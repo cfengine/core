@@ -34,7 +34,8 @@ body common control
    inputs          => { 
                       "../tests/mod_files.cf", 
                       "../tests/mod_files_copy.cf", 
-                      "../tests/mod_exec.cf" 
+                      "../tests/mod_exec.cf",
+                      "../tests/mod_access.cf" 
                       };
 
     solaris::
@@ -58,7 +59,7 @@ bundle agent myPromises(s1,s2)   # policy version 1.0
    {
    classes:
 
-     "alias"   or => { "solaris&x86|linux|mac" , userexists("mark") };
+     "alias0"   or => { "solaris" , userexists("felix") , "xyz" };
 
      "allok"   and => { userexists("$(users)") };
 
@@ -105,7 +106,7 @@ bundle agent main()
      "alias2"  or  =>  { class1, class2, class3 };
      "alias3"  and =>  { class1, class2, class3 };
 
-     "alias"   expression =>  "solaris&x86|linux|mac";
+     "alias4"   expression =>  "solaris&x86|linux|mac";
 
    vars:
 

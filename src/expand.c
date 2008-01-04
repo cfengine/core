@@ -503,7 +503,7 @@ do
    ShowPromise(pexp,6); // Delete me later, training pack only
    fprintf(FOUT,"</p>");
    
-   // DeletePromise pexp
+   DeletePromise(pexp);
    }
 while (IncrementIterationContext(lol,1));
 
@@ -519,6 +519,8 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
   char naked[CF_MAXVARSIZE];
   struct FnCall *fp;
 
+Debug("EvaluateFinalRval\n");
+  
 if ((rtype == CF_SCALAR) && IsNakedList(rval)) /* Treat lists specially here */
    {
    GetNaked(naked,rval);
@@ -556,8 +558,11 @@ switch (returnval.rtype)
           if (rp->type == CF_FNCALL)
              {
              fp = (struct FnCall *)rp->item;
-             returnval = EvaluateFunctionCall(fp,pp);
-             DeleteFnCall(fp);                
+             newret = EvaluateFunctionCall(fp,pp);
+             DeleteFnCall(fp);
+             rp->item = newret.item;
+             rp->type = newret.rtype;
+             Debug("Replacing function call with new type (%c)\n",rp->type);
              }
           else
              {
@@ -573,6 +578,8 @@ switch (returnval.rtype)
                    }
                 }
              }
+
+          /* returnval unchanged */
           }
        break;
        

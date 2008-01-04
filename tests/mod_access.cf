@@ -11,7 +11,7 @@ denyconnectionsfrom          => @(access_rules.bad);
 allowmultipleconnectionsfrom => { @(access_rules.ok) };
 trustkeysfrom                => { @(access_rules.ok) };
      
-allowssers => { "mark", "systemuser" };
+allowusers => { "mark", "systemuser" };
 
 logallconnections     => "true";
 logencryptedtransfers => "false";
@@ -20,7 +20,7 @@ skipverify       => { "IP numbers" };
 dynamicaddresses => { "IP numbers" };
 hostnamekeys     => "false";
 
-bindtointerface => { "IP number/hostname" };
+bindtointerface => "IP number/hostname";
 }
 
 #########################################################
@@ -45,4 +45,3 @@ access:
        admit => @(ok),
        deny =>  @(bad);
 }
-

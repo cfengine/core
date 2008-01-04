@@ -500,36 +500,43 @@ void DeleteRvalItem(void *rval, char type)
 
 { struct Rlist *clist;
 
-Debug("DeleteRvalItem(%c)\n",type);
+Debug("DeleteRvalItem(%c)",type);
+if (DEBUG)
+   {
+   ShowRval(stdout,rval,type);
+   }
+Debug("\n");
 
 if (rval == NULL)
    {
+   Debug("DeleteRval NULL\n");
    return;
    }
 
-switch (type)
+switch(type)
    {
    case CF_SCALAR:
        free((char *)rval);
        break;
        
    case CF_LIST:
-
+       
        /* rval is now a list whose first item is list->item */
        clist = (struct Rlist *)rval;
 
-       if (clist->item != NULL)
-          {
-          free(clist->item);
-          }
-       
        if (clist->next != NULL)
           {
-          DeleteRvalItem(clist->next,clist->next->type);
+          DeleteRvalItem(clist->next,CF_LIST);
+          }
+       
+       if (clist->item != NULL)
+          {
+          DeleteRvalItem(clist->item,clist->type);
           }
        break;
        
    case CF_FNCALL:
+       
        if (rval)
           {
           DeleteFnCall((struct FnCall *)rval);

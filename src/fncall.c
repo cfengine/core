@@ -129,7 +129,7 @@ void PrintFunctions()
 void ShowFnCall(FILE *fout,struct FnCall *fp)
 
 { struct Rlist *rp;
- 
+
 if (XML)
    {
    fprintf(fout,"%s(",fp->name);

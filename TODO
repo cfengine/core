@@ -1,0 +1,81 @@
+
+
+
+1. Out of processes strategy. Get cfexecd to remember processes
+   which might be killed, as well as highest process number
+   Put policy into cfagent.conf and save after each run a list
+   of potential candidates. or processes which should not be harmed. 
+
+   If any process has more than XX instances, killl that?
+
+
+5. What about remembering the stable core of processes, regardless
+   of who owns them? i.e. like pH og cfenvd on the ps table?? Then
+   kill the least permanent ones.
+
+7. SNMP CLI module
+
+9. Rewrite ifconfig stuff
+    - routing sockets
+    - find out the configured IP address for DHCP clients
+    - what happens on multi-homed hosts
+
+10: way of escaping list separator in strings
+
+splint *.c +unixlib
+
+with cutting out header files - non parsable..
+splint -weak client.c +unixlib
+
+Copy does not copy an empty directory?
+
+
+Make cfport number configurable?
+
+
+----
+That would be very, very nice indeed!
+<he says, wiping drool off the keyboard>
+
+mark@iu.hio.no wrote:
+
+>Perhaps an alert function that sends directly to syslog could
+>be added. Other types of alerts could be generated too, e.g.
+>SNMP traps.
+>
+----
+
+Looks like Mark is feeling exceptionally benevolent today :-)  
+
+Here is a short wish list of small features for 2.1 (or some future 
+release) that, while not necessarily enhancing the scope or 
+functionality of Cfengine in any large way, would be very welcome and 
+eliminate some of the "glue" scripts that I (and no doubt many others) 
+use to integrate Cfengine into their environment.
+
+In ascending order of implementation (by my estimate, which may be way off):
+
+1) A control: option that allows selection of the syslog facility 
+CFEngine uses, allowing administrators to (for instance) send all 
+cfengine messages to a localN facility.  (I already have [locally] a 
+crude compile-time patch for this, email me if you want it.)
+
+2) Corresponding negatives/positives for the various WarnIf and 
+BeginGroup edittools.  This would reduce the kludgery sometimes needed 
+to Do The Right Thing.
+
+3) Add options to the alert: functionality to control the medium by 
+which the alert is sent, eg syslog, stderr, pipe into a command, etc.   
+As mentioned below, SNMP would be very attractive although a little more 
+work to implement.
+
+
+#3 and #4 above would involve more cranking on cfengine than I feel 
+brave enough to do, but I'd be happy to work on the first two if there 
+is interest from the list and/or Mark wants a patch for 'em.
+
+
+It seems that variable substitution isn't happening in Setline and AppendIfNoLineMatching 
+strings.
+
+

@@ -1,0 +1,120 @@
+
+
+# A bundle is a collection of promises, i.e. objects, types and body labels
+# A body is a convenient collection of attribute constraints for a type of promise
+# Since bundles pertain to specific types of promises, the have types themselves
+
+
+# Each component has its own Body called control()
+
+#     Body cfagent control()
+#     Body cfservd control
+#     Body cfenvd  control
+#     Body cfrun   control
+
+#
+# This parser should be able to construct the promise graph in
+# matrix form and make unique identifiers for each promise so that
+# they can be instrumented. Dependency chains should be identified
+#
+# Conflicts should be analysed automatically. Loops should be
+# expanded
+#
+
+#####################################################################
+
+body common control
+   {
+   bundlesequence => { "update", "main", mypromises("2","3") };
+
+   inputs          => { 
+                      "../tests/mod_files.cf", 
+                      "../tests/mod_files_copy.cf", 
+                      "../tests/mod_exec.cf" 
+                      };
+
+    solaris::
+
+      # inputs => { "update.cf", "main.cf" , "linux.cf" };
+
+
+   }
+
+###################################################################
+
+bundle agent myPromises(s1,s2)   # policy version 1.0
+   {
+   classes:
+
+     "alias"   or => { "solaris&x86|linux|mac" , userexists("mark") };
+
+     "allok"   and => { userexists("$(users)") };
+
+     "Strategy"  dist => { "0.1", "0.2", "0.1" };
+
+   vars:
+
+     "myname"  string => "value in quotes" ,
+               policy => "constant";
+
+     "derived" string => "includes $(name) previously defined" ,
+               policy=>  "free";
+
+     # Vectors and lists
+
+     "list2"   ilist => { "1","2", getuid("mark") };
+
+     "users"   slist => { "mark", 
+                          "aeleen", 
+                          "kyrre", 
+                          "matt" 
+                        } ,
+
+                policy => constant;
+
+     # Associative arrays
+
+     # "array1"   string => readassocarray("/filename");
+
+     # Graph
+
+     "Neighbour[fromhost]" string => "tohost";
+     "Adj[tohost]"         string => "nexthost";
+   }
+
+
+##############################################################################
+
+bundle agent main()
+   {
+   classes:
+
+     "alias1"  or  =>  { "class1", "class2", "class3" };
+     "alias2"  or  =>  { class1, class2, class3 };
+     "alias3"  and =>  { class1, class2, class3 };
+
+     "alias"   expression =>  "solaris&x86|linux|mac";
+
+   vars:
+
+      "x" string => "1,2,3";
+
+      "y" real => "3.22";
+
+   report:
+
+     "Alert Message X" -> { "email", "html" }
+
+         transaction=>filters;     
+
+   }
+
+#########################################################
+
+bundle agent Update()
+
+{
+vars:
+
+}
+

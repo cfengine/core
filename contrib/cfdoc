@@ -1,0 +1,140 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1995 Andrew Ford
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+# cfdoc -- Simple utility to document a cfengine configuration file 
+#          (or other configuration file that uses '#' in the first 
+#          line to indicate comments).
+#
+# Author:
+#   Andrew Ford                     Email:  andrew@icarus.demon.co.uk
+#   Independent Software Consultant WWW:    http://www.nhbs.co.uk/aford/aford.html
+#   "Brittany", Wells Road,         Tel:    +44 1452 770836  Fax: 770835
+#   Eastcombe, Stroud, GL6 7EE, GB  Mobile: +44 385 258278
+#
+# Comments starting in column 0 are regarded as text to be typeset (this
+# can contain arbitrary markup), while other lines are regarded as code 
+# to be set in a verbatim environment.  The default comment indicator is
+# '#' and verbatim environments are enclosed in \begin{verbatim} and
+# \end{verbatim} pairs, but this behaviour can be overridden with command
+# line options.
+# 
+
+&parse_cmd_line;
+&format_file;
+
+# Format a file
+
+sub format_file {
+    while (<>) {
+
+	# Start state - look for "#!/" on first line and ignore if found.
+	
+	next if /^\#!(.*)/ && !$state++;
+	
+	chop if /\n$/;
+	
+	# Lines that start with a '#' in the first column are printed
+	# without the '#'
+	# If the previous line was not part of a comment then the
+	# currently open verbatim environment is closed.
+	
+	if (/^$comment_marker\s*(.*)/) {
+	    if ($in_code) {
+		print($end_verbatim);
+		$in_code = 0;
+	    }
+	    print("$1\n");
+	    $blank_lines = 0;
+
+	} 
+	
+	# Other lines are printed in a verbatim environment (which
+	# is opened if not already open).
+	# Blank lines are counted and only output if they apear within
+	# a block of code.
+
+	else {
+	    $blank_lines++, next if /^\s*$/;	
+	    if (!$in_code) {
+		print($start_verbatim);
+		$in_code = 1;
+	    } elsif ($blank_lines) {
+		foreach $i (1 .. $blank_lines) {
+		    print("\n");
+		}
+		$blank_lines = 0;
+	    }
+	    print("$_\n");
+	}
+    }
+
+    print $end_verbatim if $in_code;
+}
+
+
+# Parse the command line
+
+sub parse_cmd_line {
+
+    $comment_marker         = "#";
+    $latex_start_verbatim   = "\\begin{verbatim}\n";
+    $latex_end_verbatim     = "\\end{verbatim}\n";
+    $html_start_verbatim    = "<PRE>\n";
+    $html_end_verbatim      = "</PRE>\n";
+    $texinfo_start_verbatim = "\@smallexample\n";
+    $texinfo_end_verbatim   = "\@end smallexample\n";
+
+    $start_verbatim = $latex_start_verbatim;
+    $end_verbatim   = $latex_end_verbatim;
+
+    $usage = "usage: $0 [options] <file\n" .
+ 	     "    -c comment_marker     string indicating comment line (default is '#')\n" .
+	     "    -l language           markup language to use (default is LaTeX)\n" .
+	     "    -s start-marker       markup for start of code (default \\begin{verbatim})\n" .
+	     "    -e end-marker         markup for end of code (default \\end{verbatim})\n" .
+	     "Known languages are \"LaTeX\" (default), \"HTML\" and \"texinfo\".\n";
+
+    require "getopts.pl";
+    &Getopts('c:l:s:e:') || die $usage;
+
+    if (defined($opt_c)) {
+	$comment_marker = $opt_c;
+    }
+
+    if (defined($opt_l)) {
+	if ($opt_l eq "latex" || $opt_l eq "LaTeX") {
+	    $start_verbatim = $latex_start_verbatim;
+	    $end_verbatim   = $latex_end_verbatim;
+	} elsif ($opt_l eq "html" || $opt_l eq "HTML") {
+	    $start_verbatim = $html_start_verbatim;
+	    $end_verbatim   = $html_end_verbatim;
+	} elsif ($opt_l eq "texinfo" || $opt_l eq "TEXINFO") {	
+	    $start_verbatim = $texinfo_start_verbatim;
+	    $end_verbatim   = $texinfo_end_verbatim;
+	} else {
+	    die "Unknown markup language: \"$opt_l\".\n" . $usage;
+	}
+    }
+    if (defined($opt_s)) {
+	$start_verbatim = $opt_s;
+    }
+    if (defined($opt_e)) {
+	$end_verbatim = $opt_e;
+    }
+}
+
+
+
+
+

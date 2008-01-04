@@ -1,0 +1,356 @@
+#################################################################
+#
+# cf.solaris - for iu.hio.no
+#
+# This file contains solaris specific patches
+#
+#################################################################
+
+###
+#
+# BEGIN cf.solaris
+#
+###
+
+directories:
+
+     #
+     # httpd/netscape want this to exist for some bizarre reason
+     #
+
+      /usr/lib/X11/nls
+      /var/run
+      /var/spool/lpd
+
+################################################################
+
+tidy:
+
+     /usr/tmp   pattern=* age=1
+     /etc/rc2.d pattern=S80lp age=0
+
+#################################################################
+
+links:
+
+      /opt/gnu              ->  /local/gnu
+      /etc/services         ->! /etc/inet/services
+      /usr/bin/perl         ->! /local/bin/perl
+      /var/spool/mail       ->  /var/mail
+  solaris2.7::
+      /bin/bash -> /local/gnu/bin/bash
+
+##############################################################
+
+copy:
+
+   #
+   # Some standard setup files, can't link because
+   # machine won't boot if their not on / partition.
+   #
+
+   /local/bin/tcsh dest=/bin/tcsh mode=755
+
+   /local/iu/etc/nsswitch.standalone dest=/etc/nsswitch.conf
+
+   /local/iu/etc/S99rc-local dest=/etc/rc2.d/S99rc-local mode=755 
+
+   /local/iu/etc/etc_ntp_conf.solaris dest=/etc/ntp.conf mode=644
+
+##############################################################
+
+disable:
+
+    /etc/.login  type=file
+    /bin/rdist
+    /etc/auto_home
+    /etc/auto_master    
+    /usr/lib/print/printd 
+
+  nexus::
+
+    /usr/openwin/bin/Xsun   # See cert vulnerability. setuid!
+
+##############################################################
+
+files:
+
+  #
+  # If this doesn't exist fork will not work and the
+  # system will not even be able to run the /etc/rc
+  # scripts at boottime
+  #
+
+    /etc/system     o=root g=root m=644 action=touch
+    /usr/sbin/mount o=bin g=bin m=555 action=fixplain
+    /usr/sbin/ping  m=4555 action=fixplain
+    /etc/passwd        m=0644 o=root g=other action=fixplain
+    /etc/shadow        m=0600 o=root g=other action=fixplain
+    /etc/defaultrouter m=0644 o=root g=other  action=touch
+    /etc/inet          m=755  o=root g=other action=fixdirs
+    /var/adm/wtmpx     m=0644 o=adm g=adm    action=touch
+#    /var/adm/wtmp      m=0644 o=root g=adm   action=touch
+#    /var/adm/utmp      m=0644 o=root g=adm   action=fixplain
+    /var/adm/utmpx     m=0644 o=root g=bin    action=fixplain
+    /tmp m=1777                              action=fixdirs
+    /usr/openwin/bin/xdm m=0755 o=root g=bin action=fixplain
+    /usr/dt/bin        r=inf m=-6000 action=fixall
+
+    /usr/bin/tip m=0711 action=fixplain inform=true # bof
+    /usr/openwin/bin/Xsun m=0755 action=fixplain inform=false # bof
+    /usr/openwin/bin/kcms_configure m=0755 action=fixplain inform=false # bof
+    /usr/bin/sparcv7/ipcs m=0555 action=fixplain # bof
+    /usr/bin/sparcv9/ipcs m=0555 action=fixplain # bof
+    /usr/lib/dmi/snmpXdmid m=0000 action=fixplain # bof CA-2001-05
+    /usr/bin/at m=0755 action=fixplain # string format vuln
+    /usr/sbin/sparcv7/whodo m=0555 action=fixplain # bof bugtraq id 2935
+    /usr/sbin/sparcv9/whodo m=0555 action=fixplain # bof bugtraq id 2935
+
+ solaris2_7::
+
+    /usr/bin/mail m=0511 action=fixplain # bof
+
+ CheckIntegrity.Rest::
+
+    /etc o=root,bin,uucp,lp,adm action=warnall r=inf
+    /usr o=root,bin,uucp,lp,adm action=warnall r=inf checksum=md5
+         ignore=tmp ignore=authdir syslog=true
+    /var/spool/cron/crontabs checksum=md5 r=inf
+
+##############################################################
+
+disable:
+
+   #
+   # CERT security patch
+   #
+
+   /usr/openwin/bin/kcms_calibrate
+   /usr/openwin/bin/kcms_configure
+   /usr/bin/admintool
+   /etc/rc2.d/S99dtlogin
+
+################################################################
+
+shellcommands:
+
+   dax|quetzalcoatal::
+
+     "/bin/echo hei"
+
+   AllBinaryServers.Saturday.Hr00::
+
+      #
+      # Make sure the man -k / apropos data are up to date
+      #
+
+      "/usr/bin/catman  -M /local/iu/man"
+      "/usr/bin/catman  -M /local/man"
+      "/usr/bin/catman  -M /local/gnu/man"
+      "/usr/bin/catman  -M /local/teTeX/man"
+
+   any.Hr00.Saturday::
+
+      "/usr/bin/catman  -M /usr/openwin/share/man"
+      "/usr/bin/catman  -M /usr/share/man"
+
+   any::
+
+      "/local/bin/ntpdate cube > /dev/null 2>&1" inform=false
+
+   (Hr23.HalfHour)|(nexus.percent_10)::
+
+      #
+      # Update the GNU find/locate database each night
+      #
+
+      "$(gnu)/bin/updatedb  > /dev/null 2>&1"
+
+
+##############################################################
+
+editfiles:
+
+    #
+    # Makes sure that cfengine will be run by cron
+    # installs itself as a cron job - sneaky! :)
+    #
+
+    { /var/spool/cron/crontabs/root
+
+    AutoCreate
+    
+    DeleteLinesMatching "0,30 * * * * /usr/local/sbin/cfexecd -F -L /local/iu/lib:/local/lib/mysql:/local/lib"
+    AppendIfNoSuchLine "0,30 * * * * /usr/local/sbin/cfexecd -F -L /local/iu/lib:/local/lib/mysql:/local/lib:/local/gnu/lib"
+    }
+
+
+
+   #
+   # Solaris configuration for extra logins
+   #
+
+   { /etc/auto_home
+
+   DeleteLinesContaining "+"
+   }
+
+   { /etc/auto_master
+
+   DeleteLinesContaining "+"
+   }
+
+   { /etc/system
+
+   AppendIfNoSuchLine "set pt_cnt=128"
+   AppendIfNoSuchLine "set noexec_user_stack_log = 1"
+   AppendIfNoSuchLine "set noexec_user_stack = 1"
+   }
+
+ !Net75::
+
+   { /etc/netmasks
+
+   AppendIfNoSuchLine "128.39.89.0  255.255.255.0"
+   }
+
+ Net75::
+
+   { /etc/netmasks
+
+   AppendIfNoSuchLine "128.39.74.0 255.255.254.0"
+   }
+
+any::
+
+   { /etc/netmasks
+
+   DeleteLinesContaining "128.39.0.0"
+   DeleteLinesContaining "128.39  255.255.255.0"
+   }
+
+any.!Net75::
+
+   { /etc/defaultrouter
+
+   AppendIfNoSuchLine "128.39.89.1"
+   }
+
+ Net75::
+
+   { /etc/defaultrouter
+
+   AppendIfNoSuchLine "128.39.74.1"
+   }
+
+any::
+
+   { /usr/openwin/lib/app-defaults/XConsole
+
+   AppendIfNoSuchLine "XConsole.autoRaise: on"
+   }
+
+   #
+   # CERT security patch for vold vulnerability
+   #
+
+   { /etc/rmmount.conf
+
+   HashCommentLinesContaining "action cdrom"
+   HashCommentLinesContaining "action floppy"
+   }
+
+   { /etc/inet/inetd.conf
+
+#       ReplaceAll "/usr/sbin/in.ftpd" With "/local/iu/sbin/tcpd"
+#       ReplaceAll "/usr/sbin/in.telnetd" With "/local/iu/sbin/tcpd"
+      ReplaceAll "/usr/sbin/in.rshd" With "/local/iu/sbin/tcpd"
+      ReplaceAll "/usr/sbin/in.rlogind" With "/local/iu/sbin/tcpd"
+      HashCommentLinesContaining "rwall"
+      HashCommentLinesContaining "/usr/sbin/in.fingerd"
+      HashCommentLinesContaining "comsat"
+      HashCommentLinesContaining "exec"
+      AppendIfNoSuchLine         "talk dgram udp wait root /usr/sbin/in.talkd in.talkd"
+      HashCommentLinesContaining "echo"
+      HashCommentLinesContaining "discard"
+      HashCommentLinesContaining "charge"
+      HashCommentLinesContaining "quotas"
+      HashCommentLinesContaining "users"
+      HashCommentLinesContaining "spray"
+      HashCommentLinesContaining "sadmin"
+      HashCommentLinesContaining "rquota"
+      HashCommentLinesContaining "kcms"
+      HashCommentLinesContaining "comsat"
+      HashCommentLinesContaining "xaudio"
+      HashCommentLinesContaining "uucp"
+      HashCommentLinesContaining "tftp"
+      HashCommentLinesContaining "/dt"
+      HashCommentLinesContaining "tnamed"
+      HashCommentLinesContaining "in.r"
+      HashCommentLinesContaining "kerbd"
+      HashCommentLinesContaining "rpc.rstatd"
+      HashCommentLinesContaining "cachefsd"
+      HashCommentLinesContaining "gssd"
+#      HashCommentLinesContaining "telnet"
+   }
+
+      #
+      # umask define when inetd starts is inherited by all subprocesses
+      # this makes ftp post files open to the world
+
+      { /etc/rc2.d/S72inetsvc
+
+      PrependIfNoSuchLine "umask 022"
+      HashCommentLinesContaining "/usr/sbin/in.named &"
+      }
+
+   !nexus::
+
+      { /etc/vfstab
+ 
+      HashCommentLinesContaining "/iu/nexus/u1"
+      HashCommentLinesContaining "/iu/nexus/u2"
+      HashCommentLinesContaining "/iu/nexus/u3"
+      HashCommentLinesContaining "/iu/nexus/u4"
+      }
+
+############################################################################
+
+processes:
+
+  #
+  # Don't need CDE stuff
+  #
+
+  "ttdbserverd" signal=kill
+  "dmispd"      signal=kill
+  "automount"   signal=kill
+  "kwmsound"    signal=kill
+  "hpnp"        signal=kill
+  "cmsd"        signal=kill
+
+  "nfsd"        restart /usr/lib/nfs/nfsd   useshell=false
+  "mountd"      restart /usr/lib/nfs/mountd useshell=false
+# xntpd virker ikke lenger... dessuten root exploit
+#  "xntpd"       restart "/local/bin/xntpd"  useshell=false
+  "xntpd" signal=kill
+
+  "inetd" matches=>1 restart "/usr/sbin/inetd -s"
+
+ !(nexus|quetzalcoatal|dax)::
+
+  "kdm"         restart "/local/kde/bin/kdm -nodaemon -config /local/iu/X11/xdm/xdm-config"
+
+  nexus|quetzalcoatal|dax::
+
+   "kdm" signal=kill
+
+#  quetzalcoatal::
+
+#   "sshd" signal=kill
+
+###
+#
+# END cf.solaris
+#
+###

@@ -1,0 +1,88 @@
+<h1>Promise Bundles</h1> <html><head><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" /><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/></head>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>Agent</font> <font color=red>main</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>classes</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>linux</font></i> <p>
+
+Resource <b>'alias1'</b> promises...
+
+<br><font color=green>........................or</font> => class1,class2,class3,,</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>linux</font></i> <p>
+
+Resource <b>'alias2'</b> promises...
+
+<br><font color=green>........................or</font> => class1,class2,class3,,</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>linux</font></i> <p>
+
+Resource <b>'alias3'</b> promises...
+
+<br><font color=green>........................and</font> => class1,class2,class3,,</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>linux</font></i> <p>
+
+Resource <b>'alias'</b> promises...
+
+<br><font color=green>........................expression</font> => solaris&x86|linux|mac,</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>linux</font></i> <p>
+
+Resource <b>'x'</b> promises...
+
+<br><font color=green>........................string</font> => 1,2,3,</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>files</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>linux</font></i> <p>
+
+Resource <b>'/path/file.*'</b> promises...
+
+<br><font color=green>........................edit_line</font> => myedit(${this},),<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02, if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => mark,siri,, if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................Group</font> => readstringlist(filename,), if context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> => root,wheel,, if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<h1>All Bodies</h1><p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>Agent</font> <font color=red>control</font><b>(no parameters)</b>
+<br><font color=green>.............................BundleSequence</font> => update, if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................Inputs</font> => update.cf,main.cf,, if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................Inputs</font> => update.cf,main.cf,linux.cf,, if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02, if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => mark,siri,, if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................Group</font> => readstringlist(filename,), if context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> => root,wheel,, if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ 

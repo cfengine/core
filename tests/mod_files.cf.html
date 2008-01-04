@@ -1,0 +1,215 @@
+<h1>Promise Bundles</h1> <html><head><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" /><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/></head>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>filetest</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>files</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'/path/file.*'</b> promises...
+
+<br><font color=green>........................edit_line</font> => myedit(this,)<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => 'mark','siri' if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,) if context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> => 'root','wheel' if context <i><font color=blue>linux</font></i>
+<br><font color=green>........................file_select</font> => myfilter<br><font color=green>........................changes</font> =>  <font color=blue>changes</font> <font color=red>tripwire</font><b>(no parameters)</b>
+<br><font color=green>.............................hash</font> => md5 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................update</font> => yes if context <i><font color=blue>linux</font></i>
+<br><font color=green>........................recurse</font> => inf</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'$(filelist)'</b> promises...
+
+<br><font color=green>........................edit_xml</font> => insertlist($(filelist),)<br><font color=green>........................edit_line</font> => diddle<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => 'mark','siri' if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,) if context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> => 'root','wheel' if context <i><font color=blue>linux</font></i>
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>others</font>(<b>parame</b>,
+)<br><font color=green>.............................owner</font> => 'root','wheel','sudo' if context <i><font color=blue>milkyway</font></i>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'/etc/xyz'</b> promises <b> cfagent</b>
+
+<br><font color=green>........................edit_line</font> => myedit(${this},)<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => 'mark','siri' if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,) if context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> => 'root','wheel' if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'/usr/local'</b> promises...
+
+<br><font color=green>........................linkto</font> =>  <font color=blue>linkto</font> <font color=red>linkdetails</font>(<b>tofile</b>,
+)<br><font color=green>.............................link_type</font> => symbolic if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................copy_patterns</font> =>  if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................deadlinks</font> => kill if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................when_no_file</font> => force if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'/var'</b> promises...
+
+<br><font color=green>........................recurse</font> => inf<br><font color=green>........................name_select</font> => fish.*<br><font color=green>........................tidy</font> =>  <font color=blue>tidy</font> <font color=red>tidymask</font><b>(no parameters)</b>
+<br><font color=green>.............................age</font> => 0 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(50000,inf,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................age_type</font> => mtime if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................dirlinks</font> => delete if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rmdirs</font> => yes if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................links</font> => stop if context <i><font color=blue>linux</font></i>
+<br><font color=green>........................rename</font> =>  <font color=blue>rename</font> <font color=red>rotateme</font><b>(no parameters)</b>
+<br><font color=green>.............................newname</font> => filename if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rotate</font> => 4 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(1,2,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................action</font> => nop if context <i><font color=blue>linux</font></i>
+<br><font color=green>........................repository</font> => /override</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>edit_line</font> <font color=red>myedit</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+<tr><td>   scalar arg <b>filename</b>
+</td></tr></td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>append</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'My important line.*'</b> promises...
+
+<br><font color=green>........................data</font> => New important line<br><font color=green>........................transaction</font> =>  <font color=blue>transaction</font> <font color=red>controlbody</font><b>(no parameters)</b>
+<br><font color=green>.............................loglevel</font> => usr1 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................reportlevel</font> => inform if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ifelapsed</font> => 10 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................expireafter</font> => 20 if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>append</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource <b>'This a line in $(filename)'</b> promises...
+
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>replace</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>classes</font></i> <p>
+
+Resource <b>'string.[abc]*'</b> promises...
+
+<br><font color=green>........................with</font> => $(new_value)<br><font color=green>........................which</font> => all<br><font color=green>........................classes</font> => afterX</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<h1>All Bodies</h1><p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>access</font> <font color=red>others</font>(<b>parame</b>,
+)<br><font color=green>.............................owner</font> => 'root','wheel','sudo' if context <i><font color=blue>milkyway</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => 'mark','siri' if context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,) if context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> => 'root','wheel' if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>linkto</font> <font color=red>linkdetails</font>(<b>tofile</b>,
+)<br><font color=green>.............................link_type</font> => symbolic if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................copy_patterns</font> =>  if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................deadlinks</font> => kill if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................when_no_file</font> => force if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>transaction</font> <font color=red>controlbody</font><b>(no parameters)</b>
+<br><font color=green>.............................loglevel</font> => usr1 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................reportlevel</font> => inform if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ifelapsed</font> => 10 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................expireafter</font> => 20 if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>changes</font> <font color=red>tripwire</font><b>(no parameters)</b>
+<br><font color=green>.............................hash</font> => md5 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................update</font> => yes if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>file_select</font> <font color=red>myffilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> => '.*.asc' if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> => '/var/.*/mail','/usr/.*/mail' if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> => 'mark','cell','motd' if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> => 'ecg','mark' if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(date(1997,2,22,0,0,0,)now,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> => 'dir','link' if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> => '/dev/null','/dev/tyyS0' if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>tidy</font> <font color=red>tidymask</font><b>(no parameters)</b>
+<br><font color=green>.............................age</font> => 0 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(50000,inf,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................age_type</font> => mtime if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................dirlinks</font> => delete if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rmdirs</font> => yes if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................links</font> => stop if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>rename</font> <font color=red>rotateme</font><b>(no parameters)</b>
+<br><font color=green>.............................newname</font> => filename if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rotate</font> => 4 if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(1,2,) if context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................action</font> => nop if context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ 

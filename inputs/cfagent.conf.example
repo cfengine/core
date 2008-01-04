@@ -1,0 +1,85 @@
+##################################################
+# 
+#  cfagent.conf
+#
+#  This is a simple file for getting started with
+#  cfengine. It is harmless. If you get cfengine
+#  running with this file, you can build on it.
+#
+##################################################
+
+###
+#
+# BEGIN cfagent.conf (Only hard classes in this file )
+#
+###
+
+control:
+
+   actionsequence = ( files shellcommands copy )
+
+   domain         = ( example.com )
+
+   timezone       = ( MET )
+
+   smtpserver     = ( smtphost.example.org )  # used by cfexecd
+   sysadm         = ( admin@example.com )     # where to mail output
+
+######################################################################
+ 
+resolve:
+
+   #
+   # Add these name servers to the /etc/resolv.conf file
+   #
+
+     129.0.2.10      # local nameserver
+     129.0.2.156     # backup nameserver
+
+ 
+######################################################################
+
+copy:
+
+ #  Get a file from some trusted server, e.g. password sync
+ #  To do this, you need to use cfkey to install keys
+
+ #  /etc/shadow mode=0600 server=passwordserver
+
+######################################################################
+
+files:
+
+   /etc/passwd 
+
+         mode=644        # make sure the file permissions are right
+         owner=root      # make sure it's owned by root
+         action=fixall   # if anything is wrong, fix it immediately!
+         checksum=md5    # keep a "tripwire" checksum to tell us
+                         # if any changes occur here
+
+   /etc/shadow mode=600 owner=root action=fixall
+
+######################################################################
+
+shellcommands:
+
+      "/bin/echo Replace me with something useful"
+
+   Wednesday.Hr00||Saturday.Hr02::
+
+      "/usr/local/bin/MyScript"
+
+######################################################################
+
+processes:
+
+   "inetd"  signal=hup
+   "irc"    signal=kill
+
+
+###
+#
+# END cfagent.conf
+#
+###

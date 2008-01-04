@@ -1,0 +1,81 @@
+
+
+# A bundle is a collection of promises, i.e. objects, types and body labels
+# A body is a convenient collection of attribute constraints for a type of promise
+# Since bundles pertain to specific types of promises, the have types themselves
+
+
+# Each component has its own Body called control()
+
+#     Body cfagent control()
+#     Body cfservd control
+#     Body cfenvd  control
+#     Body cfrun   control
+
+#
+# This parser should be able to construct the promise graph in
+# matrix form and make unique identifiers for each promise so that
+# they can be instrumented. Dependency chains should be identified
+#
+# Conflicts should be analysed automatically. Loops should be
+# expanded
+#
+
+#####################################################################
+
+Body Agent control
+   {
+
+   BundleSequence => "update";
+
+   Inputs          => { "update.cf", "main.cf" };
+
+    linux::
+
+      Inputs => { "update.cf", "main.cf" , "linux.cf" };
+
+
+   }
+
+
+##############################################################################
+
+Bundle Agent main()
+   {
+   classes:
+
+     "alias1"  or  =>  { "class1", "class2", "class3" };
+     "alias2"  or  =>  { class1, class2, class3 };
+     "alias3"  and =>  { class1, class2, class3 };
+
+     "alias"   expression =>  "solaris&x86|linux|mac";
+
+   vars:
+
+      "x" string => "1,2,3";
+
+   files:
+
+      "/path/file.*"  
+
+            edit_line => myedit("${this}") ,
+            access => myaccess;
+}
+
+Body access myaccess()
+
+{
+any::
+
+  mode => "+077,-02";
+  owner => { "mark","siri" };
+
+solaris::
+
+  Group => readstringlist("filename");
+
+linux::
+
+  group => { "root", "wheel" };
+}
+

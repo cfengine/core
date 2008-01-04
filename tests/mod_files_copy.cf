@@ -1,0 +1,111 @@
+#########################################################
+#
+# mod_files copying parts
+#
+#########################################################
+
+bundle agent testcopy()
+
+{
+vars:
+
+  "basedir"      string => "/masterfiles";
+
+  "named_files"  slist => { "one", "two", "three" };
+
+  "servers"      slist => {"nexus","cube","eternity"};
+
+  "bla" slist => { "one", "two", "three" };
+
+ "OTHER" string => "scalar";
+
+files:
+
+  "/dest/files"  
+
+            copyfrom    => mycopy("/src/path","server"),
+            access      => myaccess,
+            file_select => myfilter,
+            recurse     => "inf";
+
+  "/dest/files"  
+
+            copyfrom    => mycopy("/src/.*/regpath","server"),
+            access      => myaccess,
+            file_select => myfilter;
+
+
+  #
+  # Copy named files *to* separate named dirs, e.g. for vm config
+  #
+
+  "$(basedir)/$(named_files)/vm.conf"
+
+           copyfrom      => mycopy("/$(basedir)/$(named_files).conf","server"),
+           access        => myaccess,
+           file_select   => myfilter;
+          
+
+  #
+  # Copy named files *from* separate named hosts - aggregation
+  #
+
+  "$(basedir)/data_from_$(servers)/$(named_files).conf"
+
+           copyfrom      => mycopy("/$(basedir)/$(named_files).conf","$(servers)"),
+           access        => myaccess,
+           file_select  => myfilter;
+  #         loopiteration => iter_policy
+          
+
+
+  # 
+  # Now copy a single set of files to different destinations on same server
+  #
+
+  "$(basedir)/$(named_files)/vm.conf"
+
+           copyfrom    => mycopy("/$(basedir)/fixed.conf","server"),
+           access      => myaccess,
+           file_select      => myfilter;
+
+}
+
+#########################################################
+
+body copyfrom mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" , "failover1" };
+action      => "fix";                    # warn/silent/fix;
+backup      => "true";                   #/false/timestamp
+repository  => "/my/repos";              # backup directory
+stealth     => "true";                   #/on/false/off
+preserve    => "true";
+linkpattern => ".*fish.*";
+xdev        => "true";                   # /on/false/off
+compare     => "mtime";                  # ctime/mtime/checksum/sum/byte/binary/any
+linktype    => "absolute";               # /symbolic/relative/hard
+typecheck   => "true";
+forceupdate => "false";
+forcedirs   => "false";
+forceipv4   => "false";
+size        => "0,50000";
+trigger     => { "tag1", "tag2" };
+trustkey    => "true";
+encrypt     => "true";
+verify      => "true";
+purge       => "false";
+findertype  => "MacOSX";
+}
+
+#################################################################
+
+#body iterate iter_policy
+#{
+#iterator_order => { "var1", "var2" };
+#tied =>  { "var1", "var2" };
+#untied =>  { "var3", "var4" };
+#}
+

@@ -1,0 +1,421 @@
+##############################################################
+#
+# cf.main - for iu.hio.no
+#
+# This file contains generic config stuff
+#
+##############################################################
+
+###############
+#
+# BEGIN cf.main
+#
+###############
+
+control: 
+
+   Access     = ( root )        # Only root should run this
+
+   site       = ( iu )
+   domain     = ( iu.hio.no )
+   sysadm     = ( cfengine@iu.hio.no ) 
+   smtpserver = ( nexus.iu.hio.no )
+
+   # Welcome to Norway...!
+
+   timezone  = ( MET CET )
+
+   #
+   # Where backup files (for copy/tidy) are kept
+   #
+
+   Repository = ( /var/spool/cfengine )
+
+   LockDirectory = ( /var/cfengine )
+   LogDirectory  = ( /var/cfengine )
+
+   #
+   # Where extension modules can be found
+   #
+
+   moduledirectory = ( /var/cfengine/modules )
+
+   SpoolDirectories = ( /var/spool/cron/crontabs )
+
+   ###################################################################
+   #
+   # Spread the load, make sure the servers get done first though
+   #
+   ###################################################################
+
+   !AllBinaryServers::
+
+    SplayTime = ( 1 )
+
+   ###################################################################
+   #
+   # Some local decisions ...
+   #
+   ###################################################################
+
+   any::
+
+    OutputPrefix = ( "cf:$(host)" )
+
+    IfElapsed   = ( 15 )  # Checks can be repeated only after 15 mins
+    ExpireAfter = ( 240 ) # Hanging checks are killed after 4 hours
+
+
+    SensibleSize  = ( 1000 )   # Mounted disk looks normal if size > 1000 bytes
+    SensibleCount = ( 2 )      #                "          if no files > 2
+    EditfileSize  = ( 40000 )  # Will not edit files bigger than this
+
+   #
+   # Local convention for mounting file systems
+   # e.g. /iu/nexus/u1. Home dirs are u1,u2,u3,u?,ua,ub ...
+   #
+
+   MountPattern = ( /$(site)/$(host) )
+   HomePattern  = ( u? ) 
+
+   ###################################################################
+   #
+   # Security checks
+   #
+   ###################################################################
+
+   NonAlphaNumFiles = ( on )           # Warn on filenames with non alphanumic chars
+   FileExtensions = ( c gif jpg )      # Filenames which should NOT be directories
+
+   # File/dir names which we should NOT be there
+
+   SuspiciousNames = ( .mo lrk3 lkr3 nuke rootkit cloak zap icepick toneloc .ek wzap clnlog sniff.pid sp.pl ) 
+
+   ChecksumDatabase = ( /var/cfengine/cf.db3 )
+
+   # This should be on only when we are updating the db after AUTHORIZED changes
+
+   ChecksumUpdates = ( on )
+
+   ###################################################################
+   #
+   # If we undefine this with cfengine -N longjob
+   # then we switch off all jobs labelled with this class
+   #
+   ###################################################################
+
+   AddClasses     = ( longjob )
+   AddInstallable = ( rootfull )
+   AddInstallable = ( pcstudupdate )
+   AddInstallable = ( dns_update )
+   AddInstallable = ( syslodgdhup )
+
+   ###################################################################
+   #
+   # Macros & constants are inherited downwards in imports
+   # but are not passed up to parent files. Good idea to
+   # define them all here
+   #
+   ###################################################################
+
+   cfbin       = ( /var/cfengine/bin )
+   checksrc    = ( /iu/nexus/ud/mark/comp )
+   gnu         = ( "/local/gnu" )
+   ftp         = ( /local/iu/ftp )
+   nisfiles    = ( /iu/nexus/local/iu/etc )  # Stupid name, since we don't use NIS anymore
+   masterfiles = ( /iu/nexus/local/iu )
+
+   ###################################################################
+   #
+   # The action sequence determines the order in which
+   # checks are performed: action.class1.class2...
+   #
+   ###################################################################
+
+   any::
+
+      actionsequence = 
+         (
+         editfiles
+         copy
+         mountall
+         mountinfo
+         checktimezone
+         resolve
+         netconfig
+         unmount
+         shellcommands
+         addmounts
+         links.Prepare
+         files.Prepare
+         directories
+         links.Rest
+#         mailcheck
+         mountall
+         required
+         tidy.IfElapsed120.ExpireAfter240
+         disable
+         editfiles
+         files.Rest
+         processes
+         )
+
+   ###################################################################
+   #
+   # Network configuration. 74+75 are one subnet. 85 is one subnet.
+   #
+   ###################################################################
+
+   nexus|quetzalcoatal|haddock::
+
+      interfacename = ( hme0 )     # A newer type of machine
+
+   Net75::
+
+      netmask   = ( 255.255.254.0 )
+
+  !Net75::
+
+      netmask   = ( 255.255.255.0 )
+
+
+######################################################################
+#
+# Strategies (mixed, randomised)
+#
+######################################################################
+
+strategies:
+
+OnTheHour::
+
+  { spread_load
+
+  percent_10: "1"   # These classes get defined in these ratios
+  percent_30: "3"
+  precent_60: "6"
+  }
+
+######################################################################
+#
+# Server relationships for NFS filesystems
+#
+######################################################################
+
+ #
+ # Hosts which have home directory disks
+ #
+
+ homeservers:
+
+   haddock|daneel::
+
+     nexus
+
+   !haddock.!daneel::
+
+     nexus cube
+
+ #
+ # Hosts which have binary data (software)
+
+ binservers:
+
+   solaris::  
+
+       nexus
+
+   linux::
+
+       cube
+
+ #
+ # A list of all NFS mountable resources which
+ # are available to *someone* within .iu.hio.no
+ #
+
+ mountables:
+
+  any::
+
+         cube:/iu/cube/u1
+         cube:/iu/cube/u2
+         cube:/iu/cube/u3
+         cube:/iu/cube/u4
+         cube:/iu/cube/local
+         nexus:/iu/nexus/local
+         dax:/iu/dax/local
+         nexus:/iu/nexus/local/iu/src
+
+   128_39_89|cube|matrix::
+
+         nexus:/iu/nexus/ua
+         nexus:/iu/nexus/ub
+         nexus:/iu/nexus/uc
+         nexus:/iu/nexus/ud
+
+ #
+ # File systems which should be unmounted
+ # and removed (old stuff)
+ #
+
+ unmount:
+
+ # when removing mountables...
+
+
+ #
+ # NFS mounts which are not covered by binserver/homeserver
+ #
+
+ miscmounts:
+
+   #
+   # Even though nexus is software bin-type "solaris"
+   # we need this partition even on non-solaris hosts
+   # because it contains sharable data (for cfengine etc)
+   #
+
+   linux::   
+
+	nexus:/iu/nexus/local /iu/nexus/local mode=ro
+
+######################################################################
+#
+# Routing configuration on local net
+#
+######################################################################
+
+broadcast:
+
+  #
+  # Modern convention for broadcast 1-bits == i.e. .255
+  #
+
+  ones
+
+defaultroute:
+
+   (128_39_74|128_39_75)::
+
+      128.39.74.1
+
+   128_39_89::
+
+      128.39.89.1
+
+######################################################################
+#
+# DNS configuration. Uninett make this complicated for us
+#                    because they own the routers and want to
+#                    keep their DNS records themselves
+#
+######################################################################
+
+resolve:
+
+  NameServers.nexus::
+
+      127.0.0.1
+      128.39.89.26           # quetx
+      128.39.74.16           # cube
+
+  NameServers.!nexus::
+
+      127.0.0.1              # loopback - itself
+      128.39.89.10           # nexus
+      128.39.74.16           # cube
+
+ !NameServers.128_39_89::
+
+      128.39.89.10           # nexus
+      128.39.89.26           # quetzalcoatal
+      128.39.74.16           # cube
+
+ !NameServers.(128_39_74|128_39_75)::
+
+      128.39.74.16           # cube
+      128.39.89.10           # nexus
+      128.39.89.26           # quetzalcoatal
+
+######################################################################
+
+tidy: 
+
+   #
+   # Some global tidy-ups which all hosts need
+   #
+
+  !rom21X::
+
+      /tmp/       pattern=*       recurse=inf   age=1
+      /var/tmp    pattern=*       recurse=inf   age=2
+      /           pattern=core    r=1           a=0
+      /etc        pattern=core    r=1           a=0
+
+######################################################################
+
+ignore:                       
+
+   #
+   # Don't check or tidy these files/directories in recursive
+   # searches.  They need exceptional treatment
+   #
+      # pseudo-filesystems:
+      /dev
+      /proc
+      /devices
+      /kernel
+
+      ls-R
+      mysql.sock
+      /local/lib/gnu/emacs/lock/
+      /local/tmp
+      ftp
+      projects
+      /local/bin/top
+      /local/lib/tex/fonts
+      /local/iu/etc
+      /local/etc
+      /local/iu/httpd/conf
+      /usr/tmp/locktelelogic
+      /usr/tmp/lockIDE
+      RootMailLog
+      lock
+      /usr/bin/[
+
+     /usr/bin/pico
+     /local/bin/pico   # exclude this so we can search for copies (security)
+
+      #
+      # Emacs lock files etc
+      #
+
+      !*
+      /local/lib/xemacs
+
+      #
+      # X11 keeps X server data in /tmp/.X11
+      # better not delete this!
+      #
+
+      .X*
+      .Media*
+
+#####################################################################
+
+disable:
+
+   #
+   # These files should never exist on any host
+   #
+  !rom21X::
+
+   /etc/hosts.equiv       # rlogin security
+   /etc/nologin           # Prevents user login
+
+#############
+#
+# END cf.main
+#
+#############

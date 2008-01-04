@@ -1,0 +1,347 @@
+##########################################
+#
+# cf.users - for iu.hio.no
+#
+# This file contains user specific actions
+#
+##########################################
+
+###
+#
+# BEGIN cf.users
+#
+###
+
+control:
+
+   #
+   # When making backups of user dirs, don't backup these files
+   #
+
+ excludecopy = ( *.EXE *.avi *.ZIP *.AVI *.MP3 *.mp3 *.o *.dvi *.rar
+                 *.au *.WAV .bin .BIN  *.mov *.MOV *.zip *.tar* core 
+                 a.out *.au *.wav *.exe *.tgz *.viv nystat-* acr-* 
+                 DOC  *.class *.dll *.avi *.ttf *.pcf *.dll *.DLL *.lnk 
+                 *.xex *.3pm *.piz *.lll *.OBJ cache* .#* )
+
+###########################################################################
+
+filters:
+
+  { historyfilter
+
+  NameRegex:   ".*history"
+  IsSymLinkTo: "/dev/null"
+  Result:      "IsSymLinkTo.NameRegex"
+  DefineClasses: "historyalert"
+  }
+
+  { setuidfilter
+
+  Owner:   "root"
+  Mode:    "+6000"
+  Result:  "Owner.Mode"
+  }
+
+########################################################################### 
+
+ignore:
+
+   #
+   # Some directories to ignore altogether when copying or checking
+
+    dl
+    download
+
+###########################################################################
+
+tidy:
+
+   emergency|nexus.Hr20.OnTheHour|cube.Hr20.OnTheHour::
+
+     #
+     # Tidy up users' home dirs
+     #
+
+#     home                 pat=.Maillock        r=inf       age=1 # nfs locking error
+     home	          pat=.nfs*	       r=inf       age=1
+     home                 pat=.rhosts                      age=0 # Security
+     home                 pat=core             r=inf       age=0
+     home                 pat=a.out            r=inf       age=1
+     home                 p=*%                 r=inf       age=2
+     home                 p=*~                 r=inf       age=2
+     home                 p=#*                 r=inf       age=1
+     home                 p=.#*                r=inf       age=1
+     home                 p=*.dvi              r=inf       age=14   type=ctime
+     home                 p=*.log              r=inf       age=2
+     home                 p=Log.*              r=inf       age=3
+#     home                 p=*.EXE              r=inf       age=1
+     home                 p=*.xex              r=inf       age=0
+#     home                 p=*.exe              r=inf       age=1
+     home                 p=BAK                r=inf       age=1
+     home                 p=log                r=inf       age=0 type=mtime
+     home                 p=*.piz              r=inf       age=1
+     home                 p=*.lll              r=inf       age=1
+     home                 p=*.o                r=inf       age=2
+     home                 p=*.aux              r=inf       age=3
+#     home                 p=*.zip              r=inf       age=2
+#     home                 p=*.ZIP              r=inf       age=2
+     home                 p=*.mp3              r=inf       age=2 type=mtime
+     home                 p=*.MP3              r=inf       age=2
+     home                 p=*.rar              r=inf       age=1
+     home                 p=*.RAR              r=inf       age=1
+     home                 p=*.pm3              r=inf       age=0
+     home                 p=*.dll              r=inf       age=2
+     home                 p=*.cf-nonalpha      r=inf       age=0
+     home                 p=*.cfsaved          r=inf       age=0
+     home/.deleted        p=*                  r=inf       age=0
+     home/.wastebacket    p=*                  r=inf       age=14
+     home/www             p=*~                 r=inf       age=1
+     home/Desktop/Trash   p=*                  r=inf       age=14
+     home                 p=*.jpg.vbs          r=inf       age=0 # LoveBug virus
+     home                 p=.saves-*                       age=15 # emacs
+     home                 p=.ksirc.socket.*                age=1
+     home                 p=.kss-install.pid.*             age=15 # screensaver...
+
+     #
+     # Clear the big cache files netscape creates
+     #
+
+#     home/.netscape-cache  p=cache????*         r=inf       age=0
+#     home/.MCOM-cache      p=cache????*         r=inf       age=0
+     home/.netscape/cache  p=*                  r=inf       age=3 type=atime
+     home/.gimp            p=gimpswap*          r=inf       age=0
+
+   dax.Hr17.OnTheHour::
+
+     #
+     # Make sure the backup disks don't get full of old stuff
+     #
+
+     /iu/dax/backup	p=*	r=inf	a=15
+     /iu/dax/backup	p=*	r=inf	a=0	size=4m
+     /iu/dax/backup2	p=*	r=inf	a=15
+
+   dax.Day28.Hr03.OnTheHour::
+
+     /iu/dax/backup  p=* r=inf rmdirs=true age=35
+     /iu/dax/backup2 p=* r=inf rmdirs=true age=35
+
+   pax.Hr17.OnTheHour::
+
+     /iu/pax/backup p=* r=inf a=15
+ 
+   pax.Day28.Hr03.OnTheHour::
+
+    /iu/pax/backup p=* r=inf rmdirs=true age=35
+
+#################################################################
+
+files:
+
+   AllHomeServers.Rest.Hr01.OnTheHour::
+
+     #
+     # Check users files are not writable to the world
+     # and there are no stale links (pointing nowhere)
+     #
+
+     home mode=-6002 recurse=inf action=fixplain ignore=www ignore=cgi-bin #links=tidy
+                     syslog=true inform=true filter=setuidfilter
+
+   cube.Rest.Hr12.OnTheHour:: 
+ 
+    /iu/cube recurse=3 action=alert filter=historyfilter
+
+   nexus.Rest.Hr12.OnTheHour::
+
+    /iu/nexus recurse=3 action=alert filter=historyfilter
+
+
+#      home/www mode=+644 r=inf action=fixall
+
+     home/.cshrc    mode=755 action=fixall
+
+   nexus::
+    
+#      home/www mode=+644 r=inf action=fixall
+
+   nexus.Hr01.OnTheHour::
+
+     #
+     # Some special permission checks
+     # To make life easy for some people...
+     #
+
+     /iu/nexus/ua/ulfu/www m=+644 recurse=inf action=fixall
+     /iu/nexus/ud/cfengine g=cfengine m=+664 recurse=inf action=fixall
+
+#################################################################
+
+copy:
+
+   AllHomeServers.Hr00.OnTheHour::
+
+   #
+   # Make sure each user has an up to date standard
+   # setup.  Cshrc just sources in a big standard file
+   # which is kept in ~user/../.setupfiles/cshrc
+   # to reduce disk wastage
+   #
+
+   $(masterfiles)/lib/Cshrc    dest=home/.cshrc
+   $(masterfiles)/lib/tkgrc    dest=home/.tkgrc
+
+   ###########################################################################
+   #
+   # Do a backup of the user disks, excluding crap, no files > 4mb
+   #
+   ###########################################################################
+
+   dax.Hr03.OnTheHour::
+
+     /iu/cube/u1 dest=/iu/dax/backup/u1 
+                  r=inf 
+                  size=<4mb 
+                  typecheck=false
+                  backup=false # Don't backup the backup!
+                  server=cube
+                  action=silent 
+                  ignore=WIN95
+
+   dax.Hr04.OnTheHour::
+
+     /iu/cube/u2 dest=/iu/dax/backup/u2 
+                  r=inf 
+                  size=<4mb 
+                  typecheck=false
+                  backup=false 
+                  server=cube
+                  action=silent 
+                  ignore=WIN95   
+
+   dax.Hr05.OnTheHour::
+
+     /iu/cube/u3 dest=/iu/dax/backup/u3 
+                  r=inf 
+                  size=<4mb 
+                  typecheck=false
+                  backup=false 
+                  server=cube
+                  action=silent 
+                  ignore=WIN95   
+
+   dax.Hr06.OnTheHour::
+
+     /iu/cube/u4 dest=/iu/dax/backup/u4 
+                  r=inf 
+                  size=<4mb 
+                  typecheck=false
+                  backup=false 
+                  server=cube
+                  action=silent 
+                  ignore=WIN95   
+
+   dax.Hr18.OnTheHour::
+
+     /iu/nexus/ua dest=/iu/dax/backup2/ua 
+                  r=inf 
+                  size=<4mb 
+                  backup=false 
+                  typecheck=false
+                  action=silent 
+                  server=nexus 
+                  exclude=.*
+
+   dax.Hr19.OnTheHour::
+
+     /iu/nexus/ub dest=/iu/dax/backup2/ub
+                  r=inf
+                  size=<4mb
+                  backup=false
+                  typecheck=false
+                  action=silent
+                  server=nexus
+                  exclude=.*
+
+   dax.Hr20.OnTheHour::
+
+     /iu/nexus/uc dest=/iu/dax/backup2/uc
+                  r=inf
+                  size=<4mb
+                  backup=false
+                  typecheck=false
+                  action=silent
+                  server=nexus
+                  exclude=.*
+
+   pax.Hr21.OnTheHour::
+
+     /iu/nexus/ud dest=/iu/pax/backup/ud 
+                  r=inf 
+                  size=<4mb 
+                  backup=false 
+                  typecheck=false
+                  action=silent 
+                  server=nexus 
+                  exclude=.*
+
+
+
+     ##########################################################
+     #
+     # Make a backup of our local system modifications
+     #
+     ##########################################################
+
+   dax.Hr01.OnTheHour::
+
+     /iu/nexus/local/iu dest=/iu/dax/backup/iu-local 
+                        r=inf 
+                        backup=false 
+                        server=nexus 
+                        action=silent 
+                        ignore=apache*
+                        ignore=logs
+                        ignore=src
+
+#      /iu/nexus/ECG dest=/iu/dax/backup2/ECG r=inf exclude=*.weekly.* exclude=*.daily.* ignore=ps backup=false server=nexus
+
+#   pax.Hr01.OnTheHour::
+
+#     /home dest=/iu/pax/backup/daneel-home r=inf backup=false server=daneel
+
+########################################################
+
+shellcommands:
+
+  historyalert::
+
+    "/bin/echo History files linked to /dev/null - someone up to no good"
+
+  nexus::
+
+    "/iu/nexus/ua/mysql/passwdskript.php" owner=mysql
+    "/local/iu/bin/Checkusers.sh > /dev/null 2>&1"
+
+  nexus.Hr07.OnTheHour::
+
+    "/iu/nexus/ud/sigmunds/Adm/Prog/dbcontrol.php | /bin/mail sigmunds" owner=sigmunds
+    "/iu/nexus/ud/sigmunds/Adm/Prog/passwdcontrol.php | /bin/mail sigmunds" owner=sigmunds
+
+  nexus.Day01.Hr08.OnTheHour::
+    "/local/iu/bin/passwdchecker.pl | /bin/mail sigmunds"
+
+
+########################################################
+
+processes:
+
+ "kik1" signal=kill
+
+
+###
+#
+# END cf.users
+#
+###

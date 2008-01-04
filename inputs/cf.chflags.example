@@ -1,0 +1,35 @@
+################################################################
+#
+# cf.chflags - tests for exrtra attributes chflags in OpenBSD/*BSD
+#
+#################################################################
+
+control:
+
+   timezone  = ( MET CET )
+
+      actionsequence =
+         (
+	 files
+         )
+
+############################################################################
+
+files:
+
+    /tmp/flags.00  mode=0600 owner=0 group=0
+                   action=touch
+
+    /tmp/flags.01  mode=0600 owner=0 group=0  
+                   flags=uappnd,uchg,uunlnk,nodump,opaque,sappnd,schg,sunlnk  
+                   action=touch
+
+    /tmp/flags.02  mode=0600 owner=0 group=0  
+                   flags=uappnd,uunlnk,opaque,schg
+                   action=touch
+
+    /tmp/flags.03  mode=0600 owner=0 group=0  flags=uchg,sappnd,sunlnk
+                   action=touch
+
+    /tmp/flags.04  mode=0600 owner=0 group=0  flags=5400037
+                   action=touch

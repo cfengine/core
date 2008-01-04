@@ -1,0 +1,28 @@
+#################################################################
+#
+# cf.sun4 - for iu.hioslo.no
+#
+# This file contains SunOS 4.1.x specific patches
+#
+#################################################################
+
+###
+#
+# BEGIN cf.sun4
+#
+###
+
+
+files:
+
+   sun4::
+
+      /etc/passwd             m=0644 r=0 o=root g=staff act=fixplain
+      /etc/group              m=0644 r=0 o=root g=staff act=fixplain
+      /dev/kmem               m=0640 r=0 o=root g=kmem  act=warnall
+
+###
+#
+# BEGIN cf.sun4
+#
+###

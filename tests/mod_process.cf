@@ -1,0 +1,60 @@
+
+bundle agent myPromises(daemon_list,s1,s2)   # policy version 1.0
+   {
+   processes:
+
+     "$(procs_list)" 
+
+        signals         => { "stop" , "term" },
+        number          => match_body,
+        select          => myselect,
+        processfilters  => myfilter;
+
+    # restart now has to refer to an executable rule for the same object
+
+     "jboss" 
+
+        restart => "restart_tag",
+
+    # In cfengine 3, we have decoupled process and restart (executable)
+    # to keep each element "pure". We have added triggers to allow
+    # for easier coupling of promises
+
+   executables:
+
+     "/path/joss/run.sh"
+
+            trigger => "restart_tag",
+            owner   => "wwwrun";
+   }
+
+################################################################
+
+body number match_body()
+
+{
+matches              => irange("1,5");
+in_range_define      => "okclass";
+out_of_range_define  => { "one", "two", "three" };
+}
+
+
+################################################################
+
+Body procfilter myfilter
+{
+owner       => "str";
+pid         => "regex";
+ppid        => "int";
+pgid        => "int";
+rsize       => "int";
+vsize       => "int";
+status      => "regex";
+command     => "regex";
+ttime_range => "int,int";
+stime_range => "int,int";
+tty         => "regex";
+priority    => "int";
+threads     => "int"
+result      => "string";
+}

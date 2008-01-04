@@ -1,0 +1,898 @@
+<h2>SCOPE control_common</h2>
+
+<table class=border width=600>
+<tr><td>  1039 </td><th>   slist</th><td> l</td><td> bundlesequence</td><td> =  {'update','main','mypromises(2,3,)'}</td></tr>
+<tr><td>  4063 </td><th>   slist</th><td> l</td><td> inputs</td><td> =  {'../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf'}</td></tr>
+</table>
+<h2>SCOPE myscripts</h2>
+
+<table class=border width=600>
+</table>
+<h2>SCOPE testcopy</h2>
+
+<table class=border width=600>
+<tr><td>   853 </td><th>  string</th><td> s</td><td> basedir</td><td> = /masterfiles</td></tr>
+<tr><td>  1712 </td><th>   slist</th><td> l</td><td> servers</td><td> =  {'nexus','cube','eternity'}</td></tr>
+<tr><td>  2613 </td><th>   slist</th><td> l</td><td> named_files</td><td> =  {'one','two','three'}</td></tr>
+<tr><td>  3637 </td><th>   slist</th><td> l</td><td> bla</td><td> =  {'one','two','three'}</td></tr>
+<tr><td>  4666 </td><th>  string</th><td> s</td><td> OTHER</td><td> = scalar</td></tr>
+</table>
+<h2>SCOPE filetest</h2>
+
+<table class=border width=600>
+</table>
+<h2>SCOPE Update</h2>
+
+<table class=border width=600>
+</table>
+<h2>SCOPE main</h2>
+
+<table class=border width=600>
+</table>
+<h2>SCOPE myPromises</h2>
+
+<table class=border width=600>
+</table>
+<h2>SCOPE system</h2>
+
+<table class=border width=600>
+<tr><td>   590 </td><th>  string</th><td> s</td><td> ipv4_2[eth1]</td><td> = 192.168</td></tr>
+<tr><td>  1895 </td><th>  string</th><td> s</td><td> ipv4[eth1]</td><td> = 192.168.1.101</td></tr>
+<tr><td>  2100 </td><th>  string</th><td> s</td><td> ipv4_1[eth1]</td><td> = 192</td></tr>
+<tr><td>  4049 </td><th>  string</th><td> s</td><td> ipv4_3[eth1]</td><td> = 192.168.1</td></tr>
+</table>
+<h1>Expanded promise list</h1><html><head><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" /><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/></head><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias'</b> promises...
+
+<br><font color=green>........................or</font> => any , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 49</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'allok'</b> promises...
+
+<br><font color=green>........................and</font> => !any , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 51</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Strategy'</b> promises...
+
+<br><font color=green>........................dist</font> =>  {'0.1','0.2','0.1'} , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 53</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'myname'</b> promises...
+
+<br><font color=green>........................string</font> => value in quotes , if body context any
+<br><font color=green>........................policy</font> => constant , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 57</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'derived'</b> promises...
+
+<br><font color=green>........................string</font> => includes $(name) previously defined , if body context any
+<br><font color=green>........................policy</font> => free , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 60</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'list2'</b> promises...
+
+<br><font color=green>........................ilist</font> => 1000 , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 65</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'users'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'mark','aeleen','kyrre','matt'} , if body context any
+<br><font color=green>........................policy</font> => constant , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 67</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Neighbour[fromhost]'</b> promises...
+
+<br><font color=green>........................string</font> => tohost , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 81</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Adj[tohost]'</b> promises...
+
+<br><font color=green>........................string</font> => nexthost , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 82</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias1'</b> promises...
+
+<br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 92</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias2'</b> promises...
+
+<br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 93</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias3'</b> promises...
+
+<br><font color=green>........................and</font> =>  {'class1','class2','class3'} , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 94</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias'</b> promises...
+
+<br><font color=green>........................expression</font> => solaris&x86|linux|mac , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 96</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'x'</b> promises...
+
+<br><font color=green>........................string</font> => 1,2,3 , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 100</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'y'</b> promises...
+
+<br><font color=green>........................real</font> => 3.22 , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 102</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Alert Message X'</b> promises <b>  {'email','html'}</b>
+
+<br><font color=green>........................transaction</font> => filters , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 106</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/path/file.*'</b> promises...
+
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<br><font color=green>........................hash</font> => md5 , if body context linux
+<br><font color=green>........................update</font> => yes , if body context linux
+<br><font color=green>........................recurse</font> => inf , if body context any
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 13</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(filelist)'</b> promises...
+
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................owner</font> =>  {'root','wheel','sudo'} , if body context milkyway
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 20</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/etc/xyz'</b> promises <b> cfagent</b>
+
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 23</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/usr/local'</b> promises...
+
+<br><font color=green>........................link_type</font> => symbolic , if body context linux
+<br><font color=green>........................copy_patterns</font> =>  , if body context linux
+<br><font color=green>........................deadlinks</font> => kill , if body context linux
+<br><font color=green>........................when_no_file</font> => force , if body context linux
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 29</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/var'</b> promises...
+
+<br><font color=green>........................recurse</font> => inf , if body context any
+<br><font color=green>........................name_select</font> => fish.* , if body context any
+<br><font color=green>........................age</font> => 0 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................age_type</font> => mtime , if body context linux
+<br><font color=green>........................dirlinks</font> => delete , if body context linux
+<br><font color=green>........................rmdirs</font> => yes , if body context linux
+<br><font color=green>........................links</font> => stop , if body context linux
+<br><font color=green>........................newname</font> => filename , if body context linux
+<br><font color=green>........................rotate</font> => 4 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................action</font> => nop , if body context linux
+<br><font color=green>........................repository</font> => /override , if body context any
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 34</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'basedir'</b> promises...
+
+<br><font color=green>........................string</font> => /masterfiles , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 12</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'named_files'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'one','two','three'} , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 14</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'servers'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'nexus','cube','eternity'} , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 16</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'bla'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'one','two','three'} , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 18</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'OTHER'</b> promises...
+
+<br><font color=green>........................string</font> => scalar , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 20</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/dest/files'</b> promises...
+
+<br><font color=green>........................source</font> => /src/path , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<br><font color=green>........................recurse</font> => inf , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 26</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/dest/files'</b> promises...
+
+<br><font color=green>........................source</font> => /src/.*/regpath , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 33</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/one/vm.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/one.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 44</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/two/vm.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/two.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 44</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/three/vm.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/three.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 44</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/data_from_nexus/one.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/one.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'nexus','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 55</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/data_from_cube/one.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/one.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'cube','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 55</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/data_from_eternity/one.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/one.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'eternity','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 55</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/one/vm.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/fixed.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 68</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/two/vm.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/fixed.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 68</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/masterfiles/three/vm.conf'</b> promises...
+
+<br><font color=green>........................source</font> => //masterfiles/fixed.conf , if body context any
+<br><font color=green>........................servers</font> =>  {'server','failover1'} , if body context any
+<br><font color=green>........................action</font> => fix , if body context any
+<br><font color=green>........................backup</font> => true , if body context any
+<br><font color=green>........................repository</font> => /my/repos , if body context any
+<br><font color=green>........................stealth</font> => true , if body context any
+<br><font color=green>........................preserve</font> => true , if body context any
+<br><font color=green>........................linkpattern</font> => .*fish.* , if body context any
+<br><font color=green>........................xdev</font> => true , if body context any
+<br><font color=green>........................compare</font> => mtime , if body context any
+<br><font color=green>........................linktype</font> => absolute , if body context any
+<br><font color=green>........................typecheck</font> => true , if body context any
+<br><font color=green>........................forceupdate</font> => false , if body context any
+<br><font color=green>........................forcedirs</font> => false , if body context any
+<br><font color=green>........................forceipv4</font> => false , if body context any
+<br><font color=green>........................size</font> => 0,50000 , if body context any
+<br><font color=green>........................trigger</font> =>  {'tag1','tag2'} , if body context any
+<br><font color=green>........................trustkey</font> => true , if body context any
+<br><font color=green>........................encrypt</font> => true , if body context any
+<br><font color=green>........................verify</font> => true , if body context any
+<br><font color=green>........................purge</font> => false , if body context any
+<br><font color=green>........................findertype</font> => MacOSX , if body context any
+<br><font color=green>........................mode</font> => +077,-02 , if body context any
+<br><font color=green>........................owner</font> =>  {'mark','siri'} , if body context any
+<br><font color=green>........................group</font> =>  , if body context solaris
+<br><font color=green>........................group</font> =>  {'root','wheel'} , if body context linux
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 68</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/script/command'</b> promises...
+
+<br><font color=green>........................args</font> => -d -v -t , if body context any
+<br><font color=green>........................useshell</font> => true , if body context any
+<br><font color=green>........................umask</font> => 077 , if body context any
+<br><font color=green>........................owner</font> => mysql , if body context any
+<br><font color=green>........................group</font> => daemon , if body context any
+<br><font color=green>........................chdir</font> => /outputs , if body context any
+<br><font color=green>........................chroot</font> => /sandbox , if body context any
+<br><font color=green>........................module</font> => true , if body context any
+<br><font color=green>........................timeout</font> => 10 , if body context any
+<br><font color=green>........................background</font> => false , if body context any
+<br><font color=green>........................ifelapsed</font> => 10 , if body context any
+<br><font color=green>........................classes</font> =>  , if body context any
+<p><small>Promise belongs to bundle <b>myscripts</b> in '<i>../tests/mod_exec.cf</i>' near line 11</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p></html>

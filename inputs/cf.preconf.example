@@ -1,0 +1,85 @@
+#!/bin/sh 
+#
+# cf.preconf is an emergency/bootstrap file to get things going
+# in case cfengine is unable to parse its config file
+#
+
+backupdir=/iu/nexus/local/iu/etc
+
+ #
+ # If these files don't exist, you might not be able to parse cfengine.conf
+ #
+
+if [ ! -s /etc/resolv.conf ]; then
+
+ echo Patching basics resolv.conf file
+ cat > /etc/resolv.conf << XX
+domain iu.hio.no
+nameserver 128.39.89.10
+nameserver 158.36.144.156
+XX
+
+fi
+
+#
+# SVR4
+#
+
+if [ "$1" = "solaris" ]; then
+
+  if [ ! -s "/etc/passwd" ]; then
+ 
+  echo Patching missing passwd file
+    /bin/cp $backupdir/passwd /etc/passwd
+  fi
+
+  if [ ! -s "/etc/shadow" ]; then
+    
+   echo Patching missing passwd file
+   /bin/cp $backupdir/shadow /etc/shadow
+  fi 
+
+ 
+  if [ ! -s "/etc/group" ]; then
+
+    echo Patching missing group file
+    /bin/cp $backupdir/group.solaris /etc/group
+
+  fi
+
+  if [ "`/bin/egrep dns /etc/nsswitch.conf`" = "" ]; then
+
+     /bin/cp $backupdir/nsswitch.standalone /etc/nsswitch.conf
+
+  fi
+
+fi
+
+#
+# BSD 4.3
+#
+
+if [ "$1" = "linux" ]; then
+
+   if [ ! -s "/etc/passwd"  ]
+   then
+    
+    echo Patching missing passwd file
+    /bin/cp $backupdir/passwd.slinux /etc/passwd
+   fi
+
+   if [ ! -s "/etc/group" ]
+   then
+    
+    echo Patching missing group file
+    /bin/cp $backupdir/group.linux /etc/group
+   fi
+
+
+fi
+
+########
+#
+# END cf.preconf
+#
+########

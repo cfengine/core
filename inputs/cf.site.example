@@ -1,0 +1,599 @@
+################################################################
+#
+# cf.site - for iu.hio.no
+#
+# This file contains site specific data and system policy
+#
+#################################################################
+
+###
+#
+# BEGIN cf.site
+#
+###
+
+classes:  # groups
+
+    #
+    # If this file exists, then ssh has been installed ok
+    #
+  
+    Setup_SSH_OK = ( '/usr/bin/test -f /etc/ssh2/ssh2_config' )
+
+#################################################################
+
+links:
+
+   Prepare::
+
+      #
+      # "local" software is always mounted /iu/nexus/local
+      # or /iu/cube/local, but we really want these to look
+      # like they are mounted at /usr/local or /local
+      #
+
+      /local              -> /$(site)/$(binserver)/local
+      /usr/local          -> /local
+
+   dax::
+
+      #
+      # On dax /iu/dax/local is only a small a partition
+      # large enough to hold the SDT simulation software
+      # which is specially licensed to dax. This fills in
+      # the blanks in /iu/dax/local by linking to nexus.
+      #
+
+      /iu/dax/local             +> /iu/nexus/local
+
+   #
+   # Different people like to see perl installed
+   # in different places
+   #
+
+   solaris::
+
+      /usr/bin/perl5 -> /local/bin/perl
+      /usr/bin/perl  -> /local/bin/perl
+
+     # So that stupid perl/cgi can find it...
+
+      /lib/libgdbm.so.1 -> /local/lib/libgdbm.so.1 
+
+   cube::
+
+      /local/etc/fingerdir -> /iu/nexus/local/etc/fingerdir
+
+   ######################################################################
+   # Other package installation fixes
+   ######################################################################
+
+    nexus::
+
+        /local/bin/acroread -> /local/Acrobat4/bin/acroread
+	/local/bin/xmgr	-> /local/xmgr/bin/xmgr
+        /local/lib/xemacs/site-lisp/site-start.el -> /iu/nexus/local/iu/lib/EmacsCStyleLisp
+        /iu/nexus/ua/www-data/www/local/latex2html/icons.gif -> /local/latex2html/icons.gif
+
+    AllBinaryServers::
+
+        #
+        # KDE Setup
+        #
+
+    /local/kde/share/applnk/Graphics/Gimp.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/Gimp.kdelnk
+    /local/kde/share/applnk/apps/Internet/TkRat.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/TkRat.kdelnk
+    /local/kde/share/applnk/apps/WordProcessing/office.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/office.kdelnk
+    /local/kde/share/applnk/apps/Graphic/xmgr.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/xmgr.kdelnk
+    /local/kde/share/applnk/apps/Utilities/xterm.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/xterm.kdelnk
+    /local/kde/share/applnk/apps/Development/freebuilder.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/freebuilder.kdelnk
+    /local/kde/share/config/kpanelrc ->! /iu/nexus/local/iu/lib/KdeSetup/kpanelrc
+    /local/kde/share/config/kdisplayrc ->! /iu/nexus/local/iu/lib/KdeSetup/kdisplayrc
+    /local/kde/share/applnk/apps/Utilities/ical.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/ical.kdelnk
+  
+    solaris:: 
+
+       /local/kde/share/applnk/apps/Development/javaworkshop.kdelnk ->! /iu/nexus/local/iu/lib/KdeSetup/javaworkshop.kdelnk     
+
+    #
+    # KDM Setup
+    #
+
+    nexus:: 
+
+       /local/kde/share/config/kdmrc ->! /iu/nexus/local/iu/lib/kdmrcSolaris
+
+    cube::
+
+      /local/kde/share/config/kdmrc ->! /iu/nexus/local/iu/lib/kdmrcLinux
+
+    debian.!rom21X::
+
+      /etc/rc2.d/S13kdm ->!             /iu/nexus/local/iu/etc/S13kdm
+
+###############################################################
+
+disable:
+
+   #
+   # CERT warning, security fix
+   #
+
+  any::
+
+    /usr/lib/expreserve
+
+  rootfull.solaris::
+
+    /var/log/syslog rotate=empty inform=true
+
+  # Don't allow running the passwd program on any host except nexus & daneel
+
+  !nexus.!daneel.!rom21X::
+
+    /usr/bin/passwd repository=none 
+
+#  solaris::
+
+#   /usr/lib/login repository=none inform=true
+
+#################################################################
+#
+# Some very basic security file permissions
+#
+################################################################
+
+files:
+
+ nexus::
+
+   /local/iu/Admin r=inf owner=root mode=600 action=fixall
+
+ CheckIntegrity.Rest.AllBinaryServers::
+
+   /iu/$(host)/local owner=root,bin,man,daemon,www-data
+                     group=root,daemon,bin,staff,www-data,adm,other,sys
+                     action=warnall mode=o-w 
+                     r=inf checksum=md5 syslog=true
+                     ignore=fingerdir ignore=cfengine ignore=var ignore=etc
+                     ignore=dns ignore=mail ignore=lprng ignore=src ignore=logs ignore=texmf
+                     ignore=log ignore=locks ignore=aliases ignore=conf ignore=servlets exclude=*.log
+                     ignore=jserv ignore=real exclude=CheckRealServer ignore=pluto exclude=.bash_history
+                     exclude=*.db
+                     
+
+  nexus::
+
+#      /iu/nexus/ECG         mode=770        g=ecg        act=fixall  r=inf
+
+     /etc/passwd  o=root checksum=md5 action=fixall 
+
+  nexus.Hr12.OnTheHour::
+
+     $(checksrc) o=mark r=inf checksum=md5 action=warnall
+
+  debian||solaris::
+
+    /etc/inetd.conf o=root checksum=md5 action=fixall
+
+  Prepare.!rom21X::
+
+      /.cshrc                       m=0644 r=0 o=root act=touch
+      /tmp/screens/.                m=0755 o=root act=touch
+      /var/spool/cron               m=755 act=fixall
+
+   Prepare.!rom21X:: # openssh...
+
+      /etc/ssh2/ssh2_config         m=644 o=root g=0 act=fixall
+      /etc/ssh2/sshd2_config        m=644 o=root g=0 act=fixall
+
+   nexus::
+
+      /local/teTeX/texmf/ls-R           m=666 o=root act=fixplain
+      #/local/iu/etc/passwd m=0644       o=root  g=other  action=fixplain
+
+      # These files contain passwords to databases
+
+      /iu/nexus/ua/mysql/UpdateEmployDB.php o=mysql mode=700 action=fixall
+      /iu/nexus/ua/mysql/UpdateStudentDB.php o=mysql mode=700 action=fixall
+      /iu/nexus/ua/mysql/UpdateCalendarDB.php o=mysql mode=700 action=fixall
+      /iu/nexus/ua/mysql/GetAliases.php o=mysql mode=700 action=fixall 
+
+   nexus.Hr18.OnTheHour::
+
+    /etc/mnttab m=644 act=fixall
+
+    # S/KEY installation
+
+    /etc/skeykeys mode=644 o=root action=touch
+
+#################################################################
+#
+# Some routine file tidying
+#
+#################################################################
+
+tidy:
+
+      #
+      # Make sure the file repository doesn't fill up
+      #
+
+      /var/spool/cfengine pattern=*      age=0
+
+      #
+      # Nothing needs to be in /tmp more than a day
+      #
+
+ !rom21X::
+
+      /tmp    pattern=.*   age=1 r=inf
+      /tmp    pattern=*    age=1 r=inf rmdirs=sub type=mtime
+
+  Hr05.(nexus|quetzalcoatal)::
+
+      /local  pattern=core age=0 r=inf
+
+ignore:
+
+      latex2html
+
+#################################################################
+
+shellcommands:
+
+
+   PasswdServer::
+
+      # Build and install the BSD compatible passwd file for GNU/Linux
+      # from the master passwd/shadow file on solaris
+
+      "/local/iu/bin/BuildPasswdFiles"
+      "/local/iu/bin/BuildGroupFiles"
+
+  nexus.Sunday.Hr15.OnTheHour::
+
+      #
+      # See how much rubbish users have accumulated on disks
+      # Sends no automatic warnings even if they exceed 60MB
+      #
+
+      "$(cfbin)/noseyparker /iu/nexus/ua ${sysadm} nomail"
+      "$(cfbin)/noseyparker /iu/nexus/ub ${sysadm} nomail"
+      "$(cfbin)/noseyparker /iu/nexus/uc ${sysadm} nomail"
+      "$(cfbin)/noseyparker /iu/nexus/ud ${sysadm} nomail"
+
+   cube.Sunday.Hr16.OnTheHour::
+
+      #
+      # See how much rubbish users have accumulated on disks
+      # Sends automatic warnings if they exceed 60MB
+      #
+
+      "$(cfbin)/noseyparker /iu/cube/u1 ${sysadm} "
+      "$(cfbin)/noseyparker /iu/cube/u2 ${sysadm} "
+      "$(cfbin)/noseyparker /iu/cube/u3 ${sysadm} "
+      "$(cfbin)/noseyparker /iu/cube/u4 ${sysadm} nomail"
+ 
+      #
+      # Update the ls-lR database for TeX
+      #
+
+    nexus.Hr01.OnTheHour::
+
+      "/local/iu/bin/TexRehash > /dev/null 2>&1"
+
+   !Setup_SSH_OK.!rom21X::
+
+     # If ssh is not properly installed, install it!
+
+     "/local/iu/bin/SetupSSH"
+
+###############################################################
+
+editfiles:
+
+  nexus::
+
+      #
+      # Disable the reboot/shutdown button on the KDM login
+      # What were they THINKING?!
+      #
+
+      { /local/iu/lib/kdmrcSolaris
+
+      ReplaceAll "K Desktop Environment" With "Sun/Solaris"
+      CommentLinesMatching ".*ShutdownButton=RootOnly.*"
+      AppendIfNoSuchLine "ShutdownButton=ConsoleOnly"
+      }
+
+      { /local/iu/lib/kdmrcLinux
+
+      ReplaceAll "K Desktop Environment" With "Debian GNU/Linux"
+      CommentLinesMatching ".*ShutdownButton=RootOnly.*"
+      AppendIfNoSuchLine "ShutdownButton=ConsoleOnly"
+      }
+
+######################################################################
+
+required:
+
+   #
+   # Any host must have a /local, /usr/local fs. Check that
+   # it exists and looks sensible. (i.e. not empty)
+   # If free space falls below 50mb start declare an emergency
+   # as a signal to "tidy"
+   #
+
+   / freespace=10mb define=rootfull
+
+   /${site}/${binserver}/local
+
+  128_39_89::
+
+   /iu/nexus/ua freespace=50mb define=emergency
+   /iu/nexus/ub freespace=50mb define=emergency
+   /iu/nexus/uc freespace=50mb define=emergency
+   /iu/nexus/ud freespace=50mb define=emergency
+
+ !haddock.!daneel::
+
+   /iu/cube/u1 freespace=50mb define=emergency
+   /iu/cube/u2 freespace=50mb define=emergency
+   /iu/cube/u3 freespace=50mb define=emergency
+   /iu/cube/u4 freespace=50mb define=emergency
+
+
+###########################################################################
+
+copy:
+
+    /iu/nexus/local/iu/etc/keys dest=/var/cfengine/keys mode=400 o=root server=nexus
+
+   #
+   # make sure the password file is distributed
+   #
+
+   solaris.PasswordClients::
+
+      /etc/passwd dest=/etc/passwd server=nexus type=checksum mode=644 o=root secure=true
+      /etc/shadow dest=/etc/shadow server=nexus type=checksum mode=600 o=root secure=true
+
+   !solaris.PasswordClients::
+
+      /etc/shadow dest=/etc/shadow server=nexus type=checksum mode=640 o=root g=shadow size=>20k
+
+   nexus:: # The alias-data contains both staff and students
+
+      /iu/nexus/ua/mysql/aliasdata dest=/local/iu/aliases/aliases 
+                                   o=root g=root mode=644 type=sum define=alias_update
+
+#      /etc/passwd dest=/iu/nexus/local/iu/etc/passwd mode=644 size=>500
+#      /etc/shadow dest=/iu/nexus/local/iu/etc/shadow mode=644 size=>50
+
+   solaris.!haddock::
+
+      $(nisfiles)/group.solaris dest=/etc/group server=nexus mode=644
+
+   (debian.PasswordClients)|daystrom::
+
+      $(nisfiles)/passwd.slinux    dest=/etc/passwd type=checksum server=nexus mode=644 o=root  size=>50k
+      $(nisfiles)/group.linux      dest=/etc/group server=nexus mode=644  size=>100
+
+   #
+   # Some other basic system files are distributed
+   #
+
+#  any::
+
+# ssh_known_hosts er ssh v1...
+#      $(nisfiles)/ssh_known_hosts dest=/etc/ssh_known_hosts o=root mode=644
+  !rom21X::
+      $(nisfiles)/shells dest=/etc/shells mode=644
+  any::
+      $(nisfiles)/etc_profile dest=/etc/profile o=root mode=644
+
+   solaris::
+
+      $(nisfiles)/services dest=/etc/inet/services mode=644
+
+   debian::
+
+      $(nisfiles)/services dest=/etc/services mode=644
+
+   #
+   # Mirror some filesystems, for backup
+   #
+
+   quetzalcoatal.Hr01.OnTheHour::
+
+     /iu/nexus/local dest=/iu/quetzalcoatal/local typecheck=false
+         r=inf server=nexus ignore=src ignore=logs ignore=log ignore=var
+
+   sigmund.Hr01.OnTheHour::
+
+     /iu/cube/local dest=/iu/sigmund/local
+         r=inf server=cube ignore=src ignore=logs ignore=log exclude=httpd.conf
+         ignore=/iu/cube/local/iu/httpd/htdocs ignore=/iu/cube/local/iu/X11
+
+   pax.OnTheHour::  # this is really important!
+
+     /iu/nexus/private dest=/iu/pax/backup/private
+                       server=nexus r=inf mode=600
+   FTPServers::
+
+      #
+      # If /etc/shells does not conatin your shell, you
+      # cannot use FTP!
+      #
+
+      /local/iu/etc/shells dest=/etc/shells m=0644
+
+#   debian:: # To prevent the use of kvt ... Modified file invokes xterm instead
+
+#      /local/iu/etc/kvt.kdelnk dest=/local/kde/share/applnk/Utilities/kvt.kdelnk m=644
+
+#####################################################################
+#
+# Some processes that we do not / do want running
+#
+#####################################################################
+
+processes:
+
+
+    "cfenvd"   restart  "/usr/local/sbin/cfenvd" useshell=false
+
+
+    "eggdrop"  signal=kill # exclude=solluna exclude=holterr
+    "BitchX"   signal=kill
+    "enting"   signal=kill
+    "bnc"      signal=kill
+
+    "mount -o" signal=term   # these should not hang around. If they do,
+                             # then the RPC is fucked, pardon my french
+
+    "cron"     signal=hup inform=false    # Get cron to reread config file
+
+  DayTime::
+
+    "rc5des"   signal=kill
+    "stst"     signal=kill
+
+  linux::
+
+      SetOptionString "aucx"
+
+  any.Hr23::
+
+   #
+   # Kill user-processes over a day old. At Hr23 because linux ps - wrongly -
+   # reports processes as a day old when it has started before 00.00 (which isn't
+   # exactly accurate)
+   #
+
+   "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec"  
+
+      signal=kill 
+
+      include=ftpd
+      include=tcsh
+      include=bash
+      include=xterm  
+      include=kio
+      include=kaudio
+      include=maudio
+      include=netscape
+      include=ftp
+      include=tkrat
+      include=pine
+      include=perl
+      include=irc
+      include=kfm
+      include=freebuild
+      include=javac
+      include=/bin/ls
+      include=emacs
+      include=passwd
+      include=ls
+      include=less
+      include=more
+      include=man
+      include=pvm3
+      include=pvmd3
+      include=lpr
+      include=communicator
+      include=kbgndwm
+      include=krootwm
+      include=utmp_update
+      include=sdtpm
+      include=sdthelp
+      include=sdtsan
+      include=staroffice
+      include=kvt
+      include=kwm
+      include=server
+      include=konsole
+      include=kghostview
+      include=alarmd
+      include=ssh2
+      include=ping
+      include=ssh
+      exclude=sshd
+      exclude=sowille
+      exclude=rmserver # Real Streaming Server
+
+   "maudio" signal=kill
+   "kaudio" signal=kill
+   
+  #
+  # Kill processes which have run on for too long e.g. 999:99 cpu time
+  # Careful - a pattern to match 99:99 will kill everything!
+  #
+
+  "[0-9][0-9][0-9][0-9]:[0-9][0-9]" signal=term exclude=root exclude=daemon
+       "[0-9][0-9][0-9]:[0-9][0-9]" signal=term exclude=root exclude=daemon
+
+ Hr05::
+
+   #
+   # Make sure these die. The above regex only works half the time!
+   #
+
+   "ftp"      signal=kill
+   "netscape" signal=kill
+
+  nexus::
+
+    "irc" signal=kill  # :-) better still, all machines!
+
+######################################################################
+
+ #
+ # Define some ACLs useful for www
+ #
+
+acl:
+
+  { WWWacl    # For CGI scripts which write to a special directory
+
+  fstype:posix
+  method:overwrite
+  mask:*:rwx
+  user:*:rwx
+  group:*:r-x
+  other:*:r
+  user:www:=rwx         # Need me and www because the file will end up with owner
+  user:mark:=rwx        # www as run by httpd
+#  default_mask:=rwx
+#  default_user:=rwx
+#  default_group:=r
+#  default_other:=r
+  }
+
+######################################################################
+
+directories:
+
+   # Guestbook management
+
+  (nexus|cube).Hr05::
+
+      home/www/cgi-out owner=www
+
+########################################################################
+
+copy:
+
+   nexus.Hr05::
+
+      /local/iu/etc/README.cgi dest=home/www/cgi-out/README.cgi mode=644 o=www
+       backup=false
+
+  # Cgi scripts can write freely here without being setuid
+
+#########
+#
+# END cf.site
+#
+#########

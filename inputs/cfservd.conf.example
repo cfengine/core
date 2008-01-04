@@ -1,0 +1,54 @@
+#########################################################
+#
+# This is a cfd config file
+#
+# The access control here follows after any tcpd
+# control in /etc/hosts.allow and /etc/hosts.deny
+#
+#########################################################
+
+ #
+ # Could import cf.groups here and use a structure like
+ # in cfengine.conf, cf.main, cf.groups
+ #
+
+control:
+
+  domain = ( iu.hioslo.no )
+
+  solaris::
+
+     cfrunCommand = ( "/iu/nexus/local/gnu/bin/cfengine" )
+
+  linux::
+
+     cfrunCommand  = ( "/iu/waldo/local/gnu/bin/cfengine" )
+#     AutoExecInterval = ( 60 )
+#     AutoExecCommand  = ( "/iu/nexus/local/gnu/lib/cfengine/bin/cfwrap /iu/nexus/local/gnu/lib/cfengine/bin/cfhourly")
+
+  any::
+
+#  ChecksumDatabase = ( /tmp/testDATABASEcache )
+
+  IfElapsed = ( 1 )
+
+  MaxConnections = ( 10 )
+
+#########################################################
+
+admit:   # or grant:
+
+   /iu/nexus/local/gnu/bin/cfengine *.iu.hioslo.no
+   /iu/waldo/local/gnu/bin/cfengine *.iu.hioslo.no
+
+   /iu/nexus/local         *.iu.hioslo.no
+   /iu/nexus/ud            dax.iu.hioslo.no
+   /iu/nexus/ua            dax.iu.hioslo.no
+   /iu/nexus/u1            dax.iu.hioslo.no
+   /iu/nexus/u2            dax.iu.hioslo.no
+   /iu/nexus/u3            dax.iu.hioslo.no
+   /iu/nexus/u4            dax.iu.hioslo.no dump-truck.iu.hioslo.no
+   /etc                    *.iu.hioslo.no
+
+
+

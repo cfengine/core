@@ -1,0 +1,27 @@
+CFEngine Design and Development
+===============================
+Mark Burgess
+Mark.Burgess@iu.hio.no
+
+Automake/Autoconf Setup
+=======================
+David Masterson
+David.Masterson@kla-tencor.com
+
+cfrun modifications
+===================
+
+Bas van der Vlies
+Andy Mayhew
+
+Windows port
+=============
+
+Bjørn Gustafson and Jørgen Kjensli did the inital port to NT using cygwin
+Martin Andrews supplied support for NT filenames and some bugfixes, he
+also provide a number of other suggestions and patches over time.
+
+Miscellaneous patches
+=====================
+
+Bryan S. Blank

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo "Testing mod_common"
+../src/cfpromises -f ./mod_common.cf
+
+echo "Testing mod_files"
+../src/cfpromises -f ./mod_files.cf
+
+echo "Testing mod_exec"
+../src/cfpromises -f ./mod_exec.cf
+
+

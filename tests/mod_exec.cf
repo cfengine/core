@@ -1,0 +1,41 @@
+
+bundle agent myscripts()
+   {
+   # these are local and trusted, and might change objects that
+   # are otherwise promised, so this should exec first
+  
+   executables:
+
+     "/script/command"   
+
+        args        => "-d -v -t" ,
+        containment => sandbox ,
+        module      => "true",      # follow protocol
+        timeout     => "10",
+        background  => "false",
+
+        transaction => standard,
+        classes     => react("command");   # or use $(this)
+   }
+
+####################################################################
+
+body containment sandbox
+
+{
+#mode => "077";
+useshell => "true";
+umask => "077";
+owner => "mysql";
+group => "daemon";
+chdir => "/outputs";
+chroot => "/sandbox";
+}
+
+####################################################################
+
+body transaction standard
+
+{
+ifelapsed => "10";
+}

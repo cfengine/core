@@ -1,0 +1,55 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle main in the context of Agent
+
+   ARGS:
+
+   {
+   TYPE: executables
+
+      promise by '/script/command' if context is any
+
+               args => -d -v -t,
+         containment => sandbox body for type containment(no parameters)
+               {
+               useshell => true, if context any
+               umask => 077, if context any
+               owner => mysql, if context any
+               group => daemon, if context any
+               chdir => /outputs, if context any
+               chroot => /sandbox, if context any
+               }
+
+             module => true,
+            timeout => 10,
+         background => false,
+         transaction => standard body for type transaction(no parameters)
+               {
+               ifelapsed => 10, if context any
+               }
+
+            classes => react(command,),
+
+   }
+
+
+
+
+All Bodies
+
+sandbox body for type containment(no parameters)
+   {
+   useshell => true, if context any
+   umask => 077, if context any
+   owner => mysql, if context any
+   group => daemon, if context any
+   chdir => /outputs, if context any
+   chroot => /sandbox, if context any
+   }
+
+standard body for type transaction(no parameters)
+   {
+   ifelapsed => 10, if context any
+   }
+

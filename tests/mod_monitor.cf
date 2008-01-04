@@ -1,0 +1,18 @@
+#########################################################
+
+body monitor control()
+   {
+   emailfrom => "mark@iu.hio.no";
+   emailto   => "cfengine@domain.tld";
+
+   threshold => "0.3"; 
+
+   forgetrate => "0.7";
+
+   # on linux
+
+   linux::
+
+   # sensor => readfile("/proc/cpu/temperature");
+   }
+

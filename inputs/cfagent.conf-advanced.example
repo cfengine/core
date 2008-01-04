@@ -1,0 +1,48 @@
+##############################################
+# 
+#  cfagent.conf
+#
+#  This file is for root only.
+#
+##############################################
+
+###
+#
+# BEGIN cfengine.conf (Only hard classes in this file )
+#
+###
+
+import:
+
+   #
+   # Split things up to keep things tidy
+   #
+
+   any::            
+                    cf.groups
+                    cf.main
+   any.!matrix::
+                    cf.site
+                    cf.services
+                    cf.motd
+                    cf.printer
+                    cf.www
+                    cf.mail
+
+   hpux::           cf.hpux
+   debian.!matrix:: cf.debian
+   redhat::         cf.redhat
+   SuSE::           cf.suse
+   solaris::        cf.solaris
+   sun4::           cf.sun4
+   ultrix::         cf.ultrix
+   freebsd::        cf.freebsd
+
+   nexus|dax|cube|pax:: cf.users
+   matrix::         cf.matrix
+
+###
+#
+# END cfengine.conf
+#
+###

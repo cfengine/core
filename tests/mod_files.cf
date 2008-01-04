@@ -1,0 +1,187 @@
+#########################################################
+#
+# files module
+#
+#########################################################
+
+bundle agent filetest()
+   {
+   files:
+
+      "/path/file.*"  
+
+            access      => myaccess,
+            file_select => myfilter,
+            changes     => tripwire,
+            recurse     => "inf";
+
+      "$(filelist)"
+
+           access     => myaccess ,
+           access     => others("fish"); # ("white");
+
+      "/etc/xyz" -> "cfagent"
+
+            access    => myaccess;
+
+      "/usr/local"    
+
+            linkto    => linkdetails("/site/mountpoint/local");
+
+
+      "/var" 
+
+            recurse    => "inf",
+            name_select=> "fish.*",
+            tidy       => tidymask,
+            rename     => rotateme,
+            repository => "/override";
+   }
+
+#########################################################
+#
+# Editfiles in not yet specified
+#
+# bundle edit_line myedit(filename)
+#   {
+#   classes:
+#
+#   append:
+#
+#       "My important line.*" 
+#
+#            data        => "New important line" ,
+#            policy      => IfNoSuchLine,
+#            transaction => controlbody("my message");
+#
+#   append:
+#
+#      "This a line in $(filename)" ;
+#   
+#   replace:
+#
+#    classes::
+#
+#        "string.[abc]*" 
+#
+#            with    => "$(new_value)" ,
+#            which   => all ,
+#            classes => afterX;  # trigger ordering
+#
+#   }
+#
+#########################################################
+
+body access others(parame)
+
+{
+milkyway::
+
+owner  => { "root", "wheel", "sudo" };
+}
+
+#########################################################
+
+body access myaccess()
+
+{
+any::
+
+  mode  => "+077,-02";
+  owner => { "mark","siri" };
+
+solaris::
+
+  group => readstringlist("filename","lines","#","1000");
+
+linux::
+
+  group => { "root", "wheel" };
+}
+
+#########################################################
+
+body linkto linkdetails(tofile)
+
+{
+link_type     => "symbolic";   # /absolute/abs/hard/relative/rel
+copy_patterns => "";           # regex list
+deadlinks     => "kill";       #/force
+when_no_file  => "force";      # kill
+}
+
+#########################################################
+
+body transaction controlbody
+
+{
+loglevel    => "usr1";
+reportlevel => "inform";
+ifelapsed   => "10";
+expireafter => "20";
+}
+
+#########################################################
+
+body changes tripwire
+
+{
+hash    => "md5";
+update  => "yes";
+}
+
+#########################################################
+
+body file_select myfilter
+
+#
+# we can build old "include", "exclude", and "ignore" from these
+# as standard patterns
+#
+
+{
+name => { ".*.asc" };                   # regex matching file name
+path => { "/var/.*/mail", "/usr/.*/mail" };
+
+mode      =>  "700";
+size      =>  irange("10000","10000000");
+
+owner     =>  { "mark", "cell", "motd" };
+group     =>  { "ecg", "mark" };
+
+ctime     => irange(ondate(2000,1,1,0,0,0),now);
+mtime     => irange(ago(1,0,0,2,30,0),now);  
+atime     => irange(ondate(1997,2,22,0,0,0),now);
+
+exec_regex  => "/usr/bin/file $(this) (.*ascii.*)";
+filetypes   => { "dir", "link" };
+issymlinkto => { "/dev/null", "/dev/tyyS0"};
+result      => "type&mode"; 
+}
+
+#########################################################
+
+body tidy tidymask
+
+{
+age      => "0";
+size     => irange(50000,inf); # number/empty
+age_type => "mtime";           #ctime/mtime/atime
+dirlinks => "delete";          #keep/tidy/delete
+rmdirs   => "yes";             #[true/all]/[false/none]/sub
+links    => "stop";            #stop/keep/traverse/tidy
+}
+
+#########################################################
+
+body rename rotateme
+
+{
+newname => "filename";
+#type=plain/file/link/links
+rotate => "4"; # 0 means empty file
+size   => irange(1,2);
+action => "nop";  #disable/warn
+}
+
+

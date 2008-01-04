@@ -1,0 +1,52 @@
+#
+# This is the host list for cfrun
+#
+# Only these hosts will be contacted by remote connection
+#
+
+domain=iu.hio.no
+access=toreo,mark,haugerud,sigmunds
+
+nexus         # solaris
+quetzalcoatal
+dax
+pax
+way
+haddock
+cube          # linux
+# ta stabile maskiner foerst
+matrix
+sigmund
+daneel
+# saa maskinene paa studentsalene, de som blir slaatt av...
+# rom 210
+daystrom
+panzerfaust
+vorlon
+nirvana
+nevermore
+delenn
+voyager
+borg
+mulder
+duke
+bajor
+collective
+arrakis
+axis
+valis
+ubik
+# rom 214
+wintermute
+roog
+zhora
+deckard
+usul
+tetsuo
+zodiac
+ix
+thistledown
+jart
+tleilax
+axolotl
+giediprime

@@ -1,0 +1,603 @@
+<html>
+
+<head>
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" />
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/>
+ <title>Cfengine 3 -- promising new language</title>
+</head>
+
+<body>
+<h1>PROMISES IN CFENGINE</h1>
+
+<p>
+<i>The most visible part of cfengine 3 will be its new language
+interface.  Although it has been clear for a long time that the
+organically grown language used to date in cfengine has many problems,
+it was not clear exactly what would be better. After all, anyone can
+suggest something more complex, but it takes a real effort to simplify
+something. To understand the new cfengine, it is best to set aside any
+preconceptions about what cfengine is today. Cfengine 3 is a genuine
+"next generation" effort, which is will be a springboard into the
+future of system management.</i>
+</p>
+
+<p>
+Many attempts at improving the user interface of cfengine have been
+proposed but none of them have been sufficiently impressive to make
+the change worthwhile. Some have gone in for an Object Oriented
+approach, but this imposes a hierarchical model that does not fit
+cfengine's autonomous peer model.  The main goal in changing the
+language is to simplify and improve the robustness and functionality
+without sacrificing the basic freedoms and concepts. Concepts such as
+explicit loops and and tests have long been banished from cfengine and
+proposals to reintroduce them have been dismissed --- something better
+is needed. The difficulty, of course is to provide a genuine
+simplification and improvement that is robust and lasting: this
+requires a deep understanding of the problem.
+</p>
+
+<p>
+Cfengine 3's new language is a direct implementation of the
+theoretical model developed at Oslo University College over the past
+four years, known colloquially as "promise theory".  Promises were
+originally introduced by Mark Burgess as a way to talk about
+cfengine's model of autonomy (it is rare to find actual autonomous
+systems implemented in the world of computing -- most systems are
+still monolithic software hierarchies). From the idea that all the
+parts of the system are independent Policy Decision Points (or
+autonomous agents) it was a short hop to the ideas of promise theory.
+</p>
+
+<p>
+Why talk about promises instead of simply talking about changes?
+The trend in business and IT management today is to talk about Change
+Management, e.g. in the IT Infrastructure Library (ITIL) terminology.
+This comes from a long history of process management thinking.
+</p>
+
+<p>
+Tools like cfengine are not really <i>change management</i> systems
+however, they are <i>maintenance systems</i>. Maintenance is a 
+process of small changes or corrections to a model. Models that
+talk about change management tend to forget that after every
+change there is a litany of <i>incidents</i> during which it
+is necessary to repair the system or return it to its intended state.
+</p>
+
+<p>
+This means that it is the <i>promises</i> about how the system should
+be that are most important, not the actual changes that are made in
+order to keep them.
+</p>
+
+<h1>Cfengine's promise language</h1>
+
+<p>
+Promises are essentially graphical. A promise is made from one
+autonomous entity to another. The general theory allows for an
+in-depth discussion of this, but in cfengine we can often suppress
+the recipient of a promise and simply consider all the independent
+resources in the system as making promises to the system administrator
+or some other external entity. This is not always true, but it is
+an okay starting point.
+
+<ul>
+<li>Promise object (or promiser)</li>
+<li>Recipient (or promisee) -- often suppressed</li>
+</ul>
+
+So we can imagine a promise as an arrow from one entity to another.
+<pre>
+"promiser" -> "promisee"
+</pre>
+
+We need to be able to distinguish different promises from one another
+and we do this by defining the <i>promise body</i>, which is
+a label on the arrow saying something about what is being promised.
+A promise body generally has a promise type or subject and
+a choice that is being specified from the set of possible things that
+can be promised about that subject. We write this as follows:
+
+<pre>
+subject => decision/constraint
+</pre>
+</p>
+
+<h2>Promise bundles</h2>
+
+<p>
+Making clear promises about behaviour can be a potentially complex thing to do.
+One way to make promises clear in a computer science sense is to make
+a clean taxonomy of promise subjects or types. (The word "type" is a bit overloaded
+in computer science so let's try to avoid it by using the word "subject".)
+</p>
+
+<p>
+A single promise might therefore consist of many subdivisions -- or
+smaller promises.  We use the term <i>promise bundle</i> (inspired by
+geometric fibre bundles or nerve bundles if you prefer) to describe
+this. In our research, we have used multiple arrows for such bundles.
+In the cfengine language, we simply list related promise bodies after
+the promiser:
+
+<pre>
+bundle name and details
+{
+main_subject:
+
+  context_for_promise::
+
+      "promiser object" -> "promisee"
+
+              subsubject_1 => choice_1,
+              subsubject_2 => choice_2,
+              ...
+              subsubject_n => choice_n;
+
+...
+}
+</pre>
+
+This is the general form of a statement in cfengine 3. The form does not
+change for different subjects so it is a pattern that pervades
+everything. This simplification is the starting point for simpler
+configuration descriptions without forced assumptions.
+</p>
+
+<h1>Cfengine Mnemonics For Promises</h1
+
+<p>
+So let's write down the cfengine language in its general form.
+
+<ul>
+<li>All reserved words are in lower case.</li>
+</ul>
+
+The fundamental text is ascii for easy versioning in
+SVN, but can be simply compiled into SQL for database
+manipulation.
+</p>
+
+<h3>Bundles and bodies</h3>
+
+<p>
+A promise has the following generic form:
+
+<pre>
+ context|classes::
+
+      "promiser object" -> "promisee"
+
+           # constraints
+              lval1 => rval1,
+              lval2 => rval2,
+              ...
+              lvaln => rvaln;
+</pre>
+A simplified form that is most often used in cfengine omit the
+promisee, as this is usually cfagent itself.
+
+ context|classes::
+
+      "promise object"
+
+           # constraints
+              lval1 => rval1,
+              lval2 => rval2,
+              ...
+              lvaln => rvaln;
+
+Cfengine arranges promises into "bundles". Sometimes an rvalue
+for a given constraint might involve many attributes that are
+conveniently grouped together. In this case these are grouped into
+a "body" which is simply an aggregate of lval,rval pairs.
+
+<pre>
+ body name
+ {
+ lval1 => rval1;
+ lval2 => rval2;
+ }
+</pre>
+
+Note the placement of "," and ";" in these.
+</p>
+
+<h3>Rvalues</h3>
+
+<p>
+An rvalue is something on the right hand side of an assignment.
+The cfengine language of promises has four distiguishable meta types of object to remember.
+By knowing the difference between these, you will see generic patterns that make syntax
+easy to learn.
+
+<ul>
+<li> Literal strings e.g. <tt>"some string"</tt></li>
+<li> Naked variable values outside of string quotes e.g. <tt>$(scalar)</tt> or <tt>${scalar}</tt> or <tt>@(list)</tt> or <tt>@{list}</tt></li>
+<li> Function calls e.g. <tt>isdefined("variable")</tt></li>
+<li> Lists e.g. <tt>{ "literal", getuser("101") } </tt>  (which may contain literal strings and function calls as elements
+          </li>
+</ul>
+Literal values can be semantically attributed one of three <i>abstract data types</i>:
+<ul>
+<li><tt>string</tt></li>
+<li><tt>int</tt></li>
+<li><tt>real</tt></li>
+</ul>
+The corresponding list types for these are
+<ul>
+<li>slist</li>
+<li>ilist</li>
+<li>rlist</li>
+</ul>
+</p>
+
+<p>
+For example
+
+<pre>
+vars:
+
+ "name"  slist = { "one", "2", "three" };
+ "float" rlist = { "1.0", "2.02", "3.33" };
+
+</pre>
+
+</p>
+
+
+Be careful not to confuse meta object types (string, list and function etc) with
+abstract types (string,int,real, etc).
+
+<h1>List substitution</h1>
+
+Because iteration over lists is implicit in cfengine, the semantic
+algorithm for handling list variables is important.
+
+<ul>
+<li>If a list variable is slotted into a list slot, such as list lval, or as a memer of a list rval, we say that a list has been quenched.
+<li>If a list variable is used in the place of a scalar, e.g. a literal string of a scalar lval,
+then it is an implied iterator.
+</ul>
+
+For example:
+
+<pre>
+bundle server main
+
+{
+vars:
+
+ "list" slist => { "192.168.0.4", "myhost.example.com" };
+
+admit:
+
+ "/etc/passwd"   -> @(list);
+ "/etc/services" -> @(list);
+
+ # Specific
+
+ "/special/$(list)/file -> $(list);
+
+}
+
+</pre>
+
+In the latter case the file
+<tt>/special/192.168.0.4/file</tt> is granted to the IP address <tt>192.168.0.4</tt> only,
+and <tt>/special/myhost.example.com/file</tt> is granted to <tt>myhost.example.com</tt> only.
+
+Now suppose that we write
+
+<pre>
+
+ "/special/$(list)/file -> @(list);
+
+</pre>
+
+This now expands to
+<pre>
+/special/192.168.0.4/file        ->  { "192.168.0.4", "myhost.example.com" };
+/special/myhost.example.com/file ->  { "192.168.0.4", "myhost.example.com" };
+</pre>
+
+<h1>Function-like references</h1>
+
+There are two kinds of function-like reference in cfengine 3:
+
+<ul>
+<li>Built-in special functions e.g. <tt>randomint("1","4")</tt>
+<li>Parameterized body references, e.g. <tt>myaccessbody("077")</tt>
+</ul>
+
+The arguments to a function-like reference may be of three types.
+
+<pre>
+lval => function("arg1", $(arg2), otherfn("arg3"))
+</pre>
+
+<ul>
+<li>Literal strings: these should preferably be written in quotes, though single atoms can be written without.
+<li>Naked variable values: direct substitution of a variable with no string padding.
+<li>Recursive function calls: values returned as a result of other function calls.
+</ul>
+
+When a body template receives logical parameters you do not write the "$()" wrapping,
+only the identifier name (which is automatically local). e.g.
+
+<pre>
+<font color=blue>Call:</font>     access => myaccess($(actual)),
+
+<font color=blue>Template:</font> body files myaccess(local)
+          {
+          }
+</pre>
+
+<h1>Aspects and Service wrappers</h1>
+
+One of the weaknesses of cfengine 2 has been the lack of clear containers for
+bundling together related promises, i.e. those which pertain to a particular
+aspect of a system, such as provision of a specific service (email, WWW etc),
+or security, or backup. There is no unique way of thinking about the different
+aspects of a system, so any kind of scheme for organizing promises should be
+as flexible as possible and pander to individual tastes.
+
+<p>
+In cfengine 3, it is now straightforward to use the concept of a bundle
+to represent aspects or parts of aspects. Just as in earlier versions of
+cfengine, one can also place aspects in different files.
+
+<p>
+We should not think of bundles as private functions in the sense of an
+object programming language. Although they can have private variables,
+the promises within do not act on private workspace, they can act on
+any part of the computer system on which the agent is running. So the
+organization is purely formal, for ease of understanding. The
+organization or reorganization of promises is entirely cosmetic.
+
+<p>
+A final aspect of promise organization is authorization. Because
+promises given are not automatically used, unless the recipient
+promises to use them, one could split up aspects into files from
+different authorized inviduals and place access control on the
+possible rules in a file obtained from a given source. Thus one could
+deny access to certain users to make certain kinds of promises.
+
+
+<h1>Some example configuration</h1>
+
+<pre>
+
+bundle agent main()
+   {
+   files:
+
+      "/path/file.*"  
+
+            edit_line   => myedit("${this}") ,
+            access      => myaccess,
+            file_select => myfilter,
+            changes     => tripwire,
+            recurse     => "inf";
+
+      "$(filelist)"
+
+           edit_xml   => insertlist("$(filelist)") ,
+           edit_line  => diddle ,
+           access     => myaccess ,
+           access     => others; # ("white");
+
+      "/etc/xyz" -> "cfagent"
+
+            edit_line => myedit("${this}") ,
+            access    => myaccess;
+
+      "/usr/local"    
+
+            linkto    => linkdetails("/site/mountpoint/local");
+
+
+      "/var" 
+
+            recurse    => "inf",
+            name_select=> "fish.*",
+            tidy       => tidymask,
+            rename     => rotateme,
+            repository => "/override";
+   }
+
+</pre>
+
+There are many details here to be expanded upon. For that, we
+use the body declarations for each promise subject type.
+
+<pre>
+#########################################################
+
+body access others(parame)
+
+{
+milkyway::
+
+owner  => { "root", "wheel", "sudo" };
+}
+
+#########################################################
+
+body access myaccess()
+
+{
+any::
+
+  mode  => "+077,-02";
+  owner => { "mark","siri" };
+
+solaris::
+
+  group => readstringlist("filename");
+
+linux::
+
+  group => { "root", "wheel" };
+}
+
+#########################################################
+
+body linkto linkdetails(tofile)
+
+{
+link_type     => "symbolic";   # /absolute/abs/hard/relative/rel
+copy_patterns => "";           # regex list
+deadlinks     => "kill";       #/force
+when_no_file  => "force";      # kill
+}
+
+#########################################################
+
+body transaction controlbody
+
+{
+loglevel    => "usr1";
+reportlevel => "inform";
+ifelapsed   => "10";
+expireafter => "20";
+}
+
+#########################################################
+
+body changes tripwire
+
+{
+hash    => "md5";
+update  => "yes";
+}
+
+#########################################################
+
+body file_select myffilter
+
+#
+# we can build old "include", "exclude", and "ignore" from these
+# as standard patterns
+#
+
+{
+name => { ".*.asc" };                   # regex matching file name
+path => { "/var/.*/mail", "/usr/.*/mail" };
+
+mode      =>  "700";
+size      =>  irange("10000,10000000");
+
+owner     =>  { "mark", "cell", "motd" };
+group     =>  { "ecg", "mark" };
+
+ctime     => irange(ondate(2000,1,1,0,0,0),now);
+mtime     => irange(ago(1,0,0,2,30,0),now);  
+atime     => irange(date(1997,2,22,0,0,0),now);
+
+exec_regex  => "/usr/bin/file $(this) (.*ascii.*)";
+filetypes   => { "dir", "link" };
+issymlinkto => { "/dev/null", "/dev/tyyS0"};
+result      => "type&mode"; 
+}
+
+#########################################################
+
+body tidy tidymask
+
+{
+age      => "0";
+size     => irange(50000,inf); # number/empty
+age_type => "mtime";           #ctime/mtime/atime
+dirlinks => "delete";          #keep/tidy/delete
+rmdirs   => "yes";             #[true/all]/[false/none]/sub
+links    => "stop";            #stop/keep/traverse/tidy
+}
+
+#########################################################
+
+body rename rotateme
+
+{
+newname => "filename";
+rotate => "4"; # 0 means empty file
+size   => irange(1,2);
+action => "nop";  #disable/warn
+}
+
+</pre>
+
+Promises can also be made about entirely abstract matters that do not require
+any follow up actions from the strong arm of cfengine:
+
+<pre>
+
+bundle external ExoCartography()
+
+{
+graph:
+
+  any::   # classes relate to where these promises are known
+          # not to be confused with the hosts promising
+
+  # List the various conduits in the network
+  # promise from nexus to cube
+
+  # Calculate the degree distribution
+
+  "sphere" -> "cube"
+
+     label     => "+nfs",
+     weight    => "0.4";
+
+  "sphere" -> "nexus"
+
+     label     => "+nfs",
+     weight    => "0.4",
+
+     # allow all of these simultaneously
+
+     s_tau  => {},
+     s_chi  => {},  # regex
+
+     i_tau  => { "1", "2"},
+     i_chi  => {},  # ranges
+
+     r_tau  => { "0,5"},     # load average
+     r_chi  => { "0,2.2" };  # ranges
+
+  "cube" -> { "nexus", "slogans", "others" }
+
+       type => "-nfs",
+       to   => "nexus";   # default weight = 1.0
+
+##############################################################
+
+sla:
+
+  #
+  # What can we put in here?
+  #
+
+  "HIO" -> "opera"
+
+     tau => "http response time",
+     real_chi => { "0 , 0.0001" },
+     str_chi => { "^(NaN)" },
+     availability => "$(www_avail)";
+
+
+
+</pre>
+
+<h1>Adaptation</h1>
+
+Because the software has to continuously re-adapt to its
+circumstances, we cannot cache too much information, else it will be
+out of date. So we do not waste any significant time by reparsing the
+configuration on each invocation. This allows us to save some memory
+references from the parsing and reuse them later.
+
+
+</body>
+</html>

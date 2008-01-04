@@ -1,0 +1,217 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle filetest in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: files
+
+      promise by '/path/file.*' (implicit) if context is any
+
+          edit_line => myedit(this,)
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => myfilter
+            changes => tripwire body for type changes(no parameters)
+               {
+               hash => md5 if context linux
+               update => yes if context linux
+               }
+
+            recurse => inf
+
+      promise by '$(filelist)' (implicit) if context is any
+
+           edit_xml => insertlist($(filelist),)
+          edit_line => diddle
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+             access => others body for type access
+               arg parame
+
+               {
+               owner => 'root','wheel','sudo' if context milkyway
+               }
+
+
+      promise by '/etc/xyz' to cfagentif context is any
+
+          edit_line => myedit(${this},)
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+
+      promise by '/usr/local' (implicit) if context is any
+
+             linkto => linkdetails body for type linkto
+               arg tofile
+
+               {
+               link_type => symbolic if context linux
+               copy_patterns =>  if context linux
+               deadlinks => kill if context linux
+               when_no_file => force if context linux
+               }
+
+
+      promise by '/var' (implicit) if context is any
+
+            recurse => inf
+         name_select => fish.*
+               tidy => tidymask body for type tidy(no parameters)
+               {
+               age => 0 if context linux
+               size => irange(50000,inf,) if context linux
+               age_type => mtime if context linux
+               dirlinks => delete if context linux
+               rmdirs => yes if context linux
+               links => stop if context linux
+               }
+
+             rename => rotateme body for type rename(no parameters)
+               {
+               newname => filename if context linux
+               rotate => 4 if context linux
+               size => irange(1,2,) if context linux
+               action => nop if context linux
+               }
+
+         repository => /override
+
+   }
+
+
+Bundle myedit in the context of edit_line
+
+   ARGS:
+
+   scalar arg filename
+
+   {
+   TYPE: append
+
+      promise by 'My important line.*' (implicit) if context is any
+
+               data => New important line
+         transaction => controlbody body for type transaction(no parameters)
+               {
+               loglevel => usr1 if context linux
+               reportlevel => inform if context linux
+               ifelapsed => 10 if context linux
+               expireafter => 20 if context linux
+               }
+
+
+   TYPE: append
+
+      promise by 'This a line in $(filename)' (implicit) if context is any
+
+
+   TYPE: replace
+
+      promise by 'string.[abc]*' (implicit) if context is classes
+
+               with => $(new_value)
+              which => all
+            classes => afterX
+
+   }
+
+
+
+
+All Bodies
+
+others body for type access
+   arg parame
+
+   {
+   owner => 'root','wheel','sudo' if context milkyway
+   }
+
+myaccess body for type access(no parameters)
+   {
+   mode => +077,-02 if context any
+   owner => 'mark','siri' if context any
+   group => readstringlist(filename,) if context solaris
+   group => 'root','wheel' if context linux
+   }
+
+linkdetails body for type linkto
+   arg tofile
+
+   {
+   link_type => symbolic if context linux
+   copy_patterns =>  if context linux
+   deadlinks => kill if context linux
+   when_no_file => force if context linux
+   }
+
+controlbody body for type transaction(no parameters)
+   {
+   loglevel => usr1 if context linux
+   reportlevel => inform if context linux
+   ifelapsed => 10 if context linux
+   expireafter => 20 if context linux
+   }
+
+tripwire body for type changes(no parameters)
+   {
+   hash => md5 if context linux
+   update => yes if context linux
+   }
+
+myffilter body for type file_select(no parameters)
+   {
+   name => '.*.asc' if context linux
+   path => '/var/.*/mail','/usr/.*/mail' if context linux
+   mode => 700 if context linux
+   size => irange(10000,10000000,) if context linux
+   owner => 'mark','cell','motd' if context linux
+   group => 'ecg','mark' if context linux
+   ctime => irange(ondate(2000,1,1,0,0,0,)now,) if context linux
+   mtime => irange(ago(1,0,0,2,30,0,)now,) if context linux
+   atime => irange(date(1997,2,22,0,0,0,)now,) if context linux
+   exec_regex => /usr/bin/file $(this) (.*ascii.*) if context linux
+   filetypes => 'dir','link' if context linux
+   issymlinkto => '/dev/null','/dev/tyyS0' if context linux
+   result => type&mode if context linux
+   }
+
+tidymask body for type tidy(no parameters)
+   {
+   age => 0 if context linux
+   size => irange(50000,inf,) if context linux
+   age_type => mtime if context linux
+   dirlinks => delete if context linux
+   rmdirs => yes if context linux
+   links => stop if context linux
+   }
+
+rotateme body for type rename(no parameters)
+   {
+   newname => filename if context linux
+   rotate => 4 if context linux
+   size => irange(1,2,) if context linux
+   action => nop if context linux
+   }
+

@@ -1,0 +1,54 @@
+##################################################################
+#
+# cf.motd
+#
+# This file is used to set the message of the day file on
+# each host
+#
+##################################################################
+ 
+#####
+#
+# BEGIN cf.motd
+#
+#####
+
+control:
+
+   #
+   # This points to the file containing general text
+   #
+
+   masterfile = ( /iu/nexus/local/iu/etc/motd-master )
+   addendum   = ( /iu/nexus/local/iu/etc/motd-nexus  )
+
+editfiles:
+
+   { /etc/motd
+
+   BeginGroupIfFileIsNewer "$(masterfile)"
+        AutoCreate
+#        IncrementPointer "1"
+        DeleteLinesAfterThisMatching ".*"
+        InsertFile "$(masterfile)"
+   EndGroup
+   }
+
+  nexus::
+
+   { /etc/motd
+
+   BeginGroupIfNoLineContaining "connecting"
+        InsertFile "$(addendum)"      
+   EndGroup
+   }
+
+files:
+
+   /etc/motd mode=644 o=root g=root action=fixplain
+
+#####
+#
+# END cf.motd
+#
+#####

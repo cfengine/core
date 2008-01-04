@@ -1,0 +1,82 @@
+#################################################################
+#
+# cf.bsd - for iu.hioslo.no
+#
+# This file contains bsd specific patches
+#
+#################################################################
+
+###
+#
+# BEGIN cf.bsd
+#
+###
+
+links:
+
+    /usr/spool        ->  /var/spool
+    /local/bin/tcsh   ->  /bin/tcsh
+    /local/bin/perl   ->  /usr/bin/perl
+    /usr/lib/sendmail ->  /usr/sbin/sendmail
+
+#################################################################
+
+files:
+
+   /usr/tmp mode=1777 owner=root action=fixall
+
+#################################################################
+
+editfiles:
+
+   { /etc/inetd.conf
+
+   AppendIfNoSuchLine "finger  stream  tcp     nowait  daemon  /local/etc/in.fingerd in.fingerd"
+   AppendIfNoSuchLine "cfinger stream  tcp     nowait  daemon  /local/etc/in.cfingerd in.cfingerd"
+   }
+
+   #
+   # Comment out all lines to shut up this annoying cfengine-like
+   # script, which sends mail every day!!!
+   #
+
+   { /etc/crontab
+
+   HashCommentLinesContaining "daily"
+   HashCommentLinesContaining "weekly"
+   HashCommentLinesContaining "monthly"
+   }
+
+#################################################################
+
+directories:
+
+   #
+   # Make printer spool directories...
+   #
+
+   /var/spool/VirtualLight  o=root g=other mode=755
+
+#########################################################################
+
+copy:
+
+      $(masterfiles)/etc/printcap.client      dest=/etc/printcap mode=0644
+
+#########################################################################
+
+shellcommands:
+
+     "/local/iu/bin/BSD-pw-update"
+
+  !Hourly::
+
+    "/usr/libexec/locate.updatedb"
+    "/usr/bin/makewhatis /usr/share/man:/usr/X11R6/man:/usr/local/man:/local/gnu/man"
+
+###
+#
+# END cf.bsd
+#
+###
+

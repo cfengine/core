@@ -1,0 +1,214 @@
+#################################################################
+#
+# cf.linux - for iu.hioslo.no
+#
+# This file contains debian linux specific patches
+#
+#################################################################
+
+###
+#
+# BEGIN cf.linux
+#
+###
+
+
+###########################################################################
+
+processes:
+
+      "xntp"           matches=1 restart "/usr/sbin/xntpd"          useshell=false
+      "inetd"          signal=hup restart "/usr/sbin/inetd"         useshell=false
+      "cron"           matches=>1 restart "/etc/init.d/cron start"  useshell=dumb inform=true
+
+###########################################################################
+
+files:
+
+     /usr/bin/lpr  o=root m=4755 action=fixplain
+     /etc/printcap m=644 o=root action=fixplain
+
+     /etc m=0644 include=csh* action=fixplain r=1
+
+     /usr/bin/tcsh mode=755 o=root act=fixall
+
+     /usr/sbin/sendmail mode=4755 o=root act=fixplain
+
+     #
+     # Cert advisories
+     #
+
+      /bin/mount         m=555 o=root action=fixall
+      /bin/umount        m=555 o=root action=fixall
+
+     # /usr/bin/X11/xlock m=555 o=root action=fixall
+
+#######################################################################
+
+  disable:
+
+      /sbin/dip-3.3.7n
+      /etc/sudoers
+      /usr/bin/sudoers
+
+########################################################################
+
+links:
+
+    /bin/tcsh   ->!  /usr/bin/tcsh
+    /etc/X11/xdm/xdm-config	->! /local/iu/X11/xdm/xdm-config
+    /etc/X11/Xsession		->! /local/iu/X11/Xsession
+
+########################################################################
+
+editfiles:
+
+   { /etc/csh.cshrc
+
+   AppendIfNoSuchLine "setenv TZ 'MET-1MET DST-2,M3.5.0/2,M10.5.0/3'"
+   }
+
+    { /etc/host.conf
+
+    PrependIfNoSuchLine "order bind"
+    }
+
+   { /etc/cron.daily/standard
+
+   HashCommentLinesContaining "security"
+   }
+
+
+  #
+  # ntpd
+  #
+
+ !borg::
+
+   { /etc/init.d/xntp3
+
+   BeginGroupIfNoLineMatching ".*ntpdate.*"
+      LocateLineMatching "test.*"
+      IncrementPointer "1"
+      InsertLine "/usr/sbin/ntpdate frey.ifi.uio.no" 
+   EndGroup
+   }
+
+
+   { /etc/init.d/cron
+
+   BeginGroupIfNoLineMatching ".*/usr/sbin/start-stop.*"
+      ReplaceAll "start-stop-daemon" With "/usr/sbin/start-stop-daemon"
+   EndGroup
+   }
+
+  any::
+
+
+   { /etc/inetd.conf 
+
+   AppendIfNoSuchLine "cffix stream tcp nowait root /local/iu/bin/cfinetd cfinetd"
+   }
+
+
+#########################################################################
+
+shellcommands:
+
+  All::
+
+     #
+     # Find/locate database
+     #
+
+     "/usr/bin/updatedb"
+     "/sbin/ldconfig"
+
+  any::
+
+     "/usr/sbin/rdate nexus >/dev/null 2>&1"  # in spite of xntpd
+
+#  waldo.CPUmax::
+
+	#
+	# Disable netscape and gimp if the load is too high.
+	# CPUhigh is 60-90% load, max is 90+.
+	#
+
+#	"/bin/mv /local/bin/netscape /local/bin/netscape.cf"
+#	"/bin/chmod 0700 /local/bin/netscape.cf"
+#	"/bin/cp /local/bin/netscape.stop /local/bin/netscape"
+#	"/bin/chmod 755 /local/bin/netscape"
+
+#        "/bin/mv /local/bin/gimp /local/bin/gimp.cf"
+#        "/bin/chmod 0700 /local/bin/gimp.cf"
+#        "/bin/cp /local/bin/gimp.stop /local/bin/gimp"
+#        "/bin/chmod 755 /local/bin/gimp"
+
+#  waldo.CPUlow|waldo.CPUmedium|waldo.CPUhigh::
+
+	#	
+	# Enable netscape and gimp if load is acceptable.
+	#
+
+#	"/bin/mv /local/bin/netscape.cf /local/bin/netscape >/dev/null"
+#	"/bin/chmod 755 /local/bin/netscape"
+
+#	"/bin/mv /local/bin/gimp.cf /local/bin/gimp >/dev/null"
+#	"/bin/chmod 755 /local/bin/gimp"
+
+#  IMAPServer::
+
+     #
+     # Prune delivery database
+     #
+
+#     "/bin/su cyrus -c '/local/bin/deliver -E 3'" 
+
+#########################################################################
+
+directories:
+
+   #
+   # Make printer spool directories...
+   #
+
+   /var/spool/virtual-light o=root g=other mode=755
+   /var/spool/elektro       o=root g=other mode=755
+   /var/spool/ibsen         o=root g=other mode=755
+
+
+#########################################################################
+
+copy:
+
+       /iu/waldo/local/iu/etc/rc.local dest=/etc/rc2.d/S99rc-local mode=755
+       /iu/waldo/local/bin/todos dest=/usr/bin/todos mode=755 type=checksum
+
+       $(masterfiles)/etc/printcap.client dest=/etc/printcap mode=0644 type=checksum
+
+       $(masterfiles)/etc/S99cfd dest=/etc/rc2.d/S99cfd mode=0755
+       $(masterfiles)/etc/S99cfd dest=/etc/rc3.d/S99cfd mode=0755
+       $(masterfiles)/etc/S99cfd dest=/etc/rc4.d/S99cfd mode=0755
+       $(masterfiles)/etc/S99cfd dest=/etc/rc5.d/S99cfd mode=0755
+
+       /iu/nexus/local/gnu/lib/emacs/uio-lisp/hilit19.el
+                         dest=/usr/lib/emacs/site-lisp/hilit19.el mode=0644
+
+
+       $(masterfiles)/etc/linux-etc-ld-so-conf dest=/etc/ld.so.conf mode=644
+
+#####################################################################################
+
+tidy:
+
+   /usr/games            pattern=fortune age=0
+   /usr/lib/xemacs       pattern=* r=inf rmdirs=true age=0
+   /usr/lib/xemacs-19.14 pattern=* r=inf rmdirs=true age=0
+   /usr/bin              pattern=cfengine age=0
+
+###
+#
+# END cf.linux
+#
+###

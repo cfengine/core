@@ -1,0 +1,118 @@
+control:
+
+   actionsequence = ( directories copy editfiles files )
+
+   # Define variables
+
+   ftp = ( /usr/local/ftp )
+   uid = ( 99 )  # ftp user
+   gid = ( 99 )  # ftp group
+
+directories:
+
+ solaris::
+
+   $(ftp)/pub      mode=644 owner=root group=other
+   $(ftp)/etc      mode=111 owner=root group=other
+   $(ftp)/dev      mode=555 owner=root group=other
+   $(ftp)/usr      mode=555 owner=root group=other
+   $(ftp)/usr/lib  mode=555 owner=root group=other
+
+files:
+
+  solaris::
+
+   $(ftp)/etc/passwd mode=644 o=root    action=fixplain
+   $(ftp)/etc/shadow mode=400 o=root    action=fixplain
+   $(ftp)/pub        mode=644 owner=ftp action=fixall  recurse=inf
+
+copy:
+
+  solaris::
+
+      # Make sure ls is a trusted program by copying 
+      # a secure location...
+
+   /bin/ls dest=$(ftp)/usr/bin/ls 
+           mode=111 
+           owner=root 
+           type=checksum
+           inform=true
+           syslog=true
+
+   /etc/netconfig dest=$(ftp)/etc/netconfig mode=444 o=root
+
+   /devices/pseudo/mm@0:zero      dest=$(ftp)/dev/zero      mode=666 o=root
+   /devices/pseudo/clone@0:tcp    dest=$(ftp)/dev/tcp       mode=444 o=root
+   /devices/pseudo/clone@0:udp    dest=$(ftp)/dev/udp       mode=666 o=root
+   /devices/pseudo/tl@0:ticotsord dest=$(ftp)/dev/ticotsord mode=666 o=root
+
+   /usr/lib        dest=$(ftp)/usr/lib recurse=2     
+                   mode=444 
+                   owner=root
+                   backup=false
+                   include=ld.so*
+                   include=libc.so*
+                   include=libdl.so*
+                   include=libmp.so*
+                   include=libnsl.so*
+                   include=libsocket.so*
+                   include=nss_compat.so*
+                   include=nss_dns.so*
+                   include=nss_files.so*
+                   include=nss_nis.so*
+                   include=nss_nisplus.so*
+                   include=nss_xfn.so*
+                   include=straddr.so*
+
+   /usr/share/lib/zoneinfo dest=$(ftp)/usr/share/lib/zoneinfo
+                    mode=444 recurse=2 o=root type=binary
+
+editfiles:
+
+   solaris::
+         
+    #
+    # Make sure that umask is right for ftpd
+    # or files can be left 666 after upload!
+    #
+
+  { /etc/rc2.d/S72inetsvc
+
+  PrependIfNoSuchLine "umask 022"
+  }
+
+  { $(ftp)/etc/passwd
+
+  AutoCreate
+  EmptyEntireFilePlease
+  AppendIfNoSuchLine "ftp:x:$(uid):$(gid):Anonymous FTP:$(ftp):/bin/sync"
+  }
+
+  { $(ftp)/etc/group
+
+  AutoCreate
+  EmptyEntireFilePlease
+  AppendIfNoSuchLine "ftp::$(gid):"
+  }
+
+  {  $(ftp)/etc/shadow
+
+  AutoCreate
+  EmptyEntireFilePlease
+  AppendIfNoSuchLine "ftp:NP:6445::::::"
+  }
+
+  # Finally...useful for chown
+
+  { /etc/passwd
+
+  AppendIfNoSuchLine "ftp:x:$(uid):$(gid):Anonymous FTP:$(ftp):/bin/sync"
+  }
+
+  { /etc/group
+
+  AppendIfNoSuchLine "ftp::$(gid):"
+  }
+
+

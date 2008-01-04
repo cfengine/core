@@ -1,0 +1,72 @@
+##############################################################
+#
+# cf.groups - for iu.hio.no
+#
+# This file contains  all group/class definitions
+#
+#################################################################
+
+###
+#
+# BEGIN cf.groups
+#
+###
+
+groups:
+
+   #
+   # Define some groups
+   #
+
+   # pentiumIII with 256MB RAM
+
+   rom210 = ( daystrom panzerfaust vorlon nirvana nevermore delenn voyager borg
+              mulder duke bajor collective arrakis axis valis ubik )
+
+   # pentiumMMX with 32MB RAM
+
+   rom214 = ( wintermute roog zhora deckard usul tetsuo zodiac ix
+              thistledown jart tleilax axolotl giediprime )
+
+   rom21X = ( rom210 rom214 )
+
+   # Net75 contains all UNICES on the 128.39.74/255.255.254.0 subnet
+
+   Net75 = ( cube matrix rom21X )
+
+   x86 = ( i386 i486 i586 i686 ) # Intel
+
+   AllHomeServers   = ( nexus cube )
+   AllBinaryServers = ( nexus cube )
+
+   Laptops = ( nomad klein )
+
+   WWWServers   = ( nexus )
+   FTPservers   = ( nexus daneel cube )
+   PrimeServers = ( nexus )
+   SlaveServers = ( quetzalcoatal cube )
+   NameServers  = ( PrimeServers SlaveServers )
+   PasswdServer = ( nexus )
+   BackupHost   = ( nexus )
+   sysloghost   = ( sigmund )
+   securehosts  = ( nexus matrix sigmund )
+
+   PasswordClients = ( any -haddock -nomad -daneel -nexus )
+
+   OnTheHour    = ( Min00_05 Min05_10 Min10_15 Min15_20 Min20_25 )
+
+   All = ( Hr00.OnTheHour )
+
+   peaktime     = ( Hr10 Hr11 Hr12 Hr13 Hr14 Hr15 )
+
+   HalfHour     = ( Min30_35 Min35_40 Min40_45 Min45_50 Min50_55 )
+
+   DayTime      = ( Hr07 Hr08 Hr09 Hr10 Hr11 Hr12 Hr13 Hr14 Hr15 Hr16 Hr17 Hr18 )
+
+   CheckIntegrity = ( Hr06.OnTheHour )
+
+###
+#
+# END cf.groups
+#
+###

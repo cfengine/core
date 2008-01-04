@@ -1,0 +1,331 @@
+##############################################################
+#
+# cf.services : local network service configuration
+#
+###############################################################
+
+###
+#
+# BEGIN cf.services
+#
+###
+
+###############################################################
+
+control:
+
+ AddInstallable = ( nfs_update )
+
+###############################################################
+
+shellcommands:
+
+ nexus::
+
+  # Clear a bad RPC channel. Someone using a bad port number?
+
+  "/usr/sbin/shareall"
+
+ cube.nfs_update::
+
+  "/etc/init.d/nfs-server restart > /dev/null 2>&1"
+
+###############################################################
+
+copy:
+
+    /iu/nexus/local/iu/etc/hosts.deny dest=/etc/hosts.deny mode=644 server=nexus
+
+   !(dax|cube|sigmund)::
+
+    /iu/nexus/local/iu/etc/hosts.allow dest=/etc/hosts.allow mode=644 server=nexus
+
+   dax|cube::
+
+    /iu/nexus/local/iu/etc/hosts.allow.dax dest=/etc/hosts.allow mode=644 server=nexus
+
+   sigmund::
+
+    /iu/nexus/local/iu/etc/hosts.allow.sigmund dest=/etc/hosts.allow mode=644 server=nexus
+
+   nexus::
+
+    /iu/nexus/local/iu/etc/dfstab dest=/etc/dfs/dfstab
+    /iu/nexus/local/iu/etc/options.tcl dest=/iu/nexus/local/share/tkrat2.0/options.tcl mode=644
+
+   cube::
+
+    /iu/cube/local/iu/etc/exports.cube      dest=/etc/exports mode=644 define=nfs_update
+    /iu/cube/local/iu/etc/options.tcl       dest=/iu/cube/local/share/tkrat2.0/options.tcl mode=644
+
+   securehosts::
+
+     /iu/nexus/local/iu/etc/ssh_banner_message_secure dest=/etc/ssh2/ssh_banner_message
+                                                      mode=644 owner=root group=root
+
+  128_39_89.!securehosts::
+
+     /iu/nexus/local/iu/etc/ssh_banner_message_89 dest=/etc/ssh2/ssh_banner_message
+                                                  mode=644 owner=root group=root
+
+###############################################################
+
+links:
+
+    nexus:: # Mirroring
+
+      /etc/rsyncd.conf -> /local/iu/etc/rsyncd.conf
+
+###############################################################
+
+editfiles:
+
+  !rom21X::
+
+     { /etc/ssh2/sshd2_config
+
+     ReplaceAll "PrintMotd.*yes" With "PrintMotd no"
+     ReplaceAll ".*Ssh1Compatibility.*yes.*" With "Ssh1Compatibility no"
+     AppendIfNoSuchLine "Ssh1Compatibility no"
+     HashCommentLinesMatching ".*Sshd1Path.*"
+     DeleteLinesMatching ".*PasswordAuthentication.*"
+     DeleteLinesMatching ".*PubkeyAuthentication.*"
+     DeleteLinesMatching ".*AllowCshrcSourcingWithSubsystems.*"
+     }
+
+  securehosts:: # Limited access to certain hosts
+
+     { /etc/ssh2/sshd2_config
+
+     AppendIfNoSuchLine "AllowGroups drift"
+     AppendIfNoSuchLine "DenyGroups student,ansatt"
+     }
+
+  128_39_89.!securehosts.!haddock::
+
+     { /etc/ssh2/sshd2_config
+
+     AppendIfNoSuchLine "AllowGroups drift,ansatt"
+     AppendIfNoSuchLine "DenyGroups student"
+     }
+
+  haddock::
+
+     { /etc/ssh2/sshd2_config
+
+     DeleteLinesMatching ".*AllowGroups.*"
+     DeleteLinesMatching ".*DenyGroups.*"
+     }
+
+  128_39_74.!securehosts.!rom21X:: # Not really necessary as all are allowed by default
+
+     { /etc/ssh2/sshd2_config
+
+     AppendIfNoSuchLine "AllowGroups drift,ansatt,student"
+     }
+
+  !rom21X::
+
+     { /etc/ssh2/ssh2_config
+
+     AppendIfNoSuchLine "AuthenticationSuccessMsg no"
+     }
+
+   FTPservers::
+
+      { /etc/shells
+
+      AppendIfNoSuchLine "/bin/tcsh"
+      AppendIfNoSuchLine "/bin/bash"
+      AppendIfNoSuchLine "/local/gnu/bin/bash"
+      }
+
+   !FTPservers::
+
+      { /etc/inetd.conf
+
+      HashCommentLinesContaining "in.ftpd"
+      }
+
+   !rom21X::
+
+      { /etc/inetd.conf
+
+      DeleteLinesContaining "bootp"
+      DeleteLinesContaining "bootps"
+      AppendIfNoSuchLine    "finger stream tcp nowait nobody /local/iu/sbin/tcpd in.fingerd"
+#      AppendIfNoSuchLine    "cfinger stream tcp nowait nobody /local/iu/sbin/tcpd in.cfingerd"
+      HashCommentLinesContaining "rshd"
+      HashCommentLinesContaining "pop"
+      HashCommentLinesContaining "swat"
+      }
+
+  rom21X::
+
+    { /etc/inetd.conf
+
+    AppendIfNoSuchLine "finger stream tcp nowait nobody /usr/sbin/tcpd /local/iu/sbin/in.fingerd"
+    AppendIfNoSuchLine "cfinger stream tcp nowait nobody /usr/sbin/tcpd /local/iu/sbin/in.cfingerd"
+    }
+
+  nexus::
+
+    { /etc/inetd.conf
+
+    AppendIfNoSuchLine "netbios-ssn stream tcp nowait root /local/sbin/smbd smbd"
+    AppendIfNoSuchLine "netbios-ns dgram udp wait root /local/sbin/nmbd nmbd"
+    AppendIfNoSuchLine "rsync stream tcp nowait root /local/iu/sbin/tcpd rsync --daemon"
+    # HashCommentLinesContaining "telnet"
+    }
+
+  cube::
+
+   { /etc/inetd.conf
+
+   AppendIfNoSuchLine "netbios-ssn stream tcp nowait.100 root /local/sbin/smbd smbd"
+   AppendIfNoSuchLine "netbios-ns dgram udp wait root /local/sbin/nmbd nmbd"
+   }
+
+  !sysloghost::
+
+    { /etc/syslog.conf
+
+    AppendIfNoSuchLine "*.warning @loghost"
+    DefineClasses "syslogdhup"
+    }
+###############################################################
+
+processes:
+
+   linux::
+ 
+      SetOptionString "aucx" 
+
+   any::
+
+      "bootp"                             signal=kill exclude=rpc.bootparamd
+      "inetd"                             signal=hup inform=false
+      "cfservd" 
+                                          restart "/usr/local/sbin/cfservd"
+                                          useshell=false
+  syslogdhup::
+
+      "syslogd" signal=hup
+
+  !rom21X::
+
+    "sshd"
+         restart "/local/sbin/sshd"
+         useshell=false
+         inform=true
+
+  rom21X:: # openssh
+
+    "sshd" restart "/etc/init.d/ssh restart"
+
+   any::
+
+      "snmp"                              signal=kill
+      "powerd"                            signal=kill
+      "mibiisa"                           signal=kill
+
+#   nexus.percent_10::       # strategy, problems with stupid named
+
+#      "named" signal=term restart "/local/sbin/named -u dns" inform=false
+
+   nexus::
+
+      "fingerd"                           restart "/local/etc/fingerd"
+                                          useshell=false
+      "mysqld"                            restart "/local/iu/bin/StartMysql"
+                                          useshell=false
+
+      "named"             restart "/local/sbin/named -u dns" useshell=false inform=true
+
+    quetzalcoatal::
+
+      "named"             restart "/local/sbin/named -u dns -c /local/etc/named.conf.slave" inform=true
+
+    cube:: # until we can use v9
+
+      "named"             restart "/local/iu/bind/bin/named -u dns -g nogroup" inform=true
+
+    NameServers.dns_update::
+
+      "named"		signal=hup
+
+    cube.Hr05:: # used kill before, will HUP do?
+
+      "rpc.mountd"    signal=hup  # restart "/usr/sbin/rpc.mountd"
+      "rpc.nfsd"      signal=hup  # restart "/usr/sbin/rpc.nfsd"
+
+#    sunos_5_6::
+
+#      "identd"   restart "/local/sbin/identd" inform=true
+
+###############################################################
+
+files:
+
+   PrimeServers::
+
+    /local/iu/dns/pz		o=dns m=644 act=fixall r=1 exclude=Fixserial
+    /local/iu/dns/pz/Fixserial	m=755 action=fixplain
+
+   SlaveServers::
+
+    /local/iu/dns/sz		o=dns m=644 act=fixall r=1
+
+   NameServers::
+
+    /local/iu/logs/admin	o=dns m=644 act=fixplain
+    /local/iu/logs/security	o=dns m=644 act=fixplain
+    /local/iu/logs/updates	o=dns m=644 act=fixplain
+    /local/iu/logs/xfer		o=dns m=644 act=fixplain
+
+   WWWServers.Rest.Hr00.HalfHour::
+
+      /local/iu/etc/apache                    m=644  act=fixall r=inf
+
+   FTPservers.nexus::
+
+      #
+      # Make sure anonymous ftp areas have the correct
+      # protection, or logins won't be able to read
+      # files - or perhaps a security risk. This is
+      # solaris 2 specific...
+      #
+
+      $(ftp)/pub        mode=644 o=root g=other      act=fixall
+      $(ftp)/pub        mode=644                     act=fixall  r=inf
+
+      $(ftp)/etc        mode=111 o=root g=other      act=fixdirs
+      $(ftp)/usr/bin/ls mode=111 o=root g=other      act=fixall
+      $(ftp)/dev        mode=555 o=root g=other      act=fixall
+      $(ftp)/usr        mode=555 o=root g=other      act=fixdirs
+
+  !rom21X::
+
+    /etc/ssh2 mode=755 o=root g=root act=fixall # set wrong by install
+
+###############################################################
+
+disable:
+
+  nexus.Sunday.All::
+
+   /var/log/xferlog rotate=3
+
+  cube.Sunday.All::
+
+   /var/log/xferlog rotate=3
+
+#  Sunday.nexus::
+
+#   /local/etc/fingerdir/userdata rotate=empty
+
+###
+#
+# END cf.services
+#
+###

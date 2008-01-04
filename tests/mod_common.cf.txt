@@ -1,0 +1,673 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle myPromises in the context of agent
+
+   ARGS:
+
+   scalar arg daemon_list
+
+   scalar arg s1
+
+   scalar arg s2
+
+   {
+   TYPE: classes
+
+      promise by 'alias' (implicit) if context is linux
+
+                 or => 
+
+      promise by 'allok' (implicit) if context is linux
+
+                and => 
+
+      promise by 'Strategy' (implicit) if context is linux
+
+               dist => 
+
+   TYPE: vars
+
+      promise by 'myname' (implicit) if context is linux
+
+             string => value in quotes
+             policy => constant
+
+      promise by 'derived' (implicit) if context is linux
+
+             string => includes $(name) previously defined
+             policy => free
+
+      promise by 'list2' (implicit) if context is linux
+
+              ilist => 
+
+      promise by 'users' (implicit) if context is linux
+
+              slist => 
+             policy => constant
+
+      promise by 'Neighbour[fromhost]' (implicit) if context is linux
+
+             string => tohost
+
+      promise by 'Adj[tohost]' (implicit) if context is linux
+
+             string => nexthost
+
+   }
+
+
+Bundle main in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: classes
+
+      promise by 'alias1' (implicit) if context is linux
+
+                 or => 
+
+      promise by 'alias2' (implicit) if context is linux
+
+                 or => 
+
+      promise by 'alias3' (implicit) if context is linux
+
+                and => 
+
+      promise by 'alias' (implicit) if context is linux
+
+         expression => solaris&x86|linux|mac
+
+   TYPE: vars
+
+      promise by 'x' (implicit) if context is linux
+
+             string => 1,2,3
+
+      promise by 'y' (implicit) if context is linux
+
+               real => 3.22
+
+   TYPE: report
+
+      promise by 'Alert Message X' to 'email','html'if context is linux
+
+         transaction => filters
+
+   }
+
+
+Bundle Update in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: vars
+
+   }
+
+
+Bundle main in the context of server
+
+   ARGS:
+
+   {
+   TYPE: vars
+
+      promise by 'portnumber' (implicit) if context is linux
+
+                int => 5803
+
+      promise by 'ok' (implicit) if context is linux
+
+              slist => 
+
+   }
+
+
+Bundle filetest in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: files
+
+      promise by '/path/file.*' (implicit) if context is any
+
+          edit_line => myedit(${this},)
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => myfilter
+            changes => tripwire body for type changes(no parameters)
+               {
+               hash => md5 if context linux
+               update => yes if context linux
+               }
+
+            recurse => inf
+
+      promise by '$(filelist)' (implicit) if context is any
+
+           edit_xml => insertlist($(filelist),)
+          edit_line => diddle
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+             access => others body for type access
+               arg parame
+
+               {
+               owner => 'root','wheel','sudo' if context milkyway
+               }
+
+
+      promise by '/etc/xyz' to cfagentif context is any
+
+          edit_line => myedit(${this},)
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+
+      promise by '/usr/local' (implicit) if context is any
+
+             linkto => linkdetails body for type linkto
+               arg tofile
+
+               {
+               link_type => symbolic if context linux
+               copy_patterns =>  if context linux
+               deadlinks => kill if context linux
+               when_no_file => force if context linux
+               }
+
+
+      promise by '/var' (implicit) if context is any
+
+            recurse => inf
+         name_select => fish.*
+               tidy => tidymask body for type tidy(no parameters)
+               {
+               age => 0 if context linux
+               size => irange(50000,inf,) if context linux
+               age_type => mtime if context linux
+               dirlinks => delete if context linux
+               rmdirs => yes if context linux
+               links => stop if context linux
+               }
+
+             rename => rotateme body for type rename(no parameters)
+               {
+               newname => filename if context linux
+               rotate => 4 if context linux
+               size => irange(1,2,) if context linux
+               action => nop if context linux
+               }
+
+         repository => /override
+
+   }
+
+
+Bundle myedit in the context of edit_line
+
+   ARGS:
+
+   scalar arg filename
+
+   {
+   TYPE: append
+
+      promise by 'My important line.*' (implicit) if context is any
+
+               data => New important line
+         transaction => controlbody body for type transaction(no parameters)
+               {
+               loglevel => usr1 if context linux
+               reportlevel => inform if context linux
+               ifelapsed => 10 if context linux
+               expireafter => 20 if context linux
+               }
+
+
+   TYPE: append
+
+      promise by 'This a line in $(filename)' (implicit) if context is any
+
+
+   TYPE: replace
+
+      promise by 'string.[abc]*' (implicit) if context is classes
+
+               with => $(new_value)
+              which => all
+            classes => afterX
+
+   }
+
+
+Bundle testcopy in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: vars
+
+      promise by 'basedir' (implicit) if context is any
+
+             string => /masterfiles
+
+      promise by 'named_files' (implicit) if context is any
+
+              slist => 
+
+      promise by 'servers' (implicit) if context is any
+
+              slist => 
+
+      promise by 'bla' (implicit) if context is any
+
+              slist => 
+
+      promise by 'OTHER' (implicit) if context is any
+
+             string => scalar
+
+   TYPE: files
+
+      promise by '/dest/files' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers => '$(server)','failover1' if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger => 'tag1','tag2' if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => crit
+            recurse => inf
+
+      promise by '/dest/files' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers => '$(server)','failover1' if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger => 'tag1','tag2' if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => crit
+
+      promise by '$(basedir)/$(named_files)/vm.conf' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers => '$(server)','failover1' if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger => 'tag1','tag2' if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => crit
+
+      promise by '$(basedir)/data_from_$(servers)/$(named_files).conf' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers => '$(server)','failover1' if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger => 'tag1','tag2' if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => crit
+
+      promise by '$(basedir)/$(named_files)/vm.conf' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers => '$(server)','failover1' if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger => 'tag1','tag2' if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02 if context any
+               owner => 'mark','siri' if context any
+               group => readstringlist(filename,) if context solaris
+               group => 'root','wheel' if context linux
+               }
+
+         file_select => crit
+
+   }
+
+
+Bundle myscripts in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: executables
+
+      promise by '/script/command' (implicit) if context is any
+
+               args => -d -v -t
+         containment => sandbox body for type containment(no parameters)
+               {
+               useshell => true if context any
+               umask => 077 if context any
+               owner => mysql if context any
+               group => daemon if context any
+               chdir => /outputs if context any
+               chroot => /sandbox if context any
+               }
+
+             module => true
+            timeout => 10
+         background => false
+         transaction => standard body for type transaction(no parameters)
+               {
+               ifelapsed => 10 if context any
+               }
+
+            classes => react(command,)
+
+   }
+
+
+
+
+All Bodies
+
+control body for type common(no parameters)
+   {
+   bundlesequence => update if context any
+   inputs => '../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf' if context any
+   }
+
+control body for type monitor(no parameters)
+   {
+   emailfrom => mark@iu.hio.no if context solaris
+   emailto => cfengine@domain.tld if context solaris
+   threshold => 0.3 if context solaris
+   forgetrate => 0.7 if context solaris
+   }
+
+others body for type access
+   arg parame
+
+   {
+   owner => 'root','wheel','sudo' if context milkyway
+   }
+
+myaccess body for type access(no parameters)
+   {
+   mode => +077,-02 if context any
+   owner => 'mark','siri' if context any
+   group => readstringlist(filename,) if context solaris
+   group => 'root','wheel' if context linux
+   }
+
+linkdetails body for type linkto
+   arg tofile
+
+   {
+   link_type => symbolic if context linux
+   copy_patterns =>  if context linux
+   deadlinks => kill if context linux
+   when_no_file => force if context linux
+   }
+
+controlbody body for type transaction(no parameters)
+   {
+   loglevel => usr1 if context linux
+   reportlevel => inform if context linux
+   ifelapsed => 10 if context linux
+   expireafter => 20 if context linux
+   }
+
+tripwire body for type changes(no parameters)
+   {
+   hash => md5 if context linux
+   update => yes if context linux
+   }
+
+myffilter body for type file_select(no parameters)
+   {
+   name => '.*.asc' if context linux
+   path => '/var/.*/mail','/usr/.*/mail' if context linux
+   mode => 700 if context linux
+   size => irange(10000,10000000,) if context linux
+   owner => 'mark','cell','motd' if context linux
+   group => 'ecg','mark' if context linux
+   ctime => irange(ondate(2000,1,1,0,0,0,)now,) if context linux
+   mtime => irange(ago(1,0,0,2,30,0,)now,) if context linux
+   atime => irange(date(1997,2,22,0,0,0,)now,) if context linux
+   exec_regex => /usr/bin/file $(this) (.*ascii.*) if context linux
+   filetypes => 'dir','link' if context linux
+   issymlinkto => '/dev/null','/dev/tyyS0' if context linux
+   result => type&mode if context linux
+   }
+
+tidymask body for type tidy(no parameters)
+   {
+   age => 0 if context linux
+   size => irange(50000,inf,) if context linux
+   age_type => mtime if context linux
+   dirlinks => delete if context linux
+   rmdirs => yes if context linux
+   links => stop if context linux
+   }
+
+rotateme body for type rename(no parameters)
+   {
+   newname => filename if context linux
+   rotate => 4 if context linux
+   size => irange(1,2,) if context linux
+   action => nop if context linux
+   }
+
+mycopy body for type copyfrom
+   arg from
+   arg server
+
+   {
+   source => $(from) if context any
+   servers => '$(server)','failover1' if context any
+   action => fix if context any
+   backup => true if context any
+   repository => /my/repos if context any
+   stealth => true if context any
+   preserve => true if context any
+   linkpattern => .*fish.* if context any
+   xdev => true if context any
+   compare => mtime if context any
+   linktype => absolute if context any
+   typecheck => true if context any
+   forceupdate => false if context any
+   forcedirs => false if context any
+   forceipv4 => false if context any
+   size => 0,50000 if context any
+   trigger => 'tag1','tag2' if context any
+   trustkey => true if context any
+   encrypt => true if context any
+   verify => true if context any
+   purge => false if context any
+   findertype => MacOSX if context any
+   }
+
+sandbox body for type containment(no parameters)
+   {
+   useshell => true if context any
+   umask => 077 if context any
+   owner => mysql if context any
+   group => daemon if context any
+   chdir => /outputs if context any
+   chroot => /sandbox if context any
+   }
+
+standard body for type transaction(no parameters)
+   {
+   ifelapsed => 10 if context any
+   }
+

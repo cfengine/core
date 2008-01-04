@@ -1,0 +1,239 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle testcopy in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: vars
+
+      promise by 'basedir' (implicit) if context is any
+
+             string => /masterfiles
+
+      promise by 'named_files' (implicit) if context is any
+
+              slist =>  {'one','two','three'}
+
+      promise by 'servers' (implicit) if context is any
+
+              slist =>  {'nexus','cube','eternity'}
+
+      promise by 'bla' (implicit) if context is any
+
+              slist =>  {'one','two','three'}
+
+      promise by 'OTHER' (implicit) if context is any
+
+             string => scalar
+
+   TYPE: files
+
+      promise by '/dest/files' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers =>  {'$(server)','failover1'} if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger =>  {'tag1','tag2'} if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess
+         file_select => crit
+            recurse => inf
+
+      promise by '/dest/files' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers =>  {'$(server)','failover1'} if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger =>  {'tag1','tag2'} if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess
+         file_select => crit
+
+      promise by '$(basedir)/$(named_files)/vm.conf' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers =>  {'$(server)','failover1'} if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger =>  {'tag1','tag2'} if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess
+         file_select => crit
+
+      promise by '$(basedir)/data_from_$(servers)/$(named_files).conf' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers =>  {'$(server)','failover1'} if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger =>  {'tag1','tag2'} if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess
+         file_select => crit
+
+      promise by '$(basedir)/$(named_files)/vm.conf' (implicit) if context is any
+
+           copyfrom => mycopy body for type copyfrom
+               arg from
+               arg server
+
+               {
+               source => $(from) if context any
+               servers =>  {'$(server)','failover1'} if context any
+               action => fix if context any
+               backup => true if context any
+               repository => /my/repos if context any
+               stealth => true if context any
+               preserve => true if context any
+               linkpattern => .*fish.* if context any
+               xdev => true if context any
+               compare => mtime if context any
+               linktype => absolute if context any
+               typecheck => true if context any
+               forceupdate => false if context any
+               forcedirs => false if context any
+               forceipv4 => false if context any
+               size => 0,50000 if context any
+               trigger =>  {'tag1','tag2'} if context any
+               trustkey => true if context any
+               encrypt => true if context any
+               verify => true if context any
+               purge => false if context any
+               findertype => MacOSX if context any
+               }
+
+             access => myaccess
+         file_select => crit
+
+   }
+
+
+
+
+All Bodies
+
+mycopy body for type copyfrom
+   arg from
+   arg server
+
+   {
+   source => $(from) if context any
+   servers =>  {'$(server)','failover1'} if context any
+   action => fix if context any
+   backup => true if context any
+   repository => /my/repos if context any
+   stealth => true if context any
+   preserve => true if context any
+   linkpattern => .*fish.* if context any
+   xdev => true if context any
+   compare => mtime if context any
+   linktype => absolute if context any
+   typecheck => true if context any
+   forceupdate => false if context any
+   forcedirs => false if context any
+   forceipv4 => false if context any
+   size => 0,50000 if context any
+   trigger =>  {'tag1','tag2'} if context any
+   trustkey => true if context any
+   encrypt => true if context any
+   verify => true if context any
+   purge => false if context any
+   findertype => MacOSX if context any
+   }
+

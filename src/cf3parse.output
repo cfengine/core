@@ -1,0 +1,1105 @@
+State 37 conflicts: 2 shift/reduce
+State 39 conflicts: 1 shift/reduce
+State 47 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: specification $end
+
+    1 specification: /* empty */
+    2              | blocks
+
+    3 blocks: block
+    4       | blocks block
+
+    5 block: bundle typeid blockid bundlebody
+    6      | bundle typeid blockid usearglist bundlebody
+    7      | body typeid blockid bodybody
+    8      | body typeid blockid usearglist bodybody
+
+    9 bundle: BUNDLE
+
+   10 body: BODY
+
+   11 typeid: ID
+
+   12 blockid: ID
+
+   13 usearglist: '(' aitems ')'
+
+   14 aitems: aitem
+   15       | aitem ',' aitems
+   16       | /* empty */
+
+   17 aitem: ID
+
+   18 @1: /* empty */
+
+   19 bundlebody: '{' @1 statements '}'
+
+   20 statements: statement
+   21           | statements statement
+
+   22 statement: category
+   23          | classpromises
+
+   24 @2: /* empty */
+
+   25 bodybody: '{' @2 bodyattribs '}'
+
+   26 bodyattribs: bodyattrib
+   27            | bodyattribs bodyattrib
+
+   28 bodyattrib: class
+   29           | selections
+
+   30 selections: selection
+   31           | selections selection
+
+   32 @3: /* empty */
+
+   33 selection: id ASSIGN rval @3 ';'
+
+   34 classpromises: classpromise
+   35              | classpromises classpromise
+
+   36 classpromise: class
+   37             | promises
+
+   38 promises: promise
+   39         | promises promise
+
+   40 category: CATEGORY
+
+   41 @4: /* empty */
+
+   42 promise: object @4 constraints ';'
+
+   43 constraints: constraint
+   44            | constraints ',' constraint
+   45            | /* empty */
+
+   46 constraint: id ASSIGN rval
+
+   47 class: CLASS
+
+   48 id: ID
+
+   49 rval: ID
+   50     | QSTRING
+   51     | list
+   52     | usefunction
+
+   53 list: '{' litems '}'
+
+   54 litems: litem
+   55       | litems ',' litem
+   56       | /* empty */
+
+   57 litem: ID
+   58      | QSTRING
+   59      | usefunction
+
+   60 functionid: ID
+
+   61 object: QSTRING
+
+   62 usefunction: functionid givearglist
+
+   63 @5: /* empty */
+
+   64 givearglist: '(' @5 gaitems ')'
+
+   65 gaitems: gaitem
+   66        | gaitems ',' gaitem
+   67        | /* empty */
+
+   68 gaitem: ID
+   69       | QSTRING
+   70       | usefunction
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 13 64
+')' (41) 13 64
+',' (44) 15 44 55 66
+';' (59) 33 42
+'{' (123) 19 25 53
+'}' (125) 19 25 53
+error (256)
+ID (258) 11 12 17 48 49 57 60 68
+QSTRING (259) 50 58 61 69
+CLASS (260) 47
+CATEGORY (261) 40
+BUNDLE (262) 9
+BODY (263) 10
+ASSIGN (264) 33 46
+
+
+Nonterminals, with rules where they appear
+
+$accept (16)
+    on left: 0
+specification (17)
+    on left: 1 2, on right: 0
+blocks (18)
+    on left: 3 4, on right: 2 4
+block (19)
+    on left: 5 6 7 8, on right: 3 4
+bundle (20)
+    on left: 9, on right: 5 6
+body (21)
+    on left: 10, on right: 7 8
+typeid (22)
+    on left: 11, on right: 5 6 7 8
+blockid (23)
+    on left: 12, on right: 5 6 7 8
+usearglist (24)
+    on left: 13, on right: 6 8
+aitems (25)
+    on left: 14 15 16, on right: 13 15
+aitem (26)
+    on left: 17, on right: 14 15
+bundlebody (27)
+    on left: 19, on right: 5 6
+@1 (28)
+    on left: 18, on right: 19
+statements (29)
+    on left: 20 21, on right: 19 21
+statement (30)
+    on left: 22 23, on right: 20 21
+bodybody (31)
+    on left: 25, on right: 7 8
+@2 (32)
+    on left: 24, on right: 25
+bodyattribs (33)
+    on left: 26 27, on right: 25 27
+bodyattrib (34)
+    on left: 28 29, on right: 26 27
+selections (35)
+    on left: 30 31, on right: 29 31
+selection (36)
+    on left: 33, on right: 30 31
+@3 (37)
+    on left: 32, on right: 33
+classpromises (38)
+    on left: 34 35, on right: 23 35
+classpromise (39)
+    on left: 36 37, on right: 34 35
+promises (40)
+    on left: 38 39, on right: 37 39
+category (41)
+    on left: 40, on right: 22
+promise (42)
+    on left: 42, on right: 38 39
+@4 (43)
+    on left: 41, on right: 42
+constraints (44)
+    on left: 43 44 45, on right: 42 44
+constraint (45)
+    on left: 46, on right: 43 44
+class (46)
+    on left: 47, on right: 28 36
+id (47)
+    on left: 48, on right: 33 46
+rval (48)
+    on left: 49 50 51 52, on right: 33 46
+list (49)
+    on left: 53, on right: 51
+litems (50)
+    on left: 54 55 56, on right: 53 55
+litem (51)
+    on left: 57 58 59, on right: 54 55
+functionid (52)
+    on left: 60, on right: 62
+object (53)
+    on left: 61, on right: 42
+usefunction (54)
+    on left: 62, on right: 52 59 70
+givearglist (55)
+    on left: 64, on right: 62
+@5 (56)
+    on left: 63, on right: 64
+gaitems (57)
+    on left: 65 66 67, on right: 64 66
+gaitem (58)
+    on left: 68 69 70, on right: 65 66
+
+
+state 0
+
+    0 $accept: . specification $end
+
+    BUNDLE  shift, and go to state 1
+    BODY    shift, and go to state 2
+
+    $default  reduce using rule 1 (specification)
+
+    specification  go to state 3
+    blocks         go to state 4
+    block          go to state 5
+    bundle         go to state 6
+    body           go to state 7
+
+
+state 1
+
+    9 bundle: BUNDLE .
+
+    $default  reduce using rule 9 (bundle)
+
+
+state 2
+
+   10 body: BODY .
+
+    $default  reduce using rule 10 (body)
+
+
+state 3
+
+    0 $accept: specification . $end
+
+    $end  shift, and go to state 8
+
+
+state 4
+
+    2 specification: blocks .  [$end]
+    4 blocks: blocks . block
+
+    BUNDLE  shift, and go to state 1
+    BODY    shift, and go to state 2
+
+    $default  reduce using rule 2 (specification)
+
+    block   go to state 9
+    bundle  go to state 6
+    body    go to state 7
+
+
+state 5
+
+    3 blocks: block .
+
+    $default  reduce using rule 3 (blocks)
+
+
+state 6
+
+    5 block: bundle . typeid blockid bundlebody
+    6      | bundle . typeid blockid usearglist bundlebody
+
+    ID  shift, and go to state 10
+
+    typeid  go to state 11
+
+
+state 7
+
+    7 block: body . typeid blockid bodybody
+    8      | body . typeid blockid usearglist bodybody
+
+    ID  shift, and go to state 10
+
+    typeid  go to state 12
+
+
+state 8
+
+    0 $accept: specification $end .
+
+    $default  accept
+
+
+state 9
+
+    4 blocks: blocks block .
+
+    $default  reduce using rule 4 (blocks)
+
+
+state 10
+
+   11 typeid: ID .
+
+    $default  reduce using rule 11 (typeid)
+
+
+state 11
+
+    5 block: bundle typeid . blockid bundlebody
+    6      | bundle typeid . blockid usearglist bundlebody
+
+    ID  shift, and go to state 13
+
+    blockid  go to state 14
+
+
+state 12
+
+    7 block: body typeid . blockid bodybody
+    8      | body typeid . blockid usearglist bodybody
+
+    ID  shift, and go to state 13
+
+    blockid  go to state 15
+
+
+state 13
+
+   12 blockid: ID .
+
+    $default  reduce using rule 12 (blockid)
+
+
+state 14
+
+    5 block: bundle typeid blockid . bundlebody
+    6      | bundle typeid blockid . usearglist bundlebody
+
+    '('  shift, and go to state 16
+    '{'  shift, and go to state 17
+
+    usearglist  go to state 18
+    bundlebody  go to state 19
+
+
+state 15
+
+    7 block: body typeid blockid . bodybody
+    8      | body typeid blockid . usearglist bodybody
+
+    '('  shift, and go to state 16
+    '{'  shift, and go to state 20
+
+    usearglist  go to state 21
+    bodybody    go to state 22
+
+
+state 16
+
+   13 usearglist: '(' . aitems ')'
+
+    ID  shift, and go to state 23
+
+    $default  reduce using rule 16 (aitems)
+
+    aitems  go to state 24
+    aitem   go to state 25
+
+
+state 17
+
+   19 bundlebody: '{' . @1 statements '}'
+
+    $default  reduce using rule 18 (@1)
+
+    @1  go to state 26
+
+
+state 18
+
+    6 block: bundle typeid blockid usearglist . bundlebody
+
+    '{'  shift, and go to state 17
+
+    bundlebody  go to state 27
+
+
+state 19
+
+    5 block: bundle typeid blockid bundlebody .
+
+    $default  reduce using rule 5 (block)
+
+
+state 20
+
+   25 bodybody: '{' . @2 bodyattribs '}'
+
+    $default  reduce using rule 24 (@2)
+
+    @2  go to state 28
+
+
+state 21
+
+    8 block: body typeid blockid usearglist . bodybody
+
+    '{'  shift, and go to state 20
+
+    bodybody  go to state 29
+
+
+state 22
+
+    7 block: body typeid blockid bodybody .
+
+    $default  reduce using rule 7 (block)
+
+
+state 23
+
+   17 aitem: ID .
+
+    $default  reduce using rule 17 (aitem)
+
+
+state 24
+
+   13 usearglist: '(' aitems . ')'
+
+    ')'  shift, and go to state 30
+
+
+state 25
+
+   14 aitems: aitem .  [')']
+   15       | aitem . ',' aitems
+
+    ','  shift, and go to state 31
+
+    $default  reduce using rule 14 (aitems)
+
+
+state 26
+
+   19 bundlebody: '{' @1 . statements '}'
+
+    QSTRING   shift, and go to state 32
+    CLASS     shift, and go to state 33
+    CATEGORY  shift, and go to state 34
+
+    statements     go to state 35
+    statement      go to state 36
+    classpromises  go to state 37
+    classpromise   go to state 38
+    promises       go to state 39
+    category       go to state 40
+    promise        go to state 41
+    class          go to state 42
+    object         go to state 43
+
+
+state 27
+
+    6 block: bundle typeid blockid usearglist bundlebody .
+
+    $default  reduce using rule 6 (block)
+
+
+state 28
+
+   25 bodybody: '{' @2 . bodyattribs '}'
+
+    ID     shift, and go to state 44
+    CLASS  shift, and go to state 33
+
+    bodyattribs  go to state 45
+    bodyattrib   go to state 46
+    selections   go to state 47
+    selection    go to state 48
+    class        go to state 49
+    id           go to state 50
+
+
+state 29
+
+    8 block: body typeid blockid usearglist bodybody .
+
+    $default  reduce using rule 8 (block)
+
+
+state 30
+
+   13 usearglist: '(' aitems ')' .
+
+    $default  reduce using rule 13 (usearglist)
+
+
+state 31
+
+   15 aitems: aitem ',' . aitems
+
+    ID  shift, and go to state 23
+
+    $default  reduce using rule 16 (aitems)
+
+    aitems  go to state 51
+    aitem   go to state 25
+
+
+state 32
+
+   61 object: QSTRING .
+
+    $default  reduce using rule 61 (object)
+
+
+state 33
+
+   47 class: CLASS .
+
+    $default  reduce using rule 47 (class)
+
+
+state 34
+
+   40 category: CATEGORY .
+
+    $default  reduce using rule 40 (category)
+
+
+state 35
+
+   19 bundlebody: '{' @1 statements . '}'
+   21 statements: statements . statement
+
+    QSTRING   shift, and go to state 32
+    CLASS     shift, and go to state 33
+    CATEGORY  shift, and go to state 34
+    '}'       shift, and go to state 52
+
+    statement      go to state 53
+    classpromises  go to state 37
+    classpromise   go to state 38
+    promises       go to state 39
+    category       go to state 40
+    promise        go to state 41
+    class          go to state 42
+    object         go to state 43
+
+
+state 36
+
+   20 statements: statement .
+
+    $default  reduce using rule 20 (statements)
+
+
+state 37
+
+   23 statement: classpromises .  [QSTRING, CLASS, CATEGORY, '}']
+   35 classpromises: classpromises . classpromise
+
+    QSTRING  shift, and go to state 32
+    CLASS    shift, and go to state 33
+
+    QSTRING   [reduce using rule 23 (statement)]
+    CLASS     [reduce using rule 23 (statement)]
+    $default  reduce using rule 23 (statement)
+
+    classpromise  go to state 54
+    promises      go to state 39
+    promise       go to state 41
+    class         go to state 42
+    object        go to state 43
+
+
+state 38
+
+   34 classpromises: classpromise .
+
+    $default  reduce using rule 34 (classpromises)
+
+
+state 39
+
+   37 classpromise: promises .  [QSTRING, CLASS, CATEGORY, '}']
+   39 promises: promises . promise
+
+    QSTRING  shift, and go to state 32
+
+    QSTRING   [reduce using rule 37 (classpromise)]
+    $default  reduce using rule 37 (classpromise)
+
+    promise  go to state 55
+    object   go to state 43
+
+
+state 40
+
+   22 statement: category .
+
+    $default  reduce using rule 22 (statement)
+
+
+state 41
+
+   38 promises: promise .
+
+    $default  reduce using rule 38 (promises)
+
+
+state 42
+
+   36 classpromise: class .
+
+    $default  reduce using rule 36 (classpromise)
+
+
+state 43
+
+   42 promise: object . @4 constraints ';'
+
+    $default  reduce using rule 41 (@4)
+
+    @4  go to state 56
+
+
+state 44
+
+   48 id: ID .
+
+    $default  reduce using rule 48 (id)
+
+
+state 45
+
+   25 bodybody: '{' @2 bodyattribs . '}'
+   27 bodyattribs: bodyattribs . bodyattrib
+
+    ID     shift, and go to state 44
+    CLASS  shift, and go to state 33
+    '}'    shift, and go to state 57
+
+    bodyattrib  go to state 58
+    selections  go to state 47
+    selection   go to state 48
+    class       go to state 49
+    id          go to state 50
+
+
+state 46
+
+   26 bodyattribs: bodyattrib .
+
+    $default  reduce using rule 26 (bodyattribs)
+
+
+state 47
+
+   29 bodyattrib: selections .  [ID, CLASS, '}']
+   31 selections: selections . selection
+
+    ID  shift, and go to state 44
+
+    ID        [reduce using rule 29 (bodyattrib)]
+    $default  reduce using rule 29 (bodyattrib)
+
+    selection  go to state 59
+    id         go to state 50
+
+
+state 48
+
+   30 selections: selection .
+
+    $default  reduce using rule 30 (selections)
+
+
+state 49
+
+   28 bodyattrib: class .
+
+    $default  reduce using rule 28 (bodyattrib)
+
+
+state 50
+
+   33 selection: id . ASSIGN rval @3 ';'
+
+    ASSIGN  shift, and go to state 60
+
+
+state 51
+
+   15 aitems: aitem ',' aitems .
+
+    $default  reduce using rule 15 (aitems)
+
+
+state 52
+
+   19 bundlebody: '{' @1 statements '}' .
+
+    $default  reduce using rule 19 (bundlebody)
+
+
+state 53
+
+   21 statements: statements statement .
+
+    $default  reduce using rule 21 (statements)
+
+
+state 54
+
+   35 classpromises: classpromises classpromise .
+
+    $default  reduce using rule 35 (classpromises)
+
+
+state 55
+
+   39 promises: promises promise .
+
+    $default  reduce using rule 39 (promises)
+
+
+state 56
+
+   42 promise: object @4 . constraints ';'
+
+    ID  shift, and go to state 44
+
+    $default  reduce using rule 45 (constraints)
+
+    constraints  go to state 61
+    constraint   go to state 62
+    id           go to state 63
+
+
+state 57
+
+   25 bodybody: '{' @2 bodyattribs '}' .
+
+    $default  reduce using rule 25 (bodybody)
+
+
+state 58
+
+   27 bodyattribs: bodyattribs bodyattrib .
+
+    $default  reduce using rule 27 (bodyattribs)
+
+
+state 59
+
+   31 selections: selections selection .
+
+    $default  reduce using rule 31 (selections)
+
+
+state 60
+
+   33 selection: id ASSIGN . rval @3 ';'
+
+    ID       shift, and go to state 64
+    QSTRING  shift, and go to state 65
+    '{'      shift, and go to state 66
+
+    rval         go to state 67
+    list         go to state 68
+    functionid   go to state 69
+    usefunction  go to state 70
+
+
+state 61
+
+   42 promise: object @4 constraints . ';'
+   44 constraints: constraints . ',' constraint
+
+    ','  shift, and go to state 71
+    ';'  shift, and go to state 72
+
+
+state 62
+
+   43 constraints: constraint .
+
+    $default  reduce using rule 43 (constraints)
+
+
+state 63
+
+   46 constraint: id . ASSIGN rval
+
+    ASSIGN  shift, and go to state 73
+
+
+state 64
+
+   49 rval: ID .  [',', ';']
+   60 functionid: ID .  ['(']
+
+    '('       reduce using rule 60 (functionid)
+    $default  reduce using rule 49 (rval)
+
+
+state 65
+
+   50 rval: QSTRING .
+
+    $default  reduce using rule 50 (rval)
+
+
+state 66
+
+   53 list: '{' . litems '}'
+
+    ID       shift, and go to state 74
+    QSTRING  shift, and go to state 75
+
+    $default  reduce using rule 56 (litems)
+
+    litems       go to state 76
+    litem        go to state 77
+    functionid   go to state 69
+    usefunction  go to state 78
+
+
+state 67
+
+   33 selection: id ASSIGN rval . @3 ';'
+
+    $default  reduce using rule 32 (@3)
+
+    @3  go to state 79
+
+
+state 68
+
+   51 rval: list .
+
+    $default  reduce using rule 51 (rval)
+
+
+state 69
+
+   62 usefunction: functionid . givearglist
+
+    '('  shift, and go to state 80
+
+    givearglist  go to state 81
+
+
+state 70
+
+   52 rval: usefunction .
+
+    $default  reduce using rule 52 (rval)
+
+
+state 71
+
+   44 constraints: constraints ',' . constraint
+
+    ID  shift, and go to state 44
+
+    constraint  go to state 82
+    id          go to state 63
+
+
+state 72
+
+   42 promise: object @4 constraints ';' .
+
+    $default  reduce using rule 42 (promise)
+
+
+state 73
+
+   46 constraint: id ASSIGN . rval
+
+    ID       shift, and go to state 64
+    QSTRING  shift, and go to state 65
+    '{'      shift, and go to state 66
+
+    rval         go to state 83
+    list         go to state 68
+    functionid   go to state 69
+    usefunction  go to state 70
+
+
+state 74
+
+   57 litem: ID .  [',', '}']
+   60 functionid: ID .  ['(']
+
+    '('       reduce using rule 60 (functionid)
+    $default  reduce using rule 57 (litem)
+
+
+state 75
+
+   58 litem: QSTRING .
+
+    $default  reduce using rule 58 (litem)
+
+
+state 76
+
+   53 list: '{' litems . '}'
+   55 litems: litems . ',' litem
+
+    ','  shift, and go to state 84
+    '}'  shift, and go to state 85
+
+
+state 77
+
+   54 litems: litem .
+
+    $default  reduce using rule 54 (litems)
+
+
+state 78
+
+   59 litem: usefunction .
+
+    $default  reduce using rule 59 (litem)
+
+
+state 79
+
+   33 selection: id ASSIGN rval @3 . ';'
+
+    ';'  shift, and go to state 86
+
+
+state 80
+
+   64 givearglist: '(' . @5 gaitems ')'
+
+    $default  reduce using rule 63 (@5)
+
+    @5  go to state 87
+
+
+state 81
+
+   62 usefunction: functionid givearglist .
+
+    $default  reduce using rule 62 (usefunction)
+
+
+state 82
+
+   44 constraints: constraints ',' constraint .
+
+    $default  reduce using rule 44 (constraints)
+
+
+state 83
+
+   46 constraint: id ASSIGN rval .
+
+    $default  reduce using rule 46 (constraint)
+
+
+state 84
+
+   55 litems: litems ',' . litem
+
+    ID       shift, and go to state 74
+    QSTRING  shift, and go to state 75
+
+    litem        go to state 88
+    functionid   go to state 69
+    usefunction  go to state 78
+
+
+state 85
+
+   53 list: '{' litems '}' .
+
+    $default  reduce using rule 53 (list)
+
+
+state 86
+
+   33 selection: id ASSIGN rval @3 ';' .
+
+    $default  reduce using rule 33 (selection)
+
+
+state 87
+
+   64 givearglist: '(' @5 . gaitems ')'
+
+    ID       shift, and go to state 89
+    QSTRING  shift, and go to state 90
+
+    $default  reduce using rule 67 (gaitems)
+
+    functionid   go to state 69
+    usefunction  go to state 91
+    gaitems      go to state 92
+    gaitem       go to state 93
+
+
+state 88
+
+   55 litems: litems ',' litem .
+
+    $default  reduce using rule 55 (litems)
+
+
+state 89
+
+   60 functionid: ID .  ['(']
+   68 gaitem: ID .  [')', ',']
+
+    '('       reduce using rule 60 (functionid)
+    $default  reduce using rule 68 (gaitem)
+
+
+state 90
+
+   69 gaitem: QSTRING .
+
+    $default  reduce using rule 69 (gaitem)
+
+
+state 91
+
+   70 gaitem: usefunction .
+
+    $default  reduce using rule 70 (gaitem)
+
+
+state 92
+
+   64 givearglist: '(' @5 gaitems . ')'
+   66 gaitems: gaitems . ',' gaitem
+
+    ')'  shift, and go to state 94
+    ','  shift, and go to state 95
+
+
+state 93
+
+   65 gaitems: gaitem .
+
+    $default  reduce using rule 65 (gaitems)
+
+
+state 94
+
+   64 givearglist: '(' @5 gaitems ')' .
+
+    $default  reduce using rule 64 (givearglist)
+
+
+state 95
+
+   66 gaitems: gaitems ',' . gaitem
+
+    ID       shift, and go to state 89
+    QSTRING  shift, and go to state 90
+
+    functionid   go to state 69
+    usefunction  go to state 91
+    gaitem       go to state 96
+
+
+state 96
+
+   66 gaitems: gaitems ',' gaitem .
+
+    $default  reduce using rule 66 (gaitems)

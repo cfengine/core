@@ -1,0 +1,68 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle main in the context of Agent
+
+   ARGS:
+
+   {
+   TYPE: classes
+
+      promise by 'alias1' if context is linux
+
+                 or => class1,class2,class3,,
+
+      promise by 'alias2' if context is linux
+
+                 or => class1,class2,class3,,
+
+      promise by 'alias3' if context is linux
+
+                and => class1,class2,class3,,
+
+      promise by 'alias' if context is linux
+
+         expression => solaris&x86|linux|mac,
+
+   TYPE: vars
+
+      promise by 'x' if context is linux
+
+             string => 1,2,3,
+
+   TYPE: files
+
+      promise by '/path/file.*' if context is linux
+
+          edit_line => myedit(${this},),
+             access => myaccess body for type access(no parameters)
+               {
+               mode => +077,-02, if context any
+               owner => mark,siri,, if context any
+               Group => readstringlist(filename,), if context solaris
+               group => root,wheel,, if context linux
+               }
+
+
+   }
+
+
+
+
+All Bodies
+
+control body for type Agent(no parameters)
+   {
+   BundleSequence => update, if context any
+   Inputs => update.cf,main.cf,, if context any
+   Inputs => update.cf,main.cf,linux.cf,, if context linux
+   }
+
+myaccess body for type access(no parameters)
+   {
+   mode => +077,-02, if context any
+   owner => mark,siri,, if context any
+   Group => readstringlist(filename,), if context solaris
+   group => root,wheel,, if context linux
+   }
+

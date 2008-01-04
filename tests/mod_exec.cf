@@ -15,7 +15,7 @@ bundle agent myscripts()
         background  => "false",
 
         transaction => standard,
-        classes     => react("command");   # or use $(this)
+        classes     => react("ThisCommand");   # or use $(this)
    }
 
 ####################################################################
@@ -23,7 +23,6 @@ bundle agent myscripts()
 body containment sandbox
 
 {
-#mode => "077";
 useshell => "true";
 umask => "077";
 owner => "mysql";
@@ -38,4 +37,19 @@ body transaction standard
 
 {
 ifelapsed => "10";
+}
+
+####################################################################
+
+body classes react(param)
+
+{
+success => { "okclass1", "okclass2" };
+reportsuccess => "Everything went well with $(param)";
+
+failure => { "failclass" };
+reportfailure => "Error, failure of $(param)";
+
+alert => { "alertclass1", "alertclass2", "alertclass3" };
+reportalert => "DANGER, WILL ROBINSON!";
 }

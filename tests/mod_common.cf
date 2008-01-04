@@ -7,10 +7,14 @@
 
 # Each component has its own Body called control()
 
-#     Body cfagent control()
-#     Body cfservd control
-#     Body cfenvd  control
-#     Body cfrun   control
+#     body cfagent control()
+#     body cfservd control
+#     body cfenvd  control
+#     body cfrun   control
+
+# In addition there is a control section for all the components
+
+#     body common control
 
 #
 # This parser should be able to construct the promise graph in
@@ -25,7 +29,7 @@
 
 body common control
    {
-   bundlesequence => { "update", "main", mypromises("2","3") };
+   bundlesequence => { update, main, mypromises("2","3") };
 
    inputs          => { 
                       "../tests/mod_files.cf", 
@@ -39,6 +43,14 @@ body common control
 
 
    }
+
+###################################################################
+
+body agent control
+
+{
+access => { "mark", "root" };
+}
 
 ###################################################################
 

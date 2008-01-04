@@ -52,6 +52,12 @@ extern struct SubTypeSyntax CF_ALL_BODIES[];
 extern struct FnCallType CF_FNCALL_TYPES[];
 #endif
 
+
+#ifndef CF3_MOD_ACCESS
+extern struct BodySyntax CF_REMACCESS_BODIES[];
+extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
+#endif
+
 #ifndef CF3_MOD_FILES
 extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
 extern struct BodySyntax CF_APPEND_REPL_BODIES[];

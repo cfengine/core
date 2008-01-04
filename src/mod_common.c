@@ -167,6 +167,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {
    {"bundlesequence",cf_slist,".*"},
    {"inputs",cf_slist,".*"},
+   {"version",cf_str,"" },
    {NULL,cf_notype,NULL}
    };
 
@@ -268,6 +269,7 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_FILES_SUBTYPES,  /* mod_files.c */
    CF_EXEC_SUBTYPES,   /* mod_exec.c */
    CF_PROCESS_SUBTYPES,/* mod_process.c */
+   CF_REMACCESS_SUBTYPES, /* mod_access.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

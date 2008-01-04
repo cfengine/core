@@ -331,8 +331,13 @@ switch(rvaltype)
        return;
        
    case CF_FNCALL:
-         // check against a list of return types
-       CheckFnCallType(lval,((struct FnCall *)rval)->name,dt,range);
+
+       /* Fn-like objects are assumed to be parameterized bundles in the bseq */
+       
+       if (strcmp(lval,"bundlesequence") != 0)
+          {
+          CheckFnCallType(lval,((struct FnCall *)rval)->name,dt,range);
+          }
        return;
    }
 

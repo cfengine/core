@@ -23,7 +23,7 @@
 
 #####################################################################
 
-body agent control
+body common control
    {
    bundlesequence => "update";
 
@@ -42,15 +42,9 @@ body agent control
 body monitor control()
    {
    emailfrom => "mark@iu.hio.no";
-   emailto => "cfengine@domain.tld";
+   emailto   => "cfengine@domain.tld";
 
-   trustnew => "0.7";
-
-   # on linux
-
-   linux::
-
-   # Sensor => ReadFile("/proc/cpu/temperature");
+   forgetrate => "0.7";
    }
 
 ###################################################################
@@ -59,7 +53,7 @@ bundle agent myPromises(daemon_list,s1,s2)   # policy version 1.0
    {
    classes:
 
-     "alias"   or => { "solaris&x86|linux|mac" , UserExists("mark") };
+     "alias"   or => { "solaris&x86|linux|mac" , userexists("mark") };
 
    vars:
 
@@ -67,22 +61,18 @@ bundle agent myPromises(daemon_list,s1,s2)   # policy version 1.0
                policy => constant;
 
      "derived" string => "includes $(name) previously defined" ,
-               policy=>variable;
+               policy => variable;
 
      # Vectors and lists
 
      "list2"   int => { "1","2", function("3") };
 
-     "users"   string => { "mark", 
+     "users"   slist => { "mark", 
                            "aeleen", 
                            "kyrre", 
                            "matt" } ,
 
                 policy => constant;
-
-     # Associative arrays
-
-     "array1"   string => ReadArray("");
 
      # Graph
 
@@ -91,18 +81,6 @@ bundle agent myPromises(daemon_list,s1,s2)   # policy version 1.0
 
 
    # we need a name for variables + classes together
-
-   # sub environments? sub contexts? conduits
-
-   subcontracts:
-
-     "alias1"   bundle => StartProcesses("$(Pservicelist)","on") ,
-                transaction => commontrans ,
-                usevars => usepolicy();
-
-     "alias2"   bundle => DoProcesses("$(Mservicelist)","off") ,
-                transaction => commontrans ,
-                usevars => usepolicy();
 
    processes:
 

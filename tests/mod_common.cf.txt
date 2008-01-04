@@ -1,673 +1,853 @@
-***********************************************************
- Promises 
-***********************************************************
-Bundle myPromises in the context of agent
-
-   ARGS:
-
-   scalar arg daemon_list
-
-   scalar arg s1
-
-   scalar arg s2
-
-   {
-   TYPE: classes
-
-      promise by 'alias' (implicit) if context is linux
-
-                 or => 
-
-      promise by 'allok' (implicit) if context is linux
-
-                and => 
-
-      promise by 'Strategy' (implicit) if context is linux
-
-               dist => 
-
-   TYPE: vars
-
-      promise by 'myname' (implicit) if context is linux
-
-             string => value in quotes
-             policy => constant
-
-      promise by 'derived' (implicit) if context is linux
-
-             string => includes $(name) previously defined
-             policy => free
-
-      promise by 'list2' (implicit) if context is linux
-
-              ilist => 
-
-      promise by 'users' (implicit) if context is linux
-
-              slist => 
-             policy => constant
-
-      promise by 'Neighbour[fromhost]' (implicit) if context is linux
-
-             string => tohost
-
-      promise by 'Adj[tohost]' (implicit) if context is linux
-
-             string => nexthost
-
-   }
-
-
-Bundle main in the context of agent
-
-   ARGS:
-
-   {
-   TYPE: classes
-
-      promise by 'alias1' (implicit) if context is linux
-
-                 or => 
-
-      promise by 'alias2' (implicit) if context is linux
-
-                 or => 
-
-      promise by 'alias3' (implicit) if context is linux
-
-                and => 
-
-      promise by 'alias' (implicit) if context is linux
-
-         expression => solaris&x86|linux|mac
-
-   TYPE: vars
-
-      promise by 'x' (implicit) if context is linux
-
-             string => 1,2,3
-
-      promise by 'y' (implicit) if context is linux
-
-               real => 3.22
-
-   TYPE: report
-
-      promise by 'Alert Message X' to 'email','html'if context is linux
-
-         transaction => filters
-
-   }
-
-
-Bundle Update in the context of agent
-
-   ARGS:
-
-   {
-   TYPE: vars
-
-   }
-
-
-Bundle main in the context of server
-
-   ARGS:
-
-   {
-   TYPE: vars
-
-      promise by 'portnumber' (implicit) if context is linux
-
-                int => 5803
-
-      promise by 'ok' (implicit) if context is linux
-
-              slist => 
-
-   }
-
-
-Bundle filetest in the context of agent
-
-   ARGS:
-
-   {
-   TYPE: files
-
-      promise by '/path/file.*' (implicit) if context is any
-
-          edit_line => myedit(${this},)
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-         file_select => myfilter
-            changes => tripwire body for type changes(no parameters)
-               {
-               hash => md5 if context linux
-               update => yes if context linux
-               }
-
-            recurse => inf
-
-      promise by '$(filelist)' (implicit) if context is any
-
-           edit_xml => insertlist($(filelist),)
-          edit_line => diddle
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-             access => others body for type access
-               arg parame
-
-               {
-               owner => 'root','wheel','sudo' if context milkyway
-               }
-
-
-      promise by '/etc/xyz' to cfagentif context is any
-
-          edit_line => myedit(${this},)
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-
-      promise by '/usr/local' (implicit) if context is any
-
-             linkto => linkdetails body for type linkto
-               arg tofile
-
-               {
-               link_type => symbolic if context linux
-               copy_patterns =>  if context linux
-               deadlinks => kill if context linux
-               when_no_file => force if context linux
-               }
-
-
-      promise by '/var' (implicit) if context is any
-
-            recurse => inf
-         name_select => fish.*
-               tidy => tidymask body for type tidy(no parameters)
-               {
-               age => 0 if context linux
-               size => irange(50000,inf,) if context linux
-               age_type => mtime if context linux
-               dirlinks => delete if context linux
-               rmdirs => yes if context linux
-               links => stop if context linux
-               }
-
-             rename => rotateme body for type rename(no parameters)
-               {
-               newname => filename if context linux
-               rotate => 4 if context linux
-               size => irange(1,2,) if context linux
-               action => nop if context linux
-               }
-
-         repository => /override
-
-   }
-
-
-Bundle myedit in the context of edit_line
-
-   ARGS:
-
-   scalar arg filename
-
-   {
-   TYPE: append
-
-      promise by 'My important line.*' (implicit) if context is any
-
-               data => New important line
-         transaction => controlbody body for type transaction(no parameters)
-               {
-               loglevel => usr1 if context linux
-               reportlevel => inform if context linux
-               ifelapsed => 10 if context linux
-               expireafter => 20 if context linux
-               }
-
-
-   TYPE: append
-
-      promise by 'This a line in $(filename)' (implicit) if context is any
-
-
-   TYPE: replace
-
-      promise by 'string.[abc]*' (implicit) if context is classes
-
-               with => $(new_value)
-              which => all
-            classes => afterX
-
-   }
-
-
-Bundle testcopy in the context of agent
-
-   ARGS:
-
-   {
-   TYPE: vars
-
-      promise by 'basedir' (implicit) if context is any
-
-             string => /masterfiles
-
-      promise by 'named_files' (implicit) if context is any
-
-              slist => 
-
-      promise by 'servers' (implicit) if context is any
-
-              slist => 
-
-      promise by 'bla' (implicit) if context is any
-
-              slist => 
-
-      promise by 'OTHER' (implicit) if context is any
-
-             string => scalar
-
-   TYPE: files
-
-      promise by '/dest/files' (implicit) if context is any
-
-           copyfrom => mycopy body for type copyfrom
-               arg from
-               arg server
-
-               {
-               source => $(from) if context any
-               servers => '$(server)','failover1' if context any
-               action => fix if context any
-               backup => true if context any
-               repository => /my/repos if context any
-               stealth => true if context any
-               preserve => true if context any
-               linkpattern => .*fish.* if context any
-               xdev => true if context any
-               compare => mtime if context any
-               linktype => absolute if context any
-               typecheck => true if context any
-               forceupdate => false if context any
-               forcedirs => false if context any
-               forceipv4 => false if context any
-               size => 0,50000 if context any
-               trigger => 'tag1','tag2' if context any
-               trustkey => true if context any
-               encrypt => true if context any
-               verify => true if context any
-               purge => false if context any
-               findertype => MacOSX if context any
-               }
-
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-         file_select => crit
-            recurse => inf
-
-      promise by '/dest/files' (implicit) if context is any
-
-           copyfrom => mycopy body for type copyfrom
-               arg from
-               arg server
-
-               {
-               source => $(from) if context any
-               servers => '$(server)','failover1' if context any
-               action => fix if context any
-               backup => true if context any
-               repository => /my/repos if context any
-               stealth => true if context any
-               preserve => true if context any
-               linkpattern => .*fish.* if context any
-               xdev => true if context any
-               compare => mtime if context any
-               linktype => absolute if context any
-               typecheck => true if context any
-               forceupdate => false if context any
-               forcedirs => false if context any
-               forceipv4 => false if context any
-               size => 0,50000 if context any
-               trigger => 'tag1','tag2' if context any
-               trustkey => true if context any
-               encrypt => true if context any
-               verify => true if context any
-               purge => false if context any
-               findertype => MacOSX if context any
-               }
-
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-         file_select => crit
-
-      promise by '$(basedir)/$(named_files)/vm.conf' (implicit) if context is any
-
-           copyfrom => mycopy body for type copyfrom
-               arg from
-               arg server
-
-               {
-               source => $(from) if context any
-               servers => '$(server)','failover1' if context any
-               action => fix if context any
-               backup => true if context any
-               repository => /my/repos if context any
-               stealth => true if context any
-               preserve => true if context any
-               linkpattern => .*fish.* if context any
-               xdev => true if context any
-               compare => mtime if context any
-               linktype => absolute if context any
-               typecheck => true if context any
-               forceupdate => false if context any
-               forcedirs => false if context any
-               forceipv4 => false if context any
-               size => 0,50000 if context any
-               trigger => 'tag1','tag2' if context any
-               trustkey => true if context any
-               encrypt => true if context any
-               verify => true if context any
-               purge => false if context any
-               findertype => MacOSX if context any
-               }
-
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-         file_select => crit
-
-      promise by '$(basedir)/data_from_$(servers)/$(named_files).conf' (implicit) if context is any
-
-           copyfrom => mycopy body for type copyfrom
-               arg from
-               arg server
-
-               {
-               source => $(from) if context any
-               servers => '$(server)','failover1' if context any
-               action => fix if context any
-               backup => true if context any
-               repository => /my/repos if context any
-               stealth => true if context any
-               preserve => true if context any
-               linkpattern => .*fish.* if context any
-               xdev => true if context any
-               compare => mtime if context any
-               linktype => absolute if context any
-               typecheck => true if context any
-               forceupdate => false if context any
-               forcedirs => false if context any
-               forceipv4 => false if context any
-               size => 0,50000 if context any
-               trigger => 'tag1','tag2' if context any
-               trustkey => true if context any
-               encrypt => true if context any
-               verify => true if context any
-               purge => false if context any
-               findertype => MacOSX if context any
-               }
-
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-         file_select => crit
-
-      promise by '$(basedir)/$(named_files)/vm.conf' (implicit) if context is any
-
-           copyfrom => mycopy body for type copyfrom
-               arg from
-               arg server
-
-               {
-               source => $(from) if context any
-               servers => '$(server)','failover1' if context any
-               action => fix if context any
-               backup => true if context any
-               repository => /my/repos if context any
-               stealth => true if context any
-               preserve => true if context any
-               linkpattern => .*fish.* if context any
-               xdev => true if context any
-               compare => mtime if context any
-               linktype => absolute if context any
-               typecheck => true if context any
-               forceupdate => false if context any
-               forcedirs => false if context any
-               forceipv4 => false if context any
-               size => 0,50000 if context any
-               trigger => 'tag1','tag2' if context any
-               trustkey => true if context any
-               encrypt => true if context any
-               verify => true if context any
-               purge => false if context any
-               findertype => MacOSX if context any
-               }
-
-             access => myaccess body for type access(no parameters)
-               {
-               mode => +077,-02 if context any
-               owner => 'mark','siri' if context any
-               group => readstringlist(filename,) if context solaris
-               group => 'root','wheel' if context linux
-               }
-
-         file_select => crit
-
-   }
-
-
-Bundle myscripts in the context of agent
-
-   ARGS:
-
-   {
-   TYPE: executables
-
-      promise by '/script/command' (implicit) if context is any
-
-               args => -d -v -t
-         containment => sandbox body for type containment(no parameters)
-               {
-               useshell => true if context any
-               umask => 077 if context any
-               owner => mysql if context any
-               group => daemon if context any
-               chdir => /outputs if context any
-               chroot => /sandbox if context any
-               }
-
-             module => true
-            timeout => 10
-         background => false
-         transaction => standard body for type transaction(no parameters)
-               {
-               ifelapsed => 10 if context any
-               }
-
-            classes => react(command,)
-
-   }
-
-
-
-
-All Bodies
-
-control body for type common(no parameters)
-   {
-   bundlesequence => update if context any
-   inputs => '../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf' if context any
-   }
-
-control body for type monitor(no parameters)
-   {
-   emailfrom => mark@iu.hio.no if context solaris
-   emailto => cfengine@domain.tld if context solaris
-   threshold => 0.3 if context solaris
-   forgetrate => 0.7 if context solaris
-   }
-
-others body for type access
-   arg parame
-
-   {
-   owner => 'root','wheel','sudo' if context milkyway
-   }
-
-myaccess body for type access(no parameters)
-   {
-   mode => +077,-02 if context any
-   owner => 'mark','siri' if context any
-   group => readstringlist(filename,) if context solaris
-   group => 'root','wheel' if context linux
-   }
-
-linkdetails body for type linkto
-   arg tofile
-
-   {
-   link_type => symbolic if context linux
-   copy_patterns =>  if context linux
-   deadlinks => kill if context linux
-   when_no_file => force if context linux
-   }
-
-controlbody body for type transaction(no parameters)
-   {
-   loglevel => usr1 if context linux
-   reportlevel => inform if context linux
-   ifelapsed => 10 if context linux
-   expireafter => 20 if context linux
-   }
-
-tripwire body for type changes(no parameters)
-   {
-   hash => md5 if context linux
-   update => yes if context linux
-   }
-
-myffilter body for type file_select(no parameters)
-   {
-   name => '.*.asc' if context linux
-   path => '/var/.*/mail','/usr/.*/mail' if context linux
-   mode => 700 if context linux
-   size => irange(10000,10000000,) if context linux
-   owner => 'mark','cell','motd' if context linux
-   group => 'ecg','mark' if context linux
-   ctime => irange(ondate(2000,1,1,0,0,0,)now,) if context linux
-   mtime => irange(ago(1,0,0,2,30,0,)now,) if context linux
-   atime => irange(date(1997,2,22,0,0,0,)now,) if context linux
-   exec_regex => /usr/bin/file $(this) (.*ascii.*) if context linux
-   filetypes => 'dir','link' if context linux
-   issymlinkto => '/dev/null','/dev/tyyS0' if context linux
-   result => type&mode if context linux
-   }
-
-tidymask body for type tidy(no parameters)
-   {
-   age => 0 if context linux
-   size => irange(50000,inf,) if context linux
-   age_type => mtime if context linux
-   dirlinks => delete if context linux
-   rmdirs => yes if context linux
-   links => stop if context linux
-   }
-
-rotateme body for type rename(no parameters)
-   {
-   newname => filename if context linux
-   rotate => 4 if context linux
-   size => irange(1,2,) if context linux
-   action => nop if context linux
-   }
-
-mycopy body for type copyfrom
-   arg from
-   arg server
-
-   {
-   source => $(from) if context any
-   servers => '$(server)','failover1' if context any
-   action => fix if context any
-   backup => true if context any
-   repository => /my/repos if context any
-   stealth => true if context any
-   preserve => true if context any
-   linkpattern => .*fish.* if context any
-   xdev => true if context any
-   compare => mtime if context any
-   linktype => absolute if context any
-   typecheck => true if context any
-   forceupdate => false if context any
-   forcedirs => false if context any
-   forceipv4 => false if context any
-   size => 0,50000 if context any
-   trigger => 'tag1','tag2' if context any
-   trustkey => true if context any
-   encrypt => true if context any
-   verify => true if context any
-   purge => false if context any
-   findertype => MacOSX if context any
-   }
-
-sandbox body for type containment(no parameters)
-   {
-   useshell => true if context any
-   umask => 077 if context any
-   owner => mysql if context any
-   group => daemon if context any
-   chdir => /outputs if context any
-   chroot => /sandbox if context any
-   }
-
-standard body for type transaction(no parameters)
-   {
-   ifelapsed => 10 if context any
-   }
-
+<h1>Promise Bundles</h1> <html><head><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" /><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/></head>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>myPromises</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+<tr><td>   scalar arg <b>s1</b>
+</td></tr><tr><td>   scalar arg <b>s2</b>
+</td></tr></td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>classes</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias'</b> promises...
+
+<br><font color=green>........................or</font> =>  {'solaris&x86|linux|mac','userexists(mark,)'} , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 61</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'allok'</b> promises...
+
+<br><font color=green>........................and</font> =>  {'userexists($(users),)'} , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 63</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Strategy'</b> promises...
+
+<br><font color=green>........................dist</font> =>  {'0.1','0.2','0.1'} , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 65</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'myname'</b> promises...
+
+<br><font color=green>........................string</font> => value in quotes , if body context any
+<br><font color=green>........................policy</font> => constant , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 69</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'derived'</b> promises...
+
+<br><font color=green>........................string</font> => includes $(name) previously defined , if body context any
+<br><font color=green>........................policy</font> => free , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 72</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'list2'</b> promises...
+
+<br><font color=green>........................ilist</font> =>  {'1','2','getuid(mark,)'} , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 77</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'users'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'mark','aeleen','kyrre','matt'} , if body context any
+<br><font color=green>........................policy</font> => constant , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 79</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Neighbour[fromhost]'</b> promises...
+
+<br><font color=green>........................string</font> => tohost , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 93</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Adj[tohost]'</b> promises...
+
+<br><font color=green>........................string</font> => nexthost , if body context any
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 94</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>main</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>classes</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias1'</b> promises...
+
+<br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 104</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias2'</b> promises...
+
+<br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 105</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias3'</b> promises...
+
+<br><font color=green>........................and</font> =>  {'class1','class2','class3'} , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 106</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'alias'</b> promises...
+
+<br><font color=green>........................expression</font> => solaris&x86|linux|mac , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 108</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'x'</b> promises...
+
+<br><font color=green>........................string</font> => 1,2,3 , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 112</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'y'</b> promises...
+
+<br><font color=green>........................real</font> => 3.22 , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 114</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>report</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>solaris</font></i> <p>
+
+Resource object <b>'Alert Message X'</b> promises <b>  {'email','html'}</b>
+
+<br><font color=green>........................transaction</font> => filters , if body context any
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 118</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>Update</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
+
+</td></tr></table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>filetest</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>files</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/path/file.*'</b> promises...
+
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................file_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................changes</font> =>  <font color=blue>changes</font> <font color=red>tripwire</font><b>(no parameters)</b>
+<br><font color=green>.............................hash</font> => md5 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................update</font> => yes if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................recurse</font> => inf , if body context any
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 13</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(filelist)'</b> promises...
+
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>others</font>(<b>parame</b>,
+)<br><font color=green>.............................owner</font> =>  {'root','wheel','sudo'} if subbody context <i><font color=blue>milkyway</font></i>
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 20</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/etc/xyz'</b> promises <b> cfagent</b>
+
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 23</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/usr/local'</b> promises...
+
+<br><font color=green>........................linkto</font> =>  <font color=blue>linkto</font> <font color=red>linkdetails</font>(<b>tofile</b>,
+)<br><font color=green>.............................link_type</font> => symbolic if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................copy_patterns</font> =>  if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................deadlinks</font> => kill if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................when_no_file</font> => force if subbody context <i><font color=blue>linux</font></i>
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 29</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/var'</b> promises...
+
+<br><font color=green>........................recurse</font> => inf , if body context any
+<br><font color=green>........................name_select</font> => fish.* , if body context any
+<br><font color=green>........................tidy</font> =>  <font color=blue>tidy</font> <font color=red>tidymask</font><b>(no parameters)</b>
+<br><font color=green>.............................age</font> => 0 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(50000,inf,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................age_type</font> => mtime if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................dirlinks</font> => delete if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rmdirs</font> => yes if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................links</font> => stop if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................rename</font> =>  <font color=blue>rename</font> <font color=red>rotateme</font><b>(no parameters)</b>
+<br><font color=green>.............................newname</font> => filename if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rotate</font> => 4 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(1,2,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................action</font> => nop if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................repository</font> => /override , if body context any
+<p><small>Promise belongs to bundle <b>filetest</b> in '<i>../tests/mod_files.cf</i>' near line 34</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>testcopy</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'basedir'</b> promises...
+
+<br><font color=green>........................string</font> => /masterfiles , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 12</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'named_files'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'one','two','three'} , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 14</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'servers'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'nexus','cube','eternity'} , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 16</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'bla'</b> promises...
+
+<br><font color=green>........................slist</font> =>  {'one','two','three'} , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 18</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'OTHER'</b> promises...
+
+<br><font color=green>........................string</font> => scalar , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 20</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>files</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/dest/files'</b> promises...
+
+<br><font color=green>........................copyfrom</font> =>  <font color=blue>copyfrom</font> <font color=red>mycopy</font>(<b>from</b>,
+<b>server</b>,
+)<br><font color=green>.............................source</font> => $(from) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................servers</font> =>  {'$(server)','failover1'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................action</font> => fix if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................backup</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................repository</font> => /my/repos if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stealth</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................preserve</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linkpattern</font> => .*fish.* if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................xdev</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................compare</font> => mtime if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linktype</font> => absolute if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................typecheck</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceupdate</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forcedirs</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceipv4</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................size</font> => 0,50000 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trigger</font> =>  {'tag1','tag2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trustkey</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................encrypt</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................verify</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................purge</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................findertype</font> => MacOSX if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................file_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................recurse</font> => inf , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 26</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/dest/files'</b> promises...
+
+<br><font color=green>........................copyfrom</font> =>  <font color=blue>copyfrom</font> <font color=red>mycopy</font>(<b>from</b>,
+<b>server</b>,
+)<br><font color=green>.............................source</font> => $(from) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................servers</font> =>  {'$(server)','failover1'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................action</font> => fix if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................backup</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................repository</font> => /my/repos if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stealth</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................preserve</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linkpattern</font> => .*fish.* if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................xdev</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................compare</font> => mtime if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linktype</font> => absolute if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................typecheck</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceupdate</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forcedirs</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceipv4</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................size</font> => 0,50000 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trigger</font> =>  {'tag1','tag2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trustkey</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................encrypt</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................verify</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................purge</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................findertype</font> => MacOSX if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................file_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 33</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(basedir)/$(named_files)/vm.conf'</b> promises...
+
+<br><font color=green>........................copyfrom</font> =>  <font color=blue>copyfrom</font> <font color=red>mycopy</font>(<b>from</b>,
+<b>server</b>,
+)<br><font color=green>.............................source</font> => $(from) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................servers</font> =>  {'$(server)','failover1'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................action</font> => fix if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................backup</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................repository</font> => /my/repos if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stealth</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................preserve</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linkpattern</font> => .*fish.* if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................xdev</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................compare</font> => mtime if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linktype</font> => absolute if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................typecheck</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceupdate</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forcedirs</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceipv4</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................size</font> => 0,50000 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trigger</font> =>  {'tag1','tag2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trustkey</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................encrypt</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................verify</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................purge</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................findertype</font> => MacOSX if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................file_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 44</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(basedir)/data_from_$(servers)/$(named_files).conf'</b> promises...
+
+<br><font color=green>........................copyfrom</font> =>  <font color=blue>copyfrom</font> <font color=red>mycopy</font>(<b>from</b>,
+<b>server</b>,
+)<br><font color=green>.............................source</font> => $(from) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................servers</font> =>  {'$(server)','failover1'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................action</font> => fix if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................backup</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................repository</font> => /my/repos if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stealth</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................preserve</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linkpattern</font> => .*fish.* if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................xdev</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................compare</font> => mtime if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linktype</font> => absolute if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................typecheck</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceupdate</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forcedirs</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceipv4</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................size</font> => 0,50000 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trigger</font> =>  {'tag1','tag2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trustkey</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................encrypt</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................verify</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................purge</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................findertype</font> => MacOSX if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................file_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 55</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(basedir)/$(named_files)/vm.conf'</b> promises...
+
+<br><font color=green>........................copyfrom</font> =>  <font color=blue>copyfrom</font> <font color=red>mycopy</font>(<b>from</b>,
+<b>server</b>,
+)<br><font color=green>.............................source</font> => $(from) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................servers</font> =>  {'$(server)','failover1'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................action</font> => fix if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................backup</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................repository</font> => /my/repos if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stealth</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................preserve</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linkpattern</font> => .*fish.* if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................xdev</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................compare</font> => mtime if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linktype</font> => absolute if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................typecheck</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceupdate</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forcedirs</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceipv4</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................size</font> => 0,50000 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trigger</font> =>  {'tag1','tag2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trustkey</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................encrypt</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................verify</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................purge</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................findertype</font> => MacOSX if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>........................access</font> =>  <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<br><font color=green>........................file_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>testcopy</b> in '<i>../tests/mod_files_copy.cf</i>' near line 68</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>myscripts</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>executables</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/script/command'</b> promises...
+
+<br><font color=green>........................args</font> => -d -v -t , if body context any
+<br><font color=green>........................containment</font> =>  <font color=blue>containment</font> <font color=red>sandbox</font><b>(no parameters)</b>
+<br><font color=green>.............................useshell</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................umask</font> => 077 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => mysql if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => daemon if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................chdir</font> => /outputs if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................chroot</font> => /sandbox if subbody context <i><font color=blue>any</font></i>
+ , if body context any
+<br><font color=green>........................module</font> => true , if body context any
+<br><font color=green>........................timeout</font> => 10 , if body context any
+<br><font color=green>........................background</font> => false , if body context any
+<br><font color=green>........................transaction</font> =>  <font color=blue>transaction</font> <font color=red>standard</font><b>(no parameters)</b>
+<br><font color=green>.............................ifelapsed</font> => 10 if subbody context <i><font color=blue>any</font></i>
+ , if body context any
+<br><font color=green>........................classes</font> =>  <font color=blue>classes</font> <font color=red>react</font>(<b>param</b>,
+)<br><font color=green>.............................success</font> =>  {'okclass1','okclass2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................reportsuccess</font> => Everything went well with $(param) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................failure</font> =>  {'failclass'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................reportfailure</font> => Error, failure of $(param) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................alert</font> =>  {'alertclass1','alertclass2','alertclass3'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................reportalert</font> => DANGER, WILL ROBINSON! if subbody context <i><font color=blue>any</font></i>
+<p><small>Promise belongs to bundle <b>myscripts</b> in '<i>../tests/mod_exec.cf</i>' near line 11</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<h1>All Bodies</h1><p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>common</font> <font color=red>control</font><b>(no parameters)</b>
+<br><font color=green>.............................bundlesequence</font> =>  {'update','main','mypromises(2,3,)'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................inputs</font> =>  {'../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf'} if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>agent</font> <font color=red>control</font><b>(no parameters)</b>
+<br><font color=green>.............................access</font> =>  {'mark','root'} if subbody context <i><font color=blue>solaris</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>access</font> <font color=red>others</font>(<b>parame</b>,
+)<br><font color=green>.............................owner</font> =>  {'root','wheel','sudo'} if subbody context <i><font color=blue>milkyway</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>access</font> <font color=red>myaccess</font><b>(no parameters)</b>
+<br><font color=green>.............................mode</font> => +077,-02 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','siri'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => readstringlist(filename,lines,#,1000,) if subbody context <i><font color=blue>solaris</font></i>
+<br><font color=green>.............................group</font> =>  {'root','wheel'} if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>linkto</font> <font color=red>linkdetails</font>(<b>tofile</b>,
+)<br><font color=green>.............................link_type</font> => symbolic if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................copy_patterns</font> =>  if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................deadlinks</font> => kill if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................when_no_file</font> => force if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>transaction</font> <font color=red>controlbody</font><b>(no parameters)</b>
+<br><font color=green>.............................loglevel</font> => usr1 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................reportlevel</font> => inform if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ifelapsed</font> => 10 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................expireafter</font> => 20 if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>changes</font> <font color=red>tripwire</font><b>(no parameters)</b>
+<br><font color=green>.............................hash</font> => md5 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................update</font> => yes if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>tidy</font> <font color=red>tidymask</font><b>(no parameters)</b>
+<br><font color=green>.............................age</font> => 0 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(50000,inf,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................age_type</font> => mtime if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................dirlinks</font> => delete if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rmdirs</font> => yes if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................links</font> => stop if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>rename</font> <font color=red>rotateme</font><b>(no parameters)</b>
+<br><font color=green>.............................newname</font> => filename if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................rotate</font> => 4 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(1,2,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................action</font> => nop if subbody context <i><font color=blue>linux</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>copyfrom</font> <font color=red>mycopy</font>(<b>from</b>,
+<b>server</b>,
+)<br><font color=green>.............................source</font> => $(from) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................servers</font> =>  {'$(server)','failover1'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................action</font> => fix if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................backup</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................repository</font> => /my/repos if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stealth</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................preserve</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linkpattern</font> => .*fish.* if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................xdev</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................compare</font> => mtime if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................linktype</font> => absolute if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................typecheck</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceupdate</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forcedirs</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................forceipv4</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................size</font> => 0,50000 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trigger</font> =>  {'tag1','tag2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................trustkey</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................encrypt</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................verify</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................purge</font> => false if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................findertype</font> => MacOSX if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>containment</font> <font color=red>sandbox</font><b>(no parameters)</b>
+<br><font color=green>.............................useshell</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................umask</font> => 077 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => mysql if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => daemon if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................chdir</font> => /outputs if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................chroot</font> => /sandbox if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>transaction</font> <font color=red>standard</font><b>(no parameters)</b>
+<br><font color=green>.............................ifelapsed</font> => 10 if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>classes</font> <font color=red>react</font>(<b>param</b>,
+)<br><font color=green>.............................success</font> =>  {'okclass1','okclass2'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................reportsuccess</font> => Everything went well with $(param) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................failure</font> =>  {'failclass'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................reportfailure</font> => Error, failure of $(param) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................alert</font> =>  {'alertclass1','alertclass2','alertclass3'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................reportalert</font> => DANGER, WILL ROBINSON! if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ 

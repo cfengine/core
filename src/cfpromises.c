@@ -498,15 +498,11 @@ for (rp = BODYPARTS; rp != NULL; rp=rp->next)
       }
    }
 
-/* Now look through the bundles themselves */
-
-// BUNDLES -> bundlesequence
+/* Now look once through all the bundles themselves */
 
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    scope = bp->name;
-
-   // Copy scope and add parameters
    
    for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
       {
@@ -516,6 +512,20 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          }
       }
    }
+
+/*
+  And finally if we get this far, execute the bundles in sequence,
+  but this is not a job for the compiler, which is simply translating
+  the rules. To take the next step, we need to connect this compiler
+  to the components
+
+   agent   cfagent
+   monitor cfenvd
+   server  cfservd  etc.
+
+   This is the next stage and is not defined in this training release.
+*/
+
 }
 
 /*******************************************************************/

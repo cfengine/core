@@ -1,13 +1,8 @@
-
-
-
- TO DO NOW _ fill in the the type tree for main syntax,  server bundles, etc
-
-
-
+######################################################################
 #
-# A simple file with a body reference
+# A simple file with a body reference showing some iteration
 #
+######################################################################
 
 bundle agent testbundle
 
@@ -17,6 +12,9 @@ vars:
   "testscalar1" string => "one";
   "testscalar2" string => "two";
 
+  # note that a variable is also a promise and we can make a note of
+  # the recipient of the promise here too.
+
   "testlist1" -> "me"   slist  => { "mark", "kyrre", "aeleen" };
 
   "testlist2"    slist  => { "alpha", "beta", "gamma" };
@@ -25,8 +23,9 @@ vars:
 
   "myint"  string => "random number $(theint)";
 
-files:
+######################################################################
 
+files:
 
        "/path/file4$(testscalar1).*" -> { @(testlist1), "mum", $(testscalar1) },
 
@@ -44,15 +43,6 @@ files:
             access      => myaccess($(testlist1)),
             recurse     => "inf";
 
-
-#
-# Currently if a type is undefined it is allowed here as long as syntax is ok
-# but it should not be executable... is this useful?
-#
-
-admit:
-
- "/etc/passwd" -> "nexus";
 }
 
 #########################################################

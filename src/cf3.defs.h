@@ -44,7 +44,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "transaction"
 
-#define CF3_MODULES 4 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 5 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 

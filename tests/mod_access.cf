@@ -1,13 +1,48 @@
+
+body server control 
+{
+cfruncommand => "/var/cfengine/bin/cfagent";
+
+maxconnections => "50";
+denybadclocks  => "false";
+     
+allowconnectionsfrom         => @(access_rules.ok);
+denyconnectionsfrom          => @(access_rules.bad);
+allowmultipleconnectionsfrom => { @(access_rules.ok) };
+trustkeysfrom                => { @(access_rules.ok) };
+     
+allowssers => { "mark", "systemuser" };
+
+logallconnections     => "true";
+logencryptedtransfers => "false";
+
+skipverify       => { "IP numbers" };
+dynamicaddresses => { "IP numbers" };
+hostnamekeys     => "false";
+
+bindtointerface => { "IP number/hostname" };
+}
+
 #########################################################
 
-bundle server main()
+bundle server access_rules()
 
 {
 vars:
 
   "portnumber" int => "5803";
 
-  "ok" slist => { "128.39.89.1/24", "192.1.168.1/24" };
+  "ok"  slist => { "128.39.89.1/24", "192.1.168.1/24" };
 
+  "bad" slist => { ".*.spam.domain" };
+
+access:
+
+  passwd_server::
+
+    "/etc/passwd"
+
+       admit => @(ok),
+       deny =>  @(bad);
 }
 

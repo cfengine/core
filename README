@@ -1,12 +1,50 @@
-This directory contains kindly donated work by other inviduals
-who use cfengine. An alternative and more official GNU makefile
-setup is included here, courtesy of  Knut-Håvard Aksnes.
-I haven't used them yet, because I like the makefiles which I
-and David Masterson have worked out -- they leave the screen
-tidier.
 
-Things in this directory are for your pleasure and for
-future work, but I am not responsible for them, nor do I
-maintain them.
+This is the cfengine version 3 pre-release training pack
 
-Mark
+To build this software you need to have version 2.2.3 of cfengine 2
+installed on your system, since cfengine 3 will use the libraries
+from the cfengine 2 to compile.
+
+Type:
+
+./configure;make
+
+to build the program. You do not need to install this software yet as
+it does nothing.  I recommend that you simply run it in the src
+directory as a regular user.
+
+THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO YOUR SYSTEM. 
+
+With this software you can:
+
+* practice making cfengine 3 configuration files
+* test syntax and iteration of rules
+* view the impact as html in your favourite browser
+
+The input files containing example syntax are located in the tests
+subdirectory and some notes are contained in the docs directory.
+
+A functional, documented version of cfengine 3 is expected at the end
+of 2008, but keep your eyes on the websites www.cfengine.org and
+www.cfengine.com for more information.
+
+TO USE:
+
+cd src
+
+./cfpromise  (which looks for ../tests/promises.cf)
+
+./cfpromises -f filename
+
+e.g.
+
+./cfpromises -f ../tests/mod_common.cf
+
+This generates output to a file promise_output.html in
+the current directory which is best examined with a web
+browser.
+
+NOTE
+
+The file promises.cf has some errors in it. See if you can
+correct them.

@@ -4,37 +4,43 @@ This is the cfengine version 3 pre-release training pack
 
 This is not a fully functional version of cfengine. It is a
 package which will allow you to learn and experiment with
-the language syntax.
+the modified language syntax in this version.
+
+A functional, documented version of cfengine 3 is expected at the end
+of 2008, but keep your eyes on the websites www.cfengine.org and
+www.cfengine.com for more information.
+
 
 BUILDING
 -----------------------------------------------------------------------
 
-To build this software you need to have version 2.2.3 of cfengine 2
-installed on your system, since cfengine 3 will use the libraries
+To build this software you need to have version 2.2.3 or greater of
+cfengine 2 installed on your system, since cfengine 3 uses libraries
 from the cfengine 2 to compile.
 
 Type the following to build the software:
 
 ./configure;make
 
-to build the program. You do not need to install this software yet as
-it does nothing.  I recommend that you simply run it in the src
+You do not need to install the software, nor do you need to run it
+with root privileges as THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO
+YOUR SYSTEM.  It is recommend that you simply run it in the src
 directory as a regular user.
-
- THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO YOUR SYSTEM. 
 
 With this software you can:
 
 * practice making cfengine 3 configuration files
 * test syntax and iteration of rules
-* view the impact as html in your favourite browser
+* view expanded policy rules as html in your favourite web browser
 
-The input files containing example syntax are located in the tests
-subdirectory and some notes are contained in the docs directory.
+EXAMPLES
+-----------------------------------------------------------------------
 
-A functional, documented version of cfengine 3 is expected at the end
-of 2008, but keep your eyes on the websites www.cfengine.org and
-www.cfengine.com for more information.
+Some basic documentation is provided in the docs directory. 
+
+Input files containing example syntax are located in the tests
+subdirectory.
+
 
 TO USE this limited release:
 -----------------------------------------------------------------------

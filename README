@@ -1,11 +1,19 @@
 
 This is the cfengine version 3 pre-release training pack
+========================================================================
+
+This is not a fully functional version of cfengine. It is a
+package which will allow you to learn and experiment with
+the language syntax.
+
+BUILDING
+-----------------------------------------------------------------------
 
 To build this software you need to have version 2.2.3 of cfengine 2
 installed on your system, since cfengine 3 will use the libraries
 from the cfengine 2 to compile.
 
-Type:
+Type the following to build the software:
 
 ./configure;make
 
@@ -13,7 +21,7 @@ to build the program. You do not need to install this software yet as
 it does nothing.  I recommend that you simply run it in the src
 directory as a regular user.
 
-THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO YOUR SYSTEM. 
+ THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO YOUR SYSTEM. 
 
 With this software you can:
 
@@ -28,23 +36,59 @@ A functional, documented version of cfengine 3 is expected at the end
 of 2008, but keep your eyes on the websites www.cfengine.org and
 www.cfengine.com for more information.
 
-TO USE:
+TO USE this limited release:
+-----------------------------------------------------------------------
 
 cd src
 
-./cfpromise  (which looks for ../tests/promises.cf)
+ ./cfpromise  (which looks for ../tests/promises.cf)
 
-./cfpromises -f filename
+ ./cfpromises -f filename
 
 e.g.
 
-./cfpromises -f ../tests/mod_common.cf
+ ./cfpromises -f ../tests/mod_common.cf
 
 This generates output to a file promise_output.html in
 the current directory which is best examined with a web
 browser.
 
-NOTE
+You can examine a summary of the configuration e.g.
+
+ firefox ../tests/mod_common.html
+
+and you can see the evaluated promises, expanded for 
+variables etc, e.g.
+
+ firefox promise_output.html
+
+For a summary of syntax:
+
+ ./cfpromise -S > syntax.html
+ firefox syntax.html
+
+NOTES about this limited release:
+-----------------------------------------------------------------------
 
 The file promises.cf has some errors in it. See if you can
 correct them.
+
+Currently the supported types are:
+
+Agent
+================
+vars:
+classes:
+files:
+processes:
+executables:     # Was shllcommands:
+storage:
+
+report:          # Was alert:
+
+Server:
+================
+vars:
+classes:
+access:
+

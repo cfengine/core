@@ -61,7 +61,7 @@
 
 struct BodySyntax CF_MATCHCLASS_BODY[] =
    {
-   {"matches",cf_int,""},
+   {"match_range",cf_irange,""},
    {"in_range_define",cf_slist,""},
    {"out_of_range_define",cf_slist,""},
    {NULL,cf_notype,NULL}
@@ -78,8 +78,8 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
    {"rsize",cf_str,""},
    {"vsize",cf_str,""},
    {"status",cf_str,""},
-   {"ttime",cf_str,""},
-   {"stime",cf_str,""},
+   {"ttime_range",cf_str,""},
+   {"stime_range",cf_str,""},
    {"command",cf_str,""},
    {"tty",cf_str,""},
    {"priority",cf_str,""},
@@ -96,7 +96,8 @@ struct BodySyntax CF_PROCESS_BODIES[] =
    {
    {"signals",cf_olist,"hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"},
    {"number",cf_body,CF_MATCHCLASS_BODY},
-   {"procfilter",cf_body,CF_PROCFILTER_BODY},
+   {"process_select",cf_body,CF_PROCFILTER_BODY},
+   {"restart",cf_str,CF_IDRANGE},
    {NULL,cf_notype,NULL}
    };
 
@@ -106,6 +107,6 @@ struct BodySyntax CF_PROCESS_BODIES[] =
 
 struct SubTypeSyntax CF_PROCESS_SUBTYPES[] =
   {
-  {"Agent","processes",CF_PROCESS_BODIES},
+  {"agent","processes",CF_PROCESS_BODIES},
   };
 

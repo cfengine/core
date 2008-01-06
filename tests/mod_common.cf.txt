@@ -18,7 +18,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias0'</b> promises...
 
 <br><font color=green>........................or</font> =>  {'solaris','userexists(felix,)','xyz'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 62</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 63</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -28,7 +28,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'allok'</b> promises...
 
 <br><font color=green>........................and</font> =>  {'userexists($(users),)'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 64</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 65</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -38,7 +38,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Strategy'</b> promises...
 
 <br><font color=green>........................dist</font> =>  {'0.1','0.2','0.1'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 66</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 67</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
@@ -51,7 +51,7 @@ Resource object <b>'myname'</b> promises...
 
 <br><font color=green>........................string</font> => value in quotes , if body context any
 <br><font color=green>........................policy</font> => constant , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 70</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 71</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -62,7 +62,7 @@ Resource object <b>'derived'</b> promises...
 
 <br><font color=green>........................string</font> => includes $(name) previously defined , if body context any
 <br><font color=green>........................policy</font> => free , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 73</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 74</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -72,7 +72,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'list2'</b> promises...
 
 <br><font color=green>........................ilist</font> =>  {'1','2','getuid(mark,)'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 78</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 79</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -83,7 +83,7 @@ Resource object <b>'users'</b> promises...
 
 <br><font color=green>........................slist</font> =>  {'mark','aeleen','kyrre','matt'} , if body context any
 <br><font color=green>........................policy</font> => constant , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 80</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 81</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -93,7 +93,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Neighbour[fromhost]'</b> promises...
 
 <br><font color=green>........................string</font> => tohost , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 94</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 95</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -103,7 +103,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Adj[tohost]'</b> promises...
 
 <br><font color=green>........................string</font> => nexthost , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 95</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 96</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </table> 
@@ -125,7 +125,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias1'</b> promises...
 
 <br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 105</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 106</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -135,7 +135,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias2'</b> promises...
 
 <br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 106</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 107</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -145,7 +145,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias3'</b> promises...
 
 <br><font color=green>........................and</font> =>  {'class1','class2','class3'} , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 107</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 108</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -155,7 +155,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias4'</b> promises...
 
 <br><font color=green>........................expression</font> => solaris&x86|linux|mac , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 109</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 110</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>   TYPE: <b><font color=green size=4>vars</font><b>
@@ -167,7 +167,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'x'</b> promises...
 
 <br><font color=green>........................string</font> => 1,2,3 , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 113</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 114</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>
@@ -177,7 +177,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'y'</b> promises...
 
 <br><font color=green>........................real</font> => 3.22 , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 115</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 116</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 <tr><td>   TYPE: <b><font color=green size=4>report</font><b>
@@ -189,7 +189,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Alert Message X'</b> promises <b>  {'email','html'}</b>
 
 <br><font color=green>........................transaction</font> => filters , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 119</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 120</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </table> 
@@ -705,6 +705,78 @@ Resource object <b>'/script/command'</b> promises...
  </html>
 <p><table class=border cellpadding=5 width=880>
 <tr><td>
+<table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>ProcessStuff</font> </td></tr></h2></table>
+</td></tr>
+ <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+
+</td></tr></table></td></tr>
+<tr><td>
+<tr><td>   TYPE: <b><font color=green size=4>processes</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(procs_list)'</b> promises...
+
+<br><font color=green>........................signals</font> =>  {'stop','term'} , if body context any
+<br><font color=green>........................number</font> =>  <font color=blue>number</font> <font color=red>match_body</font><b>(no parameters)</b>
+<br><font color=green>.............................match_range</font> => irange(1,5,) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................in_range_define</font> => okclass if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................out_of_range_define</font> =>  {'one','two','three'} if subbody context <i><font color=blue>any</font></i>
+ , if body context any
+<br><font color=green>........................process_select</font> =>  <font color=blue>file_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................name</font> =>  {'.*.asc'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mode</font> => 700 if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................size</font> => irange(10000,10000000,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................owner</font> =>  {'mark','cell','motd'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................group</font> =>  {'ecg','mark'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................ctime</font> => irange(ondate(2000,1,1,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................mtime</font> => irange(ago(1,0,0,2,30,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................atime</font> => irange(ondate(1997,2,22,0,0,0,)now,) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................filetypes</font> =>  {'dir','link'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} if subbody context <i><font color=blue>linux</font></i>
+<br><font color=green>.............................result</font> => type&mode if subbody context <i><font color=blue>linux</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>ProcessStuff</b> in '<i>../tests/mod_process.cf</i>' near line 8</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'jboss.*'</b> promises...
+
+<br><font color=green>........................restart</font> => restart_tag , if body context any
+<p><small>Promise belongs to bundle <b>ProcessStuff</b> in '<i>../tests/mod_process.cf</i>' near line 16</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+<tr><td>   TYPE: <b><font color=green size=4>executables</font><b>
+
+</td></tr><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/path/joss/run.sh'</b> promises...
+
+<br><font color=green>........................trigger</font> => restart_tag , if body context any
+<br><font color=green>........................containment</font> =>  <font color=blue>containment</font> <font color=red>sandbox</font><b>(no parameters)</b>
+<br><font color=green>.............................useshell</font> => true if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................umask</font> => 077 if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................owner</font> => mysql if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................group</font> => daemon if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................chdir</font> => /outputs if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................chroot</font> => /sandbox if subbody context <i><font color=blue>any</font></i>
+ , if body context any
+<p><small>Promise belongs to bundle <b>ProcessStuff</b> in '<i>../tests/mod_process.cf</i>' near line 26</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</table> 
+ </html>
+<p><table class=border cellpadding=5 width=880>
+<tr><td>
 <table class=border><tr><td><h2> Bundle <font color=blue>server</font> <font color=red>access_rules</font> </td></tr></h2></table>
 </td></tr>
  <tr><td> ARGS:</td></tr> <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
@@ -762,7 +834,7 @@ Resource object <b>'/etc/passwd'</b> promises...
 <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
  <font color=blue>common</font> <font color=red>control</font><b>(no parameters)</b>
 <br><font color=green>.............................bundlesequence</font> =>  {'update','main','mypromises(2,3,)'} if subbody context <i><font color=blue>any</font></i>
-<br><font color=green>.............................inputs</font> =>  {'../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf','../tests/mod_access.cf'} if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................inputs</font> =>  {'../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf','../tests/mod_process.cf','../tests/mod_access.cf'} if subbody context <i><font color=blue>any</font></i>
 </td></tr></table></td></tr>
 </table> 
  <p><table class=border cellpadding=5 width=880>
@@ -903,6 +975,33 @@ Resource object <b>'/etc/passwd'</b> promises...
 <br><font color=green>.............................reportfailure</font> => Error, failure of $(param) if subbody context <i><font color=blue>any</font></i>
 <br><font color=green>.............................alert</font> =>  {'alertclass1','alertclass2','alertclass3'} if subbody context <i><font color=blue>any</font></i>
 <br><font color=green>.............................reportalert</font> => DANGER, WILL ROBINSON! if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>number</font> <font color=red>match_body</font><b>(no parameters)</b>
+<br><font color=green>.............................match_range</font> => irange(1,5,) if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................in_range_define</font> => okclass if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................out_of_range_define</font> =>  {'one','two','three'} if subbody context <i><font color=blue>any</font></i>
+</td></tr></table></td></tr>
+</table> 
+ <p><table class=border cellpadding=5 width=880>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+ <font color=blue>proc_select</font> <font color=red>myfilter</font><b>(no parameters)</b>
+<br><font color=green>.............................owner</font> => str if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................pid</font> => regex if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................ppid</font> => int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................pgid</font> => int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................rsize</font> => int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................vsize</font> => int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................status</font> => regex if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................command</font> => regex if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................ttime_range</font> => int,int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................stime_range</font> => int,int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................tty</font> => regex if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................priority</font> => int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................threads</font> => int if subbody context <i><font color=blue>any</font></i>
+<br><font color=green>.............................result</font> => string if subbody context <i><font color=blue>any</font></i>
 </td></tr></table></td></tr>
 </table> 
  <p><table class=border cellpadding=5 width=880>

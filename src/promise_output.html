@@ -24,7 +24,7 @@
 
 <table class=border width=600>
 <tr><td>  1039 </td><th>   slist</th><td> l</td><td> bundlesequence</td><td> =  {'update','main','mypromises(2,3,)'}</td></tr>
-<tr><td>  4063 </td><th>   slist</th><td> l</td><td> inputs</td><td> =  {'../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf','../tests/mod_access.cf'}</td></tr>
+<tr><td>  4063 </td><th>   slist</th><td> l</td><td> inputs</td><td> =  {'../tests/mod_files.cf','../tests/mod_files_copy.cf','../tests/mod_exec.cf','../tests/mod_process.cf','../tests/mod_access.cf'}</td></tr>
 </table>
 <h2>SCOPE access_rules</h2>
 
@@ -32,6 +32,10 @@
 <tr><td>  1909 </td><th>   slist</th><td> l</td><td> ok</td><td> =  {'128.39.89.1/24','192.1.168.1/24'}</td></tr>
 <tr><td>  2969 </td><th>   slist</th><td> l</td><td> bad</td><td> =  {'.*.spam.domain'}</td></tr>
 <tr><td>  3572 </td><th>     int</th><td> s</td><td> portnumber</td><td> = 5803</td></tr>
+</table>
+<h2>SCOPE ProcessStuff</h2>
+
+<table class=border width=600>
 </table>
 <h2>SCOPE myscripts</h2>
 
@@ -77,7 +81,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias0'</b> promises...
 
 <br><font color=green>........................or</font> =>  {'solaris','!any','xyz'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 62</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 63</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -87,7 +91,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'allok'</b> promises...
 
 <br><font color=green>........................and</font> =>  {'!any'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 64</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 65</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -97,7 +101,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Strategy'</b> promises...
 
 <br><font color=green>........................dist</font> =>  {'0.1','0.2','0.1'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 66</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 67</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -108,7 +112,7 @@ Resource object <b>'myname'</b> promises...
 
 <br><font color=green>........................string</font> => value in quotes , if body context any
 <br><font color=green>........................policy</font> => constant , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 70</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 71</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -119,7 +123,7 @@ Resource object <b>'derived'</b> promises...
 
 <br><font color=green>........................string</font> => includes $(name) previously defined , if body context any
 <br><font color=green>........................policy</font> => free , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 73</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 74</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -129,7 +133,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'list2'</b> promises...
 
 <br><font color=green>........................ilist</font> =>  {'1','2','1000'} , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 78</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 79</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -140,7 +144,7 @@ Resource object <b>'users'</b> promises...
 
 <br><font color=green>........................slist</font> =>  {'mark','aeleen','kyrre','matt'} , if body context any
 <br><font color=green>........................policy</font> => constant , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 80</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 81</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -150,7 +154,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Neighbour[fromhost]'</b> promises...
 
 <br><font color=green>........................string</font> => tohost , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 94</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 95</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -160,7 +164,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Adj[tohost]'</b> promises...
 
 <br><font color=green>........................string</font> => nexthost , if body context any
-<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 95</small></p>
+<p><small>Promise belongs to bundle <b>myPromises</b> in '<i>../tests/mod_common.cf</i>' near line 96</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -170,7 +174,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias1'</b> promises...
 
 <br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 105</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 106</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -180,7 +184,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias2'</b> promises...
 
 <br><font color=green>........................or</font> =>  {'class1','class2','class3'} , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 106</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 107</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -190,7 +194,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias3'</b> promises...
 
 <br><font color=green>........................and</font> =>  {'class1','class2','class3'} , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 107</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 108</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -200,7 +204,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'alias4'</b> promises...
 
 <br><font color=green>........................expression</font> => solaris&x86|linux|mac , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 109</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 110</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -210,7 +214,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'x'</b> promises...
 
 <br><font color=green>........................string</font> => 1,2,3 , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 113</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 114</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -220,7 +224,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'y'</b> promises...
 
 <br><font color=green>........................real</font> => 3.22 , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 115</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 116</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -230,7 +234,7 @@ Context is <i><font color=blue>solaris</font></i> <p>
 Resource object <b>'Alert Message X'</b> promises <b>  {'email','html'}</b>
 
 <br><font color=green>........................transaction</font> => filters , if body context any
-<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 119</small></p>
+<p><small>Promise belongs to bundle <b>main</b> in '<i>../tests/mod_common.cf</i>' near line 120</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -927,6 +931,58 @@ Resource object <b>'/script/command'</b> promises...
 <br><font color=green>........................alert</font> =>  {'alertclass1','alertclass2','alertclass3'} , if body context any
 <br><font color=green>........................reportalert</font> => DANGER, WILL ROBINSON! , if body context any
 <p><small>Promise belongs to bundle <b>myscripts</b> in '<i>../tests/mod_exec.cf</i>' near line 11</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'$(procs_list)'</b> promises...
+
+<br><font color=green>........................signals</font> =>  {'stop','term'} , if body context any
+<br><font color=green>........................match_range</font> =>  , if body context any
+<br><font color=green>........................in_range_define</font> => okclass , if body context any
+<br><font color=green>........................out_of_range_define</font> =>  {'one','two','three'} , if body context any
+<br><font color=green>........................name</font> =>  {'.*.asc'} , if body context linux
+<br><font color=green>........................path</font> =>  {'/var/.*/mail','/usr/.*/mail'} , if body context linux
+<br><font color=green>........................mode</font> => 700 , if body context linux
+<br><font color=green>........................size</font> =>  , if body context linux
+<br><font color=green>........................owner</font> =>  {'mark','cell','motd'} , if body context linux
+<br><font color=green>........................group</font> =>  {'ecg','mark'} , if body context linux
+<br><font color=green>........................ctime</font> =>  , if body context linux
+<br><font color=green>........................mtime</font> =>  , if body context linux
+<br><font color=green>........................atime</font> =>  , if body context linux
+<br><font color=green>........................exec_regex</font> => /usr/bin/file $(this) (.*ascii.*) , if body context linux
+<br><font color=green>........................filetypes</font> =>  {'dir','link'} , if body context linux
+<br><font color=green>........................issymlinkto</font> =>  {'/dev/null','/dev/tyyS0'} , if body context linux
+<br><font color=green>........................result</font> => type&mode , if body context linux
+<p><small>Promise belongs to bundle <b>ProcessStuff</b> in '<i>../tests/mod_process.cf</i>' near line 8</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'jboss.*'</b> promises...
+
+<br><font color=green>........................restart</font> => restart_tag , if body context any
+<p><small>Promise belongs to bundle <b>ProcessStuff</b> in '<i>../tests/mod_process.cf</i>' near line 16</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'/path/joss/run.sh'</b> promises...
+
+<br><font color=green>........................trigger</font> => restart_tag , if body context any
+<br><font color=green>........................useshell</font> => true , if body context any
+<br><font color=green>........................umask</font> => 077 , if body context any
+<br><font color=green>........................owner</font> => mysql , if body context any
+<br><font color=green>........................group</font> => daemon , if body context any
+<br><font color=green>........................chdir</font> => /outputs , if body context any
+<br><font color=green>........................chroot</font> => /sandbox , if body context any
+<p><small>Promise belongs to bundle <b>ProcessStuff</b> in '<i>../tests/mod_process.cf</i>' near line 26</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>

@@ -363,6 +363,70 @@ different authorized inviduals and place access control on the
 possible rules in a file obtained from a given source. Thus one could
 deny access to certain users to make certain kinds of promises.
 
+<h1>Some differences in cfengine 3</h1>
+
+<p>
+One of the first things you will notice in cfengine 3 is
+that the control section has been moved and that there is a new
+place to define variables, which is called "vars:".
+
+The reason for this is clarity. In cfengine 2 there is a confusion
+between fixed-name identifiers, e.g. <tt>Inform</tt> that set optional
+behaviour (the orginal meaning of control) and freely defined
+variables that users define and use in rules.
+</p>
+
+<p>
+In cfengine 3, promises belong to bundles and attributes of promises
+belong in bodies. Variables male promises (to associate a name with a value)
+so they are placed in bundles:
+
+<pre>
+vars:
+
+  "identifier"  <i>type</i> => "value";
+</pre>
+
+Control information is now the province of promise "bodies". A body is
+exactly a collection of control attributes, belonging to a promise.
+Apart from "control" bodies, all other bodies are tied to user defined
+promises. In the case of "control", these are attributes to an implicit
+promise by the agent, the server or the monitor, etc. 
+</p>
+
+<pre>
+body agent control
+
+{
+access => { "mark", "root" };
+}
+</pre>
+
+Then there is also a control promise that is common to the entire ensemble.
+
+<pre>
+body common control
+   {
+   bundlesequence => { update, main, mypromises("2","3") };
+
+   inputs          => { 
+                      "../tests/mod_files.cf", 
+                      "../tests/mod_files_copy.cf", 
+                      "../tests/mod_exec.cf",
+                      "../tests/mod_process.cf",
+                      "../tests/mod_access.cf" 
+                      };
+
+    solaris::
+
+      # inputs => { "update.cf", "main.cf" , "linux.cf" };
+
+
+   }
+
+</pre>
+
+
 
 <h1>Some example configuration</h1>
 

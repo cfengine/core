@@ -92,7 +92,7 @@ char *CFX[][2] =
 
 char *CFH[][2] =
    {
-    "<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/menus.css\" />\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/cf_blue.css\"/>\n</head>\n","</html>",
+    "<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/syntax.css\" />\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/cf_blue.css\"/>\n</head>\n","</html>",
     "<table class=border><tr><td><h2>","</td></tr></h2></table>",
     "<p><table class=border cellpadding=5 width=880>","</table>",
     "<tr><th>","</th></tr>",

@@ -279,11 +279,12 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
-   CF_COMMON_SUBTYPES, /* Add modules after this */
-   CF_FILES_SUBTYPES,  /* mod_files.c */
-   CF_EXEC_SUBTYPES,   /* mod_exec.c */
-   CF_PROCESS_SUBTYPES,/* mod_process.c */
+   CF_COMMON_SUBTYPES,    /* Add modules after this */
+   CF_FILES_SUBTYPES,     /* mod_files.c */
+   CF_EXEC_SUBTYPES,      /* mod_exec.c */
+   CF_PROCESS_SUBTYPES,   /* mod_process.c */
    CF_REMACCESS_SUBTYPES, /* mod_access.c */
+   CF_STORAGE_SUBTYPES,   /* mod_storage.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

@@ -43,6 +43,7 @@ cfpromises_SOURCES =							\
 	mod_access.c							\
 	mod_exec.c							\
 	mod_files.c							\
+	mod_storage.c							\
 	mod_process.c
 
 #

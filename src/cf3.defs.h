@@ -44,7 +44,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "transaction"
 
-#define CF3_MODULES 5 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 6 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 
@@ -126,7 +126,7 @@ enum cfdatatype
 #define CF_IDRANGE    "[a-zA-Z0-9_]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
 #define CF_ANYSTRING  ".*"
-#define CF_PATHRANGE  "/.*"
+#define CF_PATHRANGE  "[/\\].*"
 #define CF_TIMERANGE "0,4026531839"
 
 

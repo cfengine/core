@@ -25,7 +25,7 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: mod_access.c                                                        */
+/* File: mod_storage.c                                                       */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -40,7 +40,7 @@
  
 */
 
-#define CF3_MOD_ACCESS
+#define CF3_MOD_FILES
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -59,12 +59,34 @@
  /*                                                         */
  /***********************************************************/
 
-/* This is the primary set of constraints for an exec object */
-
-struct BodySyntax CF_REMACCESS_BODIES[] =
+struct BodySyntax CF_CHECKVOL_BODY[] =
    {
-   {"admit",cf_slist,""},
-   {"deny",cf_slist,""},
+   {"check_foreign",cf_opts,CF_BOOL},
+   {"freespace",cf_str,"[0-9]+[mb%]"},
+   {"sensible_size",cf_int,CF_VALRANGE},
+   {"sensible_count",cf_int,CF_VALRANGE},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
+struct BodySyntax CF_MOUNT_BODY[] =
+   {
+   {"mount_fs",cf_opts,"nfs"},
+   {"mount_point",cf_str,CF_PATHRANGE},
+   {"mount_server",cf_str,""},
+   {"mount_options",cf_slist,""},
+   {NULL,cf_notype,NULL}
+   };
+
+/***************************************************************/
+
+/* This is the primary set of constraints for a file object */
+
+struct BodySyntax CF_STORAGE_BODIES[] =
+   {
+   {"mount",cf_body,CF_MOUNT_BODY},
+   {"checkvolume",cf_body,CF_CHECKVOL_BODY},
    {NULL,cf_notype,NULL}
    };
 
@@ -72,8 +94,11 @@ struct BodySyntax CF_REMACCESS_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
+struct SubTypeSyntax CF_STORAGE_SUBTYPES[] =
   {
-  {"server","access",CF_REMACCESS_BODIES},
+
+  /* Body lists belonging to "files:" type in Agent */
+      
+  {"agent","storage",CF_STORAGE_BODIES},
   };
 

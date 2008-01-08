@@ -45,6 +45,8 @@ subdirectory.
 TO USE this limited release:
 -----------------------------------------------------------------------
 
+See the notes in the doc directory.
+
 cd src
 
  ./cfpromise  (which looks for ../tests/promises.cf)
@@ -87,9 +89,8 @@ vars:
 classes:
 files:
 processes:
-executables:     # Was shllcommands:
-storage:
-
+executables:     # Was shellcommands:
+storage:         # Was disk/required/misc_mount
 report:          # Was alert:
 
 Server:
@@ -98,3 +99,6 @@ vars:
 classes:
 access:
 
+Not yet supported in this release are "editfiles" which will now be a
+part of "files", and routing promises. Both of these require more
+research before they can be finalized. 

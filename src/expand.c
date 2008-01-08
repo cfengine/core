@@ -260,7 +260,7 @@ struct Rlist *ExpandList(char *scopeid,struct Rlist *list)
   
 for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
    {
-   if ((rp->type == CF_SCALAR) && IsNakedList(rp->item))
+   if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
       {
       GetNaked(naked,rp->item);
       
@@ -521,7 +521,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
 
 Debug("EvaluateFinalRval\n");
   
-if ((rtype == CF_SCALAR) && IsNakedList(rval)) /* Treat lists specially here */
+if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here */
    {
    GetNaked(naked,rval);
    
@@ -661,19 +661,19 @@ return vars;
 
 /*********************************************************************/
 
-int IsNakedList(char *str)
+int IsNakedVar(char *str, char vtype)
 
 { char *sp,last = *(str+strlen(str)-1);
   int count=0;
 
-Debug1("IsNakedList(%s) - syntax verify for naked list substitution\n",str);
+  Debug1("IsNakedVar(%s,%c) - syntax verify for naked var substitution\n",str,vtype);
 
 if (strlen(str) < 3)
    {
    return false;
    }
 
-if (*str != '@')
+if (*str != vtype)
    {
    return false;
    }

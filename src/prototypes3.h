@@ -190,7 +190,7 @@ struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f);
 struct Rval ExpandPrivateRval(char *contextid,void *rval,char type);
 struct Rlist *ExpandList(char *scopeid,struct Rlist *list);
 struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,struct Promise *pp);
-int IsNakedList(char *str);
+int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 
 /* promises.c */

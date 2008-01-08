@@ -1,4 +1,8 @@
-<h1>Promise Bundles</h1> <html><head><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" /><link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/></head>
+<h1>Promise Bundles</h1> <html><head>
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" />
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/>
+</head>
+
 <p><table class=border cellpadding=5 width=880>
 <tr><td>
 <table class=border><tr><td><h2> Bundle <font color=blue>agent</font> <font color=red>myPromises</font> </td></tr></h2></table>

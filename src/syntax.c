@@ -454,6 +454,12 @@ if (strlen(range) == 0)
    return;
    }
 
+if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
+   {
+   Verbose("Unable to verify variable expansion at this stage\n");
+   return;
+   }
+
 if (CfRegcomp(&rx,range,REG_EXTENDED) != 0)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"regular expression for string rvalues is not ok for lval %s",lval);
@@ -470,7 +476,7 @@ if (regexec(&rx,s,1,&pmatch,0) == 0)
       }
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (should match %s)",lval,s,range);
+snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
 yyerror(OUTPUT);
 /*regfree(&rx); */
 }
@@ -701,4 +707,5 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
 snprintf(OUTPUT,CF_BUFSIZE,"Unknown built-in function %s()",s);
 yyerror(OUTPUT);
 }
+
 

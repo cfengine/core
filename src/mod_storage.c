@@ -65,6 +65,7 @@ struct BodySyntax CF_CHECKVOL_BODY[] =
    {"freespace",cf_str,"[0-9]+[mb%]"},
    {"sensible_size",cf_int,CF_VALRANGE},
    {"sensible_count",cf_int,CF_VALRANGE},
+   {"scan_arrivals",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -86,7 +87,7 @@ struct BodySyntax CF_MOUNT_BODY[] =
 struct BodySyntax CF_STORAGE_BODIES[] =
    {
    {"mount",cf_body,CF_MOUNT_BODY},
-   {"checkvolume",cf_body,CF_CHECKVOL_BODY},
+   {"volume",cf_body,CF_CHECKVOL_BODY},
    {NULL,cf_notype,NULL}
    };
 

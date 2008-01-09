@@ -34,13 +34,13 @@
 /* #undef REGEX_MALLOC */
 
 /* Whether to use LCHOWN to change ownerships */
-/* #undef HAVE_LCHOWN */
+#define HAVE_LCHOWN 1
 
 /* Whether the thread library has setmask */
-/* #undef HAVE_PTHREAD_SIGMASK */
+#define HAVE_PTHREAD_SIGMASK 1
 
 /* Whether the thread library has setstacksize */
-/* #undef HAVE_PTHREAD_ATTR_SETSTACKSIZE */
+#define HAVE_PTHREAD_ATTR_SETSTACKSIZE 1
 
 /* Whether libdb has db_open */
 /* #undef HAVE_DB_CREATE */
@@ -99,6 +99,16 @@
 /* Define if old Berkeley API */
 /* #undef CF_OLD_DB */
 
+/* Define to 1 if using `getloadavg.c'. */
+/* #undef C_GETLOADAVG */
+
+/* Define to 1 for DGUX with <sys/dg_sys_info.h>. */
+/* #undef DGUX */
+
+/* Define to 1 if the `getloadavg' function needs to be run setuid or setgid.
+   */
+/* #undef GETLOADAVG_PRIVILEGED */
+
 /* Define to 1 if you have the `bcopy' function. */
 #define HAVE_BCOPY 1
 
@@ -136,6 +146,9 @@
 /* Define to 1 if you have the `gethostname' function. */
 #define HAVE_GETHOSTNAME 1
 
+/* Define to 1 if you have the `getloadavg' function. */
+#define HAVE_GETLOADAVG 1
+
 /* Define to 1 if you have the `getnetgrent' function. */
 #define HAVE_GETNETGRENT 1
 
@@ -154,6 +167,12 @@
 /* Define to 1 if you have the `dce' library (-ldce). */
 /* #undef HAVE_LIBDCE */
 
+/* Define to 1 if you have the `dgc' library (-ldgc). */
+/* #undef HAVE_LIBDGC */
+
+/* Define to 1 if you have the `kstat' library (-lkstat). */
+/* #undef HAVE_LIBKSTAT */
+
 /* Define to 1 if you have the `m' library (-lm). */
 #define HAVE_LIBM 1
 
@@ -161,10 +180,10 @@
 /* #undef HAVE_LIBNSL */
 
 /* Define to 1 if you have the `nss_nis' library (-lnss_nis). */
-/* #undef HAVE_LIBNSS_NIS */
+#define HAVE_LIBNSS_NIS 1
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
-/* #undef HAVE_LIBPTHREAD */
+#define HAVE_LIBPTHREAD 1
 
 /* Define to 1 if you have the `pthreads' library (-lpthreads). */
 /* #undef HAVE_LIBPTHREADS */
@@ -184,6 +203,9 @@
 /* Define to 1 if you have the `thread' library (-lthread). */
 /* #undef HAVE_LIBTHREAD */
 
+/* Define to 1 if you have the <mach/mach.h> header file. */
+/* #undef HAVE_MACH_MACH_H */
+
 /* Define to 1 if you have the <malloc.h> header file. */
 #define HAVE_MALLOC_H 1
 
@@ -196,11 +218,17 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
 
+/* Define to 1 if you have the <nlist.h> header file. */
+/* #undef HAVE_NLIST_H */
+
+/* Define to 1 if you have the `pstat_getdynamic' function. */
+/* #undef HAVE_PSTAT_GETDYNAMIC */
+
 /* Define if you have POSIX threads libraries and header files. */
 #define HAVE_PTHREAD 1
 
 /* Define to 1 if you have the <pthread.h> header file. */
-/* #undef HAVE_PTHREAD_H */
+#define HAVE_PTHREAD_H 1
 
 /* Define to 1 if you have the `putenv' function. */
 #define HAVE_PUTENV 1
@@ -218,13 +246,16 @@
 /* #undef HAVE_RXPOSIX_H */
 
 /* Define to 1 if you have the <sched.h> header file. */
-/* #undef HAVE_SCHED_H */
+#define HAVE_SCHED_H 1
 
 /* Define to 1 if you have the `setegid' function. */
 #define HAVE_SETEGID 1
 
 /* Define to 1 if you have the `seteuid' function. */
 #define HAVE_SETEUID 1
+
+/* Define to 1 if you have the `setlocale' function. */
+/* #undef HAVE_SETLOCALE */
 
 /* Define to 1 if you have the `setregid' function. */
 #define HAVE_SETREGID 1
@@ -273,6 +304,9 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #define HAVE_STRSTR 1
+
+/* Define to 1 if `n_un.n_name' is member of `struct nlist'. */
+/* #undef HAVE_STRUCT_NLIST_N_UN_N_NAME */
 
 /* Define to 1 if `sa_len' is member of `struct sockaddr'. */
 /* #undef HAVE_STRUCT_SOCKADDR_SA_LEN */
@@ -357,6 +391,10 @@
 /* Define to 1 if you have the `waitpid' function. */
 #define HAVE_WAITPID 1
 
+/* Define to 1 if your `struct nlist' has an `n_un' member. Obsolete, depend
+   on `HAVE_STRUCT_NLIST_N_UN_N_NAME */
+/* #undef NLIST_NAME_UNION */
+
 /* Name of package */
 #define PACKAGE "cfengine"
 
@@ -382,8 +420,18 @@
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
+/* Define to 1 on System V Release 4. */
+/* #undef SVR4 */
+
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #define TIME_WITH_SYS_TIME 1
+
+/* Define to 1 for Encore UMAX. */
+/* #undef UMAX */
+
+/* Define to 1 for Encore UMAX 4.3 that has <inq_status/cpustats.h> instead of
+   <sys/cpustats.h>. */
+/* #undef UMAX4_3 */
 
 /* Define if BerkeleyDB is available. */
 #define USE_BERKELEY_DB 1

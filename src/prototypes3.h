@@ -52,6 +52,11 @@ void CheckVariablePromises(char *scope,struct Promise *varlist);
 void SetAuditVersion(void);
 void VerifyPromises(void);
 
+/* constraint.c */
+
+struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes);
+void DeleteConstraintList(struct Constraint *conlist);
+
 /* conversion.c */
 
 enum cfdatatype Typename2Datatype(char *name);
@@ -111,7 +116,6 @@ struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
 struct SubType *AppendBodyType(struct Body *body,char *typename);
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle);
-struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes);
 struct Body *IsBody(struct Body *list,char *key);
 
 /* iteration.c */

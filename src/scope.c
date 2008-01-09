@@ -84,7 +84,7 @@ if ((ptr = (struct Scope *)malloc(sizeof(struct Scope))) == NULL)
    FatalError("Memory Allocation failed for Scope");
    }
 
-InitHashes((struct CfAssoc*)ptr->hashtable);
+InitHashes((struct CfAssoc**)ptr->hashtable);
 
 ptr->next = VSCOPE;
 ptr->scope = strdup(name);

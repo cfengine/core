@@ -533,7 +533,7 @@ s,@DEFS@,|#_!!_#|-DHAVE_CONFIG_H,g
 s,@ECHO_C@,|#_!!_#|,g
 s,@ECHO_N@,|#_!!_#|-n,g
 s,@ECHO_T@,|#_!!_#|,g
-s,@LIBS@,|#_!!_#|-lrt -lcfengine -lm  -L../pub -lcfpub,g
+s,@LIBS@,|#_!!_#|-lnss_nis -lpthread -lrt -lcfengine -lm  -L../pub -lcfpub,g
 s,@build_alias@,|#_!!_#|,g
 s,@host_alias@,|#_!!_#|,g
 s,@target_alias@,|#_!!_#|,g
@@ -618,6 +618,10 @@ s,@F77@,|#_!!_#|,g
 s,@FFLAGS@,|#_!!_#|,g
 s,@ac_ct_F77@,|#_!!_#|,g
 s,@LIBTOOL@,|#_!!_#|$(SHELL) $(top_builddir)/libtool,g
+s,@LIBOBJS@,|#_!!_#|,g
+s,@NEED_SETGID@,|#_!!_#|false,g
+s,@KMEM_GROUP@,|#_!!_#|,g
+s,@GETLOADAVG_LIBS@,|#_!!_#|,g
 s,@GETCONF@,|#_!!_#|/usr/bin/getconf,g
 s,@BERKELEY_DB_LDFLAGS@,|#_!!_#|,g
 s,@BERKELEY_DB_CFLAGS@,|#_!!_#|-I/usr/include/db4,g
@@ -630,7 +634,6 @@ s,@EIGHTBIT@,|#_!!_#|\\200-\\377,g
 s,@NOWRAP@,|#_!!_#|%option noyywrap,g
 s,@GCC_CFLAG@,|#_!!_#|-g -O2 -Wreturn-type -Wmissing-prototypes -Wuninitialized,g
 s,@HOSTNAME@,|#_!!_#|/bin/hostname,g
-s,@LIBOBJS@,|#_!!_#|,g
 s,@LTLIBOBJS@,|#_!!_#|,g
 :end
 s/|#_!!_#|//g
@@ -909,6 +912,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_INTTYPES_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_STDINT_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_UNISTD_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_DLFCN_H\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETLOADAVG\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBM\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBCFENGINE\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*USE_BERKELEY_DB\)[	 (].*,\1define\2 1 ,
@@ -937,7 +941,6 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETCWD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETNETGRENT\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_WAITPID\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SETEUID\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SETEGID\)[	 (].*,\1define\2 1 ,
 CEOF
     sed -f "$tmp/defines.sed" $ac_file_inputs >"$tmp/out1"
     # First, check the format of the line:
@@ -946,6 +949,7 @@ CEOF
 /^[	 ]*#[	 ]*define[	 ][	 ]*[_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ][_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]*[(	 ]/b def
 b
 :def
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SETEGID\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SETREUID\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SETREGID\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_UNAME\)[	 (].*,\1define\2 1 ,
@@ -970,7 +974,14 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_STRERROR\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SNPRINTF\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SYSCONF\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_RTENTRY\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBPTHREAD\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD_H\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SCHED_H\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LCHOWN\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD_ATTR_SETSTACKSIZE\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD_SIGMASK\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*LINUX\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBNSS_NIS\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*WORKDIR\)[	 (].*,\1define\2 "/var/cfengine" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*AUTOCONF_HOSTNAME\)[	 (].*,\1define\2 "atlas" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*AUTOCONF_SYSNAME\)[	 (].*,\1define\2 "linux-gnu" ,

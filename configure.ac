@@ -63,6 +63,7 @@ dnl AC_DISABLE_STATIC - maybe use shared libs later
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
+AC_FUNC_GETLOADAVG 
 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
@@ -505,8 +506,6 @@ dnl #######################################################################
 dnl Handle DCE + threading stuff
 dnl #######################################################################
 
-LIBS="$LIBS -L../pub -lcfpub"
-
 AC_CHECK_LIB(pthread,main)         dnl POSIX threads
 
 if test "$ac_cv_lib_pthread_main" = "yes"; then
@@ -534,7 +533,6 @@ AC_ARG_ENABLE(DCE,[  --enable-DCE            support for DCE and ACLs],[
 	;;
   esac
 ])
-
 
 dnl ######################################################################
 dnl Give the chance to enable SELINUX
@@ -706,6 +704,7 @@ case "$target_os" in
         ;;
 esac
 
+LIBS="$LIBS -L../pub -lcfpub"
 
 dnl #####################################################################
 dnl Configure LOCKDIR and LOGDIR

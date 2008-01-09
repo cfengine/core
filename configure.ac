@@ -70,8 +70,6 @@ dnl ######################################################################
 dnl Checks for libraries.
 dnl ######################################################################
 
-LIBS="$LIBS -L../pub -lcfpub"
-
 AC_CHECK_LIB(m,main)
 AC_CHECK_LIB(cfengine,main)
 
@@ -99,7 +97,7 @@ AC_MSG_CHECKING(for BerkeleyDB location in $BERKELEY_DB_DIR)
 
 if test "x$BERKELEY_DB_DIR" = "xno" ; then
     AC_MSG_RESULT( )
-    AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.4 or later)
+    AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.2 or later)
 else
     if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
         for v in BerkeleyDB.4.2 BerkeleyDB.4.3 BerkeleyDB.4.4 BerkeleyDB.4.5 BerkeleyDB.4.6; do
@@ -234,7 +232,7 @@ int main(void)
 }
        ],
        [AC_MSG_RESULT(OK)],
-       [AC_MSG_ERROR(This release of cfengine requires BerkeleyDB 3.2 or later)]
+       [AC_MSG_ERROR(This release of cfengine requires BerkeleyDB 4)]
     )
 
     AC_MSG_CHECKING(Berkeley DB API)
@@ -506,6 +504,8 @@ AC_MSG_RESULT([$lfsresult])
 dnl #######################################################################
 dnl Handle DCE + threading stuff
 dnl #######################################################################
+
+LIBS="$LIBS -L../pub -lcfpub"
 
 AC_CHECK_LIB(pthread,main)         dnl POSIX threads
 

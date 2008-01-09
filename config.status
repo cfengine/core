@@ -533,7 +533,7 @@ s,@DEFS@,|#_!!_#|-DHAVE_CONFIG_H,g
 s,@ECHO_C@,|#_!!_#|,g
 s,@ECHO_N@,|#_!!_#|-n,g
 s,@ECHO_T@,|#_!!_#|,g
-s,@LIBS@,|#_!!_#|-lnss_nis -lpthread -lrt -lcfengine -lm  -L../pub -lcfpub,g
+s,@LIBS@,|#_!!_#|-lrt -lcfengine -lm  -L../pub -lcfpub,g
 s,@build_alias@,|#_!!_#|,g
 s,@host_alias@,|#_!!_#|,g
 s,@target_alias@,|#_!!_#|,g
@@ -970,14 +970,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_STRERROR\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SNPRINTF\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SYSCONF\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_RTENTRY\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBPTHREAD\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD_H\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SCHED_H\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LCHOWN\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD_ATTR_SETSTACKSIZE\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD_SIGMASK\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*LINUX\)[	 (].*,\1define\2 1 ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBNSS_NIS\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*WORKDIR\)[	 (].*,\1define\2 "/var/cfengine" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*AUTOCONF_HOSTNAME\)[	 (].*,\1define\2 "atlas" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*AUTOCONF_SYSNAME\)[	 (].*,\1define\2 "linux-gnu" ,

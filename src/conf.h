@@ -34,13 +34,13 @@
 /* #undef REGEX_MALLOC */
 
 /* Whether to use LCHOWN to change ownerships */
-#define HAVE_LCHOWN 1
+/* #undef HAVE_LCHOWN */
 
 /* Whether the thread library has setmask */
-#define HAVE_PTHREAD_SIGMASK 1
+/* #undef HAVE_PTHREAD_SIGMASK */
 
 /* Whether the thread library has setstacksize */
-#define HAVE_PTHREAD_ATTR_SETSTACKSIZE 1
+/* #undef HAVE_PTHREAD_ATTR_SETSTACKSIZE */
 
 /* Whether libdb has db_open */
 /* #undef HAVE_DB_CREATE */
@@ -161,10 +161,10 @@
 /* #undef HAVE_LIBNSL */
 
 /* Define to 1 if you have the `nss_nis' library (-lnss_nis). */
-#define HAVE_LIBNSS_NIS 1
+/* #undef HAVE_LIBNSS_NIS */
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
-#define HAVE_LIBPTHREAD 1
+/* #undef HAVE_LIBPTHREAD */
 
 /* Define to 1 if you have the `pthreads' library (-lpthreads). */
 /* #undef HAVE_LIBPTHREADS */
@@ -200,7 +200,7 @@
 #define HAVE_PTHREAD 1
 
 /* Define to 1 if you have the <pthread.h> header file. */
-#define HAVE_PTHREAD_H 1
+/* #undef HAVE_PTHREAD_H */
 
 /* Define to 1 if you have the `putenv' function. */
 #define HAVE_PUTENV 1
@@ -218,7 +218,7 @@
 /* #undef HAVE_RXPOSIX_H */
 
 /* Define to 1 if you have the <sched.h> header file. */
-#define HAVE_SCHED_H 1
+/* #undef HAVE_SCHED_H */
 
 /* Define to 1 if you have the `setegid' function. */
 #define HAVE_SETEGID 1

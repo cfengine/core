@@ -36,6 +36,7 @@ body common control
                       "../tests/mod_files_copy.cf", 
                       "../tests/mod_exec.cf",
                       "../tests/mod_process.cf",
+                      "../tests/mod_storage.cf",
                       "../tests/mod_access.cf" 
                       };
 

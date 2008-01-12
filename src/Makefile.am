@@ -1,7 +1,7 @@
 AM_CFLAGS = $(GCC_CFLAG) @CFLAGS@  
 AM_YFLAGS = -d
 LEXLIB = @LEXLIB@
-LDADD = libpromises.la $(BERKELEY_DB_LDFLAGSD) $(BERKELEY_DB_LIB) $(OPENSSL_LIB_LDFLAGS) $(OPENSSL_LIB_LIB)
+LDADD = $(BERKELEY_DB_LDFLAGSD) $(BERKELEY_DB_LIB) $(OPENSSL_LIB_LDFLAGS) $(OPENSSL_LIB_LIB) libpromises.la 
 INCLUDES = $(BERKELEY_DB_CFLAGS) $(OPENSSL_LIB_CPPFLAGS)
 AM_LDFLAGS = $(BERKELEY_DB_LDFLAGS) $(OPENSSL_LIB_LDFLAGS) @LDFLAGS@
 
@@ -45,6 +45,9 @@ cfpromises_SOURCES =							\
 	mod_files.c							\
 	mod_storage.c							\
 	mod_process.c
+
+
+EXTRA_DIST = cf3lex.c cf3parse.c
 
 #
 # Pickup header files here so Automake knows about them

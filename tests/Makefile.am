@@ -22,7 +22,7 @@ doc_DATA = $(psfiles) $(pdffiles)
 
 # Make sure these get distributed with everything else.
 
-EXTRA_DIST = mod_common.cf mod_exec.cf mod_process.cf mod_routing.cf mod_map.cf mod_files_copy.cf mod_files.cf 
+EXTRA_DIST = mod_common.cf mod_exec.cf mod_process.cf mod_routing.cf mod_map.cf mod_files_copy.cf mod_files.cf mod_storage.cf promises.cf mod_monitor.cf
 
 SUFFIXES = html latex pdf ps dvi
 

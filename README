@@ -10,13 +10,18 @@ A functional, documented version of cfengine 3 is expected at the end
 of 2008, but keep your eyes on the websites www.cfengine.org and
 www.cfengine.com for more information.
 
+With this software you can:
+
+* practice making cfengine 3 configuration files
+* test syntax and iteration of rules
+* view expanded policy rules as html in your favourite web browser
+
 
 BUILDING
 -----------------------------------------------------------------------
 
-To build this software you need to have version 2.2.3 or greater of
-cfengine 2 installed on your system, since cfengine 3 uses libraries
-from the cfengine 2 to compile.
+To build this software you need to have the library libcfengine from
+cfengine version 2.2.3 or later installed on your system.
 
 Type the following to build the software:
 
@@ -27,11 +32,19 @@ with root privileges as THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO
 YOUR SYSTEM.  It is recommend that you simply run it in the src
 directory as a regular user.
 
-With this software you can:
+TROUBLESHOOTING
+-----------------------------------------------------------------------
 
-* practice making cfengine 3 configuration files
-* test syntax and iteration of rules
-* view expanded policy rules as html in your favourite web browser
+Problems linking?
+
+ Try getting the latest cfengine version directly from svn. You only
+ need to install the library
+
+ host$ cd /workdir
+ host$ svn checkout https://svn.iu.hio.no/projects/cfengine-2/trunk
+ host$ cd trunk; ./configure;make
+ host$ cd src; install -c .libs/libcfengine.a /usr/local/lib/libcfengine.a
+
 
 EXAMPLES
 -----------------------------------------------------------------------

@@ -25,22 +25,11 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: mod_storage.c                                                       */
+/* File: mod_knowledge.c                                                     */
 /*                                                                           */
 /*****************************************************************************/
 
-/*
-
- This file can act as a template for adding functionality to cfengine 3.
- All functionality can be added by extending the main array
-
- CF_MOD_SUBTYPES[CF3_MODULES]
-
- and its array dimension, in mod_common, in the manner shown here.
- 
-*/
-
-#define CF3_MOD_STORAGE
+#define CF3_MOD_KNOWLEDGE
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -59,24 +48,11 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_CHECKVOL_BODY[] =
+struct BodySyntax CF_OCCUR_BODIES[] =
    {
-   {"check_foreign",cf_opts,CF_BOOL},
-   {"freespace",cf_str,"[0-9]+[mb%]"},
-   {"sensible_size",cf_int,CF_VALRANGE},
-   {"sensible_count",cf_int,CF_VALRANGE},
-   {"scan_arrivals",cf_opts,CF_BOOL},
-   {NULL,cf_notype,NULL}
-   };
-
-/**************************************************************/
-
-struct BodySyntax CF_MOUNT_BODY[] =
-   {
-   {"mount_fs",cf_opts,"nfs"},
-   {"mount_point",cf_str,CF_PATHRANGE},
-   {"mount_server",cf_str,""},
-   {"mount_options",cf_slist,""},
+   {"mentions",cf_slist,""},
+   {"usecontent",cf_slist,CF_PATHRANGE},
+   {"stylesheet",cf_str,""},
    {NULL,cf_notype,NULL}
    };
 
@@ -84,10 +60,10 @@ struct BodySyntax CF_MOUNT_BODY[] =
 
 /* This is the primary set of constraints for a file object */
 
-struct BodySyntax CF_STORAGE_BODIES[] =
+struct BodySyntax CF_TOPICS_BODIES[] =
    {
-   {"mount",cf_body,CF_MOUNT_BODY},
-   {"volume",cf_body,CF_CHECKVOL_BODY},
+   {"association",cf_str,""},
+   {"occursin",cf_slist,""},
    {NULL,cf_notype,NULL}
    };
 
@@ -95,11 +71,12 @@ struct BodySyntax CF_STORAGE_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_STORAGE_SUBTYPES[] =
+struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
 
   /* Body lists belonging to "files:" type in Agent */
       
-  {"agent","storage",CF_STORAGE_BODIES},
+  {"knowledge","topics",CF_TOPICS_BODIES},
+  {"knowledge","occurrences",CF_OCCUR_BODIES},
   };
 

@@ -9,38 +9,15 @@ bundle agent testbundle
 {
 vars:
 
-  "testscalar1" string => "one";
-  "testscalar2" string => "two";
-
-  # note that a variable is also a promise and we can make a note of
-  # the recipient of the promise here too.
-
   "testlist1" -> "me"   slist  => { "mark", "kyrre", "aeleen" };
-
-  "testlist2"    slist  => { "alpha", "beta", "gamma" };
-
-  "theint" int => randomint(3,6);
-
-  "myint"  string => "random number $(theint)";
 
 ######################################################################
 
 files:
 
-       "/path/file4$(testscalar1).*" -> { @(testlist1), "mum", $(testscalar1) },
-
-            access      => myaccess("$(testlist1)"),
-            name_select=> "fish.*",
-
-            recurse     => getuid("1000");
-
-       #
-       # list substitutions in bodies are treated as literals
-       #
-
        "/path/file5.*" 
 
-            access      => myaccess($(testlist1)),
+            access      => myaccess("$(testlist1)"),
             recurse     => "inf";
 
 }

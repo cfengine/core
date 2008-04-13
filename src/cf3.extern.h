@@ -64,6 +64,13 @@ extern struct BodySyntax CF_MOUNT_BODY[];
 extern struct BodySyntax CF_CHECKVOL_BODY[];
 #endif
 
+#ifndef CF3_MOD_KNOWLEGDE
+extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
+extern struct BodySyntax CF_TOPICS_BODIES[];
+extern struct BodySyntax CF_OCCUR_BODIES[];
+#endif
+
+
 #ifndef CF3_MOD_FILES
 extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
 extern struct BodySyntax CF_APPEND_REPL_BODIES[];

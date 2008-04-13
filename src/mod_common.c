@@ -218,6 +218,11 @@ struct BodySyntax CFEX_CONTROLBODY[] =
    {NULL,cf_notype,NULL}
    };
 
+struct BodySyntax CFK_CONTROLBODY[] =
+   {
+   {"builddir",cf_str,".*"},
+   {NULL,cf_notype,NULL}
+   };
 
 /*********************************************************/
 
@@ -229,6 +234,9 @@ struct SubTypeSyntax CF_ALL_BODIES[] =
    {"agent","control",CFA_CONTROLBODY},
    {"server","control",CFS_CONTROLBODY},
    {"monitor","control",CFM_CONTROLBODY},
+   {"runclient","control",CFR_CONTROLBODY},
+   {"executor","control",CFEX_CONTROLBODY},
+   {"knowledge","control",CFK_CONTROLBODY},
 
    //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
@@ -285,6 +293,7 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_PROCESS_SUBTYPES,   /* mod_process.c */
    CF_REMACCESS_SUBTYPES, /* mod_access.c */
    CF_STORAGE_SUBTYPES,   /* mod_storage.c */
+   CF_KNOWLEDGE_SUBTYPES, /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

@@ -61,9 +61,9 @@ bundle agent myPromises(s1,s2)   # policy version 1.0
    {
    classes:
 
-     "alias0"   or => { "solaris" , userexists("felix") , "xyz" };
+     "alias0"    or => { "solaris" , userexists("felix") , "xyz" };
 
-     "allok"   and => { userexists("$(users)") };
+     "allok  "   and => { userexists("$(users)") };
 
      "Strategy"  dist => { "0.1", "0.2", "0.1" };
 

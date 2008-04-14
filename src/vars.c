@@ -47,7 +47,7 @@ enum cfdatatype GetVariable(char *scope,char *lval,void **returnv, char *rtype)
   char scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE],sval[CF_MAXVARSIZE];
   char expbuf[CF_EXPANDSIZE];
   
-Debug("\nGetVariable(%s,%s)\n",scope,lval);
+Debug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
 if (!IsExpandable(lval))
    {

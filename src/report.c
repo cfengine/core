@@ -368,8 +368,15 @@ if (XML)
    }
 else
    {
-   fprintf(FOUT,"Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
-   fprintf(FOUT,"\n");
+   if (pp->audit)
+      {
+      fprintf(FOUT,"Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
+      fprintf(FOUT,"\n");
+      }
+   else
+      {
+      fprintf(FOUT,"Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
+      }
    }
 }
 
@@ -598,8 +605,8 @@ printf("</ul></div>\n\n");
 
 void ShowPromiseTypesFor(char *s)
 
-{ int i;
- struct SubTypeSyntax *st;
+{ int i,j;
+  struct SubTypeSyntax *st;
 
 printf("<div id=\"promisetype\">");
 printf("<h4>Promise types for %s bundles</h4>\n",s);
@@ -610,11 +617,14 @@ for (i = 0; i < CF3_MODULES; i++)
    {
    st = CF_ALL_SUBTYPES[i];
 
-   if (strcmp(s,st->btype) == 0 || strcmp("*",st->btype) == 0)
+   for (j = 0; st[j].btype != NULL; j++)
       {
-      printf("<li><h4>PROMISE TYPE %s</h4>\n",st->subtype);
-      ShowBodyParts(st->bs);
-      printf("</li>\n");
+      if (strcmp(s,st[j].btype) == 0 || strcmp("*",st[j].btype) == 0)
+         {
+         printf("<li><h4>PROMISE TYPE %s</h4>\n",st[j].subtype);
+         ShowBodyParts(st[j].bs);
+         printf("</li>\n");
+         }
       }
    }
 

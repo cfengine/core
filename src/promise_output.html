@@ -7,10 +7,10 @@
 <h2>SCOPE system</h2>
 
 <table class=border width=600>
-<tr><td>   590 </td><th>  string</th><td> s</td><td> ipv4_2[eth1]</td><td> = 192.168</td></tr>
-<tr><td>  1895 </td><th>  string</th><td> s</td><td> ipv4[eth1]</td><td> = 192.168.1.104</td></tr>
-<tr><td>  2100 </td><th>  string</th><td> s</td><td> ipv4_1[eth1]</td><td> = 192</td></tr>
-<tr><td>  4049 </td><th>  string</th><td> s</td><td> ipv4_3[eth1]</td><td> = 192.168.1</td></tr>
+<tr><td>   529 </td><th>  string</th><td> s</td><td> ipv4_2[eth0]</td><td> = 192.168</td></tr>
+<tr><td>  1834 </td><th>  string</th><td> s</td><td> ipv4[eth0]</td><td> = 192.168.1.103</td></tr>
+<tr><td>  2039 </td><th>  string</th><td> s</td><td> ipv4_1[eth0]</td><td> = 192</td></tr>
+<tr><td>  3988 </td><th>  string</th><td> s</td><td> ipv4_3[eth0]</td><td> = 192.168.1</td></tr>
 </table>
 <h1>Expanded promise list</h1><html><head>
 <link rel="stylesheet" type="text/css" href="http://www.cfengine.org/syntax.css" />
@@ -23,7 +23,7 @@ Context is <i><font color=blue>any</font></i> <p>
 Resource object <b>'docroot'</b> promises...
 
 <br><font color=green>........................string</font> => /path/to/docs , if body context any
-<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 7</small></p>
+<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 28</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -33,18 +33,27 @@ Context is <i><font color=blue>any</font></i> <p>
 Resource object <b>'otherdocs'</b> promises...
 
 <br><font color=green>........................slist</font> =>  {'doc1','doc2'} , if body context any
-<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 9</small></p>
+<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 29</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
 <tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
 Context is <i><font color=blue>any</font></i> <p>
 
-Resource object <b>'cfengine'</b> promises <b>  {'cfagent','cfservd','cfrun'}</b>
+Resource object <b>'cfengine'</b> promises <b>  {'cfagent','cfservd','cfenvd'}</b>
 
-<br><font color=green>........................association</font> => composed of , if body context any
-<br><font color=green>........................occursin</font> =>  {'$(docroot)/overview.html','$(docroot)/cf3.html'} , if body context any
-<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 15</small></p>
+<br><font color=green>........................association</font> =>  {'composed of','key concept'} , if body context any
+<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 38</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</p><p><tr><td>
+<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>
+Context is <i><font color=blue>any</font></i> <p>
+
+Resource object <b>'cfengine'</b> promises <b>  {'Mark Burgess','Bas Van der Vlies'}</b>
+
+<br><font color=green>........................association</font> => has developers , if body context any
+<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 45</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p><p><tr><td>
@@ -54,9 +63,9 @@ Context is <i><font color=blue>any</font></i> <p>
 Resource object <b>'docid'</b> promises <b>  {'doc1','doc2'}</b>
 
 <br><font color=green>........................mentions</font> =>  {'topicid1','topicid2'} , if body context any
-<br><font color=green>........................usecontent</font> =>  {'/$(docroot)/textfragment1','/$(docroot)/textfragment2'} , if body context any
+<br><font color=green>........................usecontent</font> =>  {'/path/to/docs/textfragment1','/path/to/docs/textfragment2'} , if body context any
 <br><font color=green>........................stylesheet</font> => /css/mystyle.css , if body context any
-<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 27</small></p>
+<p><small>Promise belongs to bundle <b>topic_map</b> in '<i>../tests/mod_knowledge.cf</i>' near line 55</small></p>
 </td></tr></table></td></tr>
 </td></tr>
 </p></html>

@@ -447,7 +447,7 @@ void CheckParseString(char *lval,char *s,char *range)
 { regex_t rx;
   regmatch_t pmatch;
 
-Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
+ Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
   
 if (strlen(range) == 0)
    {
@@ -476,8 +476,15 @@ if (regexec(&rx,s,1,&pmatch,0) == 0)
       }
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
-yyerror(OUTPUT);
+if (IsCf3VarString(s))
+   {
+   Verbose("Unable to verify syntax due to variable expansion at this stage\n");   
+   }
+else
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
+   yyerror(OUTPUT);
+   }
 /*regfree(&rx); */
 }
 

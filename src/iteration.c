@@ -43,16 +43,16 @@ struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
   struct Scope *ptr = NULL;
   struct CfAssoc *new,*cp;
 
-Debug("NewIterationContext()\n");
+Debug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
+
+CopyScope("this",scopeid);
+ptr=GetScope("this");
 
 if (namelist == NULL)
    {
    Debug("No lists to iterate over\n");
    return NULL;
    }
-
-CopyScope("this",scopeid);
-ptr=GetScope("this");
 
 for (rp = namelist; rp != NULL; rp = rp->next)
    {

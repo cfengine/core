@@ -62,8 +62,7 @@ struct BodySyntax CF_OCCUR_BODIES[] =
 
 struct BodySyntax CF_TOPICS_BODIES[] =
    {
-   {"association",cf_str,""},
-   {"occursin",cf_slist,""},
+   {"association",cf_slist,""},
    {NULL,cf_notype,NULL}
    };
 

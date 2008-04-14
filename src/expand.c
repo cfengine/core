@@ -97,7 +97,11 @@ void ExpandPromise(char *scopeid,struct Promise *pp)
 { struct Rlist *rp, *listvars = NULL, *scalarvars = NULL;
   struct Constraint *cp;
   struct Promise *pcopy;
- 
+
+Debug("****************************************************\n");
+Debug("* ExpandPromises (scope = %s )\n",scopeid);
+Debug("****************************************************\n\n");
+  
 pcopy = DeRefCopyPromise(scopeid,pp);
 
 ScanRval(scopeid,&scalarvars,&listvars,pcopy->promiser,CF_SCALAR);
@@ -247,6 +251,7 @@ for (sp = string; (*sp != '\0') ; sp++)
 int ExpandScalar(char *string,char buffer[CF_EXPANDSIZE])
 
 {
+Debug("\nExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
 return ExpandPrivateScalar(CONTEXTID,string,buffer); 
 }
 

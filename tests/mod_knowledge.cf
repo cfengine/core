@@ -1,0 +1,69 @@
+############################################################################
+#
+# This is a promise/cfengine version of the Linear Topic Map language
+# Topic Maps are an ISO standard, but we are trying to do something
+# slightly different here, and we want to syntax to be uniform. This
+# could be compiled into an ISO Topic Map? (Maybe if the promises fit..)
+#
+############################################################################
+#
+# Topics are independent abstract entities which use-promise associations.
+# We assume that all topics offer their info freely to all other topics.
+#
+# Documents/Occurrences lie outside of a topic map in the substrate, but this
+# is where promises live. Documents can make promises about their content
+# and type. These supplement the topic map.
+#
+############################################################################
+
+ #
+ # We introduce a "knowledge" component to cfengine 
+ #
+
+bundle knowledge topic_map
+
+{
+vars:
+
+  "docroot"   string => "/path/to/docs";
+  "otherdocs" slist  => { "doc1", "doc2" };
+
+
+ ###################################################
+
+ 
+topics: # These are abstract types
+
+
+   "cfengine" -> { "cfagent", "cfservd", "cfenvd" },
+
+         association => { 
+                        "composed of",
+                        "key concept" 
+                        };
+
+    "cfengine" -> { "Mark Burgess", "Bas Van der Vlies" },
+
+         association => "has developers" ;
+
+ ###################################################
+
+occurrences: 
+
+  # These are data/document instances
+
+  "docid" -> @(otherdocs),
+
+     mentions   => { "topicid1", "topicid2" },
+
+     # assemble document
+
+     usecontent => { 
+                   "$(docroot)/textfragment1", 
+                   "$(docroot)/textfragment2" 
+                   },
+
+     stylesheet => "/css/mystyle.css";
+
+}
+

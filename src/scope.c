@@ -136,7 +136,7 @@ void CopyScope(char *new, char *old)
 
 { struct Scope *op, *np;
  
-Debug("Copying scope data %s to %s\n",old,new);
+Debug("\n*\nCopying scope data %s to %s\n*\n",old,new);
 
 NewScope(new);
 op = GetScope(old);

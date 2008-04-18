@@ -38,6 +38,26 @@ for (i = 0; i < (int)cf_notype; i++)
 return (enum cfdatatype)i;
 }
 
+/****************************************************************************/
+
+enum cfagenttype Agent2Type(char *name)
+
+/* convert abstract data type names: int, ilist etc */
+    
+{ int i;
+
+Debug("Agent2Type(%s)\n",name);
+ 
+for (i = 0; i < (int)cf_notype; i++)
+   {
+   if (strcmp(CF_AGENTTYPES[i],name)==0)
+      {
+      break;
+      }
+   }
+
+return (enum cfagenttype)i;
+}
 
 /****************************************************************************/
 

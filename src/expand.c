@@ -92,7 +92,7 @@ or anything in a control body?.
 
 **********************************************************************/
 
-void ExpandPromise(char *scopeid,struct Promise *pp)
+void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp)
 
 { struct Rlist *rp, *listvars = NULL, *scalarvars = NULL;
   struct Constraint *cp;
@@ -116,7 +116,7 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type);
    }
 
-ExpandPromiseAndDo(scopeid,pcopy,scalarvars,listvars);
+ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars);
 
 DeletePromise(pcopy);
 DeleteRlist(scalarvars);
@@ -483,7 +483,7 @@ return returnval;
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(char *scopeid,struct Promise *pp,struct Rlist *scalarvars,struct Rlist *listvars)
+void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,struct Rlist *scalarvars,struct Rlist *listvars)
 
 { struct Rlist *lol = NULL; 
   struct Promise *pexp;
@@ -502,11 +502,19 @@ do
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise(scopeid,pp);
 
-   // turn this into XML = 1, FOUT = expandfile
-
-   fprintf(FOUT,"<p>");
-   ShowPromise(pexp,6); // Delete me later, training pack only
-   fprintf(FOUT,"</p>");
+   switch (agent)
+      {
+      case cf_wildagent:
+          
+          fprintf(FOUT,"<p>");
+          ShowPromise(pexp,6); // Delete me later, training pack only
+          fprintf(FOUT,"</p>");
+          
+          break;
+      }
+   
+   // agent: do operation
+   // server: add to control list
    
    DeletePromise(pexp);
    }

@@ -181,7 +181,7 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    ScanRval("diagnostic",&scalarvars,&listvars,cp->rval,cp->type);
    }
 
-ExpandPromiseAndDo("diagnostic",pcopy,scalarvars,listvars);
+ExpandPromiseAndDo(cf_wildagent,"diagnostic",pcopy,scalarvars,listvars);
 /* No cleanup */
 }
 

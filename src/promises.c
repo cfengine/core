@@ -205,8 +205,8 @@ return pcopy;
 
 void DeletePromise(struct Promise *pp)
 
-{ 
- Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
+{
+Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
 
 if (pp->promiser != NULL)
    {

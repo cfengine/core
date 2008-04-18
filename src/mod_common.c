@@ -165,7 +165,7 @@ struct BodySyntax CF_SELECT_BODY[] =
 
 struct BodySyntax CFG_CONTROLBODY[] =
    {
-   {"bundlesequence",cf_slist,".*"},
+   {"bundles",cf_slist,".*"},
    {"inputs",cf_slist,".*"},
    {"version",cf_str,"" },
    {NULL,cf_notype,NULL}
@@ -220,6 +220,7 @@ struct BodySyntax CFEX_CONTROLBODY[] =
 
 struct BodySyntax CFK_CONTROLBODY[] =
    {
+   {"default_association",cf_str,".*"},
    {"builddir",cf_str,".*"},
    {NULL,cf_notype,NULL}
    };

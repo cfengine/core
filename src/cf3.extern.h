@@ -24,7 +24,7 @@ extern struct FnCallStatus FNCALL_STATUS;
 
 extern struct SubTypeSyntax CF_NOSTYPE;
 extern char *CF_DATATYPES[];
-
+extern char *CF_AGENTTYPES[];
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

@@ -109,6 +109,19 @@ enum cfdatatype
    };
 
 /*************************************************************************/
+
+enum cfagenttype
+   {
+   cf_wildagent,
+   cf_agent,
+   cf_server,
+   cf_monitor,
+   cf_execagent,
+   cf_runagent,
+   cf_noagent
+   };
+
+/*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/
 

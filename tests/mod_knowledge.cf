@@ -16,6 +16,13 @@
 #
 ############################################################################
 
+body knowledge control
+
+{
+builddir => "/tmp/documents";
+default_association => "associated with";
+}
+
  #
  # We introduce a "knowledge" component to cfengine 
  #

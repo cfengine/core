@@ -79,3 +79,14 @@ char *CF_DATATYPES[] = /* see enum cfdatatype */
    };
 
 /*****************************************************************************/
+
+char *CF_AGENTTYPES[] = /* see enum cfagenttype */
+   {
+   "*",
+   "agent",
+   "server",
+   "monitor",
+   "exec",
+   "runagent",
+   "<notype>",
+   };

@@ -40,13 +40,10 @@ void ShowAssoc (struct CfAssoc *cp);
     
 /* cfpromises.c */
 
-void Cf3ParseFile(char *filename);
-void Report(char *filename);
-void HashVariables(void);
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
 void CheckVariablePromises(char *scope,struct Promise *varlist);
 void SetAuditVersion(void);
-void VerifyPromises(void);
+void VerifyPromises(enum cfagenttype ag);
 
 /* constraint.c */
 
@@ -57,6 +54,7 @@ void DeleteConstraintList(struct Constraint *conlist);
 
 enum cfdatatype Typename2Datatype(char *name);
 enum cfdatatype GetControlDatatype(char *varname,struct BodySyntax *bp);
+enum cfagenttype Agent2Type(char *name);
 
 /* report.c */
 
@@ -136,10 +134,16 @@ void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_cla
 /* generic_agent.c */
 
 void GenericInitialize(int argc,char **argv);
+void PromiseManagement(char *agent);
 void Initialize(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
 void Syntax(char *comp);
 void Version(char *comp);
+void Cf3ParseFile(char *filename);
+void Report(char *filename);
+void HashVariables(void);
+void Compile(void);
+void TheAgent(enum cfagenttype ag);
 
 /* syntax.c */
 
@@ -184,8 +188,8 @@ int IsCf3VarString(char *str);
 
 /* expand.c */
 
-void ExpandPromise(char *scopeid,struct Promise *pp);
-void ExpandPromiseAndDo(char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars);
+void ExpandPromise(enum cfagenttype ag,char *scopeid,struct Promise *pp);
+void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars);
 struct Rval ExpandDanglers(char *scope,struct Rval rval,struct Promise *pp);
 void ScanRval(char *scope,struct Rlist **los,struct Rlist **lol,void *string,char type);
 void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level);

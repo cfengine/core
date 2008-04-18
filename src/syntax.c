@@ -334,7 +334,7 @@ switch(rvaltype)
 
        /* Fn-like objects are assumed to be parameterized bundles in the bseq */
        
-       if (strcmp(lval,"bundlesequence") != 0)
+       if (strcmp(lval,"bundles") != 0)
           {
           CheckFnCallType(lval,((struct FnCall *)rval)->name,dt,range);
           }

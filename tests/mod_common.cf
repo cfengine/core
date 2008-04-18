@@ -29,7 +29,7 @@
 
 body common control
    {
-   bundlesequence => { update, main, mypromises("2","3") };
+   bundles   => { update, main, mypromises("2","3") };
 
    inputs          => { 
                       "../tests/mod_files.cf", 

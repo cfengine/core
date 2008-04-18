@@ -41,11 +41,7 @@ void ShowAssoc (struct CfAssoc *cp);
 /* cfpromises.c */
 
 void Cf3ParseFile(char *filename);
-void Initialize(int argc,char **argv);
-void CheckOpts(int argc,char **argv);
 void Report(char *filename);
-void Syntax(void);
-void Version(void);
 void HashVariables(void);
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
 void CheckVariablePromises(char *scope,struct Promise *varlist);
@@ -116,7 +112,6 @@ struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
 struct SubType *AppendBodyType(struct Body *body,char *typename);
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle);
-struct Body *IsBody(struct Body *list,char *key);
 
 /* iteration.c */
 
@@ -137,6 +132,14 @@ enum cfdatatype FunctionReturnType(char *name);
 enum fncalltype FnCallName(char *name);
 void ClearFnCallStatus(void);
 void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
+
+/* generic_agent.c */
+
+void GenericInitialize(int argc,char **argv);
+void Initialize(int argc,char **argv);
+void CheckOpts(int argc,char **argv);
+void Syntax(char *comp);
+void Version(char *comp);
 
 /* syntax.c */
 
@@ -203,6 +206,8 @@ struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
 struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
+struct Body *IsBody(struct Body *list,char *key);
+
 
 /* selfdiagnostic.c */
 

@@ -73,7 +73,7 @@
 /* #undef CFGNU */
 /* #undef UNIXWARE */
 /* #undef OPENBSD */
-/* #undef HAVE_SYS_ACL_H */
+#define HAVE_SYS_ACL_H 1
 /* #undef NOTBROKEN */
 /* #undef NT */
 /* #undef DARWIN */
@@ -318,7 +318,7 @@
 #define HAVE_SYSINFO 1
 
 /* Define to 1 if you have the <sys/acl.h> header file. */
-/* #undef HAVE_SYS_ACL_H */
+#define HAVE_SYS_ACL_H 1
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */

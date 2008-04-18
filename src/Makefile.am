@@ -12,7 +12,10 @@ libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 # Separate out a library
 
 libpromises_la_SOURCES =						\
+	generic_agent.c							\
 	fncall.c							\
+	cf3globals.c							\
+	report.c							\
 	evalfunction.c							\
 	sysinfo.c							\
 	conversion.c							\
@@ -26,18 +29,7 @@ libpromises_la_SOURCES =						\
 	promises.c							\
 	constraints.c							\
 	iteration.c							\
-	rlist.c
-
-
-sbin_PROGRAMS = cfpromises
-
-cfpromises_SOURCES =							\
-	cfpromises.c							\
-	cf3globals.c							\
-	cf3parse.y							\
-	cf3lex.l							\
-	report.c							\
-	install.c							\
+	rlist.c								\
 	syntax.c							\
 	mod_common.c							\
 	mod_access.c							\
@@ -46,6 +38,30 @@ cfpromises_SOURCES =							\
 	mod_storage.c							\
 	mod_knowledge.c							\
 	mod_process.c
+
+
+sbin_PROGRAMS = cfPromises cfAgent cfMonitor cfServer cfExec cfRunAgent
+
+cfPromises_SOURCES =							\
+	cfpromises.c							\
+	cf3parse.y							\
+	cf3lex.l							\
+	install.c
+
+cfAgent_SOURCES =							\
+	agent.c
+
+cfServer_SOURCES =							\
+	server.c
+
+cfMonitor_SOURCES =							\
+	monitor.c
+
+cfExec_SOURCES =							\
+	exec.c
+
+cfRunAgent_SOURCES =							\
+	runagent.c
 
 
 EXTRA_DIST = cf3lex.c cf3parse.c

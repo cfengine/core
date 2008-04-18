@@ -324,3 +324,20 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 free(pp);
 }
 
+
+/*******************************************************************/
+
+struct Body *IsBody(struct Body *list,char *key)
+
+{ struct Body *bp;
+
+for (bp = list; bp != NULL; bp = bp->next)
+   {
+   if (strcmp(bp->name,key) == 0)
+      {
+      return bp;
+      }
+   }
+
+return NULL;
+}

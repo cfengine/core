@@ -37,8 +37,6 @@ extern FILE *yyin;
 extern char *CFH[][2];
 
 /*******************************************************************/
-/* Functions internal to cfengine.c                                */
-/*******************************************************************/
 
 int main (int argc,char *argv[]);
 
@@ -48,7 +46,7 @@ int main (int argc,char *argv[]);
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[49] =
+ struct option OPTIONS[12] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -139,112 +137,6 @@ return 0;
 /*******************************************************************/
 /* Level 1                                                         */
 /*******************************************************************/
- 
-void Initialize(int argc,char *argv[])
-
-{ char *sp, **cfargv;;
- int i,j, cfargc, seed;
-  struct stat statbuf;
-  unsigned char s[16];
-  char ebuff[CF_EXPANDSIZE];
-  
-PreLockState();
-
-#ifndef HAVE_REGCOMP
-re_syntax_options |= RE_INTERVALS;
-#endif
-  
-OpenSSL_add_all_algorithms();
-ERR_load_crypto_strings();
-CheckWorkDirectories();
-RandomSeed();
- 
-RAND_bytes(s,16);
-s[15] = '\0';
-seed = ElfHash(s);
-srand48((long)seed);  
-
-/* Note we need to fix the options since the argv mechanism doesn't */
-/* work when the shell #!/bla/cfengine -v -f notation is used.      */
-/* Everything ends up inside a single argument! Here's the fix      */
-
-cfargc = 1;
-
-/* Pass 1: Find how many arguments there are. */
-for (i = 1, j = 1; i < argc; i++)
-   {
-   sp = argv[i];
-   
-   while (*sp != '\0')
-      {
-      while (*sp == ' ' && *sp != '\0') /* Skip to arg */
-         {
-         sp++;
-         }
-      
-      cfargc++;
-      
-      while (*sp != ' ' && *sp != '\0') /* Skip to white space */
-         {
-         sp++;
-         }
-      }
-   }
-
-/* Allocate memory for cfargv. */
-
-cfargv = (char **) malloc(sizeof(char *) * cfargc + 1);
-
-if (!cfargv)
-   {
-   FatalError("cfagent: Out of memory parsing arguments\n");
-   }
-
-/* Pass 2: Parse the arguments. */
-
-cfargv[0] = "cfagent";
-
-for (i = 1, j = 1; i < argc; i++)
-   {
-   sp = argv[i];
-   
-   while (*sp != '\0')
-      {
-      while (*sp == ' ' && *sp != '\0') /* Skip to arg */
-         {
-         if (*sp == ' ')
-            {
-            *sp = '\0'; /* Break argv string */
-            }
-         sp++;
-         }
-      
-      cfargv[j++] = sp;
-      
-      while (*sp != ' ' && *sp != '\0') /* Skip to white space */
-         {
-         sp++;
-         }
-      }
-   }
-
-cfargv[j] = NULL;
-
-CheckOpts(argc,argv);
-
-if (!MINUSF)
-   {
-   strcpy(VINPUTFILE,"../tests/promises.cf");
-   }
-
-CfenginePort();
-StrCfenginePort();
-FOUT = stdout;
-AddClassToHeap("any");
-strcpy(VPREFIX,"cfengine3");
-}
-
-/*******************************************************************/
 
 void Cf3ParseFile(char *filename)
 
@@ -284,98 +176,6 @@ while (!feof(yyin))
    }
 
 fclose (yyin);
-}
-
-/*******************************************************************/
-
-void CheckOpts(int argc,char **argv)
-
-{ extern char *optarg;
-  struct Item *actionList;
-  int optindex = 0;
-  int c;
-  
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
-  {
-  switch ((char) c)
-      {
-      case 'f':
-
-          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
-          VINPUTFILE[CF_BUFSIZE-1] = '\0';
-          MINUSF = true;
-          break;
-
-      case 'd': 
-          AddClassToHeap("opt_debug");
-          switch ((optarg==NULL) ? '3' : *optarg)
-             {
-             case '1':
-                 D1 = true;
-                 DEBUG = true;
-                 break;
-             case '2':
-                 D2 = true;
-                 DEBUG = true;
-                 break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
-                 DEBUG = true;
-                 break;
-             default:
-                 DEBUG = true;
-                 break;
-             }
-          break;
-          
-      case 'K': IGNORELOCK = true;
-          break;
-                    
-      case 'D': AddMultipleClasses(optarg);
-          break;
-          
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
-          break;
-          
-      case 'I': INFORM = true;
-          break;
-          
-      case 'v': VERBOSE = true;
-          break;
-          
-      case 'n': DONTDO = true;
-          IGNORELOCK = true;
-          AddClassToHeap("opt_dry_run");
-          break;
-          
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
-      case 'V': Version();
-          exit(0);
-          
-      case 'h': Syntax();
-          exit(0);
-
-      case 'S': SyntaxTree();
-          exit(0);
-
-      case 'x': SelfDiagnostic();
-          exit(0);
-          
-      default:  Syntax();
-          exit(1);
-          
-      }
-  }
-
-Debug("Set debugging\n");
 }
 
 /*******************************************************************/
@@ -529,35 +329,95 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 }
 
 /*******************************************************************/
-/* Level 2                                                         */
-/*******************************************************************/
 
-void Syntax()
+void CheckOpts(int argc,char **argv)
 
-{ int i;
+{ extern char *optarg;
+  struct Item *actionList;
+  int optindex = 0;
+  int c;
+  
+while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
+  {
+  switch ((char) c)
+      {
+      case 'f':
 
-Version();
-printf("\n");
-printf("Options:\n\n");
+          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
+          VINPUTFILE[CF_BUFSIZE-1] = '\0';
+          MINUSF = true;
+          break;
 
-for (i=0; OPTIONS[i].name != NULL; i++)
-   {
-   printf("--%-20s    (-%c)\n",OPTIONS[i].name,(char)OPTIONS[i].val);
-   }
+      case 'd': 
+          AddClassToHeap("opt_debug");
+          switch ((optarg==NULL) ? '3' : *optarg)
+             {
+             case '1':
+                 D1 = true;
+                 DEBUG = true;
+                 break;
+             case '2':
+                 D2 = true;
+                 DEBUG = true;
+                 break;
+             case '3':
+                 D3 = true;
+                 DEBUG = true;
+                 VERBOSE = true;
+                 break;
+             case '4':
+                 D4 = true;
+                 DEBUG = true;
+                 break;
+             default:
+                 DEBUG = true;
+                 break;
+             }
+          break;
+          
+      case 'K': IGNORELOCK = true;
+          break;
+                    
+      case 'D': AddMultipleClasses(optarg);
+          break;
+          
+      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
+          break;
+          
+      case 'I': INFORM = true;
+          break;
+          
+      case 'v': VERBOSE = true;
+          break;
+          
+      case 'n': DONTDO = true;
+          IGNORELOCK = true;
+          AddClassToHeap("opt_dry_run");
+          break;
+          
+      case 'p': PARSEONLY = true;
+          IGNORELOCK = true;
+          break;          
 
-printf("\nDebug levels: 1=parsing, 2=running, 3=summary, 4=expression eval\n");
+      case 'V': Version("Promise engine");
+          exit(0);
+          
+      case 'h': Syntax("Promise engine");
+          exit(0);
 
-printf("\nBug reports to bug-cfengine@cfengine.org (News: gnu.cfengine.bug)\n");
-printf("General help to help-cfengine@cfengine.org (News: gnu.cfengine.help)\n");
-printf("Info & fixes at http://www.cfengine.org\n");
-}
+      case 'S': SyntaxTree();
+          exit(0);
 
-/*******************************************************************/
+      case 'x': SelfDiagnostic();
+          exit(0);
+          
+      default:  Syntax("Promise engine");
+          exit(1);
+          
+      }
+  }
 
-void Version()
-
-{
-printf("Cfengine: promise engine\n%s\n%s\n",VERSION,COPYRIGHT);
+Debug("Set debugging\n");
 }
 
 /*******************************************************************/

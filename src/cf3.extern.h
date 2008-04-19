@@ -26,6 +26,9 @@ extern struct SubTypeSyntax CF_NOSTYPE;
 extern char *CF_DATATYPES[];
 extern char *CF_AGENTTYPES[];
 
+extern char THIS_AGENT[CF_MAXVARSIZE];
+extern short INSTALL_SKIP;
+
 /***********************************************************/
 /* SYNTAX MODULES                                          */
 /***********************************************************/

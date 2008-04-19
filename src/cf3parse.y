@@ -112,6 +112,12 @@ aitem:                 ID  /* recipient of argument is never a literal */
 
 bundlebody:         '{'
                        {
+                       if ((strcmp(THIS_AGENT,P.blocktype) != 0) && (strcmp(THIS_AGENT,CF_AGENTTYPES[cf_common]) != 0))
+                          {
+                          Debug("This is for a different agent\n");
+                          INSTALL_SKIP = true;
+                          }
+                       
                        P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs); 
                        P.useargs = NULL;
                        P.currenttype = NULL;
@@ -120,6 +126,7 @@ bundlebody:         '{'
                      statements
                     '}'
                        {
+                       INSTALL_SKIP = false;
                        Debug("End promise bundle\n\n");
                        };
 
@@ -290,14 +297,17 @@ constraint:           id                        /* BUNDLE ONLY */
                         { struct SubTypeSyntax ss;
                           char *contextid = NULL;
 
-                        ss = CheckSubType(P.blocktype,P.currenttype);
-
-                        CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);
-
-                        AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any");
-                        P.rval = NULL;
-                        P.lval = NULL;
-                        P.currentRlist = NULL;
+                        if (!INSTALL_SKIP)
+                           {
+                           ss = CheckSubType(P.blocktype,P.currenttype);
+                           
+                           CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);
+                           
+                           AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any");
+                           P.rval = NULL;
+                           P.lval = NULL;
+                           P.currentRlist = NULL;
+                           }  
                         };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

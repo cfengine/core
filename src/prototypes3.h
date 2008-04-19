@@ -44,6 +44,7 @@ void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist
 void CheckVariablePromises(char *scope,struct Promise *varlist);
 void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
+void CompilePromises(void);
 
 /* constraint.c */
 
@@ -133,7 +134,7 @@ void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_cla
 
 /* generic_agent.c */
 
-void GenericInitialize(int argc,char **argv);
+void GenericInitialize(int argc,char **argv,char *agents);
 void PromiseManagement(char *agent);
 void Initialize(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
@@ -142,7 +143,6 @@ void Version(char *comp);
 void Cf3ParseFile(char *filename);
 void Report(char *filename);
 void HashVariables(void);
-void Compile(void);
 void TheAgent(enum cfagenttype ag);
 
 /* syntax.c */

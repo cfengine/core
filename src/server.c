@@ -61,7 +61,8 @@ int main (int argc,char *argv[]);
 int main(int argc,char *argv[])
 
 {
-GenericInitialize(argc,argv);
+GenericInitialize(argc,argv,"server");
+return 0;
 }
 
 /*******************************************************************/

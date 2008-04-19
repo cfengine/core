@@ -40,6 +40,11 @@ struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct
   char *sp;
   struct Rlist *rp;
 
+if (INSTALL_SKIP)
+   {
+   return NULL;
+   }
+  
 Debug("Appending new bundle %s %s (",type,name);
 
 if (DEBUG)
@@ -141,6 +146,11 @@ struct SubType *AppendSubType(struct Bundle *bundle,char *typename)
 { struct SubType *tp,*lp;
   char *sp;
 
+if (INSTALL_SKIP)
+   {
+   return NULL;
+   }
+  
 Debug("Appending new type section %s\n",typename);
 
 if (bundle == NULL)
@@ -187,6 +197,11 @@ struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promise
 { struct Promise *pp,*lp;
  char *sp = NULL,*spe = NULL;
 
+if (INSTALL_SKIP)
+   {
+   return NULL;
+   }
+ 
 if (type == NULL)
    {
    yyerror("Software error. Attempt to add a promise without a type\n");

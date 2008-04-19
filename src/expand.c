@@ -504,7 +504,7 @@ do
 
    switch (agent)
       {
-      case cf_wildagent:
+      case cf_common:
           
           fprintf(FOUT,"<p>");
           ShowPromise(pexp,6); // Delete me later, training pack only

@@ -41,6 +41,9 @@ FILE *FOUT = NULL;
 short XML = false;
 struct FnCallStatus FNCALL_STATUS;
 
+char THIS_AGENT[CF_MAXVARSIZE];
+short INSTALL_SKIP = false;
+
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
@@ -82,11 +85,12 @@ char *CF_DATATYPES[] = /* see enum cfdatatype */
 
 char *CF_AGENTTYPES[] = /* see enum cfagenttype */
    {
-   "*",
-   "agent",
-   "server",
-   "monitor",
-   "exec",
-   "runagent",
+   CF_COMMONC,
+   CF_AGENTC,
+   CF_SERVERC,
+   CF_MONITORC,
+   CF_EXECC,
+   CF_RUNC,
+   CF_KNOWC,
    "<notype>",
    };

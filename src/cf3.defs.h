@@ -110,14 +110,23 @@ enum cfdatatype
 
 /*************************************************************************/
 
+#define CF_COMMONC  "common"
+#define CF_AGENTC   "agent"
+#define CF_SERVERC  "server"
+#define CF_MONITORC "monitor"
+#define CF_EXECC    "executor"
+#define CF_KNOWC    "knowledge"
+#define CF_RUNC     "runagent"
+
 enum cfagenttype
    {
-   cf_wildagent,
+   cf_common,
    cf_agent,
    cf_server,
    cf_monitor,
-   cf_execagent,
+   cf_executor,
    cf_runagent,
+   cf_know,
    cf_noagent
    };
 

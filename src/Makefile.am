@@ -12,6 +12,9 @@ libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 # Separate out a library
 
 libpromises_la_SOURCES =						\
+	cf3parse.y							\
+	cf3lex.l							\
+	install.c							\
 	generic_agent.c							\
 	fncall.c							\
 	cf3globals.c							\
@@ -43,10 +46,7 @@ libpromises_la_SOURCES =						\
 sbin_PROGRAMS = cfPromises cfAgent cfMonitor cfServer cfExec cfRunAgent
 
 cfPromises_SOURCES =							\
-	cfpromises.c							\
-	cf3parse.y							\
-	cf3lex.l							\
-	install.c
+	cfpromises.c
 
 cfAgent_SOURCES =							\
 	agent.c

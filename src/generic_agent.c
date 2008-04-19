@@ -37,10 +37,11 @@ extern char *CFH[][2];
 
 /*****************************************************************************/
 
-void GenericInitialize(int argc,char **argv)
+void GenericInitialize(int argc,char **argv,char *agents)
 
 { char rtype;
   struct Rlist *rp;
+  char name[CF_BUFSIZE];
 
 Initialize(argc,argv);
 SetReferenceTime(true);
@@ -72,6 +73,35 @@ if (VINPUTLIST != NULL)
          }
       }
    }
+
+snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+
+if ((FOUT = fopen(name,"w")) == NULL)
+   {
+   printf("Cannot open output file %s\n",name);
+   return;
+   }
+
+XML = 1;
+
+HashVariables();
+SetAuditVersion();
+
+fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
+fprintf(FOUT,"%s",CFH[0][0]);
+
+VerifyPromises(cf_common);
+
+fprintf(FOUT,"%s",CFH[0][1]);
+fclose(FOUT);
+printf("Wrote expansion summary to %s\n",name);
+
+if (ERRORCOUNT > 0)
+   {
+   FatalError("Unresolved errors in configuration");
+   }
+
+Report(VINPUTFILE); 
 }
 
 /*****************************************************************************/
@@ -82,12 +112,11 @@ void PromiseManagement(char *agent)
 
 switch (ag)
    {
-   case cf_wildagent:
-       Compile();
+   case cf_common:
        break;
        
    case cf_agent:
-       TheAgent(ag);
+//       TheAgent(ag);
        break;
        
    case cf_server:
@@ -249,39 +278,6 @@ while (!feof(yyin))
    }
 
 fclose (yyin);
-}
-
-/*******************************************************************/
-
-void Compile()
-
-{
-if ((FOUT = fopen("promise_output.html","w")) == NULL)
-   {
-   printf("Cannot open output file\n");
-   return;
-   }
-
-XML = 1;
-
-HashVariables();
-SetAuditVersion();
-
-fprintf(FOUT,"<h1>Expanded promise list</h1>");
-fprintf(FOUT,"%s",CFH[0][0]);
-
-VerifyPromises(cf_wildagent);
-
-fprintf(FOUT,"%s",CFH[0][1]);
-fclose(FOUT);
-printf("Wrote expansion summary to promise_output.html\n");
-
-if (ERRORCOUNT > 0)
-   {
-   FatalError("Unresolved errors in configuration");
-   }
-
-Report(VINPUTFILE); 
 }
 
 /*******************************************************************/

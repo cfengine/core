@@ -60,8 +60,9 @@ int main (int argc,char *argv[]);
 int main(int argc,char *argv[])
 
 {
-GenericInitialize(argc,argv);
-
+GenericInitialize(argc,argv,"agent");
+PromiseManagement("agent");
+return 0;
 }
 
 /*******************************************************************/

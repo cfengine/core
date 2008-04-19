@@ -66,8 +66,8 @@ int main (int argc,char *argv[]);
 int main(int argc,char *argv[])
 
 {
-GenericInitialize(argc,argv);
-PromiseManagement("*");
+GenericInitialize(argc,argv,"common");
+CompilePromises();
 return 0;
 }
 
@@ -163,6 +163,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
   }
 
 Debug("Set debugging\n");
+}
+
+/*******************************************************************/
+
+void CompilePromises()
+
+{
 }
 
 

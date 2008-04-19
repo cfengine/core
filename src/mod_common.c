@@ -231,13 +231,13 @@ struct BodySyntax CFK_CONTROLBODY[] =
     
 struct SubTypeSyntax CF_ALL_BODIES[] =
    {
-   {"common","control",CFG_CONTROLBODY},
-   {"agent","control",CFA_CONTROLBODY},
-   {"server","control",CFS_CONTROLBODY},
-   {"monitor","control",CFM_CONTROLBODY},
-   {"runclient","control",CFR_CONTROLBODY},
-   {"executor","control",CFEX_CONTROLBODY},
-   {"knowledge","control",CFK_CONTROLBODY},
+   {CF_COMMONC,"control",CFG_CONTROLBODY},
+   {CF_AGENTC,"control",CFA_CONTROLBODY},
+   {CF_SERVERC,"control",CFS_CONTROLBODY},
+   {CF_MONITORC,"control",CFM_CONTROLBODY},
+   {CF_RUNC,"control",CFR_CONTROLBODY},
+   {CF_EXECC,"control",CFEX_CONTROLBODY},
+   {CF_KNOWC,"control",CFK_CONTROLBODY},
 
    //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 

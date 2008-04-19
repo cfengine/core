@@ -60,7 +60,8 @@ int main (int argc,char *argv[]);
 int main(int argc,char *argv[])
 
 {
-GenericInitialize(argc,argv);
+GenericInitialize(argc,argv,"runagent");
+return 0;
 }
 
 /*******************************************************************/

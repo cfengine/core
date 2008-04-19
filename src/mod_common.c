@@ -200,8 +200,6 @@ struct BodySyntax CFS_CONTROLBODY[] =
 
 struct BodySyntax CFM_CONTROLBODY[] =
    {
-   {"emailfrom",cf_str,".*"},
-   {"emailto",cf_str,".*"},
    {"threshold",cf_real,"0,1"},
    {"forgetrate",cf_real,"0,1"},
    {NULL,cf_notype,NULL}
@@ -212,9 +210,13 @@ struct BodySyntax CFR_CONTROLBODY[] =
    {NULL,cf_notype,NULL}
    };
 
-struct BodySyntax CFEX_CONTROLBODY[] =
+struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {
-   {"schedule",cf_ilist,".*"},
+   {"mailfrom",cf_str,".*@.*"},
+   {"mailto",cf_str,".*@.*"},
+   {"smtpserver",cf_str,".*"},
+   {"mailmaxlines",cf_int,"0,1000"},
+   {"schedule",cf_slist,"Min.*"},
    {NULL,cf_notype,NULL}
    };
 

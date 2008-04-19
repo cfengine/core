@@ -131,6 +131,18 @@ enum cfagenttype
    };
 
 /*************************************************************************/
+
+enum cfexcontrol
+   {
+   cfex_mailfrom,
+   cfex_mailto,
+   cfex_smtpserver,
+   cfex_mailmaxlines,
+   cfex_schedule,
+   cfex_notype,
+   };
+
+/*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/
 

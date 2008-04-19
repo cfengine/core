@@ -31,7 +31,8 @@ body common control
    {
    bundles   => { update, main, mypromises("2","3") };
 
-   inputs          => { 
+   inputs          => {
+                      "../tests/mod_execd.cf", 
                       "../tests/mod_files.cf", 
                       "../tests/mod_files_copy.cf", 
                       "../tests/mod_exec.cf",

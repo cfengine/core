@@ -101,7 +101,10 @@ if (ERRORCOUNT > 0)
    FatalError("Unresolved errors in configuration");
    }
 
-Report(VINPUTFILE); 
+if (SHOWREPORTS || ERRORCOUNT)
+   {
+   Report(VINPUTFILE);
+   }
 }
 
 /*****************************************************************************/
@@ -116,7 +119,6 @@ switch (ag)
        break;
        
    case cf_agent:
-//       TheAgent(ag);
        break;
        
    case cf_server:
@@ -149,10 +151,12 @@ re_syntax_options |= RE_INTERVALS;
 #endif
   
 OpenSSL_add_all_algorithms();
+OpenSSL_add_all_digests();
 ERR_load_crypto_strings();
 CheckWorkDirectories();
 RandomSeed();
- 
+
+
 RAND_bytes(s,16);
 s[15] = '\0';
 seed = ElfHash(s);

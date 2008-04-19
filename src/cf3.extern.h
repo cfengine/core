@@ -28,6 +28,7 @@ extern char *CF_AGENTTYPES[];
 
 extern char THIS_AGENT[CF_MAXVARSIZE];
 extern short INSTALL_SKIP;
+extern short SHOWREPORTS;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

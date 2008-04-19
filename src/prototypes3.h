@@ -31,6 +31,11 @@
 /*                                                                           */
 /*****************************************************************************/
 
+/* Generic stubs for the agents */
+
+void ThisAgentInit(void);
+void KeepPromises(void);
+
 /* assoc.c */
 
 struct CfAssoc *NewAssoc(char *lval,void *rval,char rtype,enum cfdatatype dt);
@@ -259,5 +264,15 @@ struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char c);
 struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
 
+/* exec.c */
 
+void StartServer(int argc,char **argv);
+int ScheduleRun(void);
+void *ExitCleanly(void);
+static char *timestamp(time_t stamp, char *buf, size_t len);
+void *LocalExec(void *scheduled_run);
+int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
+int CompareResult(char *filename,char *prev_file);
+void MailResult(char *file,char *to);
+int Dialogue(int sd,char *s);
 

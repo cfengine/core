@@ -222,7 +222,13 @@ int StringContainsVar(char *s,char *v)
 
 { char varstr[CF_MAXVARSIZE];
 
+if (s == NULL)
+   {
+   return false;
+   }
+ 
 snprintf(varstr,CF_MAXVARSIZE-1,"${%s}",v);
+
 if (strstr(s,varstr) != NULL)
    {
    return true;

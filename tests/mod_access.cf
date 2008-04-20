@@ -5,13 +5,20 @@ cfruncommand => "/var/cfengine/bin/cfagent";
 
 maxconnections => "50";
 denybadclocks  => "false";
-     
-allowconnectionsfrom         => @(access_rules.ok);
-denyconnectionsfrom          => @(access_rules.bad);
-allowmultipleconnectionsfrom => { @(access_rules.ok) };
-trustkeysfrom                => { @(access_rules.ok) };
-     
-allowusers => { "mark", "systemuser" };
+
+checkident => "no";
+
+allowconnects         => @(access_rules.ok);
+denyconnects          => @(access_rules.bad);
+
+allowallconnects      => { @(access_rules.ok) };
+trustkeysfrom         => { @(access_rules.ok) };
+
+specialhosts::
+   
+  allowusers => { "mark", "systemuser" };
+
+any::
 
 logallconnections     => "true";
 logencryptedtransfers => "false";
@@ -44,4 +51,10 @@ access:
 
        admit => @(ok),
        deny =>  @(bad);
+
+#messages:
+
+#    "userclass" 
+
+#       auth => { "mark", "root" };
 }

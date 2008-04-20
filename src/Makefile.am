@@ -43,7 +43,7 @@ libpromises_la_SOURCES =						\
 	mod_process.c
 
 
-sbin_PROGRAMS = cfPromises cfAgent cfMonitor cfServer cfExec cfRunAgent
+sbin_PROGRAMS = cfPromises cfAgent cfMonitord cfServerd cfExecd cfRunAgent
 
 cfPromises_SOURCES =							\
 	cfpromises.c
@@ -51,13 +51,13 @@ cfPromises_SOURCES =							\
 cfAgent_SOURCES =							\
 	agent.c
 
-cfServer_SOURCES =							\
+cfServerd_SOURCES =							\
 	server.c
 
-cfMonitor_SOURCES =							\
+cfMonitord_SOURCES =							\
 	monitor.c
 
-cfExec_SOURCES =							\
+cfExecd_SOURCES =							\
 	exec.c
 
 cfRunAgent_SOURCES =							\

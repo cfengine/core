@@ -75,3 +75,32 @@ for (i = 0; bp[i].range != NULL; i++)
 
 return cf_notype;
 }
+
+/****************************************************************************/
+
+int GetBoolean(char *s)
+
+{ struct Item *list = SplitString(CF_BOOL,','), *ip;
+ int count = 0;
+
+for (ip = list; ip != NULL; ip=ip->next)
+   {
+   if (strcmp(s,ip->name) == 0)
+      {
+      break;
+      }
+
+   count++;
+   }
+
+DeleteItemList(list);
+
+if (count % 2)
+   {
+   return false;
+   }
+else
+   {
+   return true;
+   }
+}

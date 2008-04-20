@@ -62,6 +62,7 @@ int main(int argc,char *argv[])
 {
 GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
+ThisAgentInit();
 return 0;
 }
 
@@ -152,4 +153,11 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
   }
 
 Debug("Set debugging\n");
+}
+
+/*******************************************************************/
+
+void ThisAgentInit()
+
+{
 }

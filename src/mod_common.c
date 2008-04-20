@@ -183,9 +183,9 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"cfruncommand",cf_str,CF_PATHRANGE},
    {"maxconnections",cf_int,CF_VALRANGE},
    {"denybadclocks",cf_opts,CF_BOOL},
-   {"allowconnectionsfrom",cf_slist,""},
-   {"denyconnectionsfrom",cf_slist,""},
-   {"allowmultipleconnectionsfrom",cf_slist,""},
+   {"allowconnects",cf_slist,""},
+   {"denyconnects",cf_slist,""},
+   {"allowallconnects",cf_slist,""},
    {"trustkeysfrom",cf_slist,""},
    {"allowusers",cf_slist,""},
    {"dynamicaddresses",cf_slist,""},
@@ -193,6 +193,8 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"logallconnections",cf_opts,CF_BOOL},
    {"logencryptedtransfers",cf_opts,CF_BOOL},
    {"hostnamekeys",cf_opts,CF_BOOL},
+   {"checkident",cf_opts,CF_BOOL},
+   {"auditing",cf_opts,CF_BOOL},
    {"bindtointerface",cf_str,""},
    {NULL,cf_notype,NULL}
    };

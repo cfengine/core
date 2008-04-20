@@ -67,8 +67,8 @@ int main(int argc,char *argv[])
 
 {
 GenericInitialize(argc,argv,"common");
+ThisAgentInit();
 SHOWREPORTS = true;
-CompilePromises();
 return 0;
 }
 
@@ -168,7 +168,7 @@ Debug("Set debugging\n");
 
 /*******************************************************************/
 
-void CompilePromises()
+void ThisAgentInit()
 
 {
 }

@@ -207,7 +207,15 @@ if (this != cfn_unknown)
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"No such FnCall \"%s()\" in promise @ %s near line %d\n",fp->name,pp->audit->filename,pp->lineno);
+   if (pp)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"No such FnCall \"%s()\" in promise @ %s near line %d\n",fp->name,pp->audit->filename,pp->lineno);
+      }
+   else
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"No such FnCall \"%s()\" - context info unavailable\n",fp->name);
+      }
+   
    CfLog(cferror,OUTPUT,"");
    return rval;
    }

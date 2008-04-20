@@ -42,6 +42,7 @@ void GenericInitialize(int argc,char **argv,char *agents)
 { char rtype;
   struct Rlist *rp;
   char name[CF_BUFSIZE];
+  enum cfagenttype ag = Agent2Type(agents);
 
 Initialize(argc,argv);
 SetReferenceTime(true);
@@ -55,6 +56,8 @@ if (! NOHARDCLASSES)
    GetV6InterfaceInfo();
    GetEnvironment();
    }
+
+strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 
 Cf3ParseFile(VINPUTFILE);
 
@@ -248,6 +251,7 @@ void Cf3ParseFile(char *filename)
 
 { FILE *save_yyin = yyin;
   
+Debug("Cf3ParseFile(%s)\n",filename);
 PrependAuditFile(filename);
  
 if ((yyin = fopen(filename,"r")) == NULL)      /* Open root file */
@@ -374,7 +378,6 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
       }
    }
 
-// Delete this 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    fprintf(FOUT,"<h2>SCOPE %s</h2>\n\n",ptr->scope);
@@ -522,6 +525,7 @@ void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist
   char *lval;
   void *rval = NULL;
   int i = 0,override = true;
+  struct Rval returnval;
 
 Debug("CheckControlPromises()\n");
 
@@ -547,7 +551,9 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (!AddVariableHash(scope,cp->lval,cp->rval,cp->type,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
+   returnval = EvaluateFinalRval(CONTEXTID,cp->rval,cp->type,true,NULL);
+
+   if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
       CfLog(cferror,OUTPUT,"");

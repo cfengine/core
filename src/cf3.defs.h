@@ -143,6 +143,29 @@ enum cfexcontrol
    };
 
 /*************************************************************************/
+
+enum cfscontrol
+   {
+   cfs_cfruncommand,
+   cfs_maxconnections,
+   cfs_denybadclocks,
+   cfs_allowconnects,
+   cfs_denyconnects,
+   cfs_allowallconnects,
+   cfs_trustkeysfrom,
+   cfs_allowusers,
+   cfs_dynamicaddresses,
+   cfs_skipverify,
+   cfs_logallconnections,
+   cfs_logencryptedtransfers,
+   cfs_hostnamekeys,
+   cfs_checkident,
+   cfs_auditing,
+   cfs_bindtointerface,
+   cfs_notype,
+   };
+
+/*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/
 

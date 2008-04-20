@@ -61,6 +61,7 @@ void DeleteConstraintList(struct Constraint *conlist);
 enum cfdatatype Typename2Datatype(char *name);
 enum cfdatatype GetControlDatatype(char *varname,struct BodySyntax *bp);
 enum cfagenttype Agent2Type(char *name);
+int GetBoolean(char *val);
 
 /* report.c */
 

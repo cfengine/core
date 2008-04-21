@@ -175,6 +175,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {
    {"splaytime",cf_int,".*"},
    {"useraccess",cf_slist,".*"},
+   {"agentfacility",cf_opts,CF_FACILITY},
    {NULL,cf_notype,NULL}
    };
 
@@ -196,6 +197,7 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"checkident",cf_opts,CF_BOOL},
    {"auditing",cf_opts,CF_BOOL},
    {"bindtointerface",cf_str,""},
+   {"serverfacility",cf_opts,CF_FACILITY},
    {NULL,cf_notype,NULL}
    };
 
@@ -204,6 +206,7 @@ struct BodySyntax CFM_CONTROLBODY[] =
    {
    {"threshold",cf_real,"0,1"},
    {"forgetrate",cf_real,"0,1"},
+   {"monitorfacility",cf_opts,CF_FACILITY},
    {NULL,cf_notype,NULL}
    };
 
@@ -219,6 +222,7 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {"smtpserver",cf_str,".*"},
    {"mailmaxlines",cf_int,"0,1000"},
    {"schedule",cf_slist,"Min.*"},
+   {"executorfacility",cf_opts,CF_FACILITY},
    {NULL,cf_notype,NULL}
    };
 

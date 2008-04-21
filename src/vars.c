@@ -134,7 +134,12 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
       }
    }
 
-Debug("return final variable type=%s, value={%s}\n",CF_DATATYPES[(ptr->hashtable[i])->dtype],(ptr->hashtable[i])->rval);
+Debug("return final variable type=%s, value={\n",CF_DATATYPES[(ptr->hashtable[i])->dtype]);
+if (DEBUG)
+   {
+   ShowRval(stdout,(ptr->hashtable[i])->rval,(ptr->hashtable[i])->rtype);
+   }
+Debug("}\n");
 
 *returnv = ptr->hashtable[i]->rval;
 *rtype   = ptr->hashtable[i]->rtype;

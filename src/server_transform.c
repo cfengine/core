@@ -32,13 +32,6 @@
 #include "cf3.extern.h"
 #include "cf3.server.h"
 
-void KeepPromiseBundles(void);
-void KeepControlPromises(void);
-void KeepServerPromise(struct Promise *pp);
-void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
-struct Auth *GetAuthPath(char *path,struct Auth *list);
-void Summarize(void);
-
 extern struct BodySyntax CFS_CONTROLBODY[];
 
 /*******************************************************************/
@@ -58,6 +51,7 @@ extern int TRIES;
 extern int MAXTRIES;
 extern int LOGCONNS;
 extern int LOGENCRYPT;
+extern int FACILITY;
 extern struct Item *CONNECTIONLIST;
 
 /*******************************************************************/
@@ -201,6 +195,52 @@ for (body = BODIES; body != NULL; body = body->next)
                continue;
                }
 
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
+               {
+               if (strcmp(retval,"LOG_USER") == 0)
+                  {
+                  FACILITY = LOG_USER;
+                  }
+               if (strcmp(retval,"LOG_DAEMON") == 0)
+                  {
+                  FACILITY = LOG_DAEMON;
+                  }
+               if (strcmp(retval,"LOG_LOCAL0") == 0)
+                  {
+                  FACILITY = LOG_LOCAL0;
+                  }
+               if (strcmp(retval,"LOG_LOCAL1") == 0)
+                  {
+                  FACILITY = LOG_LOCAL1;
+                  }
+               if (strcmp(retval,"LOG_LOCAL2") == 0)
+                  {
+                  FACILITY = LOG_LOCAL2;
+                  }
+               if (strcmp(retval,"LOG_LOCAL3") == 0)
+                  {
+                  FACILITY = LOG_LOCAL3;
+                  }
+               if (strcmp(retval,"LOG_LOCAL4") == 0)
+                  {
+                  FACILITY = LOG_LOCAL4;
+                  }
+               if (strcmp(retval,"LOG_LOCAL5") == 0)
+                  {
+                  FACILITY = LOG_LOCAL5;
+                  }
+               if (strcmp(retval,"LOG_LOCAL6") == 0)
+                  {
+                  FACILITY = LOG_LOCAL6;
+                  }   
+               if (strcmp(retval,"LOG_LOCAL7") == 0)
+                  {
+                  FACILITY = LOG_LOCAL7;
+                  }
+               Verbose("SET Syslog FACILITY = %s\n",retval);
+               continue;
+               }
+
             if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
                {
                DENYBADCLOCKS = GetBoolean(retval);
@@ -301,7 +341,6 @@ for (body = BODIES; body != NULL; body = body->next)
                continue;
                }
 
-
             if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
                {
                struct Rlist *rp;
@@ -318,6 +357,22 @@ for (body = BODIES; body != NULL; body = body->next)
                continue;
                }
 
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Allowing users ...\n");
+               
+               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(ALLOWUSERLIST,rp->item))
+                     {
+                     AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }
+            
             if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
                {
                struct Rlist *rp;
@@ -353,7 +408,6 @@ for (body = BODIES; body != NULL; body = body->next)
          }
       }
    }
-
 }
 
 /*********************************************************************/

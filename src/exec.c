@@ -51,6 +51,17 @@ const int INF_LINES = -2;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
 
+void StartServer(int argc,char **argv);
+int ScheduleRun(void);
+void *ExitCleanly(void);
+static char *timestamp(time_t stamp, char *buf, size_t len);
+void *LocalExec(void *scheduled_run);
+int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
+int CompareResult(char *filename,char *prev_file);
+void MailResult(char *file,char *to);
+int Dialogue(int sd,char *s);
+
+
 /*******************************************************************/
 /* Pthreads                                                        */
 /*******************************************************************/

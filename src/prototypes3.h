@@ -118,7 +118,10 @@ struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
 struct SubType *AppendBodyType(struct Body *body,char *typename);
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle);
+void DeleteBundles(struct Bundle *bp);
+void DeleteSubTypes(struct SubType *tp);
 
+    
 /* iteration.c */
 
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *listvars);
@@ -148,9 +151,11 @@ void CheckOpts(int argc,char **argv);
 void Syntax(char *comp);
 void Version(char *comp);
 void Cf3ParseFile(char *filename);
+void Cf3ParseFiles(void);
 void Report(char *filename);
 void HashVariables(void);
 void TheAgent(enum cfagenttype ag);
+void Cf3OpenLog(void);
 
 /* syntax.c */
 
@@ -213,11 +218,12 @@ void GetNaked(char *s1, char *s2);
 
 /* promises.c */
 
-struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp);
-void DeletePromise(struct Promise *pp);
-struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
-void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
 struct Body *IsBody(struct Body *list,char *key);
+struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp);
+struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
+void DeletePromise(struct Promise *pp);
+void DeletePromises(struct Promise *pp);
+void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
 
 
 /* selfdiagnostic.c */
@@ -266,15 +272,11 @@ struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char c);
 struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
 
-/* exec.c */
+/* server_transform.c */
 
-void StartServer(int argc,char **argv);
-int ScheduleRun(void);
-void *ExitCleanly(void);
-static char *timestamp(time_t stamp, char *buf, size_t len);
-void *LocalExec(void *scheduled_run);
-int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
-int CompareResult(char *filename,char *prev_file);
-void MailResult(char *file,char *to);
-int Dialogue(int sd,char *s);
-
+void KeepPromiseBundles(void);
+void KeepControlPromises(void);
+void KeepServerPromise(struct Promise *pp);
+void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
+struct Auth *GetAuthPath(char *path,struct Auth *list);
+void Summarize(void);

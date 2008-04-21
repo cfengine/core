@@ -49,6 +49,8 @@ struct FnCallStatus FNCALL_STATUS;
 
 char THIS_AGENT[CF_MAXVARSIZE];
 short INSTALL_SKIP = false;
+int FACILITY;
+time_t PROMISETIME;
 
 /*****************************************************************************/
 /* Internal data structures                                                  */

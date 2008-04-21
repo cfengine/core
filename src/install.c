@@ -266,4 +266,60 @@ pp->next = NULL;
 return pp;
 }
 
+/*******************************************************************/
+/* Cleanup                                                         */
+/*******************************************************************/
 
+void DeleteBundles(struct Bundle *bp)
+
+{ 
+if (bp->next != NULL)
+   {
+   DeleteBundles(bp->next);
+   }
+
+if (bp->name != NULL)
+   {
+   free(bp->name);
+   }
+
+DeleteRlist(bp->args);
+DeleteSubTypes(bp->subtypes);
+}
+
+/*******************************************************************/
+
+void DeleteSubTypes(struct SubType *tp)
+
+{
+if (tp->next != NULL)
+   {
+   DeleteSubTypes(tp->next);
+   }
+
+DeletePromises(tp->promiselist);
+
+if (tp->name != NULL)
+   {
+   free(tp->name);
+   }
+}
+
+/*******************************************************************/
+
+void DeleteBodies(struct Body *bp)
+
+{
+if (bp->next != NULL)
+   {
+   DeleteBodies(bp->next);
+   }
+
+if (bp->name != NULL)
+   {
+   free(bp->name);
+   }
+
+DeleteRlist(bp->args);
+DeleteConstraintList(bp->conlist);
+}

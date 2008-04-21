@@ -201,26 +201,6 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 return pcopy;
 }
 
-/*****************************************************************************/
-
-void DeletePromise(struct Promise *pp)
-
-{
-Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
-
-if (pp->promiser != NULL)
-   {
-   free(pp->promiser);
-   }
-
-if (pp->promisee != NULL)
-   {
-   DeleteRvalItem(pp->promisee,pp->petype);
-   }
-
-DeleteConstraintList(pp->conlist);
-}
-
 
 /*****************************************************************************/
 
@@ -295,6 +275,58 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 return pcopy;
 }
 
+/*******************************************************************/
+
+struct Body *IsBody(struct Body *list,char *key)
+
+{ struct Body *bp;
+
+for (bp = list; bp != NULL; bp = bp->next)
+   {
+   if (strcmp(bp->name,key) == 0)
+      {
+      return bp;
+      }
+   }
+
+return NULL;
+}
+
+/*****************************************************************************/
+/* Cleanup                                                                   */
+/*****************************************************************************/
+
+void DeletePromises(struct Promise *pp)
+
+{
+if (pp->next != NULL)
+   {
+   DeletePromises(pp->next);
+   }
+ 
+DeletePromise(pp);
+}
+
+/*****************************************************************************/
+
+void DeletePromise(struct Promise *pp)
+
+{
+Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
+
+if (pp->promiser != NULL)
+   {
+   free(pp->promiser);
+   }
+
+if (pp->promisee != NULL)
+   {
+   DeleteRvalItem(pp->promisee,pp->petype);
+   }
+
+DeleteConstraintList(pp->conlist);
+}
+
 /*****************************************************************************/
 
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp)
@@ -325,19 +357,3 @@ free(pp);
 }
 
 
-/*******************************************************************/
-
-struct Body *IsBody(struct Body *list,char *key)
-
-{ struct Body *bp;
-
-for (bp = list; bp != NULL; bp = bp->next)
-   {
-   if (strcmp(bp->name,key) == 0)
-      {
-      return bp;
-      }
-   }
-
-return NULL;
-}

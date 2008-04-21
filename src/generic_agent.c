@@ -40,13 +40,13 @@ extern char *CFH[][2];
 void GenericInitialize(int argc,char **argv,char *agents)
 
 { char rtype;
-  struct Rlist *rp;
   char name[CF_BUFSIZE];
   enum cfagenttype ag = Agent2Type(agents);
 
 Initialize(argc,argv);
 SetReferenceTime(true);
 SetStartTime(false);
+SetSignals();
 
 if (! NOHARDCLASSES)
    {
@@ -59,23 +59,7 @@ if (! NOHARDCLASSES)
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 
-Cf3ParseFile(VINPUTFILE);
-
-if (VINPUTLIST != NULL)
-   {
-   for (rp = VINPUTLIST; rp != NULL; rp=rp->next)
-      {
-      if (rp->type != CF_SCALAR)
-         {
-         snprintf(OUTPUT,CF_BUFSIZE,"Non file object %s in list\n",(char *)rp->item);
-         CfLog(cferror,OUTPUT,"");
-         }
-      else
-         {
-         Cf3ParseFile((char *)rp->item);
-         }
-      }
-   }
+Cf3ParseFiles();
 
 snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
 
@@ -108,6 +92,16 @@ if (SHOWREPORTS || ERRORCOUNT)
    {
    Report(VINPUTFILE);
    }
+
+FOUT = stdout;
+}
+
+/*****************************************************************************/
+
+void Cf3OpenLog()
+
+{
+openlog(VPREFIX,LOG_PID|LOG_NOWAIT|LOG_ODELAY,FACILITY);
 }
 
 /*****************************************************************************/
@@ -247,6 +241,38 @@ strcpy(VPREFIX,"cfengine3");
 
 /*******************************************************************/
 
+void Cf3ParseFiles()
+
+{ struct Rlist *rp;
+
+if ((PROMISETIME = time((time_t *)NULL)) == -1)
+   {
+   printf("Couldn't read system clock\n");
+   }
+ 
+Cf3ParseFile(VINPUTFILE);
+
+if (VINPUTLIST != NULL)
+   {
+   for (rp = VINPUTLIST; rp != NULL; rp=rp->next)
+      {
+      if (rp->type != CF_SCALAR)
+         {
+         snprintf(OUTPUT,CF_BUFSIZE,"Non file object %s in list\n",(char *)rp->item);
+         CfLog(cferror,OUTPUT,"");
+         }
+      else
+         {
+         Cf3ParseFile((char *)rp->item);
+         }
+      }
+   }
+}
+
+/*******************************************************************/
+/* Level                                                           */
+/*******************************************************************/
+
 void Cf3ParseFile(char *filename)
 
 { FILE *save_yyin = yyin;
@@ -286,18 +312,6 @@ while (!feof(yyin))
    }
 
 fclose (yyin);
-}
-
-/*******************************************************************/
-
-void TheAgent(enum cfagenttype ag)
-
-{
-
- // pass on ag to verifypromises?
-HashVariables();
-SetAuditVersion();
-VerifyPromises(ag);
 }
 
 /*******************************************************************/

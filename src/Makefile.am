@@ -34,6 +34,8 @@ libpromises_la_SOURCES =						\
 	iteration.c							\
 	rlist.c								\
 	syntax.c							\
+	logging.c							\
+	signals.c							\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\

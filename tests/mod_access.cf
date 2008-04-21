@@ -28,6 +28,8 @@ dynamicaddresses => { "IP numbers" };
 hostnamekeys     => "false";
 
 bindtointerface => "IP number/hostname";
+
+serverfacility => "LOG_DAEMON";
 }
 
 #########################################################

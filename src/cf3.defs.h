@@ -200,7 +200,7 @@ enum cfspromises
 #define CF_ANYSTRING  ".*"
 #define CF_PATHRANGE  "[/\\].*"
 #define CF_TIMERANGE "0,4026531839"
-
+#define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
 
 /*************************************************************************/
 

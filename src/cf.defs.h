@@ -412,7 +412,7 @@ typedef int clockid_t;
 # define ERESTARTSYS EINTR
 #endif
 
-#define CF_FAILEDSTR "BAD: Host authentication failed. Did you forget the domain name or IP/DNS address registration (for ipv4 or ipv6)?"
+#define CF_FAILEDSTR "BAD: Unspecified server refusal (see verbose server output)"
 #define CF_CHANGEDSTR1 "BAD: File changed "   /* Split this so it cannot be recognized */
 #define CF_CHANGEDSTR2 "while copying"
 
@@ -817,11 +817,11 @@ enum classes
    darwin,
    ux4800,
    qnx,
+   dragonfly,
    unused1,
    unused2,
    unused3
    };
-
 
 /*******************************************************************/
 
@@ -914,6 +914,7 @@ enum commattr  /* See COMMATTRIBUTES[] in globals.c  for matching entry */
    cfcmp,
    cfpkgmgr,
    cfxdev,
+   cfrxdirs,
    cfretvars,
    cfretclasses,
    cfsendclasses,
@@ -1294,6 +1295,7 @@ enum pkgactions /* What to do with a package if it is found/not found */
     pkgaction_install,
     pkgaction_remove,
     pkgaction_upgrade,
+    pkgaction_fix,
     pkgaction_none
     };
 
@@ -1373,7 +1375,17 @@ enum observables
     ob_webaccess,
     ob_weberrors,
     ob_syslog,
-    ob_messages
+    ob_messages,
+    ob_temp0,
+    ob_temp1,
+    ob_temp2,
+    ob_temp3,
+    ob_cpuall,
+    ob_cpu0,
+    ob_cpu1,
+    ob_cpu2,
+    ob_cpu3,
+    ob_spare
     };
 
 
@@ -1691,6 +1703,7 @@ struct File
    char   inform;
    char   logaudit;
    char   xdev;
+   char   rxdirs;
    int    ifelapsed;
    int    expireafter;
    struct Audit *audit;

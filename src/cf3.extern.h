@@ -29,6 +29,8 @@ extern char *CF_AGENTTYPES[];
 extern char THIS_AGENT[CF_MAXVARSIZE];
 extern short INSTALL_SKIP;
 extern short SHOWREPORTS;
+extern int FACILITY;
+extern time_t PROMISETIME;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

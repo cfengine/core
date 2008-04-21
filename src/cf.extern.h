@@ -36,6 +36,7 @@ extern pthread_mutex_t MUTEX_SYSCALL;
 extern pthread_mutex_t MUTEX_LOCK;
 #endif
 
+extern pid_t ALARM_PID;
 extern short INSTALLALL;
 extern short ALL_SINGLECOPY;
 extern int PASS;
@@ -444,6 +445,7 @@ extern short NOHARDCLASSES;
 extern short NOSPLAY;
 extern short DONESPLAY;
 extern char XDEV;
+extern char RXDIRS;
 extern char TYPECHECK;
 extern char SCAN;
 

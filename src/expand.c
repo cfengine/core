@@ -92,7 +92,7 @@ or anything in a control body?.
 
 **********************************************************************/
 
-void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp)
+void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void *fnptr)
 
 { struct Rlist *rp, *listvars = NULL, *scalarvars = NULL;
   struct Constraint *cp;
@@ -116,7 +116,7 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type);
    }
 
-ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars);
+ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars,fnptr);
 
 DeletePromise(pcopy);
 DeleteRlist(scalarvars);
@@ -292,7 +292,7 @@ return start;
 /*********************************************************************/
 
 struct Rval ExpandPrivateRval(char *scopeid,void *rval,char type)
-    
+
 { char buffer[CF_EXPANDSIZE];
  struct Rlist *rp, *start = NULL;
  struct FnCall *fp,*fpe;
@@ -483,7 +483,7 @@ return returnval;
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,struct Rlist *scalarvars,struct Rlist *listvars)
+void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,struct Rlist *scalarvars,struct Rlist *listvars,void (*fnptr)())
 
 { struct Rlist *lol = NULL; 
   struct Promise *pexp;
@@ -505,16 +505,20 @@ do
    switch (agent)
       {
       case cf_common:
-          
+
           fprintf(FOUT,"<p>");
-          ShowPromise(pexp,6); // Delete me later, training pack only
+          ShowPromise(pexp,6);
           fprintf(FOUT,"</p>");
           
           break;
+
+      default:
+          if (fnptr != NULL)
+             {
+             (*fnptr)(pexp);
+             }
+          break;
       }
-   
-   // agent: do operation
-   // server: add to control list
    
    DeletePromise(pexp);
    }

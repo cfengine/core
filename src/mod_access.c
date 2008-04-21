@@ -65,6 +65,8 @@ struct BodySyntax CF_REMACCESS_BODIES[] =
    {
    {"admit",cf_slist,""},
    {"deny",cf_slist,""},
+   {"maproot",cf_slist,""},
+   {"encrypted",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -75,5 +77,6 @@ struct BodySyntax CF_REMACCESS_BODIES[] =
 struct SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
   {
   {"server","access",CF_REMACCESS_BODIES},
+  {NULL,NULL,NULL},
   };
 

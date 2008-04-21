@@ -108,5 +108,6 @@ struct BodySyntax CF_PROCESS_BODIES[] =
 struct SubTypeSyntax CF_PROCESS_SUBTYPES[] =
   {
   {"agent","processes",CF_PROCESS_BODIES},
+  {NULL,NULL,NULL},
   };
 

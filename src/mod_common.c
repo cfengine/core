@@ -165,7 +165,7 @@ struct BodySyntax CF_SELECT_BODY[] =
 
 struct BodySyntax CFG_CONTROLBODY[] =
    {
-   {"bundles",cf_slist,".*"},
+   {"bundlesequence",cf_slist,".*"},
    {"inputs",cf_slist,".*"},
    {"version",cf_str,"" },
    {NULL,cf_notype,NULL}
@@ -174,7 +174,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
 struct BodySyntax CFA_CONTROLBODY[] =
    {
    {"splaytime",cf_int,".*"},
-   {"access",cf_slist,".*"},
+   {"useraccess",cf_slist,".*"},
    {NULL,cf_notype,NULL}
    };
 

@@ -49,6 +49,7 @@ access:
 
     "/etc/passwd"
 
+       maproot => { "backuphost.domain.tld" },
        admit => @(ok),
        deny =>  @(bad);
 

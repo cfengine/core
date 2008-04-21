@@ -218,5 +218,6 @@ struct SubTypeSyntax CF_FILES_SUBTYPES[] =
      
   {"edit_line","append",CF_APPEND_BODIES},
   {"edit_line","replace",CF_REPLACE_BODIES},
+  {NULL,NULL,NULL},
   };
 

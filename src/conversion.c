@@ -19,6 +19,23 @@
 
 /****************************************************************************/
 
+enum cfsbundle Type2Cfs(char *name)
+
+{ int i;
+ 
+for (i = 0; i < (int)cfs_nobtype; i++)
+   {
+   if (strcmp(CF_REMACCESS_SUBTYPES[i].subtype,name)==0)
+      {
+      break;
+      }
+   }
+
+return (enum cfsbundle)i;
+}
+
+/****************************************************************************/
+
 enum cfdatatype Typename2Datatype(char *name)
 
 /* convert abstract data type names: int, ilist etc */

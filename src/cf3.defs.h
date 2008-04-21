@@ -165,6 +165,21 @@ enum cfscontrol
    cfs_notype,
    };
 
+enum cfsbundle
+   {
+   cfs_access,
+   cfs_nobtype
+   };
+
+enum cfspromises
+   {
+   cfs_admit,
+   cfs_deny,
+   cfs_maproot,
+   cfs_encrypted,
+   cfs_noptype
+   };
+
 /*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/

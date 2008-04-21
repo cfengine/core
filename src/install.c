@@ -195,7 +195,7 @@ return tp;
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle)
 
 { struct Promise *pp,*lp;
- char *sp = NULL,*spe = NULL;
+  char *sp = NULL,*spe = NULL;
 
 if (INSTALL_SKIP)
    {
@@ -224,10 +224,21 @@ if ((sp = strdup(promiser)) == NULL)
    FatalError("");
    }
 
-if ((spe = strdup(classes)) == NULL)
+if (strlen(classes) > 0)
    {
-   CfLog(cferror,"Unable to allocate Promise","malloc");
-   FatalError("");
+   if ((spe = strdup(classes)) == NULL)
+      {
+      CfLog(cferror,"Unable to allocate Promise","malloc");
+      FatalError("");
+      }
+   }
+else
+   {
+   if ((spe = strdup("any")) == NULL)
+      {
+      CfLog(cferror,"Unable to allocate Promise","malloc");
+      FatalError("");
+      }
    }
 
 if (type->promiselist == NULL)
@@ -246,7 +257,6 @@ else
 pp->audit = AUDITPTR;
 pp->lineno = P.line_no;
 pp->bundle =  strdup(bundle);
-
 pp->promiser = sp;
 pp->promisee = promisee;
 pp->petype = petype;      /* rtype of promisee - list or scalar recipient? */

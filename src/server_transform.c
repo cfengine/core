@@ -1,0 +1,553 @@
+/* 
+
+        Copyright (C) 1994-
+        Free Software Foundation, Inc.
+
+   This file is part of GNU cfengine - written and maintained 
+   by Mark Burgess, Dept of Computing and Engineering, Oslo College,
+   Dept. of Theoretical physics, University of Oslo
+ 
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 3, or (at your option) any
+   later version. 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+*/
+
+/*****************************************************************************/
+/*                                                                           */
+/* File: server_transform.c                                                  */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "cf3.defs.h"
+#include "cf3.extern.h"
+#include "cf3.server.h"
+
+void KeepPromiseBundles(void);
+void KeepControlPromises(void);
+void KeepServerPromise(struct Promise *pp);
+void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
+struct Auth *GetAuthPath(char *path,struct Auth *list);
+void Summarize(void);
+
+extern struct BodySyntax CFS_CONTROLBODY[];
+
+/*******************************************************************/
+/* GLOBAL VARIABLES                                                */
+/*******************************************************************/
+
+extern int CLOCK_DRIFT;
+extern int CFD_MAXPROCESSES;
+extern int ACTIVE_THREADS;
+extern int NO_FORK;
+extern int MULTITHREAD;
+extern int CHECK_RFC931;
+extern int CFD_INTERVAL;
+extern int DENYBADCLOCKS;
+extern int MULTIPLECONNS;
+extern int TRIES;
+extern int MAXTRIES;
+extern int LOGCONNS;
+extern int LOGENCRYPT;
+extern struct Item *CONNECTIONLIST;
+
+/*******************************************************************/
+
+void KeepPromises()
+
+{
+KeepControlPromises();
+KeepPromiseBundles();
+}
+
+/*******************************************************************/
+
+void Summarize()
+
+{ struct Auth *ptr;
+  struct Item *ip,*ipr;
+
+if (DEBUG || D2 || D3)
+   {
+   printf("\nACCESS GRANTED ----------------------:\n");
+
+   for (ptr = VADMIT; ptr != NULL; ptr=ptr->next)
+      {
+      printf("Path: %s (encrypt=%d)\n",ptr->path,ptr->encrypt);
+
+      for (ip = ptr->accesslist; ip != NULL; ip=ip->next)
+         {
+         printf("   Admit: %s root=",ip->name);
+         for (ipr = ptr->maproot; ipr !=NULL; ipr=ipr->next)
+            {
+            printf("%s,",ipr->name);
+            }
+         printf("\n");
+         }
+      }
+   
+   printf("\nACCESS DENIAL ------------------------ :\n");
+   
+   for (ptr = VDENY; ptr != NULL; ptr=ptr->next)
+      {
+      printf("Path: %s\n",ptr->path);
+      
+      for (ip = ptr->accesslist; ip != NULL; ip=ip->next)
+         {
+         printf("   Deny: %s\n",ip->name);
+         }      
+      }
+   
+   printf("\nHost IPs allowed connection access :\n");
+   
+   for (ip = NONATTACKERLIST; ip != NULL; ip=ip->next)
+      {
+      printf("IP: %s\n",ip->name);
+      }
+   
+   printf("\nHost IPs denied connection access :\n");
+   
+   for (ip = ATTACKERLIST; ip != NULL; ip=ip->next)
+      {
+      printf("IP: %s\n",ip->name);
+      }
+   
+   printf("\nHost IPs allowed multiple connection access :\n");
+
+   for (ip = MULTICONNLIST; ip != NULL; ip=ip->next)
+      {
+      printf("IP: %s\n",ip->name);
+      }
+
+   printf("\nHost IPs from whom we shall accept public keys on trust :\n");
+
+   for (ip = TRUSTKEYLIST; ip != NULL; ip=ip->next)
+      {
+      printf("IP: %s\n",ip->name);
+      }
+
+   printf("\nHost IPs from NAT which we don't verify :\n");
+
+   for (ip = SKIPVERIFY; ip != NULL; ip=ip->next)
+      {
+      printf("IP: %s\n",ip->name);
+      }
+
+   printf("\nDynamical Host IPs (e.g. DHCP) whose bindings could vary over time :\n");
+
+   for (ip = DHCPLIST; ip != NULL; ip=ip->next)
+      {
+      printf("IP: %s\n",ip->name);
+      }
+
+   }
+}
+
+
+/*******************************************************************/
+/* Level                                                           */
+/*******************************************************************/
+
+void KeepControlPromises()
+    
+{ struct Body *body;
+  struct Constraint *cp;
+  char scope[CF_BUFSIZE], rettype;
+  void *retval;
+
+CFD_MAXPROCESSES = 10;
+MAXTRIES = 5;
+CFD_INTERVAL = 0;
+CHECKSUMUPDATES = true;
+DENYBADCLOCKS = true;
+
+/* Keep promised agent behaviour - control bodies */
+  
+for (body = BODIES; body != NULL; body = body->next)
+   {
+   if (strcmp(body->type,CF_AGENTTYPES[cf_server]) == 0)
+      {
+      if (strcmp(body->name,"control") == 0)
+         {
+         Debug("%s body for type %s\n",body->name,body->type);
+         
+         for (cp = body->conlist; cp != NULL; cp=cp->next)
+            {
+            if (IsExcluded(cp->classes))
+               {
+               continue;
+               }
+
+            snprintf(scope,CF_BUFSIZE,"%s_%s",body->name,body->type);
+
+            if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
+               {
+               FatalError("Control variable vanished mysteriously - shouldn't happen\n");
+               }
+            
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
+               {
+               CHECK_RFC931 = GetBoolean(retval);
+               Verbose("SET CheckIdent = %d\n",CHECK_RFC931);
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
+               {
+               DENYBADCLOCKS = GetBoolean(retval);
+               Verbose("SET denybadclocks = %d\n",DENYBADCLOCKS);
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
+               {
+               LOGENCRYPT = GetBoolean(retval);
+               Verbose("SET LOGENCRYPT = %d\n",LOGENCRYPT);
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
+               {
+               LOGCONNS = GetBoolean(retval);
+               Verbose("SET LOGCONNS = %d\n",LOGCONNS);
+               continue;
+               }
+                        
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
+               {
+               CFD_MAXPROCESSES = atoi(retval);
+               MAXTRIES = CFD_MAXPROCESSES / 3;
+               Verbose("SET maxconnections = %d\n",CFD_MAXPROCESSES);
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
+               {
+               strncpy(CFRUNCOMMAND,retval,CF_BUFSIZE-1);
+               Verbose("SET cfruncommand = %s\n",CFRUNCOMMAND);
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Allowing connections from ...\n");
+               
+               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(NONATTACKERLIST,rp->item))
+                     {
+                     AppendItem(&NONATTACKERLIST,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Denying connections from ...\n");
+               
+               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(ATTACKERLIST,rp->item))
+                     {
+                     AppendItem(&ATTACKERLIST,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Skip verify connections from ...\n");
+               
+               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(SKIPVERIFY,rp->item))
+                     {
+                     AppendItem(&SKIPVERIFY,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Dynamic addresses from ...\n");
+               
+               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(DHCPLIST,rp->item))
+                     {
+                     AppendItem(&DHCPLIST,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }
+
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Allowing multiple connections from ...\n");
+               
+               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(MULTICONNLIST,rp->item))
+                     {
+                     AppendItem(&MULTICONNLIST,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Trust keys from ...\n");
+               
+               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(TRUSTKEYLIST,rp->item))
+                     {
+                     AppendItem(&TRUSTKEYLIST,rp->item,cp->classes);
+                     }
+                  }
+               
+               continue;
+               }
+
+            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+               {
+               struct Rlist *rp;
+               Verbose("SET Allow users ...\n");
+               
+               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+                  {
+                  if (!IsItemIn(ALLOWUSERLIST,rp->item))
+                     {
+                     AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
+                     }
+                  }
+
+               continue;
+               }        
+            }
+         }
+      }
+   }
+
+}
+
+/*********************************************************************/
+
+void KeepPromiseBundles()
+    
+{ struct Bundle *bp;
+  struct SubType *sp;
+  struct Promise *pp;
+  char *scope, *rettype;
+  void *retval;
+
+/* Dial up the generic promise expansion with a callback */
+  
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   scope = bp->name;
+   SetNewScope(bp->name);
+
+   if (strcmp(bp->type,CF_AGENTTYPES[cf_server]) == 0)
+      {
+      for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
+         {
+         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+            {
+            ExpandPromise(cf_server,scope,pp,KeepServerPromise);
+            }
+         }
+      }
+   }
+}
+
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
+
+void KeepServerPromise(struct Promise *pp)
+
+{ struct Constraint *cp;
+  struct Body *bp;
+  struct FnCall *fp;
+  struct Rlist *rp;
+  struct Auth *ap,*dp;
+  char *val;
+
+// Expandpromises (...,ptr to handler)
+
+printf("Context is %s\n",pp->classes);
+printf("Promiser is %s\n",pp->promiser);
+
+if (!IsDefinedClass(pp->classes))
+   {
+   printf("Skipping whole promise, as context is %s\n",pp->classes);
+   return;
+   }
+
+if (pp->promisee)
+   {
+   printf("Promisee is %s (not currently used)\n",pp->promisee);
+   ShowRval(stdout,pp->promisee,pp->petype);
+   }
+
+if (strlen(pp->promiser) != 1)
+   {
+   DeleteSlash(pp->promiser);
+   }
+
+if (ap = GetAuthPath(pp->promiser,VADMIT))
+   {
+   InstallServerAuthPath(pp->promiser,&VADMIT,&VADMITTOP);
+   }
+
+if (dp = GetAuthPath(pp->promiser,VDENY))
+   {
+   InstallServerAuthPath(pp->promiser,&VDENY,&VDENYTOP);
+   }
+
+ap = GetAuthPath(pp->promiser,VADMIT);
+dp = GetAuthPath(pp->promiser,VDENY);
+
+for (cp = pp->conlist; cp != NULL; cp = cp->next)
+   {
+   printf("   %s is ",cp->lval);
+
+   if (!IsDefinedClass(cp->classes))
+      {
+      continue;
+      }
+
+   switch (cp->type)
+      {
+      case CF_SCALAR:
+          val = (char *)cp->rval;
+
+          if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+             {
+             printf("encrypted = %s\n",val);
+             ap->encrypt = true;
+             }
+             
+          break;
+
+      case CF_LIST:
+          
+          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+             {
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                {
+                PrependItem(&(ap->accesslist),rp->item,NULL);
+                continue;
+                }
+             
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                {
+                PrependItem(&(dp->accesslist),rp->item,NULL);
+                continue;
+                }
+
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                {
+                PrependItem(&(ap->maproot),rp->item,NULL);
+                continue;
+                }
+             }
+          
+          printf("\n");
+          break;
+
+      case CF_FNCALL:
+          /* Shouldn't happen */
+          break;
+      }
+   }
+}
+
+
+/***********************************************************************/
+/* Level                                                               */
+/***********************************************************************/
+
+void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop)
+
+{ struct Auth *ptr;
+  char ebuff[CF_EXPANDSIZE]; 
+
+if ((ptr = (struct Auth *)malloc(sizeof(struct Auth))) == NULL)
+   {
+   FatalError("Memory Allocation failed for InstallAuthPath() #1");
+   }
+
+if ((ptr->path = strdup(path)) == NULL)
+   {
+   FatalError("Memory Allocation failed for InstallAuthPath() #3");
+   }
+
+if (*listtop == NULL)                 /* First element in the list */
+   {
+   *list = ptr;
+   }
+else
+   {
+   (*listtop)->next = ptr;
+   }
+
+ptr->accesslist = NULL;
+ptr->maproot = NULL;
+ptr->encrypt = false; 
+ptr->next = NULL;
+*listtop = ptr;
+}
+
+/***********************************************************************/
+/* Level                                                               */
+/***********************************************************************/
+
+struct Auth *GetAuthPath(char *path,struct Auth *list)
+
+{ struct Auth *ap;
+  char ebuff[CF_EXPANDSIZE]; 
+
+if (strlen(path) != 1)
+   {
+   DeleteSlash(path);
+   }
+
+for (ap = list; ap != NULL; ap=ap->next)
+   {
+   if (strcmp(ap->path,path) == 0)
+      {
+      return ap;
+      }
+   }
+
+return NULL;
+}
+
+/***********************************************************************/

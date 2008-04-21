@@ -201,7 +201,20 @@ selection:            id                         /* BODY ONLY */
 
                         if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
                            {
-                           VINPUTLIST = P.rval;
+                           if (strcmp(P.lval,"inputs") == 0)
+                              {
+                              if (IsDefinedClass(P.currentclasses))
+                                 {
+                                 if (VINPUTLIST == NULL)
+                                    {
+                                    VINPUTLIST = P.rval;
+                                    }
+                                 else
+                                    {
+                                    yyerror("Redefinition of input list (broken promise)");
+                                    }
+                                 }
+                              }
                            }
                         }
                        ';' ;

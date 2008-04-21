@@ -398,6 +398,8 @@ void VerifyPromises(enum cfagenttype agent)
   struct FnCall *fp;
   char buf[CF_BUFSIZE], *scope;
 
+Debug("\n\nVerifyPromises()\n");
+
 for (rp = BODYPARTS; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
@@ -431,7 +433,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       {
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
-         ExpandPromise(agent,scope,pp);
+         ExpandPromise(agent,scope,pp,NULL);
          }
       }
    }
@@ -551,7 +553,14 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       continue;
       }
 
-   returnval = EvaluateFinalRval(CONTEXTID,cp->rval,cp->type,true,NULL);
+   if (strcmp(cp->lval,"bundlesequence") == 0)
+      {
+      returnval = ExpandPrivateRval(CONTEXTID,cp->rval,cp->type);
+      }
+   else
+      {
+      returnval = EvaluateFinalRval(CONTEXTID,cp->rval,cp->type,true,NULL);
+      }
 
    if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
       {

@@ -61,6 +61,7 @@ void DeleteConstraintList(struct Constraint *conlist);
 enum cfdatatype Typename2Datatype(char *name);
 enum cfdatatype GetControlDatatype(char *varname,struct BodySyntax *bp);
 enum cfagenttype Agent2Type(char *name);
+enum cfsbundle Type2Cfs(char *name);
 int GetBoolean(char *val);
 
 /* report.c */
@@ -194,8 +195,8 @@ int IsCf3VarString(char *str);
 
 /* expand.c */
 
-void ExpandPromise(enum cfagenttype ag,char *scopeid,struct Promise *pp);
-void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars);
+void ExpandPromise(enum cfagenttype ag,char *scopeid,struct Promise *pp,void *fnptr);
+void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars,void (*fnptr)());
 struct Rval ExpandDanglers(char *scope,struct Rval rval,struct Promise *pp);
 void ScanRval(char *scope,struct Rlist **los,struct Rlist **lol,void *string,char type);
 void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level);

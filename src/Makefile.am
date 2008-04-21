@@ -52,7 +52,8 @@ cfAgent_SOURCES =							\
 	agent.c
 
 cfServerd_SOURCES =							\
-	server.c
+	server.c							\
+	server_transform.c
 
 cfMonitord_SOURCES =							\
 	monitor.c

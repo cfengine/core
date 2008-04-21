@@ -29,21 +29,26 @@
 
 body common control
    {
-   bundles   => { update, main, mypromises("2","3") };
+   any::
 
-   inputs          => {
-                      "../tests/mod_execd.cf", 
-                      "../tests/mod_files.cf", 
-                      "../tests/mod_files_copy.cf", 
-                      "../tests/mod_exec.cf",
-                      "../tests/mod_process.cf",
-                      "../tests/mod_storage.cf",
-                      "../tests/mod_access.cf" 
-                      };
+      bundlesequence  => { update, main, mypromises("2","3"), mypromises("fish","rabbit") };
+
+      inputs          => {
+                         "../tests/mod_execd.cf", 
+                         "../tests/mod_files.cf", 
+                         "../tests/mod_files_copy.cf", 
+                         "../tests/mod_exec.cf",
+                         "../tests/mod_process.cf",
+                         "../tests/mod_storage.cf",
+                         "../tests/mod_access.cf" 
+                         };
+
+      version =>  "123";
 
     solaris::
 
-      # inputs => { "update.cf", "main.cf" , "linux.cf" };
+      bundlesequence  => { additions };
+      inputs => { "update.cf", "main.cf" , "linux.cf" };
 
 
    }
@@ -53,7 +58,7 @@ body common control
 body agent control
 
 {
-access => { "mark", "root" };
+useraccess => { "mark", "root" };
 }
 
 ###################################################################
@@ -73,7 +78,7 @@ bundle agent myPromises(s1,s2)   # policy version 1.0
      "myname"  string => "value in quotes" ,
                policy => "constant";
 
-     "derived" string => "includes $(name) previously defined" ,
+     "derived" string => "includes $(name) previously defined $(s1) and $(s2)" ,
                policy=>  "free";
 
      # Vectors and lists

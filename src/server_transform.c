@@ -455,9 +455,6 @@ void KeepServerPromise(struct Promise *pp)
 
 // Expandpromises (...,ptr to handler)
 
-printf("Context is %s\n",pp->classes);
-printf("Promiser is %s\n",pp->promiser);
-
 if (!IsDefinedClass(pp->classes))
    {
    printf("Skipping whole promise, as context is %s\n",pp->classes);
@@ -490,8 +487,6 @@ dp = GetAuthPath(pp->promiser,VDENY);
 
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
-   printf("   %s is ",cp->lval);
-
    if (!IsDefinedClass(cp->classes))
       {
       continue;
@@ -504,7 +499,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
           if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
              {
-             printf("encrypted = %s\n",val);
              ap->encrypt = true;
              }
              
@@ -532,8 +526,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
                 continue;
                 }
              }
-          
-          printf("\n");
           break;
 
       case CF_FNCALL:

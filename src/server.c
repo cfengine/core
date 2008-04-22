@@ -356,8 +356,8 @@ signal(SIGTERM,(void*)ExitCleanly);
 signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
 signal(SIGCHLD,SIG_IGN);
-signal(SIGUSR1,HandleSignal);
-signal(SIGUSR2,HandleSignal);
+signal(SIGUSR1,HandleSignals);
+signal(SIGUSR2,HandleSignals);
  
 if (listen(sd,queuesize) == -1)
    {
@@ -832,11 +832,13 @@ if (PROMISETIME < newstat.st_mtime)
    Cf3ParseFiles();
    HashVariables();
 
+   NewScope("system");
    AddClassToHeap("any");
    GetNameInfo3();
    GetInterfaceInfo3();
    GetV6InterfaceInfo();
    Get3Environment();
+   SetNewScope("server");
    }
 }
 

@@ -52,7 +52,7 @@ if (signum != SIGCHLD)
       {
       unlink(PIDFILE);
       ReleaseCurrentLock();
-      CloseAuditLog();
+      CloseAudit();
       closelog();
       exit(0);
       }

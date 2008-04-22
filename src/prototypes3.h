@@ -64,6 +64,10 @@ enum cfagenttype Agent2Type(char *name);
 enum cfsbundle Type2Cfs(char *name);
 int GetBoolean(char *val);
 
+/* logging.c */
+
+void CloseAudit(void);
+
 /* report.c */
 
 void ShowContext(void);
@@ -285,3 +289,7 @@ void KeepServerPromise(struct Promise *pp);
 void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
 struct Auth *GetAuthPath(char *path,struct Auth *list);
 void Summarize(void);
+
+/* signals.c */
+
+void HandleSignals(int signum);

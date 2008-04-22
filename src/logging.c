@@ -34,19 +34,41 @@
 
 /*****************************************************************************/
 
-/* should these locks support threading ? i.e. private lock for each thread */
+void CloseAudit()
 
-/*
-Now fill in the basics avoid conflicting 2 infrastrcuture
+{ double total;
+ char *version,type;
+ 
+total = (double)(PR_KEPT+PR_NOTKEPT+PR_REPAIRED)/100.0;
 
+if (GetVariable(CONTEXTID,"version",(void *)version,&type) != cf_notype)
+   {
+   }
+else
+   {
+   version = "(not specified)";
+   }
 
-Keep auditing log as-is.
+if (total == 0)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: No checks were scheduled\n",version);
+   return;
+   }
+else
+   {   
+   snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
+            version,
+            (double)PR_KEPT/total,
+            (double)PR_REPAIRED/total,
+            (double)PR_NOTKEPT/total);
+   }
 
-CfLog has to be changed, as ShowAction is okay but only prints the lock
-    CURRENT PROMISE should be in here too...
+CfLog(cfverbose,OUTPUT,"");
+AuditLog('y',NULL,0,OUTPUT,CF_REPORT);
 
-
-    PP
-
-    Apart from openlog, the cf2 logging is good enough
-*/
+if (AUDIT && AUDITDBP)
+   {
+   AuditLog('y',NULL,0,"Cfagent closing",CF_NOP);
+   AUDITDBP->close(AUDITDBP,0);
+   }
+}

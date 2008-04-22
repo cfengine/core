@@ -129,6 +129,10 @@ void DeleteIterationContext(struct Rlist *lol);
 int IncrementIterationContext(struct Rlist *iterators,int count);
 int EndOfIteration(struct Rlist *iterator);
 
+/* instrumentation.c */
+
+void LastSaw(char *hostname,enum roles role);
+
 /* fncall.c */
 
 struct FnCall *NewFnCall(char *name, struct Rlist *args);
@@ -177,6 +181,7 @@ enum cfdatatype StringDataType(char *scopeid,char *string);
 
 void GetNameInfo3(void);
 void GetInterfaceInfo3(void);
+void Get3Environment(void);
     
 /* scope.c */
 

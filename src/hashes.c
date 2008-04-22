@@ -273,7 +273,7 @@ if (ptr == NULL)
    {
    struct Scope *sp;
    printf("No such scope id %s\n",scope);
-   FatalError("No such context");
+   FatalError("No such scope");
    }
  
 if (ptr->hashtable[slot])

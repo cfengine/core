@@ -337,3 +337,17 @@ if (GetVariable("this",name,&rval.item,&rval.rtype) == cf_notype)
 
 return true;
 }
+
+/*******************************************************************/
+
+int BooleanControl(char *scope,char *name,int bool)
+
+{ char varbuf[CF_BUFSIZE], rtype;
+ 
+if (GetVariable(scope,name,(void *)varbuf,&rtype) != cf_notype)
+   {
+   return GetBoolean(varbuf);
+   }
+
+return false;
+}

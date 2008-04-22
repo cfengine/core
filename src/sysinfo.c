@@ -385,7 +385,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
 
          strcpy(ip,inet_ntoa(sin->sin_addr));
          snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
-         NewScalar(CONTEXTID,name,ip,cf_str);
+         NewScalar("system",name,ip,cf_str);
 
          i = 3;
          
@@ -395,7 +395,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                {
                *sp = '\0';
                snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(ifp->ifr_name));
-               NewScalar(CONTEXTID,name,ip,cf_str);
+               NewScalar("system",name,ip,cf_str);
                }
             }         
          }
@@ -403,4 +403,73 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
    }
  
 close(fd);
+}
+
+/*******************************************************************/
+
+void Get3Environment()
+
+{ char env[CF_BUFSIZE],class[CF_BUFSIZE],name[CF_MAXVARSIZE],value[CF_MAXVARSIZE];
+  FILE *fp;
+  struct stat statbuf;
+  time_t now = time(NULL);
+  
+Verbose("Looking for environment from cfenvd...\n");
+snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
+
+if (stat(env,&statbuf) == -1)
+   {
+   Verbose("\nUnable to detect environment from cfenvd\n\n");
+   return;
+   }
+
+if (statbuf.st_mtime < (now - 60*60))
+   {
+   Verbose("Environment data are too old - discarding\n");
+   unlink(env);
+   return;
+   }
+
+snprintf(value,CF_MAXVARSIZE-1,"%s",ctime(&statbuf.st_mtime));
+Chop(value);
+
+DeleteVariable("system","env_time");
+NewScalar("system","env_time",value,cf_str);
+
+Verbose("Loading environment...\n");
+ 
+if ((fp = fopen(env,"r")) == NULL)
+   {
+   Verbose("\nUnable to detect environment from cfenvd\n\n");
+   return;
+   }
+
+while (!feof(fp))
+   {
+   class[0] = '\0';
+   name[0] = '\0';
+   value[0] = '\0';
+
+   fgets(class,CF_BUFSIZE-1,fp);
+
+   if (feof(fp))
+      {
+      break;
+      }
+
+   if (strstr(class,"="))
+      {
+      sscanf(class,"%255[^=]=%255[^\n]",name,value);
+
+      DeleteVariable("system",name);
+      NewScalar("system",name,value,cf_str);
+      }
+   else
+      {
+      AddClassToHeap(class);
+      }
+   }
+ 
+fclose(fp);
+Verbose("Environment data loaded\n\n"); 
 }

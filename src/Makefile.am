@@ -29,6 +29,7 @@ libpromises_la_SOURCES =						\
 	hashes.c							\
 	expand.c							\
 	selfdiagnostic.c						\
+	instrumentation.c						\
 	promises.c							\
 	constraints.c							\
 	iteration.c							\
@@ -79,6 +80,7 @@ noinst_HEADERS =							\
 	promises.h							\
 	prototypes3.h							\
 	cf3.defs.h							\
+	cf3.server.h							\
 	cf3parse.h							\
 	cf3.extern.h
 

@@ -52,7 +52,7 @@ if (signum != SIGCHLD)
       {
       unlink(PIDFILE);
       ReleaseCurrentLock();
-      Close3AuditLog();
+      CloseAuditLog();
       closelog();
       exit(0);
       }
@@ -74,3 +74,4 @@ if (signum != SIGCHLD)
    signal(signum,HandleSignal);
    }
 }
+

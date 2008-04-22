@@ -51,6 +51,9 @@ body common control
       inputs => { "update.cf", "main.cf" , "linux.cf" };
 
 
+   any::
+
+     lastseenexpireafter => "240";
    }
 
 ###################################################################

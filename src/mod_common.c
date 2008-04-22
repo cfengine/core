@@ -168,6 +168,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"bundlesequence",cf_slist,".*"},
    {"inputs",cf_slist,".*"},
    {"version",cf_str,"" },
+   {"lastseenexpireafter",cf_int,CF_VALRANGE},
    {NULL,cf_notype,NULL}
    };
 

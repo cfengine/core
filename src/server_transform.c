@@ -475,12 +475,12 @@ if (strlen(pp->promiser) != 1)
    DeleteSlash(pp->promiser);
    }
 
-if (ap = GetAuthPath(pp->promiser,VADMIT))
+if (!GetAuthPath(pp->promiser,VADMIT))
    {
    InstallServerAuthPath(pp->promiser,&VADMIT,&VADMITTOP);
    }
 
-if (dp = GetAuthPath(pp->promiser,VDENY))
+if (!GetAuthPath(pp->promiser,VDENY))
    {
    InstallServerAuthPath(pp->promiser,&VDENY,&VDENYTOP);
    }

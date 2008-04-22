@@ -34,5 +34,19 @@
 
 /*****************************************************************************/
 
+/* should these locks support threading ? i.e. private lock for each thread */
 
+/*
 Now fill in the basics avoid conflicting 2 infrastrcuture
+
+
+Keep auditing log as-is.
+
+CfLog has to be changed, as ShowAction is okay but only prints the lock
+    CURRENT PROMISE should be in here too...
+
+
+    PP
+
+    Apart from openlog, the cf2 logging is good enough
+*/

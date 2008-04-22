@@ -54,7 +54,7 @@ if (! NOHARDCLASSES)
    GetNameInfo3();
    GetInterfaceInfo3();
    GetV6InterfaceInfo();
-   GetEnvironment();
+   Get3Environment();
    }
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 

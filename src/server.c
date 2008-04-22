@@ -809,6 +809,8 @@ if (PROMISETIME < newstat.st_mtime)
    DeleteAuthList(VADMIT);
    DeleteAuthList(VDENY);
 
+   DeleteAllScope();
+
    strcpy(VDOMAIN,"undefined.domain");
 
    VADMIT = VADMITTOP = NULL;
@@ -822,20 +824,19 @@ if (PROMISETIME < newstat.st_mtime)
    NONATTACKERLIST = NULL;
    MULTICONNLIST = NULL;
 
-   BlankHashTable("server");
-
-   AddClassToHeap("any");
-   GetNameInfo3();
-   GetInterfaceInfo3();
-   GetV6InterfaceInfo();
-   GetEnvironment();
-
    DeleteBundles(BUNDLES);
    DeleteBodies(BODIES);
 
    BUNDLES = NULL;
    BODIES  = NULL;
    Cf3ParseFiles();
+   HashVariables();
+
+   AddClassToHeap("any");
+   GetNameInfo3();
+   GetInterfaceInfo3();
+   GetV6InterfaceInfo();
+   Get3Environment();
    }
 }
 
@@ -1594,7 +1595,7 @@ if ((conn->trust == false) || IsFuzzyItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
       conn->uid = pw->pw_uid;
       }
 
-   LastSeen(dns_assert,cf_accept);
+   LastSaw(dns_assert,cf_accept);
    return true;
    }
  
@@ -1770,7 +1771,7 @@ if (!matched)
  
 Verbose("Host ID is %s\n",dns_assert);
 strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE-1);
-LastSeen(dns_assert,cf_accept); 
+LastSaw(dns_assert,cf_accept); 
  
 Verbose("User ID seems to be %s\n",username); 
 strncpy(conn->username,username,CF_MAXVARSIZE-1);
@@ -3008,7 +3009,7 @@ int CheckStoreKey(struct cfd_connection *conn,RSA *key)
 { RSA *savedkey;
  char keyname[CF_MAXVARSIZE];
 
-if (OptionIs(CONTEXTID,"HostnameKeys",true))
+if (BooleanControl("server","hostnamekeys",true))
    {
    snprintf(keyname,CF_MAXVARSIZE,"%s-%s",conn->username,conn->hostname);
    }

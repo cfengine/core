@@ -93,6 +93,28 @@ VSCOPE = ptr;
 
 /*******************************************************************/
 
+void DeleteAllScope()
+
+{ struct Scope *ptr, *this;
+  
+Debug1("Deleting all scoped variables\n");
+
+ptr = VSCOPE;
+
+while (ptr != NULL)
+   {
+   this = ptr;
+   DeleteHashes(this->hashtable);
+   free(this->scope);   
+   ptr = this->next;
+   free((char *)this);
+   }
+
+VSCOPE = NULL;
+}
+
+/*******************************************************************/
+
 void DeleteScope(char *name)
 
 { struct Scope *ptr, *prev = NULL;

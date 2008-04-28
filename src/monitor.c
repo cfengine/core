@@ -32,6 +32,7 @@
 #include "cf3.extern.h"
 
 int main (int argc,char *argv[]);
+void *ExitCleanly(int signum);
 
 #include <math.h>
 
@@ -77,9 +78,10 @@ int main(int argc,char *argv[])
 
 {
 GenericInitialize(argc,argv,"monitor");
-MonInitialize();
+ThisAgentInit();
 KeepPromises();
 
+StartServer(argc,argv);
 return 0;
 }
 
@@ -128,6 +130,8 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
                  DEBUG = true;
                  break;
              }
+          
+          NO_FORK = true;
           break;
           
       case 'K': IGNORELOCK = true;
@@ -227,3 +231,42 @@ for (body = BODIES; body != NULL; body=body->next)
    }
 }
 
+/*****************************************************************************/
+/* Level 1                                                                   */
+/*****************************************************************************/
+
+void ThisAgentInit()
+
+{
+umask(077);
+sprintf(VPREFIX, "cfMonitord");
+Cf3OpenLog();
+GetNameInfo();
+GetInterfaceInfo3();
+GetV6InterfaceInfo();
+
+LOGGING = true;                    /* Do output to syslog */
+
+SetReferenceTime(false);
+SetStartTime(false);
+SetSignals();
+
+signal(SIGINT,(void*)ExitCleanly);
+signal(SIGTERM,(void*)ExitCleanly);
+signal(SIGHUP,SIG_IGN);
+signal(SIGPIPE,SIG_IGN);
+signal(SIGCHLD,SIG_IGN);
+signal(SIGUSR1,HandleSignals);
+signal(SIGUSR2,HandleSignals);
+
+MonInitialize();
+}
+
+/**************************************************************/
+
+void *ExitCleanly(int signum)
+
+{ 
+HandleSignals(signum);
+return NULL;
+}

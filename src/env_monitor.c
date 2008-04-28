@@ -160,12 +160,6 @@ void MonInitialize()
 { int i,j,k;
   struct stat statbuf;
  
-LOGGING = true;                    /* Do output to syslog */
-
-SetReferenceTime(false);
-SetStartTime(false);
-SetSignals();
-
 /* XXX Initialize workdir for non privileged users */
 
 strcpy(CFWORKDIR,WORKDIR);
@@ -374,7 +368,6 @@ void StartServer(int argc,char **argv)
 
 { char *timekey;
  struct Averages averages;
-  void HandleSignal();
   int i;
 
 if ((!NO_FORK) && (fork() != 0))
@@ -390,14 +383,6 @@ if (!NO_FORK)
    }
 
 WritePID("cfenvd.pid");
-
-signal (SIGTERM,HandleSignal);                   /* Signal Handler */
-signal (SIGHUP,HandleSignal);
-signal (SIGINT,HandleSignal);
-signal (SIGPIPE,HandleSignal);
-signal (SIGSEGV,HandleSignal);
-signal (SIGUSR1,HandleSignal);
-signal (SIGUSR2,HandleSignal);
 
 VCANONICALFILE = strdup("db");
  

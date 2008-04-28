@@ -251,7 +251,9 @@ void ThisAgentInit()
   int i;
 
 BINDINTERFACE[0] = '\0';
-  
+
+umask(077);
+
 sprintf(VPREFIX, "cfServerd");
 Cf3OpenLog();
 CfenginePort();

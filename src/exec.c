@@ -248,10 +248,8 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSxL:hFV1g",OPTIONS,&optindex)) != 
 void ThisAgentInit()
 
 {
-LOGGING = true;                    /* Do output to syslog */
-
- /* XXX Initialize workdir for non privileged users */
-
+umask(077);
+LOGGING = true;
 strcpy(CFWORKDIR,WORKDIR);
 
 if (getuid() > 0)

@@ -165,6 +165,11 @@ void HashVariables(void);
 void TheAgent(enum cfagenttype ag);
 void Cf3OpenLog(void);
 
+/* matching.c */
+
+int FullTextMatch (char *regptr,char *cmpptr);
+int IsRegexItemIn(struct Item *list,char *regex);
+
 /* syntax.c */
 
 void CheckBundle(char *name,char *type);

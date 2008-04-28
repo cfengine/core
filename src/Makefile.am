@@ -28,6 +28,7 @@ libpromises_la_SOURCES =						\
 	args.c								\
 	hashes.c							\
 	expand.c							\
+	matching.c							\
 	selfdiagnostic.c						\
 	instrumentation.c						\
 	promises.c							\
@@ -59,6 +60,7 @@ cfServerd_SOURCES =							\
 	server_transform.c
 
 cfMonitord_SOURCES =							\
+	env_monitor.c							\
 	monitor.c
 
 cfExecd_SOURCES =							\

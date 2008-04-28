@@ -8,5 +8,5 @@ smtpserver => "MAIL-out.hio.no";
 mailmaxlines => "50";
 schedule => { "Min00_05", "Min30_35"  };
 
-command => "/var/cfengine/bin/cfAgent";
+execcommand => "/var/cfengine/bin/cfAgent";
 }

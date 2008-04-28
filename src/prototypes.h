@@ -320,14 +320,15 @@ int IsDefinedClass (char *class);
 int IsInstallable (char *class);
 void AddPrefixedMultipleClasses (char *prefix,char *class);
 void NegateCompoundClass (char *class, struct Item **heap);
-int EvaluateORString (char *class, struct Item *list);
-int EvaluateANDString (char *class, struct Item *list);
+int EvaluateORString (char *class, struct Item *list,int fromIsInstallable);
+int EvaluateANDString (char *class, struct Item *list,int fromIsInstallable);
 int GetORAtom (char *start, char *buffer);
 int GetANDAtom (char *start, char *buffer);
 int CountEvalAtoms (char *class);
 enum actions ActionStringToCode  (char *str);
 int IsBracketed (char *s);
 void DeleteClassesFromContext  (char *s);
+void CheckCommonErrors(char *s);
 
 /* filedir.c */
 
@@ -567,7 +568,7 @@ char *IPString2UQHostname (char *name);
 /* instrument.c */
 
 void RecordPerformance(char *name, time_t t, double value);
-void RecordClassUsage(struct Item *list);
+void RecordClassUsage(void);
 void LastSeen (char *host,enum roles role);
 void CheckFriendConnections(int hours);
 void CheckFriendReliability(void);
@@ -757,6 +758,7 @@ int linux_fedora_version (void);
 int linux_redhat_version (void);
 int linux_mandrake_version (void);
 int linux_suse_version (void);
+int linux_slackware_version (char *filename);
 int debian_version (void);
 int lsb_version (void);
 char * UnQuote (char *name);
@@ -805,7 +807,6 @@ int IsMountedFileSystem  (struct stat *childstat, char *dir, int rlevel);
 
 /* net.c */
 
-void TimeOut (void);
 int SendTransaction (int sd, char *buffer,int len, char status);
 int ReceiveTransaction (int sd, char *buffer,int *more);
 int RecvSocketStream (int sd, char *buffer, int toget, int nothing);
@@ -917,6 +918,7 @@ FILE *cfpopen_sh (char *command, char *type);
 FILE *cfpopen_shsetuid (char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv);
 int cfpclose (FILE *pp);
 int cfpclose_def (FILE *pp, char *defines, char *elsedef);
+int CfSetUid(uid_t uid,gid_t gid);
 int SplitCommand (char *comm, char (*arg)[CF_BUFSIZE]);
 
 /* process.c */
@@ -1023,6 +1025,13 @@ int RecursiveTidySpecialArea (char *name, struct Tidy *tp, int maxrecurse, struc
 void TidyParticularFile (char *path, char *name, struct Tidy *tp, struct stat *statbuf, int is_dir, int level,int usepath);
 void DoTidyFile (char *path, char *name, struct TidyPattern *tlp, struct stat *statbuf, short int logging_this, int isdir,int usepath);
 void DeleteTidyList (struct TidyPattern *list);
+
+/* timeout.c */
+
+void SetTimeOut (int timeout);
+void TimeOut (void);
+void DeleteTimeOut (void);
+
 
 /* varstring.c */
 

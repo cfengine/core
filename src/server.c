@@ -64,7 +64,7 @@ void SetAuto (int seconds);
 int cfscanf (char *in, int len1, int len2, char *out1, char *out2, char *out3);
 int AuthenticationDialogue (struct cfd_connection *conn,char *buffer, int buffersize);
 char *MapAddress (char *addr);
-int IsWildKnownHost (RSA *oldkey,RSA *newkey,char *addr,char *user);
+int IsKnownHost (RSA *oldkey,RSA *newkey,char *addr,char *user);
 void AddToKeyDB (RSA *key,char *addr);
 int SafeOpen (char *filename);
 void SafeClose (int fd);
@@ -256,8 +256,8 @@ sprintf(VPREFIX, "cfServerd");
 Cf3OpenLog();
 CfenginePort();
 StrCfenginePort();
-AddClassToHeap("any");      /* This is a reserved word / wildcard */
-LOGGING = true;                    /* Do output to syslog */
+AddClassToHeap("any");
+LOGGING = true;
 IDClasses();
  
 if ((CFINITSTARTTIME = time((time_t *)NULL)) == -1)
@@ -1895,8 +1895,8 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
          {
          Debug("Checking whether to map root privileges..\n");
          
-         if (IsWildItemIn(ap->maproot,conn->hostname) ||
-             IsWildItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
+         if (IsRegexItemIn(ap->maproot,conn->hostname) ||
+             IsRegexItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
              IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)))
             {
             conn->maproot = true;
@@ -1907,8 +1907,8 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
             Verbose("No root privileges granted\n");
             }
          
-         if (IsWildItemIn(ap->accesslist,conn->hostname) ||
-             IsWildItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+         if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
              IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
             {
             access = true;
@@ -1923,8 +1923,8 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
     {
     if (strncmp(ap->path,realname,strlen(ap->path)) == 0)
        {
-       if (IsWildItemIn(ap->accesslist,conn->hostname) ||
-           IsWildItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+       if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+           IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
            IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
           {
           access = false;
@@ -3041,7 +3041,7 @@ if (savedkey = HavePublicKey(keyname))
       if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
          {
          int result;
-         result = IsWildKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
+         result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
          RSA_free(savedkey);
          if (result)
             {
@@ -3071,7 +3071,7 @@ else if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
    if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
       {
       int result;
-      result = IsWildKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
+      result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
       RSA_free(savedkey);
       if (result)
          {
@@ -3107,7 +3107,7 @@ else
 
 /***************************************************************/
 
-int IsWildKnownHost(RSA *oldkey,RSA *newkey,char *mipaddr,char *username)
+int IsKnownHost(RSA *oldkey,RSA *newkey,char *mipaddr,char *username)
 
 /* This builds security from trust only gradually with DHCP - takes time!
    But what else are we going to do? ssh doesn't have this problem - it

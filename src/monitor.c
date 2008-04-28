@@ -33,25 +33,41 @@
 
 int main (int argc,char *argv[]);
 
+#include <math.h>
+
+/*****************************************************************************/
+/* Globals                                                                   */
+/*****************************************************************************/
+
+extern int NO_FORK;
+extern int HISTO;
+extern short TCPDUMP;
+extern double FORGETRATE;
+
+extern struct BodySyntax CFM_CONTROLBODY[];
+extern double FORGETRATE;
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[12] =
+ struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
-      { "define",required_argument,0,'D' },
-      { "negate",required_argument,0,'N' },
       { "no-lock",no_argument,0,'K'},
       { "inform",no_argument,0,'I'},
       { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
+      { "no-fork",no_argument,0,'F'},
+      { "histograms",no_argument,0,'H'},
+      { "tcpdump",no_argument,0,'T'},
+      { "file",optional_argument,0,'f'},
       { NULL,0,0,'\0' }
       };
 
@@ -61,6 +77,9 @@ int main(int argc,char *argv[])
 
 {
 GenericInitialize(argc,argv,"monitor");
+MonInitialize();
+KeepPromises();
+
 return 0;
 }
 
@@ -73,7 +92,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -114,26 +133,24 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
       case 'K': IGNORELOCK = true;
           break;
                     
-      case 'D': AddMultipleClasses(optarg);
-          break;
-          
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
-          break;
-          
-      case 'I': INFORM = true;
+       case 'I': INFORM = true;
           break;
           
       case 'v': VERBOSE = true;
           break;
           
-      case 'n': DONTDO = true;
-          IGNORELOCK = true;
-          AddClassToHeap("opt_dry_run");
-          break;
-          
       case 'p': PARSEONLY = true;
           IGNORELOCK = true;
           break;          
+
+      case 'F': NO_FORK = true;
+         break;
+
+      case 'H': HISTO = true;
+         break;
+
+      case 'T': TCPDUMP = true;
+                break;
 
       case 'V': Version("Monitor agent");
           exit(0);
@@ -151,5 +168,62 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
   }
 
 Debug("Set debugging\n");
+}
+
+/*****************************************************************************/
+
+void KeepPromises()
+
+{ struct Body *body;
+  struct Constraint *cp;
+  char scope[CF_BUFSIZE], rettype;
+  void *retval;
+
+for (body = BODIES; body != NULL; body=body->next)
+   {
+   if (strcmp(body->type,CF_AGENTTYPES[cf_monitor]) == 0)
+      {
+      if (strcmp(body->name,"control") == 0)
+         {
+         Debug("%s body for type %s\n",body->name,body->type);
+         
+         for (cp = body->conlist; cp != NULL; cp=cp->next)
+            {
+            if (IsExcluded(cp->classes))
+               {
+               continue;
+               }
+
+            snprintf(scope,CF_BUFSIZE,"%s_%s",body->name,body->type);
+            
+            if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
+               {
+               snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in monitor control body",cp->lval);
+               CfLog(cferror,OUTPUT,"");
+               continue;
+               }
+            
+            if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_histograms].lval) == 0)
+               {
+               HISTO = GetBoolean(retval);
+               Debug("histograms = %d\n",HISTO);
+               }
+
+            if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
+               {
+               TCPDUMP = GetBoolean(retval);
+               Debug("histograms = %d\n",TCPDUMP);
+               }
+            
+            if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
+               {
+               FORGETRATE = atof(retval);
+               Debug("histograms = %d\n",HISTO);
+               }
+
+            }
+         }
+      }
+   }
 }
 

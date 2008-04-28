@@ -208,6 +208,8 @@ struct BodySyntax CFM_CONTROLBODY[] =
    {"threshold",cf_real,"0,1"},
    {"forgetrate",cf_real,"0,1"},
    {"monitorfacility",cf_opts,CF_FACILITY},
+   {"histograms",cf_opts,CF_BOOL},
+   {"tcpdump",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -224,6 +226,7 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {"mailmaxlines",cf_int,"0,1000"},
    {"schedule",cf_slist,"Min.*"},
    {"executorfacility",cf_opts,CF_FACILITY},
+   {"execcommand",cf_str,CF_PATHRANGE},
    {NULL,cf_notype,NULL}
    };
 

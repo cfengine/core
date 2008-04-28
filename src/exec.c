@@ -292,7 +292,9 @@ VMAILSERVER[0] = '\0';
 void KeepPromises()
 
 { struct Body *body;
- struct Constraint *cp;
+  struct Constraint *cp;
+  char scope[CF_BUFSIZE], rettype;
+  void *retval;
 
 for (body = BODIES; body != NULL; body=body->next)
    {
@@ -304,27 +306,41 @@ for (body = BODIES; body != NULL; body=body->next)
          
          for (cp = body->conlist; cp != NULL; cp=cp->next)
             {
+            if (IsExcluded(cp->classes))
+               {
+               continue;
+               }
+            
+            snprintf(scope,CF_BUFSIZE,"%s_%s",body->name,body->type);
+
+            if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
+               {
+               snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in exec control body",cp->lval);
+               CfLog(cferror,OUTPUT,"");
+               continue;
+               }
+
             if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
                {
-               strcpy(MAILFROM,cp->rval);
+               strcpy(MAILFROM,retval);
                Debug("mailfrom = %s\n",MAILFROM);
                }
 
             if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
                {
-               strcpy(MAILTO,cp->rval);
+               strcpy(MAILTO,retval);
                Debug("mailto = %s\n",MAILTO);
                }
 
             if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
                {
-               strcpy(VMAILSERVER,cp->rval);
+               strcpy(VMAILSERVER,retval);
                Debug("smtpserver = %s\n",VMAILSERVER);
                }
 
             if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
                {
-               MAXLINES = atoi(cp->rval);
+               MAXLINES = atoi(retval);
                Debug("maxlines = %d\n",MAXLINES);
                }
 
@@ -333,7 +349,7 @@ for (body = BODIES; body != NULL; body=body->next)
                struct Rlist *rp;
                Debug("schedule ...\n");
                
-               for (rp  = (struct Rlist *) cp->rval; rp != NULL; rp = rp->next)
+               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
                   {
                   if (!IsItemIn(SCHEDULE,rp->item))
                      {

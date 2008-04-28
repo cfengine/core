@@ -57,7 +57,6 @@ extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
-extern struct Item *CLASSHISTORY;
 extern char METHODFILENAME[CF_BUFSIZE];
 extern char *VMETHODPROTO[];
 extern int METHODARGC;

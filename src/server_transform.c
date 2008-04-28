@@ -185,7 +185,9 @@ for (body = BODIES; body != NULL; body = body->next)
 
             if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
                {
-               FatalError("Control variable vanished mysteriously - shouldn't happen\n");
+               snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in server control body",cp->lval);
+               CfLog(cferror,OUTPUT,"");
+               continue;
                }
             
             if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
@@ -534,7 +536,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       }
    }
 }
-
 
 /***********************************************************************/
 /* Level                                                               */

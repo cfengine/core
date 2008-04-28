@@ -139,7 +139,20 @@ enum cfexcontrol
    cfex_smtpserver,
    cfex_mailmaxlines,
    cfex_schedule,
+   cfex_execcommand,
    cfex_notype,
+   };
+
+/*************************************************************************/
+
+enum cfmcontrol
+   {
+   cfm_threshold,
+   cfm_forgetrate,
+   cfm_monitorfacility,
+   cfm_histograms,
+   cfm_tcpdump,
+   cfm_notype,
    };
 
 /*************************************************************************/

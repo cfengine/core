@@ -152,12 +152,7 @@ OpenSSL_add_all_digests();
 ERR_load_crypto_strings();
 CheckWorkDirectories();
 RandomSeed();
-
-
-RAND_bytes(s,16);
-s[15] = '\0';
-seed = ElfHash(s);
-srand48((long)seed);  
+LoadSecretKeys();
 
 /* Note we need to fix the options since the argv mechanism doesn't */
 /* work when the shell #!/bla/cfengine -v -f notation is used.      */
@@ -276,7 +271,28 @@ if (VINPUTLIST != NULL)
 void Cf3ParseFile(char *filename)
 
 { FILE *save_yyin = yyin;
-  
+  struct stat statbuf;
+ 
+if (stat(filename,&statbuf) == -1)
+   {
+   printf("Can't open file %s\n",filename);
+   exit(1);
+   }
+
+if (statbuf.st_uid != getuid())
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"File %s is not owned by uid %d (security exception)",filename,getuid());
+   CfLog(cferror,OUTPUT,"");
+   exit(1);
+   }
+ 
+if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"File %s (owner %d) is writable by others (security exception)",filename,getuid());
+   CfLog(cferror,OUTPUT,"");
+   exit(1);
+   }
+
 Debug("Cf3ParseFile(%s)\n",filename);
 PrependAuditFile(filename);
  
@@ -312,6 +328,122 @@ while (!feof(yyin))
    }
 
 fclose (yyin);
+}
+
+/*******************************************************************/
+
+struct Constraint *ControlBodyConstraints(enum cfagenttype agent)
+
+{ struct Body *body;
+  char scope[CF_BUFSIZE];
+
+for (body = BODIES; body != NULL; body = body->next)
+   {
+   if (strcmp(body->type,CF_AGENTTYPES[agent]) == 0)
+      {
+      if (strcmp(body->name,"control") == 0)
+         {
+         Debug("%s body for type %s\n",body->name,body->type);
+         return body->conlist;
+         }
+      }
+   }
+
+return NULL;
+}
+
+/*******************************************************************/
+
+void SetFacility(char *retval)
+
+{
+if (strcmp(retval,"LOG_USER") == 0)
+   {
+   FACILITY = LOG_USER;
+   }
+else if (strcmp(retval,"LOG_DAEMON") == 0)
+   {
+   FACILITY = LOG_DAEMON;
+   }
+else if (strcmp(retval,"LOG_LOCAL0") == 0)
+   {
+   FACILITY = LOG_LOCAL0;
+   }
+else if (strcmp(retval,"LOG_LOCAL1") == 0)
+   {
+   FACILITY = LOG_LOCAL1;
+   }
+else if (strcmp(retval,"LOG_LOCAL2") == 0)
+   {
+   FACILITY = LOG_LOCAL2;
+   }
+else if (strcmp(retval,"LOG_LOCAL3") == 0)
+   {
+   FACILITY = LOG_LOCAL3;
+   }
+else if (strcmp(retval,"LOG_LOCAL4") == 0)
+   {
+   FACILITY = LOG_LOCAL4;
+   }
+else if (strcmp(retval,"LOG_LOCAL5") == 0)
+   {
+   FACILITY = LOG_LOCAL5;
+   }
+else if (strcmp(retval,"LOG_LOCAL6") == 0)
+   {
+   FACILITY = LOG_LOCAL6;
+   }   
+else if (strcmp(retval,"LOG_LOCAL7") == 0)
+   {
+   FACILITY = LOG_LOCAL7;
+   }
+
+closelog();
+Cf3OpenLog();
+}
+
+/**************************************************************/
+
+struct Bundle *GetBundle(char *name,char *agent)
+
+{ struct Bundle *bp;
+ 
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   if (strcmp(bp->name,name) == 0)
+      {
+      if (strcmp(bp->type,agent) != 0)
+         {
+         Verbose("The bundle called %s is not of type %s\n",name,agent);
+         continue;
+         }
+      return bp;
+      }
+   }
+
+return NULL;
+}
+
+/**************************************************************/
+
+struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp)
+
+{ struct SubType *sp;
+
+if (bp == NULL)
+   {
+   return NULL;
+   }
+ 
+for (sp = bp->subtypes; sp != NULL; sp=sp->next)
+   {
+   if (strcmp(type,sp->name)== 0)
+      {
+      return sp;
+      }
+   }
+
+return NULL;
 }
 
 /*******************************************************************/
@@ -638,3 +770,18 @@ void Version(char *component)
 {
 printf("Cfengine: %s\n%s\n%s\n",component,VERSION,COPYRIGHT);
 }
+
+/**************************************************************/
+
+void *ExitCleanly(int signum)
+
+{ 
+HandleSignals(signum);
+ReleaseCurrentLock();
+closelog();
+unlink(PIDFILE);
+exit(0);
+}
+
+
+/**************************************************************/

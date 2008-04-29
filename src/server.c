@@ -40,7 +40,6 @@ void SpawnConnection (int sd_reply, char *ipaddr);
 void CheckFileChanges (int argc, char **argv, int sd);
 void *HandleConnection (struct cfd_connection *conn);
 int BusyWithConnection (struct cfd_connection *conn);
-void *ExitCleanly (int signum);
 int MatchClasses (struct cfd_connection *conn);
 void DoExec (struct cfd_connection *conn, char *sendbuffer, char *args);
 int GetCommand (char *str);
@@ -1330,15 +1329,6 @@ switch (GetCommand(recvbuffer))
  SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
  CfLog(cfinform,"Closing connection\n",""); 
  return false;
-}
-
-/**************************************************************/
-
-void *ExitCleanly(int signum)
-
-{ 
-HandleSignals(signum);
-return NULL;
 }
 
 /**************************************************************/

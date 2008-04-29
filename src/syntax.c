@@ -130,7 +130,7 @@ if (ss.subtype != NULL) /* In a bundle */
       
       for (l = 0; bs[l].lval != NULL; l++)
          {
-         Debug("CMP-bundle # (%s,%s)\n",lval,bs[l].lval);
+         Debug1("CMP-bundle # (%s,%s)\n",lval,bs[l].lval);
          
          if (strcmp(lval,bs[l].lval) == 0)
             {
@@ -160,7 +160,7 @@ if (ss.subtype != NULL) /* In a bundle */
 
 for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    {
-   Debug("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
+   Debug1("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
    
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
@@ -266,7 +266,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                {
                /* Either module defined or common */
 
-               Debug("CMP-module-subtypes: %s,%s\n",ss[j].subtype,type);
+               Debug1("CMP-module-subtypes: %s,%s\n",ss[j].subtype,type);
                
                if (strcmp(ss[j].subtype,type) == 0 && strcmp(ss[j].subtype,"*") != 0)
                   {

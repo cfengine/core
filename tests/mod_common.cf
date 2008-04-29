@@ -31,7 +31,7 @@ body common control
    {
    any::
 
-      bundlesequence  => { update, main, mypromises("2","3"), mypromises("fish","rabbit") };
+      bundlesequence  => { update, myPromises("2","3"), myPromises("fish","rabbit"), filetest };
 
       inputs          => {
                          "../tests/mod_execd.cf", 
@@ -61,7 +61,22 @@ body common control
 body agent control
 
 {
-useraccess => { "mark", "root" };
+agentaccess => { "mark", "root" };
+}
+
+###################################################################
+
+ # Bundles that are common go to everyone.
+
+bundle common globals
+{
+vars:
+
+ "globalvar" string => "this is a global variable";
+
+  "hostlist"  slist => { "288.39.89.1/24", "178.36.148.1/24", "2001:700:700:11" };
+
+mytype:
 }
 
 ###################################################################
@@ -135,7 +150,7 @@ bundle agent main()
 
 #########################################################
 
-bundle agent Update()
+bundle agent update()
 
 {
 vars:

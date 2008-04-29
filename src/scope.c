@@ -93,6 +93,34 @@ VSCOPE = ptr;
 
 /*******************************************************************/
 
+int AppendScope(char *scope, struct Rlist *lvals,struct Rlist *rvals)
+
+{ struct Scope *ptr;
+  struct Rlist *rpl,*rpr;
+  char *sp;
+
+if (RlistLen(lvals) != RlistLen(rvals))
+   {
+   return false;
+   }
+
+for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
+   {
+   sp = (char *)rpl->item;
+
+   /* We can't discern type here - this is a simple substitution */
+   
+   if (!AddVariableHash(scope,sp,rpr->item,rpr->type,cf_notype,NULL,0))
+      {
+      return false;
+      }
+   }
+
+return true;
+}
+
+/*******************************************************************/
+
 void DeleteAllScope()
 
 { struct Scope *ptr, *this;

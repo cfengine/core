@@ -32,6 +32,8 @@
 #include "cf3.extern.h"
 
 int main (int argc,char *argv[]);
+void CheckAgentAccess(struct Rlist *list);
+void KeepAgentPromise(struct Promise *pp);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -55,7 +57,9 @@ int main (int argc,char *argv[]);
       { NULL,0,0,'\0' }
       };
 
-/*****************************************************************************/
+extern struct BodySyntax CFA_CONTROLBODY[];
+
+/*******************************************************************/
 
 int main(int argc,char *argv[])
 
@@ -63,9 +67,13 @@ int main(int argc,char *argv[])
 GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
 ThisAgentInit();
+
+KeepPromises();
 return 0;
 }
 
+/*******************************************************************/
+/* Level 1                                                         */
 /*******************************************************************/
 
 void CheckOpts(int argc,char **argv)
@@ -160,4 +168,404 @@ Debug("Set debugging\n");
 void ThisAgentInit()
 
 {
+signal(SIGINT,(void*)ExitCleanly);
+signal(SIGTERM,(void*)ExitCleanly);
+signal(SIGHUP,SIG_IGN);
+signal(SIGPIPE,SIG_IGN);
+signal(SIGCHLD,SIG_IGN);
+signal(SIGUSR1,HandleSignals);
+signal(SIGUSR2,HandleSignals);
+
+}
+
+/*******************************************************************/
+
+void KeepPromises()
+
+{
+KeepControlPromises();
+KeepPromiseBundles();
+}
+
+/*******************************************************************/
+/* Level 2                                                         */
+/*******************************************************************/
+
+void KeepControlPromises()
+    
+{ struct Constraint *cp;
+  char rettype;
+  void *retval;
+
+for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
+   {
+   if (IsExcluded(cp->classes))
+      {
+      continue;
+      }
+   
+   if (GetVariable("control_agent",cp->lval,&retval,&rettype) == cf_notype)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in agent control body",cp->lval);
+      CfLog(cferror,OUTPUT,"");
+      continue;
+      }
+            
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
+      {
+      SetFacility(retval);
+      Verbose("SET Syslog FACILITY = %s\n",retval);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("Checking accesss ...\n");
+      
+      CheckAgentAccess((struct Rlist *) retval);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Abort classes from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(ABORTHEAP,rp->item))
+            {
+            AppendItem(&ABORTHEAP,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("ADD classes from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         AddClassToHeap(rp->item);
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_auditing].lval) == 0)
+      {
+      AUDIT = GetBoolean(retval);
+      Verbose("SET auditing = %d\n",AUDIT);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
+      {
+      PADCHAR = *(char *)retval;
+      Verbose("SET binarypaddingchar = %c\n",PADCHAR);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_bindtointerface].lval) == 0)
+      {
+      strncpy(BINDINTERFACE,retval,CF_BUFSIZE-1);
+      Verbose("SET bindtointerface = %s\n",BINDINTERFACE);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksumpurge].lval) == 0)
+      {
+      if (GetBoolean(retval))
+         {
+         Verbose("Purging checksums\n");
+         ChecksumPurge();
+         }
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksumupdates].lval) == 0)
+      {
+      CHECKSUMUPDATES = GetBoolean(retval);
+      Verbose("SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_compresscommand].lval) == 0)
+      {
+      COMPRESSCOMMAND = strdup(retval);
+      Verbose("SET compresscommand = %s\n",COMPRESSCOMMAND);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",retval);
+      if (putenv(strdup(OUTPUT)) == 0)
+         {
+         Verbose("Setting %s\n",OUTPUT);
+         }
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
+      {
+      DEFAULTCOPYTYPE = *(char *)retval;
+      Verbose("SET defaultcopytype = %c\n",DEFAULTCOPYTYPE);
+      continue;
+      }
+
+   /* Read directly from vars
+      
+     cfa_deletenonuserfiles,
+     cfa_deletenonownerfiles,
+     cfa_deletenonusermail,
+     cfa_deletenonownermail,
+     cfa_warnnonuserfiles,
+     cfa_warnnonownerfiles,
+     cfa_warnnonusermail,
+     cfa_warnnonownermail,
+     
+   */
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
+      {
+      DONTDO = GetBoolean(retval);
+      Verbose("SET dryrun = %c\n",DONTDO);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_inform].lval) == 0)
+      {
+      INFORM = GetBoolean(retval);
+      Verbose("SET inform = %c\n",INFORM);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_verbose].lval) == 0)
+      {
+      VERBOSE = GetBoolean(retval);
+      Verbose("SET inform = %c\n",VERBOSE);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repository].lval) == 0)
+      {
+      VREPOSITORY = strdup(retval);
+      Verbose("SET compresscommand = %s\n",VREPOSITORY);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
+      {
+      SKIPIDENTIFY = GetBoolean(retval);
+      Verbose("SET skipidentify = %c\n",SKIPIDENTIFY);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repchar].lval) == 0)
+      {
+      REPOSCHAR = *(char *)retval;
+      Verbose("SET repchar = %c\n",REPOSCHAR);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_logtidyhomefiles].lval) == 0)
+      {
+      LOGTIDYHOMEFILES = GetBoolean(retval);
+      Verbose("SET logtidyhomefiles = %d\n",LOGTIDYHOMEFILES);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_syslog].lval) == 0)
+      {
+      LOGGING = GetBoolean(retval);
+      Verbose("SET syslog = %c\n",LOGGING);
+      continue;
+      }
+
+   }
+}
+
+/*********************************************************************/
+
+void KeepPromiseBundles()
+    
+{ struct Bundle *bp;
+  struct SubType *sp;
+  struct Promise *pp;
+  struct Rlist *rp,*params;
+  struct FnCall *fp;
+  char rettype,*name;
+  void *retval;
+  int ok = true,i;
+  static char *typesequence[] = { "files", "processes", NULL };
+
+/* Dial up the generic promise expansion with a callback */
+  
+if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"No bundlesequence in the common control body");
+   CfLog(cferror,OUTPUT,"");
+   exit(1);
+   }
+
+for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   {
+   ShowRval(stdout,rp->item,rp->type);
+   printf(" = %c\n",rp->type);
+
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+          name = (char *)rp->item;
+          params = NULL;
+          break;
+      case CF_FNCALL:
+          fp = (struct FnCall *)rp->item;
+          name = (char *)fp->name;
+          params = (struct Rlist *)fp->args;
+          break;
+          
+      default:
+          name = NULL;
+          params = NULL;
+          snprintf(OUTPUT,CF_BUFSIZE,"Illegal item found in bundlesequence: ");
+          CfLog(cferror,OUTPUT,"");
+          ShowRval(stdout,rp->item,rp->type);
+          printf(" = %c\n",rp->type);
+          ok = false;
+          break;
+      }
+   
+   if (!GetBundle(name,"agent"))
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Bundle %s listed in the bundlesequence was not found\n",name);
+      CfLog(cferror,OUTPUT,"");
+      ok = false;
+      }
+   }
+
+if (!ok)
+   {
+   FatalError("Errors in agent bundles");
+   }
+
+/* If all is okay, go ahead and evaluate */
+
+for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_FNCALL:
+          fp = (struct FnCall *)rp->item;
+          name = (char *)fp->name;
+          break;
+      default:
+          name = (char *)rp->item;
+          break;
+      }
+   
+   if ((bp = GetBundle(name,"agent")) == NULL)
+      {
+      FatalError("Software error in finding bundle - shouldn't happen");
+      }
+       
+   for (i = 0;  typesequence[i] != NULL; i++)
+      {
+      if ((sp = GetSubTypeForBundle(typesequence[i],bp)) == NULL)
+         {
+         printf("No %s in %s\n",typesequence[i],bp->name);
+         continue;      
+         }
+
+      printf("Doing %s in %s\n",typesequence[i],bp->name);
+      for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+         {
+         CopyScope("bundlesequence",bp->name);
+         if (AppendScope("bundlesequence",bp->args,params))
+            {
+            ExpandPromise(cf_agent,"bundlesequence",pp,KeepAgentPromise);
+            }
+         else
+            {
+            snprintf(OUTPUT,CF_BUFSIZE,"bundlesequence parameters do not match defintion for %s()",bp->name);
+            CfLog(cferror,OUTPUT,"");
+            }
+         
+         DeleteScope("bundlesequence");
+         }
+      }
+   }
+}
+
+/*********************************************************************/
+/* Level 3                                                           */
+/*********************************************************************/
+
+void CheckAgentAccess(struct Rlist *list)
+
+{ char id[CF_MAXVARSIZE];
+  struct passwd *pw;
+  struct Rlist *rp;
+  uid_t uid;
+  
+uid = getuid();
+  
+for (rp  = list; rp != NULL; rp = rp->next)
+   {
+   if (isalpha((int)*(char *)(rp->item)))
+      {
+      if ((pw = getpwnam(rp->item)) == NULL)
+         {
+         Verbose("Unknown user on this system %s\n",rp->item);
+         return;
+         }
+      
+      if (pw->pw_uid == uid)
+         {
+         return;
+         }
+      }
+   else
+      {
+      if (atoi(rp->item) == uid)
+         {
+         return;
+         }
+      }
+   }
+
+FatalError("You are denied access to run this policy");
+}
+
+/*********************************************************************/
+
+void KeepAgentPromise(struct Promise *pp)
+
+{ struct Constraint *cp;
+  struct Body *bp;
+  struct FnCall *fp;
+  struct Rlist *rp;
+  struct Auth *ap,*dp;
+  char *val;
+
+// Expandpromises (...,ptr to handler)
+
+if (!IsDefinedClass(pp->classes))
+   {
+   Verbose("Skipping whole promise, as context is %s\n",pp->classes);
+   return;
+   }
+
+printf("PRPMOSE from %s\n",pp->promiser);
+
+if (pp->promisee)
+   {
+   Verbose("Promisee is %s (not currently used)\n",pp->promisee);
+   ShowRval(stdout,pp->promisee,pp->petype);
+   }
 }

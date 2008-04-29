@@ -53,7 +53,6 @@ extern struct BodySyntax CFEX_CONTROLBODY[];
 
 void StartServer(int argc,char **argv);
 int ScheduleRun(void);
-void *ExitCleanly(void);
 static char *timestamp(time_t stamp, char *buf, size_t len);
 void *LocalExec(void *scheduled_run);
 int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
@@ -289,72 +288,58 @@ VMAILSERVER[0] = '\0';
 
 void KeepPromises()
 
-{ struct Body *body;
-  struct Constraint *cp;
-  char scope[CF_BUFSIZE], rettype;
+{ struct Constraint *cp;
+  char rettype;
   void *retval;
 
-for (body = BODIES; body != NULL; body=body->next)
+for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    {
-   if (strcmp(body->type,CF_AGENTTYPES[cf_executor]) == 0)
+   if (IsExcluded(cp->classes))
       {
-      if (strcmp(body->name,"control") == 0)
+      continue;
+      }
+   
+   if (GetVariable("control_executor",cp->lval,&retval,&rettype) == cf_notype)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in exec control body",cp->lval);
+      CfLog(cferror,OUTPUT,"");
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
+      {
+      strcpy(MAILFROM,retval);
+      Debug("mailfrom = %s\n",MAILFROM);
+      }
+   
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
+      {
+      strcpy(MAILTO,retval);
+      Debug("mailto = %s\n",MAILTO);
+      }
+   
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
+      {
+      strcpy(VMAILSERVER,retval);
+      Debug("smtpserver = %s\n",VMAILSERVER);
+      }
+   
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
+      {
+      MAXLINES = atoi(retval);
+      Debug("maxlines = %d\n",MAXLINES);
+      }
+   
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
+      {
+      struct Rlist *rp;
+      Debug("schedule ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
-         Debug("%s body for type %s\n",body->name,body->type);
-         
-         for (cp = body->conlist; cp != NULL; cp=cp->next)
+         if (!IsItemIn(SCHEDULE,rp->item))
             {
-            if (IsExcluded(cp->classes))
-               {
-               continue;
-               }
-            
-            snprintf(scope,CF_BUFSIZE,"%s_%s",body->name,body->type);
-
-            if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
-               {
-               snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in exec control body",cp->lval);
-               CfLog(cferror,OUTPUT,"");
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
-               {
-               strcpy(MAILFROM,retval);
-               Debug("mailfrom = %s\n",MAILFROM);
-               }
-
-            if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
-               {
-               strcpy(MAILTO,retval);
-               Debug("mailto = %s\n",MAILTO);
-               }
-
-            if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
-               {
-               strcpy(VMAILSERVER,retval);
-               Debug("smtpserver = %s\n",VMAILSERVER);
-               }
-
-            if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
-               {
-               MAXLINES = atoi(retval);
-               Debug("maxlines = %d\n",MAXLINES);
-               }
-
-            if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
-               {
-               struct Rlist *rp;
-               Debug("schedule ...\n");
-               
-               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(SCHEDULE,rp->item))
-                     {
-                     AppendItem(&SCHEDULE,rp->item,NULL);
-                     }
-                  }
-               }
+            AppendItem(&SCHEDULE,rp->item,NULL);
             }
          }
       }
@@ -517,17 +502,6 @@ for (ip = SCHEDULE; ip != NULL; ip = ip->next)
 DeleteItemList(VHEAP);
 VHEAP = NULL; 
 return false;
-}
-
-/************************************************************************/
-
-void *ExitCleanly()
-
-{
-ReleaseCurrentLock();
-closelog();
-unlink(PIDFILE);
-exit(0);
 }
 
 /*************************************************************************/

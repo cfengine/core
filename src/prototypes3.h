@@ -164,6 +164,11 @@ void Report(char *filename);
 void HashVariables(void);
 void TheAgent(enum cfagenttype ag);
 void Cf3OpenLog(void);
+void *ExitCleanly(int signum);
+struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
+void SetFacility(char *retval);
+struct Bundle *GetBundle(char *name,char *agent);
+struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
 
 /* matching.c */
 
@@ -199,6 +204,7 @@ void NewScope(char *name);
 void DeleteScope(char *name);
 struct Scope *GetScope(char *scope);
 void CopyScope(char *new, char *old);
+void DeleteAllScope(void);
 
 /* vars.c */
 
@@ -211,6 +217,7 @@ void DeleteAllVariables(char *scope);
 int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);
 int IsCf3VarString(char *str);
+int BooleanControl(char *scope,char *name,int bool);
 
 /* expand.c */
 
@@ -252,6 +259,7 @@ void TestExpandVariables(void);
 int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take);
 struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp);
 void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes);
+void DeleteExpArgs(struct Rlist *args);
 
 /* hashes.c */
 

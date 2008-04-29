@@ -132,8 +132,63 @@ enum cfagenttype
 
 /*************************************************************************/
 
+enum cfacontrol
+   {
+   cfa_abortclasses,
+   cfa_addclasses,
+   cfa_agentaccess,
+   cfa_agentfacility,
+   cfa_auditing,
+   cfa_binarypaddingchar,
+   cfa_bindtointerface,
+   cfa_checksumpurge,
+   cfa_checksumupdates,
+   cfa_compresscommand,
+   cfa_childlibpath,
+   cfa_defaultcopytype,
+   cfa_deletenonuserfiles,
+   cfa_deletenonownerfiles,
+   cfa_deletenonusermail,
+   cfa_deletenonownermail,
+   cfa_dryrun,
+   cfa_editbinaryfilesize,
+   cfa_editfilesize,
+   cfa_emptyresolvconf,
+   cfa_exclamation,
+   cfa_expireafter,
+   cfa_fullencryption,
+   cfa_hostnamekeys,
+   cfa_ifelapsed,
+   cfa_inform,
+   cfa_lastseen,
+   cfa_lastseenexpireafter,
+   cfa_logtidyhomefiles,
+   cfa_nonalphanumfiles,
+   cfa_repchar,
+   cfa_repository,
+   cfa_sensiblecount,
+   cfa_sensiblesize,
+   cfa_showactions,
+   cfa_skipidentify,
+   cfa_spooldirectories,
+   cfa_suspiciousnames,
+   cfa_syslog,
+   cfa_timezone,
+   cfa_timeout,
+   cfa_verbose,
+   cfa_warnings,
+   cfa_warnnonuserfiles,
+   cfa_warnnonownerfiles,
+   cfa_warnnonusermail,
+   cfa_warnnonownermail,
+   cfa_notype,
+   };
+
+/*************************************************************************/
+
 enum cfexcontrol
    {
+   cfex_splaytime,
    cfex_mailfrom,
    cfex_mailto,
    cfex_smtpserver,
@@ -175,6 +230,7 @@ enum cfscontrol
    cfs_checkident,
    cfs_auditing,
    cfs_bindtointerface,
+   cfs_serverfacility,
    cfs_notype,
    };
 

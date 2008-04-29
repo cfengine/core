@@ -32,7 +32,6 @@
 #include "cf3.extern.h"
 
 int main (int argc,char *argv[]);
-void *ExitCleanly(int signum);
 
 #include <math.h>
 
@@ -178,56 +177,42 @@ Debug("Set debugging\n");
 
 void KeepPromises()
 
-{ struct Body *body;
-  struct Constraint *cp;
-  char scope[CF_BUFSIZE], rettype;
+{ struct Constraint *cp;
+  char rettype;
   void *retval;
 
-for (body = BODIES; body != NULL; body=body->next)
+for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    {
-   if (strcmp(body->type,CF_AGENTTYPES[cf_monitor]) == 0)
+   if (IsExcluded(cp->classes))
       {
-      if (strcmp(body->name,"control") == 0)
-         {
-         Debug("%s body for type %s\n",body->name,body->type);
-         
-         for (cp = body->conlist; cp != NULL; cp=cp->next)
-            {
-            if (IsExcluded(cp->classes))
-               {
-               continue;
-               }
-
-            snprintf(scope,CF_BUFSIZE,"%s_%s",body->name,body->type);
-            
-            if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
-               {
-               snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in monitor control body",cp->lval);
-               CfLog(cferror,OUTPUT,"");
-               continue;
-               }
-            
-            if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_histograms].lval) == 0)
-               {
-               HISTO = GetBoolean(retval);
-               Debug("histograms = %d\n",HISTO);
-               }
-
-            if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
-               {
-               TCPDUMP = GetBoolean(retval);
-               Debug("histograms = %d\n",TCPDUMP);
-               }
-            
-            if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
-               {
-               FORGETRATE = atof(retval);
-               Debug("histograms = %d\n",HISTO);
-               }
-
-            }
-         }
+      continue;
       }
+   
+   if (GetVariable("control_monitor",cp->lval,&retval,&rettype) == cf_notype)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in monitor control body",cp->lval);
+      CfLog(cferror,OUTPUT,"");
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_histograms].lval) == 0)
+      {
+      HISTO = GetBoolean(retval);
+      Debug("histograms = %d\n",HISTO);
+      }
+   
+   if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
+      {
+      TCPDUMP = GetBoolean(retval);
+      Debug("histograms = %d\n",TCPDUMP);
+      }
+   
+   if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
+      {
+      FORGETRATE = atof(retval);
+      Debug("histograms = %d\n",HISTO);
+      }
+   
    }
 }
 
@@ -249,7 +234,6 @@ LOGGING = true;                    /* Do output to syslog */
 
 SetReferenceTime(false);
 SetStartTime(false);
-SetSignals();
 
 signal(SIGINT,(void*)ExitCleanly);
 signal(SIGTERM,(void*)ExitCleanly);
@@ -262,11 +246,3 @@ signal(SIGUSR2,HandleSignals);
 MonInitialize();
 }
 
-/**************************************************************/
-
-void *ExitCleanly(int signum)
-
-{ 
-HandleSignals(signum);
-return NULL;
-}

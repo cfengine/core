@@ -153,9 +153,8 @@ if (DEBUG || D2 || D3)
 
 void KeepControlPromises()
     
-{ struct Body *body;
-  struct Constraint *cp;
-  char scope[CF_BUFSIZE], rettype;
+{ struct Constraint *cp;
+  char rettype;
   void *retval;
 
 CFD_MAXPROCESSES = 10;
@@ -165,250 +164,198 @@ CHECKSUMUPDATES = true;
 DENYBADCLOCKS = true;
 
 /* Keep promised agent behaviour - control bodies */
-  
-for (body = BODIES; body != NULL; body = body->next)
+
+for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    {
-   if (strcmp(body->type,CF_AGENTTYPES[cf_server]) == 0)
+   if (IsExcluded(cp->classes))
       {
-      if (strcmp(body->name,"control") == 0)
+      continue;
+      }
+   
+   if (GetVariable("control_server",cp->lval,&retval,&rettype) == cf_notype)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in server control body",cp->lval);
+      CfLog(cferror,OUTPUT,"");
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
+      {
+      CHECK_RFC931 = GetBoolean(retval);
+      Verbose("SET CheckIdent = %d\n",CHECK_RFC931);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
+      {
+      SetFacility(retval);
+      Verbose("SET Syslog FACILITY = %s\n",retval);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
+      {
+      DENYBADCLOCKS = GetBoolean(retval);
+      Verbose("SET denybadclocks = %d\n",DENYBADCLOCKS);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
+      {
+      LOGENCRYPT = GetBoolean(retval);
+      Verbose("SET LOGENCRYPT = %d\n",LOGENCRYPT);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
+      {
+      LOGCONNS = GetBoolean(retval);
+      Verbose("SET LOGCONNS = %d\n",LOGCONNS);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
+      {
+      CFD_MAXPROCESSES = atoi(retval);
+      MAXTRIES = CFD_MAXPROCESSES / 3;
+      Verbose("SET maxconnections = %d\n",CFD_MAXPROCESSES);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
+      {
+      strncpy(CFRUNCOMMAND,retval,CF_BUFSIZE-1);
+      Verbose("SET cfruncommand = %s\n",CFRUNCOMMAND);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Allowing connections from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
-         Debug("%s body for type %s\n",body->name,body->type);
-         
-         for (cp = body->conlist; cp != NULL; cp=cp->next)
+         if (!IsItemIn(NONATTACKERLIST,rp->item))
             {
-            if (IsExcluded(cp->classes))
-               {
-               continue;
-               }
-
-            snprintf(scope,CF_BUFSIZE,"%s_%s",body->name,body->type);
-
-            if (GetVariable(scope,cp->lval,&retval,&rettype) == cf_notype)
-               {
-               snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in server control body",cp->lval);
-               CfLog(cferror,OUTPUT,"");
-               continue;
-               }
-            
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
-               {
-               CHECK_RFC931 = GetBoolean(retval);
-               Verbose("SET CheckIdent = %d\n",CHECK_RFC931);
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
-               {
-               if (strcmp(retval,"LOG_USER") == 0)
-                  {
-                  FACILITY = LOG_USER;
-                  }
-               if (strcmp(retval,"LOG_DAEMON") == 0)
-                  {
-                  FACILITY = LOG_DAEMON;
-                  }
-               if (strcmp(retval,"LOG_LOCAL0") == 0)
-                  {
-                  FACILITY = LOG_LOCAL0;
-                  }
-               if (strcmp(retval,"LOG_LOCAL1") == 0)
-                  {
-                  FACILITY = LOG_LOCAL1;
-                  }
-               if (strcmp(retval,"LOG_LOCAL2") == 0)
-                  {
-                  FACILITY = LOG_LOCAL2;
-                  }
-               if (strcmp(retval,"LOG_LOCAL3") == 0)
-                  {
-                  FACILITY = LOG_LOCAL3;
-                  }
-               if (strcmp(retval,"LOG_LOCAL4") == 0)
-                  {
-                  FACILITY = LOG_LOCAL4;
-                  }
-               if (strcmp(retval,"LOG_LOCAL5") == 0)
-                  {
-                  FACILITY = LOG_LOCAL5;
-                  }
-               if (strcmp(retval,"LOG_LOCAL6") == 0)
-                  {
-                  FACILITY = LOG_LOCAL6;
-                  }   
-               if (strcmp(retval,"LOG_LOCAL7") == 0)
-                  {
-                  FACILITY = LOG_LOCAL7;
-                  }
-               Verbose("SET Syslog FACILITY = %s\n",retval);
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
-               {
-               DENYBADCLOCKS = GetBoolean(retval);
-               Verbose("SET denybadclocks = %d\n",DENYBADCLOCKS);
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
-               {
-               LOGENCRYPT = GetBoolean(retval);
-               Verbose("SET LOGENCRYPT = %d\n",LOGENCRYPT);
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
-               {
-               LOGCONNS = GetBoolean(retval);
-               Verbose("SET LOGCONNS = %d\n",LOGCONNS);
-               continue;
-               }
-                        
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
-               {
-               CFD_MAXPROCESSES = atoi(retval);
-               MAXTRIES = CFD_MAXPROCESSES / 3;
-               Verbose("SET maxconnections = %d\n",CFD_MAXPROCESSES);
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
-               {
-               strncpy(CFRUNCOMMAND,retval,CF_BUFSIZE-1);
-               Verbose("SET cfruncommand = %s\n",CFRUNCOMMAND);
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Allowing connections from ...\n");
-               
-               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(NONATTACKERLIST,rp->item))
-                     {
-                     AppendItem(&NONATTACKERLIST,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Denying connections from ...\n");
-               
-               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(ATTACKERLIST,rp->item))
-                     {
-                     AppendItem(&ATTACKERLIST,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Skip verify connections from ...\n");
-               
-               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(SKIPVERIFY,rp->item))
-                     {
-                     AppendItem(&SKIPVERIFY,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Dynamic addresses from ...\n");
-               
-               for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(DHCPLIST,rp->item))
-                     {
-                     AppendItem(&DHCPLIST,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Allowing multiple connections from ...\n");
-               
-               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(MULTICONNLIST,rp->item))
-                     {
-                     AppendItem(&MULTICONNLIST,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Allowing users ...\n");
-               
-               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(ALLOWUSERLIST,rp->item))
-                     {
-                     AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }
-            
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Trust keys from ...\n");
-               
-               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(TRUSTKEYLIST,rp->item))
-                     {
-                     AppendItem(&TRUSTKEYLIST,rp->item,cp->classes);
-                     }
-                  }
-               
-               continue;
-               }
-
-            if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
-               {
-               struct Rlist *rp;
-               Verbose("SET Allow users ...\n");
-               
-               for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
-                  {
-                  if (!IsItemIn(ALLOWUSERLIST,rp->item))
-                     {
-                     AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
-                     }
-                  }
-
-               continue;
-               }        
+            AppendItem(&NONATTACKERLIST,rp->item,cp->classes);
             }
          }
+      
+      continue;
       }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Denying connections from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(ATTACKERLIST,rp->item))
+            {
+            AppendItem(&ATTACKERLIST,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Skip verify connections from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(SKIPVERIFY,rp->item))
+            {
+            AppendItem(&SKIPVERIFY,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Dynamic addresses from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(DHCPLIST,rp->item))
+            {
+            AppendItem(&DHCPLIST,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Allowing multiple connections from ...\n");
+      
+      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(MULTICONNLIST,rp->item))
+            {
+            AppendItem(&MULTICONNLIST,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Allowing users ...\n");
+      
+      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(ALLOWUSERLIST,rp->item))
+            {
+            AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Trust keys from ...\n");
+      
+      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(TRUSTKEYLIST,rp->item))
+            {
+            AppendItem(&TRUSTKEYLIST,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Allow users ...\n");
+      
+      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(ALLOWUSERLIST,rp->item))
+            {
+            AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }        
    }
 }
 

@@ -4,7 +4,7 @@ bundle agent myscripts()
    # these are local and trusted, and might change objects that
    # are otherwise promised, so this should exec first
   
-   executables:
+   executions:
 
      "/script/command"   
 

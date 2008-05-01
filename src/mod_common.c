@@ -109,15 +109,6 @@ struct BodySyntax CF_DEFINECLASS_BODY[] =
 
 /*********************************************************/
 
-struct BodySyntax CF_TRIGGER_BODY[] =
-   {
-   {"followup",cf_slist,CF_FNCALLRANGE},
-   {"cleanup",cf_slist,CF_FNCALLRANGE},
-   {NULL,cf_notype,NULL}
-   };
-
-/*********************************************************/
-
 struct BodySyntax CF_VARBODY[] =
    {
    {"string",cf_str,""},
@@ -318,7 +309,7 @@ struct BodySyntax CF_COMMON_BODIES[] =
    {
    {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY},
    {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY},
-   {"trigger",cf_body,CF_TRIGGER_BODY},
+   {"ifvarclass",cf_str,""},
    {"name_select",cf_body,CF_SELECT_BODY},
    {NULL,cf_notype,NULL}
    };

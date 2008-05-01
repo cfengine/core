@@ -95,7 +95,8 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
 struct BodySyntax CF_PROCESS_BODIES[] =
    {
    {"signals",cf_olist,"hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"},
-   {"number",cf_body,CF_MATCHCLASS_BODY},
+   {"process_stop",cf_str,CF_PATHRANGE},
+   {"process_count",cf_body,CF_MATCHCLASS_BODY},
    {"process_select",cf_body,CF_PROCFILTER_BODY},
    {"restart",cf_str,CF_IDRANGE},
    {NULL,cf_notype,NULL}

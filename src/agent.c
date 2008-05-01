@@ -386,7 +386,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       Verbose("SET syslog = %c\n",LOGGING);
       continue;
       }
-
    }
 }
 
@@ -404,8 +403,6 @@ void KeepPromiseBundles()
   int ok = true,i;
   static char *typesequence[] = { "files", "processes", NULL };
 
-/* Dial up the generic promise expansion with a callback */
-  
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"No bundlesequence in the common control body");
@@ -415,9 +412,6 @@ if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype
 
 for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    {
-   ShowRval(stdout,rp->item,rp->type);
-   printf(" = %c\n",rp->type);
-
    switch (rp->type)
       {
       case CF_SCALAR:
@@ -486,10 +480,10 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
          continue;      
          }
 
-      printf("Doing %s in %s\n",typesequence[i],bp->name);
-      
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
+         /* Dial up the generic promise expansion with a callback */  
+
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
          }         
       }
@@ -557,10 +551,7 @@ if (!IsDefinedClass(pp->classes))
    return;
    }
 
-Debug("BEGIN PROMISE from %s ------------------------------------- \n",pp->promiser);
-         ShowPromise(pp,6);
-Debug("END from %s ------------------------------------- \n",pp->promiser);
-
+printf("BEGIN PROMISE from %s ------------------------------------- \n",pp->promiser);
 
 if (pp->promisee)
    {

@@ -6,7 +6,7 @@ bundle agent ProcessStuff
      "$(procs_list)" 
 
         signals         => { "stop" , "term" },
-        number          => match_body,
+        process_count   => match_body,
         process_select  => myfilter;
 
     # restart now has to refer to an executable rule for the same object
@@ -19,13 +19,57 @@ bundle agent ProcessStuff
     # to keep each element "pure". We have added triggers to allow
     # for easier coupling of promises
 
-   executables:
+   executions:
 
      "/path/joss/run.sh"
 
-            trigger      => "restart_tag",
             containment  => sandbox;
    }
+
+################################################################
+
+bundle agent Services
+
+{
+vars:
+
+  "service" slist => { "apache", "nfsd", "dns" };
+
+  "daemon[apache]" string => "/usr/local/bin/httpd";
+  "daemon[nfsd]"   string => "/usr/bin/nfsd";
+  "daemon[dns]"    string => "/usr/bin/bind";
+
+  "args[apache]" string => "-user www-run";
+  "args[nfsd]"   string => " -4";
+  "args[dns]"    string => "";
+
+processes:
+
+  "$(service)" 
+
+      process_count => up("$(service)");
+
+executions:
+
+   "$(daemon[$(service)])"  
+
+      ifvarclass => "$(service)_up",
+      args       => "$(args[$(service)])";
+
+# Forgot outside bracks
+
+}
+
+######################
+# Parameterized body
+######################
+
+body process_count up(s)
+
+{
+match_range => "[0,10]";
+out_of_range_define => "$(s)_up";
+}
 
 ################################################################
 

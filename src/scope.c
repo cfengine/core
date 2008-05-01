@@ -103,10 +103,11 @@ void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
 
 if (RlistLen(lvals) != RlistLen(rvals))
    {
-   printf("Formal = ");
-   ShowRlist(stdout,lvals);
-   printf(", Actual = ");
-   ShowRlist(stdout,rvals);
+   fprintf(stderr,"Formal = ");
+   ShowRlist(stderr,lvals);
+   fprintf(stderr,", Actual = ");
+   ShowRlist(stderr,rvals);
+   fprintf(stderr,"\n");
    FatalError("\nAugment scope, formal and actual parameter mismatch");
    }
 

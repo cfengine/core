@@ -92,7 +92,7 @@ struct BodySyntax CF_EXEC_BODIES[] =
 
 struct SubTypeSyntax CF_EXEC_SUBTYPES[] =
   {
-  {"agent","executables",CF_EXEC_BODIES},
+  {"agent","executions",CF_EXEC_BODIES},
   {NULL,NULL,NULL},
   };
 

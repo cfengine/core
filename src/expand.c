@@ -412,7 +412,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    if (strstr(temp,"$"))
       {
       Debug("  Nested variables - %s\n",temp);
-      ExpandVarstring(temp,currentitem,"");
+      ExpandPrivateScalar(scopeid,temp,currentitem);
       CheckVarID(currentitem);
       }
    else

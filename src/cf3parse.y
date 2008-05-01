@@ -188,7 +188,6 @@ selection:            id                         /* BODY ONLY */
                       rval
                         { char *contextid = NULL;
  
-                        Debug("Selection  %s => %s for %s\n",P.lval,P.rval,P.blockid); 
                         CheckSelection(P.blocktype,P.blockid,P.lval,P.rval,P.rtype);
 
                         if (P.currentclasses == NULL)

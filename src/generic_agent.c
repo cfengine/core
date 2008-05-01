@@ -510,6 +510,8 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          CheckVariablePromises(bp->name,sp->promiselist);
          }
       }
+
+   CheckBundleParameters(bp->name,bp->args);
    }
 
 /* Only control bodies need to be hashed like variables */
@@ -659,6 +661,28 @@ for (pp = varlist; pp != NULL; pp=pp->next)
          snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
          CfLog(cferror,OUTPUT,"");
          }
+      }
+   }
+}
+
+
+/*******************************************************************/
+
+void CheckBundleParameters(char *scope,struct Rlist *args)
+
+{ struct Rlist *rp;
+  struct Rval retval;
+  char *lval,rettype;;
+ 
+for (rp = args; rp != NULL; rp = rp->next)
+   {
+   lval = (char *)rp->item;
+   
+   if (GetVariable(scope,lval,&retval,&rettype) != cf_notype)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Variable and bundle parameter %s collide",lval);
+      CfLog(cferror,OUTPUT,"");
+      FatalError("Aborting");
       }
    }
 }

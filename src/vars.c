@@ -26,6 +26,37 @@ AddVariableHash(scope,sp1,sp2,CF_SCALAR,dt,NULL,0);
 
 /*******************************************************************/
 
+void DeleteScalar(char *scope,char *lval)
+
+{ struct Scope *ptr;
+  struct CfAssoc *ap;
+  int slot;
+ 
+ptr = GetScope(scope);
+slot = GetHash(lval);
+
+if (ptr == NULL)
+   {
+   struct Scope *sp;
+   printf("No such scope id %s\n",scope);
+   FatalError("No such scope");
+   }
+ 
+if (ap = (struct CfAssoc *)(ptr->hashtable[slot]))
+   {
+   DeleteRvalItem(ap->rval,ap->rtype);
+   free(ap->lval);
+   DeleteAssoc(ap);
+   ptr->hashtable[slot] = NULL;
+   }
+else
+   {
+   Debug("Attempt to delete non existent variable %s in scope %s\n",lval,scope);
+   }
+}
+
+/*******************************************************************/
+
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 
 { char *sp1;
@@ -135,6 +166,7 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
    }
 
 Debug("return final variable type=%s, value={\n",CF_DATATYPES[(ptr->hashtable[i])->dtype]);
+
 if (DEBUG)
    {
    ShowRval(stdout,(ptr->hashtable[i])->rval,(ptr->hashtable[i])->rtype);

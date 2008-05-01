@@ -49,6 +49,9 @@ if (ap != NULL)
    {
    free((char *)ap);
    }
+
+/* We don't de-allocate the lval,rval since these are references to
+   elsewhere which are not our responsibility here... */
 }
 
 /*******************************************************************/

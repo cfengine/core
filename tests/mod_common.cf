@@ -119,6 +119,13 @@ bundle agent myPromises(s1,s2)   # policy version 1.0
 
      "Neighbour[fromhost]" string => "tohost";
      "Adj[tohost]"         string => "nexthost";
+
+    ###
+
+   files:
+
+     "/param/$(s1)/$(s2)" -> "no one special";
+
    }
 
 

@@ -217,14 +217,14 @@ int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype
   struct Rlist *rp;
   int slot;
 
-  if (rtype == CF_SCALAR)
-     {
-     Debug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,rval,CF_DATATYPES[dtype],rtype);
-     }
-  else
-     {
-     Debug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
-     }
+if (rtype == CF_SCALAR)
+   {
+   Debug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,rval,CF_DATATYPES[dtype],rtype);
+   }
+else
+   {
+   Debug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
+   }
 
 if (lval == NULL || rval == NULL || scope == NULL)
    {
@@ -284,8 +284,16 @@ if (ptr->hashtable[slot])
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Duplicate selection of value for %s (broken promise)",lval);
       CfLog(cferror,OUTPUT,"");
-      snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",fname,lineno);
-      CfLog(cferror,OUTPUT,"");
+      if (fname)
+         {
+         snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",fname,lineno);
+         CfLog(cferror,OUTPUT,"");
+         }
+      else
+         {
+         snprintf(OUTPUT,CF_BUFSIZE,"in bundle parameterization\n",fname,lineno);
+         CfLog(cferror,OUTPUT,"");
+         }
       DeleteAssoc(ptr->hashtable[slot]);
       ptr->hashtable[slot] = ap;
       Debug("Stored %s in context %s\n",lval,scope);

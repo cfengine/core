@@ -463,9 +463,11 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       case CF_FNCALL:
           fp = (struct FnCall *)rp->item;
           name = (char *)fp->name;
+          params = (struct Rlist *)fp->args;
           break;
       default:
           name = (char *)rp->item;
+          params = NULL;
           break;
       }
    
@@ -473,7 +475,9 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       {
       FatalError("Software error in finding bundle - shouldn't happen");
       }
-       
+
+   AugmentScope(bp->name,bp->args,params);
+            
    for (i = 0;  typesequence[i] != NULL; i++)
       {
       if ((sp = GetSubTypeForBundle(typesequence[i],bp)) == NULL)
@@ -483,22 +487,14 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
          }
 
       printf("Doing %s in %s\n",typesequence[i],bp->name);
+      
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
-         CopyScope("bundlesequence",bp->name);
-         if (AppendScope("bundlesequence",bp->args,params))
-            {
-            ExpandPromise(cf_agent,"bundlesequence",pp,KeepAgentPromise);
-            }
-         else
-            {
-            snprintf(OUTPUT,CF_BUFSIZE,"bundlesequence parameters do not match defintion for %s()",bp->name);
-            CfLog(cferror,OUTPUT,"");
-            }
-         
-         DeleteScope("bundlesequence");
-         }
+         ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
+         }         
       }
+
+   DeleteFromScope(bp->name,bp->args);
    }
 }
 
@@ -557,11 +553,14 @@ void KeepAgentPromise(struct Promise *pp)
 
 if (!IsDefinedClass(pp->classes))
    {
-   Verbose("Skipping whole promise, as context is %s\n",pp->classes);
+   Verbose("Skipping whole promise, as context %s is not valid\n",pp->classes);
    return;
    }
 
-printf("PRPMOSE from %s\n",pp->promiser);
+Debug("BEGIN PROMISE from %s ------------------------------------- \n",pp->promiser);
+         ShowPromise(pp,6);
+Debug("END from %s ------------------------------------- \n",pp->promiser);
+
 
 if (pp->promisee)
    {

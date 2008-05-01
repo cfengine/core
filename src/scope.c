@@ -93,30 +93,34 @@ VSCOPE = ptr;
 
 /*******************************************************************/
 
-int AppendScope(char *scope, struct Rlist *lvals,struct Rlist *rvals)
+void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
 
 { struct Scope *ptr;
   struct Rlist *rpl,*rpr;
-  char *sp;
+  struct Rval retval;
+  void *result;
+  char *lval,rettype;
 
 if (RlistLen(lvals) != RlistLen(rvals))
    {
-   return false;
+   printf("Formal = ");
+   ShowRlist(stdout,lvals);
+   printf(", Actual = ");
+   ShowRlist(stdout,rvals);
+   FatalError("\nAugment scope, formal and actual parameter mismatch");
    }
 
 for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
    {
-   sp = (char *)rpl->item;
+   lval = (char *)rpl->item;
 
-   /* We can't discern type here - this is a simple substitution */
-   
-   if (!AddVariableHash(scope,sp,rpr->item,rpr->type,cf_notype,NULL,0))
-      {
-      return false;
-      }
+   // CheckBundleParameters() already checked that there is no namespace collision
+   // By this stage all functions should have been expanded, so we only have scalars left
+
+   NewScalar(scope,lval,rpr->item,cf_str); // Parameters may only be scalars
    }
 
-return true;
+return;
 }
 
 /*******************************************************************/
@@ -178,6 +182,20 @@ else
 DeleteHashes(ptr->hashtable);
 free(ptr->scope);
 free((char *)ptr);
+}
+
+/*******************************************************************/
+
+void DeleteFromScope(char *scope,struct Rlist *args)
+
+{ struct Rlist *rp;
+ char *lval;
+
+for (rp = args; rp != NULL; rp=rp->next)
+   {
+   lval = (char *)rp->item;
+   DeleteScalar(scope,lval);
+   }
 }
 
 /*******************************************************************/

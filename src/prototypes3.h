@@ -45,8 +45,6 @@ void ShowAssoc (struct CfAssoc *cp);
     
 /* cfpromises.c */
 
-void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
-void CheckVariablePromises(char *scope,struct Promise *varlist);
 void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
 void CompilePromises(void);
@@ -169,6 +167,9 @@ struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(char *retval);
 struct Bundle *GetBundle(char *name,char *agent);
 struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
+void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
+void CheckVariablePromises(char *scope,struct Promise *varlist);
+void CheckBundleParameters(char *scope,struct Rlist *args);
 
 /* matching.c */
 
@@ -205,10 +206,13 @@ void DeleteScope(char *name);
 struct Scope *GetScope(char *scope);
 void CopyScope(char *new, char *old);
 void DeleteAllScope(void);
+void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals);
+void DeleteFromScope(char *scope,struct Rlist *args);
 
 /* vars.c */
 
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
+void DeleteScalar(char *scope,char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 enum cfdatatype GetVariable(char *scope,char *lval,void **returnv,char *rtype);
 void DeleteVariable(char *scope,char *id);

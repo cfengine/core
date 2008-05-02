@@ -401,7 +401,7 @@ void KeepPromiseBundles()
   char rettype,*name;
   void *retval;
   int ok = true,i;
-  static char *typesequence[] = { "files", "processes", NULL };
+  static char *typesequence[] = { "interfaces", "processes", "files", "executions", NULL };
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
@@ -470,16 +470,18 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       FatalError("Software error in finding bundle - shouldn't happen");
       }
 
+   BannerBundle(bp,params);
    AugmentScope(bp->name,bp->args,params);
             
    for (i = 0;  typesequence[i] != NULL; i++)
       {
       if ((sp = GetSubTypeForBundle(typesequence[i],bp)) == NULL)
          {
-         printf("No %s in %s\n",typesequence[i],bp->name);
          continue;      
          }
 
+      BannerSubType(bp->name,sp->name);
+      
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          /* Dial up the generic promise expansion with a callback */  
@@ -536,26 +538,17 @@ FatalError("You are denied access to run this policy");
 
 void KeepAgentPromise(struct Promise *pp)
 
-{ struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
-  struct Rlist *rp;
-  struct Auth *ap,*dp;
-  char *val;
-
-// Expandpromises (...,ptr to handler)
-
+{
 if (!IsDefinedClass(pp->classes))
    {
    Verbose("Skipping whole promise, as context %s is not valid\n",pp->classes);
    return;
    }
 
-printf("BEGIN PROMISE from %s ------------------------------------- \n",pp->promiser);
-
-if (pp->promisee)
+if (strcmp("files",pp->agentsubtype) == 0)
    {
-   Verbose("Promisee is %s (not currently used)\n",pp->promisee);
-   ShowRval(stdout,pp->promisee,pp->petype);
+   VerifyFilesPromise(pp);
+   return;
    }
+
 }

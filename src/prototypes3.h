@@ -122,7 +122,7 @@ struct SubType *AppendBodyType(struct Body *body,char *typename);
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle);
 void DeleteBundles(struct Bundle *bp);
 void DeleteSubTypes(struct SubType *tp);
-
+void DeleteBodies(struct Body *bp);
     
 /* iteration.c */
 
@@ -170,6 +170,9 @@ struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
 void CheckVariablePromises(char *scope,struct Promise *varlist);
 void CheckBundleParameters(char *scope,struct Rlist *args);
+void PromiseBanner(struct Promise *pp);
+void BannerSubType(char *bundlename,char *type);
+void BannerBundle(struct Bundle *bp,struct Rlist *args);
 
 /* matching.c */
 
@@ -222,6 +225,8 @@ int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);
 int IsCf3VarString(char *str);
 int BooleanControl(char *scope,char *name,int bool);
+char *ExtractInnerCf3VarString(char *str,char *substr);
+char *ExtractOuterCf3VarString(char *str,char *substr);
 
 /* expand.c */
 
@@ -310,3 +315,8 @@ void Summarize(void);
 /* signals.c */
 
 void HandleSignals(int signum);
+
+/* verify_files.c */
+
+void VerifyFilesPromise(struct Promise *pp);
+

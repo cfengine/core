@@ -12,6 +12,8 @@ body monitor control()
 
    tcpdump => "false";
 
+   tcpdumpcommand => "/usr/sbin/tcpdump -i eth1 -n -t -v";
+
    # on linux
 
    linux::

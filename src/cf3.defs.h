@@ -373,6 +373,8 @@ struct SubType
 struct Promise
    {
    char *classes;
+   char *agentsubtype;          /* cache the enum for this agent, -1 if undefined */
+   char *ref;                   /* cache comment */
    char *promiser;
    void *promisee;              /* Can be a general rval */
    char  petype;                /* rtype of promisee - list or scalar recipient? */

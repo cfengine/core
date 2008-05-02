@@ -160,7 +160,12 @@ void ScanRval(char *scopeid,struct Rlist **scalarvars,struct Rlist **listvars,vo
 
 { struct Rlist *rp;
   struct FnCall *fp;
- 
+
+if (rval == NULL)
+   {
+   return;
+   }
+  
 switch(type)
    {
    case CF_SCALAR:
@@ -180,8 +185,12 @@ switch(type)
        for (rp = (struct Rlist *)fp->args; rp != NULL; rp=rp->next)
           {
           Debug("Looking at arg for function-like object %s()\n",fp->name);
-          ScanScalar(scopeid,scalarvars,listvars,(char *)rp->item,0);
+          ScanRval(scopeid,scalarvars,listvars,(char *)rp->item,rp->type);
           }
+       break;
+
+   default:
+       Debug("Unknown Rval type for scope %s",scopeid);
        break;
    }
 }
@@ -195,7 +204,12 @@ void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *strin
   void *rval;
   char var[CF_BUFSIZE],exp[CF_EXPANDSIZE];
   
-Debug("ScanForVariables([%s])\n",string);
+Debug("ScanScalar([%s])\n",string);
+
+if (string == NULL)
+   {
+   return;
+   }
 
 for (sp = string; (*sp != '\0') ; sp++)
    {
@@ -204,7 +218,7 @@ for (sp = string; (*sp != '\0') ; sp++)
    
    if (*sp == '$')
       {
-      if (ExtractInnerVarString(sp,var))
+      if (ExtractInnerCf3VarString(sp,var))
          {
          if (GetVariable(scopeid,var,&rval,&rtype) != cf_notype)
             {
@@ -390,11 +404,11 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       switch (*(sp+1))
          {
          case '(':
-                   ExtractOuterVarString(sp,var);
+                   ExtractOuterCf3VarString(sp,var);
                    varstring = ')';
                    break;
          case '{':
-                   ExtractOuterVarString(sp,var);
+                   ExtractOuterCf3VarString(sp,var);
                    varstring = '}';
                    break;
 
@@ -407,7 +421,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    memset(currentitem,0,CF_EXPANDSIZE);
 
    temp[0] = '\0';
-   ExtractInnerVarString(sp,temp);
+   ExtractInnerCf3VarString(sp,temp);
    
    if (strstr(temp,"$"))
       {
@@ -605,6 +619,11 @@ switch (returnval.rtype)
        fp = (struct FnCall *)returnval.item;
        returnval = EvaluateFunctionCall(fp,pp);
        DeleteFnCall(fp);
+       break;
+
+   default:
+       returnval.item = NULL;
+       returnval.rtype = CF_NOPROMISEE;
        break;
    }
 

@@ -48,6 +48,7 @@ short XML = false;
 struct FnCallStatus FNCALL_STATUS;
 
 char THIS_AGENT[CF_MAXVARSIZE];
+enum cfagenttype THIS_AGENT_TYPE;
 short INSTALL_SKIP = false;
 int FACILITY;
 time_t PROMISETIME;

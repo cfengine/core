@@ -58,6 +58,7 @@ if (! NOHARDCLASSES)
    }
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
+THIS_AGENT_TYPE = ag;
 
 Cf3ParseFiles();
 
@@ -446,6 +447,69 @@ for (sp = bp->subtypes; sp != NULL; sp=sp->next)
 return NULL;
 }
 
+/**************************************************************/
+
+void BannerBundle(struct Bundle *bp,struct Rlist *params)
+
+{
+Verbose("\n");
+Verbose("*****************************************************************\n");
+Verbose(" BUNDLE %s",bp->name);
+if (params && (VERBOSE||DEBUG))
+   {
+   printf("(");
+   ShowRlist(stdout,params);
+   printf(" )\n");
+   }
+else
+   {
+   Verbose("\n");
+   }
+Verbose("*****************************************************************\n");
+Verbose("\n");
+}
+
+/**************************************************************/
+
+void BannerSubType(char *bundlename,char *type)
+
+{
+Verbose("\n");
+Verbose("   =========================================================\n");
+Verbose("   %s in bundle %s\n",type,bundlename);
+Verbose("   =========================================================\n");
+Verbose("\n");
+}
+
+/**************************************************************/
+
+void PromiseBanner(struct Promise *pp)
+
+{
+Verbose("\n");
+Verbose("      .........................................................\n");
+if (VERBOSE||DEBUG)
+   {
+   printf("      %s",pp->promiser);
+   if (pp->promisee)
+      {
+      printf(" -> ");
+      ShowRval(stdout,pp->promisee,pp->petype);
+      printf("\n");
+      }
+   else
+      {
+      printf("\n");
+      }
+   if (pp->ref)
+      {
+      printf("\n      %s\n",pp->ref);
+      }
+   }
+Verbose("      .........................................................\n");
+Verbose("\n");
+}
+
 /*******************************************************************/
 /* Level 2                                                         */
 /*******************************************************************/
@@ -678,7 +742,7 @@ for (rp = args; rp != NULL; rp = rp->next)
    {
    lval = (char *)rp->item;
    
-   if (GetVariable(scope,lval,&retval,&rettype) != cf_notype)
+   if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Variable and bundle parameter %s collide",lval);
       CfLog(cferror,OUTPUT,"");

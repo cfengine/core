@@ -95,6 +95,8 @@ pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient? */
 pcopy->bundle = strdup(pp->bundle);
+pcopy->ref = pp->ref;
+pcopy->agentsubtype = pp->agentsubtype;
 
 pcopy->conlist = NULL;
 pcopy->next = NULL;
@@ -252,6 +254,8 @@ if (pcopy->promiser == NULL || pcopy->classes == NULL)
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->bundle = strdup(pp->bundle);
+pcopy->ref = pp->ref;
+pcopy->agentsubtype = pp->agentsubtype;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
 
@@ -323,6 +327,8 @@ if (pp->promisee != NULL)
    {
    DeleteRvalItem(pp->promisee,pp->petype);
    }
+
+// ref/agentsubtype are only references
 
 DeleteConstraintList(pp->conlist);
 }

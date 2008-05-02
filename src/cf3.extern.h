@@ -27,6 +27,7 @@ extern char *CF_DATATYPES[];
 extern char *CF_AGENTTYPES[];
 
 extern char THIS_AGENT[CF_MAXVARSIZE];
+extern enum cfagenttype THIS_AGENT_TYPE;
 extern short INSTALL_SKIP;
 extern short SHOWREPORTS;
 extern int FACILITY;

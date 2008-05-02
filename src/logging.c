@@ -37,7 +37,7 @@
 void CloseAudit()
 
 { double total;
- char *version,type;
+  char *version = NULL,type;
  
 total = (double)(PR_KEPT+PR_NOTKEPT+PR_REPAIRED)/100.0;
 

@@ -245,6 +245,7 @@ struct BodySyntax CFM_CONTROLBODY[] =
    {"monitorfacility",cf_opts,CF_FACILITY},
    {"histograms",cf_opts,CF_BOOL},
    {"tcpdump",cf_opts,CF_BOOL},
+   {"tcpdumpcommand",cf_str,CF_PATHRANGE},
    {NULL,cf_notype,NULL}
    };
 
@@ -293,7 +294,6 @@ struct SubTypeSyntax CF_ALL_BODIES[] =
    };
 
 
-/* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
 /*********************************************************/
 /*                                                       */
@@ -311,6 +311,7 @@ struct BodySyntax CF_COMMON_BODIES[] =
    {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY},
    {"ifvarclass",cf_str,""},
    {"name_select",cf_body,CF_SELECT_BODY},
+   {"ref",cf_str,""},
    {NULL,cf_notype,NULL}
    };
 
@@ -333,6 +334,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 /*********************************************************/
 
 /* Read in all parsable Bundle definitions */
+/* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {

@@ -38,7 +38,7 @@ slot = GetHash(lval);
 if (ptr == NULL)
    {
    struct Scope *sp;
-   printf("No such scope id %s\n",scope);
+   Verbose("No such scope id %s\n",scope);
    FatalError("No such scope");
    }
  
@@ -301,7 +301,7 @@ int IsCf3VarString(char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-Debug1("IsVarString(%s) - syntax verify\n",str);
+Debug1("IsCf3VarString(%s) - syntax verify\n",str);
   
 for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    {
@@ -348,7 +348,8 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
  
  if (bracks != 0)
     {
-    yyerror("Incomplete variable syntax or bracket mismatch");
+    snprintf(OUTPUT,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
+    yyerror(OUTPUT);
     return false;
     }
  
@@ -382,4 +383,128 @@ if (GetVariable(scope,name,(void *)varbuf,&rtype) != cf_notype)
    }
 
 return false;
+}
+
+/*******************************************************************/
+
+char *ExtractInnerCf3VarString(char *str,char *substr)
+
+{ char *sp;
+  int bracks = 1;
+
+Debug("ExtractInnerVarString( %s ) - syntax verify\n",str);
+
+memset(substr,0,CF_BUFSIZE);
+
+/* Start this from after the opening $( */
+
+for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
+   {
+   switch (*sp)
+      {
+      case '(':
+      case '{': 
+          bracks++;
+          break;
+      case ')':
+      case '}': 
+          bracks--;
+          break;
+          
+      default:
+          if (isalnum((int)*sp) || IsIn(*sp,"_[]$.:-"))
+             {
+             }
+          else
+             {
+             Debug("Illegal character found: '%c'\n", *sp);
+             yyerror("Illegal character somewhere in variable or nested expansion");
+             }
+      }
+   
+   if (bracks == 0)
+      {
+      strncpy(substr,str+2,sp-str-2);
+      Debug("Returning substring value %s\n",substr);
+      return substr;
+      }
+   }
+
+if (bracks != 0)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Broken variable syntax or bracket mismatch - inner (%s/%s)",str,substr);
+   yyerror(OUTPUT);
+   return false;
+   }
+
+return sp-1;
+}
+
+/*********************************************************************/
+
+char *ExtractOuterCf3VarString(char *str,char *substr)
+
+  /* Should only by applied on str[0] == '$' */
+    
+{ char *sp;
+  int dollar = false;
+  int bracks = 0, onebrack = false;
+  int nobracks = true;
+
+Debug("ExtractOuterVarString(%s) - syntax verify\n",str);
+
+memset(substr,0,CF_BUFSIZE);
+ 
+for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
+   {
+   switch (*sp)
+      {
+      case '$':
+          dollar = true;
+          switch (*(sp+1))
+             {
+             case '(':
+             case '{': 
+                 break;
+             default:
+                 /* Stray dollar not a variable */
+                 return NULL;
+             }
+          break;
+      case '(':
+      case '{': 
+          bracks++;
+          onebrack = true;
+          nobracks = false;
+          break;
+      case ')':
+      case '}': 
+          bracks--;
+          break;
+      }
+   
+   if (dollar && (bracks == 0) && onebrack)
+      {
+      strncpy(substr,str,sp-str+1);
+      Debug("Extracted outer variable |%s|\n",substr);
+      return substr;
+      }
+   }
+
+if (dollar == false)
+   {
+   return str; /* This is not a variable*/
+   }
+
+if (bracks != 0)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in - outer (%s/%s)",str,substr);
+   yyerror(OUTPUT);
+   return NULL;
+   }
+
+/* Return pointer to first position in string (shouldn't happen)
+   as long as we only call this function from the first $ position */
+
+return str;
 }

@@ -56,6 +56,13 @@ extern struct Item *CONNECTIONLIST;
 
 /*******************************************************************/
 
+void KeepServerAccessPromise(struct Promise *pp);
+
+
+/*******************************************************************/
+/* Level                                                           */
+/*******************************************************************/
+
 void KeepPromises()
 
 {
@@ -395,26 +402,43 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 void KeepServerPromise(struct Promise *pp)
 
+{
+if (!IsDefinedClass(pp->classes))
+   {
+   Verbose("Skipping whole promise, as context is %s\n",pp->classes);
+   return;
+   }
+
+if (strcmp(pp->agentsubtype,"access") == 0)
+   {
+   KeepServerAccessPromise(pp);
+   return;
+   }
+else
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise type %s is not known by this agent");
+   CfLog(cferror,OUTPUT,"");
+   
+   if (pp->audit != NULL)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,", in promise file %s at line %d",pp->audit->filename,pp->lineno);
+      CfLog(cferror,OUTPUT,"");
+      }
+   
+   CfLog(cferror,"\n","");
+   }
+}
+
+/*********************************************************************/
+
+void KeepServerAccessPromise(struct Promise *pp)
+
 { struct Constraint *cp;
   struct Body *bp;
   struct FnCall *fp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
   char *val;
-
-// Expandpromises (...,ptr to handler)
-
-if (!IsDefinedClass(pp->classes))
-   {
-   printf("Skipping whole promise, as context is %s\n",pp->classes);
-   return;
-   }
-
-if (pp->promisee)
-   {
-   printf("Promisee is %s (not currently used)\n",pp->promisee);
-   ShowRval(stdout,pp->promisee,pp->petype);
-   }
 
 if (strlen(pp->promiser) != 1)
    {

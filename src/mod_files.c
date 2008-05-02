@@ -209,7 +209,6 @@ struct BodySyntax CF_FILES_BODIES[] =
 
 struct SubTypeSyntax CF_FILES_SUBTYPES[] =
   {
-
   /* Body lists belonging to "files:" type in Agent */
       
   {"agent","files",CF_FILES_BODIES},

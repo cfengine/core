@@ -17,6 +17,7 @@ bundle agent filetest()
 
       "$(filelist)"
 
+              ref     => "Every promise may have an id or explanation to refer by",
            access     => myaccess ,
            access     => others("fish"); # ("white");
 

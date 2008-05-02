@@ -405,7 +405,7 @@ exp[0] = '\0';
 
 if (*string == '$')
    {
-   if (ExtractInnerVarString(string,var))
+   if (ExtractInnerCf3VarString(string,var))
       {
       if ((dtype = GetVariable(scopeid,var,&rval,&rtype)) != cf_notype)
          {

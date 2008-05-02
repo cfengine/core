@@ -54,7 +54,9 @@ cfPromises_SOURCES =							\
 
 cfAgent_SOURCES =							\
 	agent.c								\
-	verify_files.c
+	verify_files.c							\
+	verify_processes.c						\
+	verify_exec.c
 
 cfServerd_SOURCES =							\
 	server.c							\

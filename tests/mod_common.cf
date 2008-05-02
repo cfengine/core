@@ -31,7 +31,13 @@ body common control
    {
    any::
 
-      bundlesequence  => { update, myPromises("2","3"), myPromises("fish","rabbit"), filetest };
+      bundlesequence  => { 
+                         update, 
+                         myPromises("2","3"), 
+                         myPromises("fish","rabbit"), 
+                         Services,
+                         testcopy
+                         };
 
       inputs          => {
                          "../tests/mod_execd.cf", 

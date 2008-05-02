@@ -464,12 +464,8 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
           params = NULL;
           break;
       }
-   
-   if ((bp = GetBundle(name,"agent")) == NULL)
-      {
-      FatalError("Software error in finding bundle - shouldn't happen");
-      }
 
+   bp = GetBundle(name,"agent");
    BannerBundle(bp,params);
    AugmentScope(bp->name,bp->args,params);
             
@@ -484,8 +480,6 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
-         /* Dial up the generic promise expansion with a callback */  
-
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
          }         
       }
@@ -545,10 +539,23 @@ if (!IsDefinedClass(pp->classes))
    return;
    }
 
+if (strcmp("processes",pp->agentsubtype) == 0)
+   {
+   VerifyProcessesPromise(pp);
+   return;
+   }
+
 if (strcmp("files",pp->agentsubtype) == 0)
    {
    VerifyFilesPromise(pp);
    return;
    }
+
+if (strcmp("executions",pp->agentsubtype) == 0)
+   {
+   VerifyExecPromise(pp);
+   return;
+   }
+
 
 }

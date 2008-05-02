@@ -320,3 +320,10 @@ void HandleSignals(int signum);
 
 void VerifyFilesPromise(struct Promise *pp);
 
+/* verify_processes.c */
+
+void VerifyProcessesPromise(struct Promise *pp);
+
+/* verify_exec.c */
+
+void VerifyExecPromise(struct Promise *pp);

@@ -14,7 +14,7 @@ bundle agent filetest()
       "/path/file.*"  
 
             pathtype    => "regex",
-            access      => myaccess,
+            perms      => myperms,
             file_select => myfilter,
             changes     => tripwire,
             recurse     => "inf";
@@ -22,19 +22,19 @@ bundle agent filetest()
       "$(filelist)"
 
               ref     => "Every promise may have an id or explanation to refer by",
-           access     => myaccess ,
-           access     => others("fish"); # ("white");
+           perms     => myperms ,
+           perms     => others("fish"); # ("white");
 
       "/etc/xyz" -> "cfagent"     # create a file
 
             create    => "true",
             touch     => "true",
-            access    => myaccess;
+            perms    => myperms;
 
       "/etc/abc/." -> "cfagent"   # create a directory
 
             create    => "true",
-            access    => myaccess;
+            perms    => myperms;
 
       "/usr/local"    
 
@@ -45,7 +45,7 @@ bundle agent filetest()
 
             recurse    => "inf",
             name_select=> "fish.*",
-            tidy       => tidymask,
+            delete     => tidymask,
             rename     => rotateme,
             repository => "/override";
    }
@@ -84,7 +84,7 @@ bundle agent filetest()
 #
 #########################################################
 
-body access others(parame)
+body perms others(parame)
 
 {
 milkyway::
@@ -94,7 +94,7 @@ owner  => { "root", "wheel", "sudo" };
 
 #########################################################
 
-body access myaccess()
+body perms myperms()
 
 {
 any::
@@ -173,7 +173,7 @@ result      => "type&mode";
 
 #########################################################
 
-body tidy tidymask
+body delete tidymask
 
 {
 age      => "0";

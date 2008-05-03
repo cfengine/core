@@ -21,17 +21,17 @@ vars:
 
 files:
 
-  "/dest/files"  
+  "/var/[c|l][A-Za-z0-9_ ]*"  
 
             copyfrom    => mycopy("/src/path","server"),
-            access      => myaccess,
+            perms      => myperms,
             file_select => myfilter,
             recurse     => "inf";
 
   "/dest/files"  
 
             copyfrom    => mycopy("/src/.*/regpath","server"),
-            access      => myaccess,
+            perms      => myperms,
             file_select => myfilter;
 
 
@@ -42,7 +42,7 @@ files:
   "$(basedir)/$(named_files)/vm.conf"
 
            copyfrom      => mycopy("/$(basedir)/$(named_files).conf","server"),
-           access        => myaccess,
+           perms        => myperms,
            file_select   => myfilter;
           
 
@@ -53,7 +53,7 @@ files:
   "$(basedir)/data_from_$(servers)/$(named_files).conf"
 
            copyfrom      => mycopy("/$(basedir)/$(named_files).conf","$(servers)"),
-           access        => myaccess,
+           perms        => myperms,
            file_select  => myfilter;
   #         loopiteration => iter_policy
           
@@ -66,7 +66,7 @@ files:
   "$(basedir)/$(named_files)/vm.conf"
 
            copyfrom    => mycopy("/$(basedir)/fixed.conf","server"),
-           access      => myaccess,
+           perms      => myperms,
            file_select      => myfilter;
 
 }

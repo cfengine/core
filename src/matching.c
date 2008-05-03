@@ -72,7 +72,7 @@ else
    else
       {
       regerror(code,&rx,buf,1023);
-      Verbose("Regular expression error %d for %s: %s\n", code, regexp,buf);
+      Debug("Regular expression error %d for %s: %s\n", code, regexp,buf);
       return false;
       }
    }
@@ -88,7 +88,7 @@ int IsRegex(char *str)
 
 for (sp = str; *sp != '\0'; sp++)
    {
-   if (strchr("^.?*\[-]()$",*sp))
+   if (strchr("^*+\[-]()$",*sp))
       {
       return true;  /* Maybe */
       }

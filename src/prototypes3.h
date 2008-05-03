@@ -38,7 +38,7 @@ void KeepPromises(void);
 
 /* agentdiagnostic.c */
 
-void AgentDiagnostic();
+void AgentDiagnostic(void);
 
 /* assoc.c */
 
@@ -57,6 +57,8 @@ void CompilePromises(void);
 
 struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes);
 void DeleteConstraintList(struct Constraint *conlist);
+void *GetConstraint(char *lval,struct Constraint *list);
+int GetBooleanConstraint(char *lval,struct Constraint *list);
 
 /* conversion.c */
 
@@ -260,7 +262,7 @@ struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
 void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
-
+void PromiseRef(struct Promise *pp);
 
 /* selfdiagnostic.c */
 

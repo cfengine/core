@@ -139,3 +139,74 @@ for (cp = conlist; cp != NULL; cp = next)
 
 /*****************************************************************************/
 
+int GetBooleanConstraint(char *lval,struct Constraint *list)
+
+{ struct Constraint *cp;
+  int retval = CF_UNDEFINED;
+
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (strcmp(cp->rval,"true") == 0)
+         {
+         if (IsDefinedClass(cp->classes))
+            {
+            if (retval != CF_UNDEFINED)
+               {
+               snprintf(OUTPUT,CF_BUFSIZE,"Multiple %s constraints break this promise\n",lval);
+               CfLog(cferror,OUTPUT,"");
+               }
+            retval = true;
+            }
+         }
+      
+      if (strcmp(cp->rval,"false") == 0)
+         {
+         if (IsDefinedClass(cp->classes))
+            {
+            if (retval != CF_UNDEFINED)
+               {
+               snprintf(OUTPUT,CF_BUFSIZE,"Multiple %s constraints break this promise\n",lval);
+               CfLog(cferror,OUTPUT,"");
+               }
+            retval = false;
+            }
+         }
+      }
+   }
+
+if (retval == CF_UNDEFINED)
+   {
+   retval = false;
+   }
+
+return retval;
+}
+
+/*****************************************************************************/
+
+void *GetConstraint(char *lval,struct Constraint *list)
+
+{ struct Constraint *cp;
+  void *retval = NULL;
+
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (IsDefinedClass(cp->classes))
+         {
+         if (retval != NULL)
+            {
+            snprintf(OUTPUT,CF_BUFSIZE,"Inconsistent %s constraints break this promise\n",lval);
+            CfLog(cferror,OUTPUT,"");
+            }
+         retval = cp->rval;
+         }
+      }
+   }
+
+return retval;
+}
+

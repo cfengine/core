@@ -134,6 +134,10 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
           break;
       }
 
+   /* Keep the referent body type as a boolean for convenience when checking later */
+
+   AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes);
+
    /* First case is: we have a body template to expand lval = body(args), .. */
    
    if (bp != NULL) 
@@ -362,4 +366,19 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 free(pp);
 }
 
+/*****************************************************************************/
 
+void PromiseRef(struct Promise *pp)
+
+{
+if (pp->audit)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
+   }
+else
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
+   }
+
+CfLog(cferror,OUTPUT,"");
+}

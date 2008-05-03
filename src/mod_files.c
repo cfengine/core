@@ -191,9 +191,9 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"file_select",cf_body,CF_FILEFILTER_BODY},
    {"copyfrom",cf_body,CF_COPYFROM_BODY},
    {"linkto",cf_body,CF_LINKTO_BODY},
-   {"access",cf_body,CF_ACCESS_BODIES},
+   {"perms",cf_body,CF_ACCESS_BODIES},
    {"changes",cf_body,CF_CHANGEMGT_BODY},
-   {"tidy",cf_body,CF_TIDY_BODY},
+   {"delete",cf_body,CF_TIDY_BODY},
    {"rename",cf_body,CF_RENAME_BODY},
    {"repository",cf_str,"/.*"},
    {"edit_line",cf_body,CF_BUNDLE},
@@ -203,7 +203,7 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"touch",cf_opts,CF_BOOL},
    {"create",cf_opts,CF_BOOL},
    {"action",cf_opts,"fix,warn"},
-   {"path",cf_opts,"literal,regex"},
+   {"pathtype",cf_opts,"literal,regex"},
    {NULL,cf_notype,NULL}
    };
 

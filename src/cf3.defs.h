@@ -31,6 +31,7 @@
 #define CF_STACK  'k'
 
 #define CF_NOPROMISEE 'X'
+#define CF_UNDEFINED -1
 
 #define CF_INBODY   1
 #define CF_INBUNDLE 2

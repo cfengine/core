@@ -51,14 +51,14 @@ FindFilePromiserObjects(pp);
 
 void FindFilePromiserObjects(struct Promise *pp)
 
-{ int literal = false;
- 
-if (literal)
+{ char *val = GetConstraint("pathtype",pp->conlist);
+
+ if ((val != NULL) && (strcmp(val,"literal") == 0))
    {
    VerifyFilePromise(pp->promiser,pp);
    return;
    }
-else
+else // Default is to expand regex paths
    {
    SearchForFilePromisers(pp->promiser,pp,VerifyFilePromise);
    }
@@ -116,17 +116,13 @@ for (ip = path; ip != NULL; ip=ip->next)
    AddSlash(pbuffer);
    strcat(pbuffer,ip->name);
    
-   if (stat(pbuffer,&statbuf) == -1)
-      {
-      snprintf(OUTPUT,CF_BUFSIZE,"Link %s in search path %s does not exist - cannot continue under policy match",pbuffer,wildpath);
-      CfLog(cferror,OUTPUT,"");
-      return;
-      }
-   else
+   if (stat(pbuffer,&statbuf) != -1)
       {
       if (statbuf.st_uid != agentuid)
          {
-         Verbose("Link %s in search path %s is not owned by the agent uid - operation is potentially risky\n",pbuffer,path);
+         snprintf(OUTPUT,CF_BUFSIZE,"Directory %s in search path %s is controlled by another user - trusting its content is potentially risky\n",pbuffer,wildpath);
+         CfLog(cfinform,OUTPUT,"");
+         PromiseRef(pp);
          }
       }
    }
@@ -142,8 +138,8 @@ if (expandregex) /* Expand one regex link and hand down */
    
    if ((dirh=opendir(pbuffer)) == NULL)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open dir: %s\n",pbuffer);
-      CfLog(cferror,OUTPUT,"opendir");
+      snprintf(OUTPUT,CF_BUFSIZE*2,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
+      CfLog(cfverbose,OUTPUT,"opendir");
       return;
       }
    
@@ -207,6 +203,55 @@ if (count == 0)
 
 void VerifyFilePromise(char *path,struct Promise *pp)
 
-{
- printf("VerifyPromiseon .. %s\n",path);
+{ struct stat objstat;
+  int exists = false;
+  int have_rename,have_delete,have_create,have_perms,have_copyfrom;
+  
+/*
+  
+Now we have expanded everything and all that remains is to check each
+promise constraint slavishly. There is an assumed logical ordering.
+
+ Rename
+ Tidy      # garbage
+ Create|Copy
+ Permissions
+ Edit
+
+We first have to know what kind of object the leaf node is (indeed
+whether it exists)
+
+*/
+
+// Leave a boolean signal when we expand the bodies
+
+have_rename = GetBooleanConstraint("rename",pp->conlist);
+have_delete = GetBooleanConstraint("delete",pp->conlist);
+have_create = GetBooleanConstraint("create",pp->conlist);
+have_perms = GetBooleanConstraint("perms",pp->conlist);
+have_copyfrom = GetBooleanConstraint("copyfrom",pp->conlist);
+
+if (have_delete && (have_create||have_copyfrom))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be created/deleted at the same time",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(pp);
+   }
+
+if (stat(path,&objstat) == -1)
+   {
+   exists = false;
+//   DoCreate();
+   }
+else
+   {
+   exists = true;
+//   DoRename();
+//   DoTidy();
+   }
+
+//DoCreate();
+//DoCopy();
+//DoACL();
+//DoEdit();
 }

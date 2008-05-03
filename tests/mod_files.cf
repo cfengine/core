@@ -6,10 +6,14 @@
 
 bundle agent filetest()
    {
+   vars:
+
+      "filelist" slist => { "/tmp/bla1", "/tmp/bla2" };
    files:
 
       "/path/file.*"  
 
+            pathtype    => "regex",
             access      => myaccess,
             file_select => myfilter,
             changes     => tripwire,
@@ -21,8 +25,15 @@ bundle agent filetest()
            access     => myaccess ,
            access     => others("fish"); # ("white");
 
-      "/etc/xyz" -> "cfagent"
+      "/etc/xyz" -> "cfagent"     # create a file
 
+            create    => "true",
+            touch     => "true",
+            access    => myaccess;
+
+      "/etc/abc/." -> "cfagent"   # create a directory
+
+            create    => "true",
             access    => myaccess;
 
       "/usr/local"    

@@ -36,12 +36,10 @@
 /* WILDCARD TOOLKIT : Level 0                                            */
 /*************************************************************************/
 
-int FullTextMatch (char *regptr,char *cmpptr)
+int FullTextMatch (char *regexp,char *teststring)
 
 { regex_t rx,rxcache;
   regmatch_t pmatch;
-  char regexp[2048]; 
-  char teststring[2048];
   int code;
   char buf[1024];
   
@@ -62,22 +60,83 @@ else
       {
       if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(teststring)))
          {
-         Debug("Matched\n");
+         Debug("Regex %s matches (%s) exactly.\n",regexp,teststring);
          return true;
          }
       else
          {
          Debug("Regex %s did not match (%s) exactly, but it matched a part of it.\n",regexp,teststring);
+         return false;
          }
       }
    else
       {
       regerror(code,&rx,buf,1023);
       Verbose("Regular expression error %d for %s: %s\n", code, regexp,buf);
+      return false;
       }
    }
 
 return false;
+}
+
+/*********************************************************************/
+
+int IsRegex(char *str)
+
+{ char *sp;
+
+for (sp = str; *sp != '\0'; sp++)
+   {
+   if (strchr("^.?*\[-]()$",*sp))
+      {
+      return true;  /* Maybe */
+      }
+   }
+
+return false;
+}
+
+/*********************************************************************/
+
+int IsPathRegex(char *str)
+
+{ char *sp;
+  int result,s = 0,r = 0;
+
+if (result = IsRegex(str))
+   {
+   for (sp = str; *sp != '\0'; sp++)
+      {
+      switch(*sp)
+         {
+         case '[':
+             s++;
+             break;
+         case ']':
+             s--;
+             break;
+         case '(':
+             r++;
+             break;
+         case')':
+             r--;
+             break;
+         case FILE_SEPARATOR:
+             
+             if (r || s)
+                {
+                snprintf(OUTPUT,CF_BUFSIZE,"Path regular expression %s seems to use expressions containing the directory symbol %c",str,FILE_SEPARATOR);
+                CfLog(cferror,OUTPUT,"");
+                CfLog(cferror,"Use a work-around to avoid pathological behaviour\n","");
+                return false;
+                }
+             break;
+         }
+      }
+   }
+
+return result;
 }
 
 /*********************************************************************/
@@ -107,5 +166,6 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
 return(false);
 }
 
+/*********************************************************************/
 
 /* EOF */

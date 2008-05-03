@@ -200,6 +200,10 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"edit_xml",cf_body,CF_BUNDLE},
    {"acl",cf_body,NULL},
    {"recurse",cf_int,"0,inf"},
+   {"touch",cf_opts,CF_BOOL},
+   {"create",cf_opts,CF_BOOL},
+   {"action",cf_opts,"fix,warn"},
+   {"path",cf_opts,"literal,regex"},
    {NULL,cf_notype,NULL}
    };
 

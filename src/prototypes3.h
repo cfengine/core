@@ -36,6 +36,10 @@
 void ThisAgentInit(void);
 void KeepPromises(void);
 
+/* agentdiagnostic.c */
+
+void AgentDiagnostic();
+
 /* assoc.c */
 
 struct CfAssoc *NewAssoc(char *lval,void *rval,char rtype,enum cfdatatype dt);
@@ -178,6 +182,8 @@ void BannerBundle(struct Bundle *bp,struct Rlist *args);
 
 int FullTextMatch (char *regptr,char *cmpptr);
 int IsRegexItemIn(struct Item *list,char *regex);
+int IsPathRegex(char *str);
+int IsRegex(char *str);
 
 /* syntax.c */
 
@@ -262,6 +268,7 @@ void SelfDiagnostic(void);
 void TestVariableScan(void);
 void TestExpandPromise(void);
 void TestExpandVariables(void);
+void TestSearchFilePromiser(void);
 
 /* args.c */
 
@@ -318,7 +325,10 @@ void HandleSignals(int signum);
 
 /* verify_files.c */
 
-void VerifyFilesPromise(struct Promise *pp);
+void FindFilePromiserObjects(struct Promise *pp);
+void SearchForFilePromisers(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr));
+void FindAndVerifyFilesPromises(struct Promise *pp);
+void VerifyFilePromise(char *path,struct Promise *pp);
 
 /* verify_processes.c */
 

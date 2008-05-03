@@ -151,7 +151,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
       case 'h': Syntax("Cfengine Agent");
           exit(0);
 
-      case 'x': SelfDiagnostic();
+      case 'x': AgentDiagnostic();
           exit(0);
           
       default:  Syntax("Cfengine Agent");
@@ -547,7 +547,7 @@ if (strcmp("processes",pp->agentsubtype) == 0)
 
 if (strcmp("files",pp->agentsubtype) == 0)
    {
-   VerifyFilesPromise(pp);
+   FindAndVerifyFilesPromises(pp);
    return;
    }
 

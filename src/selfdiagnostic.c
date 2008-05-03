@@ -27,19 +27,10 @@
 /*                                                                           */
 /* File: selfdiagnostic.c                                                    */
 /*                                                                           */
-/* Created: Tue Oct  9 18:43:36 2007                                         */
-/*                                                                           */
-/* Author:                                           >                       */
-/*                                                                           */
-/* Revision: $Id$                                                            */
-/*                                                                           */
-/* Description:                                                              */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-
 
 /*****************************************************************************/
 
@@ -184,4 +175,3 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
 ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);
 /* No cleanup */
 }
-

@@ -56,7 +56,8 @@ cfAgent_SOURCES =							\
 	agent.c								\
 	verify_files.c							\
 	verify_processes.c						\
-	verify_exec.c
+	verify_exec.c							\
+	agentdiagnostic.c
 
 cfServerd_SOURCES =							\
 	server.c							\

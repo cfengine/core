@@ -122,14 +122,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
           break;
       }
 
-   /* Keep the referent body type as a boolean for convenience when checking later */
-
-   AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes);
-
    /* First case is: we have a body template to expand lval = body(args), .. */
    
    if (bp != NULL) 
       {
+      /* Keep the referent body type as a boolean for convenience when checking later */
+      
+      AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes);
+
       Debug("Handling body-lval \"%s\"\n",cp->lval);
       
       if (bp->args != NULL)
@@ -356,7 +356,7 @@ free(pp);
 
 /*****************************************************************************/
 
-void PromiseRef(struct Promise *pp)
+void PromiseRef(enum cfoutputlevel level,struct Promise *pp)
 
 {
 if (pp->audit)
@@ -368,5 +368,5 @@ else
    snprintf(OUTPUT,CF_BUFSIZE,"Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
    }
 
-CfLog(cferror,OUTPUT,"");
+CfLog(level,OUTPUT,"");
 }

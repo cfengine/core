@@ -57,7 +57,7 @@
 
 struct BodySyntax CF_MATCHCLASS_BODY[] =
    {
-   {"match_range",cf_irange,""},
+   {"match_range",cf_irange,CF_VALRANGE},
    {"in_range_define",cf_slist,""},
    {"out_of_range_define",cf_slist,""},
    {NULL,cf_notype,NULL}

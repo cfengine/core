@@ -102,13 +102,13 @@ extern struct BodySyntax CF_OCCUR_BODIES[];
 extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
 extern struct BodySyntax CF_APPEND_REPL_BODIES[];
 extern struct BodySyntax CF_FILES_BODIES[];
-extern struct BodySyntax CF_SELECTFILES_BODY[];
 extern struct BodySyntax CF_COPYFROM_BODY[];
 extern struct BodySyntax CF_LINKTO_BODY[];
 extern struct BodySyntax CF_FILEFILTER_BODY[];
 extern struct BodySyntax CF_CHANGEMGT_BODY[];
 extern struct BodySyntax CF_TIDY_BODY[];
 extern struct BodySyntax CF_RENAME_BODY[];
+extern struct BodySyntax CF_RECURSION_BODY[];
 #endif
 
 #ifndef CF3_MOD_EXEC

@@ -238,6 +238,8 @@ void Cf3ParseFiles()
 
 { struct Rlist *rp;
 
+PARSING = true;
+ 
 if ((PROMISETIME = time((time_t *)NULL)) == -1)
    {
    printf("Couldn't read system clock\n");
@@ -260,6 +262,8 @@ if (VINPUTLIST != NULL)
          }
       }
    }
+
+PARSING = false;
 }
 
 /*******************************************************************/

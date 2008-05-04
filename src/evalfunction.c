@@ -63,7 +63,7 @@ struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs)
   int tmp,range,result,from=-1,to=-1;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -116,7 +116,7 @@ struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
   uid_t uid;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -166,7 +166,7 @@ struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs)
   gid_t gid;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -219,7 +219,7 @@ struct Rval FnCallExecResult(struct FnCall *fp,struct Rlist *finalargs)
   int ret = false;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -284,7 +284,7 @@ struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
   short portnum;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -382,7 +382,7 @@ struct Rval FnCallReturnsZero(struct FnCall *fp,struct Rlist *finalargs)
   struct stat statbuf;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -446,7 +446,7 @@ struct Rval FnCallIsNewerThan(struct FnCall *fp,struct Rlist *finalargs)
   struct stat frombuf,tobuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -505,7 +505,7 @@ struct Rval FnCallIsAccessedBefore(struct FnCall *fp,struct Rlist *finalargs)
   struct stat frombuf,tobuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -564,7 +564,7 @@ struct Rval FnCallIsChangedBefore(struct FnCall *fp,struct Rlist *finalargs)
   struct stat frombuf,tobuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -621,7 +621,7 @@ struct Rval FnCallStatInfo(struct FnCall *fp,struct Rlist *finalargs,enum fncall
   struct stat statbuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -691,7 +691,7 @@ struct Rval FnCallIPRange(struct FnCall *fp,struct Rlist *finalargs)
   struct Item *ip;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -766,7 +766,7 @@ struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs)
   struct Item *ip;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -819,7 +819,7 @@ struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -867,7 +867,7 @@ struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -916,7 +916,7 @@ struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
   struct Item *list = NULL, *ret; 
 
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -962,7 +962,7 @@ struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
   double a = CF_NOVAL,b = CF_NOVAL;
  
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1066,7 +1066,7 @@ struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
   char *arg = finalargs->item;
  
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1103,7 +1103,6 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
-
 /*********************************************************************/
 
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
@@ -1127,7 +1126,7 @@ struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
   char *arg = finalargs->item;
  
 buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes); /* Arg validation */
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1160,6 +1159,124 @@ if ((rval.item = strdup(buffer)) == NULL)
 
 /* end fn specific content */
 
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_INTRANGE,
+     CF_INTRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_int,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  int tmp,range,result,from=-123,to=-123;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+sscanf((char *)(finalargs->item),"%d",&from);
+sscanf((char *)(finalargs->next->item),"%d",&to);
+   
+if (from == -123 || to == -123)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
+   ReportError(OUTPUT);
+   }
+
+if (from > to)
+   {
+   tmp = to;
+   to = from;
+   from = tmp;
+   }
+
+snprintf(buffer,CF_BUFSIZE-1,"%d,%d",from,to);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallIRange");
+   }
+
+/* end fn specific content */
+
+SetFnCallReturnStatus("irange",FNCALL_SUCCESS,NULL,NULL);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_REALRANGE,
+     CF_REALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_real,
+      cf_real,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  int tmp,range,result;
+  double from=-123.45,to=-123.45;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+from = atof((char *)(finalargs->item));
+to = atof((char *)(finalargs->next->item));
+
+sscanf((char *)(finalargs->item),"%lf",&from);
+sscanf((char *)(finalargs->next->item),"%lf",&to);
+   
+if (from == -123.45 || to == -123.45)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
+   ReportError(OUTPUT);
+   }
+
+if (from > to)
+   {
+   tmp = to;
+   to = from;
+   from = tmp;
+   }
+
+snprintf(buffer,CF_BUFSIZE-1,"%lf,%lf",from,to);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRRange");
+   }
+
+/* end fn specific content */
+
+SetFnCallReturnStatus("rrange",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
 }

@@ -55,6 +55,8 @@ struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void
 void DeleteConstraintList(struct Constraint *conlist);
 void *GetConstraint(char *lval,struct Constraint *list);
 int GetBooleanConstraint(char *lval,struct Constraint *list);
+void ReCheckAllConstraints(struct Promise *pp);
+void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
 
 /* conversion.c */
 
@@ -85,6 +87,7 @@ void ShowRange(char *);
 void ShowBuiltinFunctions(void);
 void ShowBody(struct Body *body,int ident);
 void DebugBanner(char *s);
+void ReportError(char *s);
 
 /* rlist.c */
 
@@ -195,6 +198,8 @@ void CheckParseString(char *lv,char *s,char *range);
 void CheckParseClass(char *lv,char *s,char *range);
 void CheckParseInt(char *lv,char *s,char *range);
 void CheckParseReal(char *lv,char *s,char *range);
+void CheckParseRealRange(char *lval,char *s,char *range);
+void CheckParseIntRange(char *lval,char *s,char *range);
 void CheckParseOpts(char *lv,char *s,char *range);
 void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);
@@ -258,7 +263,7 @@ struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
 void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
-void PromiseRef(struct Promise *pp);
+void PromiseRef(enum cfoutputlevel level,struct Promise *pp);
 
 /* selfdiagnostic.c */
 
@@ -272,7 +277,7 @@ void TestSearchFilePromiser(void);
 
 int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take);
 struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp);
-void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes);
+void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes,struct Rlist *finalargs);
 void DeleteExpArgs(struct Rlist *args);
 
 /* hashes.c */
@@ -307,6 +312,8 @@ struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char c);
 struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs);
 
 /* server_transform.c */
 

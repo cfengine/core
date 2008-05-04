@@ -67,7 +67,7 @@ executions:
 body process_count up(s)
 
 {
-match_range => "[0,10]";
+match_range => "0,10";
 out_of_range_define => "$(s)_up";
 }
 

@@ -206,3 +206,95 @@ for (cp = list; cp != NULL; cp=cp->next)
 return retval;
 }
 
+/*****************************************************************************/
+
+void ReCheckAllConstraints(struct Promise *pp)
+
+{ struct Constraint *cp;
+
+ for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    {
+    PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval,cp->type);
+    }     
+}
+
+/*****************************************************************************/
+
+void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype)
+
+{ struct SubTypeSyntax ss;
+  int lmatch = false;
+  int i,j,k,l;
+  struct BodySyntax *bs,*bs2;
+  struct SubTypeSyntax *ssp;
+
+Debug("PostCheckConstraint(%s,%s)\n",type,lval);
+
+for  (i = 0; i < CF3_MODULES; i++)
+   {
+   if ((ssp = CF_ALL_SUBTYPES[i]) == NULL)
+      {
+      continue;
+      }
+   
+   for (j = 0; ssp[j].btype != NULL; j++)
+      {
+      ss = ssp[j];
+      
+      if (ss.subtype != NULL) 
+         {
+         if (strcmp(ss.subtype,type) == 0)
+            {
+            Debug("Found type %s's body syntax\n",type);
+            
+            bs = ss.bs;
+            
+            for (l = 0; bs[l].lval != NULL; l++)
+               {
+               if (strcmp(lval,bs[l].lval) == 0)
+                  {
+                  lmatch = true;
+                  Debug("Postmatched syntatically correct bundle (lval,rval) item = (%s) to its rval\n",lval);
+                  
+                  if (bs[l].dtype == cf_body)
+                     {
+                     bs2 = (struct BodySyntax *)bs[l].range;
+                     
+                     for (i = 0; bs2[i].lval != NULL; i++)
+                        {
+                        if (strcmp(lval,bs2[i].lval) == 0)
+                           {
+                           CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[i].dtype,(char *)(bs2[i].range));
+                           return;
+                           }
+                        }
+                     return;
+                     }
+                  else
+                     {
+                     CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range));
+                     return;
+                     }
+                  }
+               }                        
+            }
+         }
+      }
+   }
+
+
+/* Now check the functional modules - extra level of indirection */
+
+for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+   {
+   Debug1("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
+   
+   if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
+      {
+      Debug("Found a match for lval %s in the common constraint attributes\n",lval);
+      CheckConstraintTypeMatch(lval,rval,rvaltype,CF_COMMON_BODIES[i].dtype,(char *)(CF_COMMON_BODIES[i].range));
+      return;
+      }
+   }
+}
+

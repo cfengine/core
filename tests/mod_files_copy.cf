@@ -23,10 +23,10 @@ files:
 
   "/var/[c|l][A-Za-z0-9_ ]*"  
 
-            copyfrom    => mycopy("/src/path","server"),
-            perms      => myperms,
-            file_select => myfilter,
-            recurse     => "inf";
+            copyfrom     => mycopy("/src/path","server"),
+            perms        => myperms,
+            file_select  => myfilter,
+            depth_search => recurse("inf");
 
   "/dest/files"  
 
@@ -91,7 +91,7 @@ typecheck   => "true";
 forceupdate => "false";
 forcedirs   => "false";
 forceipv4   => "false";
-size        => "0,50000";
+size        => irange("0","50000");
 trigger     => { "tag1", "tag2" };
 trustkey    => "true";
 encrypt     => "true";

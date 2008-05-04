@@ -13,15 +13,15 @@ bundle agent filetest()
 
       "/path/file.*"  
 
-            pathtype    => "regex",
-            perms      => myperms,
-            file_select => myfilter,
-            changes     => tripwire,
-            recurse     => "inf";
+            pathtype     => "regex",
+            perms        => myperms,
+            file_select  => myfilter,
+            changes      => tripwire,
+            depth_search => recurse("-2.3");
 
       "$(filelist)"
 
-              ref     => "Every promise may have an id or explanation to refer by",
+              ref    => "Every promise may have an id or explanation to refer by",
            perms     => myperms ,
            perms     => others("fish"); # ("white");
 
@@ -43,12 +43,20 @@ bundle agent filetest()
 
       "/var" 
 
-            recurse    => "inf",
-            name_select=> "fish.*",
-            delete     => tidymask,
-            rename     => rotateme,
-            repository => "/override";
+            depth_search => recurse("inf"),
+            delete       => tidymask,
+            rename       => rotateme,
+            repository   => "/override";
    }
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth   => "$(d)";
+include => { ".*.exe", ".*.com" };
+}
 
 #########################################################
 #
@@ -176,7 +184,7 @@ result      => "type&mode";
 body delete tidymask
 
 {
-age      => "0";
+age      => "0,1";
 size     => irange(50000,inf); # number/empty
 age_type => "mtime";           #ctime/mtime/atime
 dirlinks => "delete";          #keep/tidy/delete
@@ -193,7 +201,7 @@ newname => "filename";
 #type=plain/file/link/links
 rotate => "4"; # 0 means empty file
 size   => irange(1,2);
-action => "nop";  #disable/warn
+#action => "nop";  #disable/warn
 }
 
 

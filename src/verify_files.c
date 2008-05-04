@@ -119,7 +119,7 @@ for (ip = path; ip != NULL; ip=ip->next)
          {
          snprintf(OUTPUT,CF_BUFSIZE,"Directory %s in search path %s is controlled by another user - trusting its content is potentially risky\n",pbuffer,wildpath);
          CfLog(cfinform,OUTPUT,"");
-         PromiseRef(pp);
+         PromiseRef(cfinform,pp);
          }
       }
    }
@@ -236,14 +236,14 @@ if (have_editline && have_editxml)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
    CfLog(cferror,OUTPUT,"");
-   PromiseRef(pp);
+   PromiseRef(cferror,pp);
    }
 
 if (have_delete && (have_create||have_copyfrom||have_edit||have_rename))
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
    CfLog(cferror,OUTPUT,"");
-   PromiseRef(pp);
+   PromiseRef(cferror,pp);
    }
 
 

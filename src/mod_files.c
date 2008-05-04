@@ -73,6 +73,16 @@ struct BodySyntax CF_CHANGEMGT_BODY[] =
 
 /**************************************************************/
 
+struct BodySyntax CF_RECURSION_BODY[] =
+   {
+   {"include",cf_slist,".*"},
+   {"exclude",cf_slist,".*"},
+   {"depth",cf_int,"1,99"},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
 struct BodySyntax CF_TIDY_BODY[] =
    {
    {"age",cf_irange,"0,inf"},
@@ -168,7 +178,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"forceupdate",cf_opts,CF_BOOL},
    {"forcedirs",cf_opts,CF_BOOL},
    {"forceipv4",cf_opts,CF_BOOL},
-   {"size",cf_int,"0,inf"},
+   {"size",cf_irange,"0,inf"},
    {"trigger",cf_slist,""},
    {"trustkey",cf_opts,CF_BOOL},
    {"encrypt",cf_opts,CF_BOOL},
@@ -194,12 +204,12 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"repository",cf_str,"/.*"},
    {"edit_line",cf_body,CF_BUNDLE},
    {"edit_xml",cf_body,CF_BUNDLE},
-   {"acl",cf_body,NULL},
-   {"recurse",cf_int,"0,inf"},
+   {"depth_search",cf_body,CF_RECURSION_BODY},
    {"touch",cf_opts,CF_BOOL},
    {"create",cf_opts,CF_BOOL},
    {"action",cf_opts,"fix,warn"},
    {"pathtype",cf_opts,"literal,regex"},
+   {"acl",cf_body,NULL},
    {NULL,cf_notype,NULL}
    };
 

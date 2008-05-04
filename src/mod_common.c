@@ -137,15 +137,6 @@ struct BodySyntax CF_REPORTBODY[] =
    {NULL,cf_notype,NULL}
    };
 
-/***************************************************************/
-
-struct BodySyntax CF_SELECT_BODY[] =
-  {
-  {"include",cf_slist,".*"},
-  {"exclude",cf_slist,".*"},
-  {NULL,cf_notype,NULL}
-  };
-
 /*********************************************************/
 /* Control bodies                                        */
 /*********************************************************/
@@ -306,7 +297,6 @@ struct BodySyntax CF_COMMON_BODIES[] =
    {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY},
    {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY},
    {"ifvarclass",cf_str,""},
-   {"name_select",cf_body,CF_SELECT_BODY},
    {"ref",cf_str,""},
    {NULL,cf_notype,NULL}
    };

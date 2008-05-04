@@ -183,16 +183,14 @@ DeleteRvalItem(args,CF_LIST);
 
 /******************************************************************/
 
-void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes)
+void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes,struct Rlist *realargs)
 
-{ int argnum;
+{ int argnum,i;
   struct Rlist *rp = fp->args;
 
 for (argnum = 0; argtemplate[argnum] != NULL; argnum++)
     {
     CheckConstraintTypeMatch("arg",rp->item,rp->type,argtypes[argnum],argtemplate[argnum]);
-
-    // if fncall FnCallExecResult(struct FnCall *fp,void **value,char *type)
     rp = rp->next;
     }
 
@@ -200,5 +198,30 @@ if (argnum != RlistLen(fp->args))
    {
    printf("Arg mismatch handling function %s\n",fp->name);
    FatalError("Software error - should not happen");
+   }
+
+if (argnum != RlistLen(realargs))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Argument template mismatch handling function %s(",fp->name);
+   ReportError(OUTPUT);
+   ShowRlist(stderr,realargs);
+   fprintf(stderr,")\n",fp->name);
+
+   for (i = 0, rp = realargs; i < argnum; i++)
+      {
+      printf("  arg[%d] range %s\t",i,argtemplate[i]);
+      if (rp != NULL)
+         {
+         ShowRval(stdout,rp->item,rp->type);
+         rp=rp->next;
+         }
+      else
+         {
+         printf(" ? ");
+         }
+      printf("\n");
+      }
+   
+   FatalError("Bad arguments");
    }
 }

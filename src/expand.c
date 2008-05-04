@@ -519,7 +519,8 @@ do
           fprintf(FOUT,"<p>");
           ShowPromise(pexp,6);
           fprintf(FOUT,"</p>");
-          
+
+          ReCheckAllConstraints(pexp);
           break;
 
       default:

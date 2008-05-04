@@ -295,8 +295,10 @@ switch (this)
    case cfn_readreallist:
        break;
    case cfn_irange:
+       rval = FnCallIRange(fp,expargs);
        break;
    case cfn_rrange:
+       rval = FnCallRRange(fp,expargs);
        break;
    case cfn_date:
        break;

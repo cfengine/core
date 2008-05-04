@@ -43,7 +43,7 @@ for (bp = BUNDLES; bp != NULL; bp=bp->next)
    if ((strcmp(name,bp->name) == 0) && (strcmp(type,bp->type) == 0))
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Redefinition of bundle %s for %s is a broken promise",name,type);
-      yyerror(OUTPUT);
+      ReportError(OUTPUT);
       }
    }
 }
@@ -59,7 +59,7 @@ for (bp = BODIES; bp != NULL; bp=bp->next)
    if ((strcmp(name,bp->name) == 0) && (strcmp(type,bp->type) == 0))
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Redefinition of body %s for %s is a broken promise",name,type);
-      yyerror(OUTPUT);
+      ReportError(OUTPUT);
       }
    }
 }
@@ -93,9 +93,9 @@ for  (i = 0; i < CF3_MODULES; i++)
    }
 
 snprintf(OUTPUT,CF_BUFSIZE,"%s is not a valid type category for %s bundles",subtype,bundletype);
-yyerror(OUTPUT);
+ReportError(OUTPUT);
 snprintf(OUTPUT,CF_BUFSIZE,"Possibly the bundle type %s itself is undefined",subtype,bundletype);
-yyerror(OUTPUT);
+ReportError(OUTPUT);
 return CF_NOSTYPE;
 }
 
@@ -168,10 +168,10 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 
 // Now check if it is in the common list...
 
-if (!lmatch || ! allowed)
+if (!lmatch || !allowed)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Constraint lvalue %s is not allowed in bundle category \'%s\'",lval,type);
-   yyerror(OUTPUT);
+   ReportError(OUTPUT);
    }
 }
 
@@ -267,7 +267,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                if (strcmp(ss[j].subtype,type) == 0 && strcmp(ss[j].subtype,"*") != 0)
                   {
                   snprintf(OUTPUT,CF_BUFSIZE,"lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",lval,ss[j].subtype,type);
-                  yyerror(OUTPUT);
+                  ReportError(OUTPUT);
                   return;
                   }
                
@@ -286,7 +286,7 @@ for  (i = 0; i < CF3_MODULES; i++)
 if (!lmatch)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Constraint lvalue %s is not allowed in \'%s\' constraint body",lval,type);
-   yyerror(OUTPUT);
+   ReportError(OUTPUT);
    }
 }
 
@@ -316,7 +316,7 @@ switch(rvaltype)
               break;
           default:
               snprintf(OUTPUT,CF_BUFSIZE,"rhs is a list, but lhs (%s) is not a list type",CF_DATATYPES[dt]);
-              yyerror(OUTPUT);
+              ReportError(OUTPUT);
               break;
           }
        
@@ -368,6 +368,18 @@ switch (dt)
    case cf_clist:
        CheckParseClass(lval,(char *)rval,range);
        break;
+
+   case cf_irange:
+       CheckParseIntRange(lval,(char *)rval,range);
+       break;
+       
+   case cf_rrange:
+       CheckParseRealRange(lval,(char *)rval,range);
+       break;
+       
+   default:
+       snprintf(OUTPUT,CF_BUFSIZE,"Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
+       FatalError(OUTPUT);
    }
 }
             
@@ -452,7 +464,7 @@ if (strlen(range) == 0)
 
 if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    {
-   Verbose("Unable to verify variable expansion at this stage\n");
+   Debug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
    return;
    }
 
@@ -474,12 +486,12 @@ if (regexec(&rx,s,1,&pmatch,0) == 0)
 
 if (IsCf3VarString(s))
    {
-   Verbose("Unable to verify syntax due to variable expansion at this stage\n");   
+   Verbose("Validation: Unable to verify syntax of %s due to variable expansion at this stage\n",s);
    }
 else
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
-   yyerror(OUTPUT);
+   ReportError(OUTPUT);
    }
 /*regfree(&rx); */
 }
@@ -514,8 +526,8 @@ if (regexec(&rx,s,1,&pmatch,0) == 0)
       }
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"Class item in %s => { %s } in rvalue is out of bounds (should match %s)",lval,s,range);
-yyerror(OUTPUT);
+snprintf(OUTPUT,CF_BUFSIZE,"Class item on rhs of lval \'%s\' given as { %s } is out of bounds (should match %s)",lval,s,range);
+ReportError(OUTPUT);
 /*regfree(&rx); */
 }
 
@@ -556,19 +568,39 @@ if (min == CF_HIGHINIT || max == CF_LOWINIT)
    FatalError(OUTPUT);
    }
 
+if (IsCf3VarString(s))
+   {
+   Debug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n",s);
+   return;
+   }
+
 if (strcmp(s,"inf") == 0)
    {
    val = CF_INFINITY;
    }
+else if (strcmp(s,"now") == 0)
+   {
+   val = CFSTARTTIME;
+   }
 else
-   {    
-   val = atoi(s);
+   {
+   int a = -567;
+   
+   sscanf(s,"%d",&a);
+
+   if (a == -567)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Error reading integer %s\n",s);
+      ReportError(OUTPUT);
+      }
+   
+   val = a;
    }
 
 if (val > max || val < min)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Int item in %s => { %s or %d} in rvalue is out of bounds (should be in [%s])",lval,s,val,range);
-   yyerror(OUTPUT);
+   snprintf(OUTPUT,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %d} is out of bounds (should be in [%s])",lval,s,val,range);
+   ReportError(OUTPUT);
    return;
    }
 
@@ -577,17 +609,190 @@ Debug("CheckParseInt - syntax verified\n\n");
 
 /****************************************************************************/
 
+void CheckParseIntRange(char *lval,char *s,char *range)
+    
+{ struct Item *split,*ip,*rangep;
+  int n,max = CF_LOWINIT, min = CF_HIGHINIT, val;
+ 
+/* Numeric types are registered by range separated by comma str "min,max" */
+Debug("\nCheckParseIntRange(%s => %s/%s)\n",lval,s,range);
+
+if (*s == '[' || *s == '(')
+   {
+   ReportError("Range specification should not be enclosed in brackets - just \"a,b\"");
+   return;
+   }
+
+split = SplitString(range,',');
+
+if ((n = ListLen(split)) != 2)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:format specifier %s for irange rvalues is not ok for lval %s - got %d items",range,lval,n);
+   FatalError(OUTPUT);
+   }
+
+sscanf(split->name,"%d",&min);
+
+if (strcmp(split->next->name,"inf") == 0)
+   {
+   max = CF_INFINITY;
+   }
+else
+   {
+   sscanf(split->next->name,"%d",&max);
+   }
+
+DeleteItemList(split);
+
+if (min == CF_HIGHINIT || max == CF_LOWINIT)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"INTERN: could not parse irange format specifier for int rvalues for lval %s",lval);
+   FatalError(OUTPUT);
+   }
+
+if (IsCf3VarString(s))
+   {
+   Debug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n",s);
+   return;
+   }
+
+rangep = SplitString(s,',');
+
+if ((n = ListLen(rangep)) != 2)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Int range format specifier for lval %s should be of form \"a,b\" but got %d items",lval,n);
+   ReportError(OUTPUT);
+   DeleteItemList(rangep);
+   return;
+   }
+
+for (ip = rangep; ip != NULL; ip=ip->next)
+   {
+   if (strcmp(s,"inf") == 0)
+      {
+      val = CF_INFINITY;
+      }
+   else if (strcmp(s,"now") == 0)
+      {
+      val = CFSTARTTIME;
+      }   
+   else
+      {
+      int a = -567;
+      
+      sscanf(s,"%d",&a);
+
+      if (a == -567)
+         {
+         snprintf(OUTPUT,CF_BUFSIZE,"Error reading integer %s\n",s);
+         ReportError(OUTPUT);
+         }
+      
+      val = a;
+      }
+   
+   if (val > max || val < min)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %d} is out of bounds (should be in [%s])",lval,s,val,range);
+      ReportError(OUTPUT);
+      DeleteItemList(rangep);
+      return;
+      }
+   }
+
+DeleteItemList(rangep);
+
+Debug("CheckParseIntRange - syntax verified\n\n");
+}
+
+/****************************************************************************/
+
 void CheckParseReal(char *lval,char *s,char *range)
     
 { struct Item *split,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
+  double a = -567.89;
   int n;
 
 Debug("\nCheckParseReal(%s => %s/%s)\n",lval,s,range);
 
 if (strcmp(s,"inf") == 0)
    {
-   yyerror("keyword \"inf\" has an integer value, cannot be used as real");
+   ReportError("keyword \"inf\" has an integer value, cannot be used as real");
+   return;
+   }
+
+if (IsCf3VarString(s))
+   {
+   Debug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n",s);
+   return;
+   }
+
+/* Numeric types are registered by range separated by comma str "min,max" */
+
+split = SplitString(range,',');
+
+if ((n = ListLen(split)) != 2)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
+   FatalError(OUTPUT);
+   }
+
+sscanf(split->name,"%lf",&min);
+sscanf(split->next->name,"%lf",&max);
+DeleteItemList(split);
+
+if (min == CF_HIGHINIT || max == CF_LOWINIT)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
+   FatalError(OUTPUT);
+   }
+   
+sscanf(s,"%lf",&a);
+
+if (a == -567)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading integer %s\n",s);
+   ReportError(OUTPUT);
+   }
+
+val = a;
+
+if (val > max || val < min)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Real item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",lval,s,val,range);
+   ReportError(OUTPUT);
+   }
+
+Debug("CheckParseReal - syntax verified\n\n");
+}
+
+/****************************************************************************/
+
+void CheckParseRealRange(char *lval,char *s,char *range)
+    
+{ struct Item *split,*rangep,*ip;
+  double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
+  double a;
+  int n;
+
+Debug("\nCheckParseRealRange(%s => %s/%s)\n",lval,s,range);
+
+if (*s == '[' || *s == '(')
+   {
+   ReportError("Range specification should not be enclosed in brackets - just \"a,b\"");
+   return;
+   }
+
+if (strcmp(s,"inf") == 0)
+   {
+   ReportError("keyword \"inf\" has an integer value, cannot be used as real");
+   return;
+   }
+
+if (IsCf3VarString(s))
+   {
+   Debug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n",s);
    return;
    }
 
@@ -611,15 +816,40 @@ if (min == CF_HIGHINIT || max == CF_LOWINIT)
    FatalError(OUTPUT);
    }
 
-val = atof(s);
+rangep = SplitString(s,',');
 
-if (val > max || val < min)
+if ((n = ListLen(rangep)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Real item in %s => { %s or %.3lf} in rvalue is out of bounds (should be in [%s])",lval,s,val,range);
-   yyerror(OUTPUT);
+   snprintf(OUTPUT,CF_BUFSIZE,"Real range format specifier in lval %s should be of form \"a,b\" but got %d items",lval,n);
+   ReportError(OUTPUT);
+   DeleteItemList(rangep);
+   return;
    }
 
-Debug("CheckParseReal - syntax verified\n\n");
+for (ip = rangep; ip != NULL; ip=ip->next)
+   {
+   a = -567.89;
+   
+   sscanf(s,"%lf",&a);
+   
+   if (a == -567.89)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
+      ReportError(OUTPUT);
+      }
+   
+   val = a;
+   
+   if (val > max || val < min)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Real range item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",lval,s,val,range);
+      ReportError(OUTPUT);
+      }
+   }
+
+DeleteItemList(rangep);
+
+Debug("CheckParseRealRange - syntax verified\n\n");
 }
 
 /****************************************************************************/
@@ -637,10 +867,8 @@ split = SplitString(range,',');
 
 if (!IsItemIn(split,s))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Selection on rhs of %s => { %s } is out of bounds",lval,s);
-   yyerror(OUTPUT);
-   snprintf(OUTPUT,CF_BUFSIZE,"Should be in [%s]\n",range);
-   yyerror(OUTPUT);
+   snprintf(OUTPUT,CF_BUFSIZE,"Selection on rhs of lval \'%s\' given as { %s } is out of bounds, should be in [%s]",lval,s,range);
+   ReportError(OUTPUT);
    err = true;
    }
 
@@ -648,7 +876,7 @@ DeleteItemList(split);
 
 if (!err)
    {
-   Debug("CheckParseInt - syntax verified\n\n");
+   Debug("CheckParseOpts - syntax verified\n\n");
    }
 }
 
@@ -697,7 +925,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
             }
 
          snprintf(OUTPUT,CF_BUFSIZE,"function %s() returns type %s but lhs requires %s",s,CF_DATATYPES[dt],CF_DATATYPES[dtype]);
-         yyerror(OUTPUT);
+         ReportError(OUTPUT);
          return;
          }
       else
@@ -708,7 +936,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    }
 
 snprintf(OUTPUT,CF_BUFSIZE,"Unknown built-in function %s()",s);
-yyerror(OUTPUT);
+ReportError(OUTPUT);
 }
 
 

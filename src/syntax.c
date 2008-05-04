@@ -584,17 +584,7 @@ else if (strcmp(s,"now") == 0)
    }
 else
    {
-   int a = -567;
-   
-   sscanf(s,"%d",&a);
-
-   if (a == -567)
-      {
-      snprintf(OUTPUT,CF_BUFSIZE,"Error reading integer %s\n",s);
-      ReportError(OUTPUT);
-      }
-   
-   val = a;
+   val = Str2Int(s);
    }
 
 if (val > max || val < min)
@@ -678,17 +668,7 @@ for (ip = rangep; ip != NULL; ip=ip->next)
       }   
    else
       {
-      int a = -567;
-      
-      sscanf(s,"%d",&a);
-
-      if (a == -567)
-         {
-         snprintf(OUTPUT,CF_BUFSIZE,"Error reading integer %s\n",s);
-         ReportError(OUTPUT);
-         }
-      
-      val = a;
+      val = Str2Int(s);
       }
    
    if (val > max || val < min)
@@ -711,7 +691,6 @@ void CheckParseReal(char *lval,char *s,char *range)
     
 { struct Item *split,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
-  double a = -567.89;
   int n;
 
 Debug("\nCheckParseReal(%s => %s/%s)\n",lval,s,range);
@@ -748,15 +727,7 @@ if (min == CF_HIGHINIT || max == CF_LOWINIT)
    FatalError(OUTPUT);
    }
    
-sscanf(s,"%lf",&a);
-
-if (a == -567)
-   {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading integer %s\n",s);
-   ReportError(OUTPUT);
-   }
-
-val = a;
+val = Str2Double(s);
 
 if (val > max || val < min)
    {
@@ -773,7 +744,6 @@ void CheckParseRealRange(char *lval,char *s,char *range)
     
 { struct Item *split,*rangep,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
-  double a;
   int n;
 
 Debug("\nCheckParseRealRange(%s => %s/%s)\n",lval,s,range);
@@ -828,17 +798,7 @@ if ((n = ListLen(rangep)) != 2)
 
 for (ip = rangep; ip != NULL; ip=ip->next)
    {
-   a = -567.89;
-   
-   sscanf(s,"%lf",&a);
-   
-   if (a == -567.89)
-      {
-      snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
-      ReportError(OUTPUT);
-      }
-   
-   val = a;
+   val = Str2Double(ip->name);
    
    if (val > max || val < min)
       {

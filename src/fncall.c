@@ -301,10 +301,16 @@ switch (this)
        rval = FnCallRRange(fp,expargs);
        break;
    case cfn_date:
+       rval = FnCallOnDate(fp,expargs);
        break;
    case cfn_ago:
+       rval = FnCallAgoDate(fp,expargs);
+       break;
+   case cfn_accum:
+       rval = FnCallAccumulatedDate(fp,expargs);
        break;
    case cfn_now:
+       rval = FnCallNow(fp,expargs);
        break;
    case cfn_unknown:
        break;

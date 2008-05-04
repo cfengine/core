@@ -1169,21 +1169,21 @@ struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =
      {
-     CF_INTRANGE,
-     CF_INTRANGE,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
      NULL
      };
   static enum cfdatatype argtypes[] =
       {
-      cf_int,
-      cf_int,
+      cf_str,
+      cf_str,
       cf_notype
       };
   
   struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
-  int tmp,range,result,from=-123,to=-123;
+  int tmp,from=CF_NOINT,to=CF_NOINT;
   
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -1193,9 +1193,29 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 sscanf((char *)(finalargs->item),"%d",&from);
 sscanf((char *)(finalargs->next->item),"%d",&to);
    
-if (from == -123 || to == -123)
+if (strcmp((char *)(finalargs->item),"inf") == 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
+   from = CF_INFINITY;
+   }
+
+if (strcmp((char *)(finalargs->item),"now") == 0)
+   {
+   from = CFSTARTTIME;
+   }
+
+if (strcmp((char *)(finalargs->next->item),"inf") == 0)
+   {
+   to = CF_INFINITY;
+   }
+
+if (strcmp((char *)(finalargs->next->item),"now") == 0)
+   {
+   to = CFSTARTTIME;
+   }
+
+if (from == CF_NOINT || to == CF_NOINT)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed int values %s=>%d,%s=>%d\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
    ReportError(OUTPUT);
    }
 
@@ -1241,7 +1261,7 @@ struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   char buffer[CF_BUFSIZE];
   int tmp,range,result;
-  double from=-123.45,to=-123.45;
+  double from=CF_NODOUBLE,to=CF_NODOUBLE;
   
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -1254,7 +1274,7 @@ to = atof((char *)(finalargs->next->item));
 sscanf((char *)(finalargs->item),"%lf",&from);
 sscanf((char *)(finalargs->next->item),"%lf",&to);
    
-if (from == -123.45 || to == -123.45)
+if (from == CF_NODOUBLE || to == CF_NODOUBLE)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
    ReportError(OUTPUT);
@@ -1281,3 +1301,276 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+/*********************************************************************/
+
+struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     "1970,3000",  /* year*/
+     "1,12",       /* month */
+     "1,31",       /* day */
+     "0,23",       /* hour */
+     "0,59",       /* min */
+     "0,59",       /* sec */
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  int d[6];
+  time_t cftime;
+  struct tm tmv;
+  enum cfdatetemplate i;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+rp = finalargs;
+
+for (i = 1; i < 6; i++)
+   {
+   if (rp != NULL)
+      {
+      d[i] = Str2Int(rp->item);
+      rp = rp->next;
+      }
+   }
+
+/* (year,month,day,hour,minutes,seconds) */
+
+tmv.tm_year = d[cfa_year] - 1900;
+tmv.tm_mon  = d[cfa_month] -1;
+tmv.tm_mday = d[cfa_day];
+tmv.tm_hour = d[cfa_hour];
+tmv.tm_min  = d[cfa_min];
+tmv.tm_sec  = d[cfa_sec];
+tmv.tm_isdst= -1;
+
+if ((cftime=mktime(&tmv))== -1)
+   {
+   error("Illegal time value");
+   }
+
+Debug("Time computed from input was: %s\n",ctime(&cftime));
+
+snprintf(buffer,CF_BUFSIZE-1,"%d",time);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallOnDate");
+   }
+
+/* end fn specific content */
+
+SetFnCallReturnStatus("on",FNCALL_SUCCESS,NULL,NULL);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     "0,50",       /* year*/
+     "0,11",       /* month */
+     "0,31",       /* day */
+     "0,23",       /* hour */
+     "0,59",       /* min */
+     "0,59",       /* sec */
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  time_t cftime;
+  int d[6];
+  struct tm tmv;
+  enum cfdatetemplate i;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+
+rp = finalargs;
+
+for (i = 1; i < 6; i++)
+   {
+   if (rp != NULL)
+      {
+      d[i] = Str2Int(rp->item);
+      rp = rp->next;
+      }
+   }
+
+/* (year,month,day,hour,minutes,seconds) */
+
+cftime = CFSTARTTIME;
+cftime -= d[cfa_sec];
+cftime -= d[cfa_min] * 60;
+cftime -= d[cfa_hour] * 3600;
+cftime -= d[cfa_day] * 24 * 3600;
+cftime -= d[cfa_month] * 30 * 24 * 3600;
+cftime -= d[cfa_year] * 365 * 24 * 3600;
+
+Debug("Total negative offset = %.1f minutes\n",(double)(CFSTARTTIME-cftime)/60.0);
+Debug("Time computed from input was: %s\n",ctime(&cftime));
+
+snprintf(buffer,CF_BUFSIZE-1,"%d",time);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallAgo");
+   }
+
+/* end fn specific content */
+
+SetFnCallReturnStatus("ago",FNCALL_SUCCESS,NULL,NULL);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     "0,1",        /* year*/
+     "0,12",       /* month */
+     "0,31",       /* day */
+     "0,23",       /* hour */
+     "0,59",       /* min */
+     "0,59",       /* sec */
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  int d[6],cftime;
+  struct tm tmv;
+  enum cfdatetemplate i;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+
+rp = finalargs;
+
+for (i = 1; i < 6; i++)
+   {
+   if (rp != NULL)
+      {
+      d[i] = Str2Int(rp->item);
+      rp = rp->next;
+      }
+   }
+
+/* (year,month,day,hour,minutes,seconds) */
+
+cftime = 0;
+cftime += d[cfa_sec];
+cftime += d[cfa_min] * 60;
+cftime += d[cfa_hour] * 3600;
+cftime += d[cfa_day] * 24 * 3600;
+cftime += d[cfa_month] * 30 * 24 * 3600;
+cftime += d[cfa_year] * 365 * 24 * 3600;
+
+snprintf(buffer,CF_BUFSIZE-1,"%d",cftime);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallAgo");
+   }
+
+/* end fn specific content */
+
+SetFnCallReturnStatus("accumulated",FNCALL_SUCCESS,NULL,NULL);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  int d[6];
+  time_t cftime;
+  struct tm tmv;
+  enum cfdatetemplate i;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+cftime = CFSTARTTIME;
+
+Debug("Time computed from input was: %s\n",ctime(&cftime));
+
+snprintf(buffer,CF_BUFSIZE-1,"%d",time);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallAgo");
+   }
+
+/* end fn specific content */
+
+SetFnCallReturnStatus("now",FNCALL_SUCCESS,NULL,NULL);
+rval.rtype = CF_SCALAR;
+return rval;
+}

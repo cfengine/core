@@ -187,10 +187,17 @@ void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes
 
 { int argnum,i;
   struct Rlist *rp = fp->args;
+  char id[CF_BUFSIZE];
 
+snprintf(id,CF_MAXVARSIZE,"built-in FnCall %s-arg",fp->name);
+  
 for (argnum = 0; argtemplate[argnum] != NULL; argnum++)
     {
-    CheckConstraintTypeMatch("arg",rp->item,rp->type,argtypes[argnum],argtemplate[argnum]);
+    if (rp->type != CF_FNCALL)
+       {
+       /* Nested functions will not match to lval so don't bother checking */
+       CheckConstraintTypeMatch(id,rp->item,rp->type,argtypes[argnum],argtemplate[argnum]);
+       }
     rp = rp->next;
     }
 

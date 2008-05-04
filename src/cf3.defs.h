@@ -44,6 +44,8 @@
 
 #define CF_NOPROMISEE 'X'
 #define CF_UNDEFINED -1
+#define CF_NODOUBLE -123.45
+#define CF_NOINT    -678
 
 #define CF_INBODY   1
 #define CF_INBUNDLE 2
@@ -272,6 +274,7 @@ enum cfspromises
 #define CF_HIGHINIT 99999
 #define CF_LOWINIT -999999
 
+#define CF_TIMERANGE "0,4026531839"
 #define CF_VALRANGE  "0,99999999999"
 #define CF_INTRANGE  "-99999999999,9999999999"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
@@ -281,7 +284,7 @@ enum cfspromises
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
 #define CF_ANYSTRING  ".*"
 #define CF_PATHRANGE  "[/\\].*"
-#define CF_TIMERANGE "0,4026531839"
+
 #define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
 
 /*************************************************************************/
@@ -344,6 +347,7 @@ enum fncalltype
    cfn_rrange,
    cfn_date,
    cfn_ago,
+   cfn_accum,
    cfn_now,
    cfn_persiststate,
    cfn_erasestate,
@@ -500,5 +504,21 @@ struct FnCallStatus  /* from builtin functions */
    char message[CF_BUFSIZE];
    char fncall_classes[CF_BUFSIZE]; /* set by functions in the form fncall_CLASS */
    };
+
+/*******************************************************************/
+/* Return value signalling                                         */
+/*******************************************************************/
+
+enum cfdatetemplate
+   {
+   cfa_year,
+   cfa_month,
+   cfa_day,
+   cfa_hour,
+   cfa_min,
+   cfa_sec
+   };
+
+
 
 #include "prototypes3.h"

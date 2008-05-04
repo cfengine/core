@@ -65,6 +65,9 @@ enum cfdatatype GetControlDatatype(char *varname,struct BodySyntax *bp);
 enum cfagenttype Agent2Type(char *name);
 enum cfsbundle Type2Cfs(char *name);
 int GetBoolean(char *val);
+int Str2Int(char *s);
+int Str2Double(char *s);
+
 
 /* logging.c */
 
@@ -314,6 +317,11 @@ struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs);
+
 
 /* server_transform.c */
 

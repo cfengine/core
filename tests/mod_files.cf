@@ -169,9 +169,9 @@ size      =>  irange("10000","10000000");
 owner     =>  { "mark", "cell", "motd" };
 group     =>  { "ecg", "mark" };
 
-ctime     => irange(ondate(2000,1,1,0,0,0),now);
+ctime     => irange(on(2000,1,1,0,0,0),now);
 mtime     => irange(ago(1,0,0,2,30,0),now);  
-atime     => irange(ondate(1997,2,22,0,0,0),now);
+atime     => irange(on(1997,2,22,0,0,0),now);
 
 exec_regex  => "/usr/bin/file $(this) (.*ascii.*)";
 filetypes   => { "dir", "link" };

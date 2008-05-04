@@ -133,3 +133,47 @@ else
    return true;
    }
 }
+
+/****************************************************************************/
+
+int Str2Int(char *s)
+
+{ int a = CF_NOINT;
+
+if (s == NULL)
+   {
+   return CF_NOINT;
+   }
+ 
+sscanf(s,"%d",&a);
+ 
+if (a == CF_NOINT)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
+   ReportError(OUTPUT);
+   }
+
+return a;
+}
+
+/****************************************************************************/
+
+int Str2Double(char *s)
+
+{ double a = CF_NODOUBLE;
+ 
+if (s == NULL)
+   {
+   return CF_NODOUBLE;
+   }
+
+sscanf(s,"%d",&a);
+ 
+if (a == CF_NODOUBLE)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
+   ReportError(OUTPUT);
+   }
+
+return a;
+}

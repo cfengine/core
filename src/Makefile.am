@@ -83,7 +83,6 @@ noinst_HEADERS =							\
 	cf.defs.h							\
 	prototypes.h							\
 	cf.extern.h							\
-	promises.h							\
 	prototypes3.h							\
 	cf3.defs.h							\
 	cf3.server.h							\

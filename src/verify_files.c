@@ -1,11 +1,7 @@
 /* 
+   Copyright (C) 2008 - Mark Burgess
 
-        Copyright (C) 1994-
-        Free Software Foundation, Inc.
-
-   This file is part of GNU cfengine - written and maintained 
-   by Mark Burgess, Dept of Computing and Engineering, Oslo College,
-   Dept. of Theoretical physics, University of Oslo
+   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,6 +13,7 @@
    GNU General Public License for more details.
  
   You should have received a copy of the GNU General Public License
+  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -60,13 +57,13 @@ void FindFilePromiserObjects(struct Promise *pp)
    }
 else // Default is to expand regex paths
    {
-   SearchForFilePromisers(pp->promiser,pp,VerifyFilePromise);
+   LocateFilePromiserGroup(pp->promiser,pp,VerifyFilePromise);
    }
 }
 
 /*****************************************************************************/
 
-void SearchForFilePromisers(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr))
+void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr))
 
 { struct Item *path,*ip,*remainder = NULL;
   char pbuffer[CF_BUFSIZE];
@@ -74,7 +71,7 @@ void SearchForFilePromisers(char *wildpath,struct Promise *pp,void (*fnptr)(char
   int count = 0,lastnode = false, expandregex = false;
   uid_t agentuid = getuid();
 
-Debug("SearchForFilePromisers(%s)\n",wildpath);
+Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 if (!IsPathRegex(wildpath))
    {
@@ -109,7 +106,7 @@ for (ip = path; ip != NULL; ip=ip->next)
 
    if (BufferOverflow(pbuffer,ip->name))
       {
-      CfLog(cferror,"Buffer overflow in SearchForFilePromisers\n","");
+      CfLog(cferror,"Buffer overflow in LocateFilePromiserGroup\n","");
       return;
       }
 
@@ -180,7 +177,7 @@ if (expandregex) /* Expand one regex link and hand down */
 
       /* The next level might still contain regexs, so go again*/
 
-      SearchForFilePromisers(nextbuffer,pp,fnptr);
+      LocateFilePromiserGroup(nextbuffer,pp,fnptr);
       ChopLastNode(nextbuffer);
       }
    
@@ -206,6 +203,7 @@ void VerifyFilePromise(char *path,struct Promise *pp)
 { struct stat objstat;
   int exists = false;
   int have_rename,have_delete,have_create,have_perms,have_copyfrom;
+  int have_edit,have_editline,have_editxml;
   
 /*
   
@@ -230,28 +228,58 @@ have_delete = GetBooleanConstraint("delete",pp->conlist);
 have_create = GetBooleanConstraint("create",pp->conlist);
 have_perms = GetBooleanConstraint("perms",pp->conlist);
 have_copyfrom = GetBooleanConstraint("copyfrom",pp->conlist);
+have_editline = GetBooleanConstraint("edit_line",pp->conlist);
+have_editxml = GetBooleanConstraint("edit_xml",pp->conlist);
+have_edit = have_editline || have_editxml;
 
-if (have_delete && (have_create||have_copyfrom))
+if (have_editline && have_editxml)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be created/deleted at the same time",path);
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
    CfLog(cferror,OUTPUT,"");
    PromiseRef(pp);
    }
 
+if (have_delete && (have_create||have_copyfrom||have_edit||have_rename))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(pp);
+   }
+
+
 if (stat(path,&objstat) == -1)
    {
    exists = false;
-//   DoCreate();
+// if (S_SIDIR(path))  DoCreate();
    }
 else
    {
    exists = true;
-//   DoRename();
 //   DoTidy();
    }
 
+// if (S_SIDIR(path))
+// int RecursiveCheck(char *name,int recurse,int rlevel,struct File *ptr,struct stat *sb)
+// make a pluging handler
+
+// The handler needs to return a clear protocol to set exit status
+
 //DoCreate();
 //DoCopy();
-//DoACL();
+//DoPerms();
 //DoEdit();
+//DoRename();
+
+}
+
+/*******************************************************************/
+/* Level                                                           */
+/*******************************************************************/
+
+
+void DoCreate()
+
+{
+// if filename /a/b/c/.  make directory
+     
 }

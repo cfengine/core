@@ -258,6 +258,8 @@ pp->promisee = promisee;
 pp->petype = petype;      /* rtype of promisee - list or scalar recipient? */
 pp->classes = spe;
 pp->conlist = NULL;
+pp->done = false;
+pp->donep = &(pp->done);
 
 pp->agentsubtype = type->name; /* Cache the typename */
 pp->ref = NULL;                /* cache a reference if given*/

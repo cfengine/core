@@ -40,7 +40,7 @@ void GenericInitialize(int argc,char **argv,char *agents)
   char name[CF_BUFSIZE];
   enum cfagenttype ag = Agent2Type(agents);
 
-Initialize(argc,argv);
+InitializeGA(argc,argv);
 SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
@@ -79,7 +79,8 @@ VerifyPromises(cf_common);
 
 fprintf(FOUT,"%s",CFH[0][1]);
 fclose(FOUT);
-printf("Wrote expansion summary to %s\n",name);
+
+Verbose("Wrote expansion summary to %s\n",name);
 
 if (ERRORCOUNT > 0)
    {
@@ -131,7 +132,7 @@ switch (ag)
 /* Level 1                                                         */
 /*******************************************************************/
 
-void Initialize(int argc,char *argv[])
+void InitializeGA(int argc,char *argv[])
 
 { char *sp, **cfargv;;
  int i,j, cfargc, seed;
@@ -139,16 +140,57 @@ void Initialize(int argc,char *argv[])
   unsigned char s[16];
   char ebuff[CF_EXPANDSIZE];
   
-PreLockState();
-
 #ifndef HAVE_REGCOMP
 re_syntax_options |= RE_INTERVALS;
 #endif
-  
+
+/* Define trusted directories */
+
+if (getuid() > 0)
+   {
+   char *homedir;
+   if ((homedir = getenv("HOME")) != NULL)
+      {
+      strncpy(CFWORKDIR,homedir,CF_BUFSIZE-10);
+      strcat(CFWORKDIR,"/.cfagent");
+      if (strlen(CFWORKDIR) > CF_BUFSIZE/2)
+         {
+         FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
+         }
+      }
+   }
+else
+   {
+   strcpy(CFWORKDIR,WORKDIR);
+   }
+
+sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
+
+if (stat(ebuff,&statbuf) == -1)
+   {
+   CreateEmptyFile(ebuff);
+   }
+
+sprintf(ebuff,"%s/state/cf_rootprocs",CFWORKDIR);
+
+if (stat(ebuff,&statbuf) == -1)
+   {
+   CreateEmptyFile(ebuff);
+   }
+
+sprintf(ebuff,"%s/state/cf_otherprocs",CFWORKDIR);
+
+if (stat(ebuff,&statbuf) == -1)
+   {
+   CreateEmptyFile(ebuff);
+   }
+
+/* Init crypto stuff */
+
 OpenSSL_add_all_algorithms();
 OpenSSL_add_all_digests();
 ERR_load_crypto_strings();
-CheckWorkDirectories();
+CheckWorkingDirectories();
 RandomSeed();
 LoadSecretKeys();
 
@@ -222,7 +264,7 @@ CheckOpts(argc,argv);
 
 if (!MINUSF)
    {
-   strcpy(VINPUTFILE,"../tests/promises.cf");
+   snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/promises.cf",CFWORKDIR);
    }
 
 CfenginePort();
@@ -230,6 +272,8 @@ StrCfenginePort();
 FOUT = stdout;
 AddClassToHeap("any");
 strcpy(VPREFIX,"cfengine3");
+VIFELAPSED = 1;
+VEXPIREAFTER = 1;
 }
 
 /*******************************************************************/
@@ -509,6 +553,172 @@ if (VERBOSE||DEBUG)
    }
 Verbose("      .........................................................\n");
 Verbose("\n");
+}
+
+
+/*********************************************************************/
+
+void CheckWorkingDirectories()
+
+{ struct stat statbuf;
+  int result;
+  char *sp,vbuff[CF_BUFSIZE];
+
+Debug("CheckWorkingDirectories()\n");
+
+if (uname(&VSYSNAME) == -1)
+   {
+   perror("uname ");
+   FatalError("Uname couldn't get kernel name info!!\n");
+   }
+ 
+snprintf(LOGFILE,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+VSETUIDLOG = strdup(LOGFILE); 
+ 
+snprintf(vbuff,CF_BUFSIZE,"%s/.",CFWORKDIR);
+MakeDirectoriesFor(vbuff,'n');
+
+Verbose("Making sure that locks are private...\n"); 
+
+if (chown(CFWORKDIR,getuid(),getgid()) == -1)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",CFWORKDIR,getuid(),getgid());
+   CfLog(cferror,OUTPUT,"chown");
+   }
+ 
+if (stat(CFWORKDIR,&statbuf) != -1)
+   {
+   /* change permissions go-w */
+   chmod(CFWORKDIR,(mode_t)(statbuf.st_mode & ~022));
+   }
+
+snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
+MakeDirectoriesFor(vbuff,'n');
+
+snprintf(CFPRIVKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.priv",CFWORKDIR);
+snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
+
+Verbose("Checking integrity of the state database\n");
+snprintf(vbuff,CF_BUFSIZE,"%s/state",CFWORKDIR);
+
+if (stat(vbuff,&statbuf) == -1)
+   {
+   snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
+   MakeDirectoriesFor(vbuff,'n');
+   
+   if (chown(vbuff,getuid(),getgid()) == -1)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
+      CfLog(cferror,OUTPUT,"chown");
+      }
+
+   chmod(vbuff,(mode_t)0755);
+   }
+else 
+   {
+   if (statbuf.st_mode & 022)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: State directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
+      CfLog(cferror,OUTPUT,"");
+      }
+   }
+
+Verbose("Checking integrity of the module directory\n"); 
+
+snprintf(vbuff,CF_BUFSIZE,"%s/modules",CFWORKDIR);
+if (stat(vbuff,&statbuf) == -1)
+   {
+   snprintf(vbuff,CF_BUFSIZE,"%s/modules/.",CFWORKDIR);
+   MakeDirectoriesFor(vbuff,'n');
+   
+   if (chown(vbuff,getuid(),getgid()) == -1)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
+      CfLog(cferror,OUTPUT,"chown");
+      }
+
+   chmod(vbuff,(mode_t)0700);
+   }
+else 
+   {
+   if (statbuf.st_mode & 022)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: Module directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
+      CfLog(cferror,OUTPUT,"");
+      }
+   }
+
+Verbose("Checking integrity of the input data for RPC\n"); 
+
+snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in",CFWORKDIR);
+
+if (stat(vbuff,&statbuf) == -1)
+   {
+   snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in/.",CFWORKDIR);
+   MakeDirectoriesFor(vbuff,'n');
+   
+   if (chown(vbuff,getuid(),getgid()) == -1)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
+      CfLog(cferror,OUTPUT,"chown");
+      }
+
+   chmod(vbuff,(mode_t)0700);
+   }
+else 
+   {
+   if (statbuf.st_mode & 077)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
+      FatalError(OUTPUT);
+      }
+   }
+
+Verbose("Checking integrity of the output data for RPC\n"); 
+
+snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out",CFWORKDIR);
+
+if (stat(vbuff,&statbuf) == -1)
+   {
+   snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out/.",CFWORKDIR);
+   MakeDirectoriesFor(vbuff,'n');
+
+   if (chown(vbuff,getuid(),getgid()) == -1)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
+      CfLog(cferror,OUTPUT,"chown");
+      }
+
+   chmod(vbuff,(mode_t)0700);   
+   }
+else
+   {
+   if (statbuf.st_mode & 077)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
+      FatalError(OUTPUT);
+      }
+   }
+ 
+Verbose("Checking integrity of the PKI directory\n");
+
+snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys",CFWORKDIR);
+    
+if (stat(vbuff,&statbuf) == -1)
+   {
+   snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys/.",CFWORKDIR);
+   MakeDirectoriesFor(vbuff,'n');
+
+   chmod(vbuff,(mode_t)0700); /* Keys must be immutable to others */
+   }
+else
+   {
+   if (statbuf.st_mode & 077)
+      {
+      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: Private key directory %s/ppkeys (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
+      FatalError(OUTPUT);
+      }
+   }
 }
 
 /*******************************************************************/

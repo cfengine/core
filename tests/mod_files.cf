@@ -9,15 +9,16 @@ bundle agent filetest()
    vars:
 
       "filelist" slist => { "/tmp/bla1", "/tmp/bla2" };
+
    files:
 
-      "/path/file.*"  
+      "/path/file.*" -> "me"
 
             pathtype     => "regex",
             perms        => myperms,
             file_select  => myfilter,
             changes      => tripwire,
-            depth_search => recurse("-2.3");
+            depth_search => recurse("2");
 
       "$(filelist)"
 
@@ -38,13 +39,17 @@ bundle agent filetest()
 
       "/usr/local"    
 
-            linkto    => linkdetails("/site/mountpoint/local");
+            link_from     => linkdetails("/site/mountpoint/local");
+
+      "/usr/local/dir_of_links"    
+
+            link_from     => link_with_override("/site/mountpoint/local/sourcedir");
 
 
       "/var" 
 
             depth_search => recurse("inf"),
-            delete       => tidymask,
+            delete       => tidypolicy,    # combined with file_select now
             rename       => rotateme,
             repository   => "/override";
    }
@@ -54,8 +59,8 @@ bundle agent filetest()
 body depth_search recurse(d)
 
 {
-depth   => "$(d)";
-include => { ".*.exe", ".*.com" };
+depth        => "$(d)";
+include_dirs => { ".*.exe", ".*.com" };
 }
 
 #########################################################
@@ -121,13 +126,23 @@ linux::
 
 #########################################################
 
-body linkto linkdetails(tofile)
+body linkfrom linkdetails(tofile)
 
 {
-link_type     => "symbolic";   # /absolute/abs/hard/relative/rel
-copy_patterns => "";           # regex list
-deadlinks     => "kill";       #/force
+source        => "$(tofile)";
+link_type     => "symlink";
 when_no_file  => "force";      # kill
+}
+
+#########################################################
+
+body linkfrom link_with_override(tofile)
+
+{
+source        => "$(tofile)";
+link_type     => "symlink";          # /absolute/abs/hard/relative/rel
+when_no_file  => "force";             # kill
+link_children => "true";
 }
 
 #########################################################
@@ -135,8 +150,8 @@ when_no_file  => "force";      # kill
 body transaction controlbody
 
 {
-loglevel    => "usr1";
-reportlevel => "inform";
+log_level    => "usr1";
+report_level => "inform";
 ifelapsed   => "10";
 expireafter => "20";
 }
@@ -160,35 +175,32 @@ body file_select myfilter
 #
 
 {
-name => { ".*.asc" };                   # regex matching file name
+leafname => { ".*.asc" };                   # regex matching file name
 path => { "/var/.*/mail", "/usr/.*/mail" };
 
-mode      =>  "700";
-size      =>  irange("10000","10000000");
+search_mode      =>  "700";
+search_size      =>  irange("10000","10000000");
 
-owner     =>  { "mark", "cell", "motd" };
-group     =>  { "ecg", "mark" };
+search_owner     =>  { "mark", "cell", "motd" };
+search_group     =>  { "ecg", "mark" };
 
 ctime     => irange(on(2000,1,1,0,0,0),now);
 mtime     => irange(ago(1,0,0,2,30,0),now);  
 atime     => irange(on(1997,2,22,0,0,0),now);
 
-exec_regex  => "/usr/bin/file $(this) (.*ascii.*)";
-filetypes   => { "dir", "link" };
+exec_regex  => "/usr/bin/file $(this.file) (.*ascii.*)";
+filetypes   => { "dir", "symlink" };
 issymlinkto => { "/dev/null", "/dev/tyyS0"};
-result      => "type&mode"; 
+file_result => "type&mode"; 
 }
 
 #########################################################
 
-body delete tidymask
+body delete tidypolicy
 
 {
-age      => "0,1";
-size     => irange(50000,inf); # number/empty
-age_type => "mtime";           #ctime/mtime/atime
 dirlinks => "delete";          #keep/tidy/delete
-rmdirs   => "yes";             #[true/all]/[false/none]/sub
+rmdirs   => "all";             #none/all/sub
 links    => "stop";            #stop/keep/traverse/tidy
 }
 
@@ -198,10 +210,7 @@ body rename rotateme
 
 {
 newname => "filename";
-#type=plain/file/link/links
 rotate => "4"; # 0 means empty file
-size   => irange(1,2);
-#action => "nop";  #disable/warn
 }
 
 

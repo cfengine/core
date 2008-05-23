@@ -401,6 +401,8 @@ OpenSniffer();
    LeapDetection();
    ArmClasses(averages,timekey);
 
+   ZeroArrivals();
+
    if (TCPDUMP)
       {
       Sniff();
@@ -675,16 +677,10 @@ void GetQ()
 
 { int i;
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   THIS[i] = 0.0;
-   }
- 
 Debug("========================= GET Q ==============================\n");
 
 ENTROPIES = NULL;
 
-ZeroArrivals();
 GatherProcessData();
 GatherCPUData();
 GatherLoadData(); 
@@ -693,7 +689,6 @@ GatherSocketData();
 GatherSNMPData();
 GatherSensorData();
 }
-
 
 /*********************************************************************/
 
@@ -740,7 +735,6 @@ for (i = 0; i < CF_OBSERVABLES; i++)
        
    This[i] = RejectAnomaly(THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
 
-
    Debug("Current %s.q %lf\n",OBS[i][0],currentvals->Q[i].q);
    Debug("Current %s.var %lf\n",OBS[i][0],currentvals->Q[i].var);
    Debug("Current %s.ex %lf\n",OBS[i][0],currentvals->Q[i].expect);
@@ -755,13 +749,16 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
    LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
 
-   Debug("New %s.q %lf\n",OBS[i][0],newvals.Q[i].q);
-   Debug("New %s.var %lf\n",OBS[i][0],newvals.Q[i].var);
-   Debug("New %s.ex %lf\n",OBS[i][0],newvals.Q[i].expect);
-
-   
+   Verbose("New %s.q %lf\n",OBS[i][0],newvals.Q[i].q);
+   Verbose("New %s.var %lf\n",OBS[i][0],newvals.Q[i].var);
+   Verbose("New %s.ex %lf\n",OBS[i][0],newvals.Q[i].expect);
 
    Verbose("%s = %lf -> (%f#%f) local [%f#%f]\n",OBS[i][0],This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+
+   if (This[i] > 0)
+      {
+      Verbose("Storing %.2f in %s\n",This[i],OBS[i][0]);
+      }
    }
    
 UpdateAverages(t,newvals);
@@ -800,11 +797,6 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    /* Note AVG should contain n+1 but not SUM, hence funny increments */
    
    LDT_AVG[i] = LDT_AVG[i] + THIS[i]/((double)LDT_BUFSIZE + 1.0);
-
-   if (THIS[i] > 0)
-      {
-      Verbose("Storing %.2f in %s\n",THIS[i],OBS[i][0]);
-      }
 
    d = (double)(LDT_BUFSIZE * (LDT_BUFSIZE + 1)) * LDT_AVG[i];
 
@@ -1004,8 +996,9 @@ void AnalyzeArrival(char *arrival)
 
 /* This coarsely classifies TCP dump data */
     
-{ char src[CF_BUFSIZE],dest[CF_BUFSIZE], flag = '.';
-  
+{ char src[CF_BUFSIZE],dest[CF_BUFSIZE], flag = '.', *arr;
+  int isme_dest, isme_src;
+
 src[0] = dest[0] = '\0';
  
 if (strstr(arrival,"listening"))
@@ -1017,24 +1010,49 @@ Chop(arrival);
 
  /* Most hosts have only a few dominant services, so anomalies will
     show up even in the traffic without looking too closely. This
-    will apply only to the main interface .. not multifaces */
- 
-if (strstr(arrival,"tcp") || strstr(arrival,"ack"))
+    will apply only to the main interface .. not multifaces 
+
+    New format in tcpdump
+    
+    IP (tos 0x10, ttl 64, id 14587, offset 0, flags [DF], proto TCP (6), length 692) 128.39.89.232.22 > 84.215.40.125.48022: P 1546432:1547072(640) ack 1969 win 1593 <nop,nop,timestamp 25662737 1631360>
+    IP (tos 0x0, ttl 251, id 14109, offset 0, flags [DF], proto UDP (17), length 115) 84.208.20.110.53 > 192.168.1.103.32769: 45266 NXDomain 0/1/0 (87)
+arp who-has 192.168.1.1 tell 192.168.1.103
+arp reply 192.168.1.1 is-at 00:1d:7e:28:22:c6
+IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto ICMP (1), length 84) 192.168.1.103 > 128.39.89.10: ICMP echo request, id 48474, seq 1, length 64
+IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto ICMP (1), length 84) 192.168.1.103 > 128.39.89.10: ICMP echo request, id 48474, seq 2, length 64
+
+ */
+
+for (arr = strstr(arrival,"length"); arr != NULL && *arr != ')'; arr++)
+   {
+   }
+
+if (arr == NULL)
+   {
+   arr = arrival;
+   }
+else
+   {
+   arr++;
+   }
+
+if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
    {              
-   sscanf(arrival,"%s %*c %s %c ",src,dest,&flag);
+   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
    DePort(src);
    DePort(dest);
-   Debug("FROM %s, TO %s, Flag(%c)\n",src,dest,flag);
-    
+   isme_dest = IsInterfaceAddress(dest);
+   isme_src = IsInterfaceAddress(src);
+   
     switch (flag)
        {
        case 'S': Debug("%1.1f: TCP new connection from %s to %s - i am %s\n",ITER,src,dest,VIPADDRESS);
-           if (IsInterfaceAddress(dest))
+           if (isme_dest)
               {
               THIS[ob_tcpsyn_in]++;
               IncrementCounter(&(NETIN_DIST[tcpsyn]),src);
               }
-           else if (IsInterfaceAddress(src))
+           else if (isme_src)
               {
               THIS[ob_tcpsyn_out]++;
               IncrementCounter(&(NETOUT_DIST[tcpsyn]),dest);
@@ -1042,12 +1060,12 @@ if (strstr(arrival,"tcp") || strstr(arrival,"ack"))
            break;
            
        case 'F': Debug("%1.1f: TCP end connection from %s to %s\n",ITER,src,dest);
-           if (IsInterfaceAddress(dest))
+           if (isme_dest)
               {
               THIS[ob_tcpfin_in]++;
               IncrementCounter(&(NETIN_DIST[tcpfin]),src);
               }
-           else if (IsInterfaceAddress(src))
+           else if (isme_src)
               {
               THIS[ob_tcpfin_out]++;
               IncrementCounter(&(NETOUT_DIST[tcpfin]),dest);
@@ -1056,12 +1074,12 @@ if (strstr(arrival,"tcp") || strstr(arrival,"ack"))
            
        default: Debug("%1.1f: TCP established from %s to %s\n",ITER,src,dest);
            
-           if (IsInterfaceAddress(dest))
+           if (isme_dest)
               {
               THIS[ob_tcpack_in]++;
               IncrementCounter(&(NETIN_DIST[tcpack]),src);
               }
-           else if (IsInterfaceAddress(src))
+           else if (isme_src)
               {
               THIS[ob_tcpack_out]++;
               IncrementCounter(&(NETOUT_DIST[tcpack]),dest);
@@ -1072,54 +1090,60 @@ if (strstr(arrival,"tcp") || strstr(arrival,"ack"))
    }
 else if (strstr(arrival,".53"))
    {
-   sscanf(arrival,"%s %*c %s %c ",src,dest,&flag);
+   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
    DePort(src);
    DePort(dest);
+   isme_dest = IsInterfaceAddress(dest);
+   isme_src = IsInterfaceAddress(src);
    
    Debug("%1.1f: DNS packet from %s to %s\n",ITER,src,dest);
-   if (IsInterfaceAddress(dest))
+   if (isme_dest)
       {
       THIS[ob_dns_in]++;
       IncrementCounter(&(NETIN_DIST[dns]),src);
       }
-   else if (IsInterfaceAddress(src))
+   else if (isme_src)
       {
       THIS[ob_dns_out]++;
       IncrementCounter(&(NETOUT_DIST[tcpack]),dest);
       }       
    }
-else if (strstr(arrival,"udp"))
+else if (strstr(arrival,"proto UDP"))
    {
-   sscanf(arrival,"%s %*c %s %c ",src,dest,&flag);
+   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
    DePort(src);
    DePort(dest);
+   isme_dest = IsInterfaceAddress(dest);
+   isme_src = IsInterfaceAddress(src);
    
    Debug("%1.1f: UDP packet from %s to %s\n",ITER,src,dest);
-   if (IsInterfaceAddress(dest))
+   if (isme_dest)
       {
       THIS[ob_udp_in]++;
       IncrementCounter(&(NETIN_DIST[udp]),src);
       }
-   else if (IsInterfaceAddress(src))
+   else if (isme_src)
       {
       THIS[ob_udp_out]++;
       IncrementCounter(&(NETOUT_DIST[udp]),dest);
       }       
    }
-else if (strstr(arrival,"icmp"))
+else if (strstr(arrival,"proto ICMP"))
    {
-   sscanf(arrival,"%s %*c %s %c ",src,dest,&flag);
+   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
    DePort(src);
    DePort(dest);
+   isme_dest = IsInterfaceAddress(dest);
+   isme_src = IsInterfaceAddress(src);
    
    Debug("%1.1f: ICMP packet from %s to %s\n",ITER,src,dest);
    
-   if (IsInterfaceAddress(dest))
+   if (isme_dest)
       {
       THIS[ob_icmp_in]++;
       IncrementCounter(&(NETIN_DIST[icmp]),src);
       }
-   else if (IsInterfaceAddress(src))
+   else if (isme_src)
       {
       THIS[ob_icmp_out]++;
       IncrementCounter(&(NETOUT_DIST[icmp]),src);
@@ -1128,6 +1152,8 @@ else if (strstr(arrival,"icmp"))
 else
    {
    Debug("%1.1f: Miscellaneous undirected packet (%.100s)\n",ITER,arrival);
+   
+   THIS[ob_tcpmisc_in]++;
    
    /* Here we don't know what source will be, but .... */
    
@@ -1140,8 +1166,6 @@ else
       }
    
    DePort(src);
-   
-   THIS[ob_tcpmisc_in]++;
    
    if (strstr(arrival,".138"))
       {
@@ -2037,6 +2061,7 @@ if (delta > 4.0*dev)  /* IR */
    }
 else
    {
+   Verbose("Value accepted\n");
    return new;
    }
 }

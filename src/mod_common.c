@@ -84,10 +84,11 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"action",cf_opts,"fix,warn,nop"},
    {"ifelapsed",cf_int,CF_VALRANGE},
    {"expireafter",cf_int,CF_VALRANGE},
-   {"logstring",cf_str,""},
-   {"loglevel",cf_str,""},
+   {"log_string",cf_str,""},
+   {"log_level",cf_str,"inform,verbose,debug"},
    {"audit",cf_opts,CF_BOOL},
-   {"reportlevel",cf_opts,"inform,verbose,debug,logonly"},
+   {"background",cf_opts,CF_BOOL},
+   {"report_level",cf_opts,"inform,verbose,debug,logonly"},
    {NULL,cf_notype,NULL}
    };
 
@@ -95,12 +96,10 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
 
 struct BodySyntax CF_DEFINECLASS_BODY[] =
    {
-   {"success",cf_slist,CF_IDRANGE},
-   {"reportsuccess",cf_str,CF_ANYSTRING},
-   {"failure",cf_slist,CF_IDRANGE},
-   {"reportfailure",cf_str,CF_ANYSTRING},
-   {"alert",cf_slist,CF_IDRANGE},
-   {"reportalert",cf_str,CF_ANYSTRING},
+   {"on_change",cf_slist,CF_IDRANGE},
+   {"on_failure",cf_slist,CF_IDRANGE},
+   {"on_denied",cf_slist,CF_IDRANGE},
+   {"on_timeout",cf_slist,CF_IDRANGE},
    {NULL,cf_notype,NULL}
    };
 
@@ -153,6 +152,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
 
 struct BodySyntax CFA_CONTROLBODY[] =
    {
+   {"maxconnections",cf_int,CF_VALRANGE},
    {"abortclasses",cf_slist,".*"},
    {"addclasses",cf_slist,".*"},
    {"agentaccess",cf_slist,".*"},
@@ -184,7 +184,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"logtidyhomefiles",cf_opts,CF_BOOL},
    {"nonalphanumfiles",cf_opts,CF_BOOL},
    {"repchar",cf_str,"."},
-   {"repository",cf_str,CF_PATHRANGE},
+   {"default_repository",cf_str,CF_PATHRANGE},
    {"sensiblecount",cf_int,CF_VALRANGE},
    {"sensiblesize",cf_int,CF_VALRANGE},
    {"showactions",cf_opts,CF_BOOL},
@@ -193,7 +193,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"suspiciousnames",cf_slist,""},
    {"syslog",cf_opts,CF_BOOL},
    {"timezone",cf_str,""},
-   {"timeout",cf_int,CF_VALRANGE},
+   {"default_timeout",cf_int,CF_VALRANGE},
    {"verbose",cf_opts,CF_BOOL},
    {"warnings",cf_opts,CF_BOOL},
    {"warnnonuserfiles",cf_opts,CF_BOOL},

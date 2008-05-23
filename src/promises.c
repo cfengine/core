@@ -85,9 +85,12 @@ pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient
 pcopy->bundle = strdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->agentsubtype = pp->agentsubtype;
-
+pcopy->done = pp->done;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
+pcopy->cache = NULL;
+pcopy->this_server = NULL;
+pcopy->donep = pp->donep;
 
 Debug("Copying promise constraints\n\n");
 
@@ -148,6 +151,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          
          if (!MapBodyArgs("body",fp->args,bp->args))
             {
+            ERRORCOUNT++;
             snprintf(OUTPUT,CF_BUFSIZE,"Number of arguments does not match for body reference "
                      "\"%s\" in promise at line %d of %s\n",
                      bodyname,pp->lineno,(pp->audit)->filename);
@@ -243,6 +247,8 @@ if (pcopy->promiser == NULL || pcopy->classes == NULL)
    FatalError("memory");
    }
 
+pcopy->done = pp->done;
+pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->bundle = strdup(pp->bundle);
@@ -250,6 +256,8 @@ pcopy->ref = pp->ref;
 pcopy->agentsubtype = pp->agentsubtype;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
+pcopy->cache = NULL;
+pcopy->this_server = NULL;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
@@ -295,6 +303,11 @@ return NULL;
 void DeletePromises(struct Promise *pp)
 
 {
+if (pp->this_server != NULL)
+   {
+   free(pp->this_server);
+   }
+ 
 if (pp->next != NULL)
    {
    DeletePromises(pp->next);

@@ -1,0 +1,80 @@
+########################################################
+#
+# Simple test copy from server connection to cfServer
+#
+########################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "testbundle"
+                         };
+   }
+
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    copy_from => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+    perms => system,
+    depth_search => recurse("inf");
+
+}
+
+#########################################################
+
+body perms system
+
+{
+mode  => "0644";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copyfrom mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" };
+backup      => "true";                   #/false/timestamp
+}
+
+#########################################################
+# Server config
+#########################################################
+
+
+body server control 
+{
+allowconnects         => { "127.0.0.1"};
+allowallconnects      => { "127.0.0.1" };
+trustkeysfrom         => { "127.0.0.1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+    "/home/mark/LapTop"
+
+       admit   => { "127.0.0.1" };
+}

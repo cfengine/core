@@ -1,0 +1,55 @@
+#######################################################
+#
+# Test dead link removal
+#
+#######################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "testbundle"
+                         };
+   }
+
+
+############################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/test_create" 
+
+      depth_search => recurse("inf"),
+      perms => modestuff,
+      transaction => tell_me;
+
+}
+
+############################################
+
+body depth_search recurse(d)
+
+{
+rmdeadlinks => "true";
+depth => "$(d)";
+}
+
+############################################
+
+body perms modestuff
+
+{
+mode => "o-w";
+}
+
+############################################
+
+body transaction tell_me
+
+{
+report_level => "inform";
+}

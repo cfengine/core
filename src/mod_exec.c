@@ -64,7 +64,7 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
   {"owner",cf_slist,""},
   {"group",cf_slist,""},
   {"chdir",cf_str,"/.*"},
-  {"chroot",cf_slist,"/.*"},
+  {"chroot",cf_str,"/.*"},
   {NULL,cf_notype,NULL}
   };
 
@@ -77,8 +77,7 @@ struct BodySyntax CF_EXEC_BODIES[] =
    {"args",cf_str,""},
    {"containment",cf_body,CF_EXECCONTAIN_BODY},
    {"module",cf_opts,CF_BOOL},
-   {"timeout",cf_int,"1,3600"},
-   {"background",cf_opts,CF_BOOL},
+   {"exec_timeout",cf_int,"1,3600"},
    {NULL,cf_notype,NULL}
    };
 

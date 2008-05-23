@@ -46,12 +46,15 @@ extern struct SubTypeSyntax CF_NOSTYPE;
 extern char *CF_DATATYPES[];
 extern char *CF_AGENTTYPES[];
 
+extern int CFA_MAXTHREADS;
 extern char THIS_AGENT[CF_MAXVARSIZE];
 extern enum cfagenttype THIS_AGENT_TYPE;
 extern short INSTALL_SKIP;
 extern short SHOWREPORTS;
 extern int FACILITY;
 extern time_t PROMISETIME;
+
+extern struct Rlist *SERVERLIST;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

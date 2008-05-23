@@ -44,11 +44,15 @@ FILE *FOUT = NULL;
 short XML = false;
 struct FnCallStatus FNCALL_STATUS;
 
+int CFA_MAXTHREADS = 10;
+
 char THIS_AGENT[CF_MAXVARSIZE];
 enum cfagenttype THIS_AGENT_TYPE;
 short INSTALL_SKIP = false;
 int FACILITY;
 time_t PROMISETIME;
+
+struct Rlist *SERVERLIST = NULL;
 
 /*****************************************************************************/
 /* Internal data structures                                                  */
@@ -80,6 +84,7 @@ char *CF_DATATYPES[] = /* see enum cfdatatype */
    "(option)",
    "(option list)",
    "(ext body)",
+   "(ext bundle)",
    "class",
    "clist",
    "irange [int,int]",
@@ -100,3 +105,4 @@ char *CF_AGENTTYPES[] = /* see enum cfagenttype */
    CF_KNOWC,
    "<notype>",
    };
+

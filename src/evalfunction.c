@@ -274,7 +274,8 @@ struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
       cf_int,
       cf_notype
       };
-  
+
+  struct cfagent_connection *conn = NULL;
   struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
@@ -282,6 +283,7 @@ struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
   char *sp,*hostnameip,*maxbytes,*port,*sendstring;
   int val = 0, n_read = 0;
   short portnum;
+  struct FileAttr attr;
 
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -306,20 +308,16 @@ if (val > CF_BUFSIZE-1)
    }
 
 Debug("Want to read %d bytes from port %d at %s\n",val,portnum,hostnameip);
+    
+conn = NewAgentConn();
 
-CONN = NewAgentConn();
-
-if (!RemoteConnect(hostnameip,'n',portnum,port))
+attr.copy.force_ipv4 = false;
+attr.copy.portnumber = portnum;
+    
+if (!ServerConnect(conn,hostnameip,attr,NULL))
    {
    CfLog(cferror,"Couldn't open a tcp socket","socket");
-
-   if (CONN->sd != CF_NOT_CONNECTED)
-      {
-      close(CONN->sd);
-      CONN->sd = CF_NOT_CONNECTED;
-      }
-
-   DeleteAgentConn(CONN);
+   DeleteAgentConn(conn);
    SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
    rval.item = NULL;
    rval.rtype = CF_SCALAR;
@@ -328,9 +326,9 @@ if (!RemoteConnect(hostnameip,'n',portnum,port))
 
 if (strlen(sendstring) > 0)
    {
-   if (SendSocketStream(CONN->sd,sendstring,strlen(sendstring),0) == -1)
+   if (SendSocketStream(conn->sd,sendstring,strlen(sendstring),0) == -1)
       {
-      DeleteAgentConn(CONN);
+      DeleteAgentConn(conn);
       SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
       rval.item = NULL;
       rval.rtype = CF_SCALAR;
@@ -338,12 +336,12 @@ if (strlen(sendstring) > 0)
       }
    }
 
-if ((n_read = recv(CONN->sd,buffer,val,0)) == -1)
+if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
    {
    }
 
-close(CONN->sd);
-DeleteAgentConn(CONN);
+close(conn->sd);
+DeleteAgentConn(conn);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {

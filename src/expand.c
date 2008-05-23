@@ -508,6 +508,8 @@ do
       {
       return;
       }
+
+   /* Thread monitor */
    
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise(scopeid,pp);
@@ -522,7 +524,7 @@ do
 
           ReCheckAllConstraints(pexp);
           break;
-
+          
       default:
           if (fnptr != NULL)
              {
@@ -532,6 +534,8 @@ do
       }
    
    DeletePromise(pexp);
+   
+   /* End thread monitor */
    }
 while (IncrementIterationContext(lol,1));
 
@@ -696,10 +700,16 @@ return vars;
 
 int IsNakedVar(char *str, char vtype)
 
-{ char *sp,last = *(str+strlen(str)-1);
+{ char *sp,last;
   int count=0;
 
-  Debug1("IsNakedVar(%s,%c) - syntax verify for naked var substitution\n",str,vtype);
+if (str == NULL)
+   {
+   return false;
+   }
+
+last = *(str+strlen(str)-1);
+Debug1("IsNakedVar(%s,%c) - syntax verify for naked var substitution\n",str,vtype);
 
 if (strlen(str) < 3)
    {
@@ -764,3 +774,57 @@ void GetNaked(char *s2, char *s1)
 memset(s2,0,CF_MAXVARSIZE);
 strncpy(s2,s1+2,strlen(s1)-3);
 }
+
+/*********************************************************************/
+/* General                                                           */
+/*********************************************************************/
+
+char *JoinPath(char *path,char *leaf)
+
+{
+AddSlash(path);
+      
+if (BufferOverflow(path,leaf))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Buffer overflow occurred while joining %s + %s\n",path,leaf);
+   CfLog(cferror,OUTPUT,"");
+   return NULL;
+   }
+
+strcat(path,leaf);
+return path;
+}
+
+/*********************************************************************/
+
+char *JoinSuffix(char *path,char *leaf)
+
+{
+DeleteSlash(path);
+      
+if (BufferOverflow(path,leaf))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Buffer overflow occurred while joining %s + %s\n",path,leaf);
+   CfLog(cferror,OUTPUT,"");
+   return NULL;
+   }
+
+strcat(path,leaf);
+return path;
+}
+
+/*********************************************************************/
+
+int IsAbsPath(char *path)
+
+{
+if (IsFileSep(*path))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   }
+}
+

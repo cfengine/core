@@ -220,7 +220,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
       {
-      CFD_MAXPROCESSES = atoi(retval);
+      CFD_MAXPROCESSES = (int)Str2Int(retval);
       MAXTRIES = CFD_MAXPROCESSES / 3;
       Verbose("SET maxconnections = %d\n",CFD_MAXPROCESSES);
       continue;
@@ -286,7 +286,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       Verbose("SET Dynamic addresses from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(DHCPLIST,rp->item))
             {

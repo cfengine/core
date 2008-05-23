@@ -28,15 +28,40 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*******************************************************************/
+/* Agent specific variables                                        */
+/*******************************************************************/
+
+enum typesequence
+   {
+   kp_interfaces,
+   kp_processes,
+   kp_files,
+   kp_executions,
+   kp_none
+   };
+
+char *TYPESEQUENCE[] =
+   {
+   "interfaces",
+   "processes",
+   "files",
+   "executions",
+   NULL
+   };
+
 int main (int argc,char *argv[]);
 void CheckAgentAccess(struct Rlist *list);
 void KeepAgentPromise(struct Promise *pp);
+void NewTypeContext(enum typesequence type);
+void DeleteTypeContext(enum typesequence type);
+
+extern struct BodySyntax CFA_CONTROLBODY[];
+extern struct Rlist *SERVERLIST;
 
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
-
-  /* GNU STUFF FOR LATER #include "getopt.h" */
  
  struct option OPTIONS[12] =
       {
@@ -54,7 +79,6 @@ void KeepAgentPromise(struct Promise *pp);
       { NULL,0,0,'\0' }
       };
 
-extern struct BodySyntax CFA_CONTROLBODY[];
 
 /*******************************************************************/
 
@@ -64,7 +88,6 @@ int main(int argc,char *argv[])
 GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
 ThisAgentInit();
-
 KeepPromises();
 return 0;
 }
@@ -80,7 +103,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -172,7 +195,6 @@ signal(SIGPIPE,SIG_IGN);
 signal(SIGCHLD,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
-
 }
 
 /*******************************************************************/
@@ -180,8 +202,10 @@ signal(SIGUSR2,HandleSignals);
 void KeepPromises()
 
 {
+BeginAudit();
 KeepControlPromises();
 KeepPromiseBundles();
+EndAudit();
 }
 
 /*******************************************************************/
@@ -200,7 +224,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       {
       continue;
       }
-   
+
    if (GetVariable("control_agent",cp->lval,&retval,&rettype) == cf_notype)
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in agent control body",cp->lval);
@@ -208,6 +232,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
             
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_maxconnections].lval) == 0)
+      {
+      CFA_MAXTHREADS = (int)Str2Int(retval);
+      Verbose("SET maxconnections = %d\n",CFA_MAXTHREADS);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
       {
       SetFacility(retval);
@@ -290,7 +321,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       Verbose("SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
       continue;
       }
-   
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_compresscommand].lval) == 0)
       {
       COMPRESSCOMMAND = strdup(retval);
@@ -397,8 +428,8 @@ void KeepPromiseBundles()
   struct FnCall *fp;
   char rettype,*name;
   void *retval;
-  int ok = true,i;
-  static char *typesequence[] = { "interfaces", "processes", "files", "executions", NULL };
+  int ok = true;
+  enum typesequence type;
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
@@ -406,6 +437,7 @@ if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype
    CfLog(cferror,OUTPUT,"");
    exit(1);
    }
+
 
 for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    {
@@ -466,19 +498,23 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    BannerBundle(bp,params);
    AugmentScope(bp->name,bp->args,params);
             
-   for (i = 0;  typesequence[i] != NULL; i++)
+   for (type = 0; TYPESEQUENCE[type] != NULL; type++)
       {
-      if ((sp = GetSubTypeForBundle(typesequence[i],bp)) == NULL)
+      if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
          {
          continue;      
          }
 
       BannerSubType(bp->name,sp->name);
+
+      NewTypeContext(type);
       
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
-         }         
+         }
+
+      DeleteTypeContext(type);
       }
 
    DeleteFromScope(bp->name,bp->args);
@@ -536,6 +572,13 @@ if (!IsDefinedClass(pp->classes))
    return;
    }
 
+if (pp->done)
+   {
+   return;
+   }
+
+//SetOutputRoute
+
 if (strcmp("processes",pp->agentsubtype) == 0)
    {
    VerifyProcessesPromise(pp);
@@ -553,6 +596,50 @@ if (strcmp("executions",pp->agentsubtype) == 0)
    VerifyExecPromise(pp);
    return;
    }
+}
 
+/*********************************************************************/
+/* Type context                                                      */
+/*********************************************************************/
 
+void NewTypeContext(enum typesequence type)
+
+{ int maxconnections,i;
+// get maxconnections
+
+switch(type)
+   {
+   case kp_files:
+       
+       /* Prepare shared connection array for non-threaded remote copies */
+       
+       SERVERLIST = NULL;
+       break;
+   }
+}
+
+/*********************************************************************/
+
+void DeleteTypeContext(enum typesequence type)
+
+{ struct Rlist *rp;
+  struct ServerItem *svp;
+ 
+switch(type)
+   {
+   case kp_files:
+
+       /* Cleanup shared connection array for non-threaded remote copies */
+       
+       for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+          {
+          svp = (struct ServerItem *)rp->item;
+          DeleteAgentConn(svp->conn);
+          free(svp->server);
+          rp->item = NULL;
+          }
+
+       DeleteRlist(SERVERLIST);
+       break;
+   }
 }

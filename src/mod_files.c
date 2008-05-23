@@ -12,8 +12,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
-  
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -55,6 +54,14 @@
  /*                                                         */
  /***********************************************************/
 
+struct BodySyntax CF_ACL_BODY[] =
+   {
+   {"tobedecided",cf_str,CF_ANYSTRING},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
 struct BodySyntax CF_REPLACE_BODIES[] =
    {
    {"with",cf_str,CF_ANYSTRING},
@@ -67,6 +74,7 @@ struct BodySyntax CF_REPLACE_BODIES[] =
 struct BodySyntax CF_CHANGEMGT_BODY[] =
    {
    {"hash",cf_opts,"md5,sha1"},
+   {"report_changes",cf_opts,"content,none"},
    {"update",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
@@ -75,9 +83,13 @@ struct BodySyntax CF_CHANGEMGT_BODY[] =
 
 struct BodySyntax CF_RECURSION_BODY[] =
    {
-   {"include",cf_slist,".*"},
-   {"exclude",cf_slist,".*"},
-   {"depth",cf_int,"1,99"},
+   {"include_dirs",cf_slist,".*"},
+   {"exclude_dirs",cf_slist,".*"},
+   {"include_basedir",cf_opts,CF_BOOL},
+   {"depth",cf_int,CF_VALRANGE},
+   {"xdev",cf_opts,CF_BOOL},
+   {"traverse_links",cf_opts,CF_BOOL},
+   {"rmdeadlinks",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -85,12 +97,8 @@ struct BodySyntax CF_RECURSION_BODY[] =
 
 struct BodySyntax CF_TIDY_BODY[] =
    {
-   {"age",cf_irange,"0,inf"},
-   {"size",cf_irange,"0,inf"},
-   {"age_type",cf_opts, "mtime,ctime,mtime,atime"},
-   {"dirlinks",cf_opts,"delete,keep,tidy"},
-   {"rmdirs",cf_opts,"yes,no,true,false,sub"},
-   {"links",cf_opts,"stop,keep,traverse,tidy"},
+   {"dirlinks",cf_opts,"delete,tidy,keep"},
+   {"rmdirs",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -98,10 +106,11 @@ struct BodySyntax CF_TIDY_BODY[] =
 
 struct BodySyntax CF_RENAME_BODY[] =
    {
-   {"newname",cf_str,"filename"},
-   {"type",cf_opts,"plain,file,link"},
+   {"newname",cf_str,""},
+   {"disable_suffix",cf_str,""},
+   {"disable",cf_opts,CF_BOOL},
    {"rotate",cf_int,"0,99"},
-   {"size",cf_irange,"0,inf"},
+   {"rename_perms",cf_str,CF_MODERANGE},
    {NULL,cf_notype,NULL}
    };
 
@@ -117,9 +126,11 @@ struct BodySyntax CF_APPEND_BODIES[] =
 
 struct BodySyntax CF_ACCESS_BODIES[] =
    {
-   {"mode",cf_str,"[0-7ugorwx,+-]*"},
-   {"owner",cf_slist,".*"},
-   {"group",cf_slist,".*"},
+   {"mode",cf_str,CF_MODERANGE},
+   {"owner",cf_slist,CF_IDRANGE},
+   {"group",cf_slist,CF_IDRANGE},
+   {"rxdirs",cf_opts,CF_BOOL},
+   {"bsdflags",cf_olist,"arch,archived,dump,opaque,sappnd,sappend,schg,schange,simmutable,sunlnk,sunlink,uappnd,uappend,uchg,uchange,uimmutable,uunlnk,uunlink"},
    {NULL,cf_notype,NULL}
    };
 
@@ -127,35 +138,37 @@ struct BodySyntax CF_ACCESS_BODIES[] =
 
 struct BodySyntax CF_FILEFILTER_BODY[] =
    {
-   {"name",cf_slist,""},
-   {"path",cf_slist,CF_PATHRANGE},
-   {"mode",cf_str,""},
-   {"size",cf_irange,""},
-   {"owner",cf_slist,""},
-   {"group",cf_slist,""},
+   {"leaf_name",cf_slist,""},
+   {"path_name",cf_slist,CF_PATHRANGE},
+   {"search_mode",cf_str,CF_MODERANGE},
+   {"search_size",cf_irange,"0,inf"},
+   {"search_owner",cf_slist,CF_IDRANGE},
+   {"search_group",cf_slist,CF_IDRANGE},
    {"ctime",cf_irange,CF_TIMERANGE},
    {"mtime",cf_irange,CF_TIMERANGE},
    {"atime",cf_irange,CF_TIMERANGE},
    {"exec_regex",cf_str,""},
-   {"filetypes",cf_olist,"reg,link,dir,socket,fifo,door,char,block"},
+   {"exec_program",cf_str,""},
+   {"filetypes",cf_olist,"plain,reg,symlink,dir,socket,fifo,door,char,block"},
    {"issymlinkto",cf_slist,""},
-   {"filetype",cf_str,"[(plain|link|dir|socket|fifo|door|char|block)[|]*]*"},
-   {"result",cf_str,"[(name|path|filetype|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex)[|&!.]*]*"},
+   {"file_result",cf_str,"[(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program)[|&!.]*]*"},
    {NULL,cf_notype,NULL}
    };
 
 /**************************************************************/
 
 /* Copy and link are really the same body and should have
-   non-overlapping patterns so that they are XOR */
-       
+   non-overlapping patterns so that they are XOR but it's
+   okay that some names overlap (like source) as there is
+   no ambiguity in XOR */
 
 struct BodySyntax CF_LINKTO_BODY[] =
    {
-   {"link_type",cf_opts,"symbolic,absolute,abs,hard,relative,rel"},
+   {"source",cf_str,""},
+   {"link_type",cf_opts,CF_LINKRANGE},
    {"copy_patterns",cf_str,""},
-   {"deadlinks",cf_opts,"kill,force"},
-   {"when_no_file",cf_opts,"force,kill"},
+   {"when_no_file",cf_opts,"force,delete,nop"},
+   {"link_children",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -165,25 +178,23 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {
    {"source",cf_str,""},
    {"servers",cf_slist,""},
-   {"action",cf_str,""},
-   {"backup",cf_str,""},
-   {"repository",cf_str,CF_PATHRANGE},
+   {"portnumber",cf_int,"1024,99999"},
+   {"backup",cf_opts,"true,false,timestamp"},
    {"stealth",cf_opts,CF_BOOL},
    {"preserve",cf_opts,CF_BOOL},
-   {"linkpattern",cf_str,""},
-   {"xdev",cf_opts,CF_BOOL},
+   {"linkcopy_patterns",cf_slist,""},
+   {"copylink_patterns",cf_slist,""},
    {"compare",cf_opts,"atime,mtime,ctime,checksum"},
-   {"linktype",cf_opts,"absolute,relative,hard"},
-   {"typecheck",cf_opts,CF_BOOL},
-   {"forceupdate",cf_opts,CF_BOOL},
-   {"forcedirs",cf_opts,CF_BOOL},
-   {"forceipv4",cf_opts,CF_BOOL},
-   {"size",cf_irange,"0,inf"},
-   {"trigger",cf_slist,""},
+   {"link_type",cf_opts,CF_LINKRANGE},
+   {"type_check",cf_opts,CF_BOOL},
+   {"force_update",cf_opts,CF_BOOL},
+   {"force_ipv4",cf_opts,CF_BOOL},
+   {"copy_size",cf_irange,"0,inf"},
    {"trustkey",cf_opts,CF_BOOL},
    {"encrypt",cf_opts,CF_BOOL},
    {"verify",cf_opts,CF_BOOL},
    {"purge",cf_opts,CF_BOOL},
+   {"check_root",cf_opts,CF_BOOL},
    {"findertype",cf_opts,"MacOSX"},
    {NULL,cf_notype,NULL}
    };
@@ -195,21 +206,22 @@ struct BodySyntax CF_COPYFROM_BODY[] =
 struct BodySyntax CF_FILES_BODIES[] =
    {
    {"file_select",cf_body,CF_FILEFILTER_BODY},
-   {"copyfrom",cf_body,CF_COPYFROM_BODY},
-   {"linkto",cf_body,CF_LINKTO_BODY},
+   {"copy_from",cf_body,CF_COPYFROM_BODY},
+   {"link_from",cf_body,CF_LINKTO_BODY},
    {"perms",cf_body,CF_ACCESS_BODIES},
    {"changes",cf_body,CF_CHANGEMGT_BODY},
    {"delete",cf_body,CF_TIDY_BODY},
    {"rename",cf_body,CF_RENAME_BODY},
-   {"repository",cf_str,"/.*"},
-   {"edit_line",cf_body,CF_BUNDLE},
-   {"edit_xml",cf_body,CF_BUNDLE},
+   {"repository",cf_str,CF_PATHRANGE},
+   {"edit_line",cf_bundle,CF_BUNDLE},
+   {"edit_xml",cf_bundle,CF_BUNDLE},
    {"depth_search",cf_body,CF_RECURSION_BODY},
    {"touch",cf_opts,CF_BOOL},
    {"create",cf_opts,CF_BOOL},
-   {"action",cf_opts,"fix,warn"},
+   {"move_obstructions",cf_opts,CF_BOOL},
+   {"transformer",cf_str,CF_PATHRANGE},
    {"pathtype",cf_opts,"literal,regex"},
-   {"acl",cf_body,NULL},
+   {"acl",cf_body,CF_ACL_BODY},
    {NULL,cf_notype,NULL}
    };
 

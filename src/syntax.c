@@ -144,7 +144,7 @@ if (ss.subtype != NULL) /* In a bundle */
                }
             else
                {
-               CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range));
+               CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
                return;
                }
             }
@@ -217,7 +217,7 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
                }
             else
                {
-               CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range));
+               CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
                return;
                }
             }
@@ -274,7 +274,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                if (strcmp(lval,bs2[k].lval) == 0)
                   {
                   Debug("Matched\n");
-                  CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[k].dtype,(char *)(bs2[k].range));
+                  CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[k].dtype,(char *)(bs2[k].range),0);
                   return;
                   }
                }
@@ -294,16 +294,33 @@ if (!lmatch)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range)
+void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range,int level)
 
 { struct Rlist *rp;
 
-Debug("Checking inline constraint %s[%s] => mappedval\n",lval,CF_DATATYPES[dt]);
+Debug(" - Checking inline constraint %s[%s] => mappedval\n",lval,CF_DATATYPES[dt]);
 
 /* Get type of lval */
 
 switch(rvaltype)
    {
+   case CF_SCALAR:
+       switch(dt)
+          {
+          case cf_slist:
+          case cf_ilist:
+          case cf_rlist:
+          case cf_clist:
+          case cf_olist:
+              if (level == 0)
+                 {
+                 snprintf(OUTPUT,CF_BUFSIZE,"rhs is a scalar, but lhs (%s) is not list type",CF_DATATYPES[dt]);
+                 ReportError(OUTPUT);
+                 }
+              break;
+          }
+       break;
+       
    case CF_LIST:
 
        switch(dt)
@@ -322,8 +339,9 @@ switch(rvaltype)
        
        for (rp = (struct Rlist *)rval; rp != NULL; rp = rp->next)
           {
-          CheckConstraintTypeMatch(lval,rp->item,rp->type,dt,range);
-          }       
+          CheckConstraintTypeMatch(lval,rp->item,rp->type,dt,range,1);
+          }
+
        return;
        
    case CF_FNCALL:
@@ -455,8 +473,13 @@ void CheckParseString(char *lval,char *s,char *range)
 { regex_t rx;
   regmatch_t pmatch;
 
- Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
-  
+Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
+
+if (s == NULL)
+   {
+   return;
+   }
+
 if (strlen(range) == 0)
    {
    return;
@@ -536,7 +559,8 @@ ReportError(OUTPUT);
 void CheckParseInt(char *lval,char *s,char *range)
     
 { struct Item *split,*ip;
-  int n,max = CF_LOWINIT, min = CF_HIGHINIT, val;
+  int n;
+  long max = CF_LOWINIT, min = CF_HIGHINIT, val;
  
 /* Numeric types are registered by range separated by comma str "min,max" */
 Debug("\nCheckParseInt(%s => %s/%s)\n",lval,s,range);
@@ -549,7 +573,7 @@ if ((n = ListLen(split)) != 2)
    FatalError(OUTPUT);
    }
 
-sscanf(split->name,"%d",&min);
+sscanf(split->name,"%ld",&min);
 
 if (strcmp(split->next->name,"inf") == 0)
    {
@@ -557,7 +581,7 @@ if (strcmp(split->next->name,"inf") == 0)
    }
 else
    {
-   sscanf(split->next->name,"%d",&max);
+   sscanf(split->next->name,"%ld",&max);
    }
 
 DeleteItemList(split);
@@ -574,22 +598,11 @@ if (IsCf3VarString(s))
    return;
    }
 
-if (strcmp(s,"inf") == 0)
-   {
-   val = CF_INFINITY;
-   }
-else if (strcmp(s,"now") == 0)
-   {
-   val = CFSTARTTIME;
-   }
-else
-   {
-   val = Str2Int(s);
-   }
+val = Str2Int(s);
 
 if (val > max || val < min)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %d} is out of bounds (should be in [%s])",lval,s,val,range);
+   snprintf(OUTPUT,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);
    ReportError(OUTPUT);
    return;
    }
@@ -602,7 +615,8 @@ Debug("CheckParseInt - syntax verified\n\n");
 void CheckParseIntRange(char *lval,char *s,char *range)
     
 { struct Item *split,*ip,*rangep;
-  int n,max = CF_LOWINIT, min = CF_HIGHINIT, val;
+  int n;
+  long max = CF_LOWINIT, min = CF_HIGHINIT, val;
  
 /* Numeric types are registered by range separated by comma str "min,max" */
 Debug("\nCheckParseIntRange(%s => %s/%s)\n",lval,s,range);
@@ -621,7 +635,7 @@ if ((n = ListLen(split)) != 2)
    FatalError(OUTPUT);
    }
 
-sscanf(split->name,"%d",&min);
+sscanf(split->name,"%ld",&min);
 
 if (strcmp(split->next->name,"inf") == 0)
    {
@@ -629,7 +643,7 @@ if (strcmp(split->next->name,"inf") == 0)
    }
 else
    {
-   sscanf(split->next->name,"%d",&max);
+   sscanf(split->next->name,"%ld",&max);
    }
 
 DeleteItemList(split);
@@ -658,22 +672,11 @@ if ((n = ListLen(rangep)) != 2)
 
 for (ip = rangep; ip != NULL; ip=ip->next)
    {
-   if (strcmp(s,"inf") == 0)
-      {
-      val = CF_INFINITY;
-      }
-   else if (strcmp(s,"now") == 0)
-      {
-      val = CFSTARTTIME;
-      }   
-   else
-      {
-      val = Str2Int(s);
-      }
+   val = Str2Int(s);
    
    if (val > max || val < min)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %d} is out of bounds (should be in [%s])",lval,s,val,range);
+      snprintf(OUTPUT,CF_BUFSIZE,"Int range item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);
       ReportError(OUTPUT);
       DeleteItemList(rangep);
       return;

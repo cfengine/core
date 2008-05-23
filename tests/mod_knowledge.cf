@@ -7,8 +7,8 @@
 #
 ############################################################################
 #
-# Topics are independent abstract entities which use-promise associations.
-# We assume that all topics offer their info freely to all other topics.
+# Topics are independent abstract entities which make "use-promise" associations.
+# We can assume that all topics offer their info freely to all other topics.
 #
 # Documents/Occurrences lie outside of a topic map in the substrate, but this
 # is where promises live. Documents can make promises about their content
@@ -23,9 +23,17 @@ builddir => "/tmp/documents";
 default_association => "associated with";
 }
 
+############################################################################
+
  #
  # We introduce a "knowledge" component to cfengine 
  #
+
+ # T - topic        = topic-agent
+ # A - association  = promise
+ # O - occurrence   = document-agent
+
+############################################################################
 
 bundle knowledge topic_map
 
@@ -36,27 +44,52 @@ vars:
   "otherdocs" slist  => { "doc1", "doc2" };
 
 
+  "aliases" slist => { "deals with concepts", "is composed of" };
+
  ###################################################
 
 classes:
 
-#  "scope" 
+#  "scope" - how do we define this for tm ??
 
  ###################################################
 
-topics: # These are abstract types
+topics:
 
+  website::
+
+   #
 
    "cfengine" -> { "cfagent", "cfservd", "cfenvd" },
 
          association => { 
-                        "composed of",
-                        "key concept" 
+                        @(aliases),
+                        "another relation" 
                         };
+    #
 
     "cfengine" -> { "Mark Burgess", "Bas Van der Vlies" },
 
          association => "has developers" ;
+
+    #
+
+   social::
+
+    "Mark Burgess" -> "Steve Pepper",
+
+         association => { "has friend", "works with", "also likes Schostakovich" };
+
+    #
+
+    "Mark Burgess" -> @(all_potential_mates),
+
+        # These sound more like promises than associations.. (advertisements)
+
+         association => "has blue eye",
+         association => "has substantial depth gauge",
+         association => "has poor sense of humo(u)r";
+
 
  ###################################################
 

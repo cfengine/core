@@ -9,7 +9,7 @@ denybadclocks  => "false";
 checkident => "no";
 
 allowconnects         => { @(globals.hostlist), "127.0.0.1"};
-denyconnects          => @(access_rules.bad);
+denyconnects          => { @(access_rules.bad) };
 
 allowallconnects      => { @(access_rules.ok) };
 trustkeysfrom         => { @(access_rules.ok), "127.0.0.1" };

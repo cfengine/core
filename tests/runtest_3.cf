@@ -1,0 +1,48 @@
+#######################################################
+#
+# Disabling files
+#
+#######################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "testbundle"
+                         };
+   }
+
+
+############################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/test_create" 
+      rename => disable;
+#      create => "true";
+
+
+  "/home/mark/tmp/rotateme"
+      rename => rotate("4");
+}
+
+############################################
+
+body rename disable
+
+{
+disable => "true";
+disable_suffix => "_blownaway";
+}
+
+############################################
+
+body rename rotate(level)
+
+{
+rotate => "$(level)";
+}

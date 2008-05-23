@@ -68,7 +68,7 @@ body process_count up(s)
 
 {
 match_range => "0,10";
-out_of_range_define => "$(s)_up";
+out_of_range_define => { "$(s)_up" };
 }
 
 ################################################################
@@ -77,7 +77,7 @@ body number match_body()
 
 {
 match_range              => irange("1","5");
-in_range_define      => "okclass";
+in_range_define      => { "okclass" };
 out_of_range_define  => { "one", "two", "three" };
 }
 
@@ -86,7 +86,7 @@ out_of_range_define  => { "one", "two", "three" };
 
 body proc_select myfilter
 {
-owner       => "str";
+owner       => { "str" };
 pid         => "regex";
 ppid        => "int";
 pgid        => "int";
@@ -99,5 +99,5 @@ stime_range => "int,int";
 tty         => "regex";
 priority    => "int";
 threads     => "int";
-result      => "string";
+process_result  => "string";
 }

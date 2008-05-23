@@ -45,7 +45,9 @@
 #define CF_NOPROMISEE 'X'
 #define CF_UNDEFINED -1
 #define CF_NODOUBLE -123.45
-#define CF_NOINT    -678
+#define CF_NOINT    -678L
+#define CF_ANYUSER  (uid_t)-1
+#define CF_ANYGROUP (gid_t)-1
 
 #define CF_INBODY   1
 #define CF_INBUNDLE 2
@@ -116,6 +118,7 @@ enum cfdatatype
    cf_opts,
    cf_olist,
    cf_body,
+   cf_bundle,
    cf_class,
    cf_clist,
    cf_irange,
@@ -149,6 +152,7 @@ enum cfagenttype
 
 enum cfacontrol
    {
+   cfa_maxconnections,
    cfa_abortclasses,
    cfa_addclasses,
    cfa_agentaccess,
@@ -268,22 +272,24 @@ enum cfspromises
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/
 
-#define CF_BOOL "true,false,yes,no,on,off"
 #define CF_BUNDLE  (void*)1234           /* any non-null value, not used */
 
-#define CF_HIGHINIT 99999
-#define CF_LOWINIT -999999
+#define CF_HIGHINIT 99999L
+#define CF_LOWINIT -999999L
 
+#define CF_BOOL      "true,false,yes,no,on,off"
+#define CF_LINKRANGE "symlink,hardlink,relative,absolute"
 #define CF_TIMERANGE "0,4026531839"
 #define CF_VALRANGE  "0,99999999999"
 #define CF_INTRANGE  "-99999999999,9999999999"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
 
-#define CF_CLASSRANGE "[a-zA-Z0-9_!&|.()]+"
-#define CF_IDRANGE    "[a-zA-Z0-9_]+"
+#define CF_MODERANGE   "[0-7augorwxst,+-]+"
+#define CF_CLASSRANGE  "[a-zA-Z0-9_!&|.()]+"
+#define CF_IDRANGE     "[a-zA-Z0-9_]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
-#define CF_ANYSTRING  ".*"
-#define CF_PATHRANGE  "[/\\].*"
+#define CF_ANYSTRING   ".*"
+#define CF_PATHRANGE   "[/\\].*"
 
 #define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
 
@@ -397,10 +403,20 @@ struct Promise
    char  petype;                /* rtype of promisee - list or scalar recipient? */
    int   lineno;
    char *bundle;
-   char  done;
    struct Audit *audit;
    struct Constraint *conlist;
    struct Promise *next;
+      
+    /* Runtime bus for private flags and work space */
+
+   int    done;                 /* this needs to be preserved across runs */
+   int   *donep;
+   int    makeholes;
+   char  *this_server;
+   struct cfstat *cache;      
+   struct cfagent_connection *conn;
+   struct CompressedArray *inode_cache;
+   dev_t rootdevice;                          /* for caching during work*/
    };
 
 /*************************************************************************/
@@ -479,14 +495,12 @@ struct CfAssoc        /* variable reference linkage , with metatype*/
    };
 
 /*******************************************************************/
-/* Output options                                                  */
-/*******************************************************************/
 
-struct CfOutput
+struct ThreadPackage
    {
-   FILE *stream;
-   //graphfile
-   // graph context - or adjacency matrix?
+   char *path;
+   struct FileAttr *attr;
+   struct Promise *pp;
    };
 
 /*******************************************************************/
@@ -519,6 +533,277 @@ enum cfdatetemplate
    cfa_sec
    };
 
+enum cfcomparison
+   {
+   cfa_atime,
+   cfa_mtime,
+   cfa_ctime,
+   cfa_checksum,
+   cfa_binary,
+   cfa_nocomparison
+   };
 
+enum cflinktype
+   {
+   cfa_symlink,
+   cfa_hardlink,
+   cfa_relative,
+   cfa_absolute,
+   cfa_notlinked
+   };
+
+enum cfopaction
+   {
+   cfa_fix,
+   cfa_warn,
+   };
+
+enum cfbackupoptions
+   {
+   cfa_backup,
+   cfa_nobackup,
+   cfa_timestamp,
+   cfa_repos_store/* for internal use only */
+   };
+
+enum cftidylinks
+   {
+   cfa_linkdelete,
+   cfa_linkkeep
+   };
+
+enum cfhashes
+   {
+   cf_md5,
+   cf_sha224,
+   cf_sha256,
+   cf_sha384,
+   cf_sha512,
+   cf_sha1,
+   cf_sha,
+   cf_besthash,
+   cf_nohash
+   };
+
+enum cfnofile
+   {
+   cfa_force,
+   cfa_delete,
+   cfa_skip
+   };
+
+enum cflinkchildren
+   {
+   cfa_override,
+   cfa_onlynonexisting   
+   };
+
+enum cfchanges
+   {
+   cfa_noreport,
+   cfa_contentchange
+   };
+
+/*************************************************************************/
+/* Runtime constraint structures                                         */
+/*************************************************************************/
+
+struct CfLock
+   {
+   char *last;
+   char *lock;
+   char *log;
+   };
+
+/*************************************************************************/
+
+struct Recursion
+   {
+   int travlinks;
+   int rmdeadlinks;
+   int depth;
+   int xdev;
+   int include_basedir;
+   struct Rlist *include_dirs;
+   struct Rlist *exclude_dirs;
+   };
+
+/*************************************************************************/
+
+struct TransactionContext
+   {
+   enum cfopaction action;
+   int ifelapsed;
+   int expireafter;
+   int background;
+   char *log_string;
+   char *log_level;
+   int  audit;
+   enum cfoutputlevel report_level;
+   };
+
+/*************************************************************************/
+
+struct DefineClasses
+   {
+   struct Rlist *change;
+   struct Rlist *failure;
+   struct Rlist *denied;
+   struct Rlist *timeout;
+   struct Rlist *interrupt;
+   };
+
+/*************************************************************************/
+/* Files                                                                 */
+/*************************************************************************/
+
+struct FileCopy
+   {
+   char *source;
+   char *destination;
+   enum cfcomparison compare;
+   enum cflinktype link_type;
+   struct Rlist *servers;
+   struct Rlist *link_instead;
+   struct Rlist *copy_links;
+   enum cfbackupoptions backup;
+   int stealth;
+   int preserve;
+   int check_root;
+   int type_check;
+   int force_update;
+   int force_ipv4;
+   size_t min_size;      /* Safety margin not search criterion */
+   size_t max_size;
+   int trustkey;
+   int encrypt;
+   int verify;
+   int purge;
+   short portnumber;
+   };
+
+struct ServerItem
+   {
+   char *server;
+   struct cfagent_connection *conn;
+   };
+
+/*************************************************************************/
+
+struct FilePerms
+   {
+   mode_t plus;
+   mode_t minus;
+   struct UidList *owners;
+   struct GidList *groups;
+   char  *findertype;
+   u_long plus_flags;     /* for *BSD chflags */
+   u_long minus_flags;    /* for *BSD chflags */
+   int    rxdirs;
+   };
+
+/*************************************************************************/
+
+struct FileSelect
+   {
+   struct Rlist *name;
+   struct Rlist *path;
+   mode_t plus;
+   mode_t minus;
+   struct Rlist *owners;
+   struct Rlist *groups;
+   u_long plus_flags;     /* for *BSD chflags */
+   u_long minus_flags;    /* for *BSD chflags */
+   long max_size;
+   long min_size;
+   time_t max_ctime;
+   time_t min_ctime;
+   time_t max_mtime;
+   time_t min_mtime;
+   time_t max_atime;
+   time_t min_atime;
+   char *exec_regex;
+   char *exec_program;
+   struct Rlist *filetypes;
+   struct Rlist *issymlinkto;
+   char *result;
+   };
+
+/*************************************************************************/
+
+struct FileDelete
+
+   {
+   enum cftidylinks dirlinks;
+   int rmdirs;
+   };
+
+/*************************************************************************/
+
+struct FileRename
+   {
+   char *newname;
+   char *disable_suffix;
+   int disable;
+   int rotate;
+   mode_t plus;
+   mode_t minus;
+   };
+
+/*************************************************************************/
+
+struct FileChange
+   {
+   enum cfhashes hash;
+   enum cfchanges report_changes;
+   int update;
+   };
+
+/*************************************************************************/
+
+struct FileLink
+   {
+   char *source;
+   enum cflinktype link_type;
+   struct Rlist *copy_patterns;
+   enum cfnofile when_no_file;
+   enum cflinkchildren link_children;
+   };
+
+/*************************************************************************/
+
+struct FileAttr
+   {
+   struct FileSelect select;
+   struct FilePerms perms;
+   struct FileCopy copy;
+   struct FileDelete delete;
+   struct FileRename rename;
+   struct FileChange change;
+   struct FileLink link;
+      
+   struct Recursion recursion;
+   struct TransactionContext transaction;
+   struct DefineClasses classes;
+
+   char *transformer;
+
+   int touch;
+   int create;
+   int move_obstructions;
+   char *repository;
+
+   int havedepthsearch;
+   int haveselect;
+   int haverename;
+   int havedelete;
+   int haveperms;
+   int havechange;
+   int havecopy;
+   int havelink;
+   int haveeditline;
+   int haveeditxml;
+   int haveedit;
+   };
 
 #include "prototypes3.h"

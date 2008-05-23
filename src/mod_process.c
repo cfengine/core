@@ -80,7 +80,7 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
    {"tty",cf_str,""},
    {"priority",cf_str,""},
    {"threads",cf_str,""},
-   {"result",cf_opts,"owner,pid,ppid,pgid,rsize,vsize,status,command,ttime,stime,tty,priority,threads"},
+   {"process_result",cf_str,"[(owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*"},
    {NULL,cf_notype,NULL}
    };
 

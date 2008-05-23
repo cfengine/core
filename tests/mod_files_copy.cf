@@ -23,16 +23,18 @@ files:
 
   "/var/[c|l][A-Za-z0-9_ ]*"  
 
-            copyfrom     => mycopy("/src/path","server"),
+            copy_from     => mycopy("/src/path","server"),
+            repository  => "/my/repos",              # backup directory
+
             perms        => myperms,
-            file_select  => myfilter,
-            depth_search => recurse("inf");
+            file_select  => myfilter;
 
   "/dest/files"  
 
-            copyfrom    => mycopy("/src/.*/regpath","server"),
+            copy_from    => mycopy("/src/.*/regpath","server"),
             perms      => myperms,
-            file_select => myfilter;
+            file_select => myfilter,
+            depth_search => recurse("inf");
 
 
   #
@@ -41,7 +43,7 @@ files:
 
   "$(basedir)/$(named_files)/vm.conf"
 
-           copyfrom      => mycopy("/$(basedir)/$(named_files).conf","server"),
+           copy_from      => mycopy("/$(basedir)/$(named_files).conf","server"),
            perms        => myperms,
            file_select   => myfilter;
           
@@ -52,11 +54,9 @@ files:
 
   "$(basedir)/data_from_$(servers)/$(named_files).conf"
 
-           copyfrom      => mycopy("/$(basedir)/$(named_files).conf","$(servers)"),
-           perms        => myperms,
-           file_select  => myfilter;
-  #         loopiteration => iter_policy
-          
+           copy_from     => mycopy("/$(basedir)/$(named_files).conf","$(servers)"),
+           perms         => myperms,
+           file_select   => myfilter;          
 
 
   # 
@@ -65,7 +65,7 @@ files:
 
   "$(basedir)/$(named_files)/vm.conf"
 
-           copyfrom    => mycopy("/$(basedir)/fixed.conf","server"),
+           copy_from    => mycopy("/$(basedir)/fixed.conf","server"),
            perms      => myperms,
            file_select      => myfilter;
 
@@ -80,19 +80,17 @@ source      => "$(from)";
 servers     => { "$(server)" , "failover1" };
 action      => "fix";                    # warn/silent/fix;
 backup      => "true";                   #/false/timestamp
-repository  => "/my/repos";              # backup directory
 stealth     => "true";                   #/on/false/off
 preserve    => "true";
-linkpattern => ".*fish.*";
+linkcopy_patterns => { ".*fish.*" };
+copylink_patterns => { "non-local.*" };
 xdev        => "true";                   # /on/false/off
 compare     => "mtime";                  # ctime/mtime/checksum/sum/byte/binary/any
-linktype    => "absolute";               # /symbolic/relative/hard
-typecheck   => "true";
-forceupdate => "false";
-forcedirs   => "false";
-forceipv4   => "false";
-size        => irange("0","50000");
-trigger     => { "tag1", "tag2" };
+link_type    => "absolute";              # /symbolic/relative/hard etc
+type_check   => "true";
+force_update => "false";
+force_ipv4   => "false";
+copy_size        => irange("0","50000");
 trustkey    => "true";
 encrypt     => "true";
 verify      => "true";
@@ -101,11 +99,3 @@ findertype  => "MacOSX";
 }
 
 #################################################################
-
-#body iterate iter_policy
-#{
-#iterator_order => { "var1", "var2" };
-#tied =>  { "var1", "var2" };
-#untied =>  { "var3", "var4" };
-#}
-

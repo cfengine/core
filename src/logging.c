@@ -31,41 +31,291 @@
 
 /*****************************************************************************/
 
-void CloseAudit()
+void BeginAudit()
+
+{ DB_ENV *dbenv = NULL;
+  char name[CF_BUFSIZE];
+  struct Promise dummyp;
+  struct FileAttr dummyattr;
+
+memset(&dummyp,0,sizeof(dummyp));
+memset(&dummyattr,0,sizeof(dummyattr));
+dummyattr.transaction.audit = true;
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
+
+if ((errno = db_create(&AUDITDBP,dbenv,0)) != 0)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open performance database %s\n",name);
+   CfLog(cferror,OUTPUT,"db_open");
+   return;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = (AUDITDBP->open)(AUDITDBP,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = (AUDITDBP->open)(AUDITDBP,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open auditing database %s\n",name);
+   CfLog(cferror,OUTPUT,"db_open");
+   return;
+   }
+
+ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP);
+}
+
+/*****************************************************************************/
+
+void EndAudit()
 
 { double total;
-  char *version = NULL,type;
- 
+  char *sp,rettype;
+  void *retval;
+  struct Promise dummyp;
+  struct FileAttr dummyattr;
+
+memset(&dummyp,0,sizeof(dummyp));
+memset(&dummyattr,0,sizeof(dummyattr));
+dummyattr.transaction.audit = true;
+
 total = (double)(PR_KEPT+PR_NOTKEPT+PR_REPAIRED)/100.0;
 
-if (GetVariable(CONTEXTID,"version",(void *)version,&type) != cf_notype)
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
+   sp = (char *)retval;
    }
 else
    {
-   version = "(not specified)";
+   sp = "(not specified)";
    }
 
 if (total == 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: No checks were scheduled\n",version);
+   snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: No checks were scheduled\n",sp);
    return;
    }
 else
    {   
    snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
-            version,
+            sp,
             (double)PR_KEPT/total,
             (double)PR_REPAIRED/total,
             (double)PR_NOTKEPT/total);
    }
 
 CfLog(cfverbose,OUTPUT,"");
-AuditLog('y',NULL,0,OUTPUT,CF_REPORT);
 
-if (AUDIT && AUDITDBP)
+ClassAuditLog(&dummyp,dummyattr,OUTPUT,CF_REPORT);
+ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
+
+if (AUDITDBP)
    {
-   AuditLog('y',NULL,0,"Cfagent closing",CF_NOP);
    AUDITDBP->close(AUDITDBP,0);
    }
+}
+
+/*****************************************************************************/
+
+void ClassAuditLog(struct Promise *pp,struct FileAttr attr,char *str,char status)
+
+{ time_t now = time(NULL);
+  char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE];
+  struct AuditLog newaudit;
+  struct Audit *ap = pp->audit;
+  struct timespec t;
+  double keyval;
+  int lineno = pp->lineno;
+
+Debug("ClassAuditLog(%s)\n",str);
+
+switch(status)
+   {
+   case CF_CHG:
+       PR_REPAIRED++;
+       AddAllClasses(attr.classes.change);
+       break;
+       
+   case CF_WARN:
+       PR_NOTKEPT++;
+       break;
+       
+   case CF_TIMEX:
+       PR_NOTKEPT++;
+       AddAllClasses(attr.classes.timeout);
+       break;
+
+   case CF_FAIL:
+       PR_NOTKEPT++;
+       AddAllClasses(attr.classes.failure);
+       break;
+       
+   case CF_DENIED:
+       PR_NOTKEPT++;
+       AddAllClasses(attr.classes.denied);
+       break;
+       
+   case CF_INTERPT:
+       PR_NOTKEPT++;
+       AddAllClasses(attr.classes.interrupt);
+       break;
+
+   case CF_REGULAR:
+       PR_REPAIRED++;
+       break;
+       
+   case CF_NOP:
+       PR_KEPT++;
+       break;
+
+   case CF_UNKNOWN:
+       PR_KEPT++;
+       break;
+   }
+
+if (AUDITDBP == NULL)
+   {
+   return;
+   }
+
+snprintf(date,CF_BUFSIZE,"%s",ctime(&now));
+Chop(date);
+
+ExtractOperationLock(lock);
+snprintf(operator,CF_BUFSIZE-1,"[%s] op %s",date,lock);
+strncpy(newaudit.operator,operator,CF_AUDIT_COMMENT-1);
+
+if (clock_gettime(CLOCK_REALTIME,&t) == -1)
+   {
+   CfLog(cfverbose,"Clock gettime failure during audit transaction","clock_gettime");
+   return;
+   }
+
+keyval = (double)(t.tv_sec)+(double)(t.tv_nsec)/(double)CF_BILLION;
+      
+snprintf(key,CF_BUFSIZE-1,"%lf",keyval);
+
+if (DEBUG)
+   {
+   AuditStatusMessage(status);
+   }
+
+if (ap != NULL)
+   {
+   strncpy(newaudit.comment,str,CF_AUDIT_COMMENT-1);
+   strncpy(newaudit.filename,ap->filename,CF_AUDIT_COMMENT-1);
+   
+   if (ap->version == NULL || strlen(ap->version) == 0)
+      {
+      Debug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",ap->filename,pp->bundle,ap->date,lineno);
+      newaudit.version[0] = '\0';
+      }
+   else
+      {
+      Debug("Promised in %s bundle %s (version %s last edited at %s) at/before line %d\n",ap->filename,pp->bundle,ap->version,ap->date,lineno);
+      strncpy(newaudit.version,ap->version,CF_AUDIT_VERSION-1);
+      }
+   
+   strncpy(newaudit.date,ap->date,CF_AUDIT_DATE);
+   newaudit.lineno = lineno;
+   }
+else
+   {
+   strcpy(newaudit.date,date);
+   strcpy(newaudit.comment,str);
+   strcpy(newaudit.filename,"schedule");
+   strcpy(newaudit.version,"");
+   newaudit.lineno = 0;
+   }
+
+newaudit.status = status;
+
+if (AUDITDBP && attr.transaction.audit)
+   {
+   WriteDB(AUDITDBP,key,&newaudit,sizeof(newaudit));
+   }
+}
+
+/*****************************************************************************/
+
+void AddAllClasses(struct Rlist *list)
+
+{ struct Rlist *rp;
+ 
+if (list == NULL)
+   {
+   return;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (IsHardClass((char *)rp->item))
+      {
+      CfLog(cferror,"You cannot use reserved hard classes as post-condition classes","");
+      }
+
+   AddClassToHeap(CanonifyName((char *)rp->item));
+   }
+}
+
+
+
+/************************************************************************/
+
+void ExtractOperationLock(char *op)
+
+{ char *sp, lastch = 'x'; 
+  int i = 0, dots = 0;
+  int offset = strlen("lock...")+strlen(VUQNAME);
+
+/* Use the global copy of the lock from the main serial thread */
+  
+for (sp = CFLOCK+offset; *sp != '\0'; sp++)
+   {
+   switch (*sp)
+      {
+      case '_':
+          if (lastch == '_')
+             {
+             break;
+             }
+          else
+             {
+             op[i] = '/';
+             }
+          break;
+
+      case '.':
+          dots++;
+          op[i] = *sp;
+          break;
+
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+          dots = 9;
+          break;
+          
+      default:
+          op[i] = *sp;
+          break;
+      }
+
+   lastch = *sp;
+   i++;
+   
+   if (dots > 1)
+      {
+      break;
+      }
+   }
+
+op[i] = '\0';
 }

@@ -196,7 +196,7 @@ for (argnum = 0; argtemplate[argnum] != NULL; argnum++)
     if (rp->type != CF_FNCALL)
        {
        /* Nested functions will not match to lval so don't bother checking */
-       CheckConstraintTypeMatch(id,rp->item,rp->type,argtypes[argnum],argtemplate[argnum]);
+       CheckConstraintTypeMatch(id,rp->item,rp->type,argtypes[argnum],argtemplate[argnum],1);
        }
     rp = rp->next;
     }

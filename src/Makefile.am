@@ -16,6 +16,17 @@ libpromises_la_SOURCES =						\
 	cf3lex.l							\
 	install.c							\
 	generic_agent.c							\
+	client_protocol.c						\
+	client_code.c							\
+	files_interfaces.c						\
+	files_properties.c						\
+	files_select.c							\
+	files_operators.c						\
+	files_repository.c						\
+	files_copy.c							\
+	files_links.c							\
+	files_hashes.c							\
+	recursion.c							\
 	fncall.c							\
 	cf3globals.c							\
 	report.c							\
@@ -38,6 +49,7 @@ libpromises_la_SOURCES =						\
 	syntax.c							\
 	logging.c							\
 	signals.c							\
+	transaction.c							\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\
@@ -55,6 +67,7 @@ cfPromises_SOURCES =							\
 cfAgent_SOURCES =							\
 	agent.c								\
 	verify_files.c							\
+	files_transform.c						\
 	verify_processes.c						\
 	verify_exec.c							\
 	agentdiagnostic.c

@@ -1,0 +1,37 @@
+
+################################################
+
+bundle agenttype id
+
+{
+vars:
+
+  # "id" type => value...;
+
+promise_type:
+
+  "promiser" -> "promisee"
+
+     attribute_1 => body1,
+     attribute_2 => body2;
+
+  # etc
+
+type2:
+
+type3:
+
+
+
+}
+
+################################################
+
+ # Some bodies can have compound attributes..
+
+body attribute_1 body1
+
+{
+value1 => "...";
+value2 => "...";
+}

@@ -113,22 +113,6 @@ int LOGENCRYPT = false;
 
 struct Item *CONNECTIONLIST = NULL;
 
-/*******************************************************************/
-/* Pthreads                                                        */
-/*******************************************************************/
-
-#ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
-pthread_attr_t PTHREADDEFAULTS;
-pthread_mutex_t MUTEX_COUNT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_HOSTNAME = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-#else
-# if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-pthread_attr_t PTHREADDEFAULTS;
-pthread_mutex_t MUTEX_COUNT = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t MUTEX_HOSTNAME = PTHREAD_MUTEX_INITIALIZER;
-# endif
-#endif
-
 /*****************************************************************************/
 
 int main(int argc,char *argv[])
@@ -1396,8 +1380,9 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
 
 void DoExec(struct cfd_connection *conn,char *sendbuffer,char *args)
 
-{ char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
+{ char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp,rtype;
   int print = false,i, opt=false;
+  void *rval;
   FILE *pp;
 
 if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
@@ -1405,7 +1390,7 @@ if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
    CfLog(cferror,"Couldn't read system clock\n","time");
    }
 
-if (GetMacroValue(CONTEXTID,"cfrunCommand") == NULL)
+if (GetVariable("control_server","cfruncommand",&rval,&rtype) == cf_notype)
    {
    Verbose("cfServerd exec request: no cfrunCommand defined\n");
    sprintf(sendbuffer,"Exec request: no cfrunCommand defined\n");
@@ -1436,8 +1421,8 @@ for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
       }
    }
 
-ExpandVarstring("$(cfrunCommand) --no-splay --inform",ebuff,"");
- 
+ExpandScalar("$(cfrunCommand) --no-splay --inform",ebuff);
+
 if (strlen(ebuff)+strlen(args)+6 > CF_BUFSIZE)
    {
    snprintf(sendbuffer,CF_BUFSIZE,"Command line too long with args: %s\n",ebuff);
@@ -1451,7 +1436,6 @@ else
       {
       strcat(ebuff," ");
       strncat(ebuff,args,CF_BUFSIZE-strlen(ebuff));
-
       snprintf(sendbuffer,CF_BUFSIZE,"cfServerd Executing %s\n",ebuff);
       SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
       }

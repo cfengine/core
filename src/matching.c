@@ -98,7 +98,7 @@ return false;
 int IsPathRegex(char *str)
 
 { char *sp;
-  int result,s = 0,r = 0;
+  int result = false,s = 0,r = 0;
 
 if (result = IsRegex(str))
    {
@@ -163,5 +163,25 @@ return(false);
 }
 
 /*********************************************************************/
+
+int MatchRlistItem(struct Rlist *listofregex,char *teststring)
+
+   /* Checks whether item matches a list of wildcards */
+
+{ struct Rlist *rp;
+ 
+for (rp = listofregex; rp != NULL; rp=rp->next)
+   {
+   /* Make it commutative */
+   
+   if (FullTextMatch(rp->item,teststring) || FullTextMatch(teststring,rp->item))
+      {
+      Debug("MatchRlistItem(%s > %s)\n",rp->item,teststring);
+      return true;
+      }
+   }
+
+return false;
+}
 
 /* EOF */

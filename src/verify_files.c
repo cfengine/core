@@ -28,19 +28,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
 /*****************************************************************************/
 
 void FindAndVerifyFilesPromises(struct Promise *pp)
 
 {
-PromiseBanner(pp); 
-
-/*
-exclude_dirs
-include_dirs
-*/
-
+PromiseBanner(pp);
 FindFilePromiserObjects(pp);
 }
 
@@ -48,9 +41,11 @@ FindFilePromiserObjects(pp);
 
 void FindFilePromiserObjects(struct Promise *pp)
 
-{ char *val = GetConstraint("pathtype",pp->conlist);
+{ char *val = GetConstraint("pathtype",pp->conlist,CF_SCALAR);
 
- if ((val != NULL) && (strcmp(val,"literal") == 0))
+/* Check if we are searching over a regular expression */
+ 
+if ((val != NULL) && (strcmp(val,"literal") == 0))
    {
    VerifyFilePromise(pp->promiser,pp);
    return;
@@ -73,8 +68,11 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
 
 Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
+/* Do a search for promiser objects matching wildpath */
+
 if (!IsPathRegex(wildpath))
    {
+   Verbose(" -> Using file literal base path %s\n",wildpath);
    (*fnptr)(wildpath,pp);
    return;
    }
@@ -98,10 +96,13 @@ for (ip = path; ip != NULL; ip=ip->next)
    
    if (IsRegex(ip->name))
       {
-      // if (lastnode & policy is create) error - can't create
       remainder = ip->next;
       expandregex = true;
       break;
+      }
+   else
+      {
+      expandregex = false;
       }
 
    if (BufferOverflow(pbuffer,ip->name))
@@ -115,9 +116,9 @@ for (ip = path; ip != NULL; ip=ip->next)
    
    if (stat(pbuffer,&statbuf) != -1)
       {
-      if (statbuf.st_uid != agentuid)
+      if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Directory %s in search path %s is controlled by another user - trusting its content is potentially risky\n",pbuffer,wildpath);
+         snprintf(OUTPUT,CF_BUFSIZE,"Directory %s in search path %s is controlled by another user - trusting its content is potentially risky (possible race)\n",pbuffer,wildpath);
          CfLog(cfinform,OUTPUT,"");
          PromiseRef(cfinform,pp);
          }
@@ -131,8 +132,7 @@ if (expandregex) /* Expand one regex link and hand down */
    DIR *dirh;
  
    strncpy(regex,ip->name,CF_BUFSIZE-1);
-   strncpy(nextbuffer,pbuffer,CF_BUFSIZE-1);
-   
+
    if ((dirh=opendir(pbuffer)) == NULL)
       {
       snprintf(OUTPUT,CF_BUFSIZE*2,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
@@ -142,7 +142,7 @@ if (expandregex) /* Expand one regex link and hand down */
    
    count = 0;
    
-   for (dirp = readdir(dirh); dirp != 0; dirp = readdir(dirh))
+   for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
       if (!SensibleFile(dirp->d_name,pbuffer,NULL))
          {
@@ -165,33 +165,44 @@ if (expandregex) /* Expand one regex link and hand down */
          }
 
       count++;
-      
+
+      strncpy(nextbuffer,pbuffer,CF_BUFSIZE-1);
       AddSlash(nextbuffer);
       strcat(nextbuffer,dirp->d_name);
-      
+
       for (ip = remainder; ip != NULL; ip=ip->next)
          {
-         AddSlash(pbuffer);
-         strcat(pbuffer,ip->name);
+         AddSlash(nextbuffer);
+         strcat(nextbuffer,ip->name);
          }
-
+      
       /* The next level might still contain regexs, so go again*/
 
-      LocateFilePromiserGroup(nextbuffer,pp,fnptr);
-      ChopLastNode(nextbuffer);
+      if (!lastnode)
+         {
+         LocateFilePromiserGroup(nextbuffer,pp,fnptr);
+         }
+      else
+         {
+         Verbose(" -> Using expanded file base path %s\n",nextbuffer);
+         (*fnptr)(nextbuffer,pp);
+         }
       }
    
    closedir(dirh);
    }
 else
    {
-   (*fnptr)(wildpath,pp);
+   Verbose(" -> Using file base path %s\n",pbuffer);
+   (*fnptr)(pbuffer,pp);
    }
 
 if (count == 0)
    {
-   Verbose("No promiser file objects matched this regular expression %s\n",wildpath);
+   Verbose("No promiser file objects matched as regular expression %s\n",wildpath);
    }
+
+DeleteItemList(path);
 }
 
 /*******************************************************************/
@@ -200,86 +211,184 @@ if (count == 0)
 
 void VerifyFilePromise(char *path,struct Promise *pp)
 
-{ struct stat objstat;
-  int exists = false;
+{ struct stat osb,oslb,dsb,dslb;
+  struct FileAttr a;
+  struct CfLock thislock;
+  int success,rlevel = 0,isthere;
   int have_rename,have_delete,have_create,have_perms,have_copyfrom;
-  int have_edit,have_editline,have_editxml;
-  
-/*
-  
-Now we have expanded everything and all that remains is to check each
-promise constraint slavishly. There is an assumed logical ordering.
+  int have_edit,have_editline,have_editxml,have_depthsearch;
+  int have_linkfrom,have_fileselect;
 
- Rename
- Tidy      # garbage
- Create|Copy
- Permissions
- Edit
+a = GetFileAttributes(pp);
 
-We first have to know what kind of object the leaf node is (indeed
-whether it exists)
-
-*/
-
-// Leave a boolean signal when we expand the bodies
-
-have_rename = GetBooleanConstraint("rename",pp->conlist);
-have_delete = GetBooleanConstraint("delete",pp->conlist);
-have_create = GetBooleanConstraint("create",pp->conlist);
-have_perms = GetBooleanConstraint("perms",pp->conlist);
-have_copyfrom = GetBooleanConstraint("copyfrom",pp->conlist);
-have_editline = GetBooleanConstraint("edit_line",pp->conlist);
-have_editxml = GetBooleanConstraint("edit_xml",pp->conlist);
-have_edit = have_editline || have_editxml;
-
-if (have_editline && have_editxml)
+if (!SanityChecks(path,a,pp))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   return;
    }
 
-if (have_delete && (have_create||have_copyfrom||have_edit||have_rename))
+if (stat(path,&osb) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
-   }
-
-
-if (stat(path,&objstat) == -1)
-   {
-   exists = false;
-// if (S_SIDIR(path))  DoCreate();
+   if (a.create||a.touch)
+      {
+      if (!CreateFile(path,pp,a))
+         {
+         return;
+         }
+      }
    }
 else
    {
-   exists = true;
-//   DoTidy();
+   if (!S_ISDIR(osb.st_mode))
+      {
+      if (a.havedepthsearch)
+         {
+         snprintf(OUTPUT,CF_BUFSIZE,"depth_search (recursion) is promised for a base object %s that is not a directory",path);
+         CfLog(cferror,OUTPUT,"stat");
+         return;
+         }
+      }
    }
 
-// if (S_SIDIR(path))
-// int RecursiveCheck(char *name,int recurse,int rlevel,struct File *ptr,struct stat *sb)
-// make a pluging handler
+thislock = AcquireLock(ASUniqueName("files"),CanonifyName(path),VUQNAME,CFSTARTTIME,a,pp);
 
-// The handler needs to return a clear protocol to set exit status
+if (thislock.lock == NULL)
+   {
+   return;
+   }
 
-//DoCreate();
-//DoCopy();
-//DoPerms();
-//DoEdit();
-//DoRename();
+/* Phase 1 - */
 
+if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
+   {
+   lstat(path,&osb); /* if doesn't exist have to stat again anyway */
+   
+   if (a.havedepthsearch)
+      {
+      SetSearchDevice(&osb,pp);
+      }
+   
+   success = DepthSearch(path,&osb,rlevel,a,pp);
+
+   /* normally searches do not include the base directory */
+   
+   if (a.recursion.include_basedir)
+      {
+      int save_search = a.havedepthsearch;
+
+      /* Handle this node specially */
+
+      a.havedepthsearch = false;
+      success = DepthSearch(path,&osb,rlevel,a,pp);
+      a.havedepthsearch = save_search;
+      }
+   }
+
+/* Phase 2a - copying is potentially threadable if no followup actions */
+
+if (a.havecopy)
+   {
+   ScheduleCopyOperation(path,a,pp);
+   }
+
+/* Phase 2b link after copy in case need file first */
+
+if (a.havelink)
+   {
+   ScheduleLinkOperation(path,a,pp);
+   }
+
+/* Phase 3 - content editing */
+
+ScheduleEditOperation(path,a,pp);
+
+YieldCurrentLock(thislock);
 }
 
 /*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
-
-void DoCreate()
+int SanityChecks(char *path,struct FileAttr a,struct Promise *pp)
 
 {
-// if filename /a/b/c/.  make directory
-     
+if (a.havelink && a.havecopy)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.haveeditline && a.haveeditxml)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.havedepthsearch && a.haveedit)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Recursive depth_searches are not compatible with general file editing",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.havedelete && (a.create||a.havecopy||a.haveedit||a.haverename))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.haverename && (a.create||a.havecopy||a.haveedit))
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.havedelete && a.havedepthsearch && !a.haveselect)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Dangerous or ambiguous promise - %s specifices recursive depth search but has no file selection criteria",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.havedelete && a.haverename)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"File %s cannot promise both deletion and renaming",path);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cferror,pp);
+   return false;
+   }
+
+if (a.havecopy && a.havedepthsearch && a.havedelete)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
+   CfLog(cfinform,OUTPUT,"");
+   PromiseRef(cfinform,pp);
+   }
+
+if (a.transaction.background && a.transaction.audit)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cfinform,pp);
+   return false;
+   }
+
+if ((a.havecopy || a.havelink) && a.transformer)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
+   CfLog(cferror,OUTPUT,"");
+   PromiseRef(cfinform,pp);
+   return false;
+   }
+
+return true;
 }

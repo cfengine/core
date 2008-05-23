@@ -58,30 +58,6 @@ int Dialogue(int sd,char *s);
 
 
 /*******************************************************************/
-/* Pthreads                                                        */
-/*******************************************************************/
-
-#ifdef HAVE_PTHREAD_H
-# include <pthread.h>
-#endif
-
-#ifdef HAVE_SCHED_H
-# include <sched.h>
-#endif
-
-#ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
-pthread_attr_t PTHREADDEFAULTS;
-pthread_mutex_t MUTEX_COUNT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_HOSTNAME = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-#else
-# if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-pthread_attr_t PTHREADDEFAULTS;
-pthread_mutex_t MUTEX_COUNT = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t MUTEX_HOSTNAME = PTHREAD_MUTEX_INITIALIZER;
-# endif
-#endif
-
-/*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
@@ -258,11 +234,11 @@ if (getuid() > 0)
    }
 
 snprintf(VBUFF,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
-MakeDirectoriesFor(VBUFF,'y');
+MakeParentDirectory(VBUFF,true);
 snprintf(VBUFF,CF_BUFSIZE,"%s/bin/cfagent -D from_cfexecd",CFWORKDIR);
-MakeDirectoriesFor(VBUFF,'y');
+MakeParentDirectory(VBUFF,true);
 snprintf(VBUFF,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
-MakeDirectoriesFor(VBUFF,'y');
+MakeParentDirectory(VBUFF,true);
 
 snprintf(VBUFF,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
 chmod(VBUFF,0700); 
@@ -524,7 +500,7 @@ void *LocalExec(void *scheduled_run)
 { FILE *pp; 
   char line[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
   char cmd[CF_BUFSIZE];
-  int print;
+  int print,tid;
   time_t starttime = time(NULL);
   FILE *fp;
 #ifdef HAVE_PTHREAD_SIGMASK
@@ -533,6 +509,11 @@ void *LocalExec(void *scheduled_run)
 sigemptyset(&sigmask);
 pthread_sigmask(SIG_BLOCK,&sigmask,NULL); 
 #endif
+
+#ifdef HAVE_PTHREAD
+tid = (int) pthread_self();
+#endif
+
 
  
 Verbose("------------------------------------------------------------------\n\n");
@@ -548,7 +529,7 @@ snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cfagent%s -Dfrom_cfexecd%s",
  
 timestamp(starttime, line, CF_BUFSIZE);
 
-snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s",CFWORKDIR,CanonifyName(VFQNAME),line);
+snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%d",CFWORKDIR,CanonifyName(VFQNAME),line,tid);
  
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 

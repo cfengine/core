@@ -1,0 +1,28 @@
+
+bundle agent vartest
+
+{
+vars:
+
+  "varid" string => "some_value";
+
+files:
+
+   "/usr/local/$(varid)" -> "$(varid)"
+
+      linkto    => linkdetails("/site/mountpoint/local");
+
+
+}
+
+###
+
+body linkto linkdetails(tofile)
+
+{
+link_type     => "symbolic";   # /absolute/abs/hard/relative/rel
+copy_patterns => "";           # regex list
+deadlinks     => "kill";       #/force
+when_no_file  => "force";      # kill
+}
+

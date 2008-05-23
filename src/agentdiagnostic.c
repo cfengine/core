@@ -66,20 +66,25 @@ pp.petype = CF_SCALAR;
 pp.lineno = 0;
 pp.audit = NULL;
 pp.conlist = NULL;
-printf("TestSearchFilePromiser(%s)\n\n",pp.promiser);
+
+printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
 LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 
 pp.promiser = "/var/[^/]*/[c|l].*";
-printf("TestSearchFilePromiser(%s)\n\n",pp.promiser);
+printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
 LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 
 pp.promiser = "/var/[c|l][A-Za-z0-9_ ]*";
-printf("TestSearchFilePromiser(%s)\n\n",pp.promiser);
+printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
 LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 
 AppendConstraint(&(pp.conlist),"path","literal",CF_SCALAR,NULL);
 pp.promiser = "/var/[^/]*/[c|l].*";
-printf("TestSearchFilePromiser(%s)\n\n",pp.promiser);
+printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
+LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
+
+pp.promiser = "/var/.*/h.*";
+printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
 LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 
 }

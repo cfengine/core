@@ -62,7 +62,7 @@ if (strlen(hostname) == 0)
 Debug("LastSeen(%s) reg\n",hostname);
 
 /* Tidy old versions - temporary */
-snprintf(name,CF_BUFSIZE-1,"%s/%s",VLOCKDIR,CF_OLDLASTDB_FILE);
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_OLDLASTDB_FILE);
 unlink(name);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
@@ -72,7 +72,7 @@ if ((errno = db_create(&dbp,dbenv,0)) != 0)
    return;
    }
 
-snprintf(name,CF_BUFSIZE-1,"%s/%s",VLOCKDIR,CF_LASTDB_FILE);
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 #ifdef CF_OLD_DB
 if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
@@ -87,7 +87,7 @@ if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
    }
 
 /* Now open special file for peer entropy record - INRIA intermittency */
-snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",VLOCKDIR,CF_LASTDB_FILE,hostname);
+snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
 
 if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
    {

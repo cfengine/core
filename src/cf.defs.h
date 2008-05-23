@@ -314,6 +314,7 @@ typedef int clockid_t;
 #define CF_TICKS_PER_HOUR 3600 /* 60 * 60 */
 #define CF_HALF_HOUR 1800      /* 60 * 30 */ 
 #define CF_NOT_CONNECTED -1
+#define CF_COULD_NOT_CONNECT -2
 #define CF_RECURSION_LIMIT 100
 #define CF_MONDAY_MORNING 342000
 #define CF_NOVAL -0.7259285297502359
@@ -1410,6 +1411,7 @@ struct cfagent_connection
    {
    int sd;
    int trust;               /* true if key being accepted on trust */
+   int authenticated;
    int protoversion;
    int family;                              /* AF_INET or AF_INET6 */
    char localip[CF_MAX_IP_LEN];
@@ -1775,22 +1777,39 @@ struct Disable
 
 struct Image
    {
-   char   *cf_findertype; /* Type info for finder */
    char   done;
    char   *scope;
-   char   *path;
-   char   *destination;
-   char   *server;
-   char   *repository;
-   mode_t plus;
-   mode_t minus;
-   struct UidList *uid;
-   struct GidList *gid;
-   char   *action;                           /* fix / warn /silent */
    char   *classes;
    char   *defines;
    char   *elsedef;
    char   *failover;
+   char   xdev;
+   int    recurse;
+   int    ifelapsed;
+   int    expireafter;
+   struct Audit *audit;
+   int    lineno;   
+   struct Item *exclusions;
+   struct Item *inclusions;
+   struct Item *filters;      
+   struct Item *ignores;            
+   char   log;
+   char   inform;
+   char   logaudit;
+   u_long plus_flags;    /* for *BSD chflags */
+   u_long minus_flags;    /* for *BSD chflags */      
+   mode_t plus;
+   mode_t minus;
+   struct UidList *uid;
+   struct GidList *gid;
+
+      
+   char   *cf_findertype; /* Type info for finder */
+   char   *path;
+   char   *destination;
+   char   *server;
+   char   *repository;
+   char   *action;                           /* fix / warn /silent */
    char   force;                                     /* true false */
    char   forcedirs;
    char   forceipv4;
@@ -1800,24 +1819,12 @@ struct Image
    char   preservetimes;                 /* preserve times in copy */
    char   checkroot;              /* check perms on root directory */
    char   backup;
-   char   xdev;
-   int    recurse;
    int    makeholes;
    off_t  size;
    char   comp;
    char   purge;
 
-   int    ifelapsed;
-   int    expireafter;
-   struct Audit *audit;
-   int    lineno;
-      
-   struct Item *exclusions;
-   struct Item *inclusions;
-   struct Item *filters;      
-   struct Item *ignores;            
    struct Item *symlink;
-
    struct cfstat *cache;                              /* stat cache */
    struct CompressedArray *inode_cache;              /* inode cache */
  
@@ -1825,16 +1832,11 @@ struct Image
    
    struct Image *next;
    struct Item *acl_aliases;
-   char   log;
-   char   inform;
-   char   logaudit;
    char   typecheck;
    char   trustkey;
    char   encrypt;
    char   verify;
    char   compat;
-   u_long plus_flags;    /* for *BSD chflags */
-   u_long minus_flags;    /* for *BSD chflags */      
    };
 
 /*******************************************************************/

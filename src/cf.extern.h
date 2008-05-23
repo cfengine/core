@@ -34,7 +34,10 @@
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 extern pthread_mutex_t MUTEX_SYSCALL;
 extern pthread_mutex_t MUTEX_LOCK;
-#endif
+extern pthread_attr_t PTHREADDEFAULTS;
+extern pthread_mutex_t MUTEX_COUNT;
+extern pthread_mutex_t MUTEX_HOSTNAME;
+# endif
 
 extern pid_t ALARM_PID;
 extern short INSTALLALL;

@@ -107,6 +107,15 @@ if (now == 0)
    return this;
    }
 
+this.last = NULL;
+this.lock = NULL;
+this.log = NULL;
+
+if (pp->done)
+   {
+   return this;
+   }
+
 Debug("AcquireLock(%s,%s,time=%d), ExpireAfter=%d, IfElapsed=%d\n",operator,operand,now,attr.transaction.expireafter,attr.transaction.ifelapsed);
 
 /* Make local copy in case CanonifyName called - not re-entrant - best fix for now */

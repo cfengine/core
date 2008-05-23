@@ -515,6 +515,10 @@ if (found != -1)
          }
       } 
    }
+else
+   {
+   MakeParentDirectory(destfile,true);
+   }
 
 if (attr.copy.min_size == 0 && attr.copy.max_size == 0)
    {

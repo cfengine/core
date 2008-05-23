@@ -89,6 +89,7 @@ pcopy->done = pp->done;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
 pcopy->cache = NULL;
+pcopy->inode_cache = NULL;
 pcopy->this_server = NULL;
 pcopy->donep = pp->donep;
 
@@ -257,6 +258,7 @@ pcopy->agentsubtype = pp->agentsubtype;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
 pcopy->cache = NULL;
+pcopy->inode_cache = NULL;
 pcopy->this_server = NULL;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */

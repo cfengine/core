@@ -135,8 +135,12 @@ if (expandregex) /* Expand one regex link and hand down */
 
    if ((dirh=opendir(pbuffer)) == NULL)
       {
+      struct FileAttr dummyattr;
+
+      memset(&dummyattr,0,sizeof(dummyattr));
       snprintf(OUTPUT,CF_BUFSIZE*2,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
       CfLog(cfverbose,OUTPUT,"opendir");
+      ClassAuditLog(pp,dummyattr,OUTPUT,CF_FAIL);
       return;
       }
    

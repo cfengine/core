@@ -109,10 +109,12 @@ CfLog(cfverbose,OUTPUT,"");
 ClassAuditLog(&dummyp,dummyattr,OUTPUT,CF_REPORT);
 ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
 
+
 if (AUDITDBP)
    {
    AUDITDBP->close(AUDITDBP,0);
    }
+
 }
 
 /*****************************************************************************/

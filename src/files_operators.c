@@ -49,9 +49,6 @@ Verbose(" -> Handling file existence constraints on %s\n",path);
 
 NewScalar("this","promiser",path,cf_str); // Parameters may only be scalars
 
-//   AugmentScope("this",bp->args,params);
-
-
 if (attr.transformer != NULL)
    {
    if (!TransformFile(path,attr,pp))
@@ -82,7 +79,7 @@ if (attr.haveperms)
    VerifyFileAttributes(path,sb,attr,pp);
    }
 
-DeleteScalar("this","promiser");   
+DeleteScalar("this","promiser");
 return true;
 }
 

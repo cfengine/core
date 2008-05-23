@@ -517,7 +517,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       DeleteTypeContext(type);
       }
 
-   DeleteFromScope(bp->name,bp->args);
+   //DeleteFromScope(bp->name,bp->args);
    }
 }
 

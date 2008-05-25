@@ -208,7 +208,7 @@ if (found == -1)
    snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s\n",source);
    CfLog(cferror,OUTPUT,"");
    DeleteClientCache(attr,pp);
-   SummarizeTransaction(pp,attr,CF_FAIL);
+   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
    return;
    }
 
@@ -570,7 +570,8 @@ if (found == -1)
             }
 
          snprintf(OUTPUT,CF_BUFSIZE*2,"Copied from %s:%s\n",server,sourcefile);
-         SummarizeTransaction(pp,attr,CF_CHG);
+         CfLog(cfverbose,OUTPUT,"");
+         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
 
          /*
          if (controlVAL SINGLECOPY LIST)
@@ -671,7 +672,7 @@ else
           (S_ISLNK(dsb.st_mode)  && ! S_ISLNK(ssb.st_mode)))
           
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Image %s exists but type mismatch with source=%s\n",destfile,sourcefile);
+         snprintf(OUTPUT,CF_BUFSIZE,"Promised file copy %s exists but type mismatch with source=%s\n",destfile,sourcefile);
          CfLog(cfinform,OUTPUT,"");
          ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
          return;
@@ -684,13 +685,13 @@ else
          {
          if (DONTDO)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Should update image %s from master %s on %s",destfile,sourcefile,server);
+            snprintf(OUTPUT,CF_BUFSIZE*2,"Should update file %s from source %s on %s",destfile,sourcefile,server);
             CfLog(cferror,OUTPUT,"");
             return;
             }
          else
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Updated image %s from master %s on %s",destfile,sourcefile,server);
+            snprintf(OUTPUT,CF_BUFSIZE*2,"Updated %s from source %s on %s",destfile,sourcefile,server);
             CfLog(cfinform,OUTPUT,"");
             ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
             }
@@ -761,9 +762,10 @@ else
             }
           }
 */    
-      snprintf(OUTPUT,CF_BUFSIZE,"Image file is up to date: %s\n",destfile);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
+//      snprintf(OUTPUT,CF_BUFSIZE," -> File %s is an up to date copy of source\n",destfile);
+//      CfLog(cfinform,OUTPUT,"");
+//      ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
+      CfOut(cfinform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
       }
    }
 }

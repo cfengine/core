@@ -84,7 +84,8 @@ extern struct Rlist *SERVERLIST;
 
 int main(int argc,char *argv[])
 
-{
+{struct stat sar;
+
 GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
 ThisAgentInit();
@@ -438,7 +439,6 @@ if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype
    exit(1);
    }
 
-
 for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
@@ -516,8 +516,6 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
 
       DeleteTypeContext(type);
       }
-
-   //DeleteFromScope(bp->name,bp->args);
    }
 }
 
@@ -576,8 +574,6 @@ if (pp->done)
    {
    return;
    }
-
-//SetOutputRoute
 
 if (strcmp("processes",pp->agentsubtype) == 0)
    {
@@ -643,3 +639,5 @@ switch(type)
        break;
    }
 }
+
+

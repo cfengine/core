@@ -31,6 +31,24 @@
 
 /***************************************************************************/
 
+enum cfreport String2ReportLevel(char *s)
+
+{ int i;
+  static char *types[] = { "inform","verbose","error",NULL };
+
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return (enum cfreport) i;      
+      }
+   }
+
+return cf_noreport;
+}
+
+/***************************************************************************/
+
 enum cfhashes String2HashType(char *typestr)
 
 { int i;

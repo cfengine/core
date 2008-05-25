@@ -85,10 +85,10 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"ifelapsed",cf_int,CF_VALRANGE},
    {"expireafter",cf_int,CF_VALRANGE},
    {"log_string",cf_str,""},
-   {"log_level",cf_str,"inform,verbose,debug"},
+   {"log_level",cf_str,"inform,verbose,error"},
    {"audit",cf_opts,CF_BOOL},
    {"background",cf_opts,CF_BOOL},
-   {"report_level",cf_opts,"inform,verbose,debug,logonly"},
+   {"report_level",cf_opts,"inform,verbose,error"},
    {NULL,cf_notype,NULL}
    };
 

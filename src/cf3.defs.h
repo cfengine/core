@@ -30,6 +30,7 @@
 #include "cf.extern.h"
 
 #undef VERSION
+#undef Verbose
 
 #include "conf.h"
 
@@ -266,6 +267,14 @@ enum cfspromises
    cfs_maproot,
    cfs_encrypted,
    cfs_noptype
+   };
+
+enum cfreport
+   {
+   cf_inform,
+   cf_verbose,
+   cf_error,
+   cf_noreport
    };
 
 /*************************************************************************/
@@ -637,9 +646,9 @@ struct TransactionContext
    int expireafter;
    int background;
    char *log_string;
-   char *log_level;
    int  audit;
    enum cfoutputlevel report_level;
+   enum cfoutputlevel log_level;
    };
 
 /*************************************************************************/

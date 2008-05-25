@@ -193,32 +193,14 @@ if (t.expireafter == CF_UNDEFINED)
    t.expireafter = VEXPIREAFTER;
    }
 
-t.log_string = GetConstraint("log_string",pp->conlist,CF_SCALAR);
-t.log_level = GetConstraint("log_level",pp->conlist,CF_SCALAR);
 t.audit = GetBooleanConstraint("audit",pp->conlist);
+t.log_string = GetConstraint("log_string",pp->conlist,CF_SCALAR);
+
+value = GetConstraint("log_level",pp->conlist,CF_SCALAR);
+t.log_level = String2ReportLevel(value);
 
 value = GetConstraint("report_level",pp->conlist,CF_SCALAR);
-
-if (value && strcmp(value,"verbose") == 0)
-   {
-   t.report_level = cfverbose;   
-   }
-else if (value && strcmp(value,"error") == 0)
-   {
-   t.report_level = cferror;   
-   }
-else if (value && strcmp(value,"logonly") == 0)
-   {
-   t.report_level = cflogonly;   
-   }
-else if (value && strcmp(value,"loginform") == 0)
-   {
-   t.report_level = cfloginform;   
-   }
-else
-   {
-   t.report_level = cfsilent;   
-   }
+t.report_level = String2ReportLevel(value);
 
 return t;
 }

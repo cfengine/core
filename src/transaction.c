@@ -30,52 +30,26 @@
 
 /*****************************************************************************/
 
-void SummarizeTransaction(struct Promise *pp,struct FileAttr attr,char result)
+void SummarizeTransaction(struct FileAttr attr,struct Promise *pp)
 
 {
-switch (result)
+if (attr.transaction.log_string)
    {
-   case CF_CHG:
-       PR_REPAIRED++;
-       AddAllClasses(attr.classes.change);
-       break;
-       
-   case CF_WARN:
-       PR_NOTKEPT++;
-       break;
-       
-   case CF_TIMEX:
-       PR_NOTKEPT++;
-       AddAllClasses(attr.classes.timeout);
-       break;
-
-   case CF_FAIL:
-       PR_NOTKEPT++;
-       AddAllClasses(attr.classes.failure);
-       break;
-       
-   case CF_DENIED:
-       PR_NOTKEPT++;
-       AddAllClasses(attr.classes.denied);
-       break;
-       
-   case CF_INTERPT:
-       PR_NOTKEPT++;
-       AddAllClasses(attr.classes.interrupt);
-       break;
-
-   case CF_REGULAR:
-       PR_REPAIRED++;
-       break;
-       
-   case CF_NOP:
-       PR_KEPT++;
-       break;
-
-   case CF_UNKNOWN:
-       PR_KEPT++;
-       break;
+   CfLog(cflogonly,attr.transaction.log_string,"");
+   ClassAuditLog(pp,attr,attr.transaction.log_string,CF_NOP);
    }
+ 
+/*
+   char *log_string;
+   char *log_level;
+
+   enum cfoutputlevel report_level;
+   cfinform,
+   cfverbose,
+   cferror,
+   cflogonly,
+   {"log_level",cf_str,"inform,verbose,debug"},
+*/
 }
 
 /*****************************************************************************/

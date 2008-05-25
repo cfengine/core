@@ -269,9 +269,10 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
    {
    Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
-   snprintf(OUTPUT,CF_BUFSIZE*2,"  -> File permissions on %s as promised\n",file);
-   CfLog(cfverbose,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
+//   snprintf(OUTPUT,CF_BUFSIZE*2," -> File permissions on %s as promised\n",file);
+//   CfLog(cfverbose,OUTPUT,"");
+//   ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
+   CfOut(cfverbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
    }
 else
    {

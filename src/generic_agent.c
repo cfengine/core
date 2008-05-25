@@ -271,7 +271,7 @@ CfenginePort();
 StrCfenginePort();
 FOUT = stdout;
 AddClassToHeap("any");
-strcpy(VPREFIX,"cfengine3");
+strcpy(VPREFIX,"cf3");
 VIFELAPSED = 1;
 VEXPIREAFTER = 1;
 }
@@ -536,9 +536,10 @@ void PromiseBanner(struct Promise *pp)
 {
 Verbose("\n");
 Verbose("      .........................................................\n");
+
 if (VERBOSE||DEBUG)
    {
-   printf("      %s",pp->promiser);
+   printf("%s      %s",VPREFIX,pp->promiser);
    if (pp->promisee)
       {
       printf(" -> ");

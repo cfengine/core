@@ -50,6 +50,7 @@ libpromises_la_SOURCES =						\
 	logging.c							\
 	signals.c							\
 	transaction.c							\
+	cfstream.c							\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\

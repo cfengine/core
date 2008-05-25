@@ -100,6 +100,7 @@ int ControlBool(enum cfagenttype id,enum cfacontrol promiseoption);
 
 /* conversion.c */
 
+enum cfreport String2ReportLevel(char *typestr);
 enum cfhashes String2HashType(char *typestr);
 enum cfcomparison String2Comparison(char *s);
 enum cflinktype String2LinkType(char *s);
@@ -470,6 +471,15 @@ void Summarize(void);
 
 void HandleSignals(int signum);
 
+/* cfstreams.h */
+
+void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
+void CfT(enum cfreport level,char status,char *errstr,struct Promise *pp,struct FileAttr attr,char *fmt, ...);
+void Verbose(char *fmt, ...);
+void MakeLog(struct Item *mess,enum cfreport level);
+void MakeReport(struct Item *mess,int prefix);
+void SanitizeBuffer(char *buffer);
+
 /* syntax.c */
 
 void CheckBundle(char *name,char *type);
@@ -496,7 +506,7 @@ void Get3Environment(void);
 
 /* transaction.c */
 
-void SummarizeTransaction(struct Promise *pp,struct FileAttr attr,char result);
+void SummarizeTransaction(struct FileAttr attr,struct Promise *pp);
 struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct FileAttr attr,struct Promise *pp);
 void YieldCurrentLock(struct CfLock this);
 time_t FindLock(char *last);

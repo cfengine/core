@@ -89,9 +89,10 @@ pcopy->done = pp->done;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
 pcopy->cache = NULL;
-pcopy->inode_cache = NULL;
-pcopy->this_server = NULL;
+pcopy->inode_cache = pp->inode_cache;
+pcopy->this_server = pp->this_server;
 pcopy->donep = pp->donep;
+pcopy->conn = pp->conn;
 
 Debug("Copying promise constraints\n\n");
 
@@ -257,9 +258,10 @@ pcopy->ref = pp->ref;
 pcopy->agentsubtype = pp->agentsubtype;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
-pcopy->cache = NULL;
-pcopy->inode_cache = NULL;
-pcopy->this_server = NULL;
+pcopy->cache = pp->cache;
+pcopy->inode_cache = pp->inode_cache;
+pcopy->this_server = pp->this_server;
+pcopy->conn = pp->conn;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 

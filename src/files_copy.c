@@ -97,7 +97,7 @@ if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
    {
    if (attr.copy.purge)
       {
-      Verbose("%s: (Destination purging enabled)\n",VPREFIX);
+      Verbose(" !! (Destination purging enabled)\n");
       }
 
    SetSearchDevice(&ssb,pp);

@@ -81,7 +81,10 @@ DeleteScope("this");
 
 /* Cannot use DeleteRlist(deref) as we are referencing memory from hashtable */
 
-DeleteReferenceRlist(deref);
+if (deref != NULL)
+   {
+   DeleteReferenceRlist(deref);
+   }
 }
 
 /*****************************************************************************/

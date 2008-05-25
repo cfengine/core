@@ -5,14 +5,12 @@
 #######################################################
 
 body common control
-   {
-   any::
 
-      bundlesequence  => { 
-                         "testbundle"
-                         };
-   }
+{
+ any::
 
+  bundlesequence  => { "testbundle" };   
+}
 
 ############################################
 
@@ -52,8 +50,9 @@ links    => "stop";            #stop/keep/traverse/tidy
 body file_select zero_age
 
 #
-# we can build old "include", "exclude", and "ignore" from these
-# as standard patterns
+# we can build old "include", "exclude", and "ignore" 
+# from these as standard patterns - these bodies can
+# form a library of standard patterns
 #
 
 {

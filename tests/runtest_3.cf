@@ -1,6 +1,6 @@
 #######################################################
 #
-# Disabling files
+# Disabling / rotating files
 #
 #######################################################
 
@@ -22,11 +22,11 @@ bundle agent testbundle
 files:
 
   "/home/mark/tmp/test_create" 
-      rename => disable;
-#      create => "true";
 
+      rename => disable;
 
   "/home/mark/tmp/rotateme"
+
       rename => rotate("4");
 }
 

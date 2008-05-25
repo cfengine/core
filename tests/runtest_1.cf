@@ -4,15 +4,19 @@
 #
 ########################################################
 
+ #
+ # run this as follows:
+ #
+ # cfServerd -f runtest_1.cf [-d2]
+ # cfAgent -f runtest_2.cf
+ #
+ # Notice that the same file configures all parts of cfengine
+
 body common control
-   {
-   any::
 
-      bundlesequence  => { 
-                         "testbundle"
-                         };
-   }
-
+{
+bundlesequence  => { "testbundle"  };
+}
 
 ########################################################
 
@@ -52,15 +56,16 @@ body copyfrom mycopy(from,server)
 {
 source      => "$(from)";
 servers     => { "$(server)" };
-backup      => "true";                   #/false/timestamp
+backup      => "true";                  #/false/timestamp
+purge       => "true";
 }
 
 #########################################################
 # Server config
 #########################################################
 
-
 body server control 
+
 {
 allowconnects         => { "127.0.0.1"};
 allowallconnects      => { "127.0.0.1" };
@@ -74,7 +79,7 @@ bundle server access_rules()
 {
 access:
 
-    "/home/mark/LapTop"
+  "/home/mark/LapTop"
 
-       admit   => { "127.0.0.1" };
+    admit   => { "127.0.0.1" };
 }

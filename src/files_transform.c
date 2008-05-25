@@ -104,6 +104,10 @@ struct FilePerms GetPermissionConstraints(struct Promise *pp)
   char *value;
 
 value = (char *)GetConstraint("mode",pp->conlist,CF_SCALAR);
+
+p.plus = 0;
+p.minus = 0;
+
 ParseModeString(value,&p.plus,&p.minus);
 value = (char *)GetConstraint("bsdflags",pp->conlist,CF_SCALAR);
 ParseFlagString(value,&p.plus_flags,&p.minus_flags);
@@ -127,6 +131,8 @@ s.path = (struct Rlist *)GetConstraint("path_name",pp->conlist,CF_LIST);
 s.filetypes = (struct Rlist *)GetConstraint("file_types",pp->conlist,CF_LIST);
 s.issymlinkto = (struct Rlist *)GetConstraint("issymlinkto",pp->conlist,CF_LIST);
 
+s.plus = 0;
+s.minus = 0;
 value = (char *)GetConstraint("search_mode",pp->conlist,CF_SCALAR);
 ParseModeString(value,&s.plus,&s.minus);
 value = (char *)GetConstraint("search_bsdflags",pp->conlist,CF_SCALAR);

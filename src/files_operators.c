@@ -43,7 +43,7 @@ if (!SelectLeaf(path,sb,attr,pp))
    return false;
    }
 
-Verbose(" -> Handling file existence constraints on %s\n",path);
+Debug(" -> Handling file existence constraints on %s\n",path);
 
 /* We still need to augment the scope of context "this" for commands */
 
@@ -803,7 +803,7 @@ void VerifyDelete(char *path,struct stat *sb,struct FileAttr attr,struct Promise
 
 { char *lastnode = ReadLastNode(path);
 
-Verbose(" -> Verifying file deletions for %s\n",path);
+Debug(" -> Verifying file deletions for %s\n",path);
  
 if (DONTDO)
    {

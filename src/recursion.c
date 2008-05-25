@@ -41,7 +41,7 @@ if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are i
    {
    char basedir[CF_BUFSIZE];
 
-   Verbose(" -> Direct file reference %s, no search implied\n",name);
+   Debug(" -> Direct file reference %s, no search implied\n",name);
    strcpy(basedir,name);
    ChopLastNode(basedir);
    chdir(basedir);

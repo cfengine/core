@@ -33,7 +33,7 @@
 
 void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct FileAttr attr,struct Promise *pp)
 
-{ struct stat statbuf, deststatbuf;
+{ struct stat sb, dsb;
   char newfrom[CF_BUFSIZE];
   char newto[CF_BUFSIZE];
   struct Item *namecache = NULL;
@@ -57,8 +57,9 @@ if (strlen(from) == 0)     /* Check for root dir */
 
 strncpy(newto,to,CF_BUFSIZE-2);
 AddSlash(newto);
+strcat(newto,".");
 
-if (attr.transaction.action == cfa_warn)
+if (attr.transaction.action != cfa_warn)
    {
    if (!MakeParentDirectory(newto,attr.move_obstructions))
       {
@@ -109,28 +110,30 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       /* No point in checking if there are untrusted symlinks here,
          since this is from a trusted source, by defintion */
       
-      if (cf_stat(newfrom,&statbuf,attr,pp) == -1)
+      if (cf_stat(newfrom,&sb,attr,pp) == -1)
          {
-         Verbose("%s: (Can't stat %s)\n",VPREFIX,newfrom);
+         snprintf(OUTPUT,CF_BUFSIZE," !! (Can't stat %s)\n",newfrom);
+         CfLog(cfverbose,OUTPUT,"cf_stat");
          continue;
          }
       }
    else
       {
-      if (cf_lstat(newfrom,&statbuf,attr,pp) == -1)
+      if (cf_lstat(newfrom,&sb,attr,pp) == -1)
          {
-         Verbose("%s: (Can't stat %s)\n",VPREFIX,newfrom);
+         snprintf(OUTPUT,CF_BUFSIZE," !! (Can't stat %s)\n",newfrom);
+         CfLog(cfverbose,OUTPUT,"cf_stat");
          continue;
          }
       }
 
-   if (attr.recursion.xdev && DeviceBoundary(&statbuf,pp))
+   if (attr.recursion.xdev && DeviceBoundary(&sb,pp))
       {
-      Verbose("Skipping %s on different device\n",newfrom);
+      Verbose(" !! Skipping %s on different device\n",newfrom);
       continue;
       }
 
-   if (S_ISDIR(statbuf.st_mode))
+   if (S_ISDIR(sb.st_mode))
       {
       if (attr.recursion.travlinks)
          {
@@ -143,22 +146,19 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
          continue;
          }
 
-      memset(&deststatbuf,0,sizeof(struct stat));
+      memset(&dsb,0,sizeof(struct stat));
       
-      if (stat(newto,&deststatbuf) == -1)
+      if (stat(newto,&dsb) == -1)
          {
-         mkdir(newto,statbuf.st_mode);
-
-         if (stat(newto,&deststatbuf) == -1)
+         if (stat(newto,&dsb) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s\n",newto);
+            snprintf(OUTPUT,CF_BUFSIZE*2," !! Can't stat local copy %s - failed to establish directory\n",newto);
             CfLog(cferror,OUTPUT,"stat");
             continue;
             }
          }
       
-      VerifyCopiedFileAttributes(newto,&deststatbuf,&statbuf,attr,pp);
-
+      VerifyCopiedFileAttributes(newto,&dsb,&sb,attr,pp);
       SourceSearchAndCopy(newfrom,newto,maxrecurse-1,attr,pp);
       }
    else
@@ -169,8 +169,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
 
 if (attr.copy.purge)
    {
-   /* inclusions not exclusions, since exclude from purge means include */
-   // PurgeFiles(namecache,to,attr.select.inclusions,AUTHENTICATED); 
+   PurgeLocalFiles(namecache,to,attr,pp); 
    DeleteItemList(namecache);
    }
  
@@ -188,7 +187,7 @@ void VerifyCopy(char *source,char *destination,struct FileAttr attr,struct Promi
   char sourcedir[CF_BUFSIZE];
   char destdir[CF_BUFSIZE];
   char destfile[CF_BUFSIZE];
-  struct stat sourcestatbuf, deststatbuf;
+  struct stat ssb, dsb;
   struct cfdirent *dirp;
   int save_uid, save_gid, found;
   
@@ -197,11 +196,11 @@ Debug("VerifyCopy (source=%s destination=%s)\n",source,destination);
 if (attr.copy.link_type == cfa_notlinked)
    {
    Debug("Treating links as files for %s\n",source);
-   found = cf_stat(source,&sourcestatbuf,attr,pp);
+   found = cf_stat(source,&ssb,attr,pp);
    }
 else
    {
-   found = cf_lstat(source,&sourcestatbuf,attr,pp);
+   found = cf_lstat(source,&ssb,attr,pp);
    }
 
 if (found == -1)
@@ -213,12 +212,12 @@ if (found == -1)
    return;
    }
 
-if (sourcestatbuf.st_nlink > 1)    /* Preserve hard link structure when copying */
+if (ssb.st_nlink > 1)    /* Preserve hard link structure when copying */
    {
-   RegisterAHardLink(sourcestatbuf.st_ino,destination,attr,pp);
+   RegisterAHardLink(ssb.st_ino,destination,attr,pp);
    }
 
-if (S_ISDIR(sourcestatbuf.st_mode))
+if (S_ISDIR(ssb.st_mode))
    {
    strcpy(sourcedir,source);
    AddSlash(sourcedir);
@@ -235,14 +234,14 @@ if (S_ISDIR(sourcestatbuf.st_mode))
    
    /* Now check any overrides */
    
-   if (stat(destdir,&deststatbuf) == -1)
+   if (stat(destdir,&dsb) == -1)
       {
       snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat directory %s\n",destdir);
       CfLog(cferror,OUTPUT,"stat");
       }
    else
       {
-      VerifyCopiedFileAttributes(destdir,&deststatbuf,&sourcestatbuf,attr,pp);
+      VerifyCopiedFileAttributes(destdir,&dsb,&ssb,attr,pp);
       }
    
    for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,pp))
@@ -268,7 +267,7 @@ if (S_ISDIR(sourcestatbuf.st_mode))
             
       if (attr.copy.link_type == cfa_notlinked)
          {
-         if (cf_stat(sourcefile,&sourcestatbuf,attr,pp) == -1)
+         if (cf_stat(sourcefile,&ssb,attr,pp) == -1)
             {
             snprintf(OUTPUT,CF_BUFSIZE,"Can't stat %s\n",sourcefile);
             CfLog(cfinform,OUTPUT,"stat");
@@ -278,7 +277,7 @@ if (S_ISDIR(sourcestatbuf.st_mode))
          }
       else
          {
-         if (cf_lstat(sourcefile,&sourcestatbuf,attr,pp) == -1)
+         if (cf_lstat(sourcefile,&ssb,attr,pp) == -1)
             {
             snprintf(OUTPUT,CF_BUFSIZE,"Can't stat %s\n",sourcefile);
             CfLog(cfinform,OUTPUT,"lstat");
@@ -287,7 +286,7 @@ if (S_ISDIR(sourcestatbuf.st_mode))
             }
          }
       
-      CopyFile(sourcefile,destfile,sourcestatbuf,attr,pp);
+      CopyFile(sourcefile,destfile,ssb,attr,pp);
       }
    
    cfclosedir(dirh);
@@ -298,119 +297,119 @@ if (S_ISDIR(sourcestatbuf.st_mode))
 strcpy(sourcefile,source);
 strcpy(destfile,destination);
 
-CopyFile(sourcefile,destfile,sourcestatbuf,attr,pp);
+CopyFile(sourcefile,destfile,ssb,attr,pp);
 DeleteClientCache(attr,pp);
 }
 
 /*********************************************************************/
 
-void PurgeLocalFiles(struct Item *filelist,char *directory,struct FileAttr attr,struct Promise *pp)
+void PurgeLocalFiles(struct Item *filelist,char *localdir,struct FileAttr attr,struct Promise *pp)
 
 { DIR *dirh;
-  struct stat statbuf; 
+  struct stat sb; 
   struct dirent *dirp;
   char filename[CF_BUFSIZE];
 
-Debug("PurgeFiles(%s)\n",directory);
+Debug("PurgeFiles(%s)\n",localdir);
 
- /* If we purge with no authentication we wipe out EVERYTHING */ 
+ /* If we purge with no authentication we wipe out EVERYTHING ! */ 
 
- if (strlen(directory) < 2)
-    {
-    snprintf(OUTPUT,CF_BUFSIZE,"Purge of %s denied -- too dangerous!",directory);
-    CfLog(cferror,OUTPUT,"");
-    return;
-    }
+ /* We should be chdir inside the directory here */
+
+if (strlen(localdir) < 2)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Purge of %s denied -- too dangerous!",localdir);
+   CfLog(cferror,OUTPUT,"");
+   return;
+   }
  
- if (!AUTHENTICATED)
-    {
-    Verbose("Not purging %s - no verified contact with server\n",directory);
-    return;
-    }
+if (pp->conn && !pp->conn->authenticated)
+   {
+   Verbose(" !! Not purging local copy %s - no authenticated contact with a source\n",localdir);
+   return;
+   }
 
- if ((dirh = opendir(directory)) == NULL)
-    {
-    snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open directory %s\n",directory);
-    CfLog(cfverbose,OUTPUT,"cfopendir");
-    return;
-    }
+if (!attr.havedepthsearch)
+   {
+   Verbose(" !! No depth search when copying %s so no refrece from which to purge\n",localdir);
+   return;
+   }
+
+/* chdir to minimize the risk of race exploits during copy (which is inherently dangerous) */
+
+if (chdir(localdir) == -1)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't chdir to local directory %s\n",localdir);
+   CfLog(cfverbose,OUTPUT,"chdir");
+   return;
+   }
+
+if ((dirh = opendir(".")) == NULL)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open local directory %s\n",localdir);
+   CfLog(cfverbose,OUTPUT,"opendir");
+   return;
+   }
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
-   if (!ConsiderFile(dirp->d_name,directory,attr,pp))
+   if (!ConsiderFile(dirp->d_name,localdir,attr,pp))
       {
       continue;
       }
    
    if (!IsItemIn(filelist,dirp->d_name))
       {
-      strncpy(filename,directory,CF_BUFSIZE-2);
+      strncpy(filename,localdir,CF_BUFSIZE-2);
       AddSlash(filename);
       strncat(filename,dirp->d_name,CF_BUFSIZE-2);
       
-      Debug("Checking purge %s..\n",filename);
-      
       if (DONTDO)
          {
-         printf("Need to purge %s from copy dest directory\n",filename);
+         printf(" !! Need to purge %s from copy dest directory\n",filename);
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Purging %s in copy dest directory\n",filename);
+         snprintf(OUTPUT,CF_BUFSIZE*2," !! Purging %s in copy dest directory\n",filename);
          CfLog(cfinform,OUTPUT,"");
          
-         if (lstat(filename,&statbuf) == -1)
+         if (lstat(filename,&sb) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't stat %s while purging\n",filename);
-            CfLog(cfverbose,OUTPUT,"stat");
+            snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't stat %s while purging\n",filename);
+            CfLog(cfverbose,OUTPUT,"lstat");
+            ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
             }
-         else if (S_ISDIR(statbuf.st_mode))
+         else if (S_ISDIR(sb.st_mode))
             {
-            struct Tidy tp;
-            struct TidyPattern tpat;
-/*
-            tp.maxrecurse = 2;
-            tp.done = 'n';
-            tp.tidylist = &tpat;
-            tp.next = NULL;
-            tp.path = filename;
-            tp.exclusions = inclusions; // exclude means don't purge, i.e. include here
-            tp.ignores = NULL;
-            
-            tpat.filters = NULL;     
-            tpat.recurse = CF_INF_RECURSE;
-            tpat.age = 0;
-            tpat.size = 0;
-            tpat.pattern = strdup("*");
-            tpat.classes = strdup("any");
-            tpat.defines = NULL;
-            tpat.elsedef = NULL;
-            tpat.dirlinks = 'y';
-            tpat.travlinks = 'n';
-            tpat.rmdirs = 'y';
-            tpat.searchtype = 'a';
-            tpat.compress = 'n';
-            tpat.log = 'd';
-            tpat.inform = 'd';
-            tpat.next = NULL;
-            RecursiveTidySpecialArea(filename,&tp,CF_INF_RECURSE,&statbuf);
-            free(tpat.pattern);
-            free(tpat.classes);
-            
-            chdir("..");
+            struct FileAttr purgeattr;
+            memset(&purgeattr,0,sizeof(purgeattr));
+
+            purgeattr.havedepthsearch = true;
+            purgeattr.havedelete = true;
+            purgeattr.recursion.depth = CF_INFINITY;
+            purgeattr.recursion.travlinks = false;
+
+            SetSearchDevice(&sb,pp);
+
+            if (!DepthSearch(filename,&sb,0,purgeattr,pp))
+               {
+               snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't empty directory %s while purging\n",filename);
+               CfLog(cfverbose,OUTPUT,"rmdir");
+               ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+               }
             
             if (rmdir(filename) == -1)
                {
-               snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't remove directory %s while purging\n",filename);
+               snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't remove directory %s while purging\n",filename);
                CfLog(cfverbose,OUTPUT,"rmdir");
+               ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
                }
-*/
-            continue;
             }
          else if (unlink(filename) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't unlink %s while purging\n",filename);
+            snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't delete %s while purging\n",filename);
             CfLog(cfverbose,OUTPUT,"");
+            ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
             }
          }
       }

@@ -318,6 +318,8 @@ if (ioctl(fd, OSIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq
    exit(1);
    }
 
+last_name[0] = '\0';
+
 for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
    {
    if (ifp->ifr_addr.sa_family == 0)
@@ -330,6 +332,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
    /* Chun Tian (binghe) <binghe.lisp@gmail.com>:
       use a last_name to detect whether current address is a interface's first address:
       if current ifr_name = last_name, it's not the first address of current interface. */
+
    if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
       {
       first_address = false;
@@ -338,6 +341,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       {
       first_address = true;
       }
+   
    strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
 
    if (UNDERSCORE_CLASSES)

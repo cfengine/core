@@ -55,7 +55,9 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
       {
       continue;
       }
-   
+
+   pp->this_server = rp->item;
+
    if (attr.transaction.background)
       {
       if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
@@ -84,12 +86,12 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
       else
          {
          CacheServerConnection(conn,rp->item);
-         pp->this_server = rp->item;
          return conn;
          }
       }
    }
 
+pp->this_server = NULL;
 return NULL;
 }
 

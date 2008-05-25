@@ -254,12 +254,17 @@ pp->audit = AUDITPTR;
 pp->lineno = P.line_no;
 pp->bundle =  strdup(bundle);
 pp->promiser = sp;
-pp->promisee = promisee;
+pp->promisee = promisee;  /* this is a list allocated separately */
 pp->petype = petype;      /* rtype of promisee - list or scalar recipient? */
 pp->classes = spe;
 pp->conlist = NULL;
 pp->done = false;
 pp->donep = &(pp->done);
+
+pp->this_server = NULL;
+pp->cache = NULL;
+pp->conn = NULL;
+pp->inode_cache = NULL;
 
 pp->agentsubtype = type->name; /* Cache the typename */
 pp->ref = NULL;                /* cache a reference if given*/

@@ -132,6 +132,7 @@ ptr = VSCOPE;
 while (ptr != NULL)
    {
    this = ptr;
+   Debug(" -> Delete scope %s\n",ptr->scope);
    DeleteHashes(this->hashtable);
    free(this->scope);   
    ptr = this->next;

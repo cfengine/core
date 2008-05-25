@@ -169,7 +169,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct FileAttr attr,struc
  unsigned long err;
  unsigned char digest[EVP_MAX_MD_SIZE];
  int encrypted_len,nonce_len = 0,len;
- char cant_trust_server, keyname[CF_BUFSIZE];
+ char dont_implicitly_trust_server, keyname[CF_BUFSIZE];
  RSA *server_pubkey = NULL;
 
 if (PUBKEY == NULL || PRIVKEY == NULL) 
@@ -201,17 +201,17 @@ else
 
 if (server_pubkey = HavePublicKey(keyname))
    {
-   cant_trust_server = 'y';
+   dont_implicitly_trust_server = 'y';
    /* encrypted_len = BN_num_bytes(server_pubkey->n);*/   
    encrypted_len = RSA_size(server_pubkey);
    }
 else 
    {
-   cant_trust_server = 'n';                      /* have to trust server, since we can't verify id */
+   dont_implicitly_trust_server = 'n';                      /* have to trust server, since we can't verify id */
    encrypted_len = nonce_len;
    }
 
-snprintf(sendbuffer,CF_BUFSIZE,"SAUTH %c %d %d",cant_trust_server,encrypted_len,nonce_len);
+snprintf(sendbuffer,CF_BUFSIZE,"SAUTH %c %d %d",dont_implicitly_trust_server,encrypted_len,nonce_len);
  
 if ((out = malloc(encrypted_len)) == NULL)
    {
@@ -301,11 +301,12 @@ if (!ChecksumsMatch(digest,in,'m'))
    }
 else
    {
-   if (cant_trust_server == 'y')  /* challenge reply was correct */ 
+   if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */ 
       {
-      Verbose("\n...............................................................\n");
+      Verbose("\n...c.o.p.y....c.o.p.y....c.o.p.y...........................................\n");
       snprintf(OUTPUT,CF_BUFSIZE,"Strong authentication of server=%s connection confirmed\n",pp->this_server);
       CfLog(cfverbose,OUTPUT,"");
+      PromiseRef(cfverbose,pp);
       }
    else
       {

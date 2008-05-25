@@ -811,8 +811,6 @@ if (PROMISETIME < newstat.st_mtime)
 
    BUNDLES = NULL;
    BODIES  = NULL;
-   Cf3ParseFiles();
-   HashVariables();
 
    NewScope("system");
    AddClassToHeap("any");
@@ -821,6 +819,10 @@ if (PROMISETIME < newstat.st_mtime)
    GetV6InterfaceInfo();
    Get3Environment();
    SetNewScope("server");
+   Cf3ParseFiles();
+   HashVariables();
+   KeepPromises();
+   Summarize();
    }
 }
 

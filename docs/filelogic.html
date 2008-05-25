@@ -31,6 +31,16 @@ some operations do not make sense in reverse order. For example,
 editing a file and then copying onto it would be nonsense.
 Similarly, you cannot both remove a file and rename it.
 
+<h2>File copying</h2>
+
+One of the first things you will notice is that copying is now "backwards".
+Instead of the default object being source and the option being the destination,
+in cfengine 3 the destination is paramount and the source is an option.
+This is because the model fo voluntary cooperation tells us that it is the
+object that is changed which is the agent making the promise. One cannot
+force change onto a destination with cfengine, one can only invite change from
+a source.
+
 <h2>Normal ordering</h2>
 
 <pre>

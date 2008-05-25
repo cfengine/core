@@ -223,7 +223,7 @@ for (i = 1, j = 1; i < argc; i++)
 
 /* Allocate memory for cfargv. */
 
-cfargv = (char **) malloc(sizeof(char *) * cfargc + 1);
+cfargv = (char **) malloc(sizeof(char *) * (cfargc + 1));
 
 if (!cfargv)
    {
@@ -288,7 +288,7 @@ if ((PROMISETIME = time((time_t *)NULL)) == -1)
    {
    printf("Couldn't read system clock\n");
    }
- 
+
 Cf3ParseFile(VINPUTFILE);
 
 if (VINPUTLIST != NULL)
@@ -339,7 +339,10 @@ if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    exit(1);
    }
 
+Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 Debug("Cf3ParseFile(%s)\n",filename);
+Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
+
 PrependAuditFile(filename);
  
 if ((yyin = fopen(filename,"r")) == NULL)      /* Open root file */

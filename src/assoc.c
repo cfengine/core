@@ -57,6 +57,8 @@ return ap;
 void DeleteAssoc(struct CfAssoc *ap)
 
 {
+Debug(" ----> Delete variable association %s\n",ap->lval);
+
 if (ap != NULL)
    {
    free((char *)ap);

@@ -30,9 +30,9 @@
 
 /*******************************************************************/
 
-struct FileAttr GetFileAttributes(struct Promise *pp)
+struct Attributes GetAttributesibutes(struct Promise *pp)
 
-{ struct FileAttr attr;
+{ struct Attributes attr;
 
 attr.havedepthsearch = GetBooleanConstraint("depth_search",pp->conlist);
 attr.haveselect = GetBooleanConstraint("file_select",pp->conlist);
@@ -391,7 +391,7 @@ return f;
 
 /*******************************************************************/
 
-void ShowAttributes(struct FileAttr a)
+void ShowAttributes(struct Attributes a)
 
 {
 printf(".....................................................\n");

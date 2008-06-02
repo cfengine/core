@@ -71,7 +71,7 @@ DeleteItemList(mess);
 
 /*****************************************************************************/
 
-void CfT(enum cfreport level,char status,char *errstr,struct Promise *pp,struct FileAttr attr,char *fmt, ...)
+void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
 
 { va_list ap;
   char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE];
@@ -141,7 +141,7 @@ switch(level)
 
    default:
        
-       FatalError("Report level unknown");
+       FatalError("Software error: report level unknown: require cf_error, cf_inform, cf_verbose");
        break;       
    }
 

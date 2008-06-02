@@ -162,6 +162,7 @@ void PrintHashes(FILE *fp,struct CfAssoc **table)
 if (XML)
    {
    fprintf(fp,"<table class=border width=600>\n");
+   fprintf (fp,"<tr><th>id</th><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th></tr>\n");         
    }
  
 for (i = 0; i < CF_HASHTABLESIZE; i++)
@@ -170,7 +171,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
       {
       if (XML)
          {
-         fprintf (fp,"<tr><td> %5d </td><th>%8s</th><td> %c</td><td> %s</td><td> = ",i,CF_DATATYPES[table[i]->dtype],table[i]->rtype,table[i]->lval);
+         fprintf (fp,"<tr><td> %5d </td><th>%8s</th><td> %c</td><td> %s</td><td> ",i,CF_DATATYPES[table[i]->dtype],table[i]->rtype,table[i]->lval);
          ShowRval(fp,table[i]->rval,table[i]->rtype);
          fprintf(fp,"</td></tr>\n");         
          }
@@ -224,13 +225,13 @@ else
 
 if (lval == NULL || rval == NULL || scope == NULL)
    {
-   yyerror("Bad variable or scope");
-   FatalError("Should not happen");
+   ReportError("Bad variable or scope in a variable assignment");
+   FatalError("Should not happen - forgotten to register a function call in fncall.c?");
    }
 
 if (strlen(lval) > CF_MAXVARSIZE)
    {
-   yyerror("variable lval too long");
+   ReportError("variable lval too long");
    return false;
    }
 
@@ -280,6 +281,7 @@ if (ptr->hashtable[slot])
       {
       snprintf(OUTPUT,CF_BUFSIZE,"Duplicate selection of value for %s (broken promise)",lval);
       CfLog(cferror,OUTPUT,"");
+      
       if (fname)
          {
          snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",fname,lineno);
@@ -290,6 +292,7 @@ if (ptr->hashtable[slot])
          snprintf(OUTPUT,CF_BUFSIZE,"in bundle parameterization\n",fname,lineno);
          CfLog(cferror,OUTPUT,"");
          }
+
       DeleteAssoc(ptr->hashtable[slot]);
       ptr->hashtable[slot] = ap;
       Debug("Stored %s in context %s\n",lval,scope);

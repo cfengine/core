@@ -30,7 +30,7 @@
 
 /*****************************************************************************/
 
-void SummarizeTransaction(struct FileAttr attr,struct Promise *pp)
+void SummarizeTransaction(struct Attributes attr,struct Promise *pp)
 
 {
 if (attr.transaction.log_string)
@@ -54,7 +54,7 @@ if (attr.transaction.log_string)
 
 /*****************************************************************************/
 
-struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct FileAttr attr,struct Promise *pp)
+struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp)
 
 { unsigned int pid;
   int i, err, sum=0;

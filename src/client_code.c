@@ -39,7 +39,7 @@ extern pthread_mutex_t MUTEX_GETADDR;
 
 /*********************************************************************/
 
-struct cfagent_connection *NewServerConnection(struct FileAttr attr,struct Promise *pp)
+struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
   struct Rlist *rp;
@@ -97,7 +97,7 @@ return NULL;
 
 /*****************************************************************************/
 
-struct cfagent_connection *ServerConnection(char *server,struct FileAttr attr,struct Promise *pp)
+struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
 
@@ -169,7 +169,7 @@ return conn;
 
 /*********************************************************************/
 
-void ServerDisconnection(struct cfagent_connection *conn,struct FileAttr attr,struct Promise *pp)
+void ServerDisconnection(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp)
 
 {
 Debug("Closing current server connection to %s\n",pp->this_server);
@@ -186,7 +186,7 @@ if (conn->session_key != NULL)
 
 /*********************************************************************/
 
-int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct FileAttr attr,struct Promise *pp)
+int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes attr,struct Promise *pp)
 
 /* If a link, this reads readlink and sends it back in the same
    package. It then caches the value for each copy command */
@@ -386,7 +386,7 @@ return -1;
 
 /*********************************************************************/
 
-CFDIR *cf_remote_opendir(char *dirname,struct FileAttr attr,struct Promise *pp)
+CFDIR *cf_remote_opendir(char *dirname,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn = pp->conn;
   char sendbuffer[CF_BUFSIZE];
@@ -527,7 +527,7 @@ pp->cache = sp;
 
 /*********************************************************************/
 
-void DeleteClientCache(struct FileAttr attr,struct Promise *pp)
+void DeleteClientCache(struct Attributes attr,struct Promise *pp)
 
 { struct cfstat *sp,*sps;
 
@@ -547,7 +547,7 @@ pp->cache = NULL;
 
 /*********************************************************************/
 
-int CompareHashNet(char *file1,char *file2,struct FileAttr attr,struct Promise *pp)
+int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp)
 
 { static unsigned char d[CF_MD5_LEN];
   char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],in[CF_BUFSIZE],out[CF_BUFSIZE];
@@ -616,7 +616,7 @@ else
 
 /*********************************************************************/
 
-int CopyRegularFileNet(char *source,char *new,off_t size,struct FileAttr attr,struct Promise *pp)
+int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
 
 { int dd, buf_size,n_read = 0,toget,towrite,plainlen,more = true;
   int last_write_made_hole = 0, done = false,tosend,cipherlen=0,value;
@@ -886,7 +886,7 @@ return true;
 /* Level 2                                                           */
 /*********************************************************************/
 
-int ServerConnect(struct cfagent_connection *conn,char *host,struct FileAttr attr, struct Promise *pp) 
+int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp) 
 
 { int err;
 
@@ -1262,7 +1262,7 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
 
 /*********************************************************************/
 
-int CacheStat(char *file,struct stat *statbuf,char *stattype,struct FileAttr attr,struct Promise *pp)
+int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp)
 
 { struct cfstat *sp;
 

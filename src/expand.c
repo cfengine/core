@@ -532,6 +532,12 @@ do
              }
           break;
       }
+
+   if (strcmp(pp->agentsubtype,"vars") == 0)
+      {
+      /* Make sure vars have picked up recursive evaluations */
+      ConvergeVarHashPromise(scopeid,pexp,true);
+      }
    
    DeletePromise(pexp);
    
@@ -828,3 +834,81 @@ else
    }
 }
 
+/*********************************************************************/
+
+void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
+
+{ struct Constraint *cp,*cp_save;
+  char *lval,rtype,retval[CF_MAXVARSIZE];
+  void *rval = NULL;
+  int i = 0;
+  struct Rval returnval; /* Must expand naked functions here for consistency */
+ 
+if (IsExcluded(pp->classes))
+   {
+   return;
+   }
+ 
+for (cp = pp->conlist; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,"policy") == 0)
+      {
+      if (strcmp(cp->rval,"constant") == 0)
+         {
+         allow_redefine = false;
+         }
+      continue;
+      }
+   else
+      {
+      i++;
+      rval = cp->rval;
+      cp_save = cp;
+      }
+   }
+
+cp = cp_save;
+
+if (i > 2)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Variable type-promise in %s breaks its own promise",pp->promiser);
+   CfLog(cferror,OUTPUT,"");
+   snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+   CfLog(cferror,OUTPUT,"");
+   }
+
+if (rval != NULL)
+   {
+   struct FnCall *fp = (struct FnCall *)rval;
+   
+   if (cp->type == CF_FNCALL)
+      {
+      returnval = EvaluateFunctionCall(fp,pp);
+      DeleteFnCall(fp);
+      cp->rval = rval = returnval.item;
+      cp->type = returnval.rtype;
+      }
+   
+   if (allow_redefine) /* only on second iteration, else we ignore broken promises */
+      {
+      if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
+         {
+         DeleteVariable(scope,pp->promiser);
+         }
+      }
+   
+   if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
+      {
+      snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+      CfLog(cferror,OUTPUT,"");
+      }
+   }
+else
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Variable %s has no promised value\n",pp->promiser);
+   CfLog(cferror,OUTPUT,"");
+   snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+   CfLog(cferror,OUTPUT,"");
+   }
+}
+      

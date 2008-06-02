@@ -63,9 +63,10 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"islessthan",cf_class,2},
    {"userexists",cf_class,1},
    {"groupexists",cf_class,1},
-   {"readstringlist",cf_slist,4},
-   {"readintlist",cf_ilist,4},
-   {"readreallist",cf_rlist,4},
+   {"readfile",cf_str,2},
+   {"readstringlist",cf_slist,5},
+   {"readintlist",cf_ilist,5},
+   {"readreallist",cf_rlist,5},
    {"irange",cf_irange,2},
    {"rrange",cf_rrange,2},
    {"on",cf_int,6},
@@ -74,6 +75,9 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"now",cf_int,0},
    {"persiststate",cf_class,3},
    {"erasestate",cf_class,1},
+   {"readstringarray",cf_class,6},
+   {"readintarray",cf_class,6},
+   {"readrealarray",cf_class,6},
    {NULL,cf_notype}
    };
 
@@ -85,7 +89,7 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"ifelapsed",cf_int,CF_VALRANGE},
    {"expireafter",cf_int,CF_VALRANGE},
    {"log_string",cf_str,""},
-   {"log_level",cf_str,"inform,verbose,error"},
+   {"log_level",cf_opts,"inform,verbose,error"},
    {"audit",cf_opts,CF_BOOL},
    {"background",cf_opts,CF_BOOL},
    {"report_level",cf_opts,"inform,verbose,error"},
@@ -126,7 +130,7 @@ struct BodySyntax CF_CLASSBODY[] =
    {"xor",cf_clist,CF_CLASSRANGE},
    {"policy",cf_str,CF_IDRANGE},
    {"dist",cf_rlist,CF_REALRANGE},
-   {"expression",cf_str,CF_CLASSRANGE},
+   {"expression",cf_class,CF_CLASSRANGE},
    {NULL,cf_notype,NULL}
    };
 

@@ -283,7 +283,7 @@ struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
   char *sp,*hostnameip,*maxbytes,*port,*sendstring;
   int val = 0, n_read = 0;
   short portnum;
-  struct FileAttr attr;
+  struct Attributes attr;
 
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -1571,4 +1571,397 @@ if ((rval.item = strdup(buffer)) == NULL)
 SetFnCallReturnStatus("now",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
+}
+
+/*********************************************************************/
+/* Read functions                                                    */
+/*********************************************************************/
+
+struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs)
+    
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     CF_VALRANGE,
+     NULL
+     };
+ 
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rval rval;
+  char *filename;
+  int maxsize;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+filename = (char *)(finalargs->item);
+maxsize = Str2Int(finalargs->next->item);
+
+// Read once to validate structure of file in itemlist
+
+Debug("Read string data from file %s (up to %d)\n",filename,maxsize);
+
+rval.item = ReadFile(filename,maxsize);
+
+if (rval.item)
+   {
+   SetFnCallReturnStatus("readfile",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("readfile",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
+    
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_VALRANGE,
+     CF_VALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*newlist = NULL;
+  struct Rval rval;
+  char *filename,*comment,*split,fnname[CF_MAXVARSIZE];
+  int maxent,maxsize,count = 0,noerrors = false,purge = true;
+  char *file_buffer = NULL;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+ /* 5args: filename,comment_regex,split_regex,max number of entries,maxfilesize  */
+
+filename = (char *)(finalargs->item);
+comment = (char *)(finalargs->next->item);
+split = (char *)(finalargs->next->next->item);
+maxent = Str2Int(finalargs->next->next->next->item);
+maxsize = Str2Int(finalargs->next->next->next->next->item);
+
+// Read once to validate structure of file in itemlist
+
+Debug("Read string data from file %s\n",filename);
+
+file_buffer = (char *)ReadFile(filename,maxsize);
+
+if (file_buffer == NULL)
+   {
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+else
+   {
+   file_buffer = StripPatterns(file_buffer,comment);
+
+   if (file_buffer == NULL)
+      {
+      rval.item = NULL;
+      rval.rtype = CF_LIST;
+      return rval;
+      }
+   else
+      {
+      newlist = SplitRegexAsRList(file_buffer,split,maxent,purge);
+      }
+   }
+
+switch(type)
+   {
+   case cf_str:
+       break;
+
+   case cf_int:
+       for (rp = newlist; rp != NULL; rp=rp->next)
+          {
+          if (Str2Int(rp->item) == CF_NOINT)
+             {
+             CfOut(cf_error,"","Presumed int value \"%s\" read from file %s has no recognizable value",rp->item,filename);
+             noerrors = false;
+             }
+          }
+       break;
+
+   case cf_real:
+       for (rp = newlist; rp != NULL; rp=rp->next)
+          {
+          if (Str2Double(rp->item) == CF_NODOUBLE)
+             {
+             CfOut(cf_error,"","Presumed real value \"%s\" read from file %s has no recognizable value",rp->item,filename);
+             noerrors = false;
+             }
+          }
+       break;
+
+   default:
+       FatalError("Software error readstringlist - abused type");       
+   }
+
+snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
+       
+if (newlist && noerrors)
+   {
+   SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = newlist;
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
+
+/* lval,filename,separator,comment,Max number of bytes  */
+
+{ static char *argtemplate[] =
+     {
+     CF_IDRANGE,
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_VALRANGE,
+     CF_VALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*newlist = NULL;
+  struct Rval rval;
+  char *array_lval,*filename,*comment,*split,fnname[CF_MAXVARSIZE];
+  int maxent,maxsize,count = 0,noerrors = false;
+  char *file_buffer = NULL;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+ /* 6 args: array_lval,filename,comment_regex,split_regex,max number of entries,maxfilesize  */
+
+array_lval = (char *)(finalargs->item);
+filename = (char *)(finalargs->next->item);
+comment = (char *)(finalargs->next->next->item);
+split = (char *)(finalargs->next->next->next->item);
+maxent = Str2Int(finalargs->next->next->next->next->item);
+maxsize = Str2Int(finalargs->next->next->next->next->next->item);
+
+// Read once to validate structure of file in itemlist
+
+Debug("Read string data from file %s\n",filename);
+
+file_buffer = (char *)ReadFile(filename,maxsize);
+
+if (file_buffer == NULL)
+   {
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+else
+   {
+   file_buffer = StripPatterns(file_buffer,comment);
+
+   if (file_buffer == NULL)
+      {
+      rval.item = NULL;
+      rval.rtype = CF_LIST;
+      return rval;
+      }
+   else
+      {
+      BuildLineArray(array_lval,file_buffer,split,maxent,type);
+      }
+   }
+
+switch(type)
+   {
+   case cf_str:
+       break;
+
+   case cf_int:
+
+
+       break;
+
+   case cf_real:
+
+       break;
+
+   default:
+       FatalError("Software error readstringarray - abused type");       
+   }
+
+snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
+       
+if (newlist && noerrors)
+   {
+   SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = strdup("any");
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
+
+void *ReadFile(char *filename,int maxsize)
+
+{ struct stat sb;
+  void *result = NULL;
+  FILE *fp;
+  size_t size;
+
+if (stat(filename,&sb) == -1)
+   {
+   CfOut(cf_error,"stat","Could not examine file %s in readfile",filename);
+   return NULL;
+   }
+
+if (sb.st_size > maxsize)
+   {
+   CfOut(cf_inform,"","Truncating long file %s in readfile to max limit %d",filename,maxsize);
+   size = maxsize;
+   }
+else
+   {
+   size = sb.st_size;
+   }
+
+result = malloc(size);
+   
+if (result == NULL)
+   {
+   CfOut(cf_error,"stat","Could not examine file %s in readfile",filename);
+   return NULL;
+   }
+
+if ((fp = fopen(filename,"r")) == NULL)
+   {
+   CfOut(cferror,"fopen","Could not open file %s in readfile",filename);
+   return NULL;
+   }
+
+if (fread(result,size,1,fp) != 1)
+   {
+   CfOut(cf_error,"fread","Could not read expected amount from file %s in readfile",filename);
+   }
+
+fclose(fp);
+return result;
+}
+
+/*********************************************************************/
+
+char *StripPatterns(char *file_buffer,char *pattern)
+
+{ regmatch_t pm;
+
+while(BlockTextMatch(pattern,file_buffer,&pm))
+   {
+   CloseStringHole(file_buffer,pm.rm_so,pm.rm_eo);
+   }
+
+return file_buffer;
+}
+
+/*********************************************************************/
+
+void CloseStringHole(char *s,int start,int end)
+
+{ int count,off = end - start;
+  char *sp;
+
+if (off <= 0)
+   {
+   return;
+   }
+ 
+for (sp = s + start; *(sp+off) != '\0'; sp++)
+   {
+   *sp = *(sp+off);
+   }
+
+*sp = '\0';
+}
+
+/*********************************************************************/
+
+void BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type)
+
+{ char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE];
+  struct Rlist *rp,*newlist = NULL;
+  int nopurge = false, vcount,hcount;
+
+memset(linebuf,0,CF_BUFSIZE);
+hcount = 0;
+
+for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
+   {
+   sscanf(sp,"%1023[^\n]",linebuf);
+
+   newlist = SplitRegexAsRList(linebuf,split,maxent,nopurge);
+   
+   vcount = 0;
+   
+   for (rp = newlist; rp != NULL; rp=rp->next)
+      {
+      snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,newlist->item,vcount);
+      NewScalar(CONTEXTID,name,rp->item,type);
+      vcount++;
+      }
+   
+   hcount++;
+   sp += strlen(linebuf);
+   }
+
+/* Don't free data - goes into vars*/
+
+//ShowScopedVariables(stdout);
 }

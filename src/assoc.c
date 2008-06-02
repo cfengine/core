@@ -39,8 +39,10 @@ if ((ap= malloc(sizeof(struct CfAssoc))) == NULL)
    FatalError("malloc failure in NewAssoc\n");
    }
 
-ap->lval = lval;
-ap->rval = rval;
+/* Make a private copy because promises are ephemeral in expansion phase */
+
+ap->lval = strdup(lval);
+ap->rval = CopyRvalItem(rval,rtype);
 ap->dtype = dt;
 ap->rtype = rtype;
 
@@ -59,13 +61,20 @@ void DeleteAssoc(struct CfAssoc *ap)
 {
 Debug(" ----> Delete variable association %s\n",ap->lval);
 
+if (ap->lval)
+   {
+   free(ap->lval);
+   }
+
+if (ap->rval)
+   {
+   DeleteRvalItem(ap->rval,ap->rtype);
+   }
+
 if (ap != NULL)
    {
    free((char *)ap);
    }
-
-/* We don't de-allocate the lval,rval since these are references to
-   elsewhere which are not our responsibility here... */
 }
 
 /*******************************************************************/

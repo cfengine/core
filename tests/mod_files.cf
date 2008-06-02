@@ -117,7 +117,7 @@ any::
 
 solaris::
 
-  group => readstringlist("filename","lines","#","1000");
+  #group => { readstringlist("filename","#.*","[\n]","1000") };
 
 linux::
 
@@ -150,7 +150,7 @@ link_children => "true";
 body transaction controlbody
 
 {
-log_level    => "usr1";
+log_level    => "error";
 report_level => "inform";
 ifelapsed   => "10";
 expireafter => "20";
@@ -175,8 +175,8 @@ body file_select myfilter
 #
 
 {
-leafname => { ".*.asc" };                   # regex matching file name
-path => { "/var/.*/mail", "/usr/.*/mail" };
+leaf_name => { ".*.asc" };                   # regex matching file name
+path_name => { "/var/.*/mail", "/usr/.*/mail" };
 
 search_mode      =>  "700";
 search_size      =>  irange("10000","10000000");
@@ -200,8 +200,7 @@ body delete tidypolicy
 
 {
 dirlinks => "delete";          #keep/tidy/delete
-rmdirs   => "all";             #none/all/sub
-links    => "stop";            #stop/keep/traverse/tidy
+rmdirs   => "true";             #none/all/sub
 }
 
 #########################################################

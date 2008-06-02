@@ -29,7 +29,7 @@
 #include "cf3.extern.h"
 
 
-int DepthSearch(char *name,struct stat *sb,int rlevel,struct FileAttr attr,struct Promise *pp)
+int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp)
     
 { DIR *dirh;
   int goback; 

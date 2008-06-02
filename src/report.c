@@ -82,12 +82,12 @@ char *CFH[][2] =
    {
     "<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/syntax.css\" />\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/cf_blue.css\"/>\n</head>\n","</html>",
     "<table class=border><tr><td><h2>","</td></tr></h2></table>",
-    "<p><table class=border cellpadding=5 width=880>","</table>",
+    "<p><table class=border cellpadding=5 width=800>","</table>",
     "<tr><th>","</th></tr>",
     "<font color=red>","</font>",
     "<font color=blue>","</font>",
     "<b>","</b>",
-    "<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border><tr><td bgcolor=#ffffff>","</td></tr></table></td></tr>",
+    "<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border width=800><tr><td bgcolor=#ffffff>","</td></tr></table></td></tr>",
     "<i><font color=blue>","</font></i>",
     "<b><font color=green size=4>","</font><b>",
     "<b>","</b>",
@@ -256,16 +256,18 @@ if (XML)
    {
    fprintf(FOUT,"%s\n",CFH[cfx_line][cfb]);
    fprintf(FOUT,"%s\n",CFH[cfx_promise][cfb]);
-   fprintf(FOUT,"Context is %s%s%s <p>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+   fprintf(FOUT,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
+   fprintf(FOUT,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+   
    if (pp->promisee)
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s promises %s ",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb]);
+      fprintf(FOUT,"Resource object %s\'%s\'%s promises %s (about %s)",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
       ShowRval(FOUT,pp->promisee,pp->petype);
       fprintf(FOUT,"%s\n\n",CFH[cfx_object][cfe]);
       }
    else
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s promises...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe]);
+      fprintf(FOUT,"Resource object %s\'%s\'%s promises (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->agentsubtype);
       }
    }
 else
@@ -273,7 +275,7 @@ else
    Indent(indent);
    if (pp->promisee != NULL)
       {
-      fprintf(FOUT,"promise by \'%s\' -> ",pp->promiser);
+      fprintf(FOUT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
       ShowRval(FOUT,pp->promisee,pp->petype);
       fprintf(FOUT," if context is %s\n\n",pp->classes);
       }
@@ -376,7 +378,19 @@ void ShowScopedVariables(FILE *fp)
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
-   printf("\nVARSCOPE %s:\n",ptr->scope);
+   if (strcmp(ptr->scope,"this") == 0)
+      {
+      continue;
+      }
+   
+   if (XML)
+      {
+      fprintf(fp,"<p>\nConstant variables in SCOPE %s:\n<br><p>",ptr->scope);
+      }
+   else
+      {
+      fprintf(fp,"\nConstant variables in SCOPE %s:\n",ptr->scope);
+      }
    
    if (ptr->hashtable)
       {

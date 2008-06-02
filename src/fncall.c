@@ -288,11 +288,26 @@ switch (this)
    case cfn_groupexists:
        rval = FnCallGroupExists(fp,expargs);
        break;
+   case cfn_readfile:
+       rval = FnCallReadFile(fp,expargs);
+       break;
    case cfn_readstringlist:
+       rval = FnCallReadStringList(fp,expargs,cf_str);
        break;
    case cfn_readintlist:
+       rval = FnCallReadStringList(fp,expargs,cf_int);
        break;
    case cfn_readreallist:
+       rval = FnCallReadStringList(fp,expargs,cf_real);
+       break;
+   case cfn_readstringarray:
+       rval = FnCallReadStringArray(fp,expargs,cf_str);
+       break;
+   case cfn_readintarray:
+       rval = FnCallReadStringArray(fp,expargs,cf_int);
+       break;
+   case cfn_readrealarray:
+       rval = FnCallReadStringArray(fp,expargs,cf_real);
        break;
    case cfn_irange:
        rval = FnCallIRange(fp,expargs);
@@ -313,6 +328,8 @@ switch (this)
        rval = FnCallNow(fp,expargs);
        break;
    case cfn_unknown:
+       CfOut(cferror,"","Un-registered function call");
+       PromiseRef(cferror,pp);
        break;
    }
 

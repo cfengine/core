@@ -49,17 +49,13 @@ vars:
 
 access:
 
- # passwd_server::
+  passwd_server::
 
     "/etc/passwd"
 
        maproot => { "158.36.148.166", "2001:700:700:11" },
        admit   => { @(ok), "127.0.0.1"},
-       deny    =>  @(bad);
+       deny    => { @(bad) };
 
-#messages:
 
-#    "userclass" 
-
-#       auth => { "mark", "root" };
 }

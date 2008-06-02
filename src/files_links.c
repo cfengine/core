@@ -32,7 +32,7 @@
 
 /*****************************************************************************/
 
-int VerifyLink(char *destination,char *source,struct FileAttr attr,struct Promise *pp)
+int VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
 { char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE],*lastnode;
   int nofile = false;
@@ -174,7 +174,7 @@ else
 
 /*****************************************************************************/
 
-int VerifyAbsoluteLink(char *destination,char *source,struct FileAttr attr,struct Promise *pp)
+int VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
 { char absto[CF_BUFSIZE];
   char expand[CF_BUFSIZE];
@@ -224,7 +224,7 @@ return VerifyLink(destination,linkto,attr,pp);
 
 /*****************************************************************************/
 
-int VerifyRelativeLink(char *destination,char *source,struct FileAttr attr,struct Promise *pp)
+int VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
 { char *sp, *commonto, *commonfrom;
   char buff[CF_BUFSIZE],linkto[CF_BUFSIZE];
@@ -305,7 +305,7 @@ return VerifyLink(destination,buff,attr,pp);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int KillGhostLink(char *name,struct FileAttr attr,struct Promise *pp)
+int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp)
 
 { char linkbuf[CF_BUFSIZE],tmp[CF_BUFSIZE];
   char linkpath[CF_BUFSIZE],*sp;
@@ -361,7 +361,7 @@ return false;
 
 /*****************************************************************************/
 
-int MakeLink (char *from,char *to,struct FileAttr attr,struct Promise *pp)
+int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
 
 {
 if (DONTDO)

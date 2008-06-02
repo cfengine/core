@@ -162,7 +162,7 @@ return true;
 
 /*********************************************************************/
 
-int AuthenticateAgent(struct cfagent_connection *conn,struct FileAttr attr,struct Promise *pp)
+int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp)
 
 { char sendbuffer[CF_EXPANDSIZE],in[CF_BUFSIZE],*out,*decrypted_cchall;
  BIGNUM *nonce_challenge, *bn = NULL;
@@ -464,7 +464,7 @@ return true;
 
 /*********************************************************************/
 
-void CheckServerVersion(struct cfagent_connection *conn,struct FileAttr attr, struct Promise *pp)
+void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp)
 
 { char sendbuffer[CF_BUFSIZE];
   char recvbuffer[CF_BUFSIZE];

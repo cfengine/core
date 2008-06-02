@@ -135,7 +135,7 @@ if (expandregex) /* Expand one regex link and hand down */
 
    if ((dirh=opendir(pbuffer)) == NULL)
       {
-      struct FileAttr dummyattr;
+      struct Attributes dummyattr;
 
       memset(&dummyattr,0,sizeof(dummyattr));
       snprintf(OUTPUT,CF_BUFSIZE*2,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
@@ -216,14 +216,14 @@ DeleteItemList(path);
 void VerifyFilePromise(char *path,struct Promise *pp)
 
 { struct stat osb,oslb,dsb,dslb;
-  struct FileAttr a;
+  struct Attributes a;
   struct CfLock thislock;
   int success,rlevel = 0,isthere;
   int have_rename,have_delete,have_create,have_perms,have_copyfrom;
   int have_edit,have_editline,have_editxml,have_depthsearch;
   int have_linkfrom,have_fileselect;
 
-a = GetFileAttributes(pp);
+a = GetAttributesibutes(pp);
 
 if (!SanityChecks(path,a,pp))
    {
@@ -312,7 +312,7 @@ YieldCurrentLock(thislock);
 /* Level                                                           */
 /*******************************************************************/
 
-int SanityChecks(char *path,struct FileAttr a,struct Promise *pp)
+int SanityChecks(char *path,struct Attributes a,struct Promise *pp)
 
 {
 if (a.havelink && a.havecopy)

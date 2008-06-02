@@ -36,7 +36,7 @@ void BeginAudit()
 { DB_ENV *dbenv = NULL;
   char name[CF_BUFSIZE];
   struct Promise dummyp;
-  struct FileAttr dummyattr;
+  struct Attributes dummyattr;
 
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
@@ -73,7 +73,7 @@ void EndAudit()
   char *sp,rettype;
   void *retval;
   struct Promise dummyp;
-  struct FileAttr dummyattr;
+  struct Attributes dummyattr;
 
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
@@ -119,7 +119,7 @@ if (AUDITDBP)
 
 /*****************************************************************************/
 
-void ClassAuditLog(struct Promise *pp,struct FileAttr attr,char *str,char status)
+void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status)
 
 { time_t now = time(NULL);
   char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE];

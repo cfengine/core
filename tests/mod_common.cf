@@ -117,6 +117,12 @@ bundle agent myPromises(s1,s2)   # policy version 1.0
 
                 policy => constant;
 
+
+     
+      "xxx" string => readfile( "/home/mark/tmp/testfile" , 4000 );
+
+      "readarray" slist => { readstringlist("/home/mark/tmp/testlist","#.*","[\n]",5,4000) };
+
      # Associative arrays
 
      # "array1"   string => readassocarray("/filename");

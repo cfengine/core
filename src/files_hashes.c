@@ -31,7 +31,7 @@
 
 /*****************************************************************************/
 
-int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct FileAttr attr,struct Promise *pp)
+int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp)
 
 /* Returns false if filename never seen before, and adds a checksum
    to the database. Returns true if hashes do not match and also potentially
@@ -146,7 +146,7 @@ else
 
 /*******************************************************************/
 
-int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct FileAttr attr,struct Promise *pp)
+int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp)
 
 { static unsigned char digest1[EVP_MAX_MD_SIZE+1], digest2[EVP_MAX_MD_SIZE+1];
   int i;
@@ -183,7 +183,7 @@ else
 
 /*******************************************************************/
 
-int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct FileAttr attr,struct Promise *pp)
+int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp)
 
 { int fd1, fd2,bytes1,bytes2;
   char buff1[BUFSIZ],buff2[BUFSIZ];
@@ -354,7 +354,7 @@ return buffer;
 
 /***************************************************************/
 
-void PurgeHashes(struct FileAttr attr,struct Promise *pp)
+void PurgeHashes(struct Attributes attr,struct Promise *pp)
 
 /* Go through the database and purge records about non-existent files */
 

@@ -77,6 +77,8 @@ fprintf(FOUT,"%s",CFH[0][0]);
 
 VerifyPromises(cf_common);
 
+ShowScopedVariables(FOUT);
+
 fprintf(FOUT,"%s",CFH[0][1]);
 fclose(FOUT);
 
@@ -804,12 +806,6 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
       CheckControlPromises(buf,bdp->type,bdp->conlist);
       }
    }
-
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   fprintf(FOUT,"<h2>SCOPE %s</h2>\n\n",ptr->scope);
-   PrintHashes(FOUT,ptr->hashtable);
-   }
 }
 
 /*******************************************************************/
@@ -873,77 +869,15 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 void CheckVariablePromises(char *scope,struct Promise *varlist)
 
 { struct Promise *pp;
-  struct Constraint *cp;
-  char *lval;
-  void *rval = NULL;
-  int i = 0,override = true;
+  int allow_redefine = false;
 
 Debug("CheckVariablePromises()\n");
   
 for (pp = varlist; pp != NULL; pp=pp->next)
    {
-   i = 0;
-
-   if (IsExcluded(pp->classes))
-      {
-      continue;
-      }
-   
-   for (cp = pp->conlist; cp != NULL; cp=cp->next)
-      {
-      i++;
-
-      if (strcmp(cp->lval,"policy") == 0)
-         {
-         if (strcmp(cp->rval,"constant") == 0)
-            {
-            override = false;
-            }
-         continue;
-         }
-      else
-         {
-         rval = cp->rval;
-         }
-
-      if (i > 2)
-         {
-         snprintf(OUTPUT,CF_BUFSIZE,"Broken type-promise in %s",pp->promiser);
-         CfLog(cferror,OUTPUT,"");
-         snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-         CfLog(cferror,OUTPUT,"");
-         }
-
-      if (rval != NULL)
-         {
-         struct Rval returnval; /* Must expand naked functions here for consistency */
-         struct FnCall *fp = (struct FnCall *)rval;
-
-         if (cp->type == CF_FNCALL)
-            {
-            returnval = EvaluateFunctionCall(fp,pp);
-            DeleteFnCall(fp);
-            cp->rval = rval = returnval.item;
-            cp->type = returnval.rtype;
-            }
-
-         if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
-            {
-            snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-            CfLog(cferror,OUTPUT,"");
-            }
-         }
-      else
-         {
-         snprintf(OUTPUT,CF_BUFSIZE,"Variable %s has no promised value\n",pp->promiser);
-         CfLog(cferror,OUTPUT,"");
-         snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-         CfLog(cferror,OUTPUT,"");
-         }
-      }
+   ConvergeVarHashPromise(scope,pp,allow_redefine);
    }
 }
-
 
 /*******************************************************************/
 

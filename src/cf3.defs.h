@@ -292,6 +292,7 @@ enum cfreport
 #define CF_VALRANGE  "0,99999999999"
 #define CF_INTRANGE  "-99999999999,9999999999"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
+#define CF_CHARRANGE "^.$"
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&|.()]+"
@@ -355,6 +356,7 @@ enum fncalltype
    cfn_islessthan,
    cfn_userexists,
    cfn_groupexists,
+   cfn_readfile,
    cfn_readstringlist,
    cfn_readintlist,
    cfn_readreallist,
@@ -366,6 +368,9 @@ enum fncalltype
    cfn_now,
    cfn_persiststate,
    cfn_erasestate,
+   cfn_readstringarray,
+   cfn_readintarray,
+   cfn_readrealarray,
    cfn_unknown,
    };
 
@@ -501,15 +506,6 @@ struct CfAssoc        /* variable reference linkage , with metatype*/
    void *rval;
    char rtype;
    enum cfdatatype dtype;
-   };
-
-/*******************************************************************/
-
-struct ThreadPackage
-   {
-   char *path;
-   struct FileAttr *attr;
-   struct Promise *pp;
    };
 
 /*******************************************************************/
@@ -781,7 +777,7 @@ struct FileLink
 
 /*************************************************************************/
 
-struct FileAttr
+struct Attributes
    {
    struct FileSelect select;
    struct FilePerms perms;

@@ -76,6 +76,38 @@ else
 return false;
 }
 
+/*************************************************************************/
+
+int BlockTextMatch(char *regexp,char *teststring,regmatch_t *pmatch)
+
+{ regex_t rx,rxcache;
+  int code;
+  char errbuf[1024];
+  
+code = regcomp(&rx,regexp,REG_EXTENDED);
+
+memset(pmatch,0,sizeof(regmatch_t));
+
+if (code != 0)
+   {
+   regerror(code,&rx,errbuf,1023);
+   snprintf(OUTPUT,CF_BUFSIZE,"Regular expression error %d for %s: %s\n", code,regexp,errbuf);
+   CfLog(cferror,OUTPUT,"regerror");
+   return false;
+   }
+else
+   {
+   if ((code = regexec(&rx,teststring,1,pmatch,0)) == 0)
+      {
+      return true;
+      }
+   else
+      {
+      return false;
+      }
+   }
+}
+
 /*********************************************************************/
 
 int IsRegex(char *str)

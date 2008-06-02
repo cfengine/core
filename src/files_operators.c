@@ -32,7 +32,7 @@ extern struct cfagent_connection *COMS;
 
 /*****************************************************************************/
 
-int VerifyFileLeaf(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp)
+int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 {
 /* Here we can assume that we are in the parent directory of the leaf */
@@ -85,7 +85,7 @@ return true;
 
 /*****************************************************************************/
 
-int CreateFile(char *file,struct Promise *pp,struct FileAttr attr)
+int CreateFile(char *file,struct Promise *pp,struct Attributes attr)
 
 { int fd;
  
@@ -131,7 +131,7 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleCopyOperation(char *destination,struct FileAttr attr,struct Promise *pp)
+int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
 
@@ -165,7 +165,7 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleLinkOperation(char *destination,struct FileAttr attr,struct Promise *pp)
+int ScheduleLinkOperation(char *destination,struct Attributes attr,struct Promise *pp)
 
 {
 Verbose(" -> Handling linking\n");
@@ -174,7 +174,7 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleEditOperation(char *destination,struct FileAttr attr,struct Promise *pp)
+int ScheduleEditOperation(char *destination,struct Attributes attr,struct Promise *pp)
 
 {
 Verbose(" -> Handling file edits (not yet implemented)\n");
@@ -185,7 +185,7 @@ return true;
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyFileAttributes(char *file,struct stat *dstat,struct FileAttr attr,struct Promise *pp)
+void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
 
 { mode_t newperm = dstat->st_mode, maskvalue;
 
@@ -269,10 +269,7 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
    {
    Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
-//   snprintf(OUTPUT,CF_BUFSIZE*2," -> File permissions on %s as promised\n",file);
-//   CfLog(cfverbose,OUTPUT,"");
-//   ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
-   CfOut(cfverbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
+   cfPS(cfverbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
    }
 else
    {
@@ -386,7 +383,7 @@ Debug("CheckExistingFile(Done)\n");
 
 /*********************************************************************/
 
-void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct FileAttr attr,struct Promise *pp)
+void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
 
 { mode_t newplus,newminus;
   uid_t save_uid;
@@ -427,7 +424,7 @@ VerifyFileAttributes(file,dstat,attr,pp);
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct FileAttr attr)
+void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr)
 
 { int amroot = true;
 
@@ -526,7 +523,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
 
 /*****************************************************************************/
 
-int MoveObstruction(char *from,struct FileAttr attr,struct Promise *pp)
+int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp)
 
 { struct stat sb;
   char stamp[CF_BUFSIZE],saved[CF_BUFSIZE];
@@ -620,7 +617,7 @@ return true;
 /* Level                                                             */
 /*********************************************************************/
 
-void VerifyName(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp)
+void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { mode_t newperm;
   struct stat dsb;
@@ -800,7 +797,7 @@ if (attr.rename.rotate > 0)
 
 /*********************************************************************/
 
-void VerifyDelete(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp)
+void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { char *lastnode = ReadLastNode(path);
 
@@ -855,13 +852,13 @@ else
 
 /*********************************************************************/
 
-void TouchFile(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp)
+void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 {
 }
 
 /*********************************************************************/
 
-void VerifyFileIntegrity(char *file,struct Promise *pp,struct FileAttr attr)
+void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1];
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
@@ -896,7 +893,7 @@ else
 
 /*********************************************************************/
 
-int VerifyOwner(char *file,struct Promise *pp,struct FileAttr attr,struct stat *sb)
+int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
 
 { struct passwd *pw;
   struct group *gp;
@@ -1084,7 +1081,7 @@ return false;
 /* Level                                                             */
 /*********************************************************************/
 
-int TransformFile(char *file,struct FileAttr attr,struct Promise *pp)
+int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 
 { char comm[CF_EXPANDSIZE];
   FILE *pop;

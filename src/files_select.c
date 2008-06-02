@@ -28,7 +28,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-int SelectLeaf(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp)
+int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { struct Item *leaf_attr = NULL;
   int result = true, tmpres;

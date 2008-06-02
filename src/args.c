@@ -231,4 +231,6 @@ if (argnum != RlistLen(realargs))
    
    FatalError("Bad arguments");
    }
+
+Debug("End ArgTemplate\n");
 }

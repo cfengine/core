@@ -112,7 +112,10 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
                AddClassToHeap(CLASSTEXT[i]);
                }
             found = true;
+
             VSYSTEMHARDCLASS = (enum classes) i;
+            NewScalar("system","class",CLASSTEXT[i],cf_str);
+
             break;
             }
          }
@@ -167,6 +170,8 @@ if (VERBOSE || DEBUG || D2 || D3)
       snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
       }
 
+   snprintf(workbuf,CF_BUFSIZE,"%s",ctime(&tloc));
+   
    printf ("Cfengine - \n%s\n%s\n\n",VERSION,COPYRIGHT);
 
    printf ("------------------------------------------------------------------------\n\n");
@@ -175,9 +180,15 @@ if (VERBOSE || DEBUG || D2 || D3)
    printf ("Operating System Release is %s\n",VSYSNAME.release);
    printf ("Architecture = %s\n\n\n",VSYSNAME.machine);
    printf ("Using internal soft-class %s for host %s\n\n",workbuf,CLASSTEXT[VSYSTEMHARDCLASS]);
-   printf ("The time is now %s\n\n",ctime(&tloc));
+   printf ("The time is now %s\n\n",workbuf);
    printf ("------------------------------------------------------------------------\n\n");
    }
+
+NewScalar("system","date",workbuf,cf_str);
+NewScalar("system","host",VSYSNAME.nodename,cf_str);
+NewScalar("system","os",VSYSNAME.sysname,cf_str);
+NewScalar("system","release",VSYSNAME.release,cf_str);
+NewScalar("system","arch",VSYSNAME.machine,cf_str);
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
 AddClassToHeap(workbuf);

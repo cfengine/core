@@ -31,7 +31,7 @@
 
 /* File copying is a special case, particularly complex - cannot be integrated */
 
-void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct FileAttr attr,struct Promise *pp)
+void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes attr,struct Promise *pp)
 
 { struct stat sb, dsb;
   char newfrom[CF_BUFSIZE];
@@ -180,7 +180,7 @@ cf_closedir(dirh);
 
 /*********************************************************************/
 
-void VerifyCopy(char *source,char *destination,struct FileAttr attr,struct Promise *pp)
+void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Promise *pp)
 
 { CFDIR *dirh;
   char sourcefile[CF_BUFSIZE];
@@ -303,7 +303,7 @@ DeleteClientCache(attr,pp);
 
 /*********************************************************************/
 
-void PurgeLocalFiles(struct Item *filelist,char *localdir,struct FileAttr attr,struct Promise *pp)
+void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr,struct Promise *pp)
 
 { DIR *dirh;
   struct stat sb; 
@@ -381,7 +381,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             }
          else if (S_ISDIR(sb.st_mode))
             {
-            struct FileAttr purgeattr;
+            struct Attributes purgeattr;
             memset(&purgeattr,0,sizeof(purgeattr));
 
             purgeattr.havedepthsearch = true;
@@ -423,7 +423,7 @@ closedir(dirh);
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CopyFile(char *sourcefile,char *destfile,struct stat ssb,struct FileAttr attr, struct Promise *pp)
+void CopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
 
 { char *lastnode,*server;
   struct stat dsb;
@@ -765,14 +765,14 @@ else
 //      snprintf(OUTPUT,CF_BUFSIZE," -> File %s is an up to date copy of source\n",destfile);
 //      CfLog(cfinform,OUTPUT,"");
 //      ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
-      CfOut(cfinform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
+      cfPS(cfinform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
       }
    }
 }
 
 /*********************************************************************/
 
-int cf_stat(char *file,struct stat *buf,struct FileAttr attr,struct Promise *pp)
+int cf_stat(char *file,struct stat *buf,struct Attributes attr,struct Promise *pp)
 
 { int res;
 
@@ -790,7 +790,7 @@ else
 
 /*********************************************************************/
 
-int cf_lstat(char *file,struct stat *buf,struct FileAttr attr,struct Promise *pp)
+int cf_lstat(char *file,struct stat *buf,struct Attributes attr,struct Promise *pp)
 
 { int res;
 
@@ -808,7 +808,7 @@ else
 
 /*********************************************************************/
 
-int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct FileAttr attr,struct Promise *pp)
+int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr,struct Promise *pp)
 
  /* wrapper for network access */
 
@@ -851,7 +851,7 @@ return -1;
 
 /*********************************************************************/
 
-CFDIR *cf_opendir(char *name,struct FileAttr attr,struct Promise *pp)
+CFDIR *cf_opendir(char *name,struct Attributes attr,struct Promise *pp)
 
 { CFDIR *returnval;
 
@@ -884,7 +884,7 @@ else
 
 /*********************************************************************/
 
-struct cfdirent *cf_readdir(CFDIR *cfdirh,struct FileAttr attr,struct Promise *pp)
+struct cfdirent *cf_readdir(CFDIR *cfdirh,struct Attributes attr,struct Promise *pp)
 
   /* We need this cfdirent type to handle the weird hack */
   /* used in SVR4/solaris dirent structures              */
@@ -940,7 +940,7 @@ free((char *)dirh);
 /* Level 4                                                           */
 /*********************************************************************/
 
-int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct FileAttr attr,struct Promise *pp)
+int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp)
 
 { int ok_to_copy;
  
@@ -1033,7 +1033,7 @@ return false;
 
 /*************************************************************************************/
       
-void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct FileAttr attr, struct Promise *pp)
+void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp)
 
 { char linkbuf[CF_BUFSIZE];
   int succeed = false;
@@ -1106,7 +1106,7 @@ if (succeed)
 
 /*************************************************************************************/
 
-int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct FileAttr attr,struct Promise *pp)
+int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct Attributes attr,struct Promise *pp)
 
 { char backup[CF_BUFSIZE];
   char new[CF_BUFSIZE], *linkable;
@@ -1495,7 +1495,7 @@ return true;
 /* Level 3                                                           */
 /*********************************************************************/
 
-void RegisterAHardLink(int i,char *value,struct FileAttr attr,struct Promise *pp)
+void RegisterAHardLink(int i,char *value,struct Attributes attr,struct Promise *pp)
 
 {
 if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))

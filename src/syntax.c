@@ -298,7 +298,9 @@ void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatyp
 
 { struct Rlist *rp;
 
-Debug(" - Checking inline constraint %s[%s] => mappedval\n",lval,CF_DATATYPES[dt]);
+Debug(" ------------------------------------------------\n");
+Debug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
+Debug(" ------------------------------------------------\n");
 
 /* Get type of lval */
 
@@ -363,6 +365,7 @@ switch (dt)
    case cf_slist:
        CheckParseString(lval,(char *)rval,range);
        break;
+
    case cf_int:
    case cf_ilist:
        CheckParseInt(lval,(char *)rval,range);
@@ -399,6 +402,8 @@ switch (dt)
        snprintf(OUTPUT,CF_BUFSIZE,"Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
        FatalError(OUTPUT);
    }
+
+Debug("end CheckConstraintTypeMatch---------\n");
 }
             
 /****************************************************************************/

@@ -31,7 +31,7 @@ extern pthread_mutex_t MUTEX_GETADDR;
 
 /*********************************************************************/
 
-int ArchiveToRepository(char *file,struct FileAttr attr,struct Promise *pp)
+int ArchiveToRepository(char *file,struct Attributes attr,struct Promise *pp)
 
  /* Returns true if the file was backup up and false if not */
 

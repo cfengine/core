@@ -35,7 +35,7 @@
 
 /*********************************************************************/
 
-int ConsiderFile(char *nodename,char *path,struct FileAttr attr,struct Promise *pp)
+int ConsiderFile(char *nodename,char *path,struct Attributes attr,struct Promise *pp)
 
 { int i, suspicious = true;
   struct stat statbuf; 

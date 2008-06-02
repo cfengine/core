@@ -636,3 +636,54 @@ for (sp = string; *sp != '\0'; sp++)
 
 return liststart;
 }
+
+/*******************************************************************/
+
+struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge)
+
+ /* Splits a string containing a separator like "," 
+    into a linked list of separate items, */
+
+{ struct Rlist *liststart = NULL;
+  char format[9], *sp;
+  char node[CF_MAXVARSIZE];
+  regmatch_t pm; 
+  int delta, count = 0;
+
+Debug("\n\nSplit %s with regex %s (up to maxent %d)\n\n",string,regex,max);
+  
+sp = string;
+  
+while ((count < max) && BlockTextMatch(regex,sp,&pm))
+   {
+   if (pm.rm_eo == 0)
+      {
+      break;
+      }
+
+   delta = pm.rm_eo - pm.rm_so;
+   memset(node,0,CF_MAXVARSIZE);
+   strncpy(node,sp,pm.rm_so);
+   
+   if (strlen(node) > 0)
+      {
+      AppendRScalar(&liststart,node,CF_SCALAR);
+      count++;
+      }
+   
+   sp += pm.rm_eo;
+   }
+
+if (count < max)
+   {
+   memset(node,0,CF_MAXVARSIZE);
+   strncpy(node,sp,CF_MAXVARSIZE-1);
+   
+   if (strlen(node) > 0)
+      {
+      AppendRScalar(&liststart,node,CF_SCALAR);
+      }
+   }
+
+return liststart;
+}

@@ -62,17 +62,17 @@ void CompilePromises(void);
 
 /* client_code.c */
 
-struct cfagent_connection *NewServerConnection(struct FileAttr attr,struct Promise *pp);
-struct cfagent_connection *ServerConnection(char *server,struct FileAttr attr,struct Promise *pp);
-void ServerDisconnection(struct cfagent_connection *conn,struct FileAttr attr,struct Promise *pp);
-int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct FileAttr attr,struct Promise *pp);
-CFDIR *cf_remote_opendir(char *dirname,struct FileAttr attr,struct Promise *pp);
+struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp);
+struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp);
+void ServerDisconnection(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);
+int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes attr,struct Promise *pp);
+CFDIR *cf_remote_opendir(char *dirname,struct Attributes attr,struct Promise *pp);
 void NewClientCache(struct cfstat *data,struct Promise *pp);
-void DeleteClientCache(struct FileAttr attr,struct Promise *pp);
-int CompareHashNet(char *file1,char *file2,struct FileAttr attr,struct Promise *pp);
-int CopyRegularFileNet(char *source,char *new,off_t size,struct FileAttr attr,struct Promise *pp);
-int ServerConnect(struct cfagent_connection *conn,char *host,struct FileAttr attr, struct Promise *pp);
-int CacheStat(char *file,struct stat *statbuf,char *stattype,struct FileAttr attr,struct Promise *pp);
+void DeleteClientCache(struct Attributes attr,struct Promise *pp);
+int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp);
+int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
+int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp);
+int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp);
 void FlushFileStream(int sd,int toget);
 int ServerOffline(char *server);
 struct cfagent_connection *ServerConnectionReady(char *server);
@@ -82,8 +82,8 @@ void CacheServerConnection(struct cfagent_connection *conn,char *server);
 /* client_protocols.c */
 
 int IdentifyAgent(int sd,char *localip,int family);
-int AuthenticateAgent(struct cfagent_connection *conn,struct FileAttr attr,struct Promise *pp);
-void CheckServerVersion(struct cfagent_connection *conn,struct FileAttr attr, struct Promise *pp);
+int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);
+void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
 void SetSessionKey(struct cfagent_connection *conn);
 
 /* constraint.c */
@@ -141,6 +141,13 @@ struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type);
+struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type);
+void *ReadFile(char *filename,int maxsize);
+char *StripPatterns(char *file_buffer,char *pattern);
+void CloseStringHole(char *s,int start,int end);
+void BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type);
 
 /* expand.c */
 
@@ -162,27 +169,28 @@ void GetNaked(char *s1, char *s2);
 char *JoinPath(char *path,char *leaf);
 char *JoinSuffix(char *path,char *leaf);
 int IsAbsPath(char *path);
+void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
 
 
 /* files_copy.c */
 
-void *CopyFileSources(char *destination,struct FileAttr attr,struct Promise *pp);
-int CopyRegularFileDisk(char *source,char *new,struct FileAttr attr,struct Promise *pp);
-void CheckForFileHoles(struct stat *sstat,struct FileAttr attr,struct Promise *pp);
-int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int n_read,struct FileAttr attr,struct Promise *pp);
+void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *pp);
+int CopyRegularFileDisk(char *source,char *new,struct Attributes attr,struct Promise *pp);
+void CheckForFileHoles(struct stat *sstat,struct Attributes attr,struct Promise *pp);
+int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int n_read,struct Attributes attr,struct Promise *pp);
 
 /* files_links.c */
 
-int VerifyLink(char *destination,char *source,struct FileAttr attr,struct Promise *pp);
-int VerifyAbsoluteLink(char *destination,char *source,struct FileAttr attr,struct Promise *pp);
-int VerifyRelativeLink(char *destination,char *source,struct FileAttr attr,struct Promise *pp);
-int KillGhostLink(char *name,struct FileAttr attr,struct Promise *pp);
-int MakeLink (char *from,char *to,struct FileAttr attr,struct Promise *pp);
+int VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+int VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+int VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp);
+int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
 
 /* files_hashes.c */
 
-int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct FileAttr attr,struct Promise *pp);
-void PurgeHashes(struct FileAttr attr,struct Promise *pp);
+int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp);
+void PurgeHashes(struct Attributes attr,struct Promise *pp);
 int ReadHash(DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1], unsigned char *attr);
 int WriteHash(DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1], unsigned char *attr);
 void DeleteHash(DB *dbp,enum cfhashes type,char *name);
@@ -191,8 +199,8 @@ void DeleteHashKey(DBT *key);
 DBT *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1],unsigned char attr[EVP_MAX_MD_SIZE+1]);
 void DeleteHashValue(DBT *value);
 
-int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct FileAttr attr,struct Promise *pp);
-int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct FileAttr attr,struct Promise *pp);
+int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp);
+int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
@@ -203,56 +211,56 @@ int FileHashSize(enum cfhashes id);
 
 /* files_interfaces.c */
 
-void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct FileAttr attr,struct Promise *pp);
-void VerifyCopy(char *source,char *destination,struct FileAttr attr,struct Promise *pp);
-void PurgeLocalFiles(struct Item *filelist,char *directory,struct FileAttr attr,struct Promise *pp);
-void CopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct FileAttr attr, struct Promise *pp);
-int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct FileAttr attr,struct Promise *pp);
-void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct FileAttr attr, struct Promise *pp);
-int cf_stat(char *file,struct stat *buf,struct FileAttr attr, struct Promise *pp);
-int cf_lstat(char *file,struct stat *buf,struct FileAttr attr, struct Promise *pp);
-int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct FileAttr attr, struct Promise *pp);
-CFDIR *cf_opendir(char *name,struct FileAttr attr, struct Promise *pp);
-struct cfdirent *cf_readdir(CFDIR *cfdirh,struct FileAttr attr, struct Promise *pp);
+void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes attr,struct Promise *pp);
+void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Promise *pp);
+void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes attr,struct Promise *pp);
+void CopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
+int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
+void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp);
+int cf_stat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
+int cf_lstat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
+int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
+CFDIR *cf_opendir(char *name,struct Attributes attr, struct Promise *pp);
+struct cfdirent *cf_readdir(CFDIR *cfdirh,struct Attributes attr, struct Promise *pp);
 void cf_closedir(CFDIR *dirh);
-int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct FileAttr attr, struct Promise *pp);
-void RegisterAHardLink(int i,char *value,struct FileAttr attr, struct Promise *pp);
+int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct Attributes attr, struct Promise *pp);
+void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
 
 /* files_operators.c */
 
-int VerifyFileLeaf(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp);
-int CreateFile(char *file,struct Promise *pp,struct FileAttr attr);
-int ScheduleCopyOperation(char *destination,struct FileAttr attr,struct Promise *pp);
-int ScheduleLinkOperation(char *destination,struct FileAttr attr,struct Promise *pp);
-int ScheduleEditOperation(char *destination,struct FileAttr attr,struct Promise *pp);
+int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
+int CreateFile(char *file,struct Promise *pp,struct Attributes attr);
+int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
+int ScheduleLinkOperation(char *destination,struct Attributes attr,struct Promise *pp);
+int ScheduleEditOperation(char *destination,struct Attributes attr,struct Promise *pp);
 struct FileCopy *NewFileCopy(struct Promise *pp);
 void DeleteFileCopy(struct FileCopy *fcp);
-void VerifyFileAttributes(char *file,struct stat *dstat,struct FileAttr attr,struct Promise *pp);
-void VerifyFileIntegrity(char *file,struct Promise *pp,struct FileAttr attr);
-int VerifyOwner(char *file,struct Promise *pp,struct FileAttr attr,struct stat *statbuf);
-void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct FileAttr attr,struct Promise *pp);
-void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct FileAttr attr);
-int TransformFile(char *file,struct FileAttr attr,struct Promise *pp);
-int MoveObstruction(char *from,struct FileAttr attr,struct Promise *pp);
-void VerifyName(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp);
-void VerifyDelete(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp);
-void TouchFile(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp); 
+void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
+void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr);
+int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *statbuf);
+void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
+void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
+int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
+int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp);
+void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
+void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
+void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp); 
 int MakeParentDirectory(char *parentandchild,int force);
 
 
 /* files_properties.c */
 
-int ConsiderFile(char *nodename,char *path,struct FileAttr attr,struct Promise *pp);
+int ConsiderFile(char *nodename,char *path,struct Attributes attr,struct Promise *pp);
 void SetSearchDevice(struct stat *sb,struct Promise *pp);
 int DeviceBoundary(struct stat *sb,struct Promise *pp);
 
 /* files_repository.c */
 
-int ArchiveToRepository(char *file,struct FileAttr attr,struct Promise *pp);
+int ArchiveToRepository(char *file,struct Attributes attr,struct Promise *pp);
 
 /* files_select.c */
 
-int SelectLeaf(char *path,struct stat *sb,struct FileAttr attr,struct Promise *pp);
+int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit);
 int SelectOwnerMatch(struct stat *lstatptr,struct Rlist *crit);
 int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
@@ -266,7 +274,7 @@ int SelectExecProgram(char *filename,char *crit);
 
 /* files_transform.c */
 
-struct FileAttr GetFileAttributes(struct Promise *pp);
+struct Attributes GetAttributesibutes(struct Promise *pp);
 struct Recursion GetRecursionConstraints(struct Promise *pp);
 struct FileSelect GetSelectConstraints(struct Promise *pp);
 struct FilePerms GetPermissionConstraints(struct Promise *pp);
@@ -277,7 +285,7 @@ struct FileDelete GetDeleteConstraints(struct Promise *pp);
 struct FileChange GetChangeMgtConstraints(struct Promise *pp);
 struct FileCopy GetCopyConstraints(struct Promise *pp);
 struct FileLink GetLinkConstraints(struct Promise *pp);
-void ShowAttributes(struct FileAttr a);
+void ShowAttributes(struct Attributes a);
 
 /* fncall.c */
 
@@ -358,13 +366,14 @@ void DeleteBodies(struct Body *bp);
 
 void BeginAudit(void);
 void EndAudit(void);
-void ClassAuditLog(struct Promise *pp,struct FileAttr attr,char *str,char status);
+void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status);
 void AddAllClasses(struct Rlist *list);
 void ExtractOperationLock(char *op);
 
 /* matching.c */
 
 int FullTextMatch (char *regptr,char *cmpptr);
+int BlockTextMatch (char *regexp,char *teststring,regmatch_t *pm);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
@@ -383,7 +392,7 @@ void PromiseRef(enum cfoutputlevel level,struct Promise *pp);
 
 /* recursion.c */
 
-int DepthSearch(char *name,struct stat *sb,int rlevel,struct FileAttr attr,struct Promise *pp);
+int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp);
 int PushDirState(char *name,struct stat *sb);
 void PopDirState(int goback,char * name,struct stat *sb,struct Recursion r);
 int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
@@ -432,6 +441,7 @@ struct Rlist *PrependRlist(struct Rlist **start,void *item, char type);
 struct Rlist *AppendRlist(struct Rlist **start,void *item, char type);
 struct Rlist *PrependRlist(struct Rlist **start,void *item, char type);
 struct Rlist *SplitStringAsRList(char *string,char sep);
+struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);
 
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);
@@ -474,7 +484,7 @@ void HandleSignals(int signum);
 /* cfstreams.h */
 
 void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
-void CfT(enum cfreport level,char status,char *errstr,struct Promise *pp,struct FileAttr attr,char *fmt, ...);
+void CfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void Verbose(char *fmt, ...);
 void MakeLog(struct Item *mess,enum cfreport level);
 void MakeReport(struct Item *mess,int prefix);
@@ -506,8 +516,8 @@ void Get3Environment(void);
 
 /* transaction.c */
 
-void SummarizeTransaction(struct FileAttr attr,struct Promise *pp);
-struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct FileAttr attr,struct Promise *pp);
+void SummarizeTransaction(struct Attributes attr,struct Promise *pp);
+struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp);
 void YieldCurrentLock(struct CfLock this);
 time_t FindLock(char *last);
 int WriteLock(char *lock);
@@ -541,7 +551,7 @@ void FindFilePromiserObjects(struct Promise *pp);
 void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr));
 void FindAndVerifyFilesPromises(struct Promise *pp);
 void VerifyFilePromise(char *path,struct Promise *pp);
-int SanityChecks(char *path,struct FileAttr a,struct Promise *pp);
+int SanityChecks(char *path,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

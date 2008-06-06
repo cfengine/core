@@ -1,5 +1,3 @@
-
-
 /* 
    Copyright (C) 2008 - Mark Burgess
 
@@ -44,8 +42,7 @@ lastnode = ReadLastNode(destination);
 
 if (MatchRlistItem(attr.link.copy_patterns,lastnode))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Link %s matches copy_patterns\n",destination);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,"","Link %s matches copy_patterns\n",destination);
    VerifyCopy(source,destination,attr,pp);
    return true;
    }
@@ -106,10 +103,6 @@ if (readlink(destination,linkbuf,CF_BUFSIZE-1) == -1)
    {
    if (!MakeParentDirectory(destination,attr.move_obstructions))                  /* link doesn't exist */
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't build directory tree up to %s!\n",destination);
-      CfLog(cfsilent,OUTPUT,"");
-      snprintf(OUTPUT,CF_BUFSIZE*2,"One element was a plain file, not a directory!\n");
-      CfLog(cfsilent,OUTPUT,"");      
       return(true);
       }
    else
@@ -140,9 +133,7 @@ else
          {
          if (!DONTDO)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Overriding incorrect link %s\n",destination);
-            CfLog(cfinform,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+            cfPS(cf_inform,CF_CHG,"",pp,attr,"Overriding incorrect link %s\n",destination);
             
             if (unlink(destination) == -1)
                {
@@ -154,16 +145,13 @@ else
             }
          else
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Must remove incorrect link %s\n",destination);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Must remove incorrect link %s\n",destination);
             return false;
             }
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_inform,CF_CHG,"",pp,attr,"Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
          return true;
          }
       }
@@ -202,9 +190,8 @@ if (attr.link.when_no_file == cfa_force)
    {  
    if (!ExpandLinks(expand,absto,0))  /* begin at level 1 and beam out at 15 */
       {
-      CfLog(cferror,"Failed to make absolute link in\n","");
-      snprintf(OUTPUT,CF_BUFSIZE*2,"%s -> %s\n",destination,source);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Failed to make absolute link in\n");
+      PromiseRef(cf_error,pp);
       return false;
       }
    else
@@ -239,8 +226,7 @@ if (*source == '.')
 
 if (!CompressPath(linkto,source))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Failed to link %s to %s\n",destination,source);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Failed to link %s to %s\n",destination,source);
    return false;
    }
 
@@ -249,9 +235,8 @@ commonfrom = destination;
 
 if (strcmp(commonto,commonfrom) == 0)
    {
-   CfLog(cferror,"Can't link file to itself!\n","");
-   snprintf(OUTPUT,CF_BUFSIZE*2,"(%s -> %s)\n",destination,source);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Can't link file to itself!\n");
+   PromiseRef(cf_error,pp);
    return false;
    }
 
@@ -318,8 +303,7 @@ memset(linkpath,0,CF_BUFSIZE);
 
 if (readlink(name,linkbuf,CF_BUFSIZE-1) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"(Can't read link %s while checking for deadlinks)\n",name);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,""," !! (Can't read link %s while checking for deadlinks)\n",name);
    return true; /* ignore */
    }
 
@@ -340,17 +324,12 @@ if (stat(tmp,&statbuf) == -1)               /* link points nowhere */
    {
    if (attr.link.when_no_file == cfa_delete || attr.recursion.rmdeadlinks)
       {
+      CfOut(cf_verbose,"","%s is a link which points to %s, but that file doesn't seem to exist\n",name,VBUFF);
 
-      printf ("%d %d\n",attr.link.when_no_file == cfa_delete,attr.recursion.rmdeadlinks);
-      snprintf(OUTPUT,CF_BUFSIZE*2,"%s is a link which points to %s, but that file doesn't seem to exist\n",name,VBUFF);
-      CfLog(cfverbose,OUTPUT,"");
-
-      if (! DONTDO)
+      if (!DONTDO)
          {
          unlink(name);  /* May not work on a client-mounted system ! */
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Removing ghost %s - reference to something that is not there\n",name);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_inform,CF_CHG,"",pp,attr,"Removing ghost %s - reference to something that is not there\n",name);
          return true;
          }
       }
@@ -366,24 +345,19 @@ int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
 {
 if (DONTDO)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Need to link files %s -> %s\n",from,to);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Need to link files %s -> %s\n",from,to);
    return false;
    }
 else
    {
    if (symlink(to,from) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't link %s to %s\n",to,from);
-      CfLog(cferror,OUTPUT,"symlink");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_error,CF_FAIL,"symlink",pp,attr,"Couldn't link %s to %s\n",to,from);
       return false;
       }
    else
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Linked files %s -> %s\n",from,to);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_inform,CF_CHG,"",pp,attr,"Linked files %s -> %s\n",from,to);
       return true;
       }
    }

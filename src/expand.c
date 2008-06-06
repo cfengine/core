@@ -792,8 +792,7 @@ AddSlash(path);
       
 if (BufferOverflow(path,leaf))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Buffer overflow occurred while joining %s + %s\n",path,leaf);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Buffer overflow occurred while joining %s + %s\n",path,leaf);
    return NULL;
    }
 
@@ -810,8 +809,7 @@ DeleteSlash(path);
       
 if (BufferOverflow(path,leaf))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Buffer overflow occurred while joining %s + %s\n",path,leaf);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Buffer overflow occurred while joining %s + %s\n",path,leaf);
    return NULL;
    }
 
@@ -838,10 +836,10 @@ else
 
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
-{ struct Constraint *cp,*cp_save;
+{ struct Constraint *cp,*cp_save = NULL;
   char *lval,rtype,retval[CF_MAXVARSIZE];
   void *rval = NULL;
-  int i = 0;
+  int i = 0,ok_redefine;
   struct Rval returnval; /* Must expand naked functions here for consistency */
  
 if (IsExcluded(pp->classes))
@@ -855,7 +853,11 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (strcmp(cp->rval,"constant") == 0)
          {
-         allow_redefine = false;
+         ok_redefine = false || allow_redefine;
+         }
+      else
+         {
+         ok_redefine = true;
          }
       continue;
       }
@@ -869,12 +871,18 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
 cp = cp_save;
 
+if (cp == NULL)
+   {
+   CfOut(cf_error,"","Variable body for %s is incomplete",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return;
+   }
+
 if (i > 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Variable type-promise in %s breaks its own promise",pp->promiser);
-   CfLog(cferror,OUTPUT,"");
-   snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Variable-type body in %s breaks its own promise",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return;
    }
 
 if (rval != NULL)
@@ -889,7 +897,7 @@ if (rval != NULL)
       cp->type = returnval.rtype;
       }
    
-   if (allow_redefine) /* only on second iteration, else we ignore broken promises */
+    if (ok_redefine) /* only on second iteration, else we ignore broken promises */
       {
       if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
          {
@@ -899,16 +907,13 @@ if (rval != NULL)
    
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-      CfLog(cferror,OUTPUT,"");
+      PromiseRef(cf_error,pp);
       }
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Variable %s has no promised value\n",pp->promiser);
-   CfLog(cferror,OUTPUT,"");
-   snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Variable %s has no promised value\n",pp->promiser);
+   CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    }
 }
       

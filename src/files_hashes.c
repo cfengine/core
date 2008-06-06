@@ -57,8 +57,7 @@ HashFile(filename,current_digest,type);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open checksum database %s\n",CHECKSUMDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
    return false;
    }
 
@@ -68,8 +67,7 @@ if ((errno = (dbp->open)(dbp,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open checksum database %s\n",CHECKSUMDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
    dbp->close(dbp,0);
    return false;
    }
@@ -92,15 +90,14 @@ if (ReadChecksum(dbp,type,filename,dbdigest,dbattr))
          
          if (EXCLAIM)
             {
-            CfLog(warnlevel,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!","");
+            CfOut(warnlevel,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
          
-         snprintf(OUTPUT,CF_BUFSIZE*2,"SECURITY ALERT: Checksum (%s) for %s changed!",ChecksumName(type),filename);
-         CfLog(warnlevel,OUTPUT,"");
+         CfOut(warnlevel,"","SECURITY ALERT: Checksum (%s) for %s changed!",ChecksumName(type),filename);
          
          if (EXCLAIM)
             {
-            CfLog(warnlevel,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!","");
+            CfOut(warnlevel,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
          
          if (CHECKSUMUPDATES)
@@ -123,11 +120,7 @@ if (ReadChecksum(dbp,type,filename,dbdigest,dbattr))
 else
    {
    /* Key was not found, so install it */
-   
-   snprintf(OUTPUT,CF_BUFSIZE,"File %s was not in %s database - new file found",filename,ChecksumName(type));
-   CfLog(cfinform,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
-   
+   cfPS(cf_inform,CF_CHG,"",pp,attr,"File %s was not in %s database - new file found",filename,ChecksumName(type));   
    Debug("Storing checksum for %s in database %s\n",filename,ChecksumPrint(type,current_digest));
    WriteChecksum(dbp,type,filename,current_digest,attr_digest);
    
@@ -367,8 +360,7 @@ void PurgeHashes(struct Attributes attr,struct Promise *pp)
   
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open checksum database %s\n",CHECKSUMDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
    return;
    }
 
@@ -378,8 +370,7 @@ if ((errno = (dbp->open)(dbp,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open checksum database %s\n",CHECKSUMDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
    dbp->close(dbp,0);
    return;
    }
@@ -388,8 +379,8 @@ if ((errno = (dbp->open)(dbp,NULL,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0
 
 if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    {
-   CfLog(cferror,"Error reading from checksum database","");
-   dbp->err(dbp, ret, "DB->cursor");
+   CfOut(cf_error,"","Error reading from checksum database");
+   dbp->err(dbp,ret,"DB->cursor");
    return;
    }
 
@@ -404,14 +395,11 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    
    if (stat(obj,&statbuf) == -1)
       {
-      Verbose("Purging file %s from checksum db - no longer exists\n",obj);
-      snprintf(OUTPUT,CF_BUFSIZE*2,"SECURITY INFO: %s checksum for %s purged - file no longer exists!",key.data,obj);
-      CfLog(cferror,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_error,CF_CHG,"",pp,attr,"SECURITY INFO: %s checksum for %s purged - file no longer exists!",key.data,obj);
       
       if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
          {
-         CfLog(cferror,"","db_store");
+         CfOut(cf_error,"db_store","Deletion failed");
          }
       }
    
@@ -467,8 +455,7 @@ Debug("DATA = %s\n",HashPrint(type,value->data));
 
 if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Checksum write failed: %s",db_strerror(errno));
-   CfLog(cferror,OUTPUT,"db->put");
+   CfOut(cf_error,"db->put","Checksum write failed: %s",db_strerror(errno));
    
    DeleteHashKey(key);
    DeleteHashValue(value);
@@ -492,7 +479,7 @@ key = NewChecksumKey(type,name);
 
 if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
    {
-   CfLog(cferror,"","db_store");
+   CfOut(cf_error,"db_store","Database deletion failed");
    }
 
 DeleteChecksumKey(key);

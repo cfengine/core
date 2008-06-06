@@ -303,8 +303,7 @@ rval.rtype = CF_NOPROMISEE;
 
 if (val > CF_BUFSIZE-1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Too many bytes to read from TCP port %s@%s",port,hostnameip);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Too many bytes to read from TCP port %s@%s",port,hostnameip);
    }
 
 Debug("Want to read %d bytes from port %d at %s\n",val,portnum,hostnameip);
@@ -316,7 +315,7 @@ attr.copy.portnumber = portnum;
     
 if (!ServerConnect(conn,hostnameip,attr,NULL))
    {
-   CfLog(cferror,"Couldn't open a tcp socket","socket");
+   CfOut(cf_error,"socket","Couldn't open a tcp socket");
    DeleteAgentConn(conn);
    SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
    rval.item = NULL;
@@ -912,17 +911,27 @@ struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   char buffer[CF_BUFSIZE];
   struct Item *list = NULL, *ret; 
+  char *argv0,*argv1;
 
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-SetFnCallReturnStatus("isvariable",FNCALL_SUCCESS,NULL,NULL);   
+strcpy(buffer,CF_ANYCLASS);
+SetFnCallReturnStatus("regcmp",FNCALL_SUCCESS,NULL,NULL);   
+argv0 = finalargs->item;
+argv1 = finalargs->next->item;
 
-CfLog(cferror,"RegCmp() not yet implemented due to design changes","");
-
-strcpy(buffer,"!any");
+if (FullTextMatch(argv0,argv1))
+   {
+   strcpy(buffer,"any");   
+   }
+else
+   {
+   SetFnCallReturnStatus("regcmp",FNCALL_FAILURE,NULL,NULL);
+   strcpy(buffer,"!any");
+   }
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -955,12 +964,13 @@ struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
   struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
-  char *argv0 = finalargs->item;
-  char *argv1 = finalargs->next->item;
+  char *argv0,*argv1;
   double a = CF_NOVAL,b = CF_NOVAL;
  
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+argv0 = finalargs->item;
+argv1 = finalargs->next->item;
 
 /* begin fn specific content */
 
@@ -1039,7 +1049,6 @@ if ((rval.item = strdup(buffer)) == NULL)
 rval.rtype = CF_SCALAR;
 return rval;
 }
-
 
 /*********************************************************************/
 
@@ -1884,7 +1893,7 @@ if (result == NULL)
 
 if ((fp = fopen(filename,"r")) == NULL)
    {
-   CfOut(cferror,"fopen","Could not open file %s in readfile",filename);
+   CfOut(cf_error,"fopen","Could not open file %s in readfile",filename);
    return NULL;
    }
 

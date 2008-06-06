@@ -159,30 +159,24 @@ if ((tloc = time((time_t *)NULL)) == -1)
    printf("Couldn't read system clock\n");
    }
 
-if (VERBOSE || DEBUG || D2 || D3)
+if (UNDERSCORE_CLASSES)
    {
-   if (UNDERSCORE_CLASSES)
-      {
-      snprintf(workbuf,CF_BUFSIZE,"_%s",CLASSTEXT[i]);
-      }
-   else
-      {
-      snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
-      }
-
-   snprintf(workbuf,CF_BUFSIZE,"%s",ctime(&tloc));
-   
-   printf ("Cfengine - \n%s\n%s\n\n",VERSION,COPYRIGHT);
-
-   printf ("------------------------------------------------------------------------\n\n");
-   printf ("Host name is: %s\n",VSYSNAME.nodename);
-   printf ("Operating System Type is %s\n",VSYSNAME.sysname);
-   printf ("Operating System Release is %s\n",VSYSNAME.release);
-   printf ("Architecture = %s\n\n\n",VSYSNAME.machine);
-   printf ("Using internal soft-class %s for host %s\n\n",workbuf,CLASSTEXT[VSYSTEMHARDCLASS]);
-   printf ("The time is now %s\n\n",workbuf);
-   printf ("------------------------------------------------------------------------\n\n");
+   snprintf(workbuf,CF_BUFSIZE,"_%s",CLASSTEXT[i]);
    }
+else
+   {
+   snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
+   }
+
+CfOut(cf_verbose,"","Cfengine - \n%s\n%s\n\n",VERSION,COPYRIGHT);
+CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
+CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);
+CfOut(cf_verbose,"","Operating System Type is %s\n",VSYSNAME.sysname);
+CfOut(cf_verbose,"","Operating System Release is %s\n",VSYSNAME.release);
+CfOut(cf_verbose,"","Architecture = %s\n\n\n",VSYSNAME.machine);
+CfOut(cf_verbose,"","Using internal soft-class %s for host %s\n\n",workbuf,CLASSTEXT[VSYSTEMHARDCLASS]);
+CfOut(cf_verbose,"","The time is now %s\n\n",ctime(&tloc));
+CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 
 NewScalar("system","date",workbuf,cf_str);
 NewScalar("system","host",VSYSNAME.nodename,cf_str);
@@ -206,39 +200,39 @@ AddClassToHeap(CanonifyName(workbuf));
 #endif
 
 AddClassToHeap(CanonifyName(VSYSNAME.machine));
-Verbose("Additional hard class defined as: %s\n",CanonifyName(workbuf));
+CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
 AddClassToHeap(CanonifyName(workbuf));
-Verbose("Additional hard class defined as: %s\n",CanonifyName(workbuf));
+CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s_%s",VSYSNAME.sysname,VSYSNAME.machine,VSYSNAME.release);
 AddClassToHeap(CanonifyName(workbuf));
-Verbose("Additional hard class defined as: %s\n",CanonifyName(workbuf));
+CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
 #ifdef SI_ARCHITECTURE
 sz = sysinfo(SI_ARCHITECTURE,workbuf,CF_BUFSIZE);
 if (sz == -1)
   {
-  Verbose("cfengine internal: sysinfo returned -1\n");
+  CfOut(cf_verbose,"","cfengine internal: sysinfo returned -1\n");
   }
 else
   {
   AddClassToHeap(CanonifyName(workbuf));
-  Verbose("Additional hard class defined as: %s\n",workbuf);
+  CfOut(cf_verbose,"","Additional hard class defined as: %s\n",workbuf);
   }
 #endif
 #ifdef SI_PLATFORM
 sz = sysinfo(SI_PLATFORM,workbuf,CF_BUFSIZE);
 if (sz == -1)
   {
-  Verbose("cfengine internal: sysinfo returned -1\n");
+  CfOut(cf_verbose,"","cfengine internal: sysinfo returned -1\n");
   }
 else
   {
   AddClassToHeap(CanonifyName(workbuf));
-  Verbose("Additional hard class defined as: %s\n",workbuf);
+  CfOut(cf_verbose,"","Additional hard class defined as: %s\n",workbuf);
   }
 #endif
 #endif
@@ -251,7 +245,7 @@ if (strlen(workbuf) < CF_MAXVARSIZE-2)
    }
 else
    {
-   Verbose("cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
+   CfOut(cf_verbose,"","cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
    VARCH = strdup(CanonifyName(VSYSNAME.sysname));
    }
 
@@ -261,17 +255,17 @@ VARCH2 = strdup(CanonifyName(workbuf));
  
 AddClassToHeap(VARCH);
 
-Verbose("Additional hard class defined as: %s\n",VARCH);
+CfOut(cf_verbose,"","Additional hard class defined as: %s\n",VARCH);
 
 if (! found)
    {
-   CfLog(cferror,"Cfengine: I don't understand what architecture this is!","");
+   CfOut(cf_error,"","Cfengine: I don't understand what architecture this is!");
    }
 
 strcpy(workbuf,"compiled_on_"); 
 strcat(workbuf,CanonifyName(AUTOCONF_SYSNAME));
 AddClassToHeap(CanonifyName(workbuf));
-Verbose("\nGNU autoconf class from compile time: %s\n\n",workbuf);
+CfOut(cf_verbose,"","\nGNU autoconf class from compile time: %s\n\n",workbuf);
 
 /* Get IP address from nameserver */
 
@@ -283,7 +277,7 @@ else
    {
    memset(&cin,0,sizeof(cin));
    cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-   Verbose("Address given by nameserver: %s\n",inet_ntoa(cin.sin_addr));
+   CfOut(cf_verbose,"","Address given by nameserver: %s\n",inet_ntoa(cin.sin_addr));
    strcpy(VIPADDRESS,inet_ntoa(cin.sin_addr));
    
    for (i=0; hp->h_aliases[i]!= NULL; i++)
@@ -312,7 +306,7 @@ Debug("GetInterfaceInfo3()\n");
 
 if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
    {
-   CfLog(cferror,"Couldn't open socket","socket");
+   CfOut(cf_error,"socket","Couldn't open socket");
    exit(1);
    }
 
@@ -325,7 +319,7 @@ if (ioctl(fd, SIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq)
 if (ioctl(fd, OSIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
 #endif
    {
-   CfLog(cferror,"Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024","ioctl");
+   CfOut(cf_error,"ioctl","Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024");
    exit(1);
    }
 
@@ -334,12 +328,17 @@ last_name[0] = '\0';
 for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
    {
    if (ifp->ifr_addr.sa_family == 0)
-       {
-       continue;
-       }
+      {
+      continue;
+      }
 
-   Verbose("Interface %d: %s\n", j+1, ifp->ifr_name);
-
+   if (strlen(ifp->ifr_name) == 0)
+      {
+      continue;
+      }
+   
+   CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
+   
    /* Chun Tian (binghe) <binghe.lisp@gmail.com>:
       use a last_name to detect whether current address is a interface's first address:
       if current ifr_name = last_name, it's not the first address of current interface. */
@@ -372,7 +371,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       
       if (ioctl(fd,SIOCGIFFLAGS,&ifr) == -1)
          {
-         CfLog(cferror,"No such network device","ioctl");
+         CfOut(cf_error,"ioctl","No such network device");
          close(fd);
          return;
          }
@@ -466,18 +465,18 @@ void Get3Environment()
   struct stat statbuf;
   time_t now = time(NULL);
   
-Verbose("Looking for environment from cfenvd...\n");
+CfOut(cf_verbose,"","Looking for environment from cfenvd...\n");
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
 
 if (stat(env,&statbuf) == -1)
    {
-   Verbose("\nUnable to detect environment from cfenvd\n\n");
+   CfOut(cf_verbose,"","Unable to detect environment from cfMonitord\n\n");
    return;
    }
 
 if (statbuf.st_mtime < (now - 60*60))
    {
-   Verbose("Environment data are too old - discarding\n");
+   CfOut(cf_verbose,"","Environment data are too old - discarding\n");
    unlink(env);
    return;
    }
@@ -488,11 +487,11 @@ Chop(value);
 DeleteVariable("system","env_time");
 NewScalar("system","env_time",value,cf_str);
 
-Verbose("Loading environment...\n");
+CfOut(cf_verbose,"","Loading environment...\n");
  
 if ((fp = fopen(env,"r")) == NULL)
    {
-   Verbose("\nUnable to detect environment from cfenvd\n\n");
+   CfOut(cf_verbose,"","\nUnable to detect environment from cfenvd\n\n");
    return;
    }
 
@@ -523,5 +522,5 @@ while (!feof(fp))
    }
  
 fclose(fp);
-Verbose("Environment data loaded\n\n"); 
+CfOut(cf_verbose,"","Environment data loaded\n\n"); 
 }

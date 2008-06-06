@@ -34,7 +34,7 @@
 enum cfreport String2ReportLevel(char *s)
 
 { int i;
-  static char *types[] = { "inform","verbose","error",NULL };
+  static char *types[] = { "inform","verbose","error","log",NULL };
 
 for (i = 0; types[i] != NULL; i++)
    {
@@ -292,7 +292,7 @@ DeleteItemList(split);
 
 if (lmin == CF_HIGHINIT || lmax == CF_LOWINIT)
    {
-   PromiseRef(cferror,pp);
+   PromiseRef(cf_error,pp);
    snprintf(OUTPUT,CF_BUFSIZE,"Could not make sense of integer range [%s]",intrange);
    FatalError(OUTPUT);
    }
@@ -346,9 +346,8 @@ for (rp = uidnames; rp != NULL; rp=rp->next)
          {
          if ((pw = getpwnam(ip->name)) == NULL)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Unknown user [%s]\n",ip->name);
-            CfLog(cferror,OUTPUT,"");
-            PromiseRef(cferror,pp);
+            CfOut(cf_error,"","Unknown user [%s]\n",ip->name);
+            PromiseRef(cf_error,pp);
             uid = CF_UNKNOWN_OWNER; /* signal user not found */
             usercopy = ip->name;
             }
@@ -378,8 +377,7 @@ for (rp = uidnames; rp != NULL; rp=rp->next)
          {
          if (!PARSING)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Unknown user %s\n",uidbuff);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Unknown user %s\n",uidbuff);
             }
          uid = CF_UNKNOWN_OWNER;  /* signal user not found */
          usercopy = uidbuff;
@@ -429,9 +427,8 @@ for (rp = gidnames; rp != NULL; rp=rp->next)
          }
       else if ((gr = getgrnam(gidbuff)) == NULL)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Unknown group %s\n",gidbuff);
-         CfLog(cferror,OUTPUT,"");
-         PromiseRef(cferror,pp);
+         CfOut(cf_error,"","Unknown group %s\n",gidbuff);
+         PromiseRef(cf_error,pp);
          gid = CF_UNKNOWN_GROUP;
          groupcopy = gidbuff;
          }

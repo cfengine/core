@@ -64,15 +64,14 @@ if (attr.copy.backup == cfa_nobackup)
 
 if (IsItemIn(VREPOSLIST,file))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",file);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",file);
    return true;
    }
 
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -82,7 +81,7 @@ PrependItem(&VREPOSLIST,file,NULL);
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -105,18 +104,17 @@ strncpy(destination,localrepository,CF_BUFSIZE-2);
 
 if (!JoinPath(destination,node))
    {
-   CfLog(cferror,"Buffer overflow for long filename\n","");
+   CfOut(cf_error,"","Buffer overflow for long filename\n");
    return false;
    }
 
 if (!MakeParentDirectory(destination,attr.move_obstructions))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Repository (%s),testfile (%s)",localrepository,destination);
    }
 
 if (stat(file,&sb) == -1)
    {
-   Debug2("File %s promised to archive to the repository but it disappeared!\n",file);
+   Debug("File %s promised to archive to the repository but it disappeared!\n",file);
    return true;
    }
 
@@ -132,14 +130,12 @@ CheckForFileHoles(&sb,attr,pp);
 
 if (CopyRegularFile(file,destination,sb,dsb,attr,pp))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Moved %s to repository location %s\n",file,destination);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","Moved %s to repository location %s\n",file,destination);
    return true;
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Failed to move %s to repository location %s\n",file,destination);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","Failed to move %s to repository location %s\n",file,destination);
    return false;
    }
 }

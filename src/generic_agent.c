@@ -299,8 +299,7 @@ if (VINPUTLIST != NULL)
       {
       if (rp->type != CF_SCALAR)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Non file object %s in list\n",(char *)rp->item);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Non file object %s in list\n",(char *)rp->item);
          }
       else
          {
@@ -329,15 +328,13 @@ if (stat(filename,&statbuf) == -1)
 
 if (statbuf.st_uid != getuid())
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"File %s is not owned by uid %d (security exception)",filename,getuid());
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","File %s is not owned by uid %d (security exception)",filename,getuid());
    exit(1);
    }
  
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"File %s (owner %d) is writable by others (security exception)",filename,getuid());
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",filename,getuid());
    exit(1);
    }
 
@@ -588,8 +585,7 @@ Verbose("Making sure that locks are private...\n");
 
 if (chown(CFWORKDIR,getuid(),getgid()) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",CFWORKDIR,getuid(),getgid());
-   CfLog(cferror,OUTPUT,"chown");
+   CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",CFWORKDIR,getuid(),getgid());
    }
  
 if (stat(CFWORKDIR,&statbuf) != -1)
@@ -614,8 +610,7 @@ if (stat(vbuff,&statbuf) == -1)
    
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
-      CfLog(cferror,OUTPUT,"chown");
+      CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
    chmod(vbuff,(mode_t)0755);
@@ -624,8 +619,7 @@ else
    {
    if (statbuf.st_mode & 022)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: State directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","UNTRUSTED: State directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
       }
    }
 
@@ -639,8 +633,7 @@ if (stat(vbuff,&statbuf) == -1)
    
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
-      CfLog(cferror,OUTPUT,"chown");
+      CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
    chmod(vbuff,(mode_t)0700);
@@ -649,8 +642,7 @@ else
    {
    if (statbuf.st_mode & 022)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: Module directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
       }
    }
 
@@ -665,8 +657,7 @@ if (stat(vbuff,&statbuf) == -1)
    
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
-      CfLog(cferror,OUTPUT,"chown");
+      CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
    chmod(vbuff,(mode_t)0700);
@@ -691,8 +682,7 @@ if (stat(vbuff,&statbuf) == -1)
 
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
-      CfLog(cferror,OUTPUT,"chown");
+      CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
    chmod(vbuff,(mode_t)0700);   
@@ -830,17 +820,16 @@ for (rp = BODYPARTS; rp != NULL; rp=rp->next)
       case CF_SCALAR:
           if (!IsBody(BODIES,(char *)rp->item))
              {
-             snprintf(OUTPUT,CF_BUFSIZE,"Undeclared promise body \"%s()\" was referenced in a promise\n",(char *)rp->item);
-             CfLog(cferror,OUTPUT,"");
+             CfOut(cf_error,"","Undeclared promise body \"%s()\" was referenced in a promise\n",(char *)rp->item);
              }
           break;
 
       case CF_FNCALL:
           fp = (struct FnCall *)rp->item;
+
           if (!IsBody(BODIES,fp->name))
              {
-             snprintf(OUTPUT,CF_BUFSIZE,"Undeclared promise body \"%s()\" was referenced in a promise\n",fp->name);
-             CfLog(cferror,OUTPUT,"");
+             CfOut(cf_error,"","Undeclared promise body \"%s()\" was referenced in a promise\n",fp->name);
              }
           break;
       }
@@ -893,8 +882,7 @@ for (rp = args; rp != NULL; rp = rp->next)
    
    if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Variable and bundle parameter %s collide",lval);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Variable and bundle parameter %s collide",lval);
       FatalError("Aborting");
       }
    }
@@ -947,8 +935,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
       }
    }
 }

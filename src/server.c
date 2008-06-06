@@ -244,12 +244,12 @@ IDClasses();
  
 if ((CFINITSTARTTIME = time((time_t *)NULL)) == -1)
    {
-   CfLog(cferror,"Couldn't read system clock\n","time");
+   CfOut(cf_error,"time","Couldn't read system clock\n");
    }
 
 if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
    {
-   CfLog(cferror,"Couldn't read system clock\n","time");
+   CfOut(cf_error,"time","Couldn't read system clock\n");
    }
 
  /* XXX Initialize workdir for non privileged users */
@@ -329,7 +329,7 @@ void StartServer(int argc,char **argv)
   
 if ((sd = OpenReceiverChannel()) == -1)
    {
-   CfLog(cferror,"Unable to start server","");
+   CfOut(cf_error,"","Unable to start server");
    exit(1);
    }
 
@@ -343,7 +343,7 @@ signal(SIGUSR2,HandleSignals);
  
 if (listen(sd,queuesize) == -1)
    {
-   CfLog(cferror,"listen failed","listen");
+   CfOut(cf_error,"listen","listen failed");
    exit(1);
    }
 
@@ -351,8 +351,7 @@ Verbose("Listening for connections ...\n");
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"cfServerd starting %.24s\n",ctime(&CFDSTARTTIME));
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","cfServerd starting %.24s\n",ctime(&CFDSTARTTIME));
    closelog();
    exit(0);
    }
@@ -390,7 +389,7 @@ while (true)
          }
       else
          {
-         CfLog(cferror, "select failed", "select");
+         CfOut(cf_error,"select","select failed");
          exit(1);
          }
       }
@@ -408,16 +407,14 @@ while (true)
       
       if ((NONATTACKERLIST != NULL) && !IsFuzzyItemIn(NONATTACKERLIST,MapAddress(ipaddr)))   /* Allowed Subnets */
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Denying connection from non-authorized IP %s\n",ipaddr);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
          continue;
          }
       
       if (IsFuzzyItemIn(ATTACKERLIST,MapAddress(ipaddr)))   /* Denied Subnets */
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Denying connection from non-authorized IP %s\n",ipaddr);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
          continue;
          }      
@@ -433,8 +430,7 @@ while (true)
          {
          if (IsItemIn(CONNECTIONLIST,MapAddress(ipaddr)))
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Denying repeated connection from %s\n",ipaddr);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Denying repeated connection from %s\n",ipaddr);
             close(sd_reply);
             continue;
             }
@@ -442,8 +438,7 @@ while (true)
       
       if (LOGCONNS)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Accepting connection from %s\n",ipaddr);
-         CfLog(cfinform,OUTPUT,"");
+         CfOut(cf_inform,"","Accepting connection from %s\n",ipaddr);
          }
       
       snprintf(intime,63,"%d",(int)now);
@@ -451,7 +446,7 @@ while (true)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
       if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
          {
-         CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+         CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
          return;
          }
 #endif
@@ -461,7 +456,7 @@ while (true)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
    if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
       {
-      CfLog(cferror,"pthread_mutex_unlock failed","pthread_mutex_unlock");
+      CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
       return;
       }
 #endif
@@ -546,7 +541,7 @@ if (BINDINTERFACE[0] != '\0' )
 
 if (getaddrinfo(ptr,STR_CFENGINEPORT,&query,&response) != 0)
    {
-   CfLog(cferror,"DNS/service lookup failure","getaddrinfo");
+   CfOut(cf_error,"getaddrinfo","DNS/service lookup failure");
    return -1;   
    }
 
@@ -561,13 +556,13 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
 
    if (setsockopt(sd, SOL_SOCKET,SO_REUSEADDR,(char *)&yes,sizeof (int)) == -1)
       {
-      CfLog(cferror,"Socket options were not accepted","setsockopt");
+      CfOut(cf_error,"setsockopt","Socket options were not accepted");
       exit(1);
       }
    
    if (setsockopt(sd, SOL_SOCKET, SO_LINGER,(char *)&cflinger,sizeof (struct linger)) == -1)
       {
-      CfLog(cferror,"Socket options were not accepted","setsockopt");
+      CfOut(cf_error,"setsockopt","Socket options were not accepted");
       exit(1);
       }
 
@@ -585,14 +580,14 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
          }
       }
    
-   CfLog(cferror,"Could not bind server address","bind");
+   CfOut(cf_error,"bind","Could not bind server address");
    close(sd);
    sd = -1;
    }
- 
- if (sd < 0)
-    {
-   CfLog(cferror,"Couldn't open bind an open socket\n","");
+
+if (sd < 0)
+   {
+   CfOut(cf_error,"","Couldn't open bind an open socket\n");
    exit(1);
    }
 
@@ -618,25 +613,25 @@ sin.sin_family = AF_INET;
 
 if ((sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
    {
-   CfLog(cferror,"Couldn't open socket","socket");
+   CfOut(cf_error,"socket","Couldn't open socket");
    exit (1);
    }
 
 if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof (int)) == -1)
    {
-   CfLog(cferror,"Couldn't set socket options","sockopt");
+   CfOut(cf_error,"sockopt","Couldn't set socket options");
    exit (1);
    }
 
  if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof (struct linger)) == -1)
    {
-   CfLog(cferror,"Couldn't set socket options","sockopt");
+   CfOut(cf_error,"sockopt","Couldn't set socket options");
    exit (1);
    }
 
 if (bind(sd,(struct sockaddr *)&sin,sizeof(sin)) == -1) 
    {
-   CfLog(cferror,"Couldn't bind to socket","bind");
+   CfOut(cf_error,"bind","Couldn't bind to socket");
    exit(1);
    }
 
@@ -667,7 +662,7 @@ Debug("Purging Old Connections...\n");
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    return;
    }
 #endif
@@ -679,16 +674,14 @@ for (ip = *list; ip != NULL; ip=ip->next)
    if (now > then + 7200)
       {
       DeleteItem(list,ip);
-
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Purging IP address %s from connection list\n",ip->name);
-      CfLog(cfverbose,OUTPUT,"");
+      CfOut(cf_verbose,"","Purging IP address %s from connection list\n",ip->name);
       }
    }
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","pthread_mutex_unlock");
+   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
    return;
    }
 #endif
@@ -726,7 +719,7 @@ pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)1024*1024);
  
 if (pthread_create(&tid,&PTHREADDEFAULTS,(void *)HandleConnection,(void *)conn) != 0)
    {
-   CfLog(cferror,"pthread_create failed","create");
+   CfOut(cf_error,"create","pthread_create failed");
    HandleConnection(conn);
    }
 
@@ -764,8 +757,7 @@ strncat(filename,VINPUTFILE,CF_BUFSIZE-1-strlen(filename));
 
 if (stat(filename,&newstat) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Input file %s missing or busy..\n",filename);
-   CfLog(cferror,OUTPUT,filename);
+   CfOut(cf_error,filename,"Input file %s missing or busy..\n",filename);
    sleep(5);
    return;
    }
@@ -774,8 +766,7 @@ Debug("Checking file updates on %s (%x/%x)\n",filename, newstat.st_mtime, CFDSTA
 
 if (PROMISETIME < newstat.st_mtime)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Rereading config files %s..\n",filename);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","Rereading config files %s..\n",filename);
 
    /* Free & reload -- lock this to avoid access errors during reload */
 
@@ -849,7 +840,7 @@ if (conn == NULL)
  
 if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    DeleteConn(conn);
    return NULL;
    }
@@ -858,14 +849,14 @@ ACTIVE_THREADS++;
 
 if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    }  
 
 if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    {
    if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
       {
-      CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+      CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
       DeleteConn(conn);
       return NULL;
       }
@@ -874,17 +865,16 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    
    if (TRIES++ > MAXTRIES)  /* When to say we're hung / apoptosis threshold */
       {
-      CfLog(cferror,"Server seems to be paralyzed. DOS attack? Committing apoptosis...","");
+      CfOut(cf_error,"","Server seems to be paralyzed. DOS attack? Committing apoptosis...");
       ExitCleanly(0);
       }
 
    if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
       {
-      CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+      CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
       }
 
-   snprintf(OUTPUT,CF_BUFSIZE,"Too many threads (>=%d) -- increase MaxConnections?",CFD_MAXPROCESSES);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Too many threads (>=%d) -- increase MaxConnections?",CFD_MAXPROCESSES);
    snprintf(OUTPUT,CF_BUFSIZE,"BAD: Server is currently too busy -- increase MaxConnections or Splaytime?");
    SendTransaction(conn->sd_reply,OUTPUT,0,CF_DONE);
    DeleteConn(conn);
@@ -905,7 +895,7 @@ while (BusyWithConnection(conn))
  
 if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    DeleteConn(conn);
    return NULL;
    }
@@ -914,7 +904,7 @@ ACTIVE_THREADS--;
 
 if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    }
  
 #endif
@@ -1244,7 +1234,7 @@ switch (GetCommand(recvbuffer))
        if ((tloc = time((time_t *)NULL)) == -1)
           {
           sprintf(conn->output,"Couldn't read system clock\n");
-          CfLog(cfinform,conn->output,"time");
+          CfOut(cf_inform,"time",conn->output);
           SendTransaction(conn->sd_reply,"BAD: clocks out of synch",0,CF_DONE);
           return true;
           }
@@ -1259,8 +1249,7 @@ switch (GetCommand(recvbuffer))
        
        if (DENYBADCLOCKS && (drift*drift > CLOCK_DRIFT*CLOCK_DRIFT))
           {
-          snprintf(conn->output,CF_BUFSIZE*2,"BAD: Clocks are too far unsynchronized %ld/%ld\n",(long)tloc,(long)trem);
-          CfLog(cfinform,conn->output,"");
+          CfOut(cf_inform,"","BAD: Clocks are too far unsynchronized %ld/%ld\n",(long)tloc,(long)trem);
           SendTransaction(conn->sd_reply,conn->output,0,CF_DONE);
           return true;
           }
@@ -1310,7 +1299,7 @@ switch (GetCommand(recvbuffer))
  
  sprintf (sendbuffer,"BAD: Request denied\n");
  SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
- CfLog(cfinform,"Closing connection\n",""); 
+ CfOut(cf_inform,"","Closing connection\n"); 
  return false;
 }
 
@@ -1389,7 +1378,7 @@ void DoExec(struct cfd_connection *conn,char *sendbuffer,char *args)
 
 if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
    {
-   CfLog(cferror,"Couldn't read system clock\n","time");
+   CfOut(cf_error,"time","Couldn't read system clock\n");
    }
 
 if (GetVariable("control_server","cfruncommand",&rval,&rtype) == cf_notype)
@@ -1443,13 +1432,11 @@ else
       }
    }
 
-snprintf(conn->output,CF_BUFSIZE,"Executing command %s\n",ebuff);
-CfLog(cfinform,conn->output,""); 
+CfOut(cf_inform,"","Executing command %s\n",ebuff);
  
 if ((pp = cfpopen(ebuff,"r")) == NULL)
    {
-   snprintf(conn->output,CF_BUFSIZE,"Couldn't open pipe to command %s\n",ebuff);
-   CfLog(cferror,conn->output,"pipe");
+   CfOut(cf_error,"pipe","Couldn't open pipe to command %s\n",ebuff);
    snprintf(sendbuffer,CF_BUFSIZE,"Unable to run %s\n",ebuff);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    ReleaseCurrentLock();
@@ -1555,8 +1542,7 @@ strncpy(ip_assert,ipstring,CF_MAXVARSIZE-1);
  
 if ((conn->trust == false) || IsFuzzyItemIn(SKIPVERIFY,MapAddress(conn->ipaddr)))
    {
-   snprintf(conn->output,CF_BUFSIZE*2,"Allowing %s to connect without (re)checking ID\n",ip_assert);
-   CfLog(cfverbose,conn->output,"");
+   CfOut(cf_verbose,"","Allowing %s to connect without (re)checking ID\n",ip_assert);
    Verbose("Non-verified Host ID is %s (Using skipverify)\n",dns_assert);
    strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE); 
    Verbose("Non-verified User ID seems to be %s (Using skipverify)\n",username); 
@@ -1597,8 +1583,7 @@ if (strcmp(dns_assert,"skipident") == 0)
 
 Verbose("Socket caller address appears honest (%s matches %s)\n",ip_assert,MapAddress(conn->ipaddr));
  
-snprintf(conn->output,CF_BUFSIZE,"Socket originates from %s=%s\n",ip_assert,dns_assert);
-CfLog(cfverbose,conn->output,""); 
+CfOut(cf_verbose,"","Socket originates from %s=%s\n",ip_assert,dns_assert);
 
 Debug("Attempting to verify honesty by looking up hostname (%s)\n",dns_assert);
 
@@ -1616,8 +1601,7 @@ query.ai_flags = AI_PASSIVE;
  
 if ((err=getaddrinfo(dns_assert,NULL,&query,&response)) != 0)
    {
-   snprintf(conn->output,CF_BUFSIZE,"Unable to lookup %s (%s)",dns_assert,gai_strerror(err));
-   CfLog(cferror,conn->output,"");
+   CfOut(cf_error,"","Unable to lookup %s (%s)",dns_assert,gai_strerror(err));
    }
  
 for (ap = response; ap != NULL; ap = ap->ai_next)
@@ -1643,7 +1627,7 @@ Debug("IPV4 hostnname lookup on %s\n",dns_assert);
 # ifdef HAVE_PTHREAD_H  
  if (pthread_mutex_lock(&MUTEX_HOSTNAME) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","unlock");
+    CfOut(cf_error,"unlock","pthread_mutex_lock failed");
     exit(1);
     }
 # endif
@@ -1651,8 +1635,7 @@ Debug("IPV4 hostnname lookup on %s\n",dns_assert);
 if ((hp = gethostbyname(dns_assert)) == NULL)
    {
    Verbose("cfServerd Couldn't look up name %s\n",fqname);
-   snprintf(OUTPUT,CF_BUFSIZE,"DNS lookup of %s failed",dns_assert);
-   CfLog(cflogonly,OUTPUT,"gethostbyname");
+   CfOut(cf_log,"gethostbyname","DNS lookup of %s failed",dns_assert);
    matched = false;
    }
 else
@@ -1663,7 +1646,7 @@ else
    
    if (getpeername(conn->sd_reply,(struct sockaddr *)&raddr,&len) == -1)
       {
-      CfLog(cferror,"Couldn't get socket address\n","getpeername");
+      CfOut(cf_error,"getpeername","Couldn't get socket address\n");
       matched = false;
       }
    
@@ -1694,9 +1677,7 @@ else
       
       if ((hp->h_addr_list[i] != NULL) && (hp->h_aliases[j] != NULL))
          {
-         snprintf(conn->output,CF_BUFSIZE,"Reverse hostname lookup failed, host claiming to be %s was %s\n",buf,sockaddr_ntop((struct sockaddr *)&raddr));
-         CfLog(cflogonly,conn->output,"");
-         Verbose("%s",conn->output);
+         CfOut(cf_log,"","Reverse hostname lookup failed, host claiming to be %s was %s\n",buf,sockaddr_ntop((struct sockaddr *)&raddr));
          matched = false;
          }
       else
@@ -1706,9 +1687,7 @@ else
       }
    else
       {
-      snprintf(conn->output,CF_BUFSIZE,"No name was registered in DNS for %s - reverse lookup failed\n",dns_assert);
-      CfLog(cflogonly,conn->output,"");
-      Verbose("%s",conn->output);
+      CfOut(cf_log,"","No name was registered in DNS for %s - reverse lookup failed\n",dns_assert);
       matched = false;
       }   
    }
@@ -1729,7 +1708,7 @@ else
 # ifdef HAVE_PTHREAD_H  
  if (pthread_mutex_unlock(&MUTEX_HOSTNAME) != 0)
     {
-    CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+    CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
     exit(1);
     }
 # endif
@@ -1738,11 +1717,8 @@ else
 
 if (!matched)
    {
-   snprintf(conn->output,CF_BUFSIZE,"Failed on DNS reverse lookup of %s\n",dns_assert);
-   CfLog(cflogonly,conn->output,"gethostbyname");
-   Verbose("%s",conn->output);
-   snprintf(conn->output,CF_BUFSIZE,"Client sent: %s",buf);
-   CfLog(cflogonly,conn->output,"");
+   CfOut(cf_log,"gethostbyname","Failed on DNS reverse lookup of %s\n",dns_assert);
+   CfOut(cf_log,"","Client sent: %s",buf);
    return false;
    }
  
@@ -1803,9 +1779,7 @@ ChopLastNode(path);
 #ifdef HAVE_REALPATH
 if (realpath(path,realname) == NULL)
    {
-   snprintf(conn->output,CF_BUFSIZE*2,"Couldn't resolve filename %s from host %s\n",filename,conn->hostname);
-   CfLog(cfverbose,conn->output,"lstat");
-   CfLog(cflogonly,conn->output,"lstat");   
+   CfOut(cf_verbose,"lstat","Couldn't resolve filename %s from host %s\n",filename,conn->hostname);
    return false;
    }
 #else
@@ -1819,9 +1793,7 @@ strcat(realname,lastnode);
 
 if (lstat(realname,&statbuf) == -1)
    {
-   snprintf(conn->output,CF_BUFSIZE*2,"Couldn't stat filename %s (i.e. %s) from host %s\n",filename,realname,conn->hostname);
-   CfLog(cfverbose,conn->output,"lstat");
-   /*CfLog(cflogonly,conn->output,"lstat");   */
+   CfOut(cf_verbose,"lstat","Couldn't stat filename %s (i.e. %s) from host %s\n",filename,realname,conn->hostname);
    return false;
    }
 
@@ -1853,17 +1825,16 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
    if (res)
       {
       Debug("Found a matching rule in access list (%s in %s)\n",realname,ap->path);
+
       if (stat(ap->path,&statbuf) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",ap->path);
-         CfLog(cflogonly,OUTPUT,"");
+         CfOut(cf_log,"","Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",ap->path);
          continue;
          }
       
       if (!encrypt && (ap->encrypt == true))
          {
-         snprintf(conn->output,CF_BUFSIZE,"File %s requires encrypt connection...will not serve\n",ap->path);
-         CfLog(cferror,conn->output,"");
+         CfOut(cf_error,"","File %s requires encrypt connection...will not serve\n",ap->path);
          access = false;
          }
       else
@@ -1903,8 +1874,7 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
            IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
           {
           access = false;
-          snprintf(conn->output,CF_BUFSIZE*2,"Host %s explicitly denied access to %s\n",conn->hostname,realname);
-          CfLog(cfverbose,conn->output,"");   
+          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,realname);
           break;
           }
        }
@@ -1912,25 +1882,22 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
  
  if (access)
     {
-    snprintf(conn->output,CF_BUFSIZE*2,"Host %s granted access to %s\n",conn->hostname,realname);
-    CfLog(cfverbose,conn->output,"");
+    CfOut(cf_verbose,"","Host %s granted access to %s\n",conn->hostname,realname);
     
     if (encrypt && LOGENCRYPT)
        {
        /* Log files that were marked as requiring encryption */
-       CfLog(cfloginform,conn->output,"");
+       CfOut(cf_log,"","Host %s granted access to %s\n",conn->hostname,realname);
        }
     }
  else
     {
-    snprintf(conn->output,CF_BUFSIZE*2,"Host %s denied access to %s\n",conn->hostname,realname);
-    CfLog(cfverbose,conn->output,"");
-    CfLog(cfloginform,conn->output,"");
+    CfOut(cf_verbose,"","Host %s denied access to %s\n",conn->hostname,realname);
     }
  
  if (!conn->rsa_auth)
     {
-    CfLog(cfverbose,"Cannot map root access without RSA authentication","");
+    CfOut(cf_verbose,"","Cannot map root access without RSA authentication");
     conn->maproot = false; /* only public files accessible */
     /* return false; */
     }
@@ -1953,7 +1920,7 @@ int AuthenticationDialogue(struct cfd_connection *conn,char *recvbuffer, int rec
 
 if (PRIVKEY == NULL || PUBKEY == NULL)
    {
-   CfLog(cferror,"No public/private key pair exists, create one with cfkey\n","");
+   CfOut(cf_error,"","No public/private key pair exists, create one with cfkey\n");
    return false;
    }
  
@@ -1966,19 +1933,19 @@ sscanf(recvbuffer,"%s %c %d %d",sauth,&iscrypt,&crypt_len,&nonce_len);
 
 if (crypt_len == 0 || nonce_len == 0 || strlen(sauth) == 0)
    {
-   CfLog(cfinform,"Protocol format error in authentation from IP %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol format error in authentation from IP %s\n",conn->hostname);
    return false;
    }
 
 if (nonce_len > CF_NONCELEN*2)
    {
-   CfLog(cfinform,"Protocol deviant authentication nonce from %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol deviant authentication nonce from %s\n",conn->hostname);
    return false;   
    }
 
 if (crypt_len > 2*CF_NONCELEN)
    {
-   CfLog(cfinform,"Protocol abuse in unlikely cipher from %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol abuse in unlikely cipher from %s\n",conn->hostname);
    return false;      
    }
 
@@ -1986,13 +1953,13 @@ if (crypt_len > 2*CF_NONCELEN)
 
 if (recvbuffer+CF_RSA_PROTO_OFFSET+nonce_len > recvbuffer+recvlen)
    {
-   CfLog(cfinform,"Protocol consistency error in authentation from IP %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol consistency error in authentation from IP %s\n",conn->hostname);
    return false;   
    }
 
 if ((strcmp(sauth,"SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
    {
-   CfLog(cfinform,"Protocol error in RSA authentation from IP %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol error in RSA authentation from IP %s\n",conn->hostname);
    return false;
    }
 
@@ -2001,7 +1968,7 @@ Debug("Challenge encryption = %c, nonce = %d, buf = %d\n",iscrypt,nonce_len,cryp
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","lock");
+    CfOut(cf_error,"lock","pthread_mutex_lock failed");
     }
 #endif
  
@@ -2019,12 +1986,11 @@ if (iscrypt == 'y')
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
       if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
          {
-         CfLog(cferror,"pthread_mutex_unlock failed","lock");
+         CfOut(cf_error,"lock","pthread_mutex_unlock failed");
          }
 #endif 
 
-      snprintf(conn->output,CF_BUFSIZE,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
-      CfLog(cferror,conn->output,"");
+      CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
       free(decrypted_nonce);
       return false;
       }
@@ -2036,11 +2002,11 @@ if (iscrypt == 'y')
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
        if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
           {
-          CfLog(cferror,"pthread_mutex_unlock failed","lock");
+          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
           }
 #endif 
-       snprintf(conn->output,CF_BUFSIZE,"Illegal challenge\n");
-       CfLog(cferror,conn->output,"");
+
+       CfOut(cf_error,"","Illegal challenge\n");
        free(decrypted_nonce);
        return false;       
        }
@@ -2051,7 +2017,7 @@ if (iscrypt == 'y')
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_unlock failed","lock");
+    CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
     }
 #endif
  
@@ -2066,7 +2032,7 @@ if (iscrypt == 'y')
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","lock");
+    CfOut(cf_error,"lock","pthread_mutex_lock failed");
     }
 #endif
  
@@ -2075,7 +2041,7 @@ if (iscrypt == 'y')
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","lock");
+    CfOut(cf_error,"unlock","pthread_mutex_lock failed");
     }
 #endif 
  
@@ -2083,14 +2049,14 @@ if (iscrypt == 'y')
 /* proposition C2 */ 
  if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
     {
-    CfLog(cfinform,"Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
+    CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
     RSA_free(newkey);
     return false;
     }
  
  if (len == 0)
     {
-    CfLog(cfinform,"Protocol error 2 in RSA authentation from IP %s\n",conn->hostname);
+    CfOut(cf_inform,"","Protocol error 2 in RSA authentation from IP %s\n",conn->hostname);
     RSA_free(newkey);
     return false;
     }
@@ -2098,8 +2064,7 @@ if (iscrypt == 'y')
  if ((newkey->n = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
     {
     err = ERR_get_error();
-    snprintf(conn->output,CF_BUFSIZE,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
-    CfLog(cferror,conn->output,"");
+    CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
     RSA_free(newkey);
     return false;
     }
@@ -2108,14 +2073,14 @@ if (iscrypt == 'y')
  
  if ((len=ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
     {
-    CfLog(cfinform,"Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
+    CfOut(cf_inform,"","Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
     RSA_free(newkey);
     return false;
     }
  
  if (len == 0)
     {
-    CfLog(cfinform,"Protocol error 4 in RSA authentation from IP %s\n",conn->hostname);
+    CfOut(cf_inform,"","Protocol error 4 in RSA authentation from IP %s\n",conn->hostname);
     RSA_free(newkey);
     return false;
     }
@@ -2123,8 +2088,7 @@ if (iscrypt == 'y')
  if ((newkey->e = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
     {
     err = ERR_get_error();
-    snprintf(conn->output,CF_BUFSIZE,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
-    CfLog(cferror,conn->output,"");
+    CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
     RSA_free(newkey);
     return false;
     }
@@ -2160,7 +2124,7 @@ encrypted_len = RSA_size(newkey);         /* encryption buffer is always the sam
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","lock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    }
 #endif
  
@@ -2172,7 +2136,7 @@ if ((out = malloc(encrypted_len+1)) == NULL)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","lock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    }
 #endif
 
@@ -2180,8 +2144,7 @@ if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
 if (RSA_public_encrypt(nonce_len,in,out,newkey,RSA_PKCS1_PADDING) <= 0)
    {
    err = ERR_get_error();
-   snprintf(conn->output,CF_BUFSIZE,"Public encryption failed = %s\n",ERR_reason_error_string(err));
-   CfLog(cferror,conn->output,"");
+   CfOut(cf_error,"","Public encryption failed = %s\n",ERR_reason_error_string(err));
    RSA_free(newkey);
    free(out);
    return false;
@@ -2223,21 +2186,19 @@ if (!ChecksumsMatch(digest,in,'m'))  /* replay / piggy in the middle attack ? */
    BN_free(counter_challenge);
    free(out);
    RSA_free(newkey);
-   snprintf(conn->output,CF_BUFSIZE,"Challenge response from client %s was incorrect - ID false?",conn->ipaddr);
-   CfLog(cfinform,conn->output,"");
+   CfOut(cf_inform,"","Challenge response from client %s was incorrect - ID false?",conn->ipaddr);
    return false; 
    }
 else
    {
    if (!conn->trust)
       {
-      snprintf(conn->output,CF_BUFSIZE,"Strong authentication of client %s/%s achieved",conn->hostname,conn->ipaddr);
+      CfOut(cf_verbose,"","Strong authentication of client %s/%s achieved",conn->hostname,conn->ipaddr);
       }
    else
       {
-      snprintf(conn->output,CF_BUFSIZE,"Weak authentication of trusted client %s/%s (key accepted on trust).\n",conn->hostname,conn->ipaddr);
+      CfOut(cf_verbose,"","Weak authentication of trusted client %s/%s (key accepted on trust).\n",conn->hostname,conn->ipaddr);
       }
-   CfLog(cfverbose,conn->output,"");
    }
 
 /* Receive random session key, blowfish style ... */ 
@@ -2259,8 +2220,7 @@ if (keylen > CF_BUFSIZE/2)
    BN_free(counter_challenge);
    free(out);
    RSA_free(newkey); 
-   snprintf(conn->output,CF_BUFSIZE,"Session key length received from %s is too long",conn->ipaddr);
-   CfLog(cfinform,conn->output,"");
+   CfOut(cf_inform,"","Session key length received from %s is too long",conn->ipaddr);
    return false;
    }
 else
@@ -2272,7 +2232,7 @@ else
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","lock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    }
 #endif
  
@@ -2297,14 +2257,12 @@ else /* New encrypted */
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
       if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
          {
-         CfLog(cferror,"pthread_mutex_unlock failed","lock");
+         CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
          }
 #endif
       
       err = ERR_get_error();
-      
-      snprintf(conn->output,CF_BUFSIZE,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
-      CfLog(cferror,conn->output,"");
+      CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
       return false;
       }
    
@@ -2314,7 +2272,7 @@ else /* New encrypted */
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
    if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
       {
-      CfLog(cferror,"pthread_mutex_unlock failed","lock");
+      CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
       }
 #endif
 
@@ -2350,7 +2308,7 @@ memset(&cfst,0,sizeof(struct cfstat));
 if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
    {
    snprintf(sendbuffer,CF_BUFSIZE*2,"BAD: Filename suspiciously long [%s]\n",filename);
-   CfLog(cferror,sendbuffer,"");
+   CfOut(cf_error,"",sendbuffer);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return -1;
    }
@@ -2358,7 +2316,7 @@ if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
 if (lstat(filename,&statbuf) == -1)
    {
    snprintf(sendbuffer,CF_BUFSIZE,"BAD: unable to stat file %s",filename);
-   CfLog(cfverbose,sendbuffer,"lstat");
+   CfOut(cf_verbose,"lstat",sendbuffer);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return -1;
    }
@@ -2379,7 +2337,7 @@ if (S_ISLNK(statbuf.st_mode))
    if (readlink(filename,linkbuf,CF_BUFSIZE-1) == -1)
       {
       sprintf(sendbuffer,"BAD: unable to read link\n");
-      CfLog(cferror,sendbuffer,"readlink");
+      CfOut(cf_error,"readlink",sendbuffer);
       SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
       return -1;
       }
@@ -2391,8 +2349,7 @@ if (S_ISLNK(statbuf.st_mode))
 
 if (!islink && (stat(filename,&statbuf) == -1))
    {
-   snprintf(sendbuffer,CF_BUFSIZE,"BAD: unable to stat file %s\n",filename);
-   CfLog(cfverbose,conn->output,"stat");
+   CfOut(cf_verbose,"stat","BAD: unable to stat file %s\n",filename);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return -1;
    }
@@ -2538,10 +2495,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
          {
          Debug("Caller %s is not the owner of the file\n",(args->connect)->username);
          RefuseAccess(args->connect,sendbuffer,args->buf_size,"");
-
-         snprintf(sendbuffer,CF_BUFSIZE,"Open error of file [%s]\n",filename);
-         CfLog(cferror,sendbuffer,"open");
-         
+         CfOut(cf_error,"open","Open error of file [%s]\n",filename);         
          snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
          SendSocketStream(sd,sendbuffer,args->buf_size,0);
          return;
@@ -2551,8 +2505,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
  
  if (args->buf_size < SMALL_BLOCK_BUF_SIZE)
     {
-    snprintf(args->connect->output,CF_BUFSIZE,"blocksize for %s was only %d\n",filename,args->buf_size);
-    CfLog(cferror,args->connect->output,"");
+    CfOut(cf_error,"","blocksize for %s was only %d\n",filename,args->buf_size);
     }
  
  if (args->encrypt)
@@ -2563,8 +2516,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
  
  if ((fd = SafeOpen(filename)) == -1)
     {
-    snprintf(sendbuffer,CF_BUFSIZE,"Open error of file [%s]\n",filename);
-    CfLog(cferror,sendbuffer,"open");
+    CfOut(cf_error,"open","Open error of file [%s]\n",filename);
     snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
     SendSocketStream(sd,sendbuffer,args->buf_size,0);
     }
@@ -2578,7 +2530,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
        
        if ((n_read = read(fd,sendbuffer,args->buf_size)) == -1)
           {
-          CfLog(cferror,"read failed in GetFile","read");
+          CfOut(cf_error,"read","read failed in GetFile");
           break;
           }
        
@@ -2609,7 +2561,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
              snprintf(sendbuffer,CF_BUFSIZE,"%s%s: %s",CF_CHANGEDSTR1,CF_CHANGEDSTR2,filename);
              if (SendSocketStream(sd,sendbuffer,args->buf_size,0) == -1)
                 {
-                CfLog(cfverbose,"Send failed in GetFile","send");
+                CfOut(cf_verbose,"send","Send failed in GetFile");
                 }
              
              Debug("Aborting transfer after %d: file is changing rapidly at source.\n",total);
@@ -2640,7 +2592,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
              {
              if (SendTransaction(sd,out,cipherlen,CF_MORE) == -1)
                 {
-                CfLog(cfverbose,"Send failed in GetFile","send");
+                CfOut(cf_verbose,"send","Send failed in GetFile");
                 break;
                 }
              }
@@ -2651,7 +2603,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
           
           if (SendSocketStream(sd,sendbuffer,sendlen,0) == -1)
              {
-             CfLog(cfverbose,"Send failed in GetFile","send");
+             CfOut(cf_verbose,"send","Send failed in GetFile");
              break;
              }
           
@@ -2701,7 +2653,7 @@ for (i = 0; i < CF_MD5_LEN; i++)
 Debug("CompareLocalChecksums(%s,%s)\n",filename,ChecksumPrint('m',digest));
 memset(sendbuffer,0,CF_BUFSIZE);
 
-if (ChecksumChanged(filename,digest,cfverbose,true,'m'))
+if (ChecksumChanged(filename,digest,cf_verbose,true,'m'))
    {
    sprintf(sendbuffer,"%s",CFD_TRUE);
    Debug("Checksums didn't match\n");
@@ -2833,7 +2785,7 @@ strcpy(buffer,CFD_TERMINATOR);
 
 if (SendTransaction(sd,buffer,strlen(buffer)+1,CF_DONE) == -1)
    {
-   CfLog(cfverbose,"","send");
+   CfOut(cf_verbose,"send","Unable to reply with terminator");
    Verbose("Unable to reply with terminator...\n");
    }
 }
@@ -2932,19 +2884,18 @@ else
  
 snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
 SendTransaction(conn->sd_reply,sendbuffer,size,CF_DONE);
-snprintf(sendbuffer,CF_BUFSIZE,"From (host=%s,user=%s,ip=%s)",hostname,username,ipaddr);
-CfLog(cfinform,sendbuffer,"");
+
+CfOut(cf_inform,"","From (host=%s,user=%s,ip=%s)",hostname,username,ipaddr);
 
 if (strlen(errmesg) > 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"ID from connecting host: (%s)",errmesg);
    if (LOGCONNS)
       {
-      CfLog(cfloginform,OUTPUT,"");
+      CfOut(cf_log,"","ID from connecting host: (%s)",errmesg);
       }
    else
       {
-      CfLog(cfverbose,OUTPUT,"");
+      CfOut(cf_verbose,"","ID from connecting host: (%s)",errmesg);
       }
    }
 }
@@ -2959,7 +2910,7 @@ snprintf(buffer,CF_BUFSIZE,"Hello %s (%s), nothing relevant to do here...\n\n",c
 
 if (SendTransaction(conn->sd_reply,buffer,0,CF_DONE) == -1)
    {
-   CfLog(cferror,"","send");
+   CfOut(cf_error,"send","");
    }
 }
 
@@ -3117,8 +3068,7 @@ Debug("Checking to see if we have seen the key before..\n");
   
 if ((errno = db_create(&dbp,NULL,0)) != 0)
    {
-   sprintf(OUTPUT,"Couldn't open average database %s\n",keydb);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
    return false;
    }
  
@@ -3128,8 +3078,7 @@ if ((errno = (dbp->open)(dbp,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   sprintf(OUTPUT,"Couldn't open average database %s\n",keydb);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
    return false;
    }
 
@@ -3169,8 +3118,7 @@ if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Public key was previously owned by %s now by %s - updating\n",value.data,mipaddr);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,"","Public key was previously owned by %s now by %s - updating\n",value.data,mipaddr);
    Debug("Now trusting this new key, because we have seen it before\n");
    DeletePublicKey(keyname);
    trust = true;
@@ -3203,8 +3151,7 @@ if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,mipaddr))
    
    if ((errno = db_create(&dbp,NULL,0)) != 0)
       {
-      sprintf(OUTPUT,"Couldn't open average database %s\n",keydb);
-      CfLog(cferror,OUTPUT,"db_open");
+      CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
       return;
       }
 
@@ -3214,8 +3161,7 @@ if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,mipaddr))
    if ((errno = (dbp->open)(dbp,NULL,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
       {
-      sprintf(OUTPUT,"Couldn't open average database %s\n",keydb);
-      CfLog(cferror,OUTPUT,"db_open");
+      CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
       return;
       }
    
@@ -3249,7 +3195,7 @@ struct cfd_connection *NewConn(int sd)  /* construct */
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","lock");
+    CfOut(cf_error,"lock","pthread_mutex_lock failed");
     }
 #endif
  
@@ -3258,13 +3204,13 @@ conn = (struct cfd_connection *) malloc(sizeof(struct cfd_connection));
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_unlock failed","lock");
+    CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
     }
 #endif
  
 if (conn == NULL)
    {
-   CfLog(cferror,"Unable to allocate conn","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate conn");
    ExitCleanly(0);
    }
  
@@ -3302,7 +3248,7 @@ if (conn->ipaddr != NULL)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
    if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
       {
-      CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+      CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
       DeleteConn(conn);
       return;
       }
@@ -3313,7 +3259,7 @@ if (conn->ipaddr != NULL)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
    if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
       {
-      CfLog(cferror,"pthread_mutex_unlock failed","pthread_mutex_unlock");
+      CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
       DeleteConn(conn);
       return;
       }
@@ -3334,7 +3280,7 @@ int SafeOpen(char *filename)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+    CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
     }
 #endif
  
@@ -3343,7 +3289,7 @@ fd = open(filename,O_RDONLY);
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_unlock failed","pthread_mutex_unlock");
+    CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
     }
 #endif
 
@@ -3359,7 +3305,7 @@ void SafeClose(int fd)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+    CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
     }
 #endif
  
@@ -3368,7 +3314,7 @@ close(fd);
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
     {
-    CfLog(cferror,"pthread_mutex_unlock failed","pthread_mutex_unlock");
+    CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
     }
 #endif
 }

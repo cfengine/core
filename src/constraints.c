@@ -55,13 +55,13 @@ switch(type)
 
 if ((cp = (struct Constraint *)malloc(sizeof(struct Constraint))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Constraint","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Constraint");
    FatalError("");
    }
 
 if ((sp = strdup(lval)) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Constraint lval","malloc");
+   CfOut(cf_error,"strdup","Unable to allocate Constraint lval");
    FatalError("");
    }
 
@@ -82,7 +82,7 @@ if (classes != NULL)
    {
    if ((cp->classes = strdup(classes)) == NULL)
       {
-      CfLog(cferror,"Unable to allocate Constraint classes","malloc");
+      CfOut(cf_error,"mstrdup","Unable to allocate Constraint classes");
       FatalError("");
       }
    }
@@ -148,8 +148,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_UNDEFINED)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Multiple %s constraints break this promise\n",lval);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Multiple %s constraints break this promise\n",lval);
             }
          }
       else
@@ -159,8 +158,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Software error - expected type for boolean constraint %s did not match internals\n",lval);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Software error - expected type for boolean constraint %s did not match internals\n",lval);
          FatalError(OUTPUT);
          }
 
@@ -202,8 +200,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_UNDEFINED)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Multiple %s int constraints break this promise\n",lval);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
             }
          }
       else
@@ -213,8 +210,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Software error - expected type for int constraint %s did not match internals\n",lval);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
          FatalError(OUTPUT);
          }
 
@@ -240,8 +236,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != NULL)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Multiple %s int constraints break this promise\n",lval);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
             }
          }
       else
@@ -251,8 +246,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_LIST)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Software error - expected type for list constraint %s did not match internals\n",lval);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Software error - expected type for list constraint %s did not match internals\n",lval);
          FatalError(OUTPUT);
          }
 
@@ -278,16 +272,14 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != NULL)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Inconsistent %s constraints break this promise\n",lval);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Inconsistent %s constraints break this promise\n",lval);
             }
 
          retval = cp->rval;
 
          if (cp->type != rtype)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Software error - expected type for constraint %s did not match internals (list with {} missing?)\n",lval);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Software error - expected type for constraint %s did not match internals (list with {} missing?)\n",lval);
             FatalError(OUTPUT);
             }
          }
@@ -402,8 +394,7 @@ switch (id)
        
        if (GetVariable("control_agent",CFA_CONTROLBODY[promiseoption].lval,&retval,&rettype) == cf_notype)
           {
-          snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in agent control body",CFA_CONTROLBODY[promiseoption].lval);
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Unknown lval %s in agent control body",CFA_CONTROLBODY[promiseoption].lval);
           return false;
           }
        else

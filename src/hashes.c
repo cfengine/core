@@ -241,8 +241,7 @@ switch (rtype)
 
        if (StringContainsVar((char *)rval,lval))
           {
-          snprintf(OUTPUT,CF_BUFSIZE,"Scalar variable %s contains itself (non-convergent): %s",lval,(char *)rval);
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Scalar variable %s contains itself (non-convergent): %s",lval,(char *)rval);
           return false;
           }
        break;
@@ -253,8 +252,7 @@ switch (rtype)
           {
           if (StringContainsVar((char *)rp->item,lval))
              {
-             snprintf(OUTPUT,CF_BUFSIZE,"List variable %s contains itself (non-convergent)",lval);
-             CfLog(cferror,OUTPUT,"");
+             CfOut(cf_error,"","List variable %s contains itself (non-convergent)",lval);
              return false;
              }
           }
@@ -279,18 +277,15 @@ if (ptr->hashtable[slot])
 
    if (CompareVariable(lval,ptr->hashtable[slot]) == 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Duplicate selection of value for %s (broken promise)",lval);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Duplicate selection of value for %s (broken promise)",lval);
       
       if (fname)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",fname,lineno);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Rule from %s at/before line %d\n",fname,lineno);
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"in bundle parameterization\n",fname,lineno);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","in bundle parameterization\n",fname,lineno);
          }
 
       DeleteAssoc(ptr->hashtable[slot]);
@@ -316,11 +311,7 @@ if (ptr->hashtable[slot])
          
          if (CompareVariable(lval,ptr->hashtable[slot]) == 0)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Duplicate selection of value for %s (broken promise)",lval);
-            CfLog(cferror,OUTPUT,"");
-            snprintf(OUTPUT,CF_BUFSIZE,"Rule from %s at/before line %d\n",fname,lineno);
-            CfLog(cferror,OUTPUT,"");
-            
+            CfOut(cf_error,"","Duplicate selection of hashed value for %s (broken promise)",lval);
             DeleteAssoc(ptr->hashtable[slot]);
             break;
             }

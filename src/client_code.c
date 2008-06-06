@@ -78,9 +78,7 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
 
       if (conn == NULL)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to establish connection with %s\n",rp->item);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Unable to establish connection with %s\n",rp->item);
          MarkServerOffline(rp->item);
          }
       else
@@ -103,9 +101,7 @@ struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,
 
 if ((conn = NewAgentConn()) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Unable to allocate connection structure for %s",server);
-   CfLog(cferror,OUTPUT,"malloc");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_error,CF_FAIL,"malloc",pp,attr,"Unable to allocate connection structure for %s",server);
    return NULL;
    }
  
@@ -123,7 +119,7 @@ if (conn->sd == CF_NOT_CONNECTED)
    
    if (!ServerConnect(conn,server,attr,pp))
       {
-      CfLog(cfinform,"Couldn't open a socket","socket");
+      CfOut(cf_inform,"socket","Couldn't open a socket");
 
       if (conn->sd != CF_NOT_CONNECTED)
          {
@@ -138,8 +134,7 @@ if (conn->sd == CF_NOT_CONNECTED)
    
    if (!IdentifyAgent(conn->sd,conn->localip,conn->family))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Id-authentication for %s failed\n",VFQNAME);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Id-authentication for %s failed\n",VFQNAME);
       errno = EPERM;
       DeleteAgentConn(conn);
       free(conn);
@@ -148,8 +143,7 @@ if (conn->sd == CF_NOT_CONNECTED)
 
    if (!AuthenticateAgent(conn,attr,pp))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Authentication dialogue with %s failed\n",server);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Authentication dialogue with %s failed\n",server);
       errno = EPERM;
       DeleteAgentConn(conn);
       free(conn);
@@ -204,7 +198,7 @@ memset(recvbuffer,0,CF_BUFSIZE);
 
 if (strlen(file) > CF_BUFSIZE-30)
    {
-   CfLog(cferror,"Filename too long","");
+   CfOut(cf_error,"","Filename too long");
    return -1;
    }
  
@@ -217,7 +211,7 @@ if (ret != 0)
 
 if ((tloc = time((time_t *)NULL)) == -1)
    {
-   CfLog(cferror,"Couldn't read system clock\n","");
+   CfOut(cf_error,"","Couldn't read system clock\n");
    }
 
 sendbuffer[0] = '\0';
@@ -226,8 +220,7 @@ if (attr.copy.encrypt)
    {
    if (conn->session_key == NULL)
       {
-      CfLog(cferror,"Cannot do encrypted copy without keys (use cfkey)","");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"Cannot do encrypted copy without keys (use cfkey)");
       return -1;
       }
    
@@ -245,8 +238,7 @@ else
 
 if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Transmission failed/refused talking to %.255s:%.255s in stat",pp->this_server,file);
-   CfLog(cfinform,OUTPUT,"send");
+   cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Transmission failed/refused talking to %.255s:%.255s in stat",pp->this_server,file);
    return -1;
    }
 
@@ -257,15 +249,13 @@ if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
 
 if (strstr(recvbuffer,"unsynchronized"))
    {
-   CfLog(cferror,"Clocks differ too much to do copy by date (security)","");
-   CfLog(cferror,recvbuffer+4,"");
+   CfOut(cf_error,"","Clocks differ too much to do copy by date (security) %s",recvbuffer+4);
    return -1;
    }
 
 if (BadProtoReply(recvbuffer))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Server returned error: %s\n",recvbuffer+4);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,"","Server returned error: %s\n",recvbuffer+4);
    errno = EPERM;
    return -1;
    }
@@ -376,11 +366,8 @@ if (OKProtoReply(recvbuffer))
    return 0;
    }
 
-
-snprintf(OUTPUT,CF_BUFSIZE*2,"Transmission refused or failed statting %s\nGot: %s\n",file,recvbuffer); 
-CfLog(cferror,OUTPUT,"");
+CfOut(cf_error,"","Transmission refused or failed statting %s\nGot: %s\n",file,recvbuffer); 
 errno = EPERM;
-
 return -1;
 }
 
@@ -401,13 +388,13 @@ Debug("CfOpenDir(%s:%s)\n",pp->this_server,dirname);
 
 if (strlen(dirname) > CF_BUFSIZE - 20)
    {
-   CfLog(cferror,"Directory name too long","");
+   CfOut(cf_error,"","Directory name too long");
    return NULL;
    }
 
 if ((cfdirh = (CFDIR *)malloc(sizeof(CFDIR))) == NULL)
    {
-   CfLog(cferror,"Couldn't allocate memory in cf_remote_opendir\n","");
+   CfOut(cf_error,"","Couldn't allocate memory in cf_remote_opendir\n");
    exit(1);
    }
 
@@ -419,8 +406,7 @@ if (attr.copy.encrypt)
    {
    if (conn->session_key == NULL)
       {
-      CfLog(cferror,"Cannot do encrypted copy without keys (use cfkey)","");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Cannot do encrypted copy without keys (use cfkey)");
       return NULL;
       }
    
@@ -468,18 +454,14 @@ while (!done)
 
    if (FailedProtoReply(recvbuffer))
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Network access to %s:%s denied\n",pp->this_server,dirname);
-      CfLog(cfinform,OUTPUT,"");
-
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to %s:%s denied\n",pp->this_server,dirname);
       free((char *)cfdirh);
       return NULL;      
       }
 
    if (BadProtoReply(recvbuffer))
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"%s\n",recvbuffer+4);
-      CfLog(cfinform,OUTPUT,"");
-
+      CfOut(cf_inform,"","%s\n",recvbuffer+4);
       free((char *)cfdirh);
       return NULL;      
       }
@@ -515,7 +497,7 @@ Debug("NewClientCache\n");
  
 if ((sp = (struct cfstat *) malloc(sizeof(struct cfstat))) == NULL)
    {
-   CfLog(cferror,"Memory allocation faliure in CacheData()\n","");
+   CfOut(cf_error,"","Memory allocation faliure in CacheData()\n");
    return;
    }
 
@@ -590,12 +572,13 @@ else
  
 if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
    {
-   CfLog(cferror,"","send");
+   cfPS(cf_error,CF_INTERPT,"send",pp,attr,"Failed send");
    return false;
    }
 
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
+   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Failed send");
    Verbose("No answer from host, assuming checksum ok to avoid remote copy for now...\n");
    return false;
    }
@@ -632,7 +615,7 @@ EVP_CIPHER_CTX_init(&ctx);
 
 if ((strlen(new) > CF_BUFSIZE-20))
    {
-   CfLog(cferror,"Filename too long","");
+   CfOut(cf_error,"","Filename too long");
    return false;
    }
  
@@ -640,8 +623,7 @@ unlink(new);  /* To avoid link attacks */
   
 if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Copy %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
-   CfLog(cferror,OUTPUT,"open");
+   CfOut(cf_error,"open","Copy %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
    unlink(new);
    return false;
    }
@@ -672,7 +654,7 @@ else
 
 if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
    {
-   CfLog(cferror,"Couldn't send","send");
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Couldn't send data");
    close(dd);
    return false;
    }
@@ -721,7 +703,7 @@ while (!done)
             continue;
             }
          
-         CfLog(cferror,"Error in socket stream","recv");
+         cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Error in client-server stream");
          close(dd);
          free(buf);
          return false;
@@ -733,14 +715,12 @@ while (!done)
    
    if (n_read_total == 0 && strncmp(buf,CF_FAILEDSTR,strlen(CF_FAILEDSTR)) == 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Network access to %s:%s denied\n",pp->this_server,source);
-
       if (attr.copy.encrypt)
          {
          RecvSocketStream(conn->sd,buf,buf_size-n_read,0); /* flush rest of transaction */
          }
       
-      CfLog(cfinform,OUTPUT,"");
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to %s:%s denied\n",pp->this_server,source);
       close(dd);
       free(buf);
       return false;      
@@ -748,9 +728,8 @@ while (!done)
    
    if (strncmp(buf,cfchangedstr,strlen(cfchangedstr)) == 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"File %s:%s changed while copying\n",pp->this_server,source);
       RecvSocketStream(conn->sd,buf,buf_size-n_read,0); /* flush rest of transaction */
-      CfLog(cfinform,OUTPUT,"");
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Source %s:%s changed while copying\n",pp->this_server,source);
       close(dd);
       free(buf);
       return false;      
@@ -764,8 +743,7 @@ while (!done)
    
    if ((value > 0) && strncmp(buf+CF_INBAND_OFFSET,"BAD: ",5) == 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Network access to cleartext %s:%s denied\n",pp->this_server,source);      
-      CfLog(cfinform,OUTPUT,"");
+      CfOut(cf_inform,"","Network access to cleartext %s:%s denied\n",pp->this_server,source);      
       close(dd);
       free(buf);
       return false;
@@ -794,8 +772,7 @@ while (!done)
          {
          if (n_read_total == 0 && strncmp(buf,CF_FAILEDSTR,size) == 0)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Network access to %s:%s denied\n",pp->this_server,source);
-            CfLog(cfinform,OUTPUT,"");
+            cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to %s:%s denied\n",pp->this_server,source);
             close(dd);
             free(buf);
             return false;      
@@ -803,15 +780,6 @@ while (!done)
          }
       }
    
-/*   if (n_read < toget)
-     {
-     snprintf(OUTPUT,CF_BUFSIZE*2,"Network error getting %s:%s\n",pp->this_server,source);
-     CfLog(cfinform,OUTPUT,"");
-     close(dd);
-     free(buf);
-     return false;  
-     }
-*/   
    n_read_total += towrite; /* n_read; */
    
    if (!attr.copy.encrypt)
@@ -824,8 +792,7 @@ while (!done)
    
    if (!FSWrite(new,dd,buf,towrite,&last_write_made_hole,n_read,attr,pp))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
-      CfLog(cferror,OUTPUT,"");
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
       free(buf);
       unlink(new);
       close(dd);
@@ -845,8 +812,7 @@ if (attr.copy.encrypt) /* final crypto cleanup */
 
    if (!FSWrite(new,dd,buf,plainlen,&last_write_made_hole,n_read,attr,pp))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
-      CfLog(cferror,OUTPUT,"");
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
       free(buf);
       unlink(new);
       close(dd);
@@ -865,7 +831,7 @@ if (last_write_made_hole)
    {
    if (cf_full_write (dd,"",1) < 0 || ftruncate (dd,n_read_total) < 0)
       {
-      CfLog(cferror,"cfengine: full_write or ftruncate error in CopyReg\n","");
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"cf_full_write or ftruncate error in CopyReg, source %s\n",source);
       free(buf);
       unlink(new);
       close(dd);
@@ -912,8 +878,7 @@ if (!attr.copy.force_ipv4)
 
    if ((err = getaddrinfo(host,portnumber_str,&query,&response)) != 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to find hostname or cfengine service: (%s/%s) %s",host,portnumber_str,gai_strerror(err));
-      CfLog(cfinform,OUTPUT,"");
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Unable to find hostname or cfengine service: (%s/%s) %s",host,portnumber_str,gai_strerror(err));
       return false;
       }
    
@@ -923,7 +888,7 @@ if (!attr.copy.force_ipv4)
       
       if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
          {
-         CfLog(cfinform,"Couldn't open a socket","socket");      
+         CfOut(cf_inform,"socket","Couldn't open a socket");
          continue;
          }
       
@@ -936,9 +901,7 @@ if (!attr.copy.force_ipv4)
          
          if ((err = getaddrinfo(BINDINTERFACE,NULL,&query2,&response2)) != 0)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Unable to lookup hostname or cfengine service: %s",gai_strerror(err));
-            CfLog(cferror,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+            cfPS(cf_error,CF_FAIL,"",pp,attr,"Unable to lookup hostname or cfengine service: %s",gai_strerror(err));
             return false;
             }
          
@@ -992,9 +955,7 @@ if (!attr.copy.force_ipv4)
    
    if (!connected)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to connect to server %s",host);
-      CfLog(cfverbose,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Unable to connect to server %s",host);
       return false;
       }
    }
@@ -1010,8 +971,7 @@ if (!attr.copy.force_ipv4)
    
    if ((hp = gethostbyname(host)) == NULL)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to look up IP address of %s",host);
-      CfLog(cferror,OUTPUT,"gethostbyname");
+      CfOut(cf_error,"gethostbyname","Unable to look up IP address of %s",host);
       return false;
       }
 
@@ -1023,7 +983,7 @@ if (!attr.copy.force_ipv4)
     
    if ((conn->sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
       {
-      CfLog(cferror,"Couldn't open a socket","socket");
+      cfPS(cf_error,CF_INTERPT,"socket",pp,attr,"Couldn't open a socket");
       return false;
       }
 
@@ -1041,9 +1001,7 @@ if (!attr.copy.force_ipv4)
     
    if (err=connect(conn->sd,(void *)&cin,sizeof(cin)) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unable to connect to server %s (old ipv4)",host);
-      CfLog(cfverbose,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_verbose,CF_INTERPT,"connect",pp,attr,"Unable to connect to server %s (old ipv4)",host);
       return false;
       }
    
@@ -1068,7 +1026,7 @@ int ServerOffline(char *server)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -1078,7 +1036,7 @@ strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -1108,7 +1066,7 @@ struct cfagent_connection *ServerConnectionReady(char *server)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -1118,7 +1076,7 @@ strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -1148,7 +1106,7 @@ void MarkServerOffline(char *server)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -1158,7 +1116,7 @@ strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -1177,7 +1135,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -1193,7 +1151,7 @@ svp->conn->sd = CF_COULD_NOT_CONNECT;
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -1210,7 +1168,7 @@ void CacheServerConnection(struct cfagent_connection *conn,char *server)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -1220,7 +1178,7 @@ strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -1239,7 +1197,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -1254,7 +1212,7 @@ svp->conn = conn;
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -1314,8 +1272,7 @@ void FlushFileStream(int sd,int toget)
 { int i;
   char buffer[2]; 
 
-snprintf(OUTPUT,CF_BUFSIZE*2,"Flushing rest of file...%d bytes\n",toget);
-CfLog(cfinform,OUTPUT,""); 
+CfOut(cf_inform,"","Flushing rest of file...%d bytes\n",toget);
  
 for (i = 0; i < toget; i++)
    {

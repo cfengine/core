@@ -66,8 +66,7 @@ len2 = RlistLen(take);
 
 if (len1 != len2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Body template [+args] = %d, [-args] = %d",len1,len2);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Body template [+args] = %d, [-args] = %d",len1,len2);
    return false;
    }
 
@@ -78,10 +77,8 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
    
    if (dtg != dtt)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Type mismatch between logical/formal parameters %s/%s\n",(char *)rpg->item,(char *)rpt->item);
-      CfLog(cferror,OUTPUT,"");
-      snprintf(OUTPUT,CF_BUFSIZE,"%s is %s whereas %s is %s\n",(char *)rpg->item,CF_DATATYPES[dtg],(char *)rpt->item,CF_DATATYPES[dtt]);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Type mismatch between logical/formal parameters %s/%s\n",(char *)rpg->item,(char *)rpt->item);
+      CfOut(cf_error,"","%s is %s whereas %s is %s\n",(char *)rpg->item,CF_DATATYPES[dtg],(char *)rpt->item,CF_DATATYPES[dtt]);
       }
 
    switch (rpg->type)
@@ -147,10 +144,8 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
 
 if (ref != len)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Arguments to function %s(.) do not tally. Expect %d not %d",fp->name,ref,len);
-   CfLog(cferror,OUTPUT,"");
-   snprintf(OUTPUT,CF_BUFSIZE,"Function reference in %s @ promise near line %d",pp->audit->filename,pp->lineno);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Arguments to function %s(.) do not tally. Expect %d not %d",fp->name,ref,len);
+   CfOut(cf_error,"","Function reference in %s @ promise near line %d",pp->audit->filename,pp->lineno);
    }
 
 for (rp = fp->args; rp != NULL; rp = rp->next)

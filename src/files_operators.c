@@ -111,16 +111,12 @@ else
       
       if ((fd = creat(file,attr.perms.plus)) == -1)
          { 
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Error creating file %s, mode = %o\n",file,attr.perms.plus);
-         CfLog(cfinform,OUTPUT,"creat");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_inform,CF_FAIL,"creat",pp,attr,"Error creating file %s, mode = %o\n",file,attr.perms.plus);
          return false;
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Creating file %s, mode = %o\n",file,attr.perms.plus);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_inform,CF_CHG,"",pp,attr,"Creating file %s, mode = %o\n",file,attr.perms.plus);
          close(fd);
          }
       }
@@ -148,9 +144,8 @@ else
 
    if (conn == NULL)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"No suitable server responded to hail\n");
-      CfLog(cfinform,OUTPUT,"");
-      PromiseRef(cfinform,pp);
+      CfOut(cf_inform,"","No suitable server responded to hail\n");
+      PromiseRef(cf_inform,pp);
       ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
       return false;
       }
@@ -269,7 +264,7 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
    {
    Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
-   cfPS(cfverbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
+   cfPS(cf_verbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
    }
 else
    {
@@ -279,11 +274,7 @@ else
       {
       case cfa_warn:
           
-          snprintf(OUTPUT,CF_BUFSIZE*2,"%s has permission %o\n",file,dstat->st_mode & 07777);
-          CfLog(cferror,OUTPUT,"");
-          ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
-          snprintf(OUTPUT,CF_BUFSIZE*2,"[should be %o]\n",newperm & 07777);
-          CfLog(cferror,OUTPUT,"");
+          cfPS(cf_error,CF_WARN,"",pp,attr,"%s has permission %o - [should be %o]\n",file,dstat->st_mode & 07777,newperm & 07777);
           break;
           
       case cfa_fix:
@@ -292,16 +283,12 @@ else
              {
              if (chmod(file,newperm & 07777) == -1)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE*2,"chmod failed on %s\n",file);
-                CfLog(cferror,OUTPUT,"chmod");
+                CfOut(cf_error,"chmod","chmod failed on %s\n",file);
                 break;
                 }
              }
           
-          snprintf(OUTPUT,CF_BUFSIZE*2,"Object %s had permission %o, changed it to %o\n",
-                   file,dstat->st_mode & 07777,newperm & 07777);
-          CfLog(cfinform,OUTPUT,"");
-          ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+          cfPS(cf_inform,CF_CHG,"",pp,attr,"Object %s had permission %o, changed it to %o\n",file,dstat->st_mode & 07777,newperm & 07777);
           break;
           
       default:
@@ -326,11 +313,7 @@ else
       {
       case cfa_warn:
 
-          snprintf(OUTPUT,CF_BUFSIZE*2,"%s has flags %o\n",file,dstat->st_mode & CHFLAGS_MASK);
-          CfLog(cferror,OUTPUT,"");
-          ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
-          snprintf(OUTPUT,CF_BUFSIZE*2,"[should be %o]\n",newflags & CHFLAGS_MASK);
-          CfLog(cferror,OUTPUT,"");
+          cfPS(cf_error,CF_WARN,"",pp,attr,"%s has flags %o - [should be %o]\n",file,dstat->st_mode & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
           break;
           
       case cfa_fix:
@@ -339,17 +322,12 @@ else
              {
              if (chflags (file,newflags & CHFLAGS_MASK) == -1)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE*2,"chflags failed on %s\n",file);
-                CfLog(cferror,OUTPUT,"chflags");
-                ClassAuditLog(pp,attr,OUTPUT,CF_DENIED);
+                cfPS(cf_error,CF_DENIED,"chflags",pp,attr,"chflags failed on %s\n",file);
                 break;
                 }
              else
                 {
-                snprintf(OUTPUT,CF_BUFSIZE*2,"%s had flags %o, changed it to %o\n",
-                         file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
-                CfLog(cfinform,OUTPUT,"");
-                ClassAuditLog(pp,attr,OUTPUT,CF_CHG);                
+                cfPS(cf_inform,CF_CHG,"",pp,attr,"%s had flags %o, changed it to %o\n",file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
                 }
              }
           
@@ -365,15 +343,11 @@ if (attr.touch)
    {
    if (utime(file,NULL) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Touching file %s",file);
-      CfLog(cfinform,OUTPUT,"utime");
-      ClassAuditLog(pp,attr,OUTPUT,CF_DENIED);
+      cfPS(cf_inform,CF_DENIED,"utime",pp,attr,"Touching file %s failed",file);
       }
    else
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Touching file %s",file);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_inform,CF_CHG,"",pp,attr,"Touching file %s",file);
       }
    }
 
@@ -441,9 +415,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
          {
          if (amroot)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"NEW SETUID root PROGRAM %s\n",file);
-            CfLog(cfinform,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
+            cfPS(cf_inform,CF_WARN,"",pp,attr,"NEW SETUID root PROGRAM %s\n",file);
             }
          
          PrependItem(&VSETUIDLIST,file,NULL);
@@ -455,18 +427,14 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
          {
          case cfa_fix:
 
-             snprintf(OUTPUT,CF_BUFSIZE*2,"Removing setuid (root) flag from %s...\n\n",file);
-             CfLog(cfinform,OUTPUT,"");
-             ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+             cfPS(cf_inform,CF_CHG,"",pp,attr,"Removing setuid (root) flag from %s...\n\n",file);
              break;
 
          case cfa_warn:
 
              if (amroot)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE*2,"WARNING setuid (root) flag on %s...\n\n",file);
-                CfLog(cferror,OUTPUT,"");
-                ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
+                cfPS(cf_error,CF_WARN,"",pp,attr,"WARNING setuid (root) flag on %s...\n\n",file);
                 }
              break;             
          }
@@ -487,9 +455,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
             {
             if (amroot)
                {
-               snprintf(OUTPUT,CF_BUFSIZE*2,"NEW SETGID root PROGRAM %s\n",file);
-               CfLog(cferror,OUTPUT,"");
-               ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
+               cfPS(cf_error,CF_WARN,"",pp,attr,"NEW SETGID root PROGRAM %s\n",file);
                }
 
             PrependItem(&VSETUIDLIST,file,NULL);
@@ -502,16 +468,12 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
          {
          case cfa_fix:
 
-             snprintf(OUTPUT,CF_BUFSIZE*2,"Removing setgid (root) flag from %s...\n\n",file);
-             CfLog(cfinform,OUTPUT,"");
-             ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+             cfPS(cf_inform,CF_CHG,"",pp,attr,"Removing setgid (root) flag from %s...\n\n",file);
              break;
 
          case cfa_warn:
 
-             snprintf(OUTPUT,CF_BUFSIZE*2,"WARNING setgid (root) flag on %s...\n\n",file);
-             ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
-             CfLog(cferror,OUTPUT,"");
+             cfPS(cf_inform,CF_WARN,"",pp,attr,"WARNING setgid (root) flag on %s...\n\n",file);
              break;
              
          default:
@@ -533,16 +495,13 @@ if (lstat(from,&sb) == 0)
    {
    if (!attr.move_obstructions)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Object %s exists and is obstructing our promise\n",from);
-      CfLog(cfverbose,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Object %s exists and is obstructing our promise\n",from);
       return false;
       }
    
    if (S_ISREG(sb.st_mode))
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Moving plain file %s to %s%s\n",from,from,CF_SAVED);
-      CfLog(cfsilent,OUTPUT,"");
+      CfOut(cf_inform,"","Moving plain file %s to %s%s\n",from,from,CF_SAVED);
 
       if (DONTDO)
          {
@@ -558,9 +517,7 @@ if (lstat(from,&sb) == 0)
 
       if (rename(from,saved) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Can't rename %s to %s\n",from,saved);
-         CfLog(cferror,OUTPUT,"rename");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Can't rename %s to %s\n",from,saved);
          return false;
          }
 
@@ -574,8 +531,7 @@ if (lstat(from,&sb) == 0)
    
    if (S_ISDIR(sb.st_mode) && attr.link.when_no_file == cfa_force)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Moving directory %s to %s%s.dir\n",from,from,CF_SAVED);
-      CfLog(cfsilent,OUTPUT,"");
+      CfOut(cf_inform,"","Moving directory %s to %s%s.dir\n",from,from,CF_SAVED);
       
       if (DONTDO)
          {
@@ -592,19 +548,14 @@ if (lstat(from,&sb) == 0)
       
       if (stat(saved,&sb) != -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't save directory %s, since %s exists already\n",from,saved);
-         CfLog(cferror,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to force link to existing directory %s\n",from);
-         CfLog(cferror,OUTPUT,"");
+         cfPS(cf_error,CF_FAIL,"",pp,attr,"Couldn't save directory %s, since %s exists already\n",from,saved);
+         CfOut(cf_error,"","Unable to force link to existing directory %s\n",from);
          return false;
          }
       
       if (rename(from,saved) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Can't rename %s to %s\n",from,saved);
-         CfLog(cferror,OUTPUT,"rename");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Can't rename %s to %s\n",from,saved);
          return false;
          }
       }
@@ -624,15 +575,12 @@ void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise
  
 if (lstat(path,&dsb) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"File object named %s is not there (promise kept)",path);
-   CfLog(cfinform,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
+   cfPS(cf_inform,CF_NOP,"",pp,attr,"File object named %s is not there (promise kept)",path);
    return;
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Warning - file object %s exists, contrary to promise\n",path);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,""," !! Warning - file object %s exists, contrary to promise\n",path);
    }
 
 if (S_ISLNK(dsb.st_mode))
@@ -643,21 +591,16 @@ if (S_ISLNK(dsb.st_mode))
          {
          if (unlink(path) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2," !! Unable to unlink %s\n",path);
-            CfLog(cferror,OUTPUT,"unlink");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+            cfPS(cf_error,CF_FAIL,"unlink",pp,attr," !! Unable to unlink %s\n",path);
             }
          else
             {
-            snprintf(OUTPUT,CF_BUFSIZE," -> Disabling symbolic link %s -> %s by deleting it\n",path,VBUFF);
-            CfLog(cfinform,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+            cfPS(cf_inform,CF_CHG,"",pp,attr," -> Disabling symbolic link %s by deleting it\n",path);
             }
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE," * Need to disable link %s -> %s to keep promise\n",path,VBUFF);
-         CfLog(cfinform,OUTPUT,"");
+         CfOut(cf_inform,""," * Need to disable link %s to keep promise\n",path);
          }
       
       return;
@@ -720,25 +663,19 @@ if (attr.rename.disable)
    
    if (DONTDO)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2," -> File %s should be renamed to %s to keep promise\n",path,newname);
-      CfLog(cfinform,OUTPUT,"");
+      CfOut(cf_inform,""," -> File %s should be renamed to %s to keep promise\n",path,newname);
       return;
       }
    else
       {
       chmod(path,newperm);
-
-      snprintf(OUTPUT,CF_BUFSIZE*2," -> Disabling/renaming file %s to %s with mode %o\n",path,newname,newperm);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Disabling/renaming file %s to %s with mode %o\n",path,newname,newperm);
 
       if (!IsItemIn(VREPOSLIST,newname))
          {
          if (rename(path,newname) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Error occurred while renaming %s\n",path);
-            CfLog(cferror,OUTPUT,"rename");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+            cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Error occurred while renaming %s\n",path);
             return;
             }
          
@@ -749,9 +686,7 @@ if (attr.rename.disable)
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE," !! Disable required twice? Would overwrite saved copy - changing permissions only",path);
-         CfLog(cferror,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
+         cfPS(cf_error,CF_WARN,"",pp,attr," !! Disable required twice? Would overwrite saved copy - changing permissions only",path);
          }        
       }
 
@@ -763,14 +698,11 @@ if (attr.rename.rotate == 0)
    if (! DONTDO)
       {
       TruncateFile(path);
-      snprintf(OUTPUT,CF_BUFSIZE*2," -> Truncating (emptying) %s\n",path);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Truncating (emptying) %s\n",path);
       }
    else
       {
-      snprintf(OUTPUT,CF_BUFSIZE," * File %s needs emptying",path);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,""," * File %s needs emptying",path);
       }
    return;
    }
@@ -781,14 +713,11 @@ if (attr.rename.rotate > 0)
    if (!DONTDO)
       {
       RotateFiles(path,attr.rename.rotate);
-      snprintf(OUTPUT,CF_BUFSIZE*2," -> Rotating files %s in %d fifo\n",path,attr.rename.rotate);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Rotating files %s in %d fifo\n",path,attr.rename.rotate);
       }
    else        
       {
-      snprintf(OUTPUT,CF_BUFSIZE," * File %s needs rotating",path);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,""," * File %s needs rotating",path);
       }
 
    return;
@@ -805,8 +734,7 @@ Debug(" -> Verifying file deletions for %s\n",path);
  
 if (DONTDO)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise requires deletion of file object %s\n",path);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","Promise requires deletion of file object %s\n",path);
    }
 else
    {
@@ -814,37 +742,28 @@ else
       {
       if (unlink(lastnode) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't unlink %s tidying\n",path);
-         CfLog(cfverbose,OUTPUT,"unlink");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_verbose,CF_FAIL,"unlink",pp,attr,"Couldn't unlink %s tidying\n",path);
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE," -> Deleted file %s\n",path);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted file %s\n",path);
          }      
       }
    else
       {
       if (!attr.delete.rmdirs)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Keeping directory %s\n",path);
-         CfLog(cfinform,OUTPUT,"unlink");
+         CfOut(cf_inform,"unlink","Keeping directory %s\n",path);
          return;
          }
       
       if (rmdir(lastnode) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Delete directory %s failed\n",path);
-         CfLog(cfinform,OUTPUT,"unlink");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_inform,CF_FAIL,"unlink",pp,attr,"Delete directory %s failed\n",path);
          }            
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Deleted directory %s\n",path);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_inform,CF_CHG,"",pp,attr,"Deleted directory %s\n",path);
          }
       }
    }   
@@ -874,8 +793,8 @@ if (attr.change.hash == cf_besthash)
       {
       HashFile(file,digest1,cf_md5);
       HashFile(file,digest2,cf_sha1);
-      FileHashChanged(file,digest1,cferror,cf_md5,attr,pp);
-      FileHashChanged(file,digest2,cferror,cf_sha1,attr,pp);
+      FileHashChanged(file,digest1,cf_error,cf_md5,attr,pp);
+      FileHashChanged(file,digest2,cf_error,cf_sha1,attr,pp);
       }
    }
 else
@@ -884,7 +803,7 @@ else
    
    if (!DONTDO)
       {
-      if (FileHashChanged(file,digest1,cferror,attr.change.hash,attr,pp))
+      if (FileHashChanged(file,digest1,cf_error,attr.change.hash,attr,pp))
          {
          }
       }
@@ -1006,8 +925,7 @@ else
              Debug("Using LCHOWN function\n");
              if (lchown(file,uid,gid) == -1)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE*2,"Cannot set ownership on link %s!\n",file);
-                CfLog(cflogonly,OUTPUT,"lchown");
+                CfOut(cf_inform,"lchown","Cannot set ownership on link %s!\n",file);
                 }
              else
                 {
@@ -1019,25 +937,19 @@ else
              {
              if (!uidmatch)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE,"Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
-                CfLog(cfinform,OUTPUT,"");
-                ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+                cfPS(cf_inform,CF_CHG,"",pp,attr,"Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
                 }
              
              if (!gidmatch)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE,"Group of %s was %d, setting to %d",file,sb->st_gid,gid);
-                CfLog(cfinform,OUTPUT,"");
-                ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+                cfPS(cf_inform,CF_CHG,"",pp,attr,"Group of %s was %d, setting to %d",file,sb->st_gid,gid);
                 }
              
              if (!S_ISLNK(sb->st_mode))
                 {
                 if (chown(file,uid,gid) == -1)
                    {
-                   snprintf(OUTPUT,CF_BUFSIZE*2,"Cannot set ownership on file %s!\n",file);
-                   CfLog(cflogonly,OUTPUT,"chown");
-                   ClassAuditLog(pp,attr,OUTPUT,CF_DENIED);
+                   cfPS(cf_inform,CF_DENIED,"chown",pp,attr,"Cannot set ownership on file %s!\n",file);
                    }
                 else
                    {
@@ -1051,24 +963,18 @@ else
           
           if ((pw = getpwuid(sb->st_uid)) == NULL)
              {
-             snprintf(OUTPUT,CF_BUFSIZE*2,"File %s is not owned by anybody in the passwd database\n",file);
-             CfLog(cferror,OUTPUT,"");
-             snprintf(OUTPUT,CF_BUFSIZE*2,"(uid = %d,gid = %d)\n",sb->st_uid,sb->st_gid);
-             CfLog(cferror,OUTPUT,"");
+             CfOut(cf_error,"","File %s is not owned by anybody in the passwd database\n",file);
+             CfOut(cf_error,"","(uid = %d,gid = %d)\n",sb->st_uid,sb->st_gid);
              break;
              }
           
           if ((gp = getgrgid(sb->st_gid)) == NULL)
              {
-             snprintf(OUTPUT,CF_BUFSIZE*2,"File %s is not owned by any group in group database\n",file);
-             CfLog(cferror,OUTPUT,"");
-             ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
+             cfPS(cf_error,CF_WARN,"",pp,attr,"File %s is not owned by any group in group database\n",file);
              break;
              }
           
-          snprintf(OUTPUT,CF_BUFSIZE*2,"File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
-          CfLog(cferror,OUTPUT,"");
-          ClassAuditLog(pp,attr,OUTPUT,CF_WARN);
+          cfPS(cf_error,CF_WARN,"",pp,attr,"File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
           break;
       }
    }
@@ -1083,7 +989,7 @@ return false;
 
 int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 
-{ char comm[CF_EXPANDSIZE];
+{ char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
   FILE *pop;
 
 if (attr.transformer == NULL)
@@ -1092,29 +998,23 @@ if (attr.transformer == NULL)
    }
 
 ExpandScalar(attr.transformer,comm);
-
-snprintf(OUTPUT,CF_BUFSIZE*2,"Transforming: %s ",comm); 
-CfLog(cfinform,OUTPUT,"");
+CfOut(cf_inform,"","Transforming: %s ",comm); 
 
 if ((pop = cfpopen(comm,"r")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Transformer %s %s failed",attr.transformer,file);
-   CfLog(cfinform,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
    return false;
    }
 
 while (!feof(pop))
    {
-   ReadLine(VBUFF,CF_BUFSIZE,pop);
-   CfLog(cfinform,VBUFF,"");
+   ReadLine(line,CF_BUFSIZE,pop);
+   CfOut(cf_inform,"",line);
    }
 
 cfpclose(pop);
 
-snprintf(OUTPUT,CF_BUFSIZE,"Transformer %s => %s seemed ok",file,comm);
-CfLog(cfinform,OUTPUT,"");
-ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed ok",file,comm);
 return true;
 }
 

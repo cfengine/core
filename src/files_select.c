@@ -347,8 +347,7 @@ if (CfRegcomp(&rx,crit,REG_EXTENDED) != 0)
 
 if ((pp = cfpopen(crit,"r")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open pipe to command %s\n",crit);
-   CfLog(cferror,OUTPUT,"cfpopen");
+   CfOut(cf_error,"cfpopen","Couldn't open pipe to command %s\n",crit);
    return false;
    }
  
@@ -390,8 +389,7 @@ for (rp = crit; rp != NULL; rp = rp->next)
    
    if (readlink(filename,buffer,CF_BUFSIZE-1) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to read link %s in filter",filename);
-      CfLog(cferror,OUTPUT,"readlink");
+      CfOut(cf_error,"readlink","Unable to read link %s in filter",filename);
       regfree(&rx);
       return false;      
       }

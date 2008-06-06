@@ -32,7 +32,7 @@ AppendItem(&mess,output,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1,"%s %s: %s",VPREFIX,errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1,"%s (%s: %s)",VPREFIX,errstr,strerror(errno));
    AppendItem(&mess,output,NULL);
    }
 
@@ -60,6 +60,15 @@ switch(level)
        MakeLog(mess,level);
        break;
 
+   case cf_log:
+       
+       if (VERBOSE || DEBUG)
+          {
+          MakeReport(mess,!VERBOSE);
+          }
+       MakeLog(mess,cf_verbose);
+       break;
+       
    default:
        
        FatalError("Report level unknown");
@@ -89,6 +98,7 @@ va_end(ap);
 
 SanitizeBuffer(buffer);
 Chop(buffer);
+
 snprintf(output,CF_BUFSIZE-1,"%s %s",VPREFIX,buffer);
 AppendItem(&mess,output,NULL);
 

@@ -53,7 +53,7 @@ else
 
 if ((pcopy = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    {
-   CfLog(cferror,"Promise allocation failure","malloc");
+   CfOut(cf_error,"malloc","Promise allocation failure");
    FatalError("memory");
    }
 
@@ -75,7 +75,7 @@ if (pp->classes)
 
 if (pcopy->promiser == NULL || (pp->promisee != NULL && pcopy->promisee == NULL) || pcopy->classes == NULL)
    {
-   CfLog(cferror,"Promise detail allocation failure","malloc");
+   CfOut(cf_error,"malloc","Promise detail allocation failure");
    FatalError("memory");
    }
 
@@ -143,21 +143,15 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          
          if (fp == NULL || fp->args == NULL)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Argument mismatch for body reference "
-                     "\"%s\" in promise at line %d of %s\n",
-                     bodyname,pp->lineno,(pp->audit)->filename);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Argument mismatch for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
             }
          
          NewScope("body");
          
          if (!MapBodyArgs("body",fp->args,bp->args))
             {
-            ERRORCOUNT++;
-            snprintf(OUTPUT,CF_BUFSIZE,"Number of arguments does not match for body reference "
-                     "\"%s\" in promise at line %d of %s\n",
-                     bodyname,pp->lineno,(pp->audit)->filename);
-            CfLog(cferror,OUTPUT,"");
+            ERRORCOUNT++;            
+            CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
             }
       
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
@@ -175,10 +169,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
          if (fp != NULL)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"body \"%s()\" was undeclared,"
-                     "but used in a promise near line %d of %s",
-                     bodyname,pp->lineno,(pp->audit)->filename);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","body \"%s()\" was undeclared, but used in a promise near line %d of %s",bodyname,pp->lineno,(pp->audit)->filename);
             }
          else
             {
@@ -215,7 +206,7 @@ Debug("ExpandDerefPromise()\n");
 
 if ((pcopy = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    {
-   CfLog(cferror,"Promise allocation failure","malloc");
+   CfOut(cf_error,"malloc","Promise allocation failure");
    FatalError("memory");
    }
 
@@ -245,7 +236,7 @@ else
 
 if (pcopy->promiser == NULL || pcopy->classes == NULL)
    {
-   CfLog(cferror,"ExpandPromise detail allocation failure","malloc");
+   CfOut(cf_error,"malloc","ExpandPromise detail allocation failure");
    FatalError("memory");
    }
 
@@ -378,12 +369,10 @@ void PromiseRef(enum cfoutputlevel level,struct Promise *pp)
 {
 if (pp->audit)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
+   CfOut(level,"","Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
+   CfOut(level,"","Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
    }
-
-CfLog(level,OUTPUT,"");
 }

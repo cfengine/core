@@ -63,16 +63,14 @@ if (attr.transaction.action != cfa_warn)
    {
    if (!MakeParentDirectory(newto,attr.move_obstructions))
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to make directory for %s in file-copy %s to %s\n",newto,attr.copy.source,attr.copy.destination);
-      CfLog(cferror,OUTPUT,"");
+      cfPS(cf_error,"",CF_FAIL,pp,attr,"Unable to make directory for %s in file-copy %s to %s\n",newto,attr.copy.source,attr.copy.destination);
       return;
       }
    }
 
 if ((dirh = cf_opendir(from,attr,pp)) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"copy can't open directory [%s]\n",from);
-   CfLog(cfverbose,OUTPUT,"");
+   cfPS(cf_inform,CF_INTERPT,"",pp,attr,"copy can't open directory [%s]\n",from);
    return;
    }
 
@@ -112,8 +110,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       
       if (cf_stat(newfrom,&sb,attr,pp) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE," !! (Can't stat %s)\n",newfrom);
-         CfLog(cfverbose,OUTPUT,"cf_stat");
+         CfOut(cf_verbose,"cf_stat"," !! (Can't stat %s)\n",newfrom);
          continue;
          }
       }
@@ -121,8 +118,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       {
       if (cf_lstat(newfrom,&sb,attr,pp) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE," !! (Can't stat %s)\n",newfrom);
-         CfLog(cfverbose,OUTPUT,"cf_stat");
+         CfOut(cf_verbose,"cf_stat"," !! (Can't stat %s)\n",newfrom);
          continue;
          }
       }
@@ -137,7 +133,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       {
       if (attr.recursion.travlinks)
          {
-         CfLog(cfverbose,"Traversing directory links during copy is too dangerous, pruned","");
+         CfOut(cf_verbose,"","Traversing directory links during copy is too dangerous, pruned");
          continue;
          }
       
@@ -152,8 +148,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
          {
          if (stat(newto,&dsb) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2," !! Can't stat local copy %s - failed to establish directory\n",newto);
-            CfLog(cferror,OUTPUT,"stat");
+            cfPS(cf_error,CF_INTERPT,"stat",pp,attr," !! Can't stat local copy %s - failed to establish directory\n",newto);
             continue;
             }
          }
@@ -205,10 +200,8 @@ else
 
 if (found == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s\n",source);
-   CfLog(cferror,OUTPUT,"");
+   cfPS(cf_error,CF_FAIL,"",pp,attr,"Can't stat %s\n",source);
    DeleteClientCache(attr,pp);
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
    return;
    }
 
@@ -226,8 +219,7 @@ if (S_ISDIR(ssb.st_mode))
 
    if ((dirh = cf_opendir(sourcedir,attr,pp)) == NULL)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open directory %s\n",sourcedir);
-      CfLog(cfverbose,OUTPUT,"opendir");
+      CfOut(cf_verbose,"opendir","Can't open directory %s\n",sourcedir);
       DeleteClientCache(attr,pp);
       return;
       }
@@ -236,8 +228,7 @@ if (S_ISDIR(ssb.st_mode))
    
    if (stat(destdir,&dsb) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat directory %s\n",destdir);
-      CfLog(cferror,OUTPUT,"stat");
+      CfOut(cf_error,"stat","Can't stat directory %s\n",destdir);
       }
    else
       {
@@ -269,8 +260,7 @@ if (S_ISDIR(ssb.st_mode))
          {
          if (cf_stat(sourcefile,&ssb,attr,pp) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Can't stat %s\n",sourcefile);
-            CfLog(cfinform,OUTPUT,"stat");
+            CfOut(cf_inform,"stat","Can't stat %s\n",sourcefile);
             DeleteClientCache(attr,pp);       
             return;
             }
@@ -279,8 +269,7 @@ if (S_ISDIR(ssb.st_mode))
          {
          if (cf_lstat(sourcefile,&ssb,attr,pp) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Can't stat %s\n",sourcefile);
-            CfLog(cfinform,OUTPUT,"lstat");
+            CfOut(cf_inform,"lstat","Can't stat %s\n",sourcefile);
             DeleteClientCache(attr,pp);       
             return;
             }
@@ -318,8 +307,7 @@ Debug("PurgeFiles(%s)\n",localdir);
 
 if (strlen(localdir) < 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Purge of %s denied -- too dangerous!",localdir);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Purge of %s denied -- too dangerous!",localdir);
    return;
    }
  
@@ -339,15 +327,13 @@ if (!attr.havedepthsearch)
 
 if (chdir(localdir) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't chdir to local directory %s\n",localdir);
-   CfLog(cfverbose,OUTPUT,"chdir");
+   CfOut(cf_verbose,"chdir","Can't chdir to local directory %s\n",localdir);
    return;
    }
 
 if ((dirh = opendir(".")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open local directory %s\n",localdir);
-   CfLog(cfverbose,OUTPUT,"opendir");
+   CfOut(cf_verbose,"opendir","Can't open local directory %s\n",localdir);
    return;
    }
 
@@ -370,14 +356,11 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2," !! Purging %s in copy dest directory\n",filename);
-         CfLog(cfinform,OUTPUT,"");
+         CfOut(cf_inform,""," !! Purging %s in copy dest directory\n",filename);
          
          if (lstat(filename,&sb) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't stat %s while purging\n",filename);
-            CfLog(cfverbose,OUTPUT,"lstat");
-            ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+            cfPS(cf_verbose,CF_INTERPT,"lstat",pp,attr," !! Couldn't stat %s while purging\n",filename);
             }
          else if (S_ISDIR(sb.st_mode))
             {
@@ -393,23 +376,17 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
             if (!DepthSearch(filename,&sb,0,purgeattr,pp))
                {
-               snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't empty directory %s while purging\n",filename);
-               CfLog(cfverbose,OUTPUT,"rmdir");
-               ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+               cfPS(cf_verbose,CF_INTERPT,"rmdir",pp,attr," !! Couldn't empty directory %s while purging\n",filename);
                }
             
             if (rmdir(filename) == -1)
                {
-               snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't remove directory %s while purging\n",filename);
-               CfLog(cfverbose,OUTPUT,"rmdir");
-               ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+               cfPS(cf_verbose,CF_INTERPT,"rmdir",pp,attr," !! Couldn't remove directory %s while purging\n",filename);
                }
             }
          else if (unlink(filename) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2," !! Couldn't delete %s while purging\n",filename);
-            CfLog(cfverbose,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+            cfPS(cf_verbose,CF_CHG,"",pp,attr," !! Couldn't delete %s while purging\n",filename);
             }
          }
       }
@@ -445,8 +422,7 @@ else
 
 if ((strcmp(sourcefile,destfile) == 0) && (strcmp(server,"localhost") == 0))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Image loop: file/dir %s copies to itself",sourcefile);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","File copy promise loop: file/dir %s is its own source",sourcefile);
    return;
    }
 
@@ -463,7 +439,7 @@ if (!SelectLeaf(sourcefile,&ssb,attr,pp))
 if (IsItemIn(VEXCLUDECACHE,destfile))
    {
    snprintf(OUTPUT,CF_BUFSIZE*2,"Skipping single-copied file %s class %s\n",destfile,ip->classes);
-   CfLog(cfverbose,OUTPUT,"");
+   CfLog(cf_verbose,OUTPUT,"");
    return;
    }
 */
@@ -488,10 +464,8 @@ if (found != -1)
       {
       if (!S_ISLNK(ssb.st_mode) && (attr.copy.type_check && (attr.copy.link_type != cfa_notlinked)))
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"file image exists but destination type is silly (file/dir/link doesn't match)\n");
-         CfLog(cferror,OUTPUT,"");
-         PromiseRef(cferror,pp);
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_error,CF_FAIL,"",pp,attr,"file image exists but destination type is silly (file/dir/link doesn't match)\n");
+         PromiseRef(cf_error,pp);
          return;
          }
       
@@ -503,9 +477,7 @@ if (found != -1)
          {
          if (unlink(destfile) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't remove link %s",destfile);
-            CfLog(cferror,OUTPUT,"unlink");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+            cfPS(cf_error,CF_FAIL,"unlink",pp,attr,"Couldn't remove link %s",destfile);
             return;
             }
          
@@ -523,9 +495,7 @@ if (attr.copy.min_size == 0 && attr.copy.max_size == 0)
    {
    if (ssb.st_size < attr.copy.min_size || ssb.st_size > attr.copy.max_size)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Source file %s size is not in the permitted range\n",sourcefile);
-      CfLog(cfinform,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_inform,CF_FAIL,"",pp,attr,"Source file %s size is not in the permitted safety range\n",sourcefile);
       return;
       }
    }
@@ -534,10 +504,7 @@ if (found == -1)
    {
    if (attr.transaction.action == cfa_warn)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Image file %s is non-existent\n",destfile);
-      CfLog(cferror,OUTPUT,"");
-      snprintf(OUTPUT,CF_BUFSIZE*2,"(should be copy of %s)\n",sourcefile);
-      CfLog(cferror,OUTPUT,"");
+      cfPS(cf_error,CF_CHG,"",pp,attr,"Image file %s is non-existent and should be a copy of %s\n",destfile,sourcefile);
       return;
       }
    
@@ -545,33 +512,27 @@ if (found == -1)
       {
       if (DONTDO)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"%s wasn't at destination (needs copying)",destfile);
-         CfLog(cfverbose,OUTPUT,"");
+         CfOut(cf_verbose,"","%s wasn't at destination (needs copying)",destfile);
          return;
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"%s wasn't at destination (copying)",destfile);
-         CfLog(cfverbose,OUTPUT,"");
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Copying from %s:%s\n",server,sourcefile);
-         CfLog(cfinform,OUTPUT,"");
+         CfOut(cf_verbose,"","%s wasn't at destination (copying)",destfile);
+         CfOut(cf_inform,"","Copying from %s:%s\n",server,sourcefile);
          }
       
       if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
          {
          if (stat(destfile,&dsb) == -1)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s\n",destfile);
-            CfLog(cferror,OUTPUT,"stat");
+            CfOut(cf_error,"stat","Can't stat %s\n",destfile);
             }
          else
             {
             VerifyCopiedFileAttributes(destfile,&dsb,&ssb,attr,pp);
             }
 
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Copied from %s:%s\n",server,sourcefile);
-         CfLog(cfverbose,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_verbose,CF_CHG,"",pp,attr,"Updated file from %s:%s\n",server,sourcefile);
 
          /*
          if (controlVAL SINGLECOPY LIST)
@@ -588,7 +549,7 @@ if (found == -1)
             if (WildMatch(ptr->name,destfile))
                {
                snprintf(OUTPUT,CF_BUFSIZE*2,"Image %s was set to autodefine class %s\n",ptr->name,ptr->classes);
-               CfLog(cfinform,OUTPUT,"");
+               CfLog(cf_inform,OUTPUT,"");
                AddMultipleClasses(ptr->classes);
                }
             }
@@ -597,11 +558,9 @@ if (found == -1)
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Copy from %s:%s failed\n",server,sourcefile);
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Copy from %s:%s failed\n",server,sourcefile);
          }
-      
-      Debug2("Leaving CopyFile\n");
+
       return;
       }
    
@@ -610,18 +569,15 @@ if (found == -1)
 #ifdef HAVE_MKFIFO
       if (DONTDO)
          {
-         Silent("%s: Make FIFO %s\n",VPREFIX,destfile);
+         CfOut(cf_inform,"","Need to make FIFO %s\n",destfile);
          }
-      else if (mkfifo (destfile,srcmode))
+      else if (mkfifo(destfile,srcmode))
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Cannot create fifo `%s'", destfile);
-         CfLog(cferror,OUTPUT,"mkfifo");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_error,CF_FAIL,"mkfifo",pp,attr,"Cannot create fifo `%s'", destfile);
          return;
          }
 
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Created fifo %s", destfile);
-      ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+      cfPS(cf_inform,CF_CHG,"",pp,attr,"Created fifo %s", destfile);
 #endif
       }
    else
@@ -630,18 +586,15 @@ if (found == -1)
          {
          if (DONTDO)
             {
-            Silent("%s: Make BLK/CHR/SOCK %s\n",VPREFIX,destfile);
+            CfOut(cf_inform,"","Make BLK/CHR/SOCK %s\n",destfile);
             }
          else if (mknod (destfile, srcmode, ssb.st_rdev))
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Cannot create special file `%s'",destfile);
-            CfLog(cferror,OUTPUT,"mknod");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+            cfPS(cf_error,CF_FAIL,"mknod",pp,attr,"Cannot create special file `%s'",destfile);
             return;
             }
 
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Created socket/device %s", destfile);
-         ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+         cfPS(cf_error,CF_CHG,"mknod",pp,attr,"Created special file/device `%s'",destfile);
          }
       }
    
@@ -672,9 +625,7 @@ else
           (S_ISLNK(dsb.st_mode)  && ! S_ISLNK(ssb.st_mode)))
           
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Promised file copy %s exists but type mismatch with source=%s\n",destfile,sourcefile);
-         CfLog(cfinform,OUTPUT,"");
-         ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Promised file copy %s exists but type mismatch with source=%s\n",destfile,sourcefile);
          return;
          }
       }
@@ -685,15 +636,12 @@ else
          {
          if (DONTDO)
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Should update file %s from source %s on %s",destfile,sourcefile,server);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Should update file %s from source %s on %s",destfile,sourcefile,server);
             return;
             }
          else
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Updated %s from source %s on %s",destfile,sourcefile,server);
-            CfLog(cfinform,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+            cfPS(cf_inform,CF_CHG,"",pp,attr,"Updated %s from source %s on %s",destfile,sourcefile,server);
             }
 
          /*
@@ -702,7 +650,7 @@ else
             if (WildMatch(ptr->name,destfile))
                {
                snprintf(OUTPUT,CF_BUFSIZE*2,"Image %s was set to autodefine class %s\n",ptr->name,ptr->classes);
-               CfLog(cfinform,OUTPUT,"");
+               CfLog(cf_inform,OUTPUT,"");
                AddMultipleClasses(ptr->classes);
                }
             } 
@@ -712,9 +660,7 @@ else
             {
             if (stat(destfile,&dsb) == -1)
                {
-               snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s\n",destfile);
-               CfLog(cferror,OUTPUT,"stat");
-               ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+               cfPS(cf_error,CF_INTERPT,"stat",pp,attr,"Can't stat %s\n",destfile);
                }
             else
                {
@@ -733,9 +679,7 @@ else
             } 
          else
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s\n",destfile);
-            CfLog(cferror,OUTPUT,"stat");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+            cfPS(cf_error,CF_FAIL,"stat",pp,attr,"Can't stat %s\n",destfile);
             }
          
          return;
@@ -763,9 +707,9 @@ else
           }
 */    
 //      snprintf(OUTPUT,CF_BUFSIZE," -> File %s is an up to date copy of source\n",destfile);
-//      CfLog(cfinform,OUTPUT,"");
+//      CfLog(cf_inform,OUTPUT,"");
 //      ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
-      cfPS(cfinform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
+      cfPS(cf_inform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
       }
    }
 }
@@ -829,11 +773,8 @@ for (sp = pp->cache; sp != NULL; sp=sp->next)
          {
          if (strlen(sp->cf_readlink)+1 > buffsize)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"readlink value is too large in cfreadlink\n");
-            CfLog(cferror,OUTPUT,"");
-            ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
-            snprintf(OUTPUT,CF_BUFSIZE,"%s: [%s]]n",VPREFIX,sp->cf_readlink);
-            CfLog(cferror,OUTPUT,"");
+            cfPS(cf_error,CF_FAIL,"",pp,attr,"readlink value is too large in cfreadlink\n");
+            CfOut(cf_error,"","Contained [%s]]n",sp->cf_readlink);
             return -1;
             }
          else
@@ -954,16 +895,14 @@ switch (attr.copy.compare)
           }      
        else
           {
-          CfLog(cfinform,"Checksum comparison replaced by ctime: files not regular\n","");
-          snprintf(OUTPUT,CF_BUFSIZE*2,"%s -> %s\n",sourcefile,destfile);
-          CfLog(cfinform,OUTPUT,"");
+          CfOut(cf_inform,"","Checksum comparison replaced by ctime: files not regular\n");
+          PromiseRef(cf_inform,pp);
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
        if (ok_to_copy && (attr.transaction.action == cfa_warn))
           { 
-          snprintf(OUTPUT,CF_BUFSIZE*2,"Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
-          CfLog(cfinform,OUTPUT,"");
+          CfOut(cf_inform,"","Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -976,16 +915,14 @@ switch (attr.copy.compare)
           }      
        else
           {
-          CfLog(cfinform,"Byte comparison replaced by ctime: files not regular\n","");
-          snprintf(OUTPUT,CF_BUFSIZE*2,"%s -> %s\n",sourcefile,destfile);
-          CfLog(cfinform,OUTPUT,"");
+          CfOut(cf_inform,"","Byte comparison replaced by ctime: files not regular\n");
+          PromiseRef(cf_inform,pp);
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
        if (ok_to_copy && (attr.transaction.action == cfa_warn))
           { 
-          snprintf(OUTPUT,CF_BUFSIZE*2,"Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -996,8 +933,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action == cfa_warn))
           { 
-          snprintf(OUTPUT,CF_BUFSIZE*2,"Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1010,8 +946,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action == cfa_warn))
           { 
-          snprintf(OUTPUT,CF_BUFSIZE*2,"Image file %s is updated somehow (should be copy of %s)\n",destfile,sourcefile);
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1021,8 +956,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action == cfa_warn))
           { 
-          snprintf(OUTPUT,CF_BUFSIZE*2,"Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1041,14 +975,11 @@ void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes 
   
 if (cf_readlink(sourcefile,linkbuf,CF_BUFSIZE,attr,pp) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't readlink %s\n",sourcefile);
-   CfLog(cferror,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_error,CF_FAIL,"",pp,attr,"Can't readlink %s\n",sourcefile);
    return;
    }
 
-snprintf(OUTPUT,CF_BUFSIZE*2,"Checking link from %s to %s\n",destfile,linkbuf);
-CfLog(cfverbose,OUTPUT,"");
+CfOut(cf_verbose,"","Checking link from %s to %s\n",destfile,linkbuf);
 
 if (attr.copy.link_type == cfa_absolute && linkbuf[0] != '/')      /* Not absolute path - must fix */
    {
@@ -1091,16 +1022,14 @@ if (succeed)
    {
    if (lstat(destfile,&dsb) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Can't lstat %s\n",destfile);
-      CfLog(cferror,OUTPUT,"lstat");
+      CfOut(cf_error,"lstat","Can't lstat %s\n",destfile);
       }
    else
       {
       VerifyCopiedFileAttributes(destfile,&dsb,sb,attr,pp);
       }
    
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Created link %s", destfile);
-   ClassAuditLog(pp,attr,OUTPUT,CF_CHG);
+   cfPS(cf_inform,CF_CHG,"",pp,attr,"Created link %s", destfile);
    }
 }
 
@@ -1147,8 +1076,7 @@ discardbackup = (attr.copy.backup == cfa_nobackup || attr.copy.backup == cfa_rep
     
 if (DONTDO)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise requires copy from %s to %s\n",source,dest);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Promise requires copy from %s to %s\n",source,dest);
    return false;
    }
 
@@ -1320,15 +1248,13 @@ else
 
 if (stat(new,&dstat) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat new file %s\n",new);
-   CfLog(cferror,OUTPUT,"stat");
+   CfOut(cf_error,"stat","Can't stat new file %s\n",new);
    return false;
    }
 
 if (dstat.st_size != sstat.st_size)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"WARNING: new file %s seems to have been corrupted in transit (sizes %d and %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,""," !! New file %s seems to have been corrupted in transit (sizes %d and %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
    if (backupok)
       {
       rename(backup,dest); /* ignore failure */
@@ -1342,8 +1268,7 @@ if (attr.copy.verify)
 
    if (CompareFileHashes(source,new,&sstat,&dstat,attr,pp))
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"WARNING: new file %s seems to have been corrupted in transit, aborting!\n",new);
-      CfLog(cfverbose,OUTPUT,"");
+      CfOut(cf_verbose,""," !! New file %s seems to have been corrupted in transit, aborting!\n",new);
       if (backupok)
          {
          rename(backup,dest); /* ignore failure */
@@ -1360,8 +1285,7 @@ if (rsrcfork)
    
    if (rsrcrd == -1 || rsrcwd == -1)
       {
-      snprintf(OUTPUT, CF_BUFSIZE, "Open of rsrcrd/rsrcwd failed\n");
-      CfLog(cfinform,OUTPUT,"open");
+      CfOut(cf_inform,"open", "Open of Darwin resource fork rsrcrd/rsrcwd failed\n");
       close(rsrcrd);
       close(rsrcwd);
       return(false);
@@ -1383,8 +1307,7 @@ if (rsrcfork)
             }
          else
             {
-            snprintf(OUTPUT, CF_BUFSIZE, "Read of rsrcrd failed\n");
-            CfLog(cfinform,OUTPUT,"read");
+            CfOut(cf_inform,"read", "Read of Darwin resource fork rsrcrd failed\n");
             close(rsrcrd);
             close(rsrcwd);
             free(rsrcbuf);
@@ -1408,20 +1331,17 @@ if (rsrcfork)
       
       while (rsrcbytesl > 0)
          {
-         
          rsrcbytesw += write(rsrcwd, rsrcbuf, rsrcbytesl);
          
          if (rsrcbytesw == -1)
-            { /* Ck error */
+            {
             if (errno == EINTR)
                 {
                 continue;
                 }
             else
                {
-               snprintf(OUTPUT, CF_BUFSIZE, "Write of rsrcwd failed\n");
-               CfLog(cfinform,OUTPUT,"write");
-               
+               CfOut(cf_inform,"write", "Write of Darwin resource fork rsrcwd failed\n");
                close(rsrcrd);
                close(rsrcwd);
                free(rsrcbuf);
@@ -1431,7 +1351,6 @@ if (rsrcfork)
          rsrcbytesl = rsrcbytesr - rsrcbytesw;  
          }
       }
-   
    }
 else
    {
@@ -1439,8 +1358,8 @@ else
    
    if (rename(new,dest) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Problem: could not install copy file as %s, directory in the way?\n",dest);
-      CfLog(cferror,OUTPUT,"rename");
+      CfOut(cf_error,"rename"," !! Could not install copy file as %s, directory in the way?\n",dest);
+
       if (backupok)
          {
          rename(backup,dest); /* ignore failure */
@@ -1454,8 +1373,7 @@ else
 
 if (!discardbackup && backupisdir)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Cannot move a directory to repository, leaving at %s",backup);
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","Cannot move a directory to repository, leaving at %s",backup);
    }
 else if (!discardbackup && ArchiveToRepository(backup,attr,pp))
    {

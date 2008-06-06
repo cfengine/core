@@ -65,8 +65,6 @@ if (ptr == NULL)
  
 if (ap = (struct CfAssoc *)(ptr->hashtable[slot]))
    {
-   DeleteRvalItem(ap->rval,ap->rtype);
-   free(ap->lval);
    DeleteAssoc(ap);
    ptr->hashtable[slot] = NULL;
    }

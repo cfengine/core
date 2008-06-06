@@ -46,8 +46,7 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 
 if ((errno = db_create(&AUDITDBP,dbenv,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open performance database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    return;
    }
 
@@ -57,8 +56,7 @@ if ((errno = (AUDITDBP->open)(AUDITDBP,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (AUDITDBP->open)(AUDITDBP,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open auditing database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open auditing database %s\n",name);
    return;
    }
 
@@ -92,19 +90,17 @@ else
 
 if (total == 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: No checks were scheduled\n",sp);
+   CfOut(cf_verbose,"","Outcome of version %s: No checks were scheduled\n",sp);
    return;
    }
 else
    {   
-   snprintf(OUTPUT,CF_BUFSIZE,"Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
+   CfOut(cf_verbose,"","Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
             sp,
             (double)PR_KEPT/total,
             (double)PR_REPAIRED/total,
             (double)PR_NOTKEPT/total);
    }
-
-CfLog(cfverbose,OUTPUT,"");
 
 ClassAuditLog(&dummyp,dummyattr,OUTPUT,CF_REPORT);
 ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
@@ -189,7 +185,7 @@ strncpy(newaudit.operator,operator,CF_AUDIT_COMMENT-1);
 
 if (clock_gettime(CLOCK_REALTIME,&t) == -1)
    {
-   CfLog(cfverbose,"Clock gettime failure during audit transaction","clock_gettime");
+   CfOut(cf_verbose,"clock_gettime","Clock gettime failure during audit transaction");
    return;
    }
 
@@ -253,7 +249,7 @@ for (rp = list; rp != NULL; rp=rp->next)
    {
    if (IsHardClass((char *)rp->item))
       {
-      CfLog(cferror,"You cannot use reserved hard classes as post-condition classes","");
+      CfOut(cf_error,"","You cannot use reserved hard classes as post-condition classes");
       }
 
    AddClassToHeap(CanonifyName((char *)rp->item));

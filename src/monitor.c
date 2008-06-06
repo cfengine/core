@@ -187,8 +187,7 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    
    if (GetVariable("control_monitor",cp->lval,&retval,&rettype) == cf_notype)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in monitor control body",cp->lval);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Unknown lval %s in monitor control body",cp->lval);
       continue;
       }
    

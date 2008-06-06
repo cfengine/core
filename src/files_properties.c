@@ -51,8 +51,7 @@ int ConsiderFile(char *nodename,char *path,struct Attributes attr,struct Promise
 
 if (strlen(nodename) < 1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Empty (null) filename detected in %s\n",path);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","Empty (null) filename detected in %s\n",path);
    return true;
    }
 
@@ -63,8 +62,7 @@ if (IsItemIn(SUSPICIOUSLIST,nodename))
       {
       if (S_ISREG(statbuf.st_mode))
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Suspicious file %s found in %s\n",nodename,path);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Suspicious file %s found in %s\n",nodename,path);
          return false;
          }
       }
@@ -110,30 +108,28 @@ strcat(vbuff,nodename);
 
 if (suspicious && NONALPHAFILES)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Suspicious filename %s in %s has no alphanumeric content (security)",CanonifyName(nodename),path);
-   CfLog(cfsilent,OUTPUT,"");
+   CfOut(cf_error,"","Suspicious filename %s in %s has no alphanumeric content (security)",CanonifyName(nodename),path);
    strcpy(newname,vbuff);
 
    for (sp = newname+strlen(path); *sp != '\0'; sp++)
       {
       if ((*sp > 126) || (*sp < 33))
-  {
-  *sp = 50 + (*sp / 50);  /* Create a visible ASCII interpretation */
-  }
+         {
+         *sp = 50 + (*sp / 50);  /* Create a visible ASCII interpretation */
+         }
       }
-
+   
    strcat(newname,".cf-nonalpha");
    
-   snprintf(OUTPUT,CF_BUFSIZE,"Renaming file %s to %s",vbuff,newname);
-   CfLog(cfsilent,OUTPUT,"");
+   CfOut(cf_error,"","Renaming file %s to %s",vbuff,newname);
    
    if (rename(vbuff,newname) == -1)
       {
-      CfLog(cfverbose,"Rename failed - foreign filesystem?\n","rename");
+      CfOut(cf_verbose,"rename","Rename failed - foreign filesystem?\n");
       }
    if (chmod(newname,0644) == -1)
       {
-      CfLog(cfverbose,"Mode change failed - foreign filesystem?\n","chmod");
+      CfOut(cf_verbose,"chmod","Mode change failed - foreign filesystem?\n");
       }
    return false;
    }
@@ -142,8 +138,7 @@ if (strstr(nodename,".") && (EXTENSIONLIST != NULL))
    {
    if (cf_lstat(vbuff,&statbuf,attr,pp) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Couldn't examine %s - foreign filesystem?\n",vbuff);
-      CfLog(cfverbose,OUTPUT,"lstat");
+      CfOut(cf_verbose,"lstat","Couldn't examine %s - foreign filesystem?\n",vbuff);
       return true;
       }
 
@@ -165,8 +160,7 @@ if (strstr(nodename,".") && (EXTENSIONLIST != NULL))
          
          if ((strlen(sp) > 0) && IsItemIn(EXTENSIONLIST,sp))
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Suspicious directory %s in %s looks like plain file with extension .%s",nodename,path,sp);
-            CfLog(cfsilent,OUTPUT,"");
+            CfOut(cf_error,"","Suspicious directory %s in %s looks like plain file with extension .%s",nodename,path,sp);
             return false;
             }
          }
@@ -187,8 +181,7 @@ for (sp = nodename; *sp != '\0'; sp++) /* Check for files like ".. ." */
 
 if (cf_lstat(vbuff,&statbuf,attr,pp) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Couldn't stat %s",vbuff);
-   CfLog(cfverbose,OUTPUT,"lstat");
+   CfOut(cf_verbose,"lstat","Couldn't stat %s",vbuff);
    return true;
    }
 
@@ -197,24 +190,19 @@ if (statbuf.st_size == 0 && ! (VERBOSE||INFORM)) /* No sense in warning about em
    return false;
    }
  
-snprintf(OUTPUT,CF_BUFSIZE,"Suspicious looking file object \"%s\" masquerading as hidden file in %s\n",nodename,path);
-CfLog(cfsilent,OUTPUT,"");
+CfOut(cf_error,"","Suspicious looking file object \"%s\" masquerading as hidden file in %s\n",nodename,path);
 Debug("Filename looks suspicious\n"); 
  
 if (S_ISLNK(statbuf.st_mode))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"   %s is a symbolic link\n",nodename);
-   CfLog(cfsilent,OUTPUT,"");
+   CfOut(cf_inform,"","   %s is a symbolic link\n",nodename);
    }
 else if (S_ISDIR(statbuf.st_mode))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"   %s is a directory\n",nodename);
-   CfLog(cfsilent,OUTPUT,"");
+   CfOut(cf_inform,"","   %s is a directory\n",nodename);
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"[%s] has size %ld and full mode %o\n",nodename,(unsigned long)(statbuf.st_size),(unsigned int)(statbuf.st_mode));
-CfLog(cfsilent,OUTPUT,"");
- 
+CfOut(cfsilent,"","[%s] has size %ld and full mode %o\n",nodename,(unsigned long)(statbuf.st_size),(unsigned int)(statbuf.st_mode)); 
 return true;
 }
 

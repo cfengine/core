@@ -53,13 +53,13 @@ CheckBundle(name,type);
 
 if ((bp = (struct Bundle *)malloc(sizeof(struct Bundle))) == NULL)
    {
-   CfLog(cferror,"Unable to alloc Bundle","malloc");
+   CfOut(cf_error,"malloc","Unable to alloc Bundle");
    FatalError("");
    }
 
 if ((sp = strdup(name)) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Bundle","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Bundle");
    FatalError("");
    }
 
@@ -104,13 +104,13 @@ Debug(")\n");
 
 if ((bp = (struct Body *)malloc(sizeof(struct Body))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Body","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Body");
    FatalError("");
    }
 
 if ((sp = strdup(name)) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Body","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Body");
    FatalError("");
    }
 
@@ -157,13 +157,13 @@ if (bundle == NULL)
  
 if ((tp = (struct SubType *)malloc(sizeof(struct SubType))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate SubType","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate SubType");
    FatalError("");
    }
 
 if ((sp = strdup(typename)) == NULL)
    {
-   CfLog(cferror,"Unable to allocate SubType","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate SubType");
    FatalError("");
    }
 
@@ -210,13 +210,13 @@ Debug("Appending Promise from bundle %s %s if context %s\n",bundle,promiser,clas
 
 if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Promise","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Promise");
    FatalError("");
    }
 
 if ((sp = strdup(promiser)) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Promise","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Promise");
    FatalError("");
    }
 
@@ -224,7 +224,7 @@ if (strlen(classes) > 0)
    {
    if ((spe = strdup(classes)) == NULL)
       {
-      CfLog(cferror,"Unable to allocate Promise","malloc");
+      CfOut(cf_error,"malloc","Unable to allocate Promise");
       FatalError("");
       }
    }
@@ -232,7 +232,7 @@ else
    {
    if ((spe = strdup("any")) == NULL)
       {
-      CfLog(cferror,"Unable to allocate Promise","malloc");
+      CfOut(cf_error,"malloc","Unable to allocate Promise");
       FatalError("");
       }
    }

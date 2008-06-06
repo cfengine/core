@@ -42,13 +42,13 @@ Debug("Installing Function Call %s\n",name);
 
 if ((fp = (struct FnCall *)malloc(sizeof(struct FnCall))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate FnCall","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate FnCall");
    FatalError("");
    }
 
 if ((sp = strdup(name)) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Promise","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Promise");
    FatalError("");
    }
 
@@ -205,14 +205,13 @@ else
    {
    if (pp)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"No such FnCall \"%s()\" in promise @ %s near line %d\n",fp->name,pp->audit->filename,pp->lineno);
+      CfOut(cf_error,"","No such FnCall \"%s()\" in promise @ %s near line %d\n",fp->name,pp->audit->filename,pp->lineno);
       }
    else
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"No such FnCall \"%s()\" - context info unavailable\n",fp->name);
+      CfOut(cf_error,"","No such FnCall \"%s()\" - context info unavailable\n",fp->name);
       }
    
-   CfLog(cferror,OUTPUT,"");
    return rval;
    }
 
@@ -328,8 +327,8 @@ switch (this)
        rval = FnCallNow(fp,expargs);
        break;
    case cfn_unknown:
-       CfOut(cferror,"","Un-registered function call");
-       PromiseRef(cferror,pp);
+       CfOut(cf_error,"","Un-registered function call");
+       PromiseRef(cf_error,pp);
        break;
    }
 

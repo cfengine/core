@@ -228,8 +228,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (GetVariable("control_agent",cp->lval,&retval,&rettype) == cf_notype)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in agent control body",cp->lval);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Unknown lval %s in agent control body",cp->lval);
       continue;
       }
             
@@ -434,8 +433,7 @@ void KeepPromiseBundles()
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"No bundlesequence in the common control body");
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","No bundlesequence in the common control body");
    exit(1);
    }
 
@@ -456,8 +454,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       default:
           name = NULL;
           params = NULL;
-          snprintf(OUTPUT,CF_BUFSIZE,"Illegal item found in bundlesequence: ");
-          CfLog(cferror,OUTPUT,"");
+          CfOut(cf_error,"","Illegal item found in bundlesequence: ");
           ShowRval(stdout,rp->item,rp->type);
           printf(" = %c\n",rp->type);
           ok = false;
@@ -466,8 +463,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    
    if (!GetBundle(name,"agent"))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Bundle %s listed in the bundlesequence was not found\n",name);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Bundle %s listed in the bundlesequence was not found\n",name);
       ok = false;
       }
    }

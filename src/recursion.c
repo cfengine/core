@@ -50,8 +50,7 @@ if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are i
 
 if (rlevel > CF_RECURSION_LIMIT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)",rlevel,name);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"","WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)",rlevel,name);
    return false;
    }
  
@@ -66,8 +65,7 @@ if (!PushDirState(name,sb))
  
 if ((dirh = opendir(".")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Could not open existing directory %s\n",name);
-   CfLog(cfinform,OUTPUT,"opendir");
+   CfOut(cf_inform,"opendir","Could not open existing directory %s\n",name);
    return false;
    }
 
@@ -91,8 +89,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    
    if (lstat(dirp->d_name,&lsb) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Recurse was looking at %s when an error occurred:\n",path);
-      CfLog(cfverbose,OUTPUT,"lstat");
+      CfOut(cf_verbose,"lstat","Recurse was looking at %s when an error occurred:\n",path);
       continue;
       }
 
@@ -122,8 +119,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       
       if (stat(dirp->d_name,&lsb) == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Recurse was working on %s when this failed:\n",path);
-         CfLog(cferror,OUTPUT,"stat");
+         CfOut(cf_error,"stat","Recurse was working on %s when this failed:\n",path);
          continue;
          }
       }
@@ -171,8 +167,7 @@ int PushDirState(char *name,struct stat *sb)
 {
 if (chdir(name) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Could not change to directory %s, mode %o in tidy",name,sb->st_mode & 07777);
-   CfLog(cfinform,OUTPUT,"chdir");
+   CfOut(cf_inform,"chdir","Could not change to directory %s, mode %o in tidy",name,sb->st_mode & 07777);
    return false;
    }
 else
@@ -193,8 +188,7 @@ if (goback && r.travlinks)
    {
    if (chdir(name) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Error in backing out of recursive travlink descent securely to %s",name);
-      CfLog(cferror,OUTPUT,"chdir");
+      CfOut(cf_error,"chdir","Error in backing out of recursive travlink descent securely to %s",name);
       HandleSignal(SIGTERM);
       }
    
@@ -204,8 +198,7 @@ else if (goback)
    {
    if (chdir("..") == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Error in backing out of recursive descent securely to %s",name);
-      CfLog(cferror,OUTPUT,"chdir");
+      CfOut(cf_error,"chdir","Error in backing out of recursive descent securely to %s",name);
       HandleSignal(SIGTERM);
       }
    }

@@ -273,8 +273,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    
    if (GetVariable("control_executor",cp->lval,&retval,&rettype) == cf_notype)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in exec control body",cp->lval);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Unknown lval %s in exec control body",cp->lval);
       continue;
       }
    
@@ -329,8 +328,7 @@ Banner("Starting executor");
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"cfExec starting %.24s\n",ctime(&now));
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","cfExec starting %.24s\n",ctime(&now));
    exit(0);
    }
 
@@ -338,8 +336,7 @@ if (!ONCE)
    {
    if (!GetLock("cfexecd","execd",0,0,VUQNAME,now))
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"cfexecd: Couldn't get a lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",0,0);
-      CfLog(cfverbose,OUTPUT,"");
+      CfOut(cf_verbose,"","cfexecd: Couldn't get a lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",0,0);
       return;
       }
 
@@ -394,8 +391,7 @@ else
          {
          if (!GetLock("cf3","exec",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER,VUQNAME,time(NULL)))
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"cfExecd: Couldn't get exec lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER);
-            CfLog(cfverbose,OUTPUT,"");
+            CfOut(cf_verbose,"","cfExecd: Couldn't get exec lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER);
             continue;
             }         
 #ifdef NT 
@@ -410,7 +406,7 @@ else
 
          if (pid < 1)
             {
-            CfLog(cfinform,"Can't spawn run","spawnvp");
+            CfOut(cf_inform,"spawnvp","Can't spawn run");
             }
 #endif
 #ifndef NT
@@ -425,7 +421,7 @@ else
          
          if (pthread_create(&tid,&PTHREADDEFAULTS,LocalExec,(void *)1) != 0)
             {
-            CfLog(cfinform,"Can't create thread!","pthread_create");
+            CfOut(cf_inform,"pthread_create","Can't create thread!");
             LocalExec((void *)1);
             }
          
@@ -535,15 +531,13 @@ snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%d",CFWORKDIR,CanonifyName(V
 
 if ((fp = fopen(filename,"w")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Couldn't open %s\n",filename);
-   CfLog(cfinform,OUTPUT,"fopen");
+   CfOut(cf_inform,"fopen","Couldn't open %s\n",filename);
    return NULL;
    }
  
 if ((pp = cfpopen(cmd,"r")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Couldn't open pipe to command %s\n",cmd);
-   CfLog(cfinform,OUTPUT,"cfpopen");
+   CfOut(cf_inform,"cfpopen","Couldn't open pipe to command %s\n",cmd);
    fclose(fp);
    return NULL;
    }
@@ -580,7 +574,8 @@ while (!feof(pp) && ReadLine(line,CF_BUFSIZE,pp))
             {
             line[CF_BUFSIZE-2] = '\n';
             }
-         CfLog(cfinform,line,"");
+         
+         CfOut(cf_inform,"",line);
          }
       
       line[0] = '\0';
@@ -689,8 +684,7 @@ unlink(prev_file);
 
 if (symlink(filename, prev_file) == -1 )
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Could not link %s and %s",filename,prev_file);
-   CfLog(cfinform,OUTPUT,"symlink");
+   CfOut(cf_inform,"symlink","Could not link %s and %s",filename,prev_file);
    rtn = 1;
    }
 
@@ -760,8 +754,7 @@ if (strlen(to) == 0)
  
 if ((fp=fopen(file,"r")) == NULL)
    {
-   snprintf(VBUFF,CF_BUFSIZE-1,"Couldn't open file %s",file);
-   CfLog(cfinform,VBUFF,"fopen");
+   CfOut(cf_inform,"fopen","Couldn't open file %s",file);
    return;
    }
 
@@ -780,8 +773,7 @@ fclose(fp);
  
 if ((fp=fopen(file,"r")) == NULL)
    {
-   snprintf(VBUFF,CF_BUFSIZE-1,"Couldn't open file %s",file);
-   CfLog(cfinform,VBUFF,"fopen");
+   CfOut(cf_inform,"fopen","Couldn't open file %s",file);
    return;
    }
  
@@ -799,7 +791,7 @@ if ((hp = gethostbyname(VMAILSERVER)) == NULL)
 
 if ((server = getservbyname("smtp","tcp")) == NULL)
    {
-   CfLog(cfinform,"Unable to lookup smtp service","getservbyname");
+   CfOut(cf_inform,"getservbyname","Unable to lookup smtp service");
    fclose(fp);
    return;
    }
@@ -814,15 +806,14 @@ Debug("Connecting...\n");
 
 if ((sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
    {
-   CfLog(cfinform,"Couldn't open a socket","socket");
+   CfOut(cf_inform,"socket","Couldn't open a socket");
    fclose(fp);
    return;
    }
    
 if (connect(sd,(void *) &raddr,sizeof(raddr)) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't connect to host %s\n",VMAILSERVER);
-   CfLog(cfinform,OUTPUT,"connect");
+   CfOut(cf_inform,"connect","Couldn't connect to host %s\n",VMAILSERVER);
    fclose(fp);
    close(sd);
    return;
@@ -945,8 +936,7 @@ mail_err:
 
 fclose(fp);
 close(sd); 
-sprintf(VBUFF, "Cannot mail to %s.", to);
-CfLog(cflogonly,VBUFF,"");
+CfOut(cflogonly,"","Cannot mail to %s.", to);
 }
 
 /******************************************************************/

@@ -46,8 +46,7 @@ code = regcomp(&rx,regexp,REG_EXTENDED);
 if (code != 0)
    {
    regerror(code,&rx,buf,1023);
-   snprintf(OUTPUT,CF_BUFSIZE,"Regular expression error %d for %s: %s\n", code, regexp,buf);
-   CfLog(cferror,OUTPUT,"regerror");
+   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code, regexp,buf);
    return 0;
    }
 else
@@ -91,8 +90,7 @@ memset(pmatch,0,sizeof(regmatch_t));
 if (code != 0)
    {
    regerror(code,&rx,errbuf,1023);
-   snprintf(OUTPUT,CF_BUFSIZE,"Regular expression error %d for %s: %s\n", code,regexp,errbuf);
-   CfLog(cferror,OUTPUT,"regerror");
+   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code,regexp,errbuf);
    return false;
    }
 else
@@ -154,9 +152,8 @@ if (result = IsRegex(str))
              
              if (r || s)
                 {
-                snprintf(OUTPUT,CF_BUFSIZE,"Path regular expression %s seems to use expressions containing the directory symbol %c",str,FILE_SEPARATOR);
-                CfLog(cferror,OUTPUT,"");
-                CfLog(cferror,"Use a work-around to avoid pathological behaviour\n","");
+                CfOut(cf_error,"","Path regular expression %s seems to use expressions containing the directory symbol %c",str,FILE_SEPARATOR);
+                CfOut(cf_error,"","Use a work-around to avoid pathological behaviour\n");
                 return false;
                 }
              break;

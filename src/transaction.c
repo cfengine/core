@@ -35,8 +35,7 @@ void SummarizeTransaction(struct Attributes attr,struct Promise *pp)
 {
 if (attr.transaction.log_string)
    {
-   CfLog(cflogonly,attr.transaction.log_string,"");
-   ClassAuditLog(pp,attr,attr.transaction.log_string,CF_NOP);
+   cfPS(cf_log,CF_NOP,"",pp,attr,attr.transaction.log_string);
    }
  
 /*
@@ -44,9 +43,9 @@ if (attr.transaction.log_string)
    char *log_level;
 
    enum cfoutputlevel report_level;
-   cfinform,
-   cfverbose,
-   cferror,
+   cf_inform,
+   cf_verbose,
+   cf_error,
    cflogonly,
    {"log_level",cf_str,"inform,verbose,debug"},
 */
@@ -125,15 +124,13 @@ elapsedtime = (time_t)(now-lastcompleted) / 60;
 
 if (elapsedtime < 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Another cfengine seems to have done [%s.%s] since I started (elapsed=%d)\n",operator,operand,elapsedtime);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,"","Another cfengine seems to have done [%s.%s] since I started (elapsed=%d)\n",operator,operand,elapsedtime);
    return this;
    }
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Nothing promised for [%s.%s] (%u/%u minutes elapsed)\n",operator,operand,elapsedtime,attr.transaction.ifelapsed);
-   CfLog(cfverbose,OUTPUT,"");
+   CfOut(cf_verbose,"","Nothing promised for [%s.%s] (%u/%u minutes elapsed)\n",operator,operand,elapsedtime,attr.transaction.ifelapsed);
    return this;
    }
 
@@ -146,15 +143,13 @@ if (lastcompleted != 0)
    {
    if (elapsedtime >= attr.transaction.expireafter)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Lock %s expired (after %u/%u minutes)\n",cflock,elapsedtime,attr.transaction.expireafter);
-      CfLog(cfinform,OUTPUT,"");
+      CfOut(cf_inform,"","Lock %s expired (after %u/%u minutes)\n",cflock,elapsedtime,attr.transaction.expireafter);
 
       pid = FindLockPid(cflock);
 
       if (pid == -1)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Illegal pid in corrupt lock %s - ignoring lock\n",cflock);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Illegal pid in corrupt lock %s - ignoring lock\n",cflock);
          }
       else
          {
@@ -186,8 +181,7 @@ if (lastcompleted != 0)
             }
          else
             {
-            snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
-            CfLog(cferror,OUTPUT,"kill");
+            CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
             
             FatalError("");
             }
@@ -237,8 +231,7 @@ if (RemoveLock(this.lock) == -1)
 
 if (WriteLock(this.last) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to create %s\n",this.last);
-   CfLog(cferror,OUTPUT,"creat");
+   CfOut(cf_error,"creat","Unable to create %s\n",this.last);
    free(this.last);
    free(this.lock);
    free(this.log);
@@ -267,8 +260,7 @@ if ((mtime = FindLockTime(last)) == -1)
    
    if (WriteLock(last) == -1)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Unable to lock %s\n",last);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Unable to lock %s\n",last);
       return 0;
       }
 
@@ -302,7 +294,7 @@ entry.time = time((time_t *)NULL);
 #if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
 if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    }
 #endif
 
@@ -311,7 +303,7 @@ WriteDB(dbp,name,&entry,sizeof(entry));
 #if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
 if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    }
 #endif
  
@@ -332,8 +324,7 @@ Debug("LockLogCompletion(%s)\n",str);
 
 if ((fp = fopen(cflog,"a")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open lock-log file %s\n",cflog);
-   CfLog(cferror,OUTPUT,"fopen");
+   CfOut(cf_error,"fopen","Can't open lock-log file %s\n",cflog);
    FatalError("");
    }
 
@@ -375,7 +366,7 @@ if ((dbp = OpenLock()) == NULL)
 #if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
 if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","pthread_mutex_lock");
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    }
 #endif 
   
@@ -384,7 +375,7 @@ DeleteDB(dbp,name);
 #if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
 if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    }
 #endif
  
@@ -455,8 +446,7 @@ Debug("OpenLock(%s)\n",name);
 
 if ((errno = db_create(&dbp,NULL,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open lock database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open lock database %s\n",name);
    return NULL;
    }
 
@@ -466,8 +456,7 @@ if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open lock database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open lock database %s\n",name);
    return NULL;
    }
 

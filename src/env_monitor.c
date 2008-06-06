@@ -1,15 +1,11 @@
 /* 
+   Copyright (C) 2008 - Mark Burgess
 
-        Copyright (C) 2001-
-        Free Software Foundation, Inc.
-
-   This file is part of GNU cfengine - written and maintained 
-   by Mark Burgess, Dept of Computing and Engineering, Oslo College,
-   Dept. of Theoretical physics, University of Oslo
+   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 2, or (at your option) any
+   Free Software Foundation; either version 3, or (at your option) any
    later version. 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,10 +13,12 @@
    GNU General Public License for more details.
  
   You should have received a copy of the GNU General Public License
+  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
 */
+
 
 /*****************************************************************************/
 /*                                                                           */
@@ -28,10 +26,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
-/* This file is hard-linked in cf2 and cf3 - for consistent maintenance */
+#include "cf3.defs.h"
+#include "cf3.extern.h"
+#include "cf3.server.h"
 
-#include "cf.defs.h"
-#include "cf.extern.h"
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>
 #else
@@ -111,7 +109,6 @@ int LASTQ[CF_OBSERVABLES];
 
 void MonInitialize(void);
 void StartServer (int argc, char **argv);
-void *ExitCleanly (void);
 void yyerror (char *s);
 void RotateFiles (char *s, int n);
 
@@ -276,8 +273,7 @@ void GetDatabaseAge()
 
 if ((err_no = db_create(&dbp,NULL,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Couldn't initialize average database %s\n",AVDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't initialize average database %s\n",AVDB);
    return;
    }
 
@@ -288,8 +284,7 @@ if ((err_no = (dbp->open)(dbp,NULL,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
    AGE = WAGE = 0;
-   snprintf(OUTPUT,CF_BUFSIZE,"Couldn't open average database %s\n",AVDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
    return;
    }
 
@@ -341,7 +336,7 @@ if (HISTO)
    
    if ((fp = fopen(filename,"r")) == NULL)
       {
-      CfLog(cfverbose,"Unable to load histogram data","fopen");
+      CfOut(cf_verbose,"fopen","Unable to load histogram data");
       return;
       }
 
@@ -372,8 +367,7 @@ void StartServer(int argc,char **argv)
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   sprintf(OUTPUT,"cfenvd: starting\n");
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","cfenvd: starting\n");
    exit(0);
    }
 
@@ -718,7 +712,7 @@ struct Averages EvalAvQ(char *t)
   
 if ((currentvals = GetCurrentAverages(t)) == NULL)
    {
-   CfLog(cferror,"Error reading average database","");
+   CfOut(cf_error,"","Error reading average database");
    exit(1);
    }
 
@@ -785,8 +779,7 @@ if (++LDT_POS >= LDT_BUFSIZE)
    
    if (!LDT_FULL)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"LDT Buffer full at %d\n",LDT_BUFSIZE);
-      CfLog(cfloginform,OUTPUT,"");
+      CfOut(cfloginform,"","LDT Buffer full at %d\n",LDT_BUFSIZE);
       LDT_FULL = true;
       }
    }
@@ -877,15 +870,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       anomaly_chi[i] = CHI[i];
       anomaly_chi_limit[i] = CHI_LIMIT[i];
       
-      snprintf(OUTPUT,CF_BUFSIZE,"LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,OBS[i][0],CHI[i],CHI_LIMIT[i]);
-
-      if (VERBOSE)
-         {
-         CfLog(cfloginform,OUTPUT,"");
-         }
-      Verbose(OUTPUT);
-      
-      snprintf(OUTPUT,CF_BUFSIZE,"LDT_BUF (%s): Rot ",OBS[i][0]);
+      Verbose("LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,OBS[i][0],CHI[i],CHI_LIMIT[i]);
 
       /* Last printed element is now */
       
@@ -905,17 +890,8 @@ for (i = 0; i < CF_OBSERVABLES; i++)
             snprintf(buff,CF_BUFSIZE," %.2f",LDT_BUF[i][j]);
             }
 
-         strcat(OUTPUT,buff);
          strcat(ldt_buff,buff);
          }
-
-      strcat(OUTPUT,"\n");
-
-      if (VERBOSE)
-         {
-         CfLog(cfloginform,OUTPUT,"");
-         }
-      Verbose(OUTPUT);
 
       if (THIS[i] > av.Q[i].expect)
          {
@@ -1644,8 +1620,7 @@ struct Averages *GetCurrentAverages(char *timekey)
  
 if ((err_no = db_create(&dbp,NULL,0)) != 0)
    {
-   sprintf(OUTPUT,"Couldn't initialize average database %s\n",AVDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't initialize average database %s\n",AVDB);
    return NULL;
    }
 
@@ -1655,8 +1630,7 @@ if ((err_no = (dbp->open)(dbp,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((err_no = (dbp->open)(dbp,NULL,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   sprintf(OUTPUT,"Couldn't open average database %s\n",AVDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
    return NULL;
    }
 
@@ -1711,8 +1685,7 @@ void UpdateAverages(char *timekey,struct Averages newvals)
  
 if ((err_no = db_create(&dbp,NULL,0)) != 0)
    {
-   sprintf(OUTPUT,"Couldn't open average database %s\n",AVDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
    return;
    }
 
@@ -1722,8 +1695,7 @@ if ((err_no = (dbp->open)(dbp,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((err_no = (dbp->open)(dbp,NULL,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   sprintf(OUTPUT,"Couldn't open average database %s\n",AVDB);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
    return;
    }
 
@@ -1797,7 +1769,7 @@ if (HISTO)
       
       if ((fp = fopen(filename,"w")) == NULL)
          {
-         CfLog(cferror,"Unable to save histograms","fopen");
+         CfOut(cf_error,"fopen","Unable to save histograms");
          return;
          }
       
@@ -1833,7 +1805,7 @@ double WAverage(double anew,double aold,double age)
 
 if (FORGETRATE > 0.9 || FORGETRATE < 0.1)
    {
-   FORGETRATE = 0.7;
+   FORGETRATE = 0.6;
    }
   
 if (age < 2.0)  /* More aggressive learning for young database */
@@ -2321,8 +2293,7 @@ Debug("ACPI temperature\n");
 
 if ((dirh = opendir("/proc/acpi/thermal_zone")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open directory %s\n",path);
-   CfLog(cfverbose,OUTPUT,"opendir");
+   CfOut(cf_verbose,"opendir","Can't open directory %s\n",path);
    return false;
    }
 

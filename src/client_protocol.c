@@ -50,7 +50,7 @@ memset(dnsname,0,CF_BUFSIZE);
 
 if (!SKIPIDENTIFY && (strcmp(VDOMAIN,CF_START_DOMAIN) == 0))
    {
-   CfLog(cferror,"Undefined domain name","");
+   CfOut(cf_error,"","Undefined domain name");
    return false;
    }
 
@@ -71,12 +71,12 @@ if (!SKIPIDENTIFY)
           break;
 #endif
       default:
-          CfLog(cferror,"Software error in IdentifyForVerification","");
+          CfOut(cf_error,"","Software error in IdentifyForVerification");
       }
    
    if (getsockname(sd,(struct sockaddr *)&myaddr,&len) == -1)
       {
-      CfLog(cferror,"Couldn't get socket address\n","getsockname");
+      CfOut(cf_error,"getsockname","Couldn't get socket address\n");
       return false;
       }
    
@@ -88,8 +88,7 @@ if (!SKIPIDENTIFY)
    
    if ((err=getnameinfo((struct sockaddr *)&myaddr,len,dnsname,CF_MAXVARSIZE,NULL,0,0)) != 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Couldn't look up address v6 for %s: %s\n",dnsname,gai_strerror(err));
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Couldn't look up address v6 for %s: %s\n",dnsname,gai_strerror(err));
       return false;
       }
    
@@ -101,7 +100,7 @@ if (!SKIPIDENTIFY)
    
    if ((hp == NULL) || (hp->h_name == NULL))
       {
-      CfLog(cferror,"Couldn't lookup IP address\n","gethostbyaddr");
+      CfOut(cf_error,"gethostbyaddr","Couldn't lookup IP address\n");
       return false;
       }
    
@@ -120,7 +119,7 @@ else
    
    if (strlen(VFQNAME) > 0)
       {
-      Verbose("skipidentify was promiseed, so we are trusting and simply annoucning the identity as (%s) for this host\n",VFQNAME);
+      Verbose("skipidentify was promiseed, so we are trusting and simply announcing the identity as (%s) for this host\n",VFQNAME);
       strcat(dnsname,VFQNAME);
       }
    else
@@ -174,7 +173,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,str
 
 if (PUBKEY == NULL || PRIVKEY == NULL) 
    {
-   CfLog(cferror,"No public/private key pair found\n","");
+   CfOut(cf_error,"","No public/private key pair found\n");
    return false;
    }
 
@@ -223,9 +222,7 @@ if (server_pubkey != NULL)
    if (RSA_public_encrypt(nonce_len,in,out,server_pubkey,RSA_PKCS1_PADDING) <= 0)
       {
       err = ERR_get_error();
-      snprintf(OUTPUT,CF_BUFSIZE,"Public encryption failed = %s\n",ERR_reason_error_string(err));
-      CfLog(cferror,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"Public encryption failed = %s\n",ERR_reason_error_string(err));
       free(out);
       return false;
       }
@@ -269,14 +266,13 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
-   CfLog(cferror,"Protocol transaction broken off",NULL);
-   ClassAuditLog(pp,attr,"Connection broken off",CF_INTERPT);
+   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off");
    return false;
    }
 
 if (BadProtoReply(in))
    {
-   CfLog(cferror,in,"");
+   CfOut(cf_error,"",in);
    return false;
    }
 
@@ -287,16 +283,13 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
-   CfLog(cferror,"Protocol transaction broken off",NULL);
-   ClassAuditLog(pp,attr,"Connection broken off",CF_INTERPT);
+   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off");
    return false;   
    }
 
 if (!ChecksumsMatch(digest,in,'m')) 
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Challenge response from server %s/%s was incorrect!",pp->this_server,conn->remoteip);
-   ClassAuditLog(pp,attr,"Connection broken off",CF_INTERPT);
-   CfLog(cferror,OUTPUT,"");
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Challenge response from server %s/%s was incorrect!",pp->this_server,conn->remoteip);
    return false;
    }
 else
@@ -304,21 +297,18 @@ else
    if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */ 
       {
       Verbose("\n...c.o.p.y....c.o.p.y....c.o.p.y...........................................\n");
-      snprintf(OUTPUT,CF_BUFSIZE,"Strong authentication of server=%s connection confirmed\n",pp->this_server);
-      CfLog(cfverbose,OUTPUT,"");
-      PromiseRef(cfverbose,pp);
+      CfOut(cf_verbose,"","Strong authentication of server=%s connection confirmed\n",pp->this_server);
+      PromiseRef(cf_verbose,pp);
       }
    else
       {
       if (attr.copy.trustkey)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Trusting server identity and willing to accept key from %s=%s",pp->this_server,conn->remoteip);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Trusting server identity, promise to accept key from %s=%s",pp->this_server,conn->remoteip);
          }
       else
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Not authorized to trust the server=%s's public key (trustkey=false)\n",pp->this_server);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Not authorized to trust the server=%s's public key (trustkey=false)\n",pp->this_server);
          return false;
          }
       }
@@ -334,7 +324,7 @@ encrypted_len = ReceiveTransaction(conn->sd,in,NULL);
 
 if (encrypted_len < 0)
    {
-   CfLog(cferror,"Protocol transaction sent illegal cipher length",NULL);
+   CfOut(cf_error,"","Protocol transaction sent illegal cipher length");
    return false;      
    }
 
@@ -346,9 +336,7 @@ if ((decrypted_cchall = malloc(encrypted_len)) == NULL)
 if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADDING) <= 0)
    {
    err = ERR_get_error();
-   snprintf(OUTPUT,CF_BUFSIZE,"Private decrypt failed = %s, abandoning\n",ERR_reason_error_string(err));
-   CfLog(cferror,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private decrypt failed = %s, abandoning\n",ERR_reason_error_string(err));
    return false;
    }
 
@@ -370,16 +358,14 @@ if (server_pubkey == NULL)
    /* proposition S4 - conditional */  
    if ((len = ReceiveTransaction(conn->sd,in,NULL)) <= 0)
       {
-      CfLog(cferror,"Protocol error in RSA authentation from IP %s\n",pp->this_server);
+      CfOut(cf_error,"","Protocol error in RSA authentation from IP %s\n",pp->this_server);
       return false;
       }
    
    if ((newkey->n = BN_mpi2bn(in,len,NULL)) == NULL)
       {
       err = ERR_get_error();
-      snprintf(OUTPUT,CF_BUFSIZE,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
-      CfLog(cferror,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
       RSA_free(newkey);
       return false;
       }
@@ -387,8 +373,7 @@ if (server_pubkey == NULL)
    /* proposition S5 - conditional */  
    if ((len=ReceiveTransaction(conn->sd,in,NULL)) == 0)
       {
-      CfLog(cfinform,"Protocol error in RSA authentation from IP %s\n",pp->this_server);
-      ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Protocol error in RSA authentation from IP %s\n",pp->this_server);
       RSA_free(newkey);
       return false;
       }
@@ -396,9 +381,7 @@ if (server_pubkey == NULL)
    if ((newkey->e = BN_mpi2bn(in,len,NULL)) == NULL)
       {
       err = ERR_get_error();
-      snprintf(OUTPUT,CF_BUFSIZE,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
-      CfLog(cferror,OUTPUT,"");
-      ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
       RSA_free(newkey);
       return false;
       }
@@ -416,7 +399,7 @@ DebugBinOut(conn->session_key,CF_BLOWFISHSIZE);
 
 if (conn->session_key == NULL)
    {
-   CfLog(cferror,"A random session key could not be established","");
+   CfOut(cf_error,"","A random session key could not be established");
    return false;
    }
 else
@@ -441,9 +424,7 @@ if ((out = malloc(encrypted_len)) == NULL)
 if (RSA_public_encrypt(CF_BLOWFISHSIZE,conn->session_key,out,server_pubkey,RSA_PKCS1_PADDING) <= 0)
    {
    err = ERR_get_error();
-   snprintf(OUTPUT,CF_BUFSIZE,"Public encryption failed = %s\n",ERR_reason_error_string(err));
-   CfLog(cferror,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Public encryption failed = %s\n",ERR_reason_error_string(err));
    free(out);
    return false;
    }
@@ -476,18 +457,14 @@ tosend = strlen(sendbuffer);
 
 if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Transmission failed while checking version");
-   CfLog(cfinform,OUTPUT,"send");
-   ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
+   cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Transmission failed while checking version");
    return;
    }
 
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Reply failed while checking version");
-   CfLog(cfinform,OUTPUT,"send");
+   cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Reply failed while checking version");
    conn->protoversion = 0;
-   ClassAuditLog(pp,attr,OUTPUT,CF_INTERPT);
    return;
    }
 

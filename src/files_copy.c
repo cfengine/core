@@ -1,5 +1,3 @@
-
-
 /* 
    Copyright (C) 2008 - Mark Burgess
 
@@ -45,18 +43,14 @@ void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *p
 
 if (pp->conn != NULL && !pp->conn->authenticated)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"No authenticated source %s in files.copyfrom promise\n",source);
-   CfLog(cfverbose,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_verbose,CF_FAIL,"",pp,attr,"No authenticated source %s in files.copyfrom promise\n",source);
    free(destination);
    return NULL;
    }
   
 if (cf_stat(attr.copy.source,&ssb,attr,pp) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't stat %s in files.copyfrom promise\n",source);
-   CfLog(cfverbose,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Can't stat %s in files.copyfrom promise\n",source);
    free(destination);
    return NULL;
    }
@@ -72,7 +66,7 @@ else
 
 if (clock_gettime(CLOCK_REALTIME, &start) == -1)
    {
-   CfLog(cfverbose,"Clock gettime failure","clock_gettime");
+   CfOut(cf_verbose,"clock_gettime","Clock gettime failure");
    measured_ok = false;
    }
 
@@ -85,9 +79,7 @@ if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
 
 if (!MakeParentDirectory(vbuff,attr.move_obstructions))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Can't make directories for %s in files.copyfrom promise\n",vbuff);
-   CfLog(cfverbose,OUTPUT,"");
-   ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
+   cfPS(cf_inform,"",CF_FAIL,pp,attr,"Can't make directories for %s in files.copyfrom promise\n",vbuff);
    ReleaseCurrentLock();
    free(destination);
    return NULL;
@@ -118,7 +110,7 @@ else
 
 if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
    {
-   CfLog(cfverbose,"Clock gettime failure","clock_gettime");
+   CfOut(cf_verbose,"clock_gettime","Clock gettime failure");
    measured_ok = false;
    }
 
@@ -127,7 +119,7 @@ snprintf(eventname,CF_BUFSIZE-1,"Copy(%s:%s > %s)",server,source,destination);
 
 if (measured_ok)
    {
-   RecordPerformance(eventname,start.tv_sec,dt);
+   NotePerformance(eventname,start.tv_sec,dt);
    }
 
 if (attr.transaction.background)
@@ -177,8 +169,7 @@ int CopyRegularFileDisk(char *source,char *new,struct Attributes attr,struct Pro
   
 if ((sd = open(source,O_RDONLY|O_BINARY)) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Can't copy %s!\n",source);
-   CfLog(cfinform,OUTPUT,"open");
+   CfOut(cf_inform,"open","Can't copy %s!\n",source);
    unlink(new);
    return false;
    }
@@ -187,8 +178,7 @@ unlink(new);  /* To avoid link attacks */
  
 if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Copy %s:%s possible security violation (race) or permission denied (Not copied)\n",pp->this_server,new);
-   CfLog(cfinform,OUTPUT,"open");
+   cfPS(cf_inform,CF_FAIL,"open",pp,attr,"Copy %s:%s possible security violation (race) or permission denied (Not copied)\n",pp->this_server,new);
    close(sd);
    unlink(new);
    return false;
@@ -249,8 +239,7 @@ while (true)
          /* Make a hole.  */
          if (lseek (dd, (off_t) n_read, SEEK_CUR) < 0L)
             {
-            snprintf(OUTPUT,CF_BUFSIZE,"Copy failed (no space?) while doing %s to %s\n",source,new);
-            CfLog(cferror,OUTPUT,"lseek");
+            CfOut(cf_error,"lseek","Copy failed (no space?) while doing %s to %s\n",source,new);
             free(buf);
             unlink(new);
             close(dd);
@@ -270,8 +259,7 @@ while (true)
       {
       if (cf_full_write (dd, buf, n_read) < 0)
          {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Copy failed (no space?) while doing %s to %s\n",source,new);
-         CfLog(cferror,OUTPUT,"");
+         CfOut(cf_error,"","Copy failed (no space?) while doing %s to %s\n",source,new);
          close(sd);
          close(dd);
          free(buf);
@@ -292,7 +280,7 @@ while (true)
     
     if (cf_full_write (dd, "", 1) < 0 || ftruncate (dd, n_read_total) < 0)
        {
-       CfLog(cferror,"cfengine: full_write or ftruncate error in CopyReg\n","write");
+       CfOut(cf_error,"write","cfengine: full_write or ftruncate error in CopyReg\n");
        free(buf);
        unlink(new);
        close(sd);
@@ -344,8 +332,7 @@ int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int
        /* Make a hole.  */
        if (lseek (dd,(off_t)n_read,SEEK_CUR) < 0L)
           {
-          snprintf(OUTPUT,CF_BUFSIZE,"lseek in EmbeddedWrite, dest=%s\n", new);
-          CfLog(cferror,OUTPUT,"lseek");
+          CfOut(cf_error,"lseek","lseek in EmbeddedWrite, dest=%s\n", new);
           return false;
           }
        *last_write_made_hole = 1;
@@ -361,9 +348,8 @@ int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int
     {
     if (cf_full_write (dd,buf,towrite) < 0)
        {
-       snprintf(OUTPUT,CF_BUFSIZE*2,"Local disk write(%.256s) failed\n",new);
-       CfLog(cferror,OUTPUT,"write");
-       CONN->error = true;
+       CfOut(cf_error,"write","Local disk write(%.256s) failed\n",new);
+       pp->conn->error = true;
        return false;
        }
 

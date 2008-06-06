@@ -42,6 +42,223 @@ extern pthread_mutex_t MUTEX_GETADDR;
 
 /***************************************************************/
 
+void NotePerformance(char *eventname,time_t t,double value)
+
+{ DB *dbp;
+  DB_ENV *dbenv = NULL;
+  char name[CF_BUFSIZE];
+  struct Event e,newe;
+  double lastseen,delta2;
+  int lsea = CF_WEEK;
+  time_t now = time(NULL);
+
+Debug("PerformanceEvent(%s,%.1f s)\n",eventname,value);
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
+
+if ((errno = db_create(&dbp,dbenv,0)) != 0)
+   {
+   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   return;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   dbp->close(dbp,0);
+   return;
+   }
+
+if (ReadDB(dbp,eventname,&e,sizeof(e)))
+   {
+   lastseen = now - e.t;
+   newe.t = t;
+   newe.Q.q = value;
+   newe.Q.expect = GAverage(value,e.Q.expect,0.3);
+   delta2 = (value - e.Q.expect)*(value - e.Q.expect);
+   newe.Q.var = GAverage(delta2,e.Q.var,0.3);
+
+   /* Have to kickstart variance computation, assume 1% to start  */
+   
+   if (newe.Q.var <= 0.0009)
+      {
+      newe.Q.var =  newe.Q.expect / 100.0;
+      }
+   }
+else
+   {
+   lastseen = 0.0;
+   newe.t = t;
+   newe.Q.q = value;
+   newe.Q.expect = value;
+   newe.Q.var = 0.001;
+   }
+
+if (lastseen > (double)lsea)
+   {
+   Debug("Performance record %s expired\n",eventname);
+   DeleteDB(dbp,eventname);   
+   }
+else
+   {
+   Verbose("Performance(%s): time=%.4f secs, av=%.4f +/- %.4f\n",eventname,value,newe.Q.expect,sqrt(newe.Q.var));
+   WriteDB(dbp,eventname,&newe,sizeof(newe));
+   }
+
+dbp->close(dbp,0);
+}
+
+/***************************************************************/
+
+void NoteClassUsage()
+
+{ DB *dbp;
+  DB_ENV *dbenv = NULL;
+  DBC *dbcp;
+  DBT key,stored;
+  char name[CF_BUFSIZE];
+  struct Event e,entry,newe;
+  double lsea = CF_WEEK * 52; /* expire after a year */
+  time_t now = time(NULL);
+  struct Item *ip,*list = NULL;
+  double lastseen,delta2;
+  double vtrue = 1.0;      /* end with a rough probability */
+
+Debug("RecordClassUsage\n");
+
+for (ip = VHEAP; ip != NULL; ip=ip->next)
+   {
+   if (!IsItemIn(list,ip->name))
+      {
+      PrependItem(&list,ip->name,NULL);
+      }
+   }
+
+for (ip = VALLADDCLASSES; ip != NULL; ip=ip->next)
+   {
+   if (!IsItemIn(list,ip->name))
+      {
+      PrependItem(&list,ip->name,NULL);
+      }
+   }
+   
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
+
+if ((errno = db_create(&dbp,dbenv,0)) != 0)
+   {
+   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   return;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   dbp->close(dbp,0);
+   return;
+   }
+
+/* First record the classes that are in use */
+
+for (ip = list; ip != NULL; ip=ip->next)
+   {
+   if (ReadDB(dbp,ip->name,&e,sizeof(e)))
+      {
+      lastseen = now - e.t;
+      newe.t = now;
+      newe.Q.q = vtrue;
+      newe.Q.expect = GAverage(vtrue,e.Q.expect,0.5);
+      delta2 = (vtrue - e.Q.expect)*(vtrue - e.Q.expect);
+      newe.Q.var = GAverage(delta2,e.Q.var,0.5);
+      }
+   else
+      {
+      lastseen = 0.0;
+      newe.t = now;
+      newe.Q.q = 0.5*vtrue;
+      newe.Q.expect = 0.5*vtrue;  /* With no data it's 50/50 what we can say */
+      newe.Q.var = 0.000;
+      }
+   
+   if (lastseen > lsea)
+      {
+      Debug("Class usage record %s expired\n",ip->name);
+      DeleteDB(dbp,ip->name);   
+      }
+   else
+      {
+      Debug("Upgrading %s %f\n",ip->name,newe.Q.expect);
+      WriteDB(dbp,ip->name,&newe,sizeof(newe));
+      }
+   }
+
+/* Then update with zero the ones we know about that are not active */
+
+/* Acquire a cursor for the database. */
+
+if ((errno = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+   {
+   dbp->err(dbp, errno, "DB->cursor");
+   return;
+   }
+
+ /* Initialize the key/data return pair. */
+ 
+memset(&key, 0, sizeof(key));
+memset(&stored, 0, sizeof(stored));
+memset(&entry, 0, sizeof(entry)); 
+
+while (dbcp->c_get(dbcp, &key, &stored, DB_NEXT) == 0)
+   {
+   double measure,av,var;
+   time_t then;
+   char tbuf[CF_BUFSIZE],eventname[CF_BUFSIZE];
+
+   strcpy(eventname,(char *)key.data);
+
+   if (stored.data != NULL)
+      {
+      memcpy(&entry,stored.data,sizeof(entry));
+      
+      then    = entry.t;
+      measure = entry.Q.q;
+      av = entry.Q.expect;
+      var = entry.Q.var;
+      lastseen = now - then;
+            
+      snprintf(tbuf,CF_BUFSIZE-1,"%s",ctime(&then));
+      tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
+
+      if (lastseen > lsea)
+         {
+         Debug("Class usage record %s expired\n",eventname);
+         DeleteDB(dbp,eventname);   
+         }
+      else if (!IsItemIn(list,eventname))
+         {
+         newe.t = then;
+         newe.Q.q = 0;
+         newe.Q.expect = GAverage(0.0,av,0.5);
+         delta2 = av*av;
+         newe.Q.var = GAverage(delta2,var,0.5);
+         Debug("Downgrading class %s from %lf to %lf\n",eventname,entry.Q.expect,newe.Q.expect);
+         WriteDB(dbp,eventname,&newe,sizeof(newe));         
+         }
+      }
+   }
+
+dbp->close(dbp,0);
+}
+
+/***************************************************************/
+
 void LastSaw(char *hostname,enum roles role)
 
 { DB *dbp,*dbpent;
@@ -54,8 +271,7 @@ void LastSaw(char *hostname,enum roles role)
 
 if (strlen(hostname) == 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"LastSeen registry for empty hostname with role %d",role);
-   CfLog(cflogonly,OUTPUT,"");
+   CfOut(cf_inform,"","LastSeen registry for empty hostname with role %d",role);
    return;
    }
 
@@ -67,8 +283,7 @@ unlink(name);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't init last-seen database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't init last-seen database %s\n",name);
    return;
    }
 
@@ -80,8 +295,7 @@ if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open last-seen database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
    dbp->close(dbp,0);
    return;
    }
@@ -91,8 +305,7 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
 
 if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't init last-seen database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't init last-seen database %s\n",name);
    return;
    }
 
@@ -102,8 +315,7 @@ if ((errno = (dbpent->open)(dbpent,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't open last-seen database %s\n",name);
-   CfLog(cferror,OUTPUT,"db_open");
+   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
    dbp->close(dbp,0);
    return;
    }
@@ -112,7 +324,7 @@ if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -130,7 +342,7 @@ switch (role)
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif
@@ -165,7 +377,7 @@ else
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_lock failed","unlock");
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
 #endif
@@ -184,7 +396,7 @@ else
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    {
-   CfLog(cferror,"pthread_mutex_unlock failed","unlock");
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    exit(1);
    }
 #endif

@@ -349,6 +349,8 @@ int EndOfIteration(struct Rlist *iterator);
 
 /* instrumentation.c */
 
+void NotePerformance(char *eventname,time_t t,double value);
+void NoteClassUsage(void);
 void LastSaw(char *hostname,enum roles role);
 
 /* install.c */

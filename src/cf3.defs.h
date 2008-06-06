@@ -274,6 +274,7 @@ enum cfreport
    cf_inform,
    cf_verbose,
    cf_error,
+   cf_log,
    cf_noreport
    };
 

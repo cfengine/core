@@ -107,7 +107,7 @@ for (ip = path; ip != NULL; ip=ip->next)
 
    if (BufferOverflow(pbuffer,ip->name))
       {
-      CfLog(cferror,"Buffer overflow in LocateFilePromiserGroup\n","");
+      CfOut(cf_error,"","Buffer overflow in LocateFilePromiserGroup\n");
       return;
       }
 
@@ -118,9 +118,8 @@ for (ip = path; ip != NULL; ip=ip->next)
       {
       if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"Directory %s in search path %s is controlled by another user - trusting its content is potentially risky (possible race)\n",pbuffer,wildpath);
-         CfLog(cfinform,OUTPUT,"");
-         PromiseRef(cfinform,pp);
+         CfOut(cf_inform,"","Directory %s in search path %s is controlled by another user - trusting its content is potentially risky (possible race)\n",pbuffer,wildpath);
+         PromiseRef(cf_inform,pp);
          }
       }
    }
@@ -138,9 +137,7 @@ if (expandregex) /* Expand one regex link and hand down */
       struct Attributes dummyattr;
 
       memset(&dummyattr,0,sizeof(dummyattr));
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
-      CfLog(cfverbose,OUTPUT,"opendir");
-      ClassAuditLog(pp,dummyattr,OUTPUT,CF_FAIL);
+      cfPS(cf_verbose,CF_FAIL,"opendir",pp,dummyattr,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
       return;
       }
    
@@ -246,8 +243,7 @@ else
       {
       if (a.havedepthsearch)
          {
-         snprintf(OUTPUT,CF_BUFSIZE,"depth_search (recursion) is promised for a base object %s that is not a directory",path);
-         CfLog(cferror,OUTPUT,"stat");
+         CfOut(cf_error,"stat","depth_search (recursion) is promised for a base object %s that is not a directory",path);
          return;
          }
       }
@@ -317,80 +313,70 @@ int SanityChecks(char *path,struct Attributes a,struct Promise *pp)
 {
 if (a.havelink && a.havecopy)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.haveeditline && a.haveeditxml)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedepthsearch && a.haveedit)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Recursive depth_searches are not compatible with general file editing",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","Recursive depth_searches are not compatible with general file editing",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedelete && (a.create||a.havecopy||a.haveedit||a.haverename))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.haverename && (a.create||a.havecopy||a.haveedit))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedelete && a.havedepthsearch && !a.haveselect)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Dangerous or ambiguous promise - %s specifices recursive depth search but has no file selection criteria",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","Dangerous or ambiguous promise - %s specifices recursive depth search but has no file selection criteria",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedelete && a.haverename)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"File %s cannot promise both deletion and renaming",path);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cferror,pp);
+   CfOut(cf_error,"","File %s cannot promise both deletion and renaming",path);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havecopy && a.havedepthsearch && a.havedelete)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
-   CfLog(cfinform,OUTPUT,"");
-   PromiseRef(cfinform,pp);
+   CfOut(cf_inform,"","Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
+   PromiseRef(cf_inform,pp);
    }
 
 if (a.transaction.background && a.transaction.audit)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cfinform,pp);
+   CfOut(cf_error,"","Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
+   PromiseRef(cf_inform,pp);
    return false;
    }
 
 if ((a.havecopy || a.havelink) && a.transformer)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
-   CfLog(cferror,OUTPUT,"");
-   PromiseRef(cfinform,pp);
+   CfOut(cf_error,"","File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
+   PromiseRef(cf_inform,pp);
    return false;
    }
 

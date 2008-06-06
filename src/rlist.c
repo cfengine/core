@@ -44,7 +44,7 @@ switch(type)
        /* the rval is just a string */
        if ((new = strdup((char *)item)) ==  NULL)
           {
-          CfLog(cferror,"Memory allocation","strdup");
+          CfOut(cf_error,"strdup","Memory allocation");
           FatalError("CopyRvalItem");
           }
 
@@ -243,7 +243,7 @@ switch(type)
 
 if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Rlist","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Rlist");
    FatalError("");
    }
 
@@ -318,7 +318,7 @@ switch(type)
 
 if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Rlist","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Rlist");
    FatalError("");
    }
 
@@ -364,7 +364,7 @@ switch(type)
 
 if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Rlist","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Rlist");
    FatalError("");
    }
 
@@ -564,7 +564,7 @@ void PushStack(struct Rlist **liststart,void *item)
 
 if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
    {
-   CfLog(cferror,"Unable to allocate Rlist","malloc");
+   CfOut(cf_error,"malloc","Unable to allocate Rlist");
    FatalError("");
    }
 

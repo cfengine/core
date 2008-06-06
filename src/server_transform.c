@@ -178,8 +178,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (GetVariable("control_server",cp->lval,&retval,&rettype) == cf_notype)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Unknown lval %s in server control body",cp->lval);
-      CfLog(cferror,OUTPUT,"");
+      CfOut(cf_error,"","Unknown lval %s in server control body",cp->lval);
       continue;
       }
    
@@ -413,16 +412,8 @@ if (strcmp(pp->agentsubtype,"access") == 0)
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Promise type %s is not known by this agent");
-   CfLog(cferror,OUTPUT,"");
-   
-   if (pp->audit != NULL)
-      {
-      snprintf(OUTPUT,CF_BUFSIZE,", in promise file %s at line %d",pp->audit->filename,pp->lineno);
-      CfLog(cferror,OUTPUT,"");
-      }
-   
-   CfLog(cferror,"\n","");
+   CfOut(cf_error,"","Promise type %s is not known by this agent");
+   PromiseRef(cf_error,pp);
    }
 }
 

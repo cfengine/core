@@ -10,6 +10,8 @@ bundle agent filetest()
 
       "filelist" slist => { "/tmp/bla1", "/tmp/bla2" };
 
+
+
    files:
 
       "/path/file.*" -> "me"
@@ -19,6 +21,8 @@ bundle agent filetest()
             file_select  => myfilter,
             changes      => tripwire,
             depth_search => recurse("2");
+
+    stupid_faculty::
 
       "$(filelist)"
 

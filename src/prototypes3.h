@@ -225,6 +225,7 @@ struct cfdirent *cf_readdir(CFDIR *cfdirh,struct Attributes attr, struct Promise
 void cf_closedir(CFDIR *dirh);
 int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct Attributes attr, struct Promise *pp);
 void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
+void FileAutoDefine(char *destfile);
 
 /* files_operators.c */
 
@@ -420,6 +421,8 @@ void ReportError(char *s);
 
 /* rlist.c */
 
+int IsStringIn(struct Rlist *list,char *s);
+int IsRegexIn(struct Rlist *list,char *s);
 struct Rlist *KeyInRlist(struct Rlist *list,char *key);
 int RlistLen(struct Rlist *start);
 void PopStack(struct Rlist **liststart, void **item,size_t size);
@@ -546,6 +549,9 @@ int BooleanControl(char *scope,char *name,int bool);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
 
+/* verify_exec.c */
+
+void VerifyExecPromise(struct Promise *pp);
 
 /* verify_files.c */
 
@@ -559,6 +565,6 @@ int SanityChecks(char *path,struct Attributes a,struct Promise *pp);
 
 void VerifyProcessesPromise(struct Promise *pp);
 
-/* verify_exec.c */
+/* verify_reports.c */
 
-void VerifyExecPromise(struct Promise *pp);
+void VerifyReportPromise(struct Promise *pp);

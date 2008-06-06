@@ -30,6 +30,82 @@
 
 /*******************************************************************/
 
+struct Rlist *KeyInRlist(struct Rlist *list,char *key)
+
+{ struct Rlist *rp;
+
+for (rp = list; rp != NULL; rp = rp->next)
+   {
+   if (rp->type != CF_SCALAR)
+      {
+      continue;
+      }
+   
+   if (strcmp((char *)rp->item,key) == 0)
+      {
+      return rp;
+      }
+   }
+
+return NULL;
+}
+
+/*******************************************************************/
+
+int IsStringIn(struct Rlist *list,char *s)
+
+{ struct Rlist *rp;
+
+if (s == NULL || list == NULL)
+   {
+   return false;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (rp->type != CF_SCALAR)
+      {
+      continue;
+      }
+
+   if (strcmp(s,rp->item) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
+int IsRegexIn(struct Rlist *list,char *regex)
+
+{ struct Rlist *rp;
+
+if (regex == NULL || list == NULL)
+   {
+   return false;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (rp->type != CF_SCALAR)
+      {
+      continue;
+      }
+
+   if (FullTextMatch(regex,rp->item))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
 void *CopyRvalItem(void *item, char type)
 
 { struct Rlist *rp,*start = NULL;
@@ -263,6 +339,13 @@ else
 rp->item = CopyRvalItem(item,type);
 rp->type = type;  /* scalar, builtin function */
 
+#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
+if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
+   {
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
+   }
+#endif
+
 if (type == CF_LIST)
    {
    rp->state_ptr = rp->item;
@@ -273,6 +356,15 @@ else
    }
 
 rp->next = NULL;
+
+#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
+if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
+   {
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+   }
+#endif
+
+
 return rp;
 }
 
@@ -326,6 +418,13 @@ rp->next = *start;
 rp->item = CopyRvalItem(item,type);
 rp->type = type;  /* scalar, builtin function */
 
+#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
+if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
+   {
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
+   }
+#endif
+
 if (type == CF_LIST)
    {
    rp->state_ptr = rp->item;
@@ -336,6 +435,13 @@ else
    }
 
 *start = rp;
+
+#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
+if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
+   {
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+   }
+#endif
 
 return rp;
 }
@@ -434,29 +540,6 @@ void ShowRlistState(FILE *fp,struct Rlist *list)
 
 ShowRval(fp,list->state_ptr->item,list->type);
 }
-
-/*******************************************************************/
-
-struct Rlist *KeyInRlist(struct Rlist *list,char *key)
-
-{ struct Rlist *rp;
-
-for (rp = list; rp != NULL; rp = rp->next)
-   {
-   if (rp->type != CF_SCALAR)
-      {
-      continue;
-      }
-   
-   if (strcmp((char *)rp->item,key) == 0)
-      {
-      return rp;
-      }
-   }
-
-return NULL;
-}
-
 
 /*******************************************************************/
 

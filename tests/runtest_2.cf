@@ -42,7 +42,6 @@ body delete tidyfiles
 {
 dirlinks => "delete";          #keep/tidy/delete
 rmdirs   => "true";             #none/all/sub
-links    => "stop";            #stop/keep/traverse/tidy
 }
 
 #########################################################

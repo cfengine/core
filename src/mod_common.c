@@ -179,6 +179,8 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"emptyresolvconf",cf_opts,CF_BOOL},
    {"exclamation",cf_opts,CF_BOOL},
    {"expireafter",cf_int,CF_VALRANGE},
+   {"files_single_copy",cf_slist,""},
+   {"files_auto_define",cf_slist,""},
    {"fullencryption",cf_opts,CF_BOOL},
    {"hostnamekeys",cf_opts,CF_BOOL},
    {"ifelapsed",cf_int,CF_VALRANGE},
@@ -335,6 +337,7 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_PROCESS_SUBTYPES,   /* mod_process.c */
    CF_REMACCESS_SUBTYPES, /* mod_access.c */
    CF_STORAGE_SUBTYPES,   /* mod_storage.c */
+   CF_REPORT_SUBTYPES,    /* mod_report.c */
    CF_KNOWLEDGE_SUBTYPES, /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */

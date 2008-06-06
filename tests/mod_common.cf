@@ -100,7 +100,10 @@ bundle agent myPromises(s1,s2)   # policy version 1.0
    vars:
 
      "myname"  string => "value in quotes" ,
-               policy => "constant";
+               policy => "free";
+
+     "myname"  string => "value in quotes 2" ,
+               policy => "free";
 
      "derived" string => "includes $(name) previously defined $(s1) and $(s2)" ,
                policy=>  "free";
@@ -159,7 +162,7 @@ bundle agent main()
 
       "y" real => "3.22";
 
-   report:
+   reports:
 
      "Alert Message X" -> { "email", "html" }
 

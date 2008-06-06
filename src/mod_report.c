@@ -21,44 +21,22 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: mod_knowledge.c                                                     */
+/* File: mod_report.c                                                        */
 /*                                                                           */
 /*****************************************************************************/
 
-#define CF3_MOD_KNOWLEDGE
+#define CF3_MOD_REPORT
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
- /***********************************************************/
- /* Read this module file backwards, as dependencies have   */
- /* to be defined first - these arrays declare pairs of     */
- /* constraints                                             */
- /*                                                         */
- /* lval => rval                                            */
- /*                                                         */
- /* in the form (lval,type,range)                           */
- /*                                                         */
- /* If the type is cf_body then the range is a pointer      */
- /* to another array of pairs, like in a body "sub-routine" */
- /*                                                         */
- /***********************************************************/
-
-struct BodySyntax CF_OCCUR_BODIES[] =
-   {
-   {"mentions",cf_slist,""},
-   {"usecontent",cf_slist,CF_PATHRANGE},
-   {"stylesheet",cf_str,""},
-   {NULL,cf_notype,NULL}
-   };
 
 /***************************************************************/
 
 /* This is the primary set of constraints for a file object */
 
-struct BodySyntax CF_TOPICS_BODIES[] =
+struct BodySyntax CF_REPORT_BODIES[] =
    {
-   {"association",cf_slist,""},
    {NULL,cf_notype,NULL}
    };
 
@@ -66,13 +44,12 @@ struct BodySyntax CF_TOPICS_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
+struct SubTypeSyntax CF_REPORT_SUBTYPES[] =
   {
 
   /* Body lists belonging to "files:" type in Agent */
       
-  {"knowledge","topics",CF_TOPICS_BODIES},
-  {"knowledge","occurrences",CF_OCCUR_BODIES},
+  {"agent","reports",CF_REPORT_BODIES},
   {NULL,NULL,NULL},
   };
 

@@ -1863,7 +1863,7 @@ return rval;
 void *ReadFile(char *filename,int maxsize)
 
 { struct stat sb;
-  void *result = NULL;
+  char *result = NULL;
   FILE *fp;
   size_t size;
 
@@ -1883,7 +1883,7 @@ else
    size = sb.st_size;
    }
 
-result = malloc(size);
+result = malloc(size+1);
    
 if (result == NULL)
    {
@@ -1902,8 +1902,10 @@ if (fread(result,size,1,fp) != 1)
    CfOut(cf_error,"fread","Could not read expected amount from file %s in readfile",filename);
    }
 
+result[size] = '\0';
+
 fclose(fp);
-return result;
+return (void *)result;
 }
 
 /*********************************************************************/

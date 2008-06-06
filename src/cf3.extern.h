@@ -37,6 +37,9 @@ extern struct Audit *AUDITPTR;
 extern struct Audit *VAUDIT; 
 extern struct Rlist *VINPUTLIST;
 extern struct Rlist *BODYPARTS;
+extern struct Rlist *SINGLE_COPY_LIST;
+extern struct Rlist *AUTO_DEFINE_LIST;
+extern struct Rlist *SINGLE_COPY_CACHE;
 
 extern int XML;
 extern FILE *FOUT;
@@ -98,6 +101,12 @@ extern struct BodySyntax CF_CHECKVOL_BODY[];
 extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
 extern struct BodySyntax CF_TOPICS_BODIES[];
 extern struct BodySyntax CF_OCCUR_BODIES[];
+#endif
+
+
+#ifndef CF3_MOD_REPORT
+extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
+extern struct BodySyntax CF_REPORT_BODIES[];
 #endif
 
 

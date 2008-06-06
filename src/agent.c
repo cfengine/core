@@ -47,6 +47,7 @@ char *TYPESEQUENCE[] =
    "processes",
    "files",
    "executions",
+   "reports",
    NULL
    };
 
@@ -346,6 +347,20 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
+      {
+      SINGLE_COPY_LIST = *(char *)retval;
+      Verbose("SET file single copy list\n");
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
+      {
+      AUTO_DEFINE_LIST = *(char *)retval;
+      Verbose("SET file auto define list\n");
+      continue;
+      }
+   
    /* Read directly from vars
       
      cfa_deletenonuserfiles,
@@ -586,6 +601,12 @@ if (strcmp("files",pp->agentsubtype) == 0)
 if (strcmp("executions",pp->agentsubtype) == 0)
    {
    VerifyExecPromise(pp);
+   return;
+   }
+
+if (strcmp("reports",pp->agentsubtype) == 0)
+   {
+   VerifyReportPromise(pp);
    return;
    }
 }

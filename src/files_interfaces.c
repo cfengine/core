@@ -435,14 +435,11 @@ if (!SelectLeaf(sourcefile,&ssb,attr,pp))
    return;
    }
 
-/*
-if (IsItemIn(VEXCLUDECACHE,destfile))
+if (IsStringIn(SINGLE_COPY_CACHE,destfile))
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Skipping single-copied file %s class %s\n",destfile,ip->classes);
-   CfLog(cf_verbose,OUTPUT,"");
+   CfOut(cf_inform,"","Skipping single-copied file %s\n",destfile);
    return;
    }
-*/
 
 if (attr.copy.link_type != cfa_notlinked)
    {
@@ -534,27 +531,15 @@ if (found == -1)
 
          cfPS(cf_verbose,CF_CHG,"",pp,attr,"Updated file from %s:%s\n",server,sourcefile);
 
-         /*
-         if (controlVAL SINGLECOPY LIST)
+         if (SINGLE_COPY_LIST)
             {
-            if (!IsItemIn(VEXCLUDECACHE,destfile))
-               {
-               Debug("Appending image %s class %s to singlecopy list\n",destfile,ip->classes);
-               PrependItem(&VEXCLUDECACHE,destfile,NULL);
-               }
+            IdempPrependRScalar(&SINGLE_COPY_CACHE,destfile,CF_SCALAR);
             }         
-
-         for (ptr = VAUTODEFINE; ptr != NULL; ptr=ptr->next)
+         
+         if (MatchRlistItem(AUTO_DEFINE_LIST,destfile))
             {
-            if (WildMatch(ptr->name,destfile))
-               {
-               snprintf(OUTPUT,CF_BUFSIZE*2,"Image %s was set to autodefine class %s\n",ptr->name,ptr->classes);
-               CfLog(cf_inform,OUTPUT,"");
-               AddMultipleClasses(ptr->classes);
-               }
+            FileAutoDefine(destfile);
             }
-
-         */
          }
       else
          {
@@ -643,18 +628,11 @@ else
             {
             cfPS(cf_inform,CF_CHG,"",pp,attr,"Updated %s from source %s on %s",destfile,sourcefile,server);
             }
-
-         /*
-         for (ptr = VAUTODEFINE; ptr != NULL; ptr=ptr->next)
+         
+         if (MatchRlistItem(AUTO_DEFINE_LIST,destfile))
             {
-            if (WildMatch(ptr->name,destfile))
-               {
-               snprintf(OUTPUT,CF_BUFSIZE*2,"Image %s was set to autodefine class %s\n",ptr->name,ptr->classes);
-               CfLog(cf_inform,OUTPUT,"");
-               AddMultipleClasses(ptr->classes);
-               }
-            } 
-         */
+            FileAutoDefine(destfile);
+            }
          
          if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
             {
@@ -667,15 +645,10 @@ else
                VerifyCopiedFileAttributes(destfile,&dsb,&ssb,attr,pp);
                }
             
-/*            if (ALL_SINGLECOPY || IsWildItemIn(VSINGLECOPY,destfile))
+            if (IsRegexIn(SINGLE_COPY_LIST,destfile))
                {
-               if (!IsItemIn(VEXCLUDECACHE,destfile))
-                  {
-                  Debug("Appending image %s class %s to singlecopy list\n",destfile,ip->classes);
-                  PrependItem(&VEXCLUDECACHE,destfile,NULL);
-                  }
+               IdempPrependRScalar(&SINGLE_COPY_CACHE,destfile,CF_SCALAR);
                }
-*/
             } 
          else
             {
@@ -695,20 +668,14 @@ else
       VerifyCopiedFileAttributes(destfile,&dsb,&ssb,attr,pp);
       
       /* Now we have to check for single copy, even though nothing was copied
-         otherwise we can get oscillations between multipe versions if type is based on a checksum */
-/*      
-      if (ALL_SINGLECOPY || IsWildItemIn(VSINGLECOPY,destfile))
+         otherwise we can get oscillations between multipe versions if type
+         is based on a checksum */
+
+      if (IsRegexIn(SINGLE_COPY_LIST,destfile))
          {
-         if (!IsItemIn(VEXCLUDECACHE,destfile))
-            {
-            Debug("Appending image %s class %s to singlecopy list\n",destfile,ip->classes);
-            PrependItem(&VEXCLUDECACHE,destfile,NULL);
-            }
-          }
-*/    
-//      snprintf(OUTPUT,CF_BUFSIZE," -> File %s is an up to date copy of source\n",destfile);
-//      CfLog(cf_inform,OUTPUT,"");
-//      ClassAuditLog(pp,attr,OUTPUT,CF_NOP);
+         IdempPrependRScalar(&SINGLE_COPY_CACHE,destfile,CF_SCALAR);
+         }
+
       cfPS(cf_inform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
       }
    }
@@ -1408,6 +1375,17 @@ if (selinux_enabled)
 
 return true;
 }
+
+/*********************************************************************/
+
+void FileAutoDefine(char *destfile)
+
+{ char class[CF_MAXVARSIZE];
+
+snprintf(class,CF_MAXVARSIZE,"auto_%s",CanonifyName(destfile)); 
+AddClassToHeap(class);
+CfOut(cf_inform,"Auto defining class %s\n",class); 
+}           
 
 /*********************************************************************/
 /* Level 3                                                           */

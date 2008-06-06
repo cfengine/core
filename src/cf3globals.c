@@ -65,6 +65,10 @@ struct Scope *VSCOPE = NULL;
 struct Rlist *VINPUTLIST = NULL;
 struct Rlist *BODYPARTS = NULL;
 
+struct Rlist *SINGLE_COPY_LIST = NULL;
+struct Rlist *AUTO_DEFINE_LIST = NULL;
+struct Rlist *SINGLE_COPY_CACHE = NULL;
+
 /*****************************************************************************/
 /* Constants                                                                 */
 /*****************************************************************************/

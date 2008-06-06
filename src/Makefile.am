@@ -55,6 +55,7 @@ libpromises_la_SOURCES =						\
 	mod_access.c							\
 	mod_exec.c							\
 	mod_files.c							\
+	mod_report.c							\
 	mod_storage.c							\
 	mod_knowledge.c							\
 	mod_process.c
@@ -71,6 +72,7 @@ cfAgent_SOURCES =							\
 	files_transform.c						\
 	verify_processes.c						\
 	verify_exec.c							\
+	verify_reports.c						\
 	agentdiagnostic.c
 
 cfServerd_SOURCES =							\

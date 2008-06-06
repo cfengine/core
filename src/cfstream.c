@@ -21,18 +21,17 @@ if ((fmt == NULL) || (strlen(fmt) == 0))
    return;
    }
 
+memset(output,0,CF_BUFSIZE);
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
 SanitizeBuffer(buffer);
 Chop(buffer);
-
-snprintf(output,CF_BUFSIZE-1,"%s %s",VPREFIX,buffer);
-AppendItem(&mess,output,NULL);
+AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1,"%s (%s: %s)",VPREFIX,errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1,"(%s: %s)",errstr,strerror(errno));
    AppendItem(&mess,output,NULL);
    }
 
@@ -98,13 +97,11 @@ va_end(ap);
 
 SanitizeBuffer(buffer);
 Chop(buffer);
-
-snprintf(output,CF_BUFSIZE-1,"%s %s",VPREFIX,buffer);
-AppendItem(&mess,output,NULL);
+AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1,"%s %s: %s",VPREFIX,errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1,"%s: %s",errstr,strerror(errno));
    AppendItem(&mess,output,NULL);
    }
 

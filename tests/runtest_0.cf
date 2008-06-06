@@ -1,0 +1,80 @@
+########################################################
+#
+# Simple test create files
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/test_plain" 
+
+       perms => system,
+       create => "true";
+
+  "/home/mark/tmp/test_dir/." 
+
+       perms => system,
+       create => "true";
+
+}
+
+#########################################################
+
+body perms system
+
+{
+mode  => "0640";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copyfrom mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" };
+backup      => "true";                   #/false/timestamp
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1"};
+allowallconnects      => { "127.0.0.1" };
+trustkeysfrom         => { "127.0.0.1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/home/mark/LapTop"
+
+    admit   => { "127.0.0.1" };
+}

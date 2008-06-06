@@ -176,6 +176,8 @@ enum cfacontrol
    cfa_emptyresolvconf,
    cfa_exclamation,
    cfa_expireafter,
+   cfa_fsinglecopy,
+   cfa_fautodefine,
    cfa_fullencryption,
    cfa_hostnamekeys,
    cfa_ifelapsed,

@@ -30,7 +30,7 @@
 
 /*******************************************************************/
 
-struct Attributes GetAttributesibutes(struct Promise *pp)
+struct Attributes GetFilesAttributes(struct Promise *pp)
 
 { struct Attributes attr;
 

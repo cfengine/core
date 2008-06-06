@@ -107,6 +107,9 @@ char *CFH[][2] =
 void ShowContext(void)
 
 {
+ printf("SET CLASS PROMISES BEFORE HERE!!!!!\n");
+Banner("Agent's classified context");
+ 
 ListDefinedClasses(); /* borrow this from cf2 for now */
 }
 

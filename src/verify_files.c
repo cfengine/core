@@ -216,11 +216,8 @@ void VerifyFilePromise(char *path,struct Promise *pp)
   struct Attributes a;
   struct CfLock thislock;
   int success,rlevel = 0,isthere;
-  int have_rename,have_delete,have_create,have_perms,have_copyfrom;
-  int have_edit,have_editline,have_editxml,have_depthsearch;
-  int have_linkfrom,have_fileselect;
 
-a = GetAttributesibutes(pp);
+a = GetFilesAttributes(pp);
 
 if (!SanityChecks(path,a,pp))
    {

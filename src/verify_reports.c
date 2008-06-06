@@ -34,9 +34,30 @@
 
 void VerifyReportPromise(struct Promise *pp)
 
-{
-PromiseBanner(pp);
+{ struct Attributes a;
+  struct CfLock thislock;
 
+a = GetReportsAttributes(pp);
+
+thislock = AcquireLock(ASUniqueName("reports"),CanonifyName(pp->promiser),VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+PromiseBanner(pp);
 CfOut(cf_error,"",pp->promiser);
+
+YieldCurrentLock(thislock);
 }
 
+/*******************************************************************/
+
+struct Attributes GetReportsAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.transaction = GetTransactionConstraints(pp);
+return attr;
+}

@@ -75,6 +75,8 @@ SetAuditVersion();
 fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
 fprintf(FOUT,"%s",CFH[0][0]);
 
+ShowContext();
+
 VerifyPromises(cf_common);
 
 ShowScopedVariables(FOUT);
@@ -742,7 +744,6 @@ fclose(FOUT);
 if (DEBUG)
    {
    ShowScopedVariables(stdout);
-   ShowContext();
    }
 
 XML = true;

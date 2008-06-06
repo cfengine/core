@@ -275,7 +275,7 @@ int SelectExecProgram(char *filename,char *crit);
 
 /* files_transform.c */
 
-struct Attributes GetAttributesibutes(struct Promise *pp);
+struct Attributes GetFilesAttributes(struct Promise *pp);
 struct Recursion GetRecursionConstraints(struct Promise *pp);
 struct FileSelect GetSelectConstraints(struct Promise *pp);
 struct FilePerms GetPermissionConstraints(struct Promise *pp);
@@ -568,3 +568,9 @@ void VerifyProcessesPromise(struct Promise *pp);
 /* verify_reports.c */
 
 void VerifyReportPromise(struct Promise *pp);
+struct Attributes GetReportsAttributes(struct Promise *pp);
+
+
+
+
+

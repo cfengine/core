@@ -98,6 +98,15 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
 
 /*********************************************************/
 
+struct BodySyntax CF_PERSISTENCE_BODY[] =
+   {
+   {"countdown",cf_opts,"absolute,reset"},
+   {"lifetime",cf_int,CF_VALRANGE},
+   {NULL,cf_notype,NULL}
+   };
+
+/*********************************************************/
+
 struct BodySyntax CF_DEFINECLASS_BODY[] =
    {
    {"on_change",cf_slist,CF_IDRANGE},
@@ -131,6 +140,7 @@ struct BodySyntax CF_CLASSBODY[] =
    {"policy",cf_str,CF_IDRANGE},
    {"dist",cf_rlist,CF_REALRANGE},
    {"expression",cf_class,CF_CLASSRANGE},
+   {"persistence",cf_body,CF_PERSISTENCE_BODY},
    {NULL,cf_notype,NULL}
    };
 

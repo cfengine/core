@@ -51,6 +51,7 @@ if (strcmp(pp->bundletype,"common") == 0)
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
+      Verbose(" ?> defining class %s\n",pp->promiser);
       PrependItem(&VHEAP,pp->promiser,NULL);
       }
 
@@ -64,6 +65,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0)
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
+      Verbose(" ?> defining class %s\n",pp->promiser);
       PrependItem(&VADDCLASSES,pp->promiser,NULL);
       }
 

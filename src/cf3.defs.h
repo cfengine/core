@@ -840,6 +840,8 @@ struct Attributes
    int haveeditxml;
    int haveedit;
    int havecontain;
+   int haveclasses;
+   int havetrans;
    };
 
 #include "prototypes3.h"

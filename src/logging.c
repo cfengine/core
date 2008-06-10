@@ -257,13 +257,16 @@ for (rp = list; rp != NULL; rp=rp->next)
       CfOut(cf_error,"","You cannot use reserved hard classes as post-condition classes");
       }
 
-   if (persist)
+   if (persist > 0)
       {
+      Verbose(" ?> defining persistent class %s\n",(char *)rp->item);
       NewPersistentContext(rp->item,persist,policy);
+      PrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
    else
       {
-      AddClassToHeap(CanonifyName((char *)rp->item));
+      Verbose(" ?> defining class %s\n",(char *)rp->item);
+      PrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
    }
 }

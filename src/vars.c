@@ -28,6 +28,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*******************************************************************/
+
+void LoadSystemConstants()
+
+{
+ NewScalar("const","dollar","$",cf_str);
+ NewScalar("const","n","\n",cf_str);
+ NewScalar("const","r","\r",cf_str);
+ NewScalar("const","endl","\n",cf_str);
+}
 
 /*******************************************************************/
 /* Variables                                                       */

@@ -114,7 +114,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
             found = true;
 
             VSYSTEMHARDCLASS = (enum classes) i;
-            NewScalar("system","class",CLASSTEXT[i],cf_str);
+            NewScalar("sys","class",CLASSTEXT[i],cf_str);
 
             break;
             }
@@ -178,11 +178,11 @@ CfOut(cf_verbose,"","Using internal soft-class %s for host %s\n\n",workbuf,CLASS
 CfOut(cf_verbose,"","The time is now %s\n\n",ctime(&tloc));
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 
-NewScalar("system","date",workbuf,cf_str);
-NewScalar("system","host",VSYSNAME.nodename,cf_str);
-NewScalar("system","os",VSYSNAME.sysname,cf_str);
-NewScalar("system","release",VSYSNAME.release,cf_str);
-NewScalar("system","arch",VSYSNAME.machine,cf_str);
+NewScalar("sys","date",workbuf,cf_str);
+NewScalar("sys","host",VSYSNAME.nodename,cf_str);
+NewScalar("sys","os",VSYSNAME.sysname,cf_str);
+NewScalar("sys","release",VSYSNAME.release,cf_str);
+NewScalar("sys","arch",VSYSNAME.machine,cf_str);
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
 AddClassToHeap(workbuf);
@@ -245,13 +245,13 @@ if (strlen(workbuf) > CF_MAXVARSIZE-2)
    }
 
 sp = strdup(CanonifyName(workbuf));
-NewScalar("system","arch",sp,cf_str);
+NewScalar("sys","arch",sp,cf_str);
 AddClassToHeap(sp);
 free(sp);
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
 sp = strdup(CanonifyName(workbuf));
-NewScalar("system","ostype",sp,cf_str);
+NewScalar("sys","ostype",sp,cf_str);
 AddClassToHeap(sp);
 
 if (! found)
@@ -432,7 +432,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             {
             strcpy(ip,inet_ntoa(sin->sin_addr));
             snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
-            NewScalar("system",name,ip,cf_str);
+            NewScalar("sys",name,ip,cf_str);
             
             i = 3;
          
@@ -442,7 +442,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   {
                   *sp = '\0';
                   snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(ifp->ifr_name));
-                  NewScalar("system",name,ip,cf_str);
+                  NewScalar("sys",name,ip,cf_str);
                   }
                }
             }
@@ -481,8 +481,8 @@ if (statbuf.st_mtime < (now - 60*60))
 snprintf(value,CF_MAXVARSIZE-1,"%s",ctime(&statbuf.st_mtime));
 Chop(value);
 
-DeleteVariable("system","env_time");
-NewScalar("system","env_time",value,cf_str);
+DeleteVariable("sys","env_time");
+NewScalar("sys","env_time",value,cf_str);
 
 CfOut(cf_verbose,"","Loading environment...\n");
  
@@ -509,8 +509,8 @@ while (!feof(fp))
       {
       sscanf(class,"%255[^=]=%255[^\n]",name,value);
 
-      DeleteVariable("system",name);
-      NewScalar("system",name,value,cf_str);
+      DeleteVariable("sys",name);
+      NewScalar("sys",name,value,cf_str);
       }
    else
       {

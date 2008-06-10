@@ -75,6 +75,11 @@ category   [a-zA-Z]+:
 {promises}            {
                       /* Note this has to come before "id" since it is a subset of id */
 
+                      if (P.currentclasses != NULL)
+                         {
+                         free(P.currentclasses);
+                         P.currentclasses = NULL;
+                         }
                       P.line_pos += strlen(yytext);
                       return BUNDLE;
                       }
@@ -82,6 +87,11 @@ category   [a-zA-Z]+:
 {body}                {
                       /* Note this has to come before "id" since it is a subset of id */
 
+                      if (P.currentclasses != NULL)
+                         {
+                         free(P.currentclasses);
+                         P.currentclasses = NULL;
+                         }
                       P.line_pos += strlen(yytext);
                       return BODY;
                       }

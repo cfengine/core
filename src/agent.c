@@ -197,9 +197,14 @@ signal(SIGINT,(void*)ExitCleanly);
 signal(SIGTERM,(void*)ExitCleanly);
 signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
-signal(SIGCHLD,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
+
+/*
+  do not set signal(SIGCHLD,SIG_IGN) in agent near
+  popen() - or else pclose will fail to return
+  status which we need for setting returns
+*/
 }
 
 /*******************************************************************/
@@ -567,6 +572,8 @@ FatalError("You are denied access to run this policy");
 void KeepAgentPromise(struct Promise *pp)
 
 {
+ DebugListItemList(VADDCLASSES);
+ 
 if (!IsDefinedClass(pp->classes))
    {
    Verbose("Skipping whole promise, as context %s is not valid\n",pp->classes);

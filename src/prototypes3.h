@@ -405,7 +405,18 @@ int IsPathRegex(char *str);
 int IsRegex(char *str);
 int MatchRlistItem(struct Rlist *listofregex,char *teststring);
 
+/* pipes.c */
 
+FILE *cf_popen(char *command,char *type);
+FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+FILE *cf_popen_sh(char *command,char *type);
+FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+int cf_pclose(FILE *pp);
+int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+int CfSetuid(uid_t uid,gid_t gid);
+int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
+
+    
 /* promises.c */
 
 char *BodyName(struct Promise *pp);
@@ -560,6 +571,7 @@ void CloseLock(DB *dbp);
 
 /* vars.c */
 
+void LoadSystemConstants(void);
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 void DeleteScalar(char *scope,char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
@@ -582,6 +594,7 @@ void VerifyExec(struct Attributes a, struct Promise *pp);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
 void PreviewProtocolLine(char *s,char *comm);
+int IsExecutable(char *file);
 
 /* verify_files.c */
 

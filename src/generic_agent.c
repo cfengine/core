@@ -47,7 +47,8 @@ SetSignals();
 
 if (!NOHARDCLASSES)
    {
-   SetNewScope("system");
+   SetNewScope("sys");
+   SetNewScope("const");
    GetNameInfo3();
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
@@ -55,7 +56,7 @@ if (!NOHARDCLASSES)
    }
 
 LoadPersistentContext();
-
+LoadSystemConstants();
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 THIS_AGENT_TYPE = ag;
 

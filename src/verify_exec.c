@@ -50,12 +50,15 @@ if (a.contain.nooutput && a.contain.preview)
    {
    CfOut(cf_error,"","no_output and preview are mutually exclusive (broken promise)");
    PromiseRef(cf_error,pp);
+   return false;
    }
 
 if (a.contain.umask == CF_UNDEFINED)
    {
    a.contain.umask = 077;
    }
+
+return true;
 }
 
 /*****************************************************************************/
@@ -80,6 +83,12 @@ if (thislock.lock == NULL)
    }
 
 PromiseBanner(pp);
+
+if (!IsExecutable(pp->promiser))
+   {
+   cfPS(cf_error,CF_FAIL,"",pp,a,"%s promises to be executable but isn't\n",pp->promiser);
+   return;
+   }
 
 if (a.args)
    {
@@ -129,16 +138,17 @@ else
 
       if (a.contain.useshell)
          {
-         pfp = cfpopen_shsetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
+         pfp = cf_popen_shsetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
          }
       else
          {
-         pfp = cfpopensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);         
+         // pfp = cf_popensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
+         pfp = cf_popensetuid(execstr,"r",-1,-1,NULL,NULL);         
          }
 
       if (pfp == NULL)
          {
-         cfPS(cf_error,CF_FAIL,"cfpopen",pp,a,"Couldn't open pipe to command %s\n",execstr);
+         cfPS(cf_error,CF_FAIL,"cf_popen",pp,a,"Couldn't open pipe to command %s\n",execstr);
          YieldCurrentLock(thislock);
          return;
          }
@@ -185,7 +195,8 @@ else
       alarm(0);
       signal(SIGALRM,SIG_DFL);
       }
-   
+
+   cfPS(cf_inform,CF_CHG,"",pp,a,"Completed execution of %s\n",execstr);
    umask(maskval);
    YieldCurrentLock(thislock);
 
@@ -202,6 +213,59 @@ else
 
 /*************************************************************/
 /* Level                                                     */
+/*************************************************************/
+
+int IsExecutable(char *file)
+
+{ struct stat sb;
+  gid_t grps[NGROUPS];
+  int i,n;
+
+if (stat(file,&sb) == -1)
+   {
+   CfOut(cf_error,"","Proposed executable %s doesn't exist",file);
+   return false;
+   }
+  
+if (getuid() == sb.st_uid)
+   {
+   if (sb.st_mode && 0100)
+      {
+      return true;
+      }
+   }
+else if (getgid() == sb.st_gid)
+   {
+   if (sb.st_mode && 0010)
+      {
+      return true;
+      }    
+   }
+else
+   {
+   if (sb.st_mode && 0001)
+      {
+      return true;
+      }
+   
+   if ((n = getgroups(NGROUPS,grps)) > 0)
+      {
+      for (i = 0; i < n; i++)
+         {
+         if (grps[i] == sb.st_gid)
+            {
+            if (sb.st_mode && 0010)
+               {
+               return true;
+               }                 
+            }
+         }
+      }
+   }
+
+return false;
+}
+
 /*************************************************************/
 
 void CommPrefix(char *execstr,char *comm)

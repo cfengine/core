@@ -68,7 +68,9 @@ attr.recursion = GetRecursionConstraints(pp);
 
 /* Common ("included") */
 
+attr.havetrans = GetBooleanConstraint("transaction",pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
+attr.haveclasses = GetBooleanConstraint("classes",pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
 if (DEBUG)
@@ -109,6 +111,7 @@ struct Attributes GetExecAttributes(struct Promise *pp)
 
 { struct Attributes attr;
 
+
 attr.contain = GetExecContainConstraints(pp);
 attr.havecontain = GetBooleanConstraint("contain",pp->conlist);
 
@@ -117,7 +120,10 @@ attr.module = GetBooleanConstraint("module",pp->conlist);
 
 /* Common ("included") */
 
+attr.havetrans = GetBooleanConstraint("transaction",pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint("classes",pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
 return attr;
@@ -275,12 +281,11 @@ struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp)
 { struct DefineClasses c;
  char *pt = NULL;
 
-c.change = (struct Rlist *)GetConstraint("on_change",pp->conlist,CF_LIST);
-c.failure = (struct Rlist *)GetConstraint("on_failure",pp->conlist,CF_LIST);
-c.denied = (struct Rlist *)GetConstraint("on_denied",pp->conlist,CF_LIST);
-c.timeout = (struct Rlist *)GetConstraint("on_timeout",pp->conlist,CF_LIST);
-c.interrupt = (struct Rlist *)GetConstraint("on_interrupt",pp->conlist,CF_LIST);
-
+c.change = (struct Rlist *)GetListConstraint("on_change",pp->conlist);
+c.failure = (struct Rlist *)GetListConstraint("on_failure",pp->conlist);
+c.denied = (struct Rlist *)GetListConstraint("on_denied",pp->conlist);
+c.timeout = (struct Rlist *)GetListConstraint("on_timeout",pp->conlist);
+c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp->conlist);
 
 c.persist = GetIntConstraint("persist_time",pp->conlist);
 

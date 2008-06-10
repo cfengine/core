@@ -52,7 +52,7 @@
 void GetNameInfo3()
 
 { int i,found = false;
- char *sp,*sp2,workbuf[CF_BUFSIZE];
+  char *sp,*sp2,workbuf[CF_BUFSIZE];
   time_t tloc;
   struct hostent *hp;
   struct sockaddr_in cin;
@@ -239,23 +239,20 @@ else
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s_%s_%s",VSYSNAME.sysname,VSYSNAME.machine,VSYSNAME.release,VSYSNAME.version);
 
-if (strlen(workbuf) < CF_MAXVARSIZE-2)
-   {
-   VARCH = strdup(CanonifyName(workbuf));
-   }
-else
+if (strlen(workbuf) > CF_MAXVARSIZE-2)
    {
    CfOut(cf_verbose,"","cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
-   VARCH = strdup(CanonifyName(VSYSNAME.sysname));
    }
 
+sp = strdup(CanonifyName(workbuf));
+NewScalar("system","arch",sp,cf_str);
+AddClassToHeap(sp);
+free(sp);
+
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
-
-VARCH2 = strdup(CanonifyName(workbuf));
- 
-AddClassToHeap(VARCH);
-
-CfOut(cf_verbose,"","Additional hard class defined as: %s\n",VARCH);
+sp = strdup(CanonifyName(workbuf));
+NewScalar("system","ostype",sp,cf_str);
+AddClassToHeap(sp);
 
 if (! found)
    {
@@ -265,7 +262,7 @@ if (! found)
 strcpy(workbuf,"compiled_on_"); 
 strcat(workbuf,CanonifyName(AUTOCONF_SYSNAME));
 AddClassToHeap(CanonifyName(workbuf));
-CfOut(cf_verbose,"","\nGNU autoconf class from compile time: %s\n\n",workbuf);
+CfOut(cf_verbose,"","GNU autoconf class from compile time: %s",workbuf);
 
 /* Get IP address from nameserver */
 
@@ -523,4 +520,111 @@ while (!feof(fp))
  
 fclose(fp);
 CfOut(cf_verbose,"","Environment data loaded\n\n"); 
+}
+
+/*********************************************************************/
+
+void FindV6InterfaceInfo(void)
+
+{ FILE *pp;
+  char buffer[CF_BUFSIZE]; 
+ 
+/* Whatever the manuals might say, you cannot get IPV6
+   interface configuration from the ioctls. This seems
+   to be implemented in a non standard way across OSes
+   BSDi has done getifaddrs(), solaris 8 has a new ioctl, Stevens
+   book shows the suggestion which has not been implemented...
+*/
+ 
+ Verbose("Trying to locate my IPv6 address\n");
+
+ switch (VSYSTEMHARDCLASS)
+    {
+    case cfnt:
+        /* NT cannot do this */
+        return;
+
+    case irix:
+    case irix4:
+    case irix64:
+        
+        if ((pp = cfpopen("/usr/etc/ifconfig -a","r")) == NULL)
+           {
+           Verbose("Could not find interface info\n");
+           return;
+           }
+        
+        break;
+
+    case hp:
+        
+        if ((pp = cfpopen("/usr/sbin/ifconfig -a","r")) == NULL)
+           {
+           Verbose("Could not find interface info\n");
+           return;
+           }
+
+        break;
+
+    case aix:
+        
+        if ((pp = cfpopen("/etc/ifconfig -a","r")) == NULL)
+           {
+           Verbose("Could not find interface info\n");
+           return;
+           }
+
+        break;
+        
+    default:
+        
+        if ((pp = cfpopen("/sbin/ifconfig -a","r")) == NULL)
+           {
+           Verbose("Could not find interface info\n");
+           return;
+           }
+
+    }
+
+/* Don't know the output format of ifconfig on all these .. hope for the best*/
+ 
+while (!feof(pp))
+   {    
+   fgets(buffer,CF_BUFSIZE-1,pp);
+
+   if (ferror(pp))  /* abortable */
+      {
+      break;
+      }
+   
+   if (StrStr(buffer,"inet6"))
+      {
+      struct Item *ip,*list = NULL;
+      char *sp;
+      
+      list = SplitStringAsItemList(buffer,' ');
+      
+      for (ip = list; ip != NULL; ip=ip->next)
+         {
+         for (sp = ip->name; *sp != '\0'; sp++)
+            {
+            if (*sp == '/')  /* Remove CIDR mask */
+               {
+               *sp = '\0';
+               }
+            }
+
+         if (IsIPV6Address(ip->name) && (strcmp(ip->name,"::1") != 0))
+            {
+            Verbose("Found IPv6 address %s\n",ip->name);
+            AppendItem(&IPADDRESSES,ip->name,"");
+            AddClassToHeap(CanonifyName(ip->name));
+            }
+         }
+      
+      DeleteItemList(list);
+      }
+   }
+
+cfpclose(pp);
 }

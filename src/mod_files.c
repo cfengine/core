@@ -127,8 +127,8 @@ struct BodySyntax CF_APPEND_BODIES[] =
 struct BodySyntax CF_ACCESS_BODIES[] =
    {
    {"mode",cf_str,CF_MODERANGE},
-   {"owner",cf_slist,CF_IDRANGE},
-   {"group",cf_slist,CF_IDRANGE},
+   {"owners",cf_slist,CF_IDRANGE},
+   {"groups",cf_slist,CF_IDRANGE},
    {"rxdirs",cf_opts,CF_BOOL},
    {"bsdflags",cf_olist,"arch,archived,dump,opaque,sappnd,sappend,schg,schange,simmutable,sunlnk,sunlink,uappnd,uappend,uchg,uchange,uimmutable,uunlnk,uunlink"},
    {NULL,cf_notype,NULL}
@@ -142,8 +142,8 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {"path_name",cf_slist,CF_PATHRANGE},
    {"search_mode",cf_str,CF_MODERANGE},
    {"search_size",cf_irange,"0,inf"},
-   {"search_owner",cf_slist,CF_IDRANGE},
-   {"search_group",cf_slist,CF_IDRANGE},
+   {"search_owners",cf_slist,CF_IDRANGE},
+   {"search_groups",cf_slist,CF_IDRANGE},
    {"ctime",cf_irange,CF_TIMERANGE},
    {"mtime",cf_irange,CF_TIMERANGE},
    {"atime",cf_irange,CF_TIMERANGE},

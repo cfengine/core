@@ -157,8 +157,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
           rval = EvaluateFunctionCall(subfp,pp);
           break;
       default:
-          rval.item = rp->item;
-          rval.rtype = rp->type;
+          rval = ExpandPrivateRval(CONTEXTID,rp->item,rp->type);
           break;
       }
 

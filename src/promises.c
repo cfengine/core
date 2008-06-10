@@ -30,6 +30,42 @@
 
 /*****************************************************************************/
 
+char *BodyName(struct Promise *pp)
+
+{ char *name,*sp;
+  int i,size = 0;
+  struct Constraint *cp;
+
+/* Return a type template for the promise body for lock-type identification */
+ 
+if ((name = malloc(CF_MAXVARSIZE)) == NULL)
+   {
+   FatalError("BodyName");
+   }
+
+sp = pp->agentsubtype;
+if (size + strlen(sp) < CF_MAXVARSIZE-CF_BUFFERMARGIN)
+   {
+   strcpy(name,sp);
+   strcat(name,".");
+   size += strlen(sp);
+   }
+
+for (i = 0,cp = pp->conlist; (i < 5) && cp != NULL; i++,cp=cp->next)
+   {
+   if (size + strlen(cp->lval) < CF_MAXVARSIZE-CF_BUFFERMARGIN)
+      {
+      strcat(name,cp->lval);
+      strcat(name,".");
+      size += strlen(cp->lval);
+      }
+   }
+
+return name; 
+}
+
+/*****************************************************************************/
+
 struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp)
 
 { struct Promise *pcopy;
@@ -79,6 +115,7 @@ if (pcopy->promiser == NULL || (pp->promisee != NULL && pcopy->promisee == NULL)
    FatalError("memory");
    }
 
+pcopy->bundletype = pp->bundletype;
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient? */
@@ -240,6 +277,7 @@ if (pcopy->promiser == NULL || pcopy->classes == NULL)
    FatalError("memory");
    }
 
+pcopy->bundletype = pp->bundletype;
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
@@ -307,7 +345,8 @@ if (pp->next != NULL)
    {
    DeletePromises(pp->next);
    }
- 
+
+free(pp->bundle);
 DeletePromise(pp);
 }
 

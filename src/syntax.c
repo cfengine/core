@@ -473,7 +473,7 @@ return cf_str;
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckParseString(char *lval,char *s,char *range)
+int CheckParseString(char *lval,char *s,char *range)
 
 { regex_t rx;
   regmatch_t pmatch;
@@ -482,18 +482,18 @@ Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
    {
-   return;
+   return true;
    }
 
 if (strlen(range) == 0)
    {
-   return;
+   return true;
    }
 
 if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    {
    Debug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
-   return;
+   return false;
    }
 
 if (CfRegcomp(&rx,range,REG_EXTENDED) != 0)
@@ -508,7 +508,7 @@ if (regexec(&rx,s,1,&pmatch,0) == 0)
       {
       Debug("CheckParseString - syntax verified\n\n");
       regfree(&rx);
-      return;
+      return true;
       }
    }
 
@@ -520,13 +520,16 @@ else
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
    ReportError(OUTPUT);
+   return false;
    }
+
 /*regfree(&rx); */
+return true;
 }
 
 /****************************************************************************/
 
-void CheckParseClass(char *lval,char *s,char *range)
+int CheckParseClass(char *lval,char *s,char *range)
 
 { regex_t rx;
   regmatch_t pmatch;
@@ -535,7 +538,7 @@ Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
   
 if (strlen(range) == 0)
    {
-   return;
+   return true;
    }
 
 if (CfRegcomp(&rx,range,REG_EXTENDED) != 0)
@@ -550,13 +553,13 @@ if (regexec(&rx,s,1,&pmatch,0) == 0)
       {
       Debug("CheckParseClass - syntax verified\n\n");
       regfree(&rx);
-      return;
+      return true;
       }
    }
 
 snprintf(OUTPUT,CF_BUFSIZE,"Class item on rhs of lval \'%s\' given as { %s } is out of bounds (should match %s)",lval,s,range);
 ReportError(OUTPUT);
-/*regfree(&rx); */
+return false;
 }
 
 /****************************************************************************/

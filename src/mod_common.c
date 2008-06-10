@@ -73,8 +73,6 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"ago",cf_int,6},
    {"accumulated",cf_int,6},
    {"now",cf_int,0},
-   {"persiststate",cf_class,3},
-   {"erasestate",cf_class,1},
    {"readstringarray",cf_class,6},
    {"readintarray",cf_class,6},
    {"readrealarray",cf_class,6},
@@ -98,21 +96,14 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
 
 /*********************************************************/
 
-struct BodySyntax CF_PERSISTENCE_BODY[] =
-   {
-   {"countdown",cf_opts,"absolute,reset"},
-   {"lifetime",cf_int,CF_VALRANGE},
-   {NULL,cf_notype,NULL}
-   };
-
-/*********************************************************/
-
 struct BodySyntax CF_DEFINECLASS_BODY[] =
    {
    {"on_change",cf_slist,CF_IDRANGE},
    {"on_failure",cf_slist,CF_IDRANGE},
    {"on_denied",cf_slist,CF_IDRANGE},
    {"on_timeout",cf_slist,CF_IDRANGE},
+   {"persist_time",cf_int,CF_VALRANGE},
+   {"timer_policy",cf_opts,"absolute,reset"},
    {NULL,cf_notype,NULL}
    };
 
@@ -137,10 +128,8 @@ struct BodySyntax CF_CLASSBODY[] =
    {"or",cf_clist,CF_CLASSRANGE}, 
    {"and",cf_clist,CF_CLASSRANGE},
    {"xor",cf_clist,CF_CLASSRANGE},
-   {"policy",cf_str,CF_IDRANGE},
    {"dist",cf_rlist,CF_REALRANGE},
    {"expression",cf_class,CF_CLASSRANGE},
-   {"persistence",cf_body,CF_PERSISTENCE_BODY},
    {NULL,cf_notype,NULL}
    };
 
@@ -313,8 +302,8 @@ struct BodySyntax CF_COMMON_BODIES[] =
    {
    {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY},
    {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY},
-   {"ifvarclass",cf_str,""},
-   {"ref",cf_str,""},
+   {"ifvarclass",cf_str,""},   /* execute only if expression true */
+   {"ref",cf_str,""},          /* arbitrary annotation */
    {NULL,cf_notype,NULL}
    };
 
@@ -327,7 +316,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
      {
      {"*","vars",CF_VARBODY},
      {"*","classes",CF_CLASSBODY},
-     {"*","report",CF_REPORTBODY},
+     {"*","reports",CF_REPORTBODY},
      {"agent","*",CF_COMMON_BODIES},
      {NULL,NULL,NULL}
      };

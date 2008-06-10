@@ -32,6 +32,265 @@
 
 void VerifyExecPromise(struct Promise *pp)
 
+{ struct Attributes a;
+
+a = GetExecAttributes(pp);
+ExecSanityChecks(a,pp);
+VerifyExec(a,pp);
+}
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+int ExecSanityChecks(struct Attributes a,struct Promise *pp)
+
 {
-PromiseBanner(pp); 
+if (a.contain.nooutput && a.contain.preview)
+   {
+   CfOut(cf_error,"","no_output and preview are mutually exclusive (broken promise)");
+   PromiseRef(cf_error,pp);
+   }
+
+if (a.contain.umask == CF_UNDEFINED)
+   {
+   a.contain.umask = 077;
+   }
+}
+
+/*****************************************************************************/
+
+void VerifyExec(struct Attributes a, struct Promise *pp)
+    
+{ struct CfLock thislock;
+  char line[CF_BUFSIZE],eventname[CF_BUFSIZE];
+  char comm[20], *sp;
+  char execstr[CF_EXPANDSIZE];
+  struct timespec start;
+  int print, outsourced;
+  mode_t maskval = 0;
+  FILE *pfp;
+  int preview = false;
+
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+PromiseBanner(pp);
+
+if (a.args)
+   {
+   snprintf(execstr,CF_EXPANDSIZE-1,"%s %s",pp->promiser,a.args);
+   }
+else
+   {
+   strncpy(execstr,pp->promiser,CF_BUFSIZE);
+   }
+
+CfOut(cf_inform,"","Executing \'%s\' ...(timeout=%d,owner=%d,group=%d)\n",execstr,a.contain.timeout,a.contain.owner,a.contain.group);
+
+start = BeginMeasure();
+
+if (DONTDO && !a.contain.preview)
+   {
+   CfOut(cf_error,"","Would execute script %s\n",execstr);
+   }
+else
+   {
+   CommPrefix(execstr,comm);
+   
+   if (a.transaction.background)
+      {
+      Verbose("Backgrounding job %s\n",execstr);
+      outsourced = fork();
+      }
+   else
+      {
+      outsourced = false;
+      }
+
+   if (outsourced || !a.transaction.background)
+      {
+      if (a.contain.timeout != 0)
+         {
+         SetTimeOut(a.contain.timeout);
+         }
+      
+      Verbose("(Setting umask to %o)\n",a.contain.umask);
+      maskval = umask(a.contain.umask);
+      
+      if (a.contain.umask == 0)
+         {
+         CfOut(cf_verbose,"","Programming %s running with umask 0! Use umask= to set\n",execstr);
+         }
+
+      if (a.contain.useshell)
+         {
+         pfp = cfpopen_shsetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
+         }
+      else
+         {
+         pfp = cfpopensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);         
+         }
+
+      if (pfp == NULL)
+         {
+         cfPS(cf_error,CF_FAIL,"cfpopen",pp,a,"Couldn't open pipe to command %s\n",execstr);
+         YieldCurrentLock(thislock);
+         return;
+         }
+
+      while (!feof(pfp))
+         {
+         if (ferror(pfp))  /* abortable */
+            {
+            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Shell command pipe %s\n",execstr);
+            return;
+            }
+
+         ReadLine(line,CF_BUFSIZE-1,pfp);
+         
+         if (strstr(line,"cfengine-die"))
+            {
+            break;
+            }
+         
+         if (ferror(pfp))  /* abortable */
+            {
+            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Shell command pipe %s\n",execstr);
+            return;
+            }
+         
+         if (a.contain.preview)
+            {
+            PreviewProtocolLine(line,execstr);
+            }
+         else 
+            {
+            if (!a.contain.nooutput && NonEmptyLine(line))
+               {
+               CfOut(cf_error,"","[%s] %s\n",comm,line);
+               }
+            }
+         }
+      
+      cf_pclose_def(pfp,a,pp);
+      }
+   
+   if (a.contain.timeout != 0)
+      {
+      alarm(0);
+      signal(SIGALRM,SIG_DFL);
+      }
+   
+   umask(maskval);
+   YieldCurrentLock(thislock);
+
+   snprintf(eventname,CF_BUFSIZE-1,"Exec(%s)",execstr);
+   EndMeasure(eventname,start);
+   
+   if (a.transaction.background && outsourced)
+      {
+      Verbose("Backgrounded shell command (%s) exiting\n",execstr);
+      exit(0);
+      }
+   }
+}
+
+/*************************************************************/
+/* Level                                                     */
+/*************************************************************/
+
+void CommPrefix(char *execstr,char *comm)
+
+{ char *sp;
+
+for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+   {
+   }
+
+if (sp - 10 >= execstr)
+   {
+   sp -= 10;   /* copy 15 most relevant characters of command */
+   }
+else
+   {
+   sp = execstr;
+   }
+
+memset(comm,0,20);
+strncpy(comm,sp,15);
+}
+
+/*************************************************************/
+
+int NonEmptyLine(char *line)
+
+{ char *sp;
+            
+for (sp = line; *sp != '\0'; sp++)
+   {
+   if (!isspace((int)*sp))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*************************************************************/
+
+void PreviewProtocolLine(char *line, char *comm)
+
+{ int i;
+  int level = cferror;
+  char *message = line;
+               
+  /*
+   * Table matching cfoutputlevel enums to log prefixes.
+   */
+  
+  char *prefixes[] =
+      {
+          ":silent:",
+          ":inform:",
+          ":verbose:",
+          ":editverbose:",
+          ":error:",
+          ":logonly:",
+      };
+  
+  int precount = sizeof(prefixes)/sizeof(char *);
+  
+if (line[0] == ':')
+   {
+   /*
+    * Line begins with colon - see if it matches a log prefix.
+    */
+   
+   for (i = 0; i < precount; i++)
+      {
+      int prelen = 0;
+
+      prelen = strlen(prefixes[i]);
+
+      if (strncmp(line, prefixes[i], prelen) == 0)
+         {
+         /*
+          * Found log prefix - set logging level, and remove the
+          * prefix from the log message.
+          */
+
+         level = i;
+         message += prelen;
+         break;
+         }
+      }
+   }
+
+CfOut(level,"","%s (preview of %s)\n",message,comm);
 }

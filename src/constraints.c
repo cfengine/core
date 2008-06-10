@@ -190,8 +190,6 @@ int GetIntConstraint(char *lval,struct Constraint *list)
 { struct Constraint *cp;
   int retval = CF_UNDEFINED;
 
-// We could handle units here, like kb,b,mb
-  
 for (cp = list; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->lval,lval) == 0)
@@ -215,6 +213,118 @@ for (cp = list; cp != NULL; cp=cp->next)
          }
 
       retval = Str2Int((char *)cp->rval);
+      }
+   }
+
+return retval;
+}
+
+/*****************************************************************************/
+
+mode_t GetOctalConstraint(char *lval,struct Constraint *list)
+
+{ struct Constraint *cp;
+  mode_t retval = 077;
+
+// We could handle units here, like kb,b,mb
+  
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (IsDefinedClass(cp->classes))
+         {
+         if (retval != 077)
+            {
+            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
+            }
+         }
+      else
+         {
+         continue;
+         }
+
+      if (cp->type != CF_SCALAR)
+         {
+         CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
+         FatalError(OUTPUT);
+         }
+
+      retval = Str2Mode((char *)cp->rval);
+      }
+   }
+
+return retval;
+}
+
+/*****************************************************************************/
+
+uid_t GetUidConstraint(char *lval,struct Constraint *list, struct Promise *pp)
+
+{ struct Constraint *cp;
+  int retval = CF_SAME_OWNER;
+  char buffer[CF_MAXVARSIZE];
+
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (IsDefinedClass(cp->classes))
+         {
+         if (retval != CF_UNDEFINED)
+            {
+            CfOut(cf_error,"","Multiple %s owner constraints break this promise\n",lval);
+            }
+         }
+      else
+         {
+         continue;
+         }
+
+      if (cp->type != CF_SCALAR)
+         {
+         CfOut(cf_error,"","Software error - expected type for owner constraint %s did not match internals\n",lval);
+         FatalError(OUTPUT);
+         }
+
+      retval = Str2Uid((char *)cp->rval,buffer,pp);
+      }
+   }
+
+return retval;
+}
+
+/*****************************************************************************/
+
+gid_t GetGidConstraint(char *lval,struct Constraint *list, struct Promise *pp)
+
+{ struct Constraint *cp;
+  int retval = CF_SAME_OWNER;
+  char buffer[CF_MAXVARSIZE];
+    
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (IsDefinedClass(cp->classes))
+         {
+         if (retval != CF_UNDEFINED)
+            {
+            CfOut(cf_error,"","Multiple %s group constraints break this promise\n",lval);
+            }
+         }
+      else
+         {
+         continue;
+         }
+
+      if (cp->type != CF_SCALAR)
+         {
+         CfOut(cf_error,"","Software error - expected type for group constraint %s did not match internals\n",lval);
+         FatalError(OUTPUT);
+         }
+
+      retval = Str2Gid((char *)cp->rval,buffer,pp);
       }
    }
 

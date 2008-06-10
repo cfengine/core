@@ -46,7 +46,7 @@ attr.haveeditline = GetBooleanConstraint("edit_line",pp->conlist);
 attr.haveeditxml = GetBooleanConstraint("edit_xml",pp->conlist);
 attr.haveedit = attr.haveeditline || attr.haveeditxml;
 
-/* Files, specialist - see files_transform.c */
+/* Files, specialist */
 
 attr.repository = (char *)GetConstraint("repository",pp->conlist,CF_SCALAR);
 attr.create = GetBooleanConstraint("create",pp->conlist);
@@ -80,7 +80,70 @@ return attr;
 }
 
 /*******************************************************************/
+
+struct Attributes GetReportsAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+return attr;
+}
+
+/*******************************************************************/
+
+struct Attributes GetClassContextAttributes(struct Promise *pp)
+
+{ struct Attributes a;
+
+a.transaction = GetTransactionConstraints(pp);
+a.classes = GetClassDefinitionConstraints(pp);
+a.context = GetContextConstraints(pp);
+
+return a;
+}
+
+/*******************************************************************/
+
+struct Attributes GetExecAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.contain = GetExecContainConstraints(pp);
+attr.havecontain = GetBooleanConstraint("contain",pp->conlist);
+
+attr.args = GetConstraint("args",pp->conlist,CF_SCALAR);
+attr.module = GetBooleanConstraint("module",pp->conlist);
+
+/* Common ("included") */
+
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
 /* Level                                                           */
+/*******************************************************************/
+
+struct ExecContain GetExecContainConstraints(struct Promise *pp)
+
+{ struct ExecContain e;
+ 
+e.useshell = GetBooleanConstraint("useshell",pp->conlist);
+e.umask = GetOctalConstraint("umask",pp->conlist);
+e.owner = GetUidConstraint("exec_owner",pp->conlist,pp);
+e.group = GetGidConstraint("exec_group",pp->conlist,pp);
+e.preview = GetBooleanConstraint("preview",pp->conlist);
+e.nooutput = GetBooleanConstraint("no_output",pp->conlist);
+e.timeout = GetBooleanConstraint("exec_timeout",pp->conlist);
+e.chroot = GetConstraint("chroot",pp->conlist,CF_SCALAR);
+e.chdir = GetConstraint("chdir",pp->conlist,CF_SCALAR);
+
+return e;
+}
+
 /*******************************************************************/
 
 struct Recursion GetRecursionConstraints(struct Promise *pp)
@@ -210,12 +273,27 @@ return t;
 struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp)
 
 { struct DefineClasses c;
+ char *pt = NULL;
 
-c.change = (struct Rlist *)GetConstraint("change",pp->conlist,CF_LIST);
-c.failure = (struct Rlist *)GetConstraint("failure",pp->conlist,CF_LIST);
-c.denied = (struct Rlist *)GetConstraint("denied",pp->conlist,CF_LIST);
-c.timeout = (struct Rlist *)GetConstraint("timeout",pp->conlist,CF_LIST);
-c.interrupt = (struct Rlist *)GetConstraint("interrupt",pp->conlist,CF_LIST);
+c.change = (struct Rlist *)GetConstraint("on_change",pp->conlist,CF_LIST);
+c.failure = (struct Rlist *)GetConstraint("on_failure",pp->conlist,CF_LIST);
+c.denied = (struct Rlist *)GetConstraint("on_denied",pp->conlist,CF_LIST);
+c.timeout = (struct Rlist *)GetConstraint("on_timeout",pp->conlist,CF_LIST);
+c.interrupt = (struct Rlist *)GetConstraint("on_interrupt",pp->conlist,CF_LIST);
+
+
+c.persist = GetIntConstraint("persist_time",pp->conlist);
+
+pt = GetConstraint("timer_policy",pp->conlist,CF_SCALAR);
+
+if (pt && strncmp(pt,"abs",3) == 0)
+   {
+   c.timer = cfpreserve;
+   }
+else
+   {
+   c.timer = cfreset;
+   }
 
 return c;
 }
@@ -390,6 +468,33 @@ return f;
 }
 
 /*******************************************************************/
+
+struct Context GetContextConstraints(struct Promise *pp)
+
+{ struct Context a;
+  struct Constraint *cp;
+  int i;
+
+a.broken = -1;
+a.expression = NULL; 
+
+for (cp = pp->conlist; cp != NULL; cp=cp->next)
+   {
+   for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
+      {
+      if (strcmp(cp->lval,CF_CLASSBODY[i].lval) == 0)
+         {
+         a.expression = cp;
+         a.broken++;
+         }
+      }
+   }
+
+return a;
+}
+
+/*******************************************************************/
+
 
 void ShowAttributes(struct Attributes a)
 

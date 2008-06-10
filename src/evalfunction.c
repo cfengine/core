@@ -67,9 +67,17 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-from = atoi((char *)(finalargs->item));
-to = atoi((char *)(finalargs->next->item));
- 
+from = Str2Int((char *)(finalargs->item));
+to = Str2Int((char *)(finalargs->next->item));
+
+if (from == CF_NOINT || to == CF_NOINT)
+   {
+   SetFnCallReturnStatus("randomint",FNCALL_FAILURE,"unrecognized integer",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
 if (from > to)
    {
    tmp = to;
@@ -77,7 +85,7 @@ if (from > to)
    from = tmp;
    }
 
-range = abs(to-from);
+range = fabs(to-from);
 result = from + (int)(drand48()*(double)range);
 snprintf(buffer,CF_BUFSIZE-1,"%d",result);
 
@@ -295,8 +303,8 @@ port = finalargs->next->item;
 sendstring = finalargs->next->next->item;
 maxbytes = finalargs->next->next->next->item;
 
-val = atoi(maxbytes);
-portnum = (short) atoi(port);
+val = Str2Int(maxbytes);
+portnum = (short) Str2Int(port);
 
 rval.item = NULL;
 rval.rtype = CF_NOPROMISEE;
@@ -972,6 +980,17 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
 
+a = Str2Double(argv0);
+b = Str2Double(argv1);
+
+if (a == CF_NODOUBLE || b == CF_NODOUBLE)
+   {
+   SetFnCallReturnStatus("is*than",FNCALL_FAILURE,NULL,NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
 /* begin fn specific content */
 
 switch (ch)
@@ -983,9 +1002,6 @@ switch (ch)
        SetFnCallReturnStatus("islessthan",FNCALL_SUCCESS,NULL,NULL);
        break;
    }
-
-sscanf(argv0,"%lf",&a);
-sscanf(argv1,"%lf",&b);
 
 if ((a != CF_NOVAL) && (b != CF_NOVAL)) 
    {
@@ -1082,8 +1098,8 @@ SetFnCallReturnStatus("userexists",FNCALL_SUCCESS,NULL,NULL);
 
 if (isdigit((int)*arg))
    {
-   sscanf(arg,"%d",&uid);
-
+   uid = Str2Uid(arg,NULL,NULL);
+   
    if (uid < 0)
       {
       SetFnCallReturnStatus("userexists",FNCALL_FAILURE,"Illegal user id",NULL);   
@@ -1142,8 +1158,8 @@ SetFnCallReturnStatus("groupexists",FNCALL_SUCCESS,NULL,NULL);
 
 if (isdigit((int)*arg))
    {
-   sscanf(arg,"%d",&gid);
-
+   gid = Str2Gid(arg,NULL,NULL);
+   
    if (gid < 0)
       {
       SetFnCallReturnStatus("groupexists",FNCALL_FAILURE,"Illegal group id",NULL);   
@@ -1197,9 +1213,17 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-sscanf((char *)(finalargs->item),"%d",&from);
-sscanf((char *)(finalargs->next->item),"%d",&to);
-   
+from = Str2Int(finalargs->item);
+to = Str2Int(finalargs->next->item);
+
+if (from == CF_NOINT || to == CF_NOINT)
+   {
+   SetFnCallReturnStatus("irange",FNCALL_FAILURE,NULL,NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
 if (strcmp((char *)(finalargs->item),"inf") == 0)
    {
    from = CF_INFINITY;
@@ -1275,12 +1299,9 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-from = atof((char *)(finalargs->item));
-to = atof((char *)(finalargs->next->item));
+from = Str2Double((char *)(finalargs->item));
+to = Str2Double((char *)(finalargs->next->item));
 
-sscanf((char *)(finalargs->item),"%lf",&from);
-sscanf((char *)(finalargs->next->item),"%lf",&to);
-   
 if (from == CF_NODOUBLE || to == CF_NODOUBLE)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
@@ -1828,12 +1849,9 @@ switch(type)
        break;
 
    case cf_int:
-
-
        break;
 
    case cf_real:
-
        break;
 
    default:
@@ -1973,6 +1991,4 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    }
 
 /* Don't free data - goes into vars*/
-
-//ShowScopedVariables(stdout);
 }

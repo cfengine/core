@@ -510,7 +510,7 @@ do
       }
 
    /* Thread monitor */
-   
+
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise(scopeid,pp);
 
@@ -535,10 +535,9 @@ do
 
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
-      /* Make sure vars have picked up recursive evaluations */
       ConvergeVarHashPromise(scopeid,pexp,true);
       }
-   
+
    DeletePromise(pexp);
    
    /* End thread monitor */
@@ -839,21 +838,21 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 { struct Constraint *cp,*cp_save = NULL;
   char *lval,rtype,retval[CF_MAXVARSIZE];
   void *rval = NULL;
-  int i = 0,ok_redefine;
+  int i = 0,ok_redefine = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
  
 if (IsExcluded(pp->classes))
    {
    return;
    }
- 
+
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->lval,"policy") == 0)
       {
       if (strcmp(cp->rval,"constant") == 0)
          {
-         ok_redefine = false || allow_redefine;
+         ok_redefine = false;
          }
       else
          {
@@ -870,6 +869,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    }
 
 cp = cp_save;
+
+ok_redefine |= allow_redefine;
 
 if (cp == NULL)
    {

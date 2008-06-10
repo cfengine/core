@@ -107,10 +107,12 @@ char *CFH[][2] =
 void ShowContext(void)
 
 {
- printf("SET CLASS PROMISES BEFORE HERE!!!!!\n");
-Banner("Agent's classified context");
- 
-ListDefinedClasses(); /* borrow this from cf2 for now */
+Banner("Agent's basic classified context");
+
+if (VERBOSE || DEBUG)
+   {
+   ListDefinedClasses(); /* borrow this from cf2 for now */
+   }
 }
 
 /*******************************************************************/
@@ -414,6 +416,41 @@ void ReportBanner(char *s)
  fprintf(FOUT,"***********************************************************\n");
 }
     
+/**************************************************************/
+
+void BannerSubType(char *bundlename,char *type)
+
+{
+if (strcmp(type,"processes") == 0)
+   {
+   struct Item *ip;
+   /* Just parsed all local classes */
+
+   for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+      {
+      printf("%s ",ip->name);
+      }
+   Verbose("Local class context = {");
+   Verbose("\n");
+   }
+
+Verbose("\n");
+Verbose("   =========================================================\n");
+Verbose("   %s in bundle %s\n",type,bundlename);
+Verbose("   =========================================================\n");
+Verbose("\n");
+}
+
+/*******************************************************************/
+
+void DebugBanner(char *s)
+
+{
+Debug("----------------------------------------------------------------\n");
+Debug("  %s                                                            \n",s);
+Debug("----------------------------------------------------------------\n");
+}
+
 /*******************************************************************/
 
 void Indent(int i)
@@ -717,16 +754,6 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    }
 
 printf("</table></center>\n");
-}
-
-/*******************************************************************/
-
-void DebugBanner(char *s)
-
-{
-Debug("----------------------------------------------------------------\n");
-Debug("  %s                                                            \n",s);
-Debug("----------------------------------------------------------------\n");
 }
 
 /*******************************************************************/

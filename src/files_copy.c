@@ -36,9 +36,7 @@ void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *p
   char *server = pp->this_server;
   char vbuff[CF_BUFSIZE];
   struct stat ssb,dsb;
-  struct timespec start,stop;
-  double dt = 0;
-  int measured_ok = true;
+  struct timespec start;
   char eventname[CF_BUFSIZE];
 
 if (pp->conn != NULL && !pp->conn->authenticated)
@@ -64,11 +62,7 @@ else
    snprintf(vbuff,CF_BUFSIZE,"%.255s.%.50s_%.50s",source,destination,server);
    }
 
-if (clock_gettime(CLOCK_REALTIME, &start) == -1)
-   {
-   CfOut(cf_verbose,"clock_gettime","Clock gettime failure");
-   measured_ok = false;
-   }
+start = BeginMeasure();
 
 if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
    {
@@ -108,19 +102,8 @@ else
    VerifyCopy(source,destination,attr,pp);
    }
 
-if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
-   {
-   CfOut(cf_verbose,"clock_gettime","Clock gettime failure");
-   measured_ok = false;
-   }
-
-dt = (double)(stop.tv_sec - start.tv_sec)+(double)(stop.tv_nsec-start.tv_nsec)/(double)CF_BILLION;
 snprintf(eventname,CF_BUFSIZE-1,"Copy(%s:%s > %s)",server,source,destination);
-
-if (measured_ok)
-   {
-   NotePerformance(eventname,start.tv_sec,dt);
-   }
+EndMeasure(eventname,start);
 
 if (attr.transaction.background)
    {

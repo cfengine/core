@@ -23,7 +23,7 @@ bundle agent ProcessStuff
 
      "/path/joss/run.sh"
 
-            containment  => sandbox;
+            contain  => sandbox;
    }
 
 ################################################################

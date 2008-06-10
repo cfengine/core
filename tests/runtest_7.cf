@@ -2,15 +2,30 @@
 body common control
 
 {
-bundlesequence  => { "assign"  };
+bundlesequence  => { "mycommon","assign"  };
 }
 
+###########################################################
+
+bundle common mycommon
+
+{
+classes:
+
+ "global_class" expression => "any";
+
+ "another_global" xor => { "any", "linux", "solaris"};
+}
+
+###########################################################
 
 bundle agent assign
 
 {     
 vars:
-     
+ 
+ "scalar" int => "16k";
+    
  "xxx" string => readfile( "/home/mark/tmp/testfile" , "33" );
 
  "ran" int => randomint(4,88);
@@ -18,7 +33,7 @@ vars:
  "yyy" slist => { readstringlist("/home/mark/tmp/testlist","#[a-zA-Z0-9 ]*","[^a-zA-Z0-9]",5,4000) };
 
  "zzz" slist => { readstringlist("/home/mark/tmp/testlist2","#[^\n]*",",",5,4000) };
- "aaa" ilist => { readintlist("/home/mark/tmp/testilist","#[a-zA-Z0-9 ]*","[^a-zA-Z0-9]",5,4000) };
+ "aaa" ilist => { readintlist("/home/mark/tmp/testilist","#[a-zA-Z0-9 ]*",",",10,4000) };
 
 # check limits
 
@@ -27,15 +42,28 @@ classes:
   # got_array is a class that says whether the read was successful
   # array_name[] is the lval
 
-  
+ "myclass" or => { "solaris", "linux" };
+ 
 "got_array" expression =>  readstringarray("array_name","/etc/passwd","#[^\n]*",":",10,4000);
 
 reports:
 
-  any::
+  linux::
 
     "Read item from list: $(yyy)";
 
-    "Read this file: [$(xxx)] ...";
+    "Read this file: [$(xxx)] ..."
 
+         classes => persist("alertclass","20");
+
+}
+
+######################################################################
+
+body classes persist(class,time)
+
+{
+on_change => { "$(class)" };
+persist_time => "$(time)";
+timer_policy => "absolute";
 }

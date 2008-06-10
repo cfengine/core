@@ -10,7 +10,7 @@ bundle agent filetest()
 
       "filelist" slist => { "/tmp/bla1", "/tmp/bla2" };
 
-
+      "limit_size" int => "46m";
 
    files:
 
@@ -106,7 +106,7 @@ body perms others(parame)
 {
 milkyway::
 
-owner  => { "root", "wheel", "sudo" };
+owners  => { "root", "wheel", "sudo" };
 }
 
 #########################################################
@@ -117,15 +117,15 @@ body perms myperms()
 any::
 
   mode  => "+077,-02";
-  owner => { "mark","siri" };
+  owners => { "mark","siri" };
 
 solaris::
 
-  #group => { readstringlist("filename","#.*","[\n]","1000") };
+  #groups => { readstringlist("filename","#.*","[\n]","1000") };
 
 linux::
 
-  group => { "root", "wheel" };
+  groups => { "root", "wheel" };
 }
 
 #########################################################
@@ -183,10 +183,11 @@ leaf_name => { ".*.asc" };                   # regex matching file name
 path_name => { "/var/.*/mail", "/usr/.*/mail" };
 
 search_mode      =>  "700";
-search_size      =>  irange("10000","10000000");
+#search_size      =>  irange("10000","10000000");
+search_size      =>  irange("10000","$(filetest.limit_size)");
 
-search_owner     =>  { "mark", "cell", "motd" };
-search_group     =>  { "ecg", "mark" };
+search_owners     =>  { "mark", "cell", "motd" };
+search_groups     =>  { "ecg", "mark" };
 
 ctime     => irange(on(2000,1,1,0,0,0),now);
 mtime     => irange(ago(1,0,0,2,30,0),now);  

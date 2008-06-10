@@ -53,12 +53,12 @@ if (attr.transaction.log_string)
 
 /*****************************************************************************/
 
-struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp)
+struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp)
 
 { unsigned int pid;
   int i, err, sum=0;
   time_t lastcompleted = 0, elapsedtime;
-  char c_operator[CF_BUFSIZE],c_operand[CF_BUFSIZE],cc_operator[CF_BUFSIZE],cc_operand[CF_BUFSIZE];
+  char *promise,cc_operator[CF_BUFSIZE],cc_operand[CF_BUFSIZE];
   char cflock[CF_BUFSIZE],cflast[CF_BUFSIZE],cflog[CF_BUFSIZE];
   struct CfLock this;
 
@@ -89,28 +89,28 @@ if (pp->done)
    return this;
    }
 
-Debug("AcquireLock(%s,%s,time=%d), ExpireAfter=%d, IfElapsed=%d\n",operator,operand,now,attr.transaction.expireafter,attr.transaction.ifelapsed);
+promise = BodyName(pp);
+strncpy(cc_operator,promise,CF_MAXVARSIZE-1);
+strncpy(cc_operand,CanonifyName(operand),CF_BUFSIZE-1);
+free(promise);
 
-/* Make local copy in case CanonifyName called - not re-entrant - best fix for now */
+Debug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n",cc_operator,cc_operand,attr.transaction.expireafter,attr.transaction.ifelapsed);
 
-strncpy(c_operator,operator,CF_BUFSIZE-1);
-strncpy(c_operand,operand,CF_BUFSIZE-1);
-strncpy(cc_operator,CanonifyName(c_operator),CF_BUFSIZE-1);
-strncpy(cc_operand,CanonifyName(c_operand),CF_BUFSIZE-1);
-
-for (i = 0; operator[i] != '\0'; i++)
+for (i = 0; cc_operator[i] != '\0'; i++)
     {
-    sum = (CF_MACROALPHABET * sum + operator[i]) % CF_HASHTABLESIZE;
+    sum = (CF_MACROALPHABET * sum + cc_operator[i]) % CF_HASHTABLESIZE;
     }
 
-for (i = 0; operand[i] != '\0'; i++)
+for (i = 0; cc_operand[i] != '\0'; i++)
     {
-    sum = (CF_MACROALPHABET * sum + operand[i]) % CF_HASHTABLESIZE;
+    sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
     }
 
 snprintf(cflog,CF_BUFSIZE,"%s/cf3.%.40s.runlog",CFWORKDIR,host);
-snprintf(cflock,CF_BUFSIZE,"lock.%.40s.%.100s.%s.%.100s_%d",CanonifyName(host),pp->bundle,cc_operator,cc_operand,sum);
-snprintf(cflast,CF_BUFSIZE,"last.%.40s.%.100s.%s.%.100s_%d",CanonifyName(host),pp->bundle,cc_operator,cc_operand,sum);
+snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d",pp->bundle,cc_operator,cc_operand,sum);
+snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d",pp->bundle,cc_operator,cc_operand,sum);
+
+Debug("LOCK(%s)[%s]\n",pp->bundle,cflock);
 
 /* for signal handler - not threadsafe so applies only to main thread */
 
@@ -124,13 +124,13 @@ elapsedtime = (time_t)(now-lastcompleted) / 60;
 
 if (elapsedtime < 0)
    {
-   CfOut(cf_verbose,"","Another cfengine seems to have done [%s.%s] since I started (elapsed=%d)\n",operator,operand,elapsedtime);
+   CfOut(cf_verbose,"","Another cfengine seems to have done [%s.%s] since I started (elapsed=%d)\n",cc_operator,cc_operand,elapsedtime);
    return this;
    }
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
-   CfOut(cf_verbose,"","Nothing promised for [%s.%s] (%u/%u minutes elapsed)\n",operator,operand,elapsedtime,attr.transaction.ifelapsed);
+   CfOut(cf_verbose,"","Nothing promised for [%s.%s] (%u/%u minutes elapsed)\n",cc_operator,cc_operand,elapsedtime,attr.transaction.ifelapsed);
    return this;
    }
 
@@ -176,7 +176,7 @@ if (lastcompleted != 0)
          
          if (err == 0 || errno == ESRCH)
             {
-            LogLockCompletion(cflog,pid,"Lock expired, process killed",operator,operand);
+            LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
             unlink(cflock);
             }
          else

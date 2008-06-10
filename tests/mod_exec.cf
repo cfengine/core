@@ -9,11 +9,11 @@ bundle agent myscripts()
      "/script/command"   
 
         args        => "-d -v -t" ,
-        containment => sandbox ,
+        contain     => sandbox ,
         module      => "true",      # follow protocol
         exec_timeout     => "10",
-        transaction => standard,
-        classes     => react("ThisCommand");   # or use $(this)
+        transaction => standard;
+       # classes     => react("ThisCommand");   # or use $(this)
    }
 
 ####################################################################
@@ -23,8 +23,8 @@ body containment sandbox
 {
 useshell => "true";
 umask => "077";
-owner => { "mysql" };
-group => { "daemon" };
+exec_owner => "mysql";
+exec_group => "daemon";
 chdir => "/outputs";
 chroot => "/sandbox";
 }
@@ -39,11 +39,11 @@ ifelapsed => "10";
 
 ####################################################################
 
-body classes react(param)
-
-{
-on_change  => { "okclass1", "okclass2" };
-on_failure => { "failclass" };
-on_denied  => { "alertclass1", "alertclass2", "alertclass3" };
-on_timeout => { "somethingwrongg" };
-}
+#body classes react(param)
+#
+#{
+#on_change  => { "okclass1", "okclass2" };
+#on_failure => { "failclass" };
+#on_denied  => { "alertclass1", "alertclass2", "alertclass3" };
+#on_timeout => { "somethingwrongg" };
+#}

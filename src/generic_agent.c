@@ -45,14 +45,16 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
-if (! NOHARDCLASSES)
+if (!NOHARDCLASSES)
    {
    SetNewScope("system");
    GetNameInfo3();
    GetInterfaceInfo3();
-   GetV6InterfaceInfo();
+   FindV6InterfaceInfo();
    Get3Environment();
    }
+
+LoadPersistentContext();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 THIS_AGENT_TYPE = ag;
@@ -76,9 +78,7 @@ fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
 fprintf(FOUT,"%s",CFH[0][0]);
 
 ShowContext();
-
 VerifyPromises(cf_common);
-
 ShowScopedVariables(FOUT);
 
 fprintf(FOUT,"%s",CFH[0][1]);
@@ -196,6 +196,12 @@ OpenSSL_add_all_digests();
 ERR_load_crypto_strings();
 CheckWorkingDirectories();
 RandomSeed();
+
+RAND_bytes(s,16);
+s[15] = '\0';
+seed = ElfHash(s);
+srand48((long)seed);  
+
 LoadSecretKeys();
 
 /* Note we need to fix the options since the argv mechanism doesn't */
@@ -462,12 +468,14 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    if (strcmp(bp->name,name) == 0)
       {
-      if (strcmp(bp->type,agent) != 0)
+      if ((strcmp(bp->type,agent) == 0) || (strcmp(bp->type,"common") == 0))
+         {
+         return bp;
+         }
+      else
          {
          Verbose("The bundle called %s is not of type %s\n",name,agent);
-         continue;
          }
-      return bp;
       }
    }
 
@@ -512,21 +520,9 @@ if (params && (VERBOSE||DEBUG))
    }
 else
    {
-   Verbose("\n");
+   if (VERBOSE||DEBUG) printf("\n");
    }
 Verbose("*****************************************************************\n");
-Verbose("\n");
-}
-
-/**************************************************************/
-
-void BannerSubType(char *bundlename,char *type)
-
-{
-Verbose("\n");
-Verbose("   =========================================================\n");
-Verbose("   %s in bundle %s\n",type,bundlename);
-Verbose("   =========================================================\n");
 Verbose("\n");
 }
 
@@ -540,7 +536,7 @@ Verbose("      .........................................................\n");
 
 if (VERBOSE||DEBUG)
    {
-   printf("%s      %s",VPREFIX,pp->promiser);
+   printf("%s         %s",VPREFIX,pp->promiser);
    if (pp->promisee)
       {
       printf(" -> ");
@@ -844,6 +840,12 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    
    for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
       {
+      if (strcmp(sp->name,"classes") == 0)
+         {
+         /* these should not be evaluated here */
+         continue;
+         }
+      
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(agent,scope,pp,NULL);

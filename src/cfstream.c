@@ -49,13 +49,13 @@ switch(level)
        
        if (VERBOSE || DEBUG)
           {
-          MakeReport(mess,!VERBOSE);
+          MakeReport(mess,VERBOSE);
           }       
        break;
 
    case cf_error:
 
-       MakeReport(mess,!VERBOSE);
+       MakeReport(mess,VERBOSE);
        MakeLog(mess,level);
        break;
 
@@ -63,7 +63,7 @@ switch(level)
        
        if (VERBOSE || DEBUG)
           {
-          MakeReport(mess,!VERBOSE);
+          MakeReport(mess,VERBOSE);
           }
        MakeLog(mess,cf_verbose);
        break;
@@ -111,9 +111,9 @@ switch(level)
    {
    case cf_inform:
        
-       if (INFORM || VERBOSE || DEBUG || attr.transaction.report_level == cf_inform)
+       if (INFORM || verbose || DEBUG || attr.transaction.report_level == cf_inform)
           {
-          MakeReport(mess,!verbose);
+          MakeReport(mess,verbose);
           }
        
        if (attr.transaction.log_level == cf_inform)
@@ -126,7 +126,7 @@ switch(level)
        
        if (verbose || DEBUG)
           {
-          MakeReport(mess,!verbose);
+          MakeReport(mess,verbose);
           }
        
        if (attr.transaction.log_level == cf_verbose)
@@ -138,7 +138,7 @@ switch(level)
 
    case cf_error:
 
-       MakeReport(mess,!verbose);
+       MakeReport(mess,verbose);
        
        if (attr.transaction.log_level == cf_error)
           {   

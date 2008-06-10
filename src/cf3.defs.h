@@ -62,7 +62,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "transaction"
 
-#define CF3_MODULES 7 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 8 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 
@@ -369,8 +369,6 @@ enum fncalltype
    cfn_ago,
    cfn_accum,
    cfn_now,
-   cfn_persiststate,
-   cfn_erasestate,
    cfn_readstringarray,
    cfn_readintarray,
    cfn_readrealarray,
@@ -413,8 +411,7 @@ struct SubType
 struct Promise
    {
    char *classes;
-   char *agentsubtype;          /* cache the enum for this agent, -1 if undefined */
-   char *ref;                   /* cache comment */
+   char *ref;                   /* comment */
    char *promiser;
    void *promisee;              /* Can be a general rval */
    char  petype;                /* rtype of promisee - list or scalar recipient? */
@@ -426,8 +423,10 @@ struct Promise
       
     /* Runtime bus for private flags and work space */
 
+   char  *agentsubtype;         /* cache the promise subtype */
+   char  *bundletype;           /* cache the agent type */
    int    done;                 /* this needs to be preserved across runs */
-   int   *donep;
+   int   *donep;                /* used by locks to mark as done */
    int    makeholes;
    char  *this_server;
    struct cfstat *cache;      
@@ -659,6 +658,8 @@ struct DefineClasses
    struct Rlist *denied;
    struct Rlist *timeout;
    struct Rlist *interrupt;
+   int persist;
+   enum statepolicy timer;
    };
 
 /*************************************************************************/
@@ -780,6 +781,29 @@ struct FileLink
 
 /*************************************************************************/
 
+struct ExecContain
+   {
+   int useshell;
+   mode_t umask;
+   uid_t owner;
+   gid_t group;
+   char *chdir;
+   char *chroot;
+   int preview;
+   int nooutput;
+   int timeout;
+   };
+
+/*************************************************************************/
+
+struct Context
+   {
+   struct Constraint *expression;
+   int broken;
+   };
+
+/*************************************************************************/
+
 struct Attributes
    {
    struct FileSelect select;
@@ -789,17 +813,20 @@ struct Attributes
    struct FileRename rename;
    struct FileChange change;
    struct FileLink link;
+   struct Context context;
+   char *transformer;
+   int touch;
+   int create;
+   int move_obstructions;
+   char *repository;
       
    struct Recursion recursion;
    struct TransactionContext transaction;
    struct DefineClasses classes;
 
-   char *transformer;
-
-   int touch;
-   int create;
-   int move_obstructions;
-   char *repository;
+   struct ExecContain contain;
+   char *args;
+   int module;
 
    int havedepthsearch;
    int haveselect;
@@ -812,6 +839,7 @@ struct Attributes
    int haveeditline;
    int haveeditxml;
    int haveedit;
+   int havecontain;
    };
 
 #include "prototypes3.h"

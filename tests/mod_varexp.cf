@@ -7,19 +7,15 @@ bundle cfagent testvar
 {
 var:
 
-  "arglist"    list => { "-d", "-x", "-y" };
-  "dirlist"    list => { "one", "two", "three" };
-  "serverlist" list => { "server1", "server2 "};
+  "arglist"    slist => { "-d", "-x", "-y" };
+  "dirlist"    slist => { "one", "two", "three" };
+  "serverlist" slist => { "server1", "server2 "};
 
    # if dtype is cf_list then insert list in rval
 
-  "serverlist2" list => { "$(serverlist)" }
+  "serverlist2" slist => { "$(serverlist)" }
 
 
-executables:
-
-
-  "/bin/echo"  argstring => list2string("args",",");
 
 files:
 
@@ -42,7 +38,7 @@ files:
            copyfrom      => mycopy("/$(basedir)/$(named_files).conf","server"),
            access        => myaccess,
            file_select   => crit;
-  #         loopiteration => iter_policy
+  #        loopiteration => iter_policy
           
 
   #
@@ -54,7 +50,7 @@ files:
            copyfrom      => mycopy("/$(basedir)/$(named_files).conf","$(servers)"),
            access        => myaccess,
            file_select  => crit;
-  #         loopiteration => iter_policy
+  #        loopiteration => iter_policy
           
 
 
@@ -88,6 +84,6 @@ body access setowner(slist)
 # There is no iteration inside bodies, period -- but the
 # iterator will penetrate through variable passing
 
-owner => "$(slist)";
+owners => "$(slist)";
 }
 

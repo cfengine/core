@@ -297,7 +297,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
       {
-      MAXLINES = atoi(retval);
+      MAXLINES = Str2Int(retval);
       Debug("maxlines = %d\n",MAXLINES);
       }
    

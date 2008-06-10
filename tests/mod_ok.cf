@@ -31,11 +31,11 @@ any::
 
   mode  => "+077,-02";
 
-  owner => { "mark","siri" };
+  owners => { "mark","siri" };
 
 solaris::
 
-  group => { "$(var)123", "456", "$(var)567" };
+  groups => { "$(var)123", "456", "$(var)567" };
 
 linux::
 
@@ -44,9 +44,9 @@ linux::
     # is to assume a simple literal string atoms
     #
 
-  group => { "mark2", $(var), "$(myint)" };
+  groups => { "mark2", $(var), "$(myint)" };
 
-group => @(testlist1);
+groups => @(testlist1);
 
 }
 

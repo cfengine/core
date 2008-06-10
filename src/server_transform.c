@@ -405,6 +405,11 @@ if (!IsDefinedClass(pp->classes))
    return;
    }
 
+if (strcmp(pp->agentsubtype,"classes") == 0)
+   {
+   KeepClassContextPromise(pp);
+   }
+
 if (strcmp(pp->agentsubtype,"access") == 0)
    {
    KeepServerAccessPromise(pp);

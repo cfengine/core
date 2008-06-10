@@ -188,7 +188,7 @@ return tp;
 
 /*******************************************************************/
 
-struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle)
+struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle,char *bundletype)
 
 { struct Promise *pp,*lp;
   char *sp = NULL,*spe = NULL;
@@ -237,6 +237,11 @@ else
       }
    }
 
+if ((strcmp(spe,"any") == 0) && (strcmp(type->name,"reports") == 0))
+   {
+   yyerror("reports promises may not be in class \'any\' - too dangerous");
+   }
+   
 if (type->promiselist == NULL)
    {
    type->promiselist = pp;
@@ -266,6 +271,7 @@ pp->cache = NULL;
 pp->conn = NULL;
 pp->inode_cache = NULL;
 
+pp->bundletype = bundletype;   /* cache agent,common,server etc*/
 pp->agentsubtype = type->name; /* Cache the typename */
 pp->ref = NULL;                /* cache a reference if given*/
 

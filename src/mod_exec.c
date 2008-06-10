@@ -61,10 +61,12 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
   {
   {"useshell",cf_opts,CF_BOOL},
   {"umask",cf_int,"0,77"},
-  {"owner",cf_slist,""},
-  {"group",cf_slist,""},
+  {"exec_owner",cf_str,""},
+  {"exec_group",cf_str,""},
   {"chdir",cf_str,"/.*"},
   {"chroot",cf_str,"/.*"},
+  {"preview",cf_opts,CF_BOOL},
+  {"no_output",cf_opts,CF_BOOL},
   {NULL,cf_notype,NULL}
   };
 
@@ -75,7 +77,7 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
 struct BodySyntax CF_EXEC_BODIES[] =
    {
    {"args",cf_str,""},
-   {"containment",cf_body,CF_EXECCONTAIN_BODY},
+   {"contain",cf_body,CF_EXECCONTAIN_BODY},
    {"module",cf_opts,CF_BOOL},
    {"exec_timeout",cf_int,"1,3600"},
    {NULL,cf_notype,NULL}

@@ -219,7 +219,7 @@ void VerifyFilePromise(char *path,struct Promise *pp)
 
 a = GetFilesAttributes(pp);
 
-if (!SanityChecks(path,a,pp))
+if (!FileSanityChecks(path,a,pp))
    {
    return;
    }
@@ -246,7 +246,7 @@ else
       }
    }
 
-thislock = AcquireLock(ASUniqueName("files"),CanonifyName(path),VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
    {
@@ -305,7 +305,7 @@ YieldCurrentLock(thislock);
 /* Level                                                           */
 /*******************************************************************/
 
-int SanityChecks(char *path,struct Attributes a,struct Promise *pp)
+int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp)
 
 {
 if (a.havelink && a.havecopy)

@@ -34,7 +34,6 @@ void KeepPromises(void);
 
 /* agent.c */
 
-
 /* agentdiagnostic.c */
 
 void AgentDiagnostic(void);
@@ -54,6 +53,27 @@ void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
 void ShowAssoc (struct CfAssoc *cp);
     
+/* attributes.c */
+
+struct Attributes GetFilesAttributes(struct Promise *pp);
+struct Attributes GetReportsAttributes(struct Promise *pp);
+struct Attributes GetExecAttributes(struct Promise *pp);
+struct Attributes GetClassContextAttributes(struct Promise *pp);
+
+struct ExecContain GetExecContainConstraints(struct Promise *pp);
+struct Recursion GetRecursionConstraints(struct Promise *pp);
+struct FileSelect GetSelectConstraints(struct Promise *pp);
+struct FilePerms GetPermissionConstraints(struct Promise *pp);
+struct TransactionContext GetTransactionConstraints(struct Promise *pp);
+struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp);
+struct FileRename GetRenameConstraints(struct Promise *pp);
+struct FileDelete GetDeleteConstraints(struct Promise *pp);
+struct FileChange GetChangeMgtConstraints(struct Promise *pp);
+struct FileCopy GetCopyConstraints(struct Promise *pp);
+struct FileLink GetLinkConstraints(struct Promise *pp);
+struct Context GetContextConstraints(struct Promise *pp);
+void ShowAttributes(struct Attributes a);
+
 /* cfpromises.c */
 
 void SetAuditVersion(void);
@@ -93,6 +113,9 @@ void DeleteConstraintList(struct Constraint *conlist);
 void *GetConstraint(char *lval,struct Constraint *list,char type);
 int GetBooleanConstraint(char *lval,struct Constraint *list);
 int GetIntConstraint(char *lval,struct Constraint *list);
+mode_t GetOctalConstraint(char *lval,struct Constraint *list);
+uid_t GetUidConstraint(char *lval,struct Constraint *list,struct Promise *pp);
+gid_t GetGidConstraint(char *lval,struct Constraint *list,struct Promise *pp);
 struct Rlist *GetListConstraint(char *lval,struct Constraint *list);
 void ReCheckAllConstraints(struct Promise *pp);
 void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
@@ -110,10 +133,23 @@ enum cfagenttype Agent2Type(char *name);
 enum cfsbundle Type2Cfs(char *name);
 int GetBoolean(char *val);
 long Str2Int(char *s);
+mode_t Str2Mode(char *s);
 int Str2Double(char *s);
 void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);
 struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);
 struct GidList *Rlist2GidList(struct Rlist *gidnames, struct Promise *pp);
+uid_t Str2Uid(char *uidbuff,char *copy,struct Promise *pp);
+gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
+
+/* env_context.c */
+
+void KeepClassContextPromise(struct Promise *pp);
+int ContextSanityCheck(struct Attributes a);
+void DeletePrivateClassContext(void);
+void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy policy);
+void DeletePersistentContext(char *name);
+void LoadPersistentContext(void);
+int EvalClassExpression(struct Constraint *cp,struct Promise *pp);
 
 /* evalfunction.c */
 
@@ -273,21 +309,6 @@ int SelectExecRegexMatch(char *filename,char *crit);
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
 int SelectExecProgram(char *filename,char *crit);
 
-/* files_transform.c */
-
-struct Attributes GetFilesAttributes(struct Promise *pp);
-struct Recursion GetRecursionConstraints(struct Promise *pp);
-struct FileSelect GetSelectConstraints(struct Promise *pp);
-struct FilePerms GetPermissionConstraints(struct Promise *pp);
-struct TransactionContext GetTransactionConstraints(struct Promise *pp);
-struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp);
-struct FileRename GetRenameConstraints(struct Promise *pp);
-struct FileDelete GetDeleteConstraints(struct Promise *pp);
-struct FileChange GetChangeMgtConstraints(struct Promise *pp);
-struct FileCopy GetCopyConstraints(struct Promise *pp);
-struct FileLink GetLinkConstraints(struct Promise *pp);
-void ShowAttributes(struct Attributes a);
-
 /* fncall.c */
 
 struct FnCall *NewFnCall(char *name, struct Rlist *args);
@@ -350,6 +371,8 @@ int EndOfIteration(struct Rlist *iterator);
 
 /* instrumentation.c */
 
+struct timespec BeginMeasure(void);
+void EndMeasure(char *eventname,struct timespec start);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(void);
 void LastSaw(char *hostname,enum roles role);
@@ -360,7 +383,7 @@ struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args);
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
 struct SubType *AppendBodyType(struct Body *body,char *typename);
-struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle);
+struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle,char *bundletype);
 void DeleteBundles(struct Bundle *bp);
 void DeleteSubTypes(struct SubType *tp);
 void DeleteBodies(struct Body *bp);
@@ -370,7 +393,7 @@ void DeleteBodies(struct Body *bp);
 void BeginAudit(void);
 void EndAudit(void);
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status);
-void AddAllClasses(struct Rlist *list);
+void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void ExtractOperationLock(char *op);
 
 /* matching.c */
@@ -385,6 +408,7 @@ int MatchRlistItem(struct Rlist *listofregex,char *teststring);
 
 /* promises.c */
 
+char *BodyName(struct Promise *pp);
 struct Body *IsBody(struct Body *list,char *key);
 struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp);
 struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
@@ -503,8 +527,8 @@ struct SubTypeSyntax CheckSubType(char *btype,char *type);
 void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,struct SubTypeSyntax ss);
 void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype);
 void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range,int level);
-void CheckParseString(char *lv,char *s,char *range);
-void CheckParseClass(char *lv,char *s,char *range);
+int CheckParseString(char *lv,char *s,char *range);
+int CheckParseClass(char *lv,char *s,char *range);
 void CheckParseInt(char *lv,char *s,char *range);
 void CheckParseReal(char *lv,char *s,char *range);
 void CheckParseRealRange(char *lval,char *s,char *range);
@@ -518,11 +542,12 @@ enum cfdatatype StringDataType(char *scopeid,char *string);
 void GetNameInfo3(void);
 void GetInterfaceInfo3(void);
 void Get3Environment(void);
+void FindV6InterfaceInfo(void);
 
 /* transaction.c */
 
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp);
-struct CfLock AcquireLock(char *operator,char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp);
+struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp);
 void YieldCurrentLock(struct CfLock this);
 time_t FindLock(char *last);
 int WriteLock(char *lock);
@@ -552,6 +577,11 @@ char *ExtractOuterCf3VarString(char *str,char *substr);
 /* verify_exec.c */
 
 void VerifyExecPromise(struct Promise *pp);
+int ExecSanityChecks(struct Attributes a,struct Promise *pp);
+void VerifyExec(struct Attributes a, struct Promise *pp);
+void CommPrefix(char *execstr,char *comm);
+int NonEmptyLine(char *s);
+void PreviewProtocolLine(char *s,char *comm);
 
 /* verify_files.c */
 
@@ -559,7 +589,7 @@ void FindFilePromiserObjects(struct Promise *pp);
 void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr));
 void FindAndVerifyFilesPromises(struct Promise *pp);
 void VerifyFilePromise(char *path,struct Promise *pp);
-int SanityChecks(char *path,struct Attributes a,struct Promise *pp);
+int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 
@@ -568,7 +598,6 @@ void VerifyProcessesPromise(struct Promise *pp);
 /* verify_reports.c */
 
 void VerifyReportPromise(struct Promise *pp);
-struct Attributes GetReportsAttributes(struct Promise *pp);
 
 
 

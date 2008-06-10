@@ -210,6 +210,7 @@ else
 long Str2Int(char *s)
 
 { long a = CF_NOINT;
+  char c = 'X';
 
 if (s == NULL)
    {
@@ -226,15 +227,63 @@ if (strcmp(s,"now") == 0)
    return (long)CFSTARTTIME;
    }   
 
-sscanf(s,"%ld",&a);
+sscanf(s,"%ld%c",&a,&c);
 
 if (a == CF_NOINT)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
    ReportError(OUTPUT);
    }
+else
+   {
+   switch (c)
+      {
+      case 'k':
+          a = 1000 * a;
+          break;
+      case 'K':
+          a = 1024 * a;
+          break;          
+      case 'm':
+          a = 1000 * 1000 * a;
+          break;
+      case 'M':
+          a = 1024 * 1024 * a;
+          break;          
+      case 'g':
+          a = 1000 * 1000 * 1000 * a;
+          break;
+      case 'G':
+          a = 1024 * 1024 * 1024 * a;
+          break;          
+      default:          
+          break;
+      }
+   }
 
 return a;
+}
+
+/****************************************************************************/
+
+mode_t Str2Mode(char *s)
+
+{ int a = CF_UNDEFINED;
+
+if (s == NULL)
+   {
+   return 0;
+   }
+
+sscanf(s,"%o",&a);
+
+if (a == CF_UNDEFINED)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed octal value %s\n",s);
+   ReportError(OUTPUT);
+   }
+
+return (mode_t)a;
 }
 
 /****************************************************************************/
@@ -307,92 +356,21 @@ if (lmin == CF_HIGHINIT || lmax == CF_LOWINIT)
 
 struct UidList *Rlist2UidList(struct Rlist *uidnames,struct Promise *pp)
 
-{ struct UidList *uidlist;
-  struct Item *ip, *tmplist;
-  struct passwd *pw;
+{ struct UidList *uidlist = NULL;
   struct Rlist *rp;
-  char *uidbuff;
-  int offset,uid,tmp = -1;
-  char *machine, *user, *domain,*usercopy=NULL;
-
-uidlist = NULL;
+  char username[CF_MAXVARSIZE];
+  uid_t uid;
 
 for (rp = uidnames; rp != NULL; rp=rp->next)
    {
-   uidbuff = (char *)rp->item;
-   
-   if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout     */
-      {                          /* way because calling getpwnam spoils getnetgrent */
-      offset = 1;
-      if (uidbuff[1] == '@')
-         {
-         offset++;
-         }
-      
-      setnetgrent(uidbuff+offset);
-      tmplist = NULL;
-      
-      while (getnetgrent(&machine,&user,&domain))
-         {
-         if (user != NULL)
-            {
-            AppendItem(&tmplist,user,NULL);
-            }
-         }
-      
-      endnetgrent();
-      
-      for (ip = tmplist; ip != NULL; ip=ip->next)
-         {
-         if ((pw = getpwnam(ip->name)) == NULL)
-            {
-            CfOut(cf_error,"","Unknown user [%s]\n",ip->name);
-            PromiseRef(cf_error,pp);
-            uid = CF_UNKNOWN_OWNER; /* signal user not found */
-            usercopy = ip->name;
-            }
-         else
-            {
-            uid = pw->pw_uid;
-            }
-         AddSimpleUidItem(&uidlist,uid,usercopy); 
-         }
-      
-      DeleteItemList(tmplist);
-      continue;
-      }
-   
-   if (isdigit((int)uidbuff[0]))
-      {
-      sscanf(uidbuff,"%d",&tmp);
-      uid = (uid_t)tmp;
-      }
-   else
-      {
-      if (strcmp(uidbuff,"*") == 0)
-         {
-         uid = CF_SAME_OWNER;                     /* signals wildcard */
-         }
-      else if ((pw = getpwnam(uidbuff)) == NULL)
-         {
-         if (!PARSING)
-            {
-            CfOut(cf_error,"","Unknown user %s\n",uidbuff);
-            }
-         uid = CF_UNKNOWN_OWNER;  /* signal user not found */
-         usercopy = uidbuff;
-         }
-      else
-         {
-         uid = pw->pw_uid;
-         }
-      }
-   AddSimpleUidItem(&uidlist,uid,usercopy);
+   username[0] = '\0';
+   uid = Str2Uid(rp->item,username,pp);
+   AddSimpleUidItem(&uidlist,uid,username);
    }
 
 if (uidlist == NULL)
    {
-   AddSimpleUidItem(&uidlist,CF_SAME_OWNER,(char *) NULL);
+   AddSimpleUidItem(&uidlist,CF_SAME_OWNER,NULL);
    }
 
 return (uidlist);
@@ -402,43 +380,16 @@ return (uidlist);
 
 struct GidList *Rlist2GidList(struct Rlist *gidnames,struct Promise *pp)
 
-{ struct GidList *gidlist;
-  struct group *gr;
+{ struct GidList *gidlist = NULL;
   struct Rlist *rp;
-  char *gidbuff,*groupcopy=NULL;
-  int gid, tmp = -1;
-
-gidlist = NULL;
+  char groupname[CF_MAXVARSIZE];
+  gid_t gid;
  
 for (rp = gidnames; rp != NULL; rp=rp->next)
    {
-   gidbuff = (char *)rp->item;
-
-   if (isdigit((int)gidbuff[0]))
-      {
-      sscanf(gidbuff,"%d",&tmp);
-      gid = (gid_t)tmp;
-      }
-   else
-      {
-      if (strcmp(gidbuff,"*") == 0)
-         {
-         gid = CF_SAME_GROUP;                     /* signals wildcard */
-         }
-      else if ((gr = getgrnam(gidbuff)) == NULL)
-         {
-         CfOut(cf_error,"","Unknown group %s\n",gidbuff);
-         PromiseRef(cf_error,pp);
-         gid = CF_UNKNOWN_GROUP;
-         groupcopy = gidbuff;
-         }
-      else
-         {
-         gid = gr->gr_gid;
-         }
-      }
-   
-   AddSimpleGidItem(&gidlist,gid,groupcopy);
+   groupname[0] = '\0';
+   gid = Str2Gid(rp->item,groupname,pp);
+   AddSimpleGidItem(&gidlist,gid,groupname);
    }
 
 if (gidlist == NULL)
@@ -448,4 +399,133 @@ if (gidlist == NULL)
 
 return(gidlist);
 }
+
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
+
+uid_t Str2Uid(char *uidbuff,char *usercopy,struct Promise *pp)
+
+{ struct Item *ip, *tmplist;
+  struct passwd *pw;
+  int offset,uid = -1,tmp = -1;
+  char *machine,*user,*domain;
+ 
+if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout     */
+   {                          /* way because calling getpwnam spoils getnetgrent */
+   offset = 1;
+   if (uidbuff[1] == '@')
+      {
+      offset++;
+      }
+   
+   setnetgrent(uidbuff+offset);
+   tmplist = NULL;
+   
+   while (getnetgrent(&machine,&user,&domain))
+      {
+      if (user != NULL)
+         {
+         AppendItem(&tmplist,user,NULL);
+         }
+      }
+   
+   endnetgrent();
+   
+   for (ip = tmplist; ip != NULL; ip=ip->next)
+      {
+      if ((pw = getpwnam(ip->name)) == NULL)
+         {
+         CfOut(cf_error,"","Unknown user \'%s\'\n",ip->name);
+
+         if (pp != NULL)
+            {
+            PromiseRef(cf_error,pp);
+            }
+
+         uid = CF_UNKNOWN_OWNER; /* signal user not found */
+         }
+      else
+         {
+         uid = pw->pw_uid;
+
+         if (usercopy != NULL)
+            {
+            strcpy(usercopy,ip->name);
+            }
+         }
+      }
+   
+   DeleteItemList(tmplist);
+   return uid;
+   }
+
+if (isdigit((int)uidbuff[0]))
+   {
+   sscanf(uidbuff,"%d",&tmp);
+   uid = (uid_t)tmp;
+   }
+else
+   {
+   if (strcmp(uidbuff,"*") == 0)
+      {
+      uid = CF_SAME_OWNER;                     /* signals wildcard */
+      }
+   else if ((pw = getpwnam(uidbuff)) == NULL)
+      {
+      CfOut(cf_error,"","Unknown user %s\n",uidbuff);
+      uid = CF_UNKNOWN_OWNER;  /* signal user not found */
+
+      if (usercopy != NULL)
+         {
+         strcpy(usercopy,uidbuff);
+         }
+      }
+   else
+      {
+      uid = pw->pw_uid;
+      }
+   }
+
+return uid;
+}
+
+/*********************************************************************/
+
+gid_t Str2Gid(char *gidbuff,char *groupcopy,struct Promise *pp)
+
+{ struct group *gr;
+  int gid, tmp = -1;
+
+if (isdigit((int)gidbuff[0]))
+   {
+   sscanf(gidbuff,"%d",&tmp);
+   gid = (gid_t)tmp;
+   }
+else
+   {
+   if (strcmp(gidbuff,"*") == 0)
+      {
+      gid = CF_SAME_GROUP;                     /* signals wildcard */
+      }
+   else if ((gr = getgrnam(gidbuff)) == NULL)
+      {
+      CfOut(cf_error,"","Unknown group \'%s\'\n",gidbuff);
+      PromiseRef(cf_error,pp);
+      gid = CF_UNKNOWN_GROUP;
+      }
+   else
+      {
+      gid = gr->gr_gid;
+      strcpy(groupcopy,gidbuff);
+      }
+   }
+
+return gid;
+}
+
+
+
+
+
 

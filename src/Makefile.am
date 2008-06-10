@@ -14,10 +14,10 @@ libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libpromises_la_SOURCES =						\
 	cf3parse.y							\
 	cf3lex.l							\
+	attributes.c							\
 	install.c							\
 	generic_agent.c							\
-	client_protocol.c						\
-	client_code.c							\
+	env_context.c							\
 	files_interfaces.c						\
 	files_properties.c						\
 	files_select.c							\
@@ -26,6 +26,8 @@ libpromises_la_SOURCES =						\
 	files_copy.c							\
 	files_links.c							\
 	files_hashes.c							\
+	client_protocol.c						\
+	client_code.c							\
 	recursion.c							\
 	fncall.c							\
 	cf3globals.c							\
@@ -51,6 +53,7 @@ libpromises_la_SOURCES =						\
 	signals.c							\
 	transaction.c							\
 	cfstream.c							\
+	pipes.c								\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\
@@ -69,7 +72,6 @@ cfPromises_SOURCES =							\
 cfAgent_SOURCES =							\
 	agent.c								\
 	verify_files.c							\
-	files_transform.c						\
 	verify_processes.c						\
 	verify_exec.c							\
 	verify_reports.c						\

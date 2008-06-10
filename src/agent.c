@@ -34,6 +34,7 @@
 
 enum typesequence
    {
+   kp_classes,
    kp_interfaces,
    kp_processes,
    kp_files,
@@ -43,6 +44,7 @@ enum typesequence
 
 char *TYPESEQUENCE[] =
    {
+   "classes",
    "interfaces",
    "processes",
    "files",
@@ -56,6 +58,7 @@ void CheckAgentAccess(struct Rlist *list);
 void KeepAgentPromise(struct Promise *pp);
 void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
+void ClassBanner(enum typesequence type);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -349,14 +352,14 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
       {
-      SINGLE_COPY_LIST = *(char *)retval;
+      SINGLE_COPY_LIST = (struct Rlist *)retval;
       Verbose("SET file single copy list\n");
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
       {
-      AUTO_DEFINE_LIST = *(char *)retval;
+      AUTO_DEFINE_LIST = (struct Rlist *)retval;
       Verbose("SET file auto define list\n");
       continue;
       }
@@ -476,7 +479,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
           break;
       }
    
-   if (!GetBundle(name,"agent"))
+   if (!(GetBundle(name,"agent")||(GetBundle(name,"common"))))
       {
       CfOut(cf_error,"","Bundle %s listed in the bundlesequence was not found\n",name);
       ok = false;
@@ -504,13 +507,18 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
           params = NULL;
           break;
       }
-
-   bp = GetBundle(name,"agent");
-   BannerBundle(bp,params);
-   AugmentScope(bp->name,bp->args,params);
-            
+   
+   if ((bp = GetBundle(name,"agent")) || (bp = GetBundle(name,"common")))
+      {
+      BannerBundle(bp,params);
+      AugmentScope(bp->name,bp->args,params);
+      DeletePrivateClassContext(); // Each time we change bundle      
+      }
+             
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
       {
+      ClassBanner(type);
+      
       if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
          {
          continue;      
@@ -545,25 +553,9 @@ uid = getuid();
   
 for (rp  = list; rp != NULL; rp = rp->next)
    {
-   if (isalpha((int)*(char *)(rp->item)))
+   if (Str2Uid(rp->item,NULL,NULL) == uid)
       {
-      if ((pw = getpwnam(rp->item)) == NULL)
-         {
-         Verbose("Unknown user on this system %s\n",rp->item);
-         return;
-         }
-      
-      if (pw->pw_uid == uid)
-         {
-         return;
-         }
-      }
-   else
-      {
-      if (atoi(rp->item) == uid)
-         {
-         return;
-         }
+      return;
       }
    }
 
@@ -583,6 +575,12 @@ if (!IsDefinedClass(pp->classes))
 
 if (pp->done)
    {
+   return;
+   }
+
+if (strcmp("classes",pp->agentsubtype) == 0)
+   {
+   KeepClassContextPromise(pp);
    return;
    }
 
@@ -655,6 +653,38 @@ switch(type)
        DeleteRlist(SERVERLIST);
        break;
    }
+}
+
+/**************************************************************/
+
+void ClassBanner(enum typesequence type)
+
+{ struct Item *ip;
+ 
+if (type != kp_interfaces)   /* Just parsed all local classes */
+   {
+   return;
+   }
+
+
+Verbose ("     ??  Private class context:\n");
+
+for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+   {
+   Verbose("     ??       %s\n",ip->name);
+   }
+
+Verbose("\n");
+
+Verbose ("     ?  Public class context:\n");
+
+for (ip = VHEAP; ip != NULL; ip=ip->next)
+   {
+   Verbose("     ?       %s\n",ip->name);
+   }
+
+Verbose("\n");
+
 }
 
 

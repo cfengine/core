@@ -131,7 +131,7 @@ switch(status)
    {
    case CF_CHG:
        PR_REPAIRED++;
-       AddAllClasses(attr.classes.change);
+       AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        break;
        
    case CF_WARN:
@@ -140,22 +140,22 @@ switch(status)
        
    case CF_TIMEX:
        PR_NOTKEPT++;
-       AddAllClasses(attr.classes.timeout);
+       AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
        break;
 
    case CF_FAIL:
        PR_NOTKEPT++;
-       AddAllClasses(attr.classes.failure);
+       AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
        break;
        
    case CF_DENIED:
        PR_NOTKEPT++;
-       AddAllClasses(attr.classes.denied);
+       AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
        break;
        
    case CF_INTERPT:
        PR_NOTKEPT++;
-       AddAllClasses(attr.classes.interrupt);
+       AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
        break;
 
    case CF_REGULAR:
@@ -236,10 +236,10 @@ if (AUDITDBP && attr.transaction.audit)
 
 /*****************************************************************************/
 
-void AddAllClasses(struct Rlist *list)
+void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
 
 { struct Rlist *rp;
- 
+
 if (list == NULL)
    {
    return;
@@ -247,12 +247,24 @@ if (list == NULL)
 
 for (rp = list; rp != NULL; rp=rp->next)
    {
+   if (!CheckParseClass("class addition",(char *)rp->item,CF_IDRANGE))
+      {
+      return;
+      }
+   
    if (IsHardClass((char *)rp->item))
       {
       CfOut(cf_error,"","You cannot use reserved hard classes as post-condition classes");
       }
 
-   AddClassToHeap(CanonifyName((char *)rp->item));
+   if (persist)
+      {
+      NewPersistentContext(rp->item,persist,policy);
+      }
+   else
+      {
+      AddClassToHeap(CanonifyName((char *)rp->item));
+      }
    }
 }
 

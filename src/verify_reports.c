@@ -39,7 +39,7 @@ void VerifyReportPromise(struct Promise *pp)
 
 a = GetReportsAttributes(pp);
 
-thislock = AcquireLock(ASUniqueName("reports"),CanonifyName(pp->promiser),VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
    {
@@ -47,17 +47,8 @@ if (thislock.lock == NULL)
    }
 
 PromiseBanner(pp);
-CfOut(cf_error,"",pp->promiser);
+cfPS(cf_error,CF_CHG,"",pp,a," REPORT %s",pp->promiser);
 
 YieldCurrentLock(thislock);
 }
 
-/*******************************************************************/
-
-struct Attributes GetReportsAttributes(struct Promise *pp)
-
-{ struct Attributes attr;
-
-attr.transaction = GetTransactionConstraints(pp);
-return attr;
-}

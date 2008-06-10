@@ -42,6 +42,42 @@ extern pthread_mutex_t MUTEX_GETADDR;
 
 /***************************************************************/
 
+struct timespec BeginMeasure()
+    
+{ struct timespec start;
+
+if (clock_gettime(CLOCK_REALTIME, &start) == -1)
+   {
+   CfOut(cf_verbose,"clock_gettime","Clock gettime failure");
+   }
+
+return start;
+}
+
+/***************************************************************/
+
+void EndMeasure(char *eventname,struct timespec start)
+
+{ struct timespec stop;
+  int measured_ok = true;
+  double dt;
+
+if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
+   {
+   CfOut(cf_verbose,"clock_gettime","Clock gettime failure");
+   measured_ok = false;
+   }
+
+dt = (double)(stop.tv_sec - start.tv_sec)+(double)(stop.tv_nsec-start.tv_nsec)/(double)CF_BILLION;
+
+if (measured_ok)
+   {
+   NotePerformance(eventname,start.tv_sec,dt);
+   }
+}
+
+/***************************************************************/
+
 void NotePerformance(char *eventname,time_t t,double value)
 
 { DB *dbp;

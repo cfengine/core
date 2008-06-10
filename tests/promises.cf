@@ -268,7 +268,7 @@ body access others(parame)
 {
 milkyway::
 
-owner => { "root", "wheel", "sudo" };
+owners => { "root", "wheel", "sudo" };
 }
 
 #########################################################
@@ -279,14 +279,14 @@ body access myaccess()
 any::
 
   mode => "+077,-02";
-  owner => { "mark","siri" };
+  owners => { "mark","siri" };
 
 solaris::
 
-  group => ReadStringList("filename");
+  groups => ReadStringList("filename");
 
 linux::
 
-  group => { "root", "wheel" };
+  groups => { "root", "wheel" };
 }
 

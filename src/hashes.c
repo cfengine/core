@@ -273,7 +273,7 @@ if (ptr == NULL)
  
 if (ptr->hashtable[slot])
    {
-   Debug("Hash table Collision!\n");
+   Debug("Hash table Collision! - slot %d = (%s|%s)\n",slot,lval,ptr->hashtable[slot]->lval);
 
    if (CompareVariable(lval,ptr->hashtable[slot]) == 0)
       {

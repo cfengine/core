@@ -46,6 +46,8 @@ classes:
  
 "got_array" expression =>  readstringarray("array_name","/etc/passwd","#[^\n]*",":",10,4000);
 
+"my_dist" dist => { "10", "20", "40", "50" };
+
 reports:
 
   linux::

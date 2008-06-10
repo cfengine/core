@@ -306,10 +306,11 @@ int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
 { int result_and = true;
   int result_or = false;
   int result_xor = 0;
-  int result;
-  char *lval = cp->lval;
+  int result,total = 0;
+  char *lval = cp->lval,buffer[CF_MAXVARSIZE];
   struct Rlist *rp;
- 
+  double prob,cum = 0,fluct;
+
 if (cp->type == CF_FNCALL)
    {
    FatalError("Software error - function call in EvalClassExpression (shouldn't happen)\n");
@@ -327,6 +328,26 @@ if (strcmp(cp->lval,"expression") == 0)
       }
    }
 
+if (strcmp(cp->lval,"dist") == 0)
+   {
+   for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+      {
+      result = Str2Int(rp->item);
+      
+      if (result < 0)
+         {
+         CfOut(cf_error,"","Non-positive integer in class distribution");
+         PromiseRef(cf_error,pp);
+         return false;
+         }
+      
+      total += result;
+      }
+   }
+
+fluct = drand48(); /* Get random number 0-1 */
+cum = 0.0;
+
 for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    {
    result = IsDefinedClass((char *)(rp->item));
@@ -334,6 +355,27 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    result_and = result_and && result;
    result_or  = result_or || result;
    result_xor += result;
+
+   if (total > 0)
+      {
+      prob = ((double)Str2Int(rp->item))/((double)total);
+      cum += prob;
+      
+      if ((fluct < cum) || rp->next == NULL)
+         {
+         snprintf(buffer,CF_MAXVARSIZE,"%s_%s",pp->promiser,rp->item);
+         if (strcmp(pp->bundletype,"common") == 0)
+            {
+            PrependItem(&VHEAP,buffer,NULL);
+            }
+         else
+            {
+            PrependItem(&VADDCLASSES,buffer,NULL);
+            }
+         Verbose("     ?? \'Strategy\' distribution class interval -> %s\n",buffer);
+         return true;
+         }
+      }
    }
 
 if (strcmp(cp->lval,"or") == 0)

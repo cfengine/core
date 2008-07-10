@@ -298,6 +298,18 @@ dbp->close(dbp,0);
 Banner("Loaded persistent memory");
 }
 
+/*****************************************************************************/
+
+void AddEphemeralClasses(struct Rlist *classlist)
+
+{ struct Rlist *rp;
+
+for (rp = classlist; rp != NULL; rp = rp->next)
+   {
+   AddClassToHeap(rp->item);
+   }
+}
+
 
 /*****************************************************************************/
 /* Level                                                                     */

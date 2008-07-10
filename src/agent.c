@@ -572,11 +572,12 @@ FatalError("You are denied access to run this policy");
 void KeepAgentPromise(struct Promise *pp)
 
 {
- DebugListItemList(VADDCLASSES);
- 
 if (!IsDefinedClass(pp->classes))
    {
-   Verbose("Skipping whole promise, as context %s is not valid\n",pp->classes);
+   Verbose("\n");
+   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   Verbose("Skipping whole next promise, as context %s is not valid\n",pp->classes);
+   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 
@@ -623,6 +624,8 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 void NewTypeContext(enum typesequence type)
 
 { int maxconnections,i;
+  struct Item *procdata = NULL;
+  char *psopts = VPSOPTS[VSYSTEMHARDCLASS];
 // get maxconnections
 
 switch(type)
@@ -632,6 +635,17 @@ switch(type)
        /* Prepare shared connection array for non-threaded remote copies */
        
        SERVERLIST = NULL;
+       break;
+
+   case kp_processes:
+     
+       if (!LoadProcessTable(&PROCESSTABLE,psopts))
+          {
+          CfLog(cferror,"Unable to read the process table\n","");
+          AuditLog('y',NULL,0,"Processes inaccessible",CF_FAIL);   
+          return;
+          }
+
        break;
    }
 }
@@ -658,6 +672,14 @@ switch(type)
           }
 
        DeleteRlist(SERVERLIST);
+       break;
+
+   case kp_processes:
+
+       /* should cleanup proc memory list */
+
+       DeleteItemList(PROCESSTABLE);
+       PROCESSTABLE = NULL;
        break;
    }
 }

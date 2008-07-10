@@ -182,6 +182,9 @@
 /* Define to 1 if you have the `nss_nis' library (-lnss_nis). */
 #define HAVE_LIBNSS_NIS 1
 
+/* Define to 1 if you have the `pcre' library (-lpcre). */
+#define HAVE_LIBPCRE 1
+
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #define HAVE_LIBPTHREAD 1
 
@@ -193,9 +196,6 @@
 
 /* Define to 1 if you have the `rt' library (-lrt). */
 #define HAVE_LIBRT 1
-
-/* Define to 1 if you have the `rx' library (-lrx). */
-/* #undef HAVE_LIBRX */
 
 /* Define to 1 if you have the `socket' library (-lsocket). */
 /* #undef HAVE_LIBSOCKET */

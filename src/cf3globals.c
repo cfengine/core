@@ -53,6 +53,7 @@ int FACILITY;
 time_t PROMISETIME;
 
 struct Rlist *SERVERLIST = NULL;
+struct Item *PROCESSTABLE = NULL;
 
 /*****************************************************************************/
 /* Internal data structures                                                  */

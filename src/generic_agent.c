@@ -36,9 +36,8 @@ extern char *CFH[][2];
 
 void GenericInitialize(int argc,char **argv,char *agents)
 
-{ char rtype;
-  char name[CF_BUFSIZE];
-  enum cfagenttype ag = Agent2Type(agents);
+{ enum cfagenttype ag = Agent2Type(agents);
+  int ok;
 
 InitializeGA(argc,argv);
 SetReferenceTime(true);
@@ -60,14 +59,67 @@ LoadSystemConstants();
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 THIS_AGENT_TYPE = ag;
 
+ok = CheckPromises(ag);
+
+if (ok)
+   {
+   ReadPromises(ag,agents);
+   }
+else
+   {
+   snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/failsafe.cf",CFWORKDIR);
+   ReadPromises(ag,agents);
+   }
+
+if (SHOWREPORTS || ERRORCOUNT)
+   {
+   Report(VINPUTFILE);
+   }
+
+FOUT = stdout;
+}
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+int CheckPromises(enum cfagenttype ag)
+
+{ char cmd[CF_BUFSIZE];
+
+if (ag == cf_common)
+   {
+   /* Don't check if we are the analyzer */
+   return true;
+   }
+ 
+snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cfPromises -f %s",CFWORKDIR,VINPUTFILE);
+ 
+/* Check if reloading policy will succeed */
+ 
+if (ShellCommandReturnsZero(cmd,true))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   }
+}
+
+/*****************************************************************************/
+
+void ReadPromises(enum cfagenttype ag,char *agents)
+
+{ char name[CF_BUFSIZE];
+
 Cf3ParseFiles();
 
 snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
 
 if ((FOUT = fopen(name,"w")) == NULL)
    {
-   printf("Cannot open output file %s\n",name);
-   return;
+   FatalError("Cannot open output file\n");
    }
 
 XML = 1;
@@ -86,18 +138,6 @@ fprintf(FOUT,"%s",CFH[0][1]);
 fclose(FOUT);
 
 Verbose("Wrote expansion summary to %s\n",name);
-
-if (ERRORCOUNT > 0)
-   {
-   FatalError("Unresolved errors in configuration");
-   }
-
-if (SHOWREPORTS || ERRORCOUNT)
-   {
-   Report(VINPUTFILE);
-   }
-
-FOUT = stdout;
 }
 
 /*****************************************************************************/
@@ -294,7 +334,7 @@ void Cf3ParseFiles()
 { struct Rlist *rp;
 
 PARSING = true;
- 
+
 if ((PROMISETIME = time((time_t *)NULL)) == -1)
    {
    printf("Couldn't read system clock\n");
@@ -348,7 +388,7 @@ if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    }
 
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
-Debug("Cf3ParseFile(%s)\n",filename);
+Verbose("  > Parsing file %s\n",filename);
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
 PrependAuditFile(filename);

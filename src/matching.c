@@ -34,76 +34,46 @@
 
 int FullTextMatch (char *regexp,char *teststring)
 
-{ regex_t rx,rxcache;
-  regmatch_t pmatch;
-  int code;
-  char buf[1024];
-  
-re_syntax_options |= RE_INTERVALS;
+{ struct CfRegEx rex;
+ 
+rex = CompileRegExp(regexp);
 
-code = regcomp(&rx,regexp,REG_EXTENDED);
-
-if (code != 0)
+if (rex.failed)
    {
-   regerror(code,&rx,buf,1023);
-   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code, regexp,buf);
    return 0;
+   }
+
+if (RegExMatchFullString(rex,teststring))
+   {
+   return true;
    }
 else
    {
-   if ((code =regexec(&rx,teststring,1,&pmatch,0)) == 0)
-      {
-      if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(teststring)))
-         {
-         Debug("Regex %s matches (%s) exactly.\n",regexp,teststring);
-         return true;
-         }
-      else
-         {
-         Debug("Regex %s did not match (%s) exactly, but it matched a part of it.\n",regexp,teststring);
-         return false;
-         }
-      }
-   else
-      {
-      regerror(code,&rx,buf,1023);
-      Debug("Regular expression error %d for %s: %s\n", code, regexp,buf);
-      return false;
-      }
+   return false;
    }
-
-return false;
 }
 
 /*************************************************************************/
 
-int BlockTextMatch(char *regexp,char *teststring,regmatch_t *pmatch)
+int BlockTextMatch(char *regexp,char *teststring,int *start,int *end)
 
-{ regex_t rx,rxcache;
-  int code;
-  char errbuf[1024];
-  
-code = regcomp(&rx,regexp,REG_EXTENDED);
+{ struct CfRegEx rex;
+ 
+rex = CompileRegExp(regexp);
 
-memset(pmatch,0,sizeof(regmatch_t));
-
-if (code != 0)
+if (rex.failed)
    {
-   regerror(code,&rx,errbuf,1023);
-   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code,regexp,errbuf);
-   return false;
+   return 0;
+   }
+
+if (RegExMatchSubString(rex,teststring,start,end))
+   {
+   return true;
    }
 else
    {
-   if ((code = regexec(&rx,teststring,1,pmatch,0)) == 0)
-      {
-      return true;
-      }
-   else
-      {
-      return false;
-      }
-   }
+   return false;
+   } 
 }
 
 /*********************************************************************/
@@ -211,6 +181,178 @@ for (rp = listofregex; rp != NULL; rp=rp->next)
    }
 
 return false;
+}
+
+
+/*********************************************************************/
+/* Wrappers                                                          */
+/*********************************************************************/
+
+struct CfRegEx CompileRegExp(char *regexp)
+
+{ struct CfRegEx this;
+ 
+#ifdef HAVE_LIBPCRE
+ pcre *rx;
+ const char *errorstr; 
+ int erroffset;
+
+memset(&this,0,sizeof(struct CfRegEx)); 
+rx = pcre_compile(regexp,0,&errorstr,&erroffset,NULL);
+
+if (rx == NULL)
+   {
+   CfOut(cf_error,"","Regular expression error %s in %s at %d: %s\n",errorstr,regexp,erroffset);
+   this.failed = true;
+   }
+else
+   {
+   this.failed = false;
+   this.rx = rx;
+   }
+
+#else
+
+ regex_t rx;
+ int code;
+
+memset(&this,0,sizeof(struct CfRegEx)); 
+re_syntax_options |= RE_INTERVALS;
+
+code = regcomp(&rx,regexp,REG_EXTENDED);
+
+if (code != 0)
+   {
+   char buf[CF_BUFSIZE];
+   regerror(code,&rx,buf,CF_BUFSIZE-1);
+   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code, regexp,buf);
+   this.failed = true;
+   }
+else
+   {
+   this.failed = false;
+   this.rx = rx;
+   }
+
+#endif
+
+this.regexp = regexp;
+return this;
+}
+
+/*********************************************************************/
+
+int RegExMatchSubString(struct CfRegEx rex,char *teststring,int *start,int *end)
+
+{
+#ifdef HAVE_LIBPCRE
+ pcre *rx;
+ int ovector[OVECCOUNT],i,rc;
+ 
+rx = rex.rx;
+
+if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
+   {
+   *start = ovector[0];
+   *end = ovector[1];
+   return true;
+   }
+else
+   {
+   *start = 0;
+   *end = 0;
+   return false;
+   }
+
+#else
+
+ regex_t rx = rex.rx;
+ regmatch_t pmatch;
+ int code;
+ 
+if ((code = regexec(&rx,teststring,1,&pmatch,0)) == 0)
+   {
+   *start = pmatch.rm_so;
+   *end = pmatch.rm_eo;
+   return true;
+   }
+else
+   {
+   char buf[CF_BUFSIZE];
+   regerror(code,&rx,buf,CF_BUFSIZE-1);
+   Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+   *start = 0;
+   *end = 0;
+   return false;
+   }
+
+#endif
+}
+
+/*********************************************************************/
+
+int RegExMatchFullString(struct CfRegEx rex,char *teststring)
+
+{
+#ifdef HAVE_LIBPCRE
+ pcre *rx;
+ int ovector[OVECCOUNT],i,rc;
+ 
+rx = rex.rx;
+
+if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
+   {
+   for (i = 0; i < rc; i++)
+      {
+      char substring[1024];
+      char *match_start = teststring + ovector[i*2];
+      int match_len = ovector[i*2+1] - ovector[i*2];
+      memset(substring,0,1024);
+      strncpy(substring,match_start,match_len);
+      
+      if ((match_start == teststring) && (match_len == strlen(teststring)))
+         {
+         return true;
+         }
+      else
+         {
+         return false;
+         }
+      }
+   }
+else
+   {
+   return false;
+   }
+
+#else
+
+ regex_t rx = rex.rx;
+ regmatch_t pmatch;
+ int code;
+ 
+if ((code = regexec(&rx,teststring,1,&pmatch,0)) == 0)
+   {
+   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(teststring)))
+      {
+      Debug("Regex %s matches (%s) exactly.\n",rex.regexp,teststring);
+      return true;
+      }
+   else
+      {
+      Debug("Regex %s did not match (%s) exactly, but it matched a part of it.\n",rex.regexp,teststring);
+      return false;
+      }
+   }
+else
+   {
+   char buf[CF_BUFSIZE];
+   regerror(code,&rx,buf,CF_BUFSIZE-1);
+   Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+   return false;
+   }
+
+#endif
 }
 
 /* EOF */

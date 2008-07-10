@@ -281,25 +281,12 @@ return ((fromtime < stattime) && (stattime < totime));
 
 int SelectNameRegexMatch(char *filename,char *crit)
 
-{ regex_t rx;
-  regmatch_t pmatch;
-
-if (CfRegcomp(&rx,crit,REG_EXTENDED) != 0)
+{
+if (FullTextMatch(crit,ReadLastNode(filename)))
    {
-   return false;
+   return true;
    }            
 
-if (regexec(&rx,ReadLastNode(filename),1,&pmatch,0) == 0)
-   {
-   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(filename)))
-      {
-      regfree(&rx);
-      Debug(" - ? Select leaf name match\n");
-      return true;
-      }
-  }
-
-regfree(&rx);
 return false;      
 }
 
@@ -307,25 +294,12 @@ return false;
 
 int SelectPathRegexMatch(char *filename,char *crit)
 
-{ regex_t rx;
-  regmatch_t pmatch;
-
-if (CfRegcomp(&rx,crit,REG_EXTENDED) != 0)
+{
+if (FullTextMatch(crit,filename))
    {
-   return false;
+   return true;
    }            
 
-if (regexec(&rx,filename,1,&pmatch,0) == 0)
-   {
-   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(filename)))
-      {
-      Debug(" - ? Select path+leaf match\n");
-      regfree(&rx);
-      return true;
-      }
-  }
-
-regfree(&rx);
 return false;      
 }
 
@@ -333,17 +307,9 @@ return false;
 
 int SelectExecRegexMatch(char *filename,char *crit)
 
-{ regex_t rx;
-  regmatch_t pmatch;
-  char line[CF_BUFSIZE];
+{ char line[CF_BUFSIZE];
+  int s,e;
   FILE *pp;
-
-  return false; // Not implemented yet
-  
-if (CfRegcomp(&rx,crit,REG_EXTENDED) != 0)
-   {
-   return false;
-   }            
 
 if ((pp = cfpopen(crit,"r")) == NULL)
    {
@@ -354,18 +320,12 @@ if ((pp = cfpopen(crit,"r")) == NULL)
 ReadLine(line,CF_BUFSIZE,pp);  /* One buffer only */
 
 cfpclose(pp); 
- 
-if (regexec(&rx,line,1,&pmatch,0) == 0)
+
+if (FullTextMatch(crit,line))
    {
-   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(line)))
-      {
-      Debug(" - ? Select regex_exec match\n");
-      regfree(&rx);
-      return true;
-      }
+   return true;
    }
- 
-regfree(&rx);
+
 return false;      
 }
 
@@ -373,38 +333,23 @@ return false;
 
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit)
 
-{ regex_t rx;
-  regmatch_t pmatch;
-  char buffer[CF_BUFSIZE];
+{ char buffer[CF_BUFSIZE];
   struct Rlist *rp;
 
 for (rp = crit; rp != NULL; rp = rp->next)
    {
-   if (CfRegcomp(&rx,(char *)rp->item,REG_EXTENDED) != 0)
-      {
-      return false;
-      }
-
    memset(buffer,0,CF_BUFSIZE);
    
    if (readlink(filename,buffer,CF_BUFSIZE-1) == -1)
       {
       CfOut(cf_error,"readlink","Unable to read link %s in filter",filename);
-      regfree(&rx);
       return false;      
       }
-   
-   if (regexec(&rx,buffer,1,&pmatch,0) == 0)
-      {
-      if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(buffer)))
-         {
-         Debug(" - ? Select issymlinkto match (on %s)\n",(char *)rp->item);
-         regfree(&rx);
-         return true;
-         }
-      }
 
-   regfree(&rx);
+   if (FullTextMatch(rp->item,buffer))
+      {
+      return true;
+      }
    }
 
 return false;      
@@ -416,13 +361,8 @@ int SelectExecProgram(char *filename,char *crit)
 
   /* command can include $(this) for the name of the file */
 
-{ char ebuff[CF_EXPANDSIZE];
-
- return    false; // Not implemented yet..
- 
-Debug("Executing filter command [%s]\n",ebuff);
-
-if (ShellCommandReturnsZero(ebuff,false))
+{
+if (ShellCommandReturnsZero(filename,false))
    {
    Debug(" - ? Select ExecProgram match for %s\n",crit);
    return true;

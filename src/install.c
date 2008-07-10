@@ -285,7 +285,12 @@ return pp;
 
 void DeleteBundles(struct Bundle *bp)
 
-{ 
+{
+if (bp == NULL)
+   {
+   return;
+   }
+ 
 if (bp->next != NULL)
    {
    DeleteBundles(bp->next);
@@ -305,6 +310,11 @@ DeleteSubTypes(bp->subtypes);
 void DeleteSubTypes(struct SubType *tp)
 
 {
+if (tp == NULL)
+   {
+   return;
+   }
+ 
 if (tp->next != NULL)
    {
    DeleteSubTypes(tp->next);
@@ -323,6 +333,11 @@ if (tp->name != NULL)
 void DeleteBodies(struct Body *bp)
 
 {
+if (bp == NULL)
+   {
+   return;
+   }
+ 
 if (bp->next != NULL)
    {
    DeleteBodies(bp->next);

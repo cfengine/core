@@ -63,6 +63,7 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
   {"umask",cf_int,"0,77"},
   {"exec_owner",cf_str,""},
   {"exec_group",cf_str,""},
+  {"exec_timeout",cf_int,"1,3600"},
   {"chdir",cf_str,"/.*"},
   {"chroot",cf_str,"/.*"},
   {"preview",cf_opts,CF_BOOL},
@@ -79,7 +80,6 @@ struct BodySyntax CF_EXEC_BODIES[] =
    {"args",cf_str,""},
    {"contain",cf_body,CF_EXECCONTAIN_BODY},
    {"module",cf_opts,CF_BOOL},
-   {"exec_timeout",cf_int,"1,3600"},
    {NULL,cf_notype,NULL}
    };
 

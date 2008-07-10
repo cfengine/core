@@ -58,6 +58,7 @@ void ShowAssoc (struct CfAssoc *cp);
 struct Attributes GetFilesAttributes(struct Promise *pp);
 struct Attributes GetReportsAttributes(struct Promise *pp);
 struct Attributes GetExecAttributes(struct Promise *pp);
+struct Attributes GetProcessAttributes(struct Promise *pp);
 struct Attributes GetClassContextAttributes(struct Promise *pp);
 
 struct ExecContain GetExecContainConstraints(struct Promise *pp);
@@ -72,6 +73,9 @@ struct FileChange GetChangeMgtConstraints(struct Promise *pp);
 struct FileCopy GetCopyConstraints(struct Promise *pp);
 struct FileLink GetLinkConstraints(struct Promise *pp);
 struct Context GetContextConstraints(struct Promise *pp);
+struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp);
+struct ProcessCount GetMatchesConstraints(struct Promise *pp);
+
 void ShowAttributes(struct Attributes a);
 
 /* cfpromises.c */
@@ -123,6 +127,7 @@ int ControlBool(enum cfagenttype id,enum cfacontrol promiseoption);
 
 /* conversion.c */
 
+int Signal2Int(char *s);
 enum cfreport String2ReportLevel(char *typestr);
 enum cfhashes String2HashType(char *typestr);
 enum cfcomparison String2Comparison(char *s);
@@ -150,6 +155,7 @@ void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy p
 void DeletePersistentContext(char *name);
 void LoadPersistentContext(void);
 int EvalClassExpression(struct Constraint *cp,struct Promise *pp);
+void AddEphemeralClasses(struct Rlist *classlist);
 
 /* evalfunction.c */
 
@@ -283,6 +289,7 @@ void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise
 void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp); 
 int MakeParentDirectory(char *parentandchild,int force);
+void LogHashChange(char *file);
 
 
 /* files_properties.c */
@@ -331,6 +338,8 @@ void CheckOpts(int argc,char **argv);
 void CheckWorkingDirectories(void);
 void Syntax(char *comp);
 void Version(char *comp);
+int CheckPromises(enum cfagenttype ag);
+void ReadPromises(enum cfagenttype ag,char *agents);
 void Cf3ParseFile(char *filename);
 void Cf3ParseFiles(void);
 void Report(char *filename);
@@ -399,11 +408,14 @@ void ExtractOperationLock(char *op);
 /* matching.c */
 
 int FullTextMatch (char *regptr,char *cmpptr);
-int BlockTextMatch (char *regexp,char *teststring,regmatch_t *pm);
+int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
 int MatchRlistItem(struct Rlist *listofregex,char *teststring);
+struct CfRegEx CompileRegExp(char *regexp);
+int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
+int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 
 /* pipes.c */
 
@@ -416,7 +428,13 @@ int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
 int CfSetuid(uid_t uid,gid_t gid);
 int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
 
-    
+/* processes_select.c */
+
+int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp);
+int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,char **line);
+int SelectProcRegexMatch(char *name1,char *name2,char *regex,char **names,char **line);
+int SplitProcLine(char *proc,char **names,int *start,int *end,char **line);
+
 /* promises.c */
 
 char *BodyName(struct Promise *pp);
@@ -506,7 +524,7 @@ void TestVariableScan(void);
 void TestExpandPromise(void);
 void TestExpandVariables(void);
 void TestSearchFilePromiser(void);
-
+void TestRegularExpressions(void);
 
 /* server_transform.c */
 
@@ -607,6 +625,14 @@ int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
 /* verify_processes.c */
 
 void VerifyProcessesPromise(struct Promise *pp);
+int ProcessSanityChecks(struct Attributes a,struct Promise *pp);
+void VerifyProcesses(struct Attributes a, struct Promise *pp);
+int LoadProcessTable(struct Item **procdata,char *psopts);
+void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
+int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
+int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
+int ExtractPid(char *psentry);
+void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 
 /* verify_reports.c */
 

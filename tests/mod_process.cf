@@ -81,7 +81,6 @@ in_range_define      => { "okclass" };
 out_of_range_define  => { "one", "two", "three" };
 }
 
-
 ################################################################
 
 body proc_select myfilter

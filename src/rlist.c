@@ -730,23 +730,23 @@ struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge)
 { struct Rlist *liststart = NULL;
   char format[9], *sp;
   char node[CF_MAXVARSIZE];
-  regmatch_t pm; 
+  int start,end;
   int delta, count = 0;
 
 Debug("\n\nSplit %s with regex %s (up to maxent %d)\n\n",string,regex,max);
   
 sp = string;
   
-while ((count < max) && BlockTextMatch(regex,sp,&pm))
+while ((count < max) && BlockTextMatch(regex,sp,&start,&end))
    {
-   if (pm.rm_eo == 0)
+   if (end == 0)
       {
       break;
       }
 
-   delta = pm.rm_eo - pm.rm_so;
+   delta = end - start;
    memset(node,0,CF_MAXVARSIZE);
-   strncpy(node,sp,pm.rm_so);
+   strncpy(node,sp,start);
    
    if (strlen(node) > 0)
       {
@@ -754,7 +754,7 @@ while ((count < max) && BlockTextMatch(regex,sp,&pm))
       count++;
       }
    
-   sp += pm.rm_eo;
+   sp += end;
    }
 
 if (count < max)

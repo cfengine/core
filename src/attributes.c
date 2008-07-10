@@ -111,12 +111,38 @@ struct Attributes GetExecAttributes(struct Promise *pp)
 
 { struct Attributes attr;
 
-
 attr.contain = GetExecContainConstraints(pp);
 attr.havecontain = GetBooleanConstraint("contain",pp->conlist);
 
 attr.args = GetConstraint("args",pp->conlist,CF_SCALAR);
 attr.module = GetBooleanConstraint("module",pp->conlist);
+
+/* Common ("included") */
+
+attr.havetrans = GetBooleanConstraint("transaction",pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint("classes",pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+
+/*******************************************************************/
+
+struct Attributes GetProcessAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.signals = GetListConstraint("signals",pp->conlist);
+attr.process_stop = (char *)GetConstraint("process_stop",pp->conlist,CF_SCALAR);
+attr.haveprocess_count = GetBooleanConstraint("process_count",pp->conlist);
+attr.haveselect = GetBooleanConstraint("process_select",pp->conlist);
+attr.restart_class = (char *)GetConstraint("restart_class",pp->conlist,CF_SCALAR);
+
+attr.process_count = GetMatchesConstraints(pp);
+attr.process_select = GetProcessFilterConstraints(pp);
 
 /* Common ("included") */
 
@@ -496,6 +522,59 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    }
 
 return a;
+}
+
+/*******************************************************************/
+
+struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp)
+
+{ struct ProcessSelect p;
+  char *value;
+ 
+p.owner = GetListConstraint("process_owner",pp->conlist);
+
+value = (char *)GetConstraint("pid",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_pid,&p.max_pid,pp);
+value = (char *)GetConstraint("ppid",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_ppid,&p.max_ppid,pp);
+value = (char *)GetConstraint("pgid",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_pgid,&p.max_pgid,pp);
+value = (char *)GetConstraint("rsize",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_rsize,&p.max_rsize,pp);
+value = (char *)GetConstraint("vsize",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_rsize,&p.max_rsize,pp);
+value = (char *)GetConstraint("ttime_range",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_ttime,&p.max_ttime,pp);
+value = (char *)GetConstraint("stime_range",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_stime,&p.max_stime,pp);
+
+p.status = (char *)GetConstraint("status",pp->conlist,CF_SCALAR);
+p.command = (char *)GetConstraint("command",pp->conlist,CF_SCALAR);
+p.tty = (char *)GetConstraint("tty",pp->conlist,CF_SCALAR);
+
+value = (char *)GetConstraint("priority",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_pri,&p.max_pri,pp);
+value = (char *)GetConstraint("threads",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_thread,&p.max_thread,pp);
+
+p.process_result = (char *)GetConstraint("process_result",pp->conlist,CF_SCALAR);
+return p;
+}
+
+
+/*******************************************************************/
+
+struct ProcessCount GetMatchesConstraints(struct Promise *pp)
+
+{ struct ProcessCount p;
+  char *value;
+
+value = (char *)GetConstraint("match_range",pp->conlist,CF_SCALAR);
+IntRange2Int(value,&p.min_range,&p.max_range,pp);
+p.in_range_define = GetListConstraint("in_range_define",pp->conlist);
+p.out_of_range_define = GetListConstraint("out_of_range_define",pp->conlist);
+
+return p;
 }
 
 /*******************************************************************/

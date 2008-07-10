@@ -67,20 +67,20 @@ struct BodySyntax CF_MATCHCLASS_BODY[] =
 
 struct BodySyntax CF_PROCFILTER_BODY[] =
    {
-   {"owner",cf_slist,""},
-   {"pid",cf_str,""},
-   {"ppid",cf_str,""},
-   {"pgid",cf_str,""},
-   {"rsize",cf_str,""},
-   {"vsize",cf_str,""},
+   {"process_owner",cf_slist,""},
+   {"pid",cf_irange,CF_VALRANGE},
+   {"ppid",cf_irange,CF_VALRANGE},
+   {"pgid",cf_irange,CF_VALRANGE},
+   {"rsize",cf_irange,CF_VALRANGE},
+   {"vsize",cf_irange,CF_VALRANGE},
    {"status",cf_str,""},
-   {"ttime_range",cf_str,""},
-   {"stime_range",cf_str,""},
+   {"ttime_range",cf_irange,CF_TIMERANGE},
+   {"stime_range",cf_irange,CF_TIMERANGE},
    {"command",cf_str,""},
    {"tty",cf_str,""},
-   {"priority",cf_str,""},
-   {"threads",cf_str,""},
-   {"process_result",cf_str,"[(owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*"},
+   {"priority",cf_irange,"-20,+20"},
+   {"threads",cf_irange,CF_VALRANGE},
+   {"process_result",cf_str,"[(process_owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*"},
    {NULL,cf_notype,NULL}
    };
 
@@ -90,11 +90,11 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
 
 struct BodySyntax CF_PROCESS_BODIES[] =
    {
-   {"signals",cf_olist,"hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"},
+   {"signals",cf_olist,CF_SIGNALRANGE},
    {"process_stop",cf_str,CF_PATHRANGE},
    {"process_count",cf_body,CF_MATCHCLASS_BODY},
    {"process_select",cf_body,CF_PROCFILTER_BODY},
-   {"restart",cf_str,CF_IDRANGE},
+   {"restart_class",cf_str,CF_IDRANGE},
    {NULL,cf_notype,NULL}
    };
 

@@ -29,6 +29,7 @@ libpromises_la_SOURCES =						\
 	client_protocol.c						\
 	client_code.c							\
 	recursion.c							\
+	processes_select.c						\
 	fncall.c							\
 	cf3globals.c							\
 	report.c							\

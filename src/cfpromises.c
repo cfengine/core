@@ -66,7 +66,8 @@ int main(int argc,char *argv[])
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();
 SHOWREPORTS = true;
-return 0;
+Verbose("Inputs are valid\n");
+exit(0);
 }
 
 /*******************************************************************/

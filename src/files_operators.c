@@ -781,6 +781,7 @@ void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1];
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
+  int changed = false;
   
 Debug("Checking checksum/hash integrity of %s\n",file);
 
@@ -793,20 +794,31 @@ if (attr.change.hash == cf_besthash)
       {
       HashFile(file,digest1,cf_md5);
       HashFile(file,digest2,cf_sha1);
-      FileHashChanged(file,digest1,cf_error,cf_md5,attr,pp);
-      FileHashChanged(file,digest2,cf_error,cf_sha1,attr,pp);
+      
+      if (FileHashChanged(file,digest1,cf_error,cf_md5,attr,pp)
+          || FileHashChanged(file,digest2,cf_error,cf_sha1,attr,pp))
+         {
+         changed = true;
+         }
       }
    }
 else
    {
-   HashFile(file,digest1,attr.change.hash);
-   
    if (!DONTDO)
       {
+      HashFile(file,digest1,attr.change.hash);
+   
       if (FileHashChanged(file,digest1,cf_error,attr.change.hash,attr,pp))
          {
+         changed = true;
          }
       }
+   }
+
+if (changed)
+   {
+   AddPersistentClass("checksum_alerts",CF_PERSISTENCE,cfpreserve);
+   LogHashChange(file);
    }
 }
 
@@ -1033,4 +1045,30 @@ else
    {
    return MakeDirectoriesFor(parentandchild,'n');
    }
+}
+
+
+/*********************************************************************/
+
+void LogHashChange(char *file)
+
+{ FILE *fp;
+ char fname[CF_BUFSIZE],timebuf[CF_MAXVARSIZE];
+  time_t now = time(NULL);
+
+/* This is inefficient but we don't want to lose any data */
+  
+snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
+
+if ((fp = fopen(fname,"a")) == NULL)
+   {
+   CfLog(cferror,"Could not write to the change log","");
+   return;
+   }
+
+snprintf(timebuf,CF_MAXVARSIZE-1,"%s",ctime(&now));
+Chop(timebuf);
+fprintf(fp,"%s,%s\n",timebuf,file);
+
+fclose(fp);
 }

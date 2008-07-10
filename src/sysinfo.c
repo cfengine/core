@@ -245,7 +245,7 @@ if (strlen(workbuf) > CF_MAXVARSIZE-2)
    }
 
 sp = strdup(CanonifyName(workbuf));
-NewScalar("sys","arch",sp,cf_str);
+NewScalar("sys","long_arch",sp,cf_str);
 AddClassToHeap(sp);
 free(sp);
 

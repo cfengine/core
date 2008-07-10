@@ -404,7 +404,8 @@ dnl Checks for regular expressions
 dnl GNU regex lib if you have regcomp in libc you should NOT have this lib too
 dnl ######################################################################
 
-AC_CHECK_LIB(rx, main)
+AC_CHECK_LIB(pcre, main)
+dnl AC_CHECK_LIB(rx, main)
 AC_CHECK_LIB(rt, main)
 
 dnl ######################################################################

@@ -426,11 +426,13 @@ if (strcmp(type,"processes") == 0)
    struct Item *ip;
    /* Just parsed all local classes */
 
+   Verbose("     ??? Local class context: \n");
+
    for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
       {
-      printf("%s ",ip->name);
+      printf("       %sǹ",ip->name);
       }
-   Verbose("Local class context = {");
+
    Verbose("\n");
    }
 

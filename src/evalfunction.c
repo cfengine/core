@@ -1930,11 +1930,11 @@ return (void *)result;
 
 char *StripPatterns(char *file_buffer,char *pattern)
 
-{ regmatch_t pm;
+{ int start,end;
 
-while(BlockTextMatch(pattern,file_buffer,&pm))
+while(BlockTextMatch(pattern,file_buffer,&start,&end))
    {
-   CloseStringHole(file_buffer,pm.rm_so,pm.rm_eo);
+   CloseStringHole(file_buffer,start,end);
    }
 
 return file_buffer;

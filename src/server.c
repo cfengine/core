@@ -454,11 +454,11 @@ while (true)
       PrependItem(&CONNECTIONLIST,MapAddress(ipaddr),intime);
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
-      {
-      CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-      return;
-      }
+      if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+         {
+         CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+         return;
+         }
 #endif
       
       SpawnConnection(sd_reply,ipaddr);
@@ -742,6 +742,7 @@ void CheckFileChanges(int argc,char **argv,int sd)
 
 { struct stat newstat;
   char filename[CF_BUFSIZE],*sp;
+  int ok;
   
 memset(&newstat,0,sizeof(struct stat));
 memset(filename,0,CF_BUFSIZE);
@@ -802,6 +803,7 @@ if (PROMISETIME < newstat.st_mtime)
 
    BUNDLES = NULL;
    BODIES  = NULL;
+   ERRORCOUNT = 0;
 
    NewScope("system");
    AddClassToHeap("any");
@@ -810,7 +812,19 @@ if (PROMISETIME < newstat.st_mtime)
    GetV6InterfaceInfo();
    Get3Environment();
    SetNewScope("server");
-   Cf3ParseFiles();
+
+   ok = CheckPromises(cf_server);
+
+   if (ok)
+      {
+      ReadPromises(cf_server,CF_SERVERC);
+      }
+   else
+      {
+      snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/failsafe.cf",CFWORKDIR);
+      ReadPromises(cf_server,CF_SERVERC);
+      }
+
    HashVariables();
    KeepPromises();
    Summarize();
@@ -2359,6 +2373,11 @@ Debug("Getting size of link deref %s\n",linkbuf);
 if (islink && (stat(filename,&statlinkbuf) != -1)) /* linktype=copy used by agent */
    {
    statbuf.st_size = statlinkbuf.st_size;
+   statbuf.st_mode = statlinkbuf.st_mode;
+   statbuf.st_uid = statlinkbuf.st_uid;
+   statbuf.st_gid = statlinkbuf.st_gid;
+   statbuf.st_mtime = statlinkbuf.st_mtime;
+   statbuf.st_ctime = statlinkbuf.st_ctime;
    }
 
 if (S_ISDIR(statbuf.st_mode))

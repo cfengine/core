@@ -58,6 +58,7 @@ extern int FACILITY;
 extern time_t PROMISETIME;
 
 extern struct Rlist *SERVERLIST;
+extern struct Item *PROCESSTABLE;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

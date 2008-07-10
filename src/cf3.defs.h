@@ -34,6 +34,10 @@
 
 #include "conf.h"
 
+#ifdef HAVE_LIBPCRE
+#include <pcre.h>
+#endif
+
 /*************************************************************************/
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
@@ -289,6 +293,7 @@ enum cfreport
 #define CF_HIGHINIT 99999L
 #define CF_LOWINIT -999999L
 
+#define CF_SIGNALRANGE "hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"
 #define CF_BOOL      "true,false,yes,no,on,off"
 #define CF_LINKRANGE "symlink,hardlink,relative,absolute"
 #define CF_TIMERANGE "0,4026531839"
@@ -611,8 +616,46 @@ enum cfchanges
    cfa_contentchange
    };
 
+
+enum signalnames
+   {
+   cfa_hup,
+   cfa_int,
+   cfa_trap,
+   cfa_kill,
+   cfa_pipe,
+   cfa_cont,
+   cfa_abrt,
+   cfa_stop,
+   cfa_quit,
+   cfa_term,
+   cfa_child,
+   cfa_usr1,
+   cfa_usr2,
+   cfa_bus,
+   cfa_segv
+   };
+
+
 /*************************************************************************/
 /* Runtime constraint structures                                         */
+/*************************************************************************/
+
+#define OVECCOUNT 30
+
+struct CfRegEx
+{
+#ifdef HAVE_LIBPCRE
+   pcre *rx;
+   const char *err;
+   int err_offset;
+#else
+   regex_t rx;
+#endif
+   int failed;
+   char *regexp;
+};
+
 /*************************************************************************/
 
 struct CfLock
@@ -796,6 +839,45 @@ struct ExecContain
 
 /*************************************************************************/
 
+struct ProcessCount
+   {
+   long min_range;
+   long max_range;
+   struct Rlist *in_range_define;
+   struct Rlist *out_of_range_define;
+   };
+
+/*************************************************************************/
+
+struct ProcessSelect
+   {
+   struct Rlist *owner;
+   long min_pid;
+   long max_pid;
+   long min_ppid;
+   long max_ppid;
+   long min_pgid;
+   long max_pgid;
+   long min_rsize;
+   long max_rsize;
+   long min_vsize;
+   long max_vsize;
+   time_t min_ttime;
+   time_t max_ttime;
+   time_t min_stime;
+   time_t max_stime;
+   long min_pri;
+   long max_pri;
+   long min_thread;
+   long max_thread;
+   char *status;
+   char *command;
+   char *tty;
+   char *process_result;
+   };
+
+/*************************************************************************/
+
 struct Context
    {
    struct Constraint *expression;
@@ -827,7 +909,14 @@ struct Attributes
    struct ExecContain contain;
    char *args;
    int module;
+   int exec_timeout;
 
+   struct Rlist *signals;
+   char *process_stop;
+   char *restart_class;
+   struct ProcessCount process_count;
+   struct ProcessSelect process_select;
+      
    int havedepthsearch;
    int haveselect;
    int haverename;
@@ -842,6 +931,7 @@ struct Attributes
    int havecontain;
    int haveclasses;
    int havetrans;
+   int haveprocess_count;
    };
 
 #include "prototypes3.h"

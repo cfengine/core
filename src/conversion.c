@@ -31,6 +31,62 @@
 
 /***************************************************************************/
 
+int Signal2Int(char *s)
+
+{ int i = 0;
+  struct Item *ip, *names = SplitString(CF_SIGNALRANGE,',');
+
+for (ip = names; ip != NULL; ip=ip->next)
+   {
+   i++;
+   if (strcmp(s,ip->name) == 0)
+      {
+      break;
+      }
+   }
+ 
+DeleteItemList(names);
+
+switch (i)
+   {
+   case cfa_hup:
+       return SIGHUP;
+   case cfa_int:
+       return SIGINT;
+   case cfa_trap:
+       return SIGTRAP;
+   case cfa_kill:
+       return SIGKILL;
+   case cfa_pipe:
+       return SIGPIPE;
+   case cfa_cont:
+       return SIGCONT;
+   case cfa_abrt:
+       return SIGABRT;
+   case cfa_stop:
+       return SIGSTOP;
+   case cfa_quit:
+       return SIGQUIT;
+   case cfa_term:
+       return SIGTERM;
+   case cfa_child:
+       return SIGCHLD;
+   case cfa_usr1:
+       return SIGUSR1;
+   case cfa_usr2:
+       return SIGUSR2;
+   case cfa_bus:
+       return SIGBUS;
+   case cfa_segv:
+       return SIGSEGV;
+   default:
+       return -1;
+   }
+
+}
+
+/***************************************************************************/
+
 enum cfreport String2ReportLevel(char *s)
 
 { int i;

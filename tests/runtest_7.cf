@@ -30,7 +30,7 @@ vars:
 
  "ran" int => randomint(4,88);
 
- "yyy" slist => { readstringlist("/home/mark/tmp/testlist","#[a-zA-Z0-9 ]*","[^a-zA-Z0-9]",5,4000) };
+ "yyy" slist => { readstringlist("/home/mark/tmp/testlist","#[a-zA-Z0-9 ]*","[^a-zA-Z0-9]",15,4000) };
 
  "zzz" slist => { readstringlist("/home/mark/tmp/testlist2","#[^\n]*",",",5,4000) };
  "aaa" ilist => { readintlist("/home/mark/tmp/testilist","#[a-zA-Z0-9 ]*",",",10,4000) };

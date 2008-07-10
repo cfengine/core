@@ -41,7 +41,7 @@ switch(level)
        
        if (INFORM || VERBOSE || DEBUG)
           {
-          MakeReport(mess,!VERBOSE);
+          MakeReport(mess,VERBOSE);
           }
        break;
        

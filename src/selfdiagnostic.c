@@ -41,6 +41,7 @@ printf("----------------------------------------------------------\n\n");
 TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
+TestRegularExpressions();
 }
 
 /*****************************************************************************/
@@ -104,6 +105,19 @@ pp.petype = CF_SCALAR;
 pp.lineno = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
+
+pp.bundletype = NULL;
+pp.bundle = "test_bundle";
+pp.ref = "commentary";
+pp.agentsubtype = NULL;
+pp.done = false;
+pp.next = NULL;
+pp.cache = NULL;
+pp.inode_cache = NULL;
+pp.this_server = NULL;
+pp.donep = &(pp.done);
+pp.conn = NULL;
+
 
 AppendConstraint(&(pp.conlist),"lval1",strdup("rval1"),CF_SCALAR,"lower classes1");
 AppendConstraint(&(pp.conlist),"lval2",strdup("rval2"),CF_SCALAR,"lower classes2");
@@ -171,3 +185,107 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
 ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);
 /* No cleanup */
 }
+
+/*****************************************************************************/
+
+void TestRegularExpressions()
+
+{ struct CfRegEx rex;
+  int start,end;
+
+printf("Testing regular expression engine\n");
+
+#ifdef HAVE_LIBPCRE
+printf(" Regex engine is the Perl Compatible Regular Expression library\n");
+#else
+printf(" Regex engine is the POSIX Regular Expression library\n");
+#endif
+
+rex = CompileRegExp("#.*");
+
+if (rex.failed)
+   {
+   CfOut(cf_error,"","Failed regular expression compilation\n");
+   }
+else
+   {
+   CfOut(cf_error,"","Regular expression compilation - ok\n");
+   }
+
+if (!RegExMatchSubString(rex,"line 1:\nline2: # comment to end\nline 3: blablab",&start,&end))
+   {
+   CfOut(cf_error,"","Failed regular expression extraction +1\n");
+   }
+else
+   {
+   CfOut(cf_verbose,"","Regular expression extraction - ok %d - %d\n",start,end);
+   }
+
+if (RegExMatchFullString(rex,"line 1:\nline2: # comment to end\nline 3: blablab"))
+   {
+   CfOut(cf_error,"","Failed regular expression extraction -1\n");
+   }
+else
+   {
+   CfOut(cf_verbose,"","Regular expression extraction - ok\n");
+   }
+
+if (FullTextMatch("[a-z]*","1234abcd6789"))
+   {
+   CfOut(cf_error,"","Failed regular expression match 1\n");
+   }
+else
+   {
+   CfOut(cf_verbose,"","FullTextMatch - ok 1\n");
+   }
+
+if (FullTextMatch("[1-4]*[a-z]*.*","1234abcd6789"))
+   {
+   CfOut(cf_verbose,"","FullTextMatch - ok 2\n");
+   }
+else
+   {
+   CfOut(cf_error,"","Failed regular expression match 2\n");
+   }
+
+if (BlockTextMatch("#.*","line 1:\nline2: # comment to end\nline 3: blablab",&start,&end))
+   {
+   CfOut(cf_verbose,"","BlockTextMatch - ok\n");
+   
+   if (start != 15)
+      {
+      CfOut(cf_error,"","Start was not at 15 -> %d\n",start);
+      }
+   
+   if (end != 31)
+      {
+      CfOut(cf_error,"","Start was not at 31 -> %d\n",end);
+      }
+   }
+else
+   {
+   CfOut(cf_error,"","Failed regular expression match 3\n");
+   }
+
+if (BlockTextMatch("[a-z]+","1234abcd6789",&start,&end))
+   {
+   CfOut(cf_verbose,"","BlockTextMatch - ok\n");
+   
+   if (start != 4)
+      {
+      CfOut(cf_error,"","Start was not at 4 -> %d\n",start);
+      }
+   
+   if (end != 8)
+      {
+      CfOut(cf_error,"","Start was not at 8 -> %d\n",end);
+      }
+   }
+else
+   {
+   CfOut(cf_error,"","Failed regular expression match 3\n");
+   }
+
+
+}
+

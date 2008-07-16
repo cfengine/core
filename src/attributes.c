@@ -42,8 +42,8 @@ attr.haveperms = GetBooleanConstraint("perms",pp->conlist);
 attr.havechange = GetBooleanConstraint("changes",pp->conlist);
 attr.havecopy = GetBooleanConstraint("copy_from",pp->conlist);
 attr.havelink = GetBooleanConstraint("link_from",pp->conlist);
-attr.haveeditline = GetBooleanConstraint("edit_line",pp->conlist);
-attr.haveeditxml = GetBooleanConstraint("edit_xml",pp->conlist);
+attr.haveeditline = GetBundleConstraint("edit_line",pp->conlist);
+attr.haveeditxml = GetBundleConstraint("edit_xml",pp->conlist);
 attr.haveedit = attr.haveeditline || attr.haveeditxml;
 
 /* Files, specialist */
@@ -61,6 +61,7 @@ attr.rename = GetRenameConstraints(pp);
 attr.change = GetChangeMgtConstraints(pp);
 attr.copy = GetCopyConstraints(pp);
 attr.link = GetLinkConstraints(pp);
+attr.edits = GetEditDefaults(pp);
 
 /* Files, multiple use */
 
@@ -184,6 +185,12 @@ struct Recursion GetRecursionConstraints(struct Promise *pp)
 r.travlinks = GetBooleanConstraint("traverse_links",pp->conlist);
 r.rmdeadlinks = GetBooleanConstraint("rmdeadlinks",pp->conlist);
 r.depth = GetIntConstraint("depth",pp->conlist);
+
+if (r.depth == CF_UNDEFINED)
+   {
+   r.depth = 0;
+   }
+
 r.xdev = GetBooleanConstraint("xdev",pp->conlist);
 r.include_dirs = GetListConstraint("include_dirs",pp->conlist);
 r.exclude_dirs = GetListConstraint("exclude_dirs",pp->conlist);
@@ -197,7 +204,7 @@ struct FilePerms GetPermissionConstraints(struct Promise *pp)
 
 { struct FilePerms p;
   char *value;
-
+                
 value = (char *)GetConstraint("mode",pp->conlist,CF_SCALAR);
 
 p.plus = 0;
@@ -315,6 +322,11 @@ c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp->conlist);
 
 c.persist = GetIntConstraint("persist_time",pp->conlist);
 
+if (c.persist == CF_UNDEFINED)
+   {
+   c.persist = 20;
+   }
+
 pt = GetConstraint("timer_policy",pp->conlist,CF_SCALAR);
 
 if (pt && strncmp(pt,"abs",3) == 0)
@@ -421,10 +433,16 @@ value = (char *)GetConstraint("link_type",pp->conlist,CF_SCALAR);
 f.link_type = String2LinkType(value);
 f.servers = GetListConstraint("servers",pp->conlist);
 f.portnumber = (short)GetIntConstraint("portnumber",pp->conlist);
+
+if (f.portnumber == CF_UNDEFINED)
+   {
+   f.portnumber = 5308;
+   }
+
 f.link_instead = GetListConstraint("linkcopy_patterns",pp->conlist);
 f.copy_links = GetListConstraint("copylink_patterns",pp->conlist);
 
-value = (char *)GetConstraint("backup",pp->conlist,CF_SCALAR);
+value = (char *)GetConstraint("copy_backup",pp->conlist,CF_SCALAR);
 
 if (value && strcmp(value,"false") == 0)
    {
@@ -496,6 +514,38 @@ else
    }
 
 return f;
+}
+
+/*******************************************************************/
+
+struct EditDefaults GetEditDefaults(struct Promise *pp)
+
+{ struct EditDefaults e;
+  char *value;
+
+e.maxfilesize = GetIntConstraint("max_file_size",pp->conlist);
+
+if (e.maxfilesize == CF_UNDEFINED)
+   {
+   e.maxfilesize = EDITFILESIZE;
+   }
+
+value = (char *)GetConstraint("edit_backup",pp->conlist,CF_SCALAR);
+
+if (value && strcmp(value,"false") == 0)
+   {
+   e.backup = cfa_nobackup;
+   }
+else if (value && strcmp(value,"timestamp") == 0)
+   {
+   e.backup = cfa_timestamp;
+   }
+else
+   {
+   e.backup = cfa_backup;
+   }
+
+return e;
 }
 
 /*******************************************************************/

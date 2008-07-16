@@ -56,7 +56,7 @@ body copyfrom mycopy(from,server)
 {
 source      => "$(from)";
 servers     => { "$(server)" };
-backup      => "true";                  #/false/timestamp
+copy_backup => "true";                  #/false/timestamp
 purge       => "true";
 }
 

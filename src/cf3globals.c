@@ -65,6 +65,7 @@ struct Body *BODIES = NULL;
 struct Scope *VSCOPE = NULL;
 struct Rlist *VINPUTLIST = NULL;
 struct Rlist *BODYPARTS = NULL;
+struct Rlist *SUBBUNDLES = NULL;
 
 struct Rlist *SINGLE_COPY_LIST = NULL;
 struct Rlist *AUTO_DEFINE_LIST = NULL;

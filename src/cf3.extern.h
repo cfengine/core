@@ -37,6 +37,7 @@ extern struct Audit *AUDITPTR;
 extern struct Audit *VAUDIT; 
 extern struct Rlist *VINPUTLIST;
 extern struct Rlist *BODYPARTS;
+extern struct Rlist *SUBBUNDLES;
 extern struct Rlist *SINGLE_COPY_LIST;
 extern struct Rlist *AUTO_DEFINE_LIST;
 extern struct Rlist *SINGLE_COPY_CACHE;

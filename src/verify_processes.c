@@ -390,12 +390,12 @@ for (ip = siglist; ip != NULL; ip=ip->next)
          
          if (kill((pid_t)pid,signal) < 0)
             {
-            cfPS(cf_verbose,CF_FAIL,"kill",a,pp," - Couldn't send promised signal \'%s\' to pid %d\n",rp->item,pid);
+            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," - Couldn't send promised signal \'%s\' to pid %d\n",rp->item,pid);
             continue;
             }
          else
             {
-            cfPS(cf_inform,CF_CHG,"",a,pp," - Signalled \'%s\' to observed process match \'%s\'\n",rp->item,ip->name);
+            cfPS(cf_inform,CF_CHG,"",pp,a," - Signalled \'%s\' to observed process match \'%s\'\n",rp->item,ip->name);
             }
          }
       else

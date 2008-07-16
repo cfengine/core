@@ -70,6 +70,6 @@ body copyfrom buildvm(from)
 
 {
 source      => "$(from)";
-backup      => "true";                   #/false/timestamp
+copy_backup => "true";                   #/false/timestamp
 }
 

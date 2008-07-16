@@ -353,6 +353,7 @@ else
    }
 
 #endif
+return false;
 }
 
 /* EOF */

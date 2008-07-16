@@ -107,16 +107,29 @@ else
    {
    if (!DONTDO)
       {
+      mode_t filemode = 0600;  /* Decide the mode for filecreation */
+
+      if (GetConstraint("mode",pp->conlist,CF_SCALAR) == NULL)
+         {
+         /* Relying on umask is risky */
+         filemode = 0600;
+         Verbose("No mode was set, choose plain file default %o\n",filemode);
+         }
+      else
+         {
+         filemode = attr.perms.plus & ~(attr.perms.minus);
+         }
+
       MakeParentDirectory(file,attr.move_obstructions);
       
-      if ((fd = creat(file,attr.perms.plus)) == -1)
+      if ((fd = creat(file,filemode)) == -1)
          { 
-         cfPS(cf_inform,CF_FAIL,"creat",pp,attr,"Error creating file %s, mode = %o\n",file,attr.perms.plus);
+         cfPS(cf_inform,CF_FAIL,"creat",pp,attr,"Error creating file %s, mode = %o\n",file,filemode);
          return false;
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,attr,"Creating file %s, mode = %o\n",file,attr.perms.plus);
+         cfPS(cf_inform,CF_CHG,"",pp,attr,"Created file %s, mode = %o\n",file,filemode);
          close(fd);
          }
       }
@@ -169,11 +182,56 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleEditOperation(char *destination,struct Attributes attr,struct Promise *pp)
+int ScheduleEditOperation(char *filename,struct Attributes a,struct Promise *pp)
 
-{
-Verbose(" -> Handling file edits (not yet implemented)\n");
-return true;
+{ struct Bundle *bp;
+  void *vp;
+  struct FnCall *fp;
+  char *edit_bundle_name = NULL;
+  struct Rlist *params;
+  int retval = false;
+ 
+pp->edcontext = NewEditContext(filename,a,pp);
+
+if (pp->edcontext == NULL)
+   {
+   CfOut(cf_error,"","File %s was marked for editing but could not be opened\n",filename);
+   return false;
+   }
+
+if (a.haveeditline)
+   {
+   if (vp = GetConstraint("edit_line",pp->conlist,CF_FNCALL))
+      {
+      fp = (struct FnCall *)vp;
+      edit_bundle_name = fp->name;
+      params = fp->args;
+      }
+   else if (vp = GetConstraint("edit_line",pp->conlist,CF_SCALAR))
+      {
+      edit_bundle_name = (char *)vp;
+      params = NULL;
+      }
+   else
+      {
+      return false;
+      }
+   
+   Verbose(" -> Handling file edits in edit_line bundle %s\n",edit_bundle_name);
+
+   // add current filename to context - already there?
+
+   if (bp = GetBundle(edit_bundle_name,"edit_line"))
+      {
+      BannerSubBundle(bp,params);
+      AugmentScope(bp->name,bp->args,params);
+      retval = ScheduleEditLineOperations(filename,bp,a,pp);
+      }
+   }
+
+FinishEditContext(pp->edcontext,a,pp);
+
+return retval;
 }
 
 /*****************************************************************************/

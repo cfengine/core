@@ -54,9 +54,65 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_ACL_BODY[] =
+/**************************************************************/
+/* editing                                                    */
+/**************************************************************/
+
+struct BodySyntax CF_LOCATION_BODY[] =
    {
-   {"tobedecided",cf_str,CF_ANYSTRING},
+   {"line_location",cf_opts,"start,end"},
+   {"after_line_matching",cf_opts,CF_ANYSTRING},
+   {"before_line_matching",cf_opts,CF_ANYSTRING},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
+struct BodySyntax CF_EDITCOL_BODY[] =
+   {
+   {"column_separator",cf_str,CF_ANYSTRING},
+   {"select_column",cf_int,CF_VALRANGE},
+   {"value_separator",cf_str,CF_CHARRANGE},
+   {"column_value",cf_str,CF_ANYSTRING},
+   {"append_value",cf_str,CF_ANYSTRING},
+   {"prepend_value",cf_str,CF_ANYSTRING},
+   {"insert_value_after",cf_str,CF_ANYSTRING},
+   {"insert_value_alphanum",cf_str,CF_ANYSTRING},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
+struct BodySyntax CF_REPLACEWITH_BODY[] =
+   {
+   {"replace_value",cf_str,CF_ANYSTRING},
+   {"occurrences",cf_opts,"all,first,last"},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+/**************************************************************/
+
+struct BodySyntax CF_INSERTLINES_BODIES[] =
+   {
+   {"location",cf_body,CF_LOCATION_BODY},
+   {"source_type",cf_opts,"literal,string,file"},
+   {"expand_vars",cf_opts,CF_BOOL},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
+struct BodySyntax CF_DELETELINES_BODIES[] =
+   {
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
+struct BodySyntax CF_COLUMN_BODIES[] =
+   {
+   {"edit_column",cf_body,CF_EDITCOL_BODY},
    {NULL,cf_notype,NULL}
    };
 
@@ -64,8 +120,17 @@ struct BodySyntax CF_ACL_BODY[] =
 
 struct BodySyntax CF_REPLACE_BODIES[] =
    {
-   {"with",cf_str,CF_ANYSTRING},
-   {"which",cf_str,CF_ANYSTRING},
+   {"replace_with",cf_body,CF_REPLACEWITH_BODY},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+/* Main files                                                 */
+/**************************************************************/
+
+struct BodySyntax CF_ACL_BODY[] =
+   {
+   {"tobedecided",cf_str,CF_ANYSTRING},
    {NULL,cf_notype,NULL}
    };
 
@@ -95,6 +160,15 @@ struct BodySyntax CF_RECURSION_BODY[] =
 
 /**************************************************************/
 
+struct BodySyntax CF_EDITS_BODY[] =
+   {
+   {"edit_backup",cf_opts,"true,false,timestamp,rotate"},
+   {"max_file_size",cf_int,CF_VALRANGE},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
 struct BodySyntax CF_TIDY_BODY[] =
    {
    {"dirlinks",cf_opts,"delete,tidy,keep"},
@@ -114,13 +188,6 @@ struct BodySyntax CF_RENAME_BODY[] =
    {NULL,cf_notype,NULL}
    };
 
-/**************************************************************/
-
-struct BodySyntax CF_APPEND_BODIES[] =
-   {
-   {"data",cf_str,CF_ANYSTRING},
-   {NULL,cf_notype,NULL}
-   };
 
 /**************************************************************/
 
@@ -179,7 +246,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"source",cf_str,""},
    {"servers",cf_slist,""},
    {"portnumber",cf_int,"1024,99999"},
-   {"backup",cf_opts,"true,false,timestamp"},
+   {"copy_backup",cf_opts,"true,false,timestamp"},
    {"stealth",cf_opts,CF_BOOL},
    {"preserve",cf_opts,CF_BOOL},
    {"linkcopy_patterns",cf_slist,""},
@@ -215,6 +282,7 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"repository",cf_str,CF_PATHRANGE},
    {"edit_line",cf_bundle,CF_BUNDLE},
    {"edit_xml",cf_bundle,CF_BUNDLE},
+   {"edit_defaults",cf_body,CF_EDITS_BODY},
    {"depth_search",cf_body,CF_RECURSION_BODY},
    {"touch",cf_opts,CF_BOOL},
    {"create",cf_opts,CF_BOOL},
@@ -237,8 +305,10 @@ struct SubTypeSyntax CF_FILES_SUBTYPES[] =
 
   /* Body lists belonging to th edit_line sub-bundle of files: */
      
-  {"edit_line","append",CF_APPEND_BODIES},
-  {"edit_line","replace",CF_REPLACE_BODIES},
+  {"edit_line","insert_lines",CF_INSERTLINES_BODIES},
+  {"edit_line","column_edits",CF_COLUMN_BODIES},
+  {"edit_line","replace_patterns",CF_REPLACE_BODIES},
+  {"edit_line","delete_lines",CF_DELETELINES_BODIES},
   {NULL,NULL,NULL},
   };
 

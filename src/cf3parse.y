@@ -107,8 +107,7 @@ aitem:                 ID  /* recipient of argument is never a literal */
 
 bundlebody:         '{'
                        {
-                       if (strcmp(THIS_AGENT,CF_AGENTTYPES[cf_common]) == 0
-                            || strcmp(CF_COMMONC,P.blocktype) == 0)
+                       if (RelevantBundle(THIS_AGENT,P.blocktype))
                           {
                           Debug("We a compiling everything here\n");
                           INSTALL_SKIP = false;                          

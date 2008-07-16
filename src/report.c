@@ -443,6 +443,33 @@ Verbose("   =========================================================\n");
 Verbose("\n");
 }
 
+/**************************************************************/
+
+void BannerSubSubType(char *bundlename,char *type)
+
+{
+if (strcmp(type,"processes") == 0)
+   {
+   struct Item *ip;
+   /* Just parsed all local classes */
+
+   Verbose("     ??? Local class context: \n");
+
+   for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+      {
+      printf("       %sǹ",ip->name);
+      }
+
+   Verbose("\n");
+   }
+
+Verbose("\n");
+Verbose("      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+Verbose("      %s in bundle %s\n",type,bundlename);
+Verbose("      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+Verbose("\n");
+}
+
 /*******************************************************************/
 
 void DebugBanner(char *s)

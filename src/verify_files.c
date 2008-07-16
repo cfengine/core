@@ -296,7 +296,10 @@ if (a.havelink)
 
 /* Phase 3 - content editing */
 
-ScheduleEditOperation(path,a,pp);
+if (a.haveedit)
+   {
+   ScheduleEditOperation(path,a,pp);
+   }
 
 YieldCurrentLock(thislock);
 }

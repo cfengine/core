@@ -63,7 +63,7 @@ if (attr.transaction.action != cfa_warn)
    {
    if (!MakeParentDirectory(newto,attr.move_obstructions))
       {
-      cfPS(cf_error,"",CF_FAIL,pp,attr,"Unable to make directory for %s in file-copy %s to %s\n",newto,attr.copy.source,attr.copy.destination);
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"Unable to make directory for %s in file-copy %s to %s\n",newto,attr.copy.source,attr.copy.destination);
       return;
       }
    }

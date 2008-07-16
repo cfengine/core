@@ -569,11 +569,33 @@ Verbose("\n");
 
 /**************************************************************/
 
+void BannerSubBundle(struct Bundle *bp,struct Rlist *params)
+
+{
+Verbose("\n");
+Verbose("      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+Verbose("       BUNDLE %s",bp->name);
+if (params && (VERBOSE||DEBUG))
+   {
+   printf("(");
+   ShowRlist(stdout,params);
+   printf(" )\n");
+   }
+else
+   {
+   if (VERBOSE||DEBUG) printf("\n");
+   }
+Verbose("      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+Verbose("\n");
+}
+
+/**************************************************************/
+
 void PromiseBanner(struct Promise *pp)
 
 {
 Verbose("\n");
-Verbose("      .........................................................\n");
+Verbose("    .........................................................\n");
 
 if (VERBOSE||DEBUG)
    {
@@ -593,7 +615,7 @@ if (VERBOSE||DEBUG)
       printf("\n      %s\n",pp->ref);
       }
    }
-Verbose("      .........................................................\n");
+Verbose("    .........................................................\n");
 Verbose("\n");
 }
 
@@ -859,6 +881,7 @@ for (rp = BODYPARTS; rp != NULL; rp=rp->next)
           if (!IsBody(BODIES,(char *)rp->item))
              {
              CfOut(cf_error,"","Undeclared promise body \"%s()\" was referenced in a promise\n",(char *)rp->item);
+             ERRORCOUNT++;
              }
           break;
 
@@ -868,6 +891,33 @@ for (rp = BODYPARTS; rp != NULL; rp=rp->next)
           if (!IsBody(BODIES,fp->name))
              {
              CfOut(cf_error,"","Undeclared promise body \"%s()\" was referenced in a promise\n",fp->name);
+             ERRORCOUNT++;
+             }
+          break;
+      }
+   }
+
+/* Check for undefined subbundles */
+
+for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+          if (!IsBundle(BUNDLES,(char *)rp->item))
+             {
+             CfOut(cf_error,"","Undeclared promise bundle \"%s()\" was referenced in a promise\n",(char *)rp->item);
+             ERRORCOUNT++;
+             }
+          break;
+
+      case CF_FNCALL:
+          fp = (struct FnCall *)rp->item;
+
+          if (!IsBundle(BUNDLES,fp->name))
+             {
+             CfOut(cf_error,"","Undeclared promise bundle \"%s()\" was referenced in a promise\n",fp->name);
+             ERRORCOUNT++;
              }
           break;
       }

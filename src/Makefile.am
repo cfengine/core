@@ -24,6 +24,8 @@ libpromises_la_SOURCES =						\
 	files_operators.c						\
 	files_repository.c						\
 	files_copy.c							\
+	files_editline.c						\
+	files_edit.c							\
 	files_links.c							\
 	files_hashes.c							\
 	client_protocol.c						\

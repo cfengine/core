@@ -75,6 +75,7 @@ struct FileLink GetLinkConstraints(struct Promise *pp);
 struct Context GetContextConstraints(struct Promise *pp);
 struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp);
 struct ProcessCount GetMatchesConstraints(struct Promise *pp);
+struct EditDefaults GetEditDefaults(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -110,7 +111,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,str
 void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
 void SetSessionKey(struct cfagent_connection *conn);
 
-/* constraint.c */
+/* constraints.c */
 
 struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes);
 void DeleteConstraintList(struct Constraint *conlist);
@@ -124,6 +125,7 @@ struct Rlist *GetListConstraint(char *lval,struct Constraint *list);
 void ReCheckAllConstraints(struct Promise *pp);
 void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
 int ControlBool(enum cfagenttype id,enum cfacontrol promiseoption);
+int GetBundleConstraint(char *lval,struct Constraint *list);
 
 /* conversion.c */
 
@@ -221,6 +223,22 @@ int CopyRegularFileDisk(char *source,char *new,struct Attributes attr,struct Pro
 void CheckForFileHoles(struct stat *sstat,struct Attributes attr,struct Promise *pp);
 int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int n_read,struct Attributes attr,struct Promise *pp);
 
+/* files_edit.c */
+
+struct edit_context *NewEditContext(char *filename,struct Attributes a,struct Promise *pp);
+void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promise *pp);
+int LoadFileAsItemList(struct Item **liststart,char *file,struct Attributes a,struct Promise *pp);
+int SaveItemListAsFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp);
+
+/* files_editline.c */
+
+int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attributes a,struct Promise *pp);
+void KeepEditPromise(struct Promise *pp);
+void VerifyLineDeletions(struct Promise *pp);
+void VerifyColumnEdits(struct Promise *pp);
+void VerifyPatterns(struct Promise *pp);
+void VerifyLineInsertions(struct Promise *pp);
+
 /* files_links.c */
 
 int VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
@@ -275,7 +293,7 @@ int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Prom
 int CreateFile(char *file,struct Promise *pp,struct Attributes attr);
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
 int ScheduleLinkOperation(char *destination,struct Attributes attr,struct Promise *pp);
-int ScheduleEditOperation(char *destination,struct Attributes attr,struct Promise *pp);
+int ScheduleEditOperation(char *filename,struct Attributes attr,struct Promise *pp);
 struct FileCopy *NewFileCopy(struct Promise *pp);
 void DeleteFileCopy(struct FileCopy *fcp);
 void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
@@ -290,7 +308,6 @@ void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promi
 void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp); 
 int MakeParentDirectory(char *parentandchild,int force);
 void LogHashChange(char *file);
-
 
 /* files_properties.c */
 
@@ -355,8 +372,8 @@ void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist
 void CheckVariablePromises(char *scope,struct Promise *varlist);
 void CheckBundleParameters(char *scope,struct Rlist *args);
 void PromiseBanner(struct Promise *pp);
-void BannerSubType(char *bundlename,char *type);
 void BannerBundle(struct Bundle *bp,struct Rlist *args);
+void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
 
 
 /* hashes.c */
@@ -388,6 +405,7 @@ void LastSaw(char *hostname,enum roles role);
 
 /* install.c */
 
+int RelevantBundle(char *agent,char *blocktype);
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args);
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args);
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
@@ -439,6 +457,7 @@ int SplitProcLine(char *proc,char **names,int *start,int *end,char **line);
 
 char *BodyName(struct Promise *pp);
 struct Body *IsBody(struct Body *list,char *key);
+struct Bundle *IsBundle(struct Bundle *list,char *key);
 struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp);
 struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
@@ -471,6 +490,8 @@ void ShowBuiltinFunctions(void);
 void ShowBody(struct Body *body,int ident);
 void DebugBanner(char *s);
 void ReportError(char *s);
+void BannerSubType(char *bundlename,char *type);
+void BannerSubSubType(char *bundlename,char *type);
 
 /* rlist.c */
 
@@ -542,7 +563,7 @@ void HandleSignals(int signum);
 /* cfstreams.h */
 
 void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
-void CfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
+void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void Verbose(char *fmt, ...);
 void MakeLog(struct Item *mess,enum cfreport level);
 void MakeReport(struct Item *mess,int prefix);
@@ -565,6 +586,7 @@ void CheckParseIntRange(char *lval,char *s,char *range);
 void CheckParseOpts(char *lv,char *s,char *range);
 void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);
+enum cfdatatype ExpectedDataType(char *lvalname);
 
 /* sysinfo.c */
 

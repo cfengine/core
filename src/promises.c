@@ -301,11 +301,17 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    struct Rval returnval;
    char type;
 
-   /* The body reference could look like a scalar or fn to the parser w/w () */
-   
-   returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
-   final     = ExpandDanglers(scopeid,returnval,pp);
+   if (ExpectedDataType(cp->lval) == cf_bundle)
+      {
+       /* sub-bundles do not expand here */
+      returnval = ExpandPrivateRval(scopeid,cp->rval,cp->type);
+      }
+   else
+      {
+      returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
+      }
 
+   final = ExpandDanglers(scopeid,returnval,pp);
    AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes);
    }
 
@@ -317,6 +323,23 @@ return pcopy;
 struct Body *IsBody(struct Body *list,char *key)
 
 { struct Body *bp;
+
+for (bp = list; bp != NULL; bp = bp->next)
+   {
+   if (strcmp(bp->name,key) == 0)
+      {
+      return bp;
+      }
+   }
+
+return NULL;
+}
+
+/*******************************************************************/
+
+struct Bundle *IsBundle(struct Bundle *list,char *key)
+
+{ struct Bundle *bp;
 
 for (bp = list; bp != NULL; bp = bp->next)
    {

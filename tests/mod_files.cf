@@ -71,34 +71,35 @@ include_dirs => { ".*.exe", ".*.com" };
 #
 # Editfiles in not yet specified
 #
-# bundle edit_line myedit(filename)
-#   {
-#   classes:
-#
-#   append:
-#
-#       "My important line.*" 
-#
-#            data        => "New important line" ,
-#            policy      => IfNoSuchLine,
-#            transaction => controlbody("my message");
-#
-#   append:
-#
-#      "This a line in $(filename)" ;
-#   
-#   replace:
-#
-#    classes::
-#
-#        "string.[abc]*" 
-#
-#            with    => "$(new_value)" ,
-#            which   => all ,
-#            classes => afterX;  # trigger ordering
-#
-#   }
-#
+
+bundle edit_line myedit(filename)
+  {
+  classes:
+
+  append:
+
+      "My important line.*" 
+
+           data        => "New important line" ,
+           policy      => IfNoSuchLine,
+           transaction => controlbody("my message");
+
+  append:
+
+     "This a line in $(filename)" ;
+  
+  replace:
+
+   classes::
+
+       "string.[abc]*" 
+
+           with    => "$(new_value)" ,
+           which   => all ,
+           classes => afterX;  trigger ordering
+
+  }
+
 #########################################################
 
 body perms others(parame)

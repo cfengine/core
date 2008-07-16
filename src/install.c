@@ -28,6 +28,34 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+
+/*******************************************************************/
+
+int RelevantBundle(char *agent,char *blocktype)
+
+{ struct Item *ip;
+ 
+if (strcmp(agent,CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC,P.blocktype) == 0)
+   {
+   return true;
+   }
+
+/* Here are some additional bundle types handled by cfAgent */
+
+ip = SplitString("edit_line,edit_xml",',');
+
+if (strcmp(agent,CF_AGENTTYPES[cf_agent]) == 0)
+   {
+   if (IsItemIn(ip,blocktype))
+      {
+      DeleteItemList(ip);
+      return true;
+      }
+   }
+
+return false;
+}
+
 /*******************************************************************/
 
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args)

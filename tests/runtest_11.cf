@@ -1,0 +1,45 @@
+########################################################
+#
+# Simple test editfile
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/cf3_test"
+
+       create    => "true",
+       edit_line => AppendIfNoLine("cfengine tcp 5308","second");
+}
+
+########################################################
+
+bundle edit_line AppendIfNoLine(parameter,two)
+  {
+  vars:
+
+    "list" slist => { "1", "2", "3"  };
+
+  insert_lines:
+
+   "$(parameter) and $(two)-$(list)" location => "append";
+  }
+
+########################################################
+
+body location append
+
+{
+line_location => "end";
+}

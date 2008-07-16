@@ -101,6 +101,41 @@ return CF_NOSTYPE;
 
 /*********************************************************/
 
+enum cfdatatype ExpectedDataType(char *lvalname)
+
+{ int i,j,k;
+  struct BodySyntax *bs;
+  struct SubTypeSyntax *ss;
+
+for (i = 0; i < CF3_MODULES; i++)
+   {
+   if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+      {
+      continue;
+      }
+  
+   for (j = 0; ss[j].subtype != NULL; j++)
+      {
+      if ((bs = ss[j].bs) == NULL)
+         {
+         continue;
+         }
+      
+      for (k = 0; bs[k].range != NULL; k++)
+         {
+         if (strcmp(lvalname,bs[k].lval) == 0)
+            {
+            return bs[k].dtype;
+            }
+         }
+      }
+   }
+
+return cf_notype;
+}
+
+/*********************************************************/
+
 void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,struct SubTypeSyntax ss)
 
 { int lmatch = false;
@@ -140,6 +175,12 @@ if (ss.subtype != NULL) /* In a bundle */
                {
                Debug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n",lval,rvaltype);
                PrependRlist(&BODYPARTS,rval,rvaltype);
+               return;
+               }
+            else if (bs[l].dtype == cf_bundle)
+               {
+               Debug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n",lval,rvaltype);
+               PrependRlist(&SUBBUNDLES,rval,rvaltype);
                return;
                }
             else
@@ -213,6 +254,11 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
             if (bs[l].dtype == cf_body)
                {
                Debug("Constraint syntax ok, but definition of body is elsewhere\n");
+               return;
+               }
+            else if (bs[l].dtype == cf_bundle)
+               {
+               Debug("Constraint syntax ok, but definition of bundle is elsewhere\n");
                return;
                }
             else
@@ -297,6 +343,7 @@ if (!lmatch)
 void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range,int level)
 
 { struct Rlist *rp;
+  struct Item *checklist;
 
 Debug(" ------------------------------------------------\n");
 Debug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
@@ -348,12 +395,16 @@ switch(rvaltype)
        
    case CF_FNCALL:
 
-       /* Fn-like objects are assumed to be parameterized bundles in the bseq */
+       /* Fn-like objects are assumed to be parameterized bundles in these... */
+
+       checklist = SplitString("bundlesequence,edit_line,edit_xml",',');
        
-       if (strcmp(lval,"bundlesequence") != 0)
+       if (!IsItemIn(checklist,lval))
           {
           CheckFnCallType(lval,((struct FnCall *)rval)->name,dt,range);
           }
+
+       DeleteItemList(checklist);
        return;
    }
 
@@ -377,6 +428,7 @@ switch (dt)
        break;
 
    case cf_body:
+   case cf_bundle:
        Debug("Nothing to check for body reference\n");
        break;
        

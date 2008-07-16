@@ -158,7 +158,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type for boolean constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Software error - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
          FatalError(OUTPUT);
          }
 
@@ -181,6 +181,42 @@ if (retval == CF_UNDEFINED)
    }
 
 return retval;
+}
+
+/*****************************************************************************/
+
+int GetBundleConstraint(char *lval,struct Constraint *list)
+
+{ struct Constraint *cp;
+  int retval = CF_UNDEFINED;
+
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (IsDefinedClass(cp->classes))
+         {
+         if (retval != CF_UNDEFINED)
+            {
+            CfOut(cf_error,"","Multiple %s constraints break this promise\n",lval);
+            }
+         }
+      else
+         {
+         continue;
+         }
+
+      if (!(cp->type == CF_FNCALL || cp->type == CF_SCALAR))
+         {
+         CfOut(cf_error,"","Software error - expected type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
+         FatalError(OUTPUT);
+         }
+
+      return true;
+      }
+   }
+
+return false;
 }
 
 /*****************************************************************************/
@@ -389,8 +425,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
          if (cp->type != rtype)
             {
-            CfOut(cf_error,"","Software error - expected type for constraint %s did not match internals (list with {} missing?)\n",lval);
-            FatalError(OUTPUT);
+            return NULL;
             }
          }
       }
@@ -449,10 +484,8 @@ for  (i = 0; i < CF3_MODULES; i++)
             
             for (l = 0; bs[l].lval != NULL; l++)
                {
-               if (strcmp(lval,bs[l].lval) == 0)
+               if (bs[l].dtype == cf_bundle)
                   {
-                  CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
-                  return;
                   }
                else if (bs[l].dtype == cf_body)
                   {
@@ -466,6 +499,11 @@ for  (i = 0; i < CF3_MODULES; i++)
                         return;
                         }
                      }                  
+                  }
+               else if (strcmp(lval,bs[l].lval) == 0)
+                  {
+                  CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
+                  return;
                   }
                }                        
             }

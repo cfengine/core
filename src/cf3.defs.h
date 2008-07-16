@@ -413,6 +413,17 @@ struct SubType
 
 /*************************************************************************/
 
+struct edit_context
+   {
+   char *filename;
+   struct Item *current_line_ptr;
+   struct Item *file_start;
+   struct Item *file_classes;
+   int num_edits;
+   };
+
+/*************************************************************************/
+
 struct Promise
    {
    char *classes;
@@ -437,6 +448,7 @@ struct Promise
    struct cfstat *cache;      
    struct cfagent_connection *conn;
    struct CompressedArray *inode_cache;
+   struct edit_context *edcontext;
    dev_t rootdevice;                          /* for caching during work*/
    };
 
@@ -886,6 +898,14 @@ struct Context
 
 /*************************************************************************/
 
+struct EditDefaults
+   {
+   enum cfbackupoptions backup;
+   int maxfilesize;
+   };
+
+/*************************************************************************/
+
 struct Attributes
    {
    struct FileSelect select;
@@ -895,6 +915,7 @@ struct Attributes
    struct FileRename rename;
    struct FileChange change;
    struct FileLink link;
+   struct EditDefaults edits;
    struct Context context;
    char *transformer;
    int touch;

@@ -60,18 +60,19 @@ void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promis
 { int retval = false;
   struct Item *ip;
 
-if (DONTDO)
+if (DONTDO || a.transaction.action == cfa_warn)
    {
-   if (a.transaction.action == cfa_warn)
-      {
-      cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
-      return;
-      }
+   cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
+   return;
    }
 else if (ec->num_edits > 0)
    {
    cfPS(cf_inform,CF_CHG,"",pp,a,"Saving edit changes to file %s",ec->filename);
    SaveItemListAsFile(ec->file_start,ec->filename,a,pp);
+   }
+else
+   {
+   cfPS(cf_inform,CF_NOP,"",pp,a,"No edit changes to file %s need saving",ec->filename);
    }
 
 for (ip = ec->file_classes; ip != NULL; ip = ip->next)
@@ -175,13 +176,11 @@ if (a.edits.backup == cfa_timestamp)
    snprintf(stamp,CF_BUFSIZE,"_%d_%s", CFSTARTTIME,CanonifyName(ctime(&stamp_now)));
    strcat(backup,stamp);
    }
-else
-   {
-   strcat(backup,CF_SAVED);
-   }
+
+strcat(backup,".cf-before-edit");
 
 strcpy(new,file);
-strcat(new,CF_EDITED);
+strcat(new,".cf-after-edit");
 unlink(new); /* Just in case of races */ 
  
 if ((fp = fopen(new,"w")) == NULL)
@@ -203,28 +202,23 @@ if (fclose(fp) == -1)
  
 cfPS(cf_inform,CF_CHG,"",pp,a,"Edited file %s \n",file); 
 
+if (rename(file,backup) == -1)
+   {
+   cfPS(cf_error,CF_FAIL,"rename",pp,a,"Can't rename %s to %s - so promised edits could not be moved into place\n",file,backup);
+   return false;
+   }
+
 if (a.edits.backup != cfa_nobackup)
    {
-   if (!IsItemIn(VREPOSLIST,new))
+   if (ArchiveToRepository(backup,a,pp))
       {
-      if (rename(file,backup) == -1)
-         {
-         snprintf(OUTPUT,CF_BUFSIZE*2,"Error while renaming backup %s\n",file);
-         CfLog(cfverbose,OUTPUT,"rename ");
-         unlink(new);
-         return false;
-         }
-      else if (Repository(backup,a.repository))
-         {
-         unlink(backup);
-         }
+      unlink(backup);
       }
    }
 
 if (rename(new,file) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Error while renaming %s\n",file);
-   CfLog(cfverbose,OUTPUT,"rename");
+   cfPS(cf_error,CF_FAIL,"rename",pp,a,"Can't rename %s to %s - so promised edits could not be moved into place\n",new,file);
    return false;
    }       
 
@@ -241,5 +235,6 @@ if (selinux_enabled)
    }
 #endif
 
+cfPS(cf_error,CF_CHG,"",pp,a,"Edited file %s\n",file);
 return true;
 }

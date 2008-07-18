@@ -69,9 +69,9 @@ attr.recursion = GetRecursionConstraints(pp);
 
 /* Common ("included") */
 
-attr.havetrans = GetBooleanConstraint("transaction",pp->conlist);
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
-attr.haveclasses = GetBooleanConstraint("classes",pp->conlist);
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
 if (DEBUG)
@@ -120,10 +120,10 @@ attr.module = GetBooleanConstraint("module",pp->conlist);
 
 /* Common ("included") */
 
-attr.havetrans = GetBooleanConstraint("transaction",pp->conlist);
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
 
-attr.haveclasses = GetBooleanConstraint("classes",pp->conlist);
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
 return attr;
@@ -147,10 +147,10 @@ attr.process_select = GetProcessFilterConstraints(pp);
 
 /* Common ("included") */
 
-attr.havetrans = GetBooleanConstraint("transaction",pp->conlist);
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
 
-attr.haveclasses = GetBooleanConstraint("classes",pp->conlist);
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
 return attr;
@@ -668,3 +668,79 @@ a.classes = GetClassDefinitionConstraints(pp);
 printf(".....................................................\n\n");
 }
 
+/*******************************************************************/
+/* Edit sub-bundles have their own attributes                      */
+/*******************************************************************/
+
+struct Attributes GetInsertionAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.havelocation = GetBooleanConstraint("location",pp->conlist);
+attr.location = GetLocationAttributes(pp);
+
+attr.sourcetype = GetConstraint("source_type",pp->conlist,CF_SCALAR);
+attr.expandvars = GetBooleanConstraint("expand_vars",pp->conlist);
+                                                
+/* Common ("included") */
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
+
+struct EditLocation GetLocationAttributes(struct Promise *pp)
+
+{ struct EditLocation e;
+ char *value;
+
+e.line_matching = GetConstraint("move_to_line_matching",pp->conlist,CF_SCALAR);;
+value = GetConstraint("before_after",pp->conlist,CF_SCALAR);;
+
+if (value && strcmp(value,"before") == 0)
+   {
+   e.before_after = cfe_before;
+   }
+else
+   {
+   e.before_after = cfe_after;
+   }
+
+e.first_last = GetConstraint("first_last",pp->conlist,CF_SCALAR);;
+return e;
+}
+
+/*******************************************************************/
+
+struct Attributes GetDeletionAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+return attr;
+}
+
+/*******************************************************************/
+
+struct Attributes GetColumnAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.havecolumn = GetBooleanConstraint("edit_column",pp->conlist);
+return attr;
+}
+
+/*******************************************************************/
+
+struct Attributes GetReplaceAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.havereplace = GetBooleanConstraint("replace_pattern",pp->conlist);
+return attr;
+}

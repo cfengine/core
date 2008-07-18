@@ -130,6 +130,7 @@ pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
 pcopy->donep = pp->donep;
 pcopy->conn = pp->conn;
+pcopy->edcontext = pp->edcontext;
 
 Debug("Copying promise constraints\n\n");
 
@@ -291,6 +292,7 @@ pcopy->cache = pp->cache;
 pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
 pcopy->conn = pp->conn;
+pcopy->edcontext = pp->edcontext;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 

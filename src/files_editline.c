@@ -54,12 +54,13 @@ void EditClassBanner(enum editlinetypesequence type);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attributes a,struct Promise *pp)
+int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attributes a,struct Promise *parentp)
 
 { enum editlinetypesequence type;
   struct SubType *sp;
+  struct Promise *pp;
 
-  // What about multipass
+  // What about multipass ?
   
 for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
    {
@@ -76,7 +77,8 @@ for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
    
    for (pp = sp->promiselist; pp != NULL; pp=pp->next)
       {
-      ExpandPromise(cf_agent,bp->name,pp,KeepEditPromise);
+      pp->edcontext = parentp->edcontext;
+      ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
       }
    
    //DeleteEditTypeContext(type);
@@ -110,17 +112,9 @@ Verbose("\n");
 
 /***************************************************************************/
 
-void KeepEditPromise(struct Promise *pp)
+void KeepEditLinePromise(struct Promise *pp)
 
 {
-// this.promiser contains filename
-
-//NewScalar("this","promiser",line,cf_str); // Parameters may only be scalars
-//NewScalar, back references..
- //SetContext this
-
- printf("Do edit....%s\n",pp->promiser);
- 
 if (!IsDefinedClass(pp->classes))
    {
    Verbose("\n");
@@ -134,7 +128,6 @@ if (pp->done)
    {
    return;
    }
-
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
@@ -194,5 +187,101 @@ void VerifyPatterns(struct Promise *pp)
 
 void VerifyLineInsertions(struct Promise *pp)
 
-{
+{ struct Item **start = &(pp->edcontext->file_start), *match, *prev;
+  struct Attributes a;
+
+*(pp->donep) = true;
+
+a = GetInsertionAttributes(pp);
+
+/* First if we are not searching for a specific line, then
+   before and after refer to the whole body-text - default append */
+
+if (a.location.line_matching == NULL)
+   {
+   if (a.location.before_after == cfe_before)
+      {
+      if (!IsItemIn(*start,pp->promiser))
+         {
+         PrependItemList(start,pp->promiser);
+         (pp->edcontext->num_edits)++;
+         cfPS(cf_verbose,CF_CHG,"",pp,a,"Prepending the promised line \"%s\"",pp->promiser);
+         }
+      }
+   else
+      {      
+      if (!IsItemIn(*start,pp->promiser))
+         {
+         AppendItemList(start,pp->promiser);
+         (pp->edcontext->num_edits)++;
+         cfPS(cf_verbose,CF_CHG,"",pp,a,"Appending the promised line \"%s\"",pp->promiser);
+         }
+      }
+
+   return;
+   }
+
+/* Then, if we are searching for a specific line */
+
+if (a.location.first_last && strcmp(a.location.first_last,"first") == 0)
+   {
+   if ((match = SelectNextItemMatching(*start,a.location.line_matching,&prev)) == NULL)
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a,"No line matched the promised locator \"%s\" - skipping insert",a.location.line_matching);
+      return;
+      }
+   }
+else
+   {
+   if ((match = SelectLastItemMatching(*start,a.location.line_matching,&prev)) == NULL)
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a,"No line matched the promised locator \"%s\" - skipping insert",a.location.line_matching);
+      return;
+      }
+   }
+
+if (match == *start) /* File is empty so unambiguous */
+   {
+   if (!IsItemIn(*start,pp->promiser))
+      {
+      PrependItemList(start,pp->promiser);
+      (pp->edcontext->num_edits)++;
+      cfPS(cf_verbose,CF_CHG,"",pp,a,"Prepending the promised line \"%s\"",pp->promiser);
+      }
+   
+   return;
+   }
+
+/* If we get here, we can assume prev was set sensibly */
+
+if (a.location.before_after == cfe_before)
+   {
+   if (NeighbourItemMatches(*start,match,pp->promiser,cfe_before))
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a,"Promised line \"%s\" exists before locator \"%s\"",pp->promiser,a.location.line_matching);
+      return;
+      }
+   else
+      {
+      InsertAfter(start,prev,pp->promiser);
+      cfPS(cf_verbose,CF_CHG,"",pp,a,"Inserting the promised line \"%s\" before locator \"%s\"",pp->promiser,a.location.line_matching);
+      }
+   }
+else
+   {
+   if (NeighbourItemMatches(*start,match,pp->promiser,cfe_after))
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a,"Promised line \"%s\" exists after locator \"%s\"",pp->promiser,a.location.line_matching);
+      return;
+      }
+   else
+      {
+      InsertAfter(start,match,pp->promiser);
+      cfPS(cf_verbose,CF_CHG,"",pp,a,"Inserting the promised line \"%s\" after locator \"%s\"",pp->promiser,a.location.line_matching);
+      }
+   }
+
+(pp->edcontext->num_edits)++;
 }
+
+

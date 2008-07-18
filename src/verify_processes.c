@@ -106,6 +106,7 @@ if (thislock.lock == NULL)
 
 PromiseBanner(pp);
 VerifyProcessOp(PROCESSTABLE,a,pp);
+YieldCurrentLock(thislock);
 }
 
 

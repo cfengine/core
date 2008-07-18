@@ -25,7 +25,7 @@ files:
 
       depth_search => recurse("inf"),
       perms => modestuff,
-      transaction => tell_me;
+      action => tell_me;
 
 }
 
@@ -48,7 +48,7 @@ mode => "o-w";
 
 ############################################
 
-body transaction tell_me
+body action tell_me
 
 {
 report_level => "inform";

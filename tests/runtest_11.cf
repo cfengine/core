@@ -34,6 +34,9 @@ bundle edit_line AppendIfNoLine(parameter,two)
   insert_lines:
 
    "$(parameter) and $(two)-$(list)" location => "append";
+
+   "NEW Special-insert!!!" location => after(".*second-2");
+
   }
 
 ########################################################
@@ -41,5 +44,15 @@ bundle edit_line AppendIfNoLine(parameter,two)
 body location append
 
 {
-line_location => "end";
+# If not line to match, applies to whole text body
+before_after => "after";
+}
+########################################################
+
+body location after(x)
+
+{
+# If not line to match, applies to whole text body
+move_to_line_matching => "$(x)";
+before_after => "after";
 }

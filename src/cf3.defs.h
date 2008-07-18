@@ -64,7 +64,7 @@
 /*************************************************************************/
 
 #define CF_DEFINECLASSES "classes"
-#define CF_TRANSACTION   "transaction"
+#define CF_TRANSACTION   "action"
 
 #define CF3_MODULES 8 /* This value needs to be incremented when adding modules */
 
@@ -282,6 +282,12 @@ enum cfreport
    cf_error,
    cf_log,
    cf_noreport
+   };
+
+enum cfeditorder
+   {
+   cfe_before,
+   cfe_after
    };
 
 /*************************************************************************/
@@ -906,6 +912,30 @@ struct EditDefaults
 
 /*************************************************************************/
 
+struct EditLocation
+   {
+   char *line_matching;
+   enum cfeditorder before_after;
+   char *first_last;
+   };
+
+struct EditColumn
+   {
+   char *column_separator;
+   int select_column;
+   char value_separator;
+   char *column_value;
+   char *column_location;
+   };
+
+struct EditReplace
+   {
+   char *replace_value;
+   char *occurrences;
+   };
+
+/*************************************************************************/
+
 struct Attributes
    {
    struct FileSelect select;
@@ -937,7 +967,7 @@ struct Attributes
    char *restart_class;
    struct ProcessCount process_count;
    struct ProcessSelect process_select;
-      
+
    int havedepthsearch;
    int haveselect;
    int haverename;
@@ -953,6 +983,20 @@ struct Attributes
    int haveclasses;
    int havetrans;
    int haveprocess_count;
+
+      /* editline */
+      
+   struct EditLocation location;
+   struct EditColumn column;
+   struct EditReplace replace;
+   int havelocation;
+   int havecolumn;
+   int havereplace;
+   char *sourcetype;
+   int expandvars;
    };
+
+/*************************************************************************/
+
 
 #include "prototypes3.h"

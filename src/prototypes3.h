@@ -77,6 +77,12 @@ struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp);
 struct ProcessCount GetMatchesConstraints(struct Promise *pp);
 struct EditDefaults GetEditDefaults(struct Promise *pp);
 
+struct Attributes GetInsertionAttributes(struct Promise *pp);
+struct EditLocation GetLocationAttributes(struct Promise *pp);
+struct Attributes GetDeletionAttributes(struct Promise *pp);
+struct Attributes GetColumnAttributes(struct Promise *pp);
+struct Attributes GetReplaceAttributes(struct Promise *pp);
+
 void ShowAttributes(struct Attributes a);
 
 /* cfpromises.c */
@@ -233,7 +239,7 @@ int SaveItemListAsFile(struct Item *liststart,char *file,struct Attributes a,str
 /* files_editline.c */
 
 int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attributes a,struct Promise *pp);
-void KeepEditPromise(struct Promise *pp);
+void KeepEditLinePromise(struct Promise *pp);
 void VerifyLineDeletions(struct Promise *pp);
 void VerifyColumnEdits(struct Promise *pp);
 void VerifyPatterns(struct Promise *pp);
@@ -387,7 +393,16 @@ int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype
 void DeleteHashes(struct CfAssoc **hashtable);
 void EditHashValue(char *scopeid,char *lval,void *rval);
 void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
-    
+
+/* item-lib.c */
+
+void AppendItemList(struct Item **liststart,char *itemstring);
+void PrependItemList(struct Item **liststart,char *itemstring);
+struct Item *SelectNextItemMatching(struct Item *list,char *regexp,struct Item **prev);
+struct Item *SelectLastItemMatching(struct Item *list,char *regexp,struct Item **prev);
+void InsertAfter(struct Item **filestart,struct Item *ptr,char *string);
+int NeighbourItemMatches(struct Item *filestart,struct Item *location,char *string,enum cfeditorder pos);
+
 /* iteration.c */
 
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *listvars);

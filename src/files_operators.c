@@ -129,7 +129,7 @@ else
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,attr,"Created file %s, mode = %o\n",file,filemode);
+         cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created file %s, mode = %o\n",file,filemode);
          close(fd);
          }
       }
@@ -190,12 +190,24 @@ int ScheduleEditOperation(char *filename,struct Attributes a,struct Promise *pp)
   char *edit_bundle_name = NULL;
   struct Rlist *params;
   int retval = false;
+  struct CfLock thislock;
+  char lockname[CF_BUFSIZE];
+
+snprintf(lockname,CF_BUFSIZE-1,"edit-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return false;
+   }
  
 pp->edcontext = NewEditContext(filename,a,pp);
 
 if (pp->edcontext == NULL)
    {
    CfOut(cf_error,"","File %s was marked for editing but could not be opened\n",filename);
+   FinishEditContext(pp->edcontext,a,pp);
+   YieldCurrentLock(thislock);
    return false;
    }
 
@@ -214,6 +226,8 @@ if (a.haveeditline)
       }
    else
       {
+      FinishEditContext(pp->edcontext,a,pp);
+      YieldCurrentLock(thislock);
       return false;
       }
    
@@ -230,7 +244,7 @@ if (a.haveeditline)
    }
 
 FinishEditContext(pp->edcontext,a,pp);
-
+YieldCurrentLock(thislock);
 return retval;
 }
 

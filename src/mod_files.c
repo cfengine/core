@@ -60,9 +60,9 @@
 
 struct BodySyntax CF_LOCATION_BODY[] =
    {
-   {"line_location",cf_opts,"start,end"},
-   {"after_line_matching",cf_opts,CF_ANYSTRING},
-   {"before_line_matching",cf_opts,CF_ANYSTRING},
+   {"move_to_line_matching",cf_str,CF_ANYSTRING},
+   {"before_after",cf_opts,"before,after"},
+   {"first_last",cf_opts,"first,last"},
    {NULL,cf_notype,NULL}
    };
 
@@ -74,10 +74,7 @@ struct BodySyntax CF_EDITCOL_BODY[] =
    {"select_column",cf_int,CF_VALRANGE},
    {"value_separator",cf_str,CF_CHARRANGE},
    {"column_value",cf_str,CF_ANYSTRING},
-   {"append_value",cf_str,CF_ANYSTRING},
-   {"prepend_value",cf_str,CF_ANYSTRING},
-   {"insert_value_after",cf_str,CF_ANYSTRING},
-   {"insert_value_alphanum",cf_str,CF_ANYSTRING},
+   {"column_location",cf_opts,"prepend,append,alphanum"},
    {NULL,cf_notype,NULL}
    };
 

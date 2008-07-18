@@ -76,7 +76,7 @@ if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    }
 #endif
 
-PrependItem(&VREPOSLIST,file,NULL);
+PrependItemList(&VREPOSLIST,file);
 
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)

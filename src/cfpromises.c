@@ -67,7 +67,15 @@ GenericInitialize(argc,argv,"common");
 ThisAgentInit();
 SHOWREPORTS = true;
 Verbose("Inputs are valid\n");
-exit(0);
+
+if (ERRORCOUNT > 0)
+   {
+   exit(1);
+   }
+else
+   {
+   exit(0);
+   }
 }
 
 /*******************************************************************/

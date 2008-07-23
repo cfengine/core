@@ -82,6 +82,7 @@ struct EditLocation GetLocationAttributes(struct Promise *pp);
 struct Attributes GetDeletionAttributes(struct Promise *pp);
 struct Attributes GetColumnAttributes(struct Promise *pp);
 struct Attributes GetReplaceAttributes(struct Promise *pp);
+struct EditRegion GetRegionConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -244,6 +245,9 @@ void VerifyLineDeletions(struct Promise *pp);
 void VerifyColumnEdits(struct Promise *pp);
 void VerifyPatterns(struct Promise *pp);
 void VerifyLineInsertions(struct Promise *pp);
+int InsertMissingLineToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp);
+int InsertMissingLineAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 
 /* files_links.c */
 
@@ -396,12 +400,16 @@ void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist)
 
 /* item-lib.c */
 
+struct Item *EndOfList(struct Item *start);
+int IsItemInRegion(char *item,struct Item *begin,struct Item *end);
 void AppendItemList(struct Item **liststart,char *itemstring);
 void PrependItemList(struct Item **liststart,char *itemstring);
-struct Item *SelectNextItemMatching(struct Item *list,char *regexp,struct Item **prev);
-struct Item *SelectLastItemMatching(struct Item *list,char *regexp,struct Item **prev);
+int SelectItemMatching(char *regex,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev,char *fl);
+int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
+int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
+int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp);
 void InsertAfter(struct Item **filestart,struct Item *ptr,char *string);
-int NeighbourItemMatches(struct Item *filestart,struct Item *location,char *string,enum cfeditorder pos);
+int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,enum cfeditorder pos);
 
 /* iteration.c */
 

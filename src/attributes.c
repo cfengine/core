@@ -684,6 +684,9 @@ attr.expandvars = GetBooleanConstraint("expand_vars",pp->conlist);
                                                 
 /* Common ("included") */
 
+attr.haveregion = GetBooleanConstraint("select_region",pp->conlist);
+attr.region = GetRegionConstraints(pp);
+
 attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
 
@@ -700,7 +703,7 @@ struct EditLocation GetLocationAttributes(struct Promise *pp)
 { struct EditLocation e;
  char *value;
 
-e.line_matching = GetConstraint("move_to_line_matching",pp->conlist,CF_SCALAR);;
+e.line_matching = GetConstraint("select_line_matching",pp->conlist,CF_SCALAR);;
 value = GetConstraint("before_after",pp->conlist,CF_SCALAR);;
 
 if (value && strcmp(value,"before") == 0)
@@ -722,6 +725,18 @@ struct Attributes GetDeletionAttributes(struct Promise *pp)
 
 { struct Attributes attr;
 
+
+ /* common */
+
+attr.haveregion = GetBooleanConstraint("select_region",pp->conlist);
+attr.region = GetRegionConstraints(pp);
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
 return attr;
 }
 
@@ -732,6 +747,18 @@ struct Attributes GetColumnAttributes(struct Promise *pp)
 { struct Attributes attr;
 
 attr.havecolumn = GetBooleanConstraint("edit_column",pp->conlist);
+
+ /* common */
+
+attr.haveregion = GetBooleanConstraint("select_region",pp->conlist);
+attr.region = GetRegionConstraints(pp);
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
 return attr;
 }
 
@@ -742,5 +769,30 @@ struct Attributes GetReplaceAttributes(struct Promise *pp)
 { struct Attributes attr;
 
 attr.havereplace = GetBooleanConstraint("replace_pattern",pp->conlist);
+
+
+ /* common */
+
+attr.haveregion = GetBooleanConstraint("select_region",pp->conlist);
+attr.region = GetRegionConstraints(pp);
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
 return attr;
+}
+
+/*******************************************************************/
+
+struct EditRegion GetRegionConstraints(struct Promise *pp)
+
+{ struct EditRegion e;
+
+e.select_start = GetConstraint("select_start",pp->conlist,CF_SCALAR);
+e.select_end = GetConstraint("select_end",pp->conlist,CF_SCALAR);
+ 
+return e;
 }

@@ -113,6 +113,7 @@ extern struct BodySyntax CF_REPORT_BODIES[];
 
 
 #ifndef CF3_MOD_FILES
+extern struct BodySyntax CF_COMMON_EDITBODIES[];
 extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
 extern struct BodySyntax CF_APPEND_REPL_BODIES[];
 extern struct BodySyntax CF_FILES_BODIES[];

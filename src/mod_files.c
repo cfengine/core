@@ -60,7 +60,7 @@
 
 struct BodySyntax CF_LOCATION_BODY[] =
    {
-   {"move_to_line_matching",cf_str,CF_ANYSTRING},
+   {"select_line_matching",cf_str,CF_ANYSTRING},
    {"before_after",cf_opts,"before,after"},
    {"first_last",cf_opts,"first,last"},
    {NULL,cf_notype,NULL}
@@ -84,6 +84,15 @@ struct BodySyntax CF_REPLACEWITH_BODY[] =
    {
    {"replace_value",cf_str,CF_ANYSTRING},
    {"occurrences",cf_opts,"all,first,last"},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
+struct BodySyntax CF_EDSCOPE_BODY[] =
+   {
+   {"select_start",cf_str,CF_ANYSTRING},
+   {"select_end",cf_str,CF_ANYSTRING},
    {NULL,cf_notype,NULL}
    };
 
@@ -118,6 +127,16 @@ struct BodySyntax CF_COLUMN_BODIES[] =
 struct BodySyntax CF_REPLACE_BODIES[] =
    {
    {"replace_with",cf_body,CF_REPLACEWITH_BODY},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+/* Common to all edit_line promises                           */
+/**************************************************************/
+
+struct BodySyntax CF_COMMON_EDITBODIES[] =
+   {
+   {"select_region",cf_body,CF_EDSCOPE_BODY},
    {NULL,cf_notype,NULL}
    };
 

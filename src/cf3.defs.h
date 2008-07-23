@@ -53,6 +53,7 @@
 #define CF_NOINT    -678L
 #define CF_ANYUSER  (uid_t)-1
 #define CF_ANYGROUP (gid_t)-1
+#define CF_UNDEFINED_ITEM (void *)0x1234
 
 #define CF_INBODY   1
 #define CF_INBUNDLE 2
@@ -919,6 +920,12 @@ struct EditLocation
    char *first_last;
    };
 
+struct EditRegion
+   {
+   char *select_start;
+   char *select_end;
+   };
+
 struct EditColumn
    {
    char *column_separator;
@@ -985,10 +992,12 @@ struct Attributes
    int haveprocess_count;
 
       /* editline */
-      
+
+   struct EditRegion region;
    struct EditLocation location;
    struct EditColumn column;
    struct EditReplace replace;
+   int haveregion;
    int havelocation;
    int havecolumn;
    int havereplace;

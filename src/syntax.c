@@ -207,6 +207,18 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    }
 
 
+for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
+   {
+   Debug1("CMP-common # %s,%s\n",lval,CF_COMMON_EDITBODIES[i].lval);
+   
+   if (strcmp(lval,CF_COMMON_EDITBODIES[i].lval) == 0)
+      {
+      Debug("Found a match for lval %s in the common edit constraint attributes\n",lval);
+      return;
+      }
+   }
+
+
 // Now check if it is in the common list...
 
 if (!lmatch || !allowed)
@@ -308,7 +320,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                {
                /* Either module defined or common */
 
-               Debug1("CMP-module-subtypes: %s,%s\n",ss[j].subtype,type);
+               Debug1("CMP-module-subtypes (%s): %s,%s\n",ss[j].btype,ss[j].subtype,type);
                
                if (strcmp(ss[j].subtype,type) == 0 && strcmp(ss[j].subtype,"*") != 0)
                   {

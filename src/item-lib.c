@@ -30,6 +30,37 @@
 
 /*********************************************************************/
 
+struct Item *EndOfList(struct Item *start)
+
+{ struct Item *ip, *prev = CF_UNDEFINED_ITEM;
+
+for (ip = start; ip !=  NULL; ip=ip->next)
+   {
+   prev = ip;
+   }
+
+return prev;
+}
+
+/*********************************************************************/
+
+int IsItemInRegion(char *item,struct Item *begin_ptr,struct Item *end_ptr)
+
+{ struct Item *ip;
+ 
+for (ip = begin_ptr; ip != end_ptr->next; ip = ip->next)
+   {
+   if (strcmp(ip->name,item) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*********************************************************************/
+
 void AppendItemList(struct Item **liststart,char *itemstring)
 
 { struct Item *ip, *lp;
@@ -88,23 +119,56 @@ ip->counter = 0;
 ip->classes = NULL; /* unused */
 }
 
+/***************************************************************************/
+
+int SelectItemMatching(char *regex,struct Item *begin_ptr,struct Item *end_ptr,struct Item **match,struct Item **prev,char *fl)
+
+{
+*match = CF_UNDEFINED_ITEM;
+*prev = CF_UNDEFINED_ITEM;
+
+if (regex == NULL)
+   {
+   return false;
+   }
+
+if (fl && (strcmp(fl,"first") == 0))
+   {
+   if (SelectNextItemMatching(regex,begin_ptr,end_ptr,match,prev))
+      {
+      return true;
+      }
+   }
+else
+   {
+   printf("XXXX\n");
+   if (SelectLastItemMatching(regex,begin_ptr,end_ptr,match,prev))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
 /*********************************************************************/ 
 
-struct Item *SelectNextItemMatching(struct Item *list,char *regexp,struct Item **prev) 
+int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
 
-{ struct Item *ip;
+{ struct Item *ip,*ip_prev = CF_UNDEFINED_ITEM;
   struct CfRegEx rex;
- 
+
+*match = CF_UNDEFINED_ITEM;
+*prev = CF_UNDEFINED_ITEM;
+
 rex = CompileRegExp(regexp);
 
 if (rex.failed)
    {
-   return NULL;
+   return false;
    }
 
-*prev = NULL;
-
-for (ip = list; ip != NULL; ip=ip->next)
+for (ip = begin; ip != end; ip=ip->next)
    {
    if (ip->name == NULL)
       {
@@ -113,32 +177,35 @@ for (ip = list; ip != NULL; ip=ip->next)
 
    if (RegExMatchFullString(rex,ip->name))
       {
-      return ip;
+      *match = ip;
+      *prev = ip_prev;
+      return true;
       }
    
-   *prev = ip;
+   ip_prev = ip;
    }
 
-return NULL;
+return false;
 }
 
 /*********************************************************************/ 
 
-struct Item *SelectLastItemMatching(struct Item *list,char *regexp,struct Item **prev) 
+int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
 
-{ struct Item *ip,*ip_last = NULL,*ip_prev;
+{ struct Item *ip,*ip_last = NULL,*ip_prev = CF_UNDEFINED_ITEM;;
   struct CfRegEx rex;
  
+*match = CF_UNDEFINED_ITEM;
+*prev = CF_UNDEFINED_ITEM;
+
 rex = CompileRegExp(regexp);
 
 if (rex.failed)
    {
-   return NULL;
+   return false;
    }
 
-*prev = NULL;
-
-for (ip = list; ip != NULL; ip=ip->next)
+for (ip = begin; ip != end; ip=ip->next)
    {
    if (ip->name == NULL)
       {
@@ -154,7 +221,8 @@ for (ip = list; ip != NULL; ip=ip->next)
    ip_prev = ip;
    }
 
-return ip_last;
+*match = ip_last;
+return false;
 }
 
 /*********************************************************************/
@@ -166,7 +234,13 @@ void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 { struct Item *ip;
   char *sp;
 
-if (*filestart == NULL || ptr == *filestart)
+if (*filestart == NULL || ptr == *filestart || ptr == CF_UNDEFINED_ITEM)
+   {
+   PrependItemList(filestart,string);
+   return;
+   }
+
+if (ptr == NULL)
    {
    AppendItemList(filestart,string);
    return;
@@ -186,13 +260,13 @@ ip->classes = NULL;
 
 /*********************************************************************/
 
-int NeighbourItemMatches(struct Item *filestart,struct Item *location,char *string,enum cfeditorder pos)
+int NeighbourItemMatches(struct Item *file_start,struct Item *location,char *string,enum cfeditorder pos)
 
 { struct Item *ip;
 
 /* Look for a line matching proposed insert before or after location */
  
-for (ip = filestart; ip != NULL; ip = ip->next)
+for (ip = file_start; ip != NULL; ip = ip->next)
    {
    if (pos == cfe_before)
       {

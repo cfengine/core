@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
 /*********************************************************/
 /* FnCalls are lvalues in certain promise constraints    */
 /*********************************************************/
@@ -318,6 +317,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
      {"*","classes",CF_CLASSBODY},
      {"*","reports",CF_REPORTBODY},
      {"agent","*",CF_COMMON_BODIES},
+     {"edit_line","*",CF_COMMON_EDITBODIES},
      {NULL,NULL,NULL}
      };
 

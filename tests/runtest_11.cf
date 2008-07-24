@@ -15,6 +15,10 @@ bundlesequence  => { "testbundle"  };
 bundle agent testbundle
 
 {
+vars:
+
+ "1" string => "numerical backreference";
+
 files:
 
   "/home/mark/tmp/cf3_test"
@@ -33,18 +37,29 @@ bundle edit_line AppendIfNoLine(parameter,two)
 
     "list" slist => { "1", "2", "3"  };
 
+    "myscalar" string => "hitccokckckc";
+
+   # "usernames" slist => ReadColumn("/etc/passwd",":","1");
+
   insert_lines:
 
    "$(parameter) and $(two)-$(list)" location => "append";
 
 #   "NEW Special-insert!!!" select_region => MySection("New section");
-   "set variable = value" select_region => MySection("New section");
+#   "set variable = value" select_region => MySection("New section");
 
+
+   "/home/mark/tmp/insert" source_type => "file",
+                           expand_scalars => "true",
+                      select_region => MySection("New section");
 
   delete_lines:
 
     "l.*";
     "NEW.*" select_region => MySection("New section");
+
+   # Delete LinesStarting in file
+
   }
 
 ########################################################

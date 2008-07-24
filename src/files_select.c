@@ -63,12 +63,12 @@ if (SelectTypeMatch(sb,attr.select.filetypes))
    PrependItem(&leaf_attr,"file_types","");
    }
 
-if (SelectOwnerMatch(sb,attr.select.owners))
+if (attr.select.owners && SelectOwnerMatch(sb,attr.select.owners))
    {
    PrependItem(&leaf_attr,"owner","");
    }
 
-if (SelectGroupMatch(sb,attr.select.groups))
+if (attr.select.groups && SelectGroupMatch(sb,attr.select.groups))
    {
    PrependItem(&leaf_attr,"group","");
    }
@@ -93,17 +93,17 @@ if (SelectTimeMatch(sb->st_mtime,attr.select.min_mtime,attr.select.max_mtime))
    PrependItem(&leaf_attr,"mtime","");
    }
 
-if (SelectIsSymLinkTo(path,attr.select.issymlinkto))
+if (attr.select.issymlinkto && SelectIsSymLinkTo(path,attr.select.issymlinkto))
    {
    PrependItem(&leaf_attr,"issymlinkto","");
    }
 
-if (SelectExecRegexMatch(path,attr.select.exec_regex))
+if (attr.select.exec_regex && SelectExecRegexMatch(path,attr.select.exec_regex))
    {
    PrependItem(&leaf_attr,"exec_regex","");
    }
 
-if (SelectExecProgram(path,attr.select.exec_program))
+if (attr.select.exec_program && SelectExecProgram(path,attr.select.exec_program))
    {
    PrependItem(&leaf_attr,"exec_program","");
    }

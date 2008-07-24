@@ -43,6 +43,21 @@ void LoadSystemConstants()
 /* Variables                                                       */
 /*******************************************************************/
 
+void ForceScalar(char *lval,char *rval)
+
+{ char rtype,retval[CF_MAXVARSIZE];
+
+if (GetVariable("this",lval,(void *)&retval,&rtype) != cf_notype)
+   {
+   DeleteVariable("this",lval);
+   }
+
+NewScalar("this",lval,rval,cf_str);
+Debug("Setting local variable \"this.\" context; $(%s) = %s\n",lval,rval);
+}
+
+/*******************************************************************/
+
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 
 { char *sp1,*sp2;

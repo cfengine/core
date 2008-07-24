@@ -193,7 +193,11 @@ if (ss.subtype != NULL) /* In a bundle */
       }
    }
 
-/* Now check the functional modules - extra level of indirection */
+
+/* Now check the functional modules - extra level of indirection
+   Note that we only check body attributes relative to promise type.
+   We can enter any promise types in any bundle, but only recognized
+   types will be dealt with. */
 
 for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    {

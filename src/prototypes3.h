@@ -83,6 +83,7 @@ struct Attributes GetDeletionAttributes(struct Promise *pp);
 struct Attributes GetColumnAttributes(struct Promise *pp);
 struct Attributes GetReplaceAttributes(struct Promise *pp);
 struct EditRegion GetRegionConstraints(struct Promise *pp);
+struct EditReplace GetReplaceConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -245,9 +246,11 @@ void VerifyLineDeletions(struct Promise *pp);
 void VerifyColumnEdits(struct Promise *pp);
 void VerifyPatterns(struct Promise *pp);
 void VerifyLineInsertions(struct Promise *pp);
-int InsertMissingLineToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp);
-int InsertMissingLineAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp);
+int InsertMissingLinesAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+int InsertMissingLineAtLocation(char *string,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
+int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
 
 /* files_links.c */
 
@@ -551,6 +554,7 @@ void ShowRval(FILE *fp,void *rval,char type);
     
 /* scope.c */
 
+void SetScope(char *id);
 void SetNewScope(char *id);
 void NewScope(char *name);
 void DeleteScope(char *name);
@@ -635,6 +639,7 @@ void CloseLock(DB *dbp);
 /* vars.c */
 
 void LoadSystemConstants(void);
+void ForceScalar(char *lval,char *rval);
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 void DeleteScalar(char *scope,char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);

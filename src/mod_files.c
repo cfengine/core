@@ -83,7 +83,7 @@ struct BodySyntax CF_EDITCOL_BODY[] =
 struct BodySyntax CF_REPLACEWITH_BODY[] =
    {
    {"replace_value",cf_str,CF_ANYSTRING},
-   {"occurrences",cf_opts,"all,first,last"},
+   {"occurrences",cf_opts,"all,first"},
    {NULL,cf_notype,NULL}
    };
 
@@ -103,7 +103,7 @@ struct BodySyntax CF_INSERTLINES_BODIES[] =
    {
    {"location",cf_body,CF_LOCATION_BODY},
    {"source_type",cf_opts,"literal,string,file"},
-   {"expand_vars",cf_opts,CF_BOOL},
+   {"expand_scalars",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 
@@ -180,6 +180,7 @@ struct BodySyntax CF_EDITS_BODY[] =
    {
    {"edit_backup",cf_opts,"true,false,timestamp,rotate"},
    {"max_file_size",cf_int,CF_VALRANGE},
+   {"empty_file_before_editing",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 

@@ -129,6 +129,9 @@ if (pp->done)
    return;
    }
 
+
+SetScope("this");
+
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
    KeepClassContextPromise(pp);
@@ -183,7 +186,7 @@ if (!a.haveregion)
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"The promised line deletion (%s) could not select an edit region",pp->promiser);
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region",pp->promiser);
    return;
    }
 
@@ -204,7 +207,40 @@ void VerifyColumnEdits(struct Promise *pp)
 
 void VerifyPatterns(struct Promise *pp)
 
-{
+{ struct Item **start = &(pp->edcontext->file_start), *match, *prev;
+  struct Attributes a;
+  struct Item *begin_ptr,*end_ptr;
+
+*(pp->donep) = true;
+
+a = GetReplaceAttributes(pp);
+
+if (!a.replace.replace_value)
+   {
+   cfPS(cf_error,CF_WARN,"",pp,a,"No replace_value in promise to replace pattern %s",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return;
+   }
+
+/* Are we working in a restricted region? */
+
+if (!a.haveregion)
+   {
+   begin_ptr = *start;
+   end_ptr = EndOfList(*start);
+   }
+else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region",pp->promiser);
+   return;
+   }
+
+/* Make sure back references are expanded */
+
+if (ReplacePatterns(begin_ptr,end_ptr,a,pp))
+   {
+   (pp->edcontext->num_edits)++;
+   }
 }
 
 /***************************************************************************/
@@ -228,7 +264,7 @@ if (!a.haveregion)
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"The promised line insertion (%s) could not select an edit region",pp->promiser);
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select an edit region",pp->promiser);
    return;
    }
 
@@ -236,7 +272,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
 
 if (a.location.line_matching == NULL)
    {
-   if (InsertMissingLineToRegion(start,begin_ptr,end_ptr,a,pp))
+   if (InsertMissingLinesToRegion(start,begin_ptr,end_ptr,a,pp))
       {
       (pp->edcontext->num_edits)++;
       }
@@ -245,11 +281,11 @@ else
    {
    if (!SelectItemMatching(a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
       {
-      cfPS(cf_error,CF_INTERPT,"",pp,a,"The promised line insertion (%s) could not select a locator matching %s",pp->promiser,a.location.line_matching);
+      cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select a locator matching %s",pp->promiser,a.location.line_matching);
       return;
       }
 
-   if (InsertMissingLineAtLocation(start,match,prev,a,pp))
+   if (InsertMissingLinesAtLocation(start,match,prev,a,pp))
       {
       (pp->edcontext->num_edits)++;
       }
@@ -271,6 +307,7 @@ for (ip = start; ip != NULL; ip = ip->next)
       if (beg == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_start,ip->name))
          {
          beg = ip;
+         continue;
          }
       }
 
@@ -290,13 +327,13 @@ for (ip = start; ip != NULL; ip = ip->next)
 
 if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
    {
-   cfPS(cf_inform,CF_INTERPT,"",pp,a,"The promised start pattern (%s) was not found when selecting edit region",a.region.select_start);
+   cfPS(cf_inform,CF_INTERPT,"",pp,a," !! The promised start pattern (%s) was not found when selecting edit region",a.region.select_start);
    return false;
    }
 
 if (end == CF_UNDEFINED_ITEM && a.region.select_end)
    {
-   cfPS(cf_inform,CF_INTERPT,"",pp,a,"The promised end pattern (%s) was not found when selecting edit region",a.region.select_end);
+   cfPS(cf_inform,CF_INTERPT,"",pp,a," !! The promised end pattern (%s) was not found when selecting edit region",a.region.select_end);
    return false;
    }
 
@@ -307,7 +344,7 @@ return true;
 
 /***************************************************************************/
 
-int InsertMissingLineToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp)
+int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip, *prev = CF_UNDEFINED_ITEM;
 
@@ -315,7 +352,7 @@ int InsertMissingLineToRegion(struct Item **start,struct Item *begin_ptr,struct 
 
 if (IsItemInRegion(pp->promiser,begin_ptr,end_ptr))
    {
-   cfPS(cf_verbose,CF_NOP,"",pp,a,"Promised line \"%s\" exists within selected region",pp->promiser);
+   cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised line \"%s\" exists within selected region (promise kept)",pp->promiser);
    return false;
    }
 
@@ -325,7 +362,7 @@ if (a.location.before_after == cfe_before)
       {
       if (ip == begin_ptr)
          {
-         return InsertMissingLineAtLocation(start,ip,prev,a,pp);
+         return InsertMissingLinesAtLocation(start,ip,prev,a,pp);
          }
       
       prev = ip;
@@ -338,7 +375,7 @@ if (a.location.before_after == cfe_after)
       {
       if (ip == end_ptr)
          {
-         return InsertMissingLineAtLocation(start,ip,prev,a,pp);
+         return InsertMissingLinesAtLocation(start,ip,prev,a,pp);
          }
       
       prev = ip;
@@ -349,58 +386,57 @@ return false;
 }
 
 /***************************************************************************/
-    
-int InsertMissingLineAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
 
-/* Check line neighbourhood in whole file to avoid edge effects */
-    
-{
-if (prev == CF_UNDEFINED_ITEM) /* Insert at first line */
+int InsertMissingLinesAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+
+{ FILE *fin;
+  char buf[CF_BUFSIZE],exp[CF_EXPANDSIZE];
+  struct Item *loc;
+  int retval = false;
+  
+if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
    {
-   if (a.location.before_after == cfe_before)
+   if ((fin = fopen(pp->promiser,"r")) == NULL)
       {
-      if (strcmp((*start)->name,pp->promiser) != 0)
+      cfPS(cf_error,CF_INTERPT,"fopen",pp,a,"Could not read file %s",pp->promiser);
+      return false;
+      }
+
+   loc = location;
+
+   while (!feof(fin))
+      {
+      buf[0] = '\0';
+      fgets(buf,CF_BUFSIZE,fin);
+      Chop(buf);
+
+      if (a.expandvars)
          {
-         PrependItemList(start,pp->promiser);
-         (pp->edcontext->num_edits)++;
-         cfPS(cf_verbose,CF_CHG,"",pp,a,"Prepending the promised line \"%s\"",pp->promiser);
-         return true;
+         ExpandScalar(buf,exp);
          }
       else
          {
-         cfPS(cf_verbose,CF_NOP,"",pp,a,"Promised line \"%s\" exists at start of file (promise kept)",pp->promiser);
-         return false;
+         strcpy(exp,buf);
+         }
+
+      retval |= InsertMissingLineAtLocation(exp,start,loc,prev,a,pp);
+
+      prev = prev->next;
+      loc = loc->next;
+
+      if (loc == NULL)
+         {
+         // somthing funny ... shouldn't happen
+         break;
          }
       }
-   }
- 
-if (a.location.before_after == cfe_before)
-   {
-   if (NeighbourItemMatches(*start,location,pp->promiser,cfe_before))
-      {
-      cfPS(cf_verbose,CF_NOP,"",pp,a,"Promised line \"%s\" exists before locator (promise kept)",pp->promiser);
-      return false;
-      }
-   else
-      {
-      InsertAfter(start,prev,pp->promiser);
-      cfPS(cf_verbose,CF_CHG,"",pp,a,"Inserting the promised line \"%s\" before locator",pp->promiser);
-      return true;
-      }
+   
+   fclose(fin);
+   return retval;
    }
 else
    {
-   if (NeighbourItemMatches(*start,location,pp->promiser,cfe_after))
-      {
-      cfPS(cf_verbose,CF_NOP,"",pp,a,"Promised line \"%s\" exists after locator (promise kept)",pp->promiser);
-      return false;
-      }
-   else
-      {
-      InsertAfter(start,location,pp->promiser);
-      cfPS(cf_verbose,CF_CHG,"",pp,a,"Inserting the promised line \"%s\" after locator",pp->promiser);
-      return true;
-      }
+   return InsertMissingLineAtLocation(pp->promiser,start,location,prev,a,pp);
    }
 }
 
@@ -420,7 +456,13 @@ for (ip = *start; ip != NULL; ip = ip->next)
 
    if (in_region && FullTextMatch(pp->promiser,ip->name))
       {
-      cfPS(cf_verbose,CF_CHG,"",pp,a,"Deleting the promised line \"%s\"",ip->name);
+      if (DONTDO || a.transaction.action == cfa_warn)
+         {
+         cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to delete line \"%s\" - but only a warning was promised",ip->name);
+         return false;
+         }
+      
+      cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\"",ip->name);
       retval = true;
 
       if (ip->name != NULL)
@@ -454,4 +496,182 @@ for (ip = *start; ip != NULL; ip = ip->next)
    }
 
 return retval;
+}
+
+/********************************************************************/
+
+int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
+
+{ char *sp, *start = NULL,*end,replace[CF_EXPANDSIZE],line_buff[CF_EXPANDSIZE];
+ int match_len,start_off,end_off,once_only = false,retval = false;
+  struct CfRegEx rex;
+  struct Item *ip;
+ 
+rex = CompileRegExp(pp->promiser);
+
+if (rex.failed)
+   {
+   return false;
+   }
+
+if (a.replace.occurrences && strcmp(a.replace.occurrences,"first") == 0)
+   {
+   once_only = true;
+   }
+
+for (ip = file_start; ip != file_end; ip=ip->next)
+   {
+   if (ip->name == NULL)
+      {
+      continue;
+      }
+
+   if (!RegExMatchSubString(rex,ip->name,&start_off,&end_off))
+      {
+      continue;
+      }
+   else
+      {
+      match_len = end_off - start_off;
+      ExpandScalar(a.replace.replace_value,replace);
+      }
+   
+   memset(line_buff,0,CF_BUFSIZE);
+   sp = ip->name;   
+
+   while (*sp != '\0')
+      {
+      strncat(line_buff,sp,start_off);
+      sp += start_off;
+      strncat(line_buff,replace,CF_BUFSIZE);
+      sp += match_len;
+
+      if (once_only)
+         {
+         strncat(line_buff,ip->name+end_off,CF_BUFSIZE);
+         break;
+         }
+      else
+         {
+         if (!RegExMatchSubString(rex,sp,&start_off,&end_off))
+            {
+            strncat(line_buff,sp,CF_BUFSIZE);
+            break;
+            }
+         else
+            {
+            match_len = end_off - start_off;
+            ExpandScalar(a.replace.replace_value,replace);
+            }
+         }
+      }
+
+   if (RegExMatchSubString(rex,line_buff,&start_off,&end_off))
+      {
+      cfPS(cf_verbose,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent",line_buff,ip->name,pp->promiser);
+      continue;
+      }
+
+   if (once_only)
+      {
+      break;
+      }
+   
+   if (DONTDO || a.transaction.action == cfa_warn)
+      {
+      cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to replace line \"%s\" - but only a warning was promised",pp->promiser);
+      continue;
+      }
+   else
+      {
+      free(ip->name);
+      ip->name = strdup(line_buff);
+      cfPS(cf_verbose,CF_CHG,"",pp,a," -> Replaced pattern \"%s\"",pp->promiser);
+      retval = true;
+      }
+   }
+
+return retval;
+}
+
+/***************************************************************************/
+/* Level                                                                   */
+/***************************************************************************/
+
+int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+
+/* Check line neighbourhood in whole file to avoid edge effects */
+    
+{
+if (prev == CF_UNDEFINED_ITEM) /* Insert at first line */
+   {
+   if (a.location.before_after == cfe_before)
+      {
+      if (strcmp((*start)->name,newline) != 0)
+         {
+         if (DONTDO || a.transaction.action == cfa_warn)
+            {
+            cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to prepend the promised line \"%s\" - but only a warning was promised",newline);
+            return true;
+            }
+         else
+            {
+            PrependItemList(start,newline);
+            (pp->edcontext->num_edits)++;
+            cfPS(cf_verbose,CF_CHG,"",pp,a," -> Prepending the promised line \"%s\"",newline);
+            return true;
+            }
+         }
+      else
+         {
+         cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised line \"%s\" exists at start of file (promise kept)",newline);
+         return false;
+         }
+      }
+   }
+ 
+if (a.location.before_after == cfe_before)
+   {
+   if (NeighbourItemMatches(*start,location,newline,cfe_before))
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised line \"%s\" exists before locator (promise kept)",newline);
+      return false;
+      }
+   else
+      {
+      if (DONTDO || a.transaction.action == cfa_warn)
+         {
+         cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to insert line \"%s\" but only a warning was promised",newline);
+         return true;
+         }
+      else
+         {
+         InsertAfter(start,prev,newline);
+         cfPS(cf_verbose,CF_CHG,"",pp,a," -> Inserting the promised line \"%s\" before locator",newline);
+         return true;
+         }
+      }
+   }
+else
+   {
+   if (NeighbourItemMatches(*start,location,newline,cfe_after))
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised line \"%s\" exists after locator (promise kept)",newline);
+      return false;
+      }
+   else
+      {
+      if (DONTDO || a.transaction.action == cfa_warn)
+         {
+         cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to insert line \"%s\" but only a warning was promised",newline);
+         return true;
+         }
+      else
+         {
+         InsertAfter(start,location,newline);
+         cfPS(cf_verbose,CF_CHG,"",pp,a," -> Inserting the promised line \"%s\" after locator",newline);
+         return true;
+         }
+      }
+   }
 }

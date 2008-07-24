@@ -501,7 +501,7 @@ if (found == -1)
    {
    if (attr.transaction.action == cfa_warn)
       {
-      cfPS(cf_error,CF_CHG,"",pp,attr,"Image file %s is non-existent and should be a copy of %s\n",destfile,sourcefile);
+      cfPS(cf_error,CF_NOP,"",pp,attr,"Image file %s is non-existent and should be a copy of %s\n",destfile,sourcefile);
       return;
       }
    

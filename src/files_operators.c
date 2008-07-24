@@ -191,7 +191,7 @@ int ScheduleEditOperation(char *filename,struct Attributes a,struct Promise *pp)
   struct Rlist *params;
   int retval = false;
   struct CfLock thislock;
-  char lockname[CF_BUFSIZE];
+  char lockname[CF_BUFSIZE],context_save[CF_MAXVARSIZE];
 
 snprintf(lockname,CF_BUFSIZE-1,"edit-%s",pp->promiser);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
@@ -238,8 +238,14 @@ if (a.haveeditline)
    if (bp = GetBundle(edit_bundle_name,"edit_line"))
       {
       BannerSubBundle(bp,params);
+
+      strncpy(context_save,CONTEXTID,CF_MAXVARSIZE);
+      strncpy(CONTEXTID,bp->name,CF_MAXVARSIZE);
+      
       AugmentScope(bp->name,bp->args,params);
       retval = ScheduleEditLineOperations(filename,bp,a,pp);
+
+      strncpy(CONTEXTID,context_save,CF_MAXVARSIZE);
       }
    }
 

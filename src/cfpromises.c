@@ -40,7 +40,7 @@ int main (int argc,char *argv[]);
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[12] =
+ struct option OPTIONS[13] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -53,6 +53,7 @@ int main (int argc,char *argv[]);
       { "inform",no_argument,0,'I'},
       { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
+      { "analysis",no_argument,0,'a'},
       { NULL,0,0,'\0' }
       };
 
@@ -89,7 +90,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -162,6 +163,12 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
 
       case 'x': SelfDiagnostic();
           exit(0);
+
+      case 'a':
+
+          printf("Self-analysis is not yet implemented.");
+          exit(0);
+          break;
           
       default:  Syntax("Promise engine");
           exit(1);

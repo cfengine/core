@@ -423,7 +423,6 @@ struct SubType
 struct edit_context
    {
    char *filename;
-   struct Item *current_line_ptr;
    struct Item *file_start;
    struct Item *file_classes;
    int num_edits;
@@ -908,6 +907,7 @@ struct Context
 struct EditDefaults
    {
    enum cfbackupoptions backup;
+   int empty_before_use;
    int maxfilesize;
    };
 

@@ -42,12 +42,18 @@ if ((ec = malloc(sizeof(struct edit_context))) == NULL)
 ec->filename = filename;
 ec->file_start = NULL;
 ec->file_classes = NULL;
-ec->current_line_ptr = NULL;
 ec->num_edits = 0;
 
-if (! LoadFileAsItemList(&(ec->file_start),filename,a,pp))
+if (!LoadFileAsItemList(&(ec->file_start),filename,a,pp))
    {
    return NULL;
+   }
+
+if (a.edits.empty_before_use)
+   {
+   CfOut(cf_verbose,"","Build file model from a blank slate (emptying)\n");
+   DeleteItemList(ec->file_start);
+   ec->file_start = NULL;
    }
 
 return ec;

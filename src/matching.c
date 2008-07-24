@@ -255,6 +255,20 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    {
    *start = ovector[0];
    *end = ovector[1];
+
+   for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
+      {
+      char substring[1024];
+      char lval[4];
+      char *backref_start = teststring + ovector[i*2];
+      int backref_len = ovector[i*2+1] - ovector[i*2];
+      
+      memset(substring,0,1024);
+      strncpy(substring,backref_start,backref_len);
+      snprintf(lval,3,"%d",i);
+      ForceScalar(lval,substring);
+      }
+   
    return true;
    }
 else
@@ -274,6 +288,7 @@ if ((code = regexec(&rx,teststring,1,&pmatch,0)) == 0)
    {
    *start = pmatch.rm_so;
    *end = pmatch.rm_eo;
+
    return true;
    }
 else
@@ -296,28 +311,36 @@ int RegExMatchFullString(struct CfRegEx rex,char *teststring)
 {
 #ifdef HAVE_LIBPCRE
  pcre *rx;
- int ovector[OVECCOUNT],i,rc;
+ int ovector[OVECCOUNT],i,rc,match_len;
+ char *match_start;
  
 rx = rex.rx;
 
 if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
    {
-   for (i = 0; i < rc; i++)
+   match_start = teststring + ovector[0];
+   match_len = ovector[1] - ovector[0];
+
+   for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
       char substring[1024];
-      char *match_start = teststring + ovector[i*2];
-      int match_len = ovector[i*2+1] - ovector[i*2];
-      memset(substring,0,1024);
-      strncpy(substring,match_start,match_len);
+      char lval[4];
+      char *backref_start = teststring + ovector[i*2];
+      int backref_len = ovector[i*2+1] - ovector[i*2];
       
-      if ((match_start == teststring) && (match_len == strlen(teststring)))
-         {
-         return true;
-         }
-      else
-         {
-         return false;
-         }
+      memset(substring,0,1024);
+      strncpy(substring,backref_start,backref_len);
+      snprintf(lval,3,"%d",i);
+      ForceScalar(lval,substring);
+      }
+   
+   if ((match_start == teststring) && (match_len == strlen(teststring)))
+      {
+      return true;
+      }
+   else
+      {
+      return false;
       }
    }
 else

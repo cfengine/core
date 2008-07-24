@@ -545,6 +545,8 @@ else
    e.backup = cfa_backup;
    }
 
+e.empty_before_use = GetBooleanConstraint("empty_file_before_editing",pp->conlist);
+
 return e;
 }
 
@@ -769,7 +771,7 @@ struct Attributes GetReplaceAttributes(struct Promise *pp)
 { struct Attributes attr;
 
 attr.havereplace = GetBooleanConstraint("replace_pattern",pp->conlist);
-
+attr.replace = GetReplaceConstraints(pp);
 
  /* common */
 
@@ -795,4 +797,16 @@ e.select_start = GetConstraint("select_start",pp->conlist,CF_SCALAR);
 e.select_end = GetConstraint("select_end",pp->conlist,CF_SCALAR);
  
 return e;
+}
+
+/*******************************************************************/
+
+struct EditReplace GetReplaceConstraints(struct Promise *pp)
+
+{ struct EditReplace r;
+
+r.replace_value = GetConstraint("replace_value",pp->conlist,CF_SCALAR);
+r.occurrences = GetConstraint("occurrences",pp->conlist,CF_SCALAR);
+ 
+return r;
 }

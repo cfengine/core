@@ -434,6 +434,8 @@ fprintf(fout,"/*********************/\n\n");
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
+   strncpy(id,CanonifyName(tp->topic_name),CF_MAXVARSIZE-1);
+      
    for (op = tp->occurrences; op != NULL; op=op->next)
       {
       ShowOccurrencesLTM(fout,id,op);
@@ -621,7 +623,7 @@ else
 void ShowOccurrencesLTM(FILE *fout,char *topic_id,struct Occurrence *op)
 
 { struct Rlist *rp;
- char subtype[CF_MAXVARSIZE];
+  char subtype[CF_MAXVARSIZE];
 
 fprintf(fout,"\n /* occurrences of %s */\n\n",topic_id);
  

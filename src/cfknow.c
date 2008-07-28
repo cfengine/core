@@ -37,6 +37,7 @@ void VerifyTopicPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyOntology(void);
 void ShowOntology(void);
+void ShowTopicMap(void);
 void ShowTopicLTM(FILE *fout,char *id,char *type,char *value);
 void ShowAssociationsLTM(FILE *fout,char *id,char *type,struct TopicAssociation *ta);
 void ShowOccurrencesLTM(FILE *fout,char *id,struct Occurrence *op);
@@ -103,6 +104,7 @@ KeepKnowControlPromises();
 KeepPromiseBundles();
 VerifyOntology();
 ShowOntology(); // all types and assocs
+ShowTopicMap(); // all types and assocs
 return 0;
 }
 
@@ -371,14 +373,107 @@ void ShowOntology()
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
+  FILE *fout = stdout;
+  char filename[CF_BUFSIZE],longname[CF_BUFSIZE];
+  struct Item *generic_associations = NULL;
+  struct Item *generic_topics = NULL;
+  struct Item *generic_types = NULL;
+  struct Item *ip;
+
+AddSlash(BUILD_DIR);
+snprintf(filename,CF_BUFSIZE-1,"%sontology.html",BUILD_DIR);
+
+printf("Writing %s\n",filename);
+
+if ((fout = fopen(filename,"w")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Cannot write to %s\n",filename);
+   return;
+   }
+
+for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
+   {
+   for (ta = tp->associations; ta != NULL; ta=ta->next)
+      {
+      snprintf(longname,CF_BUFSIZE,"%s/%s",ta->fwd_name,ta->bwd_name);
+      
+      if (!IsItemIn(generic_associations,longname))
+         {
+         PrependItemList(&generic_associations,longname);            
+         }
+      }
+
+   if (tp->comment)
+      {
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      }
+   else
+      {
+      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+      }
+
+   if (!IsItemIn(generic_topics,longname))
+      {
+      PrependItemList(&generic_topics,longname);            
+      }
+
+   if (!IsItemIn(generic_types,tp->topic_type))
+      {
+      PrependItemList(&generic_types,tp->topic_type);            
+      }
+   }
+
+fprintf(fout,"<html>\n");
+fprintf(fout,"<head>\n");
+fprintf(fout,"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/syntax.css\" />\n");
+fprintf(fout,"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/cf_blue.css\"/>\n");
+fprintf(fout,"</head>\n");
+fprintf(fout,"<body>\n");
+
+fprintf(fout,"<h1>Cfengine Operational Ontology</h1><p>");
+
+fprintf(fout,"<h2>Types</h2><p>\n");
+
+for (ip = generic_types; ip != NULL; ip=ip->next)
+   {
+   fprintf(fout,"%s<br>\n",ip->name);
+   }
+
+fprintf(fout,"<h2>Associations</h2><p>\n");
+
+for (ip = generic_associations; ip != NULL; ip=ip->next)
+   {
+   fprintf(fout,"%s<br>\n",ip->name);
+   }
+
+fprintf(fout,"<h2>Topics</h2><p>\n");
+
+for (ip = generic_topics; ip != NULL; ip=ip->next)
+   {
+   fprintf(fout,"%s<br>\n",ip->name);
+   }
+
+fprintf(fout,"</body>\n");
+fprintf(fout,"</html>");
+fclose(fout);
+}
+
+/*********************************************************************/
+
+void ShowTopicMap()
+
+{ struct Topic *tp;
+  struct TopicAssociation *ta;
   struct Occurrence *op;
   FILE *fout = stdout;
-  char id[CF_MAXVARSIZE],filename[CF_BUFSIZE];
+  char id[CF_MAXVARSIZE],filename[CF_BUFSIZE],longname[CF_BUFSIZE];
   struct Item *generic_associations = NULL;
 
 AddSlash(BUILD_DIR);
-snprintf(filename,CF_BUFSIZE-1,"%sontology.ltm",BUILD_DIR);
-  
+snprintf(filename,CF_BUFSIZE-1,"%stopic_map.ltm",BUILD_DIR);
+
+printf("Writing %s\n",filename);
+
 if ((fout = fopen(filename,"w")) == NULL)
    {
    CfOut(cf_error,"fopen","Cannot write to %s\n",filename);
@@ -395,7 +490,8 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
    if (tp->comment)
       {
-      ShowTopicLTM(fout,id,tp->topic_type,tp->comment);
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      ShowTopicLTM(fout,id,tp->topic_type,longname);
       }
    else
       {
@@ -444,6 +540,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
 fclose(fout);
 }
+/*********************************************************************/
 
 /*********************************************************************/
 /* Level                                                             */
@@ -631,6 +728,11 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
    {
    strncpy(subtype,CanonifyName(rp->item),CF_MAXVARSIZE-1);
    fprintf(fout,"{%s,%s, \"%s\"}\n",topic_id,subtype,op->locator);
+
+   if (!GetTopic(TOPIC_MAP,subtype))
+      {
+      CfOut(cf_error,"","Occurrence of %s makes reference to a sub-topic %s but that has not been defined",topic_id,subtype);
+      }
    }
 }
 

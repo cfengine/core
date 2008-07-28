@@ -261,6 +261,17 @@ enum cfscontrol
    cfs_notype,
    };
 
+/*************************************************************************/
+
+enum cfkcoontrol
+   {
+   cfk_tm_prefix,
+   cfk_builddir,
+   cfk_notype
+   };
+
+/*************************************************************************/
+
 enum cfsbundle
    {
    cfs_access,
@@ -655,6 +666,15 @@ enum signalnames
    };
 
 
+enum representations
+   {
+   cfk_url,
+   cfk_file,
+   cfk_db,
+   cfk_literal,
+   cfk_none
+   };
+
 /*************************************************************************/
 /* Runtime constraint structures                                         */
 /*************************************************************************/
@@ -721,6 +741,39 @@ struct DefineClasses
    struct Rlist *interrupt;
    int persist;
    enum statepolicy timer;
+   };
+
+
+/*************************************************************************/
+/* Ontology                                                              */
+/*************************************************************************/
+
+struct Topic
+   {
+   char *topic_type;
+   char *topic_name;
+   char *comment;
+   struct Occurrence *occurrences;
+   struct TopicAssociation *associations;
+   struct Topic *next;
+   };
+
+struct TopicAssociation
+   {
+   char *assoc_type;
+   char *fwd_name;
+   char *bwd_name;
+   struct Rlist *associates;
+   char *associate_topic_type;
+   struct TopicAssociation *next;
+   };
+
+struct Occurrence
+   {
+   char *locator; /* Promiser */
+   enum representations rep_type;
+   struct Rlist *represents; /* subtype represented by promiser */
+   struct Occurrence *next;
    };
 
 /*************************************************************************/
@@ -1003,9 +1056,15 @@ struct Attributes
    int havereplace;
    char *sourcetype;
    int expandvars;
-   };
 
-/*************************************************************************/
+      /* knowledge */
+
+   char *fwd_name;
+   char *bwd_name;
+   struct Rlist *associates;
+   struct Rlist *represents;
+   char *rep_type;
+   };
 
 
 #include "prototypes3.h"

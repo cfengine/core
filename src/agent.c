@@ -39,6 +39,7 @@ enum typesequence
    kp_processes,
    kp_files,
    kp_executions,
+   kp_reports,
    kp_none
    };
 

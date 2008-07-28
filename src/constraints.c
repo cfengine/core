@@ -475,7 +475,7 @@ for  (i = 0; i < CF3_MODULES; i++)
    for (j = 0; ssp[j].btype != NULL; j++)
       {
       ss = ssp[j];
-      
+
       if (ss.subtype != NULL) 
          {
          if (strcmp(ss.subtype,type) == 0)
@@ -500,7 +500,8 @@ for  (i = 0; i < CF3_MODULES; i++)
                         }
                      }                  
                   }
-               else if (strcmp(lval,bs[l].lval) == 0)
+
+               if (strcmp(lval,bs[l].lval) == 0)
                   {
                   CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
                   return;

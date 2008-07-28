@@ -157,6 +157,31 @@ return attr;
 }
 
 /*******************************************************************/
+
+struct Attributes GetTopicsAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.fwd_name = GetConstraint("forward_relationship",pp->conlist,CF_SCALAR);
+attr.bwd_name = GetConstraint("backward_relationship",pp->conlist,CF_SCALAR);
+attr.associates = GetListConstraint("associates",pp->conlist);
+return attr;
+}
+
+/*******************************************************************/
+
+struct Attributes GetOccurrenceAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+  char *value;
+
+attr.represents = GetListConstraint("represents",pp->conlist);
+attr.rep_type = GetConstraint("representation",pp->conlist,CF_SCALAR);
+
+return attr;
+}
+
+/*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
@@ -810,3 +835,4 @@ r.occurrences = GetConstraint("occurrences",pp->conlist,CF_SCALAR);
  
 return r;
 }
+

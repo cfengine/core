@@ -261,8 +261,8 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 
 struct BodySyntax CFK_CONTROLBODY[] =
    {
-   {"default_association",cf_str,".*"},
-   {"builddir",cf_str,".*"},
+   {"id_prefix",cf_str,".*"},
+   {"build_directory",cf_str,".*"},
    {NULL,cf_notype,NULL}
    };
 
@@ -302,7 +302,7 @@ struct BodySyntax CF_COMMON_BODIES[] =
    {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY},
    {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY},
    {"ifvarclass",cf_str,""},   /* execute only if expression true */
-   {"ref",cf_str,""},          /* arbitrary annotation */
+   {"comment",cf_str,""},      /* arbitrary annotation */
    {NULL,cf_notype,NULL}
    };
 

@@ -1652,7 +1652,7 @@ yyreduce:
                            ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
                            AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any");
-                           if (strcmp(P.lval,"ref") == 0)
+                           if (strcmp(P.lval,"comment") == 0)
                               {
                               P.currentpromise->ref = P.rval;
                               }

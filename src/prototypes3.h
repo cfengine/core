@@ -60,6 +60,8 @@ struct Attributes GetReportsAttributes(struct Promise *pp);
 struct Attributes GetExecAttributes(struct Promise *pp);
 struct Attributes GetProcessAttributes(struct Promise *pp);
 struct Attributes GetClassContextAttributes(struct Promise *pp);
+struct Attributes GetTopicsAttributes(struct Promise *pp);
+struct Attributes GetOccurrenceAttributes(struct Promise *pp);
 
 struct ExecContain GetExecContainConstraints(struct Promise *pp);
 struct Recursion GetRecursionConstraints(struct Promise *pp);
@@ -84,6 +86,7 @@ struct Attributes GetColumnAttributes(struct Promise *pp);
 struct Attributes GetReplaceAttributes(struct Promise *pp);
 struct EditRegion GetRegionConstraints(struct Promise *pp);
 struct EditReplace GetReplaceConstraints(struct Promise *pp);
+struct TopicAssociation GetAssociationConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -146,6 +149,7 @@ enum cfdatatype Typename2Datatype(char *name);
 enum cfdatatype GetControlDatatype(char *varname,struct BodySyntax *bp);
 enum cfagenttype Agent2Type(char *name);
 enum cfsbundle Type2Cfs(char *name);
+enum representations String2Representation(char *s);
 int GetBoolean(char *val);
 long Str2Int(char *s);
 mode_t Str2Mode(char *s);
@@ -460,6 +464,19 @@ int MatchRlistItem(struct Rlist *listofregex,char *teststring);
 struct CfRegEx CompileRegExp(char *regexp);
 int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
+
+/* ontology.c */
+
+void AddTopic(struct Topic **list,char *name,char *type);
+void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type);
+void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *ttype,struct Rlist *associates);
+void AddOccurrence(struct Occurrence **list,char *topic_name,char *reference,struct Rlist *represents,enum representations rtype);
+int TopicExists(struct Topic *list,char *topic_name,char *topic_type);
+char *GetTopicType(struct Topic *list,char *topic_name);
+struct Topic *GetTopic(struct Topic *list,char *topic_name);
+int AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
+int OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
+
 
 /* pipes.c */
 

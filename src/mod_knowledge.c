@@ -44,11 +44,20 @@
  /*                                                         */
  /***********************************************************/
 
+struct BodySyntax CF_RELATE_BODY[] =
+   {
+   {"forward_relationship",cf_str,""},
+   {"backward_relationship",cf_str,""},
+   {"associates",cf_slist,""},
+   {NULL,cf_notype,NULL}
+   };
+
+/***************************************************************/
+
 struct BodySyntax CF_OCCUR_BODIES[] =
    {
-   {"mentions",cf_slist,""},
-   {"usecontent",cf_slist,CF_PATHRANGE},
-   {"stylesheet",cf_str,""},
+   {"represents",cf_slist,""},
+   {"representation",cf_opts,"literal,url,db,file"},
    {NULL,cf_notype,NULL}
    };
 
@@ -58,7 +67,8 @@ struct BodySyntax CF_OCCUR_BODIES[] =
 
 struct BodySyntax CF_TOPICS_BODIES[] =
    {
-   {"association",cf_slist,""},
+   {"association",cf_body,CF_RELATE_BODY},
+   {"comment",cf_str,""},              /* arbitrary annotation */
    {NULL,cf_notype,NULL}
    };
 
@@ -68,11 +78,9 @@ struct BodySyntax CF_TOPICS_BODIES[] =
 
 struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
-
-  /* Body lists belonging to "files:" type in Agent */
-      
   {"knowledge","topics",CF_TOPICS_BODIES},
   {"knowledge","occurrences",CF_OCCUR_BODIES},
+
   {NULL,NULL,NULL},
   };
 

@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
 /***************************************************************************/
 
 int Signal2Int(char *s)
@@ -154,6 +153,24 @@ for (i = 0; types[i] != NULL; i++)
    }
 
 return cfa_nocomparison;
+}
+
+/****************************************************************************/
+
+enum representations String2Representation(char *s)
+
+{ int i;
+ static char *types[] = {"url","file","db","literal",NULL};
+
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return (enum representations) i;      
+      }
+   }
+
+return cfk_none;
 }
 
 /****************************************************************************/

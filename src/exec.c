@@ -218,11 +218,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSxL:hFV1g",OPTIONS,&optindex)) != 
 
 void ThisAgentInit()
 
-{
+{ char vbuff[CF_BUFSIZE];
+ 
 umask(077);
 LOGGING = true;
 strcpy(CFWORKDIR,WORKDIR);
 
+#ifndef NT
 if (getuid() > 0)
    {
    char *homedir;
@@ -232,18 +234,19 @@ if (getuid() > 0)
       strcat(CFWORKDIR,"/.cfagent");
       }
    }
+#endif
 
-snprintf(VBUFF,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
-MakeParentDirectory(VBUFF,true);
-snprintf(VBUFF,CF_BUFSIZE,"%s/bin/cfagent -D from_cfexecd",CFWORKDIR);
-MakeParentDirectory(VBUFF,true);
-snprintf(VBUFF,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
-MakeParentDirectory(VBUFF,true);
+snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
+snprintf(vbuff,CF_BUFSIZE,"%s/bin/cfagent -D from_cfexecd",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
+snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
 
-snprintf(VBUFF,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
-chmod(VBUFF,0700); 
-snprintf(VBUFF,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
-chmod(VBUFF,0700);
+snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
+chmod(vbuff,0700); 
+snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
+chmod(vbuff,0700);
 
 strncpy(VLOCKDIR,CFWORKDIR,CF_BUFSIZE-1);
 strncpy(VLOGDIR,CFWORKDIR,CF_BUFSIZE-1);
@@ -712,7 +715,7 @@ return(rtn);
 void MailResult(char *file,char *to)
 
 { int sd, sent, count = 0, anomaly = false;
-  char domain[256], prev_file[CF_BUFSIZE];
+ char domain[256], prev_file[CF_BUFSIZE],vbuff[CF_BUFSIZE];
   struct hostent *hp;
   struct sockaddr_in raddr;
   struct servent *server;
@@ -769,9 +772,9 @@ if ((fp=fopen(file,"r")) == NULL)
 
  while (!feof(fp))
     {
-    VBUFF[0] = '\0';
-    fgets(VBUFF,CF_BUFSIZE,fp);
-    if (strstr(VBUFF,"entropy"))
+    vbuff[0] = '\0';
+    fgets(vbuff,CF_BUFSIZE,fp);
+    if (strstr(vbuff,"entropy"))
        {
        anomaly = true;
        break;
@@ -835,34 +838,34 @@ if (!Dialogue(sd,NULL))
    goto mail_err;
    }
  
-sprintf(VBUFF,"HELO %s\r\n",VFQNAME); 
-Debug("%s",VBUFF);
+sprintf(vbuff,"HELO %s\r\n",VFQNAME); 
+Debug("%s",vbuff);
 
-if (!Dialogue(sd,VBUFF))
+if (!Dialogue(sd,vbuff))
    {
    goto mail_err;
    }
 
  if (strlen(MAILFROM) == 0)
     {
-    sprintf(VBUFF,"MAIL FROM: <cfengine@%s>\r\n",VFQNAME);
-    Debug("%s",VBUFF);
+    sprintf(vbuff,"MAIL FROM: <cfengine@%s>\r\n",VFQNAME);
+    Debug("%s",vbuff);
     }
  else
     {
-    sprintf(VBUFF,"MAIL FROM: <%s>\r\n",MAILFROM);
-    Debug("%s",VBUFF);    
+    sprintf(vbuff,"MAIL FROM: <%s>\r\n",MAILFROM);
+    Debug("%s",vbuff);    
     }
 
-if (!Dialogue(sd,VBUFF))
+if (!Dialogue(sd,vbuff))
    {
    goto mail_err;
    }
  
-sprintf(VBUFF,"RCPT TO: <%s>\r\n",to);
-Debug("%s",VBUFF);
+sprintf(vbuff,"RCPT TO: <%s>\r\n",to);
+Debug("%s",vbuff);
 
-if (!Dialogue(sd,VBUFF))
+if (!Dialogue(sd,vbuff))
     {
     goto mail_err;
     }
@@ -874,57 +877,57 @@ if (!Dialogue(sd,"DATA\r\n"))
 
 if (anomaly)
    {
-   sprintf(VBUFF,"Subject: **!! (%s/%s)\r\n",VFQNAME,VIPADDRESS);
-   Debug("%s",VBUFF);
+   sprintf(vbuff,"Subject: **!! (%s/%s)\r\n",VFQNAME,VIPADDRESS);
+   Debug("%s",vbuff);
    }
 else
    {
-   sprintf(VBUFF,"Subject: (%s/%s)\r\n",VFQNAME,VIPADDRESS);
-   Debug("%s",VBUFF);
+   sprintf(vbuff,"Subject: (%s/%s)\r\n",VFQNAME,VIPADDRESS);
+   Debug("%s",vbuff);
    }
  
-sent=send(sd,VBUFF,strlen(VBUFF),0);
+sent=send(sd,vbuff,strlen(vbuff),0);
 
 #if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
-strftime(VBUFF,CF_BUFSIZE,"Date: %a, %d %b %Y %H:%M:%S %z\r\n",localtime(&now));
-sent=send(sd,VBUFF,strlen(VBUFF),0);
+strftime(vbuff,CF_BUFSIZE,"Date: %a, %d %b %Y %H:%M:%S %z\r\n",localtime(&now));
+sent=send(sd,vbuff,strlen(vbuff),0);
 #endif
 
  if (strlen(MAILFROM) == 0)
     {
-    sprintf(VBUFF,"From: cfengine@%s\r\n",VFQNAME);
-    Debug("%s",VBUFF);
+    sprintf(vbuff,"From: cfengine@%s\r\n",VFQNAME);
+    Debug("%s",vbuff);
     }
  else
     {
-    sprintf(VBUFF,"From: %s\r\n",MAILFROM);
-    Debug("%s",VBUFF);    
+    sprintf(vbuff,"From: %s\r\n",MAILFROM);
+    Debug("%s",vbuff);    
     }
  
-sent=send(sd,VBUFF,strlen(VBUFF),0);
+sent=send(sd,vbuff,strlen(vbuff),0);
 
-sprintf(VBUFF,"To: %s\r\n\r\n",to); 
-Debug("%s",VBUFF);
-sent=send(sd,VBUFF,strlen(VBUFF),0);
+sprintf(vbuff,"To: %s\r\n\r\n",to); 
+Debug("%s",vbuff);
+sent=send(sd,vbuff,strlen(vbuff),0);
 
 while(!feof(fp))
    {
-   VBUFF[0] = '\0';
-   fgets(VBUFF,CF_BUFSIZE,fp);
-   Debug("%s",VBUFF);
+   vbuff[0] = '\0';
+   fgets(vbuff,CF_BUFSIZE,fp);
+   Debug("%s",vbuff);
    
-   if (strlen(VBUFF) > 0)
+   if (strlen(vbuff) > 0)
       {
-      VBUFF[strlen(VBUFF)-1] = '\r';
-      strcat(VBUFF, "\n");
+      vbuff[strlen(vbuff)-1] = '\r';
+      strcat(vbuff, "\n");
       count++;
-      sent=send(sd,VBUFF,strlen(VBUFF),0);
+      sent=send(sd,vbuff,strlen(vbuff),0);
       }
    
    if ((MAXLINES != INF_LINES) && (count > MAXLINES))
       {
-      sprintf(VBUFF,"\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n",file,VFQNAME);
-      sent=send(sd,VBUFF,strlen(VBUFF),0);
+      sprintf(vbuff,"\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n",file,VFQNAME);
+      sent=send(sd,vbuff,strlen(vbuff),0);
       break;
       }
    } 

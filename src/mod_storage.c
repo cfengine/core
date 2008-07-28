@@ -93,9 +93,6 @@ struct BodySyntax CF_STORAGE_BODIES[] =
 
 struct SubTypeSyntax CF_STORAGE_SUBTYPES[] =
   {
-
-  /* Body lists belonging to "files:" type in Agent */
-      
   {"agent","storage",CF_STORAGE_BODIES},
   {NULL,NULL,NULL},
   };

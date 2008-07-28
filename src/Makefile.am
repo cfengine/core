@@ -68,7 +68,7 @@ libpromises_la_SOURCES =						\
 	mod_process.c
 
 
-sbin_PROGRAMS = cfPromises cfAgent cfMonitord cfServerd cfExecd cfRunAgent
+sbin_PROGRAMS = cfKnow cfPromises cfAgent cfMonitord cfServerd cfExecd cfRunAgent
 
 cfPromises_SOURCES =							\
 	cfpromises.c
@@ -95,6 +95,10 @@ cfExecd_SOURCES =							\
 cfRunAgent_SOURCES =							\
 	runagent.c
 
+cfKnow_SOURCES =							\
+	verify_reports.c						\
+	cfknow.c							\
+	ontology.c
 
 EXTRA_DIST = cf3lex.c cf3parse.c
 

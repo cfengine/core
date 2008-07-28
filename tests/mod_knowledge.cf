@@ -1,12 +1,6 @@
 ############################################################################
 #
 # This is a promise/cfengine version of the Linear Topic Map language
-# Topic Maps are an ISO standard, but we are trying to do something
-# slightly different here, and we want to syntax to be uniform. This
-# could be compiled into an ISO Topic Map? (Maybe if the promises fit..)
-#
-############################################################################
-#
 # Topics are independent abstract entities which make "use-promise" associations.
 # We can assume that all topics offer their info freely to all other topics.
 #
@@ -16,22 +10,27 @@
 #
 ############################################################################
 
-body knowledge control
 
-{
-builddir => "/tmp/documents";
-default_association => "associated with";
-}
+#####################################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "topic_map"
+                         };
+
+   }
 
 ############################################################################
 
- #
- # We introduce a "knowledge" component to cfengine 
- #
+body knowledge control
 
- # T - topic        = topic-agent
- # A - association  = promise
- # O - occurrence   = document-agent
+{
+build_directory => ".";
+id_prefix => "cfengine";
+}
 
 ############################################################################
 
@@ -40,75 +39,102 @@ bundle knowledge topic_map
 {
 vars:
 
-  "docroot"   string => "/path/to/docs";
-  "otherdocs" slist  => { "doc1", "doc2" };
+  "aliases"       slist => { "deals with concepts", "is composed of" };
+  "linux_distros" slist => { "suse", "ubuntu", "fedora", "redhat", "debian" };
 
+  #
+  # This is one kind of association 
+  #
 
-  "aliases" slist => { "deals with concepts", "is composed of" };
-
- ###################################################
-
-classes:
-
-#  "scope" - how do we define this for tm ??
+  "enemies" slist => { "big bad wolf", "own tail" };
+  "afraid_of[$(enemies)]" slist => { "little ole me", "little red riding hood", "three little pigs" };
 
  ###################################################
 
 topics:
 
-  website::
+   "short name"       comment => "a name that is shorter than long but perhaps longer than short";
 
-   #
+   "operating system";
+   "distro";
+   "promise type";
+   "host";
+   "person";
+   "component";
 
-   "cfengine" -> { "cfagent", "cfservd", "cfenvd" },
+  operating_system::           # Topic Type
 
-         association => { 
-                        @(aliases),
-                        "another relation" 
-                        };
-    #
+   "linux";                    # Topic name / id
 
-    "cfengine" -> { "Mark Burgess", "Bas Van der Vlies" },
+   "longer topic type";
 
-         association => "has developers" ;
+  distro::
 
-    #
+   "$(linux_distros)"
 
-   social::
+       association => a("is distro of","has distro","linux");
 
-    "Mark Burgess" -> "Steve Pepper",
+  host::
 
-         association => { "has friend", "works with", "also likes Schostakovich" };
+    "atlas"
 
-    #
+       association => a("owned by","owns","mark");
 
-    "Mark Burgess" -> @(all_potential_mates),
+  person::
 
-        # These sound more like promises than associations.. (advertisements)
+    "mark"
 
-         association => "has blue eye",
-         association => "has substantial depth gauge",
-         association => "has poor sense of humo(u)r";
+       association => a("designed","was designed by","cfengine");
 
+  component::
+
+    "cfengine";
 
  ###################################################
 
 occurrences: 
 
-  # These are data/document instances
+  suse::
 
-  "docid" -> @(otherdocs),
+     "http://www.opensuse.org",
 
-     mentions   => { "topicid1", "topicid2" },
+            represents => { "website" },
+            representation => "url",
+            # url is default?
+            comment => "Main site";
 
-     # assemble document
+     "yast"
 
-     usecontent => { 
-                   "$(docroot)/textfragment1", 
-                   "$(docroot)/textfragment2" 
-                   },
+            represents => { "default_configuration_tool", "setup_tool" },
+            representation => "literal";
 
-     stylesheet => "/css/mystyle.css";
+  mark::
+
+     "mark@iu.hio.no"
+
+            represents => { "email address" },
+            representation => "literal";
 
 }
 
+###################################################
+# Bodies
+###################################################
+
+body association a(f,b,name)
+
+{
+forward_relationship => "$(f)";
+backward_relationship => "$(b)";
+associates => { $(name) };
+}
+
+###################################################
+
+body association A(f,b,name_list)
+
+{
+forward_relationship => "$(f)";
+backward_relationship => "$(b)";
+associates => { @(name) };
+}

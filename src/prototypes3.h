@@ -86,6 +86,7 @@ struct Attributes GetColumnAttributes(struct Promise *pp);
 struct Attributes GetReplaceAttributes(struct Promise *pp);
 struct EditRegion GetRegionConstraints(struct Promise *pp);
 struct EditReplace GetReplaceConstraints(struct Promise *pp);
+struct EditColumn GetColumnConstraints(struct Promise *pp);
 struct TopicAssociation GetAssociationConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
@@ -255,6 +256,10 @@ int InsertMissingLinesAtLocation(struct Item **start,struct Item *location,struc
 int InsertMissingLineAtLocation(char *string,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
+int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
+int EditLineByColumn(struct Rlist *columns,struct Attributes a,struct Promise *pp);
+int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
+char *ReconstructLine(struct Rlist *list,char *sep);
 
 /* files_links.c */
 
@@ -551,6 +556,7 @@ struct Rlist *CopyRlist(struct Rlist *list);
 void DeleteRlist(struct Rlist *list);
 void DeleteReferenceRlist(struct Rlist *list);
 void ShowRlistState(FILE *fp,struct Rlist *list);
+void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
 
 struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type);
 
@@ -564,6 +570,7 @@ struct Rlist *AppendRlist(struct Rlist **start,void *item, char type);
 struct Rlist *PrependRlist(struct Rlist **start,void *item, char type);
 struct Rlist *SplitStringAsRList(char *string,char sep);
 struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);
+struct Rlist *AlphaSortRListNames(struct Rlist *list);
 
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);

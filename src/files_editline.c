@@ -182,7 +182,7 @@ a = GetDeletionAttributes(pp);
 if (!a.haveregion)
    {
    begin_ptr = *start;
-   end_ptr = EndOfList(*start);
+   end_ptr = NULL; //EndOfList(*start);
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
@@ -200,7 +200,54 @@ if (DeletePromisedLinesMatching(start,begin_ptr,end_ptr,a,pp))
 
 void VerifyColumnEdits(struct Promise *pp)
 
-{
+{ struct Item **start = &(pp->edcontext->file_start), *match, *prev;
+  struct Attributes a;
+  struct Item *begin_ptr,*end_ptr;
+
+*(pp->donep) = true;
+
+a = GetColumnAttributes(pp);
+
+if (a.column.column_separator == NULL)
+   {
+   cfPS(cf_error,CF_WARN,"",pp,a,"No column_separator in promise to edit by column for %s",pp->promiser);
+   PromiseRef(cf_error,pp);   
+   return;
+   }
+
+if (a.column.select_column <= 0)
+   {
+   cfPS(cf_error,CF_WARN,"",pp,a,"No select_column in promise to edit %s",pp->promiser);
+   PromiseRef(cf_error,pp);   
+   return;   
+   }
+
+if (!a.column.column_value)
+   {
+   cfPS(cf_error,CF_WARN,"",pp,a,"No column_value is promised to column_edit %s",pp->promiser);
+   PromiseRef(cf_error,pp);   
+   return;   
+   }
+
+/* Are we working in a restricted region? */
+
+if (!a.haveregion)
+   {
+   begin_ptr = *start;
+   end_ptr =NULL; // EndOfList(*start);
+   }
+else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region",pp->promiser);
+   return;
+   }
+
+/* locate and split line */
+
+if (EditColumns(begin_ptr,end_ptr,a,pp))
+   {
+   (pp->edcontext->num_edits)++;
+   }
 }
 
 /***************************************************************************/
@@ -227,7 +274,7 @@ if (!a.replace.replace_value)
 if (!a.haveregion)
    {
    begin_ptr = *start;
-   end_ptr = EndOfList(*start);
+   end_ptr = NULL; //EndOfList(*start);
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
@@ -260,7 +307,7 @@ a = GetInsertionAttributes(pp);
 if (!a.haveregion)
    {
    begin_ptr = *start;
-   end_ptr = EndOfList(*start);
+   end_ptr = NULL; //EndOfList(*start);
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
@@ -335,6 +382,10 @@ if (end == CF_UNDEFINED_ITEM && a.region.select_end)
    {
    cfPS(cf_inform,CF_INTERPT,"",pp,a," !! The promised end pattern (%s) was not found when selecting edit region",a.region.select_end);
    return false;
+   }
+else
+   {
+   end = NULL; /* End of file is null ptr if nothing else specified */
    }
 
 *begin_ptr = beg;
@@ -594,6 +645,54 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 return retval;
 }
 
+/********************************************************************/
+
+int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
+
+{ char separator[CF_EXPANDSIZE]; 
+  int s,e,retval = false;
+  struct CfRegEx rex;
+  struct Item *ip;
+  struct Rlist *columns;
+ 
+rex = CompileRegExp(pp->promiser);
+
+if (rex.failed)
+   {
+   return false;
+   }
+
+for (ip = file_start; ip != file_end; ip=ip->next)
+   {
+   if (ip->name == NULL)
+      {
+      continue;
+      }
+
+   if (!RegExMatchFullString(rex,ip->name))
+      {
+      continue;
+      }
+
+   if (!BlockTextMatch(a.column.column_separator,ip->name,&s,&e))
+      {
+      cfPS(cf_error,CF_INTERPT,"",pp,a,"Column edit - no columns found by promised pattern %s",a.column.column_separator);
+      return false;
+      }
+
+   strncpy(separator,ip->name+s,e-s);
+   
+   columns = SplitRegexAsRList(ip->name,a.column.column_separator,CF_INFINITY,false);
+   retval = EditLineByColumn(columns,a,pp);
+   free(ip->name);
+   ip->name = ReconstructLine(columns,separator);
+   DeleteRlist(columns);
+   }
+
+
+return retval;
+}
+
 /***************************************************************************/
 /* Level                                                                   */
 /***************************************************************************/
@@ -674,4 +773,145 @@ else
          }
       }
    }
+}
+
+/***************************************************************************/
+
+int EditLineByColumn(struct Rlist *columns,struct Attributes a,struct Promise *pp)
+
+{ struct Rlist *rp,*this_column;
+  char sep[CF_MAXVARSIZE];
+  int count = 0,retval = false;
+
+/* Now break up the line into a list - not we never remove an item/column */
+ 
+for (rp = columns; rp != NULL; rp=rp->next)
+    {
+    count++;
+    
+    if (count == a.column.select_column)
+       {
+       break;
+       }
+    }
+
+if (a.column.select_column > count)
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a,"The file has only %d columns, but there is a promise for column %d",count,a.column.select_column);
+   return false;
+   }
+
+if (a.column.value_separator)
+   {
+   /* internal separator, single char so split again */
+
+   this_column = SplitStringAsRList(rp->item,a.column.value_separator);
+   retval = EditColumn(&this_column,a,pp);
+
+   free(rp->item);
+   sep[0] = a.column.value_separator;
+   sep[1] = '\0';
+   rp->item = ReconstructLine(this_column,sep);
+   DeleteRlist(this_column);
+   return retval;
+   }
+else
+   {
+   /* No separator, so we set the whole field to the value */
+
+   if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
+      {
+      free(rp->item);
+      rp->item = strdup("");
+      return true;
+      }
+   else
+      {
+      free(rp->item);
+      rp->item = strdup(a.column.column_value);
+      return true;
+      }
+   }
+}
+
+/***************************************************************************/
+/* Level                                                                   */
+/***************************************************************************/
+
+int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
+
+{ struct Rlist *rp, *found;
+ int count = 0,retval = false;
+
+if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
+   {
+   if (found = KeyInRlist(*columns,a.column.column_value))
+      {
+      DeleteRlistEntry(columns,found);
+      return true;
+      }
+   else
+      {
+      return false;
+      }
+   }
+
+if (a.column.column_operation && strcmp(a.column.column_operation,"prepend") == 0)
+   {
+   if (IdempPrependRScalar(columns,a.column.column_value,CF_SCALAR))
+      {
+      return true;
+      }
+   else
+      {
+      return false;
+      }
+   }
+
+if (a.column.column_operation && strcmp(a.column.column_operation,"alphanum") == 0)
+   {
+   if (IdempPrependRScalar(columns,a.column.column_value,CF_SCALAR))
+      {
+      retval = true;
+      }
+   
+   rp = AlphaSortRListNames(*columns);
+   *columns = rp;
+   return retval;
+   }
+
+/* default operation is append */
+
+if (IdempAppendRScalar(columns,a.column.column_value,CF_SCALAR))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   }
+
+return false;
+}
+
+/***************************************************************************/
+
+char *ReconstructLine(struct Rlist *list,char *sep)
+
+{ char line[CF_BUFSIZE];
+  struct Rlist *rp;
+
+line[0] = '\0';
+  
+for(rp = list; rp != NULL; rp=rp->next)
+   {
+   strcat(line,(char *)rp->item);
+
+   if (rp->next)
+      {
+      strcat(line,sep);
+      }
+   }
+  
+return strdup(line);
 }

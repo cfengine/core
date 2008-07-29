@@ -11,8 +11,6 @@
 ############################################################################
 
 
-#####################################################################
-
 body common control
    {
    any::
@@ -62,6 +60,8 @@ topics:
    "person";
    "component";
 
+   "website";
+
   operating_system::           # Topic Type
 
    "linux";                    # Topic name / id
@@ -72,19 +72,19 @@ topics:
 
    "$(linux_distros)"
 
-       association => a("is distro of","has distro","linux");
+       association => a("is distro of","linux","has distro");
 
   host::
 
     "atlas"
 
-       association => a("owned by","owns","mark");
+       association => a("owned by","mark","owns");
 
   person::
 
     "mark"
 
-       association => a("designed","was designed by","cfengine");
+       association => a("designed","cfengine","was designed by");
 
   component::
 
@@ -96,7 +96,7 @@ occurrences:
 
   suse::
 
-     "http://www.opensuse.org",
+     "http://www.opensuse.org"
 
             represents => { "website" },
             representation => "url",
@@ -121,7 +121,7 @@ occurrences:
 # Bodies
 ###################################################
 
-body association a(f,b,name)
+body association a(f,name,b)
 
 {
 forward_relationship => "$(f)";
@@ -131,7 +131,7 @@ associates => { $(name) };
 
 ###################################################
 
-body association A(f,b,name_list)
+body association A(f,name_list,b)
 
 {
 forward_relationship => "$(f)";

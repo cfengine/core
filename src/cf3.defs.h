@@ -985,7 +985,7 @@ struct EditColumn
    int select_column;
    char value_separator;
    char *column_value;
-   char *column_location;
+   char *column_operation;
    };
 
 struct EditReplace

@@ -60,6 +60,7 @@ if ((tp->topic_type = strdup(type)) == NULL)
 
 tp->comment = NULL;
 tp->associations = NULL;
+tp->occurrences = NULL;
 tp->next = *list;
 *list = tp;
 }
@@ -174,12 +175,13 @@ void AddOccurrence(struct Occurrence **list,char *topic_name,char *reference,str
 
 if (!OccurrenceExists(*list,reference,rtype))
    {
-   if ((op = (struct Occurrence *)malloc(sizeof(struct TopicAssociation))) == NULL)
+   if ((op = (struct Occurrence *)malloc(sizeof(struct Occurrence))) == NULL)
       {
       CfOut(cferror,"malloc","Memory failure in AddTopicAssociation");
       FatalError("");
       }
 
+   op->represents = NULL;
    op->locator = strdup(reference);
    op->rep_type = rtype;   
    op->next = *list;
@@ -282,7 +284,15 @@ return false;
 
 int OccurrenceExists(struct Occurrence *list,char *locator,enum representations rep_type)
 
-{
+{ struct Occurrence *op;
+
+for (op = list; op != NULL; op=op->next)
+   {
+   if (strcmp(locator,op->locator) == 0)
+      {
+      return true;
+      }
+   }
 
 return false;
 }

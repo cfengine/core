@@ -656,7 +656,7 @@ if (BlockTextMatch("[.&|]+",pp->classes,&s,&e))
 
 if ((tp = GetTopic(TOPIC_MAP,pp->classes)) == NULL)
    {
-   CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences",pp->classes);
+   CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
    return;
    }
  

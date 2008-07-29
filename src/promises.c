@@ -315,6 +315,19 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    final = ExpandDanglers(scopeid,returnval,pp);
    AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes);
+
+   if (strcmp(cp->lval,"comment") == 0)
+      {
+      if (final.rtype != CF_SCALAR)
+         {
+         yyerror("Comments can only be scalar objects");
+         }
+      else
+         {
+         pcopy->ref = final.item; /* No alloc reference to comment item */
+         }
+      }
+
    }
 
 return pcopy;

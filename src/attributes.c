@@ -774,6 +774,7 @@ struct Attributes GetColumnAttributes(struct Promise *pp)
 { struct Attributes attr;
 
 attr.havecolumn = GetBooleanConstraint("edit_column",pp->conlist);
+attr.column = GetColumnConstraints(pp);
 
  /* common */
 
@@ -836,3 +837,27 @@ r.occurrences = GetConstraint("occurrences",pp->conlist,CF_SCALAR);
 return r;
 }
 
+/*******************************************************************/
+
+struct EditColumn GetColumnConstraints(struct Promise *pp)
+
+{ struct EditColumn c;
+ char *value;
+
+c.column_separator = GetConstraint("column_separator",pp->conlist,CF_SCALAR);
+c.select_column = GetIntConstraint("select_column",pp->conlist);
+value = GetConstraint("value_separator",pp->conlist,CF_SCALAR);
+
+if (value)
+   {
+   c.value_separator = *value;
+   }
+else
+   {
+   c.value_separator = '\0';
+   }
+
+c.column_value = GetConstraint("column_value",pp->conlist,CF_SCALAR);
+c.column_operation = GetConstraint("column_operation",pp->conlist,CF_SCALAR);
+return c;
+}

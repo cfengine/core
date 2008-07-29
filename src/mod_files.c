@@ -74,7 +74,7 @@ struct BodySyntax CF_EDITCOL_BODY[] =
    {"select_column",cf_int,CF_VALRANGE},
    {"value_separator",cf_str,CF_CHARRANGE},
    {"column_value",cf_str,CF_ANYSTRING},
-   {"column_location",cf_opts,"prepend,append,alphanum"},
+   {"column_operation",cf_opts,"prepend,append,alphanum,delete"},
    {NULL,cf_notype,NULL}
    };
 

@@ -362,7 +362,15 @@ void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatyp
   struct Item *checklist;
 
 Debug(" ------------------------------------------------\n");
-Debug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
+
+if (dt == cf_bundle || dt == cf_body)
+   {
+   Debug(" - Checking inline constraint/arg %s[%s] => mappedval (bundle/body)\n",lval,CF_DATATYPES[dt]);
+   }
+else
+   {
+   Debug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
+   }
 Debug(" ------------------------------------------------\n");
 
 /* Get type of lval */

@@ -43,7 +43,7 @@
 
 space      [ \t]+
 
-newline    [\n]
+newline    ([\n]|[\xd][\xa])
 
 comment    #[^\n]*
 

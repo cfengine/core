@@ -254,24 +254,6 @@ if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
 
  /* XXX Initialize workdir for non privileged users */
 
-strcpy(CFWORKDIR,WORKDIR);
-
-if (getuid() > 0)
-   {
-   char *homedir;
-   if ((homedir = getenv("HOME")) != NULL)
-      {
-      strcpy(CFWORKDIR,homedir);
-      strcat(CFWORKDIR,"/.cfagent");
-      }
-   }
-
-snprintf(vbuff,CF_BUFSIZE,"%s/test",CFWORKDIR);
-
-MakeDirectoriesFor(vbuff,'y');
-strncpy(VLOGDIR,CFWORKDIR,CF_BUFSIZE-1);
-strncpy(VLOCKDIR,CFWORKDIR,CF_BUFSIZE-1);
-
 VIFELAPSED = CF_EXEC_IFELAPSED;
 VEXPIREAFTER = CF_EXEC_EXPIREAFTER;
  

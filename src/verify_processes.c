@@ -104,6 +104,8 @@ if (thislock.lock == NULL)
    return;
    }
 
+NewScalar("this","promiser",pp->promiser,cf_str);
+
 PromiseBanner(pp);
 VerifyProcessOp(PROCESSTABLE,a,pp);
 YieldCurrentLock(thislock);

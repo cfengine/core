@@ -147,5 +147,115 @@ This would not be a convergent operation however.
 
 <p>
 Depth search is not allowed with editfiles promises.
+
+
+<h2>File editing in cfengine 3</h2>
+
+Cfengine 2 assumed that all files were line-edited, because it was
+based on Unix traditions. Since then many new file formats have
+emerged, including XML.  Cfengine 3 opens up the possibiltiy for
+multiple models of file editing. Line based editing is still present and
+is both much simplified and much more powerful than previously.
+
+<p>
+File editing is not just a single kind of promise but a whole range of
+"promises within files". It is therefore not merely a body to a single
+promise but a bundle of sub-promises. After all, inside each file is a new
+world of objects that can make promises, quite separate from files' external
+attributes.
+
+<p>
+A typical file editing stanza has the elements in the following
+example.
+
+
+<pre>
+######################################################################
+#
+# File editing
+#
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "outerbundle"  };
+}
+
+########################################################
+
+bundle agent outerbundle
+
+{
+files:
+
+  "/home/mark/tmp/cf3_test"
+
+       create    => "true",            # Like autocreate in cf2
+       edit_line => inner_bundle;
+}
+
+########################################################
+
+bundle edit_line inner_bundle
+  {
+  vars:
+
+   "edit_variable" string => "private edit variable"; 
+  
+  replace_patterns:
+
+   # replace shell comments with C comments
+
+   "#(.*)"
+
+      replace_with => C_comment,
+     select_region => MySection("New section");
+
+  }
+
+########################################
+# Bodies for the library ...
+########################################
+
+body replace_with C_comment
+
+{
+replace_value => "/* $(1) */"; # backreference 0
+occurrences => "all";          # first, last all
+}
+
+########################################################
+
+body select_region MySection(x)
+
+{
+select_start => "\[$(x)\]";
+select_end => "\[.*\]";
+}
+
+</pre>
+
+
+There are several things to notice:
+
+<ul>
+<li> The line-editing promises are all convergent promises about patterns within
+the file. They have bodies, just like other attributes do and these allow us to make
+simple templates about file editing while extending the power of the basic primitives.
+
+<li> All pattern matching is through perl compatible regular expressions
+<li> Editing takes place within a marked region (which default to the whole file).
+<li> Search/replace functions now allow back-references
+<li> The line edit model now contains a column model for dealing with tabular files such
+as Unix passwd and group files. We can now apply powerful convergent editing operations
+to single fields inside a table, to append, order and delete items from lists inside fields.
+</ul>
+
+In the example above, back references are used to allow conversion of comments from shell-style
+to C-style.
+
   </body>
 </html>

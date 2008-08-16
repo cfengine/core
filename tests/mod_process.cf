@@ -19,7 +19,7 @@ bundle agent ProcessStuff
     # to keep each element "pure". We have added triggers to allow
     # for easier coupling of promises
 
-   executions:
+   commands:
 
      "/path/joss/run.sh"
 
@@ -49,7 +49,7 @@ processes:
 
       process_count => up("$(service)");
 
-executions:
+commands:
 
    "$(daemon[$(service)])"  
 

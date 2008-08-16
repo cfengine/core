@@ -29,6 +29,7 @@ libpromises_la_SOURCES =						\
 	files_links.c							\
 	files_hashes.c							\
 	item-lib.c							\
+	cf_sql.c							\
 	client_protocol.c						\
 	client_code.c							\
 	recursion.c							\

@@ -86,6 +86,15 @@ AC_SEARCH_LIBS(socket, socket, ,
 
 
 dnl
+dnl  Look for SQL connectors.
+dnl 
+
+AC_ARG_WITH(sql,
+    [  --with-sql[=PATH] directory where MySQL/Postgress exists],
+    WITH_SQL=1,
+    WITH_SQL=0)
+
+dnl
 dnl  Look for Berkeley DB.
 dnl 
 
@@ -405,8 +414,17 @@ dnl GNU regex lib if you have regcomp in libc you should NOT have this lib too
 dnl ######################################################################
 
 AC_CHECK_LIB(pcre, main)
-dnl AC_CHECK_LIB(rx, main)
+dnl AC_CHECK_LIB(rx, main) deprecated
 AC_CHECK_LIB(rt, main)
+
+dnl Now check for database connectors
+
+if test $WITH_SQL; then
+  AC_CHECK_LIB(mysqlclient,main)
+  AC_CHECK_LIB(pq,main)
+  AC_CHECK_HEADERS(mysql/mysql.h)
+  AC_CHECK_HEADERS(pgsql/libpq-fe.h)
+fi
 
 dnl ######################################################################
 dnl Checks for header files.

@@ -263,6 +263,11 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {
    {"id_prefix",cf_str,".*"},
    {"build_directory",cf_str,".*"},
+   {"sql_type",cf_opts,"mysql,postgress"},
+   {"sql_database",cf_str,""},
+   {"sql_owner",cf_str,""},
+   {"sql_passwd",cf_str,""},
+   {"sql_server",cf_str,""},
    {NULL,cf_notype,NULL}
    };
 

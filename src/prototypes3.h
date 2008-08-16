@@ -97,6 +97,17 @@ void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
 void CompilePromises(void);
 
+/* cf_sql.c */
+
+int CfConnectDB(CfdbConn *cfdb,enum cfdbtype dbtype,char *remotehost,char *dbuser, char *passwd, char *db);
+void CfCloseDB(CfdbConn *cfdb);
+void CfVoidQueryDB(CfdbConn *cfdb,char *query);
+void CfNewQueryDB(CfdbConn *cfdb,char *query);
+char **CfFetchRow(CfdbConn *cfdb);
+char *CfFetchColumn(CfdbConn *cfdb,int col);
+void CfDeleteQuery(CfdbConn *cfdb);
+char *EscapeSQL(CfdbConn *cfdb,char *query);
+
 /* client_code.c */
 
 struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp);
@@ -141,6 +152,7 @@ int GetBundleConstraint(char *lval,struct Constraint *list);
 
 /* conversion.c */
 
+char *Rlist2String(struct Rlist *list,char *sep);
 int Signal2Int(char *s);
 enum cfreport String2ReportLevel(char *typestr);
 enum cfhashes String2HashType(char *typestr);
@@ -259,7 +271,6 @@ int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,stru
 int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
 int EditLineByColumn(struct Rlist *columns,struct Attributes a,struct Promise *pp);
 int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
-char *ReconstructLine(struct Rlist *list,char *sep);
 
 /* files_links.c */
 
@@ -474,14 +485,15 @@ int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 
 void AddTopic(struct Topic **list,char *name,char *type);
 void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type);
-void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *ttype,struct Rlist *associates);
+void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *ttype,struct Rlist *associates,int verify);
 void AddOccurrence(struct Occurrence **list,char *topic_name,char *reference,struct Rlist *represents,enum representations rtype);
 int TopicExists(struct Topic *list,char *topic_name,char *topic_type);
 char *GetTopicType(struct Topic *list,char *topic_name);
+struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
-int AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
+struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify);
 int OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
-
+char *GetLongTopicName(struct Topic *list,char *topic_name);
 
 /* pipes.c */
 

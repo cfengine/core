@@ -236,20 +236,6 @@ if (getuid() > 0)
    }
 #endif
 
-snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
-snprintf(vbuff,CF_BUFSIZE,"%s/bin/cfagent -D from_cfexecd",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
-snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
-
-snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
-chmod(vbuff,0700); 
-snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
-chmod(vbuff,0700);
-
-strncpy(VLOCKDIR,CFWORKDIR,CF_BUFSIZE-1);
-strncpy(VLOGDIR,CFWORKDIR,CF_BUFSIZE-1);
 
 VCANONICALFILE = strdup(CanonifyName(VINPUTFILE));
 

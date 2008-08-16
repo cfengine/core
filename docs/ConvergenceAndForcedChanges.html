@@ -15,7 +15,7 @@ Occasionally changes in dependencies lead us to force changes, e.g. kill and
 restart a daemon. 
 
 <pre>
-executions:
+commands:
 
     "Stop command";
     "Start command";
@@ -26,12 +26,13 @@ processes:
 
     "myprocess" signal => "term";
 
-executions:
+commands:
 
     "start command";
 </pre>
 
-This is not a convergent change unless it is qualified by a
+The problem with these commands is that they are not "guarded" (in the sense of Dijkstra's
+guarded commands). Such a command is not a convergent change unless it is qualified by a
 guarding class.
 
 e.g.
@@ -44,7 +45,7 @@ processes:
     "myprocess" signal => "term";
 
 
-executions:
+commands:
 
   change_in_dependency::
 
@@ -70,7 +71,7 @@ processes:
         # define newclass ;
 
 
-executions:
+commands:
 
   new_class::
 
@@ -83,7 +84,7 @@ executions:
     <address><a href="mailto:mark@atlas">Mark Burgess</a></address>
 <!-- Created: Thu May  1 13:07:13 CEST 2008 -->
 <!-- hhmts start -->
-Last modified: Thu May  1 13:39:27 CEST 2008
+Last modified: Sat Aug  2 09:58:12 CEST 2008
 <!-- hhmts end -->
   </body>
 </html>

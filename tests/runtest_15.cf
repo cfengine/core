@@ -1,0 +1,68 @@
+######################################################################
+#
+# File editing
+#
+# Normal ordering:
+# - delete
+# - replace | colum_edit
+# - insert
+# 
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+
+files:
+
+  # Make a copy of the password file
+
+  "/home/mark/tmp/passwd"
+
+       create    => "true",
+       edit_line => myedit("second");
+}
+
+########################################################
+
+bundle edit_line myedit(parameter)
+  {
+  vars:
+
+   "edit_variable" string => "private edit variable is $(parameter)"; 
+
+  
+  column_edits:
+
+   "mark.*"
+
+      edit_column => col(":","6","fish");
+
+  }
+
+########################################
+# Bodies
+########################################
+
+########################################
+
+body edit_column col(split,col,newval)
+
+{
+column_separator => "$(split)";
+select_column    => "$(col)";
+value_separator  => "/";
+column_value     => "$(newval)";
+column_operation => "alphanum";
+}
+

@@ -87,7 +87,7 @@ int CheckPromises(enum cfagenttype ag)
 
 { char cmd[CF_BUFSIZE];
 
-if (ag == cf_common)
+if (ag == cf_common || ag == cf_know)
    {
    /* Don't check if we are the analyzer */
    return true;
@@ -127,8 +127,8 @@ XML = 1;
 HashVariables();
 SetAuditVersion();
 
-fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
 fprintf(FOUT,"%s",CFH[0][0]);
+fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
 
 ShowContext();
 VerifyPromises(cf_common);
@@ -182,7 +182,7 @@ void InitializeGA(int argc,char *argv[])
 { char *sp, **cfargv;;
  int i,j, cfargc, seed;
   struct stat statbuf;
-  unsigned char s[16];
+  unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
   
 #ifndef HAVE_REGCOMP
@@ -191,6 +191,7 @@ re_syntax_options |= RE_INTERVALS;
 
 /* Define trusted directories */
 
+#ifndef NT
 if (getuid() > 0)
    {
    char *homedir;
@@ -208,6 +209,22 @@ else
    {
    strcpy(CFWORKDIR,WORKDIR);
    }
+#else
+strcpy(CFWORKDIR,WORKDIR);
+#endif
+
+snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
+snprintf(vbuff,CF_BUFSIZE,"%s/bin/cfagent -D from_cfexecd",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
+snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
+
+snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
+chmod(vbuff,0700); 
+snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
+chmod(vbuff,0700);
+
 
 sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
 
@@ -687,6 +704,7 @@ else
 Verbose("Checking integrity of the module directory\n"); 
 
 snprintf(vbuff,CF_BUFSIZE,"%s/modules",CFWORKDIR);
+
 if (stat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/modules/.",CFWORKDIR);

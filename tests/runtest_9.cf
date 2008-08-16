@@ -29,8 +29,7 @@ processes:
         restart_class   => "start_cfserv";
 
 
-
-executions:
+commands:
 
   start_cfserv::
 

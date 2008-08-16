@@ -37,11 +37,17 @@ void VerifyTopicPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyOntology(void);
 void ShowOntology(void);
-void ShowTopicMap(void);
+void ShowTopicMapLTM(void);
 void ShowTopicLTM(FILE *fout,char *id,char *type,char *value);
 void ShowAssociationsLTM(FILE *fout,char *id,char *type,struct TopicAssociation *ta);
 void ShowOccurrencesLTM(FILE *fout,char *id,struct Occurrence *op);
+void GenerateSQL(void);
+void LookupTopic(char *topic);
+void ShowTopicSummary(CfdbConn *cfdb,char *topic_name,char *topic_type);
+void ShowTopicCosmology(CfdbConn *cfdb,char *topic_name,char *topic_type);
 char *Name2Id(char *s);
+void ShowTextResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences);
+void ShowHtmlResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -71,7 +77,14 @@ struct Topic *TOPIC_MAP = NULL;
 
 char TM_PREFIX[CF_MAXVARSIZE];
 char BUILD_DIR[CF_BUFSIZE];
-
+char SQL_DATABASE[CF_MAXVARSIZE];
+char SQL_OWNER[CF_MAXVARSIZE];
+char SQL_PASSWD[CF_MAXVARSIZE];
+char SQL_SERVER[CF_MAXVARSIZE];
+enum cfdbtype SQL_TYPE = cfd_notype;
+int HTML = false;
+int WRITE_SQL = false;
+char TOPIC_CMD[CF_MAXVARSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -79,7 +92,7 @@ char BUILD_DIR[CF_BUFSIZE];
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[10] =
+ struct option OPTIONS[13] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -90,6 +103,9 @@ char BUILD_DIR[CF_BUFSIZE];
       { "file",required_argument,0,'f' },
       { "syntax",no_argument,0,'S'},
       { "parse-only",no_argument,0,'p'},
+      { "topic",required_argument,0,'t'},
+      { "html",no_argument,0,'H'},
+      { "sql",no_argument,0,'s'},
       { NULL,0,0,'\0' }
       };
 
@@ -103,8 +119,16 @@ ThisAgentInit();
 KeepKnowControlPromises();
 KeepPromiseBundles();
 VerifyOntology();
+
 ShowOntology(); // all types and assocs
-ShowTopicMap(); // all types and assocs
+ShowTopicMapLTM(); // all types and assocs
+GenerateSQL();
+
+if (strlen(TOPIC_CMD) > 0)
+   {
+   LookupTopic(TOPIC_CMD);
+   }
+
 return 0;
 }
 
@@ -120,7 +144,9 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"hd:vVf:pD:N:S",OPTIONS,&optindex)) != EOF)
+strcpy(TOPIC_CMD,"");
+ 
+while ((c=getopt_long(argc,argv,"hHd:vVf:pD:N:Sst:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -158,10 +184,21 @@ while ((c=getopt_long(argc,argv,"hd:vVf:pD:N:S",OPTIONS,&optindex)) != EOF)
              }
           break;
           
-      case 'D': AddMultipleClasses(optarg);
+      case 'D':
+          AddMultipleClasses(optarg);
           break;
           
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
+      case 'N':
+          NegateCompoundClass(optarg,&VNEGHEAP);
+          break;
+
+      case 't':
+          strcpy(TOPIC_CMD,optarg);
+          printf("Got topic: %s\n",TOPIC_CMD);
+          break;
+
+      case 's':
+          WRITE_SQL = true;
           break;
           
       case 'v': VERBOSE = true;
@@ -177,6 +214,10 @@ while ((c=getopt_long(argc,argv,"hd:vVf:pD:N:S",OPTIONS,&optindex)) != EOF)
       case 'h': Syntax("Knowledge agent");
           exit(0);
 
+      case 'H':
+          HTML = true;
+          break;
+
       default: Syntax("Knowledge agent");
           exit(1);
           
@@ -189,7 +230,13 @@ while ((c=getopt_long(argc,argv,"hd:vVf:pD:N:S",OPTIONS,&optindex)) != EOF)
 void ThisAgentInit()
 
 { char vbuff[CF_BUFSIZE];
- 
+
+strcpy(TM_PREFIX,"");
+strcpy(BUILD_DIR,".");
+strcpy(SQL_DATABASE,"cf_topic_map");
+strcpy(SQL_OWNER,"");
+strcpy(SQL_PASSWD,"");
+strcpy(SQL_SERVER,"localhost");
 }
 
 /*****************************************************************************/
@@ -206,7 +253,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       {
       continue;
       }
-   
+
    if (GetVariable("control_knowledge",cp->lval,&retval,&rettype) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in knowledge control body",cp->lval);
@@ -222,6 +269,45 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_builddir].lval) == 0)
       {
       strncpy(BUILD_DIR,retval,CF_BUFSIZE);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
+      {
+      if (strcmp(retval,"mysql") == 0)
+         {
+         SQL_TYPE = cfd_mysql;
+         }
+      
+      if (strcmp(retval,"postgress") == 0)
+         {
+         SQL_TYPE = cfd_postgress;
+         }
+      
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_database].lval) == 0)
+      {
+      strncpy(SQL_DATABASE,retval,CF_MAXVARSIZE);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_owner].lval) == 0)
+      {
+      strncpy(SQL_OWNER,retval,CF_MAXVARSIZE);
+      continue;
+      }
+      
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_passwd].lval) == 0)
+      {
+      strncpy(SQL_PASSWD,retval,CF_MAXVARSIZE);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_server].lval) == 0)
+      {
+      strncpy(SQL_SERVER,retval,CF_MAXVARSIZE);
       continue;
       }
    }
@@ -383,7 +469,7 @@ void ShowOntology()
 AddSlash(BUILD_DIR);
 snprintf(filename,CF_BUFSIZE-1,"%sontology.html",BUILD_DIR);
 
-printf("Writing %s\n",filename);
+Verbose("Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
@@ -434,24 +520,51 @@ fprintf(fout,"<h1>Cfengine Operational Ontology</h1><p>");
 
 fprintf(fout,"<h2>Types</h2><p>\n");
 
+ip = SortItemListNames(generic_types);
+generic_types = ip;
+
+ip = SortItemListNames(generic_associations);
+generic_associations = ip;
+
+ip = SortItemListNames(generic_topics);
+generic_topics = ip;
+
+/* Class types */
+
+fprintf(fout,"<table>\n");
+
 for (ip = generic_types; ip != NULL; ip=ip->next)
    {
-   fprintf(fout,"%s<br>\n",ip->name);
+   fprintf(fout,"<tr><td>%s</td></tr>\n",ip->name);
    }
+
+fprintf(fout,"</table>\n");
+
+/* Associations */
 
 fprintf(fout,"<h2>Associations</h2><p>\n");
 
+fprintf(fout,"<table>\n");
+
 for (ip = generic_associations; ip != NULL; ip=ip->next)
    {
-   fprintf(fout,"%s<br>\n",ip->name);
+   fprintf(fout,"<tr><td>%s</td></tr>\n",ip->name);
    }
+
+fprintf(fout,"</table>\n");
+
+/* Topics & their types */
 
 fprintf(fout,"<h2>Topics</h2><p>\n");
 
+fprintf(fout,"<table>\n");
+
 for (ip = generic_topics; ip != NULL; ip=ip->next)
    {
-   fprintf(fout,"%s<br>\n",ip->name);
+   fprintf(fout,"<tr><td>%s</td></tr>\n",ip->name);
    }
+
+fprintf(fout,"</table>\n");
 
 fprintf(fout,"</body>\n");
 fprintf(fout,"</html>");
@@ -460,7 +573,7 @@ fclose(fout);
 
 /*********************************************************************/
 
-void ShowTopicMap()
+void ShowTopicMapLTM()
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -472,7 +585,7 @@ void ShowTopicMap()
 AddSlash(BUILD_DIR);
 snprintf(filename,CF_BUFSIZE-1,"%stopic_map.ltm",BUILD_DIR);
 
-printf("Writing %s\n",filename);
+Verbose("Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
@@ -486,7 +599,7 @@ fprintf(fout,"/*********************/\n\n");
    
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   strncpy(id,CanonifyName(tp->topic_name),CF_MAXVARSIZE-1);
+   strncpy(id,Name2Id(tp->topic_name),CF_MAXVARSIZE-1);
 
    if (tp->comment)
       {
@@ -540,7 +653,96 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
 fclose(fout);
 }
+
 /*********************************************************************/
+
+void LookupTopic(char *topic)
+
+{ char query[CF_BUFSIZE],topic_name[CF_MAXVARSIZE],topic_id[CF_MAXVARSIZE],topic_type[CF_MAXVARSIZE];
+ int sql_database_defined = false,trymatch = false,count = 0;
+  CfdbConn cfdb;
+  struct Topic  *matching_topics = NULL, *tp;
+    
+Verbose("Looking up topics matching \"%s\"\n",topic);
+
+/* We need to set a scope for the regex stuff */
+
+NewScope("this");
+
+if (strlen(SQL_OWNER) > 0)
+   {
+   sql_database_defined = true;
+   }
+ 
+if (!sql_database_defined)
+   {
+   printf("No database defined...\n");
+   return;
+   }
+
+CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
+
+if (!cfdb.connected)
+   {
+   CfOut(cf_error,"","Could not open sql_db %s\n",SQL_DATABASE);
+   return;
+   }
+
+if (IsRegex(topic))
+   {
+   snprintf(query,CF_BUFSIZE,"SELECT * from topics");
+   trymatch = true;
+   }
+else
+   {
+   snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_name='%s' or topic_id='%s'",topic,topic);
+   }
+
+CfNewQueryDB(&cfdb,query);
+
+if (cfdb.maxcolumns != 3)
+   {
+   CfOut(cf_error,"","The database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
+   CfCloseDB(&cfdb);
+   return;
+   }
+
+while(CfFetchRow(&cfdb))
+   {
+   strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_MAXVARSIZE-1);
+   strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_MAXVARSIZE-1);
+   strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_MAXVARSIZE-1);
+   
+   if (trymatch && FullTextMatch(topic,topic_name))
+      {
+      AddTopic(&matching_topics,topic_name,topic_type);
+      }
+
+   count++;
+   }
+
+CfDeleteQuery(&cfdb);
+
+if (count == 0)
+   {
+   printf("No topics\n");
+   return;
+   }
+
+if (matching_topics)
+   {
+   for (tp = matching_topics; tp != NULL; tp=tp->next)
+      {
+      ShowTopicSummary(&cfdb,tp->topic_name,tp->topic_type);
+      }
+   }
+else
+   {
+   ShowTopicCosmology(&cfdb,topic_name,topic_type);
+   }
+
+CfCloseDB(&cfdb);
+}
 
 /*********************************************************************/
 /* Level                                                             */
@@ -588,6 +790,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
    }
 }
 
+
 /*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
@@ -618,7 +821,7 @@ tp = GetTopic(TOPIC_MAP,pp->promiser);
 
 if (a.fwd_name)
    {
-   AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,tp->topic_type,a.associates);
+   AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,tp->topic_type,a.associates,true);
    }
 }
 
@@ -654,7 +857,7 @@ if (BlockTextMatch("[.&|]+",pp->classes,&s,&e))
    return;
    }
 
-if ((tp = GetTopic(TOPIC_MAP,pp->classes)) == NULL)
+if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
    {
    CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
    return;
@@ -667,14 +870,17 @@ AddOccurrence(&(tp->occurrences),pp->classes,pp->promiser,a.represents,rep_type)
 
 void ShowTopicLTM(FILE *fout,char *id,char *type,char *value)
 
-{
+{ char ntype[CF_BUFSIZE];
+
+strncpy(ntype,Name2Id(type),CF_BUFSIZE);
+ 
 if (strcmp(type,"any") == 0)
    {
-   fprintf(fout,"[%s = \"%s\"]\n",id,value);
+   fprintf(fout,"[%s = \"%s\"]\n",Name2Id(id),value);
    }
 else
    {
-   fprintf(fout,"[%s: %s = \"%s\"]\n",id,type,value);
+   fprintf(fout,"[%s: %s = \"%s\"]\n",Name2Id(id),ntype,value);
    }
 }
 
@@ -706,6 +912,11 @@ else
    
    to_type = ta->associate_topic_type;
 
+   if (!to_type)
+      {
+      to_type = "any";
+      }
+
    for (rp = ta->associates; rp != NULL; rp=rp->next)
       {
       strncpy(to_id,CanonifyName(rp->item),CF_MAXVARSIZE);
@@ -727,12 +938,340 @@ fprintf(fout,"\n /* occurrences of %s */\n\n",topic_id);
 for (rp = op->represents; rp != NULL; rp=rp->next)
    {
    strncpy(subtype,CanonifyName(rp->item),CF_MAXVARSIZE-1);
-   fprintf(fout,"{%s,%s, \"%s\"}\n",topic_id,subtype,op->locator);
 
-   if (!GetTopic(TOPIC_MAP,subtype))
+   switch (op->rep_type)
+      {
+      case cfk_url:   
+          fprintf(fout,"{%s,%s, \"%s\"}\n",topic_id,subtype,op->locator);
+          break;
+
+      case cfk_file:
+      case cfk_db:
+      case cfk_literal:
+          fprintf(fout,"{%s,%s, [[%s]]}\n",topic_id,subtype,op->locator);
+          break;
+      }
+
+   if (!GetCanonizedTopic(TOPIC_MAP,subtype))
       {
       CfOut(cf_error,"","Occurrence of %s makes reference to a sub-topic %s but that has not been defined",topic_id,subtype);
       }
+   }
+}
+
+/*********************************************************************/
+
+void GenerateSQL()
+
+{ struct Topic *tp;
+  struct TopicAssociation *ta;
+  struct Occurrence *op;
+  FILE *fout = stdout;
+  char filename[CF_BUFSIZE],longname[CF_BUFSIZE],query[CF_BUFSIZE];
+  struct Rlist *rp;
+  int i,sql_database_defined = false;
+  CfdbConn cfdb;
+
+AddSlash(BUILD_DIR);
+snprintf(filename,CF_BUFSIZE-1,"%stopic_map.sql",BUILD_DIR);
+
+if (WRITE_SQL && strlen(SQL_OWNER) > 0)
+   {
+   sql_database_defined = true;
+   }
+
+Verbose("Writing %s\n",filename);
+
+/* Open channels */
+
+if ((fout = fopen(filename,"w")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Cannot write to %s\n",filename);
+   return;
+   }
+
+if (sql_database_defined)
+   {
+   CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
+
+   if (!cfdb.connected)
+      {
+      CfOut(cf_error,"","Could not open sql_db %s\n",SQL_DATABASE);
+      return;
+      }
+   }
+
+/* Schema - very simple */
+
+fprintf(fout,"# CREATE DATABASE IF NOT EXISTS cf_topic_map\n");
+fprintf(fout,"# USE %s_topic_map\n",TM_PREFIX);
+ 
+snprintf(query,CF_BUFSIZE-1,
+        "CREATE TABLE topics"
+        "("
+        "topic_name varchar(128),"
+        "topic_id varchar(128),"
+        "topic_type varchar(128)"
+        ");\n"
+        );
+
+fprintf(fout,query);
+        
+snprintf(query,CF_BUFSIZE-1,
+        "CREATE TABLE associations"
+        "("
+        "from_name varchar(128),"
+        "from_assoc varchar(128),"
+        "to_assoc varchar(128),"
+        "to_name varchar(128)"
+        ");\n"
+        );
+
+fprintf(fout,query);
+
+snprintf(query,CF_BUFSIZE-1,
+        "CREATE TABLE occurrences"
+        "("
+        "topic_name varchar(128),"
+        "locator varchar(128),"
+        "locator_type varchar(128),"
+        "subtype varchar(128)"
+        ");\n"
+        );
+
+fprintf(fout,query);
+
+/* Delete existing data and recreate */
+
+snprintf(query,CF_BUFSIZE-1,"delete from topics\n",TM_PREFIX);
+fprintf(fout,query);
+CfVoidQueryDB(&cfdb,query);
+snprintf(query,CF_BUFSIZE-1,"delete from associations\n",TM_PREFIX);
+fprintf(fout,query);
+CfVoidQueryDB(&cfdb,query);
+snprintf(query,CF_BUFSIZE-1,"delete from occurrences\n",TM_PREFIX);
+fprintf(fout,query);
+CfVoidQueryDB(&cfdb,query);
+
+/* Class types */
+
+for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
+   {
+   if (tp->comment)
+      {
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      }
+   else
+      {
+      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+      }
+
+   snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",longname,Name2Id(tp->topic_name),tp->topic_type);
+   fprintf(fout,query);
+   CfVoidQueryDB(&cfdb,query);
+   }
+
+/* Associations */
+
+for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
+   {
+   if (tp->comment)
+      {
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      }
+   else
+      {
+      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+      }
+
+   for (ta = tp->associations; ta != NULL; ta=ta->next)
+      {
+      for (rp = ta->associates; rp != NULL; rp=rp->next)
+         {
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc) values ('%s','%s','%s','%s');\n",longname,GetLongTopicName(TOPIC_MAP,rp->item),ta->fwd_name,ta->bwd_name);
+         fprintf(fout,query);
+         CfVoidQueryDB(&cfdb,query);
+         }
+      }
+   }
+
+/* Occurrences */
+
+for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
+   {
+   if (tp->comment)
+      {
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      }
+   else
+      {
+      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+      }
+      
+   for (op = tp->occurrences; op != NULL; op=op->next)
+      {
+      for (rp = op->represents; rp != NULL; rp=rp->next)
+         {
+         char safeexpr[CF_BUFSIZE];
+         strcpy(safeexpr,EscapeSQL(&cfdb,op->locator));
+         
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",longname,safeexpr,op->rep_type,GetLongTopicName(TOPIC_MAP,rp->item));
+         fprintf(fout,query);
+         CfVoidQueryDB(&cfdb,query);
+         }
+      }
+   }
+
+
+/* Close channels */
+
+fclose(fout);
+
+if (sql_database_defined)
+   {
+   CfCloseDB(&cfdb);
+   }
+}
+
+/*********************************************************************/
+
+void ShowTopicSummary(CfdbConn *cfdb,char *topic_name,char *topic_type)
+
+{
+CfOut(cf_error,"","Topic \"%s\" found in the context of \"%s\"\n",topic_name,topic_type);
+}
+
+/*********************************************************************/
+
+void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_type)
+
+{ struct Topic *other_topics = NULL;
+  struct TopicAssociation *associations = NULL;
+  struct Occurrence *occurrences = NULL;
+  char topic_name[CF_MAXVARSIZE],topic_id[CF_MAXVARSIZE],topic_type[CF_MAXVARSIZE],associate[CF_MAXVARSIZE];
+  char query[CF_MAXVARSIZE],fassociation[CF_MAXVARSIZE],bassociation[CF_MAXVARSIZE];
+  char locator[CF_MAXVARSIZE],subtype[CF_MAXVARSIZE];
+  enum representations locator_type;
+  struct Rlist *rp;
+
+/* Collect data - first other topics of same type */
+
+CfOut(cf_error,"","Topic \"%s\" found in the context of \"%s\"\n",this_name,this_type);
+  
+snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s'",this_type);
+
+CfNewQueryDB(cfdb,query);
+
+if (cfdb->maxcolumns != 3)
+   {
+   CfOut(cf_error,"","The database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
+   return;
+   }
+
+while(CfFetchRow(cfdb))
+   {
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
+   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+
+   if (strcmp(topic_name,this_name) == 0 || strcmp(topic_id,this_name) == 0)
+      {
+      continue;
+      }
+
+   AddTopic(&other_topics,topic_name,topic_type);
+   }
+
+CfDeleteQuery(cfdb);
+
+/* Then associated topics */
+
+snprintf(query,CF_BUFSIZE,"SELECT * from associations where to_name='%s'",this_name);
+
+CfNewQueryDB(cfdb,query);
+
+if (cfdb->maxcolumns != 4)
+   {
+   CfOut(cf_error,"","The database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,4);
+   return;
+   }
+
+while(CfFetchRow(cfdb))
+   {
+   struct Rlist *this = NULL;
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
+   strncpy(fassociation,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
+   strncpy(bassociation,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(associate,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
+
+   AppendRlist(&this,topic_name,CF_SCALAR);
+   AddTopicAssociation(&associations,bassociation,NULL,NULL,this,false);
+   DeleteRlist(this);
+   }
+
+CfDeleteQuery(cfdb);
+
+snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_name='%s'",this_name);
+
+CfNewQueryDB(cfdb,query);
+
+if (cfdb->maxcolumns != 4)
+   {
+   CfOut(cf_error,"","The database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,4);
+   return;
+   }
+
+while(CfFetchRow(cfdb))
+   {
+   struct Rlist *this = NULL;
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
+   strncpy(fassociation,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
+   strncpy(bassociation,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(associate,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
+
+   AppendRlist(&this,associate,CF_SCALAR);
+   AddTopicAssociation(&associations,fassociation,NULL,NULL,this,false);
+   DeleteRlist(this);
+   }
+
+CfDeleteQuery(cfdb);
+
+/* Finally occurrences of the mentioned topic */
+
+snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_name,this_name);
+
+CfNewQueryDB(cfdb,query);
+
+if (cfdb->maxcolumns != 4)
+   {
+   CfOut(cf_error,"","The database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,4);
+   return;
+   }
+
+while(CfFetchRow(cfdb))
+   {
+   struct Rlist *this = NULL;
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
+   strncpy(locator,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
+   locator_type = Str2Int(CfFetchColumn(cfdb,2));
+   strncpy(subtype,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
+
+   AppendRlist(&this,subtype,CF_SCALAR);
+   AddOccurrence(&occurrences,topic_name,locator,this,locator_type);
+   DeleteRlist(this);
+   }
+
+CfDeleteQuery(cfdb);
+
+/* Now print the results */
+
+if (HTML)
+   {
+   ShowHtmlResults(this_name,this_type,other_topics,associations,occurrences);
+   }
+else
+   {
+   ShowTextResults(this_name,this_type,other_topics,associations,occurrences);
    }
 }
 
@@ -742,19 +1281,135 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
 
 char *Name2Id(char *s)
 
-{ static char ret[CF_BUFSIZE];
+{ static char ret[CF_BUFSIZE],detox[CF_BUFSIZE];
+  char *sp;
 
-if (false)
+strncpy(ret,s,CF_BUFSIZE-1);
+
+for (sp = ret; *sp != '\0'; sp++)
    {
-   snprintf(ret,CF_BUFSIZE,"%s_%s",TM_PREFIX,CanonifyName(s));
+   if (!isalnum(*sp) && *sp != '_')
+      {
+      if (isalnum(*sp & 127))
+         {
+         *sp &= 127;
+         }
+      }
+   }
+  
+strncpy(detox,CanonifyName(ret),CF_BUFSIZE-1);
+
+if (TM_PREFIX && strlen(TM_PREFIX) > 0)
+   {
+   snprintf(ret,CF_BUFSIZE,"%s_%s",TM_PREFIX,detox);
    }
 else
    {
-   snprintf(ret,CF_BUFSIZE,"%s",TM_PREFIX,CanonifyName(s));
+   snprintf(ret,CF_BUFSIZE,"%s",detox);
    }
  
 return ret;
 }
+
+/*********************************************************************/
+
+void ShowTextResults(char *this_name,char *this_type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences)
+
+{ struct Topic *tp;
+  struct TopicAssociation *ta;
+  struct Occurrence *oc;
+  struct Rlist *rp;
+  int count = 0;
+ 
+CfOut(cf_error,"","\nAssociations:\n\n");
+
+for (ta = associations; ta != NULL; ta=ta->next)
+   {
+   printf("  %s \"%s\"\n",this_name,ta->fwd_name);
+   
+   for (rp = ta->associates; rp != NULL; rp=rp->next)
+      {
+      printf("    - %s\n",rp->item);
+      }
+
+   count++;
+   }
+
+if (count == 0)
+   {
+   printf("\n    (none)\n");
+   }
+
+count = 0;
+
+CfOut(cf_error,"","\nOccurrences of this topic:\n\n");
+
+for (oc = occurrences; oc != NULL; oc=oc->next)
+   {
+   if (oc->represents == NULL)
+      {
+      printf("(direct)");
+      }
+   else
+      {
+      for (rp = oc->represents; rp != NULL; rp=rp->next)
+         {
+         printf("   %s: ",(char *)rp->item);
+         }
+      }
+   switch (oc->rep_type)
+      {
+      case cfk_url:
+          CfOut(cf_error,""," %s (URL)",oc->locator);
+          break;
+      case cfk_file:
+          CfOut(cf_error,""," %s (file)",oc->locator);
+          break;
+      case cfk_db:
+          CfOut(cf_error,""," %s (DB)",oc->locator);
+          break;          
+      case cfk_literal:
+          CfOut(cf_error,""," \"%s\" (Quote)",oc->locator);
+          break;
+      default:
+          break;
+      }
+
+   count++;
+   }
+
+if (count == 0)
+   {
+   printf("\n    (none)\n");
+   }
+
+count = 0;
+
+CfOut(cf_error,"","\nOther topics of the same type (%s):\n\n",this_type);
+
+for (tp = other_topics; tp != NULL; tp=tp->next)
+   {
+   printf("  %s in the context of %s\n",tp->topic_name,tp->topic_type);
+   count++;
+   }
+
+if (count == 0)
+   {
+   printf("\n    (none)\n");
+   }
+}
+
+/*********************************************************************/
+
+void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences)
+
+{ struct Topic *tp;
+  struct TopicAssociation *ta;
+  struct Occurrence *oc;
+  struct Rlist *rp;
+ 
+}
+
 
 
 /* EOF */

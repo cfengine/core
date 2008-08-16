@@ -109,9 +109,9 @@ tp->next = *list;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *topic_type,struct Rlist *associates)
+void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *topic_type,struct Rlist *associates,int verify)
 
-{ struct TopicAssociation *ta = NULL;
+{ struct TopicAssociation *ta = NULL,*texist;
   char assoc_type[CF_MAXVARSIZE];
   struct Rlist *rp;
 
@@ -123,7 +123,7 @@ if (associates == NULL || associates->item == NULL)
    return;
    }
 
-if (!AssociationExists(*list,fwd_name,bwd_name))
+if ((texist = AssociationExists(*list,fwd_name,bwd_name,verify)) == NULL)
    {
    if ((ta = (struct TopicAssociation *)malloc(sizeof(struct TopicAssociation))) == NULL)
       {
@@ -145,15 +145,20 @@ if (!AssociationExists(*list,fwd_name,bwd_name))
       FatalError("");
       }
    
-   if ((ta->assoc_type = strdup(assoc_type)) == NULL)
+   if (assoc_type && (ta->assoc_type = strdup(assoc_type)) == NULL)
       {
       CfOut(cferror,"malloc","Memory failure in AddTopicAssociation");
       FatalError("");
       }
 
+   ta->associates = NULL;
    ta->associate_topic_type = NULL;
    ta->next = *list;
    *list = ta;
+   }
+else
+   {
+   ta = texist;
    }
 
 /* Association now exists, so add new members */
@@ -214,7 +219,7 @@ for (tp = list; tp != NULL; tp=tp->next)
    {
    if (strcmp(tp->topic_name,topic_name) == 0)
       {
-      if (topic_type && strcmp(tp->topic_type,topic_type) == 0)
+      if (topic_type && strcmp(tp->topic_type,topic_type) != 0)
          {
          CfOut(cf_error,"","Topic \"%s\" exists, but its type \"%s\" does not match promised type \"%s\"",topic_name,tp->topic_type,topic_type);
          }
@@ -227,57 +232,77 @@ return false;
 
 /*****************************************************************************/
 
-int AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd)
+struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify)
 
 { struct TopicAssociation *ta;
   int yfwd = false,ybwd = false;
+  enum cfreport level;
+
+if (verify)
+   {
+   level = cf_error;
+   }
+else
+   {
+   level = cf_verbose;
+   }
+
+if (fwd == NULL || (fwd && strlen(fwd) == 0))
+   {
+   CfOut(cf_error,"","NULL forward association name");
+   return NULL;
+   }
+
+if (bwd == NULL || (bwd && strlen(bwd) == 0))
+   {
+   CfOut(cf_verbose,"","NULL backward association name");
+   }
 
 for (ta = list; ta != NULL; ta=ta->next)
    {
    if (strcmp(fwd,ta->fwd_name) == 0)
       {
-      Verbose("Association exists already");
+      Verbose("Association exists already\n",fwd);
       yfwd = true;
       }
 
-   if (strcmp(bwd,ta->bwd_name) == 0)
+   if (bwd && strcmp(bwd,ta->bwd_name) == 0)
       {
-      Verbose("Association exists already");
-      yfwd = true;
+      Verbose("Association exists already\n",bwd);
+      ybwd = true;
       }
 
-   if (strcmp(fwd,ta->bwd_name) == 0)
+   if (ta->bwd_name && strcmp(fwd,ta->bwd_name) == 0)
       {
-      CfOut(cf_error,"","Association exists already but in opposite orientation");
-      return true;
+      CfOut(level,"","Association exists already but in opposite orientation");
+      return ta;
       }
 
-   if (strcmp(bwd,ta->fwd_name) == 0)
+   if (bwd && strcmp(bwd,ta->fwd_name) == 0)
       {
-      CfOut(cf_error,"","Association exists already but in opposite orientation");
-      return true;
+      CfOut(level,"","Association exists already but in opposite orientation");
+      return ta;
       }
 
    if (yfwd && ybwd)
       {
-      return true;
+      return ta;
       }
    
    if (yfwd && !ybwd)
       {
-      CfOut(cf_error,"","Association %s exists but the reverse association is missing",fwd);
-      return true;
+      CfOut(level,"","Association \"%s\" exists but the reverse association is missing",fwd);
+      return ta;
       }
    
    if (!yfwd && ybwd)
       {
-      CfOut(cf_error,"","The reverse ssociation %s exists but the forward association is missing",fwd);
-      return true;
+      CfOut(level,"","The reverse association \"%s\" exists but the forward association is missing",fwd);
+      return ta;
       }
-
    }
 
-return false;
+return NULL;
 }
 
 /*****************************************************************************/
@@ -314,7 +339,50 @@ for (tp = list; tp != NULL; tp=tp->next)
 return NULL;
 }
 
+/*****************************************************************************/
 
+char *GetLongTopicName(struct Topic *list,char *topic_name)
+
+{ struct Topic *tp;
+  static char longname[CF_BUFSIZE];
+
+for (tp = list; tp != NULL; tp=tp->next)
+   {
+   if (strcmp(topic_name,tp->topic_name) == 0)
+      {
+      if (tp->comment)
+         {
+         snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+         }
+      else
+         {
+         snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+         }
+      
+      return longname;
+      }
+   }
+
+CfOut(cf_error,"","Could not assemble long name for a known topic - something funny going on");
+return NULL;
+}
+
+/*****************************************************************************/
+
+struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
+
+{ struct Topic *tp;
+
+for (tp = list; tp != NULL; tp=tp->next)
+   {
+   if (strcmp(topic_name,CanonifyName(tp->topic_name)) == 0)
+      {
+      return tp;          
+      }
+   }
+
+return NULL;
+}
 
 /*****************************************************************************/
 
@@ -332,3 +400,4 @@ for (tp = list; tp != NULL; tp=tp->next)
 
 return NULL;
 }
+

@@ -268,13 +268,13 @@ if (XML)
    
    if (pp->promisee)
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s promises %s (about %s)",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
+      fprintf(FOUT,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
       ShowRval(FOUT,pp->promisee,pp->petype);
       fprintf(FOUT,"%s\n\n",CFH[cfx_object][cfe]);
       }
    else
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s promises (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->agentsubtype);
+      fprintf(FOUT,"Resource object %s\'%s\'%s promises to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
       }
    }
 else
@@ -359,7 +359,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
 if (XML)
    {
-   fprintf(FOUT,"<p><small>Promise belongs to bundle <b>%s</b> in \'<i>%s</i>\' near line %d</small></p>\n",pp->bundle,pp->audit->filename,pp->lineno);
+   fprintf(FOUT,"<p><small>Promise belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
    fprintf(FOUT,"%s\n",CFH[cfx_promise][cfe]);
    fprintf(FOUT,"%s\n",CFH[cfx_line][cfe]);
    }
@@ -367,12 +367,12 @@ else
    {
    if (pp->audit)
       {
-      fprintf(FOUT,"Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
+      fprintf(FOUT,"Promise belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
       fprintf(FOUT,"\n");
       }
    else
       {
-      fprintf(FOUT,"Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
+      fprintf(FOUT,"Promise belongs to bundle \'%s\' (type %s) near line %d\n",pp->bundle,pp->bundletype,pp->lineno);
       }
    }
 }

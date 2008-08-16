@@ -684,11 +684,15 @@ for (ip = file_start; ip != file_end; ip=ip->next)
    
    columns = SplitRegexAsRList(ip->name,a.column.column_separator,CF_INFINITY,false);
    retval = EditLineByColumn(columns,a,pp);
-   free(ip->name);
-   ip->name = ReconstructLine(columns,separator);
+
+   if (retval)
+      {
+      free(ip->name);
+      ip->name = Rlist2String(columns,separator);
+      }
+   
    DeleteRlist(columns);
    }
-
 
 return retval;
 }
@@ -808,10 +812,23 @@ if (a.column.value_separator)
    this_column = SplitStringAsRList(rp->item,a.column.value_separator);
    retval = EditColumn(&this_column,a,pp);
 
-   free(rp->item);
-   sep[0] = a.column.value_separator;
-   sep[1] = '\0';
-   rp->item = ReconstructLine(this_column,sep);
+   if (retval)
+      {
+      if (DONTDO || a.transaction.action == cfa_warn)
+         {
+         cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit column but only warning promised");
+         retval = false;
+         }
+      else
+         {
+         cfPS(cf_error,CF_CHG,"",pp,a,"Editing column");
+         free(rp->item);
+         sep[0] = a.column.value_separator;
+         sep[1] = '\0';
+         rp->item = Rlist2String(this_column,sep);
+         }
+      }
+   
    DeleteRlist(this_column);
    return retval;
    }
@@ -821,15 +838,33 @@ else
 
    if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
       {
-      free(rp->item);
-      rp->item = strdup("");
-      return true;
+      if (DONTDO)
+         {
+         cfPS(cf_error,CF_NOP,"",pp,a,"Need to delete column field value %s",rp->item);
+         return false;
+         }
+      else
+         {
+         cfPS(cf_inform,CF_CHG,"",pp,a,"Deleting column field value %s",rp->item);
+         free(rp->item);
+         rp->item = strdup("");
+         return true;
+         }
       }
    else
       {
-      free(rp->item);
-      rp->item = strdup(a.column.column_value);
-      return true;
+      if (DONTDO)
+         {
+         cfPS(cf_error,CF_NOP,"",pp,a,"Need to set column field value %s to %s",rp->item,a.column.column_value);
+         return false;
+         }
+      else
+         {
+         cfPS(cf_inform,CF_CHG,"",pp,a,"Setting column field value %s to %s",rp->item,a.column.column_value);
+         free(rp->item);
+         rp->item = strdup(a.column.column_value);
+         return true;
+         }
       }
    }
 }
@@ -847,8 +882,8 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0
    {
    if (found = KeyInRlist(*columns,a.column.column_value))
       {
+      CfOut(cf_inform,"","Deleting column field value %s",a.column.column_value);
       DeleteRlistEntry(columns,found);
-      return true;
       }
    else
       {
@@ -860,6 +895,7 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"prepend") == 
    {
    if (IdempPrependRScalar(columns,a.column.column_value,CF_SCALAR))
       {
+      CfOut(cf_inform,"","Prepending column field value %s",a.column.column_value);
       return true;
       }
    else
@@ -894,24 +930,3 @@ else
 return false;
 }
 
-/***************************************************************************/
-
-char *ReconstructLine(struct Rlist *list,char *sep)
-
-{ char line[CF_BUFSIZE];
-  struct Rlist *rp;
-
-line[0] = '\0';
-  
-for(rp = list; rp != NULL; rp=rp->next)
-   {
-   strcat(line,(char *)rp->item);
-
-   if (rp->next)
-      {
-      strcat(line,sep);
-      }
-   }
-  
-return strdup(line);
-}

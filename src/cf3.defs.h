@@ -263,10 +263,15 @@ enum cfscontrol
 
 /*************************************************************************/
 
-enum cfkcoontrol
+enum cfkcontrol
    {
    cfk_tm_prefix,
    cfk_builddir,
+   cfk_sql_type,
+   cfk_sql_database,
+   cfk_sql_owner,
+   cfk_sql_passwd,
+   cfk_sql_server,
    cfk_notype
    };
 
@@ -1066,5 +1071,47 @@ struct Attributes
    char *rep_type;
    };
 
+/*************************************************************************/
+/* SQL Database connectors                                               */
+/*************************************************************************/
+
+#ifdef HAVE_MYSQL_MYSQL_H
+#include <mysql/mysql.h>
+#endif
+
+#ifdef HAVE_PGSQL_LIBPQ_FE_H
+#include <pgsql/libpq-fe.h>
+#endif
+
+enum cfdbtype
+   {
+   cfd_mysql,
+   cfd_postgress,
+   cfd_notype
+   };
+
+typedef struct 
+   {
+#ifdef HAVE_MYSQL_MYSQL_H
+   MYSQL my_conn;
+   MYSQL_RES *my_res;
+#endif
+#ifdef HAVE_PGSQL_LIBPQ_FE_H
+   PGconn *pq_conn;
+   PGresult   *pq_res;
+#endif
+   int connected;
+   int result;
+   int row;
+   int maxcolumns;
+   int maxrows;
+   int column;
+   char **rowdata;
+   char *blank;
+   enum cfdbtype type;
+   }
+CfdbConn;
+
+/*************************************************************************/
 
 #include "prototypes3.h"

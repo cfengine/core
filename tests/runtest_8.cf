@@ -20,7 +20,7 @@ vars:
   "size" int => "46k";
   "rand" int => randomint("33","$(size)");
 
-executions:
+commands:
 
   "/bin/echo" 
      args => "Hello world - $(size)/$(rand)",

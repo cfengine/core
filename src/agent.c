@@ -38,7 +38,7 @@ enum typesequence
    kp_interfaces,
    kp_processes,
    kp_files,
-   kp_executions,
+   kp_commands,
    kp_reports,
    kp_none
    };
@@ -49,7 +49,7 @@ char *TYPESEQUENCE[] =
    "interfaces",
    "processes",
    "files",
-   "executions",
+   "commands",
    "reports",
    NULL
    };
@@ -605,7 +605,7 @@ if (strcmp("files",pp->agentsubtype) == 0)
    return;
    }
 
-if (strcmp("executions",pp->agentsubtype) == 0)
+if (strcmp("commands",pp->agentsubtype) == 0)
    {
    VerifyExecPromise(pp);
    return;

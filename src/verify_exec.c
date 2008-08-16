@@ -90,6 +90,8 @@ if (!IsExecutable(pp->promiser))
    return;
    }
 
+NewScalar("this","promiser",pp->promiser,cf_str);
+
 if (a.args)
    {
    snprintf(execstr,CF_EXPANDSIZE-1,"%s %s",pp->promiser,a.args);

@@ -341,34 +341,6 @@ return NULL;
 
 /*****************************************************************************/
 
-char *GetLongTopicName(struct Topic *list,char *topic_name)
-
-{ struct Topic *tp;
-  static char longname[CF_BUFSIZE];
-
-for (tp = list; tp != NULL; tp=tp->next)
-   {
-   if (strcmp(topic_name,tp->topic_name) == 0)
-      {
-      if (tp->comment)
-         {
-         snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
-         }
-      else
-         {
-         snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
-         }
-      
-      return longname;
-      }
-   }
-
-CfOut(cf_error,"","Could not assemble long name for a known topic - something funny going on");
-return NULL;
-}
-
-/*****************************************************************************/
-
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;

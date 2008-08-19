@@ -498,7 +498,6 @@ struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify);
 int OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
-char *GetLongTopicName(struct Topic *list,char *topic_name);
 
 /* pipes.c */
 

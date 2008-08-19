@@ -59,6 +59,7 @@ libpromises_la_SOURCES =						\
 	transaction.c							\
 	cfstream.c							\
 	pipes.c								\
+	html.c								\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\

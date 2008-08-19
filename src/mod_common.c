@@ -268,6 +268,9 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"sql_owner",cf_str,""},
    {"sql_passwd",cf_str,""},
    {"sql_server",cf_str,""},
+   {"query_output",cf_opts,"html,text"},
+   {"query_engine",cf_str,""},
+   {"style_sheet",cf_str,""},
    {NULL,cf_notype,NULL}
    };
 

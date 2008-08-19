@@ -179,8 +179,8 @@ switch (ag)
 
 void InitializeGA(int argc,char *argv[])
 
-{ char *sp, **cfargv;;
- int i,j, cfargc, seed;
+{ char *sp;
+  int i,j, seed;
   struct stat statbuf;
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
@@ -262,72 +262,6 @@ srand48((long)seed);
 
 LoadSecretKeys();
 
-/* Note we need to fix the options since the argv mechanism doesn't */
-/* work when the shell #!/bla/cfengine -v -f notation is used.      */
-/* Everything ends up inside a single argument! Here's the fix      */
-
-cfargc = 1;
-
-/* Pass 1: Find how many arguments there are. */
-for (i = 1, j = 1; i < argc; i++)
-   {
-   sp = argv[i];
-   
-   while (*sp != '\0')
-      {
-      while (*sp == ' ' && *sp != '\0') /* Skip to arg */
-         {
-         sp++;
-         }
-      
-      cfargc++;
-      
-      while (*sp != ' ' && *sp != '\0') /* Skip to white space */
-         {
-         sp++;
-         }
-      }
-   }
-
-/* Allocate memory for cfargv. */
-
-cfargv = (char **) malloc(sizeof(char *) * (cfargc + 1));
-
-if (!cfargv)
-   {
-   FatalError("cfagent: Out of memory parsing arguments\n");
-   }
-
-/* Pass 2: Parse the arguments. */
-
-cfargv[0] = "cfagent";
-
-for (i = 1, j = 1; i < argc; i++)
-   {
-   sp = argv[i];
-   
-   while (*sp != '\0')
-      {
-      while (*sp == ' ' && *sp != '\0') /* Skip to arg */
-         {
-         if (*sp == ' ')
-            {
-            *sp = '\0'; /* Break argv string */
-            }
-         sp++;
-         }
-      
-      cfargv[j++] = sp;
-      
-      while (*sp != ' ' && *sp != '\0') /* Skip to white space */
-         {
-         sp++;
-         }
-      }
-   }
-
-cfargv[j] = NULL;
-
 CheckOpts(argc,argv);
 
 if (!MINUSF)
@@ -392,10 +326,13 @@ if (stat(filename,&statbuf) == -1)
    exit(1);
    }
 
-if (statbuf.st_uid != getuid())
+if (IsPrivileged())
    {
-   CfOut(cf_error,"","File %s is not owned by uid %d (security exception)",filename,getuid());
-   exit(1);
+   if (statbuf.st_uid != getuid())
+      {
+      CfOut(cf_error,"","File %s is not owned by uid %d (security exception)",filename,getuid());
+      exit(1);
+      }
    }
  
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))

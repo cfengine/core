@@ -272,6 +272,9 @@ enum cfkcontrol
    cfk_sql_owner,
    cfk_sql_passwd,
    cfk_sql_server,
+   cfk_query_output,
+   cfk_query_engine,
+   cfk_stylesheet,
    cfk_notype
    };
 

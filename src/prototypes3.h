@@ -421,6 +421,11 @@ void DeleteHashes(struct CfAssoc **hashtable);
 void EditHashValue(char *scopeid,char *lval,void *rval);
 void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
+/* html.c */
+
+void CfHtmlHeader(FILE *fp,char *title,char *css);
+void CfHtmlFooter(FILE *fp);
+
 /* item-lib.c */
 
 struct Item *EndOfList(struct Item *start);

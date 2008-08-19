@@ -187,13 +187,18 @@ switch (cfdb->type)
 
        if (mysql_query(&(cfdb->my_conn),query) != 0)
           {
-          CfOut(cf_inform,"","Query failed: %s, %s\n",query,mysql_error(&(cfdb->my_conn)));
+          CfOut(cf_inform,"","Mysql query failed: %s, (%s)\n",query,mysql_error(&(cfdb->my_conn)));
           }
        else
           {
           cfdb->my_res = mysql_store_result(&(cfdb->my_conn));
-          cfdb->maxcolumns = mysql_num_fields(cfdb->my_res);
-          cfdb->maxrows = mysql_num_rows(cfdb->my_res);
+
+          if (cfdb->my_res)
+             {
+             cfdb->maxcolumns = mysql_num_fields(cfdb->my_res);
+             cfdb->maxrows = mysql_num_rows(cfdb->my_res);
+             }
+
           cfdb->result = true;
           }
 #endif
@@ -207,7 +212,7 @@ switch (cfdb->type)
 
        if (PQresultStatus(cfdb->pq_res) != PGRES_COMMAND_OK && PQresultStatus(cfdb->pq_res) != PGRES_TUPLES_OK)
           {
-          CfOut(cf_inform,"","Query failed: %s, %s\n",query,PQerrorMessage(cfdb->pq_conn));
+          CfOut(cf_inform,"","Postgress query failed: %s, %s\n",query,PQerrorMessage(cfdb->pq_conn));
           }
        else
           {

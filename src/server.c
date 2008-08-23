@@ -287,6 +287,7 @@ else
    snprintf(VFQNAME,CF_BUFSIZE,"%s.%s",VSYSNAME.nodename,ToLowerStr(VDOMAIN));
    strncpy(VUQNAME,VSYSNAME.nodename,CF_MAXVARSIZE-1);
    }
+
 }
 
 
@@ -788,6 +789,7 @@ if (PROMISETIME < newstat.st_mtime)
    ERRORCOUNT = 0;
 
    NewScope("system");
+   NewScope("this");
    AddClassToHeap("any");
    GetNameInfo3();
    GetInterfaceInfo3();

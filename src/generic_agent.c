@@ -59,6 +59,8 @@ LoadSystemConstants();
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 THIS_AGENT_TYPE = ag;
 
+NewScope("this");
+
 ok = CheckPromises(ag);
 
 if (ok)

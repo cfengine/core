@@ -47,6 +47,11 @@ void ForceScalar(char *lval,char *rval)
 
 { char rtype,retval[CF_MAXVARSIZE];
 
+if (THIS_AGENT_TYPE != cf_agent)
+   {
+   return;
+   }
+
 if (GetVariable("this",lval,(void *)&retval,&rtype) != cf_notype)
    {
    DeleteVariable("this",lval);

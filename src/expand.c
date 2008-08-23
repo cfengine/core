@@ -514,6 +514,8 @@ do
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise(scopeid,pp);
 
+      printf("PRMISE 1 %s\n",pexp->promiser);
+      
    switch (agent)
       {
       case cf_common:

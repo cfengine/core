@@ -296,6 +296,9 @@ if (a.havelink)
 
 /* Phase 3 - content editing */
 
+
+
+
 if (a.haveedit)
    {
    ScheduleEditOperation(path,a,pp);

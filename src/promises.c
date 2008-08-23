@@ -103,6 +103,10 @@ if (pp->promisee)
    pcopy->promisee = CopyRvalItem(pp->promisee,pp->petype);
    pcopy->petype = pp->petype;
    }
+else
+   {
+   pcopy->promisee = NULL;
+   }
 
 if (pp->classes)
    {

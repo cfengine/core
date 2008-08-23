@@ -1423,7 +1423,15 @@ while(CfFetchRow(cfdb))
    locator_type = Str2Int(CfFetchColumn(cfdb,2));
    strncpy(subtype,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
 
-   AppendRlist(&this,subtype,CF_SCALAR);
+   if (strcmp(subtype,this_name) == 0)
+      {
+      AppendRlist(&this,topic_name,CF_SCALAR);
+      }
+   else
+      {
+      AppendRlist(&this,subtype,CF_SCALAR);
+      }
+   
    AddOccurrence(&occurrences,topic_name,locator,this,locator_type);
    DeleteRlist(this);
    }
@@ -1463,24 +1471,27 @@ else
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type)
 
 { char topic_name[CF_MAXVARSIZE],topic_id[CF_MAXVARSIZE],topic_type[CF_MAXVARSIZE],query[CF_MAXVARSIZE];
-
+ char banner[CF_BUFSIZE];
+ 
 if (HTML)
    {
-   CfHtmlHeader(stdout,this_tassoc,STYLESHEET);
-   printf("<h1>Association \"%s\" </h1>",NextTopic(this_fassoc));
-   printf("with inverse \"%s\", ",NextTopic(this_tassoc));
-   printf("associates type \"%s\" ->",NextTopic(from_type));
-   printf("&rarr; type \"%s\"\n",NextTopic(to_type));
+   snprintf(banner,CF_BUFSIZE,"A: \"%s\" (with inverse \"%s\")",this_fassoc,this_tassoc);
+   CfHtmlHeader(stdout,banner,STYLESHEET);
+   printf("<div id=\"intro\">");
+   printf("\"%s\" associates topics of type:  \"%s\"",this_fassoc,NextTopic(from_type));
+   printf("&rarr;  \"%s\"\n",NextTopic(to_type));
+   printf("</div>");
    }
 else
    {
    printf("Association \"%s\" (with inverse \"%s\"), ",this_fassoc,this_tassoc);
-   printf("associates type \"%s\" -> type \"%s\"\n",from_type,to_type);
+   printf("associates topics of type \"%s\" -> \"%s\"\n",from_type,to_type);
    }
 
 
 if (HTML)
    {
+   printf("<p><div id=\"occurrences\">");
    printf("\n<h2>Role players</h2>\n\n");
    printf("  <h3>%s::</h3>\n",from_type);
    printf("<div id=\"roles\">\n");
@@ -1492,7 +1503,7 @@ else
    printf("  %s::\n",from_type);
    }
 
-/* Collect data - first other topics of same type (associated role players) */
+/* FROM role players */
 
 snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s'",EscapeSQL(cfdb,from_type));
 
@@ -1534,7 +1545,7 @@ else
    printf("\n  %s::\n",to_type);
    }
 
-/* Collect data - first other topics of same type (associated role players) */
+/* TO ROLE PLAYERS */
 
 snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s'",to_type);
 
@@ -1675,7 +1686,7 @@ for (oc = occurrences; oc != NULL; oc=oc->next)
           printf(" %s (URL)",oc->locator);
           break;
       case cfk_file:
-          printf(" %s (file)",oc->locator);
+          printf("%s (file)",oc->locator);
           break;
       case cfk_db:
           printf(" %s (DB)",oc->locator);
@@ -1721,11 +1732,13 @@ void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,
   struct Rlist *rp;
   int count = 0;
   FILE *fout = stdout;
-  
-CfHtmlHeader(stdout,this_name,STYLESHEET);
+  char banner[CF_BUFSIZE];
 
-fprintf(fout,"<div id=\"topic\">");
-fprintf(fout,"Topic \"%s\" found in the context of ",NextTopic(this_name));
+snprintf(banner,CF_BUFSIZE,"T: %s",this_name);  
+CfHtmlHeader(stdout,banner,STYLESHEET);
+
+fprintf(fout,"<div id=\"intro\">");
+fprintf(fout,"This topic \"%s\" is found in the context of ",NextTopic(this_name));
 fprintf(fout,"\"%s\"\n</div>",NextTopic(this_type));
 
 fprintf(fout,"<p><div id=\"thistype\">");
@@ -1776,9 +1789,9 @@ fprintf(fout,"</div>");
 
 count = 0;
 
-fprintf(fout,"<div id=\"occurrences\">");
+fprintf(fout,"<p><div id=\"occurrences\">");
 
-CfOut(cf_error,"","\n<h2>Occurrences of this topic:</h2>\n\n");
+CfOut(cf_error,"","\n<h2>Pertaining to this topic:</h2>\n\n");
 
 fprintf(fout,"<ul>\n");
 
@@ -1798,7 +1811,7 @@ for (oc = occurrences; oc != NULL; oc=oc->next)
    switch (oc->rep_type)
       {
       case cfk_url:
-          fprintf(fout," <a href=\"%s\">%s</a> (URL)",oc->locator,oc->locator);
+          fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",oc->locator,oc->locator);
           break;
       case cfk_file:
           fprintf(fout," <a href=\"file://%s\">%s</a> (file)",oc->locator,oc->locator);
@@ -1826,7 +1839,7 @@ if (count == 0)
 fprintf(fout,"</div>");
 count = 0;
 
-fprintf(fout,"<div id=\"others\">\n");
+fprintf(fout,"<p><div id=\"others\">\n");
 
 fprintf(fout,"\n<h2>Other topics of type %s:</h2>\n\n",this_type);
 

@@ -168,6 +168,7 @@ pp->conn = conn; /* for ease of access */
 pp->cache = NULL;
 
 CopyFileSources(destination,attr,pp);
+
 return true;
 }
 

@@ -80,7 +80,7 @@ for  (i = 0; i < CF3_MODULES; i++)
    
    for (j = 0; ss[j].btype != NULL; j++)
       {
-      if (strcmp(subtype,ss[j].subtype) == 0)
+      if (subtype && strcmp(subtype,ss[j].subtype) == 0)
          {
          if ((strcmp(bundletype,ss[j].btype) == 0) || (strcmp("*",ss[j].btype) == 0))
             {

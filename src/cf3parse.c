@@ -1449,7 +1449,7 @@ yyreduce:
     {
         case 2:
 #line 41 "cf3parse.y"
-    { yyerror("Something defined outside of a block in input"); }
+    { yyerror("Something defined outside of a block or missing punctuation in input"); }
     break;
 
   case 10:

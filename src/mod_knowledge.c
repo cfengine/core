@@ -57,7 +57,7 @@ struct BodySyntax CF_RELATE_BODY[] =
 struct BodySyntax CF_OCCUR_BODIES[] =
    {
    {"represents",cf_slist,""},
-   {"representation",cf_opts,"literal,url,db,file"},
+   {"representation",cf_opts,"literal,url,db,file,web"},
    {NULL,cf_notype,NULL}
    };
 

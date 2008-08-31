@@ -55,11 +55,57 @@ else
 
 /*************************************************************************/
 
+int FullTextCaseMatch (char *regexp,char *teststring)
+
+{ struct CfRegEx rex;
+ 
+rex = CaseCompileRegExp(regexp);
+
+if (rex.failed)
+   {
+   return 0;
+   }
+
+if (RegExMatchFullString(rex,teststring))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   }
+}
+
+/*************************************************************************/
+
 int BlockTextMatch(char *regexp,char *teststring,int *start,int *end)
 
 { struct CfRegEx rex;
  
 rex = CompileRegExp(regexp);
+
+if (rex.failed)
+   {
+   return 0;
+   }
+
+if (RegExMatchSubString(rex,teststring,start,end))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   } 
+}
+
+/*************************************************************************/
+
+int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end)
+
+{ struct CfRegEx rex;
+ 
+rex = CaseCompileRegExp(regexp);
 
 if (rex.failed)
    {
@@ -220,6 +266,60 @@ memset(&this,0,sizeof(struct CfRegEx));
 re_syntax_options |= RE_INTERVALS;
 
 code = regcomp(&rx,regexp,REG_EXTENDED);
+
+if (code != 0)
+   {
+   char buf[CF_BUFSIZE];
+   regerror(code,&rx,buf,CF_BUFSIZE-1);
+   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code, regexp,buf);
+   this.failed = true;
+   }
+else
+   {
+   this.failed = false;
+   this.rx = rx;
+   }
+
+#endif
+
+this.regexp = regexp;
+return this;
+}
+
+/*********************************************************************/
+
+struct CfRegEx CaseCompileRegExp(char *regexp)
+
+{ struct CfRegEx this;
+ 
+#ifdef HAVE_LIBPCRE
+ pcre *rx;
+ const char *errorstr; 
+ int erroffset;
+
+memset(&this,0,sizeof(struct CfRegEx)); 
+rx = pcre_compile(regexp,PCRE_CASELESS,&errorstr,&erroffset,NULL);
+
+if (rx == NULL)
+   {
+   CfOut(cf_error,"","Regular expression error %s in %s at %d: %s\n",errorstr,regexp,erroffset);
+   this.failed = true;
+   }
+else
+   {
+   this.failed = false;
+   this.rx = rx;
+   }
+
+#else
+
+ regex_t rx;
+ int code;
+
+memset(&this,0,sizeof(struct CfRegEx)); 
+re_syntax_options |= RE_INTERVALS;
+
+code = regcomp(&rx,regexp,REG_EXTENDED|REG_ICASE);
 
 if (code != 0)
    {

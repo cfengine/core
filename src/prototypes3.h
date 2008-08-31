@@ -423,7 +423,7 @@ void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist)
 
 /* html.c */
 
-void CfHtmlHeader(FILE *fp,char *title,char *css);
+void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner);
 void CfHtmlFooter(FILE *fp);
 
 /* item-lib.c */
@@ -456,6 +456,7 @@ void LastSaw(char *hostname,enum roles role);
 
 /* install.c */
 
+int DeEscapeString(char *from,char *to);
 int RelevantBundle(char *agent,char *blocktype);
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args);
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args);
@@ -477,12 +478,15 @@ void ExtractOperationLock(char *op);
 /* matching.c */
 
 int FullTextMatch (char *regptr,char *cmpptr);
+int FullTextCaseMatch (char *regexp,char *teststring);
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
+int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
 int MatchRlistItem(struct Rlist *listofregex,char *teststring);
 struct CfRegEx CompileRegExp(char *regexp);
+struct CfRegEx CaseCompileRegExp(char *regexp);
 int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 
@@ -497,7 +501,7 @@ char *GetTopicType(struct Topic *list,char *topic_name);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify);
-int OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
+struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
 
 /* pipes.c */
 

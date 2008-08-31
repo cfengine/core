@@ -52,6 +52,7 @@ if (!NOHARDCLASSES)
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
    Get3Environment();
+   IDClasses();
    }
 
 LoadPersistentContext();
@@ -79,6 +80,11 @@ if (SHOWREPORTS || ERRORCOUNT)
    }
 
 FOUT = stdout;
+
+if (PARSEONLY)
+   {
+   exit(0);
+   }
 }
 
 /*****************************************************************************/

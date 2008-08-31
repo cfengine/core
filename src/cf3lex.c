@@ -869,15 +869,29 @@ case 9:
 YY_RULE_SETUP
 #line 136 "cf3lex.l"
 {
+                      char *tmp = NULL;
+                      int less = 0;
+
                       P.line_pos += strlen(yytext);
-                      yytext[strlen(yytext)-1] = '\0';
-                      P.currentstring = strdup(yytext+1);                      
+
+                      if ((tmp = malloc(strlen(yytext)+1)) == NULL)
+                         {
+                         FatalError("Malloc failure in parsing");
+                         }
+
+                      if ((less = DeEscapeString(yytext,tmp)) > 0)
+                         {        
+                         yyless(less);    
+                         }
+
+                      P.currentstring = strdup(tmp);                      
+                      free(tmp);
                       return QSTRING;
                       }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 144 "cf3lex.l"
+#line 158 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       P.currentstring = strdup(yytext);                      
@@ -886,20 +900,20 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 151 "cf3lex.l"
+#line 165 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 155 "cf3lex.l"
+#line 169 "cf3lex.l"
 {
                       }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 159 "cf3lex.l"
+#line 173 "cf3lex.l"
 {
                       P.line_pos++;
                       return yytext[0];
@@ -907,10 +921,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 165 "cf3lex.l"
+#line 179 "cf3lex.l"
 ECHO;
 	YY_BREAK
-#line 914 "lex.yy.c"
+#line 928 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1877,7 +1891,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 165 "cf3lex.l"
+#line 179 "cf3lex.l"
 
 
 

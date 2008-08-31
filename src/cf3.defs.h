@@ -275,6 +275,7 @@ enum cfkcontrol
    cfk_query_output,
    cfk_query_engine,
    cfk_stylesheet,
+   cfk_htmlbanner,
    cfk_notype
    };
 
@@ -677,6 +678,7 @@ enum signalnames
 enum representations
    {
    cfk_url,
+   cfk_web,
    cfk_file,
    cfk_db,
    cfk_literal,

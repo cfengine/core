@@ -460,6 +460,9 @@
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */
 
+/* Define if XEN cpuid-based HVM detection is available. */
+#define XEN_CPUID_SUPPORT 1
+
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
 #define YYTEXT_POINTER 1

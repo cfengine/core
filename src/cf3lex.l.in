@@ -134,9 +134,23 @@ category   [a-zA-Z_]+:
                       }
 
 {qstring}             {
+                      char *tmp = NULL;
+                      int less = 0;
+
                       P.line_pos += strlen(yytext);
-                      yytext[strlen(yytext)-1] = '\0';
-                      P.currentstring = strdup(yytext+1);                      
+
+                      if ((tmp = malloc(strlen(yytext)+1)) == NULL)
+                         {
+                         FatalError("Malloc failure in parsing");
+                         }
+
+                      if ((less = DeEscapeString(yytext,tmp)) > 0)
+                         {        
+                         yyless(less);    
+                         }
+
+                      P.currentstring = strdup(tmp);                      
+                      free(tmp);
                       return QSTRING;
                       }
 

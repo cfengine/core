@@ -38,7 +38,7 @@ extern char *yytext;
 
 %%
 
-specification:       { yyerror("Something defined outside of a block in input"); }
+specification:       { yyerror("Something defined outside of a block or missing punctuation in input"); }
                      | blocks;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

@@ -271,6 +271,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"query_output",cf_opts,"html,text"},
    {"query_engine",cf_str,""},
    {"style_sheet",cf_str,""},
+   {"html_banner",cf_str,""},
    {NULL,cf_notype,NULL}
    };
 

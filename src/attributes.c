@@ -52,7 +52,7 @@ attr.repository = (char *)GetConstraint("repository",pp->conlist,CF_SCALAR);
 attr.create = GetBooleanConstraint("create",pp->conlist);
 attr.touch = GetBooleanConstraint("touch",pp->conlist);
 attr.transformer = (char *)GetConstraint("transformer",pp->conlist,CF_SCALAR);
-attr.move_obstructions = GetBooleanConstraint("move_obstruction",pp->conlist);
+attr.move_obstructions = GetBooleanConstraint("move_obstructions",pp->conlist);
 
 attr.perms = GetPermissionConstraints(pp);
 attr.select = GetSelectConstraints(pp);
@@ -510,7 +510,7 @@ struct FileLink GetLinkConstraints(struct Promise *pp)
 f.source = (char *)GetConstraint("source",pp->conlist,CF_SCALAR);
 value = (char *)GetConstraint("link_type",pp->conlist,CF_SCALAR);
 f.link_type = String2LinkType(value);
-f.copy_patterns = GetConstraint("copy_patterns",pp->conlist,CF_LIST);
+f.copy_patterns = GetListConstraint("copy_patterns",pp->conlist);
 
 value = (char *)GetConstraint("when_no_file",pp->conlist,CF_SCALAR);
 
@@ -527,16 +527,18 @@ else
    f.when_no_file = cfa_skip;
    }
 
-value = (char *)GetConstraint("link_children",pp->conlist,CF_SCALAR);
+value = (char *)GetConstraint("when_linking_children",pp->conlist,CF_SCALAR);
 
-if (value && strcmp(value,"override_existing") == 0)
+if (value && strcmp(value,"override_file") == 0)
    {
-   f.link_children = cfa_override;
+   f.when_linking_children = cfa_override;
    }
 else
    {
-   f.link_children = cfa_onlynonexisting;
+   f.when_linking_children = cfa_onlynonexisting;
    }
+
+f.link_children = GetBooleanConstraint("link_children",pp->conlist);
 
 return f;
 }

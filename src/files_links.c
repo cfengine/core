@@ -32,20 +32,11 @@
 
 int VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
-{ char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE],*lastnode;
+{ char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE];
   int nofile = false;
   struct stat sb;
       
 Debug("Linkfiles(%s -> %s)\n",destination,source);
-
-lastnode = ReadLastNode(destination);
-
-if (MatchRlistItem(attr.link.copy_patterns,lastnode))
-   {
-   CfOut(cf_verbose,"","Link %s matches copy_patterns\n",destination);
-   VerifyCopy(source,destination,attr,pp);
-   return true;
-   }
 
 memset(to,0,CF_BUFSIZE);
   
@@ -69,19 +60,16 @@ else
    strcpy(absto,to);
    }
 
-Debug("Check for source (kill old=%d)\n",attr.link.source);
-
 if (stat(absto,&sb) == -1)
    {
    Debug("No source file\n");
    nofile = true;
    }
 
-if (nofile && attr.link.when_no_file != cfa_force && attr.link.when_no_file != cfa_delete)
+if (nofile && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
    {
-   Debug("Returning since the destination is absent\n");
-   snprintf(OUTPUT,CF_BUFSIZE-1,"Source for linking is absent");
-   return false;  /* no error warning, since the higher level routine uses this */   
+   CfOut(cf_inform,"","Source %s for linking is absent",absto);
+   return false;
    }
 
 if (nofile && attr.link.when_no_file == cfa_delete)
@@ -90,30 +78,26 @@ if (nofile && attr.link.when_no_file == cfa_delete)
    return true;
    }
     
-/* Move existing object out of way? */
-
-if (!MoveObstruction(destination,attr,pp))
-   {
-   return false;
-   }
-
 memset(linkbuf,0,CF_BUFSIZE);
 
 if (readlink(destination,linkbuf,CF_BUFSIZE-1) == -1)
    {
    if (!MakeParentDirectory(destination,attr.move_obstructions))                  /* link doesn't exist */
       {
-      return(true);
+      return true;
       }
    else
-      { 
+      {
+      if (!MoveObstruction(destination,attr,pp))
+         {
+         return false;
+         }
+
       return MakeLink(destination,to,attr,pp);
       }
    }
 else
-   { int off1 = 0, off2 = 0;
-
-   /* Link exists */
+   { int off1 = 0, off2 = 0;  /* Link exists */
    
    DeleteSlash(linkbuf);
    
@@ -151,12 +135,15 @@ else
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,attr,"Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
+         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
          return true;
          }
       }
-
-   return true;
+   else
+      {
+      cfPS(cf_inform,CF_NOP,"",pp,attr,"Link %s points to %s - promise kept",destination,to);
+      return true;
+      }
    }
 }
 
@@ -226,7 +213,7 @@ if (*source == '.')
 
 if (!CompressPath(linkto,source))
    {
-   CfOut(cf_error,"","Failed to link %s to %s\n",destination,source);
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Failed to link %s to %s\n",destination,source);
    return false;
    }
 
@@ -284,6 +271,88 @@ if (BufferOverflow(buff,commonto))
 strcat(buff,commonto);
  
 return VerifyLink(destination,buff,attr,pp);
+}
+
+/*****************************************************************************/
+
+int VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+
+{ char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE];
+ struct stat ssb,dsb;
+
+memset(to,0,CF_BUFSIZE);
+  
+if ((*source != '/') && (*source != '.'))  /* links without a directory reference */
+   {
+   snprintf(to,CF_BUFSIZE-1,"./%s",source);
+   }
+else
+   {
+   strncpy(to,source,CF_BUFSIZE-1);
+   }
+
+if (*to != '/')         /* relative path, must still check if exists */
+   {
+   Debug("Relative link destination detected: %s\n",to);
+   strcpy(absto,AbsLinkPath(destination,to));
+   Debug("Absolute path to relative link = %s, destination %s\n",absto,destination);
+   }
+else
+   {
+   strcpy(absto,to);
+   }
+
+if (stat(absto,&ssb) == -1)
+   {
+   cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Source file %s doesn't exist\n",source);
+   return false;
+   }
+
+if (!S_ISREG(ssb.st_mode))
+   {
+   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Source file %s is not a regular file, not appropriate to hard-link\n",to);
+   return false;
+   }
+
+Debug2("Trying to (hard) link %s -> %s\n",destination,to);
+
+if (stat(destination,&dsb) == -1)
+   {
+   MakeHardLink(destination,to,attr,pp);
+   return true;
+   }
+
+ /* both files exist, but are they the same file? POSIX says  */
+ /* the files could be on different devices, but unix doesn't */
+ /* allow this behaviour so the tests below are theoretical...*/
+
+if (dsb.st_ino != ssb.st_ino && dsb.st_dev != ssb.st_dev)
+   {
+   Verbose("If this is POSIX, unable to determine if %s is hard link is correct\n",destination);
+   Verbose("since it points to a different filesystem!\n");
+
+   if (dsb.st_mode == ssb.st_mode && dsb.st_size == ssb.st_size)
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,attr,"Hard link (%s->%s) on different device APPEARS okay\n",destination,to);
+      return true;
+      }
+   }
+
+if (dsb.st_ino == ssb.st_ino && dsb.st_dev == ssb.st_dev)
+   {
+   cfPS(cf_verbose,CF_NOP,"",pp,attr,"Hard link (%s->%s) exists and is okay\n",destination,to);
+   return true;
+   }
+
+CfOut(cf_inform,"","%s does not appear to be a hard link to %s\n",destination,to);
+
+if (!MoveObstruction(destination,attr,pp))
+   {
+   return false;
+   }
+
+MakeHardLink(destination,to,attr,pp);
+return true;
 }
 
 /*****************************************************************************/
@@ -358,6 +427,31 @@ else
    else
       {
       cfPS(cf_inform,CF_CHG,"",pp,attr,"Linked files %s -> %s\n",from,to);
+      return true;
+      }
+   }
+}
+
+/*****************************************************************************/
+
+int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
+
+{
+if (DONTDO)
+   {
+   CfOut(cf_error,"","Need to hard link files %s -> %s\n",from,to);
+   return false;
+   }
+else
+   {
+   if (link(to,from) == -1)
+      {
+      cfPS(cf_error,CF_FAIL,"link",pp,attr,"Couldn't (hard) link %s to %s\n",to,from);
+      return false;
+      }
+   else
+      {
+      cfPS(cf_inform,CF_CHG,"",pp,attr,"(Hard) Linked files %s -> %s\n",from,to);
       return true;
       }
    }

@@ -224,6 +224,17 @@ if (!FileSanityChecks(path,a,pp))
    return;
    }
 
+if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
+   {
+   if (a.create||a.touch)
+      {
+      if (!CreateFile(path,pp,a))
+         {
+         return;
+         }
+      }
+   }
+
 if (stat(path,&osb) == -1)
    {
    if (a.create||a.touch)
@@ -246,6 +257,18 @@ else
       }
    }
 
+if (a.link.link_children)
+   {
+   if (stat(a.link.source,&dsb) != -1)
+      {
+      if (!S_ISDIR(dsb.st_mode))
+         {
+         CfOut(cf_error,"","Cannot promise to link the children of %s as it is not a directory!",a.link.source);
+         return;
+         }
+      }
+   }
+
 thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
@@ -257,14 +280,14 @@ if (thislock.lock == NULL)
 
 if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
    {
-   lstat(path,&osb); /* if doesn't exist have to stat again anyway */
+   lstat(path,&oslb); /* if doesn't exist have to stat again anyway */
    
    if (a.havedepthsearch)
       {
-      SetSearchDevice(&osb,pp);
+      SetSearchDevice(&oslb,pp);
       }
    
-   success = DepthSearch(path,&osb,rlevel,a,pp);
+   success = DepthSearch(path,&oslb,rlevel,a,pp);
 
    /* normally searches do not include the base directory */
    
@@ -275,7 +298,7 @@ if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
       /* Handle this node specially */
 
       a.havedepthsearch = false;
-      success = DepthSearch(path,&osb,rlevel,a,pp);
+      success = DepthSearch(path,&oslb,rlevel,a,pp);
       a.havedepthsearch = save_search;
       }
    }
@@ -289,15 +312,16 @@ if (a.havecopy)
 
 /* Phase 2b link after copy in case need file first */
 
-if (a.havelink)
+if (a.havelink && a.link.link_children)
    {
-   ScheduleLinkOperation(path,a,pp);
+   ScheduleLinkChildrenOperation(path,a,pp);
+   }
+else if (a.havelink)
+   {
+   ScheduleLinkOperation(path,a.link.source,a,pp);
    }
 
 /* Phase 3 - content editing */
-
-
-
 
 if (a.haveedit)
    {

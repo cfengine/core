@@ -174,10 +174,123 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleLinkOperation(char *destination,struct Attributes attr,struct Promise *pp)
+int ScheduleLinkChildrenOperation(char *destination,struct Attributes attr,struct Promise *pp)
 
-{
-Verbose(" -> Handling linking\n");
+{ DIR *dirh;
+  struct dirent *dirp;
+  char promiserpath[CF_BUFSIZE],sourcepath[CF_BUFSIZE];
+  struct stat lsb;
+
+if (lstat(destination,&lsb) != -1)
+   {
+   if (attr.move_obstructions && S_ISLNK(lsb.st_mode))
+      {
+      unlink(destination);
+      }
+   else if (!S_ISDIR(lsb.st_mode))
+      {
+      CfOut(cf_error,"","Cannot promise to link multiple files to children of %s as it is not a directory!",destination);
+      return false;
+      }
+   }
+
+snprintf(promiserpath,CF_BUFSIZE,"%s/.",destination);
+
+if (!CreateFile(promiserpath,pp,attr))
+   {
+   CfOut(cf_error,"","Cannot promise to link multiple files to children of %s as it is not a directory!",destination);
+   return false;
+   }
+  
+if ((dirh = opendir(attr.link.source)) == NULL)
+   {
+   cfPS(cf_error,CF_FAIL,"opendir",pp,attr,"Can't open source of children to link %s\n",attr.link.source);
+   return false;
+   }
+
+for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+   {
+   if (!SensibleFile(dirp->d_name,attr.link.source,NULL))
+      {
+      continue;
+      }
+
+   /* Assemble pathnames */
+
+   strncpy(promiserpath,destination,CF_BUFSIZE-1);
+   AddSlash(promiserpath);
+
+   if (!JoinPath(promiserpath,dirp->d_name))
+      {
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Can't construct filename which verifying child links\n");
+      closedir(dirh);
+      return false;
+      }
+   
+   strncpy(sourcepath,attr.link.source,CF_BUFSIZE-1);
+   AddSlash(sourcepath);
+   
+   if (!JoinPath(sourcepath,dirp->d_name))
+      {
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Can't construct filename while verifying child links\n");
+      closedir(dirh);
+      return false;
+      }
+
+   if ((lstat(promiserpath,&lsb) != -1) && !S_ISLNK(lsb.st_mode))
+      {
+      if (attr.link.when_linking_children == cfa_override)
+         {
+         attr.move_obstructions = true;
+         }
+      else
+         {
+         CfOut(cf_verbose,"","Have promised not to disturb %s\'s existing content",promiserpath);
+         continue;
+         }
+      }
+   
+   ScheduleLinkOperation(promiserpath,sourcepath,attr,pp);
+   }
+
+closedir(dirh);
+return true;
+}
+
+/*****************************************************************************/
+
+int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+
+{ char *lastnode;
+ 
+lastnode = ReadLastNode(destination);
+
+if (MatchRlistItem(attr.link.copy_patterns,lastnode))
+   {
+   CfOut(cf_verbose,"","Link %s matches copy_patterns\n",destination);
+   VerifyCopy(attr.link.source,destination,attr,pp);
+   return true;
+   }
+
+switch (attr.link.link_type)
+   {
+   case cfa_symlink:
+       VerifyLink(destination,source,attr,pp);
+       break;
+   case cfa_hardlink:
+       VerifyHardLink(destination,source,attr,pp);
+       break;
+   case cfa_relative:
+       VerifyRelativeLink(destination,source,attr,pp);
+       break;
+   case cfa_absolute:
+       VerifyAbsoluteLink(destination,source,attr,pp);
+       break;
+   default:
+       CfOut(cf_error,"","Unknown link type - should not happen.\n");
+       break;
+   }
+
 return true;
 }
 
@@ -578,9 +691,9 @@ if (lstat(from,&sb) == 0)
       return false;
       }
    
-   if (S_ISREG(sb.st_mode))
+   if (!S_ISDIR(sb.st_mode))
       {
-      CfOut(cf_inform,"","Moving plain file %s to %s%s\n",from,from,CF_SAVED);
+      cfPS(cf_verbose,CF_CHG,"",pp,attr,"Moving file object %s to %s%s\n",from,from,CF_SAVED);
 
       if (DONTDO)
          {
@@ -610,7 +723,7 @@ if (lstat(from,&sb) == 0)
    
    if (S_ISDIR(sb.st_mode) && attr.link.when_no_file == cfa_force)
       {
-      CfOut(cf_inform,"","Moving directory %s to %s%s.dir\n",from,from,CF_SAVED);
+      cfPS(cf_verbose,CF_CHG,"",pp,attr,"Moving directory %s to %s%s\n",from,from,CF_SAVED);
       
       if (DONTDO)
          {

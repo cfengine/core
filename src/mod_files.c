@@ -251,8 +251,9 @@ struct BodySyntax CF_LINKTO_BODY[] =
    {"source",cf_str,""},
    {"link_type",cf_opts,CF_LINKRANGE},
    {"copy_patterns",cf_str,""},
-   {"when_no_file",cf_opts,"force,delete,nop"},
+   {"when_no_source",cf_opts,"force,delete,nop"},
    {"link_children",cf_opts,CF_BOOL},
+   {"when_linking_children",cf_opts,"override_file,if_no_such_file"},
    {NULL,cf_notype,NULL}
    };
 

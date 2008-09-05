@@ -939,6 +939,8 @@ void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes 
 { char linkbuf[CF_BUFSIZE];
   int succeed = false;
   struct stat dsb;
+
+/* Link the file to the source, instead of copying */
   
 if (cf_readlink(sourcefile,linkbuf,CF_BUFSIZE,attr,pp) == -1)
    {

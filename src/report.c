@@ -274,7 +274,7 @@ if (XML)
       }
    else
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s promises to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
+      fprintf(FOUT,"Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
       }
    }
 else

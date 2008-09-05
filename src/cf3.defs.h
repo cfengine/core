@@ -42,6 +42,8 @@
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
+#define CF3COPYRIGHT "cf3 cfengine 3 is (C) Mark Burgess 2008, and offered under the terms of the enclosed free software licence"
+
 #define CF_SCALAR 's'
 #define CF_LIST   'l'
 #define CF_FNCALL 'f'
@@ -645,7 +647,7 @@ enum cfnofile
 enum cflinkchildren
    {
    cfa_override,
-   cfa_onlynonexisting   
+   cfa_onlynonexisting
    };
 
 enum cfchanges
@@ -900,7 +902,8 @@ struct FileLink
    enum cflinktype link_type;
    struct Rlist *copy_patterns;
    enum cfnofile when_no_file;
-   enum cflinkchildren link_children;
+   enum cflinkchildren when_linking_children;
+   int link_children;   
    };
 
 /*************************************************************************/

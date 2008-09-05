@@ -277,8 +277,10 @@ int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 int VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+int VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp);
 int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
+int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
 
 /* files_hashes.c */
 
@@ -325,7 +327,8 @@ void FileAutoDefine(char *destfile);
 int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int CreateFile(char *file,struct Promise *pp,struct Attributes attr);
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
-int ScheduleLinkOperation(char *destination,struct Attributes attr,struct Promise *pp);
+int ScheduleLinkChildrenOperation(char *destination,struct Attributes attr,struct Promise *pp);
+int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int ScheduleEditOperation(char *filename,struct Attributes attr,struct Promise *pp);
 struct FileCopy *NewFileCopy(struct Promise *pp);
 void DeleteFileCopy(struct FileCopy *fcp);

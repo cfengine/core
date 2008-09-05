@@ -168,7 +168,7 @@ else
    snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
    }
 
-CfOut(cf_verbose,"","Cfengine - \n%s\n%s\n\n",VERSION,COPYRIGHT);
+CfOut(cf_verbose,"","Cfengine - %s\n%s\n\n",VERSION,CF3COPYRIGHT);
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);
 CfOut(cf_verbose,"","Operating System Type is %s\n",VSYSNAME.sysname);

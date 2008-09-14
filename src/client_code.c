@@ -125,8 +125,7 @@ if (conn->sd == CF_NOT_CONNECTED)
          {
          DeleteAgentConn(conn);
          }
-      
-      free(conn);
+
       return NULL;
       }
 
@@ -137,7 +136,6 @@ if (conn->sd == CF_NOT_CONNECTED)
       CfOut(cf_error,"","Id-authentication for %s failed\n",VFQNAME);
       errno = EPERM;
       DeleteAgentConn(conn);
-      free(conn);
       return NULL;
       }
 
@@ -146,7 +144,6 @@ if (conn->sd == CF_NOT_CONNECTED)
       CfOut(cf_error,"","Authentication dialogue with %s failed\n",server);
       errno = EPERM;
       DeleteAgentConn(conn);
-      free(conn);
       return NULL;
       }
 

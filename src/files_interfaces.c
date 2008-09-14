@@ -146,6 +146,12 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       
       if (stat(newto,&dsb) == -1)
          {
+         if (mkdir(newto,0700) == -1)
+            {
+            cfPS(cf_error,CF_INTERPT,"mkdir",pp,attr," !! Can't make directory %s\n",newto);
+            continue;
+            }
+         
          if (stat(newto,&dsb) == -1)
             {
             cfPS(cf_error,CF_INTERPT,"stat",pp,attr," !! Can't stat local copy %s - failed to establish directory\n",newto);

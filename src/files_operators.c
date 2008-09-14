@@ -392,7 +392,7 @@ newperm &= ~(attr.perms.minus);
 
 if (S_ISDIR(dstat->st_mode))  
    {
-   if (attr.perms.rxdirs != 'n')
+   if (!attr.perms.rxdirs)
       {
       Debug("Directory...fixing x bits\n");
       

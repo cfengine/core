@@ -507,7 +507,7 @@ Verbose("------------------------------------------------------------------\n");
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
 
-snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cfagent%s -Dfrom_cfexecd%s",
+snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent%s -Dfrom_cfexecd%s",
 		 CFWORKDIR,
 		 NOSPLAY ? " -q" : "",
 		 scheduled_run ? ":scheduled_run" : "");

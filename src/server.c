@@ -689,7 +689,7 @@ strncpy(conn->ipaddr,ipaddr,CF_MAX_IP_LEN-1);
 
 Verbose("New connection...(from %s/%d)\n",conn->ipaddr,sd_reply);
  
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
+#if defined HAVE_LIBPTHREAD || defined BUILTIN_GCC_THREAD
 
 Verbose("Spawning new thread...\n");
 

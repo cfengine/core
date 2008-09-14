@@ -337,6 +337,107 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 return pcopy;
 }
 
+/*****************************************************************************/
+
+struct Promise *CopyPromise(char *scopeid,struct Promise *pp)
+
+{ struct Promise *pcopy;
+  struct Constraint *cp,*scp;
+  char scope[CF_BUFSIZE],naked[CF_MAXVARSIZE];
+  struct Rval returnval,final;
+
+Debug("CopyPromise()\n");
+
+if ((pcopy = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Promise allocation failure");
+   FatalError("memory");
+   }
+
+pcopy->promiser = strdup(pp->promiser);
+
+if (pp->promisee)
+   {
+   returnval = EvaluateFinalRval(scopeid,pp->promisee,pp->petype,true,pp);
+   pcopy->promisee = (struct Rlist *)returnval.item;
+   pcopy->petype = returnval.rtype;
+   }
+else
+   {
+   pcopy->petype = CF_NOPROMISEE;
+   pcopy->promisee = NULL;
+   }
+
+if (pp->classes)
+   {
+   pcopy->classes = strdup(pp->classes);
+   }
+else
+   {
+   pcopy->classes = strdup("any");
+   }
+
+if (pcopy->promiser == NULL || pcopy->classes == NULL)
+   {
+   CfOut(cf_error,"malloc","ExpandPromise detail allocation failure");
+   FatalError("memory");
+   }
+
+pcopy->bundletype = pp->bundletype;
+pcopy->done = pp->done;
+pcopy->donep = pp->donep;
+pcopy->audit = pp->audit;
+pcopy->lineno = pp->lineno;
+pcopy->bundle = strdup(pp->bundle);
+pcopy->ref = pp->ref;
+pcopy->agentsubtype = pp->agentsubtype;
+pcopy->conlist = NULL;
+pcopy->next = NULL;
+pcopy->cache = pp->cache;
+pcopy->inode_cache = pp->inode_cache;
+pcopy->this_server = pp->this_server;
+pcopy->conn = pp->conn;
+pcopy->edcontext = pp->edcontext;
+
+/* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
+
+for (cp = pp->conlist; cp != NULL; cp=cp->next)
+   {
+   struct FnCall *fp;
+   struct Rlist *rp;
+   struct Rval returnval;
+   char type;
+
+   if (ExpectedDataType(cp->lval) == cf_bundle)
+      {
+       /* sub-bundles do not expand here */
+      returnval = ExpandPrivateRval(scopeid,cp->rval,cp->type);
+      }
+   else
+      {
+      returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
+      }
+
+   final = ExpandDanglers(scopeid,returnval,pp);
+   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes);
+
+   if (strcmp(cp->lval,"comment") == 0)
+      {
+      if (final.rtype != CF_SCALAR)
+         {
+         yyerror("Comments can only be scalar objects");
+         }
+      else
+         {
+         pcopy->ref = final.item; /* No alloc reference to comment item */
+         }
+      }
+   }
+
+return pcopy;
+}
+
+
 /*******************************************************************/
 
 struct Body *IsBody(struct Body *list,char *key)

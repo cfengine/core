@@ -41,6 +41,7 @@ extern struct Rlist *SUBBUNDLES;
 extern struct Rlist *SINGLE_COPY_LIST;
 extern struct Rlist *AUTO_DEFINE_LIST;
 extern struct Rlist *SINGLE_COPY_CACHE;
+extern struct Rlist *ACCESSLIST;
 
 extern int XML;
 extern FILE *FOUT;
@@ -49,6 +50,7 @@ extern struct FnCallStatus FNCALL_STATUS;
 extern struct SubTypeSyntax CF_NOSTYPE;
 extern char *CF_DATATYPES[];
 extern char *CF_AGENTTYPES[];
+extern char HASHDB[CF_BUFSIZE];
 
 extern int CFA_MAXTHREADS;
 extern char THIS_AGENT[CF_MAXVARSIZE];

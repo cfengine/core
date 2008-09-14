@@ -16,6 +16,8 @@ body common control
 
 {
 bundlesequence  => { "testbundle"  };
+
+version => "1.2.3";
 }
 
 ########################################################
@@ -23,12 +25,18 @@ bundlesequence  => { "testbundle"  };
 bundle agent testbundle
 
 {
+vars:
+
+
+classes:
+
+
 files:
 
   "/home/mark/tmp/testcopy" 
 
-    copy_from => mycopy("/home/mark/LapTop/words","127.0.0.1"),
-    perms => system,
+    copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+    perms        => system,
     depth_search => recurse("inf");
 
 }
@@ -67,7 +75,7 @@ purge       => "true";
 body server control 
 
 {
-allowconnects         => { "127.0.0.1"};
+allowconnects         => { "127.0.0.1" };
 allowallconnects      => { "127.0.0.1" };
 trustkeysfrom         => { "127.0.0.1" };
 }

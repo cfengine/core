@@ -55,6 +55,8 @@ time_t PROMISETIME;
 struct Rlist *SERVERLIST = NULL;
 struct Item *PROCESSTABLE = NULL;
 
+char HASHDB[CF_BUFSIZE];
+
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
@@ -66,6 +68,7 @@ struct Scope *VSCOPE = NULL;
 struct Rlist *VINPUTLIST = NULL;
 struct Rlist *BODYPARTS = NULL;
 struct Rlist *SUBBUNDLES = NULL;
+struct Rlist *ACCESSLIST = NULL;
 
 struct Rlist *SINGLE_COPY_LIST = NULL;
 struct Rlist *AUTO_DEFINE_LIST = NULL;

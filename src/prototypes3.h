@@ -514,6 +514,7 @@ FILE *cf_popen_sh(char *command,char *type);
 FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+int cf_pwait(pid_t pid);
 int CfSetuid(uid_t uid,gid_t gid);
 int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
 
@@ -531,6 +532,7 @@ struct Body *IsBody(struct Body *list,char *key);
 struct Bundle *IsBundle(struct Bundle *list,char *key);
 struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp);
 struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
+struct Promise *CopyPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
 void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
@@ -715,7 +717,7 @@ int IsExecutable(char *file);
 
 void FindFilePromiserObjects(struct Promise *pp);
 void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr));
-void FindAndVerifyFilesPromises(struct Promise *pp);
+void *FindAndVerifyFilesPromises(struct Promise *pp);
 void VerifyFilePromise(char *path,struct Promise *pp);
 int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
 

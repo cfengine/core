@@ -30,11 +30,18 @@
 
 /*****************************************************************************/
 
-void FindAndVerifyFilesPromises(struct Promise *pp)
+void *FindAndVerifyFilesPromises(struct Promise *pp)
 
 {
-PromiseBanner(pp);
+PromiseBanner(pp); 
 FindFilePromiserObjects(pp);
+
+if (GetBooleanConstraint("background",pp->conlist))
+   {
+   exit(0);
+   }
+
+return (void *)NULL;
 }
 
 /*****************************************************************************/

@@ -101,7 +101,7 @@ if (ag == cf_common || ag == cf_know)
    return true;
    }
  
-snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cfPromises -f %s",CFWORKDIR,VINPUTFILE);
+snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
  
 /* Check if reloading policy will succeed */
  
@@ -221,6 +221,8 @@ else
 strcpy(CFWORKDIR,WORKDIR);
 #endif
 
+snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
+
 snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
 MakeParentDirectory(vbuff,true);
 snprintf(vbuff,CF_BUFSIZE,"%s/bin/cfagent -D from_cfexecd",CFWORKDIR);
@@ -327,6 +329,8 @@ void Cf3ParseFile(char *filename)
 
 { FILE *save_yyin = yyin;
   struct stat statbuf;
+  struct Rlist *rp;
+  int access = false;
  
 if (stat(filename,&statbuf) == -1)
    {
@@ -334,15 +338,6 @@ if (stat(filename,&statbuf) == -1)
    exit(1);
    }
 
-if (IsPrivileged())
-   {
-   if (statbuf.st_uid != getuid())
-      {
-      CfOut(cf_error,"","File %s is not owned by uid %d (security exception)",filename,getuid());
-      exit(1);
-      }
-   }
- 
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    {
    CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",filename,getuid());

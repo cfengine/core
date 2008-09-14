@@ -37,8 +37,8 @@ enum typesequence
    kp_classes,
    kp_interfaces,
    kp_processes,
-   kp_files,
    kp_commands,
+   kp_files,
    kp_reports,
    kp_none
    };
@@ -48,8 +48,8 @@ char *TYPESEQUENCE[] =
    "classes",
    "interfaces",
    "processes",
-   "files",
    "commands",
+   "files",
    "reports",
    NULL
    };
@@ -60,6 +60,7 @@ void KeepAgentPromise(struct Promise *pp);
 void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
+void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -258,10 +259,8 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
       {
-      struct Rlist *rp;
-      Verbose("Checking accesss ...\n");
-      
-      CheckAgentAccess((struct Rlist *) retval);
+      ACCESSLIST = (struct Rlist *) retval;
+      CheckAgentAccess(ACCESSLIST);
       continue;
       }
    
@@ -553,7 +552,9 @@ void CheckAgentAccess(struct Rlist *list)
 { char id[CF_MAXVARSIZE];
   struct passwd *pw;
   struct Rlist *rp;
+  struct stat sb;
   uid_t uid;
+  int access = false;
   
 uid = getuid();
   
@@ -562,6 +563,40 @@ for (rp  = list; rp != NULL; rp = rp->next)
    if (Str2Uid(rp->item,NULL,NULL) == uid)
       {
       return;
+      }
+   }
+
+if (VINPUTLIST != NULL)
+   {
+   for (rp = VINPUTLIST; rp != NULL; rp=rp->next)
+      {
+      stat(rp->item,&sb);
+      
+      if (ACCESSLIST)
+         {
+         for (rp  = ACCESSLIST; rp != NULL; rp = rp->next)
+            {
+            if (Str2Uid(rp->item,NULL,NULL) == sb.st_uid)
+               {
+               access = true;
+               break;
+               }
+            }
+         
+         if (!access)
+            {
+            CfOut(cf_error,"","File %s is not owned by an authorized user (security exception)",rp->item);
+            exit(1);
+            }
+         }
+      else if (IsPrivileged())
+         {
+         if (sb.st_uid != getuid())
+            {
+            CfOut(cf_error,"","File %s is not owned by uid %d (security exception)",rp->item,getuid());
+            exit(1);
+            }
+         }
       }
    }
 
@@ -601,7 +636,14 @@ if (strcmp("processes",pp->agentsubtype) == 0)
 
 if (strcmp("files",pp->agentsubtype) == 0)
    {
-   FindAndVerifyFilesPromises(pp);
+   if (GetBooleanConstraint("background",pp->conlist))
+      {      
+      ParallelFindAndVerifyFilesPromises(pp);
+      }
+   else
+      {
+      FindAndVerifyFilesPromises(pp);
+      }
    return;
    }
 
@@ -717,4 +759,24 @@ Verbose("\n");
 
 }
 
+/**************************************************************/
+/* Thread context                                             */
+/**************************************************************/
+
+void ParallelFindAndVerifyFilesPromises(struct Promise *pp)
+    
+{ pid_t child = 1;
+  int background = GetBooleanConstraint("background",pp->conlist);
+
+if (background)
+   {
+   Verbose("Spawning new process...\n");
+   child = fork();
+   }
+
+if (child || !background)
+   {
+   FindAndVerifyFilesPromises(pp);
+   }
+}
 

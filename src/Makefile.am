@@ -70,12 +70,12 @@ libpromises_la_SOURCES =						\
 	mod_process.c
 
 
-sbin_PROGRAMS = cfKnow cfPromises cfAgent cfMonitord cfServerd cfExecd cfRunAgent
+sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent
 
-cfPromises_SOURCES =							\
+cf_promises_SOURCES =							\
 	cfpromises.c
 
-cfAgent_SOURCES =							\
+cf_agent_SOURCES =							\
 	agent.c								\
 	verify_files.c							\
 	verify_processes.c						\
@@ -83,21 +83,21 @@ cfAgent_SOURCES =							\
 	verify_reports.c						\
 	agentdiagnostic.c
 
-cfServerd_SOURCES =							\
+cf_serverd_SOURCES =							\
 	server.c							\
 	server_transform.c
 
-cfMonitord_SOURCES =							\
+cf_monitord_SOURCES =							\
 	env_monitor.c							\
 	monitor.c
 
-cfExecd_SOURCES =							\
+cf_execd_SOURCES =							\
 	exec.c
 
-cfRunAgent_SOURCES =							\
+cf_runagent_SOURCES =							\
 	runagent.c
 
-cfKnow_SOURCES =							\
+cf_know_SOURCES =							\
 	verify_reports.c						\
 	cfknow.c							\
 	ontology.c

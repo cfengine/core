@@ -23,6 +23,7 @@ files:
 
   "/home/mark/tmp/test_create" 
 
+      comment => "this rule does something",
       rename => disable;
 
   "/home/mark/tmp/rotateme"

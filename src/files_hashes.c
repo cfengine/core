@@ -46,7 +46,7 @@ int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int w
   DB_ENV *dbenv = NULL;
   FILE *fp;
 
-Debug("ChecksumChanged: key %s (type=%d) with data %s\n",filename,type,HashPrint(type,digest));
+Debug("HashChanged: key %s (type=%d) with data %s\n",filename,type,HashPrint(type,digest));
 
 size = FileHashSize(type);
 
@@ -57,17 +57,17 @@ HashFile(filename,current_digest,type);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
    return false;
    }
 
 #ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+if ((errno = (dbp->open)(dbp,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #else
-if ((errno = (dbp->open)(dbp,NULL,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+if ((errno = (dbp->open)(dbp,NULL,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
    dbp->close(dbp,0);
    return false;
    }
@@ -78,7 +78,7 @@ if (needupdate) /* This section should not be needed any more */
    WriteHash(dbp,type,filename,current_digest,attr_digest);
    }
 
-if (ReadChecksum(dbp,type,filename,dbdigest,dbattr))
+if (ReadHash(dbp,type,filename,dbdigest,dbattr))
    {
    /* Ignoring attr for now - future development */
    
@@ -93,7 +93,7 @@ if (ReadChecksum(dbp,type,filename,dbdigest,dbattr))
             CfOut(warnlevel,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
          
-         CfOut(warnlevel,"","SECURITY ALERT: Checksum (%s) for %s changed!",ChecksumName(type),filename);
+         CfOut(warnlevel,"","SECURITY ALERT: Hash (%s) for %s changed!",FileHashName(type),filename);
          
          if (EXCLAIM)
             {
@@ -102,10 +102,10 @@ if (ReadChecksum(dbp,type,filename,dbdigest,dbattr))
          
          if (CHECKSUMUPDATES)
             {
-            Verbose("Updating cryptohash for %s to %s\n",filename,ChecksumPrint(type,current_digest));
+            Verbose("Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
             
-            DeleteChecksum(dbp,type,filename);
-            WriteChecksum(dbp,type,filename,current_digest,attr_digest);
+            DeleteHash(dbp,type,filename);
+            WriteHash(dbp,type,filename,current_digest,attr_digest);
             }
          
          dbp->close(dbp,0);
@@ -120,9 +120,9 @@ if (ReadChecksum(dbp,type,filename,dbdigest,dbattr))
 else
    {
    /* Key was not found, so install it */
-   cfPS(cf_inform,CF_CHG,"",pp,attr,"File %s was not in %s database - new file found",filename,ChecksumName(type));   
-   Debug("Storing checksum for %s in database %s\n",filename,ChecksumPrint(type,current_digest));
-   WriteChecksum(dbp,type,filename,current_digest,attr_digest);
+   cfPS(cf_inform,CF_CHG,"",pp,attr,"File %s was not in %s database - new file found",filename,FileHashName(type));   
+   Debug("Storing checksum for %s in database %s\n",filename,HashPrint(type,current_digest));
+   WriteHash(dbp,type,filename,current_digest,attr_digest);
    
    dbp->close(dbp,0);
    
@@ -231,7 +231,7 @@ void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhash
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
-Debug2("ChecksumFile(%c,%s)\n",type,filename);
+Debug2("HashFile(%c,%s)\n",type,filename);
 
 if ((file = fopen (filename, "rb")) == NULL)
    {
@@ -264,7 +264,7 @@ void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfh
   int md_len;
   const EVP_MD *md = NULL;
 
-Debug2("ChecksumList(%s)\n",FileHashName(type));
+Debug2("HashList(%s)\n",FileHashName(type));
 
 memset(digest,0,EVP_MAX_MD_SIZE+1);
 
@@ -289,7 +289,7 @@ void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enu
   const EVP_MD *md = NULL;
   int md_len;
 
-Debug2("ChecksumString(%c)\n",type);
+Debug2("HashString(%c)\n",type);
 
 md = EVP_get_digestbyname(FileHashName(type));
 
@@ -360,17 +360,17 @@ void PurgeHashes(struct Attributes attr,struct Promise *pp)
   
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
    return;
    }
 
 #ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+if ((errno = (dbp->open)(dbp,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #else
-if ((errno = (dbp->open)(dbp,NULL,CHECKSUMDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+if ((errno = (dbp->open)(dbp,NULL,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",CHECKSUMDB);
+   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
    dbp->close(dbp,0);
    return;
    }
@@ -436,7 +436,7 @@ if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
    }
 else
    {
-   Debug("Checksum read failed: %s",db_strerror(errno));
+   Debug("Hash read failed: %s",db_strerror(errno));
    DeleteHashKey(key);
    return false;
    }
@@ -455,7 +455,7 @@ Debug("DATA = %s\n",HashPrint(type,value->data));
 
 if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
    {
-   CfOut(cf_error,"db->put","Checksum write failed: %s",db_strerror(errno));
+   CfOut(cf_error,"db->put","Hash write failed: %s",db_strerror(errno));
    
    DeleteHashKey(key);
    DeleteHashValue(value);
@@ -475,14 +475,14 @@ void DeleteHash(DB *dbp,enum cfhashes type,char *name)
 
 { DBT *key;
 
-key = NewChecksumKey(type,name);
+key = NewHashKey(type,name);
 
 if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
    {
    CfOut(cf_error,"db_store","Database deletion failed");
    }
 
-DeleteChecksumKey(key);
+DeleteHashKey(key);
 }
 
 
@@ -495,7 +495,7 @@ DBT *NewHashKey(char type,char *name)
 
 if ((chk_key = malloc(strlen(name)+CF_MAXDIGESTNAMELEN+2)) == NULL)
    {
-   FatalError("NewChecksumKey malloc error");
+   FatalError("NewHashKey malloc error");
    }
 
 if ((key = (DBT *)malloc(sizeof(DBT))) == NULL)
@@ -538,7 +538,7 @@ DBT *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1],unsigned char attr[EVP
 
 if ((chk_val = (struct Checksum_Value *)malloc(sizeof(struct Checksum_Value))) == NULL)
    {
-   FatalError("NewChecksumKey malloc error");
+   FatalError("NewHashValue malloc error");
    }
 
 if ((value = (DBT *) malloc(sizeof(DBT))) == NULL)

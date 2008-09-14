@@ -1121,5 +1121,17 @@ typedef struct
 CfdbConn;
 
 /*************************************************************************/
+/* Threading container                                                   */
+/*************************************************************************/
+
+struct PromiseThread
+   {
+   enum cfagenttype agent;
+   char *scopeid;
+   struct Promise *pp;
+   void *fnptr;
+   };
+
+/*************************************************************************/
 
 #include "prototypes3.h"

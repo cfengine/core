@@ -428,7 +428,7 @@ else
    c.hash = cf_md5;
    }
 
-value = (char *)GetConstraint("reportt_changes",pp->conlist,CF_SCALAR);
+value = (char *)GetConstraint("report_changes",pp->conlist,CF_SCALAR);
 
 if (value && strcmp(value,"content") == 0)
    {
@@ -450,6 +450,7 @@ struct FileCopy GetCopyConstraints(struct Promise *pp)
 
 { struct FileCopy f;
   char *value;
+  long min,max;
 
 f.source = (char *)GetConstraint("source",pp->conlist,CF_SCALAR);
 value = (char *)GetConstraint("compare",pp->conlist,CF_SCALAR);
@@ -490,7 +491,10 @@ f.force_ipv4 = GetBooleanConstraint("force_ipv4",pp->conlist);
 f.check_root = GetBooleanConstraint("check_root",pp->conlist);
 
 value = (char *)GetConstraint("copy_size",pp->conlist,CF_SCALAR);
-IntRange2Int(value,&f.min_size,&f.max_size,pp);
+IntRange2Int(value,&min,&max,pp);
+
+f.min_size = (size_t) min;
+f.max_size = (size_t) max;
 
 f.trustkey = GetBooleanConstraint("trustkey",pp->conlist);
 f.encrypt = GetBooleanConstraint("encrypt",pp->conlist);

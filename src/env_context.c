@@ -101,7 +101,7 @@ snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
   
 if ((errno = db_create(&dbp,NULL,0)) != 0)
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",filename);
+   CfOut(cf_error,"db_open","Couldn't create persistent context database %s\n",filename);
    return;
    }
 
@@ -111,7 +111,7 @@ if ((errno = (dbp->open)(dbp,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",filename);
+   CfOut(cf_error,"db_open","Couldn't open persistent state database %s\n",filename);
    return;
    }
 
@@ -189,7 +189,7 @@ snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
   
 if ((errno = db_create(&dbp,NULL,0)) != 0)
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",filename);
+   CfOut(cf_error,"db_open","Couldn't open the persistent state database %s\n",filename);
    return;
    }
 
@@ -199,7 +199,7 @@ if ((errno = (dbp->open)(dbp,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",filename);
+   CfOut(cf_error,"db_open","Couldn't open the persistent state database %s\n",filename);
    return;
    }
 

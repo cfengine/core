@@ -696,8 +696,9 @@ fclose(fout);
 
 void LookupTopic(char *topic)
 
-{ char query[CF_BUFSIZE],topic_name[CF_MAXVARSIZE],topic_id[CF_MAXVARSIZE],topic_type[CF_MAXVARSIZE],to_type[CF_MAXVARSIZE];
-  char from_name[CF_BUFSIZE],to_name[CF_MAXVARSIZE],from_assoc[CF_MAXVARSIZE],to_assoc[CF_MAXVARSIZE];
+{ char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
+ char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
+  char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   int sql_database_defined = false,trymatch = false,count = 0,matched = 0;
   struct Topic *tp,*tmatches = NULL;
   CfdbConn cfdb;
@@ -753,9 +754,9 @@ if (cfdb.maxcolumns != 3)
 
 while(CfFetchRow(&cfdb))
    {
-   strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
    
    if (trymatch && BlockTextCaseMatch(topic,topic_name,&s,&e))
       {
@@ -804,17 +805,16 @@ if (count == 1)
 count = 0;
 matched = 0;
 
-if (IsRegex(topic))
+if (ISREGEX)
    {
    snprintf(query,CF_BUFSIZE,"SELECT * from associations");
    }
 else
    {
    char safe[CF_BUFSIZE];
-   strncpy(safe,EscapeSQL(&cfdb,topic),CF_MAXVARSIZE);
-   snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc='%s' or to_assoc='%s'",safe,safe);
+   strncpy(safe,EscapeSQL(&cfdb,topic),CF_BUFSIZE);
+   snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc like '%s' or to_assoc like '%s'",safe,safe);
    }
-
 
 /* Expect multiple matches always with associations */
 trymatch = true;
@@ -830,12 +830,12 @@ if (cfdb.maxcolumns != 6)
 
 while(CfFetchRow(&cfdb))
    {
-   strncpy(from_name,CfFetchColumn(&cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(&cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(from_assoc,CfFetchColumn(&cfdb,2),CF_MAXVARSIZE-1);
-   strncpy(to_assoc,CfFetchColumn(&cfdb,3),CF_MAXVARSIZE-1);
-   strncpy(to_type,CfFetchColumn(&cfdb,4),CF_MAXVARSIZE-1);
-   strncpy(to_name,CfFetchColumn(&cfdb,5),CF_MAXVARSIZE-1);
+   strncpy(from_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
+   strncpy(from_assoc,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
+   strncpy(to_assoc,CfFetchColumn(&cfdb,3),CF_BUFSIZE-1);
+   strncpy(to_type,CfFetchColumn(&cfdb,4),CF_BUFSIZE-1);
+   strncpy(to_name,CfFetchColumn(&cfdb,5),CF_BUFSIZE-1);
 
    if (trymatch && (BlockTextCaseMatch(topic,from_assoc,&s,&e)||BlockTextCaseMatch(topic,to_assoc,&s,&e)))
       {
@@ -843,6 +843,10 @@ while(CfFetchRow(&cfdb))
          {
          matched++;
          AddTopic(&tmatches,from_assoc,to_assoc);
+         strncpy(ctopic_type,topic_type,CF_BUFSIZE-1);
+         strncpy(cfrom_assoc,from_assoc,CF_BUFSIZE-1);
+         strncpy(cto_assoc,to_assoc,CF_BUFSIZE-1);
+         strncpy(cto_type,to_type,CF_BUFSIZE-1);
          }
       }
 
@@ -872,7 +876,7 @@ if (matched > 1)
 
 if (count == 1 || matched == 1)
    {
-   ShowAssociationCosmology(&cfdb,from_assoc,to_assoc,topic_type,to_type);
+   ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_type,cto_type);
    }
 
 CfCloseDB(&cfdb);
@@ -931,8 +935,8 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 
 void VerifyTopicPromise(struct Promise *pp)
 
-{ char id[CF_MAXVARSIZE];
-  char fwd[CF_MAXVARSIZE],bwd[CF_MAXVARSIZE];
+{ char id[CF_BUFSIZE];
+  char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
   struct Attributes a;
   struct Topic *tp;
 
@@ -940,7 +944,7 @@ void VerifyTopicPromise(struct Promise *pp)
 
 a = GetTopicsAttributes(pp);
  
-strncpy(id,CanonifyName(pp->promiser),CF_MAXVARSIZE-1);
+strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
 if (pp->ref != NULL)
    {
@@ -1022,9 +1026,9 @@ else
 
 void ShowAssociationsLTM(FILE *fout,char *from_id,char *from_type,struct TopicAssociation *ta)
 
-{ char assoc_id[CF_MAXVARSIZE];
+{ char assoc_id[CF_BUFSIZE];
 
-strncpy(assoc_id,CanonifyName(ta->fwd_name),CF_MAXVARSIZE);
+strncpy(assoc_id,CanonifyName(ta->fwd_name),CF_BUFSIZE);
 
 if (from_id == NULL)
    {
@@ -1042,7 +1046,7 @@ if (from_id == NULL)
 else
    {
    struct Rlist *rp;
-   char to_id[CF_MAXVARSIZE],*to_type;
+   char to_id[CF_BUFSIZE],*to_type;
    
    to_type = ta->associate_topic_type;
 
@@ -1053,7 +1057,7 @@ else
 
    for (rp = ta->associates; rp != NULL; rp=rp->next)
       {
-      strncpy(to_id,CanonifyName(rp->item),CF_MAXVARSIZE);
+      strncpy(to_id,CanonifyName(rp->item),CF_BUFSIZE);
 
       fprintf(fout,"%s( %s : %s, %s : %s)\n",assoc_id,CanonifyName(from_id),from_type,to_id,to_type);
       }
@@ -1065,13 +1069,13 @@ else
 void ShowOccurrencesLTM(FILE *fout,char *topic_id,struct Occurrence *op)
 
 { struct Rlist *rp;
-  char subtype[CF_MAXVARSIZE];
+  char subtype[CF_BUFSIZE];
 
 fprintf(fout,"\n /* occurrences of %s */\n\n",topic_id);
  
 for (rp = op->represents; rp != NULL; rp=rp->next)
    {
-   strncpy(subtype,CanonifyName(rp->item),CF_MAXVARSIZE-1);
+   strncpy(subtype,CanonifyName(rp->item),CF_BUFSIZE-1);
 
    switch (op->rep_type)
       {
@@ -1151,9 +1155,9 @@ fprintf(fout,"# USE %s_topic_map\n",TM_PREFIX);
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE topics"
         "("
-        "topic_name varchar(128),"
-        "topic_id varchar(128),"
-        "topic_type varchar(128)"
+        "topic_name varchar(256),"
+        "topic_id varchar(256),"
+        "topic_type varchar(256)"
         ");\n"
         );
 
@@ -1162,12 +1166,12 @@ fprintf(fout,query);
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE associations"
         "("
-        "from_name varchar(128),"
-        "from_type varchar(128),"
-        "from_assoc varchar(128),"
-        "to_assoc varchar(128),"
-        "to_type varchar(128),"
-        "to_name varchar(128)"
+        "from_name varchar(256),"
+        "from_type varchar(256),"
+        "from_assoc varchar(256),"
+        "to_assoc varchar(256),"
+        "to_type varchar(256),"
+        "to_name varchar(256)"
         ");\n"
         );
 
@@ -1176,10 +1180,10 @@ fprintf(fout,query);
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE occurrences"
         "("
-        "topic_name varchar(128),"
-        "locator varchar(128),"
-        "locator_type varchar(128),"
-        "subtype varchar(128)"
+        "topic_name varchar(256),"
+        "locator varchar(256),"
+        "locator_type varchar(256),"
+        "subtype varchar(256)"
         ");\n"
         );
 
@@ -1228,7 +1232,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
       }
 
-   strncpy(safe,EscapeSQL(&cfdb,longname),CF_MAXVARSIZE);
+   strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
 
    for (ta = tp->associations; ta != NULL; ta=ta->next)
       {
@@ -1345,9 +1349,9 @@ void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_id,char *this_
 { struct Topic *other_topics = NULL,*topics_this_type = NULL;
   struct TopicAssociation *associations = NULL;
   struct Occurrence *occurrences = NULL;
-  char topic_name[CF_MAXVARSIZE],topic_id[CF_MAXVARSIZE],topic_type[CF_MAXVARSIZE],associate[CF_MAXVARSIZE];
-  char query[CF_MAXVARSIZE],fassociation[CF_MAXVARSIZE],bassociation[CF_MAXVARSIZE],safe[CF_BUFSIZE];
-  char locator[CF_MAXVARSIZE],subtype[CF_MAXVARSIZE],to_type[CF_MAXVARSIZE];
+  char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],associate[CF_BUFSIZE];
+  char query[CF_BUFSIZE],fassociation[CF_BUFSIZE],bassociation[CF_BUFSIZE],safe[CF_BUFSIZE];
+  char locator[CF_BUFSIZE],subtype[CF_BUFSIZE],to_type[CF_BUFSIZE];
   enum representations locator_type;
   struct Rlist *rp;
 
@@ -1365,9 +1369,9 @@ if (cfdb->maxcolumns != 3)
 
 while(CfFetchRow(cfdb))
    {
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
    if (strcmp(topic_name,this_name) == 0 || strcmp(topic_id,this_name) == 0)
       {
@@ -1393,9 +1397,9 @@ if (cfdb->maxcolumns != 3)
 
 while(CfFetchRow(cfdb))
    {
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
    if (strcmp(topic_name,this_name) == 0 || strcmp(topic_id,this_name) == 0)
       {
@@ -1422,12 +1426,12 @@ if (cfdb->maxcolumns != 6)
 while(CfFetchRow(cfdb))
    {
    struct Rlist *this = NULL;
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(fassociation,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
-   strncpy(bassociation,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
-   strncpy(to_type,CfFetchColumn(cfdb,4),CF_MAXVARSIZE-1);
-   strncpy(associate,CfFetchColumn(cfdb,5),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(fassociation,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+   strncpy(bassociation,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
+   strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
+   strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
    AppendRlist(&this,topic_name,CF_SCALAR);
    AddTopicAssociation(&associations,bassociation,NULL,NULL,this,false);
    DeleteRlist(this);
@@ -1448,12 +1452,12 @@ if (cfdb->maxcolumns != 6)
 while(CfFetchRow(cfdb))
    {
    struct Rlist *this = NULL;
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(fassociation,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
-   strncpy(bassociation,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
-   strncpy(to_type,CfFetchColumn(cfdb,4),CF_MAXVARSIZE-1);
-   strncpy(associate,CfFetchColumn(cfdb,5),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(fassociation,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+   strncpy(bassociation,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
+   strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
+   strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
 
    AppendRlist(&this,associate,CF_SCALAR);
    AddTopicAssociation(&associations,fassociation,NULL,NULL,this,false);
@@ -1464,8 +1468,8 @@ CfDeleteQuery(cfdb);
 
 /* Finally occurrences of the mentioned topic */
 
-strncpy(safe,EscapeSQL(cfdb,this_name),CF_MAXVARSIZE);
-snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type desc",this_id,safe);
+strncpy(safe,EscapeSQL(cfdb,this_name),CF_BUFSIZE);
+snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
 
 CfNewQueryDB(cfdb,query);
 
@@ -1478,10 +1482,10 @@ if (cfdb->maxcolumns != 4)
 while(CfFetchRow(cfdb))
    {
    struct Rlist *this = NULL;
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(locator,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(locator,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
    locator_type = Str2Int(CfFetchColumn(cfdb,2));
-   strncpy(subtype,CfFetchColumn(cfdb,3),CF_MAXVARSIZE-1);
+   strncpy(subtype,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
 
    if (strcmp(subtype,this_name) == 0)
       {
@@ -1530,7 +1534,7 @@ else
 
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type)
 
-{ char topic_name[CF_MAXVARSIZE],topic_id[CF_MAXVARSIZE],topic_type[CF_MAXVARSIZE],query[CF_MAXVARSIZE];
+{ char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],query[CF_BUFSIZE];
  char banner[CF_BUFSIZE];
  
 if (HTML)
@@ -1577,9 +1581,9 @@ if (cfdb->maxcolumns != 3)
 
 while(CfFetchRow(cfdb))
    {
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
    if (HTML)
       {
@@ -1619,9 +1623,9 @@ if (cfdb->maxcolumns != 3)
 
 while(CfFetchRow(cfdb))
    {
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_MAXVARSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_MAXVARSIZE-1);
+   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
    if (HTML)
       {
@@ -1753,7 +1757,7 @@ for (oc = occurrences; oc != NULL; oc=oc->next)
           printf(" %s (DB)",oc->locator);
           break;          
       case cfk_literal:
-          printf(" \"%s\" (Quote)",oc->locator);
+          printf(" \"%s\" (Text)",oc->locator);
           break;
       default:
           break;
@@ -1861,7 +1865,7 @@ for (oc = occurrences; oc != NULL; oc=oc->next)
           fprintf(fout," %s (DB)",oc->locator);
           break;          
       case cfk_literal:
-          fprintf(fout," \"%s\" (Quote)",oc->locator);
+          fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
           break;
       default:
           break;

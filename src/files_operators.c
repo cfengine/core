@@ -74,7 +74,7 @@ else
       }
    }
 
-if (attr.haveperms)
+if (attr.haveperms || attr.havechange)
    {
    VerifyFileAttributes(path,sb,attr,pp);
    }
@@ -1009,7 +1009,7 @@ else
 
 if (changed)
    {
-   AddPersistentClass("checksum_alerts",CF_PERSISTENCE,cfpreserve);
+   NewPersistentContext("checksum_alerts",CF_PERSISTENCE,cfpreserve);
    LogHashChange(file);
    }
 }

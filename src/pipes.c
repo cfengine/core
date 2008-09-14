@@ -60,7 +60,7 @@ if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
    {
-   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_unlock failed");
    return NULL;
    }
 #endif
@@ -69,7 +69,9 @@ if (CHILDREN == NULL)   /* first time */
    {
    if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
       {
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
       pthread_mutex_unlock(&MUTEX_COUNT);
+#endif
       return NULL;
       }
    }
@@ -166,7 +168,7 @@ else
           
           if ((pp = fdopen(pd[0],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
           break;
@@ -177,7 +179,7 @@ else
           
           if ((pp = fdopen(pd[1],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
       }
@@ -185,14 +187,13 @@ else
    if (fileno(pp) >= MAX_FD)
       {
       CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
-      cfpwait(pid);
-      return NULL;
       }
    else
       {
       CHILDREN[fileno(pp)] = pid;
-      return pp;
       }
+
+   return pp;
    }
 
 return NULL; /* Cannot reach here */
@@ -332,7 +333,7 @@ else
           
           if ((pp = fdopen(pd[0],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
           break;
@@ -343,7 +344,7 @@ else
           
           if ((pp = fdopen(pd[1],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
       }
@@ -351,8 +352,6 @@ else
    if (fileno(pp) >= MAX_FD)
       {
       CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
-      cfpwait(pid);
-      return NULL;
       }
    else
       {
@@ -453,7 +452,7 @@ else
           
           if ((pp = fdopen(pd[0],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
           break;
@@ -464,7 +463,7 @@ else
           
           if ((pp = fdopen(pd[1],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
       }
@@ -472,8 +471,6 @@ else
    if (fileno(pp) >= MAX_FD)
       {
       CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
-      cfpwait(pid);
-      return NULL;
       }
    else
       {
@@ -595,7 +592,7 @@ else
           
           if ((pp = fdopen(pd[0],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
           break;
@@ -606,7 +603,7 @@ else
           
           if ((pp = fdopen(pd[1],type)) == NULL)
              {
-             cfpwait(pid);
+             cf_pwait(pid);
              return NULL;
              }
       }
@@ -614,7 +611,7 @@ else
    if (fileno(pp) >= MAX_FD)
       {
       CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
-      cfpwait(pid);
+      cf_pwait(pid);
       return NULL;
       }
    else
@@ -632,12 +629,11 @@ return NULL;
 /* Close commands                                                             */
 /******************************************************************************/
 
-
-int cfpwait(pid_t pid)
+int cf_pwait(pid_t pid)
 
 { int status, wait_result;
 
-Debug("cfpwait - Waiting for process %d\n",pid); 
+Debug("cf_pwait - Waiting for process %d\n",pid); 
 
 #ifdef HAVE_WAITPID
 
@@ -696,59 +692,24 @@ fd = fileno(pp);
 if (fd >= MAX_FD)
    {
    CfOut(cf_error,"","File descriptor %d of child higher than MAX_FD, check for defunct children", fd);
-   fclose(pp);
-   return -1;
+   pid = -1;
    }
-
-if ((pid = CHILDREN[fd]) == 0)
+else
    {
-   return -1;
+   if ((pid = CHILDREN[fd]) == 0)
+      {
+      return -1;
+      }
+   
+   CHILDREN[fd] = 0;
    }
-
-CHILDREN[fd] = 0;
 
 if (fclose(pp) == EOF)
    {
    return -1;
    }
 
-Debug("cfpopen - Waiting for process %d\n",pid); 
-
-#ifdef HAVE_WAITPID
-
-while(waitpid(pid,&status,0) < 0)
-   {
-   if (errno != EINTR)
-      {
-      return -1;
-      }
-   }
-
-return status; 
- 
-#else
-
-while ((wait_result = wait(&status)) != pid)
-   {
-   if (wait_result <= 0)
-      {
-      CfOut(cf_inform,"wait","Wait for child failed\n");
-      return -1;
-      }
-   }
- 
-if (WIFSIGNALED(status))
-   {
-   return -1;
-   }
- 
-if (! WIFEXITED(status))
-   {
-   return -1;
-   }
- 
-return (WEXITSTATUS(status));
-#endif
+return cf_pwait(pid);
 }
 
 /*******************************************************************/

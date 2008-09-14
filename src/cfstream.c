@@ -186,7 +186,21 @@ va_end(ap);
 
 if (VERBOSE)
    {
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+      {
+      return;
+      }
+#endif
+
    printf("%s %s",VPREFIX,buffer);
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+      {
+      /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
+      }
+#endif 
    }
 }
 
@@ -206,7 +220,7 @@ if (!IsPrivileged() || DONTDO)
 /* If we can't mutex it could be dangerous to proceed with threaded file descriptors */
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (!SILENT && (pthread_mutex_lock(&MUTEX_SYSCALL) != 0))
+if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
    {
    return;
    }
@@ -250,6 +264,13 @@ void MakeReport(struct Item *mess,int prefix)
 
 for (ip = mess; ip != NULL; ip = ip->next)
    {
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+      {
+      return;
+      }
+#endif
+   
    if (prefix)
       {
       printf("%s %s\n",VPREFIX,ip->name);
@@ -258,6 +279,13 @@ for (ip = mess; ip != NULL; ip = ip->next)
       {
       printf("%s\n",ip->name);
       }
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+      {
+      /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
+      }
+#endif    
    }
 }
 

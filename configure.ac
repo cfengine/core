@@ -792,6 +792,27 @@ AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`")
 AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os")
 
+
+dnl #####################################################################
+dnl xen cpuid-based hvm detection
+dnl #####################################################################
+
+AC_MSG_CHECKING(Checking for Xen cpuid-based HVM detection)
+if test x"$GCC" = "xyes"; then
+	case $host_cpu in
+		i[[3456]]86*|x86_64*)
+			AC_DEFINE(XEN_CPUID_SUPPORT, 1, [Define if XEN cpuid-based HVM detection is available.])
+
+			AC_MSG_RESULT(yes)
+			;;
+		*)
+			AC_MSG_RESULT(no)
+			;;
+	esac
+else 
+	AC_MSG_RESULT(no)
+fi
+
 dnl ######################################################################
 dnl Now make the Makefiles
 dnl ######################################################################

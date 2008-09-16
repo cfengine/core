@@ -747,6 +747,7 @@ void Report(char *fname)
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
 
 FOUT = stdout;
+XML = false;
 
 if ((FOUT = fopen(filename,"w")) == NULL)
    {

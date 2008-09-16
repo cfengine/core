@@ -56,6 +56,7 @@
 #define CF_ANYUSER  (uid_t)-1
 #define CF_ANYGROUP (gid_t)-1
 #define CF_UNDEFINED_ITEM (void *)0x1234
+#define CF_VARARGS 99
 
 #define CF_INBODY   1
 #define CF_INBUNDLE 2
@@ -406,6 +407,10 @@ enum fncalltype
    cfn_readstringarray,
    cfn_readintarray,
    cfn_readrealarray,
+   cfn_classmatch,
+   cfn_hash,
+   cfn_usemodule,
+   cfn_usemethod,
    cfn_unknown,
    };
 

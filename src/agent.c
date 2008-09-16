@@ -519,7 +519,9 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       AugmentScope(bp->name,bp->args,params);
       DeletePrivateClassContext(); // Each time we change bundle      
       }
-             
+
+   SetScope(bp->name);
+   
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
       {
       ClassBanner(type);
@@ -738,17 +740,26 @@ if (type != kp_interfaces)   /* Just parsed all local classes */
    return;
    }
 
-
-Verbose ("     ??  Private class context:\n");
+Verbose("\n");
+Verbose("     +  Private classes augmented:\n");
 
 for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
    {
-   Verbose("     ??       %s\n",ip->name);
+   Verbose("     +       %s\n",ip->name);
    }
 
 Verbose("\n");
 
-Verbose ("     ?  Public class context:\n");
+Verbose("     -  Private classes diminished:\n");
+
+for (ip = VNEGHEAP; ip != NULL; ip=ip->next)
+   {
+   Verbose("     -       %s\n",ip->name);
+   }
+
+Verbose("\n");
+
+Verbose("     ?  Public class context:\n");
 
 for (ip = VHEAP; ip != NULL; ip=ip->next)
    {

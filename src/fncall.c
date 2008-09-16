@@ -326,6 +326,19 @@ switch (this)
    case cfn_now:
        rval = FnCallNow(fp,expargs);
        break;
+   case cfn_classmatch:
+       rval = FnCallClassMatch(fp,expargs);
+       break;
+   case cfn_hash:
+       rval = FnCallHash(fp,expargs);
+       break;
+   case cfn_usemodule:
+       rval = FnCallUseModule(fp,expargs);
+       break;
+   case cfn_usemethod:
+       rval = FnCallUseMethod(fp,expargs);
+       break;
+
    case cfn_unknown:
        CfOut(cf_error,"","Un-registered function call");
        PromiseRef(cf_error,pp);

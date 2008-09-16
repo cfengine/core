@@ -75,6 +75,10 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"readstringarray",cf_class,6},
    {"readintarray",cf_class,6},
    {"readrealarray",cf_class,6},
+   {"classmatch",cf_class,2},
+   {"hash",cf_str,2},
+   {"usemodule",cf_class,2},
+   {"usemethod",cf_class,CF_VARARGS},
    {NULL,cf_notype}
    };
 

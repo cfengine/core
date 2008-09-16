@@ -386,7 +386,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
             {
             PrependItem(&VADDCLASSES,buffer,NULL);
             }
-         Verbose("     ?? \'Strategy\' distribution class interval -> %s\n",buffer);
+         Verbose("\n     ?? \'Strategy\' distribution class interval -> %s\n",buffer);
          return true;
          }
       }

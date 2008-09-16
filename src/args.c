@@ -142,10 +142,16 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
       }
    }
 
-if (ref != len)
+if ((ref != CF_VARARGS) && (ref != len))
    {
    CfOut(cf_error,"","Arguments to function %s(.) do not tally. Expect %d not %d",fp->name,ref,len);
    CfOut(cf_error,"","Function reference in %s @ promise near line %d",pp->audit->filename,pp->lineno);
+   }
+
+if ((ref == CF_VARARGS) && (len < 1))
+   {
+   CfOut(cf_error,"","Arguments to method call %s(.) must contain at least the name of the method",fp->name);
+   CfOut(cf_error,"","Reference in %s @ promise near line %d",pp->audit->filename,pp->lineno);
    }
 
 for (rp = fp->args; rp != NULL; rp = rp->next)

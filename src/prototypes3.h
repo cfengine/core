@@ -213,10 +213,16 @@ struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type);
 struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type);
+struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallUseMethod(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);
+
 void *ReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);
 void BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type);
+int ExecModule(char *command);
 
 /* expand.c */
 

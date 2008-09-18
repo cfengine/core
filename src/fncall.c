@@ -95,10 +95,10 @@ free(fp);
 
 /*********************************************************************/
 
-struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f)
+struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked)
 
 {
- return NewFnCall(f->name,ExpandList(contextid,f->args));
+return NewFnCall(f->name,ExpandList(contextid,f->args,expandnaked));
 }
 
 /*******************************************************************/

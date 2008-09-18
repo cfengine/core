@@ -61,7 +61,7 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
   struct Promise *pp;
 
   // What about multipass ?
-  
+
 for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
    {
    EditClassBanner(type);
@@ -73,15 +73,11 @@ for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
    
    BannerSubSubType(bp->name,sp->name);
    
-   //NewEditTypeContext(type);
-   
    for (pp = sp->promiselist; pp != NULL; pp=pp->next)
       {
       pp->edcontext = parentp->edcontext;
       ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
       }
-   
-   //DeleteEditTypeContext(type);
    }
 
 return true;
@@ -128,9 +124,6 @@ if (pp->done)
    {
    return;
    }
-
-
-SetScope("this");
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
@@ -653,7 +646,7 @@ int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes 
   int s,e,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
-  struct Rlist *columns;
+  struct Rlist *columns = NULL;
  
 rex = CompileRegExp(pp->promiser);
 
@@ -673,6 +666,10 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       {
       continue;
       }
+   else
+      {
+      Verbose(" - Matched line (%s)\n",ip->name);
+      }
 
    if (!BlockTextMatch(a.column.column_separator,ip->name,&s,&e))
       {
@@ -683,7 +680,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
    strncpy(separator,ip->name+s,e-s);
    
    columns = SplitRegexAsRList(ip->name,a.column.column_separator,CF_INFINITY,false);
-   retval = EditLineByColumn(columns,a,pp);
+   retval = EditLineByColumn(&columns,a,pp);
 
    if (retval)
       {
@@ -781,31 +778,55 @@ else
 
 /***************************************************************************/
 
-int EditLineByColumn(struct Rlist *columns,struct Attributes a,struct Promise *pp)
+int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp,*this_column;
   char sep[CF_MAXVARSIZE];
-  int count = 0,retval = false;
+  int i,count = 0,retval = false;
 
 /* Now break up the line into a list - not we never remove an item/column */
  
-for (rp = columns; rp != NULL; rp=rp->next)
+for (rp = *columns; rp != NULL; rp=rp->next)
     {
     count++;
     
     if (count == a.column.select_column)
        {
+       Verbose(" -> Stopped at column %d\n",count);
        break;
        }
     }
 
 if (a.column.select_column > count)
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"The file has only %d columns, but there is a promise for column %d",count,a.column.select_column);
-   return false;
+   if (!a.column.extend_columns)
+      {
+      cfPS(cf_error,CF_INTERPT,"",pp,a," !! The file has only %d columns, but there is a promise for column %d",count,a.column.select_column);
+      return false;
+      }
+   else
+      {
+      for (i = 0; i < (a.column.select_column - count); i++)
+         {
+         AppendRScalar(columns,strdup(""),CF_SCALAR);
+         }
+
+      count = 0;
+      
+      for (rp = *columns; rp != NULL; rp=rp->next)
+         {
+         count++;         
+         if (count == a.column.select_column)
+            {
+            Verbose(" -> Stopped at column %d\n",count);
+            break;
+            }
+         }
+      }
    }
 
-if (a.column.value_separator)
+
+if (a.column.value_separator != '\0')
    {
    /* internal separator, single char so split again */
 
@@ -816,12 +837,12 @@ if (a.column.value_separator)
       {
       if (DONTDO || a.transaction.action == cfa_warn)
          {
-         cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit column but only warning promised");
+         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to edit column but only warning promised");
          retval = false;
          }
       else
          {
-         cfPS(cf_error,CF_CHG,"",pp,a,"Editing column");
+         cfPS(cf_error,CF_CHG,"",pp,a," -> Edited column inside file object");
          free(rp->item);
          sep[0] = a.column.value_separator;
          sep[1] = '\0';
@@ -840,12 +861,12 @@ else
       {
       if (DONTDO)
          {
-         cfPS(cf_error,CF_NOP,"",pp,a,"Need to delete column field value %s",rp->item);
+         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to delete column field value %s",rp->item);
          return false;
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,a,"Deleting column field value %s",rp->item);
+         cfPS(cf_inform,CF_CHG,"",pp,a," -> Deleting column field value %s",rp->item);
          free(rp->item);
          rp->item = strdup("");
          return true;
@@ -855,12 +876,12 @@ else
       {
       if (DONTDO)
          {
-         cfPS(cf_error,CF_NOP,"",pp,a,"Need to set column field value %s to %s",rp->item,a.column.column_value);
+         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to set column field value %s to %s",rp->item,a.column.column_value);
          return false;
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,a,"Setting column field value %s to %s",rp->item,a.column.column_value);
+         cfPS(cf_inform,CF_CHG,"",pp,a," -> Setting whole column field value %s to %s",rp->item,a.column.column_value);
          free(rp->item);
          rp->item = strdup(a.column.column_value);
          return true;
@@ -882,7 +903,7 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0
    {
    if (found = KeyInRlist(*columns,a.column.column_value))
       {
-      CfOut(cf_inform,"","Deleting column field value %s",a.column.column_value);
+      CfOut(cf_inform,""," -> Deleting column field sub-value %s",a.column.column_value);
       DeleteRlistEntry(columns,found);
       }
    else
@@ -891,11 +912,30 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0
       }
    }
 
+if (a.column.column_operation && strcmp(a.column.column_operation,"set") == 0)
+   {
+   if (RlistLen(*columns) == 1)
+      {
+      if (strcmp((*columns)->item,a.column.column_value) == 0)
+         {
+         Verbose(" -> Column sub-value set as promised\n");
+         return false;
+         }
+      }
+   
+   CfOut(cf_inform,""," -> Setting column field sub-value %s",a.column.column_value);
+   DeleteRlist(*columns);
+   *columns = NULL;
+   IdempPrependRScalar(columns,a.column.column_value,CF_SCALAR);
+
+   return true;
+   }
+
 if (a.column.column_operation && strcmp(a.column.column_operation,"prepend") == 0)
    {
    if (IdempPrependRScalar(columns,a.column.column_value,CF_SCALAR))
       {
-      CfOut(cf_inform,"","Prepending column field value %s",a.column.column_value);
+      CfOut(cf_inform,""," -> Prepending column field sub-value %s",a.column.column_value);
       return true;
       }
    else

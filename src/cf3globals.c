@@ -74,6 +74,9 @@ struct Rlist *SINGLE_COPY_LIST = NULL;
 struct Rlist *AUTO_DEFINE_LIST = NULL;
 struct Rlist *SINGLE_COPY_CACHE = NULL;
 
+struct Rlist *CF_STCK = NULL;
+int CF_STCKFRAME = 0;
+
 /*****************************************************************************/
 /* Constants                                                                 */
 /*****************************************************************************/

@@ -331,7 +331,7 @@ if (a.haveeditline)
       {
       fp = (struct FnCall *)vp;
       edit_bundle_name = fp->name;
-      params = fp->args;
+      params = fp->args;;
       }
    else if (vp = GetConstraint("edit_line",pp->conlist,CF_SCALAR))
       {
@@ -352,14 +352,10 @@ if (a.haveeditline)
    if (bp = GetBundle(edit_bundle_name,"edit_line"))
       {
       BannerSubBundle(bp,params);
-
-      strncpy(context_save,CONTEXTID,CF_MAXVARSIZE);
-      strncpy(CONTEXTID,bp->name,CF_MAXVARSIZE);
-      
+      NewScope(bp->name);
       AugmentScope(bp->name,bp->args,params);
       retval = ScheduleEditLineOperations(filename,bp,a,pp);
-
-      strncpy(CONTEXTID,context_save,CF_MAXVARSIZE);
+      DeleteFromScope(bp->name,bp->args);
       }
    }
 

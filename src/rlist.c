@@ -364,7 +364,6 @@ if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
    }
 #endif
 
-
 return rp;
 }
 

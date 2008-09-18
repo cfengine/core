@@ -500,7 +500,7 @@ f.trustkey = GetBooleanConstraint("trustkey",pp->conlist);
 f.encrypt = GetBooleanConstraint("encrypt",pp->conlist);
 f.verify = GetBooleanConstraint("verify",pp->conlist);
 f.purge = GetBooleanConstraint("purge",pp->conlist);
-
+f.destination = NULL;
 return f;
 }
 
@@ -865,5 +865,6 @@ else
 
 c.column_value = GetConstraint("column_value",pp->conlist,CF_SCALAR);
 c.column_operation = GetConstraint("column_operation",pp->conlist,CF_SCALAR);
+c.extend_columns = GetBooleanConstraint("extend_columns",pp->conlist);
 return c;
 }

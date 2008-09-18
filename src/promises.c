@@ -309,15 +309,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
-       /* sub-bundles do not expand here */
-      returnval = ExpandPrivateRval(scopeid,cp->rval,cp->type);
+      final = ExpandBundleReference(scopeid,cp->rval,cp->type);
       }
    else
       {
       returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
+      final = ExpandDanglers(scopeid,returnval,pp);
       }
 
-   final = ExpandDanglers(scopeid,returnval,pp);
    AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes);
 
    if (strcmp(cp->lval,"comment") == 0)

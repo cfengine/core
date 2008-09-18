@@ -387,7 +387,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,"this") == 0)
       {
-      continue;
+//      continue;
       }
    
    if (XML)

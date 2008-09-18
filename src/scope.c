@@ -102,7 +102,8 @@ void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
   struct Rlist *rpl,*rpr;
   struct Rval retval;
   void *result;
-  char *lval,rettype;
+  char *lval,rettype,naked[CF_MAXVARSIZE];
+  int i;
 
 if (RlistLen(lvals) != RlistLen(rvals))
    {
@@ -121,7 +122,39 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
    // CheckBundleParameters() already checked that there is no namespace collision
    // By this stage all functions should have been expanded, so we only have scalars left
 
-   NewScalar(scope,lval,rpr->item,cf_str); // Parameters may only be scalars
+   if (IsNakedVar(rpr->item,'@'))
+      {
+      GetNaked(naked,rpr->item);
+
+      if (GetVariable(scope,naked,&(retval.item),&(retval.rtype)) != cf_notype)
+         {
+         NewList(scope,lval,retval.item,cf_slist);
+         }
+      else
+         {
+         CfOut(cf_error,"","List parameter subsitution was not found - use @(scope.variable)");
+         NewScalar(scope,lval,rpr->item,cf_str);         
+         }
+      }
+   else
+      {
+      NewScalar(scope,lval,rpr->item,cf_str);
+      }
+   }
+
+/* Check that there are no danglers left to evaluate in the hash table itself */
+
+ptr = GetScope(scope);
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   if (ptr->hashtable[i] != NULL)
+      {
+      retval = ExpandPrivateRval(scope,(char *)(ptr->hashtable[i]->rval),ptr->hashtable[i]->rtype);
+      DeleteRvalItem(ptr->hashtable[i]->rval,ptr->hashtable[i]->rtype);
+      ptr->hashtable[i]->rval = retval.item;
+      ptr->hashtable[i]->rtype = retval.rtype;
+      }
    }
 
 return;
@@ -216,4 +249,38 @@ op = GetScope(old);
 np = GetScope(new);
 CopyHashes(np->hashtable,op->hashtable);
 }
+
+/*******************************************************************/
+/* Stack frames                                                    */
+/*******************************************************************/
+
+void PushThisScope()
+
+{ struct Scope *op;
+ char name[CF_MAXVARSIZE];
+
+op = GetScope("this");
+
+CF_STCKFRAME++;
+PushStack(&CF_STCK,(void *)op);
+snprintf(name,CF_MAXVARSIZE,"this_%d",CF_STCKFRAME);
+free(op->scope);
+op->scope = strdup(name);
+}
+
+/*******************************************************************/
+
+void PopThisScope()
+
+{ struct Scope *op = NULL;
+ 
+if (CF_STCKFRAME > 0)
+   {
+   PopStack(&CF_STCK,(void *)&op,sizeof(op));
+   CF_STCKFRAME--;
+   free(op->scope);
+   op->scope = strdup("this");
+   }    
+}
+
 

@@ -208,7 +208,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (!(cp->type == CF_FNCALL || cp->type == CF_SCALAR))
          {
-         CfOut(cf_error,"","Software error - expected type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,"","Software error - type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
          FatalError(OUTPUT);
          }
 

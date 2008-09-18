@@ -235,9 +235,10 @@ void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,i
 int IsExpandable(char *str);
 int ExpandScalar(char *string,char buffer[CF_EXPANDSIZE]);
 int ExpandPrivateScalar(char *contextid,char *string,char buffer[CF_EXPANDSIZE]);
-struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f);
+struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
+struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);
 struct Rval ExpandPrivateRval(char *contextid,void *rval,char type);
-struct Rlist *ExpandList(char *scopeid,struct Rlist *list);
+struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked);
 struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,struct Promise *pp);
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
@@ -275,7 +276,7 @@ int InsertMissingLineAtLocation(char *string,struct Item **start,struct Item *lo
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
 int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
-int EditLineByColumn(struct Rlist *columns,struct Attributes a,struct Promise *pp);
+int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 
 /* files_links.c */
@@ -618,7 +619,8 @@ void CopyScope(char *new, char *old);
 void DeleteAllScope(void);
 void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals);
 void DeleteFromScope(char *scope,struct Rlist *args);
-
+void PushThisScope(void);
+void PopThisScope(void);
 
 /* selfdiagnostic.c */
 

@@ -442,7 +442,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
 
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
-         ExpandPromise(cf_agent,bp->name,pp,KeepKnowledgePromise);
+         ExpandPromise(cf_know,bp->name,pp,KeepKnowledgePromise);
          }
       }
    }

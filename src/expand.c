@@ -112,7 +112,12 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type);
    }
 
+
+PushThisScope();
+
 ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars,fnptr);
+
+PopThisScope();
 
 DeletePromise(pcopy);
 DeleteRlist(scalarvars);
@@ -267,15 +272,20 @@ return ExpandPrivateScalar(CONTEXTID,string,buffer);
 
 /*********************************************************************/
 
-struct Rlist *ExpandList(char *scopeid,struct Rlist *list)
+struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked)
 
 { struct Rlist *rp, *start = NULL;
   struct Rval returnval;
   char naked[CF_MAXVARSIZE];
-  
+
 for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
    {
-   if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
+   if (!expandnaked && (rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
+      {
+      returnval.item = strdup(rp->item);
+      returnval.rtype = CF_SCALAR;       
+      }
+   else if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
       {
       GetNaked(naked,rp->item);
       
@@ -326,7 +336,7 @@ switch (type)
        
    case CF_LIST:
 
-       returnval.item = ExpandList(scopeid,rval);
+       returnval.item = ExpandList(scopeid,rval,true);
        returnval.rtype = CF_LIST;
        break;
        
@@ -334,7 +344,46 @@ switch (type)
        
        /* Note expand function does not mean evaluate function, must preserve type */
        fp = (struct FnCall *)rval;
-       fpe = ExpandFnCall(scopeid,fp);
+       fpe = ExpandFnCall(scopeid,fp,true);
+
+       returnval.item = fpe;
+       returnval.rtype = CF_FNCALL;
+       break;       
+   }
+
+return returnval;
+}
+
+/*********************************************************************/
+
+struct Rval ExpandBundleReference(char *scopeid,void *rval,char type)
+
+{ char buffer[CF_EXPANDSIZE];
+ struct Rlist *rp, *start = NULL;
+ struct FnCall *fp,*fpe;
+ struct Rval returnval,extra;
+     
+Debug("ExpandBundleReference(scope=%s,type=%c)\n",scopeid,type);
+
+/* Allocates new memory for the copy */
+
+returnval.item = NULL;
+returnval.rtype = CF_NOPROMISEE;
+
+switch (type)
+   {
+   case CF_SCALAR:
+
+       ExpandPrivateScalar(scopeid,(char *)rval,buffer);
+       returnval.item = strdup(buffer);
+       returnval.rtype = CF_SCALAR;       
+       break;
+       
+   case CF_FNCALL:
+       
+       /* Note expand function does not mean evaluate function, must preserve type */
+       fp = (struct FnCall *)rval;
+       fpe = ExpandFnCall(scopeid,fp,false);
 
        returnval.item = fpe;
        returnval.rtype = CF_FNCALL;
@@ -512,8 +561,9 @@ do
    /* Thread monitor */
 
    DeRefListsInHashtable("this",listvars,lol);   
-   pexp = ExpandDeRefPromise(scopeid,pp);
-
+   pexp = ExpandDeRefPromise("this",pp);
+   SetScope("this");   
+   
    switch (agent)
       {
       case cf_common:
@@ -535,7 +585,9 @@ do
 
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
-      ConvergeVarHashPromise(scopeid,pexp,true);
+      XML=0;
+      ShowScopedVariables(stdout);
+      ConvergeVarHashPromise("this",pexp,true);
       }
 
    DeletePromise(pexp);
@@ -568,7 +620,7 @@ if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here 
       }
    else
       {
-      returnval.item = ExpandList(scopeid,returnval.item);
+      returnval.item = ExpandList(scopeid,returnval.item,true);
       returnval.rtype = CF_LIST;
       }
    }
@@ -714,7 +766,6 @@ if (str == NULL)
    }
 
 last = *(str+strlen(str)-1);
-Debug1("IsNakedVar(%s,%c) - syntax verify for naked var substitution\n",str,vtype);
 
 if (strlen(str) < 3)
    {
@@ -766,6 +817,8 @@ if (count != 0)
    return false;
    }
 
+
+Debug1("IsNakedVar(%s,%c)!!\n",str,vtype);
 return true;
 }
 

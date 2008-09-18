@@ -1004,6 +1004,7 @@ struct EditColumn
    char value_separator;
    char *column_value;
    char *column_operation;
+   int extend_columns;
    };
 
 struct EditReplace

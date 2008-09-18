@@ -43,6 +43,9 @@ extern struct Rlist *AUTO_DEFINE_LIST;
 extern struct Rlist *SINGLE_COPY_CACHE;
 extern struct Rlist *ACCESSLIST;
 
+extern struct Rlist *CF_STCK;
+extern int CF_STCKFRAME;
+
 extern int XML;
 extern FILE *FOUT;
 extern struct FnCallStatus FNCALL_STATUS;

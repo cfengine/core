@@ -366,12 +366,12 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
                
                if (strcmp(cplist->lval,cphash->lval) == 0)
                   {
-                  Debug("Rewriting expanded type for %s from %s",cphash->lval,CF_DATATYPES[cphash->dtype]);
-
                   /* Link up temp hash to variable lol */
 
                   state = (struct Rlist *)(cplist->rval);
 
+                  Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],state->state_ptr->item);
+                  
                   if (state->state_ptr)
                      {
                      cphash->rval = state->state_ptr->item;

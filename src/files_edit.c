@@ -241,6 +241,5 @@ if (selinux_enabled)
    }
 #endif
 
-cfPS(cf_error,CF_CHG,"",pp,a,"Edited file %s\n",file);
 return true;
 }

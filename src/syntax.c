@@ -908,13 +908,19 @@ void CheckParseOpts(char *lval,char *s,char *range)
  
 /* List/menu types are separated by comma str "a,b,c,..." */
 
-Debug("\nCheckParseopts(%s => %s/%s)\n",lval,s,range);
+Debug("\nCheckParseOpts(%s => %s/%s)\n",lval,s,range);
+
+if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
+   {
+   Debug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
+   return;
+   }
 
 split = SplitString(range,',');
 
 if (!IsItemIn(split,s))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Selection on rhs of lval \'%s\' given as { %s } is out of bounds, should be in [%s]",lval,s,range);
+   snprintf(OUTPUT,CF_BUFSIZE,"Selection on rhs of lval \'%s\' given as \'%s\' is out of bounds, should be in [%s]",lval,s,range);
    ReportError(OUTPUT);
    err = true;
    }

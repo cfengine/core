@@ -515,13 +515,11 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    
    if ((bp = GetBundle(name,"agent")) || (bp = GetBundle(name,"common")))
       {
-      BannerBundle(bp,params);
       AugmentScope(bp->name,bp->args,params);
+      BannerBundle(bp,params);
       DeletePrivateClassContext(); // Each time we change bundle      
       }
 
-   SetScope(bp->name);
-   
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
       {
       ClassBanner(type);
@@ -532,6 +530,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
          }
 
       BannerSubType(bp->name,sp->name);
+      SetScope(bp->name);
 
       NewTypeContext(type);
       
@@ -539,8 +538,6 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
          {
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
          }
-
-      DeleteTypeContext(type);
       }
    }
 }

@@ -48,7 +48,7 @@ int IsItemInRegion(char *item,struct Item *begin_ptr,struct Item *end_ptr)
 
 { struct Item *ip;
  
-for (ip = begin_ptr; ip != end_ptr->next; ip = ip->next)
+for (ip = begin_ptr; (ip != end_ptr && ip != end_ptr->next); ip = ip->next)
    {
    if (strcmp(ip->name,item) == 0)
       {

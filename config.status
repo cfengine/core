@@ -301,7 +301,7 @@ on `(hostname || uname -n) 2>/dev/null | sed 1q`
 "
 
 # Files that config.status was made for.
-config_files=" Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile"
+config_files=" Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile"
 config_headers=" src/conf.h"
 config_commands=" depfiles"
 
@@ -443,6 +443,9 @@ do
     "src/cf3lex.l") CONFIG_FILES="$CONFIG_FILES src/cf3lex.l" ;;
     "docs/Makefile") CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
+    "tests/file_masters/Makefile") CONFIG_FILES="$CONFIG_FILES tests/file_masters/Makefile" ;;
+    "tests/file_operands/Makefile") CONFIG_FILES="$CONFIG_FILES tests/file_operands/Makefile" ;;
+    "tests/units/Makefile") CONFIG_FILES="$CONFIG_FILES tests/units/Makefile" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -555,7 +558,7 @@ s,@INSTALL_DATA@,|#_!!_#|${INSTALL} -m 644,g
 s,@am__isrc@,|#_!!_#|,g
 s,@CYGPATH_W@,|#_!!_#|echo,g
 s,@PACKAGE@,|#_!!_#|cfengine,g
-s,@VERSION@,|#_!!_#|3.0.0a1,g
+s,@VERSION@,|#_!!_#|3.0.0a3,g
 s,@ACLOCAL@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run aclocal-1.10,g
 s,@AUTOCONF@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run autoconf,g
 s,@AUTOMAKE@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run automake-1.10,g
@@ -898,7 +901,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_VERSION\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_STRING\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_BUGREPORT\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE\)[	 (].*,\1define\2 "cfengine" ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0a1" ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0a3" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*YYTEXT_POINTER\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*STDC_HEADERS\)[	 (].*,\1define\2 1 ,

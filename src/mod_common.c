@@ -193,6 +193,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"nonalphanumfiles",cf_opts,CF_BOOL},
    {"repchar",cf_str,"."},
    {"default_repository",cf_str,CF_PATHRANGE},
+   {"secureinput",cf_opts,CF_BOOL},
    {"sensiblecount",cf_int,CF_VALRANGE},
    {"sensiblesize",cf_int,CF_VALRANGE},
    {"showactions",cf_opts,CF_BOOL},

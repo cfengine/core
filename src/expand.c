@@ -585,8 +585,6 @@ do
 
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
-      XML=0;
-      ShowScopedVariables(stdout);
       ConvergeVarHashPromise("this",pexp,true);
       }
 

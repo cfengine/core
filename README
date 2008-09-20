@@ -1,10 +1,11 @@
 
-This is the cfengine version 3 pre-release training pack
+This is the cfengine version 3 pre-release alpha version
 ========================================================================
 
-This is not a fully functional version of cfengine. It is a
-package which will allow you to learn and experiment with
-the modified language syntax in this version.
+This is not a fully functional version of cfengine. It is not
+guaranteed to be tested or bug-free. It is a package which will allow
+you to learn and experiment with the modified language syntax in this
+version.
 
 A functional, documented version of cfengine 3 is expected at the end
 of 2008, but keep your eyes on the websites www.cfengine.org and
@@ -21,7 +22,7 @@ BUILDING
 -----------------------------------------------------------------------
 
 To build this software you need to have the library libcfengine from
-cfengine version 2.2.3 or later installed on your system.
+cfengine version 2.2.8 or later installed on your system.
 
 Type the following to build the software:
 
@@ -62,13 +63,13 @@ See the notes in the doc directory.
 
 cd src
 
- ./cfpromise  (which looks for ../tests/promises.cf)
+ ./cf-promises  (which looks for ../tests/promises.cf)
 
- ./cfpromises -f filename
+ ./cf-promises -f filename
 
 e.g.
 
- ./cfpromises -f ../tests/mod_common.cf
+ ./cf-promises -f ../tests/mod_common.cf
 
 This generates output to a file promise_output.html in
 the current directory which is best examined with a web

@@ -300,6 +300,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
    
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
+      {
+      CFPARANOID = GetBoolean(retval);
+      Verbose("SET secure input = %d\n",CFPARANOID);
+      continue;
+      }
+   
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
       {
       PADCHAR = *(char *)retval;
@@ -588,7 +595,7 @@ if (VINPUTLIST != NULL)
             exit(1);
             }
          }
-      else if (IsPrivileged())
+      else if (CFPARANOID && IsPrivileged())
          {
          if (sb.st_uid != getuid())
             {

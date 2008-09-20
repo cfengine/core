@@ -276,7 +276,7 @@ CheckOpts(argc,argv);
 
 if (!MINUSF)
    {
-   snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/promises.cf",CFWORKDIR);
+   snprintf(VINPUTFILE,CF_BUFSIZE-1,"promises.cf");
    }
 
 CfenginePort();
@@ -331,28 +331,38 @@ void Cf3ParseFile(char *filename)
   struct stat statbuf;
   struct Rlist *rp;
   int access = false;
- 
-if (stat(filename,&statbuf) == -1)
+  char wfilename[CF_BUFSIZE];
+
+if (!MINUSF)
    {
-   printf("Can't open file %s\n",filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
+   }
+else
+   {
+   strncpy(wfilename,filename,CF_BUFSIZE-1);
+   }
+
+if (stat(wfilename,&statbuf) == -1)
+   {
+   printf("Can't open file %s\n",wfilename);
    exit(1);
    }
 
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    {
-   CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",filename,getuid());
+   CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",wfilename,getuid());
    exit(1);
    }
 
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
-Verbose("  > Parsing file %s\n",filename);
+Verbose("  > Parsing file %s\n",wfilename);
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
-PrependAuditFile(filename);
+PrependAuditFile(wfilename);
  
-if ((yyin = fopen(filename,"r")) == NULL)      /* Open root file */
+if ((yyin = fopen(wfilename,"r")) == NULL)      /* Open root file */
    {
-   printf("Can't open file %s\n",filename);
+   printf("Can't open file %s\n",wfilename);
    exit (1);
    }
  
@@ -360,7 +370,7 @@ P.line_no = 1;
 P.line_pos = 1;
 P.list_nesting = 0;
 P.arg_nesting = 0;
-P.filename = strdup(filename);
+P.filename = strdup(wfilename);
 
 P.currentid = NULL;
 P.currentstring = NULL;

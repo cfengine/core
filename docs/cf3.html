@@ -11,12 +11,17 @@
 
 <p>
 Cfengine is a suite of programs for integrated autonomic management of
-either individual or networked computers. This document represents
+either individual or networked computers. It has existed a This document represents
 cfengine versions 3.0.0 and later, which are a radical departure from
-earlier versions. Cfengine 3 is both a more powerful and much
-simplified version of cfengine, which has been designed to
-interoperate with cfengine 2 rather than be backwards compatible with
-it.  With cfengine 3 you can install, configure and maintain computers
+earlier versions. 
+
+Cfengine 3 has been changed so as to be both a more powerful and much
+simpler. Cfengine 3 is not backwards compatible with the cfengine 2
+configuration language, but it interoperates with cfengine 2 so that
+it is "run-time compatible".  This means that you can change over to
+version 3 slowly, with low risk and at your own speed.
+
+With cfengine 3 you can install, configure and maintain computers
 using powerful hands-free tools. You can also integrate knowledge
 management and diagnosis into the processes.
 <p>
@@ -36,15 +41,15 @@ Cfengine 3 consists of a number of components:
 <p>
 <table border="1">
 <tr><th>Component   </th><th>New</th><th>Function</th></tr>
-<tr><td>cfAgent     </td><td> </td>  <td>Active agent</td></tr>
-<tr><td>cfExecd     </td><td> </td>  <td>Scheduler</td></tr>
-<tr><td>cfGraph     </td><td> </td>  <td>Graph data extractor</td></tr>
-<tr><td>cfKnow      </td><td>*</td>  <td>Knowledge modelling agent</td></tr>
-<tr><td>cfMonitord  </td><td></td>   <td>Passive monitoring agent</td></tr>
-<tr><td>cfPromises  </td><td>*</td>  <td>Promise validator</td></tr>
-<tr><td>cfRunAgent  </td><td> </td>  <td>Remote run agent</td></tr>
-<tr><td>cfServerd   </td><td> </td>  <td>Server agent</td></tr>     
-<tr><td>cfShow      </td><td> </td>  <td>Self-knowledge extractor</td></tr>
+<tr><td>cf-agent     </td><td> </td>  <td>Active agent</td></tr>
+<tr><td>cf-execd     </td><td> </td>  <td>Scheduler</td></tr>
+<tr><td>cf-graph     </td><td> </td>  <td>Graph data extractor</td></tr>
+<tr><td>cf-know      </td><td>*</td>  <td>Knowledge modelling agent</td></tr>
+<tr><td>cf-monitord  </td><td></td>   <td>Passive monitoring agent</td></tr>
+<tr><td>cf-promises  </td><td>*</td>  <td>Promise validator</td></tr>
+<tr><td>cf-runAgent  </td><td> </td>  <td>Remote run agent</td></tr>
+<tr><td>cf-serverd   </td><td> </td>  <td>Server agent</td></tr>     
+<tr><td>cf-show      </td><td> </td>  <td>Self-knowledge extractor</td></tr>
 </table>
 
 <p>
@@ -439,8 +444,8 @@ will pay attention to them.)
 So try verifying / keeping the promises in this file.
 
 <pre>
-cfAgent -f ./test.cf
-cfAgent -f ./test.cf -v
+cf-agent -f ./test.cf
+cf-agent -f ./test.cf -v
 </pre>
 You may now look also at <tt>promise_output_agent.html</tt>.
 
@@ -645,7 +650,7 @@ A promise has the following generic form:
               lvaln => rvaln;
 </pre>
 A simplified form that is most often used in cfengine omit the
-promisee, as this is usually cfagent itself.
+promisee, as this is usually cf-agent itself.
 
 <pre>
  context|classes::
@@ -1010,7 +1015,7 @@ bundle agent main()
            access     => myaccess ,
            access     => others; # ("white");
 
-      "/etc/xyz" -> "cfagent"
+      "/etc/xyz" -> "cf-agent"
 
             edit_line => myedit("${this}") ,
             access    => myaccess;

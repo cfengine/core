@@ -196,6 +196,7 @@ enum cfacontrol
    cfa_nonalphanumfiles,
    cfa_repchar,
    cfa_repository,
+   cfa_secureinput,
    cfa_sensiblecount,
    cfa_sensiblesize,
    cfa_showactions,

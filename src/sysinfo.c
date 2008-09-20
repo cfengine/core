@@ -183,6 +183,7 @@ NewScalar("sys","host",VSYSNAME.nodename,cf_str);
 NewScalar("sys","os",VSYSNAME.sysname,cf_str);
 NewScalar("sys","release",VSYSNAME.release,cf_str);
 NewScalar("sys","arch",VSYSNAME.machine,cf_str);
+NewScalar("sys","workdir",CFWORKDIR,cf_str);
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
 AddClassToHeap(workbuf);

@@ -155,7 +155,7 @@ struct BodySyntax CF_ACL_BODY[] =
 
 struct BodySyntax CF_CHANGEMGT_BODY[] =
    {
-   {"hash",cf_opts,"md5,sha1"},
+   {"hash",cf_opts,"md5,sha1,best"},
    {"report_changes",cf_opts,"content,none"},
    {"update",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}

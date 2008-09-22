@@ -351,6 +351,18 @@ else
       case 'G':
           a = 1024 * 1024 * 1024 * a;
           break;          
+      case '%':
+          if (a < 0 || a > 100)
+             {
+             CfOut(cf_error,"","Percentage out of range (%d)",a);
+             return CF_NOINT;
+             }
+          else
+             {
+             /* Represent percentages internally as negative numbers */
+             a = -a;
+             }
+          break;
       default:          
           break;
       }

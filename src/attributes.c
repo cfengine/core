@@ -158,6 +158,28 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetStorageAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+ 
+attr.mount = GetMountConstraints(pp);
+attr.volume = GetVolumeConstraints(pp);
+attr.havevolume = GetBooleanConstraint("volume",pp->conlist);
+attr.havemount = GetBooleanConstraint("mount",pp->conlist);
+
+/* Common ("included") */
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetTopicsAttributes(struct Promise *pp)
 
 { struct Attributes attr;
@@ -339,10 +361,11 @@ struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp)
 { struct DefineClasses c;
  char *pt = NULL;
 
-c.change = (struct Rlist *)GetListConstraint("on_change",pp->conlist);
-c.failure = (struct Rlist *)GetListConstraint("on_failure",pp->conlist);
-c.denied = (struct Rlist *)GetListConstraint("on_denied",pp->conlist);
-c.timeout = (struct Rlist *)GetListConstraint("on_timeout",pp->conlist);
+c.change = (struct Rlist *)GetListConstraint("promise_repaired",pp->conlist);
+c.failure = (struct Rlist *)GetListConstraint("repair_failed",pp->conlist);
+c.denied = (struct Rlist *)GetListConstraint("reapir_denied",pp->conlist);
+c.timeout = (struct Rlist *)GetListConstraint("repair_timeout",pp->conlist);
+c.kept = (struct Rlist *)GetListConstraint("promise_kept",pp->conlist);
 c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp->conlist);
 
 c.persist = GetIntConstraint("persist_time",pp->conlist);
@@ -867,4 +890,40 @@ c.column_value = GetConstraint("column_value",pp->conlist,CF_SCALAR);
 c.column_operation = GetConstraint("column_operation",pp->conlist,CF_SCALAR);
 c.extend_columns = GetBooleanConstraint("extend_columns",pp->conlist);
 return c;
+}
+
+/*******************************************************************/
+/* Storage                                                         */
+/*******************************************************************/
+
+struct StorageMount GetMountConstraints(struct Promise *pp)
+
+{ struct StorageMount m;
+
+m.mount_fs = GetConstraint("mount_fs",pp->conlist,CF_SCALAR);
+m.mount_point = GetConstraint("mount_point",pp->conlist,CF_SCALAR);
+m.mount_server = GetConstraint("mount_server",pp->conlist,CF_SCALAR);
+m.mount_options = GetListConstraint("mount_options",pp->conlist);
+
+return m;
+}
+
+/*******************************************************************/
+
+struct StorageVolume GetVolumeConstraints(struct Promise *pp)
+
+{ struct StorageVolume v;
+  char *value;
+
+v.check_foreign = GetBooleanConstraint("check_foreign",pp->conlist);
+value = GetConstraint("freespace",pp->conlist,CF_SCALAR);
+
+v.freespace = (int) Str2Int(value);
+value = GetConstraint("sensible_size",pp->conlist,CF_SCALAR);
+v.sensible_size = (int) Str2Int(value);
+value = GetConstraint("sensible_count",pp->conlist,CF_SCALAR);
+v.sensible_count = (int) Str2Int(value);
+v.scan_arrivals = GetBooleanConstraint("scan_arrivals",pp->conlist);
+
+return v;
 }

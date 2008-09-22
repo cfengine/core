@@ -173,6 +173,12 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    
    if (bp != NULL) 
       {
+      if (strcmp(bp->type,cp->lval) != 0)
+         {
+         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
+         ERRORCOUNT++;
+         }
+      
       /* Keep the referent body type as a boolean for convenience when checking later */
       
       AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes);

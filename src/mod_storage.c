@@ -78,8 +78,6 @@ struct BodySyntax CF_MOUNT_BODY[] =
 
 /***************************************************************/
 
-/* This is the primary set of constraints for a file object */
-
 struct BodySyntax CF_STORAGE_BODIES[] =
    {
    {"mount",cf_body,CF_MOUNT_BODY},

@@ -37,6 +37,7 @@ void VerifyExecPromise(struct Promise *pp)
 a = GetExecAttributes(pp);
 ExecSanityChecks(a,pp);
 VerifyExec(a,pp);
+DeleteScalar("this","promiser");
 }
 
 /*****************************************************************************/
@@ -84,10 +85,14 @@ if (thislock.lock == NULL)
 
 PromiseBanner(pp);
 
-if (!IsExecutable(pp->promiser))
+if (!IsExecutable(GetArg0(pp->promiser)))
    {
    cfPS(cf_error,CF_FAIL,"",pp,a,"%s promises to be executable but isn't\n",pp->promiser);
    return;
+   }
+else
+   {
+   Verbose(" -> Promiser string contains a valid executable (%s) - ok\n",GetArg0(pp->promiser));
    }
 
 NewScalar("this","promiser",pp->promiser,cf_str);
@@ -101,7 +106,7 @@ else
    strncpy(execstr,pp->promiser,CF_BUFSIZE);
    }
 
-CfOut(cf_inform,"","Executing \'%s\' ...(timeout=%d,owner=%d,group=%d)\n",execstr,a.contain.timeout,a.contain.owner,a.contain.group);
+CfOut(cf_inform,""," -> Executing \'%s\' ...(timeout=%d,owner=%d,group=%d)\n",execstr,a.contain.timeout,a.contain.owner,a.contain.group);
 
 start = BeginMeasure();
 
@@ -115,7 +120,7 @@ else
    
    if (a.transaction.background)
       {
-      Verbose("Backgrounding job %s\n",execstr);
+      Verbose(" -> Backgrounding job %s\n",execstr);
       outsourced = fork();
       }
    else
@@ -130,7 +135,7 @@ else
          SetTimeOut(a.contain.timeout);
          }
       
-      Verbose("(Setting umask to %o)\n",a.contain.umask);
+      Verbose(" -> (Setting umask to %o)\n",a.contain.umask);
       maskval = umask(a.contain.umask);
       
       if (a.contain.umask == 0)
@@ -198,7 +203,7 @@ else
       signal(SIGALRM,SIG_DFL);
       }
 
-   cfPS(cf_inform,CF_CHG,"",pp,a,"Completed execution of %s\n",execstr);
+   cfPS(cf_inform,CF_CHG,"",pp,a," -> Completed execution of %s\n",execstr);
    umask(maskval);
    YieldCurrentLock(thislock);
 
@@ -207,7 +212,7 @@ else
    
    if (a.transaction.background && outsourced)
       {
-      Verbose("Backgrounded shell command (%s) exiting\n",execstr);
+      Verbose(" -> Backgrounded command (%s) is done - exiting\n",execstr);
       exit(0);
       }
    }
@@ -266,6 +271,24 @@ else
    }
 
 return false;
+}
+
+/*************************************************************/
+
+char *GetArg0(char *execstr)
+
+{ char *sp;
+  static char arg[CF_BUFSIZE];
+  int i = 0;
+
+for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+   {
+   i++;
+   }
+
+memset(arg,0,20);
+strncpy(arg,execstr,i);
+return arg;
 }
 
 /*************************************************************/

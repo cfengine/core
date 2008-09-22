@@ -79,6 +79,7 @@ cf_agent_SOURCES =							\
 	agent.c								\
 	verify_files.c							\
 	verify_processes.c						\
+	verify_storage.c						\
 	verify_exec.c							\
 	verify_reports.c						\
 	agentdiagnostic.c

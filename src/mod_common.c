@@ -101,10 +101,11 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
 
 struct BodySyntax CF_DEFINECLASS_BODY[] =
    {
-   {"on_change",cf_slist,CF_IDRANGE},
-   {"on_failure",cf_slist,CF_IDRANGE},
-   {"on_denied",cf_slist,CF_IDRANGE},
-   {"on_timeout",cf_slist,CF_IDRANGE},
+   {"promise_repaired",cf_slist,CF_IDRANGE},
+   {"repair_failed",cf_slist,CF_IDRANGE},
+   {"repair_denied",cf_slist,CF_IDRANGE},
+   {"repair_timeout",cf_slist,CF_IDRANGE},
+   {"promise_kept",cf_slist,CF_IDRANGE},
    {"persist_time",cf_int,CF_VALRANGE},
    {"timer_policy",cf_opts,"absolute,reset"},
    {NULL,cf_notype,NULL}

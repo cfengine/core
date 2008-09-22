@@ -37,6 +37,7 @@ enum typesequence
    kp_classes,
    kp_interfaces,
    kp_processes,
+   kp_storage,
    kp_commands,
    kp_files,
    kp_reports,
@@ -48,6 +49,7 @@ char *TYPESEQUENCE[] =
    "classes",
    "interfaces",
    "processes",
+   "storage",
    "commands",
    "files",
    "reports",
@@ -61,6 +63,7 @@ void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
+int NoMorePromises(struct Promise *plist);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -458,7 +461,7 @@ void KeepPromiseBundles()
   struct FnCall *fp;
   char rettype,*name;
   void *retval;
-  int ok = true;
+  int ok = true, pass;
   enum typesequence type;
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
@@ -527,23 +530,32 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       DeletePrivateClassContext(); // Each time we change bundle      
       }
 
-   for (type = 0; TYPESEQUENCE[type] != NULL; type++)
+   for (pass = 1; pass < CF_DONEPASSES; pass++)
       {
-      ClassBanner(type);
-      
-      if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
+      for (type = 0; TYPESEQUENCE[type] != NULL; type++)
          {
-         continue;      
-         }
+         ClassBanner(type);
+         
+         if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
+            {
+            continue;      
+            }
 
-      BannerSubType(bp->name,sp->name);
-      SetScope(bp->name);
+         BannerSubType(bp->name,sp->name);
+         SetScope(bp->name);
+         
+         NewTypeContext(type);
+         
+         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+            {
+            ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
+            }
 
-      NewTypeContext(type);
-      
-      for (pp = sp->promiselist; pp != NULL; pp=pp->next)
-         {
-         ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
+         if (NoMorePromises(sp->promiselist))
+            {
+            pass = CF_DONEPASSES;
+            break;
+            }
          }
       }
    }
@@ -640,6 +652,12 @@ if (strcmp("processes",pp->agentsubtype) == 0)
    return;
    }
 
+if (strcmp("storage",pp->agentsubtype) == 0)
+   {
+   FindAndVerifyStoragePromises(pp);
+   return;
+   }
+
 if (strcmp("files",pp->agentsubtype) == 0)
    {
    if (GetBooleanConstraint("background",pp->conlist))
@@ -664,6 +682,23 @@ if (strcmp("reports",pp->agentsubtype) == 0)
    VerifyReportPromise(pp);
    return;
    }
+}
+
+/*********************************************************************/
+
+int NoMorePromises(struct Promise *plist)
+
+{ struct Promise *pp;
+     
+for (pp = plist; pp != NULL; pp=pp->next)
+   {
+   if (pp->done == false)
+      {
+      return false;
+      }
+   }
+
+return true;
 }
 
 /*********************************************************************/

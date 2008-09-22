@@ -158,14 +158,13 @@ switch(status)
        break;
 
    case CF_REGULAR:
+       AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        PR_REPAIRED++;
        break;
        
-   case CF_NOP:
-       PR_KEPT++;
-       break;
-
    case CF_UNKNOWN:
+   case CF_NOP:
+       AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
        PR_KEPT++;
        break;
    }

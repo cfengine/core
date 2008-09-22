@@ -62,6 +62,7 @@
 #define CF_INBUNDLE 2
 
 #define CF_MAX_NESTING 3
+#define CF_DONEPASSES  3
 
 /*************************************************************************/
 /* Parsing and syntax tree structures                                    */
@@ -756,6 +757,7 @@ struct DefineClasses
    struct Rlist *failure;
    struct Rlist *denied;
    struct Rlist *timeout;
+   struct Rlist *kept;
    struct Rlist *interrupt;
    int persist;
    enum statepolicy timer;
@@ -1016,6 +1018,25 @@ struct EditReplace
 
 /*************************************************************************/
 
+struct StorageMount
+   {
+   char *mount_fs;
+   char *mount_point;
+   char *mount_server;
+   struct Rlist *mount_options;
+   };
+
+struct StorageVolume
+   {
+   int check_foreign;
+   int freespace;
+   int sensible_size;
+   int sensible_count;
+   int scan_arrivals;
+   };
+
+/*************************************************************************/
+
 struct Attributes
    {
    struct FileSelect select;
@@ -1048,6 +1069,9 @@ struct Attributes
    struct ProcessCount process_count;
    struct ProcessSelect process_select;
 
+   struct StorageMount mount;
+   struct StorageVolume volume;
+      
    int havedepthsearch;
    int haveselect;
    int haverename;
@@ -1063,6 +1087,8 @@ struct Attributes
    int haveclasses;
    int havetrans;
    int haveprocess_count;
+   int havemount;
+   int havevolume;
 
       /* editline */
 

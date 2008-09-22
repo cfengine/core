@@ -762,11 +762,11 @@ while(waitpid(pid,&status,0) < 0)
 
 if (status == 0)
    {
-   cfPS(cf_inform,CF_CHG,"",pp,a,"Finished script %s ok\n",pp->promiser);
+   Debug(" -> Finished script %s ok\n",pp->promiser);
    }
 else
    {
-   cfPS(cf_inform,CF_INTERPT,"",pp,a,"Finished script %s -- an error occurred\n",pp->promiser);
+   cfPS(cf_inform,CF_INTERPT,"",pp,a," !! Finished script %s -- an error occurred\n",pp->promiser);
    }
 
 return status; 
@@ -785,30 +785,30 @@ while ((wait_result = wait(&status)) != pid)
 
 if (WIFSIGNALED(status))
    {
-   cfPS(cf_inform,CF_INTERPT,"",pp,a,"Finished script - interrupted %s\n",pp->promiser);
+   cfPS(cf_inform,CF_INTERPT,"",pp,a," -> Finished script - interrupted %s\n",pp->promiser);
    return -1;
    }
 
 if (!WIFEXITED(status))
    {
-   cfPS(cf_inform,CF_FAIL,"",pp,a,"Finished script - failed %s\n",pp->promiser);
+   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script - failed %s\n",pp->promiser);
    return -1;
    }
 
 if (WEXITSTATUS(status) == 0)
    {
-   cfPS(cf_inform,CF_CHG,"",pp,a,"Finished script %s ok\n",pp->promiser);
+   Debug(" -> Finished script %s ok\n",pp->promiser);
    }
 else
    {
    if (errno != EINTR)
       {
-      cfPS(cf_inform,CF_FAIL,"",pp,a,"Finished script - failed %s\n",pp->promiser);
+      cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script - failed %s\n",pp->promiser);
       return -1;
       }
    else
       {
-      cfPS(cf_inform,CF_INTERPT,"",pp,a,"Script %s - interrupt\n",pp->promiser);
+      cfPS(cf_inform,CF_INTERPT,"",pp,a," !! Script %s - interrupt\n",pp->promiser);
       }
    }
 

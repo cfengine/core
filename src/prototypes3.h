@@ -59,6 +59,7 @@ struct Attributes GetFilesAttributes(struct Promise *pp);
 struct Attributes GetReportsAttributes(struct Promise *pp);
 struct Attributes GetExecAttributes(struct Promise *pp);
 struct Attributes GetProcessAttributes(struct Promise *pp);
+struct Attributes GetStorageAttributes(struct Promise *pp);
 struct Attributes GetClassContextAttributes(struct Promise *pp);
 struct Attributes GetTopicsAttributes(struct Promise *pp);
 struct Attributes GetOccurrenceAttributes(struct Promise *pp);
@@ -88,6 +89,8 @@ struct EditRegion GetRegionConstraints(struct Promise *pp);
 struct EditReplace GetReplaceConstraints(struct Promise *pp);
 struct EditColumn GetColumnConstraints(struct Promise *pp);
 struct TopicAssociation GetAssociationConstraints(struct Promise *pp);
+struct StorageMount GetMountConstraints(struct Promise *pp);
+struct StorageVolume GetVolumeConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -720,6 +723,7 @@ void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
 void PreviewProtocolLine(char *s,char *comm);
 int IsExecutable(char *file);
+char *GetArg0(char *execstr);
 
 /* verify_files.c */
 
@@ -740,6 +744,16 @@ int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attribute
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int ExtractPid(char *psentry);
 void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
+
+/* verify_storage.c */
+
+void *FindAndVerifyStoragePromises(struct Promise *pp);
+void FindStoragePromiserObjects(struct Promise *pp);
+void VerifyStoragePromise(char *path,struct Promise *pp);
+int VerifyMounted(char *file,struct Attributes a,struct Promise *pp);
+int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
+int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
+void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
 
 /* verify_reports.c */
 

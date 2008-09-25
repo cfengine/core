@@ -724,6 +724,16 @@ struct CfLock
 
 /*************************************************************************/
 
+struct CfMount
+   {
+   char *host;
+   char *source;
+   char *mounton;
+   char *options;
+   };
+
+/*************************************************************************/
+
 struct Recursion
    {
    int travlinks;
@@ -1020,10 +1030,11 @@ struct EditReplace
 
 struct StorageMount
    {
-   char *mount_fs;
-   char *mount_point;
+   char *mount_type;
+   char *mount_source;
    char *mount_server;
    struct Rlist *mount_options;
+   int editfstab;
    };
 
 struct StorageVolume

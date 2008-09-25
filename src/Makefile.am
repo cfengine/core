@@ -28,6 +28,7 @@ libpromises_la_SOURCES =						\
 	files_edit.c							\
 	files_links.c							\
 	files_hashes.c							\
+	nfs.c								\
 	item-lib.c							\
 	cf_sql.c							\
 	client_protocol.c						\

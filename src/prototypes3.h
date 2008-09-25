@@ -503,6 +503,13 @@ struct CfRegEx CaseCompileRegExp(char *regexp);
 int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 
+/* nfs.c */
+
+int LoadMountInfo(struct Rlist **list);
+void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
+void DeleteMountInfo(struct Rlist *list);
+
+
 /* ontology.c */
 
 void AddTopic(struct Topic **list,char *name,char *type);

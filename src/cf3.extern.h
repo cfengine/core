@@ -65,6 +65,8 @@ extern time_t PROMISETIME;
 
 extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
+extern struct Item *FSTABLIST;
+extern struct Rlist *MOUNTEDFSLIST;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

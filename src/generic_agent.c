@@ -100,8 +100,15 @@ if (ag == cf_common || ag == cf_know)
    /* Don't check if we are the analyzer */
    return true;
    }
- 
-snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
+
+if (!MINUSF)
+   {
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR,VINPUTFILE);
+   }
+else
+   {
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
+   }
  
 /* Check if reloading policy will succeed */
  

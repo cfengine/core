@@ -961,6 +961,21 @@ else
 
 void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 {
+if (! DONTDO)
+   {
+   if (utime(path,NULL) != -1)
+      {
+      cfPS(cf_inform,CF_CHG,"",pp,attr,"Touched (updated time stamps) %s\n",path);
+      }
+   else
+      {
+      cfPS(cf_inform,CF_FAIL,"utime",pp,attr,"Touch %s failed to update timestamps\n",path);
+      }
+   }
+else
+   {
+   CfOut(cf_error,"","Need to touch (update timestamps) %s\n",path);
+   }
 }
 
 /*********************************************************************/

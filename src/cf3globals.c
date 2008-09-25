@@ -54,6 +54,8 @@ time_t PROMISETIME;
 
 struct Rlist *SERVERLIST = NULL;
 struct Item *PROCESSTABLE = NULL;
+struct Item *FSTABLIST = NULL;
+struct Rlist *MOUNTEDFSLIST = NULL;
 
 char HASHDB[CF_BUFSIZE];
 

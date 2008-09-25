@@ -74,6 +74,12 @@ if (thislock.lock == NULL)
 
 if (a.havemount)
    {
+   if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
+      {
+      CfOut(cf_error,"","Couldn't obtain a list of mounted filesystems - aborting\n");
+      return;
+      }
+
    VerifyMounted(path,a,pp);
    }
 
@@ -100,9 +106,37 @@ YieldCurrentLock(thislock);
 
 int VerifyMounted(char *file,struct Attributes a,struct Promise *pp)
 
-{
- Verbose(" -> Verifying mounted file systems on %s\n",file);
- return true;
+{ struct CfMount mount;
+  char *options;
+ 
+Verbose(" -> Verifying mounted file systems on %s\n",file);
+
+if (!IsPrivileged())                            
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a,"Only root can mount filesystems.\n","");
+   return false;
+   }
+
+options = Rlist2String(a.mount.mount_options,",");
+
+if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,options,a,pp))
+   {
+//   MakeDirectoriesFor(maketo,'n');
+   
+   if (a.mount.editfstab)
+      {
+      //    AddToFstab(host,mountdir,mp->onto,mp->mode,mp->options,false);
+      }
+
+   }
+else
+   {
+   //AddToFstab(host,mountdir,mp->onto,mp->mode,mp->options,true);
+
+   }
+
+free(options);
+return true;
 }
 
 
@@ -252,4 +286,35 @@ void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
 
 {
 
+}
+
+/*******************************************************************/
+
+int FileSystemMountedCorrectly(struct Rlist *list,char *options,struct Attributes a,struct Promise *pp)
+
+{ struct Rlist *rp;
+  struct CfMount *mp;
+  int found = false;
+ 
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   mp = (struct CfMount *)rp->item;
+
+   /* Give primacy to the promised / affected object */
+   
+   if (strcmp(pp->promiser,mp->mounton) == 0)
+      {
+      /* We have found something mounted on the promiser dir */
+
+      found = true;
+      
+      if (strcmp(mp->source,a.mount.mount_source) != 0)
+         {
+         CfOut(cf_inform,"","A different files system (%s:%s) is mounted on %s than what is promised\n",mp->host,mp->source,pp->promiser);
+         return false;
+         }
+      }
+   }
+
+return found;
 }

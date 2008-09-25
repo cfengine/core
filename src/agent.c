@@ -729,6 +729,15 @@ switch(type)
           AuditLog('y',NULL,0,"Processes inaccessible",CF_FAIL);   
           return;
           }
+       break;
+
+   case kp_storage:
+
+       if (MOUNTEDFSLIST != NULL)
+          {
+          DeleteMountInfo(MOUNTEDFSLIST);
+          MOUNTEDFSLIST = NULL;
+          }
 
        break;
    }

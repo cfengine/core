@@ -900,10 +900,11 @@ struct StorageMount GetMountConstraints(struct Promise *pp)
 
 { struct StorageMount m;
 
-m.mount_fs = GetConstraint("mount_fs",pp->conlist,CF_SCALAR);
-m.mount_point = GetConstraint("mount_point",pp->conlist,CF_SCALAR);
+m.mount_type = GetConstraint("mount_type",pp->conlist,CF_SCALAR);
+m.mount_source = GetConstraint("mount_source",pp->conlist,CF_SCALAR);
 m.mount_server = GetConstraint("mount_server",pp->conlist,CF_SCALAR);
 m.mount_options = GetListConstraint("mount_options",pp->conlist);
+m.editfstab = GetBooleanConstraint("edit_fstab",pp->conlist);
 
 return m;
 }

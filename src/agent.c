@@ -440,7 +440,14 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       Verbose("SET logtidyhomefiles = %d\n",LOGTIDYHOMEFILES);
       continue;
       }
-   
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
+      {
+      CF_MOUNTALL = GetBoolean(retval);
+      Verbose("SET mountfilesystems = %d\n",CF_MOUNTALL);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_syslog].lval) == 0)
       {
       LOGGING = GetBoolean(retval);
@@ -789,7 +796,15 @@ switch(type)
           FSTABLIST = NULL;
           FSTAB_EDITS = 0;
           }
-       
+
+       if (!DONTDO && !NOMOUNTS && CF_MOUNTALL && FSTAB_EDITS)
+          {
+          Verbose("");
+          Verbose(" -> Mounting all filesystems\n");
+          MountAll();
+          Verbose("");
+          }
+
        break;
    }
 }

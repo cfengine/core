@@ -540,6 +540,97 @@ return false;
 }
 
 /*******************************************************************/
+
+void MountAll()
+
+{ struct stat sb;
+  char line[CF_BUFSIZE];
+  int fd;
+  struct FILE *pp;
+ 
+if (DONTDO)
+   {
+   Verbose("Promised to mount filesystem, but not on this trial run\n");
+   return;
+   }
+
+if (VSYSTEMHARDCLASS == cfnt)
+   {
+   /* This is a shell script. Make sure it hasn't been compromised. */
+
+   if (stat("/etc/fstab",&sb) == -1)
+      {
+      if ((fd = creat("/etc/fstab",0755)) > 0)
+         {
+         write(fd,"#!/bin/sh\n\n",10);
+         close(fd);
+         }
+      else
+         {
+         if (sb.st_mode & (S_IWOTH | S_IWGRP))
+            {
+            CfLog(cferror,"File /etc/fstab was insecure. Cannot mount filesystems.\n","");
+            return;
+            }
+         }
+      }
+   }
+
+SetTimeOut(RPCTIMEOUT);
+ 
+if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS],"r")) == NULL)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE*2,"Failed to open pipe from %s\n",VMOUNTCOMM[VSYSTEMHARDCLASS]);
+   CfLog(cferror,OUTPUT,"popen");
+   ReleaseCurrentLock();
+   return;
+   }
+ 
+while (!feof(pp))
+   {
+   if (ferror(pp))  /* abortable */
+      {
+      CfOut(cf_inform,"ferror","Error mounting filesystems\n");
+      break;
+      }
+   
+   ReadLine(line,CF_BUFSIZE,pp);
+
+   if (ferror(pp))  /* abortable */
+      {
+      CfOut(cf_inform,"ferror","Error mounting filesystems\n");
+      break;
+      }
+
+   if (strstr(line,"already mounted") || strstr(line,"exceeded") || strstr(line,"determined"))
+      {
+      continue;
+      }
+
+   if (strstr(line,"not supported"))
+      {
+      continue;
+      }
+
+   if (strstr(line,"denied") || strstr(line,"RPC"))
+      {
+      CfOut(cf_error,"","There was a mount error, trying to mount one of the filesystems on this host.\n");
+      break;
+      }
+
+   if (strstr(line,"trying") && !strstr(line,"NFS version 2")&& !strstr(line, "vers 3"))
+      {
+      CfOut(cf_error,"","Attempting abort because mount went into a retry loop.\n");
+      break;
+      }
+   }
+
+alarm(0);
+signal(SIGALRM,SIG_DFL);
+cfpclose(pp);
+}
+
+/*******************************************************************/
 /* Addendum                                                        */
 /*******************************************************************/
 

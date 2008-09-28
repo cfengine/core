@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
 /*****************************************************************************/
 
 void *FindAndVerifyStoragePromises(struct Promise *pp)
@@ -89,7 +88,7 @@ if (thislock.lock == NULL)
 
 /* Do mounts first */
 
-if (a.havemount)
+if (!NOMOUNTS && a.havemount)
    {
    if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
       {

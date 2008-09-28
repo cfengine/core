@@ -194,6 +194,7 @@ enum cfacontrol
    cfa_lastseen,
    cfa_lastseenexpireafter,
    cfa_logtidyhomefiles,
+   cfa_mountfilesystems,
    cfa_nonalphanumfiles,
    cfa_repchar,
    cfa_repository,

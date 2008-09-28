@@ -191,6 +191,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"lastseen",cf_opts,CF_BOOL},
    {"lastseenexpireafter",cf_int,CF_VALRANGE},
    {"logtidyhomefiles",cf_opts,CF_BOOL},
+   {"mountfilesystems",cf_opts,CF_BOOL},
    {"nonalphanumfiles",cf_opts,CF_BOOL},
    {"repchar",cf_str,"."},
    {"default_repository",cf_str,CF_PATHRANGE},

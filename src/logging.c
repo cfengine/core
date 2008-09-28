@@ -46,7 +46,7 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 
 if ((errno = db_create(&AUDITDBP,dbenv,0)) != 0)
    {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
+   CfOut(cf_error,"db_open","Couldn't initialize audit database %s\n",name);
    return;
    }
 

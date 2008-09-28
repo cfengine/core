@@ -63,6 +63,23 @@ a = GetStorageAttributes(pp);
 
 /* No parameter conflicts here */
 
+if (a.mount.unmount)
+   {
+   if (a.mount.mount_source || a.mount.mount_server)
+      {
+      Verbose(" !! An unmount promise indicates a mount-source information - probably in error\n");
+      }
+   }
+else
+   {
+   if (a.mount.mount_source == NULL || a.mount.mount_server == NULL)
+      {
+      CfLog(cf_error,""," !! Insufficient specification in mount promise - need source and server\n");
+      return;
+      }
+   }
+
+
 thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
@@ -80,7 +97,7 @@ if (a.havemount)
       return;
       }
 
-   VerifyMounted(path,a,pp);
+   VerifyMountPromise(path,a,pp);
    }
 
 /* Then check file system */
@@ -104,12 +121,16 @@ YieldCurrentLock(thislock);
 /** Level                                                          */
 /*******************************************************************/
 
-int VerifyMounted(char *file,struct Attributes a,struct Promise *pp)
+int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
 
 { struct CfMount mount;
   char *options;
+  char dir[CF_BUFSIZE];
+  int changes = 0;
  
-Verbose(" -> Verifying mounted file systems on %s\n",file);
+Verbose(" -> Verifying mounted file systems on %s\n",name);
+
+snprintf(dir,CF_BUFSIZE,"%s/.",name);
 
 if (!IsPrivileged())                            
    {
@@ -119,26 +140,61 @@ if (!IsPrivileged())
 
 options = Rlist2String(a.mount.mount_options,",");
 
-if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,options,a,pp))
+if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,name,options,a,pp))
    {
-//   MakeDirectoriesFor(maketo,'n');
-   
-   if (a.mount.editfstab)
+   if (!a.mount.unmount)
       {
-      //    AddToFstab(host,mountdir,mp->onto,mp->mode,mp->options,false);
+      if (!MakeParentDirectory(dir,a.move_obstructions))
+         {
+         }
+
+      if (a.mount.editfstab)
+         {
+         changes += VerifyInFstab(name,a,pp);
+         }
+      else
+         {
+         cfPS(cf_inform,CF_FAIL,"",pp,a," -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n",name,VFSTAB[VSYSTEMHARDCLASS]);
+         // Mount explicitly
+         }
+      }
+   else
+      {
+      if (a.mount.editfstab)
+         {
+         changes += VerifyNotInFstab(name,a,pp);
+         }
       }
 
+   if (changes)
+      {
+      CF_MOUNTALL = true;
+      CF_SAVEFSTAB = true;
+      }
    }
 else
    {
-   //AddToFstab(host,mountdir,mp->onto,mp->mode,mp->options,true);
-
+   if (a.mount.unmount)
+      {
+      VerifyUnmount(name,a,pp);
+      }
+   
+   if (a.mount.editfstab)
+      {
+      if (VerifyNotInFstab(name,a,pp))
+         {
+         CF_SAVEFSTAB = true;
+         }
+      }
+   else
+      {
+      cfPS(cf_inform,CF_NOP,"",pp,a," -> Filesystem %s seems to be mounted as promised\n",name);
+      }
    }
 
 free(options);
 return true;
 }
-
 
 /*******************************************************************/
 
@@ -285,24 +341,29 @@ return true;
 void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
 
 {
-
+ Verbose("Scan arrival sequence . not yet implemented\n");
 }
 
 /*******************************************************************/
 
-int FileSystemMountedCorrectly(struct Rlist *list,char *options,struct Attributes a,struct Promise *pp)
+int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp;
   struct CfMount *mp;
   int found = false;
- 
+
 for (rp = list; rp != NULL; rp=rp->next)
    {
    mp = (struct CfMount *)rp->item;
 
+   if (mp == NULL)
+      {
+      continue;
+      }
+
    /* Give primacy to the promised / affected object */
    
-   if (strcmp(pp->promiser,mp->mounton) == 0)
+   if (strcmp(name,mp->mounton) == 0)
       {
       /* We have found something mounted on the promiser dir */
 
@@ -310,11 +371,22 @@ for (rp = list; rp != NULL; rp=rp->next)
       
       if (strcmp(mp->source,a.mount.mount_source) != 0)
          {
-         CfOut(cf_inform,"","A different files system (%s:%s) is mounted on %s than what is promised\n",mp->host,mp->source,pp->promiser);
+         CfOut(cf_inform,"","A different files system (%s:%s) is mounted on %s than what is promised\n",mp->host,mp->source,name);
          return false;
+         }
+      else
+         {
+         Verbose(" -> File system %s seems to be mounted correctly\n",mp->source);
+         break;
          }
       }
    }
 
+if (!found)
+   {
+   Verbose(" !! File system %s seems not to be mounted correctly\n",name);
+   }
+
 return found;
 }
+

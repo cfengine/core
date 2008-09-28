@@ -69,11 +69,12 @@ struct BodySyntax CF_CHECKVOL_BODY[] =
 
 struct BodySyntax CF_MOUNT_BODY[] =
    {
-   {"mount_type",cf_opts,"nfs"},
+   {"mount_type",cf_opts,"nfs,nfs2,nfs3,nfs4"},
    {"mount_source",cf_str,CF_PATHRANGE},
    {"mount_server",cf_str,""},
    {"mount_options",cf_slist,""},
    {"edit_fstab",cf_opts,CF_BOOL},
+   {"unmount",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 

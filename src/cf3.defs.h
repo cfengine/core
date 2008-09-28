@@ -730,6 +730,7 @@ struct CfMount
    char *source;
    char *mounton;
    char *options;
+   int unmount;
    };
 
 /*************************************************************************/
@@ -1035,6 +1036,7 @@ struct StorageMount
    char *mount_server;
    struct Rlist *mount_options;
    int editfstab;
+   int unmount;
    };
 
 struct StorageVolume

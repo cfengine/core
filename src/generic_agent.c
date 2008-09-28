@@ -286,6 +286,8 @@ if (!MINUSF)
    snprintf(VINPUTFILE,CF_BUFSIZE-1,"promises.cf");
    }
 
+AUDITDBP = NULL;
+
 CfenginePort();
 StrCfenginePort();
 FOUT = stdout;

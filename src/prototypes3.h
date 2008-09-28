@@ -508,7 +508,11 @@ int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 int LoadMountInfo(struct Rlist **list);
 void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
 void DeleteMountInfo(struct Rlist *list);
-
+int VerifyNotInFstab(char *name,struct Attributes a,struct Promise *pp);
+int VerifyInFstab(char *name,struct Attributes a,struct Promise *pp);
+int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp);
+int MatchFSInFstab(char *match);
+void DeleteThisItem(struct Item **liststart,struct Item *entry);
 
 /* ontology.c */
 
@@ -599,9 +603,8 @@ void DeleteRlist(struct Rlist *list);
 void DeleteReferenceRlist(struct Rlist *list);
 void ShowRlistState(FILE *fp,struct Rlist *list);
 void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
-
+struct Rlist *AppendRlistAlien(struct Rlist **start,void *item);
 struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type);
-
 struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type);
 struct Rlist *AppendRScalar(struct Rlist **start,void *item, char type);
 struct Rlist *IdempAppendRlist(struct Rlist **start,void *item, char type);
@@ -757,10 +760,11 @@ void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 void *FindAndVerifyStoragePromises(struct Promise *pp);
 void FindStoragePromiserObjects(struct Promise *pp);
 void VerifyStoragePromise(char *path,struct Promise *pp);
-int VerifyMounted(char *file,struct Attributes a,struct Promise *pp);
+int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp);
 int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
 int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
 void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
+int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp);
 
 /* verify_reports.c */
 

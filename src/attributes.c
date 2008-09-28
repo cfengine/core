@@ -175,6 +175,8 @@ attr.transaction = GetTransactionConstraints(pp);
 attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
+attr.edits.maxfilesize = 100000;
+
 return attr;
 }
 
@@ -905,6 +907,7 @@ m.mount_source = GetConstraint("mount_source",pp->conlist,CF_SCALAR);
 m.mount_server = GetConstraint("mount_server",pp->conlist,CF_SCALAR);
 m.mount_options = GetListConstraint("mount_options",pp->conlist);
 m.editfstab = GetBooleanConstraint("edit_fstab",pp->conlist);
+m.unmount = GetBooleanConstraint("unmount",pp->conlist);
 
 return m;
 }

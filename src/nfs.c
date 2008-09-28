@@ -67,8 +67,6 @@ do
    
    ReadLine(vbuff,CF_BUFSIZE,pp);
 
-   strcpy(vbuff,"nexus:/iu/source/disk on /iu/mount/point type nfs (rw,addr=128.39.89.23)");
-   
    if (ferror(pp))  /* abortable */
       {
       CfOut(cf_error,"ferror","Error getting mount info\n");
@@ -77,8 +75,6 @@ do
    
    sscanf(vbuff,"%s%s%s",buf1,buf2,buf3);
 
-   Debug("MOUNT(%s)(%s)(%s)\n",buf1,buf2,buf3);
-   
    if (vbuff[0] == '\n')
       {
       break;
@@ -168,7 +164,6 @@ do
                     break;
       case aix:
                    /* skip header */
-          printf("FIXME!!!!!\n");
 
                     if (buf1[0] == '/')
                        {
@@ -178,6 +173,7 @@ do
                     else
                        {
                        strcpy(host,buf1);
+                       strcpy(source,buf1);
                        strcpy(mounton,buf3);
                        }
                     break;
@@ -195,7 +191,6 @@ do
           printf("cfengine software error: case %d = %s\n",VSYSTEMHARDCLASS,CLASSTEXT[VSYSTEMHARDCLASS]);
           FatalError("System error in GetMountInfo - no such class!");
       }
-
 
    Debug("GOT: host=%s, source=%s, mounton=%s\n",host,source,mounton);
 
@@ -244,7 +239,7 @@ if (options)
    entry->options = strdup(options);
    }
 
-AppendRlist(list,(void *)entry,CF_SCALAR);
+AppendRlistAlien(list,(void *)entry);
 }
 
 /*******************************************************************/
@@ -285,41 +280,39 @@ for (rp = list; rp != NULL; rp = sp)
 
 /*******************************************************************/
 
+int VerifyInFstab(char *name,struct Attributes a,struct Promise *pp)
 
-/*
-void IdempAddToFstab(char *host,char *rmountpt,char *mountpt,char *mode,char *options,int ismounted)
+/* Ensure filesystem IS in fstab, and return no of changes */
+    
+{ char fstab[CF_BUFSIZE];
+  char *host,*rmountpt,*mountpt,*fstype,*opts;
 
-{ char vbuff[CF_BUFSIZE],fstab[CF_BUFSIZE],aix_lsnfsmnt[CF_BUFSIZE],*opts;
-  FILE *fp;
-
-
-       if (FSTABLIST != NULL)
-          {
-          DeleteItemList(FSTABLIST);
-          FSTABLIST = NULL;
-          }
-       
-       if (!LoadFileAsItemList(&FSTABLIST,VFSTAB[VSYSTEMHARDCLASS],a,pp))
-          {
-          CfOut(cf_error,"","Couldn't open %s!\n",VFSTAB[VSYSTEMHARDCLASS]);
-          return;
-          }
-
-
-  
-if (mode == NULL)
+if (!FSTABLIST)
    {
-   mode = "rw";
+   if (!LoadFileAsItemList(&FSTABLIST,VFSTAB[VSYSTEMHARDCLASS],a,pp))
+      {
+      CfOut(cf_error,"","Couldn't open %s!\n",VFSTAB[VSYSTEMHARDCLASS]);
+      return false;
+      }
+   else
+      {
+      FSTAB_EDITS = 0;
+      }
    }
-
-if ((options != NULL) && (strlen(options) > 0))
+  
+if (a.mount.mount_options)
    {
-   opts = options;
+   opts = Rlist2String(a.mount.mount_options,",");
    }
 else
    {
    opts = VMOUNTOPTS[VSYSTEMHARDCLASS];
    }
+
+host = a.mount.mount_server;
+rmountpt = a.mount.mount_source;
+mountpt = name;
+fstype = a.mount.mount_type;
 
 switch (VSYSTEMHARDCLASS)
    {
@@ -333,33 +326,32 @@ switch (VSYSTEMHARDCLASS)
    case nextstep:
    case newsos:
    case qnx:
-   case sun4:    snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s %s\t%s,%s 0 0",host,rmountpt,mountpt,VNFSTYPE,mode,opts);
+   case sun4:    snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s %s\t%s 0 0",host,rmountpt,mountpt,fstype,opts);
                  break;
 
    case crayos:
-                 snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s %s\t%s,%s",host,rmountpt,mountpt,ToUpperStr(VNFSTYPE),mode,opts);
+                 snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s %s\t%s",host,rmountpt,mountpt,ToUpperStr(fstype),opts);
                  break;
-   case ultrx:   snprintf(fstab,CF_BUFSIZE,"%s@%s:%s:%s:0:0:%s:%s",rmountpt,host,mountpt,mode,VNFSTYPE,opts);
+   case ultrx:   //snprintf(fstab,CF_BUFSIZE,"%s@%s:%s:%s:0:0:%s:%s",rmountpt,host,mountpt,mode,fstype,opts);
                  break;
-   case hp:      snprintf(fstab,CF_BUFSIZE,"%s:%s %s \t %s \t %s,%s 0 0",host,rmountpt,mountpt,VNFSTYPE,mode,opts);
+   case hp:      snprintf(fstab,CF_BUFSIZE,"%s:%s %s \t %s \t %s 0 0",host,rmountpt,mountpt,fstype,opts);
                  break;
-   case aix:     snprintf(fstab,CF_BUFSIZE,"%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s,%s\n\taccount\t= false\n",mountpt,rmountpt,VNFSTYPE,VNFSTYPE,host,mode,opts);
-		 snprintf(aix_lsnfsmnt,CF_BUFSIZE,"%s:%s:%s:%s:%s",mountpt,rmountpt,host,VNFSTYPE,mode);
+   case aix:     snprintf(fstab,CF_BUFSIZE,"%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s\n\taccount\t= false\n",mountpt,rmountpt,fstype,fstype,host,opts);
                  break;
    case GnU:
-   case linuxx:  snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s \t %s \t %s,%s",host,rmountpt,mountpt,VNFSTYPE,mode,opts);
+   case linuxx:  snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s \t %s \t %s",host,rmountpt,mountpt,fstype,opts);
                  break;
 
    case netbsd:
    case openbsd:
    case bsd_i:
    case dragonfly:
-   case freebsd: snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s \t %s \t %s,%s 0 0",host,rmountpt,mountpt,VNFSTYPE,mode,opts);
+   case freebsd: snprintf(fstab,CF_BUFSIZE,"%s:%s \t %s \t %s \t %s 0 0",host,rmountpt,mountpt,fstype,opts);
                  break;
 
    case unix_sv:
    case solarisx86:
-   case solaris: snprintf(fstab,CF_BUFSIZE,"%s:%s - %s %s - yes %s,%s",host,rmountpt,mountpt,VNFSTYPE,mode,opts);
+   case solaris: snprintf(fstab,CF_BUFSIZE,"%s:%s - %s %s - yes %s",host,rmountpt,mountpt,fstype,opts);
                  break;
 
    case cfnt:    snprintf(fstab,CF_BUFSIZE,"/bin/mount %s:%s %s",host,rmountpt,mountpt);
@@ -371,203 +363,214 @@ switch (VSYSTEMHARDCLASS)
    case unused2:
    case unused3:
    default:
-       return;
+       free(opts);
+       return false;
    }
 
-if (MatchStringInFstab(mountpt))
+Verbose("Verifying %s in %s\n",mountpt,VFSTAB[VSYSTEMHARDCLASS]);
+
+if (!MatchFSInFstab(mountpt))
    {
-   if (VSYSTEMHARDCLASS == aix)
-      {
-      FILE *pp;
-      int fs_found = 0;
-      int fs_changed = 0;
-      char comm[CF_BUFSIZE];
-
-      if ((pp = cf_popen("/usr/sbin/lsnfsmnt -c", "r")) == NULL)
-         {
-         CfOut(cf_error,"","Failed to open pipe to mount file system");
-         return;
-         }
-      
-      while(!feof(pp))
-         {
-         ReadLine(vbuff, CF_BUFSIZE,pp);
-         
-         if (vbuff[0] == '#')
-            {
-            continue;
-            }
-
-         if (strstr(vbuff,mountpt))
-            {
-            fs_found++;
-
-            if (!strstr(vbuff,aix_lsnfsmnt))
-               {
-               fs_changed = 1;
-               }
-            }
-         }
-      
-      cf_pclose(pp);
-      
-      if (fs_found == 1 && !fs_changed)
-         {
-         return;
-         }
-      else
-         {
-         int failed = 0;
-         CfOut(cf_inform,"","Removing \"%s\" entry from %s to allow update (fs_found=%d):\n",
-                  mountpt,
-                  VFSTAB[VSYSTEMHARDCLASS],
-                  fs_found
-                  );
-
-         snprintf(comm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
-
-         if ((pp = cf_popen(comm,"r")) == NULL)
-            {
-            CfOut(cf_error,"","Failed to open pipe to /usr/sbin/rmnfsmnt command.");
-            return;
-            }
-         
-         while(!feof(pp))
-            {
-            ReadLine(vbuff, CF_BUFSIZE, pp);
-            if (vbuff[0] == '#')
-               {
-               continue;
-               }
-
-            if (strstr(vbuff,"busy"))
-               {
-               CfOut(cf_inform,"","The device under %s cannot be unmounted\n",mountpt);
-               failed = 1;
-               }
-            }
-         
-         cf_pclose(pp);
-         
-         if (failed)
-            {
-            return;
-            }
-         }
-      
-      }
-   else
-      { 
-      if (!MatchStringInFstab(fstab))
-         {
-         struct UnMount *saved_VUNMOUNT = VUNMOUNT;
-         char mountspec[MAXPATHLEN];
-         struct Item *mntentry = NULL;
-         struct UnMount cleaner;
-         
-         CfOut(cf_inform,"","Removing \"%s\" entry from %s to allow update:\n",mountpt,VFSTAB[VSYSTEMHARDCLASS]);
-
-         snprintf(mountspec,CF_BUFSIZE,".+:%s",mountpt);
-
-         mntentry = LocateItemContainingRegExp(VMOUNTED,mountspec);
-
-         if (mntentry)
-            {
-            sscanf(mntentry->name,"%[^:]:",mountspec);
-            strcat(mountspec,":");
-            strcat(mountspec,mountpt);
-            }
-         else
-            {
-            snprintf(mountspec,CF_BUFSIZE,"host:%s",mountpt);
-            }
-         
-         cleaner.name        = mountspec;
-         cleaner.classes     = NULL;
-         cleaner.deletedir   = 'n';
-         cleaner.deletefstab = 'y';
-         cleaner.force       = 'n';
-         cleaner.done        = 'n';
-         cleaner.scope       = CONTEXTID;
-         cleaner.next        = NULL;
-
-         VUNMOUNT = &cleaner;
-         Unmount();
-         VUNMOUNT = saved_VUNMOUNT;
-         }
-      
-      else
-
-         {
-         if (!ismounted && !strstr(mountpt,"cdrom"))
-            {
-            cfPS(cf_inform,"CF_INTERPT",pp,a,"Warning the file system %s seems to be in %s already, but I was not able to mount it.\n",mountpt,VFSTAB[VSYSTEMHARDCLASS]);
-            }
-         
-         return;
-         }
-      }
+   AppendItem(&FSTABLIST,fstab,NULL);
+   FSTAB_EDITS++;
+   cfPS(cf_inform,CF_CHG,"",pp,a,"Adding file system %s:%s seems to %s.\n",host,rmountpt,VFSTAB[VSYSTEMHARDCLASS]);   
    }
- 
- if (DONTDO)
-    {
-    CfOut(cf_error,"","Need to add promised filesystem to %s\n",VFSTAB[VSYSTEMHARDCLASS]);
-    CfOut(cf_error,"","%s",fstab);
-    }
- else
-    {
-    struct Item *filelist = NULL;
 
-    
-    NUMBEROFEDITS = 0;
-    
-    CfOut(cf_inform,"","Adding filesystem to %s\n",VFSTAB[VSYSTEMHARDCLASS]);
-    CfOut(cf_inform,"","%s\n",fstab);
-
-    if (!IsItemIn(filelist,fstab))
-       {
-       AppendItem(&filelist,fstab,NULL);
-       }
-
-    SaveItemListAsFile(filelist,VFSTAB[VSYSTEMHARDCLASS],a,pp);
-    
-    chmod(VFSTAB[VSYSTEMHARDCLASS],DEFAULTSYSTEMMODE);
-    }
+free(opts);
+return 0;
 }
 
-*/
-/*******************************************************************/
-/* Toolkit fstab                                                   */
 /*******************************************************************/
 
-int MatchStringInFstab(char *str)
+int VerifyNotInFstab(char *name,struct Attributes a,struct Promise *pp)
 
-{ FILE *fp;
-  char vbuff[CF_BUFSIZE];
+/* Ensure filesystem is NOT in fstab, and return no of changes */
+    
+{ char fstab[CF_BUFSIZE],regex[CF_BUFSIZE],aixcomm[CF_BUFSIZE],line[CF_BUFSIZE];
+  char *host,*rmountpt,*mountpt,*fstype,*opts;
+  FILE *pfp;
+  struct Item *ip;
 
-if ((fp = fopen(VFSTAB[VSYSTEMHARDCLASS],"r")) == NULL)
+if (!FSTABLIST)
    {
-   CfOut(cf_error,"fopen","Can't open %s for reading\n",VFSTAB[VSYSTEMHARDCLASS]);
-   return true; /* write nothing */
+   if (!LoadFileAsItemList(&FSTABLIST,VFSTAB[VSYSTEMHARDCLASS],a,pp))
+      {
+      CfOut(cf_error,"","Couldn't open %s!\n",VFSTAB[VSYSTEMHARDCLASS]);
+      return false;
+      }
+   else
+      {
+      FSTAB_EDITS = 0;
+      }
    }
 
-while (!feof(fp))
+if (a.mount.mount_options)
    {
-   ReadLine(vbuff,CF_BUFSIZE,fp);
+   opts = Rlist2String(a.mount.mount_options,",");
+   }
+else
+   {
+   opts = VMOUNTOPTS[VSYSTEMHARDCLASS];
+   }
 
-   if (vbuff[0] == '#')
+host = a.mount.mount_server;
+rmountpt = a.mount.mount_source;
+mountpt = name;
+fstype = a.mount.mount_type;
+
+if (MatchFSInFstab(mountpt))
+   {
+   if (a.mount.editfstab)
       {
-      continue;
+      switch (VSYSTEMHARDCLASS)
+         {
+         case aix:
+             
+             snprintf(aixcomm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
+             
+             if ((pfp = cf_popen(aixcomm,"r")) == NULL)
+                {
+                cfPS(cf_error,CF_FAIL,"",pp,a,"Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                return 0;
+                }
+             
+             while(!feof(pfp))
+                {
+                ReadLine(line,CF_BUFSIZE,pfp);
+                
+                if (line[0] == '#')
+                   {
+                   continue;
+                   }
+                
+                if (strstr(line,"busy"))
+                   {
+                   cfPS(cf_inform,CF_INTERPT,"",pp,a,"The device under %s cannot be removed from %s\n",mountpt,VFSTAB[VSYSTEMHARDCLASS]);
+                   return 0;
+                   }
+                }
+             
+             cf_pclose(pfp);
+
+             return 0; /* ignore internal editing for aix , always returns 0 changes */
+             break;
+             
+         default:
+
+             snprintf(regex,CF_BUFSIZE,".*[\\s]+%s[\\s]+.*",mountpt);
+             
+             for (ip = FSTABLIST; ip != NULL; ip=ip->next)
+                {
+                if (FullTextMatch(regex,ip->name))
+                   {
+                   cfPS(cf_inform,CF_CHG,"",pp,a,"Deleting file system mounted on %s.\n",host,rmountpt,VFSTAB[VSYSTEMHARDCLASS]);
+                   // Check host name matches too?
+                   DeleteThisItem(&FSTABLIST,ip);
+                   FSTAB_EDITS++;
+                   }
+                }
+             break;
+         }
+      }   
+   }
+
+if (a.mount.mount_options)
+   {
+   free(opts);
+   }
+
+return 0;
+}
+
+/*******************************************************************/
+
+int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp)
+
+{ char comm[CF_BUFSIZE],line[CF_BUFSIZE];
+  FILE *pfp;
+  char *host,*rmountpt,*mountpt,*fstype,*opts;
+ 
+host = a.mount.mount_server;
+rmountpt = a.mount.mount_source;
+mountpt = name;
+fstype = a.mount.mount_type;
+
+if (! DONTDO)
+   {
+   snprintf(comm,CF_BUFSIZE,"%s %s",VUNMOUNTCOMM[VSYSTEMHARDCLASS],mountpt);
+   
+   if ((pfp = cf_popen(comm,"r")) == NULL)
+      {
+      CfOut(cf_error,"","Failed to open pipe from %s\n",VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
+      return 0;
       }
-
-   if (strstr(vbuff,str))
+   
+   ReadLine(line,CF_BUFSIZE,pfp);
+   
+   if (strstr(line,"busy") || strstr(line,"Busy"))
       {
-      fclose(fp);
+      cfPS(cf_inform,CF_INTERPT,"",pp,a,"The device under %s cannot be unmounted\n",mountpt);
+      cf_pclose(pfp);
+      return 1;
+      }
+   
+   cf_pclose(pfp);
+   }
+
+cfPS(cf_inform,CF_CHG,"",pp,a,"Unmounting %s to keep promise\n",mountpt);
+      //DeleteItemStarting(&VMOUNTED,ptr->name);
+return 0;
+}
+
+/*******************************************************************/
+
+int MatchFSInFstab(char *match)
+
+{ struct Item *ip;
+ 
+for (ip = FSTABLIST; ip != NULL; ip=ip->next)
+   {
+   if (strstr(ip->name,match))
+      {
       return true;
       }
    }
 
-fclose(fp);
-return(false);
+return false;
 }
+
+/*******************************************************************/
+/* Addendum                                                        */
+/*******************************************************************/
+
+void DeleteThisItem(struct Item **liststart,struct Item *entry)
+ 
+{ struct Item *ip, *sp;
+
+if (entry != NULL)
+   {
+   if (entry->name != NULL)
+      {
+      free(entry->name);
+      }
+
+   sp = entry->next;
+
+   if (entry == *liststart)
+      {
+      *liststart = sp;
+      }
+   else
+      {
+      for (ip = *liststart; ip->next != entry; ip=ip->next)
+         {
+         }
+
+      ip->next = sp;
+      }
+
+   free((char *)entry);
+   }
+}
+
 

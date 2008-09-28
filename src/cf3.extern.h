@@ -54,6 +54,7 @@ extern struct SubTypeSyntax CF_NOSTYPE;
 extern char *CF_DATATYPES[];
 extern char *CF_AGENTTYPES[];
 extern char HASHDB[CF_BUFSIZE];
+extern int FSTAB_EDITS;
 
 extern int CFA_MAXTHREADS;
 extern char THIS_AGENT[CF_MAXVARSIZE];
@@ -67,6 +68,9 @@ extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
 extern struct Item *FSTABLIST;
 extern struct Rlist *MOUNTEDFSLIST;
+
+extern int CF_MOUNTALL;
+extern int CF_SAVEFSTAB;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

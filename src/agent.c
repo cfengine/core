@@ -551,6 +551,8 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
             ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
             }
 
+         DeleteTypeContext(type);
+
          if (NoMorePromises(sp->promiselist))
             {
             pass = CF_DONEPASSES;
@@ -749,6 +751,7 @@ void DeleteTypeContext(enum typesequence type)
 
 { struct Rlist *rp;
   struct ServerItem *svp;
+  struct Attributes a;
  
 switch(type)
    {
@@ -773,6 +776,20 @@ switch(type)
 
        DeleteItemList(PROCESSTABLE);
        PROCESSTABLE = NULL;
+       break;
+
+   case kp_storage:
+
+       Verbose("Number of changes observed in %s is %d\n",VFSTAB[VSYSTEMHARDCLASS],FSTAB_EDITS);
+       
+       if (FSTAB_EDITS && FSTABLIST && !DONTDO)
+          {
+          SaveItemListAsFile(FSTABLIST,VFSTAB[VSYSTEMHARDCLASS],a,NULL);
+          DeleteItemList(FSTABLIST);
+          FSTABLIST = NULL;
+          FSTAB_EDITS = 0;
+          }
+       
        break;
    }
 }

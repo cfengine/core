@@ -57,6 +57,10 @@ struct Item *PROCESSTABLE = NULL;
 struct Item *FSTABLIST = NULL;
 struct Rlist *MOUNTEDFSLIST = NULL;
 
+int CF_MOUNTALL = false;
+int CF_SAVEFSTAB = false;
+int FSTAB_EDITS;
+
 char HASHDB[CF_BUFSIZE];
 
 /*****************************************************************************/
@@ -77,6 +81,7 @@ struct Rlist *AUTO_DEFINE_LIST = NULL;
 struct Rlist *SINGLE_COPY_CACHE = NULL;
 
 struct Rlist *CF_STCK = NULL;
+
 int CF_STCKFRAME = 0;
 
 /*****************************************************************************/

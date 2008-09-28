@@ -657,6 +657,56 @@ if (entry != NULL)
    }
 }
 
+
+/*******************************************************************/
+
+struct Rlist *AppendRlistAlien(struct Rlist **start,void *item)
+
+   /* Allocates new memory for objects - careful, could leak!  */
+    
+{ struct Rlist *rp,*lp = *start;
+
+if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Unable to allocate Rlist");
+   FatalError("");
+   }
+
+if (*start == NULL)
+   {
+   *start = rp;
+   }
+else
+   {
+   for (lp = *start; lp->next != NULL; lp=lp->next)
+      {
+      }
+
+   lp->next = rp;
+   }
+
+rp->item = item;
+rp->type = CF_SCALAR;
+
+#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
+if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
+   {
+   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
+   }
+#endif
+
+rp->next = NULL;
+
+#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
+if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
+   {
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+   }
+#endif
+
+return rp;
+}
+
 /*******************************************************************/
 /* Stack                                                           */
 /*******************************************************************/

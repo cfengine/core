@@ -546,7 +546,7 @@ void MountAll()
 { struct stat sb;
   char line[CF_BUFSIZE];
   int fd;
-  struct FILE *pp;
+  FILE *pp;
  
 if (DONTDO)
    {

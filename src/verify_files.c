@@ -123,7 +123,7 @@ for (ip = path; ip != NULL; ip=ip->next)
    
    if (stat(pbuffer,&statbuf) != -1)
       {
-      if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid)
+      if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)
          {
          CfOut(cf_inform,"","Directory %s in search path %s is controlled by another user - trusting its content is potentially risky (possible race)\n",pbuffer,wildpath);
          PromiseRef(cf_inform,pp);

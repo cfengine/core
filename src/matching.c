@@ -155,14 +155,22 @@ if (result = IsRegex(str))
          case '[':
              s++;
              break;
-         case ']':
+         case ']':             
              s--;
+             if (s % 2 == 0)
+                {
+                result++;
+                }
              break;
          case '(':
              r++;
              break;
          case')':
              r--;
+             if (r % 2 == 0)
+                {
+                result++;
+                }
              break;
          case FILE_SEPARATOR:
              

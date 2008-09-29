@@ -400,6 +400,11 @@ if (IsItemInRegion(pp->promiser,begin_ptr,end_ptr))
    return false;
    }
 
+if (*start == NULL)
+   {
+   return InsertMissingLinesAtLocation(start,start,prev,a,pp);
+   }
+
 if (a.location.before_after == cfe_before)
    {
    for (ip = *start; ip != NULL; ip=ip->next)
@@ -707,6 +712,23 @@ if (prev == CF_UNDEFINED_ITEM) /* Insert at first line */
    {
    if (a.location.before_after == cfe_before)
       {
+      if (*start == NULL)
+         {
+         if (DONTDO || a.transaction.action == cfa_warn)
+            {
+            cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to insert the promised line \"%s\" - but only a warning was promised",newline);
+            return true;
+            }
+         else
+            {
+            PrependItemList(start,newline);
+            (pp->edcontext->num_edits)++;
+            cfPS(cf_verbose,CF_CHG,"",pp,a," -> Inserting the promised line \"%s\"",newline);
+            return true;
+            }
+
+         }
+      
       if (strcmp((*start)->name,newline) != 0)
          {
          if (DONTDO || a.transaction.action == cfa_warn)

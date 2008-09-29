@@ -48,6 +48,7 @@ if (!NOHARDCLASSES)
    {
    SetNewScope("sys");
    SetNewScope("const");
+   SetNewScope("match");
    GetNameInfo3();
    GetInterfaceInfo3();
    FindV6InterfaceInfo();

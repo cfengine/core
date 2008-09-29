@@ -71,23 +71,29 @@ if (DONTDO || a.transaction.action == cfa_warn)
    cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
    return;
    }
-else if (ec->num_edits > 0)
+else if (ec && ec->num_edits > 0)
    {
    cfPS(cf_inform,CF_CHG,"",pp,a,"Saving edit changes to file %s",ec->filename);
    SaveItemListAsFile(ec->file_start,ec->filename,a,pp);
    }
 else
    {
-   cfPS(cf_inform,CF_NOP,"",pp,a,"No edit changes to file %s need saving",ec->filename);
+   if (ec)
+      {
+      cfPS(cf_inform,CF_NOP,"",pp,a,"No edit changes to file %s need saving",ec->filename);
+      }
    }
 
-for (ip = ec->file_classes; ip != NULL; ip = ip->next)
+if (ec != NULL)
    {
-   AddClassToHeap(ip->name);
+   for (ip = ec->file_classes; ip != NULL; ip = ip->next)
+      {
+      AddClassToHeap(ip->name);
+      }
+   
+   DeleteItemList(ec->file_classes);
+   DeleteItemList(ec->file_start);
    }
-
-DeleteItemList(ec->file_classes);
-DeleteItemList(ec->file_start);
 }
 
 /*********************************************************************/
@@ -120,7 +126,6 @@ if (! S_ISREG(statbuf.st_mode))
   
 if ((fp = fopen(file,"r")) == NULL)
    {
-   printf("Editing FILE %s\n",file);
    cfPS(cf_inform,CF_INTERPT,"fopen",pp,a,"Couldn't read file %s for editing\n",file);
    return false;
    }

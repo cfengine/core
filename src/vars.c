@@ -52,13 +52,13 @@ if (THIS_AGENT_TYPE != cf_agent)
    return;
    }
 
-if (GetVariable("this",lval,(void *)&retval,&rtype) != cf_notype)
+if (GetVariable("match",lval,(void *)&retval,&rtype) != cf_notype)
    {
-   DeleteVariable("this",lval);
+   DeleteVariable("match",lval);
    }
 
-NewScalar("this",lval,rval,cf_str);
-Debug("Setting local variable \"this.\" context; $(%s) = %s\n",lval,rval);
+NewScalar("match",lval,rval,cf_str);
+Debug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval);
 }
 
 /*******************************************************************/

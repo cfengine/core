@@ -787,7 +787,7 @@ switch(type)
 
    case kp_storage:
 
-       Verbose("Number of changes observed in %s is %d\n",VFSTAB[VSYSTEMHARDCLASS],FSTAB_EDITS);
+       Verbose(" -> Number of changes observed in %s is %d\n",VFSTAB[VSYSTEMHARDCLASS],FSTAB_EDITS);
        
        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
           {

@@ -178,12 +178,17 @@ CfOut(cf_verbose,"","Using internal soft-class %s for host %s\n\n",workbuf,CLASS
 CfOut(cf_verbose,"","The time is now %s\n\n",ctime(&tloc));
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 
+snprintf(workbuf,CF_MAXVARSIZE,"%s",ctime(&tloc));
 NewScalar("sys","date",workbuf,cf_str);
+NewScalar("sys","cdate",CanonifyName(workbuf),cf_str);
 NewScalar("sys","host",VSYSNAME.nodename,cf_str);
 NewScalar("sys","os",VSYSNAME.sysname,cf_str);
 NewScalar("sys","release",VSYSNAME.release,cf_str);
 NewScalar("sys","arch",VSYSNAME.machine,cf_str);
 NewScalar("sys","workdir",CFWORKDIR,cf_str);
+NewScalar("sys","fstab",VFSTAB[VSYSTEMHARDCLASS],cf_str);
+NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
+NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
 AddClassToHeap(workbuf);
@@ -301,6 +306,8 @@ void GetInterfaceInfo3(void)
   char last_name[CF_BUFSIZE];    
 
 Debug("GetInterfaceInfo3()\n");
+
+last_name[0] = '\0';
 
 if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
    {

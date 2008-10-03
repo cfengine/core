@@ -102,6 +102,7 @@ if ((tp->topic_type = strdup(type)) == NULL)
    FatalError("");
    }
 
+tp->occurrences = NULL;
 tp->associations = NULL;
 tp->next = *list;
 *list = tp;

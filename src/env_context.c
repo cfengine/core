@@ -51,7 +51,7 @@ if (strcmp(pp->bundletype,"common") == 0)
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      Verbose(" ?> defining class %s\n",pp->promiser);
+      Debug(" ?> defining class %s\n",pp->promiser);
       PrependItem(&VHEAP,pp->promiser,NULL);
       }
 
@@ -65,7 +65,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0)
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      Verbose(" ?> defining class %s\n",pp->promiser);
+      Debug(" ?> defining class %s\n",pp->promiser);
       PrependItem(&VADDCLASSES,pp->promiser,NULL);
       }
 
@@ -386,7 +386,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
             {
             PrependItem(&VADDCLASSES,buffer,NULL);
             }
-         Verbose("\n     ?? \'Strategy\' distribution class interval -> %s\n",buffer);
+         Debug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
          return true;
          }
       }

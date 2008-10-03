@@ -36,19 +36,18 @@ void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner)
 fprintf(fp,"<html>"
         "  <head>"
         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />"
-        "    <meta http-equiv=\"refresh\" content=\"60\">"
-
         "    <title>"
         "      %s"
         "    </title>"
         "    <link rel=\"stylesheet\" href=\"%s\" type=\"text/css\" media=\"screen\" />"
+        "  </head>"
         "  <body>"
         "<div id=\"logo\"><img src=\"cfknow.png\">",title,css);
 
 if (strlen(webdriver) > 0)
    {
    fprintf(fp,"<form action=\"%s\" method=\"post\">",webdriver);
-   fprintf(fp,"<div id=\"in\">PCRE: <input type=\"text\" name=\"regex\" size=\"20\" /></div>");
+   fprintf(fp,"<div id=\"in\">Search: <input type=\"text\" name=\"regex\" size=\"20\" /></div>");
    fprintf(fp,"</form>");
    }
 

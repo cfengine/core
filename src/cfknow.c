@@ -1469,7 +1469,8 @@ CfDeleteQuery(cfdb);
 /* Finally occurrences of the mentioned topic */
 
 strncpy(safe,EscapeSQL(cfdb,this_name),CF_BUFSIZE);
-snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
+//snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
+snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' order by locator_type",this_id,safe);
 
 CfNewQueryDB(cfdb,query);
 
@@ -1806,134 +1807,156 @@ fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" is found in the context of ",NextTopic(this_name));
 fprintf(fout,"\"%s\"\n</div>",NextTopic(this_type));
 
-
-count = 0;
-
-
-fprintf(fout,"<p><div id=\"thistype\">");
-fprintf(fout,"\n<h2>Topics of type %s:</h2>\n\n",NextTopic(this_name));
-
-fprintf(fout,"<ul>\n");
-
-for (tp = topics_this_type; tp != NULL; tp=tp->next)
+if (occurrences != NULL)
    {
-   fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
-   count++;
-   }
-
-if (count == 0)
-   {
-   fprintf(fout,"<li>    (none)\n");
-   }
-
-fprintf(fout,"</ul>\n");
-fprintf(fout,"</div>");
-
-count = 0;
-
-fprintf(fout,"<p><div id=\"occurrences\">");
-
-CfOut(cf_error,"","\n<h2>Pertaining to this topic:</h2>\n\n");
-
-fprintf(fout,"<ul>\n");
-
-for (oc = occurrences; oc != NULL; oc=oc->next)
-   {
-   if (oc->represents == NULL)
-      {
-      fprintf(fout,"<li>(directly)");
-      }
-   else
-      {
-      for (rp = oc->represents; rp != NULL; rp=rp->next)
-         {
-         fprintf(fout,"<li> %s: ",NextTopic((char *)rp->item));
-         }
-      }
-   switch (oc->rep_type)
-      {
-      case cfk_url:
-          fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",oc->locator,oc->locator);
-          break;
-      case cfk_web:
-          fprintf(fout,"<span id=\"url\"><a href=\"%s\">(web) ... %s</a> </span>(URL)",oc->locator,URLHint(oc->locator));
-          break;
-      case cfk_file:
-          fprintf(fout," <a href=\"file://%s\">%s</a> (file)",oc->locator,oc->locator);
-          break;
-      case cfk_db:
-          fprintf(fout," %s (DB)",oc->locator);
-          break;          
-      case cfk_literal:
-          fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
-          break;
-      default:
-          break;
-      }
-
-   count++;
-   }
-
-fprintf(fout,"</ul>\n");
-
-if (count == 0)
-   {
-   fprintf(fout,"\n    (none)\n");
-   }
-
-fprintf(fout,"</div>");
-
-count = 0;
-
-fprintf(fout,"<p><div id=\"associations\">");
-fprintf(fout,"\n<h2>Associations:</h2>\n\n");
-
-fprintf(fout,"<ul>\n");
-
-for (ta = associations; ta != NULL; ta=ta->next)
-   {
-   fprintf(fout,"<li>  %s \"%s\"\n",this_name,NextTopic(ta->fwd_name));
-
+   count = 0;
+   
+   fprintf(fout,"<p><div id=\"occurrences\">");
+   
+   CfOut(cf_error,"","\n<h2>Pertaining to this topic:</h2>\n\n");
+   
    fprintf(fout,"<ul>\n");
-   for (rp = ta->associates; rp != NULL; rp=rp->next)
+   
+   for (oc = occurrences; oc != NULL; oc=oc->next)
       {
-      fprintf(fout,"<li> %s\n",NextTopic(rp->item));
+      if (oc->represents == NULL)
+         {
+         fprintf(fout,"<li>(directly)");
+         }
+      else
+         {
+         fprintf(fout,"<li>");
+	 
+         for (rp = oc->represents; rp != NULL; rp=rp->next)
+            {
+            if (rp->next)
+               {
+               fprintf(fout,"%s, ",NextTopic((char *)rp->item));
+               }
+            else
+               {
+               fprintf(fout,"<a href=\"%s\">%s</a> ",oc->locator,(char *)rp->item);
+               }
+            }
+         
+         fprintf(fout,":");
+         }
+      
+      switch (oc->rep_type)
+         {
+         case cfk_url:
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",oc->locator,oc->locator);
+             break;
+         case cfk_web:
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\">(web)</a> </span>(URL)",oc->locator);
+             break;
+         case cfk_file:
+             fprintf(fout," <a href=\"file://%s\">%s</a> (file)",oc->locator,oc->locator);
+             break;
+         case cfk_db:
+             fprintf(fout," %s (DB)",oc->locator);
+             break;          
+         case cfk_literal:
+             fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
+             break;
+         default:
+             break;
+         }
+      
+      count++;
       }
+   
    fprintf(fout,"</ul>\n");
-   count++;
+   
+   if (count == 0)
+      {
+      fprintf(fout,"\n    (none)\n");
+      }
+   
+   fprintf(fout,"</div>");
    }
 
-if (count == 0)
+if (associations)
    {
-   printf("<li>    (none)\n");
+   count = 0;
+   
+   fprintf(fout,"<p><div id=\"associations\">");
+   fprintf(fout,"\n<h2>Associations:</h2>\n\n");
+   
+   fprintf(fout,"<ul>\n");
+   
+   for (ta = associations; ta != NULL; ta=ta->next)
+      {
+      fprintf(fout,"<li>  %s \"%s\"\n",this_name,NextTopic(ta->fwd_name));
+      
+      fprintf(fout,"<ul>\n");
+      for (rp = ta->associates; rp != NULL; rp=rp->next)
+         {
+         fprintf(fout,"<li> %s\n",NextTopic(rp->item));
+         }
+      fprintf(fout,"</ul>\n");
+      count++;
+      }
+   
+   if (count == 0)
+      {
+      printf("<li>    (none)\n");
+      }
+   
+   fprintf(fout,"</ul>\n");
+   fprintf(fout,"</div>");
    }
 
-fprintf(fout,"</ul>\n");
-fprintf(fout,"</div>");
-
-count = 0;
-
-fprintf(fout,"<p><div id=\"others\">\n");
-
-fprintf(fout,"\n<h2>Other topics of type %s:</h2>\n\n",this_type);
-
-fprintf(fout,"<ul>\n");
-
-for (tp = other_topics; tp != NULL; tp=tp->next)
+if (topics_this_type)
    {
-   fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
-   fprintf(fout,"in the context of %s\n",NextTopic(tp->topic_type));
-   count++;
+   count = 0;
+   
+   fprintf(fout,"<p><div id=\"thistype\">");
+   fprintf(fout,"\n<h2>Topics of type %s:</h2>\n\n",NextTopic(this_name));
+   
+   fprintf(fout,"<ul>\n");
+   
+   for (tp = topics_this_type; tp != NULL; tp=tp->next)
+      {
+      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
+      count++;
+      }
+   
+   if (count == 0)
+      {
+      fprintf(fout,"<li>    (none)\n");
+      }
+   
+   fprintf(fout,"</ul>\n");
+   fprintf(fout,"</div>");
    }
 
-if (count == 0)
+if (other_topics)
    {
-   fprintf(fout,"<li>    (none)\n");
+   count = 0;
+   
+   fprintf(fout,"<p><div id=\"others\">\n");
+   
+   fprintf(fout,"\n<h2>Other topics of type %s:</h2>\n\n",this_type);
+   
+   fprintf(fout,"<ul>\n");
+   
+   for (tp = other_topics; tp != NULL; tp=tp->next)
+      {
+      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
+      fprintf(fout,"in the context of %s\n",NextTopic(tp->topic_type));
+      count++;
+      }
+   
+   if (count == 0)
+      {
+      fprintf(fout,"<li>    (none)\n");
+      }
+   
+   fprintf(fout,"</div>");
+   
+   fprintf(fout,"</ul>\n");
    }
-
-fprintf(fout,"</div>");
-
-fprintf(fout,"</ul>\n");
 
 CfHtmlFooter(stdout);
 }

@@ -402,7 +402,7 @@ if (IsItemInRegion(pp->promiser,begin_ptr,end_ptr))
 
 if (*start == NULL)
    {
-   return InsertMissingLinesAtLocation(start,start,prev,a,pp);
+   return InsertMissingLinesAtLocation(start,*start,prev,a,pp);
    }
 
 if (a.location.before_after == cfe_before)

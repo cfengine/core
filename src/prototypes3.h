@@ -34,10 +34,11 @@ void KeepPromises(void);
 
 /* agent.c */
 
+int ScheduleAgentOperations(struct Bundle *bp);
+
 /* agentdiagnostic.c */
 
 void AgentDiagnostic(void);
-
 
 /* args.c */
 
@@ -79,6 +80,7 @@ struct Context GetContextConstraints(struct Promise *pp);
 struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp);
 struct ProcessCount GetMatchesConstraints(struct Promise *pp);
 struct EditDefaults GetEditDefaults(struct Promise *pp);
+struct Attributes GetMethodAttributes(struct Promise *pp);
 
 struct Attributes GetInsertionAttributes(struct Promise *pp);
 struct EditLocation GetLocationAttributes(struct Promise *pp);
@@ -513,6 +515,7 @@ int VerifyInFstab(char *name,struct Attributes a,struct Promise *pp);
 int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp);
 int MatchFSInFstab(char *match);
 void DeleteThisItem(struct Item **liststart,struct Item *entry);
+void MountAll(void);
 
 /* ontology.c */
 
@@ -697,6 +700,7 @@ void FindV6InterfaceInfo(void);
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp);
 struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp);
 void YieldCurrentLock(struct CfLock this);
+void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params);
 time_t FindLock(char *last);
 int WriteLock(char *lock);
 int RemoveLock(char *name);
@@ -742,6 +746,10 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
 void *FindAndVerifyFilesPromises(struct Promise *pp);
 void VerifyFilePromise(char *path,struct Promise *pp);
 int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
+
+/* verify_methods.c */
+
+void VerifyMethodsPromise(struct Promise *pp);
 
 /* verify_processes.c */
 

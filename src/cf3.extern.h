@@ -141,6 +141,10 @@ extern struct BodySyntax CF_RECURSION_BODY[];
 extern struct SubTypeSyntax CF_EXEC_SUBTYPES[];
 #endif
 
+#ifndef CF3_MOD_METHODS
+extern struct SubTypeSyntax CF_METHOD_SUBTYPES[];
+#endif
+
 #ifndef CF3_MOD_PROCESS
 extern struct SubTypeSyntax CF_PROCESS_SUBTYPES[];
 extern struct BodySyntax CF_MATCHCLASS_BODY[];

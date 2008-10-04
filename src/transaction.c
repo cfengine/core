@@ -66,9 +66,15 @@ this.last =  (char *) CF_UNDEFINED;
 this.lock =  (char *) CF_UNDEFINED;
 this.log =  (char *) CF_UNDEFINED;
 
-/* Mark this here as done if we tried ... as we have passed all class constraints now */
+/* Indicate as done if we tried ... as we have passed all class
+   constraints now but we should only do this for level 0
+   promises. Sub routine bundles cannot be marked as done or it will
+   disallow iteration over bundles */
 
-*(pp->donep) = true;
+if (CF_STCKFRAME == 0)
+   {
+   *(pp->donep) = true;
+   }
 
 if (IGNORELOCK)
    {
@@ -245,6 +251,30 @@ free(this.lock);
 free(this.log);
 }
 
+/************************************************************************/
+
+void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params)
+
+{ struct Rlist *rp;
+ int max_sample, count = 0;
+
+for (rp = params; rp != NULL; rp=rp->next)
+   {
+   count++;
+   }
+
+max_sample = CF_BUFSIZE / (2*count);
+
+strncat(lockname,locktype,CF_BUFSIZE/10);
+strcat(lockname,"_");
+strncat(lockname,base,CF_BUFSIZE/10);
+strcat(lockname,"_");
+
+for (rp = params; rp != NULL; rp=rp->next)
+   {
+   strncat(lockname,(char *)rp->item,max_sample);
+   }
+}
 
 /*****************************************************************************/
 /* Level                                                                     */

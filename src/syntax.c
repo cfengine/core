@@ -421,7 +421,7 @@ switch(rvaltype)
 
        /* Fn-like objects are assumed to be parameterized bundles in these... */
 
-       checklist = SplitString("bundlesequence,edit_line,edit_xml",',');
+       checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle",',');
        
        if (!IsItemIn(checklist,lval))
           {

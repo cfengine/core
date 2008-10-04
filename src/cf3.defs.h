@@ -71,7 +71,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
 
-#define CF3_MODULES 8 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 9 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 
@@ -1103,6 +1103,7 @@ struct Attributes
    int haveprocess_count;
    int havemount;
    int havevolume;
+   int havebundle;
 
       /* editline */
 

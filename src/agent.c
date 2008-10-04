@@ -39,6 +39,7 @@ enum typesequence
    kp_processes,
    kp_storage,
    kp_commands,
+   kp_methods,
    kp_files,
    kp_reports,
    kp_none
@@ -51,6 +52,7 @@ char *TYPESEQUENCE[] =
    "processes",
    "storage",
    "commands",
+   "methods",
    "files",
    "reports",
    NULL
@@ -63,7 +65,6 @@ void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
-int NoMorePromises(struct Promise *plist);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -462,14 +463,11 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 void KeepPromiseBundles()
     
 { struct Bundle *bp;
-  struct SubType *sp;
-  struct Promise *pp;
   struct Rlist *rp,*params;
   struct FnCall *fp;
   char rettype,*name;
   void *retval;
-  int ok = true, pass;
-  enum typesequence type;
+  int ok = true;
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
@@ -536,42 +534,50 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       BannerBundle(bp,params);
       DeletePrivateClassContext(); // Each time we change bundle      
       }
-
-   for (pass = 1; pass < CF_DONEPASSES; pass++)
-      {
-      for (type = 0; TYPESEQUENCE[type] != NULL; type++)
-         {
-         ClassBanner(type);
-         
-         if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
-            {
-            continue;      
-            }
-
-         BannerSubType(bp->name,sp->name);
-         SetScope(bp->name);
-         
-         NewTypeContext(type);
-         
-         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
-            {
-            ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
-            }
-
-         DeleteTypeContext(type);
-
-         if (NoMorePromises(sp->promiselist))
-            {
-            pass = CF_DONEPASSES;
-            break;
-            }
-         }
-      }
+   
+   ScheduleAgentOperations(bp);
    }
 }
 
 /*********************************************************************/
 /* Level 3                                                           */
+/*********************************************************************/
+
+int ScheduleAgentOperations(struct Bundle *bp)
+
+{ struct SubType *sp;
+  struct Promise *pp;
+  enum typesequence type;
+  int pass;
+
+for (pass = 1; pass < CF_DONEPASSES; pass++)
+   {
+   for (type = 0; TYPESEQUENCE[type] != NULL; type++)
+      {
+      ClassBanner(type);
+      
+      if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
+         {
+         continue;      
+         }
+
+      BannerSubType(bp->name,sp->name);
+      SetScope(bp->name);
+      
+      NewTypeContext(type);
+
+      for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+         {
+         ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
+         }
+
+      DeleteTypeContext(type);      
+      }
+   }
+
+return true;
+}
+
 /*********************************************************************/
 
 void CheckAgentAccess(struct Rlist *list)
@@ -686,28 +692,17 @@ if (strcmp("commands",pp->agentsubtype) == 0)
    return;
    }
 
+if (strcmp("methods",pp->agentsubtype) == 0)
+   {
+   VerifyMethodsPromise(pp);
+   return;
+   }
+
 if (strcmp("reports",pp->agentsubtype) == 0)
    {
    VerifyReportPromise(pp);
    return;
    }
-}
-
-/*********************************************************************/
-
-int NoMorePromises(struct Promise *plist)
-
-{ struct Promise *pp;
-     
-for (pp = plist; pp != NULL; pp=pp->next)
-   {
-   if (pp->done == false)
-      {
-      return false;
-      }
-   }
-
-return true;
 }
 
 /*********************************************************************/
@@ -839,11 +834,11 @@ for (ip = VNEGHEAP; ip != NULL; ip=ip->next)
 
 Verbose("\n");
 
-Verbose("     ?  Public class context:\n");
+Debug("     ?  Public class context:\n");
 
 for (ip = VHEAP; ip != NULL; ip=ip->next)
    {
-   Verbose("     ?       %s\n",ip->name);
+   Debug("     ?       %s\n",ip->name);
    }
 
 Verbose("\n");

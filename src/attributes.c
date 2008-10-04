@@ -182,6 +182,25 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetMethodAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+ 
+attr.havebundle = GetBundleConstraint("usebundle",pp->conlist);
+
+/* Common ("included") */
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetTopicsAttributes(struct Promise *pp)
 
 { struct Attributes attr;

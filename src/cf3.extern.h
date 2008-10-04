@@ -103,6 +103,12 @@ extern struct BodySyntax CF_REMACCESS_BODIES[];
 extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
 #endif
 
+#ifndef CF_MOD_INTERFACES
+extern struct BodySyntax CF_TCPIP_BODY[];
+extern struct BodySyntax CF_INTERFACES_BODIES[];
+extern struct SubTypeSyntax CF_INTERFACES_SUBTYPES[];
+#endif
+
 #ifndef CF3_MOD_STORAGE
 extern struct BodySyntax CF_STORAGE_BODIES[];
 extern struct SubTypeSyntax CF_STORAGE_SUBTYPES[];
@@ -116,6 +122,11 @@ extern struct BodySyntax CF_TOPICS_BODIES[];
 extern struct BodySyntax CF_OCCUR_BODIES[];
 #endif
 
+#ifndef CF3_MOD_PACKAGES
+extern struct SubTypeSyntax CF_PACKAGES_SUBTYPES[];
+extern struct BodySyntax CF_PACKAGES_BODIES[];
+extern struct BodySyntax CF_EXISTS_BODY[];
+#endif
 
 #ifndef CF3_MOD_REPORT
 extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];

@@ -81,7 +81,7 @@ struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp);
 struct ProcessCount GetMatchesConstraints(struct Promise *pp);
 struct EditDefaults GetEditDefaults(struct Promise *pp);
 struct Attributes GetMethodAttributes(struct Promise *pp);
-
+struct Attributes GetInterfacesAttributes(struct Promise *pp);
 struct Attributes GetInsertionAttributes(struct Promise *pp);
 struct EditLocation GetLocationAttributes(struct Promise *pp);
 struct Attributes GetDeletionAttributes(struct Promise *pp);
@@ -93,6 +93,7 @@ struct EditColumn GetColumnConstraints(struct Promise *pp);
 struct TopicAssociation GetAssociationConstraints(struct Promise *pp);
 struct StorageMount GetMountConstraints(struct Promise *pp);
 struct StorageVolume GetVolumeConstraints(struct Promise *pp);
+struct CfTcpIp GetTCPIPAttributes(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -220,7 +221,6 @@ struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum 
 struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type);
 struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs);
-struct Rval FnCallUseMethod(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);
 
 void *ReadFile(char *filename,int maxsize);
@@ -481,6 +481,15 @@ struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promise
 void DeleteBundles(struct Bundle *bp);
 void DeleteSubTypes(struct SubType *tp);
 void DeleteBodies(struct Body *bp);
+
+/* interfaces.c */
+
+void VerifyInterfacePromise(char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
+int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
+void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
+void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast);
+void SetPromisedDefaultRoute(void);
+
 
 /* logging.c */
 
@@ -747,9 +756,15 @@ void *FindAndVerifyFilesPromises(struct Promise *pp);
 void VerifyFilePromise(char *path,struct Promise *pp);
 int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
 
+/* verify_interfaces.c */
+
+void VerifyInterface(struct Attributes a,struct Promise *pp);
+void VerifyInterfacesPromise(struct Promise *pp);
+
 /* verify_methods.c */
 
 void VerifyMethodsPromise(struct Promise *pp);
+int VerifyMethod(struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

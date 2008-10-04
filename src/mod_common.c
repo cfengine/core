@@ -78,7 +78,6 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"classmatch",cf_class,1},
    {"hash",cf_str,2},
    {"usemodule",cf_class,2},
-   {"usemethod",cf_class,CF_VARARGS},
    {NULL,cf_notype}
    };
 
@@ -346,15 +345,17 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
-   CF_COMMON_SUBTYPES,    /* Add modules after this */
-   CF_FILES_SUBTYPES,     /* mod_files.c */
-   CF_EXEC_SUBTYPES,      /* mod_exec.c */
-   CF_PROCESS_SUBTYPES,   /* mod_process.c */
-   CF_REMACCESS_SUBTYPES, /* mod_access.c */
-   CF_STORAGE_SUBTYPES,   /* mod_storage.c */
-   CF_METHOD_SUBTYPES,    /* mod_methods.c */
-   CF_REPORT_SUBTYPES,    /* mod_report.c */
-   CF_KNOWLEDGE_SUBTYPES, /* mod_knowledge.c */
+   CF_COMMON_SUBTYPES,     /* Add modules after this */
+   CF_FILES_SUBTYPES,      /* mod_files.c */
+   CF_EXEC_SUBTYPES,       /* mod_exec.c */
+   CF_PROCESS_SUBTYPES,    /* mod_process.c */
+   CF_REMACCESS_SUBTYPES,  /* mod_access.c */
+   CF_STORAGE_SUBTYPES,    /* mod_storage.c */
+   CF_METHOD_SUBTYPES,     /* mod_methods.c */
+   CF_INTERFACES_SUBTYPES, /* mod_interfaces.c */
+   CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
+   CF_REPORT_SUBTYPES,     /* mod_report.c */
+   CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

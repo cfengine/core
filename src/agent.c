@@ -38,6 +38,7 @@ enum typesequence
    kp_interfaces,
    kp_processes,
    kp_storage,
+   kp_packages,
    kp_commands,
    kp_methods,
    kp_files,
@@ -51,6 +52,7 @@ char *TYPESEQUENCE[] =
    "interfaces",
    "processes",
    "storage",
+   "packages",
    "commands",
    "methods",
    "files",
@@ -661,6 +663,12 @@ if (strcmp("classes",pp->agentsubtype) == 0)
    return;
    }
 
+if (strcmp("interfaces",pp->agentsubtype) == 0)
+   {
+   VerifyInterfacesPromise(pp);
+   return;
+   }
+
 if (strcmp("processes",pp->agentsubtype) == 0)
    {
    VerifyProcessesPromise(pp);
@@ -670,6 +678,12 @@ if (strcmp("processes",pp->agentsubtype) == 0)
 if (strcmp("storage",pp->agentsubtype) == 0)
    {
    FindAndVerifyStoragePromises(pp);
+   return;
+   }
+
+if (strcmp("packages",pp->agentsubtype) == 0)
+   {
+   VerifyPackagesPromise(pp);
    return;
    }
 

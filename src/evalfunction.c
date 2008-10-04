@@ -527,43 +527,6 @@ return rval;
 }
 
 /*********************************************************************/
-
-struct Rval FnCallUseMethod(struct FnCall *fp,struct Rlist *finalargs)
-
-  /* usemethod("/programpath",varargs) */
-    
-{ static char *argtemplate[] =
-     {
-     CF_ANYSTRING,
-     NULL
-     };
-  static enum cfdatatype argtypes[] =
-      {
-      cf_str,
-      cf_notype
-      };
-  
-  struct Rlist *rp;
-  struct Rval rval;
-  char buffer[CF_BUFSIZE];
-  int ret = false;
-
-buffer[0] = '\0';  
-//ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
-
-/* begin fn specific content */
-
-printf( " FIX xvy ME\n");
-
-
-
-/* end fn specific content */
-
-rval.rtype = CF_SCALAR;
-return rval;
-}
-
-/*********************************************************************/
 /* Misc                                                              */
 /*********************************************************************/
 

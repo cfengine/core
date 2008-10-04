@@ -335,9 +335,6 @@ switch (this)
    case cfn_usemodule:
        rval = FnCallUseModule(fp,expargs);
        break;
-   case cfn_usemethod:
-       rval = FnCallUseMethod(fp,expargs);
-       break;
 
    case cfn_unknown:
        CfOut(cf_error,"","Un-registered function call");

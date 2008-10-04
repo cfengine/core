@@ -71,7 +71,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
 
-#define CF3_MODULES 9 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 11 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 
@@ -413,7 +413,6 @@ enum fncalltype
    cfn_classmatch,
    cfn_hash,
    cfn_usemodule,
-   cfn_usemethod,
    cfn_unknown,
    };
 
@@ -1051,6 +1050,14 @@ struct StorageVolume
 
 /*************************************************************************/
 
+struct CfTcpIp
+   {
+   char *ipv4_address;
+   char *ipv4_netmask;
+   };
+
+/*************************************************************************/
+
 struct Attributes
    {
    struct FileSelect select;
@@ -1085,7 +1092,8 @@ struct Attributes
 
    struct StorageMount mount;
    struct StorageVolume volume;
-      
+
+   struct CfTcpIp tcpip;
    int havedepthsearch;
    int haveselect;
    int haverename;
@@ -1104,6 +1112,7 @@ struct Attributes
    int havemount;
    int havevolume;
    int havebundle;
+   int havetcpip;
 
       /* editline */
 

@@ -201,6 +201,26 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetInterfacesAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+ 
+attr.havetcpip = GetBundleConstraint("usebundle",pp->conlist);
+attr.tcpip = GetTCPIPAttributes(pp);
+    
+/* Common ("included") */
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetTopicsAttributes(struct Promise *pp)
 
 { struct Attributes attr;
@@ -949,4 +969,16 @@ v.sensible_count = (int) Str2Int(value);
 v.scan_arrivals = GetBooleanConstraint("scan_arrivals",pp->conlist);
 
 return v;
+}
+
+/*******************************************************************/
+
+struct CfTcpIp GetTCPIPAttributes(struct Promise *pp)
+
+{ struct CfTcpIp t;
+
+t.ipv4_address = GetConstraint("ipv4_address",pp->conlist,CF_SCALAR);
+t.ipv4_netmask = GetConstraint("ipv4_netmask",pp->conlist,CF_SCALAR);
+
+return t;
 }

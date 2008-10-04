@@ -21,22 +21,29 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: mod_methods.c                                                       */
+/* File: mod_interfaces.c                                                    */
 /*                                                                           */
 /*****************************************************************************/
-
-#define CF3_MOD_METHODS
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*****************************************************************************/
+
+#define CF3_MOD_PACKAGES
+
+struct BodySyntax CF_EXISTS_BODY[] =
+   {
+   {NULL,cf_notype,NULL}
+   };
+
 /***************************************************************/
 
-/* This is the primary set of constraints for a methods object */
+/* This is the primary set of constraints for an interfaces object */
 
-struct BodySyntax CF_METHOD_BODIES[] =
+struct BodySyntax CF_PACKAGES_BODIES[] =
    {
-   {"usebundle",cf_bundle,CF_BUNDLE},
+   {"exists",cf_body,CF_EXISTS_BODY},
    {NULL,cf_notype,NULL}
    };
 
@@ -44,9 +51,9 @@ struct BodySyntax CF_METHOD_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_METHOD_SUBTYPES[] =
+struct SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
   {
-  {"agent","methods",CF_METHOD_BODIES},
+  {"agent","packages",CF_INTERFACES_BODIES},
   {NULL,NULL,NULL},
   };
 

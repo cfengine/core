@@ -21,32 +21,30 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: mod_methods.c                                                       */
+/* File: verify_interfaces.c                                                 */
 /*                                                                           */
 /*****************************************************************************/
-
-#define CF3_MOD_METHODS
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-/***************************************************************/
+/*****************************************************************************/
 
-/* This is the primary set of constraints for a methods object */
+void VerifyInterfacesPromise(struct Promise *pp)
 
-struct BodySyntax CF_METHOD_BODIES[] =
-   {
-   {"usebundle",cf_bundle,CF_BUNDLE},
-   {NULL,cf_notype,NULL}
-   };
+{ struct Attributes a;
 
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
+a = GetInterfacesAttributes(pp);
+VerifyInterface(a,pp);
+DeleteScalar("this","promiser");
+}
 
-struct SubTypeSyntax CF_METHOD_SUBTYPES[] =
-  {
-  {"agent","methods",CF_METHOD_BODIES},
-  {NULL,NULL,NULL},
-  };
+/*****************************************************************************/
 
+void VerifyInterface(struct Attributes a,struct Promise *pp)
+
+{
+/* How shall we deal with this now ? */
+
+ printf("NOT YET IMPLEMENTED\n");
+}

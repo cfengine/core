@@ -21,22 +21,32 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: mod_methods.c                                                       */
+/* File: mod_interfaces.c                                                    */
 /*                                                                           */
 /*****************************************************************************/
-
-#define CF3_MOD_METHODS
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*****************************************************************************/
+
+#define CF3_MOD_INTEFACES
+
+struct BodySyntax CF_TCPIP_BODY[] =
+   {
+   {"ipv4_address",cf_str,"[0-9.]+/[0-4]+"},
+   {"ipv4_netmask",cf_str,"[0-9.]+/[0-4]+"},
+   {"ipv6",cf_str,"[0-9a-fA-F:]+/[0-9]+"},
+   {NULL,cf_notype,NULL}
+   };
+
 /***************************************************************/
 
-/* This is the primary set of constraints for a methods object */
+/* This is the primary set of constraints for an interfaces object */
 
-struct BodySyntax CF_METHOD_BODIES[] =
+struct BodySyntax CF_INTERFACES_BODIES[] =
    {
-   {"usebundle",cf_bundle,CF_BUNDLE},
+   {"tcp_ip",cf_body,CF_TCPIP_BODY},
    {NULL,cf_notype,NULL}
    };
 
@@ -44,9 +54,9 @@ struct BodySyntax CF_METHOD_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_METHOD_SUBTYPES[] =
+struct SubTypeSyntax CF_INTERFACES_SUBTYPES[] =
   {
-  {"agent","methods",CF_METHOD_BODIES},
+  {"agent","interfaces",CF_INTERFACES_BODIES},
   {NULL,NULL,NULL},
   };
 

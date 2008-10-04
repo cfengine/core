@@ -61,10 +61,13 @@ libpromises_la_SOURCES =						\
 	cfstream.c							\
 	pipes.c								\
 	html.c								\
+	interfaces.c							\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\
 	mod_methods.c							\
+	mod_interfaces.c						\
+	mod_packages.c							\
 	mod_files.c							\
 	mod_report.c							\
 	mod_storage.c							\
@@ -84,6 +87,8 @@ cf_agent_SOURCES =							\
 	verify_storage.c						\
 	verify_exec.c							\
 	verify_methods.c						\
+	verify_interfaces.c						\
+	verify_packages.c						\
 	verify_reports.c						\
 	agentdiagnostic.c
 

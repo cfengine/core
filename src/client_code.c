@@ -852,12 +852,17 @@ return true;
 int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp) 
 
 { int err;
+  short shortport;
 
-if (attr.copy.portnumber > 1024)
+if (attr.copy.portnumber == CF_UNDEFINED)
    {
-   SHORT_CFENGINEPORT = htons(attr.copy.portnumber);
+   shortport = SHORT_CFENGINEPORT;
    }
-
+else
+   {
+   shortport = htons(attr.copy.portnumber);
+   }
+   
 #if defined(HAVE_GETADDRINFO)
  
 if (!attr.copy.force_ipv4)
@@ -867,7 +872,7 @@ if (!attr.copy.force_ipv4)
    int err,connected = false;
    char portnumber_str[CF_MAXVARSIZE];
 
-   snprintf(portnumber_str,CF_MAXVARSIZE,"%d",ntohs(SHORT_CFENGINEPORT));
+   snprintf(portnumber_str,CF_MAXVARSIZE,"%d",ntohs(shortport));
    memset(&query,0,sizeof(struct addrinfo));   
 
    query.ai_family = AF_UNSPEC;
@@ -875,7 +880,7 @@ if (!attr.copy.force_ipv4)
 
    if ((err = getaddrinfo(host,portnumber_str,&query,&response)) != 0)
       {
-      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Unable to find hostname or cfengine service: (%s/%s) %s",host,portnumber_str,gai_strerror(err));
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Unable to find host or service: (%s/%s) %s",host,portnumber_str,gai_strerror(err));
       return false;
       }
    
@@ -928,7 +933,7 @@ if (!attr.copy.force_ipv4)
          signal(SIGALRM,SIG_DFL);
          break;
          }
-      
+
       alarm(0);
       signal(SIGALRM,SIG_DFL);
       }
@@ -972,11 +977,11 @@ if (!attr.copy.force_ipv4)
       return false;
       }
 
-   cin.sin_port = SHORT_CFENGINEPORT;
+   cin.sin_port = shortport;
    cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
    cin.sin_family = AF_INET; 
    
-   Verbose("Connect to %s = %s, port =%u\n",host,inet_ntoa(cin.sin_addr),SHORT_CFENGINEPORT);
+   Verbose("Connect to %s = %s, port =%u\n",host,inet_ntoa(cin.sin_addr),shortport);
     
    if ((conn->sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
       {

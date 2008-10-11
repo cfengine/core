@@ -109,6 +109,7 @@ cf_runagent_SOURCES =							\
 cf_know_SOURCES =							\
 	verify_reports.c						\
 	cfknow.c							\
+	graph.c								\
 	ontology.c
 
 EXTRA_DIST = cf3lex.c cf3parse.c
@@ -120,6 +121,7 @@ noinst_HEADERS =							\
 	cf.defs.h							\
 	prototypes.h							\
 	cf.extern.h							\
+	config.h							\
 	prototypes3.h							\
 	cf3.defs.h							\
 	cf3.server.h							\

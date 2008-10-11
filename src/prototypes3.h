@@ -189,6 +189,7 @@ void DeletePersistentContext(char *name);
 void LoadPersistentContext(void);
 int EvalClassExpression(struct Constraint *cp,struct Promise *pp);
 void AddEphemeralClasses(struct Rlist *classlist);
+void NewClass(char *class);
 
 /* evalfunction.c */
 
@@ -197,6 +198,7 @@ struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallExecResult(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallReturnsZero(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallIsNewerThan(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallIsAccessedBefore(struct FnCall *fp,struct Rlist *finalargs);
@@ -226,7 +228,7 @@ struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);
 void *ReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);
-void BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type);
+int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type);
 int ExecModule(char *command);
 
 /* expand.c */
@@ -423,6 +425,9 @@ void PromiseBanner(struct Promise *pp);
 void BannerBundle(struct Bundle *bp,struct Rlist *args);
 void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
 
+/* graph.c */
+
+void VerifyGraph(struct Topic *map);
 
 /* hashes.c */
 

@@ -253,7 +253,7 @@ if (a.restart_class)
    if (a.transaction.action == cfa_fix)
       {
       cfPS(cf_inform,CF_CHG,"",pp,a," - Making a one-time restart promise for %s",pp->promiser);
-      AddClassToHeap(a.restart_class);
+      NewClass(a.restart_class);
       }
    else if (a.transaction.action == cfa_warn)
       {

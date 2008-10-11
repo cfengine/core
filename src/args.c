@@ -167,6 +167,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
           break;
       }
 
+   Debug("ARG: %s\n",rval.item);
    AppendRlist(&newargs,rval.item,rval.rtype);
    }
 
@@ -198,14 +199,9 @@ for (argnum = 0; argtemplate[argnum] != NULL; argnum++)
        /* Nested functions will not match to lval so don't bother checking */
        CheckConstraintTypeMatch(id,rp->item,rp->type,argtypes[argnum],argtemplate[argnum],1);
        }
+
     rp = rp->next;
     }
-
-if (argnum != RlistLen(fp->args))
-   {
-   printf("Arg mismatch handling function %s\n",fp->name);
-   FatalError("Software error - should not happen");
-   }
 
 if (argnum != RlistLen(realargs))
    {
@@ -230,6 +226,11 @@ if (argnum != RlistLen(realargs))
       }
    
    FatalError("Bad arguments");
+   }
+
+for (rp = realargs; rp != NULL; rp=rp->next)
+   {
+   Debug("finalarg: %s\n",rp->item);
    }
 
 Debug("End ArgTemplate\n");

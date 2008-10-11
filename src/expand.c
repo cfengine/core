@@ -827,6 +827,13 @@ void GetNaked(char *s2, char *s1)
 /* copy @(listname) -> listname */
     
 {
+if (strlen(s1) < 4)
+   {
+   CfOut(cf_error,"","Naked variable expected, but \"%s\" is malformed",s1);
+   strncpy(s2,s1,CF_MAXVARSIZE-1);
+   return;
+   }
+
 memset(s2,0,CF_MAXVARSIZE);
 strncpy(s2,s1+2,strlen(s1)-3);
 }

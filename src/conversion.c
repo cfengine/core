@@ -404,7 +404,7 @@ if (s == NULL)
    return CF_NODOUBLE;
    }
 
-sscanf(s,"%d",&a);
+sscanf(s,"%lf",&a);
  
 if (a == CF_NODOUBLE)
    {

@@ -102,7 +102,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
           break;
 
       case 'd': 
-          AddClassToHeap("opt_debug");
+          NewClass("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
              {
              case '1':

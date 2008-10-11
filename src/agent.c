@@ -67,6 +67,7 @@ void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
+int Abort(void);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -285,6 +286,22 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       
       continue;
       }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortbundleclasses].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET Abort bundle classes from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(ABORTBUNDLEHEAP,rp->item))
+            {
+            AppendItem(&ABORTBUNDLEHEAP,rp->item,cp->classes);
+            }
+         }
+      
+      continue;
+      }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
       {
@@ -477,6 +494,11 @@ if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype
    exit(1);
    }
 
+if (rettype != CF_LIST)
+   {
+   FatalError("Promised bundlesequence was not a list");
+   }
+
 for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
@@ -571,6 +593,11 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
+         if (Abort())
+            {
+            DeleteTypeContext(type);
+            return false;
+            }
          }
 
       DeleteTypeContext(type);      
@@ -857,6 +884,20 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
 
 Verbose("\n");
 
+}
+
+/**************************************************************/
+
+int Abort()
+
+{
+if (ABORTBUNDLE)
+   {
+   ABORTBUNDLE = false;
+   return true;
+   }
+
+return false;
 }
 
 /**************************************************************/

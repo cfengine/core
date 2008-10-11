@@ -306,7 +306,7 @@ void AddEphemeralClasses(struct Rlist *classlist)
 
 for (rp = classlist; rp != NULL; rp = rp->next)
    {
-   AddClassToHeap(rp->item);
+   NewClass(rp->item);
    }
 }
 
@@ -410,5 +410,37 @@ if (strcmp(cp->lval,"and") == 0)
 return false;
 }
 
+/*******************************************************************/
+
+void NewClass(char *class)
+
+{
+Chop(class);
+Debug("NewClass(%s)\n",class);
+
+if (strlen(class) == 0)
+   {
+   return;
+   }
+
+if (IsRegexItemIn(ABORTBUNDLEHEAP,class))
+   {
+   CfOut(cferror,"","Bundle aborted on defined class \"%s\"\n",class);
+   ABORTBUNDLE = true;
+   }
+
+if (IsRegexItemIn(ABORTHEAP,class))
+   {
+   CfOut(cferror,"","cf-agent aborted on defined class \"%s\"\n",class);
+   exit(1);
+   }
+
+if (IsItemIn(VHEAP,class))
+   {
+   return;
+   }
+
+AppendItem(&VHEAP,class,CONTEXTID);
+}
 
 

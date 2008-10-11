@@ -18,6 +18,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
 */
+
 /*****************************************************************************/
 /*                                                                           */
 /* File: cf3.defs.h                                                          */
@@ -164,6 +165,7 @@ enum cfacontrol
    {
    cfa_maxconnections,
    cfa_abortclasses,
+   cfa_abortbundleclasses,
    cfa_addclasses,
    cfa_agentaccess,
    cfa_agentfacility,
@@ -282,6 +284,8 @@ enum cfkcontrol
    cfk_query_engine,
    cfk_stylesheet,
    cfk_htmlbanner,
+   cfk_graph_output,
+   cfk_graph_dir,
    cfk_notype
    };
 
@@ -339,6 +343,7 @@ enum cfeditorder
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&|.()]+"
 #define CF_IDRANGE     "[a-zA-Z0-9_]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
+#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
 #define CF_PATHRANGE   "[/\\].*"
 
@@ -413,6 +418,7 @@ enum fncalltype
    cfn_classmatch,
    cfn_hash,
    cfn_usemodule,
+   cfn_selectservers,
    cfn_unknown,
    };
 

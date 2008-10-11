@@ -336,11 +336,17 @@ switch (this)
        rval = FnCallUseModule(fp,expargs);
        break;
 
+   case cfn_selectservers:
+       rval = FnCallSelectServers(fp,expargs);
+       break;
+       
    case cfn_unknown:
        CfOut(cf_error,"","Un-registered function call");
        PromiseRef(cf_error,pp);
        break;
    }
+
+// Use/check function call status here FnCallStatus - use abortclasses?
 
 DeleteExpArgs(expargs);
 return rval;

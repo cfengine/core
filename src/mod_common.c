@@ -72,12 +72,13 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"ago",cf_int,6},
    {"accumulated",cf_int,6},
    {"now",cf_int,0},
-   {"readstringarray",cf_class,6},
-   {"readintarray",cf_class,6},
-   {"readrealarray",cf_class,6},
+   {"readstringarray",cf_int,6},
+   {"readintarray",cf_int,6},
+   {"readrealarray",cf_int,6},
    {"classmatch",cf_class,1},
    {"hash",cf_str,2},
    {"usemodule",cf_class,2},
+   {"selectservers",cf_int,6},
    {NULL,cf_notype}
    };
 
@@ -160,6 +161,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {
    {"maxconnections",cf_int,CF_VALRANGE},
    {"abortclasses",cf_slist,".*"},
+   {"abortbundleclasses",cf_slist,".*"},
    {"addclasses",cf_slist,".*"},
    {"agentaccess",cf_slist,".*"},
    {"agentfacility",cf_opts,CF_FACILITY},
@@ -278,6 +280,8 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"query_engine",cf_str,""},
    {"style_sheet",cf_str,""},
    {"html_banner",cf_str,""},
+   {"graph_output",cf_opts,CF_BOOL},
+   {"graph_directory",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 

@@ -63,6 +63,8 @@ extern short INSTALL_SKIP;
 extern short SHOWREPORTS;
 extern int FACILITY;
 extern time_t PROMISETIME;
+extern int ABORTBUNDLE;
+extern struct Item *ABORTBUNDLEHEAP;
 
 extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;

@@ -1876,7 +1876,7 @@ if (fabs(delta) < cf_noise_threshold) /* Arbitrary limits on sensitivity  */
        strcpy(buffer2,buffer);
        strcat(buffer2,"_microanomaly");
        AppendItem(classlist,buffer2,"2");
-       AddPersistentClass(buffer2,CF_PERSISTENCE,cfpreserve); 
+       NewPersistentContext(buffer2,CF_PERSISTENCE,cfpreserve); 
        }
    
    return sig; /* Granularity makes this silly */

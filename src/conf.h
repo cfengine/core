@@ -152,6 +152,9 @@
 /* Define to 1 if you have the `getnetgrent' function. */
 #define HAVE_GETNETGRENT 1
 
+/* Define to 1 if you have the <graphviz/gvc.h> header file. */
+#define HAVE_GRAPHVIZ_GVC_H 1
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
@@ -169,6 +172,9 @@
 
 /* Define to 1 if you have the `dgc' library (-ldgc). */
 /* #undef HAVE_LIBDGC */
+
+/* Define to 1 if you have the `gvc' library (-lgvc). */
+#define HAVE_LIBGVC 1
 
 /* Define to 1 if you have the `kstat' library (-lkstat). */
 /* #undef HAVE_LIBKSTAT */

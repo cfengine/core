@@ -52,14 +52,16 @@ short INSTALL_SKIP = false;
 int FACILITY;
 time_t PROMISETIME;
 
+struct Rlist *MOUNTEDFSLIST = NULL;
 struct Rlist *SERVERLIST = NULL;
 struct Item *PROCESSTABLE = NULL;
 struct Item *FSTABLIST = NULL;
-struct Rlist *MOUNTEDFSLIST = NULL;
+struct Item *ABORTBUNDLEHEAP = NULL;
 
 int CF_MOUNTALL = false;
 int CF_SAVEFSTAB = false;
 int FSTAB_EDITS;
+int ABORTBUNDLE = false;
 
 char HASHDB[CF_BUFSIZE];
 

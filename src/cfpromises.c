@@ -102,7 +102,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
           break;
 
       case 'd': 
-          AddClassToHeap("opt_debug");
+          NewClass("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
              {
              case '1':
@@ -145,7 +145,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
           
       case 'n': DONTDO = true;
           IGNORELOCK = true;
-          AddClassToHeap("opt_dry_run");
+          NewClass("opt_dry_run");
           break;
           
       case 'p': PARSEONLY = true;

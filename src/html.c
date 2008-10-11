@@ -33,6 +33,7 @@
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner)
 
 {
+ 
 fprintf(fp,"<html>"
         "  <head>"
         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />"
@@ -40,6 +41,20 @@ fprintf(fp,"<html>"
         "      %s"
         "    </title>"
         "    <link rel=\"stylesheet\" href=\"%s\" type=\"text/css\" media=\"screen\" />"
+
+        "<SCRIPT TYPE=\"text/javascript\">"
+        "function popup(mylink, windowname)"
+        "{"
+        "if (! window.focus)return true;"
+        "var href;"
+        "if (typeof(mylink) == \'string\')"
+        "   href=mylink;"
+        "else"
+        "   href=mylink.href;"
+        "window.open(href, windowname, \'scrollbars=yes\');"
+        "return false;"
+        "}"
+        "</SCRIPT>"
         "  </head>"
         "  <body>"
         "<div id=\"logo\"><img src=\"cfknow.png\">",title,css);
@@ -56,8 +71,7 @@ if (strlen(banner) > 0)
    fprintf(fp,"<div id=\"banner\">%s</div>\n",banner);
    }
 
-fprintf(fp,
-        "</div><div id=\"wholebody\">\n");
+fprintf(fp,"</div><div id=\"wholebody\">\n");
 
 fprintf(fp,"<div id=\"title\"><h1>%s</h1></div>",title);
 }

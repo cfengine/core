@@ -66,21 +66,6 @@ this.last =  (char *) CF_UNDEFINED;
 this.lock =  (char *) CF_UNDEFINED;
 this.log =  (char *) CF_UNDEFINED;
 
-/* Indicate as done if we tried ... as we have passed all class
-   constraints now but we should only do this for level 0
-   promises. Sub routine bundles cannot be marked as done or it will
-   disallow iteration over bundles */
-
-if (CF_STCKFRAME == 0)
-   {
-   *(pp->donep) = true;
-   }
-
-if (IGNORELOCK)
-   {
-   return this;
-   }
-
 if (now == 0)
    {
    return this;
@@ -90,8 +75,24 @@ this.last = NULL;
 this.lock = NULL;
 this.log = NULL;
 
+/* Indicate as done if we tried ... as we have passed all class
+   constraints now but we should only do this for level 0
+   promises. Sub routine bundles cannot be marked as done or it will
+   disallow iteration over bundles */
+
 if (pp->done)
    {
+   return this;
+   }
+
+if (CF_STCKFRAME == 1)
+   {
+   *(pp->donep) = true;
+   }
+
+if (IGNORELOCK)
+   {
+   this.lock = strdup("dummy");
    return this;
    }
 

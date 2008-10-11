@@ -300,14 +300,16 @@ if (ioctl(sk,SIOCSIFBRDADDR, (caddr_t) &IFR) == -1)
    return;
    } 
 
+/*
 if ((void *)(sin->sin_addr.s_addr) == (void *)NULL)
    {
-   //cfPS(cf_inform,CF_FAIL,"ioctl",pp,a,"Set broadcast address failed\n");
+   cfPS(cf_inform,CF_FAIL,"ioctl",pp,a,"Set broadcast address failed\n");
    }
 else
    {
-   //cfPS(cf_inform,CF_CHG,"ioctl",pp,a,"Set broadcast address\n");
+   cfPS(cf_inform,CF_CHG,"ioctl",pp,a,"Set broadcast address\n");
    }
+*/
 }
 
 /*****************************************************/

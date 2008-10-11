@@ -523,12 +523,6 @@ value = (char *)GetConstraint("link_type",pp->conlist,CF_SCALAR);
 f.link_type = String2LinkType(value);
 f.servers = GetListConstraint("servers",pp->conlist);
 f.portnumber = (short)GetIntConstraint("portnumber",pp->conlist);
-
-if (f.portnumber == CF_UNDEFINED)
-   {
-   f.portnumber = 5308;
-   }
-
 f.link_instead = GetListConstraint("linkcopy_patterns",pp->conlist);
 f.copy_links = GetListConstraint("copylink_patterns",pp->conlist);
 

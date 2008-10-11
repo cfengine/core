@@ -88,7 +88,7 @@ if (ec != NULL)
    {
    for (ip = ec->file_classes; ip != NULL; ip = ip->next)
       {
-      AddClassToHeap(ip->name);
+      NewClass(ip->name);
       }
    
    DeleteItemList(ec->file_classes);

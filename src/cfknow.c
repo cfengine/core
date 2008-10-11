@@ -54,6 +54,7 @@ void ShowHtmlResults(char *name,char *type,struct Topic *other_topics,struct Top
 char *NextTopic(char *link);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 char *URLHint(char *s);
+void GenerateGraph(void);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -95,6 +96,8 @@ enum cfdbtype SQL_TYPE = cfd_notype;
 int HTML = false;
 int WRITE_SQL = false;
 int ISREGEX = false;
+int GRAPH = false;
+char GRAPHDIR[CF_MAXVARSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -135,6 +138,7 @@ if (strlen(TOPIC_CMD) == 0)
    ShowOntology(); // all types and assocs
    ShowTopicMapLTM(); // all types and assocs
    GenerateSQL();
+   GenerateGraph();
    }
 else
    {
@@ -248,6 +252,7 @@ strcpy(SQL_DATABASE,"cf_topic_map");
 strcpy(SQL_OWNER,"");
 strcpy(SQL_PASSWD,"");
 strcpy(SQL_SERVER,"localhost");
+strcpy(GRAPHDIR,"");
 }
 
 /*****************************************************************************/
@@ -348,6 +353,20 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
          }
       continue;
       }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_output].lval) == 0)
+      {
+      GRAPH = GetBoolean(retval);
+      Verbose("SET graph_output = %d\n",GRAPH);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_dir].lval) == 0)
+      {
+      strncpy(GRAPHDIR,retval,CF_MAXVARSIZE);
+      continue;
+      }
+
    }
 }
 
@@ -864,10 +883,20 @@ if (count == 0 || (ISREGEX && matched == 0))
 if (matched > 1)
    {
    /* End assoc summary */
+
+   if (HTML)
+      {
+      CfHtmlHeader(stdout,"Matching associations",STYLESHEET,WEBDRIVER,BANNER);
+      }
    
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
       ShowAssociationSummary(&cfdb,tp->topic_name,tp->topic_type);
+      }
+
+   if (HTML)
+      {
+      CfHtmlFooter(stdout);
       }
    
    CfCloseDB(&cfdb);
@@ -1287,6 +1316,18 @@ if (sql_database_defined)
 
 /*********************************************************************/
 
+void GenerateGraph()
+{
+#ifdef HAVE_LIBGVC
+if (GRAPH)
+   {
+   VerifyGraph(TOPIC_MAP);
+   }
+#endif
+}
+
+/*********************************************************************/
+
 void ShowTopicDisambiguation(CfdbConn *cfdb,struct Topic *tmatches,char *name)
 
 { char banner[CF_BUFSIZE];
@@ -1469,8 +1510,7 @@ CfDeleteQuery(cfdb);
 /* Finally occurrences of the mentioned topic */
 
 strncpy(safe,EscapeSQL(cfdb,this_name),CF_BUFSIZE);
-//snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
-snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' order by locator_type",this_id,safe);
+snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
 
 CfNewQueryDB(cfdb,query);
 
@@ -1519,15 +1559,18 @@ else
 
 void ShowAssociationSummary(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc)
 
-{
+{ char banner[CF_BUFSIZE];
+ 
 if (HTML)
    {
+   printf("<div id=\"intro\">");
    printf("<li>Association \"%s\" ",NextTopic(this_fassoc));
    printf("(inverse name \"%s\")\n",NextTopic(this_tassoc));
+   printf("</div>");
    }
 else
    {
-   printf("Association \"%s\" (inverse name \"%s\")\n",this_fassoc,this_tassoc);
+   printf("Association \"%s\" (with inverse \"%s\"), ",this_fassoc,this_tassoc);
    }
 }
 
@@ -1536,11 +1579,11 @@ else
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type)
 
 { char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],query[CF_BUFSIZE];
- char banner[CF_BUFSIZE];
+  char banner[CF_BUFSIZE];
  
 if (HTML)
    {
-   snprintf(banner,CF_BUFSIZE,"A: \"%s\" (with inverse \"%s\")",this_fassoc,this_tassoc);
+   snprintf(banner,CF_BUFSIZE,"Assoc: \"%s\" (with inverse \"%s\")",this_fassoc,this_tassoc);
    CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
    printf("<div id=\"intro\">");
    printf("\"%s\" associates topics of type:  \"%s\"",this_fassoc,NextTopic(from_type));
@@ -1778,7 +1821,7 @@ printf("\nOther topics of the same type (%s):\n\n",this_type);
 
 for (tp = other_topics; tp != NULL; tp=tp->next)
    {
-   printf("  %s in the context of %s\n",tp->topic_name,tp->topic_type);
+   printf("  %s\n",tp->topic_name);
    count++;
    }
 
@@ -1796,12 +1839,21 @@ void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,
   struct TopicAssociation *ta;
   struct Occurrence *oc;
   struct Rlist *rp;
+  struct stat sb;
   int count = 0;
   FILE *fout = stdout;
-  char banner[CF_BUFSIZE];
+  char banner[CF_BUFSIZE],filename[CF_BUFSIZE];
 
-snprintf(banner,CF_BUFSIZE,"T: %s",this_name);  
+snprintf(banner,CF_BUFSIZE,"Topic: %s",this_name);  
 CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
+
+snprintf(filename,CF_BUFSIZE,"graphs/%s.png",CanonifyName(this_name));
+
+if (stat(filename,&sb) != -1)
+   {
+   // onClick=\"return popup(this,'%s')\"
+   fprintf(fout,"<div id=\"image\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
+   }
 
 fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" is found in the context of ",NextTopic(this_name));
@@ -1829,7 +1881,7 @@ if (occurrences != NULL)
 	 
          for (rp = oc->represents; rp != NULL; rp=rp->next)
             {
-            if (rp->next)
+            if (rp->next || oc->rep_type != cfk_url)
                {
                fprintf(fout,"%s, ",NextTopic((char *)rp->item));
                }
@@ -1944,7 +1996,6 @@ if (other_topics)
    for (tp = other_topics; tp != NULL; tp=tp->next)
       {
       fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
-      fprintf(fout,"in the context of %s\n",NextTopic(tp->topic_type));
       count++;
       }
    

@@ -299,10 +299,10 @@ for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
       }
    }
 
-if (strcmp("!any",buffer) == 0)
-   {
-   SetFnCallReturnStatus("classmatch",FNCALL_FAILURE,strerror(errno),NULL);
-   }
+/*
+There is no case in which the function can "fail" to find an answer
+SetFnCallReturnStatus("classmatch",FNCALL_FAILURE,strerror(errno),NULL);
+*/
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -574,12 +574,21 @@ maxbytes = finalargs->next->next->next->item;
 val = Str2Int(maxbytes);
 portnum = (short) Str2Int(port);
 
+if (val < 0 || portnum < 0)
+   {
+   SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,"port number or maxbytes out of range",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
 rval.item = NULL;
 rval.rtype = CF_NOPROMISEE;
 
 if (val > CF_BUFSIZE-1)
    {
    CfOut(cf_error,"","Too many bytes to read from TCP port %s@%s",port,hostnameip);
+   val = CF_BUFSIZE - CF_BUFFERMARGIN;
    }
 
 Debug("Want to read %d bytes from port %d at %s\n",val,portnum,hostnameip);
@@ -591,7 +600,7 @@ attr.copy.portnumber = portnum;
     
 if (!ServerConnect(conn,hostnameip,attr,NULL))
    {
-   CfOut(cf_error,"socket","Couldn't open a tcp socket");
+   CfOut(cf_inform,"socket","Couldn't open a tcp socket");
    DeleteAgentConn(conn);
    SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
    rval.item = NULL;
@@ -603,16 +612,33 @@ if (strlen(sendstring) > 0)
    {
    if (SendSocketStream(conn->sd,sendstring,strlen(sendstring),0) == -1)
       {
+      close(conn->sd);
       DeleteAgentConn(conn);
       SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
       rval.item = NULL;
       rval.rtype = CF_SCALAR;
       return rval;   
       }
-   }
 
-if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
-   {
+   signal(SIGALRM,(void *)TimeOut);
+   alarm(CF_TIMEOUT);
+   
+   if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
+      {
+      }
+
+   alarm(0);
+   signal(SIGALRM,SIG_DFL);
+
+   if (n_read == -1)
+      {
+      close(conn->sd);
+      DeleteAgentConn(conn);
+      SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
+      rval.item = NULL;
+      rval.rtype = CF_SCALAR;
+      return rval;         
+      }
    }
 
 close(conn->sd);
@@ -624,6 +650,211 @@ if ((rval.item = strdup(buffer)) == NULL)
    }
 
 SetFnCallReturnStatus("readtcp",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
+
+ /* ReadTCP(localhost,80,'GET index.html',1000) */
+    
+{ static char *argtemplate[] =
+     {
+     CF_NAKEDLRANGE,
+     CF_VALRANGE,
+     CF_ANYSTRING,
+     CF_ANYSTRING,     
+     CF_VALRANGE,
+     CF_IDRANGE,     
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_int,
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_str,
+      cf_notype
+      };
+
+  struct cfagent_connection *conn = NULL;
+  struct Rlist *rp,*hostnameip;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE],rettype;
+  int ret = false;
+  char *sp,*maxbytes,*port,*sendstring,*regex,*array_lval,*listvar;
+  int val = 0, n_read = 0,count = 0;
+  short portnum;
+  struct Attributes attr;
+  void *retval;
+
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+listvar = finalargs->item;
+port = finalargs->next->item;
+sendstring = finalargs->next->next->item;
+regex = finalargs->next->next->next->item;
+maxbytes = finalargs->next->next->next->next->item;
+array_lval = finalargs->next->next->next->next->next->item;
+
+if (*listvar == '@')
+   {
+   GetNaked(naked,listvar);
+   }
+else
+   {
+   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found\n",listvar);
+   SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
+   snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
+   rval.item = strdup(buffer);
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found\n",listvar);
+   SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
+   snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
+   rval.item = strdup(buffer);
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
+if (rettype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this variable is not a list\n",listvar);
+   SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
+   snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
+   rval.item = strdup(buffer);
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
+hostnameip = (struct Rlist *)retval;
+val = Str2Int(maxbytes);
+portnum = (short) Str2Int(port);
+
+if (val < 0 || portnum < 0)
+   {
+   SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"port number or maxbytes out of range",NULL);
+   snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
+   rval.item = strdup(buffer);
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
+rval.item = NULL;
+rval.rtype = CF_NOPROMISEE;
+
+if (val > CF_BUFSIZE-1)
+   {
+   CfOut(cf_error,"","Too many bytes specificed in selectservers",port);
+   val = CF_BUFSIZE - CF_BUFFERMARGIN;
+   }
+
+if (THIS_AGENT_TYPE != cf_agent)
+   {
+   snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
+   rval.item = strdup(buffer);
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
+for (rp = hostnameip; rp != NULL; rp=rp->next)
+   {
+   Debug("Want to read %d bytes from port %d at %s\n",val,portnum,rp->item);
+   
+   conn = NewAgentConn();
+   
+   attr.copy.force_ipv4 = false;
+   attr.copy.portnumber = portnum;
+   
+   if (!ServerConnect(conn,rp->item,attr,NULL))
+      {
+      CfOut(cf_inform,"socket","Couldn't open a tcp socket");
+      DeleteAgentConn(conn);
+      continue;
+      }
+   
+   if (strlen(sendstring) > 0)
+      {
+      if (SendSocketStream(conn->sd,sendstring,strlen(sendstring),0) == -1)
+         {
+         close(conn->sd);
+         DeleteAgentConn(conn);
+         continue;
+         }
+      
+      signal(SIGALRM,(void *)TimeOut);
+      alarm(CF_TIMEOUT);
+      
+      if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
+         {
+         }
+      
+      alarm(0);
+      signal(SIGALRM,SIG_DFL);
+      
+      if (n_read == -1)
+         {
+         close(conn->sd);
+         DeleteAgentConn(conn);
+         continue;
+         }
+
+      if (strlen(regex) == 0 || FullTextMatch(regex,buffer))
+         {
+         Verbose("Host %s is alive and responding correctly\n",rp->item);
+         snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
+         NewScalar(CONTEXTID,buffer,rp->item,cf_str);
+
+         if (IsDefinedClass(CanonifyName(rp->item)))
+            {
+            Verbose("This host is in the list and has promised to join the class %s - joined\n",array_lval);
+            NewClass(array_lval);
+            }
+         
+         count++;
+         }
+      }
+   else
+      {
+      Verbose("Host %s is alive\n",rp->item);
+      snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
+      NewScalar(CONTEXTID,buffer,rp->item,cf_str);
+
+      if (IsDefinedClass(CanonifyName(rp->item)))
+         {
+         Verbose("This host is in the list and has promised to join the class %s - joined\n",array_lval);
+         NewClass(array_lval);
+         }
+      
+      count++;
+      }
+   
+   close(conn->sd);
+   DeleteAgentConn(conn);
+   }
+
+/* Return the subset that is alive an responding correctly */
+
+/* Return the number of lines in array */
+
+snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
+rval.item = strdup(buffer);
+
+SetFnCallReturnStatus("selectservers",FNCALL_SUCCESS,NULL,NULL);
 
 /* end fn specific content */
 
@@ -903,7 +1134,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-
 strcpy(buffer,"!any");
 
 if (!FuzzyMatchParse(finalargs->item))
@@ -913,8 +1143,8 @@ if (!FuzzyMatchParse(finalargs->item))
    }
 else
    {
-   SetFnCallReturnStatus("IPRange",FNCALL_SUCCESS,NULL,NULL);
-   
+   SetFnCallReturnStatus("IPRange",FNCALL_SUCCESS,NULL,NULL);  
+
    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
       {
       Debug("Checking IP Range against RDNS %s\n",VIPADDRESS);
@@ -1047,6 +1277,8 @@ if ((rval.item = strdup(buffer)) == NULL)
    FatalError("Memory allocation in FnCallChangedBefore");
    }
 
+SetFnCallReturnStatus("isvariable",FNCALL_SUCCESS,NULL,NULL);   
+
 /* end fn specific content */
 
 rval.rtype = CF_SCALAR;
@@ -1095,6 +1327,8 @@ if ((rval.item = strdup(buffer)) == NULL)
    FatalError("Memory allocation in FnCallChangedBefore");
    }
 
+SetFnCallReturnStatus("strcmp",FNCALL_SUCCESS,NULL,NULL);
+
 /* end fn specific content */
 
 rval.rtype = CF_SCALAR;
@@ -1130,7 +1364,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 /* begin fn specific content */
 
 strcpy(buffer,CF_ANYCLASS);
-SetFnCallReturnStatus("regcmp",FNCALL_SUCCESS,NULL,NULL);   
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
 
@@ -1140,9 +1373,10 @@ if (FullTextMatch(argv0,argv1))
    }
 else
    {
-   SetFnCallReturnStatus("regcmp",FNCALL_FAILURE,NULL,NULL);
    strcpy(buffer,"!any");
    }
+
+SetFnCallReturnStatus("regcmp",FNCALL_SUCCESS,NULL,NULL);   
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -1165,7 +1399,8 @@ struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
      CF_ANYSTRING,
      NULL
      };
-  static enum cfdatatype argtypes[] =
+
+ static enum cfdatatype argtypes[] =
       {
       cf_str,
       cf_str,
@@ -1179,7 +1414,9 @@ struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
   double a = CF_NOVAL,b = CF_NOVAL;
  
 buffer[0] = '\0';  
+
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
 
@@ -1297,7 +1534,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 /* begin fn specific content */
 
 strcpy(buffer,CF_ANYCLASS);
-SetFnCallReturnStatus("userexists",FNCALL_SUCCESS,NULL,NULL);   
 
 if (isdigit((int)*arg))
    {
@@ -1306,6 +1542,10 @@ if (isdigit((int)*arg))
    if (uid < 0)
       {
       SetFnCallReturnStatus("userexists",FNCALL_FAILURE,"Illegal user id",NULL);   
+      }
+   else
+      {
+      SetFnCallReturnStatus("userexists",FNCALL_SUCCESS,NULL,NULL);   
       }
 
    if ((pw = getpwuid(uid)) == NULL)
@@ -1357,7 +1597,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 /* begin fn specific content */
 
 strcpy(buffer,CF_ANYCLASS);
-SetFnCallReturnStatus("groupexists",FNCALL_SUCCESS,NULL,NULL);   
 
 if (isdigit((int)*arg))
    {
@@ -1366,6 +1605,10 @@ if (isdigit((int)*arg))
    if (gid < 0)
       {
       SetFnCallReturnStatus("groupexists",FNCALL_FAILURE,"Illegal group id",NULL);   
+      }
+   else
+      {
+      SetFnCallReturnStatus("groupexists",FNCALL_SUCCESS,NULL,NULL);   
       }
 
    if ((gr = getgrgid(gid)) == NULL)
@@ -1467,9 +1710,10 @@ if ((rval.item = strdup(buffer)) == NULL)
    FatalError("Memory allocation in FnCallIRange");
    }
 
+SetFnCallReturnStatus("irange",FNCALL_SUCCESS,NULL,NULL);
+
 /* end fn specific content */
 
-SetFnCallReturnStatus("irange",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -1525,9 +1769,10 @@ if ((rval.item = strdup(buffer)) == NULL)
    FatalError("Memory allocation in FnCallRRange");
    }
 
+SetFnCallReturnStatus("rrange",FNCALL_SUCCESS,NULL,NULL);
+
 /* end fn specific content */
 
-SetFnCallReturnStatus("rrange",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -1605,9 +1850,10 @@ if ((rval.item = strdup(buffer)) == NULL)
    FatalError("Memory allocation in FnCallOnDate");
    }
 
+SetFnCallReturnStatus("on",FNCALL_SUCCESS,NULL,NULL);
+
 /* end fn specific content */
 
-SetFnCallReturnStatus("on",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -2002,7 +2248,7 @@ struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum
   struct Rlist *rp,*newlist = NULL;
   struct Rval rval;
   char *array_lval,*filename,*comment,*split,fnname[CF_MAXVARSIZE];
-  int maxent,maxsize,count = 0,noerrors = false;
+  int maxent,maxsize,count = 0,noerrors = false,entries = 0;
   char *file_buffer = NULL;
 
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -2042,7 +2288,7 @@ else
       }
    else
       {
-      BuildLineArray(array_lval,file_buffer,split,maxent,type);
+      entries = BuildLineArray(array_lval,file_buffer,split,maxent,type);
       }
    }
 
@@ -2072,7 +2318,11 @@ else
    SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
    }
 
-rval.item = strdup("any");
+/* Return the number of lines in array */
+
+snprintf(fnname,CF_MAXVARSIZE-1,"%d",entries);
+rval.item = strdup(fnname);
+
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -2165,7 +2415,7 @@ for (sp = s + start; *(sp+off) != '\0'; sp++)
 
 /*********************************************************************/
 
-void BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type)
+int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type)
 
 { char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
@@ -2193,7 +2443,8 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    sp += strlen(linebuf);
    }
 
-/* Don't free data - goes into vars*/
+/* Don't free data - goes into vars */
+return hcount;
 }
 
 /*********************************************************************/

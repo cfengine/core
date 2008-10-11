@@ -48,7 +48,7 @@ int VerifyMethod(struct Attributes a,struct Promise *pp)
   void *vp;
   struct FnCall *fp;
   char *method_name = NULL;
-  struct Rlist *params;
+  struct Rlist *params = NULL;
   int retval = false;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];

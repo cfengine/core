@@ -105,11 +105,11 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
             if (UNDERSCORE_CLASSES)
                {
                snprintf(workbuf,CF_BUFSIZE,"_%s",CLASSTEXT[i]);
-               AddClassToHeap(workbuf);
+               NewClass(workbuf);
                }
             else
                {
-               AddClassToHeap(CLASSTEXT[i]);
+               NewClass(CLASSTEXT[i]);
                }
             found = true;
 
@@ -149,7 +149,7 @@ for (sp2=sp; *sp2 != '\0'; sp2++)  /* Truncate fully qualified name */
 
 VDEFAULTBINSERVER.name = sp;
 
-AddClassToHeap(CanonifyName(sp));
+NewClass(CanonifyName(sp));
 
 free(sp); /* Release the ressource */
 
@@ -191,29 +191,29 @@ NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
-AddClassToHeap(workbuf);
+NewClass(workbuf);
 Verbose("Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.release);
-AddClassToHeap(CanonifyName(workbuf));
+NewClass(CanonifyName(workbuf));
 
 #ifdef IRIX
 /* Get something like `irix64_6_5_19m' defined as well as
    `irix64_6_5'.  Just copying the latter into VSYSNAME.release
    wouldn't be backwards-compatible.  */
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,real_version);
-AddClassToHeap(CanonifyName(workbuf));
+NewClass(CanonifyName(workbuf));
 #endif
 
-AddClassToHeap(CanonifyName(VSYSNAME.machine));
+NewClass(CanonifyName(VSYSNAME.machine));
 CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
-AddClassToHeap(CanonifyName(workbuf));
+NewClass(CanonifyName(workbuf));
 CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s_%s",VSYSNAME.sysname,VSYSNAME.machine,VSYSNAME.release);
-AddClassToHeap(CanonifyName(workbuf));
+NewClass(CanonifyName(workbuf));
 CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
@@ -225,7 +225,7 @@ if (sz == -1)
   }
 else
   {
-  AddClassToHeap(CanonifyName(workbuf));
+  NewClass(CanonifyName(workbuf));
   CfOut(cf_verbose,"","Additional hard class defined as: %s\n",workbuf);
   }
 #endif
@@ -237,7 +237,7 @@ if (sz == -1)
   }
 else
   {
-  AddClassToHeap(CanonifyName(workbuf));
+  NewClass(CanonifyName(workbuf));
   CfOut(cf_verbose,"","Additional hard class defined as: %s\n",workbuf);
   }
 #endif
@@ -252,13 +252,13 @@ if (strlen(workbuf) > CF_MAXVARSIZE-2)
 
 sp = strdup(CanonifyName(workbuf));
 NewScalar("sys","long_arch",sp,cf_str);
-AddClassToHeap(sp);
+NewClass(sp);
 free(sp);
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
 sp = strdup(CanonifyName(workbuf));
 NewScalar("sys","ostype",sp,cf_str);
-AddClassToHeap(sp);
+NewClass(sp);
 
 if (! found)
    {
@@ -267,7 +267,7 @@ if (! found)
 
 strcpy(workbuf,"compiled_on_"); 
 strcat(workbuf,CanonifyName(AUTOCONF_SYSNAME));
-AddClassToHeap(CanonifyName(workbuf));
+NewClass(CanonifyName(workbuf));
 CfOut(cf_verbose,"","GNU autoconf class from compile time: %s",workbuf);
 
 /* Get IP address from nameserver */
@@ -286,7 +286,7 @@ else
    for (i=0; hp->h_aliases[i]!= NULL; i++)
       {
       Debug("Adding alias %s..\n",hp->h_aliases[i]);
-      AddClassToHeap(CanonifyName(hp->h_aliases[i])); 
+      NewClass(CanonifyName(hp->h_aliases[i])); 
       }
    }
 }
@@ -368,7 +368,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
       }
 
-   AddClassToHeap(workbuf);
+   NewClass(workbuf);
    
    if (ifp->ifr_addr.sa_family == AF_INET)
       {
@@ -394,16 +394,16 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             if (hp->h_name != NULL)
                {
                Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
-               AddClassToHeap(CanonifyName(inet_ntoa(sin->sin_addr)));
+               NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
                Debug("Adding hostname %s..\n",hp->h_name);
-               AddClassToHeap(CanonifyName(hp->h_name));
+               NewClass(CanonifyName(hp->h_name));
 
                if (hp->h_aliases != NULL)
                   {
                   for (i=0; hp->h_aliases[i] != NULL; i++)
                      {
                      Debug("Adding alias %s..\n",hp->h_aliases[i]);
-                     AddClassToHeap(CanonifyName(hp->h_aliases[i]));
+                     NewClass(CanonifyName(hp->h_aliases[i]));
                      }
                   }
                }
@@ -417,20 +417,20 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             {
             }
          *sp = '\0';
-         AddClassToHeap(CanonifyName(ip));
+         NewClass(CanonifyName(ip));
          
             
          /* New style classes */
          strcpy(ip,"ipv4_");
          strcat(ip,inet_ntoa(sin->sin_addr));
-         AddClassToHeap(CanonifyName(ip));
+         NewClass(CanonifyName(ip));
 
          for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {
             if (*sp == '.')
                {
                *sp = '\0';
-               AddClassToHeap(CanonifyName(ip));
+               NewClass(CanonifyName(ip));
                }
             }
 
@@ -522,7 +522,7 @@ while (!feof(fp))
       }
    else
       {
-      AddClassToHeap(class);
+      NewClass(class);
       }
    }
  
@@ -626,7 +626,7 @@ while (!feof(pp))
             {
             Verbose("Found IPv6 address %s\n",ip->name);
             AppendItem(&IPADDRESSES,ip->name,"");
-            AddClassToHeap(CanonifyName(ip->name));
+            NewClass(CanonifyName(ip->name));
             }
          }
       

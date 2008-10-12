@@ -143,7 +143,7 @@ enum cfdatatype
 #define CF_AGENTC   "agent"
 #define CF_SERVERC  "server"
 #define CF_MONITORC "monitor"
-#define CF_EXECC    "executor"
+#define CF_EXECC    "exec"
 #define CF_KNOWC    "knowledge"
 #define CF_RUNC     "runagent"
 

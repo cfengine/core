@@ -193,7 +193,6 @@ if (ss.subtype != NULL) /* In a bundle */
       }
    }
 
-
 /* Now check the functional modules - extra level of indirection
    Note that we only check body attributes relative to promise type.
    We can enter any promise types in any bundle, but only recognized

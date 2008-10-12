@@ -40,7 +40,7 @@ int main (int argc,char *argv[]);
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[13] =
+ struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -54,6 +54,7 @@ int main (int argc,char *argv[]);
       { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
       { "analysis",no_argument,0,'a'},
+      { "reports",no_argument,0,'r'},
       { NULL,0,0,'\0' }
       };
 
@@ -66,7 +67,7 @@ int main(int argc,char *argv[])
 {
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();
-SHOWREPORTS = true;
+
 Verbose("Inputs are valid\n");
 
 if (ERRORCOUNT > 0)
@@ -90,7 +91,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -160,6 +161,10 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
 
       case 'S': SyntaxTree();
           exit(0);
+
+      case 'r':
+          SHOWREPORTS = true;
+          break;
 
       case 'x': SelfDiagnostic();
           exit(0);

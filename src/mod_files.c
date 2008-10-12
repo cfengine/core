@@ -270,7 +270,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"preserve",cf_opts,CF_BOOL},
    {"linkcopy_patterns",cf_slist,""},
    {"copylink_patterns",cf_slist,""},
-   {"compare",cf_opts,"atime,mtime,ctime,checksum"},
+   {"compare",cf_opts,"atime,mtime,ctime,digest"},
    {"link_type",cf_opts,CF_LINKRANGE},
    {"type_check",cf_opts,CF_BOOL},
    {"force_update",cf_opts,CF_BOOL},

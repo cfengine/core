@@ -75,10 +75,13 @@ libpromises_la_SOURCES =						\
 	mod_process.c
 
 
-sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent
+sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key
 
 cf_promises_SOURCES =							\
 	cfpromises.c
+
+cf_key_SOURCES =							\
+	cfkey.c
 
 cf_agent_SOURCES =							\
 	agent.c								\

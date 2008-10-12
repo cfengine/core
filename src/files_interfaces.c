@@ -520,8 +520,8 @@ if (found == -1)
          }
       else
          {
-         CfOut(cf_verbose,"","%s wasn't at destination (copying)",destfile);
-         CfOut(cf_inform,"","Copying from %s:%s\n",server,sourcefile);
+         CfOut(cf_verbose,""," -> %s wasn't at destination (copying)",destfile);
+         CfOut(cf_inform,""," -> Copying from %s:%s\n",server,sourcefile);
          }
       
       if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
@@ -535,7 +535,7 @@ if (found == -1)
             VerifyCopiedFileAttributes(destfile,&dsb,&ssb,attr,pp);
             }
 
-         cfPS(cf_verbose,CF_CHG,"",pp,attr,"Updated file from %s:%s\n",server,sourcefile);
+         cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Updated file from %s:%s\n",server,sourcefile);
 
          if (SINGLE_COPY_LIST)
             {
@@ -549,7 +549,7 @@ if (found == -1)
          }
       else
          {
-         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Copy from %s:%s failed\n",server,sourcefile);
+         cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Copy from %s:%s failed\n",server,sourcefile);
          }
 
       return;
@@ -682,7 +682,7 @@ else
          IdempPrependRScalar(&SINGLE_COPY_CACHE,destfile,CF_SCALAR);
          }
 
-      cfPS(cf_inform,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
+      cfPS(cf_verbose,CF_NOP,"",pp,attr," -> File %s is an up to date copy of source\n",destfile);
       }
    }
 }

@@ -164,7 +164,7 @@ return cfa_notlinked;
 enum cfcomparison String2Comparison(char *s)
 
 { int i;
-  static char *types[] = {"atime","mtime","ctime","checksum","binary",NULL};
+  static char *types[] = {"atime","mtime","ctime","digest","binary",NULL};
 
 for (i = 0; types[i] != NULL; i++)
    {

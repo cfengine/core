@@ -256,7 +256,7 @@ struct BodySyntax CFR_CONTROLBODY[] =
 
 struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {
-   {"splaytime",cf_int,".*"},
+   {"splaytime",cf_int,CF_VALRANGE},
    {"mailfrom",cf_str,".*@.*"},
    {"mailto",cf_str,".*@.*"},
    {"smtpserver",cf_str,".*"},

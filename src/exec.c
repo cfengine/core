@@ -250,7 +250,7 @@ VMAILSERVER[0] = '\0';
 void KeepPromises()
 
 { struct Constraint *cp;
-  char rettype;
+  char rettype,splay[CF_BUFSIZE];
   void *retval;
 
 for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
@@ -289,7 +289,16 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       MAXLINES = Str2Int(retval);
       Debug("maxlines = %d\n",MAXLINES);
       }
-   
+
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
+      {
+      int hash,time = Str2Int(retval);
+      snprintf(splay,CF_BUFSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
+      hash = Hash(splay);
+      Verbose("Sleeping for splaytime %d seconds\n\n",(int)(time*60*hash/CF_HASHTABLESIZE));
+      sleep((int)(time*60*hash/CF_HASHTABLESIZE));
+      }
+
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
       {
       struct Rlist *rp;

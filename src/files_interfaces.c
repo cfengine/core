@@ -428,7 +428,7 @@ else
 
 if ((strcmp(sourcefile,destfile) == 0) && (strcmp(server,"localhost") == 0))
    {
-   CfOut(cf_inform,"","File copy promise loop: file/dir %s is its own source",sourcefile);
+   CfOut(cf_inform,""," !! File copy promise loop: file/dir %s is its own source",sourcefile);
    return;
    }
 
@@ -443,7 +443,7 @@ if (!SelectLeaf(sourcefile,&ssb,attr,pp))
 
 if (IsStringIn(SINGLE_COPY_CACHE,destfile))
    {
-   CfOut(cf_inform,"","Skipping single-copied file %s\n",destfile);
+   CfOut(cf_inform,""," -> Skipping single-copied file %s\n",destfile);
    return;
    }
 
@@ -498,7 +498,7 @@ if (attr.copy.min_size == 0 && attr.copy.max_size == 0)
    {
    if (ssb.st_size < attr.copy.min_size || ssb.st_size > attr.copy.max_size)
       {
-      cfPS(cf_inform,CF_FAIL,"",pp,attr,"Source file %s size is not in the permitted safety range\n",sourcefile);
+      cfPS(cf_verbose,CF_FAIL,"",pp,attr," -> Source file %s size is not in the permitted safety range\n",sourcefile);
       return;
       }
    }
@@ -515,7 +515,7 @@ if (found == -1)
       {
       if (DONTDO)
          {
-         CfOut(cf_verbose,"","%s wasn't at destination (needs copying)",destfile);
+         CfOut(cf_verbose,""," -> %s wasn't at destination (needs copying)",destfile);
          return;
          }
       else

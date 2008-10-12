@@ -556,10 +556,8 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       {
       AugmentScope(bp->name,bp->args,params);
       BannerBundle(bp,params);
-      DeletePrivateClassContext(); // Each time we change bundle      
+      ScheduleAgentOperations(bp);
       }
-   
-   ScheduleAgentOperations(bp);
    }
 }
 
@@ -574,6 +572,8 @@ int ScheduleAgentOperations(struct Bundle *bp)
   enum typesequence type;
   int pass;
 
+DeletePrivateClassContext(); // Each time we change bundle
+  
 for (pass = 1; pass < CF_DONEPASSES; pass++)
    {
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
@@ -593,6 +593,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
+         
          if (Abort())
             {
             DeleteTypeContext(type);

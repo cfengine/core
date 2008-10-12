@@ -52,7 +52,7 @@ if (strcmp(pp->bundletype,"common") == 0)
    if (EvalClassExpression(a.context.expression,pp))
       {
       Debug(" ?> defining class %s\n",pp->promiser);
-      PrependItem(&VHEAP,pp->promiser,NULL);
+      NewClass(pp->promiser);
       }
 
    /* These are global and loaded once */
@@ -66,7 +66,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0)
    if (EvalClassExpression(a.context.expression,pp))
       {
       Debug(" ?> defining class %s\n",pp->promiser);
-      PrependItem(&VADDCLASSES,pp->promiser,NULL);
+      NewBundleClass(pp->promiser,pp->bundle);
       }
 
    /* Private to bundle, can be reloaded */
@@ -310,7 +310,6 @@ for (rp = classlist; rp != NULL; rp = rp->next)
    }
 }
 
-
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
@@ -339,6 +338,18 @@ if (strcmp(cp->lval,"expression") == 0)
    else
       {
       return false;
+      }
+   }
+
+if (strcmp(cp->lval,"not") == 0)
+   {
+   if (IsDefinedClass((char *)cp->rval))
+      {
+      return false;
+      }
+   else
+      {
+      return true;
       }
    }
 
@@ -380,11 +391,11 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
          snprintf(buffer,CF_MAXVARSIZE,"%s_%s",pp->promiser,rp->item);
          if (strcmp(pp->bundletype,"common") == 0)
             {
-            PrependItem(&VHEAP,buffer,NULL);
+            NewClass(buffer);
             }
          else
             {
-            PrependItem(&VADDCLASSES,buffer,NULL);
+            NewBundleClass(buffer,pp->bundle);
             }
          Debug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
          return true;
@@ -425,13 +436,13 @@ if (strlen(class) == 0)
 
 if (IsRegexItemIn(ABORTBUNDLEHEAP,class))
    {
-   CfOut(cferror,"","Bundle aborted on defined class \"%s\"\n",class);
+   CfOut(cf_error,"","Bundle aborted on defined class \"%s\"\n",class);
    ABORTBUNDLE = true;
    }
 
 if (IsRegexItemIn(ABORTHEAP,class))
    {
-   CfOut(cferror,"","cf-agent aborted on defined class \"%s\"\n",class);
+   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\"\n",class);
    exit(1);
    }
 
@@ -441,6 +452,40 @@ if (IsItemIn(VHEAP,class))
    }
 
 AppendItem(&VHEAP,class,CONTEXTID);
+}
+
+
+/*******************************************************************/
+
+void NewBundleClass(char *class,char *bundle)
+
+{
+Chop(class);
+Debug("NewBundleClass(%s)\n",class);
+
+if (strlen(class) == 0)
+   {
+   return;
+   }
+
+if (IsRegexItemIn(ABORTBUNDLEHEAP,class))
+   {
+   CfOut(cf_error,"","Bundle %s aborted on defined class \"%s\"\n",bundle,class);
+   ABORTBUNDLE = true;
+   }
+
+if (IsRegexItemIn(ABORTHEAP,class))
+   {
+   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",class,bundle);
+   exit(1);
+   }
+
+if (IsItemIn(VADDCLASSES,class))
+   {
+   return;
+   }
+
+AppendItem(&VADDCLASSES,class,CONTEXTID);
 }
 
 

@@ -134,6 +134,7 @@ struct BodySyntax CF_CLASSBODY[] =
    {"xor",cf_clist,CF_CLASSRANGE},
    {"dist",cf_rlist,CF_REALRANGE},
    {"expression",cf_class,CF_CLASSRANGE},
+   {"not",cf_class,CF_CLASSRANGE},
    {NULL,cf_notype,NULL}
    };
 

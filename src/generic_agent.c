@@ -71,6 +71,7 @@ if (ok)
    }
 else
    {
+   CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
    snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/failsafe.cf",CFWORKDIR);
    ReadPromises(ag,agents);
    }
@@ -96,11 +97,12 @@ int CheckPromises(enum cfagenttype ag)
 
 { char cmd[CF_BUFSIZE];
 
-if (ag == cf_common || ag == cf_know)
+if (ag != cf_agent)
    {
-   /* Don't check if we are the analyzer */
    return true;
    }
+
+/* If we are cf-agent, check syntax before attempting to run */
 
 if (!MINUSF)
    {

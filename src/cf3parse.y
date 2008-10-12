@@ -236,6 +236,7 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                                                  
                          if (strcmp(P.block,"bundle") == 0)
                             {
+                            struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);
                             P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
                             }
                          };

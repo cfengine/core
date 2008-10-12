@@ -42,14 +42,12 @@ void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *p
 if (pp->conn != NULL && !pp->conn->authenticated)
    {
    cfPS(cf_verbose,CF_FAIL,"",pp,attr,"No authenticated source %s in files.copyfrom promise\n",source);
-   free(destination);
    return NULL;
    }
   
 if (cf_stat(attr.copy.source,&ssb,attr,pp) == -1)
    {
    cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Can't stat %s in files.copyfrom promise\n",source);
-   free(destination);
    return NULL;
    }
   

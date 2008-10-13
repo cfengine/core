@@ -606,7 +606,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
   char naked[CF_MAXVARSIZE];
   struct FnCall *fp;
 
-Debug("EvaluateFinalRval\n");
+Debug("EvaluateFinalRval -- type %c\n",rtype);
   
 if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here */
    {
@@ -630,7 +630,15 @@ else
       }
    else
       {
-      returnval = ExpandPrivateRval("this",rval,rtype);
+      if (IsBuiltinFnCall(rval,rtype))
+         {
+         returnval.item = CopyRvalItem(rval,rtype);
+         returnval.rtype = rtype;
+         }
+      else
+         {
+         returnval = ExpandPrivateRval("this",rval,rtype);
+         }
       }
    }
 

@@ -58,6 +58,8 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"isvariable",cf_class,1},
    {"strcmp",cf_class,2},
    {"regcmp",cf_class,2},
+   {"reglist",cf_class,2},
+   {"regarray",cf_class,2},
    {"isgreaterthan",cf_class,2},
    {"islessthan",cf_class,2},
    {"userexists",cf_class,1},

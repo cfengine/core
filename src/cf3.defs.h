@@ -398,6 +398,8 @@ enum fncalltype
    cfn_isvariable,
    cfn_strcmp,
    cfn_regcmp,
+   cfn_reglist,
+   cfn_regarray,
    cfn_isgreaterthan,
    cfn_islessthan,
    cfn_userexists,

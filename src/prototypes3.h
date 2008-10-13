@@ -210,6 +210,8 @@ struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char c);
 struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
@@ -386,6 +388,7 @@ int SelectExecProgram(char *filename,char *crit);
 
 /* fncall.c */
 
+int IsBuiltinFnCall(void *rval,char rtype);
 struct FnCall *NewFnCall(char *name, struct Rlist *args);
 struct FnCall *CopyFnCall(struct FnCall *f);
 void PrintFunctions(void);

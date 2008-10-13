@@ -659,6 +659,180 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_NAKEDLRANGE,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+
+  struct Rlist *rp,*list;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE],rettype;
+  int ret = false;
+  char *regex,*listvar;
+  void *retval;
+
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+listvar = finalargs->item;
+regex = finalargs->next->item;
+
+if (*listvar == '@')
+   {
+   GetNaked(naked,listvar);
+   }
+else
+   {
+   CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this was not found\n",listvar);
+   SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function REGLIST was promised a list called \"%s\" but this was not found\n",listvar);
+   SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
+if (rettype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this variable is not a list\n",listvar);
+   SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;         
+   }
+
+list = (struct Rlist *)retval;
+
+for (rp = list; rp != NULL; rp = rp->next)
+   {
+   if (FullTextMatch(regex,rp->item))
+      {
+      strcpy(buffer,"any");
+      break;
+      }
+   else
+      {
+      strcpy(buffer,"!any");
+      }
+   }
+
+SetFnCallReturnStatus("reglist",FNCALL_SUCCESS,NULL,NULL);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRegList");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_IDRANGE,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+
+  char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],rettype;
+  char *regex,*arrayname,match[CF_MAXVARSIZE],buffer[CF_BUFSIZE];
+  struct Scope *ptr;
+  struct Rval rval;
+  int i;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+arrayname = finalargs->item;
+regex = finalargs->next->item;
+
+/* Locate the array */
+
+if (strstr(arrayname,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(arrayname,"%[^.].%s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,arrayname);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function regarray was promised a array called \"%s\" but this was not found\n",arrayname);
+   SetFnCallReturnStatus("regarray",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+strcpy(buffer,"!any");
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   if (ptr->hashtable[i] != NULL)
+      {
+      snprintf(match,CF_BUFSIZE,"%s[",lval);
+      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+         {
+         if (FullTextMatch(regex,ptr->hashtable[i]->rval))
+            {
+            strcpy(buffer,"any");
+            break;
+            }
+         }
+      }
+   }   
+
+SetFnCallReturnStatus("regarray",FNCALL_SUCCESS,NULL,NULL);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRegList");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */
@@ -817,14 +991,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
          {
          Verbose("Host %s is alive and responding correctly\n",rp->item);
          snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
-         NewScalar(CONTEXTID,buffer,rp->item,cf_str);
-
-         if (IsDefinedClass(CanonifyName(rp->item)))
-            {
-            Verbose("This host is in the list and has promised to join the class %s - joined\n",array_lval);
-            NewClass(array_lval);
-            }
-         
+         NewScalar(CONTEXTID,buffer,rp->item,cf_str);         
          count++;
          }
       }

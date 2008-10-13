@@ -30,6 +30,34 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+extern struct FnCallType CF_FNCALL_TYPES[];
+
+/*******************************************************************/
+
+int IsBuiltinFnCall(void *rval,char rtype)
+
+{ int i;
+  struct FnCall *fp;
+
+if (rtype != CF_FNCALL)
+   {
+   return false;
+   }
+
+fp = (struct FnCall *)rval;
+
+for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+   {
+   if (strcmp(CF_FNCALL_TYPES[i].name,fp->name) == 0)
+      {
+      Debug("%s is a builtin function\n",fp->name);
+      return true;
+      }
+   }
+
+return false;
+}
+
 /*******************************************************************/
 
 struct FnCall *NewFnCall(char *name, struct Rlist *args)
@@ -274,6 +302,12 @@ switch (this)
        break;
    case cfn_regcmp:
        rval = FnCallRegCmp(fp,expargs);
+       break;
+   case cfn_reglist:
+       rval = FnCallRegList(fp,expargs);
+       break;
+   case cfn_regarray:
+       rval = FnCallRegArray(fp,expargs);
        break;
    case cfn_isgreaterthan:
        rval = FnCallGreaterThan(fp,expargs,'+');

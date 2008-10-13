@@ -47,7 +47,7 @@ if (thislock.lock == NULL)
    }
 
 PromiseBanner(pp);
-cfPS(cf_error,CF_CHG,"",pp,a," REPORT %s",pp->promiser);
+cfPS(cf_error,CF_CHG,"",pp,a,"REPORT: %s",pp->promiser);
 
 YieldCurrentLock(thislock);
 }

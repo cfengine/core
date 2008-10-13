@@ -712,6 +712,7 @@ void GetNameInfo3(void);
 void GetInterfaceInfo3(void);
 void Get3Environment(void);
 void FindV6InterfaceInfo(void);
+void FindDomainName(char *hostname);
 
 /* transaction.c */
 

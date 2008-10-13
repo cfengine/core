@@ -175,6 +175,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"checksumupdates",cf_opts,CF_BOOL},
    {"compresscommand",cf_str,".*"},
    {"childlibpath",cf_str,".*"},
+   {"domain",cf_str,".*"},
    {"defaultcopytype",cf_opts,"mtime,atime,ctime,checksum,binary"},
    {"deletenonuserfiles",cf_opts,CF_BOOL},
    {"deletenonownerfiles",cf_opts,CF_BOOL},

@@ -127,33 +127,29 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
       }
    }
 
-if ((sp = malloc(strlen(VSYSNAME.nodename)+1)) == NULL)
-   {
-   FatalError("malloc failure in initialize()");
-   }
+FindDomainName(VSYSNAME.nodename);
 
-strcpy(sp,VSYSNAME.nodename);
-SetDomainName(sp);
-strncpy(VUQNAME,sp,MAXHOSTNAMELEN);  /* Default assume non-qualified kernel name, correct below */
-      
-for (sp2=sp; *sp2 != '\0'; sp2++)  /* Truncate fully qualified name */
+if (!StrStr(VSYSNAME.nodename,VDOMAIN))
    {
-   if (*sp2 == '.')
+   snprintf(VFQNAME,CF_BUFSIZE,"%s.%s",VSYSNAME.nodename,ToLowerStr(VDOMAIN));
+   NewClass(CanonifyName(VFQNAME));
+   strcpy(VUQNAME,VSYSNAME.nodename);
+   NewClass(CanonifyName(VUQNAME));
+   }
+else
+   {
+   int n = 0;
+   strcpy(VFQNAME,VSYSNAME.nodename);
+   NewClass(CanonifyName(VFQNAME));
+   
+   while(VSYSNAME.nodename[n++] != '.')
       {
-      *sp2 = '\0';
-      Debug("Truncating fully qualified hostname %s to %s\n",VSYSNAME.nodename,sp);
-      strncpy(VUQNAME,sp,MAXHOSTNAMELEN);
-      break;
       }
+   
+   strncpy(VUQNAME,VSYSNAME.nodename,n-1);
+   NewClass(CanonifyName(VUQNAME));
    }
-
-VDEFAULTBINSERVER.name = sp;
-
-NewClass(CanonifyName(sp));
-
-free(sp); /* Release the ressource */
-
- 
+  
 if ((tloc = time((time_t *)NULL)) == -1)
    {
    printf("Couldn't read system clock\n");
@@ -182,6 +178,8 @@ snprintf(workbuf,CF_MAXVARSIZE,"%s",ctime(&tloc));
 NewScalar("sys","date",workbuf,cf_str);
 NewScalar("sys","cdate",CanonifyName(workbuf),cf_str);
 NewScalar("sys","host",VSYSNAME.nodename,cf_str);
+NewScalar("sys","uqhost",VUQNAME,cf_str);
+NewScalar("sys","fqhost",VFQNAME,cf_str);
 NewScalar("sys","os",VSYSNAME.sysname,cf_str);
 NewScalar("sys","release",VSYSNAME.release,cf_str);
 NewScalar("sys","arch",VSYSNAME.machine,cf_str);
@@ -189,6 +187,16 @@ NewScalar("sys","workdir",CFWORKDIR,cf_str);
 NewScalar("sys","fstab",VFSTAB[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
+
+if (strlen(VDOMAIN) > 0)
+   {
+   NewScalar("sys","domain",VDOMAIN,cf_str);
+   }
+else
+   {
+   NewScalar("sys","domain","undefined_domain",cf_str);
+   NewClass("undefined_domain");
+   }
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
 NewClass(workbuf);
@@ -272,8 +280,9 @@ CfOut(cf_verbose,"","GNU autoconf class from compile time: %s",workbuf);
 
 /* Get IP address from nameserver */
 
-if ((hp = gethostbyname(VSYSNAME.nodename)) == NULL)
+if ((hp = gethostbyname(VFQNAME)) == NULL)
    {
+   Verbose("Hostname lookup failed on node name \"%s\"\n",VSYSNAME.nodename);
    return;
    }
 else
@@ -387,7 +396,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
    
          if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
             {
-            Debug("Host information for %s not found\n", inet_ntoa(sin->sin_addr));
+            Debug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
             }
          else
             {
@@ -402,7 +411,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   {
                   for (i=0; hp->h_aliases[i] != NULL; i++)
                      {
-                     Debug("Adding alias %s..\n",hp->h_aliases[i]);
+                     Verbose("Adding alias %s..\n",hp->h_aliases[i]);
                      NewClass(CanonifyName(hp->h_aliases[i]));
                      }
                   }
@@ -556,7 +565,7 @@ void FindV6InterfaceInfo(void)
     case irix4:
     case irix64:
         
-        if ((pp = cfpopen("/usr/etc/ifconfig -a","r")) == NULL)
+        if ((pp = cf_popen("/usr/etc/ifconfig -a","r")) == NULL)
            {
            Verbose("Could not find interface info\n");
            return;
@@ -566,7 +575,7 @@ void FindV6InterfaceInfo(void)
 
     case hp:
         
-        if ((pp = cfpopen("/usr/sbin/ifconfig -a","r")) == NULL)
+        if ((pp = cf_popen("/usr/sbin/ifconfig -a","r")) == NULL)
            {
            Verbose("Could not find interface info\n");
            return;
@@ -576,7 +585,7 @@ void FindV6InterfaceInfo(void)
 
     case aix:
         
-        if ((pp = cfpopen("/etc/ifconfig -a","r")) == NULL)
+        if ((pp = cf_popen("/etc/ifconfig -a","r")) == NULL)
            {
            Verbose("Could not find interface info\n");
            return;
@@ -586,7 +595,7 @@ void FindV6InterfaceInfo(void)
         
     default:
         
-        if ((pp = cfpopen("/sbin/ifconfig -a","r")) == NULL)
+        if ((pp = cf_popen("/sbin/ifconfig -a","r")) == NULL)
            {
            Verbose("Could not find interface info\n");
            return;
@@ -634,5 +643,77 @@ while (!feof(pp))
       }
    }
 
-cfpclose(pp);
+cf_pclose(pp);
+}
+
+
+/*********************************************************************/
+
+void FindDomainName(char *hostname)
+
+{ char fqn[CF_MAXVARSIZE];
+  char *ptr;
+  char buffer[CF_BUFSIZE];
+ 
+strcpy(VFQNAME,hostname); /* By default VFQNAME = hostname (nodename) */
+
+if (strstr(VFQNAME,".") == 0)
+   {
+   /* The nodename is not full qualified - try to find the FQDN hostname */
+
+   if (gethostname(fqn, sizeof(fqn)) != -1)
+      {
+      struct hostent *hp;
+
+      if (hp = gethostbyname(fqn))
+         {
+         if (strstr(hp->h_name,"."))
+            {
+            /* We find a FQDN hostname So we change the VFQNAME variable */
+            strncpy(VFQNAME,hp->h_name,CF_MAXVARSIZE);
+            VFQNAME[CF_MAXVARSIZE-1]= '\0'; 
+            }
+         }
+      }
+   }
+
+strcpy(buffer,VFQNAME);
+NewClass(CanonifyName(buffer));
+NewClass(CanonifyName(ToLowerStr(buffer)));
+
+if (strstr(VFQNAME,"."))
+   {
+   /* If VFQNAME is full qualified we can create VDOMAIN variable */
+   ptr = strchr(VFQNAME, '.');
+   strcpy(VDOMAIN, ++ptr);
+   DeleteClass("undefined_domain");
+   }
+
+if (strstr(VFQNAME,".") == 0 && (strcmp(VDOMAIN,CF_START_DOMAIN) != 0))
+   {
+   strcat(VFQNAME,".");
+   strcat(VFQNAME,VDOMAIN);
+   }
+
+if (strstr(VFQNAME,"."))
+   {
+   /* Add some domain hierarchy classes */
+   for (ptr=VFQNAME; *ptr != '\0'; ptr++)
+      {
+      if (*ptr == '.')
+         {
+         if (*(ptr+1) != '\0')
+            {
+            Debug("Defining domain #%s#\n",(ptr+1));
+            NewClass(CanonifyName(ptr+1));
+            }
+         else
+            {
+            Debug("Domain rejected\n");
+            }      
+         }
+      }
+   }
+
+NewClass(CanonifyName(VDOMAIN));
 }

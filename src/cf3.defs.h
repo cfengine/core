@@ -176,6 +176,7 @@ enum cfacontrol
    cfa_checksumupdates,
    cfa_compresscommand,
    cfa_childlibpath,
+   cfa_domain,
    cfa_defaultcopytype,
    cfa_deletenonuserfiles,
    cfa_deletenonownerfiles,

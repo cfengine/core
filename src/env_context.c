@@ -454,6 +454,14 @@ if (IsItemIn(VHEAP,class))
 AppendItem(&VHEAP,class,CONTEXTID);
 }
 
+/*******************************************************************/
+
+void DeleteClass(char *class)
+
+{
+DeleteItemLiteral(&VHEAP,class);
+DeleteItemLiteral(&VADDCLASSES,class);
+}
 
 /*******************************************************************/
 

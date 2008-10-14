@@ -142,14 +142,21 @@ void ReadPromises(enum cfagenttype ag,char *agents)
 
 Cf3ParseFiles();
 
-snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+if (IsPrivileged())
+   {
+   snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
+   XML = 0;
+   }
+else
+   {
+   snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+   XML = 1;
+   }
 
 if ((FOUT = fopen(name,"w")) == NULL)
    {
    FatalError("Cannot open output file\n");
    }
-
-XML = 1;
 
 HashVariables();
 SetAuditVersion();

@@ -543,7 +543,7 @@ switch (id)
        
        if (GetVariable("control_agent",CFA_CONTROLBODY[promiseoption].lval,&retval,&rettype) == cf_notype)
           {
-          CfOut(cf_error,"","Unknown lval %s in agent control body",CFA_CONTROLBODY[promiseoption].lval);
+          CfOut(cf_verbose,"","lval %s was not found in agent control body",CFA_CONTROLBODY[promiseoption].lval);
           return false;
           }
        else

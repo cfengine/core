@@ -96,10 +96,19 @@ if (PARSEONLY)
 int CheckPromises(enum cfagenttype ag)
 
 { char cmd[CF_BUFSIZE];
-
+  struct stat sb;
+ 
 if (ag != cf_agent)
    {
    return true;
+   }
+
+snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR,VINPUTFILE);
+
+if (stat(cmd,&sb) == -1)
+   {
+   CfOut(cf_error,"","cf-promises needs to be installed in %s/bin for pre-validation of full configuration",CFWORKDIR);
+   return false;
    }
 
 /* If we are cf-agent, check syntax before attempting to run */

@@ -598,7 +598,7 @@ else
    {
    int ok_to_copy = false;
    
-   Debug("Destination file %s already exists\n",destfile);
+   Verbose("Destination file %s already exists\n",destfile);
    
    if (!attr.copy.force_update)
       {
@@ -873,7 +873,7 @@ switch (attr.copy.compare)
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
-       if (ok_to_copy && (attr.transaction.action == cfa_warn))
+       if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
           CfOut(cf_inform,"","Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
@@ -893,9 +893,9 @@ switch (attr.copy.compare)
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
-       if (ok_to_copy && (attr.transaction.action == cfa_warn))
+       if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_error,"","Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,"","Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -904,9 +904,9 @@ switch (attr.copy.compare)
        
        ok_to_copy = (dsb->st_mtime < ssb->st_mtime);
        
-       if (ok_to_copy && (attr.transaction.action == cfa_warn))
+       if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_error,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -917,9 +917,9 @@ switch (attr.copy.compare)
            (dsb->st_mtime < ssb->st_mtime)||
            CompareBinaryFiles(sourcefile,destfile,ssb,dsb,attr,pp);
        
-       if (ok_to_copy && (attr.transaction.action == cfa_warn))
+       if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_error,"","Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,"","Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -927,9 +927,9 @@ switch (attr.copy.compare)
    default:
        ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
        
-       if (ok_to_copy && (attr.transaction.action == cfa_warn))
+       if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_error,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1116,7 +1116,6 @@ else
 
 if (BufferOverflow(dest,CF_NEW))
    {
-   printf(" culprit: CopyReg\n");
    return false;
    }
 strcpy(new,dest);
@@ -1167,25 +1166,29 @@ if (!discardbackup)
 
    stampnow = time((time_t *)NULL);
    
-   sprintf(stamp, "_%d_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
+   snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
 
-   if (BufferOverflow(dest,stamp))
+   if (!JoinPath(backup,dest))
       {
-      printf(" culprit: CopyReg\n");
+      Debug(" culprit: CopyReg\n");
       return false;
       }
 
-   strcpy(backup,dest);
-
    if (attr.copy.backup == cfa_timestamp)
       {
-      strcat(backup,stamp);
+      if (!JoinPath(backup,stamp))
+         {
+         return false;
+         }
       }
-
-   /* rely on prior BufferOverflow() and on strlen(CF_SAVED) < CF_BUFFERMARGIN */
-
-   strcat(backup,CF_SAVED);
-
+   else
+      {
+      if (!JoinPath(backup,CF_SAVED))
+         {
+         return false;
+         }
+      }
+   
    /* Now in case of multiple copies of same object, try to avoid overwriting original backup */
    
    if (lstat(backup,&s) != -1)

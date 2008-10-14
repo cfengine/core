@@ -130,6 +130,13 @@ category   [a-zA-Z_]+:
                       P.line_pos += strlen(yytext);
                       yytext[strlen(yytext)-1] = '\0';
                       P.currenttype = strdup(yytext);
+
+                      if (P.currentclasses != NULL)
+                         {
+                         free(P.currentclasses);
+                         P.currentclasses = NULL;
+                         }
+
                       return CATEGORY;
                       }
 

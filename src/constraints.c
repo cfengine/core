@@ -224,7 +224,7 @@ return false;
 int GetIntConstraint(char *lval,struct Constraint *list)
 
 { struct Constraint *cp;
-  int retval = CF_UNDEFINED;
+  int retval = CF_NOINT;
 
 for (cp = list; cp != NULL; cp=cp->next)
    {
@@ -232,7 +232,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       {
       if (IsDefinedClass(cp->classes))
          {
-         if (retval != CF_UNDEFINED)
+         if (retval != CF_NOINT)
             {
             CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
             }
@@ -249,6 +249,42 @@ for (cp = list; cp != NULL; cp=cp->next)
          }
 
       retval = Str2Int((char *)cp->rval);
+      }
+   }
+
+return retval;
+}
+
+/*****************************************************************************/
+
+double GetRealConstraint(char *lval,struct Constraint *list)
+
+{ struct Constraint *cp;
+  double retval = CF_NODOUBLE;
+
+for (cp = list; cp != NULL; cp=cp->next)
+   {
+   if (strcmp(cp->lval,lval) == 0)
+      {
+      if (IsDefinedClass(cp->classes))
+         {
+         if (retval != CF_NODOUBLE)
+            {
+            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
+            }
+         }
+      else
+         {
+         continue;
+         }
+
+      if (cp->type != CF_SCALAR)
+         {
+         CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
+         FatalError(OUTPUT);
+         }
+
+      retval = Str2Double((char *)cp->rval);
       }
    }
 

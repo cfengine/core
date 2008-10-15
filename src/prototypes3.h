@@ -94,6 +94,7 @@ struct TopicAssociation GetAssociationConstraints(struct Promise *pp);
 struct StorageMount GetMountConstraints(struct Promise *pp);
 struct StorageVolume GetVolumeConstraints(struct Promise *pp);
 struct CfTcpIp GetTCPIPAttributes(struct Promise *pp);
+struct Report GetReportConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -147,6 +148,7 @@ void DeleteConstraintList(struct Constraint *conlist);
 void *GetConstraint(char *lval,struct Constraint *list,char type);
 int GetBooleanConstraint(char *lval,struct Constraint *list);
 int GetIntConstraint(char *lval,struct Constraint *list);
+double GetRealConstraint(char *lval,struct Constraint *list);
 mode_t GetOctalConstraint(char *lval,struct Constraint *list);
 uid_t GetUidConstraint(char *lval,struct Constraint *list,struct Promise *pp);
 gid_t GetGidConstraint(char *lval,struct Constraint *list,struct Promise *pp);
@@ -191,6 +193,7 @@ int EvalClassExpression(struct Constraint *cp,struct Promise *pp);
 void AddEphemeralClasses(struct Rlist *classlist);
 void NewClass(char *class);
 void NewBundleClass(char *class,char *bundle);
+void DeleteClass(char *class);
 
 /* evalfunction.c */
 
@@ -802,6 +805,10 @@ int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struc
 /* verify_reports.c */
 
 void VerifyReportPromise(struct Promise *pp);
+void PrintFile(struct Attributes a,struct Promise *pp);
+void ShowState(char *type,struct Attributes a,struct Promise *pp);
+void FriendStatus(struct Attributes a,struct Promise *pp);
+
 
 
 

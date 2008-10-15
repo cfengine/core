@@ -507,7 +507,7 @@ if (found == -1)
    {
    if (attr.transaction.action == cfa_warn)
       {
-      cfPS(cf_error,CF_NOP,"",pp,attr,"Image file %s is non-existent and should be a copy of %s\n",destfile,sourcefile);
+      cfPS(cf_error,CF_NOP,"",pp,attr," !! Image file %s is non-existent and should be a copy of %s\n",destfile,sourcefile);
       return;
       }
    
@@ -632,7 +632,7 @@ else
             }
          else
             {
-            cfPS(cf_inform,CF_CHG,"",pp,attr,"Updated %s from source %s on %s",destfile,sourcefile,server);
+            cfPS(cf_inform,CF_CHG,"",pp,attr," -> Updated %s from source %s on %s",destfile,sourcefile,server);
             }
          
          if (MatchRlistItem(AUTO_DEFINE_LIST,destfile))
@@ -875,7 +875,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_inform,"","Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,""," !! Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -895,7 +895,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_inform,"","Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,""," !! Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -906,7 +906,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_inform,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,""," !! Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -919,7 +919,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_inform,"","Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,""," !! Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -929,7 +929,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy && (attr.transaction.action != cfa_warn))
           { 
-          CfOut(cf_inform,"","Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_inform,""," !! Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;

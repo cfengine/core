@@ -141,13 +141,6 @@ struct BodySyntax CF_CLASSBODY[] =
    };
 
 /*********************************************************/
-
-struct BodySyntax CF_REPORTBODY[] =
-   {
-   {NULL,cf_notype,NULL}
-   };
-
-/*********************************************************/
 /* Control bodies                                        */
 /*********************************************************/
 
@@ -338,7 +331,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
      {
      {"*","vars",CF_VARBODY},
      {"*","classes",CF_CLASSBODY},
-     {"*","reports",CF_REPORTBODY},
+     {"*","reports",CF_REPORT_BODIES},
      {"agent","*",CF_COMMON_BODIES},
      {"edit_line","*",CF_COMMON_EDITBODIES},
      {NULL,NULL,NULL}
@@ -353,7 +346,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
-   CF_COMMON_SUBTYPES,     /* Add modules after this */
+   CF_COMMON_SUBTYPES,     /* Add modules after this, mod_report.c is here */
    CF_FILES_SUBTYPES,      /* mod_files.c */
    CF_EXEC_SUBTYPES,       /* mod_exec.c */
    CF_PROCESS_SUBTYPES,    /* mod_process.c */
@@ -362,7 +355,6 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_METHOD_SUBTYPES,     /* mod_methods.c */
    CF_INTERFACES_SUBTYPES, /* mod_interfaces.c */
    CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
-   CF_REPORT_SUBTYPES,     /* mod_report.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */

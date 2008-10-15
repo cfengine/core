@@ -143,7 +143,7 @@ enum cfdatatype
 #define CF_AGENTC   "agent"
 #define CF_SERVERC  "server"
 #define CF_MONITORC "monitor"
-#define CF_EXECC    "exec"
+#define CF_EXECC    "executor"
 #define CF_KNOWC    "knowledge"
 #define CF_RUNC     "runagent"
 
@@ -1059,6 +1059,19 @@ struct StorageVolume
 
 /*************************************************************************/
 
+struct Report
+   {
+   int haveprintfile;
+   int havelastseen;
+   int lastseen;
+   double intermittency;
+   char *filename;
+   int numlines;
+   struct Rlist *showstate;
+   };
+
+/*************************************************************************/
+
 struct CfTcpIp
    {
    char *ipv4_address;
@@ -1066,6 +1079,8 @@ struct CfTcpIp
    };
 
 /*************************************************************************/
+
+ /* This is huge, but the simplification of logic is huge too and worth it */
 
 struct Attributes
    {
@@ -1099,6 +1114,7 @@ struct Attributes
    struct ProcessCount process_count;
    struct ProcessSelect process_select;
 
+   struct Report report;
    struct StorageMount mount;
    struct StorageVolume volume;
 

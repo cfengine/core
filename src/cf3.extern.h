@@ -133,6 +133,7 @@ extern struct BodySyntax CF_EXISTS_BODY[];
 #ifndef CF3_MOD_REPORT
 extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
 extern struct BodySyntax CF_REPORT_BODIES[];
+extern struct BodySyntax CF_PRINTFILE_BODY[];
 #endif
 
 

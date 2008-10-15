@@ -90,6 +90,8 @@ struct Attributes GetReportsAttributes(struct Promise *pp)
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
+
+attr.report = GetReportConstraints(pp);
 return attr;
 }
 
@@ -975,4 +977,47 @@ t.ipv4_address = GetConstraint("ipv4_address",pp->conlist,CF_SCALAR);
 t.ipv4_netmask = GetConstraint("ipv4_netmask",pp->conlist,CF_SCALAR);
 
 return t;
+}
+
+/*******************************************************************/
+
+struct Report GetReportConstraints(struct Promise *pp)
+
+{ struct Report r;
+
+if (GetConstraint("lastseen",pp->conlist,CF_SCALAR))
+   {
+   r.havelastseen = true;
+   r.lastseen = GetIntConstraint("lastseen",pp->conlist);
+   
+   if (r.lastseen == CF_NOINT)
+      {
+      r.lastseen = 0;
+      }
+   }
+else
+   {
+   r.havelastseen = false;
+   r.lastseen = 0;
+   }
+
+r.intermittency = GetRealConstraint("intermittency",pp->conlist);
+
+if (r.intermittency == CF_NODOUBLE)
+   {
+   r.intermittency = 0;
+   }
+
+r.haveprintfile = GetBooleanConstraint("printfile",pp->conlist);
+r.filename = (char *)GetConstraint("file_to_print",pp->conlist,CF_SCALAR);
+r.numlines = GetIntConstraint("num_lines",pp->conlist);
+
+if (r.numlines == CF_NOINT)
+   {
+   r.numlines = 5;
+   }
+
+r.showstate = GetListConstraint("showstate",pp->conlist);
+
+return r;
 }

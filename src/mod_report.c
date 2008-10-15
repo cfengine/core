@@ -30,6 +30,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+struct BodySyntax CF_PRINTFILE_BODY[] =
+   {
+   {"number_of_lines",cf_int,CF_VALRANGE},
+   {"file_to_print",cf_str,CF_PATHRANGE},
+   {NULL,cf_notype,NULL}
+   };
 
 /***************************************************************/
 
@@ -37,6 +43,10 @@
 
 struct BodySyntax CF_REPORT_BODIES[] =
    {
+   {"lastseen",cf_int,CF_VALRANGE},
+   {"intermittency",cf_real,"0,1"},
+   {"showstate",cf_slist,""},
+   {"printfile",cf_body,CF_PRINTFILE_BODY},
    {NULL,cf_notype,NULL}
    };
 

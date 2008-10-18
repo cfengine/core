@@ -73,8 +73,18 @@ if (DONTDO || a.transaction.action == cfa_warn)
    }
 else if (ec && ec->num_edits > 0)
    {
-   cfPS(cf_inform,CF_CHG,"",pp,a,"Saving edit changes to file %s",ec->filename);
-   SaveItemListAsFile(ec->file_start,ec->filename,a,pp);
+   if (CompareToFile(ec->file_start,ec->filename))
+      {
+      if (ec)
+         {
+         cfPS(cf_inform,CF_NOP,"",pp,a,"No edit changes to file %s need saving",ec->filename);
+         }      
+      }
+   else
+      {
+      cfPS(cf_inform,CF_CHG,"",pp,a,"Saving edit changes to file %s",ec->filename);
+      SaveItemListAsFile(ec->file_start,ec->filename,a,pp);
+      }
    }
 else
    {
@@ -114,7 +124,7 @@ if (stat(file,&statbuf) == -1)
 
 if (statbuf.st_size > a.edits.maxfilesize)
    {
-   CfOut(cf_inform,"","File %s is bigger than the limit edit.max_file_size\n",file);
+   CfOut(cf_inform,"","File %s is bigger than the limit edit.max_file_size = %d bytes\n",file,a.edits.maxfilesize);
    return(false);
    }
 

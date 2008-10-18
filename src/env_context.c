@@ -51,7 +51,7 @@ if (strcmp(pp->bundletype,"common") == 0)
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      Debug(" ?> defining class %s\n",pp->promiser);
+      Verbose(" ?> defining additional global class %s\n",pp->promiser);
       NewClass(pp->promiser);
       }
 

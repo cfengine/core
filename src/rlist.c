@@ -577,6 +577,7 @@ void DeleteRvalItem(void *rval, char type)
 { struct Rlist *clist;
 
 Debug("DeleteRvalItem(%c)",type);
+
 if (DEBUG)
    {
    ShowRval(stdout,rval,type);
@@ -803,7 +804,7 @@ return liststart;
 
 /*******************************************************************/
 
-struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge)
+struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
 
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
@@ -814,7 +815,7 @@ struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge)
   int start,end;
   int delta, count = 0;
 
-Debug("\n\nSplit %s with regex %s (up to maxent %d)\n\n",string,regex,max);
+Debug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n",string,regex,max);
   
 sp = string;
   
@@ -829,7 +830,7 @@ while ((count < max) && BlockTextMatch(regex,sp,&start,&end))
    memset(node,0,CF_MAXVARSIZE);
    strncpy(node,sp,start);
 
-   if (strlen(node) > 0)
+   if (blanks || strlen(node) > 0)
       {
       AppendRScalar(&liststart,node,CF_SCALAR);
       count++;
@@ -843,7 +844,7 @@ if (count < max)
    memset(node,0,CF_MAXVARSIZE);
    strncpy(node,sp,CF_MAXVARSIZE-1);
    
-   if (strlen(node) > 0)
+   if (blanks || strlen(node) > 0)
       {
       AppendRScalar(&liststart,node,CF_SCALAR);
       }

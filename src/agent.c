@@ -129,7 +129,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
           break;
 
       case 'd': 
-          AddClassToHeap("opt_debug");
+          NewClass("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
              {
              case '1':
@@ -172,7 +172,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
           
       case 'n': DONTDO = true;
           IGNORELOCK = true;
-          AddClassToHeap("opt_dry_run");
+          NewClass("opt_dry_run");
           break;
           
       case 'p': PARSEONLY = true;
@@ -310,7 +310,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
-         AddClassToHeap(rp->item);
+         NewClass(rp->item);
          }
       
       continue;

@@ -48,7 +48,7 @@ int IsItemInRegion(char *item,struct Item *begin_ptr,struct Item *end_ptr)
 
 { struct Item *ip;
  
-for (ip = begin_ptr; (ip != end_ptr && ip != end_ptr->next); ip = ip->next)
+for (ip = begin_ptr; (ip != end_ptr && ip != NULL); ip = ip->next)
    {
    if (strcmp(ip->name,item) == 0)
       {
@@ -141,7 +141,6 @@ if (fl && (strcmp(fl,"first") == 0))
    }
 else
    {
-   printf("XXXX\n");
    if (SelectLastItemMatching(regex,begin_ptr,end_ptr,match,prev))
       {
       return true;

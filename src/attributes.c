@@ -177,8 +177,6 @@ attr.transaction = GetTransactionConstraints(pp);
 attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
 attr.classes = GetClassDefinitionConstraints(pp);
 
-attr.edits.maxfilesize = 100000;
-
 return attr;
 }
 
@@ -276,7 +274,7 @@ r.travlinks = GetBooleanConstraint("traverse_links",pp->conlist);
 r.rmdeadlinks = GetBooleanConstraint("rmdeadlinks",pp->conlist);
 r.depth = GetIntConstraint("depth",pp->conlist);
 
-if (r.depth == CF_UNDEFINED)
+if (r.depth == CF_NOINT)
    {
    r.depth = 0;
    }
@@ -373,14 +371,14 @@ else
 t.background = GetBooleanConstraint("background",pp->conlist);
 t.ifelapsed = GetIntConstraint("ifelapsed",pp->conlist);
 
-if (t.ifelapsed == CF_UNDEFINED)
+if (t.ifelapsed == CF_NOINT)
    {
    t.ifelapsed = VIFELAPSED;
    }
 
 t.expireafter = GetIntConstraint("expireafter",pp->conlist);
 
-if (t.expireafter == CF_UNDEFINED)
+if (t.expireafter == CF_NOINT)
    {
    t.expireafter = VEXPIREAFTER;
    }
@@ -413,7 +411,7 @@ c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp->conlist);
 
 c.persist = GetIntConstraint("persist_time",pp->conlist);
 
-if (c.persist == CF_UNDEFINED)
+if (c.persist == CF_NOINT)
    {
    c.persist = 20;
    }
@@ -616,9 +614,10 @@ struct EditDefaults GetEditDefaults(struct Promise *pp)
 
 e.maxfilesize = GetIntConstraint("max_file_size",pp->conlist);
 
-if (e.maxfilesize == CF_UNDEFINED)
+if (e.maxfilesize == CF_NOINT)
    {
-   e.maxfilesize = EDITFILESIZE;
+   e.maxfilesize = 100000;
+   //e.maxfilesize = EDITFILESIZE;
    }
 
 value = (char *)GetConstraint("edit_backup",pp->conlist,CF_SCALAR);
@@ -797,6 +796,7 @@ struct EditLocation GetLocationAttributes(struct Promise *pp)
  char *value;
 
 e.line_matching = GetConstraint("select_line_matching",pp->conlist,CF_SCALAR);;
+
 value = GetConstraint("before_after",pp->conlist,CF_SCALAR);;
 
 if (value && strcmp(value,"before") == 0)
@@ -926,6 +926,7 @@ else
 c.column_value = GetConstraint("column_value",pp->conlist,CF_SCALAR);
 c.column_operation = GetConstraint("column_operation",pp->conlist,CF_SCALAR);
 c.extend_columns = GetBooleanConstraint("extend_columns",pp->conlist);
+c.blanks_ok = GetBooleanConstraint("allow_blank_columns",pp->conlist);
 return c;
 }
 

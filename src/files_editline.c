@@ -36,6 +36,7 @@ enum editlinetypesequence
    elp_columns,
    elp_replace,
    elp_insert,
+   elp_reports,
    elp_none
    };
 
@@ -45,6 +46,7 @@ char *EDITLINETYPESEQUENCE[] =
    "column_edits",
    "replace_patterns",
    "insert_lines",
+   "reports",
    NULL
    };
 
@@ -120,10 +122,12 @@ if (!IsDefinedClass(pp->classes))
    return;
    }
 
+/*
 if (pp->done)
    {
    return;
    }
+*/
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
@@ -154,6 +158,12 @@ if (strcmp("insert_lines",pp->agentsubtype) == 0)
    VerifyLineInsertions(pp);
    return;
    }
+
+if (strcmp("reports",pp->agentsubtype) == 0)
+   {
+   VerifyReportPromise(pp);
+   return;
+   }
 }
 
 /***************************************************************************/
@@ -165,8 +175,6 @@ void VerifyLineDeletions(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
-
-*(pp->donep) = true;
 
 a = GetDeletionAttributes(pp);
 
@@ -196,8 +204,6 @@ void VerifyColumnEdits(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
-
-*(pp->donep) = true;
 
 a = GetColumnAttributes(pp);
 
@@ -251,8 +257,6 @@ void VerifyPatterns(struct Promise *pp)
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
 
-*(pp->donep) = true;
-
 a = GetReplaceAttributes(pp);
 
 if (!a.replace.replace_value)
@@ -290,8 +294,6 @@ void VerifyLineInsertions(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Item *begin_ptr,*end_ptr;
   struct Attributes a;
-
-*(pp->donep) = true;
 
 a = GetInsertionAttributes(pp);
 
@@ -422,7 +424,7 @@ if (a.location.before_after == cfe_after)
    {
    for (ip = *start; ip != NULL; ip=ip->next)
       {
-      if (ip == end_ptr)
+      if (ip == end_ptr || ip->next == NULL)
          {
          return InsertMissingLinesAtLocation(start,ip,prev,a,pp);
          }
@@ -684,7 +686,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
    strncpy(separator,ip->name+s,e-s);
    
-   columns = SplitRegexAsRList(ip->name,a.column.column_separator,CF_INFINITY,false);
+   columns = SplitRegexAsRList(ip->name,a.column.column_separator,CF_INFINITY,a.column.blanks_ok);
    retval = EditLineByColumn(&columns,a,pp);
 
    if (retval)
@@ -847,7 +849,6 @@ if (a.column.select_column > count)
       }
    }
 
-
 if (a.column.value_separator != '\0')
    {
    /* internal separator, single char so split again */
@@ -864,7 +865,7 @@ if (a.column.value_separator != '\0')
          }
       else
          {
-         cfPS(cf_error,CF_CHG,"",pp,a," -> Edited column inside file object");
+         cfPS(cf_inform,CF_CHG,"",pp,a," -> Edited column inside file object");
          free(rp->item);
          sep[0] = a.column.value_separator;
          sep[1] = '\0';
@@ -910,6 +911,8 @@ else
          }
       }
    }
+
+return false;
 }
 
 /***************************************************************************/
@@ -927,6 +930,7 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0
       {
       CfOut(cf_inform,""," -> Deleting column field sub-value %s",a.column.column_value);
       DeleteRlistEntry(columns,found);
+      return true;
       }
    else
       {

@@ -62,6 +62,7 @@ libpromises_la_SOURCES =						\
 	pipes.c								\
 	html.c								\
 	interfaces.c							\
+	verify_reports.c						\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\
@@ -92,7 +93,6 @@ cf_agent_SOURCES =							\
 	verify_methods.c						\
 	verify_interfaces.c						\
 	verify_packages.c						\
-	verify_reports.c						\
 	agentdiagnostic.c
 
 cf_serverd_SOURCES =							\
@@ -110,7 +110,6 @@ cf_runagent_SOURCES =							\
 	runagent.c
 
 cf_know_SOURCES =							\
-	verify_reports.c						\
 	cfknow.c							\
 	graph.c								\
 	ontology.c

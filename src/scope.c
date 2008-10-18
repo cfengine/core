@@ -107,12 +107,13 @@ void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
 
 if (RlistLen(lvals) != RlistLen(rvals))
    {
+   CfOut(cf_error,"","While constructing scope \"%s\"\n",scope);
    fprintf(stderr,"Formal = ");
    ShowRlist(stderr,lvals);
    fprintf(stderr,", Actual = ");
    ShowRlist(stderr,rvals);
    fprintf(stderr,"\n");
-   FatalError("\nAugment scope, formal and actual parameter mismatch");
+   FatalError("Augment scope, formal and actual parameter mismatch is fatal");
    }
 
 for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
@@ -132,7 +133,7 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
          }
       else
          {
-         CfOut(cf_error,"","List parameter subsitution was not found - use @(scope.variable)");
+         CfOut(cf_error,"","List parameter not found while constructing \"%s\" - use @(scope.variable) in calling reference",scope);
          NewScalar(scope,lval,rpr->item,cf_str);         
          }
       }

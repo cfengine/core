@@ -316,6 +316,8 @@ void GetInterfaceInfo3(void)
 
 Debug("GetInterfaceInfo3()\n");
 
+NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
+
 last_name[0] = '\0';
 
 if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
@@ -427,12 +429,12 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             }
          *sp = '\0';
          NewClass(CanonifyName(ip));
-         
             
          /* New style classes */
          strcpy(ip,"ipv4_");
          strcat(ip,inet_ntoa(sin->sin_addr));
          NewClass(CanonifyName(ip));
+         NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
 
          for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {

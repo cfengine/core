@@ -793,7 +793,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function regarray was promised a array called \"%s\" but this was not found\n",arrayname);
+   CfOut(cf_error,"","Function regarray was promised an array called \"%s\" but this was not found\n",arrayname);
    SetFnCallReturnStatus("regarray",FNCALL_FAILURE,"Array not found in scope",NULL);
    rval.item = strdup("!any");
    rval.rtype = CF_SCALAR;
@@ -828,6 +828,90 @@ if ((rval.item = strdup(buffer)) == NULL)
 /* end fn specific content */
 
 rval.rtype = CF_SCALAR;
+return rval;
+}
+
+
+/*********************************************************************/
+
+struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_IDRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+
+  char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],rettype;
+  char *arrayname,index[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  struct Scope *ptr;
+  struct Rval rval;
+  struct Rlist *returnlist = NULL;
+  int i;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+arrayname = finalargs->item;
+
+/* Locate the array */
+
+if (strstr(arrayname,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(arrayname,"%[^.].%s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,arrayname);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function getindices was promised an array called \"%s\" but this was not found\n",arrayname);
+   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;            
+   }
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   if (ptr->hashtable[i] != NULL)
+      {
+      snprintf(match,CF_BUFSIZE,"%s[",lval);
+
+      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+         {
+         index[0] = '\0';
+         sscanf(ptr->hashtable[i]->lval+strlen(match),"%s",index);
+         index[strlen(index)-1] = '\0';
+         if (strlen(index) > 0)
+            {
+            Debug("FOUND KEY %s for %s (%s) \n",index,lval,ptr->hashtable[i]->lval);
+            AppendRScalar(&returnlist,index,CF_SCALAR);
+            }
+         }
+      }
+   }   
+
+SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
+
+if ((rval.item = returnlist) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRegList");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_LIST;
 return rval;
 }
 

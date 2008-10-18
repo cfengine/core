@@ -215,6 +215,7 @@ struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char c);
 struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);

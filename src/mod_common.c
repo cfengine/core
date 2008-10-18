@@ -60,6 +60,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"regcmp",cf_class,2},
    {"reglist",cf_class,2},
    {"regarray",cf_class,2},
+   {"getindices",cf_slist,1},
    {"isgreaterthan",cf_class,2},
    {"islessthan",cf_class,2},
    {"userexists",cf_class,1},

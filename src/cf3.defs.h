@@ -401,6 +401,7 @@ enum fncalltype
    cfn_regcmp,
    cfn_reglist,
    cfn_regarray,
+   cfn_getindices,
    cfn_isgreaterthan,
    cfn_islessthan,
    cfn_userexists,

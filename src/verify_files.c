@@ -72,6 +72,7 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   struct stat statbuf;
   int count = 0,lastnode = false, expandregex = false;
   uid_t agentuid = getuid();
+  int create = GetBooleanConstraint("create",pp->conlist);
 
 Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
@@ -208,6 +209,11 @@ else
 if (count == 0)
    {
    Verbose("No promiser file objects matched as regular expression %s\n",wildpath);
+
+   if (create)
+      {
+      VerifyFilePromise(pp->promiser,pp);      
+      }
    }
 
 DeleteItemList(path);

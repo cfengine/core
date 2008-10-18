@@ -310,6 +310,9 @@ switch (this)
    case cfn_regarray:
        rval = FnCallRegArray(fp,expargs);
        break;
+   case cfn_getindices:
+       rval = FnCallGetIndices(fp,expargs);
+       break;
    case cfn_isgreaterthan:
        rval = FnCallGreaterThan(fp,expargs,'+');
        break;

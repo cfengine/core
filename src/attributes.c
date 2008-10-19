@@ -772,8 +772,11 @@ attr.havelocation = GetBooleanConstraint("location",pp->conlist);
 attr.location = GetLocationAttributes(pp);
 
 attr.sourcetype = GetConstraint("source_type",pp->conlist,CF_SCALAR);
-attr.expandvars = GetBooleanConstraint("expand_vars",pp->conlist);
-                                                
+attr.expandvars = GetBooleanConstraint("expand_scalars",pp->conlist);
+
+attr.haveinsertselect = GetBooleanConstraint("insert_select",pp->conlist);
+attr.insert_select = GetInsertSelectConstraints(pp);
+
 /* Common ("included") */
 
 attr.haveregion = GetBooleanConstraint("select_region",pp->conlist);
@@ -818,6 +821,7 @@ struct Attributes GetDeletionAttributes(struct Promise *pp)
 
 { struct Attributes attr;
 
+attr.not_matching = GetBooleanConstraint("not_matching",pp->conlist);
 
  /* common */
 
@@ -1021,4 +1025,20 @@ if (r.numlines == CF_NOINT)
 r.showstate = GetListConstraint("showstate",pp->conlist);
 
 return r;
+}
+
+/*******************************************************************/
+
+struct InsertSelect GetInsertSelectConstraints(struct Promise *pp)
+
+{ struct InsertSelect s;
+
+s.startwith_from_set = GetListConstraint("startwith_from_set",pp->conlist);
+s.not_startwith_from_set = GetListConstraint("not_startwith_from_set",pp->conlist);
+s.match_from_set = GetListConstraint("match_from_set",pp->conlist);
+s.not_match_from_set = GetListConstraint("not_match_from_set",pp->conlist);
+s.contains_from_set = GetListConstraint("contains_from_set",pp->conlist);
+s.not_contains_from_set = GetListConstraint("not_contains_from_set",pp->conlist);
+
+return s;
 }

@@ -1008,6 +1008,16 @@ struct EditDefaults
 
 /*************************************************************************/
 
+struct InsertSelect
+   {
+   struct Rlist *startwith_from_set;
+   struct Rlist *not_startwith_from_set;
+   struct Rlist *match_from_set;
+   struct Rlist *not_match_from_set;
+   struct Rlist *contains_from_set;
+   struct Rlist *not_contains_from_set;
+   };
+
 struct EditLocation
    {
    char *line_matching;
@@ -1151,8 +1161,11 @@ struct Attributes
    int havelocation;
    int havecolumn;
    int havereplace;
+   int haveinsertselect;
+   struct InsertSelect insert_select;
    char *sourcetype;
    int expandvars;
+   int not_matching;
 
       /* knowledge */
 

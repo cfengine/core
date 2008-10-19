@@ -1164,8 +1164,7 @@ if (!discardbackup)
 
    Debug("Backup file %s\n",source);
 
-   stampnow = time((time_t *)NULL);
-   
+   stampnow = time((time_t *)NULL);   
    snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
 
    if (!JoinPath(backup,dest))

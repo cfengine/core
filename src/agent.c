@@ -67,7 +67,6 @@ void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
-int Abort(void);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -900,20 +899,6 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
 
 Verbose("\n");
 
-}
-
-/**************************************************************/
-
-int Abort()
-
-{
-if (ABORTBUNDLE)
-   {
-   ABORTBUNDLE = false;
-   return true;
-   }
-
-return false;
 }
 
 /**************************************************************/

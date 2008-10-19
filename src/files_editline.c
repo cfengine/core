@@ -61,24 +61,50 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
 { enum editlinetypesequence type;
   struct SubType *sp;
   struct Promise *pp;
+  int pass;
 
-  // What about multipass ?
+DeletePrivateClassContext();
+
+/* Reset the done state for every call here, since bundle is reusable */
+
+for (pass = 1; pass < CF_DONEPASSES; pass++)
+   {
+   for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
+      {
+      EditClassBanner(type);
+      
+      if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type],bp)) == NULL)
+         {
+         continue;      
+         }
+      
+      BannerSubSubType(bp->name,sp->name);
+      
+      for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+         {
+         pp->edcontext = parentp->edcontext;
+         ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
+         
+         if (Abort())
+            {
+            return false;
+            }         
+         }
+      }
+   }
+
+/* Reset the promises after 3 passes since edit bundles are reusable */
 
 for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
    {
-   EditClassBanner(type);
-   
    if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type],bp)) == NULL)
       {
       continue;      
       }
    
-   BannerSubSubType(bp->name,sp->name);
-   
    for (pp = sp->promiselist; pp != NULL; pp=pp->next)
       {
-      pp->edcontext = parentp->edcontext;
-      ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
+      pp->donep = false;
       }
    }
 
@@ -122,12 +148,10 @@ if (!IsDefinedClass(pp->classes))
    return;
    }
 
-/*
 if (pp->done)
    {
    return;
    }
-*/
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
@@ -176,6 +200,8 @@ void VerifyLineDeletions(struct Promise *pp)
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
 
+*(pp->donep) = true;	 
+	 
 a = GetDeletionAttributes(pp);
 
 /* Are we working in a restricted region? */
@@ -204,6 +230,8 @@ void VerifyColumnEdits(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
+
+*(pp->donep) = true;
 
 a = GetColumnAttributes(pp);
 
@@ -257,6 +285,8 @@ void VerifyPatterns(struct Promise *pp)
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
 
+*(pp->donep) = true;
+
 a = GetReplaceAttributes(pp);
 
 if (!a.replace.replace_value)
@@ -295,7 +325,15 @@ void VerifyLineInsertions(struct Promise *pp)
   struct Item *begin_ptr,*end_ptr;
   struct Attributes a;
 
+*(pp->donep) = true;
+
 a = GetInsertionAttributes(pp);
+
+if (!SanityCheckInsertions(a))
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) breaks its own promises",pp->promiser);
+   return;
+   }
 
 /* Are we working in a restricted region? */
 
@@ -327,7 +365,7 @@ else
       return;
       }
 
-   if (InsertMissingLinesAtLocation(start,match,prev,a,pp))
+   if (InsertMissingLinesAtLocation(start,begin_ptr,end_ptr,match,prev,a,pp))
       {
       (pp->edcontext->num_edits)++;
       }
@@ -404,7 +442,7 @@ if (IsItemInRegion(pp->promiser,begin_ptr,end_ptr))
 
 if (*start == NULL)
    {
-   return InsertMissingLinesAtLocation(start,*start,prev,a,pp);
+   return InsertMissingLinesAtLocation(start,begin_ptr,end_ptr,*start,prev,a,pp);
    }
 
 if (a.location.before_after == cfe_before)
@@ -413,7 +451,7 @@ if (a.location.before_after == cfe_before)
       {
       if (ip == begin_ptr)
          {
-         return InsertMissingLinesAtLocation(start,ip,prev,a,pp);
+         return InsertMissingLinesAtLocation(start,begin_ptr,end_ptr,ip,prev,a,pp);
          }
       
       prev = ip;
@@ -426,7 +464,7 @@ if (a.location.before_after == cfe_after)
       {
       if (ip == end_ptr || ip->next == NULL)
          {
-         return InsertMissingLinesAtLocation(start,ip,prev,a,pp);
+         return InsertMissingLinesAtLocation(start,begin_ptr,end_ptr,ip,prev,a,pp);
          }
       
       prev = ip;
@@ -438,11 +476,11 @@ return false;
 
 /***************************************************************************/
 
-int InsertMissingLinesAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
 
 { FILE *fin;
   char buf[CF_BUFSIZE],exp[CF_EXPANDSIZE];
-  struct Item *loc;
+  struct Item *loc = NULL;
   int retval = false;
   
 if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
@@ -470,15 +508,27 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
          strcpy(exp,buf);
          }
 
+      if (!SelectInsertion(exp,a,pp))
+         {
+         continue;
+         }
+      
+      if (IsItemInRegion(exp,begin_ptr,end_ptr))
+         {
+         cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised file line \"%s\" exists within file (promise kept)",exp);
+         continue;
+         }
+
       retval |= InsertMissingLineAtLocation(exp,start,loc,prev,a,pp);
 
-      prev = prev->next;
-      loc = loc->next;
-
-      if (loc == NULL)
+      if (prev && prev != CF_UNDEFINED_ITEM)
          {
-         // somthing funny ... shouldn't happen
-         break;
+         prev = prev->next;
+         }
+
+      if (loc)
+         {
+         loc = loc->next;
          }
       }
    
@@ -496,7 +546,7 @@ else
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip,*np,*lp;
- int in_region = false, retval = false;
+ int in_region = false, retval = false, match;
 
 for (ip = *start; ip != NULL; ip = ip->next)
    {
@@ -505,7 +555,16 @@ for (ip = *start; ip != NULL; ip = ip->next)
       in_region = true;
       }
 
-   if (in_region && FullTextMatch(pp->promiser,ip->name))
+   if (a.not_matching)
+      {
+      match = !FullTextMatch(pp->promiser,ip->name);
+      }
+   else
+      {
+      match = FullTextMatch(pp->promiser,ip->name);
+      }
+
+   if (in_region && match)
       {
       if (DONTDO || a.transaction.action == cfa_warn)
          {
@@ -699,6 +758,36 @@ for (ip = file_start; ip != file_end; ip=ip->next)
    }
 
 return retval;
+}
+
+/***************************************************************************/
+
+int SanityCheckInsertions(struct Attributes a)
+
+{ long not = 0;
+  long with = 0;
+  long ok = true;
+  
+with += (long)a.insert_select.startwith_from_set;
+not += (long)a.insert_select.not_startwith_from_set;
+with += (long)a.insert_select.match_from_set;
+not += (long)a.insert_select.not_match_from_set;
+with += (long)a.insert_select.contains_from_set;
+not += (long)a.insert_select.not_contains_from_set;
+
+if (not > 1)
+   {
+   CfOut(cf_error,"","Line insertion selection promise is meaningless - the alternatives are mutually exclusive (only one is allowed)");
+   ok = false;
+   }
+
+if (with && not)
+   {
+   CfOut(cf_error,"","Line insertion selection promise is meaningless - cannot mix positive and negative constraints");
+   ok = false;
+   }
+
+return ok;
 }
 
 /***************************************************************************/
@@ -913,6 +1002,107 @@ else
    }
 
 return false;
+}
+
+/***************************************************************************/
+
+int SelectInsertion(char *line,struct Attributes a,struct Promise *pp)
+
+{ struct Rlist *rp,*c;
+  int s,e;
+  char *selector;
+ 
+if (c = a.insert_select.startwith_from_set)
+   {
+   for (rp = c; rp != NULL; rp=rp->next)
+      {
+      selector = (char *)(rp->item);
+
+      if (strncmp(selector,line,strlen(selector)) == 0)
+         {
+         return true;
+         }      
+      }
+
+   return false;
+   }
+
+if (c = a.insert_select.not_startwith_from_set)
+   {
+   for (rp = c; rp != NULL; rp=rp->next)
+      {
+      selector = (char *)(rp->item);
+      
+      if (strncmp(selector,line,strlen(selector)) == 0)
+         {
+         return true;
+         }      
+      }
+
+   return true;
+   }
+
+if (c = a.insert_select.match_from_set)
+   {
+   for (rp = c; rp != NULL; rp=rp->next)
+      {
+      selector = (char *)(rp->item);
+      
+      if (FullTextMatch(selector,line))
+         {
+         return true;
+         }
+      }
+   
+   return false;
+   }
+
+if (c = a.insert_select.not_match_from_set)
+   {
+   for (rp = c; rp != NULL; rp=rp->next)
+      {
+      selector = (char *)(rp->item);
+      
+      if (FullTextMatch(selector,line))
+         {
+         return false;
+         }
+      }
+
+   return true;
+   }
+
+if (c = a.insert_select.contains_from_set)
+   {
+   for (rp = c; rp != NULL; rp=rp->next)
+      {
+      selector = (char *)(rp->item);
+      
+      if (BlockTextMatch(selector,line,&s,&e))
+         {
+         return true;
+         }            
+      }
+   
+   return false;
+   }
+
+if (c = a.insert_select.not_contains_from_set)
+   {
+   for (rp = c; rp != NULL; rp=rp->next)
+      {
+      selector = (char *)(rp->item);
+      
+      if (BlockTextMatch(selector,line,&s,&e))
+         {
+         return false;
+         }            
+      }
+
+   return true;
+   }
+
+return true;
 }
 
 /***************************************************************************/

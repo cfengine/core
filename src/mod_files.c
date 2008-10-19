@@ -99,12 +99,25 @@ struct BodySyntax CF_EDSCOPE_BODY[] =
    };
 
 /**************************************************************/
+
+struct BodySyntax CF_INSERTSELECT_BODY[] =
+   {
+   {"startwith_from_set",cf_slist,CF_ANYSTRING},
+   {"not_startwith_from_set",cf_slist,CF_ANYSTRING},
+   {"match_from_set",cf_slist,CF_ANYSTRING},
+   {"not_match_from_set",cf_slist,CF_ANYSTRING},
+   {"contains_from_set",cf_slist,CF_ANYSTRING},
+   {"not_contains_from_set",cf_slist,CF_ANYSTRING},
+   {NULL,cf_notype,NULL}
+   };
+
 /**************************************************************/
 
 struct BodySyntax CF_INSERTLINES_BODIES[] =
    {
    {"location",cf_body,CF_LOCATION_BODY},
    {"source_type",cf_opts,"literal,string,file"},
+   {"insert_select",cf_body,CF_INSERTSELECT_BODY},
    {"expand_scalars",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
@@ -113,6 +126,7 @@ struct BodySyntax CF_INSERTLINES_BODIES[] =
 
 struct BodySyntax CF_DELETELINES_BODIES[] =
    {
+   {"not_matching",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 

@@ -494,7 +494,7 @@ void *LocalExec(void *scheduled_run)
 { FILE *pp; 
   char line[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
   char cmd[CF_BUFSIZE];
-  int print,tid;
+  int print,tid,count = 0;
   time_t starttime = time(NULL);
   FILE *fp;
 #ifdef HAVE_PTHREAD_SIGMASK
@@ -520,11 +520,10 @@ snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent%s -Dfrom_cfexecd%s",
 		 CFWORKDIR,
 		 NOSPLAY ? " -q" : "",
 		 scheduled_run ? ":scheduled_run" : "");
- 
-timestamp(starttime, line, CF_BUFSIZE);
 
-snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%d",CFWORKDIR,CanonifyName(VFQNAME),line,tid);
- 
+snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
+snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,(unsigned short)tid);
+
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 
 if ((fp = fopen(filename,"w")) == NULL)
@@ -533,7 +532,7 @@ if ((fp = fopen(filename,"w")) == NULL)
    return NULL;
    }
  
-if ((pp = cfpopen(cmd,"r")) == NULL)
+if ((pp = cf_popen(cmd,"r")) == NULL)
    {
    CfOut(cf_inform,"cfpopen","Couldn't open pipe to command %s\n",cmd);
    fclose(fp);
@@ -562,6 +561,7 @@ while (!feof(pp) && ReadLine(line,CF_BUFSIZE,pp))
    if (print)
       {
       fprintf(fp,"%s\n",line);
+      count++;
       
       /* If we can't send mail, log to syslog */
       
@@ -580,12 +580,20 @@ while (!feof(pp) && ReadLine(line,CF_BUFSIZE,pp))
       }
    }
  
-cfpclose(pp);
+cf_pclose(pp);
 Debug("Closing fp\n");
 fclose(fp);
 closelog();
-  
-MailResult(filename,MAILTO);
+
+if (count)
+   {
+   MailResult(filename,MAILTO);
+   }
+else
+   {
+   unlink(filename);
+   }
+
 return NULL; 
 }
 

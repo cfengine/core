@@ -161,14 +161,25 @@ if ((FOUT = fopen(name,"w")) == NULL)
 HashVariables();
 SetAuditVersion();
 
-fprintf(FOUT,"%s",CFH[0][0]);
-fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
+if (XML)
+   {
+   fprintf(FOUT,"%s",CFH[0][0]);
+   fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
+   }
+else
+   {
+   fprintf(FOUT,"Expanded promise list for %s component\n\n",agents);
+   }
 
 ShowContext();
 VerifyPromises(cf_common);
 ShowScopedVariables(FOUT);
 
-fprintf(FOUT,"%s",CFH[0][1]);
+if (XML)
+   {
+   fprintf(FOUT,"%s",CFH[0][1]);
+   }
+
 fclose(FOUT);
 
 Verbose("Wrote expansion summary to %s\n",name);

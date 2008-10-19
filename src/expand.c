@@ -568,9 +568,17 @@ do
       {
       case cf_common:
 
-          fprintf(FOUT,"<p>");
+          if (XML)
+             {
+             fprintf(FOUT,"<p>");
+             }
+          
           ShowPromise(pexp,6);
-          fprintf(FOUT,"</p>");
+
+          if (XML)
+             {
+             fprintf(FOUT,"</p>");
+             }
 
           ReCheckAllConstraints(pexp);
           break;

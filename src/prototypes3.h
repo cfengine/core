@@ -95,6 +95,7 @@ struct StorageMount GetMountConstraints(struct Promise *pp);
 struct StorageVolume GetVolumeConstraints(struct Promise *pp);
 struct CfTcpIp GetTCPIPAttributes(struct Promise *pp);
 struct Report GetReportConstraints(struct Promise *pp);
+struct InsertSelect GetInsertSelectConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -183,6 +184,7 @@ gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
 
 /* env_context.c */
 
+int Abort(void);
 void KeepClassContextPromise(struct Promise *pp);
 int ContextSanityCheck(struct Attributes a);
 void DeletePrivateClassContext(void);
@@ -285,13 +287,15 @@ void VerifyColumnEdits(struct Promise *pp);
 void VerifyPatterns(struct Promise *pp);
 void VerifyLineInsertions(struct Promise *pp);
 int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp);
-int InsertMissingLinesAtLocation(struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
-int InsertMissingLineAtLocation(char *string,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
+int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
 int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
 int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
 int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
+int SanityCheckInsertions(struct Attributes a);
+int SelectInsertion(char *line,struct Attributes a,struct Promise *pp);
 
 /* files_links.c */
 
@@ -779,6 +783,10 @@ void VerifyInterfacesPromise(struct Promise *pp);
 
 void VerifyMethodsPromise(struct Promise *pp);
 int VerifyMethod(struct Attributes a,struct Promise *pp);
+
+/* verify_packages.c */
+
+void VerifyPackagesPromise(struct Promise *pp);
 
 /* verify_processes.c */
 

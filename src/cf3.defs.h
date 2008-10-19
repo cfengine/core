@@ -1008,14 +1008,14 @@ struct EditDefaults
 
 /*************************************************************************/
 
-struct InsertSelect
+struct LineSelect
    {
-   struct Rlist *startwith_from_set;
-   struct Rlist *not_startwith_from_set;
-   struct Rlist *match_from_set;
-   struct Rlist *not_match_from_set;
-   struct Rlist *contains_from_set;
-   struct Rlist *not_contains_from_set;
+   struct Rlist *startwith_from_line;
+   struct Rlist *not_startwith_from_line;
+   struct Rlist *match_from_line;
+   struct Rlist *not_match_from_line;
+   struct Rlist *contains_from_line;
+   struct Rlist *not_contains_from_line;
    };
 
 struct EditLocation
@@ -1162,7 +1162,8 @@ struct Attributes
    int havecolumn;
    int havereplace;
    int haveinsertselect;
-   struct InsertSelect insert_select;
+   int havedeleteselect;
+   struct LineSelect line_select;
    char *sourcetype;
    int expandvars;
    int not_matching;

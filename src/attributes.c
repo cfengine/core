@@ -775,7 +775,7 @@ attr.sourcetype = GetConstraint("source_type",pp->conlist,CF_SCALAR);
 attr.expandvars = GetBooleanConstraint("expand_scalars",pp->conlist);
 
 attr.haveinsertselect = GetBooleanConstraint("insert_select",pp->conlist);
-attr.insert_select = GetInsertSelectConstraints(pp);
+attr.line_select = GetInsertSelectConstraints(pp);
 
 /* Common ("included") */
 
@@ -822,6 +822,9 @@ struct Attributes GetDeletionAttributes(struct Promise *pp)
 { struct Attributes attr;
 
 attr.not_matching = GetBooleanConstraint("not_matching",pp->conlist);
+
+attr.havedeleteselect = GetBooleanConstraint("delete_select",pp->conlist);
+attr.line_select = GetDeleteSelectConstraints(pp);
 
  /* common */
 
@@ -1029,16 +1032,32 @@ return r;
 
 /*******************************************************************/
 
-struct InsertSelect GetInsertSelectConstraints(struct Promise *pp)
+struct LineSelect GetInsertSelectConstraints(struct Promise *pp)
 
-{ struct InsertSelect s;
+{ struct LineSelect s;
 
-s.startwith_from_set = GetListConstraint("startwith_from_set",pp->conlist);
-s.not_startwith_from_set = GetListConstraint("not_startwith_from_set",pp->conlist);
-s.match_from_set = GetListConstraint("match_from_set",pp->conlist);
-s.not_match_from_set = GetListConstraint("not_match_from_set",pp->conlist);
-s.contains_from_set = GetListConstraint("contains_from_set",pp->conlist);
-s.not_contains_from_set = GetListConstraint("not_contains_from_set",pp->conlist);
+s.startwith_from_line = GetListConstraint("insert_if_startwith_from_line",pp->conlist);
+s.not_startwith_from_line = GetListConstraint("insert_if_not_startwith_from_line",pp->conlist);
+s.match_from_line = GetListConstraint("insert_if_match_from_line",pp->conlist);
+s.not_match_from_line = GetListConstraint("insert_if_not_match_from_line",pp->conlist);
+s.contains_from_line = GetListConstraint("insert_if_contains_from_line",pp->conlist);
+s.not_contains_from_line = GetListConstraint("insert_if_not_contains_from_line",pp->conlist);
+
+return s;
+}
+
+/*******************************************************************/
+
+struct LineSelect GetDeleteSelectConstraints(struct Promise *pp)
+
+{ struct LineSelect s;
+
+s.startwith_from_line = GetListConstraint("delete_if_startwith_from_line",pp->conlist);
+s.not_startwith_from_line = GetListConstraint("delete_if_not_startwith_from_line",pp->conlist);
+s.match_from_line = GetListConstraint("delete_if_match_from_line",pp->conlist);
+s.not_match_from_line = GetListConstraint("delete_if_not_match_from_line",pp->conlist);
+s.contains_from_line = GetListConstraint("delete_if_contains_from_line",pp->conlist);
+s.not_contains_from_line = GetListConstraint("delete_if_not_contains_from_line",pp->conlist);
 
 return s;
 }

@@ -102,12 +102,12 @@ struct BodySyntax CF_EDSCOPE_BODY[] =
 
 struct BodySyntax CF_INSERTSELECT_BODY[] =
    {
-   {"startwith_from_set",cf_slist,CF_ANYSTRING},
-   {"not_startwith_from_set",cf_slist,CF_ANYSTRING},
-   {"match_from_set",cf_slist,CF_ANYSTRING},
-   {"not_match_from_set",cf_slist,CF_ANYSTRING},
-   {"contains_from_set",cf_slist,CF_ANYSTRING},
-   {"not_contains_from_set",cf_slist,CF_ANYSTRING},
+   {"insert_if_startwith_from_list",cf_slist,CF_ANYSTRING},
+   {"insert_if_not_startwith_from_list",cf_slist,CF_ANYSTRING},
+   {"insert_if_match_from_list",cf_slist,CF_ANYSTRING},
+   {"insert_if_not_match_from_list",cf_slist,CF_ANYSTRING},
+   {"insert_if_contains_from_list",cf_slist,CF_ANYSTRING},
+   {"insert_if_not_contains_from_list",cf_slist,CF_ANYSTRING},
    {NULL,cf_notype,NULL}
    };
 

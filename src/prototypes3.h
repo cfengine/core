@@ -95,7 +95,8 @@ struct StorageMount GetMountConstraints(struct Promise *pp);
 struct StorageVolume GetVolumeConstraints(struct Promise *pp);
 struct CfTcpIp GetTCPIPAttributes(struct Promise *pp);
 struct Report GetReportConstraints(struct Promise *pp);
-struct InsertSelect GetInsertSelectConstraints(struct Promise *pp);
+struct LineSelect GetInsertSelectConstraints(struct Promise *pp);
+struct LineSelect GetDeleteSelectConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 

@@ -2703,7 +2703,7 @@ return hcount;
 int ExecModule(char *command)
 
 { FILE *pp;
- char *sp,line[CF_BUFSIZE],name[CF_BUFSIZE],content[CF_BUFSIZE];
+  char *sp,line[CF_BUFSIZE];
   int print = false;
 
 if ((pp = cf_popen(command,"r")) == NULL)
@@ -2744,35 +2744,82 @@ while (!feof(pp))
          break;
          }
       }
-   
-   switch (*line)
-      {
-      case '+':
-          Verbose("Activated classes: %s\n",line+1);
-          CheckClass(line+1,command);
-          PrependItem(&VADDCLASSES,line+1,NULL);
-          break;
-      case '-':
-          Verbose("Deactivated classes: %s\n",line+1);
-          CheckClass(line+1,command);
-          NegateCompoundClass(line+1,&VNEGHEAP);
-          break;
-      case '=':
-          content[0] = '\0';
-          sscanf(line+1,"%[^=]=%[^\n]",name,content);
-          Verbose("Defined Macro: %s in context %s with value: %s\n",name,CONTEXTID,content);
-          NewScalar(CONTEXTID,name,content,cf_str);
-          break;
-          
-      default:
-          if (print)
-             {
-             CfOut(cf_error,"","Mod %s: %s\n",command,line);
-             }
-          break;
-      }
+
+   ModuleProtocol(command,line,print);
    }
 
 cf_pclose(pp);
+return true;
+}
+
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
+
+void ModuleProtocol(char *command,char *line,int print)
+
+{ char name[CF_BUFSIZE],content[CF_BUFSIZE],context[CF_BUFSIZE];
+  char *sp;
+
+for (sp = command+strlen(command)-1; sp >= command && *sp != '/'; sp--)
+   {
+   strncpy(context,sp,CF_MAXVARSIZE);
+   }
+
+NewScope(context);
+
+switch (*line)
+   {
+   case '+':
+       Verbose("Activated classes: %s\n",line+1);
+       if (CheckID(line+1))
+          {
+          NewClass(line+1);
+          }
+       break;
+   case '-':
+       Verbose("Deactivated classes: %s\n",line+1);
+       if (CheckID(line+1))
+          {
+          NegateCompoundClass(line+1,&VNEGHEAP);
+          }
+       break;
+   case '=':
+       content[0] = '\0';
+       sscanf(line+1,"%[^=]=%[^\n]",name,content);
+
+       if (CheckID(name))
+          {
+          Verbose("Defined variable: %s in context %s with value: %s\n",name,context,content);
+          NewScalar(context,name,content,cf_str);
+          }
+       break;
+       
+   default:
+       if (print)
+          {
+          CfOut(cf_error,"","M \"%s\": %s\n",command,line);
+          }
+       break;
+   }
+}
+
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
+
+int CheckID(char *id)
+
+{ char *sp;
+
+for (sp = id; *sp != '\0'; sp++)
+   {
+   if (!isalnum((int)*sp) && (*sp != '_'))
+      {
+      CfOut(cf_error,"","Module protocol contained an illegal character (%c) in class/variable identifier %s.",*sp,id);
+      return false;
+      }
+   }
+
 return true;
 }

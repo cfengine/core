@@ -1010,12 +1010,12 @@ struct EditDefaults
 
 struct LineSelect
    {
-   struct Rlist *startwith_from_line;
-   struct Rlist *not_startwith_from_line;
-   struct Rlist *match_from_line;
-   struct Rlist *not_match_from_line;
-   struct Rlist *contains_from_line;
-   struct Rlist *not_contains_from_line;
+   struct Rlist *startwith_from_list;
+   struct Rlist *not_startwith_from_list;
+   struct Rlist *match_from_list;
+   struct Rlist *not_match_from_list;
+   struct Rlist *contains_from_list;
+   struct Rlist *not_contains_from_list;
    };
 
 struct EditLocation

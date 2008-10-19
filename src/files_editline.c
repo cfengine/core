@@ -768,12 +768,12 @@ int SanityCheckInsertions(struct Attributes a)
   long with = 0;
   long ok = true;
   
-with += (long)a.insert_select.startwith_from_set;
-not += (long)a.insert_select.not_startwith_from_set;
-with += (long)a.insert_select.match_from_set;
-not += (long)a.insert_select.not_match_from_set;
-with += (long)a.insert_select.contains_from_set;
-not += (long)a.insert_select.not_contains_from_set;
+with += (long)a.line_select.startwith_from_list;
+not += (long)a.line_select.not_startwith_from_list;
+with += (long)a.line_select.match_from_list;
+not += (long)a.line_select.not_match_from_list;
+with += (long)a.line_select.contains_from_list;
+not += (long)a.line_select.not_contains_from_list;
 
 if (not > 1)
    {
@@ -1012,7 +1012,7 @@ int SelectInsertion(char *line,struct Attributes a,struct Promise *pp)
   int s,e;
   char *selector;
  
-if (c = a.insert_select.startwith_from_set)
+if (c = a.line_select.startwith_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1027,7 +1027,7 @@ if (c = a.insert_select.startwith_from_set)
    return false;
    }
 
-if (c = a.insert_select.not_startwith_from_set)
+if (c = a.line_select.not_startwith_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1042,7 +1042,7 @@ if (c = a.insert_select.not_startwith_from_set)
    return true;
    }
 
-if (c = a.insert_select.match_from_set)
+if (c = a.line_select.match_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1057,7 +1057,7 @@ if (c = a.insert_select.match_from_set)
    return false;
    }
 
-if (c = a.insert_select.not_match_from_set)
+if (c = a.line_select.not_match_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1072,7 +1072,7 @@ if (c = a.insert_select.not_match_from_set)
    return true;
    }
 
-if (c = a.insert_select.contains_from_set)
+if (c = a.line_select.contains_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1087,7 +1087,7 @@ if (c = a.insert_select.contains_from_set)
    return false;
    }
 
-if (c = a.insert_select.not_contains_from_set)
+if (c = a.line_select.not_contains_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {

@@ -100,6 +100,19 @@ struct BodySyntax CF_EDSCOPE_BODY[] =
 
 /**************************************************************/
 
+struct BodySyntax CF_DELETESELECT_BODY[] =
+   {
+   {"delete_if_startwith_from_list",cf_slist,CF_ANYSTRING},
+   {"delete_if_not_startwith_from_list",cf_slist,CF_ANYSTRING},
+   {"delete_if_match_from_list",cf_slist,CF_ANYSTRING},
+   {"delete_if_not_match_from_list",cf_slist,CF_ANYSTRING},
+   {"delete_if_contains_from_list",cf_slist,CF_ANYSTRING},
+   {"delete_if_not_contains_from_list",cf_slist,CF_ANYSTRING},
+   {NULL,cf_notype,NULL}
+   };
+
+/**************************************************************/
+
 struct BodySyntax CF_INSERTSELECT_BODY[] =
    {
    {"insert_if_startwith_from_list",cf_slist,CF_ANYSTRING},
@@ -127,6 +140,7 @@ struct BodySyntax CF_INSERTLINES_BODIES[] =
 struct BodySyntax CF_DELETELINES_BODIES[] =
    {
    {"not_matching",cf_opts,CF_BOOL},
+   {"delete_select",cf_body,CF_DELETESELECT_BODY},
    {NULL,cf_notype,NULL}
    };
 

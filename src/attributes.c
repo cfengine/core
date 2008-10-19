@@ -1036,12 +1036,12 @@ struct LineSelect GetInsertSelectConstraints(struct Promise *pp)
 
 { struct LineSelect s;
 
-s.startwith_from_line = GetListConstraint("insert_if_startwith_from_line",pp->conlist);
-s.not_startwith_from_line = GetListConstraint("insert_if_not_startwith_from_line",pp->conlist);
-s.match_from_line = GetListConstraint("insert_if_match_from_line",pp->conlist);
-s.not_match_from_line = GetListConstraint("insert_if_not_match_from_line",pp->conlist);
-s.contains_from_line = GetListConstraint("insert_if_contains_from_line",pp->conlist);
-s.not_contains_from_line = GetListConstraint("insert_if_not_contains_from_line",pp->conlist);
+s.startwith_from_list = GetListConstraint("insert_if_startwith_from_list",pp->conlist);
+s.not_startwith_from_list = GetListConstraint("insert_if_not_startwith_from_list",pp->conlist);
+s.match_from_list = GetListConstraint("insert_if_match_from_list",pp->conlist);
+s.not_match_from_list = GetListConstraint("insert_if_not_match_from_list",pp->conlist);
+s.contains_from_list = GetListConstraint("insert_if_contains_from_list",pp->conlist);
+s.not_contains_from_list = GetListConstraint("insert_if_not_contains_from_list",pp->conlist);
 
 return s;
 }
@@ -1052,12 +1052,12 @@ struct LineSelect GetDeleteSelectConstraints(struct Promise *pp)
 
 { struct LineSelect s;
 
-s.startwith_from_line = GetListConstraint("delete_if_startwith_from_line",pp->conlist);
-s.not_startwith_from_line = GetListConstraint("delete_if_not_startwith_from_line",pp->conlist);
-s.match_from_line = GetListConstraint("delete_if_match_from_line",pp->conlist);
-s.not_match_from_line = GetListConstraint("delete_if_not_match_from_line",pp->conlist);
-s.contains_from_line = GetListConstraint("delete_if_contains_from_line",pp->conlist);
-s.not_contains_from_line = GetListConstraint("delete_if_not_contains_from_line",pp->conlist);
+s.startwith_from_list = GetListConstraint("delete_if_startwith_from_list",pp->conlist);
+s.not_startwith_from_list = GetListConstraint("delete_if_not_startwith_from_list",pp->conlist);
+s.match_from_list = GetListConstraint("delete_if_match_from_list",pp->conlist);
+s.not_match_from_list = GetListConstraint("delete_if_not_match_from_list",pp->conlist);
+s.contains_from_list = GetListConstraint("delete_if_contains_from_list",pp->conlist);
+s.not_contains_from_list = GetListConstraint("delete_if_not_contains_from_list",pp->conlist);
 
 return s;
 }

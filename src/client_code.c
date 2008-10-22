@@ -39,6 +39,27 @@ extern pthread_mutex_t MUTEX_GETADDR;
 
 /*********************************************************************/
 
+void DetermineCfenginePort()
+
+{ struct servent *server;
+
+if ((server = getservbyname(CFENGINE_SERVICE,"tcp")) == NULL)
+   {
+   CfLog(cflogonly,"Couldn't get cfengine service, using default","getservbyname");
+   snprintf(STR_CFENGINEPORT,15,"5308");
+   SHORT_CFENGINEPORT = htons((unsigned short)5308);
+   }
+else
+   {
+   snprintf(STR_CFENGINEPORT,15,"%u",ntohs(server->s_port));
+   SHORT_CFENGINEPORT = server->s_port;
+   }
+
+Verbose("Setting cfengine default port to %u = %s\n",ntohs(SHORT_CFENGINEPORT),STR_CFENGINEPORT);
+}
+
+/*********************************************************************/
+
 struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
@@ -853,16 +874,22 @@ int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes a
 
 { int err;
   short shortport;
+  char strport[CF_MAXVARSIZE];
 
-if (attr.copy.portnumber == CF_UNDEFINED)
+  if (attr.copy.portnumber == (short)CF_NOINT)
    {
    shortport = SHORT_CFENGINEPORT;
+   strncpy(strport,STR_CFENGINEPORT,CF_MAXVARSIZE);
    }
 else
    {
    shortport = htons(attr.copy.portnumber);
+   snprintf(strport,CF_MAXVARSIZE,"%u",(int)attr.copy.portnumber);
    }
    
+Verbose("Set cfengine port number to %s = %u\n",strport,(int)ntohs(shortport));
+
+
 #if defined(HAVE_GETADDRINFO)
  
 if (!attr.copy.force_ipv4)
@@ -870,23 +897,20 @@ if (!attr.copy.force_ipv4)
    struct addrinfo query, *response, *ap;
    struct addrinfo query2, *response2, *ap2;
    int err,connected = false;
-   char portnumber_str[CF_MAXVARSIZE];
 
-   snprintf(portnumber_str,CF_MAXVARSIZE,"%d",ntohs(shortport));
    memset(&query,0,sizeof(struct addrinfo));   
-
    query.ai_family = AF_UNSPEC;
    query.ai_socktype = SOCK_STREAM;
 
-   if ((err = getaddrinfo(host,portnumber_str,&query,&response)) != 0)
+   if ((err = getaddrinfo(host,strport,&query,&response)) != 0)
       {
-      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Unable to find host or service: (%s/%s) %s",host,portnumber_str,gai_strerror(err));
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Unable to find host or service: (%s/%s) %s",host,strport,gai_strerror(err));
       return false;
       }
    
    for (ap = response; ap != NULL; ap = ap->ai_next)
       {
-      Verbose("Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),portnumber_str);
+      Verbose("Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
       
       if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
          {
@@ -981,7 +1005,7 @@ if (!attr.copy.force_ipv4)
    cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
    cin.sin_family = AF_INET; 
    
-   Verbose("Connect to %s = %s, port =%u\n",host,inet_ntoa(cin.sin_addr),shortport);
+   Verbose("Connect to %s = %s, port = (%u=%s)\n",host,inet_ntoa(cin.sin_addr),(int)ntohs(shortport),strport);
     
    if ((conn->sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
       {

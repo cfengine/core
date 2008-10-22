@@ -161,6 +161,8 @@ else
    strcpy(scopeid,scope);
    }
 
+Debug("Looking for %s.%s\n",scopeid,vlval);
+
 if (ptr == NULL)
    {
    /* Assume current scope */

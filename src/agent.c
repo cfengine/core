@@ -34,6 +34,7 @@
 
 enum typesequence
    {
+   kp_vars,
    kp_classes,
    kp_interfaces,
    kp_processes,
@@ -48,6 +49,7 @@ enum typesequence
 
 char *TYPESEQUENCE[] =
    {
+   "vars",
    "classes",
    "interfaces",
    "processes",

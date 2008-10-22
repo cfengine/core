@@ -225,7 +225,7 @@ if (this != cfn_unknown)
    {
    if (DEBUG)
       {
-      printf("EVALUATE FN CALL ");
+      printf("EVALUATE FN CALL %s\n",fp->name);
       ShowFnCall(stdout,fp);
       printf("\n");
       }
@@ -384,7 +384,13 @@ switch (this)
        break;
    }
 
-// Use/check function call status here FnCallStatus - use abortclasses?
+
+if (FNCALL_STATUS.status == FNCALL_FAILURE)
+   {
+   /* We do not assign variables to failed function calls */
+   rval.item = CopyFnCall(fp);
+   rval.rtype = CF_FNCALL;
+   }
 
 DeleteExpArgs(expargs);
 return rval;

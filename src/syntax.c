@@ -652,7 +652,7 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:format specifier for int rvalues is not ok for lval %s - got %d items",lval,n);
+   snprintf(OUTPUT,CF_BUFSIZE,"INTERN: format specifier for int rvalues is not ok for lval %s - got %d items",lval,n);
    FatalError(OUTPUT);
    }
 

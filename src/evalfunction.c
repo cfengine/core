@@ -875,7 +875,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function getindices was promised an array called \"%s\" but this was not found\n",arrayname);
+   CfOut(cf_error,"","Function getindices was promised an array in scope \"%s\" but this was not found\n",scopeid);
    SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
    rval.item = NULL;
    rval.rtype = CF_LIST;
@@ -884,10 +884,10 @@ if ((ptr = GetScope(scopeid)) == NULL)
 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
+   snprintf(match,CF_BUFSIZE,"%s[",lval);
+
    if (ptr->hashtable[i] != NULL)
       {
-      snprintf(match,CF_BUFSIZE,"%s[",lval);
-
       if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
          {
          index[0] = '\0';
@@ -895,19 +895,22 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          index[strlen(index)-1] = '\0';
          if (strlen(index) > 0)
             {
-            Debug("FOUND KEY %s for %s (%s) \n",index,lval,ptr->hashtable[i]->lval);
             AppendRScalar(&returnlist,index,CF_SCALAR);
             }
          }
       }
    }   
 
-SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
-
-if ((rval.item = returnlist) == NULL)
+if (returnlist == NULL)
    {
-   FatalError("Memory allocation in FnCallRegList");
+   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;               
    }
+
+SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
+rval.item = returnlist;
 
 /* end fn specific content */
 

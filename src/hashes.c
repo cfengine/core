@@ -223,10 +223,17 @@ else
    Debug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
    }
 
-if (lval == NULL || rval == NULL || scope == NULL)
+if (lval == NULL || scope == NULL)
    {
+   CfOut(cf_error,"","scope.value = %s.%s = %s",scope,lval,rval);
    ReportError("Bad variable or scope in a variable assignment");
    FatalError("Should not happen - forgotten to register a function call in fncall.c?");
+   }
+
+if (rval == NULL)
+   {
+   Debug("No value to assignment - probably a parameter in an unused bundle/body\n");
+   return false;
    }
 
 if (strlen(lval) > CF_MAXVARSIZE)

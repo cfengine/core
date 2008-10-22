@@ -409,14 +409,14 @@ if (a.havecopy && a.havedepthsearch && a.havedelete)
 if (a.transaction.background && a.transaction.audit)
    {
    CfOut(cf_error,"","Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
-   PromiseRef(cf_inform,pp);
+   PromiseRef(cf_error,pp);
    return false;
    }
 
 if ((a.havecopy || a.havelink) && a.transformer)
    {
    CfOut(cf_error,"","File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
-   PromiseRef(cf_inform,pp);
+   PromiseRef(cf_error,pp);
    return false;
    }
 

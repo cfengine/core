@@ -119,6 +119,7 @@ char *EscapeSQL(CfdbConn *cfdb,char *query);
 
 /* client_code.c */
 
+void DetermineCfenginePort(void);
 struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp);
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp);
 void ServerDisconnection(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);

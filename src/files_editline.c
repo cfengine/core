@@ -31,6 +31,7 @@
 
 enum editlinetypesequence
    {
+   elp_vars,
    elp_classes,
    elp_delete,
    elp_columns,
@@ -42,6 +43,8 @@ enum editlinetypesequence
 
 char *EDITLINETYPESEQUENCE[] =
    {
+   "vars",
+   "classes",
    "delete_lines",
    "column_edits",
    "replace_patterns",
@@ -79,7 +82,8 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          }
       
       BannerSubSubType(bp->name,sp->name);
-      
+      SetScope(bp->name);
+            
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          pp->edcontext = parentp->edcontext;

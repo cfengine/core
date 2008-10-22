@@ -318,8 +318,8 @@ if (!MINUSF)
 
 AUDITDBP = NULL;
 
-CfenginePort();
-StrCfenginePort();
+DetermineCfenginePort();
+
 FOUT = stdout;
 AddClassToHeap("any");
 strcpy(VPREFIX,"cf3");

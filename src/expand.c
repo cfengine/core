@@ -112,7 +112,6 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type);
    }
 
-
 PushThisScope();
 
 ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars,fnptr);
@@ -203,7 +202,7 @@ void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *strin
 { struct Rlist *rp;
   char *sp,rtype;
   void *rval;
-  char var[CF_BUFSIZE],exp[CF_EXPANDSIZE];
+  char var[CF_BUFSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
 Debug("ScanScalar([%s])\n",string);
 
@@ -221,11 +220,24 @@ for (sp = string; (*sp != '\0') ; sp++)
       {
       if (ExtractInnerCf3VarString(sp,var))
          {
-         if (GetVariable(scopeid,var,&rval,&rtype) != cf_notype)
+         char absscope[CF_MAXVARSIZE];
+         
+         if (strstr(var,"."))
+            {
+            strncpy(temp,var,CF_BUFSIZE-1);  
+            absscope[0] = '\0';
+            sscanf(temp,"%[^.].%s",absscope,var);
+            }
+         else
+            {
+            strncpy(absscope,scopeid,CF_MAXVARSIZE-1);  
+            }
+         
+         if (GetVariable(absscope,var,&rval,&rtype) != cf_notype)
             {
             if (rtype == CF_LIST)
                {
-               Debug("List variable $(%s) found\n",var);
+               Debug("List variable $(%s) found in scope %s\n",var,absscope);
                ExpandScalar(var,exp);  // in touch with our inner string
 
                /* embedded iterators should be incremented fastest, so order list */
@@ -472,7 +484,6 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       {
       Debug("  Nested variables - %s\n",temp);
       ExpandPrivateScalar(scopeid,temp,currentitem);
-      CheckVarID(currentitem);
       }
    else
       {
@@ -480,7 +491,6 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       }
 
    increment = strlen(var) - 1;
-   Debug("  Scanning variable %s\n",currentitem);
 
    switch (GetVariable(scopeid,currentitem,&rval,&rtype))
       {
@@ -494,7 +504,6 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
              }
           
           strcat(buffer,(char *)rval);
-          Debug("  Expansion gave (%s), len = %d\n",buffer,strlen(currentitem));
           break;
 
       case cf_slist:
@@ -559,11 +568,11 @@ do
       }
 
    /* Thread monitor */
-
+   
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise("this",pp);
    SetScope("this");   
-   
+
    switch (agent)
       {
       case cf_common:
@@ -593,9 +602,12 @@ do
 
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
-      ConvergeVarHashPromise("this",pexp,true);
+      ConvergeVarHashPromise(pp->bundle,pexp,true);
       }
 
+//   XML=0;
+//   ShowScopedVariables(stdout);
+   
    DeletePromise(pexp);
    
    /* End thread monitor */
@@ -967,22 +979,29 @@ if (rval != NULL)
    if (cp->type == CF_FNCALL)
       {
       returnval = EvaluateFunctionCall(fp,pp);
-      DeleteFnCall(fp);
       cp->rval = rval = returnval.item;
       cp->type = returnval.rtype;
+      DeleteFnCall(fp);
+      
+      if (FNCALL_STATUS.status == FNCALL_FAILURE)
+         {
+         /* We do not assign variables to failed fn calls */
+         return;
+         }
       }
-   
-    if (ok_redefine) /* only on second iteration, else we ignore broken promises */
+
+   if (ok_redefine) /* only on second iteration, else we ignore broken promises */
       {
       if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
          {
          DeleteVariable(scope,pp->promiser);
          }
       }
-   
+
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
-      PromiseRef(cf_error,pp);
+      Verbose("Unable to converge %s.%s value (possibly empty?)\n",scope,pp->promiser);
+      PromiseRef(cf_verbose,pp);
       }
    }
 else

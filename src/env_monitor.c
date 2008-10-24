@@ -161,7 +161,7 @@ void MonInitialize()
 
 strcpy(CFWORKDIR,WORKDIR);
 
-if (getuid() > 0)
+if (!IsPrivileged())
    {
    char *homedir;
    if ((homedir = getenv("HOME")) != NULL)
@@ -367,7 +367,7 @@ void StartServer(int argc,char **argv)
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   CfOut(cf_inform,"","cfenvd: starting\n");
+   CfOut(cf_inform,"","cf-monitord: starting\n");
    exit(0);
    }
 
@@ -375,6 +375,8 @@ if (!NO_FORK)
    {
    ActAsDaemon(0);
    }
+
+/* Same lock name as cf2 */
 
 WritePID("cfenvd.pid");
 

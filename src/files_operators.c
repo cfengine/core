@@ -486,9 +486,9 @@ else
  
 #if defined HAVE_CHFLAGS  /* BSD special flags */
 newflags = (dstat->st_flags & CHFLAGS_MASK) ;
-newflags |= ptr->plus_flags;
-newflags &= ~(ptr->minus_flags);
-   
+newperm |= attr.perms.plus_flags;
+newperm &= ~(attr.perms.minus_flags);
+
 if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
    {
    Debug("BSD File okay, flags = %o, current = %o\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
@@ -812,7 +812,7 @@ if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
    {
    fndrInfo.fi.fdType = *(long *)a.perms.findertype;
    
-   switch (attr.transaction.action)
+   switch (a.transaction.action)
       {       
       case cfa_fix::
           
@@ -841,6 +841,7 @@ if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
       case cfa_warn:
           CfOut(cf_error,"","Darwin FinderType does not match -- not fixing.\n");
           return 0;
+
       default:
           return 0;
       }

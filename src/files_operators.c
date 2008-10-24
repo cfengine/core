@@ -416,7 +416,7 @@ if (S_ISDIR(dstat->st_mode))
 VerifySetUidGid(file,dstat,newperm,pp,attr);
 
 #ifdef DARWIN
-if (CheckFinderType(file,action,cf_findertype,dstat))
+if (VerifyFinderType(file,dstat,attr,pp))
    {
    /* nop */
    }
@@ -751,6 +751,108 @@ if (lstat(from,&sb) == 0)
 
 return true;
 }
+
+/*********************************************************************/
+
+#ifdef DARWIN
+
+int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp)
+
+{ /* Code modeled after hfstar's extract.c */
+ typedef struct t_fndrinfo
+    {
+    long fdType;
+    long fdCreator;
+    short fdFlags;
+    short fdLocationV;
+    short fdLocationH;
+    short fdFldr;
+    short fdIconID;
+    short fdUnused[3];
+    char fdScript;
+    char fdXFlags;
+    short fdComment;
+    long fdPutAway;
+    }
+ FInfo;
+ 
+ struct attrlist attrs;
+ struct
+    {
+    long ssize;
+    struct timespec created;
+    struct timespec modified;
+    struct timespec changed;
+    struct timespec backup;
+    FInfo fi;
+    }
+ fndrInfo; 
+ int retval;
+ 
+Debug("VerifyFinderType of %s for %s\n", file,a.perms.findertype);
+ 
+if (strncmp(a.perms.findertype,"*",CF_BUFSIZE) == 0 || strncmp(a.perms.findertype,"",CF_BUFSIZE) == 0)
+   {
+   return 0;
+   }
+
+attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
+attrs.reserved = 0;
+attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_CHGTIME | ATTR_CMN_BKUPTIME | ATTR_CMN_FNDRINFO;
+attrs.volattr = 0;
+attrs.dirattr = 0;
+attrs.fileattr = 0;
+attrs.forkattr = 0;
+
+memset(&fndrInfo, 0, sizeof(fndrInfo));
+
+getattrlist(file, &attrs, &fndrInfo, sizeof(fndrInfo),0);
+
+if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
+   {
+   fndrInfo.fi.fdType = *(long *)a.perms.findertype;
+   
+   switch (attr.transaction.action)
+      {       
+      case cfa_fix::
+          
+          if (DONTDO)
+             {
+             CfOut(cf_inform,"","Promised to set Finder Type code of %s to %s\n",file,a.perms.findertype);
+             return 0;
+             }
+          
+          /* setattrlist does not take back in the long ssize */        
+          retval = setattrlist(file, &attrs, &fndrInfo.created, 4*sizeof(struct timespec) + sizeof(FInfo), 0);
+          
+          Debug("CheckFinderType setattrlist returned %d\n", retval);
+          
+          if (retval >= 0)
+             {
+             cfPS(cf_inform,CF_CHG,"",pp,a,"Setting Finder Type code of %s to %s\n",file,a.perms.findertype);
+             }
+          else
+             {
+             cfPS(cf_error,CF_FAIL,"",pp,a,"Setting Finder Type code of %s to %s failed!!\n",file,a.perms.findertype);
+             }
+          
+          return retval;
+          
+      case cfa_warn:
+          CfOut(cf_error,"","Darwin FinderType does not match -- not fixing.\n");
+          return 0;
+      default:
+          return 0;
+      }
+   }
+else
+   {
+   cfPS(cf_verbose,CF_NOP,"",pp,a,"Finder Type code of %s to %s is as promised\n",file,a.perms.findertype);
+   return 0;
+   }
+}
+
+#endif
 
 /*********************************************************************/
 /* Level                                                             */

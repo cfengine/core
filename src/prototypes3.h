@@ -365,6 +365,7 @@ void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr);
 int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *statbuf);
 void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
 void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
+int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp);
 int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
 int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp);
 void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);

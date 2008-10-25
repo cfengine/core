@@ -249,6 +249,14 @@ struct BodySyntax CFM_CONTROLBODY[] =
 
 struct BodySyntax CFR_CONTROLBODY[] =
    {
+   {"hosts",cf_slist,""},
+   {"portnumber",cf_int,"1024,99999"},
+   {"force_ipv4",cf_opts,CF_BOOL},
+   {"trustkey",cf_opts,CF_BOOL},
+   {"encrypt",cf_opts,CF_BOOL},
+   {"background",cf_opts,CF_BOOL},
+   {"maxchild",cf_int,CF_VALRANGE},
+   {"output_to_file",cf_int,CF_VALRANGE},
    {NULL,cf_notype,NULL}
    };
 

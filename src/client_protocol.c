@@ -296,7 +296,7 @@ else
    {
    if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */ 
       {
-      Verbose("\n...c.o.p.y....c.o.p.y....c.o.p.y...........................................\n");
+      Verbose("\n...h.a.i.l.......................................................\n");
       CfOut(cf_verbose,"","Strong authentication of server=%s connection confirmed\n",pp->this_server);
       PromiseRef(cf_verbose,pp);
       }

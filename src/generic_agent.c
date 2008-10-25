@@ -31,6 +31,7 @@
 extern struct option OPTIONS[];
 extern FILE *yyin;
 extern char *CFH[][2];
+extern void CheckOpts(int argc,char **argv);
 
 /*****************************************************************************/
 
@@ -372,7 +373,7 @@ void Cf3ParseFile(char *filename)
   int access = false;
   char wfilename[CF_BUFSIZE];
 
-if (!MINUSF && *filename != '/')
+if (!MINUSF && (*filename != '/'))
    {
    snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
    }

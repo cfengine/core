@@ -876,7 +876,7 @@ int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes a
   short shortport;
   char strport[CF_MAXVARSIZE];
 
-  if (attr.copy.portnumber == (short)CF_NOINT)
+if (attr.copy.portnumber == (short)CF_NOINT)
    {
    shortport = SHORT_CFENGINEPORT;
    strncpy(strport,STR_CFENGINEPORT,CF_MAXVARSIZE);
@@ -888,7 +888,6 @@ else
    }
    
 Verbose("Set cfengine port number to %s = %u\n",strport,(int)ntohs(shortport));
-
 
 #if defined(HAVE_GETADDRINFO)
  

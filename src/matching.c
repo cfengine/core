@@ -271,7 +271,6 @@ else
  int code;
 
 memset(&this,0,sizeof(struct CfRegEx)); 
-re_syntax_options |= RE_INTERVALS;
 
 code = regcomp(&rx,regexp,REG_EXTENDED);
 
@@ -325,7 +324,6 @@ else
  int code;
 
 memset(&this,0,sizeof(struct CfRegEx)); 
-re_syntax_options |= RE_INTERVALS;
 
 code = regcomp(&rx,regexp,REG_EXTENDED|REG_ICASE);
 

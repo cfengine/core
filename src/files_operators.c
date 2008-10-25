@@ -814,7 +814,7 @@ if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
    
    switch (a.transaction.action)
       {       
-      case cfa_fix::
+      case cfa_fix:
           
           if (DONTDO)
              {

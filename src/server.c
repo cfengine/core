@@ -230,66 +230,9 @@ void ThisAgentInit()
 { char vbuff[CF_BUFSIZE];
   int i;
 
-BINDINTERFACE[0] = '\0';
-
 umask(077);
 
-sprintf(VPREFIX, "cfServerd");
-Cf3OpenLog();
-CfenginePort();
-StrCfenginePort();
-AddClassToHeap("any");
-LOGGING = true;
-IDClasses();
- 
-if ((CFINITSTARTTIME = time((time_t *)NULL)) == -1)
-   {
-   CfOut(cf_error,"time","Couldn't read system clock\n");
-   }
-
-if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
-   {
-   CfOut(cf_error,"time","Couldn't read system clock\n");
-   }
-
- /* XXX Initialize workdir for non privileged users */
-
-VIFELAPSED = CF_EXEC_IFELAPSED;
-VEXPIREAFTER = CF_EXEC_EXPIREAFTER;
- 
-strcpy(VDOMAIN,"undefined.domain");
-
-VCANONICALFILE = strdup(CanonifyName(VINPUTFILE));
-VREPOSITORY = strdup("\0");
- 
-OpenSSL_add_all_algorithms();
-ERR_load_crypto_strings();
-CheckWorkDirectories();
-
-RandomSeed(); 
-LoadSecretKeys();
-
-i = 0;
-strncpy(vbuff,ToLowerStr(VDOMAIN),127);
-
-if (StrStr(VSYSNAME.nodename,vbuff))
-   {
-   strncpy(VFQNAME,VSYSNAME.nodename,CF_MAXVARSIZE-1);
-   
-   while(VSYSNAME.nodename[i++] != '.')
-      {
-      }
-   
-   strncpy(VUQNAME,VSYSNAME.nodename,i-1);
-   }
-else
-   {
-   snprintf(VFQNAME,CF_BUFSIZE,"%s.%s",VSYSNAME.nodename,ToLowerStr(VDOMAIN));
-   strncpy(VUQNAME,VSYSNAME.nodename,CF_MAXVARSIZE-1);
-   }
-
 }
-
 
 /*******************************************************************/
 
@@ -788,7 +731,8 @@ if (PROMISETIME < newstat.st_mtime)
    BODIES  = NULL;
    ERRORCOUNT = 0;
 
-   NewScope("system");
+   NewScope("sys");
+   NewScope("const");
    NewScope("this");
    AddClassToHeap("any");
    GetNameInfo3();
@@ -950,30 +894,35 @@ switch (GetCommand(recvbuffer))
        
        if (!conn->id_verified)
           {
+          CfOut(cf_inform,"","Server refusal due to incorrect identity\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
        
        if (!AllowedUser(conn->username))
           {
+          CfOut(cf_inform,"","Server refusal due to non-allowed user\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
        
        if (!conn->rsa_auth)
           {
+          CfOut(cf_inform,"","Server refusal due to no RSA authentication\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
        
        if (!AccessControl(CFRUNCOMMAND,conn,false))
           {
+          CfOut(cf_inform,"","Server refusal due to denied access to requested object\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;   
           }
        
        if (!MatchClasses(conn))
           {
+          CfOut(cf_inform,"","Server refusal due to failed class/context match\n");
           Terminate(conn->sd_reply);
           return false;
           }
@@ -1379,9 +1328,9 @@ if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
    CfOut(cf_error,"time","Couldn't read system clock\n");
    }
 
-if (GetVariable("control_server","cfruncommand",&rval,&rtype) == cf_notype)
+if (strlen(CFRUNCOMMAND) == 0)
    {
-   Verbose("cfServerd exec request: no cfrunCommand defined\n");
+   Verbose("cf-serverd exec request: no cfrunCommand defined\n");
    sprintf(sendbuffer,"Exec request: no cfrunCommand defined\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return;
@@ -1410,7 +1359,7 @@ for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
       }
    }
 
-ExpandScalar("$(cfrunCommand) --no-splay --inform",ebuff);
+snprintf(ebuff,CF_BUFSIZE,"%s --inform",CFRUNCOMMAND);
 
 if (strlen(ebuff)+strlen(args)+6 > CF_BUFSIZE)
    {
@@ -1432,7 +1381,7 @@ else
 
 CfOut(cf_inform,"","Executing command %s\n",ebuff);
  
-if ((pp = cfpopen(ebuff,"r")) == NULL)
+if ((pp = cf_popen(ebuff,"r")) == NULL)
    {
    CfOut(cf_error,"pipe","Couldn't open pipe to command %s\n",ebuff);
    snprintf(sendbuffer,CF_BUFSIZE,"Unable to run %s\n",ebuff);
@@ -1471,11 +1420,15 @@ while (!feof(pp))
    if (print)
       {
       snprintf(sendbuffer,CF_BUFSIZE,"%s\n",line);
-      SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+      if (SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE) == -1)
+         {
+         CfOut(cf_error,"send","Sending failed, aborting");
+         break;
+         }
       }
   }
       
-cfpclose(pp);
+cf_pclose(pp);
 
 /* ReleaseCurrentLock(); */
 }

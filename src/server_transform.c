@@ -133,6 +133,13 @@ if (DEBUG || D2 || D3)
       printf("IP: %s\n",ip->name);
       }
 
+   printf("\nUsers from whom we accept connections :\n");
+
+   for (ip = ALLOWUSERLIST; ip != NULL; ip=ip->next)
+      {
+      printf("USERS: %s\n",ip->name);
+      }
+
    printf("\nHost IPs from NAT which we don't verify :\n");
 
    for (ip = SKIPVERIFY; ip != NULL; ip=ip->next)
@@ -166,6 +173,7 @@ MAXTRIES = 5;
 CFD_INTERVAL = 0;
 CHECKSUMUPDATES = true;
 DENYBADCLOCKS = true;
+CFRUNCOMMAND[0] = '\0';
 
 /* Keep promised agent behaviour - control bodies */
 
@@ -344,21 +352,6 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
-      {
-      struct Rlist *rp;
-      Verbose("SET Allow users ...\n");
-      
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
-         {
-         if (!IsItemIn(ALLOWUSERLIST,rp->item))
-            {
-            AppendItem(&ALLOWUSERLIST,rp->item,cp->classes);
-            }
-         }
-      
-      continue;
-      }        
    }
 }
 

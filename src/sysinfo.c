@@ -170,7 +170,7 @@ CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);
 CfOut(cf_verbose,"","Operating System Type is %s\n",VSYSNAME.sysname);
 CfOut(cf_verbose,"","Operating System Release is %s\n",VSYSNAME.release);
 CfOut(cf_verbose,"","Architecture = %s\n\n\n",VSYSNAME.machine);
-CfOut(cf_verbose,"","Using internal soft-class %s for host %s\n\n",workbuf,CLASSTEXT[VSYSTEMHARDCLASS]);
+CfOut(cf_verbose,"","Using internal soft-class %s for host %s\n\n",workbuf,VSYSNAME.nodename);
 CfOut(cf_verbose,"","The time is now %s\n\n",ctime(&tloc));
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 

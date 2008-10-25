@@ -2092,7 +2092,7 @@ tmv.tm_isdst= -1;
 
 if ((cftime=mktime(&tmv))== -1)
    {
-   error("Illegal time value");
+   CfOut(cf_inform,"","Illegal time value");
    }
 
 Debug("Time computed from input was: %s\n",ctime(&cftime));

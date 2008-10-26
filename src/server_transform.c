@@ -30,6 +30,7 @@
 #include "cf3.server.h"
 
 extern struct BodySyntax CFS_CONTROLBODY[];
+extern struct BodySyntax CF_REMROLE_BODIES[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -50,6 +51,8 @@ extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern int FACILITY;
 extern struct Item *CONNECTIONLIST;
+extern struct Auth *ROLES;
+extern struct Auth *ROLESTOP;
 
 /*******************************************************************/
 
@@ -401,6 +404,7 @@ if (!IsDefinedClass(pp->classes))
 if (strcmp(pp->agentsubtype,"classes") == 0)
    {
    KeepClassContextPromise(pp);
+   return;
    }
 
 if (strcmp(pp->agentsubtype,"access") == 0)
@@ -408,11 +412,15 @@ if (strcmp(pp->agentsubtype,"access") == 0)
    KeepServerAccessPromise(pp);
    return;
    }
-else
+
+if (strcmp(pp->agentsubtype,"roles") == 0)
    {
-   CfOut(cf_error,"","Promise type %s is not known by this agent");
-   PromiseRef(cf_error,pp);
+   KeepServerRolePromise(pp);
+   return;
    }
+
+CfOut(cf_error,"","Promise type \"%s\" is not known by this agent");
+PromiseRef(cf_error,pp);
 }
 
 /*********************************************************************/
@@ -489,6 +497,56 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_FNCALL:
           /* Shouldn't happen */
+          break;
+      }
+   }
+}
+
+/*********************************************************************/
+
+void KeepServerRolePromise(struct Promise *pp)
+
+{ struct Constraint *cp;
+  struct Body *bp;
+  struct FnCall *fp;
+  struct Rlist *rp;
+  struct Auth *ap,*dp;
+  char *val;
+
+if (!GetAuthPath(pp->promiser,ROLES))
+   {
+   InstallServerAuthPath(pp->promiser,&ROLES,&ROLESTOP);
+   }
+
+ap = GetAuthPath(pp->promiser,ROLES);
+
+for (cp = pp->conlist; cp != NULL; cp = cp->next)
+   {
+   if (!IsDefinedClass(cp->classes))
+      {
+      continue;
+      }
+
+   switch (cp->type)
+      {
+      case CF_LIST:
+          
+          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+             {
+             if (strcmp(cp->lval,CF_REMROLE_BODIES[cfs_authorize].lval) == 0)
+                {
+                PrependItem(&(ap->accesslist),rp->item,NULL);
+                continue;
+                }
+             }
+          break;
+
+      case CF_FNCALL:
+          /* Shouldn't happen */
+          break;
+
+      default:
+          CfOut(cf_error,"","RHS of authorize promise for %s should be a list\n",pp->promiser);
           break;
       }
    }

@@ -71,13 +71,13 @@ void NewScope(char *name)
 
 { struct Scope *ptr;
   
-Debug1("Adding scope data %s\n", name);
+Debug("Adding scope data %s\n", name);
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,name) == 0)
       {
-      Debug("Object %s already exists\n",name);
+      Debug("SCOPE Object %s already exists\n",name);
       return;
       }
    }
@@ -167,14 +167,14 @@ void DeleteAllScope()
 
 { struct Scope *ptr, *this;
   
-Debug1("Deleting all scoped variables\n");
+Debug("Deleting all scoped variables\n");
 
 ptr = VSCOPE;
 
 while (ptr != NULL)
    {
    this = ptr;
-   Debug(" -> Delete scope %s\n",ptr->scope);
+   Debug(" -> Deleting scope %s\n",ptr->scope);
    DeleteHashes(this->hashtable);
    free(this->scope);   
    ptr = this->next;

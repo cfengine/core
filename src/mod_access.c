@@ -55,7 +55,7 @@
  /*                                                         */
  /***********************************************************/
 
-/* This is the primary set of constraints for an exec object */
+/* This is the primary set of constraints for a server object */
 
 struct BodySyntax CF_REMACCESS_BODIES[] =
    {
@@ -67,12 +67,21 @@ struct BodySyntax CF_REMACCESS_BODIES[] =
    };
 
 /***************************************************************/
+
+struct BodySyntax CF_REMROLE_BODIES[] =
+   {
+   {"authorize",cf_slist,""},
+   {NULL,cf_notype,NULL}
+   };
+
+/***************************************************************/
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
 struct SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
   {
   {"server","access",CF_REMACCESS_BODIES},
+  {"server","roles",CF_REMROLE_BODIES},
   {NULL,NULL,NULL},
   };
 

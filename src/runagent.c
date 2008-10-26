@@ -33,7 +33,7 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp);
 void ThisAgentInit(void);
 int ParseHostname(char *hostname,char *new_hostname);
 void SendClassData(struct cfagent_connection *conn);
-struct Promise *MakeDefaultRunAgentPromise();
+struct Promise *MakeDefaultRunAgentPromise(void);
 FILE *NewStream(char *name);
 void DeleteStream(FILE *fp);
 
@@ -43,17 +43,18 @@ void DeleteStream(FILE *fp);
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[12] =
+ struct option OPTIONS[13] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
-      { "define",required_argument,0,'D' },
+      { "define-class",required_argument,0,'D' },
+      { "select-class",required_argument,0,'s' },
       { "inform",no_argument,0,'I'},
       { "syntax",no_argument,0,'S'},
-      { "remote_options",required_argument,0,'o'},
+      { "remote-options",required_argument,0,'o'},
       { "diagnostic",no_argument,0,'x'},
       { NULL,0,0,'\0' }
       };
@@ -61,10 +62,13 @@ void DeleteStream(FILE *fp);
 extern struct BodySyntax CFR_CONTROLBODY[];
 
 int OUTPUT_TO_FILE = false;
+int BACKGROUND = false;
+int MAXCHILD = 50;
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
 struct Attributes RUNATTR;
 struct Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
+char DEFINECLASSES[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
@@ -72,13 +76,11 @@ int main(int argc,char *argv[])
 
 { struct Rlist *rp;
   struct Promise *pp;
+  int count = 1;
  
 GenericInitialize(argc,argv,"runagent");
 ThisAgentInit();
 KeepControlPromises(); // Set RUNATTR using copy
-
-/* The default promise here is to hail associates */
-
 pp = MakeDefaultRunAgentPromise();
 
 if (HOSTLIST)
@@ -86,6 +88,11 @@ if (HOSTLIST)
    for (rp = HOSTLIST; rp != NULL; rp=rp->next)
       {
       HailServer(rp->item,RUNATTR,pp);
+
+      if (count++ >= MAXCHILD)
+         {
+         BACKGROUND = false;
+         }
       }
    }
 
@@ -100,8 +107,11 @@ void CheckOpts(int argc,char **argv)
   struct Item *actionList;
   int optindex = 0;
   int c;
+
+DEFINECLASSES[0] = '\0';
+SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -131,8 +141,8 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:",OPTIONS,&optindex)) != EOF)
           
       case 'K': IGNORELOCK = true;
           break;
-                    
-      case 'D': strncpy(SENDCLASSES,optarg,CF_MAXVARSIZE);
+
+      case 's': strncpy(SENDCLASSES,optarg,CF_MAXVARSIZE);
           
           if (strlen(optarg) > CF_MAXVARSIZE)
              {
@@ -140,6 +150,14 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:",OPTIONS,&optindex)) != EOF)
              }
           break;
 
+      case 'D': strncpy(DEFINECLASSES,optarg,CF_MAXVARSIZE);
+          
+          if (strlen(optarg) > CF_MAXVARSIZE)
+             {
+             FatalError("Argument too long\n");
+             }
+          break;
+          
       case 'o':
           strncpy(REMOTE_AGENT_OPTIONS,optarg,CF_MAXVARSIZE);
           break;
@@ -181,10 +199,14 @@ Debug("Set debugging\n");
 
 void ThisAgentInit()
 
-{ char vbuff[CF_BUFSIZE];
-  int i;
-
+{
 umask(077);
+
+if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
+   {
+   CfOut(cf_error,"","The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.\n");
+   exit(1);
+   }
 }
 
 /********************************************************************/
@@ -197,8 +219,21 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
   int n_read;
 
 a.copy.portnumber = (short)ParseHostname(host,peer);
- 
-CfOut(cf_inform,"","Connecting to peer %s @ port %u, with options \"%s\"\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
+
+if (BACKGROUND)
+   {
+   CfOut(cf_inform,"","Hailing %s : %u, with options \"%s\" (parallel)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
+   if (fork() != 0)
+      {
+      return true; /* Child continues*/
+      }   
+   }
+else
+   {
+   CfOut(cf_inform,"","...........................................................................\n");
+   CfOut(cf_inform,""," * Hailing %s : %u, with options \"%s\" (serial)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
+   CfOut(cf_inform,"","...........................................................................\n");
+   }
 
 a.copy.servers = SplitStringAsRList(peer,'*');
 
@@ -213,14 +248,21 @@ else
 
    if (conn == NULL)
       {
-      CfOut(cf_inform,"","No suitable server responded to hail\n");
+      CfOut(cf_verbose,"","No suitable server responded to hail\n");
       return false;
       }
    }
 
 pp->cache = NULL;
 
-snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s",REMOTE_AGENT_OPTIONS);
+if (strlen(DEFINECLASSES))
+   {
+   snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s -D%s",REMOTE_AGENT_OPTIONS,DEFINECLASSES);
+   }
+else
+   {
+   snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s",REMOTE_AGENT_OPTIONS);
+   }
 
 if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
    {
@@ -259,7 +301,7 @@ while (true)
 
    if ((sp = strstr(recvbuffer,CFD_TERMINATOR)) != NULL)
       {
-      CfFile(fp," -> %s",recvbuffer);
+      CfFile(fp," !!\n\n");
       break;
       }
 
@@ -275,12 +317,6 @@ while (true)
       continue;
       }
 
-   if (strstr(recvbuffer,"cfXen"))
-      {
-      CfFile(fp,"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
-      continue;
-      }
-
    CfFile(fp," -> %s",recvbuffer);
    }
 
@@ -289,6 +325,13 @@ DeleteAgentConn(conn);
 DeleteRlist(a.copy.servers);
 
 DeleteStream(fp);
+
+if (BACKGROUND)
+   {
+   /* Close parallel connection*/
+   exit(0);
+   }
+
 return true;
 }
 
@@ -371,6 +414,8 @@ struct Promise *MakeDefaultRunAgentPromise()
 
 { struct Promise *pp,*lp;
   char *sp = NULL,*spe = NULL;
+  
+/* The default promise here is to hail associates */
 
 if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    {

@@ -683,6 +683,8 @@ void KeepPromiseBundles(void);
 void KeepControlPromises(void);
 void KeepServerPromise(struct Promise *pp);
 void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
+void KeepServerRolePromise(struct Promise *pp);
+void KeepServerAccessPromise(struct Promise *pp);
 struct Auth *GetAuthPath(char *path,struct Auth *list);
 void Summarize(void);
 
@@ -822,8 +824,6 @@ void VerifyReportPromise(struct Promise *pp);
 void PrintFile(struct Attributes a,struct Promise *pp);
 void ShowState(char *type,struct Attributes a,struct Promise *pp);
 void FriendStatus(struct Attributes a,struct Promise *pp);
-
-
 
 
 

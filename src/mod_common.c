@@ -256,7 +256,7 @@ struct BodySyntax CFR_CONTROLBODY[] =
    {"encrypt",cf_opts,CF_BOOL},
    {"background",cf_opts,CF_BOOL},
    {"maxchild",cf_int,CF_VALRANGE},
-   {"output_to_file",cf_int,CF_VALRANGE},
+   {"output_to_file",cf_opts,CF_BOOL},
    {NULL,cf_notype,NULL}
    };
 

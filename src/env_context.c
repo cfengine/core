@@ -466,7 +466,7 @@ if (IsItemIn(VHEAP,class))
    return;
    }
 
-AppendItem(&VHEAP,class,CONTEXTID);
+AppendItem(&VHEAP,class,NULL);
 }
 
 /*******************************************************************/

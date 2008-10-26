@@ -313,6 +313,12 @@ enum cfsbundle
    cfs_nobtype
    };
 
+enum cfsrole
+   {
+   cfs_authorize,
+   cfs_nortype
+   };
+
 enum cfspromises
    {
    cfs_admit,

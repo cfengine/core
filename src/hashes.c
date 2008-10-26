@@ -284,7 +284,7 @@ if (ptr->hashtable[slot])
 
    if (CompareVariable(lval,ptr->hashtable[slot]) == 0)
       {
-      CfOut(cf_error,"","Duplicate selection of value for %s (broken promise)",lval);
+      CfOut(cf_error,"","Duplicate selection of value for %s (broken promise) in scope %s",lval,ptr->scope);
       
       if (fname)
          {

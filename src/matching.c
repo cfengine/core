@@ -195,16 +195,16 @@ int IsRegexItemIn(struct Item *list,char *regex)
    /* Checks whether item matches a list of wildcards */
 
 { struct Item *ptr;
- 
+
 for (ptr = list; ptr != NULL; ptr=ptr->next)
    {
-   if (IsExcluded(ptr->classes))
+   if (ptr->classes && IsExcluded(ptr->classes))
       {
       continue;
       }
 
    /* Make it commutative */
-   
+
    if (FullTextMatch(regex,ptr->name) || FullTextMatch(ptr->name,regex))
       {
       Debug("IsRegexItem(%s,%s)\n",regex,ptr->name);

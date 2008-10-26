@@ -52,6 +52,7 @@ int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dir
 void Terminate (int sd);
 void DeleteAuthList (struct Auth *ap);
 int AllowedUser (char *user);
+int AuthorizeRoles(struct cfd_connection *conn,char *args);
 void ReplyNothing (struct cfd_connection *conn);
 struct cfd_connection *NewConn (int sd);
 void DeleteConn (struct cfd_connection *conn);
@@ -64,7 +65,7 @@ int IsKnownHost (RSA *oldkey,RSA *newkey,char *addr,char *user);
 void AddToKeyDB (RSA *key,char *addr);
 int SafeOpen (char *filename);
 void SafeClose (int fd);
-int WordHere(char *args, char *pos, char *word);
+int OptionFound(char *args, char *pos, char *word);
 in_addr_t GetInetAddr (char *host);
 
 extern struct BodySyntax CFS_CONTROLBODY[];
@@ -75,13 +76,14 @@ extern struct BodySyntax CFS_CONTROLBODY[];
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[14] =
+ struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
+      { "file",required_argument,0,'f'},
       { "define",required_argument,0,'D' },
       { "negate",required_argument,0,'N' },
       { "no-lock",no_argument,0,'K'},
@@ -112,6 +114,8 @@ int LOGCONNS = false;
 int LOGENCRYPT = false;
 
 struct Item *CONNECTIONLIST = NULL;
+struct Auth *ROLES = NULL;
+struct Auth *ROLESTOP = NULL;
 
 /*****************************************************************************/
 
@@ -186,10 +190,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLF",OPTIONS,&optindex)) != EOF)
       case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
           break;
           
-      case 'I': INFORM = true;
+      case 'I':
+          INFORM = true;
           break;
           
-      case 'v': VERBOSE = true;
+      case 'v':
+          VERBOSE = true;
+          NO_FORK = true;
           break;
           
       case 'n': DONTDO = true;
@@ -231,7 +238,6 @@ void ThisAgentInit()
   int i;
 
 umask(077);
-
 }
 
 /*******************************************************************/
@@ -708,6 +714,7 @@ if (PROMISETIME < newstat.st_mtime)
    DeleteItemList(MULTICONNLIST);
    DeleteAuthList(VADMIT);
    DeleteAuthList(VDENY);
+   DeleteRlist(VINPUTLIST);
 
    DeleteAllScope();
 
@@ -723,6 +730,7 @@ if (PROMISETIME < newstat.st_mtime)
    ATTACKERLIST = NULL;
    NONATTACKERLIST = NULL;
    MULTICONNLIST = NULL;
+   VINPUTLIST = NULL;
 
    DeleteBundles(BUNDLES);
    DeleteBodies(BODIES);
@@ -753,7 +761,7 @@ if (PROMISETIME < newstat.st_mtime)
       ReadPromises(cf_server,CF_SERVERC);
       }
 
-   HashVariables();
+   //HashVariables();
    KeepPromises();
    Summarize();
    }
@@ -1291,9 +1299,18 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
    
    for (ip = classlist; ip != NULL; ip=ip->next)
       {
+      Verbose("Checking whether class %s can be identified as me...\n",ip->name);
+      
       if (IsDefinedClass(ip->name))
          {
          Debug("Class %s matched, accepting...\n",ip->name);
+         DeleteItemList(classlist);
+         return true;
+         }
+
+      if (IsRegexItemIn(VHEAP,ip->name))
+         {
+         Debug("Class matched regular expression %s, accepting...\n",ip->name);
          DeleteItemList(classlist);
          return true;
          }
@@ -1330,33 +1347,46 @@ if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
 
 if (strlen(CFRUNCOMMAND) == 0)
    {
-   Verbose("cf-serverd exec request: no cfrunCommand defined\n");
-   sprintf(sendbuffer,"Exec request: no cfrunCommand defined\n");
+   Verbose("cf-serverd exec request: no cfruncommand defined\n");
+   sprintf(sendbuffer,"Exec request: no cfruncommand defined\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return;
    }
 
+Verbose("Examining command string: %s\n",args);
+
 for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
    {
-   if ((WordHere(args,sp,"-K") == true) || (WordHere(args,sp,"-f") == true))
+   if (OptionFound(args,sp,"-K")||OptionFound(args,sp,"-f"))
       {
       *sp = ' ';
       *(sp+1) = ' ';
       }
-   else if (WordHere(args,sp,"--no-lock") == true)
+   else if (OptionFound(args,sp,"--no-lock"))
       {
-      for (i = 0; i < 9; i++)
+      for (i = 0; i < strlen("--no-lock"); i++)
          {
          *(sp+i) = ' ';
          }
       }
-   else if (WordHere(args,sp,"--file") == true)
+   else if (OptionFound(args,sp,"--file"))
       {
-      for (i = 0; i < 7; i++)
+      for (i = 0; i < strlen("--file"); i++)
          {
          *(sp+i) = ' ';
          }
       }
+   else if (OptionFound(args,sp,"--define")||OptionFound(args,sp,"-D"))
+      {
+      Verbose("Attempt to activate a predefined role..\n");
+      
+      if (!AuthorizeRoles(conn,sp))
+         {
+         sprintf(sendbuffer,"You are not authorized to activate these classes/roles on host %s\n",VFQNAME);
+         SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+         return;
+         }
+      }   
    }
 
 snprintf(ebuff,CF_BUFSIZE,"%s --inform",CFRUNCOMMAND);
@@ -1854,6 +1884,82 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
     }
  
  return access;
+}
+
+/**************************************************************/
+
+int AuthorizeRoles(struct cfd_connection *conn,char *args)
+
+{ char *sp;
+  struct Auth *ap;
+  char userid1[CF_MAXVARSIZE],userid2[CF_MAXVARSIZE];
+  struct Rlist *rp,*defines = NULL;
+  int permitted = false;
+  
+snprintf(userid1,CF_MAXVARSIZE,"%s@%s",conn->username,conn->hostname);
+snprintf(userid2,CF_MAXVARSIZE,"%s@%s",conn->username,conn->ipaddr);
+
+Verbose("Checking authorized roles in %s\n",args);
+
+if (strncmp(args,"--define",strlen("--define")) == 0)
+   {
+   sp = args + strlen("--define");
+   }
+else
+   {
+   sp = args + strlen("-D");
+   }
+
+while (*sp == ' ')
+   {
+   sp++;
+   }
+
+defines = SplitRegexAsRList(sp,"[,:;]",99,false);
+
+/* For each user-defined class attempt, check RBAC */
+
+for (rp = defines; rp != NULL; rp = rp->next)
+   {
+   Verbose(" -> Verifying %s\n",rp->item);
+   
+   for (ap = ROLES; ap != NULL; ap=ap->next)
+      {
+      if (FullTextMatch(ap->path,rp->item))
+         {
+         /* We have a pattern covering this class - so are we allowed to activate it? */
+         if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(userid1)) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(userid2)) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(conn->username))
+             )
+            {
+            CfOut(cf_verbose,"","Attempt to define role/class %s is permitted\n",rp->item);
+            permitted = true;
+            }
+         else
+            {
+            CfOut(cf_verbose,"","Attempt to define role/class %s is denied\n",rp->item);
+            DeleteRlist(defines);
+            return false;
+            }
+         }
+      }
+   
+   }
+
+if (permitted)
+   {
+   Verbose("Role activation allowed\n");
+   }
+else
+   {
+   Verbose("Role activation disallowed - abort execution\n");
+   }
+
+DeleteRlist(defines);
+return permitted;
 }
 
 /**************************************************************/
@@ -2766,8 +2872,7 @@ if (ap != NULL)
 /* Level 5                                                     */
 /***************************************************************/
 
-int WordHere(char *args, char *pos, char *word)
-
+int OptionFound(char *args, char *pos, char *word)
     
 /*
  * Returns true if the current position 'pos' in buffer
@@ -2782,7 +2887,15 @@ if (pos < args)
    return false;
    }
 
+/* Single options do not have to have spaces between */
+
+if (strlen(word) == 2 && strncmp(pos,word,2) == 0)
+   {
+   return true;
+   }
+
 len = strlen(word);
+
 if (strncmp(pos, word, len) != 0)
    {
    return false;
@@ -2792,8 +2905,7 @@ if (pos == args)
    {
    return true;
    }
-else if (*(pos-1) == ' ' &&
-    (pos[len] == ' ' || pos[len] == '\0'))
+else if (*(pos-1) == ' ' && (pos[len] == ' ' || pos[len] == '\0'))
    {
    return true;
    }

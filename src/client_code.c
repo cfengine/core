@@ -140,7 +140,7 @@ if (conn->sd == CF_NOT_CONNECTED)
    
    if (!ServerConnect(conn,server,attr,pp))
       {
-      CfOut(cf_inform,"socket","Couldn't open a socket");
+      CfOut(cf_inform,"socket","No server is responding on this port");
 
       if (conn->sd != CF_NOT_CONNECTED)
          {

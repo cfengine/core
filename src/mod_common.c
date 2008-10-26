@@ -151,6 +151,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"inputs",cf_slist,".*"},
    {"version",cf_str,"" },
    {"lastseenexpireafter",cf_int,CF_VALRANGE},
+   {"output_prefix",cf_str,"" },
    {NULL,cf_notype,NULL}
    };
 

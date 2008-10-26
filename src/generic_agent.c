@@ -1026,7 +1026,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       {
       continue;
       }
-
+   
    if (strcmp(cp->lval,"bundlesequence") == 0)
       {
       returnval = ExpandPrivateRval(CONTEXTID,cp->rval,cp->type);
@@ -1039,6 +1039,11 @@ for (cp = controllist; cp != NULL; cp=cp->next)
    if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+      }
+   
+   if (strcmp(cp->lval,"output_prefix") == 0)
+      {
+      strncpy(VPREFIX,returnval.item,CF_MAXVARSIZE);
       }
    }
 }

@@ -303,7 +303,7 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim)
   Agnode_t **t = NULL;
   Agedge_t **a = NULL;
   GVC_t *gvc;
-  int i,j,counter = 0;
+  int i,j,counter = 0,nearest_neighbours;
   int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE];
 
 /* Count the  number of nodes in the solar system, to max
@@ -331,30 +331,30 @@ a = (Agedge_t **)malloc(sizeof(Agedge_t)*(CF_TRIBE_SIZE+2)*(CF_TRIBE_SIZE+2));
 
 /* Create the nodes - zero is root */
 
-counter = 0;
-t[counter] = agnode(g,names[topic]);
-agsafeset(t[counter], "style", "filled", "filled");
-agsafeset(t[counter], "shape", "circle", "");
-agsafeset(t[counter], "fixedsize", "true", "true");
-agsafeset(t[counter], "width", "0.75", "0.75");
-agsafeset(t[counter], "color", "orange", "");
-agsafeset(t[counter], "fontsize", "14", "");
-agsafeset(t[counter], "fontweight", "bold", "");
-agsafeset(t[counter], "root", "true", "");
-counter++;
+t[0] = agnode(g,names[topic]);
+agsafeset(t[0], "style", "filled", "filled");
+agsafeset(t[0], "shape", "circle", "");
+agsafeset(t[0], "fixedsize", "true", "true");
+agsafeset(t[0], "width", "0.75", "0.75");
+agsafeset(t[0], "color", "orange", "");
+agsafeset(t[0], "fontsize", "14", "");
+agsafeset(t[0], "fontweight", "bold", "");
+agsafeset(t[0], "root", "true", "");
 
-for (j = 0; tribe[j] >= 0; j++)
+for (j = 1; tribe[j] >= 0; j++)
    {
    Verbose("Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
-   t[counter] = agnode(g,names[tribe[j]]);   
-   agsafeset(t[counter], "style", "filled", "false");
-   agsafeset(t[counter], "shape", "circle", "");
-   agsafeset(t[counter], "fixedsize", "true", "true");
-   agsafeset(t[counter], "width", "0.55", "0.55");
-   agsafeset(t[counter], "color", "grey", "");
-   agsafeset(t[counter], "fontsize", "12", "");
-   counter++;
+   t[j] = agnode(g,names[tribe[j]]);   
+   agsafeset(t[j], "style", "filled", "false");
+   agsafeset(t[j], "shape", "circle", "");
+   agsafeset(t[j], "fixedsize", "true", "true");
+   agsafeset(t[j], "width", "0.55", "0.55");
+   agsafeset(t[j], "color", "grey", "");
+   agsafeset(t[j], "fontsize", "12", "");
    }
+
+nearest_neighbours = j;
+counter = 0;
 
 /* Now make the edges - have to search for the associations in the
    subgraph associate[] is the node that spawned the link to tribe[],
@@ -362,25 +362,21 @@ for (j = 0; tribe[j] >= 0; j++)
 
 Verbose("Made %d nodes\n",counter);
 
-counter = 0;
-
-for (j = 0; tribe[j] >= 0; j++)
+for (j = 1; j < nearest_neighbours; j++)
    {
-   if (associate[j] == topic)
+   a[counter] = agedge(g,t[0],t[j]);
+   Verbose("Linking ROOT \"%s\" to \"%s\"\n",names[tribe[j]],names[topic]);
+   counter++;
+   }
+
+// If the tribe of the each nearest neighbour
+
+for (i = nearest_neighbours; tribe[i] >= 0; i++)
+   {
+   for (j = 1; j < nearest_neighbours; j++)
       {
-      a[counter] = agedge(g,t[0],t[j]);
-      Verbose("Linking ROOT \"%s\" to \"%s\"\n",names[tribe[j]],names[topic]);
-      counter++;
-      continue;
-      }
-   
-   for (i = 0; tribe[i] >= 0; i++)
-      {
-      //link t[index] with t[index2 which matches tribe[index2] == assoc[index]] .i.e. t[j] with t[]
-      
       if (associate[j] == tribe[i])
          {
-         Verbose("(%d) Linking family \"%s\" (%d) to \"%s\"(%d)\n",counter,names[tribe[i]],i,names[tribe[j]],j);
          a[counter] = agedge(g,t[j],t[i]);
          counter++;
          }
@@ -406,24 +402,26 @@ CfOut(cf_inform,"","Generated topic locale %s\n",filename);
 
 /*************************************************************************/
 
-void GetTribe(int *tribe,char **n,int *assoc,int topic,double **adj,int dim)
+void GetTribe(int *tribe,char **n,int *neigh,int topic,double **adj,int dim)
 
-{ int i,j,counter = 0;
+{ int counter = 0,continue_counter,neighbour,i,j;
 
 for (i = 0; i < CF_TRIBE_SIZE; i++)
    {
    tribe[i] = -1;
-   assoc[i] = -1;
+   neigh[i] = -1;
    }
+
+/* Tribe[i] are the nearest neighbours of i, then neighbours of those too */
  
-for (i = 0; i < dim; i++)
+for (neighbour = 0; neighbour < dim; neighbour++)
    {
-   if (adj[topic][i] > 0)
+   if (adj[topic][neighbour] > 0)
       {
-      Verbose(" -> (%d) %s is a neighbour of topic %s\n",counter,n[i],n[topic]);
+      Verbose(" -> (%d) %s is a neighbour of topic %s\n",counter,n[neighbour],n[topic]);
       
-      tribe[counter] = i;
-      assoc[counter] = topic;
+      tribe[counter] = neighbour;
+      neigh[counter] = topic;
       counter++;
 
       if (counter >= CF_TRIBE_SIZE - 1)
@@ -433,27 +431,29 @@ for (i = 0; i < dim; i++)
       }
    }
 
-/* Look recursively at neighbourhoods */
+/* Look recursively at 2nd order neighbourhoods */
 
-for (i = 0; tribe[i] > 0; i++)
+continue_counter = counter;
+
+for (j = 0; j < counter; j++)
    {
-   for (j = 0; j < dim; j++)
+   for (neighbour = 0; neighbour < dim; neighbour++)
       {
-      if (j == topic || j == tribe[i])
+      if (neighbour == topic || neighbour == tribe[j])
          {
          continue;
          }
 
-      if (adj[tribe[i]][j] > 0)
+      if (adj[tribe[j]][neighbour] > 0)
          {
-         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",counter,n[j],n[tribe[i]]);
-         //link t[index] with t[index2 which matches tribe[index2] == assoc[index]]
+         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",continue_counter,n[neighbour],n[tribe[j]]);
+         //link t[index] with t[index2 which matches tribe[index2] == neigh[index]]
          
-         tribe[counter] = j;
-         assoc[counter] = tribe[i];
-         counter++;
+         tribe[continue_counter] = neighbour;
+         neigh[continue_counter] = tribe[j];
+         continue_counter++;
 
-         if (counter >= CF_TRIBE_SIZE - 1)
+         if (continue_counter >= CF_TRIBE_SIZE - 1)
             {
             return;
             }

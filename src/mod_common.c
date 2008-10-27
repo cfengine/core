@@ -288,7 +288,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"style_sheet",cf_str,""},
    {"html_banner",cf_str,""},
    {"graph_output",cf_opts,CF_BOOL},
-   {"graph_directory",cf_opts,CF_BOOL},
+   {"graph_directory",cf_str,CF_PATHRANGE},
    {NULL,cf_notype,NULL}
    };
 

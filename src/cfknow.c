@@ -42,7 +42,8 @@ void ShowTopicLTM(FILE *fout,char *id,char *type,char *value);
 void ShowAssociationsLTM(FILE *fout,char *id,char *type,struct TopicAssociation *ta);
 void ShowOccurrencesLTM(FILE *fout,char *id,struct Occurrence *op);
 void GenerateSQL(void);
-void LookupTopic(char *topic);
+void LookupUniqueTopic(char *typed_topic);
+void LookupMatchingTopics(char *typed_topic);
 void ShowTopicDisambiguation(CfdbConn *cfdb,struct Topic *list,char *name);
 void NothingFound(char *topic);
 void ShowTopicCosmology(CfdbConn *cfdb,char *topic_name,char *topic_id,char *topic_type);
@@ -51,10 +52,12 @@ void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc
 char *Name2Id(char *s);
 void ShowTextResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
 void ShowHtmlResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
-char *NextTopic(char *link);
+char *NextTopic(char *link,char* type);
+char *TypedTopic(char *topic,char *type);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 char *URLHint(char *s);
 void GenerateGraph(void);
+void DeTypeTopic(char *typdetopic,char *topic,char *type);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -142,7 +145,14 @@ if (strlen(TOPIC_CMD) == 0)
    }
 else
    {
-   LookupTopic(TOPIC_CMD);
+   if (ISREGEX)
+      {
+      LookupMatchingTopics(TOPIC_CMD);
+      }
+   else
+      {
+      LookupUniqueTopic(TOPIC_CMD);
+      }
    }
 
 return 0;
@@ -713,16 +723,189 @@ fclose(fout);
 
 /*********************************************************************/
 
-void LookupTopic(char *topic)
+void LookupUniqueTopic(char *typed_topic)
 
 { char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
- char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
+  char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
+  char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
   int sql_database_defined = false,trymatch = false,count = 0,matched = 0;
+  struct Topic *tp,*tmatches = NULL;
+  char safe[CF_MAXVARSIZE],safetype[CF_MAXVARSIZE];
+  CfdbConn cfdb;
+  int s,e;
+
+
+DeTypeTopic(typed_topic,topic,type);
+  
+Verbose("Looking up topics matching \"%s\" (%s)\n",topic,type);
+
+/* We need to set a scope for the regex stuff */
+
+if (strlen(SQL_OWNER) > 0)
+   {
+   sql_database_defined = true;
+   }
+ 
+if (!sql_database_defined)
+   {
+   printf("No database defined...\n");
+   return;
+   }
+
+CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
+
+if (!cfdb.connected)
+   {
+   CfOut(cf_error,"","Could not open sql_db %s\n",SQL_DATABASE);
+   return;
+   }
+
+/* First assume the item is a topic */
+
+Verbose("Treating the search string %s as a literal string\n",topic);
+
+strcpy(safe,EscapeSQL(&cfdb,topic));
+strcpy(safetype,EscapeSQL(&cfdb,type));
+
+if (strlen(type))
+   {
+   snprintf(query,CF_BUFSIZE,"SELECT * from topics where (topic_name='%s' or topic_id='%s') and topic_type='%s'",safe,safe,safetype);
+   }
+else
+   {
+   snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_name='%s' or topic_id='%s'",safe,safe);
+   }
+
+CfNewQueryDB(&cfdb,query);
+
+if (cfdb.maxcolumns != 3)
+   {
+   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
+   CfCloseDB(&cfdb);
+   return;
+   }
+
+while(CfFetchRow(&cfdb))
+   {
+   strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
+   AddTopic(&tmatches,topic_name,topic_type);   
+   count++;
+   }
+
+CfDeleteQuery(&cfdb);
+
+if (count == 1)
+   {
+   ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_type);
+   CfCloseDB(&cfdb);
+   return;
+   }
+
+if (count > 1)
+   {
+   NothingFound(typed_topic);
+   CfCloseDB(&cfdb);
+   return;
+   }
+
+/* If no matches, try the associations */
+
+count = 0;
+matched = 0;
+tmatches = NULL;
+
+strncpy(safe,EscapeSQL(&cfdb,topic),CF_BUFSIZE);
+snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc='%s' or to_assoc='%s'",safe,safe);
+
+/* Expect multiple matches always with associations */
+
+CfNewQueryDB(&cfdb,query);
+
+if (cfdb.maxcolumns != 6)
+   {
+   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,6);
+   CfCloseDB(&cfdb);
+   return;
+   }
+
+while (CfFetchRow(&cfdb))
+   {
+   strncpy(from_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
+   strncpy(from_assoc,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
+   strncpy(to_assoc,CfFetchColumn(&cfdb,3),CF_BUFSIZE-1);
+   strncpy(to_type,CfFetchColumn(&cfdb,4),CF_BUFSIZE-1);
+   strncpy(to_name,CfFetchColumn(&cfdb,5),CF_BUFSIZE-1);
+
+   if (!TopicExists(tmatches,from_assoc,to_assoc))
+      {
+      matched++;
+      AddTopic(&tmatches,from_assoc,to_assoc);
+      strncpy(ctopic_type,topic_type,CF_BUFSIZE-1);
+      strncpy(cfrom_assoc,from_assoc,CF_BUFSIZE-1);
+      strncpy(cto_assoc,to_assoc,CF_BUFSIZE-1);
+      strncpy(cto_type,to_type,CF_BUFSIZE-1);
+      }
+
+   count++;
+   }
+
+CfDeleteQuery(&cfdb);
+
+if (count == 0)
+   {
+   NothingFound(topic);
+   return;
+   }
+
+if (matched > 1)
+   {
+   if (HTML)
+      {
+      CfHtmlHeader(stdout,"Matching associations",STYLESHEET,WEBDRIVER,BANNER);
+      }
+   
+   for (tp = tmatches; tp != NULL; tp=tp->next)
+      {
+      ShowAssociationSummary(&cfdb,tp->topic_name,tp->topic_type);
+      }
+
+   if (HTML)
+      {
+      CfHtmlFooter(stdout);
+      }
+   
+   CfCloseDB(&cfdb);
+   return;
+   }
+
+if (count == 1 || matched == 1)
+   {
+   ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_type,cto_type);
+   }
+
+CfCloseDB(&cfdb);
+}
+
+
+/*********************************************************************/
+
+void LookupMatchingTopics(char *typed_topic)
+
+{ char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
+  char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
+  char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
+  char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
+  int  sql_database_defined = false,trymatch = false,count = 0,matched = 0;
   struct Topic *tp,*tmatches = NULL;
   CfdbConn cfdb;
   int s,e;
-    
+
+DeTypeTopic(typed_topic,topic,type);
+
 Verbose("Looking up topics matching \"%s\"\n",topic);
 
 /* We need to set a scope for the regex stuff */
@@ -748,19 +931,7 @@ if (!cfdb.connected)
 
 /* First assume the item is a topic */
 
-if (ISREGEX)
-   {
-   Verbose("Treating the search string \"%s\" as a regular expression (you might need to escape some characters if this is incorrect)\n",topic);
-   snprintf(query,CF_BUFSIZE,"SELECT * from topics");
-   trymatch = true;
-   }
-else
-   {
-   char safe[CF_BUFSIZE];
-   Verbose("Treating the search string %sas a literal string\n",topic);
-   strcpy(safe,EscapeSQL(&cfdb,topic));
-   snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_name='%s' or topic_id='%s'",safe,safe);
-   }
+snprintf(query,CF_BUFSIZE,"SELECT * from topics");
 
 CfNewQueryDB(&cfdb,query);
 
@@ -776,24 +947,17 @@ while(CfFetchRow(&cfdb))
    strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
    strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
-   
-   if (trymatch && BlockTextCaseMatch(topic,topic_name,&s,&e))
+
+   if (BlockTextCaseMatch(topic,topic_name,&s,&e))
       {
       AddTopic(&tmatches,topic_name,topic_type);
       matched++;
       }
-   else if (!trymatch)
-      {
-      /* Disambiguation */
-      AddTopic(&tmatches,topic_name,topic_type);
-      }
-   
-   count++;
    }
 
 CfDeleteQuery(&cfdb);
 
-if (matched > 1 || (!trymatch && count > 1))
+if (matched > 1)
    {
    ShowTopicDisambiguation(&cfdb,tmatches,topic);
    CfCloseDB(&cfdb);
@@ -806,15 +970,6 @@ if (matched == 1)
       {
       ShowTopicCosmology(&cfdb,tp->topic_name,topic_id,tp->topic_type);
       }
-
-   CfCloseDB(&cfdb);
-   return;
-   }
-
-if (count == 1)
-   {
-   /* End single match */
-   ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_type);
    CfCloseDB(&cfdb);
    return;
    }
@@ -823,20 +978,11 @@ if (count == 1)
 
 count = 0;
 matched = 0;
+tmatches = NULL;
 
-if (ISREGEX)
-   {
-   snprintf(query,CF_BUFSIZE,"SELECT * from associations");
-   }
-else
-   {
-   char safe[CF_BUFSIZE];
-   strncpy(safe,EscapeSQL(&cfdb,topic),CF_BUFSIZE);
-   snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc like '%s' or to_assoc like '%s'",safe,safe);
-   }
+snprintf(query,CF_BUFSIZE,"SELECT * from associations");
 
 /* Expect multiple matches always with associations */
-trymatch = true;
 
 CfNewQueryDB(&cfdb,query);
 
@@ -856,7 +1002,7 @@ while(CfFetchRow(&cfdb))
    strncpy(to_type,CfFetchColumn(&cfdb,4),CF_BUFSIZE-1);
    strncpy(to_name,CfFetchColumn(&cfdb,5),CF_BUFSIZE-1);
 
-   if (trymatch && (BlockTextCaseMatch(topic,from_assoc,&s,&e)||BlockTextCaseMatch(topic,to_assoc,&s,&e)))
+   if (BlockTextCaseMatch(topic,from_assoc,&s,&e)||BlockTextCaseMatch(topic,to_assoc,&s,&e))
       {
       if (!TopicExists(tmatches,from_assoc,to_assoc))
          {
@@ -868,13 +1014,11 @@ while(CfFetchRow(&cfdb))
          strncpy(cto_type,to_type,CF_BUFSIZE-1);
          }
       }
-
-   count++;
    }
 
 CfDeleteQuery(&cfdb);
 
-if (count == 0 || (ISREGEX && matched == 0))
+if (matched == 0)
    {
    NothingFound(topic);
    return;
@@ -883,7 +1027,7 @@ if (count == 0 || (ISREGEX && matched == 0))
 if (matched > 1)
    {
    /* End assoc summary */
-
+   
    if (HTML)
       {
       CfHtmlHeader(stdout,"Matching associations",STYLESHEET,WEBDRIVER,BANNER);
@@ -903,7 +1047,7 @@ if (matched > 1)
    return;
    }
 
-if (count == 1 || matched == 1)
+if (matched == 1)
    {
    ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_type,cto_type);
    }
@@ -1345,8 +1489,8 @@ if (HTML)
    
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      printf("<li>Topic \"%s\" found ",NextTopic(tp->topic_name));
-      printf("in the context of \"%s\"\n",NextTopic(tp->topic_type));
+      printf("<li>Topic \"%s\" found ",NextTopic(tp->topic_name,tp->topic_type));
+      printf("in the context of \"%s\"\n",NextTopic(tp->topic_type,""));
       }
 
    printf("</ul>");
@@ -1368,14 +1512,15 @@ void NothingFound(char *name)
 
 { char banner[CF_BUFSIZE];
   struct Topic *tp;
- 
+
 if (HTML)
    {
    snprintf(banner,CF_BUFSIZE,"Nothing found for %s",name);
    CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
    printf("<div id=\"intro\">");
-   printf("<p>Your search expression does not seem to match any topics\n");
+   printf("<p>Your search expression %s does not seem to match any topics\n",name);
    printf("</div>\n");
+   CfHtmlFooter(stdout);
    }
 else
    {
@@ -1473,7 +1618,7 @@ while(CfFetchRow(cfdb))
    strncpy(bassociation,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
-   AppendRlist(&this,topic_name,CF_SCALAR);
+   AppendRlist(&this,TypedTopic(topic_name,topic_type),CF_SCALAR);
    AddTopicAssociation(&associations,bassociation,NULL,NULL,this,false);
    DeleteRlist(this);
    }
@@ -1564,8 +1709,8 @@ void ShowAssociationSummary(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc)
 if (HTML)
    {
    printf("<div id=\"intro\">");
-   printf("<li>Association \"%s\" ",NextTopic(this_fassoc));
-   printf("(inverse name \"%s\")\n",NextTopic(this_tassoc));
+   printf("<li>Association \"%s\" ",NextTopic(this_fassoc,""));
+   printf("(inverse name \"%s\")\n",NextTopic(this_tassoc,""));
    printf("</div>");
    }
 else
@@ -1579,15 +1724,18 @@ else
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type)
 
 { char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],query[CF_BUFSIZE];
-  char banner[CF_BUFSIZE];
+  char banner[CF_BUFSIZE],output[CF_BUFSIZE];
+  char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
+  struct Rlist *flist = NULL,*tlist = NULL, *rp;
+  int count = 0;
  
 if (HTML)
    {
    snprintf(banner,CF_BUFSIZE,"Assoc: \"%s\" (with inverse \"%s\")",this_fassoc,this_tassoc);
    CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
    printf("<div id=\"intro\">");
-   printf("\"%s\" associates topics of type:  \"%s\"",this_fassoc,NextTopic(from_type));
-   printf("&rarr;  \"%s\"\n",NextTopic(to_type));
+   printf("\"%s\" associates topics of type:  \"%s\"",this_fassoc,NextTopic(from_type,""));
+   printf("&rarr;  \"%s\"\n",NextTopic(to_type,""));
    printf("</div>");
    }
 else
@@ -1596,96 +1744,149 @@ else
    printf("associates topics of type \"%s\" -> \"%s\"\n",from_type,to_type);
    }
 
+/* Role players - fwd search */
+
+snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc='%s'",EscapeSQL(cfdb,this_fassoc));
+
+CfNewQueryDB(cfdb,query);
+
+if (cfdb->maxcolumns != 6)
+   {
+   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
+   CfCloseDB(cfdb);
+   return;
+   }
+
+while(CfFetchRow(cfdb))
+   {
+   strncpy(from_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(from_assoc,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+   strncpy(to_assoc,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
+   strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
+   strncpy(to_name,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
+
+   if (HTML)
+      {
+      snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(from_name,topic_type),topic_type);
+      }
+   else
+      {
+      snprintf(output,CF_BUFSIZE,"    %s (%s)\n",from_name,topic_type);
+      }
+
+   IdempPrependRScalar(&flist,output,CF_SCALAR);
+
+   if (HTML)
+      {
+      snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(to_name,to_type),to_type);
+      }
+   else
+      {
+      snprintf(output,CF_BUFSIZE,"    %s (%s)\n",to_name,to_type);
+      }
+
+   IdempPrependRScalar(&tlist,output,CF_SCALAR);
+   count++;
+   }
+
+CfDeleteQuery(cfdb);
+
+/* Role players - inverse assoc search */
+
+if (count == 0)
+   {
+   snprintf(query,CF_BUFSIZE,"SELECT * from associations where to_assoc='%s'",EscapeSQL(cfdb,this_tassoc));
+
+   CfNewQueryDB(cfdb,query);
+   
+   if (cfdb->maxcolumns != 6)
+      {
+      CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
+      CfCloseDB(cfdb);
+      return;
+      }
+   
+   while(CfFetchRow(cfdb))
+      {
+      strncpy(from_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
+      strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+      strncpy(from_assoc,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+      strncpy(to_assoc,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
+      strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
+      strncpy(to_name,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
+
+      if (HTML)
+         {
+         snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(from_name,topic_type),topic_type);
+         }
+      else
+         {
+         snprintf(output,CF_BUFSIZE,"    %s (%s)\n",from_name,from_type);
+         }
+      
+      IdempPrependRScalar(&flist,output,CF_SCALAR);
+      
+      if (HTML)
+         {
+         snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(to_name,to_type),to_type);
+         }
+      else
+         {
+         snprintf(output,CF_BUFSIZE,"    %s (%s)\n",to_name,to_type);
+         }
+      
+      IdempPrependRScalar(&tlist,output,CF_SCALAR);
+      }
+
+   CfDeleteQuery(cfdb);
+   }
 
 if (HTML)
    {
    printf("<p><div id=\"occurrences\">");
    printf("\n<h2>Role players</h2>\n\n");
-   printf("  <h3>%s::</h3>\n",from_type);
+   printf("  <h3>Origin::</h3>\n");
    printf("<div id=\"roles\">\n");
    printf("<ul>\n");
    }
 else
    {
    printf("\nRole players\n\n");
-   printf("  %s::\n",from_type);
+   printf("  Origin::\n");
    }
 
-/* FROM role players */
-
-snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s'",EscapeSQL(cfdb,from_type));
-
-CfNewQueryDB(cfdb,query);
-
-if (cfdb->maxcolumns != 3)
+//for (rp = AlphaSortRListNames(flist); rp != NULL; rp=rp->next)
+    for (rp = flist; rp != NULL; rp=rp->next)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
-   return;
+   printf("%s\n",rp->item);
    }
-
-while(CfFetchRow(cfdb))
-   {
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
-
-   if (HTML)
-      {
-      printf("<li>%s</li>\n",NextTopic(topic_name));
-      }
-   else
-      {
-      printf("    %s\n",topic_name);
-      }
-   }
-
-CfDeleteQuery(cfdb);
 
 if (HTML)
    {
-   printf("</ul>\n</div>");
-   printf("  <h3>%s::</h3>\n",to_type);
+   printf("</ul></div><p>");
+   printf("  <h3>Associates::</h3>\n");
    printf("<div id=\"roles\">\n");
    printf("<ul>\n");
    }
 else
    {
-   printf("\n  %s::\n",to_type);
+   printf("\n\nRole players\n\n");
+   printf("  Associates::\n");
    }
 
-/* TO ROLE PLAYERS */
-
-snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s'",to_type);
-
-CfNewQueryDB(cfdb,query);
-
-if (cfdb->maxcolumns != 3)
+for (rp = flist; rp != NULL; rp=rp->next)
+//for (rp = AlphaSortRListNames(tlist); rp != NULL; rp=rp->next)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
-   return;
+   printf("%s\n",rp->item);
    }
 
-while(CfFetchRow(cfdb))
-   {
-   strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
-
-   if (HTML)
-      {
-      printf("<li>%s</li>\n",NextTopic(topic_name));
-      }
-   else
-      {
-      printf("    %s\n",topic_name);
-      }
-   }
-
-CfDeleteQuery(cfdb);
+DeleteRlist(flist);
+DeleteRlist(tlist);
 
 if (HTML)
    {
-   printf("</ul>\n</div>");
+   printf("</ul>\n</div></div>");
    CfHtmlFooter(stdout);
    }
 }
@@ -1856,8 +2057,8 @@ if (stat(filename,&sb) != -1)
    }
 
 fprintf(fout,"<div id=\"intro\">");
-fprintf(fout,"This topic \"%s\" is found in the context of ",NextTopic(this_name));
-fprintf(fout,"\"%s\"\n</div>",NextTopic(this_type));
+fprintf(fout,"This topic \"%s\" has type ",NextTopic(this_name,this_type));
+fprintf(fout,"\"%s\"\n</div>",NextTopic(this_type,""));
 
 if (occurrences != NULL)
    {
@@ -1865,7 +2066,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   CfOut(cf_error,"","\n<h2>Pertaining to this topic:</h2>\n\n");
+   CfOut(cf_error,"","\n<h2>Occurrence of this topic:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
@@ -1881,14 +2082,7 @@ if (occurrences != NULL)
 	 
          for (rp = oc->represents; rp != NULL; rp=rp->next)
             {
-            if (rp->next || oc->rep_type != cfk_url)
-               {
-               fprintf(fout,"%s, ",NextTopic((char *)rp->item));
-               }
-            else
-               {
-               fprintf(fout,"<a href=\"%s\">%s</a> ",oc->locator,(char *)rp->item);
-               }
+            fprintf(fout,"%s, ",NextTopic((char *)rp->item,""));
             }
          
          fprintf(fout,":");
@@ -1900,7 +2094,7 @@ if (occurrences != NULL)
              fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",oc->locator,oc->locator);
              break;
          case cfk_web:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\">(web)</a> </span>(URL)",oc->locator);
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\"> ...%s</a> </span>(URL)",oc->locator,URLHint(oc->locator));
              break;
          case cfk_file:
              fprintf(fout," <a href=\"file://%s\">%s</a> (file)",oc->locator,oc->locator);
@@ -1933,18 +2127,18 @@ if (associations)
    count = 0;
    
    fprintf(fout,"<p><div id=\"associations\">");
-   fprintf(fout,"\n<h2>Associations:</h2>\n\n");
+   fprintf(fout,"\n<h2>Associated with this topic:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
    for (ta = associations; ta != NULL; ta=ta->next)
       {
-      fprintf(fout,"<li>  %s \"%s\"\n",this_name,NextTopic(ta->fwd_name));
+      fprintf(fout,"<li>  %s \"%s\"\n",this_name,NextTopic(ta->fwd_name,""));
       
       fprintf(fout,"<ul>\n");
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
-         fprintf(fout,"<li> %s\n",NextTopic(rp->item));
+         fprintf(fout,"<li> %s\n",NextTopic(rp->item,""));
          }
       fprintf(fout,"</ul>\n");
       count++;
@@ -1964,13 +2158,13 @@ if (topics_this_type)
    count = 0;
    
    fprintf(fout,"<p><div id=\"thistype\">");
-   fprintf(fout,"\n<h2>Topics of type %s:</h2>\n\n",NextTopic(this_name));
+   fprintf(fout,"\n<h2>Topics of type %s:</h2>\n\n",NextTopic(this_name,this_type));
    
    fprintf(fout,"<ul>\n");
    
    for (tp = topics_this_type; tp != NULL; tp=tp->next)
       {
-      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
+      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name,tp->topic_type));
       count++;
       }
    
@@ -1995,7 +2189,7 @@ if (other_topics)
    
    for (tp = other_topics; tp != NULL; tp=tp->next)
       {
-      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name));
+      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name,tp->topic_type));
       count++;
       }
    
@@ -2014,18 +2208,62 @@ CfHtmlFooter(stdout);
 
 /*********************************************************************/
 
-char *NextTopic(char *topic)
+char *NextTopic(char *topic,char *type)
 
 { static char url[CF_BUFSIZE];
+ char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
 
 if (strlen(WEBDRIVER) == 0)
    {
    CfOut(cf_error,"","No query_engine is defined\n");
    exit(1);
    }
- 
-snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a>",WEBDRIVER,topic,topic);
+
+if (strchr(topic,':'))
+   {
+   DeTypeTopic(topic,ctopic,ctype);    
+   snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a>",WEBDRIVER,topic,ctopic);
+   }
+else
+   {
+   snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s:%s\">%s</a>",WEBDRIVER,type,topic,topic);
+   }
+
 return url;
+}
+
+/*********************************************************************/
+
+char *TypedTopic(char *topic,char *type)
+
+{ static char name[CF_BUFSIZE];
+
+Debug("TYPE(%s)/TOPIC(%s)",type,topic);
+snprintf(name,CF_BUFSIZE,"%s:%s",type,topic);
+return name;
+}
+
+/*********************************************************************/
+
+void DeTypeTopic(char *typed_topic,char *topic,char *type)
+
+{
+type[0] = '\0';
+topic[0] = '\0';
+
+if (strchr(typed_topic,':'))
+   {
+   sscanf(typed_topic,"%255[^:]:%255[^\n]",type,topic);
+   
+   if (strlen(topic) == 0)
+      {
+      sscanf(typed_topic,":%255[^\n]",topic);
+      }
+   }
+else
+   {
+   strncpy(topic,typed_topic,CF_MAXVARSIZE-1);
+   }
 }
 
 /*****************************************************************************/

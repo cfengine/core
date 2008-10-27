@@ -223,9 +223,13 @@ for (tp = list; tp != NULL; tp=tp->next)
       {
       if (topic_type && strcmp(tp->topic_type,topic_type) != 0)
          {
-         CfOut(cf_error,"","Topic \"%s\" exists, but it promises type \"%s\" which does not match the new promised type \"%s\"\n",topic_name,tp->topic_type,topic_type);
+         CfOut(cf_inform,"","Topic \"%s\" already exists, but it promises type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
+         return false;         
          }
-      return true;
+      else
+         {
+         return true;
+         }
       }
 
    strncpy(l,ToLowerStr(tp->topic_name),CF_MAXVARSIZE);
@@ -233,7 +237,7 @@ for (tp = list; tp != NULL; tp=tp->next)
    
    if (strcmp(l,r) == 0)
       {
-      CfOut(cf_error,"","Topic \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",topic_name,tp->topic_name);
+      CfOut(cf_inform,"","Topic \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",topic_name,tp->topic_name);
       }
    }
 
@@ -299,7 +303,7 @@ for (ta = list; ta != NULL; ta=ta->next)
       
       if (strcmp(l,r) == 0)
          {
-         CfOut(cf_error,"","Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",bwd,ta->bwd_name);
+         CfOut(cf_inform,"","Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",bwd,ta->bwd_name);
          }
       }
    

@@ -132,7 +132,7 @@ for (tp = map; tp != NULL; tp=tp->next)
             
             if (TypedTopicMatch(TypedTopic((rp->item),""),n[j]))
                {
-               adj[i][j] = adj[j][i] = 1.0;
+               //  adj[i][j] = adj[j][i] = 1.0;
                }
             }
          }
@@ -311,7 +311,7 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim)
   Agnode_t **t = NULL;
   Agedge_t **a = NULL;
   GVC_t *gvc;
-  int i,j,counter = 0,nearest_neighbours;
+  int i,j,counter = 0,nearest_neighbours = 0;
   int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE];
   char ltopic[CF_MAXVARSIZE],ltype[CF_MAXVARSIZE];
 
@@ -341,7 +341,6 @@ a = (Agedge_t **)malloc(sizeof(Agedge_t)*(CF_TRIBE_SIZE+2)*(CF_TRIBE_SIZE+2));
 
 /* Create the nodes - zero is root */
 
-//DeTypeTopic(names[topic],ltopic,ltype);
 t[0] = agnode(g,names[topic]);   
 agsafeset(t[0], "style", "filled", "filled");
 agsafeset(t[0], "shape", "circle", "");
@@ -361,11 +360,17 @@ for (j = 1; tribe[j] >= 0; j++)
    agsafeset(t[j], "shape", "circle", "");
    agsafeset(t[j], "fixedsize", "true", "true");
    agsafeset(t[j], "width", "0.75", "0.75");
-   agsafeset(t[j], "color", "grey", "");
    agsafeset(t[j], "fontsize", "12", "");
+   if (associate[j] == topic)
+      {
+      agsafeset(t[j], "color", "bisque2", "");
+      }
+   else
+      {
+      agsafeset(t[j], "color", "burlywood3", "");
+      }
    }
 
-nearest_neighbours = j;
 counter = 0;
 
 /* Now make the edges - have to search for the associations in the
@@ -374,25 +379,28 @@ counter = 0;
 
 Verbose("Made %d nodes\n",counter);
 
-for (j = 1; j < nearest_neighbours; j++)
+for (i = 1; associate[i] == topic; i++)
    {
    /* The node for tribe member tribe[j] is t[j] */
-
-   Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[0]]);
-   a[counter] = agedge(g,t[0],t[j]);
+   Verbose("Link: %s to %s\n",names[tribe[i]],names[tribe[0]]);
+   a[counter] = agedge(g,t[0],t[i]);
+   agsafeset(a[counter], "color", "red", "");
    counter++;
    }
+
+nearest_neighbours = counter;
 
 // If the tribe of the each nearest neighbour
 
 for (i = nearest_neighbours; tribe[i] >= 0; i++)
    {
-   for (j = 1; j < nearest_neighbours; j++)
+   for (j = 1; tribe[j] >= 0; j++)
       {
       Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[i]]);
-      if (associate[j] == tribe[i])
+      if (associate[i] == tribe[j])
          {
          a[counter] = agedge(g,t[j],t[i]);
+         agsafeset(a[counter], "color", "brown", "");
          counter++;
          }
       }
@@ -419,7 +427,8 @@ CfOut(cf_inform,"","Generated topic locale %s\n",filename);
 
 void GetTribe(int *tribe,char **n,int *neigh,int topic,double **adj,int dim)
 
-{ int counter = 0,continue_counter,possible_neighbour,i,j;
+{ int counter = 0,possible_neighbour,i,j;
+  int nearest_neighbour_boundary;
 
 for (i = 0; i < CF_TRIBE_SIZE; i++)
    {
@@ -440,7 +449,7 @@ for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
    
    if (adj[topic][possible_neighbour] > 0)
       {
-      Verbose(" -> %d (%s) is a neighbour of topic (%s)\n",counter,n[possible_neighbour],n[topic]);
+      Verbose(" -> %d (%s) is a nearest neighbour of topic (%s)\n",counter,n[possible_neighbour],n[topic]);
       
       tribe[counter] = possible_neighbour;
       neigh[counter] = topic;
@@ -455,9 +464,9 @@ for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
 
 /* Look recursively at 2nd order neighbourhoods */
 
-continue_counter = counter;
+nearest_neighbour_boundary = counter;
 
-for (j = 1; j < counter; j++)
+for (j = 1; j < nearest_neighbour_boundary; j++)
    {
    for (possible_neighbour = 1; possible_neighbour < dim; possible_neighbour++)
       {
@@ -473,14 +482,47 @@ for (j = 1; j < counter; j++)
 
       if (adj[tribe[j]][possible_neighbour] > 0)
          {
-         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",continue_counter,n[possible_neighbour],n[tribe[j]]);
+         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
          //link t[index] with t[index2 which matches tribe[index2] == neigh[index]]
          
-         tribe[continue_counter] = possible_neighbour;
-         neigh[continue_counter] = tribe[j];
-         continue_counter++;
+         tribe[counter] = possible_neighbour;
+         neigh[counter] = tribe[j];
+         counter++;
 
-         if (continue_counter >= CF_TRIBE_SIZE - 1)
+         if (counter >= CF_TRIBE_SIZE - 1)
+            {
+            return;
+            }
+         }
+      }
+   }
+
+/* Look recursively at 3nd order neighbourhoods for bridge connections*/
+
+for (j = nearest_neighbour_boundary; j < counter; j++)
+   {
+   for (possible_neighbour = 1; possible_neighbour < dim; possible_neighbour++)
+      {
+      if (possible_neighbour == topic)
+         {
+         continue;
+         }
+
+      if (possible_neighbour == tribe[j])
+         {
+         continue;
+         }
+
+      if (adj[tribe[j]][possible_neighbour] > 0)
+         {
+         Verbose(" -> (%d) %s is in 3extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
+         
+         tribe[counter] = possible_neighbour;
+         neigh[counter] = tribe[j];
+
+         counter++;
+
+         if (counter >= CF_TRIBE_SIZE - 1)
             {
             return;
             }

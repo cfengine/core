@@ -53,11 +53,7 @@ char *Name2Id(char *s);
 void ShowTextResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
 void ShowHtmlResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
 char *NextTopic(char *link,char* type);
-char *TypedTopic(char *topic,char *type);
-char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
-char *URLHint(char *s);
 void GenerateGraph(void);
-void DeTypeTopic(char *typdetopic,char *topic,char *type);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -2226,95 +2222,12 @@ if (strchr(topic,':'))
    }
 else
    {
-   snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s:%s\">%s</a>",WEBDRIVER,type,topic,topic);
+   snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s::%s\">%s</a>",WEBDRIVER,type,topic,topic);
    }
 
 return url;
 }
 
-/*********************************************************************/
-
-char *TypedTopic(char *topic,char *type)
-
-{ static char name[CF_BUFSIZE];
-
-Debug("TYPE(%s)/TOPIC(%s)",type,topic);
-snprintf(name,CF_BUFSIZE,"%s:%s",type,topic);
-return name;
-}
-
-/*********************************************************************/
-
-void DeTypeTopic(char *typed_topic,char *topic,char *type)
-
-{
-type[0] = '\0';
-topic[0] = '\0';
-
-if (strchr(typed_topic,':'))
-   {
-   sscanf(typed_topic,"%255[^:]:%255[^\n]",type,topic);
-   
-   if (strlen(topic) == 0)
-      {
-      sscanf(typed_topic,":%255[^\n]",topic);
-      }
-   }
-else
-   {
-   strncpy(topic,typed_topic,CF_MAXVARSIZE-1);
-   }
-}
-
-/*****************************************************************************/
-
-char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name)
-
-{ struct Topic *tp;
-  static char longname[CF_BUFSIZE];
-
-strcpy(longname,"unknown topic");
-  
-for (tp = list; tp != NULL; tp=tp->next)
-   {
-   if (strcmp(topic_name,tp->topic_name) == 0)
-      {
-      if (tp->comment)
-         {
-         snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
-         }
-      else
-         {
-         snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
-         }
-
-      if (cfdb)
-         {
-         return EscapeSQL(cfdb,longname);
-         }
-      else
-         {
-         return longname;
-         }
-      }
-   }
-
-CfOut(cf_error,"","Could not assemble long name for a known topic - something funny going on");
-return NULL;
-}
-
-/*****************************************************************************/
-
-char *URLHint(char *url)
-
-{ char *sp;
-
-for (sp = url+strlen(url); *sp != '/'; sp--)
-   {
-   }
-
-return sp;
-}
 
 /* EOF */
 

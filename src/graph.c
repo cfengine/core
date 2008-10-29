@@ -91,9 +91,9 @@ n = (char **)malloc(sizeof(char *)*topic_count);
 
 i = j = 0;
 
-for (tp = map; tp != NULL; tp=tp->next)
+for (tp = map; tp != NULL; tp=tp->next,i++)
    {
-   n[i++] = tp->topic_name;
+   n[i] = strdup(TypedTopic(tp->topic_name,tp->topic_type));
    }
 
 i = j = 0;
@@ -106,18 +106,15 @@ for (tp = map; tp != NULL; tp=tp->next)
          {
          for (j = 0; j < topic_count; j++)
             {
-            if (strcmp((char *)(rp->item),n[j]) == 0)
+            if (TypedTopicMatch(TypedTopic(rp->item,""),n[j]))
                {
-               Verbose("Adding associate %s to %s\n",n[i],n[j]);
+               if (i == j)
+                  {
+                  continue;
+                  }
+
                adj[i][j] = adj[j][i] = 1.0;
                }
-
-            /* Look at hierarchy relationships - these only distort the associations
-
-            if (strcmp((char *)(rp->item),tp->topic_type) == 0)
-               {
-               adj[i][j] = adj[j][i] = 1.0;
-               } */
             }
          }
       }
@@ -128,9 +125,13 @@ for (tp = map; tp != NULL; tp=tp->next)
          {
          for (j = 0; j < topic_count; j++)
             {
-            if (strcmp((char *)(rp->item),n[j]) == 0)
+            if (i == j)
                {
-               Verbose("Adding occurrence topic %s to %s\n",rp->item,tp->topic_name);
+               continue;
+               }
+            
+            if (TypedTopicMatch(TypedTopic((rp->item),""),n[j]))
+               {
                adj[i][j] = adj[j][i] = 1.0;
                }
             }
@@ -190,6 +191,13 @@ for (i = 0; i < topic_count; i++)
 for (i = 0; i < topic_count; i++)
    {
    PlotTopicCosmos(i,adj,n,topic_count);
+   }
+
+/* Clean up */
+
+for (i = 0; i < topic_count; i++)
+   {
+   free(n[i]);
    }
 
 free(adj);
@@ -305,6 +313,8 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim)
   GVC_t *gvc;
   int i,j,counter = 0,nearest_neighbours;
   int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE];
+  char ltopic[CF_MAXVARSIZE],ltype[CF_MAXVARSIZE];
+
 
 /* Count the  number of nodes in the solar system, to max
    number based on Dunbar's limit */  
@@ -331,11 +341,12 @@ a = (Agedge_t **)malloc(sizeof(Agedge_t)*(CF_TRIBE_SIZE+2)*(CF_TRIBE_SIZE+2));
 
 /* Create the nodes - zero is root */
 
-t[0] = agnode(g,names[topic]);
+//DeTypeTopic(names[topic],ltopic,ltype);
+t[0] = agnode(g,names[topic]);   
 agsafeset(t[0], "style", "filled", "filled");
 agsafeset(t[0], "shape", "circle", "");
 agsafeset(t[0], "fixedsize", "true", "true");
-agsafeset(t[0], "width", "0.75", "0.75");
+agsafeset(t[0], "width", "1.15", "1.15");
 agsafeset(t[0], "color", "orange", "");
 agsafeset(t[0], "fontsize", "14", "");
 agsafeset(t[0], "fontweight", "bold", "");
@@ -344,11 +355,12 @@ agsafeset(t[0], "root", "true", "");
 for (j = 1; tribe[j] >= 0; j++)
    {
    Verbose("Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
-   t[j] = agnode(g,names[tribe[j]]);   
+   DeTypeTopic(names[tribe[j]],ltopic,ltype);
+   t[j] = agnode(g,ltopic);   
    agsafeset(t[j], "style", "filled", "false");
    agsafeset(t[j], "shape", "circle", "");
    agsafeset(t[j], "fixedsize", "true", "true");
-   agsafeset(t[j], "width", "0.55", "0.55");
+   agsafeset(t[j], "width", "0.75", "0.75");
    agsafeset(t[j], "color", "grey", "");
    agsafeset(t[j], "fontsize", "12", "");
    }
@@ -364,8 +376,10 @@ Verbose("Made %d nodes\n",counter);
 
 for (j = 1; j < nearest_neighbours; j++)
    {
+   /* The node for tribe member tribe[j] is t[j] */
+
+   Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[0]]);
    a[counter] = agedge(g,t[0],t[j]);
-   Verbose("Linking ROOT \"%s\" to \"%s\"\n",names[tribe[j]],names[topic]);
    counter++;
    }
 
@@ -375,6 +389,7 @@ for (i = nearest_neighbours; tribe[i] >= 0; i++)
    {
    for (j = 1; j < nearest_neighbours; j++)
       {
+      Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[i]]);
       if (associate[j] == tribe[i])
          {
          a[counter] = agedge(g,t[j],t[i]);
@@ -404,7 +419,7 @@ CfOut(cf_inform,"","Generated topic locale %s\n",filename);
 
 void GetTribe(int *tribe,char **n,int *neigh,int topic,double **adj,int dim)
 
-{ int counter = 0,continue_counter,neighbour,i,j;
+{ int counter = 0,continue_counter,possible_neighbour,i,j;
 
 for (i = 0; i < CF_TRIBE_SIZE; i++)
    {
@@ -413,14 +428,21 @@ for (i = 0; i < CF_TRIBE_SIZE; i++)
    }
 
 /* Tribe[i] are the nearest neighbours of i, then neighbours of those too */
- 
-for (neighbour = 0; neighbour < dim; neighbour++)
+
+Verbose("Tribe for topic %d = %s\n",topic,n[topic]);
+
+for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
    {
-   if (adj[topic][neighbour] > 0)
+   if (possible_neighbour == topic)
       {
-      Verbose(" -> (%d) %s is a neighbour of topic %s\n",counter,n[neighbour],n[topic]);
+      continue;
+      }
+   
+   if (adj[topic][possible_neighbour] > 0)
+      {
+      Verbose(" -> %d (%s) is a neighbour of topic (%s)\n",counter,n[possible_neighbour],n[topic]);
       
-      tribe[counter] = neighbour;
+      tribe[counter] = possible_neighbour;
       neigh[counter] = topic;
       counter++;
 
@@ -435,21 +457,26 @@ for (neighbour = 0; neighbour < dim; neighbour++)
 
 continue_counter = counter;
 
-for (j = 0; j < counter; j++)
+for (j = 1; j < counter; j++)
    {
-   for (neighbour = 0; neighbour < dim; neighbour++)
+   for (possible_neighbour = 1; possible_neighbour < dim; possible_neighbour++)
       {
-      if (neighbour == topic || neighbour == tribe[j])
+      if (possible_neighbour == topic)
          {
          continue;
          }
 
-      if (adj[tribe[j]][neighbour] > 0)
+      if (possible_neighbour == tribe[j])
          {
-         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",continue_counter,n[neighbour],n[tribe[j]]);
+         continue;
+         }
+
+      if (adj[tribe[j]][possible_neighbour] > 0)
+         {
+         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",continue_counter,n[possible_neighbour],n[tribe[j]]);
          //link t[index] with t[index2 which matches tribe[index2] == neigh[index]]
          
-         tribe[continue_counter] = neighbour;
+         tribe[continue_counter] = possible_neighbour;
          neigh[continue_counter] = tribe[j];
          continue_counter++;
 

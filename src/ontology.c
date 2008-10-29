@@ -208,6 +208,125 @@ for (rp = represents; rp != NULL; rp=rp->next)
    }
 }
 
+/*********************************************************************/
+
+char *TypedTopic(char *topic,char *type)
+
+{ static char name[CF_BUFSIZE];
+
+Debug("TYPE(%s)/TOPIC(%s)",type,topic);
+snprintf(name,CF_BUFSIZE,"%s::%s",type,topic);
+return name;
+}
+
+/*********************************************************************/
+
+void DeTypeTopic(char *typed_topic,char *topic,char *type)
+
+{
+type[0] = '\0';
+topic[0] = '\0';
+
+if (strchr(typed_topic,':'))
+   {
+   sscanf(typed_topic,"%255[^:]::%255[^\n]",type,topic);
+   
+   if (strlen(topic) == 0)
+      {
+      sscanf(typed_topic,"::%255[^\n]",topic);
+      }
+   }
+else
+   {
+   strncpy(topic,typed_topic,CF_MAXVARSIZE-1);
+   }
+}
+
+/*********************************************************************/
+
+int TypedTopicMatch(char *ttopic1,char *ttopic2)
+
+{ char type1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
+  char type2[CF_MAXVARSIZE],topic2[CF_MAXVARSIZE];
+  
+type1[0] = '\0';
+topic1[0] = '\0';
+type2[0] = '\0';
+topic2[0] = '\0';
+
+DeTypeTopic(ttopic1,topic1,type1);
+DeTypeTopic(ttopic2,topic2,type2);
+
+Verbose("Comparing: (%s)=(%s)\n",topic1,topic2);
+
+if (strlen(type1) > 0 && strlen(type2) > 0)
+   {
+   if (strcmp(topic1,topic2) == 0 && strcmp(type1,type2) == 0)
+      {
+      return true;
+      }
+   }
+else
+   {
+   if (strcmp(topic1,topic2) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*****************************************************************************/
+
+char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name)
+
+{ struct Topic *tp;
+  static char longname[CF_BUFSIZE];
+
+strcpy(longname,"unknown topic");
+  
+for (tp = list; tp != NULL; tp=tp->next)
+   {
+   if (strcmp(topic_name,tp->topic_name) == 0)
+      {
+      if (tp->comment)
+         {
+         snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+         }
+      else
+         {
+         snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+         }
+
+      if (cfdb)
+         {
+         return EscapeSQL(cfdb,longname);
+         }
+      else
+         {
+         return longname;
+         }
+      }
+   }
+
+CfOut(cf_error,"","Could not assemble long name for a known topic - something funny going on");
+return NULL;
+}
+
+/*****************************************************************************/
+
+char *URLHint(char *url)
+
+{ char *sp;
+
+for (sp = url+strlen(url); *sp != '/'; sp--)
+   {
+   }
+
+return sp;
+}
+
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/

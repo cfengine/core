@@ -354,7 +354,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          }
       continue;
       }
-   
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksumupdates].lval) == 0)
       {
       CHECKSUMUPDATES = GetBoolean(retval);

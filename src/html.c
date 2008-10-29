@@ -81,6 +81,6 @@ fprintf(fp,"<div id=\"title\"><h1>%s</h1></div>",title);
 void CfHtmlFooter(FILE *fp)
 
 {
-fprintf(fp,"</div></body></html>");
+fprintf(fp,"</div></body></html>\n");
 }
 

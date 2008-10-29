@@ -212,10 +212,10 @@ for (rp = represents; rp != NULL; rp=rp->next)
 
 char *TypedTopic(char *topic,char *type)
 
-{ static char name[CF_BUFSIZE];
+{ static char name[CF_MAXVARSIZE];
 
 Debug("TYPE(%s)/TOPIC(%s)",type,topic);
-snprintf(name,CF_BUFSIZE,"%s::%s",type,topic);
+snprintf(name,CF_MAXVARSIZE,"%s::%s",type,topic);
 return name;
 }
 

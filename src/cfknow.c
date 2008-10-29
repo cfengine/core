@@ -104,7 +104,7 @@ char GRAPHDIR[CF_MAXVARSIZE];
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[13] =
+ struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -118,6 +118,7 @@ char GRAPHDIR[CF_MAXVARSIZE];
       { "topic",required_argument,0,'t'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
+      { "graphs",no_argument,0,'g'},
       { NULL,0,0,'\0' }
       };
 
@@ -168,7 +169,7 @@ void CheckOpts(int argc,char **argv)
 
 strcpy(TOPIC_CMD,"");
  
-while ((c=getopt_long(argc,argv,"hHd:vVf:pD:N:Sst:r:w:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:pD:N:Sst:r:w:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -208,6 +209,10 @@ while ((c=getopt_long(argc,argv,"hHd:vVf:pD:N:Sst:r:w:",OPTIONS,&optindex)) != E
           
       case 'D':
           AddMultipleClasses(optarg);
+          break;
+
+      case 'g':
+          GRAPH = true;
           break;
           
       case 'N':
@@ -734,7 +739,7 @@ void LookupUniqueTopic(char *typed_topic)
 
 DeTypeTopic(typed_topic,topic,type);
   
-Verbose("Looking up topics matching \"%s\" (%s)\n",topic,type);
+Verbose("Looking up topic \"%s\" (%s)\n",topic,type);
 
 /* We need to set a scope for the regex stuff */
 
@@ -764,13 +769,13 @@ Verbose("Treating the search string %s as a literal string\n",topic);
 strcpy(safe,EscapeSQL(&cfdb,topic));
 strcpy(safetype,EscapeSQL(&cfdb,type));
 
-if (strlen(type))
+if (strlen(type) > 0)
    {
-   snprintf(query,CF_BUFSIZE,"SELECT * from topics where (topic_name='%s' or topic_id='%s') and topic_type='%s'",safe,safe,safetype);
+   snprintf(query,CF_BUFSIZE,"SELECT * from topics where (topic_name='%s' or topic_id='%s') and topic_type='%s'",safe,CanonifyName(safe),safetype);
    }
 else
    {
-   snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_name='%s' or topic_id='%s'",safe,safe);
+   snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_name='%s' or topic_id='%s'",safe,CanonifyName(safe));
    }
 
 CfNewQueryDB(&cfdb,query);
@@ -802,7 +807,7 @@ if (count == 1)
 
 if (count > 1)
    {
-   NothingFound(typed_topic);
+   ShowTopicDisambiguation(&cfdb,tmatches,topic);
    CfCloseDB(&cfdb);
    return;
    }
@@ -813,7 +818,8 @@ count = 0;
 matched = 0;
 tmatches = NULL;
 
-strncpy(safe,EscapeSQL(&cfdb,topic),CF_BUFSIZE);
+strncpy(safe,EscapeSQL(&cfdb,topic),CF_MAXVARSIZE);
+
 snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc='%s' or to_assoc='%s'",safe,safe);
 
 /* Expect multiple matches always with associations */
@@ -851,14 +857,17 @@ while (CfFetchRow(&cfdb))
 
 CfDeleteQuery(&cfdb);
 
-if (count == 0)
+if (matched == 0)
    {
-   NothingFound(topic);
+   NothingFound(typed_topic);
+   CfCloseDB(&cfdb);
    return;
    }
 
 if (matched > 1)
    {
+   /* End assoc summary */
+   
    if (HTML)
       {
       CfHtmlHeader(stdout,"Matching associations",STYLESHEET,WEBDRIVER,BANNER);
@@ -878,14 +887,13 @@ if (matched > 1)
    return;
    }
 
-if (count == 1 || matched == 1)
+if (matched == 1)
    {
    ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_type,cto_type);
    }
 
 CfCloseDB(&cfdb);
 }
-
 
 /*********************************************************************/
 
@@ -1016,7 +1024,8 @@ CfDeleteQuery(&cfdb);
 
 if (matched == 0)
    {
-   NothingFound(topic);
+   NothingFound(typed_topic);
+   CfCloseDB(&cfdb);
    return;
    }
 
@@ -1852,8 +1861,7 @@ else
    printf("  Origin::\n");
    }
 
-//for (rp = AlphaSortRListNames(flist); rp != NULL; rp=rp->next)
-    for (rp = flist; rp != NULL; rp=rp->next)
+for (rp = AlphaSortRListNames(flist); rp != NULL; rp=rp->next)
    {
    printf("%s\n",rp->item);
    }
@@ -1871,8 +1879,7 @@ else
    printf("  Associates::\n");
    }
 
-for (rp = flist; rp != NULL; rp=rp->next)
-//for (rp = AlphaSortRListNames(tlist); rp != NULL; rp=rp->next)
+for (rp = AlphaSortRListNames(tlist); rp != NULL; rp=rp->next)
    {
    printf("%s\n",rp->item);
    }
@@ -2044,7 +2051,7 @@ void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,
 snprintf(banner,CF_BUFSIZE,"Topic: %s",this_name);  
 CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
 
-snprintf(filename,CF_BUFSIZE,"graphs/%s.png",CanonifyName(this_name));
+snprintf(filename,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
 
 if (stat(filename,&sb) != -1)
    {

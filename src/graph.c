@@ -106,7 +106,7 @@ for (tp = map; tp != NULL; tp=tp->next)
          {
          for (j = 0; j < topic_count; j++)
             {
-            if (TypedTopicMatch(TypedTopic(rp->item,""),n[j]))
+            if (TypedTopicMatch(TypedTopic(rp->item,""),n[j])||TypedTopicMatch(TypedTopic(rp->item,ta->associate_topic_type),n[j]))
                {
                if (i == j)
                   {
@@ -119,6 +119,7 @@ for (tp = map; tp != NULL; tp=tp->next)
          }
       }
 
+   /*
    for (op = tp->occurrences; op != NULL; op=op->next)
       {
       for (rp = op->represents; rp != NULL; rp=rp->next)
@@ -137,6 +138,7 @@ for (tp = map; tp != NULL; tp=tp->next)
             }
          }
       }
+   */
 
    i++;
    }
@@ -204,6 +206,8 @@ free(adj);
 free(k);
 }
 
+/*************************************************************************/
+/* Level                                                                 */
 /*************************************************************************/
 
 int Degree(double *m,int dim)

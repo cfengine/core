@@ -292,6 +292,12 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {NULL,cf_notype,NULL}
    };
 
+struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
+   {
+   {NULL,cf_notype,NULL}
+   };
+
+
 /*********************************************************/
 
 /* This list is for checking free standing body lval => rval bindings */

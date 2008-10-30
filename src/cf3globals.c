@@ -124,6 +124,7 @@ char *CF_AGENTTYPES[] = /* see enum cfagenttype */
    CF_EXECC,
    CF_RUNC,
    CF_KNOWC,
+   CF_REPORTAG,
    "<notype>",
    };
 

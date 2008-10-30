@@ -104,19 +104,17 @@ char GRAPHDIR[CF_MAXVARSIZE];
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[14] =
+ struct option OPTIONS[12] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
-      { "define",required_argument,0,'D' },
-      { "negate",required_argument,0,'N' },
       { "file",required_argument,0,'f' },
       { "syntax",no_argument,0,'S'},
-      { "parse-only",no_argument,0,'p'},
       { "topic",required_argument,0,'t'},
       { "regex",required_argument,0,'r'},
+      { "html",no_argument,0,'H'},
       { "sql",no_argument,0,'s'},
       { "graphs",no_argument,0,'g'},
       { NULL,0,0,'\0' }
@@ -169,7 +167,7 @@ void CheckOpts(int argc,char **argv)
 
 strcpy(TOPIC_CMD,"");
  
-while ((c=getopt_long(argc,argv,"ghHd:vVf:pD:N:Sst:r:w:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -206,21 +204,14 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:pD:N:Sst:r:w:",OPTIONS,&optindex)) != 
                  break;
              }
           break;
-          
-      case 'D':
-          AddMultipleClasses(optarg);
-          break;
 
       case 'g':
           GRAPH = true;
           break;
-          
-      case 'N':
-          NegateCompoundClass(optarg,&VNEGHEAP);
-          break;
 
       case 'r':
           ISREGEX = true;
+
       case 't':
           strcpy(TOPIC_CMD,optarg);
           break;
@@ -229,18 +220,21 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:pD:N:Sst:r:w:",OPTIONS,&optindex)) != 
           WRITE_SQL = true;
           break;
           
-      case 'v': VERBOSE = true;
+      case 'v':
+          VERBOSE = true;
           break;
           
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
-      case 'V': Version("Knowledge agent");
+      case 'V':
+          Version("Knowledge agent");
           exit(0);
           
-      case 'h': Syntax("Knowledge agent");
+      case 'h':
+          Syntax("Knowledge agent");
           exit(0);
+
+      case 'H':
+          HTML = 1;
+          break;
 
       default: Syntax("Knowledge agent");
           exit(1);
@@ -1731,23 +1725,9 @@ void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc
 { char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],query[CF_BUFSIZE];
   char banner[CF_BUFSIZE],output[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
-  struct Rlist *flist = NULL,*tlist = NULL, *rp;
+  struct Rlist *flist = NULL,*tlist = NULL,*ftlist = NULL,*ttlist = NULL,*rp;
   int count = 0;
  
-if (HTML)
-   {
-   snprintf(banner,CF_BUFSIZE,"Assoc: \"%s\" (with inverse \"%s\")",this_fassoc,this_tassoc);
-   CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
-   printf("<div id=\"intro\">");
-   printf("\"%s\" associates topics of type:  \"%s\"",this_fassoc,NextTopic(from_type,""));
-   printf("&rarr;  \"%s\"\n",NextTopic(to_type,""));
-   printf("</div>");
-   }
-else
-   {
-   printf("Association \"%s\" (with inverse \"%s\"), ",this_fassoc,this_tassoc);
-   printf("associates topics of type \"%s\" -> \"%s\"\n",from_type,to_type);
-   }
 
 /* Role players - fwd search */
 
@@ -1781,6 +1761,7 @@ while(CfFetchRow(cfdb))
       }
 
    IdempPrependRScalar(&flist,output,CF_SCALAR);
+   IdempPrependRScalar(&ftlist,topic_type,CF_SCALAR);
 
    if (HTML)
       {
@@ -1792,6 +1773,7 @@ while(CfFetchRow(cfdb))
       }
 
    IdempPrependRScalar(&tlist,output,CF_SCALAR);
+   IdempPrependRScalar(&ttlist,to_type,CF_SCALAR);
    count++;
    }
 
@@ -1831,6 +1813,7 @@ if (count == 0)
          }
       
       IdempPrependRScalar(&flist,output,CF_SCALAR);
+      IdempPrependRScalar(&ftlist,topic_type,CF_SCALAR);
       
       if (HTML)
          {
@@ -1842,9 +1825,66 @@ if (count == 0)
          }
       
       IdempPrependRScalar(&tlist,output,CF_SCALAR);
+      IdempPrependRScalar(&ttlist,to_type,CF_SCALAR);
       }
 
    CfDeleteQuery(cfdb);
+   }
+
+
+if (HTML)
+   {
+   snprintf(banner,CF_BUFSIZE,"A: \"%s\" (with inverse \"%s\")",this_fassoc,this_tassoc);
+   CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
+   printf("<div id=\"intro\">");
+   printf("\"%s\" associates topics of types: { ",this_fassoc);
+   for (rp = ftlist; rp != NULL; rp=rp->next)
+      {
+      printf("\"%s\"",NextTopic(rp->item,""));
+      if (rp->next)
+         {
+         printf(",");
+         }
+      }
+   printf(" } &rarr; { \n");
+
+   for (rp = ttlist; rp != NULL; rp=rp->next)
+      {
+      printf("\"%s\"",NextTopic(rp->item,""));
+      if (rp->next)
+         {
+         printf(",");
+         }
+      }
+   
+   printf(" }");
+   printf("</div>");
+   }
+else
+   {
+   printf("Association \"%s\" (with inverse \"%s\"), ",this_fassoc,this_tassoc);
+
+   printf("\"%s\" associates topics of types: { ",this_fassoc);
+   for (rp = ftlist; rp != NULL; rp=rp->next)
+      {
+      printf("\"%s\"",rp->item);
+      if (rp->next)
+         {
+         printf(",");
+         }
+      }
+   printf(" } &rarr; { \n");
+
+   for (rp = ttlist; rp != NULL; rp=rp->next)
+      {
+      printf("\"%s\"",rp->item);
+      if (rp->next)
+         {
+         printf(",");
+         }
+      }
+   
+   printf(" }");
    }
 
 if (HTML)
@@ -1886,6 +1926,8 @@ for (rp = AlphaSortRListNames(tlist); rp != NULL; rp=rp->next)
 
 DeleteRlist(flist);
 DeleteRlist(tlist);
+DeleteRlist(ftlist);
+DeleteRlist(ttlist);
 
 if (HTML)
    {

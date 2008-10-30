@@ -37,7 +37,7 @@ libpromises_la_SOURCES =						\
 	processes_select.c						\
 	fncall.c							\
 	cf3globals.c							\
-	report.c							\
+	reporting.c							\
 	evalfunction.c							\
 	sysinfo.c							\
 	conversion.c							\
@@ -76,13 +76,16 @@ libpromises_la_SOURCES =						\
 	mod_process.c
 
 
-sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key
+sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report
 
 cf_promises_SOURCES =							\
 	cfpromises.c
 
 cf_key_SOURCES =							\
 	cfkey.c
+
+cf_report_SOURCES =							\
+	cfreport.c
 
 cf_agent_SOURCES =							\
 	agent.c								\

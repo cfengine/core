@@ -200,13 +200,13 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
       {
       TCPDUMP = GetBoolean(retval);
-      Debug("histograms = %d\n",TCPDUMP);
+      Debug("use tcpdump = %d\n",TCPDUMP);
       }
    
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
       {
       FORGETRATE = atof(retval);
-      Debug("histograms = %d\n",HISTO);
+      Debug("forget rate = %f\n",FORGETRATE);
       }
    
    }

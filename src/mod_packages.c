@@ -34,7 +34,7 @@
 
 struct BodySyntax CF_EXISTS_BODY[] =
    {
-   {NULL,cf_notype,NULL}
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
@@ -43,7 +43,7 @@ struct BodySyntax CF_EXISTS_BODY[] =
 
 struct BodySyntax CF_PACKAGES_BODIES[] =
    {
-   {"exists",cf_body,CF_EXISTS_BODY},
+   {"install",cf_body,CF_EXISTS_BODY,"Criteria for package installation/upgrade on the current system"},
    {NULL,cf_notype,NULL}
    };
 
@@ -53,7 +53,7 @@ struct BodySyntax CF_PACKAGES_BODIES[] =
 
 struct SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
   {
-  {"agent","packages",CF_INTERFACES_BODIES},
+  {"agent","packages",CF_PACKAGES_BODIES},
   {NULL,NULL,NULL},
   };
 

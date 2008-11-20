@@ -177,7 +177,8 @@ CFD_INTERVAL = 0;
 CHECKSUMUPDATES = true;
 DENYBADCLOCKS = true;
 CFRUNCOMMAND[0] = '\0';
-
+CHECK_RFC931 = false;
+      
 /* Keep promised agent behaviour - control bodies */
 
 for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
@@ -190,13 +191,6 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (GetVariable("control_server",cp->lval,&retval,&rettype) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in server control body",cp->lval);
-      continue;
-      }
-   
-   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_checkident].lval) == 0)
-      {
-      CHECK_RFC931 = GetBoolean(retval);
-      Verbose("SET CheckIdent = %d\n",CHECK_RFC931);
       continue;
       }
    

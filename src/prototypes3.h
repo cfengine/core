@@ -520,6 +520,10 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void ExtractOperationLock(char *op);
 
+/* manual.c */
+
+void TexinfoManual(char *mandir);
+
 /* matching.c */
 
 int FullTextMatch (char *regptr,char *cmpptr);
@@ -614,6 +618,7 @@ void Indent(int i);
 void ReportBanner(char *s);
 void SyntaxTree(void);
 void ShowDataTypes(void);
+void ShowControlBodies(void);
 void ShowBundleTypes(void);
 void ShowPromiseTypesFor(char *s);
 void ShowBodyParts(struct BodySyntax *bs);

@@ -40,105 +40,105 @@
 
 struct FnCallType CF_FNCALL_TYPES[] = 
    {
-   {"randomint",cf_int,2},
-   {"getuid",cf_int,1},
-   {"getgid",cf_int,1},
-   {"execresult",cf_str,2},
-   {"readtcp",cf_str,4},
-   {"returnszero",cf_class,2},
-   {"isnewerthan",cf_class,2},
-   {"accessedbefore",cf_class,2},
-   {"changedbefore",cf_class,2},
-   {"fileexists",cf_class,1},
-   {"isdir",cf_class,1},
-   {"islink",cf_class,1},
-   {"isplain",cf_class,1},
-   {"iprange",cf_class,1},
-   {"hostrange",cf_class,2},
-   {"isvariable",cf_class,1},
-   {"strcmp",cf_class,2},
-   {"regcmp",cf_class,2},
-   {"reglist",cf_class,2},
-   {"regarray",cf_class,2},
-   {"getindices",cf_slist,1},
-   {"isgreaterthan",cf_class,2},
-   {"islessthan",cf_class,2},
-   {"userexists",cf_class,1},
-   {"groupexists",cf_class,1},
-   {"readfile",cf_str,2},
-   {"readstringlist",cf_slist,5},
-   {"readintlist",cf_ilist,5},
-   {"readreallist",cf_rlist,5},
-   {"irange",cf_irange,2},
-   {"rrange",cf_rrange,2},
-   {"on",cf_int,6},
-   {"ago",cf_int,6},
-   {"accumulated",cf_int,6},
-   {"now",cf_int,0},
-   {"readstringarray",cf_int,6},
-   {"readintarray",cf_int,6},
-   {"readrealarray",cf_int,6},
-   {"classmatch",cf_class,1},
-   {"hash",cf_str,2},
-   {"usemodule",cf_class,2},
-   {"selectservers",cf_int,6},
-   {NULL,cf_notype}
+   {"randomint",cf_int,2,"Generate a random integer between the given limits"},
+   {"getuid",cf_int,1,"Return the integer user id of the named user on this host"},
+   {"getgid",cf_int,1,"Return the integer group id of the named group on this host"},
+   {"execresult",cf_str,2,"Execute named command and assign output to variable"},
+   {"readtcp",cf_str,4,"Connect to tcp port, send string and assign result to variable"},
+   {"returnszero",cf_class,2,"Define class if named shell command has exit status zero"},
+   {"isnewerthan",cf_class,2,"Define class if arg1 is newer (modified later) than arg2 (mtime)"},
+   {"accessedbefore",cf_class,2,"Define class if arg1 was accessed before arg2 (atime)"},
+   {"changedbefore",cf_class,2,"Define class if arg1 was changed before arg2 (ctime)"},
+   {"fileexists",cf_class,1,"Define class if the named file can be accessed"},
+   {"isdir",cf_class,1,"Define class if the named object is a directory"},
+   {"islink",cf_class,1,"Define class if the named object is a symbolic link"},
+   {"isplain",cf_class,1,"Define class if the named object is a plain/regular file"},
+   {"iprange",cf_class,1,"Define class if the current host lies in the range of IP addresses specified"},
+   {"hostrange",cf_class,2,"Define class if the current host lies in the range of enumerated hostnames specified"},
+   {"isvariable",cf_class,1,"Define class if the named variable is defined"},
+   {"strcmp",cf_class,2,"Define class if the two strings match exactly"},
+   {"regcmp",cf_class,2,"Define class if arg1 is a regular expression matching arg2"},
+   {"reglist",cf_class,2,"Define class if arg1 matches any item in the list with id=arg2"},
+   {"regarray",cf_class,2,"Define class if arg1 matches any item in the associative array with id=arg2"},
+   {"getindices",cf_slist,1,"Get a list of keys to the array whose id is the argument and assign to variable"},
+   {"isgreaterthan",cf_class,2,"Define class if arg1 is numerically greater than arg2, else compare strings like strcmp"},
+   {"islessthan",cf_class,2,"Define class if arg1 is numerically less than arg2, else compare strings like NOT strcmp"},
+   {"userexists",cf_class,1,"Define class if user name or numerical id exists on this host"},
+   {"groupexists",cf_class,1,"Define class if group or numerical id exists on this host"},
+   {"readfile",cf_str,2,"Read max number of bytes from named file and assign to variable"},
+   {"readstringlist",cf_slist,5,"Read and assign a list variable from a file of separated strings"},
+   {"readintlist",cf_ilist,5,"Read and assign a list variable from a file of separated ints"},
+   {"readreallist",cf_rlist,5,"Read and assign a list variable from a file of separated real numbers"},
+   {"irange",cf_irange,2,"Define a range of integer values for cfengine internal use"},
+   {"rrange",cf_rrange,2,"Define a range of real numbers for cfengine internal use"},
+   {"on",cf_int,6,"Convert an exact date/time to an integer system representation"},
+   {"ago",cf_int,6,"Convert a time relative to now to an integer system representation"},
+   {"accumulated",cf_int,6,"Convert an accumulated amount of time into a system representation"},
+   {"now",cf_int,0,"Convert the current time into system representation"},
+   {"readstringarray",cf_int,6,"Read an array of strings from a file and assign the dimension to a variable"},
+   {"readintarray",cf_int,6,"Read an array of integers from a file and assign the dimension to a variable"},
+   {"readrealarray",cf_int,6,"Read an array of real numbers from a file and assign the dimension to a variable"},
+   {"classmatch",cf_class,1,"Define class if the regular expression matches any currently defined class"},
+   {"hash",cf_str,2,"Return the hash of arg1, type arg2 and assign to a variable"},
+   {"usemodule",cf_class,2,"Execute cfengine module script and set class if successful"},
+   {"selectservers",cf_int,6,"Select tcp servers which respond correctly to a query and return their number, set array of names"},
+   {NULL,cf_notype,NULL}
    };
 
 /*********************************************************/
 
 struct BodySyntax CF_TRANSACTION_BODY[] =
    {
-   {"action",cf_opts,"fix,warn,nop"},
-   {"ifelapsed",cf_int,CF_VALRANGE},
-   {"expireafter",cf_int,CF_VALRANGE},
-   {"log_string",cf_str,""},
-   {"log_level",cf_opts,"inform,verbose,error,log"},
-   {"audit",cf_opts,CF_BOOL},
-   {"background",cf_opts,CF_BOOL},
-   {"report_level",cf_opts,"inform,verbose,error,log"},
-   {NULL,cf_notype,NULL}
+   {"action",cf_opts,"fix,warn,nop","Whether to repair or report about non-kept promises"},
+   {"ifelapsed",cf_int,CF_VALRANGE,"Number of minutes before next allowed assessment of promise"},
+   {"expireafter",cf_int,CF_VALRANGE,"Number of minutes before a repair action is interrupted and retried"},
+   {"log_string",cf_str,"","A message to be written to the log when the promise is verified"},
+   {"log_level",cf_opts,"inform,verbose,error,log","The reporting level sent to syslog"},
+   {"audit",cf_opts,CF_BOOL,"true/false switch for detailed audit records of this promise"},
+   {"background",cf_opts,CF_BOOL,"true/false switch for parallelizing the promise repair"},
+   {"report_level",cf_opts,"inform,verbose,error,log","The reporting level for standard output"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /*********************************************************/
 
 struct BodySyntax CF_DEFINECLASS_BODY[] =
    {
-   {"promise_repaired",cf_slist,CF_IDRANGE},
-   {"repair_failed",cf_slist,CF_IDRANGE},
-   {"repair_denied",cf_slist,CF_IDRANGE},
-   {"repair_timeout",cf_slist,CF_IDRANGE},
-   {"promise_kept",cf_slist,CF_IDRANGE},
-   {"persist_time",cf_int,CF_VALRANGE},
-   {"timer_policy",cf_opts,"absolute,reset"},
-   {NULL,cf_notype,NULL}
+   {"promise_repaired",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
+   {"repair_failed",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
+   {"repair_denied",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
+   {"repair_timeout",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
+   {"promise_kept",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
+   {"persist_time",cf_int,CF_VALRANGE,"A number of minutes the specified classes should remain active"},
+   {"timer_policy",cf_opts,"absolute,reset","Whether a persistent class restarts its counter when rediscovered"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /*********************************************************/
 
 struct BodySyntax CF_VARBODY[] =
    {
-   {"string",cf_str,""},
-   {"int",cf_int,CF_INTRANGE},
-   {"real",cf_real,CF_REALRANGE},
-   {"slist",cf_slist,""},
-   {"ilist",cf_ilist,CF_INTRANGE},
-   {"rlist",cf_rlist,CF_REALRANGE},
-   {"policy",cf_opts,"free,overridable,constant"},
-   {NULL,cf_notype,NULL}
+   {"string",cf_str,"","A scalar string"},
+   {"int",cf_int,CF_INTRANGE,"A scalar integer"},
+   {"real",cf_real,CF_REALRANGE,"A scalar real number"},
+   {"slist",cf_slist,"","A list of scalar strings"},
+   {"ilist",cf_ilist,CF_INTRANGE,"A list of integers"},
+   {"rlist",cf_rlist,CF_REALRANGE,"A list of real numbers"},
+   {"policy",cf_opts,"free,overridable,constant","The policy for (dis)allowing redefinition of variables"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /*********************************************************/
 
 struct BodySyntax CF_CLASSBODY[] =
    {
-   {"or",cf_clist,CF_CLASSRANGE}, 
-   {"and",cf_clist,CF_CLASSRANGE},
-   {"xor",cf_clist,CF_CLASSRANGE},
-   {"dist",cf_rlist,CF_REALRANGE},
-   {"expression",cf_class,CF_CLASSRANGE},
-   {"not",cf_class,CF_CLASSRANGE},
-   {NULL,cf_notype,NULL}
+   {"or",cf_clist,CF_CLASSRANGE,"Combine class sources with inclusive OR"}, 
+   {"and",cf_clist,CF_CLASSRANGE,"Combine class sources with AND"},
+   {"xor",cf_clist,CF_CLASSRANGE,"Combine class sources with XOR"},
+   {"dist",cf_rlist,CF_REALRANGE,"Generate a probabilistic class distribution (strategy in cfengine 2)"},
+   {"expression",cf_class,CF_CLASSRANGE,"Evaluate string expression of classes in normal form"},
+   {"not",cf_class,CF_CLASSRANGE,"Evaluate the negation of string expression in normal form"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /*********************************************************/
@@ -147,154 +147,140 @@ struct BodySyntax CF_CLASSBODY[] =
 
 struct BodySyntax CFG_CONTROLBODY[] =
    {
-   {"bundlesequence",cf_slist,".*"},
-   {"inputs",cf_slist,".*"},
-   {"version",cf_str,"" },
-   {"lastseenexpireafter",cf_int,CF_VALRANGE},
-   {"output_prefix",cf_str,"" },
-   {NULL,cf_notype,NULL}
+   {"bundlesequence",cf_slist,".*","List of promise bundles to verify in order"},
+   {"inputs",cf_slist,".*","List of filenames to parse for promises"},
+   {"version",cf_str,"","Scalar version string for this configuration"},
+   {"lastseenexpireafter",cf_int,CF_VALRANGE,"Number of minutes after which last-seen entries are purged"},
+   {"output_prefix",cf_str,"","The string prefix for standard output"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 struct BodySyntax CFA_CONTROLBODY[] =
    {
-   {"maxconnections",cf_int,CF_VALRANGE},
-   {"abortclasses",cf_slist,".*"},
-   {"abortbundleclasses",cf_slist,".*"},
-   {"addclasses",cf_slist,".*"},
-   {"agentaccess",cf_slist,".*"},
-   {"agentfacility",cf_opts,CF_FACILITY},
-   {"auditing",cf_opts,CF_BOOL},
-   {"binarypaddingchar",cf_str,""},
-   {"bindtointerface",cf_str,".*"},
-   {"checksumpurge",cf_opts,CF_BOOL},
-   {"checksumupdates",cf_opts,CF_BOOL},
-   {"compresscommand",cf_str,".*"},
-   {"childlibpath",cf_str,".*"},
-   {"domain",cf_str,".*"},
+   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of outgoing connections to cf-serverd"},
+   {"abortclasses",cf_slist,".*","A list of classes which if defined lead to termination of cf-agent"},
+   {"abortbundleclasses",cf_slist,".*","A list of classes which if defined lead to termination of current bundle"},
+   {"addclasses",cf_slist,".*","A list of classes to be defined always in the current context"},
+   {"agentaccess",cf_slist,".*","A list of user names allowed to execute cf-agent"},
+   {"agentfacility",cf_opts,CF_FACILITY,"The syslog facility for cf-agent"},
+   {"auditing",cf_opts,CF_BOOL,"true/false flag to activate the cf-agent audit log"},
+   {"binarypaddingchar",cf_str,"","Character used to pad unequal replacements in binary editing"},
+   {"bindtointerface",cf_str,".*","Use this interface for outgoing connections"},
+   {"hashpurge",cf_opts,CF_BOOL,"true/false whether stored hashes for non-existent files should be removed"},
+   {"hashupdates",cf_opts,CF_BOOL,"true/false whether stored hashes are updated when change is detected in source"},
+   {"childlibpath",cf_str,".*","LD_LIBRARY_PATH for child processes"},
+   {"domain",cf_str,".*","Specify the domain name for this host"},
    {"defaultcopytype",cf_opts,"mtime,atime,ctime,checksum,binary"},
-   {"deletenonuserfiles",cf_opts,CF_BOOL},
-   {"deletenonownerfiles",cf_opts,CF_BOOL},
-   {"deletenonusermail",cf_opts,CF_BOOL},
-   {"deletenonownermail",cf_opts,CF_BOOL},
-   {"dryrun",cf_opts,CF_BOOL},
-   {"editbinaryfilesize",cf_int,CF_VALRANGE},
-   {"editfilesize",cf_int,CF_VALRANGE},
-   {"emptyresolvconf",cf_opts,CF_BOOL},
-   {"exclamation",cf_opts,CF_BOOL},
-   {"expireafter",cf_int,CF_VALRANGE},
-   {"files_single_copy",cf_slist,""},
-   {"files_auto_define",cf_slist,""},
-   {"fullencryption",cf_opts,CF_BOOL},
-   {"hostnamekeys",cf_opts,CF_BOOL},
-   {"ifelapsed",cf_int,CF_VALRANGE},
-   {"inform",cf_opts,CF_BOOL},
-   {"lastseen",cf_opts,CF_BOOL},
-   {"lastseenexpireafter",cf_int,CF_VALRANGE},
-   {"logtidyhomefiles",cf_opts,CF_BOOL},
-   {"mountfilesystems",cf_opts,CF_BOOL},
-   {"nonalphanumfiles",cf_opts,CF_BOOL},
-   {"repchar",cf_str,"."},
-   {"default_repository",cf_str,CF_PATHRANGE},
-   {"secureinput",cf_opts,CF_BOOL},
-   {"sensiblecount",cf_int,CF_VALRANGE},
-   {"sensiblesize",cf_int,CF_VALRANGE},
-   {"showactions",cf_opts,CF_BOOL},
-   {"skipidentify",cf_slist,""},
-   {"spooldirectories",cf_slist,CF_PATHRANGE},
-   {"suspiciousnames",cf_slist,""},
-   {"syslog",cf_opts,CF_BOOL},
-   {"timezone",cf_str,""},
-   {"default_timeout",cf_int,CF_VALRANGE},
-   {"verbose",cf_opts,CF_BOOL},
-   {"warnings",cf_opts,CF_BOOL},
-   {"warnnonuserfiles",cf_opts,CF_BOOL},
-   {"warnnonownerfiles",cf_opts,CF_BOOL},
-   {"warnnonusermail",cf_opts,CF_BOOL},
-   {"warnnonownermail",cf_opts,CF_BOOL},
-   {NULL,cf_notype,NULL}
+   {"dryrun",cf_opts,CF_BOOL,"All talk and no action mode"},
+   {"editbinaryfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum binary file size to be edited"},
+   {"editfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum text file size to be edited"},
+   {"exclamation",cf_opts,CF_BOOL,"true/false print exclamation marks during security warnings"},
+   {"expireafter",cf_int,CF_VALRANGE,"Global default for time before on-going promise repairs are interrupted"},
+   {"files_single_copy",cf_slist,"","List of filenames to be watched for multiple-source conflicts"},
+   {"files_auto_define",cf_slist,"","List of filenames to define classes if copied"},
+   {"fullencryption",cf_opts,CF_BOOL,"Full encryption mode in server connections, includes directory listings"},
+   {"hostnamekeys",cf_opts,CF_BOOL,"true/false label ppkeys by hostname not IP address"},
+   {"ifelapsed",cf_int,CF_VALRANGE,"Global default for time that must elapse before promise will be rechecked"},
+   {"inform",cf_opts,CF_BOOL,"true/false set inform level default"},
+   {"lastseen",cf_opts,CF_BOOL,"true/false record last observed time for all client-server connections (true)"},
+   {"lastseenexpireafter",cf_int,CF_VALRANGE,"Time in days after which non-responsive last-seen hosts are purged"},
+   {"mountfilesystems",cf_opts,CF_BOOL,"true/false mount any filesystems promised"},
+   {"nonalphanumfiles",cf_opts,CF_BOOL,"true/false warn about filenames with no alphanumeric content"},
+   {"repchar",cf_str,".","The character used to canonize pathnames in the file repository"},
+   {"default_repository",cf_str,CF_PATHRANGE,"Path to the default file repository"},
+   {"secureinput",cf_opts,CF_BOOL,"true/false check whether input files are writable by unauthorized users"},
+   {"sensiblecount",cf_int,CF_VALRANGE,"Minimum number of files a mounted filesystem is expected to have"},
+   {"sensiblesize",cf_int,CF_VALRANGE,"Minimum number of bytes a mounted filesystem is expected to have"},
+   {"skipidentify",cf_int,"","Do not send IP/name during server connection because address resolution is broken"},
+   {"suspiciousnames",cf_slist,"List of names to warn about if found during any file search"},
+   {"syslog",cf_opts,CF_BOOL,"true/false switches on output to syslog at the inform level"},
+   {"timezone",cf_slist,"","List of allowed timezones this machine must comply with"},
+   {"default_timeout",cf_int,CF_VALRANGE,"Maximum time a network connection should attempt to connect"},
+   {"verbose",cf_opts,CF_BOOL,"true/false switches on verbose standard output"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 struct BodySyntax CFS_CONTROLBODY[] =
    {
-   {"cfruncommand",cf_str,CF_PATHRANGE},
-   {"maxconnections",cf_int,CF_VALRANGE},
-   {"denybadclocks",cf_opts,CF_BOOL},
-   {"allowconnects",cf_slist,""},
-   {"denyconnects",cf_slist,""},
-   {"allowallconnects",cf_slist,""},
-   {"trustkeysfrom",cf_slist,""},
-   {"allowusers",cf_slist,""},
-   {"dynamicaddresses",cf_slist,""},
-   {"skipverify",cf_slist,""},
-   {"logallconnections",cf_opts,CF_BOOL},
-   {"logencryptedtransfers",cf_opts,CF_BOOL},
-   {"hostnamekeys",cf_opts,CF_BOOL},
-   {"checkident",cf_opts,CF_BOOL},
-   {"auditing",cf_opts,CF_BOOL},
-   {"bindtointerface",cf_str,""},
-   {"serverfacility",cf_opts,CF_FACILITY},
-   {NULL,cf_notype,NULL}
+   {"cfruncommand",cf_str,CF_PATHRANGE,"Path to the cf-agent command or cf-execd wrapper for remote execution"},
+   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of connections that will be accepted by cf-serverd"},
+   {"denybadclocks",cf_opts,CF_BOOL,"true/false accept connections from hosts with clocks that are out of sync"},
+   {"allowconnects",cf_slist,"","List of IPs or hostnames that may connect to the server port"},
+   {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
+   {"allowallconnects",cf_slist,"","List of IPs or hostnames that may have more than one connection to the server port"},
+   {"trustkeysfrom",cf_slist,"","List of IPs or hostnames from whom we accept public keys on trust"},
+   {"allowusers",cf_slist,"","List of usernames who may execute requests from this server"},
+   {"dynamicaddresses",cf_slist,"","List of IPs or hostnames for which the IP/name binding is expected to change"},
+   {"skipverify",cf_slist,"","List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
+   {"logallconnections",cf_opts,CF_BOOL,"true/false causes the server to log all new connections to syslog"},
+   {"logencryptedtransfers",cf_opts,CF_BOOL,"true/false log all successful transfers required to be encrypted"},
+   {"hostnamekeys",cf_opts,CF_BOOL,"true/false store keys using hostname lookup instead of IP addresses"},
+   {"auditing",cf_opts,CF_BOOL,"true/false activate auditing of server connections"},
+   {"bindtointerface",cf_str,"","IP of the interface to which the server should bind on multi-homed hosts"},
+   {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 
 struct BodySyntax CFM_CONTROLBODY[] =
    {
-   {"threshold",cf_real,"0,1"},
-   {"forgetrate",cf_real,"0,1"},
-   {"monitorfacility",cf_opts,CF_FACILITY},
-   {"histograms",cf_opts,CF_BOOL},
-   {"tcpdump",cf_opts,CF_BOOL},
-   {"tcpdumpcommand",cf_str,CF_PATHRANGE},
-   {NULL,cf_notype,NULL}
+   {"forgetrate",cf_real,"0,1","Decimal fraction [0,1] weighting of new values over old in 2d-average computation"},
+   {"monitorfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility"},
+   {"histograms",cf_opts,CF_BOOL,"true/false store signal histogram data"},
+   {"tcpdump",cf_opts,CF_BOOL,"true/false use tcpdump if found"},
+   {"tcpdumpcommand",cf_str,CF_PATHRANGE,"Path to the tcpdump command on this system"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 struct BodySyntax CFR_CONTROLBODY[] =
    {
-   {"hosts",cf_slist,""},
-   {"portnumber",cf_int,"1024,99999"},
-   {"force_ipv4",cf_opts,CF_BOOL},
-   {"trustkey",cf_opts,CF_BOOL},
-   {"encrypt",cf_opts,CF_BOOL},
-   {"background",cf_opts,CF_BOOL},
-   {"maxchild",cf_int,CF_VALRANGE},
-   {"output_to_file",cf_opts,CF_BOOL},
-   {NULL,cf_notype,NULL}
+   {"hosts",cf_slist,"","List of host or IP addresses to attempt connection with"},
+   {"portnumber",cf_int,"1024,99999","Default port for cfengine server"},
+   {"force_ipv4",cf_opts,CF_BOOL,"true/false force use of ipv4 in connection"},
+   {"trustkey",cf_opts,CF_BOOL,"true/false automatically accept all keys on trust from servers"},
+   {"encrypt",cf_opts,CF_BOOL,"true/false encrypt connections with servers"},
+   {"background",cf_opts,CF_BOOL,"true/false parallelize connections to servers"},
+   {"maxchild",cf_int,CF_VALRANGE,"Maximum number of simultaneous connections to attempt"},
+   {"output_to_file",cf_opts,CF_BOOL,"true/false whether to send collected output to file(s)"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {
-   {"splaytime",cf_int,CF_VALRANGE},
-   {"mailfrom",cf_str,".*@.*"},
-   {"mailto",cf_str,".*@.*"},
-   {"smtpserver",cf_str,".*"},
-   {"mailmaxlines",cf_int,"0,1000"},
-   {"schedule",cf_slist,"Min.*"},
-   {"executorfacility",cf_opts,CF_FACILITY},
-   {"execcommand",cf_str,CF_PATHRANGE},
-   {NULL,cf_notype,NULL}
+   {"splaytime",cf_int,CF_VALRANGE,"Time in minutes to splay this host based on its name hash"},
+   {"mailfrom",cf_str,".*@.*","Email-address cfengine mail appears to come from"},
+   {"mailto",cf_str,".*@.*","Email-address cfengine mail is sent to"},
+   {"smtpserver",cf_str,".*","Name or IP of a willing smtp server for sending email"},
+   {"mailmaxlines",cf_int,"0,1000","Maximum number of lines of output to send by email"},
+   {"schedule",cf_slist,"Min.*","The class schedule for activating cf-execd"},
+   {"executorfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
+   {"execcommand",cf_str,CF_PATHRANGE,"The path to the command executed by default (overriding builtin)"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 struct BodySyntax CFK_CONTROLBODY[] =
    {
-   {"id_prefix",cf_str,".*"},
-   {"build_directory",cf_str,".*"},
-   {"sql_type",cf_opts,"mysql,postgress"},
-   {"sql_database",cf_str,""},
-   {"sql_owner",cf_str,""},
-   {"sql_passwd",cf_str,""},
-   {"sql_server",cf_str,""},
-   {"query_output",cf_opts,"html,text"},
-   {"query_engine",cf_str,""},
-   {"style_sheet",cf_str,""},
-   {"html_banner",cf_str,""},
-   {"graph_output",cf_opts,CF_BOOL},
-   {"graph_directory",cf_str,CF_PATHRANGE},
-   {NULL,cf_notype,NULL}
+   {"id_prefix",cf_str,".*","The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},
+   {"build_directory",cf_str,".*","The directory in which to generate output files"},
+   {"sql_type",cf_opts,"mysql,postgress","Menu option for supported database type"},
+   {"sql_database",cf_str,"","Name of database used for the topic map"},
+   {"sql_owner",cf_str,"","User id of sql database user"},
+   {"sql_passwd",cf_str,"","Embedded password for accessing sql database"},
+   {"sql_server",cf_str,"","Name or IP of database server (or localhost)"},
+   {"query_output",cf_opts,"html,text","Menu option for generated output format"},
+   {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
+   {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
+   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered html after the header"},
+   {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
+   {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
+   {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
+   {"manual_source_directory",cf_str,CF_PATHRANGE,"Path to directory where raw text about manual topics is found"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {
-   {NULL,cf_notype,NULL}
+   {NULL,cf_notype,NULL,NULL}
    };
 
 
@@ -331,11 +317,11 @@ struct SubTypeSyntax CF_ALL_BODIES[] =
 
 struct BodySyntax CF_COMMON_BODIES[] =
    {
-   {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY},
-   {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY},
-   {"ifvarclass",cf_str,""},   /* execute only if expression true */
-   {"comment",cf_str,""},      /* arbitrary annotation */
-   {NULL,cf_notype,NULL}
+   {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY,"Output behaviour"},
+   {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY,"Signalling behaviour"},
+   {"ifvarclass",cf_str,"","Extended classes ANDed with context"},
+   {"comment",cf_str,"","Retained comment about this promise's real intention"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /*********************************************************/
@@ -363,14 +349,15 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
    CF_COMMON_SUBTYPES,     /* Add modules after this, mod_report.c is here */
-   CF_FILES_SUBTYPES,      /* mod_files.c */
    CF_EXEC_SUBTYPES,       /* mod_exec.c */
-   CF_PROCESS_SUBTYPES,    /* mod_process.c */
-   CF_REMACCESS_SUBTYPES,  /* mod_access.c */
-   CF_STORAGE_SUBTYPES,    /* mod_storage.c */
-   CF_METHOD_SUBTYPES,     /* mod_methods.c */
+   CF_FILES_SUBTYPES,      /* mod_files.c */
    CF_INTERFACES_SUBTYPES, /* mod_interfaces.c */
+   CF_METHOD_SUBTYPES,     /* mod_methods.c */
+   CF_PROCESS_SUBTYPES,    /* mod_process.c */
+   CF_REPORT_SUBTYPES,     /* mod_report.c */
+   CF_STORAGE_SUBTYPES,    /* mod_storage.c */
    CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
+   CF_REMACCESS_SUBTYPES,  /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */

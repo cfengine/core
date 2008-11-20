@@ -311,15 +311,15 @@ int SelectExecRegexMatch(char *filename,char *crit)
   int s,e;
   FILE *pp;
 
-if ((pp = cfpopen(crit,"r")) == NULL)
+if ((pp = cf_popen(crit,"r")) == NULL)
    {
-   CfOut(cf_error,"cfpopen","Couldn't open pipe to command %s\n",crit);
+   CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",crit);
    return false;
    }
  
 ReadLine(line,CF_BUFSIZE,pp);  /* One buffer only */
 
-cfpclose(pp); 
+cf_pclose(pp); 
 
 if (FullTextMatch(crit,line))
    {

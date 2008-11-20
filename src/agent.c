@@ -345,7 +345,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksumpurge].lval) == 0)
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashpurge].lval) == 0)
       {
       if (GetBoolean(retval))
          {
@@ -355,20 +355,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksumupdates].lval) == 0)
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
       {
       CHECKSUMUPDATES = GetBoolean(retval);
       Verbose("SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
       continue;
       }
 
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_compresscommand].lval) == 0)
-      {
-      COMPRESSCOMMAND = strdup(retval);
-      Verbose("SET compresscommand = %s\n",COMPRESSCOMMAND);
-      continue;
-      }
-   
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
       {
       snprintf(OUTPUT,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",retval);
@@ -400,19 +393,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
    
-   /* Read directly from vars
-      
-     cfa_deletenonuserfiles,
-     cfa_deletenonownerfiles,
-     cfa_deletenonusermail,
-     cfa_deletenonownermail,
-     cfa_warnnonuserfiles,
-     cfa_warnnonownerfiles,
-     cfa_warnnonusermail,
-     cfa_warnnonownermail,
-     
-   */
-
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
       {
       DONTDO = GetBoolean(retval);
@@ -455,13 +435,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_logtidyhomefiles].lval) == 0)
-      {
-      LOGTIDYHOMEFILES = GetBoolean(retval);
-      Verbose("SET logtidyhomefiles = %d\n",LOGTIDYHOMEFILES);
-      continue;
-      }
-
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
       {
       CF_MOUNTALL = GetBoolean(retval);

@@ -115,6 +115,7 @@ cf_runagent_SOURCES =							\
 cf_know_SOURCES =							\
 	cfknow.c							\
 	graph.c								\
+	manual.c							\
 	ontology.c
 
 EXTRA_DIST = cf3lex.c cf3parse.c

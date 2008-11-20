@@ -46,19 +46,19 @@
 
 struct BodySyntax CF_RELATE_BODY[] =
    {
-   {"forward_relationship",cf_str,""},
-   {"backward_relationship",cf_str,""},
-   {"associates",cf_slist,""},
-   {NULL,cf_notype,NULL}
+   {"forward_relationship",cf_str,"","Name of forward association between promiser topic and associates"},
+   {"backward_relationship",cf_str,"","Name of backward/inverse association from associates to promiser topic"},
+   {"associates",cf_slist,"","List of associated topics by this forward relationship"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
 
 struct BodySyntax CF_OCCUR_BODIES[] =
    {
-   {"represents",cf_slist,""},
-   {"representation",cf_opts,"literal,url,db,file,web"},
-   {NULL,cf_notype,NULL}
+   {"represents",cf_slist,"","List of subtopics that disambiguate the context of this reference"},
+   {"representation",cf_opts,"literal,url,db,file,web","How to interpret the promiser string e.g. actual data or reference to data"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
@@ -67,9 +67,9 @@ struct BodySyntax CF_OCCUR_BODIES[] =
 
 struct BodySyntax CF_TOPICS_BODIES[] =
    {
-   {"association",cf_body,CF_RELATE_BODY},
-   {"comment",cf_str,""},              /* arbitrary annotation */
-   {NULL,cf_notype,NULL}
+   {"association",cf_body,CF_RELATE_BODY,"Declare associated topics"},
+   {"comment",cf_str,"","Retained comment about this promise's real intention"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
@@ -80,7 +80,6 @@ struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
   {"knowledge","topics",CF_TOPICS_BODIES},
   {"knowledge","occurrences",CF_OCCUR_BODIES},
-
   {NULL,NULL,NULL},
   };
 

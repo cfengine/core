@@ -117,6 +117,30 @@ if (VERBOSE || DEBUG)
 
 /*******************************************************************/
 
+void ShowControlBodies()
+
+{ int i;
+
+printf("<h1>Control bodies for cfengine components</h1>\n");
+
+printf("<div id=\"bundles\">");
+printf("<ul>\n");
+
+for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+   {
+   printf("<li>COMPONENT %s</li>\n", CF_ALL_BODIES[i].btype);
+
+   printf("<li><h4>PROMISE TYPE %s</h4>\n",CF_ALL_BODIES[i].subtype);
+   ShowBodyParts(CF_ALL_BODIES[i].bs);
+   printf("</li>\n");
+   }
+
+printf("</ul></div>\n\n");
+
+}
+
+/*******************************************************************/
+
 void ShowPromises(struct Bundle *bundles,struct Body *bodies)
 
 { struct Bundle *bp;
@@ -628,6 +652,7 @@ printf("<table class=frame><tr><td>\n");
 printf("<h1>CFENGINE %s SYNTAX</h1><p>",VERSION);
 
 ShowDataTypes();
+ShowControlBodies();
 ShowBundleTypes();
 ShowBuiltinFunctions();
 printf("</td></tr></table>\n");
@@ -684,7 +709,7 @@ void ShowPromiseTypesFor(char *s)
 printf("<div id=\"promisetype\">");
 printf("<h4>Promise types for %s bundles</h4>\n",s);
 printf("<ul>\n");
-printf("<table class=border><tr><td>");
+printf("<table class=border><tr><td>\n");
 
 for (i = 0; i < CF3_MODULES; i++)
    {
@@ -734,6 +759,8 @@ for (i = 0; bs[i].lval != NULL; i++)
       {
       printf("<tr><td>%s</td><td>%s</td><td>",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       ShowRange((char *)bs[i].range);
+      printf("</td><td>");
+      printf("<div id=\"description\">%s</div>",bs[i].description);
       printf("</td></tr>\n");
       }
    }
@@ -772,14 +799,16 @@ void ShowBuiltinFunctions()
 printf("<h1>builtin functions</h1>\n");
  
 printf("<center><table id=functionshow>\n");
-printf("<tr><th>Return type</th><th>Function name</th><th>Arguments</th></tr>\n");
+printf("<tr><th>Return type</th><th>Function name</th><th>Arguments</th><th>Description</th></tr>\n");
 
 for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    {
-   printf("<tr><td>%s</td><td>%s()</td><td>%d args expected</td></tr>\n",
+   printf("<tr><td>%s</td><td>%s()</td><td>%d args expected</td><td>%s</td></tr>\n",
           CF_DATATYPES[CF_FNCALL_TYPES[i].dtype],
           CF_FNCALL_TYPES[i].name,
-          CF_FNCALL_TYPES[i].numargs);
+          CF_FNCALL_TYPES[i].numargs,
+          CF_FNCALL_TYPES[i].description
+          );
    }
 
 printf("</table></center>\n");

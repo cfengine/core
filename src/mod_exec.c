@@ -59,16 +59,16 @@
 
 struct BodySyntax CF_EXECCONTAIN_BODY[] =
   {
-  {"useshell",cf_opts,CF_BOOL},
-  {"umask",cf_int,"0,77"},
-  {"exec_owner",cf_str,""},
-  {"exec_group",cf_str,""},
-  {"exec_timeout",cf_int,"1,3600"},
-  {"chdir",cf_str,"/.*"},
-  {"chroot",cf_str,"/.*"},
-  {"preview",cf_opts,CF_BOOL},
-  {"no_output",cf_opts,CF_BOOL},
-  {NULL,cf_notype,NULL}
+  {"useshell",cf_opts,CF_BOOL,"true/false embed the command in a shell environment (true)"},
+  {"umask",cf_opts,"0,77,22,27,72","The umask value for the child process"},
+  {"exec_owner",cf_str,"","The user name or id under which to run the process"},
+  {"exec_group",cf_str,"","The group name or id under which to run the process"},
+  {"exec_timeout",cf_int,"1,3600","Timeout in seconds for command completion"},
+  {"chdir",cf_str,CF_PATHRANGE,"Directory for setting current/base directory for the process"},
+  {"chroot",cf_str,CF_PATHRANGE,"Directory of root sandbox for process"},
+  {"preview",cf_opts,CF_BOOL,"true/false preview command when running in dry-run mode (with -n)"},
+  {"no_output",cf_opts,CF_BOOL,"true/false discard all output from the command"},
+  {NULL,cf_notype,NULL,NULL}
   };
 
 /***************************************************************/
@@ -77,10 +77,10 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
 
 struct BodySyntax CF_EXEC_BODIES[] =
    {
-   {"args",cf_str,""},
-   {"contain",cf_body,CF_EXECCONTAIN_BODY},
-   {"module",cf_opts,CF_BOOL},
-   {NULL,cf_notype,NULL}
+   {"args",cf_str,"","Alternative string of arguments for the command (concatenated with promiser string)"},
+   {"contain",cf_body,CF_EXECCONTAIN_BODY,"Containment options for the execution process"},
+   {"module",cf_opts,CF_BOOL,"true/false whether to expect the cfengine module protocol"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/

@@ -231,10 +231,6 @@ void InitializeGA(int argc,char *argv[])
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
   
-#ifndef HAVE_REGCOMP
-re_syntax_options |= RE_INTERVALS;
-#endif
-
 /* Define trusted directories */
 
 #ifndef NT

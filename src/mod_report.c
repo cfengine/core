@@ -32,9 +32,9 @@
 
 struct BodySyntax CF_PRINTFILE_BODY[] =
    {
-   {"number_of_lines",cf_int,CF_VALRANGE},
-   {"file_to_print",cf_str,CF_PATHRANGE},
-   {NULL,cf_notype,NULL}
+   {"number_of_lines",cf_int,CF_VALRANGE,"Integer maximum number of lines to print from selected file"},
+   {"file_to_print",cf_str,CF_PATHRANGE,"Path name to the file that is to be sent to standard output"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
@@ -43,10 +43,10 @@ struct BodySyntax CF_PRINTFILE_BODY[] =
 
 struct BodySyntax CF_REPORT_BODIES[] =
    {
-   {"lastseen",cf_int,CF_VALRANGE},
-   {"intermittency",cf_real,"0,1"},
-   {"showstate",cf_slist,""},
-   {"printfile",cf_body,CF_PRINTFILE_BODY},
+   {"lastseen",cf_int,CF_VALRANGE,"Integer time threshold in hours since current peers were last seen, report absence"},
+   {"intermittency",cf_real,"0,1","Real number threshold [0,1] of intermittency about current peers, report above"},
+   {"showstate",cf_slist,"","List of services about which status reports should be reported to standard output"},
+   {"printfile",cf_body,CF_PRINTFILE_BODY,"Quote part of a file to standard output"},
    {NULL,cf_notype,NULL}
    };
 
@@ -56,8 +56,7 @@ struct BodySyntax CF_REPORT_BODIES[] =
 
 struct SubTypeSyntax CF_REPORT_SUBTYPES[] =
   {
-
-  /* Body lists belonging to "files:" type in Agent */
+  /* Body lists belonging to "reports:" type in Agent */
       
   {"agent","reports",CF_REPORT_BODIES},
   {NULL,NULL,NULL},

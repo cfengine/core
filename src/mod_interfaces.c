@@ -34,10 +34,10 @@
 
 struct BodySyntax CF_TCPIP_BODY[] =
    {
-   {"ipv4_address",cf_str,"[0-9.]+/[0-4]+"},
-   {"ipv4_netmask",cf_str,"[0-9.]+/[0-4]+"},
-   {"ipv6",cf_str,"[0-9a-fA-F:]+/[0-9]+"},
-   {NULL,cf_notype,NULL}
+   {"ipv4_address",cf_str,"[0-9.]+/[0-4]+","IPv4 address for the interface"},
+   {"ipv4_netmask",cf_str,"[0-9.]+/[0-4]+","Netmask for the interface"},
+   {"ipv6",cf_str,"[0-9a-fA-F:]+/[0-9]+","IPv6 address for the interface"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
@@ -46,8 +46,8 @@ struct BodySyntax CF_TCPIP_BODY[] =
 
 struct BodySyntax CF_INTERFACES_BODIES[] =
    {
-   {"tcp_ip",cf_body,CF_TCPIP_BODY},
-   {NULL,cf_notype,NULL}
+   {"tcp_ip",cf_body,CF_TCPIP_BODY,"Interface tcp/ip properties"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/

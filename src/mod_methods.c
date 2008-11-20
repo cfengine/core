@@ -36,7 +36,7 @@
 
 struct BodySyntax CF_METHOD_BODIES[] =
    {
-   {"usebundle",cf_bundle,CF_BUNDLE},
+   {"usebundle",cf_bundle,CF_BUNDLE,"Specify the name of a bundle to run as a parameterized method"},
    {NULL,cf_notype,NULL}
    };
 

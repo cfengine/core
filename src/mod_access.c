@@ -59,19 +59,19 @@
 
 struct BodySyntax CF_REMACCESS_BODIES[] =
    {
-   {"admit",cf_slist,""},
-   {"deny",cf_slist,""},
-   {"maproot",cf_slist,""},
-   {"encrypted",cf_opts,CF_BOOL},
-   {NULL,cf_notype,NULL}
+   {"admit",cf_slist,"","List of host names or IP addresses to grant access to file objects"},
+   {"deny",cf_slist,"","List of host names or IP addresses to deny access to file objects"},
+   {"maproot",cf_slist,"","List of host names or IP addresses to grant full read-privilege on the server"},
+   {"encrypted",cf_opts,CF_BOOL,"true/false whether the current file access promise is conditional on the connection from the client being encrypted"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/
 
 struct BodySyntax CF_REMROLE_BODIES[] =
    {
-   {"authorize",cf_slist,""},
-   {NULL,cf_notype,NULL}
+   {"authorize",cf_slist,"","List of public-key user names that are allowed to activate the promised class during remote agent activation"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/

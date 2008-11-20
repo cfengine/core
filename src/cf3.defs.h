@@ -174,20 +174,14 @@ enum cfacontrol
    cfa_auditing,
    cfa_binarypaddingchar,
    cfa_bindtointerface,
-   cfa_checksumpurge,
-   cfa_checksumupdates,
-   cfa_compresscommand,
+   cfa_hashpurge,
+   cfa_hashupdates,
    cfa_childlibpath,
    cfa_domain,
    cfa_defaultcopytype,
-   cfa_deletenonuserfiles,
-   cfa_deletenonownerfiles,
-   cfa_deletenonusermail,
-   cfa_deletenonownermail,
    cfa_dryrun,
    cfa_editbinaryfilesize,
    cfa_editfilesize,
-   cfa_emptyresolvconf,
    cfa_exclamation,
    cfa_expireafter,
    cfa_fsinglecopy,
@@ -198,7 +192,6 @@ enum cfacontrol
    cfa_inform,
    cfa_lastseen,
    cfa_lastseenexpireafter,
-   cfa_logtidyhomefiles,
    cfa_mountfilesystems,
    cfa_nonalphanumfiles,
    cfa_repchar,
@@ -206,19 +199,12 @@ enum cfacontrol
    cfa_secureinput,
    cfa_sensiblecount,
    cfa_sensiblesize,
-   cfa_showactions,
    cfa_skipidentify,
-   cfa_spooldirectories,
    cfa_suspiciousnames,
    cfa_syslog,
    cfa_timezone,
    cfa_timeout,
    cfa_verbose,
-   cfa_warnings,
-   cfa_warnnonuserfiles,
-   cfa_warnnonownerfiles,
-   cfa_warnnonusermail,
-   cfa_warnnonownermail,
    cfa_notype,
    };
 
@@ -240,7 +226,6 @@ enum cfexcontrol
 
 enum cfmcontrol
    {
-   cfm_threshold,
    cfm_forgetrate,
    cfm_monitorfacility,
    cfm_histograms,
@@ -280,7 +265,6 @@ enum cfscontrol
    cfs_logallconnections,
    cfs_logencryptedtransfers,
    cfs_hostnamekeys,
-   cfs_checkident,
    cfs_auditing,
    cfs_bindtointerface,
    cfs_serverfacility,
@@ -304,6 +288,8 @@ enum cfkcontrol
    cfk_htmlbanner,
    cfk_graph_output,
    cfk_graph_dir,
+   cfk_genman,
+   cfk_mandir,
    cfk_notype
    };
 
@@ -389,6 +375,7 @@ struct BodySyntax
    char *lval;
    enum cfdatatype dtype;
    void *range;               /* either char or struct BodySyntax **/
+   char *description;
    };
 
 /*************************************************************************/
@@ -407,6 +394,7 @@ struct FnCallType
    char *name;
    enum cfdatatype dtype;
    int numargs;
+   char *description;
    };
 
 /*************************************************************************/
@@ -640,6 +628,7 @@ enum cfcomparison
    cfa_mtime,
    cfa_ctime,
    cfa_checksum,
+   cfa_hash,
    cfa_binary,
    cfa_nocomparison
    };

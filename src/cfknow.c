@@ -54,6 +54,7 @@ void ShowTextResults(char *name,char *type,struct Topic *other_topics,struct Top
 void ShowHtmlResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
 char *NextTopic(char *link,char* type);
 void GenerateGraph(void);
+void GenerateManual(void);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -96,7 +97,9 @@ int HTML = false;
 int WRITE_SQL = false;
 int ISREGEX = false;
 int GRAPH = false;
+int GENERATE_MANUAL = false;
 char GRAPHDIR[CF_MAXVARSIZE];
+char MANDIR[CF_MAXVARSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -104,19 +107,20 @@ char GRAPHDIR[CF_MAXVARSIZE];
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[12] =
+ struct option OPTIONS[13] =
       {
-      { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
-      { "verbose",no_argument,0,'v' },
-      { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f' },
+      { "graphs",no_argument,0,'g'},
+      { "help",no_argument,0,'h' },
+      { "html",no_argument,0,'H'},
+      { "manual",no_argument,0,'m'},
+      { "regex",required_argument,0,'r'},
+      { "sql",no_argument,0,'s'},
       { "syntax",no_argument,0,'S'},
       { "topic",required_argument,0,'t'},
-      { "regex",required_argument,0,'r'},
-      { "html",no_argument,0,'H'},
-      { "sql",no_argument,0,'s'},
-      { "graphs",no_argument,0,'g'},
+      { "verbose",no_argument,0,'v' },
+      { "version",no_argument,0,'V' },
       { NULL,0,0,'\0' }
       };
 
@@ -136,6 +140,7 @@ if (strlen(TOPIC_CMD) == 0)
    ShowOntology(); // all types and assocs
    ShowTopicMapLTM(); // all types and assocs
    GenerateSQL();
+   GenerateManual();
    GenerateGraph();
    }
 else
@@ -167,7 +172,7 @@ void CheckOpts(int argc,char **argv)
 
 strcpy(TOPIC_CMD,"");
  
-while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -236,6 +241,13 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:",OPTIONS,&optindex)) != EOF)
           HTML = 1;
           break;
 
+      case 'S': SyntaxTree();
+          exit(0);
+
+      case 'm':
+          GENERATE_MANUAL = true;
+          break;
+          
       default: Syntax("Knowledge agent");
           exit(1);
           
@@ -369,9 +381,23 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_dir].lval) == 0)
       {
       strncpy(GRAPHDIR,retval,CF_MAXVARSIZE);
+      Verbose("SET graph_directory = %s\n",GRAPHDIR);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_genman].lval) == 0)
+      {
+      GENERATE_MANUAL = GetBoolean(retval);
+      Verbose("SET generate_manual = %d\n",GENERATE_MANUAL);
       continue;
       }
 
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_mandir].lval) == 0)
+      {
+      strncpy(MANDIR,retval,CF_MAXVARSIZE);
+      Verbose("SET manual_source_directory = %s\n",MANDIR);
+      continue;
+      }
    }
 }
 
@@ -1454,6 +1480,17 @@ fclose(fout);
 if (sql_database_defined)
    {
    CfCloseDB(&cfdb);
+   }
+}
+
+/*********************************************************************/
+
+void GenerateManual()
+
+{
+if (GENERATE_MANUAL)
+   {
+   TexinfoManual(MANDIR);
    }
 }
 

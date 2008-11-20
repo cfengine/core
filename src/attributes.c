@@ -459,7 +459,7 @@ struct FileRename GetRenameConstraints(struct Promise *pp)
 { struct FileRename r;
   char *value;
 
-value = (char *)GetConstraint("mode",pp->conlist,CF_SCALAR);
+value = (char *)GetConstraint("disable_mode",pp->conlist,CF_SCALAR);
 ParseModeString(value,&r.plus,&r.minus);
 
 r.disable = GetBooleanConstraint("disable",pp->conlist);
@@ -846,7 +846,7 @@ struct Attributes GetColumnAttributes(struct Promise *pp)
 
 { struct Attributes attr;
 
-attr.havecolumn = GetBooleanConstraint("edit_column",pp->conlist);
+attr.havecolumn = GetBooleanConstraint("edit_field",pp->conlist);
 attr.column = GetColumnConstraints(pp);
 
  /* common */
@@ -917,8 +917,8 @@ struct EditColumn GetColumnConstraints(struct Promise *pp)
 { struct EditColumn c;
  char *value;
 
-c.column_separator = GetConstraint("column_separator",pp->conlist,CF_SCALAR);
-c.select_column = GetIntConstraint("select_column",pp->conlist);
+c.column_separator = GetConstraint("field_separator",pp->conlist,CF_SCALAR);
+c.select_column = GetIntConstraint("select_field",pp->conlist);
 value = GetConstraint("value_separator",pp->conlist,CF_SCALAR);
 
 if (value)
@@ -930,10 +930,10 @@ else
    c.value_separator = '\0';
    }
 
-c.column_value = GetConstraint("column_value",pp->conlist,CF_SCALAR);
-c.column_operation = GetConstraint("column_operation",pp->conlist,CF_SCALAR);
-c.extend_columns = GetBooleanConstraint("extend_columns",pp->conlist);
-c.blanks_ok = GetBooleanConstraint("allow_blank_columns",pp->conlist);
+c.column_value = GetConstraint("field_value",pp->conlist,CF_SCALAR);
+c.column_operation = GetConstraint("field_operation",pp->conlist,CF_SCALAR);
+c.extend_columns = GetBooleanConstraint("extend_fields",pp->conlist);
+c.blanks_ok = GetBooleanConstraint("allow_blank_fields",pp->conlist);
 return c;
 }
 

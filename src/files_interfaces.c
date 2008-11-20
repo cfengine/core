@@ -861,6 +861,7 @@ int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct 
 switch (attr.copy.compare)
    {
    case cfa_checksum:
+   case cfa_hash:
        
        if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
           {

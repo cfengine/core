@@ -129,7 +129,7 @@ struct BodySyntax CF_INSERTSELECT_BODY[] =
 struct BodySyntax CF_INSERTLINES_BODIES[] =
    {
    {"location",cf_body,CF_LOCATION_BODY,"Specify where in a file an insertion will be made"},
-   {"source_type",cf_opts,"literal,string,file","Type of object the promiser string refers to (default literal)"},
+   {"insert_type",cf_opts,"literal,string,file","Type of object the promiser string refers to (default literal)"},
    {"insert_select",cf_body,CF_INSERTSELECT_BODY,"Insert only if lines pass filter criteria"},
    {"expand_scalars",cf_opts,CF_BOOL,"Expand any unexpanded variables"},
    {NULL,cf_notype,NULL,NULL}

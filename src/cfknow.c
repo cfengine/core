@@ -98,8 +98,8 @@ int WRITE_SQL = false;
 int ISREGEX = false;
 int GRAPH = false;
 int GENERATE_MANUAL = false;
-char GRAPHDIR[CF_MAXVARSIZE];
-char MANDIR[CF_MAXVARSIZE];
+char GRAPHDIR[CF_BUFSIZE];
+char MANDIR[CF_BUFSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -265,6 +265,7 @@ strcpy(TM_PREFIX,"");
 strcpy(WEBDRIVER,"");
 strcpy(BANNER,"");
 strcpy(BUILD_DIR,".");
+strcpy(MANDIR,".");
 strcpy(SQL_DATABASE,"cf_topic_map");
 strcpy(SQL_OWNER,"");
 strcpy(SQL_PASSWD,"");
@@ -302,6 +303,11 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_builddir].lval) == 0)
       {
       strncpy(BUILD_DIR,retval,CF_BUFSIZE);
+
+      if (strlen(MANDIR) < 2) /* MANDIR defaults to BUILDDIR */
+         {
+         strncpy(MANDIR,retval,CF_BUFSIZE);
+         }
       continue;
       }
 

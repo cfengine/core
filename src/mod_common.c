@@ -274,7 +274,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
    {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
    {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
-   {"manual_source_directory",cf_str,CF_PATHRANGE,"Path to directory where raw text about manual topics is found"},
+   {"manual_source_directory",cf_str,CF_PATHRANGE,"Path to directory where raw text about manual topics is found (defaults to build_directory)"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -353,12 +353,13 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_FILES_SUBTYPES,      /* mod_files.c */
    CF_INTERFACES_SUBTYPES, /* mod_interfaces.c */
    CF_METHOD_SUBTYPES,     /* mod_methods.c */
+   CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
    CF_PROCESS_SUBTYPES,    /* mod_process.c */
    CF_REPORT_SUBTYPES,     /* mod_report.c */
    CF_STORAGE_SUBTYPES,    /* mod_storage.c */
-   CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
    CF_REMACCESS_SUBTYPES,  /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */
+   NULL
    };

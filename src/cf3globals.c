@@ -102,7 +102,7 @@ char *CF_DATATYPES[] = /* see enum cfdatatype */
    "slist",
    "ilist",
    "rlist",
-   "(option)",
+   "(menu option)",
    "(option list)",
    "(ext body)",
    "(ext bundle)",

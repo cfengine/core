@@ -82,7 +82,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"hash",cf_str,2,"Return the hash of arg1, type arg2 and assign to a variable"},
    {"usemodule",cf_class,2,"Execute cfengine module script and set class if successful"},
    {"selectservers",cf_int,6,"Select tcp servers which respond correctly to a query and return their number, set array of names"},
-   {NULL,cf_notype,NULL}
+   {NULL,cf_notype,0,NULL}
    };
 
 /*********************************************************/
@@ -355,11 +355,9 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_METHOD_SUBTYPES,     /* mod_methods.c */
    CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
    CF_PROCESS_SUBTYPES,    /* mod_process.c */
-   CF_REPORT_SUBTYPES,     /* mod_report.c */
    CF_STORAGE_SUBTYPES,    /* mod_storage.c */
    CF_REMACCESS_SUBTYPES,  /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
    
    /* update CF3_MODULES in cf3.defs.h */
-   NULL
    };

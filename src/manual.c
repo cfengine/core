@@ -33,7 +33,7 @@ extern char MANDIR[CF_BUFSIZE];
 
 void TexinfoHeader(FILE *fout);
 void TexinfoFooter(FILE *fout);
-void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs);
+void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context);
 void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
 void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
 void IncludeManualFile(FILE *fout,char *filename);
@@ -80,7 +80,7 @@ IncludeManualFile(fout,"reference_control_intro.texinfo");
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
    fprintf(fout,"@node control %s\n@section @code{%s} control promises\n\n",CF_ALL_BODIES[i].btype,CF_ALL_BODIES[i].btype);
-   TexinfoBodyParts(fout,CF_ALL_BODIES[i].bs);
+   TexinfoBodyParts(fout,CF_ALL_BODIES[i].bs,CF_ALL_BODIES[i].btype);
    snprintf(filename,CF_BUFSIZE-1,"control_%s_example.texinfo",CF_ALL_BODIES[i].btype);
    IncludeManualFile(fout,filename);
    snprintf(filename,CF_BUFSIZE-1,"control_%s_notes.texinfo",CF_ALL_BODIES[i].btype);
@@ -93,8 +93,9 @@ for (i = 0; i < CF3_MODULES; i++)
    {
    st = (CF_ALL_SUBTYPES[i]);
 
-   if (st->btype != thischapter)
+   if (st == CF_COMMON_SUBTYPES || st == CF_EXEC_SUBTYPES || st == CF_REMACCESS_SUBTYPES || st == CF_KNOWLEDGE_SUBTYPES)
       {
+      Verbose("Dealing with chapter / bundle type %s\n",st->btype);
       fprintf(fout,"@c *****************************************************\n");
       fprintf(fout,"@c * CHAPTER \n");
       fprintf(fout,"@c *****************************************************\n");
@@ -107,10 +108,8 @@ for (i = 0; i < CF3_MODULES; i++)
          {
          fprintf(fout,"@node Bundles for %s\n@chapter Bundles of @code{%s}\n\n",st->btype,st->btype);
          }
-      
-      thischapter = st->btype;
       }
-
+      
    TexinfoPromiseTypesFor(fout,st);
    snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_example.texinfo",st->btype);
    IncludeManualFile(fout,filename);
@@ -239,12 +238,14 @@ void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
 
 for (j = 0; st[j].btype != NULL; j++)
    {
+   Verbose(" - Dealing with promise type %s\n",st[j].subtype);
+
    if (strcmp("*",st[j].btype) == 0)
       {
       fprintf(fout,"\n\n@node %s in common promises\n@section @code{%s} promises\n\n",st[j].subtype,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_intro.texinfo");
       IncludeManualFile(fout,filename);
-      TexinfoBodyParts(fout,st[j].bs);
+      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_example.texinfo");
       IncludeManualFile(fout,filename);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_notes.texinfo");
@@ -255,7 +256,7 @@ for (j = 0; st[j].btype != NULL; j++)
       fprintf(fout,"\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n",st[j].subtype,st[j].btype,st[j].subtype,st[j].btype);
       snprintf(filename,CF_BUFSIZE-1,"promise_%s_intro.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
-      TexinfoBodyParts(fout,st[j].bs);
+      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_%s_example.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
       snprintf(filename,CF_BUFSIZE-1,"promise_%s_notes.texinfo",st[j].subtype);
@@ -268,7 +269,7 @@ for (j = 0; st[j].btype != NULL; j++)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs)
+void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
 
 { int i;
   char filename[CF_MAXVARSIZE];
@@ -280,18 +281,20 @@ if (bs == NULL)
  
 for (i = 0; bs[i].lval != NULL; i++)
    {
+   Verbose(" - -  Dealing with body type %s\n",bs[i].lval);
+   
    if (bs[i].range == (void *)CF_BUNDLE)
       {
-      fprintf(fout,"\n\n@node %s\n@subsection @code{%s}\n\n@b{Type}: %s (Separate Bundle) \n",bs[i].lval,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s}\n\n@b{Type}: %s (Separate Bundle) \n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       }
    else if (bs[i].dtype == cf_body)
       {
-      fprintf(fout,"\n\n@node %s\n@subsection %s\n@noindent @b{Type}: %s\n\n",bs[i].lval,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s} (compound body)\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoSubBodyParts(fout,(struct BodySyntax *)bs[i].range);
       }
    else
       {
-      fprintf(fout,"\n\n@node %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n",bs[i].lval,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
       fprintf(fout,"\n@noindent @b{Example}:@*\n");

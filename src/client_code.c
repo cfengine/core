@@ -84,6 +84,7 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
       if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
          {
          conn = ServerConnection(rp->item,attr,pp);
+         return conn;
          }
       }
    else
@@ -1110,6 +1111,11 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
    svp = (struct ServerItem *)rp->item;
 
+   if (svp->busy)
+      {
+      return NULL;
+      }
+   
    if ((strcmp(ipname,svp->server) == 0) && svp->conn && svp->conn->sd > 0)
       {
       return svp->conn;

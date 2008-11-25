@@ -2,7 +2,7 @@
 man_MANS = cfpromises.8
 
 # Info used in building the Info files
-info_TEXINFOS = 
+info_TEXINFOS = cf3-Reference.texinfo
 infofiles = $(info_TEXINFOS:.texinfo=.info)
 MAKEINFOHTML = $(MAKEINFO) --html --no-split
 
@@ -13,7 +13,6 @@ htmldir = $(pkgdatadir)/html
 html_DATA = $(htmlfiles)
 
 # Info used in building and installing Postscript files
-psfiles = $(info_TEXINFOS:.texinfo=.ps)
 pdffiles = $(info_TEXINFOS:.texinfo=.pdf)
 dvifiles = $(info_TEXINFOS:.texinfo=.dvi)
 
@@ -22,21 +21,18 @@ doc_DATA = $(psfiles) $(pdffiles)
 
 # Make sure these get distributed with everything else.
 
-EXTRA_DIST = cfpromises.8
+EXTRA_DIST = cfpromises.8 *.texinfo
 
-SUFFIXES = html latex pdf ps dvi
+SUFFIXES = html pdf dvi
 
 %.html : %.texinfo
 	${MAKEINFO} -I $(srcdir) --html --no-split $<
 
-%.dvi : %.latex
-	${LATEX} $<
-
 %.dvi : %.texinfo
 	${TEXI2DVI} $<
 
-%.pdf : %.ps
-	${PS2PDF} $<
+%.pdf : %.texinfo
+	${TEXI2PDF} $<
 
 #
 # Some basic clean ups

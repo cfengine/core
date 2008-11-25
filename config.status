@@ -536,7 +536,7 @@ s,@DEFS@,|#_!!_#|-DHAVE_CONFIG_H,g
 s,@ECHO_C@,|#_!!_#|,g
 s,@ECHO_N@,|#_!!_#|-n,g
 s,@ECHO_T@,|#_!!_#|,g
-s,@LIBS@,|#_!!_#|-lnss_nis -lpthread -lpq -lmysqlclient -lrt -lpcre -lcfengine -lm  -L../pub -lcfpub,g
+s,@LIBS@,|#_!!_#|-lnss_nis -lpthread -lgvc -lpq -lmysqlclient -lrt -lpcre -lcfengine -lm  -L../pub -lcfpub,g
 s,@build_alias@,|#_!!_#|,g
 s,@host_alias@,|#_!!_#|,g
 s,@target_alias@,|#_!!_#|,g
@@ -558,7 +558,7 @@ s,@INSTALL_DATA@,|#_!!_#|${INSTALL} -m 644,g
 s,@am__isrc@,|#_!!_#|,g
 s,@CYGPATH_W@,|#_!!_#|echo,g
 s,@PACKAGE@,|#_!!_#|cfengine,g
-s,@VERSION@,|#_!!_#|3.0.0a4,g
+s,@VERSION@,|#_!!_#|3.0.0b4,g
 s,@ACLOCAL@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run aclocal-1.10,g
 s,@AUTOCONF@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run autoconf,g
 s,@AUTOMAKE@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run automake-1.10,g
@@ -901,7 +901,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_VERSION\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_STRING\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_BUGREPORT\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE\)[	 (].*,\1define\2 "cfengine" ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0a4" ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0b4" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*YYTEXT_POINTER\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*STDC_HEADERS\)[	 (].*,\1define\2 1 ,
@@ -954,6 +954,8 @@ b
 :def
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SYS_WAIT_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_DIRENT_H\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GRAPHVIZ_GVC_H\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBGVC\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETCWD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETNETGRENT\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_WAITPID\)[	 (].*,\1define\2 1 ,

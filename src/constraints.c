@@ -489,7 +489,7 @@ void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rval
 
 { struct SubTypeSyntax ss;
   int lmatch = false;
-  int i,j,k,l;
+  int i,j,k,l,m;
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
 
@@ -527,11 +527,11 @@ for  (i = 0; i < CF3_MODULES; i++)
                   {
                   bs2 = (struct BodySyntax *)bs[l].range;
                   
-                  for (i = 0; bs2[i].lval != NULL; i++)
+                  for (m = 0; bs2[m].lval != NULL; i++)
                      {
-                     if (strcmp(lval,bs2[i].lval) == 0)
+                     if (strcmp(lval,bs2[m].lval) == 0)
                         {
-                        CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[i].dtype,(char *)(bs2[i].range),0);
+                        CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[m].dtype,(char *)(bs2[m].range),0);
                         return;
                         }
                      }                  

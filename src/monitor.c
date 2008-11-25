@@ -155,13 +155,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
       case 'V': Version("Monitor agent");
           exit(0);
           
-      case 'h': Syntax("Monitor agent");
+      case 'h': Syntax("Monitor agent",OPTIONS);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default: Syntax("Monitor agent");
+      default: Syntax("Monitor agent",OPTIONS);
           exit(1);
           
       }

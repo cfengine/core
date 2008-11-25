@@ -215,13 +215,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLF",OPTIONS,&optindex)) != EOF)
       case 'V': Version("Server agent");
           exit(0);
           
-      case 'h': Syntax("Server agent");
+      case 'h': Syntax("Server agent",OPTIONS);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default:  Syntax("Server agent");
+      default:  Syntax("Server agent",OPTIONS);
           exit(1);
           
       }

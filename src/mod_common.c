@@ -239,7 +239,7 @@ struct BodySyntax CFR_CONTROLBODY[] =
    {"force_ipv4",cf_opts,CF_BOOL,"true/false force use of ipv4 in connection"},
    {"trustkey",cf_opts,CF_BOOL,"true/false automatically accept all keys on trust from servers"},
    {"encrypt",cf_opts,CF_BOOL,"true/false encrypt connections with servers"},
-   {"background",cf_opts,CF_BOOL,"true/false parallelize connections to servers"},
+   {"background_children",cf_opts,CF_BOOL,"true/false parallelize connections to servers"},
    {"maxchild",cf_int,CF_VALRANGE,"Maximum number of simultaneous connections to attempt"},
    {"output_to_file",cf_opts,CF_BOOL,"true/false whether to send collected output to file(s)"},
    {NULL,cf_notype,NULL,NULL}

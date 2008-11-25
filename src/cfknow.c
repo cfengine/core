@@ -234,7 +234,7 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
           exit(0);
           
       case 'h':
-          Syntax("Knowledge agent");
+          Syntax("Knowledge agent",OPTIONS);
           exit(0);
 
       case 'H':
@@ -248,7 +248,7 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
           GENERATE_MANUAL = true;
           break;
           
-      default: Syntax("Knowledge agent");
+      default: Syntax("Knowledge agent",OPTIONS);
           exit(1);
           
       }

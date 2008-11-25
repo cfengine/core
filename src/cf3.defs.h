@@ -871,6 +871,7 @@ struct ServerItem
    {
    char *server;
    struct cfagent_connection *conn;
+   int busy;
    };
 
 /*************************************************************************/
@@ -1208,6 +1209,10 @@ struct Attributes
 
 #ifdef HAVE_PGSQL_LIBPQ_FE_H
 #include <pgsql/libpq-fe.h>
+#endif
+
+#ifdef HAVE_LIBPQ_FE_H
+#include <libpq-fe.h>
 #endif
 
 enum cfdbtype

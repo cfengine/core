@@ -183,13 +183,13 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
       case 'V': Version("Cfengine Agent");
           exit(0);
           
-      case 'h': Syntax("Cfengine Agent");
+      case 'h': Syntax("Cfengine Agent",OPTIONS);
           exit(0);
 
       case 'x': AgentDiagnostic();
           exit(0);
           
-      default:  Syntax("Cfengine Agent");
+      default:  Syntax("Cfengine Agent",OPTIONS);
           exit(1);
           
       }
@@ -209,6 +209,8 @@ signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
+
+CFA_MAXTHREADS = 30;
 
 /*
   do not set signal(SIGCHLD,SIG_IGN) in agent near

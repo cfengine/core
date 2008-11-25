@@ -197,6 +197,9 @@
 /* Define to 1 if you have the `pq' library (-lpq). */
 #define HAVE_LIBPQ 1
 
+/* Define to 1 if you have the <libpq-fe.h> header file. */
+/* #undef HAVE_LIBPQ_FE_H */
+
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #define HAVE_LIBPTHREAD 1
 
@@ -461,7 +464,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.0b3"
+#define VERSION "3.0.0b4"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

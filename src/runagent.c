@@ -180,13 +180,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:",OPTIONS,&optindex)) != EOF)
       case 'V': Version("Run agent");
           exit(0);
           
-      case 'h': Syntax("Run agent");
+      case 'h': Syntax("Run agent",OPTIONS);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default:  Syntax("Run agent");
+      default:  Syntax("Run agent",OPTIONS);
           exit(1);
           
       }

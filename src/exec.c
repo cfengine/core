@@ -201,13 +201,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSxL:hFV1g",OPTIONS,&optindex)) != 
       case 'V': Version("Execution agent");
           exit(0);
           
-      case 'h': Syntax("Execution agent");
+      case 'h': Syntax("Execution agent",OPTIONS);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default: Syntax("Execution agent");
+      default: Syntax("Execution agent",OPTIONS);
           exit(1);
           
       }

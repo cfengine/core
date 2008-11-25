@@ -156,7 +156,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
       case 'V': Version("Promise engine");
           exit(0);
           
-      case 'h': Syntax("Promise engine");
+      case 'h': Syntax("Promise engine",OPTIONS);
           exit(0);
 
       case 'S': SyntaxTree();
@@ -175,7 +175,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
           exit(0);
           break;
           
-      default:  Syntax("Promise engine");
+      default:  Syntax("Promise engine",OPTIONS);
           exit(1);
           
       }

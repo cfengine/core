@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-extern struct option OPTIONS[];
 extern FILE *yyin;
 extern char *CFH[][2];
 extern void CheckOpts(int argc,char **argv);
@@ -1071,7 +1070,7 @@ switch (GetVariable("control_common","cfinputs_version",&rval,&rtype))
 
 /*******************************************************************/
 
-void Syntax(char *component)
+void Syntax(char *component,struct option options[])
 
 { int i;
 
@@ -1079,9 +1078,9 @@ Version(component);
 printf("\n");
 printf("Options:\n\n");
 
-for (i=0; OPTIONS[i].name != NULL; i++)
+for (i=0; options[i].name != NULL; i++)
    {
-   printf("--%-20s    (-%c)\n",OPTIONS[i].name,(char)OPTIONS[i].val);
+   printf("--%-20s    (-%c)\n",options[i].name,(char)options[i].val);
    }
 
 printf("\nDebug levels: 1=parsing, 2=running, 3=summary, 4=expression eval\n");

@@ -1,28 +1,13 @@
 
-This is the cfengine version 3 pre-release alpha version
-========================================================================
-
-This is not a fully functional version of cfengine. It is not
-guaranteed to be tested or bug-free. It is a package which will allow
-you to learn and experiment with the modified language syntax in this
-version.
-
-A functional, documented version of cfengine 3 is expected at the end
-of 2008, but keep your eyes on the websites www.cfengine.org and
-www.cfengine.com for more information.
-
-With this software you can:
-
-* practice making cfengine 3 configuration files
-* test syntax and iteration of rules
-* view expanded policy rules as html in your favourite web browser
-
+This is a functional version of cfengine 3.
 
 BUILDING
 -----------------------------------------------------------------------
 
-To build this software you need to have the library libcfengine from
-cfengine version 2.2.8 or later installed on your system.
+cfengine 3 will eventually be indepedendent of cfengine 2, however to
+build this version of the software you need to have the library
+libcfengine from cfengine version 2.2.8 or later installed on your
+system.
 
 Type the following to build the software:
 
@@ -46,6 +31,8 @@ Problems linking?
  host$ cd trunk; ./configure;make
  host$ cd src; install -c .libs/libcfengine.a /usr/local/lib/libcfengine.a
 
+Some reports indicate that there is trouble compiling cfengine with
+recent versions 4.x of gcc. No problems are reported with gcc 3.x.
 
 EXAMPLES
 -----------------------------------------------------------------------

@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.0a4)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.0b4)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -424,6 +424,7 @@ if test $WITH_SQL; then
   AC_CHECK_LIB(pq,main)
   AC_CHECK_HEADERS(mysql/mysql.h)
   AC_CHECK_HEADERS(pgsql/libpq-fe.h)
+  AC_CHECK_HEADERS(libpq-fe.h)
 fi
 
 dnl ######################################################################
@@ -454,6 +455,12 @@ AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 
+dnl ######################################################################
+dnl Checks for graph support
+dnl ######################################################################
+
+AC_CHECK_HEADERS(graphviz/gvc.h)
+AC_CHECK_LIB(gvc,main)
 
 dnl ######################################################################
 dnl Checks for data types

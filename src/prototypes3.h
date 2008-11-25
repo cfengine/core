@@ -419,7 +419,7 @@ void PromiseManagement(char *agent);
 void InitializeGA(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
 void CheckWorkingDirectories(void);
-void Syntax(char *comp);
+void Syntax(char *comp,struct option options[]);
 void Version(char *comp);
 int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);

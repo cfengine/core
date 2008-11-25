@@ -336,14 +336,14 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:",OPTIONS,&optindex)) != EOF)
           exit(0);
           
       case 'h':
-          Syntax("Knowledge agent");
+          Syntax("Reporting agent",OPTIONS);
           exit(0);
 
       case 'H':
           HTML = 1;
           break;
 
-      default: Syntax("Knowledge agent");
+      default: Syntax("Reporting agent",OPTIONS);
           exit(1);
           
       }

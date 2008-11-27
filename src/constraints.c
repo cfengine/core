@@ -507,7 +507,7 @@ for  (i = 0; i < CF3_MODULES; i++)
       {
       continue;
       }
-   
+
    for (j = 0; ssp[j].btype != NULL; j++)
       {
       ss = ssp[j];
@@ -527,7 +527,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                   {
                   bs2 = (struct BodySyntax *)bs[l].range;
                   
-                  for (m = 0; bs2[m].lval != NULL; i++)
+                  for (m = 0; bs2[m].lval != NULL; m++)
                      {
                      if (strcmp(lval,bs2[m].lval) == 0)
                         {

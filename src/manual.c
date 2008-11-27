@@ -80,11 +80,11 @@ IncludeManualFile(fout,"reference_control_intro.texinfo");
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
    fprintf(fout,"@node control %s\n@section @code{%s} control promises\n\n",CF_ALL_BODIES[i].btype,CF_ALL_BODIES[i].btype);
-   TexinfoBodyParts(fout,CF_ALL_BODIES[i].bs,CF_ALL_BODIES[i].btype);
    snprintf(filename,CF_BUFSIZE-1,"control_%s_example.texinfo",CF_ALL_BODIES[i].btype);
    IncludeManualFile(fout,filename);
    snprintf(filename,CF_BUFSIZE-1,"control_%s_notes.texinfo",CF_ALL_BODIES[i].btype);
    IncludeManualFile(fout,filename);
+   TexinfoBodyParts(fout,CF_ALL_BODIES[i].bs,CF_ALL_BODIES[i].btype);
    }
 
 /* Components */
@@ -110,11 +110,11 @@ for (i = 0; i < CF3_MODULES; i++)
          }
       }
       
-   TexinfoPromiseTypesFor(fout,st);
    snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_example.texinfo",st->btype);
    IncludeManualFile(fout,filename);
    snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_notes.texinfo",st->btype);
    IncludeManualFile(fout,filename);
+   TexinfoPromiseTypesFor(fout,st);
    }
 
 /* Other sub-bundles */
@@ -245,22 +245,22 @@ for (j = 0; st[j].btype != NULL; j++)
       fprintf(fout,"\n\n@node %s in common promises\n@section @code{%s} promises\n\n",st[j].subtype,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_intro.texinfo");
       IncludeManualFile(fout,filename);
-      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_example.texinfo");
       IncludeManualFile(fout,filename);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_notes.texinfo");
       IncludeManualFile(fout,filename);            
+      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       }
    else
       {
       fprintf(fout,"\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n",st[j].subtype,st[j].btype,st[j].subtype,st[j].btype);
       snprintf(filename,CF_BUFSIZE-1,"promise_%s_intro.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
-      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_%s_example.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
       snprintf(filename,CF_BUFSIZE-1,"promise_%s_notes.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
+      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       }
    }
 }

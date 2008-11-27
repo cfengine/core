@@ -222,9 +222,6 @@ void ThisAgentInit()
 umask(077);
 sprintf(VPREFIX, "cfMonitord");
 Cf3OpenLog();
-GetNameInfo();
-GetInterfaceInfo3();
-GetV6InterfaceInfo();
 
 LOGGING = true;                    /* Do output to syslog */
 

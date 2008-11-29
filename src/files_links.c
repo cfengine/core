@@ -38,6 +38,17 @@ int VerifyLink(char *destination,char *source,struct Attributes attr,struct Prom
       
 Debug("Linkfiles(%s -> %s)\n",destination,source);
 
+/*
+if (MatchRlistItem(attr.link.copy_patterns,lastnode))
+   {
+   Verbose("cfengine: link item %s marked for copying instead\n",sourcefile);
+   LinkCopy(sourcefile,destfile,&ssb,attr,pp);
+   attr.copy_backup = true;
+   CopyFile(source,destination,ssb,attr,pp);
+   return;
+   }
+*/
+
 memset(to,0,CF_BUFSIZE);
   
 if ((*source != '/') && (*source != '.'))  /* links without a directory reference */

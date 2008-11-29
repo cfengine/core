@@ -453,12 +453,20 @@ if (attr.copy.link_type != cfa_notlinked)
 
    if (MatchRlistItem(attr.copy.link_instead,lastnode))
       {
-      Verbose("cfengine: copy item %s marked for linking instead\n",sourcefile);
-      LinkCopy(sourcefile,destfile,&ssb,attr,pp);
-      return;
+      if (MatchRlistItem(attr.copy.copy_links,lastnode))
+         {
+         CfOut(cf_inform,"","File %s matches both copylink_patterns and linkcopy_patterns - promise loop (skipping)!",sourcefile);
+         return;
+         }
+      else
+         {
+         Verbose("cfengine: copy item %s marked for linking instead\n",sourcefile);
+         LinkCopy(sourcefile,destfile,&ssb,attr,pp);
+         return;
+         }
       }
    }
- 
+   
 found = lstat(destfile,&dsb);
 
 if (found != -1)
@@ -521,10 +529,22 @@ if (found == -1)
       else
          {
          CfOut(cf_verbose,""," -> %s wasn't at destination (copying)",destfile);
-         CfOut(cf_inform,""," -> Copying from %s:%s\n",server,sourcefile);
+         if (server)
+            {
+            CfOut(cf_inform,""," -> Copying from %s:%s\n",server,sourcefile);
+            }
+         else
+            {
+            CfOut(cf_inform,""," -> Copying from localhost:%s\n",sourcefile);
+            }
          }
-      
-      if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
+
+      if (S_ISLNK(srcmode) && attr.copy.link_type != cfa_notlinked)
+         {
+         Verbose(" -> %s is a symbolic link\n",sourcefile);
+         LinkCopy(sourcefile,destfile,&ssb,attr,pp);
+         }
+      else if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
          {
          if (stat(destfile,&dsb) == -1)
             {
@@ -535,7 +555,14 @@ if (found == -1)
             VerifyCopiedFileAttributes(destfile,&dsb,&ssb,attr,pp);
             }
 
-         cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Updated file from %s:%s\n",server,sourcefile);
+         if (server)
+            {
+            cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Updated file from %s:%s\n",server,sourcefile);
+            }
+         else
+            {
+            cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Updated file from localhost:%s\n",sourcefile);
+            }
 
          if (SINGLE_COPY_LIST)
             {
@@ -943,7 +970,7 @@ return false;
       
 void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp)
 
-{ char linkbuf[CF_BUFSIZE];
+{ char linkbuf[CF_BUFSIZE],*lastnode;
   int succeed = false;
   struct stat dsb;
 
@@ -965,6 +992,17 @@ if (attr.copy.link_type == cfa_absolute && linkbuf[0] != '/')      /* Not absolu
    AddSlash(vbuff);
    strncat(vbuff,linkbuf,CF_BUFSIZE-1);
    strncpy(linkbuf,vbuff,CF_BUFSIZE-1);
+   }
+
+lastnode=ReadLastNode(sourcefile);
+
+if (MatchRlistItem(attr.copy.copy_links,lastnode))
+   {
+   struct stat ssb;
+   Verbose("cfengine: link item in copy %s marked for copying from %s instead\n",sourcefile,linkbuf);
+   stat(linkbuf,&ssb);
+   CopyFile(linkbuf,destfile,ssb,attr,pp);
+   return;
    }
 
 switch (attr.copy.link_type)

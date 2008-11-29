@@ -689,8 +689,6 @@ if (lstat(from,&sb) == 0)
    
    if (!S_ISDIR(sb.st_mode))
       {
-      cfPS(cf_verbose,CF_CHG,"",pp,attr,"Moving file object %s to %s%s\n",from,from,CF_SAVED);
-
       if (DONTDO)
          {
          return false;
@@ -699,9 +697,15 @@ if (lstat(from,&sb) == 0)
       saved[0] = '\0';
       strcpy(saved,from);
 
-      sprintf(stamp, "_%d_%s",CFSTARTTIME,CanonifyName(ctime(&now_stamp)));
-      strcat(saved,stamp);      
+      if (attr.copy.backup == cfa_timestamp || attr.edits.backup == cfa_timestamp)
+         {
+         sprintf(stamp, "_%d_%s",CFSTARTTIME,CanonifyName(ctime(&now_stamp)));
+         strcat(saved,stamp);
+         }
+      
       strcat(saved,CF_SAVED);
+
+      cfPS(cf_verbose,CF_CHG,"",pp,attr,"Moving file object %s to %s\n",from,saved);
 
       if (rename(from,saved) == -1)
          {

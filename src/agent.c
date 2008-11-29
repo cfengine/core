@@ -247,6 +247,12 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (GetVariable("control_common",cp->lval,&retval,&rettype) != cf_notype)
+      {
+      /* Already handled in generic_agent */
+      continue;
+      }
+
    if (GetVariable("control_agent",cp->lval,&retval,&rettype) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in agent control body",cp->lval);
@@ -450,21 +456,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       Verbose("SET syslog = %c\n",LOGGING);
       continue;
       }
-
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_domain].lval) == 0)
-      {
-      strcpy(VDOMAIN,retval);
-      Verbose("SET domain = %s\n",VDOMAIN);
-      DeleteScalar("sys","domain");
-      DeleteScalar("sys","fqhost");
-      snprintf(VFQNAME,CF_MAXVARSIZE,"%s.%s",VUQNAME,VDOMAIN);
-      NewScalar("sys","fqhost",VFQNAME,cf_str);
-      NewScalar("sys","domain",VDOMAIN,cf_str);
-      DeleteClass("undefined_domain");
-      NewClass(CanonifyName(VDOMAIN));
-      continue;
-      }
-
    }
 }
 

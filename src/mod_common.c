@@ -152,6 +152,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"version",cf_str,"","Scalar version string for this configuration"},
    {"lastseenexpireafter",cf_int,CF_VALRANGE,"Number of minutes after which last-seen entries are purged"},
    {"output_prefix",cf_str,"","The string prefix for standard output"},
+   {"domain",cf_str,".*","Specify the domain name for this host"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -169,7 +170,6 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"hashpurge",cf_opts,CF_BOOL,"true/false whether stored hashes for non-existent files should be removed"},
    {"hashupdates",cf_opts,CF_BOOL,"true/false whether stored hashes are updated when change is detected in source"},
    {"childlibpath",cf_str,".*","LD_LIBRARY_PATH for child processes"},
-   {"domain",cf_str,".*","Specify the domain name for this host"},
    {"defaultcopytype",cf_opts,"mtime,atime,ctime,checksum,binary"},
    {"dryrun",cf_opts,CF_BOOL,"All talk and no action mode"},
    {"editbinaryfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum binary file size to be edited"},

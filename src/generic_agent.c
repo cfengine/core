@@ -997,6 +997,8 @@ void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist
   void *rval = NULL;
   int i = 0,override = true;
   struct Rval returnval;
+  char rettype;
+  void *retval;
 
 Debug("CheckControlPromises()\n");
 
@@ -1022,7 +1024,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (strcmp(cp->lval,"bundlesequence") == 0)
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_bundlesequence].lval) == 0)
       {
       returnval = ExpandPrivateRval(CONTEXTID,cp->rval,cp->type);
       }
@@ -1036,9 +1038,23 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
       }
    
-   if (strcmp(cp->lval,"output_prefix") == 0)
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_output_prefix].lval) == 0)
       {
       strncpy(VPREFIX,returnval.item,CF_MAXVARSIZE);
+      }
+
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_domain].lval) == 0)
+      {
+      strcpy(VDOMAIN,cp->rval);
+      Verbose("SET domain = %s\n",VDOMAIN);
+      DeleteScalar("sys","domain");
+      DeleteScalar("sys","fqhost");
+      snprintf(VFQNAME,CF_MAXVARSIZE,"%s.%s",VUQNAME,VDOMAIN);
+      NewScalar("sys","fqhost",VFQNAME,cf_str);
+      NewScalar("sys","domain",VDOMAIN,cf_str);
+      DeleteClass("undefined_domain");
+      NewClass(CanonifyName(VDOMAIN));
+      continue;
       }
    }
 }

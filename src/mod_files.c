@@ -278,12 +278,12 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
 
 struct BodySyntax CF_LINKTO_BODY[] =
    {
-   {"source",cf_str,""},
-   {"link_type",cf_opts,CF_LINKRANGE},
-   {"copy_patterns",cf_str,""},
-   {"when_no_source",cf_opts,"force,delete,nop"},
-   {"link_children",cf_opts,CF_BOOL},
-   {"when_linking_children",cf_opts,"override_file,if_no_such_file"},
+   {"source",cf_str,"","The source file to which the link should point"},
+   {"link_type",cf_opts,CF_LINKRANGE,"The type of link used to alias the file"},
+   {"copy_patterns",cf_slist,"","A set of patterns that should be copied ansd synchronized instead of linked"},
+   {"when_no_source",cf_opts,"force,delete,nop","Behaviour when the source file to link to does not exist"},
+   {"link_children",cf_opts,CF_BOOL,"true/false whether to link all directory's children to source originals"},
+   {"when_linking_children",cf_opts,"override_file,if_no_such_file","Policy for overriding existing files when linking directories of children"},
    {NULL,cf_notype,NULL,NULL}
    };
 

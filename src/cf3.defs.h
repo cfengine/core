@@ -163,6 +163,19 @@ enum cfagenttype
 
 /*************************************************************************/
 
+enum cfgcontrol
+   {
+   cfg_bundlesequence,
+   cfg_inputs,
+   cfg_version,
+   cfg_lastseenexpireafter,
+   cfg_output_prefix,
+   cfg_domain,
+   cfg_noagent
+   };
+    
+/*************************************************************************/
+
 enum cfacontrol
    {
    cfa_maxconnections,
@@ -177,7 +190,6 @@ enum cfacontrol
    cfa_hashpurge,
    cfa_hashupdates,
    cfa_childlibpath,
-   cfa_domain,
    cfa_defaultcopytype,
    cfa_dryrun,
    cfa_editbinaryfilesize,

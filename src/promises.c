@@ -562,4 +562,9 @@ else
    {
    CfOut(level,"","Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
    }
+
+if (pp->ref)
+   {
+   CfOut(level,"","Comment: %s\n",pp->ref);
+   }
 }

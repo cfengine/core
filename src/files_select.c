@@ -316,15 +316,21 @@ if ((pp = cf_popen(crit,"r")) == NULL)
    CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",crit);
    return false;
    }
- 
-ReadLine(line,CF_BUFSIZE,pp);  /* One buffer only */
+
+while (!feof(pp))
+   {
+   line[0] = '\0';
+   ReadLine(line,CF_BUFSIZE,pp);  /* One buffer only */
+
+   if (FullTextMatch(crit,line))
+      {
+      cf_pclose(pp); 
+      return true;
+      }
+   }
 
 cf_pclose(pp); 
 
-if (FullTextMatch(crit,line))
-   {
-   return true;
-   }
 
 return false;      
 }

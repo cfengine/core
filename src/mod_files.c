@@ -176,7 +176,9 @@ struct BodySyntax CF_COMMON_EDITBODIES[] =
 
 struct BodySyntax CF_ACL_BODY[] =
    {
-   {"tobedecided",cf_str,CF_ANYSTRING,"Set access control list"},
+   {"acl_method",cf_opts,"append,prepend,set","Editing method for access control list"},
+   {"acl_type",cf_opts,"solaris,linux,ntfs,afs","Access control list type for the affected file system"},
+   {"acl_entry",cf_slist,CF_ANYSTRING,"Native settings for access control entry"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -261,8 +263,8 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {"ctime",cf_irange,CF_TIMERANGE,"Range of change times (ctime) for acceptable files"},
    {"mtime",cf_irange,CF_TIMERANGE,"Range of modification times (mtime) for acceptable files"},
    {"atime",cf_irange,CF_TIMERANGE,"Range of access times (atime) for acceptable files"},
-   {"exec_regex",cf_str,"","Matches file if this regular expression matches the result returned by exec_program"},
-   {"exec_program",cf_str,CF_PATHRANGE,"Execute this command on each file (for use with exec_regex)"},
+   {"exec_regex",cf_str,CF_PATHRANGE,"Matches file if this regular expression matches any full line returned by the command"},
+   {"exec_program",cf_str,CF_PATHRANGE,"Execute this command on each file and match if the exit status is zero"},
    {"filetypes",cf_olist,"plain,reg,symlink,dir,socket,fifo,door,char,block","List of acceptable file types from menu choices"},
    {"issymlinkto",cf_slist,"","List of regular expressions to match file objects"},
    {"file_result",cf_str,"[(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program)[|&!.]*]*","Logical expression combining classes defined by file search criteria"},

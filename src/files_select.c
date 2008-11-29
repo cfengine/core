@@ -98,7 +98,7 @@ if (attr.select.issymlinkto && SelectIsSymLinkTo(path,attr.select.issymlinkto))
    PrependItem(&leaf_attr,"issymlinkto","");
    }
 
-if (attr.select.exec_regex && SelectExecRegexMatch(path,attr.select.exec_regex))
+if (attr.select.exec_regex && SelectExecRegexMatch(path,attr.select.exec_regex,attr.select.exec_program))
    {
    PrependItem(&leaf_attr,"exec_regex","");
    }
@@ -305,13 +305,13 @@ return false;
 
 /*******************************************************************/
 
-int SelectExecRegexMatch(char *filename,char *crit)
+int SelectExecRegexMatch(char *filename,char *crit,char *prog)
 
 { char line[CF_BUFSIZE];
   int s,e;
   FILE *pp;
 
-if ((pp = cf_popen(crit,"r")) == NULL)
+if ((pp = cf_popen(prog,"r")) == NULL)
    {
    CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",crit);
    return false;

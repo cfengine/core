@@ -394,7 +394,7 @@ int SelectModeMatch(struct stat *lstatptr,mode_t plus,mode_t minus);
 int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
 int SelectNameRegexMatch(char *filename,char *crit);
 int SelectPathRegexMatch(char *filename,char *crit);
-int SelectExecRegexMatch(char *filename,char *crit);
+int SelectExecRegexMatch(char *filename,char *crit,char *prog);
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
 int SelectExecProgram(char *filename,char *crit);
 

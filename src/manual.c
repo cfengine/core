@@ -146,7 +146,7 @@ void TexinfoHeader(FILE *fout)
          "@c %%** end of header\n"
          "@titlepage\n"
          "@title Cfengine Reference Manual\n"
-         "@subtitle Auto-generated cfengine knowledge\n"
+         "@subtitle Auto generated, self-healing knowledge\n"
          "@subtitle for version %s\n"
          "@author cfengine.com\n"
          "@c @smallbook\n"

@@ -38,6 +38,7 @@ void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
 void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
 void IncludeManualFile(FILE *fout,char *filename);
 void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
+void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
 
 /*****************************************************************************/
 
@@ -117,8 +118,20 @@ for (i = 0; i < CF3_MODULES; i++)
    TexinfoPromiseTypesFor(fout,st);
    }
 
-/* Other sub-bundles */
+/* Special functions */
 
+Verbose("Dealing with chapter / bundle type - special functions\n");
+fprintf(fout,"@c *****************************************************\n");
+fprintf(fout,"@c * CHAPTER \n");
+fprintf(fout,"@c *****************************************************\n");
+
+fprintf(fout,"@node Special functions\n@chapter Special functions\n\n");
+
+for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+   {
+   fprintf(fout,"@node Function %s\n@section Function %s \n\n",CF_FNCALL_TYPES[i].name,CF_FNCALL_TYPES[i].name);
+   TexinfoSpecialFunction(fout,CF_FNCALL_TYPES[i]);
+   }
 
 TexinfoFooter(fout);
 
@@ -159,7 +172,7 @@ void TexinfoHeader(FILE *fout)
          "@ifinfo\n"
          "@dircategory Cfengine Training\n"
          "@direntry\n"
-         "* cfengine Modularization:\n"
+         "* cfengine Reference:\n"
          "                        Cfengine is a language based framework\n"
          "                        designed for configuring and maintaining\n"
          "                        Unix-like operating systems attached\n"
@@ -169,7 +182,7 @@ void TexinfoHeader(FILE *fout)
          
          "@ifnottex\n"
          "@node Top, Modularization, (dir), (dir)\n"
-         "@top Cfengine-Modularization\n"
+         "@top Cfengine-AutoReference\n"
          "@end ifnottex\n"
          
          "@ifhtml\n"
@@ -245,10 +258,6 @@ for (j = 0; st[j].btype != NULL; j++)
       fprintf(fout,"\n\n@node %s in common promises\n@section @code{%s} promises\n\n",st[j].subtype,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_intro.texinfo");
       IncludeManualFile(fout,filename);
-      snprintf(filename,CF_BUFSIZE-1,"promise_common_example.texinfo");
-      IncludeManualFile(fout,filename);
-      snprintf(filename,CF_BUFSIZE-1,"promise_common_notes.texinfo");
-      IncludeManualFile(fout,filename);            
       TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       }
    else
@@ -360,16 +369,16 @@ for (i = 0; bs[i].lval != NULL; i++)
    {
    if (bs[i].range == (void *)CF_BUNDLE)
       {
-      fprintf(fout,"@item %s\n@b{Type}: %s\n (Separate Bundle) \n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"@item @code{%s}\n@b{Type}: %s\n (Separate Bundle) \n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       }
    else if (bs[i].dtype == cf_body)
       {
-      fprintf(fout,"@item %s\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"@item @code{%s}\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoSubBodyParts(fout,(struct BodySyntax *)bs[i].range);
       }
    else
       {
-      fprintf(fout,"@item %s\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"@item @code{%s}\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
       fprintf(fout,"\n@b{Example}:@*\n");
@@ -427,4 +436,22 @@ while(!feof(fp))
 fclose(fp);
 
 fprintf(fout,"\n");
+}
+
+/*****************************************************************************/
+
+void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn)
+
+{ char filename[CF_BUFSIZE];
+ 
+fprintf(fout,"\n@noindent @b{Synopsis}: %s(%d args) returns type %s\n\n",fn.name,fn.numargs,CF_DATATYPES[fn.dtype]);
+fprintf(fout,"\n@noindent %s\n\n",fn.description);
+fprintf(fout,"\n@noindent @b{Example}:@*\n");
+
+snprintf(filename,CF_BUFSIZE-1,"function_%s_example.texinfo",fn.name);
+IncludeManualFile(fout,filename);
+
+fprintf(fout,"\n@noindent @b{Notes}:@*\n");
+snprintf(filename,CF_BUFSIZE-1,"function_%s_notes.texinfo",fn.name);
+IncludeManualFile(fout,filename);
 }

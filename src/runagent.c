@@ -495,7 +495,7 @@ FILE *NewStream(char *name)
 { FILE *fp;
   char filename[CF_BUFSIZE];
 
-snprintf(filename,CF_BUFSIZE,"%s/%s_runagent.out",CFWORKDIR,name);
+snprintf(filename,CF_BUFSIZE,"%s/outputs/%s_runagent.out",WORKDIR,name);
 
 if (OUTPUT_TO_FILE)
    {

@@ -78,6 +78,26 @@ AddVariableHash(scope,sp1,sp2,CF_SCALAR,dt,NULL,0);
 
 /*******************************************************************/
 
+void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
+
+{ char *sp1,*sp2;
+  struct Rval rvald;
+ 
+Debug("IdempNewScalar(%s,%s,%s)\n",scope,lval,rval);
+
+if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) == cf_notype)
+   {
+   return;
+   }
+
+sp1 = strdup(lval);
+sp2 = strdup((char *)rval);
+
+AddVariableHash(scope,sp1,sp2,CF_SCALAR,dt,NULL,0);
+}
+
+/*******************************************************************/
+
 void DeleteScalar(char *scope,char *lval)
 
 { struct Scope *ptr;

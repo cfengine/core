@@ -186,7 +186,7 @@ if ((gr = getgrnam((char *)finalargs->item)) == NULL)
 else
    {
    gid = gr->gr_gid;
-   SetFnCallReturnStatus("getgid",FNCALL_FAILURE,NULL,NULL);
+   SetFnCallReturnStatus("getgid",FNCALL_SUCCESS,NULL,NULL);
    }
 
 snprintf(buffer,CF_BUFSIZE-1,"%d",gid);
@@ -232,14 +232,13 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-
 string = finalargs->item;
 typestring = finalargs->next->item;
 
 type = String2HashType(typestring);
 HashString(string,strlen(string),digest,type);
 
-snprintf(buffer,CF_BUFSIZE-1,"%d",HashPrint(type,digest));
+snprintf(buffer,CF_BUFSIZE-1,"%s",HashPrint(type,digest));
 
 /* lopp off prefix */
 
@@ -1153,7 +1152,7 @@ else if (stat(finalargs->next->item,&tobuf) == -1)
    SetFnCallReturnStatus("isnewerthan",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (frombuf.st_mtime < tobuf.st_mtime)
+else if (frombuf.st_mtime > tobuf.st_mtime)
    {
    strcpy(buffer,"any");
    SetFnCallReturnStatus("isnewerthan",FNCALL_SUCCESS,NULL,NULL);   
@@ -1212,7 +1211,7 @@ else if (stat(finalargs->next->item,&tobuf) == -1)
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (frombuf.st_atime < tobuf.st_atime)
+else if (frombuf.st_atime > tobuf.st_atime)
    {
    strcpy(buffer,"any");
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_SUCCESS,NULL,NULL);   
@@ -1271,7 +1270,7 @@ else if (stat(finalargs->next->item,&tobuf) == -1)
    SetFnCallReturnStatus("ischangedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (frombuf.st_ctime < tobuf.st_ctime)
+else if (frombuf.st_ctime > tobuf.st_ctime)
    {
    strcpy(buffer,"any");
    SetFnCallReturnStatus("ischangedbefore",FNCALL_SUCCESS,NULL,NULL);   
@@ -1318,38 +1317,40 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (stat(finalargs->item,&statbuf) == -1)
+if (lstat(finalargs->item,&statbuf) == -1)
    {
-   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
 else
    {
    strcpy(buffer,"!any");
-   
+
    switch (fn)
       {
-      case fn_isdir:
+      case cfn_isdir:
           if (S_ISDIR(statbuf.st_mode))
              {
              strcpy(buffer,"any");
              }
           break;
-      case fn_islink:
+      case cfn_islink:
           if (S_ISLNK(statbuf.st_mode))
              {
              strcpy(buffer,"any");
              }
           break;
-      case fn_isplain:
+      case cfn_isplain:
           if (S_ISREG(statbuf.st_mode))
              {
              strcpy(buffer,"any");
              }
           break;
+      case cfn_fileexists:
+          strcpy(buffer,"any");
+          break;
       }
 
-   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_SUCCESS,NULL,NULL);   
+   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_SUCCESS,NULL,NULL);
    }
 
 if ((rval.item = strdup(buffer)) == NULL)
@@ -1906,7 +1907,7 @@ struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
-  int tmp,from=CF_NOINT,to=CF_NOINT;
+  long tmp,from=CF_NOINT,to=CF_NOINT;
   
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -1957,7 +1958,7 @@ if (from > to)
    from = tmp;
    }
 
-snprintf(buffer,CF_BUFSIZE-1,"%d,%d",from,to);
+snprintf(buffer,CF_BUFSIZE-1,"%ld,%ld",from,to);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -2059,7 +2060,7 @@ struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
-  int d[6];
+  long d[6];
   time_t cftime;
   struct tm tmv;
   enum cfdatetemplate i;
@@ -2071,7 +2072,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 rp = finalargs;
 
-for (i = 1; i < 6; i++)
+for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
@@ -2097,7 +2098,7 @@ if ((cftime=mktime(&tmv))== -1)
 
 Debug("Time computed from input was: %s\n",ctime(&cftime));
 
-snprintf(buffer,CF_BUFSIZE-1,"%d",time);
+snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -2141,7 +2142,7 @@ struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   char buffer[CF_BUFSIZE];
   time_t cftime;
-  int d[6];
+  long d[6];
   struct tm tmv;
   enum cfdatetemplate i;
   
@@ -2153,7 +2154,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 rp = finalargs;
 
-for (i = 1; i < 6; i++)
+for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
@@ -2175,7 +2176,7 @@ cftime -= d[cfa_year] * 365 * 24 * 3600;
 Debug("Total negative offset = %.1f minutes\n",(double)(CFSTARTTIME-cftime)/60.0);
 Debug("Time computed from input was: %s\n",ctime(&cftime));
 
-snprintf(buffer,CF_BUFSIZE-1,"%d",time);
+snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -2217,7 +2218,7 @@ struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
-  int d[6],cftime;
+  long d[6], cftime;
   struct tm tmv;
   enum cfdatetemplate i;
   
@@ -2229,7 +2230,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 rp = finalargs;
 
-for (i = 1; i < 6; i++)
+for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
@@ -2248,7 +2249,7 @@ cftime += d[cfa_day] * 24 * 3600;
 cftime += d[cfa_month] * 30 * 24 * 3600;
 cftime += d[cfa_year] * 365 * 24 * 3600;
 
-snprintf(buffer,CF_BUFSIZE-1,"%d",cftime);
+snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
@@ -2528,6 +2529,7 @@ if (file_buffer == NULL)
    {
    rval.item = NULL;
    rval.rtype = CF_LIST;
+   SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
    return rval;
    }
 else
@@ -2563,14 +2565,7 @@ switch(type)
 
 snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
        
-if (newlist && noerrors)
-   {
-   SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
-   }
-else
-   {
-   SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
-   }
+SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
 
 /* Return the number of lines in array */
 

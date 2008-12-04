@@ -28,6 +28,37 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*********************************************************************/
+/* Object variables                                                  */
+/*********************************************************************/
+
+char *DAY_TEXT[] =
+   {
+   "Monday",
+   "Tuesday",
+   "Wednesday",
+   "Thursday",
+   "Friday",
+   "Saturday",
+   "Sunday"
+   };
+
+char *MONTH_TEXT[] =
+   {
+   "January",
+   "February",
+   "March",
+   "April",
+   "May",
+   "June",
+   "July",
+   "August",
+   "September",
+   "October",
+   "November",
+   "December"
+   };
+
 /***************************************************************************/
 
 char *Rlist2String(struct Rlist *list,char *sep)
@@ -373,6 +404,96 @@ return a;
 
 /****************************************************************************/
 
+long TimeCounter2Int(char *s)
+
+{ long h = CF_NOINT,m = CF_NOINT, r = 0;
+
+if (s == NULL)
+   {
+   return CF_NOINT;
+   }
+
+sscanf(s,"%ld:%ld",&h,&m);
+
+if (h == CF_NOINT || m == CF_NOINT)
+   {
+   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
+   ReportError(OUTPUT);
+   }
+else
+   {
+   /* Returns time in secs */
+   r = 3600 * h + 60 *m;
+   }
+
+return r;
+}
+
+/****************************************************************************/
+
+long TimeAbs2Int(char *s)
+
+{ time_t cftime;
+  int i;
+  char mon[4],h[3],m[3];
+  long month = 0,day = 0,hour = 0,min = 0, year = 0;
+  static long days[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+
+if (s == NULL)
+   {
+   return CF_NOINT;
+   }
+
+year = Str2Int(VYEAR);
+
+if (year % 4 == 0) /* leap years */
+   {
+   days[1] = 29;
+   }
+
+if (strstr(s,":")) /* Hr:Min */
+   {
+   sscanf(s,"%2[^:]:%2[^:]:",h,m);
+   month = Month2Int(VMONTH);
+   day = Str2Int(VDAY);
+   hour = Str2Int(h);
+   min = Str2Int(m);
+   }
+else               /* date Month */
+   {
+   sscanf(s,"%3[a-zA-Z] %d",mon,&day);
+
+   month = Month2Int(mon);
+   
+   if (Month2Number(VMONTH) < month)
+      {
+      /* Wrapped around */
+      year--;
+      }
+   }
+
+Debug("(%s)\n%d=%s,%d=%s,%d,%d,%d\n",s,year,VYEAR,month,VMONTH,day,hour,min);
+
+cftime = 0;
+cftime += min * 60;
+cftime += hour * 3600;
+cftime += (day - 1) * 24 * 3600;
+cftime += 24 * 3600 * ((year-1970)/4); /* Leap years */
+
+for (i = 0; i < month - 1; i++)
+   {
+   cftime += days[i] * 24 * 3600;
+   }
+
+cftime += (year - 1970) * 365 * 24 * 3600;
+
+
+Debug("Time CORRESPONDS %s\n",ctime(&cftime));
+return (long) cftime;
+}
+
+/****************************************************************************/
+
 mode_t Str2Mode(char *s)
 
 { int a = CF_UNDEFINED;
@@ -631,6 +752,28 @@ else
 return gid;
 }
 
+/****************************************************************************/
+
+int Month2Int(char *string)
+
+{ int i;
+
+if (string == NULL)
+   {
+   return -1;
+   }
+ 
+for (i = 0; i < 12; i++)
+   {
+   if (strncmp(MONTH_TEXT[i],string,strlen(string))==0)
+      {
+      return i+1;
+      break;
+      }
+   }
+
+return -1;
+}
 
 
 

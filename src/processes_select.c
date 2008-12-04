@@ -85,12 +85,12 @@ if (SelectProcRangeMatch("RSS","RSS",a.process_select.min_rsize,a.process_select
    PrependItem(&proc_attr,"rsize","");
    }
 
-if (SelectProcRangeMatch("TIME","TIME",a.process_select.min_ttime,a.process_select.max_ttime,names,column))
+if (SelectProcTimeCounterRangeMatch("TIME","TIME",a.process_select.min_ttime,a.process_select.max_ttime,names,column))
    {
    PrependItem(&proc_attr,"ttime","");
    }
 
-if (SelectProcRangeMatch("STIME","START",a.process_select.min_ttime,a.process_select.max_ttime,names,column))
+if (SelectProcTimeAbsRangeMatch("STIME","START",a.process_select.min_stime,a.process_select.max_stime,names,column))
    {
    PrependItem(&proc_attr,"stime","");
    }
@@ -169,6 +169,74 @@ for (i = 0; names[i] != NULL; i++)
          }
       else
          {   
+         return false;
+         }
+      }
+   }
+
+return false; 
+}
+
+/***************************************************************************/
+
+int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line)
+
+{ int i;
+  time_t value;
+ 
+for (i = 0; names[i] != NULL; i++)
+   {
+   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
+      {
+      value = (time_t) TimeCounter2Int(line[i]);
+               
+      if (value == CF_NOINT)
+         {
+         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+         return false;
+         }
+      
+      if (min < value && value < max)
+         {
+         Verbose("Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+         return true;
+         }
+      else
+         {   
+         return false;
+         }
+      }
+   }
+
+return false; 
+}
+
+/***************************************************************************/
+
+int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line)
+
+{ int i;
+  time_t value;
+ 
+for (i = 0; names[i] != NULL; i++)
+   {
+   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
+      {
+      value = (time_t)TimeAbs2Int(line[i]);
+               
+      if (value == CF_NOINT)
+         {
+         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+         return false;
+         }
+      
+      if (min < value && value < max)
+         {
+         Verbose("Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+         return true;
+         }
+      else
+         {
          return false;
          }
       }

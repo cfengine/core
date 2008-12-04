@@ -176,6 +176,8 @@ enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);
 int GetBoolean(char *val);
 long Str2Int(char *s);
+long TimeCounter2Int(char *s);
+long TimeAbs2Int(char *s);
 mode_t Str2Mode(char *s);
 int Str2Double(char *s);
 void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);
@@ -183,6 +185,7 @@ struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);
 struct GidList *Rlist2GidList(struct Rlist *gidnames, struct Promise *pp);
 uid_t Str2Uid(char *uidbuff,char *copy,struct Promise *pp);
 gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
+int Month2Int(char *string);
 
 /* env_context.c */
 
@@ -587,6 +590,8 @@ int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attrib
 int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,char **line);
 int SelectProcRegexMatch(char *name1,char *name2,char *regex,char **names,char **line);
 int SplitProcLine(char *proc,char **names,int *start,int *end,char **line);
+int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line);
+int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line);
 
 /* promises.c */
 
@@ -759,6 +764,7 @@ void CloseLock(DB *dbp);
 void LoadSystemConstants(void);
 void ForceScalar(char *lval,char *rval);
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
+void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 void DeleteScalar(char *scope,char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 enum cfdatatype GetVariable(char *scope,char *lval,void **returnv,char *rtype);

@@ -305,7 +305,7 @@ srand48((long)seed);
 
 LoadSecretKeys();
 
-CheckOpts(argc,argv);
+/* CheckOpts(argc,argv); - MacOS can't handle this back reference */
 
 if (!MINUSF)
    {

@@ -100,6 +100,7 @@ int main(int argc,char *argv[])
 
 {struct stat sar;
 
+CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
 ThisAgentInit();
@@ -117,6 +118,9 @@ void CheckOpts(int argc,char **argv)
   struct Item *actionList;
   int optindex = 0;
   int c;
+
+/* Because of the MacOS linker we have to call this from each agent
+   individually before Generic Initialize */
   
 while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
   {

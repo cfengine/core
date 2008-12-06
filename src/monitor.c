@@ -73,6 +73,7 @@ extern double FORGETRATE;
 int main(int argc,char *argv[])
 
 {
+CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"monitor");
 ThisAgentInit();
 KeepPromises();

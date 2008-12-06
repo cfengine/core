@@ -129,6 +129,7 @@ char MANDIR[CF_BUFSIZE];
 int main(int argc,char *argv[])
 
 {
+CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"knowledge");
 ThisAgentInit();
 KeepKnowControlPromises();

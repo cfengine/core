@@ -122,6 +122,7 @@ struct Auth *ROLESTOP = NULL;
 int main(int argc,char *argv[])
 
 {
+CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"server");
 ThisAgentInit();
 KeepPromises();

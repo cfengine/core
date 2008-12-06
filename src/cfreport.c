@@ -213,6 +213,7 @@ char *CFRH[][2] =
 int main(int argc,char *argv[])
 
 {
+CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"knowledge");
 ThisAgentInit();
 KeepReportControlPromises();

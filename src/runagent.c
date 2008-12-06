@@ -77,7 +77,8 @@ int main(int argc,char *argv[])
 { struct Rlist *rp;
   struct Promise *pp;
   int count = 1;
- 
+
+CheckOpts(argc,argv);  
 GenericInitialize(argc,argv,"runagent");
 ThisAgentInit();
 KeepControlPromises(); // Set RUNATTR using copy

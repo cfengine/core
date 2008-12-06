@@ -89,6 +89,7 @@ int Dialogue(int sd,char *s);
 int main(int argc,char *argv[])
 
 {
+CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"executor");
 ThisAgentInit();
 KeepPromises();

@@ -45,6 +45,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"ago",cf_int,6,"Convert a time relative to now to an integer system representation"},
    {"changedbefore",cf_class,2,"Define class if arg1 was changed before arg2 (ctime)"},
    {"classmatch",cf_class,1,"Define class if the regular expression matches any currently defined class"},
+   {"canonify",cf_class,1,"Convert an abitrary string into a legal class name"},
    {"execresult",cf_str,2,"Execute named command and assign output to variable"},
    {"fileexists",cf_class,1,"Define class if the named file can be accessed"},
    {"getindices",cf_slist,1,"Get a list of keys to the array whose id is the argument and assign to variable"},

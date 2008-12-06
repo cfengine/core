@@ -314,6 +314,41 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+/*********************************************************************/
+
+struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  struct Item *ip;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+SetFnCallReturnStatus("classmatch",FNCALL_SUCCESS,NULL,NULL);
+
+if ((rval.item = strdup(CanonifyName((char *)finalargs->item))) == NULL)
+   {
+   FatalError("Memory allocation in FnCanonify");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
 
 /*********************************************************************/
 /* Executions                                                        */

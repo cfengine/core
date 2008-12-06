@@ -201,6 +201,7 @@ void AddEphemeralClasses(struct Rlist *classlist);
 void NewClass(char *class);
 void NewBundleClass(char *class,char *bundle);
 void DeleteClass(char *class);
+int VarClassExcluded(struct Promise *pp,char **classes);
 
 /* evalfunction.c */
 
@@ -238,6 +239,7 @@ struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum
 struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs);
 void *ReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);

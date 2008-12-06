@@ -337,6 +337,7 @@ long Str2Int(char *s)
 
 { long a = CF_NOINT;
   char c = 'X';
+  char remainder[CF_BUFSIZE];
 
 if (s == NULL)
    {
@@ -353,9 +354,11 @@ if (strcmp(s,"now") == 0)
    return (long)CFSTARTTIME;
    }   
 
-sscanf(s,"%ld%c",&a,&c);
+remainder[0] = '\0';
 
-if (a == CF_NOINT)
+sscanf(s,"%ld%c%s",&a,&c,remainder);
+
+if (a == CF_NOINT || strlen(remainder) > 0)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
    ReportError(OUTPUT);
@@ -519,15 +522,18 @@ return (mode_t)a;
 int Str2Double(char *s)
 
 { double a = CF_NODOUBLE;
+  char remainder[CF_BUFSIZE];
  
 if (s == NULL)
    {
    return CF_NODOUBLE;
    }
 
-sscanf(s,"%lf",&a);
+remainder[0] = '\0';
+
+sscanf(s,"%lf%s",&a,remainder);
  
-if (a == CF_NODOUBLE)
+if (a == CF_NODOUBLE || strlen(remainder) > 0)
    {
    snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
    ReportError(OUTPUT);

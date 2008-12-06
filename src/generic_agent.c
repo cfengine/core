@@ -103,7 +103,7 @@ if (ag != cf_agent)
    return true;
    }
 
-snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR,VINPUTFILE);
+snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR);
 
 if (stat(cmd,&sb) == -1)
    {
@@ -115,11 +115,18 @@ if (stat(cmd,&sb) == -1)
 
 if (!MINUSF)
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR);
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
+   if (*VINPUTFILE == '.' || IsFileSep(*VINPUTFILE))
+      {
+      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
+      }
+   else
+      {
+      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
+      }
    }
  
 /* Check if reloading policy will succeed */
@@ -253,6 +260,8 @@ else
 #else
 strcpy(CFWORKDIR,WORKDIR);
 #endif
+
+Verbose("Work directory is %s\n",CFWORKDIR);
 
 snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
 

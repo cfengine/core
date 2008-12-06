@@ -223,20 +223,6 @@ void ThisAgentInit()
  
 umask(077);
 LOGGING = true;
-strcpy(CFWORKDIR,WORKDIR);
-
-#ifndef NT
-if (getuid() > 0)
-   {
-   char *homedir;
-   if ((homedir = getenv("HOME")) != NULL)
-      {
-      strcpy(CFWORKDIR,homedir);
-      strcat(CFWORKDIR,"/.cfagent");
-      }
-   }
-#endif
-
 
 VCANONICALFILE = strdup(CanonifyName(VINPUTFILE));
 

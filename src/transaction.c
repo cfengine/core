@@ -377,7 +377,7 @@ if (stat(cflog,&statbuf) != -1)
    if (statbuf.st_size > CFLOGSIZE)
       {
       Verbose("Rotating lock-runlog file\n");
-      RotateFiles(CFLOG,2);
+      RotateFiles(cflog,2);
       }
    }
 }

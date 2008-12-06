@@ -418,6 +418,7 @@ enum fncalltype
    cfn_ago,
    cfn_changedbefore,
    cfn_classmatch,
+   cfn_canonify,
    cfn_execresult,
    cfn_fileexists,
    cfn_getindices,

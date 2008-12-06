@@ -656,18 +656,28 @@ FatalError("You are denied access to run this policy");
 
 void KeepAgentPromise(struct Promise *pp)
 
-{
+{ char *sp = NULL;
+ 
 if (!IsDefinedClass(pp->classes))
    {
    Verbose("\n");
    Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   Verbose("Skipping whole next promise, as context %s is not valid\n",pp->classes);
+   Verbose("Skipping whole next promise (%s), as context %s is not valid\n",pp->promiser,pp->classes);
    Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 
 if (pp->done)
    {
+   return;
+   }
+
+if (VarClassExcluded(pp,&sp))
+   {
+   Verbose("\n");
+   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   Verbose("Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
+   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 

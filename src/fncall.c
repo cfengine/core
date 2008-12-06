@@ -250,6 +250,9 @@ expargs = NewExpArgs(fp,pp);
 
 switch (this)
    {
+   case cfn_canonify:
+       rval = FnCallCanonify(fp,expargs);
+       break;
    case cfn_randomint:
        rval = FnCallRandomInt(fp,expargs);
        break;

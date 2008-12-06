@@ -2383,7 +2383,7 @@ struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum 
   struct Rlist *rp,*newlist = NULL;
   struct Rval rval;
   char *filename,*comment,*split,fnname[CF_MAXVARSIZE];
-  int maxent,maxsize,count = 0,noerrors = false,purge = true;
+  int maxent,maxsize,count = 0,noerrors = true,purge = true;
   char *file_buffer = NULL;
 
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -2408,6 +2408,7 @@ if (file_buffer == NULL)
    {
    rval.item = NULL;
    rval.rtype = CF_LIST;
+   SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
    return rval;
    }
 else

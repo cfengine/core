@@ -330,8 +330,12 @@ return false;
 int VarClassExcluded(struct Promise *pp,char **classes)
 
 {
- 
 *classes = (char *)GetConstraint("ifvarclass",pp->conlist,CF_SCALAR);
+
+if (*classes == NULL)
+   {
+   return false;
+   }
 
 if (*classes && IsDefinedClass(*classes))
    {

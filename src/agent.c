@@ -657,7 +657,7 @@ FatalError("You are denied access to run this policy");
 void KeepAgentPromise(struct Promise *pp)
 
 { char *sp = NULL;
- 
+
 if (!IsDefinedClass(pp->classes))
    {
    Verbose("\n");

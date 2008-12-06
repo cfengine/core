@@ -38,11 +38,12 @@ int main (int argc,char *argv[]);
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
-int NO_FORK = false;
-int ONCE = false;
+int  NO_FORK = false;
+int  ONCE = false;
 char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
-int MAXLINES = -1;
+int  MAXLINES = -1;
+int  SPLAYTIME = 0;
 const int INF_LINES = -2;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
@@ -282,8 +283,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       int hash,time = Str2Int(retval);
       snprintf(splay,CF_BUFSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
       hash = Hash(splay);
-      Verbose("Sleeping for splaytime %d seconds\n\n",(int)(time*60*hash/CF_HASHTABLESIZE));
-      sleep((int)(time*60*hash/CF_HASHTABLESIZE));
+      SPLAYTIME = (int)(time*60*hash/CF_HASHTABLESIZE);
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
@@ -374,6 +374,9 @@ else
       
       if (time_to_run)
          {
+         Verbose("Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
+         sleep(SPLAYTIME);
+
          if (!GetLock("cf3","exec",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER,VUQNAME,time(NULL)))
             {
             CfOut(cf_verbose,"","cfExecd: Couldn't get exec lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER);

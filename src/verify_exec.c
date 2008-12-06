@@ -296,7 +296,7 @@ for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
    i++;
    }
 
-memset(arg,0,20);
+memset(arg,0,CF_MAXVARSIZE);
 strncpy(arg,execstr,i);
 return arg;
 }

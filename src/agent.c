@@ -666,7 +666,7 @@ if (!IsDefinedClass(pp->classes))
    Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
-
+ 
 if (pp->done)
    {
    return;

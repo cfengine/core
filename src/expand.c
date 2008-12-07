@@ -567,11 +567,11 @@ do
       return;
       }
 
-   /* Thread monitor */
+   /* Set scope "this" first to ensure list expansion ! */
    
+   SetScope("this");  
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise("this",pp);
-   SetScope("this");   
 
    switch (agent)
       {
@@ -593,6 +593,7 @@ do
           break;
           
       default:
+
           if (fnptr != NULL)
              {
              (*fnptr)(pexp);
@@ -699,6 +700,7 @@ switch (returnval.rtype)
        break;
        
    case CF_FNCALL:
+
        // Also have to eval function now
        fp = (struct FnCall *)returnval.item;
        returnval = EvaluateFunctionCall(fp,pp);

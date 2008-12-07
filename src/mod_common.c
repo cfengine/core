@@ -32,8 +32,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+
 /*********************************************************/
-/* FnCalls are lvalues in certain promise constraints    */
+/* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
 
 /* see cf3.defs.h enum fncalltype */

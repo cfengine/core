@@ -39,6 +39,7 @@ void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
 void IncludeManualFile(FILE *fout,char *filename);
 void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
 void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
+void TexinfoVariables(FILE *fout,char *scope);
 
 /*****************************************************************************/
 
@@ -132,6 +133,20 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    fprintf(fout,"@node Function %s\n@section Function %s \n\n",CF_FNCALL_TYPES[i].name,CF_FNCALL_TYPES[i].name);
    TexinfoSpecialFunction(fout,CF_FNCALL_TYPES[i]);
    }
+
+/* Special variables */
+
+Verbose("Dealing with chapter / bundle type - special verbose\n");
+fprintf(fout,"@c *****************************************************\n");
+fprintf(fout,"@c * CHAPTER \n");
+fprintf(fout,"@c *****************************************************\n");
+
+fprintf(fout,"@node Special Variables\n@chapter Special Variables\n\n");
+
+// scopes const and sys
+
+TexinfoVariables(fout,"const");
+TexinfoVariables(fout,"sys");
 
 TexinfoFooter(fout);
 
@@ -317,6 +332,43 @@ for (i = 0; bs[i].lval != NULL; i++)
 }
 
 /*******************************************************************/
+
+void TexinfoVariables(FILE *fout,char *scope)
+
+{ struct Scope *sp;
+  struct CfAssoc **ap;
+  char filename[CF_BUFSIZE];
+  struct Rlist *rp,*list = NULL;
+  int i;
+
+fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n",scope,scope);
+snprintf(filename,CF_BUFSIZE-1,"varcontext_%s_intro.texinfo",scope);
+IncludeManualFile(fout,filename);
+
+sp = GetScope(scope);
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   ap = sp->hashtable;
+   
+   if (ap[i] != NULL)
+      {
+      Verbose("Appending variable documentation for %s (%c)\n",ap[i]->lval,ap[i]->rtype);
+      PrependRScalar(&list,ap[i]->lval,CF_SCALAR);
+      }
+   }
+
+for (rp = AlphaSortRListNames(list); rp != NULL; rp = rp->next)
+   {
+   fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,rp->item,scope,rp->item);
+   snprintf(filename,CF_BUFSIZE-1,"var_%s_%s.texinfo",scope,rp->item);
+   IncludeManualFile(fout,filename);
+   }
+
+DeleteRlist(list);
+}
+
+/*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
@@ -414,7 +466,7 @@ if (stat(filename,&sb) == -1)
       return;
       }
 
-   fprintf(fp,"\nFill me in (%s)\n",filename);
+   fprintf(fp,"\n@verbatim\n\nFill me in (%s)@end verbatim\n",filename);
    fclose(fp);
    Verbose("Created %s template\n",filename);  
    }

@@ -37,7 +37,7 @@ void LoadSystemConstants()
  NewScalar("const","n","\n",cf_str);
  NewScalar("const","r","\r",cf_str);
  NewScalar("const","endl","\n",cf_str);
- NewScalar("const","0","\0",cf_str);
+/* NewScalar("const","0","\0",cf_str);  - this cannot work */
 }
 
 /*******************************************************************/

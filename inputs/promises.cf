@@ -1,0 +1,137 @@
+#######################################################
+#
+# Top level promises
+#
+#######################################################
+
+body common control
+
+{
+bundlesequence  => { 
+                   "update", 
+                   "sys_cfg", 
+                   "main",
+                   "cfengine2"  
+                   };
+
+inputs          => { 
+                   "update.cf", 
+                   "site.cf",
+                   "library.cf" 
+                   };
+}
+
+#######################################################
+
+body agent control
+{
+ifelapsed => "60";
+}
+
+#######################################################
+
+body monitor control
+{
+forgetrate => "0.7";
+histograms => "true";
+}
+
+#######################################################
+
+body executor control
+
+{
+splaytime => "1";
+mailto => "mark@iu.hio.no";
+}
+
+#######################################################
+
+body runagent control
+{
+hosts => { "127.0.0.1" };
+
+# , "myhost.example.com:5308", ...
+}
+
+#######################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+
+# Make updates and runs happen in one
+
+cfruncommand          => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bin/cf-agent";
+allowusers            => { "mark", "root" };
+}
+
+#######################################################
+
+bundle common sys_cfg
+{
+classes:
+
+  "integrate_cfengine2" 
+
+      and => { 
+             fileexists("$(sys.workdir)/inputs/cfagent.conf"), 
+             fileexists("$(sys.workdir)/bin/cfagent")
+             };
+
+}
+
+#######################################################
+
+bundle agent cfengine2
+
+{
+commands:
+
+ integrate_cfengine2:: 
+
+   "/var/cfengine/bin/cfagent";
+
+}
+
+#######################################################
+# For the library
+#######################################################
+
+bundle edit_line resolver
+
+{
+vars:
+
+ "search" slist => { "search iu.hio.no cfengine.com" };
+
+delete_lines:
+
+  "search.*";
+
+insert_lines:
+
+  "$(search)" location => start;
+}
+
+#######################################################
+
+body edit_defaults def
+{
+empty_file_before_editing => "false";
+edit_backup => "false";
+max_file_size => "100000";
+}
+
+########################################################
+
+body location start
+
+{
+# If not line to match, applies to whole text body
+before_after => "before";
+}
+

@@ -1,0 +1,52 @@
+#
+# Just bodies and editbundles here
+#
+
+body perms p(user,mode)
+
+{
+owners => { "$(user)" };
+mode   => "$(mode)";
+}
+
+############################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body delete tidy
+
+{
+dirlinks => "delete";          #keep/tidy/delete
+rmdirs   => "true";             #none/all/sub
+}
+
+#########################################################
+
+body file_select days(days)
+
+#
+# we can build old "include", "exclude", and "ignore" 
+# from these as standard patterns - these bodies can
+# form a library of standard patterns
+#
+
+{
+mtime       => irange(ago(0,0,$(days),0,0,0),now);  
+file_result => "mtime"; 
+}
+
+#########################################################
+
+body changes trip_wire
+
+{
+hash           => "best";
+report_changes => "content";
+update         => "yes";
+}

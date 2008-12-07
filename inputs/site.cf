@@ -1,0 +1,55 @@
+
+
+#######################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/home/mark/LapTop"
+
+    admit   => { "127.0.0.1" };
+
+  "/home/mark/.cfagent/bin/cf-agent"
+
+    admit   => { "127.0.0.1" };
+
+roles:
+
+  ".*"  authorize => { "mark" };
+}
+
+
+#######################################################
+
+bundle agent main
+
+{
+vars:
+
+  "component" slist => { "cf-monitord", "cf-serverd" };
+
+files:
+
+  "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
+
+     create        => "true",
+     edit_line     => resolver,
+     edit_defaults => def;
+
+processes:
+
+  "cfenvd"             signals => { "term" };
+
+  "$(component)" restart_class => canonify("start_$(component)");
+
+
+commands:
+
+   "/var/cfengine/bin/$(component)"
+
+       ifvarclass => canonify("start_$(component)");
+
+}
+

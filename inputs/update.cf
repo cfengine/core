@@ -1,0 +1,47 @@
+
+bundle agent update
+
+{
+files:
+
+  "/var/cfengine/inputs" 
+
+    perms => system("600"),
+    copy_from => mycopy("/home/mark/cfengine-inputs","localhost"),
+    depth_search => recurse("inf");
+
+  "/var/cfengine/bin" 
+
+    perms => system("700"),
+    copy_from => mycopy("/usr/local/sbin","localhost"),
+    file_select => cf3_files,
+    depth_search => recurse("inf");
+
+}
+
+############################################
+
+body perms system(p)
+
+{
+mode  => "$(p)";
+}
+
+############################################
+
+body file_select cf3_files
+
+{
+leaf_name => { "cf-.*" };
+
+file_result => "leaf_name";
+}
+
+#########################################################
+
+body copy_from mycopy(from,server)
+
+{
+source      => "$(from)";
+compare     => "digest";
+}

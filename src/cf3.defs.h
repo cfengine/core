@@ -707,7 +707,6 @@ enum cfchanges
    cfa_contentchange
    };
 
-
 enum signalnames
    {
    cfa_hup,

@@ -524,6 +524,7 @@ void EndAudit(void);
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status);
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void ExtractOperationLock(char *op);
+void PromiseLog(char *s);
 
 /* manual.c */
 

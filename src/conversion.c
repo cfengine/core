@@ -90,11 +90,11 @@ int Signal2Int(char *s)
 
 for (ip = names; ip != NULL; ip=ip->next)
    {
-   i++;
    if (strcmp(s,ip->name) == 0)
       {
       break;
       }
+   i++;
    }
  
 DeleteItemList(names);

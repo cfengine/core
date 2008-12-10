@@ -172,7 +172,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"hashpurge",cf_opts,CF_BOOL,"true/false whether stored hashes for non-existent files should be removed"},
    {"hashupdates",cf_opts,CF_BOOL,"true/false whether stored hashes are updated when change is detected in source"},
    {"childlibpath",cf_str,".*","LD_LIBRARY_PATH for child processes"},
-   {"defaultcopytype",cf_opts,"mtime,atime,ctime,checksum,binary"},
+   {"defaultcopytype",cf_opts,"mtime,atime,ctime,digest,hash,binary"},
    {"dryrun",cf_opts,CF_BOOL,"All talk and no action mode"},
    {"editbinaryfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum binary file size to be edited"},
    {"editfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum text file size to be edited"},
@@ -254,7 +254,7 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {"mailto",cf_str,".*@.*","Email-address cfengine mail is sent to"},
    {"smtpserver",cf_str,".*","Name or IP of a willing smtp server for sending email"},
    {"mailmaxlines",cf_int,"0,1000","Maximum number of lines of output to send by email"},
-   {"schedule",cf_slist,"Min.*","The class schedule for activating cf-execd"},
+   {"schedule",cf_slist,"","The class schedule for activating cf-execd"},
    {"executorfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
    {"execcommand",cf_str,CF_PATHRANGE,"The path to the command executed by default (overriding builtin)"},
    {NULL,cf_notype,NULL,NULL}

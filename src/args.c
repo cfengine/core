@@ -146,12 +146,14 @@ if ((ref != CF_VARARGS) && (ref != len))
    {
    CfOut(cf_error,"","Arguments to function %s(.) do not tally. Expect %d not %d",fp->name,ref,len);
    PromiseRef(cf_error,pp);
+   exit(1);
    }
 
 if ((ref == CF_VARARGS) && (len < 1))
    {
    CfOut(cf_error,"","Arguments to method call %s(.) must contain at least the name of the method",fp->name);
    PromiseRef(cf_error,pp);
+   exit(1);
    }
 
 for (rp = fp->args; rp != NULL; rp = rp->next)
@@ -192,7 +194,7 @@ void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes
 
 snprintf(id,CF_MAXVARSIZE,"built-in FnCall %s-arg",fp->name);
   
-for (argnum = 0; argtemplate[argnum] != NULL; argnum++)
+for (argnum = 0; rp != NULL && argtemplate[argnum] != NULL; argnum++)
     {
     if (rp->type != CF_FNCALL)
        {

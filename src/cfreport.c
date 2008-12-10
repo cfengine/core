@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -58,7 +58,6 @@ void OpenMagnifyFiles(void);
 void CloseMagnifyFiles(void);
 void EraseAverages(void);
 
-
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
@@ -69,7 +68,6 @@ int HTML = false;
 int GRAPH = false;
 char GRAPHDIR[CF_MAXVARSIZE];
 
-
 int TITLES = false;
 int TIMESTAMPS = false;
 int HIRES = false;
@@ -78,23 +76,21 @@ int ERRORBARS = true;
 int NOSCALING = true;
 int NOWOPT = false;
 
-char FILENAME[CF_BUFSIZE];
+char   FILENAME[CF_BUFSIZE];
 unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
-int SMOOTHHISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
-char VFQNAME[CF_MAXVARSIZE];
-char ERASE[CF_BUFSIZE];
-int ERRNO;
+int    SMOOTHHISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
+char   VFQNAME[CF_MAXVARSIZE];
+char   ERASE[CF_BUFSIZE];
+int    ERRNO;
 time_t NOW;
 
 DB *DBP;
 static struct Averages ENTRY,MAX,MIN,DET;
-char TIMEKEY[CF_SMALLBUF],FLNAME[CF_BUFSIZE],*sp;
+char TIMEKEY[CF_SMALLBUF],OUTPUTDIR[CF_BUFSIZE],*sp;
 double AGE;
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
 FILE *FPM[CF_OBSERVABLES];
-
-
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -102,7 +98,7 @@ FILE *FPM[CF_OBSERVABLES];
 
   /* GNU STUFF FOR LATER #include "getopt.h" */
  
- struct option OPTIONS[12] =
+ struct option OPTIONS[28] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -112,8 +108,25 @@ FILE *FPM[CF_OBSERVABLES];
       { "syntax",no_argument,0,'S'},
       { "html",no_argument,0,'H'},
       { "xml",no_argument,0,'X'},
-      { "sql",no_argument,0,'s'},
-      { "graphs",no_argument,0,'g'},
+      { "locks",no_argument,0,'l'},
+      { "last-seen",no_argument,0,'L'},
+      { "performance",no_argument,0,'p'},
+      { "checksum",no_argument,0,'c'},
+      { "active",no_argument,0,'a'},
+      { "classes",no_argument,0,'C'},
+      { "version",no_argument,0,'V'},
+      { "purge",no_argument,0,'P'},
+      { "audit",no_argument,0,'A'},
+      { "erasehistory",required_argument,0,'E' },
+      { "outputdir",required_argument,0,'o' },
+      { "titles",no_argument,0,'t'},
+      { "timestamps",no_argument,0,'T'},
+      { "resolution",no_argument,0,'R'},
+      { "separate",no_argument,0,'s'},
+      { "no-error-bars",no_argument,0,'e'},
+      { "no-scaling",no_argument,0,'n'},
+      { "now",no_argument,0,'N'},
+      { "verbose",no_argument,0,'v'},
       { NULL,0,0,'\0' }
       };
 
@@ -230,36 +243,8 @@ if (strlen(ERASE) > 0)
 ReadAverages(); 
 SummarizeAverages();
 
-if (strlen(FLNAME) == 0)
-   {
-   if (TIMESTAMPS)
-      {
-      if ((NOW = time((time_t *)NULL)) == -1)
-         {
-         Verbose("Couldn't read system clock\n");
-         }
-      sprintf(FLNAME,"cfenvgraphs-%s-%s",CanonifyName(VFQNAME),ctime(&NOW));
-      }
-   else
-      {
-      sprintf(FLNAME,"cfenvgraphs-snapshot-%s",CanonifyName(VFQNAME));
-      }
-   }
 
-Verbose("Creating sub-directory %s\n",FLNAME);
-
-if (mkdir(FLNAME,0755) == -1)
-   {
-   Verbose("Writing to existing directory\n");
-   }
- 
-if (chdir(FLNAME))
-   {
-   perror("chdir");
-   exit(0);
-   }
-
-Verbose("Writing data to sub-directory %s: \n   x,y1,y2,y3...\n ",FLNAME);
+Verbose("Writing data to sub-directory %s: \n   x,y1,y2,y3...\n ",OUTPUTDIR);
 
 if (NOWOPT)
    {
@@ -272,7 +257,6 @@ else
    DiskArrivals();
    PeerIntermittency();
    }
-
 
 return 0;
 }
@@ -290,15 +274,16 @@ void CheckOpts(int argc,char **argv)
   char ld_library_path[CF_BUFSIZE];
 
  
-while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:",OPTIONS,&optindex)) != EOF)
-  {
-  switch ((char) c)
+while ((c=getopt_long(argc,argv,"ghd:vVf:Sst:ACalr:cpPXHL",OPTIONS,&optindex)) != EOF)
+   {
+   switch ((char) c)
       {
       case 'f':
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
           VINPUTFILE[CF_BUFSIZE-1] = '\0';
           MINUSF = true;
+          strcpy(FILENAME,optarg);
           break;
 
       case 'd': 
@@ -333,17 +318,86 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:",OPTIONS,&optindex)) != EOF)
           break;
           
       case 'V':
-          Version("Knowledge agent");
+          Version("Reporting agent");
           exit(0);
           
       case 'h':
           Syntax("Reporting agent",OPTIONS);
           exit(0);
 
-      case 'H':
-          HTML = 1;
+      case 'E':
+          strncpy(ERASE,optarg,CF_BUFSIZE-1);
+          break;
+          
+      case 't':
+          TITLES = true;
           break;
 
+      case 'o': strcpy(OUTPUTDIR,optarg);
+          Verbose("Setting output directory to s\n",OUTPUTDIR);
+          break;
+
+      case 'T': TIMESTAMPS = true;
+          break;
+
+      case 'R': HIRES = true;
+         break;
+
+      case 's': SEPARATE = true;
+          break;
+
+      case 'e': ERRORBARS = false;
+          break;
+
+      case 'n': NOSCALING = true;
+          break;
+          
+      case 'N': NOWOPT = true;
+          break;
+
+
+          
+      case 'a':
+          TODO = cf_db_active;
+          break;
+
+      case 'A':
+          AUDIT = true;
+          TODO = cf_db_audit;
+          break;
+
+      case 'l':
+          TODO = cf_db_locks;
+          break;
+
+      case 'L':
+          TODO = cf_db_lastseen;
+          break;
+
+      case 'c':
+          TODO = cf_db_checksum;
+          break;
+
+      case 'C':
+          TODO = cf_db_classes;
+          break;
+
+      case 'p':
+          TODO = cf_db_performance;
+          break;
+
+      case 'X':
+          XML = true;
+          break;
+
+      case 'H':
+          HTML = true;
+          break;
+
+      case 'P':
+          PURGE = 'y';
+          break;
+          
       default: Syntax("Reporting agent",OPTIONS);
           exit(1);
           
@@ -357,7 +411,35 @@ void ThisAgentInit()
 
 { char vbuff[CF_BUFSIZE];
 
-strcpy(GRAPHDIR,"");
+if (strlen(OUTPUTDIR) == 0)
+   {
+   if (TIMESTAMPS)
+      {
+      if ((NOW = time((time_t *)NULL)) == -1)
+         {
+         Verbose("Couldn't read system clock\n");
+         }
+      sprintf(OUTPUTDIR,"cfenvgraphs-%s-%s",CanonifyName(VFQNAME),ctime(&NOW));
+      }
+   else
+      {
+      sprintf(OUTPUTDIR,"cfenvgraphs-snapshot-%s",CanonifyName(VFQNAME));
+      }
+   }
+
+Verbose("Creating sub-directory %s\n",OUTPUTDIR);
+
+if (mkdir(OUTPUTDIR,0755) == -1)
+   {
+   Verbose("Writing to existing directory\n");
+   }
+ 
+if (chdir(OUTPUTDIR))
+   {
+   perror("chdir");
+   exit(0);
+   }
+
 }
 
 /*****************************************************************************/
@@ -1377,7 +1459,6 @@ struct CEnt *db = (struct CEnt *) b;
 return (da->q < db->q) - (da->q > db->q);
 }
 
-
 /****************************************************************************/
 
 void ReadAverages()
@@ -1822,9 +1903,9 @@ void WriteHistograms()
     int weekly[CF_OBSERVABLES][CF_GRAINS];
     FILE *fp;
     
-    snprintf(FLNAME,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
+    snprintf(OUTPUTDIR,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
     
-    if ((fp = fopen(FLNAME,"r")) == NULL)
+    if ((fp = fopen(OUTPUTDIR,"r")) == NULL)
        {
        Verbose("Unable to load histogram data\n");
        exit(1);
@@ -1878,8 +1959,8 @@ void WriteHistograms()
     
     for (i = 0; i < CF_OBSERVABLES; i++)
        {
-       sprintf(FLNAME,"%s.distr",OBS[i][0]); 
-       if ((FPQ[i] = fopen(FLNAME,"w")) == NULL)
+       sprintf(OUTPUTDIR,"%s.distr",OBS[i][0]); 
+       if ((FPQ[i] = fopen(OUTPUTDIR,"w")) == NULL)
           {
           perror("fopen");
           exit(1);
@@ -2229,27 +2310,27 @@ void OpenFiles()
 
 { int i;
  
-sprintf(FLNAME,"cfenv-average");
+sprintf(OUTPUTDIR,"cfenv-average");
 
-if ((FPAV = fopen(FLNAME,"w")) == NULL)
+if ((FPAV = fopen(OUTPUTDIR,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",FLNAME);
+   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",OUTPUTDIR);
    exit(1);
    }
 
-sprintf(FLNAME,"cfenv-stddev"); 
+sprintf(OUTPUTDIR,"cfenv-stddev"); 
 
-if ((FPVAR = fopen(FLNAME,"w")) == NULL)
+if ((FPVAR = fopen(OUTPUTDIR,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",FLNAME);
+   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",OUTPUTDIR);
    exit(1);
    }
 
-sprintf(FLNAME,"cfenv-now"); 
+sprintf(OUTPUTDIR,"cfenv-now"); 
 
-if ((FPNOW = fopen(FLNAME,"w")) == NULL)
+if ((FPNOW = fopen(OUTPUTDIR,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",FLNAME);
+   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",OUTPUTDIR);
    exit(1);
    }
 
@@ -2259,19 +2340,19 @@ if (SEPARATE)
    {
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      sprintf(FLNAME,"%s.E-sigma",OBS[i][0]);
+      sprintf(OUTPUTDIR,"%s.E-sigma",OBS[i][0]);
       
-      if ((FPE[i] = fopen(FLNAME,"w")) == NULL)
+      if ((FPE[i] = fopen(OUTPUTDIR,"w")) == NULL)
          {
-         CfOut(cf_error,"fopen","File %s could not be opened for writing\n",FLNAME);
+         CfOut(cf_error,"fopen","File %s could not be opened for writing\n",OUTPUTDIR);
          exit(1);
          }
       
-      sprintf(FLNAME,"%s.q",OBS[i][0]);
+      sprintf(OUTPUTDIR,"%s.q",OBS[i][0]);
       
-      if ((FPQ[i] = fopen(FLNAME,"w")) == NULL)
+      if ((FPQ[i] = fopen(OUTPUTDIR,"w")) == NULL)
          {
-         CfOut(cf_error,"fopen","File %s could not be opened for writing\n",FLNAME);
+         CfOut(cf_error,"fopen","File %s could not be opened for writing\n",OUTPUTDIR);
          exit(1);
          }
 
@@ -2307,9 +2388,9 @@ void OpenMagnifyFiles()
  
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   sprintf(FLNAME,"%s.mag",OBS[i][0]);
+   sprintf(OUTPUTDIR,"%s.mag",OBS[i][0]);
    
-   if ((FPM[i] = fopen(FLNAME,"w")) == NULL)
+   if ((FPM[i] = fopen(OUTPUTDIR,"w")) == NULL)
       {
       perror("fopen");
       exit(1);

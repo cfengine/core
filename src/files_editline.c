@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -204,7 +204,7 @@ void VerifyLineDeletions(struct Promise *pp)
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
 
-*(pp->donep) = true;	 
+/* *(pp->donep) = true;	*/
 	 
 a = GetDeletionAttributes(pp);
 
@@ -235,7 +235,7 @@ void VerifyColumnEdits(struct Promise *pp)
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
 
-*(pp->donep) = true;
+/* *(pp->donep) = true; */
 
 a = GetColumnAttributes(pp);
 
@@ -289,7 +289,7 @@ void VerifyPatterns(struct Promise *pp)
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
 
-*(pp->donep) = true;
+/* *(pp->donep) = true; */
 
 a = GetReplaceAttributes(pp);
 
@@ -329,7 +329,7 @@ void VerifyLineInsertions(struct Promise *pp)
   struct Item *begin_ptr,*end_ptr;
   struct Attributes a;
 
-*(pp->donep) = true;
+/* *(pp->donep) = true; */
 
 a = GetInsertionAttributes(pp);
 

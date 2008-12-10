@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -282,6 +282,11 @@ struct BodySyntax CFK_CONTROLBODY[] =
 
 struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {
+   {"reports",cf_olist,"audit,performance,locks,hashes,classes,lastseen","A list of reports to generate"},
+   {"report_output",cf_opts,"html,text,xml","Menu option for generated output format"},
+   {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
+   {"build_directory",cf_str,".*","The directory in which to generate output files"},
+   
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -299,6 +304,7 @@ struct SubTypeSyntax CF_ALL_BODIES[] =
    {CF_RUNC,"control",CFR_CONTROLBODY},
    {CF_EXECC,"control",CFEX_CONTROLBODY},
    {CF_KNOWC,"control",CFK_CONTROLBODY},
+   {CF_REPORTC,"control",CFRE_CONTROLBODY},
 
    //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 

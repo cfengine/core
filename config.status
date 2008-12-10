@@ -558,7 +558,7 @@ s,@INSTALL_DATA@,|#_!!_#|${INSTALL} -m 644,g
 s,@am__isrc@,|#_!!_#|,g
 s,@CYGPATH_W@,|#_!!_#|echo,g
 s,@PACKAGE@,|#_!!_#|cfengine,g
-s,@VERSION@,|#_!!_#|3.0.0b4,g
+s,@VERSION@,|#_!!_#|3.0.0b5,g
 s,@ACLOCAL@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run aclocal-1.10,g
 s,@AUTOCONF@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run autoconf,g
 s,@AUTOMAKE@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run automake-1.10,g
@@ -901,7 +901,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_VERSION\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_STRING\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_BUGREPORT\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE\)[	 (].*,\1define\2 "cfengine" ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0b4" ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0b5" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*YYTEXT_POINTER\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*STDC_HEADERS\)[	 (].*,\1define\2 1 ,

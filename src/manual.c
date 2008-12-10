@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -466,7 +466,7 @@ if (stat(filename,&sb) == -1)
       return;
       }
 
-   fprintf(fp,"\n@verbatim\n\nFill me in (%s)@end verbatim\n",filename);
+   fprintf(fp,"\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n",filename);
    fclose(fp);
    Verbose("Created %s template\n",filename);  
    }

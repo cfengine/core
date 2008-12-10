@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -23,7 +23,7 @@
 /*                                                                 */
 /*  Promises cfpromises.c                                          */
 /*                                                                 */
-/*  Mark Burgess 1994/96                                           */
+/*  Cfengine AS 1994/96                                           */
 /*                                                                 */
 /*******************************************************************/
 

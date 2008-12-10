@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -248,7 +248,12 @@ int TypedTopicMatch(char *ttopic1,char *ttopic2)
 
 { char type1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
   char type2[CF_MAXVARSIZE],topic2[CF_MAXVARSIZE];
-  
+
+if (strcmp(ttopic1,ttopic2) == 0)
+   {
+   return true;
+   }
+   
 type1[0] = '\0';
 topic1[0] = '\0';
 type2[0] = '\0';

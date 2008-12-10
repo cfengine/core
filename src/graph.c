@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -96,6 +96,11 @@ for (tp = map; tp != NULL; tp=tp->next,i++)
    n[i] = strdup(TypedTopic(tp->topic_name,tp->topic_type));
    }
 
+if (i != topic_count)
+   {
+   CfOut(cf_error,"","Node mismatch %d != %d\n",i,topic_count);
+   }
+
 i = j = 0;
 
 for (tp = map; tp != NULL; tp=tp->next)
@@ -104,6 +109,8 @@ for (tp = map; tp != NULL; tp=tp->next)
       {
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
+         int count = 0;
+         
          for (j = 0; j < topic_count; j++)
             {
             if (TypedTopicMatch(TypedTopic(rp->item,""),n[j])||TypedTopicMatch(TypedTopic(rp->item,ta->associate_topic_type),n[j]))
@@ -114,33 +121,21 @@ for (tp = map; tp != NULL; tp=tp->next)
                   }
 
                adj[i][j] = adj[j][i] = 1.0;
+               count++;
                }
             }
-         }
-      }
 
-   /*
-   for (op = tp->occurrences; op != NULL; op=op->next)
-      {
-      for (rp = op->represents; rp != NULL; rp=rp->next)
-         {
-         for (j = 0; j < topic_count; j++)
+         if (count != 1)
             {
-            if (i == j)
-               {
-               continue;
-               }
-            
-            if (TypedTopicMatch(TypedTopic((rp->item),""),n[j]))
-               {
-               //  adj[i][j] = adj[j][i] = 1.0;
-               }
+            CfOut(cf_error,"","Association graph linked %d times for %s(%d/%d)->%s",count,n[j],j,topic_count,rp->item);
             }
          }
       }
-   */
-
-   i++;
+   
+   if (++i == topic_count)
+      {
+      break;
+      }
    }
 
 /* Node degree ranking */
@@ -451,7 +446,7 @@ for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
       continue;
       }
    
-   if (adj[topic][possible_neighbour] > 0)
+   if (adj[topic][possible_neighbour] > 0 || adj[possible_neighbour][topic] > 0)
       {
       Verbose(" -> %d (%s) is a nearest neighbour of topic (%s)\n",counter,n[possible_neighbour],n[topic]);
       

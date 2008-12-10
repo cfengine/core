@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -68,7 +68,10 @@ void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promis
 
 if (DONTDO || a.transaction.action == cfa_warn)
    {
-   cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
+   if (ec && ec->num_edits > 0)
+      {
+      cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
+      }
    return;
    }
 else if (ec && ec->num_edits > 0)

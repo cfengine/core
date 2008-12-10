@@ -6,7 +6,7 @@
         Free Software Foundation, Inc.
  
    This file is part of GNU cfengine - written and maintained 
-   by Mark Burgess, Dept of Computing and Engineering, Oslo College,
+   by Cfengine AS, Dept of Computing and Engineering, Oslo College,
    Dept. of Theoretical physics, University of Oslo
  
    This program is free software; you can redistribute it and/or modify it

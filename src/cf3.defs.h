@@ -1,7 +1,7 @@
 /* 
-   Copyright (C) 2008 - Mark Burgess
+   Copyright (C) 2008 - Cfengine AS
 
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -43,7 +43,7 @@
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
-#define CF3COPYRIGHT "cf3 cfengine 3 is (C) Mark Burgess 2008, and offered under the terms of the enclosed free software licence"
+#define CF3COPYRIGHT "cf3 cfengine 3 is (C) Cfengine AS 2008, and offered under the terms of the enclosed free software licence"
 
 #define CF_SCALAR 's'
 #define CF_LIST   'l'
@@ -146,7 +146,7 @@ enum cfdatatype
 #define CF_EXECC    "executor"
 #define CF_KNOWC    "knowledge"
 #define CF_RUNC     "runagent"
-#define CF_REPORTAG "reportagent"
+#define CF_REPORTC  "reportagent"
 
 enum cfagenttype
    {

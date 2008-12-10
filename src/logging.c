@@ -68,7 +68,7 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP);
 void EndAudit()
 
 { double total;
-  char *sp,rettype;
+ char *sp,rettype,string[CF_BUFSIZE];
   void *retval;
   struct Promise dummyp;
   struct Attributes dummyattr;
@@ -95,11 +95,14 @@ if (total == 0)
    }
 else
    {   
-   CfOut(cf_verbose,"","Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
+   snprintf(string,CF_BUFSIZE,"Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
             sp,
             (double)PR_KEPT/total,
             (double)PR_REPAIRED/total,
             (double)PR_NOTKEPT/total);
+
+   CfOut(cf_verbose,"","%s",string);
+   PromiseLog(string);
    }
 
 ClassAuditLog(&dummyp,dummyattr,OUTPUT,CF_REPORT);
@@ -269,8 +272,6 @@ for (rp = list; rp != NULL; rp=rp->next)
    }
 }
 
-
-
 /************************************************************************/
 
 void ExtractOperationLock(char *op)
@@ -329,4 +330,29 @@ for (sp = CFLOCK+offset; *sp != '\0'; sp++)
    }
 
 op[i] = '\0';
+}
+
+/************************************************************************/
+
+void PromiseLog(char *s)
+
+{ char filename[CF_BUFSIZE],start[CF_BUFSIZE],end[CF_BUFSIZE];
+  FILE *fout;
+  time_t now = time(NULL);
+
+snprintf(filename,CF_BUFSIZE,"%s/promise.log",CFWORKDIR);
+
+if ((fout = fopen(filename,"a")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Could not open %s",filename);
+   return;
+   }
+
+strcpy(start,ctime(&CFSTARTTIME));
+Chop(start);
+strcpy(end,ctime(&now));
+Chop(end);
+
+fprintf(fout,"%s -> %s: %s",start,end,s);
+fclose(fout);
 }

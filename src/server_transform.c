@@ -413,7 +413,7 @@ if (strcmp(pp->agentsubtype,"roles") == 0)
    return;
    }
 
-CfOut(cf_error,"","Promise type \"%s\" is not known by this agent");
+CfOut(cf_error,"","Promise type \"%s\" is not known by this agent",pp->agentsubtype);
 PromiseRef(cf_error,pp);
 }
 

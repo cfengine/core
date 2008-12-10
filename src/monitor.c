@@ -48,7 +48,12 @@ extern double FORGETRATE;
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The monitoring agent is a machine-learning, sampling\n"
+            "daemon which learns the normal state of the current\n"
+            "host and classifies new observations in terms of the\n"
+            "patterns formed by previous ones. The data are made\n"
+            "available to and read by cf-agent for classification\n"
+            "of responses to anomalous states.";
  
  struct option OPTIONS[14] =
       {
@@ -58,14 +63,30 @@ extern double FORGETRATE;
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
       { "no-lock",no_argument,0,'K'},
+      { "file",required_argument,0,'f'},
       { "inform",no_argument,0,'I'},
-      { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F'},
       { "histograms",no_argument,0,'H'},
       { "tcpdump",no_argument,0,'T'},
-      { "file",optional_argument,0,'f'},
       { NULL,0,0,'\0' }
+      };
+
+ char *HINTS[14] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Ignore system lock",
+      "Specify an alternative input file than the default",
+      "Print basic information about changes made to the system, i.e. promises repaired",
+      "Activate internal diagnostics (developers only)",
+      "Run process in foreground, not as a daemon",
+      "Store informatino about histograms / distributions",
+      "Interface with tcpdump if available to collect data about network",
+      NULL
       };
 
 /*****************************************************************************/
@@ -153,16 +174,16 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
       case 'T': TCPDUMP = true;
                 break;
 
-      case 'V': Version("Monitor agent");
+      case 'V': Version("cf-monitord");
           exit(0);
           
-      case 'h': Syntax("Monitor agent",OPTIONS);
+      case 'h': Syntax("cf-monitord - cfengine's monitoring agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default: Syntax("Monitor agent",OPTIONS);
+      default: Syntax("cf-monitord - cfengine's monitoring agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

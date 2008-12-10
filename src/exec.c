@@ -62,7 +62,11 @@ int Dialogue(int sd,char *s);
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The executor daemon is a scheduler and wrapper for\n"
+            "execution of cf-agent. It collects the output of the\n"
+            "agent and can email it to a specified address. It can\n"
+            "splay the start time of executions across the network\n"
+            "and work as a class-based clock for scheduling.";
  
  struct option OPTIONS[17] =
       {
@@ -71,18 +75,33 @@ int Dialogue(int sd,char *s);
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
+      { "file",required_argument,0,'f'},
       { "define",required_argument,0,'D' },
       { "negate",required_argument,0,'N' },
       { "no-lock",no_argument,0,'K'},
       { "inform",no_argument,0,'I'},
-      { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F' },
-      { "once",no_argument,0,'1'},
-      { "foreground",no_argument,0,'g'},
-      { "parse-only",no_argument,0,'p'},
       { "ld-library-path",required_argument,0,'L'},
       { NULL,0,0,'\0' }
+      };
+
+ char *HINTS[17] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Define a list of comma separated classes to be defined at the start of execution",
+      "Define a list of comma separated classes to be undefined at the start of execution",
+      "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
+      "Print basic information about changes made to the system, i.e. promises repaired",
+      "Activate internal diagnostics (developers only)",
+      "Run as a foreground processes (do not fork)",
+      "Set the internal value of LD_LIBRARY_PATH for child processes",
+      NULL
       };
 
 /*****************************************************************************/
@@ -118,7 +137,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSxL:hFV1g",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VxL:hFV1g",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -183,9 +202,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSxL:hFV1g",OPTIONS,&optindex)) != 
       case 'q': NOSPLAY = true;
           break;
           
-      case 'g': NO_FORK = true;
-         break;
-         
       case 'L': 
           snprintf(ld_library_path,CF_BUFSIZE-1,"LD_LIBRARY_PATH=%s",optarg);
           if (putenv(strdup(ld_library_path)) != 0)
@@ -195,21 +211,20 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VSxL:hFV1g",OPTIONS,&optindex)) != 
           break;
           
       case 'F':
-      case '1': ONCE = true;
+          ONCE = true;
           NO_FORK = true;
           break;
-
           
-      case 'V': Version("Execution agent");
+      case 'V': Version("cf-execd");
           exit(0);
           
-      case 'h': Syntax("Execution agent",OPTIONS);
+      case 'h': Syntax("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default: Syntax("Execution agent",OPTIONS);
+      default: Syntax("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

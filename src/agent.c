@@ -76,7 +76,11 @@ extern struct Rlist *SERVERLIST;
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
- 
+
+ char *ID = "The main cfengine agent is the instigator of change\n"
+            "in the system. In that sense it is the most important\n"
+            "part of the cfengine suite.\n";
+
  struct option OPTIONS[12] =
       {
       { "help",no_argument,0,'h' },
@@ -84,15 +88,30 @@ extern struct Rlist *SERVERLIST;
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
+      { "file",required_argument,0,'f'},
       { "define",required_argument,0,'D' },
       { "negate",required_argument,0,'N' },
       { "no-lock",no_argument,0,'K'},
       { "inform",no_argument,0,'I'},
-      { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
       { NULL,0,0,'\0' }
       };
 
+ char *HINTS[12] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Define a list of comma separated classes to be defined at the start of execution",
+      "Define a list of comma separated classes to be undefined at the start of execution",
+      "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
+      "Print basic information about changes made to the system, i.e. promises repaired",
+      "Activate internal diagnostics (developers only)",
+      NULL
+      };
 
 /*******************************************************************/
 
@@ -184,16 +203,16 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
           IGNORELOCK = true;
           break;          
 
-      case 'V': Version("Cfengine Agent");
+      case 'V': Version("cf-agent");
           exit(0);
           
-      case 'h': Syntax("Cfengine Agent",OPTIONS);
+      case 'h': Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': AgentDiagnostic();
           exit(0);
           
-      default:  Syntax("Cfengine Agent",OPTIONS);
+      default:  Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

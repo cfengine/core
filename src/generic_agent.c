@@ -1095,24 +1095,34 @@ switch (GetVariable("control_common","cfinputs_version",&rval,&rtype))
 
 /*******************************************************************/
 
-void Syntax(char *component,struct option options[])
+void Syntax(char *component,struct option options[],char *hints[],char *id)
 
 { int i;
 
-Version(component);
-printf("\n");
-printf("Options:\n\n");
+printf("\n\n%s\n\n",component); 
+
+printf("SYNOPSIS:\n\n   program [options]\n\nDESCRIPTION:\n\n%s\n",id);
+printf("Command line options:\n\n");
 
 for (i=0; options[i].name != NULL; i++)
    {
-   printf("--%-20s    (-%c)\n",options[i].name,(char)options[i].val);
+   if (options[i].has_arg)
+      {
+      printf("--%-12s, -%c value - %s\n",options[i].name,(char)options[i].val,hints[i]);
+      }
+   else
+      {
+      printf("--%-12s, -%-7c - %s\n",options[i].name,(char)options[i].val,hints[i]);
+      }
    }
 
 printf("\nDebug levels: 1=parsing, 2=running, 3=summary, 4=expression eval\n");
 
-printf("\nBug reports to bug-cfengine@cfengine.org\n");
-printf("General help to help-cfengine@cfengine.org\n");
-printf("Info & fixes at http://www.cfengine.org\n");
+printf("\nBug reports: bug-cfengine@cfengine.org, ");
+printf("Community help: help-cfengine@cfengine.org\n");
+printf("Community info: http://www.cfengine.org, ");
+printf("Support services: http://www.cfengine.com\n\n");
+printf("This software is (C) 2008 Cfengine AS.\n");
 }
 
 /*******************************************************************/
@@ -1120,7 +1130,7 @@ printf("Info & fixes at http://www.cfengine.org\n");
 void Version(char *component)
 
 {
-printf("Cfengine: %s\n%s\n%s\n",component,VERSION,COPYRIGHT);
+printf("This is %s\n%s\n%s\n",component,VERSION,COPYRIGHT);
 }
 
 /**************************************************************/

@@ -38,7 +38,10 @@ int main (int argc,char *argv[]);
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The promise agent is a validator and analysis tool for\n"
+            "confguration files belonging to any of the components\n"
+            "of cfengine. Configurations that make changes must be\n"
+            "approved by this validator before being executed.";
  
  struct option OPTIONS[14] =
       {
@@ -47,16 +50,35 @@ int main (int argc,char *argv[]);
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
+      { "file",required_argument,0,'f'},
       { "define",required_argument,0,'D' },
       { "negate",required_argument,0,'N' },
-      { "no-lock",no_argument,0,'K'},
       { "inform",no_argument,0,'I'},
-      { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
       { "analysis",no_argument,0,'a'},
       { "reports",no_argument,0,'r'},
       { NULL,0,0,'\0' }
       };
+
+
+ char *HINTS[14] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Define a list of comma separated classes to be defined at the start of execution",
+      "Define a list of comma separated classes to be undefined at the start of execution",
+      "Print basic information about changes made to the system, i.e. promises repaired",
+      "Activate internal diagnostics (developers only)",
+      "Perform additional analysis of configuration",
+      "Generate reports about configuration",
+      NULL
+      };
+
+
 
 /*******************************************************************/
 /* Level 0 : Main                                                  */
@@ -154,16 +176,13 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
           IGNORELOCK = true;
           break;          
 
-      case 'V': Version("Promise engine");
+      case 'V': Version("cf-promises");
           exit(0);
           
-      case 'h': Syntax("Promise engine",OPTIONS);
+      case 'h': Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
           exit(0);
 
-      case 'S': SyntaxTree();
-          exit(0);
-
-      case 'r':
+       case 'r':
           SHOWREPORTS = true;
           break;
 
@@ -176,7 +195,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
           exit(0);
           break;
           
-      default:  Syntax("Promise engine",OPTIONS);
+      default:  Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
           exit(1);
           
       }

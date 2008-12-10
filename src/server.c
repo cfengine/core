@@ -74,7 +74,11 @@ extern struct BodySyntax CFS_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The server daemon provides two services: it acts as a\n"
+            "file server for remote file copying and it allows an\n"
+            "authorized cf-runagent to start start a cf-agent process\n"
+            "and set certain additional classes with role-based access\n"
+            "control.\n";
  
  struct option OPTIONS[15] =
       {
@@ -88,11 +92,28 @@ extern struct BodySyntax CFS_CONTROLBODY[];
       { "negate",required_argument,0,'N' },
       { "no-lock",no_argument,0,'K'},
       { "inform",no_argument,0,'I'},
-      { "syntax",no_argument,0,'S'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F' },
       { "ld-library-path",required_argument,0,'L'},
       { NULL,0,0,'\0' }
+      };
+
+ char *HINTS[15] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Define a list of comma separated classes to be defined at the start of execution",
+      "Define a list of comma separated classes to be undefined at the start of execution",
+      "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
+      "Print basic information about changes made to the system, i.e. promises repaired",
+      "Activate internal diagnostics (developers only)",
+      "Run as a foreground processes (do not fork)",
+      "Set the internal value of LD_LIBRARY_PATH for child processes",
+      NULL
       };
 
 /*******************************************************************/
@@ -213,16 +234,16 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLF",OPTIONS,&optindex)) != EOF)
           putenv(ld_library_path);
           break;
 
-      case 'V': Version("Server agent");
+      case 'V': Version("cf-serverd");
           exit(0);
           
-      case 'h': Syntax("Server agent",OPTIONS);
+      case 'h': Syntax("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default:  Syntax("Server agent",OPTIONS);
+      default:  Syntax("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

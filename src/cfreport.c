@@ -96,7 +96,10 @@ FILE *FPM[CF_OBSERVABLES];
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The reporting agent is a merger between the older\n"
+            "cfengine programs cfshow and cfenvgraph. It outputs\n"
+            "data stored in cfengine's embedded databases in human\n"
+            "readable form.";
  
  struct option OPTIONS[28] =
       {
@@ -105,7 +108,6 @@ FILE *FPM[CF_OBSERVABLES];
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f' },
-      { "syntax",no_argument,0,'S'},
       { "html",no_argument,0,'H'},
       { "xml",no_argument,0,'X'},
       { "locks",no_argument,0,'l'},
@@ -129,6 +131,38 @@ FILE *FPM[CF_OBSERVABLES];
       { "verbose",no_argument,0,'v'},
       { NULL,0,0,'\0' }
       };
+
+ char *HINTS[28] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Print output in HTML",
+      "Print output in XML",
+      "Output data about the locks from the internal database",
+      "Output data from the last-seen peer database",
+      "Output data about the performance and last execution of promise repairs",
+      "Output data about hashes of files recorded by cf-agent",
+      "Output data about active locks",
+      "Output data about classes that have been defined on this host",
+      "Print version string for software",
+      "Purge data about peers not seen beyond the threshold horizon for assumed-dead",
+      "Output data from auditing database",
+      "Erase historical data from the cf-monitord monitoring database",
+      "Set output directory for printing graph data",
+      "Add title data to generated graph files",
+      "Add a time stamp to directory name for graph file data",
+      "Print graph data in high resolution",
+      "Print separate files for each graph as well as combined `ECG' form",
+      "Do not add error bars to the printed graphs",
+      "Do not automatically scale the axes",
+      "Generate expanded graph files of the past four hours in high resolution",
+      "Generate verbose output",
+      NULL
+      };
+
 
 /*******************************************************************/
 
@@ -274,7 +308,7 @@ void CheckOpts(int argc,char **argv)
   char ld_library_path[CF_BUFSIZE];
 
  
-while ((c=getopt_long(argc,argv,"ghd:vVf:Sst:ACalr:cpPXHL",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ACalr:cpPXHL",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -318,11 +352,11 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:Sst:ACalr:cpPXHL",OPTIONS,&optindex)) !
           break;
           
       case 'V':
-          Version("Reporting agent");
+          Version("cf-report");
           exit(0);
           
       case 'h':
-          Syntax("Reporting agent",OPTIONS);
+          Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'E':
@@ -398,7 +432,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:Sst:ACalr:cpPXHL",OPTIONS,&optindex)) !
           PURGE = 'y';
           break;
           
-      default: Syntax("Reporting agent",OPTIONS);
+      default: Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

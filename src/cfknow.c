@@ -105,23 +105,47 @@ char MANDIR[CF_BUFSIZE];
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The knowledge management agent is capable of building\n"
+            "an analysing a semantic knowledge network. It can\n"
+            "configure a relational database to contain an ISO\n"
+            "standard topic map and permit regular-expression based\n"
+            "searching of the map. Analysis of the semantic network\n"
+            "can be performed providing graphical output of the data,\n"
+            "and cfknow can assemble and converge the reference manual\n"
+            "for the current version of the cfengine software.";
  
  struct option OPTIONS[13] =
       {
+      { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
+      { "verbose",no_argument,0,'v' },
+      { "dry-run",no_argument,0,'n' },
+      { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f' },
       { "graphs",no_argument,0,'g'},
-      { "help",no_argument,0,'h' },
       { "html",no_argument,0,'H'},
       { "manual",no_argument,0,'m'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
-      { "syntax",no_argument,0,'S'},
       { "topic",required_argument,0,'t'},
-      { "verbose",no_argument,0,'v' },
-      { "version",no_argument,0,'V' },
       { NULL,0,0,'\0' }
+      };
+
+ char *HINTS[13] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Generate graphs from topic map data",
+      "Output queries in HTML",
+      "Generate reference manual from internal data",
+      "Specify a regular expression for searching the topic map",
+      "Store topic map in defined SQL database",
+      "Specify a literal string topic to look up in the topic map",
+      NULL
       };
 
 /*****************************************************************************/
@@ -231,11 +255,11 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
           break;
           
       case 'V':
-          Version("Knowledge agent");
+          Version("cf-know");
           exit(0);
           
       case 'h':
-          Syntax("Knowledge agent",OPTIONS);
+          Syntax("cf-know - cfengine's knowledge agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'H':
@@ -249,7 +273,7 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
           GENERATE_MANUAL = true;
           break;
           
-      default: Syntax("Knowledge agent",OPTIONS);
+      default: Syntax("cf-know - knowledge agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

@@ -41,7 +41,16 @@ void DeleteStream(FILE *fp);
 /* Command line options                                            */
 /*******************************************************************/
 
-  /* GNU STUFF FOR LATER #include "getopt.h" */
+ char *ID = "The run agent connects to a list of running instances of"
+            "the cf-serverd service. The agent allows a user to\n"
+            "forego the usual scheduling interval for the agent and\n"
+            "activate cf-agent on a remote host. Additionally, a user\n"
+            "can send additional classes to be defined on the remote\n"
+            "host. Two kinds of classes may be sent: classes to decide\n"
+            "on which hosts the agent will be started, and classes that\n"
+            "the user requests the agent should define on execution.\n"
+            "The latter type is regulated by cfserverd's role based\n"
+            "access control.";
  
  struct option OPTIONS[13] =
       {
@@ -50,14 +59,31 @@ void DeleteStream(FILE *fp);
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
+      { "file",required_argument,0,'f'},
       { "define-class",required_argument,0,'D' },
       { "select-class",required_argument,0,'s' },
       { "inform",no_argument,0,'I'},
-      { "syntax",no_argument,0,'S'},
       { "remote-options",required_argument,0,'o'},
       { "diagnostic",no_argument,0,'x'},
       { NULL,0,0,'\0' }
       };
+
+ char *HINTS[13] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Output the version of the software",
+      "Specify an alternative input file than the default",
+      "Define a list of comma separated classes to be sent to a remote agent",
+      "Define a list of comma separated classes to be used to select remote agents by constraint",
+      "Print basic information about changes made to the system, i.e. promises repaired",
+      "Pass options to a remote server process",
+      "Activate internal diagnostics (developers only)",
+      NULL
+      };
+
 
 extern struct BodySyntax CFR_CONTROLBODY[];
 
@@ -181,13 +207,13 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:",OPTIONS,&optindex)) != EOF)
       case 'V': Version("Run agent");
           exit(0);
           
-      case 'h': Syntax("Run agent",OPTIONS);
+      case 'h': Syntax("Run agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default:  Syntax("Run agent",OPTIONS);
+      default:  Syntax("Run agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

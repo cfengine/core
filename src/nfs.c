@@ -12,8 +12,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
-  
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -306,7 +305,7 @@ if (a.mount.mount_options)
    }
 else
    {
-   opts = VMOUNTOPTS[VSYSTEMHARDCLASS];
+   opts = strdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
    }
 
 host = a.mount.mount_server;
@@ -553,6 +552,10 @@ if (DONTDO)
    Verbose("Promised to mount filesystem, but not on this trial run\n");
    return;
    }
+else
+   {
+   Verbose(" -> Attempting to mount all filesystems.\n");
+   }
 
 if (VSYSTEMHARDCLASS == cfnt)
    {
@@ -627,7 +630,7 @@ while (!feof(pp))
 
 alarm(0);
 signal(SIGALRM,SIG_DFL);
-cfpclose(pp);
+cf_pclose(pp);
 }
 
 /*******************************************************************/

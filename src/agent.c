@@ -234,6 +234,8 @@ signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
 
 CFA_MAXTHREADS = 30;
+EDITFILESIZE = 100000;
+
 
 /*
   do not set signal(SIGCHLD,SIG_IGN) in agent near
@@ -470,6 +472,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       {
       CF_MOUNTALL = GetBoolean(retval);
       Verbose("SET mountfilesystems = %d\n",CF_MOUNTALL);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_editfilesize].lval) == 0)
+      {
+      EDITFILESIZE = Str2Int(retval);
+      Verbose("SET EDITFILESIZE = %d\n",EDITFILESIZE);
       continue;
       }
 
@@ -849,7 +858,7 @@ switch(type)
           FSTAB_EDITS = 0;
           }
 
-       if (!DONTDO && !NOMOUNTS && CF_MOUNTALL && FSTAB_EDITS)
+       if (!DONTDO && CF_MOUNTALL)
           {
           Verbose("");
           Verbose(" -> Mounting all filesystems\n");

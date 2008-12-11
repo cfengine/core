@@ -88,7 +88,7 @@ if (thislock.lock == NULL)
 
 /* Do mounts first */
 
-if (!NOMOUNTS && a.havemount)
+if (a.havemount)
    {
    if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
       {
@@ -384,6 +384,11 @@ for (rp = list; rp != NULL; rp=rp->next)
 if (!found)
    {
    Verbose(" !! File system %s seems not to be mounted correctly\n",name);
+
+   if (! a.mount.unmount)
+      {
+      CF_MOUNTALL = true;
+      }
    }
 
 return found;

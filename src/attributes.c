@@ -171,6 +171,8 @@ attr.havemount = GetBooleanConstraint("mount",pp->conlist);
 
 /* Common ("included") */
 
+attr.edits.maxfilesize = EDITFILESIZE;
+
 attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
 attr.transaction = GetTransactionConstraints(pp);
 
@@ -614,10 +616,9 @@ struct EditDefaults GetEditDefaults(struct Promise *pp)
 
 e.maxfilesize = GetIntConstraint("max_file_size",pp->conlist);
 
-if (e.maxfilesize == CF_NOINT)
+if (e.maxfilesize == CF_NOINT || e.maxfilesize == 0)
    {
-   e.maxfilesize = 100000;
-   //e.maxfilesize = EDITFILESIZE;
+   e.maxfilesize = EDITFILESIZE;
    }
 
 value = (char *)GetConstraint("edit_backup",pp->conlist,CF_SCALAR);

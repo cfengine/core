@@ -1009,7 +1009,7 @@ void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist
   char rettype;
   void *retval;
 
-Debug("CheckControlPromises()\n");
+Debug("CheckControlPromises(%s)\n",agent);
 
 for (i = 0; CF_ALL_BODIES[i].bs != NULL; i++)
    {

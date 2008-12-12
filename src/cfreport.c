@@ -232,7 +232,6 @@ GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
 KeepReportsControlPromises();
 KeepReportsPromises();
-
 return 0;
 }
 
@@ -372,6 +371,7 @@ strcpy(TIMEKEY,"");
 strcpy(STYLESHEET,"http://www.cfengine.org/css/promises.css");
 strcpy(WEBDRIVER,"#");
 strcpy(BANNER,"");
+snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 }
 
 /*****************************************************************************/
@@ -390,7 +390,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (GetVariable("control_reportagent",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_reporter",cp->lval,&retval,&rettype) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in report agent control body",cp->lval);
       continue;
@@ -400,6 +400,11 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       {
       strncpy(OUTPUTDIR,retval,CF_BUFSIZE);
       Verbose("SET outputdir = %s\n",OUTPUTDIR);
+
+      if (mkdir(OUTPUTDIR,0755) == -1)
+         {
+         Verbose("Writing to existing directory\n");
+         }
       
       if (chdir(OUTPUTDIR))
          {
@@ -416,7 +421,6 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       Verbose("SET autoscale = %d\n",NOSCALING);
       continue;
       }
-
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_timestamps].lval) == 0)
       {
@@ -441,6 +445,19 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_htmlbanner].lval) == 0)
       {
       strncpy(BANNER,retval,CF_BUFSIZE-1);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_report_output].lval) == 0)
+      {
+      if (strcmp("html",retval) == 0)
+         {
+         HTML = true;
+         }
+      else if (strcmp("xml",retval) == 0)
+         {
+         XML = true;
+         }
       continue;
       }
 
@@ -486,54 +503,63 @@ if (chdir(OUTPUTDIR))
    CfOut(cf_error,"chdir","Could not set the working directory");
    exit(0);
    }
- 
+
+ReadAverages(); 
+SummarizeAverages();
+
 for (rp  = REPORTS; rp != NULL; rp = rp->next)
    {
-   if (strcmp("lastseen",rp->item) == 0)
+   if (strcmp("last_seen",rp->item) == 0)
       {
+      Verbose("Creating last-seen report...\n");
       ShowLastSeen();
       }
 
    if (strcmp("all_locks",rp->item) == 0)
       {
+      Verbose("Creating lock report...\n");
       ShowLocks(CF_INACTIVE);
       }
 
    if (strcmp("active_locks",rp->item) == 0)
       {
+      Verbose("Creating active lock report...\n");
       ShowLocks(CF_ACTIVE);
       }
 
-   if (strcmp("last_seen",rp->item) == 0)
+   if (strcmp("hashes",rp->item) == 0)
       {
+      Verbose("Creating file-hash report...\n");
       ShowChecksums();
       }
 
    if (strcmp("performance",rp->item) == 0)
       {
+      Verbose("Creating performance report...\n");
       ShowPerformance();
       }
    
    if (strcmp("audit",rp->item) == 0)
       {
+      Verbose("Creating audit report...\n");
       ShowCurrentAudit();
       }
 
    if (strcmp("classes",rp->item) == 0)
       {
+      Verbose("Creating classes report...\n");
       ShowClasses();
       }
 
    if (strcmp("monitor_now",rp->item) == 0)
       {
+      Verbose("Creating monitor recent-history report...\n");
       MagnifyNow();
       }
 
    if (strcmp("monitor_history",rp->item) == 0)
       {
-      ReadAverages(); 
-      SummarizeAverages();
-
+      Verbose("Creating monitor full history report...\n");
       WriteGraphFiles();
       WriteHistograms();
       DiskArrivals();
@@ -609,6 +635,7 @@ if (HTML)
    {
    snprintf(name,CF_BUFSIZE,"Peers as last seen by %s",VFQNAME);
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 else if (XML)
    {
@@ -807,6 +834,7 @@ if (HTML)
    {
    snprintf(name,CF_BUFSIZE,"Promises last kept by %s",VFQNAME);
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
 if (XML)
@@ -984,6 +1012,7 @@ if (HTML)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"Classes last observed on %s at %s",VFQNAME,ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
 if (XML)
@@ -1149,6 +1178,7 @@ if ((fout = fopen(name,"w")) == NULL)
 if (HTML)
    {
    CfHtmlHeader(fout,"File hashes",STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
 if (XML)
@@ -1298,6 +1328,7 @@ if (HTML)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"%s lock data observed on %s at %s",lockdb,VFQNAME,ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
 if (XML)
@@ -1473,7 +1504,8 @@ if (HTML)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"Audit collected on %s at %s",VFQNAME,ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
-
+   
+   fprintf(fout,"<table class=border cellpadding=5>\n");
    /* fprintf(fout,"<th> t-index </th>");*/
    fprintf(fout,"<th> Scan convergence </th>");
    fprintf(fout,"<th> Observed </th>");

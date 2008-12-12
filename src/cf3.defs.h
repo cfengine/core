@@ -146,7 +146,7 @@ enum cfdatatype
 #define CF_EXECC    "executor"
 #define CF_KNOWC    "knowledge"
 #define CF_RUNC     "runagent"
-#define CF_REPORTC  "reportagent"
+#define CF_REPORTC  "reporter"
 
 enum cfagenttype
    {
@@ -309,9 +309,16 @@ enum cfkcontrol
 
 enum cfrecontrol
    {
-   cfre_one,
-   cfre_two,
-   cfre_notype,
+   cfre_reports,
+   cfre_report_output,
+   cfre_builddir,
+   cfre_autoscale,
+   cfre_errorbars,
+   cfre_timestamps,
+   cfre_query_engine,
+   cfre_stylesheet,
+   cfre_htmlbanner,
+   cfre_notype
    };
 
 /*************************************************************************/

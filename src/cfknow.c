@@ -289,6 +289,7 @@ void ThisAgentInit()
 strcpy(TM_PREFIX,"");
 strcpy(WEBDRIVER,"");
 strcpy(BANNER,"");
+strcpy(STYLESHEET,"");
 strcpy(BUILD_DIR,".");
 strcpy(MANDIR,".");
 strcpy(SQL_DATABASE,"cf_topic_map");

@@ -755,7 +755,7 @@ if ((n = ListLen(rangep)) != 2)
 
 for (ip = rangep; ip != NULL; ip=ip->next)
    {
-   val = Str2Int(s);
+   val = Str2Int(ip->name);
    
    if (val > max || val < min)
       {

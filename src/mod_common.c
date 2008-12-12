@@ -282,11 +282,15 @@ struct BodySyntax CFK_CONTROLBODY[] =
 
 struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {
-   {"reports",cf_olist,"audit,performance,locks,hashes,classes,lastseen","A list of reports to generate"},
+   {"reports",cf_olist,"audit,performance,all_locks,active_locks,hashes,classes,last_seen,monitor_now,monitor_history","A list of reports to generate"},
    {"report_output",cf_opts,"html,text,xml","Menu option for generated output format"},
-   {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
    {"build_directory",cf_str,".*","The directory in which to generate output files"},
-   
+   {"auto_scaling",cf_opts,CF_BOOL,"true/false whether to auto-scale graph output to optimize use of space"},
+   {"error_bars",cf_opts,CF_BOOL,"true/false whether to generate error bars on graph output"},
+   {"time_stamps",cf_opts,CF_BOOL,"true/false whether to generate timestamps on the output directory"},
+   {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
+   {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
+   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered html after the header"},
    {NULL,cf_notype,NULL,NULL}
    };
 

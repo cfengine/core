@@ -315,7 +315,7 @@ for (tp = list; tp != NULL; tp=tp->next)
       }
    }
 
-CfOut(cf_error,"","Could not assemble long name for a known topic - something funny going on");
+CfOut(cf_error,"","Could not assemble long name for a known topic %s - something funny going on",topic_name);
 return NULL;
 }
 
@@ -401,7 +401,7 @@ for (ta = list; ta != NULL; ta=ta->next)
    {
    if (strcmp(fwd,ta->fwd_name) == 0)
       {
-      Verbose("Association exists already\n",fwd);
+      Verbose("Association %s exists already\n",fwd);
       yfwd = true;
       }
    else if (fwd)
@@ -417,7 +417,7 @@ for (ta = list; ta != NULL; ta=ta->next)
    
    if (bwd && strcmp(bwd,ta->bwd_name) == 0)
       {
-      Verbose("Association exists already\n",bwd);
+      Verbose("Association %s exists already\n",bwd);
       ybwd = true;
       }
    else if (bwd && ta->bwd_name)
@@ -433,13 +433,13 @@ for (ta = list; ta != NULL; ta=ta->next)
    
    if (ta->bwd_name && strcmp(fwd,ta->bwd_name) == 0)
       {
-      CfOut(level,"","Association exists already but in opposite orientation\n");
+      CfOut(level,"","Association \"%s\" exists already but in opposite orientation\n",fwd);
       return ta;
       }
 
    if (bwd && strcmp(bwd,ta->fwd_name) == 0)
       {
-      CfOut(level,"","Association exists already but in opposite orientation\n");
+      CfOut(level,"","Association \"%s\" exists already but in opposite orientation\n",bwd);
       return ta;
       }
 

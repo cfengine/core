@@ -89,7 +89,7 @@ for (i = 0; i < topic_count; i++)
     
 n = (char **)malloc(sizeof(char *)*topic_count);
 
-i = j = 0;
+i = 0;
 
 for (tp = map; tp != NULL; tp=tp->next,i++)
    {
@@ -123,11 +123,6 @@ for (tp = map; tp != NULL; tp=tp->next)
                adj[i][j] = adj[j][i] = 1.0;
                count++;
                }
-            }
-
-         if (count != 1)
-            {
-            CfOut(cf_error,"","Association graph linked %d times for %s(%d/%d)->%s",count,n[j],j,topic_count,rp->item);
             }
          }
       }
@@ -350,7 +345,7 @@ agsafeset(t[0], "fontsize", "14", "");
 agsafeset(t[0], "fontweight", "bold", "");
 agsafeset(t[0], "root", "true", "");
 
-for (j = 1; tribe[j] >= 0; j++)
+for (j = 0; tribe[j] >= 0; j++)
    {
    Verbose("Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
    DeTypeTopic(names[tribe[j]],ltopic,ltype);
@@ -393,7 +388,7 @@ nearest_neighbours = counter;
 
 for (i = nearest_neighbours; tribe[i] >= 0; i++)
    {
-   for (j = 1; tribe[j] >= 0; j++)
+   for (j = 0; tribe[j] >= 0; j++)
       {
       Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[i]]);
       if (associate[i] == tribe[j])
@@ -465,7 +460,7 @@ for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
 
 nearest_neighbour_boundary = counter;
 
-for (j = 1; j < nearest_neighbour_boundary; j++)
+for (j = 0; j < nearest_neighbour_boundary; j++)
    {
    for (possible_neighbour = 1; possible_neighbour < dim; possible_neighbour++)
       {
@@ -500,7 +495,7 @@ for (j = 1; j < nearest_neighbour_boundary; j++)
 
 for (j = nearest_neighbour_boundary; j < counter; j++)
    {
-   for (possible_neighbour = 1; possible_neighbour < dim; possible_neighbour++)
+   for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
       {
       if (possible_neighbour == topic)
          {

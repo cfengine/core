@@ -95,7 +95,7 @@ category   [a-zA-Z_]+:
                       P.line_pos += strlen(yytext);
                       return BODY;
                       }
-                      
+
 {id}                  {
                       P.line_pos += strlen(yytext);
                       P.currentid = strdup(yytext);

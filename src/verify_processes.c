@@ -362,7 +362,7 @@ int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp)
 { struct Item *ip;
   struct Rlist *rp;
   pid_t pid;
-  int killed;
+  int killed = false;
 
 Debug("DoSignals(%s)\n",pp->promiser);
   

@@ -520,10 +520,19 @@ return NULL;
 char *GetTopicType(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
+  static char type1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
+
+type1[0] = '\0';
+DeTypeTopic(topic_name,topic1,type1);
+
+if (strlen(type1) > 0)
+   {
+   return type1;
+   }
 
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strcmp(topic_name,tp->topic_name) == 0)
+   if (strcmp(topic1,tp->topic_name) == 0)
       {
       return tp->topic_type;
       }

@@ -114,6 +114,9 @@
 /* Define to 1 if you have the `chflags' function. */
 #undef HAVE_CHFLAGS
 
+/* Define to 1 if the system has the type `clockid_t'. */
+#undef HAVE_CLOCKID_T
+
 /* Define to 1 if you have the <dce/daclif.h> header file. */
 #undef HAVE_DCE_DACLIF_H
 

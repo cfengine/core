@@ -4,7 +4,7 @@
         Free Software Foundation, Inc.
  
    This file is part of GNU cfengine - written and maintained 
-   by Cfengine AS, Dept of Computing and Engineering, Oslo College,
+   by Mark Burgess, Dept of Computing and Engineering, Oslo College,
    Dept. of Theoretical physics, University of Oslo
  
    This program is free software; you can redistribute it and/or modify it
@@ -459,7 +459,7 @@ typedef int clockid_t;
 #define CFGRACEPERIOD 4.0     /* training period in units of counters (weeks,iterations)*/
 #define cf_noise_threshold 6  /* number that does not warrent large anomaly status */
 #define big_number 100000
-#define CF_PERSISTENCE 30
+#define CF_PERSISTENCE 15
 #define LDT_BUFSIZE 10
 #define CF_GRAINS   64
 #define ATTR     11

@@ -304,7 +304,7 @@ else
 
 void GetInterfaceInfo3(void)
 
-{ int fd,len,i,j,first_address;
+{ int fd,len,i,j,first_address,ipdefault = false;
   struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
@@ -420,28 +420,22 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                }
             }
          
-         /* Old style compat */
-         strcpy(ip,inet_ntoa(sin->sin_addr));
-         AppendItem(&IPADDRESSES,ip,"");
-         
-         for (sp = ip+strlen(ip)-1; *sp != '.'; sp--)
-            {
-            }
-         *sp = '\0';
-         NewClass(CanonifyName(ip));
             
-         /* New style classes */
-         strcpy(ip,"ipv4_");
-         strcat(ip,inet_ntoa(sin->sin_addr));
-         NewClass(CanonifyName(ip));
-         NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
-
-         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+         if (!ipdefault)
             {
-            if (*sp == '.')
+            ipdefault = true;
+            strcpy(ip,"ipv4_");
+            strcat(ip,inet_ntoa(sin->sin_addr));
+            NewClass(CanonifyName(ip));
+            NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
+            
+            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
-               *sp = '\0';
-               NewClass(CanonifyName(ip));
+               if (*sp == '.')
+                  {
+                  *sp = '\0';
+                  NewClass(CanonifyName(ip));
+                  }
                }
             }
 

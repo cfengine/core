@@ -115,6 +115,9 @@
 /* Define to 1 if you have the `chflags' function. */
 /* #undef HAVE_CHFLAGS */
 
+/* Define to 1 if the system has the type `clockid_t'. */
+#define HAVE_CLOCKID_T 1
+
 /* Define to 1 if you have the <dce/daclif.h> header file. */
 /* #undef HAVE_DCE_DACLIF_H */
 
@@ -464,7 +467,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.0b6"
+#define VERSION "3.0.0b7"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

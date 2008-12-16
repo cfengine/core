@@ -558,7 +558,7 @@ s,@INSTALL_DATA@,|#_!!_#|${INSTALL} -m 644,g
 s,@am__isrc@,|#_!!_#|,g
 s,@CYGPATH_W@,|#_!!_#|echo,g
 s,@PACKAGE@,|#_!!_#|cfengine,g
-s,@VERSION@,|#_!!_#|3.0.0b5,g
+s,@VERSION@,|#_!!_#|3.0.0b7,g
 s,@ACLOCAL@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run aclocal-1.10,g
 s,@AUTOCONF@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run autoconf,g
 s,@AUTOMAKE@,|#_!!_#|${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run automake-1.10,g
@@ -576,7 +576,7 @@ s,@am__tar@,|#_!!_#|${AMTAR} chof - "$$tardir",g
 s,@am__untar@,|#_!!_#|${AMTAR} xf -,g
 s,@CC@,|#_!!_#|gcc,g
 s,@CFLAGS@,|#_!!_#|-pthread -g -O2 -I/usr/include/db4,g
-s,@LDFLAGS@,|#_!!_#| ,g
+s,@LDFLAGS@,|#_!!_#|  -L/usr/lib64,g
 s,@CPPFLAGS@,|#_!!_#|-pthread ,g
 s,@ac_ct_CC@,|#_!!_#|gcc,g
 s,@EXEEXT@,|#_!!_#|,g
@@ -599,16 +599,16 @@ s,@LEX_OUTPUT_ROOT@,|#_!!_#|lex.yy,g
 s,@LEXLIB@,|#_!!_#|-lfl,g
 s,@YACC@,|#_!!_#|bison -y,g
 s,@YFLAGS@,|#_!!_#|,g
-s,@SED@,|#_!!_#|/usr/bin/sed,g
+s,@RANLIB@,|#_!!_#|ranlib,g
 CEOF
 cat >"$tmp/subs-2.sed" <<\CEOF
 /@[a-zA-Z_][a-zA-Z_0-9]*@/!b end
+s,@SED@,|#_!!_#|/usr/bin/sed,g
 s,@GREP@,|#_!!_#|/usr/bin/grep,g
 s,@EGREP@,|#_!!_#|/usr/bin/grep -E,g
 s,@LN_S@,|#_!!_#|ln -s,g
 s,@ECHO@,|#_!!_#|echo,g
 s,@AR@,|#_!!_#|ar,g
-s,@RANLIB@,|#_!!_#|ranlib,g
 s,@CPP@,|#_!!_#|gcc -E,g
 s,@CXX@,|#_!!_#|g++,g
 s,@CXXFLAGS@,|#_!!_#|-g -O2,g
@@ -901,7 +901,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_VERSION\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_STRING\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE_BUGREPORT\)[	 (].*,\1define\2 "" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*PACKAGE\)[	 (].*,\1define\2 "cfengine" ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0b5" ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*VERSION\)[	 (].*,\1define\2 "3.0.0b7" ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_PTHREAD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*YYTEXT_POINTER\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*STDC_HEADERS\)[	 (].*,\1define\2 1 ,
@@ -956,6 +956,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_SYS_WAIT_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_DIRENT_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GRAPHVIZ_GVC_H\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_LIBGVC\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_CLOCKID_T\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETCWD\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_GETNETGRENT\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_WAITPID\)[	 (].*,\1define\2 1 ,

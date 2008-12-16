@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.0b5)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.0b7)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -22,7 +22,7 @@ AM_CONFIG_HEADER(src/conf.h)
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems
 #
-for x in /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib
+for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib
 do
   if test -d "$x"; then
     y=`expr " $LDFLAGS " : ".* -L$x "`
@@ -58,13 +58,13 @@ dnl ######################################################################
 AC_PROG_CC
 AM_PROG_LEX
 AC_PROG_YACC
+AC_PROG_RANLIB
 AC_DISABLE_SHARED
 dnl AC_DISABLE_STATIC - maybe use shared libs later
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
-
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
 dnl ######################################################################
@@ -85,14 +85,7 @@ AC_SEARCH_LIBS(socket, socket, ,
     [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
 
 
-dnl
-dnl  Look for SQL connectors.
-dnl 
 
-AC_ARG_WITH(sql,
-    [  --with-sql[=PATH] directory where MySQL/Postgress exists],
-    WITH_SQL=1,
-    WITH_SQL=0)
 
 dnl
 dnl  Look for Berkeley DB.
@@ -107,7 +100,7 @@ AC_MSG_CHECKING(for BerkeleyDB location in $BERKELEY_DB_DIR)
 
 if test "x$BERKELEY_DB_DIR" = "xno" ; then
     AC_MSG_RESULT( )
-    AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.2 or later)
+    AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.4 or later)
 else
     if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
         for v in BerkeleyDB.4.2 BerkeleyDB.4.3 BerkeleyDB.4.4 BerkeleyDB.4.5 BerkeleyDB.4.6 BerkeleyDB.4.7; do
@@ -152,7 +145,7 @@ else
 	    test "x$BERKELEY_DB_LIB" != "x" && break
             if test -f "$d/include/db.h"; then
                 if test "x$d" != "x/usr"; then
-                    BERKELEY_DB_LDFLAGS="-L$d/lib"
+                    BERKELEY_DB_LDFLAGS="-L$d/lib64 -L$d/lib"
                     BERKELEY_DB_CFLAGS="-I$d/include"
                 fi
                 BERKELEY_DB_LIB="-ldb"
@@ -194,8 +187,12 @@ else
         done
 
         BERKELEY_DB_LIB="-ldb"
-        for v in db-4.7 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
+        for v in db-4.7 db4.7 db47 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
             if test -f "$BERKELEY_DB_DIR/lib/lib$v.so"; then
+                BERKELEY_DB_LIB="-l$v"
+		break
+            fi
+            if test -f "$BERKELEY_DB_DIR/lib64/lib$v.so"; then
                 BERKELEY_DB_LIB="-l$v"
 		break
             fi
@@ -227,24 +224,6 @@ else
     CFLAGS="$CFLAGS $BERKELEY_DB_CFLAGS"
     LIBS="$LIBS $BERKELEY_DB_LIB"
 
-    AC_MSG_CHECKING(Berkeley DB Version)
-
-    AC_TRY_RUN(
-       [
-#include <db.h>
-#include <stdio.h>
-int main(void)
-{
-    printf("%d.%d.%d ",DB_VERSION_MAJOR,DB_VERSION_MINOR,DB_VERSION_PATCH);
-    if (DB_VERSION_MAJOR < 3 || (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR < 2))
-        exit(1);
-    exit(0);
-}
-       ],
-       [AC_MSG_RESULT(OK)],
-       [AC_MSG_ERROR(This release of cfengine requires BerkeleyDB 4)]
-    )
-
     AC_MSG_CHECKING(Berkeley DB API)
 
     AC_TRY_RUN(
@@ -255,8 +234,13 @@ int main(void)
 {
     printf("%d.%d.%d ",DB_VERSION_MAJOR,DB_VERSION_MINOR,DB_VERSION_PATCH);
     if (DB_VERSION_MAJOR < 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR < 1))
+        {
         exit(1);
-    exit(0);
+        }
+    else
+        {
+        exit(0);
+        }
 }
        ],
        [AC_MSG_RESULT(OK)],
@@ -365,6 +349,17 @@ AC_SUBST(OPENSSL_LIB_LDFLAGS)
 AC_SUBST(OPENSSL_LIB_CPPFLAGS)
 AC_SUBST(OPENSSL_LIB_LIB)
 
+
+
+dnl ######################################################################
+dnl  Look for SQL connectors.
+dnl ######################################################################
+
+AC_ARG_WITH(sql,
+    [  --with-sql[=PATH] directory where MySQL/Postgress exists],
+    WITH_SQL=1,
+    WITH_SQL=0)
+
 dnl ######################################################################
 dnl Checks for perl compatible regular expressions
 dnl ######################################################################
@@ -470,6 +465,7 @@ AC_TYPE_MODE_T
 AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
+AC_CHECK_TYPES(clockid_t)
 
 dnl ######################################################################
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -660,7 +656,7 @@ case "$target_os" in
 	AC_DEFINE(LINUX)
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
-   freebsd*)
+   freebsd*|dragonfly*)
 	AC_DEFINE(FREEBSD)
         CFLAGS="$CFLAGS -pthread -D_THREAD_SAFE -DBUILDTIN_GCC_THREAD"
         AC_CHECK_HEADERS(pthread.h)

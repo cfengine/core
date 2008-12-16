@@ -1,3 +1,43 @@
+
+BUILDING
+-----------------------------------------------------------------------
+
+cfengine 3 will eventually be indepedendent of cfengine 2, however to
+build this version of the software you need to have the library
+libcfengine from cfengine version 2.2.8 or later installed on your
+system.
+
+Type the following to build the software:
+
+./configure;make
+
+You do not need to install the software, nor do you need to run it
+with root privileges as THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO
+YOUR SYSTEM.  It is recommend that you simply run it in the src
+directory as a regular user.
+
+TROUBLESHOOTING
+-----------------------------------------------------------------------
+
+Problems linking?
+
+ Try getting the latest cfengine version directly from svn. You only
+ need to install the library
+
+ host$ cd /workdir
+ host$ svn checkout https://svn.iu.hio.no/projects/cfengine-2/trunk
+ host$ cd trunk; ./configure;make
+ host$ cd src; install -c .libs/libcfengine.a /usr/local/lib/libcfengine.a
+
+Some reports indicate that there is trouble compiling cfengine with
+recent versions 4.x of gcc. No problems are reported with gcc 3.x.
+
+EXAMPLES
+-----------------------------------------------------------------------
+
+Some basic documentation is provided in the tests/units directory. 
+
+
 Basic Installation
 ==================
 
@@ -82,6 +122,9 @@ collect2: ld returned 1 exit status
 make[2]: *** [cfagent] Error 1
 
 
-Then you should make sure that you rebuilt *with* shared libraries and without static libcrypto.a libraries. Rename or remove /usr/local/ssl/lib/libcrypto.a and recompile. The libdl functions are apparently only available from shared libraries.
+Then you should make sure that you rebuilt *with* shared libraries and
+without static libcrypto.a libraries. Rename or remove
+/usr/local/ssl/lib/libcrypto.a and recompile. The libdl functions are
+apparently only available from shared libraries.
 
 

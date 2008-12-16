@@ -37,69 +37,96 @@ recent versions 4.x of gcc. No problems are reported with gcc 3.x.
 EXAMPLES
 -----------------------------------------------------------------------
 
-Some basic documentation is provided in the docs directory. 
-
-Input files containing example syntax are located in the tests
-subdirectory.
+Some basic documentation is provided in the tests/units directory. 
 
 
-TO USE this limited release:
------------------------------------------------------------------------
+Basic Installation
+==================
 
-See the notes in the doc directory.
+ Cfengine depends on two packages. You should install up to date
+ versions of these first.
 
-cd src
+ Berkeley Database obtainable from http://www.sleepycat.com
+ OpenSSL obtainable from           http://www.openssl.org
 
- ./cf-promises  (which looks for ../tests/promises.cf)
+ Some operating systems with package managers will already contain
+ packages for these libraries.
+ If you use MacOS X you need to download and install a copy of
+ BerkeleyDB, as well as a copy of the OpenSSL header files.
 
- ./cf-promises -f filename
+   These are generic installation instructions.
 
-e.g.
+   The `configure' shell script attempts to guess correct values for
+various system-dependent variables used during compilation.  It uses
+those values to create a `Makefile' in each directory of the package.
+It may also create one or more `.h' files containing system-dependent
+definitions.  Finally, it creates a shell script `config.status' that
+you can run in the future to recreate the current configuration, a file
+`config.cache' that saves the results of its tests to speed up
+reconfiguring, and a file `config.log' containing compiler output
+(useful mainly for debugging `configure').
 
- ./cf-promises -f ../tests/mod_common.cf
+   If you need to do unusual things to compile the package, please try
+to figure out how `configure' could check whether to do them, and mail
+diffs or instructions to the address given in the `README' so they can
+be considered for the next release.  If at some point `config.cache'
+contains results you don't want to keep, you may remove or edit it.
 
-This generates output to a file promise_output.html in
-the current directory which is best examined with a web
-browser.
+   The file `configure.in' is used to create `configure' by a program
+called `autoconf'.  You only need `configure.in' if you want to change
+it or regenerate `configure' using a newer version of `autoconf'.
 
-You can examine a summary of the configuration e.g.
+The simplest way to compile this package is:
 
- firefox ../tests/mod_common.html
+  1. `cd' to the directory containing the package's source code and type
+     `./configure' to configure the package for your system.  If you're
+     using `csh' on an old version of System V, you might need to type
+     `sh ./configure' instead to prevent `csh' from trying to execute
+     `configure' itself.
 
-and you can see the evaluated promises, expanded for 
-variables etc, e.g.
+     Running `configure' takes awhile.  While running, it prints some
+     messages telling which features it is checking for.
 
- firefox promise_output.html
+  2. Type `make' to compile the package.
 
-For a summary of syntax:
+  3. Optionally, type `make check' to run any self-tests that come with
+     the package.
 
- ./cfpromise -S > syntax.html
- firefox syntax.html
+  4. Type `make install' to install the programs and any data files and
+     documentation.
 
-NOTES about this limited release:
------------------------------------------------------------------------
+  5. You can remove the program binaries and object files from the
+     source code directory by typing `make clean'.  To also remove the
+     files that `configure' created (so you can compile the package for
+     a different kind of computer), type `make distclean'.  There is
+     also a `make maintainer-clean' target, but that is intended mainly
+     for the package's developers.  If you use it, you may have to get
+     all sorts of other programs in order to regenerate files that came
+     with the distribution.
 
-The file promises.cf has some errors in it. See if you can
-correct them.
+OpenSSL Problem
+=====================
 
-Currently the supported types are:
+If you see error messages of the follwing type when upgrading OpenSSL:
 
-Agent
-================
-vars:
-classes:
-files:
-processes:
-executables:     # Was shellcommands:
-storage:         # Was disk/required/misc_mount
-report:          # Was alert:
+dso_dlfcn.c: undefined reference to `dlsym'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x31d):dso_dlfcn.c: undefined reference to `dlerror'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x3bf): In function `dlfcn_bind_var':
+dso_dlfcn.c: undefined reference to `dlsym'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x43b):dso_dlfcn.c: undefined reference to `dlerror'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x4a7): In function `dlfcn_unload':
+dso_dlfcn.c: undefined reference to `dlclose'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x563): In function `dlfcn_load':
+dso_dlfcn.c: undefined reference to `dlopen'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x5c9):dso_dlfcn.c: undefined reference to `dlclose'
+/usr/local/ssl/lib/libcrypto.a(dso_dlfcn.o)(.text+0x5fe):dso_dlfcn.c: undefined reference to `dlerror'
+collect2: ld returned 1 exit status
+make[2]: *** [cfagent] Error 1
 
-Server:
-================
-vars:
-classes:
-access:
 
-Not yet supported in this release are "editfiles" which will now be a
-part of "files", and routing promises. Both of these require more
-research before they can be finalized. 
+Then you should make sure that you rebuilt *with* shared libraries and
+without static libcrypto.a libraries. Rename or remove
+/usr/local/ssl/lib/libcrypto.a and recompile. The libdl functions are
+apparently only available from shared libraries.
+
+

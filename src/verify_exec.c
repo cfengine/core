@@ -149,8 +149,7 @@ else
          }
       else
          {
-         // pfp = cf_popensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
-         pfp = cf_popensetuid(execstr,"r",-1,-1,NULL,NULL);         
+         pfp = cf_popensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
          }
 
       if (pfp == NULL)

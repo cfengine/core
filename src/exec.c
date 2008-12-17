@@ -405,7 +405,7 @@ else
          
          Debug("Spawning %s\n", nargv[0]);
 
-         pid = spawnvp((int)_P_NOWAIT, nargv[0], nargv);
+         pid = spawnvp((int)_P_NOWAIT,(char *)(nargv[0]),(char **)nargv);
 
          if (pid < 1)
             {

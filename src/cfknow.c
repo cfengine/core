@@ -91,6 +91,7 @@ char SQL_SERVER[CF_MAXVARSIZE];
 char TOPIC_CMD[CF_MAXVARSIZE];
 char WEBDRIVER[CF_MAXVARSIZE];
 char BANNER[CF_BUFSIZE];
+char FOOTER[CF_BUFSIZE];
 char STYLESHEET[CF_MAXVARSIZE];
 enum cfdbtype SQL_TYPE = cfd_notype;
 int HTML = false;
@@ -289,6 +290,7 @@ void ThisAgentInit()
 strcpy(TM_PREFIX,"");
 strcpy(WEBDRIVER,"");
 strcpy(BANNER,"");
+strcpy(FOOTER,"");
 strcpy(STYLESHEET,"");
 strcpy(BUILD_DIR,".");
 strcpy(MANDIR,".");
@@ -385,6 +387,12 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlbanner].lval) == 0)
       {
       strncpy(BANNER,retval,CF_BUFSIZE-1);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlfooter].lval) == 0)
+      {
+      strncpy(FOOTER,retval,CF_BUFSIZE-1);
       continue;
       }
 
@@ -932,7 +940,7 @@ if (matched > 1)
 
    if (HTML)
       {
-      CfHtmlFooter(stdout);
+      CfHtmlFooter(stdout,FOOTER);
       }
    
    CfCloseDB(&cfdb);
@@ -1097,7 +1105,7 @@ if (matched > 1)
 
    if (HTML)
       {
-      CfHtmlFooter(stdout);
+      CfHtmlFooter(stdout,FOOTER);
       }
    
    CfCloseDB(&cfdb);
@@ -1563,7 +1571,7 @@ if (HTML)
 
    printf("</ul>");
    printf("</div>\n");
-   CfHtmlFooter(stdout);
+   CfHtmlFooter(stdout,FOOTER);
    }
 else
    {
@@ -1588,7 +1596,7 @@ if (HTML)
    printf("<div id=\"intro\">");
    printf("<p>Your search expression %s does not seem to match any topics\n",name);
    printf("</div>\n");
-   CfHtmlFooter(stdout);
+   CfHtmlFooter(stdout,FOOTER);
    }
 else
    {
@@ -2001,7 +2009,7 @@ DeleteRlist(ttlist);
 if (HTML)
    {
    printf("</ul>\n</div></div>");
-   CfHtmlFooter(stdout);
+   CfHtmlFooter(stdout,FOOTER);
    }
 }
 
@@ -2170,6 +2178,8 @@ if (stat(filename,&sb) != -1)
    fprintf(fout,"<div id=\"image\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
    }
 
+// div id=content_container
+
 fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" has type ",NextTopic(this_name,this_type));
 fprintf(fout,"\"%s\"\n</div>",NextTopic(this_type,""));
@@ -2317,7 +2327,9 @@ if (other_topics)
    fprintf(fout,"</ul>\n");
    }
 
-CfHtmlFooter(stdout);
+// end container
+
+CfHtmlFooter(stdout,FOOTER);
 }
 
 /*********************************************************************/

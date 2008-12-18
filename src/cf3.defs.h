@@ -302,6 +302,7 @@ enum cfkcontrol
    cfk_query_engine,
    cfk_stylesheet,
    cfk_htmlbanner,
+   cfk_htmlfooter,
    cfk_graph_output,
    cfk_graph_dir,
    cfk_genman,
@@ -322,6 +323,7 @@ enum cfrecontrol
    cfre_query_engine,
    cfre_stylesheet,
    cfre_htmlbanner,
+   cfre_htmlfooter,
    cfre_notype
    };
 

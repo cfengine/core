@@ -272,7 +272,8 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"query_output",cf_opts,"html,text","Menu option for generated output format"},
    {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
-   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered html after the header"},
+   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
+   {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
    {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
    {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
    {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
@@ -290,7 +291,8 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {"time_stamps",cf_opts,CF_BOOL,"true/false whether to generate timestamps on the output directory"},
    {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
-   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered html after the header"},
+   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
+   {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
    {NULL,cf_notype,NULL,NULL}
    };
 

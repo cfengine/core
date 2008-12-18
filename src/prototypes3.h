@@ -465,7 +465,7 @@ void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist)
 /* html.c */
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner);
-void CfHtmlFooter(FILE *fp);
+void CfHtmlFooter(FILE *fp,char *footer);
 
 /* item-lib.c */
 

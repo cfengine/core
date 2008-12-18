@@ -87,6 +87,7 @@ char OUTPUTDIR[CF_BUFSIZE],*sp;
 char STYLESHEET[CF_BUFSIZE];
 char WEBDRIVER[CF_MAXVARSIZE];
 char BANNER[CF_BUFSIZE];
+char FOOTER[CF_BUFSIZE];
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -371,6 +372,7 @@ strcpy(TIMEKEY,"");
 strcpy(STYLESHEET,"http://www.cfengine.org/css/promises.css");
 strcpy(WEBDRIVER,"#");
 strcpy(BANNER,"");
+strcpy(FOOTER,"");
 snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 }
 
@@ -445,6 +447,12 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_htmlbanner].lval) == 0)
       {
       strncpy(BANNER,retval,CF_BUFSIZE-1);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_htmlfooter].lval) == 0)
+      {
+      strncpy(FOOTER,retval,CF_BUFSIZE-1);
       continue;
       }
 
@@ -748,7 +756,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 if (HTML)
    {
    fprintf(fout,"</table>");
-   CfHtmlFooter(fout);
+   CfHtmlFooter(fout,FOOTER);
    }
 
 if (XML)
@@ -924,7 +932,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 if (HTML)
    {
    fprintf(fout,"</table>");
-   CfHtmlFooter(fout);
+   CfHtmlFooter(fout,FOOTER);
    }
 
 if (XML)
@@ -1111,7 +1119,7 @@ for (i = 0; array[i].q > 0; i++)
 if (HTML)
    {
    fprintf(fout,"</table>");
-   CfHtmlFooter(fout);
+   CfHtmlFooter(fout,FOOTER);
    }
 
 if (XML)
@@ -1249,7 +1257,7 @@ if (XML)
 if (HTML)
    {
    fprintf(fout,"</table>");
-   CfHtmlFooter(fout);
+   CfHtmlFooter(fout,FOOTER);
    }
 
 if (XML)
@@ -1419,7 +1427,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 if (HTML)
    {
    fprintf(fout,"</table>");
-   CfHtmlFooter(fout);
+   CfHtmlFooter(fout,FOOTER);
    }
 
 if (XML)
@@ -1610,7 +1618,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 if (HTML)
    {
    fprintf(fout,"</table>");
-   CfHtmlFooter(fout);
+   CfHtmlFooter(fout,FOOTER);
    }
 
 if (XML)

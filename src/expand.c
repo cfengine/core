@@ -934,6 +934,11 @@ if (IsExcluded(pp->classes))
    return;
    }
 
+if (pp->done)
+   {
+   return;
+   }
+
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->lval,"policy") == 0)
@@ -990,6 +995,8 @@ if (rval != NULL)
          /* We do not assign variables to failed fn calls */
          return;
          }
+
+      *(pp->donep) = true; 
       }
 
    if (ok_redefine) /* only on second iteration, else we ignore broken promises */

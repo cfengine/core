@@ -91,7 +91,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
 
 struct BodySyntax CF_TRANSACTION_BODY[] =
    {
-   {"action",cf_opts,"fix,warn,nop","Whether to repair or report about non-kept promises"},
+   {"action_policy",cf_opts,"fix,warn,nop","Whether to repair or report about non-kept promises"},
    {"ifelapsed",cf_int,CF_VALRANGE,"Number of minutes before next allowed assessment of promise"},
    {"expireafter",cf_int,CF_VALRANGE,"Number of minutes before a repair action is interrupted and retried"},
    {"log_string",cf_str,"","A message to be written to the log when the promise is verified"},

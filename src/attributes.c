@@ -359,15 +359,15 @@ struct TransactionContext GetTransactionConstraints(struct Promise *pp)
 { struct TransactionContext t;
  char *value;
 
-value = GetConstraint("action",pp->conlist,CF_SCALAR);
+value = GetConstraint("action_policy",pp->conlist,CF_SCALAR);
 
-if (value && strcmp(value,"warn") == 0)
+if (value && (strcmp(value,"fix") == 0))
    {
-   t.action = cfa_warn;
+   t.action = cfa_fix;
    }
 else
    {
-   t.action = cfa_fix; // default
+   t.action = cfa_warn; // default
    }
 
 t.background = GetBooleanConstraint("background",pp->conlist);

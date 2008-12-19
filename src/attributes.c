@@ -361,7 +361,7 @@ struct TransactionContext GetTransactionConstraints(struct Promise *pp)
 
 value = GetConstraint("action_policy",pp->conlist,CF_SCALAR);
 
-if (value && (strcmp(value,"warn") == 0||strcmp(value,"nop") == 0))
+if (value && ((strcmp(value,"warn") == 0)||(strcmp(value,"nop") == 0)))
    {
    t.action = cfa_warn;
    }
@@ -393,6 +393,8 @@ t.log_level = String2ReportLevel(value);
 
 value = GetConstraint("report_level",pp->conlist,CF_SCALAR);
 t.report_level = String2ReportLevel(value);
+
+t.measure_id = GetConstraint("measurement_class",pp->conlist,CF_SCALAR);
 
 return t;
 }

@@ -56,6 +56,21 @@ return start;
 
 /***************************************************************/
 
+void EndMeasurePromise(struct timespec start,struct Promise *pp)
+
+{ char id[CF_BUFSIZE], *mid = NULL;
+
+mid = GetConstraint("measurement_class",pp->conlist,CF_SCALAR);
+
+if (mid)
+   {
+   snprintf(id,CF_BUFSIZE,"%s:%s:%s",mid,pp->agentsubtype,pp->promiser);
+   EndMeasure(id,start);
+   }
+}
+
+/***************************************************************/
+
 void EndMeasure(char *eventname,struct timespec start)
 
 { struct timespec stop;

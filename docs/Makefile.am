@@ -1,5 +1,5 @@
 # Info used in building the MAN files
-man_MANS = cfpromises.8
+man_MANS = cf-agent.8 cf-serverd.8 cf-execd.8 cf-monitord.8 cf-report.8 cf-know.8 cf-runagent.8 cf-promise.8
 
 # Info used in building the Info files
 info_TEXINFOS = cf3-Reference.texinfo
@@ -7,7 +7,7 @@ infofiles = $(info_TEXINFOS:.texinfo=.info)
 MAKEINFOHTML = $(MAKEINFO) --html --no-split
 
 # Info used in building and installing HTML files
-htmlfiles = $(info_TEXINFOS:.texinfo=.html)
+#htmlfiles = $(info_TEXINFOS:.texinfo=.html)
 
 htmldir = $(pkgdatadir)/html
 html_DATA = $(htmlfiles)
@@ -21,9 +21,12 @@ doc_DATA = $(psfiles) $(pdffiles)
 
 # Make sure these get distributed with everything else.
 
-EXTRA_DIST = cfpromises.8 *.texinfo
+EXTRA_DIST = *.8 *.texinfo *.png
 
 SUFFIXES = html pdf dvi
+
+%.8 : ../src/%
+	../src/$< -M > `echo $<.8 | sed s/src/docs/`
 
 %.html : %.texinfo
 	${MAKEINFO} -I $(srcdir) --html --no-split $<

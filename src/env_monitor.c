@@ -378,7 +378,7 @@ if (!NO_FORK)
 
 /* Same lock name as cf2 */
 
-WritePID("cfenvd.pid");
+WritePID("cf-monitor.pid");
 
 VCANONICALFILE = strdup("db");
  

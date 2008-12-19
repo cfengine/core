@@ -99,6 +99,7 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"audit",cf_opts,CF_BOOL,"true/false switch for detailed audit records of this promise"},
    {"background",cf_opts,CF_BOOL,"true/false switch for parallelizing the promise repair"},
    {"report_level",cf_opts,"inform,verbose,error,log","The reporting level for standard output"},
+   {"measurement_class",cf_str,"","If set performance will be measured and recorded under this identifier"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -163,7 +163,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLF",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -238,6 +238,9 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLF",OPTIONS,&optindex)) != EOF)
           exit(0);
           
       case 'h': Syntax("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
@@ -315,7 +318,7 @@ if (!NO_FORK)
    ActAsDaemon(sd);
    }
 
-WritePID("cfServerd.pid");
+WritePID("cf-serverd.pid");
 
 /* Andrew Stribblehill <ads@debian.org> -- close sd on exec */ 
 fcntl(sd, F_SETFD, FD_CLOEXEC);

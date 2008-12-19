@@ -248,7 +248,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHL",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLM",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -294,6 +294,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHL",OPTIONS,&optindex)) != EOF)
           
       case 'h':
           Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
+          exit(0);
+          
+      case 'M':
+          ManPage("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'E':

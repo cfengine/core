@@ -186,6 +186,9 @@ struct GidList *Rlist2GidList(struct Rlist *gidnames, struct Promise *pp);
 uid_t Str2Uid(char *uidbuff,char *copy,struct Promise *pp);
 gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
 int Month2Int(char *string);
+char *GetArg0(char *execstr);
+void CommPrefix(char *execstr,char *comm);
+int NonEmptyLine(char *s);
 
 /* env_context.c */
 
@@ -425,6 +428,7 @@ void InitializeGA(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
 void CheckWorkingDirectories(void);
 void Syntax(char *comp,struct option options[],char *hints[],char *id);
+void ManPage(char *component,struct option options[],char *hints[],char *id);
 void Version(char *comp);
 int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);
@@ -491,6 +495,7 @@ int EndOfIteration(struct Rlist *iterator);
 
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname,struct timespec start);
+void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(void);
 void LastSaw(char *hostname,enum roles role);
@@ -786,11 +791,8 @@ char *ExtractOuterCf3VarString(char *str,char *substr);
 void VerifyExecPromise(struct Promise *pp);
 int ExecSanityChecks(struct Attributes a,struct Promise *pp);
 void VerifyExec(struct Attributes a, struct Promise *pp);
-void CommPrefix(char *execstr,char *comm);
-int NonEmptyLine(char *s);
 void PreviewProtocolLine(char *s,char *comm);
 int IsExecutable(char *file);
-char *GetArg0(char *execstr);
 
 /* verify_files.c */
 

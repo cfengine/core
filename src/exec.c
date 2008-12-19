@@ -137,7 +137,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VxL:hFV1g",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -219,6 +219,9 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VxL:hFV1g",OPTIONS,&optindex)) != E
           exit(0);
           
       case 'h': Syntax("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
@@ -348,7 +351,7 @@ if (!NO_FORK)
   ActAsDaemon(0);
   }
 
-WritePID("cfExecd.pid");
+WritePID("cf-execd.pid");
 signal(SIGINT,(void *)ExitCleanly);
 signal(SIGTERM,(void *)ExitCleanly);
 signal(SIGHUP,SIG_IGN);

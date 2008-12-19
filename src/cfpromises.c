@@ -114,7 +114,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrxM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -180,6 +180,9 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrx",OPTIONS,&optindex)) != EOF)
           exit(0);
           
       case 'h': Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
           exit(0);
 
        case 'r':

@@ -138,7 +138,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:M",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -204,16 +204,19 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:",OPTIONS,&optindex)) != EOF)
           IGNORELOCK = true;
           break;          
 
-      case 'V': Version("Run agent");
+      case 'V': Version("cf-runagent Run agent");
           exit(0);
           
-      case 'h': Syntax("Run agent",OPTIONS,HINTS,ID);
+      case 'h': Syntax("cf-runagent - Run agent",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-runagent - Run agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();
           exit(0);
           
-      default:  Syntax("Run agent",OPTIONS,HINTS,ID);
+      default:  Syntax("cf-runagent - Run agent",OPTIONS,HINTS,ID);
           exit(1);
           
       }

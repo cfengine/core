@@ -284,64 +284,6 @@ return false;
 
 /*************************************************************/
 
-char *GetArg0(char *execstr)
-
-{ char *sp;
-  static char arg[CF_BUFSIZE];
-  int i = 0;
-
-for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
-   {
-   i++;
-   }
-
-memset(arg,0,CF_MAXVARSIZE);
-strncpy(arg,execstr,i);
-return arg;
-}
-
-/*************************************************************/
-
-void CommPrefix(char *execstr,char *comm)
-
-{ char *sp;
-
-for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
-   {
-   }
-
-if (sp - 10 >= execstr)
-   {
-   sp -= 10;   /* copy 15 most relevant characters of command */
-   }
-else
-   {
-   sp = execstr;
-   }
-
-memset(comm,0,20);
-strncpy(comm,sp,15);
-}
-
-/*************************************************************/
-
-int NonEmptyLine(char *line)
-
-{ char *sp;
-            
-for (sp = line; *sp != '\0'; sp++)
-   {
-   if (!isspace((int)*sp))
-      {
-      return true;
-      }
-   }
-
-return false;
-}
-
-/*************************************************************/
-
 void PreviewProtocolLine(char *line, char *comm)
 
 { int i;

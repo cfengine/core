@@ -236,7 +236,13 @@ void InitializeGA(int argc,char *argv[])
   struct stat statbuf;
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
-  
+
+AddClassToHeap("any");
+strcpy(VPREFIX,"cf3");
+
+Verbose("Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");  
+Verbose("------------------------------------------------------------------------\n");
+
 /* Define trusted directories */
 
 #ifndef NT
@@ -326,8 +332,6 @@ AUDITDBP = NULL;
 DetermineCfenginePort();
 
 FOUT = stdout;
-AddClassToHeap("any");
-strcpy(VPREFIX,"cf3");
 VIFELAPSED = 1;
 VEXPIREAFTER = 1;
 }
@@ -1123,6 +1127,53 @@ printf("Community help: help-cfengine@cfengine.org\n");
 printf("Community info: http://www.cfengine.org, ");
 printf("Support services: http://www.cfengine.com\n\n");
 printf("This software is (C) 2008 Cfengine AS.\n");
+}
+
+/*******************************************************************/
+
+void ManPage(char *component,struct option options[],char *hints[],char *id)
+
+{ int i;
+
+printf(".TH %s 8 \"Maintenance Commands\"\n",GetArg0(component));
+printf(".SH NAME\n%s\n\n",component);
+
+printf(".SH SYNOPSIS:\n\n %s [options]\n\n.SH DESCRIPTION:\n\n%s\n",GetArg0(component),id);
+
+printf(".B cfengine\n"
+       "is a self-healing configuration and change management based system. You can think of"
+       ".B cfengine\n"
+       "as a very high level language, much higher level than Perl or shell. A"
+       "single statement is called a promise, and compliance can result in many hundreds of files"
+       "being created, or the permissions of many hundreds of"
+       "files being set. The idea of "
+       ".B cfengine\n"
+       "is to create a one or more sets of configuration files which will"
+       "classify and describe the setup of every host in a network.\n");
+
+printf(".SH COMMAND LINE OPTIONS:\n");
+
+for (i=0; options[i].name != NULL; i++)
+   {
+   if (options[i].has_arg)
+      {
+      printf(".IP \"--%s, -%c\" value\n%s\n",options[i].name,(char)options[i].val,hints[i]);
+      }
+   else
+      {
+      printf(".IP \"--%s, -%c\"\n%s\n",options[i].name,(char)options[i].val,hints[i]);
+      }
+   }
+
+printf(".SH AUTHOR\n"
+       "Mark Burgess and Cfengine AS\n"
+       ".SH INFORMATION\n");
+
+printf("\nBug reports: bug-cfengine@cfengine.org\n");
+printf(".pp\nCommunity help: help-cfengine@cfengine.org\n");
+printf(".pp\nCommunity info: http://www.cfengine.org\n");
+printf(".pp\nSupport services: http://www.cfengine.com\n");
+printf(".pp\nThis software is (C) 2008 Cfengine AS.\n");
 }
 
 /*******************************************************************/

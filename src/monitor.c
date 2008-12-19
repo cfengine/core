@@ -112,7 +112,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTKM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -178,6 +178,9 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTK",OPTIONS,&optindex)) != EOF)
           exit(0);
           
       case 'h': Syntax("cf-monitord - cfengine's monitoring agent",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-monitord - cfengine's monitoring agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': SelfDiagnostic();

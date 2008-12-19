@@ -198,7 +198,7 @@ void CheckOpts(int argc,char **argv)
 
 strcpy(TOPIC_CMD,"");
  
-while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:mM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -261,6 +261,10 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:m",OPTIONS,&optindex)) != EOF)
           
       case 'h':
           Syntax("cf-know - cfengine's knowledge agent",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M':
+          ManPage("cf-know - cfengine's knowledge agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'H':

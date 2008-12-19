@@ -117,7 +117,7 @@ extern struct Rlist *SERVERLIST;
 
 int main(int argc,char *argv[])
 
-{struct stat sar;
+{ struct stat sar;
 
 CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent");
@@ -141,7 +141,7 @@ void CheckOpts(int argc,char **argv)
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
   
-while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSxM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -207,6 +207,9 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSx",OPTIONS,&optindex)) != EOF)
           exit(0);
           
       case 'h': Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
           exit(0);
 
       case 'x': AgentDiagnostic();
@@ -607,7 +610,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
-         
+
          if (Abort())
             {
             DeleteTypeContext(type);
@@ -685,6 +688,7 @@ FatalError("You are denied access to run this policy");
 void KeepAgentPromise(struct Promise *pp)
 
 { char *sp = NULL;
+  struct timespec start = BeginMeasure();
 
 if (!IsDefinedClass(pp->classes))
    {
@@ -730,12 +734,14 @@ if (strcmp("processes",pp->agentsubtype) == 0)
 if (strcmp("storage",pp->agentsubtype) == 0)
    {
    FindAndVerifyStoragePromises(pp);
+   EndMeasurePromise(start,pp);
    return;
    }
 
 if (strcmp("packages",pp->agentsubtype) == 0)
    {
    VerifyPackagesPromise(pp);
+   EndMeasurePromise(start,pp);
    return;
    }
 
@@ -749,18 +755,22 @@ if (strcmp("files",pp->agentsubtype) == 0)
       {
       FindAndVerifyFilesPromises(pp);
       }
+   
+   EndMeasurePromise(start,pp);
    return;
    }
 
 if (strcmp("commands",pp->agentsubtype) == 0)
    {
    VerifyExecPromise(pp);
+   EndMeasurePromise(start,pp);
    return;
    }
 
 if (strcmp("methods",pp->agentsubtype) == 0)
    {
    VerifyMethodsPromise(pp);
+   EndMeasurePromise(start,pp);
    return;
    }
 

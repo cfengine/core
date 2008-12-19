@@ -193,7 +193,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"secureinput",cf_opts,CF_BOOL,"true/false check whether input files are writable by unauthorized users"},
    {"sensiblecount",cf_int,CF_VALRANGE,"Minimum number of files a mounted filesystem is expected to have"},
    {"sensiblesize",cf_int,CF_VALRANGE,"Minimum number of bytes a mounted filesystem is expected to have"},
-   {"skipidentify",cf_int,"","Do not send IP/name during server connection because address resolution is broken"},
+   {"skipidentify",cf_opts,CF_BOOL,"Do not send IP/name during server connection because address resolution is broken"},
    {"suspiciousnames",cf_slist,"List of names to warn about if found during any file search"},
    {"syslog",cf_opts,CF_BOOL,"true/false switches on output to syslog at the inform level"},
    {"timezone",cf_slist,"","List of allowed timezones this machine must comply with"},

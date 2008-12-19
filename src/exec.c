@@ -540,7 +540,7 @@ if ((fp = fopen(filename,"w")) == NULL)
    return NULL;
    }
  
-if ((pp = cf_popen(cmd,"r")) == NULL)
+if ((pp = cf_popen_sh(cmd,"r")) == NULL)
    {
    CfOut(cf_inform,"cfpopen","Couldn't open pipe to command %s\n",cmd);
    fclose(fp);

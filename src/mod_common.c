@@ -257,7 +257,7 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {"mailmaxlines",cf_int,"0,1000","Maximum number of lines of output to send by email"},
    {"schedule",cf_slist,"","The class schedule for activating cf-execd"},
    {"executorfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
-   {"execcommand",cf_str,CF_PATHRANGE,"The path to the command executed by default (overriding builtin)"},
+   {"execcommand",cf_str,CF_PATHRANGE,"The full path and command to the executable run by default (overriding builtin)"},
    {NULL,cf_notype,NULL,NULL}
    };
 

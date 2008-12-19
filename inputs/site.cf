@@ -1,25 +1,42 @@
-
-
+#######################################################
+#
+# Site specific promises
+#
 #######################################################
 
-bundle server access_rules()
+bundle agent cfengine2
 
 {
-access:
+classes:
 
-  "/home/mark/LapTop"
+  "integrate_cfengine2" 
 
-    admit   => { "127.0.0.1" };
+      and => { 
+             fileexists("$(sys.workdir)/inputs/cfagent.conf"), 
+             fileexists("$(sys.workdir)/bin/cfagent")
+             };
 
-  "/home/mark/.cfagent/bin/cf-agent"
+vars:
 
-    admit   => { "127.0.0.1" };
+   "cf2bits" slist => { "cfenvd", "cfservd", "cfexecd" };
 
-roles:
+commands:
 
-  ".*"  authorize => { "mark" };
+ integrate_cfengine2:: 
+
+   "$(sys.workdir)/bin/cfagent"
+
+        action => longjob;
+
+files:
+
+  "$(sys.workdir)/inputs/.*"
+
+       comment => "Check if there are still promises about cfengine 2 that need removing",
+       edit_line => DeleteLinesMatching(".*$(cf2bits).*"),
+       action => WarnOnly;
+
 }
-
 
 #######################################################
 
@@ -38,6 +55,12 @@ files:
      edit_line     => resolver,
      edit_defaults => def;
 
+#  "/usr"         
+#     changes      => trip_wire,
+#     depth_search => recurse("inf"),
+#     action       => measure;
+
+
 processes:
 
   "cfenvd"             signals => { "term" };
@@ -47,9 +70,55 @@ processes:
 
 commands:
 
-   "/var/cfengine/bin/$(component)"
+   "$(sys.workdir)/bin/$(component)"
 
        ifvarclass => canonify("start_$(component)");
 
 }
+
+#######################################################
+
+bundle agent garbage_collection
+{
+files:
+
+  "$(sys.workdir)/outputs" 
+
+    delete => tidy,
+    file_select => days_old("3"),
+    depth_search => recurse("inf");
+
+
+}
+
+###########################################################
+
+body action measure
+{
+measurement_class => "tripwire_usr";
+ifelapsed => "240";
+expireafter => "240";
+}
+
+#######################################################
+# Server configuration
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "/home/mark/LapTop"
+
+    admit   => { "127.0.0.1" };
+
+  "/home/mark/.cfagent/bin/cf-agent"
+
+    admit   => { "127.0.0.1" };
+
+roles:
+
+  ".*"  authorize => { "mark" };
+}
+
 

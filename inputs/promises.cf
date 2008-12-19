@@ -8,14 +8,14 @@ body common control
 
 {
 bundlesequence  => { 
-                   "update", 
-                   "sys_cfg", 
+                   "update",
+                   "garbage_collection",
                    "main",
                    "cfengine2"  
                    };
 
 inputs          => { 
-                   "update.cf", 
+                   "update.cf",
                    "site.cf",
                    "library.cf" 
                    };
@@ -43,6 +43,17 @@ body executor control
 {
 splaytime => "1";
 mailto => "mark@iu.hio.no";
+exec_command => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bin/cf-agent";
+}
+
+#######################################################
+
+body reporter control
+
+{
+reports => { "performance", "last_seen", "monitor_history" };
+build_directory => "/tmp/nerves";
+report_output => "html";
 }
 
 #######################################################
@@ -69,69 +80,4 @@ cfruncommand          => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.wo
 allowusers            => { "mark", "root" };
 }
 
-#######################################################
-
-bundle common sys_cfg
-{
-classes:
-
-  "integrate_cfengine2" 
-
-      and => { 
-             fileexists("$(sys.workdir)/inputs/cfagent.conf"), 
-             fileexists("$(sys.workdir)/bin/cfagent")
-             };
-
-}
-
-#######################################################
-
-bundle agent cfengine2
-
-{
-commands:
-
- integrate_cfengine2:: 
-
-   "/var/cfengine/bin/cfagent";
-
-}
-
-#######################################################
-# For the library
-#######################################################
-
-bundle edit_line resolver
-
-{
-vars:
-
- "search" slist => { "search iu.hio.no cfengine.com" };
-
-delete_lines:
-
-  "search.*";
-
-insert_lines:
-
-  "$(search)" location => start;
-}
-
-#######################################################
-
-body edit_defaults def
-{
-empty_file_before_editing => "false";
-edit_backup => "false";
-max_file_size => "100000";
-}
-
-########################################################
-
-body location start
-
-{
-# If not line to match, applies to whole text body
-before_after => "before";
-}
 

@@ -4,13 +4,13 @@ bundle agent update
 {
 files:
 
-  "/var/cfengine/inputs" 
+  "$(sys.workdir)/inputs" 
 
     perms => system("600"),
     copy_from => mycopy("/home/mark/cfengine-inputs","localhost"),
     depth_search => recurse("inf");
 
-  "/var/cfengine/bin" 
+  "$(sys.workdir)/bin" 
 
     perms => system("700"),
     copy_from => mycopy("/usr/local/sbin","localhost"),

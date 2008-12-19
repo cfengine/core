@@ -234,6 +234,7 @@ enum cfexcontrol
    cfex_smtpserver,
    cfex_mailmaxlines,
    cfex_schedule,
+   cfex_executorfacility,
    cfex_execcommand,
    cfex_notype,
    };

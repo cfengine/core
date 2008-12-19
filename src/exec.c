@@ -42,6 +42,7 @@ int  NO_FORK = false;
 int  ONCE = false;
 char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
+char EXECCOMMAND[CF_BUFSIZE];
 int  MAXLINES = -1;
 int  SPLAYTIME = 0;
 const int INF_LINES = -2;
@@ -137,7 +138,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -249,6 +250,7 @@ MAILTO[0] = '\0';
 MAILFROM[0] = '\0';
 VIPADDRESS[0] = '\0';
 VMAILSERVER[0] = '\0';
+EXECCOMMAND[0] = '\0';
 }
 
 /*****************************************************************************/
@@ -289,7 +291,20 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       strcpy(VMAILSERVER,retval);
       Debug("smtpserver = %s\n",VMAILSERVER);
       }
+
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
+      {
+      strcpy(EXECCOMMAND,retval);
+      Debug("exec_command = %s\n",EXECCOMMAND);
+      }
    
+   if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
+      {
+      SetFacility(retval);
+      Verbose("SET Syslog FACILITY = %s\n",retval);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
       {
       MAXLINES = Str2Int(retval);
@@ -524,10 +539,17 @@ Verbose("------------------------------------------------------------------\n");
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
 
-snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent%s -Dfrom_cfexecd%s",
-		 CFWORKDIR,
-		 NOSPLAY ? " -q" : "",
-		 scheduled_run ? ":scheduled_run" : "");
+if (strlen(EXECCOMMAND) > 0)
+   {
+   strncpy(cmd,EXECCOMMAND,CF_BUFSIZE-1);
+   }
+else
+   {
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent%s -Dfrom_cfexecd%s",
+            CFWORKDIR,
+            NOSPLAY ? " -q" : "",
+            scheduled_run ? ":scheduled_run" : "");
+   }
 
 snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
 snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,(unsigned short)tid);
@@ -539,10 +561,12 @@ if ((fp = fopen(filename,"w")) == NULL)
    CfOut(cf_inform,"fopen","Couldn't open %s\n",filename);
    return NULL;
    }
- 
+
+Verbose("Command => %s\n",cmd);
+
 if ((pp = cf_popen_sh(cmd,"r")) == NULL)
    {
-   CfOut(cf_inform,"cfpopen","Couldn't open pipe to command %s\n",cmd);
+   CfOut(cf_inform,"cf_popen","Couldn't open pipe to command %s\n",cmd);
    fclose(fp);
    return NULL;
    }

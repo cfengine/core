@@ -125,7 +125,7 @@ else
       }
    else
       {
-      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
+      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/inputs/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
       }
    }
  

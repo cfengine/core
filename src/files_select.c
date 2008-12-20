@@ -35,8 +35,6 @@ int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise 
   char *criteria = NULL;
   struct Rlist *rp;
   
-Debug("SelectLeaf(%s)\n",path);
-
 if (!attr.haveselect)
    {
    return true;
@@ -44,7 +42,7 @@ if (!attr.haveselect)
 
 for (rp = attr.select.name; rp != NULL; rp = rp->next)
    {
-   if (SelectNameRegexMatch(ReadLastNode(path),rp->item))
+   if (SelectNameRegexMatch(path,rp->item))
       {
       PrependItem(&leaf_attr,"leaf_name","");
       }

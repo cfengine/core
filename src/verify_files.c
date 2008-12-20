@@ -248,6 +248,11 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
       }
    }
 
+if (!VerifyFileLeaf(path,&oslb,a,pp))
+   {
+   return;
+   }
+
 if (stat(path,&osb) == -1)
    {
    if (a.create||a.touch)

@@ -723,8 +723,8 @@ void OSClasses()
   char *sp;
   int i = 0;
 
-AddClassToHeap("any");      /* This is a reserved word / wildcard */
- 
+NewClass("any");      /* This is a reserved word / wildcard */
+
 snprintf(VBUFF,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
 NewClass(VBUFF);
  

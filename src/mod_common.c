@@ -77,6 +77,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"readtcp",cf_str,4,"Connect to tcp port, send string and assign result to variable"},
    {"regarray",cf_class,2,"Define class if arg1 matches any item in the associative array with id=arg2"},
    {"regcmp",cf_class,2,"Define class if arg1 is a regular expression matching arg2"},
+   {"regline",cf_class,2,"Define class if arg1 is a regular expression matching a line in file arg2"},
    {"reglist",cf_class,2,"Define class if arg1 matches any item in the list with id=arg2"},
    {"returnszero",cf_class,2,"Define class if named shell command has exit status zero"},
    {"rrange",cf_rrange,2,"Define a range of real numbers for cfengine internal use"},

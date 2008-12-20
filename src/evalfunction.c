@@ -1670,7 +1670,77 @@ SetFnCallReturnStatus("regcmp",FNCALL_SUCCESS,NULL,NULL);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
-   FatalError("Memory allocation in FnCallChangedBefore");
+   FatalError("Memory allocation in FnCallRegCmp");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE],line[CF_BUFSIZE];
+  struct Item *list = NULL, *ret; 
+  char *argv0,*argv1;
+  FILE *fin;
+
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+strcpy(buffer,CF_ANYCLASS);
+argv0 = finalargs->item;
+argv1 = finalargs->next->item;
+
+strcpy(buffer,"!any");
+
+if ((fin = fopen(argv1,"r")) == NULL)
+   {
+   strcpy(buffer,"!any");
+   }
+else
+   {
+   while (!feof(fin))
+      {
+      line[0] = '\0';
+      fgets(line,CF_BUFSIZE-1,fin);
+      Chop(line);
+
+      if (FullTextMatch(argv0,line))
+         {
+         strcpy(buffer,"any");
+         break;
+         }
+      }
+
+   fclose(fin);
+   }
+   
+SetFnCallReturnStatus("regline",FNCALL_SUCCESS,NULL,NULL);   
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRegLine");
    }
 
 /* end fn specific content */

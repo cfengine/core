@@ -67,7 +67,9 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
   int pass;
 
 DeletePrivateClassContext();
-
+NewScope("edit");
+NewScalar("edit","filename",filename,cf_str);
+         
 /* Reset the done state for every call here, since bundle is reusable */
 
 for (pass = 1; pass < CF_DONEPASSES; pass++)
@@ -88,6 +90,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          {
          pp->edcontext = parentp->edcontext;
          pp->this_server = filename;
+
          ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
          
          if (Abort())
@@ -112,6 +115,8 @@ for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
       pp->donep = false;
       }
    }
+
+DeleteScope("edit");
 
 return true;
 }

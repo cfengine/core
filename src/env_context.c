@@ -61,7 +61,7 @@ if (strcmp(pp->bundletype,"common") == 0)
    return;
    }
 
-if (strcmp(pp->bundletype,THIS_AGENT) == 0)
+if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundletype))
    {
    if (EvalClassExpression(a.context.expression,pp))
       {

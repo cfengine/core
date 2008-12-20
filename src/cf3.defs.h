@@ -463,6 +463,7 @@ enum fncalltype
    cfn_readtcp,
    cfn_regarray,
    cfn_regcmp,
+   cfn_regline,
    cfn_reglist,   
    cfn_returnszero,
    cfn_rrange,

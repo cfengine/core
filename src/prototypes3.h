@@ -243,6 +243,7 @@ struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs);
 void *ReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);

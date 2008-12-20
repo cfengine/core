@@ -8,13 +8,12 @@ body common control
 
 {
 bundlesequence  => { 
-                   "update",
                    "garbage_collection",
                    "main",
-                   "cfengine2"  
+                   "cfengine"  
                    };
 
-inputs          => { 
+inputs          => {
                    "update.cf",
                    "site.cf",
                    "library.cf" 
@@ -43,6 +42,9 @@ body executor control
 {
 splaytime => "1";
 mailto => "mark@iu.hio.no";
+
+# Instead of a separate update script, now do this
+
 exec_command => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bin/cf-agent";
 }
 

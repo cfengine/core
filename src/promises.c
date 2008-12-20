@@ -195,8 +195,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             }
          
          NewScope("body");
-         
-         if (!MapBodyArgs("body",fp->args,bp->args))
+
+         if (fp && bp && fp->args && bp->args && !MapBodyArgs("body",fp->args,bp->args))
             {
             ERRORCOUNT++;            
             CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);

@@ -6,62 +6,14 @@ body common control
 
 {
 bundlesequence => { "update" };
+
+inputs => { "update.cf" };
 }
 
-#########################################################
-
-bundle agent update
-{
-files:
-
-  "/var/cfengine/inputs" 
-
-    perms => system,
-    copy_from => mycopy("/home/mark/cfengine-inputs","localhost"),
-    depth_search => recurse("inf");
-
-  "/var/cfengine/bin" 
-
-    perms => system,
-    copy_from => mycopy("/usr/local/sbin","localhost"),
-    depth_search => recurse("inf");
-
-}
-
-#########################################################
-
-body perms system
-
-{
-mode  => "0700";
-}
-
-#########################################################
+############################################
 
 body depth_search recurse(d)
 
 {
 depth => "$(d)";
-}
-
-############################################
-
-body file_select cf3_files
-
-{
-leaf_name => { "cf-.*" };
-
-file_result => "leaf_name";
-}
-
-#########################################################
-
-body copy_from mycopy(from,server)
-
-{
-source      => "$(from)";
-servers     => { "$(server)" , "failover.domain.tld" };
-#backup      => "true";
-#trustkey    => "true";
-encrypt     => "true";
 }

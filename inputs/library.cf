@@ -114,3 +114,39 @@ body action WarnOnly
 action_policy => "warn";
 ifelapsed => "1";
 }
+
+########################################################
+
+bundle edit_line upgrade_cfexecd
+  {
+  classes:
+
+    "exec_fix" not => regline(".*cf-execd.*","$(edit.filename)");
+
+  insert_lines:
+
+    exec_fix::
+
+      "0,5,10,15,20,25,30,35,40,45,50,55 * * * * /var/cfengine/bin/cf-execd -F";
+
+  replace_patterns:
+
+    "cfexecd" replace_with => With("cf-execd");
+
+  reports:
+
+    exec_fix::
+
+    "Added a 5 minute schedule to crontabs";
+  }
+
+########################################
+# Bodies
+########################################
+
+body replace_with With(x)
+
+{
+replace_value => "$(x)";
+occurrences => "all";
+}

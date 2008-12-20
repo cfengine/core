@@ -4,7 +4,25 @@
 #
 #######################################################
 
-bundle agent cfengine2
+bundle common g
+{
+vars:
+
+  SuSE::
+
+   "crontab" string => "/var/spool/cron/tabs/root";
+
+ !SuSE::
+
+   "crontab" string => "/var/spool/cron/crontabs/root";
+
+}
+
+#######################################################
+# Start with cfengine itself
+#######################################################
+
+bundle agent cfengine
 
 {
 classes:
@@ -30,14 +48,25 @@ commands:
 
 files:
 
+  # Warn about rules relating to cfengine 2 in inputs - could conflict
+
   "$(sys.workdir)/inputs/.*"
 
-       comment => "Check if there are still promises about cfengine 2 that need removing",
-       edit_line => DeleteLinesMatching(".*$(cf2bits).*"),
-       action => WarnOnly;
+       comment     => "Check if there are still promises about cfengine 2 that need removing",
+       edit_line   => DeleteLinesMatching(".*$(cf2bits).*"),
+       file_select => OldCf2Files,
+       action      => WarnOnly;
+
+  # Check cf-execd and schedule is in crontab
+
+  "$(g.crontab)"
+       edit_line => upgrade_cfexecd;
+
 
 }
 
+#######################################################
+# General site issues can be in bundles like this one
 #######################################################
 
 bundle agent main
@@ -47,6 +76,8 @@ vars:
 
   "component" slist => { "cf-monitord", "cf-serverd" };
 
+ # - - - - - - - - - - - - - - - - - - - - - - - -
+
 files:
 
   "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
@@ -55,18 +86,28 @@ files:
      edit_line     => resolver,
      edit_defaults => def;
 
-#  "/usr"         
-#     changes      => trip_wire,
-#     depth_search => recurse("inf"),
-#     action       => measure;
+ # Uncomment this to perform a change-detection scan
 
+ #  "/usr"         
+ #     changes      => trip_wire,
+ #     depth_search => recurse("inf"),
+ #     action       => measure;
 
 processes:
 
   "cfenvd"             signals => { "term" };
 
+ # Uncomment this when you are ready to upgrade the server
+ #
+ #  "cfservd"             signals => { "term" };
+ #
+
+ # Now make sure the new parts are running, cf-serverd will fail if
+ # the old server is still running 
+
   "$(component)" restart_class => canonify("start_$(component)");
 
+ # - - - - - - - - - - - - - - - - - - - - - - - -
 
 commands:
 
@@ -76,6 +117,8 @@ commands:
 
 }
 
+#######################################################
+# Garbage collection issues
 #######################################################
 
 bundle agent garbage_collection
@@ -93,9 +136,26 @@ files:
 
 ###########################################################
 
+body file_select OldCf2Files
+{
+leaf_name => { 
+             "promises.cf", 
+             "site.cf", 
+             "library.cf", 
+             "failsafe.cf", 
+             ".*.txt", 
+             ".*.html", 
+             ".*~" 
+             };
+
+file_result => "!leaf_name";
+}
+
+###########################################################
+
 body action measure
 {
-measurement_class => "tripwire_usr";
+measurement_class => "Detect Changes in /usr";
 ifelapsed => "240";
 expireafter => "240";
 }

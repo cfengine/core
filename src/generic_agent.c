@@ -53,7 +53,7 @@ if (!NOHARDCLASSES)
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
    Get3Environment();
-   IDClasses();
+   OSClasses();
    }
 
 LoadPersistentContext();
@@ -334,6 +334,8 @@ DetermineCfenginePort();
 FOUT = stdout;
 VIFELAPSED = 1;
 VEXPIREAFTER = 1;
+
+setlinebuf(stdout);
 }
 
 /*******************************************************************/
@@ -381,7 +383,7 @@ void Cf3ParseFile(char *filename)
   int access = false;
   char wfilename[CF_BUFSIZE];
 
-if (!MINUSF && (*filename != '/'))
+if ((*filename != '.') && (*filename != '/'))
    {
    snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
    }

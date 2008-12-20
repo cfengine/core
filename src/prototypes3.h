@@ -751,6 +751,20 @@ void GetInterfaceInfo3(void);
 void Get3Environment(void);
 void FindV6InterfaceInfo(void);
 void FindDomainName(char *hostname);
+void OSClasses(void);
+int Linux_Fedora_Version(void);
+int Linux_Redhat_Version(void);
+int Linux_Suse_Version(void);
+int Linux_Slackware_Version(char *filename);
+int Linux_Debian_Version(void);
+int Linux_Mandrake_Version(void);
+void * Lsb_Release(const char *command, const char *key);
+int Lsb_Version(void);
+int VM_Version(void);
+int Xen_Domain(void);
+void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
+int Xen_Hv_Check(void);
+
 
 /* transaction.c */
 

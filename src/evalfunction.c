@@ -385,7 +385,7 @@ if (strcmp(finalargs->next->item,"useshell"))
    useshell = true;
    }
 
-if (stat(finalargs->item,&statbuf) == -1)
+if (stat(GetArg0(finalargs->item),&statbuf) == -1)
    {
    SetFnCallReturnStatus("returnszero",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");   
@@ -511,7 +511,7 @@ command = finalargs->item;
 args = finalargs->next->item;
 snprintf(modulecmd,CF_BUFSIZE,"%s/modules/%s",CFWORKDIR,command);
  
-if (stat(modulecmd,&statbuf) == -1)
+if (stat(GetArg0(modulecmd),&statbuf) == -1)
    {
    CfOut(cf_error,"","(Plug-in module %s not found)",modulecmd);
    SetFnCallReturnStatus("usemodule",FNCALL_FAILURE,strerror(errno),NULL);

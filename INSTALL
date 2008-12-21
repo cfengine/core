@@ -2,19 +2,29 @@
 BUILDING
 -----------------------------------------------------------------------
 
-cfengine 3 will eventually be indepedendent of cfengine 2, however to
-build this version of the software you need to have the library
-libcfengine from cfengine version 2.2.8 or later installed on your
-system.
+In the next release, cfengine 3 will be fully indepedendent of cfengine
+2, however to build this version of the software you need to have the
+library libcfengine from cfengine version 2.2.8 or later installed on
+your system. In addition you should install development versions of
+
+Openssl
+BerkeleyDB
+flex
+bison
+PCRE
+
+to simplify building and fully enable the software.
 
 Type the following to build the software:
 
-./configure;make
+$ tar zxf cfengine-3.0.0.tar.gz
+$ cd cfengine-3.0.0
+$ ./configure && make
 
-You do not need to install the software, nor do you need to run it
-with root privileges as THIS SOFTWARE CURRENTLY MAKES NO CHANGES TO
-YOUR SYSTEM.  It is recommend that you simply run it in the src
-directory as a regular user.
+If you only wish to test this software, you do not need to install it
+with "make install", nor do you need to run it with root privileges.
+You may run it as a regular user.
+
 
 TROUBLESHOOTING
 -----------------------------------------------------------------------
@@ -44,15 +54,17 @@ Basic Installation
  Cfengine depends on two packages. You should install up to date
  versions of these first.
 
- Berkeley Database obtainable from http://www.sleepycat.com
- OpenSSL obtainable from           http://www.openssl.org
+ Berkeley Database obtainable from   http://www.sleepycat.com
+ OpenSSL obtainable from             http://www.openssl.org
+ Perl Compatible Regular Expressions
 
  Some operating systems with package managers will already contain
  packages for these libraries.
+
  If you use MacOS X you need to download and install a copy of
  BerkeleyDB, as well as a copy of the OpenSSL header files.
 
-   These are generic installation instructions.
+   The following are generic installation instructions.
 
    The `configure' shell script attempts to guess correct values for
 various system-dependent variables used during compilation.  It uses
@@ -126,5 +138,3 @@ Then you should make sure that you rebuilt *with* shared libraries and
 without static libcrypto.a libraries. Rename or remove
 /usr/local/ssl/lib/libcrypto.a and recompile. The libdl functions are
 apparently only available from shared libraries.
-
-

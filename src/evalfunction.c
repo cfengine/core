@@ -924,12 +924,22 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
       {
       if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
          {
+         char *sp;
          index[0] = '\0';
          sscanf(ptr->hashtable[i]->lval+strlen(match),"%s",index);
-         index[strlen(index)-1] = '\0';
+
+         if (sp = strchr(index,']'))
+            {
+            *sp = '\0';
+            }
+         else
+            {
+            index[strlen(index)-1] = '\0';
+            }
+         
          if (strlen(index) > 0)
             {
-            AppendRScalar(&returnlist,index,CF_SCALAR);
+            IdempAppendRScalar(&returnlist,index,CF_SCALAR);
             }
          }
       }
@@ -2826,8 +2836,14 @@ hcount = 0;
 
 for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    {
+   linebuf[0] = '\0';
    sscanf(sp,"%1023[^\n]",linebuf);
 
+   if (strlen(linebuf) == 0)
+      {
+      continue;
+      }
+   
    newlist = SplitRegexAsRList(linebuf,split,maxent,nopurge);
    
    vcount = 0;

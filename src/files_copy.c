@@ -104,8 +104,7 @@ EndMeasure(eventname,start);
 
 if (attr.transaction.background)
    {
-   ServerDisconnection(pp->conn,attr,pp);
-   DeleteAgentConn(pp->conn);
+   ServerDisconnection(pp->conn);
    }
 
 return NULL;

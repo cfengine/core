@@ -297,8 +297,7 @@ else
 if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
    {
    CfOut(cf_error,"send","Transmission rejected");
-   ServerDisconnection(conn,a,pp);
-   DeleteAgentConn(conn);
+   ServerDisconnection(conn);
    return false;
    }
 
@@ -350,8 +349,7 @@ while (true)
    CfFile(fp," -> %s",recvbuffer);
    }
 
-ServerDisconnection(conn,a,pp);
-DeleteAgentConn(conn);
+ServerDisconnection(conn);
 DeleteRlist(a.copy.servers);
 
 DeleteStream(fp);

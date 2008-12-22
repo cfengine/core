@@ -840,7 +840,7 @@ switch(type)
        for (rp = SERVERLIST; rp != NULL; rp = rp->next)
           {
           svp = (struct ServerItem *)rp->item;
-          DeleteAgentConn(svp->conn);
+          ServerDisconnection(svp->conn);
           free(svp->server);
           rp->item = NULL;
           }

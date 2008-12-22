@@ -145,7 +145,7 @@ if (conn->sd == CF_NOT_CONNECTED)
 
       if (conn->sd != CF_NOT_CONNECTED)
          {
-         DeleteAgentConn(conn);
+         ServerDisconnection(conn);
          }
 
       return NULL;
@@ -157,7 +157,7 @@ if (conn->sd == CF_NOT_CONNECTED)
       {
       CfOut(cf_error,"","Id-authentication for %s failed\n",VFQNAME);
       errno = EPERM;
-      DeleteAgentConn(conn);
+      ServerDisconnection(conn);
       return NULL;
       }
 
@@ -165,7 +165,7 @@ if (conn->sd == CF_NOT_CONNECTED)
       {
       CfOut(cf_error,"","Authentication dialogue with %s failed\n",server);
       errno = EPERM;
-      DeleteAgentConn(conn);
+      ServerDisconnection(conn);
       return NULL;
       }
 
@@ -182,10 +182,10 @@ return conn;
 
 /*********************************************************************/
 
-void ServerDisconnection(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp)
+void ServerDisconnection(struct cfagent_connection *conn)
 
 {
-Debug("Closing current server connection to %s\n",pp->this_server);
+Debug("Closing current server connection\n");
 
 close(conn->sd);
 conn->sd = CF_NOT_CONNECTED;

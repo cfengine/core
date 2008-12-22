@@ -122,7 +122,7 @@ char *EscapeSQL(CfdbConn *cfdb,char *query);
 void DetermineCfenginePort(void);
 struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp);
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp);
-void ServerDisconnection(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);
+void ServerDisconnection(struct cfagent_connection *conn);
 int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes attr,struct Promise *pp);
 CFDIR *cf_remote_opendir(char *dirname,struct Attributes attr,struct Promise *pp);
 void NewClientCache(struct cfstat *data,struct Promise *pp);

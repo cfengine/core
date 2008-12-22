@@ -304,6 +304,9 @@ switch (this)
    case cfn_strcmp:
        rval = FnCallStrCmp(fp,expargs);
        break;
+   case cfn_splitstring:
+       rval = FnCallSplitString(fp,expargs);
+       break;
    case cfn_regcmp:
        rval = FnCallRegCmp(fp,expargs);
        break;

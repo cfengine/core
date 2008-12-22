@@ -468,6 +468,7 @@ enum fncalltype
    cfn_returnszero,
    cfn_rrange,
    cfn_selectservers,
+   cfn_splitstring,
    cfn_strcmp,
    cfn_usemodule,
    cfn_userexists,

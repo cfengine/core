@@ -2683,6 +2683,51 @@ return rval;
 }
 
 /*********************************************************************/
+
+struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
+    
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_INTRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *newlist = NULL;
+  struct Rval rval;
+  char *string,*split,fnname[CF_MAXVARSIZE];
+  int max = 0,noerrors = true,purge = true;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+ /* 2args: string,split_regex,max  */
+
+string = (char *)(finalargs->item);
+split = (char *)(finalargs->next->item);
+max = Str2Int((char *)(finalargs->next->next->item));
+    
+// Read once to validate structure of file in itemlist
+
+newlist = SplitRegexAsRList(string,split,max,true);
+
+SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
+
+rval.item = newlist;
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
 

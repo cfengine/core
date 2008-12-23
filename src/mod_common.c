@@ -172,7 +172,6 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"auditing",cf_opts,CF_BOOL,"true/false flag to activate the cf-agent audit log"},
    {"binarypaddingchar",cf_str,"","Character used to pad unequal replacements in binary editing"},
    {"bindtointerface",cf_str,".*","Use this interface for outgoing connections"},
-   {"hashpurge",cf_opts,CF_BOOL,"true/false whether stored hashes for non-existent files should be removed"},
    {"hashupdates",cf_opts,CF_BOOL,"true/false whether stored hashes are updated when change is detected in source"},
    {"childlibpath",cf_str,".*","LD_LIBRARY_PATH for child processes"},
    {"defaultcopytype",cf_opts,"mtime,atime,ctime,digest,hash,binary"},

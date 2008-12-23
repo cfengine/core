@@ -188,7 +188,7 @@ struct BodySyntax CF_CHANGEMGT_BODY[] =
    {
    {"hash",cf_opts,"md5,sha1,best","Hash files for change detection"},
    {"report_changes",cf_opts,"content,none","Specify criteria for change warnings"},
-   {"update",cf_opts,CF_BOOL,"Update hash values immediately after change warning"},
+   {"update_hashes",cf_opts,CF_BOOL,"Update hash values immediately after change warning"},
    {NULL,cf_notype,NULL,NULL}
    };
 

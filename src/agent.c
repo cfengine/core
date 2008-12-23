@@ -381,16 +381,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashpurge].lval) == 0)
-      {
-      if (GetBoolean(retval))
-         {
-         Verbose("Purging checksums\n");
-         ChecksumPurge();
-         }
-      continue;
-      }
-
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
       {
       CHECKSUMUPDATES = GetBoolean(retval);

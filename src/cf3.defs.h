@@ -191,7 +191,6 @@ enum cfacontrol
    cfa_auditing,
    cfa_binarypaddingchar,
    cfa_bindtointerface,
-   cfa_hashpurge,
    cfa_hashupdates,
    cfa_childlibpath,
    cfa_defaultcopytype,

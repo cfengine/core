@@ -100,7 +100,7 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
             CfOut(warnlevel,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
          
-         if (CHECKSUMUPDATES)
+         if (attr.change.update)
             {
             Verbose("Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
             
@@ -395,14 +395,21 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    
    if (stat(obj,&statbuf) == -1)
       {
-      cfPS(cf_error,CF_CHG,"",pp,attr,"SECURITY INFO: %s checksum for %s purged - file no longer exists!",key.data,obj);
-      
-      if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
+      if (attr.change.update)
          {
-         CfOut(cf_error,"db_store","Deletion failed");
+         cfPS(cf_error,CF_CHG,"",pp,attr,"SECURITY INFO: %s checksum for %s purged - file no longer exists!",key.data,obj);
+         
+         if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
+            {
+            CfOut(cf_error,"db_store","Deletion failed");
+            }
+         }
+      else
+         {
+         cfPS(cf_error,CF_WARN,"",pp,attr,"SECURITY INFO: %s checksum for %s  - file no longer exists!",key.data,obj);
          }
       }
-   
+
    memset(&key,0,sizeof(key));
    memset(&value,0,sizeof(value));
    }

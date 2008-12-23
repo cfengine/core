@@ -507,7 +507,15 @@ else
    c.report_changes = cfa_noreport;
    }
 
-c.update = GetBooleanConstraint("update",pp->conlist);
+if (GetConstraint("update_hashes",pp->conlist,CF_SCALAR))
+   {
+   c.update = GetBooleanConstraint("update_hashes",pp->conlist);
+   }
+else
+   {
+   c.update = CHECKSUMUPDATES;
+   }
+
 
 return c;
 }

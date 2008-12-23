@@ -162,13 +162,13 @@ for (cp = list; cp != NULL; cp=cp->next)
          FatalError(OUTPUT);
          }
 
-      if (strcmp(cp->rval,"true") == 0)
+      if (strcmp(cp->rval,"true") == 0||strcmp(cp->rval,"yes") == 0)
          {
          retval = true;
          continue;
          }
 
-      if (strcmp(cp->rval,"false") == 0)
+      if (strcmp(cp->rval,"false") == 0||strcmp(cp->rval,"no") == 0)
          {
          retval = false;
          }

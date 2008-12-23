@@ -319,6 +319,11 @@ if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
       success = DepthSearch(path,&oslb,rlevel,a,pp);
       a.havedepthsearch = save_search;
       }
+
+   if (a.havechange)
+      {
+      PurgeHashes(a,pp);
+      }
    }
 
 /* Phase 2a - copying is potentially threadable if no followup actions */

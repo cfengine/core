@@ -189,12 +189,7 @@ Debug("Closing current server connection\n");
 
 close(conn->sd);
 conn->sd = CF_NOT_CONNECTED;
-
-if (conn->session_key != NULL)
-   {
-   free(conn->session_key);
-   conn->session_key = NULL;
-   }
+DeleteAgentConn(conn);
 }
 
 /*********************************************************************/

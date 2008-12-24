@@ -376,7 +376,7 @@ void Cf3ParseFile(char *filename)
   int access = false;
   char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-if (MINUSF && IsFileSep(*VINPUTFILE) && !IsFileSep(*filename))
+if (MINUSF && (*VINPUTFILE == '.' || IsFileSep(*VINPUTFILE)) && !IsFileSep(*filename))
    {
    /* If -f assume included relative files are in same directory */
    strncpy(path,VINPUTFILE,CF_BUFSIZE-1);

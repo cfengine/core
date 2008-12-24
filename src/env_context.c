@@ -506,6 +506,7 @@ void NewBundleClass(char *class,char *bundle)
 
 { char copy[CF_BUFSIZE];
 
+memset(copy,0,CF_BUFSIZE);
 strncpy(copy,class,CF_MAXVARSIZE);
 Chop(copy);
 
@@ -513,6 +514,8 @@ if (strlen(copy) == 0)
    {
    return;
    }
+
+Debug("NewBundleClass(%s)\n",copy);
 
 if (IsRegexItemIn(ABORTBUNDLEHEAP,copy))
    {
@@ -530,8 +533,6 @@ if (IsItemIn(VADDCLASSES,copy))
    {
    return;
    }
-
-Debug("NewBundleClass(%s)\n",copy);
 
 AppendItem(&VADDCLASSES,copy,CONTEXTID);
 }

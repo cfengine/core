@@ -119,9 +119,6 @@ for (ip = path; ip != NULL; ip=ip->next)
       return;
       }
 
-   AddSlash(pbuffer);
-   strcat(pbuffer,ip->name);
-   
    if (stat(pbuffer,&statbuf) != -1)
       {
       if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)

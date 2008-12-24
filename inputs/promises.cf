@@ -43,7 +43,7 @@ body executor control
 
 {
 splaytime => "1";
-mailto => "mark@iu.hio.no";
+mailto => "cfengine_mail@example.org";
 smtpserver => "localhost";
 mailmaxlines => "30";
 

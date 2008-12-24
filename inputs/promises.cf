@@ -44,6 +44,8 @@ body executor control
 {
 splaytime => "1";
 mailto => "mark@iu.hio.no";
+smtpserver => "localhost";
+mailmaxlines => "30";
 
 # Instead of a separate update script, now do this
 

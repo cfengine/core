@@ -67,7 +67,7 @@ fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
 
-fprintf(fout,"@node Basics\n@chapter Cfengine %s Basics\n\n",VERSION);
+fprintf(fout,"@node Getting started\n@chapter Cfengine %s -- Getting started\n\n",VERSION);
 IncludeManualFile(fout,"reference_basics.texinfo");
 
 /* Control promises */

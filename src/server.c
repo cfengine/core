@@ -362,14 +362,14 @@ while (true)
       
       Debug("Obtained IP address of %s on socket %d from accept\n",ipaddr,sd_reply);
       
-      if ((NONATTACKERLIST != NULL) && !IsFuzzyItemIn(NONATTACKERLIST,MapAddress(ipaddr)))   /* Allowed Subnets */
+      if (NONATTACKERLIST && !IsFuzzyItemIn(NONATTACKERLIST,MapAddress(ipaddr)) && !IsRegexItemIn(NONATTACKERLIST,MapAddress(ipaddr)))   /* Allowed Subnets */
          {
-         CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
+         CfOut(cf_error,"","Not allowing connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
          continue;
          }
       
-      if (IsFuzzyItemIn(ATTACKERLIST,MapAddress(ipaddr)))   /* Denied Subnets */
+      if (IsFuzzyItemIn(ATTACKERLIST,MapAddress(ipaddr)) || IsRegexItemIn(ATTACKERLIST,MapAddress(ipaddr)))   /* Denied Subnets */
          {
          CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
@@ -383,7 +383,7 @@ while (true)
       
       PurgeOldConnections(&CONNECTIONLIST,now);
       
-      if (!IsFuzzyItemIn(MULTICONNLIST,MapAddress(ipaddr)))
+      if (!IsFuzzyItemIn(MULTICONNLIST,MapAddress(ipaddr)) && !IsRegexItemIn(MULTICONNLIST,MapAddress(ipaddr)))
          {
          if (IsItemIn(CONNECTIONLIST,MapAddress(ipaddr)))
             {
@@ -1830,7 +1830,7 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
    
    if (res)
       {
-      Debug("Found a matching rule in access list (%s in %s)\n",realname,ap->path);
+      Verbose("Found a matching rule in access list (%s in %s)\n",realname,ap->path);
 
       if (stat(ap->path,&statbuf) == -1)
          {

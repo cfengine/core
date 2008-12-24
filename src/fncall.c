@@ -220,7 +220,7 @@ struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp)
 
 rval.item = NULL;
 rval.rtype = CF_NOPROMISEE;
- 
+
 if (this != cfn_unknown)
    {
    if (DEBUG)

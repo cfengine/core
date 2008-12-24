@@ -556,8 +556,13 @@ else
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip,*np,*lp;
- int in_region = false, retval = false, match;
+  int in_region = false, retval = false, match;
 
+if (start == NULL)
+   {
+   return false;
+   }
+  
 for (ip = *start; ip != NULL; ip = ip->next)
    {
    if (ip == begin)

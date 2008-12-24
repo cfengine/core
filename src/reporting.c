@@ -454,7 +454,7 @@ if (strcmp(type,"processes") == 0)
 
    for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
       {
-      printf("       %sǹ",ip->name);
+      Verbose("       %sǹ\n",ip->name);
       }
 
    Verbose("\n");

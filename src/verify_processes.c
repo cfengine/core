@@ -244,7 +244,7 @@ DeleteItemList(killlist);
  
 if (!need_to_restart)
    {
-   cfPS(cf_verbose,CF_NOP,"",pp,a," - Matches in range for %s - process count promise kept\n",pp->promiser);
+   cfPS(cf_verbose,CF_NOP,"",pp,a," -- Matches in range for %s - process count promise kept\n",pp->promiser);
    return;
    }
  
@@ -252,12 +252,12 @@ if (a.restart_class)
    {
    if (a.transaction.action == cfa_fix)
       {
-      cfPS(cf_inform,CF_CHG,"",pp,a," - Making a one-time restart promise for %s",pp->promiser);
+      cfPS(cf_inform,CF_CHG,"",pp,a," -> Making a one-time restart promise for %s",pp->promiser);
       NewClass(a.restart_class);
       }
    else if (a.transaction.action == cfa_warn)
       {
-      cfPS(cf_error,CF_NOP,"",pp,a," - Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
+      cfPS(cf_error,CF_NOP,"",pp,a," -- Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
       }
    }
 }
@@ -334,7 +334,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
       
       if (pid == cfengine_pid)
          {
-         CfLog(cfverbose,"cfAgent will not kill itself!\n","");
+         CfLog(cfverbose,"cf-agent will not kill itself!\n","");
          continue;
          }
       
@@ -394,18 +394,18 @@ for (ip = siglist; ip != NULL; ip=ip->next)
          
          if (kill((pid_t)pid,signal) < 0)
             {
-            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," - Couldn't send promised signal \'%s\' (%d) to pid %d\n",rp->item,signal,pid);
+            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," !! Couldn't send promised signal \'%s\' (%d) to pid %d\n",rp->item,signal,pid);
             continue;
             }
          else
             {
-            cfPS(cf_inform,CF_CHG,"",pp,a," - Signalled \'%s\' (%d) to observed process match \'%s\'\n",rp->item,signal,ip->name);
+            cfPS(cf_inform,CF_CHG,"",pp,a," -> Signalled \'%s\' (%d) to observed process match \'%s\'\n",rp->item,signal,ip->name);
             break;
             }
          }
       else
          {
-         CfOut(cf_error,""," - Need to keep signal promise \'%s\' in process entry %s",rp->item,ip->name);
+         CfOut(cf_error,""," -- Need to keep signal promise \'%s\' in process entry %s",rp->item,ip->name);
          }
       }
    }

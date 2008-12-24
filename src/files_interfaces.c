@@ -1195,6 +1195,7 @@ else
    }
 
 Debug("CopyRegular succeeded in copying to %s to %s\n",source,new);
+backup[0] = '\0';
 
 if (!discardbackup)
    {

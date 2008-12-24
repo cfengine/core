@@ -69,7 +69,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
       NewBundleClass(pp->promiser,pp->bundle);
       }
 
-   /* Private to bundle, can be reloaded */
+   // Private to bundle, can be reloaded
    *(pp->donep) = false;
    
    return;
@@ -504,33 +504,36 @@ DeleteItemLiteral(&VADDCLASSES,class);
 
 void NewBundleClass(char *class,char *bundle)
 
-{
-Chop(class);
-Debug("NewBundleClass(%s)\n",class);
+{ char copy[CF_BUFSIZE];
 
-if (strlen(class) == 0)
+strncpy(copy,class,CF_MAXVARSIZE);
+Chop(copy);
+
+if (strlen(copy) == 0)
    {
    return;
    }
 
-if (IsRegexItemIn(ABORTBUNDLEHEAP,class))
+if (IsRegexItemIn(ABORTBUNDLEHEAP,copy))
    {
-   CfOut(cf_error,"","Bundle %s aborted on defined class \"%s\"\n",bundle,class);
+   CfOut(cf_error,"","Bundle %s aborted on defined class \"%s\"\n",bundle,copy);
    ABORTBUNDLE = true;
    }
 
-if (IsRegexItemIn(ABORTHEAP,class))
+if (IsRegexItemIn(ABORTHEAP,copy))
    {
-   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",class,bundle);
+   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",copy,bundle);
    exit(1);
    }
 
-if (IsItemIn(VADDCLASSES,class))
+if (IsItemIn(VADDCLASSES,copy))
    {
    return;
    }
 
-AppendItem(&VADDCLASSES,class,CONTEXTID);
+Debug("NewBundleClass(%s)\n",copy);
+
+AppendItem(&VADDCLASSES,copy,CONTEXTID);
 }
 
 

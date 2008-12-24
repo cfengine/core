@@ -90,7 +90,7 @@ path = SplitString(wildpath,FILE_SEPARATOR);
 
 for (ip = path; ip != NULL; ip=ip->next)
    {
-   if (strlen(ip->name) == 0)
+   if (ip->name == NULL || strlen(ip->name) == 0)
       {
       continue;
       }
@@ -113,7 +113,7 @@ for (ip = path; ip != NULL; ip=ip->next)
       expandregex = false;
       }
 
-   if (BufferOverflow(pbuffer,ip->name))
+   if (!JoinPath(pbuffer,ip->name))
       {
       CfOut(cf_error,"","Buffer overflow in LocateFilePromiserGroup\n");
       return;

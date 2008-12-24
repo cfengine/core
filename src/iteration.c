@@ -113,7 +113,7 @@ if (state->state_ptr == NULL)
       if (IncrementIterationContext(iterator->next,level+1))
          {
          /* Not at end yet, so reset this wheel */
-         state->state_ptr = state;         
+         state->state_ptr = state;
          return true;
          }
       else

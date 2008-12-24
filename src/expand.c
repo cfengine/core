@@ -568,7 +568,7 @@ do
       }
 
    /* Set scope "this" first to ensure list expansion ! */
-   
+
    SetScope("this");  
    DeRefListsInHashtable("this",listvars,lol);   
    pexp = ExpandDeRefPromise("this",pp);
@@ -610,7 +610,7 @@ do
 //   ShowScopedVariables(stdout);
    
    DeletePromise(pexp);
-   
+
    /* End thread monitor */
    }
 while (IncrementIterationContext(lol,1));

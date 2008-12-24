@@ -1718,7 +1718,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-strcpy(buffer,CF_ANYCLASS);
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
 

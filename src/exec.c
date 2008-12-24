@@ -43,7 +43,7 @@ int  ONCE = false;
 char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
 char EXECCOMMAND[CF_BUFSIZE];
-int  MAXLINES = -1;
+int  MAXLINES = 30;
 int  SPLAYTIME = 0;
 const int INF_LINES = -2;
 

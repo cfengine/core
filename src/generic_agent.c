@@ -72,7 +72,7 @@ if (ok)
 else
    {
    CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-   snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/failsafe.cf",CFWORKDIR);
+   snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
    ReadPromises(ag,agents);
    }
 
@@ -95,7 +95,7 @@ if (PARSEONLY)
 
 int CheckPromises(enum cfagenttype ag)
 
-{ char cmd[CF_BUFSIZE];
+{ char cmd[CF_BUFSIZE],path[CF_BUFSIZE];
   struct stat sb;
  
 if (ag != cf_agent)
@@ -113,20 +113,13 @@ if (stat(cmd,&sb) == -1)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
-if (!MINUSF)
+if ((*VINPUTFILE == '.') || IsFileSep(*VINPUTFILE))
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR);
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
    }
 else
    {
-   if (*VINPUTFILE == '.' || IsFileSep(*VINPUTFILE))
-      {
-      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
-      }
-   else
-      {
-      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/inputs/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
-      }
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/inputs/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
    }
  
 /* Check if reloading policy will succeed */
@@ -383,25 +376,25 @@ void Cf3ParseFile(char *filename)
   int access = false;
   char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-if ((*filename != '.') && (*filename != '/'))
+if (MINUSF && IsFileSep(*VINPUTFILE) && !IsFileSep(*filename))
    {
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
-   }
-else if (MINUSF)
-   {
-   /* If -f assume relative paths are in same directory */
+   /* If -f assume included relative files are in same directory */
    strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
    ChopLastNode(path);
    snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
    }
-else
+else if ((*filename == '.') || IsFileSep(*filename))
    {
    strncpy(wfilename,filename,CF_BUFSIZE-1);
+   }
+else
+   {
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
    }
 
 if (stat(wfilename,&statbuf) == -1)
    {
-   printf("Can't open file %s\n",wfilename);
+   printf("Can't stat file %s for parsing\n",wfilename);
    exit(1);
    }
 
@@ -419,7 +412,7 @@ PrependAuditFile(wfilename);
  
 if ((yyin = fopen(wfilename,"r")) == NULL)      /* Open root file */
    {
-   printf("Can't open file %s\n",wfilename);
+   printf("Can't open file %s for parsing\n",wfilename);
    exit (1);
    }
  

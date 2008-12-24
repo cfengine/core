@@ -12,14 +12,15 @@ files:
 
     perms => system("600"),
     copy_from => mycopy("$(master_location)","localhost"),
-    depth_search => recurse("inf");
+    depth_search => recurse("inf"),
+    action => immediate;
 
   "/var/cfengine/bin" 
 
     perms => system("700"),
     copy_from => mycopy("/usr/local/sbin","localhost"),
-    depth_search => recurse("inf");
-
+    depth_search => recurse("inf"),
+    action => immediate;
 }
 
 ############################################
@@ -47,4 +48,11 @@ body copy_from mycopy(from,server)
 {
 source      => "$(from)";
 compare     => "digest";
+}
+
+#########################################################
+
+body action immediate
+{
+ifelapsed => "1";
 }

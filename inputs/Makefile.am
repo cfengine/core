@@ -1,4 +1,6 @@
 
+pkgdata_SCRIPTS = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
+
 EXTRA_DIST = *.cf
 
 #

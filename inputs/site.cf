@@ -15,7 +15,6 @@ vars:
  !SuSE::
 
    "crontab" string => "/var/spool/cron/crontabs/root";
-
 }
 
 #######################################################
@@ -59,8 +58,15 @@ files:
 
   # Check cf-execd and schedule is in crontab
 
+
   "$(g.crontab)"
        edit_line => upgrade_cfexecd;
+
+processes:
+
+  exec_fix::
+
+    "cron" signals => { "hup" };
 
 
 }
@@ -89,7 +95,7 @@ files:
  # Uncomment this to perform a change-detection scan
 
  #  "/usr"         
- #     changes      => trip_wire,
+ #     changes      => lay_trip_wire,
  #     depth_search => recurse("inf"),
  #     action       => measure;
 
@@ -145,7 +151,8 @@ leaf_name => {
              "failsafe.cf", 
              ".*.txt", 
              ".*.html", 
-             ".*~" 
+             ".*~",
+             "#.*" 
              };
 
 file_result => "!leaf_name";

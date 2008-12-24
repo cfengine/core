@@ -820,7 +820,7 @@ dnl ######################################################################
 dnl Now make the Makefiles
 dnl ######################################################################
 
-AC_OUTPUT(Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile)
+AC_OUTPUT(Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile inputs/Makefile)
 
 rm -f src/cf3parse.c src/cf3parse.h
 

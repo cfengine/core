@@ -8,6 +8,7 @@ body common control
 
 {
 bundlesequence  => { 
+                   "update",
                    "garbage_collection",
                    "main",
                    "cfengine"  
@@ -24,7 +25,8 @@ inputs          => {
 
 body agent control
 {
-ifelapsed => "60";
+# if default runtime is 5 mins we need this for long jobs
+ifelapsed => "15";
 }
 
 #######################################################

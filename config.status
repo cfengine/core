@@ -301,7 +301,7 @@ on `(hostname || uname -n) 2>/dev/null | sed 1q`
 "
 
 # Files that config.status was made for.
-config_files=" Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile"
+config_files=" Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile inputs/Makefile"
 config_headers=" src/conf.h"
 config_commands=" depfiles"
 
@@ -446,6 +446,7 @@ do
     "tests/file_masters/Makefile") CONFIG_FILES="$CONFIG_FILES tests/file_masters/Makefile" ;;
     "tests/file_operands/Makefile") CONFIG_FILES="$CONFIG_FILES tests/file_operands/Makefile" ;;
     "tests/units/Makefile") CONFIG_FILES="$CONFIG_FILES tests/units/Makefile" ;;
+    "inputs/Makefile") CONFIG_FILES="$CONFIG_FILES inputs/Makefile" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

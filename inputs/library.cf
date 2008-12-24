@@ -43,19 +43,19 @@ file_result => "mtime";
 
 #########################################################
 
-body changes trip_wire
+body changes lay_trip_wire
 
 {
 hash           => "best";
 report_changes => "content";
-update         => "yes";
+update_hashes  => "yes";
 }
 
 ########################################################
 
 body action longjob
 {
-ifelapsed => "240";
+ifelapsed => "240"; # run only every 4 hours
 }
 
 #######################################################
@@ -112,7 +112,7 @@ bundle edit_line DeleteLinesMatching(regex)
 body action WarnOnly
 {
 action_policy => "warn";
-ifelapsed => "1";
+ifelapsed => "60";
 }
 
 ########################################################
@@ -149,4 +149,15 @@ body replace_with With(x)
 {
 replace_value => "$(x)";
 occurrences => "all";
+}
+
+########################################
+
+body copy_from scp(from,server)
+
+{
+source      => "$(from)";
+compare     => "digest";
+encrypt     => "true";
+verify      => "true";
 }

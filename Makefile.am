@@ -1,5 +1,5 @@
 
-SUBDIRS = pub src tests docs
+SUBDIRS = pub src tests docs inputs
 
 EXTRA_DIST = acconfig.h COPYING ChangeLog INSTALL NEWS README LICENSE
 

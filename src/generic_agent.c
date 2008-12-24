@@ -63,7 +63,7 @@ THIS_AGENT_TYPE = ag;
 
 NewScope("this");
 
-ok = CheckPromises(ag);
+ok = BOOTSTRAP || CheckPromises(ag);
 
 if (ok)
    {
@@ -381,11 +381,18 @@ void Cf3ParseFile(char *filename)
   struct stat statbuf;
   struct Rlist *rp;
   int access = false;
-  char wfilename[CF_BUFSIZE];
+  char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
 if ((*filename != '.') && (*filename != '/'))
    {
    snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
+   }
+else if (MINUSF)
+   {
+   /* If -f assume relative paths are in same directory */
+   strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
+   ChopLastNode(path);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
    }
 else
    {
@@ -1122,7 +1129,6 @@ for (i=0; options[i].name != NULL; i++)
       }
    }
 
-printf("\nDebug levels: 1=parsing, 2=running, 3=summary, 4=expression eval\n");
 
 printf("\nBug reports: bug-cfengine@cfengine.org, ");
 printf("Community help: help-cfengine@cfengine.org\n");

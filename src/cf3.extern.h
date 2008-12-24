@@ -46,6 +46,7 @@ extern struct Rlist *ACCESSLIST;
 extern struct Rlist *CF_STCK;
 extern int CF_STCKFRAME;
 
+extern int BOOTSTRAP;
 extern int XML;
 extern FILE *FOUT;
 extern struct FnCallStatus FNCALL_STATUS;

@@ -62,6 +62,7 @@ int CF_MOUNTALL = false;
 int CF_SAVEFSTAB = false;
 int FSTAB_EDITS;
 int ABORTBUNDLE = false;
+int BOOTSTRAP = false;
 
 char HASHDB[CF_BUFSIZE];
 

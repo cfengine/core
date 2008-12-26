@@ -613,7 +613,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
    for (ta = tp->associations; ta != NULL; ta=ta->next)
       {
-      snprintf(longname,CF_BUFSIZE,"%s/%s",ta->fwd_name,ta->bwd_name);
+      snprintf(longname,CF_BUFSIZE,"%s/%s",NextTopic(ta->fwd_name,""),ta->bwd_name);
       
       if (!IsItemIn(generic_associations,longname))
          {
@@ -623,11 +623,11 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
    if (tp->comment)
       {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,NextTopic(tp->topic_name,tp->topic_type));
       }
    else
       {
-      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
+      snprintf(longname,CF_BUFSIZE,"%s",NextTopic(tp->topic_name,tp->topic_type));
       }
 
    if (!IsItemIn(generic_topics,longname))
@@ -635,20 +635,13 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       PrependItemList(&generic_topics,longname);            
       }
 
-   if (!IsItemIn(generic_types,tp->topic_type))
+   if (!IsItemIn(generic_types,NextTopic(tp->topic_type,"")))
       {
-      PrependItemList(&generic_types,tp->topic_type);            
+      PrependItemList(&generic_types,NextTopic(tp->topic_type,""));            
       }
    }
 
-fprintf(fout,"<html>\n");
-fprintf(fout,"<head>\n");
-fprintf(fout,"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/syntax.css\" />\n");
-fprintf(fout,"<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/cf_blue.css\"/>\n");
-fprintf(fout,"</head>\n");
-fprintf(fout,"<body>\n");
-
-fprintf(fout,"<h1>Cfengine Operational Ontology</h1><p>");
+CfHtmlHeader(fout,"CfKnowledge Operational Ontology",STYLESHEET,WEBDRIVER,BANNER);
 
 fprintf(fout,"<h2>Types</h2><p>\n");
 
@@ -698,8 +691,7 @@ for (ip = generic_topics; ip != NULL; ip=ip->next)
 
 fprintf(fout,"</table>\n");
 
-fprintf(fout,"</body>\n");
-fprintf(fout,"</html>");
+CfHtmlFooter(fout,FOOTER);
 fclose(fout);
 }
 

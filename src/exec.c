@@ -248,7 +248,6 @@ VCANONICALFILE = strdup(CanonifyName(VINPUTFILE));
 
 MAILTO[0] = '\0';
 MAILFROM[0] = '\0';
-VIPADDRESS[0] = '\0';
 VMAILSERVER[0] = '\0';
 EXECCOMMAND[0] = '\0';
 }
@@ -912,12 +911,12 @@ if (!Dialogue(sd,"DATA\r\n"))
 
 if (anomaly)
    {
-   sprintf(vbuff,"Subject: **!! (%s/%s)\r\n",VFQNAME,VIPADDRESS);
+   sprintf(vbuff,"Subject: **!! [%s/%s]\r\n",VFQNAME,VIPADDRESS);
    Debug("%s",vbuff);
    }
 else
    {
-   sprintf(vbuff,"Subject: (%s/%s)\r\n",VFQNAME,VIPADDRESS);
+   sprintf(vbuff,"Subject: [%s/%s]\r\n",VFQNAME,VIPADDRESS);
    Debug("%s",vbuff);
    }
  

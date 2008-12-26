@@ -420,7 +420,6 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                }
             }
          
-            
          if (!ipdefault)
             {
             ipdefault = true;
@@ -428,7 +427,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             strcat(ip,inet_ntoa(sin->sin_addr));
             NewClass(CanonifyName(ip));
             NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
-            
+            strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
+   
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
                if (*sp == '.')

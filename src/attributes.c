@@ -303,8 +303,8 @@ p.minus = 0;
 ParseModeString(value,&p.plus,&p.minus);
 value = (char *)GetConstraint("bsdflags",pp->conlist,CF_SCALAR);
 ParseFlagString(value,&p.plus_flags,&p.minus_flags);
-p.owners = Rlist2UidList((struct Rlist *)GetConstraint("owner",pp->conlist,CF_LIST),pp);
-p.groups = Rlist2GidList((struct Rlist *)GetConstraint("group",pp->conlist,CF_LIST),pp);
+p.owners = Rlist2UidList((struct Rlist *)GetConstraint("owners",pp->conlist,CF_LIST),pp);
+p.groups = Rlist2GidList((struct Rlist *)GetConstraint("groups",pp->conlist,CF_LIST),pp);
 p.findertype = (char *)GetConstraint("findertype",pp->conlist,CF_SCALAR);
 p.rxdirs = GetBooleanConstraint("rxdirs",pp->conlist);
 

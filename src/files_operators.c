@@ -1219,7 +1219,7 @@ else
             }
          }
       }
-   
+
    switch (attr.transaction.action)
       {
       case cfa_fix:

@@ -446,6 +446,11 @@ void *GetConstraint(char *lval,struct Constraint *list,char rtype)
 { struct Constraint *cp;
   void *retval = NULL;
 
+if (!VerifyConstraintName(lval))
+   {
+   CfOut(cf_error,"","Self-diagnostic: Constraint type %s is not a registered type\n",lval);
+   }
+
 for (cp = list; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->lval,lval) == 0)
@@ -559,6 +564,73 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
       return;
       }
    }
+}
+
+/*****************************************************************************/
+
+int VerifyConstraintName(char *lval)
+
+{ struct SubTypeSyntax ss;
+  int lmatch = false;
+  int i,j,k,l,m;
+  struct BodySyntax *bs,*bs2;
+  struct SubTypeSyntax *ssp;
+
+Debug("  Verify Constrant name %s\n",lval);
+
+for  (i = 0; i < CF3_MODULES; i++)
+   {
+   if ((ssp = CF_ALL_SUBTYPES[i]) == NULL)
+      {
+      continue;
+      }
+
+   for (j = 0; ssp[j].btype != NULL; j++)
+      {
+      ss = ssp[j];
+
+      if (ss.subtype != NULL) 
+         {
+         bs = ss.bs;
+         
+         for (l = 0; bs[l].lval != NULL; l++)
+            {
+            if (bs[l].dtype == cf_bundle)
+               {
+               }
+            else if (bs[l].dtype == cf_body)
+               {
+               bs2 = (struct BodySyntax *)bs[l].range;
+               
+               for (m = 0; bs2[m].lval != NULL; m++)
+                  {
+                  if (strcmp(lval,bs2[m].lval) == 0)
+                     {
+                     return true;
+                     }
+                  }                  
+               }
+            
+            if (strcmp(lval,bs[l].lval) == 0)
+               {
+               return true;
+               }
+            }                        
+         }
+      }
+   }
+
+/* Now check the functional modules - extra level of indirection */
+
+for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+   {
+   if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
 }
 
 

@@ -42,8 +42,12 @@ if (signum != SIGCHLD)
    
    if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)
       {
-      unlink(PIDFILE);
-      ReleaseCurrentLock();
+      struct CfLock best_guess;
+      
+      best_guess.lock = strdup(CFLOCK);
+      best_guess.last = strdup(CFLAST);
+      best_guess.log = strdup(CFLOG);
+      YieldCurrentLock(best_guess);      unlink(PIDFILE);
       EndAudit();
       closelog();
       exit(0);

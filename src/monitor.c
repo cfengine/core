@@ -253,8 +253,8 @@ LOGGING = true;                    /* Do output to syslog */
 SetReferenceTime(false);
 SetStartTime(false);
 
-signal(SIGINT,(void*)ExitCleanly);
-signal(SIGTERM,(void*)ExitCleanly);
+signal(SIGINT,HandleSignals);
+signal(SIGTERM,HandleSignals);
 signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
 signal(SIGCHLD,SIG_IGN);

@@ -62,9 +62,9 @@ struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes 
   char cflock[CF_BUFSIZE],cflast[CF_BUFSIZE],cflog[CF_BUFSIZE];
   struct CfLock this;
 
-this.last =  (char *) CF_UNDEFINED;
-this.lock =  (char *) CF_UNDEFINED;
-this.log =  (char *) CF_UNDEFINED;
+this.last = (char *) CF_UNDEFINED;
+this.lock = (char *) CF_UNDEFINED;
+this.log  = (char *) CF_UNDEFINED;
 
 if (now == 0)
    {
@@ -122,7 +122,6 @@ Debug("LOCK(%s)[%s]\n",pp->bundle,cflock);
 /* for signal handler - not threadsafe so applies only to main thread */
 
 CFINITSTARTTIME = time(NULL);
-strcpy(CFLOCK,cflock);
 
 /* Look for non-existent (old) processes */
 
@@ -207,6 +206,11 @@ this.lock = strdup(cflock);
 this.last = strdup(cflast);
 this.log  = strdup(cflog);
 
+/* Keep this as a global for signal handling */
+strcpy(CFLOCK,cflock);
+strcpy(CFLAST,cflast);
+strcpy(CFLOG,cflog);
+
 return this;
 }
 
@@ -225,7 +229,7 @@ if (this.lock == (char *)CF_UNDEFINED)
    return;
    }
 
-Debug("ReleaseCurrentLock(%s)\n",this.lock);
+Verbose("Yielding lock %s\n",this.lock);
 
 if (RemoveLock(this.lock) == -1)
    {

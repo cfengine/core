@@ -160,6 +160,7 @@ void ReCheckAllConstraints(struct Promise *pp);
 void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
 int ControlBool(enum cfagenttype id,enum cfacontrol promiseoption);
 int GetBundleConstraint(char *lval,struct Constraint *list);
+int VerifyConstraintName(char *lval);
 
 /* conversion.c */
 
@@ -702,6 +703,7 @@ void TestExpandPromise(void);
 void TestExpandVariables(void);
 void TestSearchFilePromiser(void);
 void TestRegularExpressions(void);
+void TestAgentPromises(void);
 
 /* server_transform.c */
 

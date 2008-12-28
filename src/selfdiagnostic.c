@@ -28,13 +28,22 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+int NR = 0;
+
 /*****************************************************************************/
 
 void SelfDiagnostic()
 
 {
-FOUT = stdout;
-
+if (VERBOSE || DEBUG)
+   {
+   FOUT = stdout;
+   }
+else
+   {
+   FOUT = fopen("/dev/null","w");
+   }
+       
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
 printf("----------------------------------------------------------\n\n");
@@ -42,6 +51,7 @@ TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
 TestRegularExpressions();
+TestAgentPromises();
 }
 
 /*****************************************************************************/
@@ -61,7 +71,7 @@ void TestVariableScan()
     NULL
     };
 
-printf("Test variable scanning\n\n");
+printf("%d. Test variable scanning\n",++NR);
 SetNewScope("diagnostic");
 
 varlist1 = SplitStringAsRList(list_text1,',');
@@ -76,16 +86,19 @@ NewList("diagnostic","five",varlist2,cf_slist);
 
 for (i = 0; varstrings[i] != NULL; i++)
    {
-   printf("-----------------------------------------------------------\n");
-   printf("Scanning: [%s]\n",varstrings[i]);
-   ScanRval("diagnostic",&scalars,&listoflists,varstrings[i],CF_SCALAR);
-   printf("Cumulative scan produced:\n");
-   printf("   Scalar variables: ");
-   ShowRlist(stdout,scalars);
-   printf("\n");
-   printf("   Lists variables: ");
-   ShowRlist(stdout,listoflists);
-   printf("\n");
+   if (VERBOSE || DEBUG)
+      {
+      printf("-----------------------------------------------------------\n");
+      printf("Scanning: [%s]\n",varstrings[i]);
+      ScanRval("diagnostic",&scalars,&listoflists,varstrings[i],CF_SCALAR);
+      printf("Cumulative scan produced:\n");
+      printf("   Scalar variables: ");
+      ShowRlist(stdout,scalars);
+      printf("\n");
+      printf("   Lists variables: ");
+      ShowRlist(stdout,listoflists);
+      printf("\n");
+      }
    }
  
 }
@@ -97,7 +110,7 @@ void TestExpandPromise()
 { struct Promise pp,*pcopy;
   struct Body *bp;
 
-printf("Testing promise duplication\n\n");
+printf("%d. Testing promise duplication and expansion\n",++NR);
 pp.promiser = "the originator";
 pp.promisee = "the recipient";
 pp.classes = "upper classes";
@@ -106,7 +119,7 @@ pp.lineno = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
 
-pp.bundletype = NULL;
+pp.bundletype = "bundle_type";
 pp.bundle = "test_bundle";
 pp.ref = "commentary";
 pp.agentsubtype = NULL;
@@ -127,11 +140,13 @@ AppendConstraint(&(pp.conlist),"lval2",strdup("rval2"),CF_SCALAR,"lower classes2
 /* Now copy promise and delete */
 
 pcopy = DeRefCopyPromise("diagnostic-scope",&pp);
-
-printf("-----------------------------------------------------------\n");
-printf("Raw test promises\n\n");
-ShowPromise(&pp,4);
-ShowPromise(pcopy,6);
+if (VERBOSE || DEBUG)
+   {
+   printf("-----------------------------------------------------------\n");
+   printf("Raw test promises\n\n");
+   ShowPromise(&pp,4);
+   ShowPromise(pcopy,6);
+   }
 DeletePromise(pcopy); 
 }
 
@@ -150,7 +165,7 @@ void TestExpandVariables()
 
 /* Still have diagnostic scope */
   
-printf("Testing variable expansion\n\n");
+printf("%d. Testing variable expansion\n",++NR);
 pp.promiser = "the originator";
 pp.promisee = "the recipient with $(two)";
 pp.classes = "proletariat";
@@ -193,12 +208,12 @@ void TestRegularExpressions()
 { struct CfRegEx rex;
   int start,end;
 
-printf("Testing regular expression engine\n");
+printf("%d. Testing regular expression engine\n",++NR);
 
 #ifdef HAVE_LIBPCRE
-printf(" Regex engine is the Perl Compatible Regular Expression library\n");
+printf(" -> Regex engine is the Perl Compatible Regular Expression library\n");
 #else
-printf(" Regex engine is the POSIX Regular Expression library\n");
+printf(" -> Regex engine is the POSIX Regular Expression library\n");
 #endif
 
 rex = CompileRegExp("#.*");
@@ -209,7 +224,7 @@ if (rex.failed)
    }
 else
    {
-   CfOut(cf_error,"","Regular expression compilation - ok\n");
+   CfOut(cf_error,""," -> Regular expression compilation - ok\n");
    }
 
 if (!RegExMatchSubString(rex,"line 1:\nline2: # comment to end\nline 3: blablab",&start,&end))
@@ -218,7 +233,7 @@ if (!RegExMatchSubString(rex,"line 1:\nline2: # comment to end\nline 3: blablab"
    }
 else
    {
-   CfOut(cf_verbose,"","Regular expression extraction - ok %d - %d\n",start,end);
+   CfOut(cf_error,""," -> Regular expression extraction - ok %d - %d\n",start,end);
    }
 
 if (RegExMatchFullString(rex,"line 1:\nline2: # comment to end\nline 3: blablab"))
@@ -227,7 +242,7 @@ if (RegExMatchFullString(rex,"line 1:\nline2: # comment to end\nline 3: blablab"
    }
 else
    {
-   CfOut(cf_verbose,"","Regular expression extraction - ok\n");
+   CfOut(cf_error,""," -> Regular expression extraction - ok\n");
    }
 
 if (FullTextMatch("[a-z]*","1234abcd6789"))
@@ -236,12 +251,12 @@ if (FullTextMatch("[a-z]*","1234abcd6789"))
    }
 else
    {
-   CfOut(cf_verbose,"","FullTextMatch - ok 1\n");
+   CfOut(cf_verbose,""," -> FullTextMatch - ok 1\n");
    }
 
 if (FullTextMatch("[1-4]*[a-z]*.*","1234abcd6789"))
    {
-   CfOut(cf_verbose,"","FullTextMatch - ok 2\n");
+   CfOut(cf_error,""," -> FullTextMatch - ok 2\n");
    }
 else
    {
@@ -250,7 +265,7 @@ else
 
 if (BlockTextMatch("#.*","line 1:\nline2: # comment to end\nline 3: blablab",&start,&end))
    {
-   CfOut(cf_verbose,"","BlockTextMatch - ok\n");
+   CfOut(cf_error,""," -> BlockTextMatch - ok\n");
    
    if (start != 15)
       {
@@ -269,7 +284,7 @@ else
 
 if (BlockTextMatch("[a-z]+","1234abcd6789",&start,&end))
    {
-   CfOut(cf_verbose,"","BlockTextMatch - ok\n");
+   CfOut(cf_error,""," -> BlockTextMatch - ok\n");
    
    if (start != 4)
       {
@@ -285,7 +300,27 @@ else
    {
    CfOut(cf_error,"","Failed regular expression match 3\n");
    }
-
-
 }
 
+
+/*****************************************************************************/
+
+void TestAgentPromises()
+
+{ struct Attributes a;
+  struct Promise pp;
+
+pp.conlist = NULL;  
+
+printf("%d. Testing promise attribute completeness\n",++NR);
+ 
+a = GetFilesAttributes(&pp);
+a = GetReportsAttributes(&pp);
+a = GetExecAttributes(&pp);
+a = GetProcessAttributes(&pp);
+a = GetStorageAttributes(&pp);
+a = GetClassContextAttributes(&pp);
+a = GetTopicsAttributes(&pp);
+a = GetOccurrenceAttributes(&pp);
+printf(" -> All non-listed items are accounted for\n");
+}

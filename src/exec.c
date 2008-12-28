@@ -366,12 +366,12 @@ if (!NO_FORK)
   }
 
 WritePID("cf-execd.pid");
-signal(SIGINT,(void *)ExitCleanly);
-signal(SIGTERM,(void *)ExitCleanly);
+signal(SIGINT,HandleSignals);
+signal(SIGTERM,HandleSignals);
 signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
-signal(SIGUSR1,HandleSignal);
-signal(SIGUSR2,HandleSignal);
+signal(SIGUSR1,HandleSignals);
+signal(SIGUSR2,HandleSignals);
  
 umask(077);
 

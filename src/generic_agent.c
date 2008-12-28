@@ -1185,17 +1185,4 @@ void Version(char *component)
 printf("This is %s\n%s\n%s\n",component,VERSION,COPYRIGHT);
 }
 
-/**************************************************************/
 
-void *ExitCleanly(int signum)
-
-{ 
-HandleSignals(signum);
-ReleaseCurrentLock();
-closelog();
-unlink(PIDFILE);
-exit(0);
-}
-
-
-/**************************************************************/

@@ -115,7 +115,7 @@ char MANDIR[CF_BUFSIZE];
             "and cfknow can assemble and converge the reference manual\n"
             "for the current version of the cfengine software.";
  
- struct option OPTIONS[13] =
+ struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -128,11 +128,12 @@ char MANDIR[CF_BUFSIZE];
       { "manual",no_argument,0,'m'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
+      { "syntax",no_argument,0,'S'},
       { "topic",required_argument,0,'t'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[13] =
+ char *HINTS[14] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -145,6 +146,7 @@ char MANDIR[CF_BUFSIZE];
       "Generate reference manual from internal data",
       "Specify a regular expression for searching the topic map",
       "Store topic map in defined SQL database",
+      "Print an HTML syntax summary of this cfengine version",
       "Specify a literal string topic to look up in the topic map",
       NULL
       };

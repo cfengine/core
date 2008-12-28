@@ -330,8 +330,8 @@ ParseModeString(value,&s.plus,&s.minus);
 value = (char *)GetConstraint("search_bsdflags",pp->conlist,CF_SCALAR);
 ParseFlagString(value,&s.plus_flags,&s.minus_flags);
 
-s.owners = (struct Rlist *)GetConstraint("search_owner",pp->conlist,CF_LIST);
-s.groups = (struct Rlist *)GetConstraint("search_group",pp->conlist,CF_LIST);
+s.owners = (struct Rlist *)GetConstraint("search_owners",pp->conlist,CF_LIST);
+s.groups = (struct Rlist *)GetConstraint("search_groups",pp->conlist,CF_LIST);
 
 value = (char *)GetConstraint("search_size",pp->conlist,CF_SCALAR);
 IntRange2Int(value,&s.min_size,&s.max_size,pp);
@@ -586,7 +586,7 @@ value = (char *)GetConstraint("link_type",pp->conlist,CF_SCALAR);
 f.link_type = String2LinkType(value);
 f.copy_patterns = GetListConstraint("copy_patterns",pp->conlist);
 
-value = (char *)GetConstraint("when_no_file",pp->conlist,CF_SCALAR);
+value = (char *)GetConstraint("when_no_source",pp->conlist,CF_SCALAR);
 
 if (value && strcmp(value,"force") == 0)
    {

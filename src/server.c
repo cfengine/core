@@ -290,8 +290,8 @@ if ((sd = OpenReceiverChannel()) == -1)
    exit(1);
    }
 
-signal(SIGINT,(void*)ExitCleanly);
-signal(SIGTERM,(void*)ExitCleanly);
+signal(SIGINT,HandleSignals);
+signal(SIGTERM,HandleSignals);
 signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
 signal(SIGCHLD,SIG_IGN);
@@ -841,7 +841,7 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    if (TRIES++ > MAXTRIES)  /* When to say we're hung / apoptosis threshold */
       {
       CfOut(cf_error,"","Server seems to be paralyzed. DOS attack? Committing apoptosis...");
-      ExitCleanly(0);
+      HandleSignals(SIGTERM);
       }
 
    if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
@@ -3304,7 +3304,7 @@ conn = (struct cfd_connection *) malloc(sizeof(struct cfd_connection));
 if (conn == NULL)
    {
    CfOut(cf_error,"malloc","Unable to allocate conn");
-   ExitCleanly(0);
+   HandleSignals(SIGTERM);
    }
  
 conn->sd_reply = sd;

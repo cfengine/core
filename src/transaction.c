@@ -229,7 +229,7 @@ if (this.lock == (char *)CF_UNDEFINED)
    return;
    }
 
-Verbose("Yielding lock %s\n",this.lock);
+Debug("Yielding lock %s\n",this.lock);
 
 if (RemoveLock(this.lock) == -1)
    {

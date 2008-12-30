@@ -300,12 +300,12 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim)
   struct Topic *tp;
   struct TopicAssociation *ta;
   struct Occurrence *op;
-  struct Rlist *rp;
+  struct Rlist *nodelist = NULL;
   Agraph_t *g;
   Agnode_t **t = NULL;
   Agedge_t **a = NULL;
   GVC_t *gvc;
-  int i,j,counter = 0,nearest_neighbours = 0;
+  int i,j,counter = 0,nearest_neighbours = 0, cadj[CF_TRIBE_SIZE][CF_TRIBE_SIZE];
   int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE];
   char ltopic[CF_MAXVARSIZE],ltype[CF_MAXVARSIZE];
 
@@ -331,7 +331,15 @@ gvc = gvContext();
 g = agopen("g",AGDIGRAPH);
 
 t = (Agnode_t **)malloc(sizeof(Agnode_t)*(CF_TRIBE_SIZE+2));
-a = (Agedge_t **)malloc(sizeof(Agedge_t)*(CF_TRIBE_SIZE+2)*(CF_TRIBE_SIZE+2));
+a = (Agedge_t **)malloc(sizeof(Agedge_t)*(CF_TRIBE_SIZE+2));
+
+for (i = 0; i < CF_TRIBE_SIZE; i++)
+   {
+   for (j = 0; j < CF_TRIBE_SIZE; j++)
+      {
+      cadj[i][j] = 0;
+      }      
+   }
 
 /* Create the nodes - zero is root */
 
@@ -345,16 +353,25 @@ agsafeset(t[0], "fontsize", "14", "");
 agsafeset(t[0], "fontweight", "bold", "");
 agsafeset(t[0], "root", "true", "");
 
-for (j = 0; tribe[j] >= 0; j++)
+for (j = 1; tribe[j] >= 0; j++)
    {
    Verbose("Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
    DeTypeTopic(names[tribe[j]],ltopic,ltype);
-   t[j] = agnode(g,ltopic);   
+
+   if (!KeyInRlist(nodelist,ltopic))
+      {
+      IdempPrependRScalar(&nodelist,ltopic,CF_SCALAR);
+      Verbose("Multiple nodes with same name will overlap on picture -- to fix later\n");
+      }
+
+   t[j] = agnode(g,ltopic);
+   
    agsafeset(t[j], "style", "filled", "false");
    agsafeset(t[j], "shape", "circle", "");
    agsafeset(t[j], "fixedsize", "true", "true");
    agsafeset(t[j], "width", "0.75", "0.75");
    agsafeset(t[j], "fontsize", "12", "");
+   
    if (associate[j] == topic)
       {
       agsafeset(t[j], "color", "bisque2", "");
@@ -376,7 +393,7 @@ Verbose("Made %d nodes\n",counter);
 for (i = 1; associate[i] == topic; i++)
    {
    /* The node for tribe member tribe[j] is t[j] */
-   Verbose("Link: %s to %s\n",names[tribe[i]],names[tribe[0]]);
+   Verbose("Link: %s to %s\n",names[tribe[i]],names[topic]);
    a[counter] = agedge(g,t[0],t[i]);
    agsafeset(a[counter], "color", "red", "");
    counter++;
@@ -391,11 +408,17 @@ for (i = nearest_neighbours; tribe[i] >= 0; i++)
    for (j = 0; tribe[j] >= 0; j++)
       {
       Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[i]]);
+
       if (associate[i] == tribe[j])
          {
-         a[counter] = agedge(g,t[j],t[i]);
-         agsafeset(a[counter], "color", "brown", "");
-         counter++;
+         if (cadj[i][j] < 3)
+            {
+            a[counter] = agedge(g,t[j],t[i]);
+            agsafeset(a[counter], "color", "brown", "");
+            counter++;
+            cadj[i][j]++;
+            cadj[j][i]++;
+            }
          }
       }
    }
@@ -415,6 +438,9 @@ gvFreeLayout(gvc, g);
 agclose(g);
 gvFreeContext(gvc);
 CfOut(cf_inform,"","Generated topic locale %s\n",filename);
+free(t);
+free(a);
+DeleteRlist(nodelist);
 }
 
 /*************************************************************************/
@@ -430,7 +456,13 @@ for (i = 0; i < CF_TRIBE_SIZE; i++)
    neigh[i] = -1;
    }
 
-/* Tribe[i] are the nearest neighbours of i, then neighbours of those too */
+/* Tribe[i] are the nearest neighbours of i, then neighbours of those too
+   Make tribe[0] == topic so it is in its own tribe .. !*/
+
+tribe[0] = topic;
+neigh[0] = topic;
+
+counter = 1;
 
 Verbose("Tribe for topic %d = %s\n",topic,n[topic]);
 
@@ -469,7 +501,7 @@ for (j = 0; j < nearest_neighbour_boundary; j++)
          continue;
          }
 
-      if (possible_neighbour == tribe[j])
+      if (AlreadyInTribe(possible_neighbour,tribe))
          {
          continue;
          }
@@ -507,6 +539,11 @@ for (j = nearest_neighbour_boundary; j < counter; j++)
          continue;
          }
 
+      if (AlreadyInTribe(possible_neighbour,tribe))
+         {
+         continue;
+         }
+
       if (adj[tribe[j]][possible_neighbour] > 0)
          {
          Verbose(" -> (%d) %s is in 3extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
@@ -523,6 +560,23 @@ for (j = nearest_neighbour_boundary; j < counter; j++)
          }
       }
    }
+}
+
+/*************************************************************************/
+
+int AlreadyInTribe(int node, int *tribe)
+
+{ int i;
+
+for (i = 0; tribe[i] > 0; i++)
+    {
+    if (tribe[i] == node)
+       {
+       return true;
+       }
+    }
+
+return false;
 }
 
 #endif

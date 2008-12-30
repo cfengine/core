@@ -1363,18 +1363,30 @@ else
 void LogHashChange(char *file)
 
 { FILE *fp;
- char fname[CF_BUFSIZE],timebuf[CF_MAXVARSIZE];
+  char fname[CF_BUFSIZE],timebuf[CF_MAXVARSIZE];
   time_t now = time(NULL);
+  struct stat sb;
 
 /* This is inefficient but we don't want to lose any data */
   
 snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
+
+if (stat(fname,&sb) != -1)
+   {
+   if (sb.st_mode & (S_IWGRP | S_IWOTH))
+      {
+      CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",fname,sb.st_uid);
+      exit(1);
+      }
+   }
 
 if ((fp = fopen(fname,"a")) == NULL)
    {
    CfLog(cferror,"Could not write to the change log","");
    return;
    }
+
+chmod(fname,600);
 
 snprintf(timebuf,CF_MAXVARSIZE-1,"%s",ctime(&now));
 Chop(timebuf);

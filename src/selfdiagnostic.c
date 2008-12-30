@@ -322,5 +322,12 @@ a = GetStorageAttributes(&pp);
 a = GetClassContextAttributes(&pp);
 a = GetTopicsAttributes(&pp);
 a = GetOccurrenceAttributes(&pp);
+GetMethodAttributes(&pp);
+GetInterfacesAttributes(&pp);
+GetInsertionAttributes(&pp);
+GetDeletionAttributes(&pp);
+GetColumnAttributes(&pp);
+GetReplaceAttributes(&pp);
+
 printf(" -> All non-listed items are accounted for\n");
 }

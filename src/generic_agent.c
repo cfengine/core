@@ -400,7 +400,7 @@ if (stat(wfilename,&statbuf) == -1)
 
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    {
-   CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",wfilename,getuid());
+   CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",wfilename,statbuf.st_uid);
    exit(1);
    }
 

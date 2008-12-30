@@ -457,6 +457,16 @@ void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
 /* graph.c */
 
 void VerifyGraph(struct Topic *map);
+int AlreadyInTribe(int node, int *tribe);
+int Degree(double *m,int dim);
+int Top(double **adj,double *evc,int topic,int dim);
+void PrintNeighbours(double *m,int dim,char **names);
+void EigenvectorCentrality(double **A,double *v,int dim);
+void MatrixOperation(double **A,double *v,int dim);
+void PlotTopicCosmos(int topic,double **adj,char **names,int dim);
+void GetTribe(int *tribe,char **n,int *neigh,int topic,double **adj,int dim);
+int AlreadyInTribe(int node, int *tribe);
+
 
 /* hashes.c */
 

@@ -782,7 +782,7 @@ struct Attributes GetInsertionAttributes(struct Promise *pp)
 attr.havelocation = GetBooleanConstraint("location",pp->conlist);
 attr.location = GetLocationAttributes(pp);
 
-attr.sourcetype = GetConstraint("source_type",pp->conlist,CF_SCALAR);
+attr.sourcetype = GetConstraint("insert_type",pp->conlist,CF_SCALAR);
 attr.expandvars = GetBooleanConstraint("expand_scalars",pp->conlist);
 
 attr.haveinsertselect = GetBooleanConstraint("insert_select",pp->conlist);

@@ -136,7 +136,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
 
 /* Special variables */
 
-Verbose("Dealing with chapter / bundle type - special verbose\n");
+Verbose("Dealing with chapter / bundle type - special variables\n");
 fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
@@ -147,6 +147,16 @@ fprintf(fout,"@node Special Variables\n@chapter Special Variables\n\n");
 
 TexinfoVariables(fout,"const");
 TexinfoVariables(fout,"sys");
+
+// Log files
+
+Verbose("Dealing with chapter / bundle type - Logs and records\n");
+fprintf(fout,"@c *****************************************************\n");
+fprintf(fout,"@c * CHAPTER \n");
+fprintf(fout,"@c *****************************************************\n");
+
+fprintf(fout,"@node Logs and records\n@chapter Logs and records\n\n");
+IncludeManualFile(fout,"reference_logs.texinfo");
 
 TexinfoFooter(fout);
 

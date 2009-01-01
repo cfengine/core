@@ -47,7 +47,7 @@
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
-#define CF3COPYRIGHT "cf3 cfengine 3 is (C) Cfengine AS 2008, and offered under the terms of the enclosed free software licence"
+#define CF3COPYRIGHT "(C) Cfengine AS 2008"
 
 #define CF_SCALAR 's'
 #define CF_LIST   'l'

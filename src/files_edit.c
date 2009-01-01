@@ -80,12 +80,12 @@ else if (ec && ec->num_edits > 0)
       {
       if (ec)
          {
-         cfPS(cf_inform,CF_NOP,"",pp,a,"No edit changes to file %s need saving",ec->filename);
+         cfPS(cf_inform,CF_NOP,"",pp,a," -- No edit changes to file %s need saving",ec->filename);
          }      
       }
    else
       {
-      cfPS(cf_inform,CF_CHG,"",pp,a,"Saving edit changes to file %s",ec->filename);
+      cfPS(cf_inform,CF_CHG,"",pp,a," -> Saving edit changes to file %s",ec->filename);
       SaveItemListAsFile(ec->file_start,ec->filename,a,pp);
       }
    }
@@ -93,7 +93,7 @@ else
    {
    if (ec)
       {
-      cfPS(cf_inform,CF_NOP,"",pp,a,"No edit changes to file %s need saving",ec->filename);
+      cfPS(cf_inform,CF_NOP,"",pp,a," -- No edit changes to file %s need saving",ec->filename);
       }
    }
 

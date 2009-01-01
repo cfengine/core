@@ -1182,7 +1182,7 @@ printf(".pp\nThis software is (C) 2008 Cfengine AS.\n");
 void Version(char *component)
 
 {
-printf("This is %s\n%s\n%s\n",component,VERSION,COPYRIGHT);
+printf("This is %s version %s %s\n",component,VERSION,CF3COPYRIGHT);
 }
 
 

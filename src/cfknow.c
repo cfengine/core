@@ -392,7 +392,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlbanner].lval) == 0)
       {
-      strncpy(BANNER,retval,CF_BUFSIZE-1);
+      strncpy(BANNER,retval,2*CF_BUFSIZE-1);
       continue;
       }
 

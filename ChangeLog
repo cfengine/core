@@ -1,0 +1,8 @@
+
+3.0.0
+	First release of cfengine 3. Known omissions:
+	- no support for ACLs
+	- no support for packages
+	- no support for interface configuration
+	These will be added in the next release.
+	

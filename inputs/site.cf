@@ -173,6 +173,8 @@ expireafter => "240";
 
 bundle agent anomalies
 {
+reports:
+
 rootprocs_high_dev2::
 
    "RootProc anomaly high 2 dev on $(sys.host) at $(sys.env_time) 

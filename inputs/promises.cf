@@ -1,6 +1,6 @@
 #######################################################
 #
-# Top level promises
+# promises.cf
 #
 #######################################################
 
@@ -66,9 +66,11 @@ report_output => "html";
 
 body runagent control
 {
-hosts => { "127.0.0.1" };
+hosts => { 
+          "127.0.0.1" 
+          # , "myhost.example.com:5308", ...
+         };
 
-# , "myhost.example.com:5308", ...
 }
 
 #######################################################
@@ -83,7 +85,7 @@ trustkeysfrom         => { "127.0.0.1" , "::1" };
 # Make updates and runs happen in one
 
 cfruncommand          => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bin/cf-agent";
-allowusers            => { "mark", "root" };
+allowusers            => { "root" };
 }
 
 

@@ -1072,7 +1072,7 @@ else
       
       if (rmdir(lastnode) == -1)
          {
-         cfPS(cf_inform,CF_FAIL,"unlink",pp,attr,"Delete directory %s failed\n",path);
+         cfPS(cf_inform,CF_FAIL,"rmdir",pp,attr,"Delete directory %s failed\n",path);
          }            
       else
          {

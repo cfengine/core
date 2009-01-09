@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.0b9)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.1a1)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -72,7 +72,8 @@ dnl Checks for libraries.
 dnl ######################################################################
 
 AC_CHECK_LIB(m,main)
-AC_CHECK_LIB(cfengine,main)
+
+dnl AC_CHECK_LIB(cfengine,main)
 
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
@@ -776,7 +777,7 @@ if test x"$GCC" = "xyes"; then
 	
 dnl # -Wformat - to be considered
 
-	GCC_CFLAG="-g -O2 -Wreturn-type -Wmissing-prototypes -Wuninitialized"		
+	GCC_CFLAG="-g -O2 -Wreturn-type -Wmissing-prototypes -Wuninitialized -fPIC"		
 	AC_MSG_RESULT(yes)
 	AC_SUBST(GCC_CFLAG)
 else 

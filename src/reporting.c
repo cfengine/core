@@ -115,7 +115,7 @@ if (!VERBOSE && !DEBUG)
 
 ReportBanner("Agent's basic classified context");
 
-CfOut(cf_verbose,"","\nDefined Classes = ( ");
+CfOut(cf_verbose,"","Defined Classes = ( ");
 
 for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
    {

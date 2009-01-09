@@ -821,13 +821,13 @@ else if (stat("/etc/redhat-release",&statbuf) != -1)
 
 if (stat("/etc/generic-release",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a sun cobalt system.\n");
+   Verbose("This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
 
 if (stat("/etc/SuSE-release",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a SuSE system.\n");
+   Verbose("This appears to be a SuSE system.\n");
    NewClass("SuSE");
    Linux_Suse_Version();
    }
@@ -836,13 +836,13 @@ if (stat("/etc/SuSE-release",&statbuf) != -1)
 #define SLACKWARE_VERSION_FILENAME "/etc/slackware-version"
 if (stat(SLACKWARE_VERSION_FILENAME,&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a slackware system.\n");
+   Verbose("This appears to be a slackware system.\n");
    NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_VERSION_FILENAME);
    }
 else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    {
-   Verbose("\nThis appears to be an ancient slackware system.\n");
+   Verbose("This appears to be an ancient slackware system.\n");
    NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_ANCIENT_VERSION_FILENAME);
    }
@@ -850,26 +850,26 @@ else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
 
 if (stat("/etc/generic-release",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a sun cobalt system.\n");
+   Verbose("This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
  
 if (stat("/etc/debian_version",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a debian system.\n");
+   Verbose("This appears to be a debian system.\n");
    NewClass("debian");
    Linux_Debian_Version();
    }
 
 if (stat("/etc/UnitedLinux-release",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a UnitedLinux system.\n");
+   Verbose("This appears to be a UnitedLinux system.\n");
    NewClass("UnitedLinux");
    }
 
 if (stat("/etc/gentoo-release",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a gentoo system.\n");
+   Verbose("This appears to be a gentoo system.\n");
    NewClass("gentoo");
    }
 
@@ -880,7 +880,7 @@ Lsb_Version();
 if (stat("/proc/vmware/version",&statbuf) != -1 ||
     stat("/etc/vmware-release",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a VMware Server ESX system.\n");
+   Verbose("This appears to be a VMware Server ESX system.\n");
    NewClass("VMware");
    VM_Version();
    }
@@ -888,7 +888,7 @@ else if (stat("/etc/vmware",&statbuf) != -1)
    {
    if (S_ISDIR(statbuf.st_mode))
       {
-      Verbose("\nThis appears to be a VMware xSX system.\n");
+      Verbose("This appears to be a VMware xSX system.\n");
       NewClass("VMware");
       VM_Version();
       }
@@ -896,14 +896,14 @@ else if (stat("/etc/vmware",&statbuf) != -1)
 
 if (stat("/proc/xen/capabilities",&statbuf) != -1)
    {
-   Verbose("\nThis appears to be a xen pv system.\n");
+   Verbose("This appears to be a xen pv system.\n");
    NewClass("xen");
    Xen_Domain();
    }
 #ifdef XEN_CPUID_SUPPORT
 else if (Xen_Hv_Check())
    {
-   Verbose("\nThis appears to be a xen hv system.\n");
+   Verbose("This appears to be a xen hv system.\n");
    NewClass("xen");
    NewClass("xen_domu_hv");
    }
@@ -1552,7 +1552,7 @@ while (dir = strsep(&rest, ":"))
         free(path);
         path = strdup(vbuff);
 
-        Verbose("\nThis appears to be a LSB compliant system.\n");
+        Verbose("This appears to be a LSB compliant system.\n");
         NewClass("lsb_compliant");
         break;
         }

@@ -156,13 +156,13 @@ void KeepPromises()
 if (stat(CFPRIVKEYFILE,&statbuf) != -1)
    {
    printf("A key file already exists at %s.\n",CFPRIVKEYFILE);
-   return 1;
+   return;
    }
 
 if (stat(CFPUBKEYFILE,&statbuf) != -1)
    {
    printf("A key file already exists at %s.\n",CFPUBKEYFILE);
-   return 1;
+   return;
    }
 
 printf("Making a key pair for cfengine, please wait, this could take a minute...\n"); 
@@ -173,7 +173,7 @@ if (pair == NULL)
    {
    err = ERR_get_error();
    printf("Error = %s\n",ERR_reason_error_string(err));
-   return 1;
+   return;
    }
 
 if (VERBOSE)
@@ -186,25 +186,25 @@ fd = open(CFPRIVKEYFILE,O_WRONLY | O_CREAT | O_TRUNC, 0600);
 if (fd < 0)
    {
    printf("Ppen %s failed: %s.",CFPRIVKEYFILE,strerror(errno));
-   return 1;
+   return;
    }
  
 if ((fp = fdopen(fd, "w")) == NULL )
    {
    printf("fdopen %s failed: %s.",CFPRIVKEYFILE, strerror(errno));
    close(fd);
-   return 1;
+   return;
    }
 
 printf("Writing private key to %s\n",CFPRIVKEYFILE);
  
 if (!PEM_write_RSAPrivateKey(fp,pair,cipher,passphrase,strlen(passphrase),NULL,NULL))
-    {
-    err = ERR_get_error();
-    printf("Error = %s\n",ERR_reason_error_string(err));
-    return 1;
-    }
- 
+   {
+   err = ERR_get_error();
+   printf("Error = %s\n",ERR_reason_error_string(err));
+   return;
+   }
+
 fclose(fp);
  
 fd = open(CFPUBKEYFILE,O_WRONLY | O_CREAT | O_TRUNC, 0600);
@@ -212,23 +212,23 @@ fd = open(CFPUBKEYFILE,O_WRONLY | O_CREAT | O_TRUNC, 0600);
 if (fd < 0)
    {
    printf("open %s failed: %s.",CFPUBKEYFILE,strerror(errno));
-   return 1;
+   return;
    }
  
 if ((fp = fdopen(fd, "w")) == NULL )
    {
    printf("fdopen %s failed: %s.",CFPUBKEYFILE, strerror(errno));
    close(fd);
-   return 1;
+   return;
    }
 
 printf("Writing public key to %s\n",CFPUBKEYFILE);
  
-if(!PEM_write_RSAPublicKey(fp,pair))
+if (!PEM_write_RSAPublicKey(fp,pair))
    {
    err = ERR_get_error();
    printf("Error = %s\n",ERR_reason_error_string(err));
-   return 1;
+   return;
    }
 
 fclose(fp);
@@ -236,6 +236,5 @@ fclose(fp);
 snprintf(vbuff,CF_BUFSIZE,"%s/randseed",CFWORKDIR);
 RAND_write_file(vbuff);
 chmod(vbuff,0644); 
-return 0;
 }
 

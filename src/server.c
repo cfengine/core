@@ -785,7 +785,6 @@ if (PROMISETIME < newstat.st_mtime)
       ReadPromises(cf_server,CF_SERVERC);
       }
 
-   //HashVariables();
    KeepPromises();
    Summarize();
    }
@@ -2100,8 +2099,8 @@ if (iscrypt == 'y')
  
 /* Client's ID is now established by key or trusted, reply with md5 */
  
- HashString(decrypted_nonce,nonce_len,digest,'m');
- free(decrypted_nonce);
+HashString(decrypted_nonce,nonce_len,digest,cf_md5);
+free(decrypted_nonce);
  
 /* Get the public key from the client */
  

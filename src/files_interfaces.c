@@ -1341,7 +1341,7 @@ int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,
   selinux_enabled = (is_selinux_enabled()>0);
 #endif
 
-Debug2("CopyRegularFile(%s,%s)\n",source,dest);
+Debug("CopyRegularFile(%s,%s)\n",source,dest);
 
 discardbackup = (attr.copy.backup == cfa_nobackup || attr.copy.backup == cfa_repos_store);
     
@@ -1402,7 +1402,7 @@ if (strstr(dest, _PATH_RSRCFORKSPEC))
    forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
    *forkpointer = '\0';
    
-   strncpy(new, tmpstr, CF_BUFSIZE);
+   strncpy(new,tmpstr,CF_BUFSIZE);
    
    free(tmpstr);
    }
@@ -1410,10 +1410,11 @@ else
    {
 #endif
 
-if (!JoinPath(dest,CF_NEW))
+if (!JoinSuffix(dest,CF_NEW))
    {
    return false;
    }
+
 strcpy(new,dest);
 
 #ifdef DARWIN

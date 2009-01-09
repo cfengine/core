@@ -572,7 +572,7 @@ if (VSYSTEMHARDCLASS == cfnt)
          {
          if (sb.st_mode & (S_IWOTH | S_IWGRP))
             {
-            CfLog(cferror,"File /etc/fstab was insecure. Cannot mount filesystems.\n","");
+            CfOut(cf_error,"","File /etc/fstab was insecure. Cannot mount filesystems.\n");
             return;
             }
          }
@@ -583,9 +583,7 @@ SetTimeOut(RPCTIMEOUT);
  
 if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS],"r")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Failed to open pipe from %s\n",VMOUNTCOMM[VSYSTEMHARDCLASS]);
-   CfLog(cferror,OUTPUT,"popen");
-   ReleaseCurrentLock();
+   CfOut(cf_error,"cf_popen","Failed to open pipe from %s\n",VMOUNTCOMM[VSYSTEMHARDCLASS]);
    return;
    }
  

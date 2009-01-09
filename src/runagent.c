@@ -138,7 +138,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:M",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:D:VSxo:s:M",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -200,10 +200,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pD:VSxo:s:M",OPTIONS,&optindex)) != EOF)
           NewClass("opt_dry_run");
           break;
           
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
       case 'V': Version("cf-runagent Run agent");
           exit(0);
           

@@ -1,0 +1,379 @@
+/* 
+   Copyright (C) 2008 - Cfengine AS
+
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 3, or (at your option) any
+   later version. 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+*/
+
+/*******************************************************************/
+/*                                                                 */
+/* IP layers                                                       */
+/*                                                                 */
+/*******************************************************************/
+
+#include "cf3.defs.h"
+#include "cf3.extern.h"
+
+/*********************************************************************/
+
+struct cfagent_connection *NewAgentConn()
+
+{ struct cfagent_connection *ap;
+
+if ((ap = (struct cfagent_connection *)malloc(sizeof(struct cfagent_connection))) == NULL)
+   {
+   return NULL;
+   }
+
+Debug("New server connection...\n");
+ap->sd = CF_NOT_CONNECTED;
+ap->family = AF_INET; 
+ap->trust = false;
+ap->localip[0] = '\0';
+ap->remoteip[0] = '\0';
+ap->session_key = NULL;
+ap->error = false; 
+return ap;
+};
+
+/*********************************************************************/
+
+void DeleteAgentConn(struct cfagent_connection *ap)
+
+{
+if (ap->session_key != NULL)
+   {
+   free(ap->session_key);
+   }
+
+free(ap);
+ap = NULL; 
+}
+
+/**********************************************************************/
+
+void DePort(char *address)
+
+{ char *sp,*chop,*fc = NULL,*fd = NULL,*ld =  NULL;
+  int i = 0,ccount = 0, dcount = 0;
+
+/* Start looking for ethernet/ipv6 addresses */
+ 
+for (sp = address; *sp != '\0'; sp++)
+   {
+   if (*sp == ':')
+      {
+      if (!fc)
+         {
+         fc = sp;
+         }
+      ccount++;
+      }
+
+   if (*sp == '.')
+      {
+      if (!fd)
+         {
+         fd = sp;
+         }
+
+      ld = sp;
+      
+      dcount++;
+      }
+   }
+
+if (!fd)
+   {
+   /* This does not look like an IP address+port, maybe ethernet */
+   return;
+   }
+
+if (dcount == 4)
+   {
+   chop = ld;
+   }
+else if (dcount > 1 && fc != NULL)
+   {
+   chop = fc;
+   }
+else if (ccount > 1 && fd != NULL)
+   {
+   chop = fd;
+   }
+else
+   {
+   /* Don't recognize address */
+   return;
+   }
+
+if (chop < address+strlen(address))
+   {
+   *chop = '\0';
+   }
+
+Verbose("Deport => %s\n",address);
+
+return;
+}
+
+/*******************************************************************/
+
+int IsIPV6Address(char *name)
+
+{ char *sp;
+ int count,max = 0; 
+
+Debug("IsIPV6Address(%s)\n",name);
+ 
+if (name == NULL)
+   {
+   return false;   
+   }
+
+count = 0;
+ 
+for (sp = name; *sp != '\0'; sp++)
+   {
+   if (isalnum((int)*sp))
+      {
+      count++;
+      }
+   else if ((*sp != ':') && (*sp != '.'))
+      {
+      return false;
+      }
+
+   if (*sp == 'r')
+      {
+      return false;
+      }
+   
+   if (count > max)
+      {
+      max = count;
+      }
+   else
+      {
+      count = 0;
+      }
+   }
+
+if (max <= 2)
+   {
+   Debug("Looks more like a MAC address");
+   return false;
+   }
+ 
+if (strstr(name,":") == NULL)
+   {
+   return false;
+   }
+
+if (StrStr(name,"scope"))
+   {
+   return false;    
+   }
+ 
+return true;
+}
+
+
+/*******************************************************************/
+
+int IsIPV4Address(char *name)
+
+{ char *sp;
+  int count = 0; 
+
+Debug("IsIPV4Address(%s)\n",name);
+ 
+if (name == NULL)
+   {
+   return false;   
+   }
+ 
+for (sp = name; *sp != '\0'; sp++)
+   {
+   if (!isdigit((int)*sp) && (*sp != '.'))
+      {
+      return false;
+      }
+
+   if (*sp == '.')
+      {
+      count++;
+      }
+   }
+ 
+if (count != 3)
+   {
+   return false;
+   }
+
+return true;
+}
+
+/*****************************************************************************/
+
+char *Hostname2IPString(char *hostname)
+
+{ static char ipbuffer[CF_SMALLBUF];
+  int err;
+
+#if defined(HAVE_GETADDRINFO)
+
+ struct addrinfo query, *response, *ap;
+
+ memset(&query,0,sizeof(struct addrinfo));   
+ query.ai_family = AF_UNSPEC;
+ query.ai_socktype = SOCK_STREAM;
+
+ memset(ipbuffer,0,CF_SMALLBUF-1);
+ 
+if ((err = getaddrinfo(hostname,NULL,&query,&response)) != 0)
+   {
+   CfOut(cf_error,"","Unable to lookup hostname (%s) or cfengine service: %s",hostname,gai_strerror(err));
+   return hostname;
+   }
+ 
+for (ap = response; ap != NULL; ap = ap->ai_next)
+   {
+   strncpy(ipbuffer,sockaddr_ntop(ap->ai_addr),64);
+   Debug("Found address (%s) for host %s\n",ipbuffer,hostname);
+
+   if (strlen(ipbuffer) == 0)
+      {
+      snprintf(ipbuffer,CF_SMALLBUF-1,"Empty IP result for %s",hostname);
+      }
+   freeaddrinfo(response);   
+   return ipbuffer;
+   }
+#else
+ struct hostent *hp;
+ struct sockaddr_in cin;
+ memset(&cin,0,sizeof(cin));
+
+ memset(ipbuffer,0,CF_SMALLBUF-1);
+
+if ((hp = gethostbyname(hostname)) != NULL)
+   {
+   cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
+   strncpy(ipbuffer,inet_ntoa(cin.sin_addr),CF_SMALLBUF-1);
+   Verbose("Found address (%s) for host %s\n",ipbuffer,hostname);
+   return ipbuffer;
+   }
+#endif
+
+snprintf(ipbuffer,CF_SMALLBUF-1,"Unknown IP %s",hostname);
+return ipbuffer;
+}
+
+
+/*****************************************************************************/
+
+char *IPString2Hostname(char *ipaddress)
+
+{ static char hostbuffer[MAXHOSTNAMELEN];
+  int err;
+
+#if defined(HAVE_GETADDRINFO)
+
+  struct addrinfo query, *response, *ap;
+
+memset(&query,0,sizeof(query));
+memset(&response,0,sizeof(response));
+
+query.ai_flags = AI_CANONNAME;
+
+memset(hostbuffer,0,MAXHOSTNAMELEN);
+
+if ((err = getaddrinfo(ipaddress,NULL,&query,&response)) != 0)
+   {
+   CfOut(cf_inform,"","Unable to lookup IP address (%s): %s",ipaddress,gai_strerror(err));
+   snprintf(hostbuffer,MAXHOSTNAMELEN-1,"(Non registered IP)"); 
+   return hostbuffer;
+   }
+
+for (ap = response; ap != NULL; ap = ap->ai_next)
+   {   
+   if ((err = getnameinfo(ap->ai_addr,ap->ai_addrlen,hostbuffer,MAXHOSTNAMELEN,0,0,0)) != 0)
+      {
+      snprintf(hostbuffer,MAXHOSTNAMELEN-1,"(Non registered IP)");
+      freeaddrinfo(response);
+      return hostbuffer;
+      }
+   
+   Debug("Found address (%s) for host %s\n",hostbuffer,ipaddress);
+   freeaddrinfo(response);
+   return hostbuffer;
+   }
+
+ snprintf(hostbuffer,MAXHOSTNAMELEN-1,"(Non registered IP)");
+ 
+#else
+
+struct hostent *hp;
+struct sockaddr_in myaddr;
+struct in_addr iaddr;
+  
+memset(hostbuffer,0,MAXHOSTNAMELEN);
+
+if ((iaddr.s_addr = inet_addr(ipaddress)) != -1)
+   {
+   hp = gethostbyaddr((void *)&iaddr,sizeof(struct sockaddr_in),AF_INET);
+  
+   if ((hp == NULL) || (hp->h_name == NULL))
+      {
+      strcpy(hostbuffer,"(Non registered IP)");
+      return hostbuffer;
+      }
+
+   strncpy(hostbuffer,hp->h_name,MAXHOSTNAMELEN-1);
+   }
+else
+   {
+   strcpy(hostbuffer,"(non registered IP)");
+   }
+
+#endif
+
+return hostbuffer;
+}
+
+/*****************************************************************************/
+
+char *IPString2UQHostname(char *ipaddress)
+
+/* Return an unqualified hostname */
+    
+{ static char hostbuffer[MAXHOSTNAMELEN];
+  char *sp;
+
+strcpy(hostbuffer,IPString2Hostname(ipaddress));
+
+for (sp = hostbuffer; *sp != '\0'; sp++)
+   {
+   if (*sp == '.')
+      {
+      *sp = '\0';
+      break;
+      }
+   }
+
+return hostbuffer;
+}
+ 

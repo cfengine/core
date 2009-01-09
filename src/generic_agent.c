@@ -82,11 +82,6 @@ if (SHOWREPORTS || ERRORCOUNT)
    }
 
 FOUT = stdout;
-
-if (PARSEONLY)
-   {
-   exit(0);
-   }
 }
 
 /*****************************************************************************/
@@ -230,7 +225,7 @@ void InitializeGA(int argc,char *argv[])
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
 
-AddClassToHeap("any");
+NewClass("any");
 strcpy(VPREFIX,"cf3");
 
 Verbose("Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");  
@@ -345,6 +340,8 @@ if ((PROMISETIME = time((time_t *)NULL)) == -1)
    }
 
 Cf3ParseFile(VINPUTFILE);
+
+// Expand any lists in this list now
 
 if (VINPUTLIST != NULL)
    {
@@ -614,24 +611,28 @@ void PromiseBanner(struct Promise *pp)
 Verbose("\n");
 Verbose("    .........................................................\n");
 
-if (VERBOSE||DEBUG)
+Verbose("    Promise: %s",pp->promiser);
+
+if (pp->promisee)
    {
-   printf("%s         %s",VPREFIX,pp->promiser);
-   if (pp->promisee)
+   Verbose(" -> ");
+   if (VERBOSE)
       {
-      printf(" -> ");
       ShowRval(stdout,pp->promisee,pp->petype);
-      printf("\n");
-      }
-   else
-      {
-      printf("\n");
-      }
-   if (pp->ref)
-      {
-      printf("\n      %s\n",pp->ref);
       }
    }
+
+if (VERBOSE)
+   {
+   printf("\n");
+   }
+
+if (pp->ref)
+   {
+   Verbose("\n");
+   Verbose("    Comment:  %s\n",pp->ref);
+   }
+   
 Verbose("    .........................................................\n");
 Verbose("\n");
 }
@@ -644,6 +645,7 @@ void CheckWorkingDirectories()
 { struct stat statbuf;
   int result;
   char *sp,vbuff[CF_BUFSIZE];
+  char output[CF_BUFSIZE];
 
 Debug("CheckWorkingDirectories()\n");
 
@@ -657,7 +659,7 @@ snprintf(LOGFILE,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
 VSETUIDLOG = strdup(LOGFILE); 
  
 snprintf(vbuff,CF_BUFSIZE,"%s/.",CFWORKDIR);
-MakeDirectoriesFor(vbuff,'n');
+MakeParentDirectory(vbuff,false);
 
 Verbose("Making sure that locks are private...\n"); 
 
@@ -673,7 +675,7 @@ if (stat(CFWORKDIR,&statbuf) != -1)
    }
 
 snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
-MakeDirectoriesFor(vbuff,'n');
+MakeParentDirectory(vbuff,false);
 
 snprintf(CFPRIVKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.priv",CFWORKDIR);
 snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
@@ -684,7 +686,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/state",CFWORKDIR);
 if (stat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
-   MakeDirectoriesFor(vbuff,'n');
+   MakeParentDirectory(vbuff,false);
    
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
@@ -697,7 +699,7 @@ else
    {
    if (statbuf.st_mode & 022)
       {
-      CfOut(cf_error,"","UNTRUSTED: State directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
+      CfOut(cf_error,"","UNTRUSTED: State directory %s (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
       }
    }
 
@@ -708,7 +710,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/modules",CFWORKDIR);
 if (stat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/modules/.",CFWORKDIR);
-   MakeDirectoriesFor(vbuff,'n');
+   MakeParentDirectory(vbuff,false);
    
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
@@ -721,7 +723,7 @@ else
    {
    if (statbuf.st_mode & 022)
       {
-      CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",VLOCKDIR,statbuf.st_mode & 0777);
+      CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
       }
    }
 
@@ -732,7 +734,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in",CFWORKDIR);
 if (stat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in/.",CFWORKDIR);
-   MakeDirectoriesFor(vbuff,'n');
+   MakeParentDirectory(vbuff,false);
    
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
@@ -745,8 +747,8 @@ else
    {
    if (statbuf.st_mode & 077)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
-      FatalError(OUTPUT);
+      snprintf(output,CF_BUFSIZE*2,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
+      FatalError(output);
       }
    }
 
@@ -757,7 +759,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out",CFWORKDIR);
 if (stat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out/.",CFWORKDIR);
-   MakeDirectoriesFor(vbuff,'n');
+   MakeParentDirectory(vbuff,false);
 
    if (chown(vbuff,getuid(),getgid()) == -1)
       {
@@ -770,8 +772,9 @@ else
    {
    if (statbuf.st_mode & 077)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
-      FatalError(OUTPUT);
+      
+      snprintf(output,CF_BUFSIZE*2,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
+      FatalError(output);
       }
    }
  
@@ -782,7 +785,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys",CFWORKDIR);
 if (stat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys/.",CFWORKDIR);
-   MakeDirectoriesFor(vbuff,'n');
+   MakeParentDirectory(vbuff,false);
 
    chmod(vbuff,(mode_t)0700); /* Keys must be immutable to others */
    }
@@ -790,8 +793,8 @@ else
    {
    if (statbuf.st_mode & 077)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"UNTRUSTED: Private key directory %s/ppkeys (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
-      FatalError(OUTPUT);
+      snprintf(output,CF_BUFSIZE*2,"UNTRUSTED: Private key directory %s/ppkeys (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
+      FatalError(output);
       }
    }
 }
@@ -802,7 +805,7 @@ else
 
 void Report(char *fname)
 
-{ char filename[CF_BUFSIZE];
+{ char filename[CF_BUFSIZE],output[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
 
@@ -811,8 +814,8 @@ XML = false;
 
 if ((FOUT = fopen(filename,"w")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
+   FatalError(output);
    }
 
 printf("Summarizing promises as text to %s\n",filename);
@@ -830,8 +833,9 @@ snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
 
 if ((FOUT = fopen(filename,"w")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(OUTPUT);
+   char output[CF_BUFSIZE];
+   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
+   FatalError(output);
    }
 
 printf("Summarizing promises as html to %s\n",filename);
@@ -963,6 +967,34 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       }
    }
 }
+
+/********************************************************************/
+
+void PrependAuditFile(char *file)
+
+{ struct stat statbuf;;
+
+if ((AUDITPTR = (struct Audit *)malloc(sizeof(struct Audit))) == NULL)
+   {
+   FatalError("Memory allocation failure in PrependAuditFile");
+   }
+
+if (stat(file,&statbuf) == -1)
+   {
+   /* shouldn't happen */
+   return;
+   }
+
+HashFile(file,AUDITPTR->digest,cf_md5);   
+
+AUDITPTR->next = VAUDIT;
+AUDITPTR->filename = strdup(file);
+AUDITPTR->date = strdup(ctime(&statbuf.st_mtime));
+Chop(AUDITPTR->date);
+AUDITPTR->version = NULL;
+VAUDIT = AUDITPTR;
+}
+
 
 /*******************************************************************/
 /* Level 3                                                         */
@@ -1183,6 +1215,25 @@ void Version(char *component)
 
 {
 printf("This is %s version %s %s\n",component,VERSION,CF3COPYRIGHT);
+}
+
+/********************************************************************/
+
+void WritePID(char *filename)
+
+{ FILE *fp;
+
+snprintf(PIDFILE,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,filename);
+
+if ((fp = fopen(PIDFILE,"w")) == NULL)
+   {
+   CfOut(cf_inform,"fopen","Could not write to PID file %s\n",filename);
+   return;
+   }
+
+fprintf(fp,"%d\n",getpid());
+
+fclose(fp);
 }
 
 

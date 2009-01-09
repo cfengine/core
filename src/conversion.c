@@ -28,36 +28,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-/*********************************************************************/
-/* Object variables                                                  */
-/*********************************************************************/
-
-char *DAY_TEXT[] =
-   {
-   "Monday",
-   "Tuesday",
-   "Wednesday",
-   "Thursday",
-   "Friday",
-   "Saturday",
-   "Sunday"
-   };
-
-char *MONTH_TEXT[] =
-   {
-   "January",
-   "February",
-   "March",
-   "April",
-   "May",
-   "June",
-   "July",
-   "August",
-   "September",
-   "October",
-   "November",
-   "December"
-   };
 
 /***************************************************************************/
 
@@ -338,6 +308,7 @@ long Str2Int(char *s)
 { long a = CF_NOINT;
   char c = 'X';
   char remainder[CF_BUFSIZE];
+  char output[CF_BUFSIZE];
 
 if (s == NULL)
    {
@@ -360,8 +331,8 @@ sscanf(s,"%ld%c%s",&a,&c,remainder);
 
 if (a == CF_NOINT || strlen(remainder) > 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
+   ReportError(output);
    }
 else
    {
@@ -410,7 +381,8 @@ return a;
 long TimeCounter2Int(char *s)
 
 { long h = CF_NOINT,m = CF_NOINT, r = 0;
-
+  char output[CF_BUFSIZE];
+  
 if (s == NULL)
    {
    return CF_NOINT;
@@ -420,8 +392,8 @@ sscanf(s,"%ld:%ld",&h,&m);
 
 if (h == CF_NOINT || m == CF_NOINT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
+   ReportError(output);
    }
 else
    {
@@ -468,7 +440,7 @@ else               /* date Month */
 
    month = Month2Int(mon);
    
-   if (Month2Number(VMONTH) < month)
+   if (Month2Int(VMONTH) < month)
       {
       /* Wrapped around */
       year--;
@@ -495,12 +467,30 @@ Debug("Time CORRESPONDS %s\n",ctime(&cftime));
 return (long) cftime;
 }
 
+/*********************************************************************/
+
+int Day2Number(char *datestring)
+
+{ int i = 0;
+
+for (i = 0; i < 7; i++)
+   {
+   if (strncmp(datestring,DAY_TEXT[i],3) == 0)
+      {
+      return i;
+      }
+   }
+
+return -1;
+}
+
 /****************************************************************************/
 
 mode_t Str2Mode(char *s)
 
 { int a = CF_UNDEFINED;
-
+  char output[CF_BUFSIZE];
+  
 if (s == NULL)
    {
    return 0;
@@ -510,8 +500,8 @@ sscanf(s,"%o",&a);
 
 if (a == CF_UNDEFINED)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed octal value %s\n",s);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed octal value %s\n",s);
+   ReportError(output);
    }
 
 return (mode_t)a;
@@ -523,7 +513,8 @@ int Str2Double(char *s)
 
 { double a = CF_NODOUBLE;
   char remainder[CF_BUFSIZE];
- 
+  char output[CF_BUFSIZE];
+  
 if (s == NULL)
    {
    return CF_NODOUBLE;
@@ -535,8 +526,8 @@ sscanf(s,"%lf%s",&a,remainder);
  
 if (a == CF_NODOUBLE || strlen(remainder) > 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
+   ReportError(output);
    }
 
 return a;
@@ -548,7 +539,8 @@ void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp)
 
 { struct Item *split;
   long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
- 
+  char output[CF_BUFSIZE];
+  
 /* Numeric types are registered by range separated by comma str "min,max" */
 
 if (intrange == NULL)
@@ -576,8 +568,8 @@ DeleteItemList(split);
 if (lmin == CF_HIGHINIT || lmax == CF_LOWINIT)
    {
    PromiseRef(cf_error,pp);
-   snprintf(OUTPUT,CF_BUFSIZE,"Could not make sense of integer range [%s]",intrange);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Could not make sense of integer range [%s]",intrange);
+   FatalError(output);
    }
 
 *min = lmin;

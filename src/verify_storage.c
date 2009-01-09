@@ -13,7 +13,6 @@
    GNU General Public License for more details.
  
   You should have received a copy of the GNU General Public License
-  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -73,7 +72,7 @@ else
    {
    if (a.mount.mount_source == NULL || a.mount.mount_server == NULL)
       {
-      CfLog(cf_error,""," !! Insufficient specification in mount promise - need source and server\n");
+      CfOut(cf_error,""," !! Insufficient specification in mount promise - need source and server\n");
       return;
       }
    }
@@ -214,7 +213,7 @@ if (stat(name,&statbuf) == -1)
 
 if (S_ISLNK(statbuf.st_mode))
    {
-   KillOldLink(name,NULL);
+   KillGhostLink(name,a,pp);
    return(true);
    }
 
@@ -222,14 +221,13 @@ if (S_ISDIR(statbuf.st_mode))
    {
    if ((dirh = opendir(name)) == NULL)
       {
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Can't open directory %s which checking required/disk\n",name);
-      CfLog(cferror,OUTPUT,"opendir");
+      CfOut(cf_error,"opendir","Can't open directory %s which checking required/disk\n",name);
       return false;
       }
 
    for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
-      if (!SensibleFile(dirp->d_name,name,NULL))
+      if (!SensibleFile(dirp->d_name,name,a,pp))
          {
          continue;
          }
@@ -249,7 +247,7 @@ if (S_ISDIR(statbuf.st_mode))
          {
          if (S_ISLNK(localstat.st_mode))
             {
-            KillOldLink(buff,NULL);
+            KillGhostLink(buff,a,pp);
             continue;
             }
 
@@ -295,15 +293,15 @@ int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
 
 if (stat(file,&statbuf) == -1)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't stat %s checking diskspace\n",file);
-   CfLog(cferror,OUTPUT,"");
+   CfOut(cf_error,"stat","Couldn't stat %s checking diskspace\n",file);
    return true;
    }
 
-if (a.volume.check_foreign)
+if (!a.volume.check_foreign)
    {
-   if (IsMountedFileSystem(&statbuf,file,1))
+   if (IsForeignFileSystem(&statbuf,file))
       {
+      CfOut(cf_inform,"","Filesystem %s is mounted from a foreign system, so skipping it",file);
       return true;
       }
    }
@@ -394,3 +392,41 @@ if (!found)
 return found;
 }
 
+/*********************************************************************/
+/* Mounting */
+/*********************************************************************/
+
+int IsForeignFileSystem (struct stat *childstat,char *dir)
+
+ /* Is FS NFS mounted ? */
+
+{ struct stat parentstat;
+  char host[CF_MAXVARSIZE], vbuff[CF_BUFSIZE];
+ 
+strncpy(vbuff,dir,CF_BUFSIZE-1);
+
+if (vbuff[strlen(vbuff)-1] == '/')
+   {
+   strcat(vbuff,"..");
+   }
+else
+   {
+   strcat(vbuff,"/..");
+   }
+
+if (stat(vbuff,&parentstat) == -1)
+   {
+   Debug2("File %s couldn't stat its parent directory! Assuming permission\n",dir);
+   Debug2("is denied because the file system is mounted from another host.\n");
+   return(true);
+   }
+
+if (childstat->st_dev != parentstat.st_dev)
+   {
+   Debug2("[%s is on a different file system, not descending]\n",dir);
+   return (true);
+   }
+
+Debug("NotMountedFileSystem\n");
+return(false);
+}

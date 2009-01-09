@@ -138,6 +138,25 @@ else
 return true;
 }
 
+/*********************************************************************/
+
+void CreateEmptyFile(char *name)
+
+{ int tempfd;
+
+if (unlink(name) == -1)
+   {
+   Debug("Pre-existing object %s could not be removed or was not there\n",name);
+   }
+
+if ((tempfd = open(name, O_CREAT|O_EXCL|O_WRONLY,0600)) < 0)
+   {
+   CfOut(cf_error,"open","Couldn't open a file %s\n",name);  
+   }
+
+close(tempfd);
+}
+
 /*****************************************************************************/
 
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp)
@@ -157,9 +176,8 @@ else
 
    if (conn == NULL)
       {
-      CfOut(cf_inform,"","No suitable server responded to hail\n");
+      cfPS(cf_inform,CF_FAIL,"",pp,attr,"No suitable server responded to hail\n");
       PromiseRef(cf_inform,pp);
-      ClassAuditLog(pp,attr,OUTPUT,CF_FAIL);
       return false;
       }
    }
@@ -210,7 +228,7 @@ if ((dirh = opendir(attr.link.source)) == NULL)
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
-   if (!SensibleFile(dirp->d_name,attr.link.source,NULL))
+   if (!SensibleFile(dirp->d_name,attr.link.source,attr,pp))
       {
       continue;
       }
@@ -444,7 +462,7 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
    {
    if (ptr != NULL)
       {
-      AddMultipleClasses(ptr->defines);
+      AddEphemeralClasses(RLIST ptr->defines);
       }
    }
 */
@@ -918,9 +936,9 @@ if (attr.rename.disable)
          {
          strcpy(newname,path);
          ChopLastNode(newname);
+
          if (!JoinPath(newname,attr.rename.newname))
             {
-            ReleaseCurrentLock();
             return;
             }
          }
@@ -1322,7 +1340,7 @@ if (attr.transformer == NULL)
 ExpandScalar(attr.transformer,comm);
 CfOut(cf_inform,"","Transforming: %s ",comm); 
 
-if ((pop = cfpopen(comm,"r")) == NULL)
+if ((pop = cf_popen(comm,"r")) == NULL)
    {
    cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
    return false;
@@ -1334,7 +1352,7 @@ while (!feof(pop))
    CfOut(cf_inform,"",line);
    }
 
-cfpclose(pop);
+cf_pclose(pop);
 
 cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed ok",file,comm);
 return true;
@@ -1344,19 +1362,208 @@ return true;
 
 int MakeParentDirectory(char *parentandchild,int force)
 
-{
-/* For now, just transform to cf2 code */
- 
-if (force)
+{ char *sp,*spc;
+  char currentpath[CF_BUFSIZE];
+  char pathbuf[CF_BUFSIZE];
+  struct stat statbuf;
+  mode_t mask;
+  int rootlen;
+  char Path_File_Separator;
+    
+#ifdef DARWIN
+/* Keeps track of if dealing w. resource fork */
+int rsrcfork;
+rsrcfork = 0;
+
+char * tmpstr;
+#endif    
+    
+if (!IsAbsoluteFileName(parentandchild))
    {
-   return MakeDirectoriesFor(parentandchild,'y');
+   CfOut(cf_error,"","Will not create directories for a relative filename (%s). Has no invariant meaning\n",parentandchild);
+   return false;
+   }
+
+strncpy(pathbuf,parentandchild,CF_BUFSIZE-1);                                      /* local copy */
+
+#ifdef DARWIN
+if (strstr(pathbuf, _PATH_RSRCFORKSPEC) != NULL)
+   {
+   rsrcfork = 1;
+   }
+#endif
+
+/* skip link name */
+sp = LastFileSeparator(pathbuf);
+
+if (sp == NULL)
+   {
+   sp = pathbuf;
+   }
+*sp = '\0';
+
+DeleteSlash(pathbuf); 
+ 
+if (lstat(pathbuf,&statbuf) != -1)
+   {
+   if (S_ISLNK(statbuf.st_mode))
+      {
+      Verbose("%s: INFO: %s is a symbolic link, not a true directory!\n",VPREFIX,pathbuf);
+      }
+   
+   if (force)   /* force in-the-way directories aside */
+      {
+      if (!S_ISDIR(statbuf.st_mode))  /* if the dir exists - no problem */
+         {
+         struct stat sbuf;
+         
+         if (DONTDO)
+            {
+            return true;
+            }
+         
+         strcpy(currentpath,pathbuf);
+         DeleteSlash(currentpath);
+         strcat(currentpath,".cf-moved");
+         CfOut(cf_inform,"","Moving obstructing file/link %s to %s to make directory",pathbuf,currentpath);
+         
+         /* If cfagent, remove an obstructing backup object */
+         
+         if (lstat(currentpath,&sbuf) != -1)
+            {
+            if (S_ISDIR(sbuf.st_mode))
+               {
+               DeleteDirectoryTree(currentpath,NULL);
+               }
+            else
+               {
+               if (unlink(currentpath) == -1)
+                  {
+                  CfOut(cf_inform,"unlink","Couldn't remove file/link %s while trying to remove a backup\n",currentpath);
+                  }
+               }
+            }
+         
+         /* And then move the current object out of the way...*/
+         
+         if (rename(pathbuf,currentpath) == -1)
+            {
+            CfOut(cf_inform,"rename","Warning. The object %s is not a directory.\n",pathbuf);
+            return(false);
+            }
+         }
+      }
+   else
+      {
+      if (! S_ISLNK(statbuf.st_mode) && ! S_ISDIR(statbuf.st_mode))
+         {
+         CfOut(cf_inform,"""The object %s is not a directory. Cannot make a new directory without deleting it.",pathbuf);
+         return(false);
+         }
+      }
+   }
+
+/* Now we can make a new directory .. */ 
+
+currentpath[0] = '\0';
+
+rootlen = RootDirLength(sp);
+strncpy(currentpath, parentandchild, rootlen);
+
+for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
+   {
+   if (!IsFileSep(*sp) && *sp != '\0')
+      {
+      *spc = *sp;
+      spc++;
+      }
+   else
+      {
+      Path_File_Separator = *sp;
+      *spc = '\0';
+      
+      if (strlen(currentpath) == 0)
+         {
+         }
+      else if (stat(currentpath,&statbuf) == -1)
+         {
+         Debug2("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
+         
+         if (! DONTDO)
+            {
+            mask = umask(0);
+            
+            if (mkdir(currentpath,DEFAULTMODE) == -1)
+               {
+               CfOut(cf_error,"mkdir","Unable to make directories to %s\n",parentandchild);
+               umask(mask);
+               return(false);
+               }
+            umask(mask);
+            }
+         }
+      else
+         {
+         if (! S_ISDIR(statbuf.st_mode))
+            {
+#ifdef DARWIN
+            /* Ck if rsrc fork */
+            if (rsrcfork)
+               {
+               tmpstr = malloc(CF_BUFSIZE);
+               strncpy(tmpstr, currentpath, CF_BUFSIZE);
+               strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
+               
+               /* Cfengine removed terminating slashes */
+               DeleteSlash(tmpstr);
+               
+               if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
+                  {
+                  free(tmpstr);
+                  return(true);
+                  }
+               free(tmpstr);
+               }
+#endif
+            
+            CfOut(cf_error,"","Cannot make %s - %s is not a directory! (use forcedirs=true)\n",pathbuf,currentpath);
+            return(false);
+            }
+         }
+      
+      /* *spc = FILE_SEPARATOR; */
+      *spc = Path_File_Separator;
+      spc++;
+      }
+   }
+
+Debug("Directory for %s exists. Okay\n",parentandchild);
+return(true);
+}
+
+/**********************************************************************/
+
+void TruncateFile(char *name)
+
+{ struct stat statbuf;
+  int fd;
+
+if (stat(name,&statbuf) == -1)
+   {
+   Debug("cfengine: didn't find %s to truncate\n",name);
    }
 else
    {
-   return MakeDirectoriesFor(parentandchild,'n');
+   if ((fd = creat(name,000)) == -1)      /* dummy mode ignored */
+      {
+      CfOut(cf_error,"creat","Failed to create or truncate file %s\n",name);
+      }
+   else
+      {
+      close(fd);
+      }
    }
 }
-
 
 /*********************************************************************/
 
@@ -1382,7 +1589,7 @@ if (stat(fname,&sb) != -1)
 
 if ((fp = fopen(fname,"a")) == NULL)
    {
-   CfLog(cferror,"Could not write to the change log","");
+   CfOut(cf_error,"fopen","Could not write to the change log");
    return;
    }
 
@@ -1394,3 +1601,392 @@ fprintf(fp,"%s,%s\n",timebuf,file);
 
 fclose(fp);
 }
+
+
+/*******************************************************************/
+
+struct UidList *MakeUidList(char *uidnames)
+
+{ struct UidList *uidlist;
+  struct Item *ip, *tmplist;
+  char uidbuff[CF_BUFSIZE];
+  char *sp;
+  int offset;
+  struct passwd *pw;
+  char *machine, *user, *domain, *usercopy=NULL;
+  int uid;
+  int tmp = -1;
+
+uidlist = NULL;
+ 
+for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
+   {
+   if (*sp == ',')
+      {
+      sp++;
+      }
+
+   if (sscanf(sp,"%[^,]",uidbuff))
+      {
+      if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout     */
+         {                          /* way because calling getpwnam spoils getnetgrent */
+         offset = 1;
+         if (uidbuff[1] == '@')
+            {
+            offset++;
+            }
+
+         setnetgrent(uidbuff+offset);
+         tmplist = NULL;
+
+         while (getnetgrent(&machine,&user,&domain))
+            {
+            if (user != NULL)
+               {
+               AppendItem(&tmplist,user,NULL);
+               }
+            }
+                   
+         endnetgrent();
+
+         for (ip = tmplist; ip != NULL; ip=ip->next)
+            {
+            if ((pw = getpwnam(ip->name)) == NULL)
+               {
+               CfOut(cf_error,"","Unknown user [%s]\n",ip->name);
+               uid = CF_UNKNOWN_OWNER; /* signal user not found */
+               usercopy = ip->name;
+               }
+            else
+               {
+               uid = pw->pw_uid;
+               }
+            AddSimpleUidItem(&uidlist,uid,usercopy); 
+            }
+         
+         DeleteItemList(tmplist);
+         continue;
+         }
+      
+      if (isdigit((int)uidbuff[0]))
+         {
+         sscanf(uidbuff,"%d",&tmp);
+         uid = (uid_t)tmp;
+         }
+      else
+         {
+         if (strcmp(uidbuff,"*") == 0)
+            {
+            uid = CF_SAME_OWNER;                     /* signals wildcard */
+            }
+         else if ((pw = getpwnam(uidbuff)) == NULL)
+            {
+            CfOut(cf_error,"","Unknown user %s\n",uidbuff);
+            uid = CF_UNKNOWN_OWNER;  /* signal user not found */
+            usercopy = uidbuff;
+            }
+         else
+            {
+            uid = pw->pw_uid;
+            }
+         }
+      AddSimpleUidItem(&uidlist,uid,usercopy);
+      }
+   }
+ 
+ if (uidlist == NULL)
+   {
+   AddSimpleUidItem(&uidlist,CF_SAME_OWNER,(char *) NULL);
+   }
+
+return (uidlist);
+}
+
+/*********************************************************************/
+
+struct GidList *MakeGidList(char *gidnames)
+
+{ struct GidList *gidlist;
+  char gidbuff[CF_BUFSIZE];
+  char *sp, *groupcopy=NULL;
+  struct group *gr;
+  int gid;
+  int tmp = -1;
+
+gidlist = NULL;
+ 
+for (sp = gidnames; *sp != '\0'; sp+=strlen(gidbuff))
+   {
+   if (*sp == ',')
+      {
+      sp++;
+      }
+
+   if (sscanf(sp,"%[^,]",gidbuff))
+      {
+      if (isdigit((int)gidbuff[0]))
+         {
+         sscanf(gidbuff,"%d",&tmp);
+         gid = (gid_t)tmp;
+         }
+      else
+         {
+         if (strcmp(gidbuff,"*") == 0)
+            {
+            gid = CF_SAME_GROUP;                     /* signals wildcard */
+            }
+         else if ((gr = getgrnam(gidbuff)) == NULL)
+            {
+            CfOut(cf_error,"","Unknown group %s\n",gidbuff);
+            gid = CF_UNKNOWN_GROUP;
+            groupcopy = gidbuff;
+            }
+         else
+            {
+            gid = gr->gr_gid;
+            }
+         }
+      
+      AddSimpleGidItem(&gidlist,gid,groupcopy);
+      }
+   }
+
+if (gidlist == NULL)
+   {
+   AddSimpleGidItem(&gidlist,CF_SAME_GROUP,NULL);
+   }
+
+return(gidlist);
+}
+
+/*********************************************************************/
+
+void RotateFiles(char *name,int number)
+
+{ int i, fd;
+  struct Image dummy;
+  struct stat statbuf;
+  char filename[CF_BUFSIZE],vbuff[CF_BUFSIZE];
+  struct Attributes attr;
+  struct Promise dummyp;
+  
+if (stat(name,&statbuf) == -1)
+   {
+   Verbose("No access to file %s\n",name);
+   return;
+   }
+
+for (i = number-1; i > 0; i--)
+   {
+   snprintf(filename,CF_BUFSIZE,"%s.%d",name,i);
+   snprintf(vbuff,CF_BUFSIZE,"%s.%d",name, i+1);
+   
+   if (rename(filename,vbuff) == -1)
+      {
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      }
+
+   snprintf(filename,CF_BUFSIZE,"%s.%d.gz",name,i);
+   snprintf(vbuff,CF_BUFSIZE,"%s.%d.gz",name, i+1);
+   
+   if (rename(filename,vbuff) == -1)
+      {
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      }
+
+   snprintf(filename,CF_BUFSIZE,"%s.%d.Z",name,i);
+   snprintf(vbuff,CF_BUFSIZE,"%s.%d.Z",name, i+1);
+   
+   if (rename(filename,vbuff) == -1)
+      {
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      }   
+
+   snprintf(filename,CF_BUFSIZE,"%s.%d.bz",name,i);
+   snprintf(vbuff,CF_BUFSIZE,"%s.%d.bz",name, i+1);
+   
+   if (rename(filename,vbuff) == -1)
+      {
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      }   
+
+   snprintf(filename,CF_BUFSIZE,"%s.%d.bz2",name,i);
+   snprintf(vbuff,CF_BUFSIZE,"%s.%d.bz2",name, i+1);
+   
+   if (rename(filename,vbuff) == -1)
+      {
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      }   
+
+   }
+
+snprintf(vbuff,CF_BUFSIZE,"%s.1",name);
+memset(&dummyp,0,sizeof(dummyp));
+memset(&attr,0,sizeof(attr));
+dummyp.this_server = "localdisk";
+
+if (CopyRegularFileDisk(name,vbuff,attr,&dummyp) == -1)
+   {
+   Debug2("cfengine: copy failed in RotateFiles %s -> %s\n",name,vbuff);
+   return;
+   }
+
+chmod(vbuff,statbuf.st_mode);
+chown(vbuff,statbuf.st_uid,statbuf.st_gid); 
+chmod(name,0600);                             /* File must be writable to empty ..*/
+ 
+if ((fd = creat(name,statbuf.st_mode)) == -1)
+   {
+   CfOut(cf_error,"creat","Failed to create new %s in disable(rotate)\n",name);
+   }
+else
+   {
+   chown(name,statbuf.st_uid,statbuf.st_gid); /* NT doesn't have fchown */
+   fchmod(fd,statbuf.st_mode);
+   close(fd);
+   }
+}
+
+/*******************************************************************/
+/* Level                                                           */
+/*******************************************************************/
+
+void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname)
+
+{ struct UidList *ulp, *u;
+  char *copyuser;
+
+if ((ulp = (struct UidList *)malloc(sizeof(struct UidList))) == NULL)
+   {
+   FatalError("cfengine: malloc() failed #1 in AddSimpleUidItem()");
+   }
+
+ulp->uid = uid;
+ 
+if (uid == CF_UNKNOWN_OWNER)   /* unknown user */
+   {
+   if ((copyuser = strdup(uidname)) == NULL)
+      {
+      FatalError("cfengine: malloc() failed #2 in AddSimpleUidItem()");
+      }
+   
+   ulp->uidname = copyuser;
+   }
+else
+   {
+   ulp->uidname = NULL;
+   }
+
+ulp->next = NULL;
+
+if (*uidlist == NULL)
+   {
+   *uidlist = ulp;
+   }
+else
+   {
+   for (u = *uidlist; u->next != NULL; u = u->next)
+      {
+      }
+   u->next = ulp;
+   }
+}
+
+/*******************************************************************/
+
+void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname)
+
+{ struct GidList *glp,*g;
+  char *copygroup;
+
+if ((glp = (struct GidList *)malloc(sizeof(struct GidList))) == NULL)
+   {
+   FatalError("cfengine: malloc() failed #1 in AddSimpleGidItem()");
+   }
+ 
+glp->gid = gid;
+ 
+if (gid == CF_UNKNOWN_GROUP)   /* unknown group */
+   {
+   if ((copygroup = strdup(gidname)) == NULL)
+      {
+      FatalError("cfengine: malloc() failed #2 in AddSimpleGidItem()");
+      }
+   
+   glp->gidname = copygroup;
+   }
+else
+   {
+   glp->gidname = NULL;
+   }
+ 
+glp->next = NULL;
+
+if (*gidlist == NULL)
+   {
+   *gidlist = glp;
+   }
+else
+   {
+   for (g = *gidlist; g->next != NULL; g = g->next)
+      {
+      }
+   g->next = glp;
+   }
+}
+
+/*******************************************************************/
+
+void DeleteDirectoryTree(char *path,struct Promise *pp)
+
+{ struct Promise promise;
+  char s[CF_MAXVARSIZE];
+  time_t now = time(NULL);
+
+// Check that tree is a directory
+ 
+promise.promiser = path;
+promise.promisee = NULL;
+promise.petype = CF_NOPROMISEE;
+promise.classes = "any";
+
+if (pp != NULL)
+   {
+   promise.bundletype = pp->bundletype;
+   promise.lineno = pp->lineno;
+   promise.bundle = strdup(pp->bundle);
+   promise.ref = pp->ref;
+   }
+else
+   {
+   promise.bundletype = "agent";
+   promise.lineno = 0;
+   promise.bundle = "embedded";
+   promise.ref = "Embedded deletion of direction";   
+   }
+
+
+promise.audit = AUDITPTR;
+promise.agentsubtype = "files";
+promise.done = false;
+promise.next = NULL;
+promise.donep = false;
+
+promise.conlist = NULL;
+
+snprintf(s,CF_MAXVARSIZE,"0,%ld",(long)now);
+
+AppendConstraint(&(promise.conlist),"action","true",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"ifelapsed","0",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"delete","true",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"dirlinks","delete",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"rmdirs","true",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"depth_search","true",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"depth","inf",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"file_select","true",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"mtime",s,CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"file_result","mtime",CF_SCALAR,"any");
+VerifyFilePromise(promise.promiser,&promise);
+rmdir(path);
+}
+

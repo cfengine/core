@@ -122,7 +122,7 @@ if (SelectProcRegexMatch("TTY","TTY",a.process_select.tty,names,column))
 
 if (result = EvaluateORString(a.process_select.process_result,proc_attr,0))
    {
-   //AddMultipleClasses(fp->defines);
+   //ClassesFromString(fp->defines);
    }
 
 DeleteItemList(proc_attr);

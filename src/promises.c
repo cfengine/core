@@ -500,6 +500,41 @@ DeletePromise(pp);
 
 /*****************************************************************************/
 
+struct Promise *NewPromise(char *typename,char *promiser)
+
+{ struct Promise *pp;
+ 
+if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Unable to allocate Promise");
+   FatalError("");
+   }
+
+pp->audit = AUDITPTR;
+pp->lineno = 0;
+pp->bundle =  strdup("independent");
+pp->promiser = strdup(promiser);
+pp->promisee = NULL;
+pp->petype = CF_NOPROMISEE;
+pp->classes = NULL;
+pp->conlist = NULL;
+pp->done = false;
+pp->donep = &(pp->done);
+
+pp->this_server = NULL;
+pp->cache = NULL;
+pp->conn = NULL;
+pp->inode_cache = NULL;
+
+pp->bundletype = NULL;
+pp->agentsubtype = strdup(typename);
+pp->ref = NULL;                /* cache a reference if given*/
+pp->next = NULL;
+return pp;
+}
+
+/*****************************************************************************/
+
 void DeletePromise(struct Promise *pp)
 
 {

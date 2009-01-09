@@ -183,7 +183,7 @@ nonce_challenge = BN_new();
 BN_rand(nonce_challenge,CF_NONCELEN,0,0);
 
 nonce_len = BN_bn2mpi(nonce_challenge,in);
-ChecksumString(in,nonce_len,digest,'m');
+HashString(in,nonce_len,digest,cf_md5);
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
@@ -287,7 +287,7 @@ if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    return false;   
    }
 
-if (!ChecksumsMatch(digest,in,'m')) 
+if (!HashesMatch(digest,in,cf_md5)) 
    {
    cfPS(cf_error,CF_INTERPT,"",pp,attr,"Challenge response from server %s/%s was incorrect!",pp->this_server,conn->remoteip);
    return false;
@@ -341,7 +341,7 @@ if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADD
    }
 
 /* proposition C4 */   
-ChecksumString(decrypted_cchall,nonce_len,digest,'m');
+HashString(decrypted_cchall,nonce_len,digest,cf_md5);
 Debug("Replying to counter challenge with md5\n"); 
 SendTransaction(conn->sd,digest,16,CF_DONE);
 free(decrypted_cchall); 
@@ -494,3 +494,29 @@ bp = BN_new();
 BN_rand(bp,CF_BLOWFISHSIZE,0,0);
 conn->session_key = (unsigned char *)bp;
 }
+
+/*********************************************************************/
+
+int BadProtoReply(char *buf)
+
+{
+ Debug("Protoreply: (%s)\n",buf);
+ return (strncmp(buf,"BAD:",4) == 0);
+}
+
+/*********************************************************************/
+
+int OKProtoReply(char *buf)
+
+{
+return(strncmp(buf,"OK:",3) == 0);
+}
+
+/*********************************************************************/
+
+int FailedProtoReply(char *buf)
+
+{
+return(strncmp(buf,CF_FAILEDSTR,strlen(CF_FAILEDSTR)) == 0);
+}
+

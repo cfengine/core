@@ -206,6 +206,10 @@ void NewClass(char *class);
 void NewBundleClass(char *class,char *bundle);
 void DeleteClass(char *class);
 int VarClassExcluded(struct Promise *pp,char **classes);
+void NewClassesFromString(char *classlist);
+void NegateClassesFromString(char *class,struct Item **heap);
+void AddPrefixedClasses(char *name,char *classlist);
+void NewPrefixedClasses(char *name,char *classlist);
 
 /* evalfunction.c */
 
@@ -385,6 +389,7 @@ void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promi
 void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp); 
 int MakeParentDirectory(char *parentandchild,int force);
 void LogHashChange(char *file);
+void DeleteDirectoryTree(char *path,struct Promise *pp);
 
 /* files_properties.c */
 
@@ -497,6 +502,7 @@ int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,stru
 int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp);
 void InsertAfter(struct Item **filestart,struct Item *ptr,char *string);
 int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,enum cfeditorder pos);
+int RawSaveItemList(struct Item *liststart, char *file);
 
 /* iteration.c */
 
@@ -627,6 +633,7 @@ void DeletePromise(struct Promise *pp);
 void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
 void PromiseRef(enum cfoutputlevel level,struct Promise *pp);
+struct Promise *NewPromise(char *typename,char *promiser);
 
 /* recursion.c */
 
@@ -634,6 +641,7 @@ int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,str
 int PushDirState(char *name,struct stat *sb);
 void PopDirState(int goback,char * name,struct stat *sb,struct Recursion r);
 int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
+int SensibleFile(char *nodename,char *path,struct Attributes,struct Promise *pp);
 
 /* report.c */
 
@@ -867,6 +875,7 @@ int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
 int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
 void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
 int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp);
+int IsForeignFileSystem (struct stat *childstat,char *dir);
 
 /* verify_reports.c */
 
@@ -874,7 +883,7 @@ void VerifyReportPromise(struct Promise *pp);
 void PrintFile(struct Attributes a,struct Promise *pp);
 void ShowState(char *type,struct Attributes a,struct Promise *pp);
 void FriendStatus(struct Attributes a,struct Promise *pp);
-
-
+void VerifyFriendReliability(struct Attributes a,struct Promise *pp);
+void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp);
 
 

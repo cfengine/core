@@ -134,14 +134,14 @@ if (expandregex) /* Expand one regex link and hand down */
    char nextbuffer[CF_BUFSIZE],regex[CF_BUFSIZE];
    struct dirent *dirp;
    DIR *dirh;
+   struct Attributes dummyattr;
+
+   memset(&dummyattr,0,sizeof(dummyattr));
  
    strncpy(regex,ip->name,CF_BUFSIZE-1);
 
    if ((dirh=opendir(pbuffer)) == NULL)
       {
-      struct Attributes dummyattr;
-
-      memset(&dummyattr,0,sizeof(dummyattr));
       cfPS(cf_verbose,CF_FAIL,"opendir",pp,dummyattr,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
       return;
       }
@@ -150,7 +150,7 @@ if (expandregex) /* Expand one regex link and hand down */
    
    for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
-      if (!SensibleFile(dirp->d_name,pbuffer,NULL))
+      if (!SensibleFile(dirp->d_name,pbuffer,dummyattr,pp))
          {
          continue;
          }
@@ -216,216 +216,3 @@ if (count == 0)
 DeleteItemList(path);
 }
 
-/*******************************************************************/
-/* Level                                                           */
-/*******************************************************************/
-
-void VerifyFilePromise(char *path,struct Promise *pp)
-
-{ struct stat osb,oslb,dsb,dslb;
-  struct Attributes a;
-  struct CfLock thislock;
-  int success,rlevel = 0,isthere;
-
-a = GetFilesAttributes(pp);
-
-if (!FileSanityChecks(path,a,pp))
-   {
-   return;
-   }
-
-if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
-   {
-   if (a.create||a.touch)
-      {
-      if (!CreateFile(path,pp,a))
-         {
-         return;
-         }
-      }
-   }
-
-if (!VerifyFileLeaf(path,&oslb,a,pp))
-   {
-   return;
-   }
-
-if (stat(path,&osb) == -1)
-   {
-   if (a.create||a.touch)
-      {
-      if (!CreateFile(path,pp,a))
-         {
-         return;
-         }
-      }
-   }
-else
-   {
-   if (!S_ISDIR(osb.st_mode))
-      {
-      if (a.havedepthsearch)
-         {
-         CfOut(cf_error,"stat","depth_search (recursion) is promised for a base object %s that is not a directory",path);
-         return;
-         }
-      }
-   }
-
-if (a.link.link_children)
-   {
-   if (stat(a.link.source,&dsb) != -1)
-      {
-      if (!S_ISDIR(dsb.st_mode))
-         {
-         CfOut(cf_error,"","Cannot promise to link the children of %s as it is not a directory!",a.link.source);
-         return;
-         }
-      }
-   }
-
-thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
-
-if (thislock.lock == NULL)
-   {
-   return;
-   }
-
-/* Phase 1 - */
-
-if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
-   {
-   lstat(path,&oslb); /* if doesn't exist have to stat again anyway */
-   
-   if (a.havedepthsearch)
-      {
-      SetSearchDevice(&oslb,pp);
-      }
-   
-   success = DepthSearch(path,&oslb,rlevel,a,pp);
-
-   /* normally searches do not include the base directory */
-   
-   if (a.recursion.include_basedir)
-      {
-      int save_search = a.havedepthsearch;
-
-      /* Handle this node specially */
-
-      a.havedepthsearch = false;
-      success = DepthSearch(path,&oslb,rlevel,a,pp);
-      a.havedepthsearch = save_search;
-      }
-
-   if (a.havechange)
-      {
-      PurgeHashes(a,pp);
-      }
-   }
-
-/* Phase 2a - copying is potentially threadable if no followup actions */
-
-if (a.havecopy)
-   {
-   ScheduleCopyOperation(path,a,pp);
-   }
-
-/* Phase 2b link after copy in case need file first */
-
-if (a.havelink && a.link.link_children)
-   {
-   ScheduleLinkChildrenOperation(path,a,pp);
-   }
-else if (a.havelink)
-   {
-   ScheduleLinkOperation(path,a.link.source,a,pp);
-   }
-
-/* Phase 3 - content editing */
-
-if (a.haveedit)
-   {
-   ScheduleEditOperation(path,a,pp);
-   }
-
-YieldCurrentLock(thislock);
-}
-
-/*******************************************************************/
-/* Level                                                           */
-/*******************************************************************/
-
-int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp)
-
-{
-if (a.havelink && a.havecopy)
-   {
-   CfOut(cf_error,"","Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.haveeditline && a.haveeditxml)
-   {
-   CfOut(cf_error,"","Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.havedepthsearch && a.haveedit)
-   {
-   CfOut(cf_error,"","Recursive depth_searches are not compatible with general file editing",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.havedelete && (a.create||a.havecopy||a.haveedit||a.haverename))
-   {
-   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.haverename && (a.create||a.havecopy||a.haveedit))
-   {
-   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.havedelete && a.havedepthsearch && !a.haveselect)
-   {
-   CfOut(cf_error,"","Dangerous or ambiguous promise - %s specifices recursive depth search but has no file selection criteria",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.havedelete && a.haverename)
-   {
-   CfOut(cf_error,"","File %s cannot promise both deletion and renaming",path);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if (a.havecopy && a.havedepthsearch && a.havedelete)
-   {
-   CfOut(cf_inform,"","Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
-   PromiseRef(cf_inform,pp);
-   }
-
-if (a.transaction.background && a.transaction.audit)
-   {
-   CfOut(cf_error,"","Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-if ((a.havecopy || a.havelink) && a.transformer)
-   {
-   CfOut(cf_error,"","File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
-
-return true;
-}

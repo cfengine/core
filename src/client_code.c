@@ -35,7 +35,6 @@
 /* cfAgent's connection cache                                        */
 /*********************************************************************/
 
-extern pthread_mutex_t MUTEX_GETADDR;
 
 /*********************************************************************/
 
@@ -45,7 +44,7 @@ void DetermineCfenginePort()
 
 if ((server = getservbyname(CFENGINE_SERVICE,"tcp")) == NULL)
    {
-   CfLog(cflogonly,"Couldn't get cfengine service, using default","getservbyname");
+   CfOut(cf_verbose,"getservbyname","No registered cfengine service, using default");
    snprintf(STR_CFENGINEPORT,15,"5308");
    SHORT_CFENGINEPORT = htons((unsigned short)5308);
    }
@@ -550,8 +549,8 @@ int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise
   int i,tosend,cipherlen;
   struct cfagent_connection *conn = pp->conn;
 
-ChecksumFile(file2,d,'m');   /* send md5 to the server for comparison */
-Debug("Send digest of %s to server, %s\n",file2,ChecksumPrint('m',d));
+HashFile(file2,d,cf_md5);
+Debug("Send digest of %s to server, %s\n",file2,HashPrint(cf_md5,d));
 
 memset(recvbuffer,0,CF_BUFSIZE);
 
@@ -965,7 +964,6 @@ if (!attr.copy.force_ipv4)
    else
       {
       close(conn->sd);
-      snprintf(OUTPUT,CF_BUFSIZE*2,"Couldn't connect to host %s\n",host);
       conn->sd = CF_NOT_CONNECTED;
       }
    

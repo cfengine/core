@@ -14,9 +14,12 @@ libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libpromises_la_SOURCES =						\
 	cf3parse.y							\
 	cf3lex.l							\
+	patches.c							\
 	attributes.c							\
 	install.c							\
 	generic_agent.c							\
+	dtypes.c							\
+	classes.c							\
 	env_context.c							\
 	files_interfaces.c						\
 	files_properties.c						\
@@ -28,11 +31,18 @@ libpromises_la_SOURCES =						\
 	files_edit.c							\
 	files_links.c							\
 	files_hashes.c							\
+	files_names.c							\
+	chflags.c 							\
+	modes.c 							\
+	exec_tools.c							\
 	nfs.c								\
 	item-lib.c							\
 	cf_sql.c							\
 	client_protocol.c						\
 	client_code.c							\
+	communication.c							\
+	net.c								\
+	sockaddr.c							\
 	recursion.c							\
 	processes_select.c						\
 	fncall.c							\
@@ -43,13 +53,17 @@ libpromises_la_SOURCES =						\
 	conversion.c							\
 	scope.c								\
 	assoc.c								\
+	comparray.c							\
 	vars.c								\
 	args.c								\
 	hashes.c							\
+	crypto.c							\
 	expand.c							\
 	matching.c							\
 	selfdiagnostic.c						\
 	instrumentation.c						\
+	granules.c 							\
+	timeout.c 							\
 	promises.c							\
 	constraints.c							\
 	iteration.c							\
@@ -62,6 +76,7 @@ libpromises_la_SOURCES =						\
 	pipes.c								\
 	html.c								\
 	interfaces.c							\
+	storage_tools.c							\
 	verify_reports.c						\
 	mod_common.c							\
 	mod_access.c							\

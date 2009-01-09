@@ -106,13 +106,32 @@ char *CFH[][2] =
 
 void ShowContext(void)
 
-{
-Banner("Agent's basic classified context");
+{ struct Item *ptr;
 
-if (VERBOSE || DEBUG)
+if (!VERBOSE && !DEBUG)
    {
-   ListDefinedClasses(); /* borrow this from cf2 for now */
+   return;
    }
+
+ReportBanner("Agent's basic classified context");
+
+CfOut(cf_verbose,"","\nDefined Classes = ( ");
+
+for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
+   {
+   printf("%s ",ptr->name);
+   }
+
+printf(")\n");
+
+CfOut (cf_verbose,"","\nNegated Classes = ( ");
+
+for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
+   {
+   printf("%s ",ptr->name);
+   }
+
+printf (")\n");
 }
 
 /*******************************************************************/
@@ -435,9 +454,9 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 void ReportBanner(char *s)
 
 {
- fprintf(FOUT,"***********************************************************\n");
- fprintf(FOUT," %s \n",s);
- fprintf(FOUT,"***********************************************************\n");
+fprintf(FOUT,"***********************************************************\n");
+fprintf(FOUT," %s \n",s);
+fprintf(FOUT,"***********************************************************\n");
 }
     
 /**************************************************************/

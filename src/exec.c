@@ -43,11 +43,18 @@ int  ONCE = false;
 char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
 char EXECCOMMAND[CF_BUFSIZE];
+char VMAILSERVER[CF_BUFSIZE];
+
+struct Item *SCHEDULE = NULL;
+
 int  MAXLINES = 30;
 int  SPLAYTIME = 0;
 const int INF_LINES = -2;
+short NOSPLAY = false;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
+
+/*******************************************************************/
 
 void StartServer(int argc,char **argv);
 int ScheduleRun(void);
@@ -57,7 +64,6 @@ int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char typ
 int CompareResult(char *filename,char *prev_file);
 void MailResult(char *file,char *to);
 int Dialogue(int sd,char *s);
-
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -117,12 +123,6 @@ KeepPromises();
 
 StartServer(argc,argv);
 
-if (!ONCE)
-   {
-   RestoreExecLock(); 
-   ReleaseCurrentLock();
-   }
-
 return 0;
 }
 
@@ -138,7 +138,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -161,15 +161,6 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) !=
                  D2 = true;
                  DEBUG = true;
                  break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
-                 DEBUG = true;
-                 break;
              default:
                  DEBUG = true;
                  break;
@@ -179,10 +170,10 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) !=
       case 'K': IGNORELOCK = true;
           break;
                     
-      case 'D': AddMultipleClasses(optarg);
+      case 'D': NewClassesFromString(optarg);
           break;
           
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
+      case 'N': NegateClassesFromString(optarg,&VNEGHEAP);
           break;
           
       case 'I': INFORM = true;
@@ -196,10 +187,6 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VxL:hFV1gM",OPTIONS,&optindex)) !=
           NewClass("opt_dry_run");
           break;
           
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
       case 'q': NOSPLAY = true;
           break;
           
@@ -243,9 +230,6 @@ void ThisAgentInit()
  
 umask(077);
 LOGGING = true;
-
-VCANONICALFILE = strdup(CanonifyName(VINPUTFILE));
-
 MAILTO[0] = '\0';
 MAILFROM[0] = '\0';
 VMAILSERVER[0] = '\0';
@@ -339,9 +323,16 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 void StartServer(int argc,char **argv)
 
 { int pid,time_to_run = false;
-  time_t now = time(NULL); 
+  time_t now = time(NULL);
+  struct Promise *pp = NewPromise("exec_cfengine","the executor agent");
+  struct Attributes dummyattr;
+  struct CfLock thislock;
+ 
+ReportBanner("Starting executor");
+memset(&dummyattr,0,sizeof(dummyattr));
 
-Banner("Starting executor");
+dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
+dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
 
 if ((!NO_FORK) && (fork() != 0))
    {
@@ -349,21 +340,17 @@ if ((!NO_FORK) && (fork() != 0))
    exit(0);
    }
 
-if (!ONCE)
-   {
-   if (!GetLock("cfexecd","execd",0,0,VUQNAME,now))
-      {
-      CfOut(cf_verbose,"","cfexecd: Couldn't get a lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",0,0);
-      return;
-      }
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
 
-   SaveExecLock(); 
+if (thislock.lock == NULL)
+   {
+   return;
    }
 
 if (!NO_FORK)
-  {
-  ActAsDaemon(0);
-  }
+   {
+   ActAsDaemon(0);
+   }
 
 WritePID("cf-execd.pid");
 signal(SIGINT,HandleSignals);
@@ -409,11 +396,6 @@ else
          Verbose("Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);
 
-         if (!GetLock("cf3","exec",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER,VUQNAME,time(NULL)))
-            {
-            CfOut(cf_verbose,"","cfExecd: Couldn't get exec lock -- exists or too soon: IfElapsed %d, ExpireAfter %d\n",CF_EXEC_IFELAPSED,CF_EXEC_EXPIREAFTER);
-            continue;
-            }         
 #ifdef NT 
          /*
           * Spawn a separate process - spawn will work if the cfexecd binary
@@ -450,11 +432,11 @@ else
          LocalExec((void *)1);  
 #endif
 #endif
-         
-         ReleaseCurrentLock();
          }
       }
    }
+
+YieldCurrentLock(thislock);
 }
 
 /*****************************************************************************/

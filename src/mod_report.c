@@ -47,6 +47,7 @@ struct BodySyntax CF_REPORT_BODIES[] =
    {"intermittency",cf_real,"0,1","Real number threshold [0,1] of intermittency about current peers, report above"},
    {"showstate",cf_slist,"","List of services about which status reports should be reported to standard output"},
    {"printfile",cf_body,CF_PRINTFILE_BODY,"Quote part of a file to standard output"},
+   {"friend_pattern",cf_str,"","Regular expression to keep selected hosts from the friends report list"},
    {NULL,cf_notype,NULL}
    };
 

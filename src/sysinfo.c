@@ -47,6 +47,37 @@
 # define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 #endif
 
+/**********************************************************************/
+
+void SetSignals()
+
+{ int i;
+
+ SIGNALS[SIGHUP] = strdup("SIGHUP");
+ SIGNALS[SIGINT] = strdup("SIGINT");
+ SIGNALS[SIGTRAP] = strdup("SIGTRAP");
+ SIGNALS[SIGKILL] = strdup("SIGKILL");
+ SIGNALS[SIGPIPE] = strdup("SIGPIPE");
+ SIGNALS[SIGCONT] = strdup("SIGCONT");
+ SIGNALS[SIGABRT] = strdup("SIGABRT");
+ SIGNALS[SIGSTOP] = strdup("SIGSTOP");
+ SIGNALS[SIGQUIT] = strdup("SIGQUIT");
+ SIGNALS[SIGTERM] = strdup("SIGTERM");
+ SIGNALS[SIGCHLD] = strdup("SIGCHLD");
+ SIGNALS[SIGUSR1] = strdup("SIGUSR1");
+ SIGNALS[SIGUSR2] = strdup("SIGUSR2");
+ SIGNALS[SIGBUS] = strdup("SIGBUS");
+ SIGNALS[SIGSEGV] = strdup("SIGSEGV");
+
+ for (i = 0; i < highest_signal; i++)
+    {
+    if (SIGNALS[i] == NULL)
+       {
+       SIGNALS[i] = strdup("NOSIG");
+       }
+    }
+}
+
 /*******************************************************************/
 
 void GetNameInfo3()
@@ -96,11 +127,11 @@ for (sp = VSYSNAME.machine; *sp != '\0'; sp++)
 
 for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
    {
-   if (WildMatch(CLASSATTRIBUTES[i][0],ToLowerStr(VSYSNAME.sysname)))
+   if (FullTextMatch(CLASSATTRIBUTES[i][0],ToLowerStr(VSYSNAME.sysname)))
       {
-      if (WildMatch(CLASSATTRIBUTES[i][1],VSYSNAME.machine))
+      if (FullTextMatch(CLASSATTRIBUTES[i][1],VSYSNAME.machine))
          {
-         if (WildMatch(CLASSATTRIBUTES[i][2],VSYSNAME.release))
+         if (FullTextMatch(CLASSATTRIBUTES[i][2],VSYSNAME.release))
             {
             if (UNDERSCORE_CLASSES)
                {
@@ -643,6 +674,27 @@ cf_pclose(pp);
 }
 
 
+/*******************************************************************/
+
+int IsInterfaceAddress(char *adr)
+
+ /* Does this address belong to a local interface */
+
+{ struct Item *ip;
+
+for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
+   {
+   if (StrnCmp(adr,ip->name,strlen(adr)) == 0)
+      {
+      Debug("Identifying (%s) as one of my interfaces\n",adr);
+      return true;
+      }
+   }
+
+Debug("(%s) is not one of my interfaces\n",adr); 
+return false; 
+}
+
 /*********************************************************************/
 
 void FindDomainName(char *hostname)
@@ -720,21 +772,22 @@ NewClass(CanonifyName(VDOMAIN));
 void OSClasses()
 
 { struct stat statbuf;
+  char vbuff[CF_BUFSIZE];
   char *sp;
   int i = 0;
 
 NewClass("any");      /* This is a reserved word / wildcard */
 
-snprintf(VBUFF,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
-NewClass(VBUFF);
+snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
+NewClass(vbuff);
  
-for (sp = VBUFF+strlen(VBUFF); i < 2; sp--)
+for (sp = vbuff+strlen(vbuff); i < 2; sp--)
    {
    if (*sp == '_')
       {
       i++;
       *sp = '\0';
-      NewClass(VBUFF);
+      NewClass(vbuff);
       }
    }
 
@@ -748,7 +801,7 @@ if (stat("/etc/mandrake-release",&statbuf) != -1)
    {
    Verbose("This appears to be a mandrake system.\n");
    NewClass("Mandrake");
-   linux_mandrake_version();
+   Linux_Mandrake_Version();
    }
 
 else if (stat("/etc/fedora-release",&statbuf) != -1)
@@ -785,7 +838,7 @@ if (stat(SLACKWARE_VERSION_FILENAME,&statbuf) != -1)
    {
    Verbose("\nThis appears to be a slackware system.\n");
    NewClass("slackware");
-   linux_slackware_version(SLACKWARE_VERSION_FILENAME);
+   Linux_Slackware_Version(SLACKWARE_VERSION_FILENAME);
    }
 else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    {
@@ -1430,20 +1483,20 @@ char strminor[CF_MAXVARSIZE];
 
 /******************************************************************/
 
-void * Lsb_Release(const char *command, const char *key)
+void *Lsb_Release(const char *command, const char *key)
 
-{ char * info = NULL;
- FILE * fp;
+{ char vbuff[CF_BUFSIZE],*info = NULL;
+  FILE *fp;
 
-snprintf(VBUFF, CF_BUFSIZE, "%s %s", command, key);
-if ((fp = cfpopen(VBUFF, "r")) == NULL)
+snprintf(vbuff, CF_BUFSIZE, "%s %s", command, key);
+if ((fp = cf_popen(vbuff, "r")) == NULL)
    {
    return NULL;
    }
 
-if (ReadLine(VBUFF, CF_BUFSIZE, fp))
+if (ReadLine(vbuff, CF_BUFSIZE, fp))
    {
-   char * buffer = VBUFF;
+   char * buffer = vbuff;
    strsep(&buffer, ":");
    
    while((*buffer != '\0') && isspace(*buffer))
@@ -1461,7 +1514,7 @@ if (ReadLine(VBUFF, CF_BUFSIZE, fp))
    info = strdup(info);
    }
 
-cfpclose(fp);
+cf_pclose(fp);
 return info;
 }
 
@@ -1469,7 +1522,9 @@ return info;
 /******************************************************************/
 
 int Lsb_Version(void)
-{
+
+{ char vbuff[CF_BUFSIZE];
+ 
 #define LSB_RELEASE_COMMAND "lsb_release"
 
 char classname[CF_MAXVARSIZE];
@@ -1491,11 +1546,11 @@ if (strlen(path) == 0)
 
 while (dir = strsep(&rest, ":"))
     {
-    snprintf(VBUFF, CF_BUFSIZE, "%s/" LSB_RELEASE_COMMAND, dir);
-    if (stat(VBUFF,&statbuf) != -1)
+    snprintf(vbuff, CF_BUFSIZE, "%s/" LSB_RELEASE_COMMAND, dir);
+    if (stat(vbuff,&statbuf) != -1)
         {
         free(path);
-        path = strdup(VBUFF);
+        path = strdup(vbuff);
 
         Verbose("\nThis appears to be a LSB compliant system.\n");
         NewClass("lsb_compliant");

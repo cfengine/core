@@ -190,7 +190,7 @@ void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes
 
 { int argnum,i;
   struct Rlist *rp = fp->args;
-  char id[CF_BUFSIZE];
+  char id[CF_BUFSIZE],output[CF_BUFSIZE];
 
 snprintf(id,CF_MAXVARSIZE,"built-in FnCall %s-arg",fp->name);
   
@@ -207,8 +207,8 @@ for (argnum = 0; rp != NULL && argtemplate[argnum] != NULL; argnum++)
 
 if (argnum != RlistLen(realargs))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Argument template mismatch handling function %s(",fp->name);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Argument template mismatch handling function %s(",fp->name);
+   ReportError(output);
    ShowRlist(stderr,realargs);
    fprintf(stderr,")\n",fp->name);
 

@@ -80,7 +80,7 @@ else if (ec && ec->num_edits > 0)
       {
       if (ec)
          {
-         cfPS(cf_inform,CF_NOP,"",pp,a," -- No edit changes to file %s need saving",ec->filename);
+         cfPS(cf_inform,CF_NOP,"",pp,a," -> No edit changes to file %s need saving",ec->filename);
          }      
       }
    else
@@ -93,7 +93,7 @@ else
    {
    if (ec)
       {
-      cfPS(cf_inform,CF_NOP,"",pp,a," -- No edit changes to file %s need saving",ec->filename);
+      cfPS(cf_inform,CF_NOP,"",pp,a," -> No edit changes to file %s need saving",ec->filename);
       }
    }
 

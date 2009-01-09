@@ -300,9 +300,20 @@ value = (char *)GetConstraint("mode",pp->conlist,CF_SCALAR);
 p.plus = 0;
 p.minus = 0;
 
-ParseModeString(value,&p.plus,&p.minus);
+if (!ParseModeString(value,&p.plus,&p.minus))
+   {
+   CfOut(cf_error,"","Problem validating a mode string");
+   PromiseRef(cf_error,pp);
+   }
+
 value = (char *)GetConstraint("bsdflags",pp->conlist,CF_SCALAR);
-ParseFlagString(value,&p.plus_flags,&p.minus_flags);
+
+if (!ParseFlagString(value,&p.plus_flags,&p.minus_flags))
+   {
+   CfOut(cf_error,"","Problem validating a BSD flag string");
+   PromiseRef(cf_error,pp);
+   }
+
 p.owners = Rlist2UidList((struct Rlist *)GetConstraint("owners",pp->conlist,CF_LIST),pp);
 p.groups = Rlist2GidList((struct Rlist *)GetConstraint("groups",pp->conlist,CF_LIST),pp);
 p.findertype = (char *)GetConstraint("findertype",pp->conlist,CF_SCALAR);
@@ -326,9 +337,20 @@ s.issymlinkto = (struct Rlist *)GetConstraint("issymlinkto",pp->conlist,CF_LIST)
 s.plus = 0;
 s.minus = 0;
 value = (char *)GetConstraint("search_mode",pp->conlist,CF_SCALAR);
-ParseModeString(value,&s.plus,&s.minus);
+
+if (!ParseModeString(value,&s.plus,&s.minus))
+   {
+   CfOut(cf_error,"","Problem validating a mode string");
+   PromiseRef(cf_error,pp);
+   }
+
 value = (char *)GetConstraint("search_bsdflags",pp->conlist,CF_SCALAR);
-ParseFlagString(value,&s.plus_flags,&s.minus_flags);
+
+if (!ParseFlagString(value,&s.plus_flags,&s.minus_flags))
+   {
+   CfOut(cf_error,"","Problem validating a BSD flag string");
+   PromiseRef(cf_error,pp);
+   }
 
 s.owners = (struct Rlist *)GetConstraint("search_owners",pp->conlist,CF_LIST);
 s.groups = (struct Rlist *)GetConstraint("search_groups",pp->conlist,CF_LIST);
@@ -464,7 +486,12 @@ struct FileRename GetRenameConstraints(struct Promise *pp)
   char *value;
 
 value = (char *)GetConstraint("disable_mode",pp->conlist,CF_SCALAR);
-ParseModeString(value,&r.plus,&r.minus);
+
+if (!ParseModeString(value,&r.plus,&r.minus))
+   {
+   CfOut(cf_error,"","Problem validating a mode string");
+   PromiseRef(cf_error,pp);
+   }
 
 r.disable = GetBooleanConstraint("disable",pp->conlist);
 r.disable_suffix = (char *)GetConstraint("disable_suffix",pp->conlist,CF_SCALAR);
@@ -529,9 +556,18 @@ struct FileCopy GetCopyConstraints(struct Promise *pp)
   long min,max;
 
 f.source = (char *)GetConstraint("source",pp->conlist,CF_SCALAR);
+
 value = (char *)GetConstraint("compare",pp->conlist,CF_SCALAR);
+
+if (value == NULL)
+   {
+   value = DEFAULT_COPYTYPE;
+   }
+
 f.compare = String2Comparison(value);
+
 value = (char *)GetConstraint("link_type",pp->conlist,CF_SCALAR);
+
 f.link_type = String2LinkType(value);
 f.servers = GetListConstraint("servers",pp->conlist);
 f.portnumber = (short)GetIntConstraint("portnumber",pp->conlist);
@@ -1040,6 +1076,8 @@ if (r.numlines == CF_NOINT)
    }
 
 r.showstate = GetListConstraint("showstate",pp->conlist);
+
+r.friend_pattern = GetIntConstraint("friend_pattern",pp->conlist);
 
 return r;
 }

@@ -66,7 +66,8 @@ extern int FACILITY;
 extern time_t PROMISETIME;
 extern int ABORTBUNDLE;
 extern struct Item *ABORTBUNDLEHEAP;
-
+extern int LASTSEENEXPIREAFTER;
+extern char *DEFAULT_COPYTYPE;
 extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
 extern struct Item *FSTABLIST;
@@ -74,6 +75,9 @@ extern struct Rlist *MOUNTEDFSLIST;
 
 extern int CF_MOUNTALL;
 extern int CF_SAVEFSTAB;
+
+extern char *DAY_TEXT[];
+extern char *MONTH_TEXT[];
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

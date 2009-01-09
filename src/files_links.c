@@ -266,20 +266,16 @@ strcat(buff,"./");
 
 while(--levels > 0)
    {
-   if (BufferOverflow(buff,"../"))
+   if (!JoinPath(buff,"../"))
       {
       return false;
       }
-   
-   strcat(buff,"../");
    }
 
-if (BufferOverflow(buff,commonto))
+if (!JoinPath(buff,commonto))
    {
    return false;
    }
-
-strcat(buff,commonto);
  
 return VerifyLink(destination,buff,attr,pp);
 }
@@ -404,7 +400,7 @@ if (stat(tmp,&statbuf) == -1)               /* link points nowhere */
    {
    if (attr.link.when_no_file == cfa_delete || attr.recursion.rmdeadlinks)
       {
-      CfOut(cf_verbose,"","%s is a link which points to %s, but that file doesn't seem to exist\n",name,VBUFF);
+      CfOut(cf_verbose,"","%s is a link which points to %s, but that file doesn't seem to exist\n",name,linkbuf);
 
       if (!DONTDO)
          {
@@ -466,4 +462,182 @@ else
       return true;
       }
    }
+}
+
+/*********************************************************************/
+
+int ExpandLinks(char *dest,char *from,int level)                            /* recursive */
+
+  /* Expand a path contaning symbolic links, up to 4 levels  */
+  /* of symbolic links and then beam out in a hurry !        */
+
+{ char *sp, buff[CF_BUFSIZE];
+  char node[CF_MAXLINKSIZE];
+  struct stat statbuf;
+  int lastnode = false;
+
+memset(dest,0,CF_BUFSIZE);
+
+if (level >= CF_MAXLINKLEVEL)
+   {
+   CfOut(cf_error,"","Too many levels of symbolic links to evaluate absolute path\n");
+   return false;
+   }
+
+for (sp = from; *sp != '\0'; sp++)
+   {
+   if (*sp == '/')
+      {
+      continue;
+      }
+   
+   sscanf(sp,"%[^/]",node);
+   sp += strlen(node);
+
+   if (*sp == '\0')
+      {
+      lastnode = true;
+      }
+   
+   if (strcmp(node,".") == 0)
+      {
+      continue;
+      }
+
+   if (strcmp(node,"..") == 0)
+      {
+      continue;
+      }
+   else
+      {
+      strcat(dest,"/");
+      }
+   
+   strcat(dest,node);
+
+   if (lstat(dest,&statbuf) == -1)  /* File doesn't exist so we can stop here */
+      {
+      CfOut(cf_error,"lstat","Can't stat %s in ExpandLinks\n",dest);
+      return false;
+      }
+
+   if (S_ISLNK(statbuf.st_mode))
+      {
+      memset(buff,0,CF_BUFSIZE);
+      
+      if (readlink(dest,buff,CF_BUFSIZE-1) == -1)
+         {
+         CfOut(cf_error,"readlink","Expand links can't stat %s\n",dest);
+         return false;
+         }
+      else
+         {
+         if (buff[0] == '.')
+            {
+            ChopLastNode(dest);
+
+            AddSlash(dest);
+
+            if (!JoinPath(dest,buff))
+               {
+               return false;
+               }
+            }
+         else if (buff[0] == '/')
+            {
+            strcpy(dest,buff);
+            DeleteSlash(dest);
+            
+            if (strcmp(dest,from) == 0)
+               {
+               Debug2("No links to be expanded\n");
+               return true;
+               }
+     
+            if (!lastnode && !ExpandLinks(buff,dest,level+1))
+               {
+               return false;
+               }
+            }
+         else
+            {
+            ChopLastNode(dest);
+            AddSlash(dest);
+            strcat(dest,buff);
+            DeleteSlash(dest);
+            
+            if (strcmp(dest,from) == 0)
+               {
+               Debug2("No links to be expanded\n");
+               return true;
+               }
+            
+            memset(buff,0,CF_BUFSIZE);
+            
+            if (!lastnode && !ExpandLinks(buff,dest,level+1))
+               {
+               return false;
+               }     
+            }
+         }
+      }
+   }
+ 
+return true;
+}
+
+/*********************************************************************/
+
+char *AbsLinkPath (char *from,char *relto)
+
+/* Take an abolute source and a relative destination object
+   and find the absolute name of the to object */
+
+{ char *sp;
+  int pop = 1;
+  static char destination[CF_BUFSIZE];
+  
+if (*relto == '/')
+   {
+   FatalError("Cfengine internal error: call to AbsLInkPath with absolute pathname\n");
+   }
+
+strcpy(destination,from);  /* reuse to save stack space */
+ 
+for (sp = relto; *sp != '\0'; sp++)
+   {
+   if (strncmp(sp,"../",3) == 0)
+      {
+      pop++;
+      sp += 2;
+      continue;
+      }
+
+   if (strncmp(sp,"./",2) == 0)
+      {
+      sp += 1;
+      continue;
+      }
+
+   break; /* real link */
+   }
+
+while (pop > 0)
+    {
+    ChopLastNode(destination);
+    pop--;
+    }
+
+if (strlen(destination) == 0)
+   {
+   strcpy(destination,"/");
+   }
+else
+   {
+   AddSlash(destination);
+   }
+ 
+strcat(destination,sp);
+Debug("Reconstructed absolute linkname = %s\n",destination);
+return destination; 
 }

@@ -108,7 +108,7 @@ if (attr.select.exec_program && SelectExecProgram(path,attr.select.exec_program)
 
 if (result = EvaluateORString(attr.select.result,leaf_attr,0))
    {
-   //AddMultipleClasses(fp->defines);
+   //NewClassesFromString(fp->defines);
    }
  
 Debug("Select result \"%s\"on %s was %d\n",attr.select.result,path,result);

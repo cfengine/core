@@ -872,55 +872,6 @@ strncpy(s2,s1+2,strlen(s1)-3);
 /* General                                                           */
 /*********************************************************************/
 
-char *JoinPath(char *path,char *leaf)
-
-{
-AddSlash(path);
-      
-if (BufferOverflow(path,leaf))
-   {
-   CfOut(cf_error,"","Buffer overflow occurred while joining %s + %s\n",path,leaf);
-   return NULL;
-   }
-
-strcat(path,leaf);
-return path;
-}
-
-/*********************************************************************/
-
-char *JoinSuffix(char *path,char *leaf)
-
-{
-DeleteSlash(path);
-      
-if (BufferOverflow(path,leaf))
-   {
-   CfOut(cf_error,"","Buffer overflow occurred while joining %s + %s\n",path,leaf);
-   return NULL;
-   }
-
-strcat(path,leaf);
-return path;
-}
-
-/*********************************************************************/
-
-int IsAbsPath(char *path)
-
-{
-if (IsFileSep(*path))
-   {
-   return true;
-   }
-else
-   {
-   return false;
-   }
-}
-
-/*********************************************************************/
-
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;

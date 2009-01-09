@@ -143,7 +143,7 @@ void CheckOpts(int argc,char **argv)
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
   
-while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSxMB",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -165,15 +165,6 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSxMB",OPTIONS,&optindex)) != EOF)
                  D2 = true;
                  DEBUG = true;
                  break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
-                 DEBUG = true;
-                 break;
              default:
                  DEBUG = true;
                  break;
@@ -188,10 +179,10 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSxMB",OPTIONS,&optindex)) != EOF)
       case 'K': IGNORELOCK = true;
           break;
                     
-      case 'D': AddMultipleClasses(optarg);
+      case 'D': NewClassesFromString(optarg);
           break;
           
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
+      case 'N': NegateClassesFromString(optarg,&VNEGHEAP);
           break;
           
       case 'I': INFORM = true;
@@ -205,10 +196,6 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:pD:N:VSxMB",OPTIONS,&optindex)) != EOF)
           NewClass("opt_dry_run");
           break;
           
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
       case 'V': Version("cf-agent");
           exit(0);
           
@@ -394,20 +381,28 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
+      {
+      EXCLAIM = GetBoolean(retval);
+      Verbose("SET exclamation %d\n",EXCLAIM);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",retval);
-      if (putenv(strdup(OUTPUT)) == 0)
+      char output[CF_BUFSIZE];
+      snprintf(output,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",retval);
+      if (putenv(strdup(output)) == 0)
          {
-         Verbose("Setting %s\n",OUTPUT);
+         Verbose("Setting %s\n",output);
          }
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
       {
-      DEFAULTCOPYTYPE = *(char *)retval;
-      Verbose("SET defaultcopytype = %c\n",DEFAULTCOPYTYPE);
+      DEFAULT_COPYTYPE = (char *)retval;
+      Verbose("SET defaultcopytype = %c\n",DEFAULT_COPYTYPE);
       continue;
       }
 
@@ -487,6 +482,11 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       Verbose("SET syslog = %c\n",LOGGING);
       continue;
       }
+   }
+
+if (GetVariable("control_common","CFG_CONTROLBODY[cfg_lastseenexpireafter]",&retval,&rettype) == cf_notype)
+   {
+   LASTSEENEXPIREAFTER = Str2Int(retval);
    }
 }
 
@@ -801,8 +801,13 @@ switch(type)
      
        if (!LoadProcessTable(&PROCESSTABLE,psopts))
           {
-          CfLog(cferror,"Unable to read the process table\n","");
-          AuditLog('y',NULL,0,"Processes inaccessible",CF_FAIL);   
+          struct Promise dummyp;
+          struct Attributes dummyattr;
+          memset(&dummyp,0,sizeof(dummyp));
+          memset(&dummyattr,0,sizeof(dummyattr));
+          dummyattr.transaction.audit = true;
+          dummyattr.transaction.log_level = cf_inform;
+          cfPS(cf_error,CF_FAIL,"",&dummyp,dummyattr,"Unable to read the process table\n","");
           return;
           }
        break;

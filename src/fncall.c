@@ -447,6 +447,6 @@ if (message && strlen(message) > 0)
 if (fncall_classes && strlen(fncall_classes))
    {
    strncpy(FNCALL_STATUS.fncall_classes,fncall_classes,CF_BUFSIZE-1);
-   AddPrefixedMultipleClasses(name,fncall_classes);
+   AddPrefixedClasses(name,fncall_classes);
    }
 }

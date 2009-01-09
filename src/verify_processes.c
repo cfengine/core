@@ -126,7 +126,7 @@ snprintf(pscomm,CF_MAXLINKSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],psopts);
 
 Verbose("Observe process table with %s\n",pscomm); 
   
-if ((prp = cfpopen(pscomm,"r")) == NULL)
+if ((prp = cf_popen(pscomm,"r")) == NULL)
    {
    CfOut(cf_error,"popen","Couldn't open the process list with command %s\n",pscomm);
    return false;
@@ -139,14 +139,12 @@ while (!feof(prp))
    AppendItem(procdata,vbuff,"");
    }
 
-cfpclose(prp);
+cf_pclose(prp);
 
 /* Now save the data */
 
-IMAGEBACKUP = 'n'; 
-
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_procs",CFWORKDIR);
-SaveItemList(*procdata,vbuff,"none");
+RawSaveItemList(*procdata,vbuff);
 
 CopyList(&rootprocs,*procdata);
 CopyList(&otherprocs,*procdata);
@@ -162,11 +160,11 @@ while (DeleteItemContaining(&otherprocs,"root"))
 PrependItem(&rootprocs,otherprocs->name,NULL);
 
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_rootprocs",CFWORKDIR);
-SaveItemList(rootprocs,vbuff,"none");
+RawSaveItemList(rootprocs,vbuff);
 DeleteItemList(rootprocs);
     
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_otherprocs",CFWORKDIR);
-SaveItemList(otherprocs,vbuff,"none");
+RawSaveItemList(otherprocs,vbuff);
 DeleteItemList(otherprocs);
 
 return true;
@@ -334,7 +332,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
       
       if (pid == cfengine_pid)
          {
-         CfLog(cfverbose,"cf-agent will not kill itself!\n","");
+         CfOut(cf_verbose,"","cf-agent will not kill itself!\n");
          continue;
          }
       
@@ -373,7 +371,7 @@ if (siglist == NULL)
 
 if (a.signals == NULL)
    {
-   CfOut(cf_inform,""," - No signals to send for %s\n",pp->promiser);
+   CfOut(cf_inform,""," -> No signals to send for %s\n",pp->promiser);
    return 0;
    }
 
@@ -405,7 +403,7 @@ for (ip = siglist; ip != NULL; ip=ip->next)
          }
       else
          {
-         CfOut(cf_error,""," -- Need to keep signal promise \'%s\' in process entry %s",rp->item,ip->name);
+         CfOut(cf_error,""," -> Need to keep signal promise \'%s\' in process entry %s",rp->item,ip->name);
          }
       }
    }
@@ -477,7 +475,7 @@ for (sp = proc; *sp != '\0'; sp++)
          end[col++] = offset - 1;
          if (col > CF_PROCCOLS - 1)
             {
-            CfLog(cferror,"Column overflow in process table","");
+            CfOut(cf_error,"","Column overflow in process table");
             break;
             }
          }

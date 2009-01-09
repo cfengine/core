@@ -151,6 +151,7 @@ enum cfdatatype
 #define CF_KNOWC    "knowledge"
 #define CF_RUNC     "runagent"
 #define CF_REPORTC  "reporter"
+#define CF_KEYGEN   "keygenerator"
 
 enum cfagenttype
    {
@@ -162,6 +163,7 @@ enum cfagenttype
    cf_runagent,
    cf_know,
    cf_report,
+   cf_keygen,
    cf_noagent
    };
 
@@ -389,7 +391,7 @@ enum cfeditorder
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
-#define CF_PATHRANGE   "[/\\].*|[cC]:[\\].*"
+#define CF_PATHRANGE   "[cC]:\\\\.*|/.*"
 
 #define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
 
@@ -1127,6 +1129,7 @@ struct Report
    int havelastseen;
    int lastseen;
    double intermittency;
+   char *friend_pattern;
    char *filename;
    int numlines;
    struct Rlist *showstate;
@@ -1179,7 +1182,7 @@ struct Attributes
    struct Report report;
    struct StorageMount mount;
    struct StorageVolume volume;
-
+      
    struct CfTcpIp tcpip;
    int havedepthsearch;
    int haveselect;

@@ -1,5 +1,4 @@
 /* 
-
    Copyright (C) 2008 - Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -14,6 +13,7 @@
    GNU General Public License for more details.
  
   You should have received a copy of the GNU General Public License
+  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -21,20 +21,128 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: cfkey.c                                                             */
+/* File: exec.c                                                              */
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf.defs.h"
-#include "cf.extern.h"
+#include "cf3.defs.h"
+#include "cf3.extern.h"
 
-char CFLOCK[CF_BUFSIZE];
+int main (int argc,char *argv[]);
 
-void Initialize(void);
+/*******************************************************************/
+/* GLOBAL VARIABLES                                                */
+/*******************************************************************/
+
+/*******************************************************************/
+/* Command line options                                            */
+/*******************************************************************/
+
+char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
+ 
+ struct option OPTIONS[17] =
+      {
+      { "help",no_argument,0,'h' },
+      { "debug",optional_argument,0,'d' },
+      { "verbose",no_argument,0,'v' },
+      { "version",no_argument,0,'V' },
+      { "output-file",required_argument,0,'o'},
+      { NULL,0,0,'\0' }
+      };
+
+ char *HINTS[17] =
+      {
+      "Print the help message",
+      "Set debugging level 0,1,2,3",
+      "Output verbose information about the behaviour of the agent",
+      "Output the version of the software",
+      "Specify an alternative output file than the default (localhost)",
+      NULL
+      };
 
 /*****************************************************************************/
 
-int main()
+int main(int argc,char *argv[])
+
+{
+CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"keygenerator");
+
+ThisAgentInit();
+KeepPromises();
+return 0;
+}
+
+/*****************************************************************************/
+/* Level 1                                                                   */
+/*****************************************************************************/
+
+void CheckOpts(int argc,char **argv)
+
+{ extern char *optarg;
+  struct Item *actionList;
+  int optindex = 0;
+  int c;
+  char ld_library_path[CF_BUFSIZE];
+
+while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
+  {
+  switch ((char) c)
+      {
+      case 'f':
+
+          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
+          VINPUTFILE[CF_BUFSIZE-1] = '\0';
+          MINUSF = true;
+          break;
+
+      case 'd': 
+          NewClass("opt_debug");
+          switch ((optarg==NULL) ? '3' : *optarg)
+             {
+             case '1':
+                 D1 = true;
+                 DEBUG = true;
+                 break;
+             case '2':
+                 D2 = true;
+                 DEBUG = true;
+                 break;
+             default:
+                 DEBUG = true;
+                 break;
+             }
+          break;
+                    
+      case 'V': Version("cf-key");
+          exit(0);
+          
+      case 'h': Syntax("cf-key - cfengine's key generator",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'M': ManPage("cf-key - cfengine's key generator",OPTIONS,HINTS,ID);
+          exit(0);
+
+      case 'x': SelfDiagnostic();
+          exit(0);
+          
+      default: Syntax("cf-key - cfengine's key generator",OPTIONS,HINTS,ID);
+          exit(1);
+          
+      }
+  }
+}
+
+/*****************************************************************************/
+
+void ThisAgentInit()
+
+{
+}
+
+/*****************************************************************************/
+
+void KeepPromises()
 
 { unsigned long err;
   RSA *pair;
@@ -43,9 +151,8 @@ int main()
   int fd;
   static char *passphrase = "Cfengine passphrase";
   EVP_CIPHER *cipher = EVP_des_ede3_cbc();
+  char vbuff[CF_BUFSIZE];
 
-Initialize();
- 
 if (stat(CFPRIVKEYFILE,&statbuf) != -1)
    {
    printf("A key file already exists at %s.\n",CFPRIVKEYFILE);
@@ -125,45 +232,10 @@ if(!PEM_write_RSAPublicKey(fp,pair))
    }
 
 fclose(fp);
-
  
-snprintf(VBUFF,CF_BUFSIZE,"%s/randseed",VLOGDIR);
-RAND_write_file(VBUFF);
-chmod(VBUFF,0644); 
+snprintf(vbuff,CF_BUFSIZE,"%s/randseed",CFWORKDIR);
+RAND_write_file(vbuff);
+chmod(vbuff,0644); 
 return 0;
-}
-
-/*******************************************************************/
-/* Level 1                                                         */
-/*******************************************************************/
-
-void Initialize()
-
-{
-umask(077);
- /* XXX Initialize workdir for non privileged users */
-
-strcpy(CFWORKDIR,WORKDIR);
-
-#ifndef NT
-if (geteuid() != 0)
-   {
-   char *homedir;
-   if ((homedir = getenv("HOME")) != NULL)
-      {
-      strcpy(CFWORKDIR,homedir);
-      strcat(CFWORKDIR,"/.cfagent");
-      }
-   }
-#endif
- 
-strcpy(VLOCKDIR,CFWORKDIR);
-strcpy(VLOGDIR,CFWORKDIR); 
-
-OpenSSL_add_all_algorithms();
-ERR_load_crypto_strings();
-
-CheckWorkDirectories();
-RandomSeed();
 }
 

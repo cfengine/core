@@ -111,7 +111,8 @@ void *CopyRvalItem(void *item, char type)
 { struct Rlist *rp,*start = NULL;
   struct FnCall *fp;
   void *new;
-
+  char output[CF_BUFSIZE];
+  
 Debug("CopyRvalItem(%c)\n",type);
   
 switch(type)
@@ -141,8 +142,8 @@ switch(type)
        return start;
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"Unknown type %c in CopyRvalItem - should not happen",type);
-FatalError(OUTPUT);
+snprintf(output,CF_BUFSIZE,"Unknown type %c in CopyRvalItem - should not happen",type);
+FatalError(output);
 return NULL;
 }
 

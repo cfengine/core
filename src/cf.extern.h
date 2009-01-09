@@ -37,6 +37,7 @@ extern pthread_mutex_t MUTEX_LOCK;
 extern pthread_attr_t PTHREADDEFAULTS;
 extern pthread_mutex_t MUTEX_COUNT;
 extern pthread_mutex_t MUTEX_HOSTNAME;
+extern pthread_mutex_t MUTEX_GETADDR;
 # endif
 
 extern pid_t ALARM_PID;
@@ -539,5 +540,5 @@ extern char *CF_SCLICODES[CF_MAX_SCLICODES][2];
 extern struct re_pattern_buffer *SEARCHPATTBUFF;
 extern struct re_pattern_buffer *PATTBUFFER;
 
-extern char *CF_DIGEST_TYPES[4][2];
-extern int CF_DIGEST_SIZES[4];
+extern char *CF_DIGEST_TYPES[9][2];
+extern int CF_DIGEST_SIZES[9];

@@ -35,6 +35,7 @@
 void CheckBundle(char *name,char *type)
 
 { struct Bundle *bp;
+  char output[CF_BUFSIZE];
 
 Debug("Checking for bundle (%s,%s)\n",name,type);
 
@@ -42,8 +43,8 @@ for (bp = BUNDLES; bp != NULL; bp=bp->next)
    {
    if ((strcmp(name,bp->name) == 0) && (strcmp(type,bp->type) == 0))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Redefinition of bundle %s for %s is a broken promise",name,type);
-      ReportError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"Redefinition of bundle %s for %s is a broken promise",name,type);
+      ReportError(output);
       }
    }
 }
@@ -53,13 +54,14 @@ for (bp = BUNDLES; bp != NULL; bp=bp->next)
 void CheckBody(char *name,char *type)
 
 { struct Body *bp;
+  char output[CF_BUFSIZE];
 
 for (bp = BODIES; bp != NULL; bp=bp->next)
    {
    if ((strcmp(name,bp->name) == 0) && (strcmp(type,bp->type) == 0))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Redefinition of body %s for %s is a broken promise",name,type);
-      ReportError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"Redefinition of body %s for %s is a broken promise",name,type);
+      ReportError(output);
       }
    }
 }
@@ -70,6 +72,14 @@ struct SubTypeSyntax CheckSubType(char *bundletype,char *subtype)
 
 { int i,j;
   struct SubTypeSyntax *ss;
+  char output[CF_BUFSIZE];
+  
+if (subtype == NULL)
+   {
+   snprintf(output,CF_BUFSIZE,"Missing promise type category for %s bundle",subtype,bundletype);
+   ReportError(output);
+   return CF_NOSTYPE;
+   }
 
 for  (i = 0; i < CF3_MODULES; i++)
    {
@@ -92,10 +102,10 @@ for  (i = 0; i < CF3_MODULES; i++)
       }
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"%s is not a valid type category for %s bundles",subtype,bundletype);
-ReportError(OUTPUT);
-snprintf(OUTPUT,CF_BUFSIZE,"Possibly the bundle type %s itself is undefined",subtype,bundletype);
-ReportError(OUTPUT);
+snprintf(output,CF_BUFSIZE,"%s is not a valid type category for %s bundle",subtype,bundletype);
+ReportError(output);
+snprintf(output,CF_BUFSIZE,"Possibly the bundle type %s itself is undefined",subtype,bundletype);
+ReportError(output);
 return CF_NOSTYPE;
 }
 
@@ -141,7 +151,8 @@ void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,s
 { int lmatch = false;
   int i,j,k,l, allowed = false;
   struct BodySyntax *bs;
-
+  char output[CF_BUFSIZE];
+  
 Debug("CheckConstraint(%s,%s,",type,lval);
 
 if (DEBUG)
@@ -226,8 +237,8 @@ for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
 
 if (!lmatch || !allowed)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Constraint lvalue %s is not allowed in bundle category \'%s\'",lval,type);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Constraint lvalue %s is not allowed in bundle category \'%s\'",lval,type);
+   ReportError(output);
    }
 }
 
@@ -240,6 +251,7 @@ void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype)
   struct SubTypeSyntax *ss;
   struct BodySyntax *bs,*bs2;
   enum cfdatatype ltype;
+  char output[CF_BUFSIZE];
   
 Debug("CheckSelection(%s,%s,",type,lval);
 
@@ -327,8 +339,8 @@ for  (i = 0; i < CF3_MODULES; i++)
                
                if (strcmp(ss[j].subtype,type) == 0 && strcmp(ss[j].subtype,"*") != 0)
                   {
-                  snprintf(OUTPUT,CF_BUFSIZE,"lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",lval,ss[j].subtype,type);
-                  ReportError(OUTPUT);
+                  snprintf(output,CF_BUFSIZE,"lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",lval,ss[j].subtype,type);
+                  ReportError(output);
                   return;
                   }
                
@@ -346,8 +358,8 @@ for  (i = 0; i < CF3_MODULES; i++)
 
 if (!lmatch)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Constraint lvalue %s is not allowed in \'%s\' constraint body",lval,type);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Constraint lvalue %s is not allowed in \'%s\' constraint body",lval,type);
+   ReportError(output);
    }
 }
 
@@ -359,7 +371,8 @@ void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatyp
 
 { struct Rlist *rp;
   struct Item *checklist;
-
+  char output[CF_BUFSIZE];
+  
 Debug(" ------------------------------------------------\n");
 
 if (dt == cf_bundle || dt == cf_body)
@@ -386,8 +399,8 @@ switch(rvaltype)
           case cf_olist:
               if (level == 0)
                  {
-                 snprintf(OUTPUT,CF_BUFSIZE,"rhs is a scalar, but lhs (%s) is not list type",CF_DATATYPES[dt]);
-                 ReportError(OUTPUT);
+                 snprintf(output,CF_BUFSIZE,"rhs is a scalar, but lhs (%s) is not list type",CF_DATATYPES[dt]);
+                 ReportError(output);
                  }
               break;
           }
@@ -404,8 +417,8 @@ switch(rvaltype)
           case cf_olist:
               break;
           default:
-              snprintf(OUTPUT,CF_BUFSIZE,"rhs is a list, but lhs (%s) is not a list type",CF_DATATYPES[dt]);
-              ReportError(OUTPUT);
+              snprintf(output,CF_BUFSIZE,"rhs is a list, but lhs (%s) is not a list type",CF_DATATYPES[dt]);
+              ReportError(output);
               break;
           }
        
@@ -474,8 +487,8 @@ switch (dt)
        break;
        
    default:
-       snprintf(OUTPUT,CF_BUFSIZE,"Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
-       FatalError(OUTPUT);
+       snprintf(output,CF_BUFSIZE,"Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
+       FatalError(output);
    }
 
 Debug("end CheckConstraintTypeMatch---------\n");
@@ -550,9 +563,8 @@ return cf_str;
 
 int CheckParseString(char *lval,char *s,char *range)
 
-{ regex_t rx;
-  regmatch_t pmatch;
-
+{ char output[CF_BUFSIZE];
+  
 Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
@@ -571,20 +583,9 @@ if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    return false;
    }
 
-if (CfRegcomp(&rx,range,REG_EXTENDED) != 0)
+if (FullTextMatch(range,s))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"regular expression for string rvalues is not ok for lval %s",lval);
-   FatalError(OUTPUT);
-   }
-
-if (regexec(&rx,s,1,&pmatch,0) == 0)
-   {
-   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(s)))
-      {
-      Debug("CheckParseString - syntax verified\n\n");
-      regfree(&rx);
-      return true;
-      }
+   return true;
    }
 
 if (IsCf3VarString(s))
@@ -593,8 +594,8 @@ if (IsCf3VarString(s))
    }
 else
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)",lval,s,range);
+   ReportError(output);
    return false;
    }
 
@@ -608,7 +609,8 @@ int CheckParseClass(char *lval,char *s,char *range)
 
 { regex_t rx;
   regmatch_t pmatch;
-
+  char output[CF_BUFSIZE];
+  
 Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
   
 if (strlen(range) == 0)
@@ -616,24 +618,13 @@ if (strlen(range) == 0)
    return true;
    }
 
-if (CfRegcomp(&rx,range,REG_EXTENDED) != 0)
+if (FullTextMatch(range,s))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"regular expression for class rvalues is not ok for lval %s",lval);
-   FatalError(OUTPUT);
+   return true;
    }
 
-if (regexec(&rx,s,1,&pmatch,0) == 0)
-   {
-   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(s)))
-      {
-      Debug("CheckParseClass - syntax verified\n\n");
-      regfree(&rx);
-      return true;
-      }
-   }
-
-snprintf(OUTPUT,CF_BUFSIZE,"Class item on rhs of lval \'%s\' given as { %s } is out of bounds (should match %s)",lval,s,range);
-ReportError(OUTPUT);
+snprintf(output,CF_BUFSIZE,"Class item on rhs of lval \'%s\' given as { %s } is out of bounds (should match %s)",lval,s,range);
+ReportError(output);
 return false;
 }
 
@@ -644,7 +635,8 @@ void CheckParseInt(char *lval,char *s,char *range)
 { struct Item *split,*ip;
   int n;
   long max = CF_LOWINIT, min = CF_HIGHINIT, val;
- 
+  char output[CF_BUFSIZE];
+  
 /* Numeric types are registered by range separated by comma str "min,max" */
 Debug("\nCheckParseInt(%s => %s/%s)\n",lval,s,range);
 
@@ -652,8 +644,8 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN: format specifier for int rvalues is not ok for lval %s - got %d items",lval,n);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN: format specifier for int rvalues is not ok for lval %s - got %d items",lval,n);
+   FatalError(output);
    }
 
 sscanf(split->name,"%ld",&min);
@@ -671,8 +663,8 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN: could not parse format specifier for int rvalues for lval %s",lval);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN: could not parse format specifier for int rvalues for lval %s",lval);
+   FatalError(output);
    }
 
 if (IsCf3VarString(s))
@@ -685,8 +677,8 @@ val = Str2Int(s);
 
 if (val > max || val < min)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);
+   ReportError(output);
    return;
    }
 
@@ -700,7 +692,8 @@ void CheckParseIntRange(char *lval,char *s,char *range)
 { struct Item *split,*ip,*rangep;
   int n;
   long max = CF_LOWINIT, min = CF_HIGHINIT, val;
- 
+  char output[CF_BUFSIZE];
+  
 /* Numeric types are registered by range separated by comma str "min,max" */
 Debug("\nCheckParseIntRange(%s => %s/%s)\n",lval,s,range);
 
@@ -714,8 +707,8 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:format specifier %s for irange rvalues is not ok for lval %s - got %d items",range,lval,n);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN:format specifier %s for irange rvalues is not ok for lval %s - got %d items",range,lval,n);
+   FatalError(output);
    }
 
 sscanf(split->name,"%ld",&min);
@@ -733,8 +726,8 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN: could not parse irange format specifier for int rvalues for lval %s",lval);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN: could not parse irange format specifier for int rvalues for lval %s",lval);
+   FatalError(output);
    }
 
 if (IsCf3VarString(s))
@@ -747,8 +740,8 @@ rangep = SplitString(s,',');
 
 if ((n = ListLen(rangep)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Int range format specifier for lval %s should be of form \"a,b\" but got %d items",lval,n);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Int range format specifier for lval %s should be of form \"a,b\" but got %d items",lval,n);
+   ReportError(output);
    DeleteItemList(rangep);
    return;
    }
@@ -759,8 +752,8 @@ for (ip = rangep; ip != NULL; ip=ip->next)
    
    if (val > max || val < min)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Int range item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);
-      ReportError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"Int range item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);
+      ReportError(output);
       DeleteItemList(rangep);
       return;
       }
@@ -778,7 +771,8 @@ void CheckParseReal(char *lval,char *s,char *range)
 { struct Item *split,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
   int n;
-
+  char output[CF_BUFSIZE];
+  
 Debug("\nCheckParseReal(%s => %s/%s)\n",lval,s,range);
 
 if (strcmp(s,"inf") == 0)
@@ -799,8 +793,8 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
+   FatalError(output);
    }
 
 sscanf(split->name,"%lf",&min);
@@ -809,16 +803,16 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
+   FatalError(output);
    }
    
 val = Str2Double(s);
 
 if (val > max || val < min)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Real item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",lval,s,val,range);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Real item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",lval,s,val,range);
+   ReportError(output);
    }
 
 Debug("CheckParseReal - syntax verified\n\n");
@@ -831,7 +825,8 @@ void CheckParseRealRange(char *lval,char *s,char *range)
 { struct Item *split,*rangep,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
   int n;
-
+  char output[CF_BUFSIZE];
+ 
 Debug("\nCheckParseRealRange(%s => %s/%s)\n",lval,s,range);
 
 if (*s == '[' || *s == '(')
@@ -858,8 +853,8 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
+   FatalError(output);
    }
 
 sscanf(split->name,"%lf",&min);
@@ -868,16 +863,16 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
-   FatalError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
+   FatalError(output);
    }
 
 rangep = SplitString(s,',');
 
 if ((n = ListLen(rangep)) != 2)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Real range format specifier in lval %s should be of form \"a,b\" but got %d items",lval,n);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Real range format specifier in lval %s should be of form \"a,b\" but got %d items",lval,n);
+   ReportError(output);
    DeleteItemList(rangep);
    return;
    }
@@ -888,8 +883,8 @@ for (ip = rangep; ip != NULL; ip=ip->next)
    
    if (val > max || val < min)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"Real range item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",lval,s,val,range);
-      ReportError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"Real range item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",lval,s,val,range);
+      ReportError(output);
       }
    }
 
@@ -904,6 +899,7 @@ void CheckParseOpts(char *lval,char *s,char *range)
 
 { struct Item *split,*ip;
   int err = false;
+  char output[CF_BUFSIZE];
  
 /* List/menu types are separated by comma str "a,b,c,..." */
 
@@ -919,8 +915,8 @@ split = SplitString(range,',');
 
 if (!IsItemIn(split,s))
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Selection on rhs of lval \'%s\' given as \'%s\' is out of bounds, should be in [%s]",lval,s,range);
-   ReportError(OUTPUT);
+   snprintf(output,CF_BUFSIZE,"Selection on rhs of lval \'%s\' given as \'%s\' is out of bounds, should be in [%s]",lval,s,range);
+   ReportError(output);
    err = true;
    }
 
@@ -938,7 +934,8 @@ void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range)
 
 { int i;
   enum cfdatatype dt;
-     
+  char output[CF_BUFSIZE];
+ 
 Debug("CheckFnCallType(%s => %s/%s)\n",lval,s,range);
 
 for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
@@ -976,8 +973,8 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
             return;
             }
 
-         snprintf(OUTPUT,CF_BUFSIZE,"function %s() returns type %s but lhs requires %s",s,CF_DATATYPES[dt],CF_DATATYPES[dtype]);
-         ReportError(OUTPUT);
+         snprintf(output,CF_BUFSIZE,"function %s() returns type %s but lhs requires %s",s,CF_DATATYPES[dt],CF_DATATYPES[dtype]);
+         ReportError(output);
          return;
          }
       else
@@ -987,8 +984,8 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
       }
    }
 
-snprintf(OUTPUT,CF_BUFSIZE,"Unknown built-in function %s()",s);
-ReportError(OUTPUT);
+snprintf(output,CF_BUFSIZE,"Unknown built-in function %s()",s);
+ReportError(output);
 }
 
 

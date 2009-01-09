@@ -72,7 +72,6 @@ if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
 if (!MakeParentDirectory(vbuff,attr.move_obstructions))
    {
    cfPS(cf_inform,CF_FAIL,"",pp,attr,"Can't make directories for %s in files.copyfrom promise\n",vbuff);
-   ReleaseCurrentLock();
    return NULL;
    }
 
@@ -168,7 +167,7 @@ buf = (char *) malloc(buf_size + sizeof(int));
 
 while (true)
    {
-   if ((n_read = read (sd,buf,buf_size)) == -1)
+   if ((n_read = read(sd,buf,buf_size)) == -1)
       {
       if (errno == EINTR) 
          {

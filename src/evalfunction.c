@@ -2061,8 +2061,8 @@ if (strcmp((char *)(finalargs->next->item),"now") == 0)
 
 if (from == CF_NOINT || to == CF_NOINT)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed int values %s=>%d,%s=>%d\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
-   ReportError(OUTPUT);
+   snprintf(buffer,CF_BUFSIZE,"Error reading assumed int values %s=>%d,%s=>%d\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
+   ReportError(buffer);
    }
 
 if (from > to)
@@ -2120,8 +2120,8 @@ to = Str2Double((char *)(finalargs->next->item));
 
 if (from == CF_NODOUBLE || to == CF_NODOUBLE)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
-   ReportError(OUTPUT);
+   snprintf(buffer,CF_BUFSIZE,"Error reading assumed real values %s=>%lf,%s=>%lf\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
+   ReportError(buffer);
    }
 
 if (from > to)
@@ -2945,7 +2945,7 @@ switch (*line)
        Verbose("Deactivated classes: %s\n",line+1);
        if (CheckID(line+1))
           {
-          NegateCompoundClass(line+1,&VNEGHEAP);
+          NegateClassesFromString(line+1,&VNEGHEAP);
           }
        break;
    case '=':

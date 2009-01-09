@@ -12,8 +12,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
-  
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -26,6 +25,8 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+
+extern char *DAY_TEXT[];
 
 struct CfState
    {
@@ -233,8 +234,11 @@ void LoadPersistentContext()
   struct CfState q;
   char filename[CF_BUFSIZE];
 
-Banner("Loading persistent classes");
-
+if (VERBOSE || DEBUG)
+   {
+   ReportBanner("Loading persistent classes");
+   }
+  
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
   
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
@@ -288,14 +292,17 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       {
       Verbose(" Persistent class %s for %d more minutes\n",key.data,(q.expires-now)/60);
       Verbose(" Adding persistent class %s to heap\n",key.data);
-      AddMultipleClasses(key.data);
+      NewClass(key.data);
       }
    }
  
 dbcp->c_close(dbcp);
 dbp->close(dbp,0);
 
-Banner("Loaded persistent memory");
+if (VERBOSE || DEBUG)
+   {
+   ReportBanner("Loaded persistent memory");
+   }
 }
 
 /*****************************************************************************/
@@ -310,6 +317,126 @@ for (rp = classlist; rp != NULL; rp = rp->next)
    }
 }
 
+/*********************************************************************/
+
+void NewClassesFromString(char *classlist)
+
+{ char *sp, currentitem[CF_MAXVARSIZE],local[CF_MAXVARSIZE];
+ 
+if ((classlist == NULL) || strlen(classlist) == 0)
+   {
+   return;
+   }
+
+memset(local,0,CF_MAXVARSIZE);
+strncpy(local,classlist,CF_MAXVARSIZE-1);
+
+for (sp = local; *sp != '\0'; sp++)
+   {
+   memset(currentitem,0,CF_MAXVARSIZE);
+
+   sscanf(sp,"%250[^.:,]",currentitem);
+
+   sp += strlen(currentitem);
+      
+   if (IsHardClass(currentitem))
+      {
+      FatalError("cfengine: You cannot use -D to define a reserved class!");
+      }
+
+   NewClass(CanonifyName(currentitem));
+   }
+}
+
+/*********************************************************************/
+
+void NegateClassesFromString(char *class,struct Item **heap)
+
+{ char *sp = class;
+  char cbuff[CF_MAXVARSIZE];
+
+while(*sp != '\0')
+   {
+   sscanf(sp,"%255[^.]",cbuff);
+
+   while ((*sp != '\0') && ((*sp !='.')||(*sp == '&')))
+      {
+      sp++;
+      }
+
+   if ((*sp == '.') || (*sp == '&'))
+      {
+      sp++;
+      }
+
+   if (IsHardClass(cbuff))
+      { char err[CF_BUFSIZE];
+      sprintf (err,"Cannot negate the reserved class [%s]\n",cbuff);
+      FatalError(err);
+      }
+
+   AppendItem(heap,cbuff,NULL);
+   }
+}
+
+/*********************************************************************/
+
+void AddPrefixedClasses(char *name,char *classlist)
+
+{ char *sp, currentitem[CF_MAXVARSIZE],local[CF_MAXVARSIZE],pref[CF_BUFSIZE];
+ 
+if ((classlist == NULL) || strlen(classlist) == 0)
+   {
+   return;
+   }
+
+memset(local,0,CF_MAXVARSIZE);
+strncpy(local,classlist,CF_MAXVARSIZE-1);
+
+for (sp = local; *sp != '\0'; sp++)
+   {
+   memset(currentitem,0,CF_MAXVARSIZE);
+
+   sscanf(sp,"%250[^.:,]",currentitem);
+
+   sp += strlen(currentitem);
+
+   pref[0] = '\0';
+   snprintf(pref,CF_BUFSIZE,"%s_%s",name,currentitem);
+
+   if (IsHardClass(pref))
+      {
+      FatalError("cfengine: You cannot use -D to define a reserved class!");
+      }
+
+   NewClass(CanonifyName(pref));
+   }
+}
+
+/*********************************************************************/
+
+int IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux */
+
+{ int i;
+
+for (i = 2; CLASSTEXT[i] != '\0'; i++)
+   {
+   if (strcmp(CLASSTEXT[i],sp) == 0)
+      {
+      return(true);
+      }
+   }
+
+for (i = 0; i < 7; i++)
+   {
+   if (strcmp(DAY_TEXT[i],sp)==0)
+      {
+      return(false);
+      }
+   }
+
+return(false);
+}
 
 /***************************************************************************/
 
@@ -491,6 +618,40 @@ if (IsItemIn(VHEAP,class))
 AppendItem(&VHEAP,class,NULL);
 }
 
+/*********************************************************************/
+
+void NewPrefixedClasses(char *name,char *classlist)
+
+{ char *sp, currentitem[CF_MAXVARSIZE],local[CF_MAXVARSIZE],pref[CF_BUFSIZE];
+ 
+if ((classlist == NULL) || strlen(classlist) == 0)
+   {
+   return;
+   }
+
+memset(local,0,CF_MAXVARSIZE);
+strncpy(local,classlist,CF_MAXVARSIZE-1);
+
+for (sp = local; *sp != '\0'; sp++)
+   {
+   memset(currentitem,0,CF_MAXVARSIZE);
+
+   sscanf(sp,"%250[^.:,]",currentitem);
+
+   sp += strlen(currentitem);
+
+   pref[0] = '\0';
+   snprintf(pref,CF_BUFSIZE,"%s_%s",name,currentitem);
+
+   if (IsHardClass(pref))
+      {
+      FatalError("cfengine: You cannot use -D to define a reserved class!");
+      }
+
+   NewClass(CanonifyName(pref));
+   }
+}
+
 /*******************************************************************/
 
 void DeleteClass(char *class)
@@ -536,5 +697,387 @@ if (IsItemIn(VADDCLASSES,copy))
 
 AppendItem(&VADDCLASSES,copy,CONTEXTID);
 }
+
+/*********************************************************************/
+
+int IsExcluded(char *exception)
+
+{
+if (!IsDefinedClass(exception))
+   {
+   Debug2("%s is excluded!\n",exception);
+   return true;
+   }  
+
+return false;
+}
+
+/*********************************************************************/
+
+int IsDefinedClass(char *class) 
+
+  /* Evaluates a.b.c|d.e.f etc and returns true if the class */
+  /* is currently true, given the defined heap and negations */
+
+{ int ret;
+Debug("IsDefinedClass(%s,VADDCLASSES)\n",class);
+
+if (class == NULL)
+   {
+   return true;
+   }
+
+ret = EvaluateORString(class,VADDCLASSES,0);
+
+return ret;
+}
+
+
+/*********************************************************************/
+/* Level 2                                                           */
+/*********************************************************************/
+
+int EvaluateORString(char *class,struct Item *list,int fromIsInstallable)
+
+{ char *sp, cbuff[CF_BUFSIZE];
+  int result = false;
+
+if (class == NULL)
+   {
+   return false;
+   }
+
+Debug("\n--------\nEvaluateORString(%s)\n",class);
+ 
+for (sp = class; *sp != '\0'; sp++)
+   {
+   while (*sp == '|')
+      {
+      sp++;
+      }
+
+   memset(cbuff,0,CF_BUFSIZE);
+
+   sp += GetORAtom(sp,cbuff);
+
+   if (strlen(cbuff) == 0)
+      {
+      break;
+      }
+
+
+   if (IsBracketed(cbuff)) /* Strip brackets */
+      {
+      cbuff[strlen(cbuff)-1] = '\0';
+
+      result |= EvaluateORString(cbuff+1,list,fromIsInstallable);
+      Debug("EvalORString-temp-result-y=%d (%s)\n",result,cbuff+1);
+      }
+   else
+      {
+      result |= EvaluateANDString(cbuff,list,fromIsInstallable);
+      Debug("EvalORString-temp-result-n=%d (%s)\n",result,cbuff);
+      }
+
+   if (*sp == '\0')
+      {
+      break;
+      }
+   }
+
+Debug("EvaluateORString(%s) returns %d\n",class,result); 
+return result;
+}
+
+/*********************************************************************/
+/* Level 3                                                           */
+/*********************************************************************/
+
+int EvaluateANDString(char *class,struct Item *list,int fromIsInstallable)
+
+{ char *sp, *atom;
+  char cbuff[CF_BUFSIZE];
+  int count = 1;
+  int negation = false;
+
+Debug("EvaluateANDString(%s)\n",class);
+
+count = CountEvalAtoms(class);
+sp = class;
+ 
+while(*sp != '\0')
+   {
+   negation = false;
+
+   while (*sp == '!')
+      {
+      negation = !negation;
+      sp++;
+      }
+
+   memset(cbuff,0,CF_BUFSIZE);
+
+   sp += GetANDAtom(sp,cbuff) + 1;
+
+   atom = cbuff;
+
+     /* Test for parentheses */
+   
+   if (IsBracketed(cbuff))
+      {
+      atom = cbuff+1;
+
+      Debug("Checking AND Atom %s?\n",atom);
+      
+      cbuff[strlen(cbuff)-1] = '\0';
+      
+      if (EvaluateORString(atom,list,fromIsInstallable))
+         {
+         if (negation)
+            {
+            Debug("EvalANDString-temp-result-neg1=false\n");
+            return false;
+            }
+         else
+            {
+            Debug("EvalORString-temp-result count=%d\n",count);
+            count--;
+            }
+         }
+      else
+         {
+         if (negation)
+            {
+            Debug("EvalORString-temp-result2 count=%d\n",count);
+            count--;
+            }
+         else
+            {
+            return false;
+            }
+         }
+
+      continue;
+      }
+   else
+      {
+      atom = cbuff;
+      }
+   
+   /* End of parenthesis check */
+   
+   if (*sp == '.' || *sp == '&')
+      {
+      sp++;
+      }
+
+   Debug("Checking OR atom (%s)?\n",atom);
+
+   if (IsItemIn(VNEGHEAP,atom))
+      {
+      if (negation)
+         {
+         Debug("EvalORString-temp-result3 count=%d\n",count);
+         count--;
+         }
+      else
+         {
+         return false;
+         }
+      } 
+   else if (IsItemIn(VHEAP,atom))
+      {
+      if (negation)
+         {
+         Debug("EvaluateANDString(%s) returns false by negation 1\n",class);
+         return false;
+         }
+      else
+         {
+         Debug("EvalORString-temp-result3.5 count=%d\n",count);
+         count--;
+         }
+      } 
+   else if (IsItemIn(list,atom))
+      {
+      if (negation && !fromIsInstallable)
+         {
+         Debug("EvaluateANDString(%s) returns false by negation 2\n",class);
+         return false;
+         }
+      else
+         {
+         Debug("EvalORString-temp-result3.6 count=%d\n",count);
+         count--;
+         }
+      } 
+   else if (negation)    /* ! (an undefined class) == true */
+      {
+      Debug("EvalORString-temp-result4 count=%d\n",count);
+      count--;
+      }
+   else       
+      {
+      Debug("EvaluateANDString(%s) returns false ny negation 3\n",class);
+      return false;
+      }
+   }
+
+ 
+if (count == 0)
+   {
+   Debug("EvaluateANDString(%s) returns true\n",class);
+   return(true);
+   }
+else
+   {
+   Debug("EvaluateANDString(%s) returns false\n",class);
+   return(false);
+   }
+}
+
+/*********************************************************************/
+
+int GetORAtom(char *start,char *buffer)
+
+{ char *sp = start;
+  char *spc = buffer;
+  int bracklevel = 0, len = 0;
+
+while ((*sp != '\0') && !((*sp == '|') && (bracklevel == 0)))
+   {
+   if (*sp == '(')
+      {
+      Debug("+(\n");
+      bracklevel++;
+      }
+
+   if (*sp == ')')
+      {
+      Debug("-)\n");
+      bracklevel--;
+      }
+
+   Debug("(%c)",*sp);
+   *spc++ = *sp++;
+   len++;
+   }
+
+*spc = '\0';
+
+Debug("\nGetORATom(%s)->%s\n",start,buffer); 
+return len;
+}
+
+/*********************************************************************/
+/* Level 4                                                           */
+/*********************************************************************/
+
+int GetANDAtom(char *start,char *buffer)
+
+{ char *sp = start;
+  char *spc = buffer;
+  int bracklevel = 0, len = 0;
+
+while ((*sp != '\0') && !(((*sp == '.')||(*sp == '&')) && (bracklevel == 0)))
+   {
+   if (*sp == '(')
+      {
+      Debug("+(\n");
+      bracklevel++;
+      }
+
+   if (*sp == ')')
+      {
+      Debug("-)\n");
+      bracklevel--;
+      }
+
+   *spc++ = *sp++;
+
+   len++;
+   }
+
+*spc = '\0';
+Debug("\nGetANDATom(%s)->%s\n",start,buffer);  
+
+return len;
+}
+
+/*********************************************************************/
+
+int CountEvalAtoms(char *class)
+
+{ char *sp;
+  int count = 0, bracklevel = 0;
+  
+for (sp = class; *sp != '\0'; sp++)
+   {
+   if (*sp == '(')
+      {
+      Debug("+(\n");
+      bracklevel++;
+      continue;
+      }
+
+   if (*sp == ')')
+      {
+      Debug("-)\n");
+      bracklevel--;
+      continue;
+      }
+   
+   if ((bracklevel == 0) && ((*sp == '.')||(*sp == '&')))
+      {
+      count++;
+      }
+   }
+
+if (bracklevel != 0)
+   {
+   char output[CF_BUFSIZE];
+   snprintf(output,CF_BUFSIZE,"Bracket mismatch, in [class=%s], level = %d\n",class,bracklevel);
+   yyerror(output);
+   FatalError("Aborted");
+   }
+
+return count+1;
+}
+
+/*********************************************************************/
+
+int IsBracketed(char *s)
+
+ /* return true if the entire string is bracketed, not just if
+    if contains brackets */
+
+{ int i, level= 0;
+
+if (*s != '(')
+   {
+   return false;
+   }
+
+for (i = 0; i < strlen(s)-1; i++)
+   {
+   if (s[i] == '(')
+      {
+      level++;
+      }
+   
+   if (s[i] == ')')
+      {
+      level--;
+      }
+
+   if (level == 0)
+      {
+      return false;  /* premature ) */
+      }
+   }
+
+return true;
+}
+
 
 

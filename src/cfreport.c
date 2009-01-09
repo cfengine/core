@@ -258,7 +258,6 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLM",OPTIONS,&optindex)) != EOF
           break;
 
       case 'd': 
-          AddClassToHeap("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
              {
              case '1':
@@ -267,15 +266,6 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLM",OPTIONS,&optindex)) != EOF
                  break;
              case '2':
                  D2 = true;
-                 DEBUG = true;
-                 break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
                  DEBUG = true;
                  break;
              default:
@@ -893,7 +883,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
             {
             if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
                {
-               CfLog(cferror,"","db_store");
+               CfOut(cf_error,"db_del","db_delete failed");
                }
             }
          
@@ -1216,7 +1206,7 @@ if (XML)
 
  while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
     {
-    char type;
+    enum cfhashes type;
     char strtype[CF_MAXVARSIZE];
     char name[CF_BUFSIZE];
     struct Checksum_Value chk_val;
@@ -1231,26 +1221,26 @@ if (XML)
     strncpy(strtype,key.data,CF_MAXDIGESTNAMELEN);
     strncpy(name,(char *)key.data+CF_CHKSUMKEYOFFSET,CF_BUFSIZE-1);
 
-    type = ChecksumType(strtype);
+    type = String2HashType(strtype);
 
     if (XML)
        {
        fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
        fprintf(fout,"%s%s%s",CFRX[cfx_event][cfb],name,CFRX[cfx_event][cfe]);
-       fprintf(fout,"%s%s%s",CFRX[cfx_q][cfb],ChecksumPrint(type,digest),CFRX[cfx_q][cfe]);
+       fprintf(fout,"%s%s%s",CFRX[cfx_q][cfb],HashPrint(type,digest),CFRX[cfx_q][cfe]);
        fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
        }
     else if (HTML)
        {
        fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
        fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],name,CFRH[cfx_filename][cfe]);
-       fprintf(fout,"%s%s%s",CFRH[cfx_q][cfb],ChecksumPrint(type,digest),CFRH[cfx_q][cfe]);
+       fprintf(fout,"%s%s%s",CFRH[cfx_q][cfb],HashPrint(type,digest),CFRH[cfx_q][cfe]);
        fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
        }
     else
        {
        fprintf(fout,"%s = ",name);
-       fprintf(fout,"%s\n",ChecksumPrint(type,digest));
+       fprintf(fout,"%s\n",HashPrint(type,digest));
        /* attr_digest too here*/
        
        memset(&key,0,sizeof(key));

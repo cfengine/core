@@ -195,7 +195,7 @@ i = slot = GetHash(vlval);
 
 if (ptr == NULL || ptr->hashtable == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Scope %s does not seem to exist -- no \"common control\" body?\n",scope);
+   CfOut(cf_error,"","Scope %s does not seem to exist -- no \"common control\" body?\n",scope);
    return cf_notype;
    }
 
@@ -420,8 +420,9 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
  
  if (bracks != 0)
     {
-    snprintf(OUTPUT,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
-    yyerror(OUTPUT);
+    char output[CF_BUFSIZE];
+    snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
+    yyerror(output);
     return false;
     }
  
@@ -504,8 +505,9 @@ for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
 
 if (bracks != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Broken variable syntax or bracket mismatch - inner (%s/%s)",str,substr);
-   yyerror(OUTPUT);
+   char output[CF_BUFSIZE];
+   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch - inner (%s/%s)",str,substr);
+   yyerror(output);
    return false;
    }
 
@@ -570,8 +572,9 @@ if (dollar == false)
 
 if (bracks != 0)
    {
-   snprintf(OUTPUT,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in - outer (%s/%s)",str,substr);
-   yyerror(OUTPUT);
+   char output[CF_BUFSIZE];
+   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in - outer (%s/%s)",str,substr);
+   yyerror(output);
    return NULL;
    }
 

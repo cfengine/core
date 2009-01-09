@@ -114,7 +114,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrxM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -137,15 +137,6 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrxM",OPTIONS,&optindex)) != EOF)
                  D2 = true;
                  DEBUG = true;
                  break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
-                 DEBUG = true;
-                 break;
              default:
                  DEBUG = true;
                  break;
@@ -155,10 +146,10 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrxM",OPTIONS,&optindex)) != EOF)
       case 'K': IGNORELOCK = true;
           break;
                     
-      case 'D': AddMultipleClasses(optarg);
+      case 'D': NewClassesFromString(optarg);
           break;
           
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
+      case 'N': NegateClassesFromString(optarg,&VNEGHEAP);
           break;
           
       case 'I': INFORM = true;
@@ -172,10 +163,6 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:pD:N:VSrxM",OPTIONS,&optindex)) != EOF)
           NewClass("opt_dry_run");
           break;
           
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
       case 'V': Version("cf-promises");
           exit(0);
           

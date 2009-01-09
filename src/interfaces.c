@@ -144,7 +144,7 @@ if (ioctl(sk,SIOCGIFMETRIC, (caddr_t) &IFR) == -1)  /* Get the routing priority 
 
 metric = IFR.ifr_metric;
 
-isnotsane = GetIfPromisedStatus(sk,vifdev,vaddress,vnetmask,vbroadcast);
+isnotsane = GetPromisedIfStatus(sk,vifdev,vaddress,vnetmask,vbroadcast);
 
 if (!DONTDO && isnotsane)
    {
@@ -388,8 +388,7 @@ Verbose("Looking for a default route...\n");
 
 if (!IsPrivileged())                            
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Only root can set a default route.");
-   CfLog(cfinform,OUTPUT,"");
+   CfOut(cf_inform,"","Only root can set a default route.");
    return;
    }
 
@@ -401,8 +400,7 @@ if (VDEFAULTROUTE == NULL)
 
 if ((pp = cf_popen(VNETSTAT[VSYSTEMHARDCLASS],"r")) == NULL)
    {
-   snprintf(OUTPUT,CF_BUFSIZE*2,"Failed to open pipe from %s\n",VNETSTAT[VSYSTEMHARDCLASS]);
-   CfLog(cferror,OUTPUT,"popen");
+   CfOut(cf_error,"cf_popen","Failed to open pipe from %s\n",VNETSTAT[VSYSTEMHARDCLASS]);
    return;
    }
 
@@ -449,7 +447,7 @@ if (defaultokay == 1)
 
 if (defaultokay == 0)
    {
-   AddMultipleClasses("no_default_route");
+   NewClass("no_default_route");
    }
 
 if (IsExcluded(VDEFAULTROUTE->classes))
@@ -458,12 +456,12 @@ if (IsExcluded(VDEFAULTROUTE->classes))
    return;   
    }
 
-CfLog(cferror,"The default route is incorrect, trying to correct\n","");
+CfOut(cf_error,"","The default route is incorrect, trying to correct\n");
 
 if (strcmp(VROUTE[VSYSTEMHARDCLASS], "-") != 0)
    {
-
    Debug ("Using route shell commands to set default route\n");
+
    if (defaultokay == 2)
       {
       if (! DONTDO)
@@ -471,14 +469,14 @@ if (strcmp(VROUTE[VSYSTEMHARDCLASS], "-") != 0)
          /* get the route command and the format for the delete argument */
          snprintf(routefmt,CF_MAXVARSIZE,"%s %s",VROUTE[VSYSTEMHARDCLASS],VROUTEDELFMT[VSYSTEMHARDCLASS]);
          snprintf(vbuff,CF_MAXVARSIZE,routefmt,"default",VDEFAULTROUTE->name);
+
          if (ShellCommandReturnsZero(vbuff,false))
             {
-            CfLog(cfinform,"Removing old default route","");
-            CfLog(cfinform,vbuff,"");
+            CfOut(cf_inform,"Removing old default route %s",vbuff);
             }
          else
             {
-            CfLog(cferror,"Error removing route","");
+            CfOut(cf_error,"","Error removing route");
             }
          }
       }
@@ -487,14 +485,14 @@ if (strcmp(VROUTE[VSYSTEMHARDCLASS], "-") != 0)
       {
       snprintf(routefmt,CF_MAXVARSIZE,"%s %s",VROUTE[VSYSTEMHARDCLASS],VROUTEADDFMT[VSYSTEMHARDCLASS]);
       snprintf(vbuff,CF_MAXVARSIZE,routefmt,"default",VDEFAULTROUTE->name);
+
       if (ShellCommandReturnsZero(vbuff,false))
          {
-         CfLog(cfinform,"Setting default route","");
-         CfLog(cfinform,vbuff,"");
+         CfOut(cf_inform,"","Setting default route %s",vbuff);
          }
       else
          {
-         CfLog(cferror,"Error setting route","");
+         CfOut(cf_error,"","Error setting route");
          }
       }
    return;
@@ -505,9 +503,7 @@ else
    Debug ("Using route ioctl to set default route\n");
    if ((sk = socket(AF_INET,SOCK_RAW,0)) == -1)
       {
-      CfLog(cferror,"System class: ", CLASSTEXT[VSYSTEMHARDCLASS]);
-      CfLog(cferror,"","Error in SetDefaultRoute():");
-      perror("cfengine: socket");
+      CfOut(cf_error,"socket","System class: ", CLASSTEXT[VSYSTEMHARDCLASS]);
       }
    else
       {
@@ -525,14 +521,11 @@ else
          {
          if (ioctl(sk,SIOCADDRT, (caddr_t) &route) == -1)   /* Get the device status flags */
             {
-            CfLog(cferror,"Error setting route:","");
-            perror("cfengine: ioctl SIOCADDRT:");
+            CfOut(cf_error,"ioctly SIOCADDRT","Error setting route");
             }
          else
             {
-            CfLog(cferror,"Setting default route.\n","");
-            snprintf(OUTPUT,CF_BUFSIZE*2,"I'm setting it to %s\n",VDEFAULTROUTE->name);
-            CfLog(cferror,OUTPUT,"");
+            CfOut(cf_error,"","Setting default route to %s\n",VDEFAULTROUTE->name);
             }
          }
       }

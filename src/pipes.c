@@ -679,7 +679,7 @@ int cf_pclose(FILE *pp)
 { int fd, status, wait_result;
   pid_t pid;
 
-Debug("cfpclose(pp)\n");
+Debug("cf_pclose(pp)\n");
 
 if (CHILDREN == NULL)  /* popen hasn't been called */
    {

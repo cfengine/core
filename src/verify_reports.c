@@ -318,7 +318,382 @@ if (dist)
 void FriendStatus(struct Attributes a,struct Promise *pp)
 
 {
-CheckFriendConnections(a.report.lastseen);
-CheckFriendReliability();
+ VerifyFriendConnections(a.report.lastseen,a,pp);
+VerifyFriendReliability(a,pp);
 }
+
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
+
+void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
+
+/* Go through the database of recent connections and check for
+   Long Time No See ...*/
+
+{ DBT key,value;
+  DB *dbp;
+  DBC *dbcp;
+  DB_ENV *dbenv = NULL;
+  int ret, secs = CF_TICKS_PER_HOUR*hours, criterion, overdue, regex=false;
+  time_t now = time(NULL),lsea = -1, tthen, then;
+  char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
+  char addr[CF_BUFSIZE],type[CF_BUFSIZE],output[CF_BUFSIZE];
+  struct QPoint entry;
+  double average = 0.0, var = 0.0, ticksperminute = 60.0;
+  double ticksperhour = (double)CF_TICKS_PER_HOUR,ticksperday = (double)CF_TICKS_PER_DAY;
+
+ 
+Verbose("CheckFriendConnections(%d)\n",hours);
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+
+if ((errno = db_create(&dbp,dbenv,0)) != 0)
+   {
+   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
+   return;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
+   dbp->close(dbp,0);
+   return;
+   }
+
+/* Acquire a cursor for the database. */
+
+if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+   {
+   CfOut(cf_error,"","Error reading from last-seen database");
+   dbp->err(dbp, ret, "DB->cursor");
+   return;
+   }
+
+ /* Walk through the database and print out the key/data pairs. */
+
+memset(&key, 0, sizeof(key));
+memset(&value, 0, sizeof(value));
+
+while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+   {
+   memset(&entry, 0, sizeof(entry)); 
+
+   strcpy(hostname,(char *)key.data);
+
+   if (value.data != NULL)
+      {
+      memcpy(&entry,value.data,sizeof(entry));
+      then = (time_t)entry.q;
+      average = (double)entry.expect;
+      var = (double)entry.var;
+      }
+   else
+      {
+      continue;
+      }
+
+   /* Got data, now get expiry criterion */
+
+   if (secs == 0)
+      {
+      /* Twice the average delta is significant */
+      criterion = (now - then > (int)(average+2.0*sqrt(var)+0.5));
+      overdue = now - then - (int)(average);
+      }
+   else
+      {
+      criterion = (now - then > secs);
+      overdue =  (now - then - secs);
+      }
+
+   if (LASTSEENEXPIREAFTER < 0)
+      {
+      lsea = (time_t)CF_WEEK/7;
+      }
+
+   if (a.report.friend_pattern)
+      {
+      if (FullTextMatch(a.report.friend_pattern,IPString2Hostname(hostname+1)))
+         {
+         Verbose("Not judging friend %s\n",hostname);
+         criterion = false;
+         lsea = CF_INFINITY;
+         }
+      }
+   
+   tthen = (time_t)then;
+
+   snprintf(datebuf,CF_BUFSIZE-1,"%s",ctime(&tthen));
+   datebuf[strlen(datebuf)-9] = '\0';                     /* Chop off second and year */
+
+   snprintf(addr,15,"%s",hostname+1);
+
+   switch(*hostname)
+      {
+      case '+':
+          snprintf(type,CF_BUFSIZE,"last responded to hails");
+          break;
+      case'-':
+          snprintf(type,CF_BUFSIZE,"last hailed us");
+          break;
+      }
+
+   snprintf(output,CF_BUFSIZE,"Host %s i.e. %s %s @ [%s] (overdue by %d mins)",
+            IPString2Hostname(hostname+1),
+            addr,
+            type,
+            datebuf,
+            overdue/(int)ticksperminute);
+
+   if (criterion)
+      {
+      CfOut(cf_error,"",output);
+      }
+   else
+      {
+      CfOut(cf_verbose,"",output);
+      }
+
+   snprintf(output,CF_BUFSIZE,"i.e. (%.2f) hrs ago, Av %.2f +/- %.2f hrs\n",
+            ((double)(now-then))/ticksperhour,
+            average/ticksperhour,
+            sqrt(var)/ticksperhour);
+   
+   if (criterion)
+      {
+      CfOut(cf_error,"",output);
+      }
+   else
+      {
+      CfOut(cf_verbose,"",output);
+      }
+   
+   if ((now-then) > lsea)
+      {
+      CfOut(cf_error,"","Giving up on host %s -- too long since last seen",IPString2Hostname(hostname+1));
+      DeleteDB(dbp,hostname);
+      }
+
+   memset(&value,0,sizeof(value));
+   memset(&key,0,sizeof(key)); 
+   }
+ 
+dbcp->c_close(dbcp);
+dbp->close(dbp,0);
+}
+
+/***************************************************************/
+
+void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
+
+{ DBT key,value;
+  DB *dbp,*dbpent;
+  DBC *dbcp;
+  DB_ENV *dbenv = NULL, *dbenv2 = NULL;
+  int i,ret;
+  double n[CF_RELIABLE_CLASSES],n_av[CF_RELIABLE_CLASSES],total;
+  double p[CF_RELIABLE_CLASSES],p_av[CF_RELIABLE_CLASSES];
+  char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
+  struct QPoint entry;
+  struct Item *ip, *hostlist = NULL;
+  double entropy,average,var,sum,sum_av,expect,actual;
+  time_t now = time(NULL), then, lastseen = CF_WEEK;
+
+Verbose("CheckFriendReliability()\n");
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+
+average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
+var = 0;
+
+if ((errno = db_create(&dbp,dbenv,0)) != 0)
+   {
+   CfOut(cf_error,"","Couldn't open last-seen database %s\n",name);
+   return;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   CfOut(cf_error,"","Couldn't open last-seen database %s\n",name);
+   dbp->close(dbp,0);
+   return;
+   }
+
+if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+   {
+   CfOut(cf_error,"","Error reading from last-seen database");
+   dbp->err(dbp, ret, "DB->cursor");
+   return;
+   }
+
+memset(&key, 0, sizeof(key));
+memset(&value, 0, sizeof(value));
+
+while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+   {
+   strcpy(hostname,IPString2Hostname((char *)key.data+1));
+
+   if (!IsItemIn(hostlist,hostname))
+      {
+      /* Check hostname not recorded twice with +/- */
+      AppendItem(&hostlist,hostname,NULL);
+      Verbose(" Measuring reliability of %s\n",hostname);
+      }
+   }
+
+dbcp->c_close(dbcp);
+dbp->close(dbp,0);
+
+/* Now go through each host and recompute entropy */
+
+for (ip = hostlist; ip != NULL; ip=ip->next)
+   {
+   snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
+
+   if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
+      {
+      CfOut(cf_error,"","Couldn't init reliability profile database %s\n",name);
+      return;
+      }
+   
+#ifdef CF_OLD_DB
+   if ((errno = (dbpent->open)(dbpent,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+   if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+      {
+      CfOut(cf_error,"","Couldn't open last-seen database %s\n",name);
+      continue;
+      }
+
+   for (i = 0; i < CF_RELIABLE_CLASSES; i++)
+      {
+      n[i] = n_av[i] = 0.0;
+      }
+
+   total = 0.0;
+
+   for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
+      {
+      memset(&key,0,sizeof(key));       
+      memset(&value,0,sizeof(value));
+      
+      strcpy(timekey,GenTimeKey(now));
+      
+      key.data = timekey;
+      key.size = strlen(timekey)+1;
+
+      if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
+         {
+         if (errno != DB_NOTFOUND)
+            {
+            dbp->err(dbp,errno,NULL);
+            exit(1);
+            }
+         }
+      
+      if (value.data != NULL)
+         {
+         memcpy(&entry,value.data,sizeof(entry));
+         then = (time_t)entry.q;
+         lastseen = now - then;
+         if (lastseen < 0)
+            {
+            lastseen = 0; /* Never seen before, so pretend */
+            }
+         average = (double)entry.expect;
+         var = (double)entry.var;
+         Debug("%s => then = %ld, lastseen = %ld, average=%.2f\n",hostname,then,lastseen,average);
+         }
+      else
+         {
+         /* If we have no data, it means no contact for whatever reason.
+            It could be unable to respond unwilling to respond, policy etc.
+            Assume for argument that we expect regular responses ... */
+         
+         lastseen += CF_MEASURE_INTERVAL; /* infer based on no data */
+         }
+
+      for (i = 0; i < CF_RELIABLE_CLASSES; i++)
+         {
+         if (lastseen >= i*CF_HOUR && lastseen < (i+1)*CF_HOUR)
+            {
+            n[i]++;
+            }
+         
+         if (average >= (double)(i*CF_HOUR) && average < (double)((i+1)*CF_HOUR))
+            {
+            n_av[i]++;
+            }
+         }
+       
+      total++;
+      }
+
+   sum = sum_av = 0.0;
+   
+   for (i = 0; i < CF_RELIABLE_CLASSES; i++)
+      {
+      p[i]    = n[i]/total;
+      p_av[i] = n_av[i]/total;
+      sum += p[i];
+      sum_av += p_av[i];
+      }
+
+   Debug("Reliabilities sum to %.2f av %.2f\n\n",sum,sum_av);
+
+   sum = sum_av = 0.0;
+   
+   for (i = 0; i < CF_RELIABLE_CLASSES; i++)
+      {
+      if (p[i] == 0.0)
+         {
+         continue;
+         }
+      sum -= p[i] * log(p[i]);
+      }
+
+   for (i = 0; i < CF_RELIABLE_CLASSES; i++)
+      {
+      if (p_av[i] == 0.0)
+         {
+         continue;
+         }
+      sum_av -= p_av[i] * log(p_av[i]);
+      }
+
+   actual = sum/log((double)CF_RELIABLE_CLASSES)*100.0;
+   expect = sum_av/log((double)CF_RELIABLE_CLASSES)*100.0;
+   
+   Verbose("Scaled entropy for %s = %.1f %%\n",ip->name,actual);
+   Verbose("Expected entropy for %s = %.1f %%\n\n",ip->name,expect);
+
+   if (actual > expect)
+      {
+      CfOut(cf_inform,""," !! The reliability of %s deteriorated\n",ip->name);
+      }
+
+   if (actual > 50.0)
+      {
+      CfOut(cf_error,"","FriendStatus reports the intermittency of %s above 50%% (SEUs)\n",ip->name);
+      }
+
+   if (expect > actual)
+      {
+      CfOut(cf_inform,"","The reliability of %s is improved\n",ip->name);
+      }
+   
+   dbpent->close(dbpent,0);
+   }
+
+DeleteItemList(hostlist);
+}
+
 

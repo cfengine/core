@@ -90,6 +90,7 @@ else
 
 if (total == 0)
    {
+   *string = '\0';
    CfOut(cf_verbose,"","Outcome of version %s: No checks were scheduled\n",sp);
    return;
    }
@@ -105,9 +106,12 @@ else
    PromiseLog(string);
    }
 
-ClassAuditLog(&dummyp,dummyattr,OUTPUT,CF_REPORT);
-ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
+if (strlen(string) > 0)
+   {
+   ClassAuditLog(&dummyp,dummyattr,string,CF_REPORT);
+   }
 
+ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
 
 if (AUDITDBP)
    {
@@ -355,4 +359,71 @@ Chop(end);
 
 fprintf(fout,"%s -> %s: %s",start,end,s);
 fclose(fout);
+}
+
+/************************************************************************/
+
+void FatalError(char *s)
+    
+{ struct CfLock best_guess;
+      
+CfOut(cf_error,"Fatal: %s",s); 
+best_guess.lock = strdup(CFLOCK);
+best_guess.last = strdup(CFLAST);
+best_guess.log = strdup(CFLOG);
+YieldCurrentLock(best_guess);
+unlink(PIDFILE);
+EndAudit();
+closelog();
+exit(0);
+}
+
+/*****************************************************************************/
+
+void AuditStatusMessage(char status)
+
+{
+switch (status) /* Reminder */
+   {
+   case CF_CHG:
+       printf("made a system correction\n");
+       break;
+       
+   case CF_WARN:
+       printf("promise not kept, no action taken");
+       break;
+       
+   case CF_TIMEX:
+       printf("timed out\n");
+       break;
+
+   case CF_FAIL:
+       printf("failed to make a correction\n");
+       break;
+       
+   case CF_DENIED:
+       printf("was denied access to an essential resource\n");
+       break;
+       
+   case CF_INTERPT:
+       printf("was interrupted\n");
+       break;
+
+   case CF_REGULAR:
+       printf("was a regular (repeatable) maintenance task");
+       break;
+       
+   case CF_NOP:
+       printf("was applied but performed no required actions\n");
+       break;
+
+   case CF_UNKNOWN:
+       printf("was applied but status unknown\n");
+       break;
+
+   case CF_REPORT:
+       printf("report\n");
+       break;
+   }
+
 }

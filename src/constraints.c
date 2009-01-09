@@ -159,7 +159,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_SCALAR)
          {
          CfOut(cf_error,"","Software error - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       if (strcmp(cp->rval,"true") == 0||strcmp(cp->rval,"yes") == 0)
@@ -209,7 +209,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (!(cp->type == CF_FNCALL || cp->type == CF_SCALAR))
          {
          CfOut(cf_error,"","Software error - type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       return true;
@@ -245,7 +245,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_SCALAR)
          {
          CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       retval = Str2Int((char *)cp->rval);
@@ -281,7 +281,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_SCALAR)
          {
          CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       retval = Str2Double((char *)cp->rval);
@@ -319,7 +319,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_SCALAR)
          {
          CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       retval = Str2Mode((char *)cp->rval);
@@ -356,7 +356,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_SCALAR)
          {
          CfOut(cf_error,"","Software error - expected type for owner constraint %s did not match internals\n",lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       retval = Str2Uid((char *)cp->rval,buffer,pp);
@@ -393,7 +393,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_SCALAR)
          {
          CfOut(cf_error,"","Software error - expected type for group constraint %s did not match internals\n",lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       retval = Str2Gid((char *)cp->rval,buffer,pp);
@@ -429,7 +429,7 @@ for (cp = list; cp != NULL; cp=cp->next)
       if (cp->type != CF_LIST)
          {
          CfOut(cf_error,"","Software error - expected type for list constraint %s did not match internals\n",lval);
-         FatalError(OUTPUT);
+         FatalError("Aborted");
          }
 
       retval = (struct Rlist *)cp->rval;

@@ -112,7 +112,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTKM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -135,15 +135,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTKM",OPTIONS,&optindex)) != EOF)
                  D2 = true;
                  DEBUG = true;
                  break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
-                 DEBUG = true;
-                 break;
              default:
                  DEBUG = true;
                  break;
@@ -161,10 +152,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:pVSxHTKM",OPTIONS,&optindex)) != EOF)
       case 'v': VERBOSE = true;
           break;
           
-      case 'p': PARSEONLY = true;
-          IGNORELOCK = true;
-          break;          
-
       case 'F': NO_FORK = true;
          break;
 

@@ -29,6 +29,44 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*******************************************************************/
+
+int Hash(char *name)
+
+{ int i, slot = 0;
+
+ for (i = 0; name[i] != '\0'; i++)
+   {
+   slot = (CF_MACROALPHABET * slot + name[i]) % CF_HASHTABLESIZE;
+   }
+
+return slot;
+}
+
+/*******************************************************************/
+
+int ElfHash(char *key)
+
+{ unsigned int h = 0;
+  unsigned int g;
+
+while (*key)
+  {
+  h = (h << 4) + *key++;
+
+  g = h & 0xF0000000;         /* Assumes int is 32 bit */
+
+  if (g) 
+     {
+     h ^= g >> 24;
+     }
+
+  h &= ~g;
+  }
+
+return (h % CF_HASHTABLESIZE);
+}
+
 /*****************************************************************************/
 
 int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp)
@@ -125,15 +163,7 @@ else
    WriteHash(dbp,type,filename,current_digest,attr_digest);
    
    dbp->close(dbp,0);
-   
-   if (ISCFENGINE)
-      {
-      return false;      /* No need to warn when first installed */
-      }
-   else
-      {
-      return true;
-      }
+   return false;
    }
 }
 

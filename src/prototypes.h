@@ -169,7 +169,7 @@ char *GenTimeKey (time_t now);
 
 /* chflags.c */
 
-void ParseFlagString (char *flagstring, u_long *plusmask, u_long *minusmask);
+int ParseFlagString (char *flagstring, u_long *plusmask, u_long *minusmask);
 
 /* client.c */
 
@@ -795,9 +795,9 @@ void SetStartTime(int setclasses);
 
 /* modes.c */
 
-void ParseModeString (char *modestring, mode_t *plusmask, mode_t *minusmask);
-void CheckModeState (enum modestate stateA, enum modestate stateB,enum modesort modeA, enum modesort modeB, char ch);
-void SetMask (char action, int value, int affected, mode_t *p, mode_t *m);
+int ParseModeString (char *modestring, mode_t *plusmask, mode_t *minusmask);
+int CheckModeState (enum modestate stateA, enum modestate stateB,enum modesort modeA, enum modesort modeB, char ch);
+int SetModeMask (char action, int value, int affected, mode_t *p, mode_t *m);
 
 /* mount.c */
 
@@ -1005,9 +1005,6 @@ void SCLIScript(void);
 
 /* sensible.c */
 
-int SensibleFile (char *nodename, char *path, struct Image *ip);
-void RegisterRecursionRootDevice (dev_t device);
-int DeviceChanged (dev_t thisdevice);
 
 /* state.c */
 

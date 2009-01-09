@@ -179,6 +179,141 @@ pp->inode_cache = NULL;
 cf_closedir(dirh);
 }
 
+/*******************************************************************/
+/* Level                                                           */
+/*******************************************************************/
+
+void VerifyFilePromise(char *path,struct Promise *pp)
+
+{ struct stat osb,oslb,dsb,dslb;
+  struct Attributes a;
+  struct CfLock thislock;
+  int success,rlevel = 0,isthere;
+
+a = GetFilesAttributes(pp);
+
+if (!FileSanityChecks(path,a,pp))
+   {
+   return;
+   }
+
+if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
+   {
+   if (a.create||a.touch)
+      {
+      if (!CreateFile(path,pp,a))
+         {
+         return;
+         }
+      }
+   }
+
+if (!VerifyFileLeaf(path,&oslb,a,pp))
+   {
+   return;
+   }
+
+if (stat(path,&osb) == -1)
+   {
+   if (a.create||a.touch)
+      {
+      if (!CreateFile(path,pp,a))
+         {
+         return;
+         }
+      }
+   }
+else
+   {
+   if (!S_ISDIR(osb.st_mode))
+      {
+      if (a.havedepthsearch)
+         {
+         CfOut(cf_error,"stat","depth_search (recursion) is promised for a base object %s that is not a directory",path);
+         return;
+         }
+      }
+   }
+
+if (a.link.link_children)
+   {
+   if (stat(a.link.source,&dsb) != -1)
+      {
+      if (!S_ISDIR(dsb.st_mode))
+         {
+         CfOut(cf_error,"","Cannot promise to link the children of %s as it is not a directory!",a.link.source);
+         return;
+         }
+      }
+   }
+
+thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+/* Phase 1 - */
+
+if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
+   {
+   lstat(path,&oslb); /* if doesn't exist have to stat again anyway */
+   
+   if (a.havedepthsearch)
+      {
+      SetSearchDevice(&oslb,pp);
+      }
+   
+   success = DepthSearch(path,&oslb,rlevel,a,pp);
+
+   /* normally searches do not include the base directory */
+   
+   if (a.recursion.include_basedir)
+      {
+      int save_search = a.havedepthsearch;
+
+      /* Handle this node specially */
+
+      a.havedepthsearch = false;
+      success = DepthSearch(path,&oslb,rlevel,a,pp);
+      a.havedepthsearch = save_search;
+      }
+
+   if (a.havechange)
+      {
+      PurgeHashes(a,pp);
+      }
+   }
+
+/* Phase 2a - copying is potentially threadable if no followup actions */
+
+if (a.havecopy)
+   {
+   ScheduleCopyOperation(path,a,pp);
+   }
+
+/* Phase 2b link after copy in case need file first */
+
+if (a.havelink && a.link.link_children)
+   {
+   ScheduleLinkChildrenOperation(path,a,pp);
+   }
+else if (a.havelink)
+   {
+   ScheduleLinkOperation(path,a.link.source,a,pp);
+   }
+
+/* Phase 3 - content editing */
+
+if (a.haveedit)
+   {
+   ScheduleEditOperation(path,a,pp);
+   }
+
+YieldCurrentLock(thislock);
+}
+
 /*********************************************************************/
 
 void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Promise *pp)
@@ -284,7 +419,7 @@ if (S_ISDIR(ssb.st_mode))
       CopyFile(sourcefile,destfile,ssb,attr,pp);
       }
    
-   cfclosedir(dirh);
+   cf_closedir(dirh);
    DeleteClientCache(attr,pp);
    return;
    }
@@ -305,7 +440,7 @@ void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr
   struct dirent *dirp;
   char filename[CF_BUFSIZE];
 
-Debug("PurgeFiles(%s)\n",localdir);
+Debug("PurgeLocalFiles(%s)\n",localdir);
 
  /* If we purge with no authentication we wipe out EVERYTHING ! */ 
 
@@ -402,8 +537,6 @@ closedir(dirh);
 }
 
 
-/*********************************************************************/
-/* Level 3                                                           */
 /*********************************************************************/
 
 void CopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
@@ -878,6 +1011,130 @@ free((char *)dirh);
 }
 
 /*********************************************************************/
+
+int ReadLine(char *buff,int size,FILE *fp)
+
+{ char ch;
+ 
+buff[0] = '\0';
+buff[size - 1] = '\0';                        /* mark end of buffer */
+
+if (fgets(buff, size, fp) == NULL)
+   {
+   *buff = '\0';                   /* EOF */
+   return false;
+   }
+else
+   {
+   char *tmp;
+
+   if ((tmp = strrchr(buff, '\n')) != NULL)
+      {
+      /* remove newline */
+      *tmp = '\0';
+      }
+   else
+      {
+      /* The line was too long and truncated so, discard probable remainder */
+      while (true)
+         {
+         if (feof(fp))
+            {
+            break;
+            }
+         
+         ch = fgetc(fp);
+
+         if (ch == '\n')
+            {
+            break;
+            }
+         }
+
+      }
+   }
+ 
+return true; 
+}
+
+/*******************************************************************/
+
+int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp)
+
+{
+if (a.havelink && a.havecopy)
+   {
+   CfOut(cf_error,"","Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.haveeditline && a.haveeditxml)
+   {
+   CfOut(cf_error,"","Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.havedepthsearch && a.haveedit)
+   {
+   CfOut(cf_error,"","Recursive depth_searches are not compatible with general file editing",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.havedelete && (a.create||a.havecopy||a.haveedit||a.haverename))
+   {
+   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.haverename && (a.create||a.havecopy||a.haveedit))
+   {
+   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.havedelete && a.havedepthsearch && !a.haveselect)
+   {
+   CfOut(cf_error,"","Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.havedelete && a.haverename)
+   {
+   CfOut(cf_error,"","File %s cannot promise both deletion and renaming",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.havecopy && a.havedepthsearch && a.havedelete)
+   {
+   CfOut(cf_inform,"","Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
+   PromiseRef(cf_inform,pp);
+   }
+
+if (a.transaction.background && a.transaction.audit)
+   {
+   CfOut(cf_error,"","Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if ((a.havecopy || a.havelink) && a.transformer)
+   {
+   CfOut(cf_error,"","File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+return true;
+}
+
+/*********************************************************************/
 /* Level 4                                                           */
 /*********************************************************************/
 
@@ -1122,7 +1379,7 @@ if (sstat.st_nlink > 1)  /* Preserve hard links, if possible */
    if (CompressedArrayElementExists(pp->inode_cache,sstat.st_ino) && (strcmp(dest,linkable) != 0))
       {
       unlink(dest);
-      DoHardLink(dest,linkable,NULL);
+      MakeHardLink(dest,linkable,attr,pp);
       return true;
       }
    }
@@ -1153,7 +1410,7 @@ else
    {
 #endif
 
-if (BufferOverflow(dest,CF_NEW))
+if (!JoinPath(dest,CF_NEW))
    {
    return false;
    }
@@ -1162,8 +1419,6 @@ strcpy(new,dest);
 #ifdef DARWIN
    }
 #endif
-
-strcat(new,CF_NEW);
 
 if (remote)
    {
@@ -1235,7 +1490,7 @@ if (!discardbackup)
       if (S_ISDIR(s.st_mode))      /* if there is a dir in the way */
          {
          backupisdir = true;
-         PurgeFiles(NULL,backup,NULL);
+         PurgeLocalFiles(NULL,backup,attr,pp);
          rmdir(backup);
          }
       
@@ -1257,7 +1512,7 @@ else
       {
       if (S_ISDIR(s.st_mode))
          {
-         PurgeFiles(NULL,dest,NULL);
+         PurgeLocalFiles(NULL,dest,attr,pp);
          rmdir(dest);
          }
       }
@@ -1433,7 +1688,7 @@ void FileAutoDefine(char *destfile)
 { char class[CF_MAXVARSIZE];
 
 snprintf(class,CF_MAXVARSIZE,"auto_%s",CanonifyName(destfile)); 
-AddClassToHeap(class);
+NewClass(class);
 CfOut(cf_inform,"Auto defining class %s\n",class); 
 }           
 
@@ -1465,3 +1720,4 @@ if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))
       }
    }
 }
+

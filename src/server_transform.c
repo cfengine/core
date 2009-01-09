@@ -77,7 +77,7 @@ void Summarize()
 { struct Auth *ptr;
   struct Item *ip,*ipr;
 
-if (DEBUG || D2 || D3)
+if (DEBUG || D2)
    {
    printf("\nACCESS GRANTED ----------------------:\n");
 

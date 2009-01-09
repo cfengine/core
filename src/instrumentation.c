@@ -30,13 +30,9 @@
 
 #include <math.h>
 
-/*
 # if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 pthread_mutex_t MUTEX_GETADDR = PTHREAD_MUTEX_INITIALIZER;
 # endif
-*/
-
-extern pthread_mutex_t MUTEX_GETADDR;
 
 /* Alter this code at your peril. Berkeley DB is very sensitive to errors. */
 
@@ -189,14 +185,6 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
       }
    }
 
-for (ip = VALLADDCLASSES; ip != NULL; ip=ip->next)
-   {
-   if (!IsItemIn(list,ip->name))
-      {
-      PrependItem(&list,ip->name,NULL);
-      }
-   }
-   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
@@ -456,4 +444,161 @@ dbp->close(dbp,0);
 dbpent->close(dbpent,0);
 }
 
+/*****************************************************************************/
+/* level                                                                     */
+/*****************************************************************************/
+
+int ReadDB(DB *dbp,char *name,void *ptr,int size)
+
+{ DBT *key,value;
+  
+key = NewDBKey(name);
+memset(&value,0,sizeof(DBT));
+
+if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
+   {
+   memset(ptr,0,size);
+   memcpy(ptr,value.data,size);
+   
+   Debug("READ %s\n",name);
+   DeleteDBKey(key);
+   return true;
+   }
+else
+   {
+   Debug("Database read failed: %s",db_strerror(errno));
+   return false;
+   }
+}
+
+/*****************************************************************************/
+
+int WriteDB(DB *dbp,char *name,void *ptr,int size)
+
+{ DBT *key,*value;
+ 
+key = NewDBKey(name); 
+value = NewDBValue(ptr,size);
+
+if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
+   {
+   Debug("Database write failed: %s",db_strerror(errno));
+   DeleteDBKey(key);
+   DeleteDBValue(value);
+   return false;
+   }
+else
+   {
+   Debug("WriteDB => %s\n",name);
+
+   DeleteDBKey(key);
+   DeleteDBValue(value);
+   return true;
+   }
+}
+
+/*****************************************************************************/
+
+void DeleteDB(DB *dbp,char *name)
+
+{ DBT *key;
+
+key = NewDBKey(name);
+
+if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
+   {
+   Debug("Database deletion failed: %s",db_strerror(errno));
+   }
+
+DeleteDBKey(key);
+Debug("DELETED DB %s\n",name);
+}
+
+
+/*****************************************************************************/
+/* Level 2                                                                   */
+/*****************************************************************************/
+
+DBT *NewDBKey(char *name)
+
+{ char *dbkey;
+  DBT *key;
+
+if ((dbkey = malloc(strlen(name)+1)) == NULL)
+   {
+   FatalError("NewChecksumKey malloc error");
+   }
+
+if ((key = (DBT *)malloc(sizeof(DBT))) == NULL)
+   {
+   FatalError("DBT  malloc error");
+   }
+
+memset(key,0,sizeof(DBT));
+memset(dbkey,0,strlen(name)+1);
+
+strncpy(dbkey,name,strlen(name));
+
+key->data = (void *)dbkey;
+key->size = strlen(name)+1;
+
+return key;
+}
+
+/*****************************************************************************/
+
+void DeleteDBKey(DBT *key)
+
+{
+free((char *)key->data);
+free((char *)key);
+}
+
+/*****************************************************************************/
+
+DBT *NewDBValue(void *ptr,int size)
+
+{ void *val;
+  DBT *value;
+
+if ((val = (void *)malloc(size)) == NULL)
+   {
+   FatalError("NewDBKey malloc error");
+   }
+
+if ((value = (DBT *) malloc(sizeof(DBT))) == NULL)
+   {
+   FatalError("DBT Value malloc error");
+   }
+
+memset(value,0,sizeof(DBT)); 
+memset(val,0,size);
+memcpy(val,ptr,size);
+
+value->data = val;
+value->size = size;
+
+return value;
+}
+
+/*****************************************************************************/
+
+void DeleteDBValue(DBT *value)
+
+{
+free((char *)value->data);
+free((char *)value);
+}
+
+/*****************************************************************************/
+/* Toolkit                                                                   */
+/*****************************************************************************/
+
+double GAverage(double anew,double aold,double p)
+
+/* return convex mixture - p is the trust in the new value */
+    
+{
+return (p*anew + (1-p)*aold);
+}
 

@@ -1,0 +1,257 @@
+/* 
+   Copyright (C) 2008 - Cfengine AS
+
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+ 
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 3, or (at your option) any
+   later version. 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License  
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+*/
+
+/*****************************************************************************/
+/*                                                                           */
+/* File: exec_tools.c                                                        */
+/*                                                                           */
+/*****************************************************************************/
+
+
+#include "cf3.defs.h"
+#include "cf3.extern.h"
+
+/*******************************************************************/
+
+int ShellCommandReturnsZero(char *comm,int useshell)
+
+{ int status, i, argc = 0;
+  pid_t pid;
+  char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
+  char **argv;
+
+if (!useshell)
+   {
+   /* Build argument array */
+
+   for (i = 0; i < CF_MAXSHELLARGS; i++)
+      {
+      memset (arg[i],0,CF_BUFSIZE);
+      }
+
+   argc = ArgSplitCommand(comm,arg);
+
+   if (argc == -1)
+      {
+      CfOut(cf_error,"","Too many arguments in %s\n",comm);
+      return false;
+      }
+   }
+    
+if ((pid = fork()) < 0)
+   {
+   FatalError("Failed to fork new process");
+   }
+else if (pid == 0)                     /* child */
+   {
+   if (useshell)
+      {
+      if (execl("/bin/sh","sh","-c",comm,NULL) == -1)
+         {
+         CfOut(cf_error,"execl","Command %s failed",comm);
+         exit(1);
+         }
+      }
+   else
+      {
+      argv = (char **) malloc((argc+1)*sizeof(char *));
+
+      if (argv == NULL)
+         {
+         FatalError("Out of memory");
+         }
+
+      for (i = 0; i < argc; i++)
+         {
+         argv[i] = arg[i];
+         }
+
+      argv[i] = (char *) NULL;
+
+      if (execv(arg[0],argv) == -1)
+         {
+         CfOut(cf_error,"execvp","Command %s failed",argv);
+         exit(1);
+         }
+
+      free((char *)argv);
+      }
+   }
+else                                    /* parent */
+   {
+   pid_t wait_result;
+   
+   while ((wait_result = wait(&status)) != pid)
+      {
+      if (wait_result <= 0)
+         {
+         CfOut(cf_inform,"wait","Wait for child failed\n");
+         return false;
+         }
+      }
+
+   if (WIFSIGNALED(status))
+      {
+      Debug("Script %s returned: %d\n",comm,WTERMSIG(status));
+      return false;
+      }
+   
+   if (! WIFEXITED(status))
+      {
+      return false;
+      }
+   
+   if (WEXITSTATUS(status) == 0)
+      {
+      Debug("Shell command returned 0\n");
+      return true;
+      }
+   else
+      {
+      Debug("Shell command was non-zero: %d\n",WEXITSTATUS(status));
+      return false;
+      }
+   }
+
+return false;
+}
+
+/********************************************************************/
+
+int GetExecOutput(char *command,char *buffer,int useshell)
+
+/* Buffer initially contains whole exec string */
+
+{ int offset = 0;
+  char line[CF_BUFSIZE], *sp; 
+  FILE *pp;
+
+Debug1("GetExecOutput(%s,%s)\n",command,buffer);
+  
+if (useshell)
+   {
+   pp = cf_popen_sh(command,"r");
+   }
+else
+   {
+   pp = cf_popen(command,"r");
+   }
+
+if (pp == NULL)
+   {
+   CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",command);
+   return false;
+   }
+
+memset(buffer,0,CF_BUFSIZE);
+  
+while (!feof(pp))
+   {
+   if (ferror(pp))  /* abortable */
+      {
+      fflush(pp);
+      break;
+      }
+
+   ReadLine(line,CF_BUFSIZE,pp);
+
+   if (ferror(pp))  /* abortable */
+      {
+      fflush(pp);
+      break;
+      }  
+   
+   for (sp = line; *sp != '\0'; sp++)
+      {
+      if (*sp == '\n')
+         {
+         *sp = ' ';
+         }
+      }
+   
+   if (strlen(line)+offset > CF_BUFSIZE-10)
+      {
+      CfOut(cf_error,"","Buffer exceeded %d bytes in exec %s\n",CF_BUFSIZE,command);
+      break;
+      }
+
+   snprintf(buffer+offset,CF_BUFSIZE,"%s ",line);
+   offset += strlen(line)+1;
+   }
+
+if (offset > 0)
+   {
+   Chop(buffer); 
+   }
+
+Debug("GetExecOutput got: [%s]\n",buffer);
+ 
+cf_pclose(pp);
+return true;
+}
+
+/**********************************************************************/
+
+void ActAsDaemon(int preserve)
+
+{ int fd, maxfd;
+
+#ifdef HAVE_SETSID
+setsid();
+#endif
+
+closelog();
+
+fflush(NULL);
+fd = open("/dev/null", O_RDWR, 0);
+
+if (fd != -1)
+   {
+   dup2(fd,STDIN_FILENO);
+   dup2(fd,STDOUT_FILENO);
+   dup2(fd,STDERR_FILENO);
+
+   if (fd > STDERR_FILENO)
+      {
+      close(fd);
+      }
+   }
+
+chdir("/");
+   
+#ifdef HAVE_SYSCONF
+maxfd = sysconf(_SC_OPEN_MAX);
+#else
+# ifdef _POXIX_OPEN_MAX
+maxfd = _POSIX_OPEN_MAX;
+# else
+maxfd = 1024;
+# endif
+#endif
+
+for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
+   {
+   if (fd != preserve)
+      {
+      close(fd);
+      }
+   }
+}
+

@@ -46,7 +46,7 @@ int AccessControl (char *filename, struct cfd_connection *conn, int encrypt);
 int CheckStoreKey  (struct cfd_connection *conn, RSA *key);
 int StatFile (struct cfd_connection *conn, char *sendbuffer, char *filename);
 void CfGetFile (struct cfd_get_arg *args);
-void CompareLocalChecksum (struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
+void CompareLocalHash(struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
 int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 void Terminate (int sd);
@@ -138,6 +138,11 @@ struct Item *CONNECTIONLIST = NULL;
 struct Auth *ROLES = NULL;
 struct Auth *ROLESTOP = NULL;
 
+struct Auth *VADMIT = NULL;
+struct Auth *VADMITTOP = NULL;
+struct Auth *VDENY = NULL;
+struct Auth *VDENYTOP = NULL;
+
 /*****************************************************************************/
 
 int main(int argc,char *argv[])
@@ -163,7 +168,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -175,7 +180,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
           break;
 
       case 'd': 
-          AddClassToHeap("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
              {
              case '1':
@@ -184,15 +188,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
                  break;
              case '2':
                  D2 = true;
-                 DEBUG = true;
-                 break;
-             case '3':
-                 D3 = true;
-                 DEBUG = true;
-                 VERBOSE = true;
-                 break;
-             case '4':
-                 D4 = true;
                  DEBUG = true;
                  break;
              default:
@@ -206,10 +201,10 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
       case 'K': IGNORELOCK = true;
           break;
                     
-      case 'D': AddMultipleClasses(optarg);
+      case 'D': NewClassesFromString(optarg);
           break;
           
-      case 'N': NegateCompoundClass(optarg,&VNEGHEAP);
+      case 'N': NegateClassesFromString(optarg,&VNEGHEAP);
           break;
           
       case 'I':
@@ -221,11 +216,6 @@ while ((c=getopt_long(argc,argv,"d:vnIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
           NO_FORK = true;
           break;
           
-      case 'n': DONTDO = true;
-          IGNORELOCK = true;
-          AddClassToHeap("opt_dry_run");
-          break;
-
       case 'F': NO_FORK = true;
          break;
 
@@ -275,6 +265,9 @@ void StartServer(int argc,char **argv)
   time_t now;
   struct timeval timeout;
   int ret_val;
+  struct Promise *pp = NewPromise("server_cfengine","the server daemon");
+  struct Attributes dummyattr;
+  struct CfLock thislock;
 
 #if defined(HAVE_GETADDRINFO)
   int addrlen=sizeof(struct sockaddr_in6);
@@ -302,6 +295,13 @@ if (listen(sd,queuesize) == -1)
    {
    CfOut(cf_error,"listen","listen failed");
    exit(1);
+   }
+
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
    }
 
 Verbose("Listening for connections ...\n");
@@ -369,7 +369,7 @@ while (true)
          continue;
          }
       
-      if (IsFuzzyItemIn(ATTACKERLIST,MapAddress(ipaddr)) || IsRegexItemIn(ATTACKERLIST,MapAddress(ipaddr)))   /* Denied Subnets */
+      if (IsFuzzyItemIn(ATTACKERLIST,MapAddress(ipaddr)) || IsRegexItemIn(ATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
@@ -421,8 +421,9 @@ while (true)
       SpawnConnection(sd_reply,ipaddr);
       }
    }
-}
 
+YieldCurrentLock(thislock); /* We never get here - this is done by a signal handler */
+}
 
 /*******************************************************************************/
 
@@ -430,27 +431,28 @@ in_addr_t GetInetAddr(char *host)
 
 { struct in_addr addr;
   struct hostent *hp;
-
+  char output[CF_BUFSIZE];
+  
 addr.s_addr = inet_addr(host);
 
 if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0)) 
    {
    if ((hp = gethostbyname(host)) == 0)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"\nhost not found: %s\n",host);
-      FatalError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"\nhost not found: %s\n",host);
+      FatalError(output);
       }
    
    if (hp->h_addrtype != AF_INET)
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"unexpected address family: %d\n",hp->h_addrtype);
-      FatalError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"unexpected address family: %d\n",hp->h_addrtype);
+      FatalError(output);
       }
    
    if (hp->h_length != sizeof(addr))
       {
-      snprintf(OUTPUT,CF_BUFSIZE,"unexpected address length %d\n",hp->h_length);
-      FatalError(OUTPUT);
+      snprintf(output,CF_BUFSIZE,"unexpected address length %d\n",hp->h_length);
+      FatalError(output);
       }
 
    memcpy((char *) &addr, hp->h_addr, hp->h_length);
@@ -731,7 +733,6 @@ if (PROMISETIME < newstat.st_mtime)
    DeleteItemList(VHEAP);
    DeleteItemList(VNEGHEAP);
    DeleteItemList(TRUSTKEYLIST);
-   DeleteItemList(VIMPORT);
    DeleteItemList(SKIPVERIFY);
    DeleteItemList(DHCPLIST);
    DeleteItemList(ATTACKERLIST);
@@ -748,7 +749,6 @@ if (PROMISETIME < newstat.st_mtime)
    VADMIT = VADMITTOP = NULL;
    VDENY  = VDENYTOP  = NULL;
    VHEAP  = VNEGHEAP  = NULL;
-   VIMPORT = NULL;
    TRUSTKEYLIST = NULL;
    SKIPVERIFY = NULL;
    DHCPLIST = NULL;
@@ -767,10 +767,9 @@ if (PROMISETIME < newstat.st_mtime)
    NewScope("sys");
    NewScope("const");
    NewScope("this");
-   AddClassToHeap("any");
    GetNameInfo3();
    GetInterfaceInfo3();
-   GetV6InterfaceInfo();
+   FindV6InterfaceInfo();
    Get3Environment();
    SetNewScope("server");
 
@@ -798,7 +797,7 @@ if (PROMISETIME < newstat.st_mtime)
 
 void *HandleConnection(struct cfd_connection *conn)
 
-{
+{ char output[CF_BUFSIZE];
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 #ifdef HAVE_PTHREAD_SIGMASK
  sigset_t sigmask;
@@ -850,8 +849,8 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
       }
 
    CfOut(cf_error,"","Too many threads (>=%d) -- increase MaxConnections?",CFD_MAXPROCESSES);
-   snprintf(OUTPUT,CF_BUFSIZE,"BAD: Server is currently too busy -- increase MaxConnections or Splaytime?");
-   SendTransaction(conn->sd_reply,OUTPUT,0,CF_DONE);
+   snprintf(output,CF_BUFSIZE,"BAD: Server is currently too busy -- increase MaxConnections or Splaytime?");
+   SendTransaction(conn->sd_reply,output,0,CF_DONE);
    DeleteConn(conn);
    return NULL;
    }
@@ -1272,7 +1271,7 @@ switch (GetCommand(recvbuffer))
        memset(filename,0,CF_BUFSIZE);
        memset(args,0,CF_BUFSIZE);
        
-       CompareLocalChecksum(conn,sendbuffer,recvbuffer);
+       CompareLocalHash(conn,sendbuffer,recvbuffer);
        return true;
        
    }
@@ -1420,7 +1419,6 @@ if (strlen(ebuff)+strlen(args)+6 > CF_BUFSIZE)
    {
    snprintf(sendbuffer,CF_BUFSIZE,"Command line too long with args: %s\n",ebuff);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
-   ReleaseCurrentLock();
    return;
    }
 else
@@ -1441,7 +1439,6 @@ if ((pp = cf_popen(ebuff,"r")) == NULL)
    CfOut(cf_error,"pipe","Couldn't open pipe to command %s\n",ebuff);
    snprintf(sendbuffer,CF_BUFSIZE,"Unable to run %s\n",ebuff);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
-   ReleaseCurrentLock();
    return;
    }
 
@@ -1484,8 +1481,6 @@ while (!feof(pp))
   }
       
 cf_pclose(pp);
-
-/* ReleaseCurrentLock(); */
 }
 
 /**************************************************************/
@@ -2105,7 +2100,7 @@ if (iscrypt == 'y')
  
 /* Client's ID is now established by key or trusted, reply with md5 */
  
- ChecksumString(decrypted_nonce,nonce_len,digest,'m');
+ HashString(decrypted_nonce,nonce_len,digest,'m');
  free(decrypted_nonce);
  
 /* Get the public key from the client */
@@ -2199,7 +2194,7 @@ SendTransaction(conn->sd_reply,digest,16,CF_DONE);
 counter_challenge = BN_new();
 BN_rand(counter_challenge,256,0,0);
 nonce_len = BN_bn2mpi(counter_challenge,in);
-ChecksumString(in,nonce_len,digest,'m');
+HashString(in,nonce_len,digest,cf_md5);
 encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
 
  
@@ -2263,7 +2258,7 @@ if (ReceiveTransaction(conn->sd_reply,in,NULL) == -1)
    return false;
    }
  
-if (!ChecksumsMatch(digest,in,'m'))  /* replay / piggy in the middle attack ? */
+if (!HashesMatch(digest,in,cf_md5))  /* replay / piggy in the middle attack ? */
    {
    BN_free(counter_challenge);
    free(out);
@@ -2719,10 +2714,12 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
 
 /**************************************************************/
 
-void CompareLocalChecksum(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
+void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
 
 { unsigned char digest[EVP_MAX_MD_SIZE+1];
   char filename[CF_BUFSIZE];
+  struct Promise *pp = NewPromise("server_cfengine","the server daemon");
+  struct Attributes attr;
   char *sp;
   int i;
 
@@ -2737,21 +2734,23 @@ for (i = 0; i < CF_MD5_LEN; i++)
    digest[i] = *sp++;
    }
  
-Debug("CompareLocalChecksums(%s,%s)\n",filename,ChecksumPrint('m',digest));
+Debug("CompareHashes(%s,%s)\n",filename,HashPrint(cf_md5,digest));
 memset(sendbuffer,0,CF_BUFSIZE);
 
-if (ChecksumChanged(filename,digest,cf_verbose,true,'m'))
+if (FileHashChanged(filename,digest,cf_verbose,cf_md5,attr,pp))
    {
    sprintf(sendbuffer,"%s",CFD_TRUE);
-   Debug("Checksums didn't match\n");
+   Debug("Hashes didn't match\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
 else
    {
    sprintf(sendbuffer,"%s",CFD_FALSE);
-   Debug("Checksums matched ok\n");
+   Debug("Hashes matched ok\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
+
+DeletePromise(pp);
 }
 
 /**************************************************************/
@@ -2841,7 +2840,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
    if (strlen(dirp->d_name)+1+offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
       {
-      cipherlen = EncryptString(sendbuffer,out,CONN->session_key,offset+1);
+      cipherlen = EncryptString(sendbuffer,out,conn->session_key,offset+1);
       SendTransaction(conn->sd_reply,out,cipherlen,CF_MORE);
       offset = 0;
       memset(sendbuffer,0,CF_BUFSIZE);

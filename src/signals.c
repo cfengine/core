@@ -47,7 +47,8 @@ if (signum != SIGCHLD)
       best_guess.lock = strdup(CFLOCK);
       best_guess.last = strdup(CFLAST);
       best_guess.log = strdup(CFLOG);
-      YieldCurrentLock(best_guess);      unlink(PIDFILE);
+      YieldCurrentLock(best_guess);
+      unlink(PIDFILE);
       EndAudit();
       closelog();
       exit(0);
@@ -67,7 +68,7 @@ if (signum != SIGCHLD)
       }
    
    /* Reset the signal handler */
-   signal(signum,HandleSignal);
+   signal(signum,HandleSignals);
    }
 }
 

@@ -1077,7 +1077,7 @@ if (r.numlines == CF_NOINT)
 
 r.showstate = GetListConstraint("showstate",pp->conlist);
 
-r.friend_pattern = GetIntConstraint("friend_pattern",pp->conlist);
+r.friend_pattern = GetConstraint("friend_pattern",pp->conlist,CF_SCALAR);
 
 return r;
 }

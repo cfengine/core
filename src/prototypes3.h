@@ -27,6 +27,19 @@
 /*                                                                           */
 /*****************************************************************************/
 
+/* pub/full-write.c */
+
+int cf_full_write (int desc, char *ptr, size_t len);
+
+/* cflex.l */
+
+int yylex (void);
+
+/* cfparse.y */
+
+void yyerror (char *s);
+int yyparse (void);
+
 /* Generic stubs for the agents */
     
 void ThisAgentInit(void);
@@ -106,6 +119,16 @@ void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
 void CompilePromises(void);
 
+/* cfstreams.h */
+
+void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
+void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
+void Verbose(char *fmt, ...);
+void CfFile(FILE *fp,char *fmt, ...);
+void MakeLog(struct Item *mess,enum cfreport level);
+void MakeReport(struct Item *mess,int prefix);
+void SanitizeBuffer(char *buffer);
+
 /* cf_sql.c */
 
 int CfConnectDB(CfdbConn *cfdb,enum cfdbtype dbtype,char *remotehost,char *dbuser, char *passwd, char *db);
@@ -143,6 +166,32 @@ int IdentifyAgent(int sd,char *localip,int family);
 int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);
 void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
 void SetSessionKey(struct cfagent_connection *conn);
+int BadProtoReply(char *buf);
+int OKProtoReply(char *buf);
+int FailedProtoReply(char *buf);
+
+
+/* chflags.c */
+
+int ParseFlagString (char *flagstring, u_long *plusmask, u_long *minusmask);
+
+/* communication.c */
+
+struct cfagent_connection *NewAgentConn(void);
+void DeleteAgentConn(struct cfagent_connection *ap);
+void DePort(char *address);
+int IsIPV6Address(char *name);
+int IsIPV4Address(char *name);
+char *Hostname2IPString(char *hostname);
+char *IPString2Hostname(char *ipaddress);
+char *IPString2UQHostname(char *ipaddress);
+
+/* comparray.c */
+
+int FixCompressedArrayValue (int i, char *value, struct CompressedArray **start);
+void DeleteCompressedArray (struct CompressedArray *start);
+int CompressedArrayElementExists (struct CompressedArray *start, int key);
+char *CompressedArrayValue (struct CompressedArray *start, int key);
 
 /* constraints.c */
 
@@ -190,6 +239,28 @@ int Month2Int(char *string);
 char *GetArg0(char *execstr);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
+int Day2Number(char *datestring);
+
+/* crypto.c */
+
+void DebugBinOut(char *buffer,int len);
+void RandomSeed (void);
+void LoadSecretKeys (void);
+void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
+int EncryptString (char *in, char *out, unsigned char *key, int len);
+int DecryptString (char *in, char *out, unsigned char *key, int len);
+RSA *HavePublicKey (char *ipaddress);
+void SavePublicKey (char *ipaddress, RSA *key);
+void DeletePublicKey (char *ipaddress);
+void GenerateRandomSessionKey (void);
+char *KeyPrint(RSA *key);
+    
+
+/* dtypes.c */
+
+int IsSocketType(char *s);
+int IsTCPType(char *s);
+int IsProcessType(char *s);
 
 /* env_context.c */
 
@@ -210,6 +281,16 @@ void NewClassesFromString(char *classlist);
 void NegateClassesFromString(char *class,struct Item **heap);
 void AddPrefixedClasses(char *name,char *classlist);
 void NewPrefixedClasses(char *name,char *classlist);
+int IsHardClass (char *sp);
+int IsSpecialClass (char *class);
+int IsExcluded (char *exception);
+int IsDefinedClass (char *class);
+int EvaluateORString (char *class, struct Item *list,int fromIsInstallable);
+int EvaluateANDString (char *class, struct Item *list,int fromIsInstallable);
+int GetORAtom (char *start, char *buffer);
+int GetANDAtom (char *start, char *buffer);
+int CountEvalAtoms (char *class);
+int IsBracketed (char *s);
 
 /* evalfunction.c */
 
@@ -277,11 +358,13 @@ struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked);
 struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,struct Promise *pp);
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
-char *JoinPath(char *path,char *leaf);
-char *JoinSuffix(char *path,char *leaf);
-int IsAbsPath(char *path);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
 
+/* exec_tool.c */
+
+int ShellCommandReturnsZero(char *comm,int useshell);
+int GetExecOutput(char *command,char *buffer,int useshell);
+void ActAsDaemon(int preserve);
 
 /* files_copy.c */
 
@@ -325,8 +408,13 @@ int VerifyHardLink(char *destination,char *source,struct Attributes attr,struct 
 int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp);
 int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
 int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
+char *AbsLinkPath (char *from,char *relto);
+int ExpandLinks(char *dest,char *from,int level);
 
 /* files_hashes.c */
+
+int Hash(char *name);
+int ElfHash(char *key);
 
 int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp);
 void PurgeHashes(struct Attributes attr,struct Promise *pp);
@@ -365,9 +453,34 @@ void cf_closedir(CFDIR *dirh);
 int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct Attributes attr, struct Promise *pp);
 void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
 void FileAutoDefine(char *destfile);
+int ReadLine(char *buff,int size,FILE *fp);
+
+/* files_names.c */
+
+int ExpandOverflow(char *str1,char *str2);
+char *JoinPath(char *path,char *leaf);
+char *JoinSuffix(char *path,char *leaf);
+int IsAbsPath(char *path);
+void AddSlash(char *str);
+void DeleteSlash(char *str);
+char *LastFileSeparator(char *str);
+int ChopLastNode(char *str);
+char *CanonifyName(char *str);
+char *ReadLastNode(char *str);
+int CompressPath(char *dest,char *src);
+void Chop(char *str);
+int IsIn(char c,char *str);
+int IsAbsoluteFileName(char *f);
+int RootDirLength(char *f);
+char ToLower (char ch);
+char ToUpper (char ch);
+char *ToUpperStr (char *str);
+char *ToLowerStr (char *str);
+
 
 /* files_operators.c */
 
+void TruncateFile(char *name);
 int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int CreateFile(char *file,struct Promise *pp,struct Attributes attr);
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
@@ -390,6 +503,13 @@ void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise 
 int MakeParentDirectory(char *parentandchild,int force);
 void LogHashChange(char *file);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
+struct UidList *MakeUidList(char *uidnames);
+struct GidList *MakeGidList(char *gidnames);
+void RotateFiles(char *name,int number);
+void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
+void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
+void DeleteDirectoryTree(char *path,struct Promise *pp);
+void CreateEmptyFile(char *name);
 
 /* files_properties.c */
 
@@ -458,6 +578,13 @@ void CheckBundleParameters(char *scope,struct Rlist *args);
 void PromiseBanner(struct Promise *pp);
 void BannerBundle(struct Bundle *bp,struct Rlist *args);
 void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
+void PrependAuditFile(char *file);
+void WritePID(char *filename);
+
+/* granules.c  */
+
+char *ConvTimeKey (char *str);
+char *GenTimeKey (time_t now);
 
 /* graph.c */
 
@@ -503,6 +630,44 @@ int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_pt
 void InsertAfter(struct Item **filestart,struct Item *ptr,char *string);
 int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,enum cfeditorder pos);
 int RawSaveItemList(struct Item *liststart, char *file);
+struct Item *SplitStringAsItemList(char *string,char sep);
+struct Item *SplitString(char *string,char sep);
+int DeleteItemGeneral (struct Item **filestart, char *string, enum matchtypes type);
+int DeleteItemLiteral (struct Item **filestart, char *string);
+int DeleteItemStarting (struct Item **list,char *string);
+int DeleteItemNotStarting (struct Item **list,char *string);
+int DeleteItemMatching (struct Item **list,char *string);
+int DeleteItemNotMatching (struct Item **list,char *string);
+int DeleteItemContaining (struct Item **list,char *string);
+int DeleteItemNotContaining (struct Item **list,char *string);
+int DeleteLinesWithFileItems (struct Item **list,char *string,enum editnames code);
+int OrderedListsMatch(struct Item *list1,struct Item *list2);
+int IsClassedItemIn(struct Item *list,char *item);
+int CompareToFile(struct Item *liststart,char *file);
+struct Item *String2List(char *string);
+int ListLen (struct Item *list);
+int ByteSizeList (struct Item *list);
+int IsItemIn (struct Item *list, char *item);
+int IsFuzzyItemIn (struct Item *list, char *item);
+int GetItemListCounter (struct Item *list, char *item);
+struct Item *ConcatLists (struct Item *list1, struct Item *list2);
+void CopyList (struct Item **dest,struct Item *source);
+int FuzzySetMatch (char *s1, char *s2);
+int FuzzyMatchParse (char *item);
+int FuzzyHostMatch (char *arg0, char *arg1,char *basename);
+int FuzzyHostParse (char *arg1,char *arg2);
+void PrependItem  (struct Item **liststart, char *itemstring, char *classes);
+void AppendItem  (struct Item **liststart, char *itemstring, char *classes);
+void DeleteItemList (struct Item *item);
+void DeleteItem (struct Item **liststart, struct Item *item);
+void DebugListItemList (struct Item *liststart);
+int ItemListsEqual (struct Item *list1, struct Item *list2);
+struct Item *SplitStringAsItemList (char *string, char sep);
+void IncrementItemListCounter (struct Item *ptr, char *string);
+void SetItemListCounter (struct Item *ptr, char *string,int value);
+struct Item *SortItemListNames(struct Item *list);
+struct Item *SortItemListCounters(struct Item *list);
+
 
 /* iteration.c */
 
@@ -519,6 +684,15 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(void);
 void LastSaw(char *hostname,enum roles role);
+int ReadDB(DB *dbp,char *name,void *ptr,int size);
+int WriteDB(DB *dbp,char *name,void *ptr,int size);
+void DeleteDB(DB *dbp,char *name);
+DBT *NewDBKey(char *name);
+void DeleteDBKey(DBT *key);
+DBT *NewDBValue(void *ptr,int size);
+void DeleteDBValue(DBT *value);
+double GAverage(double anew,double aold,double p);
+
 
 /* install.c */
 
@@ -550,6 +724,8 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void ExtractOperationLock(char *op);
 void PromiseLog(char *s);
+void FatalError(char *s);
+void AuditStatusMessage(char status);
 
 /* manual.c */
 
@@ -569,6 +745,19 @@ struct CfRegEx CompileRegExp(char *regexp);
 struct CfRegEx CaseCompileRegExp(char *regexp);
 int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
+
+/* modes.c */
+
+int ParseModeString (char *modestring, mode_t *plusmask, mode_t *minusmask);
+int CheckModeState (enum modestate stateA, enum modestate stateB,enum modesort modeA, enum modesort modeB, char ch);
+int SetModeMask (char action, int value, int affected, mode_t *p, mode_t *m);
+
+/* net.c */
+
+int SendTransaction (int sd, char *buffer,int len, char status);
+int ReceiveTransaction (int sd, char *buffer,int *more);
+int RecvSocketStream (int sd, char *buffer, int toget, int nothing);
+int SendSocketStream (int sd, char *buffer, int toget, int flags);
 
 /* nfs.c */
 
@@ -599,6 +788,45 @@ void DeTypeTopic(char *typdetopic,char *topic,char *type);
 char *TypedTopic(char *topic,char *type);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 char *URLHint(char *s);
+
+/* patches.c */
+
+int IsPrivileged (void);
+int IntMin (int a,int b);
+char *StrStr (char *s1,char *s2);
+int StrnCmp (char *s1,char *s2,size_t n);
+#ifndef HAVE_GETNETGRENT
+int setnetgrent (const char *netgroup);
+int getnetgrent (char **host, char **user, char **domain);
+void endnetgrent (void);
+#endif
+#ifndef HAVE_UNAME
+int uname  (struct utsname *name);
+#endif
+#ifndef HAVE_STRSTR
+char *strstr (char *s1,char *s2);
+#endif
+#ifndef HAVE_STRDUP
+char *strdup (char *str);
+#endif
+#ifndef HAVE_STRRCHR
+char *strrchr (char *str,char ch);
+#endif
+#ifndef HAVE_STRERROR
+char *strerror (int err);
+#endif
+#ifndef HAVE_STRSEP
+char *strsep(char **stringp, const char *delim);
+#endif
+#ifndef HAVE_PUTENV
+int putenv  (char *s);
+#endif
+#ifndef HAVE_SETEUID
+int seteuid (uid_t euid);
+#endif
+#ifndef HAVE_SETEUID
+int setegid (gid_t egid);
+#endif
 
 /* pipes.c */
 
@@ -642,6 +870,7 @@ int PushDirState(char *name,struct stat *sb);
 void PopDirState(int goback,char * name,struct stat *sb,struct Recursion r);
 int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
 int SensibleFile(char *nodename,char *path,struct Attributes,struct Promise *pp);
+void CheckLinkSecurity(struct stat *sb,char *name);
 
 /* report.c */
 
@@ -738,15 +967,14 @@ void Summarize(void);
 
 void HandleSignals(int signum);
 
-/* cfstreams.h */
+/* sockaddr.c */
 
-void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
-void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
-void Verbose(char *fmt, ...);
-void CfFile(FILE *fp,char *fmt, ...);
-void MakeLog(struct Item *mess,enum cfreport level);
-void MakeReport(struct Item *mess,int prefix);
-void SanitizeBuffer(char *buffer);
+char *sockaddr_ntop (struct sockaddr *sa);
+void *sockaddr_pton (int af,void *src);
+
+/* storage_tools.c */
+
+int GetDiskUsage  (char *file, enum cfsizes type);
 
 /* syntax.c */
 
@@ -787,7 +1015,8 @@ int VM_Version(void);
 int Xen_Domain(void);
 void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 int Xen_Hv_Check(void);
-
+void SetSignals(void);
+int IsInterfaceAddress(char *adr);
 
 /* transaction.c */
 
@@ -803,6 +1032,16 @@ time_t FindLockTime(char *name);
 pid_t FindLockPid(char *name);
 DB *OpenLock(void);
 void CloseLock(DB *dbp);
+
+/* timeout.c */
+
+void SetTimeOut(int timeout);
+void TimeOut(void);
+void DeleteTimeOut(void);
+void SetReferenceTime(int setclasses);
+void SetStartTime(int setclasses);
+void AddTimeClass(char *str);
+
 
 /* vars.c */
 

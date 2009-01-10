@@ -603,10 +603,7 @@ do
 
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
-      char control[CF_MAXVARSIZE];
-      snprintf(control,CF_MAXVARSIZE-1,"control_%s",CF_AGENTTYPES[agent]);
       ConvergeVarHashPromise(pp->bundle,pexp,true);
-      ConvergeVarHashPromise(control,pexp,true);
       }
 
 //   XML=0;

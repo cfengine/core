@@ -330,7 +330,7 @@ setlinebuf(stdout);
 
 void Cf3ParseFiles()
 
-{ struct Rlist *rp;
+{ struct Rlist *rp,*sl;
 
 PARSING = true;
 
@@ -343,6 +343,8 @@ Cf3ParseFile(VINPUTFILE);
 
 // Expand any lists in this list now
 
+HashVariables();
+
 if (VINPUTLIST != NULL)
    {
    for (rp = VINPUTLIST; rp != NULL; rp=rp->next)
@@ -353,7 +355,21 @@ if (VINPUTLIST != NULL)
          }
       else
          {
-         Cf3ParseFile((char *)rp->item);
+         struct Rval returnval = EvaluateFinalRval("sys",rp->item,rp->type,true,NULL);
+
+         switch (returnval.rtype)
+            {
+            case CF_SCALAR:
+                Cf3ParseFile((char *)returnval.item);
+                break;
+            case CF_LIST:
+
+                for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
+                   {
+                   Cf3ParseFile((char *)sl->item);
+                   }
+                break;
+            }
          }
       }
    }

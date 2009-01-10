@@ -367,15 +367,20 @@ void FatalError(char *s)
     
 { struct CfLock best_guess;
       
-CfOut(cf_error,"Fatal: %s",s); 
-best_guess.lock = strdup(CFLOCK);
-best_guess.last = strdup(CFLAST);
-best_guess.log = strdup(CFLOG);
-YieldCurrentLock(best_guess);
+CfOut(cf_error,"","Fatal cfengine error: %s",s); 
+
+if (strlen(CFLOCK) > 0)
+   {
+   best_guess.lock = strdup(CFLOCK);
+   best_guess.last = strdup(CFLAST);
+   best_guess.log = strdup(CFLOG);
+   YieldCurrentLock(best_guess);
+   }
+
 unlink(PIDFILE);
 EndAudit();
 closelog();
-exit(0);
+exit(1);
 }
 
 /*****************************************************************************/

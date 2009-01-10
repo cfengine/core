@@ -170,7 +170,11 @@ fclose(fout);
 void TexinfoHeader(FILE *fout)
 {
  fprintf(fout,
-         "\\input texinfo @c -*-texinfo-*-\n"
+         "@c \\input texinfo-altfont\n"
+         "@c \\input texinfo-logo\n"
+         "\\input texinfo\n"
+         "@c @selectaltfont{cmbright}\n"
+         "@c @setlogo{CfengineLogo}\n"
          "@c *********************************************************************\n"
          "@c\n"
          "@c  This is an AUTO_GENERATED TEXINFO file. Do not submit patches against it.\n"

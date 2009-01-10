@@ -208,6 +208,7 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:mM",OPTIONS,&optindex)) != EOF)
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
           VINPUTFILE[CF_BUFSIZE-1] = '\0';
+          MINUSF = true;
           break;
 
       case 'd': 

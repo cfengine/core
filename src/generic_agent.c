@@ -150,10 +150,13 @@ else
 
 if ((FOUT = fopen(name,"w")) == NULL)
    {
-   FatalError("Cannot open output file\n");
+   char vbuff[CF_BUFSIZE];
+   snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
+   FatalError(vbuff);
    }
 
 HashVariables();
+HashControls();
 SetAuditVersion();
 
 if (XML)
@@ -236,15 +239,12 @@ Verbose("-----------------------------------------------------------------------
 #ifndef NT
 if (getuid() > 0)
    {
-   char *homedir;
-   if ((homedir = getenv("HOME")) != NULL)
+   strncpy(CFWORKDIR,GetHome(getuid()),CF_BUFSIZE-10);
+   strcat(CFWORKDIR,"/.cfagent");
+   
+   if (strlen(CFWORKDIR) > CF_BUFSIZE/2)
       {
-      strncpy(CFWORKDIR,homedir,CF_BUFSIZE-10);
-      strcat(CFWORKDIR,"/.cfagent");
-      if (strlen(CFWORKDIR) > CF_BUFSIZE/2)
-         {
-         FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
-         }
+      FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
       }
    }
 else
@@ -266,13 +266,14 @@ MakeParentDirectory(vbuff,true);
 snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
 MakeParentDirectory(vbuff,true);
 
+
 snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
 chmod(vbuff,0700); 
 snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
 chmod(vbuff,0700);
 
-
 sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
+MakeParentDirectory(ebuff,true);
 
 if (stat(ebuff,&statbuf) == -1)
    {
@@ -362,8 +363,8 @@ if (VINPUTLIST != NULL)
             case CF_SCALAR:
                 Cf3ParseFile((char *)returnval.item);
                 break;
+                
             case CF_LIST:
-
                 for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
                    Cf3ParseFile((char *)sl->item);
@@ -373,6 +374,8 @@ if (VINPUTLIST != NULL)
          }
       }
    }
+
+UnHashVariables();
 
 PARSING = false;
 }
@@ -865,9 +868,7 @@ void HashVariables()
 
 { struct Bundle *bp,*bundles;
   struct SubType *sp;
-  struct Body *bdp;
   struct Scope *ptr;
-  char buf[CF_BUFSIZE];
 
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
@@ -883,6 +884,14 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
    CheckBundleParameters(bp->name,bp->args);
    }
+}
+
+/*******************************************************************/
+
+void HashControls()
+
+{ struct Body *bdp;
+  char buf[CF_BUFSIZE];
 
 /* Only control bodies need to be hashed like variables */
 
@@ -894,6 +903,18 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
       SetNewScope(buf);
       CheckControlPromises(buf,bdp->type,bdp->conlist);
       }
+   }
+}
+
+/*******************************************************************/
+
+void UnHashVariables()
+
+{ struct Bundle *bp,*bundles;
+
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   DeleteScope(bp->name);
    }
 }
 

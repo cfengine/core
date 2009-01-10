@@ -950,6 +950,12 @@ if (rval != NULL)
       *(pp->donep) = true; 
       }
 
+   if (Epimenides(pp->promiser,rval,cp->type,0))
+      {
+      CfOut(cf_error,"","Variable \"%s\" contains itself indirectly - an unkeepable promise",pp->promiser);
+      exit(1);
+      }
+
    if (ok_redefine) /* only on second iteration, else we ignore broken promises */
       {
       if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
@@ -957,10 +963,10 @@ if (rval != NULL)
          DeleteVariable(scope,pp->promiser);
          }
       }
-
+   
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
-      Verbose("Unable to converge %s.%s value (possibly empty?)\n",scope,pp->promiser);
+      Verbose("Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
       PromiseRef(cf_verbose,pp);
       }
    }
@@ -971,3 +977,58 @@ else
    }
 }
       
+/*********************************************************************/
+/* Levels                                                            */
+/*********************************************************************/
+
+int Epimenides(char *var,char *rval,char rtype,int level)
+
+{ struct Rlist *rp,*list;
+  char exp[CF_EXPANDSIZE];
+
+switch (rtype)
+   {
+   case CF_SCALAR:
+       
+       if (StringContainsVar(rval,var))
+          {
+          CfOut(cf_error,"","Scalar variable \"%s\" contains itself (non-convergent): %s",var,(char *)rval);
+          return true;
+          }
+
+       if (IsCf3VarString(rval))
+          {
+          ExpandPrivateScalar(CONTEXTID,rval,exp);
+          Debug("bling %d-%s: (look for %s) in \"%s\" => %s \n",level,CONTEXTID,var,rval,exp);
+
+          if (level > 3)
+             {
+             return false;
+             }
+          
+          if (Epimenides(var,exp,CF_SCALAR,level+1))
+             {
+             return true;
+             }           
+          }
+       
+       break;
+       
+   case CF_LIST:
+       list = (struct Rlist *)rval;
+       
+       for (rp = list; rp != NULL; rp=rp->next)
+          {
+          if (Epimenides(var,rp->item,rp->type,level))
+             {
+             return true;
+             }
+          }
+       break;
+       
+   default:
+       return false;
+   }
+
+return false;
+}

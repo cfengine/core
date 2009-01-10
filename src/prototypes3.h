@@ -359,6 +359,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
+int Epimenides(char *var,char *rval,char rtype,int level);
 
 /* exec_tool.c */
 
@@ -565,6 +566,8 @@ void Cf3ParseFile(char *filename);
 void Cf3ParseFiles(void);
 void Report(char *filename);
 void HashVariables(void);
+void HashControls(void);
+void UnHashVariables(void);
 void TheAgent(enum cfagenttype ag);
 void Cf3OpenLog(void);
 void *ExitCleanly(int signum);
@@ -1017,6 +1020,7 @@ void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32
 int Xen_Hv_Check(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);
+char *GetHome(uid_t uid);
 
 /* transaction.c */
 

@@ -360,7 +360,7 @@ Debug("LockLogCompletion(%s)\n",str);
 if ((fp = fopen(cflog,"a")) == NULL)
    {
    CfOut(cf_error,"fopen","Can't open lock-log file %s\n",cflog);
-   FatalError("");
+   exit(1);
    }
 
 if ((tim = time((time_t *)NULL)) == -1)

@@ -98,6 +98,11 @@ if (SelectModeMatch(sb,attr.select.plus,attr.select.minus))
    PrependItem(&leaf_attr,"mode","");
    }
 
+if (attr.select.plus == NULL && attr.select.minus == 0)
+   {
+   PrependItem(&leaf_attr,"mode","");
+   }
+
 if (SelectTimeMatch(sb->st_atime,attr.select.min_atime,attr.select.max_atime))
    { 
    PrependItem(&leaf_attr,"atime","");

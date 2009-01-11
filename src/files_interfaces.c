@@ -211,7 +211,10 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
 
 if (!VerifyFileLeaf(path,&oslb,a,pp))
    {
-   return;
+   if (!S_ISDIR(oslb.st_mode))
+      {
+      return;
+      }
    }
 
 if (stat(path,&osb) == -1)
@@ -1411,13 +1414,13 @@ else
    {
 #endif
 
-if (!JoinSuffix(dest,CF_NEW))
-   {
-   return false;
-   }
-
-strcpy(new,dest);
-
+   strncpy(new,dest,CF_BUFSIZE);
+   
+   if (!JoinSuffix(new,CF_NEW))
+      {
+      return false;
+      }
+   
 #ifdef DARWIN
    }
 #endif
@@ -1452,6 +1455,7 @@ else
    }
 
 Debug("CopyRegular succeeded in copying to %s to %s\n",source,new);
+
 backup[0] = '\0';
 
 if (!discardbackup)
@@ -1472,14 +1476,14 @@ if (!discardbackup)
 
    if (attr.copy.backup == cfa_timestamp)
       {
-      if (!JoinPath(backup,stamp))
+      if (!JoinSuffix(backup,stamp))
          {
          return false;
          }
       }
    else
       {
-      if (!JoinPath(backup,CF_SAVED))
+      if (!JoinSuffix(backup,CF_SAVED))
          {
          return false;
          }
@@ -1638,6 +1642,7 @@ else
          {
          rename(backup,dest); /* ignore failure */
          }
+      
       return false;
       }
    

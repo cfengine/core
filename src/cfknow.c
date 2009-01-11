@@ -2234,6 +2234,12 @@ if (occurrences != NULL)
    
    fprintf(fout,"</div>");
    }
+else
+   {
+   fprintf(fout,"<p><div id=\"occurrences\">");
+   fprintf(fout,"<i>This topic has no direct documentation</i>");
+   fprintf(fout,"</div>");
+   }
 
 if (associations)
    {

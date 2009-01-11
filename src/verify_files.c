@@ -150,7 +150,7 @@ if (expandregex) /* Expand one regex link and hand down */
    
    for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
-      if (!SensibleFile(dirp->d_name,pbuffer,dummyattr,pp))
+      if (!ConsiderFile(dirp->d_name,pbuffer,dummyattr,pp))
          {
          continue;
          }

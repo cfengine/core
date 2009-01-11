@@ -82,6 +82,7 @@ if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
       Verbose(" !! (Destination purging enabled)\n");
       }
 
+   Verbose(" ->>  Entering %s\n",source);
    SetSearchDevice(&ssb,pp);
    SourceSearchAndCopy(source,destination,attr.recursion.depth,attr,pp);
    

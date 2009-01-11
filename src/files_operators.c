@@ -228,7 +228,7 @@ if ((dirh = opendir(attr.link.source)) == NULL)
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
-   if (!SensibleFile(dirp->d_name,attr.link.source,attr,pp))
+   if (!ConsiderFile(dirp->d_name,attr.link.source,attr,pp))
       {
       continue;
       }

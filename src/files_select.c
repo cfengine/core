@@ -40,12 +40,23 @@ if (!attr.haveselect)
    return true;
    }
 
+if (S_ISDIR(sb->st_mode) || attr.select.name == NULL)
+   {
+   PrependItem(&leaf_attr,"leaf_name","");
+   }
+
 for (rp = attr.select.name; rp != NULL; rp = rp->next)
    {
    if (SelectNameRegexMatch(path,rp->item))
       {
       PrependItem(&leaf_attr,"leaf_name","");
+      break;
       }
+   }
+
+if (attr.select.path == NULL)
+   {
+   PrependItem(&leaf_attr,"leaf_path","");
    }
 
 for (rp = attr.select.path; rp != NULL; rp = rp->next)
@@ -53,6 +64,7 @@ for (rp = attr.select.path; rp != NULL; rp = rp->next)
    if (SelectPathRegexMatch(path,rp->item))
       {
       PrependItem(&leaf_attr,"path_name","");
+      break;         
       }
    }
 
@@ -66,7 +78,17 @@ if (attr.select.owners && SelectOwnerMatch(sb,attr.select.owners))
    PrependItem(&leaf_attr,"owner","");
    }
 
+if (attr.select.owners == NULL)
+   {
+   PrependItem(&leaf_attr,"owner","");
+   }
+
 if (attr.select.groups && SelectGroupMatch(sb,attr.select.groups))
+   {
+   PrependItem(&leaf_attr,"group","");
+   }
+
+if (attr.select.groups == NULL)
    {
    PrependItem(&leaf_attr,"group","");
    }

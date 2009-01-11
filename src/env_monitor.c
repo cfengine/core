@@ -2259,7 +2259,7 @@ if ((dirh = opendir("/proc/acpi/thermal_zone")) == NULL)
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
-   if (!SensibleFile(dirp->d_name,path,attr,NULL))
+   if (!ConsiderFile(dirp->d_name,path,attr,NULL))
       {
       continue;
       }

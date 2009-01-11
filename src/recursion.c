@@ -28,156 +28,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
-/*********************************************************************/
-/* Files to be ignored when parsing directories                      */
-/*********************************************************************/
-
-char *VSKIPFILES[] =
-   {
-   ".",
-   "..",
-   "lost+found",
-   ".cfengine.rm",
-   NULL
-   };
-
-/*********************************************************************/
-
-int SensibleFile(char *nodename,char *path,struct Attributes attr,struct Promise *pp)
-
-{ int i, suspicious = true;
-  struct stat statbuf; 
-  unsigned char *sp, newname[CF_BUFSIZE],vbuff[CF_BUFSIZE];
-  
-if (strlen(nodename) < 1)
-   {
-   CfOut(cf_error,"","Empty (null) filename detected in %s\n",path);
-   return true;
-   }
-
-if (IsItemIn(SUSPICIOUSLIST,nodename))
-   {
-   struct stat statbuf;
-
-   if (stat(nodename,&statbuf) != -1)
-      {
-      if (S_ISREG(statbuf.st_mode))
-         {
-         cfPS(cf_error,CF_CHG,"",pp,attr," !! Suspicious file %s found in %s\n",nodename,path);
-         return false;
-         }
-      }
-   }
- 
-if (strcmp(nodename,"...") == 0)
-   {
-   Verbose("Possible FS cell node detected in %s...\n",path);
-   return true;
-   }
-  
-for (i = 0; VSKIPFILES[i] != NULL; i++)
-   {
-   if (strcmp(nodename,VSKIPFILES[i]) == 0)
-      {
-      Debug("Filename %s/%s is classified as ignorable\n",path,nodename);
-      return false;
-      }
-   }
-
-if ((strcmp("[",nodename) == 0) && (strcmp("/usr/bin",path) == 0))
-   {
-   if (VSYSTEMHARDCLASS == linuxx)
-      {
-      return true;
-      }
-   }
-
-suspicious = true;
-
-for (sp = nodename; *sp != '\0'; sp++)
-   {
-   if ((*sp > 31) && (*sp < 127))
-      {
-      suspicious = false;
-      break;
-      }
-   }
-
-strcpy(vbuff,path);
-AddSlash(vbuff);
-strcat(vbuff,nodename); 
-
-if (suspicious && NONALPHAFILES)
-   {
-   cfPS(cf_error,CF_CHG,"",pp,attr," !! Suspicious filename %s in %s has no alphanumeric content (security)",CanonifyName(nodename),path);
-   strcpy(newname,vbuff);
-   
-   for (sp = newname+strlen(path); *sp != '\0'; sp++)
-      {
-      if ((*sp > 126) || (*sp < 33))
-         {
-         *sp = 50 + (*sp / 50);  /* Create a visible ASCII interpretation */
-         }
-      }
-   
-   strcat(newname,".cf-nonalpha");
-   
-   CfOut(cf_inform,"","Renaming file %s to %s",vbuff,newname);
-   
-   if (rename(vbuff,newname) == -1)
-      {
-      CfOut(cf_verbose,"rename","Rename failed - foreign filesystem?\n");
-      }
-
-   if (chmod(newname,0644) == -1)
-      {
-      CfOut(cf_verbose,"chmod","Mode change failed - foreign filesystem?\n");
-      }
-
-   return false;
-   }
-
-for (sp = nodename; *sp != '\0'; sp++) /* Check for files like ".. ." */
-   {
-   if ((*sp != '.') && ! isspace(*sp))
-      {
-      suspicious = false;
-      return true;
-      }
-   }
-
-/* removed if (EXTENSIONLIST==NULL) mb */ 
-
-if (cf_lstat(vbuff,&statbuf,attr,pp) == -1)
-   {
-   CfOut(cf_verbose,"cf_lstat","Couldn't stat %s",vbuff);
-   return true;
-   }
-
-if (statbuf.st_size == 0 && ! (VERBOSE||INFORM)) /* No sense in warning about empty files */
-   {
-   return false;
-   }
- 
-cfPS(cf_error,CF_CHG,"",pp,attr," !! Suspicious looking file object \"%s\" masquerading as hidden file in %s\n",nodename,path);
- 
-if (S_ISLNK(statbuf.st_mode))
-   {
-   CfOut(cf_error,""," !!- %s is a symbolic link\n",nodename);
-   }
-else if (S_ISDIR(statbuf.st_mode))
-   {
-   CfOut(cf_error,""," !!- %s is a directory\n",nodename);
-   }
-else
-   {
-   CfOut(cf_error,""," !!- %s has size %ld and full mode %o\n",nodename,(unsigned long)(statbuf.st_size),(unsigned int)(statbuf.st_mode));
-   }
- 
-return true;
-}
-
 /*********************************************************************/
 /* Depth searches                                                    */
 /*********************************************************************/
@@ -224,7 +74,7 @@ if ((dirh = opendir(".")) == NULL)
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
-   if (!SensibleFile(dirp->d_name,name,attr,pp))
+   if (!ConsiderFile(dirp->d_name,name,attr,pp))
       {
       continue;
       }
@@ -290,6 +140,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       
       if (attr.recursion.depth > 1)
          {
+         Verbose(" ->>  Entering %s\n",path);
          goback = DepthSearch(path,&lsb,rlevel+1,attr,pp);
          PopDirState(goback,name,sb,attr.recursion);
          VerifyFileLeaf(path,&lsb,attr,pp);

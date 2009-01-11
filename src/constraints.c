@@ -248,7 +248,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          FatalError("Aborted");
          }
 
-      retval = Str2Int((char *)cp->rval);
+      retval = (int)Str2Int((char *)cp->rval);
       }
    }
 

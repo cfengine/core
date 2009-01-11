@@ -158,7 +158,8 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
             continue;
             }
          }
-      
+
+      Verbose(" ->>  Entering %s\n",newto);
       VerifyCopiedFileAttributes(newto,&dsb,&sb,attr,pp);
       SourceSearchAndCopy(newfrom,newto,maxrecurse-1,attr,pp);
       }

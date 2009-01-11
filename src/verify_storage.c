@@ -227,7 +227,7 @@ if (S_ISDIR(statbuf.st_mode))
 
    for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
-      if (!SensibleFile(dirp->d_name,name,a,pp))
+      if (!ConsiderFile(dirp->d_name,name,a,pp))
          {
          continue;
          }

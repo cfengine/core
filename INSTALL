@@ -2,10 +2,7 @@
 BUILDING
 -----------------------------------------------------------------------
 
-In the next release, cfengine 3 will be fully indepedendent of cfengine
-2, however to build this version of the software you need to have the
-library libcfengine from cfengine version 2.2.8 or later installed on
-your system. In addition you should install development versions of
+In order to compile this software you should install development versions of
 
 Openssl
 BerkeleyDB
@@ -35,7 +32,7 @@ Problems linking?
  need to install the library
 
  host$ cd /workdir
- host$ svn checkout https://svn.iu.hio.no/projects/cfengine-2/trunk
+ host$ svn checkout https://svn.iu.hio.no/projects/cfengine-3/trunk
  host$ cd trunk; ./configure;make
  host$ cd src; install -c .libs/libcfengine.a /usr/local/lib/libcfengine.a
 

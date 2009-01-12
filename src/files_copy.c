@@ -51,24 +51,16 @@ if (cf_stat(attr.copy.source,&ssb,attr,pp) == -1)
    return NULL;
    }
   
-if (server == NULL)
-   {
-   snprintf(vbuff,CF_BUFSIZE,"%.255s.%.50s_%.50s",source,destination,"localhost");
-   }
-else
-   {
-   snprintf(vbuff,CF_BUFSIZE,"%.255s.%.50s_%.50s",source,destination,server);
-   }
-
 start = BeginMeasure();
+
+strncpy(vbuff,destination,CF_BUFSIZE-4);
 
 if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
    {
-   strncpy(vbuff,destination,CF_BUFSIZE-4);
    AddSlash(vbuff);
    strcat(vbuff,".");
    }
-
+  
 if (!MakeParentDirectory(vbuff,attr.move_obstructions))
    {
    cfPS(cf_inform,CF_FAIL,"",pp,attr,"Can't make directories for %s in files.copyfrom promise\n",vbuff);
@@ -105,6 +97,10 @@ EndMeasure(eventname,start);
 if (attr.transaction.background)
    {
    ServerDisconnection(pp->conn);
+   }
+else
+   {
+   ServerNotBusy(pp->conn);
    }
 
 return NULL;

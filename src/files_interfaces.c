@@ -57,7 +57,7 @@ if (strlen(from) == 0)     /* Check for root dir */
 
 strncpy(newto,to,CF_BUFSIZE-2);
 AddSlash(newto);
-strcat(newto,".");
+strcat(newto,"dummy");
 
 if (attr.transaction.action != cfa_warn)
    {
@@ -394,7 +394,7 @@ if (S_ISDIR(ssb.st_mode))
          FatalError("VerifyCopy");
          }
       
-      strcpy(destfile, destdir);
+      strcpy(destfile,destdir);
       
       if (!JoinPath(destfile,dirp->d_name))
          {
@@ -1465,17 +1465,13 @@ if (!discardbackup)
 
    Debug("Backup file %s\n",source);
 
-   stampnow = time((time_t *)NULL);   
-   snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
-
-   if (!JoinPath(backup,dest))
-      {
-      Debug(" culprit: CopyReg\n");
-      return false;
-      }
+   strncpy(backup,dest,CF_BUFSIZE);
 
    if (attr.copy.backup == cfa_timestamp)
       {
+      stampnow = time((time_t *)NULL);   
+      snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
+
       if (!JoinSuffix(backup,stamp))
          {
          return false;

@@ -49,10 +49,14 @@ return (void *)NULL;
 void FindFilePromiserObjects(struct Promise *pp)
 
 { char *val = GetConstraint("pathtype",pp->conlist,CF_SCALAR);
+  int literal = GetBooleanConstraint("copy_from",pp->conlist) ||
+                GetBooleanConstraint("create",pp->conlist) ||
+                ((val != NULL) && (strcmp(val,"literal") == 0));
+
 
 /* Check if we are searching over a regular expression */
- 
-if ((val != NULL) && (strcmp(val,"literal") == 0))
+
+if (literal)
    {
    VerifyFilePromise(pp->promiser,pp);
    return;

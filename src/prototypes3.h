@@ -159,6 +159,7 @@ int ServerOffline(char *server);
 struct cfagent_connection *ServerConnectionReady(char *server);
 void MarkServerOffline(char *server);
 void CacheServerConnection(struct cfagent_connection *conn,char *server);
+void ServerNotBusy(struct cfagent_connection *conn);
 
 /* client_protocols.c */
 

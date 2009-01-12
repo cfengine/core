@@ -131,8 +131,6 @@ Debug("HavePublickey(%s)\n",name);
   
 if (!IsPrivileged())
    {
-   Verbose("\n(Non privileged user...)\n\n");
-   
    if ((sp = getenv("HOME")) == NULL)
       {
       FatalError("You do not have a HOME variable pointing to your home directory");
@@ -189,21 +187,7 @@ void SavePublicKey(char *name,RSA *key)
 
 Debug("SavePublicKey %s\n",name); 
 
-if (!IsPrivileged())
-   {
-   Verbose("\n(Non privileged user...)\n\n");
-   
-   if ((sp = getenv("HOME")) == NULL)
-      {
-      FatalError("You do not have a HOME variable pointing to your home directory");
-      }
-   
-   snprintf(filename,CF_BUFSIZE,"%s/.cfagent/ppkeys/%s.pub",sp,name);
-   }
-else
-   {
-   snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
-   }
+snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
 
 if (stat(filename,&statbuf) != -1)
    {
@@ -235,21 +219,7 @@ char *name;
 
 { char filename[CF_BUFSIZE],*sp;
 
-if (!IsPrivileged())
-   {
-   Verbose("\n(Non privileged user...)\n\n");
-   
-   if ((sp = getenv("HOME")) == NULL)
-      {
-      FatalError("You do not have a HOME variable pointing to your home directory");
-      }  
-   snprintf(filename,CF_BUFSIZE,"%s/.cfagent/ppkeys/%s.pub",sp,name);
-   }
-else
-   {
-   snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
-   }
-
+snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
 unlink(filename);
 }
 

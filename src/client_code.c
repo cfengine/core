@@ -1106,16 +1106,40 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
 
    if (svp->busy)
       {
+      Verbose("Existing connection seems to be busy...\n",ipname);
       return NULL;
       }
    
    if ((strcmp(ipname,svp->server) == 0) && svp->conn && svp->conn->sd > 0)
       {
+      Verbose("Connection to %s is already open and ready...\n",ipname);
       return svp->conn;
       }
    }
 
+Verbose("No existing connection to %s is established...\n",ipname);
 return NULL;
+}
+
+/*********************************************************************/
+
+void ServerNotBusy(struct cfagent_connection *conn)
+
+{ struct Rlist *rp;
+  struct ServerItem *svp;
+ 
+for (rp = SERVERLIST; rp != NULL; rp=rp->next)
+   {
+   svp = (struct ServerItem *)rp->item;
+
+   if (svp->conn == conn)
+      {
+      svp->busy = false;
+      break;
+      }
+   }
+
+Verbose("Existing connection just became free...\n");
 }
 
 /*********************************************************************/

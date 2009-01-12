@@ -135,6 +135,11 @@ void ReadPromises(enum cfagenttype ag,char *agents)
 
 { char name[CF_BUFSIZE];
 
+if (ag == cf_keygen)
+   {
+   return;
+   }
+
 Cf3ParseFiles();
 
 if (IsPrivileged())

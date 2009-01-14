@@ -553,7 +553,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          
          if (reverse_type == NULL)
             {
-            CfOut(cf_error,"","Topic \"%s\" is not declared with a type",rp->item);
+            CfOut(cf_inform,"","Topic \"%s\" is not (yet) declared with a type",rp->item);
             continue;
             }
          
@@ -1323,7 +1323,7 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
 
    if (!GetCanonizedTopic(TOPIC_MAP,subtype))
       {
-      CfOut(cf_error,"","Occurrence of %s makes reference to a sub-topic %s but that has not been defined",topic_id,subtype);
+      CfOut(cf_inform,"","Occurrence of %s makes reference to a sub-topic %s but that has not (et) been defined",topic_id,subtype);
       }
    }
 }

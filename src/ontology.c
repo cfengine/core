@@ -288,31 +288,47 @@ char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
   static char longname[CF_BUFSIZE];
-
-strcpy(longname,"unknown topic");
+  char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
+  int match = false;
+ 
+DeTypeTopic(topic_name,type,topic);
   
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strcmp(topic_name,tp->topic_name) == 0)
+   if (tp->comment)
       {
-      if (tp->comment)
-         {
-         snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
-         }
-      else
-         {
-         snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
-         }
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,topic);
+      }
+   else
+      {
+      snprintf(longname,CF_BUFSIZE,"%s",topic);
+      }
 
-      if (cfdb)
+   if (strlen(type) > 0)
+      {
+      if ((strcmp(longname,tp->topic_name) == 0) && (strcmp(type,tp->topic_type) == 0))
          {
-         return EscapeSQL(cfdb,longname);
-         }
-      else
-         {
-         return longname;
+         match = true;
+         break;
          }
       }
+   else
+      {
+      if (strcmp(longname,tp->topic_name) == 0)
+         {
+         match = true;
+         break;
+         }
+      }
+   }
+
+if (match && cfdb)
+   {
+   return EscapeSQL(cfdb,longname);
+   }
+else
+   {
+   return longname;
    }
 
 CfOut(cf_error,"","Could not assemble long name for a known topic %s - something funny going on",topic_name);
@@ -503,12 +519,40 @@ return NULL;
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
+  char type[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
 
+strncpy(type,topic_name,CF_MAXVARSIZE-1);
+name[0] = '\0';
+
+if (sp = strchr(type,'.'))
+   {
+   *sp = '\0';
+   sp += strlen("::");
+   strncpy(name,sp,CF_MAXVARSIZE-1);
+   Verbose("%s is a typed-topic, type=%s, topic=%s\n",topic_name,type,name);
+   }
+else
+   {
+   sp = topic_name;
+   Verbose("%s is a typelss topic\n",topic_name);
+   }
+
+  
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strcmp(topic_name,CanonifyName(tp->topic_name)) == 0)
+   if (strlen(name) == 0)
       {
-      return tp;          
+      if (strcmp(topic_name,CanonifyName(tp->topic_name)) == 0)
+         {
+         return tp;          
+         }
+      }
+   else
+      {
+      if ((strcmp(name,CanonifyName(tp->topic_name))) == 0 && (strcmp(type,CanonifyName(tp->topic_type)) == 0))
+         {
+         return tp;          
+         }
       }
    }
 

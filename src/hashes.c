@@ -208,8 +208,7 @@ return slot;
 
 int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int lineno)
 
-{ char *sp1,*sp2,buffer[CF_BUFSIZE],varstr[CF_MAXVARSIZE];
-  struct Scope *ptr;
+{ struct Scope *ptr;
   struct CfAssoc *ap;
   struct Rlist *rp;
   int slot;

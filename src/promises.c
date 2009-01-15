@@ -44,6 +44,7 @@ if ((name = malloc(CF_MAXVARSIZE)) == NULL)
    }
 
 sp = pp->agentsubtype;
+
 if (size + strlen(sp) < CF_MAXVARSIZE-CF_BUFFERMARGIN)
    {
    strcpy(name,sp);
@@ -53,6 +54,11 @@ if (size + strlen(sp) < CF_MAXVARSIZE-CF_BUFFERMARGIN)
 
 for (i = 0,cp = pp->conlist; (i < 5) && cp != NULL; i++,cp=cp->next)
    {
+   if (strcmp(cp->lval,"args") == 0) /* Exception for args, by symmetry, for locking */
+      {
+      continue;
+      }
+   
    if (size + strlen(cp->lval) < CF_MAXVARSIZE-CF_BUFFERMARGIN)
       {
       strcat(name,cp->lval);

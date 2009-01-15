@@ -76,15 +76,6 @@ void VerifyExec(struct Attributes a, struct Promise *pp)
   FILE *pfp;
   int preview = false;
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp);
-
-if (thislock.lock == NULL)
-   {
-   return;
-   }
-
-PromiseBanner(pp);
-
 if (!IsExecutable(GetArg0(pp->promiser)))
    {
    cfPS(cf_error,CF_FAIL,"",pp,a,"%s promises to be executable but isn't\n",pp->promiser);
@@ -105,6 +96,15 @@ else
    {
    strncpy(execstr,pp->promiser,CF_BUFSIZE);
    }
+
+thislock = AcquireLock(execstr,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+PromiseBanner(pp);
 
 CfOut(cf_inform,""," -> Executing \'%s\' ...(timeout=%d,owner=%d,group=%d)\n",execstr,a.contain.timeout,a.contain.owner,a.contain.group);
 

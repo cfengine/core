@@ -104,14 +104,14 @@ free(promise);
 Debug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n",cc_operator,cc_operand,attr.transaction.expireafter,attr.transaction.ifelapsed);
 
 for (i = 0; cc_operator[i] != '\0'; i++)
-    {
-    sum = (CF_MACROALPHABET * sum + cc_operator[i]) % CF_HASHTABLESIZE;
-    }
+   {
+   sum = (CF_MACROALPHABET * sum + cc_operator[i]) % CF_HASHTABLESIZE;
+   }
 
 for (i = 0; cc_operand[i] != '\0'; i++)
-    {
-    sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
-    }
+   {
+   sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
+   }
 
 snprintf(cflog,CF_BUFSIZE,"%s/cf3.%.40s.runlog",CFWORKDIR,host);
 snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d",pp->bundle,cc_operator,cc_operand,sum);

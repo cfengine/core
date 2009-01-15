@@ -2155,6 +2155,17 @@ void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,
   int count = 0;
   FILE *fout = stdout;
   char banner[CF_BUFSIZE],filename[CF_BUFSIZE];
+  char *v,rettype;
+  void *retval;
+
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   {
+   v = (char *)retval;
+   }
+else
+   {
+   v = "not specified";
+   }
 
 snprintf(banner,CF_BUFSIZE,"Topic: %s",this_name);  
 CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
@@ -2171,7 +2182,7 @@ if (stat(filename,&sb) != -1)
 
 fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" has type ",NextTopic(this_name,this_type));
-fprintf(fout,"\"%s\"\n</div>",NextTopic(this_type,""));
+fprintf(fout,"\"%s\"\n</div> in version %s",NextTopic(this_type,""),v);
 
 if (occurrences != NULL)
    {

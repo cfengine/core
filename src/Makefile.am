@@ -78,6 +78,7 @@ libpromises_la_SOURCES =						\
 	interfaces.c							\
 	storage_tools.c							\
 	verify_reports.c						\
+	enterprise_stubs.c						\
 	mod_common.c							\
 	mod_access.c							\
 	mod_exec.c							\

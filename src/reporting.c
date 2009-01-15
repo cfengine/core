@@ -347,6 +347,8 @@ else
    v = "not specified";
    }
 
+MapPromiseToTopic(pp,v);
+
 if (XML)
    {
    fprintf(FREPORT,"%s\n",CFH[cfx_line][cfb]);

@@ -73,20 +73,19 @@ dnl ######################################################################
 
 AC_CHECK_LIB(m,main)
 
-dnl AC_CHECK_LIB(cfengine,main)
+dnl Look for cf enterprise versions
+
+AC_CHECK_LIB(cfnova,main)
+AC_CHECK_LIB(cfcontellation,main)
+AC_CHECK_LIB(cfgalaxy,main)
 
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
 AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
 AC_CHECK_FUNC(getaddrinfo, , AC_CHECK_LIB(socket, getaddrinfo))
 
-dnl AC_CHECK_FUNC(yp_get_default_domain, , AC_CHECK_LIB(nsl, yp_get_default_domain))
-
 AC_SEARCH_LIBS(socket, socket, ,
     [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
-
-
-
 
 dnl
 dnl  Look for Berkeley DB.

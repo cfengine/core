@@ -165,6 +165,8 @@ if (XML)
    fprintf(FREPORT,"%s",CFH[0][1]);
    }
 
+ShowTopicRepresentation();
+
 CloseReports(agents);
 }
 
@@ -388,7 +390,14 @@ if ((FREPORT = fopen(name,"w")) == NULL)
    FatalError(vbuff);
    }
 
+snprintf(name,CF_BUFSIZE,"promise_knowledge.cf",agents);
 
+if ((FKNOW = fopen(name,"w")) == NULL)
+   {
+   char vbuff[CF_BUFSIZE];
+   snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
+   FatalError(vbuff);
+   }
 }
 
 /*******************************************************************/
@@ -407,7 +416,7 @@ else
    }
 
 fclose(FREPORT);
- 
+fclose(FKNOW); 
 
 Verbose("Wrote expansion report to %s\n",name);
 }

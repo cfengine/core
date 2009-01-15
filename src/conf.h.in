@@ -160,6 +160,15 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `cfcontellation' library (-lcfcontellation). */
+#undef HAVE_LIBCFCONTELLATION
+
+/* Define to 1 if you have the `cfgalaxy' library (-lcfgalaxy). */
+#undef HAVE_LIBCFGALAXY
+
+/* Define to 1 if you have the `cfnova' library (-lcfnova). */
+#undef HAVE_LIBCFNOVA
+
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #undef HAVE_LIBCRYPTO
 

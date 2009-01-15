@@ -48,6 +48,7 @@ short CFPARANOID = false;
 struct utsname VSYSNAME;
 
 FILE *FREPORT = NULL;
+FILE *FKNOW = NULL;
 short XML = false;
 struct FnCallStatus FNCALL_STATUS;
 
@@ -94,6 +95,8 @@ struct Rlist *CF_STCK = NULL;
 
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = -1;
+
+struct Topic *TOPIC_MAP = NULL;
 
 /*****************************************************************************/
 /* Constants                                                                 */

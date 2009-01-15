@@ -263,6 +263,11 @@ int IsSocketType(char *s);
 int IsTCPType(char *s);
 int IsProcessType(char *s);
 
+/* enterprise_stubs.c */
+
+void MapPromiseToTopic(struct Promise *pp,char *version);
+void ShowTopicRepresentation(void);
+
 /* env_context.c */
 
 int Abort(void);

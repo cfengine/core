@@ -588,14 +588,25 @@ free(pp);
 
 void PromiseRef(enum cfoutputlevel level,struct Promise *pp)
 
-{
-if (pp->audit)
+{ char *v,rettype;
+  void *retval;
+
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
-   CfOut(level,"","Promise belongs to bundle \'%s\' in file \'%s\' near line %d\n",pp->bundle,pp->audit->filename,pp->lineno);
+   v = (char *)retval;
    }
 else
    {
-   CfOut(level,"","Promise belongs to bundle \'%s\' near line %d\n",pp->bundle,pp->lineno);
+   v = "not specified";
+   }
+
+if (pp->audit)
+   {
+   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %d\n",v,pp->bundle,pp->audit->filename,pp->lineno);
+   }
+else
+   {
+   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' near line %d\n",v,pp->bundle,pp->lineno);
    }
 
 if (pp->ref)

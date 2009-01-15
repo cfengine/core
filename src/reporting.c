@@ -188,7 +188,6 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    }
 
 printf("</ul></div>\n\n");
-
 }
 
 /*******************************************************************/
@@ -328,7 +327,6 @@ for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    }
 }
 
-
 /*******************************************************************/
 
 void ShowPromise(struct Promise *pp, int indent)
@@ -337,6 +335,17 @@ void ShowPromise(struct Promise *pp, int indent)
   struct Body *bp;
   struct FnCall *fp;
   struct Rlist *rp;
+  char *v,rettype;
+  void *retval;
+
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   {
+   v = (char *)retval;
+   }
+else
+   {
+   v = "not specified";
+   }
 
 if (XML)
    {
@@ -440,7 +449,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
 if (XML)
    {
-   fprintf(FREPORT,"<p><small>Promise belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
    fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfe]);
    fprintf(FREPORT,"%s\n",CFH[cfx_line][cfe]);
    }
@@ -448,12 +457,12 @@ else
    {
    if (pp->audit)
       {
-      fprintf(FREPORT,"Promise belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+      fprintf(FREPORT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
       fprintf(FREPORT,"\n");
       }
    else
       {
-      fprintf(FREPORT,"Promise belongs to bundle \'%s\' (type %s) near line %d\n",pp->bundle,pp->bundletype,pp->lineno);
+      fprintf(FREPORT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n",v,pp->bundle,pp->bundletype,pp->lineno);
       }
    }
 }

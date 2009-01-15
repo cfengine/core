@@ -78,7 +78,7 @@ else
 
 if (SHOWREPORTS || ERRORCOUNT)
    {
-   Report(VINPUTFILE);
+   CompilationReport(VINPUTFILE);
    }
 
 XML = 0;
@@ -854,7 +854,7 @@ else
 /* Level 2                                                         */
 /*******************************************************************/
 
-void Report(char *fname)
+void CompilationReport(char *fname)
 
 { char filename[CF_BUFSIZE],output[CF_BUFSIZE];
 
@@ -870,7 +870,9 @@ if ((FREPORT = fopen(filename,"w")) == NULL)
    }
 
 printf("Summarizing promises as text to %s\n",filename);
+
 ShowPromises(BUNDLES,BODIES);
+
 fclose(FREPORT);
 
 if (DEBUG)

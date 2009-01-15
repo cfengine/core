@@ -565,7 +565,7 @@ int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);
 void Cf3ParseFile(char *filename);
 void Cf3ParseFiles(void);
-void Report(char *filename);
+void CompilationReport(char *filename);
 void HashVariables(void);
 void HashControls(void);
 void UnHashVariables(void);

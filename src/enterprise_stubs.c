@@ -42,8 +42,8 @@ should be free, please let us know and we will consider this carefully.
 
 void MapPromiseToTopic(struct Promise *pp,char *version)
 {
-#ifdef CFNOVA
- Nova_MapPromiseToTopic(pp,v); 
+#ifdef HAVE_LIBCFNOVA
+ Nova_MapPromiseToTopic(pp,version); 
 #else
  Verbose("MapPromiseToTopic is only available in commerical version Nova and above");
 #endif
@@ -53,7 +53,7 @@ void MapPromiseToTopic(struct Promise *pp,char *version)
 
 void ShowTopicRepresentation(void)
 {
-#ifdef CF_NOVA
+#ifdef HAVE_LIBCF_NOVA
  Nova_ShowTopicRepresentation();
 #else
  Verbose("ShowTopicRepresentation is only available in commerical version Nova and above");

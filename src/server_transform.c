@@ -369,7 +369,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    scope = bp->name;
    SetNewScope(bp->name);
 
-   if (strcmp(bp->type,CF_AGENTTYPES[cf_server]) == 0)
+   if ((strcmp(bp->type,CF_AGENTTYPES[cf_server]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
       {
       for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
          {

@@ -47,7 +47,7 @@ short CFPARANOID = false;
 
 struct utsname VSYSNAME;
 
-FILE *FOUT = NULL;
+FILE *FREPORT = NULL;
 short XML = false;
 struct FnCallStatus FNCALL_STATUS;
 

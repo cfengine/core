@@ -157,7 +157,7 @@ Debug("CheckConstraint(%s,%s,",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(FOUT,rval,rvaltype);
+   ShowRval(stdout,rval,rvaltype);
    }
 
 Debug(")\n");
@@ -257,7 +257,7 @@ Debug("CheckSelection(%s,%s,",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(FOUT,rval,rvaltype);
+   ShowRval(stdout,rval,rvaltype);
    }
 
 Debug(")\n");
@@ -590,7 +590,7 @@ if (FullTextMatch(range,s))
 
 if (IsCf3VarString(s))
    {
-   Verbose("Validation: Unable to verify syntax of %s due to variable expansion at this stage\n",s);
+   Debug("Validation: Unable to verify syntax of %s due to variable expansion at this stage\n",s);
    }
 else
    {

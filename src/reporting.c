@@ -108,30 +108,63 @@ void ShowContext(void)
 
 { struct Item *ptr;
 
-if (!VERBOSE && !DEBUG)
+if (!XML)
    {
-   return;
+   ReportBanner("Agent's basic classified context");
+
+   CfOut(cf_verbose,"","Defined Classes = ( ");
+   
+   for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
+      {
+      if (VERBOSE||DEBUG)
+         {
+         printf("%s ",ptr->name);
+         }
+      }
+   
+      if (VERBOSE||DEBUG)
+         {
+         printf(")\n");
+         }
+   
+   CfOut (cf_verbose,"","\nNegated Classes = ( ");
+   
+   for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
+      {
+      if (VERBOSE||DEBUG)
+         {
+         printf("%s ",ptr->name);
+         }
+      }
+
+   if (VERBOSE||DEBUG)
+      {      
+      printf (")\n");
+      }
    }
-
-ReportBanner("Agent's basic classified context");
-
-CfOut(cf_verbose,"","Defined Classes = ( ");
-
-for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
+else
    {
-   printf("%s ",ptr->name);
+   fprintf(FREPORT,"<h1>Agent's basic classified context</h1>\n");
+
+   fprintf(FREPORT,"<table><tr>");
+   fprintf(FREPORT,"<td>Defined Classes</td><td><ul>");
+   
+   for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
+      {
+      fprintf(FREPORT,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
+      }
+   
+   fprintf(FREPORT,"</ul></td></tr><tr>\n");
+   
+   fprintf(FREPORT,"<td>Negated Classes</td><td><ul>");
+   
+   for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
+      {
+      fprintf(FREPORT,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
+      }
+   
+   fprintf(FREPORT,"</ul></td></tr></table><p>\n");
    }
-
-printf(")\n");
-
-CfOut (cf_verbose,"","\nNegated Classes = ( ");
-
-for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
-   {
-   printf("%s ",ptr->name);
-   }
-
-printf (")\n");
 }
 
 /*******************************************************************/
@@ -174,71 +207,73 @@ if (!XML)
    }
 else
    {
-   fprintf(FOUT,"<h1>Promise Bundles</h1> ");
-   fprintf(FOUT,"%s\n",CFH[cfx_head][cfb]);
+   fprintf(FREPORT,"<p>");
+   fprintf(FREPORT,"<h1>Promise Bundles</h1> ");
+   fprintf(FREPORT,"%s\n",CFH[cfx_head][cfb]);
    }
   
 for (bp = bundles; bp != NULL; bp=bp->next)
    {
    if (XML)
       {
-      fprintf(FOUT,"%s\n",CFH[cfx_block][cfb]);
-      fprintf(FOUT,"%s\n",CFH[cfx_line][cfb]);
-      fprintf(FOUT,"%s Bundle %s%s%s %s%s%s %s\n",
+      fprintf(FREPORT,"<a name=\"Bundle_%s\"></a>\n%s\n",CanonifyName(bp->name),CFH[cfx_block][cfb]);
+      fprintf(FREPORT,"%s\n",CFH[cfx_line][cfb]);
+      fprintf(FREPORT,"%s Bundle %s%s%s %s%s%s %s\n",
              CFH[cfx_bundle][cfb],
              CFH[cfx_blocktype][cfb],bp->type,CFH[cfx_blocktype][cfe],
              CFH[cfx_blockid][cfb],bp->name,CFH[cfx_blockid][cfe],
              CFH[cfx_bundle][cfe]);
-      fprintf(FOUT,"%s\n",CFH[cfx_line][cfe]);
+      fprintf(FREPORT,"%s\n",CFH[cfx_line][cfe]);
       }
    else
       {
-      fprintf(FOUT,"Bundle %s in the context of %s\n\n",bp->name,bp->type);
+      fprintf(FREPORT,"Bundle %s in the context of %s\n\n",bp->name,bp->type);
       }
 
    if (XML)
       {
-      fprintf(FOUT," %s ARGS:%s %s\n\n",CFH[cfx_line][cfb],CFH[cfx_line][cfe],CFH[cfx_promise][cfb]);
+      fprintf(FREPORT," %s ARGS:%s %s\n\n",CFH[cfx_line][cfb],CFH[cfx_line][cfe],CFH[cfx_promise][cfb]);
       }
    else
       {
-      fprintf(FOUT,"   ARGS:\n\n");
+      fprintf(FREPORT,"   ARGS:\n\n");
       }
    
    for (rp = bp->args; rp != NULL; rp=rp->next)
       {
       if (XML)
          {
-         fprintf(FOUT,"%s",CFH[cfx_line][cfb]);
-         fprintf(FOUT,"   scalar arg %s%s%s\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
-         fprintf(FOUT,"%s",CFH[cfx_line][cfe]);
+         fprintf(FREPORT,"%s",CFH[cfx_line][cfb]);
+         fprintf(FREPORT,"   scalar arg %s%s%s\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
+         fprintf(FREPORT,"%s",CFH[cfx_line][cfe]);
          }
       else
          {
-         fprintf(FOUT,"   scalar arg %s\n\n",(char *)rp->item);
+         fprintf(FREPORT,"   scalar arg %s\n\n",(char *)rp->item);
          }
       }
 
    if (XML)
       {
-      fprintf(FOUT,"%s\n%s\n",CFH[cfx_promise][cfe],CFH[cfx_line][cfb]);
+      fprintf(FREPORT,"%s\n%s\n",CFH[cfx_promise][cfe],CFH[cfx_line][cfb]);
       }
    else
       {
-      fprintf(FOUT,"   {\n");
+      fprintf(FREPORT,"   {\n");
       }
 
    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
       {
       if (XML)
          {
-         fprintf(FOUT,"%s",CFH[cfx_line][cfb]);
-         fprintf(FOUT,"   TYPE: %s%s%s\n\n",CFH[cfx_subtype][cfb],sp->name,CFH[cfx_subtype][cfe]);
-         fprintf(FOUT,"%s",CFH[cfx_line][cfe]);
+         fprintf(FREPORT,"%s",CFH[cfx_line][cfb]);
+         fprintf(FREPORT,"<a name=\"Type_%s\"></a>\n",CanonifyName(sp->name));
+         fprintf(FREPORT,"   TYPE: %s%s%s\n\n",CFH[cfx_subtype][cfb],sp->name,CFH[cfx_subtype][cfe]);
+         fprintf(FREPORT,"%s",CFH[cfx_line][cfe]);
          }
       else
          {
-         fprintf(FOUT,"   TYPE: %s\n\n",sp->name);
+         fprintf(FREPORT,"   TYPE: %s\n\n",sp->name);
          }
       
       for (pp = sp->promiselist; pp != NULL; pp = pp->next)
@@ -249,13 +284,13 @@ for (bp = bundles; bp != NULL; bp=bp->next)
 
    if (XML)
       {
-      fprintf(FOUT,"%s \n ",CFH[cfx_block][cfe]);
-      fprintf(FOUT,"%s\n",CFH[cfx_head][cfe]);
+      fprintf(FREPORT,"%s \n ",CFH[cfx_block][cfe]);
+      fprintf(FREPORT,"%s\n",CFH[cfx_head][cfe]);
       }
    else
       {
-      fprintf(FOUT,"   }\n");   
-      fprintf(FOUT,"\n\n");
+      fprintf(FREPORT,"   }\n");   
+      fprintf(FREPORT,"\n\n");
       }
    }
 
@@ -263,31 +298,32 @@ for (bp = bundles; bp != NULL; bp=bp->next)
 
 if (XML)
    {
-   fprintf(FOUT,"<h1>All Bodies</h1>");
+   fprintf(FREPORT,"<h1>All Bodies</h1>");
    }
 else
    {
-   fprintf(FOUT,"\n\nAll Bodies\n\n");
+   fprintf(FREPORT,"\n\nAll Bodies\n\n");
    }
 
 for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    {
    if (XML)
       {
-      fprintf(FOUT,"%s\n",CFH[cfx_block][cfb]);
-      fprintf(FOUT,"%s\n",CFH[cfx_promise][cfb]);
+      fprintf(FREPORT,"%s\n",CFH[cfx_block][cfb]);
+      fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfb]);
       }
 
    ShowBody(bdp,3);
 
    if (!XML)
       {
-      fprintf(FOUT,"\n");
+      fprintf(FREPORT,"\n");
       }
    else
       {
-      fprintf(FOUT,"%s\n",CFH[cfx_promise][cfe]);
-      fprintf(FOUT,"%s \n ",CFH[cfx_block][cfe]);
+      fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfe]);
+      fprintf(FREPORT,"%s \n ",CFH[cfx_block][cfe]);
+      fprintf(FREPORT,"</p>");
       }
    }
 }
@@ -304,20 +340,22 @@ void ShowPromise(struct Promise *pp, int indent)
 
 if (XML)
    {
-   fprintf(FOUT,"%s\n",CFH[cfx_line][cfb]);
-   fprintf(FOUT,"%s\n",CFH[cfx_promise][cfb]);
-   fprintf(FOUT,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
-   fprintf(FOUT,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
-   
+   fprintf(FREPORT,"%s\n",CFH[cfx_line][cfb]);
+   fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfb]);
+   fprintf(FREPORT,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
+   fprintf(FREPORT,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+
+   fprintf(FREPORT,"<a name=\"Promise_%s\"></a>\n",CanonifyName(pp->promiser));
+
    if (pp->promisee)
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
-      ShowRval(FOUT,pp->promisee,pp->petype);
-      fprintf(FOUT,"%s\n\n",CFH[cfx_object][cfe]);
+      fprintf(FREPORT,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
+      ShowRval(FREPORT,pp->promisee,pp->petype);
+      fprintf(FREPORT,"%s\n\n",CFH[cfx_object][cfe]);
       }
    else
       {
-      fprintf(FOUT,"Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
+      fprintf(FREPORT,"Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
       }
    }
 else
@@ -325,13 +363,13 @@ else
    Indent(indent);
    if (pp->promisee != NULL)
       {
-      fprintf(FOUT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-      ShowRval(FOUT,pp->promisee,pp->petype);
-      fprintf(FOUT," if context is %s\n\n",pp->classes);
+      fprintf(FREPORT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
+      ShowRval(FREPORT,pp->promisee,pp->petype);
+      fprintf(FREPORT," if context is %s\n\n",pp->classes);
       }
    else
       {
-      fprintf(FOUT,"promise by \'%s\' (implicit) if context is %s\n\n",pp->promiser,pp->classes);
+      fprintf(FREPORT,"promise by \'%s\' (implicit) if context is %s\n\n",pp->promiser,pp->classes);
       }
    }
   
@@ -339,15 +377,15 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    if (XML)
       {
-      fprintf(FOUT,"%s%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
+      fprintf(FREPORT,"%s%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
       }
    else
       {
       Indent(indent+3);
-      fprintf(FOUT,"%10s => ",cp->lval);
+      fprintf(FREPORT,"%10s => ",cp->lval);
       }
 
-   fprintf(FOUT,"%s",CFH[cfx_rval][cfb]);
+   fprintf(FREPORT,"%s",CFH[cfx_rval][cfb]);
 
    switch (cp->type)
       {
@@ -358,14 +396,14 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(FOUT,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT,cp->rval,cp->type); /* literal */
              }
           break;
 
       case CF_LIST:
           
           rp = (struct Rlist *)cp->rval;
-          ShowRlist(FOUT,rp);
+          ShowRlist(FREPORT,rp);
           break;
 
       case CF_FNCALL:
@@ -377,45 +415,45 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(FOUT,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT,cp->rval,cp->type); /* literal */
              }
           break;
       }
 
-   fprintf(FOUT,"%s",CFH[cfx_rval][cfe]);
+   fprintf(FREPORT,"%s",CFH[cfx_rval][cfe]);
    
    if (XML)
       {
       if (cp->type != CF_FNCALL)
          {
-         fprintf(FOUT," , if body context %s\n",cp->classes);
+         fprintf(FREPORT," , if body context %s\n",cp->classes);
          }
       }
    else
       {
       if (cp->type != CF_FNCALL)
          {
-         fprintf(FOUT," if body context %s\n",cp->classes);
+         fprintf(FREPORT," if body context %s\n",cp->classes);
          }
       }
    }
 
 if (XML)
    {
-   fprintf(FOUT,"<p><small>Promise belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
-   fprintf(FOUT,"%s\n",CFH[cfx_promise][cfe]);
-   fprintf(FOUT,"%s\n",CFH[cfx_line][cfe]);
+   fprintf(FREPORT,"<p><small>Promise belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfe]);
+   fprintf(FREPORT,"%s\n",CFH[cfx_line][cfe]);
    }
 else
    {
    if (pp->audit)
       {
-      fprintf(FOUT,"Promise belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
-      fprintf(FOUT,"\n");
+      fprintf(FREPORT,"Promise belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+      fprintf(FREPORT,"\n");
       }
    else
       {
-      fprintf(FOUT,"Promise belongs to bundle \'%s\' (type %s) near line %d\n",pp->bundle,pp->bundletype,pp->lineno);
+      fprintf(FREPORT,"Promise belongs to bundle \'%s\' (type %s) near line %d\n",pp->bundle,pp->bundletype,pp->lineno);
       }
    }
 }
@@ -451,12 +489,22 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 
 /*******************************************************************/
 
+void Banner(char *s)
+
+{
+CfOut(cf_verbose,"","***********************************************************\n");
+CfOut(cf_verbose,""," %s \n",s);
+CfOut(cf_verbose,"","***********************************************************\n");
+}
+    
+/*******************************************************************/
+
 void ReportBanner(char *s)
 
 {
-fprintf(FOUT,"***********************************************************\n");
-fprintf(FOUT," %s \n",s);
-fprintf(FOUT,"***********************************************************\n");
+fprintf(FREPORT,"***********************************************************\n");
+fprintf(FREPORT," %s \n",s);
+fprintf(FREPORT,"***********************************************************\n");
 }
     
 /**************************************************************/
@@ -516,7 +564,7 @@ void Indent(int i)
 
 for (j = 0; j < i; j++)
    {
-   fputc(' ',FOUT);
+   fputc(' ',FREPORT);
    }
 }
 
@@ -530,11 +578,11 @@ void ShowBody(struct Body *body,int indent)
 
 if (!XML)
    {
-   fprintf(FOUT,"%s body for type %s",body->name,body->type);
+   fprintf(FREPORT,"%s body for type %s",body->name,body->type);
    }
 else
    {
-   fprintf(FOUT," %s%s%s %s%s%s",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe],
+   fprintf(FREPORT," %s%s%s %s%s%s",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe],
           CFH[cfx_blockid][cfb],body->name,CFH[cfx_blockid][cfe]);
    }
 
@@ -542,22 +590,22 @@ if (body->args == NULL)
    {
    if (XML)
       {
-      fprintf(FOUT,"%s(no parameters)%s\n",CFH[cfx_args][cfb],CFH[cfx_args][cfe]);
+      fprintf(FREPORT,"%s(no parameters)%s\n",CFH[cfx_args][cfb],CFH[cfx_args][cfe]);
       }
    else
       {
-      fprintf(FOUT,"(no parameters)\n");
+      fprintf(FREPORT,"(no parameters)\n");
       }
    }
 else
    {
    if (XML)
       {
-      fprintf(FOUT,"(");
+      fprintf(FREPORT,"(");
       }
    else
       {
-      fprintf(FOUT,"\n");
+      fprintf(FREPORT,"\n");
       }
    
    for (rp = body->args; rp != NULL; rp=rp->next)
@@ -569,22 +617,22 @@ else
 
       if (XML)
          {
-         fprintf(FOUT,"%s%s%s,\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
+         fprintf(FREPORT,"%s%s%s,\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
          }
       else
          {
          Indent(indent);
-         fprintf(FOUT,"arg %s\n",(char *)rp->item);
+         fprintf(FREPORT,"arg %s\n",(char *)rp->item);
          }
       }
 
    if (XML)
       {
-      fprintf(FOUT,")");
+      fprintf(FREPORT,")");
       }
    else
       {
-      fprintf(FOUT,"\n");
+      fprintf(FREPORT,"\n");
       }
    }
 
@@ -594,31 +642,31 @@ if (XML)
 else
    {   
    Indent(indent);
-   fprintf(FOUT,"{\n");
+   fprintf(FREPORT,"{\n");
    }
 
 for (cp = body->conlist; cp != NULL; cp=cp->next)
    {
    if (XML)
       {
-      fprintf(FOUT,"%s.....%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
+      fprintf(FREPORT,"%s.....%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
       }
    else{
       Indent(indent);
-      fprintf(FOUT,"%s => ",cp->lval);
+      fprintf(FREPORT,"%s => ",cp->lval);
       }
    
-   ShowRval(FOUT,cp->rval,cp->type); /* literal */
+   ShowRval(FREPORT,cp->rval,cp->type); /* literal */
 
    if (cp->classes != NULL)
       {
       if (XML)
          {
-         fprintf(FOUT," if subbody context %s%s%s\n",CFH[cfx_class][cfb],cp->classes,CFH[cfx_class][cfe]);
+         fprintf(FREPORT," if subbody context %s%s%s\n",CFH[cfx_class][cfb],cp->classes,CFH[cfx_class][cfe]);
          }
       else
          {
-         fprintf(FOUT," if subbody context %s\n",cp->classes);
+         fprintf(FREPORT," if subbody context %s\n",cp->classes);
          }
       }
    else
@@ -628,7 +676,7 @@ for (cp = body->conlist; cp != NULL; cp=cp->next)
          }
       else
          {
-         fprintf(FOUT,"\n");
+         fprintf(FREPORT,"\n");
          }
       }
    }
@@ -639,7 +687,7 @@ if (XML)
 else
    {
    Indent(indent);
-   fprintf(FOUT,"}\n");
+   fprintf(FREPORT,"}\n");
    }
 }
 

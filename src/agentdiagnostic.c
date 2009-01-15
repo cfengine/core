@@ -33,8 +33,6 @@
 void AgentDiagnostic()
 
 {
-FOUT = stdout;
-
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
 printf("----------------------------------------------------------\n\n");

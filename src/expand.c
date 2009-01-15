@@ -577,18 +577,7 @@ do
       {
       case cf_common:
 
-          if (XML)
-             {
-             fprintf(FOUT,"<p>");
-             }
-          
           ShowPromise(pexp,6);
-
-          if (XML)
-             {
-             fprintf(FOUT,"</p>");
-             }
-
           ReCheckAllConstraints(pexp);
           break;
           
@@ -606,9 +595,6 @@ do
       ConvergeVarHashPromise(pp->bundle,pexp,true);
       }
 
-//   XML=0;
-//   ShowScopedVariables(stdout);
-   
    DeletePromise(pexp);
 
    /* End thread monitor */

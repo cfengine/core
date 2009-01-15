@@ -48,7 +48,7 @@ extern int CF_STCKFRAME;
 
 extern int BOOTSTRAP;
 extern int XML;
-extern FILE *FOUT;
+extern FILE *FREPORT;
 extern struct FnCallStatus FNCALL_STATUS;
 
 extern struct SubTypeSyntax CF_NOSTYPE;

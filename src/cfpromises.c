@@ -78,8 +78,6 @@ int main (int argc,char *argv[]);
       NULL
       };
 
-
-
 /*******************************************************************/
 /* Level 0 : Main                                                  */
 /*******************************************************************/
@@ -91,14 +89,13 @@ CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();
 
-Verbose("Inputs are valid\n");
-
 if (ERRORCOUNT > 0)
    {
    exit(1);
    }
 else
    {
+   Verbose("Inputs are valid\n");
    exit(0);
    }
 }

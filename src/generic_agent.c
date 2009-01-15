@@ -81,7 +81,7 @@ if (SHOWREPORTS || ERRORCOUNT)
    Report(VINPUTFILE);
    }
 
-FOUT = stdout;
+XML = 0;
 }
 
 /*****************************************************************************/
@@ -133,59 +133,39 @@ else
 
 void ReadPromises(enum cfagenttype ag,char *agents)
 
-{ char name[CF_BUFSIZE];
-
+{
 if (ag == cf_keygen)
    {
    return;
    }
 
 Cf3ParseFiles();
-
-if (IsPrivileged())
-   {
-   snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
-   XML = 0;
-   }
-else
-   {
-   snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
-   XML = 1;
-   }
-
-if ((FOUT = fopen(name,"w")) == NULL)
-   {
-   char vbuff[CF_BUFSIZE];
-   snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
-   FatalError(vbuff);
-   }
-
+OpenReports(agents);
 HashVariables();
 HashControls();
 SetAuditVersion();
 
+ShowContext();
+
 if (XML)
    {
-   fprintf(FOUT,"%s",CFH[0][0]);
-   fprintf(FOUT,"<h1>Expanded promise list for %s component</h1>",agents);
+   fprintf(FREPORT,"%s",CFH[0][0]);
+   fprintf(FREPORT,"<h1>Expanded promise list for %s component</h1>",agents);
    }
 else
    {
-   fprintf(FOUT,"Expanded promise list for %s component\n\n",agents);
+   fprintf(FREPORT,"Expanded promise list for %s component\n\n",agents);
    }
 
-ShowContext();
 VerifyPromises(cf_common);
-ShowScopedVariables(FOUT);
+ShowScopedVariables(FREPORT);
 
 if (XML)
    {
-   fprintf(FOUT,"%s",CFH[0][1]);
+   fprintf(FREPORT,"%s",CFH[0][1]);
    }
 
-fclose(FOUT);
-
-Verbose("Wrote expansion summary to %s\n",name);
+CloseReports(agents);
 }
 
 /*****************************************************************************/
@@ -325,7 +305,6 @@ AUDITDBP = NULL;
 
 DetermineCfenginePort();
 
-FOUT = stdout;
 VIFELAPSED = 1;
 VEXPIREAFTER = 1;
 
@@ -383,6 +362,54 @@ if (VINPUTLIST != NULL)
 UnHashVariables();
 
 PARSING = false;
+}
+
+/*******************************************************************/
+
+void OpenReports(char *agents)
+
+{ char name[CF_BUFSIZE];
+
+if (IsPrivileged())
+   {
+   snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
+   XML = 0;
+   }
+else
+   {
+   snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+   XML = 1;
+   }
+
+if ((FREPORT = fopen(name,"w")) == NULL)
+   {
+   char vbuff[CF_BUFSIZE];
+   snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
+   FatalError(vbuff);
+   }
+
+
+}
+
+/*******************************************************************/
+
+void CloseReports(char *agents)
+
+{ char name[CF_BUFSIZE];
+ 
+if (IsPrivileged())
+   {
+   snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
+   }
+else
+   {
+   snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+   }
+
+fclose(FREPORT);
+ 
+
+Verbose("Wrote expansion report to %s\n",name);
 }
 
 /*******************************************************************/
@@ -833,10 +860,10 @@ void Report(char *fname)
 
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
 
-FOUT = stdout;
+FREPORT = stdout;
 XML = false;
 
-if ((FOUT = fopen(filename,"w")) == NULL)
+if ((FREPORT = fopen(filename,"w")) == NULL)
    {
    snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
    FatalError(output);
@@ -844,7 +871,7 @@ if ((FOUT = fopen(filename,"w")) == NULL)
 
 printf("Summarizing promises as text to %s\n",filename);
 ShowPromises(BUNDLES,BODIES);
-fclose(FOUT);
+fclose(FREPORT);
 
 if (DEBUG)
    {
@@ -855,7 +882,7 @@ XML = true;
 
 snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
 
-if ((FOUT = fopen(filename,"w")) == NULL)
+if ((FREPORT = fopen(filename,"w")) == NULL)
    {
    char output[CF_BUFSIZE];
    snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
@@ -864,7 +891,7 @@ if ((FOUT = fopen(filename,"w")) == NULL)
 
 printf("Summarizing promises as html to %s\n",filename);
 ShowPromises(BUNDLES,BODIES);
-fclose(FOUT);
+fclose(FREPORT);
 }
 
 /*******************************************************************/

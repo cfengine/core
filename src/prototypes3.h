@@ -584,6 +584,8 @@ void BannerBundle(struct Bundle *bp,struct Rlist *args);
 void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
 void PrependAuditFile(char *file);
 void WritePID(char *filename);
+void OpenReports(char *agents);
+void CloseReports(char *agents);
 
 /* granules.c  */
 
@@ -876,7 +878,7 @@ int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
 int SensibleFile(char *nodename,char *path,struct Attributes,struct Promise *pp);
 void CheckLinkSecurity(struct stat *sb,char *name);
 
-/* report.c */
+/* reporting.c */
 
 void ShowContext(void);
 void ShowPromises(struct Bundle *bundles,struct Body *bodies);
@@ -897,6 +899,7 @@ void DebugBanner(char *s);
 void ReportError(char *s);
 void BannerSubType(char *bundlename,char *type);
 void BannerSubSubType(char *bundlename,char *type);
+void Banner(char *s);
 
 /* rlist.c */
 

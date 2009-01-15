@@ -37,11 +37,11 @@ void SelfDiagnostic()
 {
 if (VERBOSE || DEBUG)
    {
-   FOUT = stdout;
+   FREPORT = stdout;
    }
 else
    {
-   FOUT = fopen("/dev/null","w");
+   FREPORT = fopen("/dev/null","w");
    }
        
 printf("----------------------------------------------------------\n");

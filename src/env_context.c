@@ -234,10 +234,7 @@ void LoadPersistentContext()
   struct CfState q;
   char filename[CF_BUFSIZE];
 
-if (VERBOSE || DEBUG)
-   {
-   ReportBanner("Loading persistent classes");
-   }
+Banner("Loading persistent classes");
   
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
   
@@ -299,10 +296,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 dbcp->c_close(dbcp);
 dbp->close(dbp,0);
 
-if (VERBOSE || DEBUG)
-   {
-   ReportBanner("Loaded persistent memory");
-   }
+Banner("Loaded persistent memory");
 }
 
 /*****************************************************************************/

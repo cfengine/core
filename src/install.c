@@ -122,7 +122,7 @@ Debug("Appending new bundle %s %s (",type,name);
 
 if (DEBUG)
    {
-   ShowRlist(FOUT,args);
+   ShowRlist(stdout,args);
    }
 Debug(")\n");
 

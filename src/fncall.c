@@ -142,7 +142,7 @@ void PrintFunctions()
     if (P.currentfncall[i] != NULL)
        {
        printf("(%d) =========================\n|",i);
-       ShowFnCall(FOUT,P.currentfncall[i]);
+       ShowFnCall(stdout,P.currentfncall[i]);
        printf("|\n==============================\n");
        }
     } 

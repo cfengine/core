@@ -246,9 +246,12 @@ void CopyScope(char *new, char *old)
 Debug("\n*\nCopying scope data %s to %s\n*\n",old,new);
 
 NewScope(new);
-op = GetScope(old);
-np = GetScope(new);
-CopyHashes(np->hashtable,op->hashtable);
+
+if (op = GetScope(old))
+   {
+   np = GetScope(new);
+   CopyHashes(np->hashtable,op->hashtable);
+   }
 }
 
 /*******************************************************************/

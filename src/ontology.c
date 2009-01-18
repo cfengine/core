@@ -110,7 +110,7 @@ tp->next = *list;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *topic_type,struct Rlist *associates,int verify)
+void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *associates,int verify)
 
 { struct TopicAssociation *ta = NULL,*texist;
   char assoc_type[CF_MAXVARSIZE];
@@ -183,7 +183,7 @@ if (!(op = OccurrenceExists(*list,reference,rtype)))
    {
    if ((op = (struct Occurrence *)malloc(sizeof(struct Occurrence))) == NULL)
       {
-      CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
+      CfOut(cf_error,"malloc","Memory failure in AddOccurrence");
       FatalError("");
       }
 
@@ -291,7 +291,7 @@ char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name)
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
   int match = false;
  
-DeTypeTopic(topic_name,type,topic);
+  DeTypeTopic(topic_name,topic,type);
   
 for (tp = list; tp != NULL; tp=tp->next)
    {
@@ -502,12 +502,39 @@ return NULL;
 struct Topic *GetTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
+  char type[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
+
+strncpy(type,topic_name,CF_MAXVARSIZE-1);
+name[0] = '\0';
+
+if (sp = strstr(type,"::"))
+   {
+   *sp = '\0';
+   sp += strlen("::");
+   strncpy(name,sp,CF_MAXVARSIZE-1);
+   Verbose("%s is a typed-topic, type=%s, topic=%s\n",topic_name,type,name);
+   }
+else
+   {
+   sp = topic_name;
+   Verbose("%s is a typelss topic\n",topic_name);
+   }
 
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strcmp(topic_name,tp->topic_name) == 0)
+   if (strlen(name) == 0)
       {
-      return tp;          
+      if (strcmp(topic_name,tp->topic_name) == 0)
+         {
+         return tp;          
+         }
+      }
+   else
+      {
+      if ((strcmp(name,tp->topic_name)) == 0 && (strcmp(type,tp->topic_type) == 0))
+         {
+         return tp;          
+         }
       }
    }
 
@@ -524,7 +551,7 @@ struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 strncpy(type,topic_name,CF_MAXVARSIZE-1);
 name[0] = '\0';
 
-if (sp = strchr(type,'.'))
+if (sp = strchr(type,':'))
    {
    *sp = '\0';
    sp += strlen("::");
@@ -536,7 +563,6 @@ else
    sp = topic_name;
    Verbose("%s is a typelss topic\n",topic_name);
    }
-
   
 for (tp = list; tp != NULL; tp=tp->next)
    {

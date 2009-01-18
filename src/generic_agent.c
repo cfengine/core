@@ -165,8 +165,6 @@ if (XML)
    fprintf(FREPORT,"%s",CFH[0][1]);
    }
 
-ShowTopicRepresentation();
-
 CloseReports(agents);
 }
 
@@ -390,7 +388,14 @@ if ((FREPORT = fopen(name,"w")) == NULL)
    FatalError(vbuff);
    }
 
-snprintf(name,CF_BUFSIZE,"promise_knowledge.cf",agents);
+if (strcmp(agents,"common") == 0)
+   {
+   snprintf(name,CF_BUFSIZE,"promise_knowledge.cf");
+   }
+else
+   {
+   snprintf(name,CF_BUFSIZE,"/dev/null");
+   }
 
 if ((FKNOW = fopen(name,"w")) == NULL)
    {
@@ -398,6 +403,10 @@ if ((FKNOW = fopen(name,"w")) == NULL)
    snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
    FatalError(vbuff);
    }
+
+fprintf(FKNOW,"bundle knowledge CfengineSiteConfiguration\n{\n");
+
+ShowTopicRepresentation(FKNOW);
 }
 
 /*******************************************************************/
@@ -415,8 +424,9 @@ else
    snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
    }
 
-fclose(FREPORT);
+fprintf(FKNOW,"}\n");
 fclose(FKNOW); 
+fclose(FREPORT);
 
 Verbose("Wrote expansion report to %s\n",name);
 }

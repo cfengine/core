@@ -418,16 +418,16 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    }
  
  
- if (bracks != 0)
-    {
-    char output[CF_BUFSIZE];
-    snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
-    yyerror(output);
-    return false;
-    }
- 
- Debug("Found %d variables in (%s)\n",vars,str); 
- return vars;
+if (dollar && (bracks != 0))
+   {
+   char output[CF_BUFSIZE];
+   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
+   yyerror(output);
+   return false;
+   }
+
+Debug("Found %d variables in (%s)\n",vars,str); 
+return vars;
 }
 
 /*******************************************************************/
@@ -469,6 +469,11 @@ Debug("ExtractInnerVarString( %s ) - syntax verify\n",str);
 
 memset(substr,0,CF_BUFSIZE);
 
+if (*(str+1) != '(' && *(str+1) != '{')
+   {
+   return NULL;
+   }
+
 /* Start this from after the opening $( */
 
 for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
@@ -508,7 +513,7 @@ if (bracks != 0)
    char output[CF_BUFSIZE];
    snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch - inner (%s/%s)",str,substr);
    yyerror(output);
-   return false;
+   return NULL;
    }
 
 return sp-1;

@@ -328,17 +328,9 @@ return false;
 int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
 
 { struct Item *ip,*ip_prev = CF_UNDEFINED_ITEM;
-  struct CfRegEx rex;
 
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;
-
-rex = CompileRegExp(regexp);
-
-if (rex.failed)
-   {
-   return false;
-   }
 
 for (ip = begin; ip != end; ip=ip->next)
    {
@@ -347,7 +339,7 @@ for (ip = begin; ip != end; ip=ip->next)
       continue;
       }
 
-   if (RegExMatchFullString(rex,ip->name))
+   if (FullTextMatch(regexp,ip->name))
       {
       *match = ip;
       *prev = ip_prev;
@@ -365,17 +357,9 @@ return false;
 int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
 
 { struct Item *ip,*ip_last = NULL,*ip_prev = CF_UNDEFINED_ITEM;;
-  struct CfRegEx rex;
  
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;
-
-rex = CompileRegExp(regexp);
-
-if (rex.failed)
-   {
-   return false;
-   }
 
 for (ip = begin; ip != end; ip=ip->next)
    {
@@ -383,8 +367,8 @@ for (ip = begin; ip != end; ip=ip->next)
       {
       continue;
       }
-
-   if (RegExMatchFullString(rex,ip->name))
+   
+   if (FullTextMatch(regexp,ip->name))
       {
       *prev = ip_prev;
       ip_last = ip;
@@ -393,7 +377,12 @@ for (ip = begin; ip != end; ip=ip->next)
    ip_prev = ip;
    }
 
-*match = ip_last;
+if (ip_last)
+   {
+   *match = ip_last;
+   return true;
+   }
+
 return false;
 }
 

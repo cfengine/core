@@ -1113,6 +1113,8 @@ CfCloseDB(&cfdb);
 void KeepKnowledgePromise(struct Promise *pp)
 
 {
+Verbose("Knowledge:: look at promise by \"%s\"...\n",pp->promiser);
+ 
 if (pp->done)
    {
    return;
@@ -1120,16 +1122,7 @@ if (pp->done)
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
-   if (!IsDefinedClass(pp->classes))
-      {
-      Verbose("\n");
-      Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-      Verbose("Skipping whole next promise, as context %s is not valid\n",pp->classes);
-      Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-      return;
-      }
-
-   KeepClassContextPromise(pp);
+   Verbose("Class promises do not have any effect here.\n");
    return;
    }
 
@@ -1170,6 +1163,8 @@ a = GetTopicsAttributes(pp);
  
 strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
+Verbose("Attempting to install topic %s::%s\n",pp->classes,pp->promiser);
+
 if (pp->ref != NULL)
    {
    AddCommentedTopic(&TOPIC_MAP,pp->promiser,pp->ref,pp->classes);
@@ -1179,11 +1174,18 @@ else
    AddTopic(&TOPIC_MAP,pp->promiser,pp->classes);
    }
 
-tp = GetTopic(TOPIC_MAP,pp->promiser);
-
-if (a.fwd_name)
+if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    {
-   AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,tp->topic_type,a.associates,true);
+   Verbose(" -> Topic \"%s\" installed\n",pp->promiser);
+   
+   if (a.fwd_name)
+      {
+      AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+      }
+   }
+else
+   {
+   Verbose(" -> Topic \"%s\" did not install\n",pp->promiser);
    }
 }
 
@@ -1429,16 +1431,10 @@ CfVoidQueryDB(&cfdb,query);
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   if (tp->comment)
-      {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
-      }
-   else
-      {
-      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
-      }
+   snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
+   strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
 
-   snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",longname,Name2Id(tp->topic_name),tp->topic_type);
+   snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type);
    fprintf(fout,query);
    CfVoidQueryDB(&cfdb,query);
    }
@@ -1447,15 +1443,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   if (tp->comment)
-      {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
-      }
-   else
-      {
-      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
-      }
-
+   snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
    strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
 
    for (ta = tp->associations; ta != NULL; ta=ta->next)
@@ -1473,16 +1461,8 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   if (tp->comment)
-      {
-      snprintf(longname,CF_BUFSIZE,"%s",tp->comment);
-      }
-   else
-      {
-      snprintf(longname,CF_BUFSIZE,"%s",tp->topic_name);
-      }
-
-   strcpy(safe,EscapeSQL(&cfdb,longname));
+   snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
+   strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
 
    for (op = tp->occurrences; op != NULL; op=op->next)
       {
@@ -1490,7 +1470,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          {
          char safeexpr[CF_BUFSIZE];
          strcpy(safeexpr,EscapeSQL(&cfdb,op->locator));
-         
+
          snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",CanonifyName(tp->topic_name),safeexpr,op->rep_type,GetLongTopicName(&cfdb,TOPIC_MAP,rp->item));
          fprintf(fout,query);
          CfVoidQueryDB(&cfdb,query);
@@ -1681,7 +1661,7 @@ while(CfFetchRow(cfdb))
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
    AppendRlist(&this,TypedTopic(topic_name,topic_type),CF_SCALAR);
-   AddTopicAssociation(&associations,bassociation,NULL,NULL,this,false);
+   AddTopicAssociation(&associations,bassociation,NULL,this,false);
    DeleteRlist(this);
    }
 
@@ -1708,7 +1688,7 @@ while(CfFetchRow(cfdb))
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
 
    AppendRlist(&this,associate,CF_SCALAR);
-   AddTopicAssociation(&associations,fassociation,NULL,NULL,this,false);
+   AddTopicAssociation(&associations,fassociation,NULL,this,false);
    DeleteRlist(this);
    }
 
@@ -2179,7 +2159,7 @@ if (stat(filename,&sb) != -1)
 
 fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" has type ",NextTopic(this_name,this_type));
-fprintf(fout,"\"%s\"\n</div> in version %s",NextTopic(this_type,""),v);
+fprintf(fout,"\"%s\" in map version %s</div>\n",NextTopic(this_type,""),v);
 
 if (occurrences != NULL)
    {
@@ -2340,7 +2320,7 @@ CfHtmlFooter(stdout,FOOTER);
 char *NextTopic(char *topic,char *type)
 
 { static char url[CF_BUFSIZE];
- char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
+  char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
 
 if (strlen(WEBDRIVER) == 0)
    {

@@ -335,7 +335,7 @@ void ShowPromise(struct Promise *pp, int indent)
   struct Body *bp;
   struct FnCall *fp;
   struct Rlist *rp;
-  char *v,rettype;
+  char *v,rettype,vbuff[CF_BUFSIZE];
   void *retval;
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
@@ -347,7 +347,7 @@ else
    v = "not specified";
    }
 
-MapPromiseToTopic(pp,v);
+MapPromiseToTopic(FKNOW,pp,v);
 
 if (XML)
    {
@@ -356,7 +356,8 @@ if (XML)
    fprintf(FREPORT,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
    fprintf(FREPORT,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
 
-   fprintf(FREPORT,"<a name=\"Promise_%s\"></a>\n",CanonifyName(pp->promiser));
+   snprintf(vbuff,CF_BUFSIZE,"%s_%s",pp->promiser,pp->audit->filename);
+   fprintf(FREPORT,"<a name=\"Promise_%s_%d\"></a>\n",CanonifyName(vbuff),pp->lineno);
 
    if (pp->promisee)
       {
@@ -380,7 +381,7 @@ else
       }
    else
       {
-      fprintf(FREPORT,"promise by \'%s\' (implicit) if context is %s\n\n",pp->promiser,pp->classes);
+      fprintf(FREPORT,"%s promise by \'%s\' (implicit) if context is %s\n\n",pp->agentsubtype,pp->promiser,pp->classes);
       }
    }
   

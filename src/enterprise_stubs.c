@@ -40,24 +40,63 @@ should be free, please let us know and we will consider this carefully.
 
 /*****************************************************************************/
 
-void MapPromiseToTopic(struct Promise *pp,char *version)
+void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version)
+
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_MapPromiseToTopic(pp,version); 
+ Nova_MapPromiseToTopic(fp,pp,version); 
 #else
- Verbose("MapPromiseToTopic is only available in commerical version Nova and above");
+ Verbose("# This feature is only available in commerical version Nova and above");
 #endif
 }
 
 /*****************************************************************************/
 
-void ShowTopicRepresentation(void)
-{
-#ifdef HAVE_LIBCF_NOVA
- Nova_ShowTopicRepresentation();
+void ShowTopicRepresentation(FILE *fp)
+
+{ int i,j,k,l,m;
+  struct SubTypeSyntax *ss;
+  struct BodySyntax *bs;
+
+#ifdef HAVE_LIBCFNOVA
+ Nova_ShowTopicRepresentation(fp);
 #else
- Verbose("ShowTopicRepresentation is only available in commerical version Nova and above");
+ Verbose("# This feature is only available in commerical version Nova and above\n");
 #endif
+
+for  (i = 0; i < CF3_MODULES; i++)
+   {
+   if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+      {
+      continue;
+      }
+   
+   for (j = 0; ss[j].btype != NULL; j++)
+      {
+      if (ss[j].bs != NULL) /* In a bundle */
+         {
+         bs = ss[j].bs;
+         
+         for (l = 0; bs[l].lval != NULL; l++)
+            {
+            fprintf(fp,"   \"%s\";\n",bs[l].lval);
+            }
+         }
+      }
+
+   }
+
+for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+   {
+   fprintf(fp,"   \"%s\";\n",CF_COMMON_BODIES[i].lval);
+   }
+
+
+for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
+   {
+   fprintf(fp,"   \"%s\";\n",CF_COMMON_EDITBODIES[i].lval);
+   }
+
 }
 
 

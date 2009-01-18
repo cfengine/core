@@ -933,7 +933,7 @@ if (rval != NULL)
          return;
          }
 
-      *(pp->donep) = true; 
+      /* *(pp->donep) = true; prevents proper variable expansion e.g randomint() */
       }
 
    if (Epimenides(pp->promiser,rval,cp->type,0))
@@ -949,7 +949,7 @@ if (rval != NULL)
          DeleteVariable(scope,pp->promiser);
          }
       }
-   
+
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
       Verbose("Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);

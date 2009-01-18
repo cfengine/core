@@ -265,8 +265,8 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
-void MapPromiseToTopic(struct Promise *pp,char *version);
-void ShowTopicRepresentation(void);
+void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
+void ShowTopicRepresentation(FILE *fp);
 
 /* env_context.c */
 
@@ -786,7 +786,7 @@ void MountAll(void);
 
 void AddTopic(struct Topic **list,char *name,char *type);
 void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type);
-void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,char *ttype,struct Rlist *associates,int verify);
+void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int verify);
 void AddOccurrence(struct Occurrence **list,char *topic_name,char *reference,struct Rlist *represents,enum representations rtype);
 int TopicExists(struct Topic *list,char *topic_name,char *topic_type);
 char *GetTopicType(struct Topic *list,char *topic_name);

@@ -231,7 +231,15 @@ if (bundle == NULL)
    yyerror("Software error. Attempt to add a type without a bundle\n");
    FatalError("Stopped");
    }
- 
+
+for (lp = bundle->subtypes; lp != NULL; lp=lp->next)
+   {
+   if (strcmp(lp->name,typename) == 0)
+      {
+      return lp;
+      }
+   }
+
 if ((tp = (struct SubType *)malloc(sizeof(struct SubType))) == NULL)
    {
    CfOut(cf_error,"malloc","Unable to allocate SubType");

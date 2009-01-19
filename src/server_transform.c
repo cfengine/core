@@ -388,10 +388,20 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 void KeepServerPromise(struct Promise *pp)
 
-{
+{ char *sp = NULL;
+ 
 if (!IsDefinedClass(pp->classes))
    {
    Verbose("Skipping whole promise, as context is %s\n",pp->classes);
+   return;
+   }
+
+if (VarClassExcluded(pp,&sp))
+   {
+   Verbose("\n");
+   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   Verbose("Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
+   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 
@@ -412,9 +422,6 @@ if (strcmp(pp->agentsubtype,"roles") == 0)
    KeepServerRolePromise(pp);
    return;
    }
-
-CfOut(cf_error,"","Promise type \"%s\" is not known by this agent",pp->agentsubtype);
-PromiseRef(cf_error,pp);
 }
 
 /*********************************************************************/

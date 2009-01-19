@@ -266,7 +266,9 @@ int IsProcessType(char *s);
 /* enterprise_stubs.c */
 
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
+void Nova_MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void ShowTopicRepresentation(FILE *fp);
+void Nova_ShowTopicRepresentation(FILE *fp);
 
 /* env_context.c */
 
@@ -617,7 +619,7 @@ void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
 void BlankHashes(char *scope);
 int GetHash(char *name);
-void PrintHashes(FILE *sp,struct CfAssoc **table);
+void PrintHashes(FILE *sp,struct CfAssoc **table,int html);
 int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);
 void DeleteHashes(struct CfAssoc **hashtable);
 void EditHashValue(char *scopeid,char *lval,void *rval);
@@ -888,7 +890,7 @@ void CheckLinkSecurity(struct stat *sb,char *name);
 void ShowContext(void);
 void ShowPromises(struct Bundle *bundles,struct Body *bodies);
 void ShowPromise(struct Promise *pp, int indent);
-void ShowScopedVariables(FILE *fout);
+void ShowScopedVariables(void);
 void Indent(int i);
 void ReportBanner(char *s);
 void SyntaxTree(void);

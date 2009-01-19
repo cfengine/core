@@ -141,6 +141,33 @@ enum cfdatatype
    cf_notype
    };
 
+enum cfx_formatindex
+   {
+   cfb,
+   cfe,
+   };
+
+enum cfx_format
+   {
+   cfx_head,
+   cfx_bundle,
+   cfx_block,
+   cfx_blockheader,
+   cfx_blockid,
+   cfx_blocktype,
+   cfx_args,
+   cfx_promise,
+   cfx_class,
+   cfx_subtype,
+   cfx_object,
+   cfx_lval,
+   cfx_rval,
+   cfx_qstring,
+   cfx_rlist,
+   cfx_function,
+   cfx_line,
+   };
+
 /*************************************************************************/
 
 #define CF_COMMONC  "common"

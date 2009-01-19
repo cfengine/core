@@ -50,7 +50,8 @@ extern int CF_STCKFRAME;
 
 extern int BOOTSTRAP;
 extern int XML;
-extern FILE *FREPORT;
+extern FILE *FREPORT_HTML;
+extern FILE *FREPORT_TXT;
 extern FILE *FKNOW;
 extern struct FnCallStatus FNCALL_STATUS;
 

@@ -28,33 +28,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-enum cfx_formatindex
-   {
-   cfb,
-   cfe,
-   };
-
-enum cfx_format
-   {
-   cfx_head,
-   cfx_bundle,
-   cfx_block,
-   cfx_blockheader,
-   cfx_blockid,
-   cfx_blocktype,
-   cfx_args,
-   cfx_promise,
-   cfx_class,
-   cfx_subtype,
-   cfx_object,
-   cfx_lval,
-   cfx_rval,
-   cfx_qstring,
-   cfx_rlist,
-   cfx_function,
-   cfx_line,
-   };
-
 
 char *CFX[][2] =
    {
@@ -108,63 +81,53 @@ void ShowContext(void)
 
 { struct Item *ptr;
 
-if (!XML)
-   {
-   ReportBanner("Agent's basic classified context");
+ /* Text output */
 
+if (VERBOSE||DEBUG)
+   {      
+   ReportBanner("Agent's basic classified context");
+   
    CfOut(cf_verbose,"","Defined Classes = ( ");
    
    for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
       {
-      if (VERBOSE||DEBUG)
-         {
-         printf("%s ",ptr->name);
-         }
+      printf("%s ",ptr->name);
       }
    
-      if (VERBOSE||DEBUG)
-         {
-         printf(")\n");
-         }
+   printf(")\n");
    
    CfOut (cf_verbose,"","\nNegated Classes = ( ");
    
    for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
       {
-      if (VERBOSE||DEBUG)
-         {
-         printf("%s ",ptr->name);
-         }
+      printf("%s ",ptr->name);
       }
-
-   if (VERBOSE||DEBUG)
-      {      
-      printf (")\n");
-      }
+   
+   printf (")\n");
    }
-else
+
+/* HTML output */
+
+fprintf(FREPORT_HTML,"<h1>Agent's basic classified context</h1>\n");
+
+fprintf(FREPORT_HTML,"<table><tr>");
+fprintf(FREPORT_HTML,"<td>Defined Classes</td><td><ul>");
+
+for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
    {
-   fprintf(FREPORT,"<h1>Agent's basic classified context</h1>\n");
-
-   fprintf(FREPORT,"<table><tr>");
-   fprintf(FREPORT,"<td>Defined Classes</td><td><ul>");
-   
-   for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
-      {
-      fprintf(FREPORT,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
-      }
-   
-   fprintf(FREPORT,"</ul></td></tr><tr>\n");
-   
-   fprintf(FREPORT,"<td>Negated Classes</td><td><ul>");
-   
-   for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
-      {
-      fprintf(FREPORT,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
-      }
-   
-   fprintf(FREPORT,"</ul></td></tr></table><p>\n");
+   fprintf(FREPORT_HTML,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
    }
+
+fprintf(FREPORT_HTML,"</ul></td></tr><tr>\n");
+
+fprintf(FREPORT_HTML,"<td>Negated Classes</td><td><ul>");
+
+for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
+   {
+   fprintf(FREPORT_HTML,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
+   }
+
+fprintf(FREPORT_HTML,"</ul></td></tr></table><p>\n");
 }
 
 /*******************************************************************/
@@ -200,131 +163,80 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
   struct Promise *pp;
   struct Body *bdp;
 
-if (!XML)
-   {
-   ReportBanner("Promises");
-   }
-else
-   {
-   fprintf(FREPORT,"<p>");
-   fprintf(FREPORT,"<h1>Promise Bundles</h1> ");
-   fprintf(FREPORT,"%s\n",CFH[cfx_head][cfb]);
-   }
+ReportBanner("Promises");
+
+fprintf(FREPORT_HTML,"<p>");
+fprintf(FREPORT_HTML,"<h1>Promise Bundles</h1> ");
+fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfb]);
   
 for (bp = bundles; bp != NULL; bp=bp->next)
    {
-   if (XML)
-      {
-      fprintf(FREPORT,"<a name=\"Bundle_%s\"></a>\n%s\n",CanonifyName(bp->name),CFH[cfx_block][cfb]);
-      fprintf(FREPORT,"%s\n",CFH[cfx_line][cfb]);
-      fprintf(FREPORT,"%s Bundle %s%s%s %s%s%s %s\n",
-             CFH[cfx_bundle][cfb],
-             CFH[cfx_blocktype][cfb],bp->type,CFH[cfx_blocktype][cfe],
-             CFH[cfx_blockid][cfb],bp->name,CFH[cfx_blockid][cfe],
-             CFH[cfx_bundle][cfe]);
-      fprintf(FREPORT,"%s\n",CFH[cfx_line][cfe]);
-      }
-   else
-      {
-      fprintf(FREPORT,"Bundle %s in the context of %s\n\n",bp->name,bp->type);
-      }
+   fprintf(FREPORT_HTML,"<p><a name=\"bundle_%s\"></a>\n%s\n",bp->name,CFH[cfx_block][cfb]);
 
-   if (XML)
-      {
-      fprintf(FREPORT," %s ARGS:%s %s\n\n",CFH[cfx_line][cfb],CFH[cfx_line][cfe],CFH[cfx_promise][cfb]);
-      }
-   else
-      {
-      fprintf(FREPORT,"   ARGS:\n\n");
-      }
+   fprintf(FREPORT_HTML,"%s Bundle %s%s%s %s%s%s %s\n",
+           CFH[cfx_bundle][cfb],
+           CFH[cfx_blocktype][cfb],bp->type,CFH[cfx_blocktype][cfe],
+           CFH[cfx_blockid][cfb],bp->name,CFH[cfx_blockid][cfe],
+           CFH[cfx_bundle][cfe]);
    
+   fprintf(FREPORT_HTML," %s ARGS:%s\n\n",CFH[cfx_line][cfb],CFH[cfx_line][cfe]);
+
+   fprintf(FREPORT_TXT,"Bundle %s in the context of %s\n\n",bp->name,bp->type);
+   fprintf(FREPORT_TXT,"   ARGS:\n\n");
+
+   fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
+
    for (rp = bp->args; rp != NULL; rp=rp->next)
-      {
-      if (XML)
-         {
-         fprintf(FREPORT,"%s",CFH[cfx_line][cfb]);
-         fprintf(FREPORT,"   scalar arg %s%s%s\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
-         fprintf(FREPORT,"%s",CFH[cfx_line][cfe]);
-         }
-      else
-         {
-         fprintf(FREPORT,"   scalar arg %s\n\n",(char *)rp->item);
-         }
+      {   
+      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
+      fprintf(FREPORT_HTML,"   scalar arg %s%s%s\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
+      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
+      fprintf(FREPORT_TXT,"   scalar arg %s\n\n",(char *)rp->item);
       }
-
-   if (XML)
-      {
-      fprintf(FREPORT,"%s\n%s\n",CFH[cfx_promise][cfe],CFH[cfx_line][cfb]);
-      }
-   else
-      {
-      fprintf(FREPORT,"   {\n");
-      }
-
+  
+   fprintf(FREPORT_TXT,"   {\n");   
+   
    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
       {
-      if (XML)
-         {
-         fprintf(FREPORT,"%s",CFH[cfx_line][cfb]);
-         fprintf(FREPORT,"<a name=\"Type_%s\"></a>\n",CanonifyName(sp->name));
-         fprintf(FREPORT,"   TYPE: %s%s%s\n\n",CFH[cfx_subtype][cfb],sp->name,CFH[cfx_subtype][cfe]);
-         fprintf(FREPORT,"%s",CFH[cfx_line][cfe]);
-         }
-      else
-         {
-         fprintf(FREPORT,"   TYPE: %s\n\n",sp->name);
-         }
+      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
+      fprintf(FREPORT_HTML,"<a name=\"type_%s\"></a>\n",CanonifyName(sp->name));
+      fprintf(FREPORT_HTML,"   TYPE: %s%s%s\n\n",CFH[cfx_subtype][cfb],sp->name,CFH[cfx_subtype][cfe]);
+      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
+      fprintf(FREPORT_TXT,"   TYPE: %s\n\n",sp->name);
       
       for (pp = sp->promiselist; pp != NULL; pp = pp->next)
          {
          ShowPromise(pp,6);
          }
       }
-
-   if (XML)
-      {
-      fprintf(FREPORT,"%s \n ",CFH[cfx_block][cfe]);
-      fprintf(FREPORT,"%s\n",CFH[cfx_head][cfe]);
-      }
-   else
-      {
-      fprintf(FREPORT,"   }\n");   
-      fprintf(FREPORT,"\n\n");
-      }
+   
+   fprintf(FREPORT_TXT,"   }\n");   
+   fprintf(FREPORT_TXT,"\n\n");
+   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
+   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
    }
+
+fprintf(FREPORT_HTML,"%s \n ",CFH[cfx_block][cfe]);
 
 /* Now summarize the remaining bodies */
 
-if (XML)
-   {
-   fprintf(FREPORT,"<h1>All Bodies</h1>");
-   }
-else
-   {
-   fprintf(FREPORT,"\n\nAll Bodies\n\n");
-   }
+fprintf(FREPORT_HTML,"<h1>All Bodies</h1>");
+fprintf(FREPORT_TXT,"\n\nAll Bodies\n\n");
 
 for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    {
-   if (XML)
-      {
-      fprintf(FREPORT,"%s\n",CFH[cfx_block][cfb]);
-      fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfb]);
-      }
+   fprintf(FREPORT_HTML,"%s%s\n",CFH[cfx_line][cfb],CFH[cfx_block][cfb]);
+   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 
    ShowBody(bdp,3);
 
-   if (!XML)
-      {
-      fprintf(FREPORT,"\n");
-      }
-   else
-      {
-      fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfe]);
-      fprintf(FREPORT,"%s \n ",CFH[cfx_block][cfe]);
-      fprintf(FREPORT,"</p>");
-      }
+   fprintf(FREPORT_TXT,"\n");
+   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
+   fprintf(FREPORT_HTML,"%s%s \n ",CFH[cfx_block][cfe],CFH[cfx_line][cfe]);
+   fprintf(FREPORT_HTML,"</p>");
    }
+
+fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfe]);
 }
 
 /*******************************************************************/
@@ -349,55 +261,46 @@ else
 
 MapPromiseToTopic(FKNOW,pp,v);
 
-if (XML)
+fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
+fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
+fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
+fprintf(FREPORT_HTML,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+
+if (pp->audit)
    {
-   fprintf(FREPORT,"%s\n",CFH[cfx_line][cfb]);
-   fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfb]);
-   fprintf(FREPORT,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
-   fprintf(FREPORT,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+   snprintf(vbuff,CF_BUFSIZE,"%s_%s",pp->promiser,ReadLastNode(pp->audit->filename));
+   fprintf(FREPORT_HTML,"<a name=\"promise_%s_%d\"></a>\n",CanonifyName(vbuff),pp->lineno);
+   }
 
-   snprintf(vbuff,CF_BUFSIZE,"%s_%s",pp->promiser,pp->audit->filename);
-   fprintf(FREPORT,"<a name=\"Promise_%s_%d\"></a>\n",CanonifyName(vbuff),pp->lineno);
-
-   if (pp->promisee)
-      {
-      fprintf(FREPORT,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
-      ShowRval(FREPORT,pp->promisee,pp->petype);
-      fprintf(FREPORT,"%s\n\n",CFH[cfx_object][cfe]);
-      }
-   else
-      {
-      fprintf(FREPORT,"Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
-      }
+if (pp->promisee)
+   {
+   fprintf(FREPORT_HTML,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
+   ShowRval(FREPORT_HTML,pp->promisee,pp->petype);
+   fprintf(FREPORT_HTML,"%s\n\n",CFH[cfx_object][cfe]);
    }
 else
-   {   
-   Indent(indent);
-   if (pp->promisee != NULL)
-      {
-      fprintf(FREPORT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-      ShowRval(FREPORT,pp->promisee,pp->petype);
-      fprintf(FREPORT," if context is %s\n\n",pp->classes);
-      }
-   else
-      {
-      fprintf(FREPORT,"%s promise by \'%s\' (implicit) if context is %s\n\n",pp->agentsubtype,pp->promiser,pp->classes);
-      }
+   {
+   fprintf(FREPORT_HTML,"Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
    }
-  
+
+Indent(indent);
+if (pp->promisee != NULL)
+   {
+   fprintf(FREPORT_TXT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
+   ShowRval(FREPORT_TXT,pp->promisee,pp->petype);
+   fprintf(FREPORT_TXT," if context is %s\n\n",pp->classes);
+   }
+else
+   {
+   fprintf(FREPORT_TXT,"%s promise by \'%s\' (implicit) if context is %s\n\n",pp->agentsubtype,pp->promiser,pp->classes);
+   }
+
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
-   if (XML)
-      {
-      fprintf(FREPORT,"%s%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
-      }
-   else
-      {
-      Indent(indent+3);
-      fprintf(FREPORT,"%10s => ",cp->lval);
-      }
-
-   fprintf(FREPORT,"%s",CFH[cfx_rval][cfb]);
+   fprintf(FREPORT_HTML,"%s%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
+   Indent(indent+3);
+   fprintf(FREPORT_TXT,"%10s => ",cp->lval);
+   fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
 
    switch (cp->type)
       {
@@ -408,14 +311,16 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(FREPORT,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
              }
           break;
 
       case CF_LIST:
           
           rp = (struct Rlist *)cp->rval;
-          ShowRlist(FREPORT,rp);
+          ShowRlist(FREPORT_HTML,rp);
+          ShowRlist(FREPORT_TXT,rp);
           break;
 
       case CF_FNCALL:
@@ -427,52 +332,48 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(FREPORT,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
              }
           break;
       }
 
-   fprintf(FREPORT,"%s",CFH[cfx_rval][cfe]);
+   fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
    
-   if (XML)
+   if (cp->type != CF_FNCALL)
       {
-      if (cp->type != CF_FNCALL)
-         {
-         fprintf(FREPORT," , if body context %s\n",cp->classes);
-         }
+      Indent(indent);
+      fprintf(FREPORT_HTML," , if body context %s\n",cp->classes);
+      fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
       }
-   else
-      {
-      if (cp->type != CF_FNCALL)
-         {
-         fprintf(FREPORT," if body context %s\n",cp->classes);
-         }
-      }
+     
    }
 
-if (XML)
+if (pp->audit)
    {
-   fprintf(FREPORT,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
-   fprintf(FREPORT,"%s\n",CFH[cfx_promise][cfe]);
-   fprintf(FREPORT,"%s\n",CFH[cfx_line][cfe]);
+   Indent(indent);
+   fprintf(FREPORT_HTML,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   }
+
+fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
+fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
+
+if (pp->audit)
+   {
+   Indent(indent);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT_TXT,"\n");
    }
 else
    {
-   if (pp->audit)
-      {
-      fprintf(FREPORT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
-      fprintf(FREPORT,"\n");
-      }
-   else
-      {
-      fprintf(FREPORT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n",v,pp->bundle,pp->bundletype,pp->lineno);
-      }
+   Indent(indent);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n",v,pp->bundle,pp->bundletype,pp->lineno);
    }
 }
 
 /*******************************************************************/
 
-void ShowScopedVariables(FILE *fp)
+void ShowScopedVariables()
 
 { struct Scope *ptr;
 
@@ -480,21 +381,16 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,"this") == 0)
       {
-//      continue;
+      continue;
       }
    
-   if (XML)
-      {
-      fprintf(fp,"<p>\nConstant variables in SCOPE %s:\n<br><p>",ptr->scope);
-      }
-   else
-      {
-      fprintf(fp,"\nConstant variables in SCOPE %s:\n",ptr->scope);
-      }
+   fprintf(FREPORT_HTML,"<p>\nConstant variables in SCOPE %s:\n<br><p>",ptr->scope);
+   fprintf(FREPORT_TXT,"\nConstant variables in SCOPE %s:\n",ptr->scope);
    
    if (ptr->hashtable)
       {
-      PrintHashes(fp,ptr->hashtable);
+      PrintHashes(FREPORT_HTML,ptr->hashtable,1);
+      PrintHashes(FREPORT_TXT,ptr->hashtable,0);
       }
    }
 }
@@ -514,9 +410,9 @@ CfOut(cf_verbose,"","***********************************************************
 void ReportBanner(char *s)
 
 {
-fprintf(FREPORT,"***********************************************************\n");
-fprintf(FREPORT," %s \n",s);
-fprintf(FREPORT,"***********************************************************\n");
+fprintf(FREPORT_TXT,"***********************************************************\n");
+fprintf(FREPORT_TXT," %s \n",s);
+fprintf(FREPORT_TXT,"***********************************************************\n");
 }
     
 /**************************************************************/
@@ -576,10 +472,9 @@ void Indent(int i)
 
 for (j = 0; j < i; j++)
    {
-   fputc(' ',FREPORT);
+   fputc(' ',FREPORT_TXT);
    }
 }
-
 
 /*******************************************************************/
 
@@ -588,37 +483,19 @@ void ShowBody(struct Body *body,int indent)
 { struct Rlist *rp;
   struct Constraint *cp;
 
-if (!XML)
-   {
-   fprintf(FREPORT,"%s body for type %s",body->name,body->type);
-   }
-else
-   {
-   fprintf(FREPORT," %s%s%s %s%s%s",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe],
-          CFH[cfx_blockid][cfb],body->name,CFH[cfx_blockid][cfe]);
-   }
+fprintf(FREPORT_TXT,"%s body for type %s",body->name,body->type);
+fprintf(FREPORT_HTML," %s%s%s %s%s%s",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe],
+        CFH[cfx_blockid][cfb],body->name,CFH[cfx_blockid][cfe]);
 
 if (body->args == NULL)
    {
-   if (XML)
-      {
-      fprintf(FREPORT,"%s(no parameters)%s\n",CFH[cfx_args][cfb],CFH[cfx_args][cfe]);
-      }
-   else
-      {
-      fprintf(FREPORT,"(no parameters)\n");
-      }
+   fprintf(FREPORT_HTML,"%s(no parameters)%s\n",CFH[cfx_args][cfb],CFH[cfx_args][cfe]);
+   fprintf(FREPORT_TXT,"(no parameters)\n");
    }
 else
    {
-   if (XML)
-      {
-      fprintf(FREPORT,"(");
-      }
-   else
-      {
-      fprintf(FREPORT,"\n");
-      }
+   fprintf(FREPORT_HTML,"(");
+   fprintf(FREPORT_TXT,"\n");
    
    for (rp = body->args; rp != NULL; rp=rp->next)
       {
@@ -627,83 +504,41 @@ else
          FatalError("ShowBody - non-scalar paramater container");
          }
 
-      if (XML)
-         {
-         fprintf(FREPORT,"%s%s%s,\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
-         }
-      else
-         {
-         Indent(indent);
-         fprintf(FREPORT,"arg %s\n",(char *)rp->item);
-         }
+      fprintf(FREPORT_HTML,"%s%s%s,\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
+      Indent(indent);
+      fprintf(FREPORT_TXT,"arg %s\n",(char *)rp->item);
       }
 
-   if (XML)
-      {
-      fprintf(FREPORT,")");
-      }
-   else
-      {
-      fprintf(FREPORT,"\n");
-      }
+   fprintf(FREPORT_HTML,")");
+   fprintf(FREPORT_TXT,"\n");
    }
 
-if (XML)
-   {
-   }
-else
-   {   
-   Indent(indent);
-   fprintf(FREPORT,"{\n");
-   }
+Indent(indent);
+fprintf(FREPORT_TXT,"{\n");
 
 for (cp = body->conlist; cp != NULL; cp=cp->next)
    {
-   if (XML)
-      {
-      fprintf(FREPORT,"%s.....%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
-      }
-   else{
-      Indent(indent);
-      fprintf(FREPORT,"%s => ",cp->lval);
-      }
+   fprintf(FREPORT_HTML,"%s.....%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
+   Indent(indent);
+   fprintf(FREPORT_TXT,"%s => ",cp->lval);
    
-   ShowRval(FREPORT,cp->rval,cp->type); /* literal */
+   ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
+   ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
 
    if (cp->classes != NULL)
       {
-      if (XML)
-         {
-         fprintf(FREPORT," if subbody context %s%s%s\n",CFH[cfx_class][cfb],cp->classes,CFH[cfx_class][cfe]);
-         }
-      else
-         {
-         fprintf(FREPORT," if subbody context %s\n",cp->classes);
-         }
+      fprintf(FREPORT_HTML," if sub-body context %s%s%s\n",CFH[cfx_class][cfb],cp->classes,CFH[cfx_class][cfe]);
+      fprintf(FREPORT_TXT," if sub-body context %s\n",cp->classes);
       }
    else
       {
-      if (XML)
-         {
-         }
-      else
-         {
-         fprintf(FREPORT,"\n");
-         }
+      fprintf(FREPORT_TXT,"\n");
       }
    }
 
-if (XML)
-   {
-   }
-else
-   {
-   Indent(indent);
-   fprintf(FREPORT,"}\n");
-   }
+Indent(indent);
+fprintf(FREPORT_TXT,"}\n");
 }
-
-
 
 /*******************************************************************/
 

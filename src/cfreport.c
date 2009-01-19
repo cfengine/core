@@ -163,12 +163,6 @@ struct CEnt /* For sorting */
 
 /*******************************************************************/
 
-enum cf_formatindex
-   {
-   cfb,
-   cfe,
-   };
-
 enum cf_format
    {
    cfx_entry,

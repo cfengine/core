@@ -155,11 +155,11 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
 
 /*******************************************************************/
 
-void PrintHashes(FILE *fp,struct CfAssoc **table)
+void PrintHashes(FILE *fp,struct CfAssoc **table,int html)
 
 { int i;
 
-if (XML)
+if (html)
    {
    fprintf(fp,"<table class=border width=600>\n");
    fprintf (fp,"<tr><th>id</th><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th></tr>\n");         
@@ -169,7 +169,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
    if (table[i] != NULL)
       {
-      if (XML)
+      if (html)
          {
          fprintf (fp,"<tr><td> %5d </td><th>%8s</th><td> %c</td><td> %s</td><td> ",i,CF_DATATYPES[table[i]->dtype],table[i]->rtype,table[i]->lval);
          ShowRval(fp,table[i]->rval,table[i]->rtype);
@@ -184,7 +184,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
       }
    }
 
-if (XML)
+if (html)
    {
    fprintf(fp,"</table>\n");
    }

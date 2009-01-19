@@ -141,29 +141,22 @@ if (ag == cf_keygen)
 
 Cf3ParseFiles();
 OpenReports(agents);
+
 HashVariables();
 HashControls();
 SetAuditVersion();
 
 ShowContext();
 
-if (XML)
-   {
-   fprintf(FREPORT,"%s",CFH[0][0]);
-   fprintf(FREPORT,"<h1>Expanded promise list for %s component</h1>",agents);
-   }
-else
-   {
-   fprintf(FREPORT,"Expanded promise list for %s component\n\n",agents);
-   }
+fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfb]);
+fprintf(FREPORT_HTML,"<h1>Expanded promise list for %s component</h1>",agents);
+fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);
 
 VerifyPromises(cf_common);
-ShowScopedVariables(FREPORT);
 
-if (XML)
-   {
-   fprintf(FREPORT,"%s",CFH[0][1]);
-   }
+ShowScopedVariables();
+
+fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfe]);
 
 CloseReports(agents);
 }
@@ -370,42 +363,63 @@ void OpenReports(char *agents)
 
 { char name[CF_BUFSIZE];
 
-if (IsPrivileged())
+if (SHOWREPORTS)
    {
    snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
-   XML = 0;
-   }
-else
-   {
+
+   if ((FREPORT_TXT = fopen(name,"w")) == NULL)
+      {
+      CfOut(cf_error,"fopen","Cannot open output file %s",name);
+      FREPORT_TXT = fopen("/dev/null","w");
+      }
+   
    snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
-   XML = 1;
-   }
 
-if ((FREPORT = fopen(name,"w")) == NULL)
-   {
-   char vbuff[CF_BUFSIZE];
-   snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
-   FatalError(vbuff);
-   }
+   if ((FREPORT_HTML = fopen(name,"w")) == NULL)
+      {
+      CfOut(cf_error,"fopen","Cannot open output file %s",name);
+      FREPORT_HTML = fopen("/dev/null","w");
+      }
 
-if (strcmp(agents,"common") == 0)
-   {
    snprintf(name,CF_BUFSIZE,"promise_knowledge.cf");
+   
+   if ((FKNOW = fopen(name,"w")) == NULL)
+      {
+      CfOut(cf_error,"fopen","Cannot open output file %s",name);
+      FKNOW = fopen("/dev/null","w");
+      }
    }
 else
    {
    snprintf(name,CF_BUFSIZE,"/dev/null");
+   if ((FREPORT_TXT = fopen(name,"w")) == NULL)
+      {
+      char vbuff[CF_BUFSIZE];
+      snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
+      FatalError(vbuff);
+      }
+   
+   if ((FREPORT_HTML = fopen(name,"w")) == NULL)
+      {
+      char vbuff[CF_BUFSIZE];
+      snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
+      FatalError(vbuff);
+      }
+
+   if ((FKNOW = fopen(name,"w")) == NULL)
+      {
+      char vbuff[CF_BUFSIZE];
+      snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
+      FatalError(vbuff);
+      }
    }
 
-if ((FKNOW = fopen(name,"w")) == NULL)
+if (!(FKNOW && FREPORT_HTML && FREPORT_TXT))
    {
-   char vbuff[CF_BUFSIZE];
-   snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
-   FatalError(vbuff);
+   FatalError("Unable to continue as /dev/null is unwritable");
    }
 
 fprintf(FKNOW,"bundle knowledge CfengineSiteConfiguration\n{\n");
-
 ShowTopicRepresentation(FKNOW);
 }
 
@@ -415,20 +429,17 @@ void CloseReports(char *agents)
 
 { char name[CF_BUFSIZE];
  
-if (IsPrivileged())
+if (SHOWREPORTS)
    {
-   snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
-   }
-else
-   {
-   snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+   CfOut(cf_error,"","Wrote compilation report promise_output_%s.txt",agents);
+   CfOut(cf_error,"","Wrote compilation report promise_output_%s.html",agents);
+   CfOut(cf_error,"","Wrote knowledge map promise_knowledge.cf",agents);
    }
 
 fprintf(FKNOW,"}\n");
 fclose(FKNOW); 
-fclose(FREPORT);
-
-Verbose("Wrote expansion report to %s\n",name);
+fclose(FREPORT_HTML);
+fclose(FREPORT_TXT);
 }
 
 /*******************************************************************/
@@ -878,41 +889,27 @@ void CompilationReport(char *fname)
 { char filename[CF_BUFSIZE],output[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
-
-FREPORT = stdout;
-XML = false;
-
-if ((FREPORT = fopen(filename,"w")) == NULL)
-   {
-   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(output);
-   }
-
 printf("Summarizing promises as text to %s\n",filename);
 
-ShowPromises(BUNDLES,BODIES);
-
-fclose(FREPORT);
-
-if (DEBUG)
+if ((FREPORT_TXT = fopen(filename,"w")) == NULL)
    {
-   ShowScopedVariables(stdout);
-   }
-
-XML = true;
-
-snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
-
-if ((FREPORT = fopen(filename,"w")) == NULL)
-   {
-   char output[CF_BUFSIZE];
    snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
    FatalError(output);
    }
 
+snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
 printf("Summarizing promises as html to %s\n",filename);
+
+if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
+   {
+   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
+   FatalError(output);
+   }
+
 ShowPromises(BUNDLES,BODIES);
-fclose(FREPORT);
+
+fclose(FREPORT_HTML);
+fclose(FREPORT_TXT);
 }
 
 /*******************************************************************/

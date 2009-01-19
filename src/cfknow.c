@@ -785,8 +785,6 @@ void LookupUniqueTopic(char *typed_topic)
 
 DeTypeTopic(typed_topic,topic,type);
   
-Verbose("Looking up topic \"%s\" (%s)\n",topic,type);
-
 /* We need to set a scope for the regex stuff */
 
 if (strlen(SQL_OWNER) > 0)
@@ -1113,8 +1111,6 @@ CfCloseDB(&cfdb);
 void KeepKnowledgePromise(struct Promise *pp)
 
 {
-Verbose("Knowledge:: look at promise by \"%s\"...\n",pp->promiser);
- 
 if (pp->done)
    {
    return;

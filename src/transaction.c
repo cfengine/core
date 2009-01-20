@@ -130,13 +130,13 @@ elapsedtime = (time_t)(now-lastcompleted) / 60;
 
 if (elapsedtime < 0)
    {
-   CfOut(cf_verbose,"","Another cfengine seems to have done [%s.%s] since I started (elapsed=%d)\n",cc_operator,cc_operand,elapsedtime);
+   CfOut(cf_verbose,""," XX Another cfengine seems to have done this since I started (elapsed=%d)\n",elapsedtime);
    return this;
    }
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
-   CfOut(cf_verbose,"","Nothing promised for [%s.%s] (%u/%u minutes elapsed)\n",cc_operator,cc_operand,elapsedtime,attr.transaction.ifelapsed);
+   CfOut(cf_verbose,""," XX Nothing promised here (%u/%u minutes elapsed)\n",elapsedtime,attr.transaction.ifelapsed);
    return this;
    }
 

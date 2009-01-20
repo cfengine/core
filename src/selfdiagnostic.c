@@ -168,6 +168,7 @@ void TestExpandVariables()
   struct FnCall *fp;
 
 /* Still have diagnostic scope */
+NewScope("control_common");
   
 printf("%d. Testing variable expansion\n",++NR);
 pp.promiser = "the originator";

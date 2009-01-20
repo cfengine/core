@@ -906,10 +906,16 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
    FatalError(output);
    }
 
+if ((FKNOW = fopen("/dev/null","w")) == NULL)
+   {
+   FatalError("/dev/null failed");
+   }
+
 ShowPromises(BUNDLES,BODIES);
 
 fclose(FREPORT_HTML);
 fclose(FREPORT_TXT);
+fclose(FKNOW);
 }
 
 /*******************************************************************/

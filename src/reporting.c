@@ -171,7 +171,8 @@ fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfb]);
   
 for (bp = bundles; bp != NULL; bp=bp->next)
    {
-   fprintf(FREPORT_HTML,"<p><a name=\"bundle_%s\"></a>\n%s\n",bp->name,CFH[cfx_block][cfb]);
+   BundleNode(FREPORT_HTML,bp->name);
+   fprintf(FREPORT_HTML,"<p>\n%s\n",CFH[cfx_block][cfb]);
 
    fprintf(FREPORT_HTML,"%s Bundle %s%s%s %s%s%s %s\n",
            CFH[cfx_bundle][cfb],
@@ -199,7 +200,7 @@ for (bp = bundles; bp != NULL; bp=bp->next)
    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
       {
       fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
-      fprintf(FREPORT_HTML,"<a name=\"type_%s\"></a>\n",CanonifyName(sp->name));
+      TypeNode(FREPORT_HTML,sp->name);
       fprintf(FREPORT_HTML,"   TYPE: %s%s%s\n\n",CFH[cfx_subtype][cfb],sp->name,CFH[cfx_subtype][cfe]);
       fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
       fprintf(FREPORT_TXT,"   TYPE: %s\n\n",sp->name);
@@ -260,17 +261,12 @@ else
    }
 
 MapPromiseToTopic(FKNOW,pp,v);
+PromiseNode(FREPORT_HTML,pp,0);
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
 fprintf(FREPORT_HTML,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
-
-if (pp->audit)
-   {
-   snprintf(vbuff,CF_BUFSIZE,"%s_%s",pp->promiser,ReadLastNode(pp->audit->filename));
-   fprintf(FREPORT_HTML,"<a name=\"promise_%s_%d\"></a>\n",CanonifyName(vbuff),pp->lineno);
-   }
 
 if (pp->promisee)
    {

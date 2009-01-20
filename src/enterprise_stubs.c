@@ -40,6 +40,39 @@ should be free, please let us know and we will consider this carefully.
 
 /*****************************************************************************/
 
+void BundleNode(FILE *fp,char *bundle)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_BundleNode(fp,bundle);
+#else
+ Verbose("# This feature is only available in commerical version Nova and above");
+#endif
+}
+
+/*****************************************************************************/
+
+void TypeNode(FILE *fp,char *type)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_TypeNode(fp,type);
+#else
+ Verbose("# This feature is only available in commerical version Nova and above");
+#endif
+}
+
+/*****************************************************************************/
+
+void PromiseNode(FILE *fp,struct Promise *pp,int type)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_PromiseNode(fp,pp,type);
+#else
+ Verbose("# This feature is only available in commerical version Nova and above");
+#endif
+}
+
+/*****************************************************************************/
+
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version)
 
 {

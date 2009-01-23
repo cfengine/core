@@ -69,6 +69,7 @@ void NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
+void SetEnvironment(char *s);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -482,6 +483,19 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       Verbose("SET syslog = %c\n",LOGGING);
       continue;
       }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_environment].lval) == 0)
+      {
+      struct Rlist *rp;
+      Verbose("SET environment variables from ...\n");
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         SetEnvironment(rp->item);
+         }
+      
+      continue;
+      }
    }
 
 if (GetVariable("control_common","CFG_CONTROLBODY[cfg_lastseenexpireafter]",&retval,&rettype) == cf_notype)
@@ -774,6 +788,17 @@ if (strcmp("reports",pp->agentsubtype) == 0)
    {
    VerifyReportPromise(pp);
    return;
+   }
+}
+
+/*********************************************************************/
+
+void SetEnvironment(char *s)
+
+{
+if (putenv(s) != 0)
+   {
+   CfOut(cf_inform,"putenv","Failed to set environement %s",s);
    }
 }
 

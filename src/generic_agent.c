@@ -151,11 +151,13 @@ ShowContext();
 fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfb]);
 fprintf(FREPORT_HTML,"<h1>Expanded promise list for %s component</h1>",agents);
 fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);
+fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
 
 VerifyPromises(cf_common);
 
 ShowScopedVariables();
 
+fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfe]);
 fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfe]);
 
 CloseReports(agents);

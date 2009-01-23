@@ -226,6 +226,7 @@ enum cfacontrol
    cfa_dryrun,
    cfa_editbinaryfilesize,
    cfa_editfilesize,
+   cfa_environment,
    cfa_exclamation,
    cfa_expireafter,
    cfa_fsinglecopy,

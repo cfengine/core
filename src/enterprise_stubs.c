@@ -41,6 +41,7 @@ should be free, please let us know and we will consider this carefully.
 /*****************************************************************************/
 
 void BundleNode(FILE *fp,char *bundle)
+
 {
 #ifdef HAVE_LIBCFNOVA
  Nova_BundleNode(fp,bundle);
@@ -52,6 +53,7 @@ void BundleNode(FILE *fp,char *bundle)
 /*****************************************************************************/
 
 void TypeNode(FILE *fp,char *type)
+
 {
 #ifdef HAVE_LIBCFNOVA
  Nova_TypeNode(fp,type);
@@ -63,6 +65,7 @@ void TypeNode(FILE *fp,char *type)
 /*****************************************************************************/
 
 void PromiseNode(FILE *fp,struct Promise *pp,int type)
+
 {
 #ifdef HAVE_LIBCFNOVA
  Nova_PromiseNode(fp,pp,type);

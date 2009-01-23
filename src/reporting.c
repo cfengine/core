@@ -54,22 +54,22 @@ char *CFX[][2] =
 char *CFH[][2] =
    {
     "<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/css/promises.css\" />\n</head>\n","</html>",
-    "<table class=border><tr><td><h2>","</td></tr></h2></table>",
-    "<p><table class=border cellpadding=5 width=800>","</table>",
+    "<div id=\"bundle\"><table class=border><tr><td><h2>","</td></tr></h2></table></div>",
+    "<div id=\"block\"><table class=border cellpadding=5 width=800>","</table></div>",
     "<tr><th>","</th></tr>",
-    "<font color=red>","</font>",
-    "<font color=blue>","</font>",
+    "<span class=\"bodyname\">","</span>",
+    "<span class=\"bodytype\">","</span>",
+    "<span class=\"args\">","</span>",
+    "<tr><td><table class=\"border\"><tr><td>","</td></tr></table></td></tr>",
+    "<span class=\"class\">","</span>",
+    "<span class=\"subtype\">","</span>",
     "<b>","</b>",
-    "<tr><td bgcolor=#fefdec></td><td bgcolor=#fefeec><table class=border width=800><tr><td bgcolor=#ffffff>","</td></tr></table></td></tr>",
-    "<i><font color=blue>","</font></i>",
-    "<b><font color=green size=4>","</font><b>",
-    "<b>","</b>",
-    "<br><font color=green>........................","</font>",
+    "<br><span class=\"lval\">........................","</span>",
+    "<span class=\"rval\">","</span>",
+    "<span class=\"qstring\">","</span>",
+    "<span class=\"rlist\">","</span>",
     "","",
-    "","",
-    "<i>","</i>",
-    "","",
-    "<tr><td colspan=\"2\">","</td></tr>",
+    "<tr><td>","</td></tr>",
     NULL,NULL
    };
 
@@ -172,36 +172,33 @@ fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfb]);
 for (bp = bundles; bp != NULL; bp=bp->next)
    {
    BundleNode(FREPORT_HTML,bp->name);
-   fprintf(FREPORT_HTML,"<p>\n%s\n",CFH[cfx_block][cfb]);
 
-   fprintf(FREPORT_HTML,"%s Bundle %s%s%s %s%s%s %s\n",
+   fprintf(FREPORT_HTML,"%s Bundle %s%s%s %s%s%s\n",
            CFH[cfx_bundle][cfb],
            CFH[cfx_blocktype][cfb],bp->type,CFH[cfx_blocktype][cfe],
-           CFH[cfx_blockid][cfb],bp->name,CFH[cfx_blockid][cfe],
-           CFH[cfx_bundle][cfe]);
+           CFH[cfx_blockid][cfb],bp->name,CFH[cfx_blockid][cfe]);
    
    fprintf(FREPORT_HTML," %s ARGS:%s\n\n",CFH[cfx_line][cfb],CFH[cfx_line][cfe]);
 
    fprintf(FREPORT_TXT,"Bundle %s in the context of %s\n\n",bp->name,bp->type);
    fprintf(FREPORT_TXT,"   ARGS:\n\n");
 
-   fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
-
    for (rp = bp->args; rp != NULL; rp=rp->next)
       {   
       fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
       fprintf(FREPORT_HTML,"   scalar arg %s%s%s\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
       fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
+      
       fprintf(FREPORT_TXT,"   scalar arg %s\n\n",(char *)rp->item);
       }
   
    fprintf(FREPORT_TXT,"   {\n");   
+   fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
    
    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
       {
       fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
       TypeNode(FREPORT_HTML,sp->name);
-      fprintf(FREPORT_HTML,"   TYPE: %s%s%s\n\n",CFH[cfx_subtype][cfb],sp->name,CFH[cfx_subtype][cfe]);
       fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
       fprintf(FREPORT_TXT,"   TYPE: %s\n\n",sp->name);
       
@@ -215,9 +212,9 @@ for (bp = bundles; bp != NULL; bp=bp->next)
    fprintf(FREPORT_TXT,"\n\n");
    fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
    fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
+   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_bundle][cfe]);
    }
 
-fprintf(FREPORT_HTML,"%s \n ",CFH[cfx_block][cfe]);
 
 /* Now summarize the remaining bodies */
 
@@ -265,7 +262,7 @@ PromiseNode(FREPORT_HTML,pp,0);
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
-fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_class][cfb],pp->agentsubtype,CFH[cfx_class][cfe]);
+fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_subtype][cfb],pp->agentsubtype,CFH[cfx_subtype][cfe]);
 fprintf(FREPORT_HTML,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
 
 if (pp->promisee)
@@ -296,7 +293,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    fprintf(FREPORT_HTML,"%s%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
    Indent(indent+3);
    fprintf(FREPORT_TXT,"%10s => ",cp->lval);
-   fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
 
    switch (cp->type)
       {
@@ -315,7 +311,9 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       case CF_LIST:
           
           rp = (struct Rlist *)cp->rval;
+          fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
           ShowRlist(FREPORT_HTML,rp);
+          fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
           ShowRlist(FREPORT_TXT,rp);
           break;
 
@@ -333,8 +331,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           break;
       }
-
-   fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
    
    if (cp->type != CF_FNCALL)
       {
@@ -517,9 +513,13 @@ for (cp = body->conlist; cp != NULL; cp=cp->next)
    fprintf(FREPORT_HTML,"%s.....%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
    Indent(indent);
    fprintf(FREPORT_TXT,"%s => ",cp->lval);
-   
+
+   fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfb]);
+
    ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
    ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
+
+   fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfe]);
 
    if (cp->classes != NULL)
       {

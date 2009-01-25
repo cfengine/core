@@ -144,7 +144,7 @@ void CheckOpts(int argc,char **argv)
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
   
-while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -197,18 +197,26 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
           NewClass("opt_dry_run");
           break;
           
-      case 'V': Version("cf-agent");
+      case 'V':
+          Version("cf-agent");
           exit(0);
           
-      case 'h': Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
+      case 'h':
+          Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
           exit(0);
 
-      case 'M': ManPage("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
+      case 'M':
+          ManPage("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
           exit(0);
 
-      case 'x': AgentDiagnostic();
+      case 'x':
+          AgentDiagnostic();
           exit(0);
-          
+
+      case 'r':
+          SHOWREPORTS = true;
+          break;
+
       default:  Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
           exit(1);
           

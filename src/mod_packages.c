@@ -32,7 +32,19 @@
 
 #define CF3_MOD_PACKAGES
 
-struct BodySyntax CF_EXISTS_BODY[] =
+struct BodySyntax CF_PKGMETHOD_BODY[] =
+   {
+   {"package_use_shell",cf_opts,CF_BOOL,"Whether to use a shell wrapper when interfacing with package manager"},
+   {"package_aggregation",cf_opts,CF_BOOL,"Whether to group packages into a single aggregate command"},
+   {"package_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
+   {"package_verify",cf_opts,CF_BOOL,"Whether to attempt verification of matching installed packages (resource heavy)"},
+   {"package_verify_failure_class",cf_str,CF_IDRANGE,"Whether to attempt verification of matching installed packages (resource heavy)"},
+   {NULL,cf_notype,NULL,NULL}
+   };
+
+/***************************************************************/
+
+struct BodySyntax CF_PKGSELECT_BODY[] =
    {
    {NULL,cf_notype,NULL,NULL}
    };
@@ -43,8 +55,11 @@ struct BodySyntax CF_EXISTS_BODY[] =
 
 struct BodySyntax CF_PACKAGES_BODIES[] =
    {
-   {"install",cf_body,CF_EXISTS_BODY,"Criteria for package installation/upgrade on the current system"},
-   {NULL,cf_notype,NULL}
+   {"package_list",cf_slist,"","List of packages to review"},
+   {"package_policy",cf_opts,"insert|delete|replace","Criteria for package installation/upgrade on the current system"},
+   {"package_methods",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
+   {"package_select",cf_body,CF_PKGSELECT_BODY,"Criteria for selecting version"},
+   {NULL,cf_notype,NULL,NULL}
    };
 
 /***************************************************************/

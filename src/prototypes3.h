@@ -266,9 +266,9 @@ int IsProcessType(char *s);
 /* enterprise_stubs.c */
 
 void BundleNode(FILE *fp,char *bundle);
+void BodyNode(FILE *fp,char *bundle,int call);
 void TypeNode(FILE *fp,char *type);
 void PromiseNode(FILE *fp,struct Promise *pp,int type);
-
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void Nova_MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void ShowTopicRepresentation(FILE *fp);

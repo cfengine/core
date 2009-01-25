@@ -133,7 +133,9 @@ else
 
 void ReadPromises(enum cfagenttype ag,char *agents)
 
-{
+{ char *v,rettype;
+  void *retval;
+
 if (ag == cf_keygen)
    {
    return;
@@ -146,18 +148,34 @@ HashVariables();
 HashControls();
 SetAuditVersion();
 
-ShowContext();
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   {
+   v = (char *)retval;
+   }
+else
+   {
+   v = "not specified";
+   }
 
 fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfb]);
+
+fprintf(FREPORT_HTML,"<h1>Cfengine policy :: %s (version %s)</h1>",VFQNAME,v);
+
+ShowContext();
+
 fprintf(FREPORT_HTML,"<h1>Expanded promise list for %s component</h1>",agents);
 fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
 
 VerifyPromises(cf_common);
 
-ShowScopedVariables();
-
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfe]);
+
+if (ag != cf_common)
+   {
+   ShowScopedVariables();
+   }
+
 fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfe]);
 
 CloseReports(agents);

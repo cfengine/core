@@ -52,6 +52,18 @@ void BundleNode(FILE *fp,char *bundle)
 
 /*****************************************************************************/
 
+void BodyNode(FILE *fp,char *bundle,int calltype)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_BodyNode(fp,bundle,calltype);
+#else
+ Verbose("# This feature is only available in commerical version Nova and above");
+#endif
+}
+
+/*****************************************************************************/
+
 void TypeNode(FILE *fp,char *type)
 
 {
@@ -92,7 +104,7 @@ void ShowTopicRepresentation(FILE *fp)
 
 { int i,j,k,l,m;
   struct SubTypeSyntax *ss;
-  struct BodySyntax *bs;
+  struct BodySyntax *bs,*bs2;
 
 #ifdef HAVE_LIBCFNOVA
  Nova_ShowTopicRepresentation(fp);
@@ -100,26 +112,46 @@ void ShowTopicRepresentation(FILE *fp)
  Verbose("# This feature is only available in commerical version Nova and above\n");
 #endif
 
+ 
 for  (i = 0; i < CF3_MODULES; i++)
    {
    if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
       {
       continue;
       }
-   
+
    for (j = 0; ss[j].btype != NULL; j++)
       {
       if (ss[j].bs != NULL) /* In a bundle */
          {
          bs = ss[j].bs;
-         
+
          for (l = 0; bs[l].lval != NULL; l++)
             {
-            fprintf(fp,"   \"%s\";\n",bs[l].lval);
+            fprintf(fp,"Promise_types::\n");
+            fprintf(fp,"   \"%s\";\n",ss[j].subtype);
+            
+            fprintf(fp,"Body_lval_types::\n");
+            fprintf(fp,"   \"%s\"\n",bs[l].lval);
+            fprintf(fp,"   association => a(\"is a body-lval for\",\"Promise_types::%s\",\"has body-lvals\");\n",ss[j].subtype);
+            
+            if (bs[l].dtype == cf_body)
+               {
+               bs2 = (struct BodySyntax *)(bs[l].range);
+               
+               if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
+                  {
+                  continue;
+                  }
+               
+               for (k = 0; bs2[k].dtype != cf_notype; k++)
+                  {
+                  fprintf(fp,"   \"%s\";\n",bs2[k].lval);
+                  }
+               }
             }
          }
       }
-
    }
 
 for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)

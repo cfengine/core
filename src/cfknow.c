@@ -196,7 +196,7 @@ void CheckOpts(int argc,char **argv)
   char ld_library_path[CF_BUFSIZE];
 
 strcpy(TOPIC_CMD,"");
- 
+
 while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:mM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
@@ -784,7 +784,7 @@ void LookupUniqueTopic(char *typed_topic)
 
 
 DeTypeTopic(typed_topic,topic,type);
-  
+
 /* We need to set a scope for the regex stuff */
 
 if (strlen(SQL_OWNER) > 0)
@@ -2163,7 +2163,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   CfOut(cf_error,"","\n<h2>Occurrence of this topic:</h2>\n\n");
+   CfOut(cf_error,"","\n<h2>Occurrences of this topic:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
@@ -2230,7 +2230,7 @@ if (associations)
    count = 0;
    
    fprintf(fout,"<p><div id=\"associations\">");
-   fprintf(fout,"\n<h2>Associated with this topic:</h2>\n\n");
+   fprintf(fout,"\n<h2>Associated with this:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    

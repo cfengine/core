@@ -80,12 +80,14 @@ char *CFH[][2] =
 void ShowContext(void)
 
 { struct Item *ptr;
+  char vbuff[CF_BUFSIZE];
 
  /* Text output */
 
 if (VERBOSE||DEBUG)
-   {      
-   ReportBanner("Agent's basic classified context");
+   {
+   snprintf(vbuff,CF_BUFSIZE,"Host %s's basic classified context",VFQNAME);
+   ReportBanner(vbuff);
    
    CfOut(cf_verbose,"","Defined Classes = ( ");
    
@@ -108,10 +110,13 @@ if (VERBOSE||DEBUG)
 
 /* HTML output */
 
-fprintf(FREPORT_HTML,"<h1>Agent's basic classified context</h1>\n");
 
-fprintf(FREPORT_HTML,"<table><tr>");
-fprintf(FREPORT_HTML,"<td>Defined Classes</td><td><ul>");
+fprintf(FREPORT_HTML,"<div id=\"contextclasses\">");
+fprintf(FREPORT_HTML,"<table class=border><tr>");
+fprintf(FREPORT_HTML,"<tr><th colspan=2><h1>Agent's hard context classes</h1></th></tr>\n");
+
+fprintf(FREPORT_HTML,"<th>Defined Classes</th><td><ul>");
+fprintf(FREPORT_HTML,"<a name=\"class_context\"></a>");
 
 for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
    {
@@ -120,14 +125,14 @@ for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
 
 fprintf(FREPORT_HTML,"</ul></td></tr><tr>\n");
 
-fprintf(FREPORT_HTML,"<td>Negated Classes</td><td><ul>");
+fprintf(FREPORT_HTML,"<th>Negated Classes</th><td><ul>");
 
 for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
    {
    fprintf(FREPORT_HTML,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
    }
 
-fprintf(FREPORT_HTML,"</ul></td></tr></table><p>\n");
+fprintf(FREPORT_HTML,"</ul></td></tr></table></div><p>\n");
 }
 
 /*******************************************************************/
@@ -162,11 +167,22 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
   struct SubType *sp;
   struct Promise *pp;
   struct Body *bdp;
+  char *v,rettype,vbuff[CF_BUFSIZE];
+  void *retval;
 
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   {
+   v = (char *)retval;
+   }
+else
+   {
+   v = "not specified";
+   }
+  
 ReportBanner("Promises");
 
 fprintf(FREPORT_HTML,"<p>");
-fprintf(FREPORT_HTML,"<h1>Promise Bundles</h1> ");
+fprintf(FREPORT_HTML,"<h1>Cfengine Site Policy Summary (version %s)</h1> ",v);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfb]);
   
 for (bp = bundles; bp != NULL; bp=bp->next)
@@ -226,6 +242,7 @@ for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    fprintf(FREPORT_HTML,"%s%s\n",CFH[cfx_line][cfb],CFH[cfx_block][cfb]);
    fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 
+   BodyNode(FREPORT_HTML,bdp->name,0);
    ShowBody(bdp,3);
 
    fprintf(FREPORT_TXT,"\n");
@@ -257,13 +274,13 @@ else
    v = "not specified";
    }
 
-MapPromiseToTopic(FKNOW,pp,v);
-PromiseNode(FREPORT_HTML,pp,0);
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
+MapPromiseToTopic(FKNOW,pp,v);
+PromiseNode(FREPORT_HTML,pp,0);
 fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_subtype][cfb],pp->agentsubtype,CFH[cfx_subtype][cfe]);
-fprintf(FREPORT_HTML,"context is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+fprintf(FREPORT_HTML,"<a href=\"#class_context\">context</a> is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
 
 if (pp->promisee)
    {
@@ -335,7 +352,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    if (cp->type != CF_FNCALL)
       {
       Indent(indent);
-      fprintf(FREPORT_HTML," , if body context %s\n",cp->classes);
+      fprintf(FREPORT_HTML," , if body <a href=\"#class_context\">context</a> %s\n",cp->classes);
       fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
       }
      
@@ -369,13 +386,15 @@ void ShowScopedVariables()
 
 { struct Scope *ptr;
 
+fprintf(FREPORT_HTML,"<div id=\"showvars\"><h1>Variable scopes</h1><p>");
+
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,"this") == 0)
       {
       continue;
       }
-   
+
    fprintf(FREPORT_HTML,"<p>\nConstant variables in SCOPE %s:\n<br><p>",ptr->scope);
    fprintf(FREPORT_TXT,"\nConstant variables in SCOPE %s:\n",ptr->scope);
    
@@ -385,6 +404,8 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       PrintHashes(FREPORT_TXT,ptr->hashtable,0);
       }
    }
+
+fprintf(FREPORT_HTML,"</div>");
 }
 
 /*******************************************************************/
@@ -476,8 +497,11 @@ void ShowBody(struct Body *body,int indent)
   struct Constraint *cp;
 
 fprintf(FREPORT_TXT,"%s body for type %s",body->name,body->type);
-fprintf(FREPORT_HTML," %s%s%s %s%s%s",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe],
-        CFH[cfx_blockid][cfb],body->name,CFH[cfx_blockid][cfe]);
+fprintf(FREPORT_HTML," %s%s%s ",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe]);
+
+BodyNode(FREPORT_HTML,body->name,1);
+
+fprintf(FREPORT_HTML,"%s%s%s",CFH[cfx_blockid][cfb],body->name,CFH[cfx_blockid][cfe]);
 
 if (body->args == NULL)
    {
@@ -504,6 +528,8 @@ else
    fprintf(FREPORT_HTML,")");
    fprintf(FREPORT_TXT,"\n");
    }
+
+BodyNode(FREPORT_HTML,body->name,2);
 
 Indent(indent);
 fprintf(FREPORT_TXT,"{\n");

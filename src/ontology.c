@@ -227,7 +227,7 @@ void DeTypeTopic(char *typed_topic,char *topic,char *type)
 type[0] = '\0';
 topic[0] = '\0';
 
-if (strchr(typed_topic,':'))
+if (strstr(typed_topic,"::"))
    {
    sscanf(typed_topic,"%255[^:]::%255[^\n]",type,topic);
    
@@ -291,7 +291,7 @@ char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name)
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
   int match = false;
  
-  DeTypeTopic(topic_name,topic,type);
+DeTypeTopic(topic_name,topic,type);
   
 for (tp = list; tp != NULL; tp=tp->next)
    {
@@ -356,7 +356,7 @@ int TopicExists(struct Topic *list,char *topic_name,char *topic_type)
 
 { struct Topic *tp;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
- 
+  
 for (tp = list; tp != NULL; tp=tp->next)
    {
    if (strcmp(tp->topic_name,topic_name) == 0)
@@ -507,22 +507,11 @@ struct Topic *GetTopic(struct Topic *list,char *topic_name)
 strncpy(type,topic_name,CF_MAXVARSIZE-1);
 name[0] = '\0';
 
-if (sp = strstr(type,"::"))
-   {
-   *sp = '\0';
-   sp += strlen("::");
-   strncpy(name,sp,CF_MAXVARSIZE-1);
-   Verbose("%s is a typed-topic, type=%s, topic=%s\n",topic_name,type,name);
-   }
-else
-   {
-   sp = topic_name;
-   Verbose("%s is a typelss topic\n",topic_name);
-   }
+DeTypeTopic(topic_name,name,type);
 
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strlen(name) == 0)
+   if (strlen(type) == 0)
       {
       if (strcmp(topic_name,tp->topic_name) == 0)
          {
@@ -548,25 +537,11 @@ struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 { struct Topic *tp;
   char type[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
 
-strncpy(type,topic_name,CF_MAXVARSIZE-1);
-name[0] = '\0';
-
-if (sp = strchr(type,':'))
-   {
-   *sp = '\0';
-   sp += strlen("::");
-   strncpy(name,sp,CF_MAXVARSIZE-1);
-   Verbose("%s is a typed-topic, type=%s, topic=%s\n",topic_name,type,name);
-   }
-else
-   {
-   sp = topic_name;
-   Verbose("%s is a typelss topic\n",topic_name);
-   }
+DeTypeTopic(topic_name,name,type);
   
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strlen(name) == 0)
+   if (strlen(type) == 0)
       {
       if (strcmp(topic_name,CanonifyName(tp->topic_name)) == 0)
          {

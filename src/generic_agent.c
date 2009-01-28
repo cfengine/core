@@ -229,6 +229,22 @@ void InitializeGA(int argc,char *argv[])
 NewClass("any");
 strcpy(VPREFIX,"cf3");
 
+if (VERBOSE)
+   {
+   NewClass("verbose_mode");
+   }
+
+if (INFORM)
+   {
+   NewClass("inform_mode");
+   }
+
+if (DEBUG)
+   {
+   NewClass("debug_mode");
+   }
+
+
 Verbose("Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");  
 Verbose("------------------------------------------------------------------------\n");
 
@@ -320,6 +336,9 @@ DetermineCfenginePort();
 
 VIFELAPSED = 1;
 VEXPIREAFTER = 1;
+
+snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
+SetNewScope(vbuff);
 
 setlinebuf(stdout);
 }

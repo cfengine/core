@@ -190,6 +190,7 @@ void VerifyFilePromise(char *path,struct Promise *pp)
   struct Attributes a;
   struct CfLock thislock;
   int success,rlevel = 0,isthere;
+  char filename[CF_BUFSIZE];
 
 a = GetFilesAttributes(pp);
 
@@ -253,6 +254,13 @@ if (a.link.link_children)
 
 thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
 
+snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+
+if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
+   {
+   CfOut(cf_error,"","Could not open the setuid log %s",filename);
+   }
+
 if (thislock.lock == NULL)
    {
    return;
@@ -315,6 +323,7 @@ if (a.haveedit)
    ScheduleEditOperation(path,a,pp);
    }
 
+SaveItemListAsFile(VSETUIDLIST,filename,a,pp);
 YieldCurrentLock(thislock);
 }
 

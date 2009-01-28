@@ -1,4 +1,11 @@
+3.0.1
+	First standalone release, independent of cfengine 2 
 
+	Reporting rationalized in cf-promises with -r only to avoid
+	leaving output files everywhere.
+
+	Hooks added for upcoming commerical additions to cfengine.
+	
 3.0.0
 	First release of cfengine 3. Known omissions:
 	- no support for ACLs

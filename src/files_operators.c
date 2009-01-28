@@ -1593,13 +1593,12 @@ if ((fp = fopen(fname,"a")) == NULL)
    return;
    }
 
-chmod(fname,600);
-
 snprintf(timebuf,CF_MAXVARSIZE-1,"%s",ctime(&now));
 Chop(timebuf);
 fprintf(fp,"%s,%s\n",timebuf,file);
-
 fclose(fp);
+
+chmod(fname,600);
 }
 
 

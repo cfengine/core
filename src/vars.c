@@ -195,7 +195,7 @@ i = slot = GetHash(vlval);
 
 if (ptr == NULL || ptr->hashtable == NULL)
    {
-   CfOut(cf_error,"","Scope %s does not seem to exist -- no \"common control\" body?\n",scope);
+   Debug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
    return cf_notype;
    }
 

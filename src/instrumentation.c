@@ -386,7 +386,7 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    }
 #endif
 
-if (GetVariable("common","lastseenexpireafter",(void *)varbuf,&rtype) != cf_notype)
+if (GetVariable("control_agent","lastseenexpireafter",(void *)varbuf,&rtype) != cf_notype)
    {
    lsea = atoi(varbuf);
    lsea *= CF_TICKS_PER_DAY;

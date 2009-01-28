@@ -61,8 +61,8 @@ char *ID = "The cfengine's generator makes key pairs for remote authentication.\
 int main(int argc,char *argv[])
 
 {
-GenericInitialize(argc,argv,"keygenerator");
 CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"keygenerator");
 KeepPromises();
 return 0;
 }
@@ -82,6 +82,8 @@ void KeepPromises()
   EVP_CIPHER *cipher;
   char vbuff[CF_BUFSIZE];
 
+NewScope("common");
+  
 cipher = EVP_des_ede3_cbc();
 
 if (stat(CFPRIVKEYFILE,&statbuf) != -1)

@@ -633,36 +633,3 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 return false;
 }
 
-
-/*********************************************************************/
-/* Control                                                           */
-/*********************************************************************/
-
-extern struct BodySyntax CFA_CONTROLBODY[];
-
-int ControlBool(enum cfagenttype id,enum cfacontrol promiseoption)
-
-{ char rettype;
-  void *retval;
-  
-switch (id)
-   {
-   case cf_agent:
-       
-       if (GetVariable("control_agent",CFA_CONTROLBODY[promiseoption].lval,&retval,&rettype) == cf_notype)
-          {
-          CfOut(cf_verbose,"","lval %s was not found in agent control body",CFA_CONTROLBODY[promiseoption].lval);
-          return false;
-          }
-       else
-          {
-          return GetBoolean(retval);
-          }
-       break;
-
-   case cf_server:
-       break;
-   }
-
-return false;
-}

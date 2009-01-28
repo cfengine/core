@@ -208,7 +208,6 @@ gid_t GetGidConstraint(char *lval,struct Constraint *list,struct Promise *pp);
 struct Rlist *GetListConstraint(char *lval,struct Constraint *list);
 void ReCheckAllConstraints(struct Promise *pp);
 void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
-int ControlBool(enum cfagenttype id,enum cfacontrol promiseoption);
 int GetBundleConstraint(char *lval,struct Constraint *list);
 int VerifyConstraintName(char *lval);
 
@@ -1077,7 +1076,7 @@ void DeleteAllVariables(char *scope);
 int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);
 int IsCf3VarString(char *str);
-int BooleanControl(char *scope,char *name,int bool);
+int BooleanControl(char *scope,char *name);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
 

@@ -187,7 +187,7 @@ HashString(in,nonce_len,digest,cf_md5);
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
-if (ControlBool(THIS_AGENT_TYPE,cfa_hostnamekeys))
+if (BooleanControl("control_agent","hostnamekeys"))
    {
    snprintf(keyname,CF_BUFSIZE,"root-%s",pp->this_server); 
    Debug("AuthenticateAgent(with hostname key %s)\n",keyname);

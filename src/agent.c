@@ -175,6 +175,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
       case 'B':
           strncpy(VINPUTFILE,"./failsafe.cf",CF_BUFSIZE-1);
           BOOTSTRAP = true;
+          MINUSF = true;
           break;
           
       case 'K': IGNORELOCK = true;

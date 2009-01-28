@@ -767,11 +767,12 @@ if (PROMISETIME < newstat.st_mtime)
    NewScope("sys");
    NewScope("const");
    NewScope("this");
+   NewScope("control_server");
+   NewScope("control_common");
    GetNameInfo3();
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
    Get3Environment();
-   SetNewScope("server");
 
    ok = CheckPromises(cf_server);
 
@@ -3028,7 +3029,7 @@ int CheckStoreKey(struct cfd_connection *conn,RSA *key)
 { RSA *savedkey;
  char keyname[CF_MAXVARSIZE];
 
-if (BooleanControl("server","hostnamekeys",true))
+if (BooleanControl("control_server","hostnamekeys"))
    {
    snprintf(keyname,CF_MAXVARSIZE,"%s-%s",conn->username,conn->hostname);
    }

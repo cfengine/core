@@ -46,7 +46,6 @@ void BundleNode(FILE *fp,char *bundle)
 #ifdef HAVE_LIBCFNOVA
  Nova_BundleNode(fp,bundle);
 #else
- Verbose("# This feature is only available in commerical version Nova and above");
 #endif
 }
 
@@ -58,7 +57,6 @@ void BodyNode(FILE *fp,char *bundle,int calltype)
 #ifdef HAVE_LIBCFNOVA
  Nova_BodyNode(fp,bundle,calltype);
 #else
- Verbose("# This feature is only available in commerical version Nova and above");
 #endif
 }
 
@@ -70,7 +68,6 @@ void TypeNode(FILE *fp,char *type)
 #ifdef HAVE_LIBCFNOVA
  Nova_TypeNode(fp,type);
 #else
- Verbose("# This feature is only available in commerical version Nova and above");
 #endif
 }
 
@@ -82,7 +79,6 @@ void PromiseNode(FILE *fp,struct Promise *pp,int type)
 #ifdef HAVE_LIBCFNOVA
  Nova_PromiseNode(fp,pp,type);
 #else
- Verbose("# This feature is only available in commerical version Nova and above");
 #endif
 }
 
@@ -94,7 +90,6 @@ void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version)
 #ifdef HAVE_LIBCFNOVA
  Nova_MapPromiseToTopic(fp,pp,version); 
 #else
- Verbose("# This feature is only available in commerical version Nova and above");
 #endif
 }
 
@@ -109,7 +104,7 @@ void ShowTopicRepresentation(FILE *fp)
 #ifdef HAVE_LIBCFNOVA
  Nova_ShowTopicRepresentation(fp);
 #else
- Verbose("# This feature is only available in commerical version Nova and above\n");
+ Verbose("# This reporting feature is only available in commerical version Nova and above\n");
 #endif
 
  

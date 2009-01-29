@@ -1238,12 +1238,14 @@ if (liststart == NULL)
 for (ip = liststart; ip != NULL; ip=ip->next)
    {
    tmplen = strlen(ip->name);
+
    if ((finmem = realloc(finmem, fip+tmplen+1)) == NULL)
-	{
-	Debug("CompareToFile(%s): can't realloc() memory\n",file);
-	free(finmem);
-	return false;
-	}
+      {
+      Debug("CompareToFile(%s): can't realloc() memory\n",file);
+      free(finmem);
+      return false;
+      }
+   
    memcpy(finmem+fip, ip->name, tmplen);
    fip += tmplen;
    *(finmem+fip++) = '\n';
@@ -1255,7 +1257,7 @@ if (statbuf.st_size != fip)
    free(finmem);
    return false;
    }
- 
+
 if ((fp = fopen(file,"r")) == NULL)
    {
    CfOut(cf_error,"fopen","Couldn't read file %s for editing\n",file);
@@ -1266,19 +1268,20 @@ if ((fp = fopen(file,"r")) == NULL)
 for (idx = 0; idx < fip; idx++)
    {
    if (fread(&fdata, 1, 1, fp) != 1)
-	{
-	Debug("CompareToFile(%s): non-zero fread() before file-in-mem finished at %u-th byte MEM:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx));
-	free(finmem);
-	fclose(fp);
-	return false;
-	}
+      {
+      Debug("CompareToFile(%s): non-zero fread() before file-in-mem finished at %u-th byte MEM:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx));
+      free(finmem);
+      fclose(fp);
+      return false;
+      }
+   
    if (fdata != *(finmem+idx))
-	{
-	Debug("CompareToFile(%s): difference found at %u-th byte MEM:(0x%x/%c) != FILE:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx), fdata, fdata);
-	free(finmem);
-	fclose(fp);
-	return false;
-	}
+      {
+      printf("CompareToFile(%s): difference found at %u-th byte MEM:(0x%x/%c) != FILE:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx), fdata, fdata);
+      free(finmem);
+      fclose(fp);
+      return false;
+      }
    }
 
 free(finmem);

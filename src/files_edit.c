@@ -125,7 +125,7 @@ if (stat(file,&statbuf) == -1)
    return false;
    }
 
-if (statbuf.st_size > a.edits.maxfilesize)
+if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
    {
    CfOut(cf_inform,"","File %s is bigger than the limit edit.max_file_size = %d bytes\n",file,a.edits.maxfilesize);
    return(false);

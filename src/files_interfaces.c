@@ -187,12 +187,16 @@ cf_closedir(dirh);
 void VerifyFilePromise(char *path,struct Promise *pp)
 
 { struct stat osb,oslb,dsb,dslb;
-  struct Attributes a;
+ struct Attributes a,b;
   struct CfLock thislock;
   int success,rlevel = 0,isthere;
   char filename[CF_BUFSIZE];
 
 a = GetFilesAttributes(pp);
+
+b = a;
+b.edits.backup = cfa_nobackup;
+b.edits.maxfilesize = 0;
 
 if (!FileSanityChecks(path,a,pp))
    {
@@ -258,7 +262,7 @@ snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
 
 if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
    {
-   CfOut(cf_error,"","Could not open the setuid log %s",filename);
+   CfOut(cf_verbose,"","Did not find a previous setuid log %s",filename);
    }
 
 if (thislock.lock == NULL)
@@ -323,7 +327,17 @@ if (a.haveedit)
    ScheduleEditOperation(path,a,pp);
    }
 
-SaveItemListAsFile(VSETUIDLIST,filename,a,pp);
+if (!CompareToFile(VSETUIDLIST,filename))
+   {
+   SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
+   
+   if (VSETUIDLIST != NULL)
+      {
+      DeleteItemList(VSETUIDLIST);
+      VSETUIDLIST = NULL;
+      }
+   }
+
 YieldCurrentLock(thislock);
 }
 

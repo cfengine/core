@@ -231,7 +231,9 @@ Debug("Set debugging\n");
 
 void ThisAgentInit()
 
-{
+{ FILE *fp;
+  char filename[CF_BUFSIZE];
+ 
 signal(SIGINT,HandleSignals);
 signal(SIGTERM,HandleSignals);
 signal(SIGHUP,SIG_IGN);
@@ -242,6 +244,16 @@ signal(SIGUSR2,HandleSignals);
 CFA_MAXTHREADS = 30;
 EDITFILESIZE = 100000;
 
+snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+
+if ((fp = fopen(filename,"a")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Unable to create a writable log %s\n",filename);
+   }
+else
+   {
+   fclose(fp);
+   }
 
 /*
   do not set signal(SIGCHLD,SIG_IGN) in agent near

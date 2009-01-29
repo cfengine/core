@@ -1573,6 +1573,7 @@ void LogHashChange(char *file)
   char fname[CF_BUFSIZE],timebuf[CF_MAXVARSIZE];
   time_t now = time(NULL);
   struct stat sb;
+  mode_t perm = 0600;
 
 /* This is inefficient but we don't want to lose any data */
   
@@ -1583,13 +1584,12 @@ if (stat(fname,&sb) != -1)
    if (sb.st_mode & (S_IWGRP | S_IWOTH))
       {
       CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",fname,sb.st_uid);
-      exit(1);
       }
    }
 
 if ((fp = fopen(fname,"a")) == NULL)
    {
-   CfOut(cf_error,"fopen","Could not write to the change log");
+   CfOut(cf_error,"fopen","Could not write to the hash change log");
    return;
    }
 
@@ -1598,7 +1598,7 @@ Chop(timebuf);
 fprintf(fp,"%s,%s\n",timebuf,file);
 fclose(fp);
 
-chmod(fname,600);
+chmod(fname,perm);
 }
 
 

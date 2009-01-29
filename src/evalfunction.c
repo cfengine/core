@@ -337,11 +337,56 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-SetFnCallReturnStatus("classmatch",FNCALL_SUCCESS,NULL,NULL);
+SetFnCallReturnStatus("canonify",FNCALL_SUCCESS,NULL,NULL);
 
 if ((rval.item = strdup(CanonifyName((char *)finalargs->item))) == NULL)
    {
    FatalError("Memory allocation in FnCanonify");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+SetFnCallReturnStatus("classify",FNCALL_SUCCESS,NULL,NULL);
+
+if (IsDefinedClass(CanonifyName(finalargs->item)))
+   {
+   strcpy(buffer,"any");
+   }
+else
+   {
+   strcpy(buffer,"!any");
+   }
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnClassify");
    }
 
 /* end fn specific content */

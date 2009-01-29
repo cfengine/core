@@ -298,6 +298,9 @@ switch (this)
    case cfn_hostrange:
        rval = FnCallHostRange(fp,expargs);
        break;
+   case cfn_hostinnetgroup:
+       rval = FnCallHostInNetgroup(fp,expargs);
+       break;
    case cfn_isvariable:
        rval = FnCallIsVariable(fp,expargs);
        break;

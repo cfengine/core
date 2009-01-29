@@ -1539,6 +1539,65 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  char *machine, *user, *domain;
+   
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+strcpy(buffer,"!any");
+
+setnetgrent(finalargs->item);
+
+while (getnetgrent(&machine,&user,&domain))
+   {
+   if (strcmp(machine,VUQNAME) == 0)
+      {
+      Verbose("Matched %s in netgroup %s\n",machine,finalargs->item);
+      strcpy(buffer,"any");
+      break;
+      }
+   
+   if (strcmp(machine,VFQNAME) == 0)
+      {
+      Verbose("Matched %s in netgroup %s\n",machine,finalargs->item);
+      strcpy(buffer,"any");
+      break;
+      }
+   }
+
+endnetgrent();
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallChangedBefore");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

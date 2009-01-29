@@ -470,6 +470,7 @@ enum fncalltype
    cfn_groupexists,
    cfn_hash,
    cfn_hostrange,
+   cfn_hostinnetgroup,
    cfn_iprange,
    cfn_irange,
    cfn_isdir,

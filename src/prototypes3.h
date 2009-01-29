@@ -342,6 +342,7 @@ struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs);
 
 void *ReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);

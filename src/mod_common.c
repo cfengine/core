@@ -55,6 +55,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"groupexists",cf_class,1,"Define class if group or numerical id exists on this host"},
    {"hash",cf_str,2,"Return the hash of arg1, type arg2 and assign to a variable"},
    {"hostrange",cf_class,2,"Define class if the current host lies in the range of enumerated hostnames specified"},
+   {"hostinnetgroup",cf_class,1,"Define class if the current host is in the named netgroup"},
    {"iprange",cf_class,1,"Define class if the current host lies in the range of IP addresses specified"},
    {"irange",cf_irange,2,"Define a range of integer values for cfengine internal use"},
    {"isdir",cf_class,1,"Define class if the named object is a directory"},

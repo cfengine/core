@@ -751,7 +751,9 @@ enum cflinkchildren
 enum cfchanges
    {
    cfa_noreport,
-   cfa_contentchange
+   cfa_contentchange,
+   cfa_statschange,
+   cfa_allchanges
    };
 
 enum signalnames

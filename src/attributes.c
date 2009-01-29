@@ -529,6 +529,14 @@ if (value && strcmp(value,"content") == 0)
    {
    c.report_changes = cfa_contentchange;
    }
+else if (value && strcmp(value,"stats") == 0)
+   {
+   c.report_changes = cfa_statschange;
+   }
+else if (value && strcmp(value,"all") == 0)
+   {
+   c.report_changes = cfa_allchanges;
+   }
 else
    {
    c.report_changes = cfa_noreport;

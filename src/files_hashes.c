@@ -131,7 +131,7 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
             CfOut(warnlevel,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
          
-         CfOut(warnlevel,"","SECURITY ALERT: Hash (%s) for %s changed!",FileHashName(type),filename);
+         CfOut(warnlevel,"","ALERT: Hash (%s) for %s changed!",FileHashName(type),filename);
          
          if (EXCLAIM)
             {
@@ -422,21 +422,23 @@ memset(&value,0,sizeof(value));
 while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    {
    char *obj = (char *)key.data + CF_CHKSUMKEYOFFSET;
-   
+
    if (stat(obj,&statbuf) == -1)
       {
       if (attr.change.update)
          {
-         cfPS(cf_error,CF_CHG,"",pp,attr,"SECURITY INFO: %s checksum for %s purged - file no longer exists!",key.data,obj);
-         
-         if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
+         if (dbp->del(dbp,NULL,&key,0) != 0)
             {
-            CfOut(cf_error,"db_store","Deletion failed");
+            CfOut(cf_error,"del","Hash deletion failed: %s",db_strerror(errno));
+            }
+         else
+            {
+            cfPS(cf_error,CF_CHG,"",pp,attr,"ALERT: hash for %s purged as file no longer exists!",obj);
             }
          }
       else
          {
-         cfPS(cf_error,CF_WARN,"",pp,attr,"SECURITY INFO: %s checksum for %s  - file no longer exists!",key.data,obj);
+         cfPS(cf_error,CF_WARN,"",pp,attr,"ALERT: %s file no longer exists!",obj);
          }
       }
 

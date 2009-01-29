@@ -450,6 +450,11 @@ if (attr.havechange && S_ISREG(dstat->st_mode))
    VerifyFileIntegrity(file,pp,attr);
    }
 
+if (attr.havechange)
+   {
+   VerifyFileChanges(file,dstat,pp,attr);
+   }
+
 if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a link */
    {
    KillGhostLink(file,attr,pp);
@@ -1111,7 +1116,10 @@ void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr)
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
   int changed = false;
   
-Debug("Checking checksum/hash integrity of %s\n",file);
+if ((attr.change.report_changes != cfa_contentchange) && (attr.change.report_changes != cfa_allchanges))
+   {
+   return;
+   }
 
 memset(digest1,0,EVP_MAX_MD_SIZE+1);
 memset(digest2,0,EVP_MAX_MD_SIZE+1);
@@ -1148,6 +1156,141 @@ if (changed)
    NewPersistentContext("checksum_alerts",CF_PERSISTENCE,cfpreserve);
    LogHashChange(file);
    }
+}
+
+/*********************************************************************/
+
+void VerifyFileChanges(char *file,struct stat *sb,struct Promise *pp,struct Attributes attr)
+
+{ struct stat cmpsb;
+  DBT *key,*value;
+  DB *dbp;
+  DB_ENV *dbenv = NULL;
+  char statdb[CF_BUFSIZE];
+  int ok = true;
+
+if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_changes != cfa_allchanges))
+   {
+   return;
+   }
+
+snprintf(statdb,CF_BUFSIZE,"%s/stats.db",CFWORKDIR);
+
+if ((errno = db_create(&dbp,dbenv,0)) != 0)
+   {
+   CfOut(cf_error,"db_open","Couldn't open stat database %s\n",statdb);
+   return;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = (dbp->open)(dbp,statdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = (dbp->open)(dbp,NULL,statdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   CfOut(cf_error,"db_open","Couldn't open stat database %s\n",statdb);
+   dbp->close(dbp,0);
+   return;
+   }
+
+if (!ReadDB(dbp,file,&cmpsb,sizeof(struct stat)))
+   {
+   if (!DONTDO)
+      {
+      WriteDB(dbp,file,sb,sizeof(struct stat));
+      dbp->close(dbp,0);   
+      return;
+      }
+   }
+
+if (cmpsb.st_mode != sb->st_mode)
+   {
+   ok = false;
+   }
+
+if (cmpsb.st_uid != sb->st_uid)
+   {
+   ok = false;
+   }
+
+if (cmpsb.st_gid != sb->st_gid)
+   {
+   ok = false;
+   }
+
+if (cmpsb.st_dev != sb->st_dev)
+   {
+   ok = false;
+   }
+
+if (cmpsb.st_ino != sb->st_ino)
+   {
+   ok = false;
+   }
+
+if (cmpsb.st_mtime != sb->st_mtime)
+   {
+   ok = false;
+   }
+
+if (ok)
+   {
+   dbp->close(dbp,0);   
+   return;
+   }
+
+if (EXCLAIM)
+   {
+   CfOut(cf_error,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+   }
+
+if (cmpsb.st_mode != sb->st_mode)
+   {
+   CfOut(cf_error,"","ALERT: Permissions for %s changed %o -> %o",file,cmpsb.st_mode,sb->st_mode);
+   }
+
+if (cmpsb.st_uid != sb->st_uid)
+   {
+   CfOut(cf_error,"","ALERT: owner for %s changed %d -> %d",file,cmpsb.st_uid,sb->st_uid);
+   }
+
+if (cmpsb.st_gid != sb->st_gid)
+   {
+   CfOut(cf_error,"","ALERT: group for %s changed %d -> %d",file,cmpsb.st_gid,sb->st_gid);
+   }
+
+if (cmpsb.st_dev != sb->st_dev)
+   {
+   CfOut(cf_error,"","ALERT: device for %s changed %d -> %d",file,cmpsb.st_dev,sb->st_dev);
+   }
+
+if (cmpsb.st_ino != sb->st_ino)
+   {
+   CfOut(cf_error,"","ALERT: inode for %s changed %d -> %d",file,cmpsb.st_ino,sb->st_ino);
+   }
+
+if (cmpsb.st_mtime != sb->st_mtime)
+   {
+   char from[CF_MAXVARSIZE];
+   char to[CF_MAXVARSIZE];
+   strcpy(from,ctime(&(cmpsb.st_mtime)));
+   strcpy(to,ctime(&(sb->st_mtime)));
+   Chop(from);
+   Chop(to);
+   CfOut(cf_error,"","ALERT: Last modified time for %s changed %s -> %s",file,from,to);
+   }
+
+if (EXCLAIM)
+   {
+   CfOut(cf_error,"","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+   }
+
+if (attr.change.update && !DONTDO)
+   {
+   WriteDB(dbp,file,sb,sizeof(struct stat));
+   }
+
+dbp->close(dbp,0);
 }
 
 /*********************************************************************/

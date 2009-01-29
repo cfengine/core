@@ -296,7 +296,7 @@ if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
       a.havedepthsearch = save_search;
       }
 
-   if (a.havechange)
+   if (a.change.report_changes == cfa_contentchange || a.change.report_changes == cfa_allchanges)
       {
       PurgeHashes(a,pp);
       }

@@ -524,6 +524,7 @@ void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
 void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
 void CreateEmptyFile(char *name);
+void VerifyFileChanges(char *file,struct stat *sb,struct Promise *pp,struct Attributes attr);
 
 /* files_properties.c */
 

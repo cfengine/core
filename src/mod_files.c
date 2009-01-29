@@ -187,7 +187,7 @@ struct BodySyntax CF_ACL_BODY[] =
 struct BodySyntax CF_CHANGEMGT_BODY[] =
    {
    {"hash",cf_opts,"md5,sha1,best","Hash files for change detection"},
-   {"report_changes",cf_opts,"content,none","Specify criteria for change warnings"},
+   {"report_changes",cf_opts,"all,stats,content,none","Specify criteria for change warnings"},
    {"update_hashes",cf_opts,CF_BOOL,"Update hash values immediately after change warning"},
    {NULL,cf_notype,NULL,NULL}
    };

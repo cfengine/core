@@ -314,6 +314,11 @@ if (strlen(hostname) == 0)
    return;
    }
 
+if (!BooleanControl("control_agent",CFA_CONTROLBODY[cfa_lastseen].lval))
+   {
+   return;
+   }
+
 Debug("LastSeen(%s) reg\n",hostname);
 
 /* Tidy old versions - temporary */
@@ -340,7 +345,7 @@ if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
    }
 
 /* Now open special file for peer entropy record - INRIA intermittency */
-snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
+snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
 
 if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
    {
@@ -386,7 +391,7 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    }
 #endif
 
-if (GetVariable("control_agent","lastseenexpireafter",(void *)varbuf,&rtype) != cf_notype)
+if (GetVariable("control_agent",CFA_CONTROLBODY[cfa_lastseenexpireafter].lval,(void *)varbuf,&rtype) != cf_notype)
    {
    lsea = atoi(varbuf);
    lsea *= CF_TICKS_PER_DAY;

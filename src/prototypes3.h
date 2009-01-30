@@ -578,6 +578,7 @@ int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);
 void Cf3ParseFile(char *filename);
 void Cf3ParseFiles(void);
+int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(void);
 void HashControls(void);
@@ -599,6 +600,7 @@ void PrependAuditFile(char *file);
 void WritePID(char *filename);
 void OpenReports(char *agents);
 void CloseReports(char *agents);
+char *InputLocation(char *filename);
 
 /* granules.c  */
 

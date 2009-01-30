@@ -400,6 +400,76 @@ PARSING = false;
 
 /*******************************************************************/
 
+int NewPromiseProposals()
+
+{ struct Rlist *rp,*sl;
+  struct stat sb;
+
+if (stat(VINPUTFILE,&sb) == -1)
+   {
+   CfOut(cf_error,"stat","There are no readable promise proposals at %s",VINPUTFILE);
+   return false;
+   }
+
+if (sb.st_mtime > PROMISETIME)
+   {
+   return true;
+   }
+          
+if (VINPUTLIST != NULL)
+   {
+   for (rp = VINPUTLIST; rp != NULL; rp=rp->next)
+      {
+      if (rp->type != CF_SCALAR)
+         {
+         CfOut(cf_error,"","Non file object %s in list\n",(char *)rp->item);
+         }
+      else
+         {
+         struct Rval returnval = EvaluateFinalRval("sys",rp->item,rp->type,true,NULL);
+
+         switch (returnval.rtype)
+            {
+            case CF_SCALAR:
+
+                if (stat(InputLocation((char *)returnval.item),&sb) == -1)
+                   {
+                   CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)returnval.item);
+                   return false;
+                   }
+
+                if (sb.st_mtime > PROMISETIME)
+                   {
+                   return true;
+                   }
+                
+                break;
+                
+            case CF_LIST:
+                for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
+                   {
+                   if (stat(InputLocation((char *)returnval.item),&sb) == -1)
+                      {
+                      CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)returnval.item);
+                      return false;
+                      }
+
+                   if (sb.st_mtime > PROMISETIME)
+                      {
+                      return true;
+                      }
+                   }
+                break;
+            }
+         }
+      }
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
 void OpenReports(char *agents)
 
 { char name[CF_BUFSIZE];
@@ -493,27 +563,13 @@ void Cf3ParseFile(char *filename)
   struct stat statbuf;
   struct Rlist *rp;
   int access = false;
-  char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
+  char wfilename[CF_BUFSIZE];
 
-if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsFileSep(*VINPUTFILE)) && !IsFileSep(*filename))
-   {
-   /* If -f assume included relative files are in same directory */
-   strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
-   ChopLastNode(path);
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
-   }
-else if ((*filename == '.') || IsFileSep(*filename))
-   {
-   strncpy(wfilename,filename,CF_BUFSIZE-1);
-   }
-else
-   {
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
-   }
+strncpy(wfilename,InputLocation(filename),CF_BUFSIZE);
 
 if (stat(wfilename,&statbuf) == -1)
    {
-   printf("Can't stat file %s for parsing\n",wfilename);
+   CfOut(cf_error,"stat","Can't stat file %s for parsing\n",wfilename);
    exit(1);
    }
 
@@ -923,6 +979,31 @@ else
 
 /*******************************************************************/
 /* Level 2                                                         */
+/*******************************************************************/
+
+char *InputLocation(char *filename)
+
+{ static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
+
+if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsFileSep(*VINPUTFILE)) && !IsFileSep(*filename))
+   {
+   /* If -f assume included relative files are in same directory */
+   strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
+   ChopLastNode(path);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
+   }
+else if ((*filename == '.') || IsFileSep(*filename))
+   {
+   strncpy(wfilename,filename,CF_BUFSIZE-1);
+   }
+else
+   {
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
+   }
+
+return wfilename;
+}
+
 /*******************************************************************/
 
 void CompilationReport(char *fname)

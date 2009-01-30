@@ -61,6 +61,7 @@ mid = GetConstraint("measurement_class",pp->conlist,CF_SCALAR);
 if (mid)
    {
    snprintf(id,CF_BUFSIZE,"%s:%s:%100s",(char *)mid,pp->agentsubtype,pp->promiser);
+   Chop(id);
    EndMeasure(id,start);
    }
 }

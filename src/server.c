@@ -708,23 +708,14 @@ memset(filename,0,CF_BUFSIZE);
 
 if ((*VINPUTFILE != '.') && !IsAbsoluteFileName(VINPUTFILE)) /* Don't prepend to absolute names */
    {
-   strncpy(filename,CFWORKDIR,CF_BUFSIZE-1);
-   AddSlash(filename);
-   strncat(filename,"inputs/",CF_BUFSIZE-1-strlen(filename));
+   snprintf(filename,CF_BUFSIZE,"%s/inputs/",CFWORKDIR);
    }
 
 strncat(filename,VINPUTFILE,CF_BUFSIZE-1-strlen(filename));
 
-if (stat(filename,&newstat) == -1)
-   {
-   CfOut(cf_error,filename,"Input file %s missing or busy..\n",filename);
-   sleep(5);
-   return;
-   }
-
 Debug("Checking file updates on %s (%x/%x)\n",filename, newstat.st_mtime, CFDSTARTTIME);
 
-if (PROMISETIME < newstat.st_mtime)
+if (NewPromiseProposals())
    {
    CfOut(cf_inform,"","Rereading config files %s..\n",filename);
 

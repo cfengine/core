@@ -34,11 +34,7 @@ void VerifyPackagesPromise(struct Promise *pp)
 
 { struct Attributes a;
 
- /*
-a = GetInterfacesAttributes(pp);
-VerifyInterface(a,pp);
-DeleteScalar("this","promiser");
- */
+a = GetPackageAttributes(pp);
  
  printf("NOT YET IMPLEMENTED\n");
 }

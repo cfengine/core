@@ -1232,7 +1232,7 @@ if (stat(file,&statbuf) == -1)
 
 if (liststart == NULL)
    {
-   return false;
+   return true;
    }
 
 for (ip = liststart; ip != NULL; ip=ip->next)

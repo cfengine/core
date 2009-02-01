@@ -132,6 +132,7 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
             }
          
          CfOut(warnlevel,"","ALERT: Hash (%s) for %s changed!",FileHashName(type),filename);
+         CfOut(warnlevel,"","Preceding promise: %s",pp->ref);
          
          if (EXCLAIM)
             {

@@ -97,6 +97,18 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetPackageAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+attr.packages = GetPackageConstraints(pp);
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetClassContextAttributes(struct Promise *pp)
 
 { struct Attributes a;
@@ -723,6 +735,41 @@ return a;
 
 /*******************************************************************/
 
+struct Packages GetPackageConstraints(struct Promise *pp)
+
+{ struct Packages p;
+  enum package_actions action;
+  enum version_cmp operator;
+  enum action_policy change_policy;
+
+p.have_package_methods = GetBooleanConstraint("havepackage_methods",pp->conlist);
+p.package_version = (char *)GetConstraint("package_version",pp->conlist,CF_SCALAR);
+
+action = Str2PackageAction((char *)GetConstraint("package_policy",pp->conlist,CF_SCALAR));
+p.package_policy = action;
+  
+operator = Str2PackageSelect((char *)GetConstraint("package_select",pp->conlist,CF_SCALAR));
+p.package_select = operator;
+change_policy = Str2ActionPolicy((char *)GetConstraint("package_changes",pp->conlist,CF_SCALAR));
+p.package_changes = change_policy;
+
+p.package_file_repositories = GetListConstraint("package_file_repositories",pp->conlist);
+p.package_list_command = (char *)GetConstraint("package_list_command",pp->conlist,CF_SCALAR);
+p.package_extract_version_regex = (char *)GetConstraint("package_extract_version_regex",pp->conlist,CF_SCALAR);
+p.package_installed_regex = (char *)GetConstraint("package_installed_regex",pp->conlist,CF_SCALAR);
+p.package_add_command = (char *)GetConstraint("package_add_command",pp->conlist,CF_SCALAR);
+p.package_delete_command = (char *)GetConstraint("package_delete_command",pp->conlist,CF_SCALAR);
+p.package_update_command = (char *)GetConstraint("package_update_command",pp->conlist,CF_SCALAR);
+p.package_patch_command = (char *)GetConstraint("package_patch_command",pp->conlist,CF_SCALAR);
+p.package_verify_command = (char *)GetConstraint("package_verify_command",pp->conlist,CF_SCALAR);
+p.package_noverify_regex = (char *)GetConstraint("package_noverify_regex",pp->conlist,CF_SCALAR);
+p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode",pp->conlist);
+
+return p;
+}
+
+/*******************************************************************/
+
 struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp)
 
 { struct ProcessSelect p;
@@ -775,7 +822,6 @@ return p;
 }
 
 /*******************************************************************/
-
 
 void ShowAttributes(struct Attributes a)
 

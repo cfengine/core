@@ -1383,8 +1383,8 @@ snprintf(query,CF_BUFSIZE-1,
         ");\n"
         );
 
-fprintf(fout,query);
-        
+fprintf(fout,"%s",query);
+
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE associations"
         "("
@@ -1397,7 +1397,7 @@ snprintf(query,CF_BUFSIZE-1,
         ");\n"
         );
 
-fprintf(fout,query);
+fprintf(fout,"%s",query);
 
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE occurrences"
@@ -1409,18 +1409,18 @@ snprintf(query,CF_BUFSIZE-1,
         ");\n"
         );
 
-fprintf(fout,query);
+fprintf(fout,"%s",query);
 
 /* Delete existing data and recreate */
 
 snprintf(query,CF_BUFSIZE-1,"delete from topics\n",TM_PREFIX);
-fprintf(fout,query);
+fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
 snprintf(query,CF_BUFSIZE-1,"delete from associations\n",TM_PREFIX);
-fprintf(fout,query);
+fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
 snprintf(query,CF_BUFSIZE-1,"delete from occurrences\n",TM_PREFIX);
-fprintf(fout,query);
+fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
 
 /* Class types */
@@ -1431,7 +1431,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
 
    snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type);
-   fprintf(fout,query);
+   fprintf(fout,"%s",query);
    CfVoidQueryDB(&cfdb,query);
    }
 
@@ -1447,7 +1447,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
          snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type) values ('%s','%s','%s','%s','%s','%s');\n",safe,GetLongTopicName(&cfdb,TOPIC_MAP,rp->item),ta->fwd_name,ta->bwd_name,tp->topic_type,ta->associate_topic_type);
-         fprintf(fout,query);
+         fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
          }
       }
@@ -1468,7 +1468,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          strcpy(safeexpr,EscapeSQL(&cfdb,op->locator));
 
          snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",CanonifyName(tp->topic_name),safeexpr,op->rep_type,GetLongTopicName(&cfdb,TOPIC_MAP,rp->item));
-         fprintf(fout,query);
+         fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
          }
       }

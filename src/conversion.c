@@ -28,6 +28,59 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/***************************************************************************/
+
+enum package_actions Str2PackageAction(char *s)
+
+{ int i;
+  static char *types[] = { "add","delete","reinstall","update","patch", NULL };
+    
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return (enum package_actions) i;      
+      }
+   }
+
+return cfa_pa_none;
+}
+
+/***************************************************************************/
+
+enum version_cmp Str2PackageSelect(char *s)
+
+{ int i;
+  static char *types[] = { "==","!=",">","<",">=","<=", NULL};
+  
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return (enum version_cmp) i;      
+      }
+   }
+
+return cfa_cmp_none;
+}
+
+/***************************************************************************/
+
+enum action_policy Str2ActionPolicy(char *s)
+
+{ int i;
+ static char *types[] = { "individual","bulk",NULL};
+  
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return (enum version_cmp) i;      
+      }
+   }
+
+return cfa_no_ppolicy;
+}
 
 /***************************************************************************/
 

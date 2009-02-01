@@ -1105,9 +1105,12 @@ void VerifyPromises(enum cfagenttype agent)
   struct Promise *pp;
   struct Body *bdp;
   struct Scope *ptr;
-  struct Rlist *rp;
+  struct Rlist *rp,*params;
   struct FnCall *fp;
   char buf[CF_BUFSIZE], *scope;
+  char rettype,*name;
+  void *retval;
+  int ok = true;
 
 Debug("\n\nVerifyPromises()\n");
 
@@ -1161,7 +1164,7 @@ for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
       }
    }
 
-/* Now look once through all the bundles themselves */
+/* Now look once through ALL the bundles themselves */
 
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
@@ -1180,6 +1183,61 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          ExpandPromise(agent,scope,pp,NULL);
          }
       }
+   }
+
+/* Now look once through the sequences bundles themselves */
+
+if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
+   {
+   CfOut(cf_error,"","No bundlesequence in the common control body");
+   exit(1);
+   }
+
+if (rettype != CF_LIST)
+   {
+   FatalError("Promised bundlesequence was not a list");
+   }
+
+
+if (agent != cf_agent)
+   {
+   return;
+   }
+
+for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+          name = (char *)rp->item;
+          params = NULL;
+          break;
+      case CF_FNCALL:
+          fp = (struct FnCall *)rp->item;
+          name = (char *)fp->name;
+          params = (struct Rlist *)fp->args;
+          break;
+          
+      default:
+          name = NULL;
+          params = NULL;
+          CfOut(cf_error,"","Illegal item found in bundlesequence: ");
+          ShowRval(stdout,rp->item,rp->type);
+          printf(" = %c\n",rp->type);
+          ok = false;
+          break;
+      }
+   
+   if (!(GetBundle(name,"agent")||(GetBundle(name,"common"))))
+      {
+      CfOut(cf_error,"","Bundle %s listed in the bundlesequence was not found\n",name);
+      ok = false;
+      }
+   }
+
+if (!ok)
+   {
+   FatalError("Errors in agent bundles");
    }
 }
 

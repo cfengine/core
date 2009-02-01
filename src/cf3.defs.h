@@ -786,6 +786,34 @@ enum representations
    cfk_none
    };
 
+enum package_actions
+  {
+  cfa_addpack,
+  cfa_deletepack,
+  cfa_reinstall,
+  cfa_update,
+  cfa_patch,
+  cfa_pa_none
+  };
+
+enum version_cmp
+   {
+   cfa_eq,
+   cfa_neq,
+   cfa_gt,
+   cfa_lt,
+   cfa_ge,
+   cfa_le,
+   cfa_cmp_none
+   };
+
+enum action_policy
+  {
+  cfa_individual,
+  cfa_bulk,
+  cfa_no_ppolicy
+  };
+
 /*************************************************************************/
 /* Runtime constraint structures                                         */
 /*************************************************************************/
@@ -1169,6 +1197,28 @@ struct Report
 
 /*************************************************************************/
 
+struct Packages
+   {
+   enum package_actions package_policy;
+   int have_package_methods;
+   char *package_version;
+   enum version_cmp package_select;
+   enum action_policy package_changes;
+   struct Rlist *package_file_repositories;
+   char *package_list_command;
+   char *package_extract_version_regex;
+   char *package_installed_regex;
+   char *package_add_command;
+   char *package_delete_command;
+   char *package_update_command;
+   char *package_patch_command;
+   char *package_verify_command;
+   char *package_noverify_regex;
+   int package_noverify_returncode;
+   };
+
+/*************************************************************************/
+
 struct CfTcpIp
    {
    char *ipv4_address;
@@ -1177,7 +1227,8 @@ struct CfTcpIp
 
 /*************************************************************************/
 
- /* This is huge, but the simplification of logic is huge too and worth it */
+ /* This is huge, but the simplification of logic is huge too
+    so we leave it to the compiler to optimize */
 
 struct Attributes
    {
@@ -1189,12 +1240,13 @@ struct Attributes
    struct FileChange change;
    struct FileLink link;
    struct EditDefaults edits;
+   struct Packages packages;
    struct Context context;
    char *transformer;
+   char *repository;
    int touch;
    int create;
    int move_obstructions;
-   char *repository;
       
    struct Recursion recursion;
    struct TransactionContext transaction;
@@ -1235,6 +1287,7 @@ struct Attributes
    int havevolume;
    int havebundle;
    int havetcpip;
+   int havepackages;
 
       /* editline */
 
@@ -1291,7 +1344,7 @@ typedef struct
    MYSQL my_conn;
    MYSQL_RES *my_res;
 #endif
-#ifdef HAVE_PGSQL_LIBPQ_FE_H
+#if defined HAVE_PGSQL_LIBPQ_FE_H || defined HAVE_LIBPQ_FE_H
    PGconn *pq_conn;
    PGresult   *pq_res;
 #endif

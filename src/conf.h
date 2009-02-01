@@ -477,7 +477,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.1a6"
+#define VERSION "3.0.1a7"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

@@ -189,7 +189,7 @@ void VerifyFilePromise(char *path,struct Promise *pp)
 { struct stat osb,oslb,dsb,dslb;
  struct Attributes a,b;
   struct CfLock thislock;
-  int success,rlevel = 0,isthere;
+  int success,rlevel = 0,isthere,save = true;
   char filename[CF_BUFSIZE];
 
 a = GetFilesAttributes(pp);
@@ -238,7 +238,7 @@ else
       {
       if (a.havedepthsearch)
          {
-         CfOut(cf_error,"stat","depth_search (recursion) is promised for a base object %s that is not a directory",path);
+         CfOut(cf_error,"","Warning: depth_search (recursion) is promised for a base object %s that is not a directory",path);
          return;
          }
       }
@@ -262,7 +262,8 @@ snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
 
 if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
    {
-   CfOut(cf_verbose,"","Did not find a previous setuid log %s",filename);
+   CfOut(cf_inform,"","Did not find a previous setuid log %s",filename);
+   save = false;
    }
 
 if (thislock.lock == NULL)
@@ -327,7 +328,7 @@ if (a.haveedit)
    ScheduleEditOperation(path,a,pp);
    }
 
-if (!CompareToFile(VSETUIDLIST,filename))
+if (save && VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename))
    {
    SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
    

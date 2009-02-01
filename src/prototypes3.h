@@ -77,7 +77,9 @@ struct Attributes GetStorageAttributes(struct Promise *pp);
 struct Attributes GetClassContextAttributes(struct Promise *pp);
 struct Attributes GetTopicsAttributes(struct Promise *pp);
 struct Attributes GetOccurrenceAttributes(struct Promise *pp);
+struct Attributes GetPackageAttributes(struct Promise *pp);
 
+struct Packages GetPackageConstraints(struct Promise *pp);
 struct ExecContain GetExecContainConstraints(struct Promise *pp);
 struct Recursion GetRecursionConstraints(struct Promise *pp);
 struct FileSelect GetSelectConstraints(struct Promise *pp);
@@ -240,6 +242,9 @@ char *GetArg0(char *execstr);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
 int Day2Number(char *datestring);
+enum action_policy Str2ActionPolicy(char *s);
+enum version_cmp Str2PackageSelect(char *s);
+enum package_actions Str2PackageAction(char *s);
 
 /* crypto.c */
 
@@ -735,7 +740,6 @@ int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *
 void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
 void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast);
 void SetPromisedDefaultRoute(void);
-
 
 /* logging.c */
 

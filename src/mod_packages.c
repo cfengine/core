@@ -34,18 +34,18 @@
 
 struct BodySyntax CF_PKGMETHOD_BODY[] =
    {
-   {"package_use_shell",cf_opts,CF_BOOL,"Whether to use a shell wrapper when interfacing with package manager"},
-   {"package_aggregation",cf_opts,CF_BOOL,"Whether to group packages into a single aggregate command"},
-   {"package_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
-   {"package_verify",cf_opts,CF_BOOL,"Whether to attempt verification of matching installed packages (resource heavy)"},
-   {"package_verify_failure_class",cf_str,CF_IDRANGE,"Whether to attempt verification of matching installed packages (resource heavy)"},
-   {NULL,cf_notype,NULL,NULL}
-   };
-
-/***************************************************************/
-
-struct BodySyntax CF_PKGSELECT_BODY[] =
-   {
+   {"package_changes",cf_opts,"individual,bulk","Menu option - whether to group packages into a single aggregate command"},
+   {"package_file_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
+   {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of installed packages"},
+   {"package_extract_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
+   {"package_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
+   {"package_add_command",cf_str,CF_PATHRANGE,"Command to install a package to the system"},
+   {"package_delete_command",cf_str,CF_PATHRANGE,"Command to remove a package from the system"},
+   {"package_update_command",cf_str,CF_PATHRANGE,"Command to update to the latest version a currently installed package"},
+   {"package_patch_command",cf_str,CF_PATHRANGE,"Command to update to the latest patch release of an installed package"},
+   {"package_verify_command",cf_str,CF_PATHRANGE,"Command to verify the correctness of an installed package"},
+   {"package_noverify_regex",cf_str,"","Regular expression to match verification failure output"},
+   {"package_noverify_returncode",cf_str,"","Integer return code indicating package verification failure"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -55,10 +55,10 @@ struct BodySyntax CF_PKGSELECT_BODY[] =
 
 struct BodySyntax CF_PACKAGES_BODIES[] =
    {
-   {"package_list",cf_slist,"","List of packages to review"},
-   {"package_policy",cf_opts,"insert|delete|replace","Criteria for package installation/upgrade on the current system"},
+   {"package_policy",cf_opts,"add,delete,reinstall,update,patch","Criteria for package installation/upgrade on the current system"},
    {"package_methods",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
-   {"package_select",cf_body,CF_PKGSELECT_BODY,"Criteria for selecting version"},
+   {"package_version",cf_str,"","Version reference point for determining promised"},
+   {"package_select",cf_opts,">,<,==,!=,>=,<=","A criterion for first acceptable match relative to \"package_version\""},
    {NULL,cf_notype,NULL,NULL}
    };
 

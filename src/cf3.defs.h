@@ -855,6 +855,25 @@ struct CfMount
 
 /*************************************************************************/
 
+struct CfPackageManager
+   {
+   char *manager;
+   struct CfPackageItem *pack_list;
+   struct CfPackageList *next;
+   };
+
+/*************************************************************************/
+
+struct CfPackageItem 
+   {
+   char *name;
+   char *version;
+   char *arch;
+   struct CfPackageItem *next;
+   };
+
+/*************************************************************************/
+
 struct Recursion
    {
    int travlinks;
@@ -1206,7 +1225,12 @@ struct Packages
    enum action_policy package_changes;
    struct Rlist *package_file_repositories;
    char *package_list_command;
-   char *package_extract_version_regex;
+   char *package_list_version_regex;
+   char *package_list_name_regex;
+   char *package_list_arch_regex;
+   char *package_version_regex;
+   char *package_name_regex;
+   char *package_arch_regex;
    char *package_installed_regex;
    char *package_add_command;
    char *package_delete_command;

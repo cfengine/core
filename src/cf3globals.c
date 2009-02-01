@@ -61,6 +61,7 @@ short INSTALL_SKIP = false;
 int FACILITY;
 time_t PROMISETIME;
 
+struct CfPackageList *INSTALLEDPACKAGELISTS = NULL;
 struct Rlist *MOUNTEDFSLIST = NULL;
 struct Rlist *SERVERLIST = NULL;
 struct Item *PROCESSTABLE = NULL;

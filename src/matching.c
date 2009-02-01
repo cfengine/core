@@ -390,11 +390,23 @@ else
  regmatch_t pmatch;
  int code;
  
-if ((code = regexec(&rx,teststring,1,&pmatch,0)) == 0)
+if ((code = regexec(&rx,teststring,2,&pmatch,0)) == 0)
    {
+   for (i = 0; i < 2; i++) /* make backref vars $(1),$(2) etc */
+      {
+      int backref_len;
+      *start = pmatch[i].rm_so;
+      *end = pmatch[i].rm_eo;
+      backref_len = end - start;
+      
+      memset(substring,0,1024);
+      strncpy(substring,start,backref_len);
+      snprintf(lval,3,"%d",i);
+      ForceScalar(lval,substring);
+      }
+
    *start = pmatch.rm_so;
    *end = pmatch.rm_eo;
-
    return true;
    }
 else

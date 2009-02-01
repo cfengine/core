@@ -76,6 +76,7 @@ extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
 extern struct Item *FSTABLIST;
 extern struct Rlist *MOUNTEDFSLIST;
+extern struct CfPackageList *INSTALLEDPACKAGELISTS;
 
 extern int CF_MOUNTALL;
 extern int CF_SAVEFSTAB;

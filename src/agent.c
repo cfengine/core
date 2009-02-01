@@ -867,6 +867,10 @@ switch(type)
           }
 
        break;
+
+   case kp_packages:
+       INSTALLEDPACKAGELISTS = NULL;
+       break;
    }
 }
 
@@ -924,6 +928,17 @@ switch(type)
           }
 
        break;
+
+   case kp_packages:
+
+       if (!DONTDO && PACKAGE_SCHEDULE)
+          {
+          ExecutePackageSchedule(PACKAGE_SCHEDULE);
+          }
+
+       DeleteAllPackageLists(INSTALLEDPACKAGELISTS);
+       break;
+
    }
 }
 

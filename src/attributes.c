@@ -754,9 +754,18 @@ change_policy = Str2ActionPolicy((char *)GetConstraint("package_changes",pp->con
 p.package_changes = change_policy;
 
 p.package_file_repositories = GetListConstraint("package_file_repositories",pp->conlist);
+
 p.package_list_command = (char *)GetConstraint("package_list_command",pp->conlist,CF_SCALAR);
-p.package_extract_version_regex = (char *)GetConstraint("package_extract_version_regex",pp->conlist,CF_SCALAR);
+p.package_list_version_regex = (char *)GetConstraint("package_list_version_regex",pp->conlist,CF_SCALAR);
+p.package_list_name_regex = (char *)GetConstraint("package_list_name_regex",pp->conlist,CF_SCALAR);
+p.package_list_arch_regex = (char *)GetConstraint("package_list_arch_regex",pp->conlist,CF_SCALAR);
 p.package_installed_regex = (char *)GetConstraint("package_installed_regex",pp->conlist,CF_SCALAR);
+
+p.package_version_regex = (char *)GetConstraint("package_version_regex",pp->conlist,CF_SCALAR);
+p.package_name_regex = (char *)GetConstraint("package_name_regex",pp->conlist,CF_SCALAR);
+p.package_arch_regex = (char *)GetConstraint("package_arch_regex",pp->conlist,CF_SCALAR);
+
+
 p.package_add_command = (char *)GetConstraint("package_add_command",pp->conlist,CF_SCALAR);
 p.package_delete_command = (char *)GetConstraint("package_delete_command",pp->conlist,CF_SCALAR);
 p.package_update_command = (char *)GetConstraint("package_update_command",pp->conlist,CF_SCALAR);

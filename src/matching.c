@@ -32,7 +32,7 @@
 /* WILDCARD TOOLKIT : Level 0                                            */
 /*************************************************************************/
 
-int FullTextMatch (char *regexp,char *teststring)
+int FullTextMatch(char *regexp,char *teststring)
 
 { struct CfRegEx rex;
  
@@ -51,6 +51,28 @@ else
    {
    return false;
    }
+}
+
+/*************************************************************************/
+
+char *ExtractFirstReference(char *regexp,char *teststring)
+    
+{ struct CfRegEx rex;
+  static char *nothing = "";
+
+if (regexp == NULL || teststring == NULL)
+   {
+   return nothing;
+   }
+ 
+rex = CompileRegExp(regexp);
+
+if (rex.failed)
+   {
+   return nothing;
+   }
+
+return FirstBackReference(rex,regexp,teststring);
 }
 
 /*************************************************************************/
@@ -387,26 +409,32 @@ else
 #else
 
  regex_t rx = rex.rx;
- regmatch_t pmatch;
- int code;
+ regmatch_t pmatch[2];
+ int code,i;
  
-if ((code = regexec(&rx,teststring,2,&pmatch,0)) == 0)
+if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    {
    for (i = 0; i < 2; i++) /* make backref vars $(1),$(2) etc */
       {
       int backref_len;
-      *start = pmatch[i].rm_so;
-      *end = pmatch[i].rm_eo;
-      backref_len = end - start;
-      
+      char substring[1024];
+      char lval[4];
+      int s,e;
+      s = (int)pmatch[i].rm_so;
+      e = (int)pmatch[i].rm_eo;
+      backref_len = e - s;
       memset(substring,0,1024);
-      strncpy(substring,start,backref_len);
-      snprintf(lval,3,"%d",i);
-      ForceScalar(lval,substring);
+
+      if (backref_len < 1024)
+         {
+         strncpy(substring,(char *)(teststring+s),backref_len);
+         snprintf(lval,3,"%d",i);
+         ForceScalar(lval,substring);
+         }
       }
 
-   *start = pmatch.rm_so;
-   *end = pmatch.rm_eo;
+   *start = (int)pmatch[0].rm_so;
+   *end = (int)pmatch[0].rm_eo;
    return true;
    }
 else
@@ -469,12 +497,33 @@ else
 #else
 
  regex_t rx = rex.rx;
- regmatch_t pmatch;
- int code;
- 
-if ((code = regexec(&rx,teststring,1,&pmatch,0)) == 0)
+ regmatch_t pmatch[2];
+ int i,code;
+ regoff_t start = 0,end = 0;
+
+if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    {
-   if ((pmatch.rm_so == 0) && (pmatch.rm_eo == strlen(teststring)))
+   for (i = 1; i < 2; i++) /* make backref vars $(1),$(2) etc */
+      {
+      int backref_len;
+      char substring[1024];
+      char lval[4];
+      start = pmatch[i].rm_so;
+      end = pmatch[i].rm_eo;
+      backref_len = end - start;
+      
+      if (backref_len < CF_MAXVARSIZE)
+         {
+         memset(substring,0,1024);
+         strncpy(substring,teststring+start,backref_len);
+         snprintf(lval,3,"%d",i);
+         ForceScalar(lval,substring);         
+         }
+      
+      break;
+      }
+
+   if ((pmatch[0].rm_so == 0) && (pmatch[0].rm_eo == strlen(teststring)))
       {
       Debug("Regex %s matches (%s) exactly.\n",rex.regexp,teststring);
       return true;
@@ -497,6 +546,77 @@ else
 return false;
 }
 
+/*********************************************************************/
+
+char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring)
+
+{ static char backreference[CF_BUFSIZE];
+
+#ifdef HAVE_LIBPCRE
+ pcre *rx;
+ int ovector[OVECCOUNT],i,rc,match_len;
+ char *match_start;
+ 
+rx = rex.rx;
+memset(backreference,0,CF_BUFSIZE);
+
+if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
+   {
+   match_start = teststring + ovector[0];
+   match_len = ovector[1] - ovector[0];
+
+   for (i = 1; i < rc; i++) /* make backref vars $(1),$(2) etc */
+      {
+      char *backref_start = teststring + ovector[i*2];
+      int backref_len = ovector[i*2+1] - ovector[i*2];
+      
+      if (backref_len < CF_MAXVARSIZE)
+         {
+         strncpy(backreference,backref_start,backref_len);
+         }
+
+      break;
+      }
+   }
+
+#else
+
+ regex_t rx = rex.rx;
+ regmatch_t pmatch[3];
+ int i,code;
+ regoff_t start = 0,end = 0;
+
+memset(backreference,0,CF_MAXVARSIZE);
+ 
+if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
+   {
+   for (i = 1; i < 2; i++) /* make backref vars $(1),$(2) etc */
+      {
+      int backref_len;
+      char substring[1024];
+      char lval[4];
+      start = pmatch[i].rm_so;
+      end = pmatch[i].rm_eo;
+      backref_len = end - start;
+      
+      if (backref_len < CF_MAXVARSIZE)
+         {
+         strncpy(backreference,(char *)(teststring+start),backref_len);
+         }
+      
+      break;
+      }
+   }
+
+#endif
+
+if (strlen(backreference) == 0)
+   {
+   CfOut(cf_verbose,"","The regular expression \"%s\" contained no parenthetic back-reference",regex);
+   }
+
+return backreference;
+}
 
 /*********************************************************************/
 /* Enumerated languages - fuzzy match model                          */

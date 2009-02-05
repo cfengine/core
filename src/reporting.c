@@ -274,7 +274,6 @@ else
    v = "not specified";
    }
 
-
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 MapPromiseToTopic(FKNOW,pp,v);

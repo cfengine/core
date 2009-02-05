@@ -357,6 +357,11 @@ void LogLockCompletion(char *cflog,int pid,char *str,char *operator,char *operan
 
 Debug("LockLogCompletion(%s)\n",str);
 
+if (cflog == NULL)
+   {
+   return;
+   }
+
 if ((fp = fopen(cflog,"a")) == NULL)
    {
    CfOut(cf_error,"fopen","Can't open lock-log file %s\n",cflog);

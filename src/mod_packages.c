@@ -61,7 +61,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
 struct BodySyntax CF_PACKAGES_BODIES[] =
    {
    {"package_policy",cf_opts,"add,delete,reinstall,update,patch","Criteria for package installation/upgrade on the current system"},
-   {"package_methods",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
+   {"package_method",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
    {"package_version",cf_str,"","Version reference point for determining promised"},
    {"package_select",cf_opts,">,<,==,!=,>=,<=","A criterion for first acceptable match relative to \"package_version\""},
    {NULL,cf_notype,NULL,NULL}

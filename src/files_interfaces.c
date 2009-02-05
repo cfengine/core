@@ -258,17 +258,17 @@ if (a.link.link_children)
 
 thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
 
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
 
 if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
    {
    CfOut(cf_inform,"","Did not find a previous setuid log %s",filename);
    save = false;
-   }
-
-if (thislock.lock == NULL)
-   {
-   return;
    }
 
 /* Phase 1 - */
@@ -331,13 +331,10 @@ if (a.haveedit)
 if (save && VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename))
    {
    SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
-   
-   if (VSETUIDLIST != NULL)
-      {
-      DeleteItemList(VSETUIDLIST);
-      VSETUIDLIST = NULL;
-      }
    }
+
+DeleteItemList(VSETUIDLIST);
+VSETUIDLIST = NULL;
 
 YieldCurrentLock(thislock);
 }

@@ -1519,13 +1519,7 @@ struct Item
    char  *name;
    char  *classes;
    int    counter;
-   int    ifelapsed;
-   int    expireafter;
    struct Item *next;
-   struct Audit *audit;
-   char   logaudit;
-   int    lineno;
-   char  *scope;
    };
 
 /*******************************************************************/

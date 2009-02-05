@@ -742,7 +742,7 @@ struct Packages GetPackageConstraints(struct Promise *pp)
   enum version_cmp operator;
   enum action_policy change_policy;
 
-p.have_package_methods = GetBooleanConstraint("havepackage_methods",pp->conlist);
+p.have_package_methods = GetBooleanConstraint("havepackage_method",pp->conlist);
 p.package_version = (char *)GetConstraint("package_version",pp->conlist,CF_SCALAR);
 
 action = Str2PackageAction((char *)GetConstraint("package_policy",pp->conlist,CF_SCALAR));

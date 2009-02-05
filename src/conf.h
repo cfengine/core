@@ -248,6 +248,12 @@
 /* Define to 1 if you have the <nlist.h> header file. */
 /* #undef HAVE_NLIST_H */
 
+/* Define to 1 if you have the <pcre.h> header file. */
+#define HAVE_PCRE_H 1
+
+/* Define to 1 if you have the <pcre/pcre.h> header file. */
+/* #undef HAVE_PCRE_PCRE_H */
+
 /* Define to 1 if you have the <pgsql/libpq-fe.h> header file. */
 /* #undef HAVE_PGSQL_LIBPQ_FE_H */
 

@@ -869,7 +869,7 @@ switch(type)
        break;
 
    case kp_packages:
-       INSTALLEDPACKAGELISTS = NULL;
+       INSTALLED_PACKAGE_LISTS = NULL;
        break;
    }
 }
@@ -936,7 +936,7 @@ switch(type)
           ExecutePackageSchedule(PACKAGE_SCHEDULE);
           }
 
-       DeleteAllPackageLists(INSTALLEDPACKAGELISTS);
+       DeletePackageManagers(INSTALLED_PACKAGE_LISTS);
        break;
 
    }

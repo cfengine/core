@@ -884,8 +884,11 @@ void DeleteItemList(struct Item *item)                /* delete starting from it
 {
 if (item != NULL)
    {
-   DeleteItemList(item->next);
-   item->next = NULL;
+   if (item->next)
+      {
+      DeleteItemList(item->next);
+      item->next = NULL;
+      }
 
    if (item->name != NULL)
       {

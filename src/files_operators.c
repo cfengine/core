@@ -463,13 +463,12 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
    }
 
 /*
-  if (CheckACLs(file,action,ptr->acl_aliases))
-   {
-   if (ptr != NULL)
-      {
-      AddEphemeralClasses(RLIST ptr->defines);
-      }
+
+if (attr.haveacl)
+   { 
+   VerifyACL(file,attr,pp); 
    }
+   
 */
 
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */

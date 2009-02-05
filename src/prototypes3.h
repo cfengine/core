@@ -760,6 +760,8 @@ void TexinfoManual(char *mandir);
 
 int FullTextMatch (char *regptr,char *cmpptr);
 int FullTextCaseMatch (char *regexp,char *teststring);
+char *ExtractFirstReference(char *regexp,char *teststring);
+
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
 int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
 int IsRegexItemIn(struct Item *list,char *regex);
@@ -770,6 +772,7 @@ struct CfRegEx CompileRegExp(char *regexp);
 struct CfRegEx CaseCompileRegExp(char *regexp);
 int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
+char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring);
 
 /* modes.c */
 
@@ -1118,6 +1121,14 @@ int VerifyMethod(struct Attributes a,struct Promise *pp);
 /* verify_packages.c */
 
 void VerifyPackagesPromise(struct Promise *pp);
+void ExecutePackageSchedule(struct Rlist *schedule);
+int PackageSanityCheck(struct Attributes a,struct Promise *pp);
+int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes a,struct Promise *pp);
+void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);
+struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr);
+void DeletePackageManagers(struct CfPackageManager *newlist);
+int PrependPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
+void DeletePackageItems(struct CfPackageItem *pi);
 
 /* verify_processes.c */
 

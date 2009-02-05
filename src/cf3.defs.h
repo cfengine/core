@@ -35,9 +35,14 @@
 
 #include "conf.h"
 
-#ifdef HAVE_LIBPCRE
+#ifdef HAVE_PCRE_H
 #include <pcre.h>
 #endif
+
+#ifdef HAVE_PCRE_PCRE_H
+#include <pcre/pcre.h>
+#endif
+
 
 #ifndef NGROUPS
 # define NGROUPS 20
@@ -859,7 +864,7 @@ struct CfPackageManager
    {
    char *manager;
    struct CfPackageItem *pack_list;
-   struct CfPackageList *next;
+   struct CfPackageManager *next;
    };
 
 /*************************************************************************/

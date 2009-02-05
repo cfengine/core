@@ -570,6 +570,11 @@ for (ip = *start; ip != NULL; ip = ip->next)
       in_region = true;
       }
 
+   if (!in_region)
+      {
+      continue;
+      }
+   
    if (a.not_matching)
       {
       match = !FullTextMatch(pp->promiser,ip->name);
@@ -584,39 +589,50 @@ for (ip = *start; ip != NULL; ip = ip->next)
       if (DONTDO || a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_WARN,"",pp,a," -> Need to delete line \"%s\" from %s - but only a warning was promised",ip->name,pp->this_server);
-         return false;
-         }
-      
-      cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\" from %s",ip->name,pp->this_server);
-      retval = true;
-
-      if (ip->name != NULL)
-         {
-         free(ip->name);
-         }
-      
-      np = ip->next;
-      
-      if (ip == *start)
-         {
-         *start = np;
          }
       else
          {
-         for (lp = *start; lp->next != ip; lp=lp->next)
+         cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\" from %s",ip->name,pp->this_server);
+         retval = true;
+         
+         if (ip->name != NULL)
             {
+            free(ip->name);
+            }
+         
+         np = ip->next;
+         lp = ip;
+         
+         if (ip == *start)
+            {
+            *start = np;
+            }
+         else
+            {
+            for (lp = *start; lp->next != ip; lp=lp->next)
+               {
+               }
+            
+            lp->next = np;
             }
 
-         lp->next = np;
+         if (ip == end)
+            {
+            in_region = false;
+            break;
+            }
+         
+         free((char *)ip);
+         (pp->edcontext->num_edits)++;
+         /* Make sure loop continues from same place */
+         ip = lp;
          }
-      
-      free((char *)ip);
-      (pp->edcontext->num_edits)++;      
       }
 
    if (ip == end)
       {
       in_region = false;
+      break;
       }
    }
 
@@ -712,6 +728,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       free(ip->name);
       ip->name = strdup(line_buff);
       cfPS(cf_verbose,CF_CHG,"",pp,a," -> Replaced pattern \"%s\" in %s",pp->promiser,pp->this_server);
+      (pp->edcontext->num_edits)++;
       retval = true;
       }
    }
@@ -874,6 +891,7 @@ if (a.location.before_after == cfe_before)
       else
          {
          InsertAfter(start,prev,newline);
+         (pp->edcontext->num_edits)++;
          cfPS(cf_verbose,CF_CHG,"",pp,a," -> Inserting the promised line \"%s\" into %s before locator",newline,pp->this_server);
          return true;
          }
@@ -897,6 +915,7 @@ else
          {
          InsertAfter(start,location,newline);
          cfPS(cf_verbose,CF_CHG,"",pp,a," -> Inserting the promised line \"%s\" into %s after locator",newline,pp->this_server);
+         (pp->edcontext->num_edits)++;
          return true;
          }
       }
@@ -969,6 +988,7 @@ if (a.column.value_separator != '\0')
       else
          {
          cfPS(cf_inform,CF_CHG,"",pp,a," -> Edited field inside file object %s",pp->this_server);
+         (pp->edcontext->num_edits)++;
          free(rp->item);
          sep[0] = a.column.value_separator;
          sep[1] = '\0';
@@ -993,6 +1013,7 @@ else
       else
          {
          cfPS(cf_inform,CF_CHG,"",pp,a," -> Deleting column field value %s in %s",rp->item,pp->this_server);
+         (pp->edcontext->num_edits)++;
          free(rp->item);
          rp->item = strdup("");
          return true;
@@ -1010,6 +1031,7 @@ else
          cfPS(cf_inform,CF_CHG,"",pp,a," -> Setting whole column field value %s to %s in %s",rp->item,a.column.column_value,pp->this_server);
          free(rp->item);
          rp->item = strdup(a.column.column_value);
+         (pp->edcontext->num_edits)++;
          return true;
          }
       }

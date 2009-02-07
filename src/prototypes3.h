@@ -1121,14 +1121,21 @@ int VerifyMethod(struct Attributes a,struct Promise *pp);
 /* verify_packages.c */
 
 void VerifyPackagesPromise(struct Promise *pp);
-void ExecutePackageSchedule(struct Rlist *schedule);
+void ExecutePackageSchedule(struct CfPackageManager *schedule);
+int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action);
 int PackageSanityCheck(struct Attributes a,struct Promise *pp);
 int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes a,struct Promise *pp);
 void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);
-struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr);
+struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
 void DeletePackageManagers(struct CfPackageManager *newlist);
-int PrependPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
+int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
+int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
 void DeletePackageItems(struct CfPackageItem *pi);
+int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
+int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
+void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep);
+void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
+int ExecPackageCommand(char *command,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

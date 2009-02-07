@@ -798,6 +798,7 @@ enum package_actions
   cfa_reinstall,
   cfa_update,
   cfa_patch,
+  cfa_verifypack,
   cfa_pa_none
   };
 
@@ -856,25 +857,6 @@ struct CfMount
    char *mounton;
    char *options;
    int unmount;
-   };
-
-/*************************************************************************/
-
-struct CfPackageManager
-   {
-   char *manager;
-   struct CfPackageItem *pack_list;
-   struct CfPackageManager *next;
-   };
-
-/*************************************************************************/
-
-struct CfPackageItem 
-   {
-   char *name;
-   char *version;
-   char *arch;
-   struct CfPackageItem *next;
    };
 
 /*************************************************************************/
@@ -1226,6 +1208,7 @@ struct Packages
    enum package_actions package_policy;
    int have_package_methods;
    char *package_version;
+   struct Rlist *package_architectures;
    enum version_cmp package_select;
    enum action_policy package_changes;
    struct Rlist *package_file_repositories;
@@ -1243,6 +1226,7 @@ struct Packages
    char *package_patch_command;
    char *package_verify_command;
    char *package_noverify_regex;
+   char *package_name_convention;
    int package_noverify_returncode;
    };
 
@@ -1402,5 +1386,28 @@ struct PromiseThread
    };
 
 /*************************************************************************/
+/* Package promises                                                      */
+/*************************************************************************/
+
+struct CfPackageManager
+   {
+   char *manager;
+   enum package_actions action;
+   enum action_policy policy;
+   struct CfPackageItem *pack_list;
+   struct CfPackageManager *next;
+   };
+
+/*************************************************************************/
+
+struct CfPackageItem 
+   {
+   char *name;
+   char *version;
+   char *arch;
+   struct Promise *pp;
+   struct CfPackageItem *next;
+   };
+
 
 #include "prototypes3.h"

@@ -53,7 +53,6 @@ void FindFilePromiserObjects(struct Promise *pp)
                 GetBooleanConstraint("create",pp->conlist) ||
                 ((val != NULL) && (strcmp(val,"literal") == 0));
 
-
 /* Check if we are searching over a regular expression */
 
 if (literal)
@@ -78,7 +77,7 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   uid_t agentuid = getuid();
   int create = GetBooleanConstraint("create",pp->conlist);
 
-Debug("LocateFilePromiserGroup(%s)\n",wildpath);
+printf("LocateFilePromiserGroup(%s)\n",wildpath);
 
 /* Do a search for promiser objects matching wildpath */
 

@@ -278,7 +278,7 @@ rx = pcre_compile(regexp,0,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {
-   CfOut(cf_error,"","Regular expression error %s in %s at %d: %s\n",errorstr,regexp,erroffset);
+   CfOut(cf_error,"","Regular expression error \"%s\" in %s at %d: %s\n",errorstr,regexp,erroffset);
    this.failed = true;
    }
 else
@@ -300,6 +300,7 @@ if (code != 0)
    {
    char buf[CF_BUFSIZE];
    regerror(code,&rx,buf,CF_BUFSIZE-1);
+   Chop(buf);
    CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code, regexp,buf);
    this.failed = true;
    }

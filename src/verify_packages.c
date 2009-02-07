@@ -33,10 +33,23 @@
 void VerifyPackagesPromise(struct Promise *pp)
 
 { struct Attributes a;
+  struct CfLock thislock;
+  char lockname[CF_BUFSIZE];
 
 a = GetPackageAttributes(pp);
 
 if (!PackageSanityCheck(a,pp))
+   {
+   return;
+   }
+
+PromiseBanner(pp);
+
+snprintf(lockname,CF_BUFSIZE-1,"package-%s-%s",pp->promiser,a.packages.package_list_command);
+ 
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
    {
    return;
    }
@@ -49,12 +62,7 @@ if (!VerifyInstalledPackages(&INSTALLED_PACKAGE_LISTS,a,pp))
 
 VerifyPromisedPackage(a,pp);
 
-// Now got the existing packages
-
-// Extract the name and version from the file and see if it exists
-
-// Build the action schedule for ExecuteSchedule finale
-
+YieldCurrentLock(thislock);
 }
 
 /*****************************************************************************/
@@ -80,15 +88,64 @@ if (a.packages.package_list_command == NULL && a.packages.package_file_repositor
    return false;
    }
 
+if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.package_arch_regex)
+   {
+   if (a.packages.package_name_regex&&a.packages.package_version_regex&&a.packages.package_arch_regex)
+      {
+      if (!(a.packages.package_version && a.packages.package_architectures))
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply all regexs for (name,version,arch) or a separate version number and architecture");
+         return false;            
+         }
+      }
+   else
+      {
+      if (a.packages.package_version && a.packages.package_architectures)
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply all regexs for (name,version,arch) or a separate version number");
+         return false;
+         }
+      }
+   }
 
 return true;
 }
 
 /*****************************************************************************/
 
-void ExecutePackageSchedule(struct Rlist *schedule)
+void ExecutePackageSchedule(struct CfPackageManager *schedule)
 
 {
+ /* Normal ordering */
+
+if (!ExecuteSchedule(schedule,cfa_deletepack))
+   {
+   CfOut(cf_error,"","Aborting package schedule");
+   return;
+   }
+ 
+if (!ExecuteSchedule(schedule,cfa_reinstall))
+   {
+   return;
+   }
+
+if (!ExecuteSchedule(schedule,cfa_addpack))
+   {
+   return;
+   }
+
+if (!ExecuteSchedule(schedule,cfa_update))
+   {
+   return;
+   }            
+
+if (!ExecuteSchedule(schedule,cfa_patch))
+   {
+   return;
+   }
+
+printf("Clean memory up...\n");
+
 }
           
 /*****************************************************************************/
@@ -97,7 +154,7 @@ void ExecutePackageSchedule(struct Rlist *schedule)
 
 int VerifyInstalledPackages(struct CfPackageManager **all_mgrs,struct Attributes a,struct Promise *pp)
 
-{ struct CfPackageManager *manager = NewPackageManager(all_mgrs,a.packages.package_list_command);
+{ struct CfPackageManager *manager = NewPackageManager(all_mgrs,a.packages.package_list_command,cfa_pa_none,cfa_no_ppolicy);
   char vbuff[CF_BUFSIZE];
   struct Rlist *rp;
   struct dirent *dirp;
@@ -116,6 +173,10 @@ if (manager->pack_list != NULL)
 
 if (a.packages.package_list_command != NULL)
    {
+   Verbose("???????????????????????????????????????????????????????????????\n");
+   Verbose("  Reading package list from %s\n",GetArg0(a.packages.package_list_command));
+   Verbose("???????????????????????????????????????????????????????????????\n");
+
    if (!IsExecutable(GetArg0(a.packages.package_list_command)))
       {
       CfOut(cf_error,"","The proposed package list command \"%s\" was not executable",a.packages.package_list_command);
@@ -133,7 +194,7 @@ if (a.packages.package_list_command != NULL)
       memset(vbuff,0,CF_BUFSIZE);
       ReadLine(vbuff,CF_BUFSIZE,prp);   
       
-      if (!PrependPackageItem(&(manager->pack_list),vbuff,a,pp))
+      if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
          {
          continue;
          }
@@ -149,14 +210,217 @@ return true;
 
 void VerifyPromisedPackage(struct Attributes a,struct Promise *pp)
 
-{
+{ char version[CF_MAXVARSIZE];
+  char name[CF_MAXVARSIZE];
+  char arch[CF_MAXVARSIZE];
+  char *package = pp->promiser;
+  int matches = 0, installed = 0, no_version = false;
+  struct Rlist *rp;
+  
+if (a.packages.package_version) 
+   {
+   /* The version is specified separately */
+
+   for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
+      {
+      strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+      strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
+      strncpy(arch,rp->item,CF_MAXVARSIZE-1);
+      installed += PackageMatch(name,"*","*",a,pp);
+      matches += PackageMatch(name,version,arch,a,pp);
+      }
+
+   if (a.packages.package_architectures == NULL)
+      {
+      strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+      strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
+      strncpy(arch,"default",CF_MAXVARSIZE-1);
+      installed = PackageMatch(name,"*","*",a,pp);
+      matches = PackageMatch(name,version,arch,a,pp);
+      }
+   }
+else if (a.packages.package_version_regex)
+   {
+   /* The name, version and arch are to be extracted from the promiser */
+   strncpy(version,ExtractFirstReference(a.packages.package_version_regex,package),CF_MAXVARSIZE-1);
+   strncpy(name,ExtractFirstReference(a.packages.package_name_regex,package),CF_MAXVARSIZE-1);
+   strncpy(arch,ExtractFirstReference(a.packages.package_arch_regex,package),CF_MAXVARSIZE-1);
+   installed = PackageMatch(name,"*","*",a,pp);
+   matches = PackageMatch(name,version,arch,a,pp);
+   }
+else
+   {
+   no_version = true;
+   
+   for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
+      {
+      strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+      strncpy(version,"*",CF_MAXVARSIZE-1);
+      strncpy(arch,rp->item,CF_MAXVARSIZE-1);
+      installed += PackageMatch(name,"*","*",a,pp);
+      matches += PackageMatch(name,version,arch,a,pp);
+      }
+   
+   if (a.packages.package_architectures == NULL)
+      {
+      strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+      strncpy(version,"*",CF_MAXVARSIZE-1);
+      strncpy(arch,"default",CF_MAXVARSIZE-1);
+      installed = PackageMatch(name,"*","*",a,pp);
+      matches = PackageMatch(name,version,arch,a,pp);
+      }
+   }
+
+Verbose(" -> %d package(s) matching the name \"%s\" already installed\n",installed,name);
+Verbose(" -> %d package(s) match the promise body's criteria fully\n",installed,name);
+
+SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+}
+
+/*****************************************************************************/
+
+int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action)
+
+{ struct CfPackageItem *pi;
+  struct CfPackageManager *pm;
+  int size,estimated_size = 0,retval = true;
+  char *command_string = NULL;
+  struct Attributes a;
+  struct Promise *pp;
+  
+for (pm = schedule; pm != NULL; pm = pm->next)
+   {
+   if (pm->pack_list == NULL)
+      {
+      continue;
+      }
+   
+   for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+      {   
+      size = strlen(pi->name) + strlen(" ");
+      
+      switch (pm->action)
+         {
+         case cfa_individual:             
+
+             if (size > estimated_size)
+                {
+                estimated_size = size;
+                }             
+             break;
+             
+         case cfa_bulk:
+
+             estimated_size += size;
+             break;
+
+         default:
+             break;
+         }
+      }
+
+   pp = pm->pack_list->pp;
+   a = GetPackageAttributes(pp);
+   
+   switch (action)
+      {
+      case cfa_addpack:
+          if (command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2)))
+             {
+             snprintf(command_string,estimated_size,"%s ",a.packages.package_add_command);
+             }
+          break;
+
+      case cfa_deletepack:
+          if (command_string = (malloc(estimated_size + strlen(a.packages.package_delete_command) + 2)))
+             {
+             snprintf(command_string,estimated_size,"%s ",a.packages.package_delete_command);
+             }
+          break;
+          
+      case cfa_update:
+          if (command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2)))
+             {
+             snprintf(command_string,estimated_size,"%s ",a.packages.package_update_command);
+             }
+          break;
+
+      case cfa_patch:
+          if (command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2)))
+             {
+             snprintf(command_string,estimated_size,"%s ",a.packages.package_patch_command);
+             }
+          break;
+
+      }
+
+   if (command_string == NULL)
+      {
+      FatalError("Memory allocation error when building packaged schedule");
+      }   
+   
+   switch (pm->action)
+      {
+      int ok;
+
+      case cfa_individual:             
+
+          for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+             {
+             char *offset = command_string + strlen(command_string);
+             
+             strcpy(offset,pi->name);
+             
+             if (ExecPackageCommand(command_string,a,pp))
+                {
+                cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                }
+             else
+                {
+                cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                }
+             }
+          
+          break;
+          
+      case cfa_bulk:
+          
+          for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+             {
+             strcat(command_string,pi->name);
+             strcat(command_string," ");
+             }
+
+          ok = ExecPackageCommand(command_string,a,pp);
+
+          for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+             {
+             if (ok)
+                {
+                cfPS(cf_verbose,CF_CHG,"",pp,a,"Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                }
+             else
+                {
+                cfPS(cf_verbose,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                }
+             }
+          
+          break;
+          
+      default:
+          break;
+      }
+   
+   }
+
+return retval;
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr)
+struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy policy)
 
 { struct CfPackageManager *np;
 
@@ -167,7 +431,7 @@ if (mgr == NULL || strlen(mgr) == 0)
  
 for (np = *lists; np != NULL; np=np->next)
    {
-   if (strcmp(np->manager,mgr) == 0)
+   if ((strcmp(np->manager,mgr) == 0) && (policy == np->policy))
       {
       return np;
       }
@@ -180,6 +444,8 @@ if ((np = (struct CfPackageManager *)malloc(sizeof(struct CfPackageManager))) ==
    }
 
 np->manager = strdup(mgr);
+np->action = pa;
+np->policy = policy;
 np->pack_list = NULL;
 np->next = *lists;
 *lists = np;
@@ -202,58 +468,38 @@ for (np = newlist; np != NULL; np = next)
 
 /*****************************************************************************/
 
-int PrependPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp)
+int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp)
 
-{ struct CfPackageItem *pi;
-  char name[CF_MAXVARSIZE];
+{ char name[CF_MAXVARSIZE];
   char arch[CF_MAXVARSIZE];
   char version[CF_MAXVARSIZE];
+  char vbuff[CF_MAXVARSIZE];
 
 if (!FullTextMatch(a.packages.package_installed_regex,item))
    {
    return false;
    }
 
-strncpy(name,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
-strncpy(version,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
+strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
+sscanf(vbuff,"%s",name); /* trim */
+strncpy(vbuff,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
+sscanf(vbuff,"%s",version); /* trim */
 
 if (a.packages.package_list_arch_regex)
    {
-   strncpy(arch,ExtractFirstReference(a.packages.package_list_arch_regex,item),CF_MAXVARSIZE-1);
+   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_arch_regex,item),CF_MAXVARSIZE-1);
+   sscanf(vbuff,"%s",arch); /* trim */
    }
 else
    {
    strncpy(arch,"default",CF_MAXVARSIZE-1);
    }
 
-Verbose(" -? Extracted package name %s\n",name);
-Verbose(" -?      with version %s\n",version);
-Verbose(" -?      with architecture %s\n",arch);
+Debug(" -? Extracted package name \"%s\"\n",name);
+Debug(" -?      with version \"%s\"\n",version);
+Debug(" -?      with architecture \"%s\"\n",arch);
 
-if (strlen(name) == 0 || strlen(version) == 0)
-   {
-   return false;
-   }
-
-for (pi = *list; pi != NULL; pi=pi->next)
-   {
-   if (strcmp(pi->name,name) == 0 && strcmp(pi->version,version) == 0 && strcmp(pi->arch,arch) == 0)
-      {
-      return true;
-      }
-   }
- 
-if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Can't allocate new package\n");
-   return false;
-   }
-
-pi->name = strdup(name);
-pi->version = strdup(version);
-pi->arch = strdup(arch);
-
-return true;
+return PrependPackageItem(list,name,version,arch,a,pp);
 }
 
 /*****************************************************************************/
@@ -269,3 +515,379 @@ if (pi)
    free(pi);
    }
 }
+
+/*****************************************************************************/
+
+int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp)
+
+{ struct CfPackageManager *mp = NULL;
+  struct CfPackageItem  *pi;
+  
+for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
+   {
+   if (strcmp(mp->manager,attr.packages.package_list_command) == 0)
+      {
+      break;
+      }
+   }
+
+Verbose(" -> Looking for (%s,%s,%s)\n",n,v,a);
+
+for (pi = mp->pack_list; pi != NULL; pi=pi->next)
+   {
+   if (ComparePackages(n,v,a,pi,attr.packages.package_select))
+      {
+      return true;
+      }
+   }
+
+Verbose(" !! Unsatisfied constraints in promise (%s,%s,%s)\n",n,v,a);
+return false;
+}
+
+/*****************************************************************************/
+
+void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int no_version_specified,struct Attributes a,struct Promise *pp)
+
+{ struct CfPackageManager *manager;
+  char reference[CF_EXPANDSIZE];
+  char *id;
+  int package_select_in_range = false;
+ 
+/* Now we need to know the name-convention expected by the package manager */
+
+if (a.packages.package_name_convention)
+   {
+   SetNewScope("cf_pack_context");
+   NewScalar("cf_pack_context","name",name,cf_str);
+   NewScalar("cf_pack_context","version",version,cf_str);
+   NewScalar("cf_pack_context","arch",arch,cf_str);
+   ExpandScalar(a.packages.package_name_convention,reference);
+   id = reference;
+   DeleteScope("cf_pack_context");
+   }
+else
+   {
+   id = name;
+   }
+
+Verbose(" -> Package promises to refer to itself as \"%s\" to the manager\n",id);
+
+if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge || a.packages.package_select == cfa_le)
+   {
+   package_select_in_range = true;
+   }
+
+switch(a.packages.package_policy)
+   {
+   case cfa_addpack:
+
+       if (installed == 0)
+          {
+          Verbose(" -> Schedule package for addition\n");
+          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
+          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          }
+       else
+          {
+          Verbose(" -> Package already installed, so we never add it again\n");
+          }
+       break;
+       
+   case cfa_deletepack:
+
+       if (matched && package_select_in_range || installed && no_version_specified)
+          {
+          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
+          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          }
+       else
+          {
+          Verbose(" -> Package deletion cannot be promised -- no match\n");
+          }
+       
+       break;
+       
+   case cfa_reinstall:
+
+       if (!no_version_specified)
+          {
+          if (matched && package_select_in_range || installed && no_version_specified)
+             {
+             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
+             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+             }
+          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
+          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          }
+       else
+          {
+          Verbose(" -> Package reinstallation cannot be promised -- insufficient version info or no match\n");
+          }
+       
+       break;
+       
+   case cfa_update:
+
+       if (matched && package_select_in_range && !no_version_specified || installed)
+          {
+          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_update_command,cfa_update,a.packages.package_changes);
+          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          }
+       else
+          {
+          Verbose(" -> Package updating cannot be promised -- no match or not installed\n");
+          }
+       break;
+       
+   case cfa_patch:
+
+       if (matched && package_select_in_range && !no_version_specified || installed)
+          {
+          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_patch_command,cfa_patch,a.packages.package_changes);
+          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          }
+       else
+          {
+          Verbose(" -> Package patch update cannot be promised -- no match or not installed\n");
+          }
+       break;
+       
+   default:
+       break;
+   }
+}
+
+/*****************************************************************************/
+
+int ExecPackageCommand(char *command,struct Attributes a,struct Promise *pp)
+
+{ int offset = 0;
+  char line[CF_BUFSIZE], *sp; 
+  FILE *pfp;
+
+if (!IsExecutable(GetArg0(command)))
+   {
+   cfPS(cf_error,CF_FAIL,"",pp,a,"The proposed package schedule command \"%s\" was not executable",command);
+   return false;
+   }
+
+if (DONTDO)
+   {
+   printf(" Need to execute %39s...\n",command);
+   return true;
+   }
+
+/* Use this form to avoid limited, intermediate argument processing - long lines */
+
+if ((pfp = cf_popen_sh(command,"r")) == NULL)
+   {
+   cfPS(cf_error,CF_FAIL,"cf_popen",pp,a,"Couldn't start command %20s...\n",command);
+   return false;
+   }
+
+Verbose("Executing %40s...\n",command);
+
+while (!feof(pfp))
+   {
+   if (ferror(pfp))  /* abortable */
+      {
+      fflush(pfp);
+      cfPS(cf_error,CF_INTERPT,"read",pp,a,"Couldn't start command %20s...\n",command);
+      break;
+      }
+
+   ReadLine(line,CF_BUFSIZE-1,pfp);
+   CfOut(cf_inform,"","Q: %s",line);
+   
+   if (ferror(pfp))  /* abortable */
+      {
+      fflush(pfp);
+      cfPS(cf_error,CF_INTERPT,"read",pp,a,"Couldn't start command %20s...\n",command);
+      break;
+      }  
+   }
+
+cf_pclose(pfp);
+return true; 
+}
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp)
+
+{ struct Rlist *numbers_1 = NULL,*separators_1 = NULL;
+  struct Rlist *numbers_2 = NULL,*separators_2 = NULL;
+  struct Rlist *rp_1,*rp_2;
+  int result = true;
+
+Debug("Compare (%s,%s,%s) and (%s,%s,%s)\n",n,v,a,pi->name,pi->version,pi->arch);
+  
+if (strcmp(n,pi->name) != 0)
+   {
+   return false;
+   }
+
+Verbose(" -> Matched name %s\n",n);
+
+if (strcmp(a,"*") != 0)
+   {
+   if (strcmp(a,pi->arch) != 0)
+      {
+      return false;
+      }
+   
+   Verbose(" -> Matched arch %s\n",a);
+   }
+
+if (strcmp(v,"*") == 0)
+   {   
+   Verbose(" -> Matched version *\n");
+   return true;
+   }
+
+ParsePackageVersion(v,numbers_1,separators_1);
+ParsePackageVersion(pi->version,numbers_2,separators_2);
+
+/* If the format of the version string doesn't match, we're already doomed */
+
+for (rp_1 = separators_1,rp_2 = separators_2;
+     rp_1 != NULL & rp_2 != NULL;
+     rp_1= rp_1->next,rp_2=rp_2->next)
+   {
+   if (strcmp(rp_1->item,rp_2->item) != 0)
+      {
+      result = false;
+      break;
+      }
+   }
+
+Verbose(" -> Verified that versioning models are compatible\n");
+
+if (result != false)
+   {
+   for (rp_1 = numbers_1,rp_2 = numbers_2;
+        rp_1 != NULL & rp_2 != NULL;
+        rp_1= rp_1->next,rp_2=rp_2->next)
+      {
+      switch (cmp)
+         {
+         case cfa_eq:
+             if (strcmp(rp_1->item,rp_2->item) != 0)
+                {
+                result = false;
+                }             
+             break;
+         case cfa_neq:
+             if (strcmp(rp_1->item,rp_2->item) == 0)
+                {
+                result = false;
+                }             
+             break;
+         case cfa_gt:
+             if (strcmp(rp_1->item,rp_2->item) <= 0)
+                {
+                result = false;
+                }
+             break;
+         case cfa_lt:
+             if (strcmp(rp_1->item,rp_2->item) >= 0)
+                {
+                result = false;
+                }             
+             break;
+         case cfa_ge:
+             if (strcmp(rp_1->item,rp_2->item) < 0)
+                {
+                result = false;
+                }             
+             break;
+         case cfa_le:
+             if (strcmp(rp_1->item,rp_2->item) > 0)
+                {
+                result = false;
+                }             
+             break;
+         default:
+             break;
+         }
+
+      if (result == false)
+         {
+         break;
+         }
+      }
+   }
+
+Verbose(" -> Verified version constraint promise kept\n");
+
+DeleteRlist(numbers_1);
+DeleteRlist(numbers_2);
+DeleteRlist(separators_1);
+DeleteRlist(separators_2);
+return result;
+}
+
+/*****************************************************************************/
+
+int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char *arch,struct Attributes a,struct Promise *pp)
+
+{ struct CfPackageItem *pi;
+
+if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
+   {
+   return false;
+   }
+
+if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Can't allocate new package\n");
+   return false;
+   }
+
+pi->next = *list;
+pi->name = strdup(name);
+pi->version = strdup(version);
+pi->arch = strdup(arch);
+*list = pi;
+
+/* Finally we need these for later schedule exec, once this iteration context has gone */
+
+pi->pp = DeRefCopyPromise("this",pp);
+return true;
+}
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep)
+
+{ char *sp,numeral[30],separator[2];
+
+for (sp = version; *sp != '\0'; sp++)
+   {
+   memset(numeral,0,30);
+   memset(separator,0,2);
+
+   /* Split in 2's complement */
+   
+   sscanf(sp,"%29[0-9a-zA-Z]",numeral);
+   sp += strlen(numeral);
+   sscanf(sp,"%1[^0-9a-zA-Z]",separator);
+   
+   /* Prepend to end up with right->left comparison */
+
+   PrependRScalar(&num,numeral,CF_SCALAR);
+   PrependRScalar(&sep,separator,CF_SCALAR);
+   }
+}
+
+
+
+
+
+
+

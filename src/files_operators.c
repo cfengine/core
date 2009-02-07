@@ -1279,7 +1279,10 @@ if (cmpsb.st_mtime != sb->st_mtime)
    CfOut(cf_error,"","ALERT: Last modified time for %s changed %s -> %s",file,from,to);
    }
 
-CfOut(cf_error,"","Preceding promise: %s",pp->ref);
+if (pp->ref)
+   {
+   CfOut(cf_error,"","Preceding promise: %s",pp->ref);
+   }
 
 if (EXCLAIM)
    {

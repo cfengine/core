@@ -33,7 +33,7 @@
 enum package_actions Str2PackageAction(char *s)
 
 { int i;
-  static char *types[] = { "add","delete","reinstall","update","patch", NULL };
+  static char *types[] = { "add","delete","reinstall","update","patch","verify", NULL };
     
 for (i = 0; types[i] != NULL; i++)
    {

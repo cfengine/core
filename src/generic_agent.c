@@ -789,13 +789,13 @@ void PromiseBanner(struct Promise *pp)
 Verbose("\n");
 Verbose("    .........................................................\n");
 
-Verbose("    Promise: %s",pp->promiser);
+Verbose("    Promise by: %s",pp->promiser);
 
 if (pp->promisee)
    {
-   Verbose(" -> ");
    if (VERBOSE)
       {
+      printf(" -> ");
       ShowRval(stdout,pp->promisee,pp->petype);
       }
    }

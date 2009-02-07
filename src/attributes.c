@@ -741,9 +741,11 @@ struct Packages GetPackageConstraints(struct Promise *pp)
   enum package_actions action;
   enum version_cmp operator;
   enum action_policy change_policy;
+  char *value;
 
 p.have_package_methods = GetBooleanConstraint("havepackage_method",pp->conlist);
 p.package_version = (char *)GetConstraint("package_version",pp->conlist,CF_SCALAR);
+p.package_architectures = GetListConstraint("package_architectures",pp->conlist);
 
 action = Str2PackageAction((char *)GetConstraint("package_policy",pp->conlist,CF_SCALAR));
 p.package_policy = action;
@@ -774,6 +776,7 @@ p.package_verify_command = (char *)GetConstraint("package_verify_command",pp->co
 p.package_noverify_regex = (char *)GetConstraint("package_noverify_regex",pp->conlist,CF_SCALAR);
 p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode",pp->conlist);
 
+p.package_name_convention = (char *)GetConstraint("package_name_convention",pp->conlist,CF_SCALAR);
 return p;
 }
 

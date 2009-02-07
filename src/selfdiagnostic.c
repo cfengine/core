@@ -178,6 +178,7 @@ pp.petype = CF_SCALAR;
 pp.lineno = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
+pp.agentsubtype = "none";
 
 args = SplitStringAsRList("$(administrator)",',');
 fp = NewFnCall("getuid",args);

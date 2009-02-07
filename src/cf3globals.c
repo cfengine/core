@@ -62,7 +62,7 @@ int FACILITY;
 time_t PROMISETIME;
 
 struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
-struct Rlist *PACKAGE_SCHEDULE = NULL;
+struct CfPackageManager *PACKAGE_SCHEDULE = NULL;
 struct Rlist *MOUNTEDFSLIST = NULL;
 struct Rlist *SERVERLIST = NULL;
 struct Item *PROCESSTABLE = NULL;

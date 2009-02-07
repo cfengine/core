@@ -50,7 +50,8 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {"package_patch_command",cf_str,CF_PATHRANGE,"Command to update to the latest patch release of an installed package"},
    {"package_verify_command",cf_str,CF_PATHRANGE,"Command to verify the correctness of an installed package"},
    {"package_noverify_regex",cf_str,"","Regular expression to match verification failure output"},
-   {"package_noverify_returncode",cf_str,"","Integer return code indicating package verification failure"},
+   {"package_noverify_returncode",cf_int,CF_INTRANGE,"Integer return code indicating package verification failure"},
+   {"package_name_convention",cf_str,"","This is how the package manager expects the file to be referred to, e.g. $(name).$(arch)"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -60,9 +61,10 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
 
 struct BodySyntax CF_PACKAGES_BODIES[] =
    {
-   {"package_policy",cf_opts,"add,delete,reinstall,update,patch","Criteria for package installation/upgrade on the current system"},
+   {"package_policy",cf_opts,"add,delete,reinstall,update,patch,verify","Criteria for package installation/upgrade on the current system"},
    {"package_method",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
-   {"package_version",cf_str,"","Version reference point for determining promised"},
+   {"package_version",cf_str,"","Version reference point for determining promised version"},
+   {"package_architectures",cf_slist,"","Select the architecture for package selection"},
    {"package_select",cf_opts,">,<,==,!=,>=,<=","A criterion for first acceptable match relative to \"package_version\""},
    {NULL,cf_notype,NULL,NULL}
    };

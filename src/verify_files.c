@@ -77,7 +77,7 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   uid_t agentuid = getuid();
   int create = GetBooleanConstraint("create",pp->conlist);
 
-printf("LocateFilePromiserGroup(%s)\n",wildpath);
+Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 /* Do a search for promiser objects matching wildpath */
 

@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.1a6)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.1a7)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -420,6 +420,8 @@ if test $WITH_SQL; then
   AC_CHECK_HEADERS(mysql/mysql.h)
   AC_CHECK_HEADERS(pgsql/libpq-fe.h)
   AC_CHECK_HEADERS(libpq-fe.h)
+  AC_CHECK_HEADERS(pcre.h)
+  AC_CHECK_HEADERS(pcre/pcre.h)
 fi
 
 dnl ######################################################################
@@ -776,7 +778,7 @@ if test x"$GCC" = "xyes"; then
 	
 dnl # -Wformat - to be considered
 
-	GCC_CFLAG="-g -O2 -Wreturn-type -Wmissing-prototypes -Wuninitialized -fPIC"		
+	GCC_CFLAG="-g -O2 -Wreturn-type -Wmissing-prototypes -Wuninitialized"		
 	AC_MSG_RESULT(yes)
 	AC_SUBST(GCC_CFLAG)
 else 

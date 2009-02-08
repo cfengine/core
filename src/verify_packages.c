@@ -116,36 +116,40 @@ return true;
 void ExecutePackageSchedule(struct CfPackageManager *schedule)
 
 {
+Verbose(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+Verbose("   Offering these package-promise suggestions to the managers\n");
+Verbose(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+ 
  /* Normal ordering */
+
+Verbose(" -> Deletion schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_deletepack))
    {
    CfOut(cf_error,"","Aborting package schedule");
    return;
    }
- 
-if (!ExecuteSchedule(schedule,cfa_reinstall))
-   {
-   return;
-   }
+
+Verbose(" -> Addition schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_addpack))
    {
    return;
    }
 
+Verbose(" -> Update schedule...\n");
+
 if (!ExecuteSchedule(schedule,cfa_update))
    {
    return;
    }            
 
+Verbose(" -> Patch schedule...\n");
+
 if (!ExecuteSchedule(schedule,cfa_patch))
    {
    return;
    }
-
-printf("Clean memory up...\n");
-
 }
           
 /*****************************************************************************/
@@ -173,9 +177,9 @@ if (manager->pack_list != NULL)
 
 if (a.packages.package_list_command != NULL)
    {
-   Verbose("???????????????????????????????????????????????????????????????\n");
-   Verbose("  Reading package list from %s\n",GetArg0(a.packages.package_list_command));
-   Verbose("???????????????????????????????????????????????????????????????\n");
+   Verbose(" ???????????????????????????????????????????????????????????????\n");
+   Verbose("   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
+   Verbose(" ???????????????????????????????????????????????????????????????\n");
 
    if (!IsExecutable(GetArg0(a.packages.package_list_command)))
       {
@@ -234,7 +238,7 @@ if (a.packages.package_version)
       {
       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
       strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
-      strncpy(arch,"default",CF_MAXVARSIZE-1);
+      strncpy(arch,"*",CF_MAXVARSIZE-1);
       installed = PackageMatch(name,"*","*",a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
       }
@@ -265,7 +269,7 @@ else
       {
       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
       strncpy(version,"*",CF_MAXVARSIZE-1);
-      strncpy(arch,"default",CF_MAXVARSIZE-1);
+      strncpy(arch,"*",CF_MAXVARSIZE-1);
       installed = PackageMatch(name,"*","*",a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
       }
@@ -287,9 +291,14 @@ int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions actio
   char *command_string = NULL;
   struct Attributes a;
   struct Promise *pp;
-  
+
 for (pm = schedule; pm != NULL; pm = pm->next)
    {
+   if (pm->action != action)
+      {
+      continue;
+      }
+   
    if (pm->pack_list == NULL)
       {
       continue;
@@ -321,45 +330,44 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
    pp = pm->pack_list->pp;
    a = GetPackageAttributes(pp);
-   
+
    switch (action)
       {
       case cfa_addpack:
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2)))
              {
-             snprintf(command_string,estimated_size,"%s ",a.packages.package_add_command);
+             strcpy(command_string,a.packages.package_add_command);
              }
           break;
 
       case cfa_deletepack:
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_delete_command) + 2)))
              {
-             snprintf(command_string,estimated_size,"%s ",a.packages.package_delete_command);
+             strcpy(command_string,a.packages.package_delete_command);
              }
           break;
           
       case cfa_update:
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2)))
              {
-             snprintf(command_string,estimated_size,"%s ",a.packages.package_update_command);
+             strcpy(command_string,a.packages.package_update_command);
              }
           break;
 
       case cfa_patch:
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2)))
              {
-             snprintf(command_string,estimated_size,"%s ",a.packages.package_patch_command);
+             strcpy(command_string,a.packages.package_patch_command);
              }
           break;
 
       }
-
-   if (command_string == NULL)
-      {
-      FatalError("Memory allocation error when building packaged schedule");
-      }   
+      
+   strcat(command_string," ");
    
-   switch (pm->action)
+   Verbose("Command prefix: %s\n",command_string);
+   
+   switch (pm->policy)
       {
       int ok;
 
@@ -512,6 +520,7 @@ if (pi)
    free(pi->name);
    free(pi->version);
    free(pi->arch);
+   DeletePromise(pi->pp);
    free(pi);
    }
 }

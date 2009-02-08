@@ -16,7 +16,7 @@ html_DATA = $(htmlfiles)
 pdffiles = $(info_TEXINFOS:.texinfo=.pdf)
 dvifiles = $(info_TEXINFOS:.texinfo=.dvi)
 
-docdir = $(pkgdatadir)/doc
+docdir = @docdir@
 doc_DATA = $(psfiles) $(pdffiles)
 
 # Make sure these get distributed with everything else.

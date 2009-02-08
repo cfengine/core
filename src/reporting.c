@@ -429,12 +429,12 @@ fprintf(FREPORT_TXT,"***********************************************************
     
 /**************************************************************/
 
-void BannerSubType(char *bundlename,char *type)
+void BannerSubType(char *bundlename,char *type,int pass)
 
 {
 Verbose("\n");
 Verbose("   =========================================================\n");
-Verbose("   %s in bundle %s\n",type,bundlename);
+Verbose("   %s in bundle %s (%d)\n",type,bundlename,pass);
 Verbose("   =========================================================\n");
 Verbose("\n");
 }

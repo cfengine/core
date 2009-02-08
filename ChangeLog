@@ -5,6 +5,11 @@
 	leaving output files everywhere.
 
 	Hooks added for upcoming commerical additions to cfengine.
+
+	Added classify() and hostinnetgroup() functions
+	Added additional change management options for change detection
+
+	Package management added
 	
 3.0.0
 	First release of cfengine 3. Known omissions:

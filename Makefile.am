@@ -3,7 +3,7 @@ SUBDIRS = pub src tests docs inputs
 
 EXTRA_DIST = acconfig.h COPYING ChangeLog INSTALL NEWS README LICENSE
 
-docdir = $(pkgdatadir)
+docdir = @docdir@
 doc_DATA = README ChangeLog INSTALL NEWS
 
 #

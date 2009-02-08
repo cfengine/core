@@ -633,7 +633,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          continue;      
          }
 
-      BannerSubType(bp->name,sp->name);
+      BannerSubType(bp->name,sp->name,pass);
       SetScope(bp->name);
       
       NewTypeContext(type);
@@ -937,6 +937,9 @@ switch(type)
           }
 
        DeletePackageManagers(INSTALLED_PACKAGE_LISTS);
+       DeletePackageManagers(PACKAGE_SCHEDULE);
+       INSTALLED_PACKAGE_LISTS = NULL;
+       PACKAGE_SCHEDULE = NULL;
        break;
 
    }

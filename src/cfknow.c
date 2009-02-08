@@ -522,7 +522,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
          continue;      
          }
 
-      BannerSubType(bp->name,sp->name);
+      BannerSubType(bp->name,sp->name,1);
 
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {

@@ -1256,6 +1256,7 @@ struct Attributes
    struct Packages packages;
    struct Context context;
    char *transformer;
+   char *pathtype;
    char *repository;
    int touch;
    int create;

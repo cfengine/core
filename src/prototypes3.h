@@ -919,7 +919,7 @@ void ShowBuiltinFunctions(void);
 void ShowBody(struct Body *body,int ident);
 void DebugBanner(char *s);
 void ReportError(char *s);
-void BannerSubType(char *bundlename,char *type);
+void BannerSubType(char *bundlename,char *type,int p);
 void BannerSubSubType(char *bundlename,char *type);
 void Banner(char *s);
 

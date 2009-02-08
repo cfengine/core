@@ -53,6 +53,7 @@ attr.create = GetBooleanConstraint("create",pp->conlist);
 attr.touch = GetBooleanConstraint("touch",pp->conlist);
 attr.transformer = (char *)GetConstraint("transformer",pp->conlist,CF_SCALAR);
 attr.move_obstructions = GetBooleanConstraint("move_obstructions",pp->conlist);
+attr.pathtype = (char *)GetConstraint("pathtype",pp->conlist,CF_SCALAR);
 
 attr.perms = GetPermissionConstraints(pp);
 attr.select = GetSelectConstraints(pp);

@@ -249,7 +249,7 @@ for (rp = listofregex; rp != NULL; rp=rp->next)
    {
    /* Make it commutative */
    
-   if (FullTextMatch(rp->item,teststring) || FullTextMatch(teststring,rp->item))
+   if (FullTextMatch(rp->item,teststring))
       {
       Debug("MatchRlistItem(%s > %s)\n",rp->item,teststring);
       return true;

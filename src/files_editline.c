@@ -547,7 +547,47 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
    }
 else
    {
-   return InsertMissingLineAtLocation(pp->promiser,start,location,prev,a,pp);
+   if (strchr(pp->promiser,'\n') != NULL) /* Multi-line string */
+      {
+      char *sp;
+      loc = location;
+      
+      for (sp = pp->promiser; sp <= pp->promiser+strlen(pp->promiser); sp++)
+         {
+         memset(buf,0,CF_BUFSIZE);
+         sscanf(sp,"%[^\n]",buf);
+         sp += strlen(buf);
+         
+         if (!SelectInsertion(buf,a,pp))
+            {
+            continue;
+            }
+         
+         if (IsItemInRegion(buf,begin_ptr,end_ptr))
+            {
+            cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised file line \"%s\" exists within file %s (promise kept)",buf,pp->this_server);
+            continue;
+            }
+         
+         retval |= InsertMissingLineAtLocation(buf,start,loc,prev,a,pp);
+         
+         if (prev && prev != CF_UNDEFINED_ITEM)
+            {
+            prev = prev->next;
+            }
+         
+         if (loc)
+            {
+            loc = loc->next;
+            }
+         }
+
+      return retval;
+      }
+   else
+      {
+      return InsertMissingLineAtLocation(pp->promiser,start,location,prev,a,pp);
+      }
    }
 }
 

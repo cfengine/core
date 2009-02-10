@@ -108,6 +108,14 @@ if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.
       }
    }
 
+
+if (a.packages.package_add_command == NULL || a.packages.package_delete_command == NULL)
+   {
+   cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package add/delete command undefined");
+   return false;
+   }
+
+
 return true;
 }
 
@@ -287,7 +295,7 @@ int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions actio
 
 { struct CfPackageItem *pi;
   struct CfPackageManager *pm;
-  int size,estimated_size = 0,retval = true;
+  int size,estimated_size,retval = true;
   char *command_string = NULL;
   struct Attributes a;
   struct Promise *pp;
@@ -303,12 +311,14 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       {
       continue;
       }
+
+   estimated_size = 0;
    
    for (pi = pm->pack_list; pi != NULL; pi=pi->next)
       {   
-      size = strlen(pi->name) + strlen(" ");
+      size = strlen(pi->name) + strlen("  ");
       
-      switch (pm->action)
+      switch (pm->policy)
          {
          case cfa_individual:             
 
@@ -334,6 +344,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
    switch (action)
       {
       case cfa_addpack:
+
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2)))
              {
              strcpy(command_string,a.packages.package_add_command);
@@ -341,6 +352,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           break;
 
       case cfa_deletepack:
+
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_delete_command) + 2)))
              {
              strcpy(command_string,a.packages.package_delete_command);
@@ -348,6 +360,14 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           break;
           
       case cfa_update:
+
+          if (a.packages.package_update_command == NULL)
+             {
+             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package update command undefined");
+             free(command_string);
+             return false;
+             }
+
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2)))
              {
              strcpy(command_string,a.packages.package_update_command);
@@ -355,17 +375,29 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           break;
 
       case cfa_patch:
+
+          if (a.packages.package_patch_command == NULL)
+             {
+             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package patch command undefined");
+             free(command_string);
+             return false;
+             }
+          
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2)))
              {
              strcpy(command_string,a.packages.package_patch_command);
              }
           break;
 
+      default:
+          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Unknown action attempted");
+          free(command_string);
+          return false;
       }
       
    strcat(command_string," ");
    
-   Verbose("Command prefix: %s\n",command_string);
+   printf("Command prefix: %s\n",command_string);
    
    switch (pm->policy)
       {
@@ -395,8 +427,11 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           
           for (pi = pm->pack_list; pi != NULL; pi=pi->next)
              {
-             strcat(command_string,pi->name);
-             strcat(command_string," ");
+             if (pi->name)
+                {
+                strcat(command_string,pi->name);
+                strcat(command_string," ");
+                }
              }
 
           ok = ExecPackageCommand(command_string,a,pp);
@@ -421,6 +456,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
    
    }
 
+free(command_string);
 return retval;
 }
 
@@ -599,7 +635,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          Verbose(" -> Package already installed, so we never add it again\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package already installed, so we never add it again\n");
           }
        break;
        
@@ -612,7 +648,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          Verbose(" -> Package deletion cannot be promised -- no match\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package deletion is as promised -- no match\n");
           }
        
        break;
@@ -631,7 +667,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          Verbose(" -> Package reinstallation cannot be promised -- insufficient version info or no match\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package reinstallation cannot be promised -- insufficient version info or no match\n");
           }
        
        break;
@@ -645,7 +681,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          Verbose(" -> Package updating cannot be promised -- no match or not installed\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package updating is as promised -- no match or not installed\n");
           }
        break;
        
@@ -658,7 +694,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          Verbose(" -> Package patch update cannot be promised -- no match or not installed\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state is as promised -- no match or not installed\n");
           }
        break;
        

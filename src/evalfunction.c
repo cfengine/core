@@ -2740,7 +2740,7 @@ maxsize = Str2Int(finalargs->next->next->next->next->next->item);
 
 // Read once to validate structure of file in itemlist
 
-Debug("Read string data from file %s\n",filename);
+Debug("Read string data from file %s - , maxent %d\n",filename,maxent);
 
 file_buffer = (char *)ReadFile(filename,maxsize);
 
@@ -2946,7 +2946,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       {
       continue;
       }
-   
+
    newlist = SplitRegexAsRList(linebuf,split,maxent,nopurge);
    
    vcount = 0;
@@ -2957,7 +2957,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       NewScalar(CONTEXTID,name,rp->item,type);
       vcount++;
       }
-   
+
    hcount++;
    sp += strlen(linebuf);
    }

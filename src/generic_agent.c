@@ -393,7 +393,7 @@ if (VINPUTLIST != NULL)
       }
    }
 
-UnHashVariables();
+//UnHashVariables(); - why did I do this?
 
 PARSING = false;
 }

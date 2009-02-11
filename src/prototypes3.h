@@ -959,6 +959,7 @@ void ShowRval(FILE *fp,void *rval,char type);
     
 /* scope.c */
 
+void DebugVariables(char *label);
 void SetScope(char *id);
 void SetNewScope(char *id);
 void NewScope(char *name);

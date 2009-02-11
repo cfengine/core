@@ -30,6 +30,27 @@
 
 /*******************************************************************/
 
+void DebugVariables(char *label)
+
+{ struct Scope *ptr;
+
+ printf("----------------------%s ---------------------------\n",label);
+ 
+for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
+   {
+   printf("\nConstant variables in SCOPE %s:\n",ptr->scope);
+   
+   if (ptr->hashtable)
+      {
+      PrintHashes(stdout,ptr->hashtable,0);
+      }
+   }
+
+printf("--------------------------------------------------\n");
+}
+
+/*******************************************************************/
+
 struct Scope *GetScope(char *scope)
 
 { struct Scope *cp = NULL;

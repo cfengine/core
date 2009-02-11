@@ -865,7 +865,7 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
   void *rval = NULL;
   int i = 0,ok_redefine = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
- 
+
 if (IsExcluded(pp->classes))
    {
    return;
@@ -961,6 +961,7 @@ else
    CfOut(cf_error,"","Variable %s has no promised value\n",pp->promiser);
    CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    }
+
 }
       
 /*********************************************************************/

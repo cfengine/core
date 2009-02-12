@@ -452,7 +452,7 @@ c.persist = GetIntConstraint("persist_time",pp->conlist);
 
 if (c.persist == CF_NOINT)
    {
-   c.persist = 20;
+   c.persist = 0;
    }
 
 pt = GetConstraint("timer_policy",pp->conlist,CF_SCALAR);

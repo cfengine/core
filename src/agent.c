@@ -1012,6 +1012,10 @@ if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
    CFA_BACKGROUND++;
    Verbose("Spawning new process...\n");
    child = fork();
+   if (child == 0)
+      {
+      ALARM_PID = -1;
+      }
    }
 else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
    {

@@ -61,6 +61,8 @@ if ((pid = fork()) < 0)
    }
 else if (pid == 0)                     /* child */
    {
+   ALARM_PID = -1;
+   
    if (useshell)
       {
       if (execl("/bin/sh","sh","-c",comm,NULL) == -1)

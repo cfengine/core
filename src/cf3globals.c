@@ -322,7 +322,7 @@ dev_t ROOTDEVICE = 0;
 char  STR_CFENGINEPORT[16];
 unsigned short SHORT_CFENGINEPORT;
 int RPCTIMEOUT = 60;          /* seconds */
-pid_t ALARM_PID;
+pid_t ALARM_PID = -1;
 int SENSIBLEFILECOUNT = 2;
 int SENSIBLEFSSIZE = 1000;
 short SKIPIDENTIFY = false;

@@ -1314,6 +1314,10 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
       case cfk_literal:
           fprintf(fout,"{%s,%s, [[%s]]}\n",topic_id,subtype,op->locator);
           break;
+
+      case cfk_image:
+          fprintf(fout,"{%s,%s,\"Image at %s\"}\n",topic_id,subtype,op->locator);
+          break;
       }
 
    if (!GetCanonizedTopic(TOPIC_MAP,subtype))
@@ -2088,6 +2092,9 @@ for (oc = occurrences; oc != NULL; oc=oc->next)
       case cfk_literal:
           printf(" \"%s\" (Text)",oc->locator);
           break;
+      case cfk_image:
+          printf("(Image)",oc->locator);
+          break;
       default:
           break;
       }
@@ -2201,6 +2208,9 @@ if (occurrences != NULL)
              break;          
          case cfk_literal:
              fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
+             break;
+         case cfk_image:
+             fprintf(fout,"<p><div id=\"image\">%s</div></p>",oc->locator);
              break;
          default:
              break;

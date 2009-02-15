@@ -57,7 +57,7 @@ struct BodySyntax CF_RELATE_BODY[] =
 struct BodySyntax CF_OCCUR_BODIES[] =
    {
    {"represents",cf_slist,"","List of subtopics that disambiguate the context of this reference"},
-   {"representation",cf_opts,"literal,url,db,file,web","How to interpret the promiser string e.g. actual data or reference to data"},
+   {"representation",cf_opts,"literal,url,db,file,web,image","How to interpret the promiser string e.g. actual data or reference to data"},
    {NULL,cf_notype,NULL,NULL}
    };
 

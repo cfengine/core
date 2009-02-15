@@ -788,6 +788,7 @@ enum representations
    cfk_file,
    cfk_db,
    cfk_literal,
+   cfk_image,
    cfk_none
    };
 

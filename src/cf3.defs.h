@@ -241,7 +241,7 @@ enum cfacontrol
    cfa_ifelapsed,
    cfa_inform,
    cfa_lastseen,
-   cfa_lastseenexpireafter,
+   cfa_max_children,
    cfa_mountfilesystems,
    cfa_nonalphanumfiles,
    cfa_repchar,

@@ -54,6 +54,8 @@ short XML = false;
 struct FnCallStatus FNCALL_STATUS;
 
 int CFA_MAXTHREADS = 10;
+int CFA_BACKGROUND = 0;
+int CFA_BACKGROUND_LIMIT = 1;
 
 char THIS_AGENT[CF_MAXVARSIZE];
 enum cfagenttype THIS_AGENT_TYPE;
@@ -97,7 +99,7 @@ struct Rlist *SINGLE_COPY_CACHE = NULL;
 struct Rlist *CF_STCK = NULL;
 
 int CF_STCKFRAME = 0;
-int LASTSEENEXPIREAFTER = -1;
+int LASTSEENEXPIREAFTER = CF_WEEK;
 
 struct Topic *TOPIC_MAP = NULL;
 

@@ -498,6 +498,18 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_max_children].lval) == 0)
+      {
+      CFA_BACKGROUND_LIMIT = Str2Int(retval);
+      Verbose("SET MAX_CHILDREN = %d\n",CFA_BACKGROUND_LIMIT);
+      if (CFA_BACKGROUND_LIMIT > 10)
+         {
+         CfOut(cf_error,"","Silly value for max_children in agent control promise (%d > 10)",CFA_BACKGROUND_LIMIT);
+         CFA_BACKGROUND_LIMIT = 1;
+         }
+      continue;
+      }
+   
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_syslog].lval) == 0)
       {
       LOGGING = GetBoolean(retval);
@@ -995,10 +1007,15 @@ void ParallelFindAndVerifyFilesPromises(struct Promise *pp)
 { pid_t child = 1;
   int background = GetBooleanConstraint("background",pp->conlist);
 
-if (background)
+if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
    {
+   CFA_BACKGROUND++;
    Verbose("Spawning new process...\n");
    child = fork();
+   }
+else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
+   {
+   Verbose(" !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
    }
 
 if (child || !background)

@@ -201,7 +201,7 @@
 #define HAVE_LIBNSS_NIS 1
 
 /* Define to 1 if you have the `pcre' library (-lpcre). */
-
+#define HAVE_LIBPCRE 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
 /* #undef HAVE_LIBPQ */
@@ -249,7 +249,7 @@
 /* #undef HAVE_NLIST_H */
 
 /* Define to 1 if you have the <pcre.h> header file. */
-
+#define HAVE_PCRE_H 1
 
 /* Define to 1 if you have the <pcre/pcre.h> header file. */
 /* #undef HAVE_PCRE_PCRE_H */
@@ -483,7 +483,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.1a7"
+#define VERSION "3.0.1a8"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

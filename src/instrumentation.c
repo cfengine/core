@@ -307,7 +307,7 @@ void LastSaw(char *hostname,enum roles role)
   time_t now = time(NULL);
   struct QPoint q,newq;
   double lastseen,delta2;
-  int lsea = -1;
+  int lsea = LASTSEENEXPIREAFTER;
 
 if (strlen(hostname) == 0)
    {
@@ -391,17 +391,6 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    exit(1);
    }
 #endif
-
-if (GetVariable("control_agent",CFA_CONTROLBODY[cfa_lastseenexpireafter].lval,(void *)varbuf,&rtype) != cf_notype)
-   {
-   lsea = atoi(varbuf);
-   lsea *= CF_TICKS_PER_DAY;
-   }
-
-if (lsea < 0)
-   {
-   lsea = CF_WEEK;
-   }
    
 if (ReadDB(dbp,databuf,&q,sizeof(q)))
    {

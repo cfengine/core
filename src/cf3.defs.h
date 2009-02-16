@@ -584,6 +584,16 @@ struct Promise
 
 /*************************************************************************/
 
+struct PromiseIdent
+   {
+   char *handle;
+   char *filename;
+   int lineno;
+   struct PromiseIdent *next;
+   };
+
+/*************************************************************************/
+
 struct Constraint
    {
    char *lval;

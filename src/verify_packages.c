@@ -158,6 +158,13 @@ if (!ExecuteSchedule(schedule,cfa_patch))
    {
    return;
    }
+
+Verbose(" -> Verify schedule...\n");
+
+if (!ExecuteSchedule(schedule,cfa_verifypack))
+   {
+   return;
+   }
 }
           
 /*****************************************************************************/
@@ -295,7 +302,7 @@ int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions actio
 
 { struct CfPackageItem *pi;
   struct CfPackageManager *pm;
-  int size,estimated_size,retval = true;
+  int size,estimated_size,retval = true,verify = false;
   char *command_string = NULL;
   struct Attributes a;
   struct Promise *pp;
@@ -389,6 +396,22 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              }
           break;
 
+      case cfa_verifypack:
+          if (a.packages.package_verify_command == NULL)
+             {
+             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package verify command undefined");
+             free(command_string);
+             return false;
+             }
+          
+          if (command_string = (malloc(estimated_size + strlen(a.packages.package_verify_command) + 2)))
+             {
+             strcpy(command_string,a.packages.package_verify_command);
+             }
+
+          verify = true;
+          break;
+          
       default:
           cfPS(cf_verbose,CF_FAIL,"",pp,a,"Unknown action attempted");
           free(command_string);
@@ -397,7 +420,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       
    strcat(command_string," ");
    
-   printf("Command prefix: %s\n",command_string);
+   Verbose("Command prefix: %s\n",command_string);
    
    switch (pm->policy)
       {
@@ -408,17 +431,19 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           for (pi = pm->pack_list; pi != NULL; pi=pi->next)
              {
              char *offset = command_string + strlen(command_string);
+
+             strcat(offset,pi->name);
              
-             strcpy(offset,pi->name);
-             
-             if (ExecPackageCommand(command_string,a,pp))
+             if (ExecPackageCommand(command_string,verify,a,pp))
                 {
                 cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
                 }
              else
                 {
-                cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
                 }
+
+             *offset = '\0';
              }
           
           break;
@@ -434,7 +459,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                 }
              }
 
-          ok = ExecPackageCommand(command_string,a,pp);
+          ok = ExecPackageCommand(command_string,verify,a,pp);
 
           for (pi = pm->pack_list; pi != NULL; pi=pi->next)
              {
@@ -444,7 +469,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                 }
              else
                 {
-                cfPS(cf_verbose,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                cfPS(cf_error,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
                 }
              }
           
@@ -456,7 +481,11 @@ for (pm = schedule; pm != NULL; pm = pm->next)
    
    }
 
-free(command_string);
+if (command_string)
+   {
+   free(command_string);
+   }
+
 return retval;
 }
 
@@ -697,6 +726,20 @@ switch(a.packages.package_policy)
           cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state is as promised -- no match or not installed\n");
           }
        break;
+
+   case cfa_verifypack:
+       
+       if (matched && package_select_in_range || installed && no_version_specified)
+          {
+          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_verify_command,cfa_verifypack,a.packages.package_changes);
+          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          }
+       else
+          {
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> No package verification is promised -- no match\n");
+          }
+       
+       break;
        
    default:
        break;
@@ -705,10 +748,10 @@ switch(a.packages.package_policy)
 
 /*****************************************************************************/
 
-int ExecPackageCommand(char *command,struct Attributes a,struct Promise *pp)
+int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp)
 
-{ int offset = 0;
-  char line[CF_BUFSIZE], *sp; 
+{ int offset = 0, retval = true;
+  char line[CF_BUFSIZE], *cmd; 
   FILE *pfp;
 
 if (!IsExecutable(GetArg0(command)))
@@ -719,7 +762,7 @@ if (!IsExecutable(GetArg0(command)))
 
 if (DONTDO)
    {
-   printf(" Need to execute %39s...\n",command);
+   printf(" Need to execute %-.39s...\n",command);
    return true;
    }
 
@@ -731,7 +774,17 @@ if ((pfp = cf_popen_sh(command,"r")) == NULL)
    return false;
    }
 
-Verbose("Executing %40s...\n",command);
+Verbose("Executing %-.60s...\n",command);
+
+/* Look for short command summary */
+for (cmd = command; *cmd != '\0' && *cmd != ' '; cmd++)
+   {
+   }
+
+while (*(cmd-1) != '/' && cmd >= command)
+   {
+   cmd--;
+   }
 
 while (!feof(pfp))
    {
@@ -742,8 +795,18 @@ while (!feof(pfp))
       break;
       }
 
+   line[0] = '\0';
    ReadLine(line,CF_BUFSIZE-1,pfp);
-   CfOut(cf_inform,"","Q: %s",line);
+   CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,line);
+
+   if (strlen(line) > 0 && verify)
+      {
+      if (a.packages.package_noverify_regex && FullTextMatch(a.packages.package_noverify_regex,line))
+         {
+         cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error in %-.40s ... :%s",cmd,line);
+         retval = false;
+         }
+      }
    
    if (ferror(pfp))  /* abortable */
       {
@@ -754,7 +817,7 @@ while (!feof(pfp))
    }
 
 cf_pclose(pfp);
-return true; 
+return retval; 
 }
 
 /*****************************************************************************/
@@ -912,6 +975,11 @@ void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep)
 
 { char *sp,numeral[30],separator[2];
 
+if (version == NULL)
+   {
+   return;
+   }
+ 
 for (sp = version; *sp != '\0'; sp++)
    {
    memset(numeral,0,30);
@@ -921,11 +989,17 @@ for (sp = version; *sp != '\0'; sp++)
    
    sscanf(sp,"%29[0-9a-zA-Z]",numeral);
    sp += strlen(numeral);
-   sscanf(sp,"%1[^0-9a-zA-Z]",separator);
-   
+
    /* Prepend to end up with right->left comparison */
 
    PrependRScalar(&num,numeral,CF_SCALAR);
+
+   if (*sp == '\0')
+      {
+      return;
+      }
+   
+   sscanf(sp,"%1[^0-9a-zA-Z]",separator);
    PrependRScalar(&sep,separator,CF_SCALAR);
    }
 }

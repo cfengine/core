@@ -2210,7 +2210,7 @@ if (occurrences != NULL)
              fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
              break;
          case cfk_image:
-             fprintf(fout,"<p><div id=\"image\">%s</div></p>",oc->locator);
+             fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",oc->locator,oc->locator);
              break;
          default:
              break;

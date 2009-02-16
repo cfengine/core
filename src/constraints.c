@@ -480,8 +480,25 @@ return retval;
 void ReCheckAllConstraints(struct Promise *pp)
 
 { struct Constraint *cp;
-  struct Rlist *rp;
+  char *handle = GetConstraint("handle",pp->conlist,CF_SCALAR);
+  struct PromiseIdent *prid;
 
+if (handle)
+   {
+   if (prid = PromiseIdExists(handle))
+      {
+      if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->lineno != pp->lineno))
+         {
+         CfOut(cf_error,"","Duplicate promise handle -- previously used in file %s near line %d",prid->filename,prid->lineno);
+         PromiseRef(cf_error,pp);
+         }
+      }
+   else
+      {
+      prid = NewPromiseId(handle,pp);
+      }
+   }
+  
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval,cp->type);
@@ -631,5 +648,44 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    }
 
 return false;
+}
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp)
+
+{ struct PromiseIdent *ptr;
+
+if ((ptr = malloc(sizeof(struct PromiseIdent))) == NULL)
+   {
+   FatalError("MemoryAlloc NewPromiseId\n");
+   }
+
+ptr->filename = strdup(pp->audit->filename);
+ptr->lineno = pp->lineno;
+ptr->handle = strdup(handle);
+ptr->next = PROMISE_ID_LIST;
+PROMISE_ID_LIST = ptr;
+return ptr;     
+}
+
+/*****************************************************************************/
+
+struct PromiseIdent *PromiseIdExists(char *handle)
+
+{ struct PromiseIdent *key;
+ 
+for (key = PROMISE_ID_LIST; key != NULL; key=key->next)
+   {
+   printf("%s %s\n",handle,key->handle);
+   if (strcmp(handle,key->handle) == 0)
+      {
+      return key;
+      }
+   }
+
+return NULL;
 }
 

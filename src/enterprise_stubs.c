@@ -162,4 +162,3 @@ for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
 
 }
 
-

@@ -212,6 +212,8 @@ void ReCheckAllConstraints(struct Promise *pp);
 void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
 int GetBundleConstraint(char *lval,struct Constraint *list);
 int VerifyConstraintName(char *lval);
+struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp);
+struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
@@ -277,6 +279,7 @@ void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void Nova_MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void ShowTopicRepresentation(FILE *fp);
 void Nova_ShowTopicRepresentation(FILE *fp);
+void NotePromiseConditionals(struct Promise *pp);
 
 /* env_context.c */
 
@@ -1085,6 +1088,7 @@ void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 enum cfdatatype GetVariable(char *scope,char *lval,void **returnv,char *rtype);
 void DeleteVariable(char *scope,char *id);
 int CompareVariable(char *lval,struct CfAssoc *ap);
+int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap);
 void DeleteAllVariables(char *scope);
 int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);
@@ -1136,7 +1140,7 @@ int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *
 int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
 void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep);
 void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
-int ExecPackageCommand(char *command,struct Attributes a,struct Promise *pp);
+int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

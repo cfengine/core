@@ -283,15 +283,20 @@ if (ptr->hashtable[slot])
 
    if (CompareVariable(lval,ptr->hashtable[slot]) == 0)
       {
-      CfOut(cf_error,"","Duplicate selection of value for %s (broken promise) in scope %s",lval,ptr->scope);
+      if (CompareVariableValue(rval,rtype,ptr->hashtable[slot]) == 0)
+         {
+         return true;
+         }
+      
+      CfOut(cf_inform,"","Duplicate selection of value for %s (broken promise) in scope %s",lval,ptr->scope);
       
       if (fname)
          {
-         CfOut(cf_error,"","Rule from %s at/before line %d\n",fname,lineno);
+         CfOut(cf_inform,"","Rule from %s at/before line %d\n",fname,lineno);
          }
       else
          {
-         CfOut(cf_error,"","in bundle parameterization\n",fname,lineno);
+         CfOut(cf_inform,"","in bundle parameterization\n",fname,lineno);
          }
 
       DeleteAssoc(ptr->hashtable[slot]);

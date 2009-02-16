@@ -43,7 +43,7 @@ extern struct Rlist *AUTO_DEFINE_LIST;
 extern struct Rlist *SINGLE_COPY_CACHE;
 extern struct Rlist *ACCESSLIST;
 extern struct Topic *TOPIC_MAP;
-
+extern struct PromiseIdent *PROMISE_ID_LIST;
 
 extern struct Rlist *CF_STCK;
 extern int CF_STCKFRAME;

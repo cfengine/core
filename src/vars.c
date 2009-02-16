@@ -308,6 +308,43 @@ return strcmp(ap->lval,lval);
 
 /*******************************************************************/
 
+int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap)
+
+{ char buffer[CF_BUFSIZE];
+  struct Rlist *list, *rp;
+
+if (ap == NULL || rval == NULL)
+   {
+   return 1;
+   }
+
+switch (rtype)
+   {
+   case CF_SCALAR:
+       return strcmp(ap->rval,rval);
+
+   case CF_LIST:
+       list = (struct Rlist *)rval;
+       
+       for (rp = list; rp != NULL; rp=rp->next)
+          {
+          if (!CompareVariableValue(rp->item,rp->type,ap))
+             {
+             return -1;
+             }
+          }
+       
+       return 0;
+
+   default:
+       return 0;
+   }
+    
+return strcmp(ap->rval,rval);
+}
+
+/*******************************************************************/
+
 void DeleteAllVariables(char *scope)
 
 { int i;

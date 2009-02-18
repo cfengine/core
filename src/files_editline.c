@@ -773,6 +773,9 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       }
    }
 
+
+DeleteScope("match");
+NewScope("match");
 return retval;
 }
 

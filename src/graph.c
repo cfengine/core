@@ -37,21 +37,11 @@
 
 /*****************************************************************************/
 
-double Acc(double *v1, double *v2);
-int Degree(double *m,int dim);
-void PrintNeighbours(double *m,int dim,char **names);
-void EigenvectorCentrality(double **A,double *v,int dim);
-void MatrixOperation(double **A,double *v,int dim);
-int Top(double **adj,double *evc,int topic,int dim);
-void PlotEntireGraph(struct Topic *map);
-void PlotTopicCosmos(int topic,double **adj,char **names,int dim);
-void GetTribe(int *tribe,char **names,int *assoc,int topic,double **adj,int dim);
-
 extern char GRAPHDIR[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
-void VerifyGraph(struct Topic *map)
+void VerifyGraph(struct Topic *map, struct Rlist *assoc,char *view)
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -182,7 +172,7 @@ for (i = 0; i < topic_count; i++)
 
 for (i = 0; i < topic_count; i++)
    {
-   PlotTopicCosmos(i,adj,n,topic_count);
+   PlotTopicCosmos(i,adj,n,topic_count,view);
    }
 
 /* Clean up */
@@ -294,7 +284,7 @@ free(vp);
 
 /*************************************************************************/
 
-void PlotTopicCosmos(int topic,double **adj,char **names,int dim)
+void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view)
 
 { char filename[CF_BUFSIZE];
   struct Topic *tp;
@@ -308,21 +298,30 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim)
   int i,j,counter = 0,nearest_neighbours = 0, cadj[CF_TRIBE_SIZE][CF_TRIBE_SIZE];
   int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE];
   char ltopic[CF_MAXVARSIZE],ltype[CF_MAXVARSIZE];
-
+  char filenode[CF_MAXVARSIZE];
 
 /* Count the  number of nodes in the solar system, to max
    number based on Dunbar's limit */  
 
 Verbose("Cosmos for %s\n",names[topic]);
 
+if (view)
+   {
+   snprintf(filenode,CF_MAXVARSIZE-1,"%s_%s.png",view,CanonifyName(names[topic]));
+   }
+else
+   {
+   snprintf(filenode,CF_MAXVARSIZE-1,"%s.png",CanonifyName(names[topic]));
+   }
+
 if (strlen(GRAPHDIR) > 0)
    {
-   snprintf(filename,CF_BUFSIZE,"%s/%s.png",GRAPHDIR,CanonifyName(names[topic]));
+   snprintf(filename,CF_BUFSIZE,"%s/%s",GRAPHDIR,filenode);
    MakeParentDirectory(filename,false);
    }
 else
    {
-   snprintf(filename,CF_BUFSIZE,"%s.png",CanonifyName(names[topic]));
+   strcpy(filename,filenode);
    }
 
 GetTribe(tribe,names,associate,topic,adj,dim);
@@ -578,5 +577,10 @@ for (i = 0; tribe[i] > 0; i++)
 
 return false;
 }
+
+/*************************************************************************/
+/* Level                                                                 */
+/*************************************************************************/
+
 
 #endif

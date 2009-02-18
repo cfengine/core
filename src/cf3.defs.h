@@ -1423,3 +1423,7 @@ struct CfPackageItem
 
 
 #include "prototypes3.h"
+
+#ifdef HAVE_LIBCFNOVA
+#include <cf.nova.h>
+#endif

@@ -424,10 +424,10 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
       s = (int)pmatch[i].rm_so;
       e = (int)pmatch[i].rm_eo;
       backref_len = e - s;
-      memset(substring,0,1024);
 
       if (backref_len < 1024)
          {
+         memset(substring,0,1024);
          strncpy(substring,(char *)(teststring+s),backref_len);
          snprintf(lval,3,"%d",i);
          ForceScalar(lval,substring);

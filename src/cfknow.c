@@ -1505,10 +1505,20 @@ if (GENERATE_MANUAL)
 void GenerateGraph()
 {
 #ifdef HAVE_LIBGVC
+struct Rlist *semantics = NULL;
+
 if (GRAPH)
    {
-   VerifyGraph(TOPIC_MAP);
+   VerifyGraph(TOPIC_MAP,NULL,NULL);
+
+#ifdef HAVE_LIBCFNOVA   
+   PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
+   PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
+   VerifyGraph(TOPIC_MAP,semantics,"depends");
+#endif
    }
+
+DeleteRlist(semantics);
 #endif
 }
 
@@ -2154,7 +2164,13 @@ snprintf(filename,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,t
 
 if (stat(filename,&sb) != -1)
    {
-   // onClick=\"return popup(this,'%s')\"
+   fprintf(fout,"<div id=\"image\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
+   }
+
+snprintf(filename,CF_BUFSIZE,"graphs/flow_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+
+if (stat(filename,&sb) != -1)
+   {
    fprintf(fout,"<div id=\"image\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
    }
 

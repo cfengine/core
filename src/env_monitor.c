@@ -403,7 +403,7 @@ void CfenvTimeOut()
 {
 alarm(0);
 TCPPAUSE = true;
-Verbose("Time out\n");
+CfOut(cf_verbose,"","Time out\n");
 }
 
 /*********************************************************************/
@@ -613,7 +613,7 @@ void Sniff()
 { int i;
   char tcpbuffer[CF_BUFSIZE];
  
-Verbose("Reading from tcpdump...\n");
+CfOut(cf_verbose,"","Reading from tcpdump...\n");
 memset(tcpbuffer,0,CF_BUFSIZE);      
 signal(SIGALRM,(void *)CfenvTimeOut);
 alarm(SLEEPTIME);
@@ -726,15 +726,15 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
    LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
 
-   Verbose("New %s.q %lf\n",OBS[i][0],newvals.Q[i].q);
-   Verbose("New %s.var %lf\n",OBS[i][0],newvals.Q[i].var);
-   Verbose("New %s.ex %lf\n",OBS[i][0],newvals.Q[i].expect);
+   CfOut(cf_verbose,"","New %s.q %lf\n",OBS[i][0],newvals.Q[i].q);
+   CfOut(cf_verbose,"","New %s.var %lf\n",OBS[i][0],newvals.Q[i].var);
+   CfOut(cf_verbose,"","New %s.ex %lf\n",OBS[i][0],newvals.Q[i].expect);
 
-   Verbose("%s = %lf -> (%f#%f) local [%f#%f]\n",OBS[i][0],This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+   CfOut(cf_verbose,"","%s = %lf -> (%f#%f) local [%f#%f]\n",OBS[i][0],This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
 
    if (This[i] > 0)
       {
-      Verbose("Storing %.2f in %s\n",This[i],OBS[i][0]);
+      CfOut(cf_verbose,"","Storing %.2f in %s\n",This[i],OBS[i][0]);
       }
    }
    
@@ -853,7 +853,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       anomaly_chi[i] = CHI[i];
       anomaly_chi_limit[i] = CHI_LIMIT[i];
       
-      Verbose("LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,OBS[i][0],CHI[i],CHI_LIMIT[i]);
+      CfOut(cf_verbose,"","LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,OBS[i][0],CHI[i],CHI_LIMIT[i]);
 
       /* Last printed element is now */
       
@@ -1189,7 +1189,7 @@ cf_pclose(pp);
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_users",CFWORKDIR);
 RawSaveItemList(list,vbuff);
 DeleteItemList(list);
-Verbose("(Users,root,other) = (%d,%d,%d)\n",THIS[ob_users],THIS[ob_rootprocs],THIS[ob_otherprocs]);
+CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",THIS[ob_users],THIS[ob_rootprocs],THIS[ob_otherprocs]);
 }
 
 /*****************************************************************************/
@@ -1205,11 +1205,11 @@ void GatherCPUData()
   
 if ((fp=fopen("/proc/stat","r")) == NULL)
    {
-   Verbose("Didn't find proc data\n");
+   CfOut(cf_verbose,"","Didn't find proc data\n");
    return;
    }
 
-Verbose("Reading /proc/stat utilization data -------\n");
+CfOut(cf_verbose,"","Reading /proc/stat utilization data -------\n");
 
 count = 0;
 
@@ -1226,7 +1226,7 @@ while (!feof(fp))
 
    if (strncmp(cpuname,name,strlen(name)) == 0)
       {
-      Verbose("Found CPU %d\n",count);
+      CfOut(cf_verbose,"","Found CPU %d\n",count);
 
       switch (count++)
          {
@@ -1240,18 +1240,18 @@ while (!feof(fp))
              break;
          default:
              index = ob_spare;
-             Verbose("Error reading proc/stat\n");
+             CfOut(cf_verbose,"","Error reading proc/stat\n");
              continue;
          }
       }
    else if (strncmp(cpuname,"cpu",3) == 0)
       {
-      Verbose("Found aggregate CPU\n",count);
+      CfOut(cf_verbose,"","Found aggregate CPU\n",count);
       index = ob_cpuall;
       }
    else 
       {
-      Verbose("Found nothing (%s)\n",cpuname);
+      CfOut(cf_verbose,"","Found nothing (%s)\n",cpuname);
       index = ob_spare;
       fclose(fp);
       return;
@@ -1262,7 +1262,7 @@ while (!feof(fp))
    THIS[index] = dq;
    LASTQ[index] = q;
 
-   Verbose("Set %s=%d to %.1f after %d 100ths of a second \n",OBS[index][1],index,q,total_time);         
+   CfOut(cf_verbose,"","Set %s=%d to %.1f after %d 100ths of a second \n",OBS[index][1],index,q,total_time);         
    }
 
 fclose(fp);
@@ -1277,9 +1277,9 @@ void GatherDiskData()
   char syslog[CF_BUFSIZE];
   char messages[CF_BUFSIZE];
  
-Verbose("Gathering disk data\n");
+CfOut(cf_verbose,"","Gathering disk data\n");
 THIS[ob_diskfree] = GetDiskUsage("/",cfpercent);
-Verbose("Disk free = %d %%\n",THIS[ob_diskfree]);
+CfOut(cf_verbose,"","Disk free = %d %%\n",THIS[ob_diskfree]);
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */
 
@@ -1295,13 +1295,13 @@ switch(VSYSTEMHARDCLASS)
    }
 
 THIS[ob_webaccess] = GetFileGrowth(accesslog,ob_webaccess);
-Verbose("Webaccess = %d %%\n",THIS[ob_webaccess]);
+CfOut(cf_verbose,"","Webaccess = %d %%\n",THIS[ob_webaccess]);
 THIS[ob_weberrors] = GetFileGrowth(errorlog,ob_weberrors);
-Verbose("Web error = %d %%\n",THIS[ob_weberrors]);
+CfOut(cf_verbose,"","Web error = %d %%\n",THIS[ob_weberrors]);
 THIS[ob_syslog] = GetFileGrowth(syslog,ob_syslog);
-Verbose("Syslog = %d %%\n",THIS[ob_syslog]);
+CfOut(cf_verbose,"","Syslog = %d %%\n",THIS[ob_syslog]);
 THIS[ob_messages] = GetFileGrowth(messages,ob_messages);
-Verbose("Messages = %d %%\n",THIS[ob_messages]);
+CfOut(cf_verbose,"","Messages = %d %%\n",THIS[ob_messages]);
 }
 
 /*****************************************************************************/
@@ -1331,7 +1331,7 @@ else
 /* Scale load average by 100 to make it visible */
  
 THIS[ob_loadavg] = (int) (100.0 * sum);
-Verbose("100 x Load Average = %d\n",THIS[ob_loadavg]);
+CfOut(cf_verbose,"","100 x Load Average = %d\n",THIS[ob_loadavg]);
 }
 
 /*****************************************************************************/
@@ -1476,7 +1476,7 @@ cf_pclose(pp);
        {
        if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
-          Verbose("New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
+          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
           DeleteItemList(in[i]);
           continue;
           }
@@ -1500,7 +1500,7 @@ cf_pclose(pp);
        {       
        if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
-          Verbose("New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
+          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
           DeleteItemList(out[i]);
           continue;
           }
@@ -1524,7 +1524,7 @@ cf_pclose(pp);
        {       
        if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
-          Verbose("New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
+          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
           DeleteItemList(NETIN_DIST[i]);
           NETIN_DIST[i] = NULL;
           continue;
@@ -1550,7 +1550,7 @@ cf_pclose(pp);
        {       
        if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
-          Verbose("New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
+          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
           DeleteItemList(NETOUT_DIST[i]);
           NETOUT_DIST[i] = NULL;   
           continue;
@@ -1989,7 +1989,7 @@ if (delta > 4.0*dev)  /* IR */
    }
 else
    {
-   Verbose("Value accepted\n");
+   CfOut(cf_verbose,"","Value accepted\n");
    return new;
    }
 }
@@ -2121,11 +2121,11 @@ void SaveTCPEntropyData(struct Item *list,int i,char *inout)
   FILE *fp;
   char filename[CF_BUFSIZE];
 
-Verbose("TCP Save %s\n",TCPNAMES[i]);
+CfOut(cf_verbose,"","TCP Save %s\n",TCPNAMES[i]);
   
 if (list == NULL)
    {
-   Verbose("No %s-%s events\n",TCPNAMES[i],inout);
+   CfOut(cf_verbose,"","No %s-%s events\n",TCPNAMES[i],inout);
    return;
    }
 
@@ -2138,11 +2138,11 @@ if (list == NULL)
     snprintf(filename,CF_BUFSIZE-1,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]); 
     }
 
-Verbose("TCP Save %s\n",filename);
+CfOut(cf_verbose,"","TCP Save %s\n",filename);
  
 if ((fp = fopen(filename,"w")) == NULL)
    {
-   Verbose("Unable to write datafile %s\n",filename);
+   CfOut(cf_verbose,"","Unable to write datafile %s\n",filename);
    return;
    }
  
@@ -2185,7 +2185,7 @@ if (stat(filename,&statbuf) == -1)
 
 q = statbuf.st_size;
 
-Verbose("GetFileGrowth(%s) = %d\n",filename,q);
+CfOut(cf_verbose,"","GetFileGrowth(%s) = %d\n",filename,q);
 
 dq = q - LASTQ[index];
 

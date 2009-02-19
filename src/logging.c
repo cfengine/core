@@ -264,13 +264,13 @@ for (rp = list; rp != NULL; rp=rp->next)
 
    if (persist > 0)
       {
-      Verbose(" ?> defining persistent class %s\n",(char *)rp->item);
+      CfOut(cf_verbose,""," ?> defining persistent class %s\n",(char *)rp->item);
       NewPersistentContext(rp->item,persist,policy);
       PrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
    else
       {
-      Verbose(" ?> defining class %s\n",(char *)rp->item);
+      CfOut(cf_verbose,""," ?> defining class %s\n",(char *)rp->item);
       PrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
    }

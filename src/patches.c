@@ -142,8 +142,8 @@ strcpy(sys->nodename,buffer);
 
 if (strcmp(buffer,AUTOCONF_HOSTNAME) != 0)
    {
-   Verbose("This binary was complied on a different host (%s).\n",AUTOCONF_HOSTNAME);
-   Verbose("This host does not have uname, so I can't tell if it is the exact same OS\n");
+   CfOut(cf_verbose,"","This binary was complied on a different host (%s).\n",AUTOCONF_HOSTNAME);
+   CfOut(cf_verbose,"","This host does not have uname, so I can't tell if it is the exact same OS\n");
    }
 
 strcpy(sys->sysname,AUTOCONF_SYSNAME);
@@ -315,7 +315,7 @@ return buffer;
 int putenv(char *s)
 
 {
-Verbose("(This system does not have putenv: cannot update CFALLCLASSES\n");
+CfOut(cf_verbose,"","(This system does not have putenv: cannot update CFALLCLASSES\n");
 return 0;
 }
 
@@ -345,7 +345,7 @@ int seteuid (uid_t uid)
 #ifdef HAVE_SETREUID
 return setreuid(-1,uid);
 #else
-Verbose("(This system does not have setreuid (patches.c)\n");
+CfOut(cf_verbose,"","(This system does not have setreuid (patches.c)\n");
 return -1; 
 #endif 
 }
@@ -372,7 +372,7 @@ int setegid (gid_t gid)
 #ifdef HAVE_SETREGID
 return setregid(-1,gid);
 #else
-Verbose("(This system does not have setregid (patches.c)\n");
+CfOut(cf_verbose,"","(This system does not have setregid (patches.c)\n");
 return -1; 
 #endif 
 }

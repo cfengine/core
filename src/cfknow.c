@@ -408,28 +408,28 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_output].lval) == 0)
       {
       GRAPH = GetBoolean(retval);
-      Verbose("SET graph_output = %d\n",GRAPH);
+      CfOut(cf_verbose,"","SET graph_output = %d\n",GRAPH);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_dir].lval) == 0)
       {
       strncpy(GRAPHDIR,retval,CF_MAXVARSIZE);
-      Verbose("SET graph_directory = %s\n",GRAPHDIR);
+      CfOut(cf_verbose,"","SET graph_directory = %s\n",GRAPHDIR);
       continue;
       }
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_genman].lval) == 0)
       {
       GENERATE_MANUAL = GetBoolean(retval);
-      Verbose("SET generate_manual = %d\n",GENERATE_MANUAL);
+      CfOut(cf_verbose,"","SET generate_manual = %d\n",GENERATE_MANUAL);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_mandir].lval) == 0)
       {
       strncpy(MANDIR,retval,CF_MAXVARSIZE);
-      Verbose("SET manual_source_directory = %s\n",MANDIR);
+      CfOut(cf_verbose,"","SET manual_source_directory = %s\n",MANDIR);
       continue;
       }
    }
@@ -591,7 +591,7 @@ void ShowOntology()
 AddSlash(BUILD_DIR);
 snprintf(filename,CF_BUFSIZE-1,"%sontology.html",BUILD_DIR);
 
-Verbose("Writing %s\n",filename);
+CfOut(cf_verbose,"","Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
@@ -699,7 +699,7 @@ void ShowTopicMapLTM()
 AddSlash(BUILD_DIR);
 snprintf(filename,CF_BUFSIZE-1,"%stopic_map.ltm",BUILD_DIR);
 
-Verbose("Writing %s\n",filename);
+CfOut(cf_verbose,"","Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
@@ -808,7 +808,7 @@ if (!cfdb.connected)
 
 /* First assume the item is a topic */
 
-Verbose("Treating the search string %s as a literal string\n",topic);
+CfOut(cf_verbose,"","Treating the search string %s as a literal string\n",topic);
 
 strcpy(safe,EscapeSQL(&cfdb,topic));
 strcpy(safetype,EscapeSQL(&cfdb,type));
@@ -954,7 +954,7 @@ void LookupMatchingTopics(char *typed_topic)
 
 DeTypeTopic(typed_topic,topic,type);
 
-Verbose("Looking up topics matching \"%s\"\n",topic);
+CfOut(cf_verbose,"","Looking up topics matching \"%s\"\n",topic);
 
 /* We need to set a scope for the regex stuff */
 
@@ -1118,7 +1118,7 @@ if (pp->done)
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
-   Verbose("Class promises do not have any effect here.\n");
+   CfOut(cf_verbose,"","Class promises do not have any effect here.\n");
    return;
    }
 
@@ -1159,7 +1159,7 @@ a = GetTopicsAttributes(pp);
  
 strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
-Verbose("Attempting to install topic %s::%s\n",pp->classes,pp->promiser);
+CfOut(cf_verbose,"","Attempting to install topic %s::%s\n",pp->classes,pp->promiser);
 
 if (pp->ref != NULL)
    {
@@ -1172,7 +1172,7 @@ else
 
 if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    {
-   Verbose(" -> Topic \"%s\" installed\n",pp->promiser);
+   CfOut(cf_verbose,""," -> Topic \"%s\" installed\n",pp->promiser);
    
    if (a.fwd_name)
       {
@@ -1181,7 +1181,7 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    }
 else
    {
-   Verbose(" -> Topic \"%s\" did not install\n",pp->promiser);
+   CfOut(cf_verbose,""," -> Topic \"%s\" did not install\n",pp->promiser);
    }
 }
 
@@ -1348,7 +1348,7 @@ if (WRITE_SQL && strlen(SQL_OWNER) > 0)
    sql_database_defined = true;
    }
 
-Verbose("Writing %s\n",filename);
+CfOut(cf_verbose,"","Writing %s\n",filename);
 
 /* Open channels */
 

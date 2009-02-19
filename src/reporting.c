@@ -432,11 +432,11 @@ fprintf(FREPORT_TXT,"***********************************************************
 void BannerSubType(char *bundlename,char *type,int pass)
 
 {
-Verbose("\n");
-Verbose("   =========================================================\n");
-Verbose("   %s in bundle %s (%d)\n",type,bundlename,pass);
-Verbose("   =========================================================\n");
-Verbose("\n");
+CfOut(cf_verbose,"","\n");
+CfOut(cf_verbose,"","   =========================================================\n");
+CfOut(cf_verbose,"","   %s in bundle %s (%d)\n",type,bundlename,pass);
+CfOut(cf_verbose,"","   =========================================================\n");
+CfOut(cf_verbose,"","\n");
 }
 
 /**************************************************************/
@@ -449,21 +449,21 @@ if (strcmp(type,"processes") == 0)
    struct Item *ip;
    /* Just parsed all local classes */
 
-   Verbose("     ??? Local class context: \n");
+   CfOut(cf_verbose,"","     ??? Local class context: \n");
 
    for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
       {
       printf("       %sǹ",ip->name);
       }
 
-   Verbose("\n");
+   CfOut(cf_verbose,"","\n");
    }
 
-Verbose("\n");
-Verbose("      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-Verbose("      %s in bundle %s\n",type,bundlename);
-Verbose("      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-Verbose("\n");
+CfOut(cf_verbose,"","\n");
+CfOut(cf_verbose,"","      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+CfOut(cf_verbose,"","      %s in bundle %s\n",type,bundlename);
+CfOut(cf_verbose,"","      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+CfOut(cf_verbose,"","\n");
 }
 
 /*******************************************************************/

@@ -98,7 +98,7 @@ void VerifyInterfacePromise(char *vifdev,char *vaddress,char *vnetmask,char *vbr
 
 { int sk, flags, metric, isnotsane = false;
  
-Verbose("Assumed interface name: %s %s %s\n",vifdev,vnetmask,vbroadcast);
+CfOut(cf_verbose,"","Assumed interface name: %s %s %s\n",vifdev,vnetmask,vbroadcast);
 
 if (!IsPrivileged())                            
    {
@@ -167,7 +167,7 @@ int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *
   struct in_addr inaddr;
   char vbuff[CF_BUFSIZE];
 
-Verbose(" -> Checking interface promises on %s\n",vifdev);
+CfOut(cf_verbose,""," -> Checking interface promises on %s\n",vifdev);
   
 if ((hp = gethostbyname(VSYSNAME.nodename)) == NULL)
    {
@@ -177,7 +177,7 @@ if ((hp = gethostbyname(VSYSNAME.nodename)) == NULL)
 else
    {
    memcpy(&inaddr,hp->h_addr,hp->h_length);
-   Verbose(" -> Address reported by nameserver: %s\n",inet_ntoa(inaddr));
+   CfOut(cf_verbose,""," -> Address reported by nameserver: %s\n",inet_ntoa(inaddr));
    }
 
 strcpy(IFR.ifr_name,vifdev);
@@ -211,7 +211,7 @@ if (ioctl(sk,SIOCGIFNETMASK, (caddr_t) &IFR) == -1)
 
 netmask.sin_addr = ((struct sockaddr_in *) &IFR.ifr_addr)->sin_addr;
 
-Verbose(" -> Found netmask: %s\n",inet_ntoa(netmask.sin_addr));
+CfOut(cf_verbose,""," -> Found netmask: %s\n",inet_ntoa(netmask.sin_addr));
 
 strcpy(vbuff,inet_ntoa(netmask.sin_addr));
 
@@ -229,7 +229,7 @@ if (ioctl(sk,SIOCGIFBRDADDR, (caddr_t) &IFR) == -1)
 sin = (struct sockaddr_in *) &IFR.ifr_addr;
 strcpy(vbuff,inet_ntoa(sin->sin_addr));
 
-Verbose(" -> Found broadcast address: %s\n",inet_ntoa(sin->sin_addr));
+CfOut(cf_verbose,""," -> Found broadcast address: %s\n",inet_ntoa(sin->sin_addr));
 
 GetDefaultBroadcastAddr(inet_ntoa(inaddr),vifdev,vnetmask,vbroadcast);
 
@@ -266,7 +266,7 @@ void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char 
 
 /* set netmask */
 
-Verbose(" -> Resetting interface...\n");
+CfOut(cf_verbose,""," -> Resetting interface...\n");
 
 memset(&IFR, 0, sizeof(IFR));
 strncpy(IFR.ifr_name,vifdev,sizeof(IFR.ifr_name)); 
@@ -292,7 +292,7 @@ broadcast.sin_addr.s_addr = inet_addr(VNUMBROADCAST);
 IFR.ifr_addr = *((struct sockaddr *) &broadcast);
 sin = (struct sockaddr_in *) &IFR.ifr_addr;
 
-Verbose("Trying to set broad to %s = %s\n",VNUMBROADCAST,inet_ntoa(sin->sin_addr));
+CfOut(cf_verbose,"","Trying to set broad to %s = %s\n",VNUMBROADCAST,inet_ntoa(sin->sin_addr));
  
 if (ioctl(sk,SIOCSIFBRDADDR, (caddr_t) &IFR) == -1) 
    {
@@ -384,7 +384,7 @@ void SetPromisedDefaultRoute()
 
   FILE *pp;
 
-Verbose("Looking for a default route...\n");
+CfOut(cf_verbose,"","Looking for a default route...\n");
 
 if (!IsPrivileged())                            
    {
@@ -394,7 +394,7 @@ if (!IsPrivileged())
 
 if (VDEFAULTROUTE == NULL)
    {
-   Verbose("cfengine: No default route is defined. Ignoring the routing tables.\n");
+   CfOut(cf_verbose,"","cfengine: No default route is defined. Ignoring the routing tables.\n");
    return;
    }
 
@@ -418,13 +418,13 @@ while (!feof(pp))
         {
         if ((strncmp(VDEFAULTROUTE->name, oldroute, INET_ADDRSTRLEN)) == 0)
           {
-          Verbose("cfengine: default route is already set to %s\n",VDEFAULTROUTE->name);
+          CfOut(cf_verbose,"","cfengine: default route is already set to %s\n",VDEFAULTROUTE->name);
           defaultokay = 1;
           break;
           }
         else
           {
-          Verbose("cfengine: default route is set to %s, but should be %s.\n",oldroute,VDEFAULTROUTE->name);
+          CfOut(cf_verbose,"","cfengine: default route is set to %s, but should be %s.\n",oldroute,VDEFAULTROUTE->name);
           defaultokay = 2;
           break;
           }
@@ -441,7 +441,7 @@ cf_pclose(pp);
 
 if (defaultokay == 1)
    {
-   Verbose("Default route is set and agrees with conditional policy\n");
+   CfOut(cf_verbose,"","Default route is set and agrees with conditional policy\n");
    return;
    }
 
@@ -452,7 +452,7 @@ if (defaultokay == 0)
 
 if (IsExcluded(VDEFAULTROUTE->classes))
    {
-   Verbose("cfengine: No default route is applicable. Ignoring the routing tables.\n");
+   CfOut(cf_verbose,"","cfengine: No default route is applicable. Ignoring the routing tables.\n");
    return;   
    }
 
@@ -533,7 +533,7 @@ else
 
    /* Socket routing - don't really know how to do this yet */ 
 
-   Verbose("Sorry don't know how to do routing on this platform\n");
+   CfOut(cf_verbose,"","Sorry don't know how to do routing on this platform\n");
  
 #endif
    }
@@ -546,13 +546,13 @@ void VerifyInterfacePromise(vifdev,vaddress,vnetmask,vbroadcast)
 char *vifdev,*vaddress,*vnetmask, *vbroadcast;
 
 {
-Verbose("Network configuration is not implemented on this OS\n");
+CfOut(cf_verbose,"","Network configuration is not implemented on this OS\n");
 }
 
 void SetPromisedDefaultRoute()
 
 {
-Verbose("Setting default route is not implemented on this OS\n"); 
+CfOut(cf_verbose,"","Setting default route is not implemented on this OS\n"); 
 }
 
 #endif

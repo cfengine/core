@@ -65,7 +65,7 @@ if (a.mount.unmount)
    {
    if (a.mount.mount_source || a.mount.mount_server)
       {
-      Verbose(" !! An unmount promise indicates a mount-source information - probably in error\n");
+      CfOut(cf_verbose,""," !! An unmount promise indicates a mount-source information - probably in error\n");
       }
    }
 else
@@ -126,7 +126,7 @@ int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
   char dir[CF_BUFSIZE];
   int changes = 0;
  
-Verbose(" -> Verifying mounted file systems on %s\n",name);
+CfOut(cf_verbose,""," -> Verifying mounted file systems on %s\n",name);
 
 snprintf(dir,CF_BUFSIZE,"%s/.",name);
 
@@ -204,7 +204,7 @@ int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
   long sizeinbytes = 0, filecount = 0;
   char buff[CF_BUFSIZE];
 
-Verbose(" -> Checking required filesystem %s\n",name);
+CfOut(cf_verbose,""," -> Checking required filesystem %s\n",name);
 
 if (stat(name,&statbuf) == -1)
    {
@@ -262,7 +262,7 @@ if (S_ISDIR(statbuf.st_mode))
 
    if (sizeinbytes < 0)
       {
-      Verbose("Internal error: count of byte size was less than zero!\n");
+      CfOut(cf_verbose,"","Internal error: count of byte size was less than zero!\n");
       return true;
       }
 
@@ -338,7 +338,7 @@ return true;
 void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
 
 {
- Verbose("Scan arrival sequence . not yet implemented\n");
+ CfOut(cf_verbose,"","Scan arrival sequence . not yet implemented\n");
 }
 
 /*******************************************************************/
@@ -373,7 +373,7 @@ for (rp = list; rp != NULL; rp=rp->next)
          }
       else
          {
-         Verbose(" -> File system %s seems to be mounted correctly\n",mp->source);
+         CfOut(cf_verbose,""," -> File system %s seems to be mounted correctly\n",mp->source);
          break;
          }
       }
@@ -381,7 +381,7 @@ for (rp = list; rp != NULL; rp=rp->next)
 
 if (!found)
    {
-   Verbose(" !! File system %s seems not to be mounted correctly\n",name);
+   CfOut(cf_verbose,""," !! File system %s seems not to be mounted correctly\n",name);
 
    if (! a.mount.unmount)
       {

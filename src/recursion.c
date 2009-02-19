@@ -127,7 +127,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    
    if (attr.recursion.xdev && DeviceBoundary(&lsb,pp))
       {
-      Verbose("Skipping %s on different device - use xdev option to change this\n",path);
+      CfOut(cf_verbose,"","Skipping %s on different device - use xdev option to change this\n",path);
       continue;
       }
 
@@ -140,7 +140,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       
       if (attr.recursion.depth > 1)
          {
-         Verbose(" ->>  Entering %s\n",path);
+         CfOut(cf_verbose,""," ->>  Entering %s\n",path);
          goback = DepthSearch(path,&lsb,rlevel+1,attr,pp);
          PopDirState(goback,name,sb,attr.recursion);
          VerifyFileLeaf(path,&lsb,attr,pp);
@@ -215,13 +215,13 @@ Debug("SkipDirLinks(%s,%s)\n",path,lastnode);
 
 if ((r.include_dirs != NULL) && !(MatchRlistItem(r.include_dirs,path) || MatchRlistItem(r.include_dirs,lastnode)))
    {
-   Verbose("Skipping matched non-included directory %s\n",path);
+   CfOut(cf_verbose,"","Skipping matched non-included directory %s\n",path);
    return true;
    }
 
 if (MatchRlistItem(r.exclude_dirs,path) || MatchRlistItem(r.exclude_dirs,lastnode))
    {
-   Verbose("Skipping matched excluded directory %s\n",path);
+   CfOut(cf_verbose,"","Skipping matched excluded directory %s\n",path);
    return true;
    }       
 

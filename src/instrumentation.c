@@ -153,7 +153,7 @@ if (lastseen > (double)lsea)
    }
 else
    {
-   Verbose("Performance(%s): time=%.4f secs, av=%.4f +/- %.4f\n",eventname,value,newe.Q.expect,sqrt(newe.Q.var));
+   CfOut(cf_verbose,"","Performance(%s): time=%.4f secs, av=%.4f +/- %.4f\n",eventname,value,newe.Q.expect,sqrt(newe.Q.var));
    WriteDB(dbp,eventname,&newe,sizeof(newe));
    }
 
@@ -418,7 +418,7 @@ if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
 
 if (lastseen > (double)lsea)
    {
-   Verbose("Last seen %s expired\n",databuf);
+   CfOut(cf_verbose,"","Last seen %s expired\n",databuf);
    DeleteDB(dbp,databuf);   
    }
 else

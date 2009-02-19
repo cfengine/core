@@ -134,14 +134,14 @@ if (type != elp_delete)   /* Just parsed all local classes */
    return;
    }
 
-Verbose ("     ??  Private class context:\n");
+CfOut(cf_verbose,"","     ??  Private class context:\n");
 
 for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
    {
-   Verbose("     ??       %s\n",ip->name);
+   CfOut(cf_verbose,"","     ??       %s\n",ip->name);
    }
 
-Verbose("\n");
+CfOut(cf_verbose,"","\n");
 }
 
 /***************************************************************************/
@@ -151,10 +151,10 @@ void KeepEditLinePromise(struct Promise *pp)
 {
 if (!IsDefinedClass(pp->classes))
    {
-   Verbose("\n");
-   Verbose("   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-   Verbose("   Skipping whole next edit promise, as context %s is not valid\n",pp->classes);
-   Verbose("   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"","   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+   CfOut(cf_verbose,"","   Skipping whole next edit promise, as context %s is not valid\n",pp->classes);
+   CfOut(cf_verbose,"","   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
    return;
    }
 
@@ -809,7 +809,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       }
    else
       {
-      Verbose(" - Matched line (%s)\n",ip->name);
+      CfOut(cf_verbose,""," - Matched line (%s)\n",ip->name);
       }
 
    if (!BlockTextMatch(a.column.column_separator,ip->name,&s,&e))
@@ -981,7 +981,7 @@ for (rp = *columns; rp != NULL; rp=rp->next)
     
     if (count == a.column.select_column)
        {
-       Verbose(" -> Stopped at field %d\n",count);
+       CfOut(cf_verbose,""," -> Stopped at field %d\n",count);
        break;
        }
     }
@@ -1007,7 +1007,7 @@ if (a.column.select_column > count)
          count++;         
          if (count == a.column.select_column)
             {
-            Verbose(" -> Stopped at column/field %d\n",count);
+            CfOut(cf_verbose,""," -> Stopped at column/field %d\n",count);
             break;
             }
          }
@@ -1213,7 +1213,7 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"set") == 0)
       {
       if (strcmp((*columns)->item,a.column.column_value) == 0)
          {
-         Verbose(" -> Field sub-value set as promised\n");
+         CfOut(cf_verbose,""," -> Field sub-value set as promised\n");
          return false;
          }
       }

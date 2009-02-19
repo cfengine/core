@@ -46,13 +46,13 @@ alarm(0);
 
 if (ALARM_PID != -1)
    {
-   Verbose("Time out of process %d\n",ALARM_PID);
+   CfOut(cf_verbose,"","Time out of process %d\n",ALARM_PID);
    kill(ALARM_PID,cfterm);
    kill(ALARM_PID,cfkill);
    }
 else
    {
-   Verbose("%s: Time out\n",VPREFIX);
+   CfOut(cf_verbose,"","%s: Time out\n",VPREFIX);
    }
 }
 
@@ -79,7 +79,7 @@ CFSTARTTIME = tloc;
 
 snprintf(vbuff,CF_BUFSIZE,"%s",ctime(&tloc));
 
-Verbose("Reference time set to %s\n",ctime(&tloc));
+CfOut(cf_verbose,"","Reference time set to %s\n",ctime(&tloc));
 
 if (setclasses)
    {

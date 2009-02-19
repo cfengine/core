@@ -198,7 +198,7 @@ for (i = 0; names[i] != NULL; i++)
       
       if (min < value && value < max)
          {
-         Verbose("Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+         CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
          return true;
          }
       else
@@ -232,7 +232,7 @@ for (i = 0; names[i] != NULL; i++)
       
       if (min < value && value < max)
          {
-         Verbose("Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+         CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
          return true;
          }
       else

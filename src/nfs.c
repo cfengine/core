@@ -366,7 +366,7 @@ switch (VSYSTEMHARDCLASS)
        return false;
    }
 
-Verbose("Verifying %s in %s\n",mountpt,VFSTAB[VSYSTEMHARDCLASS]);
+CfOut(cf_verbose,"","Verifying %s in %s\n",mountpt,VFSTAB[VSYSTEMHARDCLASS]);
 
 if (!MatchFSInFstab(mountpt))
    {
@@ -549,12 +549,12 @@ void MountAll()
  
 if (DONTDO)
    {
-   Verbose("Promised to mount filesystem, but not on this trial run\n");
+   CfOut(cf_verbose,"","Promised to mount filesystem, but not on this trial run\n");
    return;
    }
 else
    {
-   Verbose(" -> Attempting to mount all filesystems.\n");
+   CfOut(cf_verbose,""," -> Attempting to mount all filesystems.\n");
    }
 
 if (VSYSTEMHARDCLASS == cfnt)

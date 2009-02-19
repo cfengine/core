@@ -95,7 +95,7 @@ if (ERRORCOUNT > 0)
    }
 else
    {
-   Verbose("Inputs are valid\n");
+   CfOut(cf_verbose,"","Inputs are valid\n");
    exit(0);
    }
 }

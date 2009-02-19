@@ -579,7 +579,7 @@ else
    else
       {
       snprintf(modulecmd,CF_BUFSIZE,"%s/modules/%s %s",CFWORKDIR,command,args);
-      Verbose("Executing and using module [%s]\n",modulecmd); 
+      CfOut(cf_verbose,"","Executing and using module [%s]\n",modulecmd); 
 
       if (ExecModule(modulecmd))
          {
@@ -1165,7 +1165,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
 
       if (strlen(regex) == 0 || FullTextMatch(regex,buffer))
          {
-         Verbose("Host %s is alive and responding correctly\n",rp->item);
+         CfOut(cf_verbose,"","Host %s is alive and responding correctly\n",rp->item);
          snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
          NewScalar(CONTEXTID,buffer,rp->item,cf_str);         
          count++;
@@ -1173,13 +1173,13 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
       }
    else
       {
-      Verbose("Host %s is alive\n",rp->item);
+      CfOut(cf_verbose,"","Host %s is alive\n",rp->item);
       snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
       NewScalar(CONTEXTID,buffer,rp->item,cf_str);
 
       if (IsDefinedClass(CanonifyName(rp->item)))
          {
-         Verbose("This host is in the list and has promised to join the class %s - joined\n",array_lval);
+         CfOut(cf_verbose,"","This host is in the list and has promised to join the class %s - joined\n",array_lval);
          NewClass(array_lval);
          }
       
@@ -1615,14 +1615,14 @@ while (getnetgrent(&machine,&user,&domain))
    {
    if (strcmp(machine,VUQNAME) == 0)
       {
-      Verbose("Matched %s in netgroup %s\n",machine,finalargs->item);
+      CfOut(cf_verbose,"","Matched %s in netgroup %s\n",machine,finalargs->item);
       strcpy(buffer,"any");
       break;
       }
    
    if (strcmp(machine,VFQNAME) == 0)
       {
-      Verbose("Matched %s in netgroup %s\n",machine,finalargs->item);
+      CfOut(cf_verbose,"","Matched %s in netgroup %s\n",machine,finalargs->item);
       strcpy(buffer,"any");
       break;
       }
@@ -3039,14 +3039,14 @@ NewScope(context);
 switch (*line)
    {
    case '+':
-       Verbose("Activated classes: %s\n",line+1);
+       CfOut(cf_verbose,"","Activated classes: %s\n",line+1);
        if (CheckID(line+1))
           {
           NewClass(line+1);
           }
        break;
    case '-':
-       Verbose("Deactivated classes: %s\n",line+1);
+       CfOut(cf_verbose,"","Deactivated classes: %s\n",line+1);
        if (CheckID(line+1))
           {
           NegateClassesFromString(line+1,&VNEGHEAP);
@@ -3058,7 +3058,7 @@ switch (*line)
 
        if (CheckID(name))
           {
-          Verbose("Defined variable: %s in context %s with value: %s\n",name,context,content);
+          CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
           NewScalar(context,name,content,cf_str);
           }
        break;

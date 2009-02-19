@@ -125,7 +125,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
 
    if (attr.recursion.xdev && DeviceBoundary(&sb,pp))
       {
-      Verbose(" !! Skipping %s on different device\n",newfrom);
+      CfOut(cf_verbose,""," !! Skipping %s on different device\n",newfrom);
       continue;
       }
 
@@ -159,7 +159,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
             }
          }
 
-      Verbose(" ->>  Entering %s\n",newto);
+      CfOut(cf_verbose,""," ->>  Entering %s\n",newto);
       VerifyCopiedFileAttributes(newto,&dsb,&sb,attr,pp);
       SourceSearchAndCopy(newfrom,newto,maxrecurse-1,attr,pp);
       }
@@ -479,13 +479,13 @@ if (strlen(localdir) < 2)
  
 if (pp->conn && !pp->conn->authenticated)
    {
-   Verbose(" !! Not purging local copy %s - no authenticated contact with a source\n",localdir);
+   CfOut(cf_verbose,""," !! Not purging local copy %s - no authenticated contact with a source\n",localdir);
    return;
    }
 
 if (!attr.havedepthsearch)
    {
-   Verbose(" !! No depth search when copying %s so no refrece from which to purge\n",localdir);
+   CfOut(cf_verbose,""," !! No depth search when copying %s so no refrece from which to purge\n",localdir);
    return;
    }
 
@@ -618,7 +618,7 @@ if (attr.copy.link_type != cfa_notlinked)
          }
       else
          {
-         Verbose("cfengine: copy item %s marked for linking instead\n",sourcefile);
+         CfOut(cf_verbose,"","cfengine: copy item %s marked for linking instead\n",sourcefile);
          LinkCopy(sourcefile,destfile,&ssb,attr,pp);
          return;
          }
@@ -640,7 +640,7 @@ if (found != -1)
       
       if (DONTDO)
          {
-         Verbose("Need to remove old symbolic link %s to make way for copy\n",destfile);
+         CfOut(cf_verbose,"","Need to remove old symbolic link %s to make way for copy\n",destfile);
          }
       else 
          {
@@ -650,7 +650,7 @@ if (found != -1)
             return;
             }
          
-         Verbose("Removing old symbolic link %s to make way for copy\n",destfile);
+         CfOut(cf_verbose,"","Removing old symbolic link %s to make way for copy\n",destfile);
          found = -1;
          }
       } 
@@ -699,7 +699,7 @@ if (found == -1)
 
       if (S_ISLNK(srcmode) && attr.copy.link_type != cfa_notlinked)
          {
-         Verbose(" -> %s is a symbolic link\n",sourcefile);
+         CfOut(cf_verbose,""," -> %s is a symbolic link\n",sourcefile);
          LinkCopy(sourcefile,destfile,&ssb,attr,pp);
          }
       else if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
@@ -783,7 +783,7 @@ else
    {
    int ok_to_copy = false;
    
-   Verbose("Destination file %s already exists\n",destfile);
+   CfOut(cf_verbose,"","Destination file %s already exists\n",destfile);
    
    if (!attr.copy.force_update)
       {
@@ -1281,7 +1281,7 @@ lastnode=ReadLastNode(sourcefile);
 if (MatchRlistItem(attr.copy.copy_links,lastnode))
    {
    struct stat ssb;
-   Verbose("cfengine: link item in copy %s marked for copying from %s instead\n",sourcefile,linkbuf);
+   CfOut(cf_verbose,"","cfengine: link item in copy %s marked for copying from %s instead\n",sourcefile,linkbuf);
    stat(linkbuf,&ssb);
    CopyFile(linkbuf,destfile,ssb,attr,pp);
    return;
@@ -1559,7 +1559,7 @@ if (dstat.st_size != sstat.st_size)
 
 if (attr.copy.verify)
    {
-   Verbose("Final verification of transmission: %s -> %s\n",source,new);
+   CfOut(cf_verbose,"","Final verification of transmission: %s -> %s\n",source,new);
 
    if (CompareFileHashes(source,new,&sstat,&dstat,attr,pp))
       {
@@ -1728,17 +1728,17 @@ if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))
     /* Not root hard link, remove to preserve consistency */
    if (DONTDO)
       {
-      Verbose("Need to remove old hard link %s to preserve structure..\n",value);
+      CfOut(cf_verbose,"","Need to remove old hard link %s to preserve structure..\n",value);
       }
    else
       {
       if (attr.transaction.action = cfa_warn)
          {
-         Verbose("Need to remove old hard link %s to preserve structure..\n",value);
+         CfOut(cf_verbose,"","Need to remove old hard link %s to preserve structure..\n",value);
          }
       else
          {
-         Verbose("Removing old hard link %s to preserve structure..\n",value);
+         CfOut(cf_verbose,"","Removing old hard link %s to preserve structure..\n",value);
          unlink(value);
          }
       }

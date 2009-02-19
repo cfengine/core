@@ -119,7 +119,7 @@ else
    
    if (strlen(VFQNAME) > 0)
       {
-      Verbose("skipidentify was promiseed, so we are trusting and simply announcing the identity as (%s) for this host\n",VFQNAME);
+      CfOut(cf_verbose,"","skipidentify was promiseed, so we are trusting and simply announcing the identity as (%s) for this host\n",VFQNAME);
       strcat(dnsname,VFQNAME);
       }
    else
@@ -296,7 +296,7 @@ else
    {
    if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */ 
       {
-      Verbose(".....................[.h.a.i.l.].................................\n");
+      CfOut(cf_verbose,"",".....................[.h.a.i.l.].................................\n");
       CfOut(cf_verbose,"","Strong authentication of server=%s connection confirmed\n",pp->this_server);
       PromiseRef(cf_verbose,pp);
       }

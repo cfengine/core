@@ -70,7 +70,7 @@ if (IsItemIn(SUSPICIOUSLIST,nodename))
  
 if (strcmp(nodename,"...") == 0)
    {
-   Verbose("Possible DFS/FS cell node detected in %s...\n",path);
+   CfOut(cf_verbose,"","Possible DFS/FS cell node detected in %s...\n",path);
    return true;
    }
   
@@ -146,7 +146,7 @@ if (strstr(nodename,".") && (EXTENSIONLIST != NULL))
       {
       if (strcmp(nodename,"...") == 0)
          {
-         Verbose("Hidden directory ... found in %s\n",path);
+         CfOut(cf_verbose,"","Hidden directory ... found in %s\n",path);
          return true;
          }
       
@@ -228,7 +228,7 @@ if (sb->st_dev == pp->rootdevice)
    }
 else
    {
-   Verbose("Device change from %d to %d\n",pp->rootdevice,sb->st_dev);
+   CfOut(cf_verbose,"","Device change from %d to %d\n",pp->rootdevice,sb->st_dev);
    return true;
    }
 }

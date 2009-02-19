@@ -167,43 +167,6 @@ DeleteItemList(mess);
 }
 
 
-/*********************************************************************************/
-
-void Verbose(char *fmt, ...)
-
-{ va_list ap;
-  char *sp,buffer[CF_BUFSIZE];
-  int endl = false;
-
-if ((fmt == NULL) || (strlen(fmt) == 0))
-   {
-   return;
-   }
-
-va_start(ap,fmt);
-vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
-va_end(ap);
-
-if (VERBOSE)
-   {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-      {
-      return;
-      }
-#endif
-
-   printf("%s %s",VPREFIX,buffer);
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-      {
-      /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
-      }
-#endif 
-   }
-}
-
 
 /*********************************************************************************/
 

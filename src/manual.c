@@ -97,7 +97,7 @@ for (i = 0; i < CF3_MODULES; i++)
 
    if (st == CF_COMMON_SUBTYPES || st == CF_EXEC_SUBTYPES || st == CF_REMACCESS_SUBTYPES || st == CF_KNOWLEDGE_SUBTYPES)
       {
-      Verbose("Dealing with chapter / bundle type %s\n",st->btype);
+      CfOut(cf_verbose,"","Dealing with chapter / bundle type %s\n",st->btype);
       fprintf(fout,"@c *****************************************************\n");
       fprintf(fout,"@c * CHAPTER \n");
       fprintf(fout,"@c *****************************************************\n");
@@ -121,7 +121,7 @@ for (i = 0; i < CF3_MODULES; i++)
 
 /* Special functions */
 
-Verbose("Dealing with chapter / bundle type - special functions\n");
+CfOut(cf_verbose,"","Dealing with chapter / bundle type - special functions\n");
 fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
@@ -136,7 +136,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
 
 /* Special variables */
 
-Verbose("Dealing with chapter / bundle type - special variables\n");
+CfOut(cf_verbose,"","Dealing with chapter / bundle type - special variables\n");
 fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
@@ -150,7 +150,7 @@ TexinfoVariables(fout,"sys");
 
 // Log files
 
-Verbose("Dealing with chapter / bundle type - Logs and records\n");
+CfOut(cf_verbose,"","Dealing with chapter / bundle type - Logs and records\n");
 fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
@@ -280,7 +280,7 @@ void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
 
 for (j = 0; st[j].btype != NULL; j++)
    {
-   Verbose(" - Dealing with promise type %s\n",st[j].subtype);
+   CfOut(cf_verbose,""," - Dealing with promise type %s\n",st[j].subtype);
 
    if (strcmp("*",st[j].btype) == 0)
       {
@@ -319,7 +319,7 @@ if (bs == NULL)
  
 for (i = 0; bs[i].lval != NULL; i++)
    {
-   Verbose(" - -  Dealing with body type %s\n",bs[i].lval);
+   CfOut(cf_verbose,""," - -  Dealing with body type %s\n",bs[i].lval);
    
    if (bs[i].range == (void *)CF_BUNDLE)
       {
@@ -367,7 +367,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    
    if (ap[i] != NULL)
       {
-      Verbose("Appending variable documentation for %s (%c)\n",ap[i]->lval,ap[i]->rtype);
+      CfOut(cf_verbose,"","Appending variable documentation for %s (%c)\n",ap[i]->lval,ap[i]->rtype);
       PrependRScalar(&list,ap[i]->lval,CF_SCALAR);
       }
    }
@@ -482,7 +482,7 @@ if (stat(filename,&sb) == -1)
 
    fprintf(fp,"\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n",filename);
    fclose(fp);
-   Verbose("Created %s template\n",filename);  
+   CfOut(cf_verbose,"","Created %s template\n",filename);  
    }
 
 if ((fp = fopen(filename,"r")) == NULL)

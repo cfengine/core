@@ -124,7 +124,7 @@ int LoadProcessTable(struct Item **procdata,char *psopts)
 
 snprintf(pscomm,CF_MAXLINKSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],psopts);
 
-Verbose("Observe process table with %s\n",pscomm); 
+CfOut(cf_verbose,"","Observe process table with %s\n",pscomm); 
   
 if ((prp = cf_popen(pscomm,"r")) == NULL)
    {
@@ -307,7 +307,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          {
          if ((RlistLen(a.signals) == 1) && IsStringIn(a.signals,"hup"))
             {
-            Verbose("(Okay to send only HUP to init)\n");
+            CfOut(cf_verbose,"","(Okay to send only HUP to init)\n");
             }
          else
             {

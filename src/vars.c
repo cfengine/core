@@ -110,7 +110,7 @@ slot = GetHash(lval);
 if (ptr == NULL)
    {
    struct Scope *sp;
-   Verbose("No such scope id %s\n",scope);
+   CfOut(cf_verbose,"","No such scope id %s\n",scope);
    FatalError("No such scope");
    }
  

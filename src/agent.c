@@ -305,14 +305,14 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_maxconnections].lval) == 0)
       {
       CFA_MAXTHREADS = (int)Str2Int(retval);
-      Verbose("SET maxconnections = %d\n",CFA_MAXTHREADS);
+      CfOut(cf_verbose,"","SET maxconnections = %d\n",CFA_MAXTHREADS);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
       {
       SetFacility(retval);
-      Verbose("SET Syslog FACILITY = %s\n",retval);
+      CfOut(cf_verbose,"","SET Syslog FACILITY = %s\n",retval);
       continue;
       }
    
@@ -326,7 +326,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Abort classes from ...\n");
+      CfOut(cf_verbose,"","SET Abort classes from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -342,7 +342,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortbundleclasses].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Abort bundle classes from ...\n");
+      CfOut(cf_verbose,"","SET Abort bundle classes from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -358,7 +358,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("ADD classes from ...\n");
+      CfOut(cf_verbose,"","ADD classes from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -371,42 +371,42 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_auditing].lval) == 0)
       {
       AUDIT = GetBoolean(retval);
-      Verbose("SET auditing = %d\n",AUDIT);
+      CfOut(cf_verbose,"","SET auditing = %d\n",AUDIT);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
       {
       CFPARANOID = GetBoolean(retval);
-      Verbose("SET secure input = %d\n",CFPARANOID);
+      CfOut(cf_verbose,"","SET secure input = %d\n",CFPARANOID);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
       {
       PADCHAR = *(char *)retval;
-      Verbose("SET binarypaddingchar = %c\n",PADCHAR);
+      CfOut(cf_verbose,"","SET binarypaddingchar = %c\n",PADCHAR);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_bindtointerface].lval) == 0)
       {
       strncpy(BINDINTERFACE,retval,CF_BUFSIZE-1);
-      Verbose("SET bindtointerface = %s\n",BINDINTERFACE);
+      CfOut(cf_verbose,"","SET bindtointerface = %s\n",BINDINTERFACE);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
       {
       CHECKSUMUPDATES = GetBoolean(retval);
-      Verbose("SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
+      CfOut(cf_verbose,"","SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
       {
       EXCLAIM = GetBoolean(retval);
-      Verbose("SET exclamation %d\n",EXCLAIM);
+      CfOut(cf_verbose,"","SET exclamation %d\n",EXCLAIM);
       continue;
       }
 
@@ -416,7 +416,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       snprintf(output,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",retval);
       if (putenv(strdup(output)) == 0)
          {
-         Verbose("Setting %s\n",output);
+         CfOut(cf_verbose,"","Setting %s\n",output);
          }
       continue;
       }
@@ -424,84 +424,84 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
       {
       DEFAULT_COPYTYPE = (char *)retval;
-      Verbose("SET defaultcopytype = %c\n",DEFAULT_COPYTYPE);
+      CfOut(cf_verbose,"","SET defaultcopytype = %c\n",DEFAULT_COPYTYPE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
       {
       SINGLE_COPY_LIST = (struct Rlist *)retval;
-      Verbose("SET file single copy list\n");
+      CfOut(cf_verbose,"","SET file single copy list\n");
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
       {
       AUTO_DEFINE_LIST = (struct Rlist *)retval;
-      Verbose("SET file auto define list\n");
+      CfOut(cf_verbose,"","SET file auto define list\n");
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
       {
       DONTDO = GetBoolean(retval);
-      Verbose("SET dryrun = %c\n",DONTDO);
+      CfOut(cf_verbose,"","SET dryrun = %c\n",DONTDO);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_inform].lval) == 0)
       {
       INFORM = GetBoolean(retval);
-      Verbose("SET inform = %c\n",INFORM);
+      CfOut(cf_verbose,"","SET inform = %c\n",INFORM);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_verbose].lval) == 0)
       {
       VERBOSE = GetBoolean(retval);
-      Verbose("SET inform = %c\n",VERBOSE);
+      CfOut(cf_verbose,"","SET inform = %c\n",VERBOSE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repository].lval) == 0)
       {
       VREPOSITORY = strdup(retval);
-      Verbose("SET compresscommand = %s\n",VREPOSITORY);
+      CfOut(cf_verbose,"","SET compresscommand = %s\n",VREPOSITORY);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
       {
       SKIPIDENTIFY = GetBoolean(retval);
-      Verbose("SET skipidentify = %c\n",SKIPIDENTIFY);
+      CfOut(cf_verbose,"","SET skipidentify = %c\n",SKIPIDENTIFY);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repchar].lval) == 0)
       {
       REPOSCHAR = *(char *)retval;
-      Verbose("SET repchar = %c\n",REPOSCHAR);
+      CfOut(cf_verbose,"","SET repchar = %c\n",REPOSCHAR);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
       {
       CF_MOUNTALL = GetBoolean(retval);
-      Verbose("SET mountfilesystems = %d\n",CF_MOUNTALL);
+      CfOut(cf_verbose,"","SET mountfilesystems = %d\n",CF_MOUNTALL);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_editfilesize].lval) == 0)
       {
       EDITFILESIZE = Str2Int(retval);
-      Verbose("SET EDITFILESIZE = %d\n",EDITFILESIZE);
+      CfOut(cf_verbose,"","SET EDITFILESIZE = %d\n",EDITFILESIZE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_max_children].lval) == 0)
       {
       CFA_BACKGROUND_LIMIT = Str2Int(retval);
-      Verbose("SET MAX_CHILDREN = %d\n",CFA_BACKGROUND_LIMIT);
+      CfOut(cf_verbose,"","SET MAX_CHILDREN = %d\n",CFA_BACKGROUND_LIMIT);
       if (CFA_BACKGROUND_LIMIT > 10)
          {
          CfOut(cf_error,"","Silly value for max_children in agent control promise (%d > 10)",CFA_BACKGROUND_LIMIT);
@@ -513,14 +513,14 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_syslog].lval) == 0)
       {
       LOGGING = GetBoolean(retval);
-      Verbose("SET syslog = %c\n",LOGGING);
+      CfOut(cf_verbose,"","SET syslog = %c\n",LOGGING);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_environment].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET environment variables from ...\n");
+      CfOut(cf_verbose,"","SET environment variables from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -735,10 +735,10 @@ void KeepAgentPromise(struct Promise *pp)
 
 if (!IsDefinedClass(pp->classes))
    {
-   Verbose("\n");
-   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   Verbose("Skipping whole next promise (%s), as context %s is not valid\n",pp->promiser,pp->classes);
-   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not valid\n",pp->promiser,pp->classes);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
  
@@ -749,10 +749,10 @@ if (pp->done)
 
 if (VarClassExcluded(pp,&sp))
    {
-   Verbose("\n");
-   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   Verbose("Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
-   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 
@@ -921,7 +921,7 @@ switch(type)
 
    case kp_storage:
 
-       Verbose(" -> Number of changes observed in %s is %d\n",VFSTAB[VSYSTEMHARDCLASS],FSTAB_EDITS);
+       CfOut(cf_verbose,""," -> Number of changes observed in %s is %d\n",VFSTAB[VSYSTEMHARDCLASS],FSTAB_EDITS);
        
        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
           {
@@ -933,10 +933,10 @@ switch(type)
 
        if (!DONTDO && CF_MOUNTALL)
           {
-          Verbose("");
-          Verbose(" -> Mounting all filesystems\n");
+          CfOut(cf_verbose,"","");
+          CfOut(cf_verbose,""," -> Mounting all filesystems\n");
           MountAll();
-          Verbose("");
+          CfOut(cf_verbose,"","");
           }
 
        break;
@@ -968,24 +968,24 @@ if (type != kp_interfaces)   /* Just parsed all local classes */
    return;
    }
 
-Verbose("\n");
-Verbose("     +  Private classes augmented:\n");
+CfOut(cf_verbose,"","\n");
+CfOut(cf_verbose,"","     +  Private classes augmented:\n");
 
 for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
    {
-   Verbose("     +       %s\n",ip->name);
+   CfOut(cf_verbose,"","     +       %s\n",ip->name);
    }
 
-Verbose("\n");
+CfOut(cf_verbose,"","\n");
 
-Verbose("     -  Private classes diminished:\n");
+CfOut(cf_verbose,"","     -  Private classes diminished:\n");
 
 for (ip = VNEGHEAP; ip != NULL; ip=ip->next)
    {
-   Verbose("     -       %s\n",ip->name);
+   CfOut(cf_verbose,"","     -       %s\n",ip->name);
    }
 
-Verbose("\n");
+CfOut(cf_verbose,"","\n");
 
 Debug("     ?  Public class context:\n");
 
@@ -994,7 +994,7 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
    Debug("     ?       %s\n",ip->name);
    }
 
-Verbose("\n");
+CfOut(cf_verbose,"","\n");
 
 }
 
@@ -1010,7 +1010,7 @@ void ParallelFindAndVerifyFilesPromises(struct Promise *pp)
 if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
    {
    CFA_BACKGROUND++;
-   Verbose("Spawning new process...\n");
+   CfOut(cf_verbose,"","Spawning new process...\n");
    child = fork();
    if (child == 0)
       {
@@ -1019,7 +1019,7 @@ if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
    }
 else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
    {
-   Verbose(" !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+   CfOut(cf_verbose,""," !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
    }
 
 if (child || !background)

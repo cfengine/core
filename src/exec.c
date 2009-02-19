@@ -284,7 +284,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
       {
       SetFacility(retval);
-      Verbose("SET Syslog FACILITY = %s\n",retval);
+      CfOut(cf_verbose,"","SET Syslog FACILITY = %s\n",retval);
       continue;
       }
 
@@ -393,7 +393,7 @@ else
       
       if (time_to_run)
          {
-         Verbose("Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
+         CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);
 
 #ifdef NT 
@@ -449,7 +449,7 @@ int ScheduleRun()
   char timekey[64];
   struct Item *ip;
 
-Verbose("Sleeping...\n");
+CfOut(cf_verbose,"","Sleeping...\n");
 sleep(60);                /* 1 Minute resolution is enough */ 
 
 now = time(NULL);
@@ -459,10 +459,10 @@ AddTimeClass(timekey);
 
 for (ip = SCHEDULE; ip != NULL; ip = ip->next)
    {
-   Verbose("Checking schedule %s...\n",ip->name);
+   CfOut(cf_verbose,"","Checking schedule %s...\n",ip->name);
    if (IsDefinedClass(ip->name))
       {
-      Verbose("Waking up the agent at %s ~ %s \n",timekey,ip->name);
+      CfOut(cf_verbose,"","Waking up the agent at %s ~ %s \n",timekey,ip->name);
       DeleteItemList(VHEAP);
       VHEAP = NULL;
       return true;
@@ -514,9 +514,9 @@ tid = (int) pthread_self();
 
 
  
-Verbose("------------------------------------------------------------------\n\n");
-Verbose("  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", ctime(&starttime));
-Verbose("------------------------------------------------------------------\n"); 
+CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");
+CfOut(cf_verbose,"","  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", ctime(&starttime));
+CfOut(cf_verbose,"","------------------------------------------------------------------\n"); 
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
 
@@ -543,7 +543,7 @@ if ((fp = fopen(filename,"w")) == NULL)
    return NULL;
    }
 
-Verbose("Command => %s\n",cmd);
+CfOut(cf_verbose,"","Command => %s\n",cmd);
 
 if ((pp = cf_popen_sh(cmd,"r")) == NULL)
    {
@@ -670,7 +670,7 @@ int CompareResult(char *filename,char *prev_file)
   FILE *fp;
   int rtn = 0;
 
-Verbose("Comparing files  %s with %s\n", prev_file, filename);
+CfOut(cf_verbose,"","Comparing files  %s with %s\n", prev_file, filename);
 
 if ((fp=fopen(prev_file,"r")) != NULL)
    {
@@ -761,7 +761,7 @@ if (statbuf.st_size == 0)
 
 if ( CompareResult(file,prev_file) == 0 ) 
    {
-   Verbose("Previous output is the same as current so do not mail it\n");
+   CfOut(cf_verbose,"","Previous output is the same as current so do not mail it\n");
    return;
    }
 

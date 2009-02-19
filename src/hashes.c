@@ -54,7 +54,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,scope) == 0)
       {
-      Verbose("Clearing macros in scope(%s)\n",scope);
+      CfOut(cf_verbose,"","Clearing macros in scope(%s)\n",scope);
       
       for (i = 0; i < CF_HASHTABLESIZE; i++)
          {

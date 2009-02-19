@@ -10,6 +10,9 @@
 	Added additional change management options for change detection
 
 	Package management added
+
+	Limits on backgrounding added to avoid resource contention during cfengine runs.
+	Image type added to cf-know.
 	
 3.0.0
 	First release of cfengine 3. Known omissions:

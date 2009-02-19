@@ -245,8 +245,8 @@ if (DEBUG)
    }
 
 
-Verbose("Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");  
-Verbose("------------------------------------------------------------------------\n");
+CfOut(cf_verbose,"","Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");  
+CfOut(cf_verbose,"","------------------------------------------------------------------------\n");
 
 /* Define trusted directories */
 
@@ -269,7 +269,7 @@ else
 strcpy(CFWORKDIR,WORKDIR);
 #endif
 
-Verbose("Work directory is %s\n",CFWORKDIR);
+CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
 
 snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
 
@@ -580,7 +580,7 @@ if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    }
 
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
-Verbose("  > Parsing file %s\n",wfilename);
+CfOut(cf_verbose,"","  > Parsing file %s\n",wfilename);
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
 PrependAuditFile(wfilename);
@@ -707,7 +707,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          }
       else
          {
-         Verbose("The bundle called %s is not of type %s\n",name,agent);
+         CfOut(cf_verbose,"","The bundle called %s is not of type %s\n",name,agent);
          }
       }
    }
@@ -742,9 +742,9 @@ return NULL;
 void BannerBundle(struct Bundle *bp,struct Rlist *params)
 
 {
-Verbose("\n");
-Verbose("*****************************************************************\n");
-Verbose(" BUNDLE %s",bp->name);
+CfOut(cf_verbose,"","\n");
+CfOut(cf_verbose,"","*****************************************************************\n");
+CfOut(cf_verbose,""," BUNDLE %s",bp->name);
 if (params && (VERBOSE||DEBUG))
    {
    printf("(");
@@ -755,8 +755,8 @@ else
    {
    if (VERBOSE||DEBUG) printf("\n");
    }
-Verbose("*****************************************************************\n");
-Verbose("\n");
+CfOut(cf_verbose,"","*****************************************************************\n");
+CfOut(cf_verbose,"","\n");
 }
 
 /**************************************************************/
@@ -764,9 +764,9 @@ Verbose("\n");
 void BannerSubBundle(struct Bundle *bp,struct Rlist *params)
 
 {
-Verbose("\n");
-Verbose("      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-Verbose("       BUNDLE %s",bp->name);
+CfOut(cf_verbose,"","\n");
+CfOut(cf_verbose,"","      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+CfOut(cf_verbose,"","       BUNDLE %s",bp->name);
 if (params && (VERBOSE||DEBUG))
    {
    printf("(");
@@ -777,8 +777,8 @@ else
    {
    if (VERBOSE||DEBUG) printf("\n");
    }
-Verbose("      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-Verbose("\n");
+CfOut(cf_verbose,"","      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+CfOut(cf_verbose,"","\n");
 }
 
 /**************************************************************/
@@ -786,10 +786,10 @@ Verbose("\n");
 void PromiseBanner(struct Promise *pp)
 
 {
-Verbose("\n");
-Verbose("    .........................................................\n");
+CfOut(cf_verbose,"","\n");
+CfOut(cf_verbose,"","    .........................................................\n");
 
-Verbose("    Promise by: %s",pp->promiser);
+CfOut(cf_verbose,"","    Promise by: %s",pp->promiser);
 
 if (pp->promisee)
    {
@@ -807,12 +807,12 @@ if (VERBOSE)
 
 if (pp->ref)
    {
-   Verbose("\n");
-   Verbose("    Comment:  %s\n",pp->ref);
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"","    Comment:  %s\n",pp->ref);
    }
    
-Verbose("    .........................................................\n");
-Verbose("\n");
+CfOut(cf_verbose,"","    .........................................................\n");
+CfOut(cf_verbose,"","\n");
 }
 
 
@@ -839,7 +839,7 @@ VSETUIDLOG = strdup(LOGFILE);
 snprintf(vbuff,CF_BUFSIZE,"%s/.",CFWORKDIR);
 MakeParentDirectory(vbuff,false);
 
-Verbose("Making sure that locks are private...\n"); 
+CfOut(cf_verbose,"","Making sure that locks are private...\n"); 
 
 if (chown(CFWORKDIR,getuid(),getgid()) == -1)
    {
@@ -858,7 +858,7 @@ MakeParentDirectory(vbuff,false);
 snprintf(CFPRIVKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.priv",CFWORKDIR);
 snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
 
-Verbose("Checking integrity of the state database\n");
+CfOut(cf_verbose,"","Checking integrity of the state database\n");
 snprintf(vbuff,CF_BUFSIZE,"%s/state",CFWORKDIR);
 
 if (stat(vbuff,&statbuf) == -1)
@@ -881,7 +881,7 @@ else
       }
    }
 
-Verbose("Checking integrity of the module directory\n"); 
+CfOut(cf_verbose,"","Checking integrity of the module directory\n"); 
 
 snprintf(vbuff,CF_BUFSIZE,"%s/modules",CFWORKDIR);
 
@@ -905,7 +905,7 @@ else
       }
    }
 
-Verbose("Checking integrity of the input data for RPC\n"); 
+CfOut(cf_verbose,"","Checking integrity of the input data for RPC\n"); 
 
 snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in",CFWORKDIR);
 
@@ -930,7 +930,7 @@ else
       }
    }
 
-Verbose("Checking integrity of the output data for RPC\n"); 
+CfOut(cf_verbose,"","Checking integrity of the output data for RPC\n"); 
 
 snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out",CFWORKDIR);
 
@@ -956,7 +956,7 @@ else
       }
    }
  
-Verbose("Checking integrity of the PKI directory\n");
+CfOut(cf_verbose,"","Checking integrity of the PKI directory\n");
 
 snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys",CFWORKDIR);
     
@@ -1366,7 +1366,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_domain].lval) == 0)
       {
       strcpy(VDOMAIN,cp->rval);
-      Verbose("SET domain = %s\n",VDOMAIN);
+      CfOut(cf_verbose,"","SET domain = %s\n",VDOMAIN);
       DeleteScalar("sys","domain");
       DeleteScalar("sys","fqhost");
       snprintf(VFQNAME,CF_MAXVARSIZE,"%s.%s",VUQNAME,VDOMAIN);

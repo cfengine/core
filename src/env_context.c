@@ -52,7 +52,7 @@ if (strcmp(pp->bundletype,"common") == 0)
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      Verbose(" ?> defining additional global class %s\n",pp->promiser);
+      CfOut(cf_verbose,""," ?> defining additional global class %s\n",pp->promiser);
       NewClass(pp->promiser);
       }
 
@@ -141,7 +141,7 @@ if (value.data != NULL)
       {
       if (now < state.expires)
          {
-         Verbose("Persisent state %s is already in a preserved state --  %d minutes to go\n",name,(state.expires-now)/60);
+         CfOut(cf_verbose,"","Persisent state %s is already in a preserved state --  %d minutes to go\n",name,(state.expires-now)/60);
          dbp->close(dbp,0);
          return;
          }
@@ -149,7 +149,7 @@ if (value.data != NULL)
    }
  else
     {
-    Verbose("New persistent state %s but empty\n",key.data);
+    CfOut(cf_verbose,"","New persistent state %s but empty\n",key.data);
     }
  
  
@@ -171,7 +171,7 @@ if ((errno = dbp->put(dbp,NULL,&key,&value,0)) != 0)
    }
 else
    {
-   Verbose("(Re)Set persistent state %s for %d minutes\n",name,ttl_minutes);
+   CfOut(cf_verbose,"","(Re)Set persistent state %s for %d minutes\n",name,ttl_minutes);
    }
 
 dbp->close(dbp,0);
@@ -279,7 +279,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 
    if (now > q.expires)
       {
-      Verbose(" Persistent class %s expired\n",key.data);
+      CfOut(cf_verbose,""," Persistent class %s expired\n",key.data);
       if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
          {
          CfOut(cf_error,"db_store","");
@@ -287,8 +287,8 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       }
    else
       {
-      Verbose(" Persistent class %s for %d more minutes\n",key.data,(q.expires-now)/60);
-      Verbose(" Adding persistent class %s to heap\n",key.data);
+      CfOut(cf_verbose,""," Persistent class %s for %d more minutes\n",key.data,(q.expires-now)/60);
+      CfOut(cf_verbose,""," Adding persistent class %s to heap\n",key.data);
       NewClass(key.data);
       }
    }

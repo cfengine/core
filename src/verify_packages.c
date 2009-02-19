@@ -124,13 +124,13 @@ return true;
 void ExecutePackageSchedule(struct CfPackageManager *schedule)
 
 {
-Verbose(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-Verbose("   Offering these package-promise suggestions to the managers\n");
-Verbose(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+CfOut(cf_verbose,""," >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+CfOut(cf_verbose,"","   Offering these package-promise suggestions to the managers\n");
+CfOut(cf_verbose,""," >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
  
  /* Normal ordering */
 
-Verbose(" -> Deletion schedule...\n");
+CfOut(cf_verbose,""," -> Deletion schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_deletepack))
    {
@@ -138,28 +138,28 @@ if (!ExecuteSchedule(schedule,cfa_deletepack))
    return;
    }
 
-Verbose(" -> Addition schedule...\n");
+CfOut(cf_verbose,""," -> Addition schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_addpack))
    {
    return;
    }
 
-Verbose(" -> Update schedule...\n");
+CfOut(cf_verbose,""," -> Update schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_update))
    {
    return;
    }            
 
-Verbose(" -> Patch schedule...\n");
+CfOut(cf_verbose,""," -> Patch schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_patch))
    {
    return;
    }
 
-Verbose(" -> Verify schedule...\n");
+CfOut(cf_verbose,""," -> Verify schedule...\n");
 
 if (!ExecuteSchedule(schedule,cfa_verifypack))
    {
@@ -192,9 +192,9 @@ if (manager->pack_list != NULL)
 
 if (a.packages.package_list_command != NULL)
    {
-   Verbose(" ???????????????????????????????????????????????????????????????\n");
-   Verbose("   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
-   Verbose(" ???????????????????????????????????????????????????????????????\n");
+   CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
+   CfOut(cf_verbose,"","   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
+   CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
 
    if (!IsExecutable(GetArg0(a.packages.package_list_command)))
       {
@@ -290,8 +290,8 @@ else
       }
    }
 
-Verbose(" -> %d package(s) matching the name \"%s\" already installed\n",installed,name);
-Verbose(" -> %d package(s) match the promise body's criteria fully\n",installed,name);
+CfOut(cf_verbose,""," -> %d package(s) matching the name \"%s\" already installed\n",installed,name);
+CfOut(cf_verbose,""," -> %d package(s) match the promise body's criteria fully\n",installed,name);
 
 SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 }
@@ -420,7 +420,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       
    strcat(command_string," ");
    
-   Verbose("Command prefix: %s\n",command_string);
+   CfOut(cf_verbose,"","Command prefix: %s\n",command_string);
    
    switch (pm->policy)
       {
@@ -605,7 +605,7 @@ for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
       }
    }
 
-Verbose(" -> Looking for (%s,%s,%s)\n",n,v,a);
+CfOut(cf_verbose,""," -> Looking for (%s,%s,%s)\n",n,v,a);
 
 for (pi = mp->pack_list; pi != NULL; pi=pi->next)
    {
@@ -615,7 +615,7 @@ for (pi = mp->pack_list; pi != NULL; pi=pi->next)
       }
    }
 
-Verbose(" !! Unsatisfied constraints in promise (%s,%s,%s)\n",n,v,a);
+CfOut(cf_verbose,""," !! Unsatisfied constraints in promise (%s,%s,%s)\n",n,v,a);
 return false;
 }
 
@@ -645,7 +645,7 @@ else
    id = name;
    }
 
-Verbose(" -> Package promises to refer to itself as \"%s\" to the manager\n",id);
+CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\" to the manager\n",id);
 
 if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge || a.packages.package_select == cfa_le)
    {
@@ -658,7 +658,7 @@ switch(a.packages.package_policy)
 
        if (installed == 0)
           {
-          Verbose(" -> Schedule package for addition\n");
+          CfOut(cf_verbose,""," -> Schedule package for addition\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
           }
@@ -774,7 +774,7 @@ if ((pfp = cf_popen_sh(command,"r")) == NULL)
    return false;
    }
 
-Verbose("Executing %-.60s...\n",command);
+CfOut(cf_verbose,"","Executing %-.60s...\n",command);
 
 /* Look for short command summary */
 for (cmd = command; *cmd != '\0' && *cmd != ' '; cmd++)
@@ -838,7 +838,7 @@ if (strcmp(n,pi->name) != 0)
    return false;
    }
 
-Verbose(" -> Matched name %s\n",n);
+CfOut(cf_verbose,""," -> Matched name %s\n",n);
 
 if (strcmp(a,"*") != 0)
    {
@@ -847,12 +847,12 @@ if (strcmp(a,"*") != 0)
       return false;
       }
    
-   Verbose(" -> Matched arch %s\n",a);
+   CfOut(cf_verbose,""," -> Matched arch %s\n",a);
    }
 
 if (strcmp(v,"*") == 0)
    {   
-   Verbose(" -> Matched version *\n");
+   CfOut(cf_verbose,""," -> Matched version *\n");
    return true;
    }
 
@@ -872,7 +872,7 @@ for (rp_1 = separators_1,rp_2 = separators_2;
       }
    }
 
-Verbose(" -> Verified that versioning models are compatible\n");
+CfOut(cf_verbose,""," -> Verified that versioning models are compatible\n");
 
 if (result != false)
    {
@@ -929,7 +929,7 @@ if (result != false)
       }
    }
 
-Verbose(" -> Verified version constraint promise kept\n");
+CfOut(cf_verbose,""," -> Verified version constraint promise kept\n");
 
 DeleteRlist(numbers_1);
 DeleteRlist(numbers_2);

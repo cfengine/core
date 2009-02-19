@@ -159,7 +159,7 @@ if (lastcompleted != 0)
          }
       else
          {
-         Verbose("Trying to kill expired process, pid %d\n",pid);
+         CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
          
          err = 0;
          
@@ -195,7 +195,7 @@ if (lastcompleted != 0)
       }
    else
       {
-      Verbose("Couldn't obtain lock for %s (already running!)\n",cflock);
+      CfOut(cf_verbose,"","Couldn't obtain lock for %s (already running!)\n",cflock);
       return this;
       }
    }
@@ -385,7 +385,7 @@ if (stat(cflog,&statbuf) != -1)
    {
    if (statbuf.st_size > CFLOGSIZE)
       {
-      Verbose("Rotating lock-runlog file\n");
+      CfOut(cf_verbose,"","Rotating lock-runlog file\n");
       RotateFiles(cflog,2);
       }
    }

@@ -219,7 +219,7 @@ while ((c=getopt_long(argc,argv,"d:vIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
       case 'F': NO_FORK = true;
          break;
 
-      case 'L': Verbose("Setting LD_LIBRARY_PATH=%s\n",optarg);
+      case 'L': CfOut(cf_verbose,"","Setting LD_LIBRARY_PATH=%s\n",optarg);
           snprintf(ld_library_path,CF_BUFSIZE-1,"LD_LIBRARY_PATH=%s",optarg);
           putenv(ld_library_path);
           break;
@@ -304,7 +304,7 @@ if (thislock.lock == NULL)
    return;
    }
 
-Verbose("Listening for connections ...\n");
+CfOut(cf_verbose,"","Listening for connections ...\n");
 
 if ((!NO_FORK) && (fork() != 0))
    {
@@ -663,11 +663,11 @@ conn = NewConn(sd_reply);
 
 strncpy(conn->ipaddr,ipaddr,CF_MAX_IP_LEN-1);
 
-Verbose("New connection...(from %s/%d)\n",conn->ipaddr,sd_reply);
+CfOut(cf_verbose,"","New connection...(from %s/%d)\n",conn->ipaddr,sd_reply);
  
 #if defined HAVE_LIBPTHREAD || defined BUILTIN_GCC_THREAD
 
-Verbose("Spawning new thread...\n");
+CfOut(cf_verbose,"","Spawning new thread...\n");
 
 pthread_attr_init(&PTHREADDEFAULTS);
 pthread_attr_setdetachstate(&PTHREADDEFAULTS,PTHREAD_CREATE_DETACHED);
@@ -688,7 +688,7 @@ pthread_attr_destroy(&PTHREADDEFAULTS);
 
 /* Can't fork here without getting a zombie unless we do some complex waiting? */
 
-Verbose("Single threaded...\n");
+CfOut(cf_verbose,"","Single threaded...\n");
 
 HandleConnection(conn);
  
@@ -1037,7 +1037,7 @@ switch (GetCommand(recvbuffer))
        sscanf(recvbuffer,"SGET %d %d",&len,&(get_args.buf_size));
        if (received != len+CF_PROTO_OFFSET)
           {
-          Verbose("Protocol error SGET\n");
+          CfOut(cf_verbose,"","Protocol error SGET\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
@@ -1095,7 +1095,7 @@ switch (GetCommand(recvbuffer))
 
        if (received != len+CF_PROTO_OFFSET)
           {
-          Verbose("Protocol error OPENDIR: %d\n",len);
+          CfOut(cf_verbose,"","Protocol error OPENDIR: %d\n",len);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
@@ -1162,7 +1162,7 @@ switch (GetCommand(recvbuffer))
 
        if (received != len+CF_PROTO_OFFSET)
           {
-          Verbose("Protocol error SSYNCH: %d\n",len);
+          CfOut(cf_verbose,"","Protocol error SSYNCH: %d\n",len);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
@@ -1314,7 +1314,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
    
    for (ip = classlist; ip != NULL; ip=ip->next)
       {
-      Verbose("Checking whether class %s can be identified as me...\n",ip->name);
+      CfOut(cf_verbose,"","Checking whether class %s can be identified as me...\n",ip->name);
       
       if (IsDefinedClass(ip->name))
          {
@@ -1332,7 +1332,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
       
       if (strncmp(ip->name,CFD_TERMINATOR,strlen(CFD_TERMINATOR)) == 0)
          {
-         Verbose("No classes matched, rejecting....\n");
+         CfOut(cf_verbose,"","No classes matched, rejecting....\n");
          ReplyNothing(conn);
          DeleteItemList(classlist);
          return false;
@@ -1341,7 +1341,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
    }
  
  ReplyNothing(conn);
- Verbose("No classes matched, rejecting....\n");
+ CfOut(cf_verbose,"","No classes matched, rejecting....\n");
  DeleteItemList(classlist);
  return false;
 }
@@ -1362,13 +1362,13 @@ if ((CFSTARTTIME = time((time_t *)NULL)) == -1)
 
 if (strlen(CFRUNCOMMAND) == 0)
    {
-   Verbose("cf-serverd exec request: no cfruncommand defined\n");
+   CfOut(cf_verbose,"","cf-serverd exec request: no cfruncommand defined\n");
    sprintf(sendbuffer,"Exec request: no cfruncommand defined\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return;
    }
 
-Verbose("Examining command string: %s\n",args);
+CfOut(cf_verbose,"","Examining command string: %s\n",args);
 
 for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
    {
@@ -1393,7 +1393,7 @@ for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
       }
    else if (OptionFound(args,sp,"--define")||OptionFound(args,sp,"-D"))
       {
-      Verbose("Attempt to activate a predefined role..\n");
+      CfOut(cf_verbose,"","Attempt to activate a predefined role..\n");
       
       if (!AuthorizeRoles(conn,sp))
          {
@@ -1535,9 +1535,9 @@ strncpy(ip_assert,ipstring,CF_MAXVARSIZE-1);
 if ((conn->trust == false) || IsFuzzyItemIn(SKIPVERIFY,MapAddress(conn->ipaddr)))
    {
    CfOut(cf_verbose,"","Allowing %s to connect without (re)checking ID\n",ip_assert);
-   Verbose("Non-verified Host ID is %s (Using skipverify)\n",dns_assert);
+   CfOut(cf_verbose,"","Non-verified Host ID is %s (Using skipverify)\n",dns_assert);
    strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE); 
-   Verbose("Non-verified User ID seems to be %s (Using skipverify)\n",username); 
+   CfOut(cf_verbose,"","Non-verified User ID seems to be %s (Using skipverify)\n",username); 
    strncpy(conn->username,username,CF_MAXVARSIZE);
 
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
@@ -1556,24 +1556,24 @@ if ((conn->trust == false) || IsFuzzyItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
  
 if (strcmp(ip_assert,MapAddress(conn->ipaddr)) != 0)
    {
-   Verbose("IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",ip_assert,conn->ipaddr);
+   CfOut(cf_verbose,"","IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",ip_assert,conn->ipaddr);
    return false;
    }
 
 if (strlen(dns_assert) == 0)
    {
-   Verbose("DNS asserted name was empty - untrustworthy connection\n");
+   CfOut(cf_verbose,"","DNS asserted name was empty - untrustworthy connection\n");
    return false;
    }
 
 if (strcmp(dns_assert,"skipident") == 0)
    {
-   Verbose("DNS asserted name was withheld before key exchange - untrustworthy connection\n");
+   CfOut(cf_verbose,"","DNS asserted name was withheld before key exchange - untrustworthy connection\n");
    return false;   
    }
 
 
-Verbose("Socket caller address appears honest (%s matches %s)\n",ip_assert,MapAddress(conn->ipaddr));
+CfOut(cf_verbose,"","Socket caller address appears honest (%s matches %s)\n",ip_assert,MapAddress(conn->ipaddr));
  
 CfOut(cf_verbose,"","Socket originates from %s=%s\n",ip_assert,dns_assert);
 
@@ -1626,7 +1626,7 @@ Debug("IPV4 hostnname lookup on %s\n",dns_assert);
  
 if ((hp = gethostbyname(dns_assert)) == NULL)
    {
-   Verbose("cfServerd Couldn't look up name %s\n",fqname);
+   CfOut(cf_verbose,"","cfServerd Couldn't look up name %s\n",fqname);
    CfOut(cf_log,"gethostbyname","DNS lookup of %s failed",dns_assert);
    matched = false;
    }
@@ -1642,27 +1642,27 @@ else
       matched = false;
       }
    
-   Verbose("Looking through hostnames on socket with IPv4 %s\n",sockaddr_ntop((struct sockaddr *)&raddr));
+   CfOut(cf_verbose,"","Looking through hostnames on socket with IPv4 %s\n",sockaddr_ntop((struct sockaddr *)&raddr));
    
    for (i = 0; hp->h_addr_list[i]; i++)
       {
-      Verbose("Reverse lookup address found: %d\n",i);
+      CfOut(cf_verbose,"","Reverse lookup address found: %d\n",i);
       if (memcmp(hp->h_addr_list[i],(char *)&(raddr.sin_addr),sizeof(raddr.sin_addr)) == 0)
          {
-         Verbose("Canonical name matched host's assertion - id confirmed as %s\n",dns_assert);
+         CfOut(cf_verbose,"","Canonical name matched host's assertion - id confirmed as %s\n",dns_assert);
          break;
          }
       }
    
    if (hp->h_addr_list[0] != NULL)
       {
-      Verbose("Checking address number %d for non-canonical names (aliases)\n",i);
+      CfOut(cf_verbose,"","Checking address number %d for non-canonical names (aliases)\n",i);
       for (j = 0; hp->h_aliases[j] != NULL; j++)
          {
-         Verbose("Comparing [%s][%s]\n",hp->h_aliases[j],ip_assert);
+         CfOut(cf_verbose,"","Comparing [%s][%s]\n",hp->h_aliases[j],ip_assert);
          if (strcmp(hp->h_aliases[j],ip_assert) == 0)
             {
-            Verbose("Non-canonical name (alias) matched host's assertion - id confirmed as %s\n",dns_assert);
+            CfOut(cf_verbose,"","Non-canonical name (alias) matched host's assertion - id confirmed as %s\n",dns_assert);
             break;
             }
          }
@@ -1674,7 +1674,7 @@ else
          }
       else
          {
-         Verbose("Reverse lookup succeeded\n");
+         CfOut(cf_verbose,"","Reverse lookup succeeded\n");
          }
       }
    else
@@ -1714,11 +1714,11 @@ if (!matched)
    return false;
    }
  
-Verbose("Host ID is %s\n",dns_assert);
+CfOut(cf_verbose,"","Host ID is %s\n",dns_assert);
 strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE-1);
 LastSaw(dns_assert,cf_accept); 
  
-Verbose("User ID seems to be %s\n",username); 
+CfOut(cf_verbose,"","User ID seems to be %s\n",username); 
 strncpy(conn->username,username,CF_MAXVARSIZE-1);
  
 return true;   
@@ -1732,11 +1732,11 @@ int AllowedUser(char *user)
 {
 if (IsItemIn(ALLOWUSERLIST,user))
    {
-   Verbose("User %s granted connection privileges\n",user);
+   CfOut(cf_verbose,"","User %s granted connection privileges\n",user);
    return true;
    }
 
-Verbose("User %s is not allowed on this server\n",user); 
+CfOut(cf_verbose,"","User %s is not allowed on this server\n",user); 
 return false;
 }
 
@@ -1793,7 +1793,7 @@ Debug("AccessControl, match(%s,%s) encrypt request=%d\n",realname,conn->hostname
  
 if (VADMIT == NULL)
    {
-   Verbose("cfServerd access list is empty, no files are visible\n");
+   CfOut(cf_verbose,"","cfServerd access list is empty, no files are visible\n");
    return false;
    }
  
@@ -1816,7 +1816,7 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
    
    if (res)
       {
-      Verbose("Found a matching rule in access list (%s in %s)\n",realname,ap->path);
+      CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",realname,ap->path);
 
       if (stat(ap->path,&statbuf) == -1)
          {
@@ -1838,11 +1838,11 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
              IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)))
             {
             conn->maproot = true;
-            Verbose("Mapping root privileges\n");
+            CfOut(cf_verbose,"","Mapping root privileges\n");
             }
          else
             {
-            Verbose("No root privileges granted\n");
+            CfOut(cf_verbose,"","No root privileges granted\n");
             }
          
          if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
@@ -1910,7 +1910,7 @@ int AuthorizeRoles(struct cfd_connection *conn,char *args)
 snprintf(userid1,CF_MAXVARSIZE,"%s@%s",conn->username,conn->hostname);
 snprintf(userid2,CF_MAXVARSIZE,"%s@%s",conn->username,conn->ipaddr);
 
-Verbose("Checking authorized roles in %s\n",args);
+CfOut(cf_verbose,"","Checking authorized roles in %s\n",args);
 
 if (strncmp(args,"--define",strlen("--define")) == 0)
    {
@@ -1932,7 +1932,7 @@ defines = SplitRegexAsRList(sp,"[,:;]",99,false);
 
 for (rp = defines; rp != NULL; rp = rp->next)
    {
-   Verbose(" -> Verifying %s\n",rp->item);
+   CfOut(cf_verbose,""," -> Verifying %s\n",rp->item);
    
    for (ap = ROLES; ap != NULL; ap=ap->next)
       {
@@ -1962,11 +1962,11 @@ for (rp = defines; rp != NULL; rp = rp->next)
 
 if (permitted)
    {
-   Verbose("Role activation allowed\n");
+   CfOut(cf_verbose,"","Role activation allowed\n");
    }
 else
    {
-   Verbose("Role activation disallowed - abort execution\n");
+   CfOut(cf_verbose,"","Role activation disallowed - abort execution\n");
    }
 
 DeleteRlist(defines);
@@ -2863,7 +2863,7 @@ strcpy(buffer,CFD_TERMINATOR);
 if (SendTransaction(sd,buffer,strlen(buffer)+1,CF_DONE) == -1)
    {
    CfOut(cf_verbose,"send","Unable to reply with terminator");
-   Verbose("Unable to reply with terminator...\n");
+   CfOut(cf_verbose,"","Unable to reply with terminator...\n");
    }
 }
 
@@ -3031,14 +3031,14 @@ else
  
 if (savedkey = HavePublicKey(keyname))
    {
-   Verbose("A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
+   CfOut(cf_verbose,"","A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
 
-   Verbose("Adding IP %s to SkipVerify - no need to check this if we have a key\n",conn->ipaddr);
+   CfOut(cf_verbose,"","Adding IP %s to SkipVerify - no need to check this if we have a key\n",conn->ipaddr);
    PrependItem(&SKIPVERIFY,MapAddress(conn->ipaddr),NULL);
    
    if ((BN_cmp(savedkey->e,key->e) == 0) && (BN_cmp(savedkey->n,key->n) == 0))
       {
-      Verbose("The public key identity was confirmed as %s@%s\n",conn->username,conn->hostname);
+      CfOut(cf_verbose,"","The public key identity was confirmed as %s@%s\n",conn->username,conn->hostname);
       SendTransaction(conn->sd_reply,"OK: key accepted",0,CF_DONE);
       RSA_free(savedkey);
       return true;
@@ -3064,7 +3064,7 @@ if (savedkey = HavePublicKey(keyname))
          }
       else /* if not, reject it */
          {
-         Verbose("The new public key does not match the old one! Spoofing attempt!\n");
+         CfOut(cf_verbose,"","The new public key does not match the old one! Spoofing attempt!\n");
          SendTransaction(conn->sd_reply,"BAD: keys did not match",0,CF_DONE);
          RSA_free(savedkey);
          return false;
@@ -3098,7 +3098,7 @@ else if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
 
 if ((TRUSTKEYLIST != NULL) && IsFuzzyItemIn(TRUSTKEYLIST,MapAddress(conn->ipaddr)))
    {
-   Verbose("Host %s/%s was found in the list of hosts to trust\n",conn->hostname,conn->ipaddr);
+   CfOut(cf_verbose,"","Host %s/%s was found in the list of hosts to trust\n",conn->hostname,conn->ipaddr);
    conn->trust = true;
    /* conn->maproot = false; ?? */
    SendTransaction(conn->sd_reply,"OK: unknown key was accepted on trust",0,CF_DONE);
@@ -3108,7 +3108,7 @@ if ((TRUSTKEYLIST != NULL) && IsFuzzyItemIn(TRUSTKEYLIST,MapAddress(conn->ipaddr
    }
 else
    {
-   Verbose("No previous key found, and unable to accept this one on trust\n");
+   CfOut(cf_verbose,"","No previous key found, and unable to accept this one on trust\n");
    SendTransaction(conn->sd_reply,"BAD: key could not be accepted on trust",0,CF_DONE);
    return false; 
    }

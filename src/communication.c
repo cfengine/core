@@ -125,7 +125,7 @@ if (chop < address+strlen(address))
    *chop = '\0';
    }
 
-Verbose("Deport => %s\n",address);
+CfOut(cf_verbose,"","Deport => %s\n",address);
 
 return;
 }
@@ -273,7 +273,7 @@ if ((hp = gethostbyname(hostname)) != NULL)
    {
    cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
    strncpy(ipbuffer,inet_ntoa(cin.sin_addr),CF_SMALLBUF-1);
-   Verbose("Found address (%s) for host %s\n",ipbuffer,hostname);
+   CfOut(cf_verbose,"","Found address (%s) for host %s\n",ipbuffer,hostname);
    return ipbuffer;
    }
 #endif

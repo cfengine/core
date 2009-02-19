@@ -246,7 +246,7 @@ else
 
 sprintf(workbuf,"%d_bit",sizeof(long)*8);
 NewClass(workbuf);
-Verbose("Additional hard class defined as: %s\n",CanonifyName(workbuf));
+CfOut(cf_verbose,"","Additional hard class defined as: %s\n",CanonifyName(workbuf));
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.release);
 NewClass(CanonifyName(workbuf));
@@ -328,7 +328,7 @@ CfOut(cf_verbose,"","GNU autoconf class from compile time: %s",workbuf);
 
 if ((hp = gethostbyname(VFQNAME)) == NULL)
    {
-   Verbose("Hostname lookup failed on node name \"%s\"\n",VSYSNAME.nodename);
+   CfOut(cf_verbose,"","Hostname lookup failed on node name \"%s\"\n",VSYSNAME.nodename);
    return;
    }
 else
@@ -459,7 +459,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   {
                   for (i=0; hp->h_aliases[i] != NULL; i++)
                      {
-                     Verbose("Adding alias %s..\n",hp->h_aliases[i]);
+                     CfOut(cf_verbose,"","Adding alias %s..\n",hp->h_aliases[i]);
                      NewClass(CanonifyName(hp->h_aliases[i]));
                      }
                   }
@@ -595,7 +595,7 @@ void FindV6InterfaceInfo(void)
    book shows the suggestion which has not been implemented...
 */
  
- Verbose("Trying to locate my IPv6 address\n");
+ CfOut(cf_verbose,"","Trying to locate my IPv6 address\n");
 
  switch (VSYSTEMHARDCLASS)
     {
@@ -609,7 +609,7 @@ void FindV6InterfaceInfo(void)
         
         if ((pp = cf_popen("/usr/etc/ifconfig -a","r")) == NULL)
            {
-           Verbose("Could not find interface info\n");
+           CfOut(cf_verbose,"","Could not find interface info\n");
            return;
            }
         
@@ -619,7 +619,7 @@ void FindV6InterfaceInfo(void)
         
         if ((pp = cf_popen("/usr/sbin/ifconfig -a","r")) == NULL)
            {
-           Verbose("Could not find interface info\n");
+           CfOut(cf_verbose,"","Could not find interface info\n");
            return;
            }
 
@@ -629,7 +629,7 @@ void FindV6InterfaceInfo(void)
         
         if ((pp = cf_popen("/etc/ifconfig -a","r")) == NULL)
            {
-           Verbose("Could not find interface info\n");
+           CfOut(cf_verbose,"","Could not find interface info\n");
            return;
            }
 
@@ -639,7 +639,7 @@ void FindV6InterfaceInfo(void)
         
         if ((pp = cf_popen("/sbin/ifconfig -a","r")) == NULL)
            {
-           Verbose("Could not find interface info\n");
+           CfOut(cf_verbose,"","Could not find interface info\n");
            return;
            }
 
@@ -675,7 +675,7 @@ while (!feof(pp))
 
          if (IsIPV6Address(ip->name) && (strcmp(ip->name,"::1") != 0))
             {
-            Verbose("Found IPv6 address %s\n",ip->name);
+            CfOut(cf_verbose,"","Found IPv6 address %s\n",ip->name);
             AppendItem(&IPADDRESSES,ip->name,"");
             NewClass(CanonifyName(ip->name));
             }
@@ -814,14 +814,14 @@ for (sp = vbuff+strlen(vbuff); i < 2; sp--)
 
 if (stat("/etc/mandrake-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a mandrake system.\n");
+   CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
    NewClass("Mandrake");
    Linux_Mandrake_Version();
    }
 
 else if (stat("/etc/fedora-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a fedora system.\n");
+   CfOut(cf_verbose,"","This appears to be a fedora system.\n");
    NewClass("redhat");
    NewClass("fedora");
    Linux_Fedora_Version();
@@ -829,20 +829,20 @@ else if (stat("/etc/fedora-release",&statbuf) != -1)
 
 else if (stat("/etc/redhat-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a redhat system.\n");
+   CfOut(cf_verbose,"","This appears to be a redhat system.\n");
    NewClass("redhat");
    Linux_Redhat_Version();
    }
 
 if (stat("/etc/generic-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a sun cobalt system.\n");
+   CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
 
 if (stat("/etc/SuSE-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a SuSE system.\n");
+   CfOut(cf_verbose,"","This appears to be a SuSE system.\n");
    NewClass("SuSE");
    Linux_Suse_Version();
    }
@@ -851,13 +851,13 @@ if (stat("/etc/SuSE-release",&statbuf) != -1)
 #define SLACKWARE_VERSION_FILENAME "/etc/slackware-version"
 if (stat(SLACKWARE_VERSION_FILENAME,&statbuf) != -1)
    {
-   Verbose("This appears to be a slackware system.\n");
+   CfOut(cf_verbose,"","This appears to be a slackware system.\n");
    NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_VERSION_FILENAME);
    }
 else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    {
-   Verbose("This appears to be an ancient slackware system.\n");
+   CfOut(cf_verbose,"","This appears to be an ancient slackware system.\n");
    NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_ANCIENT_VERSION_FILENAME);
    }
@@ -865,26 +865,26 @@ else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
 
 if (stat("/etc/generic-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a sun cobalt system.\n");
+   CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
  
 if (stat("/etc/debian_version",&statbuf) != -1)
    {
-   Verbose("This appears to be a debian system.\n");
+   CfOut(cf_verbose,"","This appears to be a debian system.\n");
    NewClass("debian");
    Linux_Debian_Version();
    }
 
 if (stat("/etc/UnitedLinux-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a UnitedLinux system.\n");
+   CfOut(cf_verbose,"","This appears to be a UnitedLinux system.\n");
    NewClass("UnitedLinux");
    }
 
 if (stat("/etc/gentoo-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a gentoo system.\n");
+   CfOut(cf_verbose,"","This appears to be a gentoo system.\n");
    NewClass("gentoo");
    }
 
@@ -895,7 +895,7 @@ Lsb_Version();
 if (stat("/proc/vmware/version",&statbuf) != -1 ||
     stat("/etc/vmware-release",&statbuf) != -1)
    {
-   Verbose("This appears to be a VMware Server ESX system.\n");
+   CfOut(cf_verbose,"","This appears to be a VMware Server ESX system.\n");
    NewClass("VMware");
    VM_Version();
    }
@@ -903,7 +903,7 @@ else if (stat("/etc/vmware",&statbuf) != -1)
    {
    if (S_ISDIR(statbuf.st_mode))
       {
-      Verbose("This appears to be a VMware xSX system.\n");
+      CfOut(cf_verbose,"","This appears to be a VMware xSX system.\n");
       NewClass("VMware");
       VM_Version();
       }
@@ -911,14 +911,14 @@ else if (stat("/etc/vmware",&statbuf) != -1)
 
 if (stat("/proc/xen/capabilities",&statbuf) != -1)
    {
-   Verbose("This appears to be a xen pv system.\n");
+   CfOut(cf_verbose,"","This appears to be a xen pv system.\n");
    NewClass("xen");
    Xen_Domain();
    }
 #ifdef XEN_CPUID_SUPPORT
 else if (Xen_Hv_Check())
    {
-   Verbose("This appears to be a xen hv system.\n");
+   CfOut(cf_verbose,"","This appears to be a xen hv system.\n");
    NewClass("xen");
    NewClass("xen_domu_hv");
    }
@@ -964,7 +964,7 @@ char strmajor[CF_MAXVARSIZE];
  fgets(relstring, sizeof(relstring), fp);
  fclose(fp);
  
- Verbose("Looking for fedora core linux info...\n");
+ CfOut(cf_verbose,"","Looking for fedora core linux info...\n");
  
  /* First, try to grok the vendor */
  if(!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
@@ -973,7 +973,7 @@ char strmajor[CF_MAXVARSIZE];
     }
  else
     {
-    Verbose("Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
+    CfOut(cf_verbose,"","Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
     return 2;
     }
  
@@ -983,7 +983,7 @@ char strmajor[CF_MAXVARSIZE];
  release = strstr(relstring, RELEASE_FLAG);
  if(release == NULL)
     {
-    Verbose("Could not find a numeric OS release in %s\n",
+    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",
      FEDORA_REL_FILENAME);
     return 2;
     }
@@ -1071,7 +1071,7 @@ char strminor[CF_MAXVARSIZE];
  fgets(relstring, sizeof(relstring), fp);
  fclose(fp);
  
-Verbose("Looking for redhat linux info in \"%s\"\n",relstring);
+CfOut(cf_verbose,"","Looking for redhat linux info in \"%s\"\n",relstring);
  
  /* First, try to grok the vendor and the edition (if any) */
  if(!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
@@ -1137,7 +1137,7 @@ Verbose("Looking for redhat linux info in \"%s\"\n",relstring);
     }
  else
     {
-    Verbose("Could not identify OS distro from %s\n", RH_REL_FILENAME);
+    CfOut(cf_verbose,"","Could not identify OS distro from %s\n", RH_REL_FILENAME);
     return 2;
     }
  
@@ -1159,7 +1159,7 @@ Verbose("Looking for redhat linux info in \"%s\"\n",relstring);
  release = strstr(relstring, RELEASE_FLAG);
  if(release == NULL)
     {
-    Verbose("Could not find a numeric OS release in %s\n",
+    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",
      RH_REL_FILENAME);
     return 2;
     }
@@ -1246,7 +1246,7 @@ fclose(fp);
   
    /* Check if it's a SuSE Enterprise version  */
 
-Verbose("Looking for SuSE enterprise info in \"%s\"\n",relstring);
+CfOut(cf_verbose,"","Looking for SuSE enterprise info in \"%s\"\n",relstring);
  
  /* Convert relstring to lowercase to handle rename of SuSE to 
   * SUSE with SUSE 10.0. 
@@ -1288,7 +1288,7 @@ release = strstr(relstring, SUSE_RELEASE_FLAG);
 
 if (release == NULL)
    {
-   Verbose("Could not find a numeric OS release in %s\n",SUSE_REL_FILENAME);
+   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",SUSE_REL_FILENAME);
    return 2;
    }
 else
@@ -1330,26 +1330,26 @@ if ((fp = fopen(filename,"r")) == NULL)
    return 1;
    }
 
-Verbose("Looking for Slackware version...\n");
+CfOut(cf_verbose,"","Looking for Slackware version...\n");
 switch (fscanf(fp, "Slackware %d.%d.%d", &major, &minor, &release))
     {
     case 3:
-        Verbose("This appears to be a Slackware %u.%u.%u system.", major, minor, release);
+        CfOut(cf_verbose,"","This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
         NewClass(classname);
         /* Fall-through */
     case 2:
-        Verbose("This appears to be a Slackware %u.%u system.", major, minor);
+        CfOut(cf_verbose,"","This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
         NewClass(classname);
         /* Fall-through */
     case 1:
-        Verbose("This appears to be a Slackware %u system.", major);
+        CfOut(cf_verbose,"","This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
         NewClass(classname);
         break;
     case 0:
-        Verbose("No Slackware version number found.\n");
+        CfOut(cf_verbose,"","No Slackware version number found.\n");
         fclose(fp);
         return 2;
     }
@@ -1372,21 +1372,21 @@ if ((fp = fopen(DEBIAN_VERSION_FILENAME,"r")) == NULL)
    return 1;
    }
 
-Verbose("Looking for Debian version...\n");
+CfOut(cf_verbose,"","Looking for Debian version...\n");
 switch (fscanf(fp, "%d.%d", &major, &release))
     {
     case 2:
-        Verbose("This appears to be a Debian %u.%u system.", major, release);
+        CfOut(cf_verbose,"","This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         NewClass(classname);
         /* Fall-through */
     case 1:
-        Verbose("This appears to be a Debian %u system.", major);
+        CfOut(cf_verbose,"","This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         NewClass(classname);
         break;
     case 0:
-        Verbose("No Debian version number found.\n");
+        CfOut(cf_verbose,"","No Debian version number found.\n");
         fclose(fp);
         return 2;
     }
@@ -1433,7 +1433,7 @@ char strminor[CF_MAXVARSIZE];
  fgets(relstring, sizeof(relstring), fp);
  fclose(fp);
 
- Verbose("Looking for Mandrake linux info in \"%s\"\n",relstring);
+ CfOut(cf_verbose,"","Looking for Mandrake linux info in \"%s\"\n",relstring);
 
   /* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
  if(!strncmp(relstring, MANDRAKE_ID, strlen(MANDRAKE_ID)))
@@ -1451,7 +1451,7 @@ char strminor[CF_MAXVARSIZE];
     }
  else
     {
-    Verbose("Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
+    CfOut(cf_verbose,"","Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
     return 2;
     }
 
@@ -1461,7 +1461,7 @@ char strminor[CF_MAXVARSIZE];
  release = strstr(relstring, RELEASE_FLAG);
  if(release == NULL)
     {
-    Verbose("Could not find a numeric OS release in %s\n",MANDRAKE_REL_FILENAME);
+    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",MANDRAKE_REL_FILENAME);
     return 2;
     }
  else
@@ -1474,7 +1474,7 @@ char strminor[CF_MAXVARSIZE];
        }
     else
        {
-       Verbose("Could not break down release version numbers in %s\n",MANDRAKE_REL_FILENAME);
+       CfOut(cf_verbose,"","Could not break down release version numbers in %s\n",MANDRAKE_REL_FILENAME);
        }
     }
 
@@ -1567,7 +1567,7 @@ while (dir = strsep(&rest, ":"))
         free(path);
         path = strdup(vbuff);
 
-        Verbose("This appears to be a LSB compliant system.\n");
+        CfOut(cf_verbose,"","This appears to be a LSB compliant system.\n");
         NewClass("lsb_compliant");
         break;
         }

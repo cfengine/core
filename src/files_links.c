@@ -41,7 +41,7 @@ Debug("Linkfiles(%s -> %s)\n",destination,source);
 /*
 if (MatchRlistItem(attr.link.copy_patterns,lastnode))
    {
-   Verbose("cfengine: link item %s marked for copying instead\n",sourcefile);
+   CfOut(cf_verbose,"","cfengine: link item %s marked for copying instead\n",sourcefile);
    LinkCopy(sourcefile,destfile,&ssb,attr,pp);
    attr.copy_backup = true;
    CopyFile(source,destination,ssb,attr,pp);
@@ -335,8 +335,8 @@ if (stat(destination,&dsb) == -1)
 
 if (dsb.st_ino != ssb.st_ino && dsb.st_dev != ssb.st_dev)
    {
-   Verbose("If this is POSIX, unable to determine if %s is hard link is correct\n",destination);
-   Verbose("since it points to a different filesystem!\n");
+   CfOut(cf_verbose,"","If this is POSIX, unable to determine if %s is hard link is correct\n",destination);
+   CfOut(cf_verbose,"","since it points to a different filesystem!\n");
 
    if (dsb.st_mode == ssb.st_mode && dsb.st_size == ssb.st_size)
       {

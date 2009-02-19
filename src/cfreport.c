@@ -293,7 +293,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLM",OPTIONS,&optindex)) != EOF
           break;
 
       case 'o': strcpy(OUTPUTDIR,optarg);
-          Verbose("Setting output directory to s\n",OUTPUTDIR);
+          CfOut(cf_verbose,"","Setting output directory to s\n",OUTPUTDIR);
           break;
 
       case 'T': TIMESTAMPS = true;
@@ -342,7 +342,7 @@ if (strlen(OUTPUTDIR) == 0)
       {
       if ((NOW = time((time_t *)NULL)) == -1)
          {
-         Verbose("Couldn't read system clock\n");
+         CfOut(cf_verbose,"","Couldn't read system clock\n");
          }
       sprintf(OUTPUTDIR,"cf-reports-%s-%s",CanonifyName(VFQNAME),ctime(&NOW));
       }
@@ -389,11 +389,11 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_builddir].lval) == 0)
       {
       strncpy(OUTPUTDIR,retval,CF_BUFSIZE);
-      Verbose("SET outputdir = %s\n",OUTPUTDIR);
+      CfOut(cf_verbose,"","SET outputdir = %s\n",OUTPUTDIR);
 
       if (mkdir(OUTPUTDIR,0755) == -1)
          {
-         Verbose("Writing to existing directory\n");
+         CfOut(cf_verbose,"","Writing to existing directory\n");
          }
       
       if (chdir(OUTPUTDIR))
@@ -408,21 +408,21 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_autoscale].lval) == 0)
       {
       NOSCALING = !GetBoolean(retval);
-      Verbose("SET autoscale = %d\n",NOSCALING);
+      CfOut(cf_verbose,"","SET autoscale = %d\n",NOSCALING);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_timestamps].lval) == 0)
       {
       TIMESTAMPS = GetBoolean(retval);
-      Verbose("SET timestamps = %d\n",TIMESTAMPS);
+      CfOut(cf_verbose,"","SET timestamps = %d\n",TIMESTAMPS);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_errorbars].lval) == 0)
       {
       ERRORBARS = GetBoolean(retval);
-      Verbose("SET errorbars = %d\n",ERRORBARS);
+      CfOut(cf_verbose,"","SET errorbars = %d\n",ERRORBARS);
       continue;
       }
 
@@ -487,11 +487,11 @@ if (REPORTS == NULL)
    exit(0);
    }
  
-Verbose("Creating sub-directory %s\n",OUTPUTDIR);
+CfOut(cf_verbose,"","Creating sub-directory %s\n",OUTPUTDIR);
 
 if (mkdir(OUTPUTDIR,0755) == -1)
    {
-   Verbose("Writing to existing directory\n");
+   CfOut(cf_verbose,"","Writing to existing directory\n");
    }
  
 if (chdir(OUTPUTDIR))
@@ -507,55 +507,55 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
    {
    if (strcmp("last_seen",rp->item) == 0)
       {
-      Verbose("Creating last-seen report...\n");
+      CfOut(cf_verbose,"","Creating last-seen report...\n");
       ShowLastSeen();
       }
 
    if (strcmp("all_locks",rp->item) == 0)
       {
-      Verbose("Creating lock report...\n");
+      CfOut(cf_verbose,"","Creating lock report...\n");
       ShowLocks(CF_INACTIVE);
       }
 
    if (strcmp("active_locks",rp->item) == 0)
       {
-      Verbose("Creating active lock report...\n");
+      CfOut(cf_verbose,"","Creating active lock report...\n");
       ShowLocks(CF_ACTIVE);
       }
 
    if (strcmp("hashes",rp->item) == 0)
       {
-      Verbose("Creating file-hash report...\n");
+      CfOut(cf_verbose,"","Creating file-hash report...\n");
       ShowChecksums();
       }
 
    if (strcmp("performance",rp->item) == 0)
       {
-      Verbose("Creating performance report...\n");
+      CfOut(cf_verbose,"","Creating performance report...\n");
       ShowPerformance();
       }
    
    if (strcmp("audit",rp->item) == 0)
       {
-      Verbose("Creating audit report...\n");
+      CfOut(cf_verbose,"","Creating audit report...\n");
       ShowCurrentAudit();
       }
 
    if (strcmp("classes",rp->item) == 0)
       {
-      Verbose("Creating classes report...\n");
+      CfOut(cf_verbose,"","Creating classes report...\n");
       ShowClasses();
       }
 
    if (strcmp("monitor_now",rp->item) == 0)
       {
-      Verbose("Creating monitor recent-history report...\n");
+      CfOut(cf_verbose,"","Creating monitor recent-history report...\n");
       MagnifyNow();
       }
 
    if (strcmp("monitor_history",rp->item) == 0)
       {
-      Verbose("Creating monitor full history report...\n");
+      CfOut(cf_verbose,"","Creating monitor full history report...\n");
       WriteGraphFiles();
       WriteHistograms();
       DiskArrivals();
@@ -1664,13 +1664,13 @@ void ReadAverages()
 { int i;
   DBT key,value;
 
-Verbose("\nLooking for database %s\n",VINPUTFILE);
-Verbose("\nFinding MAXimum values...\n\n");
-Verbose("N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n"); 
+CfOut(cf_verbose,"","\nLooking for database %s\n",VINPUTFILE);
+CfOut(cf_verbose,"","\nFinding MAXimum values...\n\n");
+CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n"); 
   
 if ((ERRNO = db_create(&DBP,NULL,0)) != 0)
    {
-   Verbose("Couldn't create average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
    exit(1);
    }
 
@@ -1680,7 +1680,7 @@ if ((ERRNO = (DBP->open)(DBP,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 if ((ERRNO = (DBP->open)(DBP,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
 #endif
    {
-   Verbose("Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    DBP->err(DBP,ERRNO,NULL);
    exit(1);
    }
@@ -1752,13 +1752,13 @@ void EraseAverages()
   DBT key,value;
   struct Item *list = NULL;
       
-Verbose("\nLooking through current database %s\n",VINPUTFILE);
+CfOut(cf_verbose,"","\nLooking through current database %s\n",VINPUTFILE);
 
 list = SplitStringAsItemList(ERASE,',');
 
 if ((ERRNO = db_create(&DBP,NULL,0)) != 0)
    {
-   Verbose("Couldn't create average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
    exit(1);
    }
 
@@ -1768,7 +1768,7 @@ if ((ERRNO = (DBP->open)(DBP,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((ERRNO = (DBP->open)(DBP,NULL,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
-   Verbose("Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    DBP->err(DBP,ERRNO,NULL);
    exit(1);
    }
@@ -1835,16 +1835,16 @@ void SummarizeAverages()
 { int i;
   DBT key,value;
 
-Verbose(" x  yN (Variable content)\n---------------------------------------------------------\n");
+CfOut(cf_verbose,""," x  yN (Variable content)\n---------------------------------------------------------\n");
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   Verbose("%2d. MAX <%-10s-in>   = %10f - %10f u %10f\n",i,OBS[i][0],MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
+   CfOut(cf_verbose,"","%2d. MAX <%-10s-in>   = %10f - %10f u %10f\n",i,OBS[i][0],MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
    }
 
 if ((ERRNO = db_create(&DBP,NULL,0)) != 0)
    {
-   Verbose("Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    exit(1);
    }
 
@@ -1854,7 +1854,7 @@ if ((ERRNO = (DBP->open)(DBP,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 if ((ERRNO = (DBP->open)(DBP,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #endif
    {
-   Verbose("Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    exit(1);
    }
 
@@ -1876,7 +1876,7 @@ if ((ERRNO = DBP->get(DBP,NULL,&key,&value,0)) != 0)
 if (value.data != NULL)
    {
    AGE = *(double *)(value.data);
-   Verbose("\n\nDATABASE_AGE %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
+   CfOut(cf_verbose,"","\n\nDATABASE_AGE %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
    }
 }
 
@@ -2098,7 +2098,7 @@ snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
     
 if ((fp = fopen(filename,"r")) == NULL)
    {
-   Verbose("Unable to load histogram data\n");
+   CfOut(cf_verbose,"","Unable to load histogram data\n");
    exit(1);
    }
 
@@ -2210,19 +2210,19 @@ if ((dirh = opendir(CFWORKDIR)) == NULL)
    return;
    }
 
-Verbose("\n\nLooking for filesystem arrival process data in %s\n",CFWORKDIR); 
+CfOut(cf_verbose,"","\n\nLooking for filesystem arrival process data in %s\n",CFWORKDIR); 
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
    if (strncmp(dirp->d_name,"scan:",5) == 0)
       {
-      Verbose("Found %s - generating X,Y plot\n",dirp->d_name);
+      CfOut(cf_verbose,"","Found %s - generating X,Y plot\n",dirp->d_name);
 
       snprintf(database,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,dirp->d_name);
       
       if ((ERRNO = db_create(&dbp,dbenv,0)) != 0)
          {
-         Verbose("Couldn't open arrivals database %s\n",database);
+         CfOut(cf_verbose,"","Couldn't open arrivals database %s\n",database);
          return;
          }
       
@@ -2232,7 +2232,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       if ((ERRNO = (dbp->open)(dbp,NULL,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
          {
-         Verbose("Couldn't open database %s\n",database);
+         CfOut(cf_verbose,"","Couldn't open database %s\n",database);
          dbp->close(dbp,0);
          continue;
          }
@@ -2303,12 +2303,12 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       
       if ((fp = fopen(filename,"w")) == NULL)
          {
-         Verbose("Unable to open %s for writing\n",filename);
+         CfOut(cf_verbose,"","Unable to open %s for writing\n",filename);
          perror("fopen");
          return;
          }
       
-      Verbose("Data points = %d\n",index);
+      CfOut(cf_verbose,"","Data points = %d\n",index);
       
       for (i = 0; i < index; i++)
          {
@@ -2355,7 +2355,7 @@ var = 0;
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   Verbose("Couldn't open last-seen database %s\n",name);
+   CfOut(cf_verbose,"","Couldn't open last-seen database %s\n",name);
    return;
    }
 
@@ -2365,14 +2365,14 @@ if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   Verbose("Couldn't open last-seen database %s\n",name);
+   CfOut(cf_verbose,"","Couldn't open last-seen database %s\n",name);
    dbp->close(dbp,0);
    return;
    }
 
 if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    {
-   Verbose("Error reading from last-seen database\n");
+   CfOut(cf_verbose,"","Error reading from last-seen database\n");
    dbp->err(dbp, ret, "DB->cursor");
    return;
    }
@@ -2380,7 +2380,7 @@ if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
 memset(&key, 0, sizeof(key));
 memset(&value, 0, sizeof(value));
 
-Verbose("Examining known peers...\n");
+CfOut(cf_verbose,"","Examining known peers...\n");
 
 while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    {
@@ -2390,7 +2390,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       {
       /* Check hostname not recorded twice with +/- */
       AppendItem(&hostlist,hostname,NULL);
-      Verbose("Examining intermittent host %s\n",hostname);
+      CfOut(cf_verbose,"","Examining intermittent host %s\n",hostname);
       }
    }
 
@@ -2404,27 +2404,27 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
    {
    snprintf(out1,CF_BUFSIZE,"lastseen-%s.q",ip->name);
 
-   Verbose("Opening %s\n",out1);
+   CfOut(cf_verbose,"","Opening %s\n",out1);
    
    if ((fp1 = fopen(out1,"w")) == NULL)
       {
-      Verbose("Unable to open %s\n",out1);
+      CfOut(cf_verbose,"","Unable to open %s\n",out1);
       continue;
       }
 
    snprintf(out2,CF_BUFSIZE,"lastseen-%s.E-sigma",hostname);
    if ((fp2 = fopen(out2,"w")) == NULL)
       {
-      Verbose("Unable to open %s\n",out1);
+      CfOut(cf_verbose,"","Unable to open %s\n",out1);
       continue;
       }
    
    snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
-   Verbose("Consulting profile %s\n",name);
+   CfOut(cf_verbose,"","Consulting profile %s\n",name);
 
    if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
       {
-      Verbose("Couldn't init reliability profile database %s\n",name);
+      CfOut(cf_verbose,"","Couldn't init reliability profile database %s\n",name);
       return;
       }
    
@@ -2434,7 +2434,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
    if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
       {
-      Verbose("Couldn't open last-seen database %s\n",name);
+      CfOut(cf_verbose,"","Couldn't open last-seen database %s\n",name);
       continue;
       }
 

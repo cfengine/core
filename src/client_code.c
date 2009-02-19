@@ -54,7 +54,7 @@ else
    SHORT_CFENGINEPORT = server->s_port;
    }
 
-Verbose("Setting cfengine default port to %u = %s\n",ntohs(SHORT_CFENGINEPORT),STR_CFENGINEPORT);
+CfOut(cf_verbose,"","Setting cfengine default port to %u = %s\n",ntohs(SHORT_CFENGINEPORT),STR_CFENGINEPORT);
 }
 
 /*********************************************************************/
@@ -592,7 +592,7 @@ if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Failed send");
-   Verbose("No answer from host, assuming checksum ok to avoid remote copy for now...\n");
+   CfOut(cf_verbose,"","No answer from host, assuming checksum ok to avoid remote copy for now...\n");
    return false;
    }
 
@@ -882,7 +882,7 @@ else
    snprintf(strport,CF_MAXVARSIZE,"%u",(int)attr.copy.portnumber);
    }
    
-Verbose("Set cfengine port number to %s = %u\n",strport,(int)ntohs(shortport));
+CfOut(cf_verbose,"","Set cfengine port number to %s = %u\n",strport,(int)ntohs(shortport));
 
 #if defined(HAVE_GETADDRINFO)
  
@@ -904,7 +904,7 @@ if (!attr.copy.force_ipv4)
    
    for (ap = response; ap != NULL; ap = ap->ai_next)
       {
-      Verbose("Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
+      CfOut(cf_verbose,"","Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
       
       if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
          {
@@ -998,7 +998,7 @@ if (!attr.copy.force_ipv4)
    cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
    cin.sin_family = AF_INET; 
    
-   Verbose("Connect to %s = %s, port = (%u=%s)\n",host,inet_ntoa(cin.sin_addr),(int)ntohs(shortport),strport);
+   CfOut(cf_verbose,"","Connect to %s = %s, port = (%u=%s)\n",host,inet_ntoa(cin.sin_addr),(int)ntohs(shortport),strport);
     
    if ((conn->sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
       {
@@ -1008,7 +1008,7 @@ if (!attr.copy.force_ipv4)
 
    if (BINDINTERFACE[0] != '\0')
       {
-      Verbose("Cannot bind interface with this OS.\n");
+      CfOut(cf_verbose,"","Cannot bind interface with this OS.\n");
       /* Could fix this - any point? */
       }
    
@@ -1106,18 +1106,18 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
 
    if (svp->busy)
       {
-      Verbose("Existing connection seems to be busy...\n",ipname);
+      CfOut(cf_verbose,"","Existing connection seems to be busy...\n",ipname);
       return NULL;
       }
    
    if ((strcmp(ipname,svp->server) == 0) && svp->conn && svp->conn->sd > 0)
       {
-      Verbose("Connection to %s is already open and ready...\n",ipname);
+      CfOut(cf_verbose,"","Connection to %s is already open and ready...\n",ipname);
       return svp->conn;
       }
    }
 
-Verbose("No existing connection to %s is established...\n",ipname);
+CfOut(cf_verbose,"","No existing connection to %s is established...\n",ipname);
 return NULL;
 }
 
@@ -1139,7 +1139,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
       }
    }
 
-Verbose("Existing connection just became free...\n");
+CfOut(cf_verbose,"","Existing connection just became free...\n");
 }
 
 /*********************************************************************/

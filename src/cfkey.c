@@ -129,7 +129,7 @@ if ((fp = fdopen(fd, "w")) == NULL )
    return;
    }
 
-Verbose("Writing private key to %s\n",CFPRIVKEYFILE);
+CfOut(cf_verbose,"","Writing private key to %s\n",CFPRIVKEYFILE);
  
 if (!PEM_write_RSAPrivateKey(fp,pair,cipher,passphrase,strlen(passphrase),NULL,NULL))
    {
@@ -155,7 +155,7 @@ if ((fp = fdopen(fd, "w")) == NULL )
    return;
    }
 
-Verbose("Writing public key to %s\n",CFPUBKEYFILE);
+CfOut(cf_verbose,"","Writing public key to %s\n",CFPUBKEYFILE);
  
 if (!PEM_write_RSAPublicKey(fp,pair))
    {

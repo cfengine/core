@@ -84,7 +84,7 @@ void PrintFile(struct Attributes a,struct Promise *pp)
 
 if (a.report.filename == NULL)
    {
-   Verbose("Printfile promise was incomplete, with no filename.\n");
+   CfOut(cf_verbose,"","Printfile promise was incomplete, with no filename.\n");
    return;
    }
   
@@ -141,7 +141,7 @@ if (stat(buffer,&statbuf) == 0)
 
       if (strlen(buffer) > 0)
          {
-         Verbose("(%2d) %s",conns,buffer);
+         CfOut(cf_verbose,"","(%2d) %s",conns,buffer);
          
          if (IsSocketType(type))
             {
@@ -227,7 +227,7 @@ if (stat(buffer,&statbuf) == 0)
          
          if (!IsIPV4Address(buffer) && !IsIPV6Address(buffer))
             {
-            Verbose("Rejecting address %s\n",ip->name);
+            CfOut(cf_verbose,"","Rejecting address %s\n",ip->name);
             continue;
             }
 
@@ -344,7 +344,7 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
   double ticksperhour = (double)CF_TICKS_PER_HOUR,ticksperday = (double)CF_TICKS_PER_DAY;
 
  
-Verbose("CheckFriendConnections(%d)\n",hours);
+CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
@@ -419,7 +419,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       {
       if (FullTextMatch(a.report.friend_pattern,IPString2Hostname(hostname+1)))
          {
-         Verbose("Not judging friend %s\n",hostname);
+         CfOut(cf_verbose,"","Not judging friend %s\n",hostname);
          criterion = false;
          lsea = CF_INFINITY;
          }
@@ -503,7 +503,7 @@ void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
   double entropy,average,var,sum,sum_av,expect,actual;
   time_t now = time(NULL), then, lastseen = CF_WEEK;
 
-Verbose("CheckFriendReliability()\n");
+CfOut(cf_verbose,"","CheckFriendReliability()\n");
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
@@ -544,7 +544,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       {
       /* Check hostname not recorded twice with +/- */
       AppendItem(&hostlist,hostname,NULL);
-      Verbose(" Measuring reliability of %s\n",hostname);
+      CfOut(cf_verbose,""," Measuring reliability of %s\n",hostname);
       }
    }
 
@@ -672,8 +672,8 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
    actual = sum/log((double)CF_RELIABLE_CLASSES)*100.0;
    expect = sum_av/log((double)CF_RELIABLE_CLASSES)*100.0;
    
-   Verbose("Scaled entropy for %s = %.1f %%\n",ip->name,actual);
-   Verbose("Expected entropy for %s = %.1f %%\n\n",ip->name,expect);
+   CfOut(cf_verbose,"","Scaled entropy for %s = %.1f %%\n",ip->name,actual);
+   CfOut(cf_verbose,"","Expected entropy for %s = %.1f %%\n\n",ip->name,expect);
 
    if (actual > expect)
       {

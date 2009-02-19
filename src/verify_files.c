@@ -83,7 +83,7 @@ Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 if (!IsPathRegex(wildpath))
    {
-   Verbose(" -> Using file literal base path %s\n",wildpath);
+   CfOut(cf_verbose,""," -> Using file literal base path %s\n",wildpath);
    (*fnptr)(wildpath,pp);
    return;
    }
@@ -193,7 +193,7 @@ if (expandregex) /* Expand one regex link and hand down */
          }
       else
          {
-         Verbose(" -> Using expanded file base path %s\n",nextbuffer);
+         CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
          (*fnptr)(nextbuffer,pp);
          }
       }
@@ -202,13 +202,13 @@ if (expandregex) /* Expand one regex link and hand down */
    }
 else
    {
-   Verbose(" -> Using file base path %s\n",pbuffer);
+   CfOut(cf_verbose,""," -> Using file base path %s\n",pbuffer);
    (*fnptr)(pbuffer,pp);
    }
 
 if (count == 0)
    {
-   Verbose("No promiser file objects matched as regular expression %s\n",wildpath);
+   CfOut(cf_verbose,"","No promiser file objects matched as regular expression %s\n",wildpath);
 
    if (create)
       {

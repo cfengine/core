@@ -36,7 +36,7 @@ void AddTopic(struct Topic **list,char *name,char *type)
 
 if (TopicExists(*list,name,type))
    {
-   Verbose("Topic %s already defined\n",name);
+   CfOut(cf_verbose,"","Topic %s already defined\n",name);
    return;
    }
  
@@ -74,7 +74,7 @@ void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type)
 
 if (TopicExists(*list,name,type))
    {
-   Verbose("Topic %s already defined\n",name);
+   CfOut(cf_verbose,"","Topic %s already defined\n",name);
    return;
    }
  
@@ -262,7 +262,7 @@ topic2[0] = '\0';
 DeTypeTopic(ttopic1,topic1,type1);
 DeTypeTopic(ttopic2,topic2,type2);
 
-Verbose("Comparing: (%s)=(%s)\n",topic1,topic2);
+CfOut(cf_verbose,"","Comparing: (%s)=(%s)\n",topic1,topic2);
 
 if (strlen(type1) > 0 && strlen(type2) > 0)
    {
@@ -417,7 +417,7 @@ for (ta = list; ta != NULL; ta=ta->next)
    {
    if (strcmp(fwd,ta->fwd_name) == 0)
       {
-      Verbose("Association %s exists already\n",fwd);
+      CfOut(cf_verbose,"","Association %s exists already\n",fwd);
       yfwd = true;
       }
    else if (fwd)
@@ -433,7 +433,7 @@ for (ta = list; ta != NULL; ta=ta->next)
    
    if (bwd && strcmp(bwd,ta->bwd_name) == 0)
       {
-      Verbose("Association %s exists already\n",bwd);
+      CfOut(cf_verbose,"","Association %s exists already\n",bwd);
       ybwd = true;
       }
    else if (bwd && ta->bwd_name)

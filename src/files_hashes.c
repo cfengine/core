@@ -141,7 +141,7 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
          
          if (attr.change.update)
             {
-            Verbose("Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
+            CfOut(cf_verbose,"","Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
             
             DeleteHash(dbp,type,filename);
             WriteHash(dbp,type,filename,current_digest,attr_digest);
@@ -232,7 +232,7 @@ if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 
 
       if ((bytes1 != bytes2) || (memcmp(buff1, buff2, bytes1) != 0))
          {
-         Verbose("Binary Comparison mismatch...\n");
+         CfOut(cf_verbose,"","Binary Comparison mismatch...\n");
          close(fd2);
          close(fd1);
          return true;

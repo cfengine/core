@@ -197,28 +197,28 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
       {
       SetFacility(retval);
-      Verbose("SET Syslog FACILITY = %s\n",retval);
+      CfOut(cf_verbose,"","SET Syslog FACILITY = %s\n",retval);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
       {
       DENYBADCLOCKS = GetBoolean(retval);
-      Verbose("SET denybadclocks = %d\n",DENYBADCLOCKS);
+      CfOut(cf_verbose,"","SET denybadclocks = %d\n",DENYBADCLOCKS);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
       {
       LOGENCRYPT = GetBoolean(retval);
-      Verbose("SET LOGENCRYPT = %d\n",LOGENCRYPT);
+      CfOut(cf_verbose,"","SET LOGENCRYPT = %d\n",LOGENCRYPT);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
       {
       LOGCONNS = GetBoolean(retval);
-      Verbose("SET LOGCONNS = %d\n",LOGCONNS);
+      CfOut(cf_verbose,"","SET LOGCONNS = %d\n",LOGCONNS);
       continue;
       }
    
@@ -226,21 +226,21 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       {
       CFD_MAXPROCESSES = (int)Str2Int(retval);
       MAXTRIES = CFD_MAXPROCESSES / 3;
-      Verbose("SET maxconnections = %d\n",CFD_MAXPROCESSES);
+      CfOut(cf_verbose,"","SET maxconnections = %d\n",CFD_MAXPROCESSES);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
       {
       strncpy(CFRUNCOMMAND,retval,CF_BUFSIZE-1);
-      Verbose("SET cfruncommand = %s\n",CFRUNCOMMAND);
+      CfOut(cf_verbose,"","SET cfruncommand = %s\n",CFRUNCOMMAND);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Allowing connections from ...\n");
+      CfOut(cf_verbose,"","SET Allowing connections from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -256,7 +256,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Denying connections from ...\n");
+      CfOut(cf_verbose,"","SET Denying connections from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -272,7 +272,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Skip verify connections from ...\n");
+      CfOut(cf_verbose,"","SET Skip verify connections from ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
@@ -288,7 +288,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Dynamic addresses from ...\n");
+      CfOut(cf_verbose,"","SET Dynamic addresses from ...\n");
       
       for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
          {
@@ -304,7 +304,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Allowing multiple connections from ...\n");
+      CfOut(cf_verbose,"","SET Allowing multiple connections from ...\n");
       
       for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
          {
@@ -320,7 +320,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Allowing users ...\n");
+      CfOut(cf_verbose,"","SET Allowing users ...\n");
       
       for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
          {
@@ -336,7 +336,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
       {
       struct Rlist *rp;
-      Verbose("SET Trust keys from ...\n");
+      CfOut(cf_verbose,"","SET Trust keys from ...\n");
       
       for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
          {
@@ -392,16 +392,16 @@ void KeepServerPromise(struct Promise *pp)
  
 if (!IsDefinedClass(pp->classes))
    {
-   Verbose("Skipping whole promise, as context is %s\n",pp->classes);
+   CfOut(cf_verbose,"","Skipping whole promise, as context is %s\n",pp->classes);
    return;
    }
 
 if (VarClassExcluded(pp,&sp))
    {
-   Verbose("\n");
-   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   Verbose("Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
-   Verbose(". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 

@@ -113,7 +113,7 @@ else
          {
          /* Relying on umask is risky */
          filemode = 0600;
-         Verbose("No mode was set, choose plain file default %o\n",filemode);
+         CfOut(cf_verbose,"","No mode was set, choose plain file default %o\n",filemode);
          }
       else
          {
@@ -163,7 +163,7 @@ int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promis
 
 { struct cfagent_connection *conn;
 
- Verbose(" -> Copy file %s from %s check\n",destination,pp->promiser);  
+ CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,pp->promiser);  
   
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
@@ -363,7 +363,7 @@ if (a.haveeditline)
       return false;
       }
    
-   Verbose(" -> Handling file edits in edit_line bundle %s\n",edit_bundle_name);
+   CfOut(cf_verbose,""," -> Handling file edits in edit_line bundle %s\n",edit_bundle_name);
 
    // add current filename to context - already there?
 
@@ -427,7 +427,7 @@ if (S_ISDIR(dstat->st_mode))
       }
    else
       {
-      Verbose("NB: rxdirs is set to false - x for r bits not checked\n");
+      CfOut(cf_verbose,"","NB: rxdirs is set to false - x for r bits not checked\n");
       }
    }
 
@@ -1392,7 +1392,7 @@ else
 
           if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
              {
-             Verbose("%s:   touching %s\n",VPREFIX,file);
+             CfOut(cf_verbose,"","%s:   touching %s\n",VPREFIX,file);
              }
           else
              {
@@ -1556,7 +1556,7 @@ if (lstat(pathbuf,&statbuf) != -1)
    {
    if (S_ISLNK(statbuf.st_mode))
       {
-      Verbose("%s: INFO: %s is a symbolic link, not a true directory!\n",VPREFIX,pathbuf);
+      CfOut(cf_verbose,"","%s: INFO: %s is a symbolic link, not a true directory!\n",VPREFIX,pathbuf);
       }
    
    if (force)   /* force in-the-way directories aside */
@@ -1919,7 +1919,7 @@ void RotateFiles(char *name,int number)
   
 if (stat(name,&statbuf) == -1)
    {
-   Verbose("No access to file %s\n",name);
+   CfOut(cf_verbose,"","No access to file %s\n",name);
    return;
    }
 

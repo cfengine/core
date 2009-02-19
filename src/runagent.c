@@ -392,28 +392,28 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_force_ipv4].lval) == 0)
       {
       RUNATTR.copy.force_ipv4 = GetBoolean(retval);
-      Verbose("SET force_ipv4 = %d\n",RUNATTR.copy.force_ipv4);
+      CfOut(cf_verbose,"","SET force_ipv4 = %d\n",RUNATTR.copy.force_ipv4);
       continue;
       }
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_trustkey].lval) == 0)
       {
       RUNATTR.copy.trustkey = GetBoolean(retval);
-      Verbose("SET trustkey = %d\n",RUNATTR.copy.trustkey);
+      CfOut(cf_verbose,"","SET trustkey = %d\n",RUNATTR.copy.trustkey);
       continue;
       }
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_encrypt].lval) == 0)
       {
       RUNATTR.copy.encrypt = GetBoolean(retval);
-      Verbose("SET encrypt = %d\n",RUNATTR.copy.encrypt);
+      CfOut(cf_verbose,"","SET encrypt = %d\n",RUNATTR.copy.encrypt);
       continue;
       }
 
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_portnumber].lval) == 0)
       {
       RUNATTR.copy.portnumber = (short)Str2Int(retval);
-      Verbose("SET default portnumber = %u\n",(int)RUNATTR.copy.portnumber);
+      CfOut(cf_verbose,"","SET default portnumber = %u\n",(int)RUNATTR.copy.portnumber);
       continue;
       }
 

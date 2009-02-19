@@ -83,7 +83,7 @@ if (!IsExecutable(GetArg0(pp->promiser)))
    }
 else
    {
-   Verbose(" -> Promiser string contains a valid executable (%s) - ok\n",GetArg0(pp->promiser));
+   CfOut(cf_verbose,""," -> Promiser string contains a valid executable (%s) - ok\n",GetArg0(pp->promiser));
    }
 
 NewScalar("this","promiser",pp->promiser,cf_str);
@@ -120,7 +120,7 @@ else
    
    if (a.transaction.background)
       {
-      Verbose(" -> Backgrounding job %s\n",execstr);
+      CfOut(cf_verbose,""," -> Backgrounding job %s\n",execstr);
       outsourced = fork();
       }
    else
@@ -135,7 +135,7 @@ else
          SetTimeOut(a.contain.timeout);
          }
       
-      Verbose(" -> (Setting umask to %o)\n",a.contain.umask);
+      CfOut(cf_verbose,""," -> (Setting umask to %o)\n",a.contain.umask);
       maskval = umask(a.contain.umask);
       
       if (a.contain.umask == 0)
@@ -221,7 +221,7 @@ else
    
    if (a.transaction.background && outsourced)
       {
-      Verbose(" -> Backgrounded command (%s) is done - exiting\n",execstr);
+      CfOut(cf_verbose,""," -> Backgrounded command (%s) is done - exiting\n",execstr);
       exit(0);
       }
    }

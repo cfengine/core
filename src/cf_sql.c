@@ -66,7 +66,7 @@ int CfConnectDB(CfdbConn *cfdb,enum cfdbtype dbtype,char *remotehost,char *dbuse
 cfdb->connected = false;
 cfdb->type = dbtype;
 
-Verbose("Connect to SQL database \"%s\" user=%s, host=%s\n",db,dbuser,remotehost);
+CfOut(cf_verbose,"","Connect to SQL database \"%s\" user=%s, host=%s\n",db,dbuser,remotehost);
 
 switch (dbtype)
    {
@@ -114,7 +114,7 @@ switch (dbtype)
        break;
 
    default:
-       Verbose("There is no SQL database selected");
+       CfOut(cf_verbose,"","There is no SQL database selected");
        cfdb->connected = false;       
        break;
    }
@@ -145,7 +145,7 @@ switch (cfdb->type)
        break;
 
    default:
-       Verbose("There is no SQL database selected");
+       CfOut(cf_verbose,"","There is no SQL database selected");
        break;
    }
 
@@ -224,7 +224,7 @@ switch (cfdb->type)
        break;
 
    default:
-       Verbose("There is no SQL database selected");
+       CfOut(cf_verbose,"","There is no SQL database selected");
        break;
    }
 }
@@ -289,7 +289,7 @@ switch (cfdb->type)
        break;
 
    default:
-       Verbose("There is no SQL database selected");
+       CfOut(cf_verbose,"","There is no SQL database selected");
        break;
    }
 
@@ -334,7 +334,7 @@ switch (cfdb->type)
        break;
 
    default:
-       Verbose("There is no SQL database selected");
+       CfOut(cf_verbose,"","There is no SQL database selected");
        break;
    }
 
@@ -376,7 +376,7 @@ switch (cfdb->type)
        break;
 
    default:
-       Verbose("There is no SQL database selected");
+       CfOut(cf_verbose,"","There is no SQL database selected");
        break;
    }
 

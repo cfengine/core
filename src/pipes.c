@@ -824,7 +824,7 @@ int CfSetuid(uid_t uid,gid_t gid)
  
 if (gid != (gid_t) -1)
    {
-   Verbose("Changing gid to %d\n",gid);      
+   CfOut(cf_verbose,"","Changing gid to %d\n",gid);      
    
    if (setgid(gid) == -1)
       {
@@ -849,7 +849,7 @@ if (gid != (gid_t) -1)
 
 if (uid != (uid_t) -1)
    {
-   Verbose("Changing uid to %d\n",uid);
+   CfOut(cf_verbose,"","Changing uid to %d\n",uid);
    
    if (setuid(uid) == -1)
       {

@@ -121,11 +121,10 @@ void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
 void CompilePromises(void);
 
-/* cfstreams.h */
+/* cfstreams.c */
 
 void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
-void Verbose(char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);
 void MakeLog(struct Item *mess,enum cfreport level);
 void MakeReport(struct Item *mess,int prefix);

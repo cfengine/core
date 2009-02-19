@@ -952,7 +952,7 @@ if (rval != NULL)
 
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
-      Verbose("Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
+      CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
       PromiseRef(cf_verbose,pp);
       }
    }

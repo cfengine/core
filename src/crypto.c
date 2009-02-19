@@ -50,7 +50,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/randseed",CFWORKDIR);
     strncpy(AVDB,vbuff,CF_MAXVARSIZE-1);
     }
 
-Verbose("Looking for a source of entropy in %s\n",AVDB);
+CfOut(cf_verbose,"","Looking for a source of entropy in %s\n",AVDB);
 
 if (!RAND_load_file(AVDB,-1))
    {
@@ -89,7 +89,7 @@ if ((PRIVKEY = PEM_read_RSAPrivateKey(fp,(RSA **)NULL,NULL,passphrase)) == NULL)
 
 fclose(fp);
 
-Verbose("Loaded %s\n",CFPRIVKEYFILE); 
+CfOut(cf_verbose,"","Loaded %s\n",CFPRIVKEYFILE); 
 
 if ((fp = fopen(CFPUBKEYFILE,"r")) == NULL)
    {
@@ -106,7 +106,7 @@ if ((PUBKEY = PEM_read_RSAPublicKey(fp,NULL,NULL,passphrase)) == NULL)
    return;
    }
 
-Verbose("Loaded %s\n",CFPUBKEYFILE);  
+CfOut(cf_verbose,"","Loaded %s\n",CFPUBKEYFILE);  
 fclose(fp);
 
 if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
@@ -164,7 +164,7 @@ else
       return NULL;
       }
    
-   Verbose("Loaded %s\n",filename);  
+   CfOut(cf_verbose,"","Loaded %s\n",filename);  
    fclose(fp);
    
    if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))
@@ -194,7 +194,7 @@ if (stat(filename,&statbuf) != -1)
    return;
    }
  
-Verbose("Saving public key %s\n",filename); 
+CfOut(cf_verbose,"","Saving public key %s\n",filename); 
   
 if ((fp = fopen(filename, "w")) == NULL )
    {
@@ -238,12 +238,12 @@ void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE+1])
   EVP_MD_CTX context;
   FILE *pp;
  
-Verbose("Looking for a random number seed...\n");
+CfOut(cf_verbose,"","Looking for a random number seed...\n");
 
 md = EVP_get_digestbyname("md5");
 EVP_DigestInit(&context,md);
 
-Verbose("...\n");
+CfOut(cf_verbose,"","...\n");
  
 snprintf(buffer,CF_BUFSIZE,"%d%d%25s",(int)CFSTARTTIME,(int)*digest,VFQNAME);
 

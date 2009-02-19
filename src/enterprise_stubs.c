@@ -104,7 +104,7 @@ void ShowTopicRepresentation(FILE *fp)
 #ifdef HAVE_LIBCFNOVA
  Nova_ShowTopicRepresentation(fp);
 #else
- Verbose("# This reporting feature is only available in commerical version Nova and above\n");
+ CfOut(cf_verbose,"","# This reporting feature is only available in commerical version Nova and above\n");
 #endif
 
  

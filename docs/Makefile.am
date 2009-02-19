@@ -9,7 +9,7 @@ MAKEINFOHTML = $(MAKEINFO) --html --no-split
 # Info used in building and installing HTML files
 #htmlfiles = $(info_TEXINFOS:.texinfo=.html)
 
-htmldir = $(pkgdatadir)/html
+htmldir = @htmldir@
 html_DATA = $(htmlfiles)
 
 # Info used in building and installing Postscript files

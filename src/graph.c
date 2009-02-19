@@ -41,7 +41,7 @@ extern char GRAPHDIR[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
-void VerifyGraph(struct Topic *map, struct Rlist *assoc,char *view)
+void VerifyGraph(struct Topic *map, struct Rlist *assoc_views,char *view)
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -57,7 +57,7 @@ for (tp = map; tp != NULL; tp=tp->next)
    topic_count++;
    
    for (ta = tp->associations; ta != NULL; ta=ta->next)
-      {
+      {      
       assoc_count++;
       }
    }
@@ -97,10 +97,17 @@ for (tp = map; tp != NULL; tp=tp->next)
    {
    for (ta = tp->associations; ta != NULL; ta=ta->next)
       {
+      /* Restrict semantics of associativity */
+      
+      if (!KeyInRlist(assoc_views,ta->fwd_name))
+         {
+         continue;
+         }
+
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
          int count = 0;
-         
+
          for (j = 0; j < topic_count; j++)
             {
             if (TypedTopicMatch(TypedTopic(rp->item,""),n[j])||TypedTopicMatch(TypedTopic(rp->item,ta->associate_topic_type),n[j]))
@@ -136,7 +143,7 @@ for (i = 0; i < topic_count; i++)
       max_k = k[i];
       }
    
-   Verbose("Topic %d - \"%s\" has degree %d\n",i,n[i],k[i]);
+   CfOut(cf_verbose,"","Topic %d - \"%s\" has degree %d\n",i,n[i],k[i]);
    PrintNeighbours(adj[i],topic_count,n);
    }
 
@@ -146,7 +153,7 @@ for (i = max_k; i >= 0; i--)
       {
       if (k[j] == i)
          {
-         Verbose("  k = %d, %s @ %d\n",k[j],n[j],j);
+         CfOut(cf_verbose,"","  k = %d, %s @ %d\n",k[j],n[j],j);
          }
       }
    }
@@ -158,13 +165,13 @@ evc = (double *)malloc(sizeof(double)*topic_count);
 
 EigenvectorCentrality(adj,evc,topic_count);
 
-Verbose("EVC tops:\n");
+CfOut(cf_verbose,"","EVC tops:\n");
 
 for (i = 0; i < topic_count; i++)
    {
    if (Top(adj,evc,i,topic_count))
       {
-      Verbose("  Topic %d - \"%s\" is an island\n",i,n[i]);      
+      CfOut(cf_verbose,"","  Topic %d - \"%s\" is an island\n",i,n[i]);      
       }
    }
 
@@ -229,7 +236,7 @@ for (i = 0; i < dim; i++)
    {
    if (m[i])
       {
-      Verbose(" - Sub: %s\n",names[i]);
+      CfOut(cf_verbose,""," - Sub: %s\n",names[i]);
       }
    }
 }
@@ -296,14 +303,14 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view)
   Agedge_t **a = NULL;
   GVC_t *gvc;
   int i,j,counter = 0,nearest_neighbours = 0, cadj[CF_TRIBE_SIZE][CF_TRIBE_SIZE];
-  int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE];
+  int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE],tribe_size = 0;
   char ltopic[CF_MAXVARSIZE],ltype[CF_MAXVARSIZE];
   char filenode[CF_MAXVARSIZE];
 
 /* Count the  number of nodes in the solar system, to max
    number based on Dunbar's limit */  
 
-Verbose("Cosmos for %s\n",names[topic]);
+CfOut(cf_verbose,"","Cosmos for %s\n",names[topic]);
 
 if (view)
    {
@@ -354,13 +361,13 @@ agsafeset(t[0], "root", "true", "");
 
 for (j = 1; tribe[j] >= 0; j++)
    {
-   Verbose("Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
+   CfOut(cf_verbose,"","Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
    DeTypeTopic(names[tribe[j]],ltopic,ltype);
 
    if (!KeyInRlist(nodelist,ltopic))
       {
       IdempPrependRScalar(&nodelist,ltopic,CF_SCALAR);
-      Verbose("Multiple nodes with same name will overlap on picture -- to fix later\n");
+      CfOut(cf_verbose,"","Multiple nodes with same name will overlap on picture -- to fix later\n");
       }
 
    t[j] = agnode(g,ltopic);
@@ -387,12 +394,12 @@ counter = 0;
    subgraph associate[] is the node that spawned the link to tribe[],
    find their t[] graph nodes and link them  */
 
-Verbose("Made %d nodes\n",counter);
+CfOut(cf_verbose,"","Made %d nodes\n",counter);
 
 for (i = 1; associate[i] == topic; i++)
    {
    /* The node for tribe member tribe[j] is t[j] */
-   Verbose("Link: %s to %s\n",names[tribe[i]],names[topic]);
+   CfOut(cf_verbose,"","Link: %s to %s\n",names[tribe[i]],names[topic]);
    a[counter] = agedge(g,t[0],t[i]);
    agsafeset(a[counter], "color", "red", "");
    counter++;
@@ -406,7 +413,7 @@ for (i = nearest_neighbours; tribe[i] >= 0; i++)
    {
    for (j = 0; tribe[j] >= 0; j++)
       {
-      Verbose("Link: %s to %s\n",names[tribe[j]],names[tribe[i]]);
+      CfOut(cf_verbose,"","Link: %s to %s\n",names[tribe[j]],names[tribe[i]]);
 
       if (associate[i] == tribe[j])
          {
@@ -417,12 +424,13 @@ for (i = nearest_neighbours; tribe[i] >= 0; i++)
             counter++;
             cadj[i][j]++;
             cadj[j][i]++;
+            tribe_size++;
             }
          }
       }
    }
 
-Verbose("Made %d edges\n",counter);
+CfOut(cf_verbose,"","Made %d edges\n",counter);
 
 agsafeset(g, "truecolor", "true", "");
 agsafeset(g, "bgcolor", "lightgrey", "");
@@ -431,7 +439,11 @@ agsafeset(g, "mode", "major", "");
 
 // circo dot fdp neato nop nop1 nop2 twopi
 gvLayout(gvc, g,"neato");
-gvRenderFilename(gvc,g,"png",filename);
+
+if (tribe_size > 1)
+   {
+   gvRenderFilename(gvc,g,"png",filename);
+   }
 
 gvFreeLayout(gvc, g);
 agclose(g);
@@ -463,7 +475,7 @@ neigh[0] = topic;
 
 counter = 1;
 
-Verbose("Tribe for topic %d = %s\n",topic,n[topic]);
+CfOut(cf_verbose,"","Tribe for topic %d = %s\n",topic,n[topic]);
 
 for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
    {
@@ -474,7 +486,7 @@ for (possible_neighbour = 0; possible_neighbour < dim; possible_neighbour++)
    
    if (adj[topic][possible_neighbour] > 0 || adj[possible_neighbour][topic] > 0)
       {
-      Verbose(" -> %d (%s) is a nearest neighbour of topic (%s)\n",counter,n[possible_neighbour],n[topic]);
+      CfOut(cf_verbose,""," -> %d (%s) is a nearest neighbour of topic (%s)\n",counter,n[possible_neighbour],n[topic]);
       
       tribe[counter] = possible_neighbour;
       neigh[counter] = topic;
@@ -507,7 +519,7 @@ for (j = 0; j < nearest_neighbour_boundary; j++)
 
       if (adj[tribe[j]][possible_neighbour] > 0)
          {
-         Verbose(" -> (%d) %s is in extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
+         CfOut(cf_verbose,""," -> (%d) %s is in extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
          //link t[index] with t[index2 which matches tribe[index2] == neigh[index]]
          
          tribe[counter] = possible_neighbour;
@@ -545,7 +557,7 @@ for (j = nearest_neighbour_boundary; j < counter; j++)
 
       if (adj[tribe[j]][possible_neighbour] > 0)
          {
-         Verbose(" -> (%d) %s is in 3extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
+         CfOut(cf_verbose,""," -> (%d) %s is in 3extended TRIBE of topic %s\n",counter,n[possible_neighbour],n[tribe[j]]);
          
          tribe[counter] = possible_neighbour;
          neigh[counter] = tribe[j];

@@ -1515,7 +1515,7 @@ if (GRAPH)
 #ifdef HAVE_LIBCFNOVA   
    PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
    PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
-   VerifyGraph(TOPIC_MAP,semantics,"depends");
+   VerifyGraph(TOPIC_MAP,semantics,"flow");
 #endif
    }
 

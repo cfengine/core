@@ -679,7 +679,6 @@ struct PromiseIdent *PromiseIdExists(char *handle)
  
 for (key = PROMISE_ID_LIST; key != NULL; key=key->next)
    {
-   printf("%s %s\n",handle,key->handle);
    if (strcmp(handle,key->handle) == 0)
       {
       return key;

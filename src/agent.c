@@ -737,7 +737,7 @@ if (!IsDefinedClass(pp->classes))
    {
    CfOut(cf_verbose,"","\n");
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not valid\n",pp->promiser,pp->classes);
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not relevant\n",pp->promiser,pp->classes);
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
@@ -751,7 +751,7 @@ if (VarClassExcluded(pp,&sp))
    {
    CfOut(cf_verbose,"","\n");
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not valid\n",pp->promiser,sp);
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }

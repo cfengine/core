@@ -134,7 +134,7 @@ if (type != elp_delete)   /* Just parsed all local classes */
    return;
    }
 
-CfOut(cf_verbose,"","     ??  Private class context:\n");
+CfOut(cf_verbose,"","     ??  Private class context\n");
 
 for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
    {
@@ -153,7 +153,7 @@ if (!IsDefinedClass(pp->classes))
    {
    CfOut(cf_verbose,"","\n");
    CfOut(cf_verbose,"","   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-   CfOut(cf_verbose,"","   Skipping whole next edit promise, as context %s is not valid\n",pp->classes);
+   CfOut(cf_verbose,"","   Skipping whole next edit promise, as context %s is not relevant\n",pp->classes);
    CfOut(cf_verbose,"","   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
    return;
    }

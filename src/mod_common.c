@@ -379,6 +379,7 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_STORAGE_SUBTYPES,    /* mod_storage.c */
    CF_REMACCESS_SUBTYPES,  /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
+   CF_MEASUREMENT_SUBTYPES,/* mod_measurement.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

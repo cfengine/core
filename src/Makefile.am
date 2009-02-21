@@ -89,6 +89,7 @@ libpromises_la_SOURCES =						\
 	mod_report.c							\
 	mod_storage.c							\
 	mod_knowledge.c							\
+	mod_measurement.c						\
 	mod_process.c
 
 

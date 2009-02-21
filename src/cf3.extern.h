@@ -179,3 +179,8 @@ extern struct BodySyntax CF_MATCHCLASS_BODY[];
 extern struct BodySyntax CF_PROCFILTER_BODY[];
 extern struct BodySyntax CF_PROCESS_BODIES[];
 #endif
+
+#ifndef CF3_MOD_PROCESS
+extern struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
+extern struct BodySyntax CF_MEASURE_BODIES[];
+#endif

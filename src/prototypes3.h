@@ -974,6 +974,7 @@ void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals);
 void DeleteFromScope(char *scope,struct Rlist *args);
 void PushThisScope(void);
 void PopThisScope(void);
+void ShowScope(char *name);
 
 /* selfdiagnostic.c */
 

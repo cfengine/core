@@ -287,7 +287,7 @@ return false;
 void PreviewProtocolLine(char *line, char *comm)
 
 { int i;
-  int level = cferror;
+  enum cfreport level = cf_error;
   char *message = line;
                
   /*

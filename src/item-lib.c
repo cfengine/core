@@ -164,13 +164,13 @@ void PrependItemList(struct Item **liststart,char *itemstring)
 
 if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
    {
-   CfOut(cferror,"malloc","Memory failure in Prepend");
+   CfOut(cf_error,"malloc","Memory failure in Prepend");
    FatalError("");
    }
 
 if ((ip->name = strdup(itemstring)) == NULL)
    {
-   CfOut(cferror,"malloc","Memory failure in Prepend");
+   CfOut(cf_error,"malloc","Memory failure in Prepend");
    FatalError("");
    }
 

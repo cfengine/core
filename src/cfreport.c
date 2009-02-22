@@ -683,7 +683,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
          {
          if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
             {
-            CfOut(cferror,"db_store","Cannot delete database entry");
+            CfOut(cf_error,"db_store","Cannot delete database entry");
             }
          }
 

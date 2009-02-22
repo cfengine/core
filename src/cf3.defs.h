@@ -894,8 +894,8 @@ struct TransactionContext
    char *log_string;
    char *measure_id;
    int  audit;
-   enum cfoutputlevel report_level;
-   enum cfoutputlevel log_level;
+   enum cfreport report_level;
+   enum cfreport log_level;
    };
 
 /*************************************************************************/

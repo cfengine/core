@@ -568,7 +568,6 @@ void CopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes 
 
 { char *lastnode,*server;
   struct stat dsb;
-  struct Link empty;
   struct Item *ptr, *ptr1;
   int found,succeed = false;
   mode_t srcmode = ssb.st_mode;
@@ -589,9 +588,6 @@ if ((strcmp(sourcefile,destfile) == 0) && (strcmp(server,"localhost") == 0))
    CfOut(cf_inform,""," !! File copy promise loop: file/dir %s is its own source",sourcefile);
    return;
    }
-
-memset(&empty,0,sizeof(struct Link));
-empty.nofile = true;
 
 if (!SelectLeaf(sourcefile,&ssb,attr,pp))
    {

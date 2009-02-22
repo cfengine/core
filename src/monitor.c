@@ -150,6 +150,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKM",OPTIONS,&optindex)) != EOF)
           break;
           
       case 'v': VERBOSE = true;
+          NO_FORK = true;
           break;
           
       case 'F': NO_FORK = true;

@@ -592,7 +592,7 @@ free(pp);
 
 /*****************************************************************************/
 
-void PromiseRef(enum cfoutputlevel level,struct Promise *pp)
+void PromiseRef(enum cfreport level,struct Promise *pp)
 
 { char *v,rettype;
   void *retval;

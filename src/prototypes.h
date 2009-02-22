@@ -57,16 +57,6 @@ struct CFACL *GetACL (char *acl_alias);
 int CheckPosixACE (struct CFACE *aces, char method, char *filename, enum fileactions action);
 
 
-/* package.c */
-int PackageCheck (struct Package *ptr,char *package, enum pkgmgrs pkgmgr, char *version, enum cmpsense cmp);
-int PackageList (struct Package *ptr,char *package, enum pkgmgrs pkgmgr, char *version, enum cmpsense cmp, struct Item **pkglist);
-int UpgradePackage (struct Package *ptr,char *package, enum pkgmgrs pkgmgr, char *version, enum cmpsense cmp);
-int InstallPackage (struct Package *ptr,enum pkgmgrs pkgmgr, struct Item **pkglist);
-int RemovePackage (struct Package *ptr,enum pkgmgrs pkgmgr, struct Item **pkglist);
-void ProcessPendingPackages (struct Package *ptr,enum pkgmgrs pkgmgr, enum pkgactions action, struct Item **pkglist);
-
-
-
 #ifdef HPuUX
 int Error;
 #endif

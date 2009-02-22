@@ -123,7 +123,7 @@ void CompilePromises(void);
 
 /* cfstreams.c */
 
-void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...);
+void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);
 void MakeLog(struct Item *mess,enum cfreport level);
@@ -671,7 +671,6 @@ int DeleteItemMatching (struct Item **list,char *string);
 int DeleteItemNotMatching (struct Item **list,char *string);
 int DeleteItemContaining (struct Item **list,char *string);
 int DeleteItemNotContaining (struct Item **list,char *string);
-int DeleteLinesWithFileItems (struct Item **list,char *string,enum editnames code);
 int OrderedListsMatch(struct Item *list1,struct Item *list2);
 int IsClassedItemIn(struct Item *list,char *item);
 int CompareToFile(struct Item *liststart,char *file);
@@ -893,7 +892,7 @@ struct Promise *CopyPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
 void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
-void PromiseRef(enum cfoutputlevel level,struct Promise *pp);
+void PromiseRef(enum cfreport level,struct Promise *pp);
 struct Promise *NewPromise(char *typename,char *promiser);
 
 /* recursion.c */

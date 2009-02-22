@@ -10,7 +10,7 @@
 
 /*****************************************************************************/
 
-void CfOut(enum cfoutputlevel level,char *errstr,char *fmt, ...)
+void CfOut(enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
   char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE];

@@ -202,7 +202,7 @@ else if (S_ISDIR(statbuf.st_mode))
    CfOut(cf_inform,"","   %s is a directory\n",nodename);
    }
 
-CfOut(cfsilent,"","[%s] has size %ld and full mode %o\n",nodename,(unsigned long)(statbuf.st_size),(unsigned int)(statbuf.st_mode)); 
+CfOut(cf_verbose,"","[%s] has size %ld and full mode %o\n",nodename,(unsigned long)(statbuf.st_size),(unsigned int)(statbuf.st_mode)); 
 return true;
 }
 

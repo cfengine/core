@@ -172,7 +172,10 @@ void HistoryUpdate(struct Averages newvals)
   struct Attributes dummyattr;
   struct CfLock thislock;
   time_t now = time(NULL);
+  char timekey[CF_MAXVARSIZE];
+  static struct Averages shift_value;
 
+#ifdef HAVE_LIBCFNOVA  
 /* We do this only once per hour - this should not be changed */
 
 dummyattr.transaction.ifelapsed = 59;
@@ -181,6 +184,7 @@ thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);
 
 if (thislock.lock == NULL)
    {
+   Nova_UpdateShiftAverage(&shift_value,&newvals);
    return;
    }
 
@@ -209,8 +213,9 @@ LoadSystemConstants();
 
 YieldCurrentLock(thislock);
 
-#ifdef HAVE_LIBCFNOVA
- Nova_HistoryUpdate(newvals);
+snprintf(timekey,CF_MAXVARSIZE-1,"%s_%s_%s_%s",VDAY,VMONTH,VLIFECYCLE,VSHIFT);
+Nova_HistoryUpdate(timekey,newvals);
+Nova_ResetShiftAverage(&shift_value);
 #else
 #endif
 }

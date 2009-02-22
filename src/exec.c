@@ -964,7 +964,7 @@ mail_err:
 
 fclose(fp);
 close(sd); 
-CfOut(cflogonly,"","Cannot mail to %s.", to);
+CfOut(cf_log,"","Cannot mail to %s.", to);
 }
 
 /******************************************************************/

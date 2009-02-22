@@ -40,7 +40,6 @@ int ArchiveToRepository(char *file,struct Attributes attr,struct Promise *pp)
   char node[CF_BUFSIZE];
   struct stat sb, dsb;
   char *sp;
-  struct Image dummy;
   short imagecopy;
 
 if (attr.repository == NULL && VREPOSITORY == NULL)

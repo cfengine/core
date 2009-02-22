@@ -106,7 +106,7 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    return;
    }
 
@@ -116,7 +116,7 @@ if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    dbp->close(dbp,0);
    return;
    }
@@ -190,7 +190,7 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
 
 if ((errno = db_create(&dbp,dbenv,0)) != 0)
    {
-   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    return;
    }
 
@@ -200,7 +200,7 @@ if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
-   CfOut(cferror,"db_open","Couldn't open performance database %s\n",name);
+   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    dbp->close(dbp,0);
    return;
    }

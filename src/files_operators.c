@@ -1911,7 +1911,6 @@ return(gidlist);
 void RotateFiles(char *name,int number)
 
 { int i, fd;
-  struct Image dummy;
   struct stat statbuf;
   char filename[CF_BUFSIZE],vbuff[CF_BUFSIZE];
   struct Attributes attr;

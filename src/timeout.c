@@ -107,7 +107,7 @@ Debug("Job start time set to %s\n",ctime(&tloc));
 
 void AddTimeClass(char *str)
 
-{ int i;
+{ int i,value;
   char buf2[10], buf3[10], buf4[10], buf5[10], buf[10], out[10];
   
 for (i = 0; i < 7; i++)
@@ -128,6 +128,29 @@ sprintf(out,"Hr%s",buf);
 NewClass(out);
 memset(VHR,0,3);
 strncpy(VHR,buf,2); 
+
+/* Shift */
+
+sscanf(buf,"%d",&value);
+
+if (0 <= value && value < 6)
+   {
+   snprintf(VSHIFT,9,"Night");
+   }
+else if (6 <= value && value < 12)
+   {
+   snprintf(VSHIFT,9,"Morning");
+   }
+else if (12 <= value && value < 18)
+   {
+   snprintf(VSHIFT,9,"Afternoon");
+   }
+else if (18 <= value && value < 24)
+   {
+   snprintf(VSHIFT,9,"Evening");
+   }    
+
+NewClass(VSHIFT);
 
 /* Minutes */
 
@@ -213,8 +236,14 @@ for (i = 0; i < 12; i++)
 /* Year */
 
 strcpy(VYEAR,buf5); 
-
 sprintf(out,"Yr%s",buf5);
 NewClass(out);
+
+/* Lifecycle - 3 year cycle */
+
+value = -1;
+sscanf(buf5,"%d",&value);
+snprintf(VLIFECYCLE,10,"Lcycle_%d",(value%3));
+NewClass(VLIFECYCLE);
 }
 

@@ -384,7 +384,7 @@ sscanf(s,"%ld%c%s",&a,&c,remainder);
 
 if (a == CF_NOINT || strlen(remainder) > 0)
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\"\n",s);
    ReportError(output);
    }
 else
@@ -445,7 +445,7 @@ sscanf(s,"%ld:%ld",&h,&m);
 
 if (h == CF_NOINT || m == CF_NOINT)
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value %s\n",s);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed time counter value \"%s\"\n",s);
    ReportError(output);
    }
 else

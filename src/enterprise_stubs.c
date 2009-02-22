@@ -104,7 +104,7 @@ void ShowTopicRepresentation(FILE *fp)
 #ifdef HAVE_LIBCFNOVA
  Nova_ShowTopicRepresentation(fp);
 #else
- CfOut(cf_verbose,"","# This reporting feature is only available in commerical version Nova and above\n");
+ CfOut(cf_verbose,"","# Knowledge map reporting feature is only available in version Nova and above\n");
 #endif
 
  
@@ -163,3 +163,54 @@ for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
 }
 
 /*****************************************************************************/
+/* Monitord                                                                  */
+/*****************************************************************************/
+
+void HistoryUpdate(struct Averages newvals)
+
+{ struct Promise *pp = NewPromise("history_db","the long term memory");
+  struct Attributes dummyattr;
+  struct CfLock thislock;
+  time_t now = time(NULL);
+
+/* We do this only once per hour - this should not be changed */
+
+dummyattr.transaction.ifelapsed = 59;
+
+thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+/* Refresh the class context of the agent */
+DeletePrivateClassContext();
+DeleteEntireHeap();
+DeleteAllScope();
+
+if (!NOHARDCLASSES)
+   {
+   NewScope("sys");
+   NewScope("const");
+   NewScope("match");
+   NewScope("control_monitor");
+   NewScope("control_common");
+   GetNameInfo3();
+   GetInterfaceInfo3();
+   FindV6InterfaceInfo();
+   Get3Environment();
+   OSClasses();
+   SetReferenceTime(true);
+   }
+
+LoadPersistentContext();
+LoadSystemConstants();
+
+YieldCurrentLock(thislock);
+
+#ifdef HAVE_LIBCFNOVA
+ Nova_HistoryUpdate(newvals);
+#else
+#endif
+}

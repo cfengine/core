@@ -280,6 +280,7 @@ void ShowTopicRepresentation(FILE *fp);
 void Nova_ShowTopicRepresentation(FILE *fp);
 void NotePromiseConditionals(struct Promise *pp);
 void DependencyGraph(struct Topic *map);
+void HistoryUpdate(struct Averages newvals);
 
 /* env_context.c */
 
@@ -287,6 +288,7 @@ int Abort(void);
 void KeepClassContextPromise(struct Promise *pp);
 int ContextSanityCheck(struct Attributes a);
 void DeletePrivateClassContext(void);
+void DeleteEntireHeap(void);
 void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy policy);
 void DeletePersistentContext(char *name);
 void LoadPersistentContext(void);

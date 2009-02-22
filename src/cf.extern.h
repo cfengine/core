@@ -109,6 +109,9 @@ extern char VMONTH[];
 extern char VHR[];
 extern char VMINUTE[];
 extern char VSEC[];
+extern char VSHIFT[];
+extern char VLIFECYCLE[];
+
 extern char *ACTIONTEXT[];
 extern char *ACTIONID[];
 extern char *BUILTINS[];

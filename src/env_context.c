@@ -79,6 +79,15 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
 
 /*****************************************************************************/
 
+void DeleteEntireHeap()
+
+{
+DeleteItemList(VHEAP);
+VHEAP = NULL;
+}
+
+/*****************************************************************************/
+
 void DeletePrivateClassContext()
 
 {

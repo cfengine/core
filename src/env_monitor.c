@@ -219,7 +219,7 @@ srand((unsigned int)time(NULL));
 LoadHistogram();
 ConvertDatabase();
 
-/* Look for local sensors */
+/* Look for local sensors - this is unfortunately linux-centric */
 
 if (stat("/proc/acpi/thermal_zone",&statbuf) != -1)
    {
@@ -1687,6 +1687,8 @@ if ((err_no = dbp->put(dbp,NULL,&key,&value,0)) != 0)
    }
  
 dbp->close(dbp,0);
+
+HistoryUpdate(newvals);
 }
 
 /*****************************************************************************/

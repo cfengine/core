@@ -200,6 +200,9 @@ char  VMONTH[4];
 char  VHR[3];
 char  VMINUTE[3];
 char  VSEC[3];
+char  VSHIFT[10];
+char  VLIFECYCLE[12];
+
 char PADCHAR = ' ';
 char PURGE = 'n';
 

@@ -119,7 +119,7 @@ else
    
    if (strlen(VFQNAME) > 0)
       {
-      CfOut(cf_verbose,"","skipidentify was promiseed, so we are trusting and simply announcing the identity as (%s) for this host\n",VFQNAME);
+      CfOut(cf_verbose,"","skipidentify was promised, so we are trusting and simply announcing the identity as (%s) for this host\n",VFQNAME);
       strcat(dnsname,VFQNAME);
       }
    else

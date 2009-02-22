@@ -764,7 +764,9 @@ if (NewPromiseProposals())
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
    Get3Environment();
-
+   OSClasses();
+   SetReferenceTime(true);
+   
    ok = CheckPromises(cf_server);
 
    if (ok)

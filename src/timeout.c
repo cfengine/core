@@ -135,19 +135,19 @@ sscanf(buf,"%d",&value);
 
 if (0 <= value && value < 6)
    {
-   snprintf(VSHIFT,9,"Night");
+   snprintf(VSHIFT,11,"Night");
    }
 else if (6 <= value && value < 12)
    {
-   snprintf(VSHIFT,9,"Morning");
+   snprintf(VSHIFT,11,"Morning");
    }
 else if (12 <= value && value < 18)
    {
-   snprintf(VSHIFT,9,"Afternoon");
+   snprintf(VSHIFT,11,"Afternoon");
    }
 else if (18 <= value && value < 24)
    {
-   snprintf(VSHIFT,9,"Evening");
+   snprintf(VSHIFT,11,"Evening");
    }    
 
 NewClass(VSHIFT);

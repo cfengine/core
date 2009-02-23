@@ -99,7 +99,7 @@ for (tp = map; tp != NULL; tp=tp->next)
       {
       /* Restrict semantics of associativity */
       
-      if (!KeyInRlist(assoc_views,ta->fwd_name))
+      if (assoc_views && !KeyInRlist(assoc_views,ta->fwd_name))
          {
          continue;
          }
@@ -191,6 +191,7 @@ for (i = 0; i < topic_count; i++)
 
 free(adj);
 free(k);
+free(n);
 }
 
 /*************************************************************************/
@@ -299,13 +300,14 @@ void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view)
   struct Occurrence *op;
   struct Rlist *nodelist = NULL;
   Agraph_t *g;
-  Agnode_t **t = NULL;
-  Agedge_t **a = NULL;
+  Agnode_t *t[CF_TRIBE_SIZE];
+  Agedge_t *a[CF_TRIBE_SIZE];
   GVC_t *gvc;
   int i,j,counter = 0,nearest_neighbours = 0, cadj[CF_TRIBE_SIZE][CF_TRIBE_SIZE];
   int tribe[CF_TRIBE_SIZE],associate[CF_TRIBE_SIZE],tribe_size = 0;
   char ltopic[CF_MAXVARSIZE],ltype[CF_MAXVARSIZE];
   char filenode[CF_MAXVARSIZE];
+  struct stat sb;
 
 /* Count the  number of nodes in the solar system, to max
    number based on Dunbar's limit */  
@@ -331,13 +333,16 @@ else
    strcpy(filename,filenode);
    }
 
+if (stat(filename,&sb) != -1)
+   {
+   CfOut(cf_inform,"","Graph %s already exists, delete to refresh\n",filename);
+   return;
+   }
+
 GetTribe(tribe,names,associate,topic,adj,dim);
 
 gvc = gvContext();
 g = agopen("g",AGDIGRAPH);
-
-t = (Agnode_t **)malloc(sizeof(Agnode_t)*(CF_TRIBE_SIZE+2));
-a = (Agedge_t **)malloc(sizeof(Agedge_t)*(CF_TRIBE_SIZE+2));
 
 for (i = 0; i < CF_TRIBE_SIZE; i++)
    {
@@ -444,13 +449,15 @@ if (tribe_size > 1)
    {
    gvRenderFilename(gvc,g,"png",filename);
    }
+else
+   {
+   CfOut(cf_error,"","Warning: Tribe size of %d is too small to make sensible graph\n",tribe_size);
+   }
 
 gvFreeLayout(gvc, g);
 agclose(g);
 gvFreeContext(gvc);
 CfOut(cf_inform,"","Generated topic locale %s\n",filename);
-free(t);
-free(a);
 DeleteRlist(nodelist);
 }
 

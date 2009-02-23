@@ -1507,7 +1507,6 @@ void GenerateGraph()
 #ifdef HAVE_LIBGVC
 struct Rlist *semantics = NULL;
 
-
 if (GRAPH)
    {
    VerifyGraph(TOPIC_MAP,NULL,NULL);

@@ -277,7 +277,7 @@ if (ptr == NULL)
    FatalError("No such scope");
    }
  
-if (ptr->hashtable[slot])
+while (ptr->hashtable[slot])
    {
    Debug("Hash table Collision! - slot %d = (%s|%s)\n",slot,lval,ptr->hashtable[slot]->lval);
 
@@ -308,36 +308,15 @@ if (ptr->hashtable[slot])
       {
       Debug("Recover from collision\n");
 
-      while ((ptr->hashtable[++slot % CF_HASHTABLESIZE] != 0))
+      if (++slot >= CF_HASHTABLESIZE-1)
          {
-         if (slot >= CF_HASHTABLESIZE-1)
-            {
-            slot = 0;
-            }
-         
-         if (slot == GetHash(lval))
-            {
-            FatalError("AddVariableValue - internal error #1");
-            }
-         
-         if (CompareVariable(lval,ptr->hashtable[slot]) == 0)
-            {
-            CfOut(cf_error,"","Duplicate selection of hashed value for %s (broken promise)",lval);
-            DeleteAssoc(ptr->hashtable[slot]);
-            break;
-            }
+         slot = 0;
          }
       }
-
-   ptr->hashtable[slot] = ap;   
-   Debug("Added Variable %s at hash address %d in scope %s with value (omitted)\n",lval,slot,scope);
-   }
-else
-   {
-   ptr->hashtable[slot] = ap;   
-   Debug("Added Variable %s at hash address %d in scope %s with value (omitted)\n",lval,slot,scope);
    }
 
+ptr->hashtable[slot] = ap;   
+Debug("Added Variable %s at hash address %d in scope %s with value (omitted)\n",lval,slot,scope);
 return true;
 }
 

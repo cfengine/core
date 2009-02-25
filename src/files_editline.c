@@ -603,7 +603,7 @@ if (start == NULL)
    return false;
    }
   
-for (ip = *start; ip != NULL; ip = ip->next)
+for (ip = *start; ip != NULL; ip = np)
    {
    if (ip == begin)
       {
@@ -612,9 +612,10 @@ for (ip = *start; ip != NULL; ip = ip->next)
 
    if (!in_region)
       {
+      np = ip->next;
       continue;
       }
-   
+
    if (a.not_matching)
       {
       match = !FullTextMatch(pp->promiser,ip->name);
@@ -629,6 +630,7 @@ for (ip = *start; ip != NULL; ip = ip->next)
       if (DONTDO || a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_WARN,"",pp,a," -> Need to delete line \"%s\" from %s - but only a warning was promised",ip->name,pp->this_server);
+         np = ip->next;
          }
       else
          {
@@ -641,6 +643,8 @@ for (ip = *start; ip != NULL; ip = ip->next)
             }
          
          np = ip->next;
+         free((char *)ip);
+         
          lp = ip;
          
          if (ip == *start)
@@ -662,11 +666,12 @@ for (ip = *start; ip != NULL; ip = ip->next)
             break;
             }
          
-         free((char *)ip);
          (pp->edcontext->num_edits)++;
-         /* Make sure loop continues from same place */
-         ip = lp;
          }
+      }
+   else
+      {
+      np = ip->next;
       }
 
    if (ip == end)

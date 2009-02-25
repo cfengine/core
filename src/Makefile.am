@@ -120,6 +120,7 @@ cf_serverd_SOURCES =							\
 	server_transform.c
 
 cf_monitord_SOURCES =							\
+	verify_measurements.c						\
 	env_monitor.c							\
 	monitor.c
 

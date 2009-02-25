@@ -200,7 +200,7 @@ snprintf(key,CF_BUFSIZE-1,"%lf",keyval);
 
 if (DEBUG)
    {
-   AuditStatusMessage(status);
+   AuditStatusMessage(stdout,status);
    }
 
 if (ap != NULL)
@@ -385,49 +385,49 @@ exit(1);
 
 /*****************************************************************************/
 
-void AuditStatusMessage(char status)
+void AuditStatusMessage(FILE *fp,char status)
 
 {
 switch (status) /* Reminder */
    {
    case CF_CHG:
-       printf("made a system correction\n");
+       fprintf(fp,"made a system correction");
        break;
        
    case CF_WARN:
-       printf("promise not kept, no action taken");
+       fprintf(fp,"promise not kept, no action taken");
        break;
        
    case CF_TIMEX:
-       printf("timed out\n");
+       fprintf(fp,"timed out");
        break;
 
    case CF_FAIL:
-       printf("failed to make a correction\n");
+       fprintf(fp,"failed to make a correction");
        break;
        
    case CF_DENIED:
-       printf("was denied access to an essential resource\n");
+       fprintf(fp,"was denied access to an essential resource");
        break;
        
    case CF_INTERPT:
-       printf("was interrupted\n");
+       fprintf(fp,"was interrupted\n");
        break;
 
    case CF_REGULAR:
-       printf("was a regular (repeatable) maintenance task");
+       fprintf(fp,"was a regular (repeatable) maintenance task");
        break;
        
    case CF_NOP:
-       printf("was applied but performed no required actions\n");
+       fprintf(fp,"was applied but performed no required actions");
        break;
 
    case CF_UNKNOWN:
-       printf("was applied but status unknown\n");
+       fprintf(fp,"was applied but status unknown");
        break;
 
    case CF_REPORT:
-       printf("report\n");
+       fprintf(fp,"report");
        break;
    }
 

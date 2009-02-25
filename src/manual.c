@@ -95,7 +95,8 @@ for (i = 0; i < CF3_MODULES; i++)
    {
    st = (CF_ALL_SUBTYPES[i]);
 
-   if (st == CF_COMMON_SUBTYPES || st == CF_EXEC_SUBTYPES || st == CF_REMACCESS_SUBTYPES || st == CF_KNOWLEDGE_SUBTYPES)
+   if (st == CF_COMMON_SUBTYPES || st == CF_EXEC_SUBTYPES || st == CF_REMACCESS_SUBTYPES || st == CF_KNOWLEDGE_SUBTYPES || st == CF_MEASUREMENT_SUBTYPES)
+       
       {
       CfOut(cf_verbose,"","Dealing with chapter / bundle type %s\n",st->btype);
       fprintf(fout,"@c *****************************************************\n");

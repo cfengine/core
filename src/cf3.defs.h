@@ -359,6 +359,7 @@ enum cfrecontrol
    cfre_stylesheet,
    cfre_htmlbanner,
    cfre_htmlfooter,
+   cfre_html_embed,
    cfre_notype
    };
 

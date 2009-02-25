@@ -12,8 +12,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
-  
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -28,7 +27,6 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-#include "cf3.server.h"
 
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>
@@ -126,7 +124,8 @@ void GatherDiskData (void);
 void GatherLoadData (void);
 void GatherSocketData (void);
 void GatherSensorData(void);
-    
+void GatherPromisedMeasures(void);
+
 void LeapDetection (void);
 struct Averages *GetCurrentAverages (char *timekey);
 void UpdateAverages (char *timekey, struct Averages newvals);
@@ -144,9 +143,9 @@ void IncrementCounter (struct Item **list,char *name);
 void SaveTCPEntropyData (struct Item *list,int i, char *inout);
 void ConvertDatabase(void);
 int GetFileGrowth(char *filename,enum observables index);
-
 int GetAcpi(void);
 int GetLMSensors(void);
+void KeepMonitorPromise(struct Promise *pp);
 
 /****************************************************************/
 
@@ -665,6 +664,7 @@ GatherLoadData();
 GatherDiskData();
 GatherSocketData();
 GatherSensorData();
+GatherPromisedMeasures();
 }
 
 /*********************************************************************/
@@ -2238,6 +2238,33 @@ void GatherSensorData()
 
 /******************************************************************************/
 
+void GatherPromisedMeasures()
+
+{ struct Bundle *bp;
+  struct SubType *sp;
+  struct Promise *pp;
+  char *scope;
+  
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   scope = bp->name;
+   SetNewScope(bp->name);
+
+   if ((strcmp(bp->type,CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
+      {
+      for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
+         {
+         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+            {
+            ExpandPromise(cf_monitor,scope,pp,KeepMonitorPromise);
+            }
+         }
+      }
+   }
+}
+
+/******************************************************************************/
+
 int GetAcpi()
 
 { DIR *dirh;
@@ -2512,7 +2539,43 @@ for (ip = list; ip != NULL; ip=ip->next)
 return count; 
 }
 
+/*********************************************************************/
+/* Level                                                             */
+/*********************************************************************/
 
+void KeepMonitorPromise(struct Promise *pp)
 
+{ char *sp = NULL;
+ 
+if (!IsDefinedClass(pp->classes))
+   {
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not relevant\n",pp->promiser,pp->classes);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   return;
+   }
+ 
+if (VarClassExcluded(pp,&sp))
+   {
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   return;
+   }
+
+if (strcmp("classes",pp->agentsubtype) == 0)
+   {
+   KeepClassContextPromise(pp);
+   return;
+   }
+
+if (strcmp("measurements",pp->agentsubtype) == 0)
+   {
+   VerifyMeasurementPromise(pp);
+   return;
+   }
+}
 
 

@@ -288,8 +288,8 @@ struct BodySyntax CFK_CONTROLBODY[] =
 
 struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {
-   {"reports",cf_olist,"audit,performance,all_locks,active_locks,hashes,classes,last_seen,monitor_now,monitor_history","A list of reports to generate"},
-   {"report_output",cf_opts,"html,text,xml","Menu option for generated output format"},
+   {"reports",cf_olist,"audit,performance,all_locks,active_locks,hashes,classes,last_seen,monitor_now,monitor_history,monitor_summary,compliance,setuid,file_changes","A list of reports to generate"},
+   {"report_output",cf_opts,"csv,html,text,xml","Menu option for generated output format. Applies only to text reports, graph data remain in xydy format."},
    {"build_directory",cf_str,".*","The directory in which to generate output files"},
    {"auto_scaling",cf_opts,CF_BOOL,"true/false whether to auto-scale graph output to optimize use of space"},
    {"error_bars",cf_opts,CF_BOOL,"true/false whether to generate error bars on graph output"},
@@ -298,6 +298,7 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
    {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
    {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
+   {"html_embed",cf_opts,CF_BOOL,"If false, no header and footer tags will be added to html output"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -219,3 +219,41 @@ Nova_ResetShiftAverage(&shift_value);
 #else
 #endif
 }
+
+/*****************************************************************************/
+/* Reporting                                                                 */
+/*****************************************************************************/
+
+void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SummarizeCompliance(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+ CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SummarizeFileChanges(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+ CfOut(cf_verbose,"","# File change reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SummarizeSetuid(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+ CfOut(cf_verbose,"","# Setuid reporting feature is only available in version Nova and above\n");
+#endif
+}

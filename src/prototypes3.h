@@ -260,7 +260,6 @@ void SavePublicKey (char *ipaddress, RSA *key);
 void DeletePublicKey (char *ipaddress);
 void GenerateRandomSessionKey (void);
 char *KeyPrint(RSA *key);
-    
 
 /* dtypes.c */
 
@@ -281,6 +280,9 @@ void Nova_ShowTopicRepresentation(FILE *fp);
 void NotePromiseConditionals(struct Promise *pp);
 void DependencyGraph(struct Topic *map);
 void HistoryUpdate(struct Averages newvals);
+void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 
 /* env_context.c */
 
@@ -754,7 +756,7 @@ void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void ExtractOperationLock(char *op);
 void PromiseLog(char *s);
 void FatalError(char *s);
-void AuditStatusMessage(char status);
+void AuditStatusMessage(FILE*fp,char status);
 
 /* manual.c */
 
@@ -1119,6 +1121,10 @@ int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
 
 void VerifyInterface(struct Attributes a,struct Promise *pp);
 void VerifyInterfacesPromise(struct Promise *pp);
+
+/* verify_measurements.c */
+
+void VerifyMeasurementPromise(struct Promise *pp);
 
 /* verify_methods.c */
 

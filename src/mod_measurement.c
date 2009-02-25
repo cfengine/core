@@ -74,7 +74,7 @@ struct BodySyntax CF_MEASURE_BODIES[] =
    {
    {"object_type",cf_opts,"pipe,file","The datatype being collected."},
    {"data_type",cf_opts,"count,integer,real,string","The datatype being collected."},
-   {"history_type",cf_opts,CF_PATHRANGE,"weekly,none"},
+   {"history_type",cf_opts,"weekly,none","Whether the data can be seen as a time-series or just an isolated value"},
    {"match_value",cf_body,CF_MATCHVALUE_BODY,"Criteria for extracting the measurement from a datastream"},
    {NULL,cf_notype,NULL,NULL}
    };

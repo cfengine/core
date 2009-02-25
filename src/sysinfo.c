@@ -401,10 +401,6 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
    
    CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
    
-   /* Chun Tian (binghe) <binghe.lisp@gmail.com>:
-      use a last_name to detect whether current address is a interface's first address:
-      if current ifr_name = last_name, it's not the first address of current interface. */
-
    if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
       {
       first_address = false;
@@ -469,8 +465,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
          if (!ipdefault)
             {
             ipdefault = true;
-            strcpy(ip,"ipv4_");
-            strcat(ip,inet_ntoa(sin->sin_addr));
+            strncpy(ip,"ipv4_",CF_MAXVARSIZE);
+            strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
             NewClass(CanonifyName(ip));
             NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
             strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));

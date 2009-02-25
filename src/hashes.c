@@ -310,7 +310,7 @@ if (ptr->hashtable[slot])
 
       while ((ptr->hashtable[++slot % CF_HASHTABLESIZE] != 0))
          {
-         if (slot == CF_HASHTABLESIZE-1)
+         if (slot >= CF_HASHTABLESIZE-1)
             {
             slot = 0;
             }

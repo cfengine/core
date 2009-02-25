@@ -37,6 +37,7 @@ extern void CheckOpts(int argc,char **argv);
 void GenericInitialize(int argc,char **argv,char *agents)
 
 { enum cfagenttype ag = Agent2Type(agents);
+ char vbuff[CF_BUFSIZE];
   int ok;
 
 InitializeGA(argc,argv);
@@ -58,8 +59,11 @@ if (!NOHARDCLASSES)
 
 LoadPersistentContext();
 LoadSystemConstants();
+
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
 THIS_AGENT_TYPE = ag;
+snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
+SetNewScope(vbuff);
 
 NewScope("this");
 
@@ -338,9 +342,6 @@ DetermineCfenginePort();
 
 VIFELAPSED = 1;
 VEXPIREAFTER = 1;
-
-snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
-SetNewScope(vbuff);
 
 setlinebuf(stdout);
 }

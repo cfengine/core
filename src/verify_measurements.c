@@ -29,6 +29,9 @@
 
 void VerifyMeasurementPromise(struct Promise *pp)
 
-{
- PromiseBanner(pp);
+{ struct Attributes a;
+ 
+PromiseBanner(pp);
+
+//a = GetMeasurementAttributes(pp);
 }

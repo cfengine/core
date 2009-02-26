@@ -745,7 +745,12 @@ void BannerBundle(struct Bundle *bp,struct Rlist *params)
 {
 CfOut(cf_verbose,"","\n");
 CfOut(cf_verbose,"","*****************************************************************\n");
-CfOut(cf_verbose,""," BUNDLE %s",bp->name);
+
+if (VERBOSE || DEBUG)
+   {
+   printf("%s BUNDLE %s",VPREFIX,bp->name);
+   }
+
 if (params && (VERBOSE||DEBUG))
    {
    printf("(");
@@ -756,6 +761,7 @@ else
    {
    if (VERBOSE||DEBUG) printf("\n");
    }
+
 CfOut(cf_verbose,"","*****************************************************************\n");
 CfOut(cf_verbose,"","\n");
 }
@@ -767,7 +773,12 @@ void BannerSubBundle(struct Bundle *bp,struct Rlist *params)
 {
 CfOut(cf_verbose,"","\n");
 CfOut(cf_verbose,"","      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-CfOut(cf_verbose,"","       BUNDLE %s",bp->name);
+
+if (VERBOSE || DEBUG)
+   {
+   printf("       BUNDLE %s",bp->name);
+   }
+
 if (params && (VERBOSE||DEBUG))
    {
    printf("(");
@@ -790,7 +801,10 @@ void PromiseBanner(struct Promise *pp)
 CfOut(cf_verbose,"","\n");
 CfOut(cf_verbose,"","    .........................................................\n");
 
-CfOut(cf_verbose,"","    Promise by: %s",pp->promiser);
+if (VERBOSE||DEBUG)
+   {
+   printf ("%s     Promise by: %s",VPREFIX,pp->promiser);
+   }
 
 if (pp->promisee)
    {

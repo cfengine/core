@@ -148,8 +148,6 @@ if (ag == cf_keygen)
 Cf3ParseFiles();
 OpenReports(agents);
 
-HashVariables();
-HashControls();
 SetAuditVersion();
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
@@ -1073,6 +1071,12 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          {
          CheckVariablePromises(bp->name,sp->promiselist);
          }
+
+      // Should we also set global classes here?
+      if (strcmp(bp->type,"common") == 0&&  strcmp(sp->name,"classes") == 0)
+         {
+         CheckCommonClassPromises(sp->promiselist);
+         }
       }
 
    CheckBundleParameters(bp->name,bp->args);
@@ -1200,6 +1204,10 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       }
    }
 
+
+HashVariables();
+HashControls();
+
 /* Now look once through the sequences bundles themselves */
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
@@ -1212,7 +1220,6 @@ if (rettype != CF_LIST)
    {
    FatalError("Promised bundlesequence was not a list");
    }
-
 
 if (agent != cf_agent)
    {
@@ -1298,6 +1305,20 @@ Debug("CheckVariablePromises()\n");
 for (pp = varlist; pp != NULL; pp=pp->next)
    {
    ConvergeVarHashPromise(scope,pp,allow_redefine);
+   }
+}
+
+/*******************************************************************/
+
+void CheckCommonClassPromises(struct Promise *classlist)
+
+{ struct Promise *pp;
+
+Debug("CheckCommonClassPromises()\n");
+  
+for (pp = classlist; pp != NULL; pp=pp->next)
+   {
+   KeepClassContextPromise(pp);
    }
 }
 

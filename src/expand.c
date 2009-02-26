@@ -866,12 +866,12 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
   int i = 0,ok_redefine = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
 
-if (IsExcluded(pp->classes))
+if (pp->done)
    {
    return;
    }
 
-if (pp->done)
+if (IsExcluded(pp->classes))
    {
    return;
    }
@@ -940,6 +940,14 @@ if (rval != NULL)
       {
       CfOut(cf_error,"","Variable \"%s\" contains itself indirectly - an unkeepable promise",pp->promiser);
       exit(1);
+      }
+   else
+      {
+      /* See if the variable needs recursively expanding again */
+      returnval = EvaluateFinalRval(scope,rval,cp->type,false,pp);
+      DeleteRvalItem(cp->rval,cp->type);
+      cp->rval = rval = returnval.item;
+      cp->type = returnval.rtype;
       }
 
    if (ok_redefine) /* only on second iteration, else we ignore broken promises */

@@ -159,6 +159,7 @@ char *CF_DATATYPES[] = /* see enum cfdatatype */
    "clist",
    "irange [int,int]",
    "rrange [real,real]",
+   "counter",
    "<notype>",
    };
 

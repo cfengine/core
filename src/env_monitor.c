@@ -141,7 +141,6 @@ void ZeroArrivals (void);
 void CfenvTimeOut (void);
 void IncrementCounter (struct Item **list,char *name);
 void SaveTCPEntropyData (struct Item *list,int i, char *inout);
-void ConvertDatabase(void);
 int GetFileGrowth(char *filename,enum observables index);
 int GetAcpi(void);
 int GetLMSensors(void);
@@ -216,7 +215,6 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 srand((unsigned int)time(NULL)); 
 LoadHistogram();
-ConvertDatabase();
 
 /* Look for local sensors - this is unfortunately linux-centric */
 
@@ -404,176 +402,6 @@ alarm(0);
 TCPPAUSE = true;
 CfOut(cf_verbose,"","Time out\n");
 }
-
-/*********************************************************************/
-
-void ConvertDatabase()
-
-/* 2.1.11 introduces a new db format - this converts */
-    
-{ struct stat statbuf;
- char filename[CF_BUFSIZE],new[CF_BUFSIZE],timekey[CF_BUFSIZE];
- int i,errno,now;
-  DBT key,value;
-  DB *dbp;
-  static struct OldAverages oldentry;
-  static struct Averages newentry;
-    
-snprintf(filename,CF_BUFSIZE-1,"%s/state/%s",CFWORKDIR,CF_OLDAVDB_FILE);
-snprintf(new,CF_BUFSIZE-1,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
-
-if (stat(new,&statbuf) != -1)
-   {
-   return;
-   }
-
-if (stat(filename,&statbuf) == -1)
-   {
-   return;
-   }
-
-printf("Found old database %s\n",filename);
-  
-if ((errno = db_create(&dbp,NULL,0)) != 0)
-   {
-   printf("Couldn't create average database %s\n",filename);
-   exit(1);
-   }
-
-#ifdef CF_OLD_DB 
-if ((errno = (dbp->open)(dbp,filename,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,filename,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
-#endif
-   {
-   printf("Couldn't open average database %s\n",filename);
-   dbp->err(dbp,errno,NULL);
-   exit(1);
-   }
-
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
-
-for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
-   {
-   memset(&key,0,sizeof(key));       
-   memset(&value,0,sizeof(value));
-   memset(&oldentry,0,sizeof(oldentry));
-   memset(&newentry,0,sizeof(newentry));
-
-   strcpy(timekey,GenTimeKey(now));
-
-   key.data = timekey;
-   key.size = strlen(timekey)+1;
-   
-   if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
-      {
-      if (errno != DB_NOTFOUND)
-         {
-         dbp->err(dbp,errno,NULL);
-         exit(1);
-         }
-      }
-   
-   if (value.data != NULL)
-      {
-      memcpy(&oldentry,value.data,sizeof(oldentry));
-
-      newentry.Q[ob_users].expect = oldentry.expect_number_of_users;
-      newentry.Q[ob_rootprocs].expect = oldentry.expect_rootprocs;
-      newentry.Q[ob_otherprocs].expect = oldentry.expect_otherprocs;
-      newentry.Q[ob_diskfree].expect = oldentry.expect_diskfree;
-      newentry.Q[ob_loadavg].expect = oldentry.expect_loadavg;
-      newentry.Q[ob_rootprocs].expect = oldentry.expect_rootprocs;
-      newentry.Q[ob_netbiosns_in].expect = oldentry.expect_incoming[0];
-      newentry.Q[ob_netbiosns_out].expect = oldentry.expect_outgoing[0];
-      newentry.Q[ob_netbiosdgm_in].expect = oldentry.expect_incoming[1];
-      newentry.Q[ob_netbiosdgm_out].expect = oldentry.expect_outgoing[1];
-      newentry.Q[ob_netbiosssn_in].expect = oldentry.expect_incoming[2];
-      newentry.Q[ob_netbiosssn_out].expect = oldentry.expect_outgoing[2];
-      newentry.Q[ob_irc_in].expect = oldentry.expect_incoming[3];
-      newentry.Q[ob_irc_out].expect = oldentry.expect_outgoing[3];
-      newentry.Q[ob_cfengine_in].expect = oldentry.expect_incoming[4];
-      newentry.Q[ob_cfengine_out].expect = oldentry.expect_outgoing[4];
-      newentry.Q[ob_nfsd_in].expect = oldentry.expect_incoming[5];
-      newentry.Q[ob_nfsd_out].expect = oldentry.expect_outgoing[5];
-      newentry.Q[ob_smtp_in].expect = oldentry.expect_incoming[6];
-      newentry.Q[ob_smtp_out].expect = oldentry.expect_outgoing[6];
-      newentry.Q[ob_www_in].expect = oldentry.expect_incoming[7];
-      newentry.Q[ob_www_out].expect = oldentry.expect_outgoing[7];
-      newentry.Q[ob_ftp_in].expect = oldentry.expect_incoming[8];
-      newentry.Q[ob_ftp_out].expect = oldentry.expect_outgoing[8];
-      newentry.Q[ob_ssh_in].expect = oldentry.expect_incoming[9];
-      newentry.Q[ob_ssh_out].expect = oldentry.expect_outgoing[9];
-      newentry.Q[ob_wwws_in].expect = oldentry.expect_incoming[10];
-      newentry.Q[ob_wwws_out].expect = oldentry.expect_outgoing[10];
-      newentry.Q[ob_icmp_in].expect = oldentry.expect_incoming[11];
-      newentry.Q[ob_icmp_out].expect = oldentry.expect_outgoing[11];
-      newentry.Q[ob_udp_in].expect = oldentry.expect_incoming[12];
-      newentry.Q[ob_udp_out].expect = oldentry.expect_outgoing[12];
-      newentry.Q[ob_dns_in].expect = oldentry.expect_incoming[13];
-      newentry.Q[ob_dns_out].expect = oldentry.expect_outgoing[13];
-      newentry.Q[ob_tcpsyn_in].expect = oldentry.expect_incoming[14];
-      newentry.Q[ob_tcpsyn_out].expect = oldentry.expect_outgoing[14];
-      newentry.Q[ob_tcpack_in].expect = oldentry.expect_incoming[15];
-      newentry.Q[ob_tcpack_out].expect = oldentry.expect_outgoing[15];
-      newentry.Q[ob_tcpfin_in].expect = oldentry.expect_incoming[16];
-      newentry.Q[ob_tcpfin_out].expect = oldentry.expect_outgoing[16];
-      newentry.Q[ob_tcpmisc_in].expect = oldentry.expect_incoming[17];
-      newentry.Q[ob_tcpmisc_out].expect = oldentry.expect_outgoing[17];
-
-      newentry.Q[ob_users].var = oldentry.var_number_of_users;
-      newentry.Q[ob_rootprocs].var = oldentry.var_rootprocs;
-      newentry.Q[ob_otherprocs].var = oldentry.var_otherprocs;
-      newentry.Q[ob_diskfree].var = oldentry.var_diskfree;
-      newentry.Q[ob_loadavg].var = oldentry.var_loadavg;
-      newentry.Q[ob_rootprocs].var = oldentry.var_rootprocs;
-      newentry.Q[ob_netbiosns_in].var = oldentry.var_incoming[0];
-      newentry.Q[ob_netbiosns_out].var = oldentry.var_outgoing[0];
-      newentry.Q[ob_netbiosdgm_in].var = oldentry.var_incoming[1];
-      newentry.Q[ob_netbiosdgm_out].var = oldentry.var_outgoing[1];
-      newentry.Q[ob_netbiosssn_in].var = oldentry.var_incoming[2];
-      newentry.Q[ob_netbiosssn_out].var = oldentry.var_outgoing[2];
-      newentry.Q[ob_irc_in].var = oldentry.var_incoming[3];
-      newentry.Q[ob_irc_out].var = oldentry.var_outgoing[3];
-      newentry.Q[ob_cfengine_in].var = oldentry.var_incoming[4];
-      newentry.Q[ob_cfengine_out].var = oldentry.var_outgoing[4];
-      newentry.Q[ob_nfsd_in].var = oldentry.var_incoming[5];
-      newentry.Q[ob_nfsd_out].var = oldentry.var_outgoing[5];
-      newentry.Q[ob_smtp_in].var = oldentry.var_incoming[6];
-      newentry.Q[ob_smtp_out].var = oldentry.var_outgoing[6];
-      newentry.Q[ob_www_in].var = oldentry.var_incoming[7];
-      newentry.Q[ob_www_out].var = oldentry.var_outgoing[7];
-      newentry.Q[ob_ftp_in].var = oldentry.var_incoming[8];
-      newentry.Q[ob_ftp_out].var = oldentry.var_outgoing[8];
-      newentry.Q[ob_ssh_in].var = oldentry.var_incoming[9];
-      newentry.Q[ob_ssh_out].var = oldentry.var_outgoing[9];
-      newentry.Q[ob_wwws_in].var = oldentry.var_incoming[10];
-      newentry.Q[ob_wwws_out].var = oldentry.var_outgoing[10];
-      newentry.Q[ob_icmp_in].var = oldentry.var_incoming[11];
-      newentry.Q[ob_icmp_out].var = oldentry.var_outgoing[11];
-      newentry.Q[ob_udp_in].var = oldentry.var_incoming[12];
-      newentry.Q[ob_udp_out].var = oldentry.var_outgoing[12];
-      newentry.Q[ob_dns_in].var = oldentry.var_incoming[13];
-      newentry.Q[ob_dns_out].var = oldentry.var_outgoing[13];
-      newentry.Q[ob_tcpsyn_in].var = oldentry.var_incoming[14];
-      newentry.Q[ob_tcpsyn_out].var = oldentry.var_outgoing[14];
-      newentry.Q[ob_tcpack_in].var = oldentry.var_incoming[15];
-      newentry.Q[ob_tcpack_out].var = oldentry.var_outgoing[15];
-      newentry.Q[ob_tcpfin_in].var = oldentry.var_incoming[16];
-      newentry.Q[ob_tcpfin_out].var = oldentry.var_outgoing[16];
-      newentry.Q[ob_tcpmisc_in].var = oldentry.var_incoming[17];
-      newentry.Q[ob_tcpmisc_out].var = oldentry.var_outgoing[17];
-
-      UpdateAverages(timekey,newentry);
-      }
-   }
- 
-dbp->close(dbp,0);
-unlink(filename);
-printf("Converted and removed old database\n");
-}
-
 
 /*********************************************************************/
 

@@ -680,6 +680,60 @@ return(gidlist);
 }
 
 /*********************************************************************/
+
+enum cf_acl_method Str2AclMethod(char *string)
+
+{ static char *text[3] = { "append", "overwrite", NULL };
+  int i;
+ 
+for (i = 0; i < 3; i++)
+   {
+   if (strcmp(text[i],string) == 0)
+      {
+      return i;
+      }
+   }
+
+return cfacl_nomethod;
+}
+
+/*********************************************************************/
+
+enum cf_acl_type Str2AclType(char *string)
+
+{ static char *text[3] = { "posix", "ntfs", NULL };
+  int i;
+ 
+for (i = 0; i < 3; i++)
+   {
+   if (strcmp(text[i],string) == 0)
+      {
+      return i;
+      }
+   }
+
+return cfacl_notype;
+}
+
+/*********************************************************************/
+
+enum cf_acl_inherit Str2AclInherit(char *string)
+
+{ static char *text[3] = { "default", "parent", NULL };
+  int i;
+ 
+for (i = 0; i < 3; i++)
+   {
+   if (strcmp(text[i],string) == 0)
+      {
+      return i;
+      }
+   }
+
+return cfacl_noinherit;
+}
+
+/*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
 

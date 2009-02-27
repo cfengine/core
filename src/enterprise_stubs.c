@@ -257,3 +257,17 @@ void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *h
  CfOut(cf_verbose,"","# Setuid reporting feature is only available in version Nova and above\n");
 #endif
 }
+
+/*****************************************************************************/
+/* Montoring                                                                 */
+/*****************************************************************************/
+
+void VerifyMeasurement(struct Attributes a,struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_VerifyMeasurement(a,pp);
+#else
+ CfOut(cf_verbose,"","# Custom monitoring feature is only available in version Nova and above\n");
+#endif
+}

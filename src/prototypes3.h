@@ -78,7 +78,8 @@ struct Attributes GetClassContextAttributes(struct Promise *pp);
 struct Attributes GetTopicsAttributes(struct Promise *pp);
 struct Attributes GetOccurrenceAttributes(struct Promise *pp);
 struct Attributes GetPackageAttributes(struct Promise *pp);
-
+struct Attributes GetMeasurementAttributes(struct Promise *pp);
+    
 struct Packages GetPackageConstraints(struct Promise *pp);
 struct ExecContain GetExecContainConstraints(struct Promise *pp);
 struct Recursion GetRecursionConstraints(struct Promise *pp);
@@ -112,6 +113,7 @@ struct CfTcpIp GetTCPIPAttributes(struct Promise *pp);
 struct Report GetReportConstraints(struct Promise *pp);
 struct LineSelect GetInsertSelectConstraints(struct Promise *pp);
 struct LineSelect GetDeleteSelectConstraints(struct Promise *pp);
+struct Measurement GetMeasurementConstraint(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -246,6 +248,9 @@ int Day2Number(char *datestring);
 enum action_policy Str2ActionPolicy(char *s);
 enum version_cmp Str2PackageSelect(char *s);
 enum package_actions Str2PackageAction(char *s);
+enum cf_acl_method Str2AclMethod(char *string);
+enum cf_acl_type Str2AclType(char *string);
+enum cf_acl_inherit Str2AclInherit(char *string);
 
 /* crypto.c */
 
@@ -283,6 +288,7 @@ void HistoryUpdate(struct Averages newvals);
 void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void VerifyMeasurement(struct Attributes a,struct Promise *pp);
 
 /* env_context.c */
 
@@ -604,6 +610,7 @@ struct Bundle *GetBundle(char *name,char *agent);
 struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
 void CheckVariablePromises(char *scope,struct Promise *varlist);
+void CheckCommonClassPromises(struct Promise *classlist);
 void CheckBundleParameters(char *scope,struct Rlist *args);
 void PromiseBanner(struct Promise *pp);
 void BannerBundle(struct Bundle *bp,struct Rlist *args);
@@ -1125,6 +1132,7 @@ void VerifyInterfacesPromise(struct Promise *pp);
 /* verify_measurements.c */
 
 void VerifyMeasurementPromise(struct Promise *pp);
+int CheckMeasureSanity(struct Attributes a,struct Promise *pp);
 
 /* verify_methods.c */
 

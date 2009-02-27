@@ -260,6 +260,25 @@ return attr;
 }
 
 /*******************************************************************/
+
+struct Attributes GetMeasurementAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.measure = GetMeasurementConstraint(pp);
+    
+/* Common ("included") */
+
+attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp->conlist);
+attr.transaction = GetTransactionConstraints(pp);
+
+attr.haveclasses = GetBooleanConstraint(CF_DEFINECLASSES,pp->conlist);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
@@ -1179,4 +1198,25 @@ s.contains_from_list = GetListConstraint("delete_if_contains_from_list",pp->conl
 s.not_contains_from_list = GetListConstraint("delete_if_not_contains_from_list",pp->conlist);
 
 return s;
+}
+
+/*******************************************************************/
+
+struct Measurement GetMeasurementConstraint(struct Promise *pp)
+
+{ struct Measurement m;
+  char *value;
+ 
+m.stream_type = GetConstraint("stream_type",pp->conlist,CF_SCALAR);
+
+value = GetConstraint("data_type",pp->conlist,CF_SCALAR);
+m.data_type = Typename2Datatype(value);
+
+m.history_type = GetConstraint("history_type",pp->conlist,CF_SCALAR);
+m.select_line_matching = GetConstraint("select_line_matching",pp->conlist,CF_SCALAR);
+m.select_line_number = GetIntConstraint("select_line_number",pp->conlist);
+    
+m.extraction_regex = GetConstraint("extraction_regex",pp->conlist,CF_SCALAR);
+m.slot = GetIntConstraint("slot_number",pp->conlist);
+return m;
 }

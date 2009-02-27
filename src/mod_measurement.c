@@ -59,11 +59,6 @@ struct BodySyntax CF_MATCHVALUE_BODY[] =
    /* Row models */
    {"select_line_matching",cf_str,CF_ANYSTRING,"Regular expression for matching line location"},
    {"select_line_number",cf_int,CF_VALRANGE,"Read from the n-th line of the output (fixed format)"},
-   /* Column/field tabular model (xor back-ref) */
-   {"field_separator",cf_str,CF_ANYSTRING,"The regular expression used to separate fields within a line"},
-   {"select_field",cf_int,CF_VALRANGE,"Integer index of the field required 1..n"},
-   {"value_separator",cf_str,CF_CHARRANGE,"Character separator for subfields inside the selected field"},
-   /* Back-reference model (xor field) */
    {"extraction_regex",cf_str,CF_CHARRANGE,"Character separator for subfields inside the selected field"},
    {NULL,cf_notype,NULL,NULL}
    };
@@ -72,9 +67,10 @@ struct BodySyntax CF_MATCHVALUE_BODY[] =
 
 struct BodySyntax CF_MEASURE_BODIES[] =
    {
-   {"object_type",cf_opts,"pipe,file","The datatype being collected."},
-   {"data_type",cf_opts,"count,integer,real,string","The datatype being collected."},
+   {"stream_type",cf_opts,"pipe,file","The datatype being collected."},
+   {"data_type",cf_opts,"counter,integer,real,string","The datatype being collected."},
    {"history_type",cf_opts,"weekly,none","Whether the data can be seen as a time-series or just an isolated value"},
+   {"slot_number",cf_int,CF_VALRANGE,"A slot number between 0-29 for numerical time-series values"},
    {"match_value",cf_body,CF_MATCHVALUE_BODY,"Criteria for extracting the measurement from a datastream"},
    {NULL,cf_notype,NULL,NULL}
    };

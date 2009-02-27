@@ -1055,68 +1055,6 @@ fclose(FKNOW);
 
 /*******************************************************************/
 
-void HashVariables()
-
-{ struct Bundle *bp,*bundles;
-  struct SubType *sp;
-  struct Scope *ptr;
-
-for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
-   {
-   SetNewScope(bp->name);
-
-   for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
-      {      
-      if (strcmp(sp->name,"vars") == 0)
-         {
-         CheckVariablePromises(bp->name,sp->promiselist);
-         }
-
-      // Should we also set global classes here?
-      if (strcmp(bp->type,"common") == 0&&  strcmp(sp->name,"classes") == 0)
-         {
-         CheckCommonClassPromises(sp->promiselist);
-         }
-      }
-
-   CheckBundleParameters(bp->name,bp->args);
-   }
-}
-
-/*******************************************************************/
-
-void HashControls()
-
-{ struct Body *bdp;
-  char buf[CF_BUFSIZE];
-
-/* Only control bodies need to be hashed like variables */
-
-for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
-   {
-   if (strcmp(bdp->name,"control") == 0)
-      {
-      snprintf(buf,CF_BUFSIZE,"%s_%s",bdp->name,bdp->type);
-      SetNewScope(buf);
-      CheckControlPromises(buf,bdp->type,bdp->conlist);
-      }
-   }
-}
-
-/*******************************************************************/
-
-void UnHashVariables()
-
-{ struct Bundle *bp,*bundles;
-
-for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
-   {
-   DeleteScope(bp->name);
-   }
-}
-
-/*******************************************************************/
-
 void VerifyPromises(enum cfagenttype agent)
 
 { struct Bundle *bp,*bundles;
@@ -1543,6 +1481,68 @@ if ((fp = fopen(PIDFILE,"w")) == NULL)
 fprintf(fp,"%d\n",getpid());
 
 fclose(fp);
+}
+
+/*******************************************************************/
+
+void HashVariables()
+
+{ struct Bundle *bp,*bundles;
+  struct SubType *sp;
+  struct Scope *ptr;
+
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   SetNewScope(bp->name);
+
+   for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
+      {      
+      if (strcmp(sp->name,"vars") == 0)
+         {
+         CheckVariablePromises(bp->name,sp->promiselist);
+         }
+
+      // Should we also set global classes here?
+      if (strcmp(bp->type,"common") == 0&&  strcmp(sp->name,"classes") == 0)
+         {
+         CheckCommonClassPromises(sp->promiselist);
+         }
+      }
+
+   CheckBundleParameters(bp->name,bp->args);
+   }
+}
+
+/*******************************************************************/
+
+void HashControls()
+
+{ struct Body *bdp;
+  char buf[CF_BUFSIZE];
+
+/* Only control bodies need to be hashed like variables */
+
+for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
+   {
+   if (strcmp(bdp->name,"control") == 0)
+      {
+      snprintf(buf,CF_BUFSIZE,"%s_%s",bdp->name,bdp->type);
+      SetNewScope(buf);
+      CheckControlPromises(buf,bdp->type,bdp->conlist);
+      }
+   }
+}
+
+/*******************************************************************/
+
+void UnHashVariables()
+
+{ struct Bundle *bp,*bundles;
+
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   DeleteScope(bp->name);
+   }
 }
 
 

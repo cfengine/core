@@ -117,7 +117,6 @@ if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
    CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -201,7 +200,6 @@ if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
    CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -341,7 +339,6 @@ if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
    {
    CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 

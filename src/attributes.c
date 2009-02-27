@@ -55,6 +55,7 @@ attr.transformer = (char *)GetConstraint("transformer",pp->conlist,CF_SCALAR);
 attr.move_obstructions = GetBooleanConstraint("move_obstructions",pp->conlist);
 attr.pathtype = (char *)GetConstraint("pathtype",pp->conlist,CF_SCALAR);
 
+attr.acl = GetAclConstraints(pp);
 attr.perms = GetPermissionConstraints(pp);
 attr.select = GetSelectConstraints(pp);
 attr.delete = GetDeleteConstraints(pp);
@@ -318,6 +319,19 @@ r.include_dirs = GetListConstraint("include_dirs",pp->conlist);
 r.exclude_dirs = GetListConstraint("exclude_dirs",pp->conlist);
 r.include_basedir = GetBooleanConstraint("include_basedir",pp->conlist);
 return r;
+}
+
+/*******************************************************************/
+
+struct CfACL GetAclConstraints(struct Promise *pp)
+
+{ struct CfACL ac;
+
+ac.acl_method = Str2AclMethod(GetConstraint("acl_method",pp->conlist,CF_SCALAR));
+ac.acl_type = Str2AclType(GetConstraint("acl_type",pp->conlist,CF_SCALAR));
+ac.acl_directory_inherit = Str2AclInherit(GetConstraint("acl_directory_inherit",pp->conlist,CF_SCALAR));
+ac.acl_entries = GetListConstraint("acl_entries",pp->conlist);
+return ac;
 }
 
 /*******************************************************************/

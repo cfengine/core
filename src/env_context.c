@@ -723,12 +723,13 @@ int IsDefinedClass(char *class)
   /* is currently true, given the defined heap and negations */
 
 { int ret;
-Debug("IsDefinedClass(%s,VADDCLASSES)\n",class);
 
 if (class == NULL)
    {
    return true;
    }
+
+Debug("IsDefinedClass(%s,VADDCLASSES)\n",class);
 
 ret = EvaluateORString(class,VADDCLASSES,0);
 

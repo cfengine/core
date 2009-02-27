@@ -266,8 +266,22 @@ void VerifyMeasurement(struct Attributes a,struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_VerifyMeasurement(a,pp);
+ //Nova_VerifyMeasurement(a,pp);
 #else
  CfOut(cf_verbose,"","# Custom monitoring feature is only available in version Nova and above\n");
 #endif
 }
+
+/*****************************************************************************/
+/* ACLs                                                                      */
+/*****************************************************************************/
+
+void VerifyACL(char *file,struct Attributes a, struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_VerifyACL(file,a,pp);
+#else
+#endif
+}
+   

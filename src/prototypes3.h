@@ -114,6 +114,7 @@ struct Report GetReportConstraints(struct Promise *pp);
 struct LineSelect GetInsertSelectConstraints(struct Promise *pp);
 struct LineSelect GetDeleteSelectConstraints(struct Promise *pp);
 struct Measurement GetMeasurementConstraint(struct Promise *pp);
+struct CfACL GetAclConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 

@@ -462,14 +462,10 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
    return;
    }
 
-/*
-
-if (attr.haveacl)
+if (attr.acl.acl_method != cfacl_nomethod)
    { 
    VerifyACL(file,attr,pp); 
    }
-   
-*/
 
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
    {

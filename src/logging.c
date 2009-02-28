@@ -44,19 +44,8 @@ dummyattr.transaction.audit = true;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 
-if ((errno = db_create(&AUDITDBP,dbenv,0)) != 0)
+if (!OpenDB(name,&AUDITDBP))
    {
-   CfOut(cf_error,"db_open","Couldn't initialize audit database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (AUDITDBP->open)(AUDITDBP,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (AUDITDBP->open)(AUDITDBP,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open auditing database %s\n",name);
    return;
    }
 

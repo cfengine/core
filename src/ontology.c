@@ -227,7 +227,11 @@ void DeTypeTopic(char *typed_topic,char *topic,char *type)
 type[0] = '\0';
 topic[0] = '\0';
 
-if (strstr(typed_topic,"::"))
+if (*typed_topic == ':')
+   {
+   sscanf(typed_topic,"::%255[^\n]",topic);
+   }
+else if (strstr(typed_topic,"::"))
    {
    sscanf(typed_topic,"%255[^:]::%255[^\n]",type,topic);
    
@@ -295,6 +299,26 @@ DeTypeTopic(topic_name,topic,type);
   
 for (tp = list; tp != NULL; tp=tp->next)
    {
+   if (strlen(type) > 0)
+      {
+      if ((strcmp(topic,tp->topic_name) == 0) && (strcmp(type,tp->topic_type) == 0))
+         {
+         match = true;
+         break;
+         }
+      }
+   else
+      {
+      if (strcmp(topic,tp->topic_name) == 0)
+         {
+         match = true;
+         break;
+         }
+      }
+   }
+
+if (match)
+   {
    if (tp->comment)
       {
       snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,topic);
@@ -302,23 +326,6 @@ for (tp = list; tp != NULL; tp=tp->next)
    else
       {
       snprintf(longname,CF_BUFSIZE,"%s",topic);
-      }
-
-   if (strlen(type) > 0)
-      {
-      if ((strcmp(longname,tp->topic_name) == 0) && (strcmp(type,tp->topic_type) == 0))
-         {
-         match = true;
-         break;
-         }
-      }
-   else
-      {
-      if (strcmp(longname,tp->topic_name) == 0)
-         {
-         match = true;
-         break;
-         }
       }
    }
 

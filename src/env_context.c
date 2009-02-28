@@ -108,20 +108,9 @@ void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy p
   char filename[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
-  
-if ((errno = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't create persistent context database %s\n",filename);
-   return;
-   }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
+if (!OpenDB(filename,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open persistent state database %s\n",filename);
    return;
    }
 
@@ -196,20 +185,9 @@ void DeletePersistentContext(char *name)
   char filename[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
-  
-if ((errno = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't open the persistent state database %s\n",filename);
-   return;
-   }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
+if (!OpenDB(filename,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open the persistent state database %s\n",filename);
    return;
    }
 
@@ -246,21 +224,9 @@ void LoadPersistentContext()
 Banner("Loading persistent classes");
   
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
-  
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",filename);
-   return;
-   }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
+if (!OpenDB(filename,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open persistent state database %s\n",filename);
-   dbp->close(dbp,0);
    return;
    }
 

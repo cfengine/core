@@ -266,9 +266,20 @@ void VerifyMeasurement(struct Attributes a,struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- //Nova_VerifyMeasurement(a,pp);
+ Nova_VerifyMeasurement(a,pp);
 #else
  CfOut(cf_verbose,"","# Custom monitoring feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void LongHaul()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ //Nova_LongHaul(VDAY,VMONTH,VLIFECYCLE,VSHIFT);
+#else
 #endif
 }
 

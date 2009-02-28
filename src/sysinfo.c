@@ -161,7 +161,6 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
 
             VSYSTEMHARDCLASS = (enum classes) i;
             NewScalar("sys","class",CLASSTEXT[i],cf_str);
-
             break;
             }
          }

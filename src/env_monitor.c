@@ -246,44 +246,15 @@ void GetDatabaseAge()
   DBT key,value;
   DB *dbp;
 
-if ((err_no = db_create(&dbp,NULL,0)) != 0)
+if (!OpenDB(AVDB,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't initialize average database %s\n",AVDB);
    return;
-   }
-
-#ifdef CF_OLD_DB
-if ((err_no = (dbp->open)(dbp,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((err_no = (dbp->open)(dbp,NULL,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
-   {
-   AGE = WAGE = 0;
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
-   return;
-   }
-
-chmod(AVDB,0644); 
-
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
-      
-key.data = "DATABASE_AGE";
-key.size = strlen("DATABASE_AGE")+1;
-
-if ((err_no = dbp->get(dbp,NULL,&key,&value,0)) != 0)
-   {
-   if (err_no != DB_NOTFOUND)
-      {
-      dbp->err(dbp,err_no,NULL);
-      dbp->close(dbp,0);
-      return;
-      }
    }
  
-if (value.data != NULL)
+chmod(AVDB,0644); 
+
+if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
-   AGE = *(double *)(value.data);
    WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
    Debug("\n\nPrevious DATABASE_AGE %f\n\n",AGE);
    }
@@ -388,7 +359,6 @@ OpenSniffer();
    
    ITER++;
    }
-
 }
 
 /*********************************************************************/
@@ -1401,62 +1371,30 @@ struct Averages *GetCurrentAverages(char *timekey)
   DBT key,value;
   DB *dbp;
   static struct Averages entry;
- 
-if ((err_no = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't initialize average database %s\n",AVDB);
-   return NULL;
-   }
 
-#ifdef CF_OLD_DB 
-if ((err_no = (dbp->open)(dbp,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((err_no = (dbp->open)(dbp,NULL,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
+if (!OpenDB(AVDB,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
-   return NULL;
-   }
-
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
-memset(&entry,0,sizeof(entry));
-      
-key.data = timekey;
-key.size = strlen(timekey)+1;
-
-if ((err_no = dbp->get(dbp,NULL,&key,&value,0)) != 0)
-   {
-   if (err_no != DB_NOTFOUND)
-      {
-      dbp->err(dbp,err_no,NULL);
-      dbp->close(dbp,0);
-      return NULL;
-      }
+   return;
    }
 
 AGE++;
 WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
 
-if (value.data != NULL)
+if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
    {
    int i;
-   memcpy(&entry,value.data,sizeof(entry));
-
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
       Debug("Previous values (%lf,..) for time index %s\n\n",entry.Q[i].expect,timekey);
       }
-   
-   dbp->close(dbp,0);
-   return &entry;
    }
 else
    {
    Debug("No previous value for time index %s\n",timekey);
-   dbp->close(dbp,0);
-   return &entry;
    }
+
+dbp->close(dbp,0);
+return &entry;
 }
 
 /*****************************************************************************/
@@ -1466,54 +1404,17 @@ void UpdateAverages(char *timekey,struct Averages newvals)
 { int err_no;
   DBT key,value;
   DB *dbp;
- 
-if ((err_no = db_create(&dbp,NULL,0)) != 0)
+
+if (!OpenDB(AVDB,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
    return;
    }
 
-#ifdef CF_OLD_DB 
-if ((err_no = (dbp->open)(dbp,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((err_no = (dbp->open)(dbp,NULL,AVDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",AVDB);
-   return;
-   }
+CfOut(cf_inform,"","Updated averages at %s\n",timekey);
 
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
-      
-key.data = timekey;
-key.size = strlen(timekey)+1;
+WriteDB(dbp,timekey,&value,sizeof(struct Averages));
+WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)); 
 
-value.data = &newvals;
-value.size = sizeof(newvals);
- 
-if ((err_no = dbp->put(dbp,NULL,&key,&value,0)) != 0)
-   {
-   dbp->err(dbp,err_no,NULL);
-   dbp->close(dbp,0);
-   return;
-   } 
-
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
-
-value.data = &AGE;
-value.size = sizeof(double);    
-key.data = "DATABASE_AGE";
-key.size = strlen("DATABASE_AGE")+1;
-
-if ((err_no = dbp->put(dbp,NULL,&key,&value,0)) != 0)
-   {
-   dbp->err(dbp,err_no,NULL);
-   dbp->close(dbp,0);
-   return;
-   }
- 
 dbp->close(dbp,0);
 
 HistoryUpdate(newvals);

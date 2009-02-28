@@ -290,6 +290,8 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
 void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void VerifyMeasurement(struct Attributes a,struct Promise *pp);
+void LongHaul(void);
+void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
 
 /* env_context.c */
 
@@ -724,6 +726,7 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(void);
 void LastSaw(char *hostname,enum roles role);
+int OpenDB(char *filename,DB **dbp);
 int ReadDB(DB *dbp,char *name,void *ptr,int size);
 int WriteDB(DB *dbp,char *name,void *ptr,int size);
 void DeleteDB(DB *dbp,char *name);

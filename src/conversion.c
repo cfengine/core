@@ -688,7 +688,7 @@ enum cf_acl_method Str2AclMethod(char *string)
  
 for (i = 0; i < 3; i++)
    {
-   if (strcmp(text[i],string) == 0)
+   if (string && (strcmp(text[i],string) == 0))
       {
       return i;
       }
@@ -706,7 +706,7 @@ enum cf_acl_type Str2AclType(char *string)
  
 for (i = 0; i < 3; i++)
    {
-   if (strcmp(text[i],string) == 0)
+   if (string && (strcmp(text[i],string) == 0))
       {
       return i;
       }
@@ -724,7 +724,7 @@ enum cf_acl_inherit Str2AclInherit(char *string)
  
 for (i = 0; i < 3; i++)
    {
-   if (strcmp(text[i],string) == 0)
+   if (string && (strcmp(text[i],string) == 0))
       {
       return i;
       }

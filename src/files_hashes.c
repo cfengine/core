@@ -93,20 +93,9 @@ memset(attr_digest,0,EVP_MAX_MD_SIZE+1);
 
 HashFile(filename,current_digest,type);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(HASHDB,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
-   return false;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
-   dbp->close(dbp,0);
+   cfPS(cf_error,CF_FAIL,"open",pp,attr,"Unable to open the hash database!");
    return false;
    }
 
@@ -388,21 +377,9 @@ void PurgeHashes(struct Attributes attr,struct Promise *pp)
   DB_ENV *dbenv = NULL;
   int ret;
   struct stat statbuf;
-  
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
-   return;
-   }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,HASHDB,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
+if (!OpenDB(HASHDB,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",HASHDB);
-   dbp->close(dbp,0);
    return;
    }
 

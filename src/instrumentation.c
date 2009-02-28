@@ -93,7 +93,6 @@ if (measured_ok)
 void NotePerformance(char *eventname,time_t t,double value)
 
 { DB *dbp;
-  DB_ENV *dbenv = NULL;
   char name[CF_BUFSIZE];
   struct Event e,newe;
   double lastseen,delta2;
@@ -104,19 +103,8 @@ Debug("PerformanceEvent(%s,%.1f s)\n",eventname,value);
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    return;
    }
 
@@ -187,19 +175,8 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
    return;
    }
 
@@ -324,44 +301,18 @@ Debug("LastSeen(%s) reg\n",hostname);
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_OLDLASTDB_FILE);
 unlink(name);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't init last-seen database %s\n",name);
-   return;
-   }
-
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
    return;
    }
 
 /* Now open special file for peer entropy record - INRIA intermittency */
 snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
 
-if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
+if (!OpenDB(name,&dbpent))
    {
-   CfOut(cf_error,"db_open","Couldn't init last-seen database %s\n",name);
    return;
    }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbpent->open)(dbpent,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
-   dbp->close(dbp,0);
-   return;
-   }
-
 
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
@@ -440,6 +391,31 @@ dbpent->close(dbpent,0);
 /* level                                                                     */
 /*****************************************************************************/
 
+int OpenDB(char *filename,DB **dbp)
+ 
+{ DB_ENV *dbenv = NULL;
+
+if ((errno = db_create(dbp,dbenv,0)) != 0)
+   {
+   CfOut(cf_error,"db_open","Couldn't get database environment for %s\n",filename);
+   return false;
+   }
+
+#ifdef CF_OLD_DB
+if ((errno = ((*dbp)->open)(*dbp,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#else
+if ((errno = ((*dbp)->open)(*dbp,NULL,filename,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+#endif
+   {
+   CfOut(cf_error,"db_open","Couldn't open database %s\n",filename);
+   return false;
+   }
+
+return true;
+}
+
+/*****************************************************************************/
+
 int ReadDB(DB *dbp,char *name,void *ptr,int size)
 
 { DBT *key,value;
@@ -450,7 +426,15 @@ memset(&value,0,sizeof(DBT));
 if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
    {
    memset(ptr,0,size);
-   memcpy(ptr,value.data,size);
+   
+   if (value.data)
+      {
+      memcpy(ptr,value.data,size);
+      }
+   else
+      {
+      return false;
+      }
    
    Debug("READ %s\n",name);
    DeleteDBKey(key);

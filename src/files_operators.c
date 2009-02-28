@@ -1171,20 +1171,8 @@ if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_chang
 
 snprintf(statdb,CF_BUFSIZE,"%s/stats.db",CFWORKDIR);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(statdb,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open stat database %s\n",statdb);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,statdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,statdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open stat database %s\n",statdb);
-   dbp->close(dbp,0);
    return;
    }
 

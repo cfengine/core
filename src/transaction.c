@@ -482,23 +482,12 @@ DB *OpenLock()
 
 snprintf(name,CF_BUFSIZE,"%s/cfengine_lock_db",CFWORKDIR);
 
+if (!OpenDB(name,&dbp))
+   {
+   return;
+   }
+
 Debug("OpenLock(%s)\n",name);
-
-if ((errno = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't open lock database %s\n",name);
-   return NULL;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open lock database %s\n",name);
-   return NULL;
-   }
 
 return dbp;
 }

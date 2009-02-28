@@ -215,7 +215,7 @@ return k;
 int Top(double **adj,double *evc,int topic,int dim)
 
 { int i;
- 
+
 for (i = 0; i < dim; i++)
    {
    if (adj[topic,i] && (evc[i] > evc[topic]))

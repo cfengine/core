@@ -347,19 +347,8 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
 CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
    return;
    }
 

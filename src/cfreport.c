@@ -77,11 +77,8 @@ int EMBEDDED = false;
 unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 int    SMOOTHHISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 char   ERASE[CF_BUFSIZE];
-int    ERRNO;
-time_t NOW;
 double AGE;
 
-DB *DBP;
 static struct Averages ENTRY,MAX,MIN,DET;
 
 char TIMEKEY[CF_SMALLBUF];
@@ -351,16 +348,18 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMI",OPTIONS,&optindex)) != EO
 void ThisAgentInit()
 
 { char vbuff[CF_BUFSIZE];
-
+  time_t now;
+ 
 if (strlen(OUTPUTDIR) == 0)
    {
    if (TIMESTAMPS)
       {
-      if ((NOW = time((time_t *)NULL)) == -1)
+      if ((now = time((time_t *)NULL)) == -1)
          {
          CfOut(cf_verbose,"","Couldn't read system clock\n");
          }
-      sprintf(OUTPUTDIR,"cf-reports-%s-%s",CanonifyName(VFQNAME),ctime(&NOW));
+
+      sprintf(OUTPUTDIR,"cf-reports-%s-%s",CanonifyName(VFQNAME),ctime(&now));
       }
    else
       {
@@ -592,6 +591,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       WriteHistograms();
       DiskArrivals();
       PeerIntermittency();
+      LongHaul();
       }
 
    if (strcmp("compliance",rp->item) == 0)
@@ -639,21 +639,8 @@ void ShowLastSeen()
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   printf("Couldn't open last-seen database %s\n",name);
-   perror("db_open");
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -838,20 +825,8 @@ void ShowPerformance()
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open performance database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -1023,20 +998,8 @@ void ShowClasses()
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't create class database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open class database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -1213,21 +1176,9 @@ void ShowChecksums()
   struct stat statbuf;
  
 snprintf(checksumdb,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_CHKDB);
-  
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
-   {
-   CfOut(cf_error,"db_create","Couldn't create checksum database %s\n",checksumdb);
-   return;
-   }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,checksumdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,checksumdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
+if (!OpenDB(checksumdb,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",checksumdb);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -1359,21 +1310,9 @@ void ShowLocks (int active)
   struct LockData entry;
 
 snprintf(lockdb,CF_BUFSIZE,"%s/cfengine_lock_db",CFWORKDIR);
-  
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
-   {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",lockdb);
-   return;
-   }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,lockdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,lockdb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
+if (!OpenDB(lockdb,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open checksum database %s\n",lockdb);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -1543,20 +1482,8 @@ void ShowCurrentAudit()
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open last-seen database %s\n",name);
-   return;
-   }
-
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open audit database %s\n",name);
-   dbp->close(dbp,0);
    return;
    }
 
@@ -1792,27 +1719,31 @@ return (da->q < db->q) - (da->q > db->q);
 
 void ReadAverages()
 
-{ int i;
+{ struct Averages entry;
+  char timekey[CF_MAXVARSIZE];
+  time_t now;
   DBT key,value;
-
+  DB *dbp;
+  int i,err;
+ 
 CfOut(cf_verbose,"","\nLooking for database %s\n",VINPUTFILE);
 CfOut(cf_verbose,"","\nFinding MAXimum values...\n\n");
 CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n"); 
   
-if ((ERRNO = db_create(&DBP,NULL,0)) != 0)
+if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
    exit(1);
    }
 
 #ifdef CF_OLD_DB 
-if ((ERRNO = (DBP->open)(DBP,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
+if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #else
-if ((ERRNO = (DBP->open)(DBP,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
+if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
 #endif
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   DBP->err(DBP,ERRNO,NULL);
+   dbp->err(dbp,err,NULL);
    exit(1);
    }
 
@@ -1823,151 +1754,110 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    FPE[i] = FPQ[i] = NULL;
    }
  
-for (NOW = CF_MONDAY_MORNING; NOW < CF_MONDAY_MORNING+CF_WEEK; NOW += CF_MEASURE_INTERVAL)
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
    {
-   memset(&key,0,sizeof(key));       
-   memset(&value,0,sizeof(value));
-   memset(&ENTRY,0,sizeof(ENTRY));
+   strcpy(timekey,GenTimeKey(now));
 
-   strcpy(TIMEKEY,GenTimeKey(NOW));
-
-   key.data = TIMEKEY;
-   key.size = strlen(TIMEKEY)+1;
-   
-   if ((ERRNO = DBP->get(DBP,NULL,&key,&value,0)) != 0)
+   if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
       {
-      if (ERRNO != DB_NOTFOUND)
-         {
-         DBP->err(DBP,ERRNO,NULL);
-         exit(1);
-         }
-      }
-   
-   if (value.data != NULL)
-      {
-      memcpy(&ENTRY,value.data,sizeof(ENTRY));
-      
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
-         if (fabs(ENTRY.Q[i].expect) > MAX.Q[i].expect)
+         if (fabs(entry.Q[i].expect) > MAX.Q[i].expect)
             {
-            MAX.Q[i].expect = fabs(ENTRY.Q[i].expect);
+            MAX.Q[i].expect = fabs(entry.Q[i].expect);
             }
 
-         if (fabs(ENTRY.Q[i].q) > MAX.Q[i].q)
+         if (fabs(entry.Q[i].q) > MAX.Q[i].q)
             {
-            MAX.Q[i].q = fabs(ENTRY.Q[i].q);
+            MAX.Q[i].q = fabs(entry.Q[i].q);
             }
 
-         if (fabs(ENTRY.Q[i].expect) < MIN.Q[i].expect)
+         if (fabs(entry.Q[i].expect) < MIN.Q[i].expect)
             {
-            MIN.Q[i].expect = fabs(ENTRY.Q[i].expect);
+            MIN.Q[i].expect = fabs(entry.Q[i].expect);
             }
          
-         if (fabs(ENTRY.Q[i].q) < MIN.Q[i].q)
+         if (fabs(entry.Q[i].q) < MIN.Q[i].q)
             {
-            MIN.Q[i].q = fabs(ENTRY.Q[i].q);
+            MIN.Q[i].q = fabs(entry.Q[i].q);
             }
          }
       }
    }
  
-DBP->close(DBP,0);
+dbp->close(dbp,0);
 }
 
 /****************************************************************************/
 
 void EraseAverages()
 
-{ int i;
-  DBT key,value;
+{ int i,err;
+  char timekey[CF_MAXVARSIZE];
   struct Item *list = NULL;
-      
+  struct Averages entry;
+  time_t now;
+  DB *dbp;
+  
 CfOut(cf_verbose,"","\nLooking through current database %s\n",VINPUTFILE);
 
 list = SplitStringAsItemList(ERASE,',');
 
-if ((ERRNO = db_create(&DBP,NULL,0)) != 0)
+if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
    exit(1);
    }
 
 #ifdef CF_OLD_DB 
-if ((ERRNO = (DBP->open)(DBP,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #else
-if ((ERRNO = (DBP->open)(DBP,NULL,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
+if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
 #endif
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   DBP->err(DBP,ERRNO,NULL);
+   dbp->err(dbp,err,NULL);
    exit(1);
    }
-
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    FPE[i] = FPQ[i] = NULL;
    }
  
-for (NOW = CF_MONDAY_MORNING; NOW < CF_MONDAY_MORNING+CF_WEEK; NOW += CF_MEASURE_INTERVAL)
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
    {
-   memset(&key,0,sizeof(key));       
-   memset(&value,0,sizeof(value));
-   memset(&ENTRY,0,sizeof(ENTRY));
+   strcpy(timekey,GenTimeKey(now));
 
-   strcpy(TIMEKEY,GenTimeKey(NOW));
-
-   key.data = TIMEKEY;
-   key.size = strlen(TIMEKEY)+1;
-   
-   if ((ERRNO = DBP->get(DBP,NULL,&key,&value,0)) != 0)
+   if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
       {
-      if (ERRNO != DB_NOTFOUND)
-         {
-         DBP->err(DBP,ERRNO,NULL);
-         exit(1);
-         }
-      }
-   
-   if (value.data != NULL)
-      {
-      memcpy(&ENTRY,value.data,sizeof(ENTRY));
-      
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
          if (IsItemIn(list,OBS[i][0]))
             {
             /* Set history but not most recent to zero */
-            ENTRY.Q[i].expect = 0;
-            ENTRY.Q[i].var = 0;
+            entry.Q[i].expect = 0;
+            entry.Q[i].var = 0;
             }
          }
 
-      value.data = &ENTRY;
-      
-      if ((ERRNO = DBP->put(DBP,NULL,&key,&value,0)) != 0)
-         {
-         DBP->err(DBP,ERRNO,NULL);
-         exit(1);
-         }
+      WriteDB(dbp,timekey,&entry,sizeof(struct Averages));
       }
    }
  
-DBP->close(DBP,0);
+dbp->close(dbp,0);
 }
 
 /*****************************************************************************/
 
 void SummarizeAverages()
 
-{ int i;
+{ int i,err;
   FILE *fout;
   DBT key,value;
   char name[CF_BUFSIZE];
-
+  DB *dbp;
+  
 Banner("Summarizing monitor averages");
 
 if (HTML)
@@ -2025,53 +1915,59 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
    }
 
-if ((ERRNO = db_create(&DBP,NULL,0)) != 0)
+if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    exit(1);
    }
 
 #ifdef CF_OLD_DB 
-if ((ERRNO = (DBP->open)(DBP,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
+if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #else
-if ((ERRNO = (DBP->open)(DBP,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
+if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #endif
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    exit(1);
    }
 
-memset(&key,0,sizeof(key));       
-memset(&value,0,sizeof(value));
-      
-key.data = "DATABASE_AGE";
-key.size = strlen("DATABASE_AGE")+1;
-
-if ((ERRNO = DBP->get(DBP,NULL,&key,&value,0)) != 0)
+if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
-   if (ERRNO != DB_NOTFOUND)
-      {
-      DBP->err(DBP,ERRNO,NULL);
-      exit(1);
-      }
-   }
- 
-if (value.data != NULL)
-   {
-   AGE = *(double *)(value.data);
-   CfOut(cf_verbose,"","\n\nDATABASE_AGE %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
+   CfOut(cf_inform,"","\n\nDATABASE_AGE %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
    }
 
 fclose(fout);
+dbp->close(dbp,0);
 }
 
 /*****************************************************************************/
 
 void WriteGraphFiles()
 
-{ int its,i,j,k, count = 0;
+{ int its,i,j,k, count = 0,err;
   DBT key,value;
   struct stat statbuf;
+  struct Averages entry,det;
+  char timekey[CF_MAXVARSIZE];
+  time_t now;
+  DB *dbp;
+  
+if ((err = db_create(&dbp,NULL,0)) != 0)
+   {
+   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
+   exit(1);
+   }
+
+#ifdef CF_OLD_DB 
+if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
+#else
+if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
+#endif
+   {
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   dbp->err(dbp,err,NULL);
+   exit(1);
+   }
 
 OpenFiles();
 
@@ -2098,41 +1994,23 @@ else
    its = 12;
    }
 
-NOW = CF_MONDAY_MORNING;
-memset(&ENTRY,0,sizeof(ENTRY)); 
+now = CF_MONDAY_MORNING;
  
-while (NOW < CF_MONDAY_MORNING+CF_WEEK)
+while (now < CF_MONDAY_MORNING + CF_WEEK)
    {
+   memset(&entry,0,sizeof(entry));
+   
    for (j = 0; j < its; j++)
       {
-      memset(&key,0,sizeof(key));       
-      memset(&value,0,sizeof(value));
-      
-      strcpy(TIMEKEY,GenTimeKey(NOW));
-      
-      key.data = TIMEKEY;
-      key.size = strlen(TIMEKEY)+1;
+      strcpy(timekey,GenTimeKey(now));
 
-      if ((ERRNO = DBP->get(DBP,NULL,&key,&value,0)) != 0)
+      if (ReadDB(dbp,timekey,&det,sizeof(struct Averages)))
          {
-         if (ERRNO != DB_NOTFOUND)
-            {
-            DBP->err(DBP,ERRNO,NULL);
-            exit(1);
-            }
-         }
-
-      /* Work out local average over grain size "its" */
-      
-      if (value.data != NULL)
-         {
-         memcpy(&DET,value.data,sizeof(DET));
-         
          for (i = 0; i < CF_OBSERVABLES; i++)
             {
-            ENTRY.Q[i].expect += DET.Q[i].expect/(double)its;
-            ENTRY.Q[i].var += DET.Q[i].var/(double)its;
-            ENTRY.Q[i].q += DET.Q[i].q/(double)its;
+            entry.Q[i].expect += det.Q[i].expect/(double)its;
+            entry.Q[i].var += det.Q[i].var/(double)its;
+            entry.Q[i].q += det.Q[i].q/(double)its;
             }         
          
          if (NOSCALING)
@@ -2145,7 +2023,7 @@ while (NOW < CF_MONDAY_MORNING+CF_WEEK)
             }
          }
       
-      NOW += CF_MEASURE_INTERVAL;
+      now += CF_MEASURE_INTERVAL;
       count++;
       }
 
@@ -2157,9 +2035,9 @@ while (NOW < CF_MONDAY_MORNING+CF_WEEK)
 
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPAV,"%f ",ENTRY.Q[i].expect/MAX.Q[i].expect);
-      fprintf(FPVAR,"%f ",ENTRY.Q[i].var/MAX.Q[i].var);
-      fprintf(FPNOW,"%f ",ENTRY.Q[i].q/MAX.Q[i].q);
+      fprintf(FPAV,"%f ",entry.Q[i].expect/MAX.Q[i].expect);
+      fprintf(FPVAR,"%f ",entry.Q[i].var/MAX.Q[i].var);
+      fprintf(FPNOW,"%f ",entry.Q[i].q/MAX.Q[i].q);
       }                        
    
    fprintf(FPAV,"\n");
@@ -2168,16 +2046,15 @@ while (NOW < CF_MONDAY_MORNING+CF_WEEK)
    
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPE[i],"%d %f %f\n",count, ENTRY.Q[i].expect, sqrt(ENTRY.Q[i].var));
+      fprintf(FPE[i],"%d %f %f\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var));
       /* Use same scaling for Q so graphs can be merged */
-      fprintf(FPQ[i],"%d %f 0.0\n",count, ENTRY.Q[i].q);
+      fprintf(FPQ[i],"%d %f 0.0\n",count, entry.Q[i].q);
       }               
 
-   memset(&ENTRY,0,sizeof(ENTRY));
+   memset(&entry,0,sizeof(entry));
    }
 
-DBP->close(DBP,0);
-
+dbp->close(dbp,0);
 CloseFiles();
 }
 
@@ -2185,51 +2062,52 @@ CloseFiles();
 
 void MagnifyNow()
 
-{ int its,i,j,k, count = 0;
+{ int its,i,j,k, count = 0,err;
   DBT key,value;
-  time_t now;
+  struct Averages entry,det;
+  time_t now,here_and_now;
+  char timekey[CF_MAXVARSIZE];
+  DB *dbp;
+  
+if ((err = db_create(&dbp,NULL,0)) != 0)
+   {
+   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
+   exit(1);
+   }
+
+#ifdef CF_OLD_DB 
+if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
+#else
+if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
+#endif
+   {
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   dbp->err(dbp,err,NULL);
+   exit(1);
+   }
 
 OpenMagnifyFiles();
 
 its = 1; /* detailed view */
 
 now = time(NULL);
-NOW = now - (time_t)(4 * CF_TICKS_PER_HOUR);
+here_and_now = now - (time_t)(4 * CF_TICKS_PER_HOUR);
  
-while (NOW < now)
+while (here_and_now < now)
    {
-   memset(&ENTRY,0,sizeof(ENTRY)); 
+   memset(&entry,0,sizeof(entry)); 
 
    for (j = 0; j < its; j++)
       {
-      memset(&key,0,sizeof(key));       
-      memset(&value,0,sizeof(value));
-      
-      strcpy(TIMEKEY,GenTimeKey(NOW));
-      
-      key.data = TIMEKEY;
-      key.size = strlen(TIMEKEY)+1;
+      strcpy(timekey,GenTimeKey(here_and_now));
 
-      if ((ERRNO = DBP->get(DBP,NULL,&key,&value,0)) != 0)
+      if (ReadDB(dbp,timekey,&det,sizeof(struct Averages)))
          {
-         if (ERRNO != DB_NOTFOUND)
-            {
-            DBP->err(DBP,ERRNO,NULL);
-            exit(1);
-            }
-         }
-
-      /* Work out local average over grain size "its" */
-      
-      if (value.data != NULL)
-         {
-         memcpy(&DET,value.data,sizeof(DET));
-         
          for (i = 0; i < CF_OBSERVABLES; i++)
             {
-            ENTRY.Q[i].expect += DET.Q[i].expect/(double)its;
-            ENTRY.Q[i].var += DET.Q[i].var/(double)its;
-            ENTRY.Q[i].q += DET.Q[i].q/(double)its;
+            entry.Q[i].expect += det.Q[i].expect/(double)its;
+            entry.Q[i].var += det.Q[i].var/(double)its;
+            entry.Q[i].q += det.Q[i].q/(double)its;
             }         
          
          if (NOSCALING)
@@ -2242,7 +2120,7 @@ while (NOW < now)
             }
          }
       
-      NOW += CF_MEASURE_INTERVAL;
+      here_and_now += CF_MEASURE_INTERVAL;
       count++;
       }
 
@@ -2250,11 +2128,11 @@ while (NOW < now)
 
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPM[i],"%d %f %f %f\n",count, ENTRY.Q[i].expect, sqrt(ENTRY.Q[i].var),ENTRY.Q[i].q);
+      fprintf(FPM[i],"%d %f %f %f\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var),entry.Q[i].q);
       }               
    }
 
-DBP->close(DBP,0);
+dbp->close(dbp,0);
 CloseMagnifyFiles();
 }
 
@@ -2375,8 +2253,8 @@ void DiskArrivals(void)
 { DIR *dirh;
   FILE *fp; 
   struct dirent *dirp;
-  int count = 0, index = 0, i;
-  char filename[CF_BUFSIZE],database[CF_BUFSIZE];
+  int count = 0, index = 0, i,err;
+  char filename[CF_BUFSIZE],database[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   double val, maxval = 1.0, *array, grain = 0.0;
   time_t now;
   DBT key,value;
@@ -2405,16 +2283,16 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
       snprintf(database,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,dirp->d_name);
       
-      if ((ERRNO = db_create(&dbp,dbenv,0)) != 0)
+      if ((err = db_create(&dbp,dbenv,0)) != 0)
          {
          CfOut(cf_verbose,"","Couldn't open arrivals database %s\n",database);
          return;
          }
       
 #ifdef CF_OLD_DB
-      if ((ERRNO = (dbp->open)(dbp,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+      if ((err = (dbp->open)(dbp,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #else
-      if ((ERRNO = (dbp->open)(dbp,NULL,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
+      if ((err = (dbp->open)(dbp,NULL,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
 #endif
          {
          CfOut(cf_verbose,"","Couldn't open database %s\n",database);
@@ -2432,16 +2310,16 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          memset(&key,0,sizeof(key));       
          memset(&value,0,sizeof(value));
          
-         strcpy(TIMEKEY,GenTimeKey(now));
+         strcpy(timekey,GenTimeKey(now));
          
-         key.data = TIMEKEY;
-         key.size = strlen(TIMEKEY)+1;
+         key.data = timekey;
+         key.size = strlen(timekey)+1;
          
-         if ((ERRNO = dbp->get(dbp,NULL,&key,&value,0)) != 0)
+         if ((err = dbp->get(dbp,NULL,&key,&value,0)) != 0)
             {
-            if (ERRNO != DB_NOTFOUND)
+            if (err != DB_NOTFOUND)
                {
-               DBP->err(DBP,ERRNO,NULL);
+               dbp->err(dbp,err,NULL);
                exit(1);
                }
             }

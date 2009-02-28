@@ -3150,21 +3150,10 @@ else
    the key before.  Check for it in a database .. */
 
 Debug("Checking to see if we have seen the key before..\n"); 
-  
-if ((errno = db_create(&dbp,NULL,0)) != 0)
+
+if (!OpenDB(keydb,&dbp))
    {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
-   return false;
-   }
- 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
-   {
-   CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
-   return false;
+   return;
    }
 
 memset(&key,0,sizeof(newkey));       
@@ -3233,25 +3222,16 @@ snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR);
 if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,mipaddr))
    {
    /* Cache keys in the db as we see them is there are dynamical addresses */
-   
-   if ((errno = db_create(&dbp,NULL,0)) != 0)
+
+   if (!OpenDB(keydb,&dbp))
       {
-      CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
       return;
       }
 
-#ifdef CF_OLD_DB
-   if ((errno = (dbp->open)(dbp,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-   if ((errno = (dbp->open)(dbp,NULL,keydb,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-      {
-      CfOut(cf_error,"db_open","Couldn't open average database %s\n",keydb);
-      return;
-      }
-   
    memset(&key,0,sizeof(key));       
    memset(&value,0,sizeof(value));
+
+   /* This case is unusual, we're using the newkey as the key */
    
    key.data = newkey;
    key.size = sizeof(RSA);

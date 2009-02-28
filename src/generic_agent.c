@@ -394,6 +394,7 @@ if (VINPUTLIST != NULL)
 
 //UnHashVariables(); - why did I do this?
 
+HashVariables();
 PARSING = false;
 }
 
@@ -1491,6 +1492,8 @@ void HashVariables()
   struct SubType *sp;
   struct Scope *ptr;
 
+CfOut(cf_verbose,"","Initiate variable convergence...\n");
+  
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    SetNewScope(bp->name);
@@ -1522,6 +1525,8 @@ void HashControls()
 
 /* Only control bodies need to be hashed like variables */
 
+CfOut(cf_verbose,"","Initiate control variable convergence...\n");
+  
 for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
    {
    if (strcmp(bdp->name,"control") == 0)

@@ -185,7 +185,7 @@ if (expandregex) /* Expand one regex link and hand down */
          strcat(nextbuffer,ip->name);
          }
       
-      /* The next level might still contain regexs, so go again*/
+      /* The next level might still contain regexs, so go again */
 
       if (!lastnode)
          {

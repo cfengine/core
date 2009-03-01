@@ -74,6 +74,8 @@
 #define CF_MAX_NESTING 3
 #define CF_DONEPASSES  3
 
+#define CF_TIME_SIZE 32
+
 /*************************************************************************/
 /* Parsing and syntax tree structures                                    */
 /*************************************************************************/

@@ -775,7 +775,7 @@ CfOut(cf_verbose,"","      * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 if (VERBOSE || DEBUG)
    {
-   printf("       BUNDLE %s",bp->name);
+   printf("%s       BUNDLE %s",VPREFIX,bp->name);
    }
 
 if (params && (VERBOSE||DEBUG))

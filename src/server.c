@@ -3153,7 +3153,7 @@ Debug("Checking to see if we have seen the key before..\n");
 
 if (!OpenDB(keydb,&dbp))
    {
-   return;
+   return false;
    }
 
 memset(&key,0,sizeof(newkey));       

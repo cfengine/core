@@ -141,6 +141,14 @@ char *MONTH_TEXT[] =
    "December"
    };
 
+char *SHIFT_TEXT[] =
+   {
+   "Night",
+   "Morning",
+   "Afternoon",
+   "Evening"
+   };
+
 /*****************************************************************************/
 
 char *CF_DATATYPES[] = /* see enum cfdatatype */

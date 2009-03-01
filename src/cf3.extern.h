@@ -86,6 +86,7 @@ extern int CF_SAVEFSTAB;
 
 extern char *DAY_TEXT[];
 extern char *MONTH_TEXT[];
+extern char *SHIFT_TEXT[];
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

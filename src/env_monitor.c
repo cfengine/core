@@ -1374,7 +1374,7 @@ struct Averages *GetCurrentAverages(char *timekey)
 
 if (!OpenDB(AVDB,&dbp))
    {
-   return;
+   return NULL;
    }
 
 AGE++;

@@ -278,7 +278,7 @@ void LongHaul()
 
 {
 #ifdef HAVE_LIBCFNOVA
- //Nova_LongHaul(VDAY,VMONTH,VLIFECYCLE,VSHIFT);
+ Nova_LongHaul(VDAY,VMONTH,VLIFECYCLE,VSHIFT);
 #else
 #endif
 }

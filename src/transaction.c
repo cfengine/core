@@ -484,7 +484,7 @@ snprintf(name,CF_BUFSIZE,"%s/cfengine_lock_db",CFWORKDIR);
 
 if (!OpenDB(name,&dbp))
    {
-   return;
+   return NULL;
    }
 
 Debug("OpenLock(%s)\n",name);

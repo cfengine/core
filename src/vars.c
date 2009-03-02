@@ -380,7 +380,7 @@ if (strstr(s,varstr) != NULL)
    return true;
    }
 
-snprintf(varstr,CF_BUFSIZE,"$(%s)",v);
+snprintf(varstr,CF_MAXVARSIZE-1,"$(%s)",v);
 if (strstr(s,varstr) != NULL)
    {
    return true;
@@ -392,7 +392,7 @@ if (strstr(s,varstr) != NULL)
    return true;
    }
 
-snprintf(varstr,CF_BUFSIZE,"@(%s)",v);
+snprintf(varstr,CF_MAXVARSIZE-1,"@(%s)",v);
 if (strstr(s,varstr) != NULL)
    {
    return true;

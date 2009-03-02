@@ -275,6 +275,7 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
+void InitMeasurements();
 void BundleNode(FILE *fp,char *bundle);
 void BodyNode(FILE *fp,char *bundle,int call);
 void TypeNode(FILE *fp,char *type);
@@ -397,6 +398,7 @@ int Epimenides(char *var,char *rval,char rtype,int level);
 
 /* exec_tool.c */
 
+int IsExecutable(char *file);
 int ShellCommandReturnsZero(char *comm,int useshell);
 int GetExecOutput(char *command,char *buffer,int useshell);
 void ActAsDaemon(int preserve);
@@ -1118,7 +1120,6 @@ void VerifyExecPromise(struct Promise *pp);
 int ExecSanityChecks(struct Attributes a,struct Promise *pp);
 void VerifyExec(struct Attributes a, struct Promise *pp);
 void PreviewProtocolLine(char *s,char *comm);
-int IsExecutable(char *file);
 
 /* verify_files.c */
 

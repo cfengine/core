@@ -71,12 +71,7 @@ else
          case cf_str:
          case cf_int:
          case cf_real:
-             if (a.measure.slot == CF_NOINT)
-                {
-                cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" does not reserve a record slot\n");
-                PromiseRef(cf_error,pp);
-                retval = false;                
-                }
+
              break;
 
          default:

@@ -262,6 +262,15 @@ void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *h
 /* Montoring                                                                 */
 /*****************************************************************************/
 
+void InitMeasurements()
+{
+#ifdef HAVE_LIBCFNOVA
+ NovaInitMeasurements();
+#endif
+}
+
+/*****************************************************************************/
+
 void VerifyMeasurement(struct Attributes a,struct Promise *pp)
 
 {

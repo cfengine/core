@@ -1231,6 +1231,6 @@ m.select_line_matching = GetConstraint("select_line_matching",pp->conlist,CF_SCA
 m.select_line_number = GetIntConstraint("select_line_number",pp->conlist);
     
 m.extraction_regex = GetConstraint("extraction_regex",pp->conlist,CF_SCALAR);
-m.slot = GetIntConstraint("slot_number",pp->conlist);
+m.units = GetConstraint("units",pp->conlist,CF_SCALAR);
 return m;
 }

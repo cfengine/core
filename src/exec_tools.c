@@ -28,6 +28,59 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*************************************************************/
+
+int IsExecutable(char *file)
+
+{ struct stat sb;
+  gid_t grps[NGROUPS];
+  int i,n;
+
+if (stat(file,&sb) == -1)
+   {
+   CfOut(cf_error,"","Proposed executable %s doesn't exist",file);
+   return false;
+   }
+  
+if (getuid() == sb.st_uid)
+   {
+   if (sb.st_mode && 0100)
+      {
+      return true;
+      }
+   }
+else if (getgid() == sb.st_gid)
+   {
+   if (sb.st_mode && 0010)
+      {
+      return true;
+      }    
+   }
+else
+   {
+   if (sb.st_mode && 0001)
+      {
+      return true;
+      }
+   
+   if ((n = getgroups(NGROUPS,grps)) > 0)
+      {
+      for (i = 0; i < n; i++)
+         {
+         if (grps[i] == sb.st_gid)
+            {
+            if (sb.st_mode && 0010)
+               {
+               return true;
+               }                 
+            }
+         }
+      }
+   }
+
+return false;
+}
+
 /*******************************************************************/
 
 int ShellCommandReturnsZero(char *comm,int useshell)

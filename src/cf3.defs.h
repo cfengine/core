@@ -77,6 +77,14 @@
 #define CF_TIME_SIZE 32
 
 /*************************************************************************/
+/** Design criteria                                                      */
+/*************************************************************************/
+
+#define CF_DUNBAR_INTIMATE 6
+#define CF_DUNBAR_WORK 30
+#define CF_DUNBAR_KNOW 120
+
+/*************************************************************************/
 /* Parsing and syntax tree structures                                    */
 /*************************************************************************/
 
@@ -1277,7 +1285,7 @@ struct Measurement
    char *select_line_matching;
    int select_line_number;
    char *extraction_regex;
-   int slot;
+   char *units;
    };
 
 /*************************************************************************/

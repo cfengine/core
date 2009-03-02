@@ -112,7 +112,7 @@ start = BeginMeasure();
 
 if (DONTDO && !a.contain.preview)
    {
-   CfOut(cf_error,"","Would execute script %s\n",execstr);
+   CfOut(cf_error,"","-> Would execute script %s\n",execstr);
    }
 else
    {
@@ -140,7 +140,7 @@ else
       
       if (a.contain.umask == 0)
          {
-         CfOut(cf_verbose,"","Programming %s running with umask 0! Use umask= to set\n",execstr);
+         CfOut(cf_verbose,""," !! Programming %s running with umask 0! Use umask= to set\n",execstr);
          }
 
       if (a.contain.useshell)
@@ -163,7 +163,8 @@ else
          {
          if (ferror(pfp))  /* abortable */
             {
-            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Shell command pipe %s\n",execstr);
+            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Command pipe %s\n",execstr);
+            YieldCurrentLock(thislock);
             return;
             }
 
@@ -176,7 +177,8 @@ else
          
          if (ferror(pfp))  /* abortable */
             {
-            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Shell command pipe %s\n",execstr);
+            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Command pipe %s\n",execstr);
+            YieldCurrentLock(thislock);   
             return;
             }
          
@@ -229,59 +231,6 @@ else
 
 /*************************************************************/
 /* Level                                                     */
-/*************************************************************/
-
-int IsExecutable(char *file)
-
-{ struct stat sb;
-  gid_t grps[NGROUPS];
-  int i,n;
-
-if (stat(file,&sb) == -1)
-   {
-   CfOut(cf_error,"","Proposed executable %s doesn't exist",file);
-   return false;
-   }
-  
-if (getuid() == sb.st_uid)
-   {
-   if (sb.st_mode && 0100)
-      {
-      return true;
-      }
-   }
-else if (getgid() == sb.st_gid)
-   {
-   if (sb.st_mode && 0010)
-      {
-      return true;
-      }    
-   }
-else
-   {
-   if (sb.st_mode && 0001)
-      {
-      return true;
-      }
-   
-   if ((n = getgroups(NGROUPS,grps)) > 0)
-      {
-      for (i = 0; i < n; i++)
-         {
-         if (grps[i] == sb.st_gid)
-            {
-            if (sb.st_mode && 0010)
-               {
-               return true;
-               }                 
-            }
-         }
-      }
-   }
-
-return false;
-}
-
 /*************************************************************/
 
 void PreviewProtocolLine(char *line, char *comm)

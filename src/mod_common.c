@@ -340,9 +340,9 @@ struct BodySyntax CF_COMMON_BODIES[] =
    {CF_TRANSACTION,cf_body,CF_TRANSACTION_BODY,"Output behaviour"},
    {CF_DEFINECLASSES,cf_body,CF_DEFINECLASS_BODY,"Signalling behaviour"},
    {"ifvarclass",cf_str,"","Extended classes ANDed with context"},
-   {"handle",cf_str,"","A unique tag string for referring to this as a promisee elsewhere"},
+   {"handle",cf_str,CF_IDRANGE,"A unique id-tag string for referring to this as a promisee elsewhere"},
    {"builds_on",cf_slist,"","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
-   {"comment",cf_str,"","Retained comment about this promise's real intention"},
+   {"comment",cf_str,"","A comment about this promise's real intention that follows through the program"},
    {NULL,cf_notype,NULL,NULL}
    };
 

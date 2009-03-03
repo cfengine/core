@@ -290,7 +290,7 @@ void HistoryUpdate(struct Averages newvals);
 void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
-void VerifyMeasurement(struct Attributes a,struct Promise *pp);
+void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp);
 void LongHaul(void);
 void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
 
@@ -1136,7 +1136,7 @@ void VerifyInterfacesPromise(struct Promise *pp);
 
 /* verify_measurements.c */
 
-void VerifyMeasurementPromise(struct Promise *pp);
+void VerifyMeasurementPromise(double *this,struct Promise *pp);
 int CheckMeasureSanity(struct Attributes a,struct Promise *pp);
 
 /* verify_methods.c */

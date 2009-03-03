@@ -966,6 +966,7 @@ while (!feof(pp))
    {
    ReadLine(vbuff,CF_BUFSIZE,pp);
    sscanf(vbuff,"%s",user);
+   
    if (!IsItemIn(list,user))
       {
       PrependItem(&list,user,NULL);
@@ -2302,7 +2303,7 @@ if (strcmp("classes",pp->agentsubtype) == 0)
 
 if (strcmp("measurements",pp->agentsubtype) == 0)
    {
-   VerifyMeasurementPromise(pp);
+   VerifyMeasurementPromise(THIS,pp);
    return;
    }
 }

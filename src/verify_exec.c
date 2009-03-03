@@ -219,7 +219,6 @@ else
    YieldCurrentLock(thislock);
 
    snprintf(eventname,CF_BUFSIZE-1,"Exec(%s)",execstr);
-   EndMeasure(eventname,start);
    
    if (a.transaction.background && outsourced)
       {

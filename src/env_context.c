@@ -459,7 +459,13 @@ int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
 
 if (cp->type == CF_FNCALL)
    {
-   FatalError("Software error - function call in EvalClassExpression (shouldn't happen)\n");
+   /* Special expansion of functions for control, best effort only */
+   struct Rval newret;
+   struct FnCall *fp = (struct FnCall *)cp->rval;
+   newret = EvaluateFunctionCall(fp,pp);
+   DeleteFnCall(fp);
+   cp->rval = newret.item;
+   cp->type = newret.rtype;
    }
 
 if (strcmp(cp->lval,"expression") == 0)

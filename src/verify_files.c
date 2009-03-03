@@ -36,8 +36,10 @@ void *FindAndVerifyFilesPromises(struct Promise *pp)
 PromiseBanner(pp); 
 FindFilePromiserObjects(pp);
 
-if (GetBooleanConstraint("background",pp->conlist))
+if (AM_BACKGROUND_PROCESS && !pp->done)
    {
+   CfOut(cf_inform,"","Exiting backgrounded promise");
+   PromiseRef(cf_inform,pp);
    exit(0);
    }
 

@@ -27,7 +27,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-void VerifyMeasurementPromise(struct Promise *pp)
+void VerifyMeasurementPromise(double *this,struct Promise *pp)
 
 { struct Attributes a;
  
@@ -39,7 +39,7 @@ if (!CheckMeasureSanity(a,pp))
    }
 
 PromiseBanner(pp);
-VerifyMeasurement(a,pp);
+VerifyMeasurement(this,a,pp);
 }
 
 /*****************************************************************************/
@@ -93,6 +93,12 @@ if (a.measure.select_line_matching && a.measure.select_line_number != CF_NOINT)
 if (!a.measure.extraction_regex)
    {
    CfOut(cf_verbose,"","No extraction regex, so assuming whole line is the value");
+
+   if (!strchr(a.measure.extraction_regex,'(') && !strchr(a.measure.extraction_regex,')'))
+      {
+      cfPS(cf_error,CF_INTERPT,"",pp,a,"The extraction_regex must contain a single backreference for the extraction\n");
+      retval = false; 
+      }
    }
 
 return retval;

@@ -49,6 +49,7 @@ extern struct Rlist *CF_STCK;
 extern int CF_STCKFRAME;
 extern int CFA_BACKGROUND;
 extern int CFA_BACKGROUND_LIMIT;
+extern int AM_BACKGROUND_PROCESS;
 
 extern int BOOTSTRAP;
 extern int XML;

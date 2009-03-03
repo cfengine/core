@@ -88,6 +88,7 @@ if (pp->done)
 if (CF_STCKFRAME == 1)
    {
    *(pp->donep) = true;
+   pp->done = true;
    }
 
 if (IGNORELOCK)

@@ -137,7 +137,7 @@ if (elapsedtime < 0)
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
-   CfOut(cf_verbose,""," XX Nothing promised here (%u/%u minutes elapsed)\n",elapsedtime,attr.transaction.ifelapsed);
+   CfOut(cf_verbose,""," XX Nothing promised here [%.30s] (%u/%u minutes elapsed)\n",cflock,elapsedtime,attr.transaction.ifelapsed);
    return this;
    }
 

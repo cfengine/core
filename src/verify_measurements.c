@@ -30,6 +30,8 @@
 void VerifyMeasurementPromise(double *this,struct Promise *pp)
 
 { struct Attributes a;
+
+PromiseBanner(pp);
  
 a = GetMeasurementAttributes(pp);
 
@@ -38,7 +40,6 @@ if (!CheckMeasureSanity(a,pp))
    return;
    }
 
-PromiseBanner(pp);
 VerifyMeasurement(this,a,pp);
 }
 
@@ -55,9 +56,9 @@ if (!IsAbsPath(pp->promiser))
    retval = false;
    }
 
-if (!a.measure.data_type)
+if (a.measure.data_type == cf_notype)
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" did not specify a data type\n");
+   cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" did not specify a data type\n",pp->promiser);
    PromiseRef(cf_error,pp);
    retval = false;   
    }
@@ -75,7 +76,7 @@ else
              break;
 
          default:
-             cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" cannot have history type weekly as it is not a number\n");
+             cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" cannot have history type weekly as it is not a number\n",pp->promiser);
              PromiseRef(cf_error,pp);
              retval = false;                
              break;
@@ -85,7 +86,7 @@ else
 
 if (a.measure.select_line_matching && a.measure.select_line_number != CF_NOINT)
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" cannot select both a line by pattern and by number\n");
+   cfPS(cf_error,CF_INTERPT,"",pp,a,"The promiser \"%s\" cannot select both a line by pattern and by number\n",pp->promiser);
    PromiseRef(cf_error,pp);
    retval = false;                
    }

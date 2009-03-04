@@ -59,7 +59,7 @@ struct BodySyntax CF_MATCHVALUE_BODY[] =
    /* Row models */
    {"select_line_matching",cf_str,CF_ANYSTRING,"Regular expression for matching line location"},
    {"select_line_number",cf_int,CF_VALRANGE,"Read from the n-th line of the output (fixed format)"},
-   {"extraction_regex",cf_str,CF_CHARRANGE,"Character separator for subfields inside the selected field"},
+   {"extraction_regex",cf_str,"","Regular expression that should contain a single backreference for extracting a value"},
    {NULL,cf_notype,NULL,NULL}
    };
 

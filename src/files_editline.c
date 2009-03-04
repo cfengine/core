@@ -689,7 +689,7 @@ return retval;
 int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
 
 { char *sp, *start = NULL,*end,replace[CF_EXPANDSIZE],line_buff[CF_EXPANDSIZE];
- int match_len,start_off,end_off,once_only = false,retval = false;
+  int match_len,start_off,end_off,once_only = false,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
  
@@ -754,8 +754,15 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
    if (RegExMatchSubString(rex,line_buff,&start_off,&end_off))
       {
-      cfPS(cf_verbose,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",line_buff,ip->name,pp->promiser,pp->this_server);
-      continue;
+      ExpandScalar(a.replace.replace_value,replace);
+
+      if (strcmp(replace,line_buff) != 0)
+         {      
+         cfPS(cf_error,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",line_buff,ip->name,pp->promiser,pp->this_server);
+         CfOut(cf_error,"","Because the regular expression \"%s\" still matches the replacement string \"%s\"",pp->promiser,line_buff);
+         PromiseRef(cf_error,pp);
+         continue;
+         }
       }
 
    if (once_only)

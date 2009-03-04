@@ -112,7 +112,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -248,6 +248,9 @@ signal(SIGPIPE,SIG_IGN);
 signal(SIGCHLD,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
+
+HISTO = false;
+FORGETRATE = 0.6;
 
 MonInitialize();
 }

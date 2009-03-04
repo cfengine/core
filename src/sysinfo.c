@@ -516,7 +516,7 @@ void Get3Environment()
   struct stat statbuf;
   time_t now = time(NULL);
   
-CfOut(cf_verbose,"","Looking for environment from cfenvd...\n");
+CfOut(cf_verbose,"","Looking for environment from cf-monitor...\n");
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
 
 if (stat(env,&statbuf) == -1)
@@ -542,7 +542,7 @@ CfOut(cf_verbose,"","Loading environment...\n");
  
 if ((fp = fopen(env,"r")) == NULL)
    {
-   CfOut(cf_verbose,"","\nUnable to detect environment from cfenvd\n\n");
+   CfOut(cf_verbose,"","\nUnable to detect environment from cf-monitord\n\n");
    return;
    }
 

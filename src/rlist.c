@@ -114,7 +114,12 @@ void *CopyRvalItem(void *item, char type)
   char output[CF_BUFSIZE];
   
 Debug("CopyRvalItem(%c)\n",type);
-  
+
+if (item == NULL)
+   {
+   return NULL;
+   }
+
 switch(type)
    {
    case CF_SCALAR:

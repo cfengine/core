@@ -40,13 +40,13 @@ Expanding all bodies in the constraint list, we have
 
 lval <=> CF_LIST|CF_SCALAR
 
-Now the rule for variable substitution is that any list variable
+Now the rule for variable substitution is that any list variable @(name)
 substituted directly for a LIST is not iterated, but dropped into
 place, i.e. in list-lvals and the promisee (since this would be
 equivalent to a re-concatenation of the expanded separate promises)
 
 Any list variable occuring within a scalar or in place of a scalar
-is assumed to be iterated.
+is assumed to be iterated i.e. $(name).
 
 To expand a promise, we build temporary hash tables. There are two
 stages, to this - one is to create a promise copy including all of the
@@ -54,14 +54,7 @@ body templates and translate the parameters. This requires one round
 of expansion with scopeid "body". Then we use this fully assembled promise
 and expand vars and function calls.
 
-We should also exclude iteration as an error in lvals like "expireafter" etc,
-or anything in a control body?.
-
-*/
-
-/*********************************************************************/
-
-/* To expand the variables in a promise we need to 
+To expand the variables in a promise we need to 
 
    -- first get all strings, also parameterized bodies, which
       could also be lists
@@ -86,6 +79,11 @@ or anything in a control body?.
    
    -- form the outer loops to generate combinations
 
+Note, we map the current context into a fluid context "this" that maps
+every list into a scalar during iteration. Thus "this" never contains
+lists. This presents a problem for absolute references like $(abs.var),
+since these cannot be mapped into "this" without some magic.
+   
 **********************************************************************/
 
 void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void *fnptr)
@@ -165,10 +163,11 @@ if (rval == NULL)
    {
    return;
    }
-  
+
 switch(type)
    {
    case CF_SCALAR:
+
        ScanScalar(scopeid,scalarvars,listvars,(char *)rval,0);
        break;
        
@@ -237,10 +236,11 @@ for (sp = string; (*sp != '\0') ; sp++)
             {
             if (rtype == CF_LIST)
                {
-               Debug("List variable $(%s) found in scope %s\n",var,absscope);
-               ExpandScalar(var,exp);  // in touch with our inner string
+               ExpandScalar(var,exp); 
 
-               /* embedded iterators should be incremented fastest, so order list */
+               /* embedded iterators should be incremented fastest,
+                  so order list -- and MUST return de-scoped name
+                  else list expansion cannot map var to this.name */
                
                if (level > 0)
                   {
@@ -571,6 +571,9 @@ do
 
    SetScope("this");  
    DeRefListsInHashtable("this",listvars,lol);   
+
+//   ShowScope("this");
+
    pexp = ExpandDeRefPromise("this",pp);
 
    switch (agent)

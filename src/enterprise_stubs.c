@@ -178,6 +178,8 @@ void HistoryUpdate(struct Averages newvals)
 #ifdef HAVE_LIBCFNOVA  
 /* We do this only once per hour - this should not be changed */
 
+Banner("Update long-term history");
+  
 dummyattr.transaction.ifelapsed = 59;
 
 thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);

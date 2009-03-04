@@ -88,7 +88,7 @@ if (pp->done)
 if (CF_STCKFRAME == 1)
    {
    *(pp->donep) = true;
-   pp->done = true;
+   /* Must not set pp->done = true for editfiles etc */
    }
 
 if (IGNORELOCK)

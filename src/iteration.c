@@ -54,10 +54,16 @@ for (rp = namelist; rp != NULL; rp = rp->next)
    {
    dtype = GetVariable(scopeid,rp->item,&returnval,&rtype);
 
+   if (dtype == cf_notype)
+      {
+      CfOut(cf_error,"","Software error: Couldn't locate variable %s....in %s\n",rp->item,scopeid);
+      FatalError("Failure in scanning promise variables");
+      }
+   
    /* Make a copy of list references in scope only, without the names */
 
    new = NewAssoc(rp->item,returnval,rtype,dtype);
-   
+
    this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
 
    /* Now fix state_ptr so it points to current (rlist) entry */

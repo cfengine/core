@@ -498,6 +498,20 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_ifelapsed].lval) == 0)
+      {
+      VIFELAPSED = Str2Int(retval);
+      CfOut(cf_verbose,"","SET ifelapsed = %d\n",VIFELAPSED);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_expireafter].lval) == 0)
+      {
+      VEXPIREAFTER = Str2Int(retval);
+      CfOut(cf_verbose,"","SET ifelapsed = %d\n",VEXPIREAFTER);
+      continue;
+      }
+   
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_max_children].lval) == 0)
       {
       CFA_BACKGROUND_LIMIT = Str2Int(retval);
@@ -531,7 +545,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       }
    }
 
-if (GetVariable("control_common","CFG_CONTROLBODY[cfg_lastseenexpireafter]",&retval,&rettype) == cf_notype)
+if (GetVariable("control_common","CFG_CONTROLBODY[cfg_lastseenexpireafter]",&retval,&rettype) != cf_notype)
    {
    LASTSEENEXPIREAFTER = Str2Int(retval);
    }

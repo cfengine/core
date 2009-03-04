@@ -196,10 +196,12 @@ i = slot = GetHash(vlval);
 if (ptr == NULL || ptr->hashtable == NULL)
    {
    Debug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
+   *returnv = lval;
+   *rtype   = CF_SCALAR;
    return cf_notype;
    }
 
-Debug("GetVariableValue(%s,%s): using scope '%s' for variable '%s'\n",scopeid,vlval,ptr->scope,vlval);
+Debug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n",scopeid,vlval,ptr->scope,vlval);
 
 if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
    {
@@ -233,6 +235,8 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
    if (!found)
       {
       Debug("No such variable found %s.%s\n",scope,lval);
+      *returnv = lval;
+      *rtype   = CF_SCALAR;
       return cf_notype;
       }
    }

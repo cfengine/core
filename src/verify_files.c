@@ -85,9 +85,13 @@ Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 if (!IsPathRegex(wildpath))
    {
-   CfOut(cf_verbose,""," -> Using file literal base path %s\n",wildpath);
+   CfOut(cf_verbose,""," -> Using literal pathtype for %s\n",wildpath);
    (*fnptr)(wildpath,pp);
    return;
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> Using regex pathtype for %s (see pathtype)\n",wildpath);
    }
 
 pbuffer[0] = '\0';

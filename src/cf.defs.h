@@ -137,6 +137,8 @@ extern int errno;
 #ifndef ps2
 #include <sys/statfs.h>
 #endif
+
+#include <sys/systemcfg.h>
 #endif
 
 #ifdef SOLARIS

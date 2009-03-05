@@ -72,7 +72,6 @@ else
          case cf_str:
          case cf_int:
          case cf_real:
-
              break;
 
          default:

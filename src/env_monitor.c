@@ -490,6 +490,8 @@ struct Averages EvalAvQ(char *t)
 { struct Averages *currentvals,newvals;
   int i; 
   double This[CF_OBSERVABLES],delta2;
+
+Banner("Evaluating and storing new weekly averages");
   
 if ((currentvals = GetCurrentAverages(t)) == NULL)
    {

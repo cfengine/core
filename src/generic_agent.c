@@ -97,7 +97,7 @@ int CheckPromises(enum cfagenttype ag)
 { char cmd[CF_BUFSIZE],path[CF_BUFSIZE];
   struct stat sb;
  
-if (ag != cf_agent)
+if ((ag != cf_agent) && (ag != cf_executor))
    {
    return true;
    }

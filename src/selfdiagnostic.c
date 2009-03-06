@@ -94,7 +94,7 @@ for (i = 0; varstrings[i] != NULL; i++)
       {
       printf("-----------------------------------------------------------\n");
       printf("Scanning: [%s]\n",varstrings[i]);
-      ScanRval("diagnostic",&scalars,&listoflists,varstrings[i],CF_SCALAR);
+      ScanRval("diagnostic",&scalars,&listoflists,varstrings[i],CF_SCALAR,NULL);
       printf("Cumulative scan produced:\n");
       printf("   Scalar variables: ");
       ShowRlist(stdout,scalars);
@@ -191,16 +191,16 @@ AppendConstraint(&(pp.conlist),"lval3",fp,CF_FNCALL,"upper classes2");
 
 pcopy = DeRefCopyPromise("diagnostic",&pp);
 
-ScanRval("diagnostic",&scalarvars,&listvars,pcopy->promiser,CF_SCALAR);
+ScanRval("diagnostic",&scalarvars,&listvars,pcopy->promiser,CF_SCALAR,NULL);
 
 if (pcopy->promisee != NULL)
    {
-   ScanRval("diagnostic",&scalarvars,&listvars,pp.promisee,pp.petype);
+   ScanRval("diagnostic",&scalarvars,&listvars,pp.promisee,pp.petype,NULL);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval("diagnostic",&scalarvars,&listvars,cp->rval,cp->type);
+   ScanRval("diagnostic",&scalarvars,&listvars,cp->rval,cp->type,NULL);
    }
 
 ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);

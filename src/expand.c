@@ -98,16 +98,16 @@ Debug("****************************************************\n\n");
   
 pcopy = DeRefCopyPromise(scopeid,pp);
 
-ScanRval(scopeid,&scalarvars,&listvars,pcopy->promiser,CF_SCALAR);
+ScanRval(scopeid,&scalarvars,&listvars,pcopy->promiser,CF_SCALAR,pp);
 
 if (pcopy->promisee != NULL)
    {
-   ScanRval(scopeid,&scalarvars,&listvars,pp->promisee,pp->petype);
+   ScanRval(scopeid,&scalarvars,&listvars,pp->promisee,pp->petype,pp);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type);
+   ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type,pp);
    }
 
 PushThisScope();
@@ -154,7 +154,7 @@ return final;
 
 /*********************************************************************/
 
-void ScanRval(char *scopeid,struct Rlist **scalarvars,struct Rlist **listvars,void *rval,char type)
+void ScanRval(char *scopeid,struct Rlist **scalarvars,struct Rlist **listvars,void *rval,char type,struct Promise *pp)
 
 { struct Rlist *rp;
   struct FnCall *fp;
@@ -168,13 +168,13 @@ switch(type)
    {
    case CF_SCALAR:
 
-       ScanScalar(scopeid,scalarvars,listvars,(char *)rval,0);
+       ScanScalar(scopeid,scalarvars,listvars,(char *)rval,0,pp);
        break;
        
    case CF_LIST:
        for (rp = (struct Rlist *)rval; rp != NULL; rp=rp->next)
           {
-          ScanRval(scopeid,scalarvars,listvars,rp->item,rp->type);
+          ScanRval(scopeid,scalarvars,listvars,rp->item,rp->type,pp);
           }
        break;
        
@@ -184,7 +184,7 @@ switch(type)
        for (rp = (struct Rlist *)fp->args; rp != NULL; rp=rp->next)
           {
           Debug("Looking at arg for function-like object %s()\n",fp->name);
-          ScanRval(scopeid,scalarvars,listvars,(char *)rp->item,rp->type);
+          ScanRval(scopeid,scalarvars,listvars,(char *)rp->item,rp->type,pp);
           }
        break;
 
@@ -196,7 +196,7 @@ switch(type)
 
 /*********************************************************************/
 
-void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *string,int level)
+void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *string,int level,struct Promise *pp)
 
 { struct Rlist *rp;
   char *sp,rtype;
@@ -231,6 +231,8 @@ for (sp = string; (*sp != '\0') ; sp++)
             {
             strncpy(absscope,scopeid,CF_MAXVARSIZE-1);  
             }
+
+         RegisterBundleDependence(absscope,pp);
          
          if (GetVariable(absscope,var,&rval,&rtype) != cf_notype)
             {
@@ -264,7 +266,7 @@ for (sp = string; (*sp != '\0') ; sp++)
             if (IsExpandable(var))
                {
                Debug("Found embedded variables\n");
-               ScanScalar(scopeid,scal,its,var,level+1);
+               ScanScalar(scopeid,scal,its,var,level+1,pp);
                }
             }
          sp += strlen(var)-1;

@@ -163,6 +163,17 @@ for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
 }
 
 /*****************************************************************************/
+
+void RegisterBundleDependence(char *name,struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_RegisterBundleDepedence(name,pp);
+#else
+#endif
+}
+
+/*****************************************************************************/
 /* Monitord                                                                  */
 /*****************************************************************************/
 

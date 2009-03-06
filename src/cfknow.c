@@ -1178,6 +1178,14 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
       {
       AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
       }
+
+   if (pp->ref)
+      {
+      struct Rlist *list = NULL;
+      PrependRScalar(&list,"Explanation",CF_SCALAR);
+      AddOccurrence(&(tp->occurrences),pp->ref,list,cfk_literal);
+      DeleteRlist(list);
+      }
    }
 else
    {
@@ -1223,7 +1231,7 @@ if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
    return;
    }
  
-AddOccurrence(&(tp->occurrences),pp->classes,pp->promiser,a.represents,rep_type);
+AddOccurrence(&(tp->occurrences),pp->promiser,a.represents,rep_type);
 }
 
 /*********************************************************************/
@@ -1471,7 +1479,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          char safeexpr[CF_BUFSIZE];
          strcpy(safeexpr,EscapeSQL(&cfdb,op->locator));
 
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",CanonifyName(tp->topic_name),safeexpr,op->rep_type,GetLongTopicName(&cfdb,TOPIC_MAP,rp->item));
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",CanonifyName(tp->topic_name),safeexpr,op->rep_type,rp->item);
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
          }
@@ -1734,7 +1742,7 @@ while(CfFetchRow(cfdb))
       AppendRlist(&this,subtype,CF_SCALAR);
       }
    
-   AddOccurrence(&occurrences,topic_name,locator,this,locator_type);
+   AddOccurrence(&occurrences,locator,this,locator_type);
    DeleteRlist(this);
    }
 

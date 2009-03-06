@@ -173,7 +173,7 @@ for (rp = associates; rp != NULL; rp=rp->next)
 
 /*****************************************************************************/
 
-void AddOccurrence(struct Occurrence **list,char *topic_name,char *reference,struct Rlist *represents,enum representations rtype)
+void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype)
 
 { struct Occurrence *op = NULL;
   struct TopRepresentation *tr;
@@ -198,7 +198,7 @@ if (!(op = OccurrenceExists(*list,reference,rtype)))
 
 if (represents == NULL)
    {
-   CfOut(cf_error,"","Class occurrence \"%s\" claims to represent no topics, in which case it is dud",topic_name);
+   CfOut(cf_error,"","Topic occurrence \"%s\" claims to represent no aspect of its topic, discarding...",reference);
    return;
    }
 
@@ -319,14 +319,8 @@ for (tp = list; tp != NULL; tp=tp->next)
 
 if (match)
    {
-   if (tp->comment)
-      {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,topic);
-      }
-   else
-      {
-      snprintf(longname,CF_BUFSIZE,"%s",topic);
-      }
+   /* deprecate this form snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,topic); */
+   snprintf(longname,CF_BUFSIZE,"%s",topic);
    }
 
 if (match && cfdb)

@@ -450,13 +450,13 @@ for (ta = list; ta != NULL; ta=ta->next)
    
    if (ta->bwd_name && strcmp(fwd,ta->bwd_name) == 0)
       {
-      CfOut(level,"","Association \"%s\" exists already but in opposite orientation\n",fwd);
+      CfOut(cf_inform,"","Association \"%s\" exists already but in opposite orientation\n",fwd);
       return ta;
       }
 
    if (bwd && strcmp(bwd,ta->fwd_name) == 0)
       {
-      CfOut(level,"","Association \"%s\" exists already but in opposite orientation\n",bwd);
+      CfOut(cf_inform,"","Association \"%s\" exists already but in opposite orientation\n",bwd);
       return ta;
       }
 

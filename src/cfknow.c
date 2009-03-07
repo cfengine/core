@@ -1522,7 +1522,12 @@ if (GRAPH)
 #ifdef HAVE_LIBCFNOVA   
    PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
    PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
-   VerifyGraph(TOPIC_MAP,semantics,"flow");
+   PrependRScalar(&semantics,NOVA_IMPACTS,CF_SCALAR);
+   PrependRScalar(&semantics,NOVA_ISIMPACTED,CF_SCALAR);
+   PrependRScalar(&semantics,NOVA_BUNDLE_DATA,CF_SCALAR);
+   PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_B,CF_SCALAR);
+   PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_P,CF_SCALAR);
+   VerifyGraph(TOPIC_MAP,semantics,"influence");
 #endif
    }
 
@@ -2165,22 +2170,28 @@ else
    v = "not specified";
    }
 
-snprintf(banner,CF_BUFSIZE,"Topic: %s",this_name);  
+snprintf(banner,CF_BUFSIZE,"%s",TypedTopic(this_name,this_type));  
 CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
+
+/* Images */
+
+fprintf(fout,"<div id=\"image\">");
 
 snprintf(filename,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
 
 if (stat(filename,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"image\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
+   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
    }
 
-snprintf(filename,CF_BUFSIZE,"graphs/flow_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
 
 if (stat(filename,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"image\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
+   fprintf(fout,"<div id=\"influence\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
    }
+
+fprintf(fout,"</div>\n");
 
 // div id=content_container
 

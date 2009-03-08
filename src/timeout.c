@@ -68,7 +68,7 @@ void DeleteTimeOut()
 void SetReferenceTime(int setclasses)
 
 { time_t tloc;
- char vbuff[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE];
  
 if ((tloc = time((time_t *)NULL)) == -1)
    {
@@ -83,6 +83,11 @@ CfOut(cf_verbose,"","Reference time set to %s\n",ctime(&tloc));
 
 if (setclasses)
    {
+   time_t now = time(NULL);
+   struct tm *tmv = gmtime(&now);
+
+   snprintf(vbuff,CF_MAXVARSIZE,"GMT_Hr%d\n",tmv->tm_hour);
+   NewClass(vbuff);
    AddTimeClass(vbuff);
    }
 }
@@ -109,7 +114,7 @@ void AddTimeClass(char *str)
 
 { int i,value;
   char buf2[10], buf3[10], buf4[10], buf5[10], buf[10], out[10];
-  
+
 for (i = 0; i < 7; i++)
    {
    if (strncmp(DAY_TEXT[i],str,3)==0)

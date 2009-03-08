@@ -2247,6 +2247,10 @@ if (occurrences != NULL)
          case cfk_image:
              fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",oc->locator,oc->locator);
              break;
+         case cfk_portal:
+             fprintf(fout,"<p><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",oc->locator,oc->locator);
+             break;
+
          default:
              break;
          }

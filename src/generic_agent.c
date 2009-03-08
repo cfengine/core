@@ -61,7 +61,9 @@ LoadPersistentContext();
 LoadSystemConstants();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]); 
+NewClass(CanonifyName(THIS_AGENT));
 THIS_AGENT_TYPE = ag;
+
 snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 SetNewScope(vbuff);
 
@@ -1460,6 +1462,7 @@ void Version(char *component)
 
 {
 printf("This is %s version %s - Free software %s\n",component,VERSION,CF3COPYRIGHT);
+EnterpriseVersion();
 }
 
 /********************************************************************/

@@ -239,6 +239,10 @@ if (a.edits.backup != cfa_nobackup)
       unlink(backup);
       }
    }
+else
+   {
+   unlink(backup);
+   }
 
 if (rename(new,file) == -1)
    {

@@ -275,7 +275,8 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
-void InitMeasurements();
+void EnterpriseVersion(void);
+void InitMeasurements(void);
 void BundleNode(FILE *fp,char *bundle);
 void BodyNode(FILE *fp,char *bundle,int call);
 void TypeNode(FILE *fp,char *type);

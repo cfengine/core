@@ -352,7 +352,7 @@ void TexinfoVariables(FILE *fout,char *scope)
 
 { struct Scope *sp;
   struct CfAssoc **ap;
-  char filename[CF_BUFSIZE];
+  char filename[CF_BUFSIZE],varname[CF_BUFSIZE];
   struct Rlist *rp,*list = NULL;
   int i;
 
@@ -381,6 +381,30 @@ for (rp = AlphaSortRListNames(list); rp != NULL; rp = rp->next)
    }
 
 DeleteRlist(list);
+
+if (strcmp(scope,"sys") == 0)
+   {
+   for (i = 0; i < CF_OBSERVABLES; i++)
+      {
+      if (strcmp(OBS[i][0],"spare") == 0)
+         {
+         break;
+         }
+      
+      snprintf(varname,CF_MAXVARSIZE,"value_%s",OBS[i][0]);
+      fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
+      fprintf(fout,"Observational measure collected every 2.5 minutes from cf-monitord, description: @var{%s}.",OBS[i][1]);
+      
+      snprintf(varname,CF_MAXVARSIZE,"average_%s",OBS[i][0]);
+      fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
+      fprintf(fout,"Observational measure collected every 2.5 minutes from cf-monitord, description: @var{%s}.",OBS[i][1]);
+      
+      snprintf(varname,CF_MAXVARSIZE,"stddev_%s",OBS[i][0]);
+      fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
+      fprintf(fout,"Observational measure collected every 2.5 minutes from cf-monitord, description: @var{%s}.",OBS[i][1]);
+      }
+   }
+
 }
 
 /*******************************************************************/

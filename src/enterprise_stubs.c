@@ -40,6 +40,18 @@ should be free, please let us know and we will consider this carefully.
 
 /*****************************************************************************/
 
+void EnterpriseVersion()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_Version();
+#endif 
+}
+
+/*****************************************************************************/
+/* Knowledge                                                                 */
+/*****************************************************************************/
+
 void BundleNode(FILE *fp,char *bundle)
 
 {

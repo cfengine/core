@@ -236,7 +236,7 @@ return cfa_nocomparison;
 enum representations String2Representation(char *s)
 
 { int i;
- static char *types[] = {"url","web","file","db","literal","image",NULL};
+ static char *types[] = {"url","web","file","db","literal","image","portal",NULL};
 
 for (i = 0; types[i] != NULL; i++)
    {

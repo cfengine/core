@@ -45,12 +45,12 @@ void LookupUniqueTopic(char *typed_topic);
 void LookupMatchingTopics(char *typed_topic);
 void ShowTopicDisambiguation(CfdbConn *cfdb,struct Topic *list,char *name);
 void NothingFound(char *topic);
-void ShowTopicCosmology(CfdbConn *cfdb,char *topic_name,char *topic_id,char *topic_type);
+void ShowTopicCosmology(CfdbConn *cfdb,char *topic_name,char *topic_id,char *topic_type,char *topic_comment);
 void ShowAssociationSummary(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc);
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type);
 char *Name2Id(char *s);
-void ShowTextResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
-void ShowHtmlResults(char *name,char *type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
+void ShowTextResults(char *name,char *type,char *comm,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
+void ShowHtmlResults(char *name,char *type,char *comm,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
 char *NextTopic(char *link,char* type);
 void GenerateGraph(void);
 void GenerateManual(void);
@@ -340,9 +340,9 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
          SQL_TYPE = cfd_mysql;
          }
       
-      if (strcmp(retval,"postgress") == 0)
+      if (strcmp(retval,"postgres") == 0)
          {
-         SQL_TYPE = cfd_postgress;
+         SQL_TYPE = cfd_postgres;
          }
       
       continue;
@@ -611,9 +611,9 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          }
       }
 
-   if (tp->comment)
+   if (tp->topic_comment)
       {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,NextTopic(tp->topic_name,tp->topic_type));
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->topic_comment,NextTopic(tp->topic_name,tp->topic_type));
       }
    else
       {
@@ -715,9 +715,9 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
    strncpy(id,Name2Id(tp->topic_name),CF_MAXVARSIZE-1);
 
-   if (tp->comment)
+   if (tp->topic_comment)
       {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,tp->topic_name);
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->topic_comment,tp->topic_name);
       ShowTopicLTM(fout,id,tp->topic_type,longname);
       }
    else
@@ -773,6 +773,7 @@ fclose(fout);
 void LookupUniqueTopic(char *typed_topic)
 
 { char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
+  char topic_comment[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
@@ -815,16 +816,16 @@ strcpy(safetype,EscapeSQL(&cfdb,type));
 
 if (strlen(type) > 0)
    {
-   snprintf(query,CF_BUFSIZE,"SELECT * from topics where (topic_name='%s' or topic_id='%s') and topic_type='%s'",safe,CanonifyName(safe),safetype);
+   snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where (topic_name='%s' or topic_id='%s') and topic_type='%s'",safe,CanonifyName(safe),safetype);
    }
 else
    {
-   snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_name='%s' or topic_id='%s'",safe,CanonifyName(safe));
+   snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where topic_name='%s' or topic_id='%s'",safe,CanonifyName(safe));
    }
 
 CfNewQueryDB(&cfdb,query);
 
-if (cfdb.maxcolumns != 3)
+if (cfdb.maxcolumns != 4)
    {
    CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
    CfCloseDB(&cfdb);
@@ -836,7 +837,16 @@ while(CfFetchRow(&cfdb))
    strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
    strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
-   AddTopic(&tmatches,topic_name,topic_type);   
+   
+   if (CfFetchColumn(&cfdb,3))
+      {
+      strncpy(topic_comment,CfFetchColumn(&cfdb,3),CF_BUFSIZE-1);
+      }
+   else
+      {
+      strncpy(topic_comment,"",CF_BUFSIZE-1);
+      }
+   AddCommentedTopic(&tmatches,topic_name,topic_comment,topic_type);   
    count++;
    }
 
@@ -844,7 +854,7 @@ CfDeleteQuery(&cfdb);
 
 if (count == 1)
    {
-   ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_type);
+   ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_type,topic_comment);
    CfCloseDB(&cfdb);
    return;
    }
@@ -864,7 +874,7 @@ tmatches = NULL;
 
 strncpy(safe,EscapeSQL(&cfdb,topic),CF_MAXVARSIZE);
 
-snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc='%s' or to_assoc='%s'",safe,safe);
+snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations where from_assoc='%s' or to_assoc='%s'",safe,safe);
 
 /* Expect multiple matches always with associations */
 
@@ -944,6 +954,7 @@ CfCloseDB(&cfdb);
 void LookupMatchingTopics(char *typed_topic)
 
 { char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
+  char topic_comment[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
@@ -979,11 +990,11 @@ if (!cfdb.connected)
 
 /* First assume the item is a topic */
 
-snprintf(query,CF_BUFSIZE,"SELECT * from topics");
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics");
 
 CfNewQueryDB(&cfdb,query);
 
-if (cfdb.maxcolumns != 3)
+if (cfdb.maxcolumns != 4)
    {
    CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
    CfCloseDB(&cfdb);
@@ -1016,7 +1027,7 @@ if (matched == 1)
    {
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      ShowTopicCosmology(&cfdb,tp->topic_name,topic_id,tp->topic_type);
+      ShowTopicCosmology(&cfdb,tp->topic_name,topic_id,tp->topic_type,tp->topic_comment);
       }
    CfCloseDB(&cfdb);
    return;
@@ -1028,7 +1039,7 @@ count = 0;
 matched = 0;
 tmatches = NULL;
 
-snprintf(query,CF_BUFSIZE,"SELECT * from associations");
+snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations");
 
 /* Expect multiple matches always with associations */
 
@@ -1159,7 +1170,7 @@ a = GetTopicsAttributes(pp);
  
 strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
-CfOut(cf_verbose,"","Attempting to install topic %s::%s\n",pp->classes,pp->promiser);
+CfOut(cf_verbose,"","Attempting to install topic %s::%s \n",pp->classes,pp->promiser);
 
 if (pp->ref != NULL)
    {
@@ -1390,6 +1401,7 @@ snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE topics"
         "("
         "topic_name varchar(256),"
+        "topic_comment varchar(1024),",
         "topic_id varchar(256),"
         "topic_type varchar(256)"
         ");\n"
@@ -1442,7 +1454,14 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
    strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
 
-   snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type);
+   if (tp->topic_comment)
+      {
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,topic_comment) values ('%s','%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type,tp->topic_comment);
+      }
+   else
+      {
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type);
+      }
    fprintf(fout,"%s",query);
    CfVoidQueryDB(&cfdb,query);
    }
@@ -1595,24 +1614,24 @@ else
 
 /*********************************************************************/
 
-void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_id,char *this_type)
+void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_id,char *this_type,char *this_comment)
 
 { struct Topic *other_topics = NULL,*topics_this_type = NULL;
   struct TopicAssociation *associations = NULL;
   struct Occurrence *occurrences = NULL;
   char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],associate[CF_BUFSIZE];
   char query[CF_BUFSIZE],fassociation[CF_BUFSIZE],bassociation[CF_BUFSIZE],safe[CF_BUFSIZE];
-  char locator[CF_BUFSIZE],subtype[CF_BUFSIZE],to_type[CF_BUFSIZE];
+  char locator[CF_BUFSIZE],subtype[CF_BUFSIZE],to_type[CF_BUFSIZE],topic_comment[CF_BUFSIZE];
   enum representations locator_type;
   struct Rlist *rp;
 
 /* Collect data - first other topics of same type */
 
-snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s' order by topic_name desc",this_type);
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where topic_type='%s' order by topic_name desc",this_type);
 
 CfNewQueryDB(cfdb,query);
 
-if (cfdb->maxcolumns != 3)
+if (cfdb->maxcolumns != 4)
    {
    CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
    return;
@@ -1623,24 +1642,33 @@ while(CfFetchRow(cfdb))
    strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
    strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+
+   if (CfFetchColumn(cfdb,3))
+      {
+      strncpy(topic_comment,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
+      }
+   else
+      {
+      strncpy(topic_comment,"",CF_BUFSIZE-1);
+      }
 
    if (strcmp(topic_name,this_name) == 0 || strcmp(topic_id,this_name) == 0)
       {
       continue;
       }
 
-   AddTopic(&other_topics,topic_name,topic_type);
+   AddCommentedTopic(&other_topics,topic_name,topic_comment,topic_type);
    }
 
 CfDeleteQuery(cfdb);
 
 /* Collect data - then topics of this topic-type */
 
-snprintf(query,CF_BUFSIZE,"SELECT * from topics where topic_type='%s' order by topic_name desc",CanonifyName(this_name));
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where topic_type='%s' order by topic_name desc",CanonifyName(this_name));
 
 CfNewQueryDB(cfdb,query);
 
-if (cfdb->maxcolumns != 3)
+if (cfdb->maxcolumns != 4)
    {
    CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
    return;
@@ -1652,6 +1680,15 @@ while(CfFetchRow(cfdb))
    strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
    strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
+   if (CfFetchColumn(cfdb,3))
+      {
+      strncpy(topic_comment,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
+      }
+   else
+      {
+      strncpy(topic_comment,"",CF_BUFSIZE-1);
+      }
+   
    if (strcmp(topic_name,this_name) == 0 || strcmp(topic_id,this_name) == 0)
       {
       continue;
@@ -1664,7 +1701,7 @@ CfDeleteQuery(cfdb);
 
 /* Then associated topics */
 
-snprintf(query,CF_BUFSIZE,"SELECT * from associations where to_name='%s'",this_name);
+snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations where to_name='%s'",this_name);
 
 CfNewQueryDB(cfdb,query);
 
@@ -1690,7 +1727,7 @@ while(CfFetchRow(cfdb))
 
 CfDeleteQuery(cfdb);
 
-snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_name='%s'",this_name);
+snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations where from_name='%s'",this_name);
 
 CfNewQueryDB(cfdb,query);
 
@@ -1720,7 +1757,7 @@ CfDeleteQuery(cfdb);
 /* Finally occurrences of the mentioned topic */
 
 strncpy(safe,EscapeSQL(cfdb,this_name),CF_BUFSIZE);
-snprintf(query,CF_BUFSIZE,"SELECT * from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,locator,locator_type,subtype from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
 
 CfNewQueryDB(cfdb,query);
 
@@ -1757,11 +1794,11 @@ CfDeleteQuery(cfdb);
 
 if (HTML)
    {
-   ShowHtmlResults(this_name,this_type,other_topics,associations,occurrences,topics_this_type);
+   ShowHtmlResults(this_name,this_type,this_comment,other_topics,associations,occurrences,topics_this_type);
    }
 else
    {
-   ShowTextResults(this_name,this_type,other_topics,associations,occurrences,topics_this_type);
+   ShowTextResults(this_name,this_type,this_comment,other_topics,associations,occurrences,topics_this_type);
    }
 }
 
@@ -1797,7 +1834,7 @@ void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc
 
 /* Role players - fwd search */
 
-snprintf(query,CF_BUFSIZE,"SELECT * from associations where from_assoc='%s'",EscapeSQL(cfdb,this_fassoc));
+snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations where from_assoc='%s'",EscapeSQL(cfdb,this_fassoc));
 
 CfNewQueryDB(cfdb,query);
 
@@ -1849,7 +1886,7 @@ CfDeleteQuery(cfdb);
 
 if (count == 0)
    {
-   snprintf(query,CF_BUFSIZE,"SELECT * from associations where to_assoc='%s'",EscapeSQL(cfdb,this_tassoc));
+   snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations where to_assoc='%s'",EscapeSQL(cfdb,this_tassoc));
 
    CfNewQueryDB(cfdb,query);
    
@@ -2040,7 +2077,7 @@ return ret;
 
 /*********************************************************************/
 
-void ShowTextResults(char *this_name,char *this_type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences, struct Topic *topics_this_type)
+void ShowTextResults(char *this_name,char *this_type,char *this_comment,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences, struct Topic *topics_this_type)
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -2136,7 +2173,15 @@ printf("\nOther topics of the same type (%s):\n\n",this_type);
 
 for (tp = other_topics; tp != NULL; tp=tp->next)
    {
-   printf("  %s\n",tp->topic_name);
+   if (tp->topic_comment)
+      {
+      printf("  %s - %s\n",tp->topic_name,tp->topic_comment);
+      }
+   else
+      {
+      printf("  %s\n",tp->topic_name);
+      }
+   
    count++;
    }
 
@@ -2148,7 +2193,7 @@ if (count == 0)
 
 /*********************************************************************/
 
-void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *topics_this_type)
+void ShowHtmlResults(char *this_name,char *this_type,char *this_comment,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *topics_this_type)
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -2341,7 +2386,14 @@ if (other_topics)
    
    for (tp = other_topics; tp != NULL; tp=tp->next)
       {
-      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name,tp->topic_type));
+      if (tp->topic_comment)
+         {
+         fprintf(fout,"<li>  %s &nbsp; %s\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+         }
+      else
+         {
+         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_type));
+         }
       count++;
       }
    

@@ -38,10 +38,8 @@ int main (int argc,char *argv[]);
 extern int NO_FORK;
 extern int HISTO;
 extern short TCPDUMP;
-extern double FORGETRATE;
 
 extern struct BodySyntax CFM_CONTROLBODY[];
-extern double FORGETRATE;
 
 /*******************************************************************/
 /* Command line options                                            */

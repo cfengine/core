@@ -38,8 +38,8 @@ FindFilePromiserObjects(pp);
 
 if (AM_BACKGROUND_PROCESS && !pp->done)
    {
-   CfOut(cf_inform,"","Exiting backgrounded promise");
-   PromiseRef(cf_inform,pp);
+   CfOut(cf_verbose,"","Exiting backgrounded promise");
+   PromiseRef(cf_verbose,pp);
    exit(0);
    }
 

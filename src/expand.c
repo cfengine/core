@@ -779,7 +779,7 @@ int IsNakedVar(char *str, char vtype)
 { char *sp,last;
   int count=0;
 
-if (str == NULL)
+if (str == NULL || strlen(str) == 0)
    {
    return false;
    }

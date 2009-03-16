@@ -96,8 +96,6 @@ struct Item *PREVIOUS_STATE = NULL;
 struct Item *ENTROPIES = NULL;
 
 int NO_FORK = false;
-double FORGETRATE = 0.7;
-
 int LASTQ[CF_OBSERVABLES];
 
 /*******************************************************************/
@@ -622,7 +620,7 @@ void ArmClasses(struct Averages av,char *timekey)
   struct Item *classlist = NULL, *ip;
   int i,j,k,pos;
   FILE *fp;
-  char buff[CF_BUFSIZE],ldt_buff[CF_BUFSIZE];
+  char buff[CF_BUFSIZE],ldt_buff[CF_BUFSIZE],name[CF_MAXVARSIZE];
   static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
   static double anomaly_chi[CF_OBSERVABLES];
   static double anomaly_chi_limit[CF_OBSERVABLES];
@@ -631,8 +629,9 @@ Debug("Arm classes for %s\n",timekey);
  
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   sigma = SetClasses(OBS[i][0],THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
-   SetVariable(OBS[i][0],THIS[i],av.Q[i].expect,sigma,&classlist);
+   GetClassName(i,name);
+   sigma = SetClasses(name,THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
+   SetVariable(name,THIS[i],av.Q[i].expect,sigma,&classlist);
 
    /* LDT */
 
@@ -653,7 +652,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       anomaly_chi[i] = CHI[i];
       anomaly_chi_limit[i] = CHI_LIMIT[i];
       
-      CfOut(cf_verbose,"","LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,OBS[i][0],CHI[i],CHI_LIMIT[i]);
+      CfOut(cf_verbose,"","LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,name,CHI[i],CHI_LIMIT[i]);
 
       /* Last printed element is now */
       
@@ -678,11 +677,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
       if (THIS[i] > av.Q[i].expect)
          {
-         snprintf(buff,CF_BUFSIZE,"%s_high_ldt",OBS[i][0]);
+         snprintf(buff,CF_BUFSIZE,"%s_high_ldt",name);
          }
       else
          {
-         snprintf(buff,CF_BUFSIZE,"%s_high_ldt",OBS[i][0]);
+         snprintf(buff,CF_BUFSIZE,"%s_high_ldt",name);
          }
 
       AppendItem(&classlist,buff,"2");
@@ -709,15 +708,17 @@ for (i = 0; i < CF_OBSERVABLES; i++)
          }
       }
 
-   snprintf(buff,CF_MAXVARSIZE,"ldtbuf_%s=%s",OBS[i][0],ldt_buff);
+   snprintf(buff,CF_MAXVARSIZE,"ldtbuf_%s=%s",name,ldt_buff);
    AppendItem(&classlist,buff,"");
 
-   snprintf(buff,CF_MAXVARSIZE,"ldtchi_%s=%.2f",OBS[i][0],anomaly_chi[i]);
+   snprintf(buff,CF_MAXVARSIZE,"ldtchi_%s=%.2f",name,anomaly_chi[i]);
    AppendItem(&classlist,buff,"");
    
-   snprintf(buff,CF_MAXVARSIZE,"ldtlimit_%s=%.2f",OBS[i][0],anomaly_chi_limit[i]);
+   snprintf(buff,CF_MAXVARSIZE,"ldtlimit_%s=%.2f",name,anomaly_chi_limit[i]);
    AppendItem(&classlist,buff,"");
    }
+
+SetMeasurementPromises(&classlist);
 
 /* Publish class list */
 
@@ -1638,10 +1639,10 @@ void SetVariable(char *name,double value,double average,double stddev,struct Ite
 sprintf(var,"value_%s=%d",name,(int)value);
 AppendItem(classlist,var,"");
 
-sprintf(var,"average_%s=%1.1f",name,average);
+sprintf(var,"av_%s=%1.1f",name,average);
 AppendItem(classlist,var,"");
 
-sprintf(var,"stddev_%s=%1.1f",name,stddev);
+sprintf(var,"dev_%s=%1.1f",name,stddev);
 AppendItem(classlist,var,""); 
 }
 

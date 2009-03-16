@@ -204,7 +204,7 @@
 #define HAVE_LIBPCRE 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
-/* #undef HAVE_LIBPQ */
+#define HAVE_LIBPQ 1
 
 /* Define to 1 if you have the <libpq-fe.h> header file. */
 /* #undef HAVE_LIBPQ_FE_H */
@@ -255,7 +255,7 @@
 /* #undef HAVE_PCRE_PCRE_H */
 
 /* Define to 1 if you have the <pgsql/libpq-fe.h> header file. */
-/* #undef HAVE_PGSQL_LIBPQ_FE_H */
+#define HAVE_PGSQL_LIBPQ_FE_H 1
 
 /* Define to 1 if you have the `pstat_getdynamic' function. */
 /* #undef HAVE_PSTAT_GETDYNAMIC */
@@ -483,7 +483,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.1b4"
+#define VERSION "3.0.1a20"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

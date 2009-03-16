@@ -264,7 +264,12 @@ void DeleteVariable(char *scope,char *id)
   
 i = slot = GetHash(id);
 ptr = GetScope(scope);
- 
+
+if (ptr == NULL)
+   {
+   return;
+   }
+
 if (CompareVariable(id,ptr->hashtable[slot]) != 0)
    {
    while (true)

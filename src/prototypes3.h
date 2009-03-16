@@ -289,12 +289,17 @@ void Nova_ShowTopicRepresentation(FILE *fp);
 void NotePromiseConditionals(struct Promise *pp);
 void DependencyGraph(struct Topic *map);
 void HistoryUpdate(struct Averages newvals);
+void GetClassName(int i,char *name);
 void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp);
+void SetMeasurementPromises(struct Item **classlist);
 void LongHaul(void);
 void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
+int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp);
+int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
+int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 
 /* env_context.c */
 
@@ -713,7 +718,7 @@ void IncrementItemListCounter (struct Item *ptr, char *string);
 void SetItemListCounter (struct Item *ptr, char *string,int value);
 struct Item *SortItemListNames(struct Item *list);
 struct Item *SortItemListCounters(struct Item *list);
-
+char *ItemList2CSV(struct Item *list);
 
 /* iteration.c */
 

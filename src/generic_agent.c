@@ -47,9 +47,10 @@ SetSignals();
 
 if (!NOHARDCLASSES)
    {
+   NewScope("const");
+   NewScope("match");
+   NewScope("mon");
    SetNewScope("sys");
-   SetNewScope("const");
-   SetNewScope("match");
    GetNameInfo3();
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
@@ -406,7 +407,7 @@ int NewPromiseProposals()
 
 if (stat(VINPUTFILE,&sb) == -1)
    {
-   CfOut(cf_error,"stat","There are no readable promise proposals at %s",VINPUTFILE);
+   CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
    return false;
    }
 

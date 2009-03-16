@@ -86,9 +86,9 @@ if (setclasses)
    time_t now = time(NULL);
    struct tm *tmv = gmtime(&now);
 
+   AddTimeClass(vbuff);
    snprintf(vbuff,CF_MAXVARSIZE,"GMT_Hr%d\n",tmv->tm_hour);
    NewClass(vbuff);
-   AddTimeClass(vbuff);
    }
 }
 
@@ -127,6 +127,8 @@ for (i = 0; i < 7; i++)
 sscanf(str,"%*s %s %s %s %s",buf2,buf3,buf4,buf5);
 
 /* Hours */
+
+buf[0] = '\0';
 
 sscanf(buf4,"%[^:]",buf);
 sprintf(out,"Hr%s",buf);

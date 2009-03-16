@@ -45,6 +45,8 @@ extern struct Rlist *ACCESSLIST;
 extern struct Topic *TOPIC_MAP;
 extern struct PromiseIdent *PROMISE_ID_LIST;
 
+extern double FORGETRATE;
+
 extern struct Rlist *CF_STCK;
 extern int CF_STCKFRAME;
 extern int CFA_BACKGROUND;

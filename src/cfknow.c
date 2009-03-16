@@ -1355,8 +1355,10 @@ void GenerateSQL()
   struct Occurrence *op;
   FILE *fout = stdout;
   char filename[CF_BUFSIZE],longname[CF_BUFSIZE],query[CF_BUFSIZE],safe[CF_BUFSIZE];
-  struct Rlist *rp;
+  struct Rlist *columns = NULL,*rp;
   int i,sql_database_defined = false;
+  struct Promise *pp;
+  struct Attributes a;
   CfdbConn cfdb;
 
 AddSlash(BUILD_DIR);
@@ -1366,6 +1368,12 @@ if (WRITE_SQL && strlen(SQL_OWNER) > 0)
    {
    sql_database_defined = true;
    }
+
+/* Set the only option used by the database code */
+
+snprintf(query,CF_MAXVARSIZE-1,"%s",SQL_DATABASE);
+pp = NewPromise("databases",query);
+a.transaction.action = cfa_fix;
 
 CfOut(cf_verbose,"","Writing %s\n",filename);
 
@@ -1383,9 +1391,26 @@ if (sql_database_defined)
 
    if (!cfdb.connected)
       {
-      CfOut(cf_error,"","Could not open sql_db %s\n",SQL_DATABASE);
-      return;
+      CfOut(cf_error,"","Could not connect an existing database %s\n",SQL_DATABASE);
+      CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,NULL);
+
+      if (!cfdb.connected)
+         {
+         CfOut(cf_error,"","Could not connect to the sql_db server for %s\n",SQL_DATABASE);
+         return;
+         }
+      
+      if (!VerifyDatabasePromise(&cfdb,SQL_DATABASE,a,pp))
+         {
+         return;
+         }
+      
+      CfOut(cf_verbose,"","Suceeded in creating database \"%s\"- now close and reopen to initialize\n",SQL_DATABASE);
+      CfCloseDB(&cfdb);
+      CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);      
       }
+
+   CfOut(cf_verbose,"","Successfully connected to \"%s\"\n",SQL_DATABASE);
    }
 else
    {
@@ -1394,7 +1419,7 @@ else
 
 /* Schema - very simple */
 
-fprintf(fout,"# CREATE DATABASE IF NOT EXISTS cf_topic_map\n");
+fprintf(fout,"# CREATE DATABASE cf_topic_map\n");
 fprintf(fout,"# USE %s_topic_map\n",TM_PREFIX);
  
 snprintf(query,CF_BUFSIZE-1,
@@ -1408,6 +1433,16 @@ snprintf(query,CF_BUFSIZE-1,
         );
 
 fprintf(fout,"%s",query);
+
+AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"topic_comment,varchar,1024",CF_SCALAR);
+AppendRScalar(&columns,"topic_id,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"topic_type,varchar,256",CF_SCALAR);
+
+snprintf(query,CF_MAXVARSIZE-1,"%s.topics",SQL_DATABASE);
+CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+DeleteRlist(columns);
+columns = NULL;
 
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE associations"
@@ -1423,17 +1458,39 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
+AppendRScalar(&columns,"from_name,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"from_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"from_assoc,varchar,256,",CF_SCALAR);
+AppendRScalar(&columns,"to_assoc,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"to_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"to_name,varchar,256",CF_SCALAR);
+
+snprintf(query,CF_MAXVARSIZE-1,"%s.associations",SQL_DATABASE);
+CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+DeleteRlist(columns);
+columns = NULL;
+
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE occurrences"
         "("
         "topic_name varchar(256),"
-        "locator varchar(256),"
+        "locator varchar(1024),"
         "locator_type varchar(256),"
         "subtype varchar(256)"
         ");\n"
         );
 
 fprintf(fout,"%s",query);
+
+AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"locator,varchar,1024",CF_SCALAR);
+AppendRScalar(&columns,"locator_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"subtype,varchar,256",CF_SCALAR);
+
+snprintf(query,CF_MAXVARSIZE-1,"%s.occurrences",SQL_DATABASE);
+CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+DeleteRlist(columns);
+columns = NULL;
 
 /* Delete existing data and recreate */
 
@@ -1509,6 +1566,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 /* Close channels */
 
 fclose(fout);
+DeletePromise(pp);
 
 if (sql_database_defined)
    {
@@ -2361,7 +2419,14 @@ if (topics_this_type)
    
    for (tp = topics_this_type; tp != NULL; tp=tp->next)
       {
-      fprintf(fout,"<li>  %s \n",NextTopic(tp->topic_name,tp->topic_type));
+      if (tp->topic_comment)
+         {
+         fprintf(fout,"<li>  %s &nbsp; %s\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+         }
+      else
+         {
+         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_type));
+         }
       count++;
       }
    

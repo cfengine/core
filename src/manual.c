@@ -148,6 +148,7 @@ fprintf(fout,"@node Special Variables\n@chapter Special Variables\n\n");
 
 TexinfoVariables(fout,"const");
 TexinfoVariables(fout,"sys");
+TexinfoVariables(fout,"mon");
 
 // Log files
 
@@ -382,7 +383,7 @@ for (rp = AlphaSortRListNames(list); rp != NULL; rp = rp->next)
 
 DeleteRlist(list);
 
-if (strcmp(scope,"sys") == 0)
+if (strcmp(scope,"mon") == 0)
    {
    for (i = 0; i < CF_OBSERVABLES; i++)
       {

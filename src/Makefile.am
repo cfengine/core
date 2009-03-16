@@ -8,6 +8,8 @@ AM_LDFLAGS = $(BERKELEY_DB_LDFLAGS) $(OPENSSL_LIB_LDFLAGS) @LDFLAGS@
 lib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libpromises_la_LIBADD = $(BERKELEY_DB_LDFLAGSD) $(BERKELEY_DB_LIB) $(OPENSSL_LIB_LDFLAGS) $(OPENSSL_LIB_LIB)
+libpromises_la_CFLAGS = $(AM_CFLAGS)
 
 # Separate out a library
 

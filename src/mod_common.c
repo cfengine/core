@@ -269,7 +269,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {
    {"id_prefix",cf_str,".*","The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},
    {"build_directory",cf_str,".*","The directory in which to generate output files"},
-   {"sql_type",cf_opts,"mysql,postgress","Menu option for supported database type"},
+   {"sql_type",cf_opts,"mysql,postgres","Menu option for supported database type"},
    {"sql_database",cf_str,"","Name of database used for the topic map"},
    {"sql_owner",cf_str,"","User id of sql database user"},
    {"sql_passwd",cf_str,"","Embedded password for accessing sql database"},

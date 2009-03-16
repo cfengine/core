@@ -101,9 +101,9 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
    {"aos",".*",".*"},              /* AOS */
    {"bsd/os",".*",".*"},           /* BSDI */
    {"nextstep",".*",".*"},         /* nextstep */
-   {"sn*","cray*",".*"},           /* cray */
-   {"gnu*",".*",".*"},             /* gnu */
-   {"cygwin_nt*",".*",".*"},       /* NT */
+   {"sn.*","cray*",".*"},           /* cray */
+   {"gnu.*",".*",".*"},             /* gnu */
+   {"cygwin_nt.*",".*",".*"},       /* NT */
    {"unix_sv",".*",".*"},          /* Unixware */
    {"openbsd",".*",".*"},          /* OpenBSD */
    {"sco_sv",".*",".*"},           /* SCO */

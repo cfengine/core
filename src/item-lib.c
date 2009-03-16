@@ -750,6 +750,35 @@ return liststart;
 }
 
 /*********************************************************************/
+
+char *ItemList2CSV(struct Item *list)
+
+{ struct Item *ip;
+  int len = 0;
+  char *s;
+  
+for (ip = list; ip !=  NULL; ip=ip->next)
+   {
+   len += strlen(ip->name) + 1;
+   }
+
+s = malloc(len+1);
+*s = '\0';
+
+for (ip = list; ip !=  NULL; ip=ip->next)
+   {
+   strcat(s,ip->name);
+
+   if (ip->next)
+      {
+      strcat(s,",");
+      }
+   }
+
+return s;
+}
+
+/*********************************************************************/
 /* Basic operations                                                  */
 /*********************************************************************/
 

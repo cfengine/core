@@ -31,9 +31,26 @@ void VerifyMeasurementPromise(double *this,struct Promise *pp)
 
 { struct Attributes a;
 
+if (pp->done)
+   {
+   if (pp->ref)
+      {
+      CfOut(cf_verbose,"","Skipping static observation %s (%s), already done",pp->promiser,pp->ref);
+      }
+   else
+      {
+      CfOut(cf_verbose,"","Skipping static observation %s, already done",pp->promiser);
+      }
+   }
+ 
 PromiseBanner(pp);
  
 a = GetMeasurementAttributes(pp);
+
+if (strcmp(a.measure.history_type,"weekly") == 0)
+   {
+   *(pp->donep) = true;
+   }
 
 if (!CheckMeasureSanity(a,pp))
    {
@@ -93,7 +110,9 @@ if (a.measure.select_line_matching && a.measure.select_line_number != CF_NOINT)
 if (!a.measure.extraction_regex)
    {
    CfOut(cf_verbose,"","No extraction regex, so assuming whole line is the value");
-
+   }
+else
+   {
    if (!strchr(a.measure.extraction_regex,'(') && !strchr(a.measure.extraction_regex,')'))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a,"The extraction_regex must contain a single backreference for the extraction\n");

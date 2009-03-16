@@ -157,6 +157,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
                {
                NewClass(CLASSTEXT[i]);
                }
+            
             found = true;
 
             VSYSTEMHARDCLASS = (enum classes) i;
@@ -220,6 +221,7 @@ CfOut(cf_verbose,"","The time is now %s\n\n",ctime(&tloc));
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 
 snprintf(workbuf,CF_MAXVARSIZE,"%s",ctime(&tloc));
+Chop(workbuf);
 NewScalar("sys","date",workbuf,cf_str);
 NewScalar("sys","cdate",CanonifyName(workbuf),cf_str);
 NewScalar("sys","host",VSYSNAME.nodename,cf_str);
@@ -517,6 +519,7 @@ void Get3Environment()
   time_t now = time(NULL);
   
 CfOut(cf_verbose,"","Looking for environment from cf-monitor...\n");
+
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
 
 if (stat(env,&statbuf) == -1)
@@ -535,8 +538,8 @@ if (statbuf.st_mtime < (now - 60*60))
 snprintf(value,CF_MAXVARSIZE-1,"%s",ctime(&statbuf.st_mtime));
 Chop(value);
 
-DeleteVariable("sys","env_time");
-NewScalar("sys","env_time",value,cf_str);
+DeleteVariable("mon","env_time");
+NewScalar("mon","env_time",value,cf_str);
 
 CfOut(cf_verbose,"","Loading environment...\n");
  
@@ -563,8 +566,8 @@ while (!feof(fp))
       {
       sscanf(class,"%255[^=]=%255[^\n]",name,value);
 
-      DeleteVariable("sys",name);
-      NewScalar("sys",name,value,cf_str);
+      DeleteVariable("mon",name);
+      NewScalar("mon",name,value,cf_str);
       }
    else
       {

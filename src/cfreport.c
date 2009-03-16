@@ -1793,7 +1793,7 @@ dbp->close(dbp,0);
 void EraseAverages()
 
 { int i,err;
-  char timekey[CF_MAXVARSIZE];
+ char timekey[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
   struct Item *list = NULL;
   struct Averages entry;
   time_t now;
@@ -1833,7 +1833,9 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
       {
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
-         if (IsItemIn(list,OBS[i][0]))
+         GetClassName(i,name);
+   
+         if (IsItemIn(list,name))
             {
             /* Set history but not most recent to zero */
             entry.Q[i].expect = 0;
@@ -1887,10 +1889,12 @@ CfOut(cf_inform,"","Writing report to %s\n",name);
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
+   GetClassName(i,name);
+   
    if (XML)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
-      fprintf(fout,"%s %s %s",CFRX[cfx_event][cfb],OBS[i][0],CFRX[cfx_event][cfe]);
+      fprintf(fout,"%s %s %s",CFRX[cfx_event][cfb],name,CFRX[cfx_event][cfe]);
       fprintf(fout,"%s %s %s",CFRX[cfx_min][cfb],MIN.Q[i].expect,CFRX[cfx_min][cfe]);
       fprintf(fout,"%s %s %s",CFRX[cfx_max][cfb],MAX.Q[i].expect,CFRX[cfx_max][cfe]);
       fprintf(fout,"%s %s %s",CFRX[cfx_dev][cfb],sqrt(MAX.Q[i].var),CFRX[cfx_dev][cfe]);
@@ -1899,7 +1903,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    else if (HTML)
       {
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
-      fprintf(fout,"%s %s %s",CFRH[cfx_event][cfb],OBS[i][0],CFRH[cfx_event][cfe]);
+      fprintf(fout,"%s %s %s",CFRH[cfx_event][cfb],name,CFRH[cfx_event][cfe]);
       fprintf(fout,"%s Min %s %s",CFRH[cfx_min][cfb],MIN.Q[i].expect,CFRH[cfx_min][cfe]);
       fprintf(fout,"%s Max %s %s",CFRH[cfx_max][cfb],MAX.Q[i].expect,CFRH[cfx_max][cfe]);
       fprintf(fout,"%s %s %s",CFRH[cfx_dev][cfb],sqrt(MAX.Q[i].var),CFRH[cfx_dev][cfe]);
@@ -1907,11 +1911,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
    else if (CSV)
       {
-      fprintf(fout,"%2d,%-10s,%10f,%10f,%10f\n",i,OBS[i][0],MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
+      fprintf(fout,"%2d,%-10s,%10f,%10f,%10f\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
       }
    else
       {
-      CfOut(cf_verbose,"","%2d. MAX <%-10s-in>   = %10f - %10f u %10f\n",i,OBS[i][0],MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
+      CfOut(cf_verbose,"","%2d. MAX <%-10s-in>   = %10f - %10f u %10f\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
       }
    }
 
@@ -1948,7 +1952,7 @@ void WriteGraphFiles()
   DBT key,value;
   struct stat statbuf;
   struct Averages entry,det;
-  char timekey[CF_MAXVARSIZE];
+  char timekey[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
   time_t now;
   DB *dbp;
   
@@ -2143,8 +2147,8 @@ void WriteHistograms()
 { int i,j,k;
   int position,day;
   int weekly[CF_OBSERVABLES][CF_GRAINS];
+  char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
   FILE *fp;
-  char filename[CF_BUFSIZE];
  
 for (i = 0; i < 7; i++)
    {
@@ -2213,7 +2217,9 @@ else
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   sprintf(filename,"%s.distr",OBS[i][0]); 
+   GetClassName(i,name);
+   sprintf(filename,"%s.distr",name);
+   
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
       perror("fopen");
@@ -2559,7 +2565,7 @@ DeleteItemList(hostlist);
 void OpenFiles()
 
 { int i;
-  char filename[CF_BUFSIZE];
+ char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
  
 sprintf(filename,"cfenv-average");
 
@@ -2587,7 +2593,8 @@ if ((FPNOW = fopen(filename,"w")) == NULL)
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   sprintf(filename,"%s.E-sigma",OBS[i][0]);
+   GetClassName(i,name);
+   sprintf(filename,"%s.E-sigma",name);
    
    if ((FPE[i] = fopen(filename,"w")) == NULL)
       {
@@ -2602,7 +2609,6 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       CfOut(cf_error,"fopen","File %s could not be opened for writing\n",filename);
       exit(1);
       }
-   
    }
 }
 
@@ -2628,11 +2634,12 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 void OpenMagnifyFiles()
 
 { int i;
-  char filename[CF_BUFSIZE];
+ char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
       
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   sprintf(filename,"%s.mag",OBS[i][0]);
+   GetClassName(i,name);
+   sprintf(filename,"%s.mag",name);
    
    if ((FPM[i] = fopen(filename,"w")) == NULL)
       {

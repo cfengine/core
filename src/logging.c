@@ -57,7 +57,7 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP);
 void EndAudit()
 
 { double total;
- char *sp,rettype,string[CF_BUFSIZE];
+  char *sp,rettype,string[CF_BUFSIZE];
   void *retval;
   struct Promise dummyp;
   struct Attributes dummyattr;
@@ -85,8 +85,10 @@ if (total == 0)
    }
 else
    {   
-   snprintf(string,CF_BUFSIZE,"Outcome of version %s: Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
+   snprintf(string,CF_BUFSIZE,"Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
             sp,
+            THIS_AGENT,
+            CFA_BACKGROUND,
             (double)PR_KEPT/total,
             (double)PR_REPAIRED/total,
             (double)PR_NOTKEPT/total);

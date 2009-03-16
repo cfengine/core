@@ -273,7 +273,7 @@ slot = GetHash(lval);
 if (ptr == NULL)
    {
    struct Scope *sp;
-   printf("No such scope id %s\n",scope);
+   CfOut(cf_error,"","No such scope id %s while getting %s \n",scope,lval);
    FatalError("No such scope");
    }
  

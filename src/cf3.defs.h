@@ -957,7 +957,7 @@ struct Topic
    {
    char *topic_type;
    char *topic_name;
-   char *comment;
+   char *topic_comment;
    struct Occurrence *occurrences;
    struct TopicAssociation *associations;
    struct Topic *next;
@@ -1420,7 +1420,7 @@ struct Attributes
 enum cfdbtype
    {
    cfd_mysql,
-   cfd_postgress,
+   cfd_postgres,
    cfd_notype
    };
 

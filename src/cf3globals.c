@@ -192,6 +192,8 @@ char *CF_AGENTTYPES[] = /* see enum cfagenttype */
 /* Compatability infrastructure                                              */
 /*****************************************************************************/
 
+double FORGETRATE = 0.7;
+
 short IGNORELOCK = false;
 short DONTDO = false;
 short DEBUG = false;
@@ -237,11 +239,13 @@ pthread_attr_t PTHREADDEFAULTS;
 pthread_mutex_t MUTEX_SYSCALL = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_LOCK = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_COUNT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+pthread_mutex_t MUTEX_HOSTNAME = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 #else
 # if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 pthread_mutex_t MUTEX_SYSCALL = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MUTEX_LOCK = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MUTEX_COUNT = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t MUTEX_HOSTNAME = PTHREAD_MUTEX_INITIALIZER;
 # endif
 #endif
 

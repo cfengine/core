@@ -70,7 +70,7 @@ if (DONTDO || a.transaction.action == cfa_warn)
    {
    if (ec && ec->num_edits > 0)
       {
-      cfPS(cf_error,CF_NOP,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
+      cfPS(cf_error,CF_WARN,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
       }
    return;
    }

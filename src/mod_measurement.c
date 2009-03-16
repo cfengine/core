@@ -68,8 +68,8 @@ struct BodySyntax CF_MATCHVALUE_BODY[] =
 struct BodySyntax CF_MEASURE_BODIES[] =
    {
    {"stream_type",cf_opts,"pipe,file","The datatype being collected."},
-   {"data_type",cf_opts,"counter,int,real,string","The datatype being collected."},
-   {"history_type",cf_opts,"weekly,none","Whether the data can be seen as a time-series or just an isolated value"},
+   {"data_type",cf_opts,"counter,int,real,string,slist","The datatype being collected."},
+   {"history_type",cf_opts,"weekly,scalar,static,log","Whether the data can be seen as a time-series or just an isolated value"},
    {"units",cf_str,"","The engineering dimensions of this value or a note about its intent used in plots"},
    {"match_value",cf_body,CF_MATCHVALUE_BODY,"Criteria for extracting the measurement from a datastream"},
    {NULL,cf_notype,NULL,NULL}

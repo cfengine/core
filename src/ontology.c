@@ -58,7 +58,7 @@ if ((tp->topic_type = strdup(type)) == NULL)
    FatalError("");
    }
 
-tp->comment = NULL;
+tp->topic_comment = NULL;
 tp->associations = NULL;
 tp->occurrences = NULL;
 tp->next = *list;
@@ -90,10 +90,17 @@ if ((tp->topic_name = strdup(name)) == NULL)
    FatalError("");
    }
 
-if ((tp->comment = strdup(comment)) == NULL)
+if (comment)
    {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
-   FatalError("");
+   if ((tp->topic_comment = strdup(comment)) == NULL)
+      {
+      CfOut(cf_error,"malloc","Memory failure in AddTopic");
+      FatalError("");
+      }
+   }
+else
+   {
+   tp->topic_comment = NULL;
    }
 
 if ((tp->topic_type = strdup(type)) == NULL)

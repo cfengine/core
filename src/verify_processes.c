@@ -255,7 +255,7 @@ if (a.restart_class)
       }
    else if (a.transaction.action == cfa_warn)
       {
-      cfPS(cf_error,CF_NOP,"",pp,a," -- Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
+      cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
       }
    }
 }

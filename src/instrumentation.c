@@ -152,7 +152,6 @@ dbp->close(dbp,0);
 void NoteClassUsage()
 
 { DB *dbp;
-  DB_ENV *dbenv = NULL;
   DBC *dbcp;
   DBT key,stored;
   char name[CF_BUFSIZE];

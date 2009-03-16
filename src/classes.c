@@ -59,7 +59,7 @@ char *CLASSTEXT[] =   /* If you change here change enum classes too! */
    "nextstep",
    "cray",
    "gnu",
-   "nt",
+   "windows",
    "unix_sv",
    "openbsd",
    "sco",

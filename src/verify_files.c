@@ -52,7 +52,6 @@ void FindFilePromiserObjects(struct Promise *pp)
 
 { char *val = GetConstraint("pathtype",pp->conlist,CF_SCALAR);
   int literal = GetBooleanConstraint("copy_from",pp->conlist) ||
-                GetBooleanConstraint("create",pp->conlist) ||
                 ((val != NULL) && (strcmp(val,"literal") == 0));
 
 /* Check if we are searching over a regular expression */
@@ -151,60 +150,64 @@ if (expandregex) /* Expand one regex link and hand down */
 
    if ((dirh=opendir(pbuffer)) == NULL)
       {
-      cfPS(cf_verbose,CF_FAIL,"opendir",pp,dummyattr,"Could not expand promise makers in %s because %s could not be read\n",pp->promiser,pbuffer);
-      return;
-      }
-   
-   count = 0;
-   
-   for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
-      {
-      if (!ConsiderFile(dirp->d_name,pbuffer,dummyattr,pp))
-         {
-         continue;
-         }
-
-      if (!lastnode && !S_ISDIR(statbuf.st_mode))
-         {
-         Debug("Skipping non-directory %s\n",dirp->d_name);
-         continue;
-         }
-
-      if (FullTextMatch(regex,dirp->d_name))
-         {
-         Debug("Link %s matched regex %s\n",dirp->d_name,regex);
-         }
-      else
-         {
-         continue;
-         }
-
-      count++;
-
+      // Could be a dummy directory to be created so this is not an error.
+      CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
       strncpy(nextbuffer,pbuffer,CF_BUFSIZE-1);
-      AddSlash(nextbuffer);
-      strcat(nextbuffer,dirp->d_name);
-
-      for (ip = remainder; ip != NULL; ip=ip->next)
+      (*fnptr)(nextbuffer,pp);
+      }
+   else
+      {
+      count = 0;
+   
+      for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          {
+         if (!ConsiderFile(dirp->d_name,pbuffer,dummyattr,pp))
+            {
+            continue;
+            }
+         
+         if (!lastnode && !S_ISDIR(statbuf.st_mode))
+            {
+            Debug("Skipping non-directory %s\n",dirp->d_name);
+            continue;
+            }
+         
+         if (FullTextMatch(regex,dirp->d_name))
+            {
+            Debug("Link %s matched regex %s\n",dirp->d_name,regex);
+            }
+         else
+            {
+            continue;
+            }
+         
+         count++;
+         
+         strncpy(nextbuffer,pbuffer,CF_BUFSIZE-1);
          AddSlash(nextbuffer);
-         strcat(nextbuffer,ip->name);
+         strcat(nextbuffer,dirp->d_name);
+         
+         for (ip = remainder; ip != NULL; ip=ip->next)
+            {
+            AddSlash(nextbuffer);
+            strcat(nextbuffer,ip->name);
+            }
+         
+         /* The next level might still contain regexs, so go again as long as expansion is not nullpotent */
+         
+         if (!lastnode && (strcmp(nextbuffer,wildpath) != 0))
+            {
+            LocateFilePromiserGroup(nextbuffer,pp,fnptr);
+            }
+         else
+            {
+            CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
+            (*fnptr)(nextbuffer,pp);
+            }
          }
       
-      /* The next level might still contain regexs, so go again as long as expansion is not nullpotent */
-
-      if (!lastnode && (strcmp(nextbuffer,wildpath) != 0))
-         {
-         LocateFilePromiserGroup(nextbuffer,pp,fnptr);
-         }
-      else
-         {
-         CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
-         (*fnptr)(nextbuffer,pp);
-         }
+      closedir(dirh);
       }
-   
-   closedir(dirh);
    }
 else
    {

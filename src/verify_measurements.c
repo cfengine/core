@@ -41,6 +41,8 @@ if (pp->done)
       {
       CfOut(cf_verbose,"","Skipping static observation %s, already done",pp->promiser);
       }
+   
+   return;
    }
  
 PromiseBanner(pp);

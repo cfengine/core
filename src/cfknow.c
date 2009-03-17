@@ -335,16 +335,12 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
       {
-      if (strcmp(retval,"mysql") == 0)
-         {
-         SQL_TYPE = cfd_mysql;
-         }
+      SQL_TYPE = Str2dbType(retval);
       
-      if (strcmp(retval,"postgres") == 0)
+      if (SQL_TYPE == cfd_notype)
          {
-         SQL_TYPE = cfd_postgres;
+         CfOut(cf_error,"","Database type \"%s\" is not a supported database type",retval);
          }
-      
       continue;
       }
 

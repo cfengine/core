@@ -69,6 +69,7 @@ struct BodySyntax CF_DATABASES_BODIES[] =
    {
    {"database_server",cf_body,CF_SQLSERVER_BODY,"Credentials for connecting to a local/remote database server"},
    {"database_type",cf_opts,"sql,ms_registry","The type of database that is to be manipulated"},
+   {"database_operation",cf_opts,"create,delete,drop","The nature of the promise - to be or not to be"},
    {"database_columns",cf_slist,".*,.*","A list of column definitions to be promised by SQL databases"},
    {"database_rows",cf_slist,".*,.*","A list of row values to be promised by SQL databases"},
    {NULL,cf_notype,NULL,NULL}

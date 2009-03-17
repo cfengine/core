@@ -30,6 +30,24 @@
 
 /***************************************************************************/
 
+enum cfdbtype Str2dbType(char *s)
+
+{ int i;
+  static char *types[] = { "mysql","postgres", NULL };
+    
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return (enum cfdbtype) i;
+      }
+   }
+
+return cfd_notype;
+}
+
+/***************************************************************************/
+
 enum package_actions Str2PackageAction(char *s)
 
 { int i;

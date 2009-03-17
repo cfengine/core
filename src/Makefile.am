@@ -116,6 +116,7 @@ cf_agent_SOURCES =							\
 	verify_methods.c						\
 	verify_interfaces.c						\
 	verify_packages.c						\
+	verify_databases.c						\
 	agentdiagnostic.c
 
 cf_serverd_SOURCES =							\

@@ -79,6 +79,7 @@ struct Attributes GetTopicsAttributes(struct Promise *pp);
 struct Attributes GetOccurrenceAttributes(struct Promise *pp);
 struct Attributes GetPackageAttributes(struct Promise *pp);
 struct Attributes GetMeasurementAttributes(struct Promise *pp);
+struct Attributes GetDatabaseAttributes(struct Promise *pp);
     
 struct Packages GetPackageConstraints(struct Promise *pp);
 struct ExecContain GetExecContainConstraints(struct Promise *pp);
@@ -115,6 +116,7 @@ struct LineSelect GetInsertSelectConstraints(struct Promise *pp);
 struct LineSelect GetDeleteSelectConstraints(struct Promise *pp);
 struct Measurement GetMeasurementConstraint(struct Promise *pp);
 struct CfACL GetAclConstraints(struct Promise *pp);
+struct CfDatabase GetDatabaseConstraints(struct Promise *pp);
 
 void ShowAttributes(struct Attributes a);
 
@@ -219,6 +221,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(struct Rlist *list,char *sep);
 int Signal2Int(char *s);
 enum cfreport String2ReportLevel(char *typestr);
@@ -1120,6 +1123,11 @@ int IsCf3VarString(char *str);
 int BooleanControl(char *scope,char *name);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
+
+/* verify_databases.c */
+
+void VerifyDatabasePromises(struct Promise *pp);
+int CheckDatabaseSanity(struct Attributes a, struct Promise *pp);
 
 /* verify_exec.c */
 

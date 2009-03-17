@@ -43,6 +43,7 @@ enum typesequence
    kp_commands,
    kp_methods,
    kp_files,
+   kp_databases,
    kp_reports,
    kp_none
    };
@@ -58,6 +59,7 @@ char *TYPESEQUENCE[] =
    "commands",
    "methods",
    "files",
+   "databases",
    "reports",
    NULL
    };
@@ -219,8 +221,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
           break;
 
       default:  Syntax("cf-agent - cfengine's change agent",OPTIONS,HINTS,ID);
-          exit(1);
-          
+          exit(1);          
       }
   }
 
@@ -820,6 +821,13 @@ if (strcmp("files",pp->agentsubtype) == 0)
 if (strcmp("commands",pp->agentsubtype) == 0)
    {
    VerifyExecPromise(pp);
+   EndMeasurePromise(start,pp);
+   return;
+   }
+
+if (strcmp("databases",pp->agentsubtype) == 0)
+   {
+   VerifyDatabasePromises(pp);
    EndMeasurePromise(start,pp);
    return;
    }

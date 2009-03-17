@@ -981,6 +981,88 @@ struct Occurrence
    struct Occurrence *next;
    };
 
+
+/*************************************************************************/
+/* SQL Database connectors                                               */
+/*************************************************************************/
+
+#ifdef HAVE_MYSQL_MYSQL_H
+#include <mysql/mysql.h>
+#endif
+
+#ifdef HAVE_PGSQL_LIBPQ_FE_H
+#include <pgsql/libpq-fe.h>
+#endif
+
+#ifdef HAVE_LIBPQ_FE_H
+#include <libpq-fe.h>
+#endif
+
+enum cfdbtype
+   {
+   cfd_mysql,
+   cfd_postgres,
+   cfd_notype
+   };
+
+typedef struct 
+   {
+#ifdef HAVE_MYSQL_MYSQL_H
+   MYSQL my_conn;
+   MYSQL_RES *my_res;
+#endif
+#if defined HAVE_PGSQL_LIBPQ_FE_H || defined HAVE_LIBPQ_FE_H
+   PGconn *pq_conn;
+   PGresult   *pq_res;
+#endif
+   int connected;
+   int result;
+   int row;
+   int maxcolumns;
+   int maxrows;
+   int column;
+   char **rowdata;
+   char *blank;
+   enum cfdbtype type;
+   }
+CfdbConn;
+
+/*************************************************************************/
+/* Threading container                                                   */
+/*************************************************************************/
+
+struct PromiseThread
+   {
+   enum cfagenttype agent;
+   char *scopeid;
+   struct Promise *pp;
+   void *fnptr;
+   };
+
+/*************************************************************************/
+/* Package promises                                                      */
+/*************************************************************************/
+
+struct CfPackageManager
+   {
+   char *manager;
+   enum package_actions action;
+   enum action_policy policy;
+   struct CfPackageItem *pack_list;
+   struct CfPackageManager *next;
+   };
+
+/*************************************************************************/
+
+struct CfPackageItem 
+   {
+   char *name;
+   char *version;
+   char *arch;
+   struct Promise *pp;
+   struct CfPackageItem *next;
+   };
+
 /*************************************************************************/
 /* Files                                                                 */
 /*************************************************************************/
@@ -1310,6 +1392,21 @@ struct CfACL
 
 /*************************************************************************/
 
+struct CfDatabase
+   {
+   char *db_server_owner;
+   char *db_server_password;
+   char *db_server_host;
+   enum cfdbtype  db_server_type;
+   char *server;
+   char *type;
+   char *operation;
+   struct Rlist *columns;
+   struct Rlist *rows;
+   };
+    
+/*************************************************************************/
+
  /* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
@@ -1327,6 +1424,7 @@ struct Attributes
    struct Context context;
    struct Measurement measure;
    struct CfACL acl;
+   struct CfDatabase database;
    char *transformer;
    char *pathtype;
    char *repository;
@@ -1400,88 +1498,6 @@ struct Attributes
    struct Rlist *represents;
    char *rep_type;
    };
-
-/*************************************************************************/
-/* SQL Database connectors                                               */
-/*************************************************************************/
-
-#ifdef HAVE_MYSQL_MYSQL_H
-#include <mysql/mysql.h>
-#endif
-
-#ifdef HAVE_PGSQL_LIBPQ_FE_H
-#include <pgsql/libpq-fe.h>
-#endif
-
-#ifdef HAVE_LIBPQ_FE_H
-#include <libpq-fe.h>
-#endif
-
-enum cfdbtype
-   {
-   cfd_mysql,
-   cfd_postgres,
-   cfd_notype
-   };
-
-typedef struct 
-   {
-#ifdef HAVE_MYSQL_MYSQL_H
-   MYSQL my_conn;
-   MYSQL_RES *my_res;
-#endif
-#if defined HAVE_PGSQL_LIBPQ_FE_H || defined HAVE_LIBPQ_FE_H
-   PGconn *pq_conn;
-   PGresult   *pq_res;
-#endif
-   int connected;
-   int result;
-   int row;
-   int maxcolumns;
-   int maxrows;
-   int column;
-   char **rowdata;
-   char *blank;
-   enum cfdbtype type;
-   }
-CfdbConn;
-
-/*************************************************************************/
-/* Threading container                                                   */
-/*************************************************************************/
-
-struct PromiseThread
-   {
-   enum cfagenttype agent;
-   char *scopeid;
-   struct Promise *pp;
-   void *fnptr;
-   };
-
-/*************************************************************************/
-/* Package promises                                                      */
-/*************************************************************************/
-
-struct CfPackageManager
-   {
-   char *manager;
-   enum package_actions action;
-   enum action_policy policy;
-   struct CfPackageItem *pack_list;
-   struct CfPackageManager *next;
-   };
-
-/*************************************************************************/
-
-struct CfPackageItem 
-   {
-   char *name;
-   char *version;
-   char *arch;
-   struct Promise *pp;
-   struct CfPackageItem *next;
-   };
-
 
 #include "prototypes3.h"
 

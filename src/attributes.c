@@ -111,6 +111,18 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetDatabaseAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+attr.database = GetDatabaseConstraints(pp);
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetClassContextAttributes(struct Promise *pp)
 
 { struct Attributes a;
@@ -1233,4 +1245,32 @@ m.select_line_number = GetIntConstraint("select_line_number",pp->conlist);
 m.extraction_regex = GetConstraint("extraction_regex",pp->conlist,CF_SCALAR);
 m.units = GetConstraint("units",pp->conlist,CF_SCALAR);
 return m;
+}
+
+/*******************************************************************/
+
+struct CfDatabase GetDatabaseConstraints(struct Promise *pp)
+
+{ struct CfDatabase d;
+  char *value;
+
+d.db_server_owner = GetConstraint("db_server_owner",pp->conlist,CF_SCALAR);
+d.db_server_password = GetConstraint("db_server_password",pp->conlist,CF_SCALAR);
+d.db_server_host = GetConstraint("db_server_host",pp->conlist,CF_SCALAR);
+d.type = GetConstraint("database_type",pp->conlist,CF_SCALAR);
+d.server = GetConstraint("database_server",pp->conlist,CF_SCALAR);
+d.columns = GetListConstraint("database_columns",pp->conlist);
+d.rows = GetListConstraint("database_rows",pp->conlist);
+d.operation = GetConstraint("database_operation",pp->conlist,CF_SCALAR);
+
+value = GetConstraint("db_server_type",pp->conlist,CF_SCALAR);
+d.db_server_type = Str2dbType(value);
+
+if (d.db_server_type == cfd_notype)
+   {
+   CfOut(cf_error,"","Unsupported database type \"%s\" in databases promise",value);
+   PromiseRef(cf_error,pp);
+   }
+
+return d;
 }

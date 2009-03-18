@@ -1,3 +1,13 @@
+
+ This program is provided under the terms of the GNU public
+ license (below), with explicit permission to link with the
+ OpenSSL library. (http://www.openssl.org)
+
+ On some systems, code under the Frontier Artistic License
+ (/pub/snprintf) might become compiled. This is compatible with the
+ GPL.
+
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

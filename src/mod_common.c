@@ -98,7 +98,7 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"action_policy",cf_opts,"fix,warn,nop","Whether to repair or report about non-kept promises"},
    {"ifelapsed",cf_int,CF_VALRANGE,"Number of minutes before next allowed assessment of promise"},
    {"expireafter",cf_int,CF_VALRANGE,"Number of minutes before a repair action is interrupted and retried"},
-   {"log_string",cf_str,"","A message to be written to the log when the promise is verified"},
+   {"log_string",cf_str,"","A message to be written to the log when a promise verification leads to a repair"},
    {"log_level",cf_opts,"inform,verbose,error,log","The reporting level sent to syslog"},
    {"audit",cf_opts,CF_BOOL,"true/false switch for detailed audit records of this promise"},
    {"background",cf_opts,CF_BOOL,"true/false switch for parallelizing the promise repair"},

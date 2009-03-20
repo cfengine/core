@@ -1811,7 +1811,7 @@ CfDeleteQuery(cfdb);
 /* Finally occurrences of the mentioned topic */
 
 strncpy(safe,EscapeSQL(cfdb,this_name),CF_BUFSIZE);
-snprintf(query,CF_BUFSIZE,"SELECT topic_name,locator,locator_type,subtype from occurrences where topic_name='%s' or subtype='%s' order by locator_type",this_id,safe);
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,locator,locator_type,subtype from occurrences where topic_name='%s' or subtype='%s' order by locator_type,subtype",this_id,safe);
 
 CfNewQueryDB(cfdb,query);
 
@@ -2449,7 +2449,14 @@ if (other_topics)
       {
       if (tp->topic_comment)
          {
-         fprintf(fout,"<li>  %s &nbsp; %s\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+         if (strncmp(tp->topic_comment,"A promise of type",strlen("A promise of type")) == 0)
+            {
+            fprintf(fout,"<li>  %s &nbsp; <i>%s</i>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+            }
+         else
+            {
+            fprintf(fout,"<li>  %s &nbsp; %s\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+            }
          }
       else
          {

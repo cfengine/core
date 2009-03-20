@@ -129,6 +129,7 @@ switch(status)
    case CF_CHG:
        PR_REPAIRED++;
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
+       SummarizeTransaction(attr,pp);
        break;
        
    case CF_WARN:

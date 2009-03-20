@@ -152,7 +152,7 @@ int IsRegex(char *str)
 
 for (sp = str; *sp != '\0'; sp++)
    {
-   if (strchr("^.*+\[]()$",*sp))
+   if (strchr("^*+\[]()$",*sp))
       {
       return true;  /* Maybe */
       }

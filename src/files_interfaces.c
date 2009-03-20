@@ -211,6 +211,10 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
          {
          return;
          }
+      else
+         {
+         lstat(path,&oslb);
+         }
       }
    }
 

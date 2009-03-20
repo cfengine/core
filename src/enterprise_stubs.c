@@ -356,6 +356,17 @@ Nova_VerifyACL(file,a,pp);
 /* SQL                                                                       */
 /*****************************************************************************/
 
+int CheckDatabaseSanity(struct Attributes a, struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_CheckDatabaseSanity(a,pp);
+#else
+return false;
+#endif
+}
+
+/*****************************************************************************/
+
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp)
 
 {
@@ -401,23 +412,54 @@ else
    CfOut(cf_verbose,""," !! Database \"%s\" does not seem to exist on this connection",database);
    }
 
-/* Get a list of the columns in the table */
-
-if (a.transaction.action != cfa_warn && !DONTDO)
+if (a.database.operation && strcmp(a.database.operation,"drop") == 0)
    {
-   CfOut(cf_verbose,""," -> Attempting to create the database %s",database);
-   snprintf(query,CF_MAXVARSIZE-1,"create database %s",database); 
-   CfVoidQueryDB(cfdb,query);
-   return cfdb->result;
-   }
-else
-   {
-   CfOut(cf_error,""," !! Need to create the database %s but only a warning was promised\n",database);
-   return false;
+   if (a.transaction.action != cfa_warn && !DONTDO)
+      {
+      CfOut(cf_verbose,""," -> Attempting to delete the database %s",database);
+      snprintf(query,CF_MAXVARSIZE-1,"drop database %s",database); 
+      CfVoidQueryDB(cfdb,query);
+      return cfdb->result;
+      }
+   else
+      {
+      CfOut(cf_error,""," !! Need to delete the database %s but only a warning was promised\n",database);
+      return false;
+      }   
    }
 
+if (a.database.operation && strcmp(a.database.operation,"create") == 0)
+   {
+   if (a.transaction.action != cfa_warn && !DONTDO)
+      {
+      CfOut(cf_verbose,""," -> Attempting to create the database %s",database);
+      snprintf(query,CF_MAXVARSIZE-1,"create database %s",database); 
+      CfVoidQueryDB(cfdb,query);
+      return cfdb->result;
+      }
+   else
+      {
+      CfOut(cf_error,""," !! Need to create the database %s but only a warning was promised\n",database);
+      return false;
+      }
+   }
+
+return false;
 #else
 CfOut(cf_verbose,"","Verifying SQL database promises is only available with Cfengine Nova or above");
+return false;
+#endif
+}
+
+/*****************************************************************************/
+
+int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_VerifyTablePromise(cfdb,name,columns,a,pp);
+#else
+CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
 return false;
 #endif
 }
@@ -513,20 +555,31 @@ while(CfFetchRow(cfdb))
    if (!identified)
       {
       cfPS(cf_error,CF_FAIL,"",pp,a,"Column \"%s\" found in database table %s is not part of its promise.",name,pp->promiser);
-      cfPS(cf_error,CF_FAIL,"",pp,a,"Cfengine will not promise to repair this, as the operation is potentially too destructive.");
+
+      if (a.database.operation && strcmp(a.database.operation,"drop") == 0)
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a,"Cfengine will not promise to repair this, as the operation is potentially too destructive.");
+         // Future allow deletion?
+         }
+      
       retval = false;
       }
    }
 
 CfDeleteQuery(cfdb);
 
-if (count == 0)
+if (count == 0 && a.database.operation && strcmp(a.database.operation,"create") == 0)
    {
    CfOut(cf_error,"","Database.table %s doesn't seem to exist, creating\n",table_path);
    return Nova_CreateTable(cfdb,table,columns,a,pp);
    }
 
-/* Now look for deviations */
+/* Now look for deviations - only if we have promised to create missing */
+
+if (a.database.operation && strcmp(a.database.operation,"create") != 0)
+   {
+   return retval;
+   }
 
 if (count != no_of_cols)
    {
@@ -562,19 +615,6 @@ if (count != no_of_cols)
 
 Nova_DeleteSQLColumns(name_table,type_table,size_table,done,no_of_cols);
 return retval;
-}
-
-/*****************************************************************************/
-
-int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp)
-
-{
-#ifdef HAVE_LIBCFNOVA
-return Nova_VerifyTablePromise(cfdb,name,columns,a,pp);
-#else
-CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
-return false;
-#endif
 }
 
 /*****************************************************************************/

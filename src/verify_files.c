@@ -151,9 +151,10 @@ if (expandregex) /* Expand one regex link and hand down */
    if ((dirh=opendir(pbuffer)) == NULL)
       {
       // Could be a dummy directory to be created so this is not an error.
-      CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
-      strncpy(nextbuffer,pbuffer,CF_BUFSIZE-1);
-      (*fnptr)(nextbuffer,pp);
+      CfOut(cf_verbose,""," -> Using best-effort expanded (but non-existent) file base path %s\n",wildpath);
+      (*fnptr)(wildpath,pp);
+      DeleteItemList(path);
+      return;
       }
    else
       {

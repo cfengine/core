@@ -115,16 +115,6 @@ if (stat(cmd,&sb) == -1)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
-#ifdef NT 
-if ((*VINPUTFILE == '.') || IsFileSep(*VINPUTFILE))
-   {
-   snprintf(cmd,CF_BUFSIZE-1,"C:\var\cfengine\bin\cf-promises -f %s",VINPUTFILE);
-   }
-else
-   {
-   snprintf(cmd,CF_BUFSIZE-1,"C:\var\cfengine\bin\cf-promises -f %s/inputs/%s",CFWORKDIR,VINPUTFILE);
-   }
-#else
 if ((*VINPUTFILE == '.') || IsFileSep(*VINPUTFILE))
    {
    snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
@@ -133,7 +123,6 @@ else
    {
    snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/inputs/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
    }
-#endif
 
 /* Check if reloading policy will succeed */
  

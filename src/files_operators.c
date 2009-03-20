@@ -43,7 +43,7 @@ if (!SelectLeaf(path,sb,attr,pp))
    return false;
    }
 
-Debug(" -> Handling file existence constraints on %s\n",path);
+CfOut(cf_verbose,""," -> Handling file existence constraints on %s\n",path);
 
 /* We still need to augment the scope of context "this" for commands */
 
@@ -93,8 +93,10 @@ int CreateFile(char *file,struct Promise *pp,struct Attributes attr)
 
 // attr.move_obstructions for MakeParentDirectory
  
-if (strcmp("/.",file+strlen(file)-2) == 0)
+if (strcmp(".",ReadLastNode(file)) == 0)
    {
+   Debug("File object \"%s \"seems to be a directory\n",file);
+   
    if (!DONTDO)
       {
       if (!MakeParentDirectory(file,attr.move_obstructions))
@@ -1589,7 +1591,7 @@ if (lstat(pathbuf,&statbuf) != -1)
       {
       if (! S_ISLNK(statbuf.st_mode) && ! S_ISDIR(statbuf.st_mode))
          {
-         CfOut(cf_inform,"""The object %s is not a directory. Cannot make a new directory without deleting it.",pathbuf);
+         CfOut(cf_inform,"","The object %s is not a directory. Cannot make a new directory without deleting it.",pathbuf);
          return(false);
          }
       }

@@ -1128,6 +1128,8 @@ char *ExtractOuterCf3VarString(char *str,char *substr);
 
 void VerifyDatabasePromises(struct Promise *pp);
 int CheckDatabaseSanity(struct Attributes a, struct Promise *pp);
+void VerifySQLPromise(struct Attributes a,struct Promise *pp);
+void VerifyRegistryPromise(struct Attributes a,struct Promise *pp);
 
 /* verify_exec.c */
 

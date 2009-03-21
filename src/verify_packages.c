@@ -90,7 +90,7 @@ if (a.packages.package_list_command == NULL && a.packages.package_file_repositor
 
 if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.package_arch_regex)
    {
-   if (a.packages.package_name_regex&&a.packages.package_version_regex&&a.packages.package_arch_regex)
+   if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
       {
       if (!(a.packages.package_version && a.packages.package_architectures))
          {
@@ -211,7 +211,7 @@ if (a.packages.package_list_command != NULL)
    while (!feof(prp))
       {
       memset(vbuff,0,CF_BUFSIZE);
-      ReadLine(vbuff,CF_BUFSIZE,prp);   
+      CfReadLine(vbuff,CF_BUFSIZE,prp);   
       
       if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
          {
@@ -222,6 +222,7 @@ if (a.packages.package_list_command != NULL)
    cf_pclose(prp);
    }
 
+ReportSoftware(INSTALLED_PACKAGE_LISTS);
 return true;
 }
 
@@ -796,7 +797,7 @@ while (!feof(pfp))
       }
 
    line[0] = '\0';
-   ReadLine(line,CF_BUFSIZE-1,pfp);
+   CfReadLine(line,CF_BUFSIZE-1,pfp);
    CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,line);
 
    if (strlen(line) > 0 && verify)

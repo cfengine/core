@@ -2988,7 +2988,7 @@ while (!feof(pp))
       break;
       }
    
-   ReadLine(line,CF_BUFSIZE,pp);
+   CfReadLine(line,CF_BUFSIZE,pp);
    
    if (strlen(line) > CF_BUFSIZE - 80)
       {

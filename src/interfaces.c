@@ -406,7 +406,7 @@ if ((pp = cf_popen(VNETSTAT[VSYSTEMHARDCLASS],"r")) == NULL)
 
 while (!feof(pp))
    {
-   ReadLine(vbuff,CF_BUFSIZE,pp);
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
 
    Debug("LINE: %s = %s?\n",vbuff,VDEFAULTROUTE->name);
    

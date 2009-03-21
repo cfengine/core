@@ -606,6 +606,12 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       SummarizeFileChanges(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
+   if (strcmp("installed_software",rp->item) == 0)
+      {
+      CfOut(cf_verbose,"","Creating software version summary (Cfengine Nova and above)...\n");
+      SummarizeSoftware(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
+      }
+
    if (strcmp("setuid",rp->item) == 0)
       {
       CfOut(cf_verbose,"","Creating setuid report (Cfengine Nova and above)...\n");
@@ -1833,7 +1839,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
       {
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
-         GetClassName(i,name);
+         LookUpClassName(i,name);
    
          if (IsItemIn(list,name))
             {
@@ -1889,7 +1895,7 @@ CfOut(cf_inform,"","Writing report to %s\n",name);
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   GetClassName(i,name);
+   LookUpClassName(i,name);
    
    if (XML)
       {
@@ -1977,11 +1983,15 @@ OpenFiles();
 
 if (TITLES)
    {
+   char name[CF_MAXVARSIZE];
+   
    for (i = 0; i < CF_OBSERVABLES; i+=2)
       {
-      fprintf(FPAV,"# Column %d: %s\n",i,OBS[i][0]);
-      fprintf(FPVAR,"# Column %d: %s\n",i,OBS[i][0]);
-      fprintf(FPNOW,"# Column %d: %s\n",i,OBS[i][0]);
+      LookUpClassName(i,name);
+
+      fprintf(FPAV,"# Column %d: %s\n",i,name);
+      fprintf(FPVAR,"# Column %d: %s\n",i,name);
+      fprintf(FPNOW,"# Column %d: %s\n",i,name);
       }
 
    fprintf(FPAV,"##############################################\n");
@@ -2217,7 +2227,7 @@ else
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   GetClassName(i,name);
+   LookUpClassName(i,name);
    sprintf(filename,"%s.distr",name);
    
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
@@ -2593,7 +2603,10 @@ if ((FPNOW = fopen(filename,"w")) == NULL)
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   GetClassName(i,name);
+   LookUpClassName(i,name);
+
+   CfOut(cf_inform,"","Reporting on \"%s\"\n",name);
+   
    sprintf(filename,"%s.E-sigma",name);
    
    if ((FPE[i] = fopen(filename,"w")) == NULL)
@@ -2602,7 +2615,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       exit(1);
       }
    
-   sprintf(filename,"%s.q",OBS[i][0]);
+   sprintf(filename,"%s.q",name);
    
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
@@ -2638,7 +2651,7 @@ void OpenMagnifyFiles()
       
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   GetClassName(i,name);
+   LookUpClassName(i,name);
    sprintf(filename,"%s.mag",name);
    
    if ((FPM[i] = fopen(filename,"w")) == NULL)

@@ -370,7 +370,7 @@ else
 
 if (found == -1)
    {
-   cfPS(cf_error,CF_FAIL,"",pp,attr,"Can't stat %s\n",source);
+   cfPS(cf_error,CF_FAIL,"",pp,attr,"Can't stat %s in verify copy\n",source);
    DeleteClientCache(attr,pp);
    return;
    }
@@ -430,7 +430,7 @@ if (S_ISDIR(ssb.st_mode))
          {
          if (cf_stat(sourcefile,&ssb,attr,pp) == -1)
             {
-            CfOut(cf_inform,"stat","Can't stat %s\n",sourcefile);
+            CfOut(cf_inform,"stat","Can't stat source file (notlinked) %s\n",sourcefile);
             DeleteClientCache(attr,pp);       
             return;
             }
@@ -439,7 +439,7 @@ if (S_ISDIR(ssb.st_mode))
          {
          if (cf_lstat(sourcefile,&ssb,attr,pp) == -1)
             {
-            CfOut(cf_inform,"lstat","Can't stat %s\n",sourcefile);
+            CfOut(cf_inform,"lstat","Can't stat source file %s\n",sourcefile);
             DeleteClientCache(attr,pp);       
             return;
             }
@@ -706,7 +706,7 @@ if (found == -1)
          {
          if (stat(destfile,&dsb) == -1)
             {
-            CfOut(cf_error,"stat","Can't stat %s\n",destfile);
+            CfOut(cf_error,"stat","Can't stat destination file %s\n",destfile);
             }
          else
             {
@@ -734,7 +734,14 @@ if (found == -1)
          }
       else
          {
-         cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Copy from %s:%s failed\n",server,sourcefile);
+         if (server)
+            {
+            cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Copy from %s:%s failed\n",server,sourcefile);
+            }
+         else
+            {
+            cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Copy from localhost:%s failed\n",sourcefile);
+            }
          }
 
       return;
@@ -817,7 +824,14 @@ else
             }
          else
             {
-            cfPS(cf_inform,CF_CHG,"",pp,attr," -> Updated %s from source %s on %s",destfile,sourcefile,server);
+            if (server)
+               {
+               cfPS(cf_inform,CF_CHG,"",pp,attr," -> Updated %s from source %s on %s",destfile,sourcefile,server);
+               }
+            else
+               {
+               cfPS(cf_inform,CF_CHG,"",pp,attr," -> Updated %s from source %s on localhost",destfile,sourcefile);
+               }
             }
          
          if (MatchRlistItem(AUTO_DEFINE_LIST,destfile))
@@ -829,7 +843,7 @@ else
             {
             if (stat(destfile,&dsb) == -1)
                {
-               cfPS(cf_error,CF_INTERPT,"stat",pp,attr,"Can't stat %s\n",destfile);
+               cfPS(cf_error,CF_INTERPT,"stat",pp,attr,"Can't stat destination %s\n",destfile);
                }
             else
                {
@@ -843,7 +857,7 @@ else
             } 
          else
             {
-            cfPS(cf_error,CF_FAIL,"stat",pp,attr,"Can't stat %s\n",destfile);
+            cfPS(cf_error,CF_FAIL,"",pp,attr,"Was not able to copy %s to %s\n",sourcefile,destfile);
             }
          
          return;
@@ -1037,7 +1051,7 @@ free((char *)dirh);
 
 /*********************************************************************/
 
-int ReadLine(char *buff,int size,FILE *fp)
+int CfReadLine(char *buff,int size,FILE *fp)
 
 { char ch;
  
@@ -1439,9 +1453,10 @@ else
    
    if (!JoinSuffix(new,CF_NEW))
       {
+      CfOut(cf_error,"","Unable to construct filename for copy");
       return false;
       }
-   
+
 #ifdef DARWIN
    }
 #endif
@@ -1475,7 +1490,7 @@ else
       }
    }
 
-Debug("CopyRegular succeeded in copying to %s to %s\n",source,new);
+CfOut(cf_verbose,""," -> Copy of regular file succeeded %s to %s\n",source,new);
 
 backup[0] = '\0';
 
@@ -1541,7 +1556,7 @@ else
       }
    }
 
-if (stat(new,&dstat) == -1)
+if (lstat(new,&dstat) == -1)
    {
    CfOut(cf_error,"stat","Can't stat new file %s\n",new);
    return false;
@@ -1549,7 +1564,7 @@ if (stat(new,&dstat) == -1)
 
 if (dstat.st_size != sstat.st_size)
    {
-   CfOut(cf_verbose,""," !! New file %s seems to have been corrupted in transit (sizes %d and %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
+   CfOut(cf_error,""," !! New file %s seems to have been corrupted in transit (sizes %d and %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
    if (backupok)
       {
       rename(backup,dest); /* ignore failure */

@@ -1238,6 +1238,11 @@ m.stream_type = GetConstraint("stream_type",pp->conlist,CF_SCALAR);
 value = GetConstraint("data_type",pp->conlist,CF_SCALAR);
 m.data_type = Typename2Datatype(value);
 
+if (m.data_type == cf_notype)
+   {
+   m.data_type = cf_str;
+   }
+
 m.history_type = GetConstraint("history_type",pp->conlist,CF_SCALAR);
 m.select_line_matching = GetConstraint("select_line_matching",pp->conlist,CF_SCALAR);
 m.select_line_number = GetIntConstraint("select_line_number",pp->conlist);

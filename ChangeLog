@@ -18,6 +18,13 @@
 	New classes for quartly shifts: Morning,Afternoon,Evening,Night
 
 	Bug fixes in editfiles - line insertion for multiple line objects
+
+	Change the name of the variables and context from the monitord for
+	better separation of data, and shorter names. sys -> mon
+	average -> av, stddev -> dev
+
+	canonical name for windows changed from "nt" to "windows", also version names
+	added "vista","xp" etc..
 	
 3.0.0
 	First release of cfengine 3. Known omissions:

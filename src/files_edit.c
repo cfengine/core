@@ -147,7 +147,7 @@ memset(line,0,CF_BUFSIZE);
 
 while(!feof(fp))
    {
-   ReadLine(line,CF_BUFSIZE-1,fp);
+   CfReadLine(line,CF_BUFSIZE-1,fp);
 
    if (!feof(fp) || (strlen(line) != 0))
       {

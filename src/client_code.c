@@ -186,9 +186,12 @@ void ServerDisconnection(struct cfagent_connection *conn)
 {
 Debug("Closing current server connection\n");
 
-close(conn->sd);
-conn->sd = CF_NOT_CONNECTED;
-DeleteAgentConn(conn);
+if (conn)
+   {
+   close(conn->sd);
+   conn->sd = CF_NOT_CONNECTED;
+   DeleteAgentConn(conn);
+   }
 }
 
 /*********************************************************************/

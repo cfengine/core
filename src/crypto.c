@@ -259,7 +259,7 @@ if ((pp = cf_popen(pscomm,"r")) == NULL)
 
 while (!feof(pp))
    {
-   ReadLine(buffer,CF_BUFSIZE,pp);
+   CfReadLine(buffer,CF_BUFSIZE,pp);
    EVP_DigestUpdate(&context,buffer,CF_BUFSIZE);
    }
 

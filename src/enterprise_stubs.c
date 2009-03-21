@@ -223,6 +223,7 @@ if (!NOHARDCLASSES)
    NewScope("sys");
    NewScope("const");
    NewScope("match");
+   NewScope("mon");
    NewScope("control_monitor");
    NewScope("control_common");
    GetNameInfo3();
@@ -241,6 +242,8 @@ YieldCurrentLock(thislock);
 snprintf(timekey,CF_MAXVARSIZE-1,"%s_%s_%s_%s",VDAY,VMONTH,VLIFECYCLE,VSHIFT);
 Nova_HistoryUpdate(timekey,newvals);
 Nova_ResetShiftAverage(&shift_value);
+Nova_DumpSlowlyVaryingObservations();
+
 #else
 #endif
 }
@@ -253,6 +256,29 @@ void GetClassName(int i,char *name)
  Nova_GetClassName(i,name);
 #else
  return OBS[i][0];
+#endif
+}
+
+/*****************************************************************************/
+
+void LookUpClassName(int i,char *name)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_LookupClassName(i,name);
+#else
+ return OBS[i][0];
+#endif
+}
+
+/*****************************************************************************/
+
+void LoadSlowlyVaryingObservations()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_LoadSlowlyVaryingObservations();
+#else
+ CfOut(cf_verbose,"","# Extended system discovery is only available in version Nova and above\n");
 #endif
 }
 
@@ -294,6 +320,29 @@ void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *h
 #endif
 }
 
+/*****************************************************************************/
+
+void ReportSoftware(struct CfPackageManager *list)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_ReportSoftware(list);
+#else
+ CfOut(cf_verbose,"","# Software reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SummarizeSoftware(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+ CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
+#endif
+}
+    
 /*****************************************************************************/
 /* Montoring                                                                 */
 /*****************************************************************************/

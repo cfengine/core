@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.1b4)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.1a21)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -356,9 +356,12 @@ dnl  Look for SQL connectors.
 dnl ######################################################################
 
 AC_ARG_WITH(sql,
-    [  --with-sql[=PATH] directory where MySQL/Postgress exists],
-    WITH_SQL=1,
-    WITH_SQL=0)
+	AS_HELP_STRING(--with-sql, [support database functions]), ,
+	with_sql=check)
+
+if test "x$with_sql" != xno; then
+   WITH_SQL=1
+fi
 
 dnl ######################################################################
 dnl Checks for perl compatible regular expressions
@@ -420,9 +423,10 @@ if test $WITH_SQL; then
   AC_CHECK_HEADERS(mysql/mysql.h)
   AC_CHECK_HEADERS(pgsql/libpq-fe.h)
   AC_CHECK_HEADERS(libpq-fe.h)
-  AC_CHECK_HEADERS(pcre.h)
-  AC_CHECK_HEADERS(pcre/pcre.h)
 fi
+
+AC_CHECK_HEADERS(pcre.h)
+AC_CHECK_HEADERS(pcre/pcre.h)
 
 dnl ######################################################################
 dnl Checks for header files.

@@ -168,7 +168,7 @@ else
             return;
             }
 
-         ReadLine(line,CF_BUFSIZE-1,pfp);
+         CfReadLine(line,CF_BUFSIZE-1,pfp);
          
          if (strstr(line,"cfengine-die"))
             {

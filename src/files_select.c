@@ -340,7 +340,7 @@ if ((pp = cf_popen(prog,"r")) == NULL)
 while (!feof(pp))
    {
    line[0] = '\0';
-   ReadLine(line,CF_BUFSIZE,pp);  /* One buffer only */
+   CfReadLine(line,CF_BUFSIZE,pp);  /* One buffer only */
 
    if (FullTextMatch(crit,line))
       {

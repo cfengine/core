@@ -135,7 +135,7 @@ if ((prp = cf_popen(pscomm,"r")) == NULL)
 while (!feof(prp))
    {
    memset(vbuff,0,CF_BUFSIZE);
-   ReadLine(vbuff,CF_BUFSIZE,prp);
+   CfReadLine(vbuff,CF_BUFSIZE,prp);
    AppendItem(procdata,vbuff,"");
    }
 

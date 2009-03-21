@@ -1482,7 +1482,7 @@ if ((pop = cf_popen(comm,"r")) == NULL)
 
 while (!feof(pop))
    {
-   ReadLine(line,CF_BUFSIZE,pop);
+   CfReadLine(line,CF_BUFSIZE,pop);
    CfOut(cf_inform,"",line);
    }
 

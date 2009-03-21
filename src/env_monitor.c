@@ -486,8 +486,9 @@ return ConvTimeKey(str);
 struct Averages EvalAvQ(char *t)
 
 { struct Averages *currentvals,newvals;
-  int i; 
   double This[CF_OBSERVABLES],delta2;
+  char name[CF_MAXVARSIZE];
+  int i; 
 
 Banner("Evaluating and storing new weekly averages");
   
@@ -502,6 +503,9 @@ if ((currentvals = GetCurrentAverages(t)) == NULL)
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    double delta2;
+   
+   name[0] = '\0';
+   GetClassName(i,name);
 
    newvals.Q[i].q = THIS[i];
    LOCALAV.Q[i].q = THIS[i];
@@ -510,11 +514,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
        
    This[i] = RejectAnomaly(THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
 
-   Debug("Current %s.q %lf\n",OBS[i][0],currentvals->Q[i].q);
-   Debug("Current %s.var %lf\n",OBS[i][0],currentvals->Q[i].var);
-   Debug("Current %s.ex %lf\n",OBS[i][0],currentvals->Q[i].expect);
-   Debug("THIS[%s] = %lf\n",OBS[i][0],THIS[i]);
-   Debug("This[%s] = %lf\n",OBS[i][0],This[i]);
+   Debug("Current %s.q %lf\n",name,currentvals->Q[i].q);
+   Debug("Current %s.var %lf\n",name,currentvals->Q[i].var);
+   Debug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
+   Debug("THIS[%s] = %lf\n",name,THIS[i]);
+   Debug("This[%s] = %lf\n",name,This[i]);
 
    newvals.Q[i].expect = WAverage(This[i],currentvals->Q[i].expect,WAGE);
    LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect,LOCALAV.Q[i].expect,ITER);
@@ -524,15 +528,15 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
    LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
 
-   CfOut(cf_verbose,"","New %s.q %lf\n",OBS[i][0],newvals.Q[i].q);
-   CfOut(cf_verbose,"","New %s.var %lf\n",OBS[i][0],newvals.Q[i].var);
-   CfOut(cf_verbose,"","New %s.ex %lf\n",OBS[i][0],newvals.Q[i].expect);
+   CfOut(cf_verbose,"","New %s.q %lf\n",name,newvals.Q[i].q);
+   CfOut(cf_verbose,"","New %s.var %lf\n",name,newvals.Q[i].var);
+   CfOut(cf_verbose,"","New %s.ex %lf\n",name,newvals.Q[i].expect);
 
-   CfOut(cf_verbose,"","%s = %lf -> (%f#%f) local [%f#%f]\n",OBS[i][0],This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+   CfOut(cf_verbose,"","%s = %lf -> (%f#%f) local [%f#%f]\n",name,This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
 
    if (This[i] > 0)
       {
-      CfOut(cf_verbose,"","Storing %.2f in %s\n",This[i],OBS[i][0]);
+      CfOut(cf_verbose,"","Storing %.2f in %s\n",This[i],name);
       }
    }
    
@@ -963,11 +967,11 @@ if ((pp = cf_popen(pscomm,"r")) == NULL)
    return;
    }
 
-ReadLine(vbuff,CF_BUFSIZE,pp); 
+CfReadLine(vbuff,CF_BUFSIZE,pp); 
 
 while (!feof(pp))
    {
-   ReadLine(vbuff,CF_BUFSIZE,pp);
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
    sscanf(vbuff,"%s",user);
    
    if (!IsItemIn(list,user))
@@ -1180,7 +1184,7 @@ while (!feof(pp))
    memset(local,0,CF_BUFSIZE);
    memset(remote,0,CF_BUFSIZE);
    
-   ReadLine(vbuff,CF_BUFSIZE,pp);
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
 
    if (strstr(vbuff,"UNIX"))
       {
@@ -2090,11 +2094,11 @@ if ((pp = cf_popen("/usr/bin/sensors","r")) == NULL)
    return false;
    }
 
-ReadLine(vbuff,CF_BUFSIZE,pp); 
+CfReadLine(vbuff,CF_BUFSIZE,pp); 
 
 while (!feof(pp))
    {
-   ReadLine(vbuff,CF_BUFSIZE,pp);
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
 
    if (strstr(vbuff,"Temp")||strstr(vbuff,"temp"))
       {

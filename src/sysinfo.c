@@ -235,6 +235,8 @@ NewScalar("sys","fstab",VFSTAB[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 
+LoadSlowlyVaryingObservations();
+
 if (strlen(VDOMAIN) > 0)
    {
    NewScalar("sys","domain",VDOMAIN,cf_str);
@@ -913,6 +915,7 @@ if (stat("/proc/xen/capabilities",&statbuf) != -1)
    NewClass("xen");
    Xen_Domain();
    }
+
 #ifdef XEN_CPUID_SUPPORT
 else if (Xen_Hv_Check())
    {
@@ -922,6 +925,45 @@ else if (Xen_Hv_Check())
    }
 #endif
 
+
+#ifdef NT
+
+for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
+   {
+   if (*sp == '-')
+      {
+      if (strcmp(sp,"5.0") == 0)
+         {
+         CfOut(cf_verbose,"","This appears to be Windows 2000\n");
+         NewClass("Win2000");
+         }
+      
+      if (strcmp(sp,"5.1") == 0)
+         {
+         CfOut(cf_verbose,"","This appears to be Windows XP\n");
+         NewClass("WinXP");
+         }
+      
+      if (strcmp(sp,"5.2") == 0)
+         {
+         CfOut(cf_verbose,"","This appears to be Windows Server 2003\n");
+         NewClass("WinServer2003");
+         }
+      
+      if (strcmp(sp,"6.1") == 0)
+         {
+         CfOut(cf_verbose,"","This appears to be Windows Vista\n");
+         NewClass("WinVista");
+         }
+      
+      if (strcmp(sp,"6.3") == 0)
+         {
+         CfOut(cf_verbose,"","This appears to be Windows Server 2008\n");
+         NewClass("WinServer2008");
+         }
+      }
+   }
+#endif
 }
 
 /*********************************************************************************/
@@ -1507,7 +1549,7 @@ if ((fp = cf_popen(vbuff, "r")) == NULL)
    return NULL;
    }
 
-if (ReadLine(vbuff, CF_BUFSIZE, fp))
+if (CfReadLine(vbuff, CF_BUFSIZE, fp))
    {
    char * buffer = vbuff;
    strsep(&buffer, ":");
@@ -1625,7 +1667,7 @@ int VM_Version(void)
 /* VMware Server ESX >= 3 has version info in /proc */
 if ((fp = fopen("/proc/vmware/version","r")) != NULL)
    {
-   ReadLine(buffer,CF_BUFSIZE,fp);
+   CfReadLine(buffer,CF_BUFSIZE,fp);
    Chop(buffer);
    if (sscanf(buffer,"VMware ESX Server %d.%d.%d",&major,&minor,&bug) > 0)
       {
@@ -1650,7 +1692,7 @@ if ((fp = fopen("/proc/vmware/version","r")) != NULL)
 if (sufficient < 1 && ((fp = fopen("/etc/vmware-release","r")) != NULL) ||
     (fp = fopen("/etc/issue","r")) != NULL)
    {
-   ReadLine(buffer,CF_BUFSIZE,fp);
+   CfReadLine(buffer,CF_BUFSIZE,fp);
    Chop(buffer);
    NewClass(CanonifyName(buffer));
    
@@ -1682,7 +1724,7 @@ if ((fp = fopen("/proc/xen/capabilities","r")) != NULL)
    {
    while (!feof(fp))
       {
-      ReadLine(buffer,CF_BUFSIZE,fp);
+      CfReadLine(buffer,CF_BUFSIZE,fp);
       if (strstr(buffer,"control_d"))
          {
          NewClass("xen_dom0");

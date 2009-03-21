@@ -64,7 +64,7 @@ do
       break;
       }
    
-   ReadLine(vbuff,CF_BUFSIZE,pp);
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
 
    if (ferror(pp))  /* abortable */
       {
@@ -435,7 +435,7 @@ if (MatchFSInFstab(mountpt))
              
              while(!feof(pfp))
                 {
-                ReadLine(line,CF_BUFSIZE,pfp);
+                CfReadLine(line,CF_BUFSIZE,pfp);
                 
                 if (line[0] == '#')
                    {
@@ -504,7 +504,7 @@ if (! DONTDO)
       return 0;
       }
    
-   ReadLine(line,CF_BUFSIZE,pfp);
+   CfReadLine(line,CF_BUFSIZE,pfp);
    
    if (strstr(line,"busy") || strstr(line,"Busy"))
       {
@@ -595,7 +595,7 @@ while (!feof(pp))
       break;
       }
    
-   ReadLine(line,CF_BUFSIZE,pp);
+   CfReadLine(line,CF_BUFSIZE,pp);
 
    if (ferror(pp))  /* abortable */
       {

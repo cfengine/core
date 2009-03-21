@@ -177,50 +177,50 @@ reports:
 
 rootprocs_high_dev2::
 
-   "RootProc anomaly high 2 dev on $(sys.host) at $(sys.env_time) 
-    measured value $(sys.value_rootprocs) av $(sys.average_rootprocs) pm $(sys.stddev_rootprocs)"
+   "RootProc anomaly high 2 dev on $(mon.host) at $(mon.env_time) 
+    measured value $(mon.value_rootprocs) av $(mon.av_rootprocs) pm $(mon.dev_rootprocs)"
 
       showstate => { "rootprocs" };
 
 entropy_www_in_high&anomaly_hosts.www_in_high_anomaly::
 
-   "HIGH ENTROPY Incoming www anomaly high anomaly dev!! on $(sys.host) at $(sys.env_time) 
-    - measured value $(sys.value_www_in) av $(sys.average_www_in) pm $(sys.stddev_www_in)"
+   "HIGH ENTROPY Incoming www anomaly high anomaly dev!! on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_www_in) av $(mon.av_www_in) pm $(mon.dev_www_in)"
    
       showstate => { "incoming.www" };
 
  entropy_www_in_low.anomaly_hosts.www_in_high_anomaly::
 
-   "LOW ENTROPY Incoming www anomaly high anomaly dev!! on $(sys.host) at $(sys.env_time)
-     - measured value $(svalue_www_in) av $(average_www_in) pm $(stddev_www_in)"
+   "LOW ENTROPY Incoming www anomaly high anomaly dev!! on $(mon.host) at $(mon.env_time)
+     - measured value $(svalue_www_in) av $(av_www_in) pm $(dev_www_in)"
 
      showstate => { "incoming.www" };
 
 entropy_tcpsyn_in_low.anomaly_hosts.tcpsyn_in_high_dev2::
 
-   "Anomalous number of new TCP connections on $(sys.host) at $(sys.env_time) 
-    - measured value $(sys.value_tcpsyn_in) av $(sys.average_tcpsyn_in) pm $(sys.stddev_tcpsyn_in)"
+   "Anomalous number of new TCP connections on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_tcpsyn_in) av $(mon.av_tcpsyn_in) pm $(mon.dev_tcpsyn_in)"
 
      showstate => { "incoming.tcpsyn" };
 
  entropy_dns_in_low.anomaly_hosts.dns_in_high_anomaly::
 
-   "Anomalous (3dev) incoming DNS packets on $(sys.host) at $(sys.env_time) 
-    - measured value $(sys.value_dns_in) av $(average_dns_in) pm $(sys.stddev_dns_in)"
+   "Anomalous (3dev) incoming DNS packets on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_dns_in) av $(av_dns_in) pm $(mon.dev_dns_in)"
    
      showstate => { "incoming.dns" };
 
  entropy_dns_in_low.anomaly_hosts.udp_in_high_dev2::
 
-   "Anomalous (2dev) incoming (non-DNS) UDP traffic on $(sys.host) at $(sys.env_time) 
-    - measured value $(sys.value_udp_in) av $(sys.average_udp_in) pm $(sys.stddev_udp_in)"
+   "Anomalous (2dev) incoming (non-DNS) UDP traffic on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_udp_in) av $(mon.av_udp_in) pm $(mon.dev_udp_in)"
 
      showstate => { "incoming.udp" };
 
  anomaly_hosts.icmp_in_high_anomaly.!entropy_icmp_in_high::
 
-   "Anomalous low entropy (3dev) incoming ICMP traffic on $(sys.host) at $(sys.env_time) 
-    - measured value $(sys.value_icmp_in) av $(sys.average_icmp_in) pm $(sys.stddev_icmp_in)"
+   "Anomalous low entropy (3dev) incoming ICMP traffic on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_icmp_in) av $(mon.av_icmp_in) pm $(mon.dev_icmp_in)"
    
      showstate => { "incoming.icmp" };
 }

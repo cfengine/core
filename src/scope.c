@@ -308,6 +308,11 @@ void PushThisScope()
 
 op = GetScope("this");
 
+if (op == NULL)
+   {
+   return;
+   }
+
 CF_STCKFRAME++;
 PushStack(&CF_STCK,(void *)op);
 snprintf(name,CF_MAXVARSIZE,"this_%d",CF_STCKFRAME);
@@ -324,6 +329,12 @@ void PopThisScope()
 if (CF_STCKFRAME > 0)
    {
    PopStack(&CF_STCK,(void *)&op,sizeof(op));
+
+   if (op == NULL)
+      {
+      return;
+      }
+   
    CF_STCKFRAME--;
    free(op->scope);
    op->scope = strdup("this");

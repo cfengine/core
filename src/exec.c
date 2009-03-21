@@ -552,7 +552,7 @@ if ((pp = cf_popen_sh(cmd,"r")) == NULL)
    return NULL;
    }
  
-while (!feof(pp) && ReadLine(line,CF_BUFSIZE,pp))
+while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
    {
    if (ferror(pp))
       {

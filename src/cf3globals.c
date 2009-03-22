@@ -270,6 +270,8 @@ char *PROTOCOL[] =
    "SGET",
    "VERSION",
    "SOPENDIR",
+   "VAR",
+   "SVAR",
    NULL
    };
 

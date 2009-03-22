@@ -283,6 +283,46 @@ void LoadSlowlyVaryingObservations()
 }
 
 /*****************************************************************************/
+/* Server                                                                    */
+/*****************************************************************************/
+
+void RegisterLiteralServerData(char *handle,struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_RegisterLiteralServerData(handle,pp);
+#else
+ CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+char *ReturnLiteralData(char *handle)
+
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_ReturnLiteralData(handle);
+#else
+ CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+return "";
+#endif 
+}
+
+/*****************************************************************************/
+
+char *GetRemoteScalar(char *handle,char *server,int encrypted)
+
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_GetRemoteScalar(handle,server,encrypted);
+#else
+CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+return "";
+#endif 
+}
+
+/*****************************************************************************/
 /* Reporting                                                                 */
 /*****************************************************************************/
 
@@ -408,7 +448,7 @@ Nova_VerifyACL(file,a,pp);
 int CheckDatabaseSanity(struct Attributes a, struct Promise *pp)
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_CheckDatabaseSanity(a,pp);
+return Nova_CheckDatabaseSanity(a,pp);
 #else
 return false;
 #endif

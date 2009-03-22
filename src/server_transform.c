@@ -56,8 +56,8 @@ extern struct Auth *ROLESTOP;
 
 /*******************************************************************/
 
-void KeepServerAccessPromise(struct Promise *pp);
-
+void KeepFileAccessPromise(struct Promise *pp);
+void KeepLiteralAccessPromise(struct Promise *pp);
 
 /*******************************************************************/
 /* Level                                                           */
@@ -411,9 +411,19 @@ if (strcmp(pp->agentsubtype,"classes") == 0)
    return;
    }
 
+sp = (char *)GetConstraint("resource_type",pp->conlist,CF_SCALAR);
+
+if (strcmp(pp->agentsubtype,"access") == 0 && strcmp(sp,"literal") == 0)
+   {
+   KeepLiteralAccessPromise(pp);
+   return;
+   }
+
+/* Default behaviour is file access */
+
 if (strcmp(pp->agentsubtype,"access") == 0)
    {
-   KeepServerAccessPromise(pp);
+   KeepFileAccessPromise(pp);
    return;
    }
 
@@ -426,7 +436,7 @@ if (strcmp(pp->agentsubtype,"roles") == 0)
 
 /*********************************************************************/
 
-void KeepServerAccessPromise(struct Promise *pp)
+void KeepFileAccessPromise(struct Promise *pp)
 
 { struct Constraint *cp;
   struct Body *bp;
@@ -463,6 +473,91 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    switch (cp->type)
       {
       case CF_SCALAR:
+
+          val = (char *)cp->rval;
+
+          if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+             {
+             ap->encrypt = true;
+             }
+             
+          break;
+
+      case CF_LIST:
+          
+          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+             {
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                {
+                PrependItem(&(ap->accesslist),rp->item,NULL);
+                continue;
+                }
+             
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                {
+                PrependItem(&(dp->accesslist),rp->item,NULL);
+                continue;
+                }
+
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                {
+                PrependItem(&(ap->maproot),rp->item,NULL);
+                continue;
+                }
+             }
+          break;
+
+      case CF_FNCALL:
+          /* Shouldn't happen */
+          break;
+      }
+   }
+}
+
+/*********************************************************************/
+
+void KeepLiteralAccessPromise(struct Promise *pp)
+
+{ struct Constraint *cp;
+  struct Body *bp;
+  struct FnCall *fp;
+  struct Rlist *rp;
+  struct Auth *ap,*dp;
+  char *handle = GetConstraint("handle",pp->conlist,CF_SCALAR);
+  char *val;
+
+if (handle == NULL)
+   {
+   CfOut(cf_error,"","Access to literal server data requires you to define a promise handle for reference");
+   return;
+   }
+  
+if (!GetAuthPath(handle,VARADMIT))
+   {
+   InstallServerAuthPath(handle,&VARADMIT,&VARADMITTOP);
+   }
+
+RegisterLiteralServerData(handle,pp);
+
+if (!GetAuthPath(handle,VARDENY))
+   {
+   InstallServerAuthPath(handle,&VARDENY,&VARDENYTOP);
+   }
+
+ap = GetAuthPath(handle,VARADMIT);
+dp = GetAuthPath(handle,VARDENY);
+
+for (cp = pp->conlist; cp != NULL; cp = cp->next)
+   {
+   if (!IsDefinedClass(cp->classes))
+      {
+      continue;
+      }
+
+   switch (cp->type)
+      {
+      case CF_SCALAR:
+
           val = (char *)cp->rval;
 
           if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)

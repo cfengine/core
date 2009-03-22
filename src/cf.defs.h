@@ -615,6 +615,8 @@ enum PROTOS
    cfd_sget,
    cfd_version,
    cfd_sopendir,
+   cfd_var,
+   cfd_svar,
    cfd_bad
    };
 

@@ -298,7 +298,6 @@ else
       {
       CfOut(cf_verbose,"",".....................[.h.a.i.l.].................................\n");
       CfOut(cf_verbose,"","Strong authentication of server=%s connection confirmed\n",pp->this_server);
-      PromiseRef(cf_verbose,pp);
       }
    else
       {
@@ -309,6 +308,7 @@ else
       else
          {
          CfOut(cf_error,"","Not authorized to trust the server=%s's public key (trustkey=false)\n",pp->this_server);
+         PromiseRef(cf_verbose,pp);
          return false;
          }
       }

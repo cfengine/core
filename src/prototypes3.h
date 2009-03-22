@@ -307,6 +307,9 @@ int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct A
 void ReportSoftware(struct CfPackageManager *list);
 void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void LoadSlowlyVaryingObservations(void);
+void RegisterLiteralServerData(char *handle,struct Promise *pp);
+char *ReturnLiteralData(char *handle);
+char *GetRemoteScalar(char *handle,char *server,int encrypted);
 
 /* env_context.c */
 
@@ -380,6 +383,7 @@ struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs);
 
 void *ReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);

@@ -373,6 +373,10 @@ extern struct Auth *VADMIT;
 extern struct Auth *VDENY;
 extern struct Auth *VADMITTOP;
 extern struct Auth *VDENYTOP;
+extern struct Auth *VARADMIT;
+extern struct Auth *VARADMITTOP;
+extern struct Auth *VARDENY;
+extern struct Auth *VARDENYTOP;
 
 /* Associated variables which simplify logic */
 

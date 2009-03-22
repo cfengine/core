@@ -457,6 +457,7 @@ pp->classes = NULL;
 pp->conlist = NULL;
 pp->done = false;
 pp->donep = &(pp->done);
+pp->ref = NULL;
 
 pp->this_server = NULL;
 pp->cache = NULL;

@@ -531,6 +531,7 @@ pp->this_server = NULL;
 pp->cache = NULL;
 pp->conn = NULL;
 pp->inode_cache = NULL;
+pp->cache = NULL;
 
 pp->bundletype = NULL;
 pp->agentsubtype = strdup(typename);

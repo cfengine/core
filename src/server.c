@@ -42,11 +42,13 @@ void DoExec (struct cfd_connection *conn, char *sendbuffer, char *args);
 int GetCommand (char *str);
 int VerifyConnection (struct cfd_connection *conn, char *buf);
 void RefuseAccess (struct cfd_connection *conn, char *sendbuffer, int size, char *errormsg);
-int AccessControl (char *filename, struct cfd_connection *conn, int encrypt);
+int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
+int LiteralAccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
 int CheckStoreKey  (struct cfd_connection *conn, RSA *key);
 int StatFile (struct cfd_connection *conn, char *sendbuffer, char *filename);
 void CfGetFile (struct cfd_get_arg *args);
 void CompareLocalHash(struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
+void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted);
 int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 void Terminate (int sd);
@@ -135,6 +137,7 @@ int LOGCONNS = false;
 int LOGENCRYPT = false;
 
 struct Item *CONNECTIONLIST = NULL;
+
 struct Auth *ROLES = NULL;
 struct Auth *ROLESTOP = NULL;
 
@@ -142,6 +145,11 @@ struct Auth *VADMIT = NULL;
 struct Auth *VADMITTOP = NULL;
 struct Auth *VDENY = NULL;
 struct Auth *VDENYTOP = NULL;
+
+struct Auth *VARADMIT = NULL;
+struct Auth *VARADMITTOP = NULL;
+struct Auth *VARDENY = NULL;
+struct Auth *VARDENYTOP = NULL;
 
 /*****************************************************************************/
 
@@ -249,9 +257,8 @@ Debug("Set debugging\n");
 
 void ThisAgentInit()
 
-{ char vbuff[CF_BUFSIZE];
-  int i;
-
+{
+NewScope("remote_access");
 umask(077);
 }
 
@@ -760,6 +767,8 @@ if (NewPromiseProposals())
    NewScope("this");
    NewScope("control_server");
    NewScope("control_common");
+   NewScope("mon");
+   NewScope("remote_access");
    GetNameInfo3();
    GetInterfaceInfo3();
    FindV6InterfaceInfo();
@@ -892,7 +901,7 @@ int BusyWithConnection(struct cfd_connection *conn)
   char recvbuffer[CF_BUFSIZE+CF_BUFEXT], sendbuffer[CF_BUFSIZE],check[CF_BUFSIZE];  
   char filename[CF_BUFSIZE],buffer[CF_BUFSIZE],args[CF_BUFSIZE],out[CF_BUFSIZE];
   long time_no_see = 0;
-  int len=0, drift, plainlen, received;
+  int len=0, drift, plainlen, received, encrypted = 0;
   struct cfd_get_arg get_args;
 
 memset(recvbuffer,0,CF_BUFSIZE+CF_BUFEXT);
@@ -909,7 +918,7 @@ if (strlen(recvbuffer) == 0)
    return false;
    }
   
-Debug("Received: [%s] on socket %d\n",recvbuffer,conn->sd_reply);
+CfOut(cf_verbose,"","Received: [%s] on socket %d\n",recvbuffer,conn->sd_reply);
 
 switch (GetCommand(recvbuffer))
    {
@@ -938,7 +947,7 @@ switch (GetCommand(recvbuffer))
           return false;
           }
        
-       if (!AccessControl(CFRUNCOMMAND,conn,false))
+       if (!AccessControl(CFRUNCOMMAND,conn,false,VADMIT,VDENY))
           {
           CfOut(cf_inform,"","Server refusal due to denied access to requested object\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
@@ -1012,7 +1021,7 @@ switch (GetCommand(recvbuffer))
           return false;
           }
        
-       if (!AccessControl(filename,conn,false))
+       if (!AccessControl(filename,conn,false,VADMIT,VDENY))
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;   
@@ -1074,7 +1083,7 @@ switch (GetCommand(recvbuffer))
           return false;
           }
        
-       if (!AccessControl(filename,conn,true))
+       if (!AccessControl(filename,conn,true,VADMIT,VDENY))
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;   
@@ -1127,7 +1136,7 @@ switch (GetCommand(recvbuffer))
           return false;
           }
        
-       if (!AccessControl(filename,conn,true)) /* opendir don't care about privacy */
+       if (!AccessControl(filename,conn,true,VADMIT,VDENY)) /* opendir don't care about privacy */
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;   
@@ -1147,7 +1156,7 @@ switch (GetCommand(recvbuffer))
           return false;
           }
        
-       if (!AccessControl(filename,conn,true)) /* opendir don't care about privacy */
+       if (!AccessControl(filename,conn,true,VADMIT,VDENY)) /* opendir don't care about privacy */
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;   
@@ -1184,6 +1193,7 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
+
        /* roll through, no break */
 
    case cfd_synch:
@@ -1213,7 +1223,7 @@ switch (GetCommand(recvbuffer))
        
        drift = (int)(tloc-trem);
        
-       if (!AccessControl(filename,conn,true))
+       if (!AccessControl(filename,conn,true,VADMIT,VDENY))
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;   
@@ -1234,7 +1244,7 @@ switch (GetCommand(recvbuffer))
        return true;
 
    case cfd_smd5:
-       memset(buffer,0,CF_BUFSIZE);
+
        sscanf(recvbuffer,"SMD5 %d",&len);
        
        if (received != len+CF_PROTO_OFFSET)
@@ -1252,27 +1262,66 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
+
        /* roll through, no break */
        
    case cfd_md5:
+
+       if (! conn->id_verified)
+          {              
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return true;
+          }
+       
+       CompareLocalHash(conn,sendbuffer,recvbuffer);
+       return true;
+
+   case cfd_svar:
+
+       sscanf(recvbuffer,"SVAR %d",&len);
+
+       if (received != len+CF_PROTO_OFFSET)
+          {
+          Debug("Decryption error: %d\n",len);
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return true;
+          }
+
+       memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
+       plainlen = DecryptString(out,recvbuffer,conn->session_key,len);
+       encrypted = true;
+       
+       if (strncmp(recvbuffer,"VAR",3) !=0)
+          {
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return false;
+          }
+
+       /* roll through, no break */
+       
+   case cfd_var:
+
        if (! conn->id_verified)
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
        
-       memset(filename,0,CF_BUFSIZE);
-       memset(args,0,CF_BUFSIZE);
-       
-       CompareLocalHash(conn,sendbuffer,recvbuffer);
+       if (!LiteralAccessControl(recvbuffer,conn,true,VARADMIT,VARDENY))
+          {
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return false;   
+          }       
+
+       GetServerLiteral(conn,sendbuffer,recvbuffer,encrypted);
        return true;
-       
+
    }
  
- sprintf (sendbuffer,"BAD: Request denied\n");
- SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
- CfOut(cf_inform,"","Closing connection\n"); 
- return false;
+sprintf (sendbuffer,"BAD: Request denied\n");
+SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+CfOut(cf_inform,"","Closing connection\n"); 
+return false;
 }
 
 /**************************************************************/
@@ -1544,7 +1593,6 @@ if ((conn->trust == false) || IsFuzzyItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
 
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
       {      
-      printf("username was");
       conn->uid = -2;
       }
    else
@@ -1689,8 +1737,6 @@ else
  
  if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
     {
-    
-    printf("username was");
     conn->uid = -2;
     }
  else
@@ -1744,7 +1790,7 @@ return false;
 
 /**************************************************************/
 
-int AccessControl(char *filename,struct cfd_connection *conn,int encrypt)
+int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
 
 { struct Auth *ap;
   int access = false;
@@ -1793,7 +1839,7 @@ if (lstat(realname,&statbuf) == -1)
 
 Debug("AccessControl, match(%s,%s) encrypt request=%d\n",realname,conn->hostname,encrypt);
  
-if (VADMIT == NULL)
+if (vadmit == NULL)
    {
    CfOut(cf_verbose,"","cfServerd access list is empty, no files are visible\n");
    return false;
@@ -1801,7 +1847,7 @@ if (VADMIT == NULL)
  
 conn->maproot = false;
  
-for (ap = VADMIT; ap != NULL; ap=ap->next)
+for (ap = vadmit; ap != NULL; ap=ap->next)
    {
    int res = false;
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
@@ -1858,45 +1904,148 @@ for (ap = VADMIT; ap != NULL; ap=ap->next)
       break;
       }
    }
+
+for (ap = vdeny; ap != NULL; ap=ap->next)
+   {
+   if (strncmp(ap->path,realname,strlen(ap->path)) == 0)
+      {
+      if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+          IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+         {
+         access = false;
+         CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,realname);
+         break;
+         }
+      }
+   }
+
+if (access)
+   {
+   CfOut(cf_verbose,"","Host %s granted access to %s\n",conn->hostname,realname);
+   
+   if (encrypt && LOGENCRYPT)
+      {
+      /* Log files that were marked as requiring encryption */
+      CfOut(cf_log,"","Host %s granted access to %s\n",conn->hostname,realname);
+      }
+   }
+else
+   {
+   CfOut(cf_verbose,"","Host %s denied access to %s\n",conn->hostname,realname);
+   }
+
+if (!conn->rsa_auth)
+   {
+   CfOut(cf_verbose,"","Cannot map root access without RSA authentication");
+   conn->maproot = false; /* only public files accessible */
+   /* return false; */
+   }
+
+return access;
+}
+
+/**************************************************************/
+
+int LiteralAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+
+{ struct Auth *ap;
+  int access = false;
+  char *sp;
+  struct stat statbuf;
+  char name[CF_BUFSIZE];
  
- for (ap = VDENY; ap != NULL; ap=ap->next)
-    {
-    if (strncmp(ap->path,realname,strlen(ap->path)) == 0)
-       {
-       if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
-           IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-           IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
-          {
-          access = false;
-          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,realname);
-          break;
-          }
-       }
-    }
+sscanf(in,"VAR %[^\n]",name);
+
+Debug("\n\nLiteralAccessControl(%s)\n",name);
+
+conn->maproot = false;
  
- if (access)
-    {
-    CfOut(cf_verbose,"","Host %s granted access to %s\n",conn->hostname,realname);
-    
-    if (encrypt && LOGENCRYPT)
-       {
-       /* Log files that were marked as requiring encryption */
-       CfOut(cf_log,"","Host %s granted access to %s\n",conn->hostname,realname);
-       }
-    }
- else
-    {
-    CfOut(cf_verbose,"","Host %s denied access to %s\n",conn->hostname,realname);
-    }
+for (ap = vadmit; ap != NULL; ap=ap->next)
+   {
+   int res = false;
+   Debug("Examining rule in access list (%s,%s)?\n",name,ap->path);
+      
+   if (strcmp(ap->path,name) == 0)
+      {
+      res = true;    /* Exact match means single file to admit */
+      }
+   
+   if (res)
+      {
+      CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",name,ap->path);
+
+      if (!encrypt && (ap->encrypt == true))
+         {
+         CfOut(cf_error,"","Variable %s requires encrypt connection...will not serve\n",ap->path);
+         access = false;
+         }
+      else
+         {
+         Debug("Checking whether to map root privileges..\n");
+         
+         if (IsRegexItemIn(ap->maproot,conn->hostname) ||
+             IsRegexItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
+             IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)))
+            {
+            conn->maproot = true;
+            CfOut(cf_verbose,"","Mapping root privileges\n");
+            }
+         else
+            {
+            CfOut(cf_verbose,"","No root privileges granted\n");
+            }
+         
+         if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+             IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+            {
+            access = true;
+            Debug("Access privileges - match found\n");
+            }
+         }
+      break;
+      }
+   }
  
- if (!conn->rsa_auth)
-    {
-    CfOut(cf_verbose,"","Cannot map root access without RSA authentication");
-    conn->maproot = false; /* only public files accessible */
-    /* return false; */
-    }
- 
- return access;
+for (ap = vdeny; ap != NULL; ap=ap->next)
+   {
+   if (strcmp(ap->path,name) == 0)
+      {
+      if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+          IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+         {
+         access = false;
+         CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,name);
+         break;
+         }
+      }
+   }
+
+if (access)
+   {
+   CfOut(cf_verbose,"","Host %s granted access to literal \"%s\"\n",conn->hostname,name);
+   
+   if (encrypt && LOGENCRYPT)
+      {
+      /* Log files that were marked as requiring encryption */
+      CfOut(cf_log,"","Host %s granted access to literal \"%s\"\n",conn->hostname,name);
+      }
+   }
+else
+   {
+   CfOut(cf_verbose,"","Host %s denied access to literal \"%s\"\n",conn->hostname,name);
+   }
+
+if (!conn->rsa_auth)
+   {
+   CfOut(cf_verbose,"","Cannot map root access without RSA authentication");
+   conn->maproot = false; /* only public files accessible */
+   /* return false; */
+   }
+
+return access;
 }
 
 /**************************************************************/
@@ -2744,6 +2893,29 @@ else
    }
 
 DeletePromise(pp);
+}
+
+/**************************************************************/
+
+void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted)
+
+{ char handle[CF_BUFSIZE],out[CF_BUFSIZE];
+  int cipherlen;
+ 
+sscanf(recvbuffer,"VAR %[^\n]",handle);
+
+memset(sendbuffer,0,CF_BUFSIZE);
+snprintf(sendbuffer,CF_BUFSIZE-1,"%s",ReturnLiteralData(handle));
+
+if (encrypted)
+   {
+   cipherlen = EncryptString(sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
+   SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
+   }
+else
+   {
+   SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+   }
 }
 
 /**************************************************************/

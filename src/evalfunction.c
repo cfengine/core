@@ -1741,6 +1741,78 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_IDRANGE,
+     CF_ANYSTRING,
+     CF_BOOL,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_opts,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  char *handle,*server;
+  int encrypted;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+handle = finalargs->item;
+server = finalargs->next->item;
+encrypted = GetBoolean(finalargs->next->next->item);
+
+if (strcmp(server,"localhost") == 0)
+   {
+   /* The only reason for this is testing...*/
+   server = "127.0.0.1";
+   }
+
+if (THIS_AGENT_TYPE == cf_common)
+   {
+   if ((rval.item = strdup("<remote scalar>")) == NULL)
+      {
+      FatalError("Memory allocation in FnCallRemoteSCalar");
+      }
+   }
+else
+   {
+   strncpy(buffer,GetRemoteScalar(handle,server,encrypted),CF_BUFSIZE-1);
+   
+   if (strncmp(buffer,"BAD:",4) == 0)
+      {
+      SetFnCallReturnStatus("remotescalar",FNCALL_FAILURE,NULL,NULL);   
+      }
+   else
+      {
+      SetFnCallReturnStatus("remotescalar",FNCALL_SUCCESS,NULL,NULL);   
+      }
+   
+   if ((rval.item = strdup(buffer)) == NULL)
+      {
+      FatalError("Memory allocation in FnCallRemoteSCalar");
+      }
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

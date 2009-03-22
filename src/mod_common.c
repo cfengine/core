@@ -81,6 +81,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"regcmp",cf_class,2,"True if arg1 is a regular expression matching arg2"},
    {"regline",cf_class,2,"True if arg1 is a regular expression matching a line in file arg2"},
    {"reglist",cf_class,2,"True if arg1 matches any item in the list with id=arg2"},
+   {"remotescalar",cf_str,3,"Read a scalar value from a remote cfengine server"},
    {"returnszero",cf_class,2,"True if named shell command has exit status zero"},
    {"rrange",cf_rrange,2,"Define a range of real numbers for cfengine internal use"},
    {"selectservers",cf_int,6,"Select tcp servers which respond correctly to a query and return their number, set array of names"},

@@ -231,7 +231,6 @@ for (bp = bundles; bp != NULL; bp=bp->next)
    fprintf(FREPORT_HTML,"%s\n",CFH[cfx_bundle][cfe]);
    }
 
-
 /* Now summarize the remaining bodies */
 
 fprintf(FREPORT_HTML,"<h1>All Bodies</h1>");
@@ -264,6 +263,8 @@ void ShowPromise(struct Promise *pp, int indent)
   struct Rlist *rp;
   char *v,rettype,vbuff[CF_BUFSIZE];
   void *retval;
+  time_t lastseen,last;
+  double val,av,var;
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
@@ -355,6 +356,30 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
       }
      
+   }
+
+lastseen = GetPromiseCompliance(pp,&val,&av,&var,&last);
+
+if (lastseen) /* This only gives something in Nova or higher */
+   {
+   strncpy(vbuff,ctime(&lastseen),CF_MAXVARSIZE);
+   Chop(vbuff);
+   
+   fprintf(FREPORT_HTML,"<hr><p><div id=\"compliance\">Compliance last checked on %s. At that time the system was ",vbuff);
+   if (val = 1.0)
+      {
+      fprintf(FREPORT_HTML,"COMPLIANT.");
+      }
+   else if (val = 0.5)
+      {
+      fprintf(FREPORT_HTML,"REPAIRED.");
+      }
+   else if (val = 0.0)
+      {
+      fprintf(FREPORT_HTML,"NON-COMPLIANT.");
+      }
+
+   fprintf(FREPORT_HTML," Average compliance %.1lf pm %.1lf percent. </div>",av*100.0,sqrt(var)*100.0);
    }
 
 if (pp->audit)

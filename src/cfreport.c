@@ -477,6 +477,10 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
          {
          XML = true;
          }
+      else if (strcmp("csv",retval) == 0)
+         {
+         CSV = true;
+         }
       continue;
       }
 

@@ -115,7 +115,7 @@ if (AUDITDBP)
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status)
 
 { time_t now = time(NULL);
-  char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE];
+ char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE],id[CF_MAXVARSIZE];
   struct AuditLog newaudit;
   struct Audit *ap = pp->audit;
   struct timespec t;
@@ -129,41 +129,49 @@ switch(status)
    case CF_CHG:
        PR_REPAIRED++;
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,0.5);
        SummarizeTransaction(attr,pp);
        break;
        
    case CF_WARN:
        PR_NOTKEPT++;
+       NotePromiseCompliance(pp,1.0);
        break;
        
    case CF_TIMEX:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,0.0);
        break;
 
    case CF_FAIL:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,0.0);
        break;
        
    case CF_DENIED:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,0.0);
        break;
        
    case CF_INTERPT:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,0.0);
        break;
 
    case CF_REGULAR:
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,0.5);
        PR_REPAIRED++;
        break;
        
    case CF_UNKNOWN:
    case CF_NOP:
        AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
+       NotePromiseCompliance(pp,1.0);
        PR_KEPT++;
        break;
    }

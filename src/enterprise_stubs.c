@@ -85,6 +85,40 @@ void TypeNode(FILE *fp,char *type)
 
 /*****************************************************************************/
 
+char *PromiseID(struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_PromiseID(pp);
+#else
+#endif
+}
+
+/*****************************************************************************/
+
+void NotePromiseCompliance(struct Promise *pp,double val)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_NotePromiseCompliance(pp,val);
+#else
+#endif
+}
+
+/*****************************************************************************/
+
+time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen)
+    
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_GetPromiseCompliance(pp,value,average,var,lastseen);
+#else
+return time(NULL);
+#endif
+}
+
+/*****************************************************************************/
+
 void PromiseNode(FILE *fp,struct Promise *pp,int type)
 
 {

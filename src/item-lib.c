@@ -1309,7 +1309,7 @@ for (idx = 0; idx < fip; idx++)
    
    if (fdata != *(finmem+idx))
       {
-      printf("CompareToFile(%s): difference found at %u-th byte MEM:(0x%x/%c) != FILE:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx), fdata, fdata);
+      Debug("CompareToFile(%s): difference found at %u-th byte MEM:(0x%x/%c) != FILE:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx), fdata, fdata);
       free(finmem);
       fclose(fp);
       return false;

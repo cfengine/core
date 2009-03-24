@@ -413,7 +413,7 @@ if (strcmp(pp->agentsubtype,"classes") == 0)
 
 sp = (char *)GetConstraint("resource_type",pp->conlist,CF_SCALAR);
 
-if (strcmp(pp->agentsubtype,"access") == 0 && strcmp(sp,"literal") == 0)
+if (strcmp(pp->agentsubtype,"access") == 0 && sp && strcmp(sp,"literal") == 0)
    {
    KeepLiteralAccessPromise(pp);
    return;

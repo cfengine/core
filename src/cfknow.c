@@ -2329,10 +2329,10 @@ if (occurrences != NULL)
       switch (oc->rep_type)
          {
          case cfk_url:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",oc->locator,oc->locator);
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",oc->locator,oc->locator);
              break;
          case cfk_web:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\"> ...%s</a> </span>(URL)",oc->locator,URLHint(oc->locator));
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\" target=\"_blank\"> ...%s</a> </span>(URL)",oc->locator,URLHint(oc->locator));
              break;
          case cfk_file:
              fprintf(fout," <a href=\"file://%s\">%s</a> (file)",oc->locator,oc->locator);

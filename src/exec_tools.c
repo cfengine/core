@@ -195,7 +195,7 @@ int GetExecOutput(char *command,char *buffer,int useshell)
 /* Buffer initially contains whole exec string */
 
 { int offset = 0;
-  char line[CF_BUFSIZE], *sp; 
+  char line[CF_EXPANDSIZE], *sp; 
   FILE *pp;
 
 Debug1("GetExecOutput(%s,%s)\n",command,buffer);
@@ -215,7 +215,7 @@ if (pp == NULL)
    return false;
    }
 
-memset(buffer,0,CF_BUFSIZE);
+memset(buffer,0,CF_EXPANDSIZE);
   
 while (!feof(pp))
    {
@@ -225,7 +225,7 @@ while (!feof(pp))
       break;
       }
 
-   CfReadLine(line,CF_BUFSIZE,pp);
+   CfReadLine(line,CF_EXPANDSIZE,pp);
 
    if (ferror(pp))  /* abortable */
       {
@@ -241,13 +241,13 @@ while (!feof(pp))
          }
       }
    
-   if (strlen(line)+offset > CF_BUFSIZE-10)
+   if (strlen(line)+offset > CF_EXPANDSIZE-10)
       {
-      CfOut(cf_error,"","Buffer exceeded %d bytes in exec %s\n",CF_BUFSIZE,command);
+      CfOut(cf_error,"","Buffer exceeded %d bytes in exec %s\n",CF_EXPANDSIZE,command);
       break;
       }
 
-   snprintf(buffer+offset,CF_BUFSIZE,"%s ",line);
+   snprintf(buffer+offset,CF_EXPANDSIZE,"%s ",line);
    offset += strlen(line)+1;
    }
 

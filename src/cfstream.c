@@ -148,11 +148,9 @@ switch(level)
 
    case cf_log:
        
-       if (attr.transaction.log_level == cf_inform)
-          {
-          MakeLog(mess,level);
-          }
-
+       MakeLog(mess,level);
+       break;
+       
    default:
        
        FatalError("Software error: report level unknown: require cf_error, cf_inform, cf_verbose");

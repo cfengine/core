@@ -276,6 +276,8 @@ void StartServer(int argc,char **argv)
   struct Attributes dummyattr;
   struct CfLock thislock;
 
+memset(&dummyattr,0,sizeof(dummyattr));
+  
 #if defined(HAVE_GETADDRINFO)
   int addrlen=sizeof(struct sockaddr_in6);
   struct sockaddr_in6 cin;
@@ -1105,7 +1107,7 @@ switch (GetCommand(recvbuffer))
        memset(buffer,0,CF_BUFSIZE);
        sscanf(recvbuffer,"SOPENDIR %u",&len);
 
-       if (received != len+CF_PROTO_OFFSET)
+       if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
           CfOut(cf_verbose,"","Protocol error OPENDIR: %d\n",len);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
@@ -1172,7 +1174,7 @@ switch (GetCommand(recvbuffer))
        memset(buffer,0,CF_BUFSIZE);
        sscanf(recvbuffer,"SSYNCH %u",&len);
 
-       if (received != len+CF_PROTO_OFFSET)
+       if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
           CfOut(cf_verbose,"","Protocol error SSYNCH: %d\n",len);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
@@ -1248,7 +1250,7 @@ switch (GetCommand(recvbuffer))
 
        sscanf(recvbuffer,"SMD5 %u",&len);
        
-       if (received != len+CF_PROTO_OFFSET)
+       if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
           Debug("Decryption error: %d\n",len);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
@@ -1281,7 +1283,7 @@ switch (GetCommand(recvbuffer))
 
        sscanf(recvbuffer,"SVAR %u",&len);
 
-       if (received != len+CF_PROTO_OFFSET)
+       if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
           Debug("Decryption error: %d\n",len);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
@@ -2149,7 +2151,7 @@ if (PRIVKEY == NULL || PUBKEY == NULL)
 
 sauth[0] = '\0';
 
-sscanf(recvbuffer,"%s %c %d %d",sauth,&iscrypt,&crypt_len,&nonce_len);
+sscanf(recvbuffer,"%s %c %u %u",sauth,&iscrypt,&crypt_len,&nonce_len);
 
 if (crypt_len == 0 || nonce_len == 0 || strlen(sauth) == 0)
    {

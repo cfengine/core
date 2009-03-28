@@ -102,6 +102,7 @@ if (strcmp(agent,CF_AGENTTYPES[cf_agent]) == 0)
       }
    }
 
+DeleteItemList(ip);
 return false;
 }
 

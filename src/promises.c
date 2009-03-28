@@ -560,6 +560,8 @@ if (pp->promisee != NULL)
 // ref/agentsubtype are only references
 
 DeleteConstraintList(pp->conlist);
+
+free((char *)pp);
 }
 
 /*****************************************************************************/

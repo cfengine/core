@@ -296,7 +296,7 @@ struct BodySyntax CF_LINKTO_BODY[] =
 struct BodySyntax CF_COPYFROM_BODY[] =
    {
    {"source",cf_str,CF_PATHRANGE,"Reference source file from which to copy"},
-   {"servers",cf_slist,"[A-Za-z0-9\-_.:]+","List of servers in order of preference from which to copy"},
+   {"servers",cf_slist,"[A-Za-z0-9_.:-]+","List of servers in order of preference from which to copy"},
    {"portnumber",cf_int,"1024,99999","Port number to connect to on server host"},
    {"copy_backup",cf_opts,"true,false,timestamp","Menu option policy for file backup/version control"},
    {"stealth",cf_opts,CF_BOOL,"true/false whether to preserve time stamps on copied file"},

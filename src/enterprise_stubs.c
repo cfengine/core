@@ -89,8 +89,9 @@ char *PromiseID(struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_PromiseID(pp);
+return Nova_PromiseID(pp);
 #else
+return "";
 #endif
 }
 

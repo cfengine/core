@@ -801,7 +801,7 @@ void TexinfoManual(char *mandir);
 int FullTextMatch (char *regptr,char *cmpptr);
 int FullTextCaseMatch (char *regexp,char *teststring);
 char *ExtractFirstReference(char *regexp,char *teststring);
-
+void CfRegFree(struct CfRegEx rex);
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
 int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
 int IsRegexItemIn(struct Item *list,char *regex);

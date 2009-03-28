@@ -442,6 +442,7 @@ if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
 else
    {
    Debug("Database read failed: %s",db_strerror(errno));
+   DeleteDBKey(key);
    return false;
    }
 }

@@ -106,6 +106,33 @@ return false;
 
 /*******************************************************************/
 
+int IsInListOfRegex(struct Rlist *list,char *str)
+
+{ struct Rlist *rp;
+
+if (str == NULL || list == NULL)
+   {
+   return false;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (rp->type != CF_SCALAR)
+      {
+      continue;
+      }
+
+   if (FullTextMatch(rp->item,str))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
 void *CopyRvalItem(void *item, char type)
 
 { struct Rlist *rp,*start = NULL;

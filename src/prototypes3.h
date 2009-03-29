@@ -388,7 +388,7 @@ struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs);
 
-void *ReadFile(char *filename,int maxsize);
+void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);
 int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type);
@@ -971,6 +971,7 @@ struct Rlist *KeyInRlist(struct Rlist *list,char *key);
 int RlistLen(struct Rlist *start);
 void PopStack(struct Rlist **liststart, void **item,size_t size);
 void PushStack(struct Rlist **liststart,void *item);
+int IsInListOfRegex(struct Rlist *list,char *str);
 
 void *CopyRvalItem(void *item, char type);
 void DeleteRvalItem(void *rval, char type);

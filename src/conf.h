@@ -201,7 +201,7 @@
 #define HAVE_LIBNSS_NIS 1
 
 /* Define to 1 if you have the `pcre' library (-lpcre). */
-
+#define HAVE_LIBPCRE 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
 #define HAVE_LIBPQ 1
@@ -249,7 +249,7 @@
 /* #undef HAVE_NLIST_H */
 
 /* Define to 1 if you have the <pcre.h> header file. */
-
+#define HAVE_PCRE_H 1
 
 /* Define to 1 if you have the <pcre/pcre.h> header file. */
 /* #undef HAVE_PCRE_PCRE_H */

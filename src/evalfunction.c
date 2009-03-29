@@ -2632,7 +2632,7 @@ maxsize = Str2Int(finalargs->next->item);
 
 Debug("Read string data from file %s (up to %d)\n",filename,maxsize);
 
-rval.item = ReadFile(filename,maxsize);
+rval.item = CfReadFile(filename,maxsize);
 
 if (rval.item)
    {
@@ -2692,7 +2692,7 @@ maxsize = Str2Int(finalargs->next->next->next->next->item);
 
 Debug("Read string data from file %s\n",filename);
 
-file_buffer = (char *)ReadFile(filename,maxsize);
+file_buffer = (char *)CfReadFile(filename,maxsize);
 
 if (file_buffer == NULL)
    {
@@ -2814,7 +2814,7 @@ maxsize = Str2Int(finalargs->next->next->next->next->next->item);
 
 Debug("Read string data from file %s - , maxent %d\n",filename,maxent);
 
-file_buffer = (char *)ReadFile(filename,maxsize);
+file_buffer = (char *)CfReadFile(filename,maxsize);
 
 if (file_buffer == NULL)
    {
@@ -2916,7 +2916,7 @@ return rval;
 /* Level                                                             */
 /*********************************************************************/
 
-void *ReadFile(char *filename,int maxsize)
+void *CfReadFile(char *filename,int maxsize)
 
 { struct stat sb;
   char *result = NULL;

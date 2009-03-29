@@ -432,6 +432,7 @@ if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
       }
    else
       {
+      DeleteDBKey(key);
       return false;
       }
    

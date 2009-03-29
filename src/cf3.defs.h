@@ -1404,6 +1404,7 @@ struct CfDatabase
    char *operation;
    struct Rlist *columns;
    struct Rlist *rows;
+   struct Rlist *exclude;
    };
     
 /*************************************************************************/

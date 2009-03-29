@@ -932,6 +932,7 @@ for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
    {
    if (*sp == '-')
       {
+      sp++;
       if (strcmp(sp,"5.0") == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows 2000\n");

@@ -1267,11 +1267,12 @@ d.server = GetConstraint("database_server",pp->conlist,CF_SCALAR);
 d.columns = GetListConstraint("database_columns",pp->conlist);
 d.rows = GetListConstraint("database_rows",pp->conlist);
 d.operation = GetConstraint("database_operation",pp->conlist,CF_SCALAR);
+d.exclude = GetListConstraint("registry_exclude",pp->conlist);
 
 value = GetConstraint("db_server_type",pp->conlist,CF_SCALAR);
 d.db_server_type = Str2dbType(value);
 
-if (d.db_server_type == cfd_notype)
+if (value && d.db_server_type == cfd_notype)
    {
    CfOut(cf_error,"","Unsupported database type \"%s\" in databases promise",value);
    PromiseRef(cf_error,pp);

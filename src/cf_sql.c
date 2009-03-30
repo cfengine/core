@@ -145,6 +145,11 @@ return true;
 void CfCloseDB(CfdbConn *cfdb)
 
 {
+if (!cfdb->connected)
+   {
+   return;
+   }
+ 
 switch (cfdb->type)
    {
    case cfd_mysql:
@@ -339,7 +344,10 @@ switch (cfdb->type)
    case cfd_mysql:
        
 #ifdef HAVE_LIBMYSQLCLIENT
-       mysql_free_result(cfdb->my_res); 
+       if (cfdb->result)
+          {
+          mysql_free_result(cfdb->my_res);
+          }
 #endif
        break;
        

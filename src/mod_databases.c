@@ -56,9 +56,9 @@
 
 struct BodySyntax CF_SQLSERVER_BODY[] =
    {
-   {"db_server_owner",cf_str,CF_SQLSERVER_BODY,"User name for database connection"},
-   {"db_server_password",cf_str,"sql,ms_registry","Clear text password for database connection"},
-   {"db_server_host",cf_str,".*,.*","Hostname or address for connection to database, blank means localhost"},
+   {"db_server_owner",cf_str,"","User name for database connection"},
+   {"db_server_password",cf_str,"","Clear text password for database connection"},
+   {"db_server_host",cf_str,"","Hostname or address for connection to database, blank means localhost"},
    {"db_server_type",cf_opts,"postgres,mysql","The dialect of the database server"},
    {NULL,cf_notype,NULL,NULL}
    };

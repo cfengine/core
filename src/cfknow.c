@@ -609,11 +609,16 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
    if (tp->topic_comment)
       {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->topic_comment,NextTopic(tp->topic_name,tp->topic_type));
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
       }
    else
       {
       snprintf(longname,CF_BUFSIZE,"%s",NextTopic(tp->topic_name,tp->topic_type));
+      }
+
+   if (tp->occurrences == NULL)
+      {
+      strcat(longname," (TBD)");
       }
 
    if (!IsItemIn(generic_topics,longname))
@@ -1369,6 +1374,7 @@ if (WRITE_SQL && strlen(SQL_OWNER) > 0)
 
 snprintf(query,CF_MAXVARSIZE-1,"%s",SQL_DATABASE);
 pp = NewPromise("databases",query);
+memset(&a,0,sizeof(a));
 a.transaction.action = cfa_fix;
 
 CfOut(cf_verbose,"","Writing %s\n",filename);

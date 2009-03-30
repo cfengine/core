@@ -405,7 +405,7 @@ int NewPromiseProposals()
 { struct Rlist *rp,*sl;
   struct stat sb;
 
-if (stat(VINPUTFILE,&sb) == -1)
+if (stat(InputLocation(VINPUTFILE),&sb) == -1)
    {
    CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
    return false;

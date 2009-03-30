@@ -1728,7 +1728,7 @@ void FileAutoDefine(char *destfile)
 
 snprintf(class,CF_MAXVARSIZE,"auto_%s",CanonifyName(destfile)); 
 NewClass(class);
-CfOut(cf_inform,"Auto defining class %s\n",class); 
+CfOut(cf_inform,"","Auto defining class %s\n",class); 
 }           
 
 /*********************************************************************/

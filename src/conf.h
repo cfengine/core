@@ -192,7 +192,7 @@
 #define HAVE_LIBM 1
 
 /* Define to 1 if you have the `mysqlclient' library (-lmysqlclient). */
-/* #undef HAVE_LIBMYSQLCLIENT */
+#define HAVE_LIBMYSQLCLIENT 1
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 /* #undef HAVE_LIBNSL */
@@ -240,7 +240,7 @@
 #define HAVE_MKFIFO 1
 
 /* Define to 1 if you have the <mysql/mysql.h> header file. */
-/* #undef HAVE_MYSQL_MYSQL_H */
+#define HAVE_MYSQL_MYSQL_H 1
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
@@ -483,7 +483,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.1a23"
+#define VERSION "3.0.1a24"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

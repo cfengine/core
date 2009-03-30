@@ -173,13 +173,16 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
       case 'D': NewClassesFromString(optarg);
           break;
           
-      case 'N': NegateClassesFromString(optarg,&VNEGHEAP);
+      case 'N':
+          NegateClassesFromString(optarg,&VNEGHEAP);
           break;
           
       case 'I': INFORM = true;
           break;
           
-      case 'v': VERBOSE = true;
+      case 'v':
+          VERBOSE = true;
+          NO_FORK = true;
           break;
           
       case 'n': DONTDO = true;
@@ -454,6 +457,12 @@ sleep(60);                /* 1 Minute resolution is enough */
 
 now = time(NULL);
 
+GetNameInfo3();
+GetInterfaceInfo3();
+FindV6InterfaceInfo();
+Get3Environment();
+OSClasses();
+SetReferenceTime(true);
 snprintf(timekey,63,"%s",ctime(&now)); 
 AddTimeClass(timekey); 
 
@@ -744,10 +753,12 @@ if ((strlen(VMAILSERVER) == 0) || (strlen(to) == 0))
    /* Syslog should have done this */
    return;
    }
+
+CfOut(cf_error,"","Mail result...\n");
   
 if (stat(file,&statbuf) == -1)
    {
-   exit(0);
+   return;
    }
 
 snprintf(prev_file,CF_BUFSIZE-1,"%s/outputs/previous",CFWORKDIR);

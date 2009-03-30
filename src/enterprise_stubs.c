@@ -288,9 +288,9 @@ Nova_DumpSlowlyVaryingObservations();
 void GetClassName(int i,char *name)
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_GetClassName(i,name);
+Nova_GetClassName(i,name);
 #else
- return OBS[i][0];
+strcpy(name,OBS[i][0]);
 #endif
 }
 
@@ -299,9 +299,9 @@ void GetClassName(int i,char *name)
 void LookUpClassName(int i,char *name)
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_LookupClassName(i,name);
+Nova_LookupClassName(i,name);
 #else
- return OBS[i][0];
+strcpy(name,OBS[i][0]);
 #endif
 }
 
@@ -311,9 +311,9 @@ void LoadSlowlyVaryingObservations()
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_LoadSlowlyVaryingObservations();
+Nova_LoadSlowlyVaryingObservations();
 #else
- CfOut(cf_verbose,"","# Extended system discovery is only available in version Nova and above\n");
+CfOut(cf_verbose,"","# Extended system discovery is only available in version Nova and above\n");
 #endif
 }
 
@@ -325,9 +325,9 @@ void RegisterLiteralServerData(char *handle,struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_RegisterLiteralServerData(handle,pp);
+Nova_RegisterLiteralServerData(handle,pp);
 #else
- CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
 #endif
 }
 
@@ -536,6 +536,8 @@ while(CfFetchRow(cfdb))
    {
    strncpy(name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
 
+   CfOut(cf_verbose,"","      ? ... discovered a database called \"%s\"",name);
+   
    if (strcmp(name,database) == 0)
       {
       found = true;
@@ -617,13 +619,7 @@ int Nova_VerifyTablePromise(CfdbConn *cfdb,char *table_path,struct Rlist *column
   char **name_table,**type_table;
   struct Rlist *rp, *cols;
 
-CfOut(cf_verbose,""," -> Verifying promised table structure");
-
-if (!cfdb->connected)
-   {
-   CfOut(cf_inform,"","Database %s is not connected\n",table_path);
-   return false;
-   }
+CfOut(cf_verbose,""," -> Verifying promised table structure for \"%s\"",table_path);
 
 if (!Nova_ValidateSQLTableName(table_path,table))
    {
@@ -631,14 +627,38 @@ if (!Nova_ValidateSQLTableName(table_path,table))
    return false;
    }
 
+/* Verify the existence of the tables within the database */
+
+if (!Nova_TableExists(cfdb,table))
+   {
+   CfOut(cf_error,""," !! The database did not contain the promised table \"%s\"\n",table_path);
+
+   if (a.database.operation && strcmp(a.database.operation,"create") == 0)
+      {
+      if (!DONTDO && a.transaction.action != cfa_warn)
+         {
+         cfPS(cf_error,CF_CHG,"",pp,a," -> Database.table %s doesn't seem to exist, creating\n",table_path);
+         return Nova_CreateTableColumns(cfdb,table,columns,a,pp);
+         }
+      else
+         {
+         CfOut(cf_error,""," -> Database.table %s doesn't seem to exist, but only a warning was promised\n",table_path);
+         }
+      }
+   
+   return false;
+   }
+
 /* Get a list of the columns in the table */
 
-Nova_QueryTable(query,table);
+Nova_QueryTableColumns(query,table);
 CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 3)
    {
+   cfPS(cf_error,CF_FAIL,"",pp,a,"Could not make sense of the columns");
    CfDeleteQuery(cfdb);
+   return;
    }
 
 /* Assume that the Rlist has been validated and consists of a,b,c */
@@ -648,6 +668,7 @@ no_of_cols = RlistLen(columns);
 
 if (!Nova_NewSQLColumns(table,columns,&name_table,&type_table,&size_table,&done))
    {
+   cfPS(cf_error,CF_FAIL,"",pp,a,"Could not make sense of the columns");
    return false;
    }
 
@@ -659,6 +680,8 @@ while(CfFetchRow(cfdb))
    strncpy(type,ToLowerStr(CfFetchColumn(cfdb,1)),CF_MAXVARSIZE-1);
    size = Str2Int(CfFetchColumn(cfdb,2));
 
+   CfOut(cf_verbose,"","    ... discovered column (%s,%s,%d)",name,type,size);
+   
    if (size == CF_NOINT)
       {
       cfPS(cf_error,CF_NOP,"",pp,a," !! Integer size of datatype could not be determined - invalid promise.");
@@ -682,7 +705,11 @@ while(CfFetchRow(cfdb))
 
          if (size != size_table[i])
             {
-            cfPS(cf_error,CF_FAIL,"",pp,a," !! Promised column %s in database %s has a non-matching array size (%d != %d)",name,pp->promiser,size,size_table[i]);
+            cfPS(cf_error,CF_FAIL,"",pp,a," !! Promised column \"%s\" in database.table \"%s\" has a non-matching array size (%d != %d)",name,table_path,size,size_table[i]);
+            }
+         else
+            {
+            CfOut(cf_verbose,""," -> Promised column \"%s\" in database.table \"%s\" is as promised",name,table_path);
             }
          
          count++;
@@ -694,7 +721,7 @@ while(CfFetchRow(cfdb))
 
    if (!identified)
       {
-      cfPS(cf_error,CF_FAIL,"",pp,a,"Column \"%s\" found in database table %s is not part of its promise.",name,pp->promiser);
+      cfPS(cf_error,CF_FAIL,"",pp,a,"Column \"%s\" found in database.table \"%s\" is not part of its promise.",name,table_path);
 
       if (a.database.operation && strcmp(a.database.operation,"drop") == 0)
          {
@@ -708,15 +735,9 @@ while(CfFetchRow(cfdb))
 
 CfDeleteQuery(cfdb);
 
-if (count == 0 && a.database.operation && strcmp(a.database.operation,"create") == 0)
-   {
-   CfOut(cf_error,"","Database.table %s doesn't seem to exist, creating\n",table_path);
-   return Nova_CreateTable(cfdb,table,columns,a,pp);
-   }
-
 /* Now look for deviations - only if we have promised to create missing */
 
-if (a.database.operation && strcmp(a.database.operation,"create") != 0)
+if (a.database.operation && strcmp(a.database.operation,"drop") == 0)
    {
    return retval;
    }
@@ -754,12 +775,35 @@ if (count != no_of_cols)
    }
 
 Nova_DeleteSQLColumns(name_table,type_table,size_table,done,no_of_cols);
+
 return retval;
 }
 
 /*****************************************************************************/
 
-int Nova_CreateTable(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp)
+int Nova_TableExists(CfdbConn *cfdb,char *name)
+
+{ struct Rlist *rp,*list = NULL;
+  int match = false;
+
+list = Nova_GetSQLTables(cfdb);
+ 
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (strcmp(name,rp->item) == 0)
+      {
+      match = true;
+      }
+   }
+
+DeleteRlist(list);
+
+return match;
+}
+
+/*****************************************************************************/
+
+int Nova_CreateTableColumns(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp)
 
 { char entry[CF_MAXVARSIZE],query[CF_BUFSIZE];
   int i,count,size,*size_table,*done,identified,retval = true;
@@ -805,6 +849,37 @@ if (no_of_cols > 0)
 CfVoidQueryDB(cfdb,query);
 Nova_DeleteSQLColumns(name_table,type_table,size_table,done,no_of_cols);
 return true;
+}
+
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+struct Rlist *Nova_GetSQLTables(CfdbConn *cfdb)
+
+{ struct Rlist *list = NULL;
+  char query[CF_MAXVARSIZE];
+
+Nova_ListTables(cfdb->type,query);
+
+CfNewQueryDB(cfdb,query);
+
+if (cfdb->maxcolumns != 1)
+   {
+   CfOut(cf_error,"","Could not make sense of the columns");
+   CfDeleteQuery(cfdb);
+   return NULL;
+   }
+
+while(CfFetchRow(cfdb))
+   {
+   PrependRScalar(&list,CfFetchColumn(cfdb,0),CF_SCALAR);
+   }
+
+CfDeleteQuery(cfdb);
+
+return list;
 }
 
 #endif

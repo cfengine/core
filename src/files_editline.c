@@ -401,7 +401,7 @@ for (ip = start; ip != NULL; ip = ip->next)
          }
       }
 
-   if (a.region.select_end)
+   if (a.region.select_end && beg != CF_UNDEFINED_ITEM)
       {
       if (end == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_end,ip->name))
          {

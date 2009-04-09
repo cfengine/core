@@ -416,7 +416,7 @@ struct Rval FnCallReturnsZero(struct FnCall *fp,struct Rlist *finalargs)
   
   struct Rlist *rp;
   struct Rval rval;
-  char buffer[CF_BUFSIZE];
+  char buffer[CF_BUFSIZE],comm[CF_BUFSIZE];
   int ret = false, useshell = false;
   struct stat statbuf;
 
@@ -425,9 +425,15 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (strcmp(finalargs->next->item,"useshell"))
+if (strcmp(finalargs->next->item,"useshell") == 0)
    {
    useshell = true;
+   snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
+   }
+else
+   {
+   useshell = false;
+   snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
    }
 
 if (stat(GetArg0(finalargs->item),&statbuf) == -1)
@@ -435,14 +441,9 @@ if (stat(GetArg0(finalargs->item),&statbuf) == -1)
    SetFnCallReturnStatus("returnszero",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");   
    }
-else if (useshell && ShellCommandReturnsZero(finalargs->item,useshell))
+else if (ShellCommandReturnsZero(comm,useshell))
    {
    SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,NULL,NULL);
-   strcpy(buffer,"any");
-   }
-else if (!useshell && ShellCommandReturnsZero(finalargs->item,useshell))
-   {
-   SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,NULL,NULL);   
    strcpy(buffer,"any");
    }
 else

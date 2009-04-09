@@ -320,6 +320,22 @@ PushStack(&CF_STCK,(void *)op);
 snprintf(name,CF_MAXVARSIZE,"this_%d",CF_STCKFRAME);
 free(op->scope);
 op->scope = strdup(name);
+
+/*
+op = GetScope("match");
+
+if (op == NULL)
+   {
+   return;
+   }
+
+CF_STCKFRAME++;
+PushStack(&CF_STCK,(void *)op);
+snprintf(name,CF_MAXVARSIZE,"match_%d",CF_STCKFRAME);
+free(op->scope);
+op->scope = strdup(name);
+NewScope("match");
+*/
 }
 
 /*******************************************************************/
@@ -327,6 +343,24 @@ op->scope = strdup(name);
 void PopThisScope()
 
 { struct Scope *op = NULL;
+
+ /*
+DeleteScope("match");
+ 
+if (CF_STCKFRAME > 0)
+   {
+   PopStack(&CF_STCK,(void *)&op,sizeof(op));
+
+   if (op == NULL)
+      {
+      return;
+      }
+   
+   CF_STCKFRAME--;
+   free(op->scope);
+   op->scope = strdup("match");
+   }    
+ */
  
 if (CF_STCKFRAME > 0)
    {

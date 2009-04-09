@@ -69,6 +69,7 @@ snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 SetNewScope(vbuff);
 
 NewScope("this");
+NewScope("match");
 
 ok = BOOTSTRAP || CheckPromises(ag);
 

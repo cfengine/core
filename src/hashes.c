@@ -276,7 +276,7 @@ if (ptr == NULL)
    CfOut(cf_error,"","No such scope \"id\" %s while getting %s \n",scope,lval);
    FatalError("No such scope");
    }
- 
+
 while (ptr->hashtable[slot])
    {
    Debug("Hash table Collision! - slot %d = (%s|%s)\n",slot,lval,ptr->hashtable[slot]->lval);
@@ -287,16 +287,19 @@ while (ptr->hashtable[slot])
          {
          return true;
          }
-      
-      CfOut(cf_inform,"","Duplicate selection of value for %s (broken promise) in scope %s",lval,ptr->scope);
-      
-      if (fname)
+
+      if (UnresolvedVariables(ptr->hashtable[slot],rtype) != 0)
          {
-         CfOut(cf_inform,"","Rule from %s at/before line %d\n",fname,lineno);
-         }
-      else
-         {
-         CfOut(cf_inform,"","in bundle parameterization\n",fname,lineno);
+         CfOut(cf_inform,"","Duplicate selection of value for variable \"%s\" (broken promise) in scope %s",lval,ptr->scope);
+      
+         if (fname)
+            {
+            CfOut(cf_inform,"","Rule from %s at/before line %d\n",fname,lineno);
+            }
+         else
+            {
+            CfOut(cf_inform,"","in bundle parameterization\n",fname,lineno);
+            }
          }
 
       DeleteAssoc(ptr->hashtable[slot]);

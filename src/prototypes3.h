@@ -1144,6 +1144,7 @@ int IsCf3VarString(char *str);
 int BooleanControl(char *scope,char *name);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
+int UnresolvedVariables(struct CfAssoc *ap,char rtype);
 
 /* verify_databases.c */
 

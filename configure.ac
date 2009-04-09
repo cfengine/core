@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.1a24)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.1b6)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -276,7 +276,7 @@ else
     if test x"$OPENSSL_LIB_DIR" = xdefault ; then
         for d in $prefix /opt/ssl /usr/local/ssl /usr/local /usr; do
             if test -f "$d/include/openssl/opensslv.h"; then
-                OPENSSL_LIB_LDFLAGS="-L$d/lib"
+                OPENSSL_LIB_LDFLAGS="-L$d/lib${libsuff}"
                 OPENSSL_LIB_CPPFLAGS="-I$d/include"
                 OPENSSL_LIB_LIB="-lcrypto"
                 AC_MSG_RESULT($d)

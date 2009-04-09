@@ -354,6 +354,41 @@ return strcmp(ap->rval,rval);
 
 /*******************************************************************/
 
+int UnresolvedVariables(struct CfAssoc *ap,char rtype)
+
+{ char buffer[CF_BUFSIZE];
+  struct Rlist *list, *rp;
+
+if (ap == NULL)
+   {
+   return false;
+   }
+
+switch (rtype)
+   {
+   case CF_SCALAR:
+       return IsCf3VarString(ap->rval);
+       
+   case CF_LIST:
+       list = (struct Rlist *)ap->rval;
+       
+       for (rp = list; rp != NULL; rp=rp->next)
+          {
+          if (IsCf3VarString(rp->item))
+             {
+             return true;
+             }
+          }
+       
+       return false;
+
+   default:
+       return false;
+   }
+}
+
+/*******************************************************************/
+
 void DeleteAllVariables(char *scope)
 
 { int i;

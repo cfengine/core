@@ -3152,7 +3152,21 @@ void *CfReadFile(char *filename,int maxsize)
 
 if (stat(filename,&sb) == -1)
    {
-   CfOut(cf_error,"stat","Could not examine file %s in readfile",filename);
+   if (THIS_AGENT_TYPE == cf_common)
+      {
+      Debug("Could not examine file %s in readfile on this system",filename);
+      }
+   else
+      {
+      if (IsCf3VarString(filename))
+         {
+         CfOut(cf_verbose,"","Cannot converge/reduce variable \"%s\" yet .. assuming it will resolve later",filename);
+         }
+      else
+         {
+         CfOut(cf_error,"stat","Could not examine file %s in readfile",filename);
+         }
+      }
    return NULL;
    }
 

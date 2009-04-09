@@ -157,7 +157,7 @@ if ((ref == CF_VARARGS) && (len < 1))
    }
 
 for (rp = fp->args; rp != NULL; rp = rp->next)
-   {   
+   {
    switch (rp->type)
       {
       case CF_FNCALL:          

@@ -141,13 +141,15 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
    {
    lval = (char *)rpl->item;
 
+   CfOut(cf_verbose,"","    ? Augment scope %s with %s\n",scope,lval);
+
    // CheckBundleParameters() already checked that there is no namespace collision
    // By this stage all functions should have been expanded, so we only have scalars left
 
    if (IsNakedVar(rpr->item,'@'))
       {
       GetNaked(naked,rpr->item);
-
+      
       if (GetVariable(scope,naked,&(retval.item),&(retval.rtype)) != cf_notype)
          {
          NewList(scope,lval,retval.item,cf_slist);

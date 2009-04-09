@@ -287,6 +287,8 @@ newperm &= ~minus;
 
 Debug(" - ? Select mode match?\n");
 return ((newperm & 07777) == (lstatptr->st_mode & 07777));
+
+// or for partial match(OR) return ((newperm & 07777) & (lstatptr->st_mode & 07777));
 } 
 
 /*******************************************************************/

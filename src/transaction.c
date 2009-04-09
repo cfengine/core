@@ -35,7 +35,7 @@ void SummarizeTransaction(struct Attributes attr,struct Promise *pp)
 {
 if (attr.transaction.log_string)
    {
-   cfPS(cf_log,CF_NOP,"",pp,attr,attr.transaction.log_string);
+   cfPS(cf_log,CF_NOP,"",pp,attr,"Promise repair begun: %s",attr.transaction.log_string);
    }
  
 /*
@@ -61,7 +61,8 @@ struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes 
   char *promise,cc_operator[CF_BUFSIZE],cc_operand[CF_BUFSIZE];
   char cflock[CF_BUFSIZE],cflast[CF_BUFSIZE],cflog[CF_BUFSIZE];
   struct CfLock this;
-
+  unsigned char digest[EVP_MAX_MD_SIZE+1];
+    
 this.last = (char *) CF_UNDEFINED;
 this.lock = (char *) CF_UNDEFINED;
 this.log  = (char *) CF_UNDEFINED;
@@ -114,9 +115,11 @@ for (i = 0; cc_operand[i] != '\0'; i++)
    sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
    }
 
+HashPromise(pp,digest,cf_md5);
+
 snprintf(cflog,CF_BUFSIZE,"%s/cf3.%.40s.runlog",CFWORKDIR,host);
-snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d",pp->bundle,cc_operator,cc_operand,sum);
-snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d",pp->bundle,cc_operator,cc_operand,sum);
+snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,HashPrint(cf_md5,digest));
+snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,HashPrint(cf_md5,digest));
 
 Debug("LOCK(%s)[%s]\n",pp->bundle,cflock);
 
@@ -211,6 +214,8 @@ this.log  = strdup(cflog);
 strcpy(CFLOCK,cflock);
 strcpy(CFLAST,cflast);
 strcpy(CFLOG,cflog);
+
+SummarizeTransaction(attr,pp);
 
 return this;
 }

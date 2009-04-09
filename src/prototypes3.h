@@ -314,6 +314,11 @@ char *PromiseID(struct Promise *pp);
 void NotePromiseCompliance(struct Promise *pp,double val);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 
+void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
+void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
+void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
+void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
+
 /* env_context.c */
 
 int Abort(void);
@@ -387,7 +392,10 @@ struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs);
-
+struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs);
 void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);
@@ -930,6 +938,7 @@ void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
 void PromiseRef(enum cfreport level,struct Promise *pp);
 struct Promise *NewPromise(char *typename,char *promiser);
+void HashPromise(struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 
 /* recursion.c */
 

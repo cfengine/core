@@ -118,7 +118,7 @@ struct BodySyntax CF_INSERTSELECT_BODY[] =
    {"insert_if_startwith_from_list",cf_slist,CF_ANYSTRING,"Insert line if it starts with a string in the list"},
    {"insert_if_not_startwith_from_list",cf_slist,CF_ANYSTRING,"Insert line if it DOES NOT start with a string in the list"},
    {"insert_if_match_from_list",cf_slist,CF_ANYSTRING,"Insert line if it fully matches a regex in the list"},
-   {"insert_if_not_match_from_list",cf_slist,CF_ANYSTRING"Insert line if it DOES NOT fully match a regex in the list"},
+   {"insert_if_not_match_from_list",cf_slist,CF_ANYSTRING,"Insert line if it DOES NOT fully match a regex in the list"},
    {"insert_if_contains_from_list",cf_slist,CF_ANYSTRING,"Insert line if a regex in the list match a line fragment"},
    {"insert_if_not_contains_from_list",cf_slist,CF_ANYSTRING,"Insert line if a regex in the list DOES NOT match a line fragment"},
    {NULL,cf_notype,NULL,NULL}

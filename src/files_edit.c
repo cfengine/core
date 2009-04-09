@@ -70,7 +70,7 @@ if (DONTDO || a.transaction.action == cfa_warn)
    {
    if (ec && ec->num_edits > 0)
       {
-      cfPS(cf_error,CF_WARN,"",pp,a,"Need to edit file %s but only a warning promised",ec->filename);
+      cfPS(cf_error,CF_WARN,"",pp,a," -> Need to edit file %s but only a warning promised",ec->filename);
       }
    return;
    }
@@ -80,7 +80,7 @@ else if (ec && ec->num_edits > 0)
       {
       if (ec)
          {
-         cfPS(cf_inform,CF_NOP,"",pp,a," -> No edit changes to file %s need saving",ec->filename);
+         cfPS(cf_verbose,CF_NOP,"",pp,a," -> No edit changes to file %s need saving",ec->filename);
          }      
       }
    else
@@ -93,7 +93,7 @@ else
    {
    if (ec)
       {
-      cfPS(cf_inform,CF_NOP,"",pp,a," -> No edit changes to file %s need saving",ec->filename);
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> No edit changes to file %s need saving",ec->filename);
       }
    }
 
@@ -127,7 +127,7 @@ if (stat(file,&statbuf) == -1)
 
 if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
    {
-   CfOut(cf_inform,"","File %s is bigger than the limit edit.max_file_size = %d bytes\n",file,a.edits.maxfilesize);
+   CfOut(cf_inform,""," !! File %s is bigger than the limit edit.max_file_size = %d bytes\n",file,a.edits.maxfilesize);
    return(false);
    }
 
@@ -189,7 +189,7 @@ stamp_now = time((time_t *)NULL);
   
 if (stat(file,&statbuf) == -1)
    {
-   cfPS(cf_error,CF_FAIL,"stat",pp,a,"Can no longer access file %s, which needed editing!\n",file);
+   cfPS(cf_error,CF_FAIL,"stat",pp,a," !! Can no longer access file %s, which needed editing!\n",file);
    return false;
    }
 
@@ -228,7 +228,7 @@ cfPS(cf_inform,CF_CHG,"",pp,a,"Edited file %s \n",file);
 
 if (rename(file,backup) == -1)
    {
-   cfPS(cf_error,CF_FAIL,"rename",pp,a,"Can't rename %s to %s - so promised edits could not be moved into place\n",file,backup);
+   cfPS(cf_error,CF_FAIL,"rename",pp,a," !! Can't rename %s to %s - so promised edits could not be moved into place\n",file,backup);
    return false;
    }
 
@@ -246,7 +246,7 @@ else
 
 if (rename(new,file) == -1)
    {
-   cfPS(cf_error,CF_FAIL,"rename",pp,a,"Can't rename %s to %s - so promised edits could not be moved into place\n",new,file);
+   cfPS(cf_error,CF_FAIL,"rename",pp,a," !! Can't rename %s to %s - so promised edits could not be moved into place\n",new,file);
    return false;
    }       
 

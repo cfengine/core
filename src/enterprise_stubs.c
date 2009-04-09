@@ -38,6 +38,16 @@ should be free, please let us know and we will consider this carefully.
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#ifdef HAVE_CFLIBNOVA
+# include <cf.nova.h>
+#endif
+
+void *Nova_LDAPValue(char *uri,char *basedn,char *filter,char *name,char *scope,char *sec);
+void *Nova_LDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
+void *Nova_LDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
+void *Nova_RegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
+
+
 /*****************************************************************************/
 
 void EnterpriseVersion()
@@ -489,6 +499,56 @@ void VerifyRegistryPromise(struct Attributes a,struct Promise *pp)
 Nova_VerifyRegistryPromise(a,pp);
 # endif
 #else
+#endif
+}
+
+/*****************************************************************************/
+/* LDAP                                                                      */
+/*****************************************************************************/
+
+void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
+{
+#ifdef HAVE_LIBCFNOVA
+ return Nova_LDAPValue(uri,dn,filter,name,scope,sec);
+#else
+ CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
+#endif
+}
+
+/*****************************************************************************/
+
+void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
+{
+#ifdef HAVE_LIBCFNOVA
+ return Nova_LDAPList(uri,dn,filter,name,scope,sec);
+#else
+ CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
+#endif
+}
+
+/*****************************************************************************/
+
+void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec)
+{
+#ifdef HAVE_LIBCFNOVA
+ return Nova_LDAPArray(array,uri,dn,filter,scope,sec);
+#else
+ CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
+#endif
+}
+
+/*****************************************************************************/
+
+void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec)
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_RegLDAP(uri,dn,filter,name,scope,regex,sec);
+#else
+CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
 #endif
 }
 

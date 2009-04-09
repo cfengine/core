@@ -322,6 +322,18 @@ switch (this)
    case cfn_regarray:
        rval = FnCallRegArray(fp,expargs);
        break;
+   case cfn_regldap:
+       rval = FnCallRegLDAP(fp,expargs);
+       break;
+   case cfn_ldaparray:
+       rval = FnCallLDAPArray(fp,expargs);
+       break;
+   case cfn_ldaplist:
+       rval = FnCallLDAPList(fp,expargs);
+       break;
+   case cfn_ldapvalue:
+       rval = FnCallLDAPValue(fp,expargs);
+       break;
    case cfn_getindices:
        rval = FnCallGetIndices(fp,expargs);
        break;
@@ -388,7 +400,6 @@ switch (this)
    case cfn_usemodule:
        rval = FnCallUseModule(fp,expargs);
        break;
-
    case cfn_selectservers:
        rval = FnCallSelectServers(fp,expargs);
        break;
@@ -399,12 +410,14 @@ switch (this)
        break;
    }
 
-
 if (FNCALL_STATUS.status == FNCALL_FAILURE)
    {
    /* We do not assign variables to failed function calls */
    rval.item = CopyFnCall(fp);
    rval.rtype = CF_FNCALL;
+   }
+else
+   {
    }
 
 DeleteExpArgs(expargs);

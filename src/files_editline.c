@@ -275,7 +275,7 @@ if (!a.haveregion)
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised column edit (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
    return;
    }
 
@@ -315,7 +315,7 @@ if (!a.haveregion)
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised pattern replace (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
    return;
    }
 
@@ -427,6 +427,11 @@ if (end == CF_UNDEFINED_ITEM && a.region.select_end)
    cfPS(cf_verbose,CF_INTERPT,"",pp,a," !! The promised end pattern (%s) was not found when selecting edit region in %s",a.region.select_end,pp->this_server);
    end = NULL; /* End of file is null ptr if nothing else specified */
    return false;
+   }
+
+if (end == CF_UNDEFINED_ITEM)
+   {
+   end = NULL; /* End of file is null ptr if nothing else specified */
    }
 
 *begin_ptr = beg;
@@ -753,14 +758,17 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
    if (RegExMatchSubString(rex,line_buff,&start_off,&end_off))
       {
-      ExpandScalar(a.replace.replace_value,replace);
-
-      if (strcmp(replace,line_buff) != 0)
-         {      
-         cfPS(cf_error,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",line_buff,ip->name,pp->promiser,pp->this_server);
-         CfOut(cf_error,"","Because the regular expression \"%s\" still matches the replacement string \"%s\"",pp->promiser,line_buff);
-         PromiseRef(cf_error,pp);
-         continue;
+      if (start_off == 0 && end_off == strlen(line_buff))
+         {
+         ExpandScalar(a.replace.replace_value,replace);
+         
+         if (strcmp(replace,line_buff) != 0)
+            {      
+            cfPS(cf_error,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",line_buff,ip->name,pp->promiser,pp->this_server);
+            CfOut(cf_error,"","Because the regular expression \"%s\" still matches the replacement string \"%s\"",pp->promiser,line_buff);
+            PromiseRef(cf_error,pp);
+            continue;
+            }
          }
       }
 

@@ -67,6 +67,7 @@ extern char HASHDB[CF_BUFSIZE];
 extern int FSTAB_EDITS;
 
 extern int CFA_MAXTHREADS;
+extern char *THIS_BUNDLE;
 extern char THIS_AGENT[CF_MAXVARSIZE];
 extern enum cfagenttype THIS_AGENT_TYPE;
 extern short INSTALL_SKIP;

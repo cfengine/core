@@ -521,7 +521,6 @@ pthread_sigmask(SIG_BLOCK,&sigmask,NULL);
 tid = (int) pthread_self();
 #endif
 
-
  
 CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", ctime(&starttime));
@@ -573,7 +572,7 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
       
    for (sp = line; *sp != '\0'; sp++)
       {
-      if (! isspace((int)*sp))
+      if (!isspace((int)*sp))
          {
          print = true;
          break;
@@ -754,8 +753,8 @@ if ((strlen(VMAILSERVER) == 0) || (strlen(to) == 0))
    return;
    }
 
-CfOut(cf_error,"","Mail result...\n");
-  
+CfOut(cf_verbose,"","Mail result...\n");
+
 if (stat(file,&statbuf) == -1)
    {
    return;

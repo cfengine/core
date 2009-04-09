@@ -623,3 +623,53 @@ if (pp->ref)
    CfOut(level,"","Comment: %s\n",pp->ref);
    }
 }
+
+
+/*******************************************************************/
+
+void HashPromise(struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+
+{ EVP_MD_CTX context;
+  int len, md_len;
+  const EVP_MD *md = NULL;
+  struct Constraint *cp;
+  struct Rlist *rp;
+
+md = EVP_get_digestbyname(FileHashName(type));
+   
+EVP_DigestInit(&context,md);
+
+EVP_DigestUpdate(&context,pp->promiser,strlen(pp->promiser));
+
+if (pp->ref)
+   {
+   EVP_DigestUpdate(&context,pp->ref,strlen(pp->ref));
+   }
+
+for (cp = pp->conlist; cp != NULL; cp=cp->next)
+   {
+   EVP_DigestUpdate(&context,cp->lval,strlen(cp->lval));
+
+   switch(cp->type)
+      {
+      case CF_SCALAR:
+          EVP_DigestUpdate(&context,cp->rval,strlen(cp->rval));
+          break;
+
+      case CF_LIST:
+          for (rp = cp->rval; rp != NULL; rp=rp->next)
+             {
+             EVP_DigestUpdate(&context,rp->item,strlen(rp->item));
+             }
+          break;
+
+      case CF_FNCALL:
+          // Shouldn't happen -right?
+          break;
+      }
+   }
+
+EVP_DigestFinal(&context,digest,&md_len);
+   
+/* Digest length stored in md_len */
+}

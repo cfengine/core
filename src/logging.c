@@ -130,7 +130,6 @@ switch(status)
        PR_REPAIRED++;
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.5);
-       SummarizeTransaction(attr,pp);
        break;
        
    case CF_WARN:

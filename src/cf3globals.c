@@ -58,6 +58,7 @@ int CFA_BACKGROUND = 0;
 int CFA_BACKGROUND_LIMIT = 1;
 int AM_BACKGROUND_PROCESS = false;
 
+char *THIS_BUNDLE = NULL;
 char THIS_AGENT[CF_MAXVARSIZE];
 enum cfagenttype THIS_AGENT_TYPE;
 short INSTALL_SKIP = false;

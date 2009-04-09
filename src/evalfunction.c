@@ -1167,7 +1167,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
          {
          CfOut(cf_verbose,"","Host %s is alive and responding correctly\n",rp->item);
          snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
-         NewScalar(CONTEXTID,buffer,rp->item,cf_str);         
+         NewScalar(CONTEXTID,buffer,rp->item,cf_str);
          count++;
          }
       }
@@ -1190,7 +1190,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
    DeleteAgentConn(conn);
    }
 
-/* Return the subset that is alive an responding correctly */
+/* Return the subset that is alive and responding correctly */
 
 /* Return the number of lines in array */
 
@@ -2691,6 +2691,7 @@ maxsize = Str2Int(finalargs->next->next->next->next->item);
 // Read once to validate structure of file in itemlist
 
 Debug("Read string data from file %s\n",filename);
+snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
 
@@ -2748,8 +2749,6 @@ switch(type)
        FatalError("Software error readstringlist - abused type");       
    }
 
-snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
-       
 if (newlist && noerrors)
    {
    SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
@@ -2799,7 +2798,10 @@ struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum
 
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
+
 /* begin fn specific content */
+
+snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
 
  /* 6 args: array_lval,filename,comment_regex,split_regex,max number of entries,maxfilesize  */
 
@@ -2854,8 +2856,6 @@ switch(type)
        FatalError("Software error readstringarray - abused type");       
    }
 
-snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
-       
 SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
 
 /* Return the number of lines in array */
@@ -2890,7 +2890,8 @@ struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   char *string,*split,fnname[CF_MAXVARSIZE];
   int max = 0,noerrors = true,purge = true;
-
+  void *newval;
+  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
@@ -2905,12 +2906,238 @@ max = Str2Int((char *)(finalargs->next->next->item));
 
 newlist = SplitRegexAsRList(string,split,max,true);
 
-SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
+SetFnCallReturnStatus("splitstring",FNCALL_SUCCESS,NULL,NULL);
 
 rval.item = newlist;
 rval.rtype = CF_LIST;
 return rval;
 }
+
+/*********************************************************************/
+/* LDAP Nova features                                                */
+/*********************************************************************/
+
+struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs)
+    
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     "subtree,onelevel,base",
+     "none,ssl,sasl",
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_opts,
+      cf_opts,
+      cf_notype
+      };
+  
+  struct Rlist *newlist = NULL;
+  struct Rval rval;
+  char *uri,*dn,*filter,*name,*scope,*sec;
+  void *newval;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+ 
+   uri = (char *)(finalargs->item);
+    dn = (char *)(finalargs->next->item);
+filter = (char *)(finalargs->next->next->item);
+  name = (char *)(finalargs->next->next->next->item);
+ scope = (char *)(finalargs->next->next->next->next->item);
+   sec = (char *)(finalargs->next->next->next->next->next->item);
+
+if (newval = CfLDAPValue(uri,dn,filter,name,scope,sec))
+   {
+   SetFnCallReturnStatus("ldapvalue",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("ldapvalue",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = newval;
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs)
+    
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     "subtree,onelevel,base",
+     "none,ssl,sasl",
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_opts,
+      cf_opts,
+      cf_notype
+      };
+  
+  struct Rlist *newlist = NULL;
+  struct Rval rval;
+  char *array,*uri,*dn,*filter,*scope,*sec;
+  void *newval;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+ array = (char *)(finalargs->item);
+   uri = (char *)(finalargs->next->item);
+    dn = (char *)(finalargs->next->next->item);
+filter = (char *)(finalargs->next->next->next->item);
+ scope = (char *)(finalargs->next->next->next->next->item);
+   sec = (char *)(finalargs->next->next->next->next->next->item);
+   
+if (newval = CfLDAPArray(array,uri,dn,filter,scope,sec))
+   {
+   SetFnCallReturnStatus("ldaparray",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("ldaparray",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = newval;
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs)
+    
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     "subtree,onelevel,base",
+     "none,ssl,sasl",
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_opts,
+      cf_opts,
+      cf_notype
+      };
+  
+  struct Rlist *newlist = NULL;
+  struct Rval rval;
+  char *uri,*dn,*filter,*name,*scope,*sec;
+  void *newval;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+   uri = (char *)(finalargs->item);
+    dn = (char *)(finalargs->next->item);
+filter = (char *)(finalargs->next->next->item);
+  name = (char *)(finalargs->next->next->next->item);
+ scope = (char *)(finalargs->next->next->next->next->item);
+   sec = (char *)(finalargs->next->next->next->next->next->item);
+
+if (newval = CfLDAPList(uri,dn,filter,name,scope,sec))
+   {
+   SetFnCallReturnStatus("ldaplist",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("ldaplist",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = newval;
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs)
+    
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     "subtree,onelevel,base",
+     CF_ANYSTRING,
+     "none,ssl,sasl",
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_opts,
+      cf_str,
+      cf_opts,
+      cf_notype
+      };
+  
+  struct Rlist *newlist = NULL;
+  struct Rval rval;
+  char *uri,*dn,*filter,*name,*scope,*regex,*sec;
+  void *newval;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+   uri = (char *)(finalargs->item);
+    dn = (char *)(finalargs->next->item);
+filter = (char *)(finalargs->next->next->item);
+  name = (char *)(finalargs->next->next->next->item);
+ scope = (char *)(finalargs->next->next->next->next->item);
+ regex = (char *)(finalargs->next->next->next->next->next->item);
+   sec = (char *)(finalargs->next->next->next->next->next->next->item);
+
+if (newval = CfRegLDAP(uri,dn,filter,name,scope,regex,sec))
+   {
+   SetFnCallReturnStatus("regldap",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("regldap",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = newval;
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
 
 /*********************************************************************/
 /* Level                                                             */

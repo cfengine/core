@@ -450,7 +450,7 @@ if (VINPUTLIST != NULL)
                    {
                    if (stat(InputLocation((char *)returnval.item),&sb) == -1)
                       {
-                      CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl.item);
+                      CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl->item);
                       return false;
                       }
 

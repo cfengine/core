@@ -93,7 +93,7 @@ if (attr.select.groups == NULL)
    PrependItem(&leaf_attr,"group","");
    }
 
-if (SelectModeMatch(sb,attr.select.plus,attr.select.minus))
+if (SelectModeMatch(sb,attr.select.perms))
    {
    PrependItem(&leaf_attr,"mode","");
    }
@@ -277,18 +277,33 @@ return false;
 
 /*******************************************************************/
 
-int SelectModeMatch(struct stat *lstatptr,mode_t plus,mode_t minus)
+int SelectModeMatch(struct stat *lstatptr,struct Rlist *list)
 
-{ mode_t newperm;
+{ mode_t newperm,plus,minus;
+  struct Rlist *rp;
 
-newperm = (lstatptr->st_mode & 07777);
-newperm |= plus;
-newperm &= ~minus;
+for  (rp = list; rp != NULL; rp=rp->next)
+   {
+   plus = 0;
+   minus = 0;
 
-Debug(" - ? Select mode match?\n");
-return ((newperm & 07777) == (lstatptr->st_mode & 07777));
+   if (!ParseModeString(rp->item,&plus,&minus))
+      {
+      CfOut(cf_error,"","Problem validating a mode string \"%s\" in search filter",rp->item);
+      continue;
+      }
 
-// or for partial match(OR) return ((newperm & 07777) & (lstatptr->st_mode & 07777));
+   newperm = (lstatptr->st_mode & 07777);
+   newperm |= plus;
+   newperm &= ~minus;
+   
+   if ((newperm & 07777) == (lstatptr->st_mode & 07777))
+      {
+      return true;
+      }   
+   }
+
+return false;
 } 
 
 /*******************************************************************/

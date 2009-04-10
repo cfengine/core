@@ -2,6 +2,8 @@
 	First standalone release, independent of cfengine 2 
 	Purge old definitions and check consistency.
 
+	NB: changed search_mode to be a list of matching values
+	
 	Reporting rationalized in cf-promises with -r only to avoid
 	leaving output files everywhere.
 

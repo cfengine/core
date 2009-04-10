@@ -68,7 +68,7 @@ void VerifySQLPromise(struct Attributes a,struct Promise *pp)
 
 { char database[CF_MAXVARSIZE],table[CF_MAXVARSIZE],query[CF_BUFSIZE];
   char *sp,sep = 'x';
-  int count = 0;
+  int count = 0, need_connector = false;
   CfdbConn cfdb;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
@@ -141,9 +141,9 @@ if (!cfdb.connected)
 
 /* Check change of existential constraints */
 
-if (a.database.operation && strcmp(a.database.operation,"create") != 0)
+if (a.database.operation && strcmp(a.database.operation,"create") == 0)
    {
-   CfConnectDB(&cfdb,a.database.db_server_type,a.database.db_server_host,a.database.db_server_owner,a.database.db_server_password,NULL);
+   CfConnectDB(&cfdb,a.database.db_server_type,a.database.db_server_host,a.database.db_server_owner,a.database.db_server_password,a.database.db_connect_db);
    
    if (!cfdb.connected)
       {
@@ -191,6 +191,11 @@ else
       }
    
 /* Finally check any row constraints on this table */
+
+   if (a.database.rows)
+      {
+      CfOut(cf_inform,""," !! Database row operations are not currently supported. Please contact cfengine with suggestions.");
+      }
    
    CfCloseDB(&cfdb);
    }

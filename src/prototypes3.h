@@ -594,7 +594,7 @@ int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise 
 int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit);
 int SelectOwnerMatch(struct stat *lstatptr,struct Rlist *crit);
 int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
-int SelectModeMatch(struct stat *lstatptr,mode_t plus,mode_t minus);
+int SelectModeMatch(struct stat *lstatptr,struct Rlist *ls);
 int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
 int SelectNameRegexMatch(char *filename,char *crit);
 int SelectPathRegexMatch(char *filename,char *crit);

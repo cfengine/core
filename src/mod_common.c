@@ -279,6 +279,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"sql_owner",cf_str,"","User id of sql database user"},
    {"sql_passwd",cf_str,"","Embedded password for accessing sql database"},
    {"sql_server",cf_str,"","Name or IP of database server (or localhost)"},
+   {"sql_connection_db",cf_str,"","The name of an existing database to connect to in order to create/manage other databases"},
    {"query_output",cf_opts,"html,text","Menu option for generated output format"},
    {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},

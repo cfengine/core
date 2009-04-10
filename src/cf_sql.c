@@ -65,6 +65,14 @@ int CfConnectDB(CfdbConn *cfdb,enum cfdbtype dbtype,char *remotehost,char *dbuse
 cfdb->connected = false;
 cfdb->type = dbtype;
 
+/* If db == NULL, no database was specified, so we assume it has not been created yet. Need to
+   open a generic database and create */
+
+if (db == NULL)
+   {
+   db = "no db specified";
+   }
+
 CfOut(cf_verbose,"","Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n",db,dbuser,remotehost,dbtype);
 
 switch (dbtype)
@@ -83,7 +91,8 @@ switch (dbtype)
           }
 
        cfdb->connected = true;
-
+#else
+       CfOut(cf_inform,"","There is no MySQL support compiled into this version");  
 #endif
        break;
        
@@ -126,6 +135,8 @@ switch (dbtype)
           }
 
        cfdb->connected = true;
+#else
+       CfOut(cf_inform,"","There is no PostgreSQL support compiled into this version");  
 #endif
        break;
 

@@ -257,7 +257,7 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {
    {"leaf_name",cf_slist,"","List of regexes that match an acceptable name"},
    {"path_name",cf_slist,CF_PATHRANGE,"List of pathnames to match acceptable target"},
-   {"search_mode",cf_str,CF_MODERANGE,"Mode mask for acceptable files"},
+   {"search_mode",cf_slist,CF_MODERANGE,"A list of mode masks for acceptable file permissions"},
    {"search_size",cf_irange,"0,inf","Integer range of file sizes"},
    {"search_owners",cf_slist,CF_USERRANGE,"List of acceptable user names or ids for the file"},
    {"search_groups",cf_slist,CF_USERRANGE,"List of acceptable group names or ids for the file"},

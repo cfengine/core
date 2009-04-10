@@ -718,7 +718,7 @@ if (cfdb->maxcolumns != 3)
    {
    cfPS(cf_error,CF_FAIL,"",pp,a,"Could not make sense of the columns");
    CfDeleteQuery(cfdb);
-   return;
+   return false;
    }
 
 /* Assume that the Rlist has been validated and consists of a,b,c */

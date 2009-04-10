@@ -60,6 +60,7 @@ struct BodySyntax CF_SQLSERVER_BODY[] =
    {"db_server_password",cf_str,"","Clear text password for database connection"},
    {"db_server_host",cf_str,"","Hostname or address for connection to database, blank means localhost"},
    {"db_server_type",cf_opts,"postgres,mysql","The dialect of the database server"},
+   {"db_server_connection_db",cf_str,"","The name of an existing database to connect to in order to create/manage other databases"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -71,7 +72,7 @@ struct BodySyntax CF_DATABASES_BODIES[] =
    {"database_type",cf_opts,"sql,ms_registry","The type of database that is to be manipulated"},
    {"database_operation",cf_opts,"create,delete,drop,cache,verify,restore","The nature of the promise - to be or not to be"},
    {"database_columns",cf_slist,".*,.*","A list of column definitions to be promised by SQL databases"},
-   {"database_rows",cf_slist,".*,.*","A list of row values to be promised by SQL databases"},
+   {"database_rows",cf_slist,".*,.*","An ordered list of row values to be promised by SQL databases"},
    {"registry_exclude",cf_slist,"","A list of regular expressions to ignore in key/value verification"},
    {NULL,cf_notype,NULL,NULL}
    };

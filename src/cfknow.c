@@ -85,6 +85,7 @@ char SQL_DATABASE[CF_MAXVARSIZE];
 char SQL_OWNER[CF_MAXVARSIZE];
 char SQL_PASSWD[CF_MAXVARSIZE];
 char SQL_SERVER[CF_MAXVARSIZE];
+char SQL_CONNECT_NAME[CF_MAXVARSIZE];
 char TOPIC_CMD[CF_MAXVARSIZE];
 char WEBDRIVER[CF_MAXVARSIZE];
 char BANNER[2*CF_BUFSIZE];
@@ -290,6 +291,7 @@ strcpy(BUILD_DIR,".");
 strcpy(MANDIR,".");
 strcpy(SQL_DATABASE,"cf_topic_map");
 strcpy(SQL_OWNER,"");
+strcpy(SQL_CONNECT_NAME,"");
 strcpy(SQL_PASSWD,"");
 strcpy(SQL_SERVER,"localhost");
 strcpy(GRAPHDIR,"");
@@ -368,6 +370,12 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_connect_db].lval) == 0)
+      {
+      strncpy(SQL_CONNECT_NAME,retval,CF_MAXVARSIZE);
+      continue;
+      }
+   
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_query_engine].lval) == 0)
       {
       strncpy(WEBDRIVER,retval,CF_MAXVARSIZE);
@@ -1394,7 +1402,7 @@ if (sql_database_defined)
    if (!cfdb.connected)
       {
       CfOut(cf_error,"","Could not connect an existing database %s\n",SQL_DATABASE);
-      CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,NULL);
+      CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_CONNECT_NAME);
 
       if (!cfdb.connected)
          {
@@ -1442,7 +1450,12 @@ AppendRScalar(&columns,"topic_id,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"topic_type,varchar,256",CF_SCALAR);
 
 snprintf(query,CF_MAXVARSIZE-1,"%s.topics",SQL_DATABASE);
-CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+
+if (sql_database_defined)
+   {
+   CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+   }
+
 DeleteRlist(columns);
 columns = NULL;
 
@@ -1468,7 +1481,12 @@ AppendRScalar(&columns,"to_type,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"to_name,varchar,256",CF_SCALAR);
 
 snprintf(query,CF_MAXVARSIZE-1,"%s.associations",SQL_DATABASE);
-CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+
+if (sql_database_defined)
+   {
+   CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+   }
+
 DeleteRlist(columns);
 columns = NULL;
 
@@ -1490,7 +1508,12 @@ AppendRScalar(&columns,"locator_type,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"subtype,varchar,256",CF_SCALAR);
 
 snprintf(query,CF_MAXVARSIZE-1,"%s.occurrences",SQL_DATABASE);
-CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+
+if (sql_database_defined)
+   {
+   CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+   }
+
 DeleteRlist(columns);
 columns = NULL;
 

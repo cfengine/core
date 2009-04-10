@@ -386,20 +386,27 @@ struct FileSelect GetSelectConstraints(struct Promise *pp)
 
 { struct FileSelect s;
   char *value;
+  struct Rlist *rp;
+  mode_t plus,minus;
   
 s.name = (struct Rlist *)GetConstraint("leaf_name",pp->conlist,CF_LIST);
 s.path = (struct Rlist *)GetConstraint("path_name",pp->conlist,CF_LIST);
 s.filetypes = (struct Rlist *)GetConstraint("file_types",pp->conlist,CF_LIST);
 s.issymlinkto = (struct Rlist *)GetConstraint("issymlinkto",pp->conlist,CF_LIST);
 
-s.plus = 0;
-s.minus = 0;
-value = (char *)GetConstraint("search_mode",pp->conlist,CF_SCALAR);
+s.perms = GetListConstraint("search_mode",pp->conlist);
 
-if (!ParseModeString(value,&s.plus,&s.minus))
+for  (rp = s.perms; rp != NULL; rp=rp->next)
    {
-   CfOut(cf_error,"","Problem validating a mode string");
-   PromiseRef(cf_error,pp);
+   plus = 0;
+   minus = 0;
+   value = (char *)rp->item;
+   
+   if (!ParseModeString(value,&plus,&minus))
+      {
+      CfOut(cf_error,"","Problem validating a mode string");
+      PromiseRef(cf_error,pp);
+      }
    }
 
 value = (char *)GetConstraint("search_bsdflags",pp->conlist,CF_SCALAR);
@@ -1262,6 +1269,7 @@ struct CfDatabase GetDatabaseConstraints(struct Promise *pp)
 d.db_server_owner = GetConstraint("db_server_owner",pp->conlist,CF_SCALAR);
 d.db_server_password = GetConstraint("db_server_password",pp->conlist,CF_SCALAR);
 d.db_server_host = GetConstraint("db_server_host",pp->conlist,CF_SCALAR);
+d.db_connect_db = GetConstraint("db_server_connection_db",pp->conlist,CF_SCALAR);
 d.type = GetConstraint("database_type",pp->conlist,CF_SCALAR);
 d.server = GetConstraint("database_server",pp->conlist,CF_SCALAR);
 d.columns = GetListConstraint("database_columns",pp->conlist);

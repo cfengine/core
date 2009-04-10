@@ -423,6 +423,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
+void ConvergePromiseValues(struct Promise *pp);
 int Epimenides(char *var,char *rval,char rtype,int level);
 
 /* exec_tool.c */

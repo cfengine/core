@@ -976,6 +976,82 @@ else
    }
 
 }
+
+/*********************************************************************/
+
+void ConvergePromiseValues(struct Promise *pp)
+
+{ struct Constraint *cp;
+  struct Rlist *rp;
+  char expandbuf[CF_EXPANDSIZE];
+
+switch (pp->petype)
+   {
+   case CF_SCALAR:
+       
+       if (IsCf3VarString((char *)pp->promisee))
+          {             
+          ExpandScalar(pp->promisee,expandbuf);
+          if (strcmp(pp->promisee,expandbuf) != 0)
+             {
+             free(pp->promisee);
+             pp->promisee = strdup(expandbuf);
+             }
+          }
+       break;
+       
+   case CF_LIST:
+       
+       for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
+          {
+          if (IsCf3VarString((char *)rp->item))
+             {             
+             ExpandScalar(rp->item,expandbuf);
+             if (strcmp(rp->item,expandbuf) != 0)
+                {
+                free(rp->item);
+                rp->item = strdup(expandbuf);
+                }
+             }          
+          }
+       break;   
+   }
+ 
+for (cp = pp->conlist; cp != NULL; cp=cp->next)
+   {
+   switch (cp->type)
+      {
+      case CF_SCALAR:
+
+          if (IsCf3VarString((char *)cp->rval))
+             {             
+             ExpandScalar(cp->rval,expandbuf);
+             if (strcmp(cp->rval,expandbuf) != 0)
+                {
+                free(cp->rval);
+                cp->rval = strdup(expandbuf);
+                }
+             }
+          break;
+
+      case CF_LIST:
+
+          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+             {
+             if (IsCf3VarString((char *)rp->item))
+                {             
+                ExpandScalar(rp->item,expandbuf);
+                if (strcmp(rp->item,expandbuf) != 0)
+                   {
+                   free(rp->item);
+                   rp->item = strdup(expandbuf);
+                   }
+                }          
+             }
+          break;
+      }
+   }
+}
       
 /*********************************************************************/
 /* Levels                                                            */

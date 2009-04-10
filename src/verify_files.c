@@ -202,8 +202,12 @@ if (expandregex) /* Expand one regex link and hand down */
             }
          else
             {
+            struct Promise *pcopy;
             CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
-            (*fnptr)(nextbuffer,pp);
+            /* If there were back references there could still be match.x vars to expand */
+            pcopy = DeRefCopyPromise(CONTEXTID,pp);
+            (*fnptr)(nextbuffer,pcopy);
+            DeletePromise(pcopy);
             }
          }
       
@@ -222,7 +226,7 @@ if (count == 0)
 
    if (create)
       {
-      VerifyFilePromise(pp->promiser,pp);      
+      VerifyFilePromise(pp->promiser,pp);
       }
    }
 

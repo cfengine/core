@@ -103,7 +103,7 @@ struct Rlist *REPORTS = NULL;
             "data stored in cfengine's embedded databases in human\n"
             "readable form.";
  
- struct option OPTIONS[19] =
+ struct option OPTIONS[20] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -120,13 +120,14 @@ struct Rlist *REPORTS = NULL;
       { "titles",no_argument,0,'t'},
       { "timestamps",no_argument,0,'T'},
       { "resolution",no_argument,0,'R'},
+      { "syntax",no_argument,0,'S'},
       { "no-error-bars",no_argument,0,'e'},
       { "no-scaling",no_argument,0,'n'},
       { "verbose",no_argument,0,'v'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[19] =
+ char *HINTS[20] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -143,6 +144,7 @@ struct Rlist *REPORTS = NULL;
       "Add title data to generated graph files",
       "Add a time stamp to directory name for graph file data",
       "Print graph data in high resolution",
+      "Print a syntax summary for this cfengine version",
       "Do not add error bars to the printed graphs",
       "Do not automatically scale the axes",
       "Generate verbose output",
@@ -251,7 +253,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMI",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIS",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -275,6 +277,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMI",OPTIONS,&optindex)) != EO
                  DEBUG = true;
                  break;
              }
+          break;
+
+      case 'S':
+          SyntaxTree();
           break;
 
       case 'v':

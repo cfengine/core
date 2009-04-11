@@ -113,12 +113,11 @@ char MANDIR[CF_BUFSIZE];
             "and cfknow can assemble and converge the reference manual\n"
             "for the current version of the cfengine software.";
  
- struct option OPTIONS[14] =
+ struct option OPTIONS[13] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
-      { "dry-run",no_argument,0,'n' },
       { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f' },
       { "graphs",no_argument,0,'g'},
@@ -126,7 +125,7 @@ char MANDIR[CF_BUFSIZE];
       { "manual",no_argument,0,'m'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
-      { "syntax",no_argument,0,'S'},
+      { "syntax",required_argument,0,'S'},
       { "topic",required_argument,0,'t'},
       { NULL,0,0,'\0' }
       };
@@ -136,7 +135,6 @@ char MANDIR[CF_BUFSIZE];
       "Print the help message",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
-      "All talk and no action mode - make no changes, only inform of promises not kept",
       "Output the version of the software",
       "Specify an alternative input file than the default",
       "Generate graphs from topic map data",
@@ -144,7 +142,7 @@ char MANDIR[CF_BUFSIZE];
       "Generate reference manual from internal data",
       "Specify a regular expression for searching the topic map",
       "Store topic map in defined SQL database",
-      "Print an HTML syntax summary of this cfengine version",
+      "Print a syntax summary of the optional keyword or this cfengine version",
       "Specify a literal string topic to look up in the topic map",
       NULL
       };
@@ -198,7 +196,7 @@ void CheckOpts(int argc,char **argv)
 
 strcpy(TOPIC_CMD,"");
 
-while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:mM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -262,7 +260,8 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:Sst:r:mM",OPTIONS,&optindex)) != EOF)
           HTML = 1;
           break;
 
-      case 'S': SyntaxTree();
+      case 'S':
+          SyntaxCompletion(optarg);
           exit(0);
 
       case 'm':

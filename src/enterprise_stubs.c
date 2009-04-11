@@ -47,6 +47,7 @@ void *Nova_LDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char 
 void *Nova_LDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
 void *Nova_RegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
 
+struct Averages SHIFT_VALUE;
 
 /*****************************************************************************/
 
@@ -231,6 +232,17 @@ void RegisterBundleDependence(char *name,struct Promise *pp)
 }
 
 /*****************************************************************************/
+
+void SyntaxCompletion(char *s)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SyntaxCompletion(s);
+#else
+ printf("Syntax completion is available in cfengine Nova,Constellation or Galaxy\n\n");
+#endif
+}
+
+/*****************************************************************************/
 /* Monitord                                                                  */
 /*****************************************************************************/
 
@@ -241,7 +253,6 @@ void HistoryUpdate(struct Averages newvals)
   struct CfLock thislock;
   time_t now = time(NULL);
   char timekey[CF_MAXVARSIZE];
-  static struct Averages shift_value;
 
 #ifdef HAVE_LIBCFNOVA  
 /* We do this only once per hour - this should not be changed */
@@ -254,7 +265,7 @@ thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);
 
 if (thislock.lock == NULL)
    {
-   Nova_UpdateShiftAverage(&shift_value,&newvals);
+   Nova_UpdateShiftAverage(&SHIFT_VALUE,&newvals);
    return;
    }
 
@@ -286,7 +297,7 @@ YieldCurrentLock(thislock);
 
 snprintf(timekey,CF_MAXVARSIZE-1,"%s_%s_%s_%s",VDAY,VMONTH,VLIFECYCLE,VSHIFT);
 Nova_HistoryUpdate(timekey,newvals);
-Nova_ResetShiftAverage(&shift_value);
+Nova_ResetShiftAverage(&SHIFT_VALUE);
 Nova_DumpSlowlyVaryingObservations();
 
 #else

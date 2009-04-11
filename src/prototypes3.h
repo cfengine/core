@@ -313,6 +313,7 @@ char *GetRemoteScalar(char *handle,char *server,int encrypted);
 char *PromiseID(struct Promise *pp);
 void NotePromiseCompliance(struct Promise *pp,double val);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
+void SyntaxComplete(char *s);
 
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
@@ -964,7 +965,7 @@ void ShowControlBodies(void);
 void ShowBundleTypes(void);
 void ShowPromiseTypesFor(char *s);
 void ShowBodyParts(struct BodySyntax *bs);
-void ShowRange(char *);
+void ShowRange(char *s,enum cfdatatype type);
 void ShowBuiltinFunctions(void);
 void ShowBody(struct Body *body,int ident);
 void DebugBanner(char *s);

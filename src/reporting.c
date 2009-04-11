@@ -588,7 +588,7 @@ fprintf(FREPORT_TXT,"}\n");
 
 /*******************************************************************/
 
-void SyntaxTree()
+void SyntaxTree(void)
 
 {
 printf("%s",CFH[0][0]);
@@ -703,7 +703,7 @@ for (i = 0; bs[i].lval != NULL; i++)
    else
       {
       printf("<tr><td>%s</td><td>%s</td><td>",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      ShowRange((char *)bs[i].range);
+      ShowRange((char *)bs[i].range,bs[i].dtype);
       printf("</td><td>");
       printf("<div id=\"description\">%s</div>",bs[i].description);
       printf("</td></tr>\n");
@@ -715,7 +715,7 @@ printf("</table></div>\n");
 
 /*******************************************************************/
 
-void ShowRange(char *s)
+void ShowRange(char *s,enum cfdatatype type)
 
 { char *sp;
  
@@ -725,13 +725,31 @@ if (strlen(s) == 0)
    return;
    }
 
-for (sp = s; *sp != '\0'; sp++)
+switch (type)
    {
-   printf("%c",*sp);
-   if (*sp == '|')
-      {
-      printf("<br>");
-      }
+   case cf_opts:
+   case cf_olist:
+       
+       for (sp = s; *sp != '\0'; sp++)
+          {
+          printf("%c",*sp);
+          if (*sp == ',')
+             {
+             printf("<br>");
+             }
+          }
+
+       break;
+
+   default:
+       for (sp = s; *sp != '\0'; sp++)
+          {
+          printf("%c",*sp);
+          if (*sp == '|')
+             {
+             printf("<br>");
+             }
+          }
    }
 }
 

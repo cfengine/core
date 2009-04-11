@@ -1266,7 +1266,7 @@ while (!feof(pp))
  
 cf_pclose(pp);
  
-/* Now save the state for ShowState() cf2 vesion alert function IFF
+/* Now save the state for ShowState() cf2 version alert function IFF
    the state is not smaller than the last or at least 40 minutes
    older. This mirrors the persistence of the maxima classes */
 

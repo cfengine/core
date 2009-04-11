@@ -187,6 +187,9 @@
 /* Define to 1 if you have the `kstat' library (-lkstat). */
 #undef HAVE_LIBKSTAT
 
+/* Define to 1 if you have the `ldap' library (-lldap). */
+#undef HAVE_LIBLDAP
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 

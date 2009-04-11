@@ -245,17 +245,16 @@ if (!need_to_restart)
    cfPS(cf_verbose,CF_NOP,"",pp,a," -- Matches in range for %s - process count promise kept\n",pp->promiser);
    return;
    }
- 
-if (a.restart_class)
+else
    {
-   if (a.transaction.action == cfa_fix)
+   if (a.transaction.action == cfa_warn)
+      {
+      cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
+      }
+   else 
       {
       cfPS(cf_inform,CF_CHG,"",pp,a," -> Making a one-time restart promise for %s",pp->promiser);
       NewClass(a.restart_class);
-      }
-   else if (a.transaction.action == cfa_warn)
-      {
-      cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
       }
    }
 }

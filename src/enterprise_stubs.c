@@ -496,7 +496,18 @@ Nova_VerifyACL(file,a,pp);
 #else
 #endif
 }
-   
+
+/*****************************************************************************/
+
+int CheckACLSyntax(struct CfACL acl,struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_CheckACLSyntax(acl,pp);
+#else
+return true;
+#endif
+}
 
 /*****************************************************************************/
 /* Registry                                                                  */

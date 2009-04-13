@@ -583,6 +583,20 @@ if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    return false;
    }
 
+/* Deal with complex strings as special cases */
+
+if (strcmp(lval,"mode") == 0 || strcmp(lval,"search_mode") == 0)
+   {
+   mode_t plus,minus;
+   
+   if (!ParseModeString(s,&plus,&minus))
+      {
+      snprintf(output,CF_BUFSIZE,"Error parsing Unix permission string %s)",s);
+      ReportError(output);
+      return false;
+      }
+   }
+
 if (FullTextMatch(range,s))
    {
    return true;
@@ -599,7 +613,6 @@ else
    return false;
    }
 
-/*regfree(&rx); */
 return true;
 }
 

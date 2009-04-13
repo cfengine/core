@@ -1362,7 +1362,7 @@ void GenerateSQL()
   struct TopicAssociation *ta;
   struct Occurrence *op;
   FILE *fout = stdout;
-  char filename[CF_BUFSIZE],longname[CF_BUFSIZE],query[CF_BUFSIZE],safe[CF_BUFSIZE];
+  char filename[CF_BUFSIZE],longname[CF_BUFSIZE],query[CF_BUFSIZE],safe[CF_BUFSIZE],safe2[CF_BUFSIZE];
   struct Rlist *columns = NULL,*rp;
   int i,sql_database_defined = false;
   struct Promise *pp;
@@ -1383,6 +1383,8 @@ snprintf(query,CF_MAXVARSIZE-1,"%s",SQL_DATABASE);
 pp = NewPromise("databases",query);
 memset(&a,0,sizeof(a));
 a.transaction.action = cfa_fix;
+a.database.operation = "create";
+pp->conlist = NULL;
 
 CfOut(cf_verbose,"","Writing %s\n",filename);
 
@@ -1537,11 +1539,12 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
    if (tp->topic_comment)
       {
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,topic_comment) values ('%s','%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type,tp->topic_comment);
+      strncpy(safe2,EscapeSQL(&cfdb,tp->topic_comment),CF_BUFSIZE);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,topic_comment) values ('%s','%s','%s','%s')\n",safe,Name2Id(tp->topic_name),tp->topic_type,safe2);
       }
    else
       {
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s');\n",safe,Name2Id(tp->topic_name),tp->topic_type);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s')\n",safe,Name2Id(tp->topic_name),tp->topic_type);
       }
    fprintf(fout,"%s",query);
    CfVoidQueryDB(&cfdb,query);

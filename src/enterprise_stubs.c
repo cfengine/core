@@ -503,7 +503,7 @@ int CheckACLSyntax(struct CfACL acl,struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_CheckACLSyntax(acl,pp);
+return Nova_CheckACLSyntax(acl,pp);
 #else
 return true;
 #endif
@@ -758,6 +758,10 @@ if (!Nova_NewSQLColumns(table,columns,&name_table,&type_table,&size_table,&done)
 
 while(CfFetchRow(cfdb))
    {
+   name[0] = '\0';
+   type[0] = '\0';
+   size = CF_NOINT;
+   
    strncpy(name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
    strncpy(type,ToLowerStr(CfFetchColumn(cfdb,1)),CF_MAXVARSIZE-1);
    size = Str2Int(CfFetchColumn(cfdb,2));

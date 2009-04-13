@@ -1264,7 +1264,7 @@ if (stat(file,&statbuf) == -1)
 
 if (liststart == NULL)
    {
-   return true;
+   return false;
    }
 
 for (ip = liststart; ip != NULL; ip=ip->next)

@@ -287,7 +287,7 @@ lastnode = ReadLastNode(destination);
 
 if (MatchRlistItem(attr.link.copy_patterns,lastnode))
    {
-   CfOut(cf_verbose,"","Link %s matches copy_patterns\n",destination);
+   CfOut(cf_verbose,""," -> Link %s matches copy_patterns\n",destination);
    VerifyCopy(attr.link.source,destination,attr,pp);
    return true;
    }
@@ -374,7 +374,9 @@ if (a.haveeditline)
       BannerSubBundle(bp,params);
       NewScope(bp->name);
       AugmentScope(bp->name,bp->args,params);
+      PushPrivateClassContext();
       retval = ScheduleEditLineOperations(filename,bp,a,pp);
+      PopPrivateClassContext();
       DeleteFromScope(bp->name,bp->args);
       }
    }
@@ -1399,7 +1401,7 @@ else
              Debug("Using LCHOWN function\n");
              if (lchown(file,uid,gid) == -1)
                 {
-                CfOut(cf_inform,"lchown","Cannot set ownership on link %s!\n",file);
+                CfOut(cf_inform,"lchown"," !! Cannot set ownership on link %s!\n",file);
                 }
              else
                 {
@@ -1411,19 +1413,19 @@ else
              {
              if (!uidmatch)
                 {
-                cfPS(cf_inform,CF_CHG,"",pp,attr,"Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
                 }
              
              if (!gidmatch)
                 {
-                cfPS(cf_inform,CF_CHG,"",pp,attr,"Group of %s was %d, setting to %d",file,sb->st_gid,gid);
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Group of %s was %d, setting to %d",file,sb->st_gid,gid);
                 }
              
              if (!S_ISLNK(sb->st_mode))
                 {
                 if (chown(file,uid,gid) == -1)
                    {
-                   cfPS(cf_inform,CF_DENIED,"chown",pp,attr,"Cannot set ownership on file %s!\n",file);
+                   cfPS(cf_inform,CF_DENIED,"chown",pp,attr," !! Cannot set ownership on file %s!\n",file);
                    }
                 else
                    {
@@ -1444,11 +1446,11 @@ else
           
           if ((gp = getgrgid(sb->st_gid)) == NULL)
              {
-             cfPS(cf_error,CF_WARN,"",pp,attr,"File %s is not owned by any group in group database\n",file);
+             cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is not owned by any group in group database\n",file);
              break;
              }
           
-          cfPS(cf_error,CF_WARN,"",pp,attr,"File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
           break;
       }
    }

@@ -109,6 +109,12 @@
    */
 /* #undef GETLOADAVG_PRIVILEGED */
 
+/* Define to 1 if you have the <acl.h> header file. */
+/* #undef HAVE_ACL_H */
+
+/* Define to 1 if you have the <acl/libacl.h> header file. */
+#define HAVE_ACL_LIBACL_H 1
+
 /* Define to 1 if you have the `bcopy' function. */
 #define HAVE_BCOPY 1
 
@@ -160,6 +166,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
+
+/* Define to 1 if you have the `acl' library (-lacl). */
+#define HAVE_LIBACL 1
 
 /* Define to 1 if you have the `cfcontellation' library (-lcfcontellation). */
 /* #undef HAVE_LIBCFCONTELLATION */

@@ -87,8 +87,10 @@ if (bp = GetBundle(method_name,"agent"))
    BannerSubBundle(bp,params);
    NewScope(bp->name);
    AugmentScope(bp->name,bp->args,params);
+   PushPrivateClassContext();
    retval = ScheduleAgentOperations(bp);
-   
+   PopPrivateClassContext();
+
    if (retval)
       {
       cfPS(cf_inform,CF_CHG,"",pp,a,"Method invoked successfully\n");

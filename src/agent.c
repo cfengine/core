@@ -466,7 +466,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repository].lval) == 0)
       {
       VREPOSITORY = strdup(retval);
-      CfOut(cf_verbose,"","SET compresscommand = %s\n",VREPOSITORY);
+      CfOut(cf_verbose,"","SET repository = %s\n",VREPOSITORY);
       continue;
       }
 
@@ -631,6 +631,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       AugmentScope(bp->name,bp->args,params);
       BannerBundle(bp,params);
       THIS_BUNDLE = bp->name;
+      DeletePrivateClassContext(); // Each time we change bundle
       ScheduleAgentOperations(bp);
       }
    }
@@ -647,8 +648,6 @@ int ScheduleAgentOperations(struct Bundle *bp)
   enum typesequence type;
   int pass;
 
-DeletePrivateClassContext(); // Each time we change bundle
-  
 for (pass = 1; pass < CF_DONEPASSES; pass++)
    {
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
@@ -761,7 +760,7 @@ if (!IsDefinedClass(pp->classes))
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
- 
+
 if (pp->done)
    {
    return;

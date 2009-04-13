@@ -280,6 +280,7 @@ struct Item *IPADDRESSES = NULL;
 struct Item *VHEAP = NULL;
 struct Item *VNEGHEAP = NULL;
 struct Item *VADDCLASSES=NULL;           /* Action sequence defs  */
+struct Rlist *PRIVCLASSHEAP = NULL;
 
 int PR_KEPT = 0;
 int PR_REPAIRED = 0;

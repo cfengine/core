@@ -312,7 +312,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIS",OPTIONS,&optindex)) != E
           break;
 
       case 'o': strcpy(OUTPUTDIR,optarg);
-          CfOut(cf_verbose,"","Setting output directory to s\n",OUTPUTDIR);
+          CfOut(cf_inform,"","Setting output directory to s\n",OUTPUTDIR);
           break;
 
       case 'T': TIMESTAMPS = true;

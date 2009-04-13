@@ -51,7 +51,7 @@ if (attr.repository != NULL)
    {
    strncpy(localrepository,attr.repository,CF_BUFSIZE);
    }
-else if (attr.repository == NULL && VREPOSITORY != NULL)
+else if (VREPOSITORY != NULL)
    {
    strncpy(localrepository,VREPOSITORY,CF_BUFSIZE);
    }

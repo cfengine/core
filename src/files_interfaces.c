@@ -756,7 +756,7 @@ if (found == -1)
          }
       else if (mkfifo(destfile,srcmode))
          {
-         cfPS(cf_error,CF_FAIL,"mkfifo",pp,attr,"Cannot create fifo `%s'", destfile);
+         cfPS(cf_error,CF_FAIL,"mkfifo",pp,attr," !! Cannot create fifo `%s'", destfile);
          return;
          }
 
@@ -773,11 +773,11 @@ if (found == -1)
             }
          else if (mknod (destfile, srcmode, ssb.st_rdev))
             {
-            cfPS(cf_error,CF_FAIL,"mknod",pp,attr,"Cannot create special file `%s'",destfile);
+            cfPS(cf_error,CF_FAIL,"mknod",pp,attr," !! Cannot create special file `%s'",destfile);
             return;
             }
 
-         cfPS(cf_error,CF_CHG,"mknod",pp,attr,"Created special file/device `%s'",destfile);
+         cfPS(cf_error,CF_CHG,"mknod",pp,attr," -> Created special file/device `%s'",destfile);
          }
       }
    

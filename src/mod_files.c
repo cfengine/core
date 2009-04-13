@@ -178,8 +178,9 @@ struct BodySyntax CF_ACL_BODY[] =
    {
    {"acl_method",cf_opts,"append,overwrite","Editing method for access control list"},
    {"acl_type",cf_opts,"posix,ntfs","Access control list type for the affected file system"},
-   {"acl_directory_inherit",cf_opts,"default,parent","Access control list type for the affected file system"},
-   {"acl_entries",cf_slist,CF_ANYSTRING,"Native settings for access control entry"},
+   {"acl_directory_inherit",cf_opts,"parent,specify,none","Access control list type for the affected file system"},
+   {"aces",cf_slist,CF_ANYSTRING,"Native settings for access control entry"},
+   {"inherit_aces",cf_slist,CF_ANYSTRING,"Native settings for access control entry"},
    {NULL,cf_notype,NULL,NULL}
    };
 

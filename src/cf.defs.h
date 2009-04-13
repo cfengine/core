@@ -1063,34 +1063,6 @@ enum matchtypes
     NOTregexComplete
     };
 
-
-/*******************************************************************/
-
-struct CFACL
-   {
-   char * acl_alias;
-   enum   cffstype type;
-   char   method;            /* a = append, o = overwrite */
-   char   nt_acltype;
-   struct CFACE *aces;
-   struct CFACL *next;
-   };
-
-/*******************************************************************/
-
-struct CFACE
-   {
-#ifdef NT
-   char *access;     /* allowed / denied */
-   long int NTMode;  /* NT's access mask */
-#endif
-   char *mode;        /* permission flags*/
-   char *name;        /* id name */
-   char *acltype;     /* user / group / other */
-   char *classes;
-   struct CFACE *next;
-   };
-
 /*******************************************************************/
 
 struct Auth

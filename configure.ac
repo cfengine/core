@@ -79,6 +79,8 @@ AC_CHECK_LIB(cfnova,main)
 AC_CHECK_LIB(cfcontellation,main)
 AC_CHECK_LIB(cfgalaxy,main)
 
+AC_CHECK_LIB(ldap,ldap_get_values_len)
+
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
 AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
@@ -661,6 +663,8 @@ case "$target_os" in
    linux*)
 	AC_DEFINE(LINUX)
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
+        AC_CHECK_LIB(acl,main)
+        AC_CHECK_HEADERS(acl.h sys/acl.h acl/libacl.h)
         ;;
    freebsd*|dragonfly*)
 	AC_DEFINE(FREEBSD)

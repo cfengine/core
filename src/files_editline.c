@@ -66,7 +66,6 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
   struct Promise *pp;
   int pass;
 
-DeletePrivateClassContext();
 NewScope("edit");
 NewScalar("edit","filename",filename,cf_str);
          

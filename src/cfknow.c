@@ -1400,7 +1400,7 @@ if (sql_database_defined)
 
    if (!cfdb.connected)
       {
-      CfOut(cf_error,"","Could not connect an existing database %s\n",SQL_DATABASE);
+      CfOut(cf_inform,"","Could not connect an existing database %s\n",SQL_DATABASE);
       CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_CONNECT_NAME);
 
       if (!cfdb.connected)

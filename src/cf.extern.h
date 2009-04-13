@@ -343,6 +343,8 @@ extern struct Item *VACTIONSEQ;
 extern struct Item *VACCESSLIST;
 extern struct Item *VADDCLASSES;
 extern struct Item *VALLADDCLASSES;
+extern struct Rlist *PRIVCLASSHEAP;
+
 extern struct Item *VJUSTACTIONS;
 extern struct Item *VAVOIDACTIONS;
 extern struct Edit *VEDITLIST;

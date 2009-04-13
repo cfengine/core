@@ -342,7 +342,8 @@ struct CfACL GetAclConstraints(struct Promise *pp)
 ac.acl_method = Str2AclMethod(GetConstraint("acl_method",pp->conlist,CF_SCALAR));
 ac.acl_type = Str2AclType(GetConstraint("acl_type",pp->conlist,CF_SCALAR));
 ac.acl_directory_inherit = Str2AclInherit(GetConstraint("acl_directory_inherit",pp->conlist,CF_SCALAR));
-ac.acl_entries = GetListConstraint("acl_entries",pp->conlist);
+ac.acl_entries = GetListConstraint("aces",pp->conlist);
+ac.acl_inherit_entries = GetListConstraint("inherit_aces",pp->conlist);
 return ac;
 }
 

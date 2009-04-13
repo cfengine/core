@@ -851,6 +851,7 @@ enum action_policy
   cfa_no_ppolicy
   };
 
+/************************************************************************************/
 
 enum cf_acl_method
    {
@@ -868,9 +869,19 @@ enum cf_acl_type
        
 enum cf_acl_inherit
    {
-   cfacl_default,
+   cfacl_specify,
    cfacl_parent,
-   cfacl_noinherit
+   cfacl_none,
+   cfacl_noinherit,
+   };
+
+struct CfACL
+   {
+   enum cf_acl_method acl_method;
+   enum cf_acl_type acl_type;
+   enum cf_acl_inherit acl_directory_inherit;
+   struct Rlist *acl_entries;
+   struct Rlist *acl_inherit_entries;
    };
 
 /*************************************************************************/
@@ -1383,16 +1394,6 @@ struct CfTcpIp
    {
    char *ipv4_address;
    char *ipv4_netmask;
-   };
-
-/*************************************************************************/
-
-struct CfACL
-   {
-   enum cf_acl_method acl_method;
-   enum cf_acl_type acl_type;
-   enum cf_acl_inherit acl_directory_inherit;
-   struct Rlist *acl_entries;
    };
 
 /*************************************************************************/

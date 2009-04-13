@@ -66,7 +66,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      Debug(" ?> defining class %s\n",pp->promiser);
+      Debug(" ?> defining explicit class %s\n",pp->promiser);
       NewBundleClass(pp->promiser,pp->bundle);
       }
 
@@ -94,7 +94,25 @@ void DeletePrivateClassContext()
 DeleteItemList(VADDCLASSES);
 VADDCLASSES = NULL;
 }
-   
+
+/*****************************************************************************/
+
+void PushPrivateClassContext()
+
+{
+PushStack(&PRIVCLASSHEAP,VADDCLASSES);
+VADDCLASSES = NULL;
+}
+
+/*****************************************************************************/
+
+void PopPrivateClassContext()
+
+{ struct Item *list;
+
+DeleteItemList(VADDCLASSES);
+PopStack(&PRIVCLASSHEAP,(void *)&VADDCLASSES,sizeof(VADDCLASSES));
+}
 
 /*****************************************************************************/
 
@@ -145,10 +163,10 @@ if (value.data != NULL)
          }
       }
    }
- else
-    {
-    CfOut(cf_verbose,"","New persistent state %s but empty\n",key.data);
-    }
+else
+   {
+   CfOut(cf_verbose,"","New persistent state %s\n",key.data);
+   }
  
  
 memset(&key,0,sizeof(key));       
@@ -169,7 +187,7 @@ if ((errno = dbp->put(dbp,NULL,&key,&value,0)) != 0)
    }
 else
    {
-   CfOut(cf_verbose,"","(Re)Set persistent state %s for %d minutes\n",name,ttl_minutes);
+   CfOut(cf_verbose,"","Re-set persistent state %s for %d minutes\n",name,ttl_minutes);
    }
 
 dbp->close(dbp,0);
@@ -740,7 +758,6 @@ for (sp = class; *sp != '\0'; sp++)
       {
       break;
       }
-
 
    if (IsBracketed(cbuff)) /* Strip brackets */
       {

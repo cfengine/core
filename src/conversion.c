@@ -737,10 +737,10 @@ return cfacl_notype;
 
 enum cf_acl_inherit Str2AclInherit(char *string)
 
-{ static char *text[3] = { "default", "parent", NULL };
+{ static char *text[3] = { "specify", "parent", "none", NULL };
   int i;
  
-for (i = 0; i < 3; i++)
+for (i = 0; i < 4; i++)
    {
    if (string && (strcmp(text[i],string) == 0))
       {

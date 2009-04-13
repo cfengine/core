@@ -325,6 +325,8 @@ void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *reg
 int Abort(void);
 void KeepClassContextPromise(struct Promise *pp);
 int ContextSanityCheck(struct Attributes a);
+void PushPrivateClassContext(void);
+void PopPrivateClassContext(void);
 void DeletePrivateClassContext(void);
 void DeleteEntireHeap(void);
 void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy policy);

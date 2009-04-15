@@ -498,7 +498,7 @@ return NULL;
 
 void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec)
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA && defined HAVE_LIBLDAP
  return Nova_LDAPArray(array,uri,dn,filter,scope,sec);
 #else
  CfOut(cf_error,"","LDAP support available in Nova and above");
@@ -510,7 +510,7 @@ return NULL;
 
 void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec)
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA && defined HAVE_LIBLDAP
 return Nova_RegLDAP(uri,dn,filter,name,scope,regex,sec);
 #else
 CfOut(cf_error,"","LDAP support available in Nova and above");
@@ -640,17 +640,21 @@ return false;
 
 int Nova_VerifyTablePromise(CfdbConn *cfdb,char *table_path,struct Rlist *columns,struct Attributes a,struct Promise *pp)
 
-{ char name[CF_MAXVARSIZE],type[CF_MAXVARSIZE],query[CF_MAXVARSIZE],table[CF_MAXVARSIZE];
+{ char name[CF_MAXVARSIZE],type[CF_MAXVARSIZE],query[CF_MAXVARSIZE],table[CF_MAXVARSIZE],db[CF_MAXVARSIZE];
   int i,count,size,no_of_cols,*size_table,*done,identified,retval = true;
   char **name_table,**type_table;
   struct Rlist *rp, *cols;
 
 CfOut(cf_verbose,""," -> Verifying promised table structure for \"%s\"",table_path);
 
-if (!Nova_ValidateSQLTableName(table_path,table))
+if (!Nova_ValidateSQLTableName(table_path,db,table))
    {
-   CfOut(cf_error,"","The structure of the promiser did not match that for an SQL table, i.e. \"database.table\"\n",table_path);
+   CfOut(cf_error,""," !! The structure of the promiser did not match that for an SQL table, i.e. \"database.table\"\n",table_path);
    return false;
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> Assuming database \"%s\" with table \"%s\"",db,table);
    }
 
 /* Verify the existence of the tables within the database */
@@ -677,7 +681,7 @@ if (!Nova_TableExists(cfdb,table))
 
 /* Get a list of the columns in the table */
 
-Nova_QueryTableColumns(query,table);
+Nova_QueryTableColumns(query,db,table);
 CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 3)

@@ -1,0 +1,59 @@
+########################################################
+#
+# Simple test execution
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+  "size" int => "46k";
+  "rand" int => randomint("33","$(size)");
+
+commands:
+
+  "/bin/echo" 
+     args => "Hello world - $(size)/$(rand)",
+     contain => standard,
+     classes => cdefine("followup","alert");
+
+  followup::
+ 
+     "/bin/ls" 
+       contain => standard;
+
+reports:
+
+  alert::
+
+     "What happened?";
+
+}
+
+######################################################################
+
+body contain standard
+
+{
+exec_owner => "mark";
+useshell => "true";
+}
+
+######################################################################
+
+body classes cdefine(class,alert)
+
+{
+promise_repaired => { "$(class)" };
+repair_failed => { "$(alert)" };
+}

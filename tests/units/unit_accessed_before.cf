@@ -1,0 +1,31 @@
+Applies at version: Nova 1.0.0
+Topics: accessedbefore function,classes,comparing timestamps
+Occurrence type: example
+
+#
+# Show the definition of classes by comparing timestamps
+#
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "do_it" and => { accessedbefore("/tmp/earlier","/tmp/later"), "linux" }; 
+
+reports:
+
+  do_it::
+
+    "The secret changes have been accessed after the reference time";
+
+}
+

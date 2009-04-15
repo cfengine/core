@@ -1,0 +1,31 @@
+
+
+body common control
+{
+bundlesequence => { "none" };
+}
+
+body reporter control
+{
+reports => { 
+  #         "audit",
+  #         "performance",
+  #         "all_locks",
+  #         "active_locks",
+  #         "hashes",
+  #         "classes",
+  #         "last_seen",
+           #"monitor_now",
+           #"monitor_history"
+           #"monitor_summary"
+           "compliance",
+           "file_changes",
+           "setuid"
+           };
+
+build_directory => "/home/mark/tmp/reports";
+
+# html,xml,csv,text
+
+report_output => "html";
+}

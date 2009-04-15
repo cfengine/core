@@ -1,0 +1,26 @@
+#
+# Test module execution as class function
+#
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         test
+                         };
+   }
+
+###################################################################
+
+bundle agent test
+
+{
+classes:
+
+  "done" or => { usemodule("module:getusers","") };
+
+commands:
+
+  "/bin/echo promiser text" args => "test $(user)";
+}

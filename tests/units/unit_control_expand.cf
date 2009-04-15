@@ -1,0 +1,71 @@
+bundle common g
+{
+classes:
+
+  "softclass" expression => "any";
+
+vars:
+
+   "bundle" slist => { "bundle1", "bundle2", @(extra) };
+
+  any::
+
+   # default extra
+
+   "extra" slist => { "bundle3" },
+          policy => "overridable";
+
+  softclass::
+
+   "extra" slist => { "bundle3", "bundle4" },
+          policy => "overridable";
+
+}
+
+##############################################################
+
+body common control
+{
+# inputs => { @(g.bundle) };
+bundlesequence  => { @(g.bundle) };
+}
+
+##############################################################
+
+bundle agent bundle1
+{
+vars:
+
+  "var1" string => "anything";
+}
+
+bundle agent bundle2
+{
+classes:
+
+  "ok" expression => isvariable("bundle1.var1");
+
+reports:
+
+  ok::
+
+    "Success";
+}
+
+bundle agent bundle3
+{
+reports:
+
+ linux::
+
+    "Success extra...";
+}
+
+bundle agent bundle4
+{
+reports:
+
+ linux::
+
+    "Success extra more...";
+}

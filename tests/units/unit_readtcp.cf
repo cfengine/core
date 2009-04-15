@@ -1,0 +1,25 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "my80" string => readtcp("www.cfengine.com","80","GET /index.html HTTP/1.1$(r)$(n)",400);
+
+reports:
+
+  Yr2008::
+
+    "Server returned: $(my80)";
+
+}
+

@@ -1,0 +1,42 @@
+########################################################
+#
+# Change detect
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp" -> "me"
+
+       changes      => stats,
+       depth_search => recurse("inf");
+}
+
+
+#########################################################
+
+body changes stats
+
+{
+report_changes => "all";
+update_hashes  => "true";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth        => "$(d)";
+}

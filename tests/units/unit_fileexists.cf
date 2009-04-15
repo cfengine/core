@@ -1,0 +1,28 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "exists" expression => fileexists("/etc/passwdx");
+
+reports:
+
+  exists::
+
+    "File exists";
+
+  !exists::
+
+    "Does not exist";
+
+}
+

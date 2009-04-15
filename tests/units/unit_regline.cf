@@ -1,0 +1,40 @@
+######################################################################
+# Function regline(regex,file)
+######################################################################
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle" };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/tmp/testfile"
+
+   edit_line => test;
+
+}
+
+########################################################
+
+bundle edit_line test
+{
+classes:
+
+    "ok" expression => regline(".*mark.*","$(edit.filename)");
+
+reports:
+
+ ok::
+
+   "File matched $(edit.filename)";
+
+}
+

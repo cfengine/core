@@ -1,0 +1,43 @@
+########################################################
+#
+# Simple backgrounding - try this with background = true and false
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+body agent control
+
+{
+agentaccess => { "mark", "root" };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+commands:
+
+  "/bin/sleep 10" 
+     action  => background;
+
+  "/bin/sleep" 
+     args => "20",
+     action  => background;
+
+}
+
+#########################################################
+
+body action background
+
+{
+background => "true";
+}

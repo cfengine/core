@@ -1,0 +1,44 @@
+
+body common control
+{
+bundlesequence => { "g","tryclasses_1", "tryclasses_2" };
+
+}
+
+#################################
+
+bundle common g
+{
+classes:
+
+  "one" expression => "any";
+
+  "client_network" expression => iprange("128.39.89.0/24");
+}
+
+#################################
+
+bundle agent tryclasses_1
+{
+classes:
+
+  "two" expression => "any";
+}
+
+#################################
+
+bundle agent tryclasses_2
+{
+classes:
+
+  "three" expression => "any";
+
+reports:
+
+  one.three.!two::
+
+    "Success";
+}
+
+
+#################################

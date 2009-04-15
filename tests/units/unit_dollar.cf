@@ -1,0 +1,27 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "some" expression => "any";
+
+reports:
+
+  some::
+
+   "The value of $(const.dollar)(const.dollar) is $(const.dollar)";
+
+   "But the value of \$(dollar) is \$(dollar)";
+
+}
+

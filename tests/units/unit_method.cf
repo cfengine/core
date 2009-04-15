@@ -1,0 +1,38 @@
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+
+version => "1.2.3";
+}
+
+###########################################
+
+bundle agent testbundle
+{
+vars:
+
+ "userlist" slist => { "mark", "jeang", "jonhenrik", "thomas", "eben" };
+
+methods:
+
+ "any" usebundle => subtest("$(userlist)");
+
+}
+
+###########################################
+
+bundle agent subtest(user)
+
+{
+commands:
+
+ "/bin/echo Fix $(user)";
+
+reports:
+
+ linux::
+
+  "Finished doing stuff for $(user)";
+}

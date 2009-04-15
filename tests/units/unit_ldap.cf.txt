@@ -1,0 +1,58 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle ldap in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: vars
+
+      vars promise by 'value' (implicit) if context is any
+
+             string => ldapvalue(ldap://eternity.iu.hio.no,dc=cfengine,dc=com,(sn=User),uid,subtree,none,)            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 21
+
+      vars promise by 'list' (implicit) if context is any
+
+              slist => ldaplist(ldap://eternity.iu.hio.no,dc=cfengine,dc=com,(sn=User),uid,subtree,none,)            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 25
+
+   TYPE: classes
+
+      classes promise by 'gotdata' (implicit) if context is any
+
+         expression => ldaparray(myarray,ldap://eternity.iu.hio.no,dc=cfengine,dc=com,(uid=mark),subtree,none,)            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 29
+
+      classes promise by 'found' (implicit) if context is any
+
+         expression => regldap(ldap://eternity.iu.hio.no,dc=cfengine,dc=com,(sn=User),uid,subtree,jon.*,none,)            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 31
+
+   TYPE: reports
+
+      reports promise by 'LDAP VALUE $(value) found' (implicit) if context is linux
+
+            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 37
+
+      reports promise by 'LDAP LIST VALUE $(list)' (implicit) if context is linux
+
+            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 38
+
+      reports promise by 'found data $(myarray[uid])' (implicit) if context is gotdata
+
+            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 42
+
+      reports promise by 'Matched regex' (implicit) if context is found
+
+            Promise (version not specified) belongs to bundle 'ldap' (type agent) in file '../tests/units/unit_ldap.cf' near line 46
+
+   }
+
+
+
+
+All Bodies
+
+control body for type common(no parameters)
+   {
+   bundlesequence =>  {'ldap'} if sub-body context any
+   }
+

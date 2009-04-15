@@ -1,0 +1,51 @@
+######################################################################
+#
+# Comment lines
+#
+######################################################################
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/comment_test"
+
+       create    => "true",
+       edit_line => comment_lines_matching;
+}
+
+########################################################
+
+bundle edit_line comment_lines_matching
+  {
+  vars:
+
+    "regexes" slist => { "one.*", "two.*", "four.*" };
+
+  replace_patterns:
+
+   "^($(regexes))$"
+      replace_with => comment("# ");
+  }
+
+########################################
+# Bodies
+########################################
+
+body replace_with comment(c)
+
+{
+replace_value => "$(c) $(match.1)";
+occurrences => "all";
+}
+

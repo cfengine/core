@@ -1,0 +1,23 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+body contain cd(dir) 
+{
+chdir => "${dir}";
+useshell => "true";
+}
+
+bundle agent example 
+{
+commands:
+
+   "/bin/pwd"
+       contain => cd("/tmp");
+}

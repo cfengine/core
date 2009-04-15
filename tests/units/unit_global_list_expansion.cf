@@ -1,0 +1,40 @@
+#
+# Show access of external lists.
+#
+# - to pass lists globally, use a parameter to dereference them
+#
+
+body common control
+{
+bundlesequence => { hardening(@(va.tmpdirs)) };
+}
+
+#########################################################
+
+bundle common va 
+{
+vars:
+ 
+ "tmpdirs"  slist => { "/tmp", "/var/tmp", "/usr/tmp"  };
+
+} 
+
+##########################################################
+
+bundle agent hardening(x)
+{
+classes:
+
+  "ok" expression => "any";
+
+vars:
+
+ "other"    slist => { "/tmp", "/var/tmp" };
+
+reports:
+
+  ok::
+
+    "Do $(x)";
+    "Other: $(other)";
+} 

@@ -1,0 +1,59 @@
+
+#######################################################
+#
+# Insert a number of lines
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => { "insert" };   
+}
+
+
+#######################################################
+
+bundle agent insert
+
+{
+vars:
+
+  "v" string => "
+                One potato
+                Two potato
+                Three potatoe
+                Four
+                ";
+ 
+files:
+
+  "/tmp/test_insert"
+
+     edit_line => Insert("$(insert.v)"),
+     edit_defaults => empty;
+
+}
+
+#######################################################
+# For the library
+#######################################################
+
+bundle edit_line Insert(name)
+
+{
+insert_lines:
+
+  "Begin$(const.n)$(name)$(const.n)End";
+
+}
+
+#######################################################
+
+body edit_defaults empty
+
+{
+empty_file_before_editing => "true";
+}

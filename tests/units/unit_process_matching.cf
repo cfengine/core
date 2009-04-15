@@ -1,0 +1,47 @@
+########################################################
+#
+# Simple test processes 
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+processes:
+
+ ".*"
+
+    process_select  => proc_finder("k.*"),
+    process_count   => up("cfservd");
+}
+
+########################################################
+
+body process_count up(s)
+
+{
+match_range => "1,10"; # or irange("1","10");
+out_of_range_define => { "$(s)_out_of_control" };
+}
+
+########################################################
+
+body process_select proc_finder(p)
+
+{
+process_owner  => { "avahi", "bin" };
+command        => "$(p)";
+pid            => "100,199";
+vsize          => "0,1000";
+process_result => "command.(process_owner|rsize)";
+}
+
+

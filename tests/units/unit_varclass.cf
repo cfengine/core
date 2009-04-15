@@ -1,0 +1,26 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+commands:
+
+    "/bin/echo This is linux"
+
+       ifvarclass => "linux";
+
+
+    "/bin/echo This is solaris"
+
+       ifvarclass => "solaris";
+
+}
+

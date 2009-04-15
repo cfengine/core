@@ -1,0 +1,12 @@
+
+bundle agent test
+
+{
+report:
+
+  # type report is a typo....
+
+  linux::
+
+   "Goodbye cruel world...";
+}

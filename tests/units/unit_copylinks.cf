@@ -1,0 +1,59 @@
+########################################################
+#
+# Simple test copy with link/copy exceptions
+#
+########################################################
+
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+
+version => "1.2.3";
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    copy_from    => mycopy("/home/mark/tmp/source"),
+    perms        => system,
+    move_obstructions => "true",
+    depth_search => recurse("inf");
+
+}
+
+#########################################################
+
+body perms system
+
+{
+mode  => "0644";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copy_from mycopy(from)
+
+{
+source      => "$(from)";
+copylink_patterns => { ".*" }; # copy all links
+#linkcopy_patterns => { ".*" }; # copy all links
+#copy_backup => "timestamp";
+}
+

@@ -1,0 +1,34 @@
+
+#
+# cfengine 3
+#
+# cf-agent -f ./cftest.cf -K
+#
+
+body common control
+
+{
+bundlesequence => { "storage" };
+}
+
+#
+
+bundle agent storage
+
+{
+storage:
+
+  "/usr" volume  => mycheck("10%");
+
+}
+
+######################################################################
+
+body volume mycheck(free)   # reusable template
+
+{
+check_foreign  => "false";
+freespace      => "$(free)";
+sensible_size  => "10000";
+sensible_count => "2";
+}

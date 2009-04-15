@@ -1,0 +1,49 @@
+#######################################################
+#
+# Searching for permissions
+#
+#######################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "testbundle"
+                         };
+
+   version => "1.2.3";
+   }
+
+############################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    file_select => by_modes,
+    transformer => "/bin/echo DETECTED $(this.promiser)",
+    depth_search => recurse("inf");
+
+}
+
+############################################
+
+body file_select by_modes
+
+{
+search_mode => { "711" , "666" };
+file_result => "mode";
+}
+
+############################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+

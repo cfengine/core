@@ -1,0 +1,30 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
+
+processes:
+
+  "$(component)" restart_class => canonify("start_$(component)");
+
+commands:
+
+   "/bin/echo /var/cfengine/bin/$(component)"
+
+       ifvarclass => canonify("start_$(component)");
+
+
+}
+

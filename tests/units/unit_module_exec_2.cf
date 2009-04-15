@@ -1,0 +1,33 @@
+#
+# Test module execution as class function
+#
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         test
+                         };
+   }
+
+###################################################################
+
+bundle agent test
+
+{
+commands:
+
+  "/home/mark/tmp/testmodule" module => "true";
+
+reports:
+
+  #
+  # Each module forms a private context with its name as id
+  #
+
+ module_class::
+
+  "Module set variable $(testmodule.myvar)";
+
+}

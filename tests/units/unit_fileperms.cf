@@ -1,0 +1,30 @@
+body common control
+
+{
+
+bundlesequence  => {
+                   "main"
+                   };
+
+}
+
+#########################################################
+
+bundle agent main
+
+{
+
+files:
+
+  "/tmp/foo" perms  => p("at","0750");
+
+}
+
+#########################################################
+
+body perms p(user,mode)
+
+{
+owners => { "$(user)" };
+mode   => "$(mode)";
+}

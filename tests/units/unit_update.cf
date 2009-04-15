@@ -1,0 +1,41 @@
+
+bundle agent update
+
+{
+files:
+
+  "/var/cfengine/inputs" 
+
+    perms => system,
+    copy_from => mycopy("/masterfiles/cfengine_inputs","gold_source.domain.tld"),
+    depth_search => recurse("inf");
+
+}
+
+############################################
+
+body perms system
+
+{
+mode  => "0600";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copyfrom mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" , "failover.domain.tld" };
+#backup      => "true";
+#trustkey    => "true";
+encrypt     => "true";
+}

@@ -1,0 +1,32 @@
+
+body common control
+
+{
+bundlesequence  => { "report" };
+}
+
+###########################################################
+
+bundle agent report
+
+{     
+reports:
+
+  linux::
+
+   "/etc/passwd except $(const.n)"
+
+    # printfile => pr("/etc/passwd","5");
+
+     showstate => { "otherprocs", "rootprocs" };
+
+}
+
+######################################################################
+
+body printfile pr(file,lines)
+
+{
+file_to_print => "$(file)";
+number_of_lines => "$(lines)";
+}

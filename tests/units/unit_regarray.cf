@@ -1,0 +1,35 @@
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+###########################################
+
+bundle agent testbundle
+{
+vars:
+
+  "myarray[0]" string => "bla1";
+  "myarray[1]" string => "bla2";
+  "myarray[3]" string => "bla";
+  "myarray"    string => "345";  
+  "not"        string => "345";  
+
+classes:
+
+  "ok" expression => regarray("myarray","b.*2");
+
+reports:
+
+ ok::
+
+    "Found in list";
+
+ !ok::
+
+    "Not found in list";
+
+}
+

@@ -1,0 +1,54 @@
+#######################################################
+#
+# Edit variable = value in a text file
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => { "testsetvar" };   
+}
+
+
+#######################################################
+
+bundle agent testsetvar
+
+{
+vars:
+
+  "v[variable_1]" string => "value_1";
+  "v[variable_2]" string => "value_2";
+
+files:
+
+  "/tmp/test_setvar"
+
+     edit_line => SetVars("testsetvar.v");
+
+}
+
+#######################################################
+# For the library
+#######################################################
+
+bundle edit_line SetVars(name)
+
+{
+vars:
+
+  "parameter_name"   slist => getindices("$(name)");
+
+delete_lines: 
+
+  "$(parameter_name).*";
+
+insert_lines:
+
+  "$(parameter_name) = $($(name)[$(parameter_name)])";
+
+}
+

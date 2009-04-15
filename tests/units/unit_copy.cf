@@ -1,0 +1,18 @@
+body common control
+{
+bundlesequence  => { "copy" };
+}
+
+bundle agent copy
+{
+files:
+    "/tmp/testfile1-cop" copy_from => mycopy("/tmp/testfile1", "gudea");
+    "/tmp/testfile2-cop" copy_from => mycopy("/tmp/testfile2", "gudea");
+}
+
+body copy_from mycopy(from,server)
+{
+source => "$(from)";
+#servers => { "$(server)" };
+}
+

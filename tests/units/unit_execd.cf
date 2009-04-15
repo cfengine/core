@@ -1,0 +1,12 @@
+
+body executor control
+
+{
+mailto => "MARK@iu.hio.no";
+mailfrom => "cfengine@domain.tld";
+smtpserver => "MAIL-out.hio.no";
+mailmaxlines => "50";
+schedule => { "Min00_05", "Min30_35"  };
+
+execcommand => "/var/cfengine/bin/cfAgent";
+}

@@ -1,0 +1,36 @@
+#######################################################
+#
+# The starting point for every configuration
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => { "update", "main", "cfengine2" };   
+
+  
+  inputs => { "update.cf" };
+}
+
+#######################################################
+
+bundle agent main
+
+{
+# do something
+}
+
+#######################################################
+
+bundle agent cfengine2
+
+{
+commands:
+
+ "/var/cfengine/bin/cfagent";
+
+
+}

@@ -1,0 +1,25 @@
+
+body common control
+{
+bundlesequence => { "one" };
+}
+
+
+
+bundle agent one
+{
+files:
+
+  "/tmp/xyz"
+
+       create => "true",
+       action => log;
+
+}
+
+body action log
+{
+log_level => "inform";
+}
+
+

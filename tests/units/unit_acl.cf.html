@@ -1,0 +1,48 @@
+<p><h1>Cfengine Site Policy Summary (version not specified)</h1> <html><head>
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/css/promises.css" />
+</head>
+
+<a name="bundle_acls"></a><div id="bundle"><table class=border><tr><td><h2> Bundle <span class="bodytype">agent</span> <span class="bodyname">acls</span>
+ <tr><td> ARGS:</td></tr>
+
+<tr><td><table class="border"><tr><td><tr><td><a name="type_files"></a>
+</td></tr><tr><td>
+<tr><td><table class="border"><tr><td>
+<a name="promise_unit_acl_cf_16"></a>
+<div id="nav">
+<a href="promises.cf.html#bundle_acls">[BUNDLE]</a>&nbsp;
+<a href="promises.cf.html#promise_unit_acl_cf_16">[TEMPLATE]</a>
+<a href="promise_output_common.html#promise_unit_acl_cf_16">[RESULT]</a>
+</div>
+Promise type is <span class="subtype">files</span>, <a href="#class_context">context</a> is <span class="class">any</span> <br><hr>
+
+Resource object <b>'/media/flash/acl/test_dir'</b> make the promise to default promisee 'cf-agent' (about files)...
+
+<br><span class="lval">........................acl</span> =>  <span class="bodytype">acl</span> <a href="#body_template"><span class="bodyname">template</span><span class="args">(no parameters)</span>
+</a><br><span class="lval">.............................acl_method</span> => '<span class="rval">overwrite'</span> if sub-body context <span class="class">any</span>
+<br><span class="lval">.............................acl_type</span> => '<span class="rval">posix'</span> if sub-body context <span class="class">any</span>
+<br><span class="lval">.............................acl_directory_inherit</span> => '<span class="rval">parent'</span> if sub-body context <span class="class">any</span>
+<br><span class="lval">.............................aces</span> => '<span class="rval"> {'user:*:r(wwx),-r:allow','group:*:+rw:allow','mask:x:allow','all:r'}'</span> if sub-body context <span class="class">any</span>
+ , if body <a href="#class_context">context</a> any
+<p><small>Promise (version not specified) belongs to bundle <b>acls</b> (type agent) in '<i>../tests/units/unit_acl.cf</i>' near line 16</small></p>
+</td></tr></table></td></tr>
+</td></tr>
+</td></tr></table></td></tr>
+</td></tr>
+</td></tr></h2></table></div>
+<h1>All Bodies</h1><tr><td><div id="block"><table class=border cellpadding=5 width=800>
+<tr><td><table class="border"><tr><td>
+<a name="body_control"></a> <span class="bodytype">common</span> <a href="#body_control"><span class="bodyname">control</span><span class="args">(no parameters)</span>
+</a><br><span class="lval">.............................bundlesequence</span> => '<span class="rval"> {'acls'}'</span> if sub-body context <span class="class">any</span>
+</td></tr></table></td></tr>
+</table></div></td></tr> 
+ </p><tr><td><div id="block"><table class=border cellpadding=5 width=800>
+<tr><td><table class="border"><tr><td>
+<a name="body_template"></a> <span class="bodytype">acl</span> <a href="#body_template"><span class="bodyname">template</span><span class="args">(no parameters)</span>
+</a><br><span class="lval">.............................acl_method</span> => '<span class="rval">overwrite'</span> if sub-body context <span class="class">any</span>
+<br><span class="lval">.............................acl_type</span> => '<span class="rval">posix'</span> if sub-body context <span class="class">any</span>
+<br><span class="lval">.............................acl_directory_inherit</span> => '<span class="rval">parent'</span> if sub-body context <span class="class">any</span>
+<br><span class="lval">.............................aces</span> => '<span class="rval"> {'user:*:r(wwx),-r:allow','group:*:+rw:allow','mask:x:allow','all:r'}'</span> if sub-body context <span class="class">any</span>
+</td></tr></table></td></tr>
+</table></div></td></tr> 
+ </p></html>

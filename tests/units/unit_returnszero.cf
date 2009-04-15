@@ -1,0 +1,16 @@
+body common control 
+{ 
+bundlesequence => { "main" }; 
+}
+
+
+bundle agent main 
+{
+classes:
+
+    "testclass" expression => returnszero("/bin/true sdkjfh","noshell");
+
+reports:
+    testclass::
+        "testclass is defined";
+}

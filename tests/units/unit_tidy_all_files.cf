@@ -1,0 +1,60 @@
+#######################################################
+#
+# Deleting files, like cf2 tidy age=0 r=inf
+#
+#######################################################
+
+body common control
+
+{
+ any::
+
+  bundlesequence  => { "testbundle" };   
+}
+
+############################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    delete => tidyfiles,
+    file_select => zero_age,
+    depth_search => recurse("inf");
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+#include_basedir => "true";
+depth => "$(d)";
+}
+
+#########################################################
+
+body delete tidyfiles
+
+{
+dirlinks => "delete";
+rmdirs   => "false"; 
+}
+
+#########################################################
+
+body file_select zero_age
+
+#
+# we can build old "include", "exclude", and "ignore" 
+# from these as standard patterns - these bodies can
+# form a library of standard patterns
+#
+
+{
+mtime     => irange(ago(1,0,0,0,0,0),now);  
+file_result => "mtime"; 
+}

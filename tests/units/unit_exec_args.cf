@@ -1,0 +1,26 @@
+#
+# Test the symmetry between using / not using args =>
+# Locks should prevent these from being run twice, all else being equal.
+#
+
+body common control
+{
+bundlesequence  => { "main" };
+}
+
+bundle agent main
+{
+
+vars:
+
+"testlist" slist => { "apple", "banana", "carrot" };
+
+commands:
+
+"/bin/echo test1 $(testlist)";
+
+"/bin/echo test1"
+
+   args => "$(testlist)";
+
+}

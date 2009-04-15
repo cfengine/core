@@ -1,0 +1,16 @@
+body common control
+{
+bundlesequence => { "test" };
+}
+
+
+
+bundle agent test
+{
+processes:
+
+ "sleep"
+
+   signals => { "term", "kill" };
+
+}

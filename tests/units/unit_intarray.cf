@@ -1,0 +1,21 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "dim_array" 
+
+     int =>  readstringarray("array_name","/tmp/array","#[^\n]*",":",10,4000);
+
+
+}
+

@@ -1,0 +1,64 @@
+######################################################################
+#
+# File editing
+#
+# Normal ordering:
+# - delete
+# - replace | colum_edit
+# - insert
+# 
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  # Make a copy of the password file
+
+  "/home/mark/tmp/passwd"
+
+       link_from     => linkdetails("/etc/passwd"),
+       move_obstructions => "true";
+
+
+  "/home/mark/tmp/linktest"
+
+       link_from     => linkchildren("/usr/local/sbin");
+
+
+#child links
+}
+
+#########################################################
+
+body linkfrom linkdetails(tofile)
+
+{
+source        => "$(tofile)";
+link_type     => "symlink";
+when_no_source  => "force";      # kill
+}
+
+#########################################################
+
+body linkfrom linkchildren(tofile)
+
+{
+source        => "$(tofile)";
+link_type     => "symlink";
+when_no_source  => "force";      # kill
+link_children => "true";
+when_linking_children => "if_no_such_file"; # "override_file";
+}
+

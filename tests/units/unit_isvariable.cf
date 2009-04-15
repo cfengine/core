@@ -1,0 +1,28 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "bla" string => "xyz..";
+
+classes:
+
+  "exists" expression => isvariable("bla");
+
+reports:
+
+  exists::
+
+    "Variable exists: \"$(bla)\"..";
+
+}
+

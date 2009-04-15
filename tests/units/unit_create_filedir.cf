@@ -1,0 +1,47 @@
+########################################################
+#
+# Simple test create files
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/test_plain" 
+
+       perms => system,
+       create => "true";
+
+  "/home/mark/tmp/test_dir/." 
+
+       perms => system,
+       create => "true";
+
+}
+
+#########################################################
+
+body perms system
+
+{
+mode  => "0640";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+

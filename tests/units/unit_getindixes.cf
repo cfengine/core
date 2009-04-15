@@ -1,0 +1,29 @@
+
+body common control
+
+{
+any::
+
+  bundlesequence  => { "testsetvar" };   
+}
+
+
+#######################################################
+
+bundle agent testsetvar
+
+{
+vars:
+
+  "v[index_1]" string => "value_1";
+  "v[index_2]" string => "value_2";
+
+  "parameter_name" slist => getindices("v");
+
+reports:
+
+  Yr2008::
+
+   "Found index: $(parameter_name)";
+
+}

@@ -1,0 +1,28 @@
+
+body common control
+{
+bundlesequence => { "acls" };
+}
+
+#########################################
+
+bundle agent acls
+
+{
+files:
+
+  "/media/flash/acl/test_dir"
+
+    acl => template;
+}
+
+#########################################
+
+body acl template
+
+{
+acl_method => "overwrite";
+acl_type => "posix";
+acl_directory_inherit => "parent";
+aces => { "user:*:r(wwx),-r:allow", "group:*:+rw:allow", "mask:x:allow", "all:r"};
+}

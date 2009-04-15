@@ -1,0 +1,55 @@
+######################################################################
+#
+# File editing
+#
+# Normal ordering:
+# - delete
+# - replace | colum_edit
+# - insert
+# 
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+
+files:
+
+  "/home/mark/LapTop/Cfengine3/trunk/src/.*\.[ch]"
+
+       edit_line => change_name;
+}
+
+########################################################
+
+bundle edit_line change_name
+  {
+  replace_patterns:
+
+   "Verbose\("
+
+      replace_with => With("CfOut(cf_verbose,\"\",");
+
+  }
+
+########################################
+# Bodies
+########################################
+
+body replace_with With(x)
+
+{
+replace_value => "$(x)";
+occurrences => "all";
+}
+

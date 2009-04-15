@@ -1,0 +1,181 @@
+
+
+# A bundle is a collection of promises, i.e. objects, types and body labels
+# A body is a convenient collection of attribute constraints for a type of promise
+# Since bundles pertain to specific types of promises, the have types themselves
+
+
+# Each component has its own Body called control()
+
+#     body cfagent control()
+#     body cfservd control
+#     body cfenvd  control
+#     body cfrun   control
+
+# In addition there is a control section for all the components
+
+#     body common control
+
+#
+# This parser should be able to construct the promise graph in
+# matrix form and make unique identifiers for each promise so that
+# they can be instrumented. Dependency chains should be identified
+#
+# Conflicts should be analysed automatically. Loops should be
+# expanded
+#
+
+#####################################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         update, 
+                         myPromises("2","3"), 
+                         myPromises("fish","rabbit"), 
+                         Services,
+                         testcopy
+                         };
+
+      inputs          => {
+                         "../tests/mod_execd.cf", 
+                         "../tests/mod_files.cf", 
+                         "../tests/mod_files_copy.cf", 
+                         "../tests/mod_exec.cf",
+                         "../tests/mod_process.cf",
+                         "../tests/mod_storage.cf",
+                         "../tests/mod_access.cf" 
+                         };
+
+      version =>  "123";
+
+    solaris::
+
+      bundlesequence  => { additions };
+      inputs => { "update.cf", "main.cf" , "linux.cf" };
+
+
+   any::
+
+     lastseenexpireafter => "240";
+   }
+
+###################################################################
+
+body agent control
+
+{
+agentaccess => { "mark", "root" };
+}
+
+###################################################################
+
+ # Bundles that are common go to everyone.
+
+bundle common globals
+{
+vars:
+
+ "globalvar" string => "this is a global variable";
+
+  "hostlist"  slist => { "288.39.89.1/24", "178.36.148.1/24", "2001:700:700:11" };
+
+mytype:
+}
+
+###################################################################
+
+bundle agent myPromises(s1,s2)   # policy version 1.0
+   {
+   classes:
+
+     "alias0"    or => { "solaris" , userexists("felix") , "xyz" };
+
+     "allok  "   and => { userexists("$(users)") };
+
+     "Strategy"  dist => { "0.1", "0.2", "0.1" };
+
+   vars:
+
+     "myname"  string => "value in quotes" ,
+               policy => "free";
+
+     "myname"  string => "value in quotes 2" ,
+               policy => "free";
+
+     "derived" string => "includes $(name) previously defined $(s1) and $(s2)" ,
+               policy=>  "free";
+
+     # Vectors and lists
+
+     "list2"   ilist => { "1","2", getuid("mark") };
+
+     "users"   slist => { "mark", 
+                          "aeleen", 
+                          "kyrre", 
+                          "matt" 
+                        } ,
+
+                policy => constant;
+
+
+     
+      "xxx" string => readfile( "/home/mark/tmp/testfile" , 4000 );
+
+      "readarray" slist => { readstringlist("/home/mark/tmp/testlist","#.*","[\n]",5,4000) };
+
+     # Associative arrays
+
+     # "array1"   string => readassocarray("/filename");
+
+     # Graph
+
+     "Neighbour[fromhost]" string => "tohost";
+     "Adj[tohost]"         string => "nexthost";
+
+    ###
+
+   files:
+
+     "/param/$(s1)/$(s2)" -> "no one special";
+
+   }
+
+
+##############################################################################
+
+bundle agent main()
+   {
+   classes:
+
+     "alias1"  or  =>  { "class1", "class2", "class3" };
+     "alias2"  or  =>  { class1, class2, class3 };
+     "alias3"  and =>  { class1, class2, class3 };
+
+     "alias4"   expression =>  "solaris&x86|linux|mac";
+
+   vars:
+
+      "x" string => "1,2,3";
+
+      "y" real => "3.22";
+
+   reports:
+
+     "Alert Message X" -> { "email", "html" }
+
+         transaction=>filters;     
+
+   }
+
+#########################################################
+
+bundle agent update()
+
+{
+vars:
+
+}
+

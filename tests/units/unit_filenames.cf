@@ -1,0 +1,22 @@
+#
+# filenames
+#
+
+bundle agent test
+{
+files:
+
+
+  "/etc/passwd"
+
+create => "true";
+
+  "C:\etc\passwd"
+create => "true";
+
+  "etc/passwd"
+create => "true";
+}
+
+
+

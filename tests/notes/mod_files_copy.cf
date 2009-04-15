@@ -1,0 +1,101 @@
+#########################################################
+#
+# mod_files copying parts
+#
+#########################################################
+
+bundle agent testcopy()
+
+{
+vars:
+
+  "basedir"      string => "/masterfiles";
+
+  "named_files"  slist => { "one", "two", "three" };
+
+  "servers"      slist => {"nexus","cube","eternity"};
+
+  "bla" slist => { "one", "two", "three" };
+
+ "OTHER" string => "scalar";
+
+files:
+
+  "/var/[c|l][A-Za-z0-9_ ]*"  
+
+            copy_from     => mycopy("/src/path","server"),
+            repository  => "/my/repos",              # backup directory
+
+            perms        => myperms,
+            file_select  => myfilter;
+
+  "/dest/files"  
+
+            copy_from    => mycopy("/src/.*/regpath","server"),
+            perms      => myperms,
+            file_select => myfilter,
+            depth_search => recurse("inf");
+
+
+  #
+  # Copy named files *to* separate named dirs, e.g. for vm config
+  #
+
+  "$(basedir)/$(named_files)/vm.conf"
+
+           copy_from      => mycopy("/$(basedir)/$(named_files).conf","server"),
+           perms        => myperms,
+           file_select   => myfilter;
+          
+
+  #
+  # Copy named files *from* separate named hosts - aggregation
+  #
+
+  "$(basedir)/data_from_$(servers)/$(named_files).conf"
+
+           copy_from     => mycopy("/$(basedir)/$(named_files).conf","$(servers)"),
+           perms         => myperms,
+           file_select   => myfilter;          
+
+
+  # 
+  # Now copy a single set of files to different destinations on same server
+  #
+
+  "$(basedir)/$(named_files)/vm.conf"
+
+           copy_from    => mycopy("/$(basedir)/fixed.conf","server"),
+           perms      => myperms,
+           file_select      => myfilter;
+
+}
+
+#########################################################
+
+body copyfrom mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" , "failover1" };
+action      => "fix";                    # warn/silent/fix;
+backup      => "true";                   #/false/timestamp
+stealth     => "true";                   #/on/false/off
+preserve    => "true";
+linkcopy_patterns => { ".*fish.*" };
+copylink_patterns => { "non-local.*" };
+xdev        => "true";                   # /on/false/off
+compare     => "mtime";                  # ctime/mtime/checksum/sum/byte/binary/any
+link_type    => "absolute";              # /symbolic/relative/hard etc
+type_check   => "true";
+force_update => "false";
+force_ipv4   => "false";
+copy_size        => irange("0","50000");
+trustkey    => "true";
+encrypt     => "true";
+verify      => "true";
+purge       => "false";
+findertype  => "MacOSX";
+}
+
+#################################################################

@@ -1,0 +1,24 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "my_result" string => execresult("/bin/ls /tmp","noshell");
+
+reports:
+
+  linux::
+
+    "Variable is $(my_result)";
+
+}
+

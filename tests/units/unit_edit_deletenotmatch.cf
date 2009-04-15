@@ -1,0 +1,66 @@
+########################################################
+#
+# Simple test editfile
+#
+########################################################
+
+#
+# This assumes a file format like:
+#
+# [section 1]
+#
+# lines....
+#
+# [section 2]
+#
+# lines... etc
+
+
+body common control
+
+{
+bundlesequence  => { "testbundle" };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/tmp/passwd_excerpt"
+
+       create    => "true",
+       edit_line => MarkNRoot;
+}
+
+########################################################
+
+bundle edit_line MarkNRoot
+  {
+  insert_lines:
+
+   !pw_loaded::
+
+     "/etc/passwd" 
+
+       insert_type => "file",
+       action => defineclass("pw_loaded");
+
+
+  delete_lines:
+
+   pw_loaded::
+
+       "mark.*|root.*" not_matching => "true";
+
+  }
+
+########################################################
+
+body action defineclass(c)
+{
+promise_repaired => { "$(c)" };
+persist_time => "0";
+}

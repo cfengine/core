@@ -1,0 +1,39 @@
+#
+# Cfagent 2 can be run as a command within cfengine 3 
+# so that cfagent 2 AND cfagent 3 can coexist
+#
+# It does not matter which versions of the daemons are run
+# but you must choose version 2 XOR version 3
+#
+
+body control common 
+
+{
+
+# Reads default 
+#   /var/cfengine/inputs/promises.cf
+#   /var/cfengine/inputs/failsafe.cf
+
+bundlesequence = { "cfengine3", "cfengine2" };
+}
+
+###########################################
+
+bundle agent cfengine2
+
+{
+commands:
+
+ "/var/cfengine/bin/cfagent";
+
+}
+
+###########################################
+
+bundle agent cfengine3
+
+{
+
+# Stuff
+
+}

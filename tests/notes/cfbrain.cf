@@ -1,0 +1,125 @@
+control:
+
+  domain = ( iu.hio.no )
+  hosts = ( "eternity:slogans:mln1.vlab:mln2.vlab:mln3.vlab" )
+
+  smtpserver = ( nexus )
+
+  actionsequence = ( processes copy methods files tidy shellcommands )
+
+  ChecksumUpdates = ( true )
+
+############################################################
+
+copy:
+
+  /var/cfengine/cfnerves   dest=/cfengine/$(this)/cfenvd
+                           recurse=inf
+                           server=$(hosts)
+                           trustkey=true
+                           mode=0644
+                           owner=mark
+
+  /home/mark/LapTop/CfBrain/trunk/src/cfcore.css dest=/cfengine/cfcore.css
+
+ #
+ # maybe state and outputs too...
+ #
+
+############################################################
+
+processes:
+
+  "cfenvd" restart "/var/cfengine/bin/cfenvd -H -T"
+
+  "cfservd" restart "/usr/local/sbin/cfservd"
+
+############################################################
+
+shellcommands:
+
+  "/usr/sbin/ntpdate cube.iu.hio.no"
+
+  "/var/cfengine/bin/cfbrain"
+
+############################################################
+
+files:
+
+ /cfengine r=2 mode=a+r action=fixall
+
+ /etc/passwd owner=root mode=0644 action=fixall checksum=best
+
+############################################################
+
+methods:
+
+  CfBrain(noarg)
+
+    action=CfBrain.cf
+
+#############################################################
+
+tidy:
+
+/var/cfengine/outputs pattern=* age=7
+
+
+#
+# Nerve endings for cfbrain
+#
+
+control:
+
+  MethodName       = ( CfNerves )
+  workdir          = ( /var/cfengine )
+  out              = ( cfnerves )
+
+  actionsequence = ( directories shellcommands files )
+
+#######################################################
+#
+# Generate byte-order independent ASCII data
+#
+#######################################################
+
+directories:
+
+   $(workdir)/$(out)  mode=0700
+
+#######################################################
+
+files:
+
+   $(workdir)/$(out)  r=inf owner=mark mode=0644 action=fixall
+
+   /cfengine r=inf mode=0644 action=fixall
+
+#######################################################
+
+shellcommands:
+
+   "$(workdir)/bin/cfenvgraph -s -o $(out)"
+
+      chdir=$(workdir)
+      ifelapsed=115
+
+   "$(workdir)/bin/cfenvgraph -o $(out) --now"
+
+      chdir=$(workdir)
+      ifelapsed=2
+
+   "$(workdir)/bin/cfshow --last-seen --html > lastseen.html"
+
+      chdir=$(workdir)/$(out)
+      ifelapsed=2
+
+   "$(workdir)/bin/cfshow --performance --html > perf.html"
+
+      chdir=$(workdir)/$(out)
+      ifelapsed=2
+
+   "$(workdir)/bin/cfshow --classes --html > classes.html"
+
+      chdir=$(workdir)/$(out)
+      ifelapsed=2

@@ -1,0 +1,24 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "isdir" expression => isdir("/etc");
+
+reports:
+
+  isdir::
+
+    "Directory exists..";
+
+}
+

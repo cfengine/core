@@ -1,0 +1,117 @@
+#
+# Testing some variable/class definitions - note scope
+#
+# Use browser -f promise_output_agent.html to view
+#
+
+body common control
+
+{
+bundlesequence  => { "test"  };
+}
+
+###########################################################
+
+bundle agent test
+
+{     
+vars:
+
+ "hosts" slist => { "slogans.iu.hio.no", "eternity.iu.hio.no", "nexus.iu.hio.no" };
+
+ # selectservers(hostlist,port,sendstr,regex_on_reply,maxbytesread_reply,array_name
+ 
+ "up_servers" int =>  selectservers("@(hosts)","80","","","100","alive_servers");
+
+classes:
+
+  "someone_alive" expression => isgreaterthan("$(up_servers)","0");
+
+  "i_am_a_server" expression => regarray("up_servers","$(host)|$(fqhost)");
+
+reports:
+
+  someone_alive::
+
+    "Number of active servers $(up_servers)" action => always;
+
+    "First server $(alive_servers[0]) fails over to $(alive_servers[1])";
+
+
+}
+
+#############################################################
+
+body action always
+{
+ifelapsed => "0";
+}########################################################
+#
+# Remote value from server connection to cfServer
+#
+########################################################
+
+ #
+ # run this as follows:
+ #
+ # cf-serverd -f runtest_1.cf [-d2]
+ # cf-agent   -f runtest_2.cf
+ #
+ # Notice that the same file configures all parts of cfengine
+
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+
+version => "1.2.3";
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+ "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+
+reports:
+
+  linux::
+
+    "Receive value $(remote)";
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+allowusers            => { "mark" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+vars:
+
+  "localvar" string => "literal string";
+
+access:
+
+  "This is a $(localvar) for remote access"
+ 
+        handle  => "test_scalar",
+  resource_type => "literal",
+        admit   => { "127.0.0.1" };
+}

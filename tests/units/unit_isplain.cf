@@ -1,0 +1,24 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "isplain" expression => isplain("/etc/passwd");
+
+reports:
+
+  isplain::
+
+    "File exists..";
+
+}
+

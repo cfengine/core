@@ -1,0 +1,53 @@
+***********************************************************
+ Promises 
+***********************************************************
+Bundle testbundle in the context of agent
+
+   ARGS:
+
+   {
+   TYPE: files
+
+      files promise by '/home/mark/tmp/testcopy' (implicit) if context is any
+
+         file_select => by_modes body for type file_select(no parameters)
+               {
+               search_mode =>  {'711','666'} if sub-body context any
+               file_result => mode if sub-body context any
+               }
+       if body context any
+         transformer => /bin/echo DETECTED perms       if body context any
+         depth_search => recurse body for type depth_search
+               arg d
+
+               {
+               depth => $(d) if sub-body context any
+               }
+            Promise (version 1.2.3) belongs to bundle 'testbundle' (type agent) in file '../tests/units/unit_select_mode.cf' near line 27
+
+   }
+
+
+
+
+All Bodies
+
+control body for type common(no parameters)
+   {
+   bundlesequence =>  {'testbundle'} if sub-body context any
+   version => 1.2.3 if sub-body context any
+   }
+
+by_modes body for type file_select(no parameters)
+   {
+   search_mode =>  {'711','666'} if sub-body context any
+   file_result => mode if sub-body context any
+   }
+
+recurse body for type depth_search
+   arg d
+
+   {
+   depth => $(d) if sub-body context any
+   }
+

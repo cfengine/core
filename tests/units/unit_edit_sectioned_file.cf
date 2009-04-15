@@ -1,0 +1,101 @@
+########################################################
+#
+# Simple test editfile
+#
+########################################################
+
+#
+# This assumes a file format like:
+#
+# [section 1]
+#
+# lines....
+#
+# [section 2]
+#
+# lines... etc
+
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+ "1" string => "numerical backreference";
+
+files:
+
+  "/home/mark/tmp/cf3_test"
+
+       create    => "true",
+       edit_line => AppendIfNoLine("cfengine tcp 5308","second");
+
+
+}
+
+########################################################
+
+bundle edit_line AppendIfNoLine(parameter,two)
+  {
+  vars:
+
+    "list"        slist => { "1", "2", "3"  };
+    "myscalar"   string => "hitccokckckc";
+    # "usernames" slist => ReadColumn("/etc/passwd",":","1");
+
+  insert_lines:
+
+   "$(parameter) and $(two)-$(list)" location => "append";
+
+#   "NEW Special-insert!!!" select_region => MySection("New section");
+#   "set variable = value" select_region => MySection("New section");
+
+
+   "/home/mark/tmp/insert"    insert_type => "file",
+                           expand_scalars => "true",
+                            select_region => MySection("New section");
+
+  delete_lines:
+
+    "l.*";
+    "NEW.*" select_region => MySection("New section");
+
+   # Delete LinesStarting in file
+
+  }
+
+########################################################
+
+body location append
+
+{
+# If not line to match, applies to whole text body
+before_after => "after";
+}
+
+########################################################
+
+body location after(x)
+
+{
+# If not line to match, applies to whole text body
+#select_line_matching => "$(x)";
+before_after => "after";
+}
+
+########################################################
+
+body select_region MySection(x)
+
+{
+select_start => "\[$(x)\]";
+select_end => "\[.*\]";
+}

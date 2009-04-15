@@ -1,0 +1,41 @@
+########################################################
+#
+# Warn if line matched
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle" };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/var/cfengine/inputs/.*"
+
+       edit_line => DeleteLinesMatching(".*cfenvd.*"),
+       action => WarnOnly;
+}
+
+########################################################
+
+bundle edit_line DeleteLinesMatching(regex)
+  {
+  delete_lines:
+
+    "$(regex)" action => WarnOnly;
+
+  }
+
+########################################################
+
+body action WarnOnly
+{
+action_policy => "warn";
+}

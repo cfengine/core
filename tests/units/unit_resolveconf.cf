@@ -1,0 +1,94 @@
+#######################################################
+#
+# Resolve conf
+#
+#######################################################
+
+bundle common g # globals
+{
+vars:
+
+ "searchlist"  slist => { 
+                        "search iu.hio.no", 
+                        "search cfengine.com" 
+                        };
+
+ "nameservers" slist => { 
+                        "128.39.89.10", 
+                        "128.39.74.16",
+                        "192.168.1.103"
+                        };
+classes:
+
+  "am_name_server" expression => reglist("@(nameservers)","$(sys.ipv4[eth1])");
+}
+
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => {
+                     "g",
+                     resolver(@(g.searchlist),@(g.nameservers))
+                     };   
+
+  domain => "iu.hio.no";
+}
+
+#######################################################
+
+bundle agent resolver(s,n)
+
+{
+files:
+
+  # When passing parameters down, we have to refer to
+  # a source context
+
+  "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
+
+      create        => "true",
+      edit_line     => doresolv("@(this.s)","@(this.n)"),
+      edit_defaults => reconstruct;
+ # or edit_defaults => modify
+}
+
+#######################################################
+# For the library
+#######################################################
+
+bundle edit_line doresolv(s,n)
+
+{
+vars:
+
+ "line" slist => { @(s), @(n) };
+
+insert_lines:
+
+  "$(line)";
+
+}
+
+#######################################################
+
+body edit_defaults reconstruct
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+max_file_size => "100000";
+}
+
+#######################################################
+
+body edit_defaults modify
+{
+empty_file_before_editing => "false";
+edit_backup => "false";
+max_file_size => "100000";
+}
+
+

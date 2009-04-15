@@ -1,0 +1,70 @@
+########################################################
+#
+# Remote value from server connection to cfServer
+#
+########################################################
+
+ #
+ # run this as follows:
+ #
+ # cf-serverd -f runtest_1.cf [-d2]
+ # cf-agent   -f runtest_2.cf
+ #
+ # Notice that the same file configures all parts of cfengine
+
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+
+version => "1.2.3";
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+ "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+
+reports:
+
+  linux::
+
+    "Receive value $(remote)";
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+allowusers            => { "mark" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+vars:
+
+  "localvar" string => "literal string";
+
+access:
+
+  "This is a $(localvar) for remote access"
+ 
+        handle  => "test_scalar",
+  resource_type => "literal",
+        admit   => { "127.0.0.1" };
+}

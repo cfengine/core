@@ -1,0 +1,72 @@
+######################################################################
+#
+# File editing
+#
+# Normal ordering:
+# - delete
+# - replace | colum_edit
+# - insert
+# 
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+
+files:
+
+  "/home/mark/tmp/cf3_test"
+
+       create    => "true",
+       edit_line => myedit("second");
+}
+
+########################################################
+
+bundle edit_line myedit(parameter)
+  {
+  vars:
+
+   "edit_variable" string => "private edit variable is $(parameter)"; 
+
+  
+  replace_patterns:
+
+  # replace shell comments with C comments
+
+   "puppet"
+
+      replace_with => With("cfengine 3");
+
+  }
+
+########################################
+# Bodies
+########################################
+
+body replace_with With(x)
+
+{
+replace_value => "$(x)";
+occurrences => "first";
+}
+
+########################################
+
+body select_region MySection(x)
+
+{
+select_start => "\[$(x)\]";
+select_end => "\[.*\]";
+}
+

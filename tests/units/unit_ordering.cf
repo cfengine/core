@@ -1,0 +1,53 @@
+
+#
+# cfengine 3
+#
+# cf-agent -f ./cftest.cf -K
+#
+
+body common control
+
+{
+bundlesequence => { "order" };
+}
+
+#
+
+bundle agent order
+
+{
+vars:
+
+ "list" slist => { "three", "four" };
+
+commands:
+
+ ok_later::
+
+   "/bin/echo five";
+
+ otherthing::
+
+   "/bin/echo six";
+
+ any::
+
+  "/bin/echo one"     classes => d("ok_later","otherthing");
+  "/bin/echo two";
+  "/bin/echo $(list)";
+
+ preserved_class::
+
+  "/bin/echo seven";
+
+}
+
+############################################
+
+body classes d(if,else)
+
+{
+promise_repaired => { "$(if)" };
+repair_failed => { "$(else)" };
+persist_time => "0";
+}

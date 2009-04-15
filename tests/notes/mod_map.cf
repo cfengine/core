@@ -1,0 +1,114 @@
+####################################################################
+#
+# Exo-cartography
+#
+# This is a way of documenting and checking promise syntax for 
+# services that are not part of cfengine's realm of responsibility
+#
+####################################################################
+
+bundle external ExoCartography()
+
+{
+# Suppose we measure a threshold value $(load_avg)
+
+graph:
+
+  any::   # classes relate to where these promises are known
+          # not to be confused with the hosts promising
+
+  # List the various conduits in the network
+  # promise from nexus to cube
+
+  # Calculate the degree distribution
+
+  "sphere" -> "cube"
+
+     label     => "+nfs",
+     weight    => "0.4";
+
+  "hexamon" -> { "sphere", "nexus" }
+
+     label  => "+way",
+     weight => "0.1";
+
+
+  "sphere" -> "nexus"
+
+     label     => "+nfs",
+     weight    => "0.4",
+
+     # allow all of these simultaneously
+
+     s_tau  => {},
+     s_chi  => {},  # regex
+
+     i_tau  => { "1", "2"},
+     i_chi  => {},  # ranges
+
+     r_tau  => { "0,5"},     # load average
+     r_chi  => { "0,2.2" };  # ranges
+
+  "cube" -> { "nexus", "slogans", "others" }
+
+       type => "-nfs",
+       to   => "nexus";   # default weight = 1.0
+
+##############################################################
+
+sla:
+
+  #
+  # What can we put in here?
+  #
+
+  "HIO" -> "opera"
+
+     tau => "http response time",
+     real_chi => { "0 , 0.0001" },
+     str_chi => { "^(NaN)" },
+     availability => "$(www_avail)";
+
+
+##############################################################
+
+inventory:
+
+  "server equipment" -> "CMDB"
+
+     cost  => "",
+     value_per_day_per_availability => "30000",
+     currency => "kroner"
+     cmdb =>  ITILstuff("mark");
+
+  "HP-4000 printer paper"
+
+    cost      => "34",
+    value     => "10000",  # reorder value for batch of paper
+    currency  => "kroner",
+    level     => "$(scli.paper_level)"
+    threshold => "10367";
+
+
+}
+
+##############################################################
+
+body cmdb ITILstuff(var)
+
+{
+serial_number => "$(var)";
+category => "";
+model => "";
+warrant_expire => "";
+version => "";
+location => "";
+CIowner => "";
+source => "";
+license => "";
+status => "";
+comment => "";
+}
+
+
+

@@ -1,0 +1,49 @@
+#######################################################
+#
+# Compressing files
+#
+#######################################################
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "testbundle"
+                         };
+
+   version => "1.2.3";
+   }
+
+############################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    file_select => pdf_files,
+    transformer => "/usr/bin/gzip $(this.promiser)",
+    depth_search => recurse("inf");
+
+}
+
+############################################
+
+body file_select pdf_files
+
+{
+leaf_name => { ".*.pdf" , ".*.fdf" };
+file_result => "leaf_name";
+}
+
+############################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+

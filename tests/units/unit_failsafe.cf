@@ -1,0 +1,22 @@
+#
+# Failsafe file
+#
+
+body control common 
+
+{
+
+# Reads default 
+#   /var/cfengine/inputs/promises.cf
+#   /var/cfengine/inputs/failsafe.cf
+
+bundlesequence = { "update" };
+
+inputs => { 
+          "update.cf" 
+
+          # a simple recovery file too?
+
+          };
+}
+

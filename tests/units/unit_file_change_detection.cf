@@ -1,0 +1,66 @@
+########################################################
+#
+# Simple backgrounding
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+body agent control
+
+{
+agentaccess => { "mark", "root" };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp" -> "me"
+
+       changes      => tripwire,
+       depth_search => recurse("inf"),
+       action       => background;
+
+  "/home/mark/LapTop/words" -> "you"
+
+       changes      => tripwire,
+       depth_search => recurse("inf");
+
+}
+
+
+#########################################################
+
+body changes tripwire
+
+{
+hash           => "md5";
+report_changes => "content";
+update_hashes  => "true";
+}
+
+#########################################################
+
+body action background
+
+{
+background => "true";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth        => "$(d)";
+}

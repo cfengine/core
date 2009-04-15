@@ -1,0 +1,29 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "gname" expression => groupexists("users");
+  "gid"   expression => groupexists("100");
+
+reports:
+
+  gname::
+
+    "Group exists by name";
+
+  gid::
+
+    "Group exists by id";
+
+}
+

@@ -1,0 +1,94 @@
+######################################################################
+#
+# File editing
+#
+# Normal ordering:
+# - delete
+# - replace | colum_edit
+# - insert
+# 
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+ "userset" slist => { "one-x", "two-x", "three-x" };
+
+files:
+
+  # Make a copy of the password file
+
+  "/home/mark/tmp/passwd"
+
+       create    => "true",
+       edit_line => SetUserParam("mark","6","/set/this/shell");
+
+  "/home/mark/tmp/group"
+
+       create    => "true",
+       edit_line => AppendUserParam("root","4","@(userset)");
+
+commands:
+
+  "/bin/echo" args => "$(userset)";
+
+}
+
+########################################################
+
+bundle edit_line SetUserParam(user,field,val)
+  {
+  field_edits:
+
+   "$(user).*"
+
+      # Set field of the file to parameter
+
+      edit_field => col(":","$(field)","$(val)","set");
+  }
+
+########################################################
+
+bundle edit_line AppendUserParam(user,field,allusers)
+  {
+  vars:
+
+    "val" slist => { @(allusers) };
+
+  field_edits:
+
+   "$(user).*"
+
+      # Set field of the file to parameter
+
+      edit_field => col(":","$(field)","$(val)","alphanum");
+
+  }
+
+########################################
+# Bodies
+########################################
+
+body edit_field col(split,col,newval,method)
+
+{
+field_separator => "$(split)";
+select_field    => "$(col)";
+value_separator  => ",";
+field_value     => "$(newval)";
+field_operation => "$(method)";
+extend_fields => "true";
+}
+

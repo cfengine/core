@@ -1,0 +1,14 @@
+body common control 
+{
+bundlesequence => { "test" };
+}
+
+bundle agent test 
+{
+vars:
+    any::
+        "tempdir" string => execresult("/bin/mktemp -d", "noshell");
+reports:
+    linux::
+        "tempdir: ${tempdir}";
+}

@@ -1,0 +1,89 @@
+########################################################
+#
+# Simple test of promise references
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+
+version => "1.2.3";
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+
+classes:
+
+
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    handle       => "update_rule",
+    copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+    perms        => system,
+    depth_search => recurse("inf");
+
+}
+
+#########################################################
+
+body perms system
+
+{
+mode  => "0644";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copy_from mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" };
+copy_backup => "true";                  #/false/timestamp
+purge       => "false";
+type_check  => "true";
+force_ipv4  => "true";
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/home/mark/LapTop"
+
+    handle  => "update_rule",
+    admit   => { "127.0.0.1" };
+}

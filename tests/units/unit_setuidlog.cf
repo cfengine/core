@@ -1,0 +1,39 @@
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp" -> "me"
+
+       changes      => tripwire,
+       depth_search => recurse("inf");
+
+}
+
+
+#########################################################
+
+body changes tripwire
+
+{
+hash           => "md5";
+report_changes => "content";
+update_hashes  => "true";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth        => "$(d)";
+}

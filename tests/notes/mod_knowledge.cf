@@ -1,0 +1,140 @@
+############################################################################
+#
+# This is a promise/cfengine version of the Linear Topic Map language
+# Topics are independent abstract entities which make "use-promise" associations.
+# We can assume that all topics offer their info freely to all other topics.
+#
+# Documents/Occurrences lie outside of a topic map in the substrate, but this
+# is where promises live. Documents can make promises about their content
+# and type. These supplement the topic map.
+#
+############################################################################
+
+
+body common control
+   {
+   any::
+
+      bundlesequence  => { 
+                         "topic_map"
+                         };
+
+   }
+
+############################################################################
+
+body knowledge control
+
+{
+build_directory => ".";
+id_prefix => "cfengine";
+}
+
+############################################################################
+
+bundle knowledge topic_map
+
+{
+vars:
+
+  "aliases"       slist => { "deals with concepts", "is composed of" };
+  "linux_distros" slist => { "suse", "ubuntu", "fedora", "redhat", "debian" };
+
+  #
+  # This is one kind of association 
+  #
+
+  "enemies" slist => { "big bad wolf", "own tail" };
+  "afraid_of[$(enemies)]" slist => { "little ole me", "little red riding hood", "three little pigs" };
+
+ ###################################################
+
+topics:
+
+   "short name"       comment => "a name that is shorter than long but perhaps longer than short";
+
+   "operating system";
+   "distro";
+   "promise type";
+   "host";
+   "person";
+   "component";
+
+   "website";
+
+  operating_system::           # Topic Type
+
+   "linux";                    # Topic name / id
+
+   "longer topic type";
+
+  distro::
+
+   "$(linux_distros)"
+
+       association => a("is distro of","linux","has distro");
+
+  host::
+
+    "atlas"
+
+       association => a("owned by","mark","owns");
+
+  person::
+
+    "mark"
+
+       association => a("designed","cfengine","was designed by");
+
+  component::
+
+    "cfengine";
+
+ ###################################################
+
+occurrences: 
+
+  suse::
+
+     "http://www.opensuse.org"
+
+            represents => { "website" },
+            representation => "url",
+            # url is default?
+            comment => "Main site";
+
+     "yast"
+
+            represents => { "default_configuration_tool", "setup_tool" },
+            representation => "literal";
+
+  mark::
+
+     "mark@iu.hio.no"
+
+            represents => { "email address" },
+            representation => "literal";
+
+}
+
+###################################################
+# Bodies
+###################################################
+
+body association a(f,name,b)
+
+{
+forward_relationship => "$(f)";
+backward_relationship => "$(b)";
+associates => { $(name) };
+}
+
+###################################################
+
+body association A(f,name_list,b)
+
+{
+forward_relationship => "$(f)";
+backward_relationship => "$(b)";
+associates => { @(name) };
+}

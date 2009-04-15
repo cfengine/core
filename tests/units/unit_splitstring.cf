@@ -1,0 +1,34 @@
+#######################################################
+#
+# Split a string into a list
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => {
+                     test
+                     };   
+}
+
+#######################################################
+
+bundle agent test
+
+{
+vars:
+
+  "split1" slist => splitstring("one:two:three",":","10");
+  "split2" slist => splitstring("alpha:xyz:beta","xyz","10");
+
+reports:
+
+ linux::
+
+  "Found key $(split1)";
+  "Found key $(split2)";
+
+}

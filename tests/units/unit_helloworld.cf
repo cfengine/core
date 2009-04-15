@@ -1,0 +1,17 @@
+# Hard promises
+
+body common control
+{
+bundlesequence => { "hello" };
+}
+
+# soft promises
+
+bundle agent hello
+{
+reports:
+
+ linux::
+
+   "Hello world!";
+}

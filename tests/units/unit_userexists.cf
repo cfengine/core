@@ -1,0 +1,28 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "ok" expression => userexists("root");
+
+reports:
+
+  ok::
+
+    "Root exists";
+
+ !ok::
+
+    "Root does not exist";
+}
+

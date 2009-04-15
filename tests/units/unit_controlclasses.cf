@@ -1,0 +1,36 @@
+
+body common control
+{
+!trusted::
+
+bundlesequence  => { @(felles.sequence) };
+ 
+inputs          => { @(felles.inn) };
+ 
+ 
+trusted::
+
+    bundlesequence  => { @(felles.sequence),
+                                "hemmelig" };
+ 
+    inputs          => { @(felles.inn),
+                                "hemmelig.cf" };
+ 
+}
+
+bundle common felles
+ {
+ vars:
+          "sequence" slist => { "get_the_classes",
+                                "get_the_roles",
+                                "update",
+                                "update_servers" };
+ 
+          "inn" slist =>  { "update.cf",
+                               "classes.cf",
+                               "serverconfig.cf" };
+
+ classes:
+
+   "trusted" expression => "xxany"; 
+ }

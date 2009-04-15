@@ -1,0 +1,100 @@
+#######################################################
+#
+# Apache 2 reconfig - modelled on SuSE
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => {
+                     apache
+                     };   
+}
+
+#######################################################
+
+bundle agent apache
+
+{
+files:
+
+  "/home/mark/tmp/apache2" #  "/etc/sysconfig/apache2" 
+
+     edit_line => fixapache;
+}
+
+#######################################################
+# For the library
+#######################################################
+
+bundle edit_line fixapache
+
+{ # Values have the form NAME = "quoted space separated list"
+
+vars:
+
+ "add_modules"     slist => { 
+                            "dav", 
+                            "dav_fs", 
+                            "ssl", 
+                            "php5", 
+                            "dav_svn",
+                            "xyz",
+                            "superduper"
+                            };
+
+ "del_modules"     slist => { 
+                            "php3",
+                            "jk",
+                            "userdir",
+                            "imagemap",
+                            "alias"
+                            };
+
+insert_lines:
+
+ "APACHE_CONF_INCLUDE_FILES=\"/site/masterfiles/local-http.conf\"";
+
+field_edits:
+
+ #####################################################################
+ # APACHE_MODULES="authz_host actions alias auth_basic dav dav_fs imagemap ssl php5 dav_svn authz_default jk"
+ #####################################################################
+
+   "APACHE_MODULES=.*"
+
+      # Insert module "columns" between the quoted RHS 
+      # using space separators
+
+      edit_field => quotedvar("$(add_modules)","append");
+
+   "APACHE_MODULES=.*"
+
+      # Delte module "columns" between the quoted RHS 
+      # using space separators
+
+      edit_field => quotedvar("$(del_modules)","delete");
+
+   # if this line already exists, edit it  
+
+}
+
+########################################
+# Bodies
+########################################
+
+body edit_field quotedvar(newval,method)
+
+{
+field_separator => "\"";
+select_field    => "2";
+value_separator  => " ";
+field_value     => "$(newval)";
+field_operation => "$(method)";
+extend_fields => "false";
+allow_blank_fields => "true";
+}
+

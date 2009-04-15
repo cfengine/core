@@ -1,0 +1,30 @@
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
+
+  "array[cf-monitord]" string => "The monitor";
+  "array[cf-serverd]" string => "The server";
+  "array[cf-execd]" string => "The executor, not executionist";
+
+commands:
+
+   "/bin/echo $(component) is"
+
+            args => "$(array[$(component)])";
+
+
+}
+

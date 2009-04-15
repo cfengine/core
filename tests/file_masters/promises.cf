@@ -1,0 +1,101 @@
+#######################################################
+#
+# The starting point for every configuration
+#
+#######################################################
+
+body common control
+
+{
+inputs  => { 
+           "update.cf", 
+           "library.cf"
+           };
+
+bundlesequence  => { 
+                   update("policy_host.domain.tld"), # set localhost to ignore
+                   "main",
+                   "cfengine2"
+                   };
+
+output_prefix => "cfengine>";
+version => "1.2.3";
+}
+
+#######################################################
+
+body runagent control
+{
+hosts => { "127.0.0.1:5308", "eternity.iu.hio.no:80", "slogans.iu.hio.no" };
+#output_to_file => "true";
+}
+
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+cfruncommand          => "/home/mark/.cfagent/bin/cf-agent";
+allowusers            => { "mark", "root" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/home/mark/LapTop"
+
+    admit   => { "127.0.0.1" };
+
+  "/home/mark/.cfagent/bin/cf-agent"
+
+    admit   => { "127.0.0.1" };
+
+roles:
+
+  ".*"  authorize => { "mark" };
+}
+
+#######################################################
+
+bundle agent main
+
+{
+vars:
+
+  "sys_files"    slist        => { 
+                                 "/etc/passwd", 
+                                 "/etc/services" 
+                                 };
+files:
+
+  "$(sys_files)" perms        => p("root","0644"),
+                 changes      => trip_wire;
+
+  "/etc/shadow"  perms        => p("root","0600"),
+                 changes      => trip_wire;
+
+  "/usr"         changes      => trip_wire,
+                 depth_search => recurse("inf");
+
+  "/tmp"         delete       => tidy,
+                 file_select  => days("2"),
+                 depth_search => recurse("inf");
+
+}
+
+#######################################################
+
+bundle agent cfengine2
+
+{
+commands:
+
+  "$(sys.workdir)/bin/cfagent";
+}

@@ -1,0 +1,17 @@
+#######################################################
+#
+# The starting point for every configuration
+#
+#######################################################
+
+body common control
+
+{
+bundlesequence  => { 
+                   "update",
+                   };
+
+inputs => { "update.cf" };
+
+}
+

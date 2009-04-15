@@ -1,0 +1,54 @@
+
+bundle agent update(source)
+
+{
+classes:
+
+  "noupdate" expression => regcmp("$(source)","localhost"); 
+ 
+files:
+
+ !noupdate::
+
+   "/var/cfengine/inputs" 
+
+     perms        => p_up,
+     copy_from    => c_up("/masterfiles/cfengine_inputs","$(source)"),
+     depth_search => r_up("inf");
+
+ any::
+
+   # Copy binaries
+
+}
+
+########################################################
+# these bodies should stand alone and not overlap with
+# any template lirary, so pick "odd" names
+########################################################
+
+body perms p_up
+
+{
+mode  => "0600";
+}
+
+#########################################################
+
+body depth_search r_up(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copy_from c_up(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" , "failover.domain.tld" };
+#backup      => "true";
+#trustkey    => "true";
+encrypt     => "true";
+}

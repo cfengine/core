@@ -1,21 +1,26 @@
 /* 
-   Copyright (C) 2008 - Cfengine AS
+
+   Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 3, or (at your option) any
-   later version. 
+   Free Software Foundation; version 3.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 */
 
 /*****************************************************************************/
@@ -2059,9 +2064,9 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
 
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPAV,"%f ",entry.Q[i].expect/MAX.Q[i].expect);
-      fprintf(FPVAR,"%f ",entry.Q[i].var/MAX.Q[i].var);
-      fprintf(FPNOW,"%f ",entry.Q[i].q/MAX.Q[i].q);
+      fprintf(FPAV,"%lf ",entry.Q[i].expect/MAX.Q[i].expect);
+      fprintf(FPVAR,"%lf ",entry.Q[i].var/MAX.Q[i].var);
+      fprintf(FPNOW,"%lf ",entry.Q[i].q/MAX.Q[i].q);
       }                        
    
    fprintf(FPAV,"\n");
@@ -2070,9 +2075,9 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
    
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPE[i],"%d %f %f\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var));
+      fprintf(FPE[i],"%d %lf %lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var));
       /* Use same scaling for Q so graphs can be merged */
-      fprintf(FPQ[i],"%d %f 0.0\n",count, entry.Q[i].q);
+      fprintf(FPQ[i],"%d %lf 0.0\n",count, entry.Q[i].q);
       }               
 
    memset(&entry,0,sizeof(entry));
@@ -2152,7 +2157,7 @@ while (here_and_now < now)
 
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPM[i],"%d %f %f %f\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var),entry.Q[i].q);
+      fprintf(FPM[i],"%d %lf %lf %lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var),entry.Q[i].q);
       }               
    }
 
@@ -2410,7 +2415,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             val = array[i];
             }
 
-         fprintf(fp,"%d %f\n",i,val/maxval*50.0);
+         fprintf(fp,"%d %lf\n",i,val/maxval*50.0);
          }
       
       fclose(fp);      

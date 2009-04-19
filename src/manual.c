@@ -1,21 +1,25 @@
 /* 
-   Copyright (C) 2008 - Cfengine AS
+   Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 3, or (at your option) any
-   later version. 
+   Free Software Foundation; version 3.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
-  
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 
 */
 
@@ -47,6 +51,7 @@ void TexinfoManual(char *mandir)
 
 { char filename[CF_BUFSIZE];
   struct SubTypeSyntax *st;
+  struct Item *done = NULL;
   char *thischapter = NULL;
   FILE *fout;
   int i,j;
@@ -112,12 +117,17 @@ for (i = 0; i < CF3_MODULES; i++)
          fprintf(fout,"@node Bundles for %s\n@chapter Bundles of @code{%s}\n\n",st->btype,st->btype);
          }
       }
-      
-   snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_example.texinfo",st->btype);
-   IncludeManualFile(fout,filename);
-   snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_notes.texinfo",st->btype);
-   IncludeManualFile(fout,filename);
-   TexinfoPromiseTypesFor(fout,st);
+
+   if (!IsItemIn(done,st->btype)) /* Avoid multiple reading if several modules */
+      {
+      PrependItem(&done,st->btype,NULL);
+      snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_example.texinfo",st->btype);
+      IncludeManualFile(fout,filename);
+      snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_notes.texinfo",st->btype);
+      IncludeManualFile(fout,filename);
+      }
+   
+   TexinfoPromiseTypesFor(fout,st);      
    }
 
 /* Special functions */
@@ -170,63 +180,70 @@ fclose(fout);
 /*****************************************************************************/
 
 void TexinfoHeader(FILE *fout)
-{
- fprintf(fout,
-         "@c \\input texinfo-altfont\n"
-         "@c \\input texinfo-logo\n"
-         "\\input texinfo\n"
-         "@c @selectaltfont{cmbright}\n"
-         "@c @setlogo{CfengineLogo}\n"
-         "@c *********************************************************************\n"
-         "@c\n"
-         "@c  This is an AUTO_GENERATED TEXINFO file. Do not submit patches against it.\n"
-         "@c  Refer to the the component .texinfo files instead when patching docs.\n"
-         "@c\n"
-         "@c ***********************************************************************\n"
-         "@c %%** start of header\n"
-         "@setfilename cf3-reference.info\n"
-         "@settitle Cfengine reference manual (version %s)\n"
-         "@setchapternewpage odd\n"
-         "@c %%** end of header\n"
-         "@titlepage\n"
-         "@title Cfengine Reference Manual\n"
-         "@subtitle Auto generated, self-healing knowledge\n"
-         "@subtitle for version %s\n"
-         "@author cfengine.com\n"
-         "@c @smallbook\n"
-         "@fonttextsize 10\n"
-         "@page\n"
-         "@vskip 0pt plus 1filll\n"
-         "Copyright @copyright{} 2008 Cfengine AS\n"
-         "@end titlepage\n"
-         "@c *************************** File begins here ************************\n"
-         "@ifinfo\n"
-         "@dircategory Cfengine Training\n"
-         "@direntry\n"
-         "* cfengine Reference:\n"
-         "                        Cfengine is a language based framework\n"
-         "                        designed for configuring and maintaining\n"
-         "                        Unix-like operating systems attached\n"
-         "                        to a TCP/IP network.\n"
-         "@end direntry\n"
-         "@end ifinfo\n"
-         
-         "@ifnottex\n"
-         "@node Top, Modularization, (dir), (dir)\n"
-         "@top Cfengine-AutoReference\n"
-         "@end ifnottex\n"
-         
-         "@ifhtml\n"
-         "@html\n"
-         "<a href=\"#Contents\"><h1>COMPLETE TABLE OF CONTENTS</h1></a>\n"
-         
-         "<h2>Summary of contents</h2>\n"
-         
-         "@end html\n"
-         "@end ifhtml\n",
-         VERSION,VERSION
-         );
 
+{
+fprintf(fout,
+        "@c \\input texinfo-altfont\n"
+        "@c \\input texinfo-logo\n"
+        "\\input texinfo\n"
+        "@c @selectaltfont{cmbright}\n"
+        "@c @setlogo{CfengineLogo}\n"
+        "@c *********************************************************************\n"
+        "@c\n"
+        "@c  This is an AUTO_GENERATED TEXINFO file. Do not submit patches against it.\n"
+        "@c  Refer to the the component .texinfo files instead when patching docs.\n"
+        "@c\n"
+        "@c ***********************************************************************\n"
+        "@c %%** start of header\n"
+        "@setfilename cf3-reference.info\n"
+        "@settitle Cfengine reference manual\n"
+        "@setchapternewpage odd\n"
+        "@c %%** end of header\n"
+        "@titlepage\n"
+        "@title Cfengine Reference Manual\n"
+        "@subtitle Auto generated, self-healing knowledge\n"
+        "@subtitle for core version %s\n"
+#ifdef HAVE_LIBCFNOVA
+        "@subtitle %s\n"
+#endif
+        "@author cfengine.com\n"
+        "@c @smallbook\n"
+        "@fonttextsize 10\n"
+        "@page\n"
+        "@vskip 0pt plus 1filll\n"
+        "Copyright @copyright{} in the year of issue Cfengine AS\n"
+        "@end titlepage\n"
+        "@c *************************** File begins here ************************\n"
+        "@ifinfo\n"
+        "@dircategory Cfengine Training\n"
+        "@direntry\n"
+        "* cfengine Reference:\n"
+        "                        Cfengine is a language based framework\n"
+        "                        designed for configuring and maintaining\n"
+        "                        Unix-like operating systems attached\n"
+        "                        to a TCP/IP network.\n"
+        "@end direntry\n"
+        "@end ifinfo\n"
+        
+        "@ifnottex\n"
+        "@node Top, Modularization, (dir), (dir)\n"
+        "@top Cfengine-AutoReference\n"
+        "@end ifnottex\n"
+        
+        "@ifhtml\n"
+        "@html\n"
+        "<a href=\"#Contents\"><h1>COMPLETE TABLE OF CONTENTS</h1></a>\n"
+        
+        "<h2>Summary of contents</h2>\n"
+        
+        "@end html\n"
+        "@end ifhtml\n",
+        VERSION
+#ifdef HAVE_LIBCFNOVA
+        ,
+        Nova_StrVersion()
+#endif
+        );
 }
 
 /*****************************************************************************/

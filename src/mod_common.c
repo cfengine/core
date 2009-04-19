@@ -1,21 +1,25 @@
 /* 
-   Copyright (C) 2008 - Cfengine AS
+   Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 3, or (at your option) any
-   later version. 
+   Free Software Foundation; version 3.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
-  
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 
 */
 
@@ -378,6 +382,7 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
    CF_COMMON_SUBTYPES,     /* Add modules after this, mod_report.c is here */
    CF_EXEC_SUBTYPES,       /* mod_exec.c */
+   CF_DATABASES_SUBTYPES,  /* mod_databases.c */
    CF_FILES_SUBTYPES,      /* mod_files.c */
    CF_INTERFACES_SUBTYPES, /* mod_interfaces.c */
    CF_METHOD_SUBTYPES,     /* mod_methods.c */
@@ -387,7 +392,6 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_REMACCESS_SUBTYPES,  /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
    CF_MEASUREMENT_SUBTYPES,/* mod_measurement.c */
-   CF_DATABASES_SUBTYPES,  /* mod_databases.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

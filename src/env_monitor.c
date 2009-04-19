@@ -1,12 +1,13 @@
 /* 
-   Copyright (C) 2008 - Cfengine AS
+
+   Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 3, or (at your option) any
-   later version. 
+   Free Software Foundation; version 3.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,6 +17,10 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 */
 
 
@@ -532,11 +537,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    CfOut(cf_verbose,"","New %s.var %lf\n",name,newvals.Q[i].var);
    CfOut(cf_verbose,"","New %s.ex %lf\n",name,newvals.Q[i].expect);
 
-   CfOut(cf_verbose,"","%s = %lf -> (%f#%f) local [%f#%f]\n",name,This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+   CfOut(cf_verbose,"","%s = %lf -> (%lf#%lf) local [%lf#%lf]\n",name,This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
 
    if (This[i] > 0)
       {
-      CfOut(cf_verbose,"","Storing %.2f in %s\n",This[i],name);
+      CfOut(cf_verbose,"","Storing %.2lf in %s\n",This[i],name);
       }
    }
    
@@ -1385,6 +1390,8 @@ if (!OpenDB(AVDB,&dbp))
    return NULL;
    }
 
+memset(&entry,0,sizeof(entry));
+
 AGE++;
 WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
 
@@ -1514,7 +1521,18 @@ else
    wold = FORGETRATE;
    }
 
+if (aold == 0 && anew == 0)
+   {
+   return 0;
+   }
+
 av = (wnew*anew + wold*aold)/(wnew+wold); 
+
+if (av < 0)
+   {
+   // Accuracy lost - something wrong
+   return 0.0;
+   }
 
 return av;
 }
@@ -1526,7 +1544,7 @@ double SetClasses(char * name,double variable,double av_expect,double av_var,dou
 { char buffer[CF_BUFSIZE],buffer2[CF_BUFSIZE];
   double dev,delta,sigma,ldelta,lsigma,sig;
 
-Debug("\n SetClasses(%s,X=%f,avX=%f,varX=%f,lavX=%f,lvarX=%f,%s)\n",name,variable,av_expect,av_var,localav_expect,localav_var,timekey);
+Debug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n",name,variable,av_expect,av_var,localav_expect,localav_var,timekey);
 
 delta = variable - av_expect;
 sigma = sqrt(av_var);
@@ -1534,7 +1552,7 @@ ldelta = variable - localav_expect;
 lsigma = sqrt(localav_var);
 sig = sqrt(sigma*sigma+lsigma*lsigma); 
 
-Debug(" delta = %f,sigma = %f, lsigma = %f, sig = %f\n",delta,sigma,lsigma,sig);
+Debug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n",delta,sigma,lsigma,sig);
  
 if (sigma == 0.0 || lsigma == 0.0)
    {
@@ -2060,7 +2078,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
                 break;
             }
 
-         Debug("Set temp%d to %f\n",count,temp);
+         Debug("Set temp%d to %lf\n",count,temp);
          }
       }
    
@@ -2141,7 +2159,7 @@ for (ip = list; ip != NULL; ip=ip->next)
                 break;
             }
 
-         Debug("Set temp%d to %f from what looks like cpu temperature\n",count,temp);
+         Debug("Set temp%d to %lf from what looks like cpu temperature\n",count,temp);
          }
       }
    }
@@ -2176,7 +2194,7 @@ for (ip = list; ip != NULL; ip=ip->next)
                 break;
             }
 
-         Debug("Set temp%d to %f from what looks like core temperatures\n",count,temp);
+         Debug("Set temp%d to %lf from what looks like core temperatures\n",count,temp);
          }
       }
    }
@@ -2249,7 +2267,7 @@ for (ip = list; ip != NULL; ip=ip->next)
                 break;
             }
 
-         Debug("Set temp%d to %f\n",count,temp);
+         Debug("Set temp%d to %lf\n",count,temp);
          }
       }
    }

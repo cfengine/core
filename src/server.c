@@ -2221,123 +2221,123 @@ if (iscrypt == 'y')
       return false;
       }
    }
- else
-    {
-    if (nonce_len > crypt_len)
-       {
+else
+   {
+   if (nonce_len > crypt_len)
+      {
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-       if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-          {
-          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-          }
+      if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+         {
+         CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+         }
 #endif 
+      
+      CfOut(cf_error,"","Illegal challenge\n");
+      free(decrypted_nonce);
+      return false;       
+      }
+   
+   memcpy(decrypted_nonce,recvbuffer+CF_RSA_PROTO_OFFSET,nonce_len);  
+   }
 
-       CfOut(cf_error,"","Illegal challenge\n");
-       free(decrypted_nonce);
-       return false;       
-       }
-    
-    memcpy(decrypted_nonce,recvbuffer+CF_RSA_PROTO_OFFSET,nonce_len);  
-    }
- 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-    }
+if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+   {
+   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+   }
 #endif
- 
+
 /* Client's ID is now established by key or trusted, reply with md5 */
- 
+
 HashString(decrypted_nonce,nonce_len,digest,cf_md5);
 free(decrypted_nonce);
- 
+
 /* Get the public key from the client */
- 
- 
+
+
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_lock failed");
-    }
+if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+   {
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
+   }
 #endif
- 
- newkey = RSA_new();
- 
+
+newkey = RSA_new();
+
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"unlock","pthread_mutex_lock failed");
-    }
+if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+   {
+   CfOut(cf_error,"unlock","pthread_mutex_lock failed");
+   }
 #endif 
- 
- 
+
+
 /* proposition C2 */ 
- if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
-    {
-    CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
-    RSA_free(newkey);
-    return false;
+if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
+   {
+   CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
+   RSA_free(newkey);
+   return false;
     }
- 
- if (len == 0)
-    {
-    CfOut(cf_inform,"","Protocol error 2 in RSA authentation from IP %s\n",conn->hostname);
-    RSA_free(newkey);
-    return false;
-    }
- 
- if ((newkey->n = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
-    {
-    err = ERR_get_error();
-    CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
-    RSA_free(newkey);
-    return false;
-    }
- 
+
+if (len == 0)
+   {
+   CfOut(cf_inform,"","Protocol error 2 in RSA authentation from IP %s\n",conn->hostname);
+   RSA_free(newkey);
+   return false;
+   }
+
+if ((newkey->n = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
+   {
+   err = ERR_get_error();
+   CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
+   RSA_free(newkey);
+   return false;
+   }
+
 /* proposition C3 */ 
- 
- if ((len=ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
-    {
-    CfOut(cf_inform,"","Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
-    RSA_free(newkey);
-    return false;
-    }
- 
- if (len == 0)
-    {
-    CfOut(cf_inform,"","Protocol error 4 in RSA authentation from IP %s\n",conn->hostname);
-    RSA_free(newkey);
-    return false;
-    }
- 
- if ((newkey->e = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
-    {
-    err = ERR_get_error();
-    CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
-    RSA_free(newkey);
-    return false;
-    }
- 
- if (DEBUG||D2)
-    {
-    RSA_print_fp(stdout,newkey,0);
-    }
- 
- if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
-    {
-    if (!conn->trust)
-       {
-       RSA_free(newkey);       
-       return false;
-       }
-    }
- 
+
+if ((len=ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
+   {
+   CfOut(cf_inform,"","Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
+   RSA_free(newkey);
+   return false;
+   }
+
+if (len == 0)
+   {
+   CfOut(cf_inform,"","Protocol error 4 in RSA authentation from IP %s\n",conn->hostname);
+   RSA_free(newkey);
+   return false;
+   }
+
+if ((newkey->e = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
+   {
+   err = ERR_get_error();
+   CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
+   RSA_free(newkey);
+   return false;
+   }
+
+if (DEBUG||D2)
+   {
+   RSA_print_fp(stdout,newkey,0);
+   }
+
+if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
+   {
+   if (!conn->trust)
+      {
+      RSA_free(newkey);       
+      return false;
+      }
+   }
+
 /* Reply with md5 of original challenge */
 
 /* proposition S2 */ 
 SendTransaction(conn->sd_reply,digest,16,CF_DONE);
- 
+
 /* Send counter challenge to be sure this is a live session */
 
 counter_challenge = BN_new();

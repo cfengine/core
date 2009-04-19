@@ -407,13 +407,15 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       snprintf(lval,3,"%d",i);
       ForceScalar(lval,substring);
       }
-   
+
+   pcre_free(rx);
    return true;
    }
 else
    {
    *start = 0;
    *end = 0;
+   //pcre_free(rx); - don't understand this seg fault
    return false;
    }
 
@@ -449,6 +451,7 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
 
    *start = (int)pmatch[0].rm_so;
    *end = (int)pmatch[0].rm_eo;
+   regfree(&rx);
    return true;
    }
 else
@@ -458,6 +461,7 @@ else
    Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
    *start = 0;
    *end = 0;
+   regfree(&rx);
    return false;
    }
 
@@ -493,6 +497,8 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       snprintf(lval,3,"%d",i);
       ForceScalar(lval,substring);
       }
+
+   pcre_free(rx);
    
    if ((match_start == teststring) && (match_len == strlen(teststring)))
       {
@@ -505,6 +511,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    }
 else
    {
+   //pcre_free(rx); don't understand segfault
    return false;
    }
 
@@ -537,6 +544,8 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
       break;
       }
 
+   regfree(&rx);
+      
    if ((pmatch[0].rm_so == 0) && (pmatch[0].rm_eo == strlen(teststring)))
       {
       Debug("Regex %s matches (%s) exactly.\n",rex.regexp,teststring);
@@ -553,6 +562,7 @@ else
    char buf[CF_BUFSIZE];
    regerror(code,&rx,buf,CF_BUFSIZE-1);
    Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+   regfree(&rx);
    return false;
    }
 
@@ -593,6 +603,8 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       }
    }
 
+pcre_free(rx);
+   
 #else
 
  regex_t rx = rex.rx;

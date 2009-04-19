@@ -85,7 +85,7 @@ trustkey => "true";
 
 body classes satisfied(x)
 {
-promise_kept => { "$(x)" };
+promise_repaired => { "$(x)" };
 persist_time => "0";
 }
 

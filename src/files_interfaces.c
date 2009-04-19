@@ -1579,7 +1579,7 @@ if (dstat.st_size != sstat.st_size)
 
 if (attr.copy.verify)
    {
-   CfOut(cf_verbose,"","Final verification of transmission: %s -> %s\n",source,new);
+   CfOut(cf_verbose,""," ?? Final verification of transmission ...\n");
 
    if (CompareFileHashes(source,new,&sstat,&dstat,attr,pp))
       {
@@ -1589,6 +1589,10 @@ if (attr.copy.verify)
          rename(backup,dest); /* ignore failure */
          }
       return false;
+      }
+   else
+      {
+      CfOut(cf_verbose,""," -> New file %s transmitted correctly - verified\n",new);
       }
    }
  

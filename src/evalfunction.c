@@ -2803,7 +2803,6 @@ struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum
 
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
-
 /* begin fn specific content */
 
 snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
@@ -3189,19 +3188,21 @@ result = malloc(size+1);
    
 if (result == NULL)
    {
-   CfOut(cf_error,"stat","Could not examine file %s in readfile",filename);
+   CfOut(cf_error,"stat","Could not allocate file %s in readfile",filename);
    return NULL;
    }
 
 if ((fp = fopen(filename,"r")) == NULL)
    {
-   CfOut(cf_error,"fopen","Could not open file %s in readfile",filename);
+   CfOut(cf_inform,"fopen","Could not open file %s in readfile",filename);
    return NULL;
    }
 
 if (fread(result,size,1,fp) != 1)
    {
-   CfOut(cf_error,"fread","Could not read expected amount from file %s in readfile",filename);
+   CfOut(cf_inform,"fread","Could not read expected amount from file %s in readfile",filename);
+   fclose(fp);
+   return NULL;
    }
 
 result[size] = '\0';

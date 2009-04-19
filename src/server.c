@@ -2865,10 +2865,8 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
 
 void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
 
-{ unsigned char digest[EVP_MAX_MD_SIZE+1];
+{ unsigned char digest1[EVP_MAX_MD_SIZE+1],digest2[EVP_MAX_MD_SIZE+1];
   char filename[CF_BUFSIZE];
-  struct Promise *pp = NewPromise("server_cfengine","the server daemon");
-  struct Attributes attr;
   char *sp;
   int i;
 
@@ -2880,13 +2878,14 @@ sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
  
 for (i = 0; i < CF_MD5_LEN; i++)
    {
-   digest[i] = *sp++;
+   digest1[i] = *sp++;
    }
  
-Debug("CompareHashes(%s,%s)\n",filename,HashPrint(cf_md5,digest));
 memset(sendbuffer,0,CF_BUFSIZE);
 
-if (FileHashChanged(filename,digest,cf_verbose,cf_md5,attr,pp))
+HashFile(filename,digest2,cf_md5);
+
+if (!HashesMatch(digest1,digest2,cf_md5))
    {
    sprintf(sendbuffer,"%s",CFD_TRUE);
    Debug("Hashes didn't match\n");
@@ -2898,8 +2897,6 @@ else
    Debug("Hashes matched ok\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
-
-DeletePromise(pp);
 }
 
 /**************************************************************/

@@ -905,6 +905,34 @@ else
    CfOut(cf_inform,""," !! Warning - file object %s exists, contrary to promise\n",path);
    }
 
+if (attr.rename.newname)
+   {
+   if (DONTDO)
+      {
+      CfOut(cf_inform,""," -> File %s should be renamed to %s to keep promise\n",path,attr.rename.newname);
+      return;
+      }
+   else
+      {
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Renaming file %s to %s\n",path,attr.rename.newname);
+
+      if (!IsItemIn(VREPOSLIST,attr.rename.newname))
+         {
+         if (rename(path,attr.rename.newname) == -1)
+            {
+            cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Error occurred while renaming %s\n",path);
+            return;
+            }
+         }
+      else
+         {
+         cfPS(cf_error,CF_WARN,"",pp,attr," !! Rename to same destination twice? Would overwrite saved copy - aborting",path);
+         }        
+      }
+   
+   return;
+   }
+
 if (S_ISLNK(dsb.st_mode))
    {
    if (attr.rename.disable)

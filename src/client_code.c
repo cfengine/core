@@ -1154,7 +1154,7 @@ CfOut(cf_verbose,"","Existing connection just became free...\n");
 void MarkServerOffline(char *server)
 
 { struct Rlist *rp;
-  struct cfagent_connection *conn;
+  struct cfagent_connection *conn = NULL;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
@@ -1195,13 +1195,30 @@ if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
    }
 #endif
 
+/* If no existing connection, get one .. */
+
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
-free(rp->item);
+
 svp = (struct ServerItem *)malloc((sizeof(struct ServerItem)));
+
+if (svp == NULL)
+   {
+   return;
+   }
+
+if ((svp->server = strdup(ipname)) == NULL)
+   {
+   return;
+   }
+
+free(rp->item);
 rp->item = svp;
-svp->server = strdup(ipname);
-svp->conn = NewAgentConn();
-svp->conn->sd = CF_COULD_NOT_CONNECT;
+
+if (svp->conn = NewAgentConn())
+   {
+   /* If we couldn't connect, mark this server unavailable for everyone */
+   svp->conn->sd = CF_COULD_NOT_CONNECT;
+   }
 
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)

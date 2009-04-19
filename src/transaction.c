@@ -243,7 +243,7 @@ Debug("Yielding lock %s\n",this.lock);
 
 if (RemoveLock(this.lock) == -1)
    {
-   Debug("Unable to remove lock %s\n",this.lock);
+   CfOut(cf_verbose,"","Unable to remove lock %s\n",this.lock);
    free(this.last);
    free(this.lock);
    free(this.log);
@@ -410,7 +410,7 @@ int RemoveLock(char *name)
 
 if ((dbp = OpenLock()) == NULL)
    {
-   return 0;
+   return -1;
    }
 
 #if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD

@@ -866,12 +866,35 @@ int SanityCheckInsertions(struct Attributes a)
   long with = 0;
   long ok = true;
   
-with += (long)a.line_select.startwith_from_list;
-not += (long)a.line_select.not_startwith_from_list;
-with += (long)a.line_select.match_from_list;
-not += (long)a.line_select.not_match_from_list;
-with += (long)a.line_select.contains_from_list;
-not += (long)a.line_select.not_contains_from_list;
+if (a.line_select.startwith_from_list)
+   {
+   with++;
+   }
+
+if (a.line_select.not_startwith_from_list)
+   {
+   not++;
+   }
+
+if (a.line_select.match_from_list)
+   {
+   with++;
+   }
+
+if (a.line_select.not_match_from_list)
+   {
+   not++;
+   }
+
+if (a.line_select.contains_from_list)
+   {
+   with++;
+   }
+
+if (a.line_select.not_contains_from_list)
+   {
+   not++;
+   }
 
 if (not > 1)
    {

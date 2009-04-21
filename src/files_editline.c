@@ -635,7 +635,7 @@ for (ip = *start; ip != NULL; ip = np)
 
    if (in_region && match)
       {
-      if (DONTDO || a.transaction.action == cfa_warn)
+      if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_WARN,"",pp,a," -> Need to delete line \"%s\" from %s - but only a warning was promised",ip->name,pp->this_server);
          np = ip->next;
@@ -781,7 +781,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       break;
       }
    
-   if (DONTDO || a.transaction.action == cfa_warn)
+   if (a.transaction.action == cfa_warn)
       {
       cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to replace line \"%s\" in %s - but only a warning was promised",pp->promiser,pp->this_server);
       continue;
@@ -926,7 +926,7 @@ if (prev == CF_UNDEFINED_ITEM) /* Insert at first line */
       {
       if (*start == NULL)
          {
-         if (DONTDO || a.transaction.action == cfa_warn)
+         if (a.transaction.action == cfa_warn)
             {
             cfPS(cf_error,CF_WARN,"",pp,a," -> Need to insert the promised line \"%s\" in %s - but only a warning was promised",newline,pp->this_server);
             return true;
@@ -942,7 +942,7 @@ if (prev == CF_UNDEFINED_ITEM) /* Insert at first line */
       
       if (strcmp((*start)->name,newline) != 0)
          {
-         if (DONTDO || a.transaction.action == cfa_warn)
+         if (a.transaction.action == cfa_warn)
             {
             cfPS(cf_error,CF_WARN,"",pp,a," -> Need to prepend the promised line \"%s\" to %s - but only a warning was promised",newline,pp->this_server);
             return true;
@@ -972,7 +972,7 @@ if (a.location.before_after == cfe_before)
       }
    else
       {
-      if (DONTDO || a.transaction.action == cfa_warn)
+      if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_WARN,"",pp,a," -> Need to insert line \"%s\" into %s but only a warning was promised",newline,pp->this_server);
          return true;
@@ -995,7 +995,7 @@ else
       }
    else
       {
-      if (DONTDO || a.transaction.action == cfa_warn)
+      if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_WARN,"",pp,a," -> Need to insert line \"%s\" in %s but only a warning was promised",newline,pp->this_server);
          return true;
@@ -1069,7 +1069,7 @@ if (a.column.value_separator != '\0')
 
    if (retval)
       {
-      if (DONTDO || a.transaction.action == cfa_warn)
+      if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_NOP,"",pp,a," -> Need to edit field in %s but only warning promised",pp->this_server);
          retval = false;
@@ -1094,9 +1094,9 @@ else
 
    if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
       {
-      if (DONTDO)
+      if (a.transaction.action = cfa_warn)
          {
-         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to delete field field value %s in %s",rp->item,pp->this_server);
+         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to delete field field value %s in %s but only a warning was promised",rp->item,pp->this_server);
          return false;
          }
       else
@@ -1110,9 +1110,9 @@ else
       }
    else
       {
-      if (DONTDO)
+      if (a.transaction.action = cfa_warn)
          {
-         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to set column field value %s to %s in %s",rp->item,a.column.column_value,pp->this_server);
+         cfPS(cf_error,CF_NOP,"",pp,a," -> Need to set column field value %s to %s in %s but only a warning was promised",rp->item,a.column.column_value,pp->this_server);
          return false;
          }
       else

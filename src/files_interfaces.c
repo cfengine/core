@@ -337,7 +337,7 @@ if (a.haveedit)
    ScheduleEditOperation(path,a,pp);
    }
 
-if (save && VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename))
+if (save && VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename,a,pp))
    {
    SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
    }

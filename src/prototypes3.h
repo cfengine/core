@@ -721,7 +721,7 @@ int DeleteItemContaining (struct Item **list,char *string);
 int DeleteItemNotContaining (struct Item **list,char *string);
 int OrderedListsMatch(struct Item *list1,struct Item *list2);
 int IsClassedItemIn(struct Item *list,char *item);
-int CompareToFile(struct Item *liststart,char *file);
+int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp);
 struct Item *String2List(char *string);
 int ListLen (struct Item *list);
 int ByteSizeList (struct Item *list);

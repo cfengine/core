@@ -72,7 +72,7 @@ void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promis
 
 if (DONTDO || a.transaction.action == cfa_warn)
    {
-   if (ec && ec->num_edits > 0)
+   if (ec && !CompareToFile(ec->file_start,ec->filename,a,pp) && ec->num_edits > 0)
       {
       cfPS(cf_error,CF_WARN,"",pp,a," -> Need to edit file %s but only a warning promised",ec->filename);
       }
@@ -80,7 +80,7 @@ if (DONTDO || a.transaction.action == cfa_warn)
    }
 else if (ec && ec->num_edits > 0)
    {
-   if (CompareToFile(ec->file_start,ec->filename))
+   if (CompareToFile(ec->file_start,ec->filename,a,pp))
       {
       if (ec)
          {

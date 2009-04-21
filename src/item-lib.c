@@ -1017,9 +1017,9 @@ while (true)
    ip1 = ip1->next;
    ip2 = ip2->next;
    }
+
+return true;
 }
-
-
 
 /*********************************************************************/
 
@@ -1250,13 +1250,13 @@ return DeleteItemGeneral(list,string,NOTliteralSomewhere);
 
 /*********************************************************************/
 
-int CompareToFile(struct Item *liststart,char *file)
+int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp)
 
 /* returns true if file on disk is identical to file in memory */
 
 { FILE *fp;
   struct stat statbuf;
-  struct Item *ip = liststart;
+  struct Item *ip = liststart,*cmplist = NULL;
   unsigned char *finmem = NULL, fdata;
   unsigned long fip = 0, tmplen, idx;
 
@@ -1272,56 +1272,17 @@ if (liststart == NULL)
    return false;
    }
 
-for (ip = liststart; ip != NULL; ip=ip->next)
+if (!LoadFileAsItemList(&cmplist,file,a,pp))
    {
-   tmplen = strlen(ip->name);
-
-   if ((finmem = realloc(finmem, fip+tmplen+1)) == NULL)
-      {
-      Debug("CompareToFile(%s): can't realloc() memory\n",file);
-      free(finmem);
-      return false;
-      }
-   
-   memcpy(finmem+fip, ip->name, tmplen);
-   fip += tmplen;
-   *(finmem+fip++) = '\n';
-   }
-
-if (statbuf.st_size != fip)
-   {
-   Debug("CompareToFile(%s): sizes are different: MEM:(%u) FILE:(%u)\n",file, fip, statbuf.st_size);
-   free(finmem);
    return false;
    }
 
-if ((fp = fopen(file,"r")) == NULL)
+if (!ItemListsEqual(cmplist,liststart))
    {
-   CfOut(cf_error,"fopen","Couldn't read file %s for editing\n",file);
-   free(finmem);
+   DeleteItemList(cmplist);
    return false;
    }
 
-for (idx = 0; idx < fip; idx++)
-   {
-   if (fread(&fdata, 1, 1, fp) != 1)
-      {
-      Debug("CompareToFile(%s): non-zero fread() before file-in-mem finished at %u-th byte MEM:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx));
-      free(finmem);
-      fclose(fp);
-      return false;
-      }
-   
-   if (fdata != *(finmem+idx))
-      {
-      Debug("CompareToFile(%s): difference found at %u-th byte MEM:(0x%x/%c) != FILE:(0x%x/%c)\n",file, idx, *(finmem+idx), *(finmem+idx), fdata, fdata);
-      free(finmem);
-      fclose(fp);
-      return false;
-      }
-   }
-
-free(finmem);
-fclose(fp);
+DeleteItemList(cmplist);
 return (true);
 }

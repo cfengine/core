@@ -935,10 +935,12 @@ switch(type)
           {
           svp = (struct ServerItem *)rp->item;
           ServerDisconnection(svp->conn);
+          
           if (svp->server)
              {
              free(svp->server);
              }
+
           rp->item = NULL;
           }
 

@@ -581,7 +581,7 @@ for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
           else
              {
              Debug("Illegal character found: '%c'\n", *sp);
-             yyerror("Illegal character somewhere in variable or nested expansion");
+             CfOut(cf_error,"","Illegal character somewhere in variable \"%s\" or nested expansion",str);
              }
       }
    

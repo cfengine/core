@@ -44,7 +44,7 @@ if ((ap = (struct cfagent_connection *)malloc(sizeof(struct cfagent_connection))
    }
 
 Debug("New server connection...\n");
-ap->sd = CF_NOT_CONNECTED;
+ap->sd = (int)CF_NOT_CONNECTED;
 ap->family = AF_INET; 
 ap->trust = false;
 ap->localip[0] = '\0';

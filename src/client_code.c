@@ -1178,7 +1178,8 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
   
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
-   conn = (struct cfagent_connection *)rp->item;
+   svp = (struct ServerItem *)rp->item;
+   conn = svp->conn;
 
    if (strcmp(ipname,conn->localip) == 0)
       {

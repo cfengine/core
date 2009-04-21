@@ -949,7 +949,7 @@ arrayname = finalargs->item;
 if (strstr(arrayname,"."))
    {
    scopeid[0] = '\0';
-   sscanf(arrayname,"%[^.].%s",scopeid,lval);
+   sscanf(arrayname,"%[^127.].%127s",scopeid,lval);
    }
 else
    {
@@ -968,7 +968,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   snprintf(match,CF_BUFSIZE,"%s[",lval);
+   snprintf(match,CF_MAXVARSIZE-1,"%127s[",lval);
 
    if (ptr->hashtable[i] != NULL)
       {
@@ -976,7 +976,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          {
          char *sp;
          index[0] = '\0';
-         sscanf(ptr->hashtable[i]->lval+strlen(match),"%s",index);
+         sscanf(ptr->hashtable[i]->lval+strlen(match),"%127s",index);
 
          if (sp = strchr(index,']'))
             {

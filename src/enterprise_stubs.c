@@ -479,7 +479,7 @@ Nova_VerifyRegistryPromise(a,pp);
 
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA && defined HAVE_LIBLDAP
  return Nova_LDAPValue(uri,dn,filter,name,scope,sec);
 #else
  CfOut(cf_error,"","LDAP support available in Nova and above");
@@ -491,7 +491,7 @@ return NULL;
 
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA && defined HAVE_LIBLDAP
  return Nova_LDAPList(uri,dn,filter,name,scope,sec);
 #else
  CfOut(cf_error,"","LDAP support available in Nova and above");

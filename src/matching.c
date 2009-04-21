@@ -485,6 +485,12 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    match_start = teststring + ovector[0];
    match_len = ovector[1] - ovector[0];
 
+   if (rc > 1)
+      {
+      DeleteScope("match");
+      NewScope("match");
+      }
+   
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
       char substring[1024];
@@ -524,6 +530,9 @@ else
 
 if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    {
+   DeleteScope("match");
+   NewScope("match");
+
    for (i = 1; i < 2; i++) /* make backref vars $(1),$(2) etc */
       {
       int backref_len;

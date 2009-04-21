@@ -208,6 +208,14 @@ if (expandregex) /* Expand one regex link and hand down */
             {
             struct Promise *pcopy;
             CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
+
+            /* Now need to recompute any back references to get the complete path */
+            
+            if (!FullTextMatch(pp->promiser,nextbuffer))
+               {
+               CfOut(cf_error,"","Error recomputing references");
+               }
+
             /* If there were back references there could still be match.x vars to expand */
             pcopy = DeRefCopyPromise(CONTEXTID,pp);
             (*fnptr)(nextbuffer,pcopy);

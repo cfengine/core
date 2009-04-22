@@ -330,6 +330,7 @@ enum cfscontrol
    cfs_auditing,
    cfs_bindtointerface,
    cfs_serverfacility,
+   cfs_portnumber,
    cfs_notype,
    };
 

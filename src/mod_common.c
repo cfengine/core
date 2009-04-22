@@ -234,6 +234,7 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"auditing",cf_opts,CF_BOOL,"true/false activate auditing of server connections"},
    {"bindtointerface",cf_str,"","IP of the interface to which the server should bind on multi-homed hosts"},
    {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
+   {"port",cf_int,"1024,99999","Default port for cfengine server"},
    {NULL,cf_notype,NULL,NULL}
    };
 

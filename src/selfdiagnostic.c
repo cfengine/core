@@ -171,6 +171,25 @@ void TestExpandVariables()
   struct Constraint *cp;
   struct FnCall *fp;
 
+#ifndef NT
+if (getuid() > 0)
+   {
+   strncpy(CFWORKDIR,GetHome(getuid()),CF_BUFSIZE-10);
+   strcat(CFWORKDIR,"/.cfagent");
+   
+   if (strlen(CFWORKDIR) > CF_BUFSIZE/2)
+      {
+      FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
+      }
+   }
+else
+   {
+   strcpy(CFWORKDIR,WORKDIR);
+   }
+#else
+strcpy(CFWORKDIR,WORKDIR);
+#endif
+  
 /* Still have diagnostic scope */
 NewScope("control_common");
   
@@ -224,6 +243,8 @@ printf("%d. Testing regular expression engine\n",++NR);
 printf(" -> Regex engine is the Perl Compatible Regular Expression library\n");
 #else
 printf(" -> Regex engine is the POSIX Regular Expression library\n");
+printf(" !! Note if any of these tests hang, we recommend using the PCRE library\n");
+printf(" !! as the POSIX implementation suffers from memory corruption\n");
 #endif
 
 rex = CompileRegExp("#.*");

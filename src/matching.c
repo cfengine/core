@@ -278,6 +278,7 @@ struct CfRegEx CompileRegExp(char *regexp)
  int erroffset;
 
 memset(&this,0,sizeof(struct CfRegEx)); 
+
 rx = pcre_compile(regexp,0,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
@@ -296,7 +297,7 @@ else
  regex_t rx;
  int code;
 
-memset(&this,0,sizeof(struct CfRegEx)); 
+memset(&this,0,sizeof(struct CfRegEx));
 
 code = regcomp(&rx,regexp,REG_EXTENDED);
 
@@ -305,7 +306,7 @@ if (code != 0)
    char buf[CF_BUFSIZE];
    regerror(code,&rx,buf,CF_BUFSIZE-1);
    Chop(buf);
-   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code, regexp,buf);
+   CfOut(cf_error,"regerror","Regular expression error %d for %s: %s\n", code,regexp,buf);
    this.failed = true;
    }
 else
@@ -424,7 +425,7 @@ else
  regex_t rx = rex.rx;
  regmatch_t pmatch[2];
  int code,i;
- 
+
 if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    {
    DeleteScope("match");
@@ -435,7 +436,7 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
       int backref_len;
       char substring[1024];
       char lval[4];
-      int s,e;
+      regoff_t s,e;
       s = (int)pmatch[i].rm_so;
       e = (int)pmatch[i].rm_eo;
       backref_len = e - s;
@@ -457,8 +458,14 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
 else
    {
    char buf[CF_BUFSIZE];
-   regerror(code,&rx,buf,CF_BUFSIZE-1);
-   Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+   
+   if (DEBUG)
+      {
+      buf[0] = '\0';
+      regerror(code,&rx,buf,CF_BUFSIZE-1);
+      Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+      }
+   
    *start = 0;
    *end = 0;
    regfree(&rx);
@@ -569,8 +576,13 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
 else
    {
    char buf[CF_BUFSIZE];
-   regerror(code,&rx,buf,CF_BUFSIZE-1);
-   Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+
+   if (DEBUG)
+      {
+      regerror(code,&rx,buf,CF_BUFSIZE-1);
+      Debug("Regular expression error %d for %s: %s\n", code,rex.regexp,buf);
+      }
+   
    regfree(&rx);
    return false;
    }
@@ -642,6 +654,8 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
       break;
       }
    }
+
+regfree(&rx);
 
 #endif
 

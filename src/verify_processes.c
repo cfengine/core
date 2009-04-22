@@ -193,14 +193,14 @@ if (a.process_count.min_range != CF_NOINT) /* if a range is specified */
    {
    if (matches < a.process_count.min_range || matches > a.process_count.max_range)
       {
-      cfPS(cf_error,CF_CHG,"",pp,a,"Process count for \'%s\' was out of promised range\n",pp->promiser);
+      cfPS(cf_error,CF_CHG,"",pp,a," !! Process count for \'%s\' was out of promised range (%d found)\n",pp->promiser,matches);
       AddEphemeralClasses(a.process_count.out_of_range_define);
       out_of_range = true;
       }
    else
       {
       AddEphemeralClasses(a.process_count.in_range_define);
-      cfPS(cf_verbose,CF_NOP,"",pp,a," - Process promise for %s is kept",pp->promiser);
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Process promise for %s is kept",pp->promiser);
       out_of_range = false;
       }
 
@@ -275,18 +275,11 @@ int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attribute
   int end[CF_PROCCOLS];
   struct CfRegEx rex;
   
-rex = CompileRegExp(pp->promiser);
-
-if (rex.failed)
-   {
-   return 0;
-   }
-
 GetProcessColumnNames(procdata->name,(char **)names,start,end); 
 
 for (ip = procdata->next; ip != NULL; ip=ip->next)
    {
-   if (RegExMatchSubString(rex,ip->name,&s,&e))
+   if (BlockTextMatch(pp->promiser,ip->name,&s,&e))
       {
       if (!SelectProcess(ip->name,names,start,end,a,pp))
          {
@@ -338,7 +331,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
       
-      sprintf(saveuid,"%d",pid);
+      snprintf(saveuid,15,"%d",(int)pid);
       PrependItem(killlist,saveuid,"");
       SetItemListCounter(*killlist,saveuid,pid);
       }

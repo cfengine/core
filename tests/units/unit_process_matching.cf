@@ -19,7 +19,7 @@ processes:
 
  ".*"
 
-    process_select  => proc_finder("k.*"),
+    process_select  => proc_finder("a.*"),
     process_count   => up("cfservd");
 }
 

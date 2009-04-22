@@ -410,15 +410,15 @@ if (strcmp(scope,"mon") == 0)
          }
       
       snprintf(varname,CF_MAXVARSIZE,"value_%s",OBS[i][0]);
-      fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
+      fprintf(fout,"\n@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
       fprintf(fout,"Observational measure collected every 2.5 minutes from cf-monitord, description: @var{%s}.",OBS[i][1]);
       
       snprintf(varname,CF_MAXVARSIZE,"average_%s",OBS[i][0]);
-      fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
+      fprintf(fout,"\n@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
       fprintf(fout,"Observational measure collected every 2.5 minutes from cf-monitord, description: @var{%s}.",OBS[i][1]);
       
       snprintf(varname,CF_MAXVARSIZE,"stddev_%s",OBS[i][0]);
-      fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
+      fprintf(fout,"\n@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,varname,scope,varname);
       fprintf(fout,"Observational measure collected every 2.5 minutes from cf-monitord, description: @var{%s}.",OBS[i][1]);
       }
    }

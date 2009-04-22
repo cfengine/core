@@ -701,13 +701,6 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
   struct CfRegEx rex;
   struct Item *ip;
  
-rex = CompileRegExp(pp->promiser);
-
-if (rex.failed)
-   {
-   return false;
-   }
-
 if (a.replace.occurrences && strcmp(a.replace.occurrences,"first") == 0)
    {
    once_only = true;
@@ -720,7 +713,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       continue;
       }
 
-   if (!RegExMatchSubString(rex,ip->name,&start_off,&end_off))
+   if (!BlockTextMatch(pp->promiser,ip->name,&start_off,&end_off))
       {
       continue;
       }

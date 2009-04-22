@@ -28,6 +28,14 @@ databases:
 #    database_rows => { "value1,REG_SZ,new value 1", "value2,REG_SZ,new val 2"} ,
 #    database_type     => "ms_registry";
 
+
+  "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+
+    database_operation => "delete", 
+    database_columns => { "value1", "value2" } ,
+    database_type => "ms_registry";
+
+
 # "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
 
 #    database_operation => "cache",   # cache,restore

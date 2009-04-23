@@ -399,7 +399,6 @@ extern short PARSING;
 extern short SHOWDB;
 extern short ISCFENGINE;
 
-extern short LASTSEEN;
 extern short VERBOSE;
 extern short EXCLAIM;
 extern short INFORM;

@@ -285,7 +285,7 @@ void LastSaw(char *hostname,enum roles role)
   time_t now = time(NULL);
   struct QPoint q,newq;
   double lastseen,delta2;
-  int lsea = LASTSEENEXPIREAFTER;
+  int lsea = LASTSEENEXPIREAFTER, intermittency = false;
 
 if (strlen(hostname) == 0)
    {
@@ -293,9 +293,9 @@ if (strlen(hostname) == 0)
    return;
    }
 
-if (!BooleanControl("control_agent",CFA_CONTROLBODY[cfa_lastseen].lval))
+if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
    {
-   return;
+   intermittency = true;
    }
 
 Debug("LastSeen(%s) reg\n",hostname);
@@ -309,12 +309,15 @@ if (!OpenDB(name,&dbp))
    return;
    }
 
-/* Now open special file for peer entropy record - INRIA intermittency */
-snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
-
-if (!OpenDB(name,&dbpent))
+if (intermittency)
    {
-   return;
+   /* Open special file for peer entropy record - INRIA intermittency */
+   snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
+   
+   if (!OpenDB(name,&dbpent))
+      {
+      return;
+      }
    }
 
 #ifdef HAVE_PTHREAD_H  
@@ -375,7 +378,11 @@ if (lastseen > (double)lsea)
 else
    {
    WriteDB(dbp,databuf,&newq,sizeof(newq));
-   WriteDB(dbpent,GenTimeKey(now),&newq,sizeof(newq));
+
+   if (intermittency)
+      {
+      WriteDB(dbpent,GenTimeKey(now),&newq,sizeof(newq));
+      }
    }
 
 #ifdef HAVE_PTHREAD_H  
@@ -386,8 +393,12 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
    }
 #endif
 
+if (intermittency)
+   {
+   dbpent->close(dbpent,0);
+   }
+
 dbp->close(dbp,0);
-dbpent->close(dbpent,0);
 }
 
 /*****************************************************************************/

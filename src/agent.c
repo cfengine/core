@@ -548,6 +548,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       
       continue;
       }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_lastseen].lval) == 0)
+      {
+      LASTSEEN = GetBoolean(retval);
+      CfOut(cf_verbose,"","SET lastseen to %d",LASTSEEN);
+      continue;
+      }
    }
 
 if (GetVariable("control_common","CFG_CONTROLBODY[cfg_lastseenexpireafter]",&retval,&rettype) != cf_notype)

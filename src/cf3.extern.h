@@ -77,6 +77,7 @@ extern time_t PROMISETIME;
 extern int ABORTBUNDLE;
 extern struct Item *ABORTBUNDLEHEAP;
 extern int LASTSEENEXPIREAFTER;
+extern int LASTSEEN;
 extern char *DEFAULT_COPYTYPE;
 extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;

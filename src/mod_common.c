@@ -199,6 +199,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"ifelapsed",cf_int,CF_VALRANGE,"Global default for time that must elapse before promise will be rechecked"},
    {"inform",cf_opts,CF_BOOL,"true/false set inform level default"},
    {"lastseen",cf_opts,CF_BOOL,"true/false record last observed time for all client-server connections (true)"},
+   {"intermittency",cf_opts,CF_BOOL,"true/false store detailed recordings of last observed time for all client-server connections for reliability assessment (false)"},
    {"max_children",cf_int,CF_VALRANGE,"Maximum number of background tasks that should be allowed concurrently"},
    {"mountfilesystems",cf_opts,CF_BOOL,"true/false mount any filesystems promised"},
    {"nonalphanumfiles",cf_opts,CF_BOOL,"true/false warn about filenames with no alphanumeric content"},

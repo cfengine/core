@@ -190,17 +190,15 @@ else
             {
             PreviewProtocolLine(line,execstr);
             }
-         else 
+
+         if (a.module)
             {
-            if (a.module)
-               {
-               ModuleProtocol(comm,line,!a.contain.nooutput);
-               }
-            else if (!a.contain.nooutput && NonEmptyLine(line))
-               {
-               CfOut(cf_error,"","Q \"...%s\": %s\n",comm,line);
-               count++;
-               }
+            ModuleProtocol(comm,line,!a.contain.nooutput);
+            }
+         else if (!a.contain.nooutput && NonEmptyLine(line))
+            {
+            CfOut(cf_error,"","Q \"...%s\": %s\n",comm,line);
+            count++;
             }
          }
       

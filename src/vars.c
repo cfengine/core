@@ -74,8 +74,11 @@ void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
  
 Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
-sp1 = strdup(lval);
-sp2 = strdup((char *)rval);
+//sp1 = strdup(lval);
+//sp2 = strdup((char *)rval);
+
+sp1 = lval;
+sp2 = rval;
 
 AddVariableHash(scope,sp1,sp2,CF_SCALAR,dt,NULL,0);
 }

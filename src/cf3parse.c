@@ -1674,7 +1674,7 @@ yyreduce:
   case 51:
 #line 338 "cf3parse.y"
     {
-                         P.lval = P.currentid; // strdup(P.currentid);
+                         P.lval = P.currentid; //strdup(P.currentid);
                          P.currentRlist = NULL;
                          Debug("Recorded LVAL %s\n",P.lval);
                          }
@@ -1762,7 +1762,7 @@ yyreduce:
   case 66:
 #line 420 "cf3parse.y"
     {
-                          P.promiser = strdup(P.currentstring);
+                          P.promiser = P.currentstring;//strdup(P.currentstring);
                           Debug("Promising object name \'%s\'\n",P.promiser);
                           }
     break;
@@ -1781,7 +1781,7 @@ yyreduce:
                               {
                               yyerror("Nesting of functions is deeper than recommended");
                               }
-                           P.currentfnid[P.arg_nesting] = strdup(P.currentid);
+                           P.currentfnid[P.arg_nesting] = P.currentid; //strdup(P.currentid);
                            Debug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                            }
     break;

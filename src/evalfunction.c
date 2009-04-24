@@ -968,7 +968,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   snprintf(match,CF_MAXVARSIZE-1,"%127s[",lval);
+   snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
 
    if (ptr->hashtable[i] != NULL)
       {

@@ -636,7 +636,7 @@ int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char typ
 
 Debug2("FileChecksum(%c,%s)\n",type,filename);
 
-if ((file = fopen (filename, "rb")) == NULL)
+if ((file = fopen(filename,"rb")) == NULL)
    {
    printf ("%s can't be opened\n", filename);
    }

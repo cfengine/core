@@ -365,7 +365,6 @@ typedef int clockid_t;
 #define CF_AVDB_FILE      "cf_observations.db"
 #define CF_OLDAVDB_FILE   "cf_learning.db"
 #define CF_STATEDB_FILE   "cf_state.db"
-#define CF_OLDLASTDB_FILE "cf_lastseen.db"
 #define CF_LASTDB_FILE    "cf_LastSeen.db"
 #define CF_AUDITDB_FILE   "cf_Audit.db"
 

@@ -412,6 +412,7 @@ int NewPromiseProposals()
 
 { struct Rlist *rp,*sl;
   struct stat sb;
+  int result = false;
 
 if (stat(InputLocation(VINPUTFILE),&sb) == -1)
    {
@@ -443,37 +444,47 @@ if (VINPUTLIST != NULL)
                 if (stat(InputLocation((char *)returnval.item),&sb) == -1)
                    {
                    CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)returnval.item);
-                   return false;
+                   break;
                    }
 
                 if (sb.st_mtime > PROMISETIME)
                    {
-                   return true;
+                   result = true;                   
                    }
                 
                 break;
                 
             case CF_LIST:
+
                 for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
                    if (stat(InputLocation((char *)returnval.item),&sb) == -1)
                       {
                       CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl->item);
-                      return false;
+                      break;
                       }
 
                    if (sb.st_mtime > PROMISETIME)
                       {
-                      return true;
+                      result = true;
+                      break;
                       }
                    }
+                
                 break;
+            }
+         
+         DeleteRvalItem(returnval.item,returnval.rtype);
+
+         if (result)
+            {
+            break;
             }
          }
       }
    }
 
-return false;
+return result;
 }
 
 /*******************************************************************/

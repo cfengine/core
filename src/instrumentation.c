@@ -295,14 +295,14 @@ if (strlen(hostname) == 0)
 
 if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
    {
+   CfOut(cf_inform,""," -> Recording intermittency");
    intermittency = true;
    }
 
-Debug("LastSeen(%s) reg\n",hostname);
+CfOut(cf_verbose,"","LastSaw host %s now\n",hostname);
 
 /* Tidy old versions - temporary */
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_OLDLASTDB_FILE);
-unlink(name);
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 if (!OpenDB(name,&dbp))
    {

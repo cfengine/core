@@ -416,7 +416,7 @@ else
    {
    *start = 0;
    *end = 0;
-   //pcre_free(rx); - don't understand this seg fault
+   pcre_free(rx);
    return false;
    }
 
@@ -512,7 +512,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       }
 
    pcre_free(rx);
-   
+      
    if ((match_start == teststring) && (match_len == strlen(teststring)))
       {
       return true;
@@ -524,7 +524,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    }
 else
    {
-   //pcre_free(rx); don't understand segfault
+   pcre_free(rx);
    return false;
    }
 
@@ -666,6 +666,7 @@ if (strlen(backreference) == 0)
 
 return backreference;
 }
+
 
 /*********************************************************************/
 /* Enumerated languages - fuzzy match model                          */

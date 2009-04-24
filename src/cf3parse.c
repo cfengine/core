@@ -1674,7 +1674,7 @@ yyreduce:
   case 51:
 #line 338 "cf3parse.y"
     {
-                         P.lval = strdup(P.currentid);
+                         P.lval = P.currentid; // strdup(P.currentid);
                          P.currentRlist = NULL;
                          Debug("Recorded LVAL %s\n",P.lval);
                          }

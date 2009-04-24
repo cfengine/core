@@ -505,6 +505,7 @@ if (pp->next != NULL)
    }
 
 free(pp->bundle);
+
 DeletePromise(pp);
 }
 
@@ -538,7 +539,7 @@ pp->inode_cache = NULL;
 pp->cache = NULL;
 
 pp->bundletype = NULL;
-pp->agentsubtype = strdup(typename);
+pp->agentsubtype = typename;   /* cache this, not copy strdup(typename);*/
 pp->ref = NULL;                /* cache a reference if given*/
 pp->next = NULL;
 return pp;

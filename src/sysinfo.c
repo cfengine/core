@@ -976,7 +976,6 @@ for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
 int Linux_Fedora_Version(void)
 {
 #define FEDORA_ID "Fedora"
-
 #define RELEASE_FLAG "release "
 
 /* We are looking for one of the following strings...
@@ -987,71 +986,70 @@ int Linux_Fedora_Version(void)
 
 #define FEDORA_REL_FILENAME "/etc/fedora-release"
 
-FILE *fp;
+ FILE *fp;
 
 /* The full string read in from fedora-release */
-char relstring[CF_MAXVARSIZE];
-char classbuf[CF_MAXVARSIZE];
-
-/* Fedora */
-char *vendor="";
-/* Where the numerical release will be found */
-char *release=NULL;
-
-int major = -1;
-char strmajor[CF_MAXVARSIZE];
+ char relstring[CF_MAXVARSIZE];
+ char classbuf[CF_MAXVARSIZE];
+ char *vendor="";
+ char *release=NULL;
+ int major = -1;
+ char strmajor[CF_MAXVARSIZE];
 
 /* Grab the first line from the file and then close it. */
- if ((fp = fopen(FEDORA_REL_FILENAME,"r")) == NULL)
-    {
-    return 1;
-    }
- fgets(relstring, sizeof(relstring), fp);
- fclose(fp);
+
+if ((fp = fopen(FEDORA_REL_FILENAME,"r")) == NULL)
+   {
+   return 1;
+   }
+
+fgets(relstring, sizeof(relstring), fp);
+fclose(fp);
  
- CfOut(cf_verbose,"","Looking for fedora core linux info...\n");
+CfOut(cf_verbose,"","Looking for fedora core linux info...\n");
  
- /* First, try to grok the vendor */
- if(!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
-    {
-    vendor = "fedora";
-    }
- else
-    {
-    CfOut(cf_verbose,"","Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
-    return 2;
-    }
- 
- /* Now, grok the release.  We assume that all the strings will
-  * have the word 'release' before the numerical release.
-  */
- release = strstr(relstring, RELEASE_FLAG);
- if(release == NULL)
-    {
-    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",
-     FEDORA_REL_FILENAME);
-    return 2;
-    }
- else
-    {
-    release += strlen(RELEASE_FLAG);
-    if (sscanf(release, "%d", &major) == 1)
-       {
-       sprintf(strmajor, "%d", major);
-       }
-    }
- 
- if (major != -1 && (strcmp(vendor,"") != 0))
-    {
-    classbuf[0] = '\0';
-    strcat(classbuf, vendor);
-    NewClass(classbuf);
-    strcat(classbuf, "_");
-    strcat(classbuf, strmajor);
-    NewClass(classbuf);
-    }
- 
- return 0;
+if (!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
+   {
+   vendor = "fedora";
+   }
+else
+   {
+   CfOut(cf_verbose,"","Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
+   return 2;
+   }
+
+/* Now, grok the release.  We assume that all the strings will
+ * have the word 'release' before the numerical release.
+ */
+
+release = strstr(relstring, RELEASE_FLAG);
+
+if(release == NULL)
+   {
+   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",FEDORA_REL_FILENAME);
+   return 2;
+   }
+else
+   {
+   release += strlen(RELEASE_FLAG);
+   
+   if (sscanf(release, "%d", &major) != 0)
+      {
+      sprintf(strmajor, "%d", major);
+      }
+   }
+
+if (major != -1 && (strcmp(vendor,"") != 0))
+   {
+   classbuf[0] = '\0';
+   strcat(classbuf, vendor);
+   NewClass(classbuf);
+   strcat(classbuf, "_");
+   strcat(classbuf, strmajor);
+   NewClass(classbuf);
+   }
+
+return 0;
 }
 
 /*********************************************************************************/
@@ -1109,147 +1107,149 @@ int minor = -1;
 char strminor[CF_MAXVARSIZE];
 
 /* Grab the first line from the file and then close it. */
- if ((fp = fopen(RH_REL_FILENAME,"r")) == NULL)
+
+if ((fp = fopen(RH_REL_FILENAME,"r")) == NULL)
     {
     return 1;
     }
- fgets(relstring, sizeof(relstring), fp);
- fclose(fp);
- 
-CfOut(cf_verbose,"","Looking for redhat linux info in \"%s\"\n",relstring);
- 
- /* First, try to grok the vendor and the edition (if any) */
- if(!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
-    {
-    vendor = "redhat";
-    edition = "es";
-    }
- else if(!strncmp(relstring, REDHAT_WS_ID, strlen(REDHAT_WS_ID)))
-    {
-    vendor = "redhat";
-    edition = "ws";
-    }
- else if(!strncmp(relstring, REDHAT_WS_ID, strlen(REDHAT_WS_ID)))
-    {
-    vendor = "redhat";
-    edition = "ws";
-    }
- else if(!strncmp(relstring, REDHAT_AS_ID, strlen(REDHAT_AS_ID)) ||
-  !strncmp(relstring, REDHAT_AS21_ID, strlen(REDHAT_AS21_ID)))
-    {
-    vendor = "redhat";
-    edition = "as";
-    }
- else if(!strncmp(relstring, REDHAT_S_ID, strlen(REDHAT_S_ID)))
-    {
-    vendor = "redhat";
-    edition = "s";
-    }
- else if(!strncmp(relstring, REDHAT_C_ID, strlen(REDHAT_C_ID)))
-    {
-    vendor = "redhat";
-    edition = "c";
-    }
- else if(!strncmp(relstring, REDHAT_ID, strlen(REDHAT_ID)))
-    {
-    vendor = "redhat";
-    }
- else if(!strncmp(relstring, MANDRAKE_ID, strlen(MANDRAKE_ID)))
-    {
-    vendor = "mandrake";
-    }
- else if(!strncmp(relstring, MANDRAKE_10_1_ID, strlen(MANDRAKE_10_1_ID)))
-    {
-    vendor = "mandrake";
-    }
- else if(!strncmp(relstring, WHITEBOX_ID, strlen(WHITEBOX_ID)))
-    {
-    vendor = "whitebox";
-    }
- else if(!strncmp(relstring, SCIENTIFIC_SL_ID, strlen(SCIENTIFIC_SL_ID)))
-    {
-    vendor = "scientific";
-    edition = "sl";
-    }
- else if(!strncmp(relstring, SCIENTIFIC_CERN_ID, strlen(SCIENTIFIC_CERN_ID)))
-    {
-    vendor = "scientific";
-    edition = "cern";
-    }
- else if(!strncmp(relstring, CENTOS_ID, strlen(CENTOS_ID)))
-    {
-    vendor = "centos";
-    }
- else
-    {
-    CfOut(cf_verbose,"","Could not identify OS distro from %s\n", RH_REL_FILENAME);
-    return 2;
-    }
- 
- /* Now, grok the release.  For AS, we neglect the AS at the end of the
-  * numerical release because we already figured out that it *is* AS
-  * from the infomation above.  We assume that all the strings will
-  * have the word 'release' before the numerical release.
-  */
 
-  /* Convert relstring to lowercase so that vendors like
-     Scientific Linux don't fall through the cracks.
+fgets(relstring, sizeof(relstring), fp);
+fclose(fp);
+
+CfOut(cf_verbose,"","Looking for redhat linux info in \"%s\"\n",relstring);
+
+/* First, try to grok the vendor and the edition (if any) */
+if (!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
+   {
+   vendor = "redhat";
+   edition = "es";
+   }
+else if(!strncmp(relstring, REDHAT_WS_ID, strlen(REDHAT_WS_ID)))
+   {
+   vendor = "redhat";
+   edition = "ws";
+   }
+else if(!strncmp(relstring, REDHAT_WS_ID, strlen(REDHAT_WS_ID)))
+   {
+   vendor = "redhat";
+   edition = "ws";
+   }
+else if(!strncmp(relstring, REDHAT_AS_ID, strlen(REDHAT_AS_ID)) ||
+        !strncmp(relstring, REDHAT_AS21_ID, strlen(REDHAT_AS21_ID)))
+   {
+   vendor = "redhat";
+   edition = "as";
+   }
+else if(!strncmp(relstring, REDHAT_S_ID, strlen(REDHAT_S_ID)))
+   {
+   vendor = "redhat";
+   edition = "s";
+   }
+else if(!strncmp(relstring, REDHAT_C_ID, strlen(REDHAT_C_ID)))
+   {
+   vendor = "redhat";
+   edition = "c";
+   }
+else if(!strncmp(relstring, REDHAT_ID, strlen(REDHAT_ID)))
+   {
+   vendor = "redhat";
+   }
+else if(!strncmp(relstring, MANDRAKE_ID, strlen(MANDRAKE_ID)))
+   {
+   vendor = "mandrake";
+   }
+else if(!strncmp(relstring, MANDRAKE_10_1_ID, strlen(MANDRAKE_10_1_ID)))
+   {
+   vendor = "mandrake";
+   }
+else if(!strncmp(relstring, WHITEBOX_ID, strlen(WHITEBOX_ID)))
+   {
+   vendor = "whitebox";
+   }
+else if(!strncmp(relstring, SCIENTIFIC_SL_ID, strlen(SCIENTIFIC_SL_ID)))
+   {
+   vendor = "scientific";
+   edition = "sl";
+   }
+else if(!strncmp(relstring, SCIENTIFIC_CERN_ID, strlen(SCIENTIFIC_CERN_ID)))
+   {
+   vendor = "scientific";
+   edition = "cern";
+   }
+else if(!strncmp(relstring, CENTOS_ID, strlen(CENTOS_ID)))
+   {
+   vendor = "centos";
+   }
+else
+   {
+   CfOut(cf_verbose,"","Could not identify OS distro from %s\n", RH_REL_FILENAME);
+   return 2;
+   }
+
+/* Now, grok the release.  For AS, we neglect the AS at the end of the
+ * numerical release because we already figured out that it *is* AS
+ * from the infomation above.  We assume that all the strings will
+ * have the word 'release' before the numerical release.
+ */
+
+/* Convert relstring to lowercase so that vendors like
+   Scientific Linux don't fall through the cracks.
    */
 
- for (i = 0; i < strlen(relstring); i++)
-    {
-    relstring[i] = tolower(relstring[i]);
-    }
- 
- release = strstr(relstring, RELEASE_FLAG);
- if(release == NULL)
-    {
-    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",
-     RH_REL_FILENAME);
-    return 2;
-    }
- else
-    {
-    release += strlen(RELEASE_FLAG);
-    if (sscanf(release, "%d.%d", &major, &minor) == 2)
-       {
-       sprintf(strmajor, "%d", major);
-       sprintf(strminor, "%d", minor);
-       }
-    /* red hat 9 is *not* red hat 9.0. 
-     * and same thing with RHEL AS 3
-     */
-    else if (sscanf(release, "%d", &major) == 1)
-       {
-       sprintf(strmajor, "%d", major);
-       minor = -2;
-       }
-    }
- 
- if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
-    {
-    classbuf[0] = '\0';
-    strcat(classbuf, vendor);
-    NewClass(classbuf);
-    strcat(classbuf, "_");
+for (i = 0; i < strlen(relstring); i++)
+   {
+   relstring[i] = tolower(relstring[i]);
+   }
+
+release = strstr(relstring, RELEASE_FLAG);
+if(release == NULL)
+   {
+   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",
+         RH_REL_FILENAME);
+   return 2;
+   }
+else
+   {
+   release += strlen(RELEASE_FLAG);
+   if (sscanf(release, "%d.%d", &major, &minor) == 2)
+      {
+      sprintf(strmajor, "%d", major);
+      sprintf(strminor, "%d", minor);
+      }
+   /* red hat 9 is *not* red hat 9.0. 
+    * and same thing with RHEL AS 3
+    */
+   else if (sscanf(release, "%d", &major) == 1)
+      {
+      sprintf(strmajor, "%d", major);
+      minor = -2;
+      }
+   }
+
+if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
+   {
+   classbuf[0] = '\0';
+   strcat(classbuf, vendor);
+   NewClass(classbuf);
+   strcat(classbuf, "_");
     
-    if (strcmp(edition,"") != 0)
-       {
-       strcat(classbuf, edition);
-       NewClass(classbuf);
-       strcat(classbuf, "_");
-       }
-    
-    strcat(classbuf, strmajor);
-    NewClass(classbuf);
-    if (minor != -2)
-       {
-       strcat(classbuf, "_");
-       strcat(classbuf, strminor);
-       NewClass(classbuf);
-       }
-    }
- return 0;
+   if (strcmp(edition,"") != 0)
+      {
+      strcat(classbuf, edition);
+      NewClass(classbuf);
+      strcat(classbuf, "_");
+      }
+   
+   strcat(classbuf, strmajor);
+   NewClass(classbuf);
+   if (minor != -2)
+      {
+      strcat(classbuf, "_");
+      strcat(classbuf, strminor);
+      NewClass(classbuf);
+      }
+   }
+return 0;
 }
 
 /******************************************************************/
@@ -1278,7 +1278,7 @@ char strminor[CF_MAXVARSIZE];
 
 FILE *fp;
 
- /* Grab the first line from the file and then close it. */
+/* Grab the first line from the file and then close it. */
 
 if ((fp = fopen(SUSE_REL_FILENAME,"r")) == NULL)
    {
@@ -1288,7 +1288,7 @@ if ((fp = fopen(SUSE_REL_FILENAME,"r")) == NULL)
 fgets(relstring, sizeof(relstring), fp);
 Chop(relstring);
 fclose(fp);
-  
+
    /* Check if it's a SuSE Enterprise version  */
 
 CfOut(cf_verbose,"","Looking for SuSE enterprise info in \"%s\"\n",relstring);
@@ -1443,8 +1443,8 @@ return 0;
 /******************************************************************/
 
 int Linux_Mandrake_Version(void)
-{
 
+{
 /* We are looking for one of the following strings... */
 #define MANDRAKE_ID "Linux Mandrake"
 #define MANDRAKE_REV_ID "Mandrake Linux"
@@ -1453,92 +1453,84 @@ int Linux_Mandrake_Version(void)
 #define RELEASE_FLAG "release "
 #define MANDRAKE_REL_FILENAME "/etc/mandrake-release"
 
-FILE *fp;
+ FILE *fp;
+ char relstring[CF_MAXVARSIZE];
+ char classbuf[CF_MAXVARSIZE];
+ char *release=NULL;
+ char *vendor=NULL;
+ int major = -1;
+ char strmajor[CF_MAXVARSIZE];
+ int minor = -1;
+ char strminor[CF_MAXVARSIZE];
+ 
+if ((fp = fopen(MANDRAKE_REL_FILENAME,"r")) == NULL)
+   {
+   return 1;
+   }
 
-/* The full string read in from mandrake-release */
-char relstring[CF_MAXVARSIZE];
-char classbuf[CF_MAXVARSIZE];
+fgets(relstring, sizeof(relstring), fp);
+fclose(fp);
 
-/* I've never seen Mandrake-Move or the other 'editions', so
-   I'm not going to try and support them here.  Contributions welcome. */
+CfOut(cf_verbose,"","Looking for Mandrake linux info in \"%s\"\n",relstring);
 
-/* Where the numerical release will be found */
-char *release=NULL;
-char *vendor=NULL;
-int major = -1;
-char strmajor[CF_MAXVARSIZE];
-int minor = -1;
-char strminor[CF_MAXVARSIZE];
+/* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
 
-/* Grab the first line from the file and then close it. */
- if ((fp = fopen(MANDRAKE_REL_FILENAME,"r")) == NULL)
-    {
-    return 1;
-    }
- fgets(relstring, sizeof(relstring), fp);
- fclose(fp);
+if(!strncmp(relstring, MANDRAKE_ID, strlen(MANDRAKE_ID)))
+   {
+   vendor = "mandrake";
+   }
+else if(!strncmp(relstring, MANDRAKE_REV_ID, strlen(MANDRAKE_REV_ID)))
+   {
+   vendor = "mandrake";
+   }
 
- CfOut(cf_verbose,"","Looking for Mandrake linux info in \"%s\"\n",relstring);
+else if(!strncmp(relstring, MANDRAKE_10_1_ID, strlen(MANDRAKE_10_1_ID)))
+   {
+   vendor = "mandrake";
+   }
+else
+   {
+   CfOut(cf_verbose,"","Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
+   return 2;
+   }
 
-  /* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
- if(!strncmp(relstring, MANDRAKE_ID, strlen(MANDRAKE_ID)))
-    {
-    vendor = "mandrake";
-    }
- else if(!strncmp(relstring, MANDRAKE_REV_ID, strlen(MANDRAKE_REV_ID)))
-    {
-    vendor = "mandrake";
-    }
+release = strstr(relstring, RELEASE_FLAG);
+if(release == NULL)
+   {
+   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",MANDRAKE_REL_FILENAME);
+   return 2;
+   }
+else
+   {
+   release += strlen(RELEASE_FLAG);
+   if (sscanf(release, "%d.%d", &major, &minor) == 2)
+      {
+      sprintf(strmajor, "%d", major);
+      sprintf(strminor, "%d", minor);
+      }
+   else
+      {
+      CfOut(cf_verbose,"","Could not break down release version numbers in %s\n",MANDRAKE_REL_FILENAME);
+      }
+   }
 
- else if(!strncmp(relstring, MANDRAKE_10_1_ID, strlen(MANDRAKE_10_1_ID)))
-    {
-    vendor = "mandrake";
-    }
- else
-    {
-    CfOut(cf_verbose,"","Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
-    return 2;
-    }
+if (major != -1 && minor != -1 && strcmp(vendor, ""))
+   {
+   classbuf[0] = '\0';
+   strcat(classbuf, vendor);
+   NewClass(classbuf);
+   strcat(classbuf, "_");
+   strcat(classbuf, strmajor);
+   NewClass(classbuf);
+   if (minor != -2)
+      {
+      strcat(classbuf, "_");
+      strcat(classbuf, strminor);
+      NewClass(classbuf);
+      }
+   }
 
- /* Now, grok the release. We assume that all the strings will
-  * have the word 'release' before the numerical release.
-  */
- release = strstr(relstring, RELEASE_FLAG);
- if(release == NULL)
-    {
-    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",MANDRAKE_REL_FILENAME);
-    return 2;
-    }
- else
-    {
-    release += strlen(RELEASE_FLAG);
-    if (sscanf(release, "%d.%d", &major, &minor) == 2)
-       {
-       sprintf(strmajor, "%d", major);
-       sprintf(strminor, "%d", minor);
-       }
-    else
-       {
-       CfOut(cf_verbose,"","Could not break down release version numbers in %s\n",MANDRAKE_REL_FILENAME);
-       }
-    }
-
- if (major != -1 && minor != -1 && strcmp(vendor, ""))
-    {
-    classbuf[0] = '\0';
-    strcat(classbuf, vendor);
-    NewClass(classbuf);
-    strcat(classbuf, "_");
-    strcat(classbuf, strmajor);
-    NewClass(classbuf);
-    if (minor != -2)
-       {
-       strcat(classbuf, "_");
-       strcat(classbuf, strminor);
-       NewClass(classbuf);
-       }
-    }
- return 0;
+return 0;
 }
 
 /******************************************************************/
@@ -1549,6 +1541,7 @@ void *Lsb_Release(const char *command, const char *key)
   FILE *fp;
 
 snprintf(vbuff, CF_BUFSIZE, "%s %s", command, key);
+
 if ((fp = cf_popen(vbuff, "r")) == NULL)
    {
    return NULL;
@@ -1577,7 +1570,6 @@ if (CfReadLine(vbuff, CF_BUFSIZE, fp))
 cf_pclose(fp);
 return info;
 }
-
 
 /******************************************************************/
 
@@ -1694,6 +1686,7 @@ if ((fp = fopen("/proc/vmware/version","r")) != NULL)
    }
 
 /* Fall back to checking for other files */
+
 if (sufficient < 1 && ((fp = fopen("/etc/vmware-release","r")) != NULL) ||
     (fp = fopen("/etc/issue","r")) != NULL)
    {
@@ -1736,6 +1729,7 @@ if ((fp = fopen("/proc/xen/capabilities","r")) != NULL)
          sufficient = 1;
          }
       }
+   
    if (sufficient < 1)
       {
       NewClass("xen_domu_pv");
@@ -1743,12 +1737,14 @@ if ((fp = fopen("/proc/xen/capabilities","r")) != NULL)
       }
    }
 
+fclose(fp);
 return sufficient < 1 ? 1 : 0;
 }
 
 /******************************************************************/
 
 #ifdef XEN_CPUID_SUPPORT
+
 /* borrowed from Xen source/tools/libxc/xc_cpuid_x86.c */
 
 void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)

@@ -28,8 +28,7 @@
 	canonical name for windows changed from "nt" to "windows", also version names
 	added "vista","xp" etc..
 
-        Known bug: $(match.n) variables are not properly private (only works within the
-	editline context)
+	License notices updated for dual license editions.
 	
 3.0.0
 	First release of cfengine 3. Known omissions:

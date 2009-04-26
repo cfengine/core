@@ -177,7 +177,6 @@
 /* #undef HAVE_LIBCFGALAXY */
 
 /* Define to 1 if you have the `cfnova' library (-lcfnova). */
-#define HAVE_LIBCFNOVA 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1

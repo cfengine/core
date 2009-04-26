@@ -1370,6 +1370,8 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       NewClass(CanonifyName(VDOMAIN));
       continue;
       }
+
+   DeleteRvalItem(returnval.item,returnval.rtype);
    }
 }
 

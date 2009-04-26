@@ -673,7 +673,6 @@ struct FnCall
 struct Scope                         /* $(bundlevar) $(scope.name) */
    {
    char *scope;                                 /* Name of scope */
-   char *classes;                               /* Private context classes */
    struct CfAssoc *hashtable[CF_HASHTABLESIZE]; /* Variable heap  */
    struct Scope *next;
    };

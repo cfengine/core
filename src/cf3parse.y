@@ -1,25 +1,5 @@
 
 %{
-/* 
-   Copyright (C) 2008 - Mark Burgess
-
-   This file is part of Cfengine 3 - written and maintained by Mark Burgess.
- 
-   This program is free software; you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 3, or (at your option) any
-   later version. 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License
-  
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
-*/
 
 /*******************************************************************/
 /*                                                                 */
@@ -101,6 +81,7 @@ aitems:                 aitem
 aitem:                 ID  /* recipient of argument is never a literal */
                           {
                           AppendRlist(&(P.useargs),P.currentid,CF_SCALAR);
+                          free(P.currentid);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -287,6 +268,8 @@ promise:              promiser                    /* BUNDLE ONLY */
                      constraints ';'
                         {
                         Debug("End full promise with promisee %s\n\n",P.promiser);
+
+                        /* Don't free these */
                         P.currentid = NULL;
                         P.currentRlist = NULL;
                         P.currentstring = NULL;
@@ -315,10 +298,6 @@ constraint:           id                        /* BUNDLE ONLY */
                            ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
                            AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any");
-                           /*  if (strcmp(P.lval,"comment") == 0)
-                              {
-                              P.currentpromise->ref = P.rval;
-                              }*/
                            P.rval = NULL;
                            P.lval = NULL;
                            P.currentRlist = NULL;
@@ -336,7 +315,7 @@ class:                CLASS
 
 id:                    ID
                          {
-                         P.lval = P.currentid; //strdup(P.currentid);
+                         P.lval = P.currentid;
                          P.currentRlist = NULL;
                          Debug("Recorded LVAL %s\n",P.lval);
                          }
@@ -389,22 +368,26 @@ litems:                litem
 litem:                 ID
                           {
                           AppendRlist((struct Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
+                          free(P.currentid);
                           }
 
                      | QSTRING
                           {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                          free(P.currentstring);
                           }
 
                      | NAKEDVAR
                           {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                          free(P.currentstring);
                           }
 
                      | usefunction
                           {
                           Debug("Install function call as list item from level %d\n",P.arg_nesting+1);
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                          DeleteRvalItem(P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -418,7 +401,7 @@ functionid:            ID
 
 promiser:                QSTRING
                           {
-                          P.promiser = P.currentstring;//strdup(P.currentstring);
+                          P.promiser = P.currentstring; //strdup(P.currentstring);
                           Debug("Promising object name \'%s\'\n",P.promiser);
                           };
 
@@ -447,7 +430,9 @@ givearglist:            '('
                            Debug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
+                           
                            P.currentid = NULL;
+                           free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
                            };
@@ -465,24 +450,28 @@ gaitem:               ID
                           {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
+                          free(P.currentid);
                           }
 
                      | QSTRING
                           {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
+                          free(P.currentstring);
                           }
 
                      | NAKEDVAR
                           {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
+                          free(P.currentstring);
                           }
 
                      | usefunction
                           {
                           /* Careful about recursion */
                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                          DeleteRvalItem(P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                           };
 
 %%

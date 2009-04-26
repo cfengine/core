@@ -496,31 +496,29 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "cf3lex.l"
 #line 2 "cf3lex.l"
-/* cfengine for GNU
- 
-        Copyright (C) 1995
-        Free Software Foundation, Inc.
- 
-   This file is part of GNU cfengine - written and maintained 
-   by Mark Burgess, Dept of Computing and Engineering, Oslo College,
-   Dept. of Theoretical physics, University of Oslo
+/* 
+   Copyright (C) Cfengine AS
+
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
  
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 2, or (at your option) any
-   later version.
- 
+   Free Software Foundation; version 3.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
  
-  You should have received a copy of the GNU General Public License
+  You should have received a copy of the GNU General Public License  
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 */
- 
 
 /*******************************************************************/
 /*                                                                 */
@@ -534,7 +532,7 @@ char *yytext;
 
 // Do not use lex - flex only
 
-#line 538 "lex.yy.c"
+#line 536 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -716,10 +714,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 68 "cf3lex.l"
+#line 66 "cf3lex.l"
 
 
-#line 723 "lex.yy.c"
+#line 721 "lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -805,7 +803,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 70 "cf3lex.l"
+#line 68 "cf3lex.l"
 {
                       P.line_no++;
                       P.line_pos = 0;
@@ -813,7 +811,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 75 "cf3lex.l"
+#line 73 "cf3lex.l"
 {
                       /* Note this has to come before "id" since it is a subset of id */
 
@@ -828,7 +826,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 87 "cf3lex.l"
+#line 85 "cf3lex.l"
 {
                       /* Note this has to come before "id" since it is a subset of id */
 
@@ -843,7 +841,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 99 "cf3lex.l"
+#line 97 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       P.currentid = strdup(yytext);
@@ -852,7 +850,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 106 "cf3lex.l"
+#line 104 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       return ASSIGN;
@@ -860,7 +858,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 111 "cf3lex.l"
+#line 109 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       return ARROW;
@@ -868,7 +866,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 116 "cf3lex.l"
+#line 114 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
 
@@ -884,7 +882,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 129 "cf3lex.l"
+#line 127 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       yytext[strlen(yytext)-1] = '\0';
@@ -902,7 +900,7 @@ YY_RULE_SETUP
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 143 "cf3lex.l"
+#line 141 "cf3lex.l"
 {
                       char *tmp = NULL;
                       int less = 0;
@@ -926,7 +924,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 165 "cf3lex.l"
+#line 163 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       P.currentstring = strdup(yytext);                      
@@ -935,20 +933,20 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 172 "cf3lex.l"
+#line 170 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 176 "cf3lex.l"
+#line 174 "cf3lex.l"
 {
                       }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 180 "cf3lex.l"
+#line 178 "cf3lex.l"
 {
                       P.line_pos++;
                       return yytext[0];
@@ -956,10 +954,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 186 "cf3lex.l"
+#line 184 "cf3lex.l"
 ECHO;
 	YY_BREAK
-#line 963 "lex.yy.c"
+#line 961 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1957,7 +1955,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 186 "cf3lex.l"
+#line 184 "cf3lex.l"
 
 
 

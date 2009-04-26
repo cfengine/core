@@ -73,7 +73,7 @@ if (a.mount.unmount)
       CfOut(cf_verbose,""," !! An unmount promise indicates a mount-source information - probably in error\n");
       }
    }
-else
+else if (a.havemount)
    {
    if (a.mount.mount_source == NULL || a.mount.mount_server == NULL)
       {

@@ -375,7 +375,7 @@ while (true)
       
       Debug("Obtained IP address of %s on socket %d from accept\n",ipaddr,sd_reply);
       
-      if (NONATTACKERLIST && !IsFuzzyItemIn(NONATTACKERLIST,MapAddress(ipaddr)) && !IsRegexItemIn(NONATTACKERLIST,MapAddress(ipaddr)))   /* Allowed Subnets */
+      if (NONATTACKERLIST && !IsFuzzyItemIn(NONATTACKERLIST,MapAddress(ipaddr)) && !IsRegexItemIn(NONATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Not allowing connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
@@ -622,7 +622,7 @@ void PurgeOldConnections(struct Item **list,time_t now)
       every couple of hours. That should be enough to prevent spamming. */
 
 { struct Item *ip;
- int then=0;
+  int then = 0;
 
 if (list == NULL)
    {
@@ -3056,7 +3056,8 @@ if (ap != NULL)
    ap->next = NULL;
 
    DeleteItemList(ap->accesslist);
-
+   DeleteItemList(ap->maproot);
+   free(ap->path);
    free((char *)ap);
    }
 }

@@ -562,6 +562,9 @@ if (pp->promisee != NULL)
    DeleteRvalItem(pp->promisee,pp->petype);
    }
 
+free(pp->bundle);
+free(pp->classes);
+
 // ref/agentsubtype are only references
 
 DeleteConstraintList(pp->conlist);
@@ -588,6 +591,8 @@ if (pp->classes)
    {
    free(pp->classes);
    }
+
+free(pp->bundle);
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {

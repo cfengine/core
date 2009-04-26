@@ -723,7 +723,7 @@ return cfacl_nomethod;
 
 enum cf_acl_type Str2AclType(char *string)
 
-{ static char *text[3] = { "posix", "ntfs", NULL };
+{ static char *text[4] = { "generic","posix", "ntfs", NULL };
   int i;
  
 for (i = 0; i < 3; i++)

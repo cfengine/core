@@ -863,6 +863,7 @@ enum cf_acl_method
 
 enum cf_acl_type
    {
+   cfacl_generic,
    cfacl_posix,
    cfacl_ntfs,
    cfacl_notype

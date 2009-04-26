@@ -458,7 +458,7 @@ if (VINPUTLIST != NULL)
 
                 for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
-                   if (stat(InputLocation((char *)returnval.item),&sb) == -1)
+                   if (stat(InputLocation((char *)sl->item),&sb) == -1)
                       {
                       CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl->item);
                       break;

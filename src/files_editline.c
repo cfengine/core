@@ -1087,7 +1087,7 @@ else
 
    if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
       {
-      if (a.transaction.action = cfa_warn)
+      if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_NOP,"",pp,a," -> Need to delete field field value %s in %s but only a warning was promised",rp->item,pp->this_server);
          return false;
@@ -1103,7 +1103,7 @@ else
       }
    else
       {
-      if (a.transaction.action = cfa_warn)
+      if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_NOP,"",pp,a," -> Need to set column field value %s to %s in %s but only a warning was promised",rp->item,a.column.column_value,pp->this_server);
          return false;

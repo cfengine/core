@@ -1730,14 +1730,15 @@ if ((fp = fopen("/proc/xen/capabilities","r")) != NULL)
          }
       }
    
-   if (sufficient < 1)
+   if (!sufficient)
       {
       NewClass("xen_domu_pv");
       sufficient = 1;
       }
+
+   fclose(fp);
    }
 
-fclose(fp);
 return sufficient < 1 ? 1 : 0;
 }
 

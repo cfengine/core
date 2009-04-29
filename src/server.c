@@ -1238,7 +1238,7 @@ switch (GetCommand(recvbuffer))
        
        if (DENYBADCLOCKS && (drift*drift > CLOCK_DRIFT*CLOCK_DRIFT))
           {
-          CfOut(cf_inform,"","BAD: Clocks are too far unsynchronized %ld/%ld\n",(long)tloc,(long)trem);
+          snprintf(conn->output,CF_BUFSIZE-1,"BAD: Clocks are too far unsynchronized %ld/%ld\n",(long)tloc,(long)trem);
           SendTransaction(conn->sd_reply,conn->output,0,CF_DONE);
           return true;
           }

@@ -496,7 +496,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (strcmp(finalargs->next->item,"useshell"))
+if (strcmp(finalargs->next->item,"useshell") == 0)
    {
    ret = GetExecOutput(finalargs->item,buffer,true);
    }

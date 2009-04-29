@@ -203,7 +203,7 @@ int GetExecOutput(char *command,char *buffer,int useshell)
   char line[CF_EXPANDSIZE], *sp; 
   FILE *pp;
 
-Debug1("GetExecOutput(%s,%s)\n",command,buffer);
+Debug("GetExecOutput(%s,%s) - use shell = %d\n",command,buffer,useshell);
   
 if (useshell)
    {

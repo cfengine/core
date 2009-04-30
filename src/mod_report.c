@@ -52,6 +52,7 @@ struct BodySyntax CF_REPORT_BODIES[] =
    {"showstate",cf_slist,"","List of services about which status reports should be reported to standard output"},
    {"printfile",cf_body,CF_PRINTFILE_BODY,"Quote part of a file to standard output"},
    {"friend_pattern",cf_str,"","Regular expression to keep selected hosts from the friends report list"},
+   {"report_to_file",cf_str,CF_PATHRANGE,"The path and filename to which output should be appended"},
    {NULL,cf_notype,NULL}
    };
 

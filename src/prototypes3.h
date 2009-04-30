@@ -133,6 +133,7 @@ void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct
 void CfFile(FILE *fp,char *fmt, ...);
 void MakeLog(struct Item *mess,enum cfreport level);
 void MakeReport(struct Item *mess,int prefix);
+void FileReport(struct Item *mess,int prefix,char *filename);
 void SanitizeBuffer(char *buffer);
 
 /* cf_sql.c */

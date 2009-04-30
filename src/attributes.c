@@ -1203,6 +1203,8 @@ r.showstate = GetListConstraint("showstate",pp->conlist);
 
 r.friend_pattern = GetConstraint("friend_pattern",pp->conlist,CF_SCALAR);
 
+r.to_file = GetConstraint("report_to_file",pp->conlist,CF_SCALAR);
+
 return r;
 }
 

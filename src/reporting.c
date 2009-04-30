@@ -362,6 +362,11 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
      
    }
 
+av = 0;
+var = 0;
+val = 0;
+last = 0;
+
 lastseen = GetPromiseCompliance(pp,&val,&av,&var,&last);
 
 if (lastseen) /* This only gives something in Nova or higher */

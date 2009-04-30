@@ -1344,6 +1344,7 @@ struct Report
    double intermittency;
    char *friend_pattern;
    char *filename;
+   char *to_file;
    int numlines;
    struct Rlist *showstate;
    };

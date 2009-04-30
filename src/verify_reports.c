@@ -346,7 +346,6 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
   struct QPoint entry;
   double average = 0.0, var = 0.0, ticksperminute = 60.0;
   double ticksperhour = (double)CF_TICKS_PER_HOUR,ticksperday = (double)CF_TICKS_PER_DAY;
-
  
 CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);

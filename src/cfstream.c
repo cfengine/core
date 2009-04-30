@@ -164,7 +164,14 @@ switch(level)
 
    case cf_error:
 
-       MakeReport(mess,verbose);
+       if (attr.report.to_file)
+          {
+          FileReport(mess,verbose,attr.report.to_file);
+          }
+       else
+          {
+          MakeReport(mess,verbose);
+          }
        
        if (attr.transaction.log_level == cf_error)
           {   
@@ -315,6 +322,50 @@ for (ip = mess; ip != NULL; ip = ip->next)
       /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
       }
 #endif    
+   }
+}
+
+/*********************************************************************************/
+
+void FileReport(struct Item *mess,int prefix,char *filename)
+
+{ struct Item *ip;
+  FILE *fp;
+
+if ((fp = fopen(filename,"a")) == NULL)
+   {
+   fp = stdout;
+   }
+  
+for (ip = mess; ip != NULL; ip = ip->next)
+   {
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+      {
+      return;
+      }
+#endif
+   
+   if (prefix)
+      {
+      fprintf(fp,"%s %s\n",VPREFIX,ip->name);
+      }
+   else
+      {
+      fprintf(fp,"%s\n",ip->name);
+      }
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+      {
+      /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
+      }
+#endif
+   }
+
+if (fp != stdout)
+   {
+   fclose(fp);
    }
 }
 

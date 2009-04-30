@@ -1581,10 +1581,24 @@ memset(username,0,CF_MAXVARSIZE);
 
 sscanf(buf,"%255s %255s %255s",ipstring,fqname,username);
 
-Debug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",ipstring,fqname,username,conn->ipaddr); 
+Debug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",ipstring,fqname,username,conn->ipaddr);
 
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+   {
+   CfOut(cf_error,"lock","pthread_mutex_lock failed");
+   }
+#endif
+ 
 strncpy(dns_assert,ToLowerStr(fqname),CF_MAXVARSIZE-1);
 strncpy(ip_assert,ipstring,CF_MAXVARSIZE-1);
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+   {
+   CfOut(cf_error,"lock","pthread_mutex_unlock failed");
+   }
+#endif 
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...

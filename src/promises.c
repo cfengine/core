@@ -509,8 +509,6 @@ if (pp->next != NULL)
    DeletePromises(pp->next);
    }
 
-free(pp->bundle);
-
 DeletePromise(pp);
 }
 

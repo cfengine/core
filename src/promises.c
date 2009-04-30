@@ -494,7 +494,12 @@ return NULL;
 void DeletePromises(struct Promise *pp)
 
 {
-if (pp->this_server != NULL)
+if (pp == NULL)
+   {
+   return;
+   }
+
+ if (pp->this_server != NULL)
    {
    free(pp->this_server);
    }

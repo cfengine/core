@@ -958,7 +958,7 @@ else
    {
    if (statbuf.st_mode & 077)
       {
-      snprintf(output,CF_BUFSIZE*2,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
+      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
       FatalError(output);
       }
    }
@@ -984,7 +984,7 @@ else
    if (statbuf.st_mode & 077)
       {
       
-      snprintf(output,CF_BUFSIZE*2,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
+      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
       FatalError(output);
       }
    }
@@ -1004,7 +1004,7 @@ else
    {
    if (statbuf.st_mode & 077)
       {
-      snprintf(output,CF_BUFSIZE*2,"UNTRUSTED: Private key directory %s/ppkeys (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
+      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: Private key directory %s/ppkeys (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
       FatalError(output);
       }
    }

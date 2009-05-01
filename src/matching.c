@@ -661,7 +661,8 @@ regfree(&rx);
 
 if (strlen(backreference) == 0)
    {
-   CfOut(cf_verbose,"","The regular expression \"%s\" contained no parenthetic back-reference",regex);
+   Debug("The regular expression \"%s\" yielded no matching back-reference",regex);
+   strncpy(backreference,"CF_NOMATCH",CF_MAXVARSIZE);
    }
 
 return backreference;

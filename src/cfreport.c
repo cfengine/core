@@ -627,6 +627,12 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       SummarizeSoftware(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
+   if (strcmp("software_updates",rp->item) == 0)
+      {
+      CfOut(cf_verbose,"","Creating software update version summary (Cfengine Nova and above)...\n");
+      SummarizeUpdates(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
+      }
+   
    if (strcmp("setuid",rp->item) == 0)
       {
       CfOut(cf_verbose,"","Creating setuid report (Cfengine Nova and above)...\n");

@@ -816,6 +816,8 @@ p.package_changes = change_policy;
 p.package_file_repositories = GetListConstraint("package_file_repositories",pp->conlist);
 
 p.package_list_command = (char *)GetConstraint("package_list_command",pp->conlist,CF_SCALAR);
+p.package_update_list_command = (char *)GetConstraint("package_update_list_command",pp->conlist,CF_SCALAR);
+
 p.package_list_version_regex = (char *)GetConstraint("package_list_version_regex",pp->conlist,CF_SCALAR);
 p.package_list_name_regex = (char *)GetConstraint("package_list_name_regex",pp->conlist,CF_SCALAR);
 p.package_list_arch_regex = (char *)GetConstraint("package_list_arch_regex",pp->conlist,CF_SCALAR);

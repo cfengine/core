@@ -41,6 +41,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {"package_changes",cf_opts,"individual,bulk","Menu option - whether to group packages into a single aggregate command"},
    {"package_file_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
    {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of installed packages"},
+   {"package_update_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available patches or updates"},
    {"package_list_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {"package_list_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
    {"package_list_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },

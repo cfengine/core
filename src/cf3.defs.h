@@ -1068,6 +1068,7 @@ struct CfPackageManager
    enum package_actions action;
    enum action_policy policy;
    struct CfPackageItem *pack_list;
+   struct CfPackageItem *update_list;
    struct CfPackageManager *next;
    };
 
@@ -1361,6 +1362,7 @@ struct Packages
    enum action_policy package_changes;
    struct Rlist *package_file_repositories;
    char *package_list_command;
+   char *package_update_list_command;
    char *package_list_version_regex;
    char *package_list_name_regex;
    char *package_list_arch_regex;

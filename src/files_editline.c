@@ -819,7 +819,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       continue;
       }
 
-   if (!RegExMatchFullString(rex,ip->name))
+   if (!FullTextMatch(pp->promiser,ip->name))
       {
       continue;
       }

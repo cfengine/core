@@ -213,7 +213,7 @@
 #define HAVE_LIBNSS_NIS 1
 
 /* Define to 1 if you have the `pcre' library (-lpcre). */
-#define HAVE_LIBPCRE 1
+
 
 /* Define to 1 if you have the `pq' library (-lpq). */
 #define HAVE_LIBPQ 1

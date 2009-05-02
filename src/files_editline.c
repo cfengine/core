@@ -740,7 +740,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
          }
       else
          {
-         if (!RegExMatchSubString(rex,sp,&start_off,&end_off))
+         if (!BlockTextMatch(pp->promiser,sp,&start_off,&end_off))
             {
             strncat(line_buff,sp,CF_BUFSIZE);
             break;
@@ -753,7 +753,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
          }
       }
 
-   if (RegExMatchSubString(rex,line_buff,&start_off,&end_off))
+   if (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
       {
       if (start_off == 0 && end_off == strlen(line_buff))
          {

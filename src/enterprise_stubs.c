@@ -328,6 +328,32 @@ return "";
 }
 
 /*****************************************************************************/
+
+void CacheUnreliableValue(char *caller,char *handle,char *buffer)
+
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_CacheUnreliableValue(caller,handle,buffer);
+#else
+CfOut(cf_verbose,"","# Value fault-tolerance in version Nova and above\n");
+return;
+#endif 
+}
+
+/*****************************************************************************/
+
+int RetrieveUnreliableValue(char *caller,char *handle,char *buffer)
+
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_RetrieveUnreliableValue(caller,handle,buffer);
+#else
+CfOut(cf_verbose,"","# Value fault-tolerance in version Nova and above\n");
+return false;
+#endif 
+}
+
+/*****************************************************************************/
 /* Reporting                                                                 */
 /*****************************************************************************/
 

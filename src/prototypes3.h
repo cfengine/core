@@ -321,6 +321,8 @@ void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *s
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
 void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
+void CacheUnreliableValue(char *caller,char *handle,char *buffer);
+int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
 
 /* env_context.c */
 

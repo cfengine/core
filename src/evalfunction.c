@@ -1797,11 +1797,19 @@ else
    
    if (strncmp(buffer,"BAD:",4) == 0)
       {
-      SetFnCallReturnStatus("remotescalar",FNCALL_FAILURE,NULL,NULL);   
+      if (RetrieveUnreliableValue("remotescalar",handle,buffer))
+         {
+         SetFnCallReturnStatus("remotescalar",FNCALL_SUCCESS,NULL,NULL);
+         }
+      else
+         {
+         SetFnCallReturnStatus("remotescalar",FNCALL_FAILURE,NULL,NULL);
+         }
       }
    else
       {
-      SetFnCallReturnStatus("remotescalar",FNCALL_SUCCESS,NULL,NULL);   
+      SetFnCallReturnStatus("remotescalar",FNCALL_SUCCESS,NULL,NULL);
+      CacheUnreliableValue("remotescalar",handle,buffer);
       }
    
    if ((rval.item = strdup(buffer)) == NULL)
@@ -2947,7 +2955,8 @@ struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *newlist = NULL;
   struct Rval rval;
   char *uri,*dn,*filter,*name,*scope,*sec;
-  void *newval;
+  char buffer[CF_BUFSIZE],handle[CF_BUFSIZE];
+  void *newval = NULL;
   
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
@@ -2960,12 +2969,27 @@ filter = (char *)(finalargs->next->next->item);
  scope = (char *)(finalargs->next->next->next->next->item);
    sec = (char *)(finalargs->next->next->next->next->next->item);
 
+snprintf(handle,CF_BUFSIZE,"%s_%s_%s_%s",dn,filter,name,scope);
+   
 if (newval = CfLDAPValue(uri,dn,filter,name,scope,sec))
+   {
+   CacheUnreliableValue("ldapvalue",handle,newval);
+   }
+else
+   {
+   if (RetrieveUnreliableValue("ldapvalue",handle,buffer))
+      {
+      newval = strdup(buffer);
+      }
+   }
+
+if (newval)
    {
    SetFnCallReturnStatus("ldapvalue",FNCALL_SUCCESS,NULL,NULL);
    }
 else
    {
+   newval = strdup("no result");
    SetFnCallReturnStatus("ldapvalue",FNCALL_FAILURE,NULL,NULL);
    }
 

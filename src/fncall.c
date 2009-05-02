@@ -252,6 +252,15 @@ ClearFnCallStatus();
 
 expargs = NewExpArgs(fp,pp);
 
+if (UnresolvedArgs(expargs))
+   {
+   FNCALL_STATUS.status = FNCALL_FAILURE;
+   rval.item = CopyFnCall(fp);
+   rval.rtype = CF_FNCALL;
+   DeleteExpArgs(expargs);
+   return rval;
+   }
+
 switch (this)
    {
    case cfn_canonify:

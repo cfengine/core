@@ -1151,6 +1151,7 @@ int BooleanControl(char *scope,char *name);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
 int UnresolvedVariables(struct CfAssoc *ap,char rtype);
+int UnresolvedArgs(struct Rlist *args);
 
 /* verify_databases.c */
 

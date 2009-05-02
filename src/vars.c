@@ -396,6 +396,23 @@ switch (rtype)
 
 /*******************************************************************/
 
+int UnresolvedArgs(struct Rlist *args)
+    
+{ struct Rlist *rp;
+
+for (rp = args; rp != NULL; rp = rp->next)
+   {
+   if (IsCf3VarString(rp->item))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
 void DeleteAllVariables(char *scope)
 
 { int i;

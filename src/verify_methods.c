@@ -97,7 +97,7 @@ if (bp = GetBundle(method_name,"agent"))
 
    if (retval)
       {
-      cfPS(cf_inform,CF_CHG,"",pp,a,"Method invoked successfully\n");
+      cfPS(cf_verbose,CF_CHG,"",pp,a,"Method invoked successfully\n");
       }
    else
       {

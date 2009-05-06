@@ -1239,6 +1239,8 @@ if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
 
 void CacheServerConnection(struct cfagent_connection *conn,char *server)
 
+/* First time we open a connection, so store it */
+    
 { struct Rlist *rp;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
@@ -1252,28 +1254,6 @@ if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
 #endif
 
 strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
-
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
-  
-for (rp = SERVERLIST; rp != NULL; rp=rp->next)
-   {
-   svp = (struct ServerItem *)rp->item;
-   conn = svp->conn;
-   }
-
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   exit(1);
-   }
-#endif
 
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
 free(rp->item);

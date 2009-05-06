@@ -966,7 +966,7 @@ if (isv4)
             {
             sscanf(buffer1,"%ld-%ld",&from,&to);
             sscanf(buffer2,"%ld",&cmp);
-            
+
             if (from < 0 || to < 0)
                {
                Debug("Couldn't read range\n");

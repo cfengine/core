@@ -238,6 +238,20 @@ for (rp = crit; rp != NULL; rp = rp->next)
       DeleteItemList(leafattrib);
       return true;
       }
+
+   if (FullTextMatch((char *)rp->item,pw->pw_name))
+      {
+      Debug(" - ? Select owner match\n");
+      DeleteItemList(leafattrib);
+      return true;
+      }
+
+   if (FullTextMatch((char *)rp->item,buffer))
+      {
+      Debug(" - ? Select owner match\n");
+      DeleteItemList(leafattrib);
+      return true;
+      }
    }
 
 DeleteItemList(leafattrib);
@@ -270,6 +284,20 @@ for (rp = crit; rp != NULL; rp = rp->next)
    if (EvaluateORString((char *)rp->item,leafattrib,0))
       {
       Debug(" - ? Select group match\n");
+      DeleteItemList(leafattrib);
+      return true;
+      }
+
+   if (FullTextMatch((char *)rp->item,gr->gr_name))
+      {
+      Debug(" - ? Select owner match\n");
+      DeleteItemList(leafattrib);
+      return true;
+      }
+
+   if (FullTextMatch((char *)rp->item,buffer))
+      {
+      Debug(" - ? Select owner match\n");
       DeleteItemList(leafattrib);
       return true;
       }

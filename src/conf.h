@@ -147,7 +147,7 @@
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the `getaddrinfo' function. */
-#define HAVE_GETADDRINFO 1
+
 
 /* Define to 1 if you have the `getcwd' function. */
 #define HAVE_GETCWD 1

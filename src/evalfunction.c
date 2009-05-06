@@ -1507,7 +1507,7 @@ else
          }
       else
          {
-         Debug("Checking IP Range against iface %s\n",VIPADDRESS);
+         Debug("Checking IP Range against iface %s\n",ip->name);
          
          if (FuzzySetMatch(finalargs->item,ip->name) == 0)
             {

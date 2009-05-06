@@ -948,16 +948,20 @@ if (isv4)
       {
       long i, from = -1, to = -1, cmp = -1;
       char *sp1,*sp2,buffer1[CF_MAX_IP_LEN],buffer2[CF_MAX_IP_LEN];
-      
+
       sp1 = s1;
       sp2 = s2;
       
       for (i = 0; i < 4; i++)
          {
-         if (sscanf(sp1,"%[^.]",buffer1) <= 0)
+         buffer1[0] = '\0';
+         sscanf(sp1,"%[^.]",buffer1);
+         
+         if (strlen(buffer1) == 0)
             {
             break;
             }
+
          sp1 += strlen(buffer1)+1;
          sscanf(sp2,"%[^.]",buffer2);
          sp2 += strlen(buffer2)+1;

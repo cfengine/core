@@ -147,7 +147,7 @@
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the `getaddrinfo' function. */
-
+#define HAVE_GETADDRINFO 1
 
 /* Define to 1 if you have the `getcwd' function. */
 #define HAVE_GETCWD 1
@@ -495,7 +495,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.1"
+#define VERSION "3.0.2a1"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

@@ -418,7 +418,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       }
    
    strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
-
+   
    if (UNDERSCORE_CLASSES)
       {
       snprintf(workbuf, CF_BUFSIZE, "_net_iface_%s", CanonifyName(ifp->ifr_name));
@@ -440,11 +440,11 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
          close(fd);
          return;
          }
-
+      
       if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
          {
          sin=(struct sockaddr_in *)&ifp->ifr_addr;
-   
+         
          if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
             {
             Debug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
@@ -457,7 +457,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
                Debug("Adding hostname %s..\n",hp->h_name);
                NewClass(CanonifyName(hp->h_name));
-
+               
                if (hp->h_aliases != NULL)
                   {
                   for (i=0; hp->h_aliases[i] != NULL; i++)
@@ -468,6 +468,36 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   }
                }
             }
+                  
+         if (strcmp(inet_ntoa(sin->sin_addr),"0.0.0.0") == 0)
+            {
+            // Maybe we need to do something windows specific here?
+            CfOut(cf_verbose,""," !! Cannot discover hardware IP, using DNS value");
+            strcpy(ip,"ipv4_");
+            strcat(ip,VIPADDRESS);
+            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+               {
+               if (*sp == '.')
+                  {
+                  *sp = '\0';
+                  NewClass(CanonifyName(ip));
+                  }
+               }
+            
+            strcpy(ip,VIPADDRESS);
+            i = 3;
+            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+               {
+               if (*sp == '.')
+                  {
+                  *sp = '\0';
+                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(VIPADDRESS));
+                  NewScalar("sys",name,ip,cf_str);
+                  }
+               }
+            close(fd);
+            return;
+            }
          
          if (!ipdefault)
             {
@@ -476,8 +506,9 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
             NewClass(CanonifyName(ip));
             NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
+            
             strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
-   
+            
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
                if (*sp == '.')
@@ -487,9 +518,9 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   }
                }
             }
-
+         
          /* Matching variables */
-
+         
          if (first_address)
             {
             strcpy(ip,inet_ntoa(sin->sin_addr));
@@ -497,7 +528,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             NewScalar("sys",name,ip,cf_str);
             
             i = 3;
-         
+            
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
                if (*sp == '.')
@@ -511,7 +542,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
          }
       }
    }
- 
+
+
 close(fd);
 }
 

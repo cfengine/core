@@ -1826,6 +1826,332 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     CF_VALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*newlist,*pruned;
+  struct Rval rval;
+  char *split = "\n",buffer[CF_BUFSIZE];
+  char *filename,*comment,*file_buffer = NULL;
+  int i,found,groupsize,maxent = 100000,maxsize = 100000;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+filename = finalargs->item;
+comment = (char *)finalargs->next->item;
+groupsize = Str2Int(finalargs->next->next->item);
+
+file_buffer = (char *)CfReadFile(filename,maxsize);
+
+if (file_buffer == NULL)
+   {
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   SetFnCallReturnStatus("peers",FNCALL_FAILURE,NULL,NULL);
+   return rval;
+   }
+else
+   {
+   file_buffer = StripPatterns(file_buffer,comment);
+
+   if (file_buffer == NULL)
+      {
+      rval.item = NULL;
+      rval.rtype = CF_LIST;
+      return rval;
+      }
+   else
+      {
+      newlist = SplitRegexAsRList(file_buffer,split,maxent,true);
+      }
+   }
+
+/* Slice up the list and discard everything except our slice */
+
+i = 0;
+found = false;
+pruned = NULL;
+
+for (rp = newlist; rp != NULL; rp = rp->next)
+   {
+   if (EmptyString(rp->item))
+      {
+      continue;
+      }
+   
+   if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+      {
+      found = true;
+      }
+   else
+      {
+      PrependRScalar(&pruned,rp->item,CF_SCALAR);
+      }
+
+   if (i++ % groupsize == groupsize-1)
+      {
+      if (found)
+         {
+         break;
+         }
+      else
+         {
+         DeleteRlist(pruned);
+         pruned = NULL;
+         }
+      }
+   }
+
+DeleteRlist(newlist);
+
+if (pruned)
+   {
+   SetFnCallReturnStatus("peers",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("peers",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = pruned;
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     CF_VALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*newlist;
+  struct Rval rval;
+  char *split = "\n";
+  char *filename,*comment,*file_buffer = NULL,buffer[CF_MAXVARSIZE];
+  int i,found,groupsize,maxent = 100000,maxsize = 100000;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+filename = finalargs->item;
+comment = (char *)finalargs->next->item;
+groupsize = Str2Int(finalargs->next->next->item);
+
+file_buffer = (char *)CfReadFile(filename,maxsize);
+
+if (file_buffer == NULL)
+   {
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   SetFnCallReturnStatus("peerleader",FNCALL_FAILURE,NULL,NULL);
+   return rval;
+   }
+else
+   {
+   file_buffer = StripPatterns(file_buffer,comment);
+
+   if (file_buffer == NULL)
+      {
+      rval.item = NULL;
+      rval.rtype = CF_LIST;
+      return rval;
+      }
+   else
+      {
+      newlist = SplitRegexAsRList(file_buffer,split,maxent,true);
+      }
+   }
+
+/* Slice up the list and discard everything except our slice */
+
+i = 0;
+found = false;
+buffer[0] = '\0';
+
+for (rp = newlist; rp != NULL; rp = rp->next)
+   {
+   if (EmptyString(rp->item))
+      {
+      continue;
+      }
+
+   if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+      {
+      found = true;
+      }
+
+   if (i % groupsize == 0)
+      {
+      if (found)
+         {
+         if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+            {
+            strncpy(buffer,"localhost",CF_MAXVARSIZE-1);
+            }
+         else
+            {
+            strncpy(buffer,rp->item,CF_MAXVARSIZE-1);
+            }
+         break;
+         }
+      }
+
+   i++;
+   }
+
+DeleteRlist(newlist);
+
+if (strlen(buffer) > 0)
+   {
+   SetFnCallReturnStatus("peerleader",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("peerleader",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = strdup(buffer);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     CF_VALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*newlist,*pruned;
+  struct Rval rval;
+  char *split = "\n";
+  char *filename,*comment,*file_buffer = NULL,buffer[CF_MAXVARSIZE];
+  int i,found,groupsize,maxent = 100000,maxsize = 100000;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+filename = finalargs->item;
+comment = (char *)finalargs->next->item;
+groupsize = Str2Int(finalargs->next->next->item);
+
+file_buffer = (char *)CfReadFile(filename,maxsize);
+
+if (file_buffer == NULL)
+   {
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   SetFnCallReturnStatus("peerleaders",FNCALL_FAILURE,NULL,NULL);
+   return rval;
+   }
+else
+   {
+   file_buffer = StripPatterns(file_buffer,comment);
+
+   if (file_buffer == NULL)
+      {
+      rval.item = NULL;
+      rval.rtype = CF_LIST;
+      return rval;
+      }
+   else
+      {
+      newlist = SplitRegexAsRList(file_buffer,split,maxent,true);
+      }
+   }
+
+/* Slice up the list and discard everything except our slice */
+
+i = 0;
+found = false;
+pruned = NULL;
+
+for (rp = newlist; rp != NULL; rp = rp->next)
+   {
+   if (EmptyString(rp->item))
+      {
+      continue;
+      }
+
+   if (i % groupsize == 0)
+      {
+      if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+         {
+         PrependRScalar(&pruned,"localhost",CF_SCALAR);
+         }
+      else
+         {
+         PrependRScalar(&pruned,rp->item,CF_SCALAR);
+         }
+      }
+
+   i++;
+   }
+
+DeleteRlist(newlist);
+
+if (pruned)
+   {
+   SetFnCallReturnStatus("peerleaders",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("peerleaders",FNCALL_FAILURE,NULL,NULL);
+   }
+
+rval.item = pruned;
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

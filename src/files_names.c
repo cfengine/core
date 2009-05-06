@@ -34,6 +34,23 @@
 
 /*********************************************************************/
 
+int EmptyString(char *s)
+
+{ char *sp;
+
+for (sp = s; *sp != '\0'; sp++)
+   {
+   if (!isspace(*sp))
+      {
+      return false;
+      }
+   }
+
+return true;
+}
+
+/*********************************************************************/
+
 int ExpandOverflow(char *str1,char *str2)   /* Should be an inline ! */
 
 { int len = strlen(str2);

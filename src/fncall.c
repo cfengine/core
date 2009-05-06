@@ -263,6 +263,15 @@ if (UnresolvedArgs(expargs))
 
 switch (this)
    {
+   case cfn_peers:
+       rval = FnCallPeers(fp,expargs);
+       break;
+   case cfn_peerleader:
+       rval = FnCallPeerLeader(fp,expargs);
+       break;
+   case cfn_peerleaders:
+       rval = FnCallPeerLeaders(fp,expargs);
+       break;
    case cfn_canonify:
        rval = FnCallCanonify(fp,expargs);
        break;

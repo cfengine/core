@@ -404,6 +404,10 @@ struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs);
+
 void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
 void CloseStringHole(char *s,int start,int end);
@@ -532,6 +536,7 @@ int CfReadLine(char *buff,int size,FILE *fp);
 
 /* files_names.c */
 
+int EmptyString(char *s);
 int ExpandOverflow(char *str1,char *str2);
 char *JoinPath(char *path,char *leaf);
 char *JoinSuffix(char *path,char *leaf);

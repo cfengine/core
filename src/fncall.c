@@ -407,6 +407,9 @@ switch (this)
    case cfn_classmatch:
        rval = FnCallClassMatch(fp,expargs);
        break;
+   case cfn_classify:
+       rval = FnCallClassify(fp,expargs);
+       break;
    case cfn_hash:
        rval = FnCallHash(fp,expargs);
        break;

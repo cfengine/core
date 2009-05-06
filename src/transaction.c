@@ -34,25 +34,30 @@
 
 /*****************************************************************************/
 
-void SummarizeTransaction(struct Attributes attr,struct Promise *pp)
+void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname)
 
-{
-if (attr.transaction.log_string)
-   {
-   cfPS(cf_log,CF_NOP,"",pp,attr,"Promise repair begun: %s",attr.transaction.log_string);
-   }
+{ FILE *fout;
  
-/*
-   char *log_string;
-   char *log_level;
+if (logname && attr.transaction.log_string)
+   {
+   if ((fout = fopen(logname,"a")) == NULL)
+      {
+      CfOut(cf_error,"","Unable to open private log %s",logname);
+      return;
+      }
 
-   enum cfoutputlevel report_level;
-   cf_inform,
-   cf_verbose,
-   cf_error,
-   cflogonly,
-   {"log_level",cf_str,"inform,verbose,debug"},
-*/
+   CfOut(cf_verbose,""," -> Logging string \"%s\" to %s\n",attr.transaction.log_string,logname);
+   fprintf(fout,"%s\n",attr.transaction.log_string);
+
+   fclose(fout);
+   }
+else if (attr.transaction.log_string)
+   {
+   if (strcmp(logname,attr.transaction.log_failed) == 0)
+      {
+      cfPS(cf_log,CF_NOP,"",pp,attr,"%s",attr.transaction.log_string);
+      }
+   }
 }
 
 /*****************************************************************************/
@@ -218,8 +223,6 @@ this.log  = strdup(cflog);
 strcpy(CFLOCK,cflock);
 strcpy(CFLAST,cflast);
 strcpy(CFLOG,cflog);
-
-SummarizeTransaction(attr,pp);
 
 return this;
 }

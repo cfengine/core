@@ -913,7 +913,7 @@ return(false);
 
 /*********************************************************************/
 
-void DeleteItemList(struct Item *item)                /* delete starting from item */
+void DeleteItemList(struct Item *item)  /* delete starting from item */
  
 {
 if (item != NULL)

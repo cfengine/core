@@ -1120,6 +1120,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    if ((strcmp(ipname,svp->server) == 0) && svp->conn && svp->conn->sd > 0)
       {
       CfOut(cf_verbose,"","Connection to %s is already open and ready...\n",ipname);
+      svp->busy = true;
       return svp->conn;
       }
    }
@@ -1153,6 +1154,9 @@ CfOut(cf_verbose,"","Existing connection just became free...\n");
 
 void MarkServerOffline(char *server)
 
+/* Unable to contact the server so don't waste time trying for
+   other connections, mark it offline */
+    
 { struct Rlist *rp;
   struct cfagent_connection *conn = NULL;
   struct ServerItem *svp;
@@ -1215,6 +1219,7 @@ if ((svp->server = strdup(ipname)) == NULL)
 free(rp->item);
 rp->item = svp;
 
+
 if (svp->conn = NewAgentConn())
    {
    /* If we couldn't connect, mark this server unavailable for everyone */
@@ -1260,12 +1265,6 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
    svp = (struct ServerItem *)rp->item;
    conn = svp->conn;
-   
-   if (strcmp(ipname,conn->localip) == 0)
-      {
-      conn->sd = CF_COULD_NOT_CONNECT;
-      return;
-      }
    }
 
 #ifdef HAVE_PTHREAD_H  
@@ -1282,6 +1281,7 @@ svp = (struct ServerItem *)malloc((sizeof(struct ServerItem)));
 rp->item = svp;
 svp->server = strdup(ipname);
 svp->conn = conn;
+svp->busy = true;
 
 #ifdef HAVE_PTHREAD_H  
 if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)

@@ -296,6 +296,7 @@ void HistoryUpdate(struct Averages newvals);
 void GetClassName(int i,char *name);
 void LookUpClassName(int i,char *name);
 void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void SummarizePerPromiseCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp);
@@ -1110,7 +1111,7 @@ char *GetHome(uid_t uid);
 
 /* transaction.c */
 
-void SummarizeTransaction(struct Attributes attr,struct Promise *pp);
+void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname);
 struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp);
 void YieldCurrentLock(struct CfLock this);
 void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params);

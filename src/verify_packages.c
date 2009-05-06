@@ -600,6 +600,7 @@ int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attribu
 
 strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
 sscanf(vbuff,"%s",name); /* trim */
+
 strncpy(vbuff,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
 sscanf(vbuff,"%s",version); /* trim */
 

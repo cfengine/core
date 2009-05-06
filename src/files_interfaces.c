@@ -192,9 +192,9 @@ cf_closedir(dirh);
 void VerifyFilePromise(char *path,struct Promise *pp)
 
 { struct stat osb,oslb,dsb,dslb;
- struct Attributes a,b;
+  struct Attributes a,b;
   struct CfLock thislock;
-  int success,rlevel = 0,isthere,save = true;
+  int exists,success,rlevel = 0,isthere,save = true;
   char filename[CF_BUFSIZE];
 
 a = GetFilesAttributes(pp);
@@ -218,12 +218,18 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
          }
       else
          {
-         lstat(path,&oslb);
+         exists = (lstat(path,&oslb) != -1);
          }
       }
+   
+   exists = false;
+   }
+else
+   {
+   exists = true;
    }
 
-if (!VerifyFileLeaf(path,&oslb,a,pp))
+if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
    {
    if (!S_ISDIR(oslb.st_mode))
       {
@@ -239,6 +245,14 @@ if (stat(path,&osb) == -1)
          {
          return;
          }
+      else
+         {
+         exists = true;
+         }
+      }
+   else
+      {
+      exists = false;
       }
    }
 else
@@ -251,6 +265,8 @@ else
          return;
          }
       }
+
+   exists = true;
    }
 
 if (a.link.link_children)
@@ -282,17 +298,17 @@ if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
 
 /* Phase 1 - */
 
-if (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer)
+if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer))
    {
    lstat(path,&oslb); /* if doesn't exist have to stat again anyway */
    
-   if (a.havedepthsearch)
+   if (a.havedepthsearch)       
       {
       SetSearchDevice(&oslb,pp);
       }
    
    success = DepthSearch(path,&oslb,rlevel,a,pp);
-
+   
    /* normally searches do not include the base directory */
    
    if (a.recursion.include_basedir)

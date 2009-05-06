@@ -947,6 +947,9 @@ struct TransactionContext
    int expireafter;
    int background;
    char *log_string;
+   char *log_kept;
+   char *log_repaired;
+   char *log_failed;
    char *measure_id;
    int  audit;
    enum cfreport report_level;

@@ -134,6 +134,7 @@ switch(status)
        PR_REPAIRED++;
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.5);
+       SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
        break;
        
    case CF_WARN:
@@ -145,24 +146,28 @@ switch(status)
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0);
+       SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
 
    case CF_FAIL:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0);
+       SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
        
    case CF_DENIED:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0);
+       SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
        
    case CF_INTERPT:
        PR_NOTKEPT++;
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0);
+       SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
 
    case CF_REGULAR:
@@ -175,6 +180,7 @@ switch(status)
    case CF_NOP:
        AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,1.0);
+       SummarizeTransaction(attr,pp,attr.transaction.log_kept);              
        PR_KEPT++;
        break;
    }

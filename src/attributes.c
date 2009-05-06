@@ -480,6 +480,10 @@ if (t.expireafter == CF_NOINT)
 t.audit = GetBooleanConstraint("audit",pp->conlist);
 t.log_string = GetConstraint("log_string",pp->conlist,CF_SCALAR);
 
+t.log_kept = GetConstraint("log_kept",pp->conlist,CF_SCALAR);
+t.log_repaired = GetConstraint("log_repaired",pp->conlist,CF_SCALAR);
+t.log_failed = GetConstraint("log_failed",pp->conlist,CF_SCALAR);
+
 value = GetConstraint("log_level",pp->conlist,CF_SCALAR);
 t.log_level = String2ReportLevel(value);
 

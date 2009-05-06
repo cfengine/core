@@ -601,7 +601,7 @@ char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring)
  pcre *rx;
  int ovector[OVECCOUNT],i,rc,match_len;
  char *match_start;
- 
+
 rx = rex.rx;
 memset(backreference,0,CF_BUFSIZE);
 

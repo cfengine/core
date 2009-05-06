@@ -109,6 +109,9 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"expireafter",cf_int,CF_VALRANGE,"Number of minutes before a repair action is interrupted and retried"},
    {"log_string",cf_str,"","A message to be written to the log when a promise verification leads to a repair"},
    {"log_level",cf_opts,"inform,verbose,error,log","The reporting level sent to syslog"},
+   {"log_kept",cf_str,"","This should be filename of a file to which log_string will be saved, if undefined it goes to syslog"},
+   {"log_repaired",cf_str,"","This should be filename of a file to which log_string will be saved, if undefined it goes to syslog"},
+   {"log_failed",cf_str,"","This should be filename of a file to which log_string will be saved, if undefined it goes to syslog"},
    {"audit",cf_opts,CF_BOOL,"true/false switch for detailed audit records of this promise"},
    {"background",cf_opts,CF_BOOL,"true/false switch for parallelizing the promise repair"},
    {"report_level",cf_opts,"inform,verbose,error,log","The reporting level for standard output"},
@@ -310,7 +313,7 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
    {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
    {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
-   {"html_embed",cf_opts,CF_BOOL,"If false, no header and footer tags will be added to html output"},
+   {"html_embed",cf_opts,CF_BOOL,"If true, no header and footer tags will be added to html output"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -1902,9 +1902,10 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          {
          Debug("Checking whether to map root privileges..\n");
          
-         if (IsRegexItemIn(ap->maproot,conn->hostname) ||
-             IsRegexItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
-             IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)))
+         if (IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->maproot,conn->hostname) ||
+             IsRegexItemIn(ap->maproot,MapAddress(conn->ipaddr)))
+             
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -1914,9 +1915,9 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             CfOut(cf_verbose,"","No root privileges granted\n");
             }
          
-         if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-             IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+         if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->accesslist,conn->hostname) ||
+             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
             {
             access = true;
             Debug("Access privileges - match found\n");
@@ -1930,9 +1931,9 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strncmp(ap->path,realname,strlen(ap->path)) == 0)
       {
-      if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
-          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-          IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+      if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+          IsRegexItemIn(ap->accesslist,conn->hostname) ||
+          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
          {
          access = false;
          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,realname);
@@ -2033,9 +2034,9 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strcmp(ap->path,name) == 0)
       {
-      if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
-          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-          IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+      if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+          IsRegexItemIn(ap->accesslist,conn->hostname) ||
+          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
          {
          access = false;
          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,name);
@@ -2111,7 +2112,8 @@ for (rp = defines; rp != NULL; rp = rp->next)
       if (FullTextMatch(ap->path,rp->item))
          {
          /* We have a pattern covering this class - so are we allowed to activate it? */
-         if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
+         if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->accesslist,conn->hostname) ||
              IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
              IsRegexItemIn(ap->accesslist,MapAddress(userid1)) ||
              IsRegexItemIn(ap->accesslist,MapAddress(userid2)) ||

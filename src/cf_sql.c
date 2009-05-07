@@ -216,6 +216,8 @@ cfdb->result = false;
 cfdb->row = 0;
 cfdb->column = 0;
 cfdb->rowdata = NULL;
+cfdb->maxcolumns = 0;
+cfdb->maxrows = 0;
 
 switch (cfdb->type)
    {

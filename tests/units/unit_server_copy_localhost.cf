@@ -36,6 +36,13 @@ files:
     depth_search => recurse("inf"),
     classes      => satisfied("copy_ok");
 
+
+  "/home/mark/tmp/testcopy/single_file" 
+
+        comment  => "test copy promise",
+    copy_from    => mycopy("/home/mark/LapTop/Cfengine3/trunk/README","127.0.0.1"),
+    perms        => system;
+
 reports:
 
   copy_ok::

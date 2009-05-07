@@ -49,6 +49,12 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
+if (EnterpriseExpiry("33","May","2109"))
+   {
+   CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise trial has expired.\n");
+   exit(1);
+   }
+
 if (!NOHARDCLASSES)
    {
    NewScope("const");
@@ -253,7 +259,6 @@ if (DEBUG)
    {
    NewClass("debug_mode");
    }
-
 
 CfOut(cf_verbose,"","Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");  
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n");

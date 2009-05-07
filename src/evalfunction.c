@@ -1891,18 +1891,23 @@ pruned = NULL;
 
 for (rp = newlist; rp != NULL; rp = rp->next)
    {
+   char s[CF_MAXVARSIZE];
+   
    if (EmptyString(rp->item))
       {
       continue;
       }
-   
-   if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+
+   s[0] = '\0';
+   sscanf(rp->item,"%s",s);
+
+   if (strcmp(s,VFQNAME) == 0 || strcmp(s,VUQNAME) == 0)
       {
       found = true;
       }
    else
       {
-      PrependRScalar(&pruned,rp->item,CF_SCALAR);
+      PrependRScalar(&pruned,s,CF_SCALAR);
       }
 
    if (i++ % groupsize == groupsize-1)
@@ -2002,12 +2007,17 @@ buffer[0] = '\0';
 
 for (rp = newlist; rp != NULL; rp = rp->next)
    {
+   char s[CF_MAXVARSIZE];
+   
    if (EmptyString(rp->item))
       {
       continue;
       }
 
-   if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+   s[0] = '\0';
+   sscanf(rp->item,"%s",s);
+   
+   if (strcmp(s,VFQNAME) == 0 || strcmp(s,VUQNAME) == 0)
       {
       found = true;
       }
@@ -2016,13 +2026,13 @@ for (rp = newlist; rp != NULL; rp = rp->next)
       {
       if (found)
          {
-         if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+         if (strcmp(s,VFQNAME) == 0 || strcmp(s,VUQNAME) == 0)
             {
             strncpy(buffer,"localhost",CF_MAXVARSIZE-1);
             }
          else
             {
-            strncpy(buffer,rp->item,CF_MAXVARSIZE-1);
+            strncpy(buffer,s,CF_MAXVARSIZE-1);
             }
          break;
          }
@@ -2114,20 +2124,25 @@ pruned = NULL;
 
 for (rp = newlist; rp != NULL; rp = rp->next)
    {
+   char s[CF_MAXVARSIZE];
+   
    if (EmptyString(rp->item))
       {
       continue;
       }
-
+   
+   s[0] = '\0';
+   sscanf(rp->item,"%s",s);
+   
    if (i % groupsize == 0)
       {
-      if (strcmp(rp->item,VFQNAME) == 0 || strcmp(rp->item,VUQNAME) == 0)
+      if (strcmp(s,VFQNAME) == 0 || strcmp(s,VUQNAME) == 0)
          {
          PrependRScalar(&pruned,"localhost",CF_SCALAR);
          }
       else
          {
-         PrependRScalar(&pruned,rp->item,CF_SCALAR);
+         PrependRScalar(&pruned,s,CF_SCALAR);
          }
       }
 

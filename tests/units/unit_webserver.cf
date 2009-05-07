@@ -79,7 +79,6 @@ field_edits:
       edit_field => quotedvar("$(del_modules)","delete");
 
    # if this line already exists, edit it  
-
 }
 
 ########################################

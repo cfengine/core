@@ -229,6 +229,13 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
       continue;
       }
 
+   /* Avoid using regex if possible, due to memory leak */
+   
+   if (strcmp(regex,ptr->name) == 0)
+      {
+      return(true);
+      }
+
    /* Make it commutative */
 
    if (FullTextMatch(regex,ptr->name) || FullTextMatch(ptr->name,regex))
@@ -251,6 +258,13 @@ int MatchRlistItem(struct Rlist *listofregex,char *teststring)
  
 for (rp = listofregex; rp != NULL; rp=rp->next)
    {
+   /* Avoid using regex if possible, due to memory leak */
+   
+   if (strcmp(teststring,rp->item) == 0)
+      {
+      return(true);
+      }
+
    /* Make it commutative */
    
    if (FullTextMatch(rp->item,teststring))

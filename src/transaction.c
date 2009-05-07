@@ -40,18 +40,25 @@ void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *lognam
  
 if (logname && attr.transaction.log_string)
    {
-   if ((fout = fopen(logname,"a")) == NULL)
+   if (strcmp(attr.transaction.log_string,"stdout") == 0)
       {
-      CfOut(cf_error,"","Unable to open private log %s",logname);
-      return;
+      fprintf(fout,"L: %s\n",attr.transaction.log_string);
       }
-
-   CfOut(cf_verbose,""," -> Logging string \"%s\" to %s\n",attr.transaction.log_string,logname);
-   fprintf(fout,"%s\n",attr.transaction.log_string);
-
-   fclose(fout);
+   else
+      {
+      if ((fout = fopen(logname,"a")) == NULL)
+         {
+         CfOut(cf_error,"","Unable to open private log %s",logname);
+         return;
+         }
+      
+      CfOut(cf_verbose,""," -> Logging string \"%s\" to %s\n",attr.transaction.log_string,logname);
+      fprintf(fout,"%s\n",attr.transaction.log_string);
+      
+      fclose(fout);
+      }
    }
-else if (attr.transaction.log_string)
+else if (attr.transaction.log_failed)
    {
    if (strcmp(logname,attr.transaction.log_failed) == 0)
       {

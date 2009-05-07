@@ -280,6 +280,7 @@ int IsProcessType(char *s);
 /* enterprise_stubs.c */
 
 void EnterpriseVersion(void);
+int EnterpriseExpiry(char *day,char *month,char *year);
 void InitMeasurements(void);
 void BundleNode(FILE *fp,char *bundle);
 void BodyNode(FILE *fp,char *bundle,int call);
@@ -309,6 +310,7 @@ int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,stru
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void ReportSoftware(struct CfPackageManager *list);
 void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void LoadSlowlyVaryingObservations(void);
 void RegisterLiteralServerData(char *handle,struct Promise *pp);
 char *ReturnLiteralData(char *handle);
@@ -1217,6 +1219,7 @@ void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep);
 void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
 int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
+int PrependUpdateItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

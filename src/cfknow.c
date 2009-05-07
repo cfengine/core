@@ -840,7 +840,7 @@ CfNewQueryDB(&cfdb,query);
 
 if (cfdb.maxcolumns != 4)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
+   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,4);
    CfCloseDB(&cfdb);
    return;
    }

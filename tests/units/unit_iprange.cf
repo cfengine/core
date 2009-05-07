@@ -12,8 +12,8 @@ bundle agent example
 {     
 classes:
 
-  "adhoc_group_1" expression => iprange("128.39.89.10-15");
-  "adhoc_group_2" expression => iprange("128.39.74.1/23");
+  "adhoc_group_1" expression => iprange("192.168.1.50-140");
+  "adhoc_group_2" expression => iprange("192.168.1.0/24");
 
 reports:
 

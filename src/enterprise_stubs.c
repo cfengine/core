@@ -65,6 +65,16 @@ void EnterpriseVersion()
 }
 
 /*****************************************************************************/
+
+int EnterpriseExpiry(char *day,char *month,char *year)
+
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_EnterpriseExpiry(day,month,year);
+#endif 
+}
+
+/*****************************************************************************/
 /* Knowledge                                                                 */
 /*****************************************************************************/
 

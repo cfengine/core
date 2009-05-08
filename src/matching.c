@@ -872,6 +872,11 @@ int FuzzySetMatch(char *s1,char *s2)
   int mask;
   unsigned long a1,a2;
 
+if (strcmp(s1,s2) == 0)
+   {
+   return true;
+   }
+  
 if (strstr(s1,"/") != 0)
    {
    isCIDR = true;

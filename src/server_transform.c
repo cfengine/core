@@ -191,7 +191,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       {
       continue;
       }
-   
+
    if (GetVariable("control_server",cp->lval,&retval,&rettype) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in server control body",cp->lval);

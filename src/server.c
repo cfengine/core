@@ -744,7 +744,7 @@ if (NewPromiseProposals())
    DeleteItemList(MULTICONNLIST);
    DeleteAuthList(VADMIT);
    DeleteAuthList(VDENY);
-   DeleteRlist(VINPUTLIST);
+   //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
    DeleteAllScope();
 

@@ -489,7 +489,7 @@ else
       {
       case cfa_warn:
           
-          cfPS(cf_error,CF_WARN,"",pp,attr,"%s has permission %o - [should be %o]\n",file,dstat->st_mode & 07777,newperm & 07777);
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has permission %o - [should be %o]\n",file,dstat->st_mode & 07777,newperm & 07777);
           break;
           
       case cfa_fix:
@@ -503,7 +503,7 @@ else
                 }
              }
           
-          cfPS(cf_inform,CF_CHG,"",pp,attr,"Object %s had permission %o, changed it to %o\n",file,dstat->st_mode & 07777,newperm & 07777);
+          cfPS(cf_inform,CF_CHG,"",pp,attr," -> Object %s had permission %o, changed it to %o\n",file,dstat->st_mode & 07777,newperm & 07777);
           break;
           
       default:
@@ -528,7 +528,7 @@ else
       {
       case cfa_warn:
 
-          cfPS(cf_error,CF_WARN,"",pp,attr,"%s has flags %o - [should be %o]\n",file,dstat->st_mode & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has flags %o - [should be %o]\n",file,dstat->st_mode & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
           break;
           
       case cfa_fix:
@@ -542,7 +542,7 @@ else
                 }
              else
                 {
-                cfPS(cf_inform,CF_CHG,"",pp,attr,"%s had flags %o, changed it to %o\n",file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> %s had flags %o, changed it to %o\n",file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
                 }
              }
           
@@ -558,11 +558,11 @@ if (attr.touch)
    {
    if (utime(file,NULL) == -1)
       {
-      cfPS(cf_inform,CF_DENIED,"utime",pp,attr,"Touching file %s failed",file);
+      cfPS(cf_inform,CF_DENIED,"utime",pp,attr," !! Touching file %s failed",file);
       }
    else
       {
-      cfPS(cf_inform,CF_CHG,"",pp,attr,"Touching file %s",file);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Touching file %s",file);
       }
    }
 
@@ -642,14 +642,14 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
          {
          case cfa_fix:
 
-             cfPS(cf_inform,CF_CHG,"",pp,attr,"Removing setuid (root) flag from %s...\n\n",file);
+             cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing setuid (root) flag from %s...\n\n",file);
              break;
 
          case cfa_warn:
 
              if (amroot)
                 {
-                cfPS(cf_error,CF_WARN,"",pp,attr,"WARNING setuid (root) flag on %s...\n\n",file);
+                cfPS(cf_error,CF_WARN,"",pp,attr," !! WARNING setuid (root) flag on %s...\n\n",file);
                 }
              break;             
          }
@@ -670,7 +670,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
             {
             if (amroot)
                {
-               cfPS(cf_error,CF_WARN,"",pp,attr,"NEW SETGID root PROGRAM %s\n",file);
+               cfPS(cf_error,CF_WARN,"",pp,attr," !! NEW SETGID root PROGRAM %s\n",file);
                }
 
             PrependItem(&VSETUIDLIST,file,NULL);
@@ -683,12 +683,12 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
          {
          case cfa_fix:
 
-             cfPS(cf_inform,CF_CHG,"",pp,attr,"Removing setgid (root) flag from %s...\n\n",file);
+             cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing setgid (root) flag from %s...\n\n",file);
              break;
 
          case cfa_warn:
 
-             cfPS(cf_inform,CF_WARN,"",pp,attr,"WARNING setgid (root) flag on %s...\n\n",file);
+             cfPS(cf_inform,CF_WARN,"",pp,attr," !! WARNING setgid (root) flag on %s...\n\n",file);
              break;
              
          default:
@@ -710,7 +710,7 @@ if (lstat(from,&sb) == 0)
    {
    if (!attr.move_obstructions)
       {
-      cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Object %s exists and is obstructing our promise\n",from);
+      cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Object %s exists and is obstructing our promise\n",from);
       return false;
       }
    
@@ -732,11 +732,11 @@ if (lstat(from,&sb) == 0)
       
       strcat(saved,CF_SAVED);
 
-      cfPS(cf_verbose,CF_CHG,"",pp,attr,"Moving file object %s to %s\n",from,saved);
+      cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Moving file object %s to %s\n",from,saved);
 
       if (rename(from,saved) == -1)
          {
-         cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Can't rename %s to %s\n",from,saved);
+         cfPS(cf_error,CF_FAIL,"rename",pp,attr," !! Can't rename %s to %s\n",from,saved);
          return false;
          }
 
@@ -750,7 +750,7 @@ if (lstat(from,&sb) == 0)
    
    if (S_ISDIR(sb.st_mode) && attr.link.when_no_file == cfa_force)
       {
-      cfPS(cf_verbose,CF_CHG,"",pp,attr,"Moving directory %s to %s%s\n",from,from,CF_SAVED);
+      cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Moving directory %s to %s%s\n",from,from,CF_SAVED);
       
       if (DONTDO)
          {
@@ -767,7 +767,7 @@ if (lstat(from,&sb) == 0)
       
       if (stat(saved,&sb) != -1)
          {
-         cfPS(cf_error,CF_FAIL,"",pp,attr,"Couldn't save directory %s, since %s exists already\n",from,saved);
+         cfPS(cf_error,CF_FAIL,"",pp,attr," !! Couldn't save directory %s, since %s exists already\n",from,saved);
          CfOut(cf_error,"","Unable to force link to existing directory %s\n",from);
          return false;
          }

@@ -1746,6 +1746,53 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  struct stat frombuf,tobuf;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+if (GetRegistryValue(finalargs->item,finalargs->next->item,buffer))
+   {
+   SetFnCallReturnStatus("registryvalue",FNCALL_SUCCESS,NULL,NULL);
+   }
+else
+   {
+   SetFnCallReturnStatus("registryvalue",FNCALL_FAILURE,NULL,NULL);
+   }
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRegistrtValue");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

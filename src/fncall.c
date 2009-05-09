@@ -263,6 +263,9 @@ if (UnresolvedArgs(expargs))
 
 switch (this)
    {
+   case cfn_registryvalue:
+       rval = FnCallRegistryValue(fp,expargs);
+       break;
    case cfn_peers:
        rval = FnCallPeers(fp,expargs);
        break;

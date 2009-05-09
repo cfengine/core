@@ -319,6 +319,7 @@ char *PromiseID(struct Promise *pp);
 void NotePromiseCompliance(struct Promise *pp,double val);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 void SyntaxCompletion(char *s);
+int GetRegistryValue(char *key,char *value,char *buffer);
 
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
@@ -409,6 +410,7 @@ struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs);
 
 void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);

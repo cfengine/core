@@ -534,6 +534,19 @@ Nova_VerifyRegistryPromise(a,pp);
 }
 
 /*****************************************************************************/
+
+int GetRegistryValue(char *key,char *value,char *buffer)
+
+{
+#ifdef HAVE_LIBCFNOVA
+# ifdef NT
+return Nova_CopyRegistryValue(key,value,buffer);
+# endif
+#else
+#endif
+}
+
+/*****************************************************************************/
 /* LDAP                                                                      */
 /*****************************************************************************/
 

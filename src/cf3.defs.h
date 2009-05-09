@@ -521,6 +521,7 @@ enum fncalltype
    cfn_readtcp,
    cfn_regarray,
    cfn_regcmp,
+   cfn_registryvalue,
    cfn_regline,
    cfn_reglist,
    cfn_regldap,

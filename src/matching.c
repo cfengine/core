@@ -39,12 +39,17 @@
 int FullTextMatch(char *regexp,char *teststring)
 
 { struct CfRegEx rex;
+
+if (strcmp(regexp,teststring) == 0)
+   {
+   return true;
+   }
  
 rex = CompileRegExp(regexp);
 
 if (rex.failed)
    {
-   return 0;
+   return false;
    }
 
 if (RegExMatchFullString(rex,teststring))
@@ -874,7 +879,7 @@ int FuzzySetMatch(char *s1,char *s2)
 
 if (strcmp(s1,s2) == 0)
    {
-   return true;
+   return 0;
    }
   
 if (strstr(s1,"/") != 0)
@@ -1117,7 +1122,7 @@ int FuzzyHostParse(char *arg1,char *arg2)
 
 n = sscanf(arg2,"%ld-%ld%n",&start,&end,&where);
 
-if ( n != 2 )
+if (n != 2)
    {
    CfOut(cf_error,"","HostRange syntax error: second arg should have X-Y format where X and Y are decimal numbers");
    return false;

@@ -404,12 +404,12 @@ if (pp->audit)
    {
    Indent(indent);
    fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
-   fprintf(FREPORT_TXT,"\n");
+   fprintf(FREPORT_TXT,"\n\n");
    }
 else
    {
    Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n",v,pp->bundle,pp->bundletype,pp->lineno);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n\n",v,pp->bundle,pp->bundletype,pp->lineno);
    }
 }
 

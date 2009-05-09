@@ -738,6 +738,7 @@ int ListLen (struct Item *list);
 int ByteSizeList (struct Item *list);
 int IsItemIn (struct Item *list, char *item);
 int IsFuzzyItemIn (struct Item *list, char *item);
+int IsMatchItemIn(struct Item *list,char *item);
 int GetItemListCounter (struct Item *list, char *item);
 struct Item *ConcatLists (struct Item *list1, struct Item *list2);
 void CopyList (struct Item **dest,struct Item *source);

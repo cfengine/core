@@ -538,7 +538,8 @@ if (strlen(EXECCOMMAND) > 0)
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent%s -Dfrom_cfexecd%s",
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent -f failsafe.cf && %s/bin/cf-agent%s -Dfrom_cfexecd%s",
+            CFWORKDIR,
             CFWORKDIR,
             NOSPLAY ? " -q" : "",
             scheduled_run ? ":scheduled_run" : "");
@@ -555,7 +556,7 @@ if ((fp = fopen(filename,"w")) == NULL)
    return NULL;
    }
 
-CfOut(cf_verbose,"","Command => %s\n",cmd);
+CfOut(cf_verbose,""," -> Command => %s\n",cmd);
 
 if ((pp = cf_popen_sh(cmd,"r")) == NULL)
    {
@@ -563,7 +564,9 @@ if ((pp = cf_popen_sh(cmd,"r")) == NULL)
    fclose(fp);
    return NULL;
    }
- 
+
+CfOut(cf_verbose,""," -> Command is executing...\n",cmd);
+
 while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
    {
    if (ferror(pp))
@@ -608,14 +611,22 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
 cf_pclose(pp);
 Debug("Closing fp\n");
 fclose(fp);
-closelog();
+
+if (ONCE)
+   {
+   closelog();
+   }
+
+CfOut(cf_verbose,""," -> Command is complete\n",cmd);
 
 if (count)
    {
+   CfOut(cf_verbose,""," -> Mailing result\n",cmd);
    MailResult(filename,MAILTO);
    }
 else
    {
+   CfOut(cf_verbose,""," -> No output\n",cmd);
    unlink(filename);
    }
 

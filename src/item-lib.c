@@ -880,6 +880,38 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
+int IsMatchItemIn(struct Item *list,char *item)
+
+/* Solve for possible regex/fuzzy models unified */
+    
+{ struct Item *ptr; 
+ 
+if ((item == NULL) || (strlen(item) == 0))
+   {
+   return true;
+   }
+ 
+for (ptr = list; ptr != NULL; ptr=ptr->next)
+   {
+   if (FuzzySetMatch(ptr->name,item) == 0)
+      {
+      return(true);
+      }
+   
+   if (IsRegex(ptr->name))
+      {
+      if (FullTextMatch(ptr->name,item))
+         {
+         return(true);
+         }      
+      }   
+   }
+ 
+return(false);
+}
+
+/*********************************************************************/
+
 int IsFuzzyItemIn(struct Item *list,char *item)
 
  /* This is for matching ranges of IP addresses, like CIDR e.g.

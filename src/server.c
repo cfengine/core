@@ -375,14 +375,14 @@ while (true)
       
       Debug("Obtained IP address of %s on socket %d from accept\n",ipaddr,sd_reply);
       
-      if (NONATTACKERLIST && !IsFuzzyItemIn(NONATTACKERLIST,MapAddress(ipaddr)) && !IsRegexItemIn(NONATTACKERLIST,MapAddress(ipaddr)))
+      if (NONATTACKERLIST && !IsMatchItemIn(NONATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Not allowing connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
          continue;
          }
       
-      if (IsFuzzyItemIn(ATTACKERLIST,MapAddress(ipaddr)) || IsRegexItemIn(ATTACKERLIST,MapAddress(ipaddr)))
+      if (IsMatchItemIn(ATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
          close(sd_reply);
@@ -396,7 +396,7 @@ while (true)
       
       PurgeOldConnections(&CONNECTIONLIST,now);
       
-      if (!IsFuzzyItemIn(MULTICONNLIST,MapAddress(ipaddr)) && !IsRegexItemIn(MULTICONNLIST,MapAddress(ipaddr)))
+      if (!IsMatchItemIn(MULTICONNLIST,MapAddress(ipaddr)))
          {
          if (IsItemIn(CONNECTIONLIST,MapAddress(ipaddr)))
             {
@@ -1604,7 +1604,7 @@ if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
  
-if ((conn->trust == false) || IsFuzzyItemIn(SKIPVERIFY,MapAddress(conn->ipaddr)))
+if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr)))
    {
    CfOut(cf_verbose,"","Allowing %s to connect without (re)checking ID\n",ip_assert);
    CfOut(cf_verbose,"","Non-verified Host ID is %s (Using skipverify)\n",dns_assert);
@@ -1873,7 +1873,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
    int res = false;
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
       
-   if ((strlen(realname) > strlen(ap->path))  && strncmp(ap->path,realname,strlen(ap->path)) == 0 && realname[strlen(ap->path)] == '/')
+   if ((strlen(realname) > strlen(ap->path)) && strncmp(ap->path,realname,strlen(ap->path)) == 0 && realname[strlen(ap->path)] == '/')
       {
       res = true;    /* Substring means must be a / to link, else just a substring og filename */
       }
@@ -1902,10 +1902,8 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          {
          Debug("Checking whether to map root privileges..\n");
          
-         if (IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->maproot,conn->hostname) ||
-             IsRegexItemIn(ap->maproot,MapAddress(conn->ipaddr)))
-             
+         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->maproot,conn->hostname))             
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -1915,9 +1913,8 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             CfOut(cf_verbose,"","No root privileges granted\n");
             }
          
-         if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->accesslist,conn->hostname) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->accesslist,conn->hostname))
             {
             access = true;
             Debug("Access privileges - match found\n");
@@ -1931,9 +1928,8 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strncmp(ap->path,realname,strlen(ap->path)) == 0)
       {
-      if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-          IsRegexItemIn(ap->accesslist,conn->hostname) ||
-          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+      if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+          IsRegexItemIn(ap->accesslist,conn->hostname))
          {
          access = false;
          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,realname);
@@ -2006,9 +2002,8 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          {
          Debug("Checking whether to map root privileges..\n");
          
-         if (IsRegexItemIn(ap->maproot,conn->hostname) ||
-             IsRegexItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
-             IsFuzzyItemIn(ap->maproot,MapAddress(conn->ipaddr)))
+         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->maproot,conn->hostname))             
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -2018,9 +2013,8 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             CfOut(cf_verbose,"","No root privileges granted\n");
             }
          
-         if (IsRegexItemIn(ap->accesslist,conn->hostname) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-             IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+             IsRegexItemIn(ap->accesslist,conn->hostname))
             {
             access = true;
             Debug("Access privileges - match found\n");
@@ -2034,9 +2028,8 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strcmp(ap->path,name) == 0)
       {
-      if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-          IsRegexItemIn(ap->accesslist,conn->hostname) ||
-          IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)))
+      if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+          IsRegexItemIn(ap->accesslist,conn->hostname))
          {
          access = false;
          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,name);
@@ -2112,12 +2105,11 @@ for (rp = defines; rp != NULL; rp = rp->next)
       if (FullTextMatch(ap->path,rp->item))
          {
          /* We have a pattern covering this class - so are we allowed to activate it? */
-         if (IsFuzzyItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
+         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
              IsRegexItemIn(ap->accesslist,conn->hostname) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(userid1)) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(userid2)) ||
-             IsRegexItemIn(ap->accesslist,MapAddress(conn->username))
+             IsRegexItemIn(ap->accesslist,userid1) ||
+             IsRegexItemIn(ap->accesslist,userid2) ||
+             IsRegexItemIn(ap->accesslist,conn->username)
              )
             {
             CfOut(cf_verbose,"","Attempt to define role/class %s is permitted\n",rp->item);
@@ -3242,7 +3234,7 @@ if (savedkey = HavePublicKey(keyname))
       {
       /* If we find a key, but it doesn't match, see if we permit dynamical IP addressing */
       
-      if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
+      if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
          {
          int result;
          result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
@@ -3268,11 +3260,11 @@ if (savedkey = HavePublicKey(keyname))
    
    return true;
    }
-else if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
+else if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
    {
    /* If the host is expected to have a dynamic address, check for the key */
    
-   if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
+   if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
       {
       int result;
       result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
@@ -3291,7 +3283,7 @@ else if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
 
 /* Finally, if we're still here, we should consider trusting a new key ... */
 
-if ((TRUSTKEYLIST != NULL) && IsFuzzyItemIn(TRUSTKEYLIST,MapAddress(conn->ipaddr)))
+if ((TRUSTKEYLIST != NULL) && IsMatchItemIn(TRUSTKEYLIST,MapAddress(conn->ipaddr)))
    {
    CfOut(cf_verbose,"","Host %s/%s was found in the list of hosts to trust\n",conn->hostname,conn->ipaddr);
    conn->trust = true;
@@ -3328,7 +3320,7 @@ snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR);
 
 Debug("The key does not match a known key but the host could have a dynamic IP...\n"); 
  
-if ((TRUSTKEYLIST != NULL) && IsFuzzyItemIn(TRUSTKEYLIST,mipaddr))
+if ((TRUSTKEYLIST != NULL) && IsMatchItemIn(TRUSTKEYLIST,MapAddress(mipaddr)))
    {
    Debug("We will accept a new key for this IP on trust\n");
    trust = true;
@@ -3412,7 +3404,7 @@ void AddToKeyDB(RSA *newkey,char *mipaddr)
 
 snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR); 
   
-if ((DHCPLIST != NULL) && IsFuzzyItemIn(DHCPLIST,mipaddr))
+if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(mipaddr)))
    {
    /* Cache keys in the db as we see them is there are dynamical addresses */
 

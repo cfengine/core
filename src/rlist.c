@@ -881,7 +881,7 @@ if (count < max)
    memset(node,0,CF_MAXVARSIZE);
    strncpy(node,sp,CF_MAXVARSIZE-1);
    
-   if (blanks || strlen(node) > 0)
+   if (strlen(node) > 0)
       {
       AppendRScalar(&liststart,node,CF_SCALAR);
       }

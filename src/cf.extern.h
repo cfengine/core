@@ -548,5 +548,5 @@ extern char *CF_SCLICODES[CF_MAX_SCLICODES][2];
 extern struct re_pattern_buffer *SEARCHPATTBUFF;
 extern struct re_pattern_buffer *PATTBUFFER;
 
-extern char *CF_DIGEST_TYPES[9][2];
-extern int CF_DIGEST_SIZES[9];
+extern char *CF_DIGEST_TYPES[10][2];
+extern int CF_DIGEST_SIZES[10];

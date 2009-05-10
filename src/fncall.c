@@ -425,6 +425,9 @@ switch (this)
    case cfn_hash:
        rval = FnCallHash(fp,expargs);
        break;
+   case cfn_hashmatch:
+       rval = FnCallHashMatch(fp,expargs);
+       break;
    case cfn_usemodule:
        rval = FnCallUseModule(fp,expargs);
        break;

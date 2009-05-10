@@ -300,7 +300,7 @@ int PR_NOTKEPT = 0;
 /* These string lengths should not exceed CF_MAXDIGESTNAMELEN
    characters for packing */
 
-char *CF_DIGEST_TYPES[9][2] =
+char *CF_DIGEST_TYPES[10][2] =
      {
      "md5","m",
      "sha224","c",
@@ -310,10 +310,11 @@ char *CF_DIGEST_TYPES[9][2] =
      "sha1","S",
      "sha","s",   /* Should come last, since substring */
      "best","b",
+     "crypt","o",
      NULL,NULL
      };
 
-int CF_DIGEST_SIZES[9] =
+int CF_DIGEST_SIZES[10] =
      {
      CF_MD5_LEN,
      CF_SHA224_LEN,
@@ -323,6 +324,7 @@ int CF_DIGEST_SIZES[9] =
      CF_SHA1_LEN,
      CF_SHA_LEN,
      CF_BEST_LEN,
+     CF_CRYPT_LEN,
      0
      };
 

@@ -59,6 +59,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"getuid",cf_int,1,"Return the integer user id of the named user on this host"},
    {"groupexists",cf_class,1,"True if group or numerical id exists on this host"},
    {"hash",cf_str,2,"Return the hash of arg1, type arg2 and assign to a variable"},
+   {"hashmatch",cf_class,3,"Compute the hash of arg1, of type arg2 and test if it matches the value in arg 3"},
    {"hostrange",cf_class,2,"True if the current host lies in the range of enumerated hostnames specified"},
    {"hostinnetgroup",cf_class,1,"True if the current host is in the named netgroup"},
    {"iprange",cf_class,1,"True if the current host lies in the range of IP addresses specified"},

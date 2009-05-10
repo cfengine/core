@@ -248,7 +248,68 @@ snprintf(buffer,CF_BUFSIZE-1,"%s",HashPrint(type,digest));
 
 if ((rval.item = strdup(buffer+4)) == NULL)
    {
-   FatalError("Memory allocation in FnCallGetGid");
+   FatalError("Memory allocation in FnCallHash");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallHashMatch(struct FnCall *fp,struct Rlist *finalargs)
+
+/* HashMatch(string,md5|sha1|crypt,"abdxy98edj") */
+    
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     "md5,sha1,crypt",
+     CF_IDRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_opts,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE],ret[CF_BUFSIZE],*string,*typestring,*compare;
+  unsigned char digest[EVP_MAX_MD_SIZE+1];
+  enum cfhashes type;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+string = finalargs->item;
+typestring = finalargs->next->item;
+compare = finalargs->next->next->item;
+
+type = String2HashType(typestring);
+HashString(string,strlen(string),digest,type);
+snprintf(buffer,CF_BUFSIZE-1,"%s",HashPrint(type,digest));
+CfOut(cf_verbose,""," -> File %s hashes to %s, compare to %s\n",string,buffer,compare);
+
+if (strcmp(buffer+4,compare) == 0)
+   {
+   strcpy(ret,"any");
+   }
+else
+   {
+   strcpy(ret,"!any");
+   }
+
+if ((rval.item = strdup(ret)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallHashMatch");
    }
 
 /* end fn specific content */

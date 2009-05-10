@@ -402,6 +402,7 @@ typedef int clockid_t;
 #define CF_SHA_LEN 20
 #define CF_SHA1_LEN 20
 #define CF_BEST_LEN 0
+#define CF_CRYPT_LEN 64
 #define CF_SHA224_LEN 28
 #define CF_SHA256_LEN 32
 #define CF_SHA384_LEN 48

@@ -491,6 +491,7 @@ enum fncalltype
    cfn_getuid,
    cfn_groupexists,
    cfn_hash,
+   cfn_hashmatch,
    cfn_hostrange,
    cfn_hostinnetgroup,
    cfn_iprange,
@@ -771,6 +772,7 @@ enum cfhashes
    cf_sha1,
    cf_sha,
    cf_besthash,
+   cf_crypt,
    cf_nohash
    };
 

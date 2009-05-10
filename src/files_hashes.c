@@ -315,15 +315,25 @@ void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enu
 
 { EVP_MD_CTX context;
   const EVP_MD *md = NULL;
+  char *file_buffer;
   int md_len;
 
 Debug2("HashString(%c)\n",type);
 
-md = EVP_get_digestbyname(FileHashName(type));
-
-EVP_DigestInit(&context,md); 
-EVP_DigestUpdate(&context,(unsigned char*)buffer,len);
-EVP_DigestFinal(&context,digest,&md_len);
+switch (type)
+   {
+   case cf_crypt:
+       CfOut(cf_error,"","The crypt support is not presently implemented, please use md5 instead");
+       break;
+       
+   default:
+       md = EVP_get_digestbyname(FileHashName(type));
+       
+       EVP_DigestInit(&context,md); 
+       EVP_DigestUpdate(&context,(unsigned char*)buffer,len);
+       EVP_DigestFinal(&context,digest,&md_len);
+       break;
+   }
 }
 
 /*******************************************************************/

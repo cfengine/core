@@ -241,9 +241,9 @@ if (S_ISDIR(statbuf.st_mode))
 
       strcpy(buff,name);
 
-      if (buff[strlen(buff)] != '/')
+      if (buff[strlen(buff)] != FILE_SEPARATOR)
          {
-         strcat(buff,"/");
+         strcat(buff,FILE_SEPARATOR_STR);
          }
 
       strcat(buff,dirp->d_name);
@@ -410,13 +410,14 @@ int IsForeignFileSystem (struct stat *childstat,char *dir)
  
 strncpy(vbuff,dir,CF_BUFSIZE-1);
 
-if (vbuff[strlen(vbuff)-1] == '/')
+if (vbuff[strlen(vbuff)-1] == FILE_SEPARATOR)
    {
    strcat(vbuff,"..");
    }
 else
    {
-   strcat(vbuff,"/..");
+   strcat(vbuff,FILE_SEPARATOR_STR);
+   strcat(vbuff,"..");
    }
 
 if (stat(vbuff,&parentstat) == -1)

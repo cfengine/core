@@ -55,7 +55,7 @@ if (MatchRlistItem(attr.link.copy_patterns,lastnode))
 
 memset(to,0,CF_BUFSIZE);
   
-if ((*source != '/') && (*source != '.'))  /* links without a directory reference */
+if (!IsAbsoluteFileName(source) && (*source != '.'))  /* links without a directory reference */
    {
    snprintf(to,CF_BUFSIZE-1,"./%s",source);
    }
@@ -64,7 +64,7 @@ else
    strncpy(to,source,CF_BUFSIZE-1);
    }
 
-if (*to != '/')         /* relative path, must still check if exists */
+if (!IsAbsoluteFileName(to))         /* relative path, must still check if exists */
    {
    Debug("Relative link destination detected: %s\n",to);
    strcpy(absto,AbsLinkPath(destination,to));
@@ -216,7 +216,7 @@ return VerifyLink(destination,linkto,attr,pp);
 int VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
 { char *sp, *commonto, *commonfrom;
-  char buff[CF_BUFSIZE],linkto[CF_BUFSIZE];
+ char buff[CF_BUFSIZE],linkto[CF_BUFSIZE],add[CF_BUFSIZE];
   int levels=0;
   
 Debug("RelativeLink(%s,%s)\n",destination,source);
@@ -248,7 +248,7 @@ while (*commonto == *commonfrom)
    commonfrom++;
    }
 
-while (!((*commonto == '/') && (*commonfrom == '/')))
+while (!(IsAbsoluteFileName(commonto) && IsAbsoluteFileName(commonfrom)))
    {
    commonto--;
    commonfrom--;
@@ -258,19 +258,22 @@ commonto++;
 
 for (sp = commonfrom; *sp != '\0'; sp++)
    {
-   if (*sp == '/')
-       {
-       levels++;
-       }
+   if (IsFileSep(*sp))
+      {
+      levels++;
+      }
    }
 
 memset(buff,0,CF_BUFSIZE);
 
-strcat(buff,"./");
+strcat(buff,".");
+strcat(buff,FILE_SEPARATOR_STR);
 
 while(--levels > 0)
    {
-   if (!JoinPath(buff,"../"))
+   snprintf(add,CF_BUFSIZE-1,"..%c",FILE_SEPARATOR);
+   
+   if (!JoinPath(buff,add))
       {
       return false;
       }
@@ -293,16 +296,16 @@ int VerifyHardLink(char *destination,char *source,struct Attributes attr,struct 
 
 memset(to,0,CF_BUFSIZE);
   
-if ((*source != '/') && (*source != '.'))  /* links without a directory reference */
+if (!IsAbsoluteFileName(source) && (*source != '.'))  /* links without a directory reference */
    {
-   snprintf(to,CF_BUFSIZE-1,"./%s",source);
+   snprintf(to,CF_BUFSIZE-1,".%c%s",FILE_SEPARATOR,source);
    }
 else
    {
    strncpy(to,source,CF_BUFSIZE-1);
    }
 
-if (*to != '/')         /* relative path, must still check if exists */
+if (!IsAbsoluteFileName(to))         /* relative path, must still check if exists */
    {
    Debug("Relative link destination detected: %s\n",to);
    strcpy(absto,AbsLinkPath(destination,to));
@@ -387,11 +390,11 @@ if (readlink(name,linkbuf,CF_BUFSIZE-1) == -1)
    return true; /* ignore */
    }
 
-if (linkbuf[0] != '/')
+if (!IsAbsoluteFileName(linkbuf))
    {
    strcpy(linkpath,name);    /* Get path to link */
 
-   for (sp = linkpath+strlen(linkpath); (*sp != '/') && (sp >= linkpath); sp-- )
+   for (sp = linkpath+strlen(linkpath); (*sp != FILE_SEPARATOR) && (sp >= linkpath); sp-- )
      {
      *sp = '\0';
      }
@@ -490,7 +493,7 @@ if (level >= CF_MAXLINKLEVEL)
 
 for (sp = from; *sp != '\0'; sp++)
    {
-   if (*sp == '/')
+   if (*sp == FILE_SEPARATOR)
       {
       continue;
       }
@@ -547,7 +550,7 @@ for (sp = from; *sp != '\0'; sp++)
                return false;
                }
             }
-         else if (buff[0] == '/')
+         else if (IsAbsoluteFileName(buff))
             {
             strcpy(dest,buff);
             DeleteSlash(dest);
@@ -601,7 +604,7 @@ char *AbsLinkPath (char *from,char *relto)
   int pop = 1;
   static char destination[CF_BUFSIZE];
   
-if (*relto == '/')
+if (IsAbsoluteFileName(relto))
    {
    FatalError("Cfengine internal error: call to AbsLInkPath with absolute pathname\n");
    }

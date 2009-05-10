@@ -1866,7 +1866,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
    int res = false;
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
       
-   if ((strlen(realname) > strlen(ap->path)) && strncmp(ap->path,realname,strlen(ap->path)) == 0 && realname[strlen(ap->path)] == '/')
+   if ((strlen(realname) > strlen(ap->path)) && strncmp(ap->path,realname,strlen(ap->path)) == 0 && realname[strlen(ap->path)] == FILE_SEPARATOR)
       {
       res = true;    /* Substring means must be a / to link, else just a substring og filename */
       }
@@ -1895,8 +1895,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          {
          Debug("Checking whether to map root privileges..\n");
          
-         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->maproot,conn->hostname))             
+         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -1906,8 +1905,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             CfOut(cf_verbose,"","No root privileges granted\n");
             }
          
-         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->accesslist,conn->hostname))
+         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
             {
             access = true;
             Debug("Access privileges - match found\n");
@@ -1995,8 +1993,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          {
          Debug("Checking whether to map root privileges..\n");
          
-         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->maproot,conn->hostname))             
+         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -2006,8 +2003,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             CfOut(cf_verbose,"","No root privileges granted\n");
             }
          
-         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-             IsRegexItemIn(ap->accesslist,conn->hostname))
+         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
             {
             access = true;
             Debug("Access privileges - match found\n");
@@ -2021,8 +2017,7 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strcmp(ap->path,name) == 0)
       {
-      if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-          IsRegexItemIn(ap->accesslist,conn->hostname))
+      if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
          {
          access = false;
          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,name);
@@ -2279,7 +2274,7 @@ if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
-    }
+   }
 
 if (len == 0)
    {
@@ -2517,7 +2512,6 @@ return true;
 /**************************************************************/
 
 int StatFile(struct cfd_connection *conn,char *sendbuffer,char *filename)
-
 
 /* Because we do not know the size or structure of remote datatypes,*/
 /* the simplest way to transfer the data is to convert them into */
@@ -2933,7 +2927,7 @@ int CfOpenDirectory(struct cfd_connection *conn,char *sendbuffer,char *dirname)
 
 Debug("CfOpenDirectory(%s)\n",dirname);
   
-if (*dirname != '/')
+if (!IsAbsoluteFileName(dirname))
    {
    sprintf(sendbuffer,"BAD: request to access a non-absolute filename\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
@@ -2985,7 +2979,7 @@ int CfSecOpenDirectory(struct cfd_connection *conn,char *sendbuffer,char *dirnam
 
 Debug("CfSecOpenDirectory(%s)\n",dirname);
   
-if (*dirname != '/')
+if (!IsAbsoluteFileName(dirname))
    {
    sprintf(sendbuffer,"BAD: request to access a non-absolute filename\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);

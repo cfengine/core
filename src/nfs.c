@@ -138,57 +138,58 @@ do
       case qnx:
       case crayos:
       case dragonfly:
-                    if (buf1[0] == '/')
-                       {
-                       strcpy(host,"localhost");
-                       strcpy(mounton,buf3);
-                       }
-                    else
-                       {
-                       sscanf(buf1,"%[^:]:%s",host,source);
-                       strcpy(mounton,buf3);
-                       }
-
-                    break;
+          if (IsAbsoluteFileName(buf1))
+             {
+             strcpy(host,"localhost");
+             strcpy(mounton,buf3);
+             }
+          else
+             {
+             sscanf(buf1,"%[^:]:%s",host,source);
+             strcpy(mounton,buf3);
+             }
+          
+          break;
       case solaris:
       case solarisx86:
 
       case hp:      
-                    if (buf3[0] == '/')
-                       {
-                       strcpy(host,"localhost");
-                       strcpy(mounton,buf1);
-                       }
-                    else
-                       {
-                       sscanf(buf1,"%[^:]:%s",host,source);
-                       strcpy(mounton,buf1);
-                       }
-
-                    break;
+          if (IsAbsoluteFileName(buf3))
+             {
+             strcpy(host,"localhost");
+             strcpy(mounton,buf1);
+             }
+          else
+             {
+             sscanf(buf1,"%[^:]:%s",host,source);
+             strcpy(mounton,buf1);
+             }
+          
+          break;
       case aix:
-                   /* skip header */
-
-                    if (buf1[0] == '/')
-                       {
-                       strcpy(host,"localhost");
-                       strcpy(mounton,buf2);
-                       }
-                    else
-                       {
-                       strcpy(host,buf1);
-                       strcpy(source,buf1);
-                       strcpy(mounton,buf3);
-                       }
-                    break;
-
-      case cfnt:    strcpy(mounton,buf2);
-                    strcpy(host,buf1);
-                    break;
+          /* skip header */
+          
+          if (IsAbsoluteFileName(buf1))
+             {
+             strcpy(host,"localhost");
+             strcpy(mounton,buf2);
+             }
+          else
+             {
+             strcpy(host,buf1);
+             strcpy(source,buf1);
+             strcpy(mounton,buf3);
+             }
+          break;
+          
+      case cfnt:
+          strcpy(mounton,buf2);
+          strcpy(host,buf1);
+          break;
       case unused2:
       case unused3:
-                    break;
-
+          break;
+          
       case cfsco: CfOut(cf_error,"","Don't understand SCO mount format, no data");
 
       default:

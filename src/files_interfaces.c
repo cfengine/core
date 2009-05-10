@@ -1301,7 +1301,7 @@ if (cf_readlink(sourcefile,linkbuf,CF_BUFSIZE,attr,pp) == -1)
 
 CfOut(cf_verbose,"","Checking link from %s to %s\n",destfile,linkbuf);
 
-if (attr.copy.link_type == cfa_absolute && linkbuf[0] != '/')      /* Not absolute path - must fix */
+if (attr.copy.link_type == cfa_absolute && !IsAbsoluteFileName(linkbuf))      /* Not absolute path - must fix */
    {
    char vbuff[CF_BUFSIZE];
    strcpy(vbuff,sourcefile);

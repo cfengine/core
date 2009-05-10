@@ -875,7 +875,7 @@ for (cmd = command; *cmd != '\0' && *cmd != ' '; cmd++)
    {
    }
 
-while (*(cmd-1) != '/' && cmd >= command)
+while (*(cmd-1) != FILE_SEPARATOR && cmd >= command)
    {
    cmd--;
    }

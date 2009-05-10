@@ -390,7 +390,8 @@ if (IsFileSep(f[0]) && IsFileSep(f[1]))
    {
    return true;
    }
-if ( isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]) )
+
+if (isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]))
    {
    return true;
    }

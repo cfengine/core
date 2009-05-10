@@ -98,7 +98,7 @@ destination[0] = '\0';
 
 for (sp = node; *sp != '\0'; sp++)
    {
-   if (*sp == '/')
+   if (*sp == FILE_SEPARATOR)
       {
       *sp = REPOSCHAR;
       }

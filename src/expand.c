@@ -887,6 +887,11 @@ if (IsExcluded(pp->classes))
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
+   if (strcmp(cp->lval,"comment") == 0)
+      {
+      continue;
+      }
+   
    if (strcmp(cp->lval,"policy") == 0)
       {
       if (strcmp(cp->rval,"constant") == 0)

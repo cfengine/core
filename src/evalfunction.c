@@ -417,6 +417,71 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*newlist;
+  struct Rval rval;
+  struct Item *ip;
+  char *name,*split;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+name = finalargs->item;
+split = finalargs->next->item;
+
+newlist = SplitRegexAsRList(name,split,100,true);
+
+for (rp = newlist; rp != NULL; rp=rp->next)
+   {
+   if (rp->next == NULL)
+      {
+      break;
+      }
+   }
+
+if (rp && rp->item)
+   {
+   SetFnCallReturnStatus("lastnode",FNCALL_SUCCESS,NULL,NULL);
+
+   if ((rval.item = strdup(rp->item)) == NULL)
+      {
+      FatalError("Memory allocation in FnLastNode");
+      }
+   }
+else
+   {
+   SetFnCallReturnStatus("lastnode",FNCALL_FAILURE,NULL,NULL);
+
+   if ((rval.item = strdup("")) == NULL)
+      {
+      FatalError("Memory allocation in FnLastNode");
+      }
+   }
+
+/* end fn specific content */
+
+DeleteRlist(newlist);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =
@@ -2043,6 +2108,8 @@ else
    SetFnCallReturnStatus("peers",FNCALL_FAILURE,NULL,NULL);
    }
 
+
+free(file_buffer);
 rval.item = pruned;
 rval.rtype = CF_LIST;
 return rval;
@@ -2160,6 +2227,7 @@ else
    SetFnCallReturnStatus("peerleader",FNCALL_FAILURE,NULL,NULL);
    }
 
+free(file_buffer);
 rval.item = strdup(buffer);
 rval.rtype = CF_SCALAR;
 return rval;
@@ -2268,6 +2336,7 @@ else
    SetFnCallReturnStatus("peerleaders",FNCALL_FAILURE,NULL,NULL);
    }
 
+free(file_buffer);
 rval.item = pruned;
 rval.rtype = CF_LIST;
 return rval;
@@ -3220,6 +3289,7 @@ else
    SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
    }
 
+free(file_buffer);
 rval.item = newlist;
 rval.rtype = CF_LIST;
 return rval;
@@ -3324,6 +3394,7 @@ SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
 snprintf(fnname,CF_MAXVARSIZE-1,"%d",entries);
 rval.item = strdup(fnname);
 
+free(file_buffer);
 rval.rtype = CF_SCALAR;
 return rval;
 }

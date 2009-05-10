@@ -1819,17 +1819,10 @@ int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct 
   struct stat statbuf;
 
 Debug("AccessControl(%s)\n",filename);
+
 memset(realname,0,CF_BUFSIZE);
 
 /* Separate path first, else this breaks for lastnode = symlink */
-
-for (sp = filename; *sp != '\0'; sp++) /*fix filename to not have windows slashes */
-   {
-   if (*sp == FILE_SEPARATOR)
-      {
-      *sp = '/';
-      }
-   }
 
 strncpy(path,filename,CF_BUFSIZE-1);
 strncpy(lastnode,ReadLastNode(filename),CF_BUFSIZE-1);
@@ -1844,7 +1837,7 @@ if (realpath(path,realname) == NULL)
    return false;
    }
 #else
-CompressPath(realname,path); /* in links.c */
+CompressPath(realname,path);
 #endif
 
 /* Rejoin the last node and stat the real thing */

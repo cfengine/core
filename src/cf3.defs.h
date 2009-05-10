@@ -503,6 +503,7 @@ enum fncalltype
    cfn_isnewerthan,
    cfn_isplain,
    cfn_isvariable,
+   cfn_lastnode,
    cfn_ldaparray,
    cfn_ldaplist,
    cfn_ldapvalue,

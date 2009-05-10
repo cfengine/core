@@ -71,6 +71,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"isnewerthan",cf_class,2,"True if arg1 is newer (modified later) than arg2 (mtime)"},
    {"isplain",cf_class,1,"True if the named object is a plain/regular file"},
    {"isvariable",cf_class,1,"True if the named variable is defined"},
+   {"lastnode",cf_str,2,"Extract the last of a separated string, e.g. filename from a path"},
    {"ldaparray",cf_class,6,"Extract all values from an ldap record"},
    {"ldaplist",cf_slist,6,"Extract all named values from multiple ldap records"},
    {"ldapvalue",cf_str,6,"Extract the first matching named value from ldap"},

@@ -40,9 +40,9 @@ void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *lognam
  
 if (logname && attr.transaction.log_string)
    {
-   if (strcmp(attr.transaction.log_string,"stdout") == 0)
+   if (strcmp(logname,"stdout") == 0)
       {
-      fprintf(fout,"L: %s\n",attr.transaction.log_string);
+      printf("L: %s\n",attr.transaction.log_string);
       }
    else
       {

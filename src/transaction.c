@@ -517,5 +517,8 @@ return dbp;
 void CloseLock(DB *dbp)
 
 {
-dbp->close(dbp,0);
+if (dbp)
+   { 
+   dbp->close(dbp,0);
+   }
 }

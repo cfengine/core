@@ -1830,7 +1830,7 @@ ChopLastNode(path);
 
 /* Eliminate links from path */
 
-#ifdef HAVE_REALPATH
+#if defined HAVE_REALPATH && !defined NT
 if (realpath(path,realname) == NULL)
    {
    CfOut(cf_verbose,"lstat","Couldn't resolve filename %s from host %s\n",filename,conn->hostname);

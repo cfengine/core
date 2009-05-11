@@ -1221,12 +1221,8 @@ struct Checksum_Value
 
 #ifdef NT
 #  define IsFileSep(c) ((c) == '\\' || (c) == '/')
-#  define FILE_SEPARATOR '\\'
-#  define FILE_SEPARATOR_STR "\\"
 #else
 #  define IsFileSep(c) ((c) == '/')
-#  define FILE_SEPARATOR '/'
-#  define FILE_SEPARATOR_STR "/"
 #endif
 
 

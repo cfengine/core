@@ -79,8 +79,8 @@ NewClass(CanonifyName(THIS_AGENT));
 THIS_AGENT_TYPE = ag;
 
 snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
-SetNewScope(vbuff);
 
+SetNewScope(vbuff);
 NewScope("this");
 NewScope("match");
 
@@ -119,7 +119,7 @@ if ((ag != cf_agent) && (ag != cf_executor))
    return true;
    }
 
-snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises",CFWORKDIR);
+snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
 
 if (stat(cmd,&sb) == -1)
    {
@@ -131,11 +131,11 @@ if (stat(cmd,&sb) == -1)
 
 if ((*VINPUTFILE == '.') || IsFileSep(*VINPUTFILE))
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s",CFWORKDIR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises -f %s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-promises -f %s/inputs/%s",CFWORKDIR,CFWORKDIR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises -f %s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
    }
 
 /* Check if reloading policy will succeed */
@@ -242,6 +242,23 @@ void InitializeGA(int argc,char *argv[])
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
 
+#ifdef NT
+if (stat("/cygdrive",&statbuf) == 0)
+   {
+   FILE_SEPARATOR = '/';
+   strcpy(FILE_SEPARATOR_STR,"/");
+   }
+else
+   {
+   FILE_SEPARATOR = '\\';
+   strcpy(FILE_SEPARATOR_STR,"\\");
+   }
+#else
+FILE_SEPARATOR = '/';
+strcpy(FILE_SEPARATOR_STR,"/");
+#endif
+
+
 NewClass("any");
 strcpy(VPREFIX,"cf3");
 
@@ -280,8 +297,9 @@ else
    {
    strcpy(CFWORKDIR,WORKDIR);
    }
+
 #else
-strcpy(CFWORKDIR,WORKDIR);
+strcpy(CFWORKDIR,MapName(WORKDIR));
 #endif
 
 CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
@@ -1023,20 +1041,20 @@ char *InputLocation(char *filename)
 
 { static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsFileSep(*VINPUTFILE)) && !IsFileSep(*filename))
+if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsAbsoluteFileName(VINPUTFILE)) && !IsAbsoluteFileName(filename))
    {
    /* If -f assume included relative files are in same directory */
    strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
    ChopLastNode(path);
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s%c%s",path,FILE_SEPARATOR,filename);
    }
-else if ((*filename == '.') || IsFileSep(*filename))
+else if ((*filename == '.') || IsAbsoluteFileName(filename))
    {
    strncpy(wfilename,filename,CF_BUFSIZE-1);
    }
 else
    {
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,filename);
    }
 
 return wfilename;

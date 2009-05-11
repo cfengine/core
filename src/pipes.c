@@ -387,6 +387,7 @@ FILE *cf_popen_sh(char *command,char *type)
  { int i,pd[2];
    pid_t pid;
    FILE *pp = NULL;
+   char esc_command[CF_BUFSIZE];
 
 Debug("cf_popen_sh(%s)\n",command);
 
@@ -452,8 +453,9 @@ if (pid == 0)
          close(i);
          }
       }
-   
-   execl("/bin/sh","sh","-c",command,NULL);
+
+   strncpy(esc_command,WinEscapeCommand(command),CF_BUFSIZE-1);
+   execl("/bin/sh","sh","-c",esc_command,NULL);
    _exit(1);
    }
 else
@@ -504,6 +506,7 @@ FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdir
  { int i,pd[2];
    pid_t pid;
    FILE *pp = NULL;
+   char esc_command[CF_BUFSIZE];
 
 Debug("cf_popen_shsetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
 
@@ -592,8 +595,9 @@ if (pid == 0)
       {
       _exit(1);
       }
-   
-   execl("/bin/sh","sh","-c",command,NULL);
+
+   strncpy(esc_command,WinEscapeCommand(command),CF_BUFSIZE-1);
+   execl("/bin/sh","sh","-c",esc_command,NULL);
    _exit(1);
    }
 else

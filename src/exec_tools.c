@@ -29,7 +29,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
@@ -94,6 +93,7 @@ int ShellCommandReturnsZero(char *comm,int useshell)
   pid_t pid;
   char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
   char **argv;
+  char esc_command[CF_BUFSIZE];
 
 if (!useshell)
    {
@@ -112,7 +112,7 @@ if (!useshell)
       return false;
       }
    }
-    
+
 if ((pid = fork()) < 0)
    {
    FatalError("Failed to fork new process");
@@ -120,12 +120,14 @@ if ((pid = fork()) < 0)
 else if (pid == 0)                     /* child */
    {
    ALARM_PID = -1;
-   
+
    if (useshell)
       {
-      if (execl("/bin/sh","sh","-c",comm,NULL) == -1)
+      strncpy(esc_command,WinEscapeCommand(comm),CF_BUFSIZE-1);
+
+      if (execl("/bin/sh","sh","-c",esc_command,NULL) == -1)
          {
-         CfOut(cf_error,"execl","Command %s failed",comm);
+         CfOut(cf_error,"execl","Command %s failed",esc_command);
          exit(1);
          }
       }
@@ -157,7 +159,7 @@ else if (pid == 0)                     /* child */
 else                                    /* parent */
    {
    pid_t wait_result;
-   
+
    while ((wait_result = wait(&status)) != pid)
       {
       if (wait_result <= 0)
@@ -315,3 +317,31 @@ for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
    }
 }
 
+/**********************************************************************/
+
+char *WinEscapeCommand(char *s)
+
+{ static char buffer[CF_BUFSIZE];
+  char *spf,*spto;
+
+memset(buffer,0,CF_BUFSIZE);
+
+spto = buffer;
+
+for (spf = s; *spf != '\0'; spf++)
+   {
+   switch (*spf)
+      {
+      case '\\':
+          *spto++ = '\\';
+          *spto++ = '\\';
+          break;
+
+      default:
+          *spto++ = *spf;
+          break;          
+      }
+   }
+
+return buffer;
+}

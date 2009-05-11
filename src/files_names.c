@@ -429,6 +429,7 @@ if (IsFileSep(f[0]) && IsFileSep(f[1]))
       }
    
    /* Skip over share name */
+
    for (len++; !IsFileSep(f[len]); len++)
       {
       if (f[len] == '\0')
@@ -442,17 +443,19 @@ if (IsFileSep(f[0]) && IsFileSep(f[1]))
    
    return len;
    }
- if ( isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]) )
-    {
-    return 3;
-    }
+
+if (isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]) )
+   {
+   return 3;
+   }
 #endif
- if (*f == '/')
-    {
-    return 1;
-    }
- 
- return 0;
+
+if (*f == '/')
+   {
+   return 1;
+   }
+
+return 0;
 }
 
 /*********************************************************************/

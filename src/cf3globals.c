@@ -291,6 +291,9 @@ int PR_KEPT = 0;
 int PR_REPAIRED = 0;
 int PR_NOTKEPT = 0;
 
+char FILE_SEPARATOR;
+char FILE_SEPARATOR_STR[2];
+
 /*******************************************************************/
 /*                                                                 */
 /* Checksums                                                       */

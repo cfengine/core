@@ -203,9 +203,9 @@ if (result = IsRegex(str))
                 result++;
                 }
              break;
-         case FILE_SEPARATOR:
-             
-             if (r || s)
+         default:
+
+             if (*sp == FILE_SEPARATOR && (r || s))
                 {
                 CfOut(cf_error,"","Path regular expression %s seems to use expressions containing the directory symbol %c",str,FILE_SEPARATOR);
                 CfOut(cf_error,"","Use a work-around to avoid pathological behaviour\n");

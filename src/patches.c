@@ -52,6 +52,76 @@ else
 
 /*********************************************************/
 
+char *MapName(char *s)
+
+{ static char buffer[CF_BUFSIZE];
+  char *spf,*spto;
+  int rootlen;
+  struct stat sb;
+
+#ifdef NT
+memset(buffer,0,CF_BUFSIZE);
+
+rootlen = RootDirLength(s);
+
+if (stat("/cygdrive",&sb) == 0)
+   {
+   spto = buffer;
+
+   if (rootlen)
+      {
+      *spto++ = '/';
+      }
+
+   for (spf = s+rootlen; *spf != '\0'; spf++)
+      {
+      switch (*spf)
+         {
+         case '\\':
+             *spto = '/';
+             break;
+
+         default:
+             *spto = *spf;
+             break;          
+         }
+      
+      spto++;
+      }
+   }
+else
+   {
+   spto = buffer;
+
+   if (rootlen)
+      {
+      *spto++ = 'c';
+      *spto++ = ':';
+      }
+
+   for (spf = s; *spf != '\0'; spf++)
+      {
+      switch (*spf)
+         {
+         case '/':
+             *spto++ = '\\';
+             break;
+
+         default:
+             *spto++ = *spf;
+             break;          
+         }
+      }
+   }
+#else
+strncpy(buffer,s,CF_BUFSIZE-1);
+#endif
+
+return buffer;
+}
+
+/*********************************************************/
+
 char *StrStr(char *a,char *b) /* Case insensitive match */
 
 { char buf1[CF_BUFSIZE],buf2[CF_BUFSIZE];

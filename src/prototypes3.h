@@ -451,6 +451,7 @@ int IsExecutable(char *file);
 int ShellCommandReturnsZero(char *comm,int useshell);
 int GetExecOutput(char *command,char *buffer,int useshell);
 void ActAsDaemon(int preserve);
+char *WinEscapeCommand(char *s);
 
 /* files_copy.c */
 
@@ -898,7 +899,7 @@ char *cf_strdup(char *s);
 int cf_strlen(char *s);
 char *cf_strncpy(char *s1,char *s2,size_t n);
 char *cf_strchr(char *s, int c);
-
+char *MapName(char *s);
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);

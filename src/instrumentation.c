@@ -433,7 +433,12 @@ return true;
 int ReadDB(DB *dbp,char *name,void *ptr,int size)
 
 { DBT *key,value;
-  
+
+if (dbp == NULL)
+   {
+   return false;
+   }
+ 
 key = NewDBKey(name);
 memset(&value,0,sizeof(DBT));
 
@@ -468,6 +473,11 @@ else
 int WriteDB(DB *dbp,char *name,void *ptr,int size)
 
 { DBT *key,*value;
+
+if (dbp == NULL)
+   {
+   return false;
+   }
  
 key = NewDBKey(name); 
 value = NewDBValue(ptr,size);
@@ -495,6 +505,11 @@ void DeleteDB(DB *dbp,char *name)
 
 { DBT *key;
 
+if (dbp == NULL)
+   {
+   return;
+   }
+ 
 key = NewDBKey(name);
 
 if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
@@ -505,7 +520,6 @@ if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
 DeleteDBKey(key);
 Debug("DELETED DB %s\n",name);
 }
-
 
 /*****************************************************************************/
 /* Level 2                                                                   */

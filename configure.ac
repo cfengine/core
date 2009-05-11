@@ -14,7 +14,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.2a1)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.2a2)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -748,12 +748,13 @@ AC_ARG_WITH(workdir,
 		if test x$withval != x ; then
 			WORKDIR=$withval
 		else
-			WORKDIR=/var/cfengine
+  		        WORKDIR=/var/cfengine
 		fi
-		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
+
+     	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
 	],
 	[
-		WORKDIR=/var/cfengine
+           WORKDIR=/var/cfengine
 
 		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
 	]

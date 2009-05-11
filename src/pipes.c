@@ -34,6 +34,16 @@
 
 /*****************************************************************************/
 
+FILE *cf_fopen(char *file,char *type)
+
+{
+/* Windows native eventually? */
+
+return fopen(file,type);
+}
+
+/*****************************************************************************/
+
 # if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 extern pthread_attr_t PTHREADDEFAULTS;
 extern pthread_mutex_t MUTEX_COUNT;
@@ -818,6 +828,16 @@ else
 
 return (WEXITSTATUS(status));
 #endif
+}
+
+/*****************************************************************************/
+
+int cf_fclose(FILE *fp)
+
+{
+/* Windows native eventually? */
+
+return fclose(fp);
 }
 
 /*******************************************************************/

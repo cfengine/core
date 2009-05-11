@@ -128,6 +128,7 @@ void CompilePromises(void);
 
 /* cfstreams.c */
 
+void CfFOut(FILE *fp,char *fmt, ...);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);
@@ -563,7 +564,6 @@ char ToUpper (char ch);
 char *ToUpperStr (char *str);
 char *ToLowerStr (char *str);
 
-
 /* files_operators.c */
 
 void TruncateFile(char *name);
@@ -892,6 +892,14 @@ int IsPrivileged (void);
 int IntMin (int a,int b);
 char *StrStr (char *s1,char *s2);
 int StrnCmp (char *s1,char *s2,size_t n);
+int cf_strcmp(char *s1,char *s2);
+int cf_strncmp(char *s1,char *s2,size_t n);
+char *cf_strdup(char *s);
+int cf_strlen(char *s);
+char *cf_strncpy(char *s1,char *s2,size_t n);
+char *cf_strchr(char *s, int c);
+
+
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);
 int getnetgrent (char **host, char **user, char **domain);
@@ -927,6 +935,8 @@ int setegid (gid_t egid);
 
 /* pipes.c */
 
+FILE *cf_fopen(char *file,char *type);
+int cf_fclose(FILE *fp);
 FILE *cf_popen(char *command,char *type);
 FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
 FILE *cf_popen_sh(char *command,char *type);

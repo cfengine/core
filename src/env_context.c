@@ -689,6 +689,11 @@ if (IsRegexItemIn(ABORTHEAP,copy))
    exit(1);
    }
 
+if (IsItemIn(VHEAP,copy))
+   {
+   CfOut(cf_error,"","WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",copy,bundle);
+   }
+
 if (IsItemIn(VADDCLASSES,copy))
    {
    return;

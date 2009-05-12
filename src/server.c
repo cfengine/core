@@ -1816,7 +1816,7 @@ int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct 
 { struct Auth *ap;
   int access = false;
   char realname[CF_BUFSIZE],path[CF_BUFSIZE],lastnode[CF_BUFSIZE],*sp;
-  char translated[CF_BUFSIZE];
+  char transrequest[CF_BUFSIZE],transpath[CF_BUFSIZE];
   struct stat statbuf;
 
 Debug("AccessControl(%s)\n",filename);
@@ -1853,7 +1853,7 @@ strcat(realname,lastnode);
     }
 #endif
 
-strncpy(translated,MapName(realname),CF_BUFSIZE-1);
+strncpy(transrequest,MapName(realname),CF_BUFSIZE-1);
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
  if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
@@ -1862,14 +1862,16 @@ strncpy(translated,MapName(realname),CF_BUFSIZE-1);
     }
 #endif 
 
-if (lstat(translated,&statbuf) == -1)
+if (lstat(transrequest,&statbuf) == -1)
    {
-   CfOut(cf_verbose,"lstat","Couldn't stat filename %s (i.e. %s) from host %s\n",filename,realname,conn->hostname);
+   CfOut(cf_verbose,"lstat","Couldn't stat filename %s (i.e. %s) from host %s\n",filename,transrequest,conn->hostname);
    return false;
    }
 
-Debug("AccessControl, match(%s,%s) encrypt request=%d\n",realname,conn->hostname,encrypt);
- 
+Debug("AccessControl, match(%s,%s) encrypt request=%d\n",transrequest,conn->hostname,encrypt);
+
+
+
 if (vadmit == NULL)
    {
    CfOut(cf_verbose,"","cfServerd access list is empty, no files are visible\n");
@@ -1882,37 +1884,47 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
    {
    int res = false;
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
-      
-   if ((strlen(realname) > strlen(ap->path)) && strncmp(ap->path,realname,strlen(ap->path)) == 0 && realname[strlen(ap->path)] == FILE_SEPARATOR)
+
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+ if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+    {
+    CfOut(cf_error,"lock","pthread_mutex_lock failed");
+    }
+#endif
+
+   strncpy(transpath,MapName(ap->path),CF_BUFSIZE-1);
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+ if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+    {
+    CfOut(cf_error,"lock","pthread_mutex_unlock failed");
+    }
+#endif 
+
+   if ((strlen(transrequest) > strlen(transpath)) && strncmp(transpath,transrequest,strlen(transpath)) == 0 && transrequest[strlen(transpath)] == FILE_SEPARATOR)
       {
       res = true;    /* Substring means must be a / to link, else just a substring og filename */
       }
 
-   if (strcmp(ap->path,realname) == 0)
+   if (strcmp(transpath,transrequest) == 0)
       {
       res = true;    /* Exact match means single file to admit */
       }
 
-#ifdef NT
-   if (strcmp(translated,realname) == 0)
-      {
-      res = true;    /* Exact match means single file to admit */
-      }   
-#endif
-   
    if (res)
       {
-      CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",realname,ap->path);
+      CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",transrequest,transpath);
 
-      if (stat(ap->path,&statbuf) == -1)
+      if (stat(transpath,&statbuf) == -1)
          {
-         CfOut(cf_log,"","Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",ap->path);
+         CfOut(cf_log,"","Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",transpath);
          continue;
          }
       
       if (!encrypt && (ap->encrypt == true))
          {
-         CfOut(cf_error,"","File %s requires encrypt connection...will not serve\n",ap->path);
+         CfOut(cf_error,"","File %s requires encrypt connection...will not serve\n",transpath);
          access = false;
          }
       else
@@ -1941,13 +1953,13 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
 
 for (ap = vdeny; ap != NULL; ap=ap->next)
    {
-   if (strncmp(ap->path,realname,strlen(ap->path)) == 0)
+   if (strncmp(transpath,transrequest,strlen(transpath)) == 0)
       {
       if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
           IsRegexItemIn(ap->accesslist,conn->hostname))
          {
          access = false;
-         CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,realname);
+         CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,transrequest);
          break;
          }
       }

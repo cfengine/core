@@ -510,7 +510,7 @@ void *LocalExec(void *scheduled_run)
 
 { FILE *pp; 
   char line[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
-  char cmd[CF_BUFSIZE];
+  char cmd[CF_BUFSIZE],esc_command[CF_BUFSIZE];
   int print,tid,count = 0;
   time_t starttime = time(NULL);
   FILE *fp;
@@ -545,6 +545,8 @@ else
             scheduled_run ? ":scheduled_run" : "");
    }
 
+strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
+   
 snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
 snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,(unsigned short)tid);
 
@@ -558,14 +560,14 @@ if ((fp = fopen(filename,"w")) == NULL)
 
 CfOut(cf_verbose,""," -> Command => %s\n",cmd);
 
-if ((pp = cf_popen_sh(cmd,"r")) == NULL)
+if ((pp = cf_popen_sh(esc_command,"r")) == NULL)
    {
    CfOut(cf_inform,"cf_popen","Couldn't open pipe to command %s\n",cmd);
    fclose(fp);
    return NULL;
    }
 
-CfOut(cf_verbose,""," -> Command is executing...\n",cmd);
+CfOut(cf_verbose,""," -> Command is executing...%s\n",esc_command);
 
 while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
    {

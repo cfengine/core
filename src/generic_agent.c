@@ -41,9 +41,9 @@ extern void CheckOpts(int argc,char **argv);
 void GenericInitialize(int argc,char **argv,char *agents)
 
 { enum cfagenttype ag = Agent2Type(agents);
- char vbuff[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE];
   int ok;
-
+  
 InitializeGA(argc,argv);
 SetReferenceTime(true);
 SetStartTime(false);
@@ -129,7 +129,7 @@ if (stat(cmd,&sb) == -1)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
-if ((*VINPUTFILE == '.') || IsFileSep(*VINPUTFILE))
+if ((*VINPUTFILE == '.') || IsAbsoluteFileName(VINPUTFILE))
    {
    snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises -f %s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
    }
@@ -607,11 +607,12 @@ void Cf3ParseFile(char *filename)
   int access = false;
   char wfilename[CF_BUFSIZE];
 
+
 strncpy(wfilename,InputLocation(filename),CF_BUFSIZE);
 
 if (stat(wfilename,&statbuf) == -1)
    {
-   CfOut(cf_error,"stat","Can't stat file %s for parsing\n",wfilename);
+   CfOut(cf_error,"stat","Can't stat file \"%s\" for parsing\n",wfilename);
    exit(1);
    }
 
@@ -1046,7 +1047,7 @@ if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsAbsoluteFileN
    /* If -f assume included relative files are in same directory */
    strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
    ChopLastNode(path);
-   snprintf(wfilename,CF_BUFSIZE-1,"%s%c%s",path,FILE_SEPARATOR,filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
    }
 else if ((*filename == '.') || IsAbsoluteFileName(filename))
    {
@@ -1054,10 +1055,10 @@ else if ((*filename == '.') || IsAbsoluteFileName(filename))
    }
 else
    {
-   snprintf(wfilename,CF_BUFSIZE-1,"%s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
    }
 
-return wfilename;
+return MapName(wfilename);
 }
 
 /*******************************************************************/

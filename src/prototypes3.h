@@ -899,7 +899,9 @@ char *cf_strdup(char *s);
 int cf_strlen(char *s);
 char *cf_strncpy(char *s1,char *s2,size_t n);
 char *cf_strchr(char *s, int c);
+char *cf_strcpy(char *s1,char *s2);
 char *MapName(char *s);
+int UseUnixStandard(char *s);
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);

@@ -62,19 +62,24 @@ char *MapName(char *s)
 #ifdef NT
 memset(buffer,0,CF_BUFSIZE);
 
-rootlen = RootDirLength(s);
-
-if (stat("/cygdrive",&sb) == 0)
+if (UseUnixStandard(s))
    {
    spto = buffer;
 
-   if (rootlen)
+   for (spf = s; *spf != '\0'; spf++)
       {
-      *spto++ = '/';
-      }
+      if (*(spf+1) != '\0' && strncmp(spf+1,":\\",2) == 0)
+         {
+         /* For cygwin translation */
+         strcat(spto,"/cygdrive/");
+         /* Drive letter */
+         strncat(spto,spf,1); 
+         strcat(spto,"/");
+         spto += strlen("/cygdrive/c/");
+         spf += strlen("c:\\") - 1;
+         continue;
+         }
 
-   for (spf = s+rootlen; *spf != '\0'; spf++)
-      {
       switch (*spf)
          {
          case '\\':
@@ -92,12 +97,6 @@ if (stat("/cygdrive",&sb) == 0)
 else
    {
    spto = buffer;
-
-   if (rootlen)
-      {
-      *spto++ = 'c';
-      *spto++ = ':';
-      }
 
    for (spf = s; *spf != '\0'; spf++)
       {
@@ -118,6 +117,14 @@ strncpy(buffer,s,CF_BUFSIZE-1);
 #endif
 
 return buffer;
+}
+
+/*********************************************************/
+
+int UseUnixStandard(char *s)
+
+{
+return true;
 }
 
 /*********************************************************/

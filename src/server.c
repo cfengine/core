@@ -1816,6 +1816,7 @@ int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct 
 { struct Auth *ap;
   int access = false;
   char realname[CF_BUFSIZE],path[CF_BUFSIZE],lastnode[CF_BUFSIZE],*sp;
+  char translated[CF_BUFSIZE];
   struct stat statbuf;
 
 Debug("AccessControl(%s)\n",filename);
@@ -1845,7 +1846,23 @@ CompressPath(realname,path);
 AddSlash(realname);
 strcat(realname,lastnode);
 
-if (lstat(realname,&statbuf) == -1)
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+ if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+    {
+    CfOut(cf_error,"lock","pthread_mutex_lock failed");
+    }
+#endif
+
+strncpy(translated,MapName(realname),CF_BUFSIZE-1);
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+ if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
+    {
+    CfOut(cf_error,"lock","pthread_mutex_unlock failed");
+    }
+#endif 
+
+if (lstat(translated,&statbuf) == -1)
    {
    CfOut(cf_verbose,"lstat","Couldn't stat filename %s (i.e. %s) from host %s\n",filename,realname,conn->hostname);
    return false;
@@ -1875,6 +1892,13 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       {
       res = true;    /* Exact match means single file to admit */
       }
+
+#ifdef NT
+   if (strcmp(translated,realname) == 0)
+      {
+      res = true;    /* Exact match means single file to admit */
+      }   
+#endif
    
    if (res)
       {

@@ -60,8 +60,9 @@ for (rp = namelist; rp != NULL; rp = rp->next)
 
    if (dtype == cf_notype)
       {
-      CfOut(cf_error,"","Software error: Couldn't locate variable %s....in %s\n",rp->item,scopeid);
-      FatalError("Failure in scanning promise variables");
+      CfOut(cf_error,""," !! Couldn't locate variable %s apparently in %s\n",rp->item,scopeid);
+      CfOut(cf_error,""," !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
+      continue;
       }
    
    /* Make a copy of list references in scope only, without the names */

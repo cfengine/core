@@ -68,7 +68,7 @@ if (UseUnixStandard(s))
 
    for (spf = s; *spf != '\0'; spf++)
       {
-      if (*(spf+1) != '\0' && strncmp(spf+1,":\\",2) == 0)
+      if (*(spf+1) != '\0' && (strncmp(spf+1,":\\",2) == 0 || strncmp(spf+1,":/",2) == 0 ))
          {
          /* For cygwin translation */
          strcat(spto,"/cygdrive/");
@@ -76,7 +76,7 @@ if (UseUnixStandard(s))
          strncat(spto,spf,1); 
          strcat(spto,"/");
          spto += strlen("/cygdrive/c/");
-         spf += strlen("c:\\") - 1;
+         spf += strlen("c:/") - 1;
          continue;
          }
 

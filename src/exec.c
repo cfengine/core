@@ -391,7 +391,7 @@ else
       nargv[i] = argv[i];
       }
    
-   nargv[i++] = strdup("--once");
+   nargv[i++] = strdup("-FK");
    nargv[i++] = NULL;
    
    while (true)
@@ -403,7 +403,7 @@ else
          CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);
 
-#ifdef NT 
+#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD) 
          /*
           * Spawn a separate process - spawn will work if the cfexecd binary
           * has changed (where cygwin's fork() would fail).
@@ -411,14 +411,14 @@ else
          
          Debug("Spawning %s\n", nargv[0]);
 
-         pid = spawnvp((int)_P_NOWAIT,(char *)(nargv[0]),(char **)nargv);
+         pid = _spawnvp((int)_P_NOWAIT,(char *)(nargv[0]),(char **)nargv);
 
          if (pid < 1)
             {
-            CfOut(cf_inform,"spawnvp","Can't spawn run");
+            CfOut(cf_error,"_spawnvp","Can't spawn run");
             }
 #endif
-#ifndef NT
+         
 #if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
          
          pthread_attr_init(&PTHREADDEFAULTS);
@@ -437,7 +437,6 @@ else
          pthread_attr_destroy(&PTHREADDEFAULTS);
 #else
          LocalExec((void *)1);  
-#endif
 #endif
          }
       }

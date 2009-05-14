@@ -847,7 +847,7 @@ if ((sp = GetConstraint("handle",pp->conlist,CF_SCALAR)) || (sp = PromiseID(pp))
    }
 else
    {
-   strcpy(handle,"(unknown)");
+   strcpy(handle,"(enterprise only)");
    }
  
 CfOut(cf_verbose,"","\n");

@@ -307,13 +307,13 @@ int CompressPath(char *dest,char *src)
   int nodelen;
   int rootlen;
 
-Debug2("CompressPath(%s,%s)\n",dest,src);
+Debug("CompressPath(%s,%s)\n",dest,src);
 
 memset(dest,0,CF_BUFSIZE);
 
 rootlen = RootDirLength(src);
 strncpy(dest,src,rootlen);
- 
+
 for (sp = src+rootlen; *sp != '\0'; sp++)
    {
    if (IsFileSep(*sp))
@@ -330,7 +330,7 @@ for (sp = src+rootlen; *sp != '\0'; sp++)
          }
       }
 
-   strncpy(node, sp, nodelen);
+   strncpy(node,sp,nodelen);
    node[nodelen] = '\0';
    
    sp += nodelen - 1;
@@ -360,7 +360,7 @@ for (sp = src+rootlen; *sp != '\0'; sp++)
       return false;
       }
    }
- 
+
 return true;
 }
 
@@ -411,9 +411,10 @@ int RootDirLength(char *f)
 
   /* Return length of Initial directory in path - */
 
-{
+{ int len;
+ char *sp;
+
 #ifdef NT
-  int len;
 
 if (IsFileSep(f[0]) && IsFileSep(f[1]))
    {
@@ -450,7 +451,7 @@ if (isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]) )
    }
 #endif
 
-if (*f == '/')
+if (IsFileSep(*f))
    {
    return 1;
    }

@@ -102,7 +102,7 @@ while (!feof(fp) && (lines < a.report.numlines))
    {
    buffer[0] = '\0';
    fgets(buffer,CF_BUFSIZE,fp);
-   cfPS(cf_error,CF_CHG,"",pp,a,"R: %s",buffer);
+   CfOut(cf_error,"","R: %s",buffer);
    lines++;
    }
 
@@ -213,7 +213,7 @@ if (stat(buffer,&statbuf) == 0)
    conns--;
 
    CfOut(cf_error,"","\n");
-   cfPS(cf_error,CF_CHG,"",pp,a,"R: The peak measured state was q = %d:\n",conns);
+   CfOut(cf_error,"","R: The peak measured state was q = %d:\n",conns);
 
    if (IsSocketType(type)||IsTCPType(type))
       {
@@ -235,7 +235,7 @@ if (stat(buffer,&statbuf) == 0)
             continue;
             }
 
-         cfPS(cf_error,CF_CHG,"",pp,a,"R: DNS key: %s = %s (%d/%d)\n",buffer,IPString2Hostname(buffer),ip->counter,conns);
+         CfOut(cf_error,"","R: DNS key: %s = %s (%d/%d)\n",buffer,IPString2Hostname(buffer),ip->counter,conns);
          
          if (strlen(ip->name) > maxlen)
             {
@@ -283,7 +283,7 @@ if (stat(buffer,&statbuf) == 0)
             }
          }
       
-      cfPS(cf_error,CF_CHG,"",pp,a,"R: %s \t(%d/%d)\n",assemble,ip->counter,conns);
+      CfOut(cf_error,"","R: %s \t(%d/%d)\n",assemble,ip->counter,conns);
       }
    
    dist = (double *) malloc((tot+1)*sizeof(double));
@@ -297,16 +297,16 @@ if (stat(buffer,&statbuf) == 0)
          S -= dist[i]*log(dist[i]);
          }
       
-      cfPS(cf_error,CF_CHG,"",pp,a,"R: Variability/entropy of addresses = %.1f %%\n",S/log((double)tot)*100.0);
+      CfOut(cf_error,"","R: Variability/entropy of addresses = %.1f %%\n",S/log((double)tot)*100.0);
       CfOut(cf_error,"","R: (Entropy = 0 for single source, 100 for flatly distributed source)\n -\n");
       }
    
    CfOut(cf_error,"","\n");
-   snprintf(buffer,CF_BUFSIZE,"R: State of %s peaked at %s\n",type,ctime(&statbuf.st_mtime));
+   CfOut(cf_error,"","R: State of %s peaked at %s\n",type,ctime(&statbuf.st_mtime));
    }
 else 
    {
-   snprintf(buffer,CF_BUFSIZE,"R: State parameter %s is not known or recorded\n",type);
+   CfOut(cf_inform,"","R: State parameter %s is not known or recorded\n",type);
    }
 
 DeleteItemList(addresses); 

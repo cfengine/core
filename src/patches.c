@@ -68,6 +68,16 @@ if (UseUnixStandard(s))
 
    for (spf = s; *spf != '\0'; spf++)
       {
+      if (IsFileSep(*spf) && IsFileSep(*(spf+1))) /* compress // or \\ */
+         {
+         continue;
+         }
+
+      if (IsFileSep(*spf) && *(spf+1) != '\0' && *(spf+2) == ':') /* compress \c:\abc */
+         {
+         continue;
+         }
+
       if (*(spf+1) != '\0' && (strncmp(spf+1,":\\",2) == 0 || strncmp(spf+1,":/",2) == 0 ))
          {
          /* For cygwin translation */

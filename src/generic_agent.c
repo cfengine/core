@@ -839,13 +839,24 @@ CfOut(cf_verbose,"","\n");
 
 void PromiseBanner(struct Promise *pp)
 
-{
+{ char *sp,handle[CF_MAXVARSIZE];
+
+if ((sp = GetConstraint("handle",pp->conlist,CF_SCALAR)) || (sp = PromiseID(pp)))
+   {
+   strncpy(handle,sp,CF_MAXVARSIZE-1);
+   }
+else
+   {
+   strcpy(handle,"(unknown)");
+   }
+ 
 CfOut(cf_verbose,"","\n");
 CfOut(cf_verbose,"","    .........................................................\n");
 
 if (VERBOSE||DEBUG)
    {
-   printf ("%s     Promise by: %s",VPREFIX,pp->promiser);
+   printf ("%s     Promise handle: %s\n",VPREFIX,handle);
+   printf ("%s     Promise made by: %s",VPREFIX,pp->promiser);
    }
 
 if (pp->promisee)

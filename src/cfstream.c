@@ -142,10 +142,12 @@ DeleteItemList(mess);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
 
 { va_list ap;
-  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE];
+  char rettype,*sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
   struct Item *ip,*mess = NULL;
   int verbose;
-
+  struct Rlist *rp;
+  void *retval;
+  
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
    return;
@@ -163,6 +165,56 @@ if ((errstr == NULL) || (strlen(errstr) > 0))
    {
    snprintf(output,CF_BUFSIZE-1,"%s: %s",errstr,strerror(errno));
    AppendItem(&mess,output,NULL);
+   }
+
+if (level == cf_error)
+   {
+   if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+      {
+      v = (char *)retval;
+      }
+   else
+      {
+      v = "not specified";
+      }
+   
+   if ((sp = GetConstraint("handle",pp->conlist,CF_SCALAR)) || (sp = PromiseID(pp)))
+      {
+      strncpy(handle,sp,CF_MAXVARSIZE-1);
+      }
+   else
+      {
+      strcpy(handle,"(unknown)");
+      }
+   
+   snprintf(output,CF_BUFSIZE-1,"I: Report relates to a promise with handle \"%s\" in version %s of \'%s\' near line %d\n",handle,v,pp->audit->filename,pp->lineno);
+   AppendItem(&mess,output,NULL);
+   
+   switch (pp->petype)
+      {
+      case CF_SCALAR:
+          
+          snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n",pp->promisee);
+          AppendItem(&mess,output,NULL);
+          break;
+          
+      case CF_LIST:
+          
+          CfOut(level,"","I: The promise was made to: \n");
+          
+          for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
+             {
+             snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n",rp->item);
+             AppendItem(&mess,output,NULL);
+             }
+          break;          
+      }
+   
+   if (pp->ref)
+      {
+      snprintf(output,CF_BUFSIZE-1,"I: Description - %s\n",pp->ref);
+      AppendItem(&mess,output,NULL);
+      }
    }
 
 verbose = (attr.transaction.report_level == cf_verbose) || VERBOSE;

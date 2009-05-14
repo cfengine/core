@@ -427,7 +427,7 @@ enum cfeditorder
 #define CF_SIGNALRANGE "hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"
 #define CF_BOOL      "true,false,yes,no,on,off"
 #define CF_LINKRANGE "symlink,hardlink,relative,absolute,none"
-#define CF_TIMERANGE "0,2147483648"
+#define CF_TIMERANGE "0,2147483647"
 #define CF_VALRANGE  "0,99999999999"
 #define CF_INTRANGE  "-99999999999,9999999999"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"

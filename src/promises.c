@@ -637,7 +637,6 @@ if (pp->ref)
    }
 }
 
-
 /*******************************************************************/
 
 void HashPromise(struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)

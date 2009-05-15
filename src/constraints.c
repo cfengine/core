@@ -34,6 +34,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+struct Item *EDIT_ANCHORS = NULL;
+
 /*******************************************************************/
 
 struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes)
@@ -484,7 +486,7 @@ return retval;
 void ReCheckAllConstraints(struct Promise *pp)
 
 { struct Constraint *cp;
-  char *handle = GetConstraint("handle",pp->conlist,CF_SCALAR);
+  char *sp,*handle = GetConstraint("handle",pp->conlist,CF_SCALAR);
   struct PromiseIdent *prid;
 
 if (handle)
@@ -516,6 +518,36 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval,cp->type);
    }     
+
+/* Special promise type checks */
+
+if (!IsDefinedClass(pp->classes))
+   {
+   return;
+   }
+
+if (VarClassExcluded(pp,&sp))
+   {
+   return;
+   }
+
+if (strcmp(pp->agentsubtype,"insert_lines") == 0)
+   {
+   /* Multiple additions with same criterion will not be convergent */
+   
+   if (sp = GetConstraint("select_line_matching",pp->conlist,CF_SCALAR))
+      {
+      if (IsItemIn(EDIT_ANCHORS,sp))
+         {
+         CfOut(cf_error,""," !! insert_lines promise uses the same select_line_matching anchor as another promise. This will lead to non-convergent behaviour.");
+         PromiseRef(cf_error,pp);
+         }
+      else
+         {
+         PrependItem(&EDIT_ANCHORS,sp,"");
+         }
+      }
+   }
 }
 
 /*****************************************************************************/

@@ -502,7 +502,16 @@ if (handle)
       prid = NewPromiseId(handle,pp);
       }
    }
-  
+
+if (REQUIRE_COMMENTS)
+   {
+   if (pp->ref == NULL)
+      {
+      CfOut(cf_error,"","Un-commented promise found, but comments have been required by policy\n");
+      PromiseRef(cf_error,pp);
+      }
+   }
+
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval,cp->type);

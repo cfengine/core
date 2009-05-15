@@ -178,6 +178,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"lastseenexpireafter",cf_int,CF_VALRANGE,"Number of minutes after which last-seen entries are purged"},
    {"output_prefix",cf_str,"","The string prefix for standard output"},
    {"domain",cf_str,".*","Specify the domain name for this host"},
+   {"require_comments",cf_opts,CF_BOOL,"Warn about promises that do not have comment documentation"},
    {NULL,cf_notype,NULL,NULL}
    };
 

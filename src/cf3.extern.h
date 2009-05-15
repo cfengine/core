@@ -29,6 +29,7 @@
 /* See variables in cf3globals.c and syntax.c */
 
 extern struct PromiseParser P;
+extern int REQUIRE_COMMENTS;
 
 extern struct Bundle *BUNDLES;
 extern struct Body *BODIES;

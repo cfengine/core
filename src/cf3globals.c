@@ -48,6 +48,7 @@ short VERBOSE = false;
 short INFORM = false;
 short PARSING = false;
 short CFPARANOID = false;
+int REQUIRE_COMMENTS = CF_UNDEFINED;
 
 struct utsname VSYSNAME;
 

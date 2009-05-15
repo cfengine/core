@@ -220,6 +220,7 @@ enum cfgcontrol
    cfg_lastseenexpireafter,
    cfg_output_prefix,
    cfg_domain,
+   cfg_require_comments,
    cfg_noagent
    };
     

@@ -554,7 +554,7 @@ return true;
 int BooleanControl(char *scope,char *name)
 
 { char varbuf[CF_BUFSIZE], rtype;
- 
+
 if (GetVariable(scope,name,(void *)varbuf,&rtype) != cf_notype)
    {
    return GetBoolean(varbuf);

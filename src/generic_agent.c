@@ -373,6 +373,23 @@ VIFELAPSED = 1;
 VEXPIREAFTER = 1;
 
 setlinebuf(stdout);
+
+if (BOOTSTRAP)
+   {
+   snprintf(vbuff,CF_BUFSIZE,"%s/inputs/failsafe.cf",CFWORKDIR);
+   
+   if (stat(vbuff,&statbuf) == -1)
+      {
+      CfOut(cf_inform,"","Didn't find established file %s, so looking for one in current directory\n",vbuff);
+      strncpy(VINPUTFILE,"./failsafe.cf",CF_BUFSIZE-1);
+      }
+   else
+      {
+      CfOut(cf_inform,"","Found an established failsafe file %s, so using it.\n",vbuff);
+      strncpy(VINPUTFILE,vbuff,CF_BUFSIZE-1);
+      }   
+   }
+
 }
 
 /*******************************************************************/
@@ -1126,6 +1143,18 @@ void VerifyPromises(enum cfagenttype agent)
 
 Debug("\n\nVerifyPromises()\n");
 
+if (REQUIRE_COMMENTS == CF_UNDEFINED)
+   {
+   for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
+      {
+      if ((strcmp(bdp->name,"control") == 0) && (strcmp(bdp->type,"common") == 0))
+         {
+         REQUIRE_COMMENTS = GetBooleanConstraint("require_comments",bdp->conlist);
+         break;
+         }
+      }
+   }
+
 for (rp = BODYPARTS; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
@@ -1386,7 +1415,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       {
       CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
       }
-   
+
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_output_prefix].lval) == 0)
       {
       strncpy(VPREFIX,returnval.item,CF_MAXVARSIZE);

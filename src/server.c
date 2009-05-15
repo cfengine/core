@@ -1907,9 +1907,16 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       res = true;    /* Substring means must be a / to link, else just a substring og filename */
       }
 
+   /* Exact match means single file to admit */
+   
    if (strcmp(transpath,transrequest) == 0)
       {
-      res = true;    /* Exact match means single file to admit */
+      res = true;
+      }
+
+   if (strcmp(transpath,"/") == 0)
+      {
+      res = true;
       }
 
    if (res)

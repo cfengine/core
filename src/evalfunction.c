@@ -740,6 +740,120 @@ return rval;
 /* Misc                                                              */
 /*********************************************************************/
 
+struct Rval FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     "daily,hourly",
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_opts,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE],class[CF_MAXVARSIZE],hrs[CF_MAXVARSIZE];
+  enum cfinterval policy;
+  char *splay;
+  int hash,box,hours,minblocks;
+  double period;
+
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+splay = finalargs->item;
+policy = Str2Interval(finalargs->next->item);
+
+switch(policy)
+   {
+   default:
+   case cfa_daily:
+       period = 12.0*24.0;
+       break;
+
+   case cfa_hourly:
+       period = 12.0;
+       break;
+   }
+
+SetFnCallReturnStatus("splayclass",FNCALL_SUCCESS,strerror(errno),NULL);   
+
+hash = (double)Hash(splay);
+box = (int)(0.5 + period*hash/(double)CF_HASHTABLESIZE);
+
+minblocks = box % 12;
+hours = box / 12;
+
+if (hours == 0)
+   {
+   strcpy(hrs,"any");
+   }
+else if (hours > 0 && hours < 10)
+   {
+   snprintf(hrs,CF_MAXVARSIZE-1,"Hr0%d",hours);
+   }
+else
+   {
+   snprintf(hrs,CF_MAXVARSIZE-1,"Hr%d",hours);
+   }
+
+switch ((minblocks))
+   {
+   case 0: snprintf(class,CF_MAXVARSIZE,"Min00_05.%s",hrs);
+           break;
+   case 1: snprintf(class,CF_MAXVARSIZE,"Min05_10.%s",hrs);
+           break;
+   case 2: snprintf(class,CF_MAXVARSIZE,"Min10_15.%s",hrs);
+           break;
+   case 3: snprintf(class,CF_MAXVARSIZE,"Min15_20.%s",hrs);
+           break;
+   case 4: snprintf(class,CF_MAXVARSIZE,"Min20_25.%s",hrs);
+           break;
+   case 5: snprintf(class,CF_MAXVARSIZE,"Min25_30.%s",hrs);
+           break;
+   case 6: snprintf(class,CF_MAXVARSIZE,"Min30_35.%s",hrs);
+           break;
+   case 7: snprintf(class,CF_MAXVARSIZE,"Min35_40.%s",hrs);
+           break;
+   case 8: snprintf(class,CF_MAXVARSIZE,"Min40_45.%s",hrs);
+           break;
+   case 9: snprintf(class,CF_MAXVARSIZE,"Min45_50.%s",hrs);
+           break;
+   case 10: snprintf(class,CF_MAXVARSIZE,"Min50_55.%s",hrs);
+            break;
+   case 11: snprintf(class,CF_MAXVARSIZE,"Min55_00.%s",hrs);
+            break;
+   }
+
+if (IsDefinedClass(class))
+   {
+   strcpy(buffer,"any");
+   }
+else
+   {
+   strcpy(buffer,"!any");
+   }
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in SplayClass");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */

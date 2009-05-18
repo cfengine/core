@@ -544,6 +544,24 @@ return (long) cftime;
 
 /*********************************************************************/
 
+enum cfinterval Str2Interval(char *string)
+
+{ static char *text[3] = { "hourly", "daily", NULL };
+  int i;
+ 
+for (i = 0; text[i] != NULL; i++)
+   {
+   if (string && (strcmp(text[i],string) == 0))
+      {
+      return i;
+      }
+   }
+
+return cfa_nointerval;
+}
+
+/*********************************************************************/
+
 int Day2Number(char *datestring)
 
 { int i = 0;

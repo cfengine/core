@@ -223,6 +223,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+enum cfinterval Str2Interval(char *s);
 enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(struct Rlist *list,char *sep);
 int Signal2Int(char *s);
@@ -364,6 +365,7 @@ int IsBracketed (char *s);
 
 /* evalfunction.c */
 
+struct Rval FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs);

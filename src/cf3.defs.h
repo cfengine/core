@@ -532,6 +532,7 @@ enum fncalltype
    cfn_returnszero,
    cfn_rrange,
    cfn_selectservers,
+   cfn_splayclass,
    cfn_splitstring,
    cfn_strcmp,
    cfn_usemodule,
@@ -713,6 +714,13 @@ struct FnCallStatus  /* from builtin functions */
 /*******************************************************************/
 /* Return value signalling                                         */
 /*******************************************************************/
+
+enum cfinterval
+   {
+   cfa_hourly,
+   cfa_daily,
+   cfa_nointerval
+   };
 
 enum cfdatetemplate
    {

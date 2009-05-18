@@ -266,6 +266,9 @@ switch (this)
    case cfn_registryvalue:
        rval = FnCallRegistryValue(fp,expargs);
        break;
+   case cfn_splayclass:
+       rval = FnCallSplayClass(fp,expargs);
+       break;
    case cfn_lastnode:
        rval = FnCallLastNode(fp,expargs);
        break;

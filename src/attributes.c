@@ -272,6 +272,8 @@ struct Attributes GetOccurrenceAttributes(struct Promise *pp)
 
 attr.represents = GetListConstraint("represents",pp->conlist);
 attr.rep_type = GetConstraint("representation",pp->conlist,CF_SCALAR);
+attr.web_root = GetConstraint("web_root",pp->conlist,CF_SCALAR);
+attr.path_root = GetConstraint("path_root",pp->conlist,CF_SCALAR);
 
 return attr;
 }

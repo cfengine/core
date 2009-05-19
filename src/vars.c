@@ -52,7 +52,7 @@ void ForceScalar(char *lval,char *rval)
 
 { char rtype,retval[CF_MAXVARSIZE];
 
-if (THIS_AGENT_TYPE != cf_agent)
+if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know)
    {
    return;
    }

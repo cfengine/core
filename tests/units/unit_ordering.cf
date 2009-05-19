@@ -1,9 +1,12 @@
-
+##################################################################
 #
-# cfengine 3
+# cfengine 3 - ordering promises into dependent chains
+#
+##
 #
 # cf-agent -f ./cftest.cf -K
 #
+##################################################################
 
 body common control
 
@@ -11,7 +14,7 @@ body common control
 bundlesequence => { "order" };
 }
 
-#
+##################################################################
 
 bundle agent order
 
@@ -31,6 +34,7 @@ commands:
    "/bin/echo six";
 
  any::
+
 
   "/bin/echo one"     classes => d("ok_later","otherthing");
   "/bin/echo two";

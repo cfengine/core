@@ -60,8 +60,10 @@ struct BodySyntax CF_RELATE_BODY[] =
 
 struct BodySyntax CF_OCCUR_BODIES[] =
    {
-   {"represents",cf_slist,"","List of subtopics that disambiguate the context of this reference"},
+   {"represents",cf_slist,"","List of subtopics that explains the type(s) of information represented by the occurrence"},
    {"representation",cf_opts,"literal,url,db,file,web,image,portal","How to interpret the promiser string e.g. actual data or reference to data"},
+   {"web_root",cf_str,"","Base URL of the occurrence when rendered as a web-URL (replaces path_root)"},
+   {"path_root",cf_str,"","Base path of the occurrence when locating file (replaced by web_root)"},
    {NULL,cf_notype,NULL,NULL}
    };
 

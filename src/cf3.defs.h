@@ -1529,6 +1529,8 @@ struct Attributes
    struct Rlist *associates;
    struct Rlist *represents;
    char *rep_type;
+   char *path_root;
+   char *web_root;
    };
 
 #include "prototypes3.h"

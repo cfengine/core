@@ -440,8 +440,6 @@ if (VINPUTLIST != NULL)
       }
    }
 
-//UnHashVariables(); - why did I do this?
-
 HashVariables();
 PARSING = false;
 }
@@ -1336,8 +1334,8 @@ void CheckCommonClassPromises(struct Promise *classlist)
 
 { struct Promise *pp;
 
-Debug("CheckCommonClassPromises()\n");
-  
+CfOut(cf_verbose,""," -> Checking common class promises...\n");
+
 for (pp = classlist; pp != NULL; pp=pp->next)
    {
    KeepClassContextPromise(pp);

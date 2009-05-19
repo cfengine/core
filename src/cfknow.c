@@ -59,6 +59,7 @@ void ShowHtmlResults(char *name,char *type,char *comm,struct Topic *other_topics
 char *NextTopic(char *link,char* type);
 void GenerateGraph(void);
 void GenerateManual(void);
+void VerifyOccurrenceGroup(char *file,struct Promise *pp);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -1223,6 +1224,7 @@ void VerifyOccurrencePromises(struct Promise *pp)
 
 { struct Attributes a;
   struct Topic *tp;
+  char name[CF_BUFSIZE];
   enum representations rep_type;
   int s,e;
 
@@ -1249,13 +1251,38 @@ if (BlockTextMatch("[.&|]+",pp->classes,&s,&e))
    return;
    }
 
-if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
+switch (rep_type)
    {
-   CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
-   return;
+   case cfk_file:
+
+       if (a.web_root == NULL || a.path_root == NULL)
+          {
+          CfOut(cf_error,"","File pattern but no complete url mapping path_root -> web_root");
+          return;
+          }
+
+       strncpy(name,a.path_root,CF_BUFSIZE-1);
+
+       if (!JoinPath(name,pp->promiser))
+          {
+          CfOut(cf_error,"","Unable to form pathname in search for local files");
+          return;
+          }
+       
+       LocateFilePromiserGroup(name,pp,VerifyOccurrenceGroup);
+       break;
+       
+   default:
+
+       if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
+          {
+          CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
+          return;
+          }
+       
+       AddOccurrence(&(tp->occurrences),pp->promiser,a.represents,rep_type);
+       break;
    }
- 
-AddOccurrence(&(tp->occurrences),pp->promiser,a.represents,rep_type);
 }
 
 /*********************************************************************/
@@ -2545,6 +2572,52 @@ else
 return url;
 }
 
+/*********************************************************************/
+
+void VerifyOccurrenceGroup(char *file,struct Promise *pp)
+    
+{ struct Attributes a;
+  struct Topic *tp;
+  enum representations rep_type;
+  struct stat sb;
+  char *sp,url[CF_BUFSIZE];
+  struct Rval retval;
+
+a = GetOccurrenceAttributes(pp);
+
+if (a.rep_type)
+   {
+   rep_type = String2Representation(a.rep_type);
+   }
+else
+   {
+   rep_type = cfk_url;
+   }
+
+if (stat(file,&sb) == -1)
+   {
+   CfOut(cf_verbose,"","File %s matched but could not be read",file);
+   return;
+   }
+
+if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
+   {
+   CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
+   return;
+   }
+
+sp = file + strlen(a.path_root) + 1;
+
+FullTextMatch(pp->promiser,sp);
+
+snprintf(url,CF_BUFSIZE-1,"%s/%s",a.web_root,sp);
+
+retval = ExpandPrivateRval("test",a.represents,CF_LIST);
+
+AddOccurrence(&(tp->occurrences),url,retval.item,cfk_url);
+
+DeleteRvalItem(retval.item,CF_LIST);
+}
 
 /* EOF */
 

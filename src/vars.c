@@ -402,7 +402,7 @@ int UnresolvedArgs(struct Rlist *args)
 
 for (rp = args; rp != NULL; rp = rp->next)
    {
-   if (IsCf3VarString(rp->item))
+   if (IsCf3Scalar(rp->item))
       {
       return true;
       }
@@ -486,6 +486,71 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
       {
       case '$':
       case '@':
+          if (*(sp+1) == '{' || *(sp+1) == '(')
+             {
+             dollar = true;
+             }
+          break;
+      case '(':
+      case '{': 
+          if (dollar)
+             {
+             left = *sp;    
+             bracks++;
+             }
+          break;
+      case ')':
+      case '}': 
+          if (dollar)
+             {
+             bracks--;
+             right = *sp;
+             }
+          break;
+      }
+   
+   if (left == '(' && right == ')' && dollar && (bracks == 0))
+      {
+      vars++;
+      dollar=false;
+      }
+   
+   if (left == '{' && right == '}' && dollar && (bracks == 0))
+      {
+      vars++;
+      dollar = false;
+      }
+   }
+ 
+ 
+if (dollar && (bracks != 0))
+   {
+   char output[CF_BUFSIZE];
+   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
+   yyerror(output);
+   return false;
+   }
+
+Debug("Found %d variables in (%s)\n",vars,str); 
+return vars;
+}
+
+/*********************************************************************/
+
+int IsCf3Scalar(char *str)
+
+{ char *sp;
+  char left = 'x', right = 'x';
+  int dollar = false;
+  int bracks = 0, vars = 0;
+
+Debug1("IsCf3Scalar(%s) - syntax verify\n",str);
+  
+for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
+   {
+   switch (*sp)
+      {
+      case '$':
           if (*(sp+1) == '{' || *(sp+1) == '(')
              {
              dollar = true;

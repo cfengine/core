@@ -416,6 +416,7 @@ struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs);
 
 void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);
@@ -1177,6 +1178,7 @@ void DeleteAllVariables(char *scope);
 int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);
 int IsCf3VarString(char *str);
+int IsCf3Scalar(char *str);
 int BooleanControl(char *scope,char *name);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);

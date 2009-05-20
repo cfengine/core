@@ -487,6 +487,7 @@ enum fncalltype
    cfn_classmatch,
    cfn_execresult,
    cfn_fileexists,
+   cfn_filesexist,
    cfn_getindices,
    cfn_getgid,
    cfn_getuid,

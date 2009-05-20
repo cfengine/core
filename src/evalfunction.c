@@ -3560,6 +3560,89 @@ return rval;
 }
 
 /*********************************************************************/
+
+struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_NAKEDLRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+
+  char *listvar;
+  struct Rlist *rp,*files;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE],rettype;
+  void *retval;
+  struct stat sb;
+
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+listvar = finalargs->item;
+
+if (*listvar == '@')
+   {
+   GetNaked(naked,listvar);
+   }
+else
+   {
+   CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
+   SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
+   SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (rettype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this variable is not a list\n",listvar);
+   SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
+   rval.item = strdup("!any");
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+files = (struct Rlist *)retval;
+
+strcpy(buffer,"any");
+
+for (rp = files; rp != NULL; rp=rp->next)
+   {
+   if (stat(rp->item,&sb) == -1)
+      {
+      strcpy(buffer,"!any");
+      break;
+      }
+   }
+
+rval.item = strdup(buffer);
+
+SetFnCallReturnStatus("filesexist",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
 /* LDAP Nova features                                                */
 /*********************************************************************/
 

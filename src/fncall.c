@@ -314,6 +314,9 @@ switch (this)
    case cfn_fileexists:
        rval = FnCallStatInfo(fp,expargs,this);
        break;
+   case cfn_filesexist:
+       rval = FnCallFileSexist(fp,expargs);
+       break;
    case cfn_isdir:
        rval = FnCallStatInfo(fp,expargs,this);
        break;

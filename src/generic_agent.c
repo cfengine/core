@@ -49,7 +49,7 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
-if (EnterpriseExpiry("33","May","2109"))
+if (EnterpriseExpiry("22","June","21009"))
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise trial has expired.\n");
    exit(1);
@@ -633,8 +633,10 @@ if (stat(wfilename,&statbuf) == -1)
 
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    {
+#ifndef NT
    CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",wfilename,statbuf.st_uid);
    exit(1);
+#endif
    }
 
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");

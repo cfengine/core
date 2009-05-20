@@ -54,6 +54,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"classmatch",cf_class,1,"True if the regular expression matches any currently defined class"},
    {"execresult",cf_str,2,"Execute named command and assign output to variable"},
    {"fileexists",cf_class,1,"True if the named file can be accessed"},
+   {"filesexist",cf_class,1,"True if the named list of files can ALL be accessed"},
    {"getindices",cf_slist,1,"Get a list of keys to the array whose id is the argument and assign to variable"},
    {"getgid",cf_int,1,"Return the integer group id of the named group on this host"},
    {"getuid",cf_int,1,"Return the integer user id of the named user on this host"},

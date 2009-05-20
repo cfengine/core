@@ -1381,7 +1381,7 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
 
    if (!GetCanonizedTopic(TOPIC_MAP,subtype))
       {
-      CfOut(cf_inform,"","Occurrence of %s makes reference to a sub-topic %s but that has not (et) been defined",topic_id,subtype);
+      CfOut(cf_inform,"","Occurrence of %s makes reference to a sub-topic %s but that has not (yet) been defined",topic_id,subtype);
       }
    }
 }
@@ -2609,10 +2609,9 @@ if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
 sp = file + strlen(a.path_root) + 1;
 
 FullTextMatch(pp->promiser,sp);
-
+retval = ExpandPrivateRval("this",a.represents,CF_LIST);
+DeleteScope("match");
 snprintf(url,CF_BUFSIZE-1,"%s/%s",a.web_root,sp);
-
-retval = ExpandPrivateRval("test",a.represents,CF_LIST);
 
 AddOccurrence(&(tp->occurrences),url,retval.item,cfk_url);
 

@@ -63,7 +63,7 @@ if (rlevel > CF_RECURSION_LIMIT)
  
 memset(path,0,CF_BUFSIZE); 
 
-Debug("To iterate is Human, to recurse is divine...(%s)\n",name);
+Debug("To iterate is Human, to recurse is Divine...(%s)\n",name);
 
 if (!PushDirState(name,sb))
    {

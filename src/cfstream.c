@@ -187,7 +187,9 @@ if (level == cf_error)
       strcpy(handle,"(unknown)");
       }
    
-   snprintf(output,CF_BUFSIZE-1,"I: Report relates to a promise with handle \"%s\" in version %s of \'%s\' near line %d\n",handle,v,pp->audit->filename,pp->lineno);
+   snprintf(output,CF_BUFSIZE-1,"I: Report relates to a promise with handle \"%s\"\n",handle);
+   AppendItem(&mess,output,NULL);
+   snprintf(output,CF_BUFSIZE-1,"I: in version \'%s\' of \'%s\' near line %d\n",v,pp->audit->filename,pp->lineno);
    AppendItem(&mess,output,NULL);
    
    switch (pp->petype)
@@ -212,7 +214,7 @@ if (level == cf_error)
    
    if (pp->ref)
       {
-      snprintf(output,CF_BUFSIZE-1,"I: Description - %s\n",pp->ref);
+      snprintf(output,CF_BUFSIZE-1,"I: Comment: %s\n",pp->ref);
       AppendItem(&mess,output,NULL);
       }
    }

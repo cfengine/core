@@ -851,11 +851,19 @@ for (sp = vbuff+strlen(vbuff); i < 2; sp--)
  * /etc/{mandrake,fedora}-release, so we else-if around that
  */
 
-if (stat("/etc/mandrake-release",&statbuf) != -1)
+if (stat("/etc/mandriva-release",&statbuf) != -1)
+   {
+   CfOut(cf_verbose,"","This appears to be a mandriva system.\n");
+   NewClass("Mandrake");
+   NewClass("Mandriva");
+   Linux_New_Mandriva_Version();
+   }
+
+else if (stat("/etc/mandrake-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
    NewClass("Mandrake");
-   Linux_Mandrake_Version();
+   Linux_Old_Mandriva_Version();
    }
 
 else if (stat("/etc/fedora-release",&statbuf) != -1)
@@ -1477,7 +1485,7 @@ return 0;
 
 /******************************************************************/
 
-int Linux_Mandrake_Version(void)
+int Linux_Old_Mandriva_Version(void)
 
 {
 /* We are looking for one of the following strings... */
@@ -1485,18 +1493,11 @@ int Linux_Mandrake_Version(void)
 #define MANDRAKE_REV_ID "Mandrake Linux"
 #define MANDRAKE_10_1_ID "Mandrakelinux"
 
-#define RELEASE_FLAG "release "
 #define MANDRAKE_REL_FILENAME "/etc/mandrake-release"
 
  FILE *fp;
  char relstring[CF_MAXVARSIZE];
- char classbuf[CF_MAXVARSIZE];
- char *release=NULL;
  char *vendor=NULL;
- int major = -1;
- char strmajor[CF_MAXVARSIZE];
- int minor = -1;
- char strminor[CF_MAXVARSIZE];
  
 if ((fp = fopen(MANDRAKE_REL_FILENAME,"r")) == NULL)
    {
@@ -1529,10 +1530,60 @@ else
    return 2;
    }
 
+return Linux_Mandriva_Version_Real(MANDRAKE_REL_FILENAME, relstring, vendor);
+}
+
+int Linux_New_Mandriva_Version(void)
+
+{
+/* We are looking for the following strings... */
+#define MANDRIVA_ID "Mandriva Linux"
+
+#define MANDRIVA_REL_FILENAME "/etc/mandriva-release"
+
+ FILE *fp;
+ char relstring[CF_MAXVARSIZE];
+ char *vendor=NULL;
+ 
+if ((fp = fopen(MANDRIVA_REL_FILENAME,"r")) == NULL)
+   {
+   return 1;
+   }
+
+fgets(relstring, sizeof(relstring), fp);
+fclose(fp);
+
+CfOut(cf_verbose,"","Looking for Mandriva linux info in \"%s\"\n",relstring);
+
+if(!strncmp(relstring, MANDRIVA_ID, strlen(MANDRIVA_ID)))
+   {
+   vendor = "mandriva";
+   }
+else
+   {
+   CfOut(cf_verbose,"","Could not identify OS distro from %s\n", MANDRIVA_REL_FILENAME);
+   return 2;
+   }
+
+return Linux_Mandriva_Version_Real(MANDRIVA_REL_FILENAME, relstring, vendor);
+
+}
+
+int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor)
+
+{
+ char *release=NULL;
+ char classbuf[CF_MAXVARSIZE];
+ int major = -1;
+ char strmajor[CF_MAXVARSIZE];
+ int minor = -1;
+ char strminor[CF_MAXVARSIZE];
+
+#define RELEASE_FLAG "release "
 release = strstr(relstring, RELEASE_FLAG);
 if(release == NULL)
    {
-   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",MANDRAKE_REL_FILENAME);
+   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",filename);
    return 2;
    }
 else
@@ -1545,7 +1596,7 @@ else
       }
    else
       {
-      CfOut(cf_verbose,"","Could not break down release version numbers in %s\n",MANDRAKE_REL_FILENAME);
+      CfOut(cf_verbose,"","Could not break down release version numbers in %s\n",filename);
       }
    }
 

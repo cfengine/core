@@ -380,6 +380,7 @@ else
      pthread_t tid;
 #endif
 
+#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD) 
    /*
     * Append --once option to our arguments for spawned monitor process.
     */
@@ -393,6 +394,7 @@ else
    
    nargv[i++] = strdup("-FK");
    nargv[i++] = NULL;
+#endif
    
    while (true)
       {
@@ -710,11 +712,13 @@ if ((fp=fopen(prev_file,"r")) != NULL)
    else
       {
       for (i = 0; i < md_len1; i++)
-          if (digest1[i] != digest2[i])
-             {
-      rtn = 1;
-      break;
-      }
+         {
+         if (digest1[i] != digest2[i])
+            {
+            rtn = 1;
+            break;
+            }
+         }
       }
    }
 else
@@ -733,7 +737,7 @@ if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
 
 unlink(prev_file);
 
-if (symlink(filename, prev_file) == -1 )
+if (symlink(filename, prev_file) == -1)
    {
    CfOut(cf_inform,"symlink","Could not link %s and %s",filename,prev_file);
    rtn = 1;
@@ -806,23 +810,24 @@ if (strlen(to) == 0)
 
 /* Check first for anomalies - for subject header */
  
-if ((fp=fopen(file,"r")) == NULL)
+if ((fp = fopen(file,"r")) == NULL)
    {
    CfOut(cf_inform,"fopen","Couldn't open file %s",file);
    return;
    }
 
- while (!feof(fp))
-    {
-    vbuff[0] = '\0';
-    fgets(vbuff,CF_BUFSIZE,fp);
-    if (strstr(vbuff,"entropy"))
-       {
-       anomaly = true;
-       break;
-       }
-    }
- 
+while (!feof(fp))
+   {
+   vbuff[0] = '\0';
+   fgets(vbuff,CF_BUFSIZE,fp);
+
+   if (strstr(vbuff,"entropy"))
+      {
+      anomaly = true;
+      break;
+      }
+   }
+
 fclose(fp);
  
 if ((fp=fopen(file,"r")) == NULL)

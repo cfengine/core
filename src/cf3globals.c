@@ -379,7 +379,7 @@ char REPOSCHAR = '_';
 struct Item *VDEFAULTROUTE=NULL;
 struct Item *VSETUIDLIST = NULL;
 struct Item *SUSPICIOUSLIST = NULL;
-enum classes VSYSTEMHARDCLASS;
+enum classes VSYSTEMHARDCLASS = unused1;
 short NONALPHAFILES = false;
 struct Item *EXTENSIONLIST = NULL;
 struct Item *SPOOLDIRLIST = NULL;

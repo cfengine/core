@@ -102,7 +102,14 @@ void GetNameInfo3()
 #endif
 
 Debug("GetNameInfo()\n");
-  
+
+if (VSYSTEMHARDCLASS != unused1)
+   {
+   CfOut(cf_verbose,"","Already know our hard classes...\n");
+   /* Already have our name - so avoid memory leaks by recomputing */
+   return;
+   }
+
 VFQNAME[0] = VUQNAME[0] = '\0';
   
 if (uname(&VSYSNAME) == -1)

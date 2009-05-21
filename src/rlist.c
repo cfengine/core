@@ -219,7 +219,7 @@ DeleteRvalItem(list,CF_LIST);
 
 struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type)
 
-{ char *scalar = strdup((char *)item);
+{ char *scalar = item;
 
 if (type != CF_SCALAR)
    {
@@ -240,7 +240,7 @@ else
 
 struct Rlist *IdempPrependRScalar(struct Rlist **start,void *item, char type)
 
-{ char *scalar = strdup((char *)item);
+{ char *scalar = item;
 
 if (type != CF_SCALAR)
    {
@@ -289,7 +289,7 @@ else
 
 struct Rlist *AppendRScalar(struct Rlist **start,void *item, char type)
 
-{ char *scalar = strdup((char *)item);
+{ char *scalar = item;
 
 if (type != CF_SCALAR)
    {
@@ -303,7 +303,7 @@ return AppendRlist(start,scalar,type);
 
 struct Rlist *PrependRScalar(struct Rlist **start,void *item, char type)
 
-{ char *scalar = strdup((char *)item);
+{ char *scalar = item;
 
 if (type != CF_SCALAR)
    {

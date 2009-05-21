@@ -239,7 +239,7 @@ for (rp = crit; rp != NULL; rp = rp->next)
       return true;
       }
 
-   if (FullTextMatch((char *)rp->item,pw->pw_name))
+   if (pw && FullTextMatch((char *)rp->item,pw->pw_name))
       {
       Debug(" - ? Select owner match\n");
       DeleteItemList(leafattrib);
@@ -288,7 +288,7 @@ for (rp = crit; rp != NULL; rp = rp->next)
       return true;
       }
 
-   if (FullTextMatch((char *)rp->item,gr->gr_name))
+   if (gr && FullTextMatch((char *)rp->item,gr->gr_name))
       {
       Debug(" - ? Select owner match\n");
       DeleteItemList(leafattrib);

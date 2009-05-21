@@ -1,0 +1,58 @@
+.TH cf-monitord 8 "Maintenance Commands"
+.SH NAME
+cf-monitord - cfengine's monitoring agent
+
+.SH SYNOPSIS:
+
+ cf-monitord [options]
+
+.SH DESCRIPTION:
+
+The monitoring agent is a machine-learning, sampling
+daemon which learns the normal state of the current
+host and classifies new observations in terms of the
+patterns formed by previous ones. The data are made
+available to and read by cf-agent for classification
+of responses to anomalous states.
+.B cfengine
+is a self-healing configuration and change management based system. You can think of.B cfengine
+as a very high level language, much higher level than Perl or shell. Asingle statement is called a promise, and compliance can result in many hundreds of filesbeing created, or the permissions of many hundreds offiles being set. The idea of .B cfengine
+is to create a one or more sets of configuration files which willclassify and describe the setup of every host in a network.
+.SH COMMAND LINE OPTIONS:
+.IP "--help, -h"
+Print the help message
+.IP "--debug, -d" value
+Set debugging level 0,1,2,3
+.IP "--verbose, -v"
+Output verbose information about the behaviour of the agent
+.IP "--dry-run, -n"
+All talk and no action mode - make no changes, only inform of promises not kept
+.IP "--version, -V"
+Output the version of the software
+.IP "--no-lock, -K"
+Ignore system lock
+.IP "--file, -f" value
+Specify an alternative input file than the default
+.IP "--inform, -I"
+Print basic information about changes made to the system, i.e. promises repaired
+.IP "--diagnostic, -x"
+Activate internal diagnostics (developers only)
+.IP "--no-fork, -F"
+Run process in foreground, not as a daemon
+.IP "--histograms, -H"
+Store informatino about histograms / distributions
+.IP "--tcpdump, -T"
+Interface with tcpdump if available to collect data about network
+.SH AUTHOR
+Mark Burgess and Cfengine AS
+.SH INFORMATION
+
+Bug reports: bug-cfengine@cfengine.org
+.pp
+Community help: help-cfengine@cfengine.org
+.pp
+Community info: http://www.cfengine.org
+.pp
+Support services: http://www.cfengine.com
+.pp
+This software is (C) 2008 Cfengine AS.

@@ -1,0 +1,59 @@
+.TH cf-runagent 8 "Maintenance Commands"
+.SH NAME
+cf-runagent - Run agent
+
+.SH SYNOPSIS:
+
+ cf-runagent [options]
+
+.SH DESCRIPTION:
+
+The run agent connects to a list of running instances ofthe cf-serverd service. The agent allows a user to
+forego the usual scheduling interval for the agent and
+activate cf-agent on a remote host. Additionally, a user
+can send additional classes to be defined on the remote
+host. Two kinds of classes may be sent: classes to decide
+on which hosts the agent will be started, and classes that
+the user requests the agent should define on execution.
+The latter type is regulated by cfserverd's role based
+access control.
+.B cfengine
+is a self-healing configuration and change management based system. You can think of.B cfengine
+as a very high level language, much higher level than Perl or shell. Asingle statement is called a promise, and compliance can result in many hundreds of filesbeing created, or the permissions of many hundreds offiles being set. The idea of .B cfengine
+is to create a one or more sets of configuration files which willclassify and describe the setup of every host in a network.
+.SH COMMAND LINE OPTIONS:
+.IP "--help, -h"
+Print the help message
+.IP "--debug, -d" value
+Set debugging level 0,1,2,3
+.IP "--verbose, -v"
+Output verbose information about the behaviour of the agent
+.IP "--dry-run, -n"
+All talk and no action mode - make no changes, only inform of promises not kept
+.IP "--version, -V"
+Output the version of the software
+.IP "--file, -f" value
+Specify an alternative input file than the default
+.IP "--define-class, -D" value
+Define a list of comma separated classes to be sent to a remote agent
+.IP "--select-class, -s" value
+Define a list of comma separated classes to be used to select remote agents by constraint
+.IP "--inform, -I"
+Print basic information about changes made to the system, i.e. promises repaired
+.IP "--remote-options, -o" value
+Pass options to a remote server process
+.IP "--diagnostic, -x"
+Activate internal diagnostics (developers only)
+.SH AUTHOR
+Mark Burgess and Cfengine AS
+.SH INFORMATION
+
+Bug reports: bug-cfengine@cfengine.org
+.pp
+Community help: help-cfengine@cfengine.org
+.pp
+Community info: http://www.cfengine.org
+.pp
+Support services: http://www.cfengine.com
+.pp
+This software is (C) 2008 Cfengine AS.

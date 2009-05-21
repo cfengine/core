@@ -1130,7 +1130,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
    if (ptr->hashtable[i] != NULL)
       {
-      snprintf(match,CF_BUFSIZE,"%s[",lval);
+      snprintf(match,CF_MAXVARSIZE,"%s[",lval);
       if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
          {
          if (FullTextMatch(regex,ptr->hashtable[i]->rval))

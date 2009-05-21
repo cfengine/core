@@ -89,7 +89,7 @@ if (total == 0)
    }
 else
    {   
-   snprintf(string,CF_BUFSIZE,"Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%\n",
+   snprintf(string,CF_BUFSIZE,"Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%\n",
             sp,
             THIS_AGENT,
             CFA_BACKGROUND,

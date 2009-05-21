@@ -293,7 +293,7 @@ void TexinfoFooter(FILE *fout)
 void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
 
 { int i,j;
-  char filename[CF_MAXVARSIZE];
+  char filename[CF_BUFSIZE];
 
 /* Each array element is SubtypeSyntax representing an agent-promise assoc */
 
@@ -329,7 +329,7 @@ for (j = 0; st[j].btype != NULL; j++)
 void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
 
 { int i;
-  char filename[CF_MAXVARSIZE];
+  char filename[CF_BUFSIZE];
   
 if (bs == NULL)
    {
@@ -465,7 +465,7 @@ else
 void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs)
 
 { int i;
-  char filename[CF_MAXVARSIZE];
+  char filename[CF_BUFSIZE];
   
 if (bs == NULL)
    {

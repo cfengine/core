@@ -480,16 +480,28 @@ int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
   char *lval = cp->lval,buffer[CF_MAXVARSIZE];
   struct Rlist *rp;
   double prob,cum = 0,fluct;
+  struct Rval newret;
+  struct FnCall *fp;
 
-if (cp->type == CF_FNCALL)
+switch (cp->type) 
    {
-   /* Special expansion of functions for control, best effort only */
-   struct Rval newret;
-   struct FnCall *fp = (struct FnCall *)cp->rval;
-   newret = EvaluateFunctionCall(fp,pp);
-   DeleteFnCall(fp);
-   cp->rval = newret.item;
-   cp->type = newret.rtype;
+   case CF_FNCALL:
+       
+       fp = (struct FnCall *)cp->rval;
+       /* Special expansion of functions for control, best effort only */
+       newret = EvaluateFunctionCall(fp,pp);
+       DeleteFnCall(fp);
+       cp->rval = newret.item;
+       cp->type = newret.rtype;
+       break;
+
+   default:
+
+       newret = ExpandPrivateRval("this",cp->rval,cp->type);
+       DeleteRvalItem(cp->rval,cp->type);
+       cp->rval = newret.item;
+       cp->type = newret.rtype;
+       break;
    }
 
 if (strcmp(cp->lval,"expression") == 0)
@@ -551,7 +563,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
       
       if ((fluct < cum) || rp->next == NULL)
          {
-         snprintf(buffer,CF_MAXVARSIZE,"%s_%s",pp->promiser,rp->item);
+         snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser,rp->item);
          if (strcmp(pp->bundletype,"common") == 0)
             {
             NewClass(buffer);

@@ -55,7 +55,8 @@ enum typesequence
 char *TYPESEQUENCE[] =
    {
    "vars",
-   "classes",
+   "classes",    /* Maelstrom order 2 */
+   "classes",    /* Maelstrom order 2 */
    "interfaces",
    "processes",
    "storage",

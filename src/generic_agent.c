@@ -1591,7 +1591,8 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          CheckVariablePromises(bp->name,sp->promiselist);
          }
 
-      // Should we also set global classes here?
+      // We must also set global classes here?
+      
       if (strcmp(bp->type,"common") == 0&&  strcmp(sp->name,"classes") == 0)
          {
          CheckCommonClassPromises(sp->promiselist);

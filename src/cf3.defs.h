@@ -435,7 +435,7 @@ enum cfeditorder
 #define CF_CHARRANGE "^.$"
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
-#define CF_CLASSRANGE  "[a-zA-Z0-9_!&|.()]+"
+#define CF_CLASSRANGE  "[a-zA-Z0-9_!&$|.()]+"
 #define CF_IDRANGE     "[a-zA-Z0-9_$.]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"

@@ -349,7 +349,7 @@ switch (type)
 
        ExpandPrivateScalar(scopeid,(char *)rval,buffer);
        returnval.item = strdup(buffer);
-       returnval.rtype = CF_SCALAR;       
+       returnval.rtype = CF_SCALAR;
        break;
        
    case CF_LIST:

@@ -274,6 +274,11 @@ int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attribute
   int start[CF_PROCCOLS];
   int end[CF_PROCCOLS];
   struct CfRegEx rex;
+
+if (procdata == NULL)
+   {
+   return 0;
+   }
   
 GetProcessColumnNames(procdata->name,(char **)names,start,end); 
 

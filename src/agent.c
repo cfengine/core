@@ -56,7 +56,6 @@ char *TYPESEQUENCE[] =
    {
    "vars",
    "classes",    /* Maelstrom order 2 */
-   "classes",    /* Maelstrom order 2 */
    "interfaces",
    "processes",
    "storage",
@@ -671,7 +670,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          continue;      
          }
 
-      if (pass > 1 && (type == kp_vars || type == kp_classes))
+      if (pass > 1 && type == kp_vars)
          {
          continue;
          }

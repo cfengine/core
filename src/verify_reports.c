@@ -53,7 +53,14 @@ if (thislock.lock == NULL)
 
 PromiseBanner(pp);
 
-CfOut(cf_error,"","R: %s",pp->promiser);
+if (a.report.to_file)
+   {
+   CfFOut(a.report.to_file,cf_error,"","%s",pp->promiser);
+   }
+else
+   {
+   CfOut(cf_error,"","R: %s",pp->promiser);
+   }
 
 if (a.report.haveprintfile)
    {

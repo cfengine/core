@@ -128,7 +128,7 @@ void CompilePromises(void);
 
 /* cfstreams.c */
 
-void CfFOut(FILE *fp,char *fmt, ...);
+void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);

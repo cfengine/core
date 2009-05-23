@@ -381,6 +381,28 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
 
 /*****************************************************************************/
 
+void NoteVarUsage()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_NoteVarUsage();
+#endif 
+}
+
+/*****************************************************************************/
+
+void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SummarizeVariables(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+ CfOut(cf_verbose,"","# Variable reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
 void SummarizePerPromiseCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
 
 {

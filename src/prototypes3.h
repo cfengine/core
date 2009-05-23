@@ -322,6 +322,8 @@ void NotePromiseCompliance(struct Promise *pp,double val);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 void SyntaxCompletion(char *s);
 int GetRegistryValue(char *key,char *value,char *buffer);
+void NoteVarUsage(void);
+void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
@@ -780,7 +782,7 @@ struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname,struct timespec start);
 void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
-void NoteClassUsage(void);
+void NoteClassUsage(struct Item *list);
 void LastSaw(char *hostname,enum roles role);
 int OpenDB(char *filename,DB **dbp);
 int ReadDB(DB *dbp,char *name,void *ptr,int size);

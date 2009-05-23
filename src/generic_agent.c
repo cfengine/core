@@ -314,7 +314,8 @@ snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
 MakeParentDirectory(vbuff,true);
 snprintf(vbuff,CF_BUFSIZE,"%s/lastseen/intermittencies",CFWORKDIR);
 MakeParentDirectory(vbuff,true);
-
+snprintf(vbuff,CF_BUFSIZE,"%s/reports/various",CFWORKDIR);
+MakeParentDirectory(vbuff,true);
 
 snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
 chmod(vbuff,0700); 

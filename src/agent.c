@@ -133,7 +133,8 @@ GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
 ThisAgentInit();
 KeepPromises();
-NoteClassUsage();
+NoteClassUsage(VHEAP);
+NoteVarUsage();
 return 0;
 }
 
@@ -1018,6 +1019,8 @@ for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
    {
    CfOut(cf_verbose,"","     +       %s\n",ip->name);
    }
+
+NoteClassUsage(VADDCLASSES);
 
 CfOut(cf_verbose,"","\n");
 

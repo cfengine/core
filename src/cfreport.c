@@ -640,6 +640,12 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       CfOut(cf_verbose,"","Creating setuid report (Cfengine Nova and above)...\n");
       SummarizeSetuid(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
+
+   if (strcmp("variables",rp->item) == 0)
+      {
+      CfOut(cf_verbose,"","Creating variables report (Cfengine Nova and above)...\n");
+      SummarizeVariables(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
+      }
    }
 
 if (strlen(ERASE) > 0)
@@ -1087,6 +1093,7 @@ if (XML)
 
 for (i = 0; i < 1024; i++)
    {
+   *(array[i].name) = '\0';
    array[i].q = -1;
    }
 
@@ -1130,7 +1137,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       if (i++ < 1024)
          {
          strncpy(array[i].date,tbuf,31);
-         strncpy(array[i].name,eventname,255);
+         strncpy(array[i].name,eventname,254);
          array[i].q = average;
          array[i].d = var;
          }
@@ -1145,8 +1152,13 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 qsort(array,1024,sizeof(struct CEnt),CompareClasses);
 #endif
 
-for (i = 0; array[i].q > 0; i++)
+for (i = 0; i < 1024; i++)
    {
+   if (array[i].q <= 0.00001)
+      {
+      continue;
+      }
+   
    if (XML)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);

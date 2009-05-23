@@ -411,12 +411,17 @@ for (sp = local; *sp != '\0'; sp++)
 int IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux */
 
 { int i;
-
+  static char *names[11] =
+     {
+     "any","agent","Morning","Afternoon","Evening","Night","Q1","Q2","Q3","Q4",
+     NULL
+     };
+ 
 for (i = 2; CLASSTEXT[i] != '\0'; i++)
    {
    if (strcmp(CLASSTEXT[i],sp) == 0)
       {
-      return(true);
+      return true;
       }
    }
 
@@ -424,8 +429,54 @@ for (i = 0; i < 7; i++)
    {
    if (strcmp(DAY_TEXT[i],sp)==0)
       {
-      return(false);
+      return true;
       }
+   }
+
+for (i = 0; i < 12; i++)
+   {
+   if (strncmp(MONTH_TEXT[i],sp,3) == 0)
+      {
+      return true;
+      }
+   }
+
+for (i = 0; names[i] != NULL; i++)
+   {
+   if (strcmp(names[i],sp) == 0)
+      {
+      return true;
+      }
+   }
+
+if (strncmp(sp,"Min",3) == 0 && isdigit(*(sp+3)))
+   {
+   return true;
+   }
+
+if (strncmp(sp,"Hr",2) == 0 && isdigit(*(sp+2)))
+   {
+   return true;
+   }
+
+if (strncmp(sp,"Yr",2) == 0 && isdigit(*(sp+2)))
+   {
+   return true;
+   }
+
+if (strncmp(sp,"Day",3) == 0 && isdigit(*(sp+3)))
+   {
+   return true;
+   }
+
+if (strncmp(sp,"GMT",3) == 0 && *(sp+3) == '_')
+   {
+   return true;
+   }
+
+if (strncmp(sp,"Lcycle",strlen("Lcycle")) == 0)
+   {
+   return true;
    }
 
 return(false);

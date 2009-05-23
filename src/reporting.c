@@ -419,7 +419,7 @@ void ShowScopedVariables()
 
 { struct Scope *ptr;
 
-fprintf(FREPORT_HTML,"<div id=\"showvars\"><h1>Variable scopes</h1><p>");
+fprintf(FREPORT_HTML,"<div id=\"showvars\">");
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
@@ -428,8 +428,8 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       continue;
       }
 
-   fprintf(FREPORT_HTML,"<p>\nConstant variables in SCOPE %s:\n<br><p>",ptr->scope);
-   fprintf(FREPORT_TXT,"\nConstant variables in SCOPE %s:\n",ptr->scope);
+   fprintf(FREPORT_HTML,"<p>\nScope %s:\n<br><p>",ptr->scope);
+   fprintf(FREPORT_TXT,"\nScope %s:\n",ptr->scope);
    
    if (ptr->hashtable)
       {

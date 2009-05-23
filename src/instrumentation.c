@@ -153,7 +153,7 @@ dbp->close(dbp,0);
 
 /***************************************************************/
 
-void NoteClassUsage()
+void NoteClassUsage(struct Item *baselist)
 
 { DB *dbp;
   DBC *dbcp;
@@ -168,8 +168,13 @@ void NoteClassUsage()
 
 Debug("RecordClassUsage\n");
 
-for (ip = VHEAP; ip != NULL; ip=ip->next)
+for (ip = baselist; ip != NULL; ip=ip->next)
    {
+   if (IsHardClass(ip->name))
+      {
+      continue;
+      }
+   
    if (!IsItemIn(list,ip->name))
       {
       PrependItem(&list,ip->name,NULL);
@@ -224,6 +229,7 @@ for (ip = list; ip != NULL; ip=ip->next)
 if ((errno = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    {
    dbp->err(dbp, errno, "DB->cursor");
+   dbp->close(dbp,0);
    return;
    }
 

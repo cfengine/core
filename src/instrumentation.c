@@ -192,9 +192,9 @@ for (ip = list; ip != NULL; ip=ip->next)
       lastseen = now - e.t;
       newe.t = now;
       newe.Q.q = vtrue;
-      newe.Q.expect = GAverage(vtrue,e.Q.expect,0.5);
+      newe.Q.expect = GAverage(vtrue,e.Q.expect,0.3);
       delta2 = (vtrue - e.Q.expect)*(vtrue - e.Q.expect);
-      newe.Q.var = GAverage(delta2,e.Q.var,0.5);
+      newe.Q.var = GAverage(delta2,e.Q.var,0.3);
       }
    else
       {
@@ -273,6 +273,7 @@ while (dbcp->c_get(dbcp, &key, &stored, DB_NEXT) == 0)
    }
 
 dbp->close(dbp,0);
+DeleteItemList(list);
 }
 
 /***************************************************************/

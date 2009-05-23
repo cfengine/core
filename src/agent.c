@@ -133,6 +133,7 @@ GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
 ThisAgentInit();
 KeepPromises();
+NoteClassUsage();
 return 0;
 }
 

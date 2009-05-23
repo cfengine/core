@@ -57,6 +57,8 @@ if (logname && attr.transaction.log_string)
       
       fclose(fout);
       }
+
+   attr.transaction.log_string = NULL; /* To avoid repetition */
    }
 else if (attr.transaction.log_failed)
    {

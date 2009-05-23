@@ -3113,6 +3113,12 @@ Debug("Time computed from input was: %s\n",ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
+if (cftime < 0)
+   {
+   Debug("AGO overflowed, truncating at zero\n");
+   snprintf(buffer,CF_BUFSIZE-1,"%ld",0);
+   }
+
 if ((rval.item = strdup(buffer)) == NULL)
    {
    FatalError("Memory allocation in FnCallAgo");

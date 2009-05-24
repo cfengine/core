@@ -364,17 +364,18 @@ enum cfkcontrol
 
 enum cfrecontrol
    {
+   cfre_autoscale,
+   cfre_builddir,
+   cfre_csv,
+   cfre_errorbars,
+   cfre_htmlbanner,
+   cfre_html_embed,
+   cfre_htmlfooter,
+   cfre_query_engine,
    cfre_reports,
    cfre_report_output,
-   cfre_builddir,
-   cfre_autoscale,
-   cfre_errorbars,
-   cfre_timestamps,
-   cfre_query_engine,
    cfre_stylesheet,
-   cfre_htmlbanner,
-   cfre_htmlfooter,
-   cfre_html_embed,
+   cfre_timestamps,
    cfre_notype
    };
 
@@ -1088,7 +1089,8 @@ struct CfPackageManager
    enum package_actions action;
    enum action_policy policy;
    struct CfPackageItem *pack_list;
-   struct CfPackageItem *update_list;
+   struct CfPackageItem *patch_list;
+   struct CfPackageItem *patch_avail;
    struct CfPackageManager *next;
    };
 
@@ -1381,15 +1383,23 @@ struct Packages
    enum version_cmp package_select;
    enum action_policy package_changes;
    struct Rlist *package_file_repositories;
+
    char *package_list_command;
-   char *package_update_list_command;
    char *package_list_version_regex;
    char *package_list_name_regex;
    char *package_list_arch_regex;
+   char *package_patch_list_command;
+
+   char *package_patch_version_regex;
+   char *package_patch_name_regex;
+   char *package_patch_arch_regex;
+   char *package_patch_installed_regex;
+
    char *package_version_regex;
    char *package_name_regex;
    char *package_arch_regex;
    char *package_installed_regex;
+
    char *package_add_command;
    char *package_delete_command;
    char *package_update_command;

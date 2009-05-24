@@ -311,6 +311,7 @@ int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct 
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void ReportSoftware(struct CfPackageManager *list);
+void ReportPatches(struct CfPackageManager *list);
 void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void LoadSlowlyVaryingObservations(void);
@@ -324,6 +325,7 @@ void SyntaxCompletion(char *s);
 int GetRegistryValue(char *key,char *value,char *buffer);
 void NoteVarUsage(void);
 void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void CSV2XML(struct Rlist *list);
 
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
@@ -1228,6 +1230,7 @@ int VerifyMethod(struct Attributes a,struct Promise *pp);
 
 /* verify_packages.c */
 
+void VerifyPromisedPatch(struct Attributes a,struct Promise *pp);
 void VerifyPackagesPromise(struct Promise *pp);
 void ExecutePackageSchedule(struct CfPackageManager *schedule);
 int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action);
@@ -1240,12 +1243,13 @@ int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attribu
 int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
 void DeletePackageItems(struct CfPackageItem *pi);
 int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
+int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
 void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep);
 void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
 int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
-int PrependUpdateItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
+int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

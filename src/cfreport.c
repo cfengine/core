@@ -98,6 +98,7 @@ FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
 FILE *FPM[CF_OBSERVABLES];
 
 struct Rlist *REPORTS = NULL;
+struct Rlist *CSVLIST = NULL;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -510,6 +511,16 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
          }
       continue;
       }
+
+   if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_csv].lval) == 0)
+      {
+      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+         {
+         IdempPrependRScalar(&CSVLIST,rp->item,CF_SCALAR);
+         CfOut(cf_inform,"","Adding %s to the csv2xml list...\n",rp->item);
+         }
+      continue;
+      }
    }
 }
 
@@ -629,7 +640,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       SummarizeSoftware(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
-   if (strcmp("software_updates",rp->item) == 0)
+   if (strcmp("software_patches",rp->item) == 0)
       {
       CfOut(cf_verbose,"","Creating software update version summary (Cfengine Nova and above)...\n");
       SummarizeUpdates(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
@@ -646,6 +657,11 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       CfOut(cf_verbose,"","Creating variables report (Cfengine Nova and above)...\n");
       SummarizeVariables(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
+   }
+
+if (CSVLIST)
+   {
+   CSV2XML(CSVLIST);
    }
 
 if (strlen(ERASE) > 0)

@@ -38,13 +38,17 @@
 
 struct BodySyntax CF_PKGMETHOD_BODY[] =
    {
-   {"package_changes",cf_opts,"individual,bulk","Menu option - whether to group packages into a single aggregate command"},
+   {"package_changes",cf_opts,"individual,bulk,bulk_no_names","Menu option - whether to group packages into a single aggregate command"},
    {"package_file_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
    {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of installed packages"},
-   {"package_update_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available patches or updates"},
    {"package_list_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {"package_list_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
    {"package_list_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
+   {"package_patch_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available patches or updates"},
+   {"package_patch_version_regex",cf_str,"","Regular expression with one backreference to extract update version string" },
+   {"package_patch_name_regex",cf_str,"","Regular expression with one backreference to extract update name string" },
+   {"package_patch_arch_regex",cf_str,"","Regular expression with one backreference to extract update architecture string" },
+   {"package_patch_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
    {"package_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {"package_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
    {"package_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },

@@ -821,12 +821,18 @@ p.package_changes = change_policy;
 
 p.package_file_repositories = GetListConstraint("package_file_repositories",pp->conlist);
 
-p.package_list_command = (char *)GetConstraint("package_list_command",pp->conlist,CF_SCALAR);
-p.package_update_list_command = (char *)GetConstraint("package_update_list_command",pp->conlist,CF_SCALAR);
 
+p.package_patch_list_command = (char *)GetConstraint("package_patch_list_command",pp->conlist,CF_SCALAR);
+p.package_patch_name_regex = (char *)GetConstraint("package_patch_name_regex",pp->conlist,CF_SCALAR);
+p.package_patch_arch_regex = (char *)GetConstraint("package_patch_arch_regex",pp->conlist,CF_SCALAR);
+p.package_patch_version_regex = (char *)GetConstraint("package_patch_version_regex",pp->conlist,CF_SCALAR);
+p.package_patch_installed_regex = (char *)GetConstraint("package_patch_installed_regex",pp->conlist,CF_SCALAR);
+
+p.package_list_command = (char *)GetConstraint("package_list_command",pp->conlist,CF_SCALAR);
 p.package_list_version_regex = (char *)GetConstraint("package_list_version_regex",pp->conlist,CF_SCALAR);
 p.package_list_name_regex = (char *)GetConstraint("package_list_name_regex",pp->conlist,CF_SCALAR);
 p.package_list_arch_regex = (char *)GetConstraint("package_list_arch_regex",pp->conlist,CF_SCALAR);
+
 p.package_installed_regex = (char *)GetConstraint("package_installed_regex",pp->conlist,CF_SCALAR);
 
 p.package_version_regex = (char *)GetConstraint("package_version_regex",pp->conlist,CF_SCALAR);

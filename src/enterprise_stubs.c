@@ -381,6 +381,18 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
 
 /*****************************************************************************/
 
+void CSV2XML(struct Rlist *list)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_CSV2XML(list);
+#else
+ CfOut(cf_verbose,"","# Format conversion feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
 void NoteVarUsage()
 
 {
@@ -445,6 +457,17 @@ void ReportSoftware(struct CfPackageManager *list)
  Nova_ReportSoftware(list);
 #else
  CfOut(cf_verbose,"","# Software reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void ReportPatches(struct CfPackageManager *list)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_ReportPatches(list);
+#else
+ CfOut(cf_verbose,"","# Patch reporting feature is only available in version Nova and above\n");
 #endif
 }
 

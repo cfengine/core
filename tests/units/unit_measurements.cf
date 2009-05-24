@@ -59,7 +59,7 @@ measurements:
 
   "/bin/df"
 
-      handle => "free_memory_watch",
+      handle => "free_disk_watch",
       stream_type => "pipe",
       data_type => "slist",
       history_type => "static",

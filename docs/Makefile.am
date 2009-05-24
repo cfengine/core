@@ -2,20 +2,20 @@
 man_MANS = cf-agent.8 cf-serverd.8 cf-execd.8 cf-monitord.8 cf-report.8 cf-know.8 cf-runagent.8 cf-promises.8 cf-key.8
 
 # Info used in building the Info files
-info_TEXINFOS = cf3-Reference.texinfo
+#info_TEXINFOS = cf3-Reference.texinfo
 
 #infofiles = $(info_TEXINFOS:.texinfo=.info)
-MAKEINFOHTML = $(MAKEINFO) --html --no-split
+#MAKEINFOHTML = $(MAKEINFO) --html --no-split
 
 # Info used in building and installing HTML files
-htmlfiles = $(info_TEXINFOS:.texinfo=.html)
+#htmlfiles = $(info_TEXINFOS:.texinfo=.html)
 
-htmldir = @htmldir@
-html_DATA = $(htmlfiles)
+#htmldir = @htmldir@
+#html_DATA = $(htmlfiles)
 
 # Info used in building and installing Postscript files
-pdffiles = $(info_TEXINFOS:.texinfo=.pdf)
-dvifiles = $(info_TEXINFOS:.texinfo=.dvi)
+#pdffiles = $(info_TEXINFOS:.texinfo=.pdf)
+#dvifiles = $(info_TEXINFOS:.texinfo=.dvi)
 
 docdir = @docdir@
 doc_DATA = $(psfiles) $(pdffiles)

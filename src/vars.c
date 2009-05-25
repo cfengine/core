@@ -116,9 +116,7 @@ slot = GetHash(lval);
 
 if (ptr == NULL)
    {
-   struct Scope *sp;
-   CfOut(cf_verbose,"","No such scope id \"%s\"\n",scope);
-   FatalError("No such scope");
+   return;
    }
  
 if (ap = (struct CfAssoc *)(ptr->hashtable[slot]))

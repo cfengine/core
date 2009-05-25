@@ -99,7 +99,9 @@ void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void 
 Debug("****************************************************\n");
 Debug("* ExpandPromises (scope = %s )\n",scopeid);
 Debug("****************************************************\n\n");
-  
+
+DeleteScope("match"); /* in case we expand something expired accidentially */
+
 pcopy = DeRefCopyPromise(scopeid,pp);
 
 ScanRval(scopeid,&scalarvars,&listvars,pcopy->promiser,CF_SCALAR,pp);

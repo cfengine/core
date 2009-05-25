@@ -276,9 +276,7 @@ slot = GetHash(lval);
 
 if (ptr == NULL)
    {
-   struct Scope *sp;
-   CfOut(cf_error,"","No such scope \"%s\" while getting variable called \"%s\" \n",scope,lval);
-   FatalError("No such scope");
+   return false;
    }
 
 while (ptr->hashtable[slot])

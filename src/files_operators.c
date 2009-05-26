@@ -79,7 +79,7 @@ else
       }
    }
 
-if (attr.haveperms || attr.havechange)
+if (attr.haveperms || attr.havechange || attr.acl.acl_entries)
    {
    VerifyFileAttributes(path,sb,attr,pp);
    }

@@ -88,13 +88,20 @@ PromiseBanner(pp);
 
 if (bp = GetBundle(method_name,"agent"))
    {
+   char *bp_stack = THIS_BUNDLE;
+   
    BannerSubBundle(bp,params);
    NewScope(bp->name);
    AugmentScope(bp->name,bp->args,params);
-   PushPrivateClassContext();
-   retval = ScheduleAgentOperations(bp);
-   PopPrivateClassContext();
 
+   THIS_BUNDLE = bp->name;
+   PushPrivateClassContext();
+   
+   retval = ScheduleAgentOperations(bp);
+
+   PopPrivateClassContext();
+   THIS_BUNDLE = bp_stack;
+    
    if (retval)
       {
       cfPS(cf_verbose,CF_CHG,"",pp,a,"Method invoked successfully\n");
@@ -103,7 +110,7 @@ if (bp = GetBundle(method_name,"agent"))
       {
       cfPS(cf_inform,CF_FAIL,"",pp,a,"Method could not be invoked successfully\n");
       }
-   
+
    DeleteFromScope(bp->name,bp->args);
    }
 

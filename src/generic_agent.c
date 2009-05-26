@@ -49,12 +49,14 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
-if (EnterpriseExpiry("22","June","21009"))
+/*
+if (EnterpriseExpiry("24","May","21009"))
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise trial has expired.\n");
    exit(1);
    }
-
+*/
+   
 if (!NOHARDCLASSES)
    {
    NewScope("const");

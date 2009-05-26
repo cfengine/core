@@ -77,6 +77,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
       }
 
    // Private to bundle, can be reloaded
+
    *(pp->donep) = false;
    
    return;

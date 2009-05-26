@@ -70,7 +70,8 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
   struct SubType *sp;
   struct Promise *pp;
   int pass;
-
+  char *bp_stack = THIS_BUNDLE;
+      
 NewScope("edit");
 NewScalar("edit","filename",filename,cf_str);
          
@@ -88,17 +89,20 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          }
       
       BannerSubSubType(bp->name,sp->name);
+      THIS_BUNDLE = bp->name;
       SetScope(bp->name);
             
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          pp->edcontext = parentp->edcontext;
          pp->this_server = filename;
-
+         pp->donep = &(pp->done);
+         
          ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
          
          if (Abort())
             {
+            THIS_BUNDLE = bp_stack;
             return false;
             }         
          }
@@ -122,6 +126,7 @@ for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
 
 DeleteScope("edit");
 
+THIS_BUNDLE = bp_stack;
 return true;
 }
 

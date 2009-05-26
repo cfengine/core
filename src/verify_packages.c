@@ -489,6 +489,12 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       {
       case cfa_addpack:
 
+          if (a.packages.package_add_command == NULL)
+             {
+             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package package add command undefined");
+             return false;
+             }
+
           CfOut(cf_verbose,"","Execute scheduled package addition");
 
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2)))
@@ -498,6 +504,12 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           break;
 
       case cfa_deletepack:
+
+          if (a.packages.package_delete_command == NULL)
+             {
+             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package delete command undefined");
+             return false;
+             }
 
           CfOut(cf_verbose,"","Execute scheduled package deletion");
 
@@ -514,7 +526,6 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           if (a.packages.package_update_command == NULL)
              {
              cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package update command undefined");
-             free(command_string);
              return false;
              }
 
@@ -531,7 +542,6 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           if (a.packages.package_patch_command == NULL)
              {
              cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package patch command undefined");
-             free(command_string);
              return false;
              }
           
@@ -548,7 +558,6 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           if (a.packages.package_verify_command == NULL)
              {
              cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package verify command undefined");
-             free(command_string);
              return false;
              }
           
@@ -562,7 +571,6 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           
       default:
           cfPS(cf_verbose,CF_FAIL,"",pp,a,"Unknown action attempted");
-          free(command_string);
           return false;
       }
       
@@ -762,9 +770,9 @@ if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcm
    return false;
    }
 
-printf(" -? Extracted package name \"%s\"\n",name);
-printf(" -?      with version \"%s\"\n",version);
-printf(" -?      with architecture \"%s\"\n",arch);
+Debug(" -? Extracted package name \"%s\"\n",name);
+Debug(" -?      with version \"%s\"\n",version);
+Debug(" -?      with architecture \"%s\"\n",arch);
 
 if (PackageInItemList(chklist,name,version,arch))
    {

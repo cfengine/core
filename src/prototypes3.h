@@ -1234,6 +1234,7 @@ void VerifyPromisedPatch(struct Attributes a,struct Promise *pp);
 void VerifyPackagesPromise(struct Promise *pp);
 void ExecutePackageSchedule(struct CfPackageManager *schedule);
 int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action);
+int ExecutePatch(struct CfPackageManager *schedule,enum package_actions action);
 int PackageSanityCheck(struct Attributes a,struct Promise *pp);
 int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes a,struct Promise *pp);
 void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);

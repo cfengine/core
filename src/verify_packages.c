@@ -167,7 +167,7 @@ if (!ExecuteSchedule(schedule,cfa_update))
 
 CfOut(cf_verbose,""," -> Patch schedule...\n");
 
-if (!ExecuteSchedule(schedule,cfa_patch))
+if (!ExecutePatch(schedule,cfa_patch))
    {
    return;
    }
@@ -443,6 +443,7 @@ int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions actio
   char *command_string = NULL;
   struct Attributes a;
   struct Promise *pp;
+  int ok;       
 
 for (pm = schedule; pm != NULL; pm = pm->next)
    {
@@ -457,7 +458,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       }
 
    estimated_size = 0;
-   
+
    for (pi = pm->pack_list; pi != NULL; pi=pi->next)
       {   
       size = strlen(pi->name) + strlen("  ");
@@ -535,22 +536,6 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              }
           break;
 
-      case cfa_patch:
-
-          CfOut(cf_verbose,"","Execute scheduled package patch");
-          
-          if (a.packages.package_patch_command == NULL)
-             {
-             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package patch command undefined");
-             return false;
-             }
-          
-          if (command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2)))
-             {
-             strcpy(command_string,a.packages.package_patch_command);
-             }
-          break;
-
       case cfa_verifypack:
 
           CfOut(cf_verbose,"","Execute scheduled package verification");
@@ -574,74 +559,247 @@ for (pm = schedule; pm != NULL; pm = pm->next)
           return false;
       }
       
-   strcat(command_string," ");
+   /* if the command ends with $ then we assume the package manager does not accept package names */
    
-   CfOut(cf_verbose,"","Command prefix: %s\n",command_string);
+   if (*(command_string+strlen(command_string)-1) == '$')
+      {
+      *(command_string+strlen(command_string)-1) = '\0';
+      CfOut(cf_verbose,"","Command does not allow arguments");
+      if (ExecPackageCommand(command_string,verify,a,pp))
+         {
+         cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok (outcome cannot be promised by cf-agent)");
+         }
+      else
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed");
+         }
+      }
+   else
+      {
+      strcat(command_string," ");
+      
+      CfOut(cf_verbose,"","Command prefix: %s\n",command_string);
+      
+      switch (pm->policy)
+         {
+         case cfa_individual:             
+             
+             for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+                {
+                char *offset = command_string + strlen(command_string);
+                
+                strcat(offset,pi->name);
+                
+                if (ExecPackageCommand(command_string,verify,a,pp))
+                   {
+                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   }
+                else
+                   {
+                   cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                   }
+                
+                *offset = '\0';
+                }
+             
+             break;
+             
+         case cfa_bulk:
+             
+             for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+                {
+                if (pi->name)
+                   {
+                   strcat(command_string,pi->name);
+                   strcat(command_string," ");
+                   }
+                }
+             
+             ok = ExecPackageCommand(command_string,verify,a,pp);
+             
+             for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+                {
+                if (ok)
+                   {
+                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   }
+                else
+                   {
+                   cfPS(cf_error,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                   }
+                }
+             
+             break;
+             
+         default:
+             break;
+         }      
+      }
+   }
+
+if (command_string)
+   {
+   free(command_string);
+   }
+
+return retval;
+}
+
+
+/*****************************************************************************/
+
+int ExecutePatch(struct CfPackageManager *schedule,enum package_actions action)
+
+{ struct CfPackageItem *pi;
+  struct CfPackageManager *pm;
+  int size,estimated_size,retval = true,verify = false;
+  char *command_string = NULL;
+  struct Attributes a;
+  struct Promise *pp;
+
+for (pm = schedule; pm != NULL; pm = pm->next)
+   {
+   if (pm->action != action)
+      {
+      continue;
+      }
+   
+   if (pm->patch_list == NULL)
+      {
+      continue;
+      }
+
+   estimated_size = 0;
+
+   for (pi = pm->patch_list; pi != NULL; pi=pi->next)
+      {   
+      size = strlen(pi->name) + strlen("  ");
+      
+      switch (pm->policy)
+         {
+         case cfa_individual:             
+
+             if (size > estimated_size)
+                {
+                estimated_size = size;
+                }             
+             break;
+             
+         case cfa_bulk:
+
+             estimated_size += size;
+             break;
+
+         default:
+             break;
+         }
+      }
+
+   pp = pm->patch_list->pp;
+   a = GetPackageAttributes(pp);
+
+   switch (action)
+      {
+      case cfa_patch:
+
+          CfOut(cf_verbose,"","Execute scheduled package patch");
+          
+          if (a.packages.package_patch_command == NULL)
+             {
+             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package patch command undefined");
+             return false;
+             }
+          
+          if (command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2)))
+             {
+             strcpy(command_string,a.packages.package_patch_command);
+             }
+          break;
+          
+      default:
+          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Unknown action attempted");
+          return false;
+      }
 
    /* if the command ends with $ then we assume the package manager does not accept package names */
    
    if (*(command_string+strlen(command_string)-1) == '$')
       {
+      *(command_string+strlen(command_string)-1) = '\0';
       CfOut(cf_verbose,"","Command does not allow arguments");
+      if (ExecPackageCommand(command_string,verify,a,pp))
+         {
+         cfPS(cf_verbose,CF_CHG,"",pp,a,"Package patching seemed to succeed (outcome cannot be promised by cf-agent)");
+         }
+      else
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a,"Package patching failed");
+         }
       }
-   
-   switch (pm->policy)
+   else
       {
-      int ok;
-
-      case cfa_individual:             
-
-          for (pi = pm->pack_list; pi != NULL; pi=pi->next)
-             {
-             char *offset = command_string + strlen(command_string);
-
-             strcat(offset,pi->name);
+      strcat(command_string," ");
+      
+      CfOut(cf_verbose,"","Command prefix: %s\n",command_string);
+      
+      switch (pm->policy)
+         {
+         int ok;
+         
+         case cfa_individual:             
              
-             if (ExecPackageCommand(command_string,verify,a,pp))
+             for (pi = pm->patch_list; pi != NULL; pi=pi->next)
                 {
-                cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                char *offset = command_string + strlen(command_string);
+                
+                strcat(offset,pi->name);
+                
+                if (ExecPackageCommand(command_string,verify,a,pp))
+                   {
+                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   }
+                else
+                   {
+                   cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                   }
+                
+                *offset = '\0';
                 }
-             else
+             
+             break;
+             
+         case cfa_bulk:
+             
+             for (pi = pm->patch_list; pi != NULL; pi=pi->next)
                 {
-                cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                if (pi->name)
+                   {
+                   strcat(command_string,pi->name);
+                   strcat(command_string," ");
+                   }
                 }
-
-             *offset = '\0';
-             }
-          
-          break;
-          
-      case cfa_bulk:
-          
-          for (pi = pm->pack_list; pi != NULL; pi=pi->next)
-             {
-             if (pi->name)
+             
+             ok = ExecPackageCommand(command_string,verify,a,pp);
+             
+             for (pi = pm->patch_list; pi != NULL; pi=pi->next)
                 {
-                strcat(command_string,pi->name);
-                strcat(command_string," ");
+                if (ok)
+                   {
+                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   }
+                else
+                   {
+                   cfPS(cf_error,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                   }
                 }
-             }
-
-          ok = ExecPackageCommand(command_string,verify,a,pp);
-
-          for (pi = pm->pack_list; pi != NULL; pi=pi->next)
-             {
-             if (ok)
-                {
-                cfPS(cf_verbose,CF_CHG,"",pp,a,"Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
-                }
-             else
-                {
-                cfPS(cf_error,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
-                }
-             }
-          
-          break;
-          
-      default:
-          break;
+             
+             break;
+             
+         default:
+             break;
+         }
+      
       }
-   
    }
 
 if (command_string)
@@ -847,7 +1005,11 @@ CfOut(cf_verbose,""," -> Looking for (%s,%s,%s)\n",n,v,a);
 
 for (pi = mp->patch_list; pi != NULL; pi=pi->next)
    {
-   if (ComparePackages(n,v,a,pi,attr.packages.package_select))
+   if (FullTextMatch(n,pi->name)) /* Check regexes */
+      {
+      return true;
+      }
+   else if (ComparePackages(n,v,a,pi,attr.packages.package_select))
       {
       return true;
       }
@@ -910,6 +1072,7 @@ switch(a.packages.package_policy)
 
        if (matched && package_select_in_range || installed && no_version_specified)
           {
+          CfOut(cf_verbose,""," -> Schedule package for deletion\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
           }
@@ -924,6 +1087,7 @@ switch(a.packages.package_policy)
 
        if (!no_version_specified)
           {
+          CfOut(cf_verbose,""," -> Schedule package for reinstallation\n");
           if (matched && package_select_in_range || installed && no_version_specified)
              {
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
@@ -943,6 +1107,7 @@ switch(a.packages.package_policy)
 
        if (matched && package_select_in_range && !no_version_specified || installed)
           {
+          CfOut(cf_verbose,""," -> Schedule package for update\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_update_command,cfa_update,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
           }
@@ -954,14 +1119,15 @@ switch(a.packages.package_policy)
        
    case cfa_patch:
 
-       if (matched && package_select_in_range && !no_version_specified || installed)
+       if (matched && !installed)
           {
+          CfOut(cf_verbose,""," -> Schedule package for patching\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_patch_command,cfa_patch,a.packages.package_changes);
           PrependPackageItem(&(manager->patch_list),id,"any","any",a,pp);
           }
        else
           {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state is as promised -- no match or not installed\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state is as promised -- already installed\n");
           }
        break;
 
@@ -969,6 +1135,7 @@ switch(a.packages.package_policy)
        
        if (matched && package_select_in_range || installed && no_version_specified)
           {
+          CfOut(cf_verbose,""," -> Schedule package for verification\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_verify_command,cfa_verifypack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
           }

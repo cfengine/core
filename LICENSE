@@ -7,6 +7,10 @@
  (/pub/snprintf) might become compiled. This is compatible with the
  GPL.
 
+ Users of the software may, at their option, choose the COSL license
+ below as part of the enterprise cfengine product.
+
+
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -682,3 +686,202 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
+
+
+------------------------------------------------------------------------------
+
+
+                    COMMERCIAL OPEN SOURCE LICENSE
+
+                           (Alternative license)
+
+This Cfengine commercial open source license ("COSL") is entered into
+between Cfengine AS, a Norwegian company, as licensor, having its
+registered address (at the time of writing) at Forskningsparken, Oslo,
+Norway, business registration no. 892 847 282 ("Cfengine") and
+
+a) the Customer entity stipulated on the the agreement front page (“Front page”),
+
+b) any entity or natural person downloading, installing or taking the
+Software or any part of it into use, or
+
+c) any entity or person who otherwise has agreed to be bound by these
+terms (collectively the "Licensee").
+
+1 LICENSE
+
+1.1 General
+
+The Software is licensed on a consecutive basis (rental) or
+perpetually, as stipulated on the Front page. See 1.2 and 1.3 below
+respectively. The following shall apply to either type of license
+grants.
+
+Subject to the terms of this COSL and other agreement between the
+parties, Cfengine hereby grants to Licensee a non-exclusive,
+non-transferable, non-sublicensable and limited license to install,
+use, study and modify the number of copies of the Software on the
+number of Instances stipulated on the Front page for use within its
+organization.
+
+The number of Instances the Software may be installed on may be
+changed by the Customer from time to time, provided ample notice is
+given to Cfengine. See Front page for reporting.
+
+The Licensee may modify, adapt and create derivative works based upon
+the Software, for use within its organisation and for sharing between
+other consecutive licensees under the COSL. Therefore, the Licensee
+shall have access to the source code of the Software. However, the
+Licensee shall not reproduce, distribute, resell, rent, lease or
+disclose the Software in any manner or form to any other third party
+not holding a COSL to the Software.
+
+Licensee may not transfer any of its rights under this COSL without
+the prior and express written consent of Cfengine.
+
+Any Cfengine software component used by both the Cfengine enterprise
+version and Cfengine community edition is licensed under the terms of
+this COSL if the Licensee does not state in writing to Cfengine that
+the Licensee instead wish to license the component in question under
+the GNU General Public License (GPL) v.3.0 or other applicable
+license.
+
+Third party software is licensed under the license of such third
+party.
+
+1.2 Consecutive license grant (subscription)
+
+If the license grant is agreed to be consecutive (see stipulation on
+Front page), it shall be effective for the period the consecutive
+license fee (subscription fee) is paid and this license is otherwise
+complied to. The payment of the consecutive license fee entitles the
+Customer to Updates and New versions of the Software (as stipulated in
+appendix 1).
+
+1.3 Perpetual license grant
+
+If the license grant is agreed to be perpetual (see stipulation on
+Front page), the grant is for ever, provided the license terms are
+complied to. The perpetual license grant is limited to current the
+version of the Software at the Effective date. Updates or New versions
+of the Software are not included, unless stated on the Front page
+(subject to additional fee).
+
+2 DEFINITIONS
+
+The following definitions shall apply to the COSL: 
+
+“Instances” means each physical or virtual computer (server or
+client), onto which an installation of the Software takes place.
+
+“New version” (of the Software) means a new edition of the Software
+containing functionality or properties not present in the previous
+edition of the Software.
+
+"Software" means: 
+
+a) the Cfengine enterprise edition Nova, Constellation and Galaxy data
+centre administration software downloaded by the Licensee or otherwise
+given access to including bundled documentation and other material, as
+described at www.cfengine.com/; and
+
+b) new versions and updates to such software provided by Cfengine, and
+
+
+“Update” (of Software) means smaller adjustments of the Software with
+the existing functionality, normally by way of installation of new
+copy of the Software.
+
+3 FEES
+
+The Licensee shall pay a license fee per Instance the Software is
+installed on for the license granted herein; either:
+
+a) per time unit (as agreed) e.g. year, for consecutive license grants, or 
+
+b) once, for perpetual license grants, for the number of Instances
+stated on the Front page, or any later adjustments. See the Front page
+for further details.
+
+4 INTELLECTUAL PROPERTY RIGHTS
+
+Cfengine and its suppliers does not by this COSL transfer any
+copyrights or other intellectual property rights relating to the
+Software to the Licensee. Such rights are protected by intellectual
+property legislation in the United States, Europe and other
+jurisdictions and by international treaty provisions. Cfengine and its
+suppliers retain all rights in the Software that are not expressly
+granted to the Licensee through this COSL.
+
+Licensee is not allowed to remove, alter or destroy any proprietary,
+trademark or copyright markings or notices placed upon or contained
+within the Software.
+
+5 TERMINATION
+
+Cfengine may terminate the COSL if the Licensee fails to comply with
+the terms of this COSL, hereunder fails to pay the stipulated fees. In
+the event of such termination, the Licensee shall immediately stop
+using the Software, return any received media and documentation, and
+destroy or permanently delete any installed versions of the Software,
+and confirm such destruction or deletion in writing within 7 days.
+
+6 IDEMNINFICATION  
+
+If the Software (except for third party software) during the term of
+the license grant is held by a court of competent jurisdiction to
+infringe any third party intellectual property rights and the Licensee
+incurs loss or expense as a result of such holding, then Licenee's
+sole remedy shall be, and Cfengine will, at its option: (i) obtain the
+right for Licensse to continue to use the Software consistent with the
+COSL; (ii) modify the Software so that it becomes non-infringing;
+(iii) replace the infringing component with a non-infringing
+component, or (iv) refund monies paid by Licensee under the Agreement
+during the prior six (6) months to the court holding (for consecutive
+license grants) or a forth of any perpetual license fee paid, and all
+Licensees rights and licenses under this Agreement shall automatically
+terminate.
+
+The Licensee is aware that the Software is also comprised of third
+party software, mostly open source software. Such third party software
+are subject to its individual license terms, and any claims shall be
+directed at the ultimate right holder to that software. Consequently
+Cfengine is not liable for any defective title in such third party
+software. See schedule 5 for a list of software contained by the
+Software with related licenses.
+
+7 NO WARRANTY
+
+To the maximum extent permitted by law, Cfengine disclaims any
+warranty for the Software (except as stated in clause 6). The
+Software, any services and any related documentation is provided on an
+"as is" basis without warranty of any kind, whether express or
+implied, including, but not limited to, implied warranties of
+merchantability, fitness for a particular purpose or non-infringement
+(except as stated in clause 6). Hereunder the parties acknowledges
+that Cfengine does not warrant for the performance of any data centre
+on which the Software runs, or the absence of any errors in the
+Software, and that any such errors does not constitute a contractual
+defect.
+
+8 LIABILITY
+
+The liability of the parties in contract, tort (including negligence)
+or otherwise shall for all incidents during the entire term of the
+COSL be limited to a fifth of the fees paid for a perpetual license or
+the annual consecutive license fees paid for the Software causing the
+damage or loss, up to a maximum of NOK 100 000. Cfengine or its
+suppliers shall not be liable for any special, incidental, indirect or
+consequential damages whatsoever (including, without limitation,
+damages for loss of business profits, lost savings, business
+interruption, loss of business information, personal injury, loss of
+privacy, loss of goodwill or any other financial loss) arising out of
+the use of or inability to use the Software, even if advised of the
+possibility of such damages.
+
+9 THIRD-PARTY TERMS
+
+For third-party software that is made available to the Licensee by
+Cfengine, the current terms of the relevant third party software
+supplier shall apply.
+

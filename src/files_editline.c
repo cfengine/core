@@ -218,10 +218,20 @@ void VerifyLineDeletions(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
+  char lockname[CF_BUFSIZE];
+  struct CfLock thislock;
 
 /* *(pp->donep) = true;	*/
 	 
 a = GetDeletionAttributes(pp);
+
+snprintf(lockname,CF_BUFSIZE-1,"filedeletion-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
 
 /* Are we working in a restricted region? */
 
@@ -233,6 +243,7 @@ if (!a.haveregion)
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
    cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   YieldCurrentLock(thislock);
    return;
    }
 
@@ -240,6 +251,8 @@ if (DeletePromisedLinesMatching(start,begin_ptr,end_ptr,a,pp))
    {
    (pp->edcontext->num_edits)++;
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -249,29 +262,42 @@ void VerifyColumnEdits(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
+  char lockname[CF_BUFSIZE];
+  struct CfLock thislock;
 
 /* *(pp->donep) = true; */
 
 a = GetColumnAttributes(pp);
 
+snprintf(lockname,CF_BUFSIZE-1,"filecolumnedits-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 if (a.column.column_separator == NULL)
    {
    cfPS(cf_error,CF_WARN,"",pp,a,"No field_separator in promise to edit by column for %s",pp->promiser);
-   PromiseRef(cf_error,pp);   
+   PromiseRef(cf_error,pp);
+   YieldCurrentLock(thislock);
    return;
    }
 
 if (a.column.select_column <= 0)
    {
    cfPS(cf_error,CF_WARN,"",pp,a,"No select_field in promise to edit %s",pp->promiser);
-   PromiseRef(cf_error,pp);   
+   PromiseRef(cf_error,pp);
+   YieldCurrentLock(thislock);
    return;   
    }
 
 if (!a.column.column_value)
    {
    cfPS(cf_error,CF_WARN,"",pp,a,"No field_value is promised to column_edit %s",pp->promiser);
-   PromiseRef(cf_error,pp);   
+   PromiseRef(cf_error,pp);
+   YieldCurrentLock(thislock);
    return;   
    }
 
@@ -285,6 +311,7 @@ if (!a.haveregion)
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
    cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised column edit (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   YieldCurrentLock(thislock);
    return;
    }
 
@@ -294,6 +321,8 @@ if (EditColumns(begin_ptr,end_ptr,a,pp))
    {
    (pp->edcontext->num_edits)++;
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -303,19 +332,31 @@ void VerifyPatterns(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a;
   struct Item *begin_ptr,*end_ptr;
+  char lockname[CF_BUFSIZE];
+  struct CfLock thislock;
 
 /* *(pp->donep) = true; */
 
+CfOut(cf_verbose,""," -> Looking at pattern %s\n",pp->promiser);
+
+/* Are we working in a restricted region? */
+
 a = GetReplaceAttributes(pp);
 
-if (!a.replace.replace_value)
+snprintf(lockname,CF_BUFSIZE-1,"filepatterns-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
    {
-   cfPS(cf_error,CF_WARN,"",pp,a,"No replace_value in promise to replace pattern %s",pp->promiser);
-   PromiseRef(cf_error,pp);
    return;
    }
 
-/* Are we working in a restricted region? */
+if (!a.replace.replace_value)
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised pattern replace (%s) had no replacement string",pp->promiser);
+   YieldCurrentLock(thislock);
+   return;
+   }
 
 if (!a.haveregion)
    {
@@ -325,6 +366,7 @@ if (!a.haveregion)
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
    cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised pattern replace (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   YieldCurrentLock(thislock);
    return;
    }
 
@@ -334,6 +376,8 @@ if (ReplacePatterns(begin_ptr,end_ptr,a,pp))
    {
    (pp->edcontext->num_edits)++;
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -343,6 +387,8 @@ void VerifyLineInsertions(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Item *begin_ptr,*end_ptr;
   struct Attributes a;
+  char lockname[CF_BUFSIZE];
+  struct CfLock thislock;
 
 /* *(pp->donep) = true; */
 
@@ -351,6 +397,14 @@ a = GetInsertionAttributes(pp);
 if (!SanityCheckInsertions(a))
    {
    cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) breaks its own promises",pp->promiser);
+   return;
+   }
+
+snprintf(lockname,CF_BUFSIZE-1,"filepatterns-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
    return;
    }
 
@@ -364,6 +418,7 @@ if (!a.haveregion)
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
    cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   YieldCurrentLock(thislock);
    return;
    }
 
@@ -381,6 +436,7 @@ else
    if (!SelectItemMatching(a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s",pp->promiser,a.location.line_matching,pp->this_server);
+      YieldCurrentLock(thislock);
       return;
       }
 
@@ -389,6 +445,8 @@ else
       (pp->edcontext->num_edits)++;
       }
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -705,9 +763,10 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
   int match_len,start_off,end_off,once_only = false,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
- 
-if (a.replace.occurrences && strcmp(a.replace.occurrences,"first") == 0)
+
+if (a.replace.occurrences && (strcmp(a.replace.occurrences,"first") == 0))
    {
+   CfOut(cf_inform,"","WARNING! Setting replace-occurrences policy to \"first\" is not convergent");
    once_only = true;
    }
 
@@ -727,7 +786,9 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       match_len = end_off - start_off;
       ExpandScalar(a.replace.replace_value,replace);
       }
-   
+
+   CfOut(cf_error,""," -> Verifying replacement of \"%s\" with \"%s\"\n",pp->promiser,replace);  
+
    memset(line_buff,0,CF_BUFSIZE);
    sp = ip->name;   
 
@@ -738,8 +799,12 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       strncat(line_buff,replace,CF_BUFSIZE);
       sp += match_len;
 
+      CfOut(cf_verbose,""," -> << \"%s\"\n",ip->name);
+      CfOut(cf_verbose,""," -> >> \"%s\"\n",line_buff);
+      
       if (once_only)
          {
+         CfOut(cf_verbose,""," -> Replace first occurrence only (warning, this is not a convergent policy)");
          strncat(line_buff,ip->name+end_off,CF_BUFSIZE);
          break;
          }
@@ -774,11 +839,6 @@ for (ip = file_start; ip != file_end; ip=ip->next)
          }
       }
 
-   if (once_only)
-      {
-      break;
-      }
-   
    if (a.transaction.action == cfa_warn)
       {
       cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to replace line \"%s\" in %s - but only a warning was promised",pp->promiser,pp->this_server);
@@ -792,8 +852,12 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       (pp->edcontext->num_edits)++;
       retval = true;
       }
-   }
 
+   if (once_only)
+      {
+      break;
+      }
+   }
 
 DeleteScope("match");
 NewScope("match");

@@ -56,6 +56,8 @@ void VerifyGraph(struct Topic *map, struct Rlist *assoc_views,char *view)
   double **adj,*evc;
   char **n;
 
+CfOut(cf_verbose,""," -> Graph view %s\n",view);
+  
 for (tp = map; tp != NULL; tp=tp->next)
    {
    topic_count++;

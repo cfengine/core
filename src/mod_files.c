@@ -90,7 +90,7 @@ struct BodySyntax CF_EDITCOL_BODY[] =
 struct BodySyntax CF_REPLACEWITH_BODY[] =
    {
    {"replace_value",cf_str,CF_ANYSTRING,"Value used to replace regular expression matches in search"},
-   {"occurrences",cf_opts,"all,first","Menu option to replace all occurrences or just first"},
+   {"occurrences",cf_opts,"all,first","Menu option to replace all occurrences or just first (NB the latter is non-convergent)"},
    {NULL,cf_notype,NULL,NULL}
    };
 

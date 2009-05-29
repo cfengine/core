@@ -78,6 +78,7 @@ struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes 
   time_t lastcompleted = 0, elapsedtime;
   char *promise,cc_operator[CF_BUFSIZE],cc_operand[CF_BUFSIZE];
   char cflock[CF_BUFSIZE],cflast[CF_BUFSIZE],cflog[CF_BUFSIZE];
+  char str_digest[CF_BUFSIZE];
   struct CfLock this;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
     
@@ -110,6 +111,21 @@ if (CF_STCKFRAME == 1)
    /* Must not set pp->done = true for editfiles etc */
    }
 
+HashPromise(pp,digest,cf_md5);
+strcpy(str_digest,HashPrint(cf_md5,digest));
+
+/* As a backup to "done" we need something immune to re-use */
+
+if (IsItemIn(DONELIST,str_digest))
+   {
+   CfOut(cf_verbose,""," -> This promise has already been verified");
+   return this;
+   }
+
+PrependItem(&DONELIST,str_digest,NULL);
+
+/* Finally if we're supposed to ignore locks ... do the remaining stuff */
+
 if (IGNORELOCK)
    {
    this.lock = strdup("dummy");
@@ -133,11 +149,9 @@ for (i = 0; cc_operand[i] != '\0'; i++)
    sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
    }
 
-HashPromise(pp,digest,cf_md5);
-
 snprintf(cflog,CF_BUFSIZE,"%s/cf3.%.40s.runlog",CFWORKDIR,host);
-snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,HashPrint(cf_md5,digest));
-snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,HashPrint(cf_md5,digest));
+snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,str_digest);
+snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,str_digest);
 
 Debug("LOCK(%s)[%s]\n",pp->bundle,cflock);
 

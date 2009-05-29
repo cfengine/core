@@ -45,6 +45,7 @@ extern struct Rlist *SINGLE_COPY_CACHE;
 extern struct Rlist *ACCESSLIST;
 extern struct Topic *TOPIC_MAP;
 extern struct PromiseIdent *PROMISE_ID_LIST;
+extern struct Item *DONELIST;
 
 extern double FORGETRATE;
 

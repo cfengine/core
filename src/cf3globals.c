@@ -78,6 +78,7 @@ struct PromiseIdent *PROMISE_ID_LIST = NULL;
 struct Item *PROCESSTABLE = NULL;
 struct Item *FSTABLIST = NULL;
 struct Item *ABORTBUNDLEHEAP = NULL;
+struct Item *DONELIST = NULL;
 
 int CF_MOUNTALL = false;
 int CF_SAVEFSTAB = false;

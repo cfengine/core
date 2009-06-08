@@ -4020,7 +4020,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    for (rp = newlist; rp != NULL; rp=rp->next)
       {
       snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,newlist->item,vcount);
-      NewScalar(CONTEXTID,name,rp->item,type);
+      NewScalar(THIS_BUNDLE,name,rp->item,type);
       vcount++;
       }
 

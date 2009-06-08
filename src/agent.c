@@ -622,6 +622,12 @@ if (!ok)
    FatalError("Errors in agent bundles");
    }
 
+if (VERBOSE || DEBUG)
+   {
+   CfOut(cf_verbose,"","Bundlesequence => ");
+   ShowRval(stdout,retval,rettype);
+   }
+
 /* If all is okay, go ahead and evaluate */
 
 for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)

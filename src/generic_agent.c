@@ -1213,7 +1213,8 @@ for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    scope = bp->name;
-   
+   THIS_BUNDLE = bp->name;
+
    for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
       {
       if (strcmp(sp->name,"classes") == 0)
@@ -1221,7 +1222,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          /* these should not be evaluated here */
          continue;
          }
-      
+
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(agent,scope,pp,NULL);
@@ -1586,6 +1587,7 @@ CfOut(cf_verbose,"","Initiate variable convergence...\n");
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    SetNewScope(bp->name);
+   THIS_BUNDLE = bp->name;
 
    for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
       {      

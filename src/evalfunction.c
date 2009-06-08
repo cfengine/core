@@ -3915,7 +3915,7 @@ if (stat(filename,&sb) == -1)
          }
       else
          {
-         CfOut(cf_error,"stat","Could not examine file %s in readfile",filename);
+         CfOut(cf_inform,"stat","Could not examine file %s in readfile",filename);
          }
       }
    return NULL;

@@ -787,7 +787,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       ExpandScalar(a.replace.replace_value,replace);
       }
 
-   CfOut(cf_error,""," -> Verifying replacement of \"%s\" with \"%s\"\n",pp->promiser,replace);  
+   CfOut(cf_verbose,""," -> Verifying replacement of \"%s\" with \"%s\"\n",pp->promiser,replace);  
 
    memset(line_buff,0,CF_BUFSIZE);
    sp = ip->name;   

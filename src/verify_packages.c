@@ -128,6 +128,11 @@ if (a.packages.package_add_command == NULL || a.packages.package_delete_command 
    return false;
    }
 
+if (!a.packages.package_installed_regex)
+   {
+   cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package installed regex undefined");
+   return false;
+   }
 
 return true;
 }

@@ -307,7 +307,10 @@ void AddEphemeralClasses(struct Rlist *classlist)
 
 for (rp = classlist; rp != NULL; rp = rp->next)
    {
-   NewClass(rp->item);
+   if (!IsItemIn(VHEAP,rp->item))
+      {
+      NewClass(rp->item);
+      }
    }
 }
 
@@ -517,6 +520,41 @@ else
    {
    return true;
    }
+}
+
+/*******************************************************************/
+
+void SaveClassEnvironment()
+
+{ struct Item *ip;
+  char file[CF_BUFSIZE];
+  FILE *fp;
+ 
+snprintf(file,CF_BUFSIZE,"%s/state/allclasses.txt",CFWORKDIR);
+
+if ((fp = fopen(file,"w")) == NULL)
+   {
+   CfOut(cf_inform,"","Could not open allclasses cache file");
+   return;
+   }
+
+for (ip = VHEAP; ip != NULL; ip=ip->next)
+   {
+   if (!IsItemIn(VNEGHEAP,ip->name))
+      {
+      fprintf(fp,"%s\n",ip->name);
+      }
+   }
+ 
+for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+   {
+   if (!IsItemIn(VNEGHEAP,ip->name))
+      {
+      fprintf(fp,"%s\n",ip->name);
+      }
+   }
+
+fclose(fp);
 }
 
 /*****************************************************************************/

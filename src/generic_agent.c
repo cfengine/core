@@ -49,13 +49,11 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
-/*
 if (EnterpriseExpiry("24","May","21009"))
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise trial has expired.\n");
    exit(1);
    }
-*/
    
 if (!NOHARDCLASSES)
    {
@@ -239,7 +237,7 @@ switch (ag)
 void InitializeGA(int argc,char *argv[])
 
 { char *sp;
-  int i,j, seed;
+  int i,j,seed,force = false;
   struct stat statbuf;
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
@@ -259,7 +257,6 @@ else
 FILE_SEPARATOR = '/';
 strcpy(FILE_SEPARATOR_STR,"/");
 #endif
-
 
 NewClass("any");
 strcpy(VPREFIX,"cf3");
@@ -309,15 +306,15 @@ CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
 snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
 
 snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
+MakeParentDirectory(vbuff,force);
 snprintf(vbuff,CF_BUFSIZE,"%s/bin/cf-agent -D from_cfexecd",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
+MakeParentDirectory(vbuff,force);
 snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
+MakeParentDirectory(vbuff,force);
 snprintf(vbuff,CF_BUFSIZE,"%s/lastseen/intermittencies",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
+MakeParentDirectory(vbuff,force);
 snprintf(vbuff,CF_BUFSIZE,"%s/reports/various",CFWORKDIR);
-MakeParentDirectory(vbuff,true);
+MakeParentDirectory(vbuff,force);
 
 snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
 chmod(vbuff,0700); 
@@ -325,7 +322,7 @@ snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
 chmod(vbuff,0700);
 
 sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
-MakeParentDirectory(ebuff,true);
+MakeParentDirectory(ebuff,force);
 
 if (stat(ebuff,&statbuf) == -1)
    {

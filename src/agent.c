@@ -690,6 +690,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
 
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
+         SaveClassEnvironment();
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
 
          if (Abort())

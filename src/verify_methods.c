@@ -76,14 +76,14 @@ if (a.havebundle)
       }   
    }
 
-/*GetLockName(lockname,"method",pp->promiser,params);
+GetLockName(lockname,"method",pp->promiser,params);
+
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
    {
    return false;
    }
-*/
 
 PromiseBanner(pp);
 
@@ -115,7 +115,7 @@ if (bp = GetBundle(method_name,"agent"))
    DeleteFromScope(bp->name,bp->args);
    }
 
-//YieldCurrentLock(thislock);
+YieldCurrentLock(thislock);
 return retval;
 }
 

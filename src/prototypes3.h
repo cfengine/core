@@ -980,7 +980,7 @@ void DeletePromises(struct Promise *pp);
 void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
 void PromiseRef(enum cfreport level,struct Promise *pp);
 struct Promise *NewPromise(char *typename,char *promiser);
-void HashPromise(struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
+void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 
 /* recursion.c */
 

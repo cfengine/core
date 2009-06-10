@@ -638,7 +638,7 @@ if (pp->ref)
 
 /*******************************************************************/
 
-void HashPromise(struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { EVP_MD_CTX context;
   int len, md_len;
@@ -655,6 +655,11 @@ EVP_DigestUpdate(&context,pp->promiser,strlen(pp->promiser));
 if (pp->ref)
    {
    EVP_DigestUpdate(&context,pp->ref,strlen(pp->ref));
+   }
+
+if (salt)
+   {
+   EVP_DigestUpdate(&context,salt,strlen(salt));
    }
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)

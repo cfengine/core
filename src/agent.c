@@ -183,6 +183,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
       case 'B':
           BOOTSTRAP = true;
           MINUSF = true;
+          NewClass("bootstrap_mode");
           break;
           
       case 'K': IGNORELOCK = true;
@@ -558,7 +559,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       }
    }
 
-if (GetVariable("control_common","CFG_CONTROLBODY[cfg_lastseenexpireafter]",&retval,&rettype) != cf_notype)
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,&retval,&rettype) != cf_notype)
    {
    LASTSEENEXPIREAFTER = Str2Int(retval);
    }

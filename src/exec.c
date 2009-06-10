@@ -48,7 +48,6 @@ char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
 char EXECCOMMAND[CF_BUFSIZE];
 char VMAILSERVER[CF_BUFSIZE];
-
 struct Item *SCHEDULE = NULL;
 
 int  MAXLINES = 30;
@@ -234,7 +233,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
 void ThisAgentInit()
 
 { char vbuff[CF_BUFSIZE];
- 
+
 umask(077);
 LOGGING = true;
 MAILTO[0] = '\0';
@@ -456,7 +455,7 @@ int ScheduleRun()
 { time_t now;
   char timekey[64];
   struct Item *ip;
-
+  
 CfOut(cf_verbose,"","Sleeping...\n");
 sleep(60);                /* 1 Minute resolution is enough */ 
 

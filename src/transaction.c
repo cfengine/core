@@ -111,7 +111,7 @@ if (CF_STCKFRAME == 1)
    /* Must not set pp->done = true for editfiles etc */
    }
 
-HashPromise(pp,digest,cf_md5);
+HashPromise(operand,pp,digest,cf_md5);
 strcpy(str_digest,HashPrint(cf_md5,digest));
 
 /* As a backup to "done" we need something immune to re-use */

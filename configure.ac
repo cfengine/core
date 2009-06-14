@@ -1,4 +1,6 @@
-        dnl ##########################################################################
+dnl ##########################################################################
+dnl #
+dnl # BUILD CFENGINE
 dnl #
 dnl # Process this file with autoconf then autoheader to build a configure
 dnl # script => aclocal; automake -a -c; autoconf
@@ -14,7 +16,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.2a6)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.2a7)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 

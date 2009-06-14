@@ -6,14 +6,5 @@ cfengine 2 installations. It is a significantly more powerful version
 of cfengine which offers a path to upgrading gradually while
 supporting an existing cfengine 2 base.
 
-What is NOT included in this release:
-
- - packages
- - Filesystem ACL support
- - Interface management
-
-These issues still require further research and will be included
-in the next release.
-
 Please see the INSTALL file for build instructions.
 

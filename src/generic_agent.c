@@ -49,7 +49,7 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
-if (EnterpriseExpiry("24","May","21009"))
+if (EnterpriseExpiry("3","July","2009"))
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise trial has expired.\n");
    exit(1);

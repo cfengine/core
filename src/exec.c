@@ -370,6 +370,8 @@ umask(077);
 
 if (ONCE)
    {
+   CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
+   sleep(SPLAYTIME);
    LocalExec((void *)0);
    }
 else

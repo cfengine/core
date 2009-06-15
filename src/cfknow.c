@@ -1814,7 +1814,7 @@ while(CfFetchRow(cfdb))
       continue;
       }
 
-   AddTopic(&topics_this_type,topic_name,topic_type);
+   AddCommentedTopic(&topics_this_type,topic_name,topic_comment,topic_type);
    }
 
 CfDeleteQuery(cfdb);

@@ -79,6 +79,7 @@ void SetEnvironment(char *s);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
+char POLICY_SERVER[CF_BUFSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -88,37 +89,39 @@ extern struct Rlist *SERVERLIST;
             "in the system. In that sense it is the most important\n"
             "part of the cfengine suite.\n";
 
- struct option OPTIONS[13] =
+ struct option OPTIONS[14] =
       {
-      { "help",no_argument,0,'h' },
-      { "debug",optional_argument,0,'d' },
-      { "verbose",no_argument,0,'v' },
-      { "dry-run",no_argument,0,'n'},
-      { "version",no_argument,0,'V' },
       { "bootstrap",no_argument,0,'B' },
-      { "file",required_argument,0,'f'},
+      { "debug",optional_argument,0,'d' },
       { "define",required_argument,0,'D' },
+      { "diagnostic",no_argument,0,'x'},
+      { "dry-run",no_argument,0,'n'},
+      { "file",required_argument,0,'f'},
+      { "help",no_argument,0,'h' },
+      { "inform",no_argument,0,'I'},
       { "negate",required_argument,0,'N' },
       { "no-lock",no_argument,0,'K'},
-      { "inform",no_argument,0,'I'},
-      { "diagnostic",no_argument,0,'x'},
+      { "policy-server",required_argument,0,'s' },
+      { "verbose",no_argument,0,'v' },
+      { "version",no_argument,0,'V' },
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[13] =
+ char *HINTS[14] =
       {
-      "Print the help message",
-      "Set debugging level 0,1,2",
-      "Output verbose information about the behaviour of the agent",
-      "All talk and no action mode - make no changes, only inform of promises not kept",
-      "Output the version of the software",
       "Bootstrap/repair a cfengine configuration from failsafe file in the current directory",
-      "Specify an alternative input file than the default",
+      "Set debugging level 0,1,2",
       "Define a list of comma separated classes to be defined at the start of execution",
+      "Activate internal diagnostics (developers only)",
+      "All talk and no action mode - make no changes, only inform of promises not kept",
+      "Specify an alternative input file than the default",      
+      "Print the help message",
+      "Print basic information about changes made to the system, i.e. promises repaired",
       "Define a list of comma separated classes to be undefined at the start of execution",
       "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
-      "Print basic information about changes made to the system, i.e. promises repaired",
-      "Activate internal diagnostics (developers only)",
+      "Define the server name or IP address of the a policy server (for use with bootstrap)",
+      "Output verbose information about the behaviour of the agent",
+      "Output the version of the software",
       NULL
       };
 
@@ -151,8 +154,10 @@ void CheckOpts(int argc,char **argv)
 
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
+
+POLICY_SERVER[0] = '\0';
   
-while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMB",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -184,6 +189,10 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:VSxMB",OPTIONS,&optindex)) != EOF)
           BOOTSTRAP = true;
           MINUSF = true;
           NewClass("bootstrap_mode");
+          break;
+
+      case 's':
+          strncpy(POLICY_SERVER,optarg,CF_BUFSIZE-1);
           break;
           
       case 'K': IGNORELOCK = true;

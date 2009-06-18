@@ -52,7 +52,7 @@
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
-#define CF3COPYRIGHT "(C) Cfengine AS 2008"
+#define CF3COPYRIGHT "(C) Cfengine AS 2008-"
 
 #define CF_SCALAR 's'
 #define CF_LIST   'l'

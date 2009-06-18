@@ -35,6 +35,7 @@
 extern FILE *yyin;
 extern char *CFH[][2];
 extern void CheckOpts(int argc,char **argv);
+extern char POLICY_SERVER[CF_BUFSIZE];
 
 /*****************************************************************************/
 
@@ -62,6 +63,7 @@ if (!NOHARDCLASSES)
    NewScope("mon");
    SetNewScope("sys");
    GetNameInfo3();
+   
    if (ag != cf_know)
       {
       GetInterfaceInfo3();
@@ -83,6 +85,12 @@ snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 SetNewScope(vbuff);
 NewScope("this");
 NewScope("match");
+
+if (BOOTSTRAP)
+   {
+   SetPolicyServer(POLICY_SERVER);
+   CheckAutoBootstrap();
+   }
 
 ok = BOOTSTRAP || CheckPromises(ag);
 
@@ -378,7 +386,7 @@ if (BOOTSTRAP)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s/inputs/failsafe.cf",CFWORKDIR);
    
-   if (stat(vbuff,&statbuf) == -1)
+   if (!IsEnterprise() && stat(vbuff,&statbuf) == -1)
       {
       CfOut(cf_inform,"","Didn't find established file %s, so looking for one in current directory\n",vbuff);
       strncpy(VINPUTFILE,"./failsafe.cf",CF_BUFSIZE-1);
@@ -1540,7 +1548,7 @@ printf("\nBug reports: bug-cfengine@cfengine.org\n");
 printf(".pp\nCommunity help: help-cfengine@cfengine.org\n");
 printf(".pp\nCommunity info: http://www.cfengine.org\n");
 printf(".pp\nSupport services: http://www.cfengine.com\n");
-printf(".pp\nThis software is (C) 2008 Cfengine AS.\n");
+printf(".pp\nThis software is (C) 2008- Cfengine AS.\n");
 }
 
 /*******************************************************************/
@@ -1548,7 +1556,7 @@ printf(".pp\nThis software is (C) 2008 Cfengine AS.\n");
 void Version(char *component)
 
 {
-printf("This is %s version %s - Free software %s\n",component,VERSION,CF3COPYRIGHT);
+printf("This is %s version %s - Free software %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
 EnterpriseVersion();
 }
 

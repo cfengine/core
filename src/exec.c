@@ -78,7 +78,7 @@ int Dialogue(int sd,char *s);
             "splay the start time of executions across the network\n"
             "and work as a class-based clock for scheduling.";
  
- struct option OPTIONS[17] =
+ struct option OPTIONS[18] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -92,6 +92,7 @@ int Dialogue(int sd,char *s);
       { "inform",no_argument,0,'I'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F' },
+      { "self-monitor",no_argument,0,'s' },
       { "ld-library-path",required_argument,0,'L'},
       { NULL,0,0,'\0' }
       };
@@ -124,8 +125,12 @@ GenericInitialize(argc,argv,"executor");
 ThisAgentInit();
 KeepPromises();
 
-StartServer(argc,argv);
+if (!ONCE)
+   {
+   StartTwin(argc,argv);
+   }
 
+StartServer(argc,argv);
 return 0;
 }
 
@@ -208,7 +213,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
           ONCE = true;
           NO_FORK = true;
           break;
-          
+
       case 'V': Version("cf-execd");
           exit(0);
           
@@ -240,6 +245,21 @@ MAILTO[0] = '\0';
 MAILFROM[0] = '\0';
 VMAILSERVER[0] = '\0';
 EXECCOMMAND[0] = '\0';
+
+if (SCHEDULE == NULL)
+   {
+   AppendItem(&SCHEDULE,"Min00",NULL);
+   AppendItem(&SCHEDULE,"Min05",NULL);
+   AppendItem(&SCHEDULE,"Min10",NULL);
+   AppendItem(&SCHEDULE,"Min15",NULL);
+   AppendItem(&SCHEDULE,"Min20",NULL);
+   AppendItem(&SCHEDULE,"Min25",NULL);   
+   AppendItem(&SCHEDULE,"Min30",NULL);
+   AppendItem(&SCHEDULE,"Min35",NULL);
+   AppendItem(&SCHEDULE,"Min45",NULL);
+   AppendItem(&SCHEDULE,"Min50",NULL);
+   AppendItem(&SCHEDULE,"Min55",NULL);
+   }
 }
 
 /*****************************************************************************/
@@ -330,27 +350,27 @@ void StartServer(int argc,char **argv)
 
 { int pid,time_to_run = false;
   time_t now = time(NULL);
-  struct Promise *pp = NewPromise("exec_cfengine","the executor agent");
+  struct Promise *pp = NewPromise("exec_cfengine","the executor agent"); 
   struct Attributes dummyattr;
   struct CfLock thislock;
- 
+
 Banner("Starting executor");
 memset(&dummyattr,0,sizeof(dummyattr));
 
 dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
 dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
 
-if ((!NO_FORK) && (fork() != 0))
-   {
-   CfOut(cf_inform,"","cfExec starting %.24s\n",ctime(&now));
-   exit(0);
-   }
-
 thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
 
 if (thislock.lock == NULL)
    {
    return;
+   }
+
+if ((!NO_FORK) && (fork() != 0))
+   {
+   CfOut(cf_inform,"","cfExec starting %.24s\n",ctime(&now));
+   exit(0);
    }
 
 if (!NO_FORK)
@@ -526,7 +546,6 @@ pthread_sigmask(SIG_BLOCK,&sigmask,NULL);
 #ifdef HAVE_PTHREAD
 tid = (int) pthread_self();
 #endif
-
  
 CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", ctime(&starttime));
@@ -925,12 +944,12 @@ if (!Dialogue(sd,"DATA\r\n"))
 
 if (anomaly)
    {
-   sprintf(vbuff,"Subject: **!! [%s/%s]\r\n",VFQNAME,VIPADDRESS);
+   sprintf(vbuff,"Subject: %s **!! [%s/%s]\r\n",MailSubject(),VFQNAME,VIPADDRESS);
    Debug("%s",vbuff);
    }
 else
    {
-   sprintf(vbuff,"Subject: [%s/%s]\r\n",VFQNAME,VIPADDRESS);
+   sprintf(vbuff,"Subject: %s [%s/%s]\r\n",MailSubject(),VFQNAME,VIPADDRESS);
    Debug("%s",vbuff);
    }
  

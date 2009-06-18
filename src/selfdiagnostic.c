@@ -203,6 +203,18 @@ pp.audit = NULL;
 pp.conlist = NULL;
 pp.agentsubtype = "none";
 
+pp.bundletype = "bundle_type";
+pp.bundle = "test_bundle";
+pp.ref = "commentary";
+pp.agentsubtype = strdup("files");
+pp.done = false;
+pp.next = NULL;
+pp.cache = NULL;
+pp.inode_cache = NULL;
+pp.this_server = NULL;
+pp.donep = &(pp.done);
+pp.conn = NULL;
+
 args = SplitStringAsRList("$(administrator)",',');
 fp = NewFnCall("getuid",args);
     
@@ -266,6 +278,9 @@ else
    {
    CfOut(cf_error,""," -> Regular expression extraction - ok %d - %d\n",start,end);
    }
+
+/* We have to recompile this for each test - else seg fault - is this a bug? */
+rex = CompileRegExp("#.*");
 
 if (RegExMatchFullString(rex,"line 1:\nline2: # comment to end\nline 3: blablab"))
    {

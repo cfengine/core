@@ -281,8 +281,12 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
+int IsEnterprise(void);
 void EnterpriseVersion(void);
 int EnterpriseExpiry(char *day,char *month,char *year);
+char *MailSubject(void);
+void CheckAutoBootstrap(void);
+void StartTwin(int argc,char **argv);
 void InitMeasurements(void);
 void BundleNode(FILE *fp,char *bundle);
 void BodyNode(FILE *fp,char *bundle,int call);

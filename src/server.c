@@ -2755,7 +2755,10 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
       }
    else
       {
-      /* We are not the owner of the file and we don't care about groups */
+#ifndef NT
+      /* We are not the owner of the file and we don't care about groups -
+         Win does not map these permissions reliably, so drop this check. */
+      
       if (statbuf.st_mode & S_IROTH)
          {
          Debug("Caller %s not owner of the file but permission granted\n",(args->connect)->username);
@@ -2764,11 +2767,11 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
          {
          Debug("Caller %s is not the owner of the file\n",(args->connect)->username);
          RefuseAccess(args->connect,sendbuffer,args->buf_size,"");
-         CfOut(cf_error,"open","Open error of file [%s]\n",filename);         
          snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
          SendSocketStream(sd,sendbuffer,args->buf_size,0);
          return;
          }
+#endif
       }
    }
  

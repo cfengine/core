@@ -56,6 +56,18 @@ struct Averages SHIFT_VALUE;
 
 /*****************************************************************************/
 
+int IsEnterprise()
+
+{
+#ifdef HAVE_LIBCFNOVA
+return true;
+#else
+return false;
+#endif
+}
+
+/*****************************************************************************/
+
 void EnterpriseVersion()
 
 {
@@ -74,6 +86,55 @@ return Nova_EnterpriseExpiry(day,month,year);
 #else
 return false;
 #endif
+}
+
+/*****************************************************************************/
+
+void CheckAutoBootstrap()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_CheckAutoBootstrap();
+#else
+#endif
+}
+
+/*****************************************************************************/
+
+void StartTwin(int argc,char **argv)
+
+/* Self-monitor in case of crash or binary change */
+    
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_StartTwin(argc,argv);
+#else
+#endif
+}
+
+/*****************************************************************************/
+
+char *MailSubject()
+
+{ static char buffer[CF_BUFSIZE];
+#ifdef HAVE_LIBCFNOVA
+ buffer[0] = '\0';
+#else
+ strcpy(buffer,"nova");
+#endif
+return buffer;
+}
+
+/*****************************************************************************/
+
+void SetPolicyServer(char *name)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SetPolicyServer(name);
+#else
+ CfOut(cf_verbose,"","Setting policy server requires version Nova or above");
+#endif 
 }
 
 /*****************************************************************************/

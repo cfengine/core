@@ -781,6 +781,7 @@ while(waitpid(pid,&status,0) < 0)
 if (status == 0)
    {
    Debug(" -> Finished script %s ok\n",pp->promiser);
+   cfPS(cf_verbose,CF_CHG,"",pp,a," !! Finished script - succeeded %s\n",pp->promiser);
    }
 else
    {
@@ -800,7 +801,6 @@ while ((wait_result = wait(&status)) != pid)
       }
    }
  
-
 if (WIFSIGNALED(status))
    {
    cfPS(cf_inform,CF_INTERPT,"",pp,a," -> Finished script - interrupted %s\n",pp->promiser);
@@ -815,7 +815,7 @@ if (!WIFEXITED(status))
 
 if (WEXITSTATUS(status) == 0)
    {
-   Debug(" -> Finished script %s ok\n",pp->promiser);
+   cfPS(cf_verbose,CF_CHG,"",pp,a," !! Finished script - succeeded %s\n",pp->promiser);
    }
 else
    {

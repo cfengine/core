@@ -284,6 +284,7 @@ int IsProcessType(char *s);
 int IsEnterprise(void);
 void EnterpriseVersion(void);
 int EnterpriseExpiry(char *day,char *month,char *year);
+char *GetConsolePrefix(void);
 char *MailSubject(void);
 void CheckAutoBootstrap(void);
 void StartTwin(int argc,char **argv);

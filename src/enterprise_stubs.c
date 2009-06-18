@@ -101,6 +101,18 @@ void CheckAutoBootstrap()
 
 /*****************************************************************************/
 
+char *GetConsolePrefix()
+    
+{
+#ifdef HAVE_LIBCFNOVA
+ return "nova>";
+#else
+ return "cf3";
+#endif
+}
+
+/*****************************************************************************/
+
 void StartTwin(int argc,char **argv)
 
 /* Self-monitor in case of crash or binary change */

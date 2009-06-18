@@ -35,7 +35,6 @@
 extern FILE *yyin;
 extern char *CFH[][2];
 extern void CheckOpts(int argc,char **argv);
-extern char POLICY_SERVER[CF_BUFSIZE];
 
 /*****************************************************************************/
 
@@ -267,7 +266,8 @@ strcpy(FILE_SEPARATOR_STR,"/");
 #endif
 
 NewClass("any");
-strcpy(VPREFIX,"cf3");
+
+strcpy(VPREFIX,GetConsolePrefix());
 
 if (VERBOSE)
    {
@@ -1556,7 +1556,7 @@ printf(".pp\nThis software is (C) 2008- Cfengine AS.\n");
 void Version(char *component)
 
 {
-printf("This is %s version %s - Free software %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
+printf("This is %s core community version %s - %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
 EnterpriseVersion();
 }
 

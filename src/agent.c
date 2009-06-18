@@ -79,7 +79,6 @@ void SetEnvironment(char *s);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
-char POLICY_SERVER[CF_BUFSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */

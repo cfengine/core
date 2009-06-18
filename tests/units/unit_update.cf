@@ -1,41 +1,127 @@
+#cop update,example
+#cop What should a failsafe and update file contain?,example
+
+# Minimum failsafe
+
+body common control
+{
+bundlesequence => { "update" };
+}
 
 bundle agent update
-
 {
+vars:
+
+ "master_location" string => "$(sys.workdir)/masterfiles";
+
+ "policy_server"   string => readfile("$(sys.workdir)/policy_server.dat",40),
+                      comment => "IP address to locate your policy host.";
+
+classes:
+
+  "policy_host" or => { 
+                      classmatch(canonify("ipv4_$(policy_server)")),
+                      classmatch(canonify("$(policy_server)"))
+                      },
+
+                   comment => "Define the ip identity of the policy source host";
+
+  "have_ppkeys" expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub");
+
+  "nofile" expression => fileexists("$(sys.workdir)/policy_server.dat");
+
+commands:
+
+ !have_ppkeys::
+
+   "/usr/local/sbin/cf-key";
+
 files:
 
   "/var/cfengine/inputs" 
 
-    perms => system,
-    copy_from => mycopy("/masterfiles/cfengine_inputs","gold_source.domain.tld"),
-    depth_search => recurse("inf");
+    handle => "update_policy",
+    perms => u_p("600"),
+    copy_from => u_scp("$(master_location)"),
+    depth_search => u_recurse("inf"),
+    action => immediate;
+
+  "/var/cfengine/bin" 
+
+    perms => u_p("700"),
+    copy_from => u_scp("/usr/local/sbin"),
+    depth_search => u_recurse("inf"),
+    action => immediate;
+
+processes:
+
+  any::
+
+    "cf-execd" restart_class => "start_exec";
+
+  policy_host::
+
+    "cf-serverd" restart_class => "start_server";
+
+commands:
+
+ start_exec::
+  "$(sys.workdir)/bin/cf-execd",
+   action => logme("executor");
+
+ start_server::
+  "$(sys.workdir)/bin/cf-serverd",
+   action => logme("server");
+
+reports:
+
+  bootstrap_mode.policy_host::
+
+      "I am the policy host - i.e. with ipv4 address $(policy_server)";
 
 }
 
 ############################################
 
-body perms system
-
+body action logme(x)
 {
-mode  => "0600";
+log_repaired => "stdout";
+logstring => " -> Started the $(x) (success)";
 }
 
-#########################################################
+############################################
 
-body depth_search recurse(d)
+body perms u_p(p)
 
 {
-depth => "$(d)";
+mode  => "$(p)";
 }
 
-#########################################################
+#############################################
 
-body copyfrom mycopy(from,server)
+body copy_from u_scp(from)
 
 {
 source      => "$(from)";
-servers     => { "$(server)" , "failover.domain.tld" };
-#backup      => "true";
-#trustkey    => "true";
-encrypt     => "true";
+compare     => "digest";
+trustkey    => "true";
+
+!policy_host::
+
+servers => { "$(policy_server)" };
+}
+
+#########################################################
+
+body action immediate
+{
+ifelapsed => "1";
+}
+
+############################################
+
+body depth_search u_recurse(d)
+
+{
+depth => "$(d)";
 }

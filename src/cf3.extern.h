@@ -30,6 +30,7 @@
 
 extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
+extern char POLICY_SERVER[CF_BUFSIZE];
 
 extern struct Bundle *BUNDLES;
 extern struct Body *BODIES;

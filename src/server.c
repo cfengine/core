@@ -746,6 +746,8 @@ if (NewPromiseProposals())
    DeleteAuthList(VDENY);
    //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
+   VSYSTEMHARDCLASS = unused1;
+   
    DeleteAllScope();
 
    strcpy(VDOMAIN,"undefined.domain");

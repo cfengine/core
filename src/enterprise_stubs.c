@@ -642,7 +642,7 @@ int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_CheckACLSyntax(acl,pp);
+return Nova_CheckACLSyntax(file,acl,pp);
 #else
 return true;
 #endif
@@ -673,6 +673,7 @@ int GetRegistryValue(char *key,char *value,char *buffer)
 return Nova_CopyRegistryValue(key,value,buffer);
 # endif
 #else
+return 0;
 #endif
 }
 

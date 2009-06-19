@@ -281,6 +281,7 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
+void SetPolicyServer(char *name);
 int IsEnterprise(void);
 void EnterpriseVersion(void);
 void EnterpriseContext(void);

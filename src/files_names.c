@@ -208,6 +208,27 @@ DeleteItemList(path);
 
 /*********************************************************************/
 
+int IsDir(char *path)
+{
+/*
+Checks if the object pointed to by path exists and is a directory.
+Returns true if so, false otherwise.
+*/
+struct stat sb;
+
+if (stat(path, &sb) != -1)
+   {
+   if (S_ISDIR(sb.st_mode))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*********************************************************************/
+
 int EmptyString(char *s)
 
 { char *sp;

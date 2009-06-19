@@ -283,6 +283,8 @@ int IsProcessType(char *s);
 
 int IsEnterprise(void);
 void EnterpriseVersion(void);
+void EnterpriseContext(void);
+char *GetProcessOptions(void);
 int EnterpriseExpiry(char *day,char *month,char *year);
 char *GetConsolePrefix(void);
 char *MailSubject(void);
@@ -311,7 +313,7 @@ void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp);
 void SetMeasurementPromises(struct Item **classlist);
 void LongHaul(void);
 void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
-int CheckACLSyntax(struct CfACL acl,struct Promise *pp);
+int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp);
 int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
@@ -557,6 +559,7 @@ int CfReadLine(char *buff,int size,FILE *fp);
 
 /* files_names.c */
 
+int IsDir(char *path);
 int EmptyString(char *s);
 int ExpandOverflow(char *str1,char *str2);
 char *JoinPath(char *path,char *leaf);

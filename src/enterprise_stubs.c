@@ -59,10 +59,20 @@ struct Averages SHIFT_VALUE;
 int IsEnterprise()
 
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA || defined HAVE_LIBCFCONSTELLATION || defined HAVE_LIBCFGALAXY
 return true;
 #else
 return false;
+#endif
+}
+
+/*****************************************************************************/
+
+void EnterpriseContext()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_EnterpriseContext();
 #endif
 }
 
@@ -628,7 +638,7 @@ Nova_VerifyACL(file,a,pp);
 
 /*****************************************************************************/
 
-int CheckACLSyntax(struct CfACL acl,struct Promise *pp)
+int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
@@ -827,6 +837,20 @@ return Nova_VerifyTablePromise(cfdb,name,columns,a,pp);
 #else
 CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
 return false;
+#endif
+}
+
+/*****************************************************************************/
+/* Misc                                                                      */
+/*****************************************************************************/
+
+char *GetProcessOptions()
+{
+#ifdef HAVE_LIBCFNOVA
+ return Nova_GetProcessOptions();
+#else
+CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
+return VPSOPTS[VSYSTEMHARDCLASS];
 #endif
 }
 

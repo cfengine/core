@@ -898,7 +898,8 @@ void NewTypeContext(enum typesequence type)
 
 { int maxconnections,i;
   struct Item *procdata = NULL;
-  char *psopts = VPSOPTS[VSYSTEMHARDCLASS];
+  char *psopts = GetProcessOptions();
+
 // get maxconnections
 
 switch(type)

@@ -458,7 +458,7 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
    return;
    }
 
-if (attr.acl.acl_method != cfacl_nomethod)
+if (attr.acl.acl_entries)
    { 
    VerifyACL(file,attr,pp); 
    }

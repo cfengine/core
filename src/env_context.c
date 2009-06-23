@@ -573,6 +573,11 @@ int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
   struct Rval newret;
   struct FnCall *fp;
 
+if (cp == NULL)
+   {
+   CfOut(cf_error,""," !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
+   }
+  
 switch (cp->type) 
    {
    case CF_FNCALL:
@@ -585,6 +590,16 @@ switch (cp->type)
        cp->type = newret.rtype;
        break;
 
+   case CF_LIST:
+       for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+          {
+          newret = ExpandPrivateRval("this",rp->item,rp->type);
+          DeleteRvalItem(rp->item,rp->type);
+          rp->item = newret.item;
+          rp->type = newret.rtype;
+          }
+       break;
+       
    default:
 
        newret = ExpandPrivateRval("this",cp->rval,cp->type);
@@ -638,8 +653,17 @@ if (strcmp(cp->lval,"dist") == 0)
 fluct = drand48(); /* Get random number 0-1 */
 cum = 0.0;
 
+/* If we get here, anything remaining on the RHS must be a clist */
+
+//DebugPromise(pp);
+
 for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    {
+   if (rp->type != CF_SCALAR)
+      {
+      return false;
+      }
+
    result = IsDefinedClass((char *)(rp->item));
 
    result_and = result_and && result;

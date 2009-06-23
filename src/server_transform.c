@@ -182,7 +182,7 @@ CHECKSUMUPDATES = true;
 DENYBADCLOCKS = true;
 CFRUNCOMMAND[0] = '\0';
 CHECK_RFC931 = false;
-      
+
 /* Keep promised agent behaviour - control bodies */
 
 for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
@@ -353,11 +353,11 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (strcmp(cp->lval,CFR_CONTROLBODY[cfs_portnumber].lval) == 0)
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_portnumber].lval) == 0)
       {
       SHORT_CFENGINEPORT = (short)Str2Int(retval);
-      strncmp(STR_CFENGINEPORT,retval,15);
-      CfOut(cf_verbose,"","SET default portnumber = %u = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT);
+      strncpy(STR_CFENGINEPORT,retval,15);
+      CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT,retval);
       continue;
       }   
    }

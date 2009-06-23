@@ -830,6 +830,9 @@ switch ((minblocks))
             break;
    case 11: snprintf(class,CF_MAXVARSIZE,"Min55_00.%s",hrs);
             break;
+   default:
+       strcpy(class,"never");
+       break;
    }
 
 if (IsDefinedClass(class))

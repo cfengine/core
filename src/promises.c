@@ -454,6 +454,84 @@ return pcopy;
 
 /*******************************************************************/
 
+void DebugPromise(struct Promise *pp)
+
+{ struct Constraint *cp;
+  struct Body *bp;
+  struct FnCall *fp;
+  struct Rlist *rp;
+  char *v,rettype,vbuff[CF_BUFSIZE];
+  void *retval;
+  time_t lastseen,last;
+  double val,av,var;
+
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   {
+   v = (char *)retval;
+   }
+else
+   {
+   v = "not specified";
+   }
+
+if (pp->promisee != NULL)
+   {
+   fprintf(stdout,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
+   ShowRval(stdout,pp->promisee,pp->petype);
+   fprintf(stdout," if context is %s\n\n",pp->classes);
+   }
+else
+   {
+   fprintf(stdout,"%s promise by \'%s\' (implicit) if context is %s\n\n",pp->agentsubtype,pp->promiser,pp->classes);
+   }
+
+for (cp = pp->conlist; cp != NULL; cp = cp->next)
+   {
+   fprintf(stdout,"%10s => ",cp->lval);
+
+   switch (cp->type)
+      {
+      case CF_SCALAR:
+          if (bp = IsBody(BODIES,(char *)cp->rval))
+             {
+             ShowBody(bp,15);
+             }
+          else
+             {
+             ShowRval(stdout,cp->rval,cp->type); /* literal */
+             }
+          break;
+
+      case CF_LIST:
+          
+          rp = (struct Rlist *)cp->rval;
+          ShowRlist(stdout,rp);
+          break;
+
+      case CF_FNCALL:
+          fp = (struct FnCall *)cp->rval;
+
+          if (bp = IsBody(BODIES,fp->name))
+             {
+             ShowBody(bp,15);
+             }
+          else
+             {
+             ShowRval(stdout,cp->rval,cp->type); /* literal */
+             }
+          break;
+      }
+   
+   if (cp->type != CF_FNCALL)
+      {
+      fprintf(stdout," if body context %s\n",cp->classes);
+      }
+     
+   }
+}
+
+/*******************************************************************/
+
 struct Body *IsBody(struct Body *list,char *key)
 
 { struct Body *bp;

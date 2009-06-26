@@ -24,6 +24,11 @@ files:
     delete => tidyfiles,
     file_select => zero_age,
     depth_search => recurse("inf");
+
+  # Now delete the parent.
+
+  "/home/mark/tmp/testcopy" 
+    delete => tidyfiles;
 }
 
 #########################################################
@@ -41,7 +46,7 @@ body delete tidyfiles
 
 {
 dirlinks => "delete";
-rmdirs   => "false"; 
+rmdirs   => "true"; 
 }
 
 #########################################################

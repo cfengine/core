@@ -140,9 +140,9 @@ char *MailSubject()
 
 { static char buffer[CF_BUFSIZE];
 #ifdef HAVE_LIBCFNOVA
- buffer[0] = '\0';
-#else
  strcpy(buffer,"nova");
+#else
+ buffer[0] = '\0';
 #endif
 return buffer;
 }
@@ -672,6 +672,7 @@ int GetRegistryValue(char *key,char *value,char *buffer)
 # ifdef NT
 return Nova_CopyRegistryValue(key,value,buffer);
 # endif
+return 0;
 #else
 return 0;
 #endif

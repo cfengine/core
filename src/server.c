@@ -1488,7 +1488,7 @@ else
 
 CfOut(cf_inform,"","Executing command %s\n",ebuff);
  
-if ((pp = cf_popen(ebuff,"r")) == NULL)
+if ((pp = cf_popen_sh(ebuff,"r")) == NULL)
    {
    CfOut(cf_error,"pipe","Couldn't open pipe to command %s\n",ebuff);
    snprintf(sendbuffer,CF_BUFSIZE,"Unable to run %s\n",ebuff);

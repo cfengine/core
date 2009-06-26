@@ -59,7 +59,15 @@ if (strcmp(pp->bundletype,"common") == 0)
    if (EvalClassExpression(a.context.expression,pp))
       {
       CfOut(cf_verbose,""," ?> defining additional global class %s\n",pp->promiser);
-      NewClass(pp->promiser);
+
+      if (!ValidClassName(pp->promiser))
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
+         }
+      else
+         {
+         NewClass(pp->promiser);
+         }
       }
 
    /* These are global and loaded once */
@@ -73,7 +81,15 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
    if (EvalClassExpression(a.context.expression,pp))
       {
       Debug(" ?> defining explicit class %s\n",pp->promiser);
-      NewBundleClass(pp->promiser,pp->bundle);
+
+      if (!ValidClassName(pp->promiser))
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
+         }
+      else
+         {
+         NewBundleClass(pp->promiser,pp->bundle);
+         }
       }
 
    // Private to bundle, can be reloaded
@@ -512,6 +528,12 @@ if (*classes == NULL)
    return false;
    }
 
+if (strchr(*classes,'$') || strchr(*classes,'@'))
+   {
+   Debug("Class expression did not evaluate");
+   return true;
+   }
+
 if (*classes && IsDefinedClass(*classes))
    {
    return false;
@@ -577,7 +599,7 @@ if (cp == NULL)
    {
    CfOut(cf_error,""," !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
    }
-  
+
 switch (cp->type) 
    {
    case CF_FNCALL:
@@ -611,6 +633,11 @@ switch (cp->type)
 
 if (strcmp(cp->lval,"expression") == 0)
    {
+   if (cp->type != CF_SCALAR)
+      {
+      return false;
+      }
+
    if (IsDefinedClass((char *)cp->rval))
       {
       return true;
@@ -623,6 +650,11 @@ if (strcmp(cp->lval,"expression") == 0)
 
 if (strcmp(cp->lval,"not") == 0)
    {
+   if (cp->type != CF_SCALAR)
+      {
+      return false;
+      }
+
    if (IsDefinedClass((char *)cp->rval))
       {
       return false;
@@ -654,8 +686,6 @@ fluct = drand48(); /* Get random number 0-1 */
 cum = 0.0;
 
 /* If we get here, anything remaining on the RHS must be a clist */
-
-//DebugPromise(pp);
 
 for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    {
@@ -920,6 +950,20 @@ return result;
 }
 
 /*********************************************************************/
+
+int ValidClassName(char *name)
+{
+if (FullTextMatch(CF_CLASSRANGE,name))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   }
+}
+
+/*********************************************************************/
 /* Level 3                                                           */
 /*********************************************************************/
 
@@ -1166,7 +1210,7 @@ for (sp = class; *sp != '\0'; sp++)
 if (bracklevel != 0)
    {
    char output[CF_BUFSIZE];
-   snprintf(output,CF_BUFSIZE,"Bracket mismatch, in [class=%s], level = %d\n",class,bracklevel);
+   snprintf(output,CF_BUFSIZE,"Bracket mismatch, in [class=\"%s\"], level = %d\n",class,bracklevel);
    yyerror(output);
    FatalError("Aborted");
    }

@@ -345,6 +345,7 @@ int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
 /* env_context.c */
 
 int Abort(void);
+int ValidClassName(char *name);
 void KeepClassContextPromise(struct Promise *pp);
 int ContextSanityCheck(struct Attributes a);
 void PushPrivateClassContext(void);

@@ -310,6 +310,9 @@ if (listen(sd,queuesize) == -1)
    exit(1);
    }
 
+dummyattr.transaction.ifelapsed = 0;
+dummyattr.transaction.expireafter = 1;
+
 thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
 
 if (thislock.lock == NULL)

@@ -319,6 +319,9 @@ void StartServer(int argc,char **argv)
 
 thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
 
+dummyattr.transaction.ifelapsed = 2400;
+dummyattr.transaction.expireafter = 2400;
+
 if (thislock.lock == NULL)
    {
    return;

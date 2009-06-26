@@ -572,11 +572,6 @@ lol = NewIterationContext(scopeid,listvars);
 
 do
    {
-   if (lol && EndOfIteration(lol))
-      {
-      return;
-      }
-
    /* Set scope "this" first to ensure list expansion ! */
 
    SetScope("this");  
@@ -618,6 +613,11 @@ do
       }
 
    DeletePromise(pexp);
+
+   if (lol && EndOfIteration(lol))
+      {
+      return;
+      }
 
    /* End thread monitor */
    }

@@ -317,10 +317,10 @@ void StartServer(int argc,char **argv)
   struct Attributes dummyattr;
   struct CfLock thislock;
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
-
 dummyattr.transaction.ifelapsed = 2400;
-dummyattr.transaction.expireafter = 2400;
+dummyattr.transaction.expireafter = 240;
+
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
 
 if (thislock.lock == NULL)
    {

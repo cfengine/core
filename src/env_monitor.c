@@ -317,16 +317,6 @@ void StartServer(int argc,char **argv)
   struct Attributes dummyattr;
   struct CfLock thislock;
 
-dummyattr.transaction.ifelapsed = 2400;
-dummyattr.transaction.expireafter = 240;
-
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
-
-if (thislock.lock == NULL)
-   {
-   return;
-   }
-
 if ((!NO_FORK) && (fork() != 0))
    {
    CfOut(cf_inform,"","cf-monitord: starting\n");
@@ -337,8 +327,17 @@ if (!NO_FORK)
    {
    ActAsDaemon(0);
    }
+  
+memset(&dummyattr,0,sizeof(dummyattr));
+dummyattr.transaction.ifelapsed = 0;
+dummyattr.transaction.expireafter = 0;
 
-/* Same lock name as cf2 */
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
 
 WritePID("cf-monitor.pid");
 

@@ -332,6 +332,8 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       {
       struct Rlist *rp;
       Debug("schedule ...\n");
+      DeleteItemList(SCHEDULE);
+      SCHEDULE = NULL;
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {

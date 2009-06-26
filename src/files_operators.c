@@ -1093,10 +1093,16 @@ else
          CfOut(cf_inform,"unlink","Keeping directory %s\n",path);
          return;
          }
+
+      if (strcmp(path,pp->promiser) == 0)
+         {
+         /* This is the parent and we cannot delete it from here - must delete separately*/
+         return;
+         }
       
       if (rmdir(lastnode) == -1)
          {
-         cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr,"Delete directory %s failed\n",path);
+         cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr,"Delete directory %s failed (node called %s)\n",path,lastnode);
          }            
       else
          {

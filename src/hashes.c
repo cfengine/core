@@ -358,18 +358,19 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
             for (rp = dereflist; rp != NULL; rp = rp->next)
                {
                cplist = (struct CfAssoc *)rp->item;
-               
+
                if (strcmp(cplist->lval,cphash->lval) == 0)
                   {
                   /* Link up temp hash to variable lol */
 
+// state = rp->state_ptr;
                   state = (struct Rlist *)(cplist->rval);
 
-                  Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],state->state_ptr->item);
-                  
-                  if (state->state_ptr)
+                  if (rp->state_ptr)
                      {
-                     cphash->rval = state->state_ptr->item;
+                     Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],rp->state_ptr->item);
+                  
+                     cphash->rval = rp->state_ptr->item;
                      }
                                     
                   switch(cphash->dtype)

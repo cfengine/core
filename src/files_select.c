@@ -44,7 +44,7 @@ if (!attr.haveselect)
    return true;
    }
 
-if (S_ISDIR(sb->st_mode) || attr.select.name == NULL)
+if (attr.select.name == NULL)
    {
    PrependItem(&leaf_attr,"leaf_name","");
    }

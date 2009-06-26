@@ -36,12 +36,12 @@
 
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
 
-{ struct Rlist *this,*rp,*state,*deref_listoflists = NULL;
+{ struct Rlist *this,*rp,*deref_listoflists = NULL;
   char *lval,rtype;
   void *returnval;
   enum cfdatatype dtype;
   struct Scope *ptr = NULL;
-  struct CfAssoc *new,*cp;
+  struct CfAssoc *new;
 
 Debug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
@@ -67,15 +67,15 @@ for (rp = namelist; rp != NULL; rp = rp->next)
    
    /* Make a copy of list references in scope only, without the names */
 
-   new = NewAssoc(rp->item,returnval,rtype,dtype);
-
-   this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
-
-   /* Now fix state_ptr so it points to current (rlist) entry */
-   
-   cp = (struct CfAssoc *)this->item;
-   state = (struct Rlist *)cp->rval;
-   state->state_ptr = state;
+   if (new = NewAssoc(rp->item,returnval,rtype,dtype))
+      {
+      this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
+      rp->state_ptr = new->rval;
+      }
+   else
+      {
+      FatalError("Iteration context failed");
+      }
    }
 
 /* We now have a control list of list-variables, with internal state in state_ptr */
@@ -110,12 +110,17 @@ if (iterator == NULL)
    return false;
    }
 
-cp = (struct CfAssoc *)iterator->item;
-state = (struct Rlist *)cp->rval;
+// iterator->next points to the next list
+// iterator->state_ptr points to the current item in the current list
 
-if (state->state_ptr == NULL)
+cp = (struct CfAssoc *)iterator->item;
+state = iterator->state_ptr;
+
+Debug("Incrementing %s\n",cp->lval);
+
+if (state->next == NULL)
    {
-   /* If this wheel comes to full revolution ..*/
+   /* This wheel has come to full revolution, so move to next */
    
    if (iterator->next != NULL)
       {
@@ -124,7 +129,7 @@ if (state->state_ptr == NULL)
       if (IncrementIterationContext(iterator->next,level+1))
          {
          /* Not at end yet, so reset this wheel */
-         state->state_ptr = state;
+         iterator->state_ptr = cp->rval;
          return true;
          }
       else
@@ -135,13 +140,15 @@ if (state->state_ptr == NULL)
       }
    else
       {
-      /* Reached last variable wheel */
+      /* Reached last variable wheel - waiting for end detection */
       return false;
       }
    }
 else
    {
-   state->state_ptr = (state->state_ptr)->next;
+   /* Update the current wheel */
+   iterator->state_ptr = state->next;
+   Debug("Incrementing wheel %s\n",cp->lval);
    return true;
    }
 }
@@ -150,20 +157,20 @@ else
 
 int EndOfIteration(struct Rlist *iterator)
 
-{ struct Rlist *rp,*state_ptr,*state;
-  struct CfAssoc *cp;
+{ struct Rlist *rp,*state;
 
 if (iterator == NULL)
    {
    return true;
    }
 
+/* When all the wheels are at NULL, we have reached the end*/
+
 for (rp = iterator; rp != NULL; rp = rp->next)
    {
-   cp = (struct CfAssoc *)iterator->item;
-   state = (struct Rlist *)cp->rval;
+   state = rp->state_ptr;
    
-   if (state->state_ptr != NULL)
+   if (state->next != NULL)
       {
       return false;
       }

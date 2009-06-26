@@ -491,6 +491,7 @@ struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type)
 { struct Rlist *rp,*lp;
   struct FnCall *fp;
   char *sp = NULL;
+  struct CfAssoc *cp;
 
 Debug("OrthogAppendRlist\n");
 
@@ -523,9 +524,14 @@ else
    lp->next = rp;
    }
 
+
+// This is item is infact a struct CfAssoc pointing to a list
+
+cp = (struct CfAssoc *)item;
+rp->state_ptr = (struct Rlist *)cp->rval;
+
 rp->item = item;
 rp->type = CF_LIST;
-rp->state_ptr = rp->item;
 rp->next = NULL;
 
 return rp;

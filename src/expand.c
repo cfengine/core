@@ -244,6 +244,7 @@ for (sp = string; (*sp != '\0') ; sp++)
             {
             if (rtype == CF_LIST)
                {
+               Debug("Found list %s\n",var);
                ExpandScalar(var,exp); 
 
                /* embedded iterators should be incremented fastest,

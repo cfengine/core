@@ -409,7 +409,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       continue;
       }
 
-   if (strlen(ifp->ifr_name) == 0)
+   if (ifp->ifr_name == NULL || strlen(ifp->ifr_name) == 0)
       {
       continue;
       }
@@ -429,11 +429,11 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
    
    if (UNDERSCORE_CLASSES)
       {
-      snprintf(workbuf, CF_BUFSIZE, "_net_iface_%s", CanonifyName(ifp->ifr_name));
+      snprintf(workbuf,CF_BUFSIZE, "_net_iface_%s", CanonifyName(ifp->ifr_name));
       }
    else
       {
-      snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
+      snprintf(workbuf,CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
       }
 
    NewClass(workbuf);

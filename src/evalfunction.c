@@ -1292,6 +1292,7 @@ struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
   short portnum;
   struct Attributes attr;
   void *retval;
+  struct Promise *pp;
 
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -1369,6 +1370,8 @@ if (THIS_AGENT_TYPE != cf_agent)
    return rval;         
    }
 
+pp = NewPromise("select_server","function"); 
+
 for (rp = hostnameip; rp != NULL; rp=rp->next)
    {
    Debug("Want to read %d bytes from port %d at %s\n",val,portnum,rp->item);
@@ -1378,7 +1381,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
    attr.copy.force_ipv4 = false;
    attr.copy.portnumber = portnum;
    
-   if (!ServerConnect(conn,rp->item,attr,NULL))
+   if (!ServerConnect(conn,rp->item,attr,pp))
       {
       CfOut(cf_inform,"socket","Couldn't open a tcp socket");
       DeleteAgentConn(conn);
@@ -1437,6 +1440,8 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
    close(conn->sd);
    DeleteAgentConn(conn);
    }
+
+DeletePromise(pp);
 
 /* Return the subset that is alive and responding correctly */
 

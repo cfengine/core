@@ -551,19 +551,24 @@ long Months2Seconds(int m)
   static long days[] = {31,28,31,30,31,30,31,31,30,31,30,31};
   long tot_days = 0;
   int this_month,i,month,year;
+
+if (m == 0)
+   {
+   return 0;
+   }
   
 this_month = Month2Int(VMONTH);
 year = Str2Int(VYEAR);
 
-for (i = m; i < this_month; i--)
+for (i = 0; i < m; i++)
    {
-   if (month < 0)
+   month = (this_month - i) % 12;
+
+   while (month < 0)
       {
       month += 12;
       year--;
       }
-
-   month = i % 12;
 
    if ((year % 4) && (month == 1))
       {

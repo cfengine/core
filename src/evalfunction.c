@@ -3113,7 +3113,7 @@ cftime -= d[cfa_sec];
 cftime -= d[cfa_min] * 60;
 cftime -= d[cfa_hour] * 3600;
 cftime -= d[cfa_day] * 24 * 3600;
-cftime -= d[cfa_month] * 30 * 24 * 3600;
+cftime -= Months2Seconds(d[cfa_month]);
 cftime -= d[cfa_year] * 365 * 24 * 3600;
 
 Debug("Total negative offset = %.1f minutes\n",(double)(CFSTARTTIME-cftime)/60.0);
@@ -4165,3 +4165,4 @@ for (sp = id; *sp != '\0'; sp++)
 
 return true;
 }
+

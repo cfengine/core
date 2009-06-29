@@ -223,6 +223,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+long Months2Seconds(int m);
 enum cfinterval Str2Interval(char *s);
 enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(struct Rlist *list,char *sep);

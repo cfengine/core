@@ -2242,7 +2242,7 @@ if (count == 0)
 
 count = 0;
 
-printf("\nOccurrences of this topic:\n\n");
+printf("\nResults:\n\n");
 
 for (oc = occurrences; oc != NULL; oc=oc->next)
    {

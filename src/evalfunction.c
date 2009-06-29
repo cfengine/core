@@ -578,7 +578,7 @@ else if (ShellCommandReturnsZero(comm,useshell))
    }
 else
    {
-   SetFnCallReturnStatus("returnszero",FNCALL_FAILURE,strerror(errno),NULL);   
+   SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
  

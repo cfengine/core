@@ -580,6 +580,11 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
       fgets(buf,CF_BUFSIZE,fin);
       Chop(buf);
 
+      if (feof(fin) && strlen(buf) == 0)
+         {
+         break;
+         }
+      
       if (a.expandvars)
          {
          ExpandScalar(buf,exp);

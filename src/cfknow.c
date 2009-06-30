@@ -2370,7 +2370,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   CfOut(cf_error,"","\n<h2>Occurrences of this topic:</h2>\n\n");
+   CfOut(cf_error,"","\n<h2>Results for this topic:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    

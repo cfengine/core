@@ -362,11 +362,14 @@ memset(&dummyattr,0,sizeof(dummyattr));
 dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
 dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
-
-if (thislock.lock == NULL)
+if (!ONCE)
    {
-   return;
+   thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
+
+   if (thislock.lock == NULL)
+      {
+      return;
+      }
    }
 
 if ((!NO_FORK) && (fork() != 0))
@@ -467,7 +470,10 @@ else
       }
    }
 
-YieldCurrentLock(thislock);
+if (!ONCE)
+   {
+   YieldCurrentLock(thislock);
+   }
 }
 
 /*****************************************************************************/

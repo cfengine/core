@@ -34,7 +34,7 @@ reports:
 body process_select proc_finder
 
 {
-stime_range => irange(ago(0,0,0,5,30,0),ago(0,0,0,0,20,0));
+stime_range => irange(ago(0,6,0,5,30,0),ago(0,0,0,0,20,0));
 process_result => "stime";
 }
 

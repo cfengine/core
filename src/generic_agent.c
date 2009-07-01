@@ -1556,7 +1556,7 @@ printf(".pp\nThis software is (C) 2008- Cfengine AS.\n");
 void Version(char *component)
 
 {
-printf("This is %s core community version %s - %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
+printf("This comprises %s core community version %s - %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
 EnterpriseVersion();
 }
 

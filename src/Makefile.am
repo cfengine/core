@@ -80,6 +80,7 @@ libpromises_la_SOURCES =						\
 	interfaces.c							\
 	storage_tools.c							\
 	verify_reports.c						\
+	verify_processes.c						\
 	enterprise_stubs.c						\
 	mod_common.c							\
 	mod_access.c							\
@@ -110,7 +111,6 @@ cf_report_SOURCES =							\
 cf_agent_SOURCES =							\
 	agent.c								\
 	verify_files.c							\
-	verify_processes.c						\
 	verify_storage.c						\
 	verify_exec.c							\
 	verify_methods.c						\

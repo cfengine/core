@@ -123,13 +123,27 @@ char *GetConsolePrefix()
 
 /*****************************************************************************/
 
-void StartTwin(int argc,char **argv)
+pid_t StartTwin(int argc,char **argv)
 
 /* Self-monitor in case of crash or binary change */
     
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_StartTwin(argc,argv);
+return Nova_StartTwin(argc,argv);
+#else
+return 0;
+#endif
+}
+
+/*****************************************************************************/
+
+void SignalTwin()
+
+/* Self-monitor in case of crash or binary change */
+    
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_SignalTwin();
 #else
 #endif
 }

@@ -384,6 +384,13 @@ p.groups = Rlist2GidList((struct Rlist *)GetConstraint("groups",pp->conlist,CF_L
 p.findertype = (char *)GetConstraint("findertype",pp->conlist,CF_SCALAR);
 p.rxdirs = GetBooleanConstraint("rxdirs",pp->conlist);
 
+// The default should be true
+
+if (!GetConstraint("rxdirs",pp->conlist,CF_SCALAR))
+   {
+   p.rxdirs = true;
+   }
+
 return p;
 }
 

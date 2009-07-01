@@ -193,8 +193,8 @@ target_vendor = unknown
 top_build_prefix = ../../
 top_builddir = ../..
 top_srcdir = ../..
-doc_DATA = README 
-EXTRA_DIST = * README
+doc_DATA = *.cf README 
+EXTRA_DIST = *.cf README
 MAINTAINERCLEANFILES = Makefile.in mdate-sh
 all: all-am
 

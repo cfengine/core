@@ -71,7 +71,7 @@ if (strcmp(pp->bundletype,"common") == 0)
       }
 
    /* These are global and loaded once */
-   *(pp->donep) = true;
+   //*(pp->donep) = true;
 
    return;
    }

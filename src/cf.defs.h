@@ -334,7 +334,7 @@ typedef int clockid_t;
 /* these should be >0 to prevent contention */
 
 #define CF_EXEC_IFELAPSED 1
-#define CF_EXEC_EXPIREAFTER 15
+#define CF_EXEC_EXPIREAFTER 1
 
 /* Need this to to avoid conflict with solaris 2.6 and db.h */
 

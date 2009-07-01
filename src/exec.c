@@ -50,8 +50,9 @@ char EXECCOMMAND[CF_BUFSIZE];
 char VMAILSERVER[CF_BUFSIZE];
 struct Item *SCHEDULE = NULL;
 
-int  MAXLINES = 30;
-int  SPLAYTIME = 0;
+pid_t MYTWIN = 0;
+int   MAXLINES = 30;
+int   SPLAYTIME = 0;
 const int INF_LINES = -2;
 short NOSPLAY = false;
 
@@ -67,6 +68,7 @@ int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char typ
 int CompareResult(char *filename,char *prev_file);
 void MailResult(char *file,char *to);
 int Dialogue(int sd,char *s);
+void Apoptosis(void);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -124,12 +126,6 @@ CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"executor");
 ThisAgentInit();
 KeepPromises();
-
-if (!ONCE)
-   {
-   StartTwin(argc,argv);
-   }
-
 StartServer(argc,argv);
 return 0;
 }
@@ -370,7 +366,11 @@ if (!ONCE)
       {
       return;
       }
+
+   MYTWIN = StartTwin(argc,argv);
    }
+
+Apoptosis();
 
 if ((!NO_FORK) && (fork() != 0))
    {
@@ -480,6 +480,65 @@ if (!ONCE)
 /* Level                                                                     */
 /*****************************************************************************/
 
+void Apoptosis()
+
+{ struct Promise pp;
+  struct Rlist *signals = NULL, *owners = NULL;
+  char mypid[32],pidrange[32];
+  struct passwd *mpw = getpwuid(getuid());
+  char *psopts = GetProcessOptions();
+
+CfOut(cf_verbose,""," !! Programmed pruning of the scheduler cluster");
+  
+pp.promiser = "cf-execd";
+pp.promisee = "cfengine";
+pp.classes = "any";
+pp.petype = CF_SCALAR;
+pp.lineno = 0;
+pp.audit = NULL;
+pp.conlist = NULL;
+
+pp.bundletype = "agent";
+pp.bundle = "exec_apoptosis";
+pp.ref = "Programmed cell death";
+pp.agentsubtype = "processes";
+pp.done = false;
+pp.next = NULL;
+pp.cache = NULL;
+pp.inode_cache = NULL;
+pp.this_server = NULL;
+pp.donep = &(pp.done);
+pp.conn = NULL;
+
+snprintf(mypid,31,"%s",mpw->pw_name);
+snprintf(pidrange,31,"0,%d",MYTWIN-1); // Don't kill our twin, or ourself
+
+PrependRlist(&signals,"term",CF_SCALAR);
+PrependRlist(&owners,mypid,CF_SCALAR);
+
+AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any");
+AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any");
+AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"pid",strdup(pidrange),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.ppid"),CF_SCALAR,"any");
+
+CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
+
+if (LoadProcessTable(&PROCESSTABLE,psopts))
+   {
+   VerifyProcessesPromise(&pp);   
+   }
+
+DeleteItemList(PROCESSTABLE);
+DeleteRlist(signals);
+DeleteRlist(owners);
+CfOut(cf_verbose,""," !! Pruning complete");
+}
+
+/*****************************************************************************/
+
 int ScheduleRun()
 
 { time_t now;
@@ -487,6 +546,9 @@ int ScheduleRun()
   struct Item *ip;
   
 CfOut(cf_verbose,"","Sleeping...\n");
+
+SignalTwin();
+
 sleep(60);                /* 1 Minute resolution is enough */ 
 
 now = time(NULL);

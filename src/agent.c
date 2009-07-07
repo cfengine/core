@@ -373,10 +373,11 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
       {
       struct Rlist *rp;
-      CfOut(cf_verbose,"","ADD classes from ...\n");
+      CfOut(cf_verbose,"","ADD classes ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
+         CfOut(cf_verbose,""," ... %s\n",rp->item);
          NewClass(rp->item);
          }
       

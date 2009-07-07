@@ -172,6 +172,8 @@ if (pp->done)
    return;
    }
 
+PromiseBanner(pp);
+
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
    KeepClassContextPromise(pp);
@@ -225,7 +227,7 @@ void VerifyLineDeletions(struct Promise *pp)
 	 
 a = GetDeletionAttributes(pp);
 
-snprintf(lockname,CF_BUFSIZE-1,"filedeletion-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"filedeletion-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
@@ -269,7 +271,7 @@ void VerifyColumnEdits(struct Promise *pp)
 
 a = GetColumnAttributes(pp);
 
-snprintf(lockname,CF_BUFSIZE-1,"filecolumnedits-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"filecolumnedits-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
@@ -343,7 +345,7 @@ CfOut(cf_verbose,""," -> Looking at pattern %s\n",pp->promiser);
 
 a = GetReplaceAttributes(pp);
 
-snprintf(lockname,CF_BUFSIZE-1,"filepatterns-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"filepatterns-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
@@ -400,7 +402,7 @@ if (!SanityCheckInsertions(a))
    return;
    }
 
-snprintf(lockname,CF_BUFSIZE-1,"filepatterns-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"filepatterns-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)

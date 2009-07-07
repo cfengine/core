@@ -237,7 +237,10 @@ fprintf(fout,
         "<h2>Summary of contents</h2>\n"
         
         "@end html\n"
-        "@end ifhtml\n",
+        "@end ifhtml\n"
+        "@iftex\n"
+        "@contents\n"
+        "@end iftex\n",
         VERSION
 #ifdef HAVE_LIBCFNOVA
         ,
@@ -261,10 +264,10 @@ void TexinfoFooter(FILE *fout)
          "@ifhtml\n"
          "@html\n"
          "<a name=\"Contents\">\n"
+         "@contents\n"
          "@end html\n"
          "@end ifhtml\n"
          
-         "@contents\n"
          "@c  The file is structured like a programming language. Each chapter\n"
          "@c  starts with a chapter comment.\n"
          "@c\n"

@@ -596,7 +596,7 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
          strcpy(exp,buf);
          }
 
-      if (!SelectInsertion(exp,a,pp))
+      if (!SelectLine(exp,a,pp))
          {
          continue;
          }
@@ -636,7 +636,7 @@ else
          sscanf(sp,"%[^\n]",buf);
          sp += strlen(buf);
          
-         if (!SelectInsertion(buf,a,pp))
+         if (!SelectLine(buf,a,pp))
             {
             continue;
             }
@@ -703,6 +703,12 @@ for (ip = *start; ip != NULL; ip = np)
       match = FullTextMatch(pp->promiser,ip->name);
       }
 
+   if (!SelectLine(ip->name,a,pp))
+      {
+      np = ip->next;
+      continue;
+      }
+         
    if (in_region && match)
       {
       if (a.transaction.action == cfa_warn)
@@ -1200,12 +1206,12 @@ return false;
 
 /***************************************************************************/
 
-int SelectInsertion(char *line,struct Attributes a,struct Promise *pp)
+int SelectLine(char *line,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp,*c;
   int s,e;
   char *selector;
- 
+
 if (c = a.line_select.startwith_from_list)
    {
    for (rp = c; rp != NULL; rp=rp->next)
@@ -1229,7 +1235,7 @@ if (c = a.line_select.not_startwith_from_list)
       
       if (strncmp(selector,line,strlen(selector)) == 0)
          {
-         return true;
+         return false;
          }      
       }
 

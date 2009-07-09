@@ -503,7 +503,7 @@ int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes 
 int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 int SanityCheckInsertions(struct Attributes a);
-int SelectInsertion(char *line,struct Attributes a,struct Promise *pp);
+int SelectLine(char *line,struct Attributes a,struct Promise *pp);
 
 /* files_links.c */
 

@@ -94,7 +94,6 @@ void Apoptosis(void);
       { "inform",no_argument,0,'I'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F' },
-      { "self-monitor",no_argument,0,'s' },
       { "ld-library-path",required_argument,0,'L'},
       { NULL,0,0,'\0' }
       };
@@ -226,7 +225,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
           exit(1);
           
       }
-  }
+   }
 }
 
 /*****************************************************************************/
@@ -366,21 +365,24 @@ if (!ONCE)
       {
       return;
       }
-
-   MYTWIN = StartTwin(argc,argv);
    }
 
 Apoptosis();
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   CfOut(cf_inform,"","cfExec starting %.24s\n",ctime(&now));
+   CfOut(cf_inform,"","cf-execd starting %.24s\n",ctime(&now));
    exit(0);
    }
 
 if (!NO_FORK)
    {
    ActAsDaemon(0);
+   }
+
+if (!ONCE)
+   {
+   MYTWIN = StartTwin(argc,argv);
    }
 
 WritePID("cf-execd.pid");
@@ -467,6 +469,8 @@ else
          LocalExec((void *)1);  
 #endif
          }
+
+      ReviveOther(argc,argv);
       }
    }
 
@@ -511,7 +515,7 @@ pp.donep = &(pp.done);
 pp.conn = NULL;
 
 snprintf(mypid,31,"%s",mpw->pw_name);
-snprintf(pidrange,31,"0,%d",MYTWIN-1); // Don't kill our twin, or ourself
+//snprintf(pidrange,31,"0,%d",MYTWIN-1); // Don't kill our twin, or ourself
 
 PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);
@@ -519,10 +523,10 @@ PrependRlist(&owners,mypid,CF_SCALAR);
 AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any");
 AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any");
 AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any");
-AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner"),CF_SCALAR,"any");
 AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"pid",strdup(pidrange),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.ppid"),CF_SCALAR,"any");
+//AppendConstraint(&(pp.conlist),"pid",strdup(pidrange),CF_SCALAR,"any");
+//AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.ppid"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner"),CF_SCALAR,"any");
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 

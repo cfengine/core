@@ -286,8 +286,16 @@ fd = open("/dev/null", O_RDWR, 0);
 
 if (fd != -1)
    {
-   dup2(fd,STDIN_FILENO);
-   dup2(fd,STDOUT_FILENO);
+   if (dup2(fd,STDIN_FILENO) == -1)
+      {
+      CfOut(cf_error,"dup2","Could not dup");
+      }
+
+   if (dup2(fd,STDOUT_FILENO) == -1)
+      {
+      CfOut(cf_error,"dup2","Could not dup");
+      }
+
    dup2(fd,STDERR_FILENO);
 
    if (fd > STDERR_FILENO)

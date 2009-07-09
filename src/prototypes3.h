@@ -336,13 +336,13 @@ int GetRegistryValue(char *key,char *value,char *buffer);
 void NoteVarUsage(void);
 void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void CSV2XML(struct Rlist *list);
-
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
 void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
 void CacheUnreliableValue(char *caller,char *handle,char *buffer);
 int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
+void ReviveOther(int argc,char **argv);
 
 /* env_context.c */
 

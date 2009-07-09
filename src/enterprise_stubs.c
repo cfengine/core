@@ -150,6 +150,19 @@ void SignalTwin()
 
 /*****************************************************************************/
 
+void ReviveOther(int argc,char **argv)
+
+/* Self-monitor in case of crash or binary change */
+    
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_ReviveOther(argc,argv);
+#else
+#endif
+}
+
+/*****************************************************************************/
+
 char *MailSubject()
 
 { static char buffer[CF_BUFSIZE];

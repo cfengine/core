@@ -325,7 +325,7 @@ int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int
  
  if (intp == 0)
     {
-    if (cf_full_write (dd,buf,towrite) < 0)
+    if (cf_full_write(dd,buf,towrite) < 0)
        {
        CfOut(cf_error,"write","Local disk write(%.256s) failed\n",new);
        pp->conn->error = true;

@@ -58,8 +58,8 @@ files:
 
   # Check cf-execd and schedule is in crontab
 
-
   "$(g.crontab)"
+       comment => "Add cfengine as a cron job, or check for cfengine 2 jobs to replace",
        edit_line => upgrade_cfexecd;
 
 processes:
@@ -88,6 +88,7 @@ files:
 
   "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
 
+     comment       => "Edit the resolver file",
      create        => "true",
      edit_line     => resolver,
      edit_defaults => def;
@@ -103,7 +104,7 @@ processes:
 
   "cfenvd"             signals => { "term" };
 
- # Uncomment this when you are ready to upgrade the server
+ # Uncomment this if/when you are ready to upgrade a cf2 server
  #
  #  "cfservd"             signals => { "term" };
  #
@@ -138,6 +139,24 @@ files:
     depth_search => recurse("inf");
 
 
+}
+
+#######################################################
+
+bundle edit_line resolver
+
+{
+vars:
+
+ "search" slist => { "search cfengine.com" };
+
+delete_lines:
+
+  "search.*";
+
+insert_lines:
+
+  "$(search)" location => start;
 }
 
 ###########################################################

@@ -492,6 +492,12 @@ void Apoptosis()
   struct passwd *mpw = getpwuid(getuid());
   char *psopts = GetProcessOptions();
 
+if (ONCE)
+   {
+   /* Otherwise we'll just kill off long jobs */
+   return;
+   }
+  
 CfOut(cf_verbose,""," !! Programmed pruning of the scheduler cluster");
   
 pp.promiser = "cf-execd";
@@ -935,9 +941,7 @@ Debug("Looking up hostname %s\n\n",VMAILSERVER);
 if ((hp = gethostbyname(VMAILSERVER)) == NULL)
    {
    printf("Unknown host: %s\n", VMAILSERVER);
-   printf("Make sure that fully qualified names can be looked up at your site!\n");
-   printf("i.e. www.gnu.org, not just www. If you use NIS or /etc/hosts\n");
-   printf("make sure that the full form is registered too as an alias!\n");
+   printf("Make sure that fully qualified names can be looked up at your site.\n");
    fclose(fp);
    return;
    }
@@ -1007,14 +1011,14 @@ sprintf(vbuff,"RCPT TO: <%s>\r\n",to);
 Debug("%s",vbuff);
 
 if (!Dialogue(sd,vbuff))
-    {
-    goto mail_err;
-    }
+   {
+   goto mail_err;
+   }
 
 if (!Dialogue(sd,"DATA\r\n"))
-    {
-    goto mail_err;
-    }
+   {
+   goto mail_err;
+   }
 
 if (anomaly)
    {

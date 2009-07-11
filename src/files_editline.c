@@ -40,8 +40,8 @@ enum editlinetypesequence
    elp_classes,
    elp_delete,
    elp_columns,
-   elp_replace,
    elp_insert,
+   elp_replace,
    elp_reports,
    elp_none
    };
@@ -52,8 +52,8 @@ char *EDITLINETYPESEQUENCE[] =
    "classes",
    "delete_lines",
    "field_edits",
-   "replace_patterns",
    "insert_lines",
+   "replace_patterns",
    "reports",
    NULL
    };
@@ -192,15 +192,15 @@ if (strcmp("field_edits",pp->agentsubtype) == 0)
    return;
    }
 
-if (strcmp("replace_patterns",pp->agentsubtype) == 0)
-   {
-   VerifyPatterns(pp);
-   return;
-   }
-
 if (strcmp("insert_lines",pp->agentsubtype) == 0)
    {
    VerifyLineInsertions(pp);
+   return;
+   }
+
+if (strcmp("replace_patterns",pp->agentsubtype) == 0)
+   {
+   VerifyPatterns(pp);
    return;
    }
 

@@ -58,7 +58,7 @@ body reporter control
 
 {
 reports => { "performance", "last_seen", "monitor_history" };
-build_directory => "/tmp/nerves";
+build_directory => "$(sys.workdir)/reports";
 report_output => "html";
 }
 

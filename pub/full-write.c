@@ -1,22 +1,28 @@
-/* full-write.c -- an interface to write that retries after interrupts
-   Copyright (C) 1993, 1994 Free Software Foundation, Inc.
+/* 
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   Copyright (C) Cfengine AS
 
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+ 
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License  
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 
-   Copied largely from GNU C's cccp.c.
-   */
+*/
 
 
 #include "../src/conf.h"
@@ -46,7 +52,7 @@ total_written = 0;
 
 while (len > 0)
    {
-   int written = write (desc,ptr,len);
+   int written = write(desc,ptr,len);
    
    if (written < 0)
       {
@@ -54,8 +60,10 @@ while (len > 0)
          {
          continue;
          }
+      
       return written;
       }
+   
    total_written += written;
    ptr += written;
    len -= written;

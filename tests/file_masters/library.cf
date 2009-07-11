@@ -48,5 +48,5 @@ body changes trip_wire
 {
 hash           => "best";
 report_changes => "content";
-update         => "yes";
+update_hashes  => "yes";
 }

@@ -62,24 +62,6 @@ ifelapsed => "240"; # run only every 4 hours
 # For the library
 #######################################################
 
-bundle edit_line resolver
-
-{
-vars:
-
- "search" slist => { "search iu.hio.no cfengine.com" };
-
-delete_lines:
-
-  "search.*";
-
-insert_lines:
-
-  "$(search)" location => start;
-}
-
-#######################################################
-
 body edit_defaults def
 {
 empty_file_before_editing => "false";

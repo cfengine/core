@@ -4,20 +4,20 @@ bundle agent update
 {
 vars:
 
- "master_location" string => "/home/mark/cfengine-inputs";
+ "master_location" string => "/var/cfengine/masterfiles";
 
 files:
 
   "/var/cfengine/inputs" 
 
-    perms => system("600"),
+    perms => u_p("600"),
     copy_from => mycopy("$(master_location)","localhost"),
     depth_search => recurse("inf"),
     action => immediate;
 
   "/var/cfengine/bin" 
 
-    perms => system("700"),
+    perms => u_p("700"),
     copy_from => mycopy("/usr/local/sbin","localhost"),
     depth_search => recurse("inf"),
     action => immediate;
@@ -25,7 +25,7 @@ files:
 
 ############################################
 
-body perms system(p)
+body perms u_p(p)
 
 {
 mode  => "$(p)";

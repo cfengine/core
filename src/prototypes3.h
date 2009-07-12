@@ -903,6 +903,7 @@ struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *f
 struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
 int TypedTopicMatch(char *ttopic1,char *ttopic2);
 void DeTypeTopic(char *typdetopic,char *topic,char *type);
+void DeTypeCanonicalTopic(char *typed_topic,char *topic,char *type);
 char *TypedTopic(char *topic,char *type);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 char *URLHint(char *s);

@@ -1245,9 +1245,9 @@ else
    rep_type = cfk_url;
    }
 
-if (BlockTextMatch("[.&|]+",pp->classes,&s,&e))
+if (BlockTextMatch("[&|]+",pp->classes,&s,&e))
    {
-   CfOut(cf_error,"","Class should be a single topic for occurrences - %s does not make sense",pp->classes);
+   CfOut(cf_error,"","Class should be a single topic or typed TYPE.TOPIC for occurrences - %s does not make sense",pp->classes);
    return;
    }
 

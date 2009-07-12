@@ -1102,11 +1102,11 @@ else
       
       if (rmdir(lastnode) == -1)
          {
-         cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr,"Delete directory %s failed (node called %s)\n",path,lastnode);
+         cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (node called %s)\n",path,lastnode);
          }            
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,attr,"Deleted directory %s\n",path);
+         cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted directory %s\n",path);
          }
       }
    }   
@@ -1120,7 +1120,7 @@ if (! DONTDO)
    {
    if (utime(path,NULL) != -1)
       {
-      cfPS(cf_inform,CF_CHG,"",pp,attr,"Touched (updated time stamps) %s\n",path);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Touched (updated time stamps) %s\n",path);
       }
    else
       {

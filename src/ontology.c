@@ -259,6 +259,33 @@ else
 
 /*********************************************************************/
 
+void DeTypeCanonicalTopic(char *typed_topic,char *topic,char *type)
+
+{
+type[0] = '\0';
+topic[0] = '\0';
+
+if (*typed_topic == '.')
+   {
+   sscanf(typed_topic,".%255[^\n]",topic);
+   }
+else if (strstr(typed_topic,"."))
+   {
+   sscanf(typed_topic,"%255[^.].%255[^\n]",type,topic);
+   
+   if (strlen(topic) == 0)
+      {
+      sscanf(typed_topic,".%255[^\n]",topic);
+      }
+   }
+else
+   {
+   strncpy(topic,typed_topic,CF_MAXVARSIZE-1);
+   }
+}
+
+/*********************************************************************/
+
 int TypedTopicMatch(char *ttopic1,char *ttopic2)
 
 { char type1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
@@ -549,13 +576,13 @@ struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 { struct Topic *tp;
   char type[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
 
-DeTypeTopic(topic_name,name,type);
-  
+DeTypeCanonicalTopic(topic_name,name,type);
+
 for (tp = list; tp != NULL; tp=tp->next)
    {
    if (strlen(type) == 0)
       {
-      if (strcmp(topic_name,CanonifyName(tp->topic_name)) == 0)
+      if (strcmp(name,CanonifyName(tp->topic_name)) == 0)
          {
          return tp;          
          }

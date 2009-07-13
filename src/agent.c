@@ -723,7 +723,7 @@ void CheckAgentAccess(struct Rlist *list)
 
 { char id[CF_MAXVARSIZE];
   struct passwd *pw;
-  struct Rlist *rp;
+  struct Rlist *rp,*rp2;
   struct stat sb;
   uid_t uid;
   int access = false;
@@ -746,7 +746,7 @@ if (VINPUTLIST != NULL)
       
       if (ACCESSLIST)
          {
-         for (rp  = ACCESSLIST; rp != NULL; rp = rp->next)
+         for (rp2  = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
             {
             if (Str2Uid(rp->item,NULL,NULL) == sb.st_uid)
                {

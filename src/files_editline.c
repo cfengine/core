@@ -881,7 +881,7 @@ return retval;
 
 int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
 
-{ char separator[CF_EXPANDSIZE]; 
+{ char separator[CF_MAXVARSIZE]; 
   int s,e,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
@@ -916,8 +916,16 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       return false;
       }
 
-   strncpy(separator,ip->name+s,e-s);
+   if (e-s > CF_MAXVARSIZE / 2)
+      {
+      CfOut(cf_error,""," !! Line split criterion matches a huge part of the line -- seems to be in error");
+      return false;
+      }
+
    
+   strncpy(separator,ip->name+s,e-s);
+   separator[e-s]='\0';
+
    columns = SplitRegexAsRList(ip->name,a.column.column_separator,CF_INFINITY,a.column.blanks_ok);
    retval = EditLineByColumn(&columns,a,pp);
 

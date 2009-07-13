@@ -121,6 +121,8 @@ for(rp = list; rp != NULL; rp=rp->next)
       {
       strcat(line,sep);
       }
+
+   printf("RECONSTR %s (%s)\n",line,sep);
    }
   
 return strdup(line);

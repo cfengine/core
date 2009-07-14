@@ -1276,7 +1276,7 @@ switch (rep_type)
 
        if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
           {
-          CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
+          CfOut(cf_error,"","Type context \"%s\" must be defined in order to map it to occurrences (ordering problem with bundlesequence?)",pp->classes);
           return;
           }
        
@@ -2207,8 +2207,54 @@ void ShowTextResults(char *this_name,char *this_type,char *this_comment,struct T
 
 printf("\nTopic \"%s\" found in the context of \"%s\"\n",this_name,this_type);
 
+printf("\nResults:\n\n");
 
-printf("\nTopics of the type %s:\n\n",this_name);
+for (oc = occurrences; oc != NULL; oc=oc->next)
+   {
+   if (oc->represents == NULL)
+      {
+      printf("(direct)");
+      }
+   else
+      {
+      for (rp = oc->represents; rp != NULL; rp=rp->next)
+         {
+         printf("   %s: ",(char *)rp->item);
+         }
+      }
+   switch (oc->rep_type)
+      {
+      case cfk_url:
+      case cfk_web:
+          printf(" %s (URL)\n",oc->locator);
+          break;
+      case cfk_file:
+          printf("%s (file)\n",oc->locator);
+          break;
+      case cfk_db:
+          printf(" %s (DB)\n",oc->locator);
+          break;          
+      case cfk_literal:
+          printf(" \"%s\" (Text)\n",oc->locator);
+          break;
+      case cfk_image:
+          printf("(Image)\n",oc->locator);
+          break;
+      default:
+          break;
+      }
+
+   count++;
+   }
+
+if (count == 0)
+   {
+   printf("\n    (none)\n");
+   }
+
+count = 0;
+
+printf("\n\nTopics of the type %s:\n\n",this_name);
 
 for (tp = topics_this_type; tp != NULL; tp=tp->next)
    {
@@ -2230,53 +2276,6 @@ for (ta = associations; ta != NULL; ta=ta->next)
    for (rp = ta->associates; rp != NULL; rp=rp->next)
       {
       printf("    - %s\n",rp->item);
-      }
-
-   count++;
-   }
-
-if (count == 0)
-   {
-   printf("\n    (none)\n");
-   }
-
-count = 0;
-
-printf("\nResults:\n\n");
-
-for (oc = occurrences; oc != NULL; oc=oc->next)
-   {
-   if (oc->represents == NULL)
-      {
-      printf("(direct)");
-      }
-   else
-      {
-      for (rp = oc->represents; rp != NULL; rp=rp->next)
-         {
-         printf("   %s: ",(char *)rp->item);
-         }
-      }
-   switch (oc->rep_type)
-      {
-      case cfk_url:
-      case cfk_web:
-          printf(" %s (URL)",oc->locator);
-          break;
-      case cfk_file:
-          printf("%s (file)",oc->locator);
-          break;
-      case cfk_db:
-          printf(" %s (DB)",oc->locator);
-          break;          
-      case cfk_literal:
-          printf(" \"%s\" (Text)",oc->locator);
-          break;
-      case cfk_image:
-          printf("(Image)",oc->locator);
-          break;
-      default:
-          break;
       }
 
    count++;

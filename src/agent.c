@@ -748,7 +748,7 @@ if (VINPUTLIST != NULL)
          {
          for (rp2  = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
             {
-            if (Str2Uid(rp->item,NULL,NULL) == sb.st_uid)
+            if (Str2Uid(rp2->item,NULL,NULL) == sb.st_uid)
                {
                access = true;
                break;

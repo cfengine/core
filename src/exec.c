@@ -354,6 +354,7 @@ void StartServer(int argc,char **argv)
 Banner("Starting executor");
 memset(&dummyattr,0,sizeof(dummyattr));
 
+dummyattr.restart_class = "nonce";
 dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
 dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
 

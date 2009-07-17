@@ -39,7 +39,7 @@ bundle:                BUNDLE
                           {
                           DebugBanner("Bundle");
                           P.block = "bundle";
-                          }
+                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -47,7 +47,7 @@ body:                  BODY
                           {
                           DebugBanner("Body");
                           P.block = "body";
-                          }
+                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -318,7 +318,7 @@ id:                    ID
                          P.lval = P.currentid;
                          P.currentRlist = NULL;
                          Debug("Recorded LVAL %s\n",P.lval);
-                         }
+                         };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

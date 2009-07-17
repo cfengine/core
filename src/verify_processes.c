@@ -98,7 +98,14 @@ void VerifyProcesses(struct Attributes a, struct Promise *pp)
 { struct CfLock thislock;
  char lockname[CF_BUFSIZE];
 
-snprintf(lockname,CF_BUFSIZE-1,"proc-%s-%s",pp->promiser,a.restart_class);
+if (a.restart_class)
+   {
+   snprintf(lockname,CF_BUFSIZE-1,"proc-%s-%s",pp->promiser,a.restart_class);
+   }
+else
+   {
+   snprintf(lockname,CF_BUFSIZE-1,"proc-%s-norestart",pp->promiser);
+   }
  
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
 

@@ -169,8 +169,9 @@
 /* Define to 1 if you have the `acl' library (-lacl). */
 #undef HAVE_LIBACL
 
-/* Define to 1 if you have the `cfcontellation' library (-lcfcontellation). */
-#undef HAVE_LIBCFCONTELLATION
+/* Define to 1 if you have the `cfconstellation' library (-lcfconstellation).
+   */
+#undef HAVE_LIBCFCONSTELLATION
 
 /* Define to 1 if you have the `cfgalaxy' library (-lcfgalaxy). */
 #undef HAVE_LIBCFGALAXY

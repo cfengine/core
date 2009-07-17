@@ -382,6 +382,7 @@ if (strlen(OUTPUTDIR) == 0)
 XML = false;
 HTML = false;
 
+umask(077);
 strcpy(ERASE,"");
 strcpy(TIMEKEY,"");
 strcpy(STYLESHEET,"http://www.cfengine.org/css/promises.css");
@@ -1181,7 +1182,7 @@ for (i = 0; i < 1024; i++)
       continue;
       }
 
-   fprintf(fnotes,"%s %lf\n",array[i].name,array[i].q);
+   fprintf(fnotes,"%s %.4lf\n",array[i].name,array[i].q);
    
    if (XML)
       {
@@ -2028,6 +2029,8 @@ if ((err = db_create(&dbp,NULL,0)) != 0)
    exit(1);
    }
 
+CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
+
 #ifdef CF_OLD_DB 
 if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #else
@@ -2109,9 +2112,9 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
 
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPAV,"%lf ",entry.Q[i].expect/MAX.Q[i].expect);
-      fprintf(FPVAR,"%lf ",entry.Q[i].var/MAX.Q[i].var);
-      fprintf(FPNOW,"%lf ",entry.Q[i].q/MAX.Q[i].q);
+      fprintf(FPAV,"%.4lf ",entry.Q[i].expect/MAX.Q[i].expect);
+      fprintf(FPVAR,"%.4lf ",entry.Q[i].var/MAX.Q[i].var);
+      fprintf(FPNOW,"%.4lf ",entry.Q[i].q/MAX.Q[i].q);
       }                        
    
    fprintf(FPAV,"\n");
@@ -2120,9 +2123,9 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
    
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPE[i],"%d %lf %lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var));
+      fprintf(FPE[i],"%d %.4lf %.4lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var));
       /* Use same scaling for Q so graphs can be merged */
-      fprintf(FPQ[i],"%d %lf 0.0\n",count, entry.Q[i].q);
+      fprintf(FPQ[i],"%d %.4lf 0.0\n",count, entry.Q[i].q);
       }               
 
    memset(&entry,0,sizeof(entry));
@@ -2148,6 +2151,8 @@ if ((err = db_create(&dbp,NULL,0)) != 0)
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
    exit(1);
    }
+
+CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
 
 #ifdef CF_OLD_DB 
 if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
@@ -2202,7 +2207,7 @@ while (here_and_now < now)
 
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      fprintf(FPM[i],"%d %lf %lf %lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var),entry.Q[i].q);
+      fprintf(FPM[i],"%d %.4lf %.4lf %.4lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var),entry.Q[i].q);
       }               
    }
 
@@ -2460,7 +2465,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             val = array[i];
             }
 
-         fprintf(fp,"%d %lf\n",i,val/maxval*50.0);
+         fprintf(fp,"%d %.4lf\n",i,val/maxval*50.0);
          }
       
       fclose(fp);      

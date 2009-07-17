@@ -105,6 +105,7 @@ int GRAPH = false;
 int GENERATE_MANUAL = false;
 char GRAPHDIR[CF_BUFSIZE];
 char MANDIR[CF_BUFSIZE];
+int LOOKUP = false;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -201,6 +202,7 @@ void CheckOpts(int argc,char **argv)
   char ld_library_path[CF_BUFSIZE];
 
 strcpy(TOPIC_CMD,"");
+LOOKUP = false;
 
 while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
   {
@@ -237,9 +239,11 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
 
       case 'r':
           ISREGEX = true;
+          LOOKUP = true;
 
       case 't':
           strcpy(TOPIC_CMD,optarg);
+          LOOKUP = true;
           break;
 
       case 's':
@@ -597,6 +601,11 @@ void ShowOntology()
   struct Item *generic_types = NULL;
   struct Item *ip;
 
+if (LOOKUP)
+   {
+   return;
+   }
+  
 AddSlash(BUILD_DIR);
 snprintf(filename,CF_BUFSIZE-1,"%sontology.html",BUILD_DIR);
 

@@ -88,29 +88,35 @@ void ShowContext(void)
 
  /* Text output */
 
+CfOut(cf_verbose,"","");
+  
 if (VERBOSE||DEBUG)
    {
    snprintf(vbuff,CF_BUFSIZE,"Host %s's basic classified context",VFQNAME);
    ReportBanner(vbuff);
    
-   CfOut(cf_verbose,"","Defined Classes = ( ");
+   printf("%s  -> Defined hard classes = { ",VPREFIX);
    
    for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
       {
       printf("%s ",ptr->name);
       }
    
-   printf(")\n");
+   printf("}\n");
+
+   CfOut(cf_verbose,"","");
    
-   CfOut (cf_verbose,"","\nNegated Classes = ( ");
+   printf("%s  -> Negated Classes = { ",VPREFIX);
    
    for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
       {
       printf("%s ",ptr->name);
       }
    
-   printf (")\n");
+   printf ("}\n");
    }
+
+CfOut(cf_verbose,"","");
 
 /* HTML output */
 

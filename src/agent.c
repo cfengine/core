@@ -373,11 +373,11 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
       {
       struct Rlist *rp;
-      CfOut(cf_verbose,"","ADD classes ...\n");
+      CfOut(cf_verbose,"","-> Add classes ...\n");
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
-         CfOut(cf_verbose,""," ... %s\n",rp->item);
+         CfOut(cf_verbose,""," -> ... %s\n",rp->item);
          NewClass(rp->item);
          }
       
@@ -634,8 +634,9 @@ if (!ok)
 
 if (VERBOSE || DEBUG)
    {
-   CfOut(cf_verbose,"","Bundlesequence => ");
+   printf("%s -> Bundlesequence => ",VPREFIX);
    ShowRval(stdout,retval,rettype);
+   printf("\n");
    }
 
 /* If all is okay, go ahead and evaluate */

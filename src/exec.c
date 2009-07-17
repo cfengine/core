@@ -54,7 +54,7 @@ pid_t MYTWIN = 0;
 int   MAXLINES = 30;
 int   SPLAYTIME = 0;
 const int INF_LINES = -2;
-short NOSPLAY = false;
+int NOSPLAY = false;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
 

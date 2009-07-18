@@ -43,8 +43,9 @@ void GenericInitialize(int argc,char **argv,char *agents)
 { enum cfagenttype ag = Agent2Type(agents);
   char vbuff[CF_BUFSIZE];
   int ok;
-  
+
 InitializeGA(argc,argv);
+
 SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
@@ -309,46 +310,49 @@ else
 strcpy(CFWORKDIR,MapName(WORKDIR));
 #endif
 
-CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
-
-snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
-
-snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
-MakeParentDirectory(vbuff,force);
-snprintf(vbuff,CF_BUFSIZE,"%s/bin/cf-agent -D from_cfexecd",CFWORKDIR);
-MakeParentDirectory(vbuff,force);
-snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
-MakeParentDirectory(vbuff,force);
-snprintf(vbuff,CF_BUFSIZE,"%s/lastseen/intermittencies",CFWORKDIR);
-MakeParentDirectory(vbuff,force);
-snprintf(vbuff,CF_BUFSIZE,"%s/reports/various",CFWORKDIR);
-MakeParentDirectory(vbuff,force);
-
-snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
-chmod(vbuff,0700); 
-snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
-chmod(vbuff,0700);
-
-sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
-MakeParentDirectory(ebuff,force);
-
-if (stat(ebuff,&statbuf) == -1)
+if (!LOOKUP) /* cf-know should not do this in lookup mode */
    {
-   CreateEmptyFile(ebuff);
-   }
+   CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
 
-sprintf(ebuff,"%s/state/cf_rootprocs",CFWORKDIR);
+   snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
 
-if (stat(ebuff,&statbuf) == -1)
-   {
-   CreateEmptyFile(ebuff);
-   }
-
-sprintf(ebuff,"%s/state/cf_otherprocs",CFWORKDIR);
-
-if (stat(ebuff,&statbuf) == -1)
-   {
-   CreateEmptyFile(ebuff);
+   snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
+   MakeParentDirectory(vbuff,force);
+   snprintf(vbuff,CF_BUFSIZE,"%s/bin/cf-agent -D from_cfexecd",CFWORKDIR);
+   MakeParentDirectory(vbuff,force);
+   snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
+   MakeParentDirectory(vbuff,force);
+   snprintf(vbuff,CF_BUFSIZE,"%s/lastseen/intermittencies",CFWORKDIR);
+   MakeParentDirectory(vbuff,force);
+   snprintf(vbuff,CF_BUFSIZE,"%s/reports/various",CFWORKDIR);
+   MakeParentDirectory(vbuff,force);
+   
+   snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
+   chmod(vbuff,0700); 
+   snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
+   chmod(vbuff,0700);
+   
+   sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
+   MakeParentDirectory(ebuff,force);
+   
+   if (stat(ebuff,&statbuf) == -1)
+      {
+      CreateEmptyFile(ebuff);
+      }
+   
+   sprintf(ebuff,"%s/state/cf_rootprocs",CFWORKDIR);
+   
+   if (stat(ebuff,&statbuf) == -1)
+      {
+      CreateEmptyFile(ebuff);
+      }
+   
+   sprintf(ebuff,"%s/state/cf_otherprocs",CFWORKDIR);
+   
+   if (stat(ebuff,&statbuf) == -1)
+      {
+      CreateEmptyFile(ebuff);
+      }
    }
 
 /* Init crypto stuff */

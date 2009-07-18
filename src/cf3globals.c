@@ -49,6 +49,7 @@ int INFORM = false;
 int PARSING = false;
 int CFPARANOID = false;
 int REQUIRE_COMMENTS = CF_UNDEFINED;
+int LOOKUP = false;
 
 struct utsname VSYSNAME;
 
@@ -114,6 +115,12 @@ int LASTSEEN = true;
 struct Topic *TOPIC_MAP = NULL;
 
 char POLICY_SERVER[CF_BUFSIZE];
+
+char WEBDRIVER[CF_MAXVARSIZE];
+char BANNER[2*CF_BUFSIZE];
+char FOOTER[CF_BUFSIZE];
+char STYLESHEET[CF_BUFSIZE];
+char AGGREGATION[CF_BUFSIZE];
 
 /*****************************************************************************/
 /* Constants                                                                 */
@@ -521,4 +528,10 @@ char *OBS[CF_OBSERVABLES][2] =
     "spare","unused",
     "spare","unused",
     };
+
+char *UNITS[CF_OBSERVABLES];
+time_t DATESTAMPS[CF_OBSERVABLES];
+
+
+
 

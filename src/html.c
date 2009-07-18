@@ -35,7 +35,6 @@
 /*****************************************************************************/
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *header)
-
 {
 fprintf(fp,"<html>"
         "  <head>"
@@ -59,7 +58,6 @@ fprintf(fp,"<h1>%s</h1>",title);
 /*****************************************************************************/
 
 void CfHtmlFooter(FILE *fp,char *footer)
-
 {
  /* This section should be conditional */
 

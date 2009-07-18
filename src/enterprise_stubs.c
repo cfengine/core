@@ -503,6 +503,16 @@ void CSV2XML(struct Rlist *list)
 
 /*****************************************************************************/
 
+void Aggregate()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_Aggregate();
+#endif 
+}
+
+/*****************************************************************************/
+
 void NoteVarUsage()
 
 {

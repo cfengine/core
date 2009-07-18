@@ -93,10 +93,6 @@ char SQL_PASSWD[CF_MAXVARSIZE];
 char SQL_SERVER[CF_MAXVARSIZE];
 char SQL_CONNECT_NAME[CF_MAXVARSIZE];
 char TOPIC_CMD[CF_MAXVARSIZE];
-char WEBDRIVER[CF_MAXVARSIZE];
-char BANNER[2*CF_BUFSIZE];
-char FOOTER[CF_BUFSIZE];
-char STYLESHEET[CF_MAXVARSIZE];
 enum cfdbtype SQL_TYPE = cfd_notype;
 int HTML = false;
 int WRITE_SQL = false;
@@ -105,7 +101,6 @@ int GRAPH = false;
 int GENERATE_MANUAL = false;
 char GRAPHDIR[CF_BUFSIZE];
 char MANDIR[CF_BUFSIZE];
-int LOOKUP = false;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -168,8 +163,8 @@ if (strlen(TOPIC_CMD) == 0)
    {
    KeepPromiseBundles();
    VerifyOntology();
-   ShowOntology(); // all types and assocs
-   ShowTopicMapLTM(); // all types and assocs
+   ShowOntology();
+   ShowTopicMapLTM();
    GenerateSQL();
    GenerateManual();
    GenerateGraph();

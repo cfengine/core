@@ -364,6 +364,7 @@ enum cfkcontrol
 
 enum cfrecontrol
    {
+   cfre_aggregation_point,
    cfre_autoscale,
    cfre_builddir,
    cfre_csv,

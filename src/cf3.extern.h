@@ -32,6 +32,11 @@ extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
 extern char POLICY_SERVER[CF_BUFSIZE];
 
+extern char WEBDRIVER[CF_MAXVARSIZE];
+extern char BANNER[2*CF_BUFSIZE];
+extern char FOOTER[CF_BUFSIZE];
+extern char STYLESHEET[CF_BUFSIZE];
+
 extern struct Bundle *BUNDLES;
 extern struct Body *BODIES;
 extern struct Scope *VSCOPE;
@@ -56,6 +61,7 @@ extern int CFA_BACKGROUND;
 extern int CFA_BACKGROUND_LIMIT;
 extern int AM_BACKGROUND_PROCESS;
 
+extern int LOOKUP;
 extern int BOOTSTRAP;
 extern int XML;
 extern FILE *FREPORT_HTML;
@@ -98,6 +104,11 @@ extern char *SHIFT_TEXT[];
 
 extern char FILE_SEPARATOR;
 extern char FILE_SEPARATOR_STR[2];
+
+extern time_t DATESTAMPS[CF_OBSERVABLES];
+extern char AGGREGATION[CF_BUFSIZE];
+extern char *UNITS[CF_OBSERVABLES];
+
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

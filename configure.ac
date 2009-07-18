@@ -78,7 +78,7 @@ AC_CHECK_LIB(m,main)
 dnl Look for cf enterprise versions
 
 AC_CHECK_LIB(cfnova,main)
-AC_CHECK_LIB(cfcontellation,main)
+AC_CHECK_LIB(cfconstellation,main)
 AC_CHECK_LIB(cfgalaxy,main)
 
 AC_CHECK_LIB(ldap,ldap_get_values_len)
@@ -466,6 +466,7 @@ dnl ######################################################################
 
 AC_CHECK_HEADERS(graphviz/gvc.h)
 AC_CHECK_LIB(gvc,main)
+AC_CHECK_LIB(gd,main)
 
 dnl ######################################################################
 dnl Checks for data types

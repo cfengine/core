@@ -312,6 +312,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
 
 struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {
+   {"aggregation_point",cf_str,CF_PATHRANGE,"The root directory of the data cache for CMDB aggregation"},       
    {"auto_scaling",cf_opts,CF_BOOL,"true/false whether to auto-scale graph output to optimize use of space"},
    {"build_directory",cf_str,".*","The directory in which to generate output files"},
    {"csv2xml",cf_slist,"","A list of csv formatted files in the build directory to convert to simple xml"},

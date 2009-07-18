@@ -817,7 +817,7 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
    
     switch (flag)
        {
-       case 'S': Debug("%1.1f: TCP new connection from %s to %s - i am %s\n",ITER,src,dest,VIPADDRESS);
+       case 'S': Debug("%1.1lf: TCP new connection from %s to %s - i am %s\n",ITER,src,dest,VIPADDRESS);
            if (isme_dest)
               {
               THIS[ob_tcpsyn_in]++;
@@ -830,7 +830,7 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
               }       
            break;
            
-       case 'F': Debug("%1.1f: TCP end connection from %s to %s\n",ITER,src,dest);
+       case 'F': Debug("%1.1lf: TCP end connection from %s to %s\n",ITER,src,dest);
            if (isme_dest)
               {
               THIS[ob_tcpfin_in]++;
@@ -843,7 +843,7 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
               }       
            break;
            
-       default: Debug("%1.1f: TCP established from %s to %s\n",ITER,src,dest);
+       default: Debug("%1.1lf: TCP established from %s to %s\n",ITER,src,dest);
            
            if (isme_dest)
               {
@@ -867,7 +867,7 @@ else if (strstr(arrival,".53"))
    isme_dest = IsInterfaceAddress(dest);
    isme_src = IsInterfaceAddress(src);
    
-   Debug("%1.1f: DNS packet from %s to %s\n",ITER,src,dest);
+   Debug("%1.1lf: DNS packet from %s to %s\n",ITER,src,dest);
    if (isme_dest)
       {
       THIS[ob_dns_in]++;
@@ -887,7 +887,7 @@ else if (strstr(arrival,"proto UDP"))
    isme_dest = IsInterfaceAddress(dest);
    isme_src = IsInterfaceAddress(src);
    
-   Debug("%1.1f: UDP packet from %s to %s\n",ITER,src,dest);
+   Debug("%1.1lf: UDP packet from %s to %s\n",ITER,src,dest);
    if (isme_dest)
       {
       THIS[ob_udp_in]++;
@@ -907,7 +907,7 @@ else if (strstr(arrival,"proto ICMP"))
    isme_dest = IsInterfaceAddress(dest);
    isme_src = IsInterfaceAddress(src);
    
-   Debug("%1.1f: ICMP packet from %s to %s\n",ITER,src,dest);
+   Debug("%1.1lf: ICMP packet from %s to %s\n",ITER,src,dest);
    
    if (isme_dest)
       {
@@ -922,7 +922,7 @@ else if (strstr(arrival,"proto ICMP"))
    }
 else
    {
-   Debug("%1.1f: Miscellaneous undirected packet (%.100s)\n",ITER,arrival);
+   Debug("%1.1lf: Miscellaneous undirected packet (%.100s)\n",ITER,arrival);
    
    THIS[ob_tcpmisc_in]++;
    
@@ -1075,7 +1075,7 @@ while (!feof(fp))
    THIS[index] = dq;
    LASTQ[index] = q;
 
-   CfOut(cf_verbose,"","Set %s=%d to %.1f after %d 100ths of a second \n",OBS[index][1],index,q,total_time);         
+   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,THIS[index],total_time);         
    }
 
 fclose(fp);
@@ -1429,11 +1429,12 @@ if (!OpenDB(AVDB,&dbp))
 
 CfOut(cf_inform,"","Updated averages at %s\n",timekey);
 
-WriteDB(dbp,timekey,&value,sizeof(struct Averages));
+//WriteDB(dbp,timekey,&value,sizeof(struct Averages));
+
+WriteDB(dbp,timekey,&newvals,sizeof(struct Averages));
 WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)); 
 
 dbp->close(dbp,0);
-
 HistoryUpdate(newvals);
 }
 
@@ -1663,10 +1664,10 @@ void SetVariable(char *name,double value,double average,double stddev,struct Ite
 sprintf(var,"value_%s=%d",name,(int)value);
 AppendItem(classlist,var,"");
 
-sprintf(var,"av_%s=%1.1f",name,average);
+sprintf(var,"av_%s=%1.lf",name,average);
 AppendItem(classlist,var,"");
 
-sprintf(var,"dev_%s=%1.1f",name,stddev);
+sprintf(var,"dev_%s=%1.lf",name,stddev);
 AppendItem(classlist,var,""); 
 }
 

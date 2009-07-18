@@ -192,6 +192,9 @@
 /* Define to 1 if you have the `dgc' library (-ldgc). */
 /* #undef HAVE_LIBDGC */
 
+/* Define to 1 if you have the `gd' library (-lgd). */
+#define HAVE_LIBGD 1
+
 /* Define to 1 if you have the `gvc' library (-lgvc). */
 #define HAVE_LIBGVC 1
 

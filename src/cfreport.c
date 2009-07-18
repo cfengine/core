@@ -86,12 +86,7 @@ double AGE;
 
 static struct Averages ENTRY,MAX,MIN,DET;
 
-char TIMEKEY[CF_SMALLBUF];
 char OUTPUTDIR[CF_BUFSIZE],*sp;
-char STYLESHEET[CF_BUFSIZE];
-char WEBDRIVER[CF_MAXVARSIZE];
-char BANNER[CF_BUFSIZE];
-char FOOTER[CF_BUFSIZE];
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -244,6 +239,7 @@ GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
 KeepReportsControlPromises();
 KeepReportsPromises();
+Aggregate();
 return 0;
 }
 
@@ -384,11 +380,11 @@ HTML = false;
 
 umask(077);
 strcpy(ERASE,"");
-strcpy(TIMEKEY,"");
 strcpy(STYLESHEET,"http://www.cfengine.org/css/promises.css");
 strcpy(WEBDRIVER,"#");
 strcpy(BANNER,"");
 strcpy(FOOTER,"");
+strcpy(AGGREGATION,"");
 snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 }
 
@@ -467,7 +463,13 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       strncpy(WEBDRIVER,retval,CF_MAXVARSIZE);
       continue;
       }
-   
+
+   if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_aggregation_point].lval) == 0)
+      {
+      strncpy(AGGREGATION,retval,CF_MAXVARSIZE);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_htmlbanner].lval) == 0)
       {
       strncpy(BANNER,retval,CF_BUFSIZE-1);
@@ -2076,7 +2078,7 @@ now = CF_MONDAY_MORNING;
 while (now < CF_MONDAY_MORNING + CF_WEEK)
    {
    memset(&entry,0,sizeof(entry));
-   
+
    for (j = 0; j < its; j++)
       {
       strcpy(timekey,GenTimeKey(now));
@@ -2089,7 +2091,7 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
             entry.Q[i].var += det.Q[i].var/(double)its;
             entry.Q[i].q += det.Q[i].q/(double)its;
             }         
-         
+
          if (NOSCALING)
             {            
             for (i = 1; i < CF_OBSERVABLES; i++)
@@ -2127,8 +2129,6 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
       /* Use same scaling for Q so graphs can be merged */
       fprintf(FPQ[i],"%d %.4lf 0.0\n",count, entry.Q[i].q);
       }               
-
-   memset(&entry,0,sizeof(entry));
    }
 
 dbp->close(dbp,0);
@@ -2197,6 +2197,10 @@ while (here_and_now < now)
                MAX.Q[i].q = 1;
                }
             }
+         }
+      else
+         {
+         CfOut(cf_verbose,""," !! Read failed for ");
          }
       
       here_and_now += CF_MEASURE_INTERVAL;
@@ -2718,7 +2722,9 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    {
    LookUpClassName(i,name);
    sprintf(filename,"%s.mag",name);
-   
+
+   CfOut(cf_inform,"","Magnifying \"%s\"\n",name);
+      
    if ((FPM[i] = fopen(filename,"w")) == NULL)
       {
       perror("fopen");

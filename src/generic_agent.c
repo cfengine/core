@@ -545,7 +545,7 @@ void OpenReports(char *agents)
 
 if (SHOWREPORTS)
    {
-   snprintf(name,CF_BUFSIZE,"promise_output_%s.txt",agents);
+   snprintf(name,CF_BUFSIZE,"%s/reports/promise_output_%s.txt",CFWORKDIR,agents);
 
    if ((FREPORT_TXT = fopen(name,"w")) == NULL)
       {
@@ -553,7 +553,7 @@ if (SHOWREPORTS)
       FREPORT_TXT = fopen("/dev/null","w");
       }
    
-   snprintf(name,CF_BUFSIZE,"promise_output_%s.html",agents);
+   snprintf(name,CF_BUFSIZE,"%s/reports/promise_output_%s.html",CFWORKDIR,agents);
 
    if ((FREPORT_HTML = fopen(name,"w")) == NULL)
       {
@@ -561,7 +561,7 @@ if (SHOWREPORTS)
       FREPORT_HTML = fopen("/dev/null","w");
       }
 
-   snprintf(name,CF_BUFSIZE,"promise_knowledge.cf");
+   snprintf(name,CF_BUFSIZE,"%s/promise_knowledge.cf",CFWORKDIR);
    
    if ((FKNOW = fopen(name,"w")) == NULL)
       {

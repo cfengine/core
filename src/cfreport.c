@@ -1476,6 +1476,8 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
                fprintf(fout,"%s\n",ctime(&entry.time));
                }
             }
+
+         CfOut(cf_inform,"","Active lock %s = ",(char *)key.data);
          }
       }
    else
@@ -1954,6 +1956,17 @@ if ((fout = fopen(name,"w")) == NULL)
    exit(1);
    }
 
+if (HTML && !EMBEDDED)
+   {
+   snprintf(name,CF_BUFSIZE,"Monitor summary for %s",VFQNAME);
+   CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<table class=border cellpadding=5>\n");
+   }
+else if (XML)
+   {
+   fprintf(fout,"<?xml version=\"1.0\"?>\n<output>\n");
+   }
+
 CfOut(cf_inform,"","Writing report to %s\n",name);
 
 for (i = 0; i < CF_OBSERVABLES; i++)
@@ -1964,27 +1977,27 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
       fprintf(fout,"%s %s %s",CFRX[cfx_event][cfb],name,CFRX[cfx_event][cfe]);
-      fprintf(fout,"%s %s %s",CFRX[cfx_min][cfb],MIN.Q[i].expect,CFRX[cfx_min][cfe]);
-      fprintf(fout,"%s %s %s",CFRX[cfx_max][cfb],MAX.Q[i].expect,CFRX[cfx_max][cfe]);
-      fprintf(fout,"%s %s %s",CFRX[cfx_dev][cfb],sqrt(MAX.Q[i].var),CFRX[cfx_dev][cfe]);
+      fprintf(fout,"%s %.4lf %s",CFRX[cfx_min][cfb],MIN.Q[i].expect,CFRX[cfx_min][cfe]);
+      fprintf(fout,"%s %.4lf %s",CFRX[cfx_max][cfb],MAX.Q[i].expect,CFRX[cfx_max][cfe]);
+      fprintf(fout,"%s %.4lf %s",CFRX[cfx_dev][cfb],sqrt(MAX.Q[i].var),CFRX[cfx_dev][cfe]);
       fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
       }
    else if (HTML)
       {
-      fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
-      fprintf(fout,"%s %s %s",CFRH[cfx_event][cfb],name,CFRH[cfx_event][cfe]);
-      fprintf(fout,"%s Min %s %s",CFRH[cfx_min][cfb],MIN.Q[i].expect,CFRH[cfx_min][cfe]);
-      fprintf(fout,"%s Max %s %s",CFRH[cfx_max][cfb],MAX.Q[i].expect,CFRH[cfx_max][cfe]);
-      fprintf(fout,"%s %s %s",CFRH[cfx_dev][cfb],sqrt(MAX.Q[i].var),CFRH[cfx_dev][cfe]);
-      fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
+      fprintf(fout,"%s\n",CFRH[cfx_entry][cfb]);
+      fprintf(fout,"%s %s %s\n",CFRH[cfx_event][cfb],name,CFRH[cfx_event][cfe]);
+      fprintf(fout,"%s Min %.4lf %s\n",CFRH[cfx_min][cfb],MIN.Q[i].expect,CFRH[cfx_min][cfe]);
+      fprintf(fout,"%s Max %.4lf %s\n",CFRH[cfx_max][cfb],MAX.Q[i].expect,CFRH[cfx_max][cfe]);
+      fprintf(fout,"%s %.4lf %s\n",CFRH[cfx_dev][cfb],sqrt(MAX.Q[i].var),CFRH[cfx_dev][cfe]);
+      fprintf(fout,"%s\n",CFRH[cfx_entry][cfe]);
       }
    else if (CSV)
       {
-      fprintf(fout,"%2d,%-10s,%10f,%10f,%10f\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
+      fprintf(fout,"%2d,%-10s,%10lf,%10lf,%10lf\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
       }
    else
       {
-      CfOut(cf_verbose,"","%2d. MAX <%-10s-in>   = %10f - %10f u %10f\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
+      CfOut(cf_verbose,"","%2d. MAX <%-10s-in>   = %10lf - %10lf u %10lf\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
       }
    }
 
@@ -2009,8 +2022,21 @@ if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    CfOut(cf_inform,"","\n\nDATABASE_AGE %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
    }
 
-fclose(fout);
 dbp->close(dbp,0);
+
+if (HTML && !EMBEDDED)
+   {
+   fprintf(fout,"</table>");
+   CfHtmlFooter(fout,FOOTER);
+   }
+
+if (XML)
+   {
+   fprintf(fout,"</output>\n");
+   }
+
+
+fclose(fout);
 }
 
 /*****************************************************************************/

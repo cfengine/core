@@ -235,10 +235,12 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
       case 'r':
           ISREGEX = true;
           LOOKUP = true;
+          SHOWREPORTS = false;
 
       case 't':
           strcpy(TOPIC_CMD,optarg);
           LOOKUP = true;
+          SHOWREPORTS = false;
           break;
 
       case 's':

@@ -144,7 +144,7 @@ if (lastseen > (double)lsea)
    }
 else
    {
-   CfOut(cf_verbose,"","Performance(%s): time=%.4f secs, av=%.4f +/- %.4f\n",eventname,value,newe.Q.expect,sqrt(newe.Q.var));
+   CfOut(cf_verbose,"","Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n",eventname,value,newe.Q.expect,sqrt(newe.Q.var));
    WriteDB(dbp,eventname,&newe,sizeof(newe));
    }
 

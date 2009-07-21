@@ -1,8 +1,13 @@
 3.0.2
 	IMPORTANT: Change in normal ordering of editing. replace comes after insert lines
 	Much testing and minor bug fixing
-	Memory leaks fixed
 
+	Memory leaks fixed
+	Many hooks added for Nova enterprise extensions.
+	
+        promise_output reports now placed in WORKDIR/reports directory
+	
+	
 3.0.1
 	First standalone release, independent of cfengine 2 
 	Purge old definitions and check consistency.

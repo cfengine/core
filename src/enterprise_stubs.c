@@ -380,7 +380,8 @@ Nova_DumpSlowlyVaryingObservations();
 void GetClassName(int i,char *name)
 {
 #ifdef HAVE_LIBCFNOVA
-Nova_GetClassName(i,name);
+ char desc[CF_BUFSIZE];
+ Nova_GetClassName(i,name,desc);
 #else
 strcpy(name,OBS[i][0]);
 #endif
@@ -391,7 +392,9 @@ strcpy(name,OBS[i][0]);
 void LookUpClassName(int i,char *name)
 {
 #ifdef HAVE_LIBCFNOVA
-Nova_LookupClassName(i,name);
+ char desc[CF_BUFSIZE];
+
+Nova_LookupClassName(i,name,desc);
 #else
 strcpy(name,OBS[i][0]);
 #endif

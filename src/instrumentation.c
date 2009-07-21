@@ -612,6 +612,6 @@ double GAverage(double anew,double aold,double p)
 /* return convex mixture - p is the trust in the new value */
     
 {
-return (p*anew + (1-p)*aold);
+return (p*anew + (1.0-p)*aold);
 }
 

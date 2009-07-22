@@ -2160,7 +2160,7 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
 dbp->close(dbp,0);
 CloseFiles();
 }
-
+ 
 /*****************************************************************************/
 
 void MagnifyNow()
@@ -2178,7 +2178,7 @@ if ((err = db_create(&dbp,NULL,0)) != 0)
    exit(1);
    }
 
-CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
+CfOut(cf_verbose,""," -> Retrieving mag data from %s",VINPUTFILE);
 
 #ifdef CF_OLD_DB 
 if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)

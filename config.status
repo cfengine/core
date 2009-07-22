@@ -637,7 +637,7 @@ fi
 
 
     PACKAGE='cfengine'
-    VERSION='3.0.2b4'
+    VERSION='3.0.2b5'
     TIMESTAMP=''
     RM='rm -f'
     ofile='libtool'
@@ -804,7 +804,7 @@ S["AUTOHEADER"]="${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run autohe
 S["AUTOMAKE"]="${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run automake-1.10"
 S["AUTOCONF"]="${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run autoconf"
 S["ACLOCAL"]="${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run aclocal-1.10"
-S["VERSION"]="3.0.2b4"
+S["VERSION"]="3.0.2b5"
 S["PACKAGE"]="cfengine"
 S["CYGPATH_W"]="echo"
 S["am__isrc"]=""
@@ -909,7 +909,7 @@ D["PACKAGE_VERSION"]=" \"\""
 D["PACKAGE_STRING"]=" \"\""
 D["PACKAGE_BUGREPORT"]=" \"\""
 D["PACKAGE"]=" \"cfengine\""
-D["VERSION"]=" \"3.0.2b4\""
+D["VERSION"]=" \"3.0.2b5\""
 D["HAVE_PTHREAD"]=" 1"
 D["YYTEXT_POINTER"]=" 1"
 D["STDC_HEADERS"]=" 1"
@@ -960,6 +960,7 @@ D["HAVE_DIRENT_H"]=" 1"
 D["HAVE_GRAPHVIZ_GVC_H"]=" 1"
 D["HAVE_LIBGVC"]=" 1"
 D["HAVE_LIBGD"]=" 1"
+D["HAVE_GD_H"]=" 1"
 D["HAVE_CLOCKID_T"]=" 1"
 D["HAVE_GETCWD"]=" 1"
 D["HAVE_GETNETGRENT"]=" 1"

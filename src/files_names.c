@@ -265,6 +265,7 @@ char *JoinPath(char *path,char *leaf)
 
 { int len = strlen(leaf);
 
+Chop(path);
 AddSlash(path);
 
 if ((strlen(path)+len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
@@ -282,7 +283,8 @@ return path;
 char *JoinSuffix(char *path,char *leaf)
 
 { int len = strlen(leaf);
- 
+
+Chop(path);
 DeleteSlash(path);
       
 if ((strlen(path)+len) > (CF_BUFSIZE - CF_BUFFERMARGIN))

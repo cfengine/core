@@ -146,6 +146,9 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
 
+/* Define to 1 if you have the <gd.h> header file. */
+#define HAVE_GD_H 1
+
 /* Define to 1 if you have the `getaddrinfo' function. */
 #define HAVE_GETADDRINFO 1
 
@@ -499,7 +502,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.2b4"
+#define VERSION "3.0.2b5"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

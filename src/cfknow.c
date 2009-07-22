@@ -2371,6 +2371,9 @@ fprintf(fout,"\"%s\" in map version %s</div>\n",NextTopic(this_type,""),v);
 
 if (occurrences != NULL)
    {
+   char embed_link[CF_BUFSIZE];
+   embed_link[0] = '\0';
+   
    count = 0;
    
    fprintf(fout,"<p><div id=\"occurrences\">");
@@ -2391,7 +2394,13 @@ if (occurrences != NULL)
 	 
          for (rp = oc->represents; rp != NULL; rp=rp->next)
             {
-            fprintf(fout,"%s, ",NextTopic((char *)rp->item,""));
+//            fprintf(fout,"%s, ",NextTopic((char *)rp->item,""));
+            fprintf(fout,"%s, ",rp->item);
+
+            if (strlen(embed_link) == 0 && (strncmp(rp->item,"http",4) == 0 || *(char *)(rp->item) == '/'))
+               {
+               strcpy(embed_link,rp->item);
+               }
             }
          
          fprintf(fout,":");
@@ -2415,7 +2424,14 @@ if (occurrences != NULL)
              fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
              break;
          case cfk_image:
-             fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",oc->locator,oc->locator);
+             if (strlen(embed_link)> 0)
+                {
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",embed_link,oc->locator);
+                }
+             else
+                {
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",oc->locator,oc->locator);
+                }
              break;
          case cfk_portal:
              fprintf(fout,"<p><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",oc->locator,oc->locator);
@@ -2605,12 +2621,15 @@ if (stat(file,&sb) == -1)
    return;
    }
 
+
+
 if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
    {
    CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
    return;
    }
 
+Chop(a.path_root);
 sp = file + strlen(a.path_root) + 1;
 
 FullTextMatch(pp->promiser,sp);

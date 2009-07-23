@@ -94,8 +94,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
 
    // Private to bundle, can be reloaded
 
-   *(pp->donep) = false;
-   
+   *(pp->donep) = false;   
    return;
    }
 }
@@ -615,7 +614,7 @@ switch (cp->type)
    case CF_LIST:
        for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
           {
-          newret = ExpandPrivateRval("this",rp->item,rp->type);
+          newret = EvaluateFinalRval("this",rp->item,rp->type,true,pp);
           DeleteRvalItem(rp->item,rp->type);
           rp->item = newret.item;
           rp->type = newret.rtype;
@@ -691,6 +690,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    {
    if (rp->type != CF_SCALAR)
       {
+      printf("WArning  not list\n");
       return false;
       }
 
@@ -708,6 +708,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
       if ((fluct < cum) || rp->next == NULL)
          {
          snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser,rp->item);
+
          if (strcmp(pp->bundletype,"common") == 0)
             {
             NewClass(buffer);
@@ -716,6 +717,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
             {
             NewBundleClass(buffer,pp->bundle);
             }
+
          Debug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
          return true;
          }

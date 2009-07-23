@@ -719,6 +719,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
          }
       }
 
+   /* Not using these for now
    snprintf(buff,CF_MAXVARSIZE,"ldtbuf_%s=%s",name,ldt_buff);
    AppendItem(&classlist,buff,"");
 
@@ -727,6 +728,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    
    snprintf(buff,CF_MAXVARSIZE,"ldtlimit_%s=%.2f",name,anomaly_chi_limit[i]);
    AppendItem(&classlist,buff,"");
+   */
    }
 
 SetMeasurementPromises(&classlist);
@@ -1661,13 +1663,13 @@ void SetVariable(char *name,double value,double average,double stddev,struct Ite
 
 { char var[CF_BUFSIZE];
 
-sprintf(var,"value_%s=%d",name,(int)value);
+snprintf(var,CF_MAXVARSIZE,"value_%s=%.0lf",name,value);
 AppendItem(classlist,var,"");
 
-sprintf(var,"av_%s=%1.lf",name,average);
+snprintf(var,CF_MAXVARSIZE,"av_%s=%.2lf",name,average);
 AppendItem(classlist,var,"");
 
-sprintf(var,"dev_%s=%1.lf",name,stddev);
+snprintf(var,CF_MAXVARSIZE,"dev_%s=%.2lf",name,stddev);
 AppendItem(classlist,var,""); 
 }
 

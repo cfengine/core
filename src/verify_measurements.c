@@ -54,10 +54,12 @@ PromiseBanner(pp);
  
 a = GetMeasurementAttributes(pp);
 
+/*
 if (strcmp(a.measure.history_type,"weekly") == 0)
    {
    *(pp->donep) = true;
    }
+*/
 
 if (!CheckMeasureSanity(a,pp))
    {

@@ -617,6 +617,7 @@ while (!feof(fp))
 
       DeleteVariable("mon",name);
       NewScalar("mon",name,value,cf_str);
+      Debug(" -> Setting new monitoring scalar %s => %s",name,value);
       }
    else
       {

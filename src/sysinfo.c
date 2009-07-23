@@ -203,7 +203,9 @@ else
       {
       }
    
-   strncpy(VUQNAME,VSYSNAME.nodename,n-1);
+   strncpy(VUQNAME,VSYSNAME.nodename,n);
+   VUQNAME[n] = '\0'; 
+   
    NewClass(CanonifyName(VUQNAME));
    }
   

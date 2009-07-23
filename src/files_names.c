@@ -110,7 +110,8 @@ if (expandregex) /* Expand one regex link and hand down */
    struct Attributes dummyattr;
 
    memset(&dummyattr,0,sizeof(dummyattr));
- 
+   memset(regex,0,CF_BUFSIZE);
+
    strncpy(regex,ip->name,CF_BUFSIZE-1);
 
    if ((dirh=opendir(pbuffer)) == NULL)

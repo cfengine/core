@@ -15,6 +15,7 @@
 
 
 
+
 pkgdatadir = $(datadir)/cfengine
 pkglibdir = $(libdir)/cfengine
 pkgincludedir = $(includedir)/cfengine
@@ -43,11 +44,19 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/src/conf.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(pkgdatadir)"
+am__installdirs = "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(inputsdir)"
 pkgdataSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(pkgdata_SCRIPTS)
 SOURCES =
 DIST_SOURCES =
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+inputsDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(inputs_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = ${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run aclocal-1.10
 AMTAR = ${SHELL} /home/mark/LapTop/Cfengine3/trunk/missing --run tar
@@ -187,7 +196,10 @@ target_vendor = unknown
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
+workdir = 
 pkgdata_SCRIPTS = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
+inputsdir = $(workdir)/inputs
+inputs_DATA = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
 EXTRA_DIST = *.cf
 
 #
@@ -270,6 +282,23 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-inputsDATA: $(inputs_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(inputsdir)" || $(MKDIR_P) "$(DESTDIR)$(inputsdir)"
+	@list='$(inputs_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(inputsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(inputsdir)/$$f'"; \
+	  $(inputsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(inputsdir)/$$f"; \
+	done
+
+uninstall-inputsDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(inputs_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(inputsdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(inputsdir)/$$f"; \
+	done
 tags: TAGS
 TAGS:
 
@@ -305,9 +334,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(SCRIPTS)
+all-am: Makefile $(SCRIPTS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(pkgdatadir)"; do \
+	for dir in "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(inputsdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -356,7 +385,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-pkgdataSCRIPTS
+install-data-am: install-inputsDATA install-pkgdataSCRIPTS
 
 install-dvi: install-dvi-am
 
@@ -390,7 +419,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkgdataSCRIPTS
+uninstall-am: uninstall-inputsDATA uninstall-pkgdataSCRIPTS
 
 .MAKE: install-am install-strip
 
@@ -399,12 +428,13 @@ uninstall-am: uninstall-pkgdataSCRIPTS
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-pkgdataSCRIPTS install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-pkgdataSCRIPTS
+	install-info install-info-am install-inputsDATA install-man \
+	install-pdf install-pdf-am install-pkgdataSCRIPTS install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am uninstall uninstall-am uninstall-inputsDATA \
+	uninstall-pkgdataSCRIPTS
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -1,6 +1,7 @@
 
 pkgdata_SCRIPTS = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
-
+inputsdir = $(workdir)/inputs
+inputs_DATA = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
 EXTRA_DIST = *.cf
 
 #

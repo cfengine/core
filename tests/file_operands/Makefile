@@ -193,6 +193,7 @@ target_vendor = unknown
 top_build_prefix = ../../
 top_builddir = ../..
 top_srcdir = ../..
+workdir = 
 doc_DATA = README 
 EXTRA_DIST = *
 MAINTAINERCLEANFILES = Makefile.in mdate-sh

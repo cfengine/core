@@ -756,6 +756,7 @@ AC_ARG_WITH(workdir,
 		fi
 
      	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
+        AC_SUBST(workdir, "${WORKDIR}")
 	],
 	[
            WORKDIR=/var/cfengine

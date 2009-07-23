@@ -195,6 +195,7 @@ target_vendor = unknown
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
+workdir = 
 SUBDIRS = file_masters file_operands units
 EXTRA_DIST = *
 MAINTAINERCLEANFILES = Makefile.in mdate-sh

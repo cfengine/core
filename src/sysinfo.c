@@ -199,7 +199,7 @@ else
    strcpy(VFQNAME,VSYSNAME.nodename);
    NewClass(CanonifyName(VFQNAME));
    
-   while(VSYSNAME.nodename[n++] != '.')
+   while(VSYSNAME.nodename[n++] != '.' && VSYSNAME.nodename[n] != '\0')
       {
       }
    

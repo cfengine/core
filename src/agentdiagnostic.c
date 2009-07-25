@@ -37,6 +37,20 @@
 void AgentDiagnostic()
 
 {
+if (VERBOSE || DEBUG)
+   {
+   FREPORT_TXT = stdout;
+   FREPORT_HTML = fopen("/dev/null","w");
+   FKNOW = fopen("/dev/null","w");
+   }
+else
+   {
+   FREPORT_TXT= fopen("/dev/null","w");
+   FREPORT_HTML= fopen("/dev/null","w");
+   FKNOW = fopen("/dev/null","w");
+   }
+
+
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
 printf("----------------------------------------------------------\n\n");

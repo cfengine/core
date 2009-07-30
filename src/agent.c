@@ -696,7 +696,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
 
       BannerSubType(bp->name,sp->name,pass);
       SetScope(bp->name);
-      
+
       NewTypeContext(type);
 
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)

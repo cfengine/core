@@ -545,7 +545,12 @@ if (a.location.before_after == cfe_after)
    {
    for (ip = *start; ip != NULL; ip=ip->next)
       {
-      if (ip == end_ptr || ip->next == NULL)
+      if (ip == end_ptr)
+         {
+         return InsertMissingLinesAtLocation(start,begin_ptr,end_ptr,ip,prev,a,pp);
+         }
+
+      if (ip->next == NULL)
          {
          return InsertMissingLinesAtLocation(start,begin_ptr,end_ptr,ip,prev,a,pp);
          }

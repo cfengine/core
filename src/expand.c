@@ -309,7 +309,7 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
    else if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
       {
       GetNaked(naked,rp->item);
-      
+
       if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) != cf_notype)
          {
          returnval = ExpandPrivateRval(scopeid,returnval.item,returnval.rtype);
@@ -323,7 +323,7 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
       {
       returnval = ExpandPrivateRval(scopeid,rp->item,rp->type);
       }
-   
+
    AppendRlist(&start,returnval.item,returnval.rtype);
    }
 
@@ -971,7 +971,7 @@ if (rval != NULL)
    else
       {
       /* See if the variable needs recursively expanding again */
-      returnval = EvaluateFinalRval(scope,rval,cp->type,false,pp);
+      returnval = EvaluateFinalRval(scope,rval,cp->type,true,pp);
       DeleteRvalItem(cp->rval,cp->type);
       cp->rval = rval = returnval.item;
       cp->type = returnval.rtype;
@@ -995,8 +995,7 @@ else
    {
    CfOut(cf_error,"","Variable %s has no promised value\n",pp->promiser);
    CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
-   }
-
+   }     
 }
 
 /*********************************************************************/

@@ -602,7 +602,7 @@ void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 
 if (*filestart == NULL || ptr == *filestart || ptr == CF_UNDEFINED_ITEM)
    {
-   PrependItemList(filestart,string);
+   AppendItemList(filestart,string);
    return;
    }
 

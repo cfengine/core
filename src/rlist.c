@@ -346,7 +346,7 @@ switch(type)
           {
           lp = AppendRlist(start,rp->item,rp->type);
           }
-       
+
        return lp;
        
    default:

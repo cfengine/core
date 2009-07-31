@@ -240,7 +240,7 @@ if (attr.copy.encrypt)
    {
    if (conn->session_key == NULL)
       {
-      cfPS(cf_error,CF_FAIL,"",pp,attr,"Cannot do encrypted copy without keys (use cfkey)");
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"Cannot do encrypted copy without keys (use cf-key)");
       return -1;
       }
    
@@ -426,7 +426,7 @@ if (attr.copy.encrypt)
    {
    if (conn->session_key == NULL)
       {
-      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Cannot do encrypted copy without keys (use cfkey)");
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Cannot do encrypted copy without keys (use cf-key)");
       return NULL;
       }
    

@@ -2190,7 +2190,7 @@ int AuthenticationDialogue(struct cfd_connection *conn,char *recvbuffer, int rec
 
 if (PRIVKEY == NULL || PUBKEY == NULL)
    {
-   CfOut(cf_error,"","No public/private key pair exists, create one with cfkey\n");
+   CfOut(cf_error,"","No public/private key pair exists, create one with cf-key\n");
    return false;
    }
  

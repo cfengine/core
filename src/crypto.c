@@ -79,7 +79,7 @@ void LoadSecretKeys()
   
 if ((fp = fopen(CFPRIVKEYFILE,"r")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Couldn't find a private key (%s) - use cfkey to get one",CFPRIVKEYFILE);
+   CfOut(cf_inform,"fopen","Couldn't find a private key (%s) - use cf-key to get one",CFPRIVKEYFILE);
    return;
    }
  
@@ -98,7 +98,7 @@ CfOut(cf_verbose,"","Loaded %s\n",CFPRIVKEYFILE);
 
 if ((fp = fopen(CFPUBKEYFILE,"r")) == NULL)
    {
-   CfOut(cf_error,"fopen","Couldn't find a public key (%s) - use cfkey to get one",CFPUBKEYFILE);
+   CfOut(cf_error,"fopen","Couldn't find a public key (%s) - use cf-key to get one",CFPUBKEYFILE);
    return;
    }
  
@@ -157,7 +157,7 @@ else
    {
    if ((fp = fopen(filename,"r")) == NULL)
       {
-      CfOut(cf_error,"fopen","Couldn't find a public key (%s) - use cfkey to get one",filename);
+      CfOut(cf_error,"fopen","Couldn't find a public key (%s) - use cf-key to get one",filename);
       return NULL;
       }
    

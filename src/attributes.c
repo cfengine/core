@@ -435,13 +435,13 @@ s.owners = (struct Rlist *)GetConstraint("search_owners",pp->conlist,CF_LIST);
 s.groups = (struct Rlist *)GetConstraint("search_groups",pp->conlist,CF_LIST);
 
 value = (char *)GetConstraint("search_size",pp->conlist,CF_SCALAR);
-IntRange2Int(value,&s.min_size,&s.max_size,pp);
+IntRange2Int(value,(long *)&s.min_size,(long *)&s.max_size,pp);
 value = (char *)GetConstraint("ctime",pp->conlist,CF_SCALAR);
-IntRange2Int(value,&s.min_ctime,&s.max_ctime,pp);
+IntRange2Int(value,(long *)&s.min_ctime,(long *)&s.max_ctime,pp);
 value = (char *)GetConstraint("atime",pp->conlist,CF_SCALAR);
-IntRange2Int(value,&s.min_atime,&s.max_atime,pp);
+IntRange2Int(value,(long *)&s.min_atime,(long *)&s.max_atime,pp);
 value = (char *)GetConstraint("mtime",pp->conlist,CF_SCALAR);
-IntRange2Int(value,&s.min_mtime,&s.max_mtime,pp);
+IntRange2Int(value,(long *)&s.min_mtime,(long *)&s.max_mtime,pp);
 s.exec_regex = (char *)GetConstraint("exec_regex",pp->conlist,CF_SCALAR);
 s.exec_program = (char *)GetConstraint("exec_program",pp->conlist,CF_SCALAR);
 

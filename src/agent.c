@@ -587,7 +587,9 @@ void KeepPromiseBundles()
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
-   CfOut(cf_error,"","No bundlesequence in the common control body");
+   CfOut(cf_error,""," !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+   CfOut(cf_error,""," !! No bundlesequence in the common control body");
+   CfOut(cf_error,""," !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
    exit(1);
    }
 

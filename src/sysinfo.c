@@ -204,7 +204,15 @@ else
       }
    
    strncpy(VUQNAME,VSYSNAME.nodename,n);
-   VUQNAME[n] = '\0'; 
+
+   if (VUQNAME[n-1] == '.')
+      {
+      VUQNAME[n-1] = '\0';
+      }
+   else
+      {
+      VUQNAME[n] = '\0';
+      }
    
    NewClass(CanonifyName(VUQNAME));
    }

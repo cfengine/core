@@ -690,7 +690,6 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    {
    if (rp->type != CF_SCALAR)
       {
-      printf("WArning  not list\n");
       return false;
       }
 

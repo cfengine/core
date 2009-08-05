@@ -29,7 +29,7 @@ files:
 body changes stats
 
 {
-report_changes => "all";
+report_changes => "all";  
 update_hashes  => "true";
 }
 

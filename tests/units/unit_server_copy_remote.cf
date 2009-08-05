@@ -41,13 +41,13 @@ depth => "$(d)";
 
 #########################################################
 
-body copyfrom mycopy(from,server)
+body copy_from mycopy(from,server)
 
 {
 source      => "$(from)";
 #portnumber => "6789";
 servers     => { "$(server)" , "failover1" };
-backup      => "true";                   #/false/timestamp
+copy_backup => "true";                   #/false/timestamp
 stealth     => "true";                   #/on/false/off
 preserve    => "true";
 linkcopy_patterns => { ".*fish.*" };

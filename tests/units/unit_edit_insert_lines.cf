@@ -32,7 +32,8 @@ files:
 
   "/tmp/test_insert"
 
-     edit_line => Insert("$(insert.v)"),
+            create => "true",
+         edit_line => Insert("$(insert.v)"),
      edit_defaults => empty;
 
 }

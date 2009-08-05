@@ -80,6 +80,23 @@ measurements:
       match_value => file_system;
       # Update this as often as possible
 
+  # Test 4
+
+   "/tmp/file"
+
+         handle => "line_counter",
+    stream_type => "file",
+      data_type => "counter",
+    match_value => scanlines("MYLINE.*"),
+   history_type => "log";
+
+}
+
+##########################################################
+
+body match_value scanlines(x)
+{
+select_line_matching => "^$(x)$";
 }
 
 ##########################################################

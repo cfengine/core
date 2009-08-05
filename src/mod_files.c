@@ -345,7 +345,7 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"touch",cf_opts,CF_BOOL,"true/false whether to touch time stamps on file"},
    {"create",cf_opts,CF_BOOL,"true/false whether to create non-existing file"},
    {"move_obstructions",cf_opts,CF_BOOL,"true/false whether to move obstructions to file-object creation"},
-   {"transformer",cf_str,CF_PATHRANGE,"Shell command (with full path) used to transform current file"},
+   {"transformer",cf_str,CF_PATHRANGE,"Command (with full path) used to transform current file (no shell wrapper used)"},
    {"pathtype",cf_opts,"literal,regex","Menu option for interpreting promiser file object"},
    {"acl",cf_body,CF_ACL_BODY,"Criteria for access control lists on file"},
    {NULL,cf_notype,NULL,NULL}

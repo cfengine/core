@@ -12,10 +12,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-
-
-
-
 pkgdatadir = $(datadir)/cfengine
 pkglibdir = $(libdir)/cfengine
 pkgincludedir = $(includedir)/cfengine
@@ -44,9 +40,6 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/src/conf.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(inputsdir)"
-pkgdataSCRIPT_INSTALL = $(INSTALL_SCRIPT)
-SCRIPTS = $(pkgdata_SCRIPTS)
 SOURCES =
 DIST_SOURCES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -55,6 +48,7 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(inputsdir)"
 inputsDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(inputs_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -197,8 +191,7 @@ top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
 workdir = 
-pkgdata_SCRIPTS = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
-inputsdir = $(workdir)/inputs
+inputsdir = ${datarootdir}/doc/${PACKAGE}/inputs
 inputs_DATA = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
 EXTRA_DIST = *.cf
 
@@ -257,25 +250,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-pkgdataSCRIPTS: $(pkgdata_SCRIPTS)
-	@$(NORMAL_INSTALL)
-	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
-	@list='$(pkgdata_SCRIPTS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  if test -f $$d$$p; then \
-	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	    echo " $(pkgdataSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgdatadir)/$$f'"; \
-	    $(pkgdataSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgdatadir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-pkgdataSCRIPTS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(pkgdata_SCRIPTS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	  echo " rm -f '$(DESTDIR)$(pkgdatadir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(pkgdatadir)/$$f"; \
-	done
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -334,9 +308,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(SCRIPTS) $(DATA)
+all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(inputsdir)"; do \
+	for dir in "$(DESTDIR)$(inputsdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -385,7 +359,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-inputsDATA install-pkgdataSCRIPTS
+install-data-am: install-inputsDATA
 
 install-dvi: install-dvi-am
 
@@ -419,7 +393,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-inputsDATA uninstall-pkgdataSCRIPTS
+uninstall-am: uninstall-inputsDATA
 
 .MAKE: install-am install-strip
 
@@ -429,12 +403,11 @@ uninstall-am: uninstall-inputsDATA uninstall-pkgdataSCRIPTS
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
 	install-info install-info-am install-inputsDATA install-man \
-	install-pdf install-pdf-am install-pkgdataSCRIPTS install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am uninstall uninstall-am uninstall-inputsDATA \
-	uninstall-pkgdataSCRIPTS
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-inputsDATA
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

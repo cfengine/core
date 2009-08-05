@@ -14,12 +14,12 @@ body common control
 
 {
 version => "1.2.3";
-bundlesequence  => { "testbundle"  };
+bundlesequence  => { "bun"  };
 }
 
 ########################################################
 
-bundle agent testbundle
+bundle agent bun
 
 {
 vars:
@@ -33,12 +33,12 @@ files:
   "/home/mark/tmp/passwd"
 
        create    => "true",
-       edit_line => SetUserParam("mark","6","/set/this/shell");
+       edit_line => SetUserParam("mark","6","/home/dir");
 
   "/home/mark/tmp/group"
 
        create    => "true",
-       edit_line => AppendUserParam("root","4","@(userset)");
+       edit_line => AppendUserParam("root","4","@(bun.userset)");
 
 commands:
 
@@ -84,11 +84,12 @@ bundle edit_line AppendUserParam(user,field,allusers)
 body edit_field col(split,col,newval,method)
 
 {
-field_separator => "$(split)";
-select_field    => "$(col)";
-value_separator  => ",";
-field_value     => "$(newval)";
-field_operation => "$(method)";
-extend_fields => "true";
+field_separator    => "$(split)";
+select_field       => "$(col)";
+value_separator    => ",";
+field_value        => "$(newval)";
+field_operation    => "$(method)";
+extend_fields      => "true";
+allow_blank_fields => "true";
 }
 

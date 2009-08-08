@@ -12,6 +12,9 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
+
+
+
 pkgdatadir = $(datadir)/cfengine
 pkglibdir = $(libdir)/cfengine
 pkgincludedir = $(includedir)/cfengine
@@ -131,7 +134,7 @@ SED = /usr/bin/sed
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = strip
-VERSION = 3.0.2b5
+VERSION = 3.0.2b6
 YACC = bison -y
 YFLAGS = 
 abs_builddir = /home/mark/LapTop/Cfengine3/trunk/inputs

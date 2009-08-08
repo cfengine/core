@@ -45,7 +45,7 @@ void DeleteStream(FILE *fp);
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The run agent connects to a list of running instances of"
+ char *ID = "The run agent connects to a list of running instances of\n"
             "the cf-serverd service. The agent allows a user to\n"
             "forego the usual scheduling interval for the agent and\n"
             "activate cf-agent on a remote host. Additionally, a user\n"
@@ -53,7 +53,7 @@ void DeleteStream(FILE *fp);
             "host. Two kinds of classes may be sent: classes to decide\n"
             "on which hosts the agent will be started, and classes that\n"
             "the user requests the agent should define on execution.\n"
-            "The latter type is regulated by cfserverd's role based\n"
+            "The latter type is regulated by cf-serverd's role based\n"
             "access control.";
  
  struct option OPTIONS[13] =
@@ -142,7 +142,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"d:vnIf:D:VSxo:s:M",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:D:VSxo:s:M",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {

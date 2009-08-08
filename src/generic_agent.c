@@ -611,9 +611,9 @@ void CloseReports(char *agents)
  
 if (SHOWREPORTS)
    {
-   CfOut(cf_error,"","Wrote compilation report promise_output_%s.txt",agents);
-   CfOut(cf_error,"","Wrote compilation report promise_output_%s.html",agents);
-   CfOut(cf_error,"","Wrote knowledge map promise_knowledge.cf",agents);
+   CfOut(cf_error,"","Wrote compilation report %s/reports/promise_output_%s.txt",CFWORKDIR,agents);
+   CfOut(cf_error,"","Wrote compilation report %s/reports/promise_output_%s.html",CFWORKDIR,agents);
+   CfOut(cf_error,"","Wrote knowledge map %s/promise_knowledge.cf",CFWORKDIR,agents);
    }
 
 fprintf(FKNOW,"}\n");

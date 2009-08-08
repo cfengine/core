@@ -461,6 +461,11 @@ Debug("========================= GET Q ==============================\n");
 
 ENTROPIES = NULL;
 
+for (i = 0; i < CF_OBSERVABLES; i++)
+   {
+   THIS[i] = 0.0;
+   }
+
 GatherProcessData();
 GatherCPUData();
 GatherLoadData(); 
@@ -1703,6 +1708,11 @@ double RejectAnomaly(double new,double average,double variance,double localav,do
 if (average == 0)
    {
    return new;
+   }
+
+if (new > big_number*4.0)
+   {
+   return 0.0;
    }
 
 if (new > big_number)

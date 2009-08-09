@@ -186,7 +186,6 @@ struct BodySyntax CFG_CONTROLBODY[] =
 
 struct BodySyntax CFA_CONTROLBODY[] =
    {
-   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of outgoing connections to cf-serverd"},
    {"abortclasses",cf_slist,".*","A list of classes which if defined lead to termination of cf-agent"},
    {"abortbundleclasses",cf_slist,".*","A list of classes which if defined lead to termination of current bundle"},
    {"addclasses",cf_slist,".*","A list of classes to be defined always in the current context"},
@@ -213,6 +212,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"lastseen",cf_opts,CF_BOOL,"true/false record last observed time for all client-server connections (true)"},
    {"intermittency",cf_opts,CF_BOOL,"true/false store detailed recordings of last observed time for all client-server connections for reliability assessment (false)"},
    {"max_children",cf_int,CF_VALRANGE,"Maximum number of background tasks that should be allowed concurrently"},
+   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of outgoing connections to cf-serverd"},
    {"mountfilesystems",cf_opts,CF_BOOL,"true/false mount any filesystems promised"},
    {"nonalphanumfiles",cf_opts,CF_BOOL,"true/false warn about filenames with no alphanumeric content"},
    {"repchar",cf_str,".","The character used to canonize pathnames in the file repository"},

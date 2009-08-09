@@ -61,8 +61,8 @@
 
 struct BodySyntax CF_MATCHCLASS_BODY[] =
    {
-   {"match_range",cf_irange,CF_VALRANGE,"Integer range for acceptable number of matches for this process"},
    {"in_range_define",cf_slist,"","List of classes to define if the matches are in range"},
+   {"match_range",cf_irange,CF_VALRANGE,"Integer range for acceptable number of matches for this process"},
    {"out_of_range_define",cf_slist,"","List of classes to define if the matches are out of range"},
    {NULL,cf_notype,NULL,NULL}
    };
@@ -71,20 +71,20 @@ struct BodySyntax CF_MATCHCLASS_BODY[] =
 
 struct BodySyntax CF_PROCFILTER_BODY[] =
    {
-   {"process_owner",cf_slist,"","List of regexes matching the user of a process"},
-   {"pid",cf_irange,CF_VALRANGE,"Range of integers matching the process id of a process"},
-   {"ppid",cf_irange,CF_VALRANGE,"Range of integers matching the parent process id of a process"},
-   {"pgid",cf_irange,CF_VALRANGE,"Range of integers matching the parent group id of a process"},
-   {"rsize",cf_irange,CF_VALRANGE,"Range of integers matching the resident memory size of a process"},
-   {"vsize",cf_irange,CF_VALRANGE,"Range of integers matching the virtual memory size of a process"},
-   {"status",cf_str,"","Regular expression matching the status field of a process"},
-   {"ttime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the total elapsed time of a process"},
-   {"stime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the start time of a process"},
    {"command",cf_str,"","Regular expression matching the command/cmd field of a process"},
-   {"tty",cf_str,"","Regular expression matching the tty field of a process"},
+   {"pid",cf_irange,CF_VALRANGE,"Range of integers matching the process id of a process"},
+   {"pgid",cf_irange,CF_VALRANGE,"Range of integers matching the parent group id of a process"},
+   {"ppid",cf_irange,CF_VALRANGE,"Range of integers matching the parent process id of a process"},
    {"priority",cf_irange,"-20,+20","Range of integers matching the priority field (PRI/NI) of a process"},
-   {"threads",cf_irange,CF_VALRANGE,"Range of integers matching the threads (NLWP) field of a process"},
+   {"process_owner",cf_slist,"","List of regexes matching the user of a process"},
    {"process_result",cf_str,"[(process_owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*","Boolean class expression returning the logical combination of classes set by a process selection test"},
+   {"rsize",cf_irange,CF_VALRANGE,"Range of integers matching the resident memory size of a process"},
+   {"status",cf_str,"","Regular expression matching the status field of a process"},
+   {"stime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the start time of a process"},
+   {"ttime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the total elapsed time of a process"},
+   {"tty",cf_str,"","Regular expression matching the tty field of a process"},
+   {"threads",cf_irange,CF_VALRANGE,"Range of integers matching the threads (NLWP) field of a process"},
+   {"vsize",cf_irange,CF_VALRANGE,"Range of integers matching the virtual memory size of a process"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -94,11 +94,11 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
 
 struct BodySyntax CF_PROCESS_BODIES[] =
    {
-   {"signals",cf_olist,CF_SIGNALRANGE,"A list of menu options representing signals to be sent to a process"},
-   {"process_stop",cf_str,CF_PATHRANGE,"A command used to stop a running process"},
    {"process_count",cf_body,CF_MATCHCLASS_BODY,"Criteria for constraining the number of processes matching other criteria"},
    {"process_select",cf_body,CF_PROCFILTER_BODY,"Criteria for matching processes in the system process table"},
+   {"process_stop",cf_str,CF_PATHRANGE,"A command used to stop a running process"},
    {"restart_class",cf_str,CF_IDRANGE,"A class to be set if the process is not running, so that a command: rule can be referred to restart the process"},
+   {"signals",cf_olist,CF_SIGNALRANGE,"A list of menu options representing signals to be sent to a process"},
    {NULL,cf_notype,NULL,NULL}
    };
 

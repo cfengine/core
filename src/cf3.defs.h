@@ -228,7 +228,6 @@ enum cfgcontrol
 
 enum cfacontrol
    {
-   cfa_maxconnections,
    cfa_abortclasses,
    cfa_abortbundleclasses,
    cfa_addclasses,
@@ -255,6 +254,7 @@ enum cfacontrol
    cfa_lastseen,
    cfa_intermittency,
    cfa_max_children,
+   cfa_maxconnections,
    cfa_mountfilesystems,
    cfa_nonalphanumfiles,
    cfa_repchar,

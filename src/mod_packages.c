@@ -38,29 +38,29 @@
 
 struct BodySyntax CF_PKGMETHOD_BODY[] =
    {
+   {"package_add_command",cf_str,CF_PATHRANGE,"Command to install a package to the system"},
+   {"package_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
    {"package_changes",cf_opts,"individual,bulk,bulk_no_names","Menu option - whether to group packages into a single aggregate command"},
+   {"package_delete_command",cf_str,CF_PATHRANGE,"Command to remove a package from the system"},
    {"package_file_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
+   {"package_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
    {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of installed packages"},
    {"package_list_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {"package_list_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
    {"package_list_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
-   {"package_patch_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available patches or updates"},
-   {"package_patch_version_regex",cf_str,"","Regular expression with one backreference to extract update version string" },
-   {"package_patch_name_regex",cf_str,"","Regular expression with one backreference to extract update name string" },
-   {"package_patch_arch_regex",cf_str,"","Regular expression with one backreference to extract update architecture string" },
-   {"package_patch_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
-   {"package_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
+   {"package_name_convention",cf_str,"","This is how the package manager expects the file to be referred to, e.g. $(name).$(arch)"},
    {"package_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
-   {"package_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
-   {"package_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
-   {"package_add_command",cf_str,CF_PATHRANGE,"Command to install a package to the system"},
-   {"package_delete_command",cf_str,CF_PATHRANGE,"Command to remove a package from the system"},
-   {"package_update_command",cf_str,CF_PATHRANGE,"Command to update to the latest version a currently installed package"},
-   {"package_patch_command",cf_str,CF_PATHRANGE,"Command to update to the latest patch release of an installed package"},
-   {"package_verify_command",cf_str,CF_PATHRANGE,"Command to verify the correctness of an installed package"},
    {"package_noverify_regex",cf_str,"","Regular expression to match verification failure output"},
    {"package_noverify_returncode",cf_int,CF_INTRANGE,"Integer return code indicating package verification failure"},
-   {"package_name_convention",cf_str,"","This is how the package manager expects the file to be referred to, e.g. $(name).$(arch)"},
+   {"package_patch_arch_regex",cf_str,"","Regular expression with one backreference to extract update architecture string" },
+   {"package_patch_command",cf_str,CF_PATHRANGE,"Command to update to the latest patch release of an installed package"},
+   {"package_patch_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
+   {"package_patch_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available patches or updates"},
+   {"package_patch_name_regex",cf_str,"","Regular expression with one backreference to extract update name string" },
+   {"package_patch_version_regex",cf_str,"","Regular expression with one backreference to extract update version string" },
+   {"package_update_command",cf_str,CF_PATHRANGE,"Command to update to the latest version a currently installed package"},
+   {"package_verify_command",cf_str,CF_PATHRANGE,"Command to verify the correctness of an installed package"},
+   {"package_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -70,11 +70,11 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
 
 struct BodySyntax CF_PACKAGES_BODIES[] =
    {
-   {"package_policy",cf_opts,"add,delete,reinstall,update,patch,verify","Criteria for package installation/upgrade on the current system"},
-   {"package_method",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
-   {"package_version",cf_str,"","Version reference point for determining promised version"},
    {"package_architectures",cf_slist,"","Select the architecture for package selection"},
+   {"package_method",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
+   {"package_policy",cf_opts,"add,delete,reinstall,update,patch,verify","Criteria for package installation/upgrade on the current system"},
    {"package_select",cf_opts,">,<,==,!=,>=,<=","A criterion for first acceptable match relative to \"package_version\""},
+   {"package_version",cf_str,"","Version reference point for determining promised version"},
    {NULL,cf_notype,NULL,NULL}
    };
 

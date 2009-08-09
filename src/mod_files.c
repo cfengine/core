@@ -65,9 +65,9 @@
 
 struct BodySyntax CF_LOCATION_BODY[] =
    {
-   {"select_line_matching",cf_str,CF_ANYSTRING,"Regular expression for matching file line location"},
    {"before_after",cf_opts,"before,after","Menu option, point cursor before of after matched line"},
    {"first_last",cf_opts,"first,last","Menu option, choose first or last occurrence of match in file"},
+   {"select_line_matching",cf_str,CF_ANYSTRING,"Regular expression for matching file line location"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -75,13 +75,13 @@ struct BodySyntax CF_LOCATION_BODY[] =
 
 struct BodySyntax CF_EDITCOL_BODY[] =
    {
+   {"allow_blank_fields",cf_opts,CF_BOOL,"true/false allow blank fields in a line (do not purge)"},
+   {"extend_fields",cf_opts,CF_BOOL,"true/false add new fields at end of line if necessary to complete edit"},
+   {"field_operation",cf_opts,"prepend,append,alphanum,delete,set","Menu option policy for editing subfields"},
    {"field_separator",cf_str,CF_ANYSTRING,"The regular expression used to separate fields in a line"},
+   {"field_value",cf_str,CF_ANYSTRING,"Set field value to a fixed value"},
    {"select_field",cf_int,CF_VALRANGE,"Integer index of the field required 1..n"},
    {"value_separator",cf_str,CF_CHARRANGE,"Character separator for subfields inside the selected field"},
-   {"field_value",cf_str,CF_ANYSTRING,"Set field value to a fixed value"},
-   {"field_operation",cf_opts,"prepend,append,alphanum,delete,set","Menu option policy for editing subfields"},
-   {"extend_fields",cf_opts,CF_BOOL,"true/false add new fields at end of line if necessary to complete edit"},
-   {"allow_blank_fields",cf_opts,CF_BOOL,"true/false allow blank fields in a line (do not purge)"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -89,8 +89,8 @@ struct BodySyntax CF_EDITCOL_BODY[] =
 
 struct BodySyntax CF_REPLACEWITH_BODY[] =
    {
-   {"replace_value",cf_str,CF_ANYSTRING,"Value used to replace regular expression matches in search"},
    {"occurrences",cf_opts,"all,first","Menu option to replace all occurrences or just first (NB the latter is non-convergent)"},
+   {"replace_value",cf_str,CF_ANYSTRING,"Value used to replace regular expression matches in search"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -133,10 +133,10 @@ struct BodySyntax CF_INSERTSELECT_BODY[] =
 
 struct BodySyntax CF_INSERTLINES_BODIES[] =
    {
-   {"location",cf_body,CF_LOCATION_BODY,"Specify where in a file an insertion will be made"},
+   {"expand_scalars",cf_opts,CF_BOOL,"Expand any unexpanded variables"},
    {"insert_type",cf_opts,"literal,string,file","Type of object the promiser string refers to (default literal)"},
    {"insert_select",cf_body,CF_INSERTSELECT_BODY,"Insert only if lines pass filter criteria"},
-   {"expand_scalars",cf_opts,CF_BOOL,"Expand any unexpanded variables"},
+   {"location",cf_body,CF_LOCATION_BODY,"Specify where in a file an insertion will be made"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -144,8 +144,8 @@ struct BodySyntax CF_INSERTLINES_BODIES[] =
 
 struct BodySyntax CF_DELETELINES_BODIES[] =
    {
-   {"not_matching",cf_opts,CF_BOOL,"true/false negate match criterion"},
    {"delete_select",cf_body,CF_DELETESELECT_BODY,"Delete only if lines pass filter criteria"},
+   {"not_matching",cf_opts,CF_BOOL,"true/false negate match criterion"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -181,10 +181,10 @@ struct BodySyntax CF_COMMON_EDITBODIES[] =
 
 struct BodySyntax CF_ACL_BODY[] =
    {
+   {"aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
+   {"acl_directory_inherit",cf_opts,"parent,specify,none","Access control list type for the affected file system"},
    {"acl_method",cf_opts,"append,overwrite","Editing method for access control list"},
    {"acl_type",cf_opts,"generic,posix,ntfs","Access control list type for the affected file system"},
-   {"acl_directory_inherit",cf_opts,"parent,specify,none","Access control list type for the affected file system"},
-   {"aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
    {"specify_inherit_aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
    {NULL,cf_notype,NULL,NULL}
    };
@@ -203,13 +203,13 @@ struct BodySyntax CF_CHANGEMGT_BODY[] =
 
 struct BodySyntax CF_RECURSION_BODY[] =
    {
-   {"include_dirs",cf_slist,".*","List of regexes of directory names to include in depth search"},
+   {"depth",cf_int,CF_VALRANGE,"Maximum depth level for search"},
    {"exclude_dirs",cf_slist,".*","List of regexes of directory names NOT to include in depth search"},
    {"include_basedir",cf_opts,CF_BOOL,"true/false include the start/root dir of the search results"},
-   {"depth",cf_int,CF_VALRANGE,"Maximum depth level for search"},
-   {"xdev",cf_opts,CF_BOOL,"true/false exclude directories that are on different devices"},
-   {"traverse_links",cf_opts,CF_BOOL,"true/false traverse symbolic links to directories (false)"},
+   {"include_dirs",cf_slist,".*","List of regexes of directory names to include in depth search"},
    {"rmdeadlinks",cf_opts,CF_BOOL,"true/false remove links that point to nowhere"},
+   {"traverse_links",cf_opts,CF_BOOL,"true/false traverse symbolic links to directories (false)"},
+   {"xdev",cf_opts,CF_BOOL,"true/false exclude directories that are on different devices"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -218,8 +218,8 @@ struct BodySyntax CF_RECURSION_BODY[] =
 struct BodySyntax CF_EDITS_BODY[] =
    {
    {"edit_backup",cf_opts,"true,false,timestamp,rotate","Menu option for backup policy on edit changes"},
-   {"max_file_size",cf_int,CF_VALRANGE,"Do not edit files bigger than this number of bytes"},
    {"empty_file_before_editing",cf_opts,CF_BOOL,"Baseline memory model of file to zero/empty before commencing promised edits"},
+   {"max_file_size",cf_int,CF_VALRANGE,"Do not edit files bigger than this number of bytes"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -236,11 +236,11 @@ struct BodySyntax CF_TIDY_BODY[] =
 
 struct BodySyntax CF_RENAME_BODY[] =
    {
-   {"newname",cf_str,"","The desired name for the current file"},
-   {"disable_suffix",cf_str,"","The suffix to add to files when disabling (.cfdisabled)"},
    {"disable",cf_opts,CF_BOOL,"true/false automatically rename and remove permissions"},
-   {"rotate",cf_int,"0,99","Maximum number of file rotations to keep"},
    {"disable_mode",cf_str,CF_MODERANGE,"The permissions to set when a file is disabled"},
+   {"disable_suffix",cf_str,"","The suffix to add to files when disabling (.cfdisabled)"},
+   {"newname",cf_str,"","The desired name for the current file"},
+   {"rotate",cf_int,"0,99","Maximum number of file rotations to keep"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -249,11 +249,11 @@ struct BodySyntax CF_RENAME_BODY[] =
 
 struct BodySyntax CF_ACCESS_BODIES[] =
    {
+   {"bsdflags",cf_olist,"arch,archived,dump,opaque,sappnd,sappend,schg,schange,simmutable,sunlnk,sunlink,uappnd,uappend,uchg,uchange,uimmutable,uunlnk,uunlink","List of menu options for bsd file system flags to set"},
+   {"groups",cf_slist,CF_USERRANGE,"List of acceptable groups of group ids, first is change target"},
    {"mode",cf_str,CF_MODERANGE,"File permissions (like posix chmod)"},
    {"owners",cf_slist,CF_USERRANGE,"List of acceptable owners or user ids, first is change target"},
-   {"groups",cf_slist,CF_USERRANGE,"List of acceptable groups of group ids, first is change target"},
    {"rxdirs",cf_opts,CF_BOOL,"true/false add execute flag for directories if read flag is set"},
-   {"bsdflags",cf_olist,"arch,archived,dump,opaque,sappnd,sappend,schg,schange,simmutable,sunlnk,sunlink,uappnd,uappend,uchg,uchange,uimmutable,uunlnk,uunlink","List of menu options for bsd file system flags to set"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -288,12 +288,12 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
 
 struct BodySyntax CF_LINKTO_BODY[] =
    {
-   {"source",cf_str,"","The source file to which the link should point"},
-   {"link_type",cf_opts,CF_LINKRANGE,"The type of link used to alias the file"},
    {"copy_patterns",cf_slist,"","A set of patterns that should be copied ansd synchronized instead of linked"},
-   {"when_no_source",cf_opts,"force,delete,nop","Behaviour when the source file to link to does not exist"},
    {"link_children",cf_opts,CF_BOOL,"true/false whether to link all directory's children to source originals"},
+   {"link_type",cf_opts,CF_LINKRANGE,"The type of link used to alias the file"},
+   {"source",cf_str,"","The source file to which the link should point"},
    {"when_linking_children",cf_opts,"override_file,if_no_such_file","Policy for overriding existing files when linking directories of children"},
+   {"when_no_source",cf_opts,"force,delete,nop","Behaviour when the source file to link to does not exist"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -303,24 +303,24 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {
    {"source",cf_str,CF_PATHRANGE,"Reference source file from which to copy"},
    {"servers",cf_slist,"[A-Za-z0-9_.:-]+","List of servers in order of preference from which to copy"},
-   {"portnumber",cf_int,"1024,99999","Port number to connect to on server host"},
-   {"copy_backup",cf_opts,"true,false,timestamp","Menu option policy for file backup/version control"},
-   {"stealth",cf_opts,CF_BOOL,"true/false whether to preserve time stamps on copied file"},
-   {"preserve",cf_opts,CF_BOOL,"true/false whether to preserve file permissions on copied file"},
-   {"linkcopy_patterns",cf_slist,"","List of patterns matching symbolic links that should be replaced with copies"},
-   {"copylink_patterns",cf_slist,"","List of patterns matching files that should be linked instead of copied"},
    {"compare",cf_opts,"atime,mtime,ctime,digest,hash","Menu option policy for comparing source and image file attributes"},
+   {"copy_backup",cf_opts,"true,false,timestamp","Menu option policy for file backup/version control"},
+   {"encrypt",cf_opts,CF_BOOL,"true/false use encrypted data stream to connect to remote host"},
+   {"check_root",cf_opts,CF_BOOL,"true/false check permissions on the root directory when depth_search"},
+   {"copylink_patterns",cf_slist,"","List of patterns matching files that should be linked instead of copied"},
+   {"copy_size",cf_irange,"0,inf","Integer range of file sizes that may be copied"},
+   {"findertype",cf_opts,"MacOSX","Menu option for default finder type on MacOSX"},
+   {"linkcopy_patterns",cf_slist,"","List of patterns matching symbolic links that should be replaced with copies"},
    {"link_type",cf_opts,CF_LINKRANGE,"Menu option for type of links to use when copying"},
-   {"type_check",cf_opts,CF_BOOL,"true/false compare file types before copying and require match"},
    {"force_update",cf_opts,CF_BOOL,"true/false force copy update always"},
    {"force_ipv4",cf_opts,CF_BOOL,"true/false force use of ipv4 on ipv6 enabled network"},
-   {"copy_size",cf_irange,"0,inf","Integer range of file sizes that may be copied"},
-   {"trustkey",cf_opts,CF_BOOL,"true/false trust public keys from remote server if previously unknown"},
-   {"encrypt",cf_opts,CF_BOOL,"true/false use encrypted data stream to connect to remote host"},
-   {"verify",cf_opts,CF_BOOL,"true/false verify transferred file by hashing after copy (resource penalty)"},
+   {"portnumber",cf_int,"1024,99999","Port number to connect to on server host"},
+   {"preserve",cf_opts,CF_BOOL,"true/false whether to preserve file permissions on copied file"},
    {"purge",cf_opts,CF_BOOL,"true/false purge files on client that do not match files on server when depth_search"},
-   {"check_root",cf_opts,CF_BOOL,"true/false check permissions on the root directory when depth_search"},
-   {"findertype",cf_opts,"MacOSX","Menu option for default finder type on MacOSX"},
+   {"stealth",cf_opts,CF_BOOL,"true/false whether to preserve time stamps on copied file"},
+   {"trustkey",cf_opts,CF_BOOL,"true/false trust public keys from remote server if previously unknown"},
+   {"type_check",cf_opts,CF_BOOL,"true/false compare file types before copying and require match"},
+   {"verify",cf_opts,CF_BOOL,"true/false verify transferred file by hashing after copy (resource penalty)"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -330,24 +330,24 @@ struct BodySyntax CF_COPYFROM_BODY[] =
 
 struct BodySyntax CF_FILES_BODIES[] =
    {
-   {"file_select",cf_body,CF_FILEFILTER_BODY,"Choose which files select in a search"},
-   {"copy_from",cf_body,CF_COPYFROM_BODY,"Criteria for copying file from a source"},
-   {"link_from",cf_body,CF_LINKTO_BODY,"Criteria for linking file from a source"},
-   {"perms",cf_body,CF_ACCESS_BODIES,"Criteria for setting permissions on a file"},
+   {"acl",cf_body,CF_ACL_BODY,"Criteria for access control lists on file"},
    {"changes",cf_body,CF_CHANGEMGT_BODY,"Criteria for change management"},
+   {"copy_from",cf_body,CF_COPYFROM_BODY,"Criteria for copying file from a source"},
+   {"create",cf_opts,CF_BOOL,"true/false whether to create non-existing file"},
    {"delete",cf_body,CF_TIDY_BODY,"Criteria for deleting files"},
-   {"rename",cf_body,CF_RENAME_BODY,"Criteria for renaming files"},
-   {"repository",cf_str,CF_PATHRANGE,"Name of a repository for versioning"},
+   {"depth_search",cf_body,CF_RECURSION_BODY,"Criteria for file depth searches"},
    {"edit_line",cf_bundle,CF_BUNDLE,"Line editing model for file"},
    {"edit_xml",cf_bundle,CF_BUNDLE,"XML editing model for file"},
    {"edit_defaults",cf_body,CF_EDITS_BODY,"Default promise details for file edits"},
-   {"depth_search",cf_body,CF_RECURSION_BODY,"Criteria for file depth searches"},
-   {"touch",cf_opts,CF_BOOL,"true/false whether to touch time stamps on file"},
-   {"create",cf_opts,CF_BOOL,"true/false whether to create non-existing file"},
+   {"file_select",cf_body,CF_FILEFILTER_BODY,"Choose which files select in a search"},
+   {"link_from",cf_body,CF_LINKTO_BODY,"Criteria for linking file from a source"},
    {"move_obstructions",cf_opts,CF_BOOL,"true/false whether to move obstructions to file-object creation"},
-   {"transformer",cf_str,CF_PATHRANGE,"Command (with full path) used to transform current file (no shell wrapper used)"},
    {"pathtype",cf_opts,"literal,regex","Menu option for interpreting promiser file object"},
-   {"acl",cf_body,CF_ACL_BODY,"Criteria for access control lists on file"},
+   {"perms",cf_body,CF_ACCESS_BODIES,"Criteria for setting permissions on a file"},
+   {"rename",cf_body,CF_RENAME_BODY,"Criteria for renaming files"},
+   {"repository",cf_str,CF_PATHRANGE,"Name of a repository for versioning"},
+   {"touch",cf_opts,CF_BOOL,"true/false whether to touch time stamps on file"},
+   {"transformer",cf_str,CF_PATHRANGE,"Command (with full path) used to transform current file (no shell wrapper used)"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -363,10 +363,10 @@ struct SubTypeSyntax CF_FILES_SUBTYPES[] =
 
   /* Body lists belonging to th edit_line sub-bundle of files: */
      
+  {"edit_line","delete_lines",CF_DELETELINES_BODIES},
   {"edit_line","insert_lines",CF_INSERTLINES_BODIES},
   {"edit_line","field_edits",CF_COLUMN_BODIES},
   {"edit_line","replace_patterns",CF_REPLACE_BODIES},
-  {"edit_line","delete_lines",CF_DELETELINES_BODIES},
   {NULL,NULL,NULL},
   };
 

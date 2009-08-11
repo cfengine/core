@@ -696,6 +696,7 @@ void WritePID(char *filename);
 void OpenReports(char *agents);
 void CloseReports(char *agents);
 char *InputLocation(char *filename);
+int BadBundleSequence(enum cfagenttype agent);
 
 /* granules.c  */
 

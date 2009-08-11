@@ -104,13 +104,14 @@ struct Rlist *CSVLIST = NULL;
             "data stored in cfengine's embedded databases in human\n"
             "readable form.";
  
- struct option OPTIONS[20] =
+ struct option OPTIONS[21] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "inform",no_argument,0,'I' },
       { "version",no_argument,0,'V' },
+      { "no-lock",no_argument,0,'K'},
       { "file",required_argument,0,'f' },
       { "html",no_argument,0,'H'},
       { "xml",no_argument,0,'X'},
@@ -128,13 +129,14 @@ struct Rlist *CSVLIST = NULL;
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[20] =
+ char *HINTS[21] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
       "Output information about actions performed by the agent",
       "Output the version of the software",
+      "Ignore ifelapsed locks",
       "Specify an alternative input file than the default",
       "Print output in HTML",
       "Print output in XML",
@@ -255,7 +257,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIS",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISK",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -283,6 +285,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIS",OPTIONS,&optindex)) != E
 
       case 'S':
           SyntaxTree();
+          break;
+
+      case'K':
+          IGNORELOCK = true;
           break;
 
       case 'v':
@@ -2271,7 +2277,7 @@ snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
 if ((fp = fopen(filename,"r")) == NULL)
    {
    CfOut(cf_verbose,"","Unable to load histogram data\n");
-   exit(1);
+   return;
    }
 
 for (position = 0; position < CF_GRAINS; position++)

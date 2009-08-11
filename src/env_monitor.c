@@ -581,7 +581,6 @@ if (++LDT_POS >= LDT_BUFSIZE)
       }
    }
 
-  
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    /* Note AVG should contain n+1 but not SUM, hence funny increments */

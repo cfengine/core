@@ -234,7 +234,7 @@ if (ap != NULL)
 else
    {
    strcpy(newaudit.date,date);
-   strcpy(newaudit.comment,str);
+   strncpy(newaudit.comment,str,CF_AUDIT_COMMENT-1);
    strcpy(newaudit.filename,"schedule");
    strcpy(newaudit.version,"");
    newaudit.lineno = 0;

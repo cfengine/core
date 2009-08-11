@@ -1619,6 +1619,11 @@ int BadBundleSequence(enum cfagenttype agent)
   int ok = true;
   struct FnCall *fp;
 
+if (THIS_AGENT_TYPE == cf_report)
+   {
+   return false;
+   }
+
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
    FatalError("No bundlesequence in the common control body");
@@ -1656,7 +1661,7 @@ if (agent == cf_agent || agent == cf_common)
              break;
          }
       
-      if (!(GetBundle(name,NULL)||(GetBundle(name,"common"))))
+      if (!GetBundle(name,NULL))
          {
          CfOut(cf_error,"","Bundle %s listed in the bundlesequence is not a defined bundle\n",name);
          ok = false;

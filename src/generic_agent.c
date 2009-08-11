@@ -773,13 +773,20 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    if (strcmp(bp->name,name) == 0)
       {
-      if ((strcmp(bp->type,agent) == 0) || (strcmp(bp->type,"common") == 0))
+      if (agent)
          {
-         return bp;
+         if ((strcmp(bp->type,agent) == 0) || (strcmp(bp->type,"common") == 0))
+            {
+            return bp;
+            }
+         else
+            {
+            CfOut(cf_verbose,"","The bundle called %s is not of type %s\n",name,agent);
+            }
          }
       else
          {
-         CfOut(cf_verbose,"","The bundle called %s is not of type %s\n",name,agent);
+         return bp;
          }
       }
    }
@@ -1649,9 +1656,9 @@ if (agent == cf_agent || agent == cf_common)
              break;
          }
       
-      if (!(GetBundle(name,"agent")||(GetBundle(name,"common"))))
+      if (!(GetBundle(name,NULL)||(GetBundle(name,"common"))))
          {
-         CfOut(cf_error,"","Bundle %s listed in the bundlesequence is not defined\n",name);
+         CfOut(cf_error,"","Bundle %s listed in the bundlesequence is not a defined bundle\n",name);
          ok = false;
          }
       }

@@ -1619,7 +1619,7 @@ int BadBundleSequence(enum cfagenttype agent)
   int ok = true;
   struct FnCall *fp;
 
-if (THIS_AGENT_TYPE == cf_report)
+if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know && THIS_AGENT_TYPE != cf_common)
    {
    return false;
    }

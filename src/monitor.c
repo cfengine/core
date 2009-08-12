@@ -254,6 +254,7 @@ signal(SIGUSR2,HandleSignals);
 HISTO = true;
 FORGETRATE = 0.6;
 
+InitMeasurements();
 MonInitialize();
 }
 

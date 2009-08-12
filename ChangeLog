@@ -6,7 +6,12 @@
 	Many hooks added for Nova enterprise extensions.
 	
         promise_output reports now placed in WORKDIR/reports directory
-	
+
+	Initialization correction and self-correx in monitord
+
+	Many new body constraints added.
+
+	Code readied for enterprise version Nova.
 	
 3.0.1
 	First standalone release, independent of cfengine 2 

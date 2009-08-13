@@ -88,8 +88,19 @@ int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
 char HASHDB[CF_BUFSIZE];
+
+
+/*****************************************************************************/
+/* Measurements                                                              */
+/*****************************************************************************/
+
 double METER_KEPT[meter_endmark];
 double METER_REPAIRED[meter_endmark];
+
+double Q_MEAN;
+double Q_SIGMA;
+double Q_MAX;
+double Q_MIN;
 
 /*****************************************************************************/
 /* Internal data structures                                                  */

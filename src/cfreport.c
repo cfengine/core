@@ -543,20 +543,20 @@ void KeepReportsPromises()
   
 if (REPORTS == NULL)
    {
-   CfOut(cf_error,"","Nothing to report - nothing selected\n");
+   CfOut(cf_error,""," !! Nothing to report - nothing selected\n");
    exit(0);
    }
  
-CfOut(cf_verbose,"","Creating sub-directory %s\n",OUTPUTDIR);
+CfOut(cf_verbose,""," -> Creating sub-directory %s\n",OUTPUTDIR);
 
 if (mkdir(OUTPUTDIR,0755) == -1)
    {
-   CfOut(cf_verbose,"","Writing to existing directory\n");
+   CfOut(cf_verbose,""," -> Writing to existing directory\n");
    }
  
 if (chdir(OUTPUTDIR))
    {
-   CfOut(cf_error,"chdir","Could not set the working directory");
+   CfOut(cf_error,"chdir"," !! Could not set the working directory");
    exit(0);
    }
 
@@ -568,61 +568,61 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
    
    if (strcmp("last_seen",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating last-seen report...\n");
+      CfOut(cf_verbose,""," -> Creating last-seen report...\n");
       ShowLastSeen();
       }
 
    if (strcmp("all_locks",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating lock report...\n");
+      CfOut(cf_verbose,""," -> Creating lock report...\n");
       ShowLocks(CF_INACTIVE);
       }
 
    if (strcmp("active_locks",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating active lock report...\n");
+      CfOut(cf_verbose,""," -> Creating active lock report...\n");
       ShowLocks(CF_ACTIVE);
       }
 
    if (strcmp("hashes",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating file-hash report...\n");
+      CfOut(cf_verbose,""," -> Creating file-hash report...\n");
       ShowChecksums();
       }
 
    if (strcmp("performance",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating performance report...\n");
+      CfOut(cf_verbose,""," -> Creating performance report...\n");
       ShowPerformance();
       }
    
    if (strcmp("audit",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating audit report...\n");
+      CfOut(cf_verbose,""," -> Creating audit report...\n");
       ShowCurrentAudit();
       }
 
    if (strcmp("classes",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating classes report...\n");
+      CfOut(cf_verbose,""," -> Creating classes report...\n");
       ShowClasses();
       }
 
    if (strcmp("monitor_now",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating monitor recent-history report...\n");
+      CfOut(cf_verbose,""," -> Creating monitor recent-history report...\n");
       MagnifyNow();
       }
    
    if (strcmp("monitor_summary",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating monitor history summary...\n");
+      CfOut(cf_verbose,""," -> Creating monitor history summary...\n");
       SummarizeAverages();
       }
 
    if (strcmp("monitor_history",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating monitor full history report...\n");
+      CfOut(cf_verbose,""," -> Creating monitor full history report...\n");
       WriteGraphFiles();
       WriteHistograms();
       DiskArrivals();
@@ -632,39 +632,39 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
 
    if (strcmp("compliance",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating compliance summary (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating compliance summary (Cfengine Nova and above)...\n");
       SummarizeCompliance(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
-      CfOut(cf_verbose,"","Creating per-promise compliance summary (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating per-promise compliance summary (Cfengine Nova and above)...\n");
       SummarizePerPromiseCompliance(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
    if (strcmp("file_changes",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating file change summary (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating file change summary (Cfengine Nova and above)...\n");
       SummarizeFileChanges(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
    if (strcmp("installed_software",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating software version summary (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating software version summary (Cfengine Nova and above)...\n");
       SummarizeSoftware(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
    if (strcmp("software_patches",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating software update version summary (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating software update version summary (Cfengine Nova and above)...\n");
       SummarizeUpdates(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
    
    if (strcmp("setuid",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating setuid report (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating setuid report (Cfengine Nova and above)...\n");
       SummarizeSetuid(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
    if (strcmp("variables",rp->item) == 0)
       {
-      CfOut(cf_verbose,"","Creating variables report (Cfengine Nova and above)...\n");
+      CfOut(cf_verbose,""," -> Creating variables report (Cfengine Nova and above)...\n");
       SummarizeVariables(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
    }
@@ -728,7 +728,7 @@ else
 
 if ((fout = fopen(name,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Unable to write to %s/lastseen.html\n",OUTPUTDIR);
+   CfOut(cf_error,"fopen"," !! Unable to write to %s/lastseen.html\n",OUTPUTDIR);
    exit(1);
    }
 
@@ -747,7 +747,7 @@ else if (XML)
 
 if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    {
-   CfOut(cf_error,"","Error reading from last-seen database: ");
+   CfOut(cf_error,""," !! Error reading from last-seen database: ");
    dbp->err(dbp, ret, "DB->cursor");
    fclose(fout);
    return;
@@ -792,7 +792,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
             }
          }
 
-      CfOut(cf_inform,"","Deleting expired entry for %s\n",hostname);
+      CfOut(cf_inform,""," -> Deleting expired entry for %s\n",hostname);
       continue;
       }
    
@@ -899,7 +899,7 @@ if (!OpenDB(name,&dbp))
 
 if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    {
-   CfOut(cf_error,"","Error reading from performance database: ");
+   CfOut(cf_error,""," !! Error reading from performance database: ");
    dbp->err(dbp, ret, "DB->cursor");
    return;
    }
@@ -923,7 +923,7 @@ else
 
 if ((fout = fopen(name,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Unable to write to %s/%s\n",OUTPUTDIR,name);
+   CfOut(cf_error,"fopen"," !! Unable to write to %s/%s\n",OUTPUTDIR,name);
    exit(1);
    }
 
@@ -988,7 +988,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
                }
             }
          
-         CfOut(cf_inform,"","Deleting entry for %s because it seems to take longer than 4 weeks to complete\n",eventname);
+         CfOut(cf_inform,""," -> Deleting entry for %s because it seems to take longer than 4 weeks to complete\n",eventname);
 
          continue;
          }
@@ -1096,7 +1096,7 @@ else
 
 if ((fout = fopen(name,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Unable to write to %s/%s\n",OUTPUTDIR,name);
+   CfOut(cf_error,"fopen"," !! Unable to write to %s/%s\n",OUTPUTDIR,name);
    exit(1);
    }
 
@@ -1160,7 +1160,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
                }
             }
          
-         CfOut(cf_error,"","Deleting expired entry for %s\n",eventname);
+         CfOut(cf_error,""," -> Deleting expired entry for %s\n",eventname);
          continue;
          }
       
@@ -1184,7 +1184,7 @@ qsort(array,1024,sizeof(struct CEnt),CompareClasses);
 
 if ((fnotes = fopen("class_notes","w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Unable to write to %s/class_notes\n",OUTPUTDIR);
+   CfOut(cf_error,"fopen"," !! Unable to write to %s/class_notes\n",OUTPUTDIR);
    exit(1);
    }
 
@@ -1281,7 +1281,7 @@ else
 
 if ((fout = fopen(name,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Unable to write to %s/%s\n",OUTPUTDIR,name);
+   CfOut(cf_error,"fopen"," !! Unable to write to %s/%s\n",OUTPUTDIR,name);
    exit(1);
    }
 
@@ -1424,7 +1424,7 @@ else
 
 if ((fout = fopen(name,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Unable to write to %s/%s\n",OUTPUTDIR,name);
+   CfOut(cf_error,"fopen"," !! Unable to write to %s/%s\n",OUTPUTDIR,name);
    exit(1);
    }
 
@@ -1445,7 +1445,7 @@ if (XML)
 
 if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    {
-   CfOut(cf_error,"","Error reading from checksum database");
+   CfOut(cf_error,""," !! Error reading from checksum database");
    dbp->err(dbp, ret, "DB->cursor");
    return;
    }
@@ -2030,7 +2030,7 @@ if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 
 if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
-   CfOut(cf_inform,"","\n\nDATABASE_AGE %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
+   CfOut(cf_inform,""," ?? Database age is %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
    }
 
 dbp->close(dbp,0);
@@ -2055,6 +2055,7 @@ fclose(fout);
 void WriteGraphFiles()
 
 { int its,i,j,k, count = 0,err;
+  double kept = 0, not_kept = 0, repaired = 0;
   DBT key,value;
   struct stat statbuf;
   struct Averages entry,det;
@@ -2154,6 +2155,32 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
       fprintf(FPAV,"%.4lf ",entry.Q[i].expect/MAX.Q[i].expect);
       fprintf(FPVAR,"%.4lf ",entry.Q[i].var/MAX.Q[i].var);
       fprintf(FPNOW,"%.4lf ",entry.Q[i].q/MAX.Q[i].q);
+
+      if (entry.Q[i].q > entry.Q[i].expect + 2.0*sqrt(entry.Q[i].var))
+         {
+         not_kept++;
+         continue;
+         }
+
+      if (entry.Q[i].q > entry.Q[i].expect + sqrt(entry.Q[i].var))
+         {
+         repaired++;
+         continue;
+         }
+
+      if (entry.Q[i].q < entry.Q[i].expect - 2.0*sqrt(entry.Q[i].var))
+         {
+         not_kept++;
+         continue;
+         }
+
+      if (entry.Q[i].q < entry.Q[i].expect - sqrt(entry.Q[i].var))
+         {
+         repaired++;
+         continue;
+         }
+
+      kept++;
       }                        
    
    fprintf(FPAV,"\n");
@@ -2167,6 +2194,9 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
       fprintf(FPQ[i],"%d %.4lf 0.0\n",count, entry.Q[i].q);
       }               
    }
+
+METER_KEPT[meter_anomalies_day] = 100.0*kept/(kept+repaired+not_kept);
+METER_REPAIRED[meter_anomalies_day] = 100.0*repaired/(kept+repaired+not_kept);
 
 dbp->close(dbp,0);
 CloseFiles();
@@ -2687,7 +2717,7 @@ sprintf(filename,"cfenv-average");
 
 if ((FPAV = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",filename);
+   CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
    exit(1);
    }
 
@@ -2695,7 +2725,7 @@ sprintf(filename,"cfenv-stddev");
 
 if ((FPVAR = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",filename);
+   CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
    exit(1);
    }
 
@@ -2703,7 +2733,7 @@ sprintf(filename,"cfenv-now");
 
 if ((FPNOW = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","File %s could not be opened for writing\n",filename);
+   CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
    exit(1);
    }
 
@@ -2711,13 +2741,13 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    {
    LookUpClassName(i,name);
 
-   CfOut(cf_inform,"","Reporting on \"%s\"\n",name);
+   CfOut(cf_inform,""," -> Reporting on \"%s\"\n",name);
    
    sprintf(filename,"%s.E-sigma",name);
    
    if ((FPE[i] = fopen(filename,"w")) == NULL)
       {
-      CfOut(cf_error,"fopen","File %s could not be opened for writing\n",filename);
+      CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
       exit(1);
       }
    
@@ -2725,7 +2755,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
-      CfOut(cf_error,"fopen","File %s could not be opened for writing\n",filename);
+      CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
       exit(1);
       }
    }
@@ -2760,7 +2790,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    LookUpClassName(i,name);
    sprintf(filename,"%s.mag",name);
 
-   CfOut(cf_inform,"","Magnifying \"%s\"\n",name);
+   CfOut(cf_inform,""," -> Magnifying \"%s\"\n",name);
       
    if ((FPM[i] = fopen(filename,"w")) == NULL)
       {

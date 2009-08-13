@@ -344,6 +344,7 @@ void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *reg
 void CacheUnreliableValue(char *caller,char *handle,char *buffer);
 int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
 void ReviveOther(int argc,char **argv);
+void GrandSummary(void);
 
 /* env_context.c */
 
@@ -643,6 +644,7 @@ int SelectPathRegexMatch(char *filename,char *crit);
 int SelectExecRegexMatch(char *filename,char *crit,char *prog);
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
 int SelectExecProgram(char *filename,char *crit);
+int SelectSizeMatch(size_t size,size_t min,size_t max);
 
 /* fncall.c */
 

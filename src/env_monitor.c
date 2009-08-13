@@ -47,7 +47,7 @@
 
 unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
-int HISTO = false;
+int HISTO = true;
 
 /* persistent observations */
 
@@ -553,11 +553,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    }
    
 UpdateAverages(t,newvals);
- 
-if (WAGE > CFGRACEPERIOD)
-   {
-   UpdateDistributions(t,currentvals);  /* Distribution about mean */
-   }
+UpdateDistributions(t,currentvals);  /* Distribution about mean */
  
 return newvals;
 }
@@ -1450,15 +1446,15 @@ void UpdateDistributions(char *timekey,struct Averages *av)
 
 { int position; 
   int day,i,time_to_update = true;
+  FILE *fp;
+  char filename[CF_BUFSIZE];
  
 /* Take an interval of 4 standard deviations from -2 to +2, divided into CF_GRAINS
    parts. Centre each measurement on CF_GRAINS/2 and scale each measurement by the
    std-deviation for the current time.
  */
-if (HISTO)
+if (HISTO && IsDefinedClass("Min40_45"))
    {
-   time_to_update = (int) (3600.0*rand()/(RAND_MAX+1.0)) > 2400;
-   
    day = Day2Number(timekey);
    
    for (i = 0; i < CF_OBSERVABLES; i++)
@@ -1471,36 +1467,31 @@ if (HISTO)
          }
       }
    
-   if (time_to_update)
+      
+   snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
+   
+   if ((fp = fopen(filename,"w")) == NULL)
       {
-      FILE *fp;
-      char filename[CF_BUFSIZE];
-      
-      snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
-      
-      if ((fp = fopen(filename,"w")) == NULL)
-         {
-         CfOut(cf_error,"fopen","Unable to save histograms");
-         return;
-         }
-      
-      for (position = 0; position < CF_GRAINS; position++)
-         {
-         fprintf(fp,"%u ",position);
-         
-         for (i = 0; i < CF_OBSERVABLES; i++)
-            {
-            for (day = 0; day < 7; day++)
-               {
-               fprintf(fp,"%u ",HISTOGRAM[i][day][position]);
-               }
-            }
-         fprintf(fp,"\n");
-         }
-      
-      fclose(fp);
+      CfOut(cf_error,"fopen","Unable to save histograms");
+      return;
       }
-   }
+   
+   for (position = 0; position < CF_GRAINS; position++)
+      {
+      fprintf(fp,"%u ",position);
+      
+      for (i = 0; i < CF_OBSERVABLES; i++)
+         {
+         for (day = 0; day < 7; day++)
+            {
+            fprintf(fp,"%u ",HISTOGRAM[i][day][position]);
+            }
+         }
+      fprintf(fp,"\n");
+      }
+   
+   fclose(fp);
+      }
 }
 
 /*****************************************************************************/

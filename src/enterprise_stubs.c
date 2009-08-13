@@ -494,6 +494,18 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
 
 /*****************************************************************************/
 
+void GrandSummary()
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_GrandSummary();
+#else
+ CfOut(cf_verbose,"","# Reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
 void CSV2XML(struct Rlist *list)
 
 {

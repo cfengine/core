@@ -109,6 +109,8 @@ extern time_t DATESTAMPS[CF_OBSERVABLES];
 extern char AGGREGATION[CF_BUFSIZE];
 extern char *UNITS[CF_OBSERVABLES];
 
+extern double METER_KEPT[meter_endmark];
+extern double METER_REPAIRED[meter_endmark];
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

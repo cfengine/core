@@ -112,6 +112,11 @@ if (SelectTimeMatch(sb->st_ctime,attr.select.min_ctime,attr.select.max_ctime))
    PrependItem(&leaf_attr,"ctime","");
    }
 
+if (SelectSizeMatch(sb->st_size,attr.select.min_size,attr.select.max_size))
+   { 
+   PrependItem(&leaf_attr,"size","");
+   }
+
 if (SelectTimeMatch(sb->st_mtime,attr.select.min_mtime,attr.select.max_mtime))
    { 
    PrependItem(&leaf_attr,"mtime","");
@@ -146,6 +151,21 @@ return result;
 
 /*******************************************************************/
 /* Level                                                           */
+/*******************************************************************/
+
+int SelectSizeMatch(size_t size,size_t min,size_t max)
+
+{ struct Item *leafattrib = NULL;
+  struct Rlist *rp;
+
+if (size <= max && size >= min)
+   {
+   return true;
+   }
+  
+return false;
+}
+
 /*******************************************************************/
 
 int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit)

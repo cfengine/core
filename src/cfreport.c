@@ -540,8 +540,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 void KeepReportsPromises()
 
 { struct Rlist *rp;
- /* Look at command line first */
-
+  
 if (REPORTS == NULL)
    {
    CfOut(cf_error,"","Nothing to report - nothing selected\n");
@@ -680,6 +679,10 @@ if (strlen(ERASE) > 0)
    EraseAverages();
    exit(0);
    }
+
+/* Compute summaries */
+
+GrandSummary();
 }
 
 /*********************************************************************/

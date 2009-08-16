@@ -246,7 +246,7 @@ void InitializeGA(int argc,char *argv[])
 
 { char *sp;
   int i,j,seed,force = false;
-  struct stat statbuf;
+  struct stat statbuf,sb;
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
 
@@ -328,9 +328,26 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
    MakeParentDirectory(vbuff,force);
    
    snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
-   chmod(vbuff,0700); 
+
+   if (stat(vbuff,&sb) == -1)
+      {
+      FatalError(" !!! No access to workspace");
+      }
+   else
+      {
+      chmod(vbuff,sb.st_mode | 0700);
+      }
+   
    snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
-   chmod(vbuff,0700);
+
+   if (stat(vbuff,&sb) == -1)
+      {
+      FatalError(" !!! No access to workspace");
+      }
+   else
+      {
+      chmod(vbuff,sb.st_mode | 0700);
+      }
    
    sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
    MakeParentDirectory(ebuff,force);

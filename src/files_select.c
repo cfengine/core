@@ -365,7 +365,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectBSDMatch(struct stat *lstatptr,ulong plus_flags,ulong minus_flags)
+int SelectBSDMatch(struct stat *lstatptr,u_long plus_flags,u_long minus_flags)
 
 {
 #if defined HAVE_CHFLAGS

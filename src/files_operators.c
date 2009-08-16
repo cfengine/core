@@ -500,8 +500,8 @@ else
  
 #if defined HAVE_CHFLAGS  /* BSD special flags */
 newflags = (dstat->st_flags & CHFLAGS_MASK) ;
-newperm |= attr.perms.plus_flags;
-newperm &= ~(attr.perms.minus_flags);
+newflags |= attr.perms.plus_flags;
+newflags &= ~(attr.perms.minus_flags);
 
 if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
    {

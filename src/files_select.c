@@ -102,6 +102,11 @@ if (SelectModeMatch(sb,attr.select.perms))
    PrependItem(&leaf_attr,"mode","");
    }
 
+if (SelectBSDMatch(sb,attr.select.plus_flags,attr.select.minus_flags))
+   {
+   PrependItem(&leaf_attr,"bsdflags","");
+   }
+
 if (SelectTimeMatch(sb->st_atime,attr.select.min_atime,attr.select.max_atime))
    { 
    PrependItem(&leaf_attr,"atime","");
@@ -355,6 +360,28 @@ for  (rp = list; rp != NULL; rp=rp->next)
       }   
    }
 
+return false;
+} 
+
+/*******************************************************************/
+
+int SelectBSDMatch(struct stat *lstatptr,ulong plus_flags,ulong minus_flags)
+
+{
+#if defined HAVE_CHFLAGS
+  u_long newflags;
+
+newflags = (lstatptr->st_flags & CHFLAGS_MASK) ;
+newflags |= plus_flags;
+newflags &= ~(minus_flags);
+
+if ((newflags & CHFLAGS_MASK) == (lstatptr->st_flags & CHFLAGS_MASK))    /* file okay */
+   {
+   return true;
+   }
+  
+#endif
+  
 return false;
 } 
 

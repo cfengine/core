@@ -645,6 +645,7 @@ int SelectExecRegexMatch(char *filename,char *crit,char *prog);
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
 int SelectExecProgram(char *filename,char *crit);
 int SelectSizeMatch(size_t size,size_t min,size_t max);
+int SelectBSDMatch(struct stat *lstatptr,ulong plus_flags,ulong minus_flags);
 
 /* fncall.c */
 

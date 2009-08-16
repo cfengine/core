@@ -519,17 +519,18 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             return;
             }
          
+         strncpy(ip,"ipv4_",CF_MAXVARSIZE);
+         strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
+         NewClass(CanonifyName(ip));
+
          if (!ipdefault)
             {
             ipdefault = true;
-            strncpy(ip,"ipv4_",CF_MAXVARSIZE);
-            strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
-            NewClass(CanonifyName(ip));
             NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
-            
+         
             strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
             AppendItem(&IPADDRESSES,VIPADDRESS,"");
-
+            
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
                if (*sp == '.')

@@ -80,6 +80,7 @@ struct Item *PROCESSTABLE = NULL;
 struct Item *FSTABLIST = NULL;
 struct Item *ABORTBUNDLEHEAP = NULL;
 struct Item *DONELIST = NULL;
+struct Rlist *CBUNDLESEQUENCE = NULL;
 
 int CF_MOUNTALL = false;
 int CF_SAVEFSTAB = false;
@@ -88,7 +89,6 @@ int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
 char HASHDB[CF_BUFSIZE];
-
 
 /*****************************************************************************/
 /* Measurements                                                              */

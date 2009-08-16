@@ -57,7 +57,7 @@ char *CFX[][2] =
 
 char *CFH[][2] =
    {
-    "<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"http://www.cfengine.org/css/promises.css\" />\n</head>\n","</html>",
+    "<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/cf_enterprise.css\" />\n</head>\n","</html>",
     "<div id=\"bundle\"><table class=border><tr><td><h2>","</td></tr></h2></table></div>",
     "<div id=\"block\"><table class=border cellpadding=5 width=800>","</table></div>",
     "<tr><th>","</th></tr>",

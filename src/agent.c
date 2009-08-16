@@ -88,9 +88,10 @@ extern struct Rlist *SERVERLIST;
             "in the system. In that sense it is the most important\n"
             "part of the cfengine suite.\n";
 
- struct option OPTIONS[14] =
+ struct option OPTIONS[15] =
       {
       { "bootstrap",no_argument,0,'B' },
+      { "bundlesequence",optional_argument,0,'b' },
       { "debug",optional_argument,0,'d' },
       { "define",required_argument,0,'D' },
       { "diagnostic",no_argument,0,'x'},
@@ -106,9 +107,10 @@ extern struct Rlist *SERVERLIST;
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[14] =
+ char *HINTS[15] =
       {
       "Bootstrap/repair a cfengine configuration from failsafe file in the current directory",
+      "Set bundlesequence from command line",
       "Set debugging level 0,1,2",
       "Define a list of comma separated classes to be defined at the start of execution",
       "Activate internal diagnostics (developers only)",
@@ -156,7 +158,7 @@ void CheckOpts(int argc,char **argv)
 
 POLICY_SERVER[0] = '\0';
   
-while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMB",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMBb:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -166,6 +168,13 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMB",OPTIONS,&optindex)) != EOF
           MINUSF = true;
           break;
 
+      case 'b':
+          if (optarg)
+             {
+             CBUNDLESEQUENCE = SplitStringAsRList(optarg,',');
+             }
+          break;
+          
       case 'd': 
           NewClass("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
@@ -585,7 +594,12 @@ void KeepPromiseBundles()
   void *retval;
   int ok = true;
 
-if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
+if (CBUNDLESEQUENCE)
+   {
+   retval = CBUNDLESEQUENCE;
+   rettype = CF_LIST;
+   }
+else if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
    CfOut(cf_error,""," !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
    CfOut(cf_error,""," !! No bundlesequence in the common control body");

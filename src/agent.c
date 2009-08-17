@@ -638,7 +638,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    
    if (!(GetBundle(name,"agent")||(GetBundle(name,"common"))))
       {
-      CfOut(cf_error,"","Bundle %s listed in the bundlesequence was not found\n",name);
+      CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence was not found\n",name);
       ok = false;
       }
    }

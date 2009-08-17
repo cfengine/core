@@ -1641,9 +1641,23 @@ if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know && THIS_AGENT_TYPE
    return false;
    }
 
+if (CBUNDLESEQUENCE)
+   {
+   return false;
+   }
+
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
-   FatalError("No bundlesequence in the common control body");
+   CfOut(cf_error,""," !!! No bundlesequence in the common control body");
+
+   if (agent == cf_common)
+      {
+      return false;
+      }
+   else
+      {
+      return true;
+      }
    }
 
 if (rettype != CF_LIST)

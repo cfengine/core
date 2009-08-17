@@ -495,7 +495,7 @@ if (handle)
       {
       if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->lineno != pp->lineno))
          {
-         CfOut(cf_error,"","Duplicate promise handle -- previously used in file %s near line %d",prid->filename,prid->lineno);
+         CfOut(cf_error,""," !! Duplicate promise handle -- previously used in file %s near line %d",prid->filename,prid->lineno);
          PromiseRef(cf_error,pp);
          }
       }
@@ -505,11 +505,11 @@ if (handle)
       }
    }
 
-if (REQUIRE_COMMENTS)
+if (REQUIRE_COMMENTS == true)
    {
    if (pp->ref == NULL)
       {
-      CfOut(cf_error,"","Un-commented promise found, but comments have been required by policy\n");
+      CfOut(cf_error,""," !! Un-commented promise found, but comments have been required by policy\n");
       PromiseRef(cf_error,pp);
       }
    }
@@ -548,6 +548,8 @@ if (strcmp(pp->agentsubtype,"insert_lines") == 0)
          }
       }
    }
+
+PreSanitizePromise(pp);
 }
 
 /*****************************************************************************/

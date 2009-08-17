@@ -246,6 +246,17 @@ void NotePromiseCompliance(struct Promise *pp,double val)
 
 /*****************************************************************************/
 
+void PreSanitizePromise(struct Promise *pp)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_PreSanitizePromise(pp);
+#else
+#endif
+}
+
+/*****************************************************************************/
+
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen)
     
 {

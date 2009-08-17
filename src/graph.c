@@ -347,6 +347,8 @@ if (stat(filename,&sb) != -1)
 
 GetTribe(tribe,names,associate,topic,adj,dim);
 
+/* Tech specific part */
+
 gvc = gvContext();
 g = agopen("g",AGDIGRAPH);
 
@@ -358,7 +360,7 @@ for (i = 0; i < CF_TRIBE_SIZE; i++)
       }      
    }
 
-/* Create the nodes - zero is root */
+/* Create the nodes - zero is root topic */
 
 t[0] = agnode(g,names[topic]);   
 agsafeset(t[0], "style", "filled", "filled");

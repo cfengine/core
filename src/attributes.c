@@ -448,7 +448,7 @@ s.exec_program = (char *)GetConstraint("exec_program",pp->conlist,CF_SCALAR);
 
 if ((s.result = (char *)GetConstraint("file_result",pp->conlist,CF_SCALAR)) == NULL)
    {
-   s.result = "leaf_name.path_name.file_types.owner.group.mode.ctime.mtime.atime.size.exec_regex.issymlinkto.exec_program";
+   CfOut(cf_error,""," !! file_select body missing its a file_result return value");
    }
 
 return s;

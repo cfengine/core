@@ -1124,69 +1124,76 @@ int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp)
 {
 if (a.havelink && a.havecopy)
    {
-   CfOut(cf_error,"","Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
+   CfOut(cf_error,""," !! Promise constraint conflicts - %s file cannot both be a copy of and a link to the source",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.haveeditline && a.haveeditxml)
    {
-   CfOut(cf_error,"","Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
+   CfOut(cf_error,""," !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedepthsearch && a.haveedit)
    {
-   CfOut(cf_error,"","Recursive depth_searches are not compatible with general file editing",path);
+   CfOut(cf_error,""," !! Recursive depth_searches are not compatible with general file editing",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedelete && (a.create||a.havecopy||a.haveedit||a.haverename))
    {
-   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
+   CfOut(cf_error,""," !! Promise constraint conflicts - %s cannot be deleted and exist at the same time",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.haverename && (a.create||a.havecopy||a.haveedit))
    {
-   CfOut(cf_error,"","Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
+   CfOut(cf_error,""," !! Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedelete && a.havedepthsearch && !a.haveselect)
    {
-   CfOut(cf_error,"","Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",path);
+   CfOut(cf_error,""," !! Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedelete && a.haverename)
    {
-   CfOut(cf_error,"","File %s cannot promise both deletion and renaming",path);
+   CfOut(cf_error,""," !! File %s cannot promise both deletion and renaming",path);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havecopy && a.havedepthsearch && a.havedelete)
    {
-   CfOut(cf_inform,"","Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
+   CfOut(cf_inform,""," !! Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",pp->promiser);
    PromiseRef(cf_inform,pp);
    }
 
 if (a.transaction.background && a.transaction.audit)
    {
-   CfOut(cf_error,"","Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
+   CfOut(cf_error,""," !! Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if ((a.havecopy || a.havelink) && a.transformer)
    {
-   CfOut(cf_error,"","File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
+   CfOut(cf_error,""," !! File object(s) %s cannot both be a copy of source and transformed simultaneously",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
+if (a.haveselect && a.select.result == NULL)
+   {
+   CfOut(cf_error,""," !! Missing file_result attribute in file_select body",pp->promiser);
    PromiseRef(cf_error,pp);
    return false;
    }

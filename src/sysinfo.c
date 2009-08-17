@@ -506,6 +506,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             
             strcpy(ip,VIPADDRESS);
             i = 3;
+
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
                if (*sp == '.')
@@ -541,24 +542,19 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                }
             }
          
-         /* Matching variables */
+         strcpy(ip,inet_ntoa(sin->sin_addr));
+         snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
+         NewScalar("sys",name,ip,cf_str);
          
-         if (first_address)
+         i = 3;
+         
+         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {
-            strcpy(ip,inet_ntoa(sin->sin_addr));
-            snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
-            NewScalar("sys",name,ip,cf_str);
-            
-            i = 3;
-            
-            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+            if (*sp == '.')
                {
-               if (*sp == '.')
-                  {
-                  *sp = '\0';
-                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(ifp->ifr_name));
-                  NewScalar("sys",name,ip,cf_str);
-                  }
+               *sp = '\0';
+               snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(ifp->ifr_name));
+               NewScalar("sys",name,ip,cf_str);
                }
             }
          }

@@ -102,10 +102,12 @@ if (SelectModeMatch(sb,attr.select.perms))
    PrependItem(&leaf_attr,"mode","");
    }
 
+#if defined HAVE_CHFLAGS 
 if (SelectBSDMatch(sb,attr.select.plus_flags,attr.select.minus_flags))
    {
    PrependItem(&leaf_attr,"bsdflags","");
    }
+#endif
 
 if (SelectTimeMatch(sb->st_atime,attr.select.min_atime,attr.select.max_atime))
    { 

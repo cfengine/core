@@ -183,6 +183,7 @@ int FailedProtoReply(char *buf);
 /* chflags.c */
 
 int ParseFlagString (char *flagstring, u_long *plusmask, u_long *minusmask);
+u_long ConvertBSDBits(char *s);
 
 /* communication.c */
 
@@ -303,6 +304,7 @@ void RegisterBundleDependence(char *absscope,struct Promise *pp);
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void Nova_MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
 void ShowTopicRepresentation(FILE *fp);
+void PreSanitizePromise(struct Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
 void NotePromiseConditionals(struct Promise *pp);
 void DependencyGraph(struct Topic *map);

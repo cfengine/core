@@ -499,6 +499,7 @@ else
    }
  
 #if defined HAVE_CHFLAGS  /* BSD special flags */
+
 newflags = (dstat->st_flags & CHFLAGS_MASK) ;
 newflags |= attr.perms.plus_flags;
 newflags &= ~(attr.perms.minus_flags);
@@ -522,7 +523,7 @@ else
 
           if (! DONTDO)
              {
-             if (chflags (file,newflags & CHFLAGS_MASK) == -1)
+             if (chflags(file,newflags & CHFLAGS_MASK) == -1)
                 {
                 cfPS(cf_error,CF_DENIED,"chflags",pp,attr,"chflags failed on %s\n",file);
                 break;

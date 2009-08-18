@@ -103,7 +103,7 @@ if (SelectModeMatch(sb,attr.select.perms))
    }
 
 #if defined HAVE_CHFLAGS 
-if (SelectBSDMatch(sb,attr.select.plus_flags,attr.select.minus_flags))
+if (SelectBSDMatch(sb,attr.select.plus_flags,attr.select.bsdflags))
    {
    PrependItem(&leaf_attr,"bsdflags","");
    }
@@ -348,7 +348,7 @@ for  (rp = list; rp != NULL; rp=rp->next)
 
    if (!ParseModeString(rp->item,&plus,&minus))
       {
-      CfOut(cf_error,"","Problem validating a mode string \"%s\" in search filter",rp->item);
+      CfOut(cf_error,""," !! Problem validating a mode string \"%s\" in search filter",rp->item);
       continue;
       }
 
@@ -367,21 +367,34 @@ return false;
 
 /*******************************************************************/
 
-int SelectBSDMatch(struct stat *lstatptr,u_long plus_flags,u_long minus_flags)
+int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags)
 
 {
 #if defined HAVE_CHFLAGS
-  u_long newflags;
+  u_long newflags,plus,minus;
+  struct Rlist *rp;
 
-newflags = (lstatptr->st_flags & CHFLAGS_MASK) ;
-newflags |= plus_flags;
-newflags &= ~(minus_flags);
-
-if ((newflags & CHFLAGS_MASK) == (lstatptr->st_flags & CHFLAGS_MASK))    /* file okay */
+for  (rp = list; rp != NULL; rp=rp->next)
    {
-   return true;
+   plus = 0;
+   minus = 0;
+
+   if (!ParseFlagString(value,&plus,&minus))
+      {
+      CfOut(cf_error,""," !! Problem validating a BSD flag string");
+      PromiseRef(cf_error,pp);
+      }
+   
+   newflags = (lstatptr->st_flags & CHFLAGS_MASK) ;
+   newflags |= plus_flags;
+   newflags &= ~(minus_flags);
+   
+   if ((newflags & CHFLAGS_MASK) == (lstatptr->st_flags & CHFLAGS_MASK))    /* file okay */
+      {
+      return true;
+      }
    }
-  
+
 #endif
   
 return false;

@@ -437,6 +437,7 @@ enum cfeditorder
 #define CF_CHARRANGE "^.$"
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
+#define CF_BSDFLAGRANGE "[+-]*[(arch|archived|dump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()]+"
 #define CF_IDRANGE     "[a-zA-Z0-9_$.]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
@@ -1162,11 +1163,10 @@ struct FileSelect
    {
    struct Rlist *name;
    struct Rlist *path;
-   struct Rlist *perms;      
+   struct Rlist *perms;
+   struct Rlist *bsdflags;      
    struct Rlist *owners;
    struct Rlist *groups;
-   u_long plus_flags;     /* for *BSD chflags */
-   u_long minus_flags;    /* for *BSD chflags */
    long max_size;
    long min_size;
    time_t max_ctime;

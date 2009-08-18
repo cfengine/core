@@ -522,8 +522,23 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    newvals.Q[i].q = THIS[i];
    LOCALAV.Q[i].q = THIS[i];
 
-   /* Periodic */
-       
+   /* Overflow protection */
+
+   if (currentvals->Q[i].expect < 0)
+      {
+      currentvals->Q[i].expect = 0;
+      }
+   
+   if (currentvals->Q[i].q < 0)
+      {
+      currentvals->Q[i].q = 0;
+      }
+
+   if (currentvals->Q[i].var < 0)
+      {
+      currentvals->Q[i].var = 0;
+      }
+
    This[i] = RejectAnomaly(THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
 
    Debug("Current %s.q %lf\n",name,currentvals->Q[i].q);

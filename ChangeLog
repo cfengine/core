@@ -12,6 +12,8 @@
 	Many new body constraints added.
 
 	Code readied for enterprise version Nova.
+
+	-b option can override the bundlesequence (must not contain parameters yet)
 	
 3.0.1
 	First standalone release, independent of cfengine 2 

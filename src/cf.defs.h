@@ -1169,7 +1169,7 @@ struct Checksum_Value
 #endif
 
 /********************************************************************/
-/* *BSD chflags stuff - Andreas.Klussmann@infosys.heitec.net        */
+/* *BSD chflags stuff -                                             */
 /********************************************************************/
 
 # if !defined UF_NODUMP

@@ -403,6 +403,8 @@ struct FileSelect GetSelectConstraints(struct Promise *pp)
   char *value;
   struct Rlist *rp;
   mode_t plus,minus;
+  u_long fplus,fminus;
+  int entries = false;
   
 s.name = (struct Rlist *)GetConstraint("leaf_name",pp->conlist,CF_LIST);
 s.path = (struct Rlist *)GetConstraint("path_name",pp->conlist,CF_LIST);
@@ -424,31 +426,71 @@ for  (rp = s.perms; rp != NULL; rp=rp->next)
       }
    }
 
-value = (char *)GetConstraint("search_bsdflags",pp->conlist,CF_SCALAR);
+s.bsdflags = (char *)GetListConstraint("search_bsdflags",pp->conlist);
 
-if (!ParseFlagString(value,&s.plus_flags,&s.minus_flags))
+for (rp = s.bsdflags; rp != NULL; rp=rp->next)
    {
-   CfOut(cf_error,"","Problem validating a BSD flag string");
-   PromiseRef(cf_error,pp);
+   fplus = 0;
+   fminus = 0;
+   value = (char *)rp->item;
+   
+   if (!ParseFlagString(value,&fplus,&fminus))
+      {
+      CfOut(cf_error,"","Problem validating a BSD flag string");
+      PromiseRef(cf_error,pp);
+      }
+   }
+
+if (s.name||s.path||s.filetypes||s.issymlinkto||s.perms||s.bsdflags)
+   {
+   entries = true;
    }
 
 s.owners = (struct Rlist *)GetConstraint("search_owners",pp->conlist,CF_LIST);
 s.groups = (struct Rlist *)GetConstraint("search_groups",pp->conlist,CF_LIST);
 
 value = (char *)GetConstraint("search_size",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,(long *)&s.min_size,(long *)&s.max_size,pp);
 value = (char *)GetConstraint("ctime",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,(long *)&s.min_ctime,(long *)&s.max_ctime,pp);
 value = (char *)GetConstraint("atime",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
 IntRange2Int(value,(long *)&s.min_atime,(long *)&s.max_atime,pp);
 value = (char *)GetConstraint("mtime",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,(long *)&s.min_mtime,(long *)&s.max_mtime,pp);
+
 s.exec_regex = (char *)GetConstraint("exec_regex",pp->conlist,CF_SCALAR);
 s.exec_program = (char *)GetConstraint("exec_program",pp->conlist,CF_SCALAR);
 
+if (s.owners||s.min_size||s.exec_regex||s.exec_program)
+   {
+   entries = true;
+   }
+
 if ((s.result = (char *)GetConstraint("file_result",pp->conlist,CF_SCALAR)) == NULL)
    {
-   CfOut(cf_error,""," !! file_select body missing its a file_result return value");
+   if (!entries)
+      {
+      CfOut(cf_error,""," !! file_select body missing its a file_result return value");
+      }
    }
 
 return s;
@@ -866,22 +908,62 @@ struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp)
 
 { static struct ProcessSelect p;
   char *value;
- 
+  int entries = 0;
+   
 p.owner = GetListConstraint("process_owner",pp->conlist);
 
 value = (char *)GetConstraint("pid",pp->conlist,CF_SCALAR);
+
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_pid,&p.max_pid,pp);
 value = (char *)GetConstraint("ppid",pp->conlist,CF_SCALAR);
+
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_ppid,&p.max_ppid,pp);
 value = (char *)GetConstraint("pgid",pp->conlist,CF_SCALAR);
+
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_pgid,&p.max_pgid,pp);
 value = (char *)GetConstraint("rsize",pp->conlist,CF_SCALAR);
+
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_rsize,&p.max_rsize,pp);
 value = (char *)GetConstraint("vsize",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_rsize,&p.max_rsize,pp);
 value = (char *)GetConstraint("ttime_range",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_ttime,&p.max_ttime,pp);
 value = (char *)GetConstraint("stime_range",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_stime,&p.max_stime,pp);
 
 p.status = (char *)GetConstraint("status",pp->conlist,CF_SCALAR);
@@ -889,11 +971,33 @@ p.command = (char *)GetConstraint("command",pp->conlist,CF_SCALAR);
 p.tty = (char *)GetConstraint("tty",pp->conlist,CF_SCALAR);
 
 value = (char *)GetConstraint("priority",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_pri,&p.max_pri,pp);
 value = (char *)GetConstraint("threads",pp->conlist,CF_SCALAR);
+if (value)
+   {
+   entries++;
+   }
+
 IntRange2Int(value,&p.min_thread,&p.max_thread,pp);
 
-p.process_result = (char *)GetConstraint("process_result",pp->conlist,CF_SCALAR);
+if (p.owner||p.status||p.command||p.tty)
+   {
+   entries = true;
+   }
+
+if ((p.process_result = (char *)GetConstraint("process_result",pp->conlist,CF_SCALAR)) == NULL)
+   {
+   if (entries)
+      {
+      CfOut(cf_error,""," !! process_select body missing its a process_result return value");
+      }
+   }
+
 return p;
 }
 

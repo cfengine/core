@@ -32,18 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
-#define SETBIT(a, b, f) {       \
- if (!memcmp(a, b, sizeof(b))) {     \
-  if (clear) {      \
-   if (minusmask)     \
-    *minusmask |= (f);   \
-  } else if (plusmask)     \
-   *plusmask |= (f);    \
-  break;       \
- }        \
-}
-
 struct CfBSDFlag
    {
    char *name;
@@ -54,7 +42,7 @@ struct CfBSDFlag CF_BSDFLAGS[] =
    {
    "arch",SF_ARCHIVED,
    "archived",SF_ARCHIVED,
-   "dump",UF_NODUMP,
+   "nodump",UF_NODUMP,
    "opaque",UF_OPAQUE,
    "sappnd",SF_APPEND,
    "sappend",SF_APPEND,
@@ -77,9 +65,10 @@ struct CfBSDFlag CF_BSDFLAGS[] =
 
 int ParseFlagString(char *flagstring,u_long *plusmask,u_long *minusmask)
 
-{ char *sp, *next;
+{ char *flag;
   struct Rlist *rp,*bitlist = NULL;
-  int ch,scan;
+  int scan;
+  char operator;
 
 if (flagstring == NULL)
    {
@@ -92,23 +81,23 @@ bitlist = SplitStringAsRList(flagstring,',');
 
 for (rp = bitlist; rp != NULL; rp=rp->next)
    {   
-   ch = (int)(*(char *)(rp->item));
+   flag = (char *)((rp->item)+1);
+   operator = *(char *)(rp->item);
+
+   *plusmask = 0;
+   *minusmask = 0;
    
-// WHAT ABOUT "no" prefix ?
-   
-   if (isdigit(ch))
+   switch (operator)
       {
-      scan = 0;
-      sscanf(sp,"%o",&scan);
-      
-      *plusmask = (u_long)scan;
-      *minusmask = (u_long)~scan & CHFLAGS_MASK;
-      }
-   else
-      {
-      *plusmask = ConvertBSDBits(rp->item);
-      scan = (int)*plusmask;
-      *minusmask = (u_long)~scan & CHFLAGS_MASK;
+      case '+':
+          *plusmask |= ConvertBSDBits(rp->item);
+          scan = (int)*plusmask;
+          *minusmask |= (u_long)~scan & CHFLAGS_MASK;
+      case '-':
+          *minusmask |= ConvertBSDBits(rp->item);
+          scan = (int)*minusmask;
+          *plusmask |= (u_long)~scan & CHFLAGS_MASK;
+          
       }
    }
 

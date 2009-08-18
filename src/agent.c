@@ -91,7 +91,7 @@ extern struct Rlist *SERVERLIST;
  struct option OPTIONS[15] =
       {
       { "bootstrap",no_argument,0,'B' },
-      { "bundlesequence",optional_argument,0,'b' },
+      { "bundlesequence",required_argument,0,'b' },
       { "debug",optional_argument,0,'d' },
       { "define",required_argument,0,'D' },
       { "diagnostic",no_argument,0,'x'},
@@ -110,7 +110,7 @@ extern struct Rlist *SERVERLIST;
  char *HINTS[15] =
       {
       "Bootstrap/repair a cfengine configuration from failsafe file in the current directory",
-      "Set bundlesequence from command line",
+      "Set or override bundlesequence from command line",
       "Set debugging level 0,1,2",
       "Define a list of comma separated classes to be defined at the start of execution",
       "Activate internal diagnostics (developers only)",
@@ -596,6 +596,7 @@ void KeepPromiseBundles()
 
 if (CBUNDLESEQUENCE)
    {
+   CfOut(cf_inform,""," >> Using command line specified bundlesequence");
    retval = CBUNDLESEQUENCE;
    rettype = CF_LIST;
    }

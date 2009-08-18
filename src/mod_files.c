@@ -249,7 +249,7 @@ struct BodySyntax CF_RENAME_BODY[] =
 
 struct BodySyntax CF_ACCESS_BODIES[] =
    {
-   {"bsdflags",cf_olist,"arch,archived,dump,opaque,sappnd,sappend,schg,schange,simmutable,sunlnk,sunlink,uappnd,uappend,uchg,uchange,uimmutable,uunlnk,uunlink","List of menu options for bsd file system flags to set"},
+   {"bsdflags",cf_slist,CF_BSDFLAGRANGE,"List of menu options for bsd file system flags to set"},
    {"groups",cf_slist,CF_USERRANGE,"List of acceptable groups of group ids, first is change target"},
    {"mode",cf_str,CF_MODERANGE,"File permissions (like posix chmod)"},
    {"owners",cf_slist,CF_USERRANGE,"List of acceptable owners or user ids, first is change target"},
@@ -267,7 +267,7 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {"search_size",cf_irange,"0,inf","Integer range of file sizes"},
    {"search_owners",cf_slist,"","List of acceptable user names or ids for the file, or regexes to match"},
    {"search_groups",cf_slist,"","List of acceptable group names or ids for the file, or regexes to match"},
-   {"search_bsdflags",cf_str,"[(arch|archived|dump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)[|*]]*","String of flags for bsd file system flags expected set"},
+   {"search_bsdflags",cf_slist,CF_BSDFLAGRANGE,"String of flags for bsd file system flags expected set"},
    {"ctime",cf_irange,CF_TIMERANGE,"Range of change times (ctime) for acceptable files"},
    {"mtime",cf_irange,CF_TIMERANGE,"Range of modification times (mtime) for acceptable files"},
    {"atime",cf_irange,CF_TIMERANGE,"Range of access times (atime) for acceptable files"},

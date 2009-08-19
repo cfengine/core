@@ -226,6 +226,10 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
    }
 else
    {
+   if (a.create||a.touch)
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> File %s exists as promised",path);
+      }
    exists = true;
    }
 

@@ -552,8 +552,17 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    
    delta2 = (This[i] - currentvals->Q[i].expect)*(This[i] - currentvals->Q[i].expect);
 
-   newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
-   LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
+   if (currentvals->Q[i].var > delta2*2.0)
+      {
+      /* Clean up past anomalies */
+      newvals.Q[i].var = delta2;
+      LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
+      }
+   else
+      {
+      newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
+      LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
+      }
 
    CfOut(cf_verbose,"","New[%d] %s.q %lf\n",i,name,newvals.Q[i].q);
    CfOut(cf_verbose,"","New[%d] %s.var %lf\n",i,name,newvals.Q[i].var);

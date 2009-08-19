@@ -493,7 +493,7 @@ void Apoptosis()
   struct passwd *mpw = getpwuid(getuid());
   char *psopts = GetProcessOptions();
 
-if (ONCE)
+if (ONCE || VSYSTEMHARDCLASS == cfnt)
    {
    /* Otherwise we'll just kill off long jobs */
    return;
@@ -511,7 +511,7 @@ pp.conlist = NULL;
 
 pp.bundletype = "agent";
 pp.bundle = "exec_apoptosis";
-pp.ref = "Programmed cell death";
+pp.ref = "Programmed death";
 pp.agentsubtype = "processes";
 pp.done = false;
 pp.next = NULL;
@@ -522,7 +522,6 @@ pp.donep = &(pp.done);
 pp.conn = NULL;
 
 snprintf(mypid,31,"%s",mpw->pw_name);
-//snprintf(pidrange,31,"0,%d",MYTWIN-1); // Don't kill our twin, or ourself
 
 PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);
@@ -531,9 +530,9 @@ AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any");
 AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any");
 AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any");
 AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any");
-//AppendConstraint(&(pp.conlist),"pid",strdup(pidrange),CF_SCALAR,"any");
-//AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.ppid"),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"process_count",strdup("true"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"match_range",strdup("0,4"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.process_count"),CF_SCALAR,"any");
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 
@@ -576,6 +575,7 @@ AddTimeClass(timekey);
 for (ip = SCHEDULE; ip != NULL; ip = ip->next)
    {
    CfOut(cf_verbose,"","Checking schedule %s...\n",ip->name);
+
    if (IsDefinedClass(ip->name))
       {
       CfOut(cf_verbose,"","Waking up the agent at %s ~ %s \n",timekey,ip->name);

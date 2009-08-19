@@ -62,15 +62,6 @@ if (a.signals != NULL && a.process_stop != NULL)
 promised_zero = (a.process_count.min_range == 0 && a.process_count.max_range == 0);
 promised_any = (a.process_count.min_range == CF_NOINT);
 
-if (!promised_any && !promised_zero)
-   {
-   if (IsStringIn(a.signals,"term") || IsStringIn(a.signals,"kill"))
-      {
-      CfOut(cf_error,"","Promise constraint conflicts - %s processes cannot have non-zero count if terminated",pp->promiser);
-      PromiseRef(cf_error,pp);
-      ret = false;
-      }
-   }
 
 if (a.restart_class)
    {
@@ -219,6 +210,11 @@ if (a.process_count.min_range != CF_NOINT) /* if a range is specified */
       {
       do_signals = true;
       }
+   }
+
+if (!out_of_range)
+   {
+   return;
    }
 
 /* signal/kill promises for existing matches */

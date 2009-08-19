@@ -192,7 +192,7 @@ char *VPSOPTS[CF_CLASSATTR] =
    "auxw",   /* nextstep */
    "-ef",    /* cray */
    "auxw",   /* gnu */
-   "-a",     /* NT */
+   "-aW",    /* NT */
    "-ef",    /* Unixware */
    "auxw",   /* openbsd */
    "-ef",    /* sco */

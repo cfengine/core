@@ -85,6 +85,18 @@ if (DEBUG)
    ShowAttributes(attr);
    }
 
+if (attr.haverename || attr.havedelete || attr.haveperms || attr.havechange ||
+    attr.havecopy || attr.havelink || attr.haveedit || attr.create || attr.touch || attr.transformer)
+   {
+   }
+else
+   {
+   if (THIS_AGENT_TYPE == cf_common)
+      {
+      cfPS(cf_error,CF_WARN,"",pp,attr," !! files promise makes no intention about system state");
+      }
+   }
+
 return attr;
 }
 

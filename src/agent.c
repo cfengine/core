@@ -71,7 +71,7 @@ char *TYPESEQUENCE[] =
 int main (int argc,char *argv[]);
 void CheckAgentAccess(struct Rlist *list);
 void KeepAgentPromise(struct Promise *pp);
-void NewTypeContext(enum typesequence type);
+int NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
@@ -714,7 +714,10 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
       BannerSubType(bp->name,sp->name,pass);
       SetScope(bp->name);
 
-      NewTypeContext(type);
+      if (!NewTypeContext(type))
+         {
+         continue;
+         }
 
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
@@ -913,7 +916,7 @@ if (putenv(s) != 0)
 /* Type context                                                      */
 /*********************************************************************/
 
-void NewTypeContext(enum typesequence type)
+int NewTypeContext(enum typesequence type)
 
 { int maxconnections,i;
   struct Item *procdata = NULL;
@@ -934,14 +937,8 @@ switch(type)
      
        if (!LoadProcessTable(&PROCESSTABLE,psopts))
           {
-          struct Promise dummyp;
-          struct Attributes dummyattr;
-          memset(&dummyp,0,sizeof(dummyp));
-          memset(&dummyattr,0,sizeof(dummyattr));
-          dummyattr.transaction.audit = true;
-          dummyattr.transaction.log_level = cf_inform;
-          cfPS(cf_error,CF_FAIL,"",&dummyp,dummyattr,"Unable to read the process table\n","");
-          return;
+          CfOut(cf_error,"","Unable to read the process table - cannot keep process promises\n","");
+          return false;
           }
        break;
 
@@ -959,6 +956,8 @@ switch(type)
        INSTALLED_PACKAGE_LISTS = NULL;
        break;
    }
+
+return true;
 }
 
 /*********************************************************************/

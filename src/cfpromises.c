@@ -111,6 +111,7 @@ else
 void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
+  char arg[CF_BUFSIZE];
   struct Item *actionList;
   int optindex = 0;
   int c;
@@ -120,6 +121,12 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
   switch ((char) c)
       {
       case 'f':
+          
+          if (optarg && strlen(optarg) < 5)
+             {
+             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
+             FatalError(arg);
+             }
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
           VINPUTFILE[CF_BUFSIZE-1] = '\0';

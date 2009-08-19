@@ -530,15 +530,16 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
          
             strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
-            AppendItem(&IPADDRESSES,VIPADDRESS,"");
-            
-            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+            }
+
+         AppendItem(&IPADDRESSES,VIPADDRESS,"");
+         
+         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+            {
+            if (*sp == '.')
                {
-               if (*sp == '.')
-                  {
-                  *sp = '\0';
-                  NewClass(CanonifyName(ip));
-                  }
+               *sp = '\0';
+               NewClass(CanonifyName(ip));
                }
             }
          

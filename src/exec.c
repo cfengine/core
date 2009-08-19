@@ -136,6 +136,7 @@ return 0;
 void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
+  char arg[CF_BUFSIZE];
   struct Item *actionList;
   int optindex = 0;
   int c;
@@ -146,6 +147,12 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
   switch ((char) c)
       {
       case 'f':
+
+          if (optarg && strlen(optarg) < 5)
+             {
+             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
+             FatalError(arg);
+             }
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
           VINPUTFILE[CF_BUFSIZE-1] = '\0';
@@ -501,7 +508,7 @@ if (ONCE || VSYSTEMHARDCLASS == cfnt)
   
 CfOut(cf_verbose,""," !! Programmed pruning of the scheduler cluster");
   
-pp.promiser = "cf-execd";
+pp.promiser = "/var/cfengine/.*/cf-execd";
 pp.promisee = "cfengine";
 pp.classes = "any";
 pp.petype = CF_SCALAR;

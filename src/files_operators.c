@@ -114,6 +114,7 @@ else
    {
    if (!DONTDO)
       {
+      mode_t saveumask = umask(0);
       mode_t filemode = 0600;  /* Decide the mode for filecreation */
 
       if (GetConstraint("mode",pp->conlist,CF_SCALAR) == NULL)
@@ -128,16 +129,18 @@ else
          }
 
       MakeParentDirectory(file,attr.move_obstructions);
-      
+
       if ((fd = creat(file,filemode)) == -1)
          { 
          cfPS(cf_inform,CF_FAIL,"creat",pp,attr,"Error creating file %s, mode = %o\n",file,filemode);
+         umask(saveumask);
          return false;
          }
       else
          {
          cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created file %s, mode = %o\n",file,filemode);
          close(fd);
+         umask(saveumask);
          }
       }
    }

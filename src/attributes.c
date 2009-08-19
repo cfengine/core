@@ -360,6 +360,7 @@ struct FilePerms GetPermissionConstraints(struct Promise *pp)
 
 { static struct FilePerms p;
   char *value;
+  struct Rlist *list;
                 
 value = (char *)GetConstraint("mode",pp->conlist,CF_SCALAR);
 
@@ -372,9 +373,9 @@ if (!ParseModeString(value,&p.plus,&p.minus))
    PromiseRef(cf_error,pp);
    }
 
-value = (char *)GetConstraint("bsdflags",pp->conlist,CF_SCALAR);
+list = GetListConstraint("bsdflags",pp->conlist);
 
-if (!ParseFlagString(value,&p.plus_flags,&p.minus_flags))
+if (list && !ParseFlagString(list,&p.plus_flags,&p.minus_flags))
    {
    CfOut(cf_error,"","Problem validating a BSD flag string");
    PromiseRef(cf_error,pp);
@@ -426,19 +427,15 @@ for  (rp = s.perms; rp != NULL; rp=rp->next)
       }
    }
 
-s.bsdflags = (char *)GetListConstraint("search_bsdflags",pp->conlist);
+s.bsdflags = GetListConstraint("search_bsdflags",pp->conlist);
 
-for (rp = s.bsdflags; rp != NULL; rp=rp->next)
+fplus = 0;
+fminus = 0;
+
+if (!ParseFlagString(s.bsdflags,&fplus,&fminus))
    {
-   fplus = 0;
-   fminus = 0;
-   value = (char *)rp->item;
-   
-   if (!ParseFlagString(value,&fplus,&fminus))
-      {
-      CfOut(cf_error,"","Problem validating a BSD flag string");
-      PromiseRef(cf_error,pp);
-      }
+   CfOut(cf_error,"","Problem validating a BSD flag string");
+   PromiseRef(cf_error,pp);
    }
 
 if (s.name||s.path||s.filetypes||s.issymlinkto||s.perms||s.bsdflags)
@@ -957,14 +954,14 @@ if (value)
    entries++;
    }
 
-IntRange2Int(value,&p.min_ttime,&p.max_ttime,pp);
+IntRange2Int(value,(long *)&p.min_ttime,(long *)&p.max_ttime,pp);
 value = (char *)GetConstraint("stime_range",pp->conlist,CF_SCALAR);
 if (value)
    {
    entries++;
    }
 
-IntRange2Int(value,&p.min_stime,&p.max_stime,pp);
+IntRange2Int(value,(long *)&p.min_stime,(long *)&p.max_stime,pp);
 
 p.status = (char *)GetConstraint("status",pp->conlist,CF_SCALAR);
 p.command = (char *)GetConstraint("command",pp->conlist,CF_SCALAR);

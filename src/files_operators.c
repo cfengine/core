@@ -500,17 +500,17 @@ else
  
 #if defined HAVE_CHFLAGS  /* BSD special flags */
 
-newflags = (dstat->st_flags & CHFLAGS_MASK) ;
+newflags = (dstat->st_flags & CHFLAGS_MASK);
 newflags |= attr.perms.plus_flags;
 newflags &= ~(attr.perms.minus_flags);
 
 if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
    {
-   Debug("BSD File okay, flags = %o, current = %o\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   Debug("BSD File okay, flags = %x, current = %x\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
    }
 else
    {
-   Debug("BSD Fixing %s, newflags = %o, flags = %o\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   Debug("BSD Fixing %s, newflags = %x, flags = %x\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
    
    switch (attr.transaction.action)
       {
@@ -525,7 +525,7 @@ else
              {
              if (chflags(file,newflags & CHFLAGS_MASK) == -1)
                 {
-                cfPS(cf_error,CF_DENIED,"chflags",pp,attr,"chflags failed on %s\n",file);
+                cfPS(cf_error,CF_DENIED,"chflags",pp,attr," !! Failed setting BSD flags %x on %s\n",newflags,file);
                 break;
                 }
              else

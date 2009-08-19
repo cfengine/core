@@ -103,7 +103,7 @@ if (SelectModeMatch(sb,attr.select.perms))
    }
 
 #if defined HAVE_CHFLAGS 
-if (SelectBSDMatch(sb,attr.select.plus_flags,attr.select.bsdflags))
+if (SelectBSDMatch(sb,attr.select.bsdflags,pp))
    {
    PrependItem(&leaf_attr,"bsdflags","");
    }
@@ -367,34 +367,27 @@ return false;
 
 /*******************************************************************/
 
-int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags)
+int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp)
 
 {
 #if defined HAVE_CHFLAGS
   u_long newflags,plus,minus;
   struct Rlist *rp;
 
-for  (rp = list; rp != NULL; rp=rp->next)
+if (!ParseFlagString(bsdflags,&plus,&minus))
    {
-   plus = 0;
-   minus = 0;
-
-   if (!ParseFlagString(value,&plus,&minus))
-      {
-      CfOut(cf_error,""," !! Problem validating a BSD flag string");
-      PromiseRef(cf_error,pp);
-      }
-   
-   newflags = (lstatptr->st_flags & CHFLAGS_MASK) ;
-   newflags |= plus_flags;
-   newflags &= ~(minus_flags);
-   
-   if ((newflags & CHFLAGS_MASK) == (lstatptr->st_flags & CHFLAGS_MASK))    /* file okay */
-      {
-      return true;
-      }
+   CfOut(cf_error,""," !! Problem validating a BSD flag string");
+   PromiseRef(cf_error,pp);
    }
 
+newflags = (lstatptr->st_flags & CHFLAGS_MASK) ;
+newflags |= plus;
+newflags &= ~minus;
+
+if ((newflags & CHFLAGS_MASK) == (lstatptr->st_flags & CHFLAGS_MASK))    /* file okay */
+   {
+   return true;
+   }
 #endif
   
 return false;

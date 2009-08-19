@@ -35,68 +35,67 @@
 struct CfBSDFlag
    {
    char *name;
-   u_long *bits;
+   u_long bits;
    };
 
 struct CfBSDFlag CF_BSDFLAGS[] =
    {
-   "arch",SF_ARCHIVED,
-   "archived",SF_ARCHIVED,
-   "nodump",UF_NODUMP,
-   "opaque",UF_OPAQUE,
-   "sappnd",SF_APPEND,
-   "sappend",SF_APPEND,
-   "schg",SF_IMMUTABLE,
-   "schange",SF_IMMUTABLE,
-   "simmutable",SF_IMMUTABLE,
-   "sunlnk",SF_NOUNLINK,
-   "sunlink",SF_NOUNLINK,
-   "uappnd",UF_APPEND,
-   "uappend",UF_APPEND,
-   "uchg",UF_IMMUTABLE,
-   "uchange",UF_IMMUTABLE,
-   "uimmutable",UF_IMMUTABLE,
-   "uunlnk",UF_NOUNLINK,
-   "uunlink",UF_NOUNLINK,
-   NULL,NULL
+   { "arch",(u_long)SF_ARCHIVED },
+   { "archived",(u_long)SF_ARCHIVED },
+   { "nodump",(u_long)UF_NODUMP },
+   { "opaque",(u_long)UF_OPAQUE },
+   { "sappnd",(u_long)SF_APPEND },
+   { "sappend",(u_long)SF_APPEND },
+   { "schg",(u_long)SF_IMMUTABLE },
+   { "schange",(u_long)SF_IMMUTABLE },
+   { "simmutable",(u_long)SF_IMMUTABLE },
+   { "sunlnk",(u_long)SF_NOUNLINK },
+   { "sunlink",(u_long)SF_NOUNLINK },
+   { "uappnd",(u_long)UF_APPEND },
+   { "uappend",(u_long)UF_APPEND },
+   { "uchg",(u_long)UF_IMMUTABLE },
+   { "uchange",(u_long)UF_IMMUTABLE },
+   { "uimmutable",(u_long)UF_IMMUTABLE },
+   { "uunlnk",(u_long)UF_NOUNLINK },
+   { "uunlink",(u_long)UF_NOUNLINK },
+   { NULL,NULL }
    };
 
 /***************************************************************/
 
-int ParseFlagString(char *flagstring,u_long *plusmask,u_long *minusmask)
+int ParseFlagString(struct Rlist *bitlist,u_long *plusmask,u_long *minusmask)
 
 { char *flag;
-  struct Rlist *rp,*bitlist = NULL;
+  struct Rlist *rp;
   int scan;
   char operator;
 
-if (flagstring == NULL)
+if (bitlist == NULL)
    {
    return true;
    }
 
-Debug1("ParseFlagString(%s)\n",flagstring);
-
-bitlist = SplitStringAsRList(flagstring,',');
+*plusmask = 0;
+*minusmask = 0;   
 
 for (rp = bitlist; rp != NULL; rp=rp->next)
-   {   
-   flag = (char *)((rp->item)+1);
+   {
+   flag = (char *)(rp->item);
    operator = *(char *)(rp->item);
 
-   *plusmask = 0;
-   *minusmask = 0;
-   
    switch (operator)
       {
-      case '+':
-          *plusmask |= ConvertBSDBits(rp->item);
-          scan = (int)*plusmask;
-          *minusmask |= (u_long)~scan & CHFLAGS_MASK;
       case '-':
-          *minusmask |= ConvertBSDBits(rp->item);
-          scan = (int)*minusmask;
-          *plusmask |= (u_long)~scan & CHFLAGS_MASK;
+          *minusmask |= ConvertBSDBits(flag+1);
+          break;
+
+      case '+':
+          *plusmask |= ConvertBSDBits(flag+1);
+          break;
+          
+      default:
+          *plusmask |= ConvertBSDBits(flag);
+          break;
           
       }
    }

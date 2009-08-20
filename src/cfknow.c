@@ -2628,8 +2628,6 @@ if (stat(file,&sb) == -1)
    return;
    }
 
-
-
 if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
    {
    CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);

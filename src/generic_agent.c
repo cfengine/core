@@ -164,13 +164,57 @@ void ReadPromises(enum cfagenttype ag,char *agents)
 
 { char *v,rettype;
   void *retval;
-
+  char vbuff[CF_BUFSIZE];
+  struct Constraint *cp;
+ 
 if (ag == cf_keygen)
    {
    return;
    }
 
+/* Parse the files*/
+
 Cf3ParseFiles();
+
+/* Now import some web variables that are set in cf-know/control for the report options */
+
+strncpy(STYLESHEET,"/cf_enterprise.css",CF_BUFSIZE-1);
+
+for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
+   {
+   if (IsExcluded(cp->classes))
+      {
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_query_engine].lval) == 0)
+      {
+      strncpy(WEBDRIVER,cp->rval,CF_MAXVARSIZE);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlbanner].lval) == 0)
+      {
+      strncpy(BANNER,cp->rval,2*CF_BUFSIZE-1);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlfooter].lval) == 0)
+      {
+      strncpy(FOOTER,cp->rval,CF_BUFSIZE-1);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_stylesheet].lval) == 0)
+      {
+      strncpy(STYLESHEET,cp->rval,CF_MAXVARSIZE);
+      continue;
+      }
+
+   }
+
+/* Make the compilation reports*/
+
 OpenReports(agents);
 
 SetAuditVersion();
@@ -184,14 +228,13 @@ else
    v = "not specified";
    }
 
-fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfb]);
 
-fprintf(FREPORT_HTML,"<h1>Cfengine policy :: %s (version %s)</h1>",VFQNAME,v);
+snprintf(vbuff,CF_BUFSIZE-1,"<h1>Expanded promises for %s</h1>",agents);
+CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
+
+fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);
 
 ShowContext();
-
-fprintf(FREPORT_HTML,"<h1>Expanded promise list for %s component</h1>",agents);
-fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
 
 VerifyPromises(cf_common);
@@ -203,7 +246,7 @@ if (ag != cf_common)
    ShowScopedVariables();
    }
 
-fprintf(FREPORT_HTML,"%s",CFH[cfx_head][cfe]);
+CfHtmlFooter(FREPORT_HTML,FOOTER);
 
 CloseReports(agents);
 }

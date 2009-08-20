@@ -188,12 +188,14 @@ else
    {
    v = "not specified";
    }
-  
+
 ReportBanner("Promises");
 
+snprintf(vbuff,CF_BUFSIZE-1,"Cfengine Site Policy Summary (version %s)",v);
+
+CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
+    
 fprintf(FREPORT_HTML,"<p>");
-fprintf(FREPORT_HTML,"<h1>Cfengine Site Policy Summary (version %s)</h1> ",v);
-fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfb]);
   
 for (bp = bundles; bp != NULL; bp=bp->next)
    {
@@ -260,7 +262,7 @@ for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    fprintf(FREPORT_HTML,"</p>");
    }
 
-fprintf(FREPORT_HTML,"%s\n",CFH[cfx_head][cfe]);
+CfHtmlFooter(FREPORT_HTML,FOOTER);
 }
 
 /*******************************************************************/

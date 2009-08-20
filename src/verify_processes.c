@@ -201,20 +201,25 @@ if (a.process_count.min_range != CF_NOINT) /* if a range is specified */
       cfPS(cf_verbose,CF_NOP,"",pp,a," -> Process promise for %s is kept",pp->promiser);
       out_of_range = false;
       }
-
-   if (a.transaction.action == cfa_warn)
-      {
-      do_signals = false;
-      }
-   else
-      {
-      do_signals = true;
-      }
+   }
+else
+   {
+   out_of_range = true;
    }
 
 if (!out_of_range)
    {
    return;
+   }
+
+
+if (a.transaction.action == cfa_warn)
+   {
+   do_signals = false;
+   }
+else
+   {
+   do_signals = true;
    }
 
 /* signal/kill promises for existing matches */

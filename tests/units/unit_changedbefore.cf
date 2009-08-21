@@ -12,13 +12,13 @@ bundle agent example
 {     
 classes:
 
-  "do_it" and => { changedbefore("/tmp/earlier","/tmp/later"), "linux" }; 
+  "do_it" and => { changedbefore("/tmp/earlier","/tmp/later") }; 
 
 reports:
 
   do_it::
 
-    "The derived file needs updating";
+    "Earlier than later!";
 
 }
 

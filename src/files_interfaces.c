@@ -102,12 +102,6 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       return;
       }
 
-   if (!JoinPath(newto,dirp->d_name))
-      {
-      cf_closedir(dirh);
-      return;
-      }
-
    if (attr.recursion.travlinks || attr.copy.link_type == cfa_notlinked)
       {
       /* No point in checking if there are untrusted symlinks here,
@@ -122,9 +116,28 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
    else
       {
       if (cf_lstat(newfrom,&sb,attr,pp) == -1)
-         {
+         {         
          CfOut(cf_verbose,"cf_stat"," !! (Can't stat %s)\n",newfrom);
          continue;
+         }
+      }
+
+   /* If we are tracking subdirs in copy, then join else don't add*/
+
+   if (attr.copy.collapse)
+      {
+      if (!S_ISDIR(sb.st_mode) && !JoinPath(newto,dirp->d_name))
+         {
+         cf_closedir(dirh);
+         return;
+         }      
+      }
+   else
+      {
+      if (!JoinPath(newto,dirp->d_name))
+         {
+         cf_closedir(dirh);
+         return;
          }
       }
 
@@ -148,8 +161,10 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
          }
 
       memset(&dsb,0,sizeof(struct stat));
-      
-      if (stat(newto,&dsb) == -1)
+
+      /* Only copy dirs if we are tracking subdirs */
+
+      if (!attr.copy.collapse && (stat(newto,&dsb) == -1))
          {
          if (mkdir(newto,0700) == -1)
             {
@@ -165,7 +180,12 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
          }
 
       CfOut(cf_verbose,""," ->>  Entering %s\n",newto);
-      VerifyCopiedFileAttributes(newto,&dsb,&sb,attr,pp);
+
+      if (!attr.copy.collapse)
+         {
+         VerifyCopiedFileAttributes(newto,&dsb,&sb,attr,pp);
+         }
+      
       SourceSearchAndCopy(newfrom,newto,maxrecurse-1,attr,pp);
       }
    else

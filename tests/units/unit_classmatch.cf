@@ -12,7 +12,7 @@ bundle agent example
 {     
 classes:
 
-  "do_it" and => { classmatch(".*_cfengine_com"), "linux" }; 
+  "do_it" and => { classmatch(".*_3"), "linux" }; 
 
 reports:
 

@@ -643,7 +643,7 @@ unlink(new);  /* To avoid link attacks */
   
 if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    {
-   CfOut(cf_error,"open","NetCopy to %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
+   CfOut(cf_error,"open","NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
    unlink(new);
    return false;
    }

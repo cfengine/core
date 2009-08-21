@@ -733,6 +733,7 @@ else
    }
        
 f.stealth = GetBooleanConstraint("stealth",pp->conlist);
+f.collapse = GetBooleanConstraint("collapse_destination_dir",pp->conlist);
 f.preserve = GetBooleanConstraint("preserve",pp->conlist);
 f.type_check = GetBooleanConstraint("type_check",pp->conlist);
 f.force_update = GetBooleanConstraint("force_update",pp->conlist);

@@ -1123,6 +1123,7 @@ struct FileCopy
    enum cfbackupoptions backup;
    int stealth;
    int preserve;
+   int collapse;
    int check_root;
    int type_check;
    int force_update;

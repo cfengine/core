@@ -1554,7 +1554,7 @@ else if (stat(finalargs->next->item,&tobuf) == -1)
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (frombuf.st_atime > tobuf.st_atime)
+else if (frombuf.st_atime < tobuf.st_atime)
    {
    strcpy(buffer,"any");
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_SUCCESS,NULL,NULL);   

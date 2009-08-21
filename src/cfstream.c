@@ -227,9 +227,18 @@ if (level == cf_error)
       snprintf(output,CF_BUFSIZE-1,"I: Report relates to a promise with handle \"%s\"",handle);
       AppendItem(&mess,output,NULL);
       }
-   
-   snprintf(output,CF_BUFSIZE-1,"I: Made in version \'%s\' of \'%s\' near line %d",v,pp->audit->filename,pp->lineno);
+
+   if (pp->audit)
+      {
+      snprintf(output,CF_BUFSIZE-1,"I: Made in version \'%s\' of \'%s\' near line %d",v,pp->audit->filename,pp->lineno);
+      }
+   else
+      {
+      snprintf(output,CF_BUFSIZE-1,"I: Promise is made internally by cfengine");
+      }
+
    AppendItem(&mess,output,NULL);
+
    
    switch (pp->petype)
       {

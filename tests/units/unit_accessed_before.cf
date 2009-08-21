@@ -1,7 +1,3 @@
-Applies at version: Nova 1.0.0
-Topics: accessedbefore function,classes,comparing timestamps
-Occurrence type: example
-
 #
 # Show the definition of classes by comparing timestamps
 #
@@ -19,13 +15,13 @@ bundle agent example
 {     
 classes:
 
-  "do_it" and => { accessedbefore("/tmp/earlier","/tmp/later"), "linux" }; 
+  "do_it" and => { accessedbefore("/tmp/earlier","/tmp/later") }; 
 
 reports:
 
   do_it::
 
-    "The secret changes have been accessed after the reference time";
+    "The earlier file has been accessed before the later";
 
 }
 

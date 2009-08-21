@@ -138,7 +138,7 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
          
          if (attr.change.update)
             {
-            CfOut(cf_verbose,"","Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
+            CfOut(cf_verbose,""," -> Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
             
             DeleteHash(dbp,type,filename);
             WriteHash(dbp,type,filename,current_digest,attr_digest);
@@ -156,7 +156,7 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
 else
    {
    /* Key was not found, so install it */
-   cfPS(warnlevel,CF_CHG,"",pp,attr,"File %s was not in %s database - new file found",filename,FileHashName(type));   
+   cfPS(warnlevel,CF_CHG,"",pp,attr," !! File %s was not in %s database - new file found",filename,FileHashName(type));   
    Debug("Storing checksum for %s in database %s\n",filename,HashPrint(type,current_digest));
    WriteHash(dbp,type,filename,current_digest,attr_digest);
    

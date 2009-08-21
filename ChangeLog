@@ -14,6 +14,9 @@
 	Code readied for enterprise version Nova.
 
 	-b option can override the bundlesequence (must not contain parameters yet)
+
+	collapse_destination_dir option added to copy so that files can be
+	aggregated from subdirectories into a single destination.
 	
 3.0.1
 	First standalone release, independent of cfengine 2 

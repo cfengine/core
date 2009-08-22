@@ -43,7 +43,7 @@ int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,str
   struct dirent *dirp;
   char path[CF_BUFSIZE];
   struct stat lsb;
-  
+
 if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are in the parent dir of the leaf */
    {
    char basedir[CF_BUFSIZE];

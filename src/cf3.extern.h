@@ -53,7 +53,7 @@ extern struct Topic *TOPIC_MAP;
 extern struct PromiseIdent *PROMISE_ID_LIST;
 extern struct Item *DONELIST;
 extern struct Rlist *CBUNDLESEQUENCE;
-
+extern struct Item *ROTATED;
 extern double FORGETRATE;
 
 extern struct Rlist *CF_STCK;

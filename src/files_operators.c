@@ -885,7 +885,7 @@ void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise
 
 { mode_t newperm;
   struct stat dsb;
- 
+
 if (lstat(path,&dsb) == -1)
    {
    cfPS(cf_inform,CF_NOP,"",pp,attr,"File object named %s is not there (promise kept)",path);
@@ -893,7 +893,10 @@ if (lstat(path,&dsb) == -1)
    }
 else
    {
-   CfOut(cf_inform,""," !! Warning - file object %s exists, contrary to promise\n",path);
+   if (attr.rename.rotate == CF_NOINT)
+      {
+      CfOut(cf_inform,""," !! Warning - file object %s exists, contrary to promise\n",path);
+      }
    }
 
 if (attr.rename.newname)
@@ -1047,7 +1050,6 @@ if (attr.rename.rotate == 0)
       }
    return;
    }
-
 
 if (attr.rename.rotate > 0)
    {
@@ -1930,10 +1932,17 @@ void RotateFiles(char *name,int number)
 
 { int i, fd;
   struct stat statbuf;
-  char filename[CF_BUFSIZE],vbuff[CF_BUFSIZE];
+  char from[CF_BUFSIZE],to[CF_BUFSIZE];
   struct Attributes attr;
   struct Promise dummyp;
   
+if (IsItemIn(ROTATED,name))
+   {
+   return;
+   }
+
+PrependItem(&ROTATED,name,NULL);
+
 if (stat(name,&statbuf) == -1)
    {
    CfOut(cf_verbose,"","No access to file %s\n",name);
@@ -1942,61 +1951,60 @@ if (stat(name,&statbuf) == -1)
 
 for (i = number-1; i > 0; i--)
    {
-   snprintf(filename,CF_BUFSIZE,"%s.%d",name,i);
-   snprintf(vbuff,CF_BUFSIZE,"%s.%d",name, i+1);
+   snprintf(from,CF_BUFSIZE,"%s.%d",name,i);
+   snprintf(to,CF_BUFSIZE,"%s.%d",name, i+1);
    
-   if (rename(filename,vbuff) == -1)
+   if (rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
 
-   snprintf(filename,CF_BUFSIZE,"%s.%d.gz",name,i);
-   snprintf(vbuff,CF_BUFSIZE,"%s.%d.gz",name, i+1);
+   snprintf(from,CF_BUFSIZE,"%s.%d.gz",name,i);
+   snprintf(to,CF_BUFSIZE,"%s.%d.gz",name, i+1);
    
-   if (rename(filename,vbuff) == -1)
+   if (rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
 
-   snprintf(filename,CF_BUFSIZE,"%s.%d.Z",name,i);
-   snprintf(vbuff,CF_BUFSIZE,"%s.%d.Z",name, i+1);
+   snprintf(from,CF_BUFSIZE,"%s.%d.Z",name,i);
+   snprintf(to,CF_BUFSIZE,"%s.%d.Z",name, i+1);
    
-   if (rename(filename,vbuff) == -1)
+   if (rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }   
 
-   snprintf(filename,CF_BUFSIZE,"%s.%d.bz",name,i);
-   snprintf(vbuff,CF_BUFSIZE,"%s.%d.bz",name, i+1);
+   snprintf(from,CF_BUFSIZE,"%s.%d.bz",name,i);
+   snprintf(to,CF_BUFSIZE,"%s.%d.bz",name, i+1);
    
-   if (rename(filename,vbuff) == -1)
+   if (rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }   
 
-   snprintf(filename,CF_BUFSIZE,"%s.%d.bz2",name,i);
-   snprintf(vbuff,CF_BUFSIZE,"%s.%d.bz2",name, i+1);
+   snprintf(from,CF_BUFSIZE,"%s.%d.bz2",name,i);
+   snprintf(to,CF_BUFSIZE,"%s.%d.bz2",name, i+1);
    
-   if (rename(filename,vbuff) == -1)
+   if (rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,filename);
-      }   
-
+      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
+      }
    }
 
-snprintf(vbuff,CF_BUFSIZE,"%s.1",name);
+snprintf(to,CF_BUFSIZE,"%s.1",name);
 memset(&dummyp,0,sizeof(dummyp));
 memset(&attr,0,sizeof(attr));
 dummyp.this_server = "localdisk";
 
-if (CopyRegularFileDisk(name,vbuff,attr,&dummyp) == -1)
+if (CopyRegularFileDisk(name,to,attr,&dummyp) == -1)
    {
-   Debug2("cfengine: copy failed in RotateFiles %s -> %s\n",name,vbuff);
+   Debug2("cfengine: copy failed in RotateFiles %s -> %s\n",name,to);
    return;
    }
 
-chmod(vbuff,statbuf.st_mode);
-chown(vbuff,statbuf.st_uid,statbuf.st_gid); 
+chmod(to,statbuf.st_mode);
+chown(to,statbuf.st_uid,statbuf.st_gid); 
 chmod(name,0600);                             /* File must be writable to empty ..*/
  
 if ((fd = creat(name,statbuf.st_mode)) == -1)

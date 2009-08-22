@@ -445,7 +445,6 @@ extern int FORCENETCOPY;
 extern int SILENT;
 extern int EDITVERBOSE;
 extern char IMAGEBACKUP;
-extern int ROTATE;
 extern int   TIDYSIZE;
 extern int USEENVIRON;
 extern int PROMATCHES;

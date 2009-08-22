@@ -516,25 +516,23 @@ void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr
 
 Debug("PurgeLocalFiles(%s)\n",localdir);
 
- /* If we purge with no authentication we wipe out EVERYTHING ! */ 
-
- /* We should be chdir inside the directory here */
-
 if (strlen(localdir) < 2)
    {
    CfOut(cf_error,"","Purge of %s denied -- too dangerous!",localdir);
    return;
    }
- 
+
+ /* If we purge with no authentication we wipe out EVERYTHING ! */ 
+
 if (pp->conn && !pp->conn->authenticated)
    {
-   CfOut(cf_verbose,""," !! Not purging local copy %s - no authenticated contact with a source\n",localdir);
+   CfOut(cf_verbose,""," !! Not purge local files %s - no authenticated contact with a source\n",localdir);
    return;
    }
 
 if (!attr.havedepthsearch)
    {
-   CfOut(cf_verbose,""," !! No depth search when copying %s so no refrece from which to purge\n",localdir);
+   CfOut(cf_verbose,""," !! No depth search when copying %s so purging does not apply\n",localdir);
    return;
    }
 
@@ -582,10 +580,15 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             struct Attributes purgeattr;
             memset(&purgeattr,0,sizeof(purgeattr));
 
+            /* Deletion is based on a files promise */
+            
             purgeattr.havedepthsearch = true;
             purgeattr.havedelete = true;
+            purgeattr.delete.dirlinks = cfa_linkdelete;
+            purgeattr.delete.rmdirs = true;
             purgeattr.recursion.depth = CF_INFINITY;
             purgeattr.recursion.travlinks = false;
+            purgeattr.recursion.xdev = false;
 
             SetSearchDevice(&sb,pp);
 
@@ -1323,23 +1326,31 @@ void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes 
   struct stat dsb;
 
 /* Link the file to the source, instead of copying */
+
+linkbuf[0] = '\0';
   
-if (cf_readlink(sourcefile,linkbuf,CF_BUFSIZE,attr,pp) == -1)
+if (S_ISLNK(sb->st_mode) && cf_readlink(sourcefile,linkbuf,CF_BUFSIZE,attr,pp) == -1)
    {
    cfPS(cf_error,CF_FAIL,"",pp,attr,"Can't readlink %s\n",sourcefile);
    return;
    }
-
-CfOut(cf_verbose,"","Checking link from %s to %s\n",destfile,linkbuf);
-
-if (attr.copy.link_type == cfa_absolute && !IsAbsoluteFileName(linkbuf))      /* Not absolute path - must fix */
+else if (S_ISLNK(sb->st_mode))
    {
-   char vbuff[CF_BUFSIZE];
-   strcpy(vbuff,sourcefile);
-   ChopLastNode(vbuff);
-   AddSlash(vbuff);
-   strncat(vbuff,linkbuf,CF_BUFSIZE-1);
-   strncpy(linkbuf,vbuff,CF_BUFSIZE-1);
+   CfOut(cf_verbose,"","Checking link from %s to %s\n",destfile,linkbuf);
+   
+   if (attr.copy.link_type == cfa_absolute && !IsAbsoluteFileName(linkbuf))      /* Not absolute path - must fix */
+      {
+      char vbuff[CF_BUFSIZE];
+      strcpy(vbuff,sourcefile);
+      ChopLastNode(vbuff);
+      AddSlash(vbuff);
+      strncat(vbuff,linkbuf,CF_BUFSIZE-1);
+      strncpy(linkbuf,vbuff,CF_BUFSIZE-1);
+      }
+   }
+else
+   {
+   strcpy(linkbuf,sourcefile);
    }
 
 lastnode=ReadLastNode(sourcefile);

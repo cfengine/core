@@ -57,7 +57,7 @@ AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1,"(%s: %s)",errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1," !! System error for %s: \"%s\"",errstr,strerror(errno));
    AppendItem(&mess,output,NULL);
    }
 

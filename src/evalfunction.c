@@ -3332,7 +3332,7 @@ struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum 
   struct Rlist *rp,*newlist = NULL;
   struct Rval rval;
   char *filename,*comment,*split,fnname[CF_MAXVARSIZE];
-  int maxent,maxsize,count = 0,noerrors = true,purge = true;
+  int maxent,maxsize,count = 0,noerrors = true,blanks = false;
   char *file_buffer = NULL;
 
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -3367,13 +3367,14 @@ else
 
    if (file_buffer == NULL)
       {
+      SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
       rval.item = NULL;
       rval.rtype = CF_LIST;
       return rval;
       }
    else
       {
-      newlist = SplitRegexAsRList(file_buffer,split,maxent,purge);
+      newlist = SplitRegexAsRList(file_buffer,split,maxent,blanks);
       }
    }
 

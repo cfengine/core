@@ -19,7 +19,7 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/testcopy" 
+  "/home/mark/tmp/test_to" 
 
     delete => tidyfiles,
     file_select => zero_age,

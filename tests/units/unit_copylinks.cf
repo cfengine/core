@@ -21,9 +21,9 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/testcopy" 
+  "/home/mark/tmp/test_to" 
 
-    copy_from    => mycopy("/home/mark/tmp/source"),
+    copy_from    => mycopy("/home/mark/tmp/test_from"),
     perms        => system,
     move_obstructions => "true",
     depth_search => recurse("inf");
@@ -52,8 +52,8 @@ body copy_from mycopy(from)
 
 {
 source      => "$(from)";
-copylink_patterns => { ".*" }; # copy all links
-#linkcopy_patterns => { ".*" }; # copy all links
+#copylink_patterns => { ".*" }; # copy all links
+linkcopy_patterns => { ".*" }; # copy all links
 #copy_backup => "timestamp";
 }
 

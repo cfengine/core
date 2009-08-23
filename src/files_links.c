@@ -144,19 +144,19 @@ else
             }
          else
             {
-            CfOut(cf_error,"","Must remove incorrect link %s\n",destination);
+            CfOut(cf_error,""," !! Must remove incorrect link %s\n",destination);
             return false;
             }
          }
       else
          {
-         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
+         cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
          return true;
          }
       }
    else
       {
-      cfPS(cf_inform,CF_NOP,"",pp,attr,"Link %s points to %s - promise kept",destination,to);
+      cfPS(cf_inform,CF_NOP,"",pp,attr," -> Link %s points to %s - promise kept",destination,to);
       return true;
       }
    }
@@ -192,7 +192,7 @@ if (attr.link.when_no_file == cfa_force)
    {  
    if (!ExpandLinks(expand,absto,0))  /* begin at level 1 and beam out at 15 */
       {
-      CfOut(cf_error,"","Failed to make absolute link in\n");
+      CfOut(cf_error,""," !! Failed to make absolute link in\n");
       PromiseRef(cf_error,pp);
       return false;
       }
@@ -228,7 +228,7 @@ if (*source == '.')
 
 if (!CompressPath(linkto,source))
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Failed to link %s to %s\n",destination,source);
+   cfPS(cf_error,CF_INTERPT,"",pp,attr," !! Failed to link %s to %s\n",destination,source);
    return false;
    }
 
@@ -237,7 +237,7 @@ commonfrom = destination;
 
 if (strcmp(commonto,commonfrom) == 0)
    {
-   CfOut(cf_error,"","Can't link file to itself!\n");
+   CfOut(cf_error,""," !! Can't link file %s to itself!\n",commonto);
    PromiseRef(cf_error,pp);
    return false;
    }
@@ -318,13 +318,13 @@ else
 
 if (stat(absto,&ssb) == -1)
    {
-   cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Source file %s doesn't exist\n",source);
+   cfPS(cf_inform,CF_INTERPT,"",pp,attr," !! Source file %s doesn't exist\n",source);
    return false;
    }
 
 if (!S_ISREG(ssb.st_mode))
    {
-   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Source file %s is not a regular file, not appropriate to hard-link\n",to);
+   cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Source file %s is not a regular file, not appropriate to hard-link\n",to);
    return false;
    }
 
@@ -342,8 +342,8 @@ if (stat(destination,&dsb) == -1)
 
 if (dsb.st_ino != ssb.st_ino && dsb.st_dev != ssb.st_dev)
    {
-   CfOut(cf_verbose,"","If this is POSIX, unable to determine if %s is hard link is correct\n",destination);
-   CfOut(cf_verbose,"","since it points to a different filesystem!\n");
+   CfOut(cf_verbose,""," !! If this is POSIX, unable to determine if %s is hard link is correct\n",destination);
+   CfOut(cf_verbose,""," !! since it points to a different filesystem!\n");
 
    if (dsb.st_mode == ssb.st_mode && dsb.st_size == ssb.st_size)
       {
@@ -354,11 +354,11 @@ if (dsb.st_ino != ssb.st_ino && dsb.st_dev != ssb.st_dev)
 
 if (dsb.st_ino == ssb.st_ino && dsb.st_dev == ssb.st_dev)
    {
-   cfPS(cf_verbose,CF_NOP,"",pp,attr,"Hard link (%s->%s) exists and is okay\n",destination,to);
+   cfPS(cf_verbose,CF_NOP,"",pp,attr," -> Hard link (%s->%s) exists and is okay\n",destination,to);
    return true;
    }
 
-CfOut(cf_inform,"","%s does not appear to be a hard link to %s\n",destination,to);
+CfOut(cf_inform,""," !! %s does not appear to be a hard link to %s\n",destination,to);
 
 if (!MoveObstruction(destination,attr,pp))
    {
@@ -407,12 +407,12 @@ if (stat(tmp,&statbuf) == -1)               /* link points nowhere */
    {
    if (attr.link.when_no_file == cfa_delete || attr.recursion.rmdeadlinks)
       {
-      CfOut(cf_verbose,"","%s is a link which points to %s, but that file doesn't seem to exist\n",name,linkbuf);
+      CfOut(cf_verbose,""," !! %s is a link which points to %s, but that file doesn't seem to exist\n",name,linkbuf);
 
       if (!DONTDO)
          {
          unlink(name);  /* May not work on a client-mounted system ! */
-         cfPS(cf_inform,CF_CHG,"",pp,attr,"Removing ghost %s - reference to something that is not there\n",name);
+         cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing ghost %s - reference to something that is not there\n",name);
          return true;
          }
       }
@@ -428,19 +428,19 @@ int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
 {
 if (DONTDO)
    {
-   CfOut(cf_error,"","Need to link files %s -> %s\n",from,to);
+   CfOut(cf_error,""," !! Need to link files %s -> %s\n",from,to);
    return false;
    }
 else
    {
    if (symlink(to,from) == -1)
       {
-      cfPS(cf_error,CF_FAIL,"symlink",pp,attr,"Couldn't link %s to %s\n",to,from);
+      cfPS(cf_error,CF_FAIL,"symlink",pp,attr," !! Couldn't link %s to %s\n",to,from);
       return false;
       }
    else
       {
-      cfPS(cf_inform,CF_CHG,"",pp,attr,"Linked files %s -> %s\n",from,to);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Linked files %s -> %s\n",from,to);
       return true;
       }
    }
@@ -453,19 +453,19 @@ int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
 {
 if (DONTDO)
    {
-   CfOut(cf_error,"","Need to hard link files %s -> %s\n",from,to);
+   CfOut(cf_error,""," !! Need to hard link files %s -> %s\n",from,to);
    return false;
    }
 else
    {
    if (link(to,from) == -1)
       {
-      cfPS(cf_error,CF_FAIL,"link",pp,attr,"Couldn't (hard) link %s to %s\n",to,from);
+      cfPS(cf_error,CF_FAIL,"link",pp,attr," !! Couldn't (hard) link %s to %s\n",to,from);
       return false;
       }
    else
       {
-      cfPS(cf_inform,CF_CHG,"",pp,attr,"(Hard) Linked files %s -> %s\n",from,to);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> (Hard) Linked files %s -> %s\n",from,to);
       return true;
       }
    }
@@ -487,7 +487,7 @@ memset(dest,0,CF_BUFSIZE);
 
 if (level >= CF_MAXLINKLEVEL)
    {
-   CfOut(cf_error,"","Too many levels of symbolic links to evaluate absolute path\n");
+   CfOut(cf_error,""," !! Too many levels of symbolic links to evaluate absolute path\n");
    return false;
    }
 
@@ -524,7 +524,7 @@ for (sp = from; *sp != '\0'; sp++)
 
    if (lstat(dest,&statbuf) == -1)  /* File doesn't exist so we can stop here */
       {
-      CfOut(cf_error,"lstat","Can't stat %s in ExpandLinks\n",dest);
+      CfOut(cf_error,"lstat"," !! Can't stat %s in ExpandLinks\n",dest);
       return false;
       }
 
@@ -534,7 +534,7 @@ for (sp = from; *sp != '\0'; sp++)
       
       if (readlink(dest,buff,CF_BUFSIZE-1) == -1)
          {
-         CfOut(cf_error,"readlink","Expand links can't stat %s\n",dest);
+         CfOut(cf_error,"readlink"," !! Expand links can't stat %s\n",dest);
          return false;
          }
       else

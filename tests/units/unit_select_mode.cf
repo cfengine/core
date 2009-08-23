@@ -22,7 +22,7 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/testcopy" 
+  "/home/mark/tmp/test_from" 
 
     file_select => by_modes,
     transformer => "/bin/echo DETECTED $(this.promiser)",

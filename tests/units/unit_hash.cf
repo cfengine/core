@@ -16,7 +16,7 @@ vars:
 
 reports:
 
-  Yr2008::
+  cfengine_3::
 
     "Hashed to: $(md5)";
 

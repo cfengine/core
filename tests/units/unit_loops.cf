@@ -17,7 +17,7 @@ vars:
 
   "array[cf-monitord]" string => "The monitor";
   "array[cf-serverd]" string => "The server";
-  "array[cf-execd]" string => "The executor, not executionist";
+  "array[cf-execd]" string => "The executor, not executioner";
 
 reports:
 

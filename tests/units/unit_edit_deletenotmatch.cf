@@ -39,19 +39,7 @@ files:
 
 bundle edit_line MarkNRoot
   {
-  insert_lines:
-
-   !pw_loaded::
-
-     "/etc/passwd" 
-
-       insert_type => "file",
-       action => defineclass("pw_loaded");
-
-
   delete_lines:
-
-   pw_loaded::
 
        "mark.*|root.*" not_matching => "true";
 

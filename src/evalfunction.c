@@ -901,7 +901,7 @@ maxbytes = finalargs->next->next->next->item;
 val = Str2Int(maxbytes);
 portnum = (short) Str2Int(port);
 
-if (val < 0 || portnum < 0)
+if (val < 0 || portnum < 0 || THIS_AGENT_TYPE == cf_common)
    {
    SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,"port number or maxbytes out of range",NULL);
    rval.item = NULL;

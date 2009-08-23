@@ -808,7 +808,7 @@ if (found == -1)
          return;
          }
 
-      cfPS(cf_inform,CF_CHG,"",pp,attr,"Created fifo %s", destfile);
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created fifo %s", destfile);
 #endif
       }
    else
@@ -838,7 +838,7 @@ else
    {
    int ok_to_copy = false;
    
-   CfOut(cf_verbose,"","Destination file %s already exists\n",destfile);
+   CfOut(cf_verbose,""," -> Destination file %s already exists\n",destfile);
    
    if (!attr.copy.force_update)
       {
@@ -1402,7 +1402,7 @@ if (succeed)
       VerifyCopiedFileAttributes(destfile,&dsb,sb,attr,pp);
       }
    
-   cfPS(cf_inform,CF_CHG,"",pp,attr,"Created link %s", destfile);
+   cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created link %s", destfile);
    }
 }
 
@@ -1810,17 +1810,17 @@ if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))
     /* Not root hard link, remove to preserve consistency */
    if (DONTDO)
       {
-      CfOut(cf_verbose,"","Need to remove old hard link %s to preserve structure..\n",value);
+      CfOut(cf_verbose,""," !! Need to remove old hard link %s to preserve structure..\n",value);
       }
    else
       {
       if (attr.transaction.action = cfa_warn)
          {
-         CfOut(cf_verbose,"","Need to remove old hard link %s to preserve structure..\n",value);
+         CfOut(cf_verbose,""," !! Need to remove old hard link %s to preserve structure..\n",value);
          }
       else
          {
-         CfOut(cf_verbose,"","Removing old hard link %s to preserve structure..\n",value);
+         CfOut(cf_verbose,""," -> Removing old hard link %s to preserve structure..\n",value);
          unlink(value);
          }
       }

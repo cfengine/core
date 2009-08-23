@@ -121,7 +121,7 @@ else
          {
          /* Relying on umask is risky */
          filemode = 0600;
-         CfOut(cf_verbose,"","No mode was set, choose plain file default %o\n",filemode);
+         CfOut(cf_verbose,""," -> No mode was set, choose plain file default %o\n",filemode);
          }
       else
          {
@@ -132,7 +132,7 @@ else
 
       if ((fd = creat(file,filemode)) == -1)
          { 
-         cfPS(cf_inform,CF_FAIL,"creat",pp,attr,"Error creating file %s, mode = %o\n",file,filemode);
+         cfPS(cf_inform,CF_FAIL,"creat",pp,attr," !! Error creating file %s, mode = %o\n",file,filemode);
          umask(saveumask);
          return false;
          }
@@ -914,7 +914,7 @@ if (attr.rename.newname)
          {
          if (rename(path,attr.rename.newname) == -1)
             {
-            cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Error occurred while renaming %s\n",path);
+            cfPS(cf_error,CF_FAIL,"rename",pp,attr," !! Error occurred while renaming %s\n",path);
             return;
             }
          }

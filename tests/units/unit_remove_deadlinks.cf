@@ -21,7 +21,7 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/test_create" -> "someone"
+  "/home/mark/tmp/test_to" -> "someone"
 
       depth_search => recurse("inf"),
       perms => modestuff,

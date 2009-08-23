@@ -42,7 +42,7 @@ files:
 
 #########################################################
 
-body linkfrom linkdetails(tofile)
+body link_from linkdetails(tofile)
 
 {
 source        => "$(tofile)";
@@ -52,7 +52,7 @@ when_no_source  => "force";      # kill
 
 #########################################################
 
-body linkfrom linkchildren(tofile)
+body link_from linkchildren(tofile)
 
 {
 source        => "$(tofile)";

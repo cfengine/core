@@ -254,6 +254,7 @@ expargs = NewExpArgs(fp,pp);
 
 if (UnresolvedArgs(expargs))
    {
+   CfOut(cf_verbose,""," !? Unresolved or non-existent variables in function call arguments, skipping");
    FNCALL_STATUS.status = FNCALL_FAILURE;
    rval.item = CopyFnCall(fp);
    rval.rtype = CF_FNCALL;

@@ -17,7 +17,7 @@ vars:
 
 reports:
 
-  Yr2008::
+  cfengine_3::
 
     "List entry: $(mylist)";
 

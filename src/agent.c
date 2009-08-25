@@ -345,6 +345,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksum_alert_time].lval) == 0)
+      {
+      CF_PERSISTENCE = (int)Str2Int(retval);
+      CfOut(cf_verbose,"","SET checksum_alert_time = %d\n",CF_PERSISTENCE);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
       {
       SetFacility(retval);

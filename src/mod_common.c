@@ -196,6 +196,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"bindtointerface",cf_str,".*","Use this interface for outgoing connections"},
    {"hashupdates",cf_opts,CF_BOOL,"true/false whether stored hashes are updated when change is detected in source"},
    {"childlibpath",cf_str,".*","LD_LIBRARY_PATH for child processes"},
+   {"checksum_alert_time",cf_int,"0,60","The persistence time for the checksum_alert class"},
    {"defaultcopytype",cf_opts,"mtime,atime,ctime,digest,hash,binary"},
    {"dryrun",cf_opts,CF_BOOL,"All talk and no action mode"},
    {"editbinaryfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum binary file size to be edited"},

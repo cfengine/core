@@ -464,7 +464,6 @@ typedef int clockid_t;
 #define CFGRACEPERIOD 4.0     /* training period in units of counters (weeks,iterations)*/
 #define cf_noise_threshold 6  /* number that does not warrent large anomaly status */
 #define big_number 100000
-#define CF_PERSISTENCE 15
 #define LDT_BUFSIZE 10
 #define CF_GRAINS   64
 #define ATTR     11

@@ -238,6 +238,7 @@ enum cfacontrol
    cfa_bindtointerface,
    cfa_hashupdates,
    cfa_childlibpath,
+   cfa_checksum_alert_time,
    cfa_defaultcopytype,
    cfa_dryrun,
    cfa_editbinaryfilesize,

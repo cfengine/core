@@ -311,7 +311,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"copylink_patterns",cf_slist,"","List of patterns matching files that should be linked instead of copied"},
    {"copy_size",cf_irange,"0,inf","Integer range of file sizes that may be copied"},
    {"findertype",cf_opts,"MacOSX","Menu option for default finder type on MacOSX"},
-   {"linkcopy_patterns",cf_slist,"","List of patterns matching symbolic links that should be replaced with copies"},
+   {"linkcopy_patterns",cf_slist,"","List of patterns matching files that should be replaced with symbolic links"},
    {"link_type",cf_opts,CF_LINKRANGE,"Menu option for type of links to use when copying"},
    {"force_update",cf_opts,CF_BOOL,"true/false force copy update always"},
    {"force_ipv4",cf_opts,CF_BOOL,"true/false force use of ipv4 on ipv6 enabled network"},

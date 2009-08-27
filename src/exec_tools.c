@@ -161,31 +161,18 @@ else                                    /* parent */
    pid_t wait_result;
    ALARM_PID = pid;
 
-   if (cf_pwait(pid) == -1)
+   if ((status = cf_pwait(pid)) == -1)
       {
       return false;
       }
-   else
-      {
-      return true;
-      }
    
-/*   while ((wait_result = wait(&status)) != pid)
-      {
-      if (wait_result <= 0)
-         {
-         CfOut(cf_inform,"wait"," !! Wait for child failed\n");
-         return false;
-         }
-      }
-
    if (WIFSIGNALED(status))
       {
       Debug("Script %s returned: %d\n",comm,WTERMSIG(status));
       return false;
       }
    
-   if (! WIFEXITED(status))
+   if (!WIFEXITED(status))
       {
       return false;
       }
@@ -199,7 +186,7 @@ else                                    /* parent */
       {
       Debug("Shell command was non-zero: %d\n",WEXITSTATUS(status));
       return false;
-      }*/
+      }
    }
 
 return false;

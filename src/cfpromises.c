@@ -95,11 +95,12 @@ ThisAgentInit();
 
 if (ERRORCOUNT > 0)
    {
+   CfOut(cf_verbose,""," !! Inputs are invalid\n");
    exit(1);
    }
 else
    {
-   CfOut(cf_verbose,"","Inputs are valid\n");
+   CfOut(cf_verbose,""," -> Inputs are valid\n");
    exit(0);
    }
 }

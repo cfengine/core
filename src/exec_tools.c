@@ -159,12 +159,22 @@ else if (pid == 0)                     /* child */
 else                                    /* parent */
    {
    pid_t wait_result;
+   ALARM_PID = pid;
 
-   while ((wait_result = wait(&status)) != pid)
+   if (cf_pwait(pid) == -1)
+      {
+      return false;
+      }
+   else
+      {
+      return true;
+      }
+   
+/*   while ((wait_result = wait(&status)) != pid)
       {
       if (wait_result <= 0)
          {
-         CfOut(cf_inform,"wait","Wait for child failed\n");
+         CfOut(cf_inform,"wait"," !! Wait for child failed\n");
          return false;
          }
       }
@@ -189,7 +199,7 @@ else                                    /* parent */
       {
       Debug("Shell command was non-zero: %d\n",WEXITSTATUS(status));
       return false;
-      }
+      }*/
    }
 
 return false;

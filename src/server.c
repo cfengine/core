@@ -740,74 +740,74 @@ Debug("Checking file updates on %s (%x/%x)\n",filename, newstat.st_mtime, CFDSTA
 
 if (NewPromiseProposals())
    {
-   CfOut(cf_inform,"","Rereading config files %s..\n",filename);
-
-   /* Free & reload -- lock this to avoid access errors during reload */
-
-   DeleteItemList(VHEAP);
-   DeleteItemList(VNEGHEAP);
-   DeleteItemList(TRUSTKEYLIST);
-   DeleteItemList(SKIPVERIFY);
-   DeleteItemList(DHCPLIST);
-   DeleteItemList(ATTACKERLIST);
-   DeleteItemList(NONATTACKERLIST);
-   DeleteItemList(MULTICONNLIST);
-   DeleteAuthList(VADMIT);
-   DeleteAuthList(VDENY);
-   //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
-
-   VSYSTEMHARDCLASS = unused1;
-   
-   DeleteAllScope();
-
-   strcpy(VDOMAIN,"undefined.domain");
-
-   VADMIT = VADMITTOP = NULL;
-   VDENY  = VDENYTOP  = NULL;
-   VHEAP  = VNEGHEAP  = NULL;
-   TRUSTKEYLIST = NULL;
-   SKIPVERIFY = NULL;
-   DHCPLIST = NULL;
-   ATTACKERLIST = NULL;
-   NONATTACKERLIST = NULL;
-   MULTICONNLIST = NULL;
-   VINPUTLIST = NULL;
-
-   DeleteBundles(BUNDLES);
-   DeleteBodies(BODIES);
-
-   BUNDLES = NULL;
-   BODIES  = NULL;
-   ERRORCOUNT = 0;
-
-   NewScope("sys");
-   NewScope("const");
-   NewScope("this");
-   NewScope("control_server");
-   NewScope("control_common");
-   NewScope("mon");
-   NewScope("remote_access");
-   GetNameInfo3();
-   GetInterfaceInfo3();
-   FindV6InterfaceInfo();
-   Get3Environment();
-   OSClasses();
-   SetReferenceTime(true);
-   
    ok = CheckPromises(cf_server);
 
    if (ok)
       {
+      CfOut(cf_inform,"","Rereading config files %s..\n",filename);
+      
+      /* Free & reload -- lock this to avoid access errors during reload */
+      
+      DeleteItemList(VHEAP);
+      DeleteItemList(VNEGHEAP);
+      DeleteItemList(TRUSTKEYLIST);
+      DeleteItemList(SKIPVERIFY);
+      DeleteItemList(DHCPLIST);
+      DeleteItemList(ATTACKERLIST);
+      DeleteItemList(NONATTACKERLIST);
+      DeleteItemList(MULTICONNLIST);
+      DeleteAuthList(VADMIT);
+      DeleteAuthList(VDENY);
+      //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
+      
+      VSYSTEMHARDCLASS = unused1;
+      
+      DeleteAllScope();
+      
+      strcpy(VDOMAIN,"undefined.domain");
+      
+      VADMIT = VADMITTOP = NULL;
+      VDENY  = VDENYTOP  = NULL;
+      VHEAP  = VNEGHEAP  = NULL;
+      TRUSTKEYLIST = NULL;
+      SKIPVERIFY = NULL;
+      DHCPLIST = NULL;
+      ATTACKERLIST = NULL;
+      NONATTACKERLIST = NULL;
+      MULTICONNLIST = NULL;
+      VINPUTLIST = NULL;
+      
+      DeleteBundles(BUNDLES);
+      DeleteBodies(BODIES);
+      
+      BUNDLES = NULL;
+      BODIES  = NULL;
+      ERRORCOUNT = 0;
+      
+      NewScope("sys");
+      NewScope("const");
+      NewScope("this");
+      NewScope("control_server");
+      NewScope("control_common");
+      NewScope("mon");
+      NewScope("remote_access");
+      GetNameInfo3();
+      GetInterfaceInfo3();
+      FindV6InterfaceInfo();
+      Get3Environment();
+      OSClasses();
+      SetReferenceTime(true);
+
       ReadPromises(cf_server,CF_SERVERC);
+
+      KeepPromises();
+      Summarize();
       }
    else
       {
-      snprintf(VINPUTFILE,CF_BUFSIZE-1,"%s/inputs/failsafe.cf",CFWORKDIR);
-      ReadPromises(cf_server,CF_SERVERC);
+      CfOut(cf_inform,"last error"," !! File changes contain errors -- ignoring");
+      PROMISETIME = time(NULL);
       }
-
-   KeepPromises();
-   Summarize();
    }
 }
 

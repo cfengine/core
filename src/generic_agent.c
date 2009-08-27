@@ -122,7 +122,7 @@ int CheckPromises(enum cfagenttype ag)
 { char cmd[CF_BUFSIZE],path[CF_BUFSIZE];
   struct stat sb;
  
-if ((ag != cf_agent) && (ag != cf_executor))
+if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
    {
    return true;
    }
@@ -147,7 +147,7 @@ else
    }
 
 /* Check if reloading policy will succeed */
- 
+
 if (ShellCommandReturnsZero(cmd,true))
    {
    return true;

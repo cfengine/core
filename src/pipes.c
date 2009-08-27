@@ -671,7 +671,7 @@ while ((wait_result = wait(&status)) != pid)
    {
    if (wait_result <= 0)
       {
-      CfOut(cf_inform,"wait","Wait for child failed\n");
+      CfOut(cf_inform,"wait"," !! Wait for child failed\n");
       return -1;
       }
    }

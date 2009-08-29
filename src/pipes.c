@@ -44,12 +44,6 @@ return fopen(file,type);
 
 /*****************************************************************************/
 
-# if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-extern pthread_attr_t PTHREADDEFAULTS;
-extern pthread_mutex_t MUTEX_COUNT;
-extern pthread_mutex_t MUTEX_HOSTNAME;
-# endif
-
 pid_t *CHILDREN;
 int    MAX_FD = 20; /* Max number of simultaneous pipes */
 
@@ -71,33 +65,21 @@ if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    return NULL;
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+if (!ThreadLock(cft_count))
    {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_unlock failed");
    return NULL;
    }
-#endif
 
 if (CHILDREN == NULL)   /* first time */
    {
    if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
       {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-      pthread_mutex_unlock(&MUTEX_COUNT);
-#endif
+      ThreadUnlock(cft_count);
       return NULL;
       }
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-   return NULL;
-   }
-#endif
-
+ThreadUnlock(cft_count);
 
 if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
    {

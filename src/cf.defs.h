@@ -292,6 +292,7 @@ typedef int clockid_t;
 #define CF_ALLCLASSSIZE (4*CF_BUFSIZE)
 #define CF_BUFFERMARGIN 32
 #define CF_BLOWFISHSIZE 16
+#define CF_FIPS_SIZE 32
 #define CF_SMALLBUF 128
 #define CF_MAXVARSIZE 1024
 #define CF_NONCELEN (CF_BUFSIZE/16)

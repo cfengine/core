@@ -320,6 +320,125 @@ for (rp = params; rp != NULL; rp=rp->next)
    }
 }
 
+/************************************************************************/
+
+int ThreadLock(enum cf_thread_mutex name)
+
+{ int val = 0;
+ 
+switch(name)
+   {
+   case cft_system:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+
+       if ((val = pthread_mutex_lock(&MUTEX_SYSCALL)) != 0)
+          {
+          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+          }
+#endif
+       
+       break;
+
+   case cft_count:
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       
+       if ((val = pthread_mutex_lock(&MUTEX_COUNT)) != 0)
+          {
+          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+          }
+#endif
+       
+       break;
+
+   case cft_lock:
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       
+       if ((val = pthread_mutex_lock(&MUTEX_LOCK)) != 0)
+          {
+          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+          }
+#endif
+       
+       break;
+       
+   case cft_getaddr:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       
+       if ((val = pthread_mutex_lock(&MUTEX_GETADDR)) != 0)
+          {
+          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+          }
+#endif 
+       break;
+
+   default:
+       break;
+  }
+
+return (val == 0);
+}
+
+/************************************************************************/
+
+int ThreadUnlock(enum cf_thread_mutex name)
+
+{ int val = 0;
+ 
+switch(name)
+   {
+   case cft_system:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       if ((val = pthread_mutex_unlock(&MUTEX_SYSCALL)) != 0)
+          {
+          CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+          }
+#endif
+       break;
+       
+   case cft_count:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+
+       if ((val = pthread_mutex_unlock(&MUTEX_COUNT)) != 0)
+          {
+          CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+          }
+#endif
+   break;
+
+   case cft_lock:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+
+       if ((val = pthread_mutex_unlock(&MUTEX_LOCK)) != 0)
+          {
+          CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+          }
+#endif
+   break;
+
+   case cft_getaddr:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       
+       if ((val = pthread_mutex_unlock(&MUTEX_GETADDR)) != 0)
+          {
+          CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+          }
+#endif
+   break;
+
+   
+   }
+
+return (val == 0);
+}
+
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/

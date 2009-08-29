@@ -376,12 +376,7 @@ else
 rp->item = CopyRvalItem(item,type);
 rp->type = type;  /* scalar, builtin function */
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
-if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-   }
-#endif
+ThreadLock(cft_lock);
 
 if (type == CF_LIST)
    {
@@ -394,12 +389,7 @@ else
 
 rp->next = NULL;
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
+ThreadUnlock(cft_lock);
 
 return rp;
 }
@@ -454,12 +444,7 @@ rp->next = *start;
 rp->item = CopyRvalItem(item,type);
 rp->type = type;  /* scalar, builtin function */
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
-if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-   }
-#endif
+ThreadLock(cft_lock);
 
 if (type == CF_LIST)
    {
@@ -472,13 +457,7 @@ else
 
 *start = rp;
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
-
+ThreadUnlock(cft_lock);
 return rp;
 }
 
@@ -732,22 +711,11 @@ else
 rp->item = item;
 rp->type = CF_SCALAR;
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD 
-if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-   }
-#endif
+ThreadLock(cft_lock);
 
 rp->next = NULL;
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
-
+ThreadUnlock(cft_lock);
 return rp;
 }
 

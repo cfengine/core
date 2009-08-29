@@ -359,21 +359,14 @@ va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+if (!ThreadLock(cft_system))
    {
    return;
    }
-#endif
 
 fprintf(fp,"%s %s",VPREFIX,buffer);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-   {
-   /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
-   }
-#endif 
+ThreadUnlock(cft_system);
 }
 
 /*********************************************************************************/
@@ -391,12 +384,10 @@ if (!IsPrivileged() || DONTDO)
  
 /* If we can't mutex it could be dangerous to proceed with threaded file descriptors */
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
+if (!ThreadLock(cft_system))
    {
    return;
    }
-#endif
  
 for (ip = mess; ip != NULL; ip = ip->next)
    {
@@ -419,13 +410,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       }
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-   {
-   /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
-   }
-#endif 
-
+ThreadUnlock(cft_system);
 }
 
 /*********************************************************************************/
@@ -436,12 +421,7 @@ void MakeReport(struct Item *mess,int prefix)
 
 for (ip = mess; ip != NULL; ip = ip->next)
    {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-      {
-      return;
-      }
-#endif
+   ThreadLock(cft_system);
    
    if (prefix)
       {
@@ -452,12 +432,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       printf("%s\n",ip->name);
       }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-      {
-      /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
-      }
-#endif    
+   ThreadUnlock(cft_system);
    }
 }
 
@@ -476,12 +451,7 @@ if ((fp = fopen(filename,"a")) == NULL)
   
 for (ip = mess; ip != NULL; ip = ip->next)
    {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-      {
-      return;
-      }
-#endif
+   ThreadLock(cft_system);
    
    if (prefix)
       {
@@ -492,12 +462,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       fprintf(fp,"%s\n",ip->name);
       }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-      {
-      /* CfLog(cferror,"pthread_mutex_unlock failed","lock");*/
-      }
-#endif
+   ThreadUnlock(cft_system);
    }
 
 if (fp != stdout)

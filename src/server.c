@@ -423,23 +423,17 @@ while (true)
       
       snprintf(intime,63,"%d",(int)now);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-      if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+      if (!ThreadLock(cft_count))
          {
-         CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
          return;
          }
-#endif
 
       PrependItem(&CONNECTIONLIST,MapAddress(ipaddr),intime);
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-      if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+      
+      if (!ThreadUnlock(cft_count))
          {
-         CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
          return;
          }
-#endif
       
       SpawnConnection(sd_reply,ipaddr);
       }
@@ -641,13 +635,10 @@ if (list == NULL)
 
 Debug("Purging Old Connections...\n");
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+if (!ThreadLock(cft_count))
    {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    return;
    }
-#endif
 
 for (ip = *list; ip != NULL; ip=ip->next)
    {
@@ -660,13 +651,10 @@ for (ip = *list; ip != NULL; ip=ip->next)
       }
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+if (!ThreadUnlock(cft_count))
    {
-   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
    return;
    }
-#endif
 
 Debug("Done purging\n");
 }
@@ -825,36 +813,34 @@ void *HandleConnection(struct cfd_connection *conn)
 sigemptyset(&sigmask);
 pthread_sigmask(SIG_BLOCK,&sigmask,NULL); 
 #endif
+#endif
 
 if (conn == NULL)
    {
    Debug("Null connection\n");
    return NULL;
    }
- 
-if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+
+if (!ThreadLock(cft_count))
    {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    DeleteConn(conn);
    return NULL;
    }
 
 ACTIVE_THREADS++;
 
-if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+if (!ThreadUnlock(cft_count))
    {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }  
+   }
 
 if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    {
-   if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+   if (!ThreadLock(cft_count))
       {
-      CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
       DeleteConn(conn);
       return NULL;
       }
-   
+
    ACTIVE_THREADS--;
    
    if (TRIES++ > MAXTRIES)  /* When to say we're hung / apoptosis threshold */
@@ -863,9 +849,8 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
       HandleSignals(SIGTERM);
       }
 
-   if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+   if (!ThreadUnlock(cft_count))
       {
-      CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
       }
 
    CfOut(cf_error,"","Too many threads (>=%d) -- increase MaxConnections?",CFD_MAXPROCESSES);
@@ -877,31 +862,23 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
 
 TRIES = 0;   /* As long as there is activity, we're not stuck */
  
-#endif
- 
 while (BusyWithConnection(conn))
    {
    }
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
+Debug("Terminating thread...\n");
 
- Debug("Terminating thread...\n");
- 
-if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+if (!ThreadLock(cft_count))
    {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    DeleteConn(conn);
    return NULL;
    }
 
 ACTIVE_THREADS--;
 
-if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+if (!ThreadUnlock(cft_count))
    {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
    }
- 
-#endif
 
 DeleteConn(conn);
 return NULL; 
@@ -1595,22 +1572,12 @@ sscanf(buf,"%255s %255s %255s",ipstring,fqname,username);
 
 Debug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",ipstring,fqname,username,conn->ipaddr);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   }
-#endif
- 
+ThreadLock(cft_system);
+
 strncpy(dns_assert,ToLowerStr(fqname),CF_MAXVARSIZE-1);
 strncpy(ip_assert,ipstring,CF_MAXVARSIZE-1);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_unlock failed");
-   }
-#endif 
+ThreadUnlock(cft_system);
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
@@ -1699,13 +1666,7 @@ if (response != NULL)
 
 Debug("IPV4 hostnname lookup on %s\n",dns_assert);
 
-# ifdef HAVE_PTHREAD_H  
- if (pthread_mutex_lock(&MUTEX_HOSTNAME) != 0)
-    {
-    CfOut(cf_error,"unlock","pthread_mutex_lock failed");
-    exit(1);
-    }
-# endif
+ThreadLock(cft_getaddr);
  
 if ((hp = gethostbyname(dns_assert)) == NULL)
    {
@@ -1776,16 +1737,9 @@ else
     {
     conn->uid = pw->pw_uid;
     }
- 
- 
-# ifdef HAVE_PTHREAD_H  
- if (pthread_mutex_unlock(&MUTEX_HOSTNAME) != 0)
-    {
-    CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-    exit(1);
-    }
-# endif
 
+ThreadUnlock(cft_getaddr); 
+ 
 #endif
 
 if (!matched)
@@ -1858,21 +1812,11 @@ CompressPath(realname,path);
 AddSlash(realname);
 strcat(realname,lastnode);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_lock failed");
-    }
-#endif
+ThreadLock(cft_system);
 
 strncpy(transrequest,MapName(realname),CF_BUFSIZE-1);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_unlock failed");
-    }
-#endif 
+ThreadUnlock(cft_system);
 
 if (lstat(transrequest,&statbuf) == -1)
    {
@@ -1881,8 +1825,6 @@ if (lstat(transrequest,&statbuf) == -1)
    }
 
 Debug("AccessControl, match(%s,%s) encrypt request=%d\n",transrequest,conn->hostname,encrypt);
-
-
 
 if (vadmit == NULL)
    {
@@ -1897,22 +1839,9 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
    int res = false;
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
 
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_lock failed");
-    }
-#endif
-
+   ThreadLock(cft_system);
    strncpy(transpath,MapName(ap->path),CF_BUFSIZE-1);
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_unlock failed");
-    }
-#endif 
+   ThreadUnlock(cft_system);
 
    if ((strlen(transrequest) > strlen(transpath)) && strncmp(transpath,transrequest,strlen(transpath)) == 0 && transrequest[strlen(transpath)] == FILE_SEPARATOR)
       {
@@ -2242,12 +2171,7 @@ if ((strcmp(sauth,"SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
 
 Debug("Challenge encryption = %c, nonce = %d, buf = %d\n",iscrypt,nonce_len,crypt_len);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_lock failed");
-    }
-#endif
+ThreadLock(cft_system);
  
 if ((decrypted_nonce = malloc(crypt_len)) == NULL)
    {
@@ -2260,13 +2184,7 @@ if (iscrypt == 'y')
       {
       err = ERR_get_error();
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-      if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-         {
-         CfOut(cf_error,"lock","pthread_mutex_unlock failed");
-         }
-#endif 
-
+      ThreadUnlock(cft_system);
       CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
       free(decrypted_nonce);
       return false;
@@ -2276,13 +2194,7 @@ else
    {
    if (nonce_len > crypt_len)
       {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-      if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-         {
-         CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-         }
-#endif 
-      
+      ThreadUnlock(cft_system);
       CfOut(cf_error,"","Illegal challenge\n");
       free(decrypted_nonce);
       return false;       
@@ -2291,12 +2203,7 @@ else
    memcpy(decrypted_nonce,recvbuffer+CF_RSA_PROTO_OFFSET,nonce_len);  
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
+ThreadUnlock(cft_system);
 
 /* Client's ID is now established by key or trusted, reply with md5 */
 
@@ -2305,23 +2212,9 @@ free(decrypted_nonce);
 
 /* Get the public key from the client */
 
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   }
-#endif
-
+ThreadLock(cft_system);
 newkey = RSA_new();
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_lock failed");
-   }
-#endif 
-
+ThreadUnlock(cft_system);
 
 /* proposition C2 */ 
 if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
@@ -2397,26 +2290,14 @@ nonce_len = BN_bn2mpi(counter_challenge,in);
 HashString(in,nonce_len,digest,cf_md5);
 encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
 
- 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   }
-#endif
+ThreadLock(cft_system);
  
 if ((out = malloc(encrypted_len+1)) == NULL)
    {
    FatalError("memory failure");
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
-
+ThreadUnlock(cft_system);
  
 if (RSA_public_encrypt(nonce_len,in,out,newkey,RSA_PKCS1_PADDING) <= 0)
    {
@@ -2502,18 +2383,13 @@ if (keylen > CF_BUFSIZE/2)
    }
 else
    {
-   Debug("Got Blowfish size %d\n",keylen);
+   Debug("Got encryption size %d\n",keylen);
    DebugBinOut(in,keylen);
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   }
-#endif
+ThreadLock(cft_system);
  
-conn->session_key = malloc(CF_BLOWFISHSIZE); 
+conn->session_key = malloc(CF_FIPS_SIZE); 
 
 if (conn->session_key == NULL)
    {
@@ -2523,21 +2399,17 @@ if (conn->session_key == NULL)
    return false;
    }
 
-if (keylen == CF_BLOWFISHSIZE) /* Old, non-encrypted */
+if (keylen == CF_BLOWFISHSIZE) /* Support the old non-ecnrypted for upgrade */
    {
    memcpy(conn->session_key,in,CF_BLOWFISHSIZE);
    }
-else /* New encrypted */
+else
    {
+   /* New protocol encrypted */
+   
    if (RSA_private_decrypt(keylen,in,out,PRIVKEY,RSA_PKCS1_PADDING) <= 0)
       {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-      if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-         {
-         CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-         }
-#endif
-      
+      ThreadUnlock(cft_system);      
       err = ERR_get_error();
       CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
       return false;
@@ -2546,12 +2418,7 @@ else /* New encrypted */
    memcpy(conn->session_key,out,CF_BLOWFISHSIZE);
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-      {
-      CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-      }
-#endif
+ThreadUnlock(cft_system);
 
 Debug("Got a session key...\n"); 
 DebugBinOut(conn->session_key,16);
@@ -3487,21 +3354,11 @@ struct cfd_connection *NewConn(int sd)  /* construct */
 
 { struct cfd_connection *conn;
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"lock","pthread_mutex_lock failed");
-    }
-#endif
+ThreadLock(cft_system);
  
 conn = (struct cfd_connection *) malloc(sizeof(struct cfd_connection));
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-    }
-#endif
+ThreadUnlock(cft_system);
  
 if (conn == NULL)
    {
@@ -3540,25 +3397,17 @@ if (conn->session_key != NULL)
  
 if (conn->ipaddr != NULL)
    {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+   if (!ThreadLock(cft_count))
       {
-      CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-      DeleteConn(conn);
       return;
       }
-#endif
 
    DeleteItemMatching(&CONNECTIONLIST,MapAddress(conn->ipaddr));
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
+   if (!ThreadUnlock(cft_count))
       {
-      CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-      DeleteConn(conn);
       return;
       }
-#endif
    }
  
 free ((char *)conn);
@@ -3572,22 +3421,9 @@ int SafeOpen(char *filename)
 
 { int fd;
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-    }
-#endif
- 
+ThreadLock(cft_system);
 fd = open(filename,O_RDONLY);
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-    }
-#endif
-
+ThreadUnlock(cft_system);
 return fd;
 }
 
@@ -3597,21 +3433,9 @@ return fd;
 void SafeClose(int fd)
 
 {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_lock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-    }
-#endif
- 
+ThreadLock(cft_system); 
 close(fd);
-
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
- if (pthread_mutex_unlock(&MUTEX_SYSCALL) != 0)
-    {
-    CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-    }
-#endif
+ThreadUnlock(cft_system);
 }
 
 /***************************************************************/
@@ -3621,7 +3445,6 @@ int cfscanf(char *in,int len1,int len2,char *out1,char *out2,char *out3)
 {  
 int len3=0;
 char *sp;
-   
    
 sp = in;
 memcpy(out1,sp,len1);

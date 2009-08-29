@@ -1179,6 +1179,8 @@ time_t FindLockTime(char *name);
 pid_t FindLockPid(char *name);
 DB *OpenLock(void);
 void CloseLock(DB *dbp);
+int ThreadLock(enum cf_thread_mutex name);
+int ThreadUnlock(enum cf_thread_mutex name);
 
 /* timeout.c */
 

@@ -1049,23 +1049,9 @@ int ServerOffline(char *server)
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   exit(1);
-   }
-#endif
-
+ThreadLock(cft_getaddr);
 strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
-  
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
+ThreadUnlock(cft_getaddr);
 
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
@@ -1089,23 +1075,9 @@ struct cfagent_connection *ServerConnectionReady(char *server)
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   exit(1);
-   }
-#endif
-
+ThreadLock(cft_getaddr);
 strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
-
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
+ThreadUnlock(cft_getaddr);
   
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
@@ -1162,23 +1134,9 @@ void MarkServerOffline(char *server)
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   exit(1);
-   }
-#endif
-
+ThreadLock(cft_getaddr);
 strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
-
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
+ThreadUnlock(cft_getaddr);
   
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
@@ -1192,13 +1150,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
       }
    }
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   exit(1);
-   }
-#endif
+ThreadLock(cft_getaddr);
 
 /* If no existing connection, get one .. */
 
@@ -1219,20 +1171,13 @@ if ((svp->server = strdup(ipname)) == NULL)
 free(rp->item);
 rp->item = svp;
 
-
 if (svp->conn = NewAgentConn())
    {
    /* If we couldn't connect, mark this server unavailable for everyone */
    svp->conn->sd = CF_COULD_NOT_CONNECT;
    }
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
+ThreadUnlock(cft_getaddr);
 }
 
 /*********************************************************************/
@@ -1245,13 +1190,10 @@ void CacheServerConnection(struct cfagent_connection *conn,char *server)
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
+if (!ThreadLock(cft_getaddr))
    {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
    exit(1);
    }
-#endif
 
 strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
 
@@ -1263,13 +1205,7 @@ svp->server = strdup(ipname);
 svp->conn = conn;
 svp->busy = true;
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
+ThreadUnlock(cft_getaddr);
 }
 
 /*********************************************************************/

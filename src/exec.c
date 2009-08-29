@@ -835,13 +835,10 @@ else
    rtn = 1;
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_lock(&MUTEX_COUNT) != 0)
+if (!ThreadLock(cft_count))
    {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
    exit(1);
    }
-#endif
 
 unlink(prev_file);
 
@@ -851,14 +848,7 @@ if (symlink(filename, prev_file) == -1)
    rtn = 1;
    }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-if (pthread_mutex_unlock(&MUTEX_COUNT) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
-
+ThreadUnlock(cft_count);
 return(rtn);
 }
 

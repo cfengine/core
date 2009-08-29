@@ -32,8 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-extern pthread_mutex_t MUTEX_GETADDR;
-
 /*********************************************************************/
 
 int ArchiveToRepository(char *file,struct Attributes attr,struct Promise *pp)
@@ -72,23 +70,9 @@ if (IsItemIn(VREPOSLIST,file))
    return true;
    }
 
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_lock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"lock","pthread_mutex_lock failed");
-   exit(1);
-   }
-#endif
-
+ThreadLock(cft_getaddr);
 PrependItemList(&VREPOSLIST,file);
-
-#ifdef HAVE_PTHREAD_H  
-if (pthread_mutex_unlock(&MUTEX_GETADDR) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   exit(1);
-   }
-#endif
+ThreadUnlock(cft_getaddr);
 
 Debug("Repository(%s)\n",file);
 

@@ -873,6 +873,15 @@ enum action_policy
   cfa_no_ppolicy
   };
 
+enum cf_thread_mutex
+  {
+  cft_system,
+  cft_count,
+  cft_getaddr,
+  cft_lock,
+  cft_no_tpolicy
+  };
+
 /************************************************************************************/
 
 enum cf_acl_method

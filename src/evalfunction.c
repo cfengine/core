@@ -215,7 +215,7 @@ struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs)
 { static char *argtemplate[] =
      {
      CF_ANYSTRING,
-     "md5,sha1,crypt",
+     "md5,sha1,sha256,sha512,sha384,crypt",
      NULL
      };
   static enum cfdatatype argtypes[] =

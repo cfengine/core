@@ -328,6 +328,11 @@ switch (type)
        
    default:
        md = EVP_get_digestbyname(FileHashName(type));
+
+       if (md == NULL)
+          {
+          CfOut(cf_inform,""," !! Digest type %s not supported by OpenSSL library",CF_DIGEST_TYPES[type][0]);
+          }
        
        EVP_DigestInit(&context,md); 
        EVP_DigestUpdate(&context,(unsigned char*)buffer,len);
@@ -361,21 +366,18 @@ char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
 { unsigned int i;
   static char buffer[EVP_MAX_MD_SIZE*4];
-  int len = 16;
 
-switch(type)
+switch (type)
    {
-   case cf_sha1:
-       sprintf(buffer,"SHA=  ");
-       len = 20;
-       break;
    case cf_md5:
        sprintf(buffer,"MD5=  ");
-       len = 16;
+       break;
+   default:
+       sprintf(buffer,"SHA=  ");
        break;
    }
-  
-for (i = 0; i < len; i++)
+
+for (i = 0; i < CF_DIGEST_SIZES[type]; i++)
    {
    sprintf((char *)(buffer+4+2*i),"%02x", digest[i]);
    }

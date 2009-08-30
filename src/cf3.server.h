@@ -44,6 +44,7 @@ struct cfd_connection
    char hostname[CF_MAXVARSIZE];
    char username[CF_MAXVARSIZE];
    uid_t uid;
+   char encryption_type;
    char ipaddr[CF_MAX_IP_LEN];
    char output[CF_BUFSIZE*2];   /* Threadsafe output channel */
    };

@@ -279,14 +279,14 @@ EVP_DigestFinal(&context,digest,&md_len);
 
 /*********************************************************************/
 
-int EncryptString(char *in,char *out,unsigned char *key,int plainlen)
+int EncryptString(char type,char *in,char *out,unsigned char *key,int plainlen)
 
-{ int cipherlen, tmplen;
- unsigned char iv[8] = {1,2,3,4,5,6,7,8};
- EVP_CIPHER_CTX ctx;
+{ int cipherlen = 0, tmplen;
+  unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
+  EVP_CIPHER_CTX ctx;
  
 EVP_CIPHER_CTX_init(&ctx);
-EVP_EncryptInit(&ctx,EVP_bf_cbc(),key,iv);
+EVP_EncryptInit(&ctx,CfengineCipher(type),key,iv);
  
 if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,in,plainlen))
    {
@@ -305,14 +305,14 @@ return cipherlen;
 
 /*********************************************************************/
 
-int DecryptString(char *in,char *out,unsigned char *key,int cipherlen)
+int DecryptString(char type,char *in,char *out,unsigned char *key,int cipherlen)
 
-{ int plainlen, tmplen;
-  unsigned char iv[8] = {1,2,3,4,5,6,7,8};
+{ int plainlen = 0, tmplen;
+  unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
   EVP_CIPHER_CTX ctx;
- 
+
 EVP_CIPHER_CTX_init(&ctx);
-EVP_DecryptInit(&ctx,EVP_bf_cbc(),key,iv);
+EVP_DecryptInit(&ctx,CfengineCipher(type),key,iv);
 
 if (!EVP_DecryptUpdate(&ctx,out,&plainlen,in,cipherlen))
    {
@@ -325,7 +325,7 @@ if (!EVP_DecryptFinal(&ctx,out+plainlen,&tmplen))
    }
  
 plainlen += tmplen;
- 
+
 EVP_CIPHER_CTX_cleanup(&ctx);
 return plainlen; 
 }

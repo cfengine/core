@@ -359,14 +359,14 @@ va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
 
-if (!ThreadLock(cft_system))
+if (!ThreadLock(cft_output))
    {
    return;
    }
 
 fprintf(fp,"%s %s",VPREFIX,buffer);
 
-ThreadUnlock(cft_system);
+ThreadUnlock(cft_output);
 }
 
 /*********************************************************************************/
@@ -384,7 +384,7 @@ if (!IsPrivileged() || DONTDO)
  
 /* If we can't mutex it could be dangerous to proceed with threaded file descriptors */
 
-if (!ThreadLock(cft_system))
+if (!ThreadLock(cft_output))
    {
    return;
    }
@@ -410,7 +410,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       }
    }
 
-ThreadUnlock(cft_system);
+ThreadUnlock(cft_output);
 }
 
 /*********************************************************************************/
@@ -421,7 +421,7 @@ void MakeReport(struct Item *mess,int prefix)
 
 for (ip = mess; ip != NULL; ip = ip->next)
    {
-   ThreadLock(cft_system);
+   ThreadLock(cft_output);
    
    if (prefix)
       {
@@ -432,7 +432,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       printf("%s\n",ip->name);
       }
 
-   ThreadUnlock(cft_system);
+   ThreadUnlock(cft_output);
    }
 }
 
@@ -451,7 +451,7 @@ if ((fp = fopen(filename,"a")) == NULL)
   
 for (ip = mess; ip != NULL; ip = ip->next)
    {
-   ThreadLock(cft_system);
+   ThreadLock(cft_output);
    
    if (prefix)
       {
@@ -462,7 +462,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       fprintf(fp,"%s\n",ip->name);
       }
 
-   ThreadUnlock(cft_system);
+   ThreadUnlock(cft_output);
    }
 
 if (fp != stdout)

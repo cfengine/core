@@ -75,6 +75,7 @@
 #define CF_DONEPASSES  4
 
 #define CF_TIME_SIZE 32
+#define CF_FIPS_SIZE 32
 
 /*************************************************************************/
 /** Design criteria                                                      */
@@ -879,6 +880,7 @@ enum cf_thread_mutex
   cft_count,
   cft_getaddr,
   cft_lock,
+  cft_output,
   cft_no_tpolicy
   };
 

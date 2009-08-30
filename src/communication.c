@@ -50,6 +50,7 @@ ap->trust = false;
 ap->localip[0] = '\0';
 ap->remoteip[0] = '\0';
 ap->session_key = NULL;
+ap->encryption_type = 'c';
 ap->error = false; 
 return ap;
 };

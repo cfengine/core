@@ -8,9 +8,13 @@ bundle agent main
 {
 classes:
 
-    "testclass" expression => returnszero("/bin/true sdkjfh","noshell");
+    "testclass1" expression => returnszero("/bin/true","noshell");
+    "testclass2" expression => returnszero("/bin/false","noshell");
 
 reports:
-    testclass::
-        "testclass is defined";
+    testclass1::
+        "true is defined";
+
+    testclass2::
+        "false is defined";
 }

@@ -1049,7 +1049,7 @@ switch (GetCommand(recvbuffer))
           return false;
           }
        
-       plainlen = DecryptString(recvbuffer+CF_PROTO_OFFSET,buffer,conn->session_key,len);
+       plainlen = DecryptString(conn->encryption_type,recvbuffer+CF_PROTO_OFFSET,buffer,conn->session_key,len);
        
        cfscanf(buffer,strlen("GET"),strlen("dummykey"),check,sendbuffer,filename);
        
@@ -1115,7 +1115,7 @@ switch (GetCommand(recvbuffer))
 
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
        
-       plainlen = DecryptString(out,recvbuffer,conn->session_key,len);
+       plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
 
        if (strncmp(recvbuffer,"OPENDIR",7) !=0)
           {
@@ -1181,8 +1181,8 @@ switch (GetCommand(recvbuffer))
           }
 
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
-       
-       plainlen = DecryptString(out,recvbuffer,conn->session_key,len);
+
+       plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
 
        if (strncmp(recvbuffer,"SYNCH",5) !=0)
           {
@@ -1251,7 +1251,7 @@ switch (GetCommand(recvbuffer))
           }
        
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
-       plainlen = DecryptString(out,recvbuffer,conn->session_key,len);
+       plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
        
        if (strncmp(recvbuffer,"MD5",3) !=0)
           {
@@ -1284,7 +1284,7 @@ switch (GetCommand(recvbuffer))
           }
 
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
-       plainlen = DecryptString(out,recvbuffer,conn->session_key,len);
+       plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
        encrypted = true;
        
        if (strncmp(recvbuffer,"VAR",3) !=0)
@@ -1316,7 +1316,7 @@ switch (GetCommand(recvbuffer))
  
 sprintf (sendbuffer,"BAD: Request denied\n");
 SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
-CfOut(cf_inform,"","Closing connection\n"); 
+CfOut(cf_inform,"","Closing connection, due to request: \"%s\"\n",recvbuffer); 
 return false;
 }
 
@@ -2119,8 +2119,8 @@ int AuthenticationDialogue(struct cfd_connection *conn,char *recvbuffer, int rec
   BIGNUM *counter_challenge = NULL;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   unsigned int crypt_len, nonce_len = 0,encrypted_len = 0;
-  char sauth[10], iscrypt ='n';
-  int len = 0,keylen;
+  char sauth[10], iscrypt ='n',enterprise_field = 'c';
+  int len = 0,keylen, session_size;
   unsigned long err;
   RSA *newkey;
 
@@ -2135,7 +2135,7 @@ if (PRIVKEY == NULL || PUBKEY == NULL)
 
 sauth[0] = '\0';
 
-sscanf(recvbuffer,"%s %c %u %u",sauth,&iscrypt,&crypt_len,&nonce_len);
+sscanf(recvbuffer,"%s %c %u %u %c",sauth,&iscrypt,&crypt_len,&nonce_len,&enterprise_field);
 
 if (crypt_len == 0 || nonce_len == 0 || strlen(sauth) == 0)
    {
@@ -2159,13 +2159,13 @@ if (crypt_len > 2*CF_NONCELEN)
 
 if (recvbuffer+CF_RSA_PROTO_OFFSET+nonce_len > recvbuffer+recvlen)
    {
-   CfOut(cf_inform,"","Protocol consistency error in authentation from IP %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol consistency error in authentication from %s\n",conn->hostname);
    return false;   
    }
 
 if ((strcmp(sauth,"SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
    {
-   CfOut(cf_inform,"","Protocol error in RSA authentation from IP %s\n",conn->hostname);
+   CfOut(cf_inform,"","Protocol error in RSA authentication from IP %s\n",conn->hostname);
    return false;
    }
 
@@ -2388,8 +2388,10 @@ else
    }
 
 ThreadLock(cft_system);
- 
-conn->session_key = malloc(CF_FIPS_SIZE); 
+
+session_size = CfSessionKeySize(enterprise_field);
+conn->session_key = malloc(session_size); 
+conn->encryption_type = enterprise_field;
 
 if (conn->session_key == NULL)
    {
@@ -2401,7 +2403,7 @@ if (conn->session_key == NULL)
 
 if (keylen == CF_BLOWFISHSIZE) /* Support the old non-ecnrypted for upgrade */
    {
-   memcpy(conn->session_key,in,CF_BLOWFISHSIZE);
+   memcpy(conn->session_key,in,session_size);
    }
 else
    {
@@ -2415,7 +2417,7 @@ else
       return false;
       }
    
-   memcpy(conn->session_key,out,CF_BLOWFISHSIZE);
+   memcpy(conn->session_key,out,session_size);
    }
 
 ThreadUnlock(cft_system);
@@ -2833,7 +2835,7 @@ snprintf(sendbuffer,CF_BUFSIZE-1,"%s",ReturnLiteralData(handle));
 
 if (encrypted)
    {
-   cipherlen = EncryptString(sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
+   cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
    SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
    }
 else
@@ -2929,7 +2931,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
    if (strlen(dirp->d_name)+1+offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
       {
-      cipherlen = EncryptString(sendbuffer,out,conn->session_key,offset+1);
+      cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,offset+1);
       SendTransaction(conn->sd_reply,out,cipherlen,CF_MORE);
       offset = 0;
       memset(sendbuffer,0,CF_BUFSIZE);
@@ -2941,7 +2943,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    }
  
 strcpy(sendbuffer+offset,CFD_TERMINATOR);
-cipherlen = EncryptString(sendbuffer,out,conn->session_key,offset+2+strlen(CFD_TERMINATOR));
+cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,offset+2+strlen(CFD_TERMINATOR));
 SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
 Debug("END CfSecOpenDirectory(%s)\n",dirname);
 closedir(dirh);
@@ -3374,7 +3376,7 @@ conn->hostname[0] = '\0';
 conn->ipaddr[0] = '\0';
 conn->username[0] = '\0'; 
 conn->session_key = NULL;
-
+conn->encryption_type = 'c';
  
 Debug("*** New socket [%d]\n",sd);
  

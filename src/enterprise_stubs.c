@@ -88,6 +88,39 @@ void EnterpriseVersion()
 
 /*****************************************************************************/
 
+int CfSessionKeySize(char c)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_CfSessionKeySize(c);
+#else
+return CF_BLOWFISHSIZE; 
+#endif 
+}
+
+/*****************************************************************************/
+
+char CfEnterpriseOptions()
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_CfEnterpriseOptions();
+#else
+return 'c'
+#endif 
+}
+
+/*****************************************************************************/
+
+const EVP_CIPHER *CfengineCipher(char type)
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_CfengineCipher(type);
+#else
+return EVP_bf_cbc();
+#endif 
+}
+
+/*****************************************************************************/
+
 int EnterpriseExpiry(char *day,char *month,char *year)
 
 {

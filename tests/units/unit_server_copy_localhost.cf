@@ -26,7 +26,7 @@ version => "1.2.3";
 bundle agent testbundle
 
 {
-files:
+files: 
 
   "/home/mark/tmp/testcopy" 
 
@@ -74,6 +74,7 @@ body copy_from mycopy(from,server)
 source      => "$(from)";
 servers     => { "$(server)" };
 compare     => "digest";
+encrypt     => "true";
 verify      => "true";
 copy_backup => "true";                  #/false/timestamp
 purge       => "false";
@@ -107,6 +108,7 @@ trustkeysfrom         => { "127.0.0.1" , "::1" };
 bundle server access_rules()
 
 {
+
 access:
 
   "/home/mark/LapTop"

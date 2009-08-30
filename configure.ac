@@ -16,7 +16,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.2)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.3a1)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -117,7 +117,7 @@ else
     if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
 
         for d in $prefix /opt /usr/local /usr; do
-            for v in db-4 db4 db3 db db40; do
+            for v in db-4 db47 db46 db45 db44 db43 db42 db41 db4 db3 db db40; do
 
                 if test -f "$d/include/$v/db.h" ; then
                     echo "Found header in $d/include/$v "
@@ -389,7 +389,7 @@ AC_ARG_WITH(pcre,
                         fi
                     done
                     if test x"$PCRE_LIB" = x ; then
-                        AC_MSG_ERROR(Cannot find PCRE)
+                        AC_MSG_ERROR(Cannot find PCRE - specify the path)
                     fi
                 else
                 if test -f "${withval}/include/pcreposix.h" ; then
@@ -397,7 +397,7 @@ AC_ARG_WITH(pcre,
                     LDFLAGS="$LDFLAGS -L${withval}/lib"
                     AC_MSG_RESULT("${withval}")
                 else
-                    AC_MSG_ERROR(Cannot find PCRE)
+                    AC_MSG_ERROR(Cannot find PCRE - specify the path)
                 fi
                 fi
             else

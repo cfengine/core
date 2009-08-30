@@ -137,7 +137,8 @@ if (strcmp(server,"localhost") == 0)
    }
 
 conn->authenticated = false;
- 
+conn->encryption_type = CfEnterpriseOptions();
+
 if (conn->sd == CF_NOT_CONNECTED)
    {   
    Debug("Opening server connnection to %s\n",server);
@@ -245,7 +246,7 @@ if (attr.copy.encrypt)
       }
    
    snprintf(in,CF_BUFSIZE-1,"SYNCH %d STAT %s",tloc,file);
-   cipherlen = EncryptString(in,out,conn->session_key,strlen(in)+1);
+   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+1);
    snprintf(sendbuffer,CF_BUFSIZE-1,"SSYNCH %d",cipherlen);
    memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
    tosend = cipherlen+CF_PROTO_OFFSET;
@@ -431,7 +432,7 @@ if (attr.copy.encrypt)
       }
    
    snprintf(in,CF_BUFSIZE,"OPENDIR %s",dirname);
-   cipherlen = EncryptString(in,out,conn->session_key,strlen(in)+1);
+   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+1);
    snprintf(sendbuffer,CF_BUFSIZE-1,"SOPENDIR %d",cipherlen);
    memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
    tosend = cipherlen+CF_PROTO_OFFSET;
@@ -469,7 +470,7 @@ while (!done)
    if (attr.copy.encrypt)
       {
       memcpy(in,recvbuffer,n);
-      plainlen = DecryptString(in,recvbuffer,conn->session_key,n);
+      plainlen = DecryptString(conn->encryption_type,in,recvbuffer,conn->session_key,n);
       }
 
    if (FailedProtoReply(recvbuffer))
@@ -572,7 +573,7 @@ if (attr.copy.encrypt)
       *sp++ = d[i];
       }
    
-   cipherlen = EncryptString(in,out,conn->session_key,strlen(in)+CF_SMALL_OFFSET+CF_MD5_LEN);
+   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+CF_SMALL_OFFSET+CF_MD5_LEN);
    snprintf(sendbuffer,CF_BUFSIZE,"SMD5 %d",cipherlen);
    memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
    tosend = cipherlen + CF_PROTO_OFFSET;
@@ -660,7 +661,7 @@ if (buf_size < 2048)
 if (attr.copy.encrypt)
    {   
    snprintf(in,CF_BUFSIZE-CF_PROTO_OFFSET,"GET dummykey %s",source);
-   cipherlen = EncryptString(in,out,conn->session_key,strlen(in)+1);
+   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+1);
    snprintf(sendbuffer,CF_BUFSIZE,"SGET %4d %4d",cipherlen,buf_size);
    memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
    tosend=cipherlen+CF_PROTO_OFFSET;   

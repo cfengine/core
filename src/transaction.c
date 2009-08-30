@@ -375,6 +375,18 @@ switch(name)
 #endif 
        break;
 
+   case cft_output:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       
+       if ((val = pthread_mutex_lock(&MUTEX_OUTPUT)) != 0)
+          {
+          CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
+          }
+#endif 
+       break;
+
+       
    default:
        break;
   }
@@ -433,7 +445,18 @@ switch(name)
 #endif
    break;
 
-   
+   case cft_output:
+       
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+       
+       if ((val = pthread_mutex_unlock(&MUTEX_OUTPUT)) != 0)
+          {
+          CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+          }
+#endif
+       break;
+
+       
    }
 
 return (val == 0);

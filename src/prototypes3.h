@@ -267,12 +267,11 @@ void DebugBinOut(char *buffer,int len);
 void RandomSeed (void);
 void LoadSecretKeys (void);
 void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
-int EncryptString (char *in, char *out, unsigned char *key, int len);
-int DecryptString (char *in, char *out, unsigned char *key, int len);
+int EncryptString (char type,char *in, char *out, unsigned char *key, int len);
+int DecryptString (char type,char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey (char *ipaddress);
 void SavePublicKey (char *ipaddress, RSA *key);
 void DeletePublicKey (char *ipaddress);
-void GenerateRandomSessionKey (void);
 char *KeyPrint(RSA *key);
 
 /* dtypes.c */
@@ -283,6 +282,9 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
+int CfSessionKeySize(char c);
+char CfEnterpriseOptions(void);
+const EVP_CIPHER *CfengineCipher(char type);
 void Aggregate(void);
 void SetPolicyServer(char *name);
 int IsEnterprise(void);

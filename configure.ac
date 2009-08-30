@@ -117,7 +117,7 @@ else
     if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
 
         for d in $prefix /opt /usr/local /usr; do
-            for v in db-4 db47 db46 db45 db44 db43 db42 db41 db4 db3 db db40; do
+            for v in db-4 db4 db3 db db40; do
 
                 if test -f "$d/include/$v/db.h" ; then
                     echo "Found header in $d/include/$v "

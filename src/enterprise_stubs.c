@@ -104,7 +104,7 @@ char CfEnterpriseOptions()
 #ifdef HAVE_LIBCFNOVA
 return Nova_CfEnterpriseOptions();
 #else
-return 'c'
+return 'c';
 #endif 
 }
 

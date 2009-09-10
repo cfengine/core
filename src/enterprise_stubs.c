@@ -91,7 +91,7 @@ void EnterpriseVersion()
 int CfSessionKeySize(char c)
 {
 #ifdef HAVE_LIBCFNOVA
-Nova_CfSessionKeySize(c);
+return Nova_CfSessionKeySize(c);
 #else
 return CF_BLOWFISHSIZE; 
 #endif 

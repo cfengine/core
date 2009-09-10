@@ -40,25 +40,25 @@ void AddTopic(struct Topic **list,char *name,char *type)
 
 if (TopicExists(*list,name,type))
    {
-   CfOut(cf_verbose,"","Topic %s already defined\n",name);
+   CfOut(cf_verbose,""," ! Topic %s already defined\n",name);
    return;
    }
  
 if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
    {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
+   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
    FatalError("");
    }
 
 if ((tp->topic_name = strdup(name)) == NULL)
    {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
+   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
    FatalError("");
    }
 
 if ((tp->topic_type = strdup(type)) == NULL)
    {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
+   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
    FatalError("");
    }
 
@@ -78,19 +78,19 @@ void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type)
 
 if (TopicExists(*list,name,type))
    {
-   CfOut(cf_verbose,"","Topic %s already defined\n",name);
+   CfOut(cf_verbose,""," ! Topic %s already defined\n",name);
    return;
    }
  
 if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
    {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
+   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
    FatalError("");
    }
 
 if ((tp->topic_name = strdup(name)) == NULL)
    {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
+   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
    FatalError("");
    }
 
@@ -131,7 +131,7 @@ strncpy(assoc_type,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
 
 if (associates == NULL || associates->item == NULL)
    {
-   CfOut(cf_error,"A topic must have at least one associate in association %s",fwd_name);
+   CfOut(cf_error," !! A topic must have at least one associate in association %s",fwd_name);
    return;
    }
 
@@ -209,7 +209,7 @@ if (!(op = OccurrenceExists(*list,reference,rtype)))
 
 if (represents == NULL)
    {
-   CfOut(cf_error,"","Topic occurrence \"%s\" claims to represent no aspect of its topic, discarding...",reference);
+   CfOut(cf_error,""," !! Topic occurrence \"%s\" claims to represent no aspect of its topic, discarding...",reference);
    return;
    }
 
@@ -304,8 +304,6 @@ topic2[0] = '\0';
 DeTypeTopic(ttopic1,topic1,type1);
 DeTypeTopic(ttopic2,topic2,type2);
 
-CfOut(cf_verbose,"","Comparing: (%s)=(%s)\n",topic1,topic2);
-
 if (strlen(type1) > 0 && strlen(type2) > 0)
    {
    if (strcmp(topic1,topic2) == 0 && strcmp(type1,type2) == 0)
@@ -370,7 +368,7 @@ else
    return longname;
    }
 
-CfOut(cf_error,"","Could not assemble long name for a known topic %s - something funny going on",topic_name);
+CfOut(cf_error,""," !! Could not assemble long name for a known topic %s - something funny going on",topic_name);
 return NULL;
 }
 
@@ -402,7 +400,7 @@ for (tp = list; tp != NULL; tp=tp->next)
       {
       if (topic_type && strcmp(tp->topic_type,topic_type) != 0)
          {
-         CfOut(cf_inform,"","Topic \"%s\" already exists, but it promises type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
+         CfOut(cf_inform,""," !! Topic \"%s\" already exists, but it promises type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
          return false;         
          }
       else
@@ -416,7 +414,7 @@ for (tp = list; tp != NULL; tp=tp->next)
    
    if (strcmp(l,r) == 0)
       {
-      CfOut(cf_inform,"","Topic \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",topic_name,tp->topic_name);
+      CfOut(cf_inform,""," ! Topic \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",topic_name,tp->topic_name);
       }
    }
 
@@ -466,13 +464,13 @@ for (ta = list; ta != NULL; ta=ta->next)
       
       if (strcmp(l,r) == 0)
          {
-         CfOut(cf_error,"","Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",fwd,ta->fwd_name);
+         CfOut(cf_error,""," ! Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",fwd,ta->fwd_name);
          }
       }
    
    if (bwd && strcmp(bwd,ta->bwd_name) == 0)
       {
-      CfOut(cf_verbose,"","Association %s exists already\n",bwd);
+      CfOut(cf_verbose,""," ! Association %s exists already\n",bwd);
       ybwd = true;
       }
    else if (bwd && ta->bwd_name)
@@ -482,19 +480,19 @@ for (ta = list; ta != NULL; ta=ta->next)
       
       if (strcmp(l,r) == 0)
          {
-         CfOut(cf_inform,"","Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",bwd,ta->bwd_name);
+         CfOut(cf_inform,""," ! Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",bwd,ta->bwd_name);
          }
       }
    
    if (ta->bwd_name && strcmp(fwd,ta->bwd_name) == 0)
       {
-      CfOut(cf_inform,"","Association \"%s\" exists already but in opposite orientation\n",fwd);
+      CfOut(cf_inform,""," ! Association \"%s\" exists already but in opposite orientation\n",fwd);
       return ta;
       }
 
    if (bwd && strcmp(bwd,ta->fwd_name) == 0)
       {
-      CfOut(cf_inform,"","Association \"%s\" exists already but in opposite orientation\n",bwd);
+      CfOut(cf_inform,""," ! Association \"%s\" exists already but in opposite orientation\n",bwd);
       return ta;
       }
 
@@ -505,13 +503,13 @@ for (ta = list; ta != NULL; ta=ta->next)
    
    if (yfwd && !ybwd)
       {
-      CfOut(level,"","Association \"%s\" exists but the reverse association is missing\n",fwd);
+      CfOut(level,""," !! Association \"%s\" exists but the reverse association is missing\n",fwd);
       return ta;
       }
    
    if (!yfwd && ybwd)
       {
-      CfOut(level,"","The reverse association \"%s\" exists but the forward association is missing\n",fwd);
+      CfOut(level,""," !! The reverse association \"%s\" exists but the forward association is missing\n",fwd);
       return ta;
       }
    }

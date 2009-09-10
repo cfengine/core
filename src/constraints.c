@@ -154,7 +154,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_UNDEFINED)
             {
-            CfOut(cf_error,"","Multiple %s constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" (boolean) constraints break this promise\n",lval);
             }
          }
       else
@@ -204,7 +204,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_UNDEFINED)
             {
-            CfOut(cf_error,"","Multiple %s constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" constraints break this promise\n",lval);
             }
          }
       else
@@ -240,7 +240,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_NOINT)
             {
-            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" (int) constraints break this promise\n",lval);
             }
          }
       else
@@ -276,7 +276,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_NODOUBLE)
             {
-            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" (real) constraints break this promise\n",lval);
             }
          }
       else
@@ -314,7 +314,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != 077)
             {
-            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" (int,octal) constraints break this promise\n",lval);
             }
          }
       else
@@ -351,7 +351,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_UNDEFINED)
             {
-            CfOut(cf_error,"","Multiple %s owner constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" (owner/uid) constraints break this promise\n",lval);
             }
          }
       else
@@ -388,7 +388,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != CF_UNDEFINED)
             {
-            CfOut(cf_error,"","Multiple %s group constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\"  (group/gid) constraints break this promise\n",lval);
             }
          }
       else
@@ -424,7 +424,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != NULL)
             {
-            CfOut(cf_error,"","Multiple %s int constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Multiple \"%s\" int constraints break this promise\n",lval);
             }
          }
       else
@@ -454,7 +454,7 @@ void *GetConstraint(char *lval,struct Constraint *list,char rtype)
 
 if (!VerifyConstraintName(lval))
    {
-   CfOut(cf_error,"","Self-diagnostic: Constraint type %s is not a registered type\n",lval);
+   CfOut(cf_error,""," !! Self-diagnostic: Constraint type %s is not a registered type\n",lval);
    }
 
 for (cp = list; cp != NULL; cp=cp->next)
@@ -465,7 +465,7 @@ for (cp = list; cp != NULL; cp=cp->next)
          {
          if (retval != NULL)
             {
-            CfOut(cf_error,"","Inconsistent %s constraints break this promise\n",lval);
+            CfOut(cf_error,""," !! Inconsistent %s constraints break this promise\n",lval);
             }
 
          retval = cp->rval;

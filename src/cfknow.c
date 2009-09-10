@@ -99,7 +99,6 @@ int WRITE_SQL = false;
 int ISREGEX = false;
 int GRAPH = false;
 int GENERATE_MANUAL = false;
-char GRAPHDIR[CF_BUFSIZE];
 char MANDIR[CF_BUFSIZE];
 
 /*******************************************************************/
@@ -327,7 +326,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
 
    if (GetVariable("control_knowledge",cp->lval,&retval,&rettype) == cf_notype)
       {
-      CfOut(cf_error,"","Unknown lval %s in knowledge control body",cp->lval);
+      CfOut(cf_error,""," !! Unknown lval %s in knowledge control body",cp->lval);
       continue;
       }
    
@@ -354,7 +353,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       
       if (SQL_TYPE == cfd_notype)
          {
-         CfOut(cf_error,"","Database type \"%s\" is not a supported database type",retval);
+         CfOut(cf_error,""," !! Database type \"%s\" is not a supported database type",retval);
          }
       continue;
       }
@@ -468,7 +467,7 @@ void KeepPromiseBundles()
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
-   CfOut(cf_error,"","No bundlesequence in the common control body");
+   CfOut(cf_error,""," !! No bundlesequence in the common control body");
    exit(1);
    }
 
@@ -489,7 +488,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       default:
           name = NULL;
           params = NULL;
-          CfOut(cf_error,"","Illegal item found in bundlesequence: ");
+          CfOut(cf_error,""," !! Illegal item found in bundlesequence: ");
           ShowRval(stdout,rp->item,rp->type);
           printf(" = %c\n",rp->type);
           ok = false;
@@ -498,7 +497,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    
    if (!(GetBundle(name,"knowledge")||(GetBundle(name,"common"))))
       {
-      CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence was not found\n",name);
+      CfOut(cf_error,""," !! Bundle \"%s\" listed in the bundlesequence was not found\n",name);
       ok = false;
       }
    }
@@ -567,7 +566,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          
          if (reverse_type == NULL)
             {
-            CfOut(cf_inform,"","Topic \"%s\" is not (yet) declared with a type",rp->item);
+            CfOut(cf_inform,""," ! Topic \"%s\" is not (yet) declared with a type",rp->item);
             continue;
             }
          
@@ -577,15 +576,15 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
             {
             if ((ta->associate_topic_type = strdup(CanonifyName(reverse_type))) == NULL)
                {
-               CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
+               CfOut(cf_error,"malloc"," !! Memory failure in AddTopicAssociation");
                FatalError("");
                }
             }
          
          if (ta->associate_topic_type && strcmp(ta->associate_topic_type,reverse_type) != 0)
             {
-            CfOut(cf_inform,"","Associates in the relationship \"%s\" do not all have the same topic type",ta->fwd_name);
-            CfOut(cf_inform,"","Found \"%s\" but expected \"%s\"",ta->associate_topic_type,reverse_type);
+            CfOut(cf_inform,""," ! Associates in the relationship \"%s\" do not all have the same topic type",ta->fwd_name);
+            CfOut(cf_inform,""," ! Found \"%s\" but expected \"%s\"",ta->associate_topic_type,reverse_type);
             }
          }
       }
@@ -617,7 +616,7 @@ CfOut(cf_verbose,"","Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Cannot write to %s\n",filename);
+   CfOut(cf_error,"fopen"," !! Cannot write to %s\n",filename);
    return;
    }
 
@@ -730,7 +729,7 @@ CfOut(cf_verbose,"","Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Cannot write to %s\n",filename);
+   CfOut(cf_error,"fopen"," !! Cannot write to %s\n",filename);
    return;
    }
 
@@ -830,13 +829,13 @@ CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
 
 if (!cfdb.connected)
    {
-   CfOut(cf_error,"","Could not open sql_db %s\n",SQL_DATABASE);
+   CfOut(cf_error,""," !! Could not open sql_db %s\n",SQL_DATABASE);
    return;
    }
 
 /* First assume the item is a topic */
 
-CfOut(cf_verbose,"","Treating the search string %s as a literal string\n",topic);
+CfOut(cf_verbose,""," -> Treating the search string %s as a literal string\n",topic);
 
 strcpy(safe,EscapeSQL(&cfdb,topic));
 strcpy(safetype,EscapeSQL(&cfdb,type));
@@ -854,7 +853,7 @@ CfNewQueryDB(&cfdb,query);
 
 if (cfdb.maxcolumns != 4)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,4);
+   CfOut(cf_error,""," !! The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,4);
    CfCloseDB(&cfdb);
    return;
    }
@@ -909,7 +908,7 @@ CfNewQueryDB(&cfdb,query);
 
 if (cfdb.maxcolumns != 6)
    {
-   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,6);
+   CfOut(cf_error,""," !! The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,6);
    CfCloseDB(&cfdb);
    return;
    }
@@ -992,7 +991,7 @@ void LookupMatchingTopics(char *typed_topic)
 
 DeTypeTopic(typed_topic,topic,type);
 
-CfOut(cf_verbose,"","Looking up topics matching \"%s\"\n",topic);
+CfOut(cf_verbose,""," -> Looking up topics matching \"%s\"\n",topic);
 
 /* We need to set a scope for the regex stuff */
 
@@ -1003,7 +1002,7 @@ if (strlen(SQL_OWNER) > 0)
  
 if (!sql_database_defined)
    {
-   printf("No database defined...\n");
+   CfOut(cf_error,""," !! No knowlegde database defined...\n");
    return;
    }
 
@@ -1011,7 +1010,7 @@ CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
 
 if (!cfdb.connected)
    {
-   CfOut(cf_error,"","Could not open sql_db %s\n",SQL_DATABASE);
+   CfOut(cf_error,""," !! Could not open sql_db %s\n",SQL_DATABASE);
    return;
    }
 
@@ -1023,7 +1022,7 @@ CfNewQueryDB(&cfdb,query);
 
 if (cfdb.maxcolumns != 4)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
+   CfOut(cf_error,""," !! The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,3);
    CfCloseDB(&cfdb);
    return;
    }
@@ -1074,7 +1073,7 @@ CfNewQueryDB(&cfdb,query);
 
 if (cfdb.maxcolumns != 6)
    {
-   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,6);
+   CfOut(cf_error,""," !! The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb.maxcolumns,6);
    CfCloseDB(&cfdb);
    return;
    }
@@ -1156,7 +1155,7 @@ if (pp->done)
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {
-   CfOut(cf_verbose,"","Class promises do not have any effect here.\n");
+   CfOut(cf_verbose,""," ! Class promises do not have any effect here.\n");
    return;
    }
 
@@ -1197,7 +1196,7 @@ a = GetTopicsAttributes(pp);
  
 strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
-CfOut(cf_verbose,"","Attempting to install topic %s::%s \n",pp->classes,pp->promiser);
+CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->promiser);
 
 if (pp->ref != NULL)
    {
@@ -1245,7 +1244,7 @@ a = GetOccurrenceAttributes(pp);
 
 if (a.represents == NULL)
    {
-   CfOut(cf_error,"","Occurrence \"%s\" (type) promises no topics");
+   CfOut(cf_error,""," ! Occurrence \"%s\" (type) promises no topics");
    return;
    }
 
@@ -1260,7 +1259,7 @@ else
 
 if (BlockTextMatch("[&|]+",pp->classes,&s,&e))
    {
-   CfOut(cf_error,"","Class should be a single topic or typed TYPE.TOPIC for occurrences - %s does not make sense",pp->classes);
+   CfOut(cf_error,""," !! Class should be a single topic or typed TYPE.TOPIC for occurrences - %s does not make sense",pp->classes);
    return;
    }
 
@@ -1270,7 +1269,7 @@ switch (rep_type)
 
        if (a.web_root == NULL || a.path_root == NULL)
           {
-          CfOut(cf_error,"","File pattern but no complete url mapping path_root -> web_root");
+          CfOut(cf_error,""," !! File pattern but no complete url mapping path_root -> web_root");
           return;
           }
 
@@ -1278,7 +1277,7 @@ switch (rep_type)
 
        if (!JoinPath(name,pp->promiser))
           {
-          CfOut(cf_error,"","Unable to form pathname in search for local files");
+          CfOut(cf_error,""," !! Unable to form pathname in search for local files");
           return;
           }
        
@@ -1289,7 +1288,7 @@ switch (rep_type)
 
        if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
           {
-          CfOut(cf_error,"","Type context \"%s\" must be defined in order to map it to occurrences (ordering problem with bundlesequence?)",pp->classes);
+          CfOut(cf_error,""," !! Type context \"%s\" must be defined in order to map it to occurrences (ordering problem with bundlesequence?)",pp->classes);
           return;
           }
        
@@ -1394,7 +1393,7 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
 
    if (!GetCanonizedTopic(TOPIC_MAP,subtype))
       {
-      CfOut(cf_inform,"","Occurrence of %s makes reference to a sub-topic %s but that has not (yet) been defined",topic_id,subtype);
+      CfOut(cf_inform,""," !! Occurrence of %s makes reference to a sub-topic %s but that has not (yet) been defined",topic_id,subtype);
       }
    }
 }
@@ -1431,13 +1430,13 @@ a.transaction.action = cfa_fix;
 a.database.operation = "create";
 pp->conlist = NULL;
 
-CfOut(cf_verbose,"","Writing %s\n",filename);
+CfOut(cf_verbose,""," -> Writing %s\n",filename);
 
 /* Open channels */
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen","Cannot write to %s\n",filename);
+   CfOut(cf_error,"fopen"," !! Cannot write to %s\n",filename);
    return;
    }
 
@@ -1447,12 +1446,12 @@ if (sql_database_defined)
 
    if (!cfdb.connected)
       {
-      CfOut(cf_inform,"","Could not connect an existing database %s\n",SQL_DATABASE);
+      CfOut(cf_inform,""," !! Could not connect an existing database %s\n",SQL_DATABASE);
       CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_CONNECT_NAME);
 
       if (!cfdb.connected)
          {
-         CfOut(cf_error,"","Could not connect to the sql_db server for %s\n",SQL_DATABASE);
+         CfOut(cf_error,""," !! Could not connect to the sql_db server for %s\n",SQL_DATABASE);
          return;
          }
       
@@ -1461,12 +1460,12 @@ if (sql_database_defined)
          return;
          }
       
-      CfOut(cf_verbose,"","Suceeded in creating database \"%s\"- now close and reopen to initialize\n",SQL_DATABASE);
+      CfOut(cf_verbose,""," -> Suceeded in creating database \"%s\"- now close and reopen to initialize\n",SQL_DATABASE);
       CfCloseDB(&cfdb);
       CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);      
       }
 
-   CfOut(cf_verbose,"","Successfully connected to \"%s\"\n",SQL_DATABASE);
+   CfOut(cf_verbose,""," -> Successfully connected to \"%s\"\n",SQL_DATABASE);
    }
 else
    {
@@ -1766,7 +1765,7 @@ CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 4)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
+   CfOut(cf_error,""," !! The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
    return;
    }
 
@@ -1803,7 +1802,7 @@ CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 4)
    {
-   CfOut(cf_error,"","The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
+   CfOut(cf_error,""," !! The topics database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,3);
    return;
    }
 
@@ -1840,7 +1839,7 @@ CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 6)
    {
-   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
+   CfOut(cf_error,""," !! The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
    return;
    }
 
@@ -1866,7 +1865,7 @@ CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 6)
    {
-   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
+   CfOut(cf_error,""," !! The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
    return;
    }
 
@@ -1896,7 +1895,7 @@ CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 4)
    {
-   CfOut(cf_error,"","The occurrences database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,4);
+   CfOut(cf_error,""," !! The occurrences database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,4);
    return;
    }
 
@@ -1973,7 +1972,7 @@ CfNewQueryDB(cfdb,query);
 
 if (cfdb->maxcolumns != 6)
    {
-   CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
+   CfOut(cf_error,""," !! The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
    CfCloseDB(cfdb);
    return;
    }
@@ -2025,7 +2024,7 @@ if (count == 0)
    
    if (cfdb->maxcolumns != 6)
       {
-      CfOut(cf_error,"","The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
+      CfOut(cf_error,""," !! The associations database table did not promise the expected number of fields - got %d expected %d\n",cfdb->maxcolumns,6);
       CfCloseDB(cfdb);
       return;
       }
@@ -2385,7 +2384,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   CfOut(cf_error,"","\n<h2>Results for this topic:</h2>\n\n");
+   fprintf(fout,"\n<h2>Results for this topic:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
@@ -2583,7 +2582,7 @@ char *NextTopic(char *topic,char *type)
 
 if (strlen(WEBDRIVER) == 0)
    {
-   CfOut(cf_error,"","No query_engine is defined\n");
+   CfOut(cf_error,""," !! No query_engine is defined\n");
    exit(1);
    }
 
@@ -2624,13 +2623,13 @@ else
 
 if (stat(file,&sb) == -1)
    {
-   CfOut(cf_verbose,"","File %s matched but could not be read",file);
+   CfOut(cf_verbose,""," !! File %s matched but could not be read",file);
    return;
    }
 
 if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
    {
-   CfOut(cf_error,"","Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
+   CfOut(cf_error,""," !! Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
    return;
    }
 

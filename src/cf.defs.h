@@ -216,10 +216,15 @@ extern int errno;
 #include <pwd.h>
 #include <grp.h>
 
-
-
 #ifdef HAVE_SYS_SOCKIO_H
 # include <sys/sockio.h>
+#endif
+
+#ifdef NT
+#  define MAX_FILENAME 227
+#  define WINVER 0x501
+#else
+#  define MAX_FILENAME 254
 #endif
 
 #ifdef MINGW
@@ -1246,13 +1251,6 @@ struct Checksum_Value
 /*******************************************************************/
 
 /* Defined maximum length of a filename. */
-
-#ifdef NT
-#  define MAX_FILENAME 227
-#  define WINVER 0x501
-#else
-#  define MAX_FILENAME 254
-#endif
 
 /* File node separator (cygwin can use \ or / but prefer \ for communicating
  * with native windows commands). */

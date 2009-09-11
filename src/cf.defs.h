@@ -273,8 +273,6 @@ extern int errno;
 # include <rxposix.h>
 #elif  HAVE_REGEX_H
 # include <regex.h>
-#else
-# include "../pub/gnuregex.h"
 #endif
 
 #ifndef HAVE_SNPRINTF

@@ -193,7 +193,7 @@ Debug("Closing current server connection\n");
 
 if (conn)
    {
-   close(conn->sd);
+   cf_closesocket(conn->sd);
    conn->sd = CF_NOT_CONNECTED;
    DeleteAgentConn(conn);
    }
@@ -971,7 +971,7 @@ if (!attr.copy.force_ipv4)
       }
    else
       {
-      close(conn->sd);
+      cf_closesocket(conn->sd);
       conn->sd = CF_NOT_CONNECTED;
       }
    

@@ -51,7 +51,7 @@ int HISTO = true;
 
 /* persistent observations */
 
-double THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current observation */
+double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current observation */
 
 /* Work */
 
@@ -463,7 +463,7 @@ ENTROPIES = NULL;
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   THIS[i] = 0.0;
+   CF_THIS[i] = 0.0;
    }
 
 GatherProcessData();
@@ -517,10 +517,10 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    double delta2;
    
    name[0] = '\0';
-   GetClassName(i,name);
+   CfGetClassName(i,name);
 
-   newvals.Q[i].q = THIS[i];
-   LOCALAV.Q[i].q = THIS[i];
+   newvals.Q[i].q = CF_THIS[i];
+   LOCALAV.Q[i].q = CF_THIS[i];
 
    /* Overflow protection */
 
@@ -539,12 +539,12 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       currentvals->Q[i].var = 0;
       }
 
-   This[i] = RejectAnomaly(THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
+   This[i] = RejectAnomaly(CF_THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
 
    Debug("Current %s.q %lf\n",name,currentvals->Q[i].q);
    Debug("Current %s.var %lf\n",name,currentvals->Q[i].var);
    Debug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
-   Debug("THIS[%s] = %lf\n",name,THIS[i]);
+   Debug("CF_THIS[%s] = %lf\n",name,CF_THIS[i]);
    Debug("This[%s] = %lf\n",name,This[i]);
 
    newvals.Q[i].expect = WAverage(This[i],currentvals->Q[i].expect,WAGE);
@@ -605,7 +605,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    {
    /* Note AVG should contain n+1 but not SUM, hence funny increments */
    
-   LDT_AVG[i] = LDT_AVG[i] + THIS[i]/((double)LDT_BUFSIZE + 1.0);
+   LDT_AVG[i] = LDT_AVG[i] + CF_THIS[i]/((double)LDT_BUFSIZE + 1.0);
 
    d = (double)(LDT_BUFSIZE * (LDT_BUFSIZE + 1)) * LDT_AVG[i];
 
@@ -625,12 +625,12 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       LDT_MAX[i] = 0.0;
       }
 
-   if (THIS[i] > LDT_MAX[i])
+   if (CF_THIS[i] > LDT_MAX[i])
       {
-      LDT_MAX[i] = THIS[i];
+      LDT_MAX[i] = CF_THIS[i];
       }
    
-   n1 = (LDT_SUM[i] - (double)LDT_BUFSIZE * THIS[i]);
+   n1 = (LDT_SUM[i] - (double)LDT_BUFSIZE * CF_THIS[i]);
 
    if (d < 0.001)
       {
@@ -642,8 +642,8 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
 
    LDT_AVG[i] = LDT_AVG[i] - LDT_BUF[i][LDT_POS]/((double)LDT_BUFSIZE + 1.0);
-   LDT_BUF[i][LDT_POS] = THIS[i];
-   LDT_SUM[i] = LDT_SUM[i] - LDT_BUF[i][LDT_POS] + THIS[i];
+   LDT_BUF[i][LDT_POS] = CF_THIS[i];
+   LDT_SUM[i] = LDT_SUM[i] - LDT_BUF[i][LDT_POS] + CF_THIS[i];
    }
 }
 
@@ -664,9 +664,9 @@ Debug("Arm classes for %s\n",timekey);
  
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   GetClassName(i,name);
-   sigma = SetClasses(name,THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
-   SetVariable(name,THIS[i],av.Q[i].expect,sigma,&classlist);
+   CfGetClassName(i,name);
+   sigma = SetClasses(name,CF_THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
+   SetVariable(name,CF_THIS[i],av.Q[i].expect,sigma,&classlist);
 
    /* LDT */
 
@@ -710,7 +710,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
          strcat(ldt_buff,buff);
          }
 
-      if (THIS[i] > av.Q[i].expect)
+      if (CF_THIS[i] > av.Q[i].expect)
          {
          snprintf(buff,CF_BUFSIZE,"%s_high_ldt",name);
          }
@@ -846,12 +846,12 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
        case 'S': Debug("%1.1lf: TCP new connection from %s to %s - i am %s\n",ITER,src,dest,VIPADDRESS);
            if (isme_dest)
               {
-              THIS[ob_tcpsyn_in]++;
+              CF_THIS[ob_tcpsyn_in]++;
               IncrementCounter(&(NETIN_DIST[tcpsyn]),src);
               }
            else if (isme_src)
               {
-              THIS[ob_tcpsyn_out]++;
+              CF_THIS[ob_tcpsyn_out]++;
               IncrementCounter(&(NETOUT_DIST[tcpsyn]),dest);
               }       
            break;
@@ -859,12 +859,12 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
        case 'F': Debug("%1.1lf: TCP end connection from %s to %s\n",ITER,src,dest);
            if (isme_dest)
               {
-              THIS[ob_tcpfin_in]++;
+              CF_THIS[ob_tcpfin_in]++;
               IncrementCounter(&(NETIN_DIST[tcpfin]),src);
               }
            else if (isme_src)
               {
-              THIS[ob_tcpfin_out]++;
+              CF_THIS[ob_tcpfin_out]++;
               IncrementCounter(&(NETOUT_DIST[tcpfin]),dest);
               }       
            break;
@@ -873,12 +873,12 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
            
            if (isme_dest)
               {
-              THIS[ob_tcpack_in]++;
+              CF_THIS[ob_tcpack_in]++;
               IncrementCounter(&(NETIN_DIST[tcpack]),src);
               }
            else if (isme_src)
               {
-              THIS[ob_tcpack_out]++;
+              CF_THIS[ob_tcpack_out]++;
               IncrementCounter(&(NETOUT_DIST[tcpack]),dest);
               }       
            break;
@@ -896,12 +896,12 @@ else if (strstr(arrival,".53"))
    Debug("%1.1lf: DNS packet from %s to %s\n",ITER,src,dest);
    if (isme_dest)
       {
-      THIS[ob_dns_in]++;
+      CF_THIS[ob_dns_in]++;
       IncrementCounter(&(NETIN_DIST[dns]),src);
       }
    else if (isme_src)
       {
-      THIS[ob_dns_out]++;
+      CF_THIS[ob_dns_out]++;
       IncrementCounter(&(NETOUT_DIST[tcpack]),dest);
       }       
    }
@@ -916,12 +916,12 @@ else if (strstr(arrival,"proto UDP"))
    Debug("%1.1lf: UDP packet from %s to %s\n",ITER,src,dest);
    if (isme_dest)
       {
-      THIS[ob_udp_in]++;
+      CF_THIS[ob_udp_in]++;
       IncrementCounter(&(NETIN_DIST[udp]),src);
       }
    else if (isme_src)
       {
-      THIS[ob_udp_out]++;
+      CF_THIS[ob_udp_out]++;
       IncrementCounter(&(NETOUT_DIST[udp]),dest);
       }       
    }
@@ -937,12 +937,12 @@ else if (strstr(arrival,"proto ICMP"))
    
    if (isme_dest)
       {
-      THIS[ob_icmp_in]++;
+      CF_THIS[ob_icmp_in]++;
       IncrementCounter(&(NETIN_DIST[icmp]),src);
       }
    else if (isme_src)
       {
-      THIS[ob_icmp_out]++;
+      CF_THIS[ob_icmp_out]++;
       IncrementCounter(&(NETOUT_DIST[icmp]),src);
       }       
    }
@@ -950,7 +950,7 @@ else
    {
    Debug("%1.1lf: Miscellaneous undirected packet (%.100s)\n",ITER,arrival);
    
-   THIS[ob_tcpmisc_in]++;
+   CF_THIS[ob_tcpmisc_in]++;
    
    /* Here we don't know what source will be, but .... */
    
@@ -1010,16 +1010,16 @@ while (!feof(pp))
    if (!IsItemIn(list,user))
       {
       PrependItem(&list,user,NULL);
-      THIS[ob_users]++;
+      CF_THIS[ob_users]++;
       }
 
    if (strcmp(user,"root") == 0)
       {
-      THIS[ob_rootprocs]++;
+      CF_THIS[ob_rootprocs]++;
       }
    else
       {
-      THIS[ob_otherprocs]++;
+      CF_THIS[ob_otherprocs]++;
       }
    }
 
@@ -1028,7 +1028,7 @@ cf_pclose(pp);
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_users",CFWORKDIR);
 RawSaveItemList(list,vbuff);
 DeleteItemList(list);
-CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",THIS[ob_users],THIS[ob_rootprocs],THIS[ob_otherprocs]);
+CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",CF_THIS[ob_users],CF_THIS[ob_rootprocs],CF_THIS[ob_otherprocs]);
 }
 
 /*****************************************************************************/
@@ -1098,10 +1098,10 @@ while (!feof(fp))
 
    dq = (q - LASTQ[index])/(double)total_time; /* % Utilization */
    
-   THIS[index] = dq;
+   CF_THIS[index] = dq;
    LASTQ[index] = q;
 
-   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,THIS[index],total_time);         
+   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,CF_THIS[index],total_time);         
    }
 
 fclose(fp);
@@ -1117,8 +1117,8 @@ void GatherDiskData()
   char messages[CF_BUFSIZE];
  
 CfOut(cf_verbose,"","Gathering disk data\n");
-THIS[ob_diskfree] = GetDiskUsage("/",cfpercent);
-CfOut(cf_verbose,"","Disk free = %d %%\n",THIS[ob_diskfree]);
+CF_THIS[ob_diskfree] = GetDiskUsage("/",cfpercent);
+CfOut(cf_verbose,"","Disk free = %d %%\n",CF_THIS[ob_diskfree]);
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */
 
@@ -1133,14 +1133,14 @@ switch(VSYSTEMHARDCLASS)
        strcpy(messages,"/var/log/messages");
    }
 
-THIS[ob_webaccess] = GetFileGrowth(accesslog,ob_webaccess);
-CfOut(cf_verbose,"","Webaccess = %d %%\n",THIS[ob_webaccess]);
-THIS[ob_weberrors] = GetFileGrowth(errorlog,ob_weberrors);
-CfOut(cf_verbose,"","Web error = %d %%\n",THIS[ob_weberrors]);
-THIS[ob_syslog] = GetFileGrowth(syslog,ob_syslog);
-CfOut(cf_verbose,"","Syslog = %d %%\n",THIS[ob_syslog]);
-THIS[ob_messages] = GetFileGrowth(messages,ob_messages);
-CfOut(cf_verbose,"","Messages = %d %%\n",THIS[ob_messages]);
+CF_THIS[ob_webaccess] = GetFileGrowth(accesslog,ob_webaccess);
+CfOut(cf_verbose,"","Webaccess = %d %%\n",CF_THIS[ob_webaccess]);
+CF_THIS[ob_weberrors] = GetFileGrowth(errorlog,ob_weberrors);
+CfOut(cf_verbose,"","Web error = %d %%\n",CF_THIS[ob_weberrors]);
+CF_THIS[ob_syslog] = GetFileGrowth(syslog,ob_syslog);
+CfOut(cf_verbose,"","Syslog = %d %%\n",CF_THIS[ob_syslog]);
+CF_THIS[ob_messages] = GetFileGrowth(messages,ob_messages);
+CfOut(cf_verbose,"","Messages = %d %%\n",CF_THIS[ob_messages]);
 }
 
 /*****************************************************************************/
@@ -1155,7 +1155,7 @@ Debug("GatherLoadData\n\n");
 #ifdef HAVE_GETLOADAVG 
 if ((n = getloadavg(load,LOADAVG_5MIN)) == -1)
    {
-   THIS[ob_loadavg] = 0.0;
+   CF_THIS[ob_loadavg] = 0.0;
    }
 else
    {
@@ -1169,8 +1169,8 @@ else
 
 /* Scale load average by 100 to make it visible */
  
-THIS[ob_loadavg] = (int) (100.0 * sum);
-CfOut(cf_verbose,"","100 x Load Average = %d\n",THIS[ob_loadavg]);
+CF_THIS[ob_loadavg] = (int) (100.0 * sum);
+CfOut(cf_verbose,"","100 x Load Average = %d\n",CF_THIS[ob_loadavg]);
 }
 
 /*****************************************************************************/
@@ -1279,7 +1279,7 @@ while (!feof(pp))
       
       if (strcmp(spend,ECGSOCKS[i].portnr) == 0)
          {
-         THIS[ECGSOCKS[i].in]++;
+         CF_THIS[ECGSOCKS[i].in]++;
          AppendItem(&in[i],vbuff,"");
          }
       
@@ -1291,7 +1291,7 @@ while (!feof(pp))
       
       if (strcmp(spend,ECGSOCKS[i].portnr) == 0)
          {
-         THIS[ECGSOCKS[i].out]++;
+         CF_THIS[ECGSOCKS[i].out]++;
          AppendItem(&out[i],vbuff,"");
          }
       }
@@ -1483,7 +1483,7 @@ if (HISTO && IsDefinedClass("Min40_45"))
    
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      position = CF_GRAINS/2 + (int)(0.5+(THIS[i] - av->Q[i].expect)*CF_GRAINS/(4*sqrt((av->Q[i].var))));
+      position = CF_GRAINS/2 + (int)(0.5+(CF_THIS[i] - av->Q[i].expect)*CF_GRAINS/(4*sqrt((av->Q[i].var))));
 
       if (0 <= position && position < CF_GRAINS)
          {
@@ -1707,7 +1707,7 @@ void ZeroArrivals()
  
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   THIS[i] = 0;
+   CF_THIS[i] = 0;
    }
 }
 
@@ -2097,13 +2097,13 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          {
          switch (count)
             {
-            case 0: THIS[ob_temp0] = temp;
+            case 0: CF_THIS[ob_temp0] = temp;
                 break;
-            case 1: THIS[ob_temp1] = temp;
+            case 1: CF_THIS[ob_temp1] = temp;
                 break;
-            case 2: THIS[ob_temp2] = temp;
+            case 2: CF_THIS[ob_temp2] = temp;
                 break;
-            case 3: THIS[ob_temp3] = temp;
+            case 3: CF_THIS[ob_temp3] = temp;
                 break;
             }
 
@@ -2130,10 +2130,10 @@ int GetLMSensors()
   int count;
   char vbuff[CF_BUFSIZE];
   
-THIS[ob_temp0] = 0.0;
-THIS[ob_temp1] = 0.0;
-THIS[ob_temp2] = 0.0;
-THIS[ob_temp3] = 0.0;
+CF_THIS[ob_temp0] = 0.0;
+CF_THIS[ob_temp1] = 0.0;
+CF_THIS[ob_temp2] = 0.0;
+CF_THIS[ob_temp3] = 0.0;
   
 if ((pp = cf_popen("/usr/bin/sensors","r")) == NULL)
    {
@@ -2178,13 +2178,13 @@ for (ip = list; ip != NULL; ip=ip->next)
          
          switch (count)
             {
-            case 0: THIS[ob_temp0] = temp;
+            case 0: CF_THIS[ob_temp0] = temp;
                 break;
-            case 1: THIS[ob_temp1] = temp;
+            case 1: CF_THIS[ob_temp1] = temp;
                 break;
-            case 2: THIS[ob_temp2] = temp;
+            case 2: CF_THIS[ob_temp2] = temp;
                 break;
-            case 3: THIS[ob_temp3] = temp;
+            case 3: CF_THIS[ob_temp3] = temp;
                 break;
             }
 
@@ -2193,7 +2193,7 @@ for (ip = list; ip != NULL; ip=ip->next)
       }
    }
 
-if (THIS[ob_temp0] != 0)
+if (CF_THIS[ob_temp0] != 0)
    {
    /* We got something plausible */
    return true;
@@ -2213,13 +2213,13 @@ for (ip = list; ip != NULL; ip=ip->next)
          
          switch (count)
             {
-            case 0: THIS[ob_temp0] = temp;
+            case 0: CF_THIS[ob_temp0] = temp;
                 break;
-            case 1: THIS[ob_temp1] = temp;
+            case 1: CF_THIS[ob_temp1] = temp;
                 break;
-            case 2: THIS[ob_temp2] = temp;
+            case 2: CF_THIS[ob_temp2] = temp;
                 break;
-            case 3: THIS[ob_temp3] = temp;
+            case 3: CF_THIS[ob_temp3] = temp;
                 break;
             }
 
@@ -2228,7 +2228,7 @@ for (ip = list; ip != NULL; ip=ip->next)
       }
    }
 
-if (THIS[ob_temp0] != 0)
+if (CF_THIS[ob_temp0] != 0)
    {
    /* We got something plausible */
    return true;
@@ -2240,32 +2240,32 @@ for (ip = list; ip != NULL; ip=ip->next)
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
       Debug("Setting temp0 to CPU Temp\n");
-      THIS[ob_temp0] = temp;
+      CF_THIS[ob_temp0] = temp;
       }
 
    if (strncmp(ip->name,"M/B Temp:",strlen("M/B Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
       Debug("Setting temp0 to M/B Temp\n");
-      THIS[ob_temp1] = temp;
+      CF_THIS[ob_temp1] = temp;
       }
 
    if (strncmp(ip->name,"Sys Temp:",strlen("Sys Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
       Debug("Setting temp0 to Sys Temp\n");
-      THIS[ob_temp2] = temp;
+      CF_THIS[ob_temp2] = temp;
       }
 
    if (strncmp(ip->name,"AUX Temp:",strlen("AUX Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
       Debug("Setting temp0 to AUX Temp\n");
-      THIS[ob_temp3] = temp;
+      CF_THIS[ob_temp3] = temp;
       }
    }
 
-if (THIS[ob_temp0] != 0)
+if (CF_THIS[ob_temp0] != 0)
    {
    /* We got something plausible */
    return true;
@@ -2286,13 +2286,13 @@ for (ip = list; ip != NULL; ip=ip->next)
          
          switch (count)
             {
-            case 0: THIS[ob_temp0] = temp;
+            case 0: CF_THIS[ob_temp0] = temp;
                 break;
-            case 1: THIS[ob_temp1] = temp;
+            case 1: CF_THIS[ob_temp1] = temp;
                 break;
-            case 2: THIS[ob_temp2] = temp;
+            case 2: CF_THIS[ob_temp2] = temp;
                 break;
-            case 3: THIS[ob_temp3] = temp;
+            case 3: CF_THIS[ob_temp3] = temp;
                 break;
             }
 
@@ -2357,7 +2357,7 @@ if (strcmp("classes",pp->agentsubtype) == 0)
 
 if (strcmp("measurements",pp->agentsubtype) == 0)
    {
-   VerifyMeasurementPromise(THIS,pp);
+   VerifyMeasurementPromise(CF_THIS,pp);
    return;
    }
 }

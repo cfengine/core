@@ -311,7 +311,7 @@ void Nova_ShowTopicRepresentation(FILE *fp);
 void NotePromiseConditionals(struct Promise *pp);
 void DependencyGraph(struct Topic *map);
 void HistoryUpdate(struct Averages newvals);
-void GetClassName(int i,char *name);
+void CfGetClassName(int i,char *name);
 void LookUpClassName(int i,char *name);
 void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizePerPromiseCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
@@ -553,7 +553,7 @@ int FileHashSize(enum cfhashes id);
 void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes attr,struct Promise *pp);
 void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Promise *pp);
 void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes attr,struct Promise *pp);
-void CopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
+void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
 int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
 void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp);
 int cf_stat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
@@ -595,7 +595,7 @@ char *ToLowerStr (char *str);
 
 void TruncateFile(char *name);
 int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-int CreateFile(char *file,struct Promise *pp,struct Attributes attr);
+int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr);
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
 int ScheduleLinkChildrenOperation(char *destination,struct Attributes attr,struct Promise *pp);
 int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp);
@@ -934,6 +934,7 @@ char *cf_strchr(char *s, int c);
 char *cf_strcpy(char *s1,char *s2);
 char *MapName(char *s);
 int UseUnixStandard(char *s);
+int cf_closesocket(int sd);
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);

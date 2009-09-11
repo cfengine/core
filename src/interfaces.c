@@ -156,7 +156,7 @@ if (!DONTDO && isnotsane)
    GetPromisedIfStatus(sk,vifdev,vaddress,vnetmask,vbroadcast);
    }
 
-close(sk);
+cf_closesocket(sk);
 }
 
 

@@ -186,7 +186,6 @@ for (i = 0; i < topic_count; i++)
    }
 */
 
-
 for (i = 0; i < topic_count; i++)
    {
 #ifdef HAVE_LIBCFNOVA
@@ -195,7 +194,6 @@ for (i = 0; i < topic_count; i++)
    PlotTopicCosmos(i,adj,n,topic_count,view);
 #endif
    }
-
 
 // Nova_PlotTopicCosmos(2484,adj,n,topic_count,view);
 
@@ -213,9 +211,7 @@ free(k);
 free(n);
 }
 
-
 /*************************************************************************/
-
 
 #ifdef HAVE_LIBGVC
 # ifdef HAVE_GRAPHVIZ_GVC_H
@@ -265,7 +261,7 @@ else
 
 if (stat(filename,&sb) != -1)
    {
-   CfOut(cf_inform,"","Graph %s already exists, delete to refresh\n",filename);
+   CfOut(cf_inform,"","Graph \"%s\" already exists, delete to refresh\n",filename);
    return;
    }
 

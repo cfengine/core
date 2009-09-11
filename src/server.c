@@ -388,14 +388,14 @@ while (true)
       if (NONATTACKERLIST && !IsMatchItemIn(NONATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Not allowing connection from non-authorized IP %s\n",ipaddr);
-         close(sd_reply);
+         cf_closesocket(sd_reply);
          continue;
          }
       
       if (IsMatchItemIn(ATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
-         close(sd_reply);
+         cf_closesocket(sd_reply);
          continue;
          }      
       
@@ -411,7 +411,7 @@ while (true)
          if (IsItemIn(CONNECTIONLIST,MapAddress(ipaddr)))
             {
             CfOut(cf_error,"","Denying repeated connection from %s\n",ipaddr);
-            close(sd_reply);
+            cf_closesocket(sd_reply);
             continue;
             }
          }
@@ -557,7 +557,7 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
       }
    
    CfOut(cf_error,"bind","Could not bind server address");
-   close(sd);
+   cf_closesocket(sd);
    sd = -1;
    }
 
@@ -3390,7 +3390,7 @@ void DeleteConn(struct cfd_connection *conn) /* destruct */
 {
 Debug("***Closing socket %d from %s\n",conn->sd_reply,conn->ipaddr);
 
-close(conn->sd_reply);
+cf_closesocket(conn->sd_reply);
 
 if (conn->session_key != NULL)
    {

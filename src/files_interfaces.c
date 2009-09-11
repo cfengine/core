@@ -232,7 +232,7 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
    {
    if (a.create||a.touch)
       {
-      if (!CreateFile(path,pp,a))
+      if (!CfCreateFile(path,pp,a))
          {
          return;
          }
@@ -265,7 +265,7 @@ if (stat(path,&osb) == -1)
    {
    if (a.create||a.touch)
       {
-      if (!CreateFile(path,pp,a))
+      if (!CfCreateFile(path,pp,a))
          {
          return;
          }
@@ -490,7 +490,7 @@ if (S_ISDIR(ssb.st_mode))
             }
          }
       
-      CopyFile(sourcefile,destfile,ssb,attr,pp);
+      CfCopyFile(sourcefile,destfile,ssb,attr,pp);
       }
    
    cf_closedir(dirh);
@@ -501,7 +501,7 @@ if (S_ISDIR(ssb.st_mode))
 strcpy(sourcefile,source);
 strcpy(destfile,destination);
 
-CopyFile(sourcefile,destfile,ssb,attr,pp);
+CfCopyFile(sourcefile,destfile,ssb,attr,pp);
 DeleteClientCache(attr,pp);
 }
 
@@ -616,7 +616,7 @@ closedir(dirh);
 
 /*********************************************************************/
 
-void CopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
+void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
 
 { char *lastnode,*server;
   struct stat dsb;
@@ -1360,7 +1360,7 @@ if (MatchRlistItem(attr.copy.copy_links,lastnode))
    struct stat ssb;
    CfOut(cf_verbose,"","cfengine: link item in copy %s marked for copying from %s instead\n",sourcefile,linkbuf);
    stat(linkbuf,&ssb);
-   CopyFile(linkbuf,destfile,ssb,attr,pp);
+   CfCopyFile(linkbuf,destfile,ssb,attr,pp);
    return;
    }
 

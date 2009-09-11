@@ -1,6 +1,8 @@
 
 3.0.3
 	sha256 .. new hashes in openssl included in syntax tree.
+
+	End of line autocropping in readfile (hopefully intelligent)
 	
 3.0.2
 	IMPORTANT: Change in normal ordering of editing. replace comes after insert lines

@@ -1663,14 +1663,12 @@ if (GENERATE_MANUAL)
 
 void GenerateGraph()
 {
-#ifdef HAVE_LIBGVC
 struct Rlist *semantics = NULL;
 
 if (GRAPH)
    {
+#ifdef HAVE_LIBCFNOVA
    VerifyGraph(TOPIC_MAP,NULL,NULL);
-
-#ifdef HAVE_LIBCFNOVA   
    PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
    PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
    PrependRScalar(&semantics,NOVA_IMPACTS,CF_SCALAR);
@@ -1679,11 +1677,14 @@ if (GRAPH)
    PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_B,CF_SCALAR);
    PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_P,CF_SCALAR);
    VerifyGraph(TOPIC_MAP,semantics,"influence");
+#else
+# ifdef HAVE_LIBGVC
+   VerifyGraph(TOPIC_MAP,NULL,NULL);
+# endif
 #endif
    }
 
 DeleteRlist(semantics);
-#endif
 }
 
 /*********************************************************************/
@@ -2333,7 +2334,7 @@ void ShowHtmlResults(char *this_name,char *this_type,char *this_comment,struct T
   struct stat sb;
   int count = 0;
   FILE *fout = stdout;
-  char banner[CF_BUFSIZE],filename[CF_BUFSIZE];
+  char banner[CF_BUFSIZE],filename[CF_BUFSIZE],pngfile[CF_BUFSIZE];
   char *v,rettype;
   void *retval;
 
@@ -2353,18 +2354,27 @@ CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
 
 fprintf(fout,"<div id=\"image\">");
 
-snprintf(filename,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(filename,CF_BUFSIZE,"graphs/%s.html",CanonifyName(TypedTopic(this_name,this_type)));
 
 if (stat(filename,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
+   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,pngfile);
+   }
+else
+   {
+   if (stat(pngfile,&sb) != -1)
+      {
+      fprintf(fout,"<div id=\"tribe\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",pngfile,pngfile);
+      }   
    }
 
-snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(pngfile,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.html",CanonifyName(TypedTopic(this_name,this_type)));
 
 if (stat(filename,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"influence\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,filename);
+   fprintf(fout,"<div id=\"influence\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,pngfile);
    }
 
 fprintf(fout,"</div>\n");

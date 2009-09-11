@@ -90,7 +90,7 @@ return true;
 
 /*****************************************************************************/
 
-int CreateFile(char *file,struct Promise *pp,struct Attributes attr)
+int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr)
 
 { int fd;
  
@@ -224,7 +224,7 @@ if (lstat(destination,&lsb) != -1)
 
 snprintf(promiserpath,CF_BUFSIZE,"%s/.",destination);
 
-if (!CreateFile(promiserpath,pp,attr))
+if (!CfCreateFile(promiserpath,pp,attr))
    {
    CfOut(cf_error,"","Cannot promise to link multiple files to children of %s as it is not a directory!",destination);
    return false;

@@ -24,7 +24,7 @@ AM_CONFIG_HEADER(src/conf.h)
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems
 #
-for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib
+for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib 
 do
   if test -d "$x"; then
     y=`expr " $LDFLAGS " : ".* -L$x "`
@@ -453,7 +453,7 @@ AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)
 AC_CHECK_HEADERS(regex.h rxposix.h)
 AC_CHECK_HEADERS(sys/systeminfo.h)
-AC_CHECK_HEADERS(sys/acl.h)
+AC_CHECK_HEADERS(sys/acl.h winsock2.h)
 
 AC_HEADER_STDC
 AC_HEADER_TIME
@@ -724,6 +724,13 @@ case "$target_os" in
 
    cygwin*)
         AC_DEFINE(NT)
+        AC_DEFINE(CFCYG)
+        ;;
+
+   mingw*)
+        AC_DEFINE(MINGW)
+        AC_DEFINE(NT)
+        LIBS="$LIBS -lws2_32 -lpsapi"
         ;;
 
    sco*)
@@ -759,7 +766,17 @@ AC_ARG_WITH(workdir,
         AC_SUBST(workdir, "${WORKDIR}")
 	],
 	[
-           WORKDIR=/var/cfengine
+
+        case "$target_os" in
+
+           mingw*)
+                WORKDIR=`cmd /c "echo %PROGRAMFILES%"`\\Cfengine
+                ;;
+
+           *)
+                WORKDIR=/var/cfengine
+                ;;
+        esac
 
 		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
 	]

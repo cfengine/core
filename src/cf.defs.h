@@ -101,6 +101,11 @@ struct utsname
 #include <openssl/bn.h>
 #include <errno.h>
 
+#ifdef MINGW
+/* Collision on windows */
+# undef STRING
+#endif
+
 #ifdef HAVE_DIRENT_H
 # include <dirent.h>
 #else
@@ -217,18 +222,33 @@ extern int errno;
 # include <sys/sockio.h>
 #endif
 
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#ifndef AOS
-# include <arpa/inet.h>
-#endif
-#include <netdb.h>
-#if !defined LINUX && !defined NT
-#include <sys/protosw.h>
-#undef sgi
-#include <net/route.h>
+#ifdef MINGW
+# include <windows.h>
+# include <AccCtrl.h>
+# include <Aclapi.h>
+# include <psapi.h>
+# include <ddk/ntapi.h>
+# include <wchar.h>
+# include <Sddl.h>
+# ifdef HAVE_WINSOCK2_H
+#  include <winsock2.h>
+# else
+#  include <winsock.h>
+# endif
+#else
+# include <sys/socket.h>
+# include <sys/ioctl.h>
+# include <net/if.h>
+# include <netinet/in.h>
+# ifndef AOS
+#  include <arpa/inet.h>
+# endif
+# include <netdb.h>
+# if !defined LINUX && !defined NT
+# include <sys/protosw.h>
+# undef sgi
+#  include <net/route.h>
+# endif
 #endif
 
 #ifdef LINUX
@@ -322,6 +342,8 @@ typedef int clockid_t;
 #define CF_NOVAL -0.7259285297502359
 #define CF_UNUSED_CHAR (char)127
 
+
+
 #define CF_MAXDIGESTNAMELEN 7
 #define CF_CHKSUMKEYOFFSET  CF_MAXDIGESTNAMELEN+1
 
@@ -348,6 +370,18 @@ typedef int clockid_t;
 
 #include <db.h>
 
+/*******************************************************************/
+/*  Windows                                                        */
+/*******************************************************************/
+
+#ifdef MINGW
+# define NULLFILE "nul"
+# define CFPROMISES_BIN "cf-promises.exe"
+# define CMD_PATH "c:\\windows\\system32\\cmd.exe"
+#else
+# define NULLFILE "/dev/null"
+# define CFPROMISES_BIN "cf-promises"
+#endif
 
 /*******************************************************************/
 /* Class array limits                                              */
@@ -1215,6 +1249,7 @@ struct Checksum_Value
 
 #ifdef NT
 #  define MAX_FILENAME 227
+#  define WINVER 0x501
 #else
 #  define MAX_FILENAME 254
 #endif

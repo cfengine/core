@@ -489,7 +489,8 @@ if (strlen(str) > CF_EXPANDSIZE)
    return;
    }
 
-for (i = strlen(str)-1; isspace((int)str[i]); i--)
+for (i = strlen(str)-1; isspace((int)str[i]) || str[i] == (char)10
+         || str[i] == (char)113 || str[i] == EOF; i--)
    {
    str[i] = '\0';
    }

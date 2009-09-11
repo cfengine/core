@@ -421,7 +421,7 @@ Nova_DumpSlowlyVaryingObservations();
 
 /*****************************************************************************/
 
-void GetClassName(int i,char *name)
+void CfGetClassName(int i,char *name)
 {
 #ifdef HAVE_LIBCFNOVA
  char desc[CF_BUFSIZE];

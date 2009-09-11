@@ -206,7 +206,6 @@ extern char ELSECLASSBUFFER[CF_BUFSIZE];
 extern char FAILOVERBUFFER[CF_BUFSIZE];
 extern char *LINKFROM;
 extern char *LINKTO;
-extern char *ERROR;
 extern char *MOUNTFROM;
 extern char *MOUNTONTO;
 extern char *MOUNTOPTS;

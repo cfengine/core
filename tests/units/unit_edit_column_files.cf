@@ -22,6 +22,10 @@ bundlesequence  => { "bun"  };
 bundle agent bun
 
 {
+vars:
+
+ "userset" slist => { "one", "two", "three" };
+
 files:
 
   # Make a copy of the password file
@@ -34,7 +38,7 @@ files:
   "/home/mark/tmp/group"
 
        create    => "true",
-       edit_line => AppendUserParam("root","4","@(bun.userset)");
+       edit_line => AppendUserParam("wheel","4","@(bun.userset)");
 
 }
 

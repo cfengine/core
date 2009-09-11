@@ -970,7 +970,7 @@ if (connect(sd,(void *) &raddr,sizeof(raddr)) == -1)
    {
    CfOut(cf_inform,"connect","Couldn't connect to host %s\n",VMAILSERVER);
    fclose(fp);
-   close(sd);
+   cf_closesocket(sd);
    return;
    }
 
@@ -1084,13 +1084,13 @@ if (!Dialogue(sd,".\r\n"))
 Dialogue(sd,"QUIT\r\n");
 Debug("Done sending mail\n");
 fclose(fp);
-close(sd);
+cf_closesocket(sd);
 return;
  
 mail_err: 
 
 fclose(fp);
-close(sd); 
+cf_closesocket(sd); 
 CfOut(cf_log,"","Cannot mail to %s.", to);
 }
 

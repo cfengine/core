@@ -59,7 +59,7 @@ char *MapName(char *s)
   int rootlen;
   struct stat sb;
 
-#ifdef NT
+#ifdef CFCYG
 memset(buffer,0,CF_BUFSIZE);
 
 if (UseUnixStandard(s))
@@ -123,7 +123,13 @@ else
       }
    }
 #else
+# ifdef MINGW
+
+// Eystein
+
+# else
 strncpy(buffer,s,CF_BUFSIZE-1);
+# endif 
 #endif
 
 return buffer;
@@ -582,3 +588,16 @@ return 0;
 }
 
 #endif
+
+/*******************************************************************/
+
+int cf_closesocket(int sd)
+
+{
+#ifdef MINGW
+return closesocket(sd);
+#else
+return close(sd);
+#endif
+}
+

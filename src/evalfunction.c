@@ -939,7 +939,7 @@ if (strlen(sendstring) > 0)
    {
    if (SendSocketStream(conn->sd,sendstring,strlen(sendstring),0) == -1)
       {
-      close(conn->sd);
+      cf_closesocket(conn->sd);
       DeleteAgentConn(conn);
       SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
       rval.item = NULL;
@@ -959,7 +959,7 @@ if (strlen(sendstring) > 0)
 
    if (n_read == -1)
       {
-      close(conn->sd);
+      cf_closesocket(conn->sd);
       DeleteAgentConn(conn);
       SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
       rval.item = NULL;
@@ -968,7 +968,7 @@ if (strlen(sendstring) > 0)
       }
    }
 
-close(conn->sd);
+cf_closesocket(conn->sd);
 DeleteAgentConn(conn);
 
 if ((rval.item = strdup(buffer)) == NULL)
@@ -1392,7 +1392,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
       {
       if (SendSocketStream(conn->sd,sendstring,strlen(sendstring),0) == -1)
          {
-         close(conn->sd);
+         cf_closesocket(conn->sd);
          DeleteAgentConn(conn);
          continue;
          }
@@ -1409,7 +1409,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
       
       if (n_read == -1)
          {
-         close(conn->sd);
+         cf_closesocket(conn->sd);
          DeleteAgentConn(conn);
          continue;
          }
@@ -1437,7 +1437,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
       count++;
       }
    
-   close(conn->sd);
+   cf_closesocket(conn->sd);
    DeleteAgentConn(conn);
    }
 
@@ -3909,6 +3909,7 @@ void *CfReadFile(char *filename,int maxsize)
   char *result = NULL;
   FILE *fp;
   size_t size;
+  int i,newlines = 0;
 
 if (stat(filename,&sb) == -1)
    {
@@ -3962,6 +3963,19 @@ if (fread(result,size,1,fp) != 1)
    }
 
 result[size] = '\0';
+
+for (i = 0; i < size-1; i++)
+   {
+   if (result[i] == '\n' || result[i] == '\r')
+      {
+      newlines++;
+      }
+   }
+
+if (newlines == 0 && (result[size-1] == '\n' || result[size-1] == '\r'))
+   {
+   result[size-1] = '\0';
+   }
 
 fclose(fp);
 return (void *)result;

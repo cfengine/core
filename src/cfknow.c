@@ -2481,7 +2481,7 @@ if (associations)
    count = 0;
    
    fprintf(fout,"<p><div id=\"associations\">");
-   fprintf(fout,"\n<h2>Associated with this:</h2>\n\n");
+   fprintf(fout,"\n<h2>Continue with:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
@@ -2512,7 +2512,7 @@ if (topics_this_type)
    count = 0;
    
    fprintf(fout,"<p><div id=\"thistype\">");
-   fprintf(fout,"\n<h2>Topics of type %s:</h2>\n\n",NextTopic(this_name,this_type));
+   fprintf(fout,"\n<h2>Topics that have \"%s\" as a subject-header:</h2>\n\n",NextTopic(this_name,this_type));
    
    fprintf(fout,"<ul>\n");
    
@@ -2544,7 +2544,7 @@ if (other_topics)
    
    fprintf(fout,"<p><div id=\"others\">\n");
    
-   fprintf(fout,"\n<h2>Other topics of type %s:</h2>\n\n",this_type);
+   fprintf(fout,"\n<h2>Other topics found under \"%s\":</h2>\n\n",this_type);
    
    fprintf(fout,"<ul>\n");
    

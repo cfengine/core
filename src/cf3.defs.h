@@ -926,7 +926,7 @@ struct CfACL
 
 struct CfRegEx
 {
-#ifdef HAVE_LIBPCRE
+#if defined HAVE_PCRE_H || defined HAVE_PCRE_PCRE_H
    pcre *rx;
    const char *err;
    int err_offset;

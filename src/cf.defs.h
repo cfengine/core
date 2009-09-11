@@ -39,6 +39,13 @@
 #include "../pub/getopt.h"
 #endif
 
+#ifdef NT
+#  define MAX_FILENAME 227
+#  define WINVER 0x501
+#else
+#  define MAX_FILENAME 254
+#endif
+
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -220,12 +227,6 @@ extern int errno;
 # include <sys/sockio.h>
 #endif
 
-#ifdef NT
-#  define MAX_FILENAME 227
-#  define WINVER 0x501
-#else
-#  define MAX_FILENAME 254
-#endif
 
 #ifdef MINGW
 # include <windows.h>
@@ -266,7 +267,7 @@ extern int errno;
 #endif
 #endif
 
-#ifdef HAVE_PCRE
+#ifdef HAVE_PCRE_H
 # include <pcreposix.h>
 #elif HAVE_RXPOSIX_H
 # include <rxposix.h>

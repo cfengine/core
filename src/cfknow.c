@@ -1289,6 +1289,7 @@ switch (rep_type)
        if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
           {
           CfOut(cf_error,""," !! Type context \"%s\" must be defined in order to map it to occurrences (ordering problem with bundlesequence?)",pp->classes);
+          PromiseRef(cf_error,pp);
           return;
           }
        
@@ -2359,13 +2360,13 @@ snprintf(filename,CF_BUFSIZE,"graphs/%s.html",CanonifyName(TypedTopic(this_name,
 
 if (stat(filename,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,pngfile);
+   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\"><img src=\"%s\"></a></div>",filename,pngfile);
    }
 else
    {
    if (stat(pngfile,&sb) != -1)
       {
-      fprintf(fout,"<div id=\"tribe\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",pngfile,pngfile);
+      fprintf(fout,"<div id=\"tribe\"><a href=\"%s\"><img src=\"%s\"></a></div>",pngfile,pngfile);
       }   
    }
 
@@ -2374,7 +2375,7 @@ snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.html",CanonifyName(TypedTopic(
 
 if (stat(filename,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"influence\"><a href=\"%s\" target=\"_blank\"><img src=\"%s\"></a></div>",filename,pngfile);
+   fprintf(fout,"<div id=\"influence\"><a href=\"%s\"><img src=\"%s\"></a></div>",filename,pngfile);
    }
 
 fprintf(fout,"</div>\n");
@@ -2410,13 +2411,19 @@ if (occurrences != NULL)
 	 
          for (rp = oc->represents; rp != NULL; rp=rp->next)
             {
-//            fprintf(fout,"%s, ",NextTopic((char *)rp->item,""));
-            fprintf(fout,"%s, ",rp->item);
-
             if (strlen(embed_link) == 0 && (strncmp(rp->item,"http",4) == 0 || *(char *)(rp->item) == '/'))
                {
                strcpy(embed_link,rp->item);
+               continue;
                }
+            else
+               {
+               if (rp != oc->represents)
+                  {
+                  fprintf(fout,",");
+                  }
+               fprintf(fout,"%s ",rp->item);
+               }            
             }
          
          fprintf(fout,":");
@@ -2481,7 +2488,7 @@ if (associations)
    count = 0;
    
    fprintf(fout,"<p><div id=\"associations\">");
-   fprintf(fout,"\n<h2>Continue with:</h2>\n\n");
+   fprintf(fout,"\n<h2>Leads and perspectives:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    

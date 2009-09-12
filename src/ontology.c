@@ -503,13 +503,13 @@ for (ta = list; ta != NULL; ta=ta->next)
    
    if (yfwd && !ybwd)
       {
-      CfOut(level,""," !! Association \"%s\" exists but the reverse association is missing\n",fwd);
+      CfOut(cf_inform,""," !! Association \"%s\" exists but the reverse association is missing\n",fwd);
       return ta;
       }
    
    if (!yfwd && ybwd)
       {
-      CfOut(level,""," !! The reverse association \"%s\" exists but the forward association is missing\n",fwd);
+      CfOut(cf_inform,""," !! The reverse association \"%s\" exists but the forward association is missing\n",fwd);
       return ta;
       }
    }

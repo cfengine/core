@@ -31,6 +31,7 @@
 extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
 extern char POLICY_SERVER[CF_BUFSIZE];
+extern int VIEWS;
 
 extern char WEBDRIVER[CF_MAXVARSIZE];
 extern char BANNER[2*CF_BUFSIZE];

@@ -308,6 +308,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
    {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
    {"manual_source_directory",cf_str,CF_PATHRANGE,"Path to directory where raw text about manual topics is found (defaults to build_directory)"},
+   {"view_projections",cf_opts,CF_BOOL,"Perform view-projection analytics in graph generation"},
    {NULL,cf_notype,NULL,NULL}
    };
 

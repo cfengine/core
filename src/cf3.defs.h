@@ -359,6 +359,7 @@ enum cfkcontrol
    cfk_graph_dir,
    cfk_genman,
    cfk_mandir,
+   cfk_views,
    cfk_notype
    };
 

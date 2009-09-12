@@ -92,9 +92,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       }
 
    strncpy(newfrom,from,CF_BUFSIZE-2);                             /* Assemble pathname */
-   AddSlash(newfrom);
    strncpy(newto,to,CF_BUFSIZE-2);
-   AddSlash(newto);
 
    if (!JoinPath(newfrom,dirp->d_name))
       {

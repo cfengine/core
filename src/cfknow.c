@@ -428,6 +428,14 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_views].lval) == 0)
+      {
+      VIEWS = GetBoolean(retval);
+      CfOut(cf_verbose,"","SET view_projections = %d\n",VIEWS);
+      continue;
+      }
+
+   
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_dir].lval) == 0)
       {
       strncpy(GRAPHDIR,retval,CF_MAXVARSIZE);
@@ -1670,14 +1678,17 @@ if (GRAPH)
    {
 #ifdef HAVE_LIBCFNOVA
    VerifyGraph(TOPIC_MAP,NULL,NULL);
-   PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
-   PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
-   PrependRScalar(&semantics,NOVA_IMPACTS,CF_SCALAR);
-   PrependRScalar(&semantics,NOVA_ISIMPACTED,CF_SCALAR);
-   PrependRScalar(&semantics,NOVA_BUNDLE_DATA,CF_SCALAR);
-   PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_B,CF_SCALAR);
-   PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_P,CF_SCALAR);
-   VerifyGraph(TOPIC_MAP,semantics,"influence");
+   if (VIEWS)
+      { 
+      PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
+      PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
+      PrependRScalar(&semantics,NOVA_IMPACTS,CF_SCALAR);
+      PrependRScalar(&semantics,NOVA_ISIMPACTED,CF_SCALAR);
+      PrependRScalar(&semantics,NOVA_BUNDLE_DATA,CF_SCALAR);
+      PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_B,CF_SCALAR);
+      PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_P,CF_SCALAR);
+      VerifyGraph(TOPIC_MAP,semantics,"influence");
+      }
 #else
 # ifdef HAVE_LIBGVC
    VerifyGraph(TOPIC_MAP,NULL,NULL);

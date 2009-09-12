@@ -50,6 +50,7 @@ int PARSING = false;
 int CFPARANOID = false;
 int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
+int VIEWS = true;
 
 struct utsname VSYSNAME;
 

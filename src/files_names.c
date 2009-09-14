@@ -495,31 +495,6 @@ for (sp_in = in; *sp_in != '\0'; sp_in++)
 
 /*****************************************************************************/
 
-char *EscapeFilename(char *in)
-
-{ static char escaped[CF_BUFSIZE];
-  char *sp_in,*sp_out;
- 
-*escaped = '\0';
-
-for (sp_in = in; *sp_in != '\0'; sp_in++)
-   {
-   if (*sp_in == ' ')
-      {
-      *sp_out++ = '\\';
-      *sp_out++ = ' ';
-      }
-   else
-      {
-      *sp_out++ = *sp_in;
-      }
-   }
-
-*sp_out = '\0';
-}
-
-/*****************************************************************************/
-
 int DeEscapeQuotedString(char *from,char *to)
 
 { char *sp,*cp;

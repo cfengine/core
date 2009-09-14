@@ -571,7 +571,6 @@ int CfReadLine(char *buff,int size,FILE *fp);
 
 int DeEscapeQuotedString(char *in, char *out);
 void DeEscapeFilename(char *in,char *out);
-char *EscapeFilename(char *in);
 int IsDir(char *path);
 int EmptyString(char *s);
 int ExpandOverflow(char *str1,char *str2);

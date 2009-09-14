@@ -116,6 +116,8 @@ if (iterator == NULL)
 cp = (struct CfAssoc *)iterator->item;
 state = iterator->state_ptr;
 
+/* Go ahead and increment */
+
 Debug("Incrementing %s\n",cp->lval);
 
 if (state->next == NULL)

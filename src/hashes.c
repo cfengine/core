@@ -363,8 +363,15 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
                   {
                   /* Link up temp hash to variable lol */
 
-// state = rp->state_ptr;
                   state = (struct Rlist *)(cplist->rval);
+
+
+                  if (rp->state_ptr->type == CF_FNCALL)
+                     {
+                     /* Unexpanded function must be skipped.*/
+                     return;
+                     }
+                  
 
                   if (rp->state_ptr)
                      {

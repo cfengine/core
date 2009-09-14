@@ -172,7 +172,7 @@ fclose(fp);
  
 snprintf(vbuff,CF_BUFSIZE,"%s/randseed",CFWORKDIR);
 RAND_write_file(vbuff);
-chmod(vbuff,0644); 
+cf_chmod(vbuff,0644); 
 }
 
 /*****************************************************************************/

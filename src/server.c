@@ -3303,7 +3303,7 @@ else
 SavePublicKey(keyname,newkey);
 
 dbp->close(dbp,0);
-chmod(keydb,0644); 
+cf_chmod(keydb,0644); 
  
 return trust; 
 }
@@ -3344,7 +3344,7 @@ if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(mipaddr)))
       }
    
    dbp->close(dbp,0);
-   chmod(keydb,0644); 
+   cf_chmod(keydb,0644); 
    }
 }
 

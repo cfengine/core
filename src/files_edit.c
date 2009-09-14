@@ -230,9 +230,9 @@ if (fclose(fp) == -1)
  
 cfPS(cf_inform,CF_CHG,"",pp,a,"Edited file %s \n",file); 
 
-if (rename(file,backup) == -1)
+if (cf_rename(file,backup) == -1)
    {
-   cfPS(cf_error,CF_FAIL,"rename",pp,a," !! Can't rename %s to %s - so promised edits could not be moved into place\n",file,backup);
+   cfPS(cf_error,CF_FAIL,"cf_rename",pp,a," !! Can't rename %s to %s - so promised edits could not be moved into place\n",file,backup);
    return false;
    }
 
@@ -248,14 +248,14 @@ else
    unlink(backup);
    }
 
-if (rename(new,file) == -1)
+if (cf_rename(new,file) == -1)
    {
-   cfPS(cf_error,CF_FAIL,"rename",pp,a," !! Can't rename %s to %s - so promised edits could not be moved into place\n",new,file);
+   cfPS(cf_error,CF_FAIL,"cf_rename",pp,a," !! Can't rename %s to %s - so promised edits could not be moved into place\n",new,file);
    return false;
    }       
 
 mask = umask(0); 
-chmod(file,statbuf.st_mode);                    /* Restore file permissions etc */
+cf_chmod(file,statbuf.st_mode);                    /* Restore file permissions etc */
 chown(file,statbuf.st_uid,statbuf.st_gid);
 umask(mask); 
 

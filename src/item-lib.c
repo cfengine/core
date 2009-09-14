@@ -240,9 +240,9 @@ if (fclose(fp) == -1)
    return false;
    }
 
-if (rename(new,file) == -1)
+if (cf_rename(new,file) == -1)
    {
-   CfOut(cf_error,"rename","Error while renaming %s\n",file);
+   CfOut(cf_error,"cf_rename","Error while renaming %s\n",file);
    return false;
    }       
 

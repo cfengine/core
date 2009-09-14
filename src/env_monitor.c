@@ -254,7 +254,7 @@ if (!OpenDB(AVDB,&dbp))
    return;
    }
  
-chmod(AVDB,0644); 
+cf_chmod(AVDB,0644); 
 
 if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
@@ -784,7 +784,7 @@ for (ip = ENTROPIES; ip != NULL; ip=ip->next)
 DeleteItemList(ENTROPIES); 
 fclose(fp);
 
-rename(ENVFILE_NEW,ENVFILE);
+cf_rename(ENVFILE_NEW,ENVFILE);
 }
 
 /*********************************************************************/

@@ -378,7 +378,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
       }
    else
       {
-      chmod(vbuff,sb.st_mode | 0700);
+      cf_chmod(vbuff,sb.st_mode | 0700);
       }
    
    snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
@@ -389,7 +389,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
       }
    else
       {
-      chmod(vbuff,sb.st_mode | 0700);
+      cf_chmod(vbuff,sb.st_mode | 0700);
       }
    
    sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
@@ -1013,7 +1013,7 @@ if (chown(CFWORKDIR,getuid(),getgid()) == -1)
 if (stat(CFWORKDIR,&statbuf) != -1)
    {
    /* change permissions go-w */
-   chmod(CFWORKDIR,(mode_t)(statbuf.st_mode & ~022));
+   cf_chmod(CFWORKDIR,(mode_t)(statbuf.st_mode & ~022));
    }
 
 snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
@@ -1035,7 +1035,7 @@ if (stat(vbuff,&statbuf) == -1)
       CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
-   chmod(vbuff,(mode_t)0755);
+   cf_chmod(vbuff,(mode_t)0755);
    }
 else 
    {
@@ -1059,7 +1059,7 @@ if (stat(vbuff,&statbuf) == -1)
       CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
-   chmod(vbuff,(mode_t)0700);
+   cf_chmod(vbuff,(mode_t)0700);
    }
 else 
    {
@@ -1083,7 +1083,7 @@ if (stat(vbuff,&statbuf) == -1)
       CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
-   chmod(vbuff,(mode_t)0700);
+   cf_chmod(vbuff,(mode_t)0700);
    }
 else 
    {
@@ -1108,7 +1108,7 @@ if (stat(vbuff,&statbuf) == -1)
       CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
       }
 
-   chmod(vbuff,(mode_t)0700);   
+   cf_chmod(vbuff,(mode_t)0700);   
    }
 else
    {
@@ -1129,7 +1129,7 @@ if (stat(vbuff,&statbuf) == -1)
    snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys/.",CFWORKDIR);
    MakeParentDirectory(vbuff,false);
 
-   chmod(vbuff,(mode_t)0700); /* Keys must be immutable to others */
+   cf_chmod(vbuff,(mode_t)0700); /* Keys must be immutable to others */
    }
 else
    {

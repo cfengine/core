@@ -486,9 +486,9 @@ else
           
           if (!DONTDO)
              {
-             if (chmod(file,newperm & 07777) == -1)
+             if (cf_chmod(file,newperm & 07777) == -1)
                 {
-                CfOut(cf_error,"chmod","chmod failed on %s\n",file);
+                CfOut(cf_error,"cf_chmod","cf_chmod failed on %s\n",file);
                 break;
                 }
              }
@@ -725,9 +725,9 @@ if (lstat(from,&sb) == 0)
 
       cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Moving file object %s to %s\n",from,saved);
 
-      if (rename(from,saved) == -1)
+      if (cf_rename(from,saved) == -1)
          {
-         cfPS(cf_error,CF_FAIL,"rename",pp,attr," !! Can't rename %s to %s\n",from,saved);
+         cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr," !! Can't rename %s to %s\n",from,saved);
          return false;
          }
 
@@ -763,9 +763,9 @@ if (lstat(from,&sb) == 0)
          return false;
          }
       
-      if (rename(from,saved) == -1)
+      if (cf_rename(from,saved) == -1)
          {
-         cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Can't rename %s to %s\n",from,saved);
+         cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr,"Can't rename %s to %s\n",from,saved);
          return false;
          }
       }
@@ -912,9 +912,9 @@ if (attr.rename.newname)
 
       if (!IsItemIn(VREPOSLIST,attr.rename.newname))
          {
-         if (rename(path,attr.rename.newname) == -1)
+         if (cf_rename(path,attr.rename.newname) == -1)
             {
-            cfPS(cf_error,CF_FAIL,"rename",pp,attr," !! Error occurred while renaming %s\n",path);
+            cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr," !! Error occurred while renaming %s\n",path);
             return;
             }
          }
@@ -1012,14 +1012,14 @@ if (attr.rename.disable)
       }
    else
       {
-      chmod(path,newperm);
+      cf_chmod(path,newperm);
       cfPS(cf_inform,CF_CHG,"",pp,attr," -> Disabling/renaming file %s to %s with mode %o\n",path,newname,newperm);
 
       if (!IsItemIn(VREPOSLIST,newname))
          {
-         if (rename(path,newname) == -1)
+         if (cf_rename(path,newname) == -1)
             {
-            cfPS(cf_error,CF_FAIL,"rename",pp,attr,"Error occurred while renaming %s\n",path);
+            cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr,"Error occurred while renaming %s\n",path);
             return;
             }
          
@@ -1614,9 +1614,9 @@ if (lstat(pathbuf,&statbuf) != -1)
          
          /* And then move the current object out of the way...*/
          
-         if (rename(pathbuf,currentpath) == -1)
+         if (cf_rename(pathbuf,currentpath) == -1)
             {
-            CfOut(cf_inform,"rename","Warning. The object %s is not a directory.\n",pathbuf);
+            CfOut(cf_inform,"cf_rename","Warning. The object %s is not a directory.\n",pathbuf);
             return(false);
             }
          }
@@ -1661,9 +1661,9 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
             {
             mask = umask(0);
             
-            if (mkdir(currentpath,DEFAULTMODE) == -1)
+            if (cf_mkdir(currentpath,DEFAULTMODE) == -1)
                {
-               CfOut(cf_error,"mkdir","Unable to make directories to %s\n",parentandchild);
+               CfOut(cf_error,"cf_mkdir","Unable to make directories to %s\n",parentandchild);
                umask(mask);
                return(false);
                }
@@ -1766,7 +1766,7 @@ Chop(timebuf);
 fprintf(fp,"%s,%s\n",timebuf,file);
 fclose(fp);
 
-chmod(fname,perm);
+cf_chmod(fname,perm);
 }
 
 
@@ -1954,7 +1954,7 @@ for (i = number-1; i > 0; i--)
    snprintf(from,CF_BUFSIZE,"%s.%d",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d",name, i+1);
    
-   if (rename(from,to) == -1)
+   if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
@@ -1962,7 +1962,7 @@ for (i = number-1; i > 0; i--)
    snprintf(from,CF_BUFSIZE,"%s.%d.gz",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.gz",name, i+1);
    
-   if (rename(from,to) == -1)
+   if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
@@ -1970,7 +1970,7 @@ for (i = number-1; i > 0; i--)
    snprintf(from,CF_BUFSIZE,"%s.%d.Z",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.Z",name, i+1);
    
-   if (rename(from,to) == -1)
+   if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }   
@@ -1978,7 +1978,7 @@ for (i = number-1; i > 0; i--)
    snprintf(from,CF_BUFSIZE,"%s.%d.bz",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.bz",name, i+1);
    
-   if (rename(from,to) == -1)
+   if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }   
@@ -1986,7 +1986,7 @@ for (i = number-1; i > 0; i--)
    snprintf(from,CF_BUFSIZE,"%s.%d.bz2",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.bz2",name, i+1);
    
-   if (rename(from,to) == -1)
+   if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
@@ -2003,9 +2003,9 @@ if (CopyRegularFileDisk(name,to,attr,&dummyp) == -1)
    return;
    }
 
-chmod(to,statbuf.st_mode);
+cf_chmod(to,statbuf.st_mode);
 chown(to,statbuf.st_uid,statbuf.st_gid); 
-chmod(name,0600);                             /* File must be writable to empty ..*/
+cf_chmod(name,0600);                             /* File must be writable to empty ..*/
  
 if ((fd = creat(name,statbuf.st_mode)) == -1)
    {

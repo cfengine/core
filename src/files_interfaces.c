@@ -164,9 +164,9 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
 
       if (!attr.copy.collapse && (stat(newto,&dsb) == -1))
          {
-         if (mkdir(newto,0700) == -1)
+         if (cf_mkdir(newto,0700) == -1)
             {
-            cfPS(cf_error,CF_INTERPT,"mkdir",pp,attr," !! Can't make directory %s\n",newto);
+            cfPS(cf_error,CF_INTERPT,"cf_mkdir",pp,attr," !! Can't make directory %s\n",newto);
             continue;
             }
          
@@ -1596,12 +1596,12 @@ if (!discardbackup)
       unlink(backup);
       }
    
-   if (rename(dest,backup) == -1)
+   if (cf_rename(dest,backup) == -1)
       {
       /* ignore */
       }
    
-   backupok = (lstat(backup,&s) != -1); /* Did the rename() succeed? NFS-safe */
+   backupok = (lstat(backup,&s) != -1); /* Did the cf_rename() succeed? NFS-safe */
    }
 else
    {
@@ -1628,7 +1628,7 @@ if (dstat.st_size != sstat.st_size)
    CfOut(cf_error,""," !! New file %s seems to have been corrupted in transit (sizes %d and %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
    if (backupok)
       {
-      rename(backup,dest); /* ignore failure */
+      cf_rename(backup,dest); /* ignore failure */
       }
    return false;
    }
@@ -1642,7 +1642,7 @@ if (attr.copy.verify)
       CfOut(cf_verbose,""," !! New file %s seems to have been corrupted in transit, aborting!\n",new);
       if (backupok)
          {
-         rename(backup,dest); /* ignore failure */
+         cf_rename(backup,dest); /* ignore failure */
          }
       return false;
       }
@@ -1731,13 +1731,13 @@ else
    {
 #endif   
    
-   if (rename(new,dest) == -1)
+   if (cf_rename(new,dest) == -1)
       {
-      CfOut(cf_error,"rename"," !! Could not install copy file as %s, directory in the way?\n",dest);
+      CfOut(cf_error,"cf_rename"," !! Could not install copy file as %s, directory in the way?\n",dest);
 
       if (backupok)
          {
-         rename(backup,dest); /* ignore failure */
+         cf_rename(backup,dest); /* ignore failure */
          }
       
       return false;

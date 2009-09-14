@@ -423,7 +423,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       strncpy(OUTPUTDIR,retval,CF_BUFSIZE);
       CfOut(cf_verbose,"","SET outputdir = %s\n",OUTPUTDIR);
 
-      if (mkdir(OUTPUTDIR,0755) == -1)
+      if (cf_mkdir(OUTPUTDIR,0755) == -1)
          {
          CfOut(cf_verbose,"","Writing to existing directory\n");
          }
@@ -549,7 +549,7 @@ if (REPORTS == NULL)
  
 CfOut(cf_verbose,""," -> Creating sub-directory %s\n",OUTPUTDIR);
 
-if (mkdir(OUTPUTDIR,0755) == -1)
+if (cf_mkdir(OUTPUTDIR,0755) == -1)
    {
    CfOut(cf_verbose,""," -> Writing to existing directory\n");
    }

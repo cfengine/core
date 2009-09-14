@@ -601,3 +601,39 @@ return close(sd);
 #endif
 }
 
+/*******************************************************************/
+
+int cf_mkdir(const char *path, mode_t mode)
+
+{
+#ifdef MINGW
+return NovaWin_mkdir(path, mode);
+#else
+return mkdir(path,mode);
+#endif
+}
+
+/*******************************************************************/
+
+int cf_chmod(const char *path, mode_t mode)
+
+{
+#ifdef MINGW
+return NovaWin_chmod(path, mode);
+#else
+return chmod(path,mode);
+#endif
+}
+
+/*******************************************************************/
+
+int cf_rename(const char *oldpath, const char *newpath)
+
+{
+#ifdef MINGW
+return NovaWin_rename(oldpath, newpath);
+#else
+return rename(oldpath,newpath);
+#endif
+}
+

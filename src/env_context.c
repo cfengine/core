@@ -154,7 +154,7 @@ if (!OpenDB(filename,&dbp))
    return;
    }
 
-chmod(filename,0644);  
+cf_chmod(filename,0644);  
 memset(&key,0,sizeof(key));       
 memset(&value,0,sizeof(value));
       
@@ -231,7 +231,7 @@ if (!OpenDB(filename,&dbp))
    return;
    }
 
-chmod(filename,0644); 
+cf_chmod(filename,0644); 
 
 memset(&key,0,sizeof(key));       
 memset(&value,0,sizeof(value));

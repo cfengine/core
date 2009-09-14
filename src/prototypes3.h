@@ -935,6 +935,9 @@ char *cf_strcpy(char *s1,char *s2);
 char *MapName(char *s);
 int UseUnixStandard(char *s);
 int cf_closesocket(int sd);
+int cf_mkdir(const char *path, mode_t mode);
+int cf_chmod(const char *path, mode_t mode);
+int cf_rename(const char *oldpath, const char *newpath);
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);

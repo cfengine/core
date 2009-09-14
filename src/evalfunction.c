@@ -266,7 +266,7 @@ struct Rval FnCallHashMatch(struct FnCall *fp,struct Rlist *finalargs)
 { static char *argtemplate[] =
      {
      CF_PATHRANGE,
-     "md5,sha1,crypt",
+     "md5,sha1,crypt,cf_sha224,cf_sha256,cf_sha384,cf_sha512",
      CF_IDRANGE,
      NULL
      };
@@ -294,9 +294,9 @@ typestring = finalargs->next->item;
 compare = finalargs->next->next->item;
 
 type = String2HashType(typestring);
-HashString(string,strlen(string),digest,type);
+HashFile(string,digest,type);
 snprintf(buffer,CF_BUFSIZE-1,"%s",HashPrint(type,digest));
-CfOut(cf_verbose,""," -> File %s hashes to %s, compare to %s\n",string,buffer,compare);
+CfOut(cf_verbose,""," -> File \"%s\" hashes to \"%s\", compare to \"%s\"\n",string,buffer,compare);
 
 if (strcmp(buffer+4,compare) == 0)
    {

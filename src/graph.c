@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#define CF_TRIBE_SIZE 30
+
 /*****************************************************************************/
 
 void VerifyGraph(struct Topic *map, struct Rlist *assoc_views,char *view)
@@ -217,7 +219,6 @@ free(n);
 # ifdef HAVE_GRAPHVIZ_GVC_H
 #  include <graphviz/gvc.h>
 # endif
-#define CF_TRIBE_SIZE 30
 
 void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view)
 

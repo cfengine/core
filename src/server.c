@@ -2557,7 +2557,7 @@ if (cfst.cf_nlink == CF_NOSIZE)
    cfst.cf_nlink = statbuf.st_nlink;
    }
 
-#ifndef IRIX
+#if !defined(IRIX) && !defined(MINGW)
 if (statbuf.st_size > statbuf.st_blocks * DEV_BSIZE)
 #else
 # ifdef HAVE_ST_BLOCKS

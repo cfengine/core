@@ -44,11 +44,11 @@ void RandomSeed()
 
 Debug("RandomSeed() work directory is %s\n",CFWORKDIR);
 
-snprintf(vbuff,CF_BUFSIZE,"%s/randseed",CFWORKDIR); 
+snprintf(vbuff,CF_BUFSIZE,"%s%crandseed",CFWORKDIR,FILE_SEPARATOR);
 
  if (stat(vbuff,&statbuf) == -1)
     {
-    snprintf(AVDB,CF_MAXVARSIZE-1,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
+    snprintf(AVDB,CF_MAXVARSIZE-1,"%s%cstate%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CF_AVDB_FILE);
     }
  else
     {

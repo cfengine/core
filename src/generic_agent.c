@@ -415,6 +415,10 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
       }
    }
 
+#ifdef MINGW
+NovaWin_OpenNetwork();
+#endif   
+   
 /* Init crypto stuff */
 
 OpenSSL_add_all_algorithms();
@@ -610,7 +614,7 @@ if (SHOWREPORTS)
    if ((FREPORT_TXT = fopen(name,"w")) == NULL)
       {
       CfOut(cf_error,"fopen","Cannot open output file %s",name);
-      FREPORT_TXT = fopen("/dev/null","w");
+      FREPORT_TXT = fopen(NULLFILE,"w");
       }
    
    snprintf(name,CF_BUFSIZE,"%s/reports/promise_output_%s.html",CFWORKDIR,agents);
@@ -618,7 +622,7 @@ if (SHOWREPORTS)
    if ((FREPORT_HTML = fopen(name,"w")) == NULL)
       {
       CfOut(cf_error,"fopen","Cannot open output file %s",name);
-      FREPORT_HTML = fopen("/dev/null","w");
+      FREPORT_HTML = fopen(NULLFILE,"w");
       }
 
    snprintf(name,CF_BUFSIZE,"%s/promise_knowledge.cf",CFWORKDIR);
@@ -626,12 +630,12 @@ if (SHOWREPORTS)
    if ((FKNOW = fopen(name,"w")) == NULL)
       {
       CfOut(cf_error,"fopen","Cannot open output file %s",name);
-      FKNOW = fopen("/dev/null","w");
+      FKNOW = fopen(NULLFILE,"w");
       }
    }
 else
    {
-   snprintf(name,CF_BUFSIZE,"/dev/null");
+   snprintf(name,CF_BUFSIZE,NULLFILE);
    if ((FREPORT_TXT = fopen(name,"w")) == NULL)
       {
       char vbuff[CF_BUFSIZE];
@@ -656,7 +660,7 @@ else
 
 if (!(FKNOW && FREPORT_HTML && FREPORT_TXT))
    {
-   FatalError("Unable to continue as /dev/null is unwritable");
+   FatalError("Unable to continue as the null-file is unwritable");
    }
 
 fprintf(FKNOW,"bundle knowledge CfengineSiteConfiguration\n{\n");
@@ -1192,9 +1196,9 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
    FatalError(output);
    }
 
-if ((FKNOW = fopen("/dev/null","w")) == NULL)
+if ((FKNOW = fopen(NULLFILE,"w")) == NULL)
    {
-   FatalError("/dev/null failed");
+   FatalError("Null-file failed");
    }
 
 ShowPromises(BUNDLES,BODIES);

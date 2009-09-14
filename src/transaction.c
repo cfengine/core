@@ -199,10 +199,10 @@ if (lastcompleted != 0)
       else
          {
          CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
-         
-         err = 0;
-         
-         if ((err = kill(pid,SIGINT)) == -1)
+ 
+         err = GracefulTerminate(pid);
+
+         if (err || errno == ESRCH)
             {
             sleep(1);
             err=0;

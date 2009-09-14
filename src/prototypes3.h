@@ -1201,6 +1201,16 @@ void SetReferenceTime(int setclasses);
 void SetStartTime(int setclasses);
 void AddTimeClass(char *str);
 
+/* unix.c */
+
+#ifndef MINGW  // TODO: Define UNIX instead ?
+int Unix_GracefulTerminate(pid_t pid);
+int Unix_ShellCommandReturnsZero(char *comm,int useshell);
+int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
+int Unix_LoadProcessTable(struct Item **procdata,char *psopts);
+void Unix_CreateEmptyFile(char *name);
+int Unix_IsExecutable(char *file);
+#endif  /* NOT MINGW */
 
 /* vars.c */
 

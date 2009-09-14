@@ -375,6 +375,11 @@ else
 
 void GetInterfaceInfo3(void)
 
+#ifdef MINGW
+{
+CfOut(cf_verbose,"","Interface information not yet available under NT.\n");
+}
+#else
 { int fd,len,i,j,first_address,ipdefault = false;
   struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
   struct ifconf list;
@@ -565,6 +570,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
 
 close(fd);
 }
+#endif  /* NOT MINGW */
 
 /*******************************************************************/
 
@@ -641,6 +647,11 @@ CfOut(cf_verbose,"","Environment data loaded\n\n");
 
 void FindV6InterfaceInfo(void)
 
+#ifdef MINGW
+{
+CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
+}
+#else
 { FILE *pp;
   char buffer[CF_BUFSIZE]; 
  
@@ -743,7 +754,7 @@ while (!feof(pp))
 
 cf_pclose(pp);
 }
-
+#endif  /* NOT MINGW */
 
 /*******************************************************************/
 

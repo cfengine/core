@@ -36,160 +36,24 @@
 
 int IsExecutable(char *file)
 
-{ struct stat sb;
-  gid_t grps[NGROUPS];
-  int i,n;
-
-if (stat(file,&sb) == -1)
-   {
-   CfOut(cf_error,"","Proposed executable file \"%s\" doesn't exist",file);
-   return false;
-   }
-  
-if (getuid() == sb.st_uid)
-   {
-   if (sb.st_mode && 0100)
-      {
-      return true;
-      }
-   }
-else if (getgid() == sb.st_gid)
-   {
-   if (sb.st_mode && 0010)
-      {
-      return true;
-      }    
-   }
-else
-   {
-   if (sb.st_mode && 0001)
-      {
-      return true;
-      }
-   
-   if ((n = getgroups(NGROUPS,grps)) > 0)
-      {
-      for (i = 0; i < n; i++)
-         {
-         if (grps[i] == sb.st_gid)
-            {
-            if (sb.st_mode && 0010)
-               {
-               return true;
-               }                 
-            }
-         }
-      }
-   }
-
-return false;
+{ 
+#ifdef MINGW
+return NovaWin_IsExecutable(file);
+#else
+return Unix_IsExecutable(file);
+#endif
 }
 
 /*******************************************************************/
 
 int ShellCommandReturnsZero(char *comm,int useshell)
 
-{ int status, i, argc = 0;
-  pid_t pid;
-  char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
-  char **argv;
-  char esc_command[CF_BUFSIZE];
-
-if (!useshell)
-   {
-   /* Build argument array */
-
-   for (i = 0; i < CF_MAXSHELLARGS; i++)
-      {
-      memset (arg[i],0,CF_BUFSIZE);
-      }
-
-   argc = ArgSplitCommand(comm,arg);
-
-   if (argc == -1)
-      {
-      CfOut(cf_error,"","Too many arguments in %s\n",comm);
-      return false;
-      }
-   }
-
-if ((pid = fork()) < 0)
-   {
-   FatalError("Failed to fork new process");
-   }
-else if (pid == 0)                     /* child */
-   {
-   ALARM_PID = -1;
-
-   if (useshell)
-      {
-      strncpy(esc_command,WinEscapeCommand(comm),CF_BUFSIZE-1);
-
-      if (execl("/bin/sh","sh","-c",esc_command,NULL) == -1)
-         {
-         CfOut(cf_error,"execl","Command %s failed",esc_command);
-         exit(1);
-         }
-      }
-   else
-      {
-      argv = (char **) malloc((argc+1)*sizeof(char *));
-
-      if (argv == NULL)
-         {
-         FatalError("Out of memory");
-         }
-
-      for (i = 0; i < argc; i++)
-         {
-         argv[i] = arg[i];
-         }
-
-      argv[i] = (char *) NULL;
-
-      if (execv(arg[0],argv) == -1)
-         {
-         CfOut(cf_error,"execvp","Command %s failed",argv);
-         exit(1);
-         }
-
-      free((char *)argv);
-      }
-   }
-else                                    /* parent */
-   {
-   pid_t wait_result;
-   ALARM_PID = pid;
-
-   if ((status = cf_pwait(pid)) == -1)
-      {
-      return false;
-      }
-   
-   if (WIFSIGNALED(status))
-      {
-      Debug("Script %s returned: %d\n",comm,WTERMSIG(status));
-      return false;
-      }
-   
-   if (!WIFEXITED(status))
-      {
-      return false;
-      }
-   
-   if (WEXITSTATUS(status) == 0)
-      {
-      Debug("Shell command returned 0\n");
-      return true;
-      }
-   else
-      {
-      Debug("Shell command was non-zero: %d\n",WEXITSTATUS(status));
-      return false;
-      }
-   }
-
-return false;
+{ 
+#ifdef MINGW
+return NovaWin_ShellCommandReturnsZero(comm,useshell);
+#else
+return Unix_ShellCommandReturnsZero(comm,useshell);
+#endif
 }
 
 /********************************************************************/
@@ -279,7 +143,7 @@ setsid();
 closelog();
 
 fflush(NULL);
-fd = open("/dev/null", O_RDWR, 0);
+fd = open(NULLFILE, O_RDWR, 0);
 
 if (fd != -1)
    {

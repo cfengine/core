@@ -140,7 +140,11 @@ return buffer;
 int UseUnixStandard(char *s)
 
 {
+#ifdef MINGW
+return false;
+#else
 return true;
+#endif
 }
 
 /*********************************************************/

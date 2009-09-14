@@ -621,7 +621,8 @@ void *LocalExec(void *scheduled_run)
 { FILE *pp; 
   char line[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
   char cmd[CF_BUFSIZE],esc_command[CF_BUFSIZE];
-  int print,tid,count = 0;
+  int print,count = 0;
+  pthread_t tid;
   time_t starttime = time(NULL);
   FILE *fp;
 #ifdef HAVE_PTHREAD_SIGMASK
@@ -632,7 +633,7 @@ pthread_sigmask(SIG_BLOCK,&sigmask,NULL);
 #endif
 
 #ifdef HAVE_PTHREAD
-tid = (int) pthread_self();
+tid = pthread_self();
 #endif
  
 CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");

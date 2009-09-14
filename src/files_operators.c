@@ -152,21 +152,13 @@ return true;
 
 void CreateEmptyFile(char *name)
 
-{ int tempfd;
-
-if (unlink(name) == -1)
-   {
-   Debug("Pre-existing object %s could not be removed or was not there\n",name);
-   }
-
-if ((tempfd = open(name, O_CREAT|O_EXCL|O_WRONLY,0600)) < 0)
-   {
-   CfOut(cf_error,"open","Couldn't open a file %s\n",name);  
-   }
-
-close(tempfd);
+{ 
+#ifdef MINGW
+NovaWin_CreateEmptyFile(name);
+#else
+Unix_CreateEmptyFile(name);
+#endif
 }
-
 /*****************************************************************************/
 
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp)

@@ -94,7 +94,8 @@ libpromises_la_SOURCES =						\
 	mod_knowledge.c							\
 	mod_measurement.c						\
 	mod_databases.c							\
-	mod_process.c
+	mod_process.c                           \
+	unix.c
 
 
 sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report

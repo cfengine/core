@@ -120,7 +120,7 @@ void CheckForFileHoles(struct stat *sstat,struct Attributes attr,struct Promise 
 /* Use a public member in struct Image                   */
 
 {
-#ifndef IRIX
+#if !defined(IRIX) && !defined(MINGW)
 if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
 #else
 # ifdef HAVE_ST_BLOCKS

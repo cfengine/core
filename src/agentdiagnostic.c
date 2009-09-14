@@ -40,14 +40,14 @@ void AgentDiagnostic()
 if (VERBOSE || DEBUG)
    {
    FREPORT_TXT = stdout;
-   FREPORT_HTML = fopen("/dev/null","w");
-   FKNOW = fopen("/dev/null","w");
+   FREPORT_HTML = fopen(NULLFILE,"w");
+   FKNOW = fopen(NULLFILE,"w");
    }
 else
    {
-   FREPORT_TXT= fopen("/dev/null","w");
-   FREPORT_HTML= fopen("/dev/null","w");
-   FKNOW = fopen("/dev/null","w");
+   FREPORT_TXT= fopen(NULLFILE,"w");
+   FREPORT_HTML= fopen(NULLFILE,"w");
+   FKNOW = fopen(NULLFILE,"w");
    }
 
 

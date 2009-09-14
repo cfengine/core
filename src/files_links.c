@@ -150,13 +150,13 @@ else
          }
       else
          {
-         cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
+         cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Link %s points to %s not %s - not authorized to override",destination,linkbuf,to);
          return true;
          }
       }
    else
       {
-      cfPS(cf_inform,CF_NOP,"",pp,attr," -> Link %s points to %s - promise kept",destination,to);
+      cfPS(cf_verbose,CF_NOP,"",pp,attr," -> Link %s points to %s - promise kept",destination,to);
       return true;
       }
    }

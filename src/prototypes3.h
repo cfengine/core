@@ -569,6 +569,9 @@ int CfReadLine(char *buff,int size,FILE *fp);
 
 /* files_names.c */
 
+int DeEscapeQuotedString(char *in, char *out);
+void DeEscapeFilename(char *in,char *out);
+char *EscapeFilename(char *in);
 int IsDir(char *path);
 int EmptyString(char *s);
 int ExpandOverflow(char *str1,char *str2);
@@ -823,7 +826,6 @@ double GAverage(double anew,double aold,double p);
 
 /* install.c */
 
-int DeEscapeString(char *from,char *to);
 int RelevantBundle(char *agent,char *blocktype);
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args);
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args);

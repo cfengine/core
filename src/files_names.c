@@ -472,6 +472,111 @@ else
    }
 }
 
+/*****************************************************************************/
+
+void DeEscapeFilename(char *in,char *out)
+
+{ char *sp_in,*sp_out = out;
+
+*sp_out = '\0';
+
+for (sp_in = in; *sp_in != '\0'; sp_in++)
+   {
+   if (*sp_in == '\\' && *(sp_in+1) == ' ')
+      {
+      sp_in++;
+      }
+
+   *sp_out++ = *sp_in;
+   }
+
+*sp_out = '\0';
+}
+
+/*****************************************************************************/
+
+char *EscapeFilename(char *in)
+
+{ static char escaped[CF_BUFSIZE];
+  char *sp_in,*sp_out;
+ 
+*escaped = '\0';
+
+for (sp_in = in; *sp_in != '\0'; sp_in++)
+   {
+   if (*sp_in == ' ')
+      {
+      *sp_out++ = '\\';
+      *sp_out++ = ' ';
+      }
+   else
+      {
+      *sp_out++ = *sp_in;
+      }
+   }
+
+*sp_out = '\0';
+}
+
+/*****************************************************************************/
+
+int DeEscapeQuotedString(char *from,char *to)
+
+{ char *sp,*cp;
+  char start = *from;
+  int len = strlen(from);
+
+if (len == 0)
+   {
+   return 0;
+   }
+
+ for (sp=from+1,cp=to; (sp-from) < len; sp++,cp++)
+    {
+    if ((*sp == start))
+       {
+       *(cp) = '\0';
+
+       if (*(sp+1) != '\0')
+          {
+          return (2+(sp - from));
+          }
+
+       return 0;
+       }
+
+    if (*sp == '\n')
+       {
+       P.line_no++;
+       }
+
+    if (*sp == '\\')
+       {
+       switch (*(sp+1))
+          {
+          case '\n':
+              P.line_no++;
+              sp+=2;
+              break;
+
+          case ' ':
+              break;
+              
+          case '\\':
+          case '\"':
+          case '\'': sp++;
+              break;
+          }
+       }
+
+    *cp = *sp;    
+    }
+ 
+ yyerror("Runaway string");
+ *(cp) = '\0';
+ return 0;
+}
+
 /*********************************************************************/
 
 void Chop(char *str) /* remove trailing spaces */
@@ -489,8 +594,7 @@ if (strlen(str) > CF_EXPANDSIZE)
    return;
    }
 
-for (i = strlen(str)-1; isspace((int)str[i]) || str[i] == (char)10
-         || str[i] == (char)113 || str[i] == EOF; i--)
+for (i = strlen(str)-1; isspace((int)str[i]); i--)
    {
    str[i] = '\0';
    }

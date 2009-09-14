@@ -1090,6 +1090,18 @@ switch(a.packages.package_policy)
        
    case cfa_reinstall:
 
+       if (a.packages.package_delete_command == NULL)
+          {
+          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package delete command undefined");
+          return;
+          }
+
+       if (a.packages.package_add_command == NULL)
+          {
+          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package add command undefined");
+          return;
+          }
+
        if (!no_version_specified)
           {
           CfOut(cf_verbose,""," -> Schedule package for reinstallation\n");
@@ -1109,6 +1121,12 @@ switch(a.packages.package_policy)
        break;
        
    case cfa_update:
+
+       if (a.packages.package_update_command == NULL)
+          {
+          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package update command undefined");
+          return;
+          }
 
        if (matched && package_select_in_range && !no_version_specified || installed)
           {

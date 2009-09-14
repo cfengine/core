@@ -973,10 +973,17 @@ char *GetArg0(char *execstr)
 for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
    {
    i++;
+
+   if (*sp == '\"')
+      {
+      DeEscapeQuotedString(sp,arg);
+      return arg;
+      }
    }
 
 memset(arg,0,CF_MAXVARSIZE);
 strncpy(arg,execstr,i);
+arg[i] = '\0';
 return arg;
 }
 

@@ -149,7 +149,7 @@ category   [a-zA-Z_]+:
                          FatalError("Malloc failure in parsing");
                          }
 
-                      if ((less = DeEscapeString(yytext,tmp)) > 0)
+                      if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)
                          {        
                          yyless(less);    
                          }

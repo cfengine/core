@@ -42,7 +42,7 @@ int IsExecutable(char *file)
 
 if (stat(file,&sb) == -1)
    {
-   CfOut(cf_error,"","Proposed executable %s doesn't exist",file);
+   CfOut(cf_error,"","Proposed executable file \"%s\" doesn't exist",file);
    return false;
    }
   

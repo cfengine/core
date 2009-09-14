@@ -723,6 +723,7 @@ void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_S
   const EVP_MD *md = NULL;
   struct Constraint *cp;
   struct Rlist *rp;
+  struct FnCall *fp;
 
 md = EVP_get_digestbyname(FileHashName(type));
    
@@ -758,7 +759,15 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
           break;
 
       case CF_FNCALL:
-          // Shouldn't happen -right?
+
+          /* Body or bundle */
+
+          fp = (struct FnCall *)cp->rval;
+          EVP_DigestUpdate(&context,fp->name,strlen>(fp->name));
+          for (rp = fp->args; rp != NULL; rp=rp->next)
+             {
+             EVP_DigestUpdate(&context,rp->item,strlen(rp->item));
+             }
           break;
       }
    }

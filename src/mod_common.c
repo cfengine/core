@@ -175,7 +175,7 @@ struct BodySyntax CF_CLASSBODY[] =
 struct BodySyntax CFG_CONTROLBODY[] =
    {
    {"bundlesequence",cf_slist,".*","List of promise bundles to verify in order"},
-   {"inputs",cf_slist,".*","List of filenames to parse for promises"},
+   {"inputs",cf_slist,".*","List of additional filenames to parse for promises"},
    {"version",cf_str,"","Scalar version string for this configuration"},
    {"lastseenexpireafter",cf_int,CF_VALRANGE,"Number of minutes after which last-seen entries are purged"},
    {"output_prefix",cf_str,"","The string prefix for standard output"},
@@ -283,7 +283,7 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
    {"mailto",cf_str,".*@.*","Email-address cfengine mail is sent to"},
    {"smtpserver",cf_str,".*","Name or IP of a willing smtp server for sending email"},
    {"mailmaxlines",cf_int,"0,1000","Maximum number of lines of output to send by email"},
-   {"schedule",cf_slist,"","The class schedule for activating cf-execd"},
+   {"schedule",cf_slist,"","The class schedule used by cf-execd for activating cf-agent"},
    {"executorfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
    {"exec_command",cf_str,CF_PATHRANGE,"The full path and command to the executable run by default (overriding builtin)"},
    {NULL,cf_notype,NULL,NULL}

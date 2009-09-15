@@ -282,5 +282,5 @@ if (line[0] == ':')
       }
    }
 
-CfOut(level,"","%s (preview of %s)\n",message,comm);
+CfOut(cf_verbose,"","%s (preview of %s)\n",message,comm);
 }

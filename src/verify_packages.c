@@ -192,9 +192,10 @@ if (!ExecuteSchedule(schedule,cfa_verifypack))
 int VerifyInstalledPackages(struct CfPackageManager **all_mgrs,struct Attributes a,struct Promise *pp)
 
 { struct CfPackageManager *manager = NewPackageManager(all_mgrs,a.packages.package_list_command,cfa_pa_none,cfa_no_ppolicy);
+  const int reset = true, update = false;
   char vbuff[CF_BUFSIZE];
-  struct Rlist *rp;
   struct dirent *dirp;
+  struct Rlist *rp;
   FILE *prp;
   DIR *dirh;
  
@@ -231,14 +232,28 @@ if (a.packages.package_list_command != NULL)
       memset(vbuff,0,CF_BUFSIZE);
       CfReadLine(vbuff,CF_BUFSIZE,prp);   
 
-      if (!FullTextMatch(a.packages.package_installed_regex,vbuff))
+      if (a.packages.package_multiline_start)
          {
-         continue;
+         if (FullTextMatch(a.packages.package_multiline_start,vbuff))
+            {
+            PrependMultiLinePackageItem(&(manager->pack_list),vbuff,reset,a,pp);
+            }
+         else
+            {
+            PrependMultiLinePackageItem(&(manager->pack_list),vbuff,update,a,pp);
+            }
          }
-      
-      if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
+      else
          {
-         continue;
+         if (!FullTextMatch(a.packages.package_installed_regex,vbuff))
+            {
+            continue;
+            }
+         
+         if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
+            {
+            continue;
+            }
          }
       }
    
@@ -902,6 +917,60 @@ Debug(" -?      with version \"%s\"\n",version);
 Debug(" -?      with architecture \"%s\"\n",arch);
 
 return PrependPackageItem(list,name,version,arch,a,pp);
+}
+
+/*****************************************************************************/
+
+int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp)
+
+{ static char name[CF_MAXVARSIZE];
+  static char arch[CF_MAXVARSIZE];
+  static char version[CF_MAXVARSIZE];
+  static char vbuff[CF_MAXVARSIZE];
+
+if (reset)
+   {
+   if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0)
+      {
+      return false;
+      }
+
+   if (strcmp(name,"") != 0 || strcmp(version,"") != 0)
+      {
+      Debug(" -? Extracted package name \"%s\"\n",name);
+      Debug(" -?      with version \"%s\"\n",version);
+      Debug(" -?      with architecture \"%s\"\n",arch);
+      
+      PrependPackageItem(list,name,version,arch,a,pp);
+      }
+
+   strcpy(name,"CF_NOMATCH");
+   strcpy(version,"CF_NOMATCH");
+   strcpy(arch,"default");
+   }
+
+if (FullTextMatch(a.packages.package_list_name_regex,item))
+   {
+   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
+   sscanf(vbuff,"%s",name); /* trim */
+   }
+
+if (FullTextMatch(a.packages.package_list_version_regex,item))
+   {
+   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
+   sscanf(vbuff,"%s",version); /* trim */
+   }
+
+if (a.packages.package_list_arch_regex && FullTextMatch(a.packages.package_list_arch_regex,item))
+   {
+   if (a.packages.package_list_arch_regex)
+      {
+      strncpy(vbuff,ExtractFirstReference(a.packages.package_list_arch_regex,item),CF_MAXVARSIZE-1);
+      sscanf(vbuff,"%s",arch); /* trim */
+      }
+   }
+   
+return false;
 }
 
 /*****************************************************************************/

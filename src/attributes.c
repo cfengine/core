@@ -909,6 +909,8 @@ p.package_noverify_regex = (char *)GetConstraint("package_noverify_regex",pp->co
 p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode",pp->conlist);
 
 p.package_name_convention = (char *)GetConstraint("package_name_convention",pp->conlist,CF_SCALAR);
+
+p.package_multiline_start = (char *)GetConstraint("package_multiline_start",pp->conlist,CF_SCALAR);
 return p;
 }
 

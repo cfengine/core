@@ -61,6 +61,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {"package_update_command",cf_str,CF_PATHRANGE,"Command to update to the latest version a currently installed package"},
    {"package_verify_command",cf_str,CF_PATHRANGE,"Command to verify the correctness of an installed package"},
    {"package_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
+   {"package_multiline_start",cf_str,"","Regular expression which matches the start of a new package in multiline output" },
    {NULL,cf_notype,NULL,NULL}
    };
 

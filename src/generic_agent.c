@@ -127,11 +127,11 @@ if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
    return true;
    }
 
-snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
+snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN);
 
 if (stat(cmd,&sb) == -1)
    {
-   CfOut(cf_error,"","cf-promises needs to be installed in %s/bin for pre-validation of full configuration",CFWORKDIR);
+   CfOut(cf_error,"","%s needs to be installed in %s%cbin for pre-validation of full configuration",CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR);
    return false;
    }
 
@@ -139,11 +139,11 @@ if (stat(cmd,&sb) == -1)
 
 if ((*VINPUTFILE == '.') || IsAbsoluteFileName(VINPUTFILE))
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises\" -f %s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f %s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,VINPUTFILE);
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises\" -f %s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f %s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
    }
 
 /* Check if reloading policy will succeed */
@@ -357,31 +357,20 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
    {
    CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
 
-   snprintf(HASHDB,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CHKDB);
+   snprintf(HASHDB,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_CHKDB);
 
-   snprintf(vbuff,CF_BUFSIZE,"%s/inputs/update.conf",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cinputs%cupdate.conf",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,force);
-   snprintf(vbuff,CF_BUFSIZE,"%s/bin/cf-agent -D from_cfexecd",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cbin%ccf-agent -D from_cfexecd",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,force);
-   snprintf(vbuff,CF_BUFSIZE,"%s/outputs/spooled_reports",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%coutputs%cspooled_reports",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,force);
-   snprintf(vbuff,CF_BUFSIZE,"%s/lastseen/intermittencies",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%clastseen%cintermittencies",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,force);
-   snprintf(vbuff,CF_BUFSIZE,"%s/reports/various",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%creports%cvarious",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,force);
    
-   snprintf(vbuff,CF_BUFSIZE,"%s/inputs",CFWORKDIR);
-
-   if (stat(vbuff,&sb) == -1)
-      {
-      FatalError(" !!! No access to workspace");
-      }
-   else
-      {
-      cf_chmod(vbuff,sb.st_mode | 0700);
-      }
-   
-   snprintf(vbuff,CF_BUFSIZE,"%s/outputs",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cinputs",CFWORKDIR,FILE_SEPARATOR);
 
    if (stat(vbuff,&sb) == -1)
       {
@@ -392,7 +381,18 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
       cf_chmod(vbuff,sb.st_mode | 0700);
       }
    
-   sprintf(ebuff,"%s/state/cf_procs",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%coutputs",CFWORKDIR,FILE_SEPARATOR);
+
+   if (stat(vbuff,&sb) == -1)
+      {
+      FatalError(" !!! No access to workspace");
+      }
+   else
+      {
+      cf_chmod(vbuff,sb.st_mode | 0700);
+      }
+   
+   sprintf(ebuff,"%s%cstate%ccf_procs",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(ebuff,force);
    
    if (stat(ebuff,&statbuf) == -1)
@@ -400,14 +400,14 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
       CreateEmptyFile(ebuff);
       }
    
-   sprintf(ebuff,"%s/state/cf_rootprocs",CFWORKDIR);
+   sprintf(ebuff,"%s%cstate%ccf_rootprocs",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
    if (stat(ebuff,&statbuf) == -1)
       {
       CreateEmptyFile(ebuff);
       }
    
-   sprintf(ebuff,"%s/state/cf_otherprocs",CFWORKDIR);
+   sprintf(ebuff,"%s%cstate%ccf_otherprocs",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
    if (stat(ebuff,&statbuf) == -1)
       {
@@ -452,12 +452,12 @@ setlinebuf(stdout);
 
 if (BOOTSTRAP)
    {
-   snprintf(vbuff,CF_BUFSIZE,"%s/inputs/failsafe.cf",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cinputs%cfailsafe.cf",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
    if (!IsEnterprise() && stat(vbuff,&statbuf) == -1)
       {
       CfOut(cf_inform,"","Didn't find established file %s, so looking for one in current directory\n",vbuff);
-      strncpy(VINPUTFILE,"./failsafe.cf",CF_BUFSIZE-1);
+	  snprintf(VINPUTFILE,CF_BUFSIZE-1,".%cfailsafe.cf",FILE_SEPARATOR);
       }
    else
       {
@@ -609,7 +609,7 @@ void OpenReports(char *agents)
 
 if (SHOWREPORTS)
    {
-   snprintf(name,CF_BUFSIZE,"%s/reports/promise_output_%s.txt",CFWORKDIR,agents);
+   snprintf(name,CF_BUFSIZE,"%s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
 
    if ((FREPORT_TXT = fopen(name,"w")) == NULL)
       {
@@ -617,7 +617,7 @@ if (SHOWREPORTS)
       FREPORT_TXT = fopen(NULLFILE,"w");
       }
    
-   snprintf(name,CF_BUFSIZE,"%s/reports/promise_output_%s.html",CFWORKDIR,agents);
+   snprintf(name,CF_BUFSIZE,"%s%creports%cpromise_output_%s.html",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
 
    if ((FREPORT_HTML = fopen(name,"w")) == NULL)
       {
@@ -625,7 +625,7 @@ if (SHOWREPORTS)
       FREPORT_HTML = fopen(NULLFILE,"w");
       }
 
-   snprintf(name,CF_BUFSIZE,"%s/promise_knowledge.cf",CFWORKDIR);
+   snprintf(name,CF_BUFSIZE,"%s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR);
    
    if ((FKNOW = fopen(name,"w")) == NULL)
       {
@@ -675,9 +675,9 @@ void CloseReports(char *agents)
  
 if (SHOWREPORTS)
    {
-   CfOut(cf_error,"","Wrote compilation report %s/reports/promise_output_%s.txt",CFWORKDIR,agents);
-   CfOut(cf_error,"","Wrote compilation report %s/reports/promise_output_%s.html",CFWORKDIR,agents);
-   CfOut(cf_error,"","Wrote knowledge map %s/promise_knowledge.cf",CFWORKDIR,agents);
+   CfOut(cf_error,"","Wrote compilation report %s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
+   CfOut(cf_error,"","Wrote compilation report %s%creports%cpromise_output_%s.html",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
+   CfOut(cf_error,"","Wrote knowledge map %s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR,agents);
    }
 
 fprintf(FKNOW,"}\n");
@@ -1001,10 +1001,10 @@ if (uname(&VSYSNAME) == -1)
    FatalError("Uname couldn't get kernel name info!!\n");
    }
  
-snprintf(LOGFILE,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+snprintf(LOGFILE,CF_BUFSIZE,"%s%ccfagent.%s.log",CFWORKDIR,FILE_SEPARATOR,VSYSNAME.nodename);
 VSETUIDLOG = strdup(LOGFILE); 
  
-snprintf(vbuff,CF_BUFSIZE,"%s/.",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%c.",CFWORKDIR,FILE_SEPARATOR);
 MakeParentDirectory(vbuff,false);
 
 CfOut(cf_verbose,"","Making sure that locks are private...\n"); 
@@ -1020,18 +1020,18 @@ if (stat(CFWORKDIR,&statbuf) != -1)
    cf_chmod(CFWORKDIR,(mode_t)(statbuf.st_mode & ~022));
    }
 
-snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%cstate%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
 MakeParentDirectory(vbuff,false);
 
-snprintf(CFPRIVKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.priv",CFWORKDIR);
-snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
+snprintf(CFPRIVKEYFILE,CF_BUFSIZE,"%s%cppkeys%clocalhost.priv",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
+snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s%cppkeys%clocalhost.pub",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
 
 CfOut(cf_verbose,"","Checking integrity of the state database\n");
-snprintf(vbuff,CF_BUFSIZE,"%s/state",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%cstate",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
 
 if (stat(vbuff,&statbuf) == -1)
    {
-   snprintf(vbuff,CF_BUFSIZE,"%s/state/.",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cstate%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
    
    if (chown(vbuff,getuid(),getgid()) == -1)
@@ -1051,11 +1051,11 @@ else
 
 CfOut(cf_verbose,"","Checking integrity of the module directory\n"); 
 
-snprintf(vbuff,CF_BUFSIZE,"%s/modules",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%cmodules",CFWORKDIR,FILE_SEPARATOR);
 
 if (stat(vbuff,&statbuf) == -1)
    {
-   snprintf(vbuff,CF_BUFSIZE,"%s/modules/.",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cmodules%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
    
    if (chown(vbuff,getuid(),getgid()) == -1)
@@ -1075,11 +1075,11 @@ else
 
 CfOut(cf_verbose,"","Checking integrity of the input data for RPC\n"); 
 
-snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%crpc_in",CFWORKDIR,FILE_SEPARATOR);
 
 if (stat(vbuff,&statbuf) == -1)
    {
-   snprintf(vbuff,CF_BUFSIZE,"%s/rpc_in/.",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%crpc_in%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
    
    if (chown(vbuff,getuid(),getgid()) == -1)
@@ -1100,11 +1100,11 @@ else
 
 CfOut(cf_verbose,"","Checking integrity of the output data for RPC\n"); 
 
-snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%crpc_out",CFWORKDIR,FILE_SEPARATOR);
 
 if (stat(vbuff,&statbuf) == -1)
    {
-   snprintf(vbuff,CF_BUFSIZE,"%s/rpc_out/.",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%crpc_out%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
 
    if (chown(vbuff,getuid(),getgid()) == -1)
@@ -1126,11 +1126,11 @@ else
  
 CfOut(cf_verbose,"","Checking integrity of the PKI directory\n");
 
-snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys",CFWORKDIR);
+snprintf(vbuff,CF_BUFSIZE,"%s%cppkeys",CFWORKDIR,FILE_SEPARATOR);
     
 if (stat(vbuff,&statbuf) == -1)
    {
-   snprintf(vbuff,CF_BUFSIZE,"%s/ppkeys/.",CFWORKDIR);
+   snprintf(vbuff,CF_BUFSIZE,"%s%cppkeys%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
 
    cf_chmod(vbuff,(mode_t)0700); /* Keys must be immutable to others */
@@ -1139,7 +1139,7 @@ else
    {
    if (statbuf.st_mode & 077)
       {
-      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: Private key directory %s/ppkeys (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
+      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: Private key directory %s%cppkeys (mode %o) was not private!\n",CFWORKDIR,FILE_SEPARATOR,statbuf.st_mode & 0777);
       FatalError(output);
       }
    }
@@ -1158,7 +1158,7 @@ if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsAbsoluteFileN
    /* If -f assume included relative files are in same directory */
    strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
    ChopLastNode(path);
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/%s",path,filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s%c%s",path,FILE_SEPARATOR,filename);
    }
 else if ((*filename == '.') || IsAbsoluteFileName(filename))
    {
@@ -1166,7 +1166,7 @@ else if ((*filename == '.') || IsAbsoluteFileName(filename))
    }
 else
    {
-   snprintf(wfilename,CF_BUFSIZE-1,"%s/inputs/%s",CFWORKDIR,filename);
+   snprintf(wfilename,CF_BUFSIZE-1,"%s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,filename);
    }
 
 return MapName(wfilename);
@@ -1592,7 +1592,7 @@ void WritePID(char *filename)
 
 { FILE *fp;
 
-snprintf(PIDFILE,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,filename);
+snprintf(PIDFILE,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,filename);
 
 if ((fp = fopen(PIDFILE,"w")) == NULL)
    {

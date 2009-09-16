@@ -130,7 +130,10 @@ struct utsname
 
 #include <signal.h>
 
+#ifndef MINGW
 #include <syslog.h>
+#endif
+
 extern int errno;
 
 /* Do this for ease of configuration from the Makefile */
@@ -220,8 +223,10 @@ extern int errno;
 # include <sys/time.h>
 #endif
 
+#ifndef MINGW
 #include <pwd.h>
 #include <grp.h>
+#endif
 
 #ifdef HAVE_SYS_SOCKIO_H
 # include <sys/sockio.h>

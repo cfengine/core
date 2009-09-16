@@ -29,9 +29,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#ifndef MINGW  // TODO: Define UNIX instead ?
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+
+#ifndef MINGW
 
 /* newly created, used in timeout.c and transaction.c */
 int Unix_GracefulTerminate(pid_t pid)

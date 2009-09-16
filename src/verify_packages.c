@@ -1474,7 +1474,15 @@ if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
    return false;
    }
 
-pi->next = *list;
+if (list)
+   {
+   pi->next = *list;
+   }
+else
+   {
+   pi->next = NULL;
+   }
+
 pi->name = strdup(name);
 pi->version = strdup(version);
 pi->arch = strdup(arch);

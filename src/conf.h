@@ -76,6 +76,7 @@
 #define HAVE_SYS_ACL_H 1
 /* #undef NOTBROKEN */
 /* #undef NT */
+/* #undef MINGW */
 /* #undef DARWIN */
 
 /* SVR4 header stuff */

@@ -215,14 +215,15 @@ free(n);
 
 /*************************************************************************/
 
+void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view)
+
+{
 #ifdef HAVE_LIBGVC
 # ifdef HAVE_GRAPHVIZ_GVC_H
 #  include <graphviz/gvc.h>
 # endif
-
-void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view)
-
-{ char filename[CF_BUFSIZE];
+  
+  char filename[CF_BUFSIZE];
   struct Topic *tp;
   struct TopicAssociation *ta;
   struct Occurrence *op;
@@ -389,9 +390,9 @@ agclose(g);
 gvFreeContext(gvc);
 CfOut(cf_inform,"","Generated topic locale %s\n",filename);
 DeleteRlist(nodelist);
-}
 
 #endif
+}
 
 /*************************************************************************/
 

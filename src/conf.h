@@ -181,7 +181,7 @@
 /* #undef HAVE_LIBCFGALAXY */
 
 /* Define to 1 if you have the `cfnova' library (-lcfnova). */
-
+#define HAVE_LIBCFNOVA 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
@@ -502,7 +502,7 @@
 /* #undef USE_PCRE */
 
 /* Version number of package */
-#define VERSION "3.0.3a1"
+#define VERSION "3.0.3a2"
 
 /* Define if you want to use SELINUX */
 /* #undef WITH_SELINUX */

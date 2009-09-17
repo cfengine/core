@@ -770,7 +770,7 @@ AC_ARG_WITH(workdir,
         case "$target_os" in
 
            mingw*)
-                WORKDIR=`cmd /c "echo %PROGRAMFILES%"`\\Cfengine
+                WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
                 ;;
 
            *)

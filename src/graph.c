@@ -190,7 +190,7 @@ for (i = 0; i < topic_count; i++)
 
 for (i = 0; i < topic_count; i++)
    {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA && defined HAVE_LIBGD
    Nova_PlotTopicCosmos(i,adj,n,topic_count,view);
 #else
    PlotTopicCosmos(i,adj,n,topic_count,view);

@@ -2661,13 +2661,29 @@ if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
    return;
    }
 
+if (a.path_root == NULL || a.web_root == NULL)
+   {
+   CfOut(cf_error,""," !! No pathroot/webroot defined in representation");
+   PromiseRef(cf_error,pp);
+   return;
+   }
+
 Chop(a.path_root);
+DeleteSlash(a.path_root);
 sp = file + strlen(a.path_root) + 1;
 
 FullTextMatch(pp->promiser,sp);
 retval = ExpandPrivateRval("this",a.represents,CF_LIST);
 DeleteScope("match");
-snprintf(url,CF_BUFSIZE-1,"%s/%s",a.web_root,sp);
+
+if (strlen(a.web_root) > 0)
+   {
+   snprintf(url,CF_BUFSIZE-1,"%s/%s",a.web_root,sp);
+   }
+else
+   {
+   snprintf(url,CF_BUFSIZE-1,"%s",sp);
+   }
 
 AddOccurrence(&(tp->occurrences),url,retval.item,cfk_url);
 

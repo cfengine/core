@@ -204,23 +204,6 @@ if (lastcompleted != 0)
 
          if (err || errno == ESRCH)
             {
-            sleep(1);
-            err=0;
-            
-            if ((err = kill(pid,SIGTERM)) == -1)
-               {   
-               sleep(5);
-               err=0;
-               
-               if ((err = kill(pid,SIGKILL)) == -1)
-                  {
-                  sleep(1);
-                  }
-               }
-            }
-         
-         if (err == 0 || errno == ESRCH)
-            {
             LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
             unlink(cflock);
             }

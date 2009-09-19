@@ -48,6 +48,13 @@ void KeepClassContextPromise(struct Promise *pp)
 
 a = GetClassContextAttributes(pp);
 
+if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
+   {
+   CfOut(cf_error,""," !! Class identifier contains illegal characters");
+   PromiseRef(cf_error,pp);
+   return;
+   }
+
 if (a.context.broken)
    {
    cfPS(cf_error,CF_FAIL,"",pp,a,"Irreconcilable constraints in classes for %s (broken promise)",pp->promiser);

@@ -985,6 +985,13 @@ if (rval != NULL)
          }
       }
 
+   if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
+      {
+      CfOut(cf_error,""," !! Variable identifier contains illegal characters");
+      PromiseRef(cf_error,pp);
+      return;
+      }
+
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);

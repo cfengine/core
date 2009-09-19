@@ -290,9 +290,9 @@ while (ptr->hashtable[slot])
          return true;
          }
 
-      if (UnresolvedVariables(ptr->hashtable[slot],rtype) != 0)
+      if (!UnresolvedVariables(ptr->hashtable[slot],rtype))
          {
-         CfOut(cf_inform,"","Duplicate selection of value for variable \"%s\" (broken promise) in scope %s",lval,ptr->scope);
+         CfOut(cf_inform,""," !! Duplicate selection of value for variable \"%s\" in scope %s",lval,ptr->scope);
       
          if (fname)
             {
@@ -302,6 +302,10 @@ while (ptr->hashtable[slot])
             {
             CfOut(cf_inform,"","in bundle parameterization\n",fname,lineno);
             }
+         }
+      else
+         {
+         CfOut(cf_inform,""," !! Unresolved variables in rval of \"%s\" in scope %s",lval,ptr->scope);
          }
 
       DeleteAssoc(ptr->hashtable[slot]);

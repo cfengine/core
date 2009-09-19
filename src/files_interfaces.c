@@ -645,7 +645,7 @@ if (!SelectLeaf(sourcefile,&ssb,attr,pp))
    return;
    }
 
-if (IsStringIn(SINGLE_COPY_CACHE,destfile))
+if (IsInListOfRegex(SINGLE_COPY_CACHE,destfile))
    {
    CfOut(cf_inform,""," -> Skipping single-copied file %s\n",destfile);
    return;
@@ -896,7 +896,7 @@ else
                VerifyCopiedFileAttributes(destfile,&dsb,&ssb,attr,pp);
                }
             
-            if (IsRegexIn(SINGLE_COPY_LIST,destfile))
+            if (IsInListOfRegex(SINGLE_COPY_LIST,destfile))
                {
                IdempPrependRScalar(&SINGLE_COPY_CACHE,destfile,CF_SCALAR);
                }
@@ -922,7 +922,7 @@ else
          otherwise we can get oscillations between multipe versions if type
          is based on a checksum */
 
-      if (IsRegexIn(SINGLE_COPY_LIST,destfile))
+      if (IsInListOfRegex(SINGLE_COPY_LIST,destfile))
          {
          IdempPrependRScalar(&SINGLE_COPY_CACHE,destfile,CF_SCALAR);
          }

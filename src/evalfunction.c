@@ -3898,6 +3898,50 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+/*********************************************************************/
+
+struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  u_long df;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+df = GetDiskUsage((char *)finalargs->item, cfabs);
+
+if (df == CF_INFINITY)
+   {
+   df = 0;
+   }
+
+snprintf(buffer,CF_BUFSIZE-1,"%d", df);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallGetGid");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+
 
 /*********************************************************************/
 /* Level                                                             */

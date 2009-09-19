@@ -444,6 +444,9 @@ switch (this)
    case cfn_selectservers:
        rval = FnCallSelectServers(fp,expargs);
        break;
+   case cfn_diskfree:
+       rval = FnCallDiskFree(fp,expargs);
+       break;
        
    case cfn_unknown:
        CfOut(cf_error,"","Un-registered function call");

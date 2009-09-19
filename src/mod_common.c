@@ -52,6 +52,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"changedbefore",cf_class,2,"True if arg1 was changed before arg2 (ctime)"},
    {"classify",cf_class,1,"True if the canonicalization of the argument is a currently defined class"},
    {"classmatch",cf_class,1,"True if the regular expression matches any currently defined class"},
+   {"diskfree",cf_int,1,"Return the free space (in KB) available on the directory's current partition (0 if not found)"},
    {"execresult",cf_str,2,"Execute named command and assign output to variable"},
    {"fileexists",cf_class,1,"True if the named file can be accessed"},
    {"filesexist",cf_class,1,"True if the named list of files can ALL be accessed"},

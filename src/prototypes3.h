@@ -439,6 +439,7 @@ struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs);
 
 void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);

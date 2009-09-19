@@ -491,6 +491,7 @@ enum fncalltype
    cfn_changedbefore,
    cfn_classify,
    cfn_classmatch,
+   cfn_diskfree,
    cfn_execresult,
    cfn_fileexists,
    cfn_filesexist,

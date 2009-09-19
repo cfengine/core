@@ -158,16 +158,97 @@ else
 int IsRegex(char *str)
 
 { char *sp;
+  int ret = false;
+  enum { r_norm, r_norepeat, r_literal } special = r_norepeat;
+  int bracket = 0;
+  int paren = 0;
 
+/* Try to see when something is intended as a regular expression */
+  
 for (sp = str; *sp != '\0'; sp++)
    {
-   if (strchr("^*+\[]()$",*sp))
+   if (special == r_literal)
       {
-      return true;  /* Maybe */
+      special = r_norm;
+      continue;
       }
+   else if (*sp == '\\')
+      {
+      special = r_literal;
+      continue;
+      }
+   else if (bracket && *sp != ']')
+      {
+      if (*sp == '[')
+         {
+         return false;
+         }
+      continue;
+      }
+ 
+   switch (*sp)
+      {
+      case '^':
+	 special = (sp == str) ? r_norepeat : r_norm;
+	 break;
+      case '*':
+      case '+':
+	 if (special == r_norepeat)
+            {
+            return false;
+            }
+	 special = r_norepeat;
+	 ret = true;
+	 break;
+      case '[':
+	 special = r_norm;
+	 bracket++;
+	 ret = true;
+	 break;
+      case ']':
+	 if (bracket == 0)
+            {
+            return false;
+            }
+	 bracket = 0;
+	 special = r_norm;
+	 break;
+      case '(':
+	 special = r_norepeat;
+	 paren++;
+	 break;
+
+      case ')':
+	 special = r_norm;
+	 paren--;
+	 if (paren < 0)
+            {
+            return false;
+            }
+	 break;
+         
+      case '|':
+	 special = r_norepeat;
+	 if (paren > 0)
+            {
+            ret = true;
+            }
+	 break;
+         
+      default:
+	 special = r_norm;
+      }
+
    }
 
-return false;
+if (bracket != 0 || paren != 0 || special == r_literal)
+   {
+   return false;
+   }
+else
+   {
+   return ret;
+   }
 }
 
 /*********************************************************************/

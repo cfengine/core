@@ -100,9 +100,9 @@ int GetDiskUsage (char *file,enum cfsizes type)
 #endif
 
 #if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined HPuUX || defined DARWIN
-    total = buf.f_blocks;
-    used = buf.f_blocks - buf.f_bfree;
-    avail = buf.f_bavail;
+    total = buf.f_blocks * buf.f_bsize / blocksize;
+    used = (buf.f_blocks - buf.f_bfree)  * buf.f_bsize / blocksize;
+    avail = buf.f_bavail * buf.f_bsize / blocksize;
 #endif
 
 #if defined OSF

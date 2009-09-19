@@ -731,7 +731,7 @@ if (lstat(from,&sb) == 0)
       return true;
       }
    
-   if (S_ISDIR(sb.st_mode) && attr.link.when_no_file == cfa_force)
+   if (S_ISDIR(sb.st_mode))
       {
       cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Moving directory %s to %s%s\n",from,from,CF_SAVED);
       

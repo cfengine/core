@@ -275,12 +275,12 @@ for (rp = list; rp != NULL; rp=rp->next)
       {
       CfOut(cf_verbose,""," ?> defining persistent promise result class %s\n",(char *)rp->item);
       NewPersistentContext(rp->item,persist,policy);
-      PrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
+      IdempPrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
    else
       {
       CfOut(cf_verbose,""," ?> defining promise result class %s\n",(char *)rp->item);
-      PrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
+      IdempPrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
    }
 }

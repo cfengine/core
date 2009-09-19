@@ -88,7 +88,18 @@ return false;
 
 /*********************************************************************/
 
-void PrependItem (struct Item **liststart,char *itemstring,char *classes)
+void IdempPrependItem(struct Item **liststart,char *itemstring,char *classes)
+
+{
+if (!IsItemIn(*liststart,itemstring))
+   {
+   PrependItem(liststart,itemstring,classes);
+   }
+}
+
+/*********************************************************************/
+
+void PrependItem(struct Item **liststart,char *itemstring,char *classes)
 
 { struct Item *ip;
   char *sp,*spe = NULL;

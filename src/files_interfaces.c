@@ -1320,7 +1320,7 @@ return false;
 void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp)
 
 { char linkbuf[CF_BUFSIZE],*lastnode;
-  int succeed = false;
+  int status = CF_UNKNOWN;
   struct stat dsb;
 
 /* Link the file to the source, instead of copying */
@@ -1368,20 +1368,20 @@ switch (attr.copy.link_type)
        
        if (*linkbuf == '.')
           {
-          succeed = VerifyRelativeLink(destfile,linkbuf,attr,pp);
+          status = VerifyRelativeLink(destfile,linkbuf,attr,pp);
           }
        else
           {
-          succeed = VerifyLink(destfile,linkbuf,attr,pp);
+          status = VerifyLink(destfile,linkbuf,attr,pp);
           }
        break;
        
    case cfa_relative:
-       succeed = VerifyRelativeLink(destfile,linkbuf,attr,pp);
+       status = VerifyRelativeLink(destfile,linkbuf,attr,pp);
        break;
        
    case cfa_absolute:
-       succeed = VerifyAbsoluteLink(destfile,linkbuf,attr,pp);
+       status = VerifyAbsoluteLink(destfile,linkbuf,attr,pp);
        break;
        
    default:
@@ -1389,7 +1389,7 @@ switch (attr.copy.link_type)
        return;
    }
 
-if (succeed)
+if (status == CF_CHG || status == CF_NOP)
    {
    if (lstat(destfile,&dsb) == -1)
       {
@@ -1400,7 +1400,12 @@ if (succeed)
       VerifyCopiedFileAttributes(destfile,&dsb,sb,attr,pp);
       }
    
-   cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created link %s", destfile);
+   if (status == CF_CHG)
+      cfPS(cf_inform,status,"",pp,attr," -> Created link %s", destfile);
+   else if (status == CF_NOP)
+      ; /*cfPS(cf_inform,status,"",pp,attr," -> Link %s as promised", destfile);*/
+   else
+      cfPS(cf_inform,status,"",pp,attr," -> Unable to create link %s", destfile);
    }
 }
 

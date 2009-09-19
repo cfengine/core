@@ -514,10 +514,10 @@ int SelectLine(char *line,struct Attributes a,struct Promise *pp);
 
 /* files_links.c */
 
-int VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
-int VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
-int VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
-int VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+char VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+char VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+char VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
+char VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp);
 int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
 int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp);

@@ -114,7 +114,10 @@ if (readlink(destination,linkbuf,CF_BUFSIZE-1) == -1)
 else
    { int off1 = 0, off2 = 0;  /* Link exists */
    
-   DeleteSlash(linkbuf);
+   if (*to && !IsFileSep(to[strlen(to)-1]))
+      {
+      DeleteSlash(linkbuf);
+      }
    
    if (strncmp(linkbuf,"./",2) == 0)   /* Ignore ./ at beginning */
       {

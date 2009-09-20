@@ -1,0 +1,32 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "mylist" slist => { "/tmp/a", "/tmp/b", "/tmp/c" };
+
+classes:
+
+  "exists" expression => filesexist("@(mylist)");
+
+reports:
+
+  exists::
+
+    "File does exist";
+
+  !exists::
+
+    "Does not yet exist";
+
+}
+

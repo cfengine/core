@@ -1,0 +1,69 @@
+########################################################
+#
+# Change detect
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "neighbourhood_watch"  };
+}
+
+########################################################
+
+bundle agent neighbourhood_watch
+
+{
+vars:
+
+  "neighbours" slist => peers("/var/cfengine/inputs/hostlist","#.*",4);
+
+files:
+
+  # Redundant cross monitoring .......................................
+
+  "$(sys.workdir)/nw/$(neighbours)_checksum_digests.db"
+
+     comment => "Watch our peers remote hash tables and keep a local copy",
+    copyfrom => rcp("$(sys.workdir)/checksum_digests.db",$(neighbours)),
+  depends_on => { "grant_hash_tables" };
+
+  # Define the actual children to watch over .........................
+
+   "/usr/bin"         
+
+      comment     => "Watch over the system binaries - changes are mostly updates",
+      changes      => lay_trip_wire,
+      depth_search => recurse("inf"),
+      action       => measure;
+
+}
+
+#########################################################
+
+body changes lay_trip_wire
+{
+hash           => "best";
+report_changes => "content";
+update_hashes  => "yes";
+}
+
+#########################################################
+
+body copy_from rcp(from,server)
+
+{
+servers     => { "$(server)" };
+source      => "$(from)";
+compare     => "digest";
+encrypt     => "false";
+}
+
+##########################################################
+
+body depth_search recurse(d)
+
+{
+depth        => "$(d)";
+}

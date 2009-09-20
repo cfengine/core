@@ -35,33 +35,35 @@
 #ifndef MINGW
 
 /* newly created, used in timeout.c and transaction.c */
+
 int Unix_GracefulTerminate(pid_t pid)
-{
-  int res;
 
-   if ((res = kill(pid,SIGINT)) == -1)
-     {
-       sleep(1);
-       res = 0;
-           
-       if ((res = kill(pid,SIGTERM)) == -1)
-	 {   
-	   sleep(5);
-	   res = 0;
-               
-	   if ((res = kill(pid,SIGKILL)) == -1)
-	     {
-	       sleep(1);
-	     }
-	 }
-     }
+{ int res;
+ 
+if ((res = kill(pid,SIGINT)) == -1)
+   {
+   sleep(1);
+   res = 0;
+   
+   if ((res = kill(pid,SIGTERM)) == -1)
+      {   
+      sleep(5);
+      res = 0;
+      
+      if ((res = kill(pid,SIGKILL)) == -1)
+         {
+         sleep(1);
+         }
+      }
+   }
 
-   return (res == 0);
+return (res == 0);
 }
 
 /*************************************************************/
 
 /* from exec_tools.c */
+
 int Unix_IsExecutable(char *file)
 
 { struct stat sb;
@@ -73,24 +75,31 @@ if (stat(file,&sb) == -1)
    CfOut(cf_error,"","Proposed executable file \"%s\" doesn't exist",file);
    return false;
    }
-  
+
+if (sb.st_mode & 02)
+   {
+   CfOut(cf_error,""," !! SECURITY ALERT: promised executable \"%s\" is world writable! ",file);
+   CfOut(cf_error,""," !! SECURITY ALERT: cfengine will not execute this - requires human inspection");
+   return false;
+   }
+
 if (getuid() == sb.st_uid)
    {
-   if (sb.st_mode && 0100)
+   if (sb.st_mode & 0100)
       {
       return true;
       }
    }
 else if (getgid() == sb.st_gid)
    {
-   if (sb.st_mode && 0010)
+   if (sb.st_mode & 0010)
       {
       return true;
       }    
    }
 else
    {
-   if (sb.st_mode && 0001)
+   if (sb.st_mode & 0001)
       {
       return true;
       }
@@ -101,7 +110,7 @@ else
          {
          if (grps[i] == sb.st_gid)
             {
-            if (sb.st_mode && 0010)
+            if (sb.st_mode & 0010)
                {
                return true;
                }                 
@@ -116,6 +125,7 @@ return false;
 /*******************************************************************/
 
 /* from exec_tools.c */
+
 int Unix_ShellCommandReturnsZero(char *comm,int useshell)
 
 { int status, i, argc = 0;
@@ -224,6 +234,7 @@ return false;
 /**********************************************************************************/
 
 /* from verify_processes.c */
+
 int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip;
@@ -283,6 +294,7 @@ return killed;
 /*******************************************************************/
 
 /* from verify_processes.c */
+
 int Unix_LoadProcessTable(struct Item **procdata,char *psopts)
 
 { FILE *prp;
@@ -341,6 +353,7 @@ return true;
 /*********************************************************************/
 
 /* from files_operators.c */
+
 void Unix_CreateEmptyFile(char *name)
 
 { int tempfd;

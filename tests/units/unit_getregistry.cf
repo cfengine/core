@@ -1,0 +1,19 @@
+
+body common control
+{
+bundlesequence => { "reg" };
+}
+
+bundle agent reg
+{
+vars:
+
+  "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine","value3");
+
+reports:
+
+  WinXP::
+
+   "Value extracted: $(value)";
+
+}

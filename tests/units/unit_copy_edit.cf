@@ -1,0 +1,96 @@
+########################################################
+#
+# Copy and edit convergently
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle" };
+version => "1.2.3";
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+vars:
+
+  "source" string => "/tmp";
+  "dest"   string => "/tmp";
+
+files:
+
+  "/$(dest)/staging-file" 
+
+        comment  => "Copy from source to buffer",
+    copy_from    => cp("$(source)/source-template"),
+    classes      => satisfied("copy_ok");
+
+ copy_ok::
+
+  "/$(dest)/final-file" 
+
+           comment => "Build a file template and expand keys",
+         edit_line => myedits("/$(dest)/staging-file"),
+     edit_defaults => empty;
+
+}
+
+#########################################################
+
+body copy_from cp(from)
+
+{
+source      => "$(from)";
+compare     => "mtime";
+type_check  => "true";
+}
+
+########################################################
+
+bundle edit_line myedits(f)
+
+{
+insert_lines:
+
+  "$(f)"
+
+      comment     => "Populate empty file",
+      insert_type => "file";
+
+replace_patterns:
+
+ "TEMPLATE_HOST_KEY"
+
+           comment => "Replace a place-marker with the name of this host",
+      replace_with => rp("$(sys.host)");
+
+}
+
+########################################################
+
+body replace_with rp(x)
+
+{
+replace_value => "$(x)";
+occurrences => "all";
+}
+
+#########################################################
+
+body classes satisfied(x)
+{
+promise_repaired => { "$(x)" };
+persist_time => "0";
+}
+
+#######################################################
+
+body edit_defaults empty
+
+{
+empty_file_before_editing => "true";
+}

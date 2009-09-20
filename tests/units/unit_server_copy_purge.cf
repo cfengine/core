@@ -1,0 +1,108 @@
+########################################################
+#
+# Simple test copy from server connection to cfServer
+#
+########################################################
+
+ #
+ # run this as follows:
+ #
+ # cf-serverd -f runtest_1.cf [-d2]
+ # cf-agent   -f runtest_2.cf
+ #
+ # Notice that the same file configures all parts of cfengine
+
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle" };
+version => "1.2.3";
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/test_to" 
+
+        comment  => "test copy promise",
+    copy_from    => mycopy("/home/mark/tmp/test_from","127.0.0.1"),
+    perms        => system,
+    depth_search => recurse("inf"),
+    classes      => satisfied("copy_ok");
+
+reports:
+
+  copy_ok::
+
+    "Files were copied..";
+}
+
+#########################################################
+
+body perms system
+
+{
+mode  => "0644";
+}
+
+#########################################################
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+}
+
+#########################################################
+
+body copy_from mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" };
+compare     => "digest";
+verify      => "true";
+copy_backup => "true";                  #/false/timestamp
+purge       => "true";
+type_check  => "true";
+force_ipv4  => "true";
+trustkey => "true";
+}
+
+#########################################################
+
+body classes satisfied(x)
+{
+promise_repaired => { "$(x)" };
+persist_time => "0";
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/home/mark/tmp"
+
+    admit   => { "127.0.0.1" };
+}

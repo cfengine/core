@@ -1,0 +1,29 @@
+#
+# Nested iteration
+#
+
+body common control
+{
+bundlesequence => {"x"};
+}
+
+bundle agent x
+{
+vars:
+
+"list1" slist => { "a", "b", "c" };
+
+"list2" slist => { "1", "2", "3", "4" };
+
+"list3" slist => { "x", "y", "z" };
+
+reports:
+
+  linux::
+
+   "Hello $(list1) $(list2) $(list3)";
+}
+
+
+
+

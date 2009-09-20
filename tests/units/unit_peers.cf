@@ -1,0 +1,27 @@
+
+body common control
+{
+bundlesequence => { "peers" };
+}
+
+#
+
+bundle agent peers
+{
+vars:
+
+  "mygroup" slist => peers("/tmp/hostlist","#.*",4);
+
+  "myleader" string => peerleader("/tmp/hostlist","#.*",4);
+
+  "all_leaders" slist => peerleaders("/tmp/hostlist","#.*",4);
+
+reports:
+
+ linux::
+
+   "mypeer *$(mygroup)*";
+   "myleader *$(myleader)*";
+   "another leader *$(all_leaders)*";
+
+}

@@ -1,0 +1,26 @@
+body common control
+{
+bundlesequence  => { "tm" };
+} 
+
+body knowledge control
+{
+query_output => "text";
+query_engine => "none";
+
+sql_database => "test_map";
+sql_owner => "mark";
+sql_type => "mysql";
+sql_passwd => ""; # No passwd for localhost
+}
+
+###################################################
+
+bundle knowledge tm
+{
+topics:
+
+ any::
+
+   "Nothing needed here -- we get everything from the db cache";
+}

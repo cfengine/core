@@ -1,0 +1,17 @@
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+#
+
+bundle agent test
+{
+reports:
+
+  linux::
+
+   "$(sys.date),This is a report"
+     report_to_file => "/tmp/test_log";
+}

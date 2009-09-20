@@ -1,0 +1,42 @@
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "mylist" slist => { "/tmp/a", "/tmp/b", "/tmp/c" };
+
+
+methods:
+
+  "any" usebundle => crystal_meth(@(example.mylist));
+
+}
+
+bundle agent crystal_meth(x)
+
+{
+classes:
+
+  "exists" expression => filesexist("@(x)");
+
+reports:
+
+  exists::
+
+    "File does exist";
+
+  !exists::
+
+    "Does not yet exist";
+
+}
+

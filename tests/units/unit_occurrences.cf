@@ -1,0 +1,31 @@
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+body knowledge control
+{
+query_engine => "123";
+}
+
+bundle knowledge test
+
+{
+topics:
+
+  "test topic";
+
+occurrences:
+
+  test_topic::
+
+   "(.*)/help.html"
+
+            represents => { "host $(match.1)" },
+            representation => "file",
+            path_root => "/home/mark/tmp",
+            web_root => "http://www.cfengine.com";
+
+
+}

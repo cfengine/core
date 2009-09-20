@@ -1,0 +1,25 @@
+body common control
+{
+bundlesequence => {"yes"};
+}
+
+
+bundle agent yes
+{
+vars:
+
+  "path1" string => "/one/two/last1";
+  "path2" string => "one:two:last2";
+
+  "last1" string => lastnode("$(path1)","/");
+  "last2" string => lastnode("$(path2)",":");
+
+  "last3" string => lastnode("$(path2)","/");
+
+reports:
+
+  Yr2009::
+
+    "Last = $(last1),$(last2),$(last3)";
+
+}

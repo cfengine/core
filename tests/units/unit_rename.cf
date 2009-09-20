@@ -1,0 +1,20 @@
+
+body common control
+{
+bundlesequence => {"test"};
+}
+
+bundle agent test
+{
+  files:
+
+    "/tmp/foo"
+ 
+       rename => moveit;
+
+}
+
+body rename moveit 
+{
+newname => "/tmp/foo_moved";
+}

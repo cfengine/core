@@ -1,0 +1,39 @@
+
+body common control
+{
+bundlesequence => { "tryclasses_1" };
+}
+
+#################################
+
+bundle agent tryclasses_1
+{
+vars:
+
+  "x" string => "one";
+
+  "y" slist => { "linux", "Friday" };
+
+classes:
+
+ "three" and => { "$(x)", "two" };
+
+ "four"  or => { @(y) };
+
+ "one" expression => "any";
+ "two" expression => "any";
+
+reports:
+
+  three::
+
+    "Evaluated true";
+
+  four::
+
+    "List substitution works";
+
+}
+
+
+#################################

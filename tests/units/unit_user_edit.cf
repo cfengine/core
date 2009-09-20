@@ -1,0 +1,47 @@
+
+#
+
+body common control
+{
+bundlesequence => { "users" };
+}
+
+body agent control
+{
+abortbundleclasses => { "ldap_fail" };
+}
+
+################################################################################
+
+bundle agent users
+{
+vars:
+
+   "users" slist => { "mark", "nakarin", "jonhenrik" };
+
+files:
+
+   "/tmp/passwd2"
+
+       create => "true",
+     edit_line => fix_passwd("$(users)");
+
+reports:
+
+  !ldap_fail::
+
+     "Editing user $(users)";
+}
+
+###################################################################################################
+
+bundle edit_line fix_passwd(x)
+{
+classes:
+
+    "ldap_fail" not => ldaparray("dat","ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(uid=$(x))","subtree","none");
+
+insert_lines:
+
+   "Hello $(x),$(dat[uid]),$(dat[gecos])";
+}

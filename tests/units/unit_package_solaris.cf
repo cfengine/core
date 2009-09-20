@@ -1,0 +1,90 @@
+
+#
+# Package managment
+#
+
+body common control
+{
+bundlesequence => { "packages" };
+}
+
+#############################################
+
+bundle agent packages
+{
+vars:
+
+  "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
+  "package_names"              slist => getindices("solaris_packages");
+  "admin_file"                string => "cfengine_admin_file";
+
+files:
+
+  "/tmp/$(admin_file)"
+	create => "true",
+	edit_defaults => empty_file,
+	edit_line => create_admin_file;
+
+packages:
+
+  "$(package_names)"
+
+     package_policy => "add",
+     package_method => solaris("$(package_names)", "$(solaris_packages[$(package_names)])", "$(admin_file)");
+
+}
+
+#############################################
+
+body package_method solaris (pkgname, spoolfile, adminfile)
+
+{
+solaris::
+
+ package_changes => "individual";
+
+ package_list_command => "/usr/bin/pkginfo -l";
+
+ package_multiline_start    =>  "\s*PKGINST:\s+[^\s]+";
+ package_list_name_regex    => "\s*PKGINST:\s+([^\s]+)";
+ package_list_version_regex => "\s*VERSION:\s+([^\s]+)";
+ package_list_arch_regex    => "\s*ARCH:\s+([^\s]+)";
+
+ package_installed_regex => "\s*STATUS:\s*(completely|partially)\s+installed.*";
+
+ package_name_convention => "$(name)";
+
+ package_add_command => "/usr/sbin/pkgadd -n -a /tmp/$(adminfile) -d /tmp/$(spoolfile)";
+ package_delete_command => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
+}
+
+###########################################################
+
+bundle edit_line create_admin_file
+{
+insert_lines:
+		
+  "mail=
+instance=unique
+partial=nocheck
+runlevel=nocheck
+idepend=nocheck
+rdepend=nocheck
+space=nocheck
+setuid=nocheck
+conflict=nocheck
+action=nocheck
+networktimeout=60
+networkretries=3
+authentication=quit
+keystore=/var/sadm/security
+proxy=
+basedir=default";
+}
+
+###########################################################
+
+body edit_defaults empty_file
+{
+	empty_file_before_editing => "true";
+}

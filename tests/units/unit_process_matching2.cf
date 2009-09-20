@@ -1,0 +1,39 @@
+########################################################
+#
+# Simple test processes 
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+processes:
+
+ "sleep"
+
+    process_count   => up("sleep");
+
+reports:
+
+ sleep_out_of_control::
+
+   "Out of control";
+}
+
+########################################################
+
+body process_count up(s)
+
+{
+match_range => "5,10"; # or irange("1","10");
+out_of_range_define => { "$(s)_out_of_control" };
+}
+

@@ -1,0 +1,23 @@
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+files:
+
+   "/tmp/newfile"
+
+       create => "true",
+       perms => setbsd;
+
+}
+
+
+body perms setbsd
+{
+bsdflags => { "+uappnd","+uchg", "+uunlnk", "-nodump" };
+}
+

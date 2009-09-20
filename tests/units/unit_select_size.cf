@@ -1,0 +1,35 @@
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+#
+
+bundle agent test
+{
+files:
+
+    # Show files in range
+
+    "/home/mark/tmp"
+
+        file_select => name_and_sizes(".*cf","100","300"),
+	depth_search => recurse("1"),
+        transformer => "/bin/ls -l $(this.promiser)";
+
+}
+
+#
+
+body file_select name_and_sizes(n,x,y)
+{
+    leaf_name   => { "$(n)" };
+    search_size => irange("$(x)", "$(y)");
+    file_result => "leaf_name&size";
+}
+
+body depth_search recurse(x)
+{
+    depth => "$(x)";
+}

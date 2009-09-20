@@ -1,0 +1,43 @@
+########################################################
+#
+# Simple test editfile - template expansion
+#
+########################################################
+
+body common control
+
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/file_based_on_template"
+
+       create    => "true",
+       edit_line => ExpandMeFrom("/tmp/source_template");
+
+
+}
+
+########################################################
+
+bundle edit_line ExpandMeFrom(template)
+{
+vars:
+
+   "myvar" string => "[sub string]";
+
+insert_lines:
+
+   "$(template)"
+
+          insert_type => "file",
+       expand_scalars => "true";
+}
+

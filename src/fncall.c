@@ -372,6 +372,12 @@ switch (this)
    case cfn_getindices:
        rval = FnCallGetIndices(fp,expargs);
        break;
+   case cfn_countlinesmatching:
+       rval = FnCallCountLinesMatching(fp,expargs);
+       break;
+   case cfn_getfields:
+       rval = FnCallGetFields(fp,expargs);
+       break;
    case cfn_isgreaterthan:
        rval = FnCallGreaterThan(fp,expargs,'+');
        break;

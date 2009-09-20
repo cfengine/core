@@ -1,0 +1,20 @@
+body common control
+{
+bundlesequence => {"yes"};
+}
+
+
+bundle agent yes
+{
+vars:
+
+  "var" string => "/one/two/last1",
+         comment => "This is a comment";
+ 
+reports:
+
+  Yr2009::
+
+    "Test = $(var)";
+
+}

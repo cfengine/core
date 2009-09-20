@@ -1257,6 +1257,173 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+
+  struct Rval rval;
+  struct Rlist *rp,*newlist;
+  char *filename,*regex,*array_lval,*split;
+  char name[CF_MAXVARSIZE],line[CF_BUFSIZE],retval[CF_SMALLBUF];
+  int lcount = 0,vcount = 0,nopurge = false;
+  FILE *fin;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+regex = finalargs->item;
+filename = finalargs->next->item;
+split = finalargs->next->next->item;
+array_lval = finalargs->next->next->next->item;
+
+if ((fin = fopen(filename,"r")) == NULL)
+   {
+   CfOut(cf_error,"fopen"," !! File \"%s\" could not be read in getfields()",filename);
+   SetFnCallReturnStatus("getfields",FNCALL_FAILURE,"File unreadable",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;               
+   }
+
+while (!feof(fin))
+   {
+   line[0] = '\0';
+   fgets(line,CF_BUFSIZE-1,fin);
+   Chop(line);
+   
+   if (feof(fin))
+      {
+      break;
+      }
+
+   if (!FullTextMatch(regex,line))
+      {
+      continue;
+      }
+
+   if (lcount == 0)
+      {
+      newlist = SplitRegexAsRList(line,split,31,nopurge);
+      
+      vcount = 1;
+      
+      for (rp = newlist; rp != NULL; rp=rp->next)
+         {
+         snprintf(name,CF_MAXVARSIZE-1,"%s[%d]",array_lval,vcount);
+         NewScalar(THIS_BUNDLE,name,rp->item,cf_str);
+         CfOut(cf_verbose,""," -> getfields: defining %s = %s\n",name,rp->item);
+         vcount++;
+         }
+      }
+   
+   lcount++;
+   }
+
+fclose(fin);
+
+snprintf(retval,CF_SMALLBUF-1,"%d",lcount);
+
+SetFnCallReturnStatus("getfields",FNCALL_SUCCESS,NULL,NULL);
+rval.item = strdup(retval);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallCountLinesMatching(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+
+  struct Rval rval;
+  struct Rlist *rp,*newlist;
+  char *filename,*regex,*array_lval,*split;
+  char name[CF_MAXVARSIZE],line[CF_BUFSIZE],retval[CF_SMALLBUF];
+  int lcount = 0,vcount = 0,nopurge = false;
+  FILE *fin;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+regex = finalargs->item;
+filename = finalargs->next->item;
+
+if ((fin = fopen(filename,"r")) == NULL)
+   {
+   CfOut(cf_error,"fopen"," !! File \"%s\" could not be read in countlinesmatching()",filename);
+   SetFnCallReturnStatus("countlinesmatching",FNCALL_FAILURE,"File unreadable",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;               
+   }
+
+while (!feof(fin))
+   {
+   line[0] = '\0';
+   fgets(line,CF_BUFSIZE-1,fin);
+   Chop(line);
+
+   if (feof(fin))
+      {
+      break;
+      }
+
+   if (FullTextMatch(regex,line))
+      {
+      lcount++;
+      CfOut(cf_verbose,""," -> countlinesmatching: matched \"%s\"",line);
+      continue;
+      }
+   }
+
+fclose(fin);
+
+snprintf(retval,CF_SMALLBUF-1,"%d",lcount);
+
+SetFnCallReturnStatus("countlinesmatching",FNCALL_SUCCESS,NULL,NULL);
+rval.item = strdup(retval);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */

@@ -658,7 +658,7 @@ else
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
    
 snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
-snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,(unsigned short)tid);
+snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s",CFWORKDIR,CanonifyName(VFQNAME),line);
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 

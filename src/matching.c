@@ -383,7 +383,7 @@ rx = pcre_compile(regexp,0,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {
-   CfOut(cf_error,"","Regular expression error \"%s\" in %s at %d: %s\n",errorstr,regexp,erroffset);
+   CfOut(cf_error,"","Regular expression error \"%s\" in expression \"%s\" at %d\n",errorstr,regexp,erroffset);
    this.failed = true;
    }
 else

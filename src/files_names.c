@@ -690,7 +690,7 @@ int RootDirLength(char *f)
   /* Return length of Initial directory in path - */
 
 { int len;
- char *sp;
+  char *sp;
 
 #ifdef NT
 

@@ -422,9 +422,7 @@ AC_ARG_WITH(pcre,
     ]
 )
 
-
-LIBS="$LIBS $BERKELEY_DB_LDFLAGSD $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
-
+LIBS="$LIBS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
 
 dnl ######################################################################
 dnl Checks for regular expressions

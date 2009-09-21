@@ -255,6 +255,7 @@ NewScalar("sys","workdir",CFWORKDIR,cf_str);
 NewScalar("sys","fstab",VFSTAB[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
+NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 
 LoadSlowlyVaryingObservations();
 EnterpriseContext();

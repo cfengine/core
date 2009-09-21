@@ -489,10 +489,11 @@ extern char *VHOSTEQUIV[];
 extern char *VFSTAB[];
 extern char *VMAILDIR[];
 extern char *VNETSTAT[];
+extern char *VEXPORTS[];
 extern char *VROUTE[];
 extern char *VROUTEADDFMT[];
 extern char *VROUTEDELFMT[];
-extern char *VFILECOMM[];
+
 extern char *ACTIONSEQTEXT[];
 extern char *VEDITNAMES[];
 extern char *VFILTERNAMES[];

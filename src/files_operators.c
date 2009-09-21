@@ -1627,7 +1627,7 @@ if (lstat(pathbuf,&statbuf) != -1)
 
 currentpath[0] = '\0';
 
-rootlen = RootDirLength(sp);
+rootlen = RootDirLength(parentandchild);
 strncpy(currentpath, parentandchild, rootlen);
 
 for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)

@@ -551,6 +551,49 @@ char *VNETSTAT[CF_CLASSATTR] =
 
 /*********************************************************************/
 
+char *VEXPORTS[CF_CLASSATTR] =
+   {
+   "-",
+   "-", 
+   "/etc/exports",    /* sun4 */
+   "/etc/exports",    /* ultrix */
+   "/etc/exports",    /* hpux */
+   "/etc/exports",    /* aix */
+   "/etc/exports",    /* linux */
+   "/etc/dfs/dfstab", /* solaris */
+   "/etc/exports",    /* osf1 */
+   "/etc/exports",    /* digital */   
+   "/etc/exports",    /* sun3 */
+   "/etc/exports",    /* irix4 */
+   "/etc/exports",    /* irix */
+   "/etc/exports",    /* irix64 */
+   "/etc/exports",    /* freebsd */
+   "/etc/dfs/dfstab", /* solarisx86 */
+   "/etc/exports",    /* bsd4.3 */
+   "/etc/exports",    /* newsos4 */
+   "/etc/exports",    /* netbsd */
+   "/etc/exports",    /* AOS */
+   "/etc/exports",    /* BSDI */
+   "/etc/exports",    /* nextstep */
+   "/etc/exports",    /* cray */
+   "/etc/exports",    /* gnu */
+   "/etc/exports",    /* NT */
+   "/etc/dfs/dfstab", /* Unixware */
+   "/etc/exports",    /* openbsd */
+   "/etc/dfs/dfstab", /* sco */
+   "/etc/exports",    /* darwin */
+   "/etc/exports",    /* ux4800 */
+   "/etc/exports",    /* qnx */
+   "/etc/exports",    /* dragonfly */
+   "unused-blah",
+   "unused-blah",
+   "unused-blah",
+   NULL
+   };
+
+
+/*********************************************************************/
+
 char *VROUTE[CF_CLASSATTR] =
    {
    "-",
@@ -674,47 +717,3 @@ char *VROUTEDELFMT[CF_CLASSATTR] =
    "unused-blah",
    NULL
    };
-
-/*********************************************************************/
-
-char *VFILECOMM[CF_CLASSATTR] =
-   {
-   "-",
-   "-", 
-   "/usr/bin/file",   /* sun4 */
-   "/usr/bin/file",   /* ultrix */
-   "/usr/bin/file",   /* hpux */
-   "/usr/bin/file",   /* aix */
-   "/usr/bin/file",   /* linux */
-   "/usr/bin/file",   /* solaris */
-   "/usr/bin/file",   /* osf1 */
-   "/usr/bin/file",   /* digital */   
-   "/usr/ucb/file",   /* sun3 */
-   "/usr/bin/file",   /* irix4 */
-   "/usr/bin/file",   /* irix */
-   "/usr/bin/file",   /* irix64 */
-   "/usr/bin/file",   /* freebsd */
-   "/usr/bin/file",   /* solarisx86 */
-   "/usr/ucb/file",   /* bsd4.3 */
-   "/usr/ucb/file",   /* newsos4 */
-   "/usr/bin/file",   /* netbsd */
-   "/usr/ucb/file",   /* AOS */
-   "/usr/bin/file",   /* BSDI */
-   "/usr/ucb/file",   /* nextstep */
-   "/usr/ucb/file",   /* cray */
-   "/usr/bin/file",   /* gnu */
-   "/C/WINNT/System32/file", /* NT */
-   "/usr/bin/file",   /* Unixware */
-   "/usr/bin/file",   /* openbsd */
-   "/usr/bin/file",   /* sco */
-   "/usr/bin/file",   /* darwin */
-   "/usr/bin/file",   /* ux4800 */
-   "/usr/bin/file",   /* qnx */
-   "/usr/bin/file",   /* dragonfly */
-   "unused-blah",
-   "unused-blah",
-   "unused-blah",
-   NULL
-   };
-
-

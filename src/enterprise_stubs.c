@@ -268,11 +268,11 @@ return "";
 
 /*****************************************************************************/
 
-void NotePromiseCompliance(struct Promise *pp,double val)
+void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_NotePromiseCompliance(pp,val);
+ Nova_NotePromiseCompliance(pp,val,status);
 #else
 #endif
 }

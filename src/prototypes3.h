@@ -334,7 +334,7 @@ void RegisterLiteralServerData(char *handle,struct Promise *pp);
 char *ReturnLiteralData(char *handle);
 char *GetRemoteScalar(char *handle,char *server,int encrypted);
 char *PromiseID(struct Promise *pp);
-void NotePromiseCompliance(struct Promise *pp,double val);
+void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 void SyntaxCompletion(char *s);
 int GetRegistryValue(char *key,char *value,char *buffer);

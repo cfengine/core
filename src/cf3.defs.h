@@ -888,6 +888,13 @@ enum cf_thread_mutex
   cft_no_tpolicy
   };
 
+enum cf_status
+  {
+  cfn_repaired,
+  cfn_notkept,
+  cfn_nop
+  };
+
 /************************************************************************************/
 
 enum cf_acl_method

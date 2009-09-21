@@ -77,11 +77,24 @@ AC_CHECK_LIB(m,main)
 
 dnl Look for cf enterprise versions
 
+AC_CHECK_LIB(ldap,ldap_get_values_len)
+
+
+AC_CHECK_LIB(pcre, main)
+dnl Now check for database connectors
+
+if test $WITH_SQL; then
+  AC_CHECK_LIB(mysqlclient,main)
+  AC_CHECK_LIB(pq,main)
+  AC_CHECK_HEADERS(mysql/mysql.h)
+  AC_CHECK_HEADERS(pgsql/libpq-fe.h)
+  AC_CHECK_HEADERS(libpq-fe.h)
+fi
+
+
 AC_CHECK_LIB(cfnova,main)
 AC_CHECK_LIB(cfconstellation,main)
 AC_CHECK_LIB(cfgalaxy,main)
-
-AC_CHECK_LIB(ldap,ldap_get_values_len)
 
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
@@ -410,24 +423,17 @@ AC_ARG_WITH(pcre,
 )
 
 
+LIBS="$LIBS $BERKELEY_DB_LDFLAGSD $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
+
+
 dnl ######################################################################
 dnl Checks for regular expressions
 dnl GNU regex lib if you have regcomp in libc you should NOT have this lib too
 dnl ######################################################################
 
-AC_CHECK_LIB(pcre, main)
+
 dnl AC_CHECK_LIB(rx, main) deprecated
 AC_CHECK_LIB(rt, main)
-
-dnl Now check for database connectors
-
-if test $WITH_SQL; then
-  AC_CHECK_LIB(mysqlclient,main)
-  AC_CHECK_LIB(pq,main)
-  AC_CHECK_HEADERS(mysql/mysql.h)
-  AC_CHECK_HEADERS(pgsql/libpq-fe.h)
-  AC_CHECK_HEADERS(libpq-fe.h)
-fi
 
 AC_CHECK_HEADERS(pcre.h)
 AC_CHECK_HEADERS(pcre/pcre.h)
@@ -566,7 +572,7 @@ AC_ARG_ENABLE(DCE,[  --enable-DCE            support for DCE and ACLs],[
 	AC_CHECK_HEADERS(sched.h)
 	;;
   esac
-])
+ ])
 
 dnl ######################################################################
 dnl Give the chance to enable SELINUX

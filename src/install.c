@@ -279,7 +279,7 @@ else
 
 if ((strcmp(spe,"any") == 0) && (strcmp(type->name,"reports") == 0))
    {
-   yyerror("reports promises may not be in class \'any\' - too dangerous");
+   yyerror("reports promises may not be in class \'any\' - risk of a notification explosion");
    }
    
 if (type->promiselist == NULL)

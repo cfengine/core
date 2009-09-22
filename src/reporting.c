@@ -332,7 +332,10 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
+             fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
              ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
+             fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
+
              ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
              }
           break;
@@ -364,7 +367,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    if (cp->type != CF_FNCALL)
       {
       Indent(indent);
-      fprintf(FREPORT_HTML," , if body <a href=\"#class_context\">context</a> %s\n",cp->classes);
+      fprintf(FREPORT_HTML," , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",cp->classes);
       fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
       }
      

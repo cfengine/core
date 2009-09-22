@@ -78,10 +78,21 @@ AC_CHECK_LIB(m,main)
 dnl Look for cf enterprise versions
 
 AC_CHECK_LIB(ldap,ldap_get_values_len)
-
-
 AC_CHECK_LIB(pcre, main)
 dnl Now check for database connectors
+
+
+dnl ######################################################################
+dnl  Look for SQL connectors.
+dnl ######################################################################
+
+AC_ARG_WITH(sql,
+	AS_HELP_STRING(--with-sql, [support database functions]), ,
+	with_sql=check)
+
+if test "x$with_sql" != xno; then
+   WITH_SQL=1
+fi
 
 if test $WITH_SQL; then
   AC_CHECK_LIB(mysqlclient,main)
@@ -367,18 +378,6 @@ AC_SUBST(OPENSSL_LIB_CPPFLAGS)
 AC_SUBST(OPENSSL_LIB_LIB)
 
 
-
-dnl ######################################################################
-dnl  Look for SQL connectors.
-dnl ######################################################################
-
-AC_ARG_WITH(sql,
-	AS_HELP_STRING(--with-sql, [support database functions]), ,
-	with_sql=check)
-
-if test "x$with_sql" != xno; then
-   WITH_SQL=1
-fi
 
 dnl ######################################################################
 dnl Checks for perl compatible regular expressions

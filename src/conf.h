@@ -212,7 +212,7 @@
 #define HAVE_LIBM 1
 
 /* Define to 1 if you have the `mysqlclient' library (-lmysqlclient). */
-/* #undef HAVE_LIBMYSQLCLIENT */
+#define HAVE_LIBMYSQLCLIENT 1
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 /* #undef HAVE_LIBNSL */
@@ -224,7 +224,7 @@
 #define HAVE_LIBPCRE 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
-/* #undef HAVE_LIBPQ */
+#define HAVE_LIBPQ 1
 
 /* Define to 1 if you have the <libpq-fe.h> header file. */
 /* #undef HAVE_LIBPQ_FE_H */
@@ -260,7 +260,7 @@
 #define HAVE_MKFIFO 1
 
 /* Define to 1 if you have the <mysql/mysql.h> header file. */
-/* #undef HAVE_MYSQL_MYSQL_H */
+#define HAVE_MYSQL_MYSQL_H 1
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
@@ -275,7 +275,7 @@
 /* #undef HAVE_PCRE_PCRE_H */
 
 /* Define to 1 if you have the <pgsql/libpq-fe.h> header file. */
-/* #undef HAVE_PGSQL_LIBPQ_FE_H */
+#define HAVE_PGSQL_LIBPQ_FE_H 1
 
 /* Define to 1 if you have the `pstat_getdynamic' function. */
 /* #undef HAVE_PSTAT_GETDYNAMIC */

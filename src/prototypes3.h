@@ -1311,6 +1311,7 @@ int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attribute
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int ExtractPid(char *psentry);
 void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
+int GracefulTerminate(pid_t pid);
 
 /* verify_storage.c */
 

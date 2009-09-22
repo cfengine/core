@@ -200,32 +200,41 @@ else                                    /* parent */
    pid_t wait_result;
    ALARM_PID = pid;
 
-   if ((status = cf_pwait(pid)) == -1)
+#ifdef HAVE_WAITPID
+   
+   while(waitpid(pid,&status,0) < 0)
       {
-      return false;
+      if (errno != EINTR)
+         {
+         return -1;
+         }
+      }
+   
+   return (WEXITSTATUS(status) == 0);
+   
+#else
+   
+   while ((wait_result = wait(&status)) != pid)
+      {
+      if (wait_result <= 0)
+         {
+         CfOut(cf_inform,"wait"," !! Wait for child failed\n");
+         return false;
+         }
       }
    
    if (WIFSIGNALED(status))
       {
-      Debug("Script %s returned: %d\n",comm,WTERMSIG(status));
       return false;
       }
    
-   if (!WIFEXITED(status))
+   if (! WIFEXITED(status))
       {
       return false;
       }
    
-   if (WEXITSTATUS(status) == 0)
-      {
-      Debug("Shell command returned 0\n");
-      return true;
-      }
-   else
-      {
-      Debug("Shell command was non-zero: %d\n",WEXITSTATUS(status));
-      return false;
-      }
+   return (WEXITSTATUS(status) == 0);
+#endif
    }
 
 return false;

@@ -4232,7 +4232,7 @@ int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enu
 
 { char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
-  int nopurge = false, vcount,hcount;
+  int allowblanks = true, vcount,hcount;
 
 memset(linebuf,0,CF_BUFSIZE);
 hcount = 0;
@@ -4247,7 +4247,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       continue;
       }
 
-   newlist = SplitRegexAsRList(linebuf,split,maxent,nopurge);
+   newlist = SplitRegexAsRList(linebuf,split,maxent,allowblanks);
    
    vcount = 0;
    

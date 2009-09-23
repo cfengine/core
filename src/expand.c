@@ -566,7 +566,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
   struct Promise *pexp;
   struct Scope *ptr;
   int i = 1;
-  char *handle = GetConstraint("handle",pp->conlist,CF_SCALAR);
+  char *handle = GetConstraint("handle",pp,CF_SCALAR);
   
 lol = NewIterationContext(scopeid,listvars);
 
@@ -985,7 +985,7 @@ if (rval != NULL)
          }
       }
 
-   if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
+   if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+([\\[][a-zA-Z0-9_\200-\377.]+[\\]])*",pp->promiser))
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");
       PromiseRef(cf_error,pp);

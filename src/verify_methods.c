@@ -59,13 +59,13 @@ int VerifyMethod(struct Attributes a,struct Promise *pp)
 
 if (a.havebundle)
    {
-   if (vp = GetConstraint("usebundle",pp->conlist,CF_FNCALL))
+   if (vp = GetConstraint("usebundle",pp,CF_FNCALL))
       {
       fp = (struct FnCall *)vp;
       method_name = fp->name;
       params = fp->args;;
       }
-   else if (vp = GetConstraint("usebundle",pp->conlist,CF_SCALAR))
+   else if (vp = GetConstraint("usebundle",pp,CF_SCALAR))
       {
       method_name = (char *)vp;
       params = NULL;

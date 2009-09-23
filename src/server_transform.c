@@ -422,7 +422,7 @@ if (strcmp(pp->agentsubtype,"classes") == 0)
    return;
    }
 
-sp = (char *)GetConstraint("resource_type",pp->conlist,CF_SCALAR);
+sp = (char *)GetConstraint("resource_type",pp,CF_SCALAR);
 
 if (strcmp(pp->agentsubtype,"access") == 0 && sp && strcmp(sp,"literal") == 0)
    {
@@ -534,7 +534,7 @@ void KeepLiteralAccessPromise(struct Promise *pp)
   struct FnCall *fp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
-  char *handle = GetConstraint("handle",pp->conlist,CF_SCALAR);
+  char *handle = GetConstraint("handle",pp,CF_SCALAR);
   char *val;
 
 if (handle == NULL)

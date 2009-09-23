@@ -763,7 +763,9 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
           /* Body or bundle */
 
           fp = (struct FnCall *)cp->rval;
-          EVP_DigestUpdate(&context,fp->name,strlen>(fp->name));
+
+          EVP_DigestUpdate(&context,fp->name,strlen(fp->name));
+          
           for (rp = fp->args; rp != NULL; rp=rp->next)
              {
              EVP_DigestUpdate(&context,rp->item,strlen(rp->item));

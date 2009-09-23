@@ -527,7 +527,7 @@ return false;
 int VarClassExcluded(struct Promise *pp,char **classes)
 
 {
-*classes = (char *)GetConstraint("ifvarclass",pp->conlist,CF_SCALAR);
+*classes = (char *)GetConstraint("ifvarclass",pp,CF_SCALAR);
 
 if (*classes == NULL)
    {

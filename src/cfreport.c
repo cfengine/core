@@ -934,6 +934,7 @@ if (HTML && !EMBEDDED)
    {
    snprintf(name,CF_BUFSIZE,"Promises last kept by %s",VFQNAME);
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1028,6 +1029,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
+   fprintf(fout,"</div></div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1108,6 +1110,7 @@ if (HTML && !EMBEDDED)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"Classes last observed on %s at %s",VFQNAME,ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1224,6 +1227,7 @@ for (i = 0; i < 1024; i++)
 
 if (HTML && !EMBEDDED)
    {
+   fprintf(fout,"</div></div>\n");
    fprintf(fout,"</table>");
    CfHtmlFooter(fout,FOOTER);
    }
@@ -1285,6 +1289,7 @@ if ((fout = fopen(name,"w")) == NULL)
 if (HTML && !EMBEDDED)
    {
    CfHtmlHeader(fout,"File hashes",STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1360,6 +1365,7 @@ if (XML)
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
+   fprintf(fout,"</div></div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1430,6 +1436,7 @@ if (HTML && !EMBEDDED)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"%s lock data observed on %s at %s",lockdb,VFQNAME,ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1533,6 +1540,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
+   fprintf(fout,"</div></div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 

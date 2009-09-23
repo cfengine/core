@@ -869,7 +869,7 @@ if (strcmp("packages",pp->agentsubtype) == 0)
 
 if (strcmp("files",pp->agentsubtype) == 0)
    {
-   if (GetBooleanConstraint("background",pp->conlist))
+   if (GetBooleanConstraint("background",pp))
       {      
       ParallelFindAndVerifyFilesPromises(pp);
       }
@@ -1095,7 +1095,7 @@ CfOut(cf_verbose,"","\n");
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp)
     
 { pid_t child = 1;
-  int background = GetBooleanConstraint("background",pp->conlist);
+  int background = GetBooleanConstraint("background",pp);
 
 if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
    {

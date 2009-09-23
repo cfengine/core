@@ -663,8 +663,9 @@ if (!(FKNOW && FREPORT_HTML && FREPORT_TXT))
    FatalError("Unable to continue as the null-file is unwritable");
    }
 
-fprintf(FKNOW,"bundle knowledge CfengineSiteConfiguration\n{\n");
+fprintf(FKNOW,"bundle knowledge CfengineEnterpriseFundamentals\n{\n");
 ShowTopicRepresentation(FKNOW);
+fprintf(FKNOW,"}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
 }
 
 /*******************************************************************/
@@ -941,7 +942,7 @@ void PromiseBanner(struct Promise *pp)
 
 { char *sp,handle[CF_MAXVARSIZE];
 
-if ((sp = GetConstraint("handle",pp->conlist,CF_SCALAR)) || (sp = PromiseID(pp)))
+if ((sp = GetConstraint("handle",pp,CF_SCALAR)) || (sp = PromiseID(pp)))
    {
    strncpy(handle,sp,CF_MAXVARSIZE-1);
    }
@@ -1230,7 +1231,7 @@ if (REQUIRE_COMMENTS == CF_UNDEFINED)
       {
       if ((strcmp(bdp->name,"control") == 0) && (strcmp(bdp->type,"common") == 0))
          {
-         REQUIRE_COMMENTS = GetBooleanConstraint("require_comments",bdp->conlist);
+         REQUIRE_COMMENTS = GetRawBooleanConstraint("require_comments",bdp->conlist);
          break;
          }
       }

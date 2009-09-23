@@ -56,7 +56,7 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp)
 
 { char id[CF_BUFSIZE], *mid = NULL;
 
-mid = GetConstraint("measurement_class",pp->conlist,CF_SCALAR);
+mid = GetConstraint("measurement_class",pp,CF_SCALAR);
 
 if (mid)
    {

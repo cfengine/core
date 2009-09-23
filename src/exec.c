@@ -664,9 +664,9 @@ snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(V
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 
-if ((fp = fopen(filename,"w")) == NULL)
+if ((fp = fopen(MapName(filename),"w")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Couldn't open %s\n",filename);
+   CfOut(cf_inform,"fopen","Couldn't open %s\n",MapName(filename));
    return NULL;
    }
 
@@ -736,12 +736,12 @@ CfOut(cf_verbose,""," -> Command is complete\n",cmd);
 if (count)
    {
    CfOut(cf_verbose,""," -> Mailing result\n",cmd);
-   MailResult(filename,MAILTO);
+   MailResult(MapName(filename),MAILTO);
    }
 else
    {
    CfOut(cf_verbose,""," -> No output\n",cmd);
-   unlink(filename);
+   unlink(MapName(filename));
    }
 
 return NULL; 

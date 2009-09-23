@@ -2406,7 +2406,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   fprintf(fout,"\n<h2>Results for this topic:</h2>\n\n");
+   fprintf(fout,"\n<h2>References to this topic:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
@@ -2499,7 +2499,7 @@ if (associations)
    count = 0;
    
    fprintf(fout,"<p><div id=\"associations\">");
-   fprintf(fout,"\n<h2>Leads and perspectives:</h2>\n\n");
+   fprintf(fout,"\n<h2>Insight, leads and perspectives:</h2>\n\n");
    
    fprintf(fout,"<ul>\n");
    
@@ -2530,7 +2530,7 @@ if (topics_this_type)
    count = 0;
    
    fprintf(fout,"<p><div id=\"thistype\">");
-   fprintf(fout,"\n<h2>Topics that have \"%s\" as a subject-header:</h2>\n\n",NextTopic(this_name,this_type));
+   fprintf(fout,"\n<h2>Topic \"%s\" includes:</h2>\n\n",NextTopic(this_name,this_type));
    
    fprintf(fout,"<ul>\n");
    

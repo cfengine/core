@@ -27,13 +27,12 @@ packages:
   "$(match_package)"
 
      package_policy => "add",
-     package_method => yum;
+     package_method => freebsd;
 
 }
-
 #############################################
 
-body package_method yum
+body package_method freebsd
 
 {
 any::

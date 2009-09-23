@@ -622,7 +622,7 @@ void *LocalExec(void *scheduled_run)
   char line[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
   char cmd[CF_BUFSIZE],esc_command[CF_BUFSIZE];
   int print,count = 0;
-  pthread_t tid;
+  void *threadName;
   time_t starttime = time(NULL);
   FILE *fp;
 #ifdef HAVE_PTHREAD_SIGMASK
@@ -633,7 +633,9 @@ pthread_sigmask(SIG_BLOCK,&sigmask,NULL);
 #endif
 
 #ifdef HAVE_PTHREAD
-tid = pthread_self();
+threadName = ThreadUniqueName(pthread_self());
+#else
+threadName = NULL;
 #endif
  
 CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");
@@ -658,7 +660,7 @@ else
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
    
 snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
-snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s",CFWORKDIR,CanonifyName(VFQNAME),line);
+snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,threadName);
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 

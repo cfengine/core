@@ -807,7 +807,6 @@ buffer[i] = '\0';
 return buffer;
 }
 
-
 /*********************************************************************/
 
 char *ToLowerStr (char *str)
@@ -835,3 +834,17 @@ buffer[i] = '\0';
 return buffer;
 }
 
+/*********************************************************************/
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+void *ThreadUniqueName(pthread_t tid)
+/* pthread_t is an integer on Unix, but a structure on Windows
+ * Finds a unique name for a thread for both platforms. */
+{
+#ifdef MINGW
+return tid.p;  // pointer to thread structure
+#else
+return (void*)tid;  // index into thread array ?
+#endif  /* NOT MINGW */
+}
+#endif  /* HAVE PTHREAD */

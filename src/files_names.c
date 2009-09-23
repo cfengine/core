@@ -41,7 +41,7 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   struct stat statbuf;
   int count = 0,lastnode = false, expandregex = false;
   uid_t agentuid = getuid();
-  int create = GetBooleanConstraint("create",pp->conlist);
+  int create = GetBooleanConstraint("create",pp);
 
 Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 

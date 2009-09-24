@@ -558,6 +558,8 @@ if (!GetAuthPath(handle,VARDENY))
 ap = GetAuthPath(handle,VARADMIT);
 dp = GetAuthPath(handle,VARDENY);
 
+ap->literal = true;
+
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    if (!IsDefinedClass(cp->classes))
@@ -689,6 +691,7 @@ else
 
 ptr->accesslist = NULL;
 ptr->maproot = NULL;
+ptr->literal = false;
 ptr->encrypt = false; 
 ptr->next = NULL;
 *listtop = ptr;

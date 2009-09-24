@@ -1058,6 +1058,11 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
    svp = (struct ServerItem *)rp->item;
 
+   if (svp == NULL)
+      {
+      continue;
+      }
+   
    if ((strcmp(ipname,svp->server) == 0) && (svp->conn == NULL))
       {
       return true;
@@ -1084,6 +1089,11 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
    svp = (struct ServerItem *)rp->item;
 
+   if (svp == NULL)
+      {
+      continue;
+      }
+   
    if (svp->busy)
       {
       CfOut(cf_verbose,"","Existing connection seems to be busy...\n",ipname);

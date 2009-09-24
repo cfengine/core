@@ -1115,8 +1115,9 @@ struct Auth
    {
    char *path;
    struct Item *accesslist;
-   struct Item *maproot;    /* which hosts should have root read access */
+   struct Item *maproot;     /* which hosts should have root read access */
    int encrypt;              /* which files HAVE to be transmitted securely */
+   int literal;
    struct Auth *next;
    };
 

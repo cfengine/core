@@ -472,11 +472,11 @@ CfOut(cf_verbose,"","# Access to server literals is only available in version No
 
 /*****************************************************************************/
 
-char *ReturnLiteralData(char *handle)
+int ReturnLiteralData(char *handle,char *ret)
 
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_ReturnLiteralData(handle);
+ return Nova_ReturnLiteralData(handle,ret);
 #else
  CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
 return "";
@@ -485,11 +485,11 @@ return "";
 
 /*****************************************************************************/
 
-char *GetRemoteScalar(char *handle,char *server,int encrypted)
+char *GetRemoteScalar(char *handle,char *server,int encrypted,char *rcv)
 
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_GetRemoteScalar(handle,server,encrypted);
+ return Nova_GetRemoteScalar(handle,server,encrypted,rcv);
 #else
 CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
 return "";

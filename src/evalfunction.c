@@ -2255,7 +2255,7 @@ if (THIS_AGENT_TYPE == cf_common)
    }
 else
    {
-   strncpy(buffer,GetRemoteScalar(handle,server,encrypted),CF_BUFSIZE-1);
+   GetRemoteScalar(handle,server,encrypted,buffer);
    
    if (strncmp(buffer,"BAD:",4) == 0)
       {

@@ -332,8 +332,8 @@ void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char 
 void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void LoadSlowlyVaryingObservations(void);
 void RegisterLiteralServerData(char *handle,struct Promise *pp);
-char *ReturnLiteralData(char *handle);
-char *GetRemoteScalar(char *handle,char *server,int encrypted);
+int ReturnLiteralData(char *handle,char *ret);
+char *GetRemoteScalar(char *handle,char *server,int encrypted,char *rcv);
 char *PromiseID(struct Promise *pp);
 void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);

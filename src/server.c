@@ -1303,7 +1303,7 @@ switch (GetCommand(recvbuffer))
           return true;
           }
        
-       if (!LiteralAccessControl(recvbuffer,conn,true,VARADMIT,VARDENY))
+       if (!LiteralAccessControl(recvbuffer,conn,encrypted,VARADMIT,VARDENY))
           {
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;   
@@ -1968,10 +1968,18 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       {
       CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",name,ap->path);
 
+      if (ap->literal == false)
+         {
+         CfOut(cf_error,"","Variable %s requires a literal server item...cannot set variable directly by path\n",ap->path);
+         access = false;
+         break;
+         }
+
       if (!encrypt && (ap->encrypt == true))
          {
-         CfOut(cf_error,"","Variable %s requires encrypt connection...will not serve\n",ap->path);
-         access = false;
+         CfOut(cf_error,"","Variable %s requires encrypt connection...will not serve\n",name);
+         access = false;      
+         break;
          }
       else
          {
@@ -1993,7 +2001,6 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             Debug("Access privileges - match found\n");
             }
          }
-      break;
       }
    }
  
@@ -2826,12 +2833,20 @@ else
 void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted)
 
 { char handle[CF_BUFSIZE],out[CF_BUFSIZE];
-  int cipherlen;
- 
-sscanf(recvbuffer,"VAR %[^\n]",handle);
+ int cipherlen, ok = false;
 
-memset(sendbuffer,0,CF_BUFSIZE);
-snprintf(sendbuffer,CF_BUFSIZE-1,"%s",ReturnLiteralData(handle));
+if (ok = ReturnLiteralData(handle,out))
+   {
+   memset(sendbuffer,0,CF_BUFSIZE);
+   snprintf(sendbuffer,CF_BUFSIZE-1,"%s",out);
+   }
+else
+   {
+   memset(sendbuffer,0,CF_BUFSIZE);
+   snprintf(sendbuffer,CF_BUFSIZE-1,"BAD: Not found");
+   }
+
+sscanf(recvbuffer,"VAR %[^\n]",handle);
 
 if (encrypted)
    {

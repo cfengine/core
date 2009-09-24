@@ -2397,6 +2397,8 @@ fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" has type ",NextTopic(this_name,this_type));
 fprintf(fout,"\"%s\" in map version %s</div>\n",NextTopic(this_type,""),v);
 
+// Occurrences
+
 if (occurrences != NULL)
    {
    char embed_link[CF_BUFSIZE];
@@ -2494,36 +2496,8 @@ else
    fprintf(fout,"</div>");
    }
 
-if (associations)
-   {
-   count = 0;
-   
-   fprintf(fout,"<p><div id=\"associations\">");
-   fprintf(fout,"\n<h2>Insight, leads and perspectives:</h2>\n\n");
-   
-   fprintf(fout,"<ul>\n");
-   
-   for (ta = associations; ta != NULL; ta=ta->next)
-      {
-      fprintf(fout,"<li>  %s \"%s\"\n",this_name,NextTopic(ta->fwd_name,""));
-      
-      fprintf(fout,"<ul>\n");
-      for (rp = ta->associates; rp != NULL; rp=rp->next)
-         {
-         fprintf(fout,"<li> %s\n",NextTopic(rp->item,""));
-         }
-      fprintf(fout,"</ul>\n");
-      count++;
-      }
-   
-   if (count == 0)
-      {
-      printf("<li>    (none)\n");
-      }
-   
-   fprintf(fout,"</ul>\n");
-   fprintf(fout,"</div>");
-   }
+
+// Topics
 
 if (topics_this_type)
    {
@@ -2555,6 +2529,43 @@ if (topics_this_type)
    fprintf(fout,"</ul>\n");
    fprintf(fout,"</div>");
    }
+
+
+// Associations
+
+if (associations)
+   {
+   count = 0;
+   
+   fprintf(fout,"<p><div id=\"associations\">");
+   fprintf(fout,"\n<h2>Insight, leads and perspectives:</h2>\n\n");
+   
+   fprintf(fout,"<ul>\n");
+   
+   for (ta = associations; ta != NULL; ta=ta->next)
+      {
+      fprintf(fout,"<li>  %s \"%s\"\n",this_name,NextTopic(ta->fwd_name,""));
+      
+      fprintf(fout,"<ul>\n");
+      for (rp = ta->associates; rp != NULL; rp=rp->next)
+         {
+         fprintf(fout,"<li> %s\n",NextTopic(rp->item,""));
+         }
+      fprintf(fout,"</ul>\n");
+      count++;
+      }
+   
+   if (count == 0)
+      {
+      printf("<li>    (none)\n");
+      }
+   
+   fprintf(fout,"</ul>\n");
+   fprintf(fout,"</div>");
+   }
+
+
+// Others
 
 if (other_topics)
    {

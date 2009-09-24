@@ -3279,7 +3279,7 @@ key.size = sizeof(RSA);
 if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
    {
    Debug("The new key is not previously known, so we need to use policy for trusting the host %s\n",mipaddr);
-
+ 
    if (trust)
       {
       Debug("Policy says to trust the changed key from %s and note that it could vary in future\n",mipaddr);

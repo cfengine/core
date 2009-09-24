@@ -325,9 +325,11 @@ void VerifyPromisedPackage(struct Attributes a,struct Promise *pp)
 if (a.packages.package_version) 
    {
    /* The version is specified separately */
+   CfOut(cf_verbose,""," -> Package version specified explicitly in promise body");
 
    for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
       {
+      CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
       strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
       strncpy(arch,rp->item,CF_MAXVARSIZE-1);
@@ -347,18 +349,28 @@ if (a.packages.package_version)
 else if (a.packages.package_version_regex)
    {
    /* The name, version and arch are to be extracted from the promiser */
+   CfOut(cf_verbose,""," -> Package version specified implicitly in promiser's name");
+      
    strncpy(version,ExtractFirstReference(a.packages.package_version_regex,package),CF_MAXVARSIZE-1);
    strncpy(name,ExtractFirstReference(a.packages.package_name_regex,package),CF_MAXVARSIZE-1);
    strncpy(arch,ExtractFirstReference(a.packages.package_arch_regex,package),CF_MAXVARSIZE-1);
+
+   if (strlen(arch) == 0)
+      {
+      strncpy(arch,"*",CF_MAXVARSIZE-1);
+      }
+   
    installed = PackageMatch(name,"*","*",a,pp);
    matches = PackageMatch(name,version,arch,a,pp);
    }
 else
    {
    no_version = true;
-   
+   CfOut(cf_verbose,""," -> Package version was not specified");
+      
    for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
       {
+      CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
       strncpy(version,"*",CF_MAXVARSIZE-1);
       strncpy(arch,rp->item,CF_MAXVARSIZE-1);
@@ -377,7 +389,7 @@ else
    }
 
 CfOut(cf_verbose,""," -> %d package(s) matching the name \"%s\" already installed\n",installed,name);
-CfOut(cf_verbose,""," -> %d package(s) match the promise body's criteria fully\n",installed,name);
+CfOut(cf_verbose,""," -> %d package(s) match the promise body's criteria fully\n",matches,name);
 
 SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 }
@@ -448,7 +460,7 @@ else
    }
 
 CfOut(cf_verbose,""," -> %d patch(es) matching the name \"%s\" already installed\n",installed,name);
-CfOut(cf_verbose,""," -> %d patch(es) match the promise body's criteria fully\n",installed,name);
+CfOut(cf_verbose,""," -> %d patch(es) match the promise body's criteria fully\n",matches,name);
 
 SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 }
@@ -912,7 +924,8 @@ if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcm
    return false;
    }
 
-Debug(" -? Extracted package name \"%s\"\n",name);
+Debug(" -? Package line \"%s\"\n",item);
+Debug(" -?      with name \"%s\"\n",name);
 Debug(" -?      with version \"%s\"\n",version);
 Debug(" -?      with architecture \"%s\"\n",arch);
 
@@ -1002,7 +1015,8 @@ if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcm
    return false;
    }
 
-Debug(" -? Extracted package name \"%s\"\n",name);
+Debug(" ?? Patch line: \"%s\"",item);
+Debug(" -?      with name \"%s\"\n",name);
 Debug(" -?      with version \"%s\"\n",version);
 Debug(" -?      with architecture \"%s\"\n",arch);
 
@@ -1121,8 +1135,10 @@ else
 
 CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\" to the manager\n",id);
 
-if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge || a.packages.package_select == cfa_le)
+if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge ||
+    a.packages.package_select == cfa_le || a.packages.package_select == cfa_cmp_none)
    {
+   CfOut(cf_verbose,""," -> Package version seems to match criteria");
    package_select_in_range = true;
    }
 
@@ -1358,6 +1374,8 @@ ParsePackageVersion(pi->version,numbers_2,separators_2);
 
 /* If the format of the version string doesn't match, we're already doomed */
 
+CfOut(cf_verbose,""," -> Check for compatible versioning model in (%s,%s)\n",v,pi->version);
+
 for (rp_1 = separators_1,rp_2 = separators_2;
      rp_1 != NULL & rp_2 != NULL;
      rp_1= rp_1->next,rp_2=rp_2->next)
@@ -1367,9 +1385,28 @@ for (rp_1 = separators_1,rp_2 = separators_2;
       result = false;
       break;
       }
+   
+   if (rp_1->next == NULL && rp_2->next == NULL)
+      {
+      result = true;
+      break;
+      }
+
+   if (rp_1->next != NULL && rp_2->next == NULL || rp_1->next == NULL && rp_2->next != NULL)
+      {
+      result = false;
+      break;
+      }
    }
 
-CfOut(cf_verbose,""," -> Verified that versioning models are compatible\n");
+if (result)
+   {
+   CfOut(cf_verbose,""," -> Verified that versioning models are compatible\n");
+   }
+else
+   {
+   CfOut(cf_verbose,""," !! Versioning models for (%s,%s) were incompatible\n",v,pi->version);
+   }
 
 if (result != false)
    {
@@ -1380,6 +1417,7 @@ if (result != false)
       switch (cmp)
          {
          case cfa_eq:
+         case cfa_cmp_none:
              if (strcmp(rp_1->item,rp_2->item) != 0)
                 {
                 result = false;
@@ -1426,7 +1464,14 @@ if (result != false)
       }
    }
 
-CfOut(cf_verbose,""," -> Verified version constraint promise kept\n");
+if (result)
+   {
+   CfOut(cf_verbose,""," -> Verified version constraint promise kept\n");
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> Versions did not match\n");
+   }
 
 DeleteRlist(numbers_1);
 DeleteRlist(numbers_2);

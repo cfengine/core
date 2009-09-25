@@ -78,7 +78,7 @@ AC_CHECK_LIB(m,main)
 dnl Look for cf enterprise versions
 
 AC_CHECK_LIB(ldap,ldap_get_values_len)
-AC_CHECK_LIB(pcre, main)
+
 dnl Now check for database connectors
 
 
@@ -420,6 +420,8 @@ AC_ARG_WITH(pcre,
         fi
     ]
 )
+
+AC_CHECK_LIB(pcre, main)
 
 LIBS="$LIBS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
 

@@ -76,6 +76,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"isplain",cf_class,1,"True if the named object is a plain/regular file"},
    {"isvariable",cf_class,1,"True if the named variable is defined"},
    {"lastnode",cf_str,2,"Extract the last of a separated string, e.g. filename from a path"},
+   {"hostsseen",cf_str,3,"Extract the list of hosts last seen/not seen within the last arg1 minutes"},
    {"ldaparray",cf_class,6,"Extract all values from an ldap record"},
    {"ldaplist",cf_slist,6,"Extract all named values from multiple ldap records"},
    {"ldapvalue",cf_str,6,"Extract the first matching named value from ldap"},
@@ -184,6 +185,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"output_prefix",cf_str,"","The string prefix for standard output"},
    {"domain",cf_str,".*","Specify the domain name for this host"},
    {"require_comments",cf_opts,CF_BOOL,"Warn about promises that do not have comment documentation"},
+   {"host_licenses_paid",cf_int,CF_VALRANGE,"The number of licenses that you promise to have paid for by setting this value (legally binding for commercial license)"},
    {NULL,cf_notype,NULL,NULL}
    };
 

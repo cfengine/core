@@ -9,6 +9,11 @@ body common control
 bundlesequence => { "packages" };
 }
 
+body agent control
+{
+environment => { "DEBIAN_FRONTEND=noninteractive" };
+}
+
 #############################################
 
 bundle agent packages

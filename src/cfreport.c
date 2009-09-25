@@ -696,7 +696,8 @@ void ShowLastSeen()
   DBC *dbcp;
   DB_ENV *dbenv = NULL;
   FILE *fout;
-  double now = (double)time(NULL),average = 0, var = 0;
+  time_t tid = time(NULL);
+  double now = (double)tid,average = 0, var = 0;
   double ticksperhr = (double)CF_TICKS_PER_HOUR;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
   struct QPoint entry;
@@ -736,6 +737,10 @@ if (HTML && !EMBEDDED)
    {
    snprintf(name,CF_BUFSIZE,"Peers as last seen by %s",VFQNAME);
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
+   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
+
+   fprintf(fout,"<h4>This report was last updated at %s</h4>",ctime(&tid));
+
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 else if (XML)
@@ -821,7 +826,14 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    else if (HTML)
       {
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
-      fprintf(fout,"%s%c%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
+      if (*hostname == '+')
+         {
+         fprintf(fout,"%s&larr;(%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
+         }
+      else
+         {
+         fprintf(fout,"%s&rarr;(%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
+         }
       fprintf(fout,"%s%s%s",CFRH[cfx_host][cfb],IPString2Hostname(hostname+1),CFRH[cfx_host][cfe]);
       fprintf(fout,"%s%s%s",CFRH[cfx_ip][cfb],hostname+1,CFRH[cfx_ip][cfe]);
       fprintf(fout,"%s Last seen at %s%s",CFRH[cfx_date][cfb],tbuf,CFRH[cfx_date][cfe]);
@@ -856,7 +868,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 
 if (HTML && !EMBEDDED)
    {
-   fprintf(fout,"</table>");
+   fprintf(fout,"</table></div></div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -2681,10 +2693,12 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
          memcpy(&entry,value.data,sizeof(entry));
          then = (time_t)entry.q;
          lastseen = now - then;
+
          if (lastseen < 0)
             {
             lastseen = 0; /* Never seen before, so pretend */
             }
+
          average = (double)entry.expect;
          var = (double)entry.var;
 

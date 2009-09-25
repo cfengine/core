@@ -388,6 +388,7 @@ void SaveClassEnvironment(void);
 
 /* evalfunction.c */
 
+struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs);

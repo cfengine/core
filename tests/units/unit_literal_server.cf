@@ -29,13 +29,15 @@ bundle agent testbundle
 {
 vars:
 
- "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+ "remote1" string => remotescalar("test_scalar1","127.0.0.1","yes");
+ "remote2" string => remotescalar("test_scalar2","127.0.0.1","yes");
+ "remote3" string => remotescalar("test_scalar3","127.0.0.1","yes");
 
 reports:
 
   linux::
 
-    "Receive value $(remote)";
+    "Receive value $(remote1), $(remote2), $(remote3)";
 }
 
 #########################################################
@@ -64,7 +66,19 @@ access:
 
   "This is a $(localvar) for remote access"
  
-        handle  => "test_scalar",
+        handle  => "test_scalar1",
   resource_type => "literal",
+        admit   => { "127.0.0.1" };
+
+
+
+  "Mary had a little lamb whose fleece was white as snow and everywhere that Mary went she wore it lovingly"
+ 
+        handle  => "test_scalar2",
+  resource_type => "literal",
+        admit   => { "127.0.0.1" };
+
+  "/etc/passwd"
+        handle  => "test_scalar3",
         admit   => { "127.0.0.1" };
 }

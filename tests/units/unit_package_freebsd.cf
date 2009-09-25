@@ -1,0 +1,64 @@
+
+#
+# Package managment
+#
+
+body common control
+{
+bundlesequence => { "packages" };
+}
+
+#############################################
+
+body agent control
+{
+environment => { "PACKAGESITE=ftp://freebsd-src.es.net/pub/FreeBSD/ports/i386/packages-7.2-release/All/" };
+}
+
+#############################################
+
+bundle agent packages
+{
+vars:
+
+ # Test the simplest case -- leave everything to the yum smart manager
+
+ "match_package" slist => { 
+                          "wget-1.11.4"
+                          };
+packages:
+
+  "$(match_package)"
+
+     package_policy => "add",
+     package_method => freebsd;
+
+}
+#############################################
+
+body package_method freebsd
+
+{
+any::
+
+ package_changes => "individual";
+
+ # Could use rpm for this
+ package_list_command => "/usr/sbin/pkg_info";
+
+ # Remember to escape special characters like |
+
+ package_list_name_regex    => "([^-]+).*";
+ package_list_version_regex => "[^-]+-([^\s]+).*";
+
+ package_name_regex    => "([^-]+).*";
+ package_version_regex => "[^-]+-([^\s]+).*";
+
+ package_installed_regex => ".*";
+
+ package_name_convention => "$(name)-$(version)";
+
+
+package_add_command => "/usr/sbin/pkg_add -r";
+package_delete_command => "/usr/sbin/pkg_delete";
+}

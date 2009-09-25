@@ -384,6 +384,9 @@ switch (this)
    case cfn_islessthan:
        rval = FnCallGreaterThan(fp,expargs,'-');
        break;
+   case cfn_hostsseen:
+       rval = FnCallHostsSeen(fp,expargs);
+       break;
    case cfn_userexists:
        rval = FnCallUserExists(fp,expargs);
        break;

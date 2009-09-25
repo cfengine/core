@@ -46,6 +46,159 @@
 
 /*********************************************************************/
 
+struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_INTRANGE,
+     "lastseen,notseen",
+     "name,address",
+     NULL
+     };
+ 
+  static enum cfdatatype argtypes[] =
+      {
+      cf_int,
+      cf_opts,
+      cf_opts,
+      cf_notype
+      };
+
+  struct Rval rval;
+  struct Rlist *rp,*returnlist = NULL;
+  char *policy,*format,buffer[CF_BUFSIZE];
+  int tmp,range,result,from=-1,to=-1;
+  DBT key,value;
+  DB *dbp;
+  DBC *dbcp;
+  DB_ENV *dbenv = NULL;
+  time_t tid = time(NULL);
+  double now = (double)tid,average = 0, var = 0;
+  double ticksperhr = (double)CF_TICKS_PER_HOUR;
+  char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
+  struct QPoint entry;
+  int ret,horizon;
+
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+horizon = Str2Int((char *)(finalargs->item));
+policy = (char *)(finalargs->next->item);
+format = (char *)(finalargs->next->next->item);
+
+if (from == CF_NOINT || to == CF_NOINT)
+   {
+   SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,"unrecognized integer",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+
+if (!OpenDB(name,&dbp))
+   {
+   SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+
+/* Acquire a cursor for the database. */
+
+if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+   {
+   SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
+   CfOut(cf_error,""," !! Error reading from last-seen database: ");
+   dbp->err(dbp, ret, "DB->cursor");
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+
+ /* Initialize the key/data return pair. */
+
+memset(&key,0,sizeof(key));
+memset(&value,0,sizeof(value));
+memset(&entry,0,sizeof(entry)); 
+ 
+ /* Walk through the database and print out the key/data pairs. */
+
+while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+   {
+   double then;
+   time_t fthen;
+   char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
+
+   memcpy(&then,value.data,sizeof(then));
+   strcpy(hostname,(char *)(key.data+1));
+
+   if (value.data != NULL)
+      {
+      memcpy(&entry,value.data,sizeof(entry));
+      then = entry.q;
+      average = (double)entry.expect;
+      var = (double)entry.var;
+      }
+   else
+      {
+      continue;
+      }
+
+      
+   if (strcmp(policy,"lastseen") == 0)
+      {
+      if (now - then > horizon)
+         {
+         continue;
+         }
+      }
+   else
+      {
+      if (now - then <= horizon)
+         {
+         continue;
+         }      
+      }
+
+   if (strcmp(format,"address") == 0)
+      {
+      IdempPrependRScalar(&returnlist,hostname,CF_SCALAR);
+      }
+   else
+      {
+      strncpy(name,IPString2Hostname(hostname),CF_MAXVARSIZE);
+      IdempPrependRScalar(&returnlist,name,CF_SCALAR);
+      }
+   }
+
+dbcp->c_close(dbcp);
+dbp->close(dbp,0);
+
+/* end fn specific content */
+
+if (returnlist == NULL)
+   {
+   SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+else
+   {
+   SetFnCallReturnStatus("hostsseen",FNCALL_SUCCESS,NULL,NULL);
+   rval.item = returnlist;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+}
+
+
+/*********************************************************************/
+
 struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

@@ -222,6 +222,7 @@ enum cfgcontrol
    cfg_output_prefix,
    cfg_domain,
    cfg_require_comments,
+   cfg_licenses,
    cfg_noagent
    };
     
@@ -515,6 +516,7 @@ enum fncalltype
    cfn_isplain,
    cfn_isvariable,
    cfn_lastnode,
+   cfn_hostsseen,
    cfn_ldaparray,
    cfn_ldaplist,
    cfn_ldapvalue,

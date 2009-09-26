@@ -38,35 +38,36 @@ void AddTopic(struct Topic **list,char *name,char *type)
 
 { struct Topic *tp;
 
-if (TopicExists(*list,name,type))
+if (tp = TopicExists(*list,name,type))
    {
    CfOut(cf_verbose,""," ! Topic %s already defined\n",name);
-   return;
    }
- 
-if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
+else
    {
-   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-   FatalError("");
+   if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
+      {
+      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
+      FatalError("");
+      }
+   
+   if ((tp->topic_name = strdup(name)) == NULL)
+      {
+      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
+      FatalError("");
+      }
+   
+   if ((tp->topic_type = strdup(type)) == NULL)
+      {
+      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
+      FatalError("");
+      }
+   
+   tp->topic_comment = NULL;
+   tp->associations = NULL;
+   tp->occurrences = NULL;
+   tp->next = *list;
+   *list = tp;
    }
-
-if ((tp->topic_name = strdup(name)) == NULL)
-   {
-   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-   FatalError("");
-   }
-
-if ((tp->topic_type = strdup(type)) == NULL)
-   {
-   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-   FatalError("");
-   }
-
-tp->topic_comment = NULL;
-tp->associations = NULL;
-tp->occurrences = NULL;
-tp->next = *list;
-*list = tp;
 }
 
 
@@ -76,47 +77,57 @@ void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type)
 
 { struct Topic *tp;
 
-if (TopicExists(*list,name,type))
+if (tp = TopicExists(*list,name,type))
    {
-   CfOut(cf_verbose,""," ! Topic %s already defined\n",name);
-   return;
-   }
- 
-if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
-   {
-   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-   FatalError("");
-   }
+   CfOut(cf_verbose,""," -> Topic %s already defined, ok\n",name);
 
-if ((tp->topic_name = strdup(name)) == NULL)
-   {
-   CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-   FatalError("");
-   }
-
-if (comment)
-   {
-   if ((tp->topic_comment = strdup(comment)) == NULL)
+   if (comment && tp->topic_comment == NULL)
       {
-      CfOut(cf_error,"malloc","Memory failure in AddTopic");
-      FatalError("");
+      if ((tp->topic_comment = strdup(comment)) == NULL)
+         {
+         CfOut(cf_error,"malloc","Memory failure in AddTopic");
+         FatalError("");
+         }
       }
    }
 else
    {
-   tp->topic_comment = NULL;
+   if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
+      {
+      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
+      FatalError("");
+      }
+   
+   if ((tp->topic_name = strdup(name)) == NULL)
+      {
+      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
+      FatalError("");
+      }
+   
+   if (comment)
+      {
+      if ((tp->topic_comment = strdup(comment)) == NULL)
+         {
+         CfOut(cf_error,"malloc","Memory failure in AddTopic");
+         FatalError("");
+         }
+      }
+   else
+      {
+      tp->topic_comment = NULL;
+      }
+   
+   if ((tp->topic_type = strdup(type)) == NULL)
+      {
+      CfOut(cf_error,"malloc","Memory failure in AddTopic");
+      FatalError("");
+      }
+   
+   tp->occurrences = NULL;
+   tp->associations = NULL;
+   tp->next = *list;
+   *list = tp;
    }
-
-if ((tp->topic_type = strdup(type)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Memory failure in AddTopic");
-   FatalError("");
-   }
-
-tp->occurrences = NULL;
-tp->associations = NULL;
-tp->next = *list;
-*list = tp;
 }
 
 /*****************************************************************************/
@@ -190,7 +201,7 @@ void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *repres
   struct TopRepresentation *tr;
   struct Rlist *rp;
 
-if (!(op = OccurrenceExists(*list,reference,rtype)))
+if ((op = OccurrenceExists(*list,reference,rtype)) == NULL)
    {
    if ((op = (struct Occurrence *)malloc(sizeof(struct Occurrence))) == NULL)
       {
@@ -389,7 +400,7 @@ return sp;
 /* Level                                                                     */
 /*****************************************************************************/
 
-int TopicExists(struct Topic *list,char *topic_name,char *topic_type)
+struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_type)
 
 { struct Topic *tp;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
@@ -401,11 +412,11 @@ for (tp = list; tp != NULL; tp=tp->next)
       if (topic_type && strcmp(tp->topic_type,topic_type) != 0)
          {
          CfOut(cf_inform,""," !! Topic \"%s\" already exists, but it promises type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
-         return false;         
+         return NULL;         
          }
       else
          {
-         return true;
+         return tp;
          }
       }
 
@@ -418,7 +429,7 @@ for (tp = list; tp != NULL; tp=tp->next)
       }
    }
 
-return false;
+return NULL;
 }
 
 /*****************************************************************************/

@@ -916,7 +916,7 @@ void AddTopic(struct Topic **list,char *name,char *type);
 void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type);
 void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int verify);
 void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype);
-int TopicExists(struct Topic *list,char *topic_name,char *topic_type);
+struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_type);
 char *GetTopicType(struct Topic *list,char *topic_name);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);

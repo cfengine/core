@@ -517,41 +517,41 @@ if (!ok)
 
 /* If all is okay, go ahead and evaluate */
 
-for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+for (type = 0; TYPESEQUENCE[type] != NULL; type++)
    {
-   switch (rp->type)
+   for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       {
-      case CF_FNCALL:
-          fp = (struct FnCall *)rp->item;
-          name = (char *)fp->name;
-          params = (struct Rlist *)fp->args;
-          break;
-      default:
-          name = (char *)rp->item;
-          params = NULL;
-          break;
-      }
-   
-   if ((bp = GetBundle(name,"knowledge")) || (bp = GetBundle(name,"common")))
-      {
-      BannerBundle(bp,params);
-      AugmentScope(bp->name,bp->args,params);
-      DeletePrivateClassContext(); // Each time we change bundle      
-      }
-             
-   for (type = 0; TYPESEQUENCE[type] != NULL; type++)
-      {
+      switch (rp->type)
+         {
+         case CF_FNCALL:
+             fp = (struct FnCall *)rp->item;
+             name = (char *)fp->name;
+             params = (struct Rlist *)fp->args;
+             break;
+         default:
+             name = (char *)rp->item;
+             params = NULL;
+             break;
+         }
+      
+      if ((bp = GetBundle(name,"knowledge")) || (bp = GetBundle(name,"common")))
+         {
+         BannerBundle(bp,params);
+         AugmentScope(bp->name,bp->args,params);
+         DeletePrivateClassContext(); // Each time we change bundle      
+         }
+      
       if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
          {
          continue;      
          }
-
+      
       BannerSubType(bp->name,sp->name,1);
-
+      
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
          ExpandPromise(cf_know,bp->name,pp,KeepKnowledgePromise);
-         }
+         }      
       }
    }
 }
@@ -880,6 +880,7 @@ while(CfFetchRow(&cfdb))
       {
       strncpy(topic_comment,"",CF_BUFSIZE-1);
       }
+
    AddCommentedTopic(&tmatches,topic_name,topic_comment,topic_type);   
    count++;
    }
@@ -1219,7 +1220,7 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    {
    CfOut(cf_verbose,""," -> Topic \"%s\" installed\n",pp->promiser);
    
-   if (a.fwd_name)
+   if (a.fwd_name && a.bwd_name)
       {
       AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
       }
@@ -1227,14 +1228,15 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    if (pp->ref)
       {
       struct Rlist *list = NULL;
-      PrependRScalar(&list,"Explanation",CF_SCALAR);
+      PrependRScalar(&list,"About",CF_SCALAR);
       AddOccurrence(&(tp->occurrences),pp->ref,list,cfk_literal);
       DeleteRlist(list);
       }
    }
 else
    {
-   CfOut(cf_verbose,""," -> Topic \"%s\" did not install\n",pp->promiser);
+   CfOut(cf_error,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
+   PromiseRef(cf_error,pp);
    }
 }
 

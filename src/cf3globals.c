@@ -73,6 +73,9 @@ int INSTALL_SKIP = false;
 int FACILITY;
 time_t PROMISETIME;
 
+int LICENSES = 0;
+char EXPIRY[32];
+
 struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 struct CfPackageManager *PACKAGE_SCHEDULE = NULL;
 struct Rlist *MOUNTEDFSLIST = NULL;

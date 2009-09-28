@@ -37,12 +37,10 @@
 
 int IdentifyAgent(int sd,char *localip,int family)
 
-{ char sendbuff[CF_BUFSIZE],dnsname[CF_BUFSIZE];
+{ char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE],dnsname[CF_BUFSIZE];
   struct in_addr *iaddr;
   struct hostent *hp;
   int len,err;
-  struct passwd *user_ptr;
-  char *uname;
 #if defined(HAVE_GETADDRINFO)
   char myaddr[256]; /* Compilation trick for systems that don't know ipv6 */
 #else
@@ -132,8 +130,7 @@ else
       }
    }
 
-user_ptr = getpwuid(getuid());
-uname = user_ptr ? user_ptr->pw_name : "UNKNOWN";
+GetCurrentUserName(uname, sizeof(uname));
 
 /* Some resolvers will not return FQNAME and missing PTR will give numerical result */
 

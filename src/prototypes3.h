@@ -1194,6 +1194,7 @@ int Xen_Hv_Check(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);
 char *GetHome(uid_t uid);
+int GetCurrentUserName(char *userName, int userNameLen);
 
 /* transaction.c */
 
@@ -1223,8 +1224,9 @@ void AddTimeClass(char *str);
 
 /* unix.c */
 
-#ifndef MINGW  // TODO: Define UNIX instead ?
+#ifndef MINGW
 int Unix_GracefulTerminate(pid_t pid);
+int Unix_GetCurrentUserName(char *userName, int userNameLen);
 int Unix_ShellCommandReturnsZero(char *comm,int useshell);
 int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int Unix_LoadProcessTable(struct Item **procdata,char *psopts);

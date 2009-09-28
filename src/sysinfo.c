@@ -1914,3 +1914,14 @@ char *GetHome(uid_t uid)
 struct passwd *mpw = getpwuid(uid);
 return mpw->pw_dir;
 }
+
+/******************************************************************/
+
+int GetCurrentUserName(char *userName, int userNameLen)
+{
+#ifdef MINGW
+return NovaWin_GetCurrentUserName(userName, userNameLen);
+#else
+return Unix_GetCurrentUserName(userName, userNameLen);
+#endif
+}

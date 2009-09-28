@@ -108,11 +108,6 @@ struct utsname
 #include <openssl/bn.h>
 #include <errno.h>
 
-#ifdef MINGW
-/* Collision on windows */
-# undef STRING
-#endif
-
 #ifdef HAVE_DIRENT_H
 # include <dirent.h>
 #else
@@ -241,6 +236,7 @@ extern int errno;
 # include <ddk/ntapi.h>
 # include <wchar.h>
 # include <Sddl.h>
+# include <fcntl.h>
 # ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
 # else

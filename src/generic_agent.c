@@ -143,7 +143,7 @@ if ((*VINPUTFILE == '.') || IsAbsoluteFileName(VINPUTFILE))
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f %s%cinputs%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f \"%s%cinputs%c%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
    }
 
 /* Check if reloading policy will succeed */

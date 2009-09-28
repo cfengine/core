@@ -986,15 +986,25 @@ int setegid (gid_t egid);
 
 FILE *cf_fopen(char *file,char *type);
 int cf_fclose(FILE *fp);
+
 FILE *cf_popen(char *command,char *type);
 FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
 FILE *cf_popen_sh(char *command,char *type);
 FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+
+#ifndef MINGW
+FILE *Unix_cf_popen(char *command,char *type);
+FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+FILE *Unix_cf_popen_sh(char *command,char *type);
+FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+int Unix_cf_pclose(FILE *pp);
+int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
 int cf_pwait(pid_t pid);
 int CfSetuid(uid_t uid,gid_t gid);
 int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
+#endif  /* NOT MINGW */
 
 /* processes_select.c */
 

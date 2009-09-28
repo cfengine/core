@@ -59,7 +59,7 @@ char *MapName(char *s)
   int rootlen;
   struct stat sb;
 
-#ifdef CFCYG
+#ifdef NT
 memset(buffer,0,CF_BUFSIZE);
 
 if (UseUnixStandard(s))
@@ -123,13 +123,7 @@ else
       }
    }
 #else
-# ifdef MINGW
-
-// Eystein
-
-# else
 strncpy(buffer,s,CF_BUFSIZE-1);
-# endif 
 #endif
 
 return buffer;

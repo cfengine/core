@@ -44,12 +44,103 @@ return fopen(file,type);
 
 /*****************************************************************************/
 
+int cf_fclose(FILE *fp)
+
+{
+/* Windows native eventually? */
+
+return fclose(fp);
+}
+
+/*******************************************************************/
+/* Pipe API - OS function mapping                                  */
+/*******************************************************************/
+
+FILE *cf_popen(char *command,char *type)
+
+{ 
+#ifdef MINGW
+return NovaWin_cf_popen(command, type);
+#else
+return Unix_cf_popen(command, type);
+#endif
+}
+
+/*****************************************************************************/
+
+FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+
+{ 
+#ifdef MINGW
+return NovaWin_cf_popensetuid(command, type, uid, gid, chdirv, chrootv);
+#else
+return Unix_cf_popensetuid(command, type, uid, gid, chdirv, chrootv);
+#endif
+}
+
+/*****************************************************************************/
+
+FILE *cf_popen_sh(char *command,char *type)
+
+{ 
+#ifdef MINGW
+return NovaWin_cf_popen_sh(command, type);
+#else
+return Unix_cf_popen_sh(command, type);
+#endif
+}
+
+/*****************************************************************************/
+
+FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+
+{ 
+#ifdef MINGW
+return NovaWin_cf_popen_shsetuid(command, type, uid, gid, chdirv, chrootv);
+#else
+return Unix_cf_popen_shsetuid(command, type, uid, gid, chdirv, chrootv);
+#endif
+}
+
+/*****************************************************************************/
+
+int cf_pclose(FILE *pp)
+
+{ 
+#ifdef MINGW
+return NovaWin_cf_pclose(pp);
+#else
+return Unix_cf_pclose(pp);
+#endif
+}
+
+/*****************************************************************************/
+
+int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
+
+{ 
+#ifdef MINGW
+return NovaWin_cf_pclose_def(pfp, a, pp);
+#else
+return Unix_cf_pclose_def(pfp, a, pp);
+#endif
+}
+
+/*******************************************************************/
+/* End pipe API                                                    */
+/*******************************************************************/
+
+
+#ifndef MINGW
+
+/*****************************************************************************/
+
 pid_t *CHILDREN;
 int    MAX_FD = 20; /* Max number of simultaneous pipes */
 
 /*****************************************************************************/
 
-FILE *cf_popen(char *command,char *type)
+FILE *Unix_cf_popen(char *command,char *type)
 
  { static char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
    int i, argc, pd[2];
@@ -57,7 +148,7 @@ FILE *cf_popen(char *command,char *type)
    pid_t pid;
    FILE *pp = NULL;
 
-Debug("cf_popen(%s)\n",command);
+Debug("Unix_cf_popen(%s)\n",command);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -197,7 +288,7 @@ return NULL; /* Cannot reach here */
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
     
  { static char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
    int i, argc, pd[2];
@@ -205,7 +296,7 @@ FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,c
    pid_t pid;
    FILE *pp = NULL;
 
-Debug("cfpopensetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
+Debug("Unix_cf_popensetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -364,14 +455,14 @@ return NULL; /* cannot reach here */
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *cf_popen_sh(char *command,char *type)
+FILE *Unix_cf_popen_sh(char *command,char *type)
     
  { int i,pd[2];
    pid_t pid;
    FILE *pp = NULL;
    char esc_command[CF_BUFSIZE];
 
-Debug("cf_popen_sh(%s)\n",command);
+Debug("Unix_cf_popen_sh(%s)\n",command);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -483,14 +574,14 @@ return NULL;
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
     
  { int i,pd[2];
    pid_t pid;
    FILE *pp = NULL;
    char esc_command[CF_BUFSIZE];
 
-Debug("cf_popen_shsetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
+Debug("Unix_cf_popen_shsetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -674,12 +765,12 @@ return (WEXITSTATUS(status));
 
 /*******************************************************************/
 
-int cf_pclose(FILE *pp)
+int Unix_cf_pclose(FILE *pp)
 
 { int fd, status, wait_result;
   pid_t pid;
 
-Debug("cf_pclose(pp)\n");
+Debug("Unix_cf_pclose(pp)\n");
 
 if (CHILDREN == NULL)  /* popen hasn't been called */
    {
@@ -714,12 +805,12 @@ return cf_pwait(pid);
 
 /*******************************************************************/
 
-int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
+int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
 
 { int fd, status, wait_result;
   pid_t pid;
 
-Debug("cf_pclose_def(pfp)\n");
+Debug("Unix_cf_pclose_def(pfp)\n");
 
 if (CHILDREN == NULL)  /* popen hasn't been called */
    {
@@ -748,7 +839,7 @@ if (fclose(pfp) == EOF)
    return -1;
    }
 
-Debug("cf_pclose_def - Waiting for process %d\n",pid); 
+Debug("Unix_cf_pclose_def - Waiting for process %d\n",pid); 
 
 #ifdef HAVE_WAITPID
 
@@ -814,16 +905,6 @@ else
 
 return (WEXITSTATUS(status));
 #endif
-}
-
-/*****************************************************************************/
-
-int cf_fclose(FILE *fp)
-
-{
-/* Windows native eventually? */
-
-return fclose(fp);
 }
 
 /*******************************************************************/
@@ -914,3 +995,4 @@ for (sp = comm; sp < comm+strlen(comm); sp++)
  return (i);
 }
 
+#endif  /* NOT MINGW */

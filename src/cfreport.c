@@ -636,6 +636,10 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       SummarizeCompliance(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       CfOut(cf_verbose,""," -> Creating per-promise compliance summary (Cfengine Nova and above)...\n");
       SummarizePerPromiseCompliance(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
+      CfOut(cf_verbose,""," -> Creating promise repair summary (Cfengine Nova and above)...\n");
+      SummarizePromiseRepaired(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
+      CfOut(cf_verbose,""," -> Creating promise non-kept summary (Cfengine Nova and above)...\n");
+      SummarizePromiseNotKept(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
    if (strcmp("file_changes",rp->item) == 0)

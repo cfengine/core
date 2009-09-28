@@ -538,6 +538,30 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
 
 /*****************************************************************************/
 
+void SummarizePromiseRepaired(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_SummarizePromiseRepaired(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void SummarizePromiseNotKept(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_SummarizePromiseNotKept(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
 void GrandSummary()
 
 {

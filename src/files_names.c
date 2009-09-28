@@ -723,9 +723,14 @@ if (IsFileSep(f[0]) && IsFileSep(f[1]))
    return len;
    }
 
-if (isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]) )
+if (isalpha(f[0]) && f[1] == ':')
    {
-   return 3;
+   if(IsFileSep(f[2]))
+     {
+     return 3;
+     }
+
+   return 2;  
    }
 #endif
 

@@ -52,9 +52,11 @@ else
 
 /*********************************************************/
 
+/* We assume that s is at least MAX_FILENAME large.
+ * MapName() is thread-safe, but the argument is modified. */
 char *MapName(char *s)
 
-{ static char buffer[CF_BUFSIZE];
+{ char buffer[CF_BUFSIZE];
   char *spf,*spto;
   int rootlen;
   struct stat sb;
@@ -122,11 +124,13 @@ else
          }
       }
    }
-#else
-strncpy(buffer,s,CF_BUFSIZE-1);
-#endif
 
-return buffer;
+memset(s,0,MAX_FILENAME);
+strncpy(s,buffer,MAX_FILENAME-1);
+
+#endif  /* NT */
+
+return s;
 }
 
 /*********************************************************/

@@ -661,12 +661,13 @@ strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
    
 snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
 snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,threadName);
+MapName(filename);
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 
-if ((fp = fopen(MapName(filename),"w")) == NULL)
+if ((fp = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Couldn't open %s\n",MapName(filename));
+   CfOut(cf_inform,"fopen","Couldn't open %s\n",filename);
    return NULL;
    }
 
@@ -736,12 +737,12 @@ CfOut(cf_verbose,""," -> Command is complete\n",cmd);
 if (count)
    {
    CfOut(cf_verbose,""," -> Mailing result\n",cmd);
-   MailResult(MapName(filename),MAILTO);
+   MailResult(filename,MAILTO);
    }
 else
    {
    CfOut(cf_verbose,""," -> No output\n",cmd);
-   unlink(MapName(filename));
+   unlink(filename);
    }
 
 return NULL; 

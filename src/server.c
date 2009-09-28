@@ -1840,7 +1840,8 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
 
    ThreadLock(cft_system);
-   strncpy(transpath,MapName(ap->path),CF_BUFSIZE-1);
+   strncpy(transpath,ap->path,CF_BUFSIZE-1);
+   MapName(transpath);
    ThreadUnlock(cft_system);
 
    if ((strlen(transrequest) > strlen(transpath)) && strncmp(transpath,transrequest,strlen(transpath)) == 0 && transrequest[strlen(transpath)] == FILE_SEPARATOR)

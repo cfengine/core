@@ -236,7 +236,6 @@ extern int errno;
 # include <ddk/ntapi.h>
 # include <wchar.h>
 # include <Sddl.h>
-# include <fcntl.h>
 # ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
 # else

@@ -350,7 +350,8 @@ else
    }
 
 #else
-strcpy(CFWORKDIR,MapName(WORKDIR));
+strcpy(CFWORKDIR,WORKDIR);
+MapName(CFWORKDIR);
 #endif
 
 if (!LOOKUP) /* cf-know should not do this in lookup mode */

@@ -157,7 +157,8 @@ CfOut(cf_verbose,"","\n");
 
 void KeepEditLinePromise(struct Promise *pp)
 
-{
+{ char *sp = NULL;
+ 
 if (!IsDefinedClass(pp->classes))
    {
    CfOut(cf_verbose,"","\n");
@@ -169,6 +170,15 @@ if (!IsDefinedClass(pp->classes))
 
 if (pp->done)
    {
+   return;
+   }
+
+if (VarClassExcluded(pp,&sp))
+   {
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
 

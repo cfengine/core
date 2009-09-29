@@ -66,6 +66,9 @@ int main(int argc,char *argv[])
 
 {
 CheckOpts(argc,argv);
+
+THIS_AGENT_TYPE = cf_keygen;
+
 GenericInitialize(argc,argv,"keygenerator");
 KeepPromises();
 return 0;

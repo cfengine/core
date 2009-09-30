@@ -106,8 +106,11 @@ if (strcmp(".",ReadLastNode(file)) == 0)
       {
       if (!MakeParentDirectory(file,attr.move_obstructions))
          {
+         cfPS(cf_inform,CF_FAIL,"creat",pp,attr," !! Error creating directories for %s\n",file);
          return false;
          }
+
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created directory %s\n",file);
       }
    }
 else

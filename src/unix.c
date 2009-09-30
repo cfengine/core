@@ -82,6 +82,13 @@ return true;
 
 /*************************************************************/
 
+char *Unix_GetErrorStr(void)
+{
+return strerror(errno);
+}
+
+/*************************************************************/
+
 /* from exec_tools.c */
 
 int Unix_IsExecutable(char *file)

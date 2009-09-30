@@ -497,7 +497,6 @@ void Apoptosis()
 { struct Promise pp;
   struct Rlist *signals = NULL, *owners = NULL;
   char mypid[32],pidrange[32];
-  struct passwd *mpw = getpwuid(getuid());
   char *psopts = GetProcessOptions();
 
 if (ONCE || VSYSTEMHARDCLASS == cfnt)
@@ -528,7 +527,7 @@ pp.this_server = NULL;
 pp.donep = &(pp.done);
 pp.conn = NULL;
 
-snprintf(mypid,31,"%s",mpw->pw_name);
+GetCurrentUserName(mypid,31);
 
 PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);

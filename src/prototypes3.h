@@ -126,7 +126,7 @@ void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
 void CompilePromises(void);
 
-/* cfstreams.c */
+/* cfstream.c */
 
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
@@ -136,6 +136,7 @@ void MakeLog(struct Item *mess,enum cfreport level);
 void MakeReport(struct Item *mess,int prefix);
 void FileReport(struct Item *mess,int prefix,char *filename);
 void SanitizeBuffer(char *buffer);
+char *GetErrorStr(void);
 
 /* cf_sql.c */
 
@@ -1232,6 +1233,7 @@ int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *p
 int Unix_LoadProcessTable(struct Item **procdata,char *psopts);
 void Unix_CreateEmptyFile(char *name);
 int Unix_IsExecutable(char *file);
+char *Unix_GetErrorStr(void);
 #endif  /* NOT MINGW */
 
 /* vars.c */

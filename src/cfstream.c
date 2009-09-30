@@ -57,7 +57,7 @@ AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1," !!! System reports error for %s: \"%s\"",errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1," !!! System reports error for %s: \"%s\"",errstr,GetErrorStr());
    AppendItem(&mess,output,NULL);
    }
 
@@ -489,3 +489,15 @@ for (sp = buffer; *sp != '\0'; sp++)
       }
    }
 }
+
+/*********************************************************************************/
+
+char *GetErrorStr(void)
+{
+#ifdef MINGW
+return NovaWin_GetErrorStr();
+#else
+return Unix_GetErrorStr();
+#endif
+}
+

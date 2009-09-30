@@ -193,6 +193,7 @@ void SavePublicKey(char *name,RSA *key)
 Debug("SavePublicKey %s\n",name); 
 
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
+MapName(filename);
 
 if (stat(filename,&statbuf) != -1)
    {

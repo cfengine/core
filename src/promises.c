@@ -576,7 +576,7 @@ if (pp == NULL)
    return;
    }
 
- if (pp->this_server != NULL)
+if (pp->this_server != NULL)
    {
    free(pp->this_server);
    }
@@ -631,6 +631,11 @@ void DeletePromise(struct Promise *pp)
 
 {
 Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
+
+if (pp == NULL)
+   {
+   return;
+   }
 
 if (pp->promiser != NULL)
    {

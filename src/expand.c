@@ -985,7 +985,7 @@ if (rval != NULL)
          }
       }
 
-   if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+([\\[][a-zA-Z0-9_\200-\377.]+[\\]])*",pp->promiser))
+   if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*",pp->promiser))
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");
       PromiseRef(cf_error,pp);

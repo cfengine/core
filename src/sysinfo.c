@@ -258,6 +258,7 @@ NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
 
+
 LoadSlowlyVaryingObservations();
 EnterpriseContext();
 
@@ -859,7 +860,8 @@ void OSClasses()
   char vbuff[CF_BUFSIZE];
   char *sp;
   int i = 0;
-
+  struct passwd *pw;
+ 
 NewClass("any");      /* This is a reserved word / wildcard */
 
 snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
@@ -1041,6 +1043,29 @@ for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
          }
       }
    }
+
+NewScalar("sys","crontab","",cf_str);
+
+#endif
+
+#ifndef NT
+if ((pw = getpwuid(getuid())) == NULL)
+   {
+   CfOut(cf_error,"getpwuid"," !! Unable to get username for uid %d",getuid);
+   }
+else
+   {
+   if (IsDefinedClass("SuSE"))
+      {
+      snprintf(vbuff,CF_BUFSIZE,"/var/spool/cron/tabs/%s",pw->pw_name);
+      }
+   else
+      {
+      snprintf(vbuff,CF_BUFSIZE,"/var/spool/cron/crontabs/%s",pw->pw_name);
+      }
+   }
+
+NewScalar("sys","crontab",vbuff,cf_str);
 #endif
 }
 

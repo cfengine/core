@@ -764,10 +764,13 @@ if (strlen(backreference) == 0)
    Debug("The regular expression \"%s\" yielded no matching back-reference",regex);
    strncpy(backreference,"CF_NOMATCH",CF_MAXVARSIZE);
    }
+else
+   {
+   Debug("The regular expression \"%s\" yielded backreference \"%s\" on %s",regex,backreference,teststring);
+   }
 
 return backreference;
 }
-
 
 /*********************************************************************/
 /* Enumerated languages - fuzzy match model                          */

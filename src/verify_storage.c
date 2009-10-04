@@ -180,13 +180,12 @@ else
    if (a.mount.unmount)
       {
       VerifyUnmount(name,a,pp);
-      }
-   
-   if (a.mount.editfstab)
-      {
-      if (VerifyNotInFstab(name,a,pp))
+      if (a.mount.editfstab)
          {
-         CF_SAVEFSTAB = true;
+         if (VerifyNotInFstab(name,a,pp))
+            {
+            CF_SAVEFSTAB = true;
+            }
          }
       }
    else

@@ -1013,9 +1013,12 @@ switch(type)
        
        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
           {
-          SaveItemListAsFile(FSTABLIST,VFSTAB[VSYSTEMHARDCLASS],a,NULL);
-          DeleteItemList(FSTABLIST);
-          FSTABLIST = NULL;
+          if (FSTABLIST)
+             {
+             SaveItemListAsFile(FSTABLIST,VFSTAB[VSYSTEMHARDCLASS],a,NULL);
+             DeleteItemList(FSTABLIST);
+             FSTABLIST = NULL;
+             }
           FSTAB_EDITS = 0;
           }
 

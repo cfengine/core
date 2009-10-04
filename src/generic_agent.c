@@ -179,39 +179,7 @@ Cf3ParseFiles();
 /* Now import some web variables that are set in cf-know/control for the report options */
 
 strncpy(STYLESHEET,"/cf_enterprise.css",CF_BUFSIZE-1);
-
-for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
-   {
-   if (IsExcluded(cp->classes))
-      {
-      continue;
-      }
-   
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_query_engine].lval) == 0)
-      {
-      strncpy(WEBDRIVER,cp->rval,CF_MAXVARSIZE);
-      continue;
-      }
-   
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlbanner].lval) == 0)
-      {
-      strncpy(BANNER,cp->rval,2*CF_BUFSIZE-1);
-      continue;
-      }
-
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlfooter].lval) == 0)
-      {
-      strncpy(FOOTER,cp->rval,CF_BUFSIZE-1);
-      continue;
-      }
-
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_stylesheet].lval) == 0)
-      {
-      strncpy(STYLESHEET,cp->rval,CF_MAXVARSIZE);
-      continue;
-      }
-
-   }
+strncpy(WEBDRIVER,"",CF_BUFSIZE-1);
 
 /* Make the compilation reports*/
 

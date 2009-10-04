@@ -887,19 +887,21 @@ while(CfFetchRow(&cfdb))
 
 CfDeleteQuery(&cfdb);
 
-if (count == 1)
+if (count >= 1)
    {
    ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_type,topic_comment);
    CfCloseDB(&cfdb);
    return;
    }
 
+/* This can only come about by illegal repetition in a direct lookup
 if (count > 1)
    {
    ShowTopicDisambiguation(&cfdb,tmatches,topic);
    CfCloseDB(&cfdb);
    return;
    }
+*/
 
 /* If no matches, try the associations */
 

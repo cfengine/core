@@ -258,7 +258,7 @@ char *VUNMOUNTCOMM[CF_CLASSATTR] =
    "/etc/umount",      /* sun4 */
    "/etc/umount",      /* ultrix */
    "/sbin/umount",     /* hpux */
-   "/etc/umount",      /* aix */
+   "/usr/sbin/umount", /* aix */
    "/bin/umount",      /* linux */
    "/etc/umount",      /* solaris */
    "/usr/sbin/umount", /* osf1 */

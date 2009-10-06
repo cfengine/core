@@ -5,6 +5,8 @@
 	End of line autocropping in readfile (hopefully intelligent)
 
 	hashmatch function incorrectly implemented - old debugging code left behind. Fix.
+
+	sys.crontab variable
 	
 3.0.2
 	IMPORTANT: Change in normal ordering of editing. replace comes after insert lines

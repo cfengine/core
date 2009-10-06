@@ -489,6 +489,46 @@ return 0;
 
 /*******************************************************************/
 
+int VerifyMount(char *name,struct Attributes a,struct Promise *pp)
+
+{ char comm[CF_BUFSIZE],line[CF_BUFSIZE];
+  FILE *pfp;
+  char *host,*rmountpt,*mountpt,*fstype,*opts;
+ 
+host = a.mount.mount_server;
+rmountpt = a.mount.mount_source;
+mountpt = name;
+fstype = a.mount.mount_type;
+
+if (! DONTDO)
+   {
+   snprintf(comm,CF_BUFSIZE,"%s %s:%s %s",GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]),host,rmountpt,mountpt);
+   
+   if ((pfp = cf_popen(comm,"r")) == NULL)
+      {
+      CfOut(cf_error,""," !! Failed to open pipe from %s\n",GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+      return 0;
+      }
+   
+   CfReadLine(line,CF_BUFSIZE,pfp);
+   
+   if (strstr(line,"busy") || strstr(line,"Busy"))
+      {
+      cfPS(cf_inform,CF_INTERPT,"",pp,a," !! The device under %s cannot be mounted\n",mountpt);
+      cf_pclose(pfp);
+      return 1;
+      }
+   
+   cf_pclose(pfp);
+   }
+
+cfPS(cf_inform,CF_CHG,"",pp,a," -> Mounting %s to keep promise\n",mountpt);
+      //DeleteItemStarting(&VMOUNTED,ptr->name);
+return 0;
+}
+
+/*******************************************************************/
+
 int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp)
 
 { char comm[CF_BUFSIZE],line[CF_BUFSIZE];
@@ -506,7 +546,7 @@ if (! DONTDO)
    
    if ((pfp = cf_popen(comm,"r")) == NULL)
       {
-      CfOut(cf_error,"","Failed to open pipe from %s\n",VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
+      CfOut(cf_error,""," !! Failed to open pipe from %s\n",VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
       return 0;
       }
    
@@ -514,7 +554,7 @@ if (! DONTDO)
    
    if (strstr(line,"busy") || strstr(line,"Busy"))
       {
-      cfPS(cf_inform,CF_INTERPT,"",pp,a,"The device under %s cannot be unmounted\n",mountpt);
+      cfPS(cf_inform,CF_INTERPT,"",pp,a," !! The device under %s cannot be unmounted\n",mountpt);
       cf_pclose(pfp);
       return 1;
       }
@@ -522,7 +562,7 @@ if (! DONTDO)
    cf_pclose(pfp);
    }
 
-cfPS(cf_inform,CF_CHG,"",pp,a,"Unmounting %s to keep promise\n",mountpt);
+cfPS(cf_inform,CF_CHG,"",pp,a," -> Unmounting %s to keep promise\n",mountpt);
       //DeleteItemStarting(&VMOUNTED,ptr->name);
 return 0;
 }

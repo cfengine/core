@@ -22,8 +22,8 @@ files:
   # The back reference in a path only applies to the last link
   # of the pathname, so the (tmp) gets ignored
 
-  "/home/mark/(tmp)/(cf3)_(.*)"
-       create    => "true",
+  "/home/mark/tmp/(cf3)_(.*)"
+
        edit_line => myedit("second $(match.2)");
 
 
@@ -48,33 +48,5 @@ bundle edit_line myedit(parameter)
 
      "$(edit_variable)";
   
-  replace_patterns:
-
-  # replace shell comments with C comments
-
-   "#(.*)"
-
-      replace_with => C_comment,
-     select_region => MySection("New section");
-
   }
 
-########################################
-# Bodies
-########################################
-
-body replace_with C_comment
-
-{
-replace_value => "/* $(match.1) */"; # backreference 0
-occurrences => "all";  # first, last all
-}
-
-########################################################
-
-body select_region MySection(x)
-
-{
-select_start => "\[$(x)\]";
-select_end => "\[.*\]";
-}

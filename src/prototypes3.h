@@ -908,6 +908,7 @@ void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,
 void DeleteMountInfo(struct Rlist *list);
 int VerifyNotInFstab(char *name,struct Attributes a,struct Promise *pp);
 int VerifyInFstab(char *name,struct Attributes a,struct Promise *pp);
+int VerifyMount(char *name,struct Attributes a,struct Promise *pp);
 int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp);
 int MatchFSInFstab(char *match);
 void DeleteThisItem(struct Item **liststart,struct Item *entry);

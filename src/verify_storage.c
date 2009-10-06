@@ -159,6 +159,7 @@ if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,name,options,a,pp))
          {
          cfPS(cf_inform,CF_FAIL,"",pp,a," -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n",name,VFSTAB[VSYSTEMHARDCLASS]);
          // Mount explicitly
+         VerifyMount(name,a,pp);               
          }
       }
    else

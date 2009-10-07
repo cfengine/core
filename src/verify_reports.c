@@ -410,7 +410,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 
    if (LASTSEENEXPIREAFTER < 0)
       {
-      lsea = (time_t)CF_WEEK/7;
+      lsea = (time_t)CF_WEEK;
       }
 
    if (a.report.friend_pattern)
@@ -470,7 +470,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       CfOut(cf_verbose,"",output);
       }
    
-   if ((now-then) > lsea)
+   if (then && (now-then) > lsea)
       {
       CfOut(cf_error,"","Giving up on host %s -- too long since last seen",IPString2Hostname(hostname+1));
       DeleteDB(dbp,hostname);

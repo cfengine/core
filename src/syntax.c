@@ -106,7 +106,7 @@ for  (i = 0; i < CF3_MODULES; i++)
       }
    }
 
-snprintf(output,CF_BUFSIZE,"%s is not a valid type category for %s bundle",subtype);
+snprintf(output,CF_BUFSIZE,"%s is not a valid type category for %s bundle",subtype,bundletype);
 ReportError(output);
 snprintf(output,CF_BUFSIZE,"Possibly the bundle type \"%s\" itself is undefined",bundletype);
 ReportError(output);

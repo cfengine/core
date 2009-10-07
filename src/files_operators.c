@@ -1815,7 +1815,7 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
             {
             if ((pw = getpwnam(ip->name)) == NULL)
                {
-               CfOut(cf_error,"","Unknown user [%s]\n",ip->name);
+               CfOut(cf_error,"","Unknown user \'%s\'\n",ip->name);
                uid = CF_UNKNOWN_OWNER; /* signal user not found */
                usercopy = ip->name;
                }
@@ -1823,6 +1823,7 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
                {
                uid = pw->pw_uid;
                }
+
             AddSimpleUidItem(&uidlist,uid,usercopy); 
             }
          
@@ -1843,7 +1844,7 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
             }
          else if ((pw = getpwnam(uidbuff)) == NULL)
             {
-            CfOut(cf_error,"","Unknown user %s\n",uidbuff);
+            CfOut(cf_error,"","Unknown user \'%s\'\n",uidbuff);
             uid = CF_UNKNOWN_OWNER;  /* signal user not found */
             usercopy = uidbuff;
             }
@@ -1852,6 +1853,7 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
             uid = pw->pw_uid;
             }
          }
+      
       AddSimpleUidItem(&uidlist,uid,usercopy);
       }
    }

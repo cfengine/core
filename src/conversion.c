@@ -857,7 +857,7 @@ if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout    
             PromiseRef(cf_error,pp);
             }
 
-         uid = CF_UNKNOWN_OWNER; /* signal user not found */
+         uid = CF_SAME_OWNER; /* signal user not found */
          }
       else
          {
@@ -926,7 +926,7 @@ else
       {
       CfOut(cf_error,"","Unknown group \'%s\'\n",gidbuff);
       PromiseRef(cf_error,pp);
-      gid = CF_UNKNOWN_GROUP;
+      gid = CF_SAME_GROUP;
       }
    else
       {

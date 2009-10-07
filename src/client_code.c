@@ -123,7 +123,13 @@ return NULL;
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
+  static sigset_t   signal_mask;
 
+signal(SIGPIPE,SIG_IGN);
+sigemptyset (&signal_mask);
+sigaddset (&signal_mask, SIGPIPE);
+pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);
+ 
 if ((conn = NewAgentConn()) == NULL)
    {
    cfPS(cf_error,CF_FAIL,"malloc",pp,attr,"Unable to allocate connection structure for %s",server);
@@ -155,6 +161,11 @@ if (conn->sd == CF_NOT_CONNECTED)
       return NULL;
       }
 
+   if (conn->sd == (int)CF_NOT_CONNECTED)
+      {
+      return NULL;
+      }
+   
    Debug("Remote IP set to %s\n",conn->remoteip);
    
    if (!IdentifyAgent(conn->sd,conn->localip,conn->family))
@@ -1152,6 +1163,12 @@ ThreadUnlock(cft_getaddr);
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
    svp = (struct ServerItem *)rp->item;
+
+   if (svp == NULL)
+      {
+      continue;
+      }
+   
    conn = svp->conn;
 
    if (strcmp(ipname,conn->localip) == 0)

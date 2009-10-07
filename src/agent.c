@@ -280,7 +280,6 @@ signal(SIGUSR2,HandleSignals);
 CFA_MAXTHREADS = 30;
 EDITFILESIZE = 100000;
 
-
 /*
   do not set signal(SIGCHLD,SIG_IGN) in agent near
   popen() - or else pclose will fail to return
@@ -986,6 +985,12 @@ switch(type)
        for (rp = SERVERLIST; rp != NULL; rp = rp->next)
           {
           svp = (struct ServerItem *)rp->item;
+
+          if (svp == NULL)
+             {
+             continue;
+             }
+          
           ServerDisconnection(svp->conn);
           
           if (svp->server)

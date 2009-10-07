@@ -160,12 +160,6 @@ return toget;
 
 /*************************************************************************/
 
-/*
- * Drop in replacement for send but includes
- * guaranteed whole buffer sending.
- * Wed Feb 28 11:30:55 GMT 2001, Morten Hermanrud, mhe@say.no
- */
-
 int SendSocketStream(int sd,char buffer[CF_BUFSIZE],int tosend,int flags)
 
 { int sent,already=0;
@@ -174,7 +168,7 @@ do
    {
    Debug("Attempting to send %d bytes\n",tosend-already);
 
-   sent=send(sd,buffer+already,tosend-already,flags);
+   sent = send(sd,buffer+already,tosend-already,flags);
    
    switch(sent)
       {

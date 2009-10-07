@@ -832,11 +832,11 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
       if (*hostname == '+')
          {
-         fprintf(fout,"%s&larr;(%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
+         fprintf(fout,"%s <- (%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
          }
       else
          {
-         fprintf(fout,"%s&rarr;(%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
+         fprintf(fout,"%s -> (%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
          }
       fprintf(fout,"%s%s%s",CFRH[cfx_host][cfb],IPString2Hostname(hostname+1),CFRH[cfx_host][cfe]);
       fprintf(fout,"%s%s%s",CFRH[cfx_ip][cfb],hostname+1,CFRH[cfx_ip][cfe]);

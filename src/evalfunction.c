@@ -4482,7 +4482,10 @@ void ModuleProtocol(char *command,char *line,int print)
 { char name[CF_BUFSIZE],content[CF_BUFSIZE],context[CF_BUFSIZE];
   char *sp;
 
-for (sp = command+strlen(command)-1; sp >= command && *sp != FILE_SEPARATOR; sp--)
+memset(content,0,CF_BUFSIZE);  
+strncpy(content,GetArg0(command),CF_BUFSIZE-1);
+
+for (sp = content+strlen(content)-1; sp >= content && *sp != FILE_SEPARATOR; sp--)
    {
    strncpy(context,sp,CF_MAXVARSIZE);
    }

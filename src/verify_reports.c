@@ -347,7 +347,7 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
   DBC *dbcp;
   DB_ENV *dbenv = NULL;
   int ret, secs = CF_TICKS_PER_HOUR*hours, criterion, overdue, regex=false;
-  time_t now = time(NULL),lsea = -1, tthen, then;
+  time_t now = time(NULL),lsea = (time_t)CF_WEEK, tthen, then;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
   char addr[CF_BUFSIZE],type[CF_BUFSIZE],output[CF_BUFSIZE];
   struct QPoint entry;
@@ -394,6 +394,11 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       continue;
       }
 
+   if (then == 0)
+      {
+      continue; // No data
+      }
+   
    /* Got data, now get expiry criterion */
 
    if (secs == 0)
@@ -411,6 +416,10 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    if (LASTSEENEXPIREAFTER < 0)
       {
       lsea = (time_t)CF_WEEK;
+      }
+   else
+      {
+      lsea = LASTSEENEXPIREAFTER;
       }
 
    if (a.report.friend_pattern)
@@ -469,13 +478,13 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       {
       CfOut(cf_verbose,"",output);
       }
-   
-   if (then && (now-then) > lsea)
+
+   if (now - then > lsea)
       {
-      CfOut(cf_error,"","Giving up on host %s -- too long since last seen",IPString2Hostname(hostname+1));
+      CfOut(cf_error,"","Giving up on host %s -- %d hours since last seen",IPString2Hostname(hostname+1),hours);
       DeleteDB(dbp,hostname);
       }
-
+  
    memset(&value,0,sizeof(value));
    memset(&key,0,sizeof(key)); 
    }

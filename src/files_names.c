@@ -210,11 +210,14 @@ DeleteItemList(path);
 /*********************************************************************/
 
 int IsDir(char *path)
-{
 /*
 Checks if the object pointed to by path exists and is a directory.
 Returns true if so, false otherwise.
 */
+{
+#ifdef MINGW
+return NovaWin_IsDir(path);
+#else
 struct stat sb;
 
 if (stat(path, &sb) != -1)
@@ -226,6 +229,7 @@ if (stat(path, &sb) != -1)
    }
 
 return false;
+#endif  /* NOT MINGW */
 }
 
 /*********************************************************************/

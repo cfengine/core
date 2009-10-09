@@ -931,6 +931,13 @@ struct CfACL
    struct Rlist *acl_inherit_entries;
    };
 
+typedef enum
+  {
+  INHERIT_ACCESS_ONLY,
+  INHERIT_DEFAULT_ONLY,
+  INHERIT_ACCESS_AND_DEFAULT
+  }inherit_t;
+
 /*************************************************************************/
 /* Runtime constraint structures                                         */
 /*************************************************************************/

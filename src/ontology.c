@@ -463,23 +463,32 @@ if (bwd == NULL || (bwd && strlen(bwd) == 0))
 
 for (ta = list; ta != NULL; ta=ta->next)
    {
-   if (strcmp(fwd,ta->fwd_name) == 0)
+   if (fwd && (strcmp(fwd,ta->fwd_name) == 0))
       {
       CfOut(cf_verbose,"","Association %s exists already\n",fwd);
       yfwd = true;
       }
-   else if (fwd)
+   else if (fwd && ta->fwd_name)
       {
       strncpy(l,ToLowerStr(fwd),CF_MAXVARSIZE);
       strncpy(r,ToLowerStr(ta->fwd_name),CF_MAXVARSIZE);
       
       if (strcmp(l,r) == 0)
          {
-         CfOut(cf_error,""," ! Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",fwd,ta->fwd_name);
+         CfOut(cf_error,""," ! Association \"%s\" exists with different capitalization \"%s\"\n",fwd,ta->fwd_name);
+         yfwd = true;
+         }
+      else
+         {
+         yfwd = false;
          }
       }
-   
-   if (bwd && strcmp(bwd,ta->bwd_name) == 0)
+   else
+      {
+      yfwd = false;
+      }
+
+   if (bwd && (strcmp(bwd,ta->bwd_name) == 0))
       {
       CfOut(cf_verbose,""," ! Association %s exists already\n",bwd);
       ybwd = true;
@@ -491,36 +500,28 @@ for (ta = list; ta != NULL; ta=ta->next)
       
       if (strcmp(l,r) == 0)
          {
-         CfOut(cf_inform,""," ! Association \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",bwd,ta->bwd_name);
+         CfOut(cf_inform,""," ! Association \"%s\" exists with different capitalization \"%s\"\n",bwd,ta->bwd_name);
          }
+
+      ybwd = true;
+      }
+   else if (!bwd && ta->bwd_name == NULL)
+      {
+      ybwd = true;
+      }
+   else
+      {
+      ybwd = false;
       }
    
-   if (ta->bwd_name && strcmp(fwd,ta->bwd_name) == 0)
+   if (ta->bwd_name && (strcmp(fwd,ta->bwd_name) == 0) && bwd && (strcmp(bwd,ta->fwd_name) == 0))
       {
       CfOut(cf_inform,""," ! Association \"%s\" exists already but in opposite orientation\n",fwd);
       return ta;
       }
 
-   if (bwd && strcmp(bwd,ta->fwd_name) == 0)
-      {
-      CfOut(cf_inform,""," ! Association \"%s\" exists already but in opposite orientation\n",bwd);
-      return ta;
-      }
-
    if (yfwd && ybwd)
       {
-      return ta;
-      }
-   
-   if (yfwd && !ybwd)
-      {
-      CfOut(cf_inform,""," !! Association \"%s\" exists but the reverse association is missing\n",fwd);
-      return ta;
-      }
-   
-   if (!yfwd && ybwd)
-      {
-      CfOut(cf_inform,""," !! The reverse association \"%s\" exists but the forward association is missing\n",fwd);
       return ta;
       }
    }

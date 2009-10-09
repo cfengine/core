@@ -35,12 +35,12 @@ files:
 # For the library
 #######################################################
 
-bundle edit_line SetVars(name)
+bundle edit_line setvars(contexted_array_name)
 
 {
 vars:
 
-  "parameter_name"   slist => getindices("$(name)");
+  "parameter_name"   slist => getindices("$(contexted_array_name)");
 
 delete_lines: 
 
@@ -48,7 +48,7 @@ delete_lines:
 
 insert_lines:
 
-  "$(parameter_name) = $($(name)[$(parameter_name)])";
+  "$(parameter_name) = $($(contexted_array_name)[$(parameter_name)])";
 
 }
 

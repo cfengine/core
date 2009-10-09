@@ -179,7 +179,7 @@ Cf3ParseFiles();
 /* Now import some web variables that are set in cf-know/control for the report options */
 
 strncpy(STYLESHEET,"/cf_enterprise.css",CF_BUFSIZE-1);
-strncpy(WEBDRIVER,"",CF_BUFSIZE-1);
+strncpy(WEBDRIVER,"",CF_MAXVARSIZE-1);
 
 /* Make the compilation reports*/
 

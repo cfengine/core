@@ -37,6 +37,7 @@ void CheckOpts(int argc,char **argv);
 void ThisAgentInit(void);
 void KeepKnowControlPromises(void);
 void KeepKnowledgePromise(struct Promise *pp);
+void KeepAssociationPromise(struct Promise *pp);
 void VerifyTopicPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyOntology(void);
@@ -553,6 +554,43 @@ for (type = 0; TYPESEQUENCE[type] != NULL; type++)
          ExpandPromise(cf_know,bp->name,pp,KeepKnowledgePromise);
          }      
       }
+   }
+
+/* Second pass association processing */
+
+for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_FNCALL:
+          fp = (struct FnCall *)rp->item;
+          name = (char *)fp->name;
+          params = (struct Rlist *)fp->args;
+          break;
+      default:
+          name = (char *)rp->item;
+          params = NULL;
+          break;
+      }
+   
+   if ((bp = GetBundle(name,"knowledge")) || (bp = GetBundle(name,"common")))
+      {
+      BannerBundle(bp,params);
+      AugmentScope(bp->name,bp->args,params);
+      DeletePrivateClassContext(); // Each time we change bundle      
+      }
+   
+   if ((sp = GetSubTypeForBundle(TYPESEQUENCE[kp_topics],bp)) == NULL)
+      {
+      continue;      
+      }
+   
+   BannerSubType(bp->name,sp->name,1);
+      
+   for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+      {
+      ExpandPromise(cf_know,bp->name,pp,KeepAssociationPromise);
+      }      
    }
 }
 
@@ -1189,7 +1227,6 @@ if (strcmp("reports",pp->agentsubtype) == 0)
    }
 }
 
-
 /*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
@@ -1221,11 +1258,6 @@ else
 if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    {
    CfOut(cf_verbose,""," -> Topic \"%s\" installed\n",pp->promiser);
-   
-   if (a.fwd_name && a.bwd_name)
-      {
-      AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
-      }
 
    if (pp->ref)
       {
@@ -1241,6 +1273,36 @@ else
    PromiseRef(cf_error,pp);
    }
 }
+
+/*********************************************************************/
+
+void KeepAssociationPromise(struct Promise *pp)
+
+{ char id[CF_BUFSIZE];
+  char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
+  struct Attributes a;
+  struct Topic *tp;
+
+a = GetTopicsAttributes(pp);
+ 
+strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
+
+if (tp = GetTopic(TOPIC_MAP,pp->promiser))
+   {
+   CfOut(cf_verbose,""," -> Topic \"%s\" installed\n",pp->promiser);
+   
+   if (a.fwd_name && a.bwd_name)
+      {
+      AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+      }
+   }
+else
+   {
+   CfOut(cf_error,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
+   PromiseRef(cf_error,pp);
+   }
+}
+
 
 /*********************************************************************/
 
@@ -1591,8 +1653,7 @@ CfVoidQueryDB(&cfdb,query);
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
-   strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
+   strncpy(safe,EscapeSQL(&cfdb,tp->topic_name),CF_BUFSIZE-1);
 
    if (tp->topic_comment)
       {
@@ -1612,14 +1673,18 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
-   strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
+   strncpy(safe,EscapeSQL(&cfdb,tp->topic_name),CF_BUFSIZE);
 
    for (ta = tp->associations; ta != NULL; ta=ta->next)
       {
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type) values ('%s','%s','%s','%s','%s','%s');\n",safe,GetLongTopicName(&cfdb,TOPIC_MAP,rp->item),ta->fwd_name,ta->bwd_name,tp->topic_type,ta->associate_topic_type);
+         char to_type[CF_MAXVARSIZE],to_topic[CF_MAXVARSIZE];
+         
+         DeTypeTopic(rp->item,to_topic,to_type);
+         
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type) values ('%s','%s','%s','%s','%s','%s');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_type,to_type);
+
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
          CfOut(cf_verbose,""," -> Add association %s\n",ta->fwd_name);
@@ -1631,8 +1696,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
 for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
-   snprintf(longname,CF_BUFSIZE,"%s",GetLongTopicName(&cfdb,TOPIC_MAP,tp->topic_name));
-   strncpy(safe,EscapeSQL(&cfdb,longname),CF_BUFSIZE);
+   strncpy(safe,EscapeSQL(&cfdb,tp->topic_name),CF_BUFSIZE);
 
    for (op = tp->occurrences; op != NULL; op=op->next)
       {
@@ -1860,6 +1924,8 @@ if (cfdb->maxcolumns != 6)
    return;
    }
 
+/* Look in both directions for associations - first into */
+
 while(CfFetchRow(cfdb))
    {
    struct Rlist *this = NULL;
@@ -1869,12 +1935,15 @@ while(CfFetchRow(cfdb))
    strncpy(bassociation,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
+
    AppendRlist(&this,TypedTopic(topic_name,topic_type),CF_SCALAR);
    AddTopicAssociation(&associations,bassociation,NULL,this,false);
    DeleteRlist(this);
    }
 
 CfDeleteQuery(cfdb);
+
+/* ... then onto */
 
 snprintf(query,CF_BUFSIZE,"SELECT from_name,from_type,from_assoc,to_assoc,to_type,to_name from associations where from_name='%s'",this_name);
 
@@ -1896,7 +1965,7 @@ while(CfFetchRow(cfdb))
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
 
-   AppendRlist(&this,associate,CF_SCALAR);
+   AppendRlist(&this,TypedTopic(associate,to_type),CF_SCALAR);
    AddTopicAssociation(&associations,fassociation,NULL,this,false);
    DeleteRlist(this);
    }
@@ -2631,8 +2700,15 @@ if (strlen(WEBDRIVER) == 0)
 
 if (strchr(topic,':'))
    {
-   DeTypeTopic(topic,ctopic,ctype);    
-   snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a>",WEBDRIVER,topic,ctopic);
+   DeTypeTopic(topic,ctopic,ctype);
+   if (ctype && strlen(ctype) > 0)
+      {
+      snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a> (in %s)",WEBDRIVER,topic,ctopic,ctype);
+      }
+   else
+      {
+      snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s::%s\">%s</a>",WEBDRIVER,type,topic,topic);
+      }
    }
 else
    {

@@ -189,6 +189,7 @@ else
 for (rp = associates; rp != NULL; rp=rp->next)
    {
    /* Defer checking until we have whole ontlogy - all types */
+   CfOut(cf_verbose,""," ---> Adding associate '%s'",rp->item);
    IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
    }
 }
@@ -237,7 +238,15 @@ char *TypedTopic(char *topic,char *type)
 { static char name[CF_MAXVARSIZE];
 
 Debug("TYPE(%s)/TOPIC(%s)",type,topic);
-snprintf(name,CF_MAXVARSIZE,"%s::%s",type,topic);
+if (type && strlen(type) > 0)
+   {
+   snprintf(name,CF_MAXVARSIZE,"%s::%s",type,topic);
+   }
+else
+   {
+   snprintf(name,CF_MAXVARSIZE,"%s",topic);
+   }
+
 return name;
 }
 
@@ -331,56 +340,6 @@ else
    }
 
 return false;
-}
-
-/*****************************************************************************/
-
-char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name)
-
-{ struct Topic *tp;
-  static char longname[CF_BUFSIZE];
-  char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
-  int match = false;
- 
-DeTypeTopic(topic_name,topic,type);
-  
-for (tp = list; tp != NULL; tp=tp->next)
-   {
-   if (strlen(type) > 0)
-      {
-      if ((strcmp(topic,tp->topic_name) == 0) && (strcmp(type,tp->topic_type) == 0))
-         {
-         match = true;
-         break;
-         }
-      }
-   else
-      {
-      if (strcmp(topic,tp->topic_name) == 0)
-         {
-         match = true;
-         break;
-         }
-      }
-   }
-
-if (match)
-   {
-   /* deprecate this form snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->comment,topic); */
-   snprintf(longname,CF_BUFSIZE,"%s",topic);
-   }
-
-if (match && cfdb)
-   {
-   return EscapeSQL(cfdb,longname);
-   }
-else
-   {
-   return longname;
-   }
-
-CfOut(cf_error,""," !! Could not assemble long name for a known topic %s - something funny going on",topic_name);
-return NULL;
 }
 
 /*****************************************************************************/

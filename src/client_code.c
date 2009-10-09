@@ -993,7 +993,7 @@ if (!attr.copy.force_ipv4)
    
    if (!connected && pp)
       {
-      cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Unable to connect to server %s",host);
+      cfPS(cf_verbose,CF_FAIL,"connect",pp,attr,"Unable to connect to server %s",host);
       return false;
       }
    }

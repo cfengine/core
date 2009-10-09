@@ -7,10 +7,13 @@
 	hashmatch function incorrectly implemented - old debugging code left behind. Fix.
 
 	sys.crontab variable
+
+	Unknown user is now interpretated as "same user", so that we give cfengine a chance to
+	fix
 	
 3.0.2
-	IMPORTANT: Change in normal ordering of editing. replace comes after insert lines
-	Much testing and minor bug fixing
+	IMPORTANT: Change in normal ordering of editing. replace comes
+	after insert lines Much testing and minor bug fixing
 
 	Memory leaks fixed
 	Many hooks added for Nova enterprise extensions.

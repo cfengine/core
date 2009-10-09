@@ -29,15 +29,19 @@ bundle agent testbundle
 {
 vars:
 
+ "x" string => "scalar2";
  "remote1" string => remotescalar("test_scalar1","127.0.0.1","yes");
  "remote2" string => remotescalar("test_scalar2","127.0.0.1","yes");
  "remote3" string => remotescalar("test_scalar3","127.0.0.1","yes");
+ "remote_error" string => remotescalar("test_$(x)","127.0.0.2","yes");
 
 reports:
 
   linux::
 
     "Receive value $(remote1), $(remote2), $(remote3)";
+
+    "And an error gives: $(remote_error)";
 }
 
 #########################################################

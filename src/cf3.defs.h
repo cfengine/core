@@ -916,9 +916,10 @@ enum cf_acl_type
        
 enum cf_acl_inherit
    {
+   cfacl_nochange,
    cfacl_specify,
    cfacl_parent,
-   cfacl_none,
+   cfacl_clear,
    cfacl_noinherit,
    };
 

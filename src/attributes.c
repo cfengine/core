@@ -86,7 +86,7 @@ if (DEBUG)
    }
 
 if (attr.haverename || attr.havedelete || attr.haveperms || attr.havechange ||
-    attr.havecopy || attr.havelink || attr.haveedit || attr.create || attr.touch || attr.transformer)
+    attr.havecopy || attr.havelink || attr.haveedit || attr.create || attr.touch || attr.transformer || attr.acl.acl_entries)
    {
    }
 else

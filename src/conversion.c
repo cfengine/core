@@ -767,7 +767,7 @@ enum cf_acl_method Str2AclMethod(char *string)
 { static char *text[3] = { "append", "overwrite", NULL };
   int i;
  
-for (i = 0; i < 3; i++)
+for (i = 0; i < 2; i++)
    {
    if (string && (strcmp(text[i],string) == 0))
       {
@@ -803,7 +803,7 @@ enum cf_acl_inherit Str2AclInherit(char *string)
 { static char *text[5] = { "nochange", "specify", "parent", "clear", NULL };
   int i;
  
-for (i = 0; i < 5; i++)
+for (i = 0; i < 4; i++)
    {
    if (string && (strcmp(text[i],string) == 0))
       {

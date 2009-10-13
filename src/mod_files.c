@@ -181,11 +181,11 @@ struct BodySyntax CF_COMMON_EDITBODIES[] =
 
 struct BodySyntax CF_ACL_BODY[] =
    {
-   {"aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
+   {"aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
    {"acl_directory_inherit",cf_opts,"nochange,parent,specify,clear","Access control list type for the affected file system"},
    {"acl_method",cf_opts,"append,overwrite","Editing method for access control list"},
    {"acl_type",cf_opts,"generic,posix,ntfs","Access control list type for the affected file system"},
-   {"specify_inherit_aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
+   {"specify_inherit_aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
    {NULL,cf_notype,NULL,NULL}
    };
 

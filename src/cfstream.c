@@ -126,7 +126,7 @@ AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1," !!! System error for %s: \"%s\"",errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1," !!! System error for %s: \"%s\"",errstr,GetErrorStr());
    AppendItem(&mess,output,NULL);
    }
 
@@ -198,7 +198,7 @@ AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
-   snprintf(output,CF_BUFSIZE-1," !!! System reports error for %s: \"%s\"",errstr,strerror(errno));
+   snprintf(output,CF_BUFSIZE-1," !!! System reports error for %s: \"%s\"",errstr,GetErrorStr());
    AppendItem(&mess,output,NULL);
    }
 

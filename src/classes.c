@@ -72,6 +72,7 @@ char *CLASSTEXT[] =   /* If you change here change enum classes too! */
    "ux4800",
    "qnx",
    "dragonfly",
+   "windows",
    "unused1",
    "unused2",
    "unused3",
@@ -108,7 +109,7 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
    {"nextstep",".*",".*"},         /* nextstep */
    {"sn.*","cray*",".*"},           /* cray */
    {"gnu.*",".*",".*"},             /* gnu */
-   {"cygwin_nt.*",".*",".*"},       /* NT */
+   {"cygwin_nt.*",".*",".*"},       /* NT (cygwin) */
    {"unix_sv",".*",".*"},          /* Unixware */
    {"openbsd",".*",".*"},          /* OpenBSD */
    {"sco_sv",".*",".*"},           /* SCO */
@@ -116,6 +117,7 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
    {"ux4800",".*",".*"},           /* UX/4800 */
    {"qnx",".*",".*"},              /* qnx  */
    {"dragonfly",".*",".*"},        /* dragonfly */
+   {"mingw",".*",".*"},            /* NT (native) */
    {"unused1","blah","blah"},
    {"unused2","blah","blah"},
    {"unused3","blah","blah"},
@@ -158,6 +160,7 @@ char *VPSCOMM[CF_CLASSATTR] =
    "/bin/ps",       /* ux4800 */
    "/bin/ps",       /* qnx  */
    "/bin/ps",       /* dragonfly */
+   "mingw-invalid", /* mingw */
    "/bin/ps",
    "/bin/ps",
    "/bin/ps",
@@ -200,6 +203,7 @@ char *VPSOPTS[CF_CLASSATTR] =
    "-ef",    /* ux4800 */
    "-ef",    /* qnx */
    "auxw",   /* dragonfly */
+   "mingw-invalid", /* mingw */
    "-",
    "-",
    "-",
@@ -243,6 +247,7 @@ char *VMOUNTCOMM[CF_CLASSATTR] =
    "/sbin/mount -v",     /* ux4800 */
    "/bin/mount -v",      /* qnx */
    "/sbin/mount -va",     /* dragonfly */
+   "mingw-invalid",         /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -285,6 +290,7 @@ char *VUNMOUNTCOMM[CF_CLASSATTR] =
    "/sbin/umount",     /* ux4800 */
    "/bin/umount",      /* qnx */
    "/sbin/umount",     /* dragonfly */
+   "mingw-invalid",     /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -329,6 +335,7 @@ char *VMOUNTOPTS[CF_CLASSATTR] =
    "bg,hard,intr",    /* ux4800 */
    "bg,hard,intr",    /* qnx */
    "bg,intr",         /* dragonfly */
+   "mingw-invalid",     /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -371,6 +378,7 @@ char *VIFDEV[CF_CLASSATTR] =
    "ec0",    /* ux4800 */
    "en0",    /* qnx */
    "ep0",    /* dragonfly */
+   "mingw-invalid",     /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -414,6 +422,7 @@ char *VRESOLVCONF[CF_CLASSATTR] =
    "/etc/resolv.conf",     /* ux4800 */
    "/etc/resolv.conf",     /* qnx */
    "/etc/resolv.conf",     /* dragonfly */
+   "mingw-invalid",        /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -458,6 +467,7 @@ char *VFSTAB[CF_CLASSATTR] =
    "/etc/vfstab",      /* ux4800 */
    "/etc/fstab",       /* qnx */
    "/etc/fstab",       /* dragonfly */
+   "mingw-invalid",     /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -500,6 +510,7 @@ char *VMAILDIR[CF_CLASSATTR] =
    "/var/mail",          /* ux4800 */
    "/var/spool/mail",    /* qnx */
    "/var/mail",          /* dragonfly */
+   "mingw-invalid",     /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -542,6 +553,7 @@ char *VNETSTAT[CF_CLASSATTR] =
    "/usr/bin/netstat -rn",   /* ux4800 */
    "/usr/bin/netstat -rn",   /* qnx */
    "/usr/bin/netstat -rn",   /* dragonfly */
+   "mingw-invalid",          /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -585,6 +597,7 @@ char *VEXPORTS[CF_CLASSATTR] =
    "/etc/exports",    /* ux4800 */
    "/etc/exports",    /* qnx */
    "/etc/exports",    /* dragonfly */
+   "mingw-invalid",   /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -628,6 +641,7 @@ char *VROUTE[CF_CLASSATTR] =
    "-",   /* ux4800 */
    "-",   /* qnx */
    "/sbin/route",  /* dragonfly */
+   "mingw-invalid",  /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -670,6 +684,7 @@ char *VROUTEADDFMT[CF_CLASSATTR] =
    "-",   /* ux4800 */
    "-",   /* qnx */
    "add %s %s",  /* dragonfly */
+   "mingw-invalid",  /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -712,6 +727,7 @@ char *VROUTEDELFMT[CF_CLASSATTR] =
    "-",   /* ux4800 */
    "-",   /* qnx */
    "delete %s",  /* dragonfly */
+   "mingw-invalid",  /* mingw */
    "unused-blah",
    "unused-blah",
    "unused-blah",

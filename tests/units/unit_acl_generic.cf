@@ -21,15 +21,6 @@ files:
 body acl test
 
 {
-acl_method => "overwrite";
-acl_type => "posix";
-aces => {"user:*:rwx", "group:*:rx", "all:r"};
+acl_type => "generic";
+aces => {"user:bob:rwx", "group:staff:rx", "all:r"};
 }
-
-body acl emptyall
-
-{
-aces => { "user:*:rwx", "group:*:rx", "all:"};
-}
-
-

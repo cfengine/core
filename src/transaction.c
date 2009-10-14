@@ -290,7 +290,14 @@ for (rp = params; rp != NULL; rp=rp->next)
    count++;
    }
 
-max_sample = CF_BUFSIZE / (2*count);
+if (count)
+   {
+   max_sample = CF_BUFSIZE / (2*count);
+   }
+else
+   {
+   max_sample = 0;
+   }
 
 strncat(lockname,locktype,CF_BUFSIZE/10);
 strcat(lockname,"_");

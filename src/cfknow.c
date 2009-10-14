@@ -2464,11 +2464,12 @@ if (stat(filename,&sb) != -1)
 
 fprintf(fout,"</div>\n");
 
-// div id=content_container
+/* div id=content_container
 
 fprintf(fout,"<div id=\"intro\">");
 fprintf(fout,"This topic \"%s\" has type ",NextTopic(this_name,this_type));
 fprintf(fout,"\"%s\" in map version %s</div>\n",NextTopic(this_type,""),v);
+*/
 
 // Occurrences
 

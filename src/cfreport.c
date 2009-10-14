@@ -257,7 +257,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISK",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -1943,6 +1943,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
             /* Set history but not most recent to zero */
             entry.Q[i].expect = 0;
             entry.Q[i].var = 0;
+            entry.Q[i].q = 0;
             }
          }
 

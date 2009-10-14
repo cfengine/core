@@ -264,6 +264,12 @@ if (UnresolvedArgs(expargs))
 
 switch (this)
    {
+   case cfn_join:
+       rval = FnCallJoin(fp,expargs);
+       break;
+   case cfn_grep:
+       rval = FnCallGrep(fp,expargs);
+       break;
    case cfn_registryvalue:
        rval = FnCallRegistryValue(fp,expargs);
        break;

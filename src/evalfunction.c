@@ -1410,6 +1410,201 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_IDRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+
+  char lval[CF_MAXVARSIZE];
+  char *name,*regex,index[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  struct Rval rval,rval2;
+  struct Rlist *rp,*returnlist = NULL;
+  struct Scope *ptr;
+  int i;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+regex = finalargs->item;
+name = finalargs->next->item;
+
+/* Locate the array */
+
+if (strstr(name,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,name);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function \"grep\" was promised an array in scope \"%s\" but this was not found\n",scopeid);
+   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;            
+   }
+
+if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function \"grep\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+
+if (rval2.rtype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function grep was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
+   }
+
+for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
+   {
+   if (FullTextMatch(regex,rp->item))
+      {
+      AppendRScalar(&returnlist,rp->item,CF_SCALAR);
+      }
+   }
+
+SetFnCallReturnStatus("grep",FNCALL_SUCCESS,NULL,NULL);
+rval.item = returnlist;
+
+/* end fn specific content */
+
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_IDRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+
+  char lval[CF_MAXVARSIZE],*joined;
+  char *name,*join,index[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  struct Rval rval,rval2;
+  struct Rlist *rp;
+  struct Scope *ptr;
+  int i,size = 0;
+
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+join = finalargs->item;
+name = finalargs->next->item;
+
+/* Locate the array */
+
+if (strstr(name,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,name);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function \"join\" was promised an array in scope \"%s\" but this was not found\n",scopeid);
+   SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function \"join\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+if (rval2.rtype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function \"join\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
+   {
+   size += strlen(rp->item) + strlen(join);
+   }
+
+if ((joined = malloc(size)) == NULL)
+   {
+   CfOut(cf_error,"malloc","Function \"join\" was not able to allocate memory\n",name);
+   SetFnCallReturnStatus("join",FNCALL_FAILURE,"Memory error",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+size = 0;
+
+for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
+   {
+   strcpy(joined+size,rp->item);
+
+   if (rp->next != NULL)
+      {
+      strcpy(joined+size+strlen(rp->item),join);
+      size += strlen(rp->item) + strlen(join);
+      }
+   }
+
+SetFnCallReturnStatus("grep",FNCALL_SUCCESS,NULL,NULL);
+rval.item = joined;
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

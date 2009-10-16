@@ -327,6 +327,7 @@ void LongHaul(void);
 void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
 int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp);
 int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp);
+void LogFileChange(char *file,struct Attributes a,struct Promise *pp);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void ReportSoftware(struct CfPackageManager *list);

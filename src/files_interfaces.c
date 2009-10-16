@@ -1223,6 +1223,13 @@ if (a.haveselect && a.select.result == NULL)
    return false;
    }
 
+if (a.havedepthsearch && a.change.report_diffs)
+   {
+   CfOut(cf_error,""," !! Difference reporting is not allowed during a depth_search",pp->promiser);
+   PromiseRef(cf_error,pp);
+   return false;   
+   }
+
 return true;
 }
 

@@ -220,6 +220,18 @@ void SetPolicyServer(char *name)
 }
 
 /*****************************************************************************/
+
+void LogFileChange(char *file,struct Attributes a,struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_LogFileChange(file,a,pp);
+#else
+ CfOut(cf_verbose,"","Logging file differences requires version Nova or above");
+#endif 
+}
+
+
+/*****************************************************************************/
 /* Knowledge                                                                 */
 /*****************************************************************************/
 

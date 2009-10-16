@@ -186,7 +186,7 @@ if (value.data != NULL)
       {
       if (now < state.expires)
          {
-         CfOut(cf_verbose,"","Persisent state %s is already in a preserved state --  %d minutes to go\n",name,(state.expires-now)/60);
+         CfOut(cf_verbose,""," -> Persisent state %s is already in a preserved state --  %d minutes to go\n",name,(state.expires-now)/60);
          dbp->close(dbp,0);
          return;
          }
@@ -194,7 +194,7 @@ if (value.data != NULL)
    }
 else
    {
-   CfOut(cf_verbose,"","New persistent state %s\n",key.data);
+   CfOut(cf_verbose,""," -> New persistent state %s\n",key.data);
    }
  
  
@@ -216,7 +216,7 @@ if ((errno = dbp->put(dbp,NULL,&key,&value,0)) != 0)
    }
 else
    {
-   CfOut(cf_verbose,"","Re-set persistent state %s for %d minutes\n",name,ttl_minutes);
+   CfOut(cf_verbose,""," -> Re-set persistent state %s for %d minutes\n",name,ttl_minutes);
    }
 
 dbp->close(dbp,0);

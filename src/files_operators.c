@@ -1181,6 +1181,7 @@ if (changed)
    {
    NewPersistentContext("checksum_alerts",CF_PERSISTENCE,cfpreserve);
    LogHashChange(file);
+   LogFileChange(file,attr,pp);
    }
 }
 

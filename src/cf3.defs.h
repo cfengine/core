@@ -1245,6 +1245,7 @@ struct FileChange
    {
    enum cfhashes hash;
    enum cfchanges report_changes;
+   int report_diffs;
    int update;
    };
 

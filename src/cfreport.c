@@ -386,7 +386,7 @@ HTML = false;
 
 umask(077);
 strcpy(ERASE,"");
-strcpy(STYLESHEET,"http://www.cfengine.org/css/promises.css");
+strcpy(STYLESHEET,"");
 strcpy(WEBDRIVER,"#");
 strcpy(BANNER,"");
 strcpy(FOOTER,"");
@@ -1625,7 +1625,7 @@ else
 if ((fout = fopen(name,"w")) == NULL)
    {
    CfOut(cf_error,"fopen","Unable to write to %s/%s\n",OUTPUTDIR,name);
-   exit(1);
+   return;
    }
 
 if (HTML && !EMBEDDED)
@@ -1836,7 +1836,7 @@ CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documenta
 if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   exit(1);
+   return;
    }
 
 #ifdef CF_OLD_DB 
@@ -1846,8 +1846,7 @@ if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #endif
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   dbp->err(dbp,err,NULL);
-   exit(1);
+   return;
    }
 
 for (i = 0; i < CF_OBSERVABLES; i++)
@@ -1909,7 +1908,7 @@ list = SplitStringAsItemList(ERASE,',');
 if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   exit(1);
+   return;
    }
 
 #ifdef CF_OLD_DB 
@@ -1920,7 +1919,7 @@ if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    dbp->err(dbp,err,NULL);
-   exit(1);
+   return;
    }
 
 for (i = 0; i < CF_OBSERVABLES; i++)
@@ -1986,7 +1985,7 @@ else
 if ((fout = fopen(name,"w")) == NULL)
    {
    CfOut(cf_error,"fopen","Unable to write to %s/%s\n",OUTPUTDIR,name);
-   exit(1);
+   return;
    }
 
 if (HTML && !EMBEDDED)
@@ -2037,7 +2036,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   exit(1);
+   return;
    }
 
 #ifdef CF_OLD_DB 
@@ -2047,7 +2046,7 @@ if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
 #endif
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   exit(1);
+   return;
    }
 
 if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
@@ -2088,7 +2087,7 @@ void WriteGraphFiles()
 if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   exit(1);
+   return;
    }
 
 CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
@@ -2101,7 +2100,7 @@ if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    dbp->err(dbp,err,NULL);
-   exit(1);
+   return;
    }
 
 OpenFiles();
@@ -2238,7 +2237,7 @@ void MagnifyNow()
 if ((err = db_create(&dbp,NULL,0)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   exit(1);
+   return;
    }
 
 CfOut(cf_verbose,""," -> Retrieving mag data from %s",VINPUTFILE);
@@ -2251,7 +2250,7 @@ if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    dbp->err(dbp,err,NULL);
-   exit(1);
+   return;
    }
 
 OpenMagnifyFiles();
@@ -2390,8 +2389,8 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
-      perror("fopen");
-      exit(1);
+      CfOut(cf_inform,"fopen","Couldn't write %s",name);
+      return;
       }
    }
 
@@ -2494,7 +2493,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             if (err != DB_NOTFOUND)
                {
                dbp->err(dbp,err,NULL);
-               exit(1);
+               return;
                }
             }
          
@@ -2689,7 +2688,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
          if (errno != DB_NOTFOUND)
             {
             dbpent->err(dbp,errno,NULL);
-            exit(1);
+            return;
             }
          }
       
@@ -2742,7 +2741,7 @@ sprintf(filename,"cfenv-average");
 if ((FPAV = fopen(filename,"w")) == NULL)
    {
    CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
-   exit(1);
+   return;
    }
 
 sprintf(filename,"cfenv-stddev"); 
@@ -2750,7 +2749,7 @@ sprintf(filename,"cfenv-stddev");
 if ((FPVAR = fopen(filename,"w")) == NULL)
    {
    CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
-   exit(1);
+   return;
    }
 
 sprintf(filename,"cfenv-now"); 
@@ -2758,7 +2757,7 @@ sprintf(filename,"cfenv-now");
 if ((FPNOW = fopen(filename,"w")) == NULL)
    {
    CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
-   exit(1);
+   return;
    }
 
 for (i = 0; i < CF_OBSERVABLES; i++)
@@ -2772,7 +2771,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    if ((FPE[i] = fopen(filename,"w")) == NULL)
       {
       CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
-      exit(1);
+      return;
       }
    
    sprintf(filename,"%s.q",name);
@@ -2780,7 +2779,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
       CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
-      exit(1);
+      return;
       }
    }
 }
@@ -2819,7 +2818,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    if ((FPM[i] = fopen(filename,"w")) == NULL)
       {
       perror("fopen");
-      exit(1);
+      return;
       }
    }
 }

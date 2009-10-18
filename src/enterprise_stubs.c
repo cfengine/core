@@ -213,20 +213,20 @@ void SetPolicyServer(char *name)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_SetPolicyServer(name);
+Nova_SetPolicyServer(name);
 #else
- CfOut(cf_verbose,"","Setting policy server requires version Nova or above");
+CfOut(cf_verbose,"","Setting policy server requires version Nova or above");
 #endif 
 }
 
 /*****************************************************************************/
 
-void LogFileChange(char *file,struct Attributes a,struct Promise *pp)
+void LogFileChange(char *file,int change,struct Attributes a,struct Promise *pp)
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_LogFileChange(file,a,pp);
+Nova_LogFileChange(file,change,a,pp);
 #else
- CfOut(cf_verbose,"","Logging file differences requires version Nova or above");
+CfOut(cf_verbose,"","Logging file differences requires version Nova or above");
 #endif 
 }
 
@@ -239,7 +239,7 @@ void BundleNode(FILE *fp,char *bundle)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_BundleNode(fp,bundle);
+Nova_BundleNode(fp,bundle);
 #else
 #endif
 }

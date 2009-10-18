@@ -114,7 +114,7 @@ attr.copy.stealth = false;
 attr.copy.verify = false;
 attr.copy.preserve = false;
 
-CheckForFileHoles(&sb,attr,pp);
+CheckForFileHoles(&sb,pp);
 
 if (CopyRegularFile(file,destination,sb,dsb,attr,pp))
    {

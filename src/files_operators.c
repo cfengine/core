@@ -441,12 +441,12 @@ if (VerifyOwner(file,pp,attr,dstat))
 
 if (attr.havechange && S_ISREG(dstat->st_mode))
    {
-   VerifyFileIntegrity(file,pp,attr);
+   VerifyFileIntegrity(file,attr,pp);
    }
 
 if (attr.havechange)
    {
-   VerifyFileChanges(file,dstat,pp,attr);
+   VerifyFileChanges(file,dstat,attr,pp);
    }
 
 if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a link */
@@ -1136,7 +1136,7 @@ else
 
 /*********************************************************************/
 
-void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr)
+void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1];
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
@@ -1181,13 +1181,14 @@ if (changed)
    {
    NewPersistentContext("checksum_alerts",CF_PERSISTENCE,cfpreserve);
    LogHashChange(file);
-   LogFileChange(file,attr,pp);
    }
+
+LogFileChange(file,changed,attr,pp);
 }
 
 /*********************************************************************/
 
-void VerifyFileChanges(char *file,struct stat *sb,struct Promise *pp,struct Attributes attr)
+void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { struct stat cmpsb;
   DBT *key,*value;

@@ -686,9 +686,7 @@ else
    c.update = CHECKSUMUPDATES;
    }
 
-
 c.report_diffs = GetBooleanConstraint("report_diffs",pp);
-
 return c;
 }
 

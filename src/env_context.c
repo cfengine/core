@@ -302,6 +302,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    if (now > q.expires)
       {
       CfOut(cf_verbose,""," Persistent class %s expired\n",key.data);
+
       if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
          {
          CfOut(cf_error,"db_store","");

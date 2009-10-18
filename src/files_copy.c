@@ -114,7 +114,7 @@ return NULL;
 /* Local low level                                                           */
 /*****************************************************************************/
 
-void CheckForFileHoles(struct stat *sstat,struct Attributes attr,struct Promise *pp)
+void CheckForFileHoles(struct stat *sstat,struct Promise *pp)
 
 /* Need a transparent way of getting this into CopyReg() */
 /* Use a public member in struct Image                   */

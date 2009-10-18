@@ -941,7 +941,7 @@ int cf_stat(char *file,struct stat *buf,struct Attributes attr,struct Promise *p
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
    res = stat(file,buf);
-   CheckForFileHoles(buf,attr,pp);
+   CheckForFileHoles(buf,pp);
    return res;
    }
 else
@@ -959,7 +959,7 @@ int cf_lstat(char *file,struct stat *buf,struct Attributes attr,struct Promise *
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
    res = lstat(file,buf);
-   CheckForFileHoles(buf,attr,pp);
+   CheckForFileHoles(buf,pp);
    return res;
    }
 else

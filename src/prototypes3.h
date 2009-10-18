@@ -327,7 +327,7 @@ void LongHaul(void);
 void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
 int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp);
 int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp);
-void LogFileChange(char *file,struct Attributes a,struct Promise *pp);
+void LogFileChange(char *file,int change,struct Attributes a,struct Promise *pp);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void ReportSoftware(struct CfPackageManager *list);
@@ -493,7 +493,7 @@ char *WinEscapeCommand(char *s);
 
 void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *pp);
 int CopyRegularFileDisk(char *source,char *new,struct Attributes attr,struct Promise *pp);
-void CheckForFileHoles(struct stat *sstat,struct Attributes attr,struct Promise *pp);
+void CheckForFileHoles(struct stat *sstat,struct Promise *pp);
 int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int n_read,struct Attributes attr,struct Promise *pp);
 
 /* files_edit.c */
@@ -619,7 +619,7 @@ int ScheduleEditOperation(char *filename,struct Attributes attr,struct Promise *
 struct FileCopy *NewFileCopy(struct Promise *pp);
 void DeleteFileCopy(struct FileCopy *fcp);
 void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
-void VerifyFileIntegrity(char *file,struct Promise *pp,struct Attributes attr);
+void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp);
 int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *statbuf);
 void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
 void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
@@ -639,7 +639,7 @@ void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
 void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
 void CreateEmptyFile(char *name);
-void VerifyFileChanges(char *file,struct stat *sb,struct Promise *pp,struct Attributes attr);
+void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp);
 
 /* files_properties.c */
 

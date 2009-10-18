@@ -1140,7 +1140,7 @@ void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1];
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
-  int changed = false;
+  int changed = false, one,two;
   
 if ((attr.change.report_changes != cfa_contentchange) && (attr.change.report_changes != cfa_allchanges))
    {
@@ -1157,8 +1157,10 @@ if (attr.change.hash == cf_besthash)
       HashFile(file,digest1,cf_md5);
       HashFile(file,digest2,cf_sha1);
       
-      if (FileHashChanged(file,digest1,cf_error,cf_md5,attr,pp)
-          || FileHashChanged(file,digest2,cf_error,cf_sha1,attr,pp))
+      one = FileHashChanged(file,digest1,cf_error,cf_md5,attr,pp);
+      two = FileHashChanged(file,digest2,cf_error,cf_sha1,attr,pp);
+      
+      if (one || two)
          {
          changed = true;
          }

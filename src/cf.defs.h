@@ -1064,6 +1064,9 @@ struct TwoDimList
 
 struct UidList
    {
+#ifdef MINGW  // TODO: remove uid for NT ?
+   SID *sid;
+#endif  /* MINGW */
    uid_t uid;
    char *uidname;				/* when uid is -2 */
    struct UidList *next;

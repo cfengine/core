@@ -640,6 +640,9 @@ void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp);
+#ifndef MINGW
+int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
+#endif  /* NOT MINGW */
 
 /* files_properties.c */
 

@@ -35,7 +35,36 @@
 extern int CFA_MAXTHREADS;
 extern struct cfagent_connection *COMS;
 
+
+/*******************************************************************/
+/* File API - OS function mapping                                  */
+/*******************************************************************/
+
+void CreateEmptyFile(char *name)
+
+{ 
+#ifdef MINGW
+NovaWin_CreateEmptyFile(name);
+#else
+Unix_CreateEmptyFile(name);
+#endif
+}
+
 /*****************************************************************************/
+
+int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
+
+{ 
+#ifdef MINGW
+return NovaWin_VerifyOwner(file,pp,attr);
+#else
+return Unix_VerifyOwner(file,pp,attr,sb);
+#endif
+}
+
+/*******************************************************************/
+/* End file API                                                    */
+/*******************************************************************/
 
 int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
@@ -151,17 +180,6 @@ else
 return true;
 }
 
-/*********************************************************************/
-
-void CreateEmptyFile(char *name)
-
-{ 
-#ifdef MINGW
-NovaWin_CreateEmptyFile(name);
-#else
-Unix_CreateEmptyFile(name);
-#endif
-}
 /*****************************************************************************/
 
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp)
@@ -1318,179 +1336,6 @@ dbp->close(dbp,0);
 }
 
 /*********************************************************************/
-
-int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
-
-{ struct passwd *pw;
-  struct group *gp;
-  struct UidList *ulp, *unknownulp;
-  struct GidList *glp, *unknownglp;
-  short uidmatch = false, gidmatch = false;
-  uid_t uid = CF_SAME_OWNER; 
-  gid_t gid = CF_SAME_GROUP;
-
-Debug("VerifyOwner: %d\n",sb->st_uid);
-  
-for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
-   {
-   if (ulp->uid == CF_UNKNOWN_OWNER)
-      {
-      unknownulp = MakeUidList(ulp->uidname); /* Will only match one */
-      
-      if (unknownulp != NULL && sb->st_uid == unknownulp->uid)
-         {
-         uid = unknownulp->uid;
-         uidmatch = true;
-         break;
-         }
-      }
-   
-   if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)   /* "same" matches anything */
-      {
-      uid = ulp->uid;
-      uidmatch = true;
-      break;
-      }
-   }
- 
-for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
-   {
-   if (glp->gid == CF_UNKNOWN_GROUP) /* means not found while parsing */
-      {
-      unknownglp = MakeGidList(glp->gidname); /* Will only match one */
-      
-      if (unknownglp != NULL && sb->st_gid == unknownglp->gid)
-         {
-         gid = unknownglp->gid;
-         gidmatch = true;
-         break;
-         }
-      }
-
-   if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)  /* "same" matches anything */
-      {
-      gid = glp->gid;
-      gidmatch = true;
-      break;
-      }
-   }
- 
-if (uidmatch && gidmatch)
-   {
-   return false;
-   }
-else
-   {
-   if (! uidmatch)
-      {
-      for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
-         {
-         if (attr.perms.owners->uid != CF_UNKNOWN_OWNER)
-            {
-            uid = attr.perms.owners->uid;    /* default is first (not unknown) item in list */
-            break;
-            }
-         }
-      }
-   
-   if (! gidmatch)
-      {
-      for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
-         {
-         if (attr.perms.groups->gid != CF_UNKNOWN_GROUP)
-            {
-            gid = attr.perms.groups->gid;    /* default is first (not unknown) item in list */
-            break;
-            }
-         }
-      }
-
-   switch (attr.transaction.action)
-      {
-      case cfa_fix:
-
-          if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
-             {
-             CfOut(cf_verbose,"","%s:   touching %s\n",VPREFIX,file);
-             }
-          else
-             {
-             if (uid != CF_SAME_OWNER)
-                {
-                Debug("(Change owner to uid %d if possible)\n",uid);
-                }
-             
-             if (gid != CF_SAME_GROUP)
-                {
-                Debug("Change group to gid %d if possible)\n",gid);
-                }
-             }
-          
-          if (!DONTDO && S_ISLNK(sb->st_mode))
-             {
-#ifdef HAVE_LCHOWN
-             Debug("Using LCHOWN function\n");
-             if (lchown(file,uid,gid) == -1)
-                {
-                CfOut(cf_inform,"lchown"," !! Cannot set ownership on link %s!\n",file);
-                }
-             else
-                {
-                return true;
-                }
-#endif
-             }
-          else if (!DONTDO)
-             {
-             if (!uidmatch)
-                {
-                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
-                }
-             
-             if (!gidmatch)
-                {
-                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Group of %s was %d, setting to %d",file,sb->st_gid,gid);
-                }
-             
-             if (!S_ISLNK(sb->st_mode))
-                {
-                if (chown(file,uid,gid) == -1)
-                   {
-                   cfPS(cf_inform,CF_DENIED,"chown",pp,attr," !! Cannot set ownership on file %s!\n",file);
-                   }
-                else
-                   {
-                   return true;
-                   }
-                }
-             }
-          break;
-          
-      case cfa_warn:
-          
-          if ((pw = getpwuid(sb->st_uid)) == NULL)
-             {
-             CfOut(cf_error,"","File %s is not owned by anybody in the passwd database\n",file);
-             CfOut(cf_error,"","(uid = %d,gid = %d)\n",sb->st_uid,sb->st_gid);
-             break;
-             }
-          
-          if ((gp = getgrgid(sb->st_gid)) == NULL)
-             {
-             cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is not owned by any group in group database\n",file);
-             break;
-             }
-          
-          cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
-          break;
-      }
-   }
-
-return false; 
-}
-
-
-/*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
 
@@ -2163,3 +2008,180 @@ VerifyFilePromise(promise.promiser,&promise);
 rmdir(path);
 }
 
+#ifndef MINGW
+
+/*******************************************************************/
+/* Unix implementations of file functions                          */
+/*******************************************************************/
+
+int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
+
+{ struct passwd *pw;
+  struct group *gp;
+  struct UidList *ulp, *unknownulp;
+  struct GidList *glp, *unknownglp;
+  short uidmatch = false, gidmatch = false;
+  uid_t uid = CF_SAME_OWNER; 
+  gid_t gid = CF_SAME_GROUP;
+
+Debug("Unix_VerifyOwner: %d\n",sb->st_uid);
+  
+for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
+   {
+   if (ulp->uid == CF_UNKNOWN_OWNER)
+      {
+      unknownulp = MakeUidList(ulp->uidname); /* Will only match one */
+      
+      if (unknownulp != NULL && sb->st_uid == unknownulp->uid)
+         {
+         uid = unknownulp->uid;
+         uidmatch = true;
+         break;
+         }
+      }
+   
+   if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)   /* "same" matches anything */
+      {
+      uid = ulp->uid;
+      uidmatch = true;
+      break;
+      }
+   }
+ 
+for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
+   {
+   if (glp->gid == CF_UNKNOWN_GROUP) /* means not found while parsing */
+      {
+      unknownglp = MakeGidList(glp->gidname); /* Will only match one */
+      
+      if (unknownglp != NULL && sb->st_gid == unknownglp->gid)
+         {
+         gid = unknownglp->gid;
+         gidmatch = true;
+         break;
+         }
+      }
+
+   if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)  /* "same" matches anything */
+      {
+      gid = glp->gid;
+      gidmatch = true;
+      break;
+      }
+   }
+ 
+if (uidmatch && gidmatch)
+   {
+   return false;
+   }
+else
+   {
+   if (! uidmatch)
+      {
+      for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
+         {
+         if (attr.perms.owners->uid != CF_UNKNOWN_OWNER)
+            {
+            uid = attr.perms.owners->uid;    /* default is first (not unknown) item in list */
+            break;
+            }
+         }
+      }
+   
+   if (! gidmatch)
+      {
+      for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
+         {
+         if (attr.perms.groups->gid != CF_UNKNOWN_GROUP)
+            {
+            gid = attr.perms.groups->gid;    /* default is first (not unknown) item in list */
+            break;
+            }
+         }
+      }
+
+   switch (attr.transaction.action)
+      {
+      case cfa_fix:
+
+          if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
+             {
+             CfOut(cf_verbose,"","%s:   touching %s\n",VPREFIX,file);
+             }
+          else
+             {
+             if (uid != CF_SAME_OWNER)
+                {
+                Debug("(Change owner to uid %d if possible)\n",uid);
+                }
+             
+             if (gid != CF_SAME_GROUP)
+                {
+                Debug("Change group to gid %d if possible)\n",gid);
+                }
+             }
+          
+          if (!DONTDO && S_ISLNK(sb->st_mode))
+             {
+#ifdef HAVE_LCHOWN
+             Debug("Using LCHOWN function\n");
+             if (lchown(file,uid,gid) == -1)
+                {
+                CfOut(cf_inform,"lchown"," !! Cannot set ownership on link %s!\n",file);
+                }
+             else
+                {
+                return true;
+                }
+#endif
+             }
+          else if (!DONTDO)
+             {
+             if (!uidmatch)
+                {
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
+                }
+             
+             if (!gidmatch)
+                {
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Group of %s was %d, setting to %d",file,sb->st_gid,gid);
+                }
+             
+             if (!S_ISLNK(sb->st_mode))
+                {
+                if (chown(file,uid,gid) == -1)
+                   {
+                   cfPS(cf_inform,CF_DENIED,"chown",pp,attr," !! Cannot set ownership on file %s!\n",file);
+                   }
+                else
+                   {
+                   return true;
+                   }
+                }
+             }
+          break;
+          
+      case cfa_warn:
+          
+          if ((pw = getpwuid(sb->st_uid)) == NULL)
+             {
+             CfOut(cf_error,"","File %s is not owned by anybody in the passwd database\n",file);
+             CfOut(cf_error,"","(uid = %d,gid = %d)\n",sb->st_uid,sb->st_gid);
+             break;
+             }
+          
+          if ((gp = getgrgid(sb->st_gid)) == NULL)
+             {
+             cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is not owned by any group in group database\n",file);
+             break;
+             }
+          
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
+          break;
+      }
+   }
+
+return false; 
+}
+
+#endif  /* NOT MINGW */

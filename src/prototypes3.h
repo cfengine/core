@@ -632,8 +632,6 @@ void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise 
 int MakeParentDirectory(char *parentandchild,int force);
 void LogHashChange(char *file);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
-struct UidList *MakeUidList(char *uidnames);
-struct GidList *MakeGidList(char *gidnames);
 void RotateFiles(char *name,int number);
 void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
 void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
@@ -642,6 +640,8 @@ void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp);
 #ifndef MINGW
 int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
+struct UidList *MakeUidList(char *uidnames);
+struct GidList *MakeGidList(char *gidnames);
 #endif  /* NOT MINGW */
 
 /* files_properties.c */

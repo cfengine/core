@@ -1036,6 +1036,7 @@ if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_chang
    }
 
 snprintf(statdb,CF_BUFSIZE,"%s/stats.db",CFWORKDIR);
+MapName(statdb);
 
 if (!OpenDB(statdb,&dbp))
    {
@@ -1403,6 +1404,7 @@ void LogHashChange(char *file)
 /* This is inefficient but we don't want to lose any data */
   
 snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
+MapName(fname);
 
 if (stat(fname,&sb) != -1)
    {

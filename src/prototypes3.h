@@ -642,6 +642,8 @@ void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct 
 int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
 struct UidList *MakeUidList(char *uidnames);
 struct GidList *MakeGidList(char *gidnames);
+void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
+void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
 #endif  /* NOT MINGW */
 
 /* files_properties.c */

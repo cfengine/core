@@ -318,6 +318,7 @@ typedef int clockid_t;
 #define CF_BLOWFISHSIZE 16
 #define CF_SMALLBUF 128
 #define CF_MAXVARSIZE 1024
+#define CF_MAXSIDSIZE 2048  /* Windows only: Max size (bytes) of security identifers */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
 #define CF_MAXLINKLEVEL 4
@@ -1065,7 +1066,7 @@ struct TwoDimList
 struct UidList
    {
 #ifdef MINGW  // TODO: remove uid for NT ?
-   SID *sid;
+     char sid[CF_MAXSIDSIZE];  /* Invalid sid indicates unset */
 #endif  /* MINGW */
    uid_t uid;
    char *uidname;				/* when uid is -2 */

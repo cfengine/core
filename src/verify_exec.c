@@ -58,11 +58,34 @@ if (a.contain.nooutput && a.contain.preview)
    return false;
    }
 
+#ifdef MINGW
+if(a.contain.umask != CF_UNDEFINED)  // TODO: Always true (077 != -1?, compare positive and negative number), make false when umask not set
+  {
+  CfOut(cf_verbose, "", "contain-umask is ignored on NT");
+  }
+
+if(a.contain.owner != CF_UNDEFINED)
+  {
+  CfOut(cf_verbose, "", "contain-exec_owner is ignored on NT");
+  }
+    
+if(a.contain.group != CF_UNDEFINED)
+  {
+  CfOut(cf_verbose, "", "contain-exec_group is ignored on NT");
+  }
+  
+if(a.contain.chroot != NULL)
+  {
+  CfOut(cf_verbose, "", "contain-chroot is ignored on NT");
+  }
+  
+#else  /* NOT MINGW */
 if (a.contain.umask == CF_UNDEFINED)
    {
    a.contain.umask = 077;
    }
-
+#endif  /* NOT MINGW */
+   
 return true;
 }
 
@@ -139,6 +162,7 @@ else
          SetTimeOut(a.contain.timeout);
          }
       
+#ifndef MINGW
       CfOut(cf_verbose,""," -> (Setting umask to %o)\n",a.contain.umask);
       maskval = umask(a.contain.umask);
       
@@ -146,7 +170,8 @@ else
          {
          CfOut(cf_verbose,""," !! Programming %s running with umask 0! Use umask= to set\n",execstr);
          }
-
+#endif  /* NOT MINGW */
+		 
       if (a.contain.useshell)
          {
          pfp = cf_popen_shsetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
@@ -217,7 +242,9 @@ else
       }
 
    CfOut(cf_inform,""," -> Completed execution of %s\n",execstr);
+#ifndef MINGW
    umask(maskval);
+#endif
    YieldCurrentLock(thislock);
 
    snprintf(eventname,CF_BUFSIZE-1,"Exec(%s)",execstr);

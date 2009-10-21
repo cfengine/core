@@ -62,6 +62,30 @@ return Unix_VerifyOwner(file,pp,attr,sb);
 #endif
 }
 
+/*****************************************************************************/
+
+void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+
+{ 
+#ifdef MINGW
+NovaWin_VerifyFileAttributes(file,dstat,attr,pp);
+#else
+Unix_VerifyFileAttributes(file,dstat,attr,pp);
+#endif
+}
+
+/*****************************************************************************/
+
+void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
+
+{ 
+#ifdef MINGW
+NovaWin_VerifyCopiedFileAttributes(file,dstat,attr,pp);
+#else
+Unix_VerifyCopiedFileAttributes(file,dstat,sstat,attr,pp);
+#endif
+}
+
 /*******************************************************************/
 /* End file API                                                    */
 /*******************************************************************/
@@ -398,220 +422,6 @@ return retval;
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
-
-{ mode_t newperm = dstat->st_mode, maskvalue;
-
-#if defined HAVE_CHFLAGS
-  u_long newflags;
-#endif
-
-Debug("VerifyFileAttributes(%s)\n",file);
-  
-maskvalue = umask(0);                 /* This makes the DEFAULT modes absolute */
- 
-newperm = (dstat->st_mode & 07777);
-newperm |= attr.perms.plus;
-newperm &= ~(attr.perms.minus);
-
- /* directories must have x set if r set, regardless  */
-
-if (S_ISDIR(dstat->st_mode))  
-   {
-   if (attr.perms.rxdirs)
-      {
-      Debug("Directory...fixing x bits\n");
-      
-      if (newperm & S_IRUSR)
-         {
-         newperm  |= S_IXUSR;
-         }
-      
-      if (newperm & S_IRGRP)
-         {
-         newperm |= S_IXGRP;
-         }
-      
-      if (newperm & S_IROTH)
-         {
-         newperm |= S_IXOTH;
-         }
-      }
-   else
-      {
-      CfOut(cf_verbose,"","NB: rxdirs is set to false - x for r bits not checked\n");
-      }
-   }
-
-VerifySetUidGid(file,dstat,newperm,pp,attr);
-
-#ifdef DARWIN
-if (VerifyFinderType(file,dstat,attr,pp))
-   {
-   /* nop */
-   }
-#endif
-
-if (VerifyOwner(file,pp,attr,dstat))
-   {
-   /* nop */
-   }
-
-if (attr.havechange && S_ISREG(dstat->st_mode))
-   {
-   VerifyFileIntegrity(file,attr,pp);
-   }
-
-if (attr.havechange)
-   {
-   VerifyFileChanges(file,dstat,attr,pp);
-   }
-
-if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a link */
-   {
-   KillGhostLink(file,attr,pp);
-   umask(maskvalue);
-   return;
-   }
-
-if (attr.acl.acl_entries)
-   { 
-   VerifyACL(file,attr,pp); 
-   }
-
-if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
-   {
-   Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
-   cfPS(cf_verbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
-   }
-else
-   {
-   Debug("Trying to fix mode...newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
-   
-   switch (attr.transaction.action)
-      {
-      case cfa_warn:
-          
-          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has permission %o - [should be %o]\n",file,dstat->st_mode & 07777,newperm & 07777);
-          break;
-          
-      case cfa_fix:
-          
-          if (!DONTDO)
-             {
-             if (cf_chmod(file,newperm & 07777) == -1)
-                {
-                CfOut(cf_error,"cf_chmod","cf_chmod failed on %s\n",file);
-                break;
-                }
-             }
-          
-          cfPS(cf_inform,CF_CHG,"",pp,attr," -> Object %s had permission %o, changed it to %o\n",file,dstat->st_mode & 07777,newperm & 07777);
-          break;
-          
-      default:
-          FatalError("cfengine: internal error VerifyFileAttributes(): illegal file action\n");
-      }
-   }
- 
-#if defined HAVE_CHFLAGS  /* BSD special flags */
-
-newflags = (dstat->st_flags & CHFLAGS_MASK);
-newflags |= attr.perms.plus_flags;
-newflags &= ~(attr.perms.minus_flags);
-
-if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
-   {
-   Debug("BSD File okay, flags = %x, current = %x\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
-   }
-else
-   {
-   Debug("BSD Fixing %s, newflags = %x, flags = %x\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
-   
-   switch (attr.transaction.action)
-      {
-      case cfa_warn:
-
-          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has flags %o - [should be %o]\n",file,dstat->st_mode & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
-          break;
-          
-      case cfa_fix:
-
-          if (! DONTDO)
-             {
-             if (chflags(file,newflags & CHFLAGS_MASK) == -1)
-                {
-                cfPS(cf_error,CF_DENIED,"chflags",pp,attr," !! Failed setting BSD flags %x on %s\n",newflags,file);
-                break;
-                }
-             else
-                {
-                cfPS(cf_inform,CF_CHG,"",pp,attr," -> %s had flags %o, changed it to %o\n",file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
-                }
-             }
-          
-          break;
-          
-      default:
-          FatalError("cfengine: internal error VerifyFileAttributes() illegal file action\n");
-      }
-   }
-#endif
-
-if (attr.touch)
-   {
-   if (utime(file,NULL) == -1)
-      {
-      cfPS(cf_inform,CF_DENIED,"utime",pp,attr," !! Touching file %s failed",file);
-      }
-   else
-      {
-      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Touching file %s",file);
-      }
-   }
-
-umask(maskvalue);  
-Debug("CheckExistingFile(Done)\n"); 
-}
-
-/*********************************************************************/
-
-void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
-
-{ mode_t newplus,newminus;
-  uid_t save_uid;
-  gid_t save_gid;
-
-// How do we get the default attr?
-  
-Debug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus); 
-
-save_uid = (attr.perms.owners)->uid;
-save_gid = (attr.perms.groups)->gid;
-
-if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
-   {
-   (attr.perms.owners)->uid = sstat->st_uid;
-   }
-
-if ((attr.perms.groups)->gid == CF_SAME_GROUP)
-   {
-   (attr.perms.groups)->gid = sstat->st_gid;
-   }
-
-// Will this preserve if no mode set?
-
-newplus = (sstat->st_mode & 07777) | attr.perms.plus;
-newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
-
-attr.perms.plus = newplus;
-attr.perms.minus = newminus;
-
-VerifyFileAttributes(file,dstat,attr,pp);
-
-(attr.perms.owners)->uid = save_uid;
-(attr.perms.groups)->gid = save_gid;
-}
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -2184,5 +1994,223 @@ if (gidlist == NULL)
 
 return(gidlist);
 }
+
+/*****************************************************************************/
+
+void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+
+{ mode_t newperm = dstat->st_mode, maskvalue;
+
+#if defined HAVE_CHFLAGS
+  u_long newflags;
+#endif
+
+Debug("Unix_VerifyFileAttributes(%s)\n",file);
+  
+maskvalue = umask(0);                 /* This makes the DEFAULT modes absolute */
+ 
+newperm = (dstat->st_mode & 07777);
+newperm |= attr.perms.plus;
+newperm &= ~(attr.perms.minus);
+
+ /* directories must have x set if r set, regardless  */
+
+if (S_ISDIR(dstat->st_mode))  
+   {
+   if (attr.perms.rxdirs)
+      {
+      Debug("Directory...fixing x bits\n");
+      
+      if (newperm & S_IRUSR)
+         {
+         newperm  |= S_IXUSR;
+         }
+      
+      if (newperm & S_IRGRP)
+         {
+         newperm |= S_IXGRP;
+         }
+      
+      if (newperm & S_IROTH)
+         {
+         newperm |= S_IXOTH;
+         }
+      }
+   else
+      {
+      CfOut(cf_verbose,"","NB: rxdirs is set to false - x for r bits not checked\n");
+      }
+   }
+
+VerifySetUidGid(file,dstat,newperm,pp,attr);
+
+#ifdef DARWIN
+if (VerifyFinderType(file,dstat,attr,pp))
+   {
+   /* nop */
+   }
+#endif
+
+if (VerifyOwner(file,pp,attr,dstat))
+   {
+   /* nop */
+   }
+
+if (attr.havechange && S_ISREG(dstat->st_mode))
+   {
+   VerifyFileIntegrity(file,attr,pp);
+   }
+
+if (attr.havechange)
+   {
+   VerifyFileChanges(file,dstat,attr,pp);
+   }
+
+if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a link */
+   {
+   KillGhostLink(file,attr,pp);
+   umask(maskvalue);
+   return;
+   }
+
+if (attr.acl.acl_entries)
+   { 
+   VerifyACL(file,attr,pp); 
+   }
+
+if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
+   {
+   Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
+   cfPS(cf_verbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
+   }
+else
+   {
+   Debug("Trying to fix mode...newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
+   
+   switch (attr.transaction.action)
+      {
+      case cfa_warn:
+          
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has permission %o - [should be %o]\n",file,dstat->st_mode & 07777,newperm & 07777);
+          break;
+          
+      case cfa_fix:
+          
+          if (!DONTDO)
+             {
+             if (cf_chmod(file,newperm & 07777) == -1)
+                {
+                CfOut(cf_error,"cf_chmod","cf_chmod failed on %s\n",file);
+                break;
+                }
+             }
+          
+          cfPS(cf_inform,CF_CHG,"",pp,attr," -> Object %s had permission %o, changed it to %o\n",file,dstat->st_mode & 07777,newperm & 07777);
+          break;
+          
+      default:
+          FatalError("cfengine: internal error Unix_VerifyFileAttributes(): illegal file action\n");
+      }
+   }
+ 
+#if defined HAVE_CHFLAGS  /* BSD special flags */
+
+newflags = (dstat->st_flags & CHFLAGS_MASK);
+newflags |= attr.perms.plus_flags;
+newflags &= ~(attr.perms.minus_flags);
+
+if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
+   {
+   Debug("BSD File okay, flags = %x, current = %x\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   }
+else
+   {
+   Debug("BSD Fixing %s, newflags = %x, flags = %x\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   
+   switch (attr.transaction.action)
+      {
+      case cfa_warn:
+
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has flags %o - [should be %o]\n",file,dstat->st_mode & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
+          break;
+          
+      case cfa_fix:
+
+          if (! DONTDO)
+             {
+             if (chflags(file,newflags & CHFLAGS_MASK) == -1)
+                {
+                cfPS(cf_error,CF_DENIED,"chflags",pp,attr," !! Failed setting BSD flags %x on %s\n",newflags,file);
+                break;
+                }
+             else
+                {
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> %s had flags %o, changed it to %o\n",file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
+                }
+             }
+          
+          break;
+          
+      default:
+          FatalError("cfengine: internal error Unix_VerifyFileAttributes() illegal file action\n");
+      }
+   }
+#endif
+
+if (attr.touch)
+   {
+   if (utime(file,NULL) == -1)
+      {
+      cfPS(cf_inform,CF_DENIED,"utime",pp,attr," !! Touching file %s failed",file);
+      }
+   else
+      {
+      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Touching file %s",file);
+      }
+   }
+
+umask(maskvalue);  
+Debug("Unix_VerifyFileAttributes(Done)\n"); 
+}
+
+/*****************************************************************************/
+
+void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
+
+{ mode_t newplus,newminus;
+  uid_t save_uid;
+  gid_t save_gid;
+
+// How do we get the default attr?
+  
+Debug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus); 
+
+save_uid = (attr.perms.owners)->uid;
+save_gid = (attr.perms.groups)->gid;
+
+if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
+   {
+   (attr.perms.owners)->uid = sstat->st_uid;
+   }
+
+if ((attr.perms.groups)->gid == CF_SAME_GROUP)
+   {
+   (attr.perms.groups)->gid = sstat->st_gid;
+   }
+
+// Will this preserve if no mode set?
+
+newplus = (sstat->st_mode & 07777) | attr.perms.plus;
+newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+
+attr.perms.plus = newplus;
+attr.perms.minus = newminus;
+
+VerifyFileAttributes(file,dstat,attr,pp);
+
+(attr.perms.owners)->uid = save_uid;
+(attr.perms.groups)->gid = save_gid;
+}
+
 
 #endif  /* NOT MINGW */

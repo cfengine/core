@@ -43,7 +43,11 @@ struct cfd_connection
    unsigned char *session_key;
    char hostname[CF_MAXVARSIZE];
    char username[CF_MAXVARSIZE];
+   #ifdef MINGW
+   char sid[CF_MAXSIDSIZE];  /* we avoid dynamically allocated buffers due to potential memory leaks */
+   #else
    uid_t uid;
+   #endif
    char encryption_type;
    char ipaddr[CF_MAX_IP_LEN];
    char output[CF_BUFSIZE*2];   /* Threadsafe output channel */

@@ -1591,6 +1591,13 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
    CfOut(cf_verbose,"","Non-verified User ID seems to be %s (Using skipverify)\n",username); 
    strncpy(conn->username,username,CF_MAXVARSIZE);
 
+#ifdef MINGW  /* NT uses security identifier instead of uid */
+   if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE))
+     {
+	 memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
+     }
+	 
+#else  /* NOT MINGW */
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
       {      
       conn->uid = -2;
@@ -1599,6 +1606,7 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
       {
       conn->uid = pw->pw_uid;
       }
+#endif  /* NOT MINGW */
 
    LastSaw(dns_assert,cf_accept);
    return true;
@@ -1729,14 +1737,22 @@ else
    }
  
  
+#ifdef MINGW  /* NT uses security identifier instead of uid */
+ if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE))
+   {
+   memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
+   }
+	 
+#else  /* NOT MINGW */
  if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
-    {
+    {      
     conn->uid = -2;
     }
  else
     {
     conn->uid = pw->pw_uid;
     }
+#endif  /* NOT MINGW */
 
 ThreadUnlock(cft_getaddr); 
  
@@ -2629,12 +2645,36 @@ void CfGetFile(struct cfd_get_arg *args)
 sd         = (args->connect)->sd_reply;
 filename   = args->replyfile;
 key        = (args->connect)->session_key;
-uid        = (args->connect)->uid;
 
 stat(filename,&statbuf);
 Debug("CfGetFile(%s on sd=%d), size=%d\n",filename,sd,statbuf.st_size);
 
 /* Now check to see if we have remote permission */
+
+#ifdef MINGW
+SECURITY_DESCRIPTOR *secDesc;
+SID *ownerSid;
+
+if(GetNamedSecurityInfo(filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, (PSID*)&ownerSid, NULL, NULL, NULL, &secDesc) == ERROR_SUCCESS)
+  {
+  if(IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
+    {
+    Debug("Caller %s is the owner of the file\n",(args->connect)->username);
+    }
+  else  // TODO: Check for read access ?
+    {
+	CfOut(cf_verbose,"","Caller %s is not the owner of the file \"%s\" - assuming read access\n", (args->connect)->username, filename);
+	}
+	
+  LocalFree(secDesc);
+  }
+else
+  {
+  CfOut(cf_error,"GetNamedSecurityInfo","!! Could not retreive existing owner of \"%s\"", filename);
+  }
+  
+#else  /* NOT MINGW */
+uid        = (args->connect)->uid;
 
 if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
    {
@@ -2644,7 +2684,6 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
       }
    else
       {
-#ifndef NT
       /* We are not the owner of the file and we don't care about groups -
          Win does not map these permissions reliably, so drop this check. */
       
@@ -2660,9 +2699,9 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
          SendSocketStream(sd,sendbuffer,args->buf_size,0);
          return;
          }
-#endif
       }
    }
+#endif  /* NOT MINGW */
  
  if (args->buf_size < SMALL_BLOCK_BUF_SIZE)
     {

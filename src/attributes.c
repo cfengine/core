@@ -323,7 +323,7 @@ e.owner = GetUidConstraint("exec_owner",pp);
 e.group = GetGidConstraint("exec_group",pp);
 e.preview = GetBooleanConstraint("preview",pp);
 e.nooutput = GetBooleanConstraint("no_output",pp);
-e.timeout = GetBooleanConstraint("exec_timeout",pp);
+e.timeout = GetIntConstraint("exec_timeout",pp);
 e.chroot = GetConstraint("chroot",pp,CF_SCALAR);
 e.chdir = GetConstraint("chdir",pp,CF_SCALAR);
 

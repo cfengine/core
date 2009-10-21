@@ -1013,7 +1013,10 @@ if (changed)
    LogHashChange(file);
    }
 
-LogFileChange(file,changed,attr,pp);
+if (attr.change.report_diffs)
+   {
+   LogFileChange(file,changed,attr,pp);
+   }
 }
 
 /*********************************************************************/

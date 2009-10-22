@@ -38,6 +38,13 @@ int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise 
   int result = true, tmpres;
   char *criteria = NULL;
   struct Rlist *rp;
+
+#ifdef MINGW
+if(attr.select.issymlinkto != NULL)
+{
+CfOut(cf_verbose, "", "files_select.issymlinkto is ignored on Windows (symbolic links are not supported by Windows)");
+}
+#endif  /* MINGW */
   
 if (!attr.haveselect)
    {
@@ -463,7 +470,9 @@ return false;
 
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit)
 
-{ char buffer[CF_BUFSIZE];
+{
+#ifndef MINGW
+  char buffer[CF_BUFSIZE];
   struct Rlist *rp;
 
 for (rp = crit; rp != NULL; rp = rp->next)
@@ -481,7 +490,7 @@ for (rp = crit; rp != NULL; rp = rp->next)
       return true;
       }
    }
-
+#endif  /* NOT MINGW */
 return false;      
 }
 

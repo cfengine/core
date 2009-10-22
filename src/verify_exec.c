@@ -61,22 +61,22 @@ if (a.contain.nooutput && a.contain.preview)
 #ifdef MINGW
 if(a.contain.umask != CF_UNDEFINED)  // TODO: Always true (077 != -1?, compare positive and negative number), make false when umask not set
   {
-  CfOut(cf_verbose, "", "contain-umask is ignored on NT");
+  CfOut(cf_verbose, "", "contain.umask is ignored on Windows");
   }
 
 if(a.contain.owner != CF_UNDEFINED)
   {
-  CfOut(cf_verbose, "", "contain-exec_owner is ignored on NT");
+  CfOut(cf_verbose, "", "contain.exec_owner is ignored on Windows");
   }
     
 if(a.contain.group != CF_UNDEFINED)
   {
-  CfOut(cf_verbose, "", "contain-exec_group is ignored on NT");
+  CfOut(cf_verbose, "", "contain.exec_group is ignored on Windows");
   }
   
 if(a.contain.chroot != NULL)
   {
-  CfOut(cf_verbose, "", "contain-chroot is ignored on NT");
+  CfOut(cf_verbose, "", "contain.chroot is ignored on Windows");
   }
   
 #else  /* NOT MINGW */

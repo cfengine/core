@@ -624,6 +624,13 @@ void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attribute
 
 Debug2("CopyFile(%s,%s)\n",sourcefile,destfile);
 
+#ifdef MINGW
+if(attr.copy.copy_links != NULL)
+{
+CfOut(cf_verbose, "", "copy_from.copylink_patterns is ignored on Windows (source files cannot be symbolic links)");
+}
+#endif  /* MINGW */
+
 if (attr.copy.servers)
    {
    server = (char *)attr.copy.servers->item;
@@ -664,9 +671,13 @@ if (attr.copy.link_type != cfa_notlinked)
          }
       else
          {
-         CfOut(cf_verbose,"","cfengine: copy item %s marked for linking instead\n",sourcefile);
+		 CfOut(cf_verbose,"","Copy item %s marked for linking\n",sourcefile);
+#ifdef MINGW
+		 CfOut(cf_verbose,"","Links are not yet supported on Windows - copying instead\n",sourcefile);
+#else		 
          LinkCopy(sourcefile,destfile,&ssb,attr,pp);
-         return;
+		 return;
+#endif
          }
       }
    }

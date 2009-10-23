@@ -84,7 +84,7 @@ if (SelectTypeMatch(sb,attr.select.filetypes))
    PrependItem(&leaf_attr,"file_types","");
    }
 
-if (attr.select.owners && SelectOwnerMatch(sb,attr.select.owners))
+if (attr.select.owners && SelectOwnerMatch(path,sb,attr.select.owners))
    {
    PrependItem(&leaf_attr,"owner","");
    }
@@ -245,19 +245,38 @@ return false;
 
 /*******************************************************************/
 
-int SelectOwnerMatch(struct stat *lstatptr,struct Rlist *crit)
+/* Writes the owner of file 'path', with stat 'lstatptr' into buffer 'owner' of
+ * size 'ownerSz'. Returns true on success, false otherwise                      */
+int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
+
+{
+#ifdef MINGW
+return NovaWin_GetOwnerName(path, owner, ownerSz);
+#else  /* NOT MINGW */
+return Unix_GetOwnerName(lstatptr, owner, ownerSz);
+#endif  /* NOT MINGW */
+}
+
+/*******************************************************************/
+
+int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit)
 
 { struct Item *leafattrib = NULL;
-  char buffer[CF_SMALLBUF];
-  struct passwd *pw;
   struct Rlist *rp;
+  char ownerName[CF_BUFSIZE];
+  int gotOwner;
 
+#ifndef MINGW  // no uids on Windows
+char buffer[CF_SMALLBUF];
 sprintf(buffer,"%d",lstatptr->st_uid);
 PrependItem(&leafattrib,buffer,""); 
+#endif  /* MINGW */
 
-if ((pw = getpwuid(lstatptr->st_uid)) != NULL)
+gotOwner = GetOwnerName(path, lstatptr, ownerName, sizeof(ownerName));
+
+if (gotOwner)
    {
-   PrependItem(&leafattrib,pw->pw_name,""); 
+   PrependItem(&leafattrib,ownerName,""); 
    }
 else
    {
@@ -273,19 +292,21 @@ for (rp = crit; rp != NULL; rp = rp->next)
       return true;
       }
 
-   if (pw && FullTextMatch((char *)rp->item,pw->pw_name))
+   if (gotOwner && FullTextMatch((char *)rp->item,ownerName))
       {
       Debug(" - ? Select owner match\n");
       DeleteItemList(leafattrib);
       return true;
       }
 
+#ifndef MINGW	  
    if (FullTextMatch((char *)rp->item,buffer))
       {
       Debug(" - ? Select owner match\n");
       DeleteItemList(leafattrib);
       return true;
       }
+#endif  /* NOT MINGW */
    }
 
 DeleteItemList(leafattrib);
@@ -512,3 +533,30 @@ else
    }
 }
 
+
+#ifndef MINGW
+
+/*******************************************************************/
+/* Unix implementations                                            */
+/*******************************************************************/
+
+int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz)
+
+{
+struct passwd *pw;
+
+memset(owner, 0, ownerSz);
+pw = getpwuid(lstatptr->st_uid));
+
+if(pw == NULL)
+  {
+  CfOut(cf_error, "getpwuid", "!! Could not get owner name of user with uid=%d", lstatptr->st_uid);
+  return false;
+  }
+  
+strncpy(owner, pw->pw_name, ownerSz - 1);
+
+return true;
+}
+
+#endif  /* NOT MINGW */

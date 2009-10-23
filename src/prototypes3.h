@@ -660,7 +660,8 @@ int ArchiveToRepository(char *file,struct Attributes attr,struct Promise *pp);
 
 int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit);
-int SelectOwnerMatch(struct stat *lstatptr,struct Rlist *crit);
+int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
+int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit);
 int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
 int SelectModeMatch(struct stat *lstatptr,struct Rlist *ls);
 int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
@@ -671,6 +672,9 @@ int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
 int SelectExecProgram(char *filename,char *crit);
 int SelectSizeMatch(size_t size,size_t min,size_t max);
 int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp);
+#ifndef MINGW
+int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz);
+#endif  /* NOT MINGW */
 
 /* fncall.c */
 

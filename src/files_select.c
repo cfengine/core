@@ -546,7 +546,7 @@ int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz)
 struct passwd *pw;
 
 memset(owner, 0, ownerSz);
-pw = getpwuid(lstatptr->st_uid));
+pw = getpwuid(lstatptr->st_uid);
 
 if(pw == NULL)
   {

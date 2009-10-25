@@ -53,6 +53,7 @@ void *Nova_LDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,cha
 void *Nova_RegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
 
 struct Averages SHIFT_VALUE;
+char CURRENT_SHIFT[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
@@ -385,7 +386,13 @@ void HistoryUpdate(struct Averages newvals)
 /* We do this only once per hour - this should not be changed */
 
 Banner("Update long-term history");
-  
+
+if (strlen(CURRENT_SHIFT) == 0)
+   {
+   // initialize
+   Nova_ResetShiftAverage(&SHIFT_VALUE);
+   }
+
 dummyattr.transaction.ifelapsed = 59;
 
 thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);
@@ -424,7 +431,13 @@ YieldCurrentLock(thislock);
 
 snprintf(timekey,CF_MAXVARSIZE-1,"%s_%s_%s_%s",VDAY,VMONTH,VLIFECYCLE,VSHIFT);
 Nova_HistoryUpdate(timekey,newvals);
-Nova_ResetShiftAverage(&SHIFT_VALUE);
+
+if (strcmp(CURRENT_SHIFT,VSHIFT) != 0)
+   {
+   strcpy(CURRENT_SHIFT,VSHIFT);
+   Nova_ResetShiftAverage(&SHIFT_VALUE);
+   }
+
 Nova_DumpSlowlyVaryingObservations();
 
 #else

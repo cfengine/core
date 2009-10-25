@@ -781,6 +781,7 @@ enum classes
    qnx,
    dragonfly,
    mingw,
+   vmware,
    unused1,
    unused2,
    unused3

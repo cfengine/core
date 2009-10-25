@@ -73,6 +73,7 @@ char *CLASSTEXT[] =   /* If you change here change enum classes too! */
    "qnx",
    "dragonfly",
    "windows",
+   "vmware",
    "unused1",
    "unused2",
    "unused3",
@@ -118,6 +119,7 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
    {"qnx",".*",".*"},              /* qnx  */
    {"dragonfly",".*",".*"},        /* dragonfly */
    {"mingw",".*",".*"},            /* NT (native) */
+   {"vmkernel",".*",".*"},            /* VMWARE / ESX */
    {"unused1","blah","blah"},
    {"unused2","blah","blah"},
    {"unused3","blah","blah"},
@@ -161,6 +163,7 @@ char *VPSCOMM[CF_CLASSATTR] =
    "/bin/ps",       /* qnx  */
    "/bin/ps",       /* dragonfly */
    "mingw-invalid", /* mingw */
+   "/bin/ps",       /* vmware */
    "/bin/ps",
    "/bin/ps",
    "/bin/ps",
@@ -204,6 +207,7 @@ char *VPSOPTS[CF_CLASSATTR] =
    "-ef",    /* qnx */
    "auxw",   /* dragonfly */
    "mingw-invalid", /* mingw */
+   "?",      /* vmware*/
    "-",
    "-",
    "-",
@@ -244,10 +248,11 @@ char *VMOUNTCOMM[CF_CLASSATTR] =
    "/sbin/mount",         /* openbsd */
    "/etc/mountall",         /* sco */
    "/sbin/mount -va",     /* darwin */
-   "/sbin/mount -v",     /* ux4800 */
-   "/bin/mount -v",      /* qnx */
+   "/sbin/mount -v",      /* ux4800 */
+   "/bin/mount -v",       /* qnx */
    "/sbin/mount -va",     /* dragonfly */
-   "mingw-invalid",         /* mingw */
+   "mingw-invalid",       /* mingw */
+   "/bin/mount -a",       /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -291,6 +296,7 @@ char *VUNMOUNTCOMM[CF_CLASSATTR] =
    "/bin/umount",      /* qnx */
    "/sbin/umount",     /* dragonfly */
    "mingw-invalid",     /* mingw */
+   "/bin/umount",      /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -335,7 +341,8 @@ char *VMOUNTOPTS[CF_CLASSATTR] =
    "bg,hard,intr",    /* ux4800 */
    "bg,hard,intr",    /* qnx */
    "bg,intr",         /* dragonfly */
-   "mingw-invalid",     /* mingw */
+   "mingw-invalid",   /* mingw */
+   "defaults",        /* vmstate */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -379,6 +386,7 @@ char *VIFDEV[CF_CLASSATTR] =
    "en0",    /* qnx */
    "ep0",    /* dragonfly */
    "mingw-invalid",     /* mingw */
+   "eth0",   /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -423,6 +431,7 @@ char *VRESOLVCONF[CF_CLASSATTR] =
    "/etc/resolv.conf",     /* qnx */
    "/etc/resolv.conf",     /* dragonfly */
    "mingw-invalid",        /* mingw */
+   "/etc/resolv.conf",     /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -468,6 +477,7 @@ char *VFSTAB[CF_CLASSATTR] =
    "/etc/fstab",       /* qnx */
    "/etc/fstab",       /* dragonfly */
    "mingw-invalid",     /* mingw */
+   "/etc/fstab",       /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -510,7 +520,8 @@ char *VMAILDIR[CF_CLASSATTR] =
    "/var/mail",          /* ux4800 */
    "/var/spool/mail",    /* qnx */
    "/var/mail",          /* dragonfly */
-   "mingw-invalid",     /* mingw */
+   "mingw-invalid",      /* mingw */
+   "/var/spool/mail",    /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -554,6 +565,7 @@ char *VNETSTAT[CF_CLASSATTR] =
    "/usr/bin/netstat -rn",   /* qnx */
    "/usr/bin/netstat -rn",   /* dragonfly */
    "mingw-invalid",          /* mingw */
+   "/usr/bin/netstat",       /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -598,6 +610,7 @@ char *VEXPORTS[CF_CLASSATTR] =
    "/etc/exports",    /* qnx */
    "/etc/exports",    /* dragonfly */
    "mingw-invalid",   /* mingw */
+   "none",            /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -611,37 +624,38 @@ char *VROUTE[CF_CLASSATTR] =
    {
    "-",
    "-", 
-   "-",   /* sun4 */
-   "-",   /* ultrix */
-   "-",   /* hpux */
-   "-",   /* aix */
-   "/sbin/route",       /* linux */
-   "/usr/sbin/route",   /* solaris */
-   "-",  /* osf1 */
-   "-",  /* digital */   
-   "-",   /* sun3 */
-   "-",   /* irix4 */
-   "-",   /* irix */
-   "-",   /* irix64 */
-   "/sbin/route",   /* freebsd */
-   "/usr/sbin/route",       /* solarisx86 */
-   "-",   /* bsd4.3 */
-   "-",   /* newsos4 */
-   "-",   /* netbsd */
-   "-",   /* AOS */
-   "-",  /* BSDI */
-   "-",   /* nextstep */
-   "-",   /* cray */
-   "-",       /* gnu */
-   "-", /* NT */
-   "-",   /* Unixware */
-   "/sbin/route",   /* openbsd */
-   "-",   /* sco */
-   "/sbin/route",  /* darwin */
-   "-",   /* ux4800 */
-   "-",   /* qnx */
-   "/sbin/route",  /* dragonfly */
+   "-",              /* sun4 */
+   "-",              /* ultrix */
+   "-",              /* hpux */
+   "-",              /* aix */
+   "/sbin/route",    /* linux */
+   "/usr/sbin/route",/* solaris */
+   "-",              /* osf1 */
+   "-",              /* digital */   
+   "-",              /* sun3 */
+   "-",              /* irix4 */
+   "-",              /* irix */
+   "-",              /* irix64 */
+   "/sbin/route",    /* freebsd */
+   "/usr/sbin/route",/* solarisx86 */
+   "-",              /* bsd4.3 */
+   "-",              /* newsos4 */
+   "-",              /* netbsd */
+   "-",              /* AOS */
+   "-",              /* BSDI */
+   "-",              /* nextstep */
+   "-",              /* cray */
+   "-",              /* gnu */
+   "-",              /* NT */
+   "-",              /* Unixware */
+   "/sbin/route",    /* openbsd */
+   "-",              /* sco */
+   "/sbin/route",    /* darwin */
+   "-",              /* ux4800 */
+   "-",              /* qnx */
+   "/sbin/route",    /* dragonfly */
    "mingw-invalid",  /* mingw */
+   "-",              /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -654,37 +668,38 @@ char *VROUTEADDFMT[CF_CLASSATTR] =
    {
    "-",
    "-", 
-   "-",   /* sun4 */
-   "-",   /* ultrix */
-   "-",   /* hpux */
-   "-",   /* aix */
-   "add %s gw %s",       /* linux */
-   "add %s %s",   /* solaris */
-   "-",  /* osf1 */
-   "-",  /* digital */   
-   "-",   /* sun3 */
-   "-",   /* irix4 */
-   "-",   /* irix */
-   "-",   /* irix64 */
-   "add %s %s",   /* freebsd */
-   "add %s %s",       /* solarisx86 */
-   "-",   /* bsd4.3 */
-   "-",   /* newsos4 */
-   "-",   /* netbsd */
-   "-",   /* AOS */
-   "-",  /* BSDI */
-   "-",   /* nextstep */
-   "-",   /* cray */
-   "-",       /* gnu */
-   "-", /* NT */
-   "-",   /* Unixware */
-   "add %s %s",   /* openbsd */
-   "-",   /* sco */
-   "add %s %s",  /* darwin */
-   "-",   /* ux4800 */
-   "-",   /* qnx */
-   "add %s %s",  /* dragonfly */
+   "-",              /* sun4 */
+   "-",              /* ultrix */
+   "-",              /* hpux */
+   "-",              /* aix */
+   "add %s gw %s",   /* linux */
+   "add %s %s",      /* solaris */
+   "-",              /* osf1 */
+   "-",              /* digital */   
+   "-",              /* sun3 */
+   "-",              /* irix4 */
+   "-",              /* irix */
+   "-",              /* irix64 */
+   "add %s %s",      /* freebsd */
+   "add %s %s",      /* solarisx86 */
+   "-",              /* bsd4.3 */
+   "-",              /* newsos4 */
+   "-",              /* netbsd */
+   "-",              /* AOS */
+   "-",              /* BSDI */
+   "-",              /* nextstep */
+   "-",              /* cray */
+   "-",              /* gnu */
+   "-",              /* NT */
+   "-",              /* Unixware */
+   "add %s %s",      /* openbsd */
+   "-",              /* sco */
+   "add %s %s",      /* darwin */
+   "-",              /* ux4800 */
+   "-",              /* qnx */
+   "add %s %s",      /* dragonfly */
    "mingw-invalid",  /* mingw */
+   "-",              /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",
@@ -697,37 +712,38 @@ char *VROUTEDELFMT[CF_CLASSATTR] =
    {
    "-",
    "-", 
-   "-",   /* sun4 */
-   "-",   /* ultrix */
-   "-",   /* hpux */
-   "-",   /* aix */
-   "del %s",       /* linux */
-   "delete %s",   /* solaris */
-   "-",  /* osf1 */
-   "-",  /* digital */   
-   "-",   /* sun3 */
-   "-",   /* irix4 */
-   "-",   /* irix */
-   "-",   /* irix64 */
-   "delete %s",   /* freebsd */
-   "delete %s",       /* solarisx86 */
-   "-",   /* bsd4.3 */
-   "-",   /* newsos4 */
-   "-",   /* netbsd */
-   "-",   /* AOS */
-   "-",  /* BSDI */
-   "-",   /* nextstep */
-   "-",   /* cray */
-   "-",       /* gnu */
-   "-", /* NT */
-   "-",   /* Unixware */
-   "delete %s",   /* openbsd */
-   "-",   /* sco */
-   "delete %s",  /* darwin */
-   "-",   /* ux4800 */
-   "-",   /* qnx */
-   "delete %s",  /* dragonfly */
+   "-",              /* sun4 */
+   "-",              /* ultrix */
+   "-",              /* hpux */
+   "-",              /* aix */
+   "del %s",         /* linux */
+   "delete %s",      /* solaris */
+   "-",              /* osf1 */
+   "-",              /* digital */   
+   "-",              /* sun3 */
+   "-",              /* irix4 */
+   "-",              /* irix */
+   "-",              /* irix64 */
+   "delete %s",      /* freebsd */
+   "delete %s",      /* solarisx86 */
+   "-",              /* bsd4.3 */
+   "-",              /* newsos4 */
+   "-",              /* netbsd */
+   "-",              /* AOS */
+   "-",              /* BSDI */
+   "-",              /* nextstep */
+   "-",              /* cray */
+   "-",              /* gnu */
+   "-",              /* NT */
+   "-",              /* Unixware */
+   "delete %s",      /* openbsd */
+   "-",              /* sco */
+   "delete %s",      /* darwin */
+   "-",              /* ux4800 */
+   "-",              /* qnx */
+   "delete %s",      /* dragonfly */
    "mingw-invalid",  /* mingw */
+   "-",              /* vmware */
    "unused-blah",
    "unused-blah",
    "unused-blah",

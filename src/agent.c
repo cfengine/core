@@ -750,6 +750,10 @@ return true;
 
 void CheckAgentAccess(struct Rlist *list)
 
+#ifdef MINGW
+{
+}
+#else  /* NOT MINGW */
 { char id[CF_MAXVARSIZE];
   struct passwd *pw;
   struct Rlist *rp,*rp2;
@@ -803,6 +807,7 @@ if (VINPUTLIST != NULL)
 
 FatalError("You are denied access to run this policy");
 }
+#endif  /* NOT MINGW */
 
 /*********************************************************************/
 

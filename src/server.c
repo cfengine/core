@@ -1592,7 +1592,7 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
    strncpy(conn->username,username,CF_MAXVARSIZE);
 
 #ifdef MINGW  /* NT uses security identifier instead of uid */
-   if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE))
+   if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
      {
 	 memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
      }
@@ -1738,7 +1738,7 @@ else
  
  
 #ifdef MINGW  /* NT uses security identifier instead of uid */
- if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE))
+ if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
    {
    memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
    }

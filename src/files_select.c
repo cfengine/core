@@ -201,11 +201,6 @@ int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit)
 
 { struct Item *leafattrib = NULL;
   struct Rlist *rp;
-
-if (S_ISLNK(lstatptr->st_mode))
-   {
-   PrependItem(&leafattrib,"symlink","");
-   }
  
 if (S_ISREG(lstatptr->st_mode))
    {
@@ -217,6 +212,12 @@ if (S_ISDIR(lstatptr->st_mode))
    {
    PrependItem(&leafattrib,"dir","");
    }
+
+#ifndef MINGW   
+if (S_ISLNK(lstatptr->st_mode))
+   {
+   PrependItem(&leafattrib,"symlink","");
+   }   
  
 if (S_ISFIFO(lstatptr->st_mode))
    {
@@ -237,6 +238,7 @@ if (S_ISBLK(lstatptr->st_mode))
    {
    PrependItem(&leafattrib,"block","");
    }
+#endif  /* NOT MINGW */
 
 #ifdef HAVE_DOOR_CREATE
 if (S_ISDOOR(lstatptr->st_mode))

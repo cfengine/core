@@ -710,56 +710,6 @@ if (lmin == CF_HIGHINIT || lmax == CF_LOWINIT)
 *max = lmax;
 }
 
-/****************************************************************************/
-/* Rlist to Uid/Gid lists                                                   */
-/****************************************************************************/
-
-struct UidList *Rlist2UidList(struct Rlist *uidnames,struct Promise *pp)
-
-{ struct UidList *uidlist = NULL;
-  struct Rlist *rp;
-  char username[CF_MAXVARSIZE];
-  uid_t uid;
-
-for (rp = uidnames; rp != NULL; rp=rp->next)
-   {
-   username[0] = '\0';
-   uid = Str2Uid(rp->item,username,pp);
-   AddSimpleUidItem(&uidlist,uid,username);
-   }
-
-if (uidlist == NULL)
-   {
-   AddSimpleUidItem(&uidlist,CF_SAME_OWNER,NULL);
-   }
-
-return (uidlist);
-}
-
-/*********************************************************************/
-
-struct GidList *Rlist2GidList(struct Rlist *gidnames,struct Promise *pp)
-
-{ struct GidList *gidlist = NULL;
-  struct Rlist *rp;
-  char groupname[CF_MAXVARSIZE];
-  gid_t gid;
- 
-for (rp = gidnames; rp != NULL; rp=rp->next)
-   {
-   groupname[0] = '\0';
-   gid = Str2Gid(rp->item,groupname,pp);
-   AddSimpleGidItem(&gidlist,gid,groupname);
-   }
-
-if (gidlist == NULL)
-   {
-   AddSimpleGidItem(&gidlist,CF_SAME_GROUP,NULL);
-   }
-
-return(gidlist);
-}
-
 /*********************************************************************/
 
 enum cf_acl_method Str2AclMethod(char *string)
@@ -816,6 +766,150 @@ return cfacl_noinherit;
 
 /*********************************************************************/
 /* Level                                                             */
+/*********************************************************************/
+
+int Month2Int(char *string)
+
+{ int i;
+
+if (string == NULL)
+   {
+   return -1;
+   }
+ 
+for (i = 0; i < 12; i++)
+   {
+   if (strncmp(MONTH_TEXT[i],string,strlen(string))==0)
+      {
+      return i+1;
+      break;
+      }
+   }
+
+return -1;
+}
+
+/*************************************************************/
+
+char *GetArg0(char *execstr)
+
+{ char *sp;
+  static char arg[CF_BUFSIZE];
+  int i = 0;
+
+for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+   {
+   i++;
+
+   if (*sp == '\"')
+      {
+      DeEscapeQuotedString(sp,arg);
+      return arg;
+      }
+   }
+
+memset(arg,0,CF_MAXVARSIZE);
+strncpy(arg,execstr,i);
+arg[i] = '\0';
+return arg;
+}
+
+/*************************************************************/
+
+void CommPrefix(char *execstr,char *comm)
+
+{ char *sp;
+
+for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+   {
+   }
+
+if (sp - 10 >= execstr)
+   {
+   sp -= 10;   /* copy 15 most relevant characters of command */
+   }
+else
+   {
+   sp = execstr;
+   }
+
+memset(comm,0,20);
+strncpy(comm,sp,15);
+}
+
+/*************************************************************/
+
+int NonEmptyLine(char *line)
+
+{ char *sp;
+            
+for (sp = line; *sp != '\0'; sp++)
+   {
+   if (!isspace((int)*sp))
+      {
+      return true;
+      }
+   }
+
+return false;
+}
+
+/*******************************************************************/
+/* Unix-only functions                                             */
+/*******************************************************************/
+
+#ifndef MINGW
+
+/****************************************************************************/
+/* Rlist to Uid/Gid lists                                                   */
+/****************************************************************************/
+
+struct UidList *Rlist2UidList(struct Rlist *uidnames,struct Promise *pp)
+
+{ 
+  struct Rlist *rp;
+  char username[CF_MAXVARSIZE];
+  uid_t uid;
+
+for (rp = uidnames; rp != NULL; rp=rp->next)
+   {
+   username[0] = '\0';
+   uid = Str2Uid(rp->item,username,pp);
+   AddSimpleUidItem(&uidlist,uid,username);
+   }
+
+if (uidlist == NULL)
+   {
+   AddSimpleUidItem(&uidlist,CF_SAME_OWNER,NULL);
+   }
+
+return (uidlist);
+}
+
+/*********************************************************************/
+
+struct GidList *Rlist2GidList(struct Rlist *gidnames,struct Promise *pp)
+
+{ struct GidList *gidlist = NULL;
+  struct Rlist *rp;
+  char groupname[CF_MAXVARSIZE];
+  gid_t gid;
+ 
+for (rp = gidnames; rp != NULL; rp=rp->next)
+   {
+   groupname[0] = '\0';
+   gid = Str2Gid(rp->item,groupname,pp);
+   AddSimpleGidItem(&gidlist,gid,groupname);
+   }
+
+if (gidlist == NULL)
+   {
+   AddSimpleGidItem(&gidlist,CF_SAME_GROUP,NULL);
+   }
+
+return(gidlist);
+}
+
 /*********************************************************************/
 
 uid_t Str2Uid(char *uidbuff,char *usercopy,struct Promise *pp)
@@ -937,96 +1031,4 @@ else
 
 return gid;
 }
-
-/****************************************************************************/
-
-int Month2Int(char *string)
-
-{ int i;
-
-if (string == NULL)
-   {
-   return -1;
-   }
- 
-for (i = 0; i < 12; i++)
-   {
-   if (strncmp(MONTH_TEXT[i],string,strlen(string))==0)
-      {
-      return i+1;
-      break;
-      }
-   }
-
-return -1;
-}
-
-
-/*************************************************************/
-
-char *GetArg0(char *execstr)
-
-{ char *sp;
-  static char arg[CF_BUFSIZE];
-  int i = 0;
-
-for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
-   {
-   i++;
-
-   if (*sp == '\"')
-      {
-      DeEscapeQuotedString(sp,arg);
-      return arg;
-      }
-   }
-
-memset(arg,0,CF_MAXVARSIZE);
-strncpy(arg,execstr,i);
-arg[i] = '\0';
-return arg;
-}
-
-/*************************************************************/
-
-void CommPrefix(char *execstr,char *comm)
-
-{ char *sp;
-
-for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
-   {
-   }
-
-if (sp - 10 >= execstr)
-   {
-   sp -= 10;   /* copy 15 most relevant characters of command */
-   }
-else
-   {
-   sp = execstr;
-   }
-
-memset(comm,0,20);
-strncpy(comm,sp,15);
-}
-
-/*************************************************************/
-
-int NonEmptyLine(char *line)
-
-{ char *sp;
-            
-for (sp = line; *sp != '\0'; sp++)
-   {
-   if (!isspace((int)*sp))
-      {
-      return true;
-      }
-   }
-
-return false;
-}
-
-
-
-
+#endif  /* NOT MINGW */

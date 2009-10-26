@@ -393,8 +393,13 @@ if (list && !ParseFlagString(list,&p.plus_flags,&p.minus_flags))
    PromiseRef(cf_error,pp);
    }
 
+#ifdef MINGW
+p.owners = NovaWin_Rlist2SidList((struct Rlist *)GetConstraint("owners",pp,CF_LIST),pp);
+#else  /* NOT MINGW */
 p.owners = Rlist2UidList((struct Rlist *)GetConstraint("owners",pp,CF_LIST),pp);
 p.groups = Rlist2GidList((struct Rlist *)GetConstraint("groups",pp,CF_LIST),pp);
+#endif  /* NOT MINGW */
+
 p.findertype = (char *)GetConstraint("findertype",pp,CF_SCALAR);
 p.rxdirs = GetBooleanConstraint("rxdirs",pp);
 

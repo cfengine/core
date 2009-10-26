@@ -397,6 +397,11 @@ return retval;
 
 uid_t GetUidConstraint(char *lval,struct Promise *pp)
 
+#ifdef MINGW
+{  // we use sids on windows instead
+  return CF_SAME_OWNER;
+}
+#else  /* NOT MINGW */
 { struct Constraint *cp;
   int retval = CF_SAME_OWNER;
   char buffer[CF_MAXVARSIZE];
@@ -431,11 +436,17 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
 return retval;
 }
+#endif  /* NOT MINGW */
 
 /*****************************************************************************/
 
 gid_t GetGidConstraint(char *lval,struct Promise *pp)
 
+#ifdef MINGW
+{  // not applicable on windows: processes have no group
+  return CF_SAME_GROUP;
+}
+#else
 { struct Constraint *cp;
   int retval = CF_SAME_OWNER;
   char buffer[CF_MAXVARSIZE];
@@ -470,6 +481,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
 return retval;
 }
+#endif  /* NOT MINGW */
 
 /*****************************************************************************/
 

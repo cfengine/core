@@ -44,7 +44,35 @@
      
   */
 
+/*******************************************************************/
+/* FnCall API - OS function mapping                                */
+/*******************************************************************/
+
+struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
+
+{
+#ifdef MINGW
+return NovaWin_FnCallUserExists(fp, finalargs);
+#else
+return Unix_FnCallUserExists(fp, finalargs);
+#endif
+}
+
 /*********************************************************************/
+
+struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
+
+{
+#ifdef MINGW
+return NovaWin_FnCallGroupExists(fp, finalargs);
+#else
+return Unix_FnCallGroupExists(fp, finalargs);
+#endif
+}
+
+/*******************************************************************/
+/* End FnCall API                                                  */
+/*******************************************************************/
 
 struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
@@ -3221,132 +3249,6 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
-
-{ static char *argtemplate[] =
-     {
-     CF_ANYSTRING,
-     NULL
-     };
-  static enum cfdatatype argtypes[] =
-      {
-      cf_str,
-      cf_notype
-      };
-  
-  struct Rlist *rp;
-  struct Rval rval;
-  char buffer[CF_BUFSIZE];
-  struct passwd *pw;
-  uid_t uid = -1;
-  char *arg = finalargs->item;
- 
-buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
-
-/* begin fn specific content */
-
-strcpy(buffer,CF_ANYCLASS);
-
-if (isdigit((int)*arg))
-   {
-   uid = Str2Uid(arg,NULL,NULL);
-   
-   if (uid < 0)
-      {
-      SetFnCallReturnStatus("userexists",FNCALL_FAILURE,"Illegal user id",NULL);   
-      }
-   else
-      {
-      SetFnCallReturnStatus("userexists",FNCALL_SUCCESS,NULL,NULL);   
-      }
-
-   if ((pw = getpwuid(uid)) == NULL)
-      {
-      strcpy(buffer,"!any");
-      }
-   }
-else if ((pw = getpwnam(arg)) == NULL)
-   {
-   strcpy(buffer,"!any");
-   }
-
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallUserExists");
-   }
-
-/* end fn specific content */
-
-rval.rtype = CF_SCALAR;
-return rval;
-}
-
-/*********************************************************************/
-
-struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
-
-{ static char *argtemplate[] =
-     {
-     CF_ANYSTRING,
-     NULL
-     };
-  static enum cfdatatype argtypes[] =
-      {
-      cf_str,
-      cf_notype
-      };
-  
-  struct Rlist *rp;
-  struct Rval rval;
-  char buffer[CF_BUFSIZE];
-  struct group *gr;
-  gid_t gid = -1;
-  char *arg = finalargs->item;
- 
-buffer[0] = '\0';  
-ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
-
-/* begin fn specific content */
-
-strcpy(buffer,CF_ANYCLASS);
-
-if (isdigit((int)*arg))
-   {
-   gid = Str2Gid(arg,NULL,NULL);
-   
-   if (gid < 0)
-      {
-      SetFnCallReturnStatus("groupexists",FNCALL_FAILURE,"Illegal group id",NULL);   
-      }
-   else
-      {
-      SetFnCallReturnStatus("groupexists",FNCALL_SUCCESS,NULL,NULL);   
-      }
-
-   if ((gr = getgrgid(gid)) == NULL)
-      {
-      strcpy(buffer,"!any");
-      }
-   }
-else if ((gr = getgrnam(arg)) == NULL)
-   {
-   strcpy(buffer,"!any");
-   }
-
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallUserExists");
-   }
-
-/* end fn specific content */
-
-rval.rtype = CF_SCALAR;
-return rval;
-}
-
-/*********************************************************************/
-
 struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =
@@ -4456,6 +4358,136 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+#ifndef MINGW
+
+/*******************************************************************/
+/* Unix implementations                                            */
+/*******************************************************************/
+
+struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  struct passwd *pw;
+  uid_t uid = -1;
+  char *arg = finalargs->item;
+ 
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+strcpy(buffer,CF_ANYCLASS);
+
+if (isdigit((int)*arg))
+   {
+   uid = Str2Uid(arg,NULL,NULL);
+   
+   if (uid < 0)
+      {
+      SetFnCallReturnStatus("userexists",FNCALL_FAILURE,"Illegal user id",NULL);   
+      }
+   else
+      {
+      SetFnCallReturnStatus("userexists",FNCALL_SUCCESS,NULL,NULL);   
+      }
+
+   if ((pw = getpwuid(uid)) == NULL)
+      {
+      strcpy(buffer,"!any");
+      }
+   }
+else if ((pw = getpwnam(arg)) == NULL)
+   {
+   strcpy(buffer,"!any");
+   }
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallUserExists");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  struct group *gr;
+  gid_t gid = -1;
+  char *arg = finalargs->item;
+ 
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+strcpy(buffer,CF_ANYCLASS);
+
+if (isdigit((int)*arg))
+   {
+   gid = Str2Gid(arg,NULL,NULL);
+   
+   if (gid < 0)
+      {
+      SetFnCallReturnStatus("groupexists",FNCALL_FAILURE,"Illegal group id",NULL);   
+      }
+   else
+      {
+      SetFnCallReturnStatus("groupexists",FNCALL_SUCCESS,NULL,NULL);   
+      }
+
+   if ((gr = getgrgid(gid)) == NULL)
+      {
+      strcpy(buffer,"!any");
+      }
+   }
+else if ((gr = getgrnam(arg)) == NULL)
+   {
+   strcpy(buffer,"!any");
+   }
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallGroupExists");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+#endif  /* NOT MINGW */
 
 
 /*********************************************************************/

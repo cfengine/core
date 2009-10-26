@@ -247,10 +247,6 @@ long TimeAbs2Int(char *s);
 mode_t Str2Mode(char *s);
 int Str2Double(char *s);
 void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);
-struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);
-struct GidList *Rlist2GidList(struct Rlist *gidnames, struct Promise *pp);
-uid_t Str2Uid(char *uidbuff,char *copy,struct Promise *pp);
-gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
 int Month2Int(char *string);
 char *GetArg0(char *execstr);
 void CommPrefix(char *execstr,char *comm);
@@ -262,6 +258,12 @@ enum package_actions Str2PackageAction(char *s);
 enum cf_acl_method Str2AclMethod(char *string);
 enum cf_acl_type Str2AclType(char *string);
 enum cf_acl_inherit Str2AclInherit(char *string);
+#ifndef MINGW
+struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);
+struct GidList *Rlist2GidList(struct Rlist *gidnames, struct Promise *pp);
+uid_t Str2Uid(char *uidbuff,char *copy,struct Promise *pp);
+gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
+#endif  /* NOT MINGW */
 
 /* crypto.c */
 
@@ -633,8 +635,6 @@ int MakeParentDirectory(char *parentandchild,int force);
 void LogHashChange(char *file);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
 void RotateFiles(char *name,int number);
-void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
-void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp);
@@ -644,6 +644,8 @@ struct UidList *MakeUidList(char *uidnames);
 struct GidList *MakeGidList(char *gidnames);
 void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
+void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
+void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
 #endif  /* NOT MINGW */
 
 /* files_properties.c */

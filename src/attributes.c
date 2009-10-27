@@ -967,7 +967,7 @@ if (value)
    entries++;
    }
 
-IntRange2Int(value,&p.min_rsize,&p.max_rsize,pp);
+IntRange2Int(value,&p.min_vsize,&p.max_vsize,pp);
 value = (char *)GetConstraint("ttime_range",pp,CF_SCALAR);
 if (value)
    {

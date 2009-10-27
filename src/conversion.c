@@ -866,7 +866,7 @@ return false;
 
 struct UidList *Rlist2UidList(struct Rlist *uidnames,struct Promise *pp)
 
-{ 
+{ struct UidList *uidlist = NULL;
   struct Rlist *rp;
   char username[CF_MAXVARSIZE];
   uid_t uid;

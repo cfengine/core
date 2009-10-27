@@ -452,6 +452,10 @@ struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs);
+#ifndef MINGW
+struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
+#endif  /* NOT MINGW */
 
 void *CfReadFile(char *filename,int maxsize);
 char *StripPatterns(char *file_buffer,char *pattern);

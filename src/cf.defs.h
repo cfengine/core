@@ -393,7 +393,7 @@ typedef int clockid_t;
 /* This is the only place you ever need to edit anything           */
 /*******************************************************************/
 
-#define CF_CLASSATTR 37         /* increase this for each new class added */
+#define CF_CLASSATTR 38         /* increase this for each new class added */
                                 /* It defines the array size for class data */
 #define CF_ATTRDIM 3            /* Only used in CLASSATTRUBUTES[][] defn */
 

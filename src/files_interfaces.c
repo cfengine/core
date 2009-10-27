@@ -311,6 +311,7 @@ if (thislock.lock == NULL)
    }
 
 snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+MapName(filename);
 
 if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
    {

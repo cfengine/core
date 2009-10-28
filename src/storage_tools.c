@@ -46,8 +46,22 @@
 
 /************************************************************************/
 
-int GetDiskUsage (char *file,enum cfsizes type)
+int GetDiskUsage(char *file,enum cfsizes type)
+{
+#ifdef MINGW
+return NovaWin_GetDiskUsage(file, type);
+#else
+return Unix_GetDiskUsage(file, type);
+#endif
+}
 
+/************************************************************************/
+/*  Unix implementations                                                */
+/************************************************************************/
+
+#ifndef MINGW
+
+int Unix_GetDiskUsage(char *file,enum cfsizes type)
 {
 #if defined SOLARIS || defined OSF || defined UNIXWARE  || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
@@ -145,3 +159,5 @@ else
    return capacity;
    }
 }
+
+#endif  /* NOT MINGW */

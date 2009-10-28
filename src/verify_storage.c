@@ -64,6 +64,13 @@ void VerifyStoragePromise(char *path,struct Promise *pp)
 
 a = GetStorageAttributes(pp);
 
+#ifdef MINGW
+if(a.havemount != NULL)
+{
+CfOut(cf_verbose, "", "storage.mount is not supported on Windows");
+}
+#endif
+
 /* No parameter conflicts here */
 
 if (a.mount.unmount)
@@ -92,17 +99,20 @@ if (thislock.lock == NULL)
 
 /* Do mounts first */
 
+#ifndef MINGW
 if (a.havemount)
    {
    if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
       {
       CfOut(cf_error,"","Couldn't obtain a list of mounted filesystems - aborting\n");
+	  YieldCurrentLock(thislock);
       return;
       }
 
    VerifyMountPromise(path,a,pp);
    }
-
+#endif  /* NOT MINGW */
+   
 /* Then check file system */
 
 if (a.havevolume)
@@ -295,6 +305,13 @@ int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
 { struct stat statbuf;
   int free;
   int kilobytes;
+  
+#ifdef MINGW
+if(a.volume.check_foreign)
+{
+CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows");
+}
+#endif  /* MINGW */
 
 if (stat(file,&statbuf) == -1)
    {
@@ -302,6 +319,7 @@ if (stat(file,&statbuf) == -1)
    return true;
    }
 
+#ifndef MINGW
 if (!a.volume.check_foreign)
    {
    if (IsForeignFileSystem(&statbuf,file))
@@ -310,7 +328,8 @@ if (!a.volume.check_foreign)
       return true;
       }
    }
-
+#endif  /* NOT MINGW */
+   
 kilobytes = a.volume.freespace;
 
 if (kilobytes < 0)

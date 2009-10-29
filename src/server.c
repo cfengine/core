@@ -724,6 +724,8 @@ if ((*VINPUTFILE != '.') && !IsAbsoluteFileName(VINPUTFILE)) /* Don't prepend to
 
 strncat(filename,VINPUTFILE,CF_BUFSIZE-1-strlen(filename));
 
+MapName(filename);
+
 Debug("Checking file updates on %s (%x/%x)\n",filename, newstat.st_mtime, CFDSTARTTIME);
 
 if (NewPromiseProposals())
@@ -1831,6 +1833,14 @@ strcat(realname,lastnode);
 ThreadLock(cft_system);
 
 strncpy(transrequest,MapName(realname),CF_BUFSIZE-1);
+#ifdef MINGW
+// NT has case-insensitive path names
+int i;
+for (i = 0; i < strlen(transrequest); i++)
+{
+transrequest[i] = ToLower(transrequest[i]);
+}
+#endif  /* MINGW */
 
 ThreadUnlock(cft_system);
 

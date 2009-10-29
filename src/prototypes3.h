@@ -1216,8 +1216,10 @@ void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32
 int Xen_Hv_Check(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);
-char *GetHome(uid_t uid);
 int GetCurrentUserName(char *userName, int userNameLen);
+#ifndef MINGW
+char *GetHome(uid_t uid);
+#endif  /* NOT MINGW */
 
 /* transaction.c */
 

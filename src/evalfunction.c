@@ -291,6 +291,7 @@ return rval;
 
 struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
 
+#ifndef MINGW
 { static char *argtemplate[] =
      {
      CF_ANYSTRING,
@@ -336,11 +337,21 @@ if ((rval.item = strdup(buffer)) == NULL)
 rval.rtype = CF_SCALAR;
 return rval;
 }
+#else  /* MINGW */
+{
+struct Rval rval;
+SetFnCallReturnStatus("getuid",FNCALL_FAILURE,"Windows does not have user ids",NULL);
+rval.item = strdup("\0");
+rval.rtype = CF_SCALAR;
+return rval;
+}
+#endif  /* MINGW */
 
 /*********************************************************************/
 
 struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs)
 
+#ifndef MINGW
 { static char *argtemplate[] =
      {
      CF_ANYSTRING,
@@ -386,6 +397,15 @@ if ((rval.item = strdup(buffer)) == NULL)
 rval.rtype = CF_SCALAR;
 return rval;
 }
+#else  /* MINGW */
+{
+struct Rval rval;
+SetFnCallReturnStatus("getgid",FNCALL_FAILURE,"Windows does not have group ids",NULL);
+rval.item = strdup("\0");
+rval.rtype = CF_SCALAR;
+return rval;
+}
+#endif  /* MINGW */
 
 /*********************************************************************/
 

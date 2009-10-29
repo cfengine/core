@@ -65,7 +65,7 @@ void VerifyStoragePromise(char *path,struct Promise *pp)
 a = GetStorageAttributes(pp);
 
 #ifdef MINGW
-if(a.havemount != NULL)
+if(!a.havemount)
 {
 CfOut(cf_verbose, "", "storage.mount is not supported on Windows");
 }
@@ -307,9 +307,9 @@ int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
   int kilobytes;
   
 #ifdef MINGW
-if(a.volume.check_foreign)
+if(!a.volume.check_foreign)
 {
-CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows");
+CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows (checking every mount)");
 }
 #endif  /* MINGW */
 

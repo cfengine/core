@@ -1018,7 +1018,7 @@ switch(type)
        break;
 
    case kp_storage:
-
+#ifndef MINGW
        CfOut(cf_verbose,""," -> Number of changes observed in %s is %d\n",VFSTAB[VSYSTEMHARDCLASS],FSTAB_EDITS);
        
        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
@@ -1039,7 +1039,7 @@ switch(type)
           MountAll();
           CfOut(cf_verbose,"","");
           }
-
+#endif  /* NOT MINGW */
        break;
 
    case kp_packages:

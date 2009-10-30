@@ -326,6 +326,9 @@ switch(level)
        break;       
    }
 
+#ifdef MINGW
+NovaWin_LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, mess);
+#endif
 
 /* Now complete the exits status classes and auditing */
 
@@ -371,48 +374,6 @@ ThreadUnlock(cft_output);
 
 /*********************************************************************************/
 /* Level                                                                         */
-/*********************************************************************************/
-
-void MakeLog(struct Item *mess,enum cfreport level)
-
-{ struct Item *ip;
-
-if (!IsPrivileged() || DONTDO)
-   {
-   return;
-   }
- 
-/* If we can't mutex it could be dangerous to proceed with threaded file descriptors */
-
-if (!ThreadLock(cft_output))
-   {
-   return;
-   }
- 
-for (ip = mess; ip != NULL; ip = ip->next)
-   {
-   switch (level)
-      {
-      case cf_inform:
-          syslog(LOG_NOTICE," %s",ip->name);
-          break;
-          
-      case cf_verbose:
-          syslog(LOG_INFO," %s",ip->name);
-          break;
-          
-      case cf_error:
-          syslog(LOG_ERR," %s",ip->name);
-          break;
-
-      default:
-          break;
-      }
-   }
-
-ThreadUnlock(cft_output);
-}
-
 /*********************************************************************************/
 
 void MakeReport(struct Item *mess,int prefix)
@@ -500,4 +461,61 @@ return NovaWin_GetErrorStr();
 return Unix_GetErrorStr();
 #endif
 }
+
+/*********************************************************************************/
+
+void MakeLog(struct Item *mess,enum cfreport level)
+{
+#ifdef MINGW
+NovaWin_MakeLog(mess, level);
+#else
+Unix_MakeLog(mess, level);
+#endif
+}
+
+/*********************************************************************************/
+
+#ifndef MINGW
+
+void Unix_MakeLog(struct Item *mess,enum cfreport level)
+
+{ struct Item *ip;
+
+if (!IsPrivileged() || DONTDO)
+   {
+   return;
+   }
+ 
+/* If we can't mutex it could be dangerous to proceed with threaded file descriptors */
+
+if (!ThreadLock(cft_output))
+   {
+   return;
+   }
+ 
+for (ip = mess; ip != NULL; ip = ip->next)
+   {
+   switch (level)
+      {
+      case cf_inform:
+          syslog(LOG_NOTICE," %s",ip->name);
+          break;
+          
+      case cf_verbose:
+          syslog(LOG_INFO," %s",ip->name);
+          break;
+          
+      case cf_error:
+          syslog(LOG_ERR," %s",ip->name);
+          break;
+
+      default:
+          break;
+      }
+   }
+
+ThreadUnlock(cft_output);
+}
+
+#endif  /* NOT MINGW */
 

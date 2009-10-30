@@ -728,7 +728,7 @@ fclose(fp);
 
 if (ONCE)
    {
-   closelog();
+   Cf3CloseLog();
    }
 
 CfOut(cf_verbose,""," -> Command is complete\n",cmd);

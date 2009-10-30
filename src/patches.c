@@ -541,7 +541,7 @@ return -1;
 
 /*******************************************************************/
 
-#ifndef HAVE_DRAND48  
+#ifndef HAVE_DRAND48
 
 double drand48(void)
 

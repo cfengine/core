@@ -854,6 +854,45 @@ for (sp = line; *sp != '\0'; sp++)
 return false;
 }
 
+/*************************************************************/
+
+char *Item2String(struct Item *ip)
+{
+  struct Item *currItem;
+  int stringSz = 0;
+  char *buf;
+  
+  // compute required buffer size
+  for(currItem = ip; currItem != NULL; currItem = currItem->next)
+    {
+      stringSz += strlen(currItem->name);
+      stringSz++; // newline space
+    }
+  
+  // we automatically get \0-termination because we are not appending a \n after the last item
+
+  buf = calloc(1, stringSz);
+
+  if(buf == NULL)
+    {
+      FatalError("Memory allocation in ItemToString()");
+    }
+  
+  // do the copy
+  for(currItem = ip; currItem != NULL; currItem = currItem->next)
+    {
+      strcat(buf, currItem->name);
+	  
+	  if(currItem->next != NULL)  // no newline after last item
+	  {
+        strcat(buf, "\n");
+	  }
+    }
+  
+  return buf;
+}
+
+
 /*******************************************************************/
 /* Unix-only functions                                             */
 /*******************************************************************/

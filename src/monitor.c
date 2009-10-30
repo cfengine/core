@@ -236,7 +236,6 @@ void ThisAgentInit()
 {
 umask(077);
 sprintf(VPREFIX, "cf-monitord");
-Cf3OpenLog();
 
 LOGGING = true;                    /* Do output to syslog */
 

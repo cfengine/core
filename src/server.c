@@ -332,7 +332,7 @@ CfOut(cf_verbose,"","Listening for connections ...\n");
 if ((!NO_FORK) && (fork() != 0))
    {
    CfOut(cf_inform,"","cfServerd starting %.24s\n",ctime(&CFDSTARTTIME));
-   closelog();
+   Cf3CloseLog();
    exit(0);
    }
 

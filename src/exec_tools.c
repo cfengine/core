@@ -140,7 +140,7 @@ void ActAsDaemon(int preserve)
 setsid();
 #endif
 
-closelog();
+Cf3CloseLog();
 
 fflush(NULL);
 fd = open(NULLFILE, O_RDWR, 0);

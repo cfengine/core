@@ -132,11 +132,14 @@ void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);
-void MakeLog(struct Item *mess,enum cfreport level);
 void MakeReport(struct Item *mess,int prefix);
 void FileReport(struct Item *mess,int prefix,char *filename);
 void SanitizeBuffer(char *buffer);
 char *GetErrorStr(void);
+void MakeLog(struct Item *mess,enum cfreport level);
+#ifndef MINGW
+void Unix_MakeLog(struct Item *mess,enum cfreport level);
+#endif  /* NOT MINGW */
 
 /* cf_sql.c */
 
@@ -258,6 +261,7 @@ enum package_actions Str2PackageAction(char *s);
 enum cf_acl_method Str2AclMethod(char *string);
 enum cf_acl_type Str2AclType(char *string);
 enum cf_acl_inherit Str2AclInherit(char *string);
+char *Item2String(struct Item *ip);
 #ifndef MINGW
 struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);
 struct GidList *Rlist2GidList(struct Rlist *gidnames, struct Promise *pp);
@@ -717,6 +721,7 @@ void HashControls(void);
 void UnHashVariables(void);
 void TheAgent(enum cfagenttype ag);
 void Cf3OpenLog(void);
+void Cf3CloseLog(void);
 void *ExitCleanly(int signum);
 struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(char *retval);
@@ -970,6 +975,15 @@ int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
+#ifndef HAVE_SETEGID
+int setegid (gid_t gid);
+#endif /* HAVE_SETEGID */
+#ifndef HAVE_DRAND48
+double drand48(void);
+#endif  /* HAVE_DRAND48 */
+#ifndef HAVE_DRAND48
+void srand48(long seed);
+#endif  /* HAVE_DRAND48 */
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);

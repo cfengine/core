@@ -140,6 +140,7 @@ void ActAsDaemon(int preserve)
 setsid();
 #endif
 
+CloseNetwork();
 Cf3CloseLog();
 
 fflush(NULL);
@@ -165,7 +166,7 @@ if (fd != -1)
       }
    }
 
-chdir("/");
+chdir(MapName("/"));
    
 #ifdef HAVE_SYSCONF
 maxfd = sysconf(_SC_OPEN_MAX);

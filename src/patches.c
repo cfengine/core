@@ -58,8 +58,6 @@ char *MapName(char *s)
 
 { char buffer[CF_BUFSIZE];
   char *spf,*spto;
-  int rootlen;
-  struct stat sb;
 
 #ifdef NT
 memset(buffer,0,CF_BUFSIZE);
@@ -639,3 +637,28 @@ return rename(oldpath,newpath);
 #endif
 }
 
+/*******************************************************************/
+
+void OpenNetwork()
+
+{
+#ifdef MINGW
+NovaWin_OpenNetwork();
+#else
+/* no network init on Unix */
+#endif
+}
+
+/*******************************************************************/
+
+void CloseNetwork()
+
+{
+#ifdef MINGW
+NovaWin_CloseNetwork();
+#else
+/* no network close on Unix */
+#endif
+}
+
+/*******************************************************************/

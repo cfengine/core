@@ -946,6 +946,17 @@ else
 
 /*********************************************************************/
 
+int cfstat(const char *path, struct stat *buf)
+{
+#ifdef MINGW
+return NovaWin_stat(path, buf);
+#else
+return stat(path, buf);
+#endif
+}
+
+/*********************************************************************/
+
 int cf_stat(char *file,struct stat *buf,struct Attributes attr,struct Promise *pp)
 
 { int res;

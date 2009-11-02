@@ -388,6 +388,7 @@ if (strlen(CFLOCK) > 0)
 
 unlink(PIDFILE);
 EndAudit();
+CloseNetwork();
 Cf3CloseLog();
 exit(1);
 }

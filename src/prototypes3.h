@@ -577,6 +577,7 @@ void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes att
 void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
 int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
 void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp);
+int cfstat(const char *path, struct stat *buf);
 int cf_stat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
 int cf_lstat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
 int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
@@ -975,6 +976,8 @@ int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
+void OpenNetwork(void);
+void CloseNetwork(void);
 #ifndef HAVE_SETEGID
 int setegid (gid_t gid);
 #endif /* HAVE_SETEGID */

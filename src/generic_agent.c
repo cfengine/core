@@ -228,7 +228,23 @@ CloseReports(agents);
 void Cf3OpenLog()
 
 {
+#ifdef MINGW
+NovaWin_OpenLog();
+#else
 openlog(VPREFIX,LOG_PID|LOG_NOWAIT|LOG_ODELAY,FACILITY);
+#endif
+}
+
+/*****************************************************************************/
+
+void Cf3CloseLog()
+
+{
+#ifdef MINGW
+NovaWin_CloseLog();
+#else
+closelog();
+#endif
 }
 
 /*****************************************************************************/
@@ -326,6 +342,8 @@ strcpy(CFWORKDIR,WORKDIR);
 MapName(CFWORKDIR);
 #endif
 
+Cf3OpenLog();
+
 if (!LOOKUP) /* cf-know should not do this in lookup mode */
    {
    CfOut(cf_verbose,"","Work directory is %s\n",CFWORKDIR);
@@ -388,9 +406,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
       }
    }
 
-#ifdef MINGW
-NovaWin_OpenNetwork();
-#endif   
+OpenNetwork();
    
 /* Init crypto stuff */
 
@@ -797,7 +813,7 @@ else if (strcmp(retval,"LOG_LOCAL7") == 0)
    FACILITY = LOG_LOCAL7;
    }
 
-closelog();
+Cf3CloseLog();
 Cf3OpenLog();
 }
 
@@ -1041,7 +1057,7 @@ if (stat(vbuff,&statbuf) == -1)
    }
 else 
    {
-   if (statbuf.st_mode & 022)
+   if (statbuf.st_mode & 077)
       {
       CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
       }

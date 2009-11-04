@@ -427,3 +427,4 @@ return NovaWin_GracefulTerminate(pid);
 return Unix_GracefulTerminate(pid);
 #endif
 }
+

@@ -1071,3 +1071,4 @@ else
 return gid;
 }
 #endif  /* NOT MINGW */
+

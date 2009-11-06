@@ -977,7 +977,7 @@ CfOut(cf_verbose,"","\n");
 /*********************************************************************/
 
 void CheckWorkingDirectories()
-
+/* NOTE: We do not care about permissions (ACLs) in windows */
 { struct stat statbuf;
   int result;
   char *sp,vbuff[CF_BUFSIZE];
@@ -1033,10 +1033,12 @@ if (stat(vbuff,&statbuf) == -1)
    }
 else 
    {
+#ifndef MINGW
    if (statbuf.st_mode & 022)
       {
       CfOut(cf_error,"","UNTRUSTED: State directory %s (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
       }
+#endif  /* NOT MINGW */
    }
 
 CfOut(cf_verbose,"","Checking integrity of the module directory\n"); 
@@ -1057,10 +1059,12 @@ if (stat(vbuff,&statbuf) == -1)
    }
 else 
    {
+#ifndef MINGW
    if (statbuf.st_mode & 077)
       {
       CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
       }
+#endif  /* NOT MINGW */
    }
 
 CfOut(cf_verbose,"","Checking integrity of the input data for RPC\n"); 
@@ -1081,11 +1085,13 @@ if (stat(vbuff,&statbuf) == -1)
    }
 else 
    {
+#ifndef MINGW
    if (statbuf.st_mode & 077)
       {
       snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
       FatalError(output);
       }
+#endif  /* NOT MINGW */
    }
 
 CfOut(cf_verbose,"","Checking integrity of the output data for RPC\n"); 
@@ -1106,12 +1112,14 @@ if (stat(vbuff,&statbuf) == -1)
    }
 else
    {
+#ifndef MINGW
    if (statbuf.st_mode & 077)
       {
       
       snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
       FatalError(output);
       }
+#endif  /* NOT MINGW */
    }
  
 CfOut(cf_verbose,"","Checking integrity of the PKI directory\n");
@@ -1127,11 +1135,13 @@ if (stat(vbuff,&statbuf) == -1)
    }
 else
    {
+#ifndef MINGW
    if (statbuf.st_mode & 077)
       {
       snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: Private key directory %s%cppkeys (mode %o) was not private!\n",CFWORKDIR,FILE_SEPARATOR,statbuf.st_mode & 0777);
       FatalError(output);
       }
+#endif  /* NOT MINGW */
    }
 }
 

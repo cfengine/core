@@ -282,6 +282,42 @@ void SavePublicKey (char *ipaddress, RSA *key);
 void DeletePublicKey (char *ipaddress);
 char *KeyPrint(RSA *key);
 
+/* dbm_api.c */
+
+int OpenDB(char *filename, CF_DB **dbp);
+int CloseDB(CF_DB *dbp);
+int ValueSizeDB(CF_DB *dbp, char *key);
+int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz);
+int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz);
+int DeleteDB(CF_DB *dbp, char *key);
+
+
+/* dbm_berkely.c */
+
+#ifdef BDB  // FIXME
+int BDB_OpenDB(char *filename,DB **dbp);
+int BDB_CloseDB(DB *dbp);
+int BDB_ValueSizeDB(DB *dbp, char *key);
+int BDB_ReadDB(DB *dbp,char *name,void *ptr,int size);
+int BDB_WriteDB(DB *dbp,char *name,void *ptr,int size);
+int BDB_DeleteDB(DB *dbp,char *name);
+DBT *BDB_NewDBKey(char *name);
+void BDB_DeleteDBKey(DBT *key);
+DBT *BDB_NewDBValue(void *ptr,int size);
+void BDB_DeleteDBValue(DBT *value);
+#endif
+
+/* dbm_quick.c */
+
+#ifdef QDB  // FIXME
+int QDB_OpenDB(char *filename, DEPOT **depot);
+int QDB_CloseDB(DEPOT *depot);
+int QDB_ValueSizeDB(DEPOT *dbp, char *key);
+int QDB_ReadDB(DEPOT *depot, char *key, void *dest, int destSz);
+int QDB_WriteDB(DEPOT *depot, char *key, void *src, int srcSz);
+int QDB_DeleteDB(DEPOT *depot, char *key);
+#endif 
+
 /* dtypes.c */
 
 int IsSocketType(char *s);
@@ -848,14 +884,6 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct Item *list);
 void LastSaw(char *hostname,enum roles role);
-int OpenDB(char *filename,DB **dbp);
-int ReadDB(DB *dbp,char *name,void *ptr,int size);
-int WriteDB(DB *dbp,char *name,void *ptr,int size);
-void DeleteDB(DB *dbp,char *name);
-DBT *NewDBKey(char *name);
-void DeleteDBKey(DBT *key);
-DBT *NewDBValue(void *ptr,int size);
-void DeleteDBValue(DBT *value);
 double GAverage(double anew,double aold,double p);
 
 

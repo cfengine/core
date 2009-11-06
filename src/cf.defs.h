@@ -363,8 +363,21 @@ typedef int clockid_t;
 #define CF_EXEC_IFELAPSED 1
 #define CF_EXEC_EXPIREAFTER 1
 
-/* Need this to to avoid conflict with solaris 2.6 and db.h */
+/*******************************************************************/
+/*  DBM                                                            */
+/*******************************************************************/
 
+#define BDB  // FIXME: Set in autoconf
+
+#ifdef BDB  // FIXME
+
+// FIXME: TEMP - remove when DB API is finished (used by Nova/registry.c)
+#define NewDBKey(a) BDB_NewDBKey(a)
+#define DeleteDBKey(a) BDB_DeleteDBKey(a)
+#define NewDBValue(a,b) BDB_NewDBValue(a,b)
+#define DeleteDBValue(a) BDB_DeleteDBValue(a)
+
+/* Need this to to avoid conflict with solaris 2.6 and db.h */
 #ifdef SOLARIS
 # ifndef u_int32_t
 #  define u_int32_t uint32_t
@@ -374,6 +387,15 @@ typedef int clockid_t;
 #endif
 
 #include <db.h>
+#define CF_DB DB
+
+#elif defined(QDB)
+
+#include <depot.h>
+#define CF_DB DEPOT
+
+#endif  /* QDB */
+
 
 /*******************************************************************/
 /*  Windows                                                        */

@@ -20,6 +20,8 @@ libpromises_la_SOURCES =						\
 	attributes.c							\
 	install.c							\
 	generic_agent.c							\
+        dbm_api.c                                                       \
+        dbm_berkeley.c                                                  \
 	dtypes.c							\
 	classes.c							\
 	env_context.c							\

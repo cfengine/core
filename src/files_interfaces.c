@@ -627,9 +627,9 @@ Debug2("CopyFile(%s,%s)\n",sourcefile,destfile);
 
 #ifdef MINGW
 if(attr.copy.copy_links != NULL)
-{
-CfOut(cf_verbose, "", "copy_from.copylink_patterns is ignored on Windows (source files cannot be symbolic links)");
-}
+   {
+   CfOut(cf_verbose, "", "copy_from.copylink_patterns is ignored on Windows (source files cannot be symbolic links)");
+   }
 #endif  /* MINGW */
 
 if (attr.copy.servers)
@@ -672,17 +672,17 @@ if (attr.copy.link_type != cfa_notlinked)
          }
       else
          {
-		 CfOut(cf_verbose,"","Copy item %s marked for linking\n",sourcefile);
+         CfOut(cf_verbose,"","Copy item %s marked for linking\n",sourcefile);
 #ifdef MINGW
-		 CfOut(cf_verbose,"","Links are not yet supported on Windows - copying instead\n",sourcefile);
+         CfOut(cf_verbose,"","Links are not yet supported on Windows - copying instead\n",sourcefile);
 #else		 
          LinkCopy(sourcefile,destfile,&ssb,attr,pp);
-		 return;
+         return;
 #endif
          }
       }
    }
-   
+
 found = lstat(destfile,&dsb);
 
 if (found != -1)
@@ -745,6 +745,7 @@ if (found == -1)
       else
          {
          CfOut(cf_verbose,""," -> %s wasn't at destination (copying)",destfile);
+
          if (server)
             {
             CfOut(cf_inform,""," -> Copying from %s:%s\n",server,sourcefile);
@@ -849,6 +850,12 @@ else
    int ok_to_copy = false;
    
    CfOut(cf_verbose,""," -> Destination file %s already exists\n",destfile);
+
+   if (attr.copy.compare == cfa_exists)
+      {
+      CfOut(cf_verbose,""," -> Existence only is promised, no copying required\n",destfile);
+      return;
+      }
    
    if (!attr.copy.force_update)
       {

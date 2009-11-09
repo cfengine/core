@@ -240,7 +240,7 @@ return cfa_symlink;
 enum cfcomparison String2Comparison(char *s)
 
 { int i;
-  static char *types[] = {"atime","mtime","ctime","digest","hash","binary",NULL};
+  static char *types[] = {"atime","mtime","ctime","digest","hash","binary","exists",NULL};
 
 for (i = 0; types[i] != NULL; i++)
    {

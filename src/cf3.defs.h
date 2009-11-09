@@ -754,6 +754,7 @@ enum cfcomparison
    cfa_checksum,
    cfa_hash,
    cfa_binary,
+   cfa_exists,
    cfa_nocomparison
    };
 

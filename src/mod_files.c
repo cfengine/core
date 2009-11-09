@@ -305,7 +305,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"source",cf_str,CF_PATHRANGE,"Reference source file from which to copy"},
    {"servers",cf_slist,"[A-Za-z0-9_.:-]+","List of servers in order of preference from which to copy"},
    {"collapse_destination_dir",cf_opts,CF_BOOL,"true/false Place files in subdirectories into the root destination directory during copy"},
-   {"compare",cf_opts,"atime,mtime,ctime,digest,hash","Menu option policy for comparing source and image file attributes"},
+   {"compare",cf_opts,"atime,mtime,ctime,digest,hash,exists","Menu option policy for comparing source and image file attributes"},
    {"copy_backup",cf_opts,"true,false,timestamp","Menu option policy for file backup/version control"},
    {"encrypt",cf_opts,CF_BOOL,"true/false use encrypted data stream to connect to remote host"},
    {"check_root",cf_opts,CF_BOOL,"true/false check permissions on the root directory when depth_search"},

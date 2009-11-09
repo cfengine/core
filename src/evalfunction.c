@@ -125,7 +125,7 @@ if (from == CF_NOINT || to == CF_NOINT)
    return rval;
    }
 
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+snprintf(name,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_LASTDB_FILE);
 
 if (!OpenDB(name,&dbp))
    {
@@ -886,7 +886,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 command = finalargs->item;
 args = finalargs->next->item;
-snprintf(modulecmd,CF_BUFSIZE,"%s/modules/%s",CFWORKDIR,command);
+snprintf(modulecmd,CF_BUFSIZE,"%s%cmodules%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,command);
  
 if (cfstat(GetArg0(modulecmd),&statbuf) == -1)
    {
@@ -910,7 +910,7 @@ else
       }
    else
       {
-      snprintf(modulecmd,CF_BUFSIZE,"%s/modules/%s %s",CFWORKDIR,command,args);
+      snprintf(modulecmd,CF_BUFSIZE,"%s%cmodules%c%s %s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,command,args);
       CfOut(cf_verbose,"","Executing and using module [%s]\n",modulecmd); 
 
       if (ExecModule(modulecmd))

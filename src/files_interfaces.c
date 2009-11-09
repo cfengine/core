@@ -315,7 +315,7 @@ MapName(filename);
 
 if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
    {
-   CfOut(cf_inform,"","Did not find a previous setuid log %s",filename);
+   CfOut(cf_verbose,"","Did not find any previous setuid log %s, creating a new one",filename);
    save = false;
    }
 
@@ -1654,7 +1654,7 @@ else
 
 if (lstat(new,&dstat) == -1)
    {
-   CfOut(cf_error,"stat","Can't stat new file %s\n",new);
+   CfOut(cf_inform,"stat","Can't stat new file %s - another agent has picked it up?\n",new);
    return false;
    }
 

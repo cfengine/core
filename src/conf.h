@@ -94,7 +94,7 @@
 
 /* Special CFEngine symbols */
 
-#define AUTOCONF_HOSTNAME "ecs-laptop"
+#define AUTOCONF_HOSTNAME "atlas"
 #define AUTOCONF_SYSNAME "linux-gnu"
 
 /* Define if old Berkeley API */
@@ -148,7 +148,7 @@
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the <gd.h> header file. */
-/* #undef HAVE_GD_H */
+#define HAVE_GD_H 1
 
 /* Define to 1 if you have the `getaddrinfo' function. */
 #define HAVE_GETADDRINFO 1
@@ -166,7 +166,7 @@
 #define HAVE_GETNETGRENT 1
 
 /* Define to 1 if you have the <graphviz/gvc.h> header file. */
-/* #undef HAVE_GRAPHVIZ_GVC_H */
+#define HAVE_GRAPHVIZ_GVC_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
@@ -197,16 +197,16 @@
 /* #undef HAVE_LIBDGC */
 
 /* Define to 1 if you have the `gd' library (-lgd). */
-/* #undef HAVE_LIBGD */
+#define HAVE_LIBGD 1
 
 /* Define to 1 if you have the `gvc' library (-lgvc). */
-/* #undef HAVE_LIBGVC */
+#define HAVE_LIBGVC 1
 
 /* Define to 1 if you have the `kstat' library (-lkstat). */
 /* #undef HAVE_LIBKSTAT */
 
 /* Define to 1 if you have the `ldap' library (-lldap). */
-/* #undef HAVE_LIBLDAP */
+#define HAVE_LIBLDAP 1
 
 /* Define to 1 if you have the `m' library (-lm). */
 #define HAVE_LIBM 1
@@ -224,7 +224,7 @@
 #define HAVE_LIBPCRE 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
-/* #undef HAVE_LIBPQ */
+#define HAVE_LIBPQ 1
 
 /* Define to 1 if you have the <libpq-fe.h> header file. */
 /* #undef HAVE_LIBPQ_FE_H */
@@ -275,7 +275,7 @@
 /* #undef HAVE_PCRE_PCRE_H */
 
 /* Define to 1 if you have the <pgsql/libpq-fe.h> header file. */
-/* #undef HAVE_PGSQL_LIBPQ_FE_H */
+#define HAVE_PGSQL_LIBPQ_FE_H 1
 
 /* Define to 1 if you have the `pstat_getdynamic' function. */
 /* #undef HAVE_PSTAT_GETDYNAMIC */
@@ -449,7 +449,7 @@
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
-/* #undef LT_OBJDIR */
+#define LT_OBJDIR ".libs/"
 
 /* Define to 1 if your `struct nlist' has an `n_un' member. Obsolete, depend
    on `HAVE_STRUCT_NLIST_N_UN_N_NAME */

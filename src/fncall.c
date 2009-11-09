@@ -248,6 +248,14 @@ else
    return rval;
    }
 
+
+/* If the container classes seem not to be defined at this stage, then don't try to expand the function */
+
+if (!IsDefinedClass(pp->classes))
+   {
+   return rval;
+   }
+
 ClearFnCallStatus();
 
 expargs = NewExpArgs(fp,pp);

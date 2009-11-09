@@ -125,7 +125,7 @@ int LoadFileAsItemList(struct Item **liststart,char *file,struct Attributes a,st
   
 if (cfstat(file,&statbuf) == -1)
    {
-   cfPS(cf_inform,CF_INTERPT,"stat",pp,a,"File %s could not be loaded",file);
+   CfOut(cf_inform,"stat"," ** Information: the proposed file \"%s\" could not be loaded",file);
    return false;
    }
 

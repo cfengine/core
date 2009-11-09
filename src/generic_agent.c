@@ -1060,9 +1060,9 @@ if (cfstat(vbuff,&statbuf) == -1)
 else 
    {
 #ifndef MINGW
-   if (statbuf.st_mode & 077)
+   if (statbuf.st_mode & 022)
       {
-      CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",CFWORKDIR,statbuf.st_mode & 0777);
+      CfOut(cf_error,"","UNTRUSTED: Module directory %s (mode %o) was not private!\n",vbuff,statbuf.st_mode & 0777);
       }
 #endif  /* NOT MINGW */
    }

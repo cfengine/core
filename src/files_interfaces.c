@@ -162,7 +162,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
 
       /* Only copy dirs if we are tracking subdirs */
 
-      if (!attr.copy.collapse && (stat(newto,&dsb) == -1))
+      if (!attr.copy.collapse && (cfstat(newto,&dsb) == -1))
          {
          if (cf_mkdir(newto,0700) == -1)
             {
@@ -170,7 +170,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
             continue;
             }
          
-         if (stat(newto,&dsb) == -1)
+         if (cfstat(newto,&dsb) == -1)
             {
             cfPS(cf_error,CF_INTERPT,"stat",pp,attr," !! Can't stat local copy %s - failed to establish directory\n",newto);
             continue;
@@ -259,7 +259,7 @@ if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
       }
    }
 
-if (stat(path,&osb) == -1)
+if (cfstat(path,&osb) == -1)
    {
    if (a.create||a.touch)
       {
@@ -293,7 +293,7 @@ else
 
 if (a.link.link_children)
    {
-   if (stat(a.link.source,&dsb) != -1)
+   if (cfstat(a.link.source,&dsb) != -1)
       {
       if (!S_ISDIR(dsb.st_mode))
          {
@@ -440,7 +440,7 @@ if (S_ISDIR(ssb.st_mode))
    
    /* Now check any overrides */
    
-   if (stat(destdir,&dsb) == -1)
+   if (cfstat(destdir,&dsb) == -1)
       {
       CfOut(cf_error,"stat","Can't stat directory %s\n",destdir);
       }
@@ -762,7 +762,7 @@ if (found == -1)
          }
       else if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
          {
-         if (stat(destfile,&dsb) == -1)
+         if (cfstat(destfile,&dsb) == -1)
             {
             CfOut(cf_error,"stat","Can't stat destination file %s\n",destfile);
             }
@@ -899,7 +899,7 @@ else
          
          if (CopyRegularFile(sourcefile,destfile,ssb,dsb,attr,pp))
             {
-            if (stat(destfile,&dsb) == -1)
+            if (cfstat(destfile,&dsb) == -1)
                {
                cfPS(cf_error,CF_INTERPT,"stat",pp,attr,"Can't stat destination %s\n",destfile);
                }
@@ -963,7 +963,7 @@ int cf_stat(char *file,struct stat *buf,struct Attributes attr,struct Promise *p
 
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
-   res = stat(file,buf);
+   res = cfstat(file,buf);
    CheckForFileHoles(buf,pp);
    return res;
    }
@@ -1387,7 +1387,7 @@ if (MatchRlistItem(attr.copy.copy_links,lastnode))
    {
    struct stat ssb;
    CfOut(cf_verbose,"","cfengine: link item in copy %s marked for copying from %s instead\n",sourcefile,linkbuf);
-   stat(linkbuf,&ssb);
+   cfstat(linkbuf,&ssb);
    CfCopyFile(linkbuf,destfile,ssb,attr,pp);
    return;
    }
@@ -1489,7 +1489,7 @@ if (DONTDO)
 #ifdef WITH_SELINUX
 if (selinux_enabled)
    {
-   dest_exists = stat(dest,&cur_dest);
+   dest_exists = cfstat(dest,&cur_dest);
    
    if(dest_exists == 0)
       {
@@ -1642,7 +1642,7 @@ else
    {
    /* Mainly important if there is a dir in the way */
    
-   if (stat(dest,&s) != -1)
+   if (cfstat(dest,&s) != -1)
       {
       if (S_ISDIR(s.st_mode))
          {

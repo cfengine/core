@@ -129,7 +129,7 @@ if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
 
 snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN);
 
-if (stat(cmd,&sb) == -1)
+if (cfstat(cmd,&sb) == -1)
    {
    CfOut(cf_error,"","%s needs to be installed in %s%cbin for pre-validation of full configuration",CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR);
    return false;
@@ -282,7 +282,7 @@ void InitializeGA(int argc,char *argv[])
   char ebuff[CF_EXPANDSIZE];
 
 #ifdef NT
-if (stat("/cygdrive",&statbuf) == 0)
+if (cfstat("/cygdrive",&statbuf) == 0)
    {
    FILE_SEPARATOR = '/';
    strcpy(FILE_SEPARATOR_STR,"/");
@@ -363,7 +363,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
    
    snprintf(vbuff,CF_BUFSIZE,"%s%cinputs",CFWORKDIR,FILE_SEPARATOR);
 
-   if (stat(vbuff,&sb) == -1)
+   if (cfstat(vbuff,&sb) == -1)
       {
       FatalError(" !!! No access to workspace");
       }
@@ -374,7 +374,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
    
    snprintf(vbuff,CF_BUFSIZE,"%s%coutputs",CFWORKDIR,FILE_SEPARATOR);
 
-   if (stat(vbuff,&sb) == -1)
+   if (cfstat(vbuff,&sb) == -1)
       {
       FatalError(" !!! No access to workspace");
       }
@@ -386,21 +386,21 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
    sprintf(ebuff,"%s%cstate%ccf_procs",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(ebuff,force);
    
-   if (stat(ebuff,&statbuf) == -1)
+   if (cfstat(ebuff,&statbuf) == -1)
       {
       CreateEmptyFile(ebuff);
       }
    
    sprintf(ebuff,"%s%cstate%ccf_rootprocs",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
-   if (stat(ebuff,&statbuf) == -1)
+   if (cfstat(ebuff,&statbuf) == -1)
       {
       CreateEmptyFile(ebuff);
       }
    
    sprintf(ebuff,"%s%cstate%ccf_otherprocs",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
-   if (stat(ebuff,&statbuf) == -1)
+   if (cfstat(ebuff,&statbuf) == -1)
       {
       CreateEmptyFile(ebuff);
       }
@@ -443,7 +443,7 @@ if (BOOTSTRAP)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s%cinputs%cfailsafe.cf",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
-   if (!IsEnterprise() && stat(vbuff,&statbuf) == -1)
+   if (!IsEnterprise() && cfstat(vbuff,&statbuf) == -1)
       {
       CfOut(cf_inform,"","Didn't find established file %s, so looking for one in current directory\n",vbuff);
 	  snprintf(VINPUTFILE,CF_BUFSIZE-1,".%cfailsafe.cf",FILE_SEPARATOR);
@@ -517,7 +517,7 @@ int NewPromiseProposals()
   struct stat sb;
   int result = false;
 
-if (stat(InputLocation(VINPUTFILE),&sb) == -1)
+if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
    {
    CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
    return false;
@@ -544,7 +544,7 @@ if (VINPUTLIST != NULL)
             {
             case CF_SCALAR:
 
-                if (stat(InputLocation((char *)returnval.item),&sb) == -1)
+                if (cfstat(InputLocation((char *)returnval.item),&sb) == -1)
                    {
                    CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)returnval.item);
                    break;
@@ -561,7 +561,7 @@ if (VINPUTLIST != NULL)
 
                 for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
-                   if (stat(InputLocation((char *)sl->item),&sb) == -1)
+                   if (cfstat(InputLocation((char *)sl->item),&sb) == -1)
                       {
                       CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl->item);
                       break;
@@ -691,7 +691,7 @@ void Cf3ParseFile(char *filename)
 
 strncpy(wfilename,InputLocation(filename),CF_BUFSIZE);
 
-if (stat(wfilename,&statbuf) == -1)
+if (cfstat(wfilename,&statbuf) == -1)
    {
    CfOut(cf_error,"stat","Can't stat file \"%s\" for parsing\n",wfilename);
    exit(1);
@@ -1004,7 +1004,7 @@ if (chown(CFWORKDIR,getuid(),getgid()) == -1)
    CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",CFWORKDIR,getuid(),getgid());
    }
  
-if (stat(CFWORKDIR,&statbuf) != -1)
+if (cfstat(CFWORKDIR,&statbuf) != -1)
    {
    /* change permissions go-w */
    cf_chmod(CFWORKDIR,(mode_t)(statbuf.st_mode & ~022));
@@ -1019,7 +1019,7 @@ snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s%cppkeys%clocalhost.pub",CFWORKDIR,FILE_SEPA
 CfOut(cf_verbose,"","Checking integrity of the state database\n");
 snprintf(vbuff,CF_BUFSIZE,"%s%cstate",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
 
-if (stat(vbuff,&statbuf) == -1)
+if (cfstat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s%cstate%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
@@ -1045,7 +1045,7 @@ CfOut(cf_verbose,"","Checking integrity of the module directory\n");
 
 snprintf(vbuff,CF_BUFSIZE,"%s%cmodules",CFWORKDIR,FILE_SEPARATOR);
 
-if (stat(vbuff,&statbuf) == -1)
+if (cfstat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s%cmodules%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
@@ -1071,7 +1071,7 @@ CfOut(cf_verbose,"","Checking integrity of the input data for RPC\n");
 
 snprintf(vbuff,CF_BUFSIZE,"%s%crpc_in",CFWORKDIR,FILE_SEPARATOR);
 
-if (stat(vbuff,&statbuf) == -1)
+if (cfstat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s%crpc_in%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
@@ -1098,7 +1098,7 @@ CfOut(cf_verbose,"","Checking integrity of the output data for RPC\n");
 
 snprintf(vbuff,CF_BUFSIZE,"%s%crpc_out",CFWORKDIR,FILE_SEPARATOR);
 
-if (stat(vbuff,&statbuf) == -1)
+if (cfstat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s%crpc_out%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
@@ -1126,7 +1126,7 @@ CfOut(cf_verbose,"","Checking integrity of the PKI directory\n");
 
 snprintf(vbuff,CF_BUFSIZE,"%s%cppkeys",CFWORKDIR,FILE_SEPARATOR);
     
-if (stat(vbuff,&statbuf) == -1)
+if (cfstat(vbuff,&statbuf) == -1)
    {
    snprintf(vbuff,CF_BUFSIZE,"%s%cppkeys%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    MakeParentDirectory(vbuff,false);
@@ -1331,7 +1331,7 @@ if ((AUDITPTR = (struct Audit *)malloc(sizeof(struct Audit))) == NULL)
    FatalError("Memory allocation failure in PrependAuditFile");
    }
 
-if (stat(file,&statbuf) == -1)
+if (cfstat(file,&statbuf) == -1)
    {
    /* shouldn't happen */
    return;

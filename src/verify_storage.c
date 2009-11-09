@@ -221,7 +221,7 @@ int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
 
 CfOut(cf_verbose,""," -> Checking required filesystem %s\n",name);
 
-if (stat(name,&statbuf) == -1)
+if (cfstat(name,&statbuf) == -1)
    {
    return(false);
    }
@@ -313,7 +313,7 @@ CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows 
 }
 #endif  /* MINGW */
 
-if (stat(file,&statbuf) == -1)
+if (cfstat(file,&statbuf) == -1)
    {
    CfOut(cf_error,"stat","Couldn't stat %s checking diskspace\n",file);
    return true;
@@ -439,7 +439,7 @@ else
    strcat(vbuff,"..");
    }
 
-if (stat(vbuff,&parentstat) == -1)
+if (cfstat(vbuff,&parentstat) == -1)
    {
    Debug2("File %s couldn't stat its parent directory! Assuming permission\n",dir);
    Debug2("is denied because the file system is mounted from another host.\n");

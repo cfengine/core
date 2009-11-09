@@ -607,7 +607,7 @@ if (VSYSTEMHARDCLASS == cfnt)
    {
    /* This is a shell script. Make sure it hasn't been compromised. */
 
-   if (stat("/etc/fstab",&sb) == -1)
+   if (cfstat("/etc/fstab",&sb) == -1)
       {
       if ((fd = creat("/etc/fstab",0755)) > 0)
          {

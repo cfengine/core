@@ -46,7 +46,7 @@ Debug("RandomSeed() work directory is %s\n",CFWORKDIR);
 
 snprintf(vbuff,CF_BUFSIZE,"%s%crandseed",CFWORKDIR,FILE_SEPARATOR);
 
- if (stat(vbuff,&statbuf) == -1)
+ if (cfstat(vbuff,&statbuf) == -1)
     {
     snprintf(AVDB,CF_MAXVARSIZE-1,"%s%cstate%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CF_AVDB_FILE);
     }
@@ -150,7 +150,7 @@ else
    
 MapName(filename);
  
-if (stat(filename,&statbuf) == -1)
+if (cfstat(filename,&statbuf) == -1)
    {
    Debug("Did not have key %s\n",name);
    return NULL;
@@ -197,7 +197,7 @@ Debug("SavePublicKey %s\n",name);
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
 MapName(filename);
 
-if (stat(filename,&statbuf) != -1)
+if (cfstat(filename,&statbuf) != -1)
    {
    return;
    }

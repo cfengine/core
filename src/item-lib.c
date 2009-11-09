@@ -1305,7 +1305,7 @@ int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct P
 
 Debug("CompareToFile(%s)\n",file);
 
-if (stat(file,&statbuf) == -1)
+if (cfstat(file,&statbuf) == -1)
    {
    return false;
    }

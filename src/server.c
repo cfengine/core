@@ -1892,7 +1892,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       {
       CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",transrequest,transpath);
 
-      if (stat(transpath,&statbuf) == -1)
+      if (cfstat(transpath,&statbuf) == -1)
          {
          CfOut(cf_log,"","Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",transpath);
          continue;
@@ -2527,7 +2527,7 @@ if (S_ISLNK(statbuf.st_mode))
    cfst.cf_readlink = linkbuf;
    }
 
-if (!islink && (stat(filename,&statbuf) == -1))
+if (!islink && (cfstat(filename,&statbuf) == -1))
    {
    CfOut(cf_verbose,"stat","BAD: unable to stat file %s\n",filename);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
@@ -2536,7 +2536,7 @@ if (!islink && (stat(filename,&statbuf) == -1))
 
 Debug("Getting size of link deref %s\n",linkbuf);
 
-if (islink && (stat(filename,&statlinkbuf) != -1)) /* linktype=copy used by agent */
+if (islink && (cfstat(filename,&statlinkbuf) != -1)) /* linktype=copy used by agent */
    {
    statbuf.st_size = statlinkbuf.st_size;
    statbuf.st_mode = statlinkbuf.st_mode;
@@ -2657,7 +2657,7 @@ sd         = (args->connect)->sd_reply;
 filename   = args->replyfile;
 key        = (args->connect)->session_key;
 
-stat(filename,&statbuf);
+cfstat(filename,&statbuf);
 Debug("CfGetFile(%s on sd=%d), size=%d\n",filename,sd,statbuf.st_size);
 
 /* Now check to see if we have remote permission */

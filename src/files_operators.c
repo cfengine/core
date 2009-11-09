@@ -579,7 +579,7 @@ if (lstat(from,&sb) == 0)
       strcat(saved,CF_SAVED);
       strcat(saved,".dir");
       
-      if (stat(saved,&sb) != -1)
+      if (cfstat(saved,&sb) != -1)
          {
          cfPS(cf_error,CF_FAIL,"",pp,attr," !! Couldn't save directory %s, since %s exists already\n",from,saved);
          CfOut(cf_error,"","Unable to force link to existing directory %s\n",from);
@@ -1311,7 +1311,7 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
       if (strlen(currentpath) == 0)
          {
          }
-      else if (stat(currentpath,&statbuf) == -1)
+      else if (cfstat(currentpath,&statbuf) == -1)
          {
          Debug2("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
          
@@ -1374,7 +1374,7 @@ void TruncateFile(char *name)
 { struct stat statbuf;
   int fd;
 
-if (stat(name,&statbuf) == -1)
+if (cfstat(name,&statbuf) == -1)
    {
    Debug("cfengine: didn't find %s to truncate\n",name);
    }
@@ -1406,7 +1406,7 @@ void LogHashChange(char *file)
 snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
 MapName(fname);
 
-if (stat(fname,&sb) != -1)
+if (cfstat(fname,&sb) != -1)
    {
    if (sb.st_mode & (S_IWGRP | S_IWOTH))
       {
@@ -1447,7 +1447,7 @@ if (IsItemIn(ROTATED,name))
 
 PrependItem(&ROTATED,name,NULL);
 
-if (stat(name,&statbuf) == -1)
+if (cfstat(name,&statbuf) == -1)
    {
    CfOut(cf_verbose,"","No access to file %s\n",name);
    return;

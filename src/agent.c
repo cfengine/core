@@ -775,7 +775,7 @@ if (VINPUTLIST != NULL)
    {
    for (rp = VINPUTLIST; rp != NULL; rp=rp->next)
       {
-      stat(rp->item,&sb);
+      cfstat(rp->item,&sb);
       
       if (ACCESSLIST)
          {

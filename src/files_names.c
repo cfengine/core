@@ -92,7 +92,7 @@ for (ip = path; ip != NULL; ip=ip->next)
       return;
       }
 
-   if (stat(pbuffer,&statbuf) != -1)
+   if (cfstat(pbuffer,&statbuf) != -1)
       {
       if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)
          {
@@ -220,7 +220,7 @@ return NovaWin_IsDir(path);
 #else
 struct stat sb;
 
-if (stat(path, &sb) != -1)
+if (cfstat(path, &sb) != -1)
    {
    if (S_ISDIR(sb.st_mode))
       {

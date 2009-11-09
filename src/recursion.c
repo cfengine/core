@@ -122,7 +122,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
       /* if so, hide the difference by replacing with actual object */
       
-      if (stat(dirp->d_name,&lsb) == -1)
+      if (cfstat(dirp->d_name,&lsb) == -1)
          {
          CfOut(cf_error,"stat","Recurse was working on %s when this failed:\n",path);
          continue;
@@ -241,7 +241,7 @@ void CheckLinkSecurity(struct stat *sb,char *name)
 
 Debug("Checking the inode and device to make sure we are where we think we are...\n"); 
 
-if (stat(".",&security) == -1)
+if (cfstat(".",&security) == -1)
    {
    CfOut(cf_error,"stat","Could not stat directory %s after entering!",name);
    return;

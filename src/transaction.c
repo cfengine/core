@@ -552,7 +552,7 @@ fprintf(fp,"%s:%s:pid=%d:%s:%s\n",buffer,str,pid,operator,operand);
 
 fclose(fp);
 
-if (stat(cflog,&statbuf) != -1)
+if (cfstat(cflog,&statbuf) != -1)
    {
    if (statbuf.st_size > CFLOGSIZE)
       {

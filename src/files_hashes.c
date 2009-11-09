@@ -421,7 +421,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    {
    char *obj = (char *)key.data + CF_CHKSUMKEYOFFSET;
 
-   if (stat(obj,&statbuf) == -1)
+   if (cfstat(obj,&statbuf) == -1)
       {
       if (attr.change.update)
          {

@@ -767,7 +767,7 @@ else
    snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
    }
 
-if (stat(GetArg0(finalargs->item),&statbuf) == -1)
+if (cfstat(GetArg0(finalargs->item),&statbuf) == -1)
    {
    SetFnCallReturnStatus("returnszero",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");   
@@ -888,7 +888,7 @@ command = finalargs->item;
 args = finalargs->next->item;
 snprintf(modulecmd,CF_BUFSIZE,"%s/modules/%s",CFWORKDIR,command);
  
-if (stat(GetArg0(modulecmd),&statbuf) == -1)
+if (cfstat(GetArg0(modulecmd),&statbuf) == -1)
    {
    CfOut(cf_error,"","(Plug-in module %s not found)",modulecmd);
    SetFnCallReturnStatus("usemodule",FNCALL_FAILURE,strerror(errno),NULL);
@@ -2048,12 +2048,12 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (stat(finalargs->item,&frombuf) == -1)
+if (cfstat(finalargs->item,&frombuf) == -1)
    {
    SetFnCallReturnStatus("isnewerthan",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (stat(finalargs->next->item,&tobuf) == -1)
+else if (cfstat(finalargs->next->item,&tobuf) == -1)
    {
    SetFnCallReturnStatus("isnewerthan",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
@@ -2107,12 +2107,12 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (stat(finalargs->item,&frombuf) == -1)
+if (cfstat(finalargs->item,&frombuf) == -1)
    {
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (stat(finalargs->next->item,&tobuf) == -1)
+else if (cfstat(finalargs->next->item,&tobuf) == -1)
    {
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
@@ -2166,12 +2166,12 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (stat(finalargs->item,&frombuf) == -1)
+if (cfstat(finalargs->item,&frombuf) == -1)
    {
    SetFnCallReturnStatus("ischangedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
    }
-else if (stat(finalargs->next->item,&tobuf) == -1)
+else if (cfstat(finalargs->next->item,&tobuf) == -1)
    {
    SetFnCallReturnStatus("ischangedbefore",FNCALL_FAILURE,strerror(errno),NULL);   
    strcpy(buffer,"!any");
@@ -4077,7 +4077,7 @@ strcpy(buffer,"any");
 
 for (rp = files; rp != NULL; rp=rp->next)
    {
-   if (stat(rp->item,&sb) == -1)
+   if (cfstat(rp->item,&sb) == -1)
       {
       strcpy(buffer,"!any");
       break;
@@ -4522,7 +4522,7 @@ void *CfReadFile(char *filename,int maxsize)
   size_t size;
   int i,newlines = 0;
 
-if (stat(filename,&sb) == -1)
+if (cfstat(filename,&sb) == -1)
    {
    if (THIS_AGENT_TYPE == cf_common)
       {

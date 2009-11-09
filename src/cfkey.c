@@ -93,13 +93,13 @@ NewScope("common");
   
 cipher = EVP_des_ede3_cbc();
 
-if (stat(CFPRIVKEYFILE,&statbuf) != -1)
+if (cfstat(CFPRIVKEYFILE,&statbuf) != -1)
    {
    CfOut(cf_error,"","A key file already exists at %s.\n",CFPRIVKEYFILE);
    return;
    }
 
-if (stat(CFPUBKEYFILE,&statbuf) != -1)
+if (cfstat(CFPUBKEYFILE,&statbuf) != -1)
    {
    CfOut(cf_error,"","A key file already exists at %s.\n",CFPUBKEYFILE);
    return;

@@ -221,13 +221,13 @@ LoadHistogram();
 
 /* Look for local sensors - this is unfortunately linux-centric */
 
-if (stat("/proc/acpi/thermal_zone",&statbuf) != -1)
+if (cfstat("/proc/acpi/thermal_zone",&statbuf) != -1)
    {
    Debug("Found an acpi service\n");
    ACPI = true;
    }
 
-if (stat("/usr/bin/sensors",&statbuf) != -1)
+if (cfstat("/usr/bin/sensors",&statbuf) != -1)
    {
    if (statbuf.st_mode & 0111)
       {
@@ -390,7 +390,7 @@ if (TCPDUMP)
    char buffer[CF_MAXVARSIZE];
    sscanf(CF_TCPDUMP_COMM,"%s",buffer);
    
-   if (stat(buffer,&statbuf) != -1)
+   if (cfstat(buffer,&statbuf) != -1)
       {
       if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM,"r")) == NULL)
          {
@@ -1311,7 +1311,7 @@ cf_pclose(pp);
     
     Debug("save incoming %s\n",ECGSOCKS[i].name);
     snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
-    if (stat(vbuff,&statbuf) != -1)
+    if (cfstat(vbuff,&statbuf) != -1)
        {
        if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
@@ -1335,7 +1335,7 @@ cf_pclose(pp);
     Debug("save outgoing %s\n",ECGSOCKS[i].name);
     snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
 
-    if (stat(vbuff,&statbuf) != -1)
+    if (cfstat(vbuff,&statbuf) != -1)
        {       
        if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
@@ -1359,7 +1359,7 @@ cf_pclose(pp);
     Debug("save incoming %s\n",TCPNAMES[i]);
     snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,TCPNAMES[i]);
     
-    if (stat(vbuff,&statbuf) != -1)
+    if (cfstat(vbuff,&statbuf) != -1)
        {       
        if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
@@ -1385,7 +1385,7 @@ cf_pclose(pp);
     Debug("save outgoing %s\n",TCPNAMES[i]);
     snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]);
     
-    if (stat(vbuff,&statbuf) != -1)
+    if (cfstat(vbuff,&statbuf) != -1)
        {       
        if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
           {
@@ -1964,7 +1964,7 @@ int GetFileGrowth(char *filename,enum observables index)
 { struct stat statbuf;
   size_t q, dq;
 
-if (stat(filename,&statbuf) == -1)
+if (cfstat(filename,&statbuf) == -1)
    {
    return 0;
    }

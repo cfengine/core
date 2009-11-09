@@ -134,7 +134,7 @@ Debug("ShowState(%s)\n",type);
 
 snprintf(buffer,CF_BUFSIZE-1,"%s/state/cf_%s",CFWORKDIR,type);
 
-if (stat(buffer,&statbuf) == 0)
+if (cfstat(buffer,&statbuf) == 0)
    {
    if ((fp = fopen(buffer,"r")) == NULL)
       {

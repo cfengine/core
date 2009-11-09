@@ -97,7 +97,7 @@ int Unix_IsExecutable(char *file)
   gid_t grps[NGROUPS];
   int i,n;
 
-if (stat(file,&sb) == -1)
+if (cfstat(file,&sb) == -1)
    {
    CfOut(cf_error,"","Proposed executable file \"%s\" doesn't exist",file);
    return false;

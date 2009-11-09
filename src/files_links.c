@@ -75,7 +75,7 @@ else
    strcpy(absto,to);
    }
 
-if (stat(absto,&sb) == -1)
+if (cfstat(absto,&sb) == -1)
    {
    Debug("No source file\n");
    nofile = true;
@@ -319,7 +319,7 @@ else
    strcpy(absto,to);
    }
 
-if (stat(absto,&ssb) == -1)
+if (cfstat(absto,&ssb) == -1)
    {
    cfPS(cf_inform,CF_INTERPT,"",pp,attr," !! Source file %s doesn't exist\n",source);
    return CF_WARN;
@@ -333,7 +333,7 @@ if (!S_ISREG(ssb.st_mode))
 
 Debug2("Trying to (hard) link %s -> %s\n",destination,to);
 
-if (stat(destination,&dsb) == -1)
+if (cfstat(destination,&dsb) == -1)
    {
    return MakeHardLink(destination,to,attr,pp)?CF_CHG:CF_FAIL;
    }
@@ -404,7 +404,7 @@ if (!IsAbsoluteFileName(linkbuf))
 strcat(linkpath,linkbuf);
 CompressPath(tmp,linkpath); 
  
-if (stat(tmp,&statbuf) == -1)               /* link points nowhere */
+if (cfstat(tmp,&statbuf) == -1)               /* link points nowhere */
    {
    if (attr.link.when_no_file == cfa_delete || attr.recursion.rmdeadlinks)
       {

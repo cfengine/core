@@ -262,7 +262,7 @@ else
    strcpy(filename,filenode);
    }
 
-if (stat(filename,&sb) != -1)
+if (cfstat(filename,&sb) != -1)
    {
    CfOut(cf_inform,"","Graph \"%s\" already exists, delete to refresh\n",filename);
    return;

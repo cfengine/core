@@ -62,7 +62,7 @@ if (strlen(nodename) < 1)
 if (IsItemIn(SUSPICIOUSLIST,nodename))
    {
    struct stat statbuf;
-   if (stat(nodename,&statbuf) != -1)
+   if (cfstat(nodename,&statbuf) != -1)
       {
       if (S_ISREG(statbuf.st_mode))
          {

@@ -523,7 +523,7 @@ snprintf(filename,CF_BUFSIZE-1,"%s%s",MANDIR,file);
 
 fprintf(fout,"@*\n");
 
-if (stat(filename,&sb) == -1)
+if (cfstat(filename,&sb) == -1)
    {
    if ((fp = fopen(filename,"w")) == NULL)
       {

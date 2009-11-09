@@ -2442,13 +2442,13 @@ fprintf(fout,"<div id=\"image\">");
 snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
 snprintf(filename,CF_BUFSIZE,"graphs/%s.html",CanonifyName(TypedTopic(this_name,this_type)));
 
-if (stat(filename,&sb) != -1)
+if (cfstat(filename,&sb) != -1)
    {
    fprintf(fout,"<div id=\"tribe\"><a href=\"%s\"><img src=\"%s\"></a></div>",filename,pngfile);
    }
 else
    {
-   if (stat(pngfile,&sb) != -1)
+   if (cfstat(pngfile,&sb) != -1)
       {
       fprintf(fout,"<div id=\"tribe\"><a href=\"%s\"><img src=\"%s\"></a></div>",pngfile,pngfile);
       }   
@@ -2457,7 +2457,7 @@ else
 snprintf(pngfile,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
 snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.html",CanonifyName(TypedTopic(this_name,this_type)));
 
-if (stat(filename,&sb) != -1)
+if (cfstat(filename,&sb) != -1)
    {
    fprintf(fout,"<div id=\"influence\"><a href=\"%s\"><img src=\"%s\"></a></div>",filename,pngfile);
    }
@@ -2741,7 +2741,7 @@ else
    rep_type = cfk_url;
    }
 
-if (stat(file,&sb) == -1)
+if (cfstat(file,&sb) == -1)
    {
    CfOut(cf_verbose,""," !! File %s matched but could not be read",file);
    return;

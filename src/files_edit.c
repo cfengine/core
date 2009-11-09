@@ -123,7 +123,7 @@ int LoadFileAsItemList(struct Item **liststart,char *file,struct Attributes a,st
   struct stat statbuf;
   char line[CF_BUFSIZE];
   
-if (stat(file,&statbuf) == -1)
+if (cfstat(file,&statbuf) == -1)
    {
    cfPS(cf_inform,CF_INTERPT,"stat",pp,a,"File %s could not be loaded",file);
    return false;
@@ -191,7 +191,7 @@ if (selinux_enabled)
 
 stamp_now = time((time_t *)NULL);
   
-if (stat(file,&statbuf) == -1)
+if (cfstat(file,&statbuf) == -1)
    {
    cfPS(cf_error,CF_FAIL,"stat",pp,a," !! Can no longer access file %s, which needed editing!\n",file);
    return false;

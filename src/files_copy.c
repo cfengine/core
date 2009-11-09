@@ -82,7 +82,7 @@ if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
    SetSearchDevice(&ssb,pp);
    SourceSearchAndCopy(source,destination,attr.recursion.depth,attr,pp);
    
-   if (stat(destination,&dsb) != -1)
+   if (cfstat(destination,&dsb) != -1)
       {
       if (attr.copy.check_root)
          {

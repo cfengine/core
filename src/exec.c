@@ -876,7 +876,7 @@ if ((strlen(VMAILSERVER) == 0) || (strlen(to) == 0))
 
 CfOut(cf_verbose,"","Mail result...\n");
 
-if (stat(file,&statbuf) == -1)
+if (cfstat(file,&statbuf) == -1)
    {
    return;
    }

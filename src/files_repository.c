@@ -100,13 +100,13 @@ if (!MakeParentDirectory(destination,attr.move_obstructions))
    {
    }
 
-if (stat(file,&sb) == -1)
+if (cfstat(file,&sb) == -1)
    {
    Debug("File %s promised to archive to the repository but it disappeared!\n",file);
    return true;
    }
 
-stat(destination,&dsb);
+cfstat(destination,&dsb);
 
 attr.copy.servers = NULL;
 attr.copy.backup = cfa_repos_store; // cfa_nobackup;

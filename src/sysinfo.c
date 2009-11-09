@@ -588,7 +588,7 @@ CfOut(cf_verbose,"","Looking for environment from cf-monitor...\n");
 
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
 
-if (stat(env,&statbuf) == -1)
+if (cfstat(env,&statbuf) == -1)
    {
    CfOut(cf_verbose,"","Unable to detect environment from cfMonitord\n\n");
    return;
@@ -883,7 +883,7 @@ for (sp = vbuff+strlen(vbuff); i < 2; sp--)
  * /etc/{mandrake,fedora}-release, so we else-if around that
  */
 
-if (stat("/etc/mandriva-release",&statbuf) != -1)
+if (cfstat("/etc/mandriva-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a mandriva system.\n");
    NewClass("Mandrake");
@@ -891,14 +891,14 @@ if (stat("/etc/mandriva-release",&statbuf) != -1)
    Linux_New_Mandriva_Version();
    }
 
-else if (stat("/etc/mandrake-release",&statbuf) != -1)
+else if (cfstat("/etc/mandrake-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
    NewClass("Mandrake");
    Linux_Old_Mandriva_Version();
    }
 
-else if (stat("/etc/fedora-release",&statbuf) != -1)
+else if (cfstat("/etc/fedora-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a fedora system.\n");
    NewClass("redhat");
@@ -906,20 +906,20 @@ else if (stat("/etc/fedora-release",&statbuf) != -1)
    Linux_Fedora_Version();
    }
 
-else if (stat("/etc/redhat-release",&statbuf) != -1)
+else if (cfstat("/etc/redhat-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a redhat system.\n");
    NewClass("redhat");
    Linux_Redhat_Version();
    }
 
-if (stat("/etc/generic-release",&statbuf) != -1)
+if (cfstat("/etc/generic-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
 
-if (stat("/etc/SuSE-release",&statbuf) != -1)
+if (cfstat("/etc/SuSE-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a SuSE system.\n");
    NewClass("SuSE");
@@ -928,13 +928,13 @@ if (stat("/etc/SuSE-release",&statbuf) != -1)
 
 #define SLACKWARE_ANCIENT_VERSION_FILENAME "/etc/slackware-release"
 #define SLACKWARE_VERSION_FILENAME "/etc/slackware-version"
-if (stat(SLACKWARE_VERSION_FILENAME,&statbuf) != -1)
+if (cfstat(SLACKWARE_VERSION_FILENAME,&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a slackware system.\n");
    NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_VERSION_FILENAME);
    }
-else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
+else if (cfstat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be an ancient slackware system.\n");
    NewClass("slackware");
@@ -942,26 +942,26 @@ else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    }
 
 
-if (stat("/etc/generic-release",&statbuf) != -1)
+if (cfstat("/etc/generic-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
  
-if (stat("/etc/debian_version",&statbuf) != -1)
+if (cfstat("/etc/debian_version",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a debian system.\n");
    NewClass("debian");
    Linux_Debian_Version();
    }
 
-if (stat("/etc/UnitedLinux-release",&statbuf) != -1)
+if (cfstat("/etc/UnitedLinux-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a UnitedLinux system.\n");
    NewClass("UnitedLinux");
    }
 
-if (stat("/etc/gentoo-release",&statbuf) != -1)
+if (cfstat("/etc/gentoo-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a gentoo system.\n");
    NewClass("gentoo");
@@ -971,14 +971,14 @@ Lsb_Version();
 
 #endif
 
-if (stat("/proc/vmware/version",&statbuf) != -1 ||
-    stat("/etc/vmware-release",&statbuf) != -1)
+if (cfstat("/proc/vmware/version",&statbuf) != -1 ||
+    cfstat("/etc/vmware-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a VMware Server ESX system.\n");
    NewClass("VMware");
    VM_Version();
    }
-else if (stat("/etc/vmware",&statbuf) != -1)
+else if (cfstat("/etc/vmware",&statbuf) != -1)
    {
    if (S_ISDIR(statbuf.st_mode))
       {
@@ -988,7 +988,7 @@ else if (stat("/etc/vmware",&statbuf) != -1)
       }
    }
 
-if (stat("/proc/xen/capabilities",&statbuf) != -1)
+if (cfstat("/proc/xen/capabilities",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a xen pv system.\n");
    NewClass("xen");
@@ -1740,7 +1740,7 @@ if (strlen(path) == 0)
 while (dir = strsep(&rest, ":"))
     {
     snprintf(vbuff, CF_BUFSIZE, "%s/" LSB_RELEASE_COMMAND, dir);
-    if (stat(vbuff,&statbuf) != -1)
+    if (cfstat(vbuff,&statbuf) != -1)
         {
         free(path);
         path = strdup(vbuff);

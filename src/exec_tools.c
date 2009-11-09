@@ -166,7 +166,7 @@ if (fd != -1)
       }
    }
 
-chdir(MapName("/"));
+chdir("/");
    
 #ifdef HAVE_SYSCONF
 maxfd = sysconf(_SC_OPEN_MAX);

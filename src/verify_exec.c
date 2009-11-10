@@ -147,15 +147,19 @@ else
    
    if (a.transaction.background)
       {
+#ifdef MINGW
+      outsourced = true;
+#else
       CfOut(cf_verbose,""," -> Backgrounding job %s\n",execstr);
       outsourced = fork();
+#endif
       }
    else
       {
       outsourced = false;
       }
 
-   if (outsourced || !a.transaction.background)
+   if (outsourced || !a.transaction.background)  // work done here: either by child or non-background parent
       {
       if (a.contain.timeout != 0)
          {
@@ -174,11 +178,11 @@ else
 		 
       if (a.contain.useshell)
          {
-         pfp = cf_popen_shsetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
+         pfp = cf_popen_shsetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot,a.transaction.background);
          }
       else
          {
-         pfp = cf_popensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot);
+         pfp = cf_popensetuid(execstr,"r",a.contain.owner,a.contain.group,a.contain.chdir,a.contain.chroot,a.transaction.background);
          }
 
       if (pfp == NULL)
@@ -227,7 +231,7 @@ else
             }
          }
       
-      cf_pclose_def(pfp,a,pp);
+      cf_pclose_def(pfp,a,pp); // FIXME on win - run by parent before child exits
       }
 
    if (count)
@@ -249,11 +253,13 @@ else
 
    snprintf(eventname,CF_BUFSIZE-1,"Exec(%s)",execstr);
    
+#ifndef MINGW
    if (a.transaction.background && outsourced)
       {
       CfOut(cf_verbose,""," -> Backgrounded command (%s) is done - exiting\n",execstr);
       exit(0);
       }
+#endif  /* NOT MINGW */
    }
 }
 

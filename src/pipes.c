@@ -68,11 +68,11 @@ return Unix_cf_popen(command, type);
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background)
 
 { 
 #ifdef MINGW
-return NovaWin_cf_popensetuid(command, type, uid, gid, chdirv, chrootv);
+return NovaWin_cf_popensetuid(command, type, uid, gid, chdirv, chrootv,background);
 #else
 return Unix_cf_popensetuid(command, type, uid, gid, chdirv, chrootv);
 #endif
@@ -92,11 +92,11 @@ return Unix_cf_popen_sh(command, type);
 
 /*****************************************************************************/
 
-FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background)
 
 { 
 #ifdef MINGW
-return NovaWin_cf_popen_shsetuid(command, type, uid, gid, chdirv, chrootv);
+return NovaWin_cf_popen_shsetuid(command, type, uid, gid, chdirv, chrootv, background);
 #else
 return Unix_cf_popen_shsetuid(command, type, uid, gid, chdirv, chrootv);
 #endif

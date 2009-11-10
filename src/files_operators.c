@@ -143,6 +143,32 @@ return true;
 
 /*****************************************************************************/
 
+FILE *CreateEmptyStream()
+{
+FILE *fp;
+fp = fopen(NULLFILE, "r");
+
+if(fp == NULL)
+  {
+  CfOut(cf_error, "", "!! Open of NULLFILE failed");
+  return NULL;
+  }
+
+// get to EOF
+fgetc(fp);
+
+if(!feof(fp))
+  {
+  CfOut(cf_error, "", "!! Could not create empty stream");
+  fclose(fp);
+  return NULL;
+  }
+
+return fp;
+}
+
+/*****************************************************************************/
+
 int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr)
 
 { int fd;

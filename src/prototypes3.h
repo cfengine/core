@@ -659,6 +659,7 @@ void *ThreadUniqueName(pthread_t tid);
 void TruncateFile(char *name);
 int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr);
+FILE *CreateEmptyStream(void);
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
 int ScheduleLinkChildrenOperation(char *destination,struct Attributes attr,struct Promise *pp);
 int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp);
@@ -1055,9 +1056,9 @@ FILE *cf_fopen(char *file,char *type);
 int cf_fclose(FILE *fp);
 
 FILE *cf_popen(char *command,char *type);
-FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background);
 FILE *cf_popen_sh(char *command,char *type);
-FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
 

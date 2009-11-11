@@ -824,6 +824,7 @@ if (found == -1)
       }
    else
       {
+#ifndef MINGW  // only regular files on windows
       if (S_ISBLK (srcmode) || S_ISCHR (srcmode) || S_ISSOCK (srcmode))
          {
          if (DONTDO)
@@ -838,6 +839,7 @@ if (found == -1)
 
          cfPS(cf_error,CF_CHG,"mknod",pp,attr," -> Created special file/device `%s'",destfile);
          }
+#endif  /* NOT MINGW */		 
       }
    
    if (S_ISLNK(srcmode) && attr.copy.link_type != cfa_notlinked)

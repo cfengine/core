@@ -450,7 +450,12 @@ else
 /*****************************************************************************/
 
 int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
-
+#ifdef MINGW
+{  // TODO: Implement ?
+CfOut(cf_verbose, "", "Hard links are not yet supported on Windows");
+return false;
+}
+#else  /* NOT MINGW */
 {
 if (DONTDO)
    {
@@ -471,6 +476,7 @@ else
       }
    }
 }
+#endif  /* NOT MINGW */
 
 /*********************************************************************/
 

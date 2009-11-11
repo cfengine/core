@@ -250,6 +250,19 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
 
 a.copy.portnumber = (short)ParseHostname(host,peer);
 
+#ifdef MINGW
+
+if(BACKGROUND)
+  {
+  CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+  }
+
+CfOut(cf_inform,"","...........................................................................\n");
+CfOut(cf_inform,""," * Hailing %s : %u, with options \"%s\" (serial)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
+CfOut(cf_inform,"","...........................................................................\n");  
+  
+#else  /* NOT MINGW */
+
 if (BACKGROUND)
    {
    CfOut(cf_inform,"","Hailing %s : %u, with options \"%s\" (parallel)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
@@ -264,6 +277,8 @@ else
    CfOut(cf_inform,""," * Hailing %s : %u, with options \"%s\" (serial)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
    CfOut(cf_inform,"","...........................................................................\n");
    }
+
+#endif  /* NOT MINGW */
 
 a.copy.servers = SplitStringAsRList(peer,'*');
 
@@ -354,12 +369,14 @@ DeleteRlist(a.copy.servers);
 
 DeleteStream(fp);
 
+#ifndef MINGW
 if (BACKGROUND)
    {
    /* Close parallel connection*/
    exit(0);
    }
-
+#endif   /* NOT MINGW */
+   
 return true;
 }
 

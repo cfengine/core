@@ -230,8 +230,14 @@ else
             count++;
             }
          }
-      
-      cf_pclose_def(pfp,a,pp); // FIXME on win - run by parent before child exits
+#ifdef MINGW
+      if(!outsourced)  // only get return value if we waited for command execution
+	    {
+		cf_pclose_def(pfp,a,pp);
+		}
+#else  /* NOT MINGW */
+      cf_pclose_def(pfp,a,pp);
+#endif
       }
 
    if (count)

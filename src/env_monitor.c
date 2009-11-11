@@ -317,6 +317,15 @@ void StartServer(int argc,char **argv)
   struct Attributes dummyattr;
   struct CfLock thislock;
 
+#ifdef MINGW
+
+if(!NO_FORK)
+  {
+  CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+  }
+
+#else  /* NOT MINGW */  
+  
 if ((!NO_FORK) && (fork() != 0))
    {
    CfOut(cf_inform,"","cf-monitord: starting\n");
@@ -327,7 +336,9 @@ if (!NO_FORK)
    {
    ActAsDaemon(0);
    }
-  
+
+#endif  /* NOT MINGW */   
+   
 memset(&dummyattr,0,sizeof(dummyattr));
 dummyattr.transaction.ifelapsed = 0;
 dummyattr.transaction.expireafter = 0;

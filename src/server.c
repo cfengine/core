@@ -329,6 +329,15 @@ if (thislock.lock == NULL)
 
 CfOut(cf_verbose,"","Listening for connections ...\n");
 
+#ifdef MINGW
+
+if(!NO_FORK)
+  {
+  CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+  }
+
+#else  /* NOT MINGW */
+
 if ((!NO_FORK) && (fork() != 0))
    {
    CfOut(cf_inform,"","cfServerd starting %.24s\n",ctime(&CFDSTARTTIME));
@@ -341,11 +350,15 @@ if (!NO_FORK)
    {
    ActAsDaemon(sd);
    }
+   
+#endif  /* NOT MINGW */
 
 WritePID("cf-serverd.pid");
 
 /* Andrew Stribblehill <ads@debian.org> -- close sd on exec */ 
+#ifndef MINGW  // TODO: close in windows on exec
 fcntl(sd, F_SETFD, FD_CLOEXEC);
+#endif
  
 while (true)
    {

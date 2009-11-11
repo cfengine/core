@@ -377,6 +377,15 @@ if (!ONCE)
 
 Apoptosis();
 
+#ifdef MINGW
+
+if(!NO_FORK)
+  {
+  CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+  }
+
+#else  /* NOT MINGW */
+
 if ((!NO_FORK) && (fork() != 0))
    {
    CfOut(cf_inform,"","cf-execd starting %.24s\n",ctime(&now));
@@ -387,7 +396,10 @@ if (!NO_FORK)
    {
    ActAsDaemon(0);
    }
+   
+#endif  /* NOT MINGW */
 
+   
 if (!ONCE)
    {
    MYTWIN = StartTwin(argc,argv);

@@ -60,6 +60,7 @@ void Terminate (int sd);
 void DeleteAuthList (struct Auth *ap);
 int AllowedUser (char *user);
 int AuthorizeRoles(struct cfd_connection *conn,char *args);
+int TransferRights(char *filename,int sd,struct cfd_get_arg *args,char *sendbuffer, struct stat *sb);
 void AbortTransfer(int sd,char *sendbuffer,char *filename);
 void FailedTransfer(int sd,char *sendbuffer,char *filename);
 void ReplyNothing (struct cfd_connection *conn);
@@ -2692,7 +2693,7 @@ void CfGetFile(struct cfd_get_arg *args)
 
 { int sd,fd,n_read,total=0,cipherlen,sendlen=0,count = 0,finlen;
   char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],*filename;
-  struct stat statbuf;
+  struct stat sb;
   int blocksize = 2048;
   uid_t uid;
   char *key;
@@ -2701,61 +2702,20 @@ sd         = (args->connect)->sd_reply;
 filename   = args->replyfile;
 key        = (args->connect)->session_key;
 
-cfstat(filename,&statbuf);
+cfstat(filename,&sb);
 
-Debug("CfGetFile(%s on sd=%d), size=%d\n",filename,sd,statbuf.st_size);
+Debug("CfGetFile(%s on sd=%d), size=%d\n",filename,sd,sb.st_size);
 
 /* Now check to see if we have remote permission */
 
-#ifdef MINGW
-SECURITY_DESCRIPTOR *secDesc;
-SID *ownerSid;
-
-if (GetNamedSecurityInfo(filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, (PSID*)&ownerSid, NULL, NULL, NULL, &secDesc) == ERROR_SUCCESS)
+if (!TransferRights(filename,sd,args,sendbuffer,&sb))
    {
-   if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
-      {
-      Debug("Caller %s is the owner of the file\n",(args->connect)->username);
-      }
-   else  // TODO: Check for read access ?
-      {
-      CfOut(cf_verbose,"","Caller %s is not the owner of \"%s\" - assuming read access\n", (args->connect)->username, filename);
-      }
-   
-   LocalFree(secDesc);
-   }
-else
-   {
-   CfOut(cf_error,"GetNamedSecurityInfo","!! Could not retreive existing owner of \"%s\"", filename);
+   RefuseAccess(args->connect,sendbuffer,args->buf_size,"");
+   snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
+   SendSocketStream(sd,sendbuffer,args->buf_size,0);
    }
 
-#else  /* NOT MINGW */
-
-uid = (args->connect)->uid;
-
-if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
-   {
-   if (statbuf.st_uid == uid)
-      {
-      Debug("Caller %s is the owner of the file\n",(args->connect)->username);
-      }
-   else
-      {
-      if (statbuf.st_mode & S_IROTH)
-         {
-         Debug("Caller %s not owner of the file but permission granted\n",(args->connect)->username);
-         }
-      else
-         {
-         Debug("Caller %s is not the owner of the file\n",(args->connect)->username);
-         RefuseAccess(args->connect,sendbuffer,args->buf_size,"");
-         snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
-         SendSocketStream(sd,sendbuffer,args->buf_size,0);
-         return;
-         }
-      }
-   }
-#endif  /* NOT MINGW */
+/* File transfer */
  
 if ((fd = SafeOpen(filename)) == -1)
    {
@@ -2782,16 +2742,16 @@ else
          break;
          }
       else
-         { int savedlen = statbuf.st_size;
+         { int savedlen = sb.st_size;
          
          /* check the file is not changing at source */
          
          if (count++ % 3 == 0) /* Don't do this too often */
             {
-            stat(filename,&statbuf);
+            stat(filename,&sb);
             }
 
-         if (statbuf.st_size != savedlen)
+         if (sb.st_size != savedlen)
             {
             snprintf(sendbuffer,CF_BUFSIZE,"%s%s: %s",CF_CHANGEDSTR1,CF_CHANGEDSTR2,filename);
 
@@ -2840,9 +2800,9 @@ void CfEncryptGetFile(struct cfd_get_arg *args)
     
 { int sd,fd,n_read,total=0,cipherlen,sendlen=0,count = 0,finlen,cnt = 0;
   char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],*filename;
-  struct stat statbuf;
+  struct stat sb;
   unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
-  int blocksize = CF_BUFSIZE - 2*CF_INBAND_OFFSET;
+  int blocksize = CF_BUFSIZE - 4*CF_INBAND_OFFSET;
   uid_t uid;
   char *key,enctype;
   int savedlen;
@@ -2853,61 +2813,17 @@ filename   = args->replyfile;
 key        = (args->connect)->session_key;
 enctype    = (args->connect)->encryption_type;
 
-cfstat(filename,&statbuf);
+cfstat(filename,&sb);
 
-printf("CfEncryptGetFile(%s on sd=%d), size=%d\n",filename,sd,statbuf.st_size);
+Debug("CfEncryptGetFile(%s on sd=%d), size=%d\n",filename,sd,sb.st_size);
 
 /* Now check to see if we have remote permission */
 
-#ifdef MINGW
-SECURITY_DESCRIPTOR *secDesc;
-SID *ownerSid;
-
-if (GetNamedSecurityInfo(filename,SE_FILE_OBJECT,OWNER_SECURITY_INFORMATION,
-                         (PSID*)&ownerSid,NULL,NULL,NULL,&secDesc) == ERROR_SUCCESS)
+if (!TransferRights(filename,sd,args,sendbuffer,&sb))
    {
-   if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
-      {
-      Debug("Caller %s is the owner of the file\n",(args->connect)->username);
-      }
-   else  // TODO: Check for read access ?
-      {
-      CfOut(cf_verbose,"","Caller %s is not the owner of \"%s\" - assuming read access\n", (args->connect)->username, filename);
-      }
-   
-   LocalFree(secDesc);
+   RefuseAccess(args->connect,sendbuffer,args->buf_size,"");
+   FailedTransfer(sd,sendbuffer,filename);
    }
-else
-   {
-   CfOut(cf_error,"GetNamedSecurityInfo","!! Could not retreive existing owner of \"%s\"", filename);
-   }
-
-#else  /* NOT MINGW */
-
-uid = (args->connect)->uid;
-
-if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
-   {
-   if (statbuf.st_uid == uid)
-      {
-      Debug("Caller %s is the owner of the file\n",(args->connect)->username);
-      }
-   else
-      {
-      if (statbuf.st_mode & S_IROTH)
-         {
-         Debug("Caller %s not owner of the file but permission granted\n",(args->connect)->username);
-         }
-      else
-         {
-         Debug("Caller %s is not the owner of the file\n",(args->connect)->username);
-         RefuseAccess(args->connect,sendbuffer,blocksize,"");
-         FailedTransfer(sd,sendbuffer,filename);
-         return;
-         }
-      }
-   }
-#endif  /* NOT MINGW */
 
 EVP_CIPHER_CTX_init(&ctx);
 
@@ -2928,15 +2844,15 @@ else
          break;
          }
 
-      savedlen = statbuf.st_size;
+      savedlen = sb.st_size;
       
       if (count++ % 3 == 0) /* Don't do this too often */
          {
          Debug("Restatting %s\n",filename);
-         stat(filename,&statbuf);
+         stat(filename,&sb);
          }
       
-      if (statbuf.st_size != savedlen)
+      if (sb.st_size != savedlen)
          {
          AbortTransfer(sd,sendbuffer,filename);
          break;
@@ -3296,6 +3212,71 @@ if (strlen(errmesg) > 0)
       CfOut(cf_verbose,"","ID from connecting host: (%s)",errmesg);
       }
    }
+}
+
+/***************************************************************/
+
+int TransferRights(char *filename,int sd,struct cfd_get_arg *args,char *sendbuffer, struct stat *sb)
+{
+#ifdef MINGW
+SECURITY_DESCRIPTOR *secDesc;
+SID *ownerSid;
+
+if (GetNamedSecurityInfo(filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,(PSID*)&ownerSid,NULL,NULL,NULL,&secDesc) == ERROR_SUCCESS)
+   {
+   if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
+      {
+      Debug("Caller %s is the owner of the file\n",(args->connect)->username);
+      }
+   else
+      {
+      // If the process doesn't own the file, we can access if we are root AND granted root map
+
+      if (args->connect->maproot)
+         {
+         CfOut(cf_verbose,"","Caller %s not owner of \"%s\", but mapping privilege\n", (args->connect)->username, filename);
+         return true;
+         }
+      else
+         {
+         return false;
+         }
+      }
+   
+   LocalFree(secDesc);
+   }
+else
+   {
+   CfOut(cf_error,"GetNamedSecurityInfo","!! Could not retreive existing owner of \"%s\"", filename);
+   return false;
+   }
+
+#else
+
+uid_t uid = (args->connect)->uid;
+
+if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
+   {
+   if (sb->st_uid == uid)
+      {
+      Debug("Caller %s is the owner of the file\n",(args->connect)->username);
+      }
+   else
+      {
+      if (sb->st_mode & S_IROTH)
+         {
+         Debug("Caller %s not owner of the file but permission granted\n",(args->connect)->username);
+         }
+      else
+         {
+         Debug("Caller %s is not the owner of the file\n",(args->connect)->username);
+         return false;
+         }
+      }
+   }
+#endif
+
+return true;
 }
 
 /***************************************************************/

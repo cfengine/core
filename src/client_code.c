@@ -36,11 +36,6 @@
 #include "cf3.extern.h"
 
 /*********************************************************************/
-/* cfAgent's connection cache                                        */
-/*********************************************************************/
-
-
-/*********************************************************************/
 
 void DetermineCfenginePort()
 
@@ -510,7 +505,7 @@ while (!done)
          }
 
       AppendItem(&(cfdirh->cf_list),sp,NULL);
-      
+
       while(*sp != '\0')
          {
          sp++;
@@ -518,8 +513,8 @@ while (!done)
       }
    }
  
- cfdirh->cf_listpos = cfdirh->cf_list;
- return cfdirh;
+cfdirh->cf_listpos = cfdirh->cf_list;
+return cfdirh;
 }
 
 /*********************************************************************/
@@ -636,18 +631,16 @@ else
 
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
 
-{ int dd, buf_size,n_read = 0,toget,towrite,plainlen,more = true;
+{ int dd, buf_size,n_read = 0,toget,towrite,plainlen,more = true, finlen;
   int last_write_made_hole = 0, done = false,tosend,cipherlen=0,value;
-  char *buf,in[CF_BUFSIZE],out[CF_BUFSIZE],sendbuffer[CF_BUFSIZE],cfchangedstr[265];
-  unsigned char iv[] = {1,2,3,4,5,6,7,8};
+  char *buf,in[CF_BUFSIZE],out[CF_BUFSIZE],workbuf[CF_BUFSIZE],cfchangedstr[265];
+  unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
   long n_read_total = 0;  
   EVP_CIPHER_CTX ctx;
   struct cfagent_connection *conn = pp->conn;
 
 snprintf(cfchangedstr,255,"%s%s",CF_CHANGEDSTR1,CF_CHANGEDSTR2);
   
-EVP_CIPHER_CTX_init(&ctx);  
-
 if ((strlen(new) > CF_BUFSIZE-20))
    {
    CfOut(cf_error,"","Filename too long");
@@ -663,31 +656,16 @@ if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    return false;
    }
 
-sendbuffer[0] = '\0';
+workbuf[0] = '\0';
 
-buf_size = ST_BLKSIZE(dstat);
-
-if (buf_size < 2048)
-   {
-   buf_size = 2048;
-   } 
+buf_size = 2048;
  
-if (attr.copy.encrypt)
-   {   
-   snprintf(in,CF_BUFSIZE-CF_PROTO_OFFSET,"GET dummykey %s",source);
-   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+1);
-   snprintf(sendbuffer,CF_BUFSIZE,"SGET %4d %4d",cipherlen,buf_size);
-   memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
-   tosend=cipherlen+CF_PROTO_OFFSET;   
-   EVP_DecryptInit(&ctx,EVP_bf_cbc(),conn->session_key,iv);
-   }
-else
-   {
-   snprintf(sendbuffer,CF_BUFSIZE,"GET %d %s",buf_size,source);
-   tosend=strlen(sendbuffer);
-   }
+/* Send proposition C0 */
 
-if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
+snprintf(workbuf,CF_BUFSIZE,"GET %d %s",buf_size,source);
+tosend=strlen(workbuf);
+
+if (SendTransaction(conn->sd,workbuf,tosend,CF_DONE) == -1)
    {
    cfPS(cf_error,CF_INTERPT,"",pp,attr,"Couldn't send data");
    close(dd);
@@ -699,8 +677,6 @@ n_read_total = 0;
 
 while (!done)
    {
-   cipherlen = 0;
-
    if ((size - n_read_total)/buf_size > 0)
       {
       toget = towrite = buf_size;
@@ -714,47 +690,26 @@ while (!done)
       {
       toget = towrite = 0;
       }
+
+   /* Stage C1 - receive */
    
-   if (attr.copy.encrypt)
+   if ((n_read = RecvSocketStream(conn->sd,buf,toget,0)) == -1)
       {
-      if (more)
+      if (errno == EINTR) 
          {
-         if ((cipherlen = ReceiveTransaction(conn->sd,buf,&more)) == -1)
-            {
-            return false;
-            }
+         continue;
          }
-      else
-         {
-         break;  /* Already written last encrypted buffer */
-         }
+      
+      cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Error in client-server stream");
+      close(dd);
+      free(buf);
+      return false;
       }
-   else
-      {
-      if ((n_read = RecvSocketStream(conn->sd,buf,toget,0)) == -1)
-         {
-         if (errno == EINTR) 
-            {
-            continue;
-            }
-         
-         cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Error in client-server stream");
-         close(dd);
-         free(buf);
-         return false;
-         }
-      }
-   
-   
+
    /* If the first thing we get is an error message, break. */
    
    if (n_read_total == 0 && strncmp(buf,CF_FAILEDSTR,strlen(CF_FAILEDSTR)) == 0)
       {
-      if (attr.copy.encrypt)
-         {
-         RecvSocketStream(conn->sd,buf,buf_size-n_read,0); /* flush rest of transaction */
-         }
-      
       cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to %s:%s denied\n",pp->this_server,source);
       close(dd);
       free(buf);
@@ -763,7 +718,6 @@ while (!done)
    
    if (strncmp(buf,cfchangedstr,strlen(cfchangedstr)) == 0)
       {
-      RecvSocketStream(conn->sd,buf,buf_size-n_read,0); /* flush rest of transaction */
       cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Source %s:%s changed while copying\n",pp->this_server,source);
       close(dd);
       free(buf);
@@ -783,48 +737,7 @@ while (!done)
       free(buf);
       return false;
       }
-   
-   if (attr.copy.encrypt)
-      {
-      if (!EVP_DecryptUpdate(&ctx,(unsigned char *)sendbuffer,&plainlen,(unsigned char*)buf,cipherlen))
-         {
-         Debug("Decryption failed\n");
-         return false;
-         }
       
-      memcpy(buf,sendbuffer,plainlen);
-      n_read = towrite = plainlen;
-      }
-
-   if (attr.copy.encrypt)
-      {
-      if (n_read == 0)
-         {
-         break;
-         }
-      
-      if (n_read == size)
-         {
-         if (n_read_total == 0 && strncmp(buf,CF_FAILEDSTR,size) == 0)
-            {
-            cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to %s:%s denied\n",pp->this_server,source);
-            close(dd);
-            free(buf);
-            return false;      
-            }
-         }
-      }
-   
-   n_read_total += towrite; /* n_read; */
-   
-   if (!attr.copy.encrypt)
-      {
-      if (n_read_total >= (long)size)  /* Handle EOF without closing socket */
-         {
-         done = true;
-         }
-      }
-   
    if (!FSWrite(new,dd,buf,towrite,&last_write_made_hole,n_read,attr,pp))
       {
       cfPS(cf_error,CF_FAIL,"",pp,attr," !! Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
@@ -835,28 +748,15 @@ while (!done)
       EVP_CIPHER_CTX_cleanup(&ctx);
       return false;
       }
-   }
 
-if (attr.copy.encrypt) /* final crypto cleanup */
-   {
-   if (!EVP_DecryptFinal(&ctx,buf,&plainlen))
+   n_read_total += towrite; /* n_read; */
+   
+   if (n_read_total >= (long)size)  /* Handle EOF without closing socket */
       {
-      Debug("Final decrypt failed\n");
-      return false;
-      }
-
-   if (!FSWrite(new,dd,buf,plainlen,&last_write_made_hole,n_read,attr,pp))
-      {
-      cfPS(cf_error,CF_FAIL,"",pp,attr,"Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
-      free(buf);
-      unlink(new);
-      close(dd);
-      FlushFileStream(conn->sd,size - n_read_total);
-      EVP_CIPHER_CTX_cleanup(&ctx);
-      return false;
+      done = true;      
       }
    }
- 
+
   /* If the file ends with a `hole', something needs to be written at
      the end.  Otherwise the kernel would truncate the file at the end
      of the last write operation. Write a null character and truncate
@@ -864,19 +764,152 @@ if (attr.copy.encrypt) /* final crypto cleanup */
 
 if (last_write_made_hole)   
    {
-   if (cf_full_write (dd,"",1) < 0 || ftruncate (dd,n_read_total) < 0)
+   if (cf_full_write(dd,"",1) < 0 || ftruncate(dd,n_read_total) < 0)
       {
       cfPS(cf_error,CF_FAIL,"",pp,attr,"cf_full_write or ftruncate error in CopyReg, source %s\n",source);
       free(buf);
       unlink(new);
       close(dd);
       FlushFileStream(conn->sd,size - n_read_total);
-      EVP_CIPHER_CTX_cleanup(&ctx);
       return false;
       }
    }
  
 Debug("End of CopyNetReg\n");
+close(dd);
+free(buf);
+return true;
+}
+
+/*********************************************************************/
+
+int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
+
+{ int dd, blocksize = 2048,n_read = 0,toget,towrite,plainlen,more = true, finlen,cnt = 0;
+  int last_write_made_hole = 0, done = false,tosend,cipherlen=0,value;
+  char *buf,in[CF_BUFSIZE],out[CF_BUFSIZE],workbuf[CF_BUFSIZE],cfchangedstr[265];
+  unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
+  long n_read_total = 0;  
+  EVP_CIPHER_CTX ctx;
+  struct cfagent_connection *conn = pp->conn;
+
+snprintf(cfchangedstr,255,"%s%s",CF_CHANGEDSTR1,CF_CHANGEDSTR2);
+  
+if ((strlen(new) > CF_BUFSIZE-20))
+   {
+   CfOut(cf_error,"","Filename too long");
+   return false;
+   }
+ 
+unlink(new);  /* To avoid link attacks */ 
+  
+if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
+   {
+   CfOut(cf_error,"open"," !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
+   unlink(new);
+   return false;
+   }
+
+workbuf[0] = '\0';
+EVP_CIPHER_CTX_init(&ctx);  
+
+snprintf(in,CF_BUFSIZE-CF_PROTO_OFFSET,"GET dummykey %s",source);
+cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+1);
+snprintf(workbuf,CF_BUFSIZE,"SGET %4d %4d",cipherlen,blocksize);
+memcpy(workbuf+CF_PROTO_OFFSET,out,cipherlen);
+tosend=cipherlen+CF_PROTO_OFFSET;   
+
+/* Send proposition C0 - query */
+
+if (SendTransaction(conn->sd,workbuf,tosend,CF_DONE) == -1)
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Couldn't send data");
+   close(dd);
+   return false;
+   }
+
+buf = (char *) malloc(CF_BUFSIZE + sizeof(int));
+
+n_read_total = 0;
+
+while (more)
+   {
+   if ((cipherlen = ReceiveTransaction(conn->sd,buf,&more)) == -1)
+      {
+      return false;
+      }
+
+   cnt++;
+   
+   /* If the first thing we get is an error message, break. */
+
+   if (n_read_total == 0 && strncmp(buf+CF_INBAND_OFFSET,CF_FAILEDSTR,strlen(CF_FAILEDSTR)) == 0)
+      {      
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to %s:%s denied\n",pp->this_server,source);
+      close(dd);
+      free(buf);
+      return false;      
+      }
+   
+   if (strncmp(buf+CF_INBAND_OFFSET,cfchangedstr,strlen(cfchangedstr)) == 0)
+      {
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Source %s:%s changed while copying\n",pp->this_server,source);
+      close(dd);
+      free(buf);
+      return false;      
+      }
+
+   EVP_DecryptInit(&ctx,CfengineCipher(CfEnterpriseOptions()),conn->session_key,iv);
+
+   if (!EVP_DecryptUpdate(&ctx,workbuf,&plainlen,buf,cipherlen))
+      {
+      Debug("Decryption failed\n");
+      close(dd);
+      free(buf);
+      return false;
+      }
+
+   if (!EVP_DecryptFinal(&ctx,workbuf+plainlen,&finlen))
+      {
+      Debug("Final decrypt failed\n");
+      close(dd);
+      free(buf);
+      return false;
+      }
+
+   towrite = n_read = plainlen+finlen;
+
+   n_read_total += n_read;
+       
+   if (!FSWrite(new,dd,workbuf,towrite,&last_write_made_hole,n_read,attr,pp))
+      {
+      cfPS(cf_error,CF_FAIL,"",pp,attr," !! Local disk write failed copying %s:%s to %s\n",pp->this_server,source,new);
+      free(buf);
+      unlink(new);
+      close(dd);
+      EVP_CIPHER_CTX_cleanup(&ctx);
+      return false;
+      }
+   }
+
+  /* If the file ends with a `hole', something needs to be written at
+     the end.  Otherwise the kernel would truncate the file at the end
+     of the last write operation. Write a null character and truncate
+     it again.  */
+
+if (last_write_made_hole)   
+   {
+   if (cf_full_write(dd,"",1) < 0 || ftruncate(dd,n_read_total) < 0)
+      {
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"cf_full_write or ftruncate error in CopyReg, source %s\n",source);
+      free(buf);
+      unlink(new);
+      close(dd);
+      EVP_CIPHER_CTX_cleanup(&ctx);
+      return false;
+      }
+   }
+
 close(dd);
 free(buf);
 EVP_CIPHER_CTX_cleanup(&ctx);

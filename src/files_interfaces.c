@@ -1572,10 +1572,20 @@ if (remote)
       {
       return false;
       }
-   
-   if (!CopyRegularFileNet(source,new,sstat.st_size,attr,pp))
+
+   if (attr.copy.encrypt)
       {
-      return false;
+      if (!EncryptCopyRegularFileNet(source,new,sstat.st_size,attr,pp))
+         {
+         return false;
+         }
+      }
+   else
+      {
+      if (!CopyRegularFileNet(source,new,sstat.st_size,attr,pp))
+         {
+         return false;
+         }
       }
    }
 else
@@ -1669,7 +1679,7 @@ if (lstat(new,&dstat) == -1)
 
 if (dstat.st_size != sstat.st_size)
    {
-   CfOut(cf_error,""," !! New file %s seems to have been corrupted in transit (sizes %d and %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
+   CfOut(cf_error,""," !! New file %s seems to have been corrupted in transit (dest %d and src %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
    if (backupok)
       {
       cf_rename(backup,dest); /* ignore failure */

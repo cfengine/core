@@ -164,6 +164,7 @@ void NewClientCache(struct cfstat *data,struct Promise *pp);
 void DeleteClientCache(struct Attributes attr,struct Promise *pp);
 int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp);
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
+int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp);
 int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp);
 void FlushFileStream(int sd,int toget);

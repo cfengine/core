@@ -290,7 +290,7 @@ int EncryptString(char type,char *in,char *out,unsigned char *key,int plainlen)
  
 EVP_CIPHER_CTX_init(&ctx);
 EVP_EncryptInit(&ctx,CfengineCipher(type),key,iv);
- 
+
 if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,in,plainlen))
    {
    return -1;

@@ -374,6 +374,7 @@ if (server_pubkey == NULL)
       }
 
    /* proposition S5 - conditional */  
+
    if ((len=ReceiveTransaction(conn->sd,in,NULL)) == 0)
       {
       cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Protocol error in RSA authentation from IP %s\n",pp->this_server);
@@ -491,8 +492,6 @@ void SetSessionKey(struct cfagent_connection *conn)
 
 { BIGNUM *bp;
   int session_size = CfSessionKeySize(conn->encryption_type);
-
-/* Hardcode blowfish for now - it's fast */ 
 
 bp = BN_new(); 
 BN_rand(bp,session_size,0,0);

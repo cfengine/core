@@ -577,7 +577,7 @@ CfOut(cf_verbose,"","Sleeping...\n");
 
 SignalTwin();
 
-sleep(60);                /* 1 Minute resolution is enough */ 
+sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 
 
 now = time(NULL);
 

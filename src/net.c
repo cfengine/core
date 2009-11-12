@@ -83,6 +83,7 @@ if (RecvSocketStream(sd,proto,CF_INBAND_OFFSET,0) == -1)   /* Get control channe
    }
 
 sscanf(proto,"%c %u",&status,&len);
+
 Debug("Transaction Receive [%s][%s]\n",proto,proto+CF_INBAND_OFFSET);
 
 if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
@@ -97,16 +98,16 @@ if (strncmp(proto,"CAUTH",5) == 0)
    return -1;
    }
  
- if (more != NULL)
-    {
-    switch(status)
-       {
-       case 'm': *more = true;
-           break;
-       default: *more = false;
-       }
-    }
- 
+if (more != NULL)
+   {
+   switch(status)
+      {
+      case 'm': *more = true;
+          break;
+      default: *more = false;
+      }
+   }
+
 return RecvSocketStream(sd,buffer,len,0);
 }
 

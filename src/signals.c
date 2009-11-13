@@ -55,8 +55,7 @@ if (signum != SIGCHLD)
       YieldCurrentLock(best_guess);
       unlink(PIDFILE);
       EndAudit();
-	  CloseNetwork();
-      Cf3CloseLog();
+	  GenericDeInitialize();
       exit(0);
       }
    else if (signum == SIGUSR1)

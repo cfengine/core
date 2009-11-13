@@ -139,6 +139,7 @@ ThisAgentInit();
 KeepPromises();
 NoteClassUsage(VHEAP);
 NoteVarUsage();
+GenericDeInitialize();
 return 0;
 }
 

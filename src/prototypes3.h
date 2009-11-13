@@ -744,6 +744,7 @@ void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_cla
 /* generic_agent.c */
 
 void GenericInitialize(int argc,char **argv,char *agents);
+void GenericDeInitialize(void);
 void PromiseManagement(char *agent);
 void InitializeGA(int argc,char **argv);
 void CheckOpts(int argc,char **argv);

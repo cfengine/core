@@ -48,10 +48,8 @@ InitializeGA(argc,argv);
 
 SetReferenceTime(true);
 SetStartTime(false);
-
-#ifndef MIGNW
 SetSignals();
-#endif
+
 
 if (EnterpriseExpiry("3","July","21009"))
    {
@@ -114,6 +112,17 @@ if (SHOWREPORTS || ERRORCOUNT)
    }
 
 XML = 0;
+}
+
+/*****************************************************************************/
+
+void GenericDeInitialize()
+
+{
+  Debug("GenericDeInitialize()\n");
+
+  CloseNetwork();
+  Cf3CloseLog();
 }
 
 /*****************************************************************************/

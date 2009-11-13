@@ -59,7 +59,7 @@ if (a.report.to_file)
    }
 else
    {
-   CfOut(cf_error,"","R: %s",pp->promiser);
+   CfOut(cf_reporting,"","R: %s",pp->promiser);
    }
 
 if (a.report.haveprintfile)

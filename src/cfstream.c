@@ -80,6 +80,7 @@ switch(level)
        break;
 
    case cf_error:
+   case cf_reporting:
 
        FileReport(mess,VERBOSE,filename);
        MakeLog(mess,level);
@@ -149,10 +150,11 @@ switch(level)
        break;
 
    case cf_error:
+   case cf_reporting:
 
        MakeReport(mess,VERBOSE);
        MakeLog(mess,level);
-       break;
+       break; 
 
    case cf_log:
        
@@ -299,6 +301,7 @@ switch(level)
        break;
 
    case cf_error:
+   case cf_reporting:
 
        if (attr.report.to_file)
           {
@@ -309,12 +312,12 @@ switch(level)
           MakeReport(mess,verbose);
           }
        
-       if (attr.transaction.log_level == cf_error)
+       if (attr.transaction.log_level == level)
           {   
           MakeLog(mess,level);
           }
-       break;
-
+       break;   
+	   
    case cf_log:
        
        MakeLog(mess,level);
@@ -498,6 +501,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
    switch (level)
       {
       case cf_inform:
+	  case cf_reporting:
           syslog(LOG_NOTICE," %s",ip->name);
           break;
           

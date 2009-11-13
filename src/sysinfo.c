@@ -587,6 +587,7 @@ void Get3Environment()
 CfOut(cf_verbose,"","Looking for environment from cf-monitor...\n");
 
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
+MapName(env);
 
 if (cfstat(env,&statbuf) == -1)
    {

@@ -855,13 +855,27 @@ if (!ThreadLock(cft_count))
    exit(1);
    }
 
+/* replace old file with new*/   
+
 unlink(prev_file);
+
+#ifdef MINGW
+
+if(!CopyFile(filename, prev_file, TRUE))
+  {
+  CfOut(cf_inform,"CopyFile","Could copy %s to %s",filename,prev_file);
+  rtn = 1;
+  }
+
+#else  /* NOT MINGW */
 
 if (symlink(filename, prev_file) == -1)
    {
    CfOut(cf_inform,"symlink","Could not link %s and %s",filename,prev_file);
    rtn = 1;
    }
+   
+#endif  /* NOT MINGW */
 
 ThreadUnlock(cft_count);
 return(rtn);
@@ -894,6 +908,7 @@ if (cfstat(file,&statbuf) == -1)
    }
 
 snprintf(prev_file,CF_BUFSIZE-1,"%s/outputs/previous",CFWORKDIR);
+MapName(prev_file);
 
 if (statbuf.st_size == 0)
    {

@@ -2553,6 +2553,7 @@ cfst.cf_nlink = CF_NOSIZE;
 
 memset(linkbuf,0,CF_BUFSIZE);
 
+#ifndef MINGW  // windows doesn't support symbolic links
 if (S_ISLNK(statbuf.st_mode))
    {
    islink = true;
@@ -2572,6 +2573,7 @@ if (S_ISLNK(statbuf.st_mode))
 
    cfst.cf_readlink = linkbuf;
    }
+#endif  /* NOT MINGW */
 
 if (!islink && (cfstat(filename,&statbuf) == -1))
    {

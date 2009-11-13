@@ -1002,6 +1002,8 @@ else
 
 /*********************************************************************/
 
+#ifndef MINGW
+
 int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr,struct Promise *pp)
 
  /* wrapper for network access */
@@ -1039,6 +1041,8 @@ for (sp = pp->cache; sp != NULL; sp=sp->next)
 
 return -1;
 }
+
+#endif  /* NOT MINGW */
 
 /*********************************************************************/
 
@@ -1358,11 +1362,17 @@ return false;
       
 void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp)
 
+/* Link the file to the source, instead of copying */
+
+#ifdef MINGW
+{
+CfOut(cf_verbose, "", "Windows does not support symbolic links");
+cfPS(cf_error,CF_FAIL,"",pp,attr,"Windows can't link \"%s\" to \"%s\"",sourcefile, destfile);
+}
+#else  /* NOT MINGW */
 { char linkbuf[CF_BUFSIZE],*lastnode;
   int status = CF_UNKNOWN;
   struct stat dsb;
-
-/* Link the file to the source, instead of copying */
 
 linkbuf[0] = '\0';
   
@@ -1447,6 +1457,7 @@ if (status == CF_CHG || status == CF_NOP)
       cfPS(cf_inform,status,"",pp,attr," -> Unable to create link %s", destfile);
    }
 }
+#endif  /* NOT MINGW */
 
 /*************************************************************************************/
 

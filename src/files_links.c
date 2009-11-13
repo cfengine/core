@@ -36,6 +36,12 @@
 
 char VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
+#ifdef MINGW
+{
+CfOut(cf_verbose, "", "Windows does not support symbolic links (at VerifyLink())");
+return CF_FAIL;
+}
+#else  /* NOT MINGW */
 { char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE];
   int nofile = false;
   struct stat sb;
@@ -164,6 +170,7 @@ else
       }
    }
 }
+#endif  /* NOT MINGW */
 
 /*****************************************************************************/
 
@@ -376,6 +383,13 @@ return MakeHardLink(destination,to,attr,pp)?CF_CHG:CF_FAIL;
 
 int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp)
 
+#ifdef MINGW
+{
+CfOut(cf_verbose, "", "Windows does not support symbolic links (at KillGhostLink())");
+cfPS(cf_error,CF_FAIL,"",pp,attr," !! Windows does not support killing link \"%s\"", name);
+return false;
+}
+#else  /* NOT MINGW */
 { char linkbuf[CF_BUFSIZE],tmp[CF_BUFSIZE];
   char linkpath[CF_BUFSIZE],*sp;
   struct stat statbuf;
@@ -421,11 +435,18 @@ if (cfstat(tmp,&statbuf) == -1)               /* link points nowhere */
 
 return false;
 }
+#endif  /* NOT MINGW */
 
 /*****************************************************************************/
 
 int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
-
+#ifdef MINGW  // TODO: Remove? Should never get called.
+{
+CfOut(cf_verbose, "", "Windows does not support symbolic links");
+cfPS(cf_error,CF_FAIL,"symlink",pp,attr," !! Couldn't link %s to %s\n",to,from);
+return false;
+}
+#else  /* NOT MINGW */
 {
 if (DONTDO)
    {
@@ -446,6 +467,7 @@ else
       }
    }
 }
+#endif  /* NOT MINGW */
 
 /*****************************************************************************/
 
@@ -453,6 +475,7 @@ int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
 #ifdef MINGW
 {  // TODO: Implement ?
 CfOut(cf_verbose, "", "Hard links are not yet supported on Windows");
+cfPS(cf_error,CF_FAIL,"link",pp,attr," !! Couldn't (hard) link %s to %s\n",to,from);
 return false;
 }
 #else  /* NOT MINGW */
@@ -484,7 +507,12 @@ int ExpandLinks(char *dest,char *from,int level)                            /* r
 
   /* Expand a path contaning symbolic links, up to 4 levels  */
   /* of symbolic links and then beam out in a hurry !        */
-
+#ifdef MINGW
+{
+CfOut(cf_error, "", "!! Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
+return false;
+}
+#else  /* NOT MINGW */
 { char *sp, buff[CF_BUFSIZE];
   char node[CF_MAXLINKSIZE];
   struct stat statbuf;
@@ -599,6 +627,7 @@ for (sp = from; *sp != '\0'; sp++)
  
 return true;
 }
+#endif  /* NOT MINGW */
 
 /*********************************************************************/
 

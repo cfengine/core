@@ -617,7 +617,6 @@ void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes 
 int cfstat(const char *path, struct stat *buf);
 int cf_stat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
 int cf_lstat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
-int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
 CFDIR *cf_opendir(char *name,struct Attributes attr, struct Promise *pp);
 struct cfdirent *cf_readdir(CFDIR *cfdirh,struct Attributes attr, struct Promise *pp);
 void cf_closedir(CFDIR *dirh);
@@ -625,6 +624,9 @@ int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,
 void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
 void FileAutoDefine(char *destfile);
 int CfReadLine(char *buff,int size,FILE *fp);
+#ifdef MINGW
+int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
+#endif  /* NOT MINGW */
 
 /* files_names.c */
 

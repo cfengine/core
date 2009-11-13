@@ -698,6 +698,11 @@ for  (i = 0; i < CF3_MODULES; i++)
 
 for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    {
+   if (CF_COMMON_BODIES[i].dtype == cf_body)
+      {
+      continue;
+      }
+   
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
       Debug("Found a match for lval %s in the common constraint attributes\n",lval);

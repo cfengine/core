@@ -376,6 +376,11 @@ void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatyp
 { struct Rlist *rp;
   struct Item *checklist;
   char output[CF_BUFSIZE];
+
+if (rval == NULL)
+   {
+   return;
+   }
   
 Debug(" ------------------------------------------------\n");
 
@@ -627,6 +632,11 @@ int CheckParseClass(char *lval,char *s,char *range)
 { regex_t rx;
   regmatch_t pmatch;
   char output[CF_BUFSIZE];
+
+if (s == NULL)
+   {
+   return false;
+   }
   
 Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
   
@@ -656,6 +666,11 @@ void CheckParseInt(char *lval,char *s,char *range)
   
 /* Numeric types are registered by range separated by comma str "min,max" */
 Debug("\nCheckParseInt(%s => %s/%s)\n",lval,s,range);
+
+if (s == NULL)
+   {
+   return;
+   }
 
 split = SplitString(range,',');
 
@@ -710,6 +725,11 @@ void CheckParseIntRange(char *lval,char *s,char *range)
   int n;
   long max = CF_LOWINIT, min = CF_HIGHINIT, val;
   char output[CF_BUFSIZE];
+
+if (s == NULL)
+   {
+   return;
+   }
   
 /* Numeric types are registered by range separated by comma str "min,max" */
 Debug("\nCheckParseIntRange(%s => %s/%s)\n",lval,s,range);
@@ -792,6 +812,11 @@ void CheckParseReal(char *lval,char *s,char *range)
   
 Debug("\nCheckParseReal(%s => %s/%s)\n",lval,s,range);
 
+if (s == NULL)
+   {
+   return;
+   }
+
 if (strcmp(s,"inf") == 0)
    {
    ReportError("keyword \"inf\" has an integer value, cannot be used as real");
@@ -843,7 +868,12 @@ void CheckParseRealRange(char *lval,char *s,char *range)
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
   int n;
   char output[CF_BUFSIZE];
- 
+
+if (s == NULL)
+   {
+   return;
+   }
+  
 Debug("\nCheckParseRealRange(%s => %s/%s)\n",lval,s,range);
 
 if (*s == '[' || *s == '(')
@@ -922,6 +952,11 @@ void CheckParseOpts(char *lval,char *s,char *range)
 
 Debug("\nCheckParseOpts(%s => %s/%s)\n",lval,s,range);
 
+if (s == NULL)
+   {
+   return;
+   }
+
 if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    {
    Debug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
@@ -952,8 +987,13 @@ void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range)
 { int i;
   enum cfdatatype dt;
   char output[CF_BUFSIZE];
- 
+
 Debug("CheckFnCallType(%s => %s/%s)\n",lval,s,range);
+
+if (s == NULL)
+   {
+   return;
+   }
 
 for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    {

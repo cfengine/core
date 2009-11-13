@@ -478,7 +478,12 @@ int IsCf3VarString(char *str)
   int bracks = 0, vars = 0;
 
 Debug1("IsCf3VarString(%s) - syntax verify\n",str);
-  
+
+if (str == NULL)
+   {
+   return false;
+   }
+
 for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    {
    switch (*sp)
@@ -544,6 +549,11 @@ int IsCf3Scalar(char *str)
   int bracks = 0, vars = 0;
 
 Debug1("IsCf3Scalar(%s) - syntax verify\n",str);
+
+if (str == NULL)
+   {
+   return false;
+   }
   
 for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    {
@@ -604,6 +614,11 @@ return vars;
 int DefinedVariable(char *name)
 
 { struct Rval rval;
+
+if (name == NULL)
+   {
+   return false;
+   }
  
 if (GetVariable("this",name,&rval.item,&rval.rtype) == cf_notype)
    {
@@ -619,6 +634,11 @@ int BooleanControl(char *scope,char *name)
 
 { char varbuf[CF_BUFSIZE], rtype;
 
+if (name == NULL)
+   {
+   return false;
+   }
+ 
 if (GetVariable(scope,name,(void *)varbuf,&rtype) != cf_notype)
    {
    return GetBoolean(varbuf);

@@ -673,7 +673,6 @@ void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,s
 void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp);
 int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *statbuf);
 void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
-void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
 int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp);
 int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
 int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp);
@@ -688,6 +687,7 @@ void DeleteDirectoryTree(char *path,struct Promise *pp);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp);
 #ifndef MINGW
+void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
 int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
 struct UidList *MakeUidList(char *uidnames);
 struct GidList *MakeGidList(char *gidnames);
@@ -959,6 +959,7 @@ int SendSocketStream (int sd, char *buffer, int toget, int flags);
 
 /* nfs.c */
 
+#ifndef MINGW
 int LoadMountInfo(struct Rlist **list);
 void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
 void DeleteMountInfo(struct Rlist *list);
@@ -969,6 +970,7 @@ int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp);
 int MatchFSInFstab(char *match);
 void DeleteThisItem(struct Item **liststart,struct Item *entry);
 void MountAll(void);
+#endif  /* NOT MINGW */
 
 /* ontology.c */
 
@@ -1019,6 +1021,9 @@ double drand48(void);
 #ifndef HAVE_DRAND48
 void srand48(long seed);
 #endif  /* HAVE_DRAND48 */
+#ifdef MINGW
+unsigned int alarm(unsigned int seconds);
+#endif /* MINGW */
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);
@@ -1412,12 +1417,14 @@ int GracefulTerminate(pid_t pid);
 void *FindAndVerifyStoragePromises(struct Promise *pp);
 void FindStoragePromiserObjects(struct Promise *pp);
 void VerifyStoragePromise(char *path,struct Promise *pp);
-int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp);
 int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
 int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
 void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
 int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp);
 int IsForeignFileSystem (struct stat *childstat,char *dir);
+#ifndef MINGW
+int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp);
+#endif  /* NOT MINGW */
 
 /* verify_reports.c */
 

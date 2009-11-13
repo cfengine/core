@@ -662,3 +662,11 @@ NovaWin_CloseNetwork();
 }
 
 /*******************************************************************/
+
+#ifdef MINGW  // FIXME: Timeouts ignored on windows for now...
+unsigned int alarm(unsigned int seconds)
+
+{
+return 0;
+}
+#endif  /* MINGW */

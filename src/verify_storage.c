@@ -134,83 +134,6 @@ YieldCurrentLock(thislock);
 /** Level                                                          */
 /*******************************************************************/
 
-int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
-
-{ struct CfMount mount;
-  char *options;
-  char dir[CF_BUFSIZE];
-  int changes = 0;
- 
-CfOut(cf_verbose,""," -> Verifying mounted file systems on %s\n",name);
-
-snprintf(dir,CF_BUFSIZE,"%s/.",name);
-
-if (!IsPrivileged())                            
-   {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"Only root can mount filesystems.\n","");
-   return false;
-   }
-
-options = Rlist2String(a.mount.mount_options,",");
-
-if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,name,options,a,pp))
-   {
-   if (!a.mount.unmount)
-      {
-      if (!MakeParentDirectory(dir,a.move_obstructions))
-         {
-         }
-
-      if (a.mount.editfstab)
-         {
-         changes += VerifyInFstab(name,a,pp);
-         }
-      else
-         {
-         cfPS(cf_inform,CF_FAIL,"",pp,a," -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n",name,VFSTAB[VSYSTEMHARDCLASS]);
-         // Mount explicitly
-         VerifyMount(name,a,pp);               
-         }
-      }
-   else
-      {
-      if (a.mount.editfstab)
-         {
-         changes += VerifyNotInFstab(name,a,pp);
-         }
-      }
-
-   if (changes)
-      {
-      CF_MOUNTALL = true;
-      CF_SAVEFSTAB = true;
-      }
-   }
-else
-   {
-   if (a.mount.unmount)
-      {
-      VerifyUnmount(name,a,pp);
-      if (a.mount.editfstab)
-         {
-         if (VerifyNotInFstab(name,a,pp))
-            {
-            CF_SAVEFSTAB = true;
-            }
-         }
-      }
-   else
-      {
-      cfPS(cf_inform,CF_NOP,"",pp,a," -> Filesystem %s seems to be mounted as promised\n",name);
-      }
-   }
-
-free(options);
-return true;
-}
-
-/*******************************************************************/
-
 int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf, localstat;
@@ -455,3 +378,87 @@ if (childstat->st_dev != parentstat.st_dev)
 Debug("NotMountedFileSystem\n");
 return(false);
 }
+
+
+/*********************************************************************/
+/*  Unix-specific implementations                                    */
+/*********************************************************************/
+
+#ifndef MINGW
+
+int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
+
+{ struct CfMount mount;
+  char *options;
+  char dir[CF_BUFSIZE];
+  int changes = 0;
+ 
+CfOut(cf_verbose,""," -> Verifying mounted file systems on %s\n",name);
+
+snprintf(dir,CF_BUFSIZE,"%s/.",name);
+
+if (!IsPrivileged())                            
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a,"Only root can mount filesystems.\n","");
+   return false;
+   }
+
+options = Rlist2String(a.mount.mount_options,",");
+
+if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,name,options,a,pp))
+   {
+   if (!a.mount.unmount)
+      {
+      if (!MakeParentDirectory(dir,a.move_obstructions))
+         {
+         }
+
+      if (a.mount.editfstab)
+         {
+         changes += VerifyInFstab(name,a,pp);
+         }
+      else
+         {
+         cfPS(cf_inform,CF_FAIL,"",pp,a," -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n",name,VFSTAB[VSYSTEMHARDCLASS]);
+         // Mount explicitly
+         VerifyMount(name,a,pp);               
+         }
+      }
+   else
+      {
+      if (a.mount.editfstab)
+         {
+         changes += VerifyNotInFstab(name,a,pp);
+         }
+      }
+
+   if (changes)
+      {
+      CF_MOUNTALL = true;
+      CF_SAVEFSTAB = true;
+      }
+   }
+else
+   {
+   if (a.mount.unmount)
+      {
+      VerifyUnmount(name,a,pp);
+      if (a.mount.editfstab)
+         {
+         if (VerifyNotInFstab(name,a,pp))
+            {
+            CF_SAVEFSTAB = true;
+            }
+         }
+      }
+   else
+      {
+      cfPS(cf_inform,CF_NOP,"",pp,a," -> Filesystem %s seems to be mounted as promised\n",name);
+      }
+   }
+
+free(options);
+return true;
+}
+
+#endif  /* NOT MINGW */

@@ -402,13 +402,43 @@ typedef int clockid_t;
 /*******************************************************************/
 
 #ifdef MINGW
+# define MAXHOSTNAMELEN	256  // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
 # define NULLFILE "nul"
 # define CFPROMISES_BIN "cf-promises.exe"
 # define CMD_PATH "c:\\windows\\system32\\cmd.exe"
-#else
+
+typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
+
+/* Dummy signals, can be set to anything below 23 but
+ * 2, 4, 8, 11, 15, 21, 22 which are taken.
+ * Calling signal() with anything from below causes SIG_ERR
+ * to be returned.                                         */
+
+# define SIGALRM 1
+# define SIGHUP 3
+# define SIGTRAP 5
+# define SIGKILL 6
+# define SIGPIPE 7
+# define SIGCONT 9
+# define SIGSTOP 10
+# define SIGQUIT 12
+# define SIGCHLD 13
+# define SIGUSR1 14
+# define SIGUSR2 16
+# define SIGBUS 17
+
+# ifndef HAVE_STRUCT_TIMESPEC
+#  define HAVE_STRUCT_TIMESPEC 1
+   struct timespec {
+           long tv_sec;
+           long tv_nsec;
+   };
+# endif /* HAVE_STRUCT_TIMESPEC */
+
+#else  /* NOT MINGW */
 # define NULLFILE "/dev/null"
 # define CFPROMISES_BIN "cf-promises"
-#endif
+#endif  /* NOT MINGW */
 
 /*******************************************************************/
 /* Class array limits                                              */

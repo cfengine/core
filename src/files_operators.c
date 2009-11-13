@@ -453,93 +453,6 @@ return retval;
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr)
-
-{ int amroot = true;
-
-if (!IsPrivileged())                            
-   {
-   amroot = false;
-   }
-
-if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
-   {
-   if (newperm & S_ISUID)
-      {
-      if (!IsItemIn(VSETUIDLIST,file))
-         {
-         if (amroot)
-            {
-            cfPS(cf_inform,CF_WARN,"",pp,attr,"NEW SETUID root PROGRAM %s\n",file);
-            }
-         
-         PrependItem(&VSETUIDLIST,file,NULL);
-         }
-      }
-   else
-      {
-      switch (attr.transaction.action)
-         {
-         case cfa_fix:
-
-             cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing setuid (root) flag from %s...\n\n",file);
-             break;
-
-         case cfa_warn:
-
-             if (amroot)
-                {
-                cfPS(cf_error,CF_WARN,"",pp,attr," !! WARNING setuid (root) flag on %s...\n\n",file);
-                }
-             break;             
-         }
-      }
-   }
- 
-if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
-   {
-   if (newperm & S_ISGID)
-      {
-      if (!IsItemIn(VSETUIDLIST,file))
-         {
-         if (S_ISDIR(dstat->st_mode))
-            {
-            /* setgid directory */
-            }
-         else
-            {
-            if (amroot)
-               {
-               cfPS(cf_error,CF_WARN,"",pp,attr," !! NEW SETGID root PROGRAM %s\n",file);
-               }
-
-            PrependItem(&VSETUIDLIST,file,NULL);
-            }
-         }
-      }
-   else
-      {
-      switch (attr.transaction.action)
-         {
-         case cfa_fix:
-
-             cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing setgid (root) flag from %s...\n\n",file);
-             break;
-
-         case cfa_warn:
-
-             cfPS(cf_inform,CF_WARN,"",pp,attr," !! WARNING setgid (root) flag on %s...\n\n",file);
-             break;
-             
-         default:
-             break;
-         }
-      }
-   } 
-}
-
-/*****************************************************************************/
-
 int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp)
 
 { struct stat sb;
@@ -1432,6 +1345,7 @@ void LogHashChange(char *file)
 snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
 MapName(fname);
 
+#ifndef MINGW
 if (cfstat(fname,&sb) != -1)
    {
    if (sb.st_mode & (S_IWGRP | S_IWOTH))
@@ -1439,6 +1353,7 @@ if (cfstat(fname,&sb) != -1)
       CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",fname,sb.st_uid);
       }
    }
+#endif  /* NOT MINGW */
 
 if ((fp = fopen(fname,"a")) == NULL)
    {
@@ -1609,8 +1524,95 @@ rmdir(path);
 #ifndef MINGW
 
 /*******************************************************************/
-/* Unix implementations of file functions                          */
+/* Unix-specific implementations of file functions                 */
 /*******************************************************************/
+
+void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr)
+
+{ int amroot = true;
+
+if (!IsPrivileged())                            
+   {
+   amroot = false;
+   }
+
+if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
+   {
+   if (newperm & S_ISUID)
+      {
+      if (!IsItemIn(VSETUIDLIST,file))
+         {
+         if (amroot)
+            {
+            cfPS(cf_inform,CF_WARN,"",pp,attr,"NEW SETUID root PROGRAM %s\n",file);
+            }
+         
+         PrependItem(&VSETUIDLIST,file,NULL);
+         }
+      }
+   else
+      {
+      switch (attr.transaction.action)
+         {
+         case cfa_fix:
+
+             cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing setuid (root) flag from %s...\n\n",file);
+             break;
+
+         case cfa_warn:
+
+             if (amroot)
+                {
+                cfPS(cf_error,CF_WARN,"",pp,attr," !! WARNING setuid (root) flag on %s...\n\n",file);
+                }
+             break;             
+         }
+      }
+   }
+ 
+if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
+   {
+   if (newperm & S_ISGID)
+      {
+      if (!IsItemIn(VSETUIDLIST,file))
+         {
+         if (S_ISDIR(dstat->st_mode))
+            {
+            /* setgid directory */
+            }
+         else
+            {
+            if (amroot)
+               {
+               cfPS(cf_error,CF_WARN,"",pp,attr," !! NEW SETGID root PROGRAM %s\n",file);
+               }
+
+            PrependItem(&VSETUIDLIST,file,NULL);
+            }
+         }
+      }
+   else
+      {
+      switch (attr.transaction.action)
+         {
+         case cfa_fix:
+
+             cfPS(cf_inform,CF_CHG,"",pp,attr," -> Removing setgid (root) flag from %s...\n\n",file);
+             break;
+
+         case cfa_warn:
+
+             cfPS(cf_inform,CF_WARN,"",pp,attr," !! WARNING setgid (root) flag on %s...\n\n",file);
+             break;
+             
+         default:
+             break;
+         }
+      }
+   } 
+}
+
+/*****************************************************************************/
 
 int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
 

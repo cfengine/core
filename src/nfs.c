@@ -34,6 +34,8 @@
 
 /*******************************************************************/
 
+#ifndef MINGW  // use samba on windows ?
+
 int LoadMountInfo(struct Rlist **list)
 
 /* This is, in fact, the most portable way to read the mount info! */
@@ -711,4 +713,4 @@ if (entry != NULL)
    }
 }
 
-
+#endif  /* NOT MINGW */

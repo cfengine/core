@@ -120,9 +120,9 @@ struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,
 { struct cfagent_connection *conn;
   static sigset_t   signal_mask;
 
+#ifndef MINGW
 signal(SIGPIPE,SIG_IGN);
 
-#ifndef MINGW
 sigemptyset (&signal_mask);
 sigaddset (&signal_mask, SIGPIPE);
 pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);

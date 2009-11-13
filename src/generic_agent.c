@@ -48,7 +48,10 @@ InitializeGA(argc,argv);
 
 SetReferenceTime(true);
 SetStartTime(false);
+
+#ifndef MIGNW
 SetSignals();
+#endif
 
 if (EnterpriseExpiry("3","July","21009"))
    {
@@ -697,14 +700,14 @@ if (cfstat(wfilename,&statbuf) == -1)
    exit(1);
    }
 
+#ifndef NT
 if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    {
-#ifndef NT
    CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",wfilename,statbuf.st_uid);
    exit(1);
-#endif
    }
-
+#endif
+   
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 CfOut(cf_verbose,"","  > Parsing file %s\n",wfilename);
 Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
@@ -772,6 +775,7 @@ return NULL;
 void SetFacility(char *retval)
 
 {
+#ifndef MINGW  // TODO: Needed if syslog is to be supported on Win
 if (strcmp(retval,"LOG_USER") == 0)
    {
    FACILITY = LOG_USER;
@@ -812,6 +816,7 @@ else if (strcmp(retval,"LOG_LOCAL7") == 0)
    {
    FACILITY = LOG_LOCAL7;
    }
+#endif  /* NOT MINGW */
 
 Cf3CloseLog();
 Cf3OpenLog();

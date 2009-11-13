@@ -151,7 +151,7 @@ if (cfstat(cmd,&sb) == -1)
 
 if ((*VINPUTFILE == '.') || IsAbsoluteFileName(VINPUTFILE))
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f %s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f \"%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,VINPUTFILE);
    }
 else
    {

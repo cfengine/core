@@ -56,7 +56,7 @@ void DeleteStream(FILE *fp);
             "The latter type is regulated by cf-serverd's role based\n"
             "access control.";
  
- struct option OPTIONS[13] =
+ struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -69,10 +69,12 @@ void DeleteStream(FILE *fp);
       { "inform",no_argument,0,'I'},
       { "remote-options",required_argument,0,'o'},
       { "diagnostic",no_argument,0,'x'},
+      { "hail",required_argument,0,'H'},
+      { "interactive",no_argument,0,'i'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[13] =
+ char *HINTS[15] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -85,12 +87,15 @@ void DeleteStream(FILE *fp);
       "Print basic information about changes made to the system, i.e. promises repaired",
       "Pass options to a remote server process",
       "Activate internal diagnostics (developers only)",
+      "Hail the following comma-separated lists of hosts, overriding default list",
+      "Enable interactive mode for key trust",
       NULL
       };
 
 
 extern struct BodySyntax CFR_CONTROLBODY[];
 
+int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
 int BACKGROUND = false;
 int MAXCHILD = 50;
@@ -112,6 +117,13 @@ CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"runagent");
 ThisAgentInit();
 KeepControlPromises(); // Set RUNATTR using copy
+
+if (BACKGROUND && INTERACTIVE)
+   {
+   CfOut(cf_error,""," !! You cannot specify background mode and interactive mode together");
+   exit(1);
+   }
+
 pp = MakeDefaultRunAgentPromise();
 
 if (HOSTLIST)
@@ -142,7 +154,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"d:vnKIf:D:VSxo:s:M",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -188,12 +200,19 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:VSxo:s:M",OPTIONS,&optindex)) != EOF)
              FatalError("Argument too long\n");
              }
           break;
+
+      case 'H':
+          HOSTLIST = SplitStringAsRList(optarg,',');
+          break;
           
       case 'o':
           strncpy(REMOTE_AGENT_OPTIONS,optarg,CF_MAXVARSIZE);
           break;
           
       case 'I': INFORM = true;
+          break;
+
+      case 'i': INTERACTIVE = true;
           break;
           
       case 'v': VERBOSE = true;
@@ -247,12 +266,14 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
   FILE *fp = stdout;
   char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE];
   int n_read;
-
+  void *gotkey;
+  char reply[8];
+  
 a.copy.portnumber = (short)ParseHostname(host,peer);
 
 #ifdef MINGW
 
-if(BACKGROUND)
+if (BACKGROUND)
   {
   CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
   }
@@ -297,6 +318,49 @@ else
       return false;
       }
    }
+
+/* Check trust interaction*/
+
+if (INTERACTIVE)
+   {
+   snprintf(sendbuffer,CF_BUFSIZE,"root-%s",host);
+   gotkey = HavePublicKey(sendbuffer);
+   
+   if (!gotkey)
+      {
+      snprintf(sendbuffer,CF_BUFSIZE,"root-%s",conn->remoteip);
+      gotkey = HavePublicKey(sendbuffer);
+      }
+
+   if (!gotkey)
+      {
+      printf("WARNING - You do not have a public key from host %s = %s\n",host,conn->remoteip);
+      printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
+      
+      while (true)
+         {
+         fgets(reply,8,stdin);
+         Chop(reply);
+         
+         if (strcmp(reply,"yes")==0)
+            {
+            RUNATTR.copy.trustkey = true;
+            break;
+            }
+         else if (strcmp(reply,"no")==0)
+            {
+            RUNATTR.copy.trustkey = false;
+            break;
+            }
+         else
+            {
+            printf(" !! Please reply yes or no...(%s)\n",reply);
+            }
+         }
+      }
+   }
+
+/* Continue */
 
 pp->cache = NULL;
 
@@ -447,7 +511,11 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_hosts].lval) == 0)
       {
-      HOSTLIST = retval;
+      if (HOSTLIST == NULL) // Don't override if command line setting
+         {
+         HOSTLIST = retval;
+         }
+      
       continue;
       }   
    }

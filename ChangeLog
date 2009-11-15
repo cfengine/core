@@ -10,6 +10,9 @@
 
 	Unknown user is now interpretated as "same user", so that we give cfengine a chance to
 	fix
+
+	Unregistered addresses no longer report "(Non registered IP)", but return as the address
+	itself when doing reverse lookups.
 	
 3.0.2
 	IMPORTANT: Change in normal ordering of editing. replace comes

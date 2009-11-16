@@ -451,7 +451,7 @@ enum cfeditorder
 #define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
-#define CF_PATHRANGE   "([a-zA-Z]:\\\\.*)|(/.*)"
+#define CF_PATHRANGE   "(\042?[a-zA-Z]:\\\\.*)|(/.*)"  // win: can start with e.g. c:\... or "c:\...  |  unix
 
 #define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
 

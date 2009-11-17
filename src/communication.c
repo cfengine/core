@@ -380,4 +380,25 @@ for (sp = hostbuffer; *sp != '\0'; sp++)
 
 return hostbuffer;
 }
- 
+
+/*****************************************************************************/
+
+int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
+{
+char *ip;
+struct hostent *hostinfo;
+
+if(gethostname(nameBuf, MAXHOSTNAMELEN) == 0)
+{
+  if((hostinfo = gethostbyname(nameBuf)) != NULL)
+	{
+	  ip = inet_ntoa (*(struct in_addr *)*hostinfo->h_addr_list);
+	  strncpy(ipBuf, ip, MAXIP4CHARLEN - 1);
+	  ipBuf[MAXIP4CHARLEN - 1] = '\0';
+	  return true;
+	}
+}
+
+return false;
+}
+

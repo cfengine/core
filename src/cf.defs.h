@@ -363,6 +363,8 @@ typedef int clockid_t;
 #define CF_EXEC_IFELAPSED 1
 #define CF_EXEC_EXPIREAFTER 1
 
+#define MAXIP4CHARLEN 16
+
 /*******************************************************************/
 /*  DBM                                                            */
 /*******************************************************************/
@@ -408,6 +410,9 @@ typedef int clockid_t;
 # define CMD_PATH "c:\\windows\\system32\\cmd.exe"
 
 typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
+#ifndef VER_SUITE_WH_SERVER  // shold be in winnt.h, but is not in current mingw-version
+# define VER_SUITE_WH_SERVER 0x00008000
+#endif
 
 /* Dummy signals, can be set to anything below 23 but
  * 2, 4, 8, 11, 15, 21, 22 which are taken.

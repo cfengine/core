@@ -200,6 +200,7 @@ int IsIPV4Address(char *name);
 char *Hostname2IPString(char *hostname);
 char *IPString2Hostname(char *ipaddress);
 char *IPString2UQHostname(char *ipaddress);
+int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
 
 /* comparray.c */
 

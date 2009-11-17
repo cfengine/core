@@ -862,6 +862,7 @@ void OSClasses()
   char *sp;
   int i = 0;
   struct passwd *pw;
+  char winName[_SYS_NMLN];
  
 NewClass("any");      /* This is a reserved word / wildcard */
 
@@ -1006,38 +1007,38 @@ else if (Xen_Hv_Check())
 #endif
 
 
-#ifdef NT
+#ifdef CFCYG
 
 for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
    {
    if (*sp == '-')
       {
       sp++;
-      if (strcmp(sp,"5.0") == 0)
+      if (strncmp(sp,"5.0",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows 2000\n");
          NewClass("Win2000");
          }
       
-      if (strcmp(sp,"5.1") == 0)
+      if (strncmp(sp,"5.1",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows XP\n");
          NewClass("WinXP");
          }
       
-      if (strcmp(sp,"5.2") == 0)
+      if (strncmp(sp,"5.2",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows Server 2003\n");
          NewClass("WinServer2003");
          }
       
-      if (strcmp(sp,"6.1") == 0)
+      if (strncmp(sp,"6.1",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows Vista\n");
          NewClass("WinVista");
          }
       
-      if (strcmp(sp,"6.3") == 0)
+      if (strncmp(sp,"6.3",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows Server 2008\n");
          NewClass("WinServer2008");
@@ -1047,7 +1048,33 @@ for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
 
 NewScalar("sys","crontab","",cf_str);
 
-#endif
+#endif  /* CFCYG */
+
+#ifdef MINGW
+NewClass("windows");
+NewClass(CanonifyName(VSYSNAME.version));  // code name - e.g. Windows Vista
+NewClass(CanonifyName(VSYSNAME.release));  // service pack number - e.g. Service Pack 3
+
+ if(strstr(VSYSNAME.sysname, "workstation"))
+   {
+     NewClass("WinWorkstation");
+   }
+ else if(strstr(VSYSNAME.sysname, "server"))
+   {
+     NewClass("WinServer");
+   }
+  else if(strstr(VSYSNAME.sysname, "domain controller"))
+   {
+     NewClass("DomainController");
+     NewClass("WinServer");
+   }
+  else
+    {
+      NewClass("unknown_ostype");
+    }
+
+#endif  /* MINGW */
+
 
 #ifndef NT
 if ((pw = getpwuid(getuid())) == NULL)

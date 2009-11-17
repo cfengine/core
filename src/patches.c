@@ -288,6 +288,14 @@ void endnetgrent()
 
 int uname (struct utsname *sys)
 
+#ifdef MINGW
+
+{
+return NovaWin_uname(sys);
+}
+
+#else  /* NOT MINGW */
+
 { char buffer[CF_BUFSIZE], *sp;
 
 if (gethostname(buffer,CF_BUFSIZE) == -1)
@@ -326,7 +334,9 @@ for (sp = sys->sysname; *sp != '\0'; sp++)
 return (0);
 }
 
-#endif
+#endif  /* NOT MINGW */
+
+#endif  /* NOT HAVE_UNAME */
 
 /***********************************************************/
 /* strstr() missing on old BSD systems                     */

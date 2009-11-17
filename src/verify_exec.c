@@ -231,7 +231,11 @@ else
             }
          }
 #ifdef MINGW
-      if(!outsourced)  // only get return value if we waited for command execution
+      if(outsourced)  // only get return value if we waited for command execution
+	    {
+		cf_pclose(pfp);
+		}
+	  else
 	    {
 		cf_pclose_def(pfp,a,pp);
 		}

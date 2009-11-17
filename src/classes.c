@@ -118,7 +118,7 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
    {"ux4800",".*",".*"},           /* UX/4800 */
    {"qnx",".*",".*"},              /* qnx  */
    {"dragonfly",".*",".*"},        /* dragonfly */
-   {"mingw",".*",".*"},            /* NT (native) */
+   {"windows_nt.*",".*",".*"},     /* NT (native) */
    {"vmkernel",".*",".*"},            /* VMWARE / ESX */
    {"unused1","blah","blah"},
    {"unused2","blah","blah"},

@@ -380,7 +380,7 @@ void GetInterfaceInfo3(void)
 
 #ifdef MINGW
 {
-CfOut(cf_verbose,"","Interface information not yet available under NT.\n");
+NovaWin_GetInterfaceInfo3();
 }
 #else
 { int fd,len,i,j,first_address,ipdefault = false;
@@ -1051,7 +1051,6 @@ NewScalar("sys","crontab","",cf_str);
 #endif  /* CFCYG */
 
 #ifdef MINGW
-NewClass("windows");
 NewClass(CanonifyName(VSYSNAME.version));  // code name - e.g. Windows Vista
 NewClass(CanonifyName(VSYSNAME.release));  // service pack number - e.g. Service Pack 3
 

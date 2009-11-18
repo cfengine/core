@@ -298,6 +298,7 @@ int DeleteDB(CF_DB *dbp, char *key);
 int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
 int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
 int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
+int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize);
 
 /* dbm_berkely.c */
 
@@ -319,7 +320,7 @@ void BDB_DeleteDBValue(DBT *value);
 int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
 int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
 int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
-
+int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize);
 #endif
 
 /* dbm_quick.c */

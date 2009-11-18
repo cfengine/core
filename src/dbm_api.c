@@ -77,6 +77,17 @@ return BDB_ReadDB(dbp, key, dest, destSz);
 
 /*****************************************************************************/
 
+int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize)
+{
+#ifdef QDB  // FIXME
+return QDB_RevealDB(dbp,key,result,rsize);
+#else
+return BDB_RevealDB(dbp,key,result,rsize);
+#endif
+}
+
+/*****************************************************************************/
+
 int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz,void *dest, int destSz)
 {
 #ifdef QDB  // FIXME

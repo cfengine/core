@@ -104,7 +104,7 @@ struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
   double ticksperhr = (double)CF_TICKS_PER_HOUR;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
   struct QPoint entry;
-  int ret,horizon;
+  int horizon;
   
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -135,12 +135,10 @@ if (!OpenDB(name,&dbp))
 
 /* Acquire a cursor for the database. */
 
-
 if (!NewDBCursor(dbp,&dbcp))
    {
    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
    CfOut(cf_error,""," !! Error reading from last-seen database: ");
-   dbp->err(dbp, ret, "DB->cursor");
    rval.item = NULL;
    rval.rtype = CF_LIST;
    return rval;

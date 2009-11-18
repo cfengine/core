@@ -229,9 +229,6 @@ if (!NewDBCursor(dbp,&dbcp))
    return;
    }
 
-
- /* Initialize the key/data return pair. */
- 
 memset(&entry, 0, sizeof(entry)); 
 
 while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))

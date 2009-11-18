@@ -152,6 +152,44 @@ else
 
 /*****************************************************************************/
 
+int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize)
+
+{ DBT *key,value;
+
+if (dbp == NULL)
+   {
+   return false;
+   }
+ 
+key = BDB_NewDBKey(name);
+memset(&value,0,sizeof(DBT));
+
+if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
+   {
+   if (value.data)
+      {
+      *rsize = value.size;
+      *result = value.data;
+      }
+   else
+      {
+      BDB_DeleteDBKey(key);
+      return false;
+      }
+   
+   BDB_DeleteDBKey(key);
+   return true;
+   }
+else
+   {
+   Debug("Database read failed: %s",db_strerror(errno));
+   BDB_DeleteDBKey(key);
+   return false;
+   }
+}
+
+/*****************************************************************************/
+
 int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
 
 { DBT *key,value;

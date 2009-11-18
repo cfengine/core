@@ -196,6 +196,14 @@ if (lastcompleted != 0)
          {
          CfOut(cf_error,"","Illegal pid in corrupt lock %s - ignoring lock\n",cflock);
          }
+#ifdef MINGW  // killing processes with e.g. task manager does not allow for termination handling
+      else if(!NovaWin_IsProcessRunning(pid))
+	{
+	  CfOut(cf_verbose,"","Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",pid);
+	  LogLockCompletion(cflog,pid,"Lock expired, process not running",cc_operator,cc_operand);
+	  unlink(cflock);
+	}
+#endif  /* MINGW */
       else
          {
          CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);

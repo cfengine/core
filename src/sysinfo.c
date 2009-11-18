@@ -862,7 +862,6 @@ void OSClasses()
   char *sp;
   int i = 0;
   struct passwd *pw;
-  char winName[CF_MAXVARSIZE];
  
 NewClass("any");      /* This is a reserved word / wildcard */
 

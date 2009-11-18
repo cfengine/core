@@ -291,8 +291,13 @@ int CloseDB(CF_DB *dbp);
 int ValueSizeDB(CF_DB *dbp, char *key);
 int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz);
 int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz);
+int WriteComplexKeyDB(CF_DB *dbp, char *key,int keySz,void *src, int srcSz);
+int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz,void *dest, int destSz);
+int DeleteComplexKeyDB(CF_DB *dbp, char *key, int size);
 int DeleteDB(CF_DB *dbp, char *key);
-
+int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
+int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
+int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
 
 /* dbm_berkely.c */
 
@@ -304,9 +309,17 @@ int BDB_ReadDB(DB *dbp,char *name,void *ptr,int size);
 int BDB_WriteDB(DB *dbp,char *name,void *ptr,int size);
 int BDB_DeleteDB(DB *dbp,char *name);
 DBT *BDB_NewDBKey(char *name);
+DBT *BDB_NewDBComplexKey(char *key,int size);
+int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size);
+int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size);
+int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size);
 void BDB_DeleteDBKey(DBT *key);
 DBT *BDB_NewDBValue(void *ptr,int size);
 void BDB_DeleteDBValue(DBT *value);
+int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
+int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
+int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
+
 #endif
 
 /* dbm_quick.c */
@@ -584,19 +597,15 @@ int ExpandLinks(char *dest,char *from,int level);
 
 /* files_hashes.c */
 
-int Hash(char *name);
-int ElfHash(char *key);
-
 int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp);
 void PurgeHashes(struct Attributes attr,struct Promise *pp);
-int ReadHash(DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1], unsigned char *attr);
-int WriteHash(DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1], unsigned char *attr);
-void DeleteHash(DB *dbp,enum cfhashes type,char *name);
-DBT *NewHashKey(char type,char *name);
-void DeleteHashKey(DBT *key);
-DBT *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1],unsigned char attr[EVP_MAX_MD_SIZE+1]);
-void DeleteHashValue(DBT *value);
-
+int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
+int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
+void DeleteHash(CF_DB *dbp,enum cfhashes type,char *name);
+char *NewIndexKey(char type,char *name, int *size);
+void DeleteIndexKey(char *key);
+struct Checksum_Value *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1]);
+void DeleteHashValue(struct Checksum_Value *value);
 int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
@@ -625,9 +634,7 @@ int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,
 void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
 void FileAutoDefine(char *destfile);
 int CfReadLine(char *buff,int size,FILE *fp);
-#ifdef MINGW
 int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
-#endif  /* NOT MINGW */
 
 /* files_names.c */
 
@@ -807,6 +814,8 @@ void MatrixOperation(double **A,double *v,int dim);
 
 /* hashes.c */
 
+int Hash(char *name);
+int ElfHash(char *key);
 void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
 void BlankHashes(char *scope);
@@ -1289,8 +1298,8 @@ int RemoveLock(char *name);
 void LogLockCompletion(char *cflog,int pid,char *str,char *operator,char *operand);
 time_t FindLockTime(char *name);
 pid_t FindLockPid(char *name);
-DB *OpenLock(void);
-void CloseLock(DB *dbp);
+CF_DB *OpenLock(void);
+void CloseLock(CF_DB *dbp);
 int ThreadLock(enum cf_thread_mutex name);
 int ThreadUnlock(enum cf_thread_mutex name);
 

@@ -82,20 +82,12 @@ int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int w
 { struct stat stat1, stat2;
   int i,needupdate = false, size = 21;
   unsigned char dbdigest[EVP_MAX_MD_SIZE+1],dbattr[EVP_MAX_MD_SIZE+1];
-  unsigned char current_digest[EVP_MAX_MD_SIZE+1],attr_digest[EVP_MAX_MD_SIZE+1];
-  DBT *key,*value;
-  DB *dbp;
-  DB_ENV *dbenv = NULL;
+  CF_DB *dbp;
   FILE *fp;
 
 Debug("HashChanged: key %s (type=%d) with data %s\n",filename,type,HashPrint(type,digest));
 
 size = FileHashSize(type);
-
-memset(current_digest,0,EVP_MAX_MD_SIZE+1);
-memset(attr_digest,0,EVP_MAX_MD_SIZE+1);
-
-HashFile(filename,current_digest,type);
 
 if (!OpenDB(HASHDB,&dbp))
    {
@@ -103,19 +95,11 @@ if (!OpenDB(HASHDB,&dbp))
    return false;
    }
 
-if (needupdate) /* This section should not be needed any more */
+if (ReadHash(dbp,type,filename,dbdigest))
    {
-   DeleteHash(dbp,type,filename);    
-   WriteHash(dbp,type,filename,current_digest,attr_digest);
-   }
-
-if (ReadHash(dbp,type,filename,dbdigest,dbattr))
-   {
-   /* Ignoring attr for now - future development */
-   
    for (i = 0; i < size; i++)
       {
-      if (current_digest[i] != dbdigest[i])
+      if (digest[i] != dbdigest[i])
          {
          Debug("Found cryptohash for %s in database but it didn't match\n",filename);
          
@@ -138,10 +122,10 @@ if (ReadHash(dbp,type,filename,dbdigest,dbattr))
          
          if (attr.change.update)
             {
-            CfOut(cf_verbose,""," -> Updating cryptohash for %s to %s\n",filename,HashPrint(type,current_digest));
+            CfOut(cf_verbose,""," -> Updating cryptohash for %s to %s\n",filename,HashPrint(type,digest));
             
             DeleteHash(dbp,type,filename);
-            WriteHash(dbp,type,filename,current_digest,attr_digest);
+            WriteHash(dbp,type,filename,digest);
             }
          
          dbp->close(dbp,0);
@@ -157,8 +141,8 @@ else
    {
    /* Key was not found, so install it */
    cfPS(warnlevel,CF_CHG,"",pp,attr," !! File %s was not in %s database - new file found",filename,FileHashName(type));   
-   Debug("Storing checksum for %s in database %s\n",filename,HashPrint(type,current_digest));
-   WriteHash(dbp,type,filename,current_digest,attr_digest);
+   Debug("Storing checksum for %s in database %s\n",filename,HashPrint(type,digest));
+   WriteHash(dbp,type,filename,digest);
    
    dbp->close(dbp,0);
    return false;
@@ -261,9 +245,9 @@ void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhash
 
 Debug2("HashFile(%c,%s)\n",type,filename);
 
-if ((file = fopen (filename, "rb")) == NULL)
+if ((file = fopen(filename, "rb")) == NULL)
    {
-   printf ("%s can't be opened\n", filename);
+   CfOut(cf_inform,"fopen","%s can't be opened\n", filename);
    }
 else
    {
@@ -391,12 +375,12 @@ void PurgeHashes(struct Attributes attr,struct Promise *pp)
 
 /* Go through the database and purge records about non-existent files */
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL;
-  int ret;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
   struct stat statbuf;
+  int ret,ksize,vsize;
+  char *key;
+  void *value;
 
 if (!OpenDB(HASHDB,&dbp))
    {
@@ -405,33 +389,25 @@ if (!OpenDB(HASHDB,&dbp))
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,"","Error reading from checksum database");
-   dbp->err(dbp,ret,"DB->cursor");
+   CfOut(cf_inform,""," !! Unable to scan hash database");
    return;
    }
 
  /* Walk through the database and print out the key/data pairs. */
 
-memset(&key,0,sizeof(key));
-memset(&value,0,sizeof(value));
-
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   char *obj = (char *)key.data + CF_CHKSUMKEYOFFSET;
-
+   char *obj = (char *)key + CF_INDEX_OFFSET;
+   
    if (cfstat(obj,&statbuf) == -1)
       {
       if (attr.change.update)
-         {
-         if (dbp->del(dbp,NULL,&key,0) != 0)
+         {         
+         if (DeleteDB(dbp,key))
             {
-            CfOut(cf_error,"del","Hash deletion failed: %s",db_strerror(errno));
-            }
-         else
-            {
-            cfPS(cf_error,CF_CHG,"",pp,attr,"ALERT: hash for %s purged as file no longer exists!",obj);
+            cfPS(cf_error,CF_CHG,"",pp,attr,"ALERT: %s file no longer exists!",obj);
             }
          }
       else
@@ -444,167 +420,121 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    memset(&value,0,sizeof(value));
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 }
 
 /*****************************************************************************/
 
-int ReadHash(DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1], unsigned char *attr)
+int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
-{ DBT *key,value;
+{ char *key;
+  int size;
   struct Checksum_Value chk_val;
-  
-key = NewHashKey(type,name);
 
-memset(&value,0,sizeof(value));
+key = NewIndexKey(type,name,&size);
 
-if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
+if (ReadComplexKeyDB(dbp,key,size,(void *)&chk_val,sizeof(struct Checksum_Value)))
    {
    memset(digest,0,EVP_MAX_MD_SIZE+1);
-   memset(&chk_val,0,sizeof(chk_val));
-   
-   memcpy(&chk_val,value.data,sizeof(chk_val));
    memcpy(digest,chk_val.mess_digest,EVP_MAX_MD_SIZE+1);
-   
-   Debug("READ %c %s %s\n",type,name,HashPrint(type,digest));
-   DeleteHashKey(key);
+   DeleteIndexKey(key);
    return true;
    }
 else
    {
-   Debug("Hash read failed: %s",db_strerror(errno));
-   DeleteHashKey(key);
+   DeleteIndexKey(key);
    return false;
    }
 }
 
 /*****************************************************************************/
 
-int WriteHash(DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1], unsigned char *attr)
+int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
-{ DBT *key,*value;
- 
-key = NewHashKey(type,name); 
-value = NewHashValue(digest,attr);
+{ char *key;
+  struct Checksum_Value *value;
+  int ret, keysize;
 
-Debug("DATA = %s\n",HashPrint(type,value->data));
-
-if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
-   {
-   CfOut(cf_error,"db->put","Hash write failed: %s",db_strerror(errno));
-   
-   DeleteHashKey(key);
-   DeleteHashValue(value);
-   return false;
-   }
-else
-   {
-   DeleteHashKey(key);
-   DeleteHashValue(value);
-   return true;
-   }
+key = NewIndexKey(type,name,&keysize);
+value = NewHashValue(digest);
+ret = WriteComplexKeyDB(dbp,key,keysize,value,sizeof(struct Checksum_Value));
+DeleteIndexKey(key);
+DeleteHashValue(value);
+return ret;
 }
 
 /*****************************************************************************/
 
-void DeleteHash(DB *dbp,enum cfhashes type,char *name)
+void DeleteHash(CF_DB *dbp,enum cfhashes type,char *name)
 
-{ DBT *key;
+{ int size;
+  char *key;
 
-key = NewHashKey(type,name);
-
-if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
-   {
-   CfOut(cf_error,"db_store","Database deletion failed");
-   }
-
-DeleteHashKey(key);
+key = NewIndexKey(type,name,&size);  
+DeleteComplexKeyDB(dbp,key,size);
+DeleteIndexKey(name);
 }
 
-
+/*****************************************************************************/
+/* level                                                                     */
 /*****************************************************************************/
 
-DBT *NewHashKey(char type,char *name)
+char *NewIndexKey(char type,char *name, int *size)
 
 { char *chk_key;
-  DBT *key;
 
-if ((chk_key = malloc(strlen(name)+CF_MAXDIGESTNAMELEN+2)) == NULL)
+// Filename plus index_str in one block + \0
+
+*size = strlen(name)+CF_INDEX_OFFSET+1;
+ 
+if ((chk_key = malloc(*size)) == NULL)
    {
-   FatalError("NewHashKey malloc error");
+   FatalError("NewIndexKey malloc error");
    }
 
-if ((key = (DBT *)malloc(sizeof(DBT))) == NULL)
-   {
-   FatalError("DBT  malloc error");
-   }
+// Data start after offset for index
 
-memset(key,0,sizeof(DBT));
-memset(chk_key,0,strlen(name)+CF_MAXDIGESTNAMELEN+2);
+memset(chk_key,0,*size);
 
-strcpy(chk_key,FileHashName(type)); /* safe */
-
-/* Berkeley DB needs this packed */
-
-strncpy(chk_key+CF_CHKSUMKEYOFFSET,name,strlen(name));
-
-Debug("KEY => %s,%s\n",chk_key,chk_key+CF_CHKSUMKEYOFFSET);
-key->data = chk_key;
-key->size = strlen(name)+CF_MAXDIGESTNAMELEN+2;
-
-return key;
+strncpy(chk_key,FileHashName(type),CF_INDEX_FIELD_LEN);
+strncpy(chk_key+CF_INDEX_OFFSET,name,strlen(name));
+return chk_key;
 }
 
 /*****************************************************************************/
 
-void DeleteHashKey(DBT *key)
+void DeleteIndexKey(char *key)
 
 {
-free((char *)key->data);
-free((char *)key);
+free(key);
 }
 
 /*****************************************************************************/
 
-DBT *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1],unsigned char attr[EVP_MAX_MD_SIZE+1])
+struct Checksum_Value *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1])
     
 { struct Checksum_Value *chk_val;
-  DBT *value;
-  char *x;
 
 if ((chk_val = (struct Checksum_Value *)malloc(sizeof(struct Checksum_Value))) == NULL)
    {
    FatalError("NewHashValue malloc error");
    }
 
-if ((value = (DBT *) malloc(sizeof(DBT))) == NULL)
-   {
-   FatalError("DBT Value malloc error");
-   }
-
-memset(value,0,sizeof(DBT)); 
-
 memset(chk_val,0,sizeof(struct Checksum_Value));
 memcpy(chk_val->mess_digest,digest,EVP_MAX_MD_SIZE+1);
-memcpy(chk_val->attr_digest,attr,EVP_MAX_MD_SIZE+1);
 
-value->data = (void *) chk_val;
-value->size = sizeof(*chk_val);
+/* memcpy(chk_val->attr_digest,attr,EVP_MAX_MD_SIZE+1); depricated */
 
-return value;
+return chk_val;
 }
 
 /*****************************************************************************/
 
-void DeleteHashValue(DBT *value)
+void DeleteHashValue(struct Checksum_Value *chk_val)
 
-{ struct Checksum_Value *chk_val;
-
-chk_val = (struct Checksum_Value *) value->data;
-
+{
 free((char *)chk_val);
-free((char *)value);
 }
 
 /*********************************************************************/

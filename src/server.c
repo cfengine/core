@@ -3450,11 +3450,12 @@ int IsKnownHost(RSA *oldkey,RSA *newkey,char *mipaddr,char *username)
    But what else are we going to do? ssh doesn't have this problem - it
    just asks the user interactively. We can't do that ... */
 
-{ DBT key,value;
-  DB *dbp;
+{ CF_DB *dbp;
   int trust = false;
   char keyname[CF_MAXVARSIZE];
   char keydb[CF_MAXVARSIZE];
+  char vbuff[CF_BUFSIZE];
+  void *value;
 
 snprintf(keyname,CF_MAXVARSIZE,"%s-%s",username,mipaddr);
 snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR); 
@@ -3482,33 +3483,14 @@ if (!OpenDB(keydb,&dbp))
    return false;
    }
 
-memset(&key,0,sizeof(newkey));       
-memset(&value,0,sizeof(value));
-      
-key.data = newkey;
-key.size = sizeof(RSA);
-
-if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
+if (!ReadComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),&value,CF_BUFSIZE))
    {
    Debug("The new key is not previously known, so we need to use policy for trusting the host %s\n",mipaddr);
  
    if (trust)
       {
       Debug("Policy says to trust the changed key from %s and note that it could vary in future\n",mipaddr);
-      memset(&key,0,sizeof(key));       
-      memset(&value,0,sizeof(value));
-      
-      key.data = newkey;
-      key.size = sizeof(RSA);
-      
-      value.data = mipaddr;
-      value.size = strlen(mipaddr)+1;
-      
-      if ((errno = dbp->put(dbp,NULL,&key,&value,0)) != 0)
-         {
-         dbp->err(dbp,errno,NULL);
-         }
-
+      WriteComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),mipaddr,strlen(mipaddr)+1);
       DeletePublicKey(keyname);
       }
    else
@@ -3518,7 +3500,7 @@ if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
    }
 else
    {
-   CfOut(cf_verbose,"","Public key was previously owned by %s now by %s - updating\n",value.data,mipaddr);
+   CfOut(cf_verbose,"","Public key was previously owned by %s now by %s - updating\n",value,mipaddr);
    Debug("Now trusting this new key, because we have seen it before\n");
    DeletePublicKey(keyname);
    trust = true;
@@ -3529,7 +3511,7 @@ else
 
 SavePublicKey(keyname,newkey);
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 cf_chmod(keydb,0644); 
  
 return trust; 
@@ -3539,8 +3521,7 @@ return trust;
 
 void AddToKeyDB(RSA *newkey,char *mipaddr)
 
-{ DBT key,value;
-  DB *dbp;
+{ CF_DB *dbp;
   char keydb[CF_MAXVARSIZE];
 
 snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR); 
@@ -3554,23 +3535,8 @@ if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(mipaddr)))
       return;
       }
 
-   memset(&key,0,sizeof(key));       
-   memset(&value,0,sizeof(value));
-
-   /* This case is unusual, we're using the newkey as the key */
-   
-   key.data = newkey;
-   key.size = sizeof(RSA);
-   
-   value.data = mipaddr;
-   value.size = strlen(mipaddr)+1;
-   
-   if ((errno = dbp->put(dbp,NULL,&key,&value,0)) != 0)
-      {
-      dbp->err(dbp,errno,NULL);
-      }
-   
-   dbp->close(dbp,0);
+   WriteComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),mipaddr,strlen(mipaddr)+1);
+   CloseDB(dbp);
    cf_chmod(keydb,0644); 
    }
 }

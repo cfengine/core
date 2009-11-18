@@ -349,8 +349,8 @@ typedef int clockid_t;
 
 
 
-#define CF_MAXDIGESTNAMELEN 7
-#define CF_CHKSUMKEYOFFSET  CF_MAXDIGESTNAMELEN+1
+#define CF_INDEX_FIELD_LEN 7
+#define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
 #define CF_IFREQ 2048    /* Reportedly the largest size that does not segfault 32/64 bit*/
 #define CF_ADDRSIZE 128
@@ -390,7 +390,7 @@ typedef int clockid_t;
 
 #include <db.h>
 #define CF_DB DB
-
+#define CF_DBC DBC
 #elif defined(QDB)
 
 #include <depot.h>

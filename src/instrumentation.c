@@ -92,7 +92,7 @@ if (measured_ok)
 
 void NotePerformance(char *eventname,time_t t,double value)
 
-{ DB *dbp;
+{ CF_DB *dbp;
   char name[CF_BUFSIZE];
   struct Event e,newe;
   double lastseen,delta2;
@@ -144,17 +144,18 @@ else
    WriteDB(dbp,eventname,&newe,sizeof(newe));
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /***************************************************************/
 
 void NoteClassUsage(struct Item *baselist)
 
-{ DB *dbp;
-  DBC *dbcp;
-  DBT key,stored;
-  char name[CF_BUFSIZE];
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  void *stored;
+  char *key,name[CF_BUFSIZE];
+  int ksize,vsize;
   struct Event e,entry,newe;
   double lsea = CF_WEEK * 52; /* expire after a year */
   time_t now = time(NULL);
@@ -222,30 +223,28 @@ for (ip = list; ip != NULL; ip=ip->next)
 
 /* Acquire a cursor for the database. */
 
-if ((errno = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   dbp->err(dbp, errno, "DB->cursor");
-   dbp->close(dbp,0);
+   CfOut(cf_inform,""," !! Unable to scan class db");
    return;
    }
 
+
  /* Initialize the key/data return pair. */
  
-memset(&key, 0, sizeof(key));
-memset(&stored, 0, sizeof(stored));
 memset(&entry, 0, sizeof(entry)); 
 
-while (dbcp->c_get(dbcp, &key, &stored, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
    {
    double measure,av,var;
    time_t then;
    char tbuf[CF_BUFSIZE],eventname[CF_BUFSIZE];
 
-   strcpy(eventname,(char *)key.data);
+   strcpy(eventname,(char *)key);
 
-   if (stored.data != NULL)
+   if (stored != NULL)
       {
-      memcpy(&entry,stored.data,sizeof(entry));
+      memcpy(&entry,stored,sizeof(entry));
       
       then    = entry.t;
       measure = entry.Q.q;
@@ -274,7 +273,8 @@ while (dbcp->c_get(dbcp, &key, &stored, DB_NEXT) == 0)
       }
    }
 
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 DeleteItemList(list);
 }
 
@@ -282,8 +282,7 @@ DeleteItemList(list);
 
 void LastSaw(char *hostname,enum roles role)
 
-{ DB *dbp,*dbpent;
-  DB_ENV *dbenv = NULL, *dbenv2 = NULL;
+{ CF_DB *dbp,*dbpent;
   char name[CF_BUFSIZE],databuf[CF_BUFSIZE],varbuf[CF_BUFSIZE],rtype;
   time_t now = time(NULL);
   struct QPoint q,newq;
@@ -374,10 +373,10 @@ ThreadUnlock(cft_getaddr);
 
 if (intermittency)
    {
-   dbpent->close(dbpent,0);
+   CloseDB(dbpent);
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /*****************************************************************************/

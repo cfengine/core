@@ -963,9 +963,7 @@ if (attr.change.report_diffs)
 void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { struct stat cmpsb;
-  DBT *key,*value;
-  DB *dbp;
-  DB_ENV *dbenv = NULL;
+  CF_DB *dbp;
   char statdb[CF_BUFSIZE];
   int ok = true;
 

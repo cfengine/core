@@ -250,7 +250,7 @@ char *Hostname2IPString(char *hostname)
  
 if ((err = getaddrinfo(hostname,NULL,&query,&response)) != 0)
    {
-   CfOut(cf_error,"","Unable to lookup hostname (%s) or cfengine service: %s",hostname,gai_strerror(err));
+   CfOut(cf_inform,"","Unable to lookup hostname (%s) or cfengine service: %s",hostname,gai_strerror(err));
    return hostname;
    }
  

@@ -342,10 +342,12 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
 /* Go through the database of recent connections and check for
    Long Time No See ...*/
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
   DB_ENV *dbenv = NULL;
+  char *key;
+  void *value;
+  int ksize,vsize;
   int ret, secs = CF_TICKS_PER_HOUR*hours, criterion, overdue, regex=false;
   time_t now = time(NULL),lsea = (time_t)CF_WEEK, tthen, then;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
@@ -364,27 +366,23 @@ if (!OpenDB(name,&dbp))
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,"","Error reading from last-seen database");
-   dbp->err(dbp, ret, "DB->cursor");
+   CfOut(cf_inform,""," !! Unable to scan friend db");
    return;
    }
 
  /* Walk through the database and print out the key/data pairs. */
 
-memset(&key, 0, sizeof(key));
-memset(&value, 0, sizeof(value));
-
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    memset(&entry, 0, sizeof(entry)); 
 
-   strcpy(hostname,(char *)key.data);
+   strncpy(hostname,(char *)key,ksize);
 
-   if (value.data != NULL)
+   if (value != NULL)
       {
-      memcpy(&entry,value.data,sizeof(entry));
+      memcpy(&entry,value,sizeof(entry));
       then = (time_t)entry.q;
       average = (double)entry.expect;
       var = (double)entry.var;
@@ -488,20 +486,20 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    memset(&value,0,sizeof(value));
    memset(&key,0,sizeof(key)); 
    }
- 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 }
 
 /***************************************************************/
 
 void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
 
-{ DBT key,value;
-  DB *dbp,*dbpent;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL, *dbenv2 = NULL;
-  int i,ret;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  int i,ret,ksize,vsize;
+  char *key;
+  void *value;
   double n[CF_RELIABLE_CLASSES],n_av[CF_RELIABLE_CLASSES],total;
   double p[CF_RELIABLE_CLASSES],p_av[CF_RELIABLE_CLASSES];
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
@@ -516,35 +514,20 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
 var = 0;
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_error,"","Couldn't open last-seen database %s\n",name);
    return;
    }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,"","Couldn't open last-seen database %s\n",name);
+   CfOut(cf_inform,""," !! Unable to scan last-seen db");
    return;
    }
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   CfOut(cf_error,"","Error reading from last-seen database");
-   dbp->err(dbp, ret, "DB->cursor");
-   return;
-   }
-
-memset(&key, 0, sizeof(key));
-memset(&value, 0, sizeof(value));
-
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
-   {
-   strcpy(hostname,IPString2Hostname((char *)key.data+1));
+   strcpy(hostname,IPString2Hostname((char *)key+1));
 
    if (!IsItemIn(hostlist,hostname))
       {
@@ -554,8 +537,8 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       }
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 
 /* Now go through each host and recompute entropy */
 
@@ -563,22 +546,11 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
    {
    snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
 
-   if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
+   if (!OpenDB(name,&dbp))
       {
-      CfOut(cf_error,"","Couldn't init reliability profile database %s\n",name);
       return;
       }
    
-#ifdef CF_OLD_DB
-   if ((errno = (dbpent->open)(dbpent,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-   if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-      {
-      CfOut(cf_error,"","Couldn't open last-seen database %s\n",name);
-      continue;
-      }
-
    for (i = 0; i < CF_RELIABLE_CLASSES; i++)
       {
       n[i] = n_av[i] = 0.0;
@@ -588,26 +560,11 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
 
    for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
       {
-      memset(&key,0,sizeof(key));       
-      memset(&value,0,sizeof(value));
-      
       strcpy(timekey,GenTimeKey(now));
       
-      key.data = timekey;
-      key.size = strlen(timekey)+1;
-
-      if ((errno = dbp->get(dbp,NULL,&key,&value,0)) != 0)
+      if (ReadDB(dbp,timekey,&value,sizeof(entry)))
          {
-         if (errno != DB_NOTFOUND)
-            {
-            dbp->err(dbp,errno,NULL);
-            exit(1);
-            }
-         }
-      
-      if (value.data != NULL)
-         {
-         memcpy(&entry,value.data,sizeof(entry));
+         memcpy(&entry,value,sizeof(entry));
          then = (time_t)entry.q;
          lastseen = now - then;
          if (lastseen < 0)
@@ -695,8 +652,8 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       {
       CfOut(cf_inform,"","The reliability of %s is improved\n",ip->name);
       }
-   
-   dbpent->close(dbpent,0);
+
+   CloseDB(dbp);
    }
 
 DeleteItemList(hostlist);

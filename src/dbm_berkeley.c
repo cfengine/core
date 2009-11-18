@@ -64,42 +64,43 @@ return true;
 /*****************************************************************************/
 
 int BDB_CloseDB(DB *dbp)
-{
-  if(dbp == NULL)
-    {
-      return false;
-    }
 
-  return (dbp->close(dbp, 0) == 0);
+{
+if (dbp == NULL)
+   {
+   return false;
+   }
+
+return (dbp->close(dbp,0) == 0);
 }
 
 /*****************************************************************************/
 
 int BDB_ValueSizeDB(DB *dbp, char *key)
-{
-  DBT *db_key, value;
+
+{ DBT *db_key, value;
   int retv;
 
-  if (dbp == NULL)
-    {
-      return -1;
-    }
- 
-  db_key = BDB_NewDBKey(key);
-  memset(&value,0,sizeof(DBT));
+if (dbp == NULL)
+   {
+   return -1;
+   }
 
-  if ((errno = dbp->get(dbp,NULL,db_key,&value,0)) == 0)
-    {
-      retv = value.size;
-    }
-  else
-    {
-      retv = -1;
-    }
- 
-  BDB_DeleteDBKey(db_key);
- 
-  return retv;
+db_key = BDB_NewDBKey(key);
+memset(&value,0,sizeof(DBT));
+
+if ((errno = dbp->get(dbp,NULL,db_key,&value,0)) == 0)
+   {
+   retv = value.size;
+   }
+else
+   {
+   retv = -1;
+   }
+
+BDB_DeleteDBKey(db_key);
+
+return retv;
 }
 
 /*****************************************************************************/
@@ -122,7 +123,14 @@ if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
    
    if (value.data)
       {
-      memcpy(ptr,value.data,size);
+      if (size < value.size)
+         {
+         memcpy(ptr,value.data,size);
+         }
+      else
+         {
+         memcpy(ptr,value.data,value.size);
+         }
       }
    else
       {
@@ -138,6 +146,53 @@ else
    {
    Debug("Database read failed: %s",db_strerror(errno));
    BDB_DeleteDBKey(key);
+   return false;
+   }
+}
+
+/*****************************************************************************/
+
+int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
+
+{ DBT *key,value;
+
+if (dbp == NULL)
+   {
+   return false;
+   }
+
+key = BDB_NewDBValue(name,keysize);
+memset(&value,0,sizeof(DBT));
+
+if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
+   {
+   memset(ptr,0,size);
+   
+   if (value.data)
+      {
+      if (size < value.size)
+         {
+         memcpy(ptr,value.data,size);
+         }
+      else
+         {
+         memcpy(ptr,value.data,value.size);
+         }
+      }
+   else
+      {
+      BDB_DeleteDBValue(key);
+      return false;
+      }
+   
+   Debug("READ %s\n",name);
+   BDB_DeleteDBValue(key);
+   return true;
+   }
+else
+   {
+   Debug("Database read failed: %s",db_strerror(errno));
+   BDB_DeleteDBValue(key);
    return false;
    }
 }
@@ -175,6 +230,37 @@ else
 
 /*****************************************************************************/
 
+int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
+
+{ DBT *key,*value;
+
+if (dbp == NULL)
+   {
+   return false;
+   }
+ 
+key = BDB_NewDBValue(name,keysize); 
+value = BDB_NewDBValue(ptr,size);
+
+if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
+   {
+   Debug("Database write failed: %s",db_strerror(errno));
+   BDB_DeleteDBKey(key);
+   BDB_DeleteDBValue(value);
+   return false;
+   }
+else
+   {
+   Debug("WriteDB => %s\n",name);
+
+   BDB_DeleteDBValue(key);
+   BDB_DeleteDBValue(value);
+   return true;
+   }
+}
+
+/*****************************************************************************/
+
 int BDB_DeleteDB(DB *dbp,char *name)
 
 { DBT *key;
@@ -196,6 +282,81 @@ if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
 BDB_DeleteDBKey(key);
 Debug("DELETED DB %s\n",name);
 return true;
+}
+
+/*****************************************************************************/
+
+int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size)
+
+{ DBT *key;
+
+if (dbp == NULL)
+   {
+   return false;
+   }
+ 
+key = BDB_NewDBValue(name,size);
+
+if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
+   {
+   Debug("Database deletion failed: %s",db_strerror(errno));
+   BDB_DeleteDBKey(key);
+   return false;
+   }
+
+BDB_DeleteDBKey(key);
+
+return true;
+}
+
+/*****************************************************************************/
+
+int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcpp)
+
+{ int ret;
+ 
+if ((ret = dbp->cursor(dbp,NULL,dbcpp,0)) != 0)
+   {
+   CfOut(cf_error,"","Error establishing scanner for hash database");
+   dbp->err(dbp,ret,"cursor");
+   return false;
+   }
+
+return true;
+}
+
+/*****************************************************************************/
+
+int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp)
+
+{
+return (dbcp->c_close(dbcp) == 0);
+}
+
+/*****************************************************************************/
+
+int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize)
+
+{ int ret;
+  DBT dbvalue,dbkey;
+
+memset(&dbkey,0,sizeof(DBT));
+memset(&dbvalue,0,sizeof(DBT));
+  
+ret = dbcp->c_get(dbcp,&dbkey,&dbvalue,DB_NEXT);
+
+*ksize = dbkey.size;
+*vsize = dbvalue.size;
+*key = dbkey.data;
+*value = dbvalue.data;
+
+if (DEBUG && ret != 0)
+   {
+   CfOut(cf_error,""," !! Error scanning hashbase");
+   dbp->err(dbp,ret,"cursor");
+   }
+
+return (ret == 0);
 }
 
 /*****************************************************************************/
@@ -255,7 +416,6 @@ if ((value = (DBT *) malloc(sizeof(DBT))) == NULL)
    }
 
 memset(value,0,sizeof(DBT)); 
-memset(val,0,size);
 memcpy(val,ptr,size);
 
 value->data = val;

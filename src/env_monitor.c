@@ -246,8 +246,7 @@ Debug("Finished with initialization.\n");
 void GetDatabaseAge()
 
 { int err_no;
-  DBT key,value;
-  DB *dbp;
+  CF_DB *dbp;
 
 if (!OpenDB(AVDB,&dbp))
    {
@@ -267,7 +266,7 @@ else
    AGE = 0.0;
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /*********************************************************************/
@@ -1420,8 +1419,7 @@ cf_pclose(pp);
 struct Averages *GetCurrentAverages(char *timekey)
 
 { int err_no;
-  DBT key,value;
-  DB *dbp;
+  CF_DB *dbp;
   static struct Averages entry;
 
 if (!OpenDB(AVDB,&dbp))
@@ -1447,7 +1445,7 @@ else
    Debug("No previous value for time index %s\n",timekey);
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 return &entry;
 }
 
@@ -1457,7 +1455,7 @@ void UpdateAverages(char *timekey,struct Averages newvals)
 
 { int err_no;
   DBT key,value;
-  DB *dbp;
+  CF_DB *dbp;
 
 if (!OpenDB(AVDB,&dbp))
    {
@@ -1471,7 +1469,7 @@ CfOut(cf_inform,"","Updated averages at %s\n",timekey);
 WriteDB(dbp,timekey,&newvals,sizeof(struct Averages));
 WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)); 
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 HistoryUpdate(newvals);
 }
 

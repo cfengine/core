@@ -77,12 +77,34 @@ return BDB_ReadDB(dbp, key, dest, destSz);
 
 /*****************************************************************************/
 
+int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz,void *dest, int destSz)
+{
+#ifdef QDB  // FIXME
+return QDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
+#else
+return BDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
+#endif
+}
+
+/*****************************************************************************/
+
 int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz)
 {
 #ifdef QDB  // FIXME
 return QDB_WriteDB(dbp, key, src, srcSz);
 #else
 return BDB_WriteDB(dbp, key, src, srcSz);
+#endif
+}
+
+/*****************************************************************************/
+
+int WriteComplexKeyDB(CF_DB *dbp, char *key, int keySz, void *src, int srcSz)
+{
+#ifdef QDB  // FIXME
+return QDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
+#else
+return BDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #endif
 }
 
@@ -97,5 +119,53 @@ int DeleteDB(CF_DB *dbp, char *key)
 return QDB_DeleteDB(dbp, key);
 #else
 return BDB_DeleteDB(dbp, key);
+#endif
+}
+
+/*****************************************************************************/
+
+int DeleteComplexKeyDB(CF_DB *dbp, char *key, int size)
+/**
+ * Delete a record (key,value pair)
+ */
+{
+#ifdef QDB  // FIXME
+ return QDB_DeleteComplexKeyDB(dbp,key,size);
+#else
+ return BDB_DeleteComplexKeyDB(dbp,key,size);
+#endif
+}
+
+/*****************************************************************************/
+
+int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp)
+
+{
+#ifdef QDB  // FIXME
+ return QDB_NewDBCursor(dbp,dbcp);
+#else
+ return BDB_NewDBCursor(dbp,dbcp);
+#endif
+}
+
+/*****************************************************************************/
+
+int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp)
+{
+#ifdef QDB  // FIXME
+ return QDB_DeleteDBCursor(dbp,dbcp);
+#else
+ return BDB_DeleteDBCursor(dbp,dbcp);
+#endif
+}
+
+/*****************************************************************************/
+
+int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize)
+{
+#ifdef QDB  // FIXME
+ return QDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
+#else
+ return BDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
 #endif
 }

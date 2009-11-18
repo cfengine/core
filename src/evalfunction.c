@@ -94,19 +94,17 @@ struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
   struct Rval rval;
   struct Rlist *rp,*returnlist = NULL;
-  char *policy,*format,buffer[CF_BUFSIZE];
-  int tmp,range,result,from=-1,to=-1;
-  DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL;
+  char *key,*policy,*format,buffer[CF_BUFSIZE];
+  int ksize,vsize,tmp,range,result,from=-1,to=-1;
+  void *value;
+  CF_DB *dbp;
+  CF_DBC *dbcp;
   time_t tid = time(NULL);
   double now = (double)tid,average = 0, var = 0;
   double ticksperhr = (double)CF_TICKS_PER_HOUR;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
   struct QPoint entry;
   int ret,horizon;
-
   
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
@@ -137,7 +135,8 @@ if (!OpenDB(name,&dbp))
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+
+if (!NewDBCursor(dbp,&dbcp))
    {
    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
    CfOut(cf_error,""," !! Error reading from last-seen database: ");
@@ -147,26 +146,22 @@ if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
    return rval;
    }
 
- /* Initialize the key/data return pair. */
-
-memset(&key,0,sizeof(key));
-memset(&value,0,sizeof(value));
 memset(&entry,0,sizeof(entry)); 
  
  /* Walk through the database and print out the key/data pairs. */
 
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    double then;
    time_t fthen;
    char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
 
-   memcpy(&then,value.data,sizeof(then));
-   strcpy(hostname,(char *)(key.data+1));
+   memcpy(&then,value,sizeof(then));
+   strcpy(hostname,(char *)(key+1));
 
-   if (value.data != NULL)
+   if (value != NULL)
       {
-      memcpy(&entry,value.data,sizeof(entry));
+      memcpy(&entry,value,sizeof(entry));
       then = entry.q;
       average = (double)entry.expect;
       var = (double)entry.var;
@@ -176,7 +171,6 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       continue;
       }
 
-      
    if (strcmp(policy,"lastseen") == 0)
       {
       if (now - then > horizon)
@@ -203,8 +197,8 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       }
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 
 /* end fn specific content */
 

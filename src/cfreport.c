@@ -695,17 +695,17 @@ GrandSummary();
 
 void ShowLastSeen()
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;
   FILE *fout;
   time_t tid = time(NULL);
   double now = (double)tid,average = 0, var = 0;
   double ticksperhr = (double)CF_TICKS_PER_HOUR;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
   struct QPoint entry;
-  int ret;
+  int ret,ksize,vsize;
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
@@ -754,34 +754,30 @@ else if (XML)
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,""," !! Error reading from last-seen database: ");
-   dbp->err(dbp, ret, "DB->cursor");
-   fclose(fout);
+   CfOut(cf_inform,""," !! Unable to scan last-seen database");
    return;
    }
 
  /* Initialize the key/data return pair. */
 
-memset(&key, 0, sizeof(key));
-memset(&value, 0, sizeof(value));
 memset(&entry, 0, sizeof(entry)); 
  
  /* Walk through the database and print out the key/data pairs. */
 
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    double then;
    time_t fthen;
    char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
 
-   memcpy(&then,value.data,sizeof(then));
-   strcpy(hostname,(char *)key.data);
+   memcpy(&then,value,sizeof(then));
+   strncpy(hostname,(char *)key,ksize);
 
-   if (value.data != NULL)
+   if (value != NULL)
       {
-      memcpy(&entry,value.data,sizeof(entry));
+      memcpy(&entry,value,sizeof(entry));
       then = entry.q;
       average = (double)entry.expect;
       var = (double)entry.var;
@@ -793,11 +789,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
 
    if (now - then > CF_WEEK)
       {
-      if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
-         {
-         CfOut(cf_error,"db_store","Cannot delete database entry");
-         }
-
+      DeleteDB(dbp,key);
       CfOut(cf_inform,""," -> Deleting expired entry for %s\n",hostname);
       continue;
       }
@@ -830,6 +822,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
    else if (HTML)
       {
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
+
       if (*hostname == '+')
          {
          fprintf(fout,"%s out (%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
@@ -881,8 +874,8 @@ if (XML)
    fprintf(fout,"</output>\n");
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 fclose(fout);
 }
 
@@ -890,16 +883,16 @@ fclose(fout);
 
 void ShowPerformance()
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;  
   FILE *fout;
   double now = (double)time(NULL),average = 0, var = 0;
   double ticksperminute = 60.0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
   struct Event entry;
-  int ret;
+  int ret,ksize,vsize;
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
 
@@ -910,10 +903,9 @@ if (!OpenDB(name,&dbp))
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,""," !! Error reading from performance database: ");
-   dbp->err(dbp, ret, "DB->cursor");
+   CfOut(cf_inform,""," !! Unable to scan hash database");
    return;
    }
 
@@ -961,18 +953,18 @@ if (XML)
 
  /* Walk through the database and print out the key/data pairs. */
 
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    double measure;
    time_t then;
    char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
 
-   memcpy(&then,value.data,sizeof(then));
-   strcpy(eventname,(char *)key.data);
+   memcpy(&then,value,sizeof(then));
+   strncpy(eventname,(char *)key,ksize);
 
-   if (value.data != NULL)
+   if (value != NULL)
       {
-      memcpy(&entry,value.data,sizeof(entry));
+      memcpy(&entry,value,sizeof(entry));
 
       then    = entry.t;
       measure = entry.Q.q/ticksperminute;;
@@ -986,20 +978,14 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
          {
          if (now - then > CF_WEEK)
             {
-            if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
-               {
-               CfOut(cf_error,"db_store","Cannot delete from database");
-               }
+            DeleteDB(dbp,key);
             }
          
          CfOut(cf_inform,"","Deleting expired entry for %s\n",eventname);
 
          if (measure < 0 || average < 0 || measure > 4*CF_WEEK)
             {
-            if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
-               {
-               CfOut(cf_error,"db_del","db_delete failed");
-               }
+            DeleteDB(dbp,key);
             }
          
          CfOut(cf_inform,""," -> Deleting entry for %s because it seems to take longer than 4 weeks to complete\n",eventname);
@@ -1054,8 +1040,8 @@ if (XML)
    fprintf(fout,"</output>\n");
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 fclose(fout);
 }
 
@@ -1064,17 +1050,17 @@ fclose(fout);
 
 void ShowClasses()
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;  
   FILE *fout,*fnotes;
   double now = (double)time(NULL),average = 0, var = 0;
   double ticksperminute = 60.0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
   struct Event entry;
   struct CEnt array[1024];
-  int ret, i;
+  int ret,i,ksize,vsize;
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
 
@@ -1085,10 +1071,9 @@ if (!OpenDB(name,&dbp))
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,"","Error reading from class database: ");
-   dbp->err(dbp, ret, "DB->cursor");
+   CfOut(cf_inform,""," !! Unable to scan class db");
    return;
    }
 
@@ -1117,8 +1102,6 @@ if ((fout = fopen(name,"w")) == NULL)
 
 /* Initialize the key/data return pair. */
  
-memset(&key, 0, sizeof(key));
-memset(&value, 0, sizeof(value));
 memset(&entry, 0, sizeof(entry)); 
 
 if (HTML && !EMBEDDED)
@@ -1145,18 +1128,18 @@ for (i = 0; i < 1024; i++)
 
 i = 0;
 
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    double measure;
    time_t then;
    char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
 
-   memcpy(&then,value.data,sizeof(then));
-   strcpy(eventname,(char *)key.data);
+   memcpy(&then,value,sizeof(then));
+   strncpy(eventname,(char *)key,CF_BUFSIZE-1);
 
-   if (value.data != NULL)
+   if (value != NULL)
       {
-      memcpy(&entry,value.data,sizeof(entry));
+      memcpy(&entry,value,sizeof(entry));
 
       then    = entry.t;
       measure = entry.Q.q;
@@ -1170,10 +1153,7 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
          {
          if (now - then > CF_WEEK*52)
             {
-            if ((errno = dbp->del(dbp,NULL,&key,0)) != 0)
-               {
-               CfOut(cf_error,"db_del","Can't delete from database");
-               }
+            DeleteDB(dbp,key);
             }
          
          CfOut(cf_error,""," -> Deleting expired entry for %s\n",eventname);
@@ -1253,8 +1233,8 @@ if (XML)
    fprintf(fout,"</output>\n");
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 fclose(fout);
 fclose(fnotes);
 }
@@ -1263,11 +1243,11 @@ fclose(fnotes);
 
 void ShowChecksums()
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL;
-  int ret;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;
+  int ret,ksize,vsize;
   FILE *pp,*fout;
   char checksumdb[CF_BUFSIZE],name[CF_BUFSIZE];
   struct stat statbuf;
@@ -1316,67 +1296,56 @@ if (XML)
 
 /* Acquire a cursor for the database. */
 
- if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
-    {
-    CfOut(cf_error,"","Error reading from checksum database");
-    dbp->err(dbp, ret, "DB->cursor");
-    return;
-    }
+if (!NewDBCursor(dbp,&dbcp))
+   {
+   CfOut(cf_inform,""," !! Unable to scan last-seen db");
+   return;
+   }
 
- /* Initialize the key/data return pair. */
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
+   {
+   enum cfhashes type;
+   char strtype[CF_MAXVARSIZE];
+   char name[CF_BUFSIZE];
+   struct Checksum_Value chk_val;
+   unsigned char digest[EVP_MAX_MD_SIZE+1];
+   
+   memcpy(&chk_val,value,sizeof(chk_val));
+   memcpy(digest,chk_val.mess_digest,EVP_MAX_MD_SIZE+1);
 
- memset(&key,0,sizeof(key));
- memset(&value,0,sizeof(value));
- 
- /* Walk through the database and print out the key/data pairs. */
+   strncpy(strtype,key,CF_INDEX_FIELD_LEN);
+   strncpy(name,(char *)key+CF_INDEX_OFFSET,CF_BUFSIZE-1);
 
- while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
-    {
-    enum cfhashes type;
-    char strtype[CF_MAXVARSIZE];
-    char name[CF_BUFSIZE];
-    struct Checksum_Value chk_val;
-    unsigned char digest[EVP_MAX_MD_SIZE+1];
-    
-    memset(digest,0,EVP_MAX_MD_SIZE+1);
-    memset(&chk_val,0,sizeof(chk_val));
-    
-    memcpy(&chk_val,value.data,sizeof(chk_val));
-    memcpy(digest,chk_val.mess_digest,EVP_MAX_MD_SIZE+1);
+   type = String2HashType(strtype);
 
-    strncpy(strtype,key.data,CF_MAXDIGESTNAMELEN);
-    strncpy(name,(char *)key.data+CF_CHKSUMKEYOFFSET,CF_BUFSIZE-1);
-
-    type = String2HashType(strtype);
-
-    if (XML)
-       {
-       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
-       fprintf(fout,"%s%s%s",CFRX[cfx_event][cfb],name,CFRX[cfx_event][cfe]);
-       fprintf(fout,"%s%s%s",CFRX[cfx_q][cfb],HashPrint(type,digest),CFRX[cfx_q][cfe]);
-       fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
-       }
-    else if (HTML)
-       {
-       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
-       fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],name,CFRH[cfx_filename][cfe]);
-       fprintf(fout,"%s%s%s",CFRH[cfx_q][cfb],HashPrint(type,digest),CFRH[cfx_q][cfe]);
-       fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
-       }
-    else if (CSV)
-       {
-       fprintf(fout,"%s,",name);
-       fprintf(fout,"%s\n",HashPrint(type,digest));
-       }
-    else
-       {
-       fprintf(fout,"%s = ",name);
-       fprintf(fout,"%s\n",HashPrint(type,digest));
-       }
-    
-    memset(&key,0,sizeof(key));
-    memset(&value,0,sizeof(value));       
-    }
+   if (XML)
+      {
+      fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_event][cfb],name,CFRX[cfx_event][cfe]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_q][cfb],HashPrint(type,digest),CFRX[cfx_q][cfe]);
+      fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
+      }
+   else if (HTML)
+      {
+      fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
+      fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],name,CFRH[cfx_filename][cfe]);
+      fprintf(fout,"%s%s%s",CFRH[cfx_q][cfb],HashPrint(type,digest),CFRH[cfx_q][cfe]);
+      fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
+      }
+   else if (CSV)
+      {
+      fprintf(fout,"%s,",name);
+      fprintf(fout,"%s\n",HashPrint(type,digest));
+      }
+   else
+      {
+      fprintf(fout,"%s = ",name);
+      fprintf(fout,"%s\n",HashPrint(type,digest));
+      }
+   
+   memset(&key,0,sizeof(key));
+   memset(&value,0,sizeof(value));       
+   }
 
 if (HTML && !EMBEDDED)
    {
@@ -1390,8 +1359,8 @@ if (XML)
    fprintf(fout,"</output>\n");
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 fclose(fout);
 }
 
@@ -1399,12 +1368,13 @@ fclose(fout);
 
 void ShowLocks (int active)
 
-{ DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;
   DB_ENV *dbenv = NULL;
   FILE *fout;
-  int ret;
+  int ret,ksize,vsize;
   char lockdb[CF_BUFSIZE],name[CF_BUFSIZE];
   struct LockData entry;
 
@@ -1463,91 +1433,73 @@ if (XML)
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,""," !! Error reading from checksum database");
-   dbp->err(dbp, ret, "DB->cursor");
+   CfOut(cf_inform,""," !! Unable to scan last-seen db");
    return;
    }
 
-/* Initialize the key/data return pair. */
-
-memset(&key,0,sizeof(key));
-memset(&value,0,sizeof(value));
-
-/* Walk through the database and print out the key/data pairs. */
-
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    if (active)
       {
-      if (strncmp("lock",(char *)key.data,4) == 0)
+      if (value != NULL)
+         {
+         memcpy(&entry,value,sizeof(entry));
+         }
+      
+      if (strncmp("lock",(char *)key,4) == 0)
          {
          if (XML)
             {
             fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
-            fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key.data,CFRX[cfx_filename][cfe]);
+            fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key,CFRX[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],ctime(&entry.time),CFRX[cfx_date][cfe]);
             fprintf(fout,"%s",CFRX[cfx_entry][cfe]);         
             }
          else if (HTML)
             {
             fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
-            fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key.data,CFRH[cfx_filename][cfe]);
+            fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key,CFRH[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],ctime(&entry.time),CFRH[cfx_date][cfe]);
             fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
             }
          else
             {
-            fprintf(fout,"%s = ",(char *)key.data);
-            
-            if (value.data != NULL)
-               {
-               memcpy(&entry,value.data,sizeof(entry));
-               fprintf(fout,"%s\n",ctime(&entry.time));
-               }
+            fprintf(fout,"%s = ",(char *)key);            
+            fprintf(fout,"%s\n",ctime(&entry.time));             
             }
 
-         CfOut(cf_inform,"","Active lock %s = ",(char *)key.data);
+         CfOut(cf_inform,"","Active lock %s = ",(char *)key);
          }
       }
    else
       {
-      if (strncmp("last",(char *)key.data,4) == 0)
+      if (strncmp("last",(char *)key,4) == 0)
          {
          if (XML)
             {
             fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
-            fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key.data,CFRX[cfx_filename][cfe]);
+            fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key,CFRX[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],ctime(&entry.time),CFRX[cfx_date][cfe]);
             fprintf(fout,"%s",CFRX[cfx_entry][cfe]);         
             }
          else if (HTML)
             {
             fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
-            fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key.data,CFRH[cfx_filename][cfe]);
+            fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key,CFRH[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],ctime(&entry.time),CFRH[cfx_date][cfe]);
             fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
             }
          else if (CSV)
             {
-            fprintf(fout,"%s",(char *)key.data);
-            
-            if (value.data != NULL)
-               {
-               memcpy(&entry,value.data,sizeof(entry));
-               fprintf(fout,",%s\n",ctime(&entry.time));
-               }
+            fprintf(fout,"%s",(char *)key);            
+            fprintf(fout,",%s\n",ctime(&entry.time));
             }
          else
             {
-            fprintf(fout,"%s = ",(char *)key.data);
-            
-            if (value.data != NULL)
-               {
-               memcpy(&entry,value.data,sizeof(entry));
-               fprintf(fout,"%s\n",ctime(&entry.time));
-               }
+            fprintf(fout,"%s = ",(char *)key);
+            fprintf(fout,"%s\n",ctime(&entry.time));
             }
          }
       }
@@ -1565,8 +1517,9 @@ if (XML)
    fprintf(fout,"</output>\n");
    } 
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 fclose(fout);
 }
 
@@ -1578,10 +1531,11 @@ void ShowCurrentAudit()
   struct AuditLog entry;
   FILE *fout;
   DB_ENV *dbenv = NULL;
-  DBT key,value;
-  DB *dbp;
-  DBC *dbcp;
-  int ret;
+  char *key;
+  void *value;
+  CF_DB *dbp;
+  CF_DBC *dbcp;
+  int ret,ksize,vsize;
   
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 
@@ -1592,17 +1546,12 @@ if (!OpenDB(name,&dbp))
 
 /* Acquire a cursor for the database. */
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_error,"","Error reading from last-seen database: ");
-   dbp->err(dbp, ret, "DB->cursor");
+   CfOut(cf_inform,""," !! Unable to scan last-seen db");
    return;
    }
 
- /* Initialize the key/data return pair. */
- 
-memset(&key, 0, sizeof(key));
-memset(&value, 0, sizeof(value));
 memset(&entry, 0, sizeof(entry)); 
 
 if (HTML)
@@ -1651,13 +1600,13 @@ if (XML)
 
  /* Walk through the database and print out the key/data pairs. */
 
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   strncpy(operation,(char *)key.data,CF_BUFSIZE-1);
+   strncpy(operation,(char *)key,CF_BUFSIZE-1);
 
-   if (value.data != NULL)
+   if (value != NULL)
       {
-      memcpy(&entry,value.data,sizeof(entry));
+      memcpy(&entry,value,sizeof(entry));
       
       if (XML)
          {
@@ -1775,8 +1724,9 @@ if (XML)
    fprintf(fout,"</output>\n");
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 fclose(fout);
 }
 
@@ -1825,25 +1775,14 @@ void ReadAverages()
 { struct Averages entry;
   char timekey[CF_MAXVARSIZE];
   time_t now;
-  DBT key,value;
-  DB *dbp;
+  CF_DB *dbp;
   int i,err;
  
 CfOut(cf_verbose,"","\nLooking for database %s\n",VINPUTFILE);
 CfOut(cf_verbose,"","\nFinding MAXimum values...\n\n");
 CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n"); 
   
-if ((err = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   return;
-   }
-
-#ifdef CF_OLD_DB 
-if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
-#else
-if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
-#endif
+if (!OpenDB(VINPUTFILE,&dbp))
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
    return;
@@ -1887,7 +1826,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
       }
    }
  
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /****************************************************************************/
@@ -1899,26 +1838,15 @@ void EraseAverages()
   struct Item *list = NULL;
   struct Averages entry;
   time_t now;
-  DB *dbp;
+  CF_DB *dbp;
   
 CfOut(cf_verbose,"","\nLooking through current database %s\n",VINPUTFILE);
 
 list = SplitStringAsItemList(ERASE,',');
 
-if ((err = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   return;
-   }
-
-#ifdef CF_OLD_DB 
-if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_CREATE,0644)) != 0)    
-#endif
+if (!OpenDB(VINPUTFILE,&dbp))
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   dbp->err(dbp,err,NULL);
    return;
    }
 
@@ -1950,7 +1878,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
       }
    }
  
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /*****************************************************************************/
@@ -1959,9 +1887,8 @@ void SummarizeAverages()
 
 { int i,err;
   FILE *fout;
-  DBT key,value;
   char name[CF_BUFSIZE];
-  DB *dbp;
+  CF_DB *dbp;
   
 Banner("Summarizing monitor averages");
 
@@ -2033,19 +1960,9 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
    }
 
-if ((err = db_create(&dbp,NULL,0)) != 0)
+if (!OpenDB(VINPUTFILE,&dbp))
    {
-   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   return;
-   }
-
-#ifdef CF_OLD_DB 
-if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
-#else
-if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
-#endif
-   {
-   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_error,"","Could not open %s",VINPUTFILE);
    return;
    }
 
@@ -2054,7 +1971,7 @@ if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    CfOut(cf_inform,""," ?? Database age is %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 
 if (HTML && !EMBEDDED)
    {
@@ -2067,7 +1984,6 @@ if (XML)
    fprintf(fout,"</output>\n");
    }
 
-
 fclose(fout);
 }
 
@@ -2077,29 +1993,17 @@ void WriteGraphFiles()
 
 { int its,i,j,k, count = 0,err;
   double kept = 0, not_kept = 0, repaired = 0;
-  DBT key,value;
   struct stat statbuf;
   struct Averages entry,det;
   char timekey[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
   time_t now;
-  DB *dbp;
+  CF_DB *dbp;
   
-if ((err = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   return;
-   }
-
 CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
 
-#ifdef CF_OLD_DB 
-if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
-#else
-if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
-#endif
+if (!OpenDB(VINPUTFILE,&dbp))
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   dbp->err(dbp,err,NULL);
    return;
    }
 
@@ -2219,7 +2123,7 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
 METER_KEPT[meter_anomalies_day] = 100.0*kept/(kept+repaired+not_kept);
 METER_REPAIRED[meter_anomalies_day] = 100.0*repaired/(kept+repaired+not_kept);
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 CloseFiles();
 }
  
@@ -2228,28 +2132,14 @@ CloseFiles();
 void MagnifyNow()
 
 { int its,i,j,k, count = 0,err;
-  DBT key,value;
   struct Averages entry,det;
   time_t now,here_and_now;
   char timekey[CF_MAXVARSIZE];
-  DB *dbp;
-  
-if ((err = db_create(&dbp,NULL,0)) != 0)
-   {
-   CfOut(cf_verbose,"","Couldn't create average database %s\n",VINPUTFILE);
-   return;
-   }
+  CF_DB *dbp;
 
-CfOut(cf_verbose,""," -> Retrieving mag data from %s",VINPUTFILE);
-
-#ifdef CF_OLD_DB 
-if ((err = (dbp->open)(dbp,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)
-#else
-if ((err = (dbp->open)(dbp,NULL,VINPUTFILE,NULL,DB_BTREE,DB_RDONLY,0644)) != 0)    
-#endif
+if (!OpenDB(VINPUTFILE,&dbp))
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
-   dbp->err(dbp,err,NULL);
    return;
    }
 
@@ -2303,7 +2193,7 @@ while (here_and_now < now)
       }               
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 CloseMagnifyFiles();
 }
 
@@ -2430,9 +2320,8 @@ void DiskArrivals(void)
   char filename[CF_BUFSIZE],database[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   double val, maxval = 1.0, *array, grain = 0.0;
   time_t now;
-  DBT key,value;
-  DB *dbp = NULL;
-  DB_ENV *dbenv = NULL;
+  void *value;
+  CF_DB *dbp = NULL;
 
 if ((array = (double *)malloc((int)CF_WEEK)) == NULL)
    {
@@ -2456,23 +2345,11 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
       snprintf(database,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,dirp->d_name);
       
-      if ((err = db_create(&dbp,dbenv,0)) != 0)
+      if (!OpenDB(database,&dbp))
          {
-         CfOut(cf_verbose,"","Couldn't open arrivals database %s\n",database);
-         return;
-         }
-      
-#ifdef CF_OLD_DB
-      if ((err = (dbp->open)(dbp,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-      if ((err = (dbp->open)(dbp,NULL,database,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-         {
-         CfOut(cf_verbose,"","Couldn't open database %s\n",database);
-         dbp->close(dbp,0);
          continue;
          }
-      
+
       maxval = 1.0;
       grain = 0.0;
       count = 0.0;
@@ -2480,26 +2357,11 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       
       for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
          {
-         memset(&key,0,sizeof(key));       
-         memset(&value,0,sizeof(value));
-         
          strcpy(timekey,GenTimeKey(now));
          
-         key.data = timekey;
-         key.size = strlen(timekey)+1;
-         
-         if ((err = dbp->get(dbp,NULL,&key,&value,0)) != 0)
+         if (ReadDB(dbp,timekey,&value,sizeof(struct Averages)))
             {
-            if (err != DB_NOTFOUND)
-               {
-               dbp->err(dbp,err,NULL);
-               return;
-               }
-            }
-         
-         if (value.data != NULL)
-            {
-            grain += (double)*(double *)(value.data);
+            grain += (double)*(double *)(value);
             }
          else
             {
@@ -2532,8 +2394,8 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             }            
          count++;
          }
-      
-      dbp->close(dbp,0);
+
+      CloseDB(dbp);
       
       snprintf(filename,CF_BUFSIZE-1,"%s.cfenv",dirp->d_name);
       
@@ -2571,11 +2433,11 @@ closedir(dirh);
 
 void PeerIntermittency()
 
-{ DBT key,value;
-  DB *dbp,*dbpent;
-  DBC *dbcp;
-  DB_ENV *dbenv = NULL, *dbenv2 = NULL;
-  int i,ret;
+{ CF_DB *dbp,*dbpent;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;
+  int i,ret,ksize,vsize;
   FILE *fp1,*fp2;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   char out1[CF_BUFSIZE],out2[CF_BUFSIZE];
@@ -2589,38 +2451,23 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
 var = 0;
 
-if ((errno = db_create(&dbp,dbenv,0)) != 0)
+if (!OpenDB(name,&dbp))
    {
-   CfOut(cf_verbose,"","Couldn't open last-seen database %s\n",name);
    return;
    }
 
-#ifdef CF_OLD_DB
-if ((errno = (dbp->open)(dbp,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-if ((errno = (dbp->open)(dbp,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
+if (!NewDBCursor(dbp,&dbcp))
    {
-   CfOut(cf_verbose,"","Couldn't open last-seen database %s\n",name);
-   dbp->close(dbp,0);
+   CfOut(cf_inform,""," !! Unable to scan last-seen db");
    return;
    }
 
-if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0)
-   {
-   CfOut(cf_verbose,"","Error reading from last-seen database\n");
-   dbp->err(dbp, ret, "DB->cursor");
-   return;
-   }
-
-memset(&key, 0, sizeof(key));
-memset(&value, 0, sizeof(value));
 
 CfOut(cf_verbose,"","Examining known peers...\n");
 
-while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   strcpy(hostname,IPString2Hostname((char *)key.data+1));
+   strcpy(hostname,IPString2Hostname((char *)key+1));
 
    if (!IsItemIn(hostlist,hostname))
       {
@@ -2630,8 +2477,8 @@ while (dbcp->c_get(dbcp, &key, &value, DB_NEXT) == 0)
       }
    }
 
-dbcp->c_close(dbcp);
-dbp->close(dbp,0);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
 
 /* Now go through each host and recompute entropy */
 
@@ -2648,6 +2495,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       }
 
    snprintf(out2,CF_BUFSIZE,"lastseen-%s.E-sigma",hostname);
+
    if ((fp2 = fopen(out2,"w")) == NULL)
       {
       CfOut(cf_verbose,"","Unable to open %s\n",out1);
@@ -2657,44 +2505,21 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
    snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
    CfOut(cf_verbose,"","Consulting profile %s\n",name);
 
-   if ((errno = db_create(&dbpent,dbenv2,0)) != 0)
+   if (!OpenDB(name,&dbp))
       {
-      CfOut(cf_verbose,"","Couldn't init reliability profile database %s\n",name);
       return;
       }
    
-#ifdef CF_OLD_DB
-   if ((errno = (dbpent->open)(dbpent,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#else
-   if ((errno = (dbpent->open)(dbpent,NULL,name,NULL,DB_BTREE,DB_CREATE,0644)) != 0)
-#endif
-      {
-      CfOut(cf_verbose,"","Couldn't open last-seen database %s\n",name);
-      continue;
-      }
-
    for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
       {
       memset(&key,0,sizeof(key));       
       memset(&value,0,sizeof(value));
       
       strcpy(timekey,GenTimeKey(now));
-      
-      key.data = timekey;
-      key.size = strlen(timekey)+1;
 
-      if ((errno = dbpent->get(dbpent,NULL,&key,&value,0)) != 0)
+      if (ReadDB(dbp,timekey,&value,sizeof(entry)))
          {
-         if (errno != DB_NOTFOUND)
-            {
-            dbpent->err(dbp,errno,NULL);
-            return;
-            }
-         }
-      
-      if (value.data != NULL)
-         {
-         memcpy(&entry,value.data,sizeof(entry));
+         memcpy(&entry,value,sizeof(entry));
          then = (time_t)entry.q;
          lastseen = now - then;
 
@@ -2722,7 +2547,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
 
    fclose(fp1);
    fclose(fp2);
-   dbpent->close(dbpent,0);
+   CloseDB(dbp);
    }
 
 DeleteItemList(hostlist);
@@ -2806,7 +2631,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 void OpenMagnifyFiles()
 
 { int i;
- char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
+  char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
       
 for (i = 0; i < CF_OBSERVABLES; i++)
    {

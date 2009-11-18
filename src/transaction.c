@@ -482,7 +482,7 @@ else
 
 int WriteLock(char *name)
 
-{ DB *dbp;
+{ CF_DB *dbp;
   struct LockData entry;
 
 Debug("WriteLock(%s)\n",name);
@@ -566,8 +566,7 @@ if (cfstat(cflog,&statbuf) != -1)
 
 int RemoveLock(char *name)
 
-{ DBT key;
-  DB *dbp;
+{ CF_DB *dbp;
 
 if ((dbp = OpenLock()) == NULL)
    {
@@ -598,7 +597,7 @@ return 0;
 
 time_t FindLockTime(char *name)
 
-{ DB *dbp;
+{ CF_DB *dbp;
   struct LockData entry;
 
 Debug("FindLockTime(%s)\n",name);
@@ -624,7 +623,7 @@ else
 
 pid_t FindLockPid(char *name)
 
-{ DB *dbp;
+{ CF_DB *dbp;
   struct LockData entry;
 
 if ((dbp = OpenLock()) == NULL)
@@ -646,10 +645,10 @@ else
 
 /************************************************************************/
 
-DB *OpenLock()
+CF_DB *OpenLock()
 
 { char name[CF_BUFSIZE];
-  DB *dbp;
+  CF_DB *dbp;
 
 snprintf(name,CF_BUFSIZE,"%s/cfengine_lock_db",CFWORKDIR);
 
@@ -665,11 +664,11 @@ return dbp;
 
 /************************************************************************/
 
-void CloseLock(DB *dbp)
+void CloseLock(CF_DB *dbp)
 
 {
 if (dbp)
    { 
-   dbp->close(dbp,0);
+   CloseDB(dbp);
    }
 }

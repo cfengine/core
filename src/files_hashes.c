@@ -473,7 +473,7 @@ void DeleteHash(CF_DB *dbp,enum cfhashes type,char *name)
 
 key = NewIndexKey(type,name,&size);  
 DeleteComplexKeyDB(dbp,key,size);
-DeleteIndexKey(name);
+DeleteIndexKey(key);
 }
 
 /*****************************************************************************/

@@ -169,7 +169,7 @@ if (ReadDB(dbp,name,&state,sizeof(state)))
       if (now < state.expires)
          {
          CfOut(cf_verbose,""," -> Persisent state %s is already in a preserved state --  %d minutes to go\n",name,(state.expires-now)/60);
-         CloseDB(dbp);
+ CloseDB(dbp);
          return;
          }
       }
@@ -177,6 +177,8 @@ if (ReadDB(dbp,name,&state,sizeof(state)))
 else
    {
    CfOut(cf_verbose,""," -> New persistent state %s\n",name);
+   state.expires = ttl_minutes;
+   state.policy = policy;
    }
  
 WriteDB(dbp,name,&state,sizeof(state));

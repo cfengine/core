@@ -177,7 +177,7 @@ if (ReadDB(dbp,name,&state,sizeof(state)))
 else
    {
    CfOut(cf_verbose,""," -> New persistent state %s\n",name);
-   state.expires = ttl_minutes;
+   state.expires = now + ttl_minutes * 60;
    state.policy = policy;
    }
  

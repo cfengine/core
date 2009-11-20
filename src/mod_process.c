@@ -84,7 +84,7 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
    {"ttime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the total elapsed time of a process"},
    {"tty",cf_str,"","Regular expression matching the tty field of a process"},
    {"threads",cf_irange,CF_VALRANGE,"Range of integers matching the threads (NLWP) field of a process"},
-   {"vsize",cf_irange,CF_VALRANGE,"Range of integers matching the virtual memory size of a process"},
+   {"vsize",cf_irange,CF_VALRANGE,"Range of integers matching the virtual memory size of a process, in kilobytes"},
    {NULL,cf_notype,NULL,NULL}
    };
 

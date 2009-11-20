@@ -78,7 +78,7 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
    {"priority",cf_irange,"-20,+20","Range of integers matching the priority field (PRI/NI) of a process"},
    {"process_owner",cf_slist,"","List of regexes matching the user of a process"},
    {"process_result",cf_str,"[(process_owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*","Boolean class expression returning the logical combination of classes set by a process selection test"},
-   {"rsize",cf_irange,CF_VALRANGE,"Range of integers matching the resident memory size of a process"},
+   {"rsize",cf_irange,CF_VALRANGE,"Range of integers matching the resident memory size of a process, in kilobytes"},
    {"status",cf_str,"","Regular expression matching the status field of a process"},
    {"stime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the start time of a process"},
    {"ttime_range",cf_irange,CF_TIMERANGE,"Range of integers matching the total elapsed time of a process"},

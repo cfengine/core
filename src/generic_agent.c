@@ -1693,7 +1693,7 @@ int BadBundleSequence(enum cfagenttype agent)
 
 { struct Rlist *rp,*params;
   char rettype,*name;
-  void *retval;
+  void *retval = NULL;
   int ok = true;
   struct FnCall *fp;
 
@@ -1755,7 +1755,7 @@ if (agent == cf_agent || agent == cf_common)
       
       if (!GetBundle(name,NULL))
          {
-         CfOut(cf_error,"","Bundle %s listed in the bundlesequence is not a defined bundle\n",name);
+         CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n",name);
          ok = false;
          }
       }

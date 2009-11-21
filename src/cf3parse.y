@@ -39,6 +39,8 @@ bundle:                BUNDLE
                           {
                           DebugBanner("Bundle");
                           P.block = "bundle";
+                          P.rval = NULL;
+                          P.currentRlist = NULL;
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -130,6 +132,7 @@ bodybody:            '{'
                         P.useargs = NULL;
                         P.currenttype = NULL;
                         P.currentid = NULL;
+
                         /* The append functions gobble these strdups, so no memory leak */
                         Debug("Starting block\n");
                         }
@@ -191,6 +194,8 @@ selection:            id                         /* BODY ONLY */
                                  }
                               }
                            }
+
+                        P.rval = NULL;
                         }
                        ';' ;
 

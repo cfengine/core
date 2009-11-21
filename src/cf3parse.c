@@ -448,13 +448,13 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,    21,    21,    22,    26,    27,    31,    32,    33,    34,
-      38,    46,    54,    62,    69,    75,    76,    77,    81,    90,
-      89,   116,   117,   121,   122,   127,   126,   146,   147,   151,
-     152,   156,   157,   164,   161,   199,   200,   204,   205,   209,
-     210,   214,   232,   227,   257,   256,   284,   285,   286,   290,
-     309,   316,   325,   331,   337,   343,   348,   356,   362,   363,
-     364,   368,   374,   380,   386,   395,   402,   410,   418,   417,
-     443,   444,   445,   449,   456,   463,   470
+      38,    48,    56,    64,    71,    77,    78,    79,    83,    92,
+      91,   118,   119,   123,   124,   129,   128,   149,   150,   154,
+     155,   159,   160,   167,   164,   204,   205,   209,   210,   214,
+     215,   219,   237,   232,   262,   261,   289,   290,   291,   295,
+     314,   321,   330,   336,   342,   348,   353,   361,   367,   368,
+     369,   373,   379,   385,   391,   400,   407,   415,   423,   422,
+     448,   449,   450,   454,   461,   468,   475
 };
 #endif
 
@@ -1437,11 +1437,13 @@ yyreduce:
     {
                           DebugBanner("Bundle");
                           P.block = "bundle";
+                          P.rval = NULL;
+                          P.currentRlist = NULL;
                           }
     break;
 
   case 11:
-#line 47 "cf3parse.y"
+#line 49 "cf3parse.y"
     {
                           DebugBanner("Body");
                           P.block = "body";
@@ -1449,7 +1451,7 @@ yyreduce:
     break;
 
   case 12:
-#line 54 "cf3parse.y"
+#line 56 "cf3parse.y"
     {
                           P.blocktype = P.currentid;;
                           Debug("Found block type %s for %s\n",P.blocktype,P.block);
@@ -1458,7 +1460,7 @@ yyreduce:
     break;
 
   case 13:
-#line 62 "cf3parse.y"
+#line 64 "cf3parse.y"
     {
                           P.blockid = P.currentid;
                           Debug("Found identifier %s for %s\n",P.currentid,P.block);
@@ -1466,7 +1468,7 @@ yyreduce:
     break;
 
   case 18:
-#line 82 "cf3parse.y"
+#line 84 "cf3parse.y"
     {
                           AppendRlist(&(P.useargs),P.currentid,CF_SCALAR);
                           free(P.currentid);
@@ -1474,7 +1476,7 @@ yyreduce:
     break;
 
   case 19:
-#line 90 "cf3parse.y"
+#line 92 "cf3parse.y"
     {
                        if (RelevantBundle(THIS_AGENT,P.blocktype))
                           {
@@ -1495,7 +1497,7 @@ yyreduce:
     break;
 
   case 20:
-#line 109 "cf3parse.y"
+#line 111 "cf3parse.y"
     {
                        INSTALL_SKIP = false;
                        Debug("End promise bundle\n\n");
@@ -1503,27 +1505,28 @@ yyreduce:
     break;
 
   case 25:
-#line 127 "cf3parse.y"
+#line 129 "cf3parse.y"
     {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
                           
                         P.useargs = NULL;
                         P.currenttype = NULL;
                         P.currentid = NULL;
+
                         /* The append functions gobble these strdups, so no memory leak */
                         Debug("Starting block\n");
                         }
     break;
 
   case 26:
-#line 140 "cf3parse.y"
+#line 143 "cf3parse.y"
     {
                         Debug("End promise body\n");
                         }
     break;
 
   case 33:
-#line 164 "cf3parse.y"
+#line 167 "cf3parse.y"
     { char *contextid = NULL;
  
                         CheckSelection(P.blocktype,P.blockid,P.lval,P.rval,P.rtype);
@@ -1554,11 +1557,13 @@ yyreduce:
                                  }
                               }
                            }
+
+                        P.rval = NULL;
                         }
     break;
 
   case 41:
-#line 215 "cf3parse.y"
+#line 220 "cf3parse.y"
     {
                          Debug("\n* Begin new promise type category %s in function \n\n",P.currenttype);
                                                  
@@ -1571,7 +1576,7 @@ yyreduce:
     break;
 
   case 42:
-#line 232 "cf3parse.y"
+#line 237 "cf3parse.y"
     {
                         if (P.currentclasses == NULL)
                            {
@@ -1585,7 +1590,7 @@ yyreduce:
     break;
 
   case 43:
-#line 244 "cf3parse.y"
+#line 249 "cf3parse.y"
     {
                         Debug("End implicit promise %s\n\n",P.promiser);
                         P.currentid = NULL;
@@ -1598,7 +1603,7 @@ yyreduce:
     break;
 
   case 44:
-#line 257 "cf3parse.y"
+#line 262 "cf3parse.y"
     {
                         if (P.currentclasses == NULL)
                            {
@@ -1612,7 +1617,7 @@ yyreduce:
     break;
 
   case 45:
-#line 269 "cf3parse.y"
+#line 274 "cf3parse.y"
     {
                         Debug("End full promise with promisee %s\n\n",P.promiser);
 
@@ -1627,7 +1632,7 @@ yyreduce:
     break;
 
   case 49:
-#line 293 "cf3parse.y"
+#line 298 "cf3parse.y"
     { struct SubTypeSyntax ss;
                           char *contextid = NULL;
 
@@ -1644,14 +1649,14 @@ yyreduce:
     break;
 
   case 50:
-#line 310 "cf3parse.y"
+#line 315 "cf3parse.y"
     {
                          Debug("  New class context \'%s\' :: \n\n",P.currentclasses);
                          }
     break;
 
   case 51:
-#line 317 "cf3parse.y"
+#line 322 "cf3parse.y"
     {
                          P.lval = P.currentid;
                          P.currentRlist = NULL;
@@ -1660,7 +1665,7 @@ yyreduce:
     break;
 
   case 52:
-#line 326 "cf3parse.y"
+#line 331 "cf3parse.y"
     {
                          P.rval = P.currentid;
                          P.rtype = CF_SCALAR;
@@ -1669,7 +1674,7 @@ yyreduce:
     break;
 
   case 53:
-#line 332 "cf3parse.y"
+#line 337 "cf3parse.y"
     {
                          P.rval = P.currentstring;
                          P.rtype = CF_SCALAR;
@@ -1678,7 +1683,7 @@ yyreduce:
     break;
 
   case 54:
-#line 338 "cf3parse.y"
+#line 343 "cf3parse.y"
     {
                          P.rval = P.currentstring;
                          P.rtype = CF_SCALAR;
@@ -1687,7 +1692,7 @@ yyreduce:
     break;
 
   case 55:
-#line 344 "cf3parse.y"
+#line 349 "cf3parse.y"
     {
                          P.rval = P.currentRlist;
                          P.rtype = CF_LIST;
@@ -1695,7 +1700,7 @@ yyreduce:
     break;
 
   case 56:
-#line 349 "cf3parse.y"
+#line 354 "cf3parse.y"
     {
                          P.rval = P.currentfncall[P.arg_nesting+1];
                          P.rtype = CF_FNCALL;
@@ -1703,7 +1708,7 @@ yyreduce:
     break;
 
   case 61:
-#line 369 "cf3parse.y"
+#line 374 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                           free(P.currentid);
@@ -1711,7 +1716,7 @@ yyreduce:
     break;
 
   case 62:
-#line 375 "cf3parse.y"
+#line 380 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
@@ -1719,7 +1724,7 @@ yyreduce:
     break;
 
   case 63:
-#line 381 "cf3parse.y"
+#line 386 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
@@ -1727,7 +1732,7 @@ yyreduce:
     break;
 
   case 64:
-#line 387 "cf3parse.y"
+#line 392 "cf3parse.y"
     {
                           Debug("Install function call as list item from level %d\n",P.arg_nesting+1);
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
@@ -1736,14 +1741,14 @@ yyreduce:
     break;
 
   case 65:
-#line 396 "cf3parse.y"
+#line 401 "cf3parse.y"
     {
                           Debug("Found function identifier %s\n",P.currentid);
                           }
     break;
 
   case 66:
-#line 403 "cf3parse.y"
+#line 408 "cf3parse.y"
     {
                           P.promiser = P.currentstring; //strdup(P.currentstring);
                           Debug("Promising object name \'%s\'\n",P.promiser);
@@ -1751,14 +1756,14 @@ yyreduce:
     break;
 
   case 67:
-#line 411 "cf3parse.y"
+#line 416 "cf3parse.y"
     {
                          Debug("Finished with function call, now at level %d\n\n",P.arg_nesting);
                          }
     break;
 
   case 68:
-#line 418 "cf3parse.y"
+#line 423 "cf3parse.y"
     {
                            if (++P.arg_nesting > CF_MAX_NESTING)
                               {
@@ -1770,7 +1775,7 @@ yyreduce:
     break;
 
   case 69:
-#line 429 "cf3parse.y"
+#line 434 "cf3parse.y"
     {
                            Debug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
@@ -1784,7 +1789,7 @@ yyreduce:
     break;
 
   case 73:
-#line 450 "cf3parse.y"
+#line 455 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
@@ -1793,7 +1798,7 @@ yyreduce:
     break;
 
   case 74:
-#line 457 "cf3parse.y"
+#line 462 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
@@ -1802,7 +1807,7 @@ yyreduce:
     break;
 
   case 75:
-#line 464 "cf3parse.y"
+#line 469 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
@@ -1811,7 +1816,7 @@ yyreduce:
     break;
 
   case 76:
-#line 471 "cf3parse.y"
+#line 476 "cf3parse.y"
     {
                           /* Careful about recursion */
                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
@@ -1821,7 +1826,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1825 "y.tab.c"
+#line 1830 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2035,7 +2040,7 @@ yyreturn:
 }
 
 
-#line 477 "cf3parse.y"
+#line 482 "cf3parse.y"
 
 
 /*****************************************************************/

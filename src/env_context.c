@@ -203,7 +203,7 @@ if (!OpenDB(filename,&dbp))
 cf_chmod(filename,0644); 
 DeleteDB(dbp,name);
 Debug("Deleted any persistent state %s\n",name); 
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /*****************************************************************************/
@@ -211,7 +211,7 @@ dbp->close(dbp,0);
 void LoadPersistentContext()
 
 { CF_DB *dbp;
-  DBC *dbcp;
+  CF_DBC *dbcp;
   int ret,ksize,vsize;
   char *key;
   void *value;

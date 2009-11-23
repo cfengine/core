@@ -985,7 +985,7 @@ if (!ReadDB(dbp,file,&cmpsb,sizeof(struct stat)))
    if (!DONTDO)
       {
       WriteDB(dbp,file,sb,sizeof(struct stat));
-      dbp->close(dbp,0);   
+      CloseDB(dbp);
       return;
       }
    }
@@ -1022,7 +1022,7 @@ if (cmpsb.st_mtime != sb->st_mtime)
 
 if (ok)
    {
-   dbp->close(dbp,0);   
+   CloseDB(dbp);
    return;
    }
 
@@ -1083,7 +1083,7 @@ if (attr.change.update && !DONTDO)
    WriteDB(dbp,file,sb,sizeof(struct stat));
    }
 
-dbp->close(dbp,0);
+CloseDB(dbp);
 }
 
 /*********************************************************************/

@@ -128,13 +128,13 @@ if (ReadHash(dbp,type,filename,dbdigest))
             WriteHash(dbp,type,filename,digest);
             }
          
-         dbp->close(dbp,0);
+	 CloseDB(dbp);
          return true;                        /* Checksum updated but was changed */
          }
       }
    
    Debug("Found checksum for %s in database and it matched\n",filename);
-   dbp->close(dbp,0);
+   CloseDB(dbp);
    return false;
    }
 else
@@ -144,7 +144,7 @@ else
    Debug("Storing checksum for %s in database %s\n",filename,HashPrint(type,digest));
    WriteHash(dbp,type,filename,digest);
    
-   dbp->close(dbp,0);
+   CloseDB(dbp);
    return false;
    }
 }

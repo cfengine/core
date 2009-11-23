@@ -1372,7 +1372,6 @@ void ShowLocks (int active)
   CF_DBC *dbcp;
   char *key;
   void *value;
-  DB_ENV *dbenv = NULL;
   FILE *fout;
   int ret,ksize,vsize;
   char lockdb[CF_BUFSIZE],name[CF_BUFSIZE];
@@ -1530,7 +1529,6 @@ void ShowCurrentAudit()
 { char operation[CF_BUFSIZE],name[CF_BUFSIZE];
   struct AuditLog entry;
   FILE *fout;
-  DB_ENV *dbenv = NULL;
   char *key;
   void *value;
   CF_DB *dbp;

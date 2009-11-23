@@ -373,12 +373,6 @@ typedef int clockid_t;
 
 #ifdef BDB  // FIXME
 
-// FIXME: TEMP - remove when DB API is finished (used by Nova/registry.c)
-#define NewDBKey(a) BDB_NewDBKey(a)
-#define DeleteDBKey(a) BDB_DeleteDBKey(a)
-#define NewDBValue(a,b) BDB_NewDBValue(a,b)
-#define DeleteDBValue(a) BDB_DeleteDBValue(a)
-
 /* Need this to to avoid conflict with solaris 2.6 and db.h */
 #ifdef SOLARIS
 # ifndef u_int32_t
@@ -391,10 +385,25 @@ typedef int clockid_t;
 #include <db.h>
 #define CF_DB DB
 #define CF_DBC DBC
+
 #elif defined(QDB)
 
 #include <depot.h>
-#define CF_DB DEPOT
+
+typedef struct
+{
+  DEPOT *depot;
+  char *valmemp;  // allocated on demand, freed on db close
+}CF_QDB;
+
+typedef struct
+{
+  char *curkey;
+  char *curval;
+}CF_QDBC;
+
+#define CF_DB CF_QDB
+#define CF_DBC CF_QDBC
 
 #endif  /* QDB */
 

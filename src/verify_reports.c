@@ -344,7 +344,6 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
-  DB_ENV *dbenv = NULL;
   char *key;
   void *value;
   int ksize,vsize;

@@ -326,12 +326,19 @@ int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize);
 /* dbm_quick.c */
 
 #ifdef QDB  // FIXME
-int QDB_OpenDB(char *filename, DEPOT **depot);
-int QDB_CloseDB(DEPOT *depot);
-int QDB_ValueSizeDB(DEPOT *dbp, char *key);
-int QDB_ReadDB(DEPOT *depot, char *key, void *dest, int destSz);
-int QDB_WriteDB(DEPOT *depot, char *key, void *src, int srcSz);
-int QDB_DeleteDB(DEPOT *depot, char *key);
+int QDB_OpenDB(char *filename, CF_QDB **qdbp);
+int QDB_CloseDB(CF_QDB *qdbp);
+int QDB_ValueSizeDB(CF_QDB *qdbp, char *key);
+int QDB_ReadComplexKeyDB(CF_QDB *qdbp, char *key, int keySz,void *dest, int destSz);
+int QDB_ReadDB(CF_QDB *qdbp, char *key, void *dest, int destSz);
+int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *src, int srcSz);
+int QDB_WriteDB(CF_QDB *qdbp, char *key, void *src, int srcSz);
+int QDB_DeleteComplexKeyDB(CF_QDB *qdbp, char *key, int size);
+int QDB_DeleteDB(CF_QDB *qdbp, char *key);
+int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize);
+int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp);
+int QDB_DeleteDBCursor(CF_QDB *qdbp,CF_QDBC *qdbcp);
+int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,int *vsize);
 #endif 
 
 /* dtypes.c */

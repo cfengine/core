@@ -1454,7 +1454,7 @@ return &entry;
 void UpdateAverages(char *timekey,struct Averages newvals)
 
 { int err_no;
-  DBT key,value;
+  //DBT key,value;
   CF_DB *dbp;
 
 if (!OpenDB(AVDB,&dbp))

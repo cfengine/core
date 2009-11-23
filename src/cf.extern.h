@@ -126,7 +126,7 @@ extern char VLOGFILE[];
 extern char *CHDIR;
 extern char *VSETUIDLOG;
 extern FILE *VLOGFP;
-extern DB *AUDITDBP;
+extern CF_DB *AUDITDBP;
 extern int AUDIT;
 extern char VEDITABORT[];
 extern char LISTSEPARATOR;

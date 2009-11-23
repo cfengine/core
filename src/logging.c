@@ -37,8 +37,7 @@
 
 void BeginAudit()
 
-{ DB_ENV *dbenv = NULL;
-  char name[CF_BUFSIZE];
+{ char name[CF_BUFSIZE];
   struct Promise dummyp;
   struct Attributes dummyattr;
 
@@ -110,7 +109,7 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
 
 if (AUDITDBP)
    {
-   AUDITDBP->close(AUDITDBP,0);
+   CloseDB(AUDITDBP);
    }
 }
 

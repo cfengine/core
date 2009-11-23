@@ -125,7 +125,11 @@ CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"executor");
 ThisAgentInit();
 KeepPromises();
+#ifdef MINGW
+NovaWin_StartExecService(argc, argv);
+#else
 StartServer(argc,argv);
+#endif
 return 0;
 }
 
@@ -510,6 +514,7 @@ void Apoptosis()
   struct Rlist *signals = NULL, *owners = NULL;
   char mypid[32],pidrange[32];
   char *psopts = GetProcessOptions();
+  static char promiserBuf[CF_SMALLBUF];
 
 if (ONCE || VSYSTEMHARDCLASS == cfnt)
    {
@@ -518,8 +523,14 @@ if (ONCE || VSYSTEMHARDCLASS == cfnt)
    }
   
 CfOut(cf_verbose,""," !! Programmed pruning of the scheduler cluster");
-  
-pp.promiser = "/var/cfengine/.*/cf-execd";
+
+#ifdef MINGW
+snprintf(promiserBuf, sizeof(promiserBuf), "cf-execd");	  // using '\' causes regexp problems
+#else
+snprintf(promiserBuf, sizeof(promiserBuf), "%s/bin/cf-execd", CFWORKDIR);
+#endif
+
+pp.promiser = promiserBuf;
 pp.promisee = "cfengine";
 pp.classes = "any";
 pp.petype = CF_SCALAR;

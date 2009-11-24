@@ -1233,6 +1233,7 @@ void Summarize(void);
 /* signals.c */
 
 void HandleSignals(int signum);
+void SelfTerminatePrelude(void);
 
 /* sockaddr.c */
 

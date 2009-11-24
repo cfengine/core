@@ -46,16 +46,7 @@ if (signum != SIGCHLD)
    
    if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)
       {
-      struct CfLock best_guess;
-
-      CfOut(cf_verbose,"","Trying to remove lock - try %s",CFLOCK);
-      best_guess.lock = strdup(CFLOCK);
-      best_guess.last = strdup(CFLAST);
-      best_guess.log = strdup(CFLOG);
-      YieldCurrentLock(best_guess);
-      unlink(PIDFILE);
-      EndAudit();
-	  GenericDeInitialize();
+	  SelfTerminatePrelude();
       exit(0);
       }
    else if (signum == SIGUSR1)
@@ -77,3 +68,16 @@ if (signum != SIGCHLD)
    }
 }
 
+void SelfTerminatePrelude()
+{
+struct CfLock best_guess;
+
+CfOut(cf_verbose,"","Trying to remove lock - try %s",CFLOCK);
+best_guess.lock = strdup(CFLOCK);
+best_guess.last = strdup(CFLAST);
+best_guess.log = strdup(CFLOG);
+YieldCurrentLock(best_guess);
+unlink(PIDFILE);
+EndAudit();
+GenericDeInitialize();
+}

@@ -1,26 +1,26 @@
 /* cfengine for GNU
- 
+
         Copyright (C) 1995
         Free Software Foundation, Inc.
- 
-   This file is part of GNU cfengine - written and maintained 
+
+   This file is part of GNU cfengine - written and maintained
    by Mark Burgess, Dept of Computing and Engineering, Oslo College,
    Dept. of Theoretical physics, University of Oslo
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; either version 2, or (at your option) any
    later version.
- 
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
- 
+
 
 /*******************************************************************/
 /*                                                                 */
@@ -236,6 +236,7 @@ extern int errno;
 # include <ddk/ntapi.h>
 # include <wchar.h>
 # include <Sddl.h>
+# include <tlhelp32.h>
 # ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
 # else
@@ -301,7 +302,7 @@ typedef int clockid_t;
 #endif
 
 #ifdef WITH_SELINUX
-# include <selinux/selinux.h> 
+# include <selinux/selinux.h>
 #endif
 
 /*******************************************************************/
@@ -339,7 +340,7 @@ typedef int clockid_t;
 #define CF_INFINITY ((int)999999999)
 #define CF_TICKS_PER_DAY 86400 /* 60 * 60 *24 */
 #define CF_TICKS_PER_HOUR 3600 /* 60 * 60 */
-#define CF_HALF_HOUR 1800      /* 60 * 30 */ 
+#define CF_HALF_HOUR 1800      /* 60 * 30 */
 #define CF_NOT_CONNECTED -1
 #define CF_COULD_NOT_CONNECT -2
 #define CF_RECURSION_LIMIT 100
@@ -413,7 +414,7 @@ typedef struct
 /*******************************************************************/
 
 #ifdef MINGW
-# define MAXHOSTNAMELEN	256  // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
+# define MAXHOSTNAMELEN 256  // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
 # define NULLFILE "nul"
 # define CFPROMISES_BIN "cf-promises.exe"
 # define CMD_PATH "c:\\windows\\system32\\cmd.exe"
@@ -608,7 +609,7 @@ struct OldAverages /* For conversion to new db */
    double expect_loadavg;
    double expect_incoming[ATTR];
    double expect_outgoing[ATTR];
-   double expect_pH[PH_LIMIT];      
+   double expect_pH[PH_LIMIT];
    double var_number_of_users;
    double var_rootprocs;
    double var_otherprocs;
@@ -640,7 +641,7 @@ struct LockData
 struct AuditLog        /* key includes operation and date */
    {
    char  operator[CF_AUDIT_COMMENT];
-   char  comment[CF_AUDIT_COMMENT];     
+   char  comment[CF_AUDIT_COMMENT];
    char  filename[CF_AUDIT_COMMENT];
    char  bundle[CF_AUDIT_VERSION]; /* not used in cf2 */
    char  version[CF_AUDIT_VERSION];
@@ -662,7 +663,7 @@ struct AuditLog        /* key includes operation and date */
 #define DEV_BSIZE 4096
 #endif /* !BSIZE */
 #endif /* !DEV_BSIZE */
- 
+
 /* Extract or fake data from a `struct stat'.
    ST_BLKSIZE: Optimal I/O blocksize for the file, in bytes.
    ST_NBLOCKS: Number of 512-byte blocks in the file
@@ -1136,7 +1137,7 @@ struct UidList
      char sid[CF_MAXSIDSIZE];  /* Invalid sid indicates unset */
 #endif  /* MINGW */
    uid_t uid;
-   char *uidname;				/* when uid is -2 */
+   char *uidname;                               /* when uid is -2 */
    struct UidList *next;
    };
 
@@ -1145,7 +1146,7 @@ struct UidList
 struct GidList
    {
    gid_t gid;
-   char *gidname;				/* when gid is -2 */
+   char *gidname;                               /* when gid is -2 */
    struct GidList *next;
    };
 
@@ -1267,12 +1268,12 @@ struct Checksum_Value
 #define S_IRUSR 00400
 #define S_IWUSR 00200
 #define S_IXUSR 00100
- 
+
 #define S_IRWXG 00070
 #define S_IRGRP 00040
 #define S_IWGRP 00020
 #define S_IXGRP 00010
- 
+
 #define S_IRWXO 00007
 #define S_IROTH 00004
 #define S_IWOTH 00002
@@ -1319,7 +1320,7 @@ struct Checksum_Value
 #endif
 
 /*******************************************************************/
-/* File path manipulation primitives				   */
+/* File path manipulation primitives                               */
 /*******************************************************************/
 
 /* Defined maximum length of a filename. */

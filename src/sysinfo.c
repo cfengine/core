@@ -259,6 +259,24 @@ NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
 
 
+#ifdef MINGW
+if(NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
+  {
+  NewScalar("sys","windir",workbuf,cf_str);
+  }
+  
+if(NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
+  {
+  NewScalar("sys","winsysdir",workbuf,cf_str);
+  }
+  
+if(NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
+  {
+  NewScalar("sys","winprogdir",workbuf,cf_str);
+  }
+#endif  /* MINGW */
+
+
 LoadSlowlyVaryingObservations();
 EnterpriseContext();
 

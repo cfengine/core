@@ -417,7 +417,6 @@ typedef struct
 # define MAXHOSTNAMELEN 256  // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
 # define NULLFILE "nul"
 # define CFPROMISES_BIN "cf-promises.exe"
-# define CMD_PATH "c:\\windows\\system32\\cmd.exe"
 
 typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #ifndef VER_SUITE_WH_SERVER  // shold be in winnt.h, but is not in current mingw-version

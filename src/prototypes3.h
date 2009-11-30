@@ -1,19 +1,19 @@
-/* 
+/*
    Copyright (C) 2008 - Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; either version 3, or (at your option) any
-   later version. 
+   later version.
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
+
   You should have received a copy of the GNU General Public License
-  
+
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -41,7 +41,7 @@ void yyerror (char *s);
 int yyparse (void);
 
 /* Generic stubs for the agents */
-    
+
 void ThisAgentInit(void);
 void KeepPromises(void);
 
@@ -66,7 +66,7 @@ struct CfAssoc *NewAssoc(char *lval,void *rval,char rtype,enum cfdatatype dt);
 void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
 void ShowAssoc (struct CfAssoc *cp);
-    
+
 /* attributes.c */
 
 struct Attributes GetFilesAttributes(struct Promise *pp);
@@ -80,7 +80,7 @@ struct Attributes GetOccurrenceAttributes(struct Promise *pp);
 struct Attributes GetPackageAttributes(struct Promise *pp);
 struct Attributes GetMeasurementAttributes(struct Promise *pp);
 struct Attributes GetDatabaseAttributes(struct Promise *pp);
-    
+
 struct Packages GetPackageConstraints(struct Promise *pp);
 struct ExecContain GetExecContainConstraints(struct Promise *pp);
 struct Recursion GetRecursionConstraints(struct Promise *pp);
@@ -289,16 +289,16 @@ char *KeyPrint(RSA *key);
 int OpenDB(char *filename, CF_DB **dbp);
 int CloseDB(CF_DB *dbp);
 int ValueSizeDB(CF_DB *dbp, char *key);
-int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz);
-int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz);
-int WriteComplexKeyDB(CF_DB *dbp, char *key,int keySz,void *src, int srcSz);
 int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz,void *dest, int destSz);
+int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize);
+int WriteComplexKeyDB(CF_DB *dbp, char *key,int keySz,void *src, int srcSz);
 int DeleteComplexKeyDB(CF_DB *dbp, char *key, int size);
-int DeleteDB(CF_DB *dbp, char *key);
+int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
 int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
 int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
-int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
-int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize);
+int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz);
+int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz);
+int DeleteDB(CF_DB *dbp, char *key);
 
 /* dbm_berkely.c */
 
@@ -306,21 +306,18 @@ int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize);
 int BDB_OpenDB(char *filename,DB **dbp);
 int BDB_CloseDB(DB *dbp);
 int BDB_ValueSizeDB(DB *dbp, char *key);
-int BDB_ReadDB(DB *dbp,char *name,void *ptr,int size);
-int BDB_WriteDB(DB *dbp,char *name,void *ptr,int size);
-int BDB_DeleteDB(DB *dbp,char *name);
+int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size);
+int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize);
+int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size);
+int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size);
+int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
+int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
+int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
 DBT *BDB_NewDBKey(char *name);
 DBT *BDB_NewDBComplexKey(char *key,int size);
-int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size);
-int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size);
-int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size);
 void BDB_DeleteDBKey(DBT *key);
 DBT *BDB_NewDBValue(void *ptr,int size);
 void BDB_DeleteDBValue(DBT *value);
-int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
-int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
-int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
-int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize);
 #endif
 
 /* dbm_quick.c */
@@ -330,16 +327,28 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp);
 int QDB_CloseDB(CF_QDB *qdbp);
 int QDB_ValueSizeDB(CF_QDB *qdbp, char *key);
 int QDB_ReadComplexKeyDB(CF_QDB *qdbp, char *key, int keySz,void *dest, int destSz);
-int QDB_ReadDB(CF_QDB *qdbp, char *key, void *dest, int destSz);
-int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *src, int srcSz);
-int QDB_WriteDB(CF_QDB *qdbp, char *key, void *src, int srcSz);
-int QDB_DeleteComplexKeyDB(CF_QDB *qdbp, char *key, int size);
-int QDB_DeleteDB(CF_QDB *qdbp, char *key);
 int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize);
+int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *src, int srcSz);
+int QDB_DeleteComplexKeyDB(CF_QDB *qdbp, char *key, int size);
 int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp);
-int QDB_DeleteDBCursor(CF_QDB *qdbp,CF_QDBC *qdbcp);
 int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,int *vsize);
-#endif 
+int QDB_DeleteDBCursor(CF_QDB *qdbp,CF_QDBC *qdbcp);
+#endif
+
+/* dbm_tokyocab.c */
+
+#ifdef TCDB
+int TCDB_OpenDB(char *filename, CF_TCDB **hdbp);
+int TCDB_CloseDB(CF_TCDB *hdbp);
+int TCDB_ValueSizeDB(CF_TCDB *hdbp, char *key);
+int TCDB_ReadComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz,void *dest, int destSz);
+int TCDB_RevealDB(CF_TCDB *hdbp, char *key, void **result, int *rsize);
+int TCDB_WriteComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, void *src, int srcSz);
+int TCDB_DeleteComplexKeyDB(CF_TCDB *hdbp, char *key, int size);
+int TCDB_NewDBCursor(CF_TCDB *hdbp,CF_TCDBC **hdbcp);
+int TCDB_NextDB(CF_TCDB *hdbp,CF_TCDBC *hdbcp,char **key,int *ksize,void **value,int *vsize);
+int TCDB_DeleteDBCursor(CF_TCDB *hdbp,CF_TCDBC *hdbcp);
+#endif
 
 /* dtypes.c */
 
@@ -694,7 +703,7 @@ int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
 int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp);
 void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp); 
+void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int MakeParentDirectory(char *parentandchild,int force);
 void LogHashChange(char *file);
 void DeleteDirectoryTree(char *path,struct Promise *pp);
@@ -1192,7 +1201,7 @@ struct Rlist *AlphaSortRListNames(struct Rlist *list);
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);
 
-    
+
 /* scope.c */
 
 void DebugVariables(char *label);

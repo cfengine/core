@@ -387,7 +387,28 @@ typedef int clockid_t;
 #define CF_DB DB
 #define CF_DBC DBC
 
-#elif defined(QDB)
+#elif defined(TCDB) // ------------
+
+#include <tcutil.h>
+#include <tchdb.h>
+
+typedef struct
+{
+  TCHDB *hdb;
+  char *valmemp;  // allocated on demand, freed on db close
+}CF_TCDB;
+
+typedef struct
+{
+  char *curkey;
+  char *curval;
+}CF_TCDBC;
+
+#define CF_DB CF_TCDB
+#define CF_DBC CF_TCDBC
+
+
+#elif defined(QDB)  // ------------
 
 #include <depot.h>
 
@@ -406,7 +427,7 @@ typedef struct
 #define CF_DB CF_QDB
 #define CF_DBC CF_QDBC
 
-#endif  /* QDB */
+#endif  /* QDB */   // ------------
 
 
 /*******************************************************************/

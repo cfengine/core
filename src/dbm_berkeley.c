@@ -1,19 +1,19 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -29,7 +29,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-/* 
+/*
  * Implementation of the Cfengine DBM API using Berkeley DB.
  */
 
@@ -39,7 +39,7 @@
 #ifdef BDB  // FIXME
 
 int BDB_OpenDB(char *filename,DB **dbp)
- 
+
 { DB_ENV *dbenv = NULL;
 
 if ((errno = db_create(dbp,dbenv,0)) != 0)
@@ -105,91 +105,6 @@ return retv;
 
 /*****************************************************************************/
 
-int BDB_ReadDB(DB *dbp,char *name,void *ptr,int size)
-
-{ DBT *key,value;
-
-if (dbp == NULL)
-   {
-   return false;
-   }
- 
-key = BDB_NewDBKey(name);
-memset(&value,0,sizeof(DBT));
-
-if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
-   {
-   memset(ptr,0,size);
-   
-   if (value.data)
-      {
-      if (size < value.size)
-         {
-         memcpy(ptr,value.data,size);
-         }
-      else
-         {
-         memcpy(ptr,value.data,value.size);
-         }
-      }
-   else
-      {
-      BDB_DeleteDBKey(key);
-      return false;
-      }
-   
-   Debug("READ %s\n",name);
-   BDB_DeleteDBKey(key);
-   return true;
-   }
-else
-   {
-   Debug("Database read failed: %s",db_strerror(errno));
-   BDB_DeleteDBKey(key);
-   return false;
-   }
-}
-
-/*****************************************************************************/
-
-int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize)
-
-{ DBT *key,value;
-
-if (dbp == NULL)
-   {
-   return false;
-   }
- 
-key = BDB_NewDBKey(name);
-memset(&value,0,sizeof(DBT));
-
-if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
-   {
-   if (value.data)
-      {
-      *rsize = value.size;
-      *result = value.data;
-      }
-   else
-      {
-      BDB_DeleteDBKey(key);
-      return false;
-      }
-   
-   BDB_DeleteDBKey(key);
-   return true;
-   }
-else
-   {
-   Debug("Database read failed: %s",db_strerror(errno));
-   BDB_DeleteDBKey(key);
-   return false;
-   }
-}
-
-/*****************************************************************************/
-
 int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
 
 { DBT *key,value;
@@ -205,7 +120,7 @@ memset(&value,0,sizeof(DBT));
 if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
    {
    memset(ptr,0,size);
-   
+
    if (value.data)
       {
       if (size < value.size)
@@ -222,7 +137,7 @@ if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
       BDB_DeleteDBValue(key);
       return false;
       }
-   
+
    Debug("READ %s\n",name);
    BDB_DeleteDBValue(key);
    return true;
@@ -237,34 +152,42 @@ else
 
 /*****************************************************************************/
 
-int BDB_WriteDB(DB *dbp,char *name,void *ptr,int size)
+int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize)
 
-{ DBT *key,*value;
+{ DBT *key,value;
 
 if (dbp == NULL)
    {
    return false;
    }
- 
-key = BDB_NewDBKey(name); 
-value = BDB_NewDBValue(ptr,size);
 
-if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
+key = BDB_NewDBKey(name);
+memset(&value,0,sizeof(DBT));
+
+if ((errno = dbp->get(dbp,NULL,key,&value,0)) == 0)
    {
-   Debug("Database write failed: %s",db_strerror(errno));
+   if (value.data)
+      {
+      *rsize = value.size;
+      *result = value.data;
+      }
+   else
+      {
+      BDB_DeleteDBKey(key);
+      return false;
+      }
+
    BDB_DeleteDBKey(key);
-   BDB_DeleteDBValue(value);
-   return false;
+   return true;
    }
 else
    {
-   Debug("WriteDB => %s\n",name);
-
+   Debug("Database read failed: %s",db_strerror(errno));
    BDB_DeleteDBKey(key);
-   BDB_DeleteDBValue(value);
-   return true;
+   return false;
    }
 }
+
 
 /*****************************************************************************/
 
@@ -276,8 +199,8 @@ if (dbp == NULL)
    {
    return false;
    }
- 
-key = BDB_NewDBValue(name,keysize); 
+
+key = BDB_NewDBValue(name,keysize);
 value = BDB_NewDBValue(ptr,size);
 
 if ((errno = dbp->put(dbp,NULL,key,value,0)) != 0)
@@ -299,31 +222,6 @@ else
 
 /*****************************************************************************/
 
-int BDB_DeleteDB(DB *dbp,char *name)
-
-{ DBT *key;
-
-if (dbp == NULL)
-   {
-   return false;
-   }
- 
-key = BDB_NewDBKey(name);
-
-if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
-   {
-   Debug("Database deletion failed: %s",db_strerror(errno));
-   BDB_DeleteDBKey(key);
-   return false;
-   }
-
-BDB_DeleteDBKey(key);
-Debug("DELETED DB %s\n",name);
-return true;
-}
-
-/*****************************************************************************/
-
 int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size)
 
 { DBT *key;
@@ -332,7 +230,7 @@ if (dbp == NULL)
    {
    return false;
    }
- 
+
 key = BDB_NewDBValue(name,size);
 
 if ((errno = dbp->del(dbp,NULL,key,0)) != 0)
@@ -352,7 +250,7 @@ return true;
 int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcpp)
 
 { int ret;
- 
+
 if ((ret = dbp->cursor(dbp,NULL,dbcpp,0)) != 0)
    {
    CfOut(cf_error,"","Error establishing scanner for hash database");
@@ -365,14 +263,6 @@ return true;
 
 /*****************************************************************************/
 
-int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp)
-
-{
-return (dbcp->c_close(dbcp) == 0);
-}
-
-/*****************************************************************************/
-
 int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize)
 
 { int ret;
@@ -380,7 +270,7 @@ int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *v
 
 memset(&dbkey,0,sizeof(DBT));
 memset(&dbvalue,0,sizeof(DBT));
-  
+
 ret = dbcp->c_get(dbcp,&dbkey,&dbvalue,DB_NEXT);
 
 *ksize = dbkey.size;
@@ -395,6 +285,14 @@ if (DEBUG && ret != 0)
    }
 
 return (ret == 0);
+}
+
+/*****************************************************************************/
+
+int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp)
+
+{
+return (dbcp->c_close(dbcp) == 0);
 }
 
 /*****************************************************************************/
@@ -453,7 +351,7 @@ if ((value = (DBT *) malloc(sizeof(DBT))) == NULL)
    FatalError("DBT Value malloc error");
    }
 
-memset(value,0,sizeof(DBT)); 
+memset(value,0,sizeof(DBT));
 memcpy(val,ptr,size);
 
 value->data = val;

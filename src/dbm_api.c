@@ -90,7 +90,7 @@ int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize)
    next call to this function or db close) */
 {
 #ifdef TCDB
-  return RevealDB(dbp,key,result,rsize);
+  return TCDB_RevealDB(dbp,key,result,rsize);
 #elif defined QDB  // FIXME
   return QDB_RevealDB(dbp,key,result,rsize);
 #else

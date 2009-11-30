@@ -59,10 +59,10 @@ int TCDB_OpenDB(char *filename, CF_TCDB **hdbp)
 
   if(!tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
     {
-      free(*hdbp);
-      ThreadUnlock(cft_system);
       errCode = tchdbecode((*hdbp)->hdb);
       CfOut(cf_error, "tchdbopen", "!! Opening database \"%s\" failed: %s", filename, tchdberrmsg(errCode));
+      free(*hdbp);
+      ThreadUnlock(cft_system);
       return false;
     }
 

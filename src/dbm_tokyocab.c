@@ -227,6 +227,7 @@ int TCDB_NewDBCursor(CF_TCDB *hdbp,CF_TCDBC **hdbcp)
 
 int TCDB_NextDB(CF_TCDB *hdbp,CF_TCDBC *hdbcp,char **key,int *ksize,void **value,int *vsize)
 {
+  int errCode;
 
   ThreadLock(cft_system);
 
@@ -261,6 +262,7 @@ int TCDB_NextDB(CF_TCDB *hdbp,CF_TCDBC *hdbcp,char **key,int *ksize,void **value
       ThreadUnlock(cft_system);
 
       *key = NULL;
+      errCode = tchdbecode(hdbp->hdb);
       CfOut(cf_error, "tchdbget", "!! Could not get value corrsponding to key \"%s\": %s", key, tchdberrmsg(errCode));
       return false;
     }

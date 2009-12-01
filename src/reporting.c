@@ -378,6 +378,8 @@ var = 0;
 val = 0;
 last = 0;
 
+
+#ifdef HAVE_LIBCFNOVA
 lastseen = GetPromiseCompliance(pp,&val,&av,&var,&last);
 
 if (lastseen) /* This only gives something in Nova or higher */
@@ -401,6 +403,9 @@ if (lastseen) /* This only gives something in Nova or higher */
 
    fprintf(FREPORT_HTML," Average compliance %.1lf pm %.1lf percent. </div>",av*100.0,sqrt(var)*100.0);
    }
+#else
+fprintf(FREPORT_HTML,"<hr><p><div id=\"compliance\">Compliance level checking only in Cfengine Nova and above</div>",vbuff);
+#endif
 
 if (pp->audit)
    {

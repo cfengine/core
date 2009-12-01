@@ -237,7 +237,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
    time_t then;
    char tbuf[CF_BUFSIZE],eventname[CF_BUFSIZE];
 
-   strcpy(eventname,(char *)key);
+   memset(eventname,0,CF_BUFSIZE);
+   strncpy(eventname,(char *)key,ksize);
 
    if (stored != NULL)
       {

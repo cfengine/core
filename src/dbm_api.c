@@ -35,11 +35,11 @@
 int OpenDB(char *filename, CF_DB **dbp)
 {
 #ifdef TCDB
-  return TCDB_OpenDB(filename, dbp);
+return TCDB_OpenDB(filename, dbp);
 #elif defined QDB  // FIXME
-  return QDB_OpenDB(filename, dbp);
+return QDB_OpenDB(filename, dbp);
 #else
-  return BDB_OpenDB(filename, dbp);
+return BDB_OpenDB(filename, dbp);
 #endif
 }
 
@@ -48,11 +48,11 @@ int OpenDB(char *filename, CF_DB **dbp)
 int CloseDB(CF_DB *dbp)
 {
 #ifdef TCDB
-  return TCDB_CloseDB(dbp);;
+return TCDB_CloseDB(dbp);;
 #elif defined QDB  // FIXME
-  return QDB_CloseDB(dbp);
+return QDB_CloseDB(dbp);
 #else
-  return BDB_CloseDB(dbp);
+return BDB_CloseDB(dbp);
 #endif
 }
 
@@ -62,11 +62,11 @@ int ValueSizeDB(CF_DB *dbp, char *key)
 /* Returns size of value corresponding to key, or -1 on not found or error */
 {
 #ifdef TCDB
-  return TCDB_ValueSizeDB(dbp, key);
+return TCDB_ValueSizeDB(dbp, key);
 #elif defined QDB  // FIXME
-  return QDB_ValueSizeDB(dbp, key);
+return QDB_ValueSizeDB(dbp, key);
 #else
-  return BDB_ValueSizeDB(dbp, key);
+return BDB_ValueSizeDB(dbp, key);
 #endif
 }
 
@@ -75,11 +75,11 @@ int ValueSizeDB(CF_DB *dbp, char *key)
 int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz,void *dest, int destSz)
 {
 #ifdef TCDB
-  return TCDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
+return TCDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
 #elif defined QDB  // FIXME
-  return QDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
+return QDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
 #else
-  return BDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
+return BDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
 #endif
 }
 
@@ -90,11 +90,11 @@ int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize)
    next call to this function or db close) */
 {
 #ifdef TCDB
-  return TCDB_RevealDB(dbp,key,result,rsize);
+return TCDB_RevealDB(dbp,key,result,rsize);
 #elif defined QDB  // FIXME
-  return QDB_RevealDB(dbp,key,result,rsize);
+return QDB_RevealDB(dbp,key,result,rsize);
 #else
-  return BDB_RevealDB(dbp,key,result,rsize);
+return BDB_RevealDB(dbp,key,result,rsize);
 #endif
 }
 
@@ -103,11 +103,11 @@ int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize)
 int WriteComplexKeyDB(CF_DB *dbp, char *key, int keySz, void *src, int srcSz)
 {
 #ifdef TCDB
-  return TCDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
+return TCDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #elif defined QDB  // FIXME
-  return QDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
+return QDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #else
-  return BDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
+return BDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #endif
 }
 
@@ -119,11 +119,11 @@ int DeleteComplexKeyDB(CF_DB *dbp, char *key, int size)
  */
 {
 #ifdef TCDB
-  return TCDB_DeleteComplexKeyDB(dbp,key,size);
+return TCDB_DeleteComplexKeyDB(dbp,key,size);
 #elif defined QDB  // FIXME
-  return QDB_DeleteComplexKeyDB(dbp,key,size);
+return QDB_DeleteComplexKeyDB(dbp,key,size);
 #else
-  return BDB_DeleteComplexKeyDB(dbp,key,size);
+return BDB_DeleteComplexKeyDB(dbp,key,size);
 #endif
 }
 
@@ -133,11 +133,11 @@ int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp)
 
 {
 #ifdef TCDB
-  return TCDB_NewDBCursor(dbp,dbcp);
+return TCDB_NewDBCursor(dbp,dbcp);
 #elif defined QDB  // FIXME
-  return QDB_NewDBCursor(dbp,dbcp);
+return QDB_NewDBCursor(dbp,dbcp);
 #else
-  return BDB_NewDBCursor(dbp,dbcp);
+return BDB_NewDBCursor(dbp,dbcp);
 #endif
 }
 
@@ -146,11 +146,11 @@ int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp)
 int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize)
 {
 #ifdef TCDB
-  return TCDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
+return TCDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
 #elif defined QDB  // FIXME
-  return QDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
+return QDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
 #else
-  return BDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
+return BDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
 #endif
 }
 
@@ -159,26 +159,28 @@ int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize
 int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp)
 {
 #ifdef TCDB
-  return TCDB_DeleteDBCursor(dbp,dbcp);
+return TCDB_DeleteDBCursor(dbp,dbcp);
 #elif defined QDB  // FIXME
-  return QDB_DeleteDBCursor(dbp,dbcp);
+return QDB_DeleteDBCursor(dbp,dbcp);
 #else
-  return BDB_DeleteDBCursor(dbp,dbcp);
+return BDB_DeleteDBCursor(dbp,dbcp);
 #endif
 }
 
 /*****************************************************************************/
 
 int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz)
+
 {
-  return ReadComplexKeyDB(dbp, key, strlen(key), dest, destSz);
+return ReadComplexKeyDB(dbp,key,strlen(key)+1, dest, destSz);
 }
 
 /*****************************************************************************/
 
 int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz)
+
 {
-  return WriteComplexKeyDB(dbp, key, strlen(key), src, srcSz);
+return WriteComplexKeyDB(dbp,key,strlen(key)+1,src,srcSz);
 }
 
 
@@ -189,6 +191,6 @@ int DeleteDB(CF_DB *dbp, char *key)
  * Delete a record (key,value pair)
  */
 {
-  return DeleteComplexKeyDB(dbp, key, strlen(key));
+return DeleteComplexKeyDB(dbp,key,strlen(key));
 }
 

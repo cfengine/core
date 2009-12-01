@@ -278,7 +278,7 @@ ret = dbcp->c_get(dbcp,&dbkey,&dbvalue,DB_NEXT);
 *key = dbkey.data;
 *value = dbvalue.data;
 
-if (DEBUG && ret != 0)
+if (ret != 0)
    {
    CfOut(cf_error,""," !! Error scanning hashbase");
    dbp->err(dbp,ret,"cursor");

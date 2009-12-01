@@ -172,7 +172,7 @@ return BDB_DeleteDBCursor(dbp,dbcp);
 int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz)
 
 {
-return ReadComplexKeyDB(dbp,key,strlen(key),dest,destSz);
+return ReadComplexKeyDB(dbp,key,strlen(key)+1,dest,destSz);
 }
 
 /*****************************************************************************/

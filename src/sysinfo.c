@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -111,7 +111,7 @@ if (VSYSTEMHARDCLASS != unused1)
    }
 
 VFQNAME[0] = VUQNAME[0] = '\0';
-  
+
 if (uname(&VSYSNAME) == -1)
    {
    perror("uname ");
@@ -122,9 +122,9 @@ if (uname(&VSYSNAME) == -1)
 snprintf(real_version,_SYS_NMLN,"%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
 strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
 #elif defined IRIX
-/* This gets us something like `6.5.19m' rather than just `6.5'.  */ 
+/* This gets us something like `6.5.19m' rather than just `6.5'.  */
  syssgi (SGI_RELEASE_NAME, 256, real_version);
-#endif 
+#endif
 
 for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
    {
@@ -168,7 +168,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
                {
                NewClass(CLASSTEXT[i]);
                }
-            
+
             found = true;
 
             VSYSTEMHARDCLASS = (enum classes) i;
@@ -198,11 +198,11 @@ else
    int n = 0;
    strcpy(VFQNAME,VSYSNAME.nodename);
    NewClass(CanonifyName(VFQNAME));
-   
+
    while(VSYSNAME.nodename[n++] != '.' && VSYSNAME.nodename[n] != '\0')
       {
       }
-   
+
    strncpy(VUQNAME,VSYSNAME.nodename,n);
 
    if (VUQNAME[n-1] == '.')
@@ -213,10 +213,10 @@ else
       {
       VUQNAME[n] = '\0';
       }
-   
+
    NewClass(CanonifyName(VUQNAME));
    }
-  
+
 if ((tloc = time((time_t *)NULL)) == -1)
    {
    printf("Couldn't read system clock\n");
@@ -259,22 +259,35 @@ NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
 
 
+/* Windows special directories */
+
 #ifdef MINGW
 if(NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
   {
   NewScalar("sys","windir",workbuf,cf_str);
   }
-  
+
 if(NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
   {
   NewScalar("sys","winsysdir",workbuf,cf_str);
   }
-  
+
 if(NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
   {
   NewScalar("sys","winprogdir",workbuf,cf_str);
   }
-#endif  /* MINGW */
+
+#else /* NOT MINGW */
+
+// empty defs on Unix for manual-building purposes
+
+NewScalar("sys","windir","",cf_str);
+NewScalar("sys","winsysdir","",cf_str);
+NewScalar("sys","winprogdir","",cf_str);
+
+#endif  /* NOT MINGW */
+
+
 
 
 LoadSlowlyVaryingObservations();
@@ -365,7 +378,7 @@ if (! found)
    CfOut(cf_error,"","Cfengine: I don't understand what architecture this is!");
    }
 
-strcpy(workbuf,"compiled_on_"); 
+strcpy(workbuf,"compiled_on_");
 strcat(workbuf,CanonifyName(AUTOCONF_SYSNAME));
 NewClass(CanonifyName(workbuf));
 CfOut(cf_verbose,"","GNU autoconf class from compile time: %s",workbuf);
@@ -383,11 +396,11 @@ else
    cin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
    CfOut(cf_verbose,"","Address given by nameserver: %s\n",inet_ntoa(cin.sin_addr));
    strcpy(VIPADDRESS,inet_ntoa(cin.sin_addr));
-   
+
    for (i=0; hp->h_aliases[i]!= NULL; i++)
       {
       Debug("Adding alias %s..\n",hp->h_aliases[i]);
-      NewClass(CanonifyName(hp->h_aliases[i])); 
+      NewClass(CanonifyName(hp->h_aliases[i]));
       }
    }
 }
@@ -409,7 +422,7 @@ NovaWin_GetInterfaceInfo3();
   char *sp, workbuf[CF_BUFSIZE];
   char ip[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
-  char last_name[CF_BUFSIZE];    
+  char last_name[CF_BUFSIZE];
 
 Debug("GetInterfaceInfo3()\n");
 
@@ -449,9 +462,9 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       {
       continue;
       }
-   
+
    CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
-   
+
    if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
       {
       first_address = false;
@@ -460,9 +473,9 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       {
       first_address = true;
       }
-   
+
    strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
-   
+
    if (UNDERSCORE_CLASSES)
       {
       snprintf(workbuf,CF_BUFSIZE, "_net_iface_%s", CanonifyName(ifp->ifr_name));
@@ -473,22 +486,22 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       }
 
    NewClass(workbuf);
-   
+
    if (ifp->ifr_addr.sa_family == AF_INET)
       {
       strncpy(ifr.ifr_name,ifp->ifr_name,sizeof(ifp->ifr_name));
-      
+
       if (ioctl(fd,SIOCGIFFLAGS,&ifr) == -1)
          {
          CfOut(cf_error,"ioctl","No such network device");
          close(fd);
          return;
          }
-      
+
       if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
          {
          sin=(struct sockaddr_in *)&ifp->ifr_addr;
-         
+
          if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
             {
             Debug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
@@ -501,7 +514,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
                Debug("Adding hostname %s..\n",hp->h_name);
                NewClass(CanonifyName(hp->h_name));
-               
+
                if (hp->h_aliases != NULL)
                   {
                   for (i=0; hp->h_aliases[i] != NULL; i++)
@@ -512,7 +525,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   }
                }
             }
-                  
+
          if (strcmp(inet_ntoa(sin->sin_addr),"0.0.0.0") == 0)
             {
             // Maybe we need to do something windows specific here?
@@ -520,7 +533,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             strcpy(ip,"ipv4_");
             strcat(ip,VIPADDRESS);
             AppendItem(&IPADDRESSES,VIPADDRESS,"");
-            
+
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
                if (*sp == '.')
@@ -529,7 +542,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   NewClass(CanonifyName(ip));
                   }
                }
-            
+
             strcpy(ip,VIPADDRESS);
             i = 3;
 
@@ -545,7 +558,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             close(fd);
             return;
             }
-         
+
          strncpy(ip,"ipv4_",CF_MAXVARSIZE);
          strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
          NewClass(CanonifyName(ip));
@@ -554,12 +567,12 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             {
             ipdefault = true;
             NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
-         
+
             strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
             }
 
          AppendItem(&IPADDRESSES,VIPADDRESS,"");
-         
+
          for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {
             if (*sp == '.')
@@ -568,13 +581,13 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                NewClass(CanonifyName(ip));
                }
             }
-         
+
          strcpy(ip,inet_ntoa(sin->sin_addr));
          snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
          NewScalar("sys",name,ip,cf_str);
-         
+
          i = 3;
-         
+
          for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {
             if (*sp == '.')
@@ -601,7 +614,7 @@ void Get3Environment()
   FILE *fp;
   struct stat statbuf;
   time_t now = time(NULL);
-  
+
 CfOut(cf_verbose,"","Looking for environment from cf-monitor...\n");
 
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
@@ -627,7 +640,7 @@ DeleteVariable("mon","env_time");
 NewScalar("mon","env_time",value,cf_str);
 
 CfOut(cf_verbose,"","Loading environment...\n");
- 
+
 if ((fp = fopen(env,"r")) == NULL)
    {
    CfOut(cf_verbose,"","\nUnable to detect environment from cf-monitord\n\n");
@@ -660,9 +673,9 @@ while (!feof(fp))
       NewClass(class);
       }
    }
- 
+
 fclose(fp);
-CfOut(cf_verbose,"","Environment data loaded\n\n"); 
+CfOut(cf_verbose,"","Environment data loaded\n\n");
 }
 
 /*********************************************************************/
@@ -675,15 +688,15 @@ CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
 }
 #else
 { FILE *pp;
-  char buffer[CF_BUFSIZE]; 
- 
+  char buffer[CF_BUFSIZE];
+
 /* Whatever the manuals might say, you cannot get IPV6
    interface configuration from the ioctls. This seems
    to be implemented in a non standard way across OSes
    BSDi has done getifaddrs(), solaris 8 has a new ioctl, Stevens
    book shows the suggestion which has not been implemented...
 */
- 
+
  CfOut(cf_verbose,"","Trying to locate my IPv6 address\n");
 
  switch (VSYSTEMHARDCLASS)
@@ -695,17 +708,17 @@ CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
     case irix:
     case irix4:
     case irix64:
-        
+
         if ((pp = cf_popen("/usr/etc/ifconfig -a","r")) == NULL)
            {
            CfOut(cf_verbose,"","Could not find interface info\n");
            return;
            }
-        
+
         break;
 
     case hp:
-        
+
         if ((pp = cf_popen("/usr/sbin/ifconfig -a","r")) == NULL)
            {
            CfOut(cf_verbose,"","Could not find interface info\n");
@@ -715,7 +728,7 @@ CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
         break;
 
     case aix:
-        
+
         if ((pp = cf_popen("/etc/ifconfig -a","r")) == NULL)
            {
            CfOut(cf_verbose,"","Could not find interface info\n");
@@ -723,9 +736,9 @@ CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
            }
 
         break;
-        
+
     default:
-        
+
         if ((pp = cf_popen("/sbin/ifconfig -a","r")) == NULL)
            {
            CfOut(cf_verbose,"","Could not find interface info\n");
@@ -735,23 +748,23 @@ CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
     }
 
 /* Don't know the output format of ifconfig on all these .. hope for the best*/
- 
+
 while (!feof(pp))
-   {    
+   {
    fgets(buffer,CF_BUFSIZE-1,pp);
 
    if (ferror(pp))  /* abortable */
       {
       break;
       }
-   
+
    if (StrStr(buffer,"inet6"))
       {
       struct Item *ip,*list = NULL;
       char *sp;
-      
+
       list = SplitStringAsItemList(buffer,' ');
-      
+
       for (ip = list; ip != NULL; ip=ip->next)
          {
          for (sp = ip->name; *sp != '\0'; sp++)
@@ -769,7 +782,7 @@ while (!feof(pp))
             NewClass(CanonifyName(ip->name));
             }
          }
-      
+
       DeleteItemList(list);
       }
    }
@@ -795,8 +808,8 @@ for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
       }
    }
 
-Debug("(%s) is not one of my interfaces\n",adr); 
-return false; 
+Debug("(%s) is not one of my interfaces\n",adr);
+return false;
 }
 
 /*********************************************************************/
@@ -806,7 +819,7 @@ void FindDomainName(char *hostname)
 { char fqn[CF_MAXVARSIZE];
   char *ptr;
   char buffer[CF_BUFSIZE];
- 
+
 strcpy(VFQNAME,hostname); /* By default VFQNAME = hostname (nodename) */
 
 if (strstr(VFQNAME,".") == 0)
@@ -823,7 +836,7 @@ if (strstr(VFQNAME,".") == 0)
             {
             /* We find a FQDN hostname So we change the VFQNAME variable */
             strncpy(VFQNAME,hp->h_name,CF_MAXVARSIZE);
-            VFQNAME[CF_MAXVARSIZE-1]= '\0'; 
+            VFQNAME[CF_MAXVARSIZE-1]= '\0';
             }
          }
       }
@@ -862,7 +875,7 @@ if (strstr(VFQNAME,"."))
          else
             {
             Debug("Domain rejected\n");
-            }      
+            }
          }
       }
    }
@@ -880,12 +893,12 @@ void OSClasses()
   char *sp;
   int i = 0;
   struct passwd *pw;
- 
+
 NewClass("any");      /* This is a reserved word / wildcard */
 
 snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
 NewClass(vbuff);
- 
+
 for (sp = vbuff+strlen(vbuff); i < 2; sp--)
    {
    if (*sp == '_')
@@ -966,7 +979,7 @@ if (cfstat("/etc/generic-release",&statbuf) != -1)
    CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
    NewClass("SunCobalt");
    }
- 
+
 if (cfstat("/etc/debian_version",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a debian system.\n");
@@ -1036,25 +1049,25 @@ for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
          CfOut(cf_verbose,"","This appears to be Windows 2000\n");
          NewClass("Win2000");
          }
-      
+
       if (strncmp(sp,"5.1",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows XP\n");
          NewClass("WinXP");
          }
-      
+
       if (strncmp(sp,"5.2",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows Server 2003\n");
          NewClass("WinServer2003");
          }
-      
+
       if (strncmp(sp,"6.1",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows Vista\n");
          NewClass("WinVista");
          }
-      
+
       if (strncmp(sp,"6.3",3) == 0)
          {
          CfOut(cf_verbose,"","This appears to be Windows Server 2008\n");
@@ -1147,9 +1160,9 @@ if ((fp = fopen(FEDORA_REL_FILENAME,"r")) == NULL)
 
 fgets(relstring, sizeof(relstring), fp);
 fclose(fp);
- 
+
 CfOut(cf_verbose,"","Looking for fedora core linux info...\n");
- 
+
 if (!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
    {
    vendor = "fedora";
@@ -1174,7 +1187,7 @@ if(release == NULL)
 else
    {
    release += strlen(RELEASE_FLAG);
-   
+
    if (sscanf(release, "%d", &major) != 0)
       {
       sprintf(strmajor, "%d", major);
@@ -1358,7 +1371,7 @@ else
       sprintf(strmajor, "%d", major);
       sprintf(strminor, "%d", minor);
       }
-   /* red hat 9 is *not* red hat 9.0. 
+   /* red hat 9 is *not* red hat 9.0.
     * and same thing with RHEL AS 3
     */
    else if (sscanf(release, "%d", &major) == 1)
@@ -1374,14 +1387,14 @@ if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
    strcat(classbuf, vendor);
    NewClass(classbuf);
    strcat(classbuf, "_");
-    
+
    if (strcmp(edition,"") != 0)
       {
       strcat(classbuf, edition);
       NewClass(classbuf);
       strcat(classbuf, "_");
       }
-   
+
    strcat(classbuf, strmajor);
    NewClass(classbuf);
    if (minor != -2)
@@ -1434,9 +1447,9 @@ fclose(fp);
    /* Check if it's a SuSE Enterprise version  */
 
 CfOut(cf_verbose,"","Looking for SuSE enterprise info in \"%s\"\n",relstring);
- 
- /* Convert relstring to lowercase to handle rename of SuSE to 
-  * SUSE with SUSE 10.0. 
+
+ /* Convert relstring to lowercase to handle rename of SuSE to
+  * SUSE with SUSE 10.0.
   */
 
 for (i = 0; i < strlen(relstring); i++)
@@ -1458,7 +1471,7 @@ else
       {
       snprintf(vbuf,CF_BUFSIZE,"%s %d ",SUSE_SLES_ID,version);
       Debug("Checking for suse [%s]\n",vbuf);
-      
+
       if (!strncmp(relstring, vbuf, strlen(vbuf)))
          {
          snprintf(classbuf,CF_MAXVARSIZE,"SLES%d",version);
@@ -1466,7 +1479,7 @@ else
          }
       }
    }
-    
+
  /* Determine release version. We assume that the version follows
   * the string "SuSE Linux" or "SUSE LINUX".
   */
@@ -1506,8 +1519,8 @@ return 0;
 
 int Linux_Slackware_Version(char *filename)
 {
-int major = -1; 
-int minor = -1; 
+int major = -1;
+int minor = -1;
 int release = -1;
 char classname[CF_MAXVARSIZE] = "";
 FILE *fp;
@@ -1549,7 +1562,7 @@ return 0;
 int Linux_Debian_Version(void)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
-int major = -1; 
+int major = -1;
 int release = -1;
 char classname[CF_MAXVARSIZE] = "";
 FILE *fp;
@@ -1597,7 +1610,7 @@ int Linux_Old_Mandriva_Version(void)
  FILE *fp;
  char relstring[CF_MAXVARSIZE];
  char *vendor=NULL;
- 
+
 if ((fp = fopen(MANDRAKE_REL_FILENAME,"r")) == NULL)
    {
    return 1;
@@ -1643,7 +1656,7 @@ int Linux_New_Mandriva_Version(void)
  FILE *fp;
  char relstring[CF_MAXVARSIZE];
  char *vendor=NULL;
- 
+
 if ((fp = fopen(MANDRIVA_REL_FILENAME,"r")) == NULL)
    {
    return 1;
@@ -1736,18 +1749,18 @@ if (CfReadLine(vbuff, CF_BUFSIZE, fp))
    {
    char * buffer = vbuff;
    strsep(&buffer, ":");
-   
+
    while((*buffer != '\0') && isspace(*buffer))
       {
       buffer++;
       }
-   
+
    info = buffer;
    while((*buffer != '\0') && !isspace(*buffer))
       {
       *buffer = tolower(*buffer++);
       }
-   
+
    *buffer = '\0';
    info = strdup(info);
    }
@@ -1761,7 +1774,7 @@ return info;
 int Lsb_Version(void)
 
 { char vbuff[CF_BUFSIZE];
- 
+
 #define LSB_RELEASE_COMMAND "lsb_release"
 
 char classname[CF_MAXVARSIZE];
@@ -1805,13 +1818,13 @@ if ((distrib  = Lsb_Release(path, "--id")) != NULL)
    {
    snprintf(classname, CF_MAXVARSIZE, "%s", distrib);
    NewClass(classname);
-   
+
    if ((codename = Lsb_Release(path, "--codename")) != NULL)
       {
       snprintf(classname, CF_MAXVARSIZE, "%s_%s", distrib, codename);
       NewClass(classname);
       }
-   
+
    if ((release  = Lsb_Release(path, "--release")) != NULL)
       {
       switch (sscanf(release, "%d.%d\n", &major, &minor))
@@ -1878,7 +1891,7 @@ if (sufficient < 1 && ((fp = fopen("/etc/vmware-release","r")) != NULL) ||
    CfReadLine(buffer,CF_BUFSIZE,fp);
    Chop(buffer);
    NewClass(CanonifyName(buffer));
-   
+
    /* Strip off the release code name e.g. "(Dali)" */
    if ((sp = strchr(buffer,'(')) != NULL)
       {
@@ -1902,7 +1915,7 @@ int Xen_Domain(void)
   int sufficient = 0;
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
-  
+
 if ((fp = fopen("/proc/xen/capabilities","r")) != NULL)
    {
    while (!feof(fp))
@@ -1914,7 +1927,7 @@ if ((fp = fopen("/proc/xen/capabilities","r")) != NULL)
          sufficient = 1;
          }
       }
-   
+
    if (!sufficient)
       {
       NewClass("xen_domu_pv");

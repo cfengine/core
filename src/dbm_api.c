@@ -172,7 +172,7 @@ return BDB_DeleteDBCursor(dbp,dbcp);
 int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz)
 
 {
-return ReadComplexKeyDB(dbp,key,strlen(key)+1, dest, destSz);
+return ReadComplexKeyDB(dbp,key,strlen(key),dest,destSz);
 }
 
 /*****************************************************************************/
@@ -187,9 +187,7 @@ return WriteComplexKeyDB(dbp,key,strlen(key)+1,src,srcSz);
 /*****************************************************************************/
 
 int DeleteDB(CF_DB *dbp, char *key)
-/**
- * Delete a record (key,value pair)
- */
+
 {
 return DeleteComplexKeyDB(dbp,key,strlen(key));
 }

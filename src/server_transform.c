@@ -670,6 +670,14 @@ void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop)
 { struct Auth *ptr;
   char ebuff[CF_EXPANDSIZE]; 
 
+#ifdef MINGW
+int i;
+for(i = 0; path[i] != '\0'; i++)
+  {
+  path[i] = ToLower(path[i]);
+  }
+#endif  /* MINGW */
+
 if ((ptr = (struct Auth *)malloc(sizeof(struct Auth))) == NULL)
    {
    FatalError("Memory Allocation failed for InstallAuthPath() #1");
@@ -705,6 +713,14 @@ struct Auth *GetAuthPath(char *path,struct Auth *list)
 
 { struct Auth *ap;
   char ebuff[CF_EXPANDSIZE]; 
+
+#ifdef MINGW
+int i;
+for(i = 0; path[i] != '\0'; i++)
+  {
+  path[i] = ToLower(path[i]);
+  }
+#endif  /* MINGW */
 
 if (strlen(path) != 1)
    {

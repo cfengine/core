@@ -753,18 +753,13 @@ return 0;
 char ToLower (char ch)
 
 {
-if (isdigit((int)ch) || ispunct((int)ch))
+if (isupper((int)ch))
    {
-   return(ch);
-   }
-
-if (islower((int)ch))
-   {
-   return(ch);
+   return(ch - 'A' + 'a');
    }
 else
    {
-   return(ch - 'A' + 'a');
+   return(ch);
    }
 }
 

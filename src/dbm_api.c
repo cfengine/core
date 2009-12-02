@@ -34,12 +34,17 @@
 
 int OpenDB(char *filename, CF_DB **dbp)
 {
+char filenameDb[CF_BUFSIZE];
+
 #ifdef TCDB
-return TCDB_OpenDB(filename, dbp);
+snprintf(filenameDb, sizeof(filenameDb), "%s.tcdb", filename);
+return TCDB_OpenDB(filenameDb, dbp);
 #elif defined QDB  // FIXME
-return QDB_OpenDB(filename, dbp);
+snprintf(filenameDb, sizeof(filenameDb), "%s.qdbm", filename);
+return QDB_OpenDB(filenameDb, dbp);
 #else
-return BDB_OpenDB(filename, dbp);
+snprintf(filenameDb, sizeof(filenameDb), "%s.db", filename);
+return BDB_OpenDB(filenameDb, dbp);
 #endif
 }
 

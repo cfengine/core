@@ -488,14 +488,15 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 
 /*******************************************************************/
 
-#define CF_CLASSUSAGE     "cf_classes.db"
-#define CF_PERFORMANCE    "performance.db"
-#define CF_CHKDB          "checksum_digests.db"
-#define CF_AVDB_FILE      "cf_observations.db"
-#define CF_OLDAVDB_FILE   "cf_learning.db"
-#define CF_STATEDB_FILE   "cf_state.db"
-#define CF_LASTDB_FILE    "cf_LastSeen.db"
-#define CF_AUDITDB_FILE   "cf_Audit.db"
+#define CF_CLASSUSAGE     "cf_classes"
+#define CF_PERFORMANCE    "performance"
+#define CF_CHKDB          "checksum_digests"
+#define CF_AVDB_FILE      "cf_observations"
+#define CF_OLDAVDB_FILE   "cf_learning"
+#define CF_STATEDB_FILE   "cf_state"
+#define CF_LASTDB_FILE    "cf_LastSeen"
+#define CF_AUDITDB_FILE   "cf_Audit"
+#define CF_LOCKDB_FILE    "cf_lock"
 
 #define CF_STATELOG_FILE "state_log"
 #define CF_ENVNEW_FILE   "env_data.new"

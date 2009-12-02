@@ -1,19 +1,19 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -103,7 +103,7 @@ struct Rlist *CSVLIST = NULL;
             "cfengine programs cfshow and cfenvgraph. It outputs\n"
             "data stored in cfengine's embedded databases in human\n"
             "readable form.";
- 
+
  struct option OPTIONS[21] =
       {
       { "help",no_argument,0,'h' },
@@ -236,7 +236,7 @@ char *CFRH[][2] =
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv); 
+CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
 KeepReportsControlPromises();
@@ -266,7 +266,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
           MINUSF = true;
           break;
 
-      case 'd': 
+      case 'd':
           switch ((optarg==NULL) ? '3' : *optarg)
              {
              case '1':
@@ -298,15 +298,15 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
       case 'I':
           INFORM = true;
           break;
-          
+
       case 'V':
           Version("cf-report");
           exit(0);
-          
+
       case 'h':
           Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(0);
-          
+
       case 'M':
           ManPage("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(0);
@@ -314,7 +314,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
       case 'E':
           strncpy(ERASE,optarg,CF_BUFSIZE-1);
           break;
-          
+
       case 't':
           TITLES = true;
           break;
@@ -334,10 +334,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
 
       case 'n': NOSCALING = true;
           break;
-          
+
       case 'N': NOWOPT = true;
           break;
-          
+
       case 'X':
           XML = true;
           break;
@@ -349,10 +349,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
       case 'P':
           PURGE = 'y';
           break;
-          
+
       default: Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(1);
-          
+
       }
   }
 }
@@ -363,7 +363,7 @@ void ThisAgentInit()
 
 { char vbuff[CF_BUFSIZE];
   time_t now;
- 
+
 if (strlen(OUTPUTDIR) == 0)
    {
    if (TIMESTAMPS)
@@ -427,13 +427,13 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
          {
          CfOut(cf_verbose,"","Writing to existing directory\n");
          }
-      
+
       if (chdir(OUTPUTDIR))
          {
          CfOut(cf_error,"chdir","Could not set the working directory to %s",OUTPUTDIR);
          exit(0);
          }
-      
+
       continue;
       }
 
@@ -451,7 +451,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       continue;
       }
 
-   
+
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_timestamps].lval) == 0)
       {
       TIMESTAMPS = GetBoolean(retval);
@@ -540,32 +540,32 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 void KeepReportsPromises()
 
 { struct Rlist *rp;
-  
+
 if (REPORTS == NULL)
    {
    CfOut(cf_error,""," !! Nothing to report - nothing selected\n");
    exit(0);
    }
- 
+
 CfOut(cf_verbose,""," -> Creating sub-directory %s\n",OUTPUTDIR);
 
 if (cf_mkdir(OUTPUTDIR,0755) == -1)
    {
    CfOut(cf_verbose,""," -> Writing to existing directory\n");
    }
- 
+
 if (chdir(OUTPUTDIR))
    {
    CfOut(cf_error,"chdir"," !! Could not set the working directory");
    exit(0);
    }
 
-ReadAverages(); 
+ReadAverages();
 
 for (rp  = REPORTS; rp != NULL; rp = rp->next)
    {
    Banner(rp->item);
-   
+
    if (strcmp("last_seen",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating last-seen report...\n");
@@ -595,7 +595,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       CfOut(cf_verbose,""," -> Creating performance report...\n");
       ShowPerformance();
       }
-   
+
    if (strcmp("audit",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating audit report...\n");
@@ -613,7 +613,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       CfOut(cf_verbose,""," -> Creating monitor recent-history report...\n");
       MagnifyNow();
       }
-   
+
    if (strcmp("monitor_summary",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating monitor history summary...\n");
@@ -659,7 +659,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       CfOut(cf_verbose,""," -> Creating software update version summary (Cfengine Nova and above)...\n");
       SummarizeUpdates(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
-   
+
    if (strcmp("setuid",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating setuid report (Cfengine Nova and above)...\n");
@@ -706,7 +706,7 @@ void ShowLastSeen()
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
   struct QPoint entry;
   int ret,ksize,vsize;
-  
+
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 if (!OpenDB(name,&dbp))
@@ -762,8 +762,8 @@ if (!NewDBCursor(dbp,&dbcp))
 
  /* Initialize the key/data return pair. */
 
-memset(&entry, 0, sizeof(entry)); 
- 
+memset(&entry, 0, sizeof(entry));
+
  /* Walk through the database and print out the key/data pairs. */
 
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
@@ -793,7 +793,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       CfOut(cf_inform,""," -> Deleting expired entry for %s\n",hostname);
       continue;
       }
-   
+
    fthen = (time_t)then;                            /* format date */
    snprintf(tbuf,CF_BUFSIZE-1,"%s",ctime(&fthen));
    tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
@@ -886,14 +886,14 @@ void ShowPerformance()
 { CF_DB *dbp;
   CF_DBC *dbcp;
   char *key;
-  void *value;  
+  void *value;
   FILE *fout;
   double now = (double)time(NULL),average = 0, var = 0;
   double ticksperminute = 60.0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
   struct Event entry;
   int ret,ksize,vsize;
-  
+
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
 
 if (!OpenDB(name,&dbp))
@@ -933,10 +933,10 @@ if ((fout = fopen(name,"w")) == NULL)
    }
 
  /* Initialize the key/data return pair. */
- 
+
 memset(&key, 0, sizeof(key));
 memset(&value, 0, sizeof(value));
-memset(&entry, 0, sizeof(entry)); 
+memset(&entry, 0, sizeof(entry));
 
 if (HTML && !EMBEDDED)
    {
@@ -980,19 +980,19 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             {
             DeleteDB(dbp,key);
             }
-         
+
          CfOut(cf_inform,"","Deleting expired entry for %s\n",eventname);
 
          if (measure < 0 || average < 0 || measure > 4*CF_WEEK)
             {
             DeleteDB(dbp,key);
             }
-         
+
          CfOut(cf_inform,""," -> Deleting entry for %s because it seems to take longer than 4 weeks to complete\n",eventname);
 
          continue;
          }
-      
+
       if (XML)
          {
          fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
@@ -1001,7 +1001,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          fprintf(fout,"%s%.4lf%s",CFRX[cfx_q][cfb],measure,CFRX[cfx_q][cfe]);
          fprintf(fout,"%s%.4lf%s",CFRX[cfx_av][cfb],average,CFRX[cfx_av][cfe]);
          fprintf(fout,"%s%.4lf%s",CFRX[cfx_dev][cfb],sqrt(var)/ticksperminute,CFRX[cfx_dev][cfe]);
-         fprintf(fout,"%s",CFRX[cfx_entry][cfe]);         
+         fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
          }
       else if (HTML)
          {
@@ -1053,7 +1053,7 @@ void ShowClasses()
 { CF_DB *dbp;
   CF_DBC *dbcp;
   char *key;
-  void *value;  
+  void *value;
   FILE *fout,*fnotes;
   double now = (double)time(NULL),average = 0, var = 0;
   double ticksperminute = 60.0;
@@ -1061,7 +1061,7 @@ void ShowClasses()
   struct Event entry;
   struct CEnt array[1024];
   int ret,i,ksize,vsize;
-  
+
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
 
 if (!OpenDB(name,&dbp))
@@ -1101,8 +1101,8 @@ if ((fout = fopen(name,"w")) == NULL)
    }
 
 /* Initialize the key/data return pair. */
- 
-memset(&entry, 0, sizeof(entry)); 
+
+memset(&entry, 0, sizeof(entry));
 
 if (HTML && !EMBEDDED)
    {
@@ -1155,11 +1155,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             {
             DeleteDB(dbp,key);
             }
-         
+
          CfOut(cf_error,""," -> Deleting expired entry for %s\n",eventname);
          continue;
          }
-      
+
       if (i++ < 1024)
          {
          strncpy(array[i].date,tbuf,31);
@@ -1192,7 +1192,7 @@ for (i = 0; i < 1024; i++)
       }
 
    fprintf(fnotes,"%s %.4lf\n",array[i].name,array[i].q);
-   
+
    if (XML)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
@@ -1200,7 +1200,7 @@ for (i = 0; i < 1024; i++)
       fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],array[i].date,CFRX[cfx_date][cfe]);
       fprintf(fout,"%s%.4lf%s",CFRX[cfx_av][cfb],array[i].q,CFRX[cfx_av][cfe]);
       fprintf(fout,"%s%.4lf%s",CFRX[cfx_dev][cfb],sqrt(array[i].d),CFRX[cfx_dev][cfe]);
-      fprintf(fout,"%s",CFRX[cfx_entry][cfe]);         
+      fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
       }
    else if (HTML)
       {
@@ -1251,7 +1251,7 @@ void ShowChecksums()
   FILE *pp,*fout;
   char checksumdb[CF_BUFSIZE],name[CF_BUFSIZE];
   struct stat statbuf;
- 
+
 snprintf(checksumdb,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_CHKDB);
 
 if (!OpenDB(checksumdb,&dbp))
@@ -1309,7 +1309,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    char name[CF_BUFSIZE];
    struct Checksum_Value chk_val;
    unsigned char digest[EVP_MAX_MD_SIZE+1];
-   
+
    memcpy(&chk_val,value,sizeof(chk_val));
    memcpy(digest,chk_val.mess_digest,EVP_MAX_MD_SIZE+1);
 
@@ -1330,7 +1330,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
       fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],name,CFRH[cfx_filename][cfe]);
       fprintf(fout,"%s%s%s",CFRH[cfx_q][cfb],HashPrint(type,digest),CFRH[cfx_q][cfe]);
-      fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
+      fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
       }
    else if (CSV)
       {
@@ -1342,9 +1342,9 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       fprintf(fout,"%s = ",name);
       fprintf(fout,"%s\n",HashPrint(type,digest));
       }
-   
+
    memset(&key,0,sizeof(key));
-   memset(&value,0,sizeof(value));       
+   memset(&value,0,sizeof(value));
    }
 
 if (HTML && !EMBEDDED)
@@ -1377,7 +1377,8 @@ void ShowLocks (int active)
   char lockdb[CF_BUFSIZE],name[CF_BUFSIZE];
   struct LockData entry;
 
-snprintf(lockdb,CF_BUFSIZE,"%s/cfengine_lock_db",CFWORKDIR);
+snprintf(lockdb,CF_BUFSIZE,"%s/state/%s",CFWORKDIR, CF_LOCKDB_FILE);
+MapName(lockdb);
 
 if (!OpenDB(lockdb,&dbp))
    {
@@ -1446,7 +1447,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          {
          memcpy(&entry,value,sizeof(entry));
          }
-      
+
       if (strncmp("lock",(char *)key,4) == 0)
          {
          if (XML)
@@ -1454,19 +1455,19 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key,CFRX[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],ctime(&entry.time),CFRX[cfx_date][cfe]);
-            fprintf(fout,"%s",CFRX[cfx_entry][cfe]);         
+            fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
             }
          else if (HTML)
             {
             fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key,CFRH[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],ctime(&entry.time),CFRH[cfx_date][cfe]);
-            fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
+            fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
             }
          else
             {
-            fprintf(fout,"%s = ",(char *)key);            
-            fprintf(fout,"%s\n",ctime(&entry.time));             
+            fprintf(fout,"%s = ",(char *)key);
+            fprintf(fout,"%s\n",ctime(&entry.time));
             }
 
          CfOut(cf_inform,"","Active lock %s = ",(char *)key);
@@ -1481,18 +1482,18 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key,CFRX[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],ctime(&entry.time),CFRX[cfx_date][cfe]);
-            fprintf(fout,"%s",CFRX[cfx_entry][cfe]);         
+            fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
             }
          else if (HTML)
             {
             fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key,CFRH[cfx_filename][cfe]);
             fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],ctime(&entry.time),CFRH[cfx_date][cfe]);
-            fprintf(fout,"%s",CFRH[cfx_entry][cfe]);         
+            fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
             }
          else if (CSV)
             {
-            fprintf(fout,"%s",(char *)key);            
+            fprintf(fout,"%s",(char *)key);
             fprintf(fout,",%s\n",ctime(&entry.time));
             }
          else
@@ -1514,7 +1515,7 @@ if (HTML && !EMBEDDED)
 if (XML)
    {
    fprintf(fout,"</output>\n");
-   } 
+   }
 
 
 DeleteDBCursor(dbp,dbcp);
@@ -1534,7 +1535,7 @@ void ShowCurrentAudit()
   CF_DB *dbp;
   CF_DBC *dbcp;
   int ret,ksize,vsize;
-  
+
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 
 if (!OpenDB(name,&dbp))
@@ -1550,7 +1551,7 @@ if (!NewDBCursor(dbp,&dbcp))
    return;
    }
 
-memset(&entry, 0, sizeof(entry)); 
+memset(&entry, 0, sizeof(entry));
 
 if (HTML)
    {
@@ -1580,7 +1581,7 @@ if (HTML && !EMBEDDED)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"Audit collected on %s at %s",VFQNAME,ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
-   
+
    fprintf(fout,"<table class=border cellpadding=5>\n");
    /* fprintf(fout,"<th> t-index </th>");*/
    fprintf(fout,"<th> Scan convergence </th>");
@@ -1605,7 +1606,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    if (value != NULL)
       {
       memcpy(&entry,value,sizeof(entry));
-      
+
       if (XML)
          {
          fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
@@ -1649,7 +1650,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          {
          fprintf(fout,"%s,",operation);
          fprintf(fout,"%s,",entry.operator);
-         
+
          AuditStatusMessage(fout,entry.status); /* Reminder */
 
          if (strlen(entry.comment) > 0)
@@ -1677,7 +1678,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          fprintf(fout,". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n");
          fprintf(fout,"Operation index: \'%s\'\n",operation);
          fprintf(fout,"Converge \'%s\' ",entry.operator);
-         
+
          AuditStatusMessage(fout,entry.status); /* Reminder */
 
          if (strlen(entry.comment) > 0)
@@ -1737,7 +1738,7 @@ char *Format(char *s,int width)
 { static char buffer[CF_BUFSIZE];
   char *sp;
   int i = 0, count = 0;
-  
+
 for (sp = s; *sp != '\0'; sp++)
    {
    buffer[i++] = *sp;
@@ -1775,11 +1776,11 @@ void ReadAverages()
   time_t now;
   CF_DB *dbp;
   int i,err;
- 
+
 CfOut(cf_verbose,"","\nLooking for database %s\n",VINPUTFILE);
 CfOut(cf_verbose,"","\nFinding MAXimum values...\n\n");
-CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n"); 
-  
+CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n");
+
 if (!OpenDB(VINPUTFILE,&dbp))
    {
    CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
@@ -1792,7 +1793,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    MIN.Q[i].var = MIN.Q[i].expect = MIN.Q[i].q = 9999.0;
    FPE[i] = FPQ[i] = NULL;
    }
- 
+
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
    {
    strcpy(timekey,GenTimeKey(now));
@@ -1815,7 +1816,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
             {
             MIN.Q[i].expect = fabs(entry.Q[i].expect);
             }
-         
+
          if (fabs(entry.Q[i].q) < MIN.Q[i].q)
             {
             MIN.Q[i].q = fabs(entry.Q[i].q);
@@ -1823,7 +1824,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
          }
       }
    }
- 
+
 CloseDB(dbp);
 }
 
@@ -1837,7 +1838,7 @@ void EraseAverages()
   struct Averages entry;
   time_t now;
   CF_DB *dbp;
-  
+
 CfOut(cf_verbose,"","\nLooking through current database %s\n",VINPUTFILE);
 
 list = SplitStringAsItemList(ERASE,',');
@@ -1852,7 +1853,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    {
    FPE[i] = FPQ[i] = NULL;
    }
- 
+
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
    {
    strcpy(timekey,GenTimeKey(now));
@@ -1862,7 +1863,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
          LookUpClassName(i,name);
-   
+
          if (IsItemIn(list,name))
             {
             /* Set history but not most recent to zero */
@@ -1875,7 +1876,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
       WriteDB(dbp,timekey,&entry,sizeof(struct Averages));
       }
    }
- 
+
 CloseDB(dbp);
 }
 
@@ -1887,7 +1888,7 @@ void SummarizeAverages()
   FILE *fout;
   char name[CF_BUFSIZE];
   CF_DB *dbp;
-  
+
 Banner("Summarizing monitor averages");
 
 if (HTML)
@@ -1929,7 +1930,7 @@ CfOut(cf_inform,"","Writing report to %s\n",name);
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    LookUpClassName(i,name);
-   
+
    if (XML)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
@@ -1996,7 +1997,7 @@ void WriteGraphFiles()
   char timekey[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
   time_t now;
   CF_DB *dbp;
-  
+
 CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
 
 if (!OpenDB(VINPUTFILE,&dbp))
@@ -2010,7 +2011,7 @@ OpenFiles();
 if (TITLES)
    {
    char name[CF_MAXVARSIZE];
-   
+
    for (i = 0; i < CF_OBSERVABLES; i+=2)
       {
       LookUpClassName(i,name);
@@ -2035,7 +2036,7 @@ else
    }
 
 now = CF_MONDAY_MORNING;
- 
+
 while (now < CF_MONDAY_MORNING + CF_WEEK)
    {
    memset(&entry,0,sizeof(entry));
@@ -2051,10 +2052,10 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
             entry.Q[i].expect += det.Q[i].expect/(double)its;
             entry.Q[i].var += det.Q[i].var/(double)its;
             entry.Q[i].q += det.Q[i].q/(double)its;
-            }         
+            }
 
          if (NOSCALING)
-            {            
+            {
             for (i = 1; i < CF_OBSERVABLES; i++)
                {
                MAX.Q[i].expect = 1;
@@ -2062,13 +2063,13 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
                }
             }
          }
-      
+
       now += CF_MEASURE_INTERVAL;
       count++;
       }
 
    /* Output the data in a plethora of files */
-   
+
    fprintf(FPAV,"%d ",count);
    fprintf(FPVAR,"%d ",count);
    fprintf(FPNOW,"%d ",count);
@@ -2104,18 +2105,18 @@ while (now < CF_MONDAY_MORNING + CF_WEEK)
          }
 
       kept++;
-      }                        
-   
+      }
+
    fprintf(FPAV,"\n");
    fprintf(FPVAR,"\n");
    fprintf(FPNOW,"\n");
-   
+
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
       fprintf(FPE[i],"%d %.4lf %.4lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var));
       /* Use same scaling for Q so graphs can be merged */
       fprintf(FPQ[i],"%d %.4lf 0.0\n",count, entry.Q[i].q);
-      }               
+      }
    }
 
 METER_KEPT[meter_anomalies_day] = 100.0*kept/(kept+repaired+not_kept);
@@ -2124,7 +2125,7 @@ METER_REPAIRED[meter_anomalies_day] = 100.0*repaired/(kept+repaired+not_kept);
 CloseDB(dbp);
 CloseFiles();
 }
- 
+
 /*****************************************************************************/
 
 void MagnifyNow()
@@ -2147,10 +2148,10 @@ its = 1; /* detailed view */
 
 now = time(NULL);
 here_and_now = now - (time_t)(4 * CF_TICKS_PER_HOUR);
- 
+
 while (here_and_now < now)
    {
-   memset(&entry,0,sizeof(entry)); 
+   memset(&entry,0,sizeof(entry));
 
    for (j = 0; j < its; j++)
       {
@@ -2163,10 +2164,10 @@ while (here_and_now < now)
             entry.Q[i].expect += det.Q[i].expect/(double)its;
             entry.Q[i].var += det.Q[i].var/(double)its;
             entry.Q[i].q += det.Q[i].q/(double)its;
-            }         
-         
+            }
+
          if (NOSCALING)
-            {            
+            {
             for (i = 1; i < CF_OBSERVABLES; i++)
                {
                MAX.Q[i].expect = 1;
@@ -2178,7 +2179,7 @@ while (here_and_now < now)
          {
          CfOut(cf_verbose,""," !! Read failed for ");
          }
-      
+
       here_and_now += CF_MEASURE_INTERVAL;
       count++;
       }
@@ -2188,7 +2189,7 @@ while (here_and_now < now)
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
       fprintf(FPM[i],"%d %.4lf %.4lf %.4lf\n",count, entry.Q[i].expect, sqrt(entry.Q[i].var),entry.Q[i].q);
-      }               
+      }
    }
 
 CloseDB(dbp);
@@ -2204,7 +2205,7 @@ void WriteHistograms()
   int weekly[CF_OBSERVABLES][CF_GRAINS];
   char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
   FILE *fp;
- 
+
 for (i = 0; i < 7; i++)
    {
    for (j = 0; j < CF_OBSERVABLES; j++)
@@ -2215,9 +2216,9 @@ for (i = 0; i < 7; i++)
          }
       }
     }
-    
+
 snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
-    
+
 if ((fp = fopen(filename,"r")) == NULL)
    {
    CfOut(cf_verbose,"","Unable to load histogram data\n");
@@ -2227,14 +2228,14 @@ if ((fp = fopen(filename,"r")) == NULL)
 for (position = 0; position < CF_GRAINS; position++)
    {
    fscanf(fp,"%d ",&position);
-   
+
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
       for (day = 0; day < 7; day++)
          {
          fscanf(fp,"%d ",&(HISTOGRAM[i][day][position]));
          }
-      
+
       weekly[i][position] = 0;
       }
    }
@@ -2248,7 +2249,7 @@ if (!HIRES)
       {
       for (j = 0; j < CF_OBSERVABLES; j++)
          {
-         for (i = 0; i < 7; i++)  
+         for (i = 0; i < 7; i++)
             {
             SMOOTHHISTOGRAM[j][i][k] = ((double)(HISTOGRAM[j][i][k-1] + HISTOGRAM[j][i][k] + HISTOGRAM[j][i][k+1]))/3.0;
             }
@@ -2261,7 +2262,7 @@ else
       {
       for (j = 0; j < CF_OBSERVABLES; j++)
          {
-         for (i = 0; i < 7; i++)  
+         for (i = 0; i < 7; i++)
             {
             SMOOTHHISTOGRAM[j][i][k] = (double) HISTOGRAM[j][i][k];
             }
@@ -2274,7 +2275,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    {
    LookUpClassName(i,name);
    sprintf(filename,"%s.distr",name);
-   
+
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
       CfOut(cf_inform,"fopen","Couldn't write %s",name);
@@ -2286,15 +2287,15 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 for (k = 0; k < CF_GRAINS; k++)
    {
    int a;
-   
+
    for (j = 0; j < CF_OBSERVABLES; j++)
       {
-      for (i = 0; i < 7; i++)  
+      for (i = 0; i < 7; i++)
          {
          weekly[j][k] += (int) (SMOOTHHISTOGRAM[j][i][k]+0.5);
          }
       }
-   
+
    for (a = 0; a < CF_OBSERVABLES; a++)
       {
       fprintf(FPQ[a],"%d %d\n",k,weekly[a][k]);
@@ -2312,7 +2313,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 void DiskArrivals(void)
 
 { DIR *dirh;
-  FILE *fp; 
+  FILE *fp;
   struct dirent *dirp;
   int count = 0, index = 0, i,err;
   char filename[CF_BUFSIZE],database[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
@@ -2333,7 +2334,7 @@ if ((dirh = opendir(CFWORKDIR)) == NULL)
    return;
    }
 
-CfOut(cf_verbose,"","\n\nLooking for filesystem arrival process data in %s\n",CFWORKDIR); 
+CfOut(cf_verbose,"","\n\nLooking for filesystem arrival process data in %s\n",CFWORKDIR);
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
@@ -2342,7 +2343,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       CfOut(cf_verbose,"","Found %s - generating X,Y plot\n",dirp->d_name);
 
       snprintf(database,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,dirp->d_name);
-      
+
       if (!OpenDB(database,&dbp))
          {
          continue;
@@ -2352,11 +2353,11 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       grain = 0.0;
       count = 0.0;
       index = 0;
-      
+
       for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
          {
          strcpy(timekey,GenTimeKey(now));
-         
+
          if (ReadDB(dbp,timekey,&value,sizeof(struct Averages)))
             {
             grain += (double)*(double *)(value);
@@ -2365,16 +2366,16 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             {
             grain = 0;
             }
-         
+
          if (HIRES)
             {
             if (grain > maxval)
                {
                maxval = grain;
                }
-            
+
             array[index] = grain;
-            grain = 0.0;     
+            grain = 0.0;
             index++;
             }
          else
@@ -2389,23 +2390,23 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
                index++;
                grain = 0.0;
                }
-            }            
+            }
          count++;
          }
 
       CloseDB(dbp);
-      
+
       snprintf(filename,CF_BUFSIZE-1,"%s.cfenv",dirp->d_name);
-      
+
       if ((fp = fopen(filename,"w")) == NULL)
          {
          CfOut(cf_verbose,"","Unable to open %s for writing\n",filename);
          perror("fopen");
          return;
          }
-      
+
       CfOut(cf_verbose,"","Data points = %d\n",index);
-      
+
       for (i = 0; i < index; i++)
          {
          if (i > 1 && i < index-1)
@@ -2419,11 +2420,11 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
          fprintf(fp,"%d %.4lf\n",i,val/maxval*50.0);
          }
-      
-      fclose(fp);      
+
+      fclose(fp);
       }
    }
- 
+
 closedir(dirh);
 }
 
@@ -2485,7 +2486,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
    snprintf(out1,CF_BUFSIZE,"lastseen-%s.q",ip->name);
 
    CfOut(cf_verbose,"","Opening %s\n",out1);
-   
+
    if ((fp1 = fopen(out1,"w")) == NULL)
       {
       CfOut(cf_verbose,"","Unable to open %s\n",out1);
@@ -2499,7 +2500,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       CfOut(cf_verbose,"","Unable to open %s\n",out1);
       continue;
       }
-   
+
    snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
    CfOut(cf_verbose,"","Consulting profile %s\n",name);
 
@@ -2507,12 +2508,12 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       {
       return;
       }
-   
+
    for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
       {
-      memset(&key,0,sizeof(key));       
+      memset(&key,0,sizeof(key));
       memset(&value,0,sizeof(value));
-      
+
       strcpy(timekey,GenTimeKey(now));
 
       if (ReadDB(dbp,timekey,&value,sizeof(entry)))
@@ -2536,7 +2537,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
          /* If we have no data, it means no contact for whatever reason.
             It could be unable to respond unwilling to respond, policy etc.
             Assume for argument that we expect regular responses ... */
-         
+
          lastseen += CF_MEASURE_INTERVAL; /* infer based on no data */
          }
 
@@ -2558,7 +2559,7 @@ void OpenFiles()
 
 { int i;
  char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
- 
+
 sprintf(filename,"cfenv-average");
 
 if ((FPAV = fopen(filename,"w")) == NULL)
@@ -2567,7 +2568,7 @@ if ((FPAV = fopen(filename,"w")) == NULL)
    return;
    }
 
-sprintf(filename,"cfenv-stddev"); 
+sprintf(filename,"cfenv-stddev");
 
 if ((FPVAR = fopen(filename,"w")) == NULL)
    {
@@ -2575,7 +2576,7 @@ if ((FPVAR = fopen(filename,"w")) == NULL)
    return;
    }
 
-sprintf(filename,"cfenv-now"); 
+sprintf(filename,"cfenv-now");
 
 if ((FPNOW = fopen(filename,"w")) == NULL)
    {
@@ -2588,17 +2589,17 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    LookUpClassName(i,name);
 
    CfOut(cf_inform,""," -> Reporting on \"%s\"\n",name);
-   
+
    sprintf(filename,"%s.E-sigma",name);
-   
+
    if ((FPE[i] = fopen(filename,"w")) == NULL)
       {
       CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
       return;
       }
-   
+
    sprintf(filename,"%s.q",name);
-   
+
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
       {
       CfOut(cf_error,"fopen"," !! File %s could not be opened for writing\n",filename);
@@ -2612,10 +2613,10 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 void CloseFiles()
 
 { int i;
- 
+
 fclose(FPAV);
 fclose(FPVAR);
-fclose(FPNOW); 
+fclose(FPNOW);
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
@@ -2630,14 +2631,14 @@ void OpenMagnifyFiles()
 
 { int i;
   char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
-      
+
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    LookUpClassName(i,name);
    sprintf(filename,"%s.mag",name);
 
    CfOut(cf_inform,""," -> Magnifying \"%s\"\n",name);
-      
+
    if ((FPM[i] = fopen(filename,"w")) == NULL)
       {
       perror("fopen");

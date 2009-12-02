@@ -2476,8 +2476,7 @@ fprintf(fout,"\"%s\" in map version %s</div>\n",NextTopic(this_type,""),v);
 if (occurrences != NULL)
    {
    char embed_link[CF_BUFSIZE];
-   embed_link[0] = '\0';
-   
+
    count = 0;
    
    fprintf(fout,"<p><div id=\"occurrences\">");
@@ -2488,6 +2487,8 @@ if (occurrences != NULL)
    
    for (oc = occurrences; oc != NULL; oc=oc->next)
       {
+      embed_link[0] = '\0';
+
       if (oc->represents == NULL)
          {
          fprintf(fout,"<li>(directly)");
@@ -2540,7 +2541,7 @@ if (occurrences != NULL)
                 }
              else
                 {
-                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",oc->locator,oc->locator);
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\" border=\"0\"></a></div></p>",oc->locator,oc->locator);
                 }
              break;
          case cfk_portal:

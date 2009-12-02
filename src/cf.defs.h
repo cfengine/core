@@ -1134,6 +1134,7 @@ struct Item
    char  *name;
    char  *classes;
    int    counter;
+   time_t time;
    struct Item *next;
    };
 

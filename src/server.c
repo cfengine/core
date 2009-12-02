@@ -1884,9 +1884,9 @@ strncpy(transrequest,MapName(realname),CF_BUFSIZE-1);
 // NT has case-insensitive path names
 int i;
 for (i = 0; i < strlen(transrequest); i++)
-{
-transrequest[i] = ToLower(transrequest[i]);
-}
+   {
+   transrequest[i] = ToLower(transrequest[i]);
+   }
 #endif  /* MINGW */
 
 ThreadUnlock(cft_system);

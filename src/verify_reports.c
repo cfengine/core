@@ -356,7 +356,7 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
   double ticksperhour = (double)CF_TICKS_PER_HOUR,ticksperday = (double)CF_TICKS_PER_DAY;
  
 CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 if (!OpenDB(name,&dbp))
    {

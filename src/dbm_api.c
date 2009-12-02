@@ -189,6 +189,6 @@ return WriteComplexKeyDB(dbp,key,strlen(key)+1,src,srcSz);
 int DeleteDB(CF_DB *dbp, char *key)
 
 {
-return DeleteComplexKeyDB(dbp,key,strlen(key));
+return DeleteComplexKeyDB(dbp,key,strlen(key)+1);
 }
 

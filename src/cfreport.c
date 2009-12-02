@@ -2500,7 +2500,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       continue;
       }
    
-   snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
+   snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
    CfOut(cf_verbose,"","Consulting profile %s\n",name);
 
    if (!OpenDB(name,&dbp))

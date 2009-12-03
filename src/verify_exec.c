@@ -226,7 +226,7 @@ else
             }
          else if (!a.contain.nooutput && NonEmptyLine(line))
             {
-            CfOut(cf_error,"","Q: \"...%s\": %s\n",comm,line);
+            CfOut(cf_cmdout,"","Q: \"...%s\": %s\n",comm,line);
             count++;
             }
          }

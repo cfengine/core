@@ -55,6 +55,7 @@ int   MAXLINES = 30;
 int   SPLAYTIME = 0;
 const int INF_LINES = -2;
 int NOSPLAY = false;
+int WINSERVICE = false;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
 
@@ -80,7 +81,7 @@ void Apoptosis(void);
             "splay the start time of executions across the network\n"
             "and work as a class-based clock for scheduling.";
  
- struct option OPTIONS[18] =
+ struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -94,11 +95,12 @@ void Apoptosis(void);
       { "inform",no_argument,0,'I'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F' },
+      { "winservice",no_argument,0,'W' },
       { "ld-library-path",required_argument,0,'L'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[17] =
+ char *HINTS[15] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -112,6 +114,7 @@ void Apoptosis(void);
       "Print basic information about changes made to the system, i.e. promises repaired",
       "Activate internal diagnostics (developers only)",
       "Run as a foreground processes (do not fork)",
+      "Run as a windows service (Cfengine Nova only)",
       "Set the internal value of LD_LIBRARY_PATH for child processes",
       NULL
       };
@@ -125,11 +128,15 @@ CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"executor");
 ThisAgentInit();
 KeepPromises();
+
 #ifdef MINGW
-NovaWin_StartExecService(argc, argv);
-#else
+if(WINSERVICE)
+  {
+  NovaWin_StartExecService(argc, argv);
+  }
+#endif  /* MINGW */
+
 StartServer(argc,argv);
-#endif
 return 0;
 }
 
@@ -146,7 +153,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -198,6 +205,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
           VERBOSE = true;
           NO_FORK = true;
           break;
+	  
           
       case 'n': DONTDO = true;
           IGNORELOCK = true;
@@ -212,8 +220,10 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gM",OPTIONS,&optindex)) != 
           if (putenv(strdup(ld_library_path)) != 0)
              {
              }
-          
           break;
+
+      case 'W':
+    	  WINSERVICE = true;
           
       case 'F':
           ONCE = true;

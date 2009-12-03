@@ -333,7 +333,21 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 
 /* Define trusted directories */
 
-#ifndef NT
+#ifdef MINGW
+if(NovaWin_GetProgDir(CFWORKDIR, CF_BUFSIZE - sizeof("Cfengine")))
+  {
+  strcat(CFWORKDIR, "\\Cfengine");
+  }
+else
+  {
+  CfOut(cf_error, "", "!! Could not get CFWORKDIR from Windows environment variable, falling back to compile time dir (%s)", WORKDIR);
+  strcpy(CFWORKDIR,WORKDIR);
+  }
+Debug("Setting CFWORKDIR=%s\n", CFWORKDIR);
+#elif defined(CFCYG)
+strcpy(CFWORKDIR,WORKDIR);
+MapName(CFWORKDIR);
+#else
 if (getuid() > 0)
    {
    strncpy(CFWORKDIR,GetHome(getuid()),CF_BUFSIZE-10);
@@ -348,10 +362,6 @@ else
    {
    strcpy(CFWORKDIR,WORKDIR);
    }
-
-#else
-strcpy(CFWORKDIR,WORKDIR);
-MapName(CFWORKDIR);
 #endif
 
 Cf3OpenLog();

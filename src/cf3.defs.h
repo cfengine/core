@@ -416,6 +416,7 @@ enum cfreport
    cf_error,
    cf_log,
    cf_reporting,
+   cf_cmdout,
    cf_noreport
    };
 

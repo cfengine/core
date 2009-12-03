@@ -81,6 +81,7 @@ switch(level)
 
    case cf_error:
    case cf_reporting:
+   case cf_cmdout:
 
        FileReport(mess,VERBOSE,filename);
        MakeLog(mess,level);
@@ -151,6 +152,7 @@ switch(level)
 
    case cf_error:
    case cf_reporting:
+   case cf_cmdout:
 
        MakeReport(mess,VERBOSE);
        MakeLog(mess,level);
@@ -302,6 +304,7 @@ switch(level)
 
    case cf_error:
    case cf_reporting:
+   case cf_cmdout:
 
        if (attr.report.to_file)
           {
@@ -502,6 +505,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       {
       case cf_inform:
 	  case cf_reporting:
+	  case cf_cmdout:
           syslog(LOG_NOTICE," %s",ip->name);
           break;
           

@@ -171,12 +171,26 @@ void TestExpandVariables()
   struct Constraint *cp;
   struct FnCall *fp;
 
-#ifndef NT
+#ifdef MINGW
+if(NovaWin_GetProgDir(CFWORKDIR, CF_BUFSIZE - sizeof("Cfengine")))
+  {
+  strcat(CFWORKDIR, "\\Cfengine");
+  }
+else
+  {
+  CfOut(cf_error, "", "!! Could not get CFWORKDIR from Windows environment variable, falling back to compile time dir (%s)", WORKDIR);
+  strcpy(CFWORKDIR,WORKDIR);
+  }
+Debug("Setting CFWORKDIR=%s\n", CFWORKDIR);
+#elif defined(CFCYG)
+strcpy(CFWORKDIR,WORKDIR);
+MapName(CFWORKDIR);
+#else
 if (getuid() > 0)
    {
    strncpy(CFWORKDIR,GetHome(getuid()),CF_BUFSIZE-10);
    strcat(CFWORKDIR,"/.cfagent");
-   
+
    if (strlen(CFWORKDIR) > CF_BUFSIZE/2)
       {
       FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
@@ -186,8 +200,6 @@ else
    {
    strcpy(CFWORKDIR,WORKDIR);
    }
-#else
-strcpy(CFWORKDIR,WORKDIR);
 #endif
   
 /* Still have diagnostic scope */

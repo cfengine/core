@@ -3617,7 +3617,13 @@ int SafeOpen(char *filename)
 { int fd;
 
 ThreadLock(cft_system);
+
+#ifdef MINGW
 fd = open(filename,O_RDONLY | _O_BINARY);
+#else
+fd = open(filename,O_RDONLY);
+#endif
+
 ThreadUnlock(cft_system);
 return fd;
 }

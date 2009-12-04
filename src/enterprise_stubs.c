@@ -722,7 +722,18 @@ void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *
  CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
 #endif
 }
-    
+
+/*****************************************************************************/
+
+void VerifyServices(struct Attributes a,struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_VerifyServices(a,pp);
+#else
+ CfOut(cf_verbose,"","# Services promises are only available in Cfengine Nova and above");
+#endif
+}
+
 /*****************************************************************************/
 /* Montoring                                                                 */
 /*****************************************************************************/

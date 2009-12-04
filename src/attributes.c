@@ -86,7 +86,8 @@ if (DEBUG)
    }
 
 if (attr.haverename || attr.havedelete || attr.haveperms || attr.havechange ||
-    attr.havecopy || attr.havelink || attr.haveedit || attr.create || attr.touch || attr.transformer || attr.acl.acl_entries)
+    attr.havecopy || attr.havelink || attr.haveedit || attr.create || attr.touch ||
+    attr.transformer || attr.acl.acl_entries)
    {
    }
 else
@@ -110,6 +111,19 @@ attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 
 attr.report = GetReportConstraints(pp);
+return attr;
+}
+
+/*******************************************************************/
+
+struct Attributes GetServicesAttributes(struct Promise *pp)
+
+{ static struct Attributes attr;
+
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+attr.service = GetServicesConstraints(pp);
 return attr;
 }
 
@@ -311,6 +325,21 @@ return attr;
 
 /*******************************************************************/
 /* Level                                                           */
+/*******************************************************************/
+
+struct CfServices GetServicesConstraints(struct Promise *pp)
+
+{ static struct CfServices s;
+ 
+s.service_type = GetConstraint("service_type",pp,CF_SCALAR);
+s.service_policy = GetConstraint("service_policy",pp,CF_SCALAR);
+s.service_start_policy = GetConstraint("service_start_policy",pp,CF_SCALAR);
+s.service_args = GetConstraint("service_args",pp,CF_SCALAR);
+s.service_depend = GetListConstraint("service_dependencies",pp);
+
+return s;
+}
+
 /*******************************************************************/
 
 struct ExecContain GetExecContainConstraints(struct Promise *pp)

@@ -94,7 +94,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
 
-#define CF3_MODULES 12 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 13 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 
@@ -1496,6 +1496,17 @@ struct CfDatabase
     
 /*************************************************************************/
 
+struct CfServices
+   {
+   struct Rlist *service_depend;
+   char *service_type;
+   char *service_args;
+   char *service_policy;
+   char *service_start_policy;
+   };
+
+/*************************************************************************/
+
  /* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
@@ -1514,6 +1525,7 @@ struct Attributes
    struct Measurement measure;
    struct CfACL acl;
    struct CfDatabase database;
+   struct CfServices service;
    char *transformer;
    char *pathtype;
    char *repository;

@@ -98,7 +98,8 @@ libpromises_la_SOURCES =                                                \
         mod_knowledge.c                                                 \
         mod_measurement.c                                               \
         mod_databases.c                                                 \
-        mod_process.c                           \
+        mod_services.c                                                  \
+        mod_process.c   			                        \
         unix.c
 
 
@@ -122,6 +123,7 @@ cf_agent_SOURCES =                                                      \
         verify_interfaces.c                                             \
         verify_packages.c                                               \
         verify_databases.c                                              \
+	verify_services.c						\
         agentdiagnostic.c
 
 cf_serverd_SOURCES =                                                    \

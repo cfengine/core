@@ -413,6 +413,7 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_METHOD_SUBTYPES,     /* mod_methods.c */
    CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
    CF_PROCESS_SUBTYPES,    /* mod_process.c */
+   CF_SERVICES_SUBTYPES,   /* mod_services.c */
    CF_STORAGE_SUBTYPES,    /* mod_storage.c */
    CF_REMACCESS_SUBTYPES,  /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */

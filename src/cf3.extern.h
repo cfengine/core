@@ -225,3 +225,9 @@ extern struct BodySyntax CF_PROCESS_BODIES[];
 extern struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
 extern struct BodySyntax CF_MEASURE_BODIES[];
 #endif
+
+#ifndef CF3_MOD_SERVICES
+extern struct SubTypeSyntax CF_SERVICES_SUBTYPES[];
+extern struct BodySyntax CF_SERVMETHOD_BODY[];
+extern struct BodySyntax CF_SERVICES_BODIES[];
+#endif

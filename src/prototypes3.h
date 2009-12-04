@@ -69,6 +69,8 @@ void ShowAssoc (struct CfAssoc *cp);
 
 /* attributes.c */
 
+struct Attributes GetServicesAttributes(struct Promise *pp);
+struct CfServices GetServicesConstraints(struct Promise *pp);
 struct Attributes GetFilesAttributes(struct Promise *pp);
 struct Attributes GetReportsAttributes(struct Promise *pp);
 struct Attributes GetExecAttributes(struct Promise *pp);
@@ -1441,6 +1443,11 @@ int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int ExtractPid(char *psentry);
 void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 int GracefulTerminate(pid_t pid);
+
+/* verify_services.c */
+
+void VerifyServicesPromise(struct Promise *pp);
+void ServicesSanityChecks(struct Attributes a,struct Promise *pp);
 
 /* verify_storage.c */
 

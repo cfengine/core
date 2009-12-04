@@ -1047,8 +1047,8 @@ void GatherCPUData()
 
 { double q,dq;
   char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];
-  int count,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
-  int total_time = 1;
+  long count,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
+  long total_time = 1;
   FILE *fp;
   enum observables index = ob_spare;
   
@@ -1066,7 +1066,7 @@ while (!feof(fp))
    {
    fgets(buf,CF_BUFSIZE,fp);
 
-   sscanf(buf,"%s%d%d%d%d%d%d%d",&cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
+   sscanf(buf,"%s%ld%ld%ld%ld%ld%ld%ld",&cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
    snprintf(name,16,"cpu%d",count);
    
    total_time = (userticks+niceticks+systemticks+idle); 
@@ -1107,6 +1107,11 @@ while (!feof(fp))
       }
 
    dq = (q - LASTQ[index])/(double)total_time; /* % Utilization */
+
+   if (dq > 100 || dq < 0) // Counter wrap around
+      {
+      dq = 50;
+      }
    
    CF_THIS[index] = dq;
    LASTQ[index] = q;

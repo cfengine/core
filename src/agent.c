@@ -45,6 +45,7 @@ enum typesequence
    kp_storage,
    kp_packages,
    kp_commands,
+   kp_services,
    kp_methods,
    kp_files,
    kp_databases,
@@ -60,6 +61,7 @@ char *TYPESEQUENCE[] =
    "processes",
    "storage",
    "packages",
+   "services",
    "commands",
    "methods",
    "files",
@@ -904,6 +906,13 @@ if (strcmp("databases",pp->agentsubtype) == 0)
 if (strcmp("methods",pp->agentsubtype) == 0)
    {
    VerifyMethodsPromise(pp);
+   EndMeasurePromise(start,pp);
+   return;
+   }
+
+if (strcmp("services",pp->agentsubtype) == 0)
+   {
+   VerifyServicesPromise(pp);
    EndMeasurePromise(start,pp);
    return;
    }

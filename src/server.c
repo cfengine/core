@@ -3617,7 +3617,7 @@ int SafeOpen(char *filename)
 { int fd;
 
 ThreadLock(cft_system);
-fd = open(filename,O_RDONLY);
+fd = open(filename,O_RDONLY | _O_BINARY);
 ThreadUnlock(cft_system);
 return fd;
 }

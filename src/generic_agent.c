@@ -364,6 +364,16 @@ else
    }
 #endif
 
+/* On windows, use 'binary mode' as default for files */
+
+#ifdef MINGW
+if(_set_fmode(_O_BINARY) != 0)
+  {
+  CfOut(cf_error, "_set_fmode", "!! Could not set binary as default file translation mode");
+  }
+#endif
+
+
 Cf3OpenLog();
 
 if (!LOOKUP) /* cf-know should not do this in lookup mode */

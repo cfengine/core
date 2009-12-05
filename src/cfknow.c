@@ -275,8 +275,12 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
           break;
 
       case 'S':
-          SyntaxCompletion(optarg);
-          exit(0);
+          if (optarg)
+             {
+             SyntaxCompletion(optarg);
+             exit(0);
+             }
+          break;
 
       case 'm':
           GENERATE_MANUAL = true;

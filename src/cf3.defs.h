@@ -54,6 +54,11 @@
 
 #define CF3COPYRIGHT "(C) Cfengine AS 2008-"
 
+
+#define LIC_DAY "3"
+#define LIC_MONTH "July"
+#define LIC_YEAR "2100"
+
 #define CF_SCALAR 's'
 #define CF_LIST   'l'
 #define CF_FNCALL 'f'

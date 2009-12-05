@@ -50,8 +50,9 @@ SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
 
+// See cf3.defs.h for these settings
 
-if (EnterpriseExpiry("3","July","21009"))
+if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license has expired.\n");
    exit(1);

@@ -203,7 +203,6 @@ if (clock_gettime(CLOCK_REALTIME,&t) == -1)
    }
 
 keyval = (double)(t.tv_sec)+(double)(t.tv_nsec)/(double)CF_BILLION;
-      
 snprintf(key,CF_BUFSIZE-1,"%lf",keyval);
 
 if (DEBUG)

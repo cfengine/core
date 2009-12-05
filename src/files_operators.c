@@ -964,6 +964,7 @@ void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct 
 
 { struct stat cmpsb;
   CF_DB *dbp;
+  char message[CF_BUFSIZE];
   char statdb[CF_BUFSIZE];
   int ok = true;
 
@@ -1033,17 +1034,23 @@ if (EXCLAIM)
 
 if (cmpsb.st_mode != sb->st_mode)
    {
-   CfOut(cf_error,"","ALERT: Permissions for %s changed %o -> %o",file,cmpsb.st_mode,sb->st_mode);
+   snprintf(message,CF_BUFSIZE-1,"ALERT: Permissions for %s changed %o -> %o",file,cmpsb.st_mode,sb->st_mode);
+   CfOut(cf_error,"","%s",message);
+   LogHashChange(message+strlen("ALERT: "));
    }
 
 if (cmpsb.st_uid != sb->st_uid)
    {
-   CfOut(cf_error,"","ALERT: owner for %s changed %d -> %d",file,cmpsb.st_uid,sb->st_uid);
+   snprintf(message,CF_BUFSIZE-1,"ALERT: owner for %s changed %d -> %d",file,cmpsb.st_uid,sb->st_uid);
+   CfOut(cf_error,"","%s",message);
+   LogHashChange(message+strlen("ALERT: "));
    }
 
 if (cmpsb.st_gid != sb->st_gid)
    {
-   CfOut(cf_error,"","ALERT: group for %s changed %d -> %d",file,cmpsb.st_gid,sb->st_gid);
+   snprintf(message,CF_BUFSIZE-1,"ALERT: group for %s changed %d -> %d",file,cmpsb.st_gid,sb->st_gid);
+   CfOut(cf_error,"","%s",message);
+   LogHashChange(message+strlen("ALERT: "));
    }
 
 if (cmpsb.st_dev != sb->st_dev)

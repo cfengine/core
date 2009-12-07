@@ -641,7 +641,7 @@ if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here 
    {
    GetNaked(naked,rval);
    
-   if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) == cf_notype)
+   if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) == cf_notype || returnval.rtype != CF_LIST)
       {
       returnval = ExpandPrivateRval("this",rval,rtype);
       }

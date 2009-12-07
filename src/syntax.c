@@ -408,7 +408,7 @@ switch(rvaltype)
           case cf_olist:
               if (level == 0)
                  {
-                 snprintf(output,CF_BUFSIZE,"rhs is a scalar, but lhs (%s) is not list type",CF_DATATYPES[dt]);
+                 snprintf(output,CF_BUFSIZE,"rhs is a scalar, but lhs (%s) is not a scalar type",CF_DATATYPES[dt]);
                  ReportError(output);
                  }
               break;

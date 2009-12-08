@@ -55,7 +55,7 @@ int   MAXLINES = 30;
 int   SPLAYTIME = 0;
 const int INF_LINES = -2;
 int NOSPLAY = false;
-int WINSERVICE = false;
+int NOWINSERVICE = false;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
 
@@ -95,7 +95,7 @@ void Apoptosis(void);
       { "inform",no_argument,0,'I'},
       { "diagnostic",no_argument,0,'x'},
       { "no-fork",no_argument,0,'F' },
-      { "winservice",no_argument,0,'W' },
+      { "no-winsrv",no_argument,0,'W' },
       { "ld-library-path",required_argument,0,'L'},
       { NULL,0,0,'\0' }
       };
@@ -114,7 +114,7 @@ void Apoptosis(void);
       "Print basic information about changes made to the system, i.e. promises repaired",
       "Activate internal diagnostics (developers only)",
       "Run as a foreground processes (do not fork)",
-      "Run as a windows service (Cfengine Nova only)",
+      "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
       "Set the internal value of LD_LIBRARY_PATH for child processes",
       NULL
       };
@@ -130,13 +130,20 @@ ThisAgentInit();
 KeepPromises();
 
 #ifdef MINGW
-if(WINSERVICE)
+if(NOWINSERVICE)
+  {
+  StartServer(argc,argv);
+  }
+ else
   {
   NovaWin_StartExecService(argc, argv);
   }
-#endif  /* MINGW */
+#else  /* NOT MINGW */
 
 StartServer(argc,argv);
+
+#endif  /* NOT MINGW */
+
 return 0;
 }
 
@@ -223,8 +230,9 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
           break;
 
       case 'W':
-    	  WINSERVICE = true;
-          
+    	  NOWINSERVICE = true;
+          break;
+		  
       case 'F':
           ONCE = true;
           NO_FORK = true;

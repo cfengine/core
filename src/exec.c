@@ -682,9 +682,11 @@ if (strlen(EXECCOMMAND) > 0)
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-agent -f failsafe.cf && %s/bin/cf-agent%s -Dfrom_cfexecd%s",
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent%s\" -f failsafe.cf && \"%s/bin/cf-agent%s%s\" -Dfrom_cfexecd%s",
             CFWORKDIR,
+			EXEC_SUFFIX,
             CFWORKDIR,
+			EXEC_SUFFIX,
             NOSPLAY ? " -q" : "",
             scheduled_run ? ":scheduled_run" : "");
    }

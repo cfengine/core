@@ -38,6 +38,8 @@ int SendTransaction(int sd,char *buffer,int len,char status)
 
 { char work[CF_BUFSIZE];
   int wlen;
+
+memset(work, 0, sizeof(work));
  
 if (len == 0) 
    {

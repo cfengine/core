@@ -437,7 +437,7 @@ typedef struct
 #ifdef MINGW
 # define MAXHOSTNAMELEN 256  // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
 # define NULLFILE "nul"
-# define CFPROMISES_BIN "cf-promises.exe"
+# define EXEC_SUFFIX ".exe"
 
 typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #ifndef VER_SUITE_WH_SERVER  // shold be in winnt.h, but is not in current mingw-version
@@ -472,7 +472,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 
 #else  /* NOT MINGW */
 # define NULLFILE "/dev/null"
-# define CFPROMISES_BIN "cf-promises"
+# define EXEC_SUFFIX ""
 #endif  /* NOT MINGW */
 
 /*******************************************************************/

@@ -140,11 +140,11 @@ if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
    return true;
    }
 
-snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN);
+snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX);
 
 if (cfstat(cmd,&sb) == -1)
    {
-   CfOut(cf_error,"","%s needs to be installed in %s%cbin for pre-validation of full configuration",CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR);
+   CfOut(cf_error,"","cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",EXEC_SUFFIX,CFWORKDIR,FILE_SEPARATOR);
    return false;
    }
 
@@ -152,11 +152,11 @@ if (cfstat(cmd,&sb) == -1)
 
 if ((*VINPUTFILE == '.') || IsAbsoluteFileName(VINPUTFILE))
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f \"%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises%s\" -f \"%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX,VINPUTFILE);
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%c%s\" -f \"%s%cinputs%c%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CFPROMISES_BIN,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
+   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises%s\" -f \"%s%cinputs%c%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
    }
 
 /* Check if reloading policy will succeed */
@@ -368,10 +368,7 @@ else
 /* On windows, use 'binary mode' as default for files */
 
 #ifdef MINGW
-if(_set_fmode(_O_BINARY) != 0)
-  {
-  CfOut(cf_error, "_set_fmode", "!! Could not set binary as default file translation mode");
-  }
+_fmode = _O_BINARY;
 #endif
 
 

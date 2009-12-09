@@ -453,6 +453,8 @@ last_name[0] = '\0';
 
 for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
    {
+   int skip = false;
+   
    if (ifp->ifr_addr.sa_family == 0)
       {
       continue;
@@ -463,8 +465,16 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       continue;
       }
 
-   CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
-
+   if (*(ifp->ifr_name) == 'v')
+      {
+      CfOut(cf_verbose,"","Skipping apparent virtual interface %d: %s\n",j+1,ifp->ifr_name);
+      continue;
+      }
+   else
+      {
+      CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
+      }
+   
    if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
       {
       first_address = false;
@@ -501,6 +511,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
          {
          sin=(struct sockaddr_in *)&ifp->ifr_addr;
+         Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
+         NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
 
          if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
             {
@@ -510,8 +522,6 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             {
             if (hp->h_name != NULL)
                {
-               Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
-               NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
                Debug("Adding hostname %s..\n",hp->h_name);
                NewClass(CanonifyName(hp->h_name));
 

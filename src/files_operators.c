@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -42,7 +42,7 @@ extern struct cfagent_connection *COMS;
 
 void CreateEmptyFile(char *name)
 
-{ 
+{
 #ifdef MINGW
 NovaWin_CreateEmptyFile(name);
 #else
@@ -54,7 +54,7 @@ Unix_CreateEmptyFile(name);
 
 int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
 
-{ 
+{
 #ifdef MINGW
 return NovaWin_VerifyOwner(file,pp,attr);
 #else
@@ -66,7 +66,7 @@ return Unix_VerifyOwner(file,pp,attr,sb);
 
 void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
 
-{ 
+{
 #ifdef MINGW
 NovaWin_VerifyFileAttributes(file,dstat,attr,pp);
 #else
@@ -78,7 +78,7 @@ Unix_VerifyFileAttributes(file,dstat,attr,pp);
 
 void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
 
-{ 
+{
 #ifdef MINGW
 NovaWin_VerifyCopiedFileAttributes(file,dstat,attr,pp);
 #else
@@ -120,12 +120,12 @@ else
       {
       VerifyName(path,sb,attr,pp);
       }
-   
+
    if (attr.havedelete)
       {
       VerifyDelete(path,sb,attr,pp);
       }
-   
+
    if (attr.touch)
       {
       TouchFile(path,sb,attr,pp); // intrinsically non-convergent op
@@ -172,15 +172,15 @@ return fp;
 int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr)
 
 { int fd;
- 
+
  /* If name ends in /. then this is a directory */
 
 // attr.move_obstructions for MakeParentDirectory
- 
+
 if (strcmp(".",ReadLastNode(file)) == 0)
    {
    Debug("File object \"%s \"seems to be a directory\n",file);
-   
+
    if (!DONTDO)
       {
       if (!MakeParentDirectory(file,attr.move_obstructions))
@@ -213,7 +213,7 @@ else
       MakeParentDirectory(file,attr.move_obstructions);
 
       if ((fd = creat(file,filemode)) == -1)
-         { 
+         {
          cfPS(cf_inform,CF_FAIL,"creat",pp,attr," !! Error creating file %s, mode = %o\n",file,filemode);
          umask(saveumask);
          return false;
@@ -236,8 +236,8 @@ int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promis
 
 { struct cfagent_connection *conn;
 
- CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,attr.copy.source);  
-  
+ CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,attr.copy.source);
+
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
    conn = NULL;
@@ -292,7 +292,7 @@ if (!CfCreateFile(promiserpath,pp,attr))
    CfOut(cf_error,"","Cannot promise to link multiple files to children of %s as it is not a directory!",destination);
    return false;
    }
-  
+
 if ((dirh = opendir(attr.link.source)) == NULL)
    {
    cfPS(cf_error,CF_FAIL,"opendir",pp,attr,"Can't open source of children to link %s\n",attr.link.source);
@@ -317,10 +317,10 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       closedir(dirh);
       return false;
       }
-   
+
    strncpy(sourcepath,attr.link.source,CF_BUFSIZE-1);
    AddSlash(sourcepath);
-   
+
    if (!JoinPath(sourcepath,dirp->d_name))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,attr,"Can't construct filename while verifying child links\n");
@@ -340,7 +340,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          continue;
          }
       }
-   
+
    ScheduleLinkOperation(promiserpath,sourcepath,attr,pp);
    }
 
@@ -353,7 +353,7 @@ return true;
 int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
 { char *lastnode;
- 
+
 lastnode = ReadLastNode(destination);
 
 if (MatchRlistItem(attr.link.copy_patterns,lastnode))
@@ -395,7 +395,7 @@ int ScheduleEditOperation(char *filename,struct Attributes a,struct Promise *pp)
   char *edit_bundle_name = NULL;
   struct Rlist *params;
   int retval = false;
- 
+
 pp->edcontext = NewEditContext(filename,a,pp);
 
 if (pp->edcontext == NULL)
@@ -423,7 +423,7 @@ if (a.haveeditline)
       FinishEditContext(pp->edcontext,a,pp);
       return false;
       }
-   
+
    CfOut(cf_verbose,""," -> Handling file edits in edit_line bundle %s\n",edit_bundle_name);
 
    // add current filename to context - already there?
@@ -466,7 +466,7 @@ if (lstat(from,&sb) == 0)
       cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Object %s exists and is obstructing our promise\n",from);
       return false;
       }
-   
+
    if (!S_ISDIR(sb.st_mode))
       {
       if (DONTDO)
@@ -482,7 +482,7 @@ if (lstat(from,&sb) == 0)
          sprintf(stamp, "_%d_%s",CFSTARTTIME,CanonifyName(ctime(&now_stamp)));
          strcat(saved,stamp);
          }
-      
+
       strcat(saved,CF_SAVED);
 
       cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Moving file object %s to %s\n",from,saved);
@@ -500,31 +500,31 @@ if (lstat(from,&sb) == 0)
 
       return true;
       }
-   
+
    if (S_ISDIR(sb.st_mode))
       {
       cfPS(cf_verbose,CF_CHG,"",pp,attr," -> Moving directory %s to %s%s\n",from,from,CF_SAVED);
-      
+
       if (DONTDO)
          {
          return false;
          }
-      
+
       saved[0] = '\0';
       strcpy(saved,from);
-      
+
       sprintf(stamp, "_%d_%s", CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
       strcat(saved,stamp);
       strcat(saved,CF_SAVED);
       strcat(saved,".dir");
-      
+
       if (cfstat(saved,&sb) != -1)
          {
          cfPS(cf_error,CF_FAIL,"",pp,attr," !! Couldn't save directory %s, since %s exists already\n",from,saved);
          CfOut(cf_error,"","Unable to force link to existing directory %s\n",from);
          return false;
          }
-      
+
       if (cf_rename(from,saved) == -1)
          {
          cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr,"Can't rename %s to %s\n",from,saved);
@@ -559,7 +559,7 @@ int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct 
     long fdPutAway;
     }
  FInfo;
- 
+
  struct attrlist attrs;
  struct
     {
@@ -570,11 +570,11 @@ int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct 
     struct timespec backup;
     FInfo fi;
     }
- fndrInfo; 
+ fndrInfo;
  int retval;
- 
+
 Debug("VerifyFinderType of %s for %s\n", file,a.perms.findertype);
- 
+
 if (strncmp(a.perms.findertype,"*",CF_BUFSIZE) == 0 || strncmp(a.perms.findertype,"",CF_BUFSIZE) == 0)
    {
    return 0;
@@ -595,22 +595,22 @@ getattrlist(file, &attrs, &fndrInfo, sizeof(fndrInfo),0);
 if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
    {
    fndrInfo.fi.fdType = *(long *)a.perms.findertype;
-   
+
    switch (a.transaction.action)
-      {       
+      {
       case cfa_fix:
-          
+
           if (DONTDO)
              {
              CfOut(cf_inform,"","Promised to set Finder Type code of %s to %s\n",file,a.perms.findertype);
              return 0;
              }
-          
-          /* setattrlist does not take back in the long ssize */        
+
+          /* setattrlist does not take back in the long ssize */
           retval = setattrlist(file, &attrs, &fndrInfo.created, 4*sizeof(struct timespec) + sizeof(FInfo), 0);
-          
+
           Debug("CheckFinderType setattrlist returned %d\n", retval);
-          
+
           if (retval >= 0)
              {
              cfPS(cf_inform,CF_CHG,"",pp,a,"Setting Finder Type code of %s to %s\n",file,a.perms.findertype);
@@ -619,9 +619,9 @@ if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
              {
              cfPS(cf_error,CF_FAIL,"",pp,a,"Setting Finder Type code of %s to %s failed!!\n",file,a.perms.findertype);
              }
-          
+
           return retval;
-          
+
       case cfa_warn:
           CfOut(cf_error,"","Darwin FinderType does not match -- not fixing.\n");
           return 0;
@@ -683,9 +683,9 @@ if (attr.rename.newname)
       else
          {
          cfPS(cf_error,CF_WARN,"",pp,attr," !! Rename to same destination twice? Would overwrite saved copy - aborting",path);
-         }        
+         }
       }
-   
+
    return;
    }
 
@@ -708,7 +708,7 @@ if (S_ISLNK(dsb.st_mode))
          {
          CfOut(cf_inform,""," * Need to disable link %s to keep promise\n",path);
          }
-      
+
       return;
       }
    }
@@ -718,7 +718,7 @@ if (S_ISLNK(dsb.st_mode))
 if (attr.rename.disable)
    {
    char newname[CF_BUFSIZE];
-   
+
    if (attr.rename.newname && strlen(attr.rename.newname) > 0)
       {
       if (IsAbsPath(attr.rename.newname))
@@ -755,7 +755,7 @@ if (attr.rename.disable)
             }
          }
       }
-   
+
    if ((attr.rename.plus != CF_SAMEMODE) && (attr.rename.minus != CF_SAMEMODE))
       {
       newperm = (sb->st_mode & 07777);
@@ -766,7 +766,7 @@ if (attr.rename.disable)
       {
       newperm = (mode_t)0600;
       }
-   
+
    if (DONTDO)
       {
       CfOut(cf_inform,""," -> File %s should be renamed to %s to keep promise\n",path,newname);
@@ -784,7 +784,7 @@ if (attr.rename.disable)
             cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr,"Error occurred while renaming %s\n",path);
             return;
             }
-         
+
          if (ArchiveToRepository(newname,attr,pp))
             {
             unlink(newname);
@@ -793,14 +793,14 @@ if (attr.rename.disable)
       else
          {
          cfPS(cf_error,CF_WARN,"",pp,attr," !! Disable required twice? Would overwrite saved copy - changing permissions only",path);
-         }        
+         }
       }
 
    return;
    }
 
 if (attr.rename.rotate == 0)
-   {   
+   {
    if (! DONTDO)
       {
       TruncateFile(path);
@@ -820,7 +820,7 @@ if (attr.rename.rotate > 0)
       RotateFiles(path,attr.rename.rotate);
       cfPS(cf_inform,CF_CHG,"",pp,attr," -> Rotating files %s in %d fifo\n",path,attr.rename.rotate);
       }
-   else        
+   else
       {
       CfOut(cf_error,""," * File %s needs rotating",path);
       }
@@ -835,49 +835,65 @@ void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promi
 
 { char *lastnode = ReadLastNode(path);
 
-Debug(" -> Verifying file deletions for %s\n",path);
- 
-if (DONTDO)
-   {
-   CfOut(cf_inform,"","Promise requires deletion of file object %s\n",path);
-   }
-else
-   {
-   if (!S_ISDIR(sb->st_mode))
-      {
-      if (unlink(lastnode) == -1)
-         {
-         cfPS(cf_verbose,CF_FAIL,"unlink",pp,attr,"Couldn't unlink %s tidying\n",path);
-         }
-      else
-         {
-         cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted file %s\n",path);
-         }      
-      }
-   else
-      {
-      if (!attr.delete.rmdirs)
-         {
-         CfOut(cf_inform,"unlink","Keeping directory %s\n",path);
-         return;
-         }
+  Debug(" -> Verifying file deletions for %s\n",path);
 
-      if (strcmp(path,pp->promiser) == 0)
-         {
-         /* This is the parent and we cannot delete it from here - must delete separately*/
-         return;
-         }
-      
-      if (rmdir(lastnode) == -1)
-         {
-         cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (node called %s)\n",path,lastnode);
-         }            
-      else
-         {
-         cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted directory %s\n",path);
-         }
-      }
-   }   
+  if (DONTDO)
+    {
+      CfOut(cf_inform,"","Promise requires deletion of file object %s\n",path);
+    }
+  else
+    {
+      switch (attr.transaction.action)
+        {
+        case cfa_warn:
+
+          cfPS(cf_error,CF_WARN,"",pp,attr," !! %s '%s' should be deleted", S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+          break;
+
+        case cfa_fix:
+
+
+          if (!S_ISDIR(sb->st_mode))
+            {
+              if (unlink(lastnode) == -1)
+                {
+                  cfPS(cf_verbose,CF_FAIL,"unlink",pp,attr,"Couldn't unlink %s tidying\n",path);
+                }
+              else
+                {
+                  cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted file %s\n",path);
+                }
+            }
+          else
+            {
+              if (!attr.delete.rmdirs)
+                {
+                  CfOut(cf_inform,"unlink","Keeping directory %s\n",path);
+                  return;
+                }
+
+              if (strcmp(path,pp->promiser) == 0)
+                {
+                  /* This is the parent and we cannot delete it from here - must delete separately*/
+                  return;
+                }
+
+              if (rmdir(lastnode) == -1)
+                {
+                  cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (node called %s)\n",path,lastnode);
+                }
+              else
+                {
+                  cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted directory %s\n",path);
+                }
+            }
+
+          break;
+
+        default:
+          FatalError("Cfengine: internal error: illegal file action\n");
+        }
+    }
 }
 
 /*********************************************************************/
@@ -908,7 +924,7 @@ void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp)
 { unsigned char digest1[EVP_MAX_MD_SIZE+1];
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
   int changed = false, one,two;
-  
+
 if ((attr.change.report_changes != cfa_contentchange) && (attr.change.report_changes != cfa_allchanges))
    {
    return;
@@ -923,10 +939,10 @@ if (attr.change.hash == cf_besthash)
       {
       HashFile(file,digest1,cf_md5);
       HashFile(file,digest2,cf_sha1);
-      
+
       one = FileHashChanged(file,digest1,cf_error,cf_md5,attr,pp);
       two = FileHashChanged(file,digest2,cf_error,cf_sha1,attr,pp);
-      
+
       if (one || two)
          {
          changed = true;
@@ -938,7 +954,7 @@ else
    if (!DONTDO)
       {
       HashFile(file,digest1,attr.change.hash);
-   
+
       if (FileHashChanged(file,digest1,cf_error,attr.change.hash,attr,pp))
          {
          changed = true;
@@ -1108,7 +1124,7 @@ if (attr.transformer == NULL)
    }
 
 ExpandScalar(attr.transformer,comm);
-CfOut(cf_inform,"","Transforming: %s ",comm); 
+CfOut(cf_inform,"","Transforming: %s ",comm);
 
 if ((pop = cf_popen(comm,"r")) == NULL)
    {
@@ -1139,15 +1155,15 @@ int MakeParentDirectory(char *parentandchild,int force)
   mode_t mask;
   int rootlen;
   char Path_File_Separator;
-    
+
 #ifdef DARWIN
 /* Keeps track of if dealing w. resource fork */
 int rsrcfork;
 rsrcfork = 0;
 
 char * tmpstr;
-#endif    
-    
+#endif
+
 if (!IsAbsoluteFileName(parentandchild))
    {
    CfOut(cf_error,"","Will not create directories for a relative filename (%s). Has no invariant meaning\n",parentandchild);
@@ -1172,33 +1188,33 @@ if (sp == NULL)
    }
 *sp = '\0';
 
-DeleteSlash(pathbuf); 
- 
+DeleteSlash(pathbuf);
+
 if (lstat(pathbuf,&statbuf) != -1)
    {
    if (S_ISLNK(statbuf.st_mode))
       {
       CfOut(cf_verbose,"","%s: INFO: %s is a symbolic link, not a true directory!\n",VPREFIX,pathbuf);
       }
-   
+
    if (force)   /* force in-the-way directories aside */
       {
       if (!S_ISDIR(statbuf.st_mode))  /* if the dir exists - no problem */
          {
          struct stat sbuf;
-         
+
          if (DONTDO)
             {
             return true;
             }
-         
+
          strcpy(currentpath,pathbuf);
          DeleteSlash(currentpath);
          strcat(currentpath,".cf-moved");
          CfOut(cf_inform,"","Moving obstructing file/link %s to %s to make directory",pathbuf,currentpath);
-         
+
          /* If cfagent, remove an obstructing backup object */
-         
+
          if (lstat(currentpath,&sbuf) != -1)
             {
             if (S_ISDIR(sbuf.st_mode))
@@ -1213,9 +1229,9 @@ if (lstat(pathbuf,&statbuf) != -1)
                   }
                }
             }
-         
+
          /* And then move the current object out of the way...*/
-         
+
          if (cf_rename(pathbuf,currentpath) == -1)
             {
             CfOut(cf_inform,"cf_rename","Warning. The object %s is not a directory.\n",pathbuf);
@@ -1233,7 +1249,7 @@ if (lstat(pathbuf,&statbuf) != -1)
       }
    }
 
-/* Now we can make a new directory .. */ 
+/* Now we can make a new directory .. */
 
 currentpath[0] = '\0';
 
@@ -1251,18 +1267,18 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
       {
       Path_File_Separator = *sp;
       *spc = '\0';
-      
+
       if (strlen(currentpath) == 0)
          {
          }
       else if (cfstat(currentpath,&statbuf) == -1)
          {
          Debug2("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
-         
+
          if (! DONTDO)
             {
             mask = umask(0);
-            
+
             if (cf_mkdir(currentpath,DEFAULTMODE) == -1)
                {
                CfOut(cf_error,"cf_mkdir","Unable to make directories to %s\n",parentandchild);
@@ -1283,10 +1299,10 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
                tmpstr = malloc(CF_BUFSIZE);
                strncpy(tmpstr, currentpath, CF_BUFSIZE);
                strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
-               
+
                /* Cfengine removed terminating slashes */
                DeleteSlash(tmpstr);
-               
+
                if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
                   {
                   free(tmpstr);
@@ -1295,12 +1311,12 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
                free(tmpstr);
                }
 #endif
-            
+
             CfOut(cf_error,"","Cannot make %s - %s is not a directory! (use forcedirs=true)\n",pathbuf,currentpath);
             return(false);
             }
          }
-      
+
       /* *spc = FILE_SEPARATOR; */
       *spc = Path_File_Separator;
       spc++;
@@ -1346,7 +1362,7 @@ void LogHashChange(char *file)
   mode_t perm = 0600;
 
 /* This is inefficient but we don't want to lose any data */
-  
+
 snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
 MapName(fname);
 
@@ -1385,7 +1401,7 @@ void RotateFiles(char *name,int number)
   char from[CF_BUFSIZE],to[CF_BUFSIZE];
   struct Attributes attr;
   struct Promise dummyp;
-  
+
 if (IsItemIn(ROTATED,name))
    {
    return;
@@ -1403,7 +1419,7 @@ for (i = number-1; i > 0; i--)
    {
    snprintf(from,CF_BUFSIZE,"%s.%d",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d",name, i+1);
-   
+
    if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
@@ -1411,7 +1427,7 @@ for (i = number-1; i > 0; i--)
 
    snprintf(from,CF_BUFSIZE,"%s.%d.gz",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.gz",name, i+1);
-   
+
    if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
@@ -1419,23 +1435,23 @@ for (i = number-1; i > 0; i--)
 
    snprintf(from,CF_BUFSIZE,"%s.%d.Z",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.Z",name, i+1);
-   
+
    if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
-      }   
+      }
 
    snprintf(from,CF_BUFSIZE,"%s.%d.bz",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.bz",name, i+1);
-   
+
    if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
-      }   
+      }
 
    snprintf(from,CF_BUFSIZE,"%s.%d.bz2",name,i);
    snprintf(to,CF_BUFSIZE,"%s.%d.bz2",name, i+1);
-   
+
    if (cf_rename(from,to) == -1)
       {
       Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
@@ -1454,9 +1470,9 @@ if (CopyRegularFileDisk(name,to,attr,&dummyp) == -1)
    }
 
 cf_chmod(to,statbuf.st_mode);
-chown(to,statbuf.st_uid,statbuf.st_gid); 
+chown(to,statbuf.st_uid,statbuf.st_gid);
 cf_chmod(name,0600);                             /* File must be writable to empty ..*/
- 
+
 if ((fd = creat(name,statbuf.st_mode)) == -1)
    {
    CfOut(cf_error,"creat","Failed to create new %s in disable(rotate)\n",name);
@@ -1480,7 +1496,7 @@ void DeleteDirectoryTree(char *path,struct Promise *pp)
   time_t now = time(NULL);
 
 // Check that tree is a directory
- 
+
 promise.promiser = path;
 promise.promisee = NULL;
 promise.petype = CF_NOPROMISEE;
@@ -1498,7 +1514,7 @@ else
    promise.bundletype = "agent";
    promise.lineno = 0;
    promise.bundle = "embedded";
-   promise.ref = "Embedded deletion of direction";   
+   promise.ref = "Embedded deletion of direction";
    }
 
 
@@ -1536,7 +1552,7 @@ void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise
 
 { int amroot = true;
 
-if (!IsPrivileged())                            
+if (!IsPrivileged())
    {
    amroot = false;
    }
@@ -1551,7 +1567,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
             {
             cfPS(cf_inform,CF_WARN,"",pp,attr,"NEW SETUID root PROGRAM %s\n",file);
             }
-         
+
          PrependItem(&VSETUIDLIST,file,NULL);
          }
       }
@@ -1570,11 +1586,11 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
                 {
                 cfPS(cf_error,CF_WARN,"",pp,attr," !! WARNING setuid (root) flag on %s...\n\n",file);
                 }
-             break;             
+             break;
          }
       }
    }
- 
+
 if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
    {
    if (newperm & S_ISGID)
@@ -1609,12 +1625,12 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
 
              cfPS(cf_inform,CF_WARN,"",pp,attr," !! WARNING setgid (root) flag on %s...\n\n",file);
              break;
-             
+
          default:
              break;
          }
       }
-   } 
+   }
 }
 
 /*****************************************************************************/
@@ -1626,17 +1642,17 @@ int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct
   struct UidList *ulp, *unknownulp;
   struct GidList *glp, *unknownglp;
   short uidmatch = false, gidmatch = false;
-  uid_t uid = CF_SAME_OWNER; 
+  uid_t uid = CF_SAME_OWNER;
   gid_t gid = CF_SAME_GROUP;
 
 Debug("Unix_VerifyOwner: %d\n",sb->st_uid);
-  
+
 for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
    {
    if (ulp->uid == CF_UNKNOWN_OWNER)
       {
       unknownulp = MakeUidList(ulp->uidname); /* Will only match one */
-      
+
       if (unknownulp != NULL && sb->st_uid == unknownulp->uid)
          {
          uid = unknownulp->uid;
@@ -1644,7 +1660,7 @@ for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
          break;
          }
       }
-   
+
    if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)   /* "same" matches anything */
       {
       uid = ulp->uid;
@@ -1652,13 +1668,13 @@ for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
       break;
       }
    }
- 
+
 for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
    {
    if (glp->gid == CF_UNKNOWN_GROUP) /* means not found while parsing */
       {
       unknownglp = MakeGidList(glp->gidname); /* Will only match one */
-      
+
       if (unknownglp != NULL && sb->st_gid == unknownglp->gid)
          {
          gid = unknownglp->gid;
@@ -1674,7 +1690,7 @@ for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
       break;
       }
    }
- 
+
 if (uidmatch && gidmatch)
    {
    return false;
@@ -1692,7 +1708,7 @@ else
             }
          }
       }
-   
+
    if (! gidmatch)
       {
       for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
@@ -1719,13 +1735,13 @@ else
                 {
                 Debug("(Change owner to uid %d if possible)\n",uid);
                 }
-             
+
              if (gid != CF_SAME_GROUP)
                 {
                 Debug("Change group to gid %d if possible)\n",gid);
                 }
              }
-          
+
           if (!DONTDO && S_ISLNK(sb->st_mode))
              {
 #ifdef HAVE_LCHOWN
@@ -1746,12 +1762,12 @@ else
                 {
                 cfPS(cf_inform,CF_CHG,"",pp,attr," -> Owner of %s was %d, setting to %d",file,sb->st_uid,uid);
                 }
-             
+
              if (!gidmatch)
                 {
                 cfPS(cf_inform,CF_CHG,"",pp,attr," -> Group of %s was %d, setting to %d",file,sb->st_gid,gid);
                 }
-             
+
              if (!S_ISLNK(sb->st_mode))
                 {
                 if (chown(file,uid,gid) == -1)
@@ -1765,28 +1781,28 @@ else
                 }
              }
           break;
-          
+
       case cfa_warn:
-          
+
           if ((pw = getpwuid(sb->st_uid)) == NULL)
              {
              CfOut(cf_error,"","File %s is not owned by anybody in the passwd database\n",file);
              CfOut(cf_error,"","(uid = %d,gid = %d)\n",sb->st_uid,sb->st_gid);
              break;
              }
-          
+
           if ((gp = getgrgid(sb->st_gid)) == NULL)
              {
              cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is not owned by any group in group database\n",file);
              break;
              }
-          
+
           cfPS(cf_error,CF_WARN,"",pp,attr," !! File %s is owned by [%s], group [%s]\n",file,pw->pw_name,gp->gr_name);
           break;
       }
    }
 
-return false; 
+return false;
 }
 
 /*********************************************************************/
@@ -1804,7 +1820,7 @@ struct UidList *MakeUidList(char *uidnames)
   int tmp = -1;
 
 uidlist = NULL;
- 
+
 for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
    {
    if (*sp == ',')
@@ -1832,7 +1848,7 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
                AppendItem(&tmplist,user,NULL);
                }
             }
-                   
+
          endnetgrent();
 
          for (ip = tmplist; ip != NULL; ip=ip->next)
@@ -1848,13 +1864,13 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
                uid = pw->pw_uid;
                }
 
-            AddSimpleUidItem(&uidlist,uid,usercopy); 
+            AddSimpleUidItem(&uidlist,uid,usercopy);
             }
-         
+
          DeleteItemList(tmplist);
          continue;
          }
-      
+
       if (isdigit((int)uidbuff[0]))
          {
          sscanf(uidbuff,"%d",&tmp);
@@ -1877,11 +1893,11 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
             uid = pw->pw_uid;
             }
          }
-      
+
       AddSimpleUidItem(&uidlist,uid,usercopy);
       }
    }
- 
+
  if (uidlist == NULL)
    {
    AddSimpleUidItem(&uidlist,CF_SAME_OWNER,(char *) NULL);
@@ -1902,7 +1918,7 @@ struct GidList *MakeGidList(char *gidnames)
   int tmp = -1;
 
 gidlist = NULL;
- 
+
 for (sp = gidnames; *sp != '\0'; sp+=strlen(gidbuff))
    {
    if (*sp == ',')
@@ -1934,7 +1950,7 @@ for (sp = gidnames; *sp != '\0'; sp+=strlen(gidbuff))
             gid = gr->gr_gid;
             }
          }
-      
+
       AddSimpleGidItem(&gidlist,gid,groupcopy);
       }
    }
@@ -1958,31 +1974,31 @@ void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes a
 #endif
 
 Debug("Unix_VerifyFileAttributes(%s)\n",file);
-  
+
 maskvalue = umask(0);                 /* This makes the DEFAULT modes absolute */
- 
+
 newperm = (dstat->st_mode & 07777);
 newperm |= attr.perms.plus;
 newperm &= ~(attr.perms.minus);
 
  /* directories must have x set if r set, regardless  */
 
-if (S_ISDIR(dstat->st_mode))  
+if (S_ISDIR(dstat->st_mode))
    {
    if (attr.perms.rxdirs)
       {
       Debug("Directory...fixing x bits\n");
-      
+
       if (newperm & S_IRUSR)
          {
          newperm  |= S_IXUSR;
          }
-      
+
       if (newperm & S_IRGRP)
          {
          newperm |= S_IXGRP;
          }
-      
+
       if (newperm & S_IROTH)
          {
          newperm |= S_IXOTH;
@@ -2026,8 +2042,8 @@ if (S_ISLNK(dstat->st_mode))             /* No point in checking permission on a
    }
 
 if (attr.acl.acl_entries)
-   { 
-   VerifyACL(file,attr,pp); 
+   {
+   VerifyACL(file,attr,pp);
    }
 
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
@@ -2038,16 +2054,16 @@ if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
 else
    {
    Debug("Trying to fix mode...newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
-   
+
    switch (attr.transaction.action)
       {
       case cfa_warn:
-          
+
           cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has permission %o - [should be %o]\n",file,dstat->st_mode & 07777,newperm & 07777);
           break;
-          
+
       case cfa_fix:
-          
+
           if (!DONTDO)
              {
              if (cf_chmod(file,newperm & 07777) == -1)
@@ -2056,15 +2072,15 @@ else
                 break;
                 }
              }
-          
+
           cfPS(cf_inform,CF_CHG,"",pp,attr," -> Object %s had permission %o, changed it to %o\n",file,dstat->st_mode & 07777,newperm & 07777);
           break;
-          
+
       default:
           FatalError("cfengine: internal error Unix_VerifyFileAttributes(): illegal file action\n");
       }
    }
- 
+
 #if defined HAVE_CHFLAGS  /* BSD special flags */
 
 newflags = (dstat->st_flags & CHFLAGS_MASK);
@@ -2078,14 +2094,14 @@ if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file ok
 else
    {
    Debug("BSD Fixing %s, newflags = %x, flags = %x\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
-   
+
    switch (attr.transaction.action)
       {
       case cfa_warn:
 
           cfPS(cf_error,CF_WARN,"",pp,attr," !! %s has flags %o - [should be %o]\n",file,dstat->st_mode & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
           break;
-          
+
       case cfa_fix:
 
           if (! DONTDO)
@@ -2100,9 +2116,9 @@ else
                 cfPS(cf_inform,CF_CHG,"",pp,attr," -> %s had flags %o, changed it to %o\n",file,dstat->st_flags & CHFLAGS_MASK,newflags & CHFLAGS_MASK);
                 }
              }
-          
+
           break;
-          
+
       default:
           FatalError("cfengine: internal error Unix_VerifyFileAttributes() illegal file action\n");
       }
@@ -2121,8 +2137,8 @@ if (attr.touch)
       }
    }
 
-umask(maskvalue);  
-Debug("Unix_VerifyFileAttributes(Done)\n"); 
+umask(maskvalue);
+Debug("Unix_VerifyFileAttributes(Done)\n");
 }
 
 /*****************************************************************************/
@@ -2134,8 +2150,8 @@ void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *
   gid_t save_gid;
 
 // How do we get the default attr?
-  
-Debug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus); 
+
+Debug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus);
 
 save_uid = (attr.perms.owners)->uid;
 save_gid = (attr.perms.groups)->gid;
@@ -2177,14 +2193,14 @@ if ((ulp = (struct UidList *)malloc(sizeof(struct UidList))) == NULL)
    }
 
 ulp->uid = uid;
- 
+
 if (uid == CF_UNKNOWN_OWNER)   /* unknown user */
    {
    if ((copyuser = strdup(uidname)) == NULL)
       {
       FatalError("cfengine: malloc() failed #2 in AddSimpleUidItem()");
       }
-   
+
    ulp->uidname = copyuser;
    }
 else
@@ -2218,23 +2234,23 @@ if ((glp = (struct GidList *)malloc(sizeof(struct GidList))) == NULL)
    {
    FatalError("cfengine: malloc() failed #1 in AddSimpleGidItem()");
    }
- 
+
 glp->gid = gid;
- 
+
 if (gid == CF_UNKNOWN_GROUP)   /* unknown group */
    {
    if ((copygroup = strdup(gidname)) == NULL)
       {
       FatalError("cfengine: malloc() failed #2 in AddSimpleGidItem()");
       }
-   
+
    glp->gidname = copygroup;
    }
 else
    {
    glp->gidname = NULL;
    }
- 
+
 glp->next = NULL;
 
 if (*gidlist == NULL)

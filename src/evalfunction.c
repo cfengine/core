@@ -3492,11 +3492,11 @@ struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
 { static char *argtemplate[] =
      {
      "0,50",       /* year*/
-     "0,11",       /* month */
-     "0,31",       /* day */
-     "0,23",       /* hour */
-     "0,59",       /* min */
-     "0,59",       /* sec */
+     "0,100",      /* month */
+     "0,1000",     /* day */
+     "0,100",      /* hour */
+     "0,1000",     /* min */
+     "0,3600",     /* sec */
      NULL
      };
   static enum cfdatatype argtypes[] =

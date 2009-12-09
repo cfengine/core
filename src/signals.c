@@ -46,7 +46,7 @@ if (signum != SIGCHLD)
    
    if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)
       {
-	  SelfTerminatePrelude();
+      SelfTerminatePrelude();
       exit(0);
       }
    else if (signum == SIGUSR1)

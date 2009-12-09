@@ -537,11 +537,9 @@ for (i = 0; i < month - 1; i++)
 
 cftime += (year - 1970) * 365 * 24 * 3600;
 
-
-Debug("Time CORRESPONDS %s\n",ctime(&cftime));
+Debug("Time %s CORRESPONDS %s\n",s,ctime(&cftime));
 return (long) cftime;
 }
-
 
 /****************************************************************************/
 

@@ -1104,61 +1104,6 @@ else
 #endif  /* NOT MINGW */
    }
 
-CfOut(cf_verbose,"","Checking integrity of the input data for RPC\n");
-
-snprintf(vbuff,CF_BUFSIZE,"%s%crpc_in",CFWORKDIR,FILE_SEPARATOR);
-
-if (cfstat(vbuff,&statbuf) == -1)
-   {
-   snprintf(vbuff,CF_BUFSIZE,"%s%crpc_in%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
-   MakeParentDirectory(vbuff,false);
-
-   if (chown(vbuff,getuid(),getgid()) == -1)
-      {
-      CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
-      }
-
-   cf_chmod(vbuff,(mode_t)0700);
-   }
-else
-   {
-#ifndef MINGW
-   if (statbuf.st_mode & 077)
-      {
-      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: RPC input directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
-      FatalError(output);
-      }
-#endif  /* NOT MINGW */
-   }
-
-CfOut(cf_verbose,"","Checking integrity of the output data for RPC\n");
-
-snprintf(vbuff,CF_BUFSIZE,"%s%crpc_out",CFWORKDIR,FILE_SEPARATOR);
-
-if (cfstat(vbuff,&statbuf) == -1)
-   {
-   snprintf(vbuff,CF_BUFSIZE,"%s%crpc_out%c.",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
-   MakeParentDirectory(vbuff,false);
-
-   if (chown(vbuff,getuid(),getgid()) == -1)
-      {
-      CfOut(cf_error,"chown","Unable to set owner on %s to %d.%d",vbuff,getuid(),getgid());
-      }
-
-   cf_chmod(vbuff,(mode_t)0700);
-   }
-else
-   {
-#ifndef MINGW
-   if (statbuf.st_mode & 077)
-      {
-
-      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: RPC output directory %s was not private! (%o)\n",vbuff,statbuf.st_mode & 0777);
-      FatalError(output);
-      }
-#endif  /* NOT MINGW */
-   }
-
 CfOut(cf_verbose,"","Checking integrity of the PKI directory\n");
 
 snprintf(vbuff,CF_BUFSIZE,"%s%cppkeys",CFWORKDIR,FILE_SEPARATOR);

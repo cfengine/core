@@ -400,12 +400,12 @@ if (!NewDBCursor(dbp,&dbcp))
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    char *obj = (char *)key + CF_INDEX_OFFSET;
-   
+
    if (cfstat(obj,&statbuf) == -1)
       {
       if (attr.change.update)
          {         
-         if (DeleteDB(dbp,key))
+         if (DeleteComplexKeyDB(dbp,key,ksize))
             {
             cfPS(cf_error,CF_CHG,"",pp,attr,"ALERT: %s file no longer exists!",obj);
             }

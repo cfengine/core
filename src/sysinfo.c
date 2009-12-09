@@ -465,6 +465,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       continue;
       }
 
+   /* Skip virtual network interfaces */
+   
    if (*(ifp->ifr_name) == 'v')
       {
       CfOut(cf_verbose,"","Skipping apparent virtual interface %d: %s\n",j+1,ifp->ifr_name);

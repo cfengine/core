@@ -325,7 +325,7 @@ Debug("Receive counter challenge from server\n");
 memset(in,0,CF_BUFSIZE);  
 encrypted_len = ReceiveTransaction(conn->sd,in,NULL);
 
-if (encrypted_len < 0)
+if (encrypted_len <= 0)
    {
    CfOut(cf_error,"","Protocol transaction sent illegal cipher length");
    return false;      

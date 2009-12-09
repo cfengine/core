@@ -844,6 +844,13 @@ for (sp = str; *sp != '\0'; sp++)
       case '}':
       case ']':
           count--;
+
+          /* The last character must be the end of the variable */
+
+          if (count == 0 && strlen(sp) > 1)
+             {
+             return false;
+             }
           break;
       }
    }
@@ -852,7 +859,6 @@ if (count != 0)
    {
    return false;
    }
-
 
 Debug1("IsNakedVar(%s,%c)!!\n",str,vtype);
 return true;

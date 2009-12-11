@@ -37,11 +37,11 @@
 void LoadSystemConstants()
 
 {
- NewScalar("const","dollar","$",cf_str);
- NewScalar("const","n","\n",cf_str);
- NewScalar("const","r","\r",cf_str);
- NewScalar("const","t","\t",cf_str);
- NewScalar("const","endl","\n",cf_str);
+NewScalar("const","dollar","$",cf_str);
+NewScalar("const","n","\n",cf_str);
+NewScalar("const","r","\r",cf_str);
+NewScalar("const","t","\t",cf_str);
+NewScalar("const","endl","\n",cf_str);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 }
 
@@ -512,6 +512,18 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
              }
           break;
       }
+
+   /* Some chars cannot be in variable ids, e.g.
+      $(/bin/cat file) is legal in bash */
+
+   if (bracks > 0)
+      {
+      switch (*sp)
+         {
+         case '/':
+             return false;
+         }
+      }
    
    if (left == '(' && right == ')' && dollar && (bracks == 0))
       {
@@ -583,6 +595,18 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
           break;
       }
    
+   /* Some chars cannot be in variable ids, e.g.
+      $(/bin/cat file) is legal in bash */
+
+   if (bracks > 0)
+      {
+      switch (*sp)
+         {
+         case '/':
+             return false;
+         }
+      }
+
    if (left == '(' && right == ')' && dollar && (bracks == 0))
       {
       vars++;

@@ -48,7 +48,7 @@ return Unix_IsExecutable(file);
 
 int ShellCommandReturnsZero(char *comm,int useshell)
 
-{ 
+{
 #ifdef MINGW
 return NovaWin_ShellCommandReturnsZero(comm,useshell);
 #else

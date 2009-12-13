@@ -194,12 +194,17 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
           printf("Self-analysis is not yet implemented.");
           exit(0);
           break;
-          
+
       default:  Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
           exit(1);
           
       }
   }
+
+if (argv[optind] != NULL)
+   {
+   CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
+   }
 
 Debug("Set debugging\n");
 }

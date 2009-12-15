@@ -1,0 +1,34 @@
+#######################################################
+#
+# grp function to concat a list
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => {
+                     test
+                     };   
+}
+
+#######################################################
+
+bundle agent test
+
+{
+vars:
+
+  "mylist" slist => { "One", "Two", "Three", "Four", "Five" };
+
+  "sublist" slist => grep("T.*","mylist");
+
+reports:
+
+ linux::
+
+  "Item: $(sublist)";
+
+}

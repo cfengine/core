@@ -1,0 +1,34 @@
+#######################################################
+#
+# join function to concat a list
+#
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => {
+                     test
+                     };   
+}
+
+#######################################################
+
+bundle agent test
+
+{
+vars:
+
+  "mylist" slist => { "one", "two", "three", "four", "five" };
+
+  "scalar" string => join("<->","mylist");
+
+reports:
+
+ linux::
+
+  "Concatenated $(scalar)";
+
+}

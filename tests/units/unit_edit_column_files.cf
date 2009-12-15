@@ -33,18 +33,18 @@ files:
   "/home/mark/tmp/passwd"
 
        create    => "true",
-       edit_line => SetUserParam("mark","6","/home/dir");
+       edit_line => set_user_field("mark","6","/home/dir");
 
   "/home/mark/tmp/group"
 
        create    => "true",
-       edit_line => AppendUserParam("wheel","4","@(bun.userset)");
+       edit_line => append_user_field("wheel","4","@(bun.userset)");
 
 }
 
 ########################################################
 
-bundle edit_line SetUserParam(user,field,val)
+bundle edit_line set_user_field(user,field,val)
   {
   field_edits:
 
@@ -57,7 +57,7 @@ bundle edit_line SetUserParam(user,field,val)
 
 ########################################################
 
-bundle edit_line AppendUserParam(user,field,allusers)
+bundle edit_line append_user_field(user,field,allusers)
   {
   vars:
 

@@ -411,6 +411,7 @@ void ReportSoftware(struct CfPackageManager *list);
 void ReportPatches(struct CfPackageManager *list);
 void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void VerifyServices(struct Attributes a,struct Promise *pp);
 void LoadSlowlyVaryingObservations(void);
 void RegisterLiteralServerData(char *handle,struct Promise *pp);
 int ReturnLiteralData(char *handle,char *ret);

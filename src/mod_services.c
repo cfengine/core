@@ -51,7 +51,7 @@ struct BodySyntax CF_SERVMETHOD_BODY[] =
 struct BodySyntax CF_SERVICES_BODIES[] =
    {
    {"service_policy",cf_opts,"start,stop,disable","Policy for service status to maintain"},
-   {"service_dependencies",cf_slist,CF_IDRANGE,"A list of sub-services on which this service depends"},
+   {"service_dependencies",cf_slist,CF_IDRANGE,"A list of services on which this service depends"},
    {"service_method",cf_body,CF_SERVMETHOD_BODY,"Details of the service specification"},
    {NULL,cf_notype,NULL,NULL}
    };

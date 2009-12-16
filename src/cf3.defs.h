@@ -1508,6 +1508,7 @@ struct CfServices
    char *service_args;
    char *service_policy;
    char *service_start_policy;
+   char *service_depend_chain;
    };
 
 /*************************************************************************/

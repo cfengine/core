@@ -336,6 +336,7 @@ s.service_policy = GetConstraint("service_policy",pp,CF_SCALAR);
 s.service_start_policy = GetConstraint("service_start_policy",pp,CF_SCALAR);
 s.service_args = GetConstraint("service_args",pp,CF_SCALAR);
 s.service_depend = GetListConstraint("service_dependencies",pp);
+s.service_depend_chain = GetConstraint("service_dependence_chain",pp,CF_SCALAR);
 
 return s;
 }

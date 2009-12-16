@@ -265,6 +265,7 @@ enum package_actions Str2PackageAction(char *s);
 enum cf_acl_method Str2AclMethod(char *string);
 enum cf_acl_type Str2AclType(char *string);
 enum cf_acl_inherit Str2AclInherit(char *string);
+enum cf_acl_inherit Str2ServicePolicy(char *string);
 char *Item2String(struct Item *ip);
 #ifndef MINGW
 struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);

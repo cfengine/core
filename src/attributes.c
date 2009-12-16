@@ -332,7 +332,7 @@ struct CfServices GetServicesConstraints(struct Promise *pp)
 { static struct CfServices s;
  
 s.service_type = GetConstraint("service_type",pp,CF_SCALAR);
-s.service_policy = GetConstraint("service_policy",pp,CF_SCALAR);
+s.service_policy = Str2ServicePolicy(GetConstraint("service_policy",pp,CF_SCALAR));
 s.service_start_policy = GetConstraint("service_start_policy",pp,CF_SCALAR);
 s.service_args = GetConstraint("service_args",pp,CF_SCALAR);
 s.service_depend = GetListConstraint("service_dependencies",pp);

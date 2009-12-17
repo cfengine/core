@@ -714,3 +714,4 @@ if (entry != NULL)
 }
 
 #endif  /* NOT MINGW */
+

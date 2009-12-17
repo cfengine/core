@@ -570,6 +570,7 @@ int ShellCommandReturnsZero(char *comm,int useshell);
 int GetExecOutput(char *command,char *buffer,int useshell);
 void ActAsDaemon(int preserve);
 char *WinEscapeCommand(char *s);
+int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
 
 /* files_copy.c */
 
@@ -1047,16 +1048,17 @@ void OpenNetwork(void);
 void CloseNetwork(void);
 #ifndef HAVE_SETEGID
 int setegid (gid_t gid);
-#endif /* HAVE_SETEGID */
+#endif
 #ifndef HAVE_DRAND48
 double drand48(void);
-#endif  /* HAVE_DRAND48 */
-#ifndef HAVE_DRAND48
 void srand48(long seed);
-#endif  /* HAVE_DRAND48 */
+#endif
+#ifndef HAVE_LIBRT
+int clock_gettime(clockid_t clock_id,struct timespec *tp);
+#endif
 #ifdef MINGW
 unsigned int alarm(unsigned int seconds);
-#endif /* MINGW */
+#endif
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);
@@ -1112,7 +1114,6 @@ int Unix_cf_pclose(FILE *pp);
 int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
 int cf_pwait(pid_t pid);
 int CfSetuid(uid_t uid,gid_t gid);
-int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
 #endif  /* NOT MINGW */
 
 /* processes_select.c */

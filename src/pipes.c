@@ -956,47 +956,4 @@ if (uid != (uid_t) -1)
 return true;
 }
 
-/*******************************************************************/
-/* Command exec aids                                               */
-/*******************************************************************/
-
-int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE])
-
-{ char *sp;
-  int i = 0;
-
-for (sp = comm; sp < comm+strlen(comm); sp++)
-   {
-   if (i >= CF_MAXSHELLARGS-1)
-      {
-      CfOut(cf_error,"","Too many arguments in embedded script");
-      FatalError("Use a wrapper");
-      }
-   
-   while (*sp == ' ' || *sp == '\t')
-      {
-      sp++;
-      }
-   
-   switch (*sp)
-      {
-      case '\0': return(i-1);
-   
-      case '\"': sscanf (++sp,"%[^\"]",arg[i]);
-          break;
-      case '\'': sscanf (++sp,"%[^\']",arg[i]);
-          break;
-      case '`':  sscanf (++sp,"%[^`]",arg[i]);
-          break;
-      default:   sscanf (sp,"%s",arg[i]);
-          break;
-      }
-   
-   sp += strlen(arg[i]);
-   i++;
-   }
- 
- return (i);
-}
-
 #endif  /* NOT MINGW */

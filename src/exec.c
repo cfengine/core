@@ -134,9 +134,9 @@ if(NOWINSERVICE)
   {
   StartServer(argc,argv);
   }
- else
+else
   {
-  NovaWin_StartExecService(argc, argv);
+  NovaWin_StartExecService();
   }
 #else  /* NOT MINGW */
 

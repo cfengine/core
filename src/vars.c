@@ -175,7 +175,7 @@ else
       }
    }
 
-if (strstr(sval,"."))
+if (IsQualifiedVariable(sval))
    {
    scopeid[0] = '\0';
    sscanf(sval,"%[^.].%s",scopeid,vlval);
@@ -800,4 +800,34 @@ if (bracks != 0)
    as long as we only call this function from the first $ position */
 
 return str;
+}
+
+/*********************************************************************/
+
+int IsQualifiedVariable(char *var)
+
+{ int isarraykey = false;
+  char *sp;
+ 
+for (sp = var; *sp != '\0'; sp++)
+   {
+   if (*sp == '[')
+      {
+      isarraykey = true;
+      }
+   
+   if (isarraykey)
+      {
+      return false;
+      }
+   else
+      {
+      if (*sp == '.')
+         {
+         return true;
+         }      
+      }
+   }
+
+return false;
 }

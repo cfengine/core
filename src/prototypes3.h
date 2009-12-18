@@ -1371,6 +1371,7 @@ char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
 int UnresolvedVariables(struct CfAssoc *ap,char rtype);
 int UnresolvedArgs(struct Rlist *args);
+int IsQualifiedVariable(char *var);
 
 /* verify_databases.c */
 

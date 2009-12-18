@@ -1516,7 +1516,7 @@ struct CfServices
    char *service_type;
    char *service_args;
    enum cf_srv_policy service_policy;
-   char *service_start_policy;
+   char *service_autostart_policy;
    char *service_depend_chain;
    };
 

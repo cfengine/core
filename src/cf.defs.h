@@ -371,9 +371,8 @@ typedef int clockid_t;
 /*******************************************************************/
 
 #ifdef TCDB
-
-#include <tcutil.h>
-#include <tchdb.h>
+# include <tcutil.h>
+# include <tchdb.h>
 
 typedef struct
   {
@@ -389,12 +388,12 @@ typedef struct
    }
 CF_TCDBC;
 
-#define CF_DB CF_TCDB
-#define CF_DBC CF_TCDBC
+# define CF_DB CF_TCDB
+# define CF_DBC CF_TCDBC
 
 #elif defined(QDB)
 
-#include <depot.h>
+# include <depot.h>
 
 typedef struct
    {
@@ -410,24 +409,23 @@ typedef struct
    }
 CF_QDBC;
 
-#define CF_DB CF_QDB
-#define CF_DBC CF_QDBC
-
+# define CF_DB CF_QDB
+# define CF_DBC CF_QDBC
+# 
 #else
 
-#ifdef SOLARIS
-# ifndef u_int32_t
-#  define u_int32_t uint32_t
-#  define u_int16_t uint16_t
-#  define u_int8_t uint8_t
+# ifdef SOLARIS
+#  ifndef u_int32_t
+#   define u_int32_t uint32_t
+#   define u_int16_t uint16_t
+#   define u_int8_t uint8_t
+#  endif
 # endif
-#endif
 
-#include <db.h>
-#define CF_DB DB
-#define CF_DBC DBC
-
-#define BDB 1
+# include <db.h>
+# define CF_DB DB
+# define CF_DBC DBC
+# define BDB 1
 #endif
 
 

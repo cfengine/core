@@ -77,6 +77,8 @@
 #undef NT
 #undef MINGW
 #undef DARWIN
+#undef TCDB
+#undef BDB
 
 /* SVR4 header stuff */
 

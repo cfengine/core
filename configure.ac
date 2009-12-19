@@ -118,7 +118,7 @@ dnl
 dnl Choose a database
 dnl
 
-AC_ARG_WITH(tokyoabinet,
+AC_ARG_WITH(tokyocabinet,
 	AS_HELP_STRING(--with-tokyocabinet, [support database functions]),with_tokyo=yes,
 	with_tokyo=no)
 

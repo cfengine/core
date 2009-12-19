@@ -1668,7 +1668,7 @@ struct Rval FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp,*newlist;
   char *filename,*regex,*array_lval,*split;
   char name[CF_MAXVARSIZE],line[CF_BUFSIZE],retval[CF_SMALLBUF];
-  int lcount = 0,vcount = 0,nopurge = false;
+  int lcount = 0,vcount = 0,nopurge = true;
   FILE *fin;
   
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */

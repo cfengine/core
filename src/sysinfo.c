@@ -1427,6 +1427,7 @@ int Linux_Suse_Version(void)
 /* Check if it's a SuSE Enterprise version (all in lowercase) */
 #define SUSE_SLES8_ID "suse sles-8"
 #define SUSE_SLES_ID  "suse linux enterprise server"
+#define SUSE_SLED_ID  "suse linux enterprise desktop"
 #define SUSE_RELEASE_FLAG "linux "
 
 /* The full string read in from SuSE-release */
@@ -1488,6 +1489,17 @@ else
          {
          snprintf(classbuf,CF_MAXVARSIZE,"SLES%d",version);
          NewClass(classbuf);
+         }
+      else
+         {
+         snprintf(vbuf,CF_BUFSIZE,"%s %d ",SUSE_SLED_ID,version);
+         Debug("Checking for suse [%s]\n",vbuf);
+         
+         if (!strncmp(relstring, vbuf, strlen(vbuf)))
+            {
+            snprintf(classbuf,CF_MAXVARSIZE,"SLED%d",version);
+            NewClass(classbuf);
+            }
          }
       }
    }

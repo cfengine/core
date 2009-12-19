@@ -94,14 +94,13 @@ if test "x$with_sql" != xno; then
    WITH_SQL=1
 fi
 
-if test $WITH_SQL; then
+if test $WITH_SQL = 1; then
   AC_CHECK_LIB(mysqlclient,main)
   AC_CHECK_LIB(pq,main)
   AC_CHECK_HEADERS(mysql/mysql.h)
   AC_CHECK_HEADERS(pgsql/libpq-fe.h)
   AC_CHECK_HEADERS(libpq-fe.h)
 fi
-
 
 AC_CHECK_LIB(cfnova,main)
 AC_CHECK_LIB(cfconstellation,main)
@@ -115,21 +114,43 @@ AC_CHECK_FUNC(getaddrinfo, , AC_CHECK_LIB(socket, getaddrinfo))
 AC_SEARCH_LIBS(socket, socket, ,
     [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
 
+dnl 
+dnl Choose a database
+dnl
+
+AC_ARG_WITH(tokyoabinet,
+	AS_HELP_STRING(--with-tokyocabinet, [support database functions]),with_tokyo=yes,
+	with_tokyo=no)
+
+if test "x$with_tokyo" = xyes; then
+   AC_MSG_CHECKING(for TokyoCabinet)
+   WITH_TOKYO=1
+else
+   WITH_TOKYO=0
+fi
+
+if test $WITH_TOKYO = 1; then
+  AC_CHECK_LIB(tokyocabinet,main)
+  AC_CHECK_HEADERS(tcutil.h)
+  AC_CHECK_HEADERS(tchdb.h)
+  AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
+else
+
 dnl
 dnl  Look for Berkeley DB.
 dnl 
 
-AC_ARG_WITH(berkeleydb,
+  AC_ARG_WITH(berkeleydb,
     [  --with-berkeleydb[=PATH] directory where BerkeleyDB exists],
     BERKELEY_DB_DIR=$with_berkeleydb,
     BERKELEY_DB_DIR=default)
 
-AC_MSG_CHECKING(for BerkeleyDB location in $BERKELEY_DB_DIR)
+  AC_MSG_CHECKING(for BerkeleyDB location in $BERKELEY_DB_DIR)
 
-if test "x$BERKELEY_DB_DIR" = "xno" ; then
+  if test "x$BERKELEY_DB_DIR" = "xno" ; then
     AC_MSG_RESULT( )
     AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.4 or later)
-else
+  else
     if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
         for v in BerkeleyDB.4.2 BerkeleyDB.4.3 BerkeleyDB.4.4 BerkeleyDB.4.5 BerkeleyDB.4.6 BerkeleyDB.4.7; do
             for d in $prefix /opt /usr/local /usr; do
@@ -286,10 +307,14 @@ AC_SUBST(BERKELEY_DB_LDFLAGS)
 AC_SUBST(BERKELEY_DB_CFLAGS)
 AC_SUBST(BERKELEY_DB_LIB)
 
+fi
 
-###
-### Search for openssl
-###
+dnl END check database
+
+
+dnl
+dnl Search for openssl
+dnl
 
 
 AC_ARG_WITH(openssl,
@@ -469,8 +494,22 @@ dnl ######################################################################
 dnl Checks for graph support
 dnl ######################################################################
 
-AC_CHECK_HEADERS(graphviz/gvc.h)
-AC_CHECK_LIB(gvc,main)
+AC_ARG_WITH(graphviz,
+	AS_HELP_STRING(--with-graphviz, [support some graphic functions]),with_graphviz=yes,
+	with_graphviz=no)
+
+if test "x$with_graphviz" = xyes; then
+   AC_MSG_CHECKING(for Graphviz)
+   WITH_GVC=1
+else
+   WITH_GVC=0
+fi
+
+if test $WITH_GVC = 1; then
+  AC_CHECK_HEADERS(graphviz/gvc.h)
+  AC_CHECK_LIB(gvc,main)
+fi
+
 AC_CHECK_LIB(gd,main)
 AC_CHECK_HEADERS(gd.h)
 

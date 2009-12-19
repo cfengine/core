@@ -14,6 +14,10 @@ vars:
   "rhs[lhs2]" string => "Whose Fleece was white as snow";
   "rhs[lhs3]" string => "And everywhere that Mary went";
 
+  "rhs[net/ipv4/tcp_syncookies]" string => "1";
+  "rhs[net/ipv4/icmp_echo_ignore_broadcasts]" string => "1";
+  "rhs[net/ipv4/ip_forward]" string => "0";
+
   # oops, now change pig -> lamb
 
 files:
@@ -37,6 +41,10 @@ vars:
 
   "index" slist => getindices("$(v)");
 
+  # Be careful if the index string contains funny chars
+
+  "cindex[$(index)]" string => canonify("$(index)");
+
 field_edits:
 
   # match a line starting like the key = something
@@ -44,13 +52,13 @@ field_edits:
   "$(index)\s*=.*"
 
      edit_field => col("=","2","$($(v)[$(index)])","set"),
-      classes => if_ok("not_$(index)");
+        classes => if_ok("not_$(cindex[$(index)])");
 
 insert_lines:
 
   "$(index)=$($(v)[$(index)])",
 
-      ifvarclass => "!not_$(index)";
+      ifvarclass => "!not_$(cindex[$(index)])";
 }
 
 ############################################################

@@ -27,7 +27,7 @@ files:
 
   "/tmp/test_setvar"
 
-     edit_line => SetVars("testsetvar.v");
+     edit_line => setvars_v1("testsetvar.v");
 
 }
 
@@ -35,7 +35,7 @@ files:
 # For the library
 #######################################################
 
-bundle edit_line setvars(contexted_array_name)
+bundle edit_line setvars_v1(contexted_array_name)
 
 {
 vars:

@@ -370,11 +370,51 @@ typedef int clockid_t;
 /*  DBM                                                            */
 /*******************************************************************/
 
-#define BDB  // FIXME: Set in autoconf
+#ifdef TCDB
 
-#ifdef BDB  // FIXME
+#include <tcutil.h>
+#include <tchdb.h>
 
-/* Need this to to avoid conflict with solaris 2.6 and db.h */
+typedef struct
+  {
+  TCHDB *hdb;
+  char *valmemp;  // allocated on demand, freed on db close
+  }
+CF_TCDB;
+
+typedef struct
+   {
+   char *curkey;
+   char *curval;
+   }
+CF_TCDBC;
+
+#define CF_DB CF_TCDB
+#define CF_DBC CF_TCDBC
+
+#elif defined(QDB)
+
+#include <depot.h>
+
+typedef struct
+   {
+   DEPOT *depot;
+   char *valmemp;  // allocated on demand, freed on db close
+   }
+CF_QDB;
+
+typedef struct
+   {
+   char *curkey;
+   char *curval;
+   }
+CF_QDBC;
+
+#define CF_DB CF_QDB
+#define CF_DBC CF_QDBC
+
+#else
+
 #ifdef SOLARIS
 # ifndef u_int32_t
 #  define u_int32_t uint32_t
@@ -387,47 +427,8 @@ typedef int clockid_t;
 #define CF_DB DB
 #define CF_DBC DBC
 
-#elif defined(TCDB) // ------------
-
-#include <tcutil.h>
-#include <tchdb.h>
-
-typedef struct
-{
-  TCHDB *hdb;
-  char *valmemp;  // allocated on demand, freed on db close
-}CF_TCDB;
-
-typedef struct
-{
-  char *curkey;
-  char *curval;
-}CF_TCDBC;
-
-#define CF_DB CF_TCDB
-#define CF_DBC CF_TCDBC
-
-
-#elif defined(QDB)  // ------------
-
-#include <depot.h>
-
-typedef struct
-{
-  DEPOT *depot;
-  char *valmemp;  // allocated on demand, freed on db close
-}CF_QDB;
-
-typedef struct
-{
-  char *curkey;
-  char *curval;
-}CF_QDBC;
-
-#define CF_DB CF_QDB
-#define CF_DBC CF_QDBC
-
-#endif  /* QDB */   // ------------
+#define BDB 1
+#endif
 
 
 /*******************************************************************/

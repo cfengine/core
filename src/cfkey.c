@@ -93,15 +93,15 @@ NewScope("common");
   
 cipher = EVP_des_ede3_cbc();
 
-if (cfstat(CFPRIVKEYFILE,&statbuf) != -1)
+if (cfstat(CFPUBKEYFILE,&statbuf) != -1)
    {
-   CfOut(cf_error,"","A key file already exists at %s.\n",CFPRIVKEYFILE);
+   CfOut(cf_error,"","A key file already exists at %s\n",CFPUBKEYFILE);
    return;
    }
 
-if (cfstat(CFPUBKEYFILE,&statbuf) != -1)
+if (cfstat(CFPRIVKEYFILE,&statbuf) != -1)
    {
-   CfOut(cf_error,"","A key file already exists at %s.\n",CFPUBKEYFILE);
+   CfOut(cf_error,"","A key file already exists at %s\n",CFPRIVKEYFILE);
    return;
    }
 
@@ -219,6 +219,10 @@ while ((c=getopt_long(argc,argv,"d:vf:VM",OPTIONS,&optindex)) != EOF)
                     
       case 'V': Version("cf-key");
           exit(0);
+
+      case 'v':
+          VERBOSE = true;
+          break;
           
       case 'h': Syntax("cf-key - cfengine's key generator",OPTIONS,HINTS,ID);
           exit(0);

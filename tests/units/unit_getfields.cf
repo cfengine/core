@@ -12,13 +12,19 @@ bundle agent example
 {     
 vars:
 
-  "no" int => getfields("mark.*","/etc/passwd",":","userdata");
+  "no" int => getfields("mark.*","/tmp/passwd",":","userdata");
 
 reports:
 
   cfengine_3::
 
     "Found $(no) lines matching";
+
+    "Mark's handle = $(userdata[1])";
+    "Mark's passwd = ... forget it!";
+    "Mark's uid = $(userdata[3])";
+    "Mark's gid = $(userdata[4])";
+    "Mark's name = $(userdata[5])";
     "Mark's homedir = $(userdata[6])";
 
 }

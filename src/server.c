@@ -2370,21 +2370,19 @@ SendTransaction(conn->sd_reply,digest,16,CF_DONE);
 
 /* Send counter challenge to be sure this is a live session */
 
+ThreadLock(cft_system);
+
 counter_challenge = BN_new();
 BN_rand(counter_challenge,256,0,0);
 nonce_len = BN_bn2mpi(counter_challenge,in);
 HashString(in,nonce_len,digest,cf_md5);
 encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
 
-ThreadLock(cft_system);
- 
 if ((out = malloc(encrypted_len+1)) == NULL)
    {
    FatalError("memory failure");
    }
 
-ThreadUnlock(cft_system);
- 
 if (RSA_public_encrypt(nonce_len,in,out,newkey,RSA_PKCS1_PADDING) <= 0)
    {
    err = ERR_get_error();
@@ -2393,6 +2391,8 @@ if (RSA_public_encrypt(nonce_len,in,out,newkey,RSA_PKCS1_PADDING) <= 0)
    free(out);
    return false;
    }
+
+ThreadUnlock(cft_system);
 
 /* proposition S3 */ 
 SendTransaction(conn->sd_reply,out,encrypted_len,CF_DONE);

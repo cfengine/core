@@ -411,7 +411,8 @@ CF_QDBC;
 
 # define CF_DB CF_QDB
 # define CF_DBC CF_QDBC
-# 
+
+
 #else
 
 # ifdef SOLARIS

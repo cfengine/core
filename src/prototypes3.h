@@ -374,6 +374,7 @@ int EnterpriseExpiry(char *day,char *month,char *year);
 char *GetConsolePrefix(void);
 char *MailSubject(void);
 void CheckAutoBootstrap(void);
+void CheckLicenses(void);
 pid_t StartTwin(int argc,char **argv);
 void SignalTwin(void);
 void InitMeasurements(void);

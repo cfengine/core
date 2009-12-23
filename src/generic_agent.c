@@ -112,6 +112,8 @@ if (SHOWREPORTS || ERRORCOUNT)
    CompilationReport(VINPUTFILE);
    }
 
+CheckLicenses();
+
 XML = 0;
 }
 
@@ -120,10 +122,10 @@ XML = 0;
 void GenericDeInitialize()
 
 {
-  Debug("GenericDeInitialize()\n");
+Debug("GenericDeInitialize()\n");
 
-  CloseNetwork();
-  Cf3CloseLog();
+CloseNetwork();
+Cf3CloseLog();
 }
 
 /*****************************************************************************/

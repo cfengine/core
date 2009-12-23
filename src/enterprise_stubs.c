@@ -134,6 +134,18 @@ return false;
 
 /*****************************************************************************/
 
+void CheckLicenses()
+
+{
+#ifdef HAVE_LIBCFNOVA
+return Nova_CheckLicensePromise();
+#else
+return;
+#endif
+}
+
+/*****************************************************************************/
+
 void CheckAutoBootstrap()
 
 {

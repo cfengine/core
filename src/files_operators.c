@@ -101,6 +101,12 @@ if (!SelectLeaf(path,sb,attr,pp))
    return false;
    }
 
+if (!attr.recursion.include_basedir && (strcmp(path,pp->promiser) == 0))
+   {
+   CfOut(cf_verbose,""," -> Promise to skip base directory %s\n",path);
+   return false;
+   }
+
 CfOut(cf_verbose,""," -> Handling file existence constraints on %s\n",path);
 
 /* We still need to augment the scope of context "this" for commands */

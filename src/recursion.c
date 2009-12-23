@@ -217,16 +217,22 @@ int SkipDirLinks(char *path,char *lastnode,struct Recursion r)
 {
 Debug("SkipDirLinks(%s,%s)\n",path,lastnode);
 
-if (MatchRlistItem(r.exclude_dirs,path) || MatchRlistItem(r.exclude_dirs,lastnode))
+if (r.exclude_dirs)
    {
-   CfOut(cf_verbose,"","Skipping matched excluded directory %s\n",path);
-   return true;
-   }       
+   if (MatchRlistItem(r.exclude_dirs,path) || MatchRlistItem(r.exclude_dirs,lastnode))
+      {
+      CfOut(cf_verbose,"","Skipping matched excluded directory %s\n",path);
+      return true;
+      }
+   }
 
-if ((r.include_dirs != NULL) && !(MatchRlistItem(r.include_dirs,path) || MatchRlistItem(r.include_dirs,lastnode)))
+if (r.include_dirs)
    {
-   CfOut(cf_verbose,"","Skipping matched non-included directory %s\n",path);
-   return true;
+   if (!(MatchRlistItem(r.include_dirs,path) || MatchRlistItem(r.include_dirs,lastnode)))
+      {
+      CfOut(cf_verbose,"","Skipping matched non-included directory %s\n",path);
+      return true;
+      }
    }
 
 return false;

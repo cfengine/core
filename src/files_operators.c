@@ -841,65 +841,65 @@ void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promi
 
 { char *lastnode = ReadLastNode(path);
 
-  Debug(" -> Verifying file deletions for %s\n",path);
+Debug(" -> Verifying file deletions for %s\n",path);
 
-  if (DONTDO)
-    {
-      CfOut(cf_inform,"","Promise requires deletion of file object %s\n",path);
-    }
-  else
-    {
-      switch (attr.transaction.action)
-        {
-        case cfa_warn:
-
+if (DONTDO)
+   {
+   CfOut(cf_inform,"","Promise requires deletion of file object %s\n",path);
+   }
+else
+   {
+   switch (attr.transaction.action)
+      {
+      case cfa_warn:
+          
           cfPS(cf_error,CF_WARN,"",pp,attr," !! %s '%s' should be deleted", S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
           break;
-
-        case cfa_fix:
-
-
+          
+      case cfa_fix:
+          
+          
           if (!S_ISDIR(sb->st_mode))
-            {
-              if (unlink(lastnode) == -1)
+             {
+             if (unlink(lastnode) == -1)
                 {
-                  cfPS(cf_verbose,CF_FAIL,"unlink",pp,attr,"Couldn't unlink %s tidying\n",path);
+                cfPS(cf_verbose,CF_FAIL,"unlink",pp,attr,"Couldn't unlink %s tidying\n",path);
                 }
-              else
+             else
                 {
-                  cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted file %s\n",path);
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted file %s\n",path);
                 }
-            }
+             }
           else
-            {
-              if (!attr.delete.rmdirs)
+             {
+             if (!attr.delete.rmdirs)
                 {
-                  CfOut(cf_inform,"unlink","Keeping directory %s\n",path);
-                  return;
+                CfOut(cf_inform,"unlink","Keeping directory %s\n",path);
+                return;
                 }
-
-              if (strcmp(path,pp->promiser) == 0)
+             
+             if (strcmp(path,pp->promiser) == 0)
                 {
-                  /* This is the parent and we cannot delete it from here - must delete separately*/
-                  return;
+                /* This is the parent and we cannot delete it from here - must delete separately*/
+                return;
                 }
-
-              if (rmdir(lastnode) == -1)
+             
+             if (rmdir(lastnode) == -1)
                 {
-                  cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (node called %s)\n",path,lastnode);
+                cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (node called %s)\n",path,lastnode);
                 }
-              else
+             else
                 {
-                  cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted directory %s\n",path);
+                cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted directory %s\n",path);
                 }
-            }
-
+             }
+          
           break;
-
-        default:
+          
+      default:
           FatalError("Cfengine: internal error: illegal file action\n");
-        }
-    }
+      }
+   }
 }
 
 /*********************************************************************/

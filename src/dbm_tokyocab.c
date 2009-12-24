@@ -115,8 +115,6 @@ int TCDB_ReadComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz,void *dest, int de
 
 { int errCode;
 
-memset(dest, 0, destSz);
-
 if (tchdbget3(hdbp->hdb, key, keySz, dest, destSz) == -1)
    {
    errCode = tchdbecode(hdbp->hdb);

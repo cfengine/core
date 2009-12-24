@@ -177,7 +177,7 @@ if (VarClassExcluded(pp,&sp))
    {
    CfOut(cf_verbose,"","\n");
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
+   CfOut(cf_verbose,"","Skipping whole next edit promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }

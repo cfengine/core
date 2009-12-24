@@ -101,12 +101,6 @@ if (!SelectLeaf(path,sb,attr,pp))
    return false;
    }
 
-if (!attr.recursion.include_basedir && (strcmp(path,pp->promiser) == 0))
-   {
-   CfOut(cf_verbose,""," -> Promise to skip base directory %s\n",path);
-   return false;
-   }
-
 CfOut(cf_verbose,""," -> Handling file existence constraints on %s\n",path);
 
 /* We still need to augment the scope of context "this" for commands */
@@ -140,7 +134,14 @@ else
 
 if (attr.haveperms || attr.havechange || attr.acl.acl_entries)
    {
-   VerifyFileAttributes(path,sb,attr,pp);
+   if (!attr.recursion.include_basedir && (strcmp(path,pp->promiser) == 0))
+      {
+      CfOut(cf_verbose,""," -> Promise to skip base directory %s\n",path);
+      }
+   else
+      {
+      VerifyFileAttributes(path,sb,attr,pp);
+      }
    }
 
 DeleteScalar("this","promiser");

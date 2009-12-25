@@ -134,7 +134,7 @@ else
 
 if (attr.haveperms || attr.havechange || attr.acl.acl_entries)
    {
-   if (!attr.recursion.include_basedir && (strcmp(path,pp->promiser) == 0))
+   if (S_ISDIR(sb->st_mode) && !attr.recursion.include_basedir && (strcmp(path,pp->promiser) == 0))
       {
       CfOut(cf_verbose,""," -> Promise to skip base directory %s\n",path);
       }

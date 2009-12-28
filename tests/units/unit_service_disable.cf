@@ -1,0 +1,23 @@
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "bad_services" slist => { "Telnet",  "ftpdaemon", "mailsrv" };
+
+services:
+  
+  "$(bad_services)"
+     
+       service_policy => "disable",
+       comment => "Disable services that create security issues";
+}
+

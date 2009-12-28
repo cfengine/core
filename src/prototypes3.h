@@ -1452,7 +1452,8 @@ int GracefulTerminate(pid_t pid);
 /* verify_services.c */
 
 void VerifyServicesPromise(struct Promise *pp);
-void ServicesSanityChecks(struct Attributes a,struct Promise *pp);
+int ServicesSanityChecks(struct Attributes a,struct Promise *pp);
+void SetServiceDefaults(struct Attributes *a);
 
 /* verify_storage.c */
 

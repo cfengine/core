@@ -40,18 +40,101 @@ void VerifyServicesPromise(struct Promise *pp)
 
 a = GetServicesAttributes(pp);
 
-ServicesSanityChecks(a,pp);
+SetServiceDefaults(&a);
 
-VerifyServices(a,pp);
+if(ServicesSanityChecks(a,pp))
+   {
+   VerifyServices(a,pp);
+   }
 }
 
 /*****************************************************************************/
 
-void ServicesSanityChecks(struct Attributes a,struct Promise *pp)
+int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
     
 {
+ struct Rlist *dep;
+
+ switch(a.service.service_policy)
+    {
+    case cfsrv_start:
+        break;
+        
+    case cfsrv_stop:
+    case cfsrv_disable:
+        if(strcmp(a.service.service_autostart_policy, "none") != 0)
+           {
+           CfOut(cf_error,"","!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
+                 pp->promiser, a.service.service_autostart_policy);
+           PromiseRef(cf_error,pp);
+           return false;
+           }
+        break;
+        
+    default:
+        CfOut(cf_error,"","!! Invalid service policy for service \"%s\"", pp->promiser);
+        PromiseRef(cf_error,pp);
+        return false;
+    }
+
+ for(dep = a.service.service_depend; dep != NULL; dep = dep->next)
+    {
+    if(strcmp(pp->promiser, dep->item) == 0)
+       {
+       CfOut(cf_error,"","!! Service promiser \"%s\" has itself as dependency", pp->promiser);
+       PromiseRef(cf_error,pp);
+       return false;
+       }
+    }
+
+ if(a.service.service_type ==  NULL)
+    {
+    CfOut(cf_error,"","!! Service type for service \"%s\" is not known", pp->promiser);
+    PromiseRef(cf_error,pp);
+    return false;
+    }
+
+#ifdef MINGW
+
+ if(strcmp(a.service.service_type, "windows") != 0)
+    {
+    CfOut(cf_error,"","!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"", pp->promiser, a.service.service_type);
+    PromiseRef(cf_error,pp);
+    return false;
+    }
+ 
+#endif  /* MINGW */
+
+ return true;
 }
 
+/*****************************************************************************/
+
+void SetServiceDefaults(struct Attributes *a)
+{
+ 
+ if(a->service.service_autostart_policy == NULL)
+    {
+    a->service.service_autostart_policy = "none";
+    }
+
+ if(a->service.service_depend_chain == NULL)
+    {
+    a->service.service_depend_chain = "ignore";
+    }
+
+ 
+ // default service type to "windows" on windows platforms
+#ifdef MINGW
+ 
+ if(a->service.service_type == NULL)
+    {
+    a->service.service_type = "windows";
+    }
+ 
+#endif  /* MINGW */
+     
+}
 
 
 

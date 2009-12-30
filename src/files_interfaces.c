@@ -316,7 +316,7 @@ MapName(filename);
 if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
    {
    CfOut(cf_verbose,"","Did not find any previous setuid log %s, creating a new one",filename);
-   //save = false;
+   save = false;
    }
 
 /* Phase 1 - */

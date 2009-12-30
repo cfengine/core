@@ -293,6 +293,13 @@ EDITFILESIZE = 100000;
   popen() - or else pclose will fail to return
   status which we need for setting returns
 */
+
+snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+MapName(filename);
+if ((fp = fopen(filename,"a")) != NULL)
+   {
+   fclose(fp);
+   }
 }
 
 /*******************************************************************/

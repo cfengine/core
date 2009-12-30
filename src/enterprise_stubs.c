@@ -213,9 +213,16 @@ char *MailSubject()
 
 { static char buffer[CF_BUFSIZE];
 #ifdef HAVE_LIBCFNOVA
- strcpy(buffer,"nova");
+if (LICENSES)
+   {
+   strcpy(buffer,"Nova");
+   }
+else
+   {
+   strcpy(buffer,"EXPIRED");
+   }
 #else
- buffer[0] = '\0';
+strcpy(buffer,"community");
 #endif
 return buffer;
 }

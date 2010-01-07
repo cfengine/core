@@ -287,7 +287,7 @@ if (siglist == NULL)
 
 if (a.signals == NULL)
    {
-   CfOut(cf_inform,""," -> No signals to send for %s\n",pp->promiser);
+   CfOut(cf_verbose,""," -> No signals to send for %s\n",pp->promiser);
    return 0;
    }
 

@@ -43,8 +43,8 @@ int main (int argc,char *argv[]);
 /*******************************************************************/
 
  char *ID = "The promise agent is a validator and analysis tool for\n"
-            "confguration files belonging to any of the components\n"
-            "of cfengine. Configurations that make changes must be\n"
+            "configuration files belonging to any of the components\n"
+            "of Cfengine. Configurations that make changes must be\n"
             "approved by this validator before being executed.";
  
  struct option OPTIONS[14] =

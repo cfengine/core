@@ -86,9 +86,9 @@ extern struct Rlist *SERVERLIST;
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The main cfengine agent is the instigator of change\n"
+ char *ID = "The main Cfengine agent is the instigator of change\n"
             "in the system. In that sense it is the most important\n"
-            "part of the cfengine suite.\n";
+            "part of the Cfengine suite.\n";
 
  struct option OPTIONS[15] =
       {

@@ -107,13 +107,13 @@ char MANDIR[CF_BUFSIZE];
 /*******************************************************************/
 
  char *ID = "The knowledge management agent is capable of building\n"
-            "an analysing a semantic knowledge network. It can\n"
+            "and analysing a semantic knowledge network. It can\n"
             "configure a relational database to contain an ISO\n"
             "standard topic map and permit regular-expression based\n"
             "searching of the map. Analysis of the semantic network\n"
             "can be performed providing graphical output of the data,\n"
-            "and cfknow can assemble and converge the reference manual\n"
-            "for the current version of the cfengine software.";
+            "and cf-know can assemble and converge the reference manual\n"
+            "for the current version of the Cfengine software.";
  
  struct option OPTIONS[13] =
       {

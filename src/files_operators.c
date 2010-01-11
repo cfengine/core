@@ -1980,13 +1980,14 @@ void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes a
   u_long newflags;
 #endif
 
-Debug("Unix_VerifyFileAttributes(%s)\n",file);
 
 maskvalue = umask(0);                 /* This makes the DEFAULT modes absolute */
 
 newperm = (dstat->st_mode & 07777);
 newperm |= attr.perms.plus;
 newperm &= ~(attr.perms.minus);
+
+Debug("Unix_VerifyFileAttributes(%s -> %o)\n",file,newperm);
 
  /* directories must have x set if r set, regardless  */
 
@@ -2156,27 +2157,49 @@ void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *
   uid_t save_uid;
   gid_t save_gid;
 
-// How do we get the default attr?
+// If we get here, there is both a src and dest file
 
 Debug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus);
 
 save_uid = (attr.perms.owners)->uid;
 save_gid = (attr.perms.groups)->gid;
 
-if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
+if (attr.copy.preserve)
    {
-   (attr.perms.owners)->uid = sstat->st_uid;
-   }
-
-if ((attr.perms.groups)->gid == CF_SAME_GROUP)
-   {
-   (attr.perms.groups)->gid = sstat->st_gid;
-   }
+   CfOut(cf_verbose,""," -> Attempting to preserve file permissions from the source");
+      
+   if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
+      {
+      (attr.perms.owners)->uid = sstat->st_uid;
+      }
+   
+   if ((attr.perms.groups)->gid == CF_SAME_GROUP)
+      {
+      (attr.perms.groups)->gid = sstat->st_gid;
+      }
 
 // Will this preserve if no mode set?
 
-newplus = (sstat->st_mode & 07777) | attr.perms.plus;
-newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+   newplus = (sstat->st_mode & 07777) | attr.perms.plus;
+   newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> Not attempting to preserve file permissions from the source");
+   
+   if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
+      {
+      (attr.perms.owners)->uid = dstat->st_uid;
+      }
+   
+   if ((attr.perms.groups)->gid == CF_SAME_GROUP)
+      {
+      (attr.perms.groups)->gid = dstat->st_gid;
+      }
+
+   newplus = (dstat->st_mode & 07777) | attr.perms.plus;
+   newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+   }
 
 attr.perms.plus = newplus;
 attr.perms.minus = newminus;

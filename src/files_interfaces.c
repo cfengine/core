@@ -1821,7 +1821,7 @@ else if (!discardbackup && ArchiveToRepository(backup,attr,pp))
    unlink(backup);
    }
 
-if (attr.copy.preserve)
+if (attr.copy.stealth)
    {
 #ifdef HAVE_UTIME_H
    timebuf.actime = sstat.st_atime;

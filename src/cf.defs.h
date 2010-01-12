@@ -32,18 +32,18 @@
 
 #include "conf.h"
 
-#include <stdio.h>
-#include <math.h>
-
-#ifndef _GETOPT_H
-#include "../pub/getopt.h"
-#endif
-
 #ifdef NT
 #  define MAX_FILENAME 227
 #  define WINVER 0x501
 #else
 #  define MAX_FILENAME 254
+#endif
+
+#include <stdio.h>
+#include <math.h>
+
+#ifndef _GETOPT_H
+#include "../pub/getopt.h"
 #endif
 
 #ifdef HAVE_STDLIB_H

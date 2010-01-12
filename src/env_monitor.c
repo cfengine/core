@@ -160,8 +160,11 @@ void MonInitialize()
 for (i = 0; i < ATTR; i++)
    {
    sprintf(vbuff,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
+   MapName(vbuff);
    CreateEmptyFile(vbuff);
+   
    sprintf(vbuff,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
+   MapName(vbuff);
    CreateEmptyFile(vbuff);
    }
 
@@ -172,12 +175,20 @@ for (i = 0; i < CF_NETATTR; i++)
    }
  
 sprintf(vbuff,"%s/state/cf_users",CFWORKDIR);
+MapName(vbuff);
 CreateEmptyFile(vbuff);
  
 snprintf(AVDB,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
+MapName(AVDB);
+
 snprintf(STATELOG,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATELOG_FILE);
+MapName(STATELOG);
+
 snprintf(ENVFILE_NEW,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENVNEW_FILE);
+MapName(ENVFILE_NEW);
+
 snprintf(ENVFILE,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
+MapName(ENVFILE);
 
 if (!BATCH_MODE)
    {

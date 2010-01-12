@@ -465,13 +465,13 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 # define SIGUSR2 16
 # define SIGBUS 17
 
-# ifndef _TIMESPEC_DEFINED
-#  define _TIMESPEC_DEFINED 1
+# if !defined( _TIMESPEC_DEFINED) && !defined(HAVE_STRUCT_TIMESPEC)
+#  define HAVE_STRUCT_TIMESPEC 1
    struct timespec {
            long tv_sec;
            long tv_nsec;
    };
-# endif /* _TIMESPEC_DEFINED */
+# endif /* NOT _TIMESPEC_DEFINED */
 
 #else  /* NOT MINGW */
 # define NULLFILE "/dev/null"

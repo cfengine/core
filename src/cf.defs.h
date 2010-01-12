@@ -72,6 +72,10 @@ struct utsname
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
+
 #ifdef HAVE_SYS_SYSTEMINFO_H
 # include <sys/systeminfo.h>
 #endif
@@ -233,7 +237,6 @@ extern int errno;
 # include <AccCtrl.h>
 # include <Aclapi.h>
 # include <psapi.h>
-# include <ddk/ntapi.h>
 # include <wchar.h>
 # include <Sddl.h>
 # include <tlhelp32.h>
@@ -462,13 +465,13 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 # define SIGUSR2 16
 # define SIGBUS 17
 
-# ifndef HAVE_STRUCT_TIMESPEC
-#  define HAVE_STRUCT_TIMESPEC 1
+# ifndef _TIMESPEC_DEFINED
+#  define _TIMESPEC_DEFINED 1
    struct timespec {
            long tv_sec;
            long tv_nsec;
    };
-# endif /* HAVE_STRUCT_TIMESPEC */
+# endif /* _TIMESPEC_DEFINED */
 
 #else  /* NOT MINGW */
 # define NULLFILE "/dev/null"

@@ -600,7 +600,7 @@ struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp)
 
 c.change = (struct Rlist *)GetListConstraint("promise_repaired",pp);
 c.failure = (struct Rlist *)GetListConstraint("repair_failed",pp);
-c.denied = (struct Rlist *)GetListConstraint("reapir_denied",pp);
+c.denied = (struct Rlist *)GetListConstraint("repair_denied",pp);
 c.timeout = (struct Rlist *)GetListConstraint("repair_timeout",pp);
 c.kept = (struct Rlist *)GetListConstraint("promise_kept",pp);
 c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp);

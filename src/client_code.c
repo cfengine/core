@@ -118,9 +118,10 @@ return NULL;
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
-  static sigset_t   signal_mask;
-
+  
 #ifndef MINGW
+static sigset_t   signal_mask;
+
 signal(SIGPIPE,SIG_IGN);
 
 sigemptyset (&signal_mask);

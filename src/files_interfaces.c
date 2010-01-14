@@ -858,7 +858,7 @@ else
       CfOut(cf_verbose,""," -> Existence only is promised, no copying required\n",destfile);
       return;
       }
-   
+
    if (!attr.copy.force_update)
       {
       ok_to_copy = CompareForFileCopy(sourcefile,destfile,&ssb,&dsb,attr,pp);
@@ -880,6 +880,13 @@ else
          }
       }
    
+   if (ok_to_copy && attr.transaction.action == cfa_warn)
+      {
+      cfPS(cf_error,CF_WARN,"",pp,attr," !! Image file \"%s\" exists but is not up to date wrt %s\n",destfile,sourcefile);
+      cfPS(cf_error,CF_WARN,"",pp,attr," !! Only a warning has been promised\n");
+      return;
+      }
+
    if (attr.copy.force_update || ok_to_copy || S_ISLNK(ssb.st_mode))  /* Always check links */
       {
       if (S_ISREG(srcmode) || attr.copy.link_type == cfa_notlinked)

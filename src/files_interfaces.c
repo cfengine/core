@@ -641,7 +641,7 @@ else
    server = NULL;
    }
 
-if ((strcmp(sourcefile,destfile) == 0) && (strcmp(server,"localhost") == 0))
+if ((strcmp(sourcefile,destfile) == 0) && server && (strcmp(server,"localhost") == 0))
    {
    CfOut(cf_inform,""," !! File copy promise loop: file/dir %s is its own source",sourcefile);
    return;
@@ -731,7 +731,7 @@ if (found == -1)
    {
    if (attr.transaction.action == cfa_warn)
       {
-      cfPS(cf_error,CF_NOP,"",pp,attr," !! Image file %s is non-existent and should be a copy of %s\n",destfile,sourcefile);
+      cfPS(cf_error,CF_WARN,"",pp,attr," !! Image file \"%s\" is non-existent and should be a copy of %s\n",destfile,sourcefile);
       return;
       }
    
@@ -851,7 +851,7 @@ else
    {
    int ok_to_copy = false;
    
-   CfOut(cf_verbose,""," -> Destination file %s already exists\n",destfile);
+   CfOut(cf_verbose,""," -> Destination file \"%s\" already exists\n",destfile);
 
    if (attr.copy.compare == cfa_exists)
       {
@@ -863,7 +863,11 @@ else
       {
       ok_to_copy = CompareForFileCopy(sourcefile,destfile,&ssb,&dsb,attr,pp);
       }
-   
+   else
+      {
+      ok_to_copy = true;
+      }
+
    if (attr.copy.type_check && attr.copy.link_type != cfa_notlinked)
       {
       if ((S_ISDIR(dsb.st_mode)  && ! S_ISDIR(ssb.st_mode))  ||
@@ -879,8 +883,8 @@ else
          return;
          }
       }
-   
-   if (ok_to_copy && attr.transaction.action == cfa_warn)
+
+   if (ok_to_copy && (attr.transaction.action == cfa_warn))
       {
       cfPS(cf_error,CF_WARN,"",pp,attr," !! Image file \"%s\" exists but is not up to date wrt %s\n",destfile,sourcefile);
       cfPS(cf_error,CF_WARN,"",pp,attr," !! Only a warning has been promised\n");
@@ -1288,7 +1292,7 @@ switch (attr.copy.compare)
    {
    case cfa_checksum:
    case cfa_hash:
-       
+
        if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
           {
           ok_to_copy = CompareFileHashes(sourcefile,destfile,ssb,dsb,attr,pp);
@@ -1300,7 +1304,7 @@ switch (attr.copy.compare)
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
-       if (ok_to_copy && (attr.transaction.action != cfa_warn))
+       if (ok_to_copy)
           { 
           CfOut(cf_inform,""," !! Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;

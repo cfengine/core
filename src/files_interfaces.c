@@ -1299,14 +1299,13 @@ switch (attr.copy.compare)
           }      
        else
           {
-          CfOut(cf_inform,"","Checksum comparison replaced by ctime: files not regular\n");
-          PromiseRef(cf_inform,pp);
+          CfOut(cf_verbose,"","Checksum comparison replaced by ctime: files not regular\n");
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
        if (ok_to_copy)
           { 
-          CfOut(cf_inform,""," !! Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_verbose,""," !! Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1319,14 +1318,13 @@ switch (attr.copy.compare)
           }      
        else
           {
-          CfOut(cf_inform,"","Byte comparison replaced by ctime: files not regular\n");
-          PromiseRef(cf_inform,pp);
+          CfOut(cf_verbose,"","Byte comparison replaced by ctime: files not regular\n");
           ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
           }
        
-       if (ok_to_copy && (attr.transaction.action != cfa_warn))
+       if (ok_to_copy)
           { 
-          CfOut(cf_inform,""," !! Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_verbose,""," !! Image file %s has a wrong binary checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1335,9 +1333,9 @@ switch (attr.copy.compare)
        
        ok_to_copy = (dsb->st_mtime < ssb->st_mtime);
        
-       if (ok_to_copy && (attr.transaction.action != cfa_warn))
+       if (ok_to_copy)
           { 
-          CfOut(cf_inform,""," !! Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_verbose,""," !! Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1348,9 +1346,9 @@ switch (attr.copy.compare)
            (dsb->st_mtime < ssb->st_mtime)||
            CompareBinaryFiles(sourcefile,destfile,ssb,dsb,attr,pp);
        
-       if (ok_to_copy && (attr.transaction.action != cfa_warn))
+       if (ok_to_copy)
           { 
-          CfOut(cf_inform,""," !! Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_verbose,""," !! Image file %s seems out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;
@@ -1358,9 +1356,9 @@ switch (attr.copy.compare)
    default:
        ok_to_copy = (dsb->st_ctime < ssb->st_ctime)||(dsb->st_mtime < ssb->st_mtime);
        
-       if (ok_to_copy && (attr.transaction.action != cfa_warn))
+       if (ok_to_copy)
           { 
-          CfOut(cf_inform,""," !! Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_verbose,""," !! Image file %s out of date (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;

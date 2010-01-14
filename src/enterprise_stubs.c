@@ -84,9 +84,6 @@ void EnterpriseVersion()
 {
 #ifdef HAVE_LIBCFNOVA
 Nova_Version();
-NewClass("nova_edition");
-#else
-NewClass("community_edition");
 #endif 
 }
 

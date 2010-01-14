@@ -314,6 +314,12 @@ strcpy(FILE_SEPARATOR_STR,"/");
 
 NewClass("any");
 
+#ifdef HAVE_LIBCFNOVA
+NewClass("nova_edition");
+#else
+NewClass("community_edition");
+#endif
+
 strcpy(VPREFIX,GetConsolePrefix());
 
 if (VERBOSE)

@@ -649,6 +649,25 @@ return rename(oldpath,newpath);
 
 /*******************************************************************/
 
+void *cf_malloc(size_t size, char *errLocation)
+/* Stops on memory allocation error */
+{
+ char buf[CF_SMALLBUF];
+ void *ptr = NULL;
+ 
+ ptr = malloc(size);
+
+ if(ptr == NULL)
+    {
+    CfOut(cf_error, "malloc", "!! Could not allocate memory in \"%s\"", errLocation);
+    FatalError("Memory allocation\n");
+    }
+ 
+ return ptr;
+}
+
+/*******************************************************************/
+
 void OpenNetwork()
 
 {

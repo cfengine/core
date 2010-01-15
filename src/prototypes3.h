@@ -1046,6 +1046,7 @@ int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
+void *cf_malloc(size_t size, char *errLocation);
 void OpenNetwork(void);
 void CloseNetwork(void);
 #ifndef HAVE_SETEGID

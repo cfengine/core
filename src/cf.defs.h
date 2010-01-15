@@ -240,6 +240,8 @@ extern int errno;
 # include <wchar.h>
 # include <Sddl.h>
 # include <tlhelp32.h>
+# include <iphlpapi.h>
+# include <Ws2tcpip.h>
 # ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
 # else

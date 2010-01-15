@@ -310,14 +310,25 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 name = finalargs->item;
 limit = Str2Int(finalargs->next->item);
+buffer[0] = '\0';
 
 snprintf(ctrlstr,CF_SMALLBUF,"%%.%ds",limit); // -> %45s
-snprintf(buffer,CF_BUFSIZE-1,ctrlstr,getenv(name));
+
+if (getenv(name))
+   {
+   snprintf(buffer,CF_BUFSIZE-1,ctrlstr,getenv(name));
+   }
+else
+   {
+   snprintf(buffer,CF_BUFSIZE-1,"");
+   }
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
    FatalError("Memory allocation in FnCallGetUid");
    }
+
+SetFnCallReturnStatus("getenv",FNCALL_SUCCESS,NULL,NULL);
 
 /* end fn specific content */
 

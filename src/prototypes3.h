@@ -471,6 +471,7 @@ void SaveClassEnvironment(void);
 
 /* evalfunction.c */
 
+struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs);

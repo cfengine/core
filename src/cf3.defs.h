@@ -508,6 +508,7 @@ enum fncalltype
    cfn_filesexist,
    cfn_getfields,
    cfn_getindices,
+   cfn_getenv,
    cfn_getgid,
    cfn_getuid,
    cfn_grep,

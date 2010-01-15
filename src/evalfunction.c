@@ -281,6 +281,52 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_IDRANGE,
+     CF_VALRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_int,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  struct passwd *pw;
+  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char *name;
+  int limit;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+name = finalargs->item;
+limit = Str2Int(finalargs->next->item);
+
+snprintf(ctrlstr,CF_SMALLBUF,"%%.%ds",limit); // -> %45s
+snprintf(buffer,CF_BUFSIZE-1,ctrlstr,getenv(name));
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallGetUid");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
 
 #ifndef MINGW

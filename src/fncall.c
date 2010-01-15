@@ -302,6 +302,9 @@ switch (this)
    case cfn_randomint:
        rval = FnCallRandomInt(fp,expargs);
        break;
+   case cfn_getenv:
+       rval = FnCallGetEnv(fp,expargs);
+       break;
    case cfn_getuid:
        rval = FnCallGetUid(fp,expargs);
        break;

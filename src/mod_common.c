@@ -59,6 +59,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"filesexist",cf_class,1,"True if the named list of files can ALL be accessed"},
    {"getfields",cf_int,4,"Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4"},
    {"getindices",cf_slist,1,"Get a list of keys to the array whose id is the argument and assign to variable"},
+   {"getenv",cf_str,2,"Return the environment variable named arg1, truncated at arg2 characters"},
    {"getgid",cf_int,1,"Return the integer group id of the named group on this host"},
    {"getuid",cf_int,1,"Return the integer user id of the named user on this host"},
    {"grep",cf_str,2,"Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2"},

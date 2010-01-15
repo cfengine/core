@@ -792,9 +792,9 @@ case "$target_os" in
         ;;
 
    mingw*)
-        AC_DEFINE(MINGW)
+        AC_DEFINE(MINGW, 1, [Native NT build.])
         AC_DEFINE(NT)
-        LIBS="$LIBS -lws2_32 -lpsapi"
+        LIBS="$LIBS -liphlpapi -lws2_32 -lpsapi"
         ;;
 
    sco*)

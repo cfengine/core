@@ -1000,11 +1000,11 @@ if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout    
       {
       if ((pw = getpwnam(ip->name)) == NULL)
          {
-         CfOut(cf_error,"","Unknown user \'%s\'\n",ip->name);
+         CfOut(cf_inform,"","Unknown user \'%s\'\n",ip->name);
 
          if (pp != NULL)
             {
-            PromiseRef(cf_error,pp);
+            PromiseRef(cf_inform,pp);
             }
 
          uid = CF_SAME_OWNER; /* signal user not found */
@@ -1037,7 +1037,7 @@ else
       }
    else if ((pw = getpwnam(uidbuff)) == NULL)
       {
-      CfOut(cf_error,"","Unknown user %s\n",uidbuff);
+      CfOut(cf_inform,"","Unknown user %s\n",uidbuff);
       uid = CF_UNKNOWN_OWNER;  /* signal user not found */
 
       if (usercopy != NULL)
@@ -1074,8 +1074,13 @@ else
       }
    else if ((gr = getgrnam(gidbuff)) == NULL)
       {
-      CfOut(cf_error,"","Unknown group \'%s\'\n",gidbuff);
-      PromiseRef(cf_error,pp);
+      CfOut(cf_inform,"","Unknown group \'%s\'\n",gidbuff);
+
+      if (pp)
+         {
+         PromiseRef(cf_inform,pp);
+         }
+
       gid = CF_SAME_GROUP;
       }
    else

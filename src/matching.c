@@ -498,13 +498,13 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
-      char substring[1024];
+      char substring[CF_MAXVARSIZE];
       char lval[4];
       char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
       
-      memset(substring,0,1024);
-      strncpy(substring,backref_start,backref_len);
+      memset(substring,0,CF_MAXVARSIZE);
+      strncpy(substring,backref_start,CF_MAXVARSIZE-1);
       snprintf(lval,3,"%d",i);
       ForceScalar(lval,substring);
       }
@@ -534,16 +534,16 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    for (i = 0; i < 2; i++) /* make backref vars $(1),$(2) etc */
       {
       int backref_len;
-      char substring[1024];
+      char substring[CF_MAXVARSIZE];
       char lval[4];
       regoff_t s,e;
       s = (int)pmatch[i].rm_so;
       e = (int)pmatch[i].rm_eo;
       backref_len = e - s;
 
-      if (backref_len < 1024)
+      if (backref_len < CF_MAXVARSIZE)
          {
-         memset(substring,0,1024);
+         memset(substring,0,CF_MAXVARSIZE);
          strncpy(substring,(char *)(teststring+s),backref_len);
          snprintf(lval,3,"%d",i);
          ForceScalar(lval,substring);
@@ -600,18 +600,25 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
-      char substring[1024];
+      char substring[CF_MAXVARSIZE];
       char lval[4];
       char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
       
-      memset(substring,0,1024);
-      strncpy(substring,backref_start,backref_len);
-      snprintf(lval,3,"%d",i);
-      ForceScalar(lval,substring);
+      memset(substring,0,CF_MAXVARSIZE);
+
+      if (backref_len < CF_MAXVARSIZE)
+         {
+         strncpy(substring,backref_start,backref_len);
+         snprintf(lval,3,"%d",i);
+         ForceScalar(lval,substring);
+         }
       }
 
-   pcre_free(rx);
+   if (rx)
+      {
+      pcre_free(rx);
+      }
       
    if ((match_start == teststring) && (match_len == strlen(teststring)))
       {
@@ -643,7 +650,7 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    for (i = 1; i < 2; i++) /* make backref vars $(1),$(2) etc */
       {
       int backref_len;
-      char substring[1024];
+      char substring[CF_MAXVARSIZE];
       char lval[4];
       start = pmatch[i].rm_so;
       end = pmatch[i].rm_eo;
@@ -651,7 +658,7 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
       
       if (backref_len < CF_MAXVARSIZE)
          {
-         memset(substring,0,1024);
+         memset(substring,0,CF_MAXVARSIZE);
          strncpy(substring,teststring+start,backref_len);
          snprintf(lval,3,"%d",i);
          ForceScalar(lval,substring);         
@@ -740,7 +747,7 @@ if ((code = regexec(&rx,teststring,2,pmatch,0)) == 0)
    for (i = 1; i < 2; i++) /* make backref vars $(1),$(2) etc */
       {
       int backref_len;
-      char substring[1024];
+      char substring[CF_MAXVARSIZE];
       char lval[4];
       start = pmatch[i].rm_so;
       end = pmatch[i].rm_eo;

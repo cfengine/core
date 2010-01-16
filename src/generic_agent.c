@@ -65,10 +65,10 @@ if (!NOHARDCLASSES)
    NewScope("mon");
    SetNewScope("sys");
    GetNameInfo3();
-
+   GetInterfaceInfo3(ag);
+      
    if (ag != cf_know)
       {
-      GetInterfaceInfo3();
       FindV6InterfaceInfo();
       Get3Environment();
       OSClasses();

@@ -157,8 +157,10 @@ fprintf(fout,"@node Special Variables\n@chapter Special Variables\n\n");
 // scopes const and sys
 
 TexinfoVariables(fout,"const");
-TexinfoVariables(fout,"sys");
+TexinfoVariables(fout,"match");
 TexinfoVariables(fout,"mon");
+TexinfoVariables(fout,"sys");
+TexinfoVariables(fout,"this");
 
 // Log files
 

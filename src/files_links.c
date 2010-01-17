@@ -448,7 +448,7 @@ return false;
 }
 #else  /* NOT MINGW */
 {
-if (DONTDO)
+if (DONTDO || attr.transaction.action == cfa_warn)
    {
    CfOut(cf_error,""," !! Need to link files %s -> %s\n",from,to);
    return false;

@@ -120,7 +120,7 @@ int LoadProcessTable(struct Item **procdata,char *psopts)
 
 { 
 #ifdef MINGW
-return NovaWin_LoadProcessTable(procdata,psopts);
+return NovaWin_LoadProcessTable(procdata);
 #else
 return Unix_LoadProcessTable(procdata,psopts);
 #endif

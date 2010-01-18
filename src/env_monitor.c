@@ -129,6 +129,7 @@ void GatherSocketData (void);
 void GatherSensorData(void);
 void GatherPromisedMeasures(void);
 
+int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
 void LeapDetection (void);
 struct Averages *GetCurrentAverages (char *timekey);
 void UpdateAverages (char *timekey, struct Averages newvals);
@@ -148,6 +149,10 @@ int GetFileGrowth(char *filename,enum observables index);
 int GetAcpi(void);
 int GetLMSensors(void);
 void KeepMonitorPromise(struct Promise *pp);
+
+#ifndef MINGW
+int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+#endif /* NOT MINGW */
 
 /****************************************************************/
 
@@ -1008,48 +1013,42 @@ else
 
 void GatherProcessData()
 
-{ FILE *pp;
-  char pscomm[CF_BUFSIZE];
-  char user[CF_MAXVARSIZE];
-  struct Item *list = NULL;
+{ struct Item *userList = NULL;
   char vbuff[CF_BUFSIZE];
+  int numProcUsers;
+  int numRootProcs;
+  int numOtherProcs;
+
+  if(!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
+     {
+     return;
+     }
   
-snprintf(pscomm,CF_BUFSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],VPSOPTS[VSYSTEMHARDCLASS]);
+  CF_THIS[ob_users] += numProcUsers;
+  CF_THIS[ob_rootprocs] += numRootProcs;
+  CF_THIS[ob_otherprocs] += numOtherProcs;
 
-if ((pp = cf_popen(pscomm,"r")) == NULL)
-   {
-   return;
-   }
 
-CfReadLine(vbuff,CF_BUFSIZE,pp); 
-
-while (!feof(pp))
-   {
-   CfReadLine(vbuff,CF_BUFSIZE,pp);
-   sscanf(vbuff,"%s",user);
-   
-   if (!IsItemIn(list,user))
-      {
-      PrependItem(&list,user,NULL);
-      CF_THIS[ob_users]++;
-      }
-
-   if (strcmp(user,"root") == 0)
-      {
-      CF_THIS[ob_rootprocs]++;
-      }
-   else
-      {
-      CF_THIS[ob_otherprocs]++;
-      }
-   }
-
-cf_pclose(pp);
-
+  
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_users",CFWORKDIR);
-RawSaveItemList(list,vbuff);
-DeleteItemList(list);
+MapName(vbuff);
+RawSaveItemList(userList,vbuff);
+
+DeleteItemList(userList);
+
 CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",CF_THIS[ob_users],CF_THIS[ob_rootprocs],CF_THIS[ob_otherprocs]);
+}
+
+/*****************************************************************************/
+
+
+int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+{
+#ifdef MINGW
+ return NovaWin_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
+#else
+ return Unix_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
+#endif
 }
 
 /*****************************************************************************/
@@ -2388,3 +2387,57 @@ if (strcmp("measurements",pp->agentsubtype) == 0)
 }
 
 
+#ifndef MINGW
+
+/*******************************************************************/
+/* Unix implementations                                            */
+/*******************************************************************/
+
+int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+    
+{
+ FILE *pp;
+ char pscomm[CF_BUFSIZE];
+ char user[CF_MAXVARSIZE];
+ char vbuff[CF_BUFSIZE];
+
+ *userListSz = 0;
+ *numRootProcs = 0;
+ *numOtherProcs = 0;
+ 
+snprintf(pscomm,CF_BUFSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],VPSOPTS[VSYSTEMHARDCLASS]);
+
+if ((pp = cf_popen(pscomm,"r")) == NULL)
+   {
+   return false;
+   }
+
+CfReadLine(vbuff,CF_BUFSIZE,pp); 
+
+while (!feof(pp))
+   {
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
+   sscanf(vbuff,"%s",user);
+   
+   if (!IsItemIn(*userList,user))
+      {
+      PrependItem(userList,user,NULL);
+      (*userListSz)++;
+      }
+
+   if (strcmp(user,"root") == 0)
+      {
+      (*numRootProcs)++;
+      }
+   else
+      {
+      (*numOtherProcs)++;
+      }
+   }
+
+cf_pclose(pp);
+
+return true;
+}
+
+#endif  /* NOT MINGW */

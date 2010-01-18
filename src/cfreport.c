@@ -398,6 +398,7 @@ strcpy(BANNER,"");
 strcpy(FOOTER,"");
 strcpy(AGGREGATION,"");
 snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
+MapName(VINPUTFILE);
 
 InitMeasurements();
 }

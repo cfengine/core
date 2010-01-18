@@ -75,11 +75,7 @@
 #undef HAVE_SYS_ACL_H
 #undef NOTBROKEN
 #undef NT
-#undef MINGW
 #undef DARWIN
-#undef TCDB
-#undef QDB
-#undef BDB
 
 /* SVR4 header stuff */
 
@@ -98,6 +94,9 @@
 
 #undef AUTOCONF_HOSTNAME
 #undef AUTOCONF_SYSNAME
+
+/* Cygwin NT build */
+#undef CFCYG
 
 /* Define if old Berkeley API */
 #undef CF_OLD_DB
@@ -129,6 +128,9 @@
 
 /* Define to 1 if you have the <dce/daclif.h> header file. */
 #undef HAVE_DCE_DACLIF_H
+
+/* Define to 1 if you have the <depot.h> header file. */
+#undef HAVE_DEPOT_H
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -240,6 +242,9 @@
 /* Define to 1 if you have the `PW' library (-lPW). */
 #undef HAVE_LIBPW
 
+/* Define to 1 if you have the `qdbm' library (-lqdbm). */
+#undef HAVE_LIBQDBM
+
 /* Define to 1 if you have the `rt' library (-lrt). */
 #undef HAVE_LIBRT
 
@@ -248,6 +253,9 @@
 
 /* Define to 1 if you have the `thread' library (-lthread). */
 #undef HAVE_LIBTHREAD
+
+/* Define to 1 if you have the `tokyocabinet' library (-ltokyocabinet). */
+#undef HAVE_LIBTOKYOCABINET
 
 /* Define to 1 if you have the <mach/mach.h> header file. */
 #undef HAVE_MACH_MACH_H
@@ -428,6 +436,12 @@
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
 #undef HAVE_SYS_WAIT_H
 
+/* Define to 1 if you have the <tchdb.h> header file. */
+#undef HAVE_TCHDB_H
+
+/* Define to 1 if you have the <tcutil.h> header file. */
+#undef HAVE_TCUTIL_H
+
 /* Define to 1 if you have the <thread.h> header file. */
 #undef HAVE_THREAD_H
 
@@ -449,9 +463,15 @@
 /* Define to 1 if you have the `waitpid' function. */
 #undef HAVE_WAITPID
 
+/* Define to 1 if you have the <winsock2.h> header file. */
+#undef HAVE_WINSOCK2_H
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #undef LT_OBJDIR
+
+/* Native NT build */
+#undef MINGW
 
 /* Define to 1 if your `struct nlist' has an `n_un' member. Obsolete, depend
    on `HAVE_STRUCT_NLIST_N_UN_N_NAME */
@@ -479,11 +499,17 @@
    your system. */
 #undef PTHREAD_CREATE_JOINABLE
 
+/* Define if QDBM is available. */
+#undef QDB
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Define to 1 on System V Release 4. */
 #undef SVR4
+
+/* Define if Tokyo Cabinet is available. */
+#undef TCDB
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME

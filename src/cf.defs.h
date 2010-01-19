@@ -234,14 +234,14 @@ extern int errno;
 
 #ifdef MINGW
 # include <windows.h>
-# include <AccCtrl.h>
-# include <Aclapi.h>
+# include <accctrl.h>
+# include <aclapi.h>
 # include <psapi.h>
 # include <wchar.h>
-# include <Sddl.h>
+# include <sddl.h>
 # include <tlhelp32.h>
 # include <iphlpapi.h>
-# include <Ws2tcpip.h>
+# include <ws2tcpip.h>
 # ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
 # else

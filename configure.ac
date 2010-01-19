@@ -403,7 +403,8 @@ int main(void)
 }
        ],
        [AC_MSG_RESULT(OK)],
-       [AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)]
+       [AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)],
+       [AC_MSG_WARN(Assuming 0.9.7 or later when cross-compiling)]
     )
 
     dnl ######################################################################

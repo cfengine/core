@@ -111,7 +111,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-horizon = Str2Int((char *)(finalargs->item));
+horizon = Str2Int((char *)(finalargs->item)) * 3600;
 policy = (char *)(finalargs->next->item);
 format = (char *)(finalargs->next->next->item);
 

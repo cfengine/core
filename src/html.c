@@ -43,8 +43,9 @@ fprintf(fp,"<html>"
         "      %s"
         "    </title>"
         "    <link rel=\"stylesheet\" href=\"%s\" type=\"text/css\" media=\"screen\" />"
+        "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />"
         "  </head>"
-        "  <body>",title,css);
+        "  <body>",title,css,css);
 
 if (strlen(header) > 0)
    {

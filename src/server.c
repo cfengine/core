@@ -2855,7 +2855,7 @@ else
       
       if (count++ % 3 == 0) /* Don't do this too often */
          {
-         Debug("Restatting %s\n",filename);
+         Debug("Restatting %s - size %d\n",filename,n_read);
          stat(filename,&sb);
          }
       
@@ -2867,20 +2867,23 @@ else
 
       total += n_read;
 
-      EVP_EncryptInit(&ctx,CfengineCipher(enctype),key,iv);    
-
-      if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,sendbuffer,n_read))
+      if (n_read > 0)
          {
-         FailedTransfer(sd,sendbuffer,filename);
-         close(fd);
-         return;
-         }
-      
-      if (!EVP_EncryptFinal(&ctx,out+cipherlen,&finlen))
-         {
-         FailedTransfer(sd,sendbuffer,filename);
-         close(fd);
-         return;
+         EVP_EncryptInit(&ctx,CfengineCipher(enctype),key,iv);    
+         
+         if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,sendbuffer,n_read))
+            {
+            FailedTransfer(sd,sendbuffer,filename);
+            close(fd);
+            return;
+            }
+         
+         if (!EVP_EncryptFinal(&ctx,out+cipherlen,&finlen))
+            {
+            FailedTransfer(sd,sendbuffer,filename);
+            close(fd);
+            return;
+            }
          }
 
       cnt++;

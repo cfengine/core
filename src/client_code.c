@@ -811,6 +811,13 @@ if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    return false;
    }
 
+if (size == 0)
+   {
+   // No sense in copying an empty file
+   close(dd);
+   return true;
+   }
+
 workbuf[0] = '\0';
 EVP_CIPHER_CTX_init(&ctx);  
 

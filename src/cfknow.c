@@ -1788,7 +1788,7 @@ if (HTML)
    {
    snprintf(banner,CF_BUFSIZE,"Disambiguation %s",name);
    CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
-   printf("<div id=\"intro\">");
+   printf("<div id=\"disambig\">");
 
    printf("<p>More than one topic matched your search parameters.</p>");
 
@@ -2427,7 +2427,7 @@ void ShowHtmlResults(char *this_name,char *this_type,char *this_comment,struct T
   struct Occurrence *oc;
   struct Rlist *rp;
   struct stat sb;
-  int count = 0;
+  int count = 0, subcount = 0;
   FILE *fout = stdout;
   char banner[CF_BUFSIZE],filename[CF_BUFSIZE],pngfile[CF_BUFSIZE];
   char *v,rettype;
@@ -2581,41 +2581,6 @@ else
    fprintf(fout,"</div>");
    }
 
-
-// Topics
-
-if (topics_this_type)
-   {
-   count = 0;
-   
-   fprintf(fout,"<p><div id=\"thistype\">");
-   fprintf(fout,"\n<h2>Topic \"%s\" includes:</h2>\n\n",NextTopic(this_name,this_type));
-   
-   fprintf(fout,"<ul>\n");
-   
-   for (tp = topics_this_type; tp != NULL; tp=tp->next)
-      {
-      if (tp->topic_comment)
-         {
-         fprintf(fout,"<li>  %s &nbsp; %s\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
-         }
-      else
-         {
-         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_type));
-         }
-      count++;
-      }
-   
-   if (count == 0)
-      {
-      fprintf(fout,"<li>    (none)\n");
-      }
-   
-   fprintf(fout,"</ul>\n");
-   fprintf(fout,"</div>");
-   }
-
-
 // Associations
 
 if (associations)
@@ -2650,30 +2615,33 @@ if (associations)
    }
 
 
-// Others
+// Tree-view
 
-if (other_topics)
+if (other_topics || topics_this_type)
    {
    count = 0;
    
    fprintf(fout,"<p><div id=\"others\">\n");
    
-   fprintf(fout,"\n<h2>Other topics found under \"%s\":</h2>\n\n",this_type);
+   fprintf(fout,"\n<h2>Category \"%s\" :</h2>\n\n",this_type);
+   
+   fprintf(fout,"<ul>\n");
+
+   fprintf(fout,"<li>  %s\n",this_name);
+
+   // Pseudo hierarchy
+
+   // Enter this sub-topic
+
+   count = 0;
    
    fprintf(fout,"<ul>\n");
    
-   for (tp = other_topics; tp != NULL; tp=tp->next)
+   for (tp = topics_this_type; tp != NULL; tp=tp->next)
       {
       if (tp->topic_comment)
          {
-         if (strncmp(tp->topic_comment,"A promise of type",strlen("A promise of type")) == 0)
-            {
-            fprintf(fout,"<li>  %s &nbsp; <i>%s</i>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
-            }
-         else
-            {
-            fprintf(fout,"<li>  %s &nbsp; %s\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
-            }
+         fprintf(fout,"<li>  %s &nbsp; <span id=\"subcomment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
          }
       else
          {
@@ -2684,7 +2652,37 @@ if (other_topics)
    
    if (count == 0)
       {
-      fprintf(fout,"<li>    (none)\n");
+      fprintf(fout,"<li>    (no sub-topics)\n");
+      }
+   
+   fprintf(fout,"</ul>\n");
+   
+   // Back up a level
+   
+   for (tp = other_topics; tp != NULL; tp=tp->next)
+      {
+      if (tp->topic_comment)
+         {
+         if (strncmp(tp->topic_comment,"A promise of type",strlen("A promise of type")) == 0)
+            {
+            fprintf(fout,"<li>  %s &nbsp; <span id=\"comment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+            }
+         else
+            {
+            fprintf(fout,"<li>  %s &nbsp; <span id=\"comment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+            }
+         }
+      else
+         {
+         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_type));
+         }
+
+      subcount++;
+      }
+   
+   if (subcount == 0)
+      {
+      fprintf(fout,"<li>    (no other topics in this category)\n");
       }
    
    fprintf(fout,"</div>");

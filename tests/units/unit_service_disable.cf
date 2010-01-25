@@ -1,23 +1,22 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+bundlesequence  => { "winservice" };
 }
 
 ###########################################################
 
-bundle agent example
+bundle agent winservice
 
-{     
+{
 vars:
 
-  "bad_services" slist => { "Telnet",  "ftpdaemon", "mailsrv" };
+  "bad_services" slist => { "Alerter",  "ClipSrv" };
 
 services:
-  
+
   "$(bad_services)"
-     
+
        service_policy => "disable",
        comment => "Disable services that create security issues";
 }
-

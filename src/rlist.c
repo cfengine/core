@@ -139,10 +139,11 @@ return false;
 
 void *CopyRvalItem(void *item, char type)
 
-{ struct Rlist *rp,*start = NULL;
+{ struct Rlist *rp,*srp,*start = NULL;
   struct FnCall *fp;
-  void *new;
-  char output[CF_BUFSIZE];
+  void *new,*rval;
+  char rtype = CF_SCALAR,output[CF_BUFSIZE];
+  char naked[CF_MAXVARSIZE];
   
 Debug("CopyRvalItem(%c)\n",type);
 
@@ -150,6 +151,8 @@ if (item == NULL)
    {
    return NULL;
    }
+
+naked[0] = '\0';
 
 switch(type)
    {
@@ -172,7 +175,31 @@ switch(type)
        /* The rval is an embedded rlist (2d) */
        for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
           {
-          AppendRlist(&start,rp->item,rp->type);
+          if (IsNakedVar(rp->item,'@'))
+             {
+             GetNaked(naked,rp->item);
+
+             if (GetVariable(CONTEXTID,naked,&rval,&rtype) != cf_notype)
+                {
+                switch (rtype)
+                   {
+                   case CF_LIST:
+                       for (srp = (struct Rlist *)rval; srp != NULL; srp=srp->next)
+                          {
+                          AppendRlist(&start,srp->item,srp->type);
+                          }
+                       break;
+                     
+                   default:
+                       AppendRlist(&start,rp->item,rp->type);
+                       break;
+                   }
+                }
+             }
+          else
+             {             
+             AppendRlist(&start,rp->item,rp->type);
+             }
           }
        
        return start;
@@ -473,7 +500,7 @@ struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type)
   struct CfAssoc *cp;
 
 Debug("OrthogAppendRlist\n");
-
+ 
 switch(type)
    {
    case CF_LIST:

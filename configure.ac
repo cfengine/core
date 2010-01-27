@@ -562,8 +562,16 @@ if test $WITH_GVC = 1; then
   AC_CHECK_LIB(gvc,main)
 fi
 
-AC_CHECK_LIB(gd,main)
-AC_CHECK_HEADERS(gd.h)
+
+AC_ARG_WITH(gd,
+	AS_HELP_STRING(--without-gd, [support some graphic functions]),with_gd=no,
+	with_gd=yes)
+
+if test "x$with_gd" != xno; then
+   AC_CHECK_LIB(gd,main)
+   AC_CHECK_HEADERS(gd.h)
+fi
+
 
 dnl ######################################################################
 dnl Checks for data types

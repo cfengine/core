@@ -688,6 +688,12 @@ if (cfstat("/etc/debian_version",&statbuf) != -1)
    Linux_Debian_Version();
    }
 
+if (cfstat("/usr/bin/aptitude",&statbuf) != -1)
+   {
+   CfOut(cf_verbose,"","This system seems to have the aptitude package system\n");
+   NewClass("have_aptitude");
+   }
+
 if (cfstat("/etc/UnitedLinux-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a UnitedLinux system.\n");

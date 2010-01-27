@@ -152,10 +152,10 @@ return 0;
 void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  char arg[CF_BUFSIZE];
+ char arg[CF_BUFSIZE],*sp;
   struct Item *actionList;
   int optindex = 0;
-  int c;
+  int c,alpha = false,v6 = false;
 
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
@@ -215,7 +215,31 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMBb:",OPTIONS,&optindex)) != E
           break;
 
       case 's':
-          strncpy(POLICY_SERVER,optarg,CF_BUFSIZE-1);
+          strncpy(POLICY_SERVER,Hostname2IPString(optarg),CF_BUFSIZE-1);
+
+          for (sp = POLICY_SERVER; *sp != '\0'; sp++)
+             {
+             if (isalpha(*sp))
+                {
+                alpha = true;
+                }
+
+             if (ispunct(*sp) && *sp != ':' && *sp != '.')
+                {
+                alpha = true;
+                }
+             
+             if (*sp == ':')
+                {
+                v6 = true;
+                }
+             }
+
+          if (alpha && !v6)
+             {
+             FatalError("Error specifying policy server. The policy server's IP address could not be looked up. Please use the IP address instead if there is no error.");
+             }
+          
           break;
           
       case 'K': IGNORELOCK = true;

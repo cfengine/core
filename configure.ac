@@ -75,9 +75,15 @@ dnl ######################################################################
 
 AC_CHECK_LIB(m,main)
 
-dnl Look for cf enterprise versions
+dnl Look for ldap
 
-AC_CHECK_LIB(ldap,ldap_get_values_len)
+AC_ARG_WITH(ldap,
+	AS_HELP_STRING(--without-ldap, [support some graphic functions]),with_ldap=no,
+	with_ldap=yes)
+
+if test "x$with_ldap" != xno; then
+   AC_CHECK_LIB(ldap,ldap_get_values_len)
+fi
 
 dnl Now check for database connectors
 
@@ -102,9 +108,32 @@ if test $WITH_SQL = 1; then
   AC_CHECK_HEADERS(libpq-fe.h)
 fi
 
-AC_CHECK_LIB(cfnova,main)
-AC_CHECK_LIB(cfconstellation,main)
-AC_CHECK_LIB(cfgalaxy,main)
+
+AC_ARG_WITH(nova,
+	AS_HELP_STRING(--without-nova, [support some graphic functions]),with_nova=no,
+	with_nova=yes)
+
+if test "x$with_nova" != xno; then
+   AC_CHECK_LIB(cfnova,main)
+fi
+
+AC_ARG_WITH(constellation,
+	AS_HELP_STRING(--without-constellation, [support some graphic functions]),with_constellation=no,
+	with_constellation=yes)
+
+if test "x$with_constellation" != xno; then
+   AC_CHECK_LIB(cfconstellation,main)
+
+fi
+
+AC_ARG_WITH(galaxy,
+	AS_HELP_STRING(--without-galaxy, [support some graphic functions]),with_galaxy=no,
+	with_galaxy=yes)
+
+if test "x$with_galaxy" != xno; then
+   AC_CHECK_LIB(cfgalaxy,main)
+
+fi
 
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
@@ -510,6 +539,8 @@ AC_HEADER_STDC
 AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
+
+
 
 dnl ######################################################################
 dnl Checks for graph support

@@ -65,7 +65,7 @@ if (!NOHARDCLASSES)
    NewScope("mon");
    SetNewScope("sys");
    GetNameInfo3();
-   GetInterfaceInfo(ag);
+   CfGetInterfaceInfo(ag);
       
    if (ag != cf_know)
       {

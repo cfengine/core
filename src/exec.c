@@ -616,7 +616,7 @@ sleep(CFPULSETIME);                /* 1 Minute resolution is enough */
 now = time(NULL);
 
 GetNameInfo3();
-GetInterfaceInfo(cf_executor);
+CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();
 SetReferenceTime(true);

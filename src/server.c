@@ -805,7 +805,7 @@ if (NewPromiseProposals())
       NewScope("mon");
       NewScope("remote_access");
       GetNameInfo3();
-      GetInterfaceInfo(cf_server);
+      CfGetInterfaceInfo(cf_server);
       Get3Environment();
       OSClasses();
       SetReferenceTime(true);

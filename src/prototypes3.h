@@ -1287,7 +1287,7 @@ enum cfdatatype ExpectedDataType(char *lvalname);
 /* sysinfo.c */
 
 void GetNameInfo3(void);
-void GetInterfaceInfo(enum cfagenttype ag);
+void CfGetInterfaceInfo(enum cfagenttype ag);
 void Get3Environment(void);
 void FindDomainName(char *hostname);
 void OSClasses(void);

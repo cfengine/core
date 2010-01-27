@@ -407,7 +407,7 @@ else
 
 /*********************************************************************/
 
-void GetInterfaceInfo(enum cfagenttype ag)
+void CfGetInterfaceInfo(enum cfagenttype ag)
 
 #ifdef MINGW
 {
@@ -1729,7 +1729,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   char name[CF_MAXVARSIZE];
   char last_name[CF_BUFSIZE];
 
-Debug("GetInterfaceInfo3()\n");
+Debug("Unix_GetInterfaceInfo()\n");
 
 NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
 

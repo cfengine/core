@@ -436,7 +436,7 @@ if (!NOHARDCLASSES)
    NewScope("control_monitor");
    NewScope("control_common");
    GetNameInfo3();
-   GetInterfaceInfo(cf_monitor);
+   CfGetInterfaceInfo(cf_monitor);
    Get3Environment();
    OSClasses();
    SetReferenceTime(true);

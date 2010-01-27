@@ -407,236 +407,20 @@ else
 
 /*********************************************************************/
 
-void GetInterfaceInfo3(enum cfagenttype ag)
+void GetInterfaceInfo(enum cfagenttype ag)
 
 #ifdef MINGW
 {
-NovaWin_GetInterfaceInfo3();
+NovaWin_GetInterfaceInfo();
 }
 #else
-{ int fd,len,i,j,first_address,ipdefault = false;
-  struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
-  struct ifconf list;
-  struct sockaddr_in *sin;
-  struct hostent *hp;
-  char *sp, workbuf[CF_BUFSIZE];
-  char ip[CF_MAXVARSIZE];
-  char name[CF_MAXVARSIZE];
-  char last_name[CF_BUFSIZE];
-
-Debug("GetInterfaceInfo3()\n");
-
-NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
-
-last_name[0] = '\0';
-
-if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
-   {
-   CfOut(cf_error,"socket","Couldn't open socket");
-   exit(1);
-   }
-
-list.ifc_len = sizeof(ifbuf);
-list.ifc_req = ifbuf;
-
-#ifdef SIOCGIFCONF
-if (ioctl(fd, SIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
-#else
-if (ioctl(fd, OSIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
-#endif
-   {
-   CfOut(cf_error,"ioctl","Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024");
-   exit(1);
-   }
-
-last_name[0] = '\0';
-
-for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
-   {
-   int skip = false;
-   
-   if (ifp->ifr_addr.sa_family == 0)
-      {
-      continue;
-      }
-
-   if (ifp->ifr_name == NULL || strlen(ifp->ifr_name) == 0)
-      {
-      continue;
-      }
-
-   /* Skip virtual network interfaces */
-   
-   if (strstr(ifp->ifr_name,":"))
-      {
-      CfOut(cf_verbose,"","Skipping apparent virtual interface %d: %s\n",j+1,ifp->ifr_name);
-      continue;
-      }
-   else
-      {
-      CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
-      }
-   
-   if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
-      {
-      first_address = false;
-      }
-   else
-      {
-      first_address = true;
-      }
-
-   strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
-
-   if (UNDERSCORE_CLASSES)
-      {
-      snprintf(workbuf,CF_BUFSIZE, "_net_iface_%s", CanonifyName(ifp->ifr_name));
-      }
-   else
-      {
-      snprintf(workbuf,CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
-      }
-
-   NewClass(workbuf);
-
-   if (ifp->ifr_addr.sa_family == AF_INET)
-      {
-      strncpy(ifr.ifr_name,ifp->ifr_name,sizeof(ifp->ifr_name));
-
-      if (ioctl(fd,SIOCGIFFLAGS,&ifr) == -1)
-         {
-         CfOut(cf_error,"ioctl","No such network device");
-         close(fd);
-         return;
-         }
-
-      if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
-         {
-         sin=(struct sockaddr_in *)&ifp->ifr_addr;
-         Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
-         NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
-
-         if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
-            {
-            Debug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
-            }
-         else
-            {
-            if (hp->h_name != NULL)
-               {
-               Debug("Adding hostname %s..\n",hp->h_name);
-               NewClass(CanonifyName(hp->h_name));
-
-               if (hp->h_aliases != NULL)
-                  {
-                  for (i=0; hp->h_aliases[i] != NULL; i++)
-                     {
-                     CfOut(cf_verbose,"","Adding alias %s..\n",hp->h_aliases[i]);
-                     NewClass(CanonifyName(hp->h_aliases[i]));
-                     }
-                  }
-               }
-            }
-
-         if (strcmp(inet_ntoa(sin->sin_addr),"0.0.0.0") == 0)
-            {
-            // Maybe we need to do something windows specific here?
-            CfOut(cf_verbose,""," !! Cannot discover hardware IP, using DNS value");
-            strcpy(ip,"ipv4_");
-            strcat(ip,VIPADDRESS);
-            AppendItem(&IPADDRESSES,VIPADDRESS,"");
-
-            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
-               {
-               if (*sp == '.')
-                  {
-                  *sp = '\0';
-                  NewClass(CanonifyName(ip));
-                  }
-               }
-
-            strcpy(ip,VIPADDRESS);
-            i = 3;
-
-            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
-               {
-               if (*sp == '.')
-                  {
-                  *sp = '\0';
-                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(VIPADDRESS));
-                  NewScalar("sys",name,ip,cf_str);
-                  }
-               }
-            close(fd);
-            return;
-            }
-
-         strncpy(ip,"ipv4_",CF_MAXVARSIZE);
-         strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
-         NewClass(CanonifyName(ip));
-
-         if (!ipdefault)
-            {
-            ipdefault = true;
-            NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
-
-            strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
-            }
-
-         AppendItem(&IPADDRESSES,VIPADDRESS,"");
-
-         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
-            {
-            if (*sp == '.')
-               {
-               *sp = '\0';
-               NewClass(CanonifyName(ip));
-               }
-            }
-
-         strcpy(ip,inet_ntoa(sin->sin_addr));
-
-         if (ag != cf_know)
-            {
-            snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
-            }
-         else
-            {
-            snprintf(name,CF_MAXVARSIZE-1,"ipv4[interface_name]");
-            }
-         
-         NewScalar("sys",name,ip,cf_str);
-
-         i = 3;
-
-         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
-            {
-            if (*sp == '.')
-               {
-               *sp = '\0';
-               
-               if (ag != cf_know)
-                  {                  
-                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(ifp->ifr_name));
-                  }
-               else
-                  {
-                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[interface_name]",i--);
-                  }
-               
-               NewScalar("sys",name,ip,cf_str);
-               }
-            }
-         }
-      }
-   }
-
-
-close(fd);
+{
+Unix_GetInterfaceInfo(ag);
+Unix_FindV6InterfaceInfo();
 }
 #endif  /* NOT MINGW */
 
-/*******************************************************************/
+/*********************************************************************/
 
 void Get3Environment()
 
@@ -707,119 +491,6 @@ while (!feof(fp))
 fclose(fp);
 CfOut(cf_verbose,"","Environment data loaded\n\n");
 }
-
-/*********************************************************************/
-
-void FindV6InterfaceInfo(void)
-
-#ifdef MINGW
-{
-CfOut(cf_verbose,"","Interface v6 information not yet available under NT.\n");
-}
-#else
-{ FILE *pp;
-  char buffer[CF_BUFSIZE];
-
-/* Whatever the manuals might say, you cannot get IPV6
-   interface configuration from the ioctls. This seems
-   to be implemented in a non standard way across OSes
-   BSDi has done getifaddrs(), solaris 8 has a new ioctl, Stevens
-   book shows the suggestion which has not been implemented...
-*/
-
- CfOut(cf_verbose,"","Trying to locate my IPv6 address\n");
-
- switch (VSYSTEMHARDCLASS)
-    {
-    case cfnt:
-        /* NT cannot do this */
-        return;
-
-    case irix:
-    case irix4:
-    case irix64:
-
-        if ((pp = cf_popen("/usr/etc/ifconfig -a","r")) == NULL)
-           {
-           CfOut(cf_verbose,"","Could not find interface info\n");
-           return;
-           }
-
-        break;
-
-    case hp:
-
-        if ((pp = cf_popen("/usr/sbin/ifconfig -a","r")) == NULL)
-           {
-           CfOut(cf_verbose,"","Could not find interface info\n");
-           return;
-           }
-
-        break;
-
-    case aix:
-
-        if ((pp = cf_popen("/etc/ifconfig -a","r")) == NULL)
-           {
-           CfOut(cf_verbose,"","Could not find interface info\n");
-           return;
-           }
-
-        break;
-
-    default:
-
-        if ((pp = cf_popen("/sbin/ifconfig -a","r")) == NULL)
-           {
-           CfOut(cf_verbose,"","Could not find interface info\n");
-           return;
-           }
-
-    }
-
-/* Don't know the output format of ifconfig on all these .. hope for the best*/
-
-while (!feof(pp))
-   {
-   fgets(buffer,CF_BUFSIZE-1,pp);
-
-   if (ferror(pp))  /* abortable */
-      {
-      break;
-      }
-
-   if (StrStr(buffer,"inet6"))
-      {
-      struct Item *ip,*list = NULL;
-      char *sp;
-
-      list = SplitStringAsItemList(buffer,' ');
-
-      for (ip = list; ip != NULL; ip=ip->next)
-         {
-         for (sp = ip->name; *sp != '\0'; sp++)
-            {
-            if (*sp == '/')  /* Remove CIDR mask */
-               {
-               *sp = '\0';
-               }
-            }
-
-         if (IsIPV6Address(ip->name) && (strcmp(ip->name,"::1") != 0))
-            {
-            CfOut(cf_verbose,"","Found IPv6 address %s\n",ip->name);
-            AppendItem(&IPADDRESSES,ip->name,"");
-            NewClass(CanonifyName(ip->name));
-            }
-         }
-
-      DeleteItemList(list);
-      }
-   }
-
-cf_pclose(pp);
-}
-#endif  /* NOT MINGW */
 
 /*******************************************************************/
 
@@ -2044,11 +1715,345 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 /******************************************************************/
 
 #ifndef MINGW
+
+void Unix_GetInterfaceInfo(enum cfagenttype ag)
+{ 
+
+  int fd,len,i,j,first_address,ipdefault = false;
+  struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
+  struct ifconf list;
+  struct sockaddr_in *sin;
+  struct hostent *hp;
+  char *sp, workbuf[CF_BUFSIZE];
+  char ip[CF_MAXVARSIZE];
+  char name[CF_MAXVARSIZE];
+  char last_name[CF_BUFSIZE];
+
+Debug("GetInterfaceInfo3()\n");
+
+NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
+
+last_name[0] = '\0';
+
+if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+   {
+   CfOut(cf_error,"socket","Couldn't open socket");
+   exit(1);
+   }
+
+list.ifc_len = sizeof(ifbuf);
+list.ifc_req = ifbuf;
+
+#ifdef SIOCGIFCONF
+if (ioctl(fd, SIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
+#else
+if (ioctl(fd, OSIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
+#endif
+   {
+   CfOut(cf_error,"ioctl","Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024");
+   exit(1);
+   }
+
+last_name[0] = '\0';
+
+for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
+   {
+   int skip = false;
+   
+   if (ifp->ifr_addr.sa_family == 0)
+      {
+      continue;
+      }
+
+   if (ifp->ifr_name == NULL || strlen(ifp->ifr_name) == 0)
+      {
+      continue;
+      }
+
+   /* Skip virtual network interfaces */
+   
+   if (strstr(ifp->ifr_name,":"))
+      {
+      CfOut(cf_verbose,"","Skipping apparent virtual interface %d: %s\n",j+1,ifp->ifr_name);
+      continue;
+      }
+   else
+      {
+      CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
+      }
+   
+   if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
+      {
+      first_address = false;
+      }
+   else
+      {
+      first_address = true;
+      }
+
+   strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
+
+   if (UNDERSCORE_CLASSES)
+      {
+      snprintf(workbuf,CF_BUFSIZE, "_net_iface_%s", CanonifyName(ifp->ifr_name));
+      }
+   else
+      {
+      snprintf(workbuf,CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
+      }
+
+   NewClass(workbuf);
+
+   if (ifp->ifr_addr.sa_family == AF_INET)
+      {
+      strncpy(ifr.ifr_name,ifp->ifr_name,sizeof(ifp->ifr_name));
+
+      if (ioctl(fd,SIOCGIFFLAGS,&ifr) == -1)
+         {
+         CfOut(cf_error,"ioctl","No such network device");
+         close(fd);
+         return;
+         }
+
+      if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
+         {
+         sin=(struct sockaddr_in *)&ifp->ifr_addr;
+         Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
+         NewClass(CanonifyName(inet_ntoa(sin->sin_addr)));
+
+         if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
+            {
+            Debug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
+            }
+         else
+            {
+            if (hp->h_name != NULL)
+               {
+               Debug("Adding hostname %s..\n",hp->h_name);
+               NewClass(CanonifyName(hp->h_name));
+
+               if (hp->h_aliases != NULL)
+                  {
+                  for (i=0; hp->h_aliases[i] != NULL; i++)
+                     {
+                     CfOut(cf_verbose,"","Adding alias %s..\n",hp->h_aliases[i]);
+                     NewClass(CanonifyName(hp->h_aliases[i]));
+                     }
+                  }
+               }
+            }
+
+         if (strcmp(inet_ntoa(sin->sin_addr),"0.0.0.0") == 0)
+            {
+            // Maybe we need to do something windows specific here?
+            CfOut(cf_verbose,""," !! Cannot discover hardware IP, using DNS value");
+            strcpy(ip,"ipv4_");
+            strcat(ip,VIPADDRESS);
+            AppendItem(&IPADDRESSES,VIPADDRESS,"");
+
+            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+               {
+               if (*sp == '.')
+                  {
+                  *sp = '\0';
+                  NewClass(CanonifyName(ip));
+                  }
+               }
+
+            strcpy(ip,VIPADDRESS);
+            i = 3;
+
+            for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+               {
+               if (*sp == '.')
+                  {
+                  *sp = '\0';
+                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(VIPADDRESS));
+                  NewScalar("sys",name,ip,cf_str);
+                  }
+               }
+            close(fd);
+            return;
+            }
+
+         strncpy(ip,"ipv4_",CF_MAXVARSIZE);
+         strncat(ip,inet_ntoa(sin->sin_addr),CF_MAXVARSIZE-6);
+         NewClass(CanonifyName(ip));
+
+         if (!ipdefault)
+            {
+            ipdefault = true;
+            NewScalar("sys","ipv4",inet_ntoa(sin->sin_addr),cf_str);
+
+            strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
+            }
+
+         AppendItem(&IPADDRESSES,VIPADDRESS,"");
+
+         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+            {
+            if (*sp == '.')
+               {
+               *sp = '\0';
+               NewClass(CanonifyName(ip));
+               }
+            }
+
+         strcpy(ip,inet_ntoa(sin->sin_addr));
+
+         if (ag != cf_know)
+            {
+            snprintf(name,CF_MAXVARSIZE-1,"ipv4[%s]",CanonifyName(ifp->ifr_name));
+            }
+         else
+            {
+            snprintf(name,CF_MAXVARSIZE-1,"ipv4[interface_name]");
+            }
+         
+         NewScalar("sys",name,ip,cf_str);
+
+         i = 3;
+
+         for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
+            {
+            if (*sp == '.')
+               {
+               *sp = '\0';
+               
+               if (ag != cf_know)
+                  {                  
+                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[%s]",i--,CanonifyName(ifp->ifr_name));
+                  }
+               else
+                  {
+                  snprintf(name,CF_MAXVARSIZE-1,"ipv4_%d[interface_name]",i--);
+                  }
+               
+               NewScalar("sys",name,ip,cf_str);
+               }
+            }
+         }
+      }
+   }
+
+
+close(fd);
+}
+
+/*******************************************************************/
+
+void Unix_FindV6InterfaceInfo(void)
+
+{ FILE *pp;
+  char buffer[CF_BUFSIZE];
+
+/* Whatever the manuals might say, you cannot get IPV6
+   interface configuration from the ioctls. This seems
+   to be implemented in a non standard way across OSes
+   BSDi has done getifaddrs(), solaris 8 has a new ioctl, Stevens
+   book shows the suggestion which has not been implemented...
+*/
+
+ CfOut(cf_verbose,"","Trying to locate my IPv6 address\n");
+
+ switch (VSYSTEMHARDCLASS)
+    {
+    case cfnt:
+        /* NT cannot do this */
+        return;
+
+    case irix:
+    case irix4:
+    case irix64:
+
+        if ((pp = cf_popen("/usr/etc/ifconfig -a","r")) == NULL)
+           {
+           CfOut(cf_verbose,"","Could not find interface info\n");
+           return;
+           }
+
+        break;
+
+    case hp:
+
+        if ((pp = cf_popen("/usr/sbin/ifconfig -a","r")) == NULL)
+           {
+           CfOut(cf_verbose,"","Could not find interface info\n");
+           return;
+           }
+
+        break;
+
+    case aix:
+
+        if ((pp = cf_popen("/etc/ifconfig -a","r")) == NULL)
+           {
+           CfOut(cf_verbose,"","Could not find interface info\n");
+           return;
+           }
+
+        break;
+
+    default:
+
+        if ((pp = cf_popen("/sbin/ifconfig -a","r")) == NULL)
+           {
+           CfOut(cf_verbose,"","Could not find interface info\n");
+           return;
+           }
+
+    }
+
+/* Don't know the output format of ifconfig on all these .. hope for the best*/
+
+while (!feof(pp))
+   {
+   fgets(buffer,CF_BUFSIZE-1,pp);
+
+   if (ferror(pp))  /* abortable */
+      {
+      break;
+      }
+
+   if (StrStr(buffer,"inet6"))
+      {
+      struct Item *ip,*list = NULL;
+      char *sp;
+
+      list = SplitStringAsItemList(buffer,' ');
+
+      for (ip = list; ip != NULL; ip=ip->next)
+         {
+         for (sp = ip->name; *sp != '\0'; sp++)
+            {
+            if (*sp == '/')  /* Remove CIDR mask */
+               {
+               *sp = '\0';
+               }
+            }
+
+         if (IsIPV6Address(ip->name) && (strcmp(ip->name,"::1") != 0))
+            {
+            CfOut(cf_verbose,"","Found IPv6 address %s\n",ip->name);
+            AppendItem(&IPADDRESSES,ip->name,"");
+            NewClass(CanonifyName(ip->name));
+            }
+         }
+
+      DeleteItemList(list);
+      }
+   }
+
+cf_pclose(pp);
+}
+
+/******************************************************************/
+
 char *GetHome(uid_t uid)
 
 {
 struct passwd *mpw = getpwuid(uid);
 return mpw->pw_dir;
 }
-#endif
 
+#endif  /* NOT MINGW */

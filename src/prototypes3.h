@@ -1287,9 +1287,8 @@ enum cfdatatype ExpectedDataType(char *lvalname);
 /* sysinfo.c */
 
 void GetNameInfo3(void);
-void GetInterfaceInfo3(enum cfagenttype ag);
+void GetInterfaceInfo(enum cfagenttype ag);
 void Get3Environment(void);
-void FindV6InterfaceInfo(void);
 void FindDomainName(char *hostname);
 void OSClasses(void);
 int Linux_Fedora_Version(void);
@@ -1310,6 +1309,8 @@ void SetSignals(void);
 int IsInterfaceAddress(char *adr);
 int GetCurrentUserName(char *userName, int userNameLen);
 #ifndef MINGW
+void Unix_GetInterfaceInfo(enum cfagenttype ag);
+void Unix_FindV6InterfaceInfo(void);
 char *GetHome(uid_t uid);
 #endif  /* NOT MINGW */
 

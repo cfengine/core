@@ -1189,6 +1189,8 @@ int IsInListOfRegex(struct Rlist *list,char *str);
 void *CopyRvalItem(void *item, char type);
 void DeleteRvalItem(void *rval, char type);
 struct Rlist *CopyRlist(struct Rlist *list);
+int CompareRlist(struct Rlist *list1, struct Rlist *list2);
+int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
 void DeleteRlist(struct Rlist *list);
 void DeleteReferenceRlist(struct Rlist *list);
 void ShowRlistState(FILE *fp,struct Rlist *list);

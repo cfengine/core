@@ -223,6 +223,75 @@ return NULL;
 
 /*******************************************************************/
 
+int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2)
+
+{
+if (rtype1 != rtype2)
+   {
+   return false;
+   }
+
+switch (rtype1)
+   {
+   case CF_SCALAR:
+       if (IsCf3VarString((char *)rval1) || IsCf3VarString((char *)rval2))
+          {
+          return -1; // inconclusive
+          }
+
+       if (strcmp(rval1,rval2) != 0)
+          {
+          return false;
+          }
+       
+       break;
+       
+   case CF_LIST:
+       return CompareRlist(rval1,rval2);
+       
+   case CF_FNCALL:
+       return -1;       
+   }
+
+return true;
+}
+
+/*******************************************************************/
+
+int CompareRlist(struct Rlist *list1, struct Rlist *list2)
+
+{ struct Rlist *rp1,*rp2;
+
+for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2!= NULL; rp1=rp1->next,rp2=rp2->next)
+   {
+   if (rp1->item && rp2->item)
+      {
+      if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
+         {
+         return -1; // inconclusive
+         }
+      
+      if (IsCf3VarString(rp1->item) || IsCf3VarString(rp2->item))
+         {
+         return -1; // inconclusive
+         }
+
+      if (strcmp(rp1->item,rp2->item) != 0)
+         {
+         return false;
+         }
+      }
+   else
+      {
+      return false;
+      }
+   }
+
+return true;
+}
+
+/*******************************************************************/
+
 struct Rlist *CopyRlist(struct Rlist *list)
 
 { struct Rlist *rp,*start = NULL;

@@ -279,6 +279,27 @@ if (ptr == NULL)
    return false;
    }
 
+
+// Look for outstanding lists in variable rvals
+
+if (THIS_AGENT_TYPE == cf_common)
+   {
+   struct Rlist *listvars = NULL, *scalarvars = NULL;
+
+   if (strcmp(CONTEXTID,"this") != 0)
+      {
+      ScanRval(CONTEXTID,&scalarvars,&listvars,rval,rtype,NULL);
+      
+      if (listvars != NULL)
+         {
+         CfOut(cf_error,""," !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",lval,CONTEXTID);
+         }
+   
+      DeleteRlist(scalarvars);
+      DeleteRlist(listvars);
+      }
+   }
+
 while (ptr->hashtable[slot])
    {
    Debug("Hash table Collision! - slot %d = (%s|%s)\n",slot,lval,ptr->hashtable[slot]->lval);
@@ -310,7 +331,7 @@ while (ptr->hashtable[slot])
 
       DeleteAssoc(ptr->hashtable[slot]);
       ptr->hashtable[slot] = ap;
-      Debug("Stored %s in context %s\n",lval,scope);
+      Debug("Stored \"%s\" in context %s at position %d\n",lval,scope,slot);
       return true;
       }
    else

@@ -827,9 +827,12 @@ switch (*(str+1))
           {
           return false;
           }
-       break;       
-   }
+       break;
 
+   default:
+       return false;
+       break;
+   }
 
 for (sp = str; *sp != '\0'; sp++)
    {
@@ -889,8 +892,8 @@ strncpy(s2,s1+2,strlen(s1)-3);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
-  char *lval,rtype,retval[CF_MAXVARSIZE];
-  void *rval = NULL;
+ char *lval,rtype;
+ void *rval = NULL,*retval;
   int i = 0,ok_redefine = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
 
@@ -921,6 +924,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          {
          ok_redefine = true;
          }
+      
       continue;
       }
    else
@@ -932,8 +936,6 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    }
 
 cp = cp_save;
-
-ok_redefine |= allow_redefine;
 
 if (cp == NULL)
    {
@@ -965,8 +967,6 @@ if (rval != NULL)
          /* We do not assign variables to failed fn calls */
          return;
          }
-
-      /* *(pp->donep) = true; prevents proper variable expansion e.g randomint() */
       }
 
    if (Epimenides(pp->promiser,rval,cp->type,0))
@@ -983,14 +983,19 @@ if (rval != NULL)
       cp->type = returnval.rtype;
       }
 
-   if (ok_redefine) /* only on second iteration, else we ignore broken promises */
+   if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
       {
-      if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
+      if (ok_redefine) /* only on second iteration, else we ignore broken promises */
          {
          DeleteVariable(scope,pp->promiser);
          }
+      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rtype,rval,cp->type) == false))
+         {
+         CfOut(cf_error,""," !! Redefinition of a constant variable \"%s\"",pp->promiser);
+         PromiseRef(cf_error,pp);
+         }
       }
-
+   
    if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*",pp->promiser))
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");

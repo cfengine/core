@@ -791,6 +791,7 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
   int match_len,start_off,end_off,once_only = false,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
+  int notfound = true;
 
 if (a.replace.occurrences && (strcmp(a.replace.occurrences,"first") == 0))
    {
@@ -829,6 +830,8 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
       CfOut(cf_verbose,""," -> << \"%s\"\n",ip->name);
       CfOut(cf_verbose,""," -> >> \"%s\"\n",line_buff);
+
+      notfound = false;
       
       if (once_only)
          {
@@ -885,6 +888,11 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       {
       break;
       }
+   }
+
+if (notfound)
+   {
+   cfPS(cf_verbose,CF_NOP,"",pp,a," -> No pattern \"%s\" in %s",pp->promiser,pp->this_server);
    }
 
 DeleteScope("match");

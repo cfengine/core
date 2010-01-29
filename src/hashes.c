@@ -369,14 +369,12 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 
                   state = (struct Rlist *)(cplist->rval);
 
-
-                  if (rp->state_ptr->type == CF_FNCALL)
+                  if (rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
                      {
                      /* Unexpanded function must be skipped.*/
                      return;
                      }
                   
-
                   if (rp->state_ptr)
                      {
                      Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],rp->state_ptr->item);

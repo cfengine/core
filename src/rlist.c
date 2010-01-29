@@ -149,7 +149,14 @@ Debug("CopyRvalItem(%c)\n",type);
 
 if (item == NULL)
    {
-   return NULL;
+   switch (type)
+      {
+      case CF_SCALAR:
+          return strdup("");
+
+      case CF_LIST:
+          return NULL;
+      }
    }
 
 naked[0] = '\0';
@@ -194,6 +201,10 @@ switch(type)
                        AppendRlist(&start,rp->item,rp->type);
                        break;
                    }
+                }
+             else
+                {
+                AppendRlist(&start,rp->item,rp->type);
                 }
              }
           else

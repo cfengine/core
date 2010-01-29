@@ -72,10 +72,6 @@ for (rp = namelist; rp != NULL; rp = rp->next)
       this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
       rp->state_ptr = new->rval;
       }
-   else
-      {
-      FatalError("Iteration context failed");
-      }
    }
 
 /* We now have a control list of list-variables, with internal state in state_ptr */

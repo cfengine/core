@@ -580,6 +580,21 @@ t.log_kept = GetConstraint("log_kept",pp,CF_SCALAR);
 t.log_repaired = GetConstraint("log_repaired",pp,CF_SCALAR);
 t.log_failed = GetConstraint("log_failed",pp,CF_SCALAR);
 
+if ((t.value_kept = GetRealConstraint("value_kept",pp)) == CF_NODOUBLE)
+   {
+   t.value_kept = 1.0;
+   }
+
+if ((t.value_repaired = GetRealConstraint("value_repaired",pp)) == CF_NODOUBLE)
+   {
+   t.value_repaired = 0.5;
+   }
+
+if ((t.value_notkept = GetRealConstraint("value_notkept",pp)) == CF_NODOUBLE)
+   {
+   t.value_notkept = -1.0;
+   }
+
 value = GetConstraint("log_level",pp,CF_SCALAR);
 t.log_level = String2ReportLevel(value);
 

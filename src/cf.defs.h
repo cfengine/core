@@ -502,6 +502,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define CF_LASTDB_FILE    "cf_LastSeen"
 #define CF_AUDITDB_FILE   "cf_Audit"
 #define CF_LOCKDB_FILE    "cf_lock"
+#define CF_VALUE_LOG      "cf_value.log"
 
 #define CF_STATELOG_FILE "state_log"
 #define CF_ENVNEW_FILE   "env_data.new"

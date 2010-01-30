@@ -115,6 +115,10 @@ extern time_t DATESTAMPS[CF_OBSERVABLES];
 extern char AGGREGATION[CF_BUFSIZE];
 extern char *UNITS[CF_OBSERVABLES];
 
+extern double VAL_KEPT;
+extern double VAL_REPAIRED;
+extern double VAL_NOTKEPT;
+
 extern double METER_KEPT[meter_endmark];
 extern double METER_REPAIRED[meter_endmark];
 extern double Q_MEAN;

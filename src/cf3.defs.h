@@ -275,6 +275,7 @@ enum cfacontrol
    cfa_skipidentify,
    cfa_suspiciousnames,
    cfa_syslog,
+   cfa_track_value,
    cfa_timezone,
    cfa_timeout,
    cfa_verbose,
@@ -1018,6 +1019,9 @@ struct TransactionContext
    char *log_repaired;
    char *log_failed;
    char *measure_id;
+   double value_kept;
+   double value_notkept;
+   double value_repaired;
    int  audit;
    enum cfreport report_level;
    enum cfreport log_level;

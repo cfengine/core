@@ -69,6 +69,28 @@ memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
 dummyattr.transaction.audit = true;
 
+if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
+   {
+   FILE *fout;
+   char name[CF_MAXVARSIZE],datestr[CF_MAXVARSIZE];
+   time_t now = time(NULL);
+   
+   CfOut(cf_inform,""," -> Recording promise valuations");
+    
+   snprintf(name,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_VALUE_LOG);
+   snprintf(datestr,CF_MAXVARSIZE,"%s",ctime(&now));
+   
+   if ((fopen(name,"a")) == NULL)
+      {
+      CfOut(cf_inform,""," !! Unable to write to the value log %s\n",name);
+      return;
+      }
+   
+   fprintf(fout,"%s,%.4lf,%.4lf,%.4lf\n",VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);
+   
+   fclose(fout);
+   }
+
 total = (double)(PR_KEPT+PR_NOTKEPT+PR_REPAIRED)/100.0;
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
@@ -130,7 +152,8 @@ Debug("ClassAuditLog(%s)\n",str);
 switch(status)
    {
    case CF_CHG:
-       PR_REPAIRED++;
+       PR_REPAIRED++;       
+       VAL_REPAIRED += attr.transaction.value_repaired;
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.5,cfn_repaired);
        SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
@@ -138,11 +161,13 @@ switch(status)
        
    case CF_WARN:
        PR_NOTKEPT++;
+       VAL_NOTKEPT += attr.transaction.value_notkept;
        NotePromiseCompliance(pp,1.0,cfn_notkept);
        break;
        
    case CF_TIMEX:
        PR_NOTKEPT++;
+       VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -150,6 +175,7 @@ switch(status)
 
    case CF_FAIL:
        PR_NOTKEPT++;
+       VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -157,6 +183,7 @@ switch(status)
        
    case CF_DENIED:
        PR_NOTKEPT++;
+       VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -164,6 +191,7 @@ switch(status)
        
    case CF_INTERPT:
        PR_NOTKEPT++;
+       VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -173,6 +201,7 @@ switch(status)
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.5,cfn_notkept);
        PR_REPAIRED++;
+       VAL_REPAIRED += attr.transaction.value_repaired;       
        break;
        
    case CF_UNKNOWN:
@@ -181,6 +210,7 @@ switch(status)
        NotePromiseCompliance(pp,1.0,cfn_nop);
        SummarizeTransaction(attr,pp,attr.transaction.log_kept);              
        PR_KEPT++;
+       VAL_KEPT += attr.transaction.value_kept;
        break;
    }
 

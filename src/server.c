@@ -1342,7 +1342,7 @@ switch (GetCommand(recvbuffer))
        if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
           CfOut(cf_inform,"","Decrypt error SVAR\n");
-          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          RefuseAccess(conn,sendbuffer,0,"decrypt error SVAR");
           return true;
           }
 
@@ -1353,7 +1353,7 @@ switch (GetCommand(recvbuffer))
        if (strncmp(recvbuffer,"VAR",3) !=0)
           {
           CfOut(cf_inform,"","VAR protocol defect\n");
-          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          RefuseAccess(conn,sendbuffer,0,"decyption failre");
           return false;
           }
 
@@ -1384,8 +1384,8 @@ switch (GetCommand(recvbuffer))
 
        if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
-          CfOut(cf_inform,"","Decrypt error SCONTEXT\n");
-          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          CfOut(cf_inform,"","Decrypt error SCONTEXT, len,received = %d,%d\n",len,received);
+          RefuseAccess(conn,sendbuffer,0,"decrypt error SCONTEXT");
           return true;
           }
 
@@ -1395,8 +1395,8 @@ switch (GetCommand(recvbuffer))
        
        if (strncmp(recvbuffer,"CONTEXT",7) !=0)
           {
-          CfOut(cf_inform,"","CONTEXT protocol defect\n");
-          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          CfOut(cf_inform,"","CONTEXT protocol defect...\n");
+          RefuseAccess(conn,sendbuffer,0,"Decryption failed?");
           return false;
           }
 
@@ -1407,13 +1407,13 @@ switch (GetCommand(recvbuffer))
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
-          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          RefuseAccess(conn,sendbuffer,0,"Context probe");
           return true;
           }
        
        if ((classes = ContextAccessControl(recvbuffer,conn,encrypted,VARADMIT,VARDENY)) == NULL)
           {
-          CfOut(cf_inform,"","Context access failure\n");
+          CfOut(cf_inform,"","Context access failure on %s\n",recvbuffer);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;   
           }       
@@ -2195,9 +2195,9 @@ struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encry
   struct Item *ip,*matches = NULL, *candidates = NULL;
   char filename[CF_BUFSIZE];
 
-Debug("\n\nContextAccessControl(%s)\n",client_regex);
-
 sscanf(in,"CONTEXT %[^\n]",client_regex);
+
+Debug("\n\nContextAccessControl(%s)\n",client_regex);
 
 snprintf(filename,CF_BUFSIZE,"%s%cstate%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CF_STATEDB_FILE);
 
@@ -2218,8 +2218,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    memcpy((void *)&q,value,sizeof(struct CfState));
 
-   Debug(" - Found key %s...\n",key);
-
    if (now > q.expires)
       {
       CfOut(cf_verbose,""," Persistent class %s expired\n",key);
@@ -2229,6 +2227,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       {
       if (FullTextMatch(client_regex,key))
          {
+         CfOut(cf_verbose,""," - Found key %s...\n",key);
          AppendItem(&candidates,key,NULL);
          }
       }
@@ -2245,7 +2244,7 @@ for (ip = candidates; ip != NULL; ip=ip->next)
       
       if (FullTextMatch(ap->path,ip->name) == 0)
          {
-         res = true;    /* Exact match means single file to admit */
+         res = true; 
          }
       
       if (res)
@@ -3219,8 +3218,6 @@ else
    {
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
-
-//if (DELETECLASSes) remove the old persistentr class
 }
 
 /**************************************************************/
@@ -3455,11 +3452,11 @@ if (strlen(errmesg) > 0)
    {
    if (LOGCONNS)
       {
-      CfOut(cf_log,"","ID from connecting host: (%s)",errmesg);
+      CfOut(cf_log,"","REFUSAL of request from connecting host: (%s)",errmesg);
       }
    else
       {
-      CfOut(cf_verbose,"","ID from connecting host: (%s)",errmesg);
+      CfOut(cf_verbose,"","REFUSAL of request from connecting host: (%s)",errmesg);
       }
    }
 }

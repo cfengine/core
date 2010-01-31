@@ -2793,6 +2793,8 @@ else
          {
          FatalError("Memory allocation in FnCallRemoteClasses");
          }
+      rval.rtype = CF_SCALAR;
+      return rval;
       }
    else
       {

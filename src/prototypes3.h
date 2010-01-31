@@ -416,7 +416,7 @@ void VerifyServices(struct Attributes a,struct Promise *pp);
 void LoadSlowlyVaryingObservations(void);
 void RegisterLiteralServerData(char *handle,struct Promise *pp);
 int ReturnLiteralData(char *handle,char *ret);
-char *GetRemoteScalar(char *handle,char *server,int encrypted,char *rcv);
+char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv);
 char *PromiseID(struct Promise *pp);
 void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);

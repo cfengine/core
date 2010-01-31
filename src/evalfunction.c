@@ -2700,7 +2700,7 @@ if (THIS_AGENT_TYPE == cf_common)
    }
 else
    {
-   GetRemoteScalar(handle,server,encrypted,buffer);
+   GetRemoteScalar("VAR",handle,server,encrypted,buffer);
    
    if (strncmp(buffer,"BAD:",4) == 0)
       {
@@ -2766,7 +2766,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 regex = finalargs->item;
 server = finalargs->next->item;
 encrypted = GetBoolean(finalargs->next->next->item);
-prefix = finalargs->next->next->item;
+prefix = finalargs->next->next->next->item;
     
 if (strcmp(server,"localhost") == 0)
    {
@@ -2783,7 +2783,7 @@ if (THIS_AGENT_TYPE == cf_common)
    }
 else
    {
-   GetRemoteScalar(regex,server,encrypted,buffer);
+   GetRemoteScalar("CONTEXT",regex,server,encrypted,buffer);
    
    if (strncmp(buffer,"BAD:",4) == 0)
       {

@@ -527,11 +527,11 @@ return "";
 
 /*****************************************************************************/
 
-char *GetRemoteScalar(char *handle,char *server,int encrypted,char *rcv)
+char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv)
 
 {
 #ifdef HAVE_LIBCFNOVA
- return Nova_GetRemoteScalar(handle,server,encrypted,rcv);
+ return Nova_GetRemoteScalar(proto,handle,server,encrypted,rcv);
 #else
 CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
 return "";

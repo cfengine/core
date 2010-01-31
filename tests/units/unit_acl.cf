@@ -12,7 +12,8 @@ bundle agent acls
 files:
 
   "/media/flash/acl/test_dir"
-
+ 
+    depth_search => include_base,
     acl => template;
 }
 
@@ -27,6 +28,7 @@ acl_directory_inherit => "parent";
 aces => { "user:*:r(wwx),-r:allow", "group:*:+rw:allow", "mask:x:allow", "all:r"};
 }
 
+#########################################
 
 body acl win
 
@@ -35,4 +37,12 @@ acl_method => "overwrite";
 acl_type => "ntfs";
 acl_directory_inherit => "nochange";
 aces => { "user:Administrator:rw", "group:Bad:rwx(Dpo):deny" };
+}
+
+#########################################
+
+body depth_search include_base
+
+{
+include_basedir => "true";
 }

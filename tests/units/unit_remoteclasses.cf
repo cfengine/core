@@ -1,0 +1,152 @@
+########################################################
+#
+# Remote classes from server connection to cfServer
+#
+########################################################
+
+ #
+ # run this as follows:
+ #
+ # cf-serverd -f runtest_1.cf [-d2]
+ # cf-agent   -f runtest_2.cf
+ #
+ # Notice that the same file configures all parts of cfengine
+
+########################################################
+
+body common control
+
+{
+bundlesequence  => { job_chain("Hr16|Hr17") };
+
+version => "1.2.3";
+}
+
+########################################################
+
+bundle common g
+{
+vars:
+
+ # Signals are in scope of promiser and promisee
+
+ "signal"   string => "pack_a_name";
+
+}
+
+########################################################
+
+bundle agent job_chain(time)
+
+{
+vars:
+
+ "client"   string => "localhost";
+ "server"   string => "localhost";
+ "margin"   string => "5"; # mins deadtime
+
+classes:
+
+   "client_primed" expression => classmatch(canonify("$(client)")),
+                   ifvarclass => "$(time)";
+
+   "server_primed" expression => classmatch(canonify("$(server)")),
+                   ifvarclass => "$(time)";
+
+ client_primed::
+
+   "succeeded"     expression => remoteclassesmatching("$(g.signal)","$(server)","yes","myprefix");
+
+ #
+ # Now the job itself
+ #
+
+methods:
+
+ client_primed::
+
+    "downstream" usebundle => do_job("Starting local follow-up job"),
+                    action => if_elapsed("$(margin)"),
+                ifvarclass => "myprefix_$(g.signal)";
+
+ server_primed::
+
+    "upstream"   usebundle => do_job("Starting remote job"),
+                    action => if_elapsed("$(margin)"),
+                   classes => signal_repaired("$(g.signal)");
+
+reports:
+
+  !succeeded::
+
+    "Server communication failed",
+ 
+                 ifvarclass => "$(time)";
+
+
+  "Job completed on the server...",
+
+          ifvarclass => "$(g.signal)";
+
+}
+
+#########################################################
+
+bundle agent do_job(job)
+{
+commands:
+
+   # do whatever...
+
+   "/bin/echo $(job)";
+}
+
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+allowusers            => { "mark" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+vars:
+
+  "localvar" string => "literal string";
+
+access:
+
+  "$(g.signal)"
+
+        handle  => "test_class_signal",
+  resource_type => "context",
+        admit   => { "127.0.0.1" };
+}
+
+
+#########################################################
+# Standard library
+#########################################################
+
+body action if_elapsed(x)
+{
+ifelapsed => "$(x)";
+}
+
+#########################################################
+
+body classes signal_repaired(x)
+{
+promise_repaired => { "$(x)" };
+persist_time => "10";
+}

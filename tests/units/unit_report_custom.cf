@@ -1,0 +1,48 @@
+
+
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+vars:
+
+ "software" slist => { "gpg", "zip", "rsync" };
+
+classes:
+
+ "noreport"         expression => fileexists("/tmp/report.html");
+ "have_$(software)" expression => fileexists("/usr/bin/$(software)");
+
+reports:
+
+  no_report::
+
+      "
+      <html>
+      Name of this host is: $(sys.host)<br>
+      Type of this host is: $(sys.os)<br>
+      "
+
+         report_to_file => "/tmp/report.html";
+
+      #
+
+      "
+      Host has software $(software)<br>
+      "
+
+        ifvarclass => "have_$(software)",
+         report_to_file => "/tmp/report.html";
+
+      #
+
+      "
+      </html>
+      "
+         report_to_file => "/tmp/report.html";
+
+}

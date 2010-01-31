@@ -1,0 +1,69 @@
+
+body common control
+{
+bundlesequence => { "addpasswd" };
+}
+
+bundle agent addpasswd
+{
+vars:
+
+  # want to set these values by the names of their array keys
+
+  "pwd[mark]" string => "mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash";
+  "pwd[fred]" string => "fred:x:1001:100:Right Said:/home/fred:/bin/bash";
+  "pwd[jane]" string => "jane:x:1002:100:Jane Doe:/home/jane:/bin/bash";
+
+files:
+
+
+  "/tmp/passwd"
+
+        create => "true",
+     edit_line => append_users_starting("addpasswd.pwd");
+
+}
+
+############################################################
+# Library stuff
+############################################################
+
+bundle edit_line append_users_starting(v)
+
+{
+vars:
+
+  "index"        slist => getindices("$(v)");
+
+classes:
+
+  "add_$(index)" not => userexists("$(index)");
+
+insert_lines:
+
+  "$($(v)[$(index)])",
+
+      ifvarclass => "add_$(index)";
+
+}
+
+############################################################
+
+bundle edit_line append_groups_starting(v)
+
+{
+vars:
+
+  "index"        slist => getindices("$(v)");
+
+classes:
+
+  "add_$(index)" not => groupexists("$(index)");
+
+insert_lines:
+
+  "$($(v)[$(index)])",
+
+      ifvarclass => "add_$(index)";
+
+}

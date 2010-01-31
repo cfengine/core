@@ -1,0 +1,50 @@
+######################################################################
+#
+# Uncomment lines
+#
+######################################################################
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle"  };
+}
+
+# try this on some test data like
+
+# one
+# two
+# mark one
+#mark two
+
+########################################################
+
+bundle agent testbundle
+
+{
+files:
+
+  "/home/mark/tmp/comment_test"
+
+       create    => "true",
+       edit_line => uncomment_lines_matching("\s*mark.*","#");
+}
+
+########################################################
+
+bundle edit_line uncomment_lines_matching(regex,comment)
+{
+replace_patterns:
+
+ "#($(regex))$" replace_with => uncomment;
+}
+
+########################################################
+
+body replace_with uncomment
+{
+replace_value => "$(match.1)";
+occurrences => "all";
+}
+

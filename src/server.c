@@ -48,6 +48,8 @@ int VerifyConnection (struct cfd_connection *conn, char *buf);
 void RefuseAccess (struct cfd_connection *conn, char *sendbuffer, int size, char *errormsg);
 int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
 int LiteralAccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
+struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny);
+void ReplyServerContext(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted,struct Item *classes);
 int CheckStoreKey  (struct cfd_connection *conn, RSA *key);
 int StatFile (struct cfd_connection *conn, char *sendbuffer, char *filename);
 void CfGetFile (struct cfd_get_arg *args);
@@ -381,6 +383,8 @@ while (true)
    
    timeout.tv_sec = 10;  /* Set a 10 second timeout for select */
    timeout.tv_usec = 0;
+
+   CfOut(cf_verbose,""," -> Waiting at incoming select...\n");
    
    ret_val = select((sd+1),&rset,NULL,NULL,&timeout);
 
@@ -400,6 +404,8 @@ while (true)
       {
       continue;
       }
+
+   CfOut(cf_verbose,""," -> Accepting a connection\n");
    
    if ((sd_reply = accept(sd,(struct sockaddr *)&cin,&addrlen)) != -1)
       {
@@ -736,7 +742,7 @@ void CheckFileChanges(int argc,char **argv,int sd)
 { struct stat newstat;
   char filename[CF_BUFSIZE],*sp;
   int ok;
-  
+
 memset(&newstat,0,sizeof(struct stat));
 memset(filename,0,CF_BUFSIZE);
 
@@ -753,6 +759,8 @@ Debug("Checking file updates on %s (%x/%x)\n",filename, newstat.st_mtime, CFDSTA
 
 if (NewPromiseProposals())
    {
+   CfOut(cf_verbose,""," -> New promises detected...\n");
+  
    ok = CheckPromises(cf_server);
 
    if (ok)
@@ -817,9 +825,13 @@ if (NewPromiseProposals())
       }
    else
       {
-      CfOut(cf_inform,"last error"," !! File changes contain errors -- ignoring");
+      CfOut(cf_inform,""," !! File changes contain errors -- ignoring");
       PROMISETIME = time(NULL);
       }
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> No new promises found\n");
    }
 }
 
@@ -923,6 +935,7 @@ int BusyWithConnection(struct cfd_connection *conn)
   unsigned int len=0;
   int drift, plainlen, received, encrypted = 0;
   struct cfd_get_arg get_args;
+  struct Item *classes;
 
 memset(recvbuffer,0,CF_BUFSIZE+CF_BUFEXT);
 memset(&get_args,0,sizeof(get_args));
@@ -1363,6 +1376,49 @@ switch (GetCommand(recvbuffer))
           }       
 
        GetServerLiteral(conn,sendbuffer,recvbuffer,encrypted);
+       return true;
+
+   case cfd_scontext:
+              
+       sscanf(recvbuffer,"SCONTEXT %u",&len);
+
+       if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
+          {
+          CfOut(cf_inform,"","Decrypt error SCONTEXT\n");
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return true;
+          }
+
+       memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
+       plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
+       encrypted = true;
+       
+       if (strncmp(recvbuffer,"CONTEXT",7) !=0)
+          {
+          CfOut(cf_inform,"","CONTEXT protocol defect\n");
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return false;
+          }
+
+       /* roll through, no break */
+       
+   case cfd_context:
+
+       if (! conn->id_verified)
+          {
+          CfOut(cf_inform,"","ID not verified\n");
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return true;
+          }
+       
+       if ((classes = ContextAccessControl(recvbuffer,conn,encrypted,VARADMIT,VARDENY)) == NULL)
+          {
+          CfOut(cf_inform,"","Context access failure\n");
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return false;   
+          }       
+
+       ReplyServerContext(conn,sendbuffer,recvbuffer,encrypted,classes);
        return true;
 
    }
@@ -2118,6 +2174,152 @@ if (!conn->rsa_auth)
    }
 
 return access;
+}
+
+/**************************************************************/
+
+struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+
+{ struct Auth *ap;
+  int access = false;
+  char *sp;
+  struct stat statbuf;
+  char client_regex[CF_BUFSIZE];
+  CF_DB *dbp;
+  CF_DBC *dbcp;
+  int ret,ksize,vsize;
+  char *key;
+  void *value;
+  time_t now = time(NULL);
+  struct CfState q;
+  struct Item *ip,*matches = NULL, *candidates = NULL;
+  char filename[CF_BUFSIZE];
+
+Debug("\n\nContextAccessControl(%s)\n",client_regex);
+
+sscanf(in,"CONTEXT %[^\n]",client_regex);
+
+snprintf(filename,CF_BUFSIZE,"%s%cstate%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,CF_STATEDB_FILE);
+
+if (!OpenDB(filename,&dbp))
+   {
+   return NULL;
+   }
+
+/* Acquire a cursor for the database. */
+
+if (!NewDBCursor(dbp,&dbcp))
+   {
+   CfOut(cf_inform,""," !! Unable to scan persistence cache");
+   return NULL;
+   }
+
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
+   {
+   memcpy((void *)&q,value,sizeof(struct CfState));
+
+   Debug(" - Found key %s...\n",key);
+
+   if (now > q.expires)
+      {
+      CfOut(cf_verbose,""," Persistent class %s expired\n",key);
+      DeleteDB(dbp,key);
+      }
+   else
+      {
+      if (FullTextMatch(client_regex,key))
+         {
+         AppendItem(&candidates,key,NULL);
+         }
+      }
+   }
+
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
+
+for (ip = candidates; ip != NULL; ip=ip->next)
+   {
+   for (ap = vadmit; ap != NULL; ap=ap->next)
+      {
+      int res = false;
+      
+      if (FullTextMatch(ap->path,ip->name) == 0)
+         {
+         res = true;    /* Exact match means single file to admit */
+         }
+      
+      if (res)
+         {
+         CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",ip->name,ap->path);
+         
+         if (ap->classpattern == false)
+            {
+            CfOut(cf_error,"","Variable %s requires a literal server item...cannot set variable directly by path\n",ap->path);
+            access = false;
+            continue;
+            }
+         
+         if (!encrypt && (ap->encrypt == true))
+            {
+            CfOut(cf_error,"","Context %s requires encrypt connection...will not serve\n",ip->name);
+            access = false;      
+            break;
+            }
+         else
+            {
+            Debug("Checking whether to map root privileges..\n");
+            
+            if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
+               {
+               conn->maproot = true;
+               CfOut(cf_verbose,"","Mapping root privileges\n");
+               }
+            else
+               {
+               CfOut(cf_verbose,"","No root privileges granted\n");
+               }
+            
+            if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
+               {
+               access = true;
+               Debug("Access privileges - match found\n");
+               }
+            }
+         }
+      }
+   
+   for (ap = vdeny; ap != NULL; ap=ap->next)
+      {
+      if (strcmp(ap->path,ip->name) == 0)
+         {
+         if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
+            {
+            access = false;
+            CfOut(cf_verbose,"","Host %s explicitly denied access to context %s\n",conn->hostname,ip->name);
+            break;
+            }
+         }
+      }
+   
+   if (access)
+      {
+      CfOut(cf_verbose,"","Host %s granted access to context \"%s\"\n",conn->hostname,ip->name);
+      AppendItem(&matches,ip->name,NULL);
+      
+      if (encrypt && LOGENCRYPT)
+         {
+         /* Log files that were marked as requiring encryption */
+         CfOut(cf_log,"","Host %s granted access to context \"%s\"\n",conn->hostname,ip->name);
+         }
+      }
+   else
+      {
+      CfOut(cf_verbose,"","Host %s denied access to context \"%s\"\n",conn->hostname,ip->name);
+      }
+   }
+
+DeleteItemList(candidates);
+return matches;
 }
 
 /**************************************************************/
@@ -2980,6 +3182,45 @@ else
    {
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
+}
+
+/**************************************************************/
+
+void ReplyServerContext(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted,struct Item *classes)
+
+{ char out[CF_BUFSIZE];
+  int cipherlen, ok = false;
+  struct Item *ip;
+
+memset(sendbuffer,0,CF_BUFSIZE);
+
+for (ip = classes; ip != NULL; ip=ip->next)
+   {
+   if (strlen(sendbuffer) + strlen(ip->name) < CF_BUFSIZE-3)
+      {
+      strcat(sendbuffer,ip->name);
+      strcat(sendbuffer,",");
+      }
+   else
+      {
+      CfOut(cf_error,""," !! Overflow in context grab");
+      break;
+      }
+   }
+
+DeleteItemList(classes);
+
+if (encrypted)
+   {
+   cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
+   SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
+   }
+else
+   {
+   SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+   }
+
+//if (DELETECLASSes) remove the old persistentr class
 }
 
 /**************************************************************/

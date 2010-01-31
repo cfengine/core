@@ -104,6 +104,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"reglist",cf_class,2,"True if the regular expression in arg2 matches any item in the list whose id is arg1"},
    {"regldap",cf_class,7,"True if the regular expression in arg6 matches a value item in an ldap search"},
    {"remotescalar",cf_str,3,"Read a scalar value from a remote cfengine server"},
+   {"remoteclassesmatching",cf_class,4,"Read persistent classes matching a regular expression from a remote cfengine server and add them into local context with prefix"},
    {"returnszero",cf_class,2,"True if named shell command has exit status zero"},
    {"rrange",cf_rrange,2,"Define a range of real numbers for cfengine internal use"},
    {"selectservers",cf_int,6,"Select tcp servers which respond correctly to a query and return their number, set array of names"},

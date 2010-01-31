@@ -519,6 +519,7 @@ struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs);

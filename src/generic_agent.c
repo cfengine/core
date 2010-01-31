@@ -141,6 +141,8 @@ if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
    return true;
    }
 
+CfOut(cf_verbose,""," > Verifying the syntax of the inputs...\n");
+
 snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX);
 
 if (cfstat(cmd,&sb) == -1)

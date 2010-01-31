@@ -2733,6 +2733,96 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_BOOL,
+     CF_IDRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_opts,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp,*classlist;
+  struct Rval rval;  
+  char buffer[CF_BUFSIZE],class[CF_MAXVARSIZE];
+  char *server,*regex,*prefix;
+  int encrypted;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+regex = finalargs->item;
+server = finalargs->next->item;
+encrypted = GetBoolean(finalargs->next->next->item);
+prefix = finalargs->next->next->item;
+    
+if (strcmp(server,"localhost") == 0)
+   {
+   /* The only reason for this is testing...*/
+   server = "127.0.0.1";
+   }
+
+if (THIS_AGENT_TYPE == cf_common)
+   {
+   if ((rval.item = strdup("<remote classes>")) == NULL)
+      {
+      FatalError("Memory allocation in FnCallRemoteSCalar");
+      }
+   }
+else
+   {
+   GetRemoteScalar(regex,server,encrypted,buffer);
+   
+   if (strncmp(buffer,"BAD:",4) == 0)
+      {
+      SetFnCallReturnStatus("remoteclassesmatching",FNCALL_FAILURE,NULL,NULL);
+
+      if ((rval.item = strdup("!any")) == NULL)
+         {
+         FatalError("Memory allocation in FnCallRemoteClasses");
+         }
+      }
+   else
+      {
+      SetFnCallReturnStatus("remoteclassesmatching",FNCALL_SUCCESS,NULL,NULL);
+
+      if ((rval.item = strdup("any")) == NULL)
+         {
+         FatalError("Memory allocation in FnCallRemoteClasses");
+         }
+      }
+
+   if (classlist = SplitStringAsRList(buffer,','))
+      {
+      for (rp = classlist; rp != NULL; rp=rp->next)
+         {
+         snprintf(class,CF_MAXVARSIZE-1,"%s_%s",prefix,rp->item);
+         NewBundleClass(class,THIS_BUNDLE);
+         }
+      DeleteRlist(classlist);
+      }
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

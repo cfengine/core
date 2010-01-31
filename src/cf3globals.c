@@ -311,6 +311,8 @@ char *PROTOCOL[] =
    "SOPENDIR",
    "VAR",
    "SVAR",
+   "CONTEXT",
+   "SCONTEXT",
    NULL
    };
 

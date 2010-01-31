@@ -440,6 +440,9 @@ switch (this)
    case cfn_remotescalar:
        rval = FnCallRemoteScalar(fp,expargs);
        break;
+   case cfn_remoteclassesmatching:
+       rval = FnCallRemoteClasses(fp,expargs);
+       break;
    case cfn_date:
        rval = FnCallOnDate(fp,expargs);
        break;

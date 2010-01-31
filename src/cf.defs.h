@@ -752,6 +752,8 @@ enum PROTOS
    cfd_sopendir,
    cfd_var,
    cfd_svar,
+   cfd_context,
+   cfd_scontext,
    cfd_bad
    };
 
@@ -1214,6 +1216,7 @@ struct Auth
    struct Item *maproot;     /* which hosts should have root read access */
    int encrypt;              /* which files HAVE to be transmitted securely */
    int literal;
+   int classpattern;
    struct Auth *next;
    };
 

@@ -554,6 +554,7 @@ enum fncalltype
    cfn_reglist,
    cfn_regldap,
    cfn_remotescalar,
+   cfn_remoteclassesmatching,
    cfn_returnszero,
    cfn_rrange,
    cfn_selectservers,
@@ -1193,6 +1194,14 @@ struct ServerItem
    char *server;
    struct cfagent_connection *conn;
    int busy;
+   };
+
+/*************************************************************************/
+
+struct CfState
+   {
+   unsigned int expires;
+   enum statepolicy policy;
    };
 
 /*************************************************************************/

@@ -80,13 +80,14 @@ if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
    snprintf(name,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_VALUE_LOG);
    snprintf(datestr,CF_MAXVARSIZE,"%s",ctime(&now));
    
-   if ((fopen(name,"a")) == NULL)
+   if ((fout = fopen(name,"a")) == NULL)
       {
       CfOut(cf_inform,""," !! Unable to write to the value log %s\n",name);
       return;
       }
-   
-   fprintf(fout,"%s,%.4lf,%.4lf,%.4lf\n",VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);
+
+   Chop(datestr);
+   fprintf(fout,"%s,%.4lf,%.4lf,%.4lf\n",datestr,VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);
    
    fclose(fout);
    }

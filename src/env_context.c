@@ -34,12 +34,6 @@
 
 extern char *DAY_TEXT[];
 
-struct CfState
-   {
-   unsigned int expires;
-   enum statepolicy policy;
-   };
-
 /*****************************************************************************/
 
 void KeepClassContextPromise(struct Promise *pp)

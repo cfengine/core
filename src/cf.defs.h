@@ -24,7 +24,7 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*  HEADER for cfengine                                            */
+/*  HEAER for cfengine                                            */
 /*                                                                 */
 /*******************************************************************/
 
@@ -395,6 +395,7 @@ CF_TCDBC;
 
 # define CF_DB CF_TCDB
 # define CF_DBC CF_TCDBC
+# define DB_FEXT "tcdb"
 
 #elif defined(QDB)
 
@@ -416,6 +417,7 @@ CF_QDBC;
 
 # define CF_DB CF_QDB
 # define CF_DBC CF_QDBC
+# define DB_FEXT "qdbm"
 
 
 #else
@@ -431,6 +433,7 @@ CF_QDBC;
 # include <db.h>
 # define CF_DB DB
 # define CF_DBC DBC
+# define DB_FEXT "db"
 # define BDB 1
 #endif
 
@@ -493,16 +496,21 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 
 /*******************************************************************/
 
-#define CF_CLASSUSAGE     "cf_classes"
-#define CF_PERFORMANCE    "performance"
-#define CF_CHKDB          "checksum_digests"
-#define CF_AVDB_FILE      "cf_observations"
-#define CF_OLDAVDB_FILE   "cf_learning"
-#define CF_STATEDB_FILE   "cf_state"
-#define CF_LASTDB_FILE    "cf_LastSeen"
-#define CF_AUDITDB_FILE   "cf_Audit"
-#define CF_LOCKDB_FILE    "cf_lock"
+/* database file names */
+
+#define CF_CLASSUSAGE     "cf_classes" "." DB_FEXT
+#define CF_PERFORMANCE    "performance" "." DB_FEXT
+#define CF_CHKDB          "checksum_digests" "." DB_FEXT
+#define CF_AVDB_FILE      "cf_observations" "." DB_FEXT
+#define CF_STATEDB_FILE   "cf_state" "." DB_FEXT
+#define CF_LASTDB_FILE    "cf_LastSeen" "." DB_FEXT
+#define CF_AUDITDB_FILE   "cf_Audit" "." DB_FEXT
+#define CF_LOCKDB_FILE    "cf_lock" "." DB_FEXT
+
+/* end database file names */
+
 #define CF_VALUE_LOG      "cf_value.log"
+
 
 #define CF_STATELOG_FILE "state_log"
 #define CF_ENVNEW_FILE   "env_data.new"

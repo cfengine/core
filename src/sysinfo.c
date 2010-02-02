@@ -277,10 +277,18 @@ if(NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
   NewScalar("sys","winprogdir",workbuf,cf_str);
   }
 
+# ifdef _WIN64
+// only available on 64 bit windows systems
 if(NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
   {
   NewScalar("sys","winprogdir86",workbuf,cf_str);
   }
+
+# else  /* NOT _WIN64 */
+
+NewScalar("sys","winprogdir86","",cf_str);
+
+# endif
 
 #else /* NOT MINGW */
 

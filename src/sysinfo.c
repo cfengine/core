@@ -277,6 +277,11 @@ if(NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
   NewScalar("sys","winprogdir",workbuf,cf_str);
   }
 
+if(NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
+  {
+  NewScalar("sys","winprogdir86",workbuf,cf_str);
+  }
+
 #else /* NOT MINGW */
 
 // empty defs on Unix for manual-building purposes
@@ -284,6 +289,7 @@ if(NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
 NewScalar("sys","windir","",cf_str);
 NewScalar("sys","winsysdir","",cf_str);
 NewScalar("sys","winprogdir","",cf_str);
+NewScalar("sys","winprogdir86","",cf_str);
 
 #endif  /* NOT MINGW */
 

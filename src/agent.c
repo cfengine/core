@@ -215,7 +215,14 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMBb:",OPTIONS,&optindex)) != E
           break;
 
       case 's':
+	  
+	  // temporary assure that network functions are working
+   	  OpenNetwork();
+
           strncpy(POLICY_SERVER,Hostname2IPString(optarg),CF_BUFSIZE-1);
+
+          CloseNetwork();
+
 
           for (sp = POLICY_SERVER; *sp != '\0'; sp++)
              {

@@ -430,7 +430,7 @@ char *VRESOLVCONF[CF_CLASSATTR] =
    "/etc/resolv.conf",     /* ux4800 */
    "/etc/resolv.conf",     /* qnx */
    "/etc/resolv.conf",     /* dragonfly */
-   "mingw-invalid",        /* mingw */
+   "",                     /* mingw */
    "/etc/resolv.conf",     /* vmware */
    "unused-blah",
    "unused-blah",
@@ -476,7 +476,7 @@ char *VFSTAB[CF_CLASSATTR] =
    "/etc/vfstab",      /* ux4800 */
    "/etc/fstab",       /* qnx */
    "/etc/fstab",       /* dragonfly */
-   "mingw-invalid",     /* mingw */
+   "",                 /* mingw */
    "/etc/fstab",       /* vmware */
    "unused-blah",
    "unused-blah",
@@ -520,7 +520,7 @@ char *VMAILDIR[CF_CLASSATTR] =
    "/var/mail",          /* ux4800 */
    "/var/spool/mail",    /* qnx */
    "/var/mail",          /* dragonfly */
-   "mingw-invalid",      /* mingw */
+   "",                   /* mingw */
    "/var/spool/mail",    /* vmware */
    "unused-blah",
    "unused-blah",
@@ -609,7 +609,7 @@ char *VEXPORTS[CF_CLASSATTR] =
    "/etc/exports",    /* ux4800 */
    "/etc/exports",    /* qnx */
    "/etc/exports",    /* dragonfly */
-   "mingw-invalid",   /* mingw */
+   "",                /* mingw */
    "none",            /* vmware */
    "unused-blah",
    "unused-blah",
@@ -654,7 +654,7 @@ char *VROUTE[CF_CLASSATTR] =
    "-",              /* ux4800 */
    "-",              /* qnx */
    "/sbin/route",    /* dragonfly */
-   "mingw-invalid",  /* mingw */
+   "-",              /* mingw */
    "-",              /* vmware */
    "unused-blah",
    "unused-blah",
@@ -698,7 +698,7 @@ char *VROUTEADDFMT[CF_CLASSATTR] =
    "-",              /* ux4800 */
    "-",              /* qnx */
    "add %s %s",      /* dragonfly */
-   "mingw-invalid",  /* mingw */
+   "-",              /* mingw */
    "-",              /* vmware */
    "unused-blah",
    "unused-blah",
@@ -742,7 +742,7 @@ char *VROUTEDELFMT[CF_CLASSATTR] =
    "-",              /* ux4800 */
    "-",              /* qnx */
    "delete %s",      /* dragonfly */
-   "mingw-invalid",  /* mingw */
+   "-",              /* mingw */
    "-",              /* vmware */
    "unused-blah",
    "unused-blah",

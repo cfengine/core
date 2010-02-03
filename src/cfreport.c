@@ -2453,6 +2453,7 @@ void PeerIntermittency()
   time_t now = time(NULL), then, lastseen = CF_WEEK;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
 
 average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
 var = 0;

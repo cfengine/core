@@ -18,7 +18,7 @@ reports:
 
   isdefined::
 
-   "/bin/echo The path is $(myvar)";
+   "The path is $(myvar)";
 
   !isdefined::
 

@@ -8,6 +8,8 @@ bundle agent test
 {
 files:
 
+ freebsd::
+
    "/tmp/newfile"
 
        create => "true",

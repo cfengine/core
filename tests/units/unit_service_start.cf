@@ -7,7 +7,6 @@ body common control
 
 bundle agent example
 {
-
 services:
 
   "Themes"

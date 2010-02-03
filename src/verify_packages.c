@@ -101,6 +101,26 @@ if (a.packages.package_list_command == NULL && a.packages.package_file_repositor
    return false;
    }
 
+if (a.packages.package_file_repositories && a.packages.package_changes != cfa_individual)
+   {
+   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must use individual installation when specifying a reposiroty list");
+   return false;   
+   }
+
+if (a.packages.package_file_repositories)
+   {
+   struct Rlist *rp;
+
+   for (rp = a.packages.package_file_repositories; rp != NULL; rp = rp->next)
+      {
+      if (strlen(rp->item) > CF_MAXVARSIZE-1)
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! The repository path \"%s\" is too long",rp->item);
+         return false;         
+         }
+      }
+   }
+
 if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.package_arch_regex)
    {
    if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
@@ -198,8 +218,8 @@ int VerifyInstalledPackages(struct CfPackageManager **all_mgrs,struct Attributes
   struct Rlist *rp;
   FILE *prp;
   DIR *dirh;
- 
-if (!manager)
+  
+if (manager)
    {
    return false;
    }
@@ -501,7 +521,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
              if (size > estimated_size)
                 {
-                estimated_size = size;
+                estimated_size = size + CF_MAXVARSIZE;
                 }             
              break;
              
@@ -618,8 +638,21 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              
              for (pi = pm->pack_list; pi != NULL; pi=pi->next)
                 {
-                char *offset = command_string + strlen(command_string);
-                
+                char *sp,*offset = command_string + strlen(command_string);
+
+                if (a.packages.package_file_repositories)
+                   {
+                   if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
+                      {
+                      strcat(offset,sp);
+                      AddSlash(offset);
+                      }
+                   else
+                      {
+                      break;
+                      }
+                   }
+
                 strcat(offset,pi->name);
                 
                 if (ExecPackageCommand(command_string,verify,a,pp))
@@ -1257,6 +1290,29 @@ switch(a.packages.package_policy)
    default:
        break;
    }
+}
+
+/*****************************************************************************/
+
+char *PrefixLocalRepository(struct Rlist *repositories,char *package)
+
+{ struct Rlist *rp;
+  struct stat sb;
+  char name[CF_BUFSIZE];
+ 
+for (rp = repositories; rp != NULL; rp=rp->next)
+   {
+   strncpy(name,rp->item,CF_MAXVARSIZE);
+   AddSlash(name);
+   strcat(name,package);
+   
+   if (cfstat(name,&sb) != -1)
+      {
+      return rp->item;
+      }
+   }
+
+return NULL;
 }
 
 /*****************************************************************************/

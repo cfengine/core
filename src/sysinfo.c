@@ -100,6 +100,9 @@ void GetNameInfo3()
 #ifdef HAVE_SYSINFO
   long sz;
 #endif
+  char *components[] = { "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
+                         "cf-reports", "cf-key", "cf-runagent", "cf-execd",
+                         "cf-promises", "cf-twin",  NULL };
 
 Debug("GetNameInfo()\n");
 
@@ -257,6 +260,29 @@ NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
+
+for (i = 0; components[i] != NULL; i++)
+   {
+   struct stat sb;
+   char name[CF_MAXVARSIZE],shortname[CF_MAXVARSIZE];
+
+   snprintf(shortname,CF_MAXVARSIZE-1,"%s",CanonifyName(components[i]));
+
+   if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
+      {
+      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s.exe",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
+      }
+   else
+      {
+      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
+      }
+   
+   if (cfstat(name,&sb) != -1)
+      {
+      NewScalar("sys",shortname,name,cf_str);
+      }
+   }
+
 
 
 /* Windows special directories */

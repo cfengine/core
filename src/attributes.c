@@ -938,6 +938,8 @@ p.package_patch_arch_regex = (char *)GetConstraint("package_patch_arch_regex",pp
 p.package_patch_version_regex = (char *)GetConstraint("package_patch_version_regex",pp,CF_SCALAR);
 p.package_patch_installed_regex = (char *)GetConstraint("package_patch_installed_regex",pp,CF_SCALAR);
 
+p.package_list_update_command = (char *)GetConstraint("package_list_update_command",pp,CF_SCALAR);
+p.package_list_update_ifelapsed = GetIntConstraint("package_list_update_ifelapsed",pp);
 p.package_list_command = (char *)GetConstraint("package_list_command",pp,CF_SCALAR);
 p.package_list_version_regex = (char *)GetConstraint("package_list_version_regex",pp,CF_SCALAR);
 p.package_list_name_regex = (char *)GetConstraint("package_list_name_regex",pp,CF_SCALAR);

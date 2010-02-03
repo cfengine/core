@@ -1457,6 +1457,9 @@ struct Packages
    char *package_patch_name_regex;
    char *package_patch_arch_regex;
    char *package_patch_installed_regex;
+      
+   char *package_list_update_command;
+   int package_list_update_ifelapsed;
 
    char *package_version_regex;
    char *package_name_regex;

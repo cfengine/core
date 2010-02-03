@@ -36,7 +36,7 @@
 
 void VerifyPackagesPromise(struct Promise *pp)
 
-{ struct Attributes a;
+{ struct Attributes a,al;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
 
@@ -48,6 +48,31 @@ if (!PackageSanityCheck(a,pp))
    }
 
 PromiseBanner(pp);
+
+// First check if we need to force a repository update
+
+if (a.packages.package_list_update_command)
+   {
+   snprintf(lockname,CF_BUFSIZE-1,"package-%s-%s",pp->promiser,a.packages.package_list_update_command);
+
+   al = a;
+   
+   if (a.packages.package_list_update_ifelapsed != CF_NOINT)
+      {
+      al.transaction.ifelapsed = a.packages.package_list_update_ifelapsed;
+      }
+   
+   thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,al,pp);
+   
+   if (thislock.lock != NULL)
+      {
+      ExecPackageCommand(a.packages.package_list_update_command,false,al,pp);   
+      }
+   
+   YieldCurrentLock(thislock);
+   }
+
+// Now verify the package itself
 
 snprintf(lockname,CF_BUFSIZE-1,"package-%s-%s",pp->promiser,a.packages.package_list_command);
  

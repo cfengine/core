@@ -79,6 +79,13 @@ if (promised_zero && a.restart_class)
    ret = false;
    }
 
+if (a.haveselect && !a.process_select.process_result)
+   {
+   CfOut(cf_error,""," !! Process select constraint body promised no result (check body definition)");
+   PromiseRef(cf_error,pp);
+   return false;   
+   }
+
 return ret;
 }
 

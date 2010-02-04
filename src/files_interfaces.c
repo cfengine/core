@@ -1236,6 +1236,13 @@ if (a.havedelete && a.havedepthsearch && !a.haveselect)
    return false;
    }
 
+if (a.haveselect && !a.select.result)
+   {
+   CfOut(cf_error,""," !! File select constraint body promised no result (check body definition)");
+   PromiseRef(cf_error,pp);
+   return false;   
+   }
+
 if (a.havedelete && a.haverename)
    {
    CfOut(cf_error,""," !! File %s cannot promise both deletion and renaming",path);

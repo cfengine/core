@@ -23,29 +23,35 @@ AM_CONFIG_HEADER(src/conf.h)
 #
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems
+# Don't add if cross-compiling (setting host), to avoid using native libs.
 #
-for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib 
-do
-  if test -d "$x"; then
-    y=`expr " $LDFLAGS " : ".* -L$x "`
-    if test $y -eq 0; then
-      LDFLAGS="$LDFLAGS -L$x"
+if test "x$host" = "x"; then
+  for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib 
+  do
+    if test -d "$x"; then
+      y=`expr " $LDFLAGS " : ".* -L$x "`
+      if test $y -eq 0; then
+        LDFLAGS="$LDFLAGS -L$x"
+      fi
     fi
-  fi
-done
+  done
+fi
 
 #
 # Add to the default list of places in CPPFLAGS to match LDFLAGS above
+# Don't add if cross-compiling (setting host), to avoid using native libs.
 # 
-for x in /usr/local/gnu/include /opt/dce/include /sw/include
-do 
-  if test -d "$x"; then
-    y=`expr " $CPPFLAGS " : ".* -I$x "`
-    if test $y -eq 0; then
-      CPPFLAGS="$CPPFLAGS -I$x"
+if test "x$host" = "x"; then
+  for x in /usr/local/gnu/include /opt/dce/include /sw/include
+  do 
+    if test -d "$x"; then
+      y=`expr " $CPPFLAGS " : ".* -I$x "`
+      if test $y -eq 0; then
+        CPPFLAGS="$CPPFLAGS -I$x"
+      fi
     fi
-  fi
-done
+  done
+fi
 
 ACX_PTHREAD
 CC=$PTHREAD_CC

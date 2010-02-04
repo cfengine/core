@@ -499,8 +499,8 @@ void GetQ()
  GatherDiskData();
  GatherSocketData();
  GatherSensorData();
- GatherPromisedMeasures();
 #endif  /* NOT MINGW */
+ GatherPromisedMeasures();
 }
 
 /*********************************************************************/

@@ -90,7 +90,7 @@ if (a.measure.data_type == cf_notype)
    }
 else
    {
-   if (strcmp(a.measure.history_type,"weekly") == 0)
+   if (a.measure.history_type && strcmp(a.measure.history_type,"weekly") == 0)
       {
       switch (a.measure.data_type)
          {

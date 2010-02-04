@@ -872,22 +872,31 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-if (strcmp(finalargs->next->item,"useshell") == 0)
-   {
-   ret = GetExecOutput(finalargs->item,buffer,true);
-   }
-else
-   {
-   ret = GetExecOutput(finalargs->item,buffer,false);
-   }
 
-if (ret)
+if (!IsExecutable(GetArg0(finalargs->next->item)))
    {
-   SetFnCallReturnStatus("execresult",FNCALL_SUCCESS,NULL,NULL);
+   CfOut(cf_error,"","ExecResult \"%s\" is assumed to be executable but isn't\n",finalargs->next->item);
+   SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
    }
 else
    {
-   SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   if (strcmp(finalargs->next->item,"useshell") == 0)
+      {
+      ret = GetExecOutput(finalargs->item,buffer,true);
+      }
+   else
+      {
+      ret = GetExecOutput(finalargs->item,buffer,false);
+      }
+   
+   if (ret)
+      {
+      SetFnCallReturnStatus("execresult",FNCALL_SUCCESS,NULL,NULL);
+      }
+   else
+      {
+      SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+      }
    }
 
 if ((rval.item = strdup(buffer)) == NULL)
@@ -1442,7 +1451,7 @@ arrayname = finalargs->item;
 if (strstr(arrayname,"."))
    {
    scopeid[0] = '\0';
-   sscanf(arrayname,"%[^127.].%127s",scopeid,lval);
+   sscanf(arrayname,"%127[^.].%127s",scopeid,lval);
    }
 else
    {
@@ -1452,7 +1461,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function getindices was promised an array in scope \"%s\" but this was not found\n",scopeid);
+   CfOut(cf_error,"","Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
    SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
    rval.item = NULL;
    rval.rtype = CF_LIST;
@@ -2120,7 +2129,7 @@ else
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
-   FatalError("Memory allocation in FnCallReturnsZero");
+   FatalError("Memory allocation in FnCallNewerThan");
    }
 
 /* end fn specific content */

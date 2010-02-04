@@ -995,6 +995,12 @@ if (rval != NULL)
          PromiseRef(cf_error,pp);
          }
       }
+
+   if (IsCf3VarString(pp->promiser))
+      {
+      // Unexpanded variables, we don't do anything with
+      return;
+      }
    
    if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*",pp->promiser))
       {
@@ -1014,6 +1020,7 @@ else
    CfOut(cf_error,"","Variable %s has no promised value\n",pp->promiser);
    CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    }     
+
 }
 
 /*********************************************************************/

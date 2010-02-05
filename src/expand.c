@@ -892,11 +892,12 @@ strncpy(s2,s1+2,strlen(s1)-3);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
- char *lval,rtype;
- void *rval = NULL,*retval;
-  int i = 0,ok_redefine = false;
+  char *lval,rtype;
+  void *rval = NULL,*retval;
+  int i = 0,ok_redefine = false,drop_undefined = false;;
   struct Rval returnval; /* Must expand naked functions here for consistency */
-
+  struct Rlist *rp,*last;
+  
 if (pp->done)
    {
    return;
@@ -916,7 +917,12 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,"policy") == 0)
       {
-      if (strcmp(cp->rval,"constant") == 0)
+      if (strcmp(cp->rval,"ifdefined") == 0)
+         {
+         drop_undefined = true;
+         ok_redefine = false;
+         }
+      else if (strcmp(cp->rval,"constant") == 0)
          {
          ok_redefine = false;
          }
@@ -946,7 +952,7 @@ if (cp == NULL)
 
 if (i > 2)
    {
-   CfOut(cf_error,"","Variable-type body in %s breaks its own promise",pp->promiser);
+   CfOut(cf_error,"","Variable-type body in %s breaks its own promise (code %d)",pp->promiser,i);
    PromiseRef(cf_error,pp);
    return;
    }
@@ -1009,6 +1015,28 @@ if (rval != NULL)
       return;
       }
 
+   if (drop_undefined && cp->type == CF_LIST)
+      {
+      for (rp = rval; rp != NULL; rp=rp->next)
+         {
+         if (IsNakedVar(rp->item,'@'))
+            {
+            if (rp == rval)
+               {
+               DeleteRvalItem(rp->item,rp->type);
+               rval = rp->next;
+               }
+            else
+               {
+               last->next = rp->next;
+               DeleteRvalItem(rp->item,rp->type);
+               }
+            }
+
+         last = rp;
+         }
+      }
+   
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);

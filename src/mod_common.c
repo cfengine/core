@@ -162,7 +162,7 @@ struct BodySyntax CF_VARBODY[] =
    {"slist",cf_slist,"","A list of scalar strings"},
    {"ilist",cf_ilist,CF_INTRANGE,"A list of integers"},
    {"rlist",cf_rlist,CF_REALRANGE,"A list of real numbers"},
-   {"policy",cf_opts,"free,overridable,constant","The policy for (dis)allowing redefinition of variables"},
+   {"policy",cf_opts,"free,overridable,constant,ifdefined","The policy for (dis)allowing (re)definition of variables"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -618,7 +618,7 @@ if(times == NULL)
 
 if(times[8] == '0')
   {
-  times[8] == ' ';
+  times[8] = ' ';
   }
 
 #endif  /* MINGW */

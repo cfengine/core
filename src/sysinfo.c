@@ -101,7 +101,7 @@ void GetNameInfo3()
   long sz;
 #endif
   char *components[] = { "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
-                         "cf-reports", "cf-key", "cf-runagent", "cf-execd",
+                         "cf-report", "cf-key", "cf-runagent", "cf-execd",
                          "cf-promises", "cf-twin",  NULL };
 
 Debug("GetNameInfo()\n");
@@ -270,11 +270,11 @@ for (i = 0; components[i] != NULL; i++)
 
    if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
       {
-      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s.exe",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
+      snprintf(name,CF_MAXVARSIZE-1,"\"%s%cbin%c%s.exe\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
       }
    else
       {
-      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
+      snprintf(name,CF_MAXVARSIZE-1,"\"%s%cbin%c%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
       }
    
    if (cfstat(name,&sb) != -1)

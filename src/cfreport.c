@@ -379,7 +379,7 @@ if (strlen(OUTPUTDIR) == 0)
          CfOut(cf_verbose,"","Couldn't read system clock\n");
          }
 
-      sprintf(OUTPUTDIR,"cf-reports-%s-%s",CanonifyName(VFQNAME),ctime(&now));
+      sprintf(OUTPUTDIR,"cf-reports-%s-%s",CanonifyName(VFQNAME),cf_ctime(&now));
       }
    else
       {
@@ -750,7 +750,7 @@ if (HTML && !EMBEDDED)
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
    fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
 
-   fprintf(fout,"<h4>This report was last updated at %s</h4>",ctime(&tid));
+   fprintf(fout,"<h4>This report was last updated at %s</h4>",cf_ctime(&tid));
 
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
@@ -802,7 +802,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       }
 
    fthen = (time_t)then;                            /* format date */
-   snprintf(tbuf,CF_BUFSIZE-1,"%s",ctime(&fthen));
+   snprintf(tbuf,CF_BUFSIZE-1,"%s",cf_ctime(&fthen));
    tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
 
    if (strlen(hostname+1) > 15)
@@ -978,7 +978,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       average = entry.Q.expect/ticksperminute;;
       var     = entry.Q.var;
 
-      snprintf(tbuf,CF_BUFSIZE-1,"%s",ctime(&then));
+      snprintf(tbuf,CF_BUFSIZE-1,"%s",cf_ctime(&then));
       tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
 
       if (PURGE == 'y')
@@ -1114,7 +1114,7 @@ memset(&entry, 0, sizeof(entry));
 if (HTML && !EMBEDDED)
    {
    time_t now = time(NULL);
-   snprintf(name,CF_BUFSIZE,"Classes last observed on %s at %s",VFQNAME,ctime(&now));
+   snprintf(name,CF_BUFSIZE,"Classes last observed on %s at %s",VFQNAME,cf_ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
    fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
@@ -1153,7 +1153,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       average = entry.Q.expect;
       var     = entry.Q.var;
 
-      snprintf(tbuf,CF_BUFSIZE-1,"%s",ctime(&then));
+      snprintf(tbuf,CF_BUFSIZE-1,"%s",cf_ctime(&then));
       tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
 
       if (PURGE == 'y')
@@ -1427,7 +1427,7 @@ if ((fout = fopen(name,"w")) == NULL)
 if (HTML && !EMBEDDED)
    {
    time_t now = time(NULL);
-   snprintf(name,CF_BUFSIZE,"%s lock data observed on %s at %s",lockdb,VFQNAME,ctime(&now));
+   snprintf(name,CF_BUFSIZE,"%s lock data observed on %s at %s",lockdb,VFQNAME,cf_ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
    fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
@@ -1461,20 +1461,20 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             {
             fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key,CFRX[cfx_filename][cfe]);
-            fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],ctime(&entry.time),CFRX[cfx_date][cfe]);
+            fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],cf_ctime(&entry.time),CFRX[cfx_date][cfe]);
             fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
             }
          else if (HTML)
             {
             fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key,CFRH[cfx_filename][cfe]);
-            fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],ctime(&entry.time),CFRH[cfx_date][cfe]);
+            fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],cf_ctime(&entry.time),CFRH[cfx_date][cfe]);
             fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
             }
          else
             {
             fprintf(fout,"%s = ",(char *)key);
-            fprintf(fout,"%s\n",ctime(&entry.time));
+            fprintf(fout,"%s\n",cf_ctime(&entry.time));
             }
 
          CfOut(cf_inform,"","Active lock %s = ",(char *)key);
@@ -1488,25 +1488,25 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             {
             fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRX[cfx_filename][cfb],(char *)key,CFRX[cfx_filename][cfe]);
-            fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],ctime(&entry.time),CFRX[cfx_date][cfe]);
+            fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],cf_ctime(&entry.time),CFRX[cfx_date][cfe]);
             fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
             }
          else if (HTML)
             {
             fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
             fprintf(fout,"%s%s%s",CFRH[cfx_filename][cfb],(char *)key,CFRH[cfx_filename][cfe]);
-            fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],ctime(&entry.time),CFRH[cfx_date][cfe]);
+            fprintf(fout,"%s%s%s",CFRH[cfx_date][cfb],cf_ctime(&entry.time),CFRH[cfx_date][cfe]);
             fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
             }
          else if (CSV)
             {
             fprintf(fout,"%s",(char *)key);
-            fprintf(fout,",%s\n",ctime(&entry.time));
+            fprintf(fout,",%s\n",cf_ctime(&entry.time));
             }
          else
             {
             fprintf(fout,"%s = ",(char *)key);
-            fprintf(fout,"%s\n",ctime(&entry.time));
+            fprintf(fout,"%s\n",cf_ctime(&entry.time));
             }
          }
       }
@@ -1586,7 +1586,7 @@ if ((fout = fopen(name,"w")) == NULL)
 if (HTML && !EMBEDDED)
    {
    time_t now = time(NULL);
-   snprintf(name,CF_BUFSIZE,"Audit collected on %s at %s",VFQNAME,ctime(&now));
+   snprintf(name,CF_BUFSIZE,"Audit collected on %s at %s",VFQNAME,cf_ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
 
    fprintf(fout,"<table class=border cellpadding=5>\n");

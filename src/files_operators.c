@@ -486,7 +486,7 @@ if (lstat(from,&sb) == 0)
 
       if (attr.copy.backup == cfa_timestamp || attr.edits.backup == cfa_timestamp)
          {
-         sprintf(stamp, "_%d_%s",CFSTARTTIME,CanonifyName(ctime(&now_stamp)));
+         sprintf(stamp, "_%d_%s",CFSTARTTIME,CanonifyName(cf_ctime(&now_stamp)));
          strcat(saved,stamp);
          }
 
@@ -520,7 +520,7 @@ if (lstat(from,&sb) == 0)
       saved[0] = '\0';
       strcpy(saved,from);
 
-      sprintf(stamp, "_%d_%s", CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
+      sprintf(stamp, "_%d_%s", CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
       strcat(saved,stamp);
       strcat(saved,CF_SAVED);
       strcat(saved,".dir");
@@ -1090,8 +1090,8 @@ if (cmpsb.st_mtime != sb->st_mtime)
    {
    char from[CF_MAXVARSIZE];
    char to[CF_MAXVARSIZE];
-   strcpy(from,ctime(&(cmpsb.st_mtime)));
-   strcpy(to,ctime(&(sb->st_mtime)));
+   strcpy(from,cf_ctime(&(cmpsb.st_mtime)));
+   strcpy(to,cf_ctime(&(sb->st_mtime)));
    Chop(from);
    Chop(to);
    CfOut(cf_error,"","ALERT: Last modified time for %s changed %s -> %s",file,from,to);
@@ -1389,7 +1389,7 @@ if ((fp = fopen(fname,"a")) == NULL)
    return;
    }
 
-snprintf(timebuf,CF_MAXVARSIZE-1,"%s",ctime(&now));
+snprintf(timebuf,CF_MAXVARSIZE-1,"%s",cf_ctime(&now));
 Chop(timebuf);
 fprintf(fp,"%s,%s\n",timebuf,file);
 fclose(fp);

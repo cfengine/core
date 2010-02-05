@@ -40,8 +40,8 @@ void HandleSignals(int signum)
 if (signum != SIGCHLD)
    {
    CfOut(cf_error,"","Received signal %d (%s) while doing [%s]",signum,SIGNALS[signum],CFLOCK);
-   CfOut(cf_error,"","Logical start time %s ",ctime(&CFSTARTTIME));
-   CfOut(cf_error,"","This sub-task started really at %s\n",ctime(&CFINITSTARTTIME));
+   CfOut(cf_error,"","Logical start time %s ",cf_ctime(&CFSTARTTIME));
+   CfOut(cf_error,"","This sub-task started really at %s\n",cf_ctime(&CFINITSTARTTIME));
    fflush(stdout);
    
    if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)

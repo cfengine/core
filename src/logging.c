@@ -78,7 +78,7 @@ if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
    CfOut(cf_inform,""," -> Recording promise valuations");
     
    snprintf(name,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_VALUE_LOG);
-   snprintf(datestr,CF_MAXVARSIZE,"%s",ctime(&now));
+   snprintf(datestr,CF_MAXVARSIZE,"%s",cf_ctime(&now));
    
    if ((fout = fopen(name,"a")) == NULL)
       {
@@ -220,7 +220,7 @@ if (AUDITDBP == NULL)
    return;
    }
 
-snprintf(date,CF_BUFSIZE,"%s",ctime(&now));
+snprintf(date,CF_BUFSIZE,"%s",cf_ctime(&now));
 Chop(date);
 
 ExtractOperationLock(lock);
@@ -392,9 +392,9 @@ if ((fout = fopen(filename,"a")) == NULL)
    return;
    }
 
-strcpy(start,ctime(&CFSTARTTIME));
+strcpy(start,cf_ctime(&CFSTARTTIME));
 Chop(start);
-strcpy(end,ctime(&now));
+strcpy(end,cf_ctime(&now));
 Chop(end);
 
 fprintf(fout,"%s -> %s: %s",start,end,s);

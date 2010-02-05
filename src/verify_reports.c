@@ -309,7 +309,7 @@ if (cfstat(buffer,&statbuf) == 0)
       }
    
    CfOut(cf_error,"","\n");
-   CfOut(cf_error,"","R: State of %s peaked at %s\n",type,ctime(&statbuf.st_mtime));
+   CfOut(cf_error,"","R: State of %s peaked at %s\n",type,cf_ctime(&statbuf.st_mtime));
    }
 else 
    {
@@ -431,7 +431,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    
    tthen = (time_t)then;
 
-   snprintf(datebuf,CF_MAXVARSIZE-1,"%s",ctime(&tthen));
+   snprintf(datebuf,CF_MAXVARSIZE-1,"%s",cf_ctime(&tthen));
    datebuf[strlen(datebuf)-9] = '\0';                     /* Chop off second and year */
 
    snprintf(addr,15,"%s",hostname+1);

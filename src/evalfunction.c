@@ -3626,7 +3626,7 @@ if ((cftime=mktime(&tmv))== -1)
    CfOut(cf_inform,"","Illegal time value");
    }
 
-Debug("Time computed from input was: %s\n",ctime(&cftime));
+Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
@@ -3704,7 +3704,7 @@ cftime -= Months2Seconds(d[cfa_month]);
 cftime -= d[cfa_year] * 365 * 24 * 3600;
 
 Debug("Total negative offset = %.1f minutes\n",(double)(CFSTARTTIME-cftime)/60.0);
-Debug("Time computed from input was: %s\n",ctime(&cftime));
+Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
@@ -3827,7 +3827,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 cftime = CFSTARTTIME;
 
-Debug("Time computed from input was: %s\n",ctime(&cftime));
+Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%d",time);
 

@@ -250,7 +250,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
       var = entry.Q.var;
       lastseen = now - then;
             
-      snprintf(tbuf,CF_BUFSIZE-1,"%s",ctime(&then));
+      snprintf(tbuf,CF_BUFSIZE-1,"%s",cf_ctime(&then));
       tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
 
       if (lastseen > lsea)

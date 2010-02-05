@@ -81,9 +81,9 @@ if ((tloc = time((time_t *)NULL)) == -1)
 
 CFSTARTTIME = tloc;
 
-snprintf(vbuff,CF_BUFSIZE,"%s",ctime(&tloc));
+snprintf(vbuff,CF_BUFSIZE,"%s",cf_ctime(&tloc));
 
-CfOut(cf_verbose,"","Reference time set to %s\n",ctime(&tloc));
+CfOut(cf_verbose,"","Reference time set to %s\n",cf_ctime(&tloc));
 
 if (setclasses)
    {
@@ -109,7 +109,7 @@ if ((tloc = time((time_t *)NULL)) == -1)
 
 CFINITSTARTTIME = tloc;
 
-Debug("Job start time set to %s\n",ctime(&tloc));
+Debug("Job start time set to %s\n",cf_ctime(&tloc));
 }
 
 /*********************************************************************/

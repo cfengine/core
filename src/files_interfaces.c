@@ -1648,7 +1648,7 @@ if (!discardbackup)
    if (attr.copy.backup == cfa_timestamp)
       {
       stampnow = time((time_t *)NULL);   
-      snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
+      snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(cf_ctime(&stampnow)));
 
       if (!JoinSuffix(backup,stamp))
          {

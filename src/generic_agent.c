@@ -1332,7 +1332,7 @@ HashFile(file,AUDITPTR->digest,cf_md5);
 
 AUDITPTR->next = VAUDIT;
 AUDITPTR->filename = strdup(file);
-AUDITPTR->date = strdup(ctime(&statbuf.st_mtime));
+AUDITPTR->date = strdup(cf_ctime(&statbuf.st_mtime));
 Chop(AUDITPTR->date);
 AUDITPTR->version = NULL;
 VAUDIT = AUDITPTR;

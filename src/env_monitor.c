@@ -515,7 +515,7 @@ char *GetTimeKey()
     exit(1);
     }
 
- sprintf(str,"%s",ctime(&now));
+ sprintf(str,"%s",cf_ctime(&now));
 
  return ConvTimeKey(str); 
 }

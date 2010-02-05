@@ -241,10 +241,10 @@ CfOut(cf_verbose,"","Operating System Type is %s\n",VSYSNAME.sysname);
 CfOut(cf_verbose,"","Operating System Release is %s\n",VSYSNAME.release);
 CfOut(cf_verbose,"","Architecture = %s\n\n\n",VSYSNAME.machine);
 CfOut(cf_verbose,"","Using internal soft-class %s for host %s\n\n",workbuf,VSYSNAME.nodename);
-CfOut(cf_verbose,"","The time is now %s\n\n",ctime(&tloc));
+CfOut(cf_verbose,"","The time is now %s\n\n",cf_ctime(&tloc));
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 
-snprintf(workbuf,CF_MAXVARSIZE,"%s",ctime(&tloc));
+snprintf(workbuf,CF_MAXVARSIZE,"%s",cf_ctime(&tloc));
 Chop(workbuf);
 NewScalar("sys","date",workbuf,cf_str);
 NewScalar("sys","cdate",CanonifyName(workbuf),cf_str);
@@ -487,7 +487,7 @@ if (statbuf.st_mtime < (now - 60*60))
    return;
    }
 
-snprintf(value,CF_MAXVARSIZE-1,"%s",ctime(&statbuf.st_mtime));
+snprintf(value,CF_MAXVARSIZE-1,"%s",cf_ctime(&statbuf.st_mtime));
 Chop(value);
 
 DeleteVariable("mon","env_time");

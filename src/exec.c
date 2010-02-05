@@ -415,7 +415,7 @@ if(!NO_FORK)
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   CfOut(cf_inform,"","cf-execd starting %.24s\n",ctime(&now));
+   CfOut(cf_inform,"","cf-execd starting %.24s\n",cf_ctime(&now));
    exit(0);
    }
 
@@ -620,7 +620,7 @@ CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();
 SetReferenceTime(true);
-snprintf(timekey,63,"%s",ctime(&now)); 
+snprintf(timekey,63,"%s",cf_ctime(&now)); 
 AddTimeClass(timekey); 
 
 for (ip = SCHEDULE; ip != NULL; ip = ip->next)
@@ -683,7 +683,7 @@ threadName = NULL;
 #endif
  
 CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");
-CfOut(cf_verbose,"","  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", ctime(&starttime));
+CfOut(cf_verbose,"","  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", cf_ctime(&starttime));
 CfOut(cf_verbose,"","------------------------------------------------------------------\n"); 
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
@@ -705,7 +705,7 @@ else
 
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
    
-snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(ctime(&starttime)));
+snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(cf_ctime(&starttime)));
 snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%x",CFWORKDIR,CanonifyName(VFQNAME),line,threadName);
 MapName(filename);
 

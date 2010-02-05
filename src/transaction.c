@@ -552,7 +552,7 @@ if ((tim = time((time_t *)NULL)) == -1)
    Debug("Cfengine: couldn't read system clock\n");
    }
 
-sprintf(buffer,"%s",ctime(&tim));
+sprintf(buffer,"%s",cf_ctime(&tim));
 
 Chop(buffer);
 

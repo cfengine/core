@@ -384,7 +384,7 @@ lastseen = GetPromiseCompliance(pp,&val,&av,&var,&last);
 
 if (lastseen) /* This only gives something in Nova or higher */
    {
-   strncpy(vbuff,ctime(&lastseen),CF_MAXVARSIZE);
+   strncpy(vbuff,cf_ctime(&lastseen),CF_MAXVARSIZE);
    Chop(vbuff);
    
    fprintf(FREPORT_HTML,"<hr><p><div id=\"compliance\">Compliance last checked on %s. At that time the system was ",vbuff);

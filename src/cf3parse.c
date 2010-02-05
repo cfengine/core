@@ -452,9 +452,9 @@ static const yytype_uint16 yyrline[] =
       91,   118,   119,   123,   124,   129,   128,   149,   150,   154,
      155,   159,   160,   167,   164,   204,   205,   209,   210,   214,
      215,   219,   237,   232,   262,   261,   289,   290,   291,   295,
-     314,   321,   330,   336,   342,   348,   353,   361,   367,   368,
-     369,   373,   379,   385,   391,   400,   407,   415,   423,   422,
-     448,   449,   450,   454,   461,   468,   475
+     314,   321,   330,   337,   344,   351,   357,   366,   372,   373,
+     374,   378,   384,   390,   396,   405,   412,   420,   428,   427,
+     453,   454,   455,   459,   466,   473,   480
 };
 #endif
 
@@ -1533,11 +1533,11 @@ yyreduce:
 
                         if (P.currentclasses == NULL)
                            {
-                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any");
+                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            }
                         else
                            {
-                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses);
+                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
                            }
 
                         if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
@@ -1640,7 +1640,7 @@ yyreduce:
                            {
                            ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
-                           AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any");
+                           AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            P.rval = NULL;
                            P.lval = NULL;
                            P.currentRlist = NULL;
@@ -1669,46 +1669,51 @@ yyreduce:
     {
                          P.rval = P.currentid;
                          P.rtype = CF_SCALAR;
+                         P.isbody = true;
                          Debug("Recorded IDRVAL %s\n",P.rval);
                          }
     break;
 
   case 53:
-#line 337 "cf3parse.y"
+#line 338 "cf3parse.y"
     {
                          P.rval = P.currentstring;
                          P.rtype = CF_SCALAR;
+                         P.isbody = false;
                          Debug("Recorded scalarRVAL %s\n",P.rval);
                          }
     break;
 
   case 54:
-#line 343 "cf3parse.y"
+#line 345 "cf3parse.y"
     {
                          P.rval = P.currentstring;
                          P.rtype = CF_SCALAR;
+                         P.isbody = false;
                          Debug("Recorded saclarvariableRVAL %s\n",P.rval);
                          }
     break;
 
   case 55:
-#line 349 "cf3parse.y"
+#line 352 "cf3parse.y"
     {
                          P.rval = P.currentRlist;
+                         P.isbody = false;
                          P.rtype = CF_LIST;
                          }
     break;
 
   case 56:
-#line 354 "cf3parse.y"
+#line 358 "cf3parse.y"
     {
+                         P.isbody = false;
                          P.rval = P.currentfncall[P.arg_nesting+1];
                          P.rtype = CF_FNCALL;
                          }
     break;
 
   case 61:
-#line 374 "cf3parse.y"
+#line 379 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                           free(P.currentid);
@@ -1716,7 +1721,7 @@ yyreduce:
     break;
 
   case 62:
-#line 380 "cf3parse.y"
+#line 385 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
@@ -1724,7 +1729,7 @@ yyreduce:
     break;
 
   case 63:
-#line 386 "cf3parse.y"
+#line 391 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
@@ -1732,7 +1737,7 @@ yyreduce:
     break;
 
   case 64:
-#line 392 "cf3parse.y"
+#line 397 "cf3parse.y"
     {
                           Debug("Install function call as list item from level %d\n",P.arg_nesting+1);
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
@@ -1741,14 +1746,14 @@ yyreduce:
     break;
 
   case 65:
-#line 401 "cf3parse.y"
+#line 406 "cf3parse.y"
     {
                           Debug("Found function identifier %s\n",P.currentid);
                           }
     break;
 
   case 66:
-#line 408 "cf3parse.y"
+#line 413 "cf3parse.y"
     {
                           P.promiser = P.currentstring; //strdup(P.currentstring);
                           Debug("Promising object name \'%s\'\n",P.promiser);
@@ -1756,14 +1761,14 @@ yyreduce:
     break;
 
   case 67:
-#line 416 "cf3parse.y"
+#line 421 "cf3parse.y"
     {
                          Debug("Finished with function call, now at level %d\n\n",P.arg_nesting);
                          }
     break;
 
   case 68:
-#line 423 "cf3parse.y"
+#line 428 "cf3parse.y"
     {
                            if (++P.arg_nesting > CF_MAX_NESTING)
                               {
@@ -1775,7 +1780,7 @@ yyreduce:
     break;
 
   case 69:
-#line 434 "cf3parse.y"
+#line 439 "cf3parse.y"
     {
                            Debug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
@@ -1789,7 +1794,7 @@ yyreduce:
     break;
 
   case 73:
-#line 455 "cf3parse.y"
+#line 460 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
@@ -1798,7 +1803,7 @@ yyreduce:
     break;
 
   case 74:
-#line 462 "cf3parse.y"
+#line 467 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
@@ -1807,7 +1812,7 @@ yyreduce:
     break;
 
   case 75:
-#line 469 "cf3parse.y"
+#line 474 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
@@ -1816,7 +1821,7 @@ yyreduce:
     break;
 
   case 76:
-#line 476 "cf3parse.y"
+#line 481 "cf3parse.y"
     {
                           /* Careful about recursion */
                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
@@ -1826,7 +1831,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1830 "y.tab.c"
+#line 1835 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2040,7 +2045,7 @@ yyreturn:
 }
 
 
-#line 482 "cf3parse.y"
+#line 487 "cf3parse.y"
 
 
 /*****************************************************************/

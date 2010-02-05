@@ -1535,16 +1535,16 @@ promise.conlist = NULL;
 
 snprintf(s,CF_MAXVARSIZE,"0,%ld",(long)now);
 
-AppendConstraint(&(promise.conlist),"action","true",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"ifelapsed","0",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"delete","true",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"dirlinks","delete",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"rmdirs","true",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"depth_search","true",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"depth","inf",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"file_select","true",CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"mtime",s,CF_SCALAR,"any");
-AppendConstraint(&(promise.conlist),"file_result","mtime",CF_SCALAR,"any");
+AppendConstraint(&(promise.conlist),"action","true",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"ifelapsed","0",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"delete","true",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"dirlinks","delete",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"rmdirs","true",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"depth_search","true",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"depth","inf",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"file_select","true",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"mtime",s,CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist),"file_result","mtime",CF_SCALAR,"any",false);
 VerifyFilePromise(promise.promiser,&promise);
 rmdir(path);
 }

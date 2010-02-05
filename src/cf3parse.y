@@ -170,11 +170,11 @@ selection:            id                         /* BODY ONLY */
 
                         if (P.currentclasses == NULL)
                            {
-                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any");
+                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            }
                         else
                            {
-                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses);
+                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
                            }
 
                         if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
@@ -302,7 +302,7 @@ constraint:           id                        /* BUNDLE ONLY */
                            {
                            ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
-                           AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any");
+                           AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            P.rval = NULL;
                            P.lval = NULL;
                            P.currentRlist = NULL;
@@ -331,27 +331,32 @@ rval:                  ID
                          {
                          P.rval = P.currentid;
                          P.rtype = CF_SCALAR;
+                         P.isbody = true;
                          Debug("Recorded IDRVAL %s\n",P.rval);
                          }
                      | QSTRING
                          {
                          P.rval = P.currentstring;
                          P.rtype = CF_SCALAR;
+                         P.isbody = false;
                          Debug("Recorded scalarRVAL %s\n",P.rval);
                          }
                      | NAKEDVAR
                          {
                          P.rval = P.currentstring;
                          P.rtype = CF_SCALAR;
+                         P.isbody = false;
                          Debug("Recorded saclarvariableRVAL %s\n",P.rval);
                          }
                      | list
                          {
                          P.rval = P.currentRlist;
+                         P.isbody = false;
                          P.rtype = CF_LIST;
                          }
                      | usefunction
                          {
+                         P.isbody = false;
                          P.rval = P.currentfncall[P.arg_nesting+1];
                          P.rtype = CF_FNCALL;
                          };

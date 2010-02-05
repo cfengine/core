@@ -38,7 +38,7 @@ struct Item *EDIT_ANCHORS = NULL;
 
 /*******************************************************************/
 
-struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes)
+struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body)
 
 /* Note rval must be pre-allocated for this function, e.g. use
    CopyRvalItem in call.  This is to make the parser and var expansion
@@ -102,6 +102,7 @@ cp->lineno = P.line_no;
 cp->lval = sp;
 cp->rval = rval;
 cp->type = type;  /* literal, bodyname, builtin function */
+cp->isbody = body;
 cp->next = NULL;
 return cp;
 }

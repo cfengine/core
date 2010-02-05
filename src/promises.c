@@ -152,8 +152,8 @@ Debug("Copying promise constraints\n\n");
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   struct Body *bp;
-   struct FnCall *fp;
+   struct Body *bp = NULL;
+   struct FnCall *fp = NULL;
    struct Rlist *rp,*rnew;
    enum cfdatatype dtype;
    char *bodyname = NULL;
@@ -164,7 +164,10 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       case CF_SCALAR:
           bodyname = (char *)cp->rval;
-          bp = IsBody(BODIES,bodyname);
+          if (cp->isbody)
+             {
+             bp = IsBody(BODIES,bodyname);
+             }
           fp = NULL;
           break;
       case CF_FNCALL:
@@ -191,7 +194,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       
       /* Keep the referent body type as a boolean for convenience when checking later */
       
-      AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes);
+      AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes,false);
 
       Debug("Handling body-lval \"%s\"\n",cp->lval);
       
@@ -216,7 +219,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             {
             Debug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);
             returnval = ExpandPrivateRval("body",scp->rval,scp->type);
-            AppendConstraint(&(pcopy->conlist),scp->lval,returnval.item,returnval.rtype,scp->classes);
+            AppendConstraint(&(pcopy->conlist),scp->lval,returnval.item,returnval.rtype,scp->classes,false);
             }
 
          DeleteScope("body");
@@ -235,7 +238,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
                {
                Debug("Doing sublval = %s (promises.c)\n",scp->lval);
                rnew = CopyRvalItem(scp->rval,scp->type);
-               AppendConstraint(&(pcopy->conlist),scp->lval,rnew,scp->type,scp->classes);
+               AppendConstraint(&(pcopy->conlist),scp->lval,rnew,scp->type,scp->classes,false);
                }
             }
          }
@@ -243,7 +246,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    else
       {
       rnew = CopyRvalItem(cp->rval,cp->type);
-      scp = AppendConstraint(&(pcopy->conlist),cp->lval,rnew,cp->type,cp->classes);
+      scp = AppendConstraint(&(pcopy->conlist),cp->lval,rnew,cp->type,cp->classes,false);
       }
    }
 
@@ -333,7 +336,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       final = ExpandDanglers(scopeid,returnval,pp);
       }
 
-   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes);
+   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes,false);
 
    if (strcmp(cp->lval,"comment") == 0)
       {
@@ -434,7 +437,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
 
    final = ExpandDanglers(scopeid,returnval,pp);
-   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes);
+   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes,false);
 
    if (strcmp(cp->lval,"comment") == 0)
       {

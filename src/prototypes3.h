@@ -213,7 +213,7 @@ char *CompressedArrayValue (struct CompressedArray *start, int key);
 
 /* constraints.c */
 
-struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes);
+struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body);
 void DeleteConstraintList(struct Constraint *conlist);
 void *GetConstraint(char *lval,struct Promise *list,char type);
 int GetBooleanConstraint(char *lval,struct Promise *list);

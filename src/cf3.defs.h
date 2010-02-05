@@ -119,6 +119,7 @@ struct PromiseParser
    char *lval;
    void *rval;
    char rtype;
+   int isbody;
 
    char *promiser;
    void *promisee;
@@ -656,6 +657,7 @@ struct Constraint
    char type;     /* scalar, list, or function */
    char *classes; /* only used within bodies */
    int lineno;
+   int isbody;
    struct Audit *audit;
    struct Constraint *next;
    };

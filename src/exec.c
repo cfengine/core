@@ -578,13 +578,13 @@ GetCurrentUserName(mypid,31);
 PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);
 
-AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any");
-AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any");
-AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"process_count",strdup("true"),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"match_range",strdup("0,4"),CF_SCALAR,"any");
-AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.process_count"),CF_SCALAR,"any");
+AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any",false);
+AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any",false);
+AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"process_count",strdup("true"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"match_range",strdup("0,4"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.process_count"),CF_SCALAR,"any",false);
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 

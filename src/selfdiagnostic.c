@@ -140,8 +140,8 @@ pp.donep = &(pp.done);
 pp.conn = NULL;
 
 
-AppendConstraint(&(pp.conlist),"lval1",strdup("rval1"),CF_SCALAR,"lower classes1");
-AppendConstraint(&(pp.conlist),"lval2",strdup("rval2"),CF_SCALAR,"lower classes2");
+AppendConstraint(&(pp.conlist),"lval1",strdup("rval1"),CF_SCALAR,"lower classes1",false);
+AppendConstraint(&(pp.conlist),"lval2",strdup("rval2"),CF_SCALAR,"lower classes2",false);
 
 //getuid AppendConstraint(&(pp.conlist),"lval2",,CF_SCALAR,"lower classes2");
 
@@ -230,9 +230,9 @@ pp.conn = NULL;
 args = SplitStringAsRList("$(administrator)",',');
 fp = NewFnCall("getuid",args);
     
-AppendConstraint(&(pp.conlist),"lval1",strdup("@(one)"),CF_SCALAR,"lower classes1");
-AppendConstraint(&(pp.conlist),"lval2",strdup("$(four)"),CF_SCALAR,"upper classes1");
-AppendConstraint(&(pp.conlist),"lval3",fp,CF_FNCALL,"upper classes2");
+AppendConstraint(&(pp.conlist),"lval1",strdup("@(one)"),CF_SCALAR,"lower classes1",false);
+AppendConstraint(&(pp.conlist),"lval2",strdup("$(four)"),CF_SCALAR,"upper classes1",false);
+AppendConstraint(&(pp.conlist),"lval3",fp,CF_FNCALL,"upper classes2",false);
 
 /* Now copy promise and delete */
 

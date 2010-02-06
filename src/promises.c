@@ -148,6 +148,8 @@ pcopy->edcontext = pp->edcontext;
 
 Debug("Copying promise constraints\n\n");
 
+
+
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -523,6 +525,9 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              ShowRval(stdout,cp->rval,cp->type); /* literal */
              }
           break;
+
+      default:
+          printf("Unknown RHS type %c\n",cp->type);
       }
    
    if (cp->type != CF_FNCALL)

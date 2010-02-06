@@ -540,6 +540,11 @@ if (cp == NULL)
    CfOut(cf_error,""," !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
    }
 
+if (!IsDefinedClass(pp->classes))
+   {
+   return false;
+   }
+
 switch (cp->type) 
    {
    case CF_FNCALL:

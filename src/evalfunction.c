@@ -873,7 +873,7 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 /* begin fn specific content */
 
 
-if (!IsExecutable(GetArg0(finalargs->next->item)))
+if (!IsExecutable(GetArg0(finalargs->item)))
    {
    CfOut(cf_error,"","ExecResult \"%s\" is assumed to be executable but isn't\n",finalargs->next->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);

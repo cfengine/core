@@ -296,7 +296,7 @@ for (rp = list; rp != NULL; rp=rp->next)
       {
       return;
       }
-   
+
    if (IsHardClass((char *)rp->item))
       {
       CfOut(cf_error,"","You cannot use reserved hard classes as post-condition classes");

@@ -3233,6 +3233,96 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     CF_ANYSTRING,
+     CF_IDRANGE,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  struct Item *list = NULL, *ret; 
+  char *regex,*data,*arrayname;
+  struct Scope *ptr;
+
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+strcpy(buffer,CF_ANYCLASS);
+regex = finalargs->item;
+data = finalargs->next->item;
+arrayname = finalargs->next->next->item;
+
+if (FullTextMatch(regex,data))
+   {
+   strcpy(buffer,"any");   
+   }
+else
+   {
+   strcpy(buffer,"!any");
+   }
+
+ptr = GetScope("match");
+
+if (ptr && ptr->hashtable)
+   {
+   int i;
+   
+   for (i = 0; i < CF_HASHTABLESIZE; i++)
+      {
+      char var[CF_MAXVARSIZE];
+      
+      if (ptr->hashtable[i] != NULL)
+         {
+         if (ptr->hashtable[i]->rtype != CF_SCALAR)
+            {
+            CfOut(cf_error,""," !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
+            strcpy(buffer,"!any");
+            SetFnCallReturnStatus("regextract",FNCALL_FAILURE,NULL,NULL);
+            break;
+            }
+         else
+            {
+            snprintf(var,CF_MAXVARSIZE-1,"%s[%s]",arrayname,ptr->hashtable[i]->lval);
+            NewScalar(THIS_BUNDLE,var,ptr->hashtable[i]->rval,cf_str);
+            }
+         }
+      }   
+   }
+else
+   {
+   strcpy(buffer,"!any");
+   }
+
+SetFnCallReturnStatus("regextract",FNCALL_SUCCESS,NULL,NULL);   
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallRegCmp");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

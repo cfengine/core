@@ -15,8 +15,9 @@ bundle agent packages
 vars:
 
   "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
-  "package_names"              slist => getindices("solaris_packages");
   "admin_file"                string => "cfengine_admin_file";
+
+  "package_names"              slist => getindices("solaris_packages");
 
 files:
 

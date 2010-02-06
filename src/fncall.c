@@ -365,6 +365,9 @@ switch (this)
    case cfn_regcmp:
        rval = FnCallRegCmp(fp,expargs);
        break;
+   case cfn_regextract:
+       rval = FnCallRegExtract(fp,expargs);
+       break;
    case cfn_regline:
        rval = FnCallRegLine(fp,expargs);
        break;

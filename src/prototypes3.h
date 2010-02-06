@@ -492,6 +492,7 @@ struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs);

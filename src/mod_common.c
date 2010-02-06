@@ -99,6 +99,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"readtcp",cf_str,4,"Connect to tcp port, send string and assign result to variable"},
    {"regarray",cf_class,2,"True if arg1 matches any item in the associative array with id=arg2"},
    {"regcmp",cf_class,2,"True if arg1 is a regular expression matching that matches string arg2"},
+   {"regextract",cf_class,3,"True if the regular expression in arg 1 matches the string in arg2 and sets a non-empty array of backreferences named arg3"},
    {"registryvalue",cf_str,2,"Returns a value for an MS-Win registry key,value pair"},
    {"regline",cf_class,2,"True if the regular expression in arg1 matches a line in file arg2"},
    {"reglist",cf_class,2,"True if the regular expression in arg2 matches any item in the list whose id is arg1"},

@@ -1199,7 +1199,7 @@ if (a.column.value_separator != '\0')
       }
    else
       {
-      cfPS(cf_error,CF_NOP,"",pp,a," -> No need to edit field in %s",pp->this_server);
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> No need to edit field in %s",pp->this_server);
       }
    
    DeleteRlist(this_column);
@@ -1243,7 +1243,7 @@ else
       }
    }
 
-cfPS(cf_error,CF_NOP,"",pp,a," -> No need to edit column field value %s in %s",a.column.column_value,pp->this_server);
+cfPS(cf_verbose,CF_NOP,"",pp,a," -> No need to edit column field value %s in %s",a.column.column_value,pp->this_server);
 
 return false;
 }

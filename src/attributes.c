@@ -1453,6 +1453,7 @@ m.select_line_number = GetIntConstraint("select_line_number",pp);
     
 m.extraction_regex = GetConstraint("extraction_regex",pp,CF_SCALAR);
 m.units = GetConstraint("units",pp,CF_SCALAR);
+m.growing = GetBooleanConstraint("track_growing_file",pp);
 return m;
 }
 

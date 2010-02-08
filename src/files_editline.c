@@ -784,7 +784,7 @@ for (ip = *start; ip != NULL; ip = np)
 
 if (noedits)
    {
-   cfPS(cf_error,CF_NOP,"",pp,a," -> No need to delete line \"%s\" from %s, ok",ip->name,pp->this_server);
+   cfPS(cf_verbose,CF_NOP,"",pp,a," -> No need to delete lines from %s, ok",pp->this_server);
    }
 
 return retval;

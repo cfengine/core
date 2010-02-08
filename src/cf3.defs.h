@@ -1493,6 +1493,7 @@ struct Measurement
    int select_line_number;
    char *extraction_regex;
    char *units;
+   int growing;
    };
 
 /*************************************************************************/

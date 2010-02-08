@@ -502,11 +502,14 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       char lval[4];
       char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
-      
-      memset(substring,0,CF_MAXVARSIZE);
-      strncpy(substring,backref_start,CF_MAXVARSIZE-1);
-      snprintf(lval,3,"%d",i);
-      ForceScalar(lval,substring);
+
+      if (backref_len < CF_MAXVARSIZE)
+         {
+         memset(substring,0,CF_MAXVARSIZE);
+         strncpy(substring,backref_start,backref_len);
+         snprintf(lval,3,"%d",i);
+         ForceScalar(lval,substring);
+         }
       }
 
    pcre_free(rx);

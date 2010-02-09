@@ -491,6 +491,7 @@ struct Rval FnCallIPRange(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs);

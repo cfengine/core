@@ -112,6 +112,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"splayclass",cf_class,2,"True if the first argument's time-slot has arrived, according to a policy in arg2"},
    {"splitstring",cf_slist,3,"Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
    {"strcmp",cf_class,2,"True if the two strings match exactly"},
+   {"translate_path",cf_str,2,"Translate a string with extension from Unix style to windows format"},
    {"usemodule",cf_class,2,"Execute cfengine module script and set class if successful"},
    {"userexists",cf_class,1,"True if user name or numerical id exists on this host"},
    {NULL,cf_notype,0,NULL}

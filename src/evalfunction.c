@@ -2613,6 +2613,54 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+
+/*********************************************************************/
+
+struct Rval FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_PATHRANGE,
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  char *arg1,*arg2;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+arg1 = finalargs->item;
+arg2 = finalargs->next->item;
+
+// result in buffer....
+
+
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallChangedBefore");
+   }
+
+SetFnCallReturnStatus("translatepath",FNCALL_SUCCESS,NULL,NULL);   
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
 /*********************************************************************/
 
 struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs)

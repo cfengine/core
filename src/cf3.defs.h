@@ -563,6 +563,7 @@ enum fncalltype
    cfn_splayclass,
    cfn_splitstring,
    cfn_strcmp,
+   cfn_translatepath,
    cfn_usemodule,
    cfn_userexists,
    cfn_unknown,

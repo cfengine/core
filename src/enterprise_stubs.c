@@ -126,7 +126,7 @@ int EnterpriseExpiry(char *day,char *month,char *year)
 
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_EnterpriseExpiry(day,month,year);
+return Nova_EnterpriseModuleExpiry(day,month,year) || Nova_EnterpriseExpiry(day,month,year);
 #else
 return false;
 #endif
@@ -531,7 +531,7 @@ char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *
 
 {
 #ifdef HAVE_LIBCFNOVA
- return Nova_GetRemoteScalar(proto,handle,server,encrypted,rcv);
+return Nova_GetRemoteScalar(proto,handle,server,encrypted,rcv);
 #else
 CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
 return "";

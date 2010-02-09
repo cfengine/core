@@ -16,6 +16,8 @@ bundle agent testbundle
 {
 classes:
 
+    # Extract regular backreferences and put them in an array
+
     "ok" expression => regextract("xx ([^\s]+) ([^\s]+).* xx","xx one two three four xx","myarray");
 
 reports:

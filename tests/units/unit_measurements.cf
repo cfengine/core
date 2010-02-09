@@ -32,7 +32,6 @@ reports:
 
    "
    Free memory read at $(mon.av_free_memory_watch)
-
    cf_monitord read $(mon.value_monitor_self_watch)   
    ";
 }
@@ -40,7 +39,6 @@ reports:
 #######################################################
 
 bundle monitor watch
-
 {
 measurements:
 
@@ -66,7 +64,8 @@ measurements:
       data_type => "int",
       history_type => "static",
       units => "kB",
-      match_value => proc_value(".*cf-monitord.*","root\s+[0-9.]+\s+[0-9.]+\s+[0-9.]+\s+[0-9.]+\s+([0-9]+).*");
+      match_value => proc_value(".*cf-monitord.*",
+                                "root\s+[0-9.]+\s+[0-9.]+\s+[0-9.]+\s+[0-9.]+\s+([0-9]+).*");
 
   # Test 3, discover disk device information
 

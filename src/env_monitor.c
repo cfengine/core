@@ -783,7 +783,7 @@ void ArmClasses(struct Averages av,char *timekey)
     */
     }
 
- SetMeasurementPromises(&classlist);
+SetMeasurementPromises(&classlist);
 
 /* Publish class list */
 
@@ -2382,6 +2382,7 @@ void KeepMonitorPromise(struct Promise *pp)
  if (strcmp("measurements",pp->agentsubtype) == 0)
     {
     VerifyMeasurementPromise(CF_THIS,pp);
+    *pp->donep = false;
     return;
     }
 }

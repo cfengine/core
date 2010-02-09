@@ -73,75 +73,75 @@ int Unix_GetDiskUsage(char *file,enum cfsizes type)
     u_long blocksize = 1024, total = 0, used = 0, avail = 0;
     int capacity = 0;
     
-    memset(&buf,0,sizeof(buf));
+memset(&buf,0,sizeof(buf));
 
 #if defined ULTRIX
-    if (getmnt(NULL,&buf, sizeof(struct fs_data), STAT_ONE, file) == -1)
-       {
-       CfOut(cf_error,"getmnt","Couldn't get filesystem info for %s\n",file);
-       return CF_INFINITY;
-       }
+if (getmnt(NULL,&buf, sizeof(struct fs_data), STAT_ONE, file) == -1)
+   {
+   CfOut(cf_error,"getmnt","Couldn't get filesystem info for %s\n",file);
+   return CF_INFINITY;
+   }
 #elif defined SOLARIS || defined OSF || defined UNIXWARE || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
-    if (statvfs(file,&buf) != 0)
-       {
-       CfOut(cf_error,"statvfs","Couldn't get filesystem info for %s\n",file);
-       return CF_INFINITY;
-       }
+if (statvfs(file,&buf) != 0)
+   {
+   CfOut(cf_error,"statvfs","Couldn't get filesystem info for %s\n",file);
+   return CF_INFINITY;
+   }
 #elif defined IRIX || defined SCO || defined CFCRAY || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
-    if (statfs (file, &buf, sizeof (struct statfs), 0) != 0)
-       {
-       CfOut(cf_error,"statfs","Couldn't get filesystem info for %s\n",file);
-       return CF_INFINITY;
-       }
+if (statfs (file, &buf, sizeof (struct statfs), 0) != 0)
+   {
+   CfOut(cf_error,"statfs","Couldn't get filesystem info for %s\n",file);
+   return CF_INFINITY;
+   }
 #else
-    if (statfs(file, &buf) != 0)
-       {
-       CfOut(cf_error,"statfs","Couldn't get filesystem info for %s\n",file);
-       return CF_INFINITY;
-       }
+if (statfs(file, &buf) != 0)
+   {
+   CfOut(cf_error,"statfs","Couldn't get filesystem info for %s\n",file);
+   return CF_INFINITY;
+   }
 #endif
 
 #if defined ULTRIX
-    total = buf.fd_btot;
-    used = buf.fd_btot - buf.fd_bfree;
-    avail = buf.fd_bfreen;
+total = buf.fd_btot;
+used = buf.fd_btot - buf.fd_bfree;
+avail = buf.fd_bfreen;
 #endif
 
 #if defined SOLARIS
-    total = buf.f_blocks * (buf.f_frsize / blocksize);
-    used = (buf.f_blocks - buf.f_bfree) * (buf.f_frsize / blocksize);
-    avail = buf.f_bavail * (buf.f_frsize / blocksize);
+total = buf.f_blocks * (buf.f_frsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * (buf.f_frsize / blocksize);
+avail = buf.f_bavail * (buf.f_frsize / blocksize);
 #endif
 
 #if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined HPuUX || defined DARWIN
-    total = buf.f_blocks * buf.f_bsize / blocksize;
-    used = (buf.f_blocks - buf.f_bfree)  * buf.f_bsize / blocksize;
-    avail = buf.f_bavail * buf.f_bsize / blocksize;
+total = buf.f_blocks * buf.f_bsize / blocksize;
+used = (buf.f_blocks - buf.f_bfree)  * buf.f_bsize / blocksize;
+avail = buf.f_bavail * buf.f_bsize / blocksize;
 #endif
 
 #if defined OSF
-    total = (buf.f_blocks *  buf.f_frsize) / blocksize;
-    used = ((buf.f_blocks - buf.f_bfree)* (buf.f_frsize) / blocksize);
-    avail = (buf.f_bavail * buf.f_frsize) / blocksize;
+total = (buf.f_blocks *  buf.f_frsize) / blocksize;
+used = ((buf.f_blocks - buf.f_bfree)* (buf.f_frsize) / blocksize);
+avail = (buf.f_bavail * buf.f_frsize) / blocksize;
 #endif
 
 #if defined AIX || defined SCO || defined CFCRAY
-    total = buf.f_blocks * ((float)buf.f_bsize / blocksize);
-    used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
-    avail = buf.f_bfree * ((float)buf.f_bsize / blocksize);
+total = buf.f_blocks * ((float)buf.f_bsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
+avail = buf.f_bfree * ((float)buf.f_bsize / blocksize);
 #endif
 
 #if defined LINUX
-    total = buf.f_blocks * ((float)buf.f_bsize / blocksize);
-    used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
-    avail = buf.f_bavail * ((float)buf.f_bsize / blocksize);
+total = buf.f_blocks * ((float)buf.f_bsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
+avail = buf.f_bavail * ((float)buf.f_bsize / blocksize);
 #endif
     
 #if defined IRIX
-    /* Float fix by arjen@sara.nl */
-    total = buf.f_blocks *  ((float)buf.f_bsize / blocksize);
-    used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
-    avail = buf.f_bfree *  ((float)buf.f_bsize/blocksize);
+/* Float fix by arjen@sara.nl */
+total = buf.f_blocks *  ((float)buf.f_bsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
+avail = buf.f_bfree *  ((float)buf.f_bsize/blocksize);
 #endif
    
 capacity = (double) (avail) / (double) (avail + used) * 100;

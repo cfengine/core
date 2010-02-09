@@ -54,7 +54,7 @@ SetSignals();
 
 if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
    {
-   CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license has expired.\n");
+   CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
    exit(1);
    }
 

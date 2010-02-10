@@ -152,6 +152,7 @@ void KeepMonitorPromise(struct Promise *pp);
 
 #ifndef MINGW
 int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+void Unix_GatherProcessData (void);
 #endif /* NOT MINGW */
 
 /****************************************************************/
@@ -493,8 +494,8 @@ void GetQ()
     }
 
  GatherProcessData();
-#ifndef MINGW
  GatherCPUData();
+#ifndef MINGW
  GatherLoadData(); 
  GatherDiskData();
  GatherSocketData();
@@ -1054,85 +1055,14 @@ int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProc
 /*****************************************************************************/
 
 void GatherCPUData()
-
-{ double q,dq;
- char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];
- long count,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
- long total_time = 1;
- FILE *fp;
- enum observables index = ob_spare;
-  
- if ((fp=fopen("/proc/stat","r")) == NULL)
-    {
-    CfOut(cf_verbose,"","Didn't find proc data\n");
-    return;
-    }
-
- CfOut(cf_verbose,"","Reading /proc/stat utilization data -------\n");
-
- count = 0;
-
- while (!feof(fp))
-    {
-    fgets(buf,CF_BUFSIZE,fp);
-
-    sscanf(buf,"%s%ld%ld%ld%ld%ld%ld%ld",&cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
-    snprintf(name,16,"cpu%d",count);
-   
-    total_time = (userticks+niceticks+systemticks+idle); 
-
-    q = 100.0 * (double)(total_time - idle);
-
-    if (strncmp(cpuname,name,strlen(name)) == 0)
-       {
-       CfOut(cf_verbose,"","Found CPU %d\n",count);
-
-       switch (count++)
-          {
-          case 0: index = ob_cpu0;
-              break;
-          case 1: index = ob_cpu1;
-              break;
-          case 2: index = ob_cpu2;
-              break;
-          case 3: index = ob_cpu3;
-              break;
-          default:
-              index = ob_spare;
-              CfOut(cf_verbose,"","Error reading proc/stat\n");
-              continue;
-          }
-       }
-    else if (strncmp(cpuname,"cpu",3) == 0)
-       {
-       CfOut(cf_verbose,"","Found aggregate CPU\n",count);
-       index = ob_cpuall;
-       }
-    else 
-       {
-       CfOut(cf_verbose,"","Found nothing (%s)\n",cpuname);
-       index = ob_spare;
-       fclose(fp);
-       return;
-       }
-
-    dq = (q - LASTQ[index])/(double)total_time; /* % Utilization */
-
-    if (dq > 100 || dq < 0) // Counter wrap around
-       {
-       dq = 50;
-       }
-   
-    CF_THIS[index] = dq;
-    LASTQ[index] = q;
-
-    CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,CF_THIS[index],total_time);         
-    }
-
- fclose(fp);
+{
+#ifdef MINGW
+NovaWin_GatherCPUData(CF_THIS);
+#else
+Unix_GatherCPUData();
+#endif
 }
 
-/*****************************************************************************/
 
 void GatherDiskData()
 
@@ -2436,5 +2366,87 @@ int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRoo
 
  return true;
 }
+
+/*****************************************************************************/
+
+void Unix_GatherCPUData()
+
+{ double q,dq;
+ char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];
+ long count,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
+ long total_time = 1;
+ FILE *fp;
+ enum observables index = ob_spare;
+  
+ if ((fp=fopen("/proc/stat","r")) == NULL)
+    {
+    CfOut(cf_verbose,"","Didn't find proc data\n");
+    return;
+    }
+
+ CfOut(cf_verbose,"","Reading /proc/stat utilization data -------\n");
+
+ count = 0;
+
+ while (!feof(fp))
+    {
+    fgets(buf,CF_BUFSIZE,fp);
+
+    sscanf(buf,"%s%ld%ld%ld%ld%ld%ld%ld",&cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
+    snprintf(name,16,"cpu%d",count);
+   
+    total_time = (userticks+niceticks+systemticks+idle); 
+
+    q = 100.0 * (double)(total_time - idle);
+
+    if (strncmp(cpuname,name,strlen(name)) == 0)
+       {
+       CfOut(cf_verbose,"","Found CPU %d\n",count);
+
+       switch (count++)
+          {
+          case 0: index = ob_cpu0;
+              break;
+          case 1: index = ob_cpu1;
+              break;
+          case 2: index = ob_cpu2;
+              break;
+          case 3: index = ob_cpu3;
+              break;
+          default:
+              index = ob_spare;
+              CfOut(cf_verbose,"","Error reading proc/stat\n");
+              continue;
+          }
+       }
+    else if (strncmp(cpuname,"cpu",3) == 0)
+       {
+       CfOut(cf_verbose,"","Found aggregate CPU\n",count);
+       index = ob_cpuall;
+       }
+    else 
+       {
+       CfOut(cf_verbose,"","Found nothing (%s)\n",cpuname);
+       index = ob_spare;
+       fclose(fp);
+       return;
+       }
+
+    dq = (q - LASTQ[index])/(double)total_time; /* % Utilization */
+
+    if (dq > 100 || dq < 0) // Counter wrap around
+       {
+       dq = 50;
+       }
+   
+    CF_THIS[index] = dq;
+    LASTQ[index] = q;
+
+    CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,CF_THIS[index],total_time);         
+    }
+
+ fclose(fp);
+}
+
 
 #endif  /* NOT MINGW */

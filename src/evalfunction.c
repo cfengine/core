@@ -2621,31 +2621,25 @@ struct Rval FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalargs)
 { static char *argtemplate[] =
      {
      CF_PATHRANGE,
-     CF_ANYSTRING,
      NULL
      };
   static enum cfdatatype argtypes[] =
       {
-      cf_str,
       cf_str,
       cf_notype
       };
   
   struct Rlist *rp;
   struct Rval rval;
-  char buffer[CF_BUFSIZE];
-  char *arg1,*arg2;
+  char buffer[MAX_FILENAME];
   
 buffer[0] = '\0';  
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-arg1 = finalargs->item;
-arg2 = finalargs->next->item;
-
-// result in buffer....
-
+snprintf(buffer, sizeof(buffer), "%s", finalargs->item);
+MapName(buffer);
 
 
 if ((rval.item = strdup(buffer)) == NULL)

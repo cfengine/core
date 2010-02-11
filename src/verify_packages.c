@@ -244,13 +244,15 @@ int VerifyInstalledPackages(struct CfPackageManager **all_mgrs,struct Attributes
   FILE *prp;
   DIR *dirh;
   
-if (manager)
+if (manager == NULL)
    {
+   CfOut(cf_error,""," !! Can't create a package manager envelope for \"%s\"",a.packages.package_list_command);
    return false;
    }
 
 if (manager->pack_list != NULL)
    {
+   CfOut(cf_verbose,""," ?? Already have a package list for this manager ");
    return true;
    }
 
@@ -910,17 +912,19 @@ struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char 
 
 if (mgr == NULL || strlen(mgr) == 0)
    {
+   CfOut(cf_error,""," !! Attempted to create a package manager with no name");
    return NULL;
    }
- 
+
 for (np = *lists; np != NULL; np=np->next)
    {
    if ((strcmp(np->manager,mgr) == 0) && (policy == np->policy))
       {
+       printf("here3....\n");
       return np;
       }
    }
- 
+
 if ((np = (struct CfPackageManager *)malloc(sizeof(struct CfPackageManager))) == NULL)
    {
    CfOut(cf_error,"malloc","Can't allocate new package\n");

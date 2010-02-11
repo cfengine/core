@@ -6,20 +6,9 @@
 #
 #######################################################
 
-body common control
-{
-bundlesequence => { "report" };
-}
-
-#######################################################
-
-body monitor control
-{
-forgetrate => "0.7";
-histograms => "true";
-}
-
-#######################################################
+#
+# Look for a file in /var/cfengine/state/line_counter_measure.log 
+#
 
 bundle monitor watch
 {

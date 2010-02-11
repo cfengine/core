@@ -100,9 +100,13 @@ void GetNameInfo3()
 #ifdef HAVE_SYSINFO
   long sz;
 #endif
-  char *components[] = { "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
+  char *components[] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
                          "cf-report", "cf-key", "cf-runagent", "cf-execd",
-                         "cf-promises", "cf-twin",  NULL };
+                         "cf-promises", NULL };
+  int have_component[11];
+  struct stat sb;
+  char name[CF_MAXVARSIZE],quoteName[CF_MAXVARSIZE],shortname[CF_MAXVARSIZE];
+
 
 Debug("GetNameInfo()\n");
 
@@ -263,9 +267,6 @@ NewScalar("sys","expires",EXPIRY,cf_str);
 
 for (i = 0; components[i] != NULL; i++)
    {
-   struct stat sb;
-   char name[CF_MAXVARSIZE],qouteName[CF_MAXVARSIZE],shortname[CF_MAXVARSIZE];
-
    snprintf(shortname,CF_MAXVARSIZE-1,"%s",CanonifyName(components[i]));
 
    if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
@@ -277,14 +278,37 @@ for (i = 0; components[i] != NULL; i++)
       snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
       }
 
-   if(cfstat(name, &sb) != -1)
-     {
-     snprintf(qouteName, sizeof(qouteName), "\"%s\"", name);
-     NewScalar("sys",shortname,qouteName,cf_str);
-     }
+   have_component[i] = false;
+
+   if (cfstat(name, &sb) != -1)
+      {
+      snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
+      NewScalar("sys",shortname,quoteName,cf_str);
+      have_component[i] = true;
+      }
    }
 
+// If no twin, fail over the agent
 
+if (!have_component[0])
+   {
+   snprintf(shortname,CF_MAXVARSIZE-1,"%s",CanonifyName(components[1]));
+   
+   if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
+      {
+      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s.exe",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[1]);
+      }
+   else
+      {
+      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[1]);
+      }
+
+   if (cfstat(name, &sb) != -1)
+      {
+      snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
+      NewScalar("sys",shortname,quoteName,cf_str);
+      }
+   }
 
 /* Windows special directories */
 

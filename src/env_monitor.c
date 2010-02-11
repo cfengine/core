@@ -45,7 +45,7 @@ included file COSL.txt.
 /* Globals                                                                   */
 /*****************************************************************************/
 
-     unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
+unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
 int HISTO = true;
 
@@ -123,6 +123,7 @@ void Sniff(void);
 
 void GatherProcessData (void);
 void GatherCPUData (void);
+void Unix_GatherCPUData(void);
 void GatherDiskData (void);
 void GatherLoadData (void);
 void GatherSocketData (void);
@@ -1042,7 +1043,6 @@ void GatherProcessData()
 
 /*****************************************************************************/
 
-
 int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
 #ifdef MINGW
@@ -1063,6 +1063,7 @@ Unix_GatherCPUData();
 #endif
 }
 
+/*****************************************************************************/
 
 void GatherDiskData()
 

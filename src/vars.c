@@ -401,6 +401,11 @@ int UnresolvedArgs(struct Rlist *args)
 
 for (rp = args; rp != NULL; rp = rp->next)
    {
+   if (rp->type != CF_SCALAR)
+      {
+      return true;
+      }
+   
    if (IsCf3Scalar(rp->item))
       {
       return true;

@@ -215,7 +215,7 @@ switch(status)
        break;
    }
 
-if (AUDITDBP == NULL)
+if (AUDITDBP == NULL || THIS_AGENT_TYPE != cf_agent)
    {
    return;
    }

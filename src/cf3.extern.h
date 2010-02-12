@@ -60,6 +60,7 @@ extern struct Item *ROTATED;
 extern double FORGETRATE;
 
 extern struct Rlist *CF_STCK;
+extern int EDIT_MODEL;
 extern int CF_STCKFRAME;
 extern int CFA_BACKGROUND;
 extern int CFA_BACKGROUND_LIMIT;

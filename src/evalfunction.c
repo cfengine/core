@@ -3813,7 +3813,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-
 rp = finalargs;
 
 for (i = 0; i < 6; i++)

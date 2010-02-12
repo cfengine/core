@@ -71,7 +71,7 @@ len2 = RlistLen(take);
 
 if (len1 != len2)
    {
-   CfOut(cf_error,"","Body template [+args] = %d, [-args] = %d",len1,len2);
+   CfOut(cf_error,""," !! Argument mismatch in body template give[+args] = %d, take[-args] = %d",len1,len2);
    return false;
    }
 

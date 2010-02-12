@@ -60,6 +60,8 @@ if (a.edits.empty_before_use)
    ec->file_start = NULL;
    }
 
+EDIT_MODEL = true;
+
 return ec;
 }
 
@@ -70,6 +72,8 @@ void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promis
 { int retval = false;
   struct Item *ip;
 
+EDIT_MODEL = false;
+  
 if (DONTDO || a.transaction.action == cfa_warn)
    {
    if (ec && !CompareToFile(ec->file_start,ec->filename,a,pp) && ec->num_edits > 0)

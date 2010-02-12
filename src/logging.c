@@ -153,8 +153,13 @@ Debug("ClassAuditLog(%s)\n",str);
 switch(status)
    {
    case CF_CHG:
-       PR_REPAIRED++;       
-       VAL_REPAIRED += attr.transaction.value_repaired;
+       
+       if (!EDIT_MODEL)
+          {
+          PR_REPAIRED++;       
+          VAL_REPAIRED += attr.transaction.value_repaired;
+          }
+
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        NotePromiseCompliance(pp,0.5,cfn_repaired);
        SummarizeTransaction(attr,pp,attr.transaction.log_repaired);

@@ -88,7 +88,7 @@ struct Item *ABORTBUNDLEHEAP = NULL;
 struct Item *DONELIST = NULL;
 struct Rlist *CBUNDLESEQUENCE = NULL;
 
-
+int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
 int CF_SAVEFSTAB = false;
 int FSTAB_EDITS;

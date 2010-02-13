@@ -35,7 +35,6 @@
 /*********************************************************************/
 /* Depth searches                                                    */
 /*********************************************************************/
-
 int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp)
     
 { DIR *dirh;
@@ -60,7 +59,13 @@ if (rlevel > CF_RECURSION_LIMIT)
    CfOut(cf_error,"","WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)",rlevel,name);
    return false;
    }
- 
+
+if (rlevel > CF_RECURSION_LIMIT)
+   {
+   CfOut(cf_error,"","WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)",rlevel,name);
+   return false;
+   }
+
 memset(path,0,CF_BUFSIZE); 
 
 Debug("To iterate is Human, to recurse is Divine...(%s)\n",name);
@@ -142,9 +147,9 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          continue;
          }
       
-      if (attr.recursion.depth > 1)
+      if (attr.recursion.depth > 1 && rlevel <= attr.recursion.depth)
          {
-         CfOut(cf_verbose,""," ->>  Entering %s\n",path);
+         CfOut(cf_verbose,""," ->>  Entering %s (%d)\n",path,rlevel);
          goback = DepthSearch(path,&lsb,rlevel+1,attr,pp);
          PopDirState(goback,name,sb,attr.recursion);
          VerifyFileLeaf(path,&lsb,attr,pp);

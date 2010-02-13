@@ -914,7 +914,15 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       continue;
       }
-   
+
+   if (strcmp(cp->lval,"ifvarclass") == 0)
+      {
+      if (IsExcluded(cp->rval))
+         {
+         return;
+         }
+      }
+
    if (strcmp(cp->lval,"policy") == 0)
       {
       if (strcmp(cp->rval,"ifdefined") == 0)

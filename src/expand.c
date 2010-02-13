@@ -921,6 +921,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          {
          return;
          }
+      
+      continue;
       }
 
    if (strcmp(cp->lval,"policy") == 0)
@@ -938,8 +940,6 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          {
          ok_redefine = true;
          }
-      
-      continue;
       }
    else
       {

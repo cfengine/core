@@ -915,6 +915,11 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (cp->rval == NULL)
+      {
+      continue;
+      }
+
    if (strcmp(cp->lval,"ifvarclass") == 0)
       {
       if (IsExcluded(cp->rval))
@@ -941,7 +946,9 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          ok_redefine = true;
          }
       }
-   else
+   else if (strcmp(cp->lval,"string") == 0 || strcmp(cp->lval,"slist") == 0 ||
+            strcmp(cp->lval,"int") == 0 || strcmp(cp->lval,"ilist") == 0 ||
+            strcmp(cp->lval,"real") == 0 || strcmp(cp->lval,"rlist") == 0)
       {
       i++;
       rval = cp->rval;
@@ -953,14 +960,14 @@ cp = cp_save;
 
 if (cp == NULL)
    {
-   CfOut(cf_error,"","Variable body for %s is incomplete",pp->promiser);
+   CfOut(cf_error,"","Variable body for \"%s\" is incomplete",pp->promiser);
    PromiseRef(cf_error,pp);
    return;
    }
 
 if (i > 2)
    {
-   CfOut(cf_error,"","Variable-type body in %s breaks its own promise (code %d)",pp->promiser,i);
+   CfOut(cf_error,"","Variable \"%s\" breaks its own promise with multiple values (code %d)",pp->promiser,i);
    PromiseRef(cf_error,pp);
    return;
    }

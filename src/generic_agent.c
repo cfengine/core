@@ -526,7 +526,7 @@ if (VINPUTLIST != NULL)
       {
       if (rp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Non file object %s in list\n",(char *)rp->item);
+         CfOut(cf_error,"","Non file object in inputs list\n");
          }
       else
          {

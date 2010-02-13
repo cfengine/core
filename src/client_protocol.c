@@ -306,11 +306,11 @@ else
       {
       if (attr.copy.trustkey)
          {
-         CfOut(cf_error,"","Trusting server identity, promise to accept key from %s=%s",pp->this_server,conn->remoteip);
+         CfOut(cf_error,""," -> Trusting server identity, promise to accept key from %s=%s",pp->this_server,conn->remoteip);
          }
       else
          {
-         CfOut(cf_error,"","Not authorized to trust the server=%s's public key (trustkey=false)\n",pp->this_server);
+         CfOut(cf_error,""," !! Not authorized to trust the server=%s's public key (trustkey=false)\n",pp->this_server);
          PromiseRef(cf_verbose,pp);
          return false;
          }

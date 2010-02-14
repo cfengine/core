@@ -246,9 +246,14 @@ else
    {
    if (a.create||a.touch)
       {
-      cfPS(cf_verbose,CF_NOP,"",pp,a," -> File %s exists as promised",path);
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> File \"%s\" exists as promised",path);
       }
    exists = true;
+   }
+
+if (a.havedelete && !exists)
+   {
+   cfPS(cf_verbose,CF_NOP,"",pp,a," -> File \"%s\" does not exist as promised",path);
    }
 
 if (exists && !VerifyFileLeaf(path,&oslb,a,pp))

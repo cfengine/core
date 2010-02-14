@@ -892,11 +892,12 @@ strncpy(s2,s1+2,strlen(s1)-3);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
+  struct Attributes a;
   char *lval,rtype;
   void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;;
   struct Rval returnval; /* Must expand naked functions here for consistency */
-  struct Rlist *rp,*last;
+  struct Rlist *rp,*last = NULL;
   
 if (pp->done)
    {
@@ -972,6 +973,10 @@ if (i > 2)
    return;
    }
 
+// More consideration needs to be given to using these
+//a.transaction = GetTransactionConstraints(pp);
+//a.classes = GetClassDefinitionConstraints(pp);
+
 if (rval != NULL)
    {
    struct FnCall *fp = (struct FnCall *)rval;
@@ -1041,7 +1046,7 @@ if (rval != NULL)
                DeleteRvalItem(rp->item,rp->type);
                rval = rp->next;
                }
-            else
+            else if (last)
                {
                last->next = rp->next;
                DeleteRvalItem(rp->item,rp->type);

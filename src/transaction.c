@@ -40,7 +40,11 @@ void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *lognam
 
 if (logname && attr.transaction.log_string)
    {
-   if (strcmp(logname,"stdout") == 0)
+   if (strcmp(logname,"udp_syslog") == 0)
+      {
+      RemoteSyslog(attr,pp);
+      }
+   else if (strcmp(logname,"stdout") == 0)
       {
       printf("L: %s\n",attr.transaction.log_string);
       }

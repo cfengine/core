@@ -575,6 +575,7 @@ if (t.expireafter == CF_NOINT)
 
 t.audit = GetBooleanConstraint("audit",pp);
 t.log_string = GetConstraint("log_string",pp,CF_SCALAR);
+t.log_priority = SyslogPriority2Int(GetConstraint("log_priority",pp,CF_SCALAR));
 
 t.log_kept = GetConstraint("log_kept",pp,CF_SCALAR);
 t.log_repaired = GetConstraint("log_repaired",pp,CF_SCALAR);

@@ -235,6 +235,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 long Months2Seconds(int m);
 enum cfinterval Str2Interval(char *s);
+int SyslogPriority2Int(char *s);
 enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(struct Rlist *list,char *sep);
 int Signal2Int(char *s);
@@ -406,6 +407,7 @@ void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
 int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp);
 int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void LogFileChange(char *file,int change,struct Attributes a,struct Promise *pp);
+void RemoteSyslog(struct Attributes a,struct Promise *pp);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void ReportSoftware(struct CfPackageManager *list);

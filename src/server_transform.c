@@ -363,7 +363,17 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       strncpy(STR_CFENGINEPORT,retval,15);
       CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT,retval);
       continue;
-      }   
+      }
+   }
+
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)
+   {
+   SYSLOGPORT = (unsigned short)Str2Int(retval);
+   }
+
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
+   {
+   strncpy(SYSLOGHOST,Hostname2IPString(retval),CF_MAXVARSIZE-1);
    }
 }
 

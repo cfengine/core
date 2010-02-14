@@ -70,6 +70,9 @@ char *THIS_BUNDLE = NULL;
 char THIS_AGENT[CF_MAXVARSIZE];
 enum cfagenttype THIS_AGENT_TYPE;
 int INSTALL_SKIP = false;
+
+char SYSLOGHOST[CF_MAXVARSIZE];
+unsigned short SYSLOGPORT = 514;
 int FACILITY;
 time_t PROMISETIME;
 

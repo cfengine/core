@@ -380,6 +380,8 @@ else
 _fmode = _O_BINARY;
 #endif
 
+strcpy(SYSLOGHOST,"localhost");
+SYSLOGPORT = htons(514);
 
 Cf3OpenLog();
 
@@ -816,7 +818,6 @@ return NULL;
 void SetFacility(char *retval)
 
 {
-#ifndef MINGW  // TODO: Needed if syslog is to be supported on Win
 if (strcmp(retval,"LOG_USER") == 0)
    {
    FACILITY = LOG_USER;
@@ -857,7 +858,6 @@ else if (strcmp(retval,"LOG_LOCAL7") == 0)
    {
    FACILITY = LOG_LOCAL7;
    }
-#endif  /* NOT MINGW */
 
 Cf3CloseLog();
 Cf3OpenLog();

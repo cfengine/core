@@ -34,6 +34,25 @@
 
 /***************************************************************************/
 
+int SyslogPriority2Int(char *s)
+
+{ int i;
+  static char *types[] = { "emergency","alert","critical","error",
+                           "warning","notice","info","debug", NULL };
+    
+for (i = 0; types[i] != NULL; i++)
+   {
+   if (s && strcmp(s,types[i]) == 0)
+      {
+      return i;
+      }
+   }
+
+return 3;
+}
+
+/***************************************************************************/
+
 enum cfdbtype Str2dbType(char *s)
 
 { int i;

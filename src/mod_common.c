@@ -127,9 +127,10 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"expireafter",cf_int,CF_VALRANGE,"Number of minutes before a repair action is interrupted and retried"},
    {"log_string",cf_str,"","A message to be written to the log when a promise verification leads to a repair"},
    {"log_level",cf_opts,"inform,verbose,error,log","The reporting level sent to syslog"},
-   {"log_kept",cf_str,"","This should be filename of a file to which log_string will be saved, if undefined it goes to syslog"},
-   {"log_repaired",cf_str,"","This should be filename of a file to which log_string will be saved, if undefined it goes to syslog"},
-   {"log_failed",cf_str,"","This should be filename of a file to which log_string will be saved, if undefined it goes to syslog"},
+   {"log_kept",cf_str,CF_LOGRANGE,"This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger"},
+   {"log_priority",cf_opts,"emergency,alert,critical,error,warning,notice,info,debug","The priority level of the log message, as interpreted by a syslog server"},
+   {"log_repaired",cf_str,CF_LOGRANGE,"This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger"},
+   {"log_failed",cf_str,CF_LOGRANGE,"This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger"},
    {"value_kept",cf_real,"","A real number value attributed to keeping this promise"},
    {"value_repaired",cf_real,"","A real number value attributed to reparing this promise"},
    {"value_notkept",cf_real,"","A real number value (possibly negative) attributed to not keeping this promise"},
@@ -195,6 +196,8 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"domain",cf_str,".*","Specify the domain name for this host"},
    {"require_comments",cf_opts,CF_BOOL,"Warn about promises that do not have comment documentation"},
    {"host_licenses_paid",cf_int,CF_VALRANGE,"The number of licenses that you promise to have paid for by setting this value (legally binding for commercial license)"},
+   {"syslog_host",cf_str,CF_IPRANGE,"The name or address of a host to which syslog messages should be sent directly by UDP"},
+   {"syslog_port",cf_int,CF_VALRANGE,"The port number of a UDP syslog service"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -635,6 +635,19 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,&
    {
    LASTSEENEXPIREAFTER = Str2Int(retval);
    }
+
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
+   {
+   SYSLOGPORT = (unsigned short)Str2Int(retval);
+   CfOut(cf_verbose,"","SET syslog_port to %d",SYSLOGPORT);
+   }
+
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)
+   {   
+   strncpy(SYSLOGHOST,Hostname2IPString(retval),CF_MAXVARSIZE-1);
+   CfOut(cf_verbose,"","SET syslog_host to %s",SYSLOGHOST);
+   }
+
 }
 
 /*********************************************************************/

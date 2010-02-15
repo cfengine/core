@@ -189,6 +189,7 @@ struct BodySyntax CF_CLASSBODY[] =
 struct BodySyntax CFG_CONTROLBODY[] =
    {
    {"bundlesequence",cf_slist,".*","List of promise bundles to verify in order"},
+   {"ignore_missing_inputs",cf_opts,CF_BOOL,"If any input files do not exist, ignore and continue"},
    {"inputs",cf_slist,".*","List of additional filenames to parse for promises"},
    {"version",cf_str,"","Scalar version string for this configuration"},
    {"lastseenexpireafter",cf_int,CF_VALRANGE,"Number of minutes after which last-seen entries are purged"},

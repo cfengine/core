@@ -35,6 +35,7 @@
 /*********************************************************************/
 /* Depth searches                                                    */
 /*********************************************************************/
+
 int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp)
     
 { DIR *dirh;

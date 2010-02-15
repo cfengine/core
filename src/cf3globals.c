@@ -51,6 +51,7 @@ int CFPARANOID = false;
 int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
 int VIEWS = true;
+int IGNORE_MISSING_INPUTS = false;
 
 struct utsname VSYSNAME;
 

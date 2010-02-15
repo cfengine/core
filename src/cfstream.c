@@ -243,7 +243,6 @@ if (level == cf_error)
 
    AppendItem(&mess,output,NULL);
 
-   
    switch (pp->petype)
       {
       case CF_SCALAR:

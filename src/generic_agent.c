@@ -521,6 +521,7 @@ Cf3ParseFile(VINPUTFILE);
 // Expand any lists in this list now
 
 HashVariables();
+HashControls();
 
 if (VINPUTLIST != NULL)
    {
@@ -528,7 +529,7 @@ if (VINPUTLIST != NULL)
       {
       if (rp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Non file object in inputs list\n");
+         CfOut(cf_error,"","Non-file object in inputs list\n");
          }
       else
          {
@@ -739,6 +740,11 @@ strncpy(wfilename,InputLocation(filename),CF_BUFSIZE);
 
 if (cfstat(wfilename,&statbuf) == -1)
    {
+   if (IGNORE_MISSING_INPUTS)
+      {
+      return;
+      }
+
    CfOut(cf_error,"stat","Can't stat file \"%s\" for parsing\n",wfilename);
    exit(1);
    }
@@ -1458,6 +1464,13 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       NewScalar("sys","domain",VDOMAIN,cf_str);
       DeleteClass("undefined_domain");
       NewClass(CanonifyName(VDOMAIN));
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
+      {
+      CfOut(cf_verbose,"","SET ignore_missing_inputs %s\n",cp->rval);
+      IGNORE_MISSING_INPUTS = GetBoolean(cp->rval);
       continue;
       }
 

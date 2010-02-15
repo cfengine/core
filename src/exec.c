@@ -691,7 +691,10 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 if (strlen(EXECCOMMAND) > 0)
    {
    strncpy(cmd,EXECCOMMAND,CF_BUFSIZE-1);
-//   if (!strstr(EXECCOMMAND,"-Dfrom_cfexecd"))
+   if (!strstr(EXECCOMMAND,"-Dfrom_cfexecd"))
+      {
+      strcat(EXECCOMMAND," -Dfrom_cfexecd");
+      }
    }
 else
    {

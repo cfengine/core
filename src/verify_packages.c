@@ -920,7 +920,6 @@ for (np = *lists; np != NULL; np=np->next)
    {
    if ((strcmp(np->manager,mgr) == 0) && (policy == np->policy))
       {
-       printf("here3....\n");
       return np;
       }
    }
@@ -1360,7 +1359,7 @@ if (!IsExecutable(GetArg0(command)))
 
 if (DONTDO)
    {
-   printf(" Need to execute %-.39s...\n",command);
+   CfOut(cf_error,""," -> Need to execute %-.39s...\n",command);
    return true;
    }
 

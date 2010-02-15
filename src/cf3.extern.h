@@ -34,7 +34,7 @@ extern char POLICY_SERVER[CF_BUFSIZE];
 extern int VIEWS;
 extern int LICENSES;
 extern char EXPIRY[32];
-
+extern int IGNORE_MISSING_INPUTS;
 extern char WEBDRIVER[CF_MAXVARSIZE];
 extern char BANNER[2*CF_BUFSIZE];
 extern char FOOTER[CF_BUFSIZE];

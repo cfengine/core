@@ -691,16 +691,33 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 if (strlen(EXECCOMMAND) > 0)
    {
    strncpy(cmd,EXECCOMMAND,CF_BUFSIZE-1);
+//   if (!strstr(EXECCOMMAND,"-Dfrom_cfexecd"))
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent%s\" -f failsafe.cf && \"%s/bin/cf-agent%s%s\" -Dfrom_cfexecd%s",
-            CFWORKDIR,
-			EXEC_SUFFIX,
-            CFWORKDIR,
-			EXEC_SUFFIX,
-            NOSPLAY ? " -q" : "",
-            scheduled_run ? ":scheduled_run" : "");
+   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
+   
+   if (IsExecutable(cmd))
+      {
+      snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin%s\" -f failsafe.cf && \"%s/bin/cf-agent%s%s\" -Dfrom_cfexecd%s",
+               CFWORKDIR,
+               EXEC_SUFFIX,
+               CFWORKDIR,
+               EXEC_SUFFIX,
+               NOSPLAY ? " -q" : "",
+               scheduled_run ? ":scheduled_run" : "");      
+      }
+   else
+      {
+      snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent%s\" -f failsafe.cf && \"%s/bin/cf-agent%s%s\" -Dfrom_cfexecd%s",
+               CFWORKDIR,
+               EXEC_SUFFIX,
+               CFWORKDIR,
+               EXEC_SUFFIX,
+               NOSPLAY ? " -q" : "",
+               scheduled_run ? ":scheduled_run" : "");      
+      }
+   
    }
 
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);

@@ -129,7 +129,18 @@ struct utsname
 
 #include <signal.h>
 
-#ifndef MINGW
+#ifdef MINGW
+#define LOG_LOCAL0      (16<<3)
+#define LOG_LOCAL1      (17<<3)
+#define LOG_LOCAL2      (18<<3)
+#define LOG_LOCAL3      (19<<3)
+#define LOG_LOCAL4      (20<<3)
+#define LOG_LOCAL5      (21<<3)
+#define LOG_LOCAL6      (22<<3)
+#define LOG_LOCAL7      (23<<3)
+#define LOG_USER        (1<<3)
+#define LOG_DAEMON      (3<<3)
+#else
 #include <syslog.h>
 #endif
 

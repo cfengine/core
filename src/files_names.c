@@ -324,10 +324,20 @@ void AddSlash(char *str)
 { char *sp, *sep = FILE_SEPARATOR_STR;
   int f = false ,b = false;
 
-if (str == NULL || strlen(str) == 0)
+if (str == NULL)
    {
    return;
    }
+
+// add root slash on Unix systems
+if(strlen(str) == 0)
+  {
+  if((VSYSTEMHARDCLASS != mingw) && (VSYSTEMHARDCLASS != cfnt))
+    {
+    strcpy(str, "/");
+    }
+  return;
+  }
 
 /* Try to see what convention is being used for filenames
    in case this is a cross-system copy from Win/Unix */

@@ -364,6 +364,13 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT,retval);
       continue;
       }
+
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
+      {
+      strncpy(BINDINTERFACE,retval,CF_BUFSIZE-1);
+      CfOut(cf_verbose,"","SET bindtointerface = %s\n",BINDINTERFACE);
+      continue;
+      }
    }
 
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)

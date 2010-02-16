@@ -167,7 +167,7 @@ res = tchdbput(hdbp->hdb, key, keySz, src, srcSz);
 if (!res)
    {
    errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "tchdbput", "!! Could not write key: %s", tchdberrmsg(errCode));
+   CfOut(cf_error, "tchdbput", "!! Could not write key: %s",tchdberrmsg(errCode));
    return false;
    }
 

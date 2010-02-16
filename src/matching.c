@@ -49,6 +49,7 @@ rex = CompileRegExp(regexp);
 
 if (rex.failed)
    {
+   CfOut(cf_error, "CompileRegExp", "!! Could not parse regular expression '%s'", regexp);
    return false;
    }
 

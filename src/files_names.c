@@ -324,7 +324,7 @@ void AddSlash(char *str)
 { char *sp, *sep = FILE_SEPARATOR_STR;
   int f = false ,b = false;
 
-if (str == NULL)
+if (str == NULL || strlen(str) == 0)
    {
    return;
    }

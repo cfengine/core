@@ -179,6 +179,7 @@ for (ip = baselist; ip != NULL; ip=ip->next)
    }
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {

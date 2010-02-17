@@ -1071,6 +1071,7 @@ void ShowClasses()
   int ret,i,ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {

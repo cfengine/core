@@ -52,8 +52,6 @@ return BDB_OpenDB(filename, dbp);
 
 int CloseDB(CF_DB *dbp)
 {
-Debug("CloseDB()\n");
-
 #ifdef TCDB
 return TCDB_CloseDB(dbp);;
 #elif defined QDB

@@ -73,8 +73,16 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
 int QDB_CloseDB(CF_QDB *qdbp)
 {
   int res;
+  char *dbName = NULL;
+  char buf[CF_MAXVARSIZE];
+
+  dbName = dpname(qdbp->depot);
+  snprintf(buf, sizeof(buf), "CloseDB(%s)\n", dbName);
+  Debug(buf);
 
   ThreadLock(cft_system);
+
+  free(dbName);
 
   if(qdbp->valmemp != NULL)
     {

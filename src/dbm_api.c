@@ -34,6 +34,11 @@
 
 int OpenDB(char *filename, CF_DB **dbp)
 {
+char buf[CF_MAXVARSIZE];
+
+snprintf(buf, sizeof(buf), "OpenDB(%s)\n", filename);
+Debug(buf);
+
 #ifdef TCDB
 return TCDB_OpenDB(filename, dbp);
 #elif defined QDB
@@ -47,6 +52,8 @@ return BDB_OpenDB(filename, dbp);
 
 int CloseDB(CF_DB *dbp)
 {
+Debug("CloseDB()\n");
+
 #ifdef TCDB
 return TCDB_CloseDB(dbp);;
 #elif defined QDB

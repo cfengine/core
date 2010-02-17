@@ -80,6 +80,11 @@ int TCDB_CloseDB(CF_TCDB *hdbp)
 
 { int errCode;
 
+char buf[CF_MAXVARSIZE];
+
+snprintf(buf, sizeof(buf), "CloseDB(%s)\n", tchdbpath(hdbp->hdb));
+Debug(buf);
+
 if (!tchdbclose(hdbp->hdb))
    {
    errCode = tchdbecode(hdbp->hdb);

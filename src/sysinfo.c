@@ -271,7 +271,15 @@ for (i = 0; components[i] != NULL; i++)
 
    if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
       {
-      snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s.exe",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
+      // twin has own dir, and is named agent
+      if(i == 0)
+	{
+	snprintf(name,CF_MAXVARSIZE-1,"%s%cbin-twin%ccf-agent.exe",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
+	}
+      else
+	{
+        snprintf(name,CF_MAXVARSIZE-1,"%s%cbin%c%s.exe",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,components[i]);
+	}
       }
    else
       {
@@ -292,7 +300,7 @@ for (i = 0; components[i] != NULL; i++)
 
 if (!have_component[0])
    {
-   snprintf(shortname,CF_MAXVARSIZE-1,"%s",CanonifyName(components[1]));
+   snprintf(shortname,CF_MAXVARSIZE-1,"%s",CanonifyName(components[0]));
    
    if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
       {

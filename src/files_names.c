@@ -59,7 +59,7 @@ else
    }
 
 pbuffer[0] = '\0';
-path = SplitString(wildpath,"/");  // always use '/' to avoid regexp abigiuty
+path = SplitString(wildpath,FILE_SEPARATOR);
 
 for (ip = path; ip != NULL; ip=ip->next)
    {

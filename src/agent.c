@@ -45,10 +45,10 @@ enum typesequence
    kp_storage,
    kp_packages,
    kp_commands,
-   kp_services,
    kp_methods,
    kp_files,
    kp_databases,
+   kp_services,
    kp_reports,
    kp_none
    };

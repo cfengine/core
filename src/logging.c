@@ -46,6 +46,7 @@ memset(&dummyattr,0,sizeof(dummyattr));
 dummyattr.transaction.audit = true;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
+MapName(name);
 
 if (!OpenDB(name,&AUDITDBP))
    {

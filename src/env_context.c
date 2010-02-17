@@ -148,6 +148,7 @@ void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy p
   char filename[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
+MapName(filename);
 
 if (!OpenDB(filename,&dbp))
    {
@@ -188,6 +189,7 @@ void DeletePersistentContext(char *name)
   char filename[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
+MapName(filename);
 
 if (!OpenDB(filename,&dbp))
    {
@@ -216,6 +218,7 @@ void LoadPersistentContext()
 Banner("Loading persistent classes");
   
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);
+MapName(filename);
 
 if (!OpenDB(filename,&dbp))
    {

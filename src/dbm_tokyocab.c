@@ -55,12 +55,14 @@ if (*hdbp == NULL)
 
 (*hdbp)->hdb = tchdbnew();
 
-
 if (!tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
    {
    errCode = tchdbecode((*hdbp)->hdb);
-   CfOut(cf_error, "tchdbopen", "!! Opening database \"%s\" failed: %s", filename, tchdberrmsg(errCode));
+   CfOut(cf_error, "", "!! tchdbopen: Opening database \"%s\" failed: %s", filename, tchdberrmsg(errCode));
+
    free(*hdbp);
+   *hdbp = NULL;
+
    ThreadUnlock(cft_system);
    return false;
    }
@@ -81,7 +83,7 @@ int TCDB_CloseDB(CF_TCDB *hdbp)
 if (!tchdbclose(hdbp->hdb))
    {
    errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "tchdbclose", "!! Closing database failed: %s", tchdberrmsg(errCode));
+   CfOut(cf_error, "", "!! tchdbclose: Closing database failed: %s", tchdberrmsg(errCode));
    return false;
    }
 
@@ -95,6 +97,7 @@ if (hdbp->valmemp != NULL)
    }
 
 free(hdbp);
+hdbp = NULL;
 
 ThreadUnlock(cft_system);
 
@@ -167,7 +170,8 @@ res = tchdbput(hdbp->hdb, key, keySz, src, srcSz);
 if (!res)
    {
    errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "tchdbput", "!! Could not write key: %s",tchdberrmsg(errCode));
+   CfOut(cf_error, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
+	 tchdbpath(hdbp->hdb), tchdberrmsg(errCode));
    return false;
    }
 
@@ -199,7 +203,7 @@ int TCDB_NewDBCursor(CF_TCDB *hdbp,CF_TCDBC **hdbcp)
 if (!tchdbiterinit(hdbp->hdb))
    {
    errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "tchdbiterinit", "!! Could not initialize iterator: %s", tchdberrmsg(errCode));
+   CfOut(cf_error, "", "!! tchdbiterinit: Could not initialize iterator: %s", tchdberrmsg(errCode));
    return false;
    }
 
@@ -260,7 +264,7 @@ if (*value == NULL)
    
    *key = NULL;
    errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "tchdbget", "!! Could not get value corrsponding to key \"%s\": %s", key, tchdberrmsg(errCode));
+   CfOut(cf_error, "", "!! tchdbget: Could not get value corrsponding to key \"%s\": %s", key, tchdberrmsg(errCode));
    return false;
    }
 
@@ -297,4 +301,4 @@ ThreadUnlock(cft_system);
 return true;
 }
 
-#endif //FIXME
+#endif

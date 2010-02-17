@@ -715,6 +715,7 @@ void ShowLastSeen()
   int ret,ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
@@ -1544,6 +1545,7 @@ void ShowCurrentAudit()
   int ret,ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
@@ -2510,6 +2512,8 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       }
 
    snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
+   MapName(name);
+
    CfOut(cf_verbose,"","Consulting profile %s\n",name);
 
    if (!OpenDB(name,&dbp))

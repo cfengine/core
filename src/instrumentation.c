@@ -303,6 +303,7 @@ CfOut(cf_verbose,"","LastSaw host %s now\n",hostname);
 
 /* Tidy old versions - temporary */
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
@@ -313,6 +314,7 @@ if (intermittency)
    {
    /* Open special file for peer entropy record - INRIA intermittency */
    snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
+   MapName(name);
    
    if (!OpenDB(name,&dbpent))
       {

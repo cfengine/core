@@ -36,7 +36,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#ifdef BDB  // FIXME
+#ifdef BDB
 
 int BDB_OpenDB(char *filename,DB **dbp)
 
@@ -66,11 +66,6 @@ return true;
 int BDB_CloseDB(DB *dbp)
 
 {
-if (dbp == NULL)
-   {
-   return false;
-   }
-
 return (dbp->close(dbp,0) == 0);
 }
 
@@ -80,11 +75,6 @@ int BDB_ValueSizeDB(DB *dbp, char *key)
 
 { DBT *db_key, value;
   int retv;
-
-if (dbp == NULL)
-   {
-   return -1;
-   }
 
 db_key = BDB_NewDBKey(key);
 memset(&value,0,sizeof(DBT));
@@ -108,11 +98,6 @@ return retv;
 int BDB_ReadComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
 
 { DBT *key,value;
-
-if (dbp == NULL)
-   {
-   return false;
-   }
 
 key = BDB_NewDBValue(name,keysize);
 memset(&value,0,sizeof(DBT));
@@ -156,11 +141,6 @@ int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize)
 
 { DBT *key,value;
 
-if (dbp == NULL)
-   {
-   return false;
-   }
-
 key = BDB_NewDBKey(name);
 memset(&value,0,sizeof(DBT));
 
@@ -195,11 +175,6 @@ int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
 
 { DBT *key,*value;
 
-if (dbp == NULL)
-   {
-   return false;
-   }
-
 key = BDB_NewDBValue(name,keysize);
 value = BDB_NewDBValue(ptr,size);
 
@@ -225,11 +200,6 @@ else
 int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size)
 
 { DBT *key;
-
-if (dbp == NULL)
-   {
-   return false;
-   }
 
 key = BDB_NewDBValue(name,size);
 
@@ -369,4 +339,4 @@ free((char *)value->data);
 free((char *)value);
 }
 
-#endif // FIXME
+#endif

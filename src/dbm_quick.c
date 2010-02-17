@@ -53,8 +53,11 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
 
   if((*qdbp)->depot == NULL)
     {
-      CfOut(cf_error, "dpopen", "!! Opening database \"%s\" failed: %s", filename, dperrmsg(dpecode));
+      CfOut(cf_error, "", "!! dpopen: Opening database \"%s\" failed: %s", filename, dperrmsg(dpecode));
+
       free(*qdbp);
+      *qdbp = NULL;
+
       ThreadUnlock(cft_system);
       return false;
     }
@@ -71,11 +74,6 @@ int QDB_CloseDB(CF_QDB *qdbp)
 {
   int res;
 
-  if(qdbp->depot == NULL)
-    {
-      return false;
-    }
-
   ThreadLock(cft_system);
 
   if(qdbp->valmemp != NULL)
@@ -87,6 +85,7 @@ int QDB_CloseDB(CF_QDB *qdbp)
   res = dpclose(qdbp->depot);
 
   free(qdbp);
+  qdbp = NULL;
 
   ThreadUnlock(cft_system);
 
@@ -98,11 +97,6 @@ int QDB_CloseDB(CF_QDB *qdbp)
 int QDB_ValueSizeDB(CF_QDB *qdbp, char *key)
 
 {
-  if(qdbp->depot == NULL)
-    {
-      return -1;
-    }
-
   return dpvsiz(qdbp->depot, key, -1);
 }
 
@@ -111,11 +105,6 @@ int QDB_ValueSizeDB(CF_QDB *qdbp, char *key)
 int QDB_ReadComplexKeyDB(CF_QDB *qdbp, char *key, int keySz,void *dest, int destSz)
 {
   int bytesRead;
-
-  if(qdbp->depot == NULL)
-    {
-      return false;
-    }
 
   bytesRead = dpgetwb(qdbp->depot, key, keySz, 0, destSz, dest);
 
@@ -132,11 +121,6 @@ int QDB_ReadComplexKeyDB(CF_QDB *qdbp, char *key, int keySz,void *dest, int dest
 
 int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize)
 {
-  if(qdbp->depot == NULL)
-    {
-      return false;
-    }
-
   ThreadLock(cft_system);
 
   if(qdbp->valmemp != NULL)
@@ -164,14 +148,17 @@ int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize)
 
 int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *src, int srcSz)
 {
-  if(qdbp->depot == NULL)
-    {
-      return false;
-    }
+  char *dbName = NULL;
 
   if(!dpput(qdbp->depot, key, keySz, src, srcSz, DP_DOVER))
     {
-      CfOut(cf_error, "dpput", "!! Could not write key: %s", dperrmsg(dpecode));
+      dbName = dpname(qdbp->depot);
+
+      CfOut(cf_error, "", "!! dpput: Could not write key to DB \"%s\": %s",
+	    dbName, dperrmsg(dpecode));
+
+      free(dbName);
+
       return false;
     }
 
@@ -182,10 +169,6 @@ int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *src, int src
 
 int QDB_DeleteComplexKeyDB(CF_QDB *qdbp, char *key, int size)
 {
-  if(qdbp->depot == NULL)
-    {
-      return false;
-    }
 
   if(!dpout(qdbp->depot, key, size))
     {
@@ -201,14 +184,9 @@ int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp)
 {
   Debug("Entering QDB_NewDBCursor()\n");
 
-  if(qdbp->depot == NULL)
-    {
-      return false;
-    }
-
   if(!dpiterinit(qdbp->depot))
     {
-      CfOut(cf_error, "dpiterinit", "!! Could not initialize iterator: %s", dperrmsg(dpecode));
+      CfOut(cf_error, "", "!! dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
       return false;
     }
 

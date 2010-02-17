@@ -357,6 +357,7 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
  
 CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
 snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
@@ -544,6 +545,7 @@ CloseDB(dbp);
 for (ip = hostlist; ip != NULL; ip=ip->next)
    {
    snprintf(name,CF_BUFSIZE-1,"%s/%s.%s",CFWORKDIR,CF_LASTDB_FILE,ip->name);
+   MapName(name);
 
    if (!OpenDB(name,&dbp))
       {

@@ -386,6 +386,9 @@ typedef int clockid_t;
 /*  DBM                                                            */
 /*******************************************************************/
 
+// maximum amount of simultanious open DBs
+#define MAX_OPENDB 30
+
 #ifdef TCDB
 # include <tcutil.h>
 # include <tchdb.h>

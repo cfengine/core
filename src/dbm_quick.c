@@ -50,6 +50,19 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
     }
 
   (*qdbp)->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
+  
+  if(((*qdbp)->depot == NULL) && (dpecode == DP_EBROKEN))
+    {
+    CfOut(cf_error, "", "!! Database \"%s\" is broken, trying to repair...");
+
+    if(dprepair(filename))
+      {
+      CfOut(cf_log, "", "Seemed to repair database successfully");
+      }
+
+    (*qdbp)->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
+
+    }
 
   if((*qdbp)->depot == NULL)
     {

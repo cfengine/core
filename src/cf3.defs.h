@@ -911,6 +911,7 @@ enum cf_thread_mutex
   cft_getaddr,
   cft_lock,
   cft_output,
+  cft_dbhandle,
   cft_no_tpolicy
   };
 

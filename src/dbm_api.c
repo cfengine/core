@@ -32,13 +32,41 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+
+static int DoOpenDB(char *filename, CF_DB **dbp);
+static int DoCloseDB(CF_DB *dbp);
+static int SaveDBHandle(CF_DB *dbp);
+static int RemoveDBHandle(CF_DB *dbp);
+static int PopDBHandle(CF_DB **dbp);
+
+
+CF_DB *OPENDB[MAX_OPENDB] = {0};
+
+
 int OpenDB(char *filename, CF_DB **dbp)
 {
-char buf[CF_MAXVARSIZE];
+int res;
 
-snprintf(buf, sizeof(buf), "OpenDB(%s)\n", filename);
-Debug(buf);
+Debug("OpenDB(%s)\n", filename);
 
+res = DoOpenDB(filename, dbp);
+
+// record open DBs if successful
+if(res)
+  {
+  if(!SaveDBHandle(*dbp))
+    {
+    FatalError("OpenDB: Could not save DB handle");
+    }
+  }
+
+return res;
+}
+
+/*****************************************************************************/
+
+static int DoOpenDB(char *filename, CF_DB **dbp)
+{
 #ifdef TCDB
 return TCDB_OpenDB(filename, dbp);
 #elif defined QDB
@@ -51,6 +79,25 @@ return BDB_OpenDB(filename, dbp);
 /*****************************************************************************/
 
 int CloseDB(CF_DB *dbp)
+{
+int res;
+
+res = DoCloseDB(dbp);
+
+if(res)
+  {
+  if(!RemoveDBHandle(dbp))
+    {
+    FatalError("CloseDB: Could not find DB handle in open pool\n");
+    }
+  }
+
+return res;
+}
+
+/*****************************************************************************/
+
+static int DoCloseDB(CF_DB *dbp)
 {
 #ifdef TCDB
 return TCDB_CloseDB(dbp);;
@@ -197,3 +244,127 @@ int DeleteDB(CF_DB *dbp, char *key)
 return DeleteComplexKeyDB(dbp,key,strlen(key)+1);
 }
 
+/*****************************************************************************/
+
+void CloseAllDB(void)
+/* Closes all open DB handles */
+{
+  CF_DB *dbp;
+  int i = 0;
+  
+  while(true)
+    {
+    if(!PopDBHandle(&dbp))
+      {
+      FatalError("CloseAllDB: Could not pop next DB handle");
+      }
+  
+    if(dbp == NULL)
+      {
+      break;
+      }
+
+    if(!CloseDB(dbp))
+      {
+      CfOut(cf_error, "", "!! CloseAllDB: Could not close DB with this handle");
+      }
+
+      i++;
+    }
+  
+  CfOut(cf_verbose, "", "Closed %d open DB handles", i);
+}
+
+/*****************************************************************************/
+
+static int SaveDBHandle(CF_DB *dbp)
+{
+  int i;
+
+  if (!ThreadLock(cft_dbhandle))
+    {
+      return false;
+    }
+
+  // find first free slot
+  i = 0;
+  while(OPENDB[i] != NULL)
+    {
+      i++;
+      if(i == MAX_OPENDB)
+	{
+	  ThreadUnlock(cft_dbhandle);
+	  CfOut(cf_error,"","!! Too many open databases");
+	  return false;
+	}
+    }
+  
+  OPENDB[i] = dbp;
+
+  ThreadUnlock(cft_dbhandle);
+  return true;
+
+}
+
+/*****************************************************************************/
+
+static int RemoveDBHandle(CF_DB *dbp)
+/* Remove a specific DB handle */
+{
+  int i;
+
+  if (!ThreadLock(cft_dbhandle))
+    {
+      return false;
+    }
+
+  i = 0;
+  while(OPENDB[i] != dbp)
+    {
+      i++;
+      if(i == MAX_OPENDB)
+	{
+	  ThreadUnlock(cft_dbhandle);
+	  CfOut(cf_error,"","!! Database handle was not found");
+	  return false;
+	}
+    }
+
+  // free slot
+  OPENDB[i] = NULL;
+
+  ThreadUnlock(cft_dbhandle);
+  return true;
+}
+
+/*****************************************************************************/
+
+static int PopDBHandle(CF_DB **dbp)
+/* Pop the first DB handle, and return it in the parameter - NULL if empty */
+{
+  int i;
+
+  if (!ThreadLock(cft_dbhandle))
+    {
+      return false;
+    }
+
+  i = 0;
+  while(OPENDB[i] == NULL)
+    {
+      i++;
+      if(i == MAX_OPENDB)
+	{
+	  ThreadUnlock(cft_dbhandle);
+	  *dbp = NULL;
+	  return true;
+	}
+    }
+
+  // return entry and free slot
+  *dbp = OPENDB[i];
+  OPENDB[i] = NULL;
+
+  ThreadUnlock(cft_dbhandle);
+  return true;
+}

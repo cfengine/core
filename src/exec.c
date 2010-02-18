@@ -698,28 +698,51 @@ if (strlen(EXECCOMMAND) > 0)
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
+   // twin is bin-twin\cf-agent.exe on windows, bin/cf-twin on Unix
+   if(VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
+     {
+       snprintf(cmd,CF_BUFSIZE-1,"%s/bin-twin/cf-agent.exe",CFWORKDIR);
+       MapName(cmd);
    
-   if (IsExecutable(cmd))
-      {
-      snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin%s\" -f failsafe.cf && \"%s/bin/cf-agent%s%s\" -Dfrom_cfexecd%s",
-               CFWORKDIR,
-               EXEC_SUFFIX,
-               CFWORKDIR,
-               EXEC_SUFFIX,
-               NOSPLAY ? " -q" : "",
-               scheduled_run ? ":scheduled_run" : "");      
-      }
+       if (IsExecutable(cmd))
+	 {
+	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin-twin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
+		    CFWORKDIR,
+		    CFWORKDIR,
+		    NOSPLAY ? " -q" : "",
+		    scheduled_run ? ":scheduled_run" : "");      
+	 }
+       else
+	 {
+	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
+		    CFWORKDIR,
+		    CFWORKDIR,
+		    NOSPLAY ? " -q" : "",
+		    scheduled_run ? ":scheduled_run" : "");      
+	 }
+     }
    else
-      {
-      snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent%s\" -f failsafe.cf && \"%s/bin/cf-agent%s%s\" -Dfrom_cfexecd%s",
-               CFWORKDIR,
-               EXEC_SUFFIX,
-               CFWORKDIR,
-               EXEC_SUFFIX,
-               NOSPLAY ? " -q" : "",
-               scheduled_run ? ":scheduled_run" : "");      
-      }
+     {
+       snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
+   
+       if (IsExecutable(cmd))
+	 {
+	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
+		    CFWORKDIR,
+		    CFWORKDIR,
+		    NOSPLAY ? " -q" : "",
+		    scheduled_run ? ":scheduled_run" : "");      
+	 }
+       else
+	 {
+	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
+		    CFWORKDIR,
+		    CFWORKDIR,
+		    NOSPLAY ? " -q" : "",
+		    scheduled_run ? ":scheduled_run" : "");      
+	 }
+
+     }
    
    }
 
@@ -741,7 +764,7 @@ CfOut(cf_verbose,""," -> Command => %s\n",cmd);
 
 if ((pp = cf_popen_sh(esc_command,"r")) == NULL)
    {
-   CfOut(cf_inform,"cf_popen","Couldn't open pipe to command %s\n",cmd);
+   CfOut(cf_error,"cf_popen","!! Couldn't open pipe to command %s\n",cmd);
    fclose(fp);
    return NULL;
    }

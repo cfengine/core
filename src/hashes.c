@@ -279,7 +279,6 @@ if (ptr == NULL)
    return false;
    }
 
-
 // Look for outstanding lists in variable rvals
 
 if (THIS_AGENT_TYPE == cf_common)
@@ -345,7 +344,8 @@ while (ptr->hashtable[slot])
       }
    }
 
-ptr->hashtable[slot] = ap;   
+ptr->hashtable[slot] = ap;
+
 Debug("Added Variable %s at hash address %d in scope %s with value (omitted)\n",lval,slot,scope);
 return true;
 }
@@ -369,6 +369,7 @@ if (len == 0)
    {
    return;
    }
+
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {

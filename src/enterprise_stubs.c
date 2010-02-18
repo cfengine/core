@@ -422,6 +422,7 @@ if (strlen(CURRENT_SHIFT) == 0)
    Nova_ResetShiftAverage(&SHIFT_VALUE);
    }
 
+memset(&dummyattr,0,sizeof(dummyattr));
 dummyattr.transaction.ifelapsed = 59;
 
 thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);

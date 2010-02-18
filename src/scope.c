@@ -153,14 +153,14 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
    if (IsNakedVar(rpr->item,'@'))
       {
       GetNaked(naked,rpr->item);
-      
+
       if (GetVariable(scope,naked,&(retval.item),&(retval.rtype)) != cf_notype)
          {
-         NewList(scope,lval,retval.item,cf_slist);
+         NewList(scope,lval,CopyRvalItem(retval.item,CF_LIST),cf_slist);
          }
       else
          {
-         CfOut(cf_error,"","List parameter not found while constructing \"%s\" - use @(scope.variable) in calling reference",scope);
+         CfOut(cf_error,"","List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);
          NewScalar(scope,lval,rpr->item,cf_str);         
          }
       }
@@ -289,7 +289,7 @@ void ShowScope(char *name)
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
-   if (strcmp(ptr->scope,name) != 0)
+   if (name && strcmp(ptr->scope,name) != 0)
       {
       continue;
       }
@@ -324,22 +324,6 @@ PushStack(&CF_STCK,(void *)op);
 snprintf(name,CF_MAXVARSIZE,"this_%d",CF_STCKFRAME);
 free(op->scope);
 op->scope = strdup(name);
-
-/*
-op = GetScope("match");
-
-if (op == NULL)
-   {
-   return;
-   }
-
-CF_STCKFRAME++;
-PushStack(&CF_STCK,(void *)op);
-snprintf(name,CF_MAXVARSIZE,"match_%d",CF_STCKFRAME);
-free(op->scope);
-op->scope = strdup(name);
-NewScope("match");
-*/
 }
 
 /*******************************************************************/
@@ -348,28 +332,10 @@ void PopThisScope()
 
 { struct Scope *op = NULL;
 
- /*
-DeleteScope("match");
- 
 if (CF_STCKFRAME > 0)
    {
+   DeleteScope("this");
    PopStack(&CF_STCK,(void *)&op,sizeof(op));
-
-   if (op == NULL)
-      {
-      return;
-      }
-   
-   CF_STCKFRAME--;
-   free(op->scope);
-   op->scope = strdup("match");
-   }    
- */
- 
-if (CF_STCKFRAME > 0)
-   {
-   PopStack(&CF_STCK,(void *)&op,sizeof(op));
-
    if (op == NULL)
       {
       return;

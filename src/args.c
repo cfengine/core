@@ -101,9 +101,6 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           lval = (char *)rpt->item;
           rval = rpg->item;
 
-          Debug("MapBodyArgs(LIST,%s,\n",lval);
-          ShowRlist(stdout,rval);
-          Debug(")\n");
           AddVariableHash(scopeid,lval,rval,CF_LIST,dtg,NULL,0);
           
           break;

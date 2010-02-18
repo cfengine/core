@@ -56,6 +56,7 @@ int VerifyMethod(struct Attributes a,struct Promise *pp)
   int retval = false;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
+  struct Rlist *expargs;
 
 if (a.havebundle)
    {
@@ -63,7 +64,7 @@ if (a.havebundle)
       {
       fp = (struct FnCall *)vp;
       method_name = fp->name;
-      params = fp->args;;
+      params = fp->args;
       }
    else if (vp = GetConstraint("usebundle",pp,CF_SCALAR))
       {
@@ -90,26 +91,27 @@ PromiseBanner(pp);
 if (bp = GetBundle(method_name,"agent"))
    {
    char *bp_stack = THIS_BUNDLE;
-   
+
    BannerSubBundle(bp,params);
    NewScope(bp->name);
+
    AugmentScope(bp->name,bp->args,params);
 
    THIS_BUNDLE = bp->name;
    PushPrivateClassContext();
-   
+
    retval = ScheduleAgentOperations(bp);
 
    PopPrivateClassContext();
    THIS_BUNDLE = bp_stack;
-    
+   
    if (retval)
       {
-      cfPS(cf_verbose,CF_CHG,"",pp,a,"Method invoked successfully\n");
+      cfPS(cf_verbose,CF_CHG,"",pp,a," -> Method invoked successfully\n");
       }
    else
       {
-      cfPS(cf_inform,CF_FAIL,"",pp,a,"Method could not be invoked successfully\n");
+      cfPS(cf_inform,CF_FAIL,"",pp,a," !! Method could not be invoked successfully\n");
       }
 
    DeleteFromScope(bp->name,bp->args);

@@ -117,9 +117,7 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    }
 
 PushThisScope();
-
 ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars,fnptr);
-
 PopThisScope();
 
 DeletePromise(pcopy);
@@ -567,13 +565,12 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
   struct Scope *ptr;
   int i = 1;
   char *handle = GetConstraint("handle",pp,CF_SCALAR);
-  
+
 lol = NewIterationContext(scopeid,listvars);
 
 do
    {
    /* Set scope "this" first to ensure list expansion ! */
-
    SetScope("this");  
    DeRefListsInHashtable("this",listvars,lol);   
 
@@ -587,9 +584,9 @@ do
       {
       NewScalar("this","handle",PromiseID(pp),cf_str);
       }
-            
+   
    pexp = ExpandDeRefPromise("this",pp);
-
+     
    switch (agent)
       {
       case cf_common:
@@ -606,7 +603,7 @@ do
              }
           break;
       }
-
+      
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
       ConvergeVarHashPromise(pp->bundle,pexp,true);

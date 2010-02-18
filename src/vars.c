@@ -137,10 +137,9 @@ void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 
 { char *sp1;
  
-Debug("NewList(%s,%s,%s)\n",scope,lval,rval);
+Debug("NewList(%s,%s,...\n",scope,lval);
 
 sp1 = strdup(lval);
-
 AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
 }
 

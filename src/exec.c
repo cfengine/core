@@ -756,7 +756,7 @@ MapName(filename);
 
 if ((fp = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Couldn't open %s\n",filename);
+   CfOut(cf_error,"fopen","!! Couldn't open \"%s\" - aborting exec\n",filename);
    return NULL;
    }
 
@@ -764,7 +764,7 @@ CfOut(cf_verbose,""," -> Command => %s\n",cmd);
 
 if ((pp = cf_popen_sh(esc_command,"r")) == NULL)
    {
-   CfOut(cf_error,"cf_popen","!! Couldn't open pipe to command %s\n",cmd);
+   CfOut(cf_error,"cf_popen","!! Couldn't open pipe to command \"%s\"\n",cmd);
    fclose(fp);
    return NULL;
    }

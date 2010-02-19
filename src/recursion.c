@@ -49,7 +49,7 @@ if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are i
    char basedir[CF_BUFSIZE];
 
    Debug(" -> Direct file reference %s, no search implied\n",name);
-   strcpy(basedir,name);
+   snprintf(basedir, sizeof(basedir), "%s", name);
    ChopLastNode(basedir);
    chdir(basedir);
    return VerifyFileLeaf(name,sb,attr,pp);

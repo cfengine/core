@@ -256,6 +256,18 @@ if (a.havedelete && !exists)
    cfPS(cf_verbose,CF_NOP,"",pp,a," -> File \"%s\" does not exist as promised",path);
    }
 
+
+if (!a.havedepthsearch)  /* if the search is trivial, make sure that we are in the parent dir of the leaf */
+   {
+   char basedir[CF_BUFSIZE];
+
+   Debug(" -> Direct file reference %s, no search implied\n",path);
+   snprintf(basedir, sizeof(basedir), "%s", path);
+   ChopLastNode(basedir);
+   chdir(basedir);
+   }
+
+
 if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
    {
    if (!S_ISDIR(oslb.st_mode))

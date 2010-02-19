@@ -859,7 +859,8 @@ else
           break;
           
       case cfa_fix:
-          
+	
+	printf("---lastnode:%s\n", lastnode);
           
           if (!S_ISDIR(sb->st_mode))
              {

@@ -59,7 +59,7 @@ else
    }
 
 pbuffer[0] = '\0';
-path = SplitString(wildpath,FILE_SEPARATOR);
+path = SplitString(wildpath,'/');  // require forward slash in regex on all platforms
 
 for (ip = path; ip != NULL; ip=ip->next)
    {
@@ -104,7 +104,7 @@ for (ip = path; ip != NULL; ip=ip->next)
 
 if (expandregex) /* Expand one regex link and hand down */
    {
-   char nextbuffer[CF_BUFSIZE],regex[CF_BUFSIZE];
+   char nextbuffer[CF_BUFSIZE],nextbufferOrig[CF_BUFSIZE],regex[CF_BUFSIZE];
    struct dirent *dirp;
    DIR *dirh;
    struct Attributes dummyattr;
@@ -172,6 +172,10 @@ if (expandregex) /* Expand one regex link and hand down */
             CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
 
             /* Now need to recompute any back references to get the complete path */
+
+	    snprintf(nextbufferOrig, sizeof(nextbufferOrig), "%s", nextbuffer);
+	    MapNameForward(nextbuffer);
+
             if (!FullTextMatch(pp->promiser,nextbuffer))
                {
                CfOut(cf_error,"","Error recomputing references");
@@ -180,7 +184,7 @@ if (expandregex) /* Expand one regex link and hand down */
             /* If there were back references there could still be match.x vars to expand */
 
             pcopy = ExpandDeRefPromise(CONTEXTID,pp);            
-            (*fnptr)(nextbuffer,pcopy);
+            (*fnptr)(nextbufferOrig,pcopy);
             DeletePromise(pcopy);
             }
          }

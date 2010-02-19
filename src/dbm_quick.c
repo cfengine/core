@@ -53,7 +53,7 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
   
   if(((*qdbp)->depot == NULL) && (dpecode == DP_EBROKEN))
     {
-    CfOut(cf_error, "", "!! Database \"%s\" is broken, trying to repair...");
+     CfOut(cf_error, "", "!! Database \"%s\" is broken, trying to repair...", filename);
 
     if(dprepair(filename))
       {

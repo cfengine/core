@@ -1047,6 +1047,7 @@ char *cf_strncpy(char *s1,char *s2,size_t n);
 char *cf_strchr(char *s, int c);
 char *cf_strcpy(char *s1,char *s2);
 char *MapName(char *s);
+char *MapNameForward(char *s);
 int UseUnixStandard(char *s);
 char *cf_ctime(const time_t *timep);
 int cf_closesocket(int sd);

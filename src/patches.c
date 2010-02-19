@@ -133,6 +133,25 @@ return s;
 
 /*********************************************************/
 
+char *MapNameForward(char *s)
+/* Like MapName(), but maps all slashes to forward */
+{
+  char *sp;
+
+  for(sp = s; *sp != '\0'; sp++)
+    {
+      switch(*sp)
+	{
+	case '\\':
+	  *sp = '/';
+	}
+    }
+  
+  return s;
+}
+
+/*********************************************************/
+
 int UseUnixStandard(char *s)
 
 {

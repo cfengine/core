@@ -156,7 +156,11 @@ fprintf(fout,"@node Special Variables\n@chapter Special Variables\n\n");
 
 // scopes const and sys
 
+NewScope("edit");
+NewScalar("edit","filename","x",cf_str);
+
 TexinfoVariables(fout,"const");
+TexinfoVariables(fout,"edit");
 TexinfoVariables(fout,"match");
 TexinfoVariables(fout,"mon");
 TexinfoVariables(fout,"sys");

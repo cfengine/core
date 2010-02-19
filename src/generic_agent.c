@@ -1404,11 +1404,10 @@ void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist
   struct SubTypeSyntax *sp;
   struct BodySyntax *bp = NULL;
   char *lval;
-  void *rval = NULL;
+  void *rval = NULL,*retval;
   int i = 0,override = true;
   struct Rval returnval;
-  char rettype;
-  void *retval;
+  char rettype,rtype;
 
 Debug("CheckControlPromises(%s)\n",agent);
 
@@ -1443,6 +1442,8 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       returnval = EvaluateFinalRval(CONTEXTID,cp->rval,cp->type,true,NULL);
       }
 
+   DeleteVariable(scope,cp->lval);
+   
    if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);

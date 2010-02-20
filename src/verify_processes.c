@@ -67,7 +67,7 @@ if (a.restart_class)
    {
    if (IsStringIn(a.signals,"term") || IsStringIn(a.signals,"kill"))
       {
-      CfOut(cf_inform,"","Promise %s kills then restarts - i.e. never converges",pp->promiser);
+      CfOut(cf_inform,""," -> (warning) Promise %s kills then restarts - never strictly converges",pp->promiser);
       PromiseRef(cf_inform,pp);
       }   
    }

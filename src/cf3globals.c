@@ -52,6 +52,7 @@ int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
 int VIEWS = true;
 int IGNORE_MISSING_INPUTS = false;
+int IGNORE_MISSING_BUNDLES = false;
 
 struct utsname VSYSNAME;
 

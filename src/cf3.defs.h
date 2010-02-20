@@ -224,6 +224,7 @@ enum cfagenttype
 enum cfgcontrol
    {
    cfg_bundlesequence,
+   cfg_ignore_missing_bundles,
    cfg_ignore_missing_inputs,
    cfg_inputs,
    cfg_version,

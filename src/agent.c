@@ -308,7 +308,18 @@ void ThisAgentInit()
 
 { FILE *fp;
   char filename[CF_BUFSIZE];
- 
+
+#ifdef HAVE_SETSID
+if (setsid() == -1)
+   {
+   CfOut(cf_verbose,"setsid"," !! Couldn't immunize against the parent");
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> Immunizing against parental death");
+   }
+#endif
+
 signal(SIGINT,HandleSignals);
 signal(SIGTERM,HandleSignals);
 signal(SIGHUP,SIG_IGN);
@@ -703,11 +714,14 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
           ok = false;
           break;
       }
-   
-   if (!(GetBundle(name,"agent")||(GetBundle(name,"common"))))
+
+   if (!IGNORE_MISSING_BUNDLES)
       {
-      CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence was not found\n",name);
-      ok = false;
+      if (!(GetBundle(name,"agent")||(GetBundle(name,"common"))))
+         {
+         CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence was not found\n",name);
+         ok = false;
+         }
       }
    }
 

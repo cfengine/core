@@ -1475,6 +1475,13 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
+      {
+      CfOut(cf_verbose,"","SET ignore_missing_bundles %s\n",cp->rval);
+      IGNORE_MISSING_BUNDLES = GetBoolean(cp->rval);
+      continue;
+      }
+
    DeleteRvalItem(returnval.item,returnval.rtype);
    }
 }
@@ -1744,7 +1751,7 @@ if (agent == cf_agent || agent == cf_common)
              break;
          }
 
-      if (!GetBundle(name,NULL))
+      if (!IGNORE_MISSING_BUNDLES && !GetBundle(name,NULL))
          {
          CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n",name);
          ok = false;

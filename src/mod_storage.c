@@ -62,7 +62,7 @@
 struct BodySyntax CF_CHECKVOL_BODY[] =
    {
    {"check_foreign",cf_opts,CF_BOOL,"true/false verify storage that is mounted from a foreign system on this host"},
-   {"freespace",cf_str,"[0-9]+[mb%]","Absolute or percentage minimum disk space that should be available before warning"},
+   {"freespace",cf_str,"[0-9]+[MBkKgGmb%]","Absolute or percentage minimum disk space that should be available before warning"},
    {"sensible_size",cf_int,CF_VALRANGE,"Minimum size in bytes that should be used on a sensible-looking storage device"},
    {"sensible_count",cf_int,CF_VALRANGE,"Minimum number of files that should be defined on a sensible-looking storage device"},
    {"scan_arrivals",cf_opts,CF_BOOL,"true/false generate pseudo-periodic disk change arrival distribution"},

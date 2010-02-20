@@ -1703,9 +1703,9 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
 #ifdef MINGW  /* NT uses security identifier instead of uid */
    if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
      {
-	 memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
+     memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
      }
-	 
+   
 #else  /* NOT MINGW */
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
       {      

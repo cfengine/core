@@ -35,6 +35,7 @@ extern int VIEWS;
 extern int LICENSES;
 extern char EXPIRY[32];
 extern int IGNORE_MISSING_INPUTS;
+extern int IGNORE_MISSING_BUNDLES;
 extern char WEBDRIVER[CF_MAXVARSIZE];
 extern char BANNER[2*CF_BUFSIZE];
 extern char FOOTER[CF_BUFSIZE];

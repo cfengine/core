@@ -735,10 +735,13 @@ else
    MakeParentDirectory(destfile,true);
    }
 
-if (ssb.st_size < attr.copy.min_size || ssb.st_size > attr.copy.max_size)
+if (attr.copy.min_size != CF_NOINT)
    {
-   cfPS(cf_verbose,CF_NOP,"",pp,attr," -> Source file %s size is not in the permitted safety range\n",sourcefile);
-   return;
+   if (ssb.st_size < attr.copy.min_size || ssb.st_size > attr.copy.max_size)
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,attr," -> Source file %s size is not in the permitted safety range\n",sourcefile);
+      return;
+      }
    }
    
 if (found == -1)

@@ -434,6 +434,7 @@ void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *
 void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
 void CacheUnreliableValue(char *caller,char *handle,char *buffer);
 int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
+void TranslatePath(char *new,char *old);
 void ReviveOther(int argc,char **argv);
 void GrandSummary(void);
 

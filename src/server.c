@@ -2721,7 +2721,7 @@ return true;
 
 /**************************************************************/
 
-int StatFile(struct cfd_connection *conn,char *sendbuffer,char *filename)
+int StatFile(struct cfd_connection *conn,char *sendbuffer,char *ofilename)
 
 /* Because we do not know the size or structure of remote datatypes,*/
 /* the simplest way to transfer the data is to convert them into */
@@ -2729,10 +2729,12 @@ int StatFile(struct cfd_connection *conn,char *sendbuffer,char *filename)
 
 { struct cfstat cfst;
   struct stat statbuf,statlinkbuf;
-  char linkbuf[CF_BUFSIZE];
+  char linkbuf[CF_BUFSIZE],filename[CF_BUFSIZE];
   int islink = false;
 
 Debug("\nStatFile(%s)\n",filename);
+
+TranslatePath(filename,ofilename);
 
 memset(&cfst,0,sizeof(struct cfstat));
   
@@ -2899,15 +2901,16 @@ return 0;
 void CfGetFile(struct cfd_get_arg *args)
 
 { int sd,fd,n_read,total=0,cipherlen,sendlen=0,count = 0,finlen;
-  char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],*filename;
+  char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],filename[CF_BUFSIZE];
   struct stat sb;
   int blocksize = 2048;
   uid_t uid;
   char *key;
 
 sd         = (args->connect)->sd_reply;
-filename   = args->replyfile;
 key        = (args->connect)->session_key;
+
+TranslatePath(filename,args->replyfile);
 
 cfstat(filename,&sb);
 
@@ -3006,7 +3009,7 @@ void CfEncryptGetFile(struct cfd_get_arg *args)
    encryption, hence we need to handle this with transactions */
     
 { int sd,fd,n_read,total=0,cipherlen,sendlen=0,count = 0,finlen,cnt = 0;
-  char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],*filename;
+  char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],filename[CF_BUFSIZE];
   struct stat sb;
   unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
   int blocksize = CF_BUFSIZE - 4*CF_INBAND_OFFSET;
@@ -3016,9 +3019,10 @@ void CfEncryptGetFile(struct cfd_get_arg *args)
   EVP_CIPHER_CTX ctx;
 
 sd         = (args->connect)->sd_reply;
-filename   = args->replyfile;
 key        = (args->connect)->session_key;
 enctype    = (args->connect)->encryption_type;
+
+TranslatePath(filename,args->replyfile);
 
 cfstat(filename,&sb);
 
@@ -3119,13 +3123,13 @@ close(fd);
 void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1],digest2[EVP_MAX_MD_SIZE+1];
-  char filename[CF_BUFSIZE];
+ char filename[CF_BUFSIZE],rfilename[CF_BUFSIZE];
   char *sp;
   int i;
 
 /* TODO - when safe change this to sha2 */
   
-sscanf(recvbuffer,"MD5 %[^\n]",filename);
+sscanf(recvbuffer,"MD5 %[^\n]",rfilename);
 
 sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
  
@@ -3135,6 +3139,8 @@ for (i = 0; i < CF_MD5_LEN; i++)
    }
  
 memset(sendbuffer,0,CF_BUFSIZE);
+
+TranslatePath(filename,rfilename);
 
 HashFile(filename,digest2,cf_md5);
 

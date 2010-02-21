@@ -226,6 +226,13 @@ if (!FileSanityChecks(path,a,pp))
    return;
    }
 
+thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
    {
    if (a.create||a.touch)
@@ -256,7 +263,6 @@ if (a.havedelete && !exists)
    cfPS(cf_verbose,CF_NOP,"",pp,a," -> File \"%s\" does not exist as promised",path);
    }
 
-
 if (!a.havedepthsearch)  /* if the search is trivial, make sure that we are in the parent dir of the leaf */
    {
    char basedir[CF_BUFSIZE];
@@ -266,7 +272,6 @@ if (!a.havedepthsearch)  /* if the search is trivial, make sure that we are in t
    ChopLastNode(basedir);
    chdir(basedir);
    }
-
 
 if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
    {
@@ -318,13 +323,6 @@ if (a.link.link_children)
          return;
          }
       }
-   }
-
-thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
-
-if (thislock.lock == NULL)
-   {
-   return;
    }
 
 snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);

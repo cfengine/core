@@ -249,7 +249,8 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMBb:",OPTIONS,&optindex)) != E
           
           break;
           
-      case 'K': IGNORELOCK = true;
+      case 'K':
+          IGNORELOCK = true;
           break;
                     
       case 'D': NewClassesFromString(optarg);

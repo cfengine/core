@@ -651,11 +651,11 @@ void CSV2XML(struct Rlist *list)
 
 /*****************************************************************************/
 
-void Aggregate()
+void Aggregate(char *stylesheet,char *banner,char *footer,char *webdriver)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_Aggregate();
+Nova_Aggregate(stylesheet,banner,footer,webdriver);
 #endif 
 }
 
@@ -665,7 +665,7 @@ void NoteVarUsage()
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_NoteVarUsage();
+Nova_NoteVarUsage();
 #endif 
 }
 

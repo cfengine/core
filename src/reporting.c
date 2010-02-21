@@ -89,13 +89,16 @@ void ShowContext(void)
  /* Text output */
 
 CfOut(cf_verbose,"","");
-  
+
+ptr = SortItemListNames(VHEAP);
+VHEAP = ptr;
+
 if (VERBOSE||DEBUG)
    {
    snprintf(vbuff,CF_BUFSIZE,"Host %s's basic classified context",VFQNAME);
    ReportBanner(vbuff);
    
-   printf("%s  -> Defined hard classes = { ",VPREFIX);
+   printf("%s  -> Defined classes = { ",VPREFIX);
    
    for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
       {
@@ -120,7 +123,7 @@ CfOut(cf_verbose,"","");
 
 /* HTML output */
 
-
+/*
 fprintf(FREPORT_HTML,"<div id=\"contextclasses\">");
 fprintf(FREPORT_HTML,"<table class=border><tr>");
 fprintf(FREPORT_HTML,"<tr><th colspan=2><h1>Agent's hard context classes</h1></th></tr>\n");
@@ -143,6 +146,7 @@ for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
    }
 
 fprintf(FREPORT_HTML,"</ul></td></tr></table></div><p>\n");
+*/
 }
 
 /*******************************************************************/

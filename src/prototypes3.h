@@ -366,7 +366,7 @@ int IsProcessType(char *s);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
-void Aggregate(void);
+void Aggregate(char *stylesheet,char *banner,char *footer,char *webdriver);
 void SetPolicyServer(char *name);
 int IsEnterprise(void);
 void EnterpriseVersion(void);

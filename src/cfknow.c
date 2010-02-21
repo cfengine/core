@@ -1675,7 +1675,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s')\n",safe,Name2Id(tp->topic_name),tp->topic_type);
       }
    fprintf(fout,"%s",query);
-   CfOut(cf_verbose,""," -> Add topic %s\n",tp->topic_name);
+   Debug(" -> Add topic %s\n",tp->topic_name);
    CfVoidQueryDB(&cfdb,query);
    }
 
@@ -1697,7 +1697,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
-         CfOut(cf_verbose,""," -> Add association %s\n",ta->fwd_name);
+         Debug(" -> Add association %s\n",ta->fwd_name);
          }
       }
    }
@@ -1718,7 +1718,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",CanonifyName(tp->topic_name),safeexpr,op->rep_type,rp->item);
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
-         CfOut(cf_verbose,""," -> Add occurrence of %s\n",tp->topic_name);
+         Debug(" -> Add occurrence of %s\n",tp->topic_name);
          }
       }
    }
@@ -2787,6 +2787,7 @@ else
    }
 
 AddOccurrence(&(tp->occurrences),url,retval.item,cfk_url);
+CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 
 DeleteRvalItem(retval.item,CF_LIST);
 }

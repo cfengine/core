@@ -374,9 +374,10 @@ for (sp = local; *sp != '\0'; sp++)
 int IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux */
 
 { int i;
-  static char *names[11] =
+  static char *names[] =
      {
      "any","agent","Morning","Afternoon","Evening","Night","Q1","Q2","Q3","Q4",
+     "SuSE","suse","fedora","Ubuntu","cfengine","ipv4","lsb_compliant","localhost",
      NULL
      };
  
@@ -406,7 +407,7 @@ for (i = 0; i < 12; i++)
 
 for (i = 0; names[i] != NULL; i++)
    {
-   if (strcmp(names[i],sp) == 0)
+   if (strncmp(names[i],sp,strlen(names[i])) == 0)
       {
       return true;
       }

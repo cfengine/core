@@ -241,7 +241,7 @@ GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
 KeepReportsControlPromises();
 KeepReportsPromises();
-Aggregate();
+Aggregate(STYLESHEET,BANNER,FOOTER,WEBDRIVER);
 return 0;
 }
 
@@ -1063,6 +1063,7 @@ void ShowClasses()
   char *key;
   void *value;
   FILE *fout,*fnotes;
+  struct Item *already = NULL,*ip;
   double now = (double)time(NULL),average = 0, var = 0;
   double ticksperminute = 60.0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
@@ -1119,7 +1120,9 @@ if (HTML && !EMBEDDED)
    snprintf(name,CF_BUFSIZE,"Classes last observed on %s at %s",VFQNAME,cf_ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
    fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
-   fprintf(fout,"<table class=border cellpadding=5>\n");
+
+   fprintf(fout,"<h4>Soft classes</h4>");
+   fprintf(fout,"<table class=\"border\" cellpadding=\"5\">\n");
    }
 
 if (XML)
@@ -1202,6 +1205,8 @@ for (i = 0; i < 1024; i++)
 
    fprintf(fnotes,"%s %.4lf\n",array[i].name,array[i].q);
 
+   PrependItem(&already,array[i].name,NULL);
+   
    if (XML)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
@@ -1232,8 +1237,51 @@ for (i = 0; i < 1024; i++)
 
 if (HTML && !EMBEDDED)
    {
-   fprintf(fout,"</div></div>\n");
    fprintf(fout,"</table>");
+   fprintf(fout,"<h4>All classes</h4>\n");
+   fprintf(fout,"<table class=\"border\" cellpadding=\"5\">\n");
+   }
+
+for (ip = VHEAP; ip != NULL; ip=ip->next)
+   {
+   if (IsItemIn(already,ip->name))
+      {
+      continue;
+      }
+
+   if (strncmp(ip->name,"Min",3) == 0 || strncmp(ip->name,"Hr",2) == 0 || strncmp(ip->name,"Q",1) == 0)
+      {
+      continue;
+      }
+   
+   if (XML)
+      {
+      fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_event][cfb],ip->name,CFRX[cfx_event][cfe]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],"always",CFRX[cfx_date][cfe]);
+      fprintf(fout,"%s%.4lf%s",CFRX[cfx_av][cfb],1.0,CFRX[cfx_av][cfe]);
+      fprintf(fout,"%s%.4lf%s",CFRX[cfx_dev][cfb],0.0,CFRX[cfx_dev][cfe]);
+      fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
+      }
+   else if (HTML)
+      {
+      fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
+      fprintf(fout,"%s%s%s",CFRH[cfx_event][cfb],ip->name,CFRH[cfx_event][cfe]);
+      fprintf(fout,"%s occured %s%s",CFRH[cfx_date][cfb],"always",CFRH[cfx_date][cfe]);
+      fprintf(fout,"%s Probability %.4lf %s",CFRH[cfx_av][cfb],1.0,CFRH[cfx_av][cfe]);
+      fprintf(fout,"%s &plusmn; %.4lf %s",CFRH[cfx_dev][cfb],0.0,CFRH[cfx_dev][cfe]);
+      fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
+      }
+   else if (CSV)
+      {
+      fprintf(fout,"%7.4lf,%7.4lf,%s,%s\n",1.0,0.0,ip->name,"always");
+      }
+   }
+
+if (HTML && !EMBEDDED)
+   {
+   fprintf(fout,"</table>");
+   fprintf(fout,"</div></div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1246,6 +1294,7 @@ DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
 fclose(fout);
 fclose(fnotes);
+DeleteItemList(already);
 }
 
 /*******************************************************************/

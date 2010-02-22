@@ -46,7 +46,7 @@ void DoExec (struct cfd_connection *conn, char *sendbuffer, char *args);
 int GetCommand (char *str);
 int VerifyConnection (struct cfd_connection *conn, char *buf);
 void RefuseAccess (struct cfd_connection *conn, char *sendbuffer, int size, char *errormsg);
-int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
+int AccessControl(char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
 int LiteralAccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
 struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny);
 void ReplyServerContext(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted,struct Item *classes);
@@ -1902,13 +1902,15 @@ return false;
 
 /**************************************************************/
 
-int AccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+int AccessControl(char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
 
 { struct Auth *ap;
   int access = false;
-  char realname[CF_BUFSIZE],path[CF_BUFSIZE],lastnode[CF_BUFSIZE],*sp;
+  char realname[CF_BUFSIZE],path[CF_BUFSIZE],lastnode[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
   char transrequest[CF_BUFSIZE],transpath[CF_BUFSIZE];
   struct stat statbuf;
+
+TranslatePath(filename, oldFilename);
 
 Debug("AccessControl(%s)\n",filename);
 

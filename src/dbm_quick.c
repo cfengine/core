@@ -57,7 +57,7 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
 
     if(dprepair(filename))
       {
-      CfOut(cf_log, "", "Seemed to repair database successfully");
+      CfOut(cf_log, "", "Successfully repaired database \"%s\"", filename);
       }
 
     (*qdbp)->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);

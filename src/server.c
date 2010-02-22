@@ -3488,7 +3488,10 @@ if (GetNamedSecurityInfo(filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,(P
       }
    else
       {
-      // If the process doesn't own the file, we can access if we are root AND granted root map
+      // If the process doesn't own the file, we can access if we are
+      // root AND granted root map
+
+      LocalFree(secDesc);
 
       if (args->connect->maproot)
          {
@@ -3497,6 +3500,7 @@ if (GetNamedSecurityInfo(filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,(P
          }
       else
          {
+         CfOut(cf_verbose, "", "!! Remote user denied right to file \"%s\" (consider maproot?)", filename);	 
          return false;
          }
       }
@@ -3528,6 +3532,7 @@ if (uid != 0 && !args->connect->maproot) /* should remote root be local root */
       else
          {
          Debug("Caller %s is not the owner of the file\n",(args->connect)->username);
+	 CfOut(cf_verbose, "", "!! Remote user denied right to file \"%s\" (consider maproot?)", filename);
          return false;
          }
       }

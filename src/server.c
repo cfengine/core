@@ -56,7 +56,7 @@ void CfGetFile (struct cfd_get_arg *args);
 void CfEncryptGetFile(struct cfd_get_arg *args);
 void CompareLocalHash(struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
 void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted);
-int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
+int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *oldDirname);
 int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 void Terminate (int sd);
 void DeleteAuthList (struct Auth *ap);
@@ -3230,11 +3230,14 @@ else
 
 /**************************************************************/
 
-int CfOpenDirectory(struct cfd_connection *conn,char *sendbuffer,char *dirname)
+int CfOpenDirectory(struct cfd_connection *conn,char *sendbuffer,char *oldDirname)
 
 { DIR *dirh;
   struct dirent *dirp;
   int offset;
+  char dirname[CF_BUFSIZE];
+
+TranslatePath(dirname, oldDirname);
 
 Debug("CfOpenDirectory(%s)\n",dirname);
   

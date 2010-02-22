@@ -239,6 +239,7 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
       {
       if (!CfCreateFile(path,pp,a))
          {
+         YieldCurrentLock(thislock);
          return;
          }
       else
@@ -277,6 +278,7 @@ if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
    {
    if (!S_ISDIR(oslb.st_mode))
       {
+      YieldCurrentLock(thislock);
       return;
       }
    }
@@ -287,6 +289,7 @@ if (cfstat(path,&osb) == -1)
       {
       if (!CfCreateFile(path,pp,a))
          {
+         YieldCurrentLock(thislock);
          return;
          }
       else
@@ -306,6 +309,7 @@ else
       if (a.havedepthsearch)
          {
          CfOut(cf_error,"","Warning: depth_search (recursion) is promised for a base object %s that is not a directory",path);
+         YieldCurrentLock(thislock);
          return;
          }
       }
@@ -320,6 +324,7 @@ if (a.link.link_children)
       if (!S_ISDIR(dsb.st_mode))
          {
          CfOut(cf_error,"","Cannot promise to link the children of %s as it is not a directory!",a.link.source);
+         YieldCurrentLock(thislock);
          return;
          }
       }

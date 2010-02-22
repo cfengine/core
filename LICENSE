@@ -1,15 +1,23 @@
 
- This program is provided under the terms of the GNU public
- license (below), with explicit permission to link with the
- OpenSSL library. (http://www.openssl.org)
+This file contains a copy of:
 
- On some systems, code under the Frontier Artistic License
- (/pub/snprintf) might become compiled. This is compatible with the
- GPL.
+1) The GNU General Public License version 3
+1) The Commericial Open Source License (COSL)
 
- Users of the software may, at their option, choose the COSL license
- below as part of the enterprise cfengine product.
+----------------------------------------------------------------------------
 
+Cfengine is provided under the terms of the GNU public
+license (below), with explicit permission to link with the
+OpenSSL library. (http://www.openssl.org)
+
+On some systems, code under the Frontier Artistic License
+(/pub/snprintf) might become compiled. This is compatible with the
+GPL.
+
+Users of the software may, at their option, choose the COSL license
+below as part of the enterprise Cfengine product.
+
+----------------------------------------------------------------------------
 
 
                     GNU GENERAL PUBLIC LICENSE
@@ -693,12 +701,10 @@ Public License instead of this License.  But first, please read
 
                     COMMERCIAL OPEN SOURCE LICENSE
 
-                           (Alternative license)
-
 This Cfengine commercial open source license ("COSL") is entered into
 between Cfengine AS, a Norwegian company, as licensor, having its
-registered address (at the time of writing) at Forskningsparken, Oslo,
-Norway, business registration no. 892 847 282 ("Cfengine") and
+registered address (at the time of writing) in Nydalen, Oslo, Norway,
+business registration no. 892 847 282 ("Cfengine") and
 
 a) the Customer entity stipulated on the the agreement front page (“Front page”),
 

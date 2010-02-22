@@ -314,7 +314,7 @@ void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_NotePromiseCompliance(pp,val,status);
+Nova_NotePromiseCompliance(pp,val,status);
 #else
 #endif
 }
@@ -325,9 +325,20 @@ void PreSanitizePromise(struct Promise *pp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_PreSanitizePromise(pp);
+Nova_PreSanitizePromise(pp);
 #else
 #endif
+}
+
+/*****************************************************************************/
+
+void TrackValue(char *date,double kept,double repaired, double notkept)
+
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_TrackValue(date,kept,repaired,notkept);
+#else
+#endif 
 }
 
 /*****************************************************************************/
@@ -598,6 +609,18 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
  Nova_SummarizeCompliance(xml,html,csv,embed,stylesheet,head,foot,web);
 #else
  CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void SummarizeValue(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_SummarizeValue(xml,html,csv,embed,stylesheet,head,foot,web);
+#else
+CfOut(cf_verbose,"","# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
 #endif
 }
 

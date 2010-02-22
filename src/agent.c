@@ -311,14 +311,8 @@ void ThisAgentInit()
   char filename[CF_BUFSIZE];
 
 #ifdef HAVE_SETSID
-if (setsid() == -1)
-   {
-   CfOut(cf_verbose,"setsid"," !! Couldn't immunize against the parent");
-   }
-else
-   {
-   CfOut(cf_verbose,""," -> Immunizing against parental death");
-   }
+CfOut(cf_verbose,""," -> Immunizing against parental death");
+setsid();
 #endif
 
 signal(SIGINT,HandleSignals);

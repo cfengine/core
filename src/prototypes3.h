@@ -401,6 +401,7 @@ void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,cha
 void SummarizePerPromiseCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
+void SummarizeValue(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp);
 void SetMeasurementPromises(struct Item **classlist);
 void LongHaul(void);
@@ -437,6 +438,7 @@ int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
 void TranslatePath(char *new,char *old);
 void ReviveOther(int argc,char **argv);
 void GrandSummary(void);
+void TrackValue(char *date,double kept,double repaired, double notkept);
 
 /* env_context.c */
 

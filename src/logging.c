@@ -89,7 +89,7 @@ if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
 
    Chop(datestr);
    fprintf(fout,"%s,%.4lf,%.4lf,%.4lf\n",datestr,VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);
-   
+   TrackValue(datestr,VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);   
    fclose(fout);
    }
 

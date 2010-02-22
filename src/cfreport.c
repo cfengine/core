@@ -547,6 +547,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 void KeepReportsPromises()
 
 { struct Rlist *rp;
+  int all = false;
 
 if (REPORTS == NULL)
    {
@@ -573,7 +574,18 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
    {
    Banner(rp->item);
 
-   if (strcmp("last_seen",rp->item) == 0)
+   if (strcmp("all",rp->item) == 0)
+      {
+      if (RlistLen(REPORTS) > 1)
+         {
+         CfOut(cf_error,""," !! \"all\" should be the only item in the list, if it exists");
+         continue;
+         }
+      
+      all = true;            
+      }
+   
+   if (all || strcmp("last_seen",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating last-seen report...\n");
       ShowLastSeen();
@@ -591,13 +603,13 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       ShowLocks(CF_ACTIVE);
       }
 
-   if (strcmp("hashes",rp->item) == 0)
+   if (all || strcmp("hashes",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating file-hash report...\n");
       ShowChecksums();
       }
 
-   if (strcmp("performance",rp->item) == 0)
+   if (all || strcmp("performance",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating performance report...\n");
       ShowPerformance();
@@ -609,25 +621,25 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       ShowCurrentAudit();
       }
 
-   if (strcmp("classes",rp->item) == 0)
+   if (all || strcmp("classes",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating classes report...\n");
       ShowClasses();
       }
 
-   if (strcmp("monitor_now",rp->item) == 0)
+   if (all || strcmp("monitor_now",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating monitor recent-history report...\n");
       MagnifyNow();
       }
 
-   if (strcmp("monitor_summary",rp->item) == 0)
+   if (all || strcmp("monitor_summary",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating monitor history summary...\n");
       SummarizeAverages();
       }
 
-   if (strcmp("monitor_history",rp->item) == 0)
+   if (all || strcmp("monitor_history",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating monitor full history report...\n");
       WriteGraphFiles();
@@ -637,7 +649,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       LongHaul();
       }
 
-   if (strcmp("compliance",rp->item) == 0)
+   if (all || strcmp("compliance",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating compliance summary (Cfengine Nova and above)...\n");
       SummarizeCompliance(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
@@ -649,34 +661,40 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       SummarizePromiseNotKept(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
-   if (strcmp("file_changes",rp->item) == 0)
+   if (all || strcmp("file_changes",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating file change summary (Cfengine Nova and above)...\n");
       SummarizeFileChanges(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
-   if (strcmp("installed_software",rp->item) == 0)
+   if (all || strcmp("installed_software",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating software version summary (Cfengine Nova and above)...\n");
       SummarizeSoftware(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
-   if (strcmp("software_patches",rp->item) == 0)
+   if (all || strcmp("software_patches",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating software update version summary (Cfengine Nova and above)...\n");
       SummarizeUpdates(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
-   if (strcmp("setuid",rp->item) == 0)
+   if (all || strcmp("setuid",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating setuid report (Cfengine Nova and above)...\n");
       SummarizeSetuid(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
 
-   if (strcmp("variables",rp->item) == 0)
+   if (all || strcmp("variables",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating variables report (Cfengine Nova and above)...\n");
       SummarizeVariables(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
+      }
+
+   if (all || strcmp("value",rp->item) == 0)
+      {
+      CfOut(cf_verbose,""," -> Creating value report (Cfengine Nova and above)...\n");
+      SummarizeValue(XML,HTML,CSV,EMBEDDED,STYLESHEET,BANNER,FOOTER,WEBDRIVER);
       }
    }
 

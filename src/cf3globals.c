@@ -135,7 +135,7 @@ struct Rlist *CF_STCK = NULL;
 
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = CF_WEEK;
-int LASTSEEN = true;
+int LASTSEEN = false;
 
 struct Topic *TOPIC_MAP = NULL;
 

@@ -1,4 +1,10 @@
+3.0.4
+	Special function getenv() which returns the contents of an
+	environment variable (on all platforms).
 
+	More robust integrated database implementation; closing all
+	handles when receiving signals, self-healing on corruption.
+	
 3.0.3
 	sha256 .. new hashes in openssl included in syntax tree.
 

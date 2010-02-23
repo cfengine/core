@@ -61,11 +61,11 @@ char *TYPESEQUENCE[] =
    "processes",
    "storage",
    "packages",
-   "services",
    "commands",
    "methods",
    "files",
    "databases",
+   "services",
    "reports",
    NULL
    };

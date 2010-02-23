@@ -253,6 +253,7 @@ extern int errno;
 # include <tlhelp32.h>
 # include <iphlpapi.h>
 # include <ws2tcpip.h>
+# include <objbase.h>  // for disphelper
 # ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
 # else

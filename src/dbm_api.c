@@ -249,7 +249,7 @@ return DeleteComplexKeyDB(dbp,key,strlen(key)+1);
 void CloseAllDB(void)
 /* Closes all open DB handles */
 {
-  CF_DB *dbp;
+  CF_DB *dbp = NULL;
   int i = 0;
   
   while(true)

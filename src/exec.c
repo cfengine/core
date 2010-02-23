@@ -615,6 +615,13 @@ sleep(CFPULSETIME);                /* 1 Minute resolution is enough */
 
 now = time(NULL);
 
+// recheck license (in case of license updates or expiry)
+if(EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
+  {
+  CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
+  exit(1);
+  }
+
 GetNameInfo3();
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();

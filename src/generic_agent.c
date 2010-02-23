@@ -712,9 +712,9 @@ void CloseReports(char *agents)
 
 if (SHOWREPORTS)
    {
-   CfOut(cf_error,"","Wrote compilation report %s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
-   CfOut(cf_error,"","Wrote compilation report %s%creports%cpromise_output_%s.html",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
-   CfOut(cf_error,"","Wrote knowledge map %s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR,agents);
+   CfOut(cf_cmdout,"","Wrote compilation report %s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
+   CfOut(cf_cmdout,"","Wrote compilation report %s%creports%cpromise_output_%s.html",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
+   CfOut(cf_cmdout,"","Wrote knowledge map %s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR,agents);
    }
 
 fprintf(FKNOW,"}\n");

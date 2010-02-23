@@ -67,6 +67,8 @@ else
    tp->occurrences = NULL;
    tp->next = *list;
    *list = tp;
+
+   CF_NODES++;
    }
 }
 
@@ -127,6 +129,7 @@ else
    tp->associations = NULL;
    tp->next = *list;
    *list = tp;
+   CF_NODES++;
    }
 }
 
@@ -191,6 +194,7 @@ for (rp = associates; rp != NULL; rp=rp->next)
    /* Defer checking until we have whole ontlogy - all types */
    CfOut(cf_verbose,""," ---> Adding associate '%s'",rp->item);
    IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
+   CF_EDGES++;
    }
 }
 
@@ -215,6 +219,8 @@ if ((op = OccurrenceExists(*list,reference,rtype)) == NULL)
    op->rep_type = rtype;   
    op->next = *list;
    *list = op;
+   CF_EDGES++;
+   CF_NODES++;
    }
 
 /* Occurrence now exists, so add new subtype promises */

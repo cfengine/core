@@ -64,6 +64,8 @@ void VerifyStoragePromise(char *path,struct Promise *pp)
 
 a = GetStorageAttributes(pp);
 
+CF_NODES++;
+
 #ifdef MINGW
 if(!a.havemount)
 {

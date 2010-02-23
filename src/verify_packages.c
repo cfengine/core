@@ -277,7 +277,8 @@ if (a.packages.package_list_command != NULL)
    while (!feof(prp))
       {
       memset(vbuff,0,CF_BUFSIZE);
-      CfReadLine(vbuff,CF_BUFSIZE,prp);   
+      CfReadLine(vbuff,CF_BUFSIZE,prp);
+      CF_NODES++;
 
       if (a.packages.package_multiline_start)
          {

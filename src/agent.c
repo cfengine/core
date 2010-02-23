@@ -348,6 +348,9 @@ BeginAudit();
 KeepControlPromises();
 KeepPromiseBundles();
 EndAudit();
+
+CfOut(cf_verbose,"","Estimated system complexity as touched objects = %d",CF_NODES);
+NoteEfficiency(100.0-((double)CF_EDGES/(double)CF_NODES*100.0));
 }
 
 /*******************************************************************/
@@ -799,6 +802,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          {
          SaveClassEnvironment();
 
+         CF_EDGES++;
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
 
          if (Abort())

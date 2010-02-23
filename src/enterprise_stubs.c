@@ -1065,6 +1065,20 @@ return false;
 /* Misc                                                                      */
 /*****************************************************************************/
 
+void NoteEfficiency(double e)
+
+{
+#ifdef HAVE_LIBCFNOVA
+ struct Attributes a;
+ struct Promise p;
+ 
+NovaNamedEvent("configuration_model_efficiency",e,a,&p);
+CfOut(cf_verbose,"","Configuration model efficiency for %s = %lf%%",VUQNAME,e);
+#endif 
+}
+
+/*****************************************************************************/
+
 char *GetProcessOptions()
 {
 #ifdef HAVE_LIBCFNOVA

@@ -71,8 +71,6 @@ int CF_PERSISTENCE = 10;
 char *THIS_BUNDLE = NULL;
 char THIS_AGENT[CF_MAXVARSIZE];
 enum cfagenttype THIS_AGENT_TYPE;
-int INSTALL_SKIP = false;
-
 char SYSLOGHOST[CF_MAXVARSIZE];
 unsigned short SYSLOGPORT = 514;
 int FACILITY;
@@ -80,6 +78,12 @@ time_t PROMISETIME;
 
 int LICENSES = 0;
 char EXPIRY[32];
+int INSTALL_SKIP = false;
+
+// These are used to measure graph complexity in know/agent
+
+int CF_NODES = 0; // objects
+int CF_EDGES = 0; // links or promises between them
 
 struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 struct CfPackageManager *PACKAGE_SCHEDULE = NULL;

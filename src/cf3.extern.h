@@ -40,6 +40,8 @@ extern char WEBDRIVER[CF_MAXVARSIZE];
 extern char BANNER[2*CF_BUFSIZE];
 extern char FOOTER[CF_BUFSIZE];
 extern char STYLESHEET[CF_BUFSIZE];
+extern int CF_NODES;
+extern int CF_EDGES;
 
 extern struct Bundle *BUNDLES;
 extern struct Body *BODIES;

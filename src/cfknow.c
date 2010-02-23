@@ -161,6 +161,8 @@ KeepKnowControlPromises();
 
 if (strlen(TOPIC_CMD) == 0)
    {
+   int complete;
+   double percent;
    KeepPromiseBundles();
    VerifyOntology();
    ShowOntology();
@@ -168,6 +170,9 @@ if (strlen(TOPIC_CMD) == 0)
    GenerateSQL();
    GenerateManual();
    GenerateGraph();
+   complete = (double)CF_NODES*(CF_NODES-1);
+   percent = 100.0 * (double)CF_EDGES/(double)complete;
+   CfOut(cf_inform,""," -> Complexity of knowledge model yields %d/%d = %.1lf%%\n",CF_EDGES,complete,percent);
    }
 else
    {

@@ -621,12 +621,14 @@ return 0;
 /*******************************************************************/
 
 char *cf_ctime(const time_t *timep)
+
 /* NT uses format "Wed Jan 02 02:03:55 1980", but should use
  * "Wed Jan  2 02:03:55 1980" (no 0-padding for days)        */
+
 {
 char *times = ctime(timep);
 
-if(times == NULL)
+if (times == NULL)
   {
   CfOut(cf_error, "ctime", "!! Could not convert time to string");
   return NULL;
@@ -635,7 +637,7 @@ if(times == NULL)
 
 #ifdef MINGW
 
-if(times[8] == '0')
+if (times[8] == '0')
   {
   times[8] = ' ';
   }

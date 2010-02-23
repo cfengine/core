@@ -233,6 +233,8 @@ if (thislock.lock == NULL)
    return;
    }
 
+CF_NODES++;
+
 if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
    {
    if (a.create||a.touch)

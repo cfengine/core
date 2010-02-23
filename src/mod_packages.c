@@ -45,7 +45,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {"package_file_repositories",cf_slist,"","A list of machine-local directories to search for packages"},
    {"package_installed_regex",cf_str,"","Regular expression which matches packages that are already installed"},
    {"package_list_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
-   {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of installed packages"},
+   {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available packages"},
    {"package_list_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
    {"package_list_update_command",cf_str,"","Command to update the list of available packages (if any)" },
    {"package_list_update_ifelapsed",cf_int,"","The ifelapsed locking time in between updates of the package list" },

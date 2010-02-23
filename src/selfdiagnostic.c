@@ -368,10 +368,11 @@ void TestAgentPromises()
 { struct Attributes a;
   struct Promise pp;
 
-pp.conlist = NULL;  
+pp.conlist = NULL;
+pp.audit = NULL;
 
 printf("%d. Testing promise attribute completeness\n",++NR);
- 
+
 a = GetFilesAttributes(&pp);
 a = GetReportsAttributes(&pp);
 a = GetExecAttributes(&pp);

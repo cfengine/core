@@ -278,6 +278,7 @@ extern struct Item *VSTRATEGYBUILD;
 extern struct Item *VMOUNTLIST;
 extern struct Item *VHEAP;      /* Points to the base of the attribute heap */
 extern struct Item *VNEGHEAP;
+extern struct Item *VDELCLASSES;
 extern struct Item *ABORTHEAP;
 
 /* For packages: */

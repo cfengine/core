@@ -351,6 +351,8 @@ for (rp = list; rp != NULL; rp=rp->next)
    CfOut(cf_verbose,""," -> Cancelling class %s\n",(char *)rp->item);
    DeletePersistentContext(rp->item);
    DeleteItemLiteral(&VHEAP,CanonifyName((char *)rp->item));
+   DeleteItemLiteral(&VADDCLASSES,CanonifyName((char *)rp->item));
+   AppendItem(&VDELCLASSES,CanonifyName((char *)rp->item),NULL);
    }
 }
 

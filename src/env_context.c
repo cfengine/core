@@ -115,7 +115,9 @@ void DeletePrivateClassContext()
 
 {
 DeleteItemList(VADDCLASSES);
+DeleteItemList(VDELCLASSES);
 VADDCLASSES = NULL;
+VDELCLASSES = NULL;
 }
 
 /*****************************************************************************/
@@ -998,7 +1000,7 @@ while(*sp != '\0')
 
    Debug("Checking OR atom (%s)?\n",atom);
 
-   if (IsItemIn(VNEGHEAP,atom))
+   if (IsItemIn(VNEGHEAP,atom)||IsItemIn(VDELCLASSES,atom))
       {
       if (negation)
          {

@@ -53,6 +53,8 @@ if (thislock.lock == NULL)
 
 PromiseBanner(pp);
 
+cfPS(cf_verbose,CF_CHG,"",pp,a,"Reporting about this...");
+
 if (a.report.to_file)
    {
    CfFOut(a.report.to_file,cf_error,"","%s",pp->promiser);

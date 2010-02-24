@@ -337,6 +337,7 @@ char *PROTOCOL[] =
 struct Item *IPADDRESSES = NULL;
 struct Item *VHEAP = NULL;
 struct Item *VNEGHEAP = NULL;
+struct Item *VDELCLASSES = NULL;
 struct Item *VADDCLASSES=NULL;           /* Action sequence defs  */
 struct Rlist *PRIVCLASSHEAP = NULL;
 

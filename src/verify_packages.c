@@ -108,6 +108,8 @@ YieldCurrentLock(thislock);
 int PackageSanityCheck(struct Attributes a,struct Promise *pp)
 
 {
+
+#ifndef MINGW
 if (a.packages.package_list_version_regex == NULL)
    {
    cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the version of existing packages");
@@ -119,6 +121,7 @@ if (a.packages.package_list_name_regex == NULL)
    cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the name of existing packages");
    return false;
    }
+#endif  /* NOT MINGW */
 
 if (a.packages.package_list_command == NULL && a.packages.package_file_repositories == NULL)
    {
@@ -257,10 +260,13 @@ if (manager->pack_list != NULL)
    }
 
 #ifdef MINGW
-if (a.packages.package_list_command && strcmp(a.packages.package_list_command,"windows") == 0)
+
+ if(!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
    {
-   NovaWin_WmiGetInstalledPkgsNew(&(manager->pack_list),a,pp);
+     CfOut(cf_error, "", "!! Could not get list of installed packages");
+     return false;
    }
+
 #else
 if (a.packages.package_list_command != NULL)
    {
@@ -313,7 +319,7 @@ if (a.packages.package_list_command != NULL)
    
    cf_pclose(prp);
    }
-#endif
+#endif  /* NOT MINGW */
 
 ReportSoftware(INSTALLED_PACKAGE_LISTS);
 

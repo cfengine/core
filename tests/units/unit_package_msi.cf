@@ -1,0 +1,59 @@
+
+#
+# Package managment
+#
+
+body common control
+{
+bundlesequence => { "packages" };
+}
+
+#############################################
+
+body agent control
+{
+environment => { "PACKAGESITE=ftp://freebsd-src.es.net/pub/FreeBSD/ports/i386/packages-7.2-release/All/" };
+}
+
+#############################################
+
+bundle agent packages
+{
+vars:
+
+ # Test the simplest case -- leave everything to the yum smart manager
+
+ "match_package" slist => { 
+                          "cfengine_nova-1.1.0-x86_64"
+                          };
+packages:
+
+  "$(match_package)"
+
+     package_policy => "add",
+     package_method => freebsd;
+
+}
+#############################################
+
+body package_method msi
+
+{
+any::
+
+ package_changes => "individual";
+
+ package_list_command => "windows";
+
+ # Remember to escape special characters like |
+
+ package_name_regex    => "([^-]+).*";
+ package_version_regex => "[^-]+-([^-]+).*";
+
+
+ package_name_convention => "$(name)-$(version)-$(arch)";
+
+
+package_add_command => "msiexec...";
+package_delete_command => "msiecedfksgflf.";
+}

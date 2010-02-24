@@ -1052,6 +1052,9 @@ struct DefineClasses
    struct Rlist *interrupt;
    int persist;
    enum statepolicy timer;
+   struct Rlist *del_change;
+   struct Rlist *del_kept;
+   struct Rlist *del_notkept;
    };
 
 

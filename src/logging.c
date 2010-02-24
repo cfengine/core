@@ -160,58 +160,63 @@ switch(status)
           }
 
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
+       DeleteAllClasses(attr.classes.del_change);
        NotePromiseCompliance(pp,0.5,cfn_repaired);
        SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
        break;
        
    case CF_WARN:
+
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
        NotePromiseCompliance(pp,1.0,cfn_notkept);
        break;
        
    case CF_TIMEX:
+
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
+       DeleteAllClasses(attr.classes.del_notkept);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
 
    case CF_FAIL:
+
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
+       DeleteAllClasses(attr.classes.del_notkept);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
        
    case CF_DENIED:
+
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
+       DeleteAllClasses(attr.classes.del_notkept);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
        
    case CF_INTERPT:
+
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
+       DeleteAllClasses(attr.classes.del_notkept);
        NotePromiseCompliance(pp,0.0,cfn_notkept);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
 
-   case CF_REGULAR:
-       AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
-       NotePromiseCompliance(pp,0.5,cfn_notkept);
-       PR_REPAIRED++;
-       VAL_REPAIRED += attr.transaction.value_repaired;       
-       break;
-       
    case CF_UNKNOWN:
    case CF_NOP:
+
        AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
+       DeleteAllClasses(attr.classes.del_kept);
        NotePromiseCompliance(pp,1.0,cfn_nop);
        SummarizeTransaction(attr,pp,attr.transaction.log_kept);              
        PR_KEPT++;
@@ -303,7 +308,7 @@ for (rp = list; rp != NULL; rp=rp->next)
 
    if (IsHardClass((char *)rp->item))
       {
-      CfOut(cf_error,"","You cannot use reserved hard classes as post-condition classes");
+      CfOut(cf_error,""," !! You cannot use reserved hard classes as post-condition classes");
       }
 
    if (persist > 0)
@@ -317,6 +322,35 @@ for (rp = list; rp != NULL; rp=rp->next)
       CfOut(cf_verbose,""," ?> defining promise result class %s\n",(char *)rp->item);
       IdempPrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
       }
+   }
+}
+
+/*****************************************************************************/
+
+void DeleteAllClasses(struct Rlist *list)
+
+{ struct Rlist *rp;
+
+if (list == NULL)
+   {
+   return;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (!CheckParseClass("class cancellation",(char *)rp->item,CF_IDRANGE))
+      {
+      return;
+      }
+
+   if (IsHardClass((char *)rp->item))
+      {
+      CfOut(cf_error,""," !! You cannot cancel a reserved hard classes in post-condition classes");
+      }
+
+   CfOut(cf_verbose,""," -> Cancelling class %s\n",(char *)rp->item);
+   DeletePersistentContext(rp->item);
+   DeleteItemLiteral(&VHEAP,CanonifyName((char *)rp->item));
    }
 }
 
@@ -459,10 +493,6 @@ switch (status) /* Reminder */
        fprintf(fp,"was interrupted\n");
        break;
 
-   case CF_REGULAR:
-       fprintf(fp,"was a regular (repeatable) maintenance task");
-       break;
-       
    case CF_NOP:
        fprintf(fp,"was applied but performed no required actions");
        break;

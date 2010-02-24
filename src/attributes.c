@@ -649,6 +649,10 @@ c.timeout = (struct Rlist *)GetListConstraint("repair_timeout",pp);
 c.kept = (struct Rlist *)GetListConstraint("promise_kept",pp);
 c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp);
 
+c.del_change = (struct Rlist *)GetListConstraint("cancel_repaired",pp);
+c.del_kept = (struct Rlist *)GetListConstraint("cancel_kept",pp);
+c.del_notkept = (struct Rlist *)GetListConstraint("cancel_notkept",pp);
+
 c.persist = GetIntConstraint("persist_time",pp);
 
 if (c.persist == CF_NOINT)

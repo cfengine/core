@@ -963,6 +963,7 @@ void BeginAudit(void);
 void EndAudit(void);
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status);
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
+void DeleteAllClasses(struct Rlist *list);
 void ExtractOperationLock(char *op);
 void PromiseLog(char *s);
 void FatalError(char *s);

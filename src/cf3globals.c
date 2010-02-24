@@ -152,6 +152,15 @@ char STYLESHEET[CF_BUFSIZE];
 char AGGREGATION[CF_BUFSIZE];
 
 /*****************************************************************************/
+/* Windows version constants                                                 */
+/*****************************************************************************/
+
+unsigned int WINVER_MAJOR = 0;
+unsigned int WINVER_MINOR = 0;
+unsigned int WINVER_BUILD = 0;
+
+
+/*****************************************************************************/
 /* Constants                                                                 */
 /*****************************************************************************/
 
@@ -569,7 +578,3 @@ char *OBS[CF_OBSERVABLES][2] =
 
 char *UNITS[CF_OBSERVABLES];
 time_t DATESTAMPS[CF_OBSERVABLES];
-
-
-
-

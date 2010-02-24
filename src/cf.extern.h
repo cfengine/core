@@ -549,3 +549,9 @@ extern struct re_pattern_buffer *PATTBUFFER;
 
 extern char *CF_DIGEST_TYPES[10][2];
 extern int CF_DIGEST_SIZES[10];
+
+/* Windows version constants */
+
+extern unsigned int WINVER_MAJOR;
+extern unsigned int WINVER_MINOR;
+extern unsigned int WINVER_BUILD;

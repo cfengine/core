@@ -1,4 +1,6 @@
 3.0.4
+	Class cancellation in promises
+
 	Special function getenv() which returns the contents of an
 	environment variable (on all platforms).
 

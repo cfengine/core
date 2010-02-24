@@ -343,14 +343,18 @@ if ((fp = fopen(filename,"a")) != NULL)
 
 void KeepPromises()
 
-{
+{ double efficiency;
+ 
 BeginAudit();
 KeepControlPromises();
 KeepPromiseBundles();
 EndAudit();
 
-CfOut(cf_verbose,"","Estimated system complexity as touched objects = %d",CF_NODES);
-NoteEfficiency(100.0-((double)CF_EDGES/(double)CF_NODES*100.0));
+CfOut(cf_verbose,"","Estimated system complexity as touched objects = %d, for %d promises",CF_NODES,CF_EDGES);
+
+efficiency = 100.0*CF_EDGES/(double)(CF_NODES+CF_EDGES);
+
+NoteEfficiency(efficiency);
 }
 
 /*******************************************************************/
@@ -802,7 +806,6 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          {
          SaveClassEnvironment();
 
-         CF_EDGES++;
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
 
          if (Abort())
@@ -911,6 +914,10 @@ if (VarClassExcluded(pp,&sp))
    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
    return;
    }
+
+// Record promises examined for efficiency calc
+
+CF_EDGES++;
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {

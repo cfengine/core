@@ -391,6 +391,7 @@ void ShowTopicRepresentation(FILE *fp);
 void PreSanitizePromise(struct Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
 void NotePromiseConditionals(struct Promise *pp);
+void NoteEfficiency(double e);
 void DependencyGraph(struct Topic *map);
 void HistoryUpdate(struct Averages newvals);
 void CfGetClassName(int i,char *name);

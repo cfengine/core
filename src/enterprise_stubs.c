@@ -1072,8 +1072,8 @@ void NoteEfficiency(double e)
  struct Attributes a;
  struct Promise p;
  
-NovaNamedEvent("configuration_model_efficiency",e,a,&p);
-CfOut(cf_verbose,"","Configuration model efficiency for %s = %lf%%",VUQNAME,e);
+NovaNamedEvent("Configuration model efficiency",e,a,&p);
+CfOut(cf_verbose,"","Configuration model efficiency for %s = %.2lf%%",VUQNAME,e);
 #endif 
 }
 

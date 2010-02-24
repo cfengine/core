@@ -43,7 +43,6 @@ void BeginAudit()
 
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
-dummyattr.transaction.audit = true;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
 MapName(name);
@@ -68,7 +67,6 @@ void EndAudit()
 
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
-dummyattr.transaction.audit = true;
 
 if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
    {
@@ -279,7 +277,7 @@ else
 
 newaudit.status = status;
 
-if (AUDITDBP && attr.transaction.audit)
+if (AUDITDBP && attr.transaction.audit || AUDITDBP && AUDIT)
    {
    WriteDB(AUDITDBP,key,&newaudit,sizeof(newaudit));
    }

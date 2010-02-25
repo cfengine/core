@@ -80,5 +80,4 @@ YieldCurrentLock(best_guess);
 unlink(PIDFILE);
 EndAudit();
 GenericDeInitialize();
-CloseAllDB();
 }

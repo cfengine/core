@@ -352,8 +352,7 @@ if(!NO_FORK)
 if ((!NO_FORK) && (fork() != 0))
    {
    CfOut(cf_inform,"","cfServerd starting %.24s\n",cf_ctime(&CFDSTARTTIME));
-   CloseNetwork();
-   Cf3CloseLog();
+   GenericDeInitialize();
    exit(0);
    }
 

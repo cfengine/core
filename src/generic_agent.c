@@ -123,8 +123,10 @@ void GenericDeInitialize()
 {
 Debug("GenericDeInitialize()\n");
 
+CloseWmi();
 CloseNetwork();
 Cf3CloseLog();
+CloseAllDB();
 }
 
 /*****************************************************************************/

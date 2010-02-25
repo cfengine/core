@@ -459,8 +459,7 @@ if (strlen(CFLOCK) > 0)
 
 unlink(PIDFILE);
 EndAudit();
-CloseNetwork();
-Cf3CloseLog();
+GenericDeInitialize();
 exit(1);
 }
 

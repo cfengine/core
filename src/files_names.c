@@ -96,7 +96,7 @@ for (ip = path; ip != NULL; ip=ip->next)
       {
       if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)
          {
-         CfOut(cf_inform,"","Directory %s in search path %s is controlled by another user - trusting its content is potentially risky (possible race)\n",pbuffer,wildpath);
+         CfOut(cf_inform,"","Directory %s in search path %s is controlled by another user (uid %d) - trusting its content is potentially risky (possible race)\n",pbuffer,wildpath,statbuf.st_uid);
          PromiseRef(cf_inform,pp);
          }
       }

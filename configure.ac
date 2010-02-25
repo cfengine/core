@@ -16,7 +16,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.3patch2)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.0.4)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -104,6 +104,8 @@ AC_ARG_WITH(sql,
 
 if test "x$with_sql" != xno; then
    WITH_SQL=1
+else
+   WITH_SQL=0
 fi
 
 if test $WITH_SQL = 1; then

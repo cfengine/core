@@ -1063,6 +1063,7 @@ int cf_rename(const char *oldpath, const char *newpath);
 void *cf_malloc(size_t size, char *errLocation);
 void OpenNetwork(void);
 void CloseNetwork(void);
+void CloseWmi(void);
 #ifndef HAVE_SETEGID
 int setegid (gid_t gid);
 #endif

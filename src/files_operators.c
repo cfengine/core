@@ -581,10 +581,11 @@ int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct 
  fndrInfo;
  int retval;
 
-if (a.perms.findertype)
+if (a.perms.findertype == NULL)
    {
    return 0;
    }
+
 Debug("VerifyFinderType of %s for %s\n", file,a.perms.findertype);
 
 if (strncmp(a.perms.findertype,"*",CF_BUFSIZE) == 0 || strncmp(a.perms.findertype,"",CF_BUFSIZE) == 0)

@@ -1054,13 +1054,9 @@ if (hours == 0)
    {
    strcpy(hrs,"any");
    }
-else if (hours > 0 && hours < 10)
-   {
-   snprintf(hrs,CF_MAXVARSIZE-1,"Hr0%d",hours);
-   }
 else
    {
-   snprintf(hrs,CF_MAXVARSIZE-1,"Hr%d",hours);
+   snprintf(hrs,CF_MAXVARSIZE-1,"Hr%02d",hours);
    }
 
 switch ((minblocks))

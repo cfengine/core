@@ -1849,12 +1849,15 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       continue;
       }
 
-   /* Skip virtual network interfaces */
+   /* Skip virtual network interfaces for Linux, which seems to be a problem */
    
    if (strstr(ifp->ifr_name,":"))
       {
-      CfOut(cf_verbose,"","Skipping apparent virtual interface %d: %s\n",j+1,ifp->ifr_name);
-      continue;
+      if (VSYSTEMHARDCLASS == linuxx)
+         {
+         CfOut(cf_verbose,"","Skipping apparent virtual interface %d: %s\n",j+1,ifp->ifr_name);
+         continue;
+         }
       }
    else
       {

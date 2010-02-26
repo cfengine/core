@@ -153,9 +153,9 @@ if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.
    {
    if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
       {
-      if (!(a.packages.package_version && a.packages.package_architectures))
+      if (a.packages.package_version || a.packages.package_architectures)
          {
-         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply all regexs for (name,version,arch) or a separate version number and architecture");
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
          return false;            
          }
       }
@@ -163,7 +163,7 @@ if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.
       {
       if (a.packages.package_version && a.packages.package_architectures)
          {
-         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply all regexs for (name,version,arch) or a separate version number");
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
          return false;
          }
       }
@@ -625,8 +625,10 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
           if (command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2)))
              {
+             memset(command_string, 0, strlen(a.packages.package_update_command) + 2);
              strcpy(command_string,a.packages.package_update_command);
              }
+
           break;
 
       case cfa_verifypack:
@@ -672,7 +674,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       strcat(command_string," ");
       
       CfOut(cf_verbose,"","Command prefix: %s\n",command_string);
-      
+
       switch (pm->policy)
          {
          case cfa_individual:             
@@ -683,19 +685,20 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
                 if (a.packages.package_file_repositories)
                    {
-                   if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
+		     if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
                       {
                       strcat(offset,sp);
-                      AddSlash(offset);
                       }
                    else
                       {
                       break;
                       }
                    }
+		else
+		  {
+		    strcat(offset,pi->name);
+		  }
 
-                strcat(offset,pi->name);
-                
                 if (ExecPackageCommand(command_string,verify,a,pp))
                    {
                    cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
@@ -739,7 +742,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              
          default:
              break;
-         }      
+         }
       }
    }
 
@@ -847,7 +850,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       strcat(command_string," ");
       
       CfOut(cf_verbose,"","Command prefix: %s\n",command_string);
-      
+
       switch (pm->policy)
          {
          int ok;
@@ -1188,6 +1191,10 @@ void SchedulePackageOp(char *name,char *version,char *arch,int installed,int mat
 
 { struct CfPackageManager *manager;
   char reference[CF_EXPANDSIZE];
+  char refAnyVer[CF_EXPANDSIZE];
+  char refAnyVerEsc[CF_EXPANDSIZE];
+  char largestVerAvail[CF_MAXVARSIZE];
+  char largestPackAvail[CF_MAXVARSIZE];
   char *id;
   int package_select_in_range = false;
  
@@ -1223,6 +1230,33 @@ switch(a.packages.package_policy)
 
        if (installed == 0)
           {
+	    if((a.packages.package_file_repositories != NULL) &&
+	       (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
+	      {
+	   
+		SetNewScope("cf_pack_context_anyver");
+		NewScalar("cf_pack_context_anyver","name",name,cf_str);
+		NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
+		NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
+		ExpandScalar(a.packages.package_name_convention,refAnyVer);
+		DeleteScope("cf_pack_context_anyver");
+
+
+		EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+	   
+		if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
+		  {
+		    CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
+		    id = largestPackAvail;
+		  }
+		else
+		  {
+		    CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
+		    break;
+		  }
+	      }
+
+
           CfOut(cf_verbose,""," -> Schedule package for addition\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
@@ -1284,9 +1318,50 @@ switch(a.packages.package_policy)
 
        if (a.packages.package_update_command == NULL)
           {
-          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package update command undefined");
+          cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Package update command undefined");
           return;
           }
+
+       if((a.packages.package_file_repositories != NULL) &&
+	  (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
+	 {
+	   
+	   SetNewScope("cf_pack_context_anyver");
+	   NewScalar("cf_pack_context_anyver","name",name,cf_str);
+	   NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
+	   NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
+	   ExpandScalar(a.packages.package_name_convention,refAnyVer);
+	   DeleteScope("cf_pack_context_anyver");
+
+
+	   EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+	   
+	   if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
+	     {
+	       CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
+	       id = largestPackAvail;
+	     }
+	   else
+	     {
+	       CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
+	       break;
+	     }
+	   
+	   if(installed)
+	     {
+	       CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
+	       
+	       if(IsNewerThanInstalled(name, largestVerAvail, arch, a))
+		 {
+		   CfOut(cf_verbose, "", "Installed package is older than latest available");
+		 }
+	       else
+		 {
+		   CfOut(cf_verbose, "", "Installed package is up to date, not updating");
+		   break;
+		 }
+	     }
+	 }
 
        if (matched && package_select_in_range && !no_version_specified || installed)
           {
@@ -1338,23 +1413,172 @@ switch(a.packages.package_policy)
 
 char *PrefixLocalRepository(struct Rlist *repositories,char *package)
 
-{ struct Rlist *rp;
+{ 
+  static char quotedPath[CF_MAXVARSIZE];
+  struct Rlist *rp;
   struct stat sb;
-  char name[CF_BUFSIZE];
- 
+  char path[CF_BUFSIZE];
+
+  
 for (rp = repositories; rp != NULL; rp=rp->next)
    {
-   strncpy(name,rp->item,CF_MAXVARSIZE);
-   AddSlash(name);
-   strcat(name,package);
-   
-   if (cfstat(name,&sb) != -1)
+   strncpy(path,rp->item,CF_MAXVARSIZE);
+
+   AddSlash(path);
+
+   strcat(path,package);
+
+   if (cfstat(path,&sb) != -1)
       {
-      return rp->item;
+      snprintf(quotedPath, sizeof(quotedPath), "\"%s\"", path);
+      return quotedPath;
       }
    }
 
 return NULL;
+}
+
+/*****************************************************************************/
+
+int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories)
+/* Returns true if a version gt/ge ver is found in local repos, false otherwise */
+{
+  struct Rlist *rp;
+  struct dirent *dirp;
+  char largestVer[CF_MAXVARSIZE];
+  char largestVerName[CF_MAXVARSIZE];
+  char *matchVer;
+  int match;
+  DIR *dirh;
+
+  Debug("FindLargestVersionAvail()\n");
+
+  match = false;
+
+  // match any version
+  if((strlen(ver) == 0) || (strcmp(ver, "*") == 0))
+    {
+      memset(largestVer, 0, sizeof(largestVer));
+    }
+  else
+    {
+      snprintf(largestVer, sizeof(largestVer), "%s", ver);
+
+      if(package_select == cfa_gt)  // either gt or ge
+	{
+	  largestVer[strlen(largestVer) - 1]++;
+	}
+    }
+
+  for (rp = repositories; rp != NULL; rp=rp->next)
+    {
+
+      if ((dirh = opendir(rp->item)) == NULL)
+	{
+	  CfOut(cf_error,"opendir","!! Can't open local directory \"%s\"\n", rp->item);
+	  continue;
+	}
+      
+      for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+	{
+	  if (FullTextMatch(refAnyVer, dirp->d_name))
+	    {
+	      matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);
+
+	      // check if match is largest so far
+	      if(VersionCmp(largestVer, matchVer))
+		{
+		  snprintf(largestVer, sizeof(largestVer), "%s", matchVer);
+		  snprintf(largestVerName, sizeof(largestVerName), "%s", dirp->d_name);
+		  match = true;
+		}
+	    }
+	  
+	}      
+      closedir(dirh);
+    }
+
+  Debug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
+  Debug("match=%d\n", match);
+  
+  if(match)
+    {
+      snprintf(matchName, CF_MAXVARSIZE, "%s", largestVerName);
+      snprintf(matchVers, CF_MAXVARSIZE, "%s", largestVer);
+    }
+  
+  return match;
+}
+
+/*****************************************************************************/
+
+int VersionCmp(char *vs1, char *vs2)
+/* Returns true if vs2 is a larger or equal version than vs1, false otherwise */
+{
+  int i;
+  
+  if(strlen(vs1) > strlen(vs2))
+    {
+      return false;
+    }
+
+  if(strlen(vs1) < strlen(vs2))
+    {
+      return true;
+    }
+
+  for(i = 0; i < strlen(vs1); i++)
+    {
+      if(vs1[i] < vs2[i])
+	{
+	  return true;
+	}
+      else if(vs1[i] > vs2[i])
+	{
+	  return false;
+	}
+    }
+  
+  return true;
+}
+
+/*****************************************************************************/
+
+int IsNewerThanInstalled(char *n,char *v,char *a, struct Attributes attr)
+/* Returns true if a package (n, a) is installed and v is larger than
+ * the installed version */
+{ struct CfPackageManager *mp = NULL;
+  struct CfPackageItem  *pi;
+  
+for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
+   {
+   if (strcmp(mp->manager,attr.packages.package_list_command) == 0)
+      {
+      break;
+      }
+   }
+
+CfOut(cf_verbose,"","Looking for an installed package older than (%s,%s,%s)",n,v,a);
+
+for (pi = mp->pack_list; pi != NULL; pi=pi->next)
+   {
+     if((strcmp(n, pi->name) == 0) && (strcmp(a, pi->arch) == 0))
+       {
+	 CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
+
+	 if(!VersionCmp(v, pi->version))
+	   {
+	     return true;
+	   }
+	 else
+	   {
+	     return false;
+	   }
+       }
+   }
+
+CfOut(cf_verbose,""," !! Package (%s,%s) is not installed\n",n,a);
+return false;
 }
 
 /*****************************************************************************/

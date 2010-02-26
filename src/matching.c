@@ -1275,7 +1275,44 @@ if (strcmp(buf1,buf2) != 0)
 return 0;
 }
 
+/*********************************************************************/
 
+void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc)
+/* Escapes non-alphanumeric chars, except sequence given in noEsc */
+{
+  char *sp;
+  int strEscPos = 0;
+  
+  if(noEsc == NULL)
+    {
+      noEsc = "";
+    }
+
+  memset(strEsc, 0, strEscSz);
+
+  for(sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
+    {
+      if(strncmp(sp, noEsc, strlen(noEsc)) == 0)
+	{
+	  if(strEscSz <= strEscPos + strlen(noEsc))
+	    {
+	      break;
+	    }
+
+	  strcat(strEsc, noEsc);
+	  strEscPos += strlen(noEsc);
+	  sp += strlen(noEsc);
+	}
+      
+      if(!isalnum(*sp))
+	{
+	  strEsc[strEscPos++] = '\\';
+	}
+      
+      strEsc[strEscPos++] = *sp;
+    }
+  
+}
 
 
 /* EOF */

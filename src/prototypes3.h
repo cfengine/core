@@ -990,6 +990,7 @@ struct CfRegEx CaseCompileRegExp(char *regexp);
 int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring);
+void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
 
 /* modes.c */
 
@@ -1450,6 +1451,9 @@ int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum versio
 void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep);
 void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
 char *PrefixLocalRepository(struct Rlist *repositories,char *package);
+int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
+int VersionCmp(char *vs1, char *vs2);
+int IsNewerThanInstalled(char *n,char *v,char *a, struct Attributes attr);
 int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);

@@ -272,7 +272,7 @@ void CloseAllDB(void)
       i++;
     }
   
-  CfOut(cf_verbose, "", "Closed %d open DB handles", i);
+  Debug("Closed %d open DB handles\n", i);
 }
 
 /*****************************************************************************/

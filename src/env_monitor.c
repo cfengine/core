@@ -528,153 +528,160 @@ char *GetTimeKey()
 struct Averages EvalAvQ(char *t)
 
 { struct Averages *currentvals,newvals;
- double This[CF_OBSERVABLES],delta2;
- char name[CF_MAXVARSIZE];
- int i; 
+  double This[CF_OBSERVABLES],delta2;
+  char name[CF_MAXVARSIZE];
+  int i; 
 
- Banner("Evaluating and storing new weekly averages");
+Banner("Evaluating and storing new weekly averages");
   
- if ((currentvals = GetCurrentAverages(t)) == NULL)
-    {
-    CfOut(cf_error,"","Error reading average database");
-    exit(1);
-    }
+if ((currentvals = GetCurrentAverages(t)) == NULL)
+   {
+   CfOut(cf_error,"","Error reading average database");
+   exit(1);
+   }
 
 /* Discard any apparently anomalous behaviour before renormalizing database */
 
- for (i = 0; i < CF_OBSERVABLES; i++)
-    {
-    double delta2;
+for (i = 0; i < CF_OBSERVABLES; i++)
+   {
+   double delta2;
    
-    name[0] = '\0';
-    CfGetClassName(i,name);
-
-    newvals.Q[i].q = CF_THIS[i];
-    LOCALAV.Q[i].q = CF_THIS[i];
-
-    /* Overflow protection */
-
-    if (currentvals->Q[i].expect < 0)
-       {
-       currentvals->Q[i].expect = 0;
-       }
+   name[0] = '\0';
+   CfGetClassName(i,name);
    
-    if (currentvals->Q[i].q < 0)
-       {
-       currentvals->Q[i].q = 0;
-       }
-
-    if (currentvals->Q[i].var < 0)
-       {
-       currentvals->Q[i].var = 0;
-       }
-
-    This[i] = RejectAnomaly(CF_THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
-
-    Debug("Current %s.q %lf\n",name,currentvals->Q[i].q);
-    Debug("Current %s.var %lf\n",name,currentvals->Q[i].var);
-    Debug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
-    Debug("CF_THIS[%s] = %lf\n",name,CF_THIS[i]);
-    Debug("This[%s] = %lf\n",name,This[i]);
-
-    newvals.Q[i].expect = WAverage(This[i],currentvals->Q[i].expect,WAGE);
-    LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect,LOCALAV.Q[i].expect,ITER);
+   /* Overflow protection */
    
-    delta2 = (This[i] - currentvals->Q[i].expect)*(This[i] - currentvals->Q[i].expect);
-
-    if (currentvals->Q[i].var > delta2*2.0)
-       {
-       /* Clean up past anomalies */
-       newvals.Q[i].var = delta2;
-       LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
-       }
-    else
-       {
-       newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
-       LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
-       }
-
-    CfOut(cf_verbose,"","New[%d] %s.q %lf\n",i,name,newvals.Q[i].q);
-    CfOut(cf_verbose,"","New[%d] %s.var %lf\n",i,name,newvals.Q[i].var);
-    CfOut(cf_verbose,"","New[%d] %s.ex %lf\n",i,name,newvals.Q[i].expect);
-
-    CfOut(cf_verbose,"","%s = %lf -> (%lf#%lf) local [%lf#%lf]\n",name,This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
-
-    if (This[i] > 0)
-       {
-       CfOut(cf_verbose,"","Storing %.2lf in %s\n",This[i],name);
-       }
-    }
+   if (currentvals->Q[i].expect < 0)
+      {
+      currentvals->Q[i].expect = 0;
+      }
    
- UpdateAverages(t,newvals);
- UpdateDistributions(t,currentvals);  /* Distribution about mean */
- 
- return newvals;
+   if (currentvals->Q[i].q < 0)
+      {
+      currentvals->Q[i].q = 0;
+      }
+   
+   if (currentvals->Q[i].var < 0)
+      {
+      currentvals->Q[i].var = 0;
+      }
+   
+   This[i] = RejectAnomaly(CF_THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
+
+   newvals.Q[i].q = This[i];
+   LOCALAV.Q[i].q = This[i];
+   
+   Debug("Current %s.q %lf\n",name,currentvals->Q[i].q);
+   Debug("Current %s.var %lf\n",name,currentvals->Q[i].var);
+   Debug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
+   Debug("CF_THIS[%s] = %lf\n",name,CF_THIS[i]);
+   Debug("This[%s] = %lf\n",name,This[i]);
+   
+   newvals.Q[i].expect = WAverage(This[i],currentvals->Q[i].expect,WAGE);
+   LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect,LOCALAV.Q[i].expect,ITER);
+   
+   delta2 = (This[i] - currentvals->Q[i].expect)*(This[i] - currentvals->Q[i].expect);
+   
+   if (currentvals->Q[i].var > delta2*2.0)
+      {
+      /* Clean up past anomalies */
+      newvals.Q[i].var = delta2;
+      LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
+      }
+   else
+      {
+      newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
+      LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
+      }
+   
+   CfOut(cf_verbose,"","New[%d] %s.q %lf\n",i,name,newvals.Q[i].q);
+   CfOut(cf_verbose,"","New[%d] %s.var %lf\n",i,name,newvals.Q[i].var);
+   CfOut(cf_verbose,"","New[%d] %s.ex %lf\n",i,name,newvals.Q[i].expect);
+   
+   CfOut(cf_verbose,"","%s = %lf -> (%lf#%lf) local [%lf#%lf]\n",name,This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+   
+   if (This[i] > 0)
+      {
+      CfOut(cf_verbose,"","Storing %.2lf in %s\n",This[i],name);
+      }
+   }
+
+UpdateAverages(t,newvals);
+UpdateDistributions(t,currentvals);  /* Distribution about mean */
+
+return newvals;
 }
 
 /*********************************************************************/
 
 void LeapDetection()
 
-{ int i,j;
- double n1,n2,d;
- double padding = 0.2;
+{ int i,j,last_pos = LDT_POS;;
+  double n1,n2,d;
+  double padding = 0.2;
 
- if (++LDT_POS >= LDT_BUFSIZE)
-    {
-    LDT_POS = 0;
+if (++LDT_POS >= LDT_BUFSIZE)
+   {
+   LDT_POS = 0;
    
-    if (!LDT_FULL)
-       {
-       CfOut(cf_log,"","LDT Buffer full at %d\n",LDT_BUFSIZE);
-       LDT_FULL = true;
-       }
-    }
+   if (!LDT_FULL)
+      {
+      CfOut(cf_log,"","LDT Buffer full at %d\n",LDT_BUFSIZE);
+      LDT_FULL = true;
+      }
+   }
 
- for (i = 0; i < CF_OBSERVABLES; i++)
-    {
-    /* Note AVG should contain n+1 but not SUM, hence funny increments */
+for (i = 0; i < CF_OBSERVABLES; i++)
+   {
+   // First do some anomaly rejection. Sudden jumps must be numerical errors.
    
-    LDT_AVG[i] = LDT_AVG[i] + CF_THIS[i]/((double)LDT_BUFSIZE + 1.0);
+   if (LDT_BUF[i][last_pos] > 0 && CF_THIS[i]/LDT_BUF[i][last_pos] > 1000)
+      {
+      CF_THIS[i] = LDT_BUF[i][last_pos];
+      }
 
-    d = (double)(LDT_BUFSIZE * (LDT_BUFSIZE + 1)) * LDT_AVG[i];
+   /* Note AVG should contain n+1 but not SUM, hence funny increments */
 
-    if (LDT_FULL && (LDT_POS == 0))
-       {
-       n2 = (LDT_SUM[i] - (double)LDT_BUFSIZE * LDT_MAX[i]);
+   LDT_AVG[i] = LDT_AVG[i] + CF_THIS[i]/((double)LDT_BUFSIZE + 1.0);
+   
+   d = (double)(LDT_BUFSIZE * (LDT_BUFSIZE + 1)) * LDT_AVG[i];
+   
+   if (LDT_FULL && (LDT_POS == 0))
+      {
+      n2 = (LDT_SUM[i] - (double)LDT_BUFSIZE * LDT_MAX[i]);
       
-       if (d < 0.001)
-          {
-          CHI_LIMIT[i] = 0.5;
-          }
-       else
-          {
-          CHI_LIMIT[i] = padding + sqrt(n2*n2/d);
-          }
+      if (d < 0.001)
+         {
+         CHI_LIMIT[i] = 0.5;
+         }
+      else
+         {
+         CHI_LIMIT[i] = padding + sqrt(n2*n2/d);
+         }
       
-       LDT_MAX[i] = 0.0;
-       }
-
-    if (CF_THIS[i] > LDT_MAX[i])
-       {
-       LDT_MAX[i] = CF_THIS[i];
-       }
+      LDT_MAX[i] = 0.0;
+      }
    
-    n1 = (LDT_SUM[i] - (double)LDT_BUFSIZE * CF_THIS[i]);
-
-    if (d < 0.001)
-       {
-       CHI[i] = 0.0;
-       }
-    else
-       {
-       CHI[i] = sqrt(n1*n1/d);
-       }
-
-    LDT_AVG[i] = LDT_AVG[i] - LDT_BUF[i][LDT_POS]/((double)LDT_BUFSIZE + 1.0);
-    LDT_BUF[i][LDT_POS] = CF_THIS[i];
-    LDT_SUM[i] = LDT_SUM[i] - LDT_BUF[i][LDT_POS] + CF_THIS[i];
-    }
+   if (CF_THIS[i] > LDT_MAX[i])
+      {
+      LDT_MAX[i] = CF_THIS[i];
+      }
+   
+   n1 = (LDT_SUM[i] - (double)LDT_BUFSIZE * CF_THIS[i]);
+   
+   if (d < 0.001)
+      {
+      CHI[i] = 0.0;
+      }
+   else
+      {
+      CHI[i] = sqrt(n1*n1/d);
+      }
+   
+   LDT_AVG[i] = LDT_AVG[i] - LDT_BUF[i][LDT_POS]/((double)LDT_BUFSIZE + 1.0);
+   LDT_BUF[i][LDT_POS] = CF_THIS[i];
+   LDT_SUM[i] = LDT_SUM[i] - LDT_BUF[i][LDT_POS] + CF_THIS[i];
+   }
 }
 
 /*********************************************************************/
@@ -1400,23 +1407,22 @@ struct Averages *GetCurrentAverages(char *timekey)
 void UpdateAverages(char *timekey,struct Averages newvals)
 
 { int err_no;
- //DBT key,value;
- CF_DB *dbp;
+  CF_DB *dbp;
 
- if (!OpenDB(AVDB,&dbp))
-    {
-    return;
-    }
+if (!OpenDB(AVDB,&dbp))
+   {
+   return;
+   }
 
- CfOut(cf_inform,"","Updated averages at %s\n",timekey);
+CfOut(cf_inform,"","Updated averages at %s\n",timekey);
 
 //WriteDB(dbp,timekey,&value,sizeof(struct Averages));
 
- WriteDB(dbp,timekey,&newvals,sizeof(struct Averages));
- WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)); 
+WriteDB(dbp,timekey,&newvals,sizeof(struct Averages));
+WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)); 
 
- CloseDB(dbp);
- HistoryUpdate(newvals);
+CloseDB(dbp);
+HistoryUpdate(newvals);
 }
 
 /*****************************************************************************/
@@ -1481,39 +1487,58 @@ double WAverage(double anew,double aold,double age)
    be way too large. Then downplay newer data somewhat, and rely on
    experience of a couple of months of data ... */
 
-{ double av;
- double wnew,wold;
+{ double av,cf_sane_monitor_limit = 9999999.0;
+  double wnew,wold;
 
- if (FORGETRATE > 0.9 || FORGETRATE < 0.1)
-    {
-    FORGETRATE = 0.6;
-    }
+// First do some database corruption self-healing
   
- if (age < 2.0)  /* More aggressive learning for young database */
-    {
-    wnew = FORGETRATE;
-    wold = (1.0-FORGETRATE);
-    }
- else
-    {
-    wnew = (1.0-FORGETRATE);
-    wold = FORGETRATE;
-    }
+if (aold > cf_sane_monitor_limit && anew > cf_sane_monitor_limit)
+   {
+   return 0;
+   }
+  
+if (aold > cf_sane_monitor_limit)
+   {
+   return anew; 
+   }
 
- if (aold == 0 && anew == 0)
-    {
-    return 0;
-    }
+if (aold > cf_sane_monitor_limit)
+   {
+   return aold; 
+   }
 
- av = (wnew*anew + wold*aold)/(wnew+wold); 
+// Now look at the self-learning
 
- if (av < 0)
-    {
-    // Accuracy lost - something wrong
-    return 0.0;
-    }
+if (FORGETRATE > 0.9 || FORGETRATE < 0.1)
+   {
+   FORGETRATE = 0.6;
+   }
 
- return av;
+if (age < 2.0)  /* More aggressive learning for young database */
+   {
+   wnew = FORGETRATE;
+   wold = (1.0-FORGETRATE);
+   }
+else
+   {
+   wnew = (1.0-FORGETRATE);
+   wold = FORGETRATE;
+   }
+
+if (aold == 0 && anew == 0)
+   {
+   return 0;
+   }
+
+av = (wnew*anew + wold*aold)/(wnew+wold); 
+
+if (av < 0)
+   {
+   // Accuracy lost - something wrong
+   return 0.0;
+   }
+
+return av;
 }
 
 /*****************************************************************************/
@@ -1671,68 +1696,68 @@ void ZeroArrivals()
 double RejectAnomaly(double new,double average,double variance,double localav,double localvar)
 
 { double dev = sqrt(variance+localvar);          /* Geometrical average dev */
- double delta;
- int bigger;
+  double delta;
+  int bigger;
 
- if (average == 0)
-    {
-    return new;
-    }
+if (average == 0)
+   {
+   return new;
+   }
 
- if (new > big_number*4.0)
-    {
-    return 0.0;
-    }
+if (new > big_number*4.0)
+   {
+   return 0.0;
+   }
 
- if (new > big_number)
-    {
-    return average;
-    }
+if (new > big_number)
+   {
+   return average;
+   }
 
- if ((new-average)*(new-average) < cf_noise_threshold*cf_noise_threshold)
-    {
-    return new;
-    }
+if ((new-average)*(new-average) < cf_noise_threshold*cf_noise_threshold)
+   {
+   return new;
+   }
 
- if (new - average > 0)
-    {
-    bigger = true;
-    }
- else
-    {
-    bigger = false;
-    }
+if (new - average > 0)
+   {
+   bigger = true;
+   }
+else
+   {
+   bigger = false;
+   }
 
 /* This routine puts some inertia into the changes, so that the system
    doesn't respond to every little change ...   IR and UV cutoff */
- 
- delta = sqrt((new-average)*(new-average)+(new-localav)*(new-localav));
 
- if (delta > 4.0*dev)  /* IR */
-    {
-    srand48((unsigned int)time(NULL)); 
+delta = sqrt((new-average)*(new-average)+(new-localav)*(new-localav));
+
+if (delta > 4.0*dev)  /* IR */
+   {
+   srand48((unsigned int)time(NULL)); 
    
-    if (drand48() < 0.7) /* 70% chance of using full value - as in learning policy */
-       {
-       return new;
-       }
-    else
-       {
-       if (bigger)
-          {
-          return average+2.0*dev;
-          }
-       else
-          {
-          return average-2.0*dev;
-          }
-       }
-    }
- else
-    {
-    CfOut(cf_verbose,"","Value accepted\n");
-    return new;
-    }
+   if (drand48() < 0.7) /* 70% chance of using full value - as in learning policy */
+      {
+      return new;
+      }
+   else
+      {
+      if (bigger)
+         {
+         return average+2.0*dev;
+         }
+      else
+         {
+         return average-2.0*dev;
+         }
+      }
+   }
+else
+   {
+   CfOut(cf_verbose,"","Value accepted\n");
+   return new;
+   }
 }
 
 /***************************************************************/
@@ -1917,27 +1942,27 @@ void IncrementCounter(struct Item **list,char *name)
 int GetFileGrowth(char *filename,enum observables index)
 
 { struct stat statbuf;
- size_t q, dq;
+  size_t q, dq;
 
- if (cfstat(filename,&statbuf) == -1)
-    {
-    return 0;
-    }
+if (cfstat(filename,&statbuf) == -1)
+   {
+   return 0;
+   }
 
- q = statbuf.st_size;
+q = statbuf.st_size;
 
- CfOut(cf_verbose,"","GetFileGrowth(%s) = %d\n",filename,q);
+CfOut(cf_verbose,"","GetFileGrowth(%s) = %d\n",filename,q);
 
- dq = q - LASTQ[index];
+dq = q - LASTQ[index];
 
- if (LASTQ[index] == 0)
-    {
-    LASTQ[index] = q;
-    return dq/10;       /* arbitrary spike mitigation */
-    }
+if (LASTQ[index] == 0)
+   {
+   LASTQ[index] = q;
+   return q/100;       /* arbitrary spike mitigation */
+   }
 
- LASTQ[index] = q;
- return dq;
+LASTQ[index] = q;
+return dq;
 }
 
 /******************************************************************************/

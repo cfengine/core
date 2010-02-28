@@ -240,13 +240,13 @@ char *Hostname2IPString(char *hostname)
 
 #if defined(HAVE_GETADDRINFO)
 
- struct addrinfo query, *response, *ap;
+struct addrinfo query, *response, *ap;
 
- memset(&query,0,sizeof(struct addrinfo));   
- query.ai_family = AF_UNSPEC;
- query.ai_socktype = SOCK_STREAM;
+memset(&query,0,sizeof(struct addrinfo));   
+query.ai_family = AF_UNSPEC;
+query.ai_socktype = SOCK_STREAM;
 
- memset(ipbuffer,0,CF_SMALLBUF-1);
+memset(ipbuffer,0,CF_SMALLBUF-1);
  
 if ((err = getaddrinfo(hostname,NULL,&query,&response)) != 0)
    {
@@ -263,15 +263,17 @@ for (ap = response; ap != NULL; ap = ap->ai_next)
       {
       snprintf(ipbuffer,CF_SMALLBUF-1,"Empty IP result for %s",hostname);
       }
+
    freeaddrinfo(response);   
    return ipbuffer;
    }
 #else
  struct hostent *hp;
  struct sockaddr_in cin;
- memset(&cin,0,sizeof(cin));
 
- memset(ipbuffer,0,CF_SMALLBUF-1);
+memset(&cin,0,sizeof(cin));
+
+memset(ipbuffer,0,CF_SMALLBUF-1);
 
 if ((hp = gethostbyname(hostname)) != NULL)
    {

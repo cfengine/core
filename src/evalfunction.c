@@ -338,6 +338,92 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  struct passwd *pw;
+  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char *name;
+  int limit;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+name = finalargs->item;
+
+EscapeSpecialChars(name,buffer,CF_BUFSIZE-1,"");
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallEscape");
+   }
+
+SetFnCallReturnStatus("escape",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  struct passwd *pw;
+  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char *name;
+  int limit;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+name = finalargs->item;
+
+if ((rval.item = strdup(Hostname2IPString(name))) == NULL)
+   {
+   FatalError("Memory allocation in FnCallHost2IP");
+   }
+
+SetFnCallReturnStatus("host2ip",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
 
 #ifndef MINGW

@@ -446,8 +446,11 @@ fclose(fout);
 void FatalError(char *s)
     
 { struct CfLock best_guess;
-      
-CfOut(cf_error,"","Fatal cfengine error: %s",s); 
+
+if (s)
+   {
+   CfOut(cf_error,"","Fatal cfengine error: %s",s); 
+   }
 
 if (strlen(CFLOCK) > 0)
    {

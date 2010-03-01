@@ -351,12 +351,12 @@ NewScalar("sys","winprogdir86","",cf_str);
 
 #else /* NOT MINGW */
 
-// empty defs on Unix for manual-building purposes
+// defs on Unix for manual-building purposes
 
-NewScalar("sys","windir","",cf_str);
-NewScalar("sys","winsysdir","",cf_str);
-NewScalar("sys","winprogdir","",cf_str);
-NewScalar("sys","winprogdir86","",cf_str);
+NewScalar("sys","windir","/dev/null",cf_str);
+NewScalar("sys","winsysdir","/dev/null",cf_str);
+NewScalar("sys","winprogdir","/dev/null",cf_str);
+NewScalar("sys","winprogdir86","/dev/null",cf_str);
 
 #endif  /* NOT MINGW */
 

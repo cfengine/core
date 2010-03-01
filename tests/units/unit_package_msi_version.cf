@@ -22,8 +22,8 @@ packages:
   "$(match_package)"
 
      package_policy => "update",
-	 package_select => ">=",
-	 package_architectures => { "x86_64" },
+     package_select => ">=",
+     package_architectures => { "x86_64" },
      package_version => "3.00",
      package_method => msi_vmatch;
 
@@ -37,7 +37,6 @@ body package_method msi_vmatch
  package_changes => "individual";
  package_file_repositories => { "$(sys.workdir)\software_updates\windows", "s:\su" };
 
- package_list_command => "/anything";
  package_installed_regex => ".*";
  
  package_name_convention => "$(name)-$(version)-$(arch).msi";

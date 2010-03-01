@@ -42,6 +42,12 @@ void VerifyPackagesPromise(struct Promise *pp)
 
 a = GetPackageAttributes(pp);
 
+#ifdef MINGW
+
+a.packages.package_list_command = "/mingw-unused";
+
+#endif
+
 if (!PackageSanityCheck(a,pp))
    {
    return;

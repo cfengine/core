@@ -360,9 +360,6 @@ NewScalar("sys","winprogdir86","/dev/null",cf_str);
 
 #endif  /* NOT MINGW */
 
-
-
-
 LoadSlowlyVaryingObservations();
 EnterpriseContext();
 
@@ -470,7 +467,7 @@ else
    CfOut(cf_verbose,"","Address given by nameserver: %s\n",inet_ntoa(cin.sin_addr));
    strcpy(VIPADDRESS,inet_ntoa(cin.sin_addr));
 
-   for (i=0; hp->h_aliases[i]!= NULL; i++)
+   for (i = 0; hp->h_aliases[i]!= NULL; i++)
       {
       Debug("Adding alias %s..\n",hp->h_aliases[i]);
       NewClass(CanonifyName(hp->h_aliases[i]));
@@ -657,13 +654,12 @@ if (strstr(VFQNAME,"."))
 NewClass(CanonifyName(VDOMAIN));
 }
 
-
 /*******************************************************************/
 
 void OSClasses()
 
 { struct stat statbuf;
-  char vbuff[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE],class[CF_BUFSIZE];
   char *sp;
   int i = 0;
   struct passwd *pw;
@@ -747,7 +743,6 @@ else if (cfstat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    Linux_Slackware_Version(SLACKWARE_ANCIENT_VERSION_FILENAME);
    }
 
-
 if (cfstat("/etc/generic-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
@@ -780,6 +775,23 @@ if (cfstat("/etc/gentoo-release",&statbuf) != -1)
    }
 
 Lsb_Version();
+
+#else
+
+strncpy(vbuff,VSYSNAME.release,CF_MAXVARSIZE);
+
+for (sp = vbuff; *sp != '\0'; sp++)
+   {
+   if (*sp == '-')
+      {
+      *sp = '\0';
+      break;
+      }
+   }
+
+snprintf(class,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,vbuff);
+NewScalar("sys","flavour",class,cf_str);
+NewScalar("sys","flavor",class,cf_str);
 
 #endif
 
@@ -864,23 +876,26 @@ NewScalar("sys","crontab","",cf_str);
 NewClass(CanonifyName(VSYSNAME.version));  // code name - e.g. Windows Vista
 NewClass(CanonifyName(VSYSNAME.release));  // service pack number - e.g. Service Pack 3
 
- if(strstr(VSYSNAME.sysname, "workstation"))
+if(strstr(VSYSNAME.sysname, "workstation"))
    {
-     NewClass("WinWorkstation");
+   NewClass("WinWorkstation");
    }
- else if(strstr(VSYSNAME.sysname, "server"))
+else if(strstr(VSYSNAME.sysname, "server"))
    {
-     NewClass("WinServer");
+   NewClass("WinServer");
    }
-  else if(strstr(VSYSNAME.sysname, "domain controller"))
+else if(strstr(VSYSNAME.sysname, "domain controller"))
    {
-     NewClass("DomainController");
-     NewClass("WinServer");
+   NewClass("DomainController");
+   NewClass("WinServer");
    }
-  else
-    {
-      NewClass("unknown_ostype");
-    }
+else
+   {
+   NewClass("unknown_ostype");
+   }
+
+NewScalar("sys","flavour","windows",cf_str);
+NewScalar("sys","flavor","windows",cf_str);
 
 #endif  /* MINGW */
 
@@ -959,7 +974,7 @@ else
 
 release = strstr(relstring, RELEASE_FLAG);
 
-if(release == NULL)
+if (release == NULL)
    {
    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",FEDORA_REL_FILENAME);
    return 2;
@@ -1137,10 +1152,9 @@ for (i = 0; i < strlen(relstring); i++)
    }
 
 release = strstr(relstring, RELEASE_FLAG);
-if(release == NULL)
+if (release == NULL)
    {
-   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",
-         RH_REL_FILENAME);
+   CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n", RH_REL_FILENAME);
    return 2;
    }
 else
@@ -1177,6 +1191,7 @@ if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
 
    strcat(classbuf, strmajor);
    NewClass(classbuf);
+
    if (minor != -2)
       {
       strcat(classbuf, "_");
@@ -1184,6 +1199,7 @@ if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
       NewClass(classbuf);
       }
    }
+
 return 0;
 }
 
@@ -1291,7 +1307,7 @@ else
    sprintf(strminor, "%d", minor);
    }
 
-if(major != -1 && minor != -1)
+if (major != -1 && minor != -1)
    {
    classbuf[0] = '\0';
    strcat(classbuf, "SuSE");
@@ -1590,14 +1606,14 @@ while (dir = strsep(&rest, ":"))
     {
     snprintf(vbuff, CF_BUFSIZE, "%s/" LSB_RELEASE_COMMAND, dir);
     if (cfstat(vbuff,&statbuf) != -1)
-        {
-        free(path);
-        path = strdup(vbuff);
-
-        CfOut(cf_verbose,"","This appears to be a LSB compliant system.\n");
-        NewClass("lsb_compliant");
-        break;
-        }
+       {
+       free(path);
+       path = strdup(vbuff);
+       
+       CfOut(cf_verbose,"","This appears to be a LSB compliant system.\n");
+       NewClass("lsb_compliant");
+       break;
+       }
     }
 
 if (!dir)
@@ -1630,6 +1646,9 @@ if ((distrib  = Lsb_Release(path, "--id")) != NULL)
          }
       }
 
+   NewScalar("sys","flavour",classname,cf_str);
+   NewScalar("sys","flavor",classname,cf_str);
+   
    free(path);
    return 0;
    }

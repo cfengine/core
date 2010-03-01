@@ -52,6 +52,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"changedbefore",cf_class,2,"True if arg1 was changed before arg2 (ctime)"},
    {"classify",cf_class,1,"True if the canonicalization of the argument is a currently defined class"},
    {"classmatch",cf_class,1,"True if the regular expression matches any currently defined class"},
+   {"countclassesmatching",cf_int,1,"Count the number of defined classes matching regex arg1"},
    {"countlinesmatching",cf_int,2,"Count the number of lines matching regex arg1 in file arg2"},
    {"diskfree",cf_int,1,"Return the free space (in KB) available on the directory's current partition (0 if not found)"},
    {"escape",cf_str,1,"Escape regular expression characters in a string"},

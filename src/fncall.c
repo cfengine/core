@@ -274,6 +274,9 @@ switch (this)
    case cfn_escape:
        rval = FnCallEscape(fp,expargs);
        break;
+   case cfn_countclassesmatching:
+       rval = FnCallCountClassesMatching(fp,expargs);
+       break;
    case cfn_host2ip:
        rval = FnCallHost2IP(fp,expargs);
        break;

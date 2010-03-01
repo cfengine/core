@@ -509,6 +509,7 @@ enum fncalltype
    cfn_changedbefore,
    cfn_classify,
    cfn_classmatch,
+   cfn_countclassesmatching,
    cfn_countlinesmatching,
    cfn_diskfree,
    cfn_escape,

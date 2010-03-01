@@ -478,6 +478,7 @@ void SaveClassEnvironment(void);
 
 /* evalfunction.c */
 
+struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs);

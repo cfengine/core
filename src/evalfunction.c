@@ -717,6 +717,62 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs)
+
+{ static char *argtemplate[] =
+     {
+     CF_ANYSTRING,
+     NULL
+     };
+  static enum cfdatatype argtypes[] =
+      {
+      cf_str,
+      cf_notype
+      };
+  
+  struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  struct Item *ip;
+  int count = 0;
+  
+ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+for (ip = VHEAP; ip != NULL; ip=ip->next)
+   {
+   if (FullTextMatch((char *)finalargs->item,ip->name))
+      {
+      count++;
+      }
+   }
+
+for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+   {
+   if (FullTextMatch((char *)finalargs->item,ip->name))
+      {
+      count++;
+      }
+   }
+
+SetFnCallReturnStatus("countclassesmatching",FNCALL_SUCCESS,NULL,NULL);
+
+snprintf(buffer,CF_MAXVARSIZE,"%d",count);
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnClassMatch");
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs)
 
 { static char *argtemplate[] =

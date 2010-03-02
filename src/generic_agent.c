@@ -1467,21 +1467,18 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       NewScalar("sys","domain",VDOMAIN,cf_str);
       DeleteClass("undefined_domain");
       NewClass(CanonifyName(VDOMAIN));
-      continue;
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
       {
       CfOut(cf_verbose,"","SET ignore_missing_inputs %s\n",cp->rval);
       IGNORE_MISSING_INPUTS = GetBoolean(cp->rval);
-      continue;
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
       {
       CfOut(cf_verbose,"","SET ignore_missing_bundles %s\n",cp->rval);
       IGNORE_MISSING_BUNDLES = GetBoolean(cp->rval);
-      continue;
       }
 
    DeleteRvalItem(returnval.item,returnval.rtype);

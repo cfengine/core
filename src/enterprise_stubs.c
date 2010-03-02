@@ -441,6 +441,7 @@ thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);
 if (thislock.lock == NULL)
    {
    Nova_UpdateShiftAverage(&SHIFT_VALUE,&newvals);
+   DeletePromise(pp);
    return;
    }
 
@@ -468,6 +469,7 @@ LoadPersistentContext();
 LoadSystemConstants();
 
 YieldCurrentLock(thislock);
+DeletePromise(pp);
 
 snprintf(timekey,CF_MAXVARSIZE-1,"%s_%s_%s_%s",VDAY,VMONTH,VLIFECYCLE,VSHIFT);
 Nova_HistoryUpdate(timekey,newvals);
@@ -541,10 +543,10 @@ int ReturnLiteralData(char *handle,char *ret)
 
 {
 #ifdef HAVE_LIBCFNOVA
- return Nova_ReturnLiteralData(handle,ret);
+return Nova_ReturnLiteralData(handle,ret);
 #else
- CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
-return "";
+CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+return 0;
 #endif 
 }
 

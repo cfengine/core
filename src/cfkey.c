@@ -95,13 +95,13 @@ cipher = EVP_des_ede3_cbc();
 
 if (cfstat(CFPUBKEYFILE,&statbuf) != -1)
    {
-   CfOut(cf_error,"","A key file already exists at %s\n",CFPUBKEYFILE);
+   CfOut(cf_cmdout,"","A key file already exists at %s\n",CFPUBKEYFILE);
    return;
    }
 
 if (cfstat(CFPRIVKEYFILE,&statbuf) != -1)
    {
-   CfOut(cf_error,"","A key file already exists at %s\n",CFPRIVKEYFILE);
+   CfOut(cf_cmdout,"","A key file already exists at %s\n",CFPRIVKEYFILE);
    return;
    }
 

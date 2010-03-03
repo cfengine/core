@@ -594,9 +594,13 @@ if (LoadProcessTable(&PROCESSTABLE,psopts))
    }
 
 DeleteItemList(PROCESSTABLE);
-DeleteRlist(signals);
-DeleteRlist(owners);
+
 CfOut(cf_verbose,""," !! Pruning complete");
+
+if (pp.conlist)
+   {
+   DeleteConstraintList(pp.conlist);
+   }
 }
 
 /*****************************************************************************/
@@ -622,6 +626,9 @@ if(EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR))
   exit(1);
   }
 
+NewScope("this");
+NewScope("mon");
+
 GetNameInfo3();
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
@@ -644,7 +651,9 @@ for (ip = SCHEDULE; ip != NULL; ip = ip->next)
    }
 
 DeleteItemList(VHEAP);
-VHEAP = NULL; 
+VHEAP = NULL;
+DeleteScope("this");
+DeleteScope("mon");
 return false;
 }
 

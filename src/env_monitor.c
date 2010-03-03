@@ -401,9 +401,9 @@ void StartServer(int argc,char **argv)
 void CfenvTimeOut()
  
 {
- alarm(0);
- TCPPAUSE = true;
- CfOut(cf_verbose,"","Time out\n");
+alarm(0);
+TCPPAUSE = true;
+CfOut(cf_verbose,"","Time out\n");
 }
 
 /*********************************************************************/
@@ -443,40 +443,40 @@ void Sniff()
 { int i;
  char tcpbuffer[CF_BUFSIZE];
  
- CfOut(cf_verbose,"","Reading from tcpdump...\n");
- memset(tcpbuffer,0,CF_BUFSIZE);      
- signal(SIGALRM,(void *)CfenvTimeOut);
- alarm(SLEEPTIME);
- TCPPAUSE = false;
+CfOut(cf_verbose,"","Reading from tcpdump...\n");
+memset(tcpbuffer,0,CF_BUFSIZE);      
+signal(SIGALRM,(void *)CfenvTimeOut);
+alarm(SLEEPTIME);
+TCPPAUSE = false;
 
- while (!feof(TCPPIPE))
-    {
-    if (TCPPAUSE)
+while (!feof(TCPPIPE))
+   {
+   if (TCPPAUSE)
+      {
+      break;
+      }
+   
+   fgets(tcpbuffer,CF_BUFSIZE-1,TCPPIPE);
+   
+   if (TCPPAUSE)
        {
        break;
        }
    
-    fgets(tcpbuffer,CF_BUFSIZE-1,TCPPIPE);
+   if (strstr(tcpbuffer,"tcpdump:")) /* Error message protect sleeptime */
+      {
+      Debug("Error - (%s)\n",tcpbuffer);
+      alarm(0);
+      TCPDUMP = false;
+      break;
+      }
    
-    if (TCPPAUSE)
-       {
-       break;
-       }
-   
-    if (strstr(tcpbuffer,"tcpdump:")) /* Error message protect sleeptime */
-       {
-       Debug("Error - (%s)\n",tcpbuffer);
-       alarm(0);
-       TCPDUMP = false;
-       break;
-       }
-   
-    AnalyzeArrival(tcpbuffer);
-    }
+   AnalyzeArrival(tcpbuffer);
+   }
 
- signal(SIGALRM,SIG_DFL);
- TCPPAUSE = false;
- fflush(TCPPIPE);
+signal(SIGALRM,SIG_DFL);
+TCPPAUSE = false;
+fflush(TCPPIPE);
 }
 
 /*********************************************************************/
@@ -485,24 +485,24 @@ void GetQ()
 
 { int i;
 
- Debug("========================= GET Q ==============================\n");
+Debug("========================= GET Q ==============================\n");
 
- ENTROPIES = NULL;
+ENTROPIES = NULL;
 
- for (i = 0; i < CF_OBSERVABLES; i++)
-    {
-    CF_THIS[i] = 0.0;
-    }
+for (i = 0; i < CF_OBSERVABLES; i++)
+   {
+   CF_THIS[i] = 0.0;
+   }
 
- GatherProcessData();
- GatherCPUData();
+GatherProcessData();
+GatherCPUData();
 #ifndef MINGW
- GatherLoadData(); 
- GatherDiskData();
- GatherSocketData();
- GatherSensorData();
+GatherLoadData(); 
+GatherDiskData();
+GatherSocketData();
+GatherSensorData();
 #endif  /* NOT MINGW */
- GatherPromisedMeasures();
+GatherPromisedMeasures();
 }
 
 /*********************************************************************/
@@ -510,16 +510,16 @@ void GetQ()
 char *GetTimeKey()
 
 { time_t now;
- char str[CF_SMALLBUF];
+  char str[CF_SMALLBUF];
   
- if ((now = time((time_t *)NULL)) == -1)
-    {
-    exit(1);
-    }
+if ((now = time((time_t *)NULL)) == -1)
+   {
+   exit(1);
+   }
 
- sprintf(str,"%s",cf_ctime(&now));
+sprintf(str,"%s",cf_ctime(&now));
 
- return ConvTimeKey(str); 
+return ConvTimeKey(str); 
 }
 
 
@@ -1025,27 +1025,27 @@ void AnalyzeArrival(char *arrival)
 void GatherProcessData()
 
 { struct Item *userList = NULL;
- char vbuff[CF_BUFSIZE];
- int numProcUsers = 0;
- int numRootProcs = 0;
- int numOtherProcs = 0;
+  char vbuff[CF_BUFSIZE];
+  int numProcUsers = 0;
+  int numRootProcs = 0;
+  int numOtherProcs = 0;
 
- if(!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
-    {
-    return;
-    }
-  
- CF_THIS[ob_users] += numProcUsers;
- CF_THIS[ob_rootprocs] += numRootProcs;
- CF_THIS[ob_otherprocs] += numOtherProcs;
+if(!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
+   {
+   return;
+   }
 
- snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_users",CFWORKDIR);
- MapName(vbuff);
- RawSaveItemList(userList,vbuff);
+CF_THIS[ob_users] += numProcUsers;
+CF_THIS[ob_rootprocs] += numRootProcs;
+CF_THIS[ob_otherprocs] += numOtherProcs;
 
- DeleteItemList(userList);
+snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_users",CFWORKDIR);
+MapName(vbuff);
+RawSaveItemList(userList,vbuff);
 
- CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",CF_THIS[ob_users],CF_THIS[ob_rootprocs],CF_THIS[ob_otherprocs]);
+DeleteItemList(userList);
+
+CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",CF_THIS[ob_users],CF_THIS[ob_rootprocs],CF_THIS[ob_otherprocs]);
 }
 
 /*****************************************************************************/
@@ -1075,35 +1075,35 @@ Unix_GatherCPUData();
 void GatherDiskData()
 
 { char accesslog[CF_BUFSIZE];
- char errorlog[CF_BUFSIZE];
- char syslog[CF_BUFSIZE];
- char messages[CF_BUFSIZE];
+  char errorlog[CF_BUFSIZE];
+  char syslog[CF_BUFSIZE];
+  char messages[CF_BUFSIZE];
  
- CfOut(cf_verbose,"","Gathering disk data\n");
- CF_THIS[ob_diskfree] = GetDiskUsage("/",cfpercent);
- CfOut(cf_verbose,"","Disk free = %d %%\n",CF_THIS[ob_diskfree]);
+CfOut(cf_verbose,"","Gathering disk data\n");
+CF_THIS[ob_diskfree] = GetDiskUsage("/",cfpercent);
+CfOut(cf_verbose,"","Disk free = %d %%\n",CF_THIS[ob_diskfree]);
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */
 
- switch(VSYSTEMHARDCLASS)
-    {
-    linuxx:
+switch(VSYSTEMHARDCLASS)
+   {
+   linuxx:
+   
+   default:
+       strcpy(accesslog,"/var/log/apache2/access_log");
+       strcpy(errorlog,"/var/log/apache2/error_log");
+       strcpy(syslog,"/var/log/syslog");
+       strcpy(messages,"/var/log/messages");
+   }
 
-    default:
-        strcpy(accesslog,"/var/log/apache2/access_log");
-        strcpy(errorlog,"/var/log/apache2/error_log");
-        strcpy(syslog,"/var/log/syslog");
-        strcpy(messages,"/var/log/messages");
-    }
-
- CF_THIS[ob_webaccess] = GetFileGrowth(accesslog,ob_webaccess);
- CfOut(cf_verbose,"","Webaccess = %d %%\n",CF_THIS[ob_webaccess]);
- CF_THIS[ob_weberrors] = GetFileGrowth(errorlog,ob_weberrors);
- CfOut(cf_verbose,"","Web error = %d %%\n",CF_THIS[ob_weberrors]);
- CF_THIS[ob_syslog] = GetFileGrowth(syslog,ob_syslog);
- CfOut(cf_verbose,"","Syslog = %d %%\n",CF_THIS[ob_syslog]);
- CF_THIS[ob_messages] = GetFileGrowth(messages,ob_messages);
- CfOut(cf_verbose,"","Messages = %d %%\n",CF_THIS[ob_messages]);
+CF_THIS[ob_webaccess] = GetFileGrowth(accesslog,ob_webaccess);
+CfOut(cf_verbose,"","Webaccess = %d %%\n",CF_THIS[ob_webaccess]);
+CF_THIS[ob_weberrors] = GetFileGrowth(errorlog,ob_weberrors);
+CfOut(cf_verbose,"","Web error = %d %%\n",CF_THIS[ob_weberrors]);
+CF_THIS[ob_syslog] = GetFileGrowth(syslog,ob_syslog);
+CfOut(cf_verbose,"","Syslog = %d %%\n",CF_THIS[ob_syslog]);
+CF_THIS[ob_messages] = GetFileGrowth(messages,ob_messages);
+CfOut(cf_verbose,"","Messages = %d %%\n",CF_THIS[ob_messages]);
 }
 
 /*****************************************************************************/
@@ -1111,260 +1111,259 @@ void GatherDiskData()
 void GatherLoadData()
 
 { double load[4] = {0,0,0,0}, sum = 0.0; 
- int i,n = 1;
+  int i,n = 1;
 
- Debug("GatherLoadData\n\n");
+Debug("GatherLoadData\n\n");
 
 #ifdef HAVE_GETLOADAVG 
- if ((n = getloadavg(load,LOADAVG_5MIN)) == -1)
-    {
-    CF_THIS[ob_loadavg] = 0.0;
-    }
- else
-    {
-    for (i = 0; i < n; i++)
-       {
-       Debug("Found load average to be %lf of %d samples\n", load[i],n);
-       sum += load[i];
-       }
-    }
+if ((n = getloadavg(load,LOADAVG_5MIN)) == -1)
+   {
+   CF_THIS[ob_loadavg] = 0.0;
+   }
+else
+   {
+   for (i = 0; i < n; i++)
+      {
+      Debug("Found load average to be %lf of %d samples\n", load[i],n);
+      sum += load[i];
+      }
+   }
 #endif
 
 /* Scale load average by 100 to make it visible */
- 
- CF_THIS[ob_loadavg] = (int) (100.0 * sum);
- CfOut(cf_verbose,"","100 x Load Average = %d\n",CF_THIS[ob_loadavg]);
+
+CF_THIS[ob_loadavg] = (int) (100.0 * sum);
+CfOut(cf_verbose,"","100 x Load Average = %d\n",CF_THIS[ob_loadavg]);
 }
 
 /*****************************************************************************/
 
 void GatherSocketData()
-
-{ FILE *pp;
- char local[CF_BUFSIZE],remote[CF_BUFSIZE],comm[CF_BUFSIZE];
- struct Item *in[ATTR],*out[ATTR];
- char *sp;
- int i;
- char vbuff[CF_BUFSIZE];
     
- Debug("GatherSocketData()\n");
+{ FILE *pp;
+  char local[CF_BUFSIZE],remote[CF_BUFSIZE],comm[CF_BUFSIZE];
+  struct Item *in[ATTR],*out[ATTR];
+  char *sp;
+  int i;
+  char vbuff[CF_BUFSIZE];
+    
+Debug("GatherSocketData()\n");
   
- for (i = 0; i < ATTR; i++)
-    {
-    in[i] = out[i] = NULL;
-    }
+for (i = 0; i < ATTR; i++)
+   {
+   in[i] = out[i] = NULL;
+   }
 
- if (ALL_INCOMING != NULL)
-    {
-    DeleteItemList(ALL_INCOMING);
-    ALL_INCOMING = NULL;
-    }
+if (ALL_INCOMING != NULL)
+   {
+   DeleteItemList(ALL_INCOMING);
+   ALL_INCOMING = NULL;
+   }
 
- if (ALL_OUTGOING != NULL)
-    {
-    DeleteItemList(ALL_OUTGOING);
-    ALL_OUTGOING = NULL;
-    } 
- 
- sscanf(VNETSTAT[VSYSTEMHARDCLASS],"%s",comm);
+if (ALL_OUTGOING != NULL)
+   {
+   DeleteItemList(ALL_OUTGOING);
+   ALL_OUTGOING = NULL;
+   } 
 
- strcat(comm," -n"); 
- 
- if ((pp = cf_popen(comm,"r")) == NULL)
-    {
-    return;
-    }
+sscanf(VNETSTAT[VSYSTEMHARDCLASS],"%s",comm);
 
- while (!feof(pp))
-    {
-    memset(local,0,CF_BUFSIZE);
-    memset(remote,0,CF_BUFSIZE);
+strcat(comm," -n"); 
+
+if ((pp = cf_popen(comm,"r")) == NULL)
+   {
+   return;
+   }
+
+while (!feof(pp))
+   {
+   memset(local,0,CF_BUFSIZE);
+   memset(remote,0,CF_BUFSIZE);
    
-    CfReadLine(vbuff,CF_BUFSIZE,pp);
-
-    if (strstr(vbuff,"UNIX"))
-       {
-       break;
-       }
-
-    if (!strstr(vbuff,"."))
-       {
-       continue;
-       }
-
-    /* Different formats here ... ugh.. */
-
-    if (strncmp(vbuff,"tcp",3) == 0)
-       {
-       sscanf(vbuff,"%*s %*s %*s %s %s",local,remote); /* linux-like */
-       }
-    else
-       {
-       sscanf(vbuff,"%s %s",local,remote);             /* solaris-like */
-       } 
-
-    if (strlen(local) == 0)
-       {
-       continue;
-       }
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
    
-    for (sp = local+strlen(local); (*sp != '.') && (sp > local); sp--)
-       {
-       }
-
-    sp++;
+   if (strstr(vbuff,"UNIX"))
+      {
+      break;
+      }
    
-    if ((strlen(sp) < 5) &&!IsItemIn(ALL_INCOMING,sp))
-       {
-       PrependItem(&ALL_INCOMING,sp,NULL);
-       }
+   if (!strstr(vbuff,"."))
+      {
+      continue;
+      }
    
-    for (sp = remote+strlen(remote); (sp >= remote) && !isdigit((int)*sp); sp--)
-       {
-       }
+   /* Different formats here ... ugh.. */
+   
+   if (strncmp(vbuff,"tcp",3) == 0)
+      {
+      sscanf(vbuff,"%*s %*s %*s %s %s",local,remote); /* linux-like */
+      }
+   else
+      {
+      sscanf(vbuff,"%s %s",local,remote);             /* solaris-like */
+      } 
+   
+   if (strlen(local) == 0)
+      {
+      continue;
+      }
+   
+   for (sp = local+strlen(local); (*sp != '.') && (sp > local); sp--)
+      {
+      }
+   
+   sp++;
+   
+   if ((strlen(sp) < 5) &&!IsItemIn(ALL_INCOMING,sp))
+      {
+      PrependItem(&ALL_INCOMING,sp,NULL);
+      }
+   
+   for (sp = remote+strlen(remote); (sp >= remote) && !isdigit((int)*sp); sp--)
+      {
+      }
+   
+   sp++;
+   
+   if ((strlen(sp) < 5) && !IsItemIn(ALL_OUTGOING,sp))
+      {
+      PrependItem(&ALL_OUTGOING,sp,NULL);
+      }
+   
+   for (i = 0; i < ATTR; i++)
+      {
+      char *spend;
+      
+      for (spend = local+strlen(local)-1; isdigit((int)*spend); spend--)
+         {
+         }
+      
+      spend++;
+      
+      if (strcmp(spend,ECGSOCKS[i].portnr) == 0)
+         {
+         CF_THIS[ECGSOCKS[i].in]++;
+         AppendItem(&in[i],vbuff,"");
+         }
+      
+      for (spend = remote+strlen(remote)-1; (sp >= remote) && isdigit((int)*spend); spend--)
+         {
+         }
+      
+      spend++;
+      
+      if (strcmp(spend,ECGSOCKS[i].portnr) == 0)
+         {
+         CF_THIS[ECGSOCKS[i].out]++;
+         AppendItem(&out[i],vbuff,"");
+         }
+      }
+   }
 
-    sp++;
+cf_pclose(pp);
 
-    if ((strlen(sp) < 5) && !IsItemIn(ALL_OUTGOING,sp))
-       {
-       PrependItem(&ALL_OUTGOING,sp,NULL);
-       }
-
-    for (i = 0; i < ATTR; i++)
-       {
-       char *spend;
-      
-       for (spend = local+strlen(local)-1; isdigit((int)*spend); spend--)
-          {
-          }
-      
-       spend++;
-      
-       if (strcmp(spend,ECGSOCKS[i].portnr) == 0)
-          {
-          CF_THIS[ECGSOCKS[i].in]++;
-          AppendItem(&in[i],vbuff,"");
-          }
-      
-       for (spend = remote+strlen(remote)-1; (sp >= remote) && isdigit((int)*spend); spend--)
-          {
-          }
-      
-       spend++;
-      
-       if (strcmp(spend,ECGSOCKS[i].portnr) == 0)
-          {
-          CF_THIS[ECGSOCKS[i].out]++;
-          AppendItem(&out[i],vbuff,"");
-          }
-       }
-    }
- 
- cf_pclose(pp);
- 
 /* Now save the state for ShowState() cf2 version alert function IFF
    the state is not smaller than the last or at least 40 minutes
    older. This mirrors the persistence of the maxima classes */
 
  
- for (i = 0; i < ATTR; i++)
-    {
-    struct stat statbuf;
-    time_t now = time(NULL);
-    
-    Debug("save incoming %s\n",ECGSOCKS[i].name);
-    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
-    if (cfstat(vbuff,&statbuf) != -1)
-       {
-       if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
-          {
-          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
-          DeleteItemList(in[i]);
-          continue;
-          }
-       }
-    
-    SetEntropyClasses(ECGSOCKS[i].name,in[i],"in");
-    RawSaveItemList(in[i],vbuff);
-    DeleteItemList(in[i]);
-    Debug("Saved in netstat data in %s\n",vbuff); 
-    }
- 
- for (i = 0; i < ATTR; i++)
-    {
-    struct stat statbuf;
-    time_t now = time(NULL); 
+for (i = 0; i < ATTR; i++)
+   {
+   struct stat statbuf;
+   time_t now = time(NULL);
+   
+   Debug("save incoming %s\n",ECGSOCKS[i].name);
+   snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
+   if (cfstat(vbuff,&statbuf) != -1)
+      {
+      if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
+         {
+         CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
+         DeleteItemList(in[i]);
+         continue;
+         }
+      }
+   
+   SetEntropyClasses(ECGSOCKS[i].name,in[i],"in");
+   RawSaveItemList(in[i],vbuff);
+   DeleteItemList(in[i]);
+   Debug("Saved in netstat data in %s\n",vbuff); 
+   }
 
-    Debug("save outgoing %s\n",ECGSOCKS[i].name);
-    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
+for (i = 0; i < ATTR; i++)
+   {
+   struct stat statbuf;
+   time_t now = time(NULL); 
+   
+   Debug("save outgoing %s\n",ECGSOCKS[i].name);
+   snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
+   
+   if (cfstat(vbuff,&statbuf) != -1)
+      {       
+      if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
+         {
+         CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
+         DeleteItemList(out[i]);
+         continue;
+         }
+      }
+   
+   SetEntropyClasses(ECGSOCKS[i].name,out[i],"out");
+   RawSaveItemList(out[i],vbuff);
+   Debug("Saved out netstat data in %s\n",vbuff); 
+   DeleteItemList(out[i]);
+   }
 
-    if (cfstat(vbuff,&statbuf) != -1)
-       {       
-       if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
-          {
-          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",ECGSOCKS[i].name);
-          DeleteItemList(out[i]);
-          continue;
-          }
-       }
-    
-    SetEntropyClasses(ECGSOCKS[i].name,out[i],"out");
-    RawSaveItemList(out[i],vbuff);
-    Debug("Saved out netstat data in %s\n",vbuff); 
-    DeleteItemList(out[i]);
-    }
-  
- for (i = 0; i < CF_NETATTR; i++)
-    {
-    struct stat statbuf;
-    time_t now = time(NULL); 
-    
-    Debug("save incoming %s\n",TCPNAMES[i]);
-    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,TCPNAMES[i]);
-    
-    if (cfstat(vbuff,&statbuf) != -1)
-       {       
-       if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
-          {
-          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
-          DeleteItemList(NETIN_DIST[i]);
-          NETIN_DIST[i] = NULL;
-          continue;
-          }
-       }
-    
-    SaveTCPEntropyData(NETIN_DIST[i],i,"in");
-    SetEntropyClasses(TCPNAMES[i],NETIN_DIST[i],"in");
-    DeleteItemList(NETIN_DIST[i]);
-    NETIN_DIST[i] = NULL;
-    }
+for (i = 0; i < CF_NETATTR; i++)
+   {
+   struct stat statbuf;
+   time_t now = time(NULL); 
+   
+   Debug("save incoming %s\n",TCPNAMES[i]);
+   snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,TCPNAMES[i]);
+   
+   if (cfstat(vbuff,&statbuf) != -1)
+      {       
+      if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
+         {
+         CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
+         DeleteItemList(NETIN_DIST[i]);
+         NETIN_DIST[i] = NULL;
+         continue;
+         }
+      }
+   
+   SaveTCPEntropyData(NETIN_DIST[i],i,"in");
+   SetEntropyClasses(TCPNAMES[i],NETIN_DIST[i],"in");
+   DeleteItemList(NETIN_DIST[i]);
+   NETIN_DIST[i] = NULL;
+   }
 
 
- for (i = 0; i < CF_NETATTR; i++)
-    {
-    struct stat statbuf;
-    time_t now = time(NULL); 
- 
-    Debug("save outgoing %s\n",TCPNAMES[i]);
-    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]);
-    
-    if (cfstat(vbuff,&statbuf) != -1)
-       {       
-       if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
-          {
-          CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
-          DeleteItemList(NETOUT_DIST[i]);
-          NETOUT_DIST[i] = NULL;   
-          continue;
-          }
-       }
-    
-    SaveTCPEntropyData(NETOUT_DIST[i],i,"out");
-    SetEntropyClasses(TCPNAMES[i],NETOUT_DIST[i],"out");
-    DeleteItemList(NETOUT_DIST[i]);
-    NETOUT_DIST[i] = NULL;
-    }
-
+for (i = 0; i < CF_NETATTR; i++)
+   {
+   struct stat statbuf;
+   time_t now = time(NULL); 
+   
+   Debug("save outgoing %s\n",TCPNAMES[i]);
+   snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]);
+   
+   if (cfstat(vbuff,&statbuf) != -1)
+      {       
+      if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
+         {
+         CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
+         DeleteItemList(NETOUT_DIST[i]);
+         NETOUT_DIST[i] = NULL;   
+         continue;
+         }
+      }
+   
+   SaveTCPEntropyData(NETOUT_DIST[i],i,"out");
+   SetEntropyClasses(TCPNAMES[i],NETOUT_DIST[i],"out");
+   DeleteItemList(NETOUT_DIST[i]);
+   NETOUT_DIST[i] = NULL;
+   }
 }
 
 /*****************************************************************************/
@@ -1372,34 +1371,34 @@ void GatherSocketData()
 struct Averages *GetCurrentAverages(char *timekey)
 
 { int err_no;
- CF_DB *dbp;
- static struct Averages entry;
+  CF_DB *dbp;
+  static struct Averages entry;
 
- if (!OpenDB(AVDB,&dbp))
-    {
-    return NULL;
-    }
+if (!OpenDB(AVDB,&dbp))
+   {
+   return NULL;
+   }
 
- memset(&entry,0,sizeof(entry));
+memset(&entry,0,sizeof(entry));
 
- AGE++;
- WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
+AGE++;
+WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
 
- if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
-    {
-    int i;
-    for (i = 0; i < CF_OBSERVABLES; i++)
-       {
-       Debug("Previous values (%lf,..) for time index %s\n\n",entry.Q[i].expect,timekey);
-       }
-    }
- else
-    {
-    Debug("No previous value for time index %s\n",timekey);
-    }
+if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
+   {
+   int i;
+   for (i = 0; i < CF_OBSERVABLES; i++)
+      {
+      Debug("Previous values (%lf,..) for time index %s\n\n",entry.Q[i].expect,timekey);
+      }
+   }
+else
+   {
+   Debug("No previous value for time index %s\n",timekey);
+   }
 
- CloseDB(dbp);
- return &entry;
+CloseDB(dbp);
+return &entry;
 }
 
 /*****************************************************************************/

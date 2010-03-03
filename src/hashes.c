@@ -307,6 +307,7 @@ while (ptr->hashtable[slot])
       {
       if (CompareVariableValue(rval,rtype,ptr->hashtable[slot]) == 0)
          {
+         DeleteAssoc(ap);
          return true;
          }
 

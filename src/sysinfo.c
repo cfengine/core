@@ -442,6 +442,7 @@ snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
 sp = strdup(CanonifyName(workbuf));
 NewScalar("sys","ostype",sp,cf_str);
 NewClass(sp);
+free(sp);
 
 if (! found)
    {
@@ -1543,7 +1544,8 @@ return 0;
 
 void *Lsb_Release(const char *command, const char *key)
 
-{ char vbuff[CF_BUFSIZE],*info = NULL;
+{ static char vbuff[CF_BUFSIZE];
+  char *info = NULL;
   FILE *fp;
 
 snprintf(vbuff, CF_BUFSIZE, "%s %s", command, key);
@@ -1564,13 +1566,13 @@ if (CfReadLine(vbuff, CF_BUFSIZE, fp))
       }
 
    info = buffer;
+
    while((*buffer != '\0') && !isspace(*buffer))
       {
       *buffer = tolower(*buffer++);
       }
 
    *buffer = '\0';
-   info = strdup(info);
    }
 
 cf_pclose(fp);

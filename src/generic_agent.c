@@ -1031,7 +1031,9 @@ CfOut(cf_verbose,"","\n");
 /*********************************************************************/
 
 void CheckWorkingDirectories()
+    
 /* NOTE: We do not care about permissions (ACLs) in windows */
+
 { struct stat statbuf;
   int result;
   char *sp,vbuff[CF_BUFSIZE];

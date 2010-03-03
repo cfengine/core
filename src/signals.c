@@ -68,6 +68,8 @@ if (signum != SIGCHLD)
    }
 }
 
+/*****************************************************************************/
+
 void SelfTerminatePrelude()
 {
 struct CfLock best_guess;

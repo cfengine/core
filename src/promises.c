@@ -658,7 +658,7 @@ if (pp->promisee != NULL)
 free(pp->bundle);
 free(pp->classes);
 
-// ref/agentsubtype are only references
+// ref and agentsubtype are only references, do not free
 
 DeleteConstraintList(pp->conlist);
 

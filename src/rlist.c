@@ -711,6 +711,7 @@ if (DEBUG)
    {
    ShowRval(stdout,rval,type);
    }
+
 Debug("\n");
 
 if (rval == NULL)

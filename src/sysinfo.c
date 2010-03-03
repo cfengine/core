@@ -877,7 +877,7 @@ NewScalar("sys","crontab","",cf_str);
 NewClass(CanonifyName(VSYSNAME.version));  // code name - e.g. Windows Vista
 NewClass(CanonifyName(VSYSNAME.release));  // service pack number - e.g. Service Pack 3
 
-if(strstr(VSYSNAME.sysname, "workstation"))
+if (strstr(VSYSNAME.sysname, "workstation"))
    {
    NewClass("WinWorkstation");
    }
@@ -1831,7 +1831,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
 Debug("Unix_GetInterfaceInfo()\n");
 
-NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
+//NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
 
 last_name[0] = '\0';
 

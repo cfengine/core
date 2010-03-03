@@ -54,6 +54,7 @@ else
 
 /* We assume that s is at least MAX_FILENAME large.
  * MapName() is thread-safe, but the argument is modified. */
+
 char *MapName(char *s)
 
 { char buffer[CF_BUFSIZE];
@@ -135,19 +136,19 @@ return s;
 
 char *MapNameForward(char *s)
 /* Like MapName(), but maps all slashes to forward */
-{
-  char *sp;
 
-  for(sp = s; *sp != '\0'; sp++)
-    {
-      switch(*sp)
-	{
-	case '\\':
+{ char *sp;
+ 
+for (sp = s; *sp != '\0'; sp++)
+   {
+   switch(*sp)
+      {
+      case '\\':
 	  *sp = '/';
-	}
-    }
-  
-  return s;
+      }
+   }
+
+return s;
 }
 
 /*********************************************************/

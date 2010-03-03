@@ -398,6 +398,7 @@ if (!ONCE)
 
    if (thislock.lock == NULL)
       {
+      DeletePromise(pp);
       return;
       }
    }
@@ -620,7 +621,8 @@ sleep(CFPULSETIME);                /* 1 Minute resolution is enough */
 now = time(NULL);
 
 // recheck license (in case of license updates or expiry)
-if(EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
+
+if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
   {
   CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
   exit(1);
@@ -646,14 +648,23 @@ for (ip = SCHEDULE; ip != NULL; ip = ip->next)
       CfOut(cf_verbose,"","Waking up the agent at %s ~ %s \n",timekey,ip->name);
       DeleteItemList(VHEAP);
       VHEAP = NULL;
+      DeleteItemList(VADDCLASSES);
+      VADDCLASSES = NULL;
+      DeleteScope("this");
+      DeleteScope("mon");
+      DeleteScope("sys");
       return true;
       }
    }
 
 DeleteItemList(VHEAP);
 VHEAP = NULL;
+DeleteItemList(VADDCLASSES);
+VADDCLASSES = NULL;
+DeleteScope("this");
 DeleteScope("this");
 DeleteScope("mon");
+DeleteScope("sys");
 return false;
 }
 
@@ -715,51 +726,49 @@ if (strlen(EXECCOMMAND) > 0)
 else
    {
    // twin is bin-twin\cf-agent.exe on windows, bin/cf-twin on Unix
-   if(VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
-     {
-       snprintf(cmd,CF_BUFSIZE-1,"%s/bin-twin/cf-agent.exe",CFWORKDIR);
-       MapName(cmd);
-   
-       if (IsExecutable(cmd))
+   if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
+      {
+      snprintf(cmd,CF_BUFSIZE-1,"%s/bin-twin/cf-agent.exe",CFWORKDIR);
+      MapName(cmd);
+      
+      if (IsExecutable(cmd))
 	 {
-	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin-twin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
-		    CFWORKDIR,
-		    CFWORKDIR,
-		    NOSPLAY ? " -q" : "",
-		    scheduled_run ? ":scheduled_run" : "");      
+         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin-twin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
+                  CFWORKDIR,
+                  CFWORKDIR,
+                  NOSPLAY ? " -q" : "",
+                  scheduled_run ? ":scheduled_run" : "");      
 	 }
-       else
+      else
 	 {
-	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
-		    CFWORKDIR,
-		    CFWORKDIR,
-		    NOSPLAY ? " -q" : "",
-		    scheduled_run ? ":scheduled_run" : "");      
+         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
+                  CFWORKDIR,
+                  CFWORKDIR,
+                  NOSPLAY ? " -q" : "",
+                  scheduled_run ? ":scheduled_run" : "");      
 	 }
-     }
+      }
    else
-     {
-       snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
-   
-       if (IsExecutable(cmd))
+      {
+      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
+      
+      if (IsExecutable(cmd))
 	 {
-	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
-		    CFWORKDIR,
-		    CFWORKDIR,
-		    NOSPLAY ? " -q" : "",
-		    scheduled_run ? ":scheduled_run" : "");      
+         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
+                  CFWORKDIR,
+                  CFWORKDIR,
+                  NOSPLAY ? " -q" : "",
+                  scheduled_run ? ":scheduled_run" : "");      
 	 }
-       else
+      else
 	 {
-	   snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
-		    CFWORKDIR,
-		    CFWORKDIR,
-		    NOSPLAY ? " -q" : "",
-		    scheduled_run ? ":scheduled_run" : "");      
+         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
+                  CFWORKDIR,
+                  CFWORKDIR,
+                  NOSPLAY ? " -q" : "",
+                  scheduled_run ? ":scheduled_run" : "");      
 	 }
-
-     }
-   
+      }   
    }
 
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);

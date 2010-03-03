@@ -37,7 +37,7 @@ static int DoOpenDB(char *filename, CF_DB **dbp);
 static int DoCloseDB(CF_DB *dbp);
 static int SaveDBHandle(CF_DB *dbp);
 static int RemoveDBHandle(CF_DB *dbp);
-static int PopDBHandle(CF_DB **dbp);
+static int GetDBHandle(CF_DB **dbp);
 
 
 CF_DB *OPENDB[MAX_OPENDB] = {0};
@@ -251,10 +251,12 @@ void CloseAllDB(void)
 {
   CF_DB *dbp = NULL;
   int i = 0;
+
+  Debug("CloseAllDB()\n");
   
   while(true)
     {
-    if(!PopDBHandle(&dbp))
+    if(!GetDBHandle(&dbp))
       {
       FatalError("CloseAllDB: Could not pop next DB handle");
       }
@@ -280,7 +282,7 @@ void CloseAllDB(void)
 static int SaveDBHandle(CF_DB *dbp)
 {
   int i;
-
+  
   if (!ThreadLock(cft_dbhandle))
     {
       return false;
@@ -319,6 +321,7 @@ static int RemoveDBHandle(CF_DB *dbp)
     }
 
   i = 0;
+
   while(OPENDB[i] != dbp)
     {
       i++;
@@ -339,8 +342,8 @@ static int RemoveDBHandle(CF_DB *dbp)
 
 /*****************************************************************************/
 
-static int PopDBHandle(CF_DB **dbp)
-/* Pop the first DB handle, and return it in the parameter - NULL if empty */
+static int GetDBHandle(CF_DB **dbp)
+/* Return the first unused DB handle in the parameter - NULL if empty */
 {
   int i;
 
@@ -350,6 +353,7 @@ static int PopDBHandle(CF_DB **dbp)
     }
 
   i = 0;
+  
   while(OPENDB[i] == NULL)
     {
       i++;
@@ -361,9 +365,7 @@ static int PopDBHandle(CF_DB **dbp)
 	}
     }
 
-  // return entry and free slot
   *dbp = OPENDB[i];
-  OPENDB[i] = NULL;
 
   ThreadUnlock(cft_dbhandle);
   return true;

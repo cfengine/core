@@ -1568,7 +1568,7 @@ CfOut(cf_verbose,"","Looking for an installed package older than (%s,%s,%s)",n,v
 
 for (pi = mp->pack_list; pi != NULL; pi=pi->next)
    {
-     if((strcmp(n, pi->name) == 0) && (strcmp(a, pi->arch) == 0))
+     if((strcmp(n, pi->name) == 0) && ((strcmp(a, pi->arch) == 0) || (strcmp("default", pi->arch) == 0)))
        {
 	 CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
 

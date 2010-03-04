@@ -1319,7 +1319,7 @@ int Linux_Debian_Version(void);
 int Linux_Old_Mandriva_Version(void);
 int Linux_New_Mandriva_Version(void);
 int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
-void * Lsb_Release(const char *command, const char *key);
+void *Lsb_Release(char *key);
 int Lsb_Version(void);
 int VM_Version(void);
 int Xen_Domain(void);

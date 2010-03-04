@@ -1542,101 +1542,35 @@ return 0;
 
 /******************************************************************/
 
-void *Lsb_Release(const char *command, const char *key)
-
-{ static char vbuff[CF_BUFSIZE];
-  char *info = NULL;
-  FILE *fp;
-
-snprintf(vbuff, CF_BUFSIZE, "%s %s", command, key);
-
-if ((fp = cf_popen(vbuff, "r")) == NULL)
-   {
-   return NULL;
-   }
-
-if (CfReadLine(vbuff, CF_BUFSIZE, fp))
-   {
-   char * buffer = vbuff;
-   strsep(&buffer, ":");
-
-   while((*buffer != '\0') && isspace(*buffer))
-      {
-      buffer++;
-      }
-
-   info = buffer;
-
-   while((*buffer != '\0') && !isspace(*buffer))
-      {
-      *buffer = tolower(*buffer++);
-      }
-
-   *buffer = '\0';
-   }
-
-cf_pclose(fp);
-return info;
-}
-
-/******************************************************************/
-
 int Lsb_Version(void)
 
 { char vbuff[CF_BUFSIZE];
-
-#define LSB_RELEASE_COMMAND "lsb_release"
-
-char classname[CF_MAXVARSIZE];
-char *distrib  = NULL;
-char *release  = NULL;
-char *codename = NULL;
-int major = 0;
-int minor = 0;
-
-char *path, *dir, *rest;
-struct stat statbuf;
-
-path = rest = strdup(getenv("PATH"));
-
-if (strlen(path) == 0)
+  char codename[CF_MAXVARSIZE];
+  char distrib[CF_MAXVARSIZE];
+  char release[CF_MAXVARSIZE];
+  char classname[CF_MAXVARSIZE];;
+  char *ret;
+  int major = 0;
+  int minor = 0;
+  
+if ((ret = Lsb_Release("--id")) != NULL)
    {
-   return 1;
-   }
-
-while (dir = strsep(&rest, ":"))
-    {
-    snprintf(vbuff, CF_BUFSIZE, "%s/" LSB_RELEASE_COMMAND, dir);
-    if (cfstat(vbuff,&statbuf) != -1)
-       {
-       free(path);
-       path = strdup(vbuff);
-       
-       CfOut(cf_verbose,"","This appears to be a LSB compliant system.\n");
-       NewClass("lsb_compliant");
-       break;
-       }
-    }
-
-if (!dir)
-   {
-   free(path);
-   return 1;
-   }
-
-if ((distrib  = Lsb_Release(path, "--id")) != NULL)
-   {
-   snprintf(classname, CF_MAXVARSIZE, "%s", distrib);
+   strncpy(distrib,ret,CF_MAXVARSIZE);
+   NewClass(classname);
+   snprintf(classname, CF_MAXVARSIZE, "%s",ret);
    NewClass(classname);
 
-   if ((codename = Lsb_Release(path, "--codename")) != NULL)
+   if ((ret = Lsb_Release("--codename")) != NULL)
       {
-      snprintf(classname, CF_MAXVARSIZE, "%s_%s", distrib, codename);
+      strncpy(codename,ret,CF_MAXVARSIZE);
+      snprintf(classname, CF_MAXVARSIZE, "%s_%s", distrib,codename);
       NewClass(classname);
       }
 
-   if ((release  = Lsb_Release(path, "--release")) != NULL)
+   if ((ret  = Lsb_Release("--release")) != NULL)
       {
+      strncpy(release,ret,CF_MAXVARSIZE);
+      
       switch (sscanf(release, "%d.%d\n", &major, &minor))
          {
          case 2:
@@ -1650,14 +1584,12 @@ if ((distrib  = Lsb_Release(path, "--id")) != NULL)
 
    NewScalar("sys","flavour",classname,cf_str);
    NewScalar("sys","flavor",classname,cf_str);
-   
-   free(path);
    return 0;
    }
 else
    {
-   free(path);
-   return 2;
+   CfOut(cf_verbose,""," !! No LSB information available on this Linux host - you should install the LSB packages");
+   return -1;
    }
 }
 
@@ -1801,6 +1733,32 @@ return 1;
 
 /******************************************************************/
 /* User info                                                      */
+/******************************************************************/
+
+void *Lsb_Release(char *key)
+
+{ char vbuff[CF_BUFSIZE];
+  char info[CF_MAXVARSIZE];
+  FILE *pp;
+
+snprintf(vbuff, CF_BUFSIZE, "/usr/bin/lsb_release %s",key);
+
+if ((pp = cf_popen(vbuff, "r")) == NULL)
+   {
+   return NULL;
+   }
+
+memset(info,0,CF_MAXVARSIZE);
+
+if (CfReadLine(vbuff,CF_BUFSIZE,pp))
+   {
+   sscanf(vbuff,"%*[^:]: %255s",info);
+   }
+
+cf_pclose(pp);
+return ToLowerStr(info);
+}
+
 /******************************************************************/
 
 int GetCurrentUserName(char *userName, int userNameLen)

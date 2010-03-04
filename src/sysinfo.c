@@ -548,7 +548,6 @@ while (!feof(fp))
    if (strstr(class,"="))
       {
       sscanf(class,"%255[^=]=%255[^\n]",name,value);
-
       DeleteVariable("mon",name);
       NewScalar("mon",name,value,cf_str);
       Debug(" -> Setting new monitoring scalar %s => %s",name,value);

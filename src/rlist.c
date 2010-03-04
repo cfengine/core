@@ -725,7 +725,7 @@ switch(type)
    case CF_SCALAR:
        free((char *)rval);
        break;
-       
+
    case CF_LIST:
        
        /* rval is now a list whose first item is list->item */

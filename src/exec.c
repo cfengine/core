@@ -628,6 +628,9 @@ if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR))
   exit(1);
   }
 
+DeleteScope("this");
+DeleteScope("mon");
+DeleteScope("sys");
 NewScope("this");
 NewScope("mon");
 
@@ -661,10 +664,6 @@ DeleteItemList(VHEAP);
 VHEAP = NULL;
 DeleteItemList(VADDCLASSES);
 VADDCLASSES = NULL;
-DeleteScope("this");
-DeleteScope("this");
-DeleteScope("mon");
-DeleteScope("sys");
 return false;
 }
 

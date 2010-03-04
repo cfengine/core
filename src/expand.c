@@ -364,7 +364,6 @@ switch (type)
        /* Note expand function does not mean evaluate function, must preserve type */
        fp = (struct FnCall *)rval;
        fpe = ExpandFnCall(scopeid,fp,true);
-
        returnval.item = fpe;
        returnval.rtype = CF_FNCALL;
        break;       

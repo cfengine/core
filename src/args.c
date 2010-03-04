@@ -182,7 +182,8 @@ return newargs;
 
 void DeleteExpArgs(struct Rlist *args)
 
-{
+{ struct Rlist *rp;
+
 DeleteRvalItem(args,CF_LIST);
 }
 

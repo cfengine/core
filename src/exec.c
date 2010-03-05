@@ -596,12 +596,12 @@ if (LoadProcessTable(&PROCESSTABLE,psopts))
 
 DeleteItemList(PROCESSTABLE);
 
-CfOut(cf_verbose,""," !! Pruning complete");
-
 if (pp.conlist)
    {
    DeleteConstraintList(pp.conlist);
    }
+
+CfOut(cf_verbose,""," !! Pruning complete");
 }
 
 /*****************************************************************************/
@@ -634,10 +634,10 @@ DeleteScope("sys");
 NewScope("this");
 NewScope("mon");
 
-GetNameInfo3();
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();
+
 SetReferenceTime(true);
 snprintf(timekey,63,"%s",cf_ctime(&now)); 
 AddTimeClass(timekey); 
@@ -653,9 +653,6 @@ for (ip = SCHEDULE; ip != NULL; ip = ip->next)
       VHEAP = NULL;
       DeleteItemList(VADDCLASSES);
       VADDCLASSES = NULL;
-      DeleteScope("this");
-      DeleteScope("mon");
-      DeleteScope("sys");
       return true;
       }
    }
@@ -696,7 +693,7 @@ void *LocalExec(void *scheduled_run)
   time_t starttime = time(NULL);
   FILE *fp;
 #ifdef HAVE_PTHREAD_SIGMASK
- sigset_t sigmask;
+  sigset_t sigmask;
 
 sigemptyset(&sigmask);
 pthread_sigmask(SIG_BLOCK,&sigmask,NULL); 
@@ -717,6 +714,7 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 if (strlen(EXECCOMMAND) > 0)
    {
    strncpy(cmd,EXECCOMMAND,CF_BUFSIZE-1);
+
    if (!strstr(EXECCOMMAND,"-Dfrom_cfexecd"))
       {
       strcat(EXECCOMMAND," -Dfrom_cfexecd");
@@ -963,7 +961,7 @@ unlink(prev_file);
 
 #ifdef MINGW
 
-if(!CopyFile(filename, prev_file, TRUE))
+if (!CopyFile(filename, prev_file, TRUE))
   {
   CfOut(cf_inform,"CopyFile","Could copy %s to %s",filename,prev_file);
   rtn = 1;
@@ -1019,7 +1017,7 @@ if (statbuf.st_size == 0)
    return;
    }
 
-if ( CompareResult(file,prev_file) == 0 ) 
+if (CompareResult(file,prev_file) == 0) 
    {
    CfOut(cf_verbose,"","Previous output is the same as current so do not mail it\n");
    return;

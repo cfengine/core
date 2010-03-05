@@ -105,7 +105,7 @@ for (i = 0; i < CF3_MODULES; i++)
       {
       CfOut(cf_verbose,"","Dealing with chapter / bundle type %s\n",st->btype);
       fprintf(fout,"@c *****************************************************\n");
-      fprintf(fout,"@c * CHAPTER \n");
+     fprintf(fout,"@c * CHAPTER \n");
       fprintf(fout,"@c *****************************************************\n");
       
       if (strcmp(st->btype,"*") == 0)
@@ -138,6 +138,10 @@ fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
 
 fprintf(fout,"@node Special functions\n@chapter Special functions\n\n");
+
+fprintf(fout,"@node Introduction to functions\n@section Introduction to functions\n\n");
+
+IncludeManualFile(fout,"functions_intro.texinfo");
 
 for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    {

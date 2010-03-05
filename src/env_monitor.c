@@ -796,32 +796,32 @@ SetMeasurementPromises(&classlist);
 
 /* Publish class list */
 
- unlink(ENVFILE_NEW);
- 
- if ((fp = fopen(ENVFILE_NEW,"a")) == NULL)
-    {
-    DeleteItemList(PREVIOUS_STATE);
-    PREVIOUS_STATE = classlist;
-    return; 
-    }
+unlink(ENVFILE_NEW);
 
- for (ip = classlist; ip != NULL; ip=ip->next)
-    {
-    fprintf(fp,"%s\n",ip->name);
-    }
- 
- DeleteItemList(PREVIOUS_STATE);
- PREVIOUS_STATE = classlist;
+if ((fp = fopen(ENVFILE_NEW,"a")) == NULL)
+   {
+   DeleteItemList(PREVIOUS_STATE);
+   PREVIOUS_STATE = classlist;
+   return; 
+   }
 
- for (ip = ENTROPIES; ip != NULL; ip=ip->next)
-    {
-    fprintf(fp,"%s\n",ip->name);
-    }
+for (ip = classlist; ip != NULL; ip=ip->next)
+   {
+   fprintf(fp,"%s\n",ip->name);
+   }
 
- DeleteItemList(ENTROPIES); 
- fclose(fp);
+DeleteItemList(PREVIOUS_STATE);
+PREVIOUS_STATE = classlist;
 
- cf_rename(ENVFILE_NEW,ENVFILE);
+for (ip = ENTROPIES; ip != NULL; ip=ip->next)
+   {
+   fprintf(fp,"%s\n",ip->name);
+   }
+
+DeleteItemList(ENTROPIES); 
+fclose(fp);
+
+cf_rename(ENVFILE_NEW,ENVFILE);
 }
 
 /*********************************************************************/

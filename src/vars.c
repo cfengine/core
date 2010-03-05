@@ -72,11 +72,17 @@ Debug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 
 { char *sp1,*sp2;
- 
+  struct Rval rvald;
+   
 Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
 //sp1 = strdup(lval);
 //sp2 = strdup((char *)rval);
+
+if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
+   {
+   DeleteScalar(scope,lval);
+   }
 
 sp1 = lval;
 sp2 = rval;
@@ -93,7 +99,7 @@ void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
  
 Debug("IdempNewScalar(%s,%s,%s)\n",scope,lval,rval);
 
-if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) == cf_notype)
+if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    {
    return;
    }
@@ -136,9 +142,13 @@ else
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 
 { char *sp1;
- 
-Debug("NewList(%s,%s,...\n",scope,lval);
+  struct Rval rvald;
 
+if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
+   {
+   DeleteVariable(scope,lval);
+   }
+ 
 sp1 = strdup(lval);
 AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
 }

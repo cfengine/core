@@ -1233,7 +1233,7 @@ if (a.packages.package_delete_convention)
    }
 else
    {
-   id_del = name;
+   id_del = id; // defaults to the package_name_convention
    }
 
 CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\"/\"%s\" to the manager\n",id,id_del);

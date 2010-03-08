@@ -58,7 +58,7 @@ struct CfBSDFlag CF_BSDFLAGS[] =
    { "uimmutable",(u_long)UF_IMMUTABLE },
    { "uunlnk",(u_long)UF_NOUNLINK },
    { "uunlink",(u_long)UF_NOUNLINK },
-   { NULL,NULL }
+   { NULL,(u_long)NULL }
    };
 
 /***************************************************************/

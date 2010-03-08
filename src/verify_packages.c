@@ -1196,12 +1196,12 @@ return false;
 void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int no_version_specified,struct Attributes a,struct Promise *pp)
 
 { struct CfPackageManager *manager;
-  char reference[CF_EXPANDSIZE];
+ char reference[CF_EXPANDSIZE],reference2[CF_EXPANDSIZE];
   char refAnyVer[CF_EXPANDSIZE];
   char refAnyVerEsc[CF_EXPANDSIZE];
   char largestVerAvail[CF_MAXVARSIZE];
   char largestPackAvail[CF_MAXVARSIZE];
-  char *id;
+  char *id,*id_del;
   int package_select_in_range = false;
  
 /* Now we need to know the name-convention expected by the package manager */
@@ -1221,7 +1221,22 @@ else
    id = name;
    }
 
-CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\" to the manager\n",id);
+if (a.packages.package_delete_convention)
+   {
+   SetNewScope("cf_pack_context");
+   NewScalar("cf_pack_context","name",name,cf_str);
+   NewScalar("cf_pack_context","version",version,cf_str);
+   NewScalar("cf_pack_context","arch",arch,cf_str);
+   ExpandScalar(a.packages.package_delete_convention,reference2);
+   id_del = reference2;
+   DeleteScope("cf_pack_context");
+   }
+else
+   {
+   id_del = name;
+   }
+
+CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\"/\"%s\" to the manager\n",id,id_del);
 
 if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge ||
     a.packages.package_select == cfa_le || a.packages.package_select == cfa_cmp_none)
@@ -1260,8 +1275,7 @@ switch(a.packages.package_policy)
                 CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
                 break;
                 }
-             }
-          
+             }          
           
           CfOut(cf_verbose,""," -> Schedule package for addition\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
@@ -1368,7 +1382,7 @@ switch(a.packages.package_policy)
              CfOut(cf_verbose,""," !! Package update command undefined - failing over to delete then add");
 
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
-             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+             PrependPackageItem(&(manager->pack_list),id_del,"any","any",a,pp);
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
              PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
              }

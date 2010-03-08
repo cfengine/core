@@ -994,6 +994,7 @@ p.package_noverify_regex = (char *)GetConstraint("package_noverify_regex",pp,CF_
 p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode",pp);
 
 p.package_name_convention = (char *)GetConstraint("package_name_convention",pp,CF_SCALAR);
+p.package_delete_convention = (char *)GetConstraint("package_delete_convention",pp,CF_SCALAR);
 
 p.package_multiline_start = (char *)GetConstraint("package_multiline_start",pp,CF_SCALAR);
 return p;

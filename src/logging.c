@@ -37,20 +37,11 @@
 
 void BeginAudit()
 
-{ char name[CF_BUFSIZE];
-  struct Promise dummyp;
+{ struct Promise dummyp;
   struct Attributes dummyattr;
 
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
-
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
-MapName(name);
-
-if (!OpenDB(name,&AUDITDBP))
-   {
-   return;
-   }
 
 ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP);
 }
@@ -128,11 +119,6 @@ if (strlen(string) > 0)
    }
 
 ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
-
-if (AUDITDBP)
-   {
-   CloseDB(AUDITDBP);
-   }
 }
 
 /*****************************************************************************/
@@ -140,12 +126,14 @@ if (AUDITDBP)
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status)
 
 { time_t now = time(NULL);
- char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE],id[CF_MAXVARSIZE];
+  char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE],id[CF_MAXVARSIZE];
   struct AuditLog newaudit;
   struct Audit *ap = pp->audit;
   struct timespec t;
   double keyval;
   int lineno = pp->lineno;
+  char name[CF_BUFSIZE];
+
 
 Debug("ClassAuditLog(%s)\n",str);
 
@@ -224,6 +212,19 @@ switch(status)
        break;
    }
 
+if (!(attr.transaction.audit || AUDIT))
+   {
+   return;
+   }
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
+MapName(name);
+
+if (!OpenDB(name,&AUDITDBP))
+   {
+   return;
+   }
+
 if (AUDITDBP == NULL || THIS_AGENT_TYPE != cf_agent)
    {
    return;
@@ -286,6 +287,8 @@ if (AUDITDBP && attr.transaction.audit || AUDITDBP && AUDIT)
    {
    WriteDB(AUDITDBP,key,&newaudit,sizeof(newaudit));
    }
+
+CloseDB(AUDITDBP);
 }
 
 /*****************************************************************************/

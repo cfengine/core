@@ -1236,33 +1236,33 @@ switch(a.packages.package_policy)
 
        if (installed == 0)
           {
-	    if((a.packages.package_file_repositories != NULL) &&
-	       (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
-	      {
-	   
-		SetNewScope("cf_pack_context_anyver");
-		NewScalar("cf_pack_context_anyver","name",name,cf_str);
-		NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
-		NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
-		ExpandScalar(a.packages.package_name_convention,refAnyVer);
-		DeleteScope("cf_pack_context_anyver");
-
-
-		EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
-	   
-		if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
-		  {
-		    CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
-		    id = largestPackAvail;
-		  }
-		else
-		  {
-		    CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
-		    break;
-		  }
-	      }
-
-
+          if((a.packages.package_file_repositories != NULL) &&
+             (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
+             {
+             
+             SetNewScope("cf_pack_context_anyver");
+             NewScalar("cf_pack_context_anyver","name",name,cf_str);
+             NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
+             NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
+             ExpandScalar(a.packages.package_name_convention,refAnyVer);
+             DeleteScope("cf_pack_context_anyver");
+             
+             
+             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+             
+             if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
+                {
+                CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
+                id = largestPackAvail;
+                }
+             else
+                {
+                CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
+                break;
+                }
+             }
+          
+          
           CfOut(cf_verbose,""," -> Schedule package for addition\n");
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
@@ -1322,58 +1322,62 @@ switch(a.packages.package_policy)
        
    case cfa_update:
 
-       if (a.packages.package_update_command == NULL)
-          {
-          cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Package update command undefined");
-          return;
-          }
-
-       if((a.packages.package_file_repositories != NULL) &&
+       if ((a.packages.package_file_repositories != NULL) &&
 	  (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
-	 {
-	   
-	   SetNewScope("cf_pack_context_anyver");
-	   NewScalar("cf_pack_context_anyver","name",name,cf_str);
-	   NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
-	   NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
-	   ExpandScalar(a.packages.package_name_convention,refAnyVer);
-	   DeleteScope("cf_pack_context_anyver");
-
-
-	   EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
-	   
-	   if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
+          {          
+          SetNewScope("cf_pack_context_anyver");
+          NewScalar("cf_pack_context_anyver","name",name,cf_str);
+          NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
+          NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
+          ExpandScalar(a.packages.package_name_convention,refAnyVer);
+          DeleteScope("cf_pack_context_anyver");
+                    
+          EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+	  
+          if (FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
 	     {
-	       CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
-	       id = largestPackAvail;
+             CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
+             id = largestPackAvail;
 	     }
-	   else
+          else
 	     {
-	       CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
-	       break;
+             CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
+             break;
 	     }
-	   
-	   if(installed)
+          
+          if (installed)
 	     {
-	       CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
-	       
-	       if(IsNewerThanInstalled(name, largestVerAvail, arch, a))
-		 {
-		   CfOut(cf_verbose, "", "Installed package is older than latest available");
-		 }
-	       else
-		 {
-		   CfOut(cf_verbose, "", "Installed package is up to date, not updating");
-		   break;
-		 }
+             CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
+	     
+             if (IsNewerThanInstalled(name, largestVerAvail, arch, a))
+                {
+                CfOut(cf_verbose, "", "Installed package is older than latest available");
+                }
+             else
+                {
+                CfOut(cf_verbose, "", "Installed package is up to date, not updating");
+                break;
+                }
 	     }
-	 }
-
+          }
+       
        if (matched && package_select_in_range && !no_version_specified || installed)
           {
-          CfOut(cf_verbose,""," -> Schedule package for update\n");
-          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_update_command,cfa_update,a.packages.package_changes);
-          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+          if (a.packages.package_update_command == NULL)
+             {
+             CfOut(cf_verbose,""," !! Package update command undefined - failing over to delete then add");
+
+             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
+             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
+             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+             }
+          else
+             {
+             CfOut(cf_verbose,""," -> Schedule package for update\n");
+             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_update_command,cfa_update,a.packages.package_changes);
+             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+             }
           }
        else
           {

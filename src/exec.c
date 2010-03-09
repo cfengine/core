@@ -722,13 +722,22 @@ if (strlen(EXECCOMMAND) > 0)
    }
 else
    {
+   struct stat sb;
+   int twin_exists = false;
+      
    // twin is bin-twin\cf-agent.exe on windows, bin/cf-twin on Unix
+
    if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
       {
       snprintf(cmd,CF_BUFSIZE-1,"%s/bin-twin/cf-agent.exe",CFWORKDIR);
       MapName(cmd);
+
+      if (stat(cmd,&sb) == 0)
+         {
+         twin_exists = true;
+         }
       
-      if (IsExecutable(cmd))
+      if (twin_exists && IsExecutable(cmd))
 	 {
          snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin-twin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
                   CFWORKDIR,
@@ -748,6 +757,11 @@ else
    else
       {
       snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
+
+      if (stat(cmd,&sb) == 0)
+         {
+         twin_exists = true;
+         }
       
       if (IsExecutable(cmd))
 	 {

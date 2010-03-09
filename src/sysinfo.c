@@ -1555,7 +1555,7 @@ int Lsb_Version(void)
 if ((ret = Lsb_Release("--id")) != NULL)
    {
    strncpy(distrib,ret,CF_MAXVARSIZE);
-   NewClass(classname);
+   NewClass(distrib);
    snprintf(classname, CF_MAXVARSIZE, "%s",ret);
    NewClass(classname);
 

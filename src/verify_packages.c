@@ -689,7 +689,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                 {
                 char *sp,*offset = command_string + strlen(command_string);
 
-                if (a.packages.package_file_repositories)
+                if (a.packages.package_file_repositories && ( action == cfa_addpack || action == cfa_update ) )
                    {
 		     if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
                       {
@@ -1201,6 +1201,8 @@ void SchedulePackageOp(char *name,char *version,char *arch,int installed,int mat
   char refAnyVerEsc[CF_EXPANDSIZE];
   char largestVerAvail[CF_MAXVARSIZE];
   char largestPackAvail[CF_MAXVARSIZE];
+  char instVer[CF_MAXVARSIZE];
+  char instArch[CF_MAXVARSIZE];
   char *id,*id_del;
   int package_select_in_range = false;
  
@@ -1221,22 +1223,8 @@ else
    id = name;
    }
 
-if (a.packages.package_delete_convention)
-   {
-   SetNewScope("cf_pack_context");
-   NewScalar("cf_pack_context","name",name,cf_str);
-   NewScalar("cf_pack_context","version",version,cf_str);
-   NewScalar("cf_pack_context","arch",arch,cf_str);
-   ExpandScalar(a.packages.package_delete_convention,reference2);
-   id_del = reference2;
-   DeleteScope("cf_pack_context");
-   }
-else
-   {
-   id_del = id; // defaults to the package_name_convention
-   }
 
-CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\"/\"%s\" to the manager\n",id,id_del);
+CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\" to the manager\n",id);
 
 if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge ||
     a.packages.package_select == cfa_le || a.packages.package_select == cfa_cmp_none)
@@ -1336,6 +1324,9 @@ switch(a.packages.package_policy)
        
    case cfa_update:
 
+       *instVer = '\0';
+       *instArch = '\0';
+
        if ((a.packages.package_file_repositories != NULL) &&
 	  (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
           {          
@@ -1363,7 +1354,7 @@ switch(a.packages.package_policy)
 	     {
              CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
 	     
-             if (IsNewerThanInstalled(name, largestVerAvail, arch, a))
+             if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
                 {
                 CfOut(cf_verbose, "", "Installed package is older than latest available");
                 }
@@ -1381,8 +1372,40 @@ switch(a.packages.package_policy)
              {
              CfOut(cf_verbose,""," !! Package update command undefined - failing over to delete then add");
 
+	     // we need to have the version of installed package
+	     if (a.packages.package_delete_convention)
+	       {
+		 if(*instVer == '\0')
+		   {
+		     instVer[0] == '*';
+		     instVer[1] == '\0';
+		   }
+
+		 if(*instArch == '\0')
+		   {
+		     instArch[0] == '*';
+		     instArch[1] == '\0';
+		   }
+
+		 SetNewScope("cf_pack_context");
+		 NewScalar("cf_pack_context","name",name,cf_str);
+		 NewScalar("cf_pack_context","version",instVer,cf_str);
+		 NewScalar("cf_pack_context","arch",instArch,cf_str);
+		 ExpandScalar(a.packages.package_delete_convention,reference2);
+		 id_del = reference2;
+		 DeleteScope("cf_pack_context");
+	       }
+	     else
+	       {
+		 id_del = id; // defaults to the package_name_convention
+	       }
+
+
+	     CfOut(cf_verbose, "", "Scheduling package with id \"%s\" for deletion", id_del);
+
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
              PrependPackageItem(&(manager->pack_list),id_del,"any","any",a,pp);
+
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
              PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
              }
@@ -1568,9 +1591,9 @@ int VersionCmp(char *vs1, char *vs2)
 
 /*****************************************************************************/
 
-int IsNewerThanInstalled(char *n,char *v,char *a, struct Attributes attr)
+int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr)
 /* Returns true if a package (n, a) is installed and v is larger than
- * the installed version */
+ * the installed version. instV and instA are the version and arch installed. */
 { struct CfPackageManager *mp = NULL;
   struct CfPackageItem  *pi;
   
@@ -1589,6 +1612,9 @@ for (pi = mp->pack_list; pi != NULL; pi=pi->next)
      if((strcmp(n, pi->name) == 0) && ((strcmp(a, pi->arch) == 0) || (strcmp("default", pi->arch) == 0)))
        {
 	 CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
+	 
+	 snprintf(instV, CF_MAXVARSIZE, "%s", pi->version);
+	 snprintf(instA, CF_MAXVARSIZE, "%s", pi->arch);
 
 	 if(!VersionCmp(v, pi->version))
 	   {

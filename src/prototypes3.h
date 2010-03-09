@@ -1457,7 +1457,7 @@ void SchedulePackageOp(char *name,char *version,char *arch,int installed,int mat
 char *PrefixLocalRepository(struct Rlist *repositories,char *package);
 int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
 int VersionCmp(char *vs1, char *vs2);
-int IsNewerThanInstalled(char *n,char *v,char *a, struct Attributes attr);
+int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr);
 int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);

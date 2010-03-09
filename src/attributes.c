@@ -444,6 +444,9 @@ if (!ParseModeString(value,&p.plus,&p.minus))
 
 list = GetListConstraint("bsdflags",pp);
 
+p.plus_flags = 0;
+p.minus_flags = 0;
+
 if (list && !ParseFlagString(list,&p.plus_flags,&p.minus_flags))
    {
    CfOut(cf_error,"","Problem validating a BSD flag string");

@@ -1,3 +1,7 @@
+3.0.5
+	Attribute package_delete_convention added, to allow customizable
+	package name in delete command during update.
+
 3.0.4
 	Class cancellation in promises to create better class feedback,
 	allows emulation of switch/case semantics etc

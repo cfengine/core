@@ -1008,7 +1008,7 @@ void SetEnvironment(char *s)
 {
 if (putenv(s) != 0)
    {
-   CfOut(cf_inform,"putenv","Failed to set environement %s",s);
+   CfOut(cf_inform,"putenv","Failed to set environment %s",s);
    }
 }
 

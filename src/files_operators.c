@@ -683,14 +683,16 @@ if (attr.rename.newname)
       }
    else
       {
-      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Renaming file %s to %s\n",path,attr.rename.newname);
-
       if (!IsItemIn(VREPOSLIST,attr.rename.newname))
          {
          if (cf_rename(path,attr.rename.newname) == -1)
             {
             cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr," !! Error occurred while renaming %s\n",path);
             return;
+            }
+         else
+            {
+            cfPS(cf_inform,CF_CHG,"",pp,attr," -> Renaming file %s to %s\n",path,attr.rename.newname);
             }
          }
       else
@@ -787,8 +789,7 @@ if (attr.rename.disable)
       }
    else
       {
-      cf_chmod(path,newperm);
-      cfPS(cf_inform,CF_CHG,"",pp,attr," -> Disabling/renaming file %s to %s with mode %o\n",path,newname,newperm);
+      cf_chmod(path,newperm);      
 
       if (!IsItemIn(VREPOSLIST,newname))
          {
@@ -796,6 +797,10 @@ if (attr.rename.disable)
             {
             cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr,"Error occurred while renaming %s\n",path);
             return;
+            }
+         else
+            {
+            cfPS(cf_inform,CF_CHG,"",pp,attr," -> Disabling/renaming file %s to %s with mode %o\n",path,newname,newperm);
             }
 
          if (ArchiveToRepository(newname,attr,pp))

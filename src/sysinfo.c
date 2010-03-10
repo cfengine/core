@@ -1773,9 +1773,8 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 #ifndef MINGW
 
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
-{ 
 
-  int fd,len,i,j,first_address,ipdefault = false;
+{ int fd,len,i,j,first_address,ipdefault = false;
   struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
@@ -1787,7 +1786,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
 Debug("Unix_GetInterfaceInfo()\n");
 
-//NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
+NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
 
 last_name[0] = '\0';
 
@@ -1870,8 +1869,9 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       if (ioctl(fd,SIOCGIFFLAGS,&ifr) == -1)
          {
          CfOut(cf_error,"ioctl","No such network device");
-         close(fd);
-         return;
+         //close(fd);
+         //return;
+         continue;
          }
 
       if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
@@ -1931,8 +1931,9 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                   NewScalar("sys",name,ip,cf_str);
                   }
                }
-            close(fd);
-            return;
+            //close(fd);
+            //return;
+            continue;
             }
 
          strncpy(ip,"ipv4_",CF_MAXVARSIZE);
@@ -1994,7 +1995,6 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
          }
       }
    }
-
 
 close(fd);
 }

@@ -631,7 +631,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             }
          else if (unlink(filename) == -1)
             {
-            cfPS(cf_verbose,CF_CHG,"",pp,attr," !! Couldn't delete %s while purging\n",filename);
+            cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Couldn't delete %s while purging\n",filename);
             }
          }
       }
@@ -865,7 +865,7 @@ if (found == -1)
             return;
             }
 
-         cfPS(cf_error,CF_CHG,"mknod",pp,attr," -> Created special file/device `%s'",destfile);
+         cfPS(cf_inform,CF_CHG,"mknod",pp,attr," -> Created special file/device `%s'",destfile);
          }
 #endif  /* NOT MINGW */		 
       }
@@ -1493,11 +1493,17 @@ if (status == CF_CHG || status == CF_NOP)
       }
    
    if (status == CF_CHG)
+      {
       cfPS(cf_inform,status,"",pp,attr," -> Created link %s", destfile);
+      }
    else if (status == CF_NOP)
-      ; /*cfPS(cf_inform,status,"",pp,attr," -> Link %s as promised", destfile);*/
+      {
+      cfPS(cf_inform,status,"",pp,attr," -> Link %s as promised", destfile);
+      }
    else
+      {
       cfPS(cf_inform,status,"",pp,attr," -> Unable to create link %s", destfile);
+      }
    }
 }
 #endif  /* NOT MINGW */

@@ -93,7 +93,6 @@ else if (ec && ec->num_edits > 0)
       }
    else
       {
-      cfPS(cf_inform,CF_CHG,"",pp,a," -> Saving edit changes to file %s",ec->filename);
       SaveItemListAsFile(ec->file_start,ec->filename,a,pp);
       }
    }
@@ -186,6 +185,7 @@ int SaveItemListAsFile(struct Item *liststart,char *file,struct Attributes a,str
   security_context_t scontext=NULL;
 
 selinux_enabled = (is_selinux_enabled() > 0);
+
 if (selinux_enabled)
    {
    /* get current security context */

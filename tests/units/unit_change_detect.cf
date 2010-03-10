@@ -41,14 +41,13 @@ files:
 
   "/home/mark/tmp/web" -> "me"
 
-       changes      => stats,
-       depth_search => recurse("inf");
+   changes      => detect_all_change,
+   depth_search => recurse("inf");
 }
-
 
 #########################################################
 
-body changes stats
+body changes detect_all_change
 
 {
 report_changes => "all";  

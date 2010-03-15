@@ -44,7 +44,7 @@ a = GetClassContextAttributes(pp);
 
 if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
    {
-   CfOut(cf_error,""," !! Class identifier contains illegal characters");
+   CfOut(cf_error,""," !! Class identifier \"%s\" contains illegal characters",pp->promiser);
    PromiseRef(cf_error,pp);
    return;
    }

@@ -1135,7 +1135,7 @@ int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 { char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
   FILE *pop;
 
-if (attr.transformer == NULL)
+if (attr.transformer == NULL || file == NULL)
    {
    return false;
    }

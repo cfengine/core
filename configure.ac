@@ -59,6 +59,10 @@ CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 CPPFLAGS="$PTHREAD_CPPFLAGS $CPPFLAGS"
 LDFLAGS="$PTHREAD_LDFLAGS $LDFLAGS"
 
+case "$target_os" in
+   linux*) CPPFLAGS=-I`pg_config --includedir`
+esac 
+
 dnl ######################################################################
 dnl Checks for programs.
 dnl ######################################################################

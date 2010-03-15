@@ -130,7 +130,12 @@ else
       }
    }
 
+/* client always identifies as root on windows */
+#ifdef MINGW
+snprintf(uname, sizeof(uname), "%s", "root");
+#else
 GetCurrentUserName(uname, sizeof(uname));
+#endif
 
 /* Some resolvers will not return FQNAME and missing PTR will give numerical result */
 

@@ -216,7 +216,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             ERRORCOUNT++;            
             CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
             }
-      
+    
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
             {
             Debug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);

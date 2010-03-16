@@ -205,9 +205,9 @@ void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *strin
 { struct Rlist *rp;
   char *sp,rtype;
   void *rval;
-  char var[CF_BUFSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
+  char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
-Debug("ScanScalar([%s])\n",string);
+Debug("ScanScalar(\"%s\")\n",string);
 
 if (string == NULL)
    {
@@ -216,28 +216,31 @@ if (string == NULL)
 
 for (sp = string; (*sp != '\0') ; sp++)
    {
+   v[0] = '\0';
    var[0] = '\0';
    exp[0] = '\0';
-   
+
    if (*sp == '$')
       {
-      if (ExtractInnerCf3VarString(sp,var))
+      if (ExtractInnerCf3VarString(sp,v))
          {
          char absscope[CF_MAXVARSIZE];
-         
-         if (strstr(var,"."))
+
+         if (strstr(v,"."))
             {
             strncpy(temp,var,CF_BUFSIZE-1);  
             absscope[0] = '\0';
-            sscanf(temp,"%[^.].%s",absscope,var);
+            sscanf(temp,"%[^.].%s",absscope,v);
             }
          else
             {
             strncpy(absscope,scopeid,CF_MAXVARSIZE-1);  
             }
 
+         ExpandPrivateScalar(absscope,v,var); 
+
          RegisterBundleDependence(absscope,pp);
-         
+
          if (GetVariable(absscope,var,&rval,&rtype) != cf_notype)
             {
             if (rtype == CF_LIST)
@@ -285,7 +288,7 @@ for (sp = string; (*sp != '\0') ; sp++)
 int ExpandScalar(char *string,char buffer[CF_EXPANDSIZE])
 
 {
-Debug("\nExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
+Debug("ExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
 return ExpandPrivateScalar(CONTEXTID,string,buffer); 
 }
 

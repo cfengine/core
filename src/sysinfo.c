@@ -1738,8 +1738,17 @@ void *Lsb_Release(char *key)
 { char vbuff[CF_BUFSIZE];
   char info[CF_MAXVARSIZE];
   FILE *pp;
+  struct stat sb;
 
-snprintf(vbuff, CF_BUFSIZE, "/usr/bin/lsb_release %s",key);
+snprintf(vbuff,CF_BUFSIZE, "/usr/bin/lsb_release");
+
+if (cfstat(vbuff,&sb) == -1)
+   {
+   CfOut(cf_verbose,"","LSB probe \"%s\" doesn't exist",vbuff);
+   return NULL;
+   }
+
+snprintf(vbuff,CF_BUFSIZE, "/usr/bin/lsb_release %s",key);
 
 if ((pp = cf_popen(vbuff, "r")) == NULL)
    {

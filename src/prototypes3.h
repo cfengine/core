@@ -1261,6 +1261,7 @@ void TestAgentPromises(void);
 
 void KeepPromiseBundles(void);
 void KeepControlPromises(void);
+void KeepContextBundles(void);
 void KeepServerPromise(struct Promise *pp);
 void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
 void KeepServerRolePromise(struct Promise *pp);

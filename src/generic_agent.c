@@ -502,7 +502,6 @@ if (BOOTSTRAP)
       strncpy(VINPUTFILE,vbuff,CF_BUFSIZE-1);
       }
    }
-
 }
 
 /*******************************************************************/
@@ -555,6 +554,7 @@ if (VINPUTLIST != NULL)
    }
 
 HashVariables();
+
 PARSING = false;
 }
 
@@ -1309,7 +1309,6 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       }
    }
 
-
 HashVariables();
 HashControls();
 
@@ -1376,7 +1375,7 @@ CfOut(cf_verbose,""," -> Checking common class promises...\n");
 
 for (pp = classlist; pp != NULL; pp=pp->next)
    {
-   KeepClassContextPromise(pp);
+   ExpandPromise(cf_agent,THIS_BUNDLE,pp,KeepClassContextPromise);
    }
 }
 
@@ -1642,7 +1641,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
       // We must also set global classes here?
 
-      if (strcmp(bp->type,"common") == 0&&  strcmp(sp->name,"classes") == 0)
+      if (strcmp(bp->type,"common") == 0 && strcmp(sp->name,"classes") == 0)
          {
          CheckCommonClassPromises(sp->promiselist);
          }
@@ -1661,13 +1660,13 @@ void HashControls()
 
 /* Only control bodies need to be hashed like variables */
 
-CfOut(cf_verbose,"","Initiate control variable convergence...\n");
-
 for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
    {
    if (strcmp(bdp->name,"control") == 0)
       {
       snprintf(buf,CF_BUFSIZE,"%s_%s",bdp->name,bdp->type);
+      CfOut(cf_verbose,"","Initiate control variable convergence...%s\n",buf);
+      DeleteScope(buf);
       SetNewScope(buf);
       CheckControlPromises(buf,bdp->type,bdp->conlist);
       }

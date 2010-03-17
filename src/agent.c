@@ -755,7 +755,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
           params = NULL;
           break;
       }
-   
+
    if ((bp = GetBundle(name,"agent")) || (bp = GetBundle(name,"common")))
       {
       AugmentScope(bp->name,bp->args,params);
@@ -783,7 +783,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
       {
       ClassBanner(type);
-      
+
       if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type],bp)) == NULL)
          {
          continue;      

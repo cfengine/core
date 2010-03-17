@@ -70,6 +70,7 @@ void KeepLiteralAccessPromise(struct Promise *pp, char *type);
 void KeepPromises()
 
 {
+KeepContextBundles();
 KeepControlPromises();
 KeepPromiseBundles();
 }
@@ -176,8 +177,11 @@ for (ip = DHCPLIST; ip != NULL; ip=ip->next)
 void KeepControlPromises()
     
 { struct Constraint *cp;
+  struct Scope *ptr;
+  struct Rval rrval;
   char rettype;
   void *retval;
+  int i;
 
 CFD_MAXPROCESSES = 10;
 MAXTRIES = 5;
@@ -188,6 +192,12 @@ CFRUNCOMMAND[0] = '\0';
 CHECK_RFC931 = false;
 
 /* Keep promised agent behaviour - control bodies */
+
+Banner("Server control promises..");
+
+HashControls();
+
+/* Now expand */
 
 for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    {
@@ -386,6 +396,50 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&
 
 /*********************************************************************/
 
+void KeepContextBundles()
+    
+{ struct Bundle *bp;
+  struct SubType *sp;
+  struct Promise *pp;
+  char *scope, *rettype;
+  void *retval;
+
+/* Dial up the generic promise expansion with a callback */
+
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   scope = bp->name;
+   SetNewScope(bp->name);
+   
+   if ((strcmp(bp->type,CF_AGENTTYPES[cf_server]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
+      {
+      DeletePrivateClassContext(); // Each time we change bundle
+      
+      BannerBundle(bp,NULL);
+      scope = bp->name;
+      
+      for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
+         {
+         if (strcmp(sp->name,"access") == 0)
+            {
+            continue;
+            }
+         
+         BannerSubType(scope,sp->name,0);
+         SetScope(scope);
+         AugmentScope(scope,NULL,NULL);
+         
+         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+            {
+            ExpandPromise(cf_server,scope,pp,KeepServerPromise);
+            }
+         }
+      }
+   }
+}
+
+/*********************************************************************/
+
 void KeepPromiseBundles()
     
 { struct Bundle *bp;
@@ -395,16 +449,30 @@ void KeepPromiseBundles()
   void *retval;
 
 /* Dial up the generic promise expansion with a callback */
-  
+
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
    scope = bp->name;
    SetNewScope(bp->name);
-
+   
    if ((strcmp(bp->type,CF_AGENTTYPES[cf_server]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
       {
+      DeletePrivateClassContext(); // Each time we change bundle
+      
+      BannerBundle(bp,NULL);
+      scope = bp->name;
+      
       for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
          {
+         if (strcmp(sp->name,"access") != 0)
+            {
+            continue;
+            }
+         
+         BannerSubType(scope,sp->name,0);
+         SetScope(scope);
+         AugmentScope(scope,NULL,NULL);
+         
          for (pp = sp->promiselist; pp != NULL; pp=pp->next)
             {
             ExpandPromise(cf_server,scope,pp,KeepServerPromise);

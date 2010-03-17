@@ -586,13 +586,12 @@ do
       {
       NewScalar("this","handle",PromiseID(pp),cf_str);
       }
-   
+
    pexp = ExpandDeRefPromise("this",pp);
      
    switch (agent)
       {
       case cf_common:
-
           ShowPromise(pexp,6);
           ReCheckAllConstraints(pexp);
           break;
@@ -1055,7 +1054,7 @@ if (rval != NULL)
          last = rp;
          }
       }
-   
+
    if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);

@@ -1539,7 +1539,7 @@ printf("\nBug reports: bug-cfengine@cfengine.org, ");
 printf("Community help: help-cfengine@cfengine.org\n");
 printf("Community info: http://www.cfengine.org, ");
 printf("Support services: http://www.cfengine.com\n\n");
-printf("This software is (C) 2008 Cfengine AS.\n");
+printf("This software is Copyright (C) 2008-present Cfengine AS.\n");
 }
 
 /*******************************************************************/
@@ -1586,7 +1586,7 @@ printf("\nBug reports: bug-cfengine@cfengine.org\n");
 printf(".pp\nCommunity help: help-cfengine@cfengine.org\n");
 printf(".pp\nCommunity info: http://www.cfengine.org\n");
 printf(".pp\nSupport services: http://www.cfengine.com\n");
-printf(".pp\nThis software is (C) 2008- Cfengine AS.\n");
+printf(".pp\nThis software is Copyright (C) 2008- Cfengine AS.\n");
 }
 
 /*******************************************************************/
@@ -1594,7 +1594,7 @@ printf(".pp\nThis software is (C) 2008- Cfengine AS.\n");
 void Version(char *component)
 
 {
-printf("This comprises %s core community version %s - %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
+printf("This comprises %s core community version %s - Copyright %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
 EnterpriseVersion();
 }
 

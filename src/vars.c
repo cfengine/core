@@ -226,7 +226,7 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
       {
       i++;
 
-      if (i >= CF_HASHTABLESIZE-1)
+      if (i >= CF_HASHTABLESIZE)
          {
          i = 0;
          }
@@ -297,7 +297,7 @@ if (CompareVariable(id,ptr->hashtable[slot]) != 0)
          break;
          }
       
-      if (i >= CF_HASHTABLESIZE-1)
+      if (i >= CF_HASHTABLESIZE)
          {
          i = 0;
          }

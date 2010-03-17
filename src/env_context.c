@@ -708,7 +708,8 @@ return false;
 
 void NewClass(char *class)
 
-{
+{ struct Item *ip;
+ 
 Chop(class);
 Debug("NewClass(%s)\n",class);
 
@@ -735,6 +736,29 @@ if (IsItemIn(VHEAP,class))
    }
 
 AppendItem(&VHEAP,class,NULL);
+
+for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+   {
+   if (IsDefinedClass(ip->name))
+      {
+      CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",class,THIS_BUNDLE);
+      exit(1);
+      }
+   }
+
+if (!ABORTBUNDLE)
+   {
+   for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+      {
+      if (IsDefinedClass(ip->name))
+         {
+         CfOut(cf_error,""," -> Setting abort for \"%s\" when setting \"%s\"",ip->name,class);
+         ABORTBUNDLE = true;
+         break;
+         }
+      }
+   }
+
 }
 
 /*********************************************************************/
@@ -785,6 +809,7 @@ DeleteItemLiteral(&VADDCLASSES,class);
 void NewBundleClass(char *class,char *bundle)
 
 { char copy[CF_BUFSIZE];
+  struct Item *ip;
 
 memset(copy,0,CF_BUFSIZE);
 strncpy(copy,class,CF_MAXVARSIZE);
@@ -820,6 +845,28 @@ if (IsItemIn(VADDCLASSES,copy))
    }
 
 AppendItem(&VADDCLASSES,copy,CONTEXTID);
+
+for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+   {
+   if (IsDefinedClass(ip->name))
+      {
+      CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",copy,bundle);
+      exit(1);
+      }
+   }
+
+if (!ABORTBUNDLE)
+   {
+   for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+      {
+      if (IsDefinedClass(ip->name))
+         {
+         CfOut(cf_error,""," -> Setting abort for \"%s\" when setting \"%s\"",ip->name,class);
+         ABORTBUNDLE = true;
+         break;
+         }
+      }
+   }
 }
 
 /*********************************************************************/

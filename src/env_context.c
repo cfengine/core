@@ -551,6 +551,16 @@ if (!IsDefinedClass(pp->classes))
    return false;
    }
 
+if (pp->done)
+   {
+   return false;
+   }
+
+if (IsDefinedClass(pp->promiser))
+   {
+   return false;
+   }
+
 switch (cp->type) 
    {
    case CF_FNCALL:
@@ -651,14 +661,15 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    result_or  = result_or || result;
    result_xor += result;
 
-   if (total > 0)
+   if (total > 0) // dist class
       {
       prob = ((double)Str2Int(rp->item))/((double)total);
       cum += prob;
-      
+
       if ((fluct < cum) || rp->next == NULL)
          {
          snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser,rp->item);
+         *(pp->donep) = true;
 
          if (strcmp(pp->bundletype,"common") == 0)
             {

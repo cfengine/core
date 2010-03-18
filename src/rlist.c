@@ -228,12 +228,13 @@ int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2)
 {
 if (rtype1 != rtype2)
    {
-   return false;
+   return -1;
    }
 
 switch (rtype1)
    {
    case CF_SCALAR:
+
        if (IsCf3VarString((char *)rval1) || IsCf3VarString((char *)rval2))
           {
           return -1; // inconclusive

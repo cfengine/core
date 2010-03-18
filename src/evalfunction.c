@@ -1781,7 +1781,7 @@ if (strstr(name,"."))
 else
    {
    strcpy(lval,name);
-   strcpy(scopeid,CONTEXTID);
+   strcpy(scopeid,"this");
    }
 
 if ((ptr = GetScope(scopeid)) == NULL)
@@ -1795,7 +1795,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
 
 if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
    {
-   CfOut(cf_error,"","Function \"join\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"join\" was promised a list called \"%s.%s\" but this was not (yet) found\n",scopeid,name);
    SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
    rval.item = NULL;
    rval.rtype = CF_SCALAR;
@@ -1804,12 +1804,13 @@ if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
 
 if (rval2.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function \"join\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"join\" was promised a list called \"%s\" but this was not (yet) found\n",name);
    SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
    rval.item = NULL;
    rval.rtype = CF_SCALAR;
    return rval;
    }
+
 
 for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    {

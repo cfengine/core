@@ -165,6 +165,13 @@ enum cfdatatype GetVariable(char *scope,char *lval,void **returnv, char *rtype)
   
 Debug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
+if (lval == NULL)
+   {
+   *returnv = lval;
+   *rtype   = CF_SCALAR;
+   return cf_notype;
+   }
+
 if (!IsExpandable(lval))
    {
    strncpy(sval,lval,CF_MAXVARSIZE-1);

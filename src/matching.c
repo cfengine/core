@@ -608,7 +608,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       char lval[4];
       char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
-      
+
       memset(substring,0,CF_MAXVARSIZE);
 
       if (backref_len < CF_MAXVARSIZE)

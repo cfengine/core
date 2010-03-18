@@ -789,11 +789,6 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          continue;      
          }
 
-      if (pass > 1 && type == kp_vars)
-         {
-         continue;
-         }
-
       BannerSubType(bp->name,sp->name,pass);
       SetScope(bp->name);
 
@@ -918,6 +913,12 @@ if (VarClassExcluded(pp,&sp))
 // Record promises examined for efficiency calc
 
 CF_EDGES++;
+
+if (strcmp("vars",pp->agentsubtype) == 0)
+   {
+   ConvergeVarHashPromise(pp->bundle,pp,true);
+   return;
+   }
 
 if (strcmp("classes",pp->agentsubtype) == 0)
    {

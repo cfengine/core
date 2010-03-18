@@ -59,9 +59,6 @@ CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 CPPFLAGS="$PTHREAD_CPPFLAGS $CPPFLAGS"
 LDFLAGS="$PTHREAD_LDFLAGS $LDFLAGS"
 
-case "$target_os" in
-   linux*) CPPFLAGS=-I`pg_config --includedir`
-esac 
 
 dnl ######################################################################
 dnl Checks for programs.
@@ -113,6 +110,12 @@ else
 fi
 
 if test $WITH_SQL = 1; then
+  case "$target_os" in
+     linux*)
+        if [ `which pg_config` ]; then
+          CPPFLAGS=-I`pg_config --includedir`
+        fi
+  esac
   AC_CHECK_LIB(mysqlclient,main)
   AC_CHECK_LIB(pq,main)
   AC_CHECK_HEADERS(mysql/mysql.h)

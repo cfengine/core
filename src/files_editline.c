@@ -501,13 +501,6 @@ if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
    return false;
    }
 
-if (end == CF_UNDEFINED_ITEM && a.region.select_end)
-   {
-   cfPS(cf_verbose,CF_INTERPT,"",pp,a," !! The promised end pattern (%s) was not found when selecting edit region in %s, abort edit",a.region.select_end,pp->this_server);
-   end = NULL; /* End of file is null ptr if nothing else specified */
-   return false;
-   }
-
 if (end == CF_UNDEFINED_ITEM)
    {
    end = NULL; /* End of file is null ptr if nothing else specified */

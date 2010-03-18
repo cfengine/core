@@ -738,6 +738,10 @@ void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_S
   struct Rlist *rp;
   struct FnCall *fp;
 
+  char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
+  int doHash;
+  int i;
+
 md = EVP_get_digestbyname(FileHashName(type));
    
 EVP_DigestInit(&context,md);
@@ -758,6 +762,23 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    EVP_DigestUpdate(&context,cp->lval,strlen(cp->lval));
 
+   // don't hash rvals that change (e.g. times)
+   doHash = true;
+
+   for(i = 0; noRvalHash[i] != NULL; i++ )
+     {
+       if(strcmp(cp->lval, noRvalHash[i]) == 0)
+	 {
+	   doHash = false;
+	   break;
+	 }
+     }
+
+   if(!doHash)
+     {
+       continue;
+     }
+   
    switch(cp->type)
       {
       case CF_SCALAR:

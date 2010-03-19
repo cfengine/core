@@ -42,12 +42,13 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   int count = 0,lastnode = false, expandregex = false;
   uid_t agentuid = getuid();
   int create = GetBooleanConstraint("create",pp);
+  char *pathtype = GetConstraint("pathtype",pp,CF_SCALAR);
 
 Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 /* Do a search for promiser objects matching wildpath */
 
-if (!IsPathRegex(wildpath))
+if (!IsPathRegex(wildpath) || pathtype && (strcmp(pathtype,"literal") == 0))
    {
    CfOut(cf_verbose,""," -> Using literal pathtype for %s\n",wildpath);
    (*fnptr)(wildpath,pp);

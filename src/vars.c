@@ -51,7 +51,7 @@ NewScalar("const","endl","\n",cf_str);
 
 void ForceScalar(char *lval,char *rval)
 
-{ char rtype,retval[CF_MAXVARSIZE];
+{ char rtype,*retval;
 
 if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know)
    {
@@ -71,23 +71,18 @@ Debug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval
 
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 
-{ char *sp1,*sp2;
-  struct Rval rvald;
+{ struct Rval rvald;
    
 Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
-//sp1 = strdup(lval);
-//sp2 = strdup((char *)rval);
+// Newscalar allocates memory through NewAssoc
 
 if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    {
    DeleteScalar(scope,lval);
    }
 
-sp1 = lval;
-sp2 = rval;
-
-AddVariableHash(scope,sp1,sp2,CF_SCALAR,dt,NULL,0);
+AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 }
 
 /*******************************************************************/
@@ -104,10 +99,7 @@ if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    return;
    }
 
-sp1 = strdup(lval);
-sp2 = strdup((char *)rval);
-
-AddVariableHash(scope,sp1,sp2,CF_SCALAR,dt,NULL,0);
+AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 }
 
 /*******************************************************************/

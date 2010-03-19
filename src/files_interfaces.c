@@ -1263,6 +1263,12 @@ if (a.havedelete && a.havedepthsearch && !a.haveselect)
    return false;
    }
 
+if (a.haveselect && !(a.havedepthsearch || IsRegex(pp->promiser)))
+   {
+   CfOut(cf_error,""," -> Warning: File select constraint body promised but no depth search indicated");
+   PromiseRef(cf_error,pp);
+   }
+
 if (a.haveselect && !a.select.result)
    {
    CfOut(cf_error,""," !! File select constraint body promised no result (check body definition)");

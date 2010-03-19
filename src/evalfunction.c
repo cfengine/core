@@ -3718,8 +3718,6 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 from = Str2Int(finalargs->item);
 to = Str2Int(finalargs->next->item);
 
-printf("ARGS: %s,%s\n",finalargs->item,finalargs->next->item);
-
 if (from == CF_NOINT || to == CF_NOINT)
    {
    SetFnCallReturnStatus("irange",FNCALL_FAILURE,NULL,NULL);

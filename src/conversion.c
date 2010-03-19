@@ -733,7 +733,7 @@ enum cf_acl_method Str2AclMethod(char *string)
 
 { static char *text[3] = { "append", "overwrite", NULL };
   int i;
- 
+
 for (i = 0; i < 2; i++)
    {
    if (string && (strcmp(text[i],string) == 0))

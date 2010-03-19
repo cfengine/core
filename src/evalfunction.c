@@ -3718,32 +3718,14 @@ ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 from = Str2Int(finalargs->item);
 to = Str2Int(finalargs->next->item);
 
+printf("ARGS: %s,%s\n",finalargs->item,finalargs->next->item);
+
 if (from == CF_NOINT || to == CF_NOINT)
    {
    SetFnCallReturnStatus("irange",FNCALL_FAILURE,NULL,NULL);
    rval.item = NULL;
    rval.rtype = CF_SCALAR;
    return rval;
-   }
-
-if (strcmp((char *)(finalargs->item),"inf") == 0)
-   {
-   from = CF_INFINITY;
-   }
-
-if (strcmp((char *)(finalargs->item),"now") == 0)
-   {
-   from = CFSTARTTIME;
-   }
-
-if (strcmp((char *)(finalargs->next->item),"inf") == 0)
-   {
-   to = CF_INFINITY;
-   }
-
-if (strcmp((char *)(finalargs->next->item),"now") == 0)
-   {
-   to = CFSTARTTIME;
    }
 
 if (from == CF_NOINT || to == CF_NOINT)
@@ -4099,7 +4081,7 @@ cftime = CFSTARTTIME;
 
 Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
-snprintf(buffer,CF_BUFSIZE-1,"%d",time);
+snprintf(buffer,CF_BUFSIZE-1,"%ld",(long)cftime);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {

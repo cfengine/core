@@ -367,7 +367,7 @@ void StartServer(int argc,char **argv)
     return;
     }
 
- WritePID("cf-monitor.pid");
+ WritePID("cf-monitord.pid");
 
  OpenSniffer();
  

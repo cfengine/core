@@ -48,7 +48,7 @@ Debug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 /* Do a search for promiser objects matching wildpath */
 
-if (!IsPathRegex(wildpath) || pathtype && (strcmp(pathtype,"literal") == 0))
+if (!IsPathRegex(wildpath) || (pathtype && (strcmp(pathtype,"literal") == 0)))
    {
    CfOut(cf_verbose,""," -> Using literal pathtype for %s\n",wildpath);
    (*fnptr)(wildpath,pp);

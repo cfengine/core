@@ -344,7 +344,7 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"file_select",cf_body,CF_FILEFILTER_BODY,"Choose which files select in a search"},
    {"link_from",cf_body,CF_LINKTO_BODY,"Criteria for linking file from a source"},
    {"move_obstructions",cf_opts,CF_BOOL,"true/false whether to move obstructions to file-object creation"},
-   {"pathtype",cf_opts,"literal,regex","Menu option for interpreting promiser file object"},
+   {"pathtype",cf_opts,"literal,regex,guess","Menu option for interpreting promiser file object"},
    {"perms",cf_body,CF_ACCESS_BODIES,"Criteria for setting permissions on a file"},
    {"rename",cf_body,CF_RENAME_BODY,"Criteria for renaming files"},
    {"repository",cf_str,CF_PATHRANGE,"Name of a repository for versioning"},

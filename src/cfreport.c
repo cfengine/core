@@ -59,6 +59,7 @@ void MagnifyNow(void);
 void OpenMagnifyFiles(void);
 void CloseMagnifyFiles(void);
 void EraseAverages(void);
+void RemoveHostSeen(char *hosts);
 
 extern struct BodySyntax CFRE_CONTROLBODY[];
 
@@ -87,6 +88,7 @@ double AGE;
 static struct Averages ENTRY,MAX,MIN,DET;
 
 char OUTPUTDIR[CF_BUFSIZE],*sp;
+char REMOVEHOSTS[CF_BUFSIZE];
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -104,7 +106,7 @@ struct Rlist *CSVLIST = NULL;
             "data stored in cfengine's embedded databases in human\n"
             "readable form.";
 
- struct option OPTIONS[21] =
+ struct option OPTIONS[22] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -126,10 +128,11 @@ struct Rlist *CSVLIST = NULL;
       { "no-error-bars",no_argument,0,'e'},
       { "no-scaling",no_argument,0,'n'},
       { "verbose",no_argument,0,'v'},
+      { "remove-hosts",required_argument,0,'r'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[21] =
+ char *HINTS[22] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -151,6 +154,7 @@ struct Rlist *CSVLIST = NULL;
       "Do not add error bars to the printed graphs",
       "Do not automatically scale the axes",
       "Generate verbose output",
+      "Remove comma separated list of IP address entries from the hosts-seen database",
       NULL
       };
 
@@ -329,6 +333,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
       case 'R': HIRES = true;
          break;
 
+      case 'r':
+          strncpy(REMOVEHOSTS,optarg,CF_BUFSIZE-1);
+          break;         
+
       case 'e': ERRORBARS = false;
           break;
 
@@ -401,6 +409,7 @@ snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 MapName(VINPUTFILE);
 
 InitMeasurements();
+RemoveHostSeen(REMOVEHOSTS);
 }
 
 /*****************************************************************************/
@@ -716,6 +725,34 @@ GrandSummary();
 
 /*********************************************************************/
 /* Level 2                                                           */
+/*********************************************************************/
+
+void RemoveHostSeen(char *hosts)
+
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key,name[CF_BUFSIZE];
+  void *value;
+  struct Item *ip,*list = SplitStringAsItemList(hosts,',');
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
+
+if (!OpenDB(name,&dbp))
+   {
+   return;
+   }
+
+for (ip = list; ip != NULL; ip=ip->next)
+   {
+   DeleteDB(dbp,ip->name);
+   CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",ip->name);
+   }
+
+CloseDB(dbp);
+DeleteItemList(list);
+}
+
 /*********************************************************************/
 
 void ShowLastSeen()

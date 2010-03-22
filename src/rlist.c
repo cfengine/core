@@ -889,7 +889,8 @@ free((char *)rp);
 struct Rlist *SplitStringAsRList(char *string,char sep)
 
  /* Splits a string containing a separator like "," 
-    into a linked list of separate items, */
+    into a linked list of separate items, supports
+    escaping separators, e.g. \, */
 
 { struct Rlist *liststart = NULL;
   char format[9], *sp;
@@ -897,26 +898,18 @@ struct Rlist *SplitStringAsRList(char *string,char sep)
   
 Debug("SplitStringAsRList(%s)\n",string);
 
-sprintf(format,"%%255[^%c]",sep);   /* set format string to search */
-
 for (sp = string; *sp != '\0'; sp++)
    {
-   memset(node,0,CF_MAXVARSIZE);
-   sscanf(sp,format,node);
-
-   if (strlen(node) == 0)
-      {
-      continue;
-      }
-   
-   sp += strlen(node)-1;
-
-   AppendRScalar(&liststart,node,CF_SCALAR);
-
    if (*sp == '\0')
       {
       break;
       }
+
+   memset(node,0,CF_MAXVARSIZE);
+
+   sp += SubStrnCopyChr(node,sp,CF_MAXVARSIZE,sep)+1;
+
+   AppendRScalar(&liststart,node,CF_SCALAR);
    }
 
 return liststart;

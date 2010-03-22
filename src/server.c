@@ -1216,7 +1216,6 @@ switch (GetCommand(recvbuffer))
        CfOpenDirectory(conn,sendbuffer,filename);
        return true;
        
-       
    case cfd_ssynch:
 
        memset(buffer,0,CF_BUFSIZE);
@@ -1240,7 +1239,7 @@ switch (GetCommand(recvbuffer))
 
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
 
-       if (strncmp(recvbuffer,"SYNCH",5) !=0)
+       if (strncmp(recvbuffer,"SYNCH",5) != 0)
           {
           CfOut(cf_inform,"","No synch\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);

@@ -855,10 +855,58 @@ return buffer;
 
 /*********************************************************************/
 
+int SubStrnCopyChr(char *to,char *from,int len,char sep)
+
+{ char *sp,*sto = to;
+  int count = 0;
+
+memset(to,0,len);
+
+if (from == NULL)
+   {
+   return 0;
+   }
+
+if (from && strlen(from) == 0)
+   {
+   return 0;
+   }
+
+for (sp = from; *sp != '\0'; sp++)
+   {
+   if (count > len-1)
+      {
+      break;
+      }
+
+   if (*sp == '\\' && *(sp+1) == sep)
+      {
+      *sto++ = *++sp;
+      }
+   else if (*sp == sep)
+      {
+      break;          
+      }
+   else
+      {
+      *sto++ = *sp;
+      }
+
+   count++;
+   }
+
+return count;
+}
+
+/*********************************************************************/
+
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+
 void *ThreadUniqueName(pthread_t tid)
+
 /* pthread_t is an integer on Unix, but a structure on Windows
  * Finds a unique name for a thread for both platforms. */
+
 {
 #ifdef MINGW
 return tid.p;  // pointer to thread structure

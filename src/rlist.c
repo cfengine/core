@@ -907,7 +907,7 @@ for (sp = string; *sp != '\0'; sp++)
 
    memset(node,0,CF_MAXVARSIZE);
 
-   sp += SubStrnCopyChr(node,sp,CF_MAXVARSIZE,sep)+1;
+   sp += SubStrnCopyChr(node,sp,CF_MAXVARSIZE,sep);
 
    AppendRScalar(&liststart,node,CF_SCALAR);
    }

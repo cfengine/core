@@ -885,6 +885,7 @@ for (sp = from; *sp != '\0'; sp++)
       }
    else if (*sp == sep)
       {
+      count;
       break;          
       }
    else

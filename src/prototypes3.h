@@ -699,6 +699,7 @@ char ToUpper (char ch);
 char *ToUpperStr (char *str);
 char *ToLowerStr (char *str);
 int SubStrnCopyChr(char *to,char *from,int len,char sep);
+int CountChar(char *string,char sp);
     
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 void *ThreadUniqueName(pthread_t tid);

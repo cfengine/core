@@ -34,7 +34,7 @@ vars:
 
 reports:
 
-  WinXP::
+  windows::
 
    "Value extracted: $(value)";
 

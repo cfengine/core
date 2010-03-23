@@ -67,10 +67,3 @@ bundle edit_line MarkNRoot
 
   }
 
-########################################################
-
-body action defineclass(c)
-{
-promise_repaired => { "$(c)" };
-persist_time => "0";
-}

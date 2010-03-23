@@ -36,9 +36,9 @@ body package_method msi_fmatch
 
  package_installed_regex => ".*";
 
- package_name_regex    => "([^-]+).*";
- package_version_regex => "[^-]+-([^-]+).*";
- package_arch_regex => "[^-]+-[^-]+-([^\.]+).*";
+ package_name_regex    => "^(\S+)-(\d+\.?)+";
+ package_version_regex => "^\S+-((\d+\.?)+)";
+ package_arch_regex    => "^\S+-(\d+\.?)+(^.+)";
  
  package_name_convention => "$(name)-$(version)-$(arch).msi";
 

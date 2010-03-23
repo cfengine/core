@@ -3,6 +3,7 @@
 	package name in delete command during update.
 
         Bad initialization of BSD flags fixed
+	Multiple variable expansion issues in control fixed for server and agent
 	
 3.0.4
 	Class cancellation in promises to create better class feedback,

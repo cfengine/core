@@ -382,7 +382,6 @@ var = 0;
 val = 0;
 last = 0;
 
-
 #ifdef HAVE_LIBCFNOVA
 lastseen = GetPromiseCompliance(pp,&val,&av,&var,&last);
 

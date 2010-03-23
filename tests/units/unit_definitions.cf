@@ -53,13 +53,13 @@ vars:
  
  "scalar" int    => "16k";
     
- "xxx"    string => readfile( "/home/mark/tmp/testfile" , "33" );
+# "xxx"    string => readfile( "/home/mark/tmp/testfile" , "33" );
 
  "ran"    int    => randomint(4,88);
 
- "yyy"    slist  => { readstringlist("/home/mark/tmp/testlist","#[a-zA-Z0-9 ]*","[^a-zA-Z0-9]",15,4000) };
- "zzz"    slist  => { readstringlist("/home/mark/tmp/testlist2","#[^\n]*",",",5,4000) };
- "aaa"    ilist  => { readintlist("/home/mark/tmp/testilist","#[a-zA-Z0-9 ]*",",",10,4000) };
+# "yyy"    slist  => { readstringlist("/home/mark/tmp/testlist","#[a-zA-Z0-9 ]*","[^a-zA-Z0-9]",15,4000) };
+# "zzz"    slist  => { readstringlist("/home/mark/tmp/testlist2","#[^\n]*",",",5,4000) };
+# "aaa"    ilist  => { readintlist("/home/mark/tmp/testilist","#[a-zA-Z0-9 ]*",",",10,4000) };
 
  "dim_array" int =>  readstringarray("array_name","/etc/passwd","#[^\n]*",":",10,4000);
 
@@ -75,7 +75,7 @@ classes:
 
  # Create a distribution
 
- "my_dist" dist => { "10", "20", "40", "50" };
+ "my_dist" dist => { "10", "20", "30", "40" };
 
  #
  # Now like "alerts" in cf2

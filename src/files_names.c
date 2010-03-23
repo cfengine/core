@@ -681,13 +681,13 @@ return false;
 
 int IsStrIn(char *str, char **strs)
 {
-  char *currStr;
+  int i;
 
-  for(currStr = *strs; *currStr != NULL; currStr++)
+  for(i = 0; strs[i] != NULL; i++)
     {
-      if(strcmp(currStr, str) == 0)
+      if(strcmp(str, strs[i]) == 0)
 	{
-	  return true;
+	return true;
 	}
     }
 

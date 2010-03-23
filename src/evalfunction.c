@@ -1285,7 +1285,7 @@ struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
   short portnum;
   struct Attributes attr;
 
-buffer[0] = '\0';  
+memset(buffer, 0, sizeof(buffer));
 ArgTemplate(fp,argtemplate,argtypes,finalargs); /* Arg validation */
 
 /* begin fn specific content */

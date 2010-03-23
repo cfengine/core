@@ -529,6 +529,11 @@ void *GetConstraint(char *lval,struct Promise *pp,char rtype)
 { struct Constraint *cp;
   void *retval = NULL;
 
+if (pp == NULL)
+   {
+   return NULL;
+   }
+  
 if (!VerifyConstraintName(lval))
    {
    CfOut(cf_error,""," !! Self-diagnostic: Constraint type \"%s\" is not a registered type\n",lval);

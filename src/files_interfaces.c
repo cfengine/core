@@ -1566,7 +1566,7 @@ if (selinux_enabled)
    {
    dest_exists = cfstat(dest,&cur_dest);
    
-   if(dest_exists == 0)
+   if (dest_exists == 0)
       {
       /* get current security context of destination file */
       getfilecon(dest,&scontext);
@@ -1602,9 +1602,8 @@ if (attr.copy.servers != NULL && strcmp(attr.copy.servers->item,"localhost") != 
 
 #ifdef DARWIN
 if (strstr(dest, _PATH_RSRCFORKSPEC))
-   { /* Need to munge the "new" name */
+   {
    rsrcfork = 1;
-   
    tmpstr = malloc(CF_BUFSIZE);
    
    /* Drop _PATH_RSRCFORKSPEC */
@@ -1811,13 +1810,13 @@ if (rsrcfork)
          }
       
       else if (rsrcbytesr == 0)
-         { /* Reached EOF */
+         {
+         /* Reached EOF */
          close(rsrcrd);
          close(rsrcwd);
          free(rsrcbuf);
          
-         unlink(new); /* Go ahead and unlink .cfnew */
-         
+         unlink(new); /* Go ahead and unlink .cfnew */         
          break;
          }
       

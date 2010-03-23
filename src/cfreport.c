@@ -549,6 +549,11 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       continue;
       }
    }
+
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,&retval,&rettype) != cf_notype)
+   {
+   LASTSEENEXPIREAFTER = Str2Int(retval);
+   }
 }
 
 /*****************************************************************************/
@@ -850,7 +855,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       continue;
       }
 
-   if (now - then > CF_WEEK)
+   if (now - then > (double)LASTSEENEXPIREAFTER)
       {
       DeleteDB(dbp,key);
       CfOut(cf_inform,""," -> Deleting expired entry for %s\n",hostname);

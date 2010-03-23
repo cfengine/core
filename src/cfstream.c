@@ -232,7 +232,7 @@ if (level == cf_error)
       AppendItem(&mess,output,NULL);
       }
 
-   if (pp->audit)
+   if (pp && pp->audit)
       {
       snprintf(output,CF_BUFSIZE-1,"I: Made in version \'%s\' of \'%s\' near line %d",v,pp->audit->filename,pp->lineno);
       }
@@ -243,30 +243,33 @@ if (level == cf_error)
 
    AppendItem(&mess,output,NULL);
 
-   switch (pp->petype)
+   if (pp != NULL)
       {
-      case CF_SCALAR:
-          
-          snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n",pp->promisee);
-          AppendItem(&mess,output,NULL);
-          break;
-          
-      case CF_LIST:
-          
-          CfOut(level,"","I: The promise was made to: \n");
-          
-          for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
-             {
-             snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n",rp->item);
+      switch (pp->petype)
+         {
+         case CF_SCALAR:
+             
+             snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n",pp->promisee);
              AppendItem(&mess,output,NULL);
-             }
-          break;          
-      }
-   
-   if (pp->ref)
-      {
-      snprintf(output,CF_BUFSIZE-1,"I: Comment: %s\n",pp->ref);
-      AppendItem(&mess,output,NULL);
+             break;
+             
+         case CF_LIST:
+             
+             CfOut(level,"","I: The promise was made to: \n");
+             
+             for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
+                {
+                snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n",rp->item);
+                AppendItem(&mess,output,NULL);
+                }
+             break;          
+         }
+      
+      if (pp->ref)
+         {
+         snprintf(output,CF_BUFSIZE-1,"I: Comment: %s\n",pp->ref);
+         AppendItem(&mess,output,NULL);
+         }
       }
    }
 

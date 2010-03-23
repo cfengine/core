@@ -120,6 +120,11 @@ void CheckForFileHoles(struct stat *sstat,struct Promise *pp)
 /* Use a public member in struct Image                   */
 
 {
+if (pp == NULL)
+   {
+   return;
+   }
+
 #if !defined(IRIX) && !defined(MINGW)
 if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
 #else
@@ -190,7 +195,7 @@ while (true)
 
    intp = 0;
 
-   if (pp->makeholes)
+   if (pp && pp->makeholes)
       {
       buf[n_read] = 1;                    /* Sentinel to stop loop.  */
 
@@ -284,7 +289,7 @@ int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int
  
 intp = 0;
  
-if (pp->makeholes)
+if (pp && pp->makeholes)
    {
    buf[n_read] = 1;                    /* Sentinel to stop loop.  */
    

@@ -679,6 +679,23 @@ return false;
 
 /*********************************************************************/
 
+int IsStrIn(char *str, char **strs)
+{
+  char *currStr;
+
+  for(currStr = *strs; *currStr != NULL; currStr++)
+    {
+      if(strcmp(currStr, str) == 0)
+	{
+	  return true;
+	}
+    }
+
+  return false;
+}
+
+/*********************************************************************/
+
 int IsAbsoluteFileName(char *f)
 
 {

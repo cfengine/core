@@ -335,7 +335,10 @@ switch(level)
    }
 
 #ifdef MINGW
-NovaWin_LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, mess);
+if(pp != NULL)
+  {
+  NovaWin_LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, mess);
+  }
 #endif
 
 /* Now complete the exits status classes and auditing */

@@ -854,6 +854,7 @@ void VerifyACL(char *file,struct Attributes a, struct Promise *pp)
 #ifdef HAVE_LIBCFNOVA
 Nova_VerifyACL(file,a,pp);
 #else
+CfOut(cf_verbose, "", "Verifying ACL promises is only available with Cfengine Nova or above");
 #endif
 }
 

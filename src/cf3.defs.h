@@ -1432,7 +1432,7 @@ struct StorageMount
 struct StorageVolume
    {
    int check_foreign;
-   int freespace;
+   long freespace;
    int sensible_size;
    int sensible_count;
    int scan_arrivals;

@@ -1366,7 +1366,7 @@ struct StorageVolume GetVolumeConstraints(struct Promise *pp)
 v.check_foreign = GetBooleanConstraint("check_foreign",pp);
 value = GetConstraint("freespace",pp,CF_SCALAR);
 
-v.freespace = (int) Str2Int(value);
+v.freespace = (long) Str2Int(value);
 value = GetConstraint("sensible_size",pp,CF_SCALAR);
 v.sensible_size = (int) Str2Int(value);
 value = GetConstraint("sensible_count",pp,CF_SCALAR);

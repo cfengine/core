@@ -229,7 +229,7 @@ int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf;
   int free;
-  int kilobytes;
+  long kilobytes;
   
 #ifdef MINGW
 if(!a.volume.check_foreign)
@@ -262,7 +262,7 @@ if (kilobytes < 0)
    free = GetDiskUsage(file,cfpercent);
    kilobytes = -1 * kilobytes;
 
-   if (free < kilobytes)
+   if (free < (int)kilobytes)
       {
       cfPS(cf_error,CF_FAIL,"",pp,a," !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",kilobytes,file,free);
       return false;
@@ -271,6 +271,7 @@ if (kilobytes < 0)
 else
    {
    free = GetDiskUsage(file, cfabs);
+   kilobytes = kilobytes / 1024;
 
    if (free < kilobytes)
       {

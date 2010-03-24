@@ -1093,7 +1093,7 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        plainlen = DecryptString(conn->encryption_type,recvbuffer+CF_PROTO_OFFSET,buffer,conn->session_key,len);
        
        cfscanf(buffer,strlen("GET"),strlen("dummykey"),check,sendbuffer,filename);
@@ -1351,7 +1351,7 @@ switch (GetCommand(recvbuffer))
        if (strncmp(recvbuffer,"VAR",3) !=0)
           {
           CfOut(cf_inform,"","VAR protocol defect\n");
-          RefuseAccess(conn,sendbuffer,0,"decyption failre");
+          RefuseAccess(conn,sendbuffer,0,"decryption failure");
           return false;
           }
 

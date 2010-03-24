@@ -219,7 +219,7 @@ if (strchr(retval,':'))
    CfOut(cf_error,""," !! The version string may not contain the \":\" character");
    }
 
-snprintf(vbuff,CF_BUFSIZE-1,"<h1>Expanded promises for %s</h1>",agents);
+snprintf(vbuff,CF_BUFSIZE-1,"Expanded promises for %s",agents);
 CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
 
 fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);

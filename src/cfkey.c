@@ -86,7 +86,7 @@ void KeepPromises()
   struct stat statbuf;
   int fd;
   static char *passphrase = "Cfengine passphrase";
-  EVP_CIPHER *cipher;
+  const EVP_CIPHER *cipher;
   char vbuff[CF_BUFSIZE];
 
 NewScope("common");

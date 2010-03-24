@@ -459,9 +459,6 @@ extern char RXDIRS;
 extern char TYPECHECK;
 extern char SCAN;
 
-extern enum actions ACTION;
-extern enum vnames CONTROLVAR;
-
 extern mode_t PLUSMASK;
 extern mode_t MINUSMASK;
 

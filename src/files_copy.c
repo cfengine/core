@@ -162,7 +162,7 @@ unlink(new);  /* To avoid link attacks */
  
 if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    {
-   cfPS(cf_inform,CF_FAIL,"open",pp,attr,"Copy %s:%s possible security violation (race) or permission denied (Not copied)\n",pp->this_server,new);
+   cfPS(cf_inform,CF_FAIL,"open",pp,attr,"Copy %s possible security violation (race) or permission denied (Not copied)\n",new);
    close(sd);
    unlink(new);
    return false;

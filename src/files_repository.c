@@ -116,7 +116,7 @@ attr.copy.preserve = false;
 
 CheckForFileHoles(&sb,pp);
 
-if (CopyRegularFile(file,destination,sb,dsb,attr,pp))
+if (CopyRegularFileDisk(file,destination,attr,pp))
    {
    CfOut(cf_inform,"","Moved %s to repository location %s\n",file,destination);
    return true;

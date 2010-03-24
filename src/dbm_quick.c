@@ -232,6 +232,8 @@ int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp)
 
 int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,int *vsize)
 {
+  Debug("Entering QDB_NextDB()\n");
+
   ThreadLock(cft_system);
 
   if(qdbcp->curkey != NULL)
@@ -251,18 +253,18 @@ int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,in
   if(*key == NULL)
     {
       ThreadUnlock(cft_system);
-      Debug("Got NULL-key in QDB_NextDB()\n");
+      Debug("Got NULL-key in QDB_NextDB(): %s\n", dperrmsg(dpecode));
       return false;
     }
 
-  *value = dpget(qdbp->depot, *key, -1, 0, -1, vsize);
+  *value = dpget(qdbp->depot, *key, *ksize, 0, -1, vsize);
 
   if(*value == NULL)
     {
+      CfOut(cf_error, "", "!! Got NULL-value in QDB_NextDB() for key %s: %s\n", *key, dperrmsg(dpecode));
       free(*key);
       *key = NULL;
       ThreadUnlock(cft_system);
-      Debug("Got NULL-value in QDB_NextDB()\n");
       return false;
     }
 

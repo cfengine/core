@@ -1268,7 +1268,8 @@ for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
    switch (rp->type)
       {
       case CF_SCALAR:
-          if (!IsBundle(BUNDLES,(char *)rp->item))
+          
+          if (!IGNORE_MISSING_BUNDLES && !IsBundle(BUNDLES,(char *)rp->item))
              {
              CfOut(cf_error,"","Undeclared promise bundle \"%s()\" was referenced in a promise\n",(char *)rp->item);
              ERRORCOUNT++;
@@ -1276,9 +1277,10 @@ for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
           break;
 
       case CF_FNCALL:
+
           fp = (struct FnCall *)rp->item;
 
-          if (!IsBundle(BUNDLES,fp->name))
+          if (!IGNORE_MISSING_BUNDLES && !IsBundle(BUNDLES,fp->name))
              {
              CfOut(cf_error,"","Undeclared promise bundle \"%s()\" was referenced in a promise\n",fp->name);
              ERRORCOUNT++;

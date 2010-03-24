@@ -116,6 +116,10 @@ if (bp = GetBundle(method_name,"agent"))
 
    DeleteFromScope(bp->name,bp->args);
    }
+else
+   {
+   cfPS(cf_error,CF_FAIL,"",pp,a," !! Method \"%s\" was used but was not defined!\n",bp->name);
+   }
 
 YieldCurrentLock(thislock);
 return retval;

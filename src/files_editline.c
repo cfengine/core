@@ -103,6 +103,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          if (Abort())
             {
             THIS_BUNDLE = bp_stack;
+            DeleteScope("edit");
             return false;
             }         
          }

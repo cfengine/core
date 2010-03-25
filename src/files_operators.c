@@ -444,7 +444,7 @@ if (a.haveeditline)
       PushPrivateClassContext();
       retval = ScheduleEditLineOperations(filename,bp,a,pp);
       PopPrivateClassContext();
-      DeleteFromScope(bp->name,bp->args);
+      DeleteScope(bp->name);
       }
    }
 

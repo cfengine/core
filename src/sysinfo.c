@@ -1783,7 +1783,7 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
-{ int fd,len,i,j,first_address,ipdefault = false;
+{ int fd,len,i,j,first_address = false,ipdefault = false;
   struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
@@ -1794,8 +1794,6 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   char last_name[CF_BUFSIZE];
 
 Debug("Unix_GetInterfaceInfo()\n");
-
-NewScalar("sys","interface",VIFDEV[VSYSTEMHARDCLASS],cf_str);
 
 last_name[0] = '\0';
 
@@ -1848,6 +1846,13 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       {
       CfOut(cf_verbose,"","Interface %d: %s\n",j+1,ifp->ifr_name);
       }
+
+   // Ignore the loopback
+   
+   if (strcmp(ifp->ifr_name,"lo") == 0)
+      {
+      continue;
+      }
    
    if (strncmp(last_name,ifp->ifr_name,sizeof(ifp->ifr_name)) == 0)
       {
@@ -1855,10 +1860,14 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       }
    else
       {
-      first_address = true;
-      }
+      strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
 
-   strncpy(last_name,ifp->ifr_name,sizeof(ifp->ifr_name));
+      if (!first_address)
+         {
+         NewScalar("sys","interface",last_name,cf_str);
+         first_address = true;
+         }
+      }
 
    if (UNDERSCORE_CLASSES)
       {

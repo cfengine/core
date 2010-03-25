@@ -351,51 +351,6 @@ char *VMOUNTOPTS[CF_CLASSATTR] =
 
 /*********************************************************************/
 
-char *VIFDEV[CF_CLASSATTR] =
-   {
-   "-",
-   "-",                                              /* see cf.defs.h */
-   "le0",    /* sun4 */
-   "ln0",    /* ultrix */
-   "lan0",   /* hpux */
-   "en0",    /* aix */
-   "eth0",   /* linux */ 
-   "le0",    /* solaris */
-   "ln0",    /* osf1 */
-   "ln0",    /* digital */   
-   "le0",    /* sun3 */
-   "ec0",    /* irix4 */
-   "ec0",    /* irix */
-   "ec0",    /* irix64 */
-   "ep0",    /* freebsd */
-   "dnet0",  /* solarisx86 */
-   "le0",    /* bsd4.3 */
-   "en0",    /* newsos4 */
-   "le0",    /* netbsd */
-   "un0",    /* AOS */
-   "le0",    /* BSDI */
-   "en0",    /* nextstep -default */
-   "en0",    /* cray */
-   "eth0",   /* gnu */
-   "N/A",    /* NT */
-   "unknown", /* Unixware */
-   "le0",    /* openbsd */
-   "net0",   /* sco */
-   "en0",    /* darwin */
-   "ec0",    /* ux4800 */
-   "en0",    /* qnx */
-   "ep0",    /* dragonfly */
-   "mingw-invalid",     /* mingw */
-   "eth0",   /* vmware */
-   "unused-blah",
-   "unused-blah",
-   "unused-blah",
-   NULL
-   };
-
-
-/*********************************************************************/
-
 char *VRESOLVCONF[CF_CLASSATTR] =
    {
    "-",

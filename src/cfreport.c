@@ -750,8 +750,12 @@ if (!OpenDB(name,&dbp))
 
 for (ip = list; ip != NULL; ip=ip->next)
    {
-   DeleteDB(dbp,ip->name);
-   CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",ip->name);
+   snprintf(name,CF_MAXVARSIZE,"+%s",ip->name);
+   DeleteDB(dbp,name);
+   CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",name);
+   snprintf(name,CF_MAXVARSIZE,"-%s",ip->name);
+   DeleteDB(dbp,name);
+   CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",name);
    }
 
 CloseDB(dbp);

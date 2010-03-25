@@ -961,8 +961,8 @@ cp = cp_save;
 
 if (cp == NULL)
    {
-   CfOut(cf_error,"","Variable body for \"%s\" is incomplete",pp->promiser);
-   PromiseRef(cf_error,pp);
+   CfOut(cf_inform,"","Warning: Variable body for \"%s\" seems incomplete",pp->promiser);
+   PromiseRef(cf_inform,pp);
    return;
    }
 

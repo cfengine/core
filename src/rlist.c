@@ -895,12 +895,13 @@ struct Rlist *SplitStringAsRList(char *string,char sep)
 { struct Rlist *liststart = NULL;
   char format[9], *sp;
   char node[CF_MAXVARSIZE];
+  int maxlen = strlen(string);
   
 Debug("SplitStringAsRList(%s)\n",string);
 
 for (sp = string; *sp != '\0'; sp++)
    {
-   if (*sp == '\0')
+   if (*sp == '\0' || sp > string+maxlen)
       {
       break;
       }

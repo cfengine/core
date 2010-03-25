@@ -251,7 +251,7 @@ else
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-if (!IsDefinedClass(pp->classes))
+if ((pp != NULL) && !IsDefinedClass(pp->classes))
    {
    return rval;
    }

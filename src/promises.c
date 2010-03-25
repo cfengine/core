@@ -703,6 +703,11 @@ void PromiseRef(enum cfreport level,struct Promise *pp)
 { char *v,rettype;
   void *retval;
 
+if (pp == NULL)
+   {
+   return;
+   }
+
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
    v = (char *)retval;

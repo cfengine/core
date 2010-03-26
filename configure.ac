@@ -85,7 +85,7 @@ AC_CHECK_LIB(m,main)
 dnl Look for ldap
 
 AC_ARG_WITH(ldap,
-	AS_HELP_STRING(--without-ldap, [support some graphic functions]),with_ldap=no,
+	AS_HELP_STRING(--without-ldap, [support ldap functions]),with_ldap=no,
 	with_ldap=yes)
 
 if test "x$with_ldap" != xno; then
@@ -967,6 +967,59 @@ if test x"$GCC" = "xyes"; then
 else 
 	AC_MSG_RESULT(no)
 fi
+
+
+dnl ######################################################################
+dnl Summarize
+dnl ######################################################################
+
+AC_MSG_RESULT( )
+AC_MSG_RESULT(    Summary of options...)
+
+
+if test $ac_cv_lib_pcre_main = "yes"; then
+  AC_MSG_RESULT( -> Configured with PCRE libraries)
+else
+  AC_MSG_RESULT( -> No PCRE library support - reverting to POSIX builtins)
+fi
+
+if test $WITH_SQL = 1; then
+
+  if test $ac_cv_lib_mysqlclient_main = "yes"; then
+    AC_MSG_RESULT( -> Configured with MYSQL libraries)
+  fi
+
+  if test $ac_cv_lib_pq_main = "yes"; then
+    AC_MSG_RESULT( -> Configured with Postgres libraries)
+  fi
+
+else
+  AC_MSG_RESULT( -> No SQL library support for knowledge map)
+fi
+
+if test $WITH_GVC = 1; then
+ if test $ac_cv_lib_gvc_main = "yes"; then
+   AC_MSG_RESULT( -> Configured with Graphviz libraries)
+ fi
+else
+  AC_MSG_RESULT( -> No Graphviz libraries included)
+fi
+
+if test $ac_cv_lib_ldap_ldap_get_values_len = "yes"; then
+  AC_MSG_RESULT( -> Configured with LDAP libraries)
+else
+  AC_MSG_RESULT( -> No LDAP libraries included)
+fi
+
+if test $WITH_TOKYO = 1; then
+  AC_MSG_RESULT( -> Configured with Tokyo Cabinet)
+elif test $WITH_QDBM = 1; then
+  AC_MSG_RESULT( -> Configured with QDBM)
+else
+  AC_MSG_RESULT( -> Will look for BerkeleyDB in $BERKELEY_DB_DIR)
+fi
+
+AC_MSG_RESULT( )
 
 dnl ######################################################################
 dnl Now make the Makefiles

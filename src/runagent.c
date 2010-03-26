@@ -264,12 +264,57 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
 
 { struct cfagent_connection *conn;
   FILE *fp = stdout;
-  char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE];
+  char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE];
   int n_read;
   void *gotkey;
   char reply[8];
   
 a.copy.portnumber = (short)ParseHostname(host,peer);
+
+snprintf(ipv4,CF_MAXVARSIZE,"%s",Hostname2IPString(peer));
+
+if (INTERACTIVE)
+   {
+   snprintf(sendbuffer,CF_BUFSIZE,"root-%s",peer);
+   gotkey = HavePublicKey(sendbuffer);
+   
+   if (!gotkey)
+      {
+      snprintf(sendbuffer,CF_BUFSIZE,"root-%s",ipv4);
+      gotkey = HavePublicKey(sendbuffer);
+      }
+
+   if (!gotkey)
+      {
+      printf("WARNING - You do not have a public key from host %s = %s\n",host,ipv4);
+      printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
+      
+      while (true)
+         {
+         fgets(reply,8,stdin);
+         Chop(reply);
+         
+         if (strcmp(reply,"yes")==0)
+            {
+            printf(" -> Will trust the key...\n");
+            a.copy.trustkey = true;
+            break;
+            }
+         else if (strcmp(reply,"no")==0)
+            {
+            printf(" -> Will not trust the key...\n");
+            a.copy.trustkey = false;
+            break;
+            }
+         else
+            {
+            printf(" !! Please reply yes or no...(%s)\n",reply);
+            }
+         }
+      }
+   }
+
+/* Continue */
 
 #ifdef MINGW
 
@@ -321,46 +366,6 @@ else
 
 /* Check trust interaction*/
 
-if (INTERACTIVE)
-   {
-   snprintf(sendbuffer,CF_BUFSIZE,"root-%s",host);
-   gotkey = HavePublicKey(sendbuffer);
-   
-   if (!gotkey)
-      {
-      snprintf(sendbuffer,CF_BUFSIZE,"root-%s",conn->remoteip);
-      gotkey = HavePublicKey(sendbuffer);
-      }
-
-   if (!gotkey)
-      {
-      printf("WARNING - You do not have a public key from host %s = %s\n",host,conn->remoteip);
-      printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
-      
-      while (true)
-         {
-         fgets(reply,8,stdin);
-         Chop(reply);
-         
-         if (strcmp(reply,"yes")==0)
-            {
-            RUNATTR.copy.trustkey = true;
-            break;
-            }
-         else if (strcmp(reply,"no")==0)
-            {
-            RUNATTR.copy.trustkey = false;
-            break;
-            }
-         else
-            {
-            printf(" !! Please reply yes or no...(%s)\n",reply);
-            }
-         }
-      }
-   }
-
-/* Continue */
 
 pp->cache = NULL;
 

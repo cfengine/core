@@ -545,12 +545,6 @@ if (strlen(localdir) < 2)
 
  /* If we purge with no authentication we wipe out EVERYTHING ! */ 
 
-if (pp->conn == NULL)
-   {
-   CfOut(cf_verbose,""," !! Not purge local files %s - no contact with a source\n",localdir);
-   return;
-   }
-
 if (pp->conn && !pp->conn->authenticated)
    {
    CfOut(cf_verbose,""," !! Not purge local files %s - no authenticated contact with a source\n",localdir);

@@ -41,7 +41,6 @@ void RandomSeed()
   char vbuff[CF_BUFSIZE];
   
 /* Use the system database as the entropy source for random numbers */
-
 Debug("RandomSeed() work directory is %s\n",CFWORKDIR);
 
 snprintf(vbuff,CF_BUFSIZE,"%s%crandseed",CFWORKDIR,FILE_SEPARATOR);
@@ -259,16 +258,15 @@ EVP_DigestUpdate(&context,buffer,CF_BUFSIZE);
 
 snprintf(pscomm,CF_BUFSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],VPSOPTS[VSYSTEMHARDCLASS]);
 
-if ((pp = cf_popen(pscomm,"r")) == NULL)
+if ((pp = cf_popen(pscomm,"r")) != NULL)
    {
    CfOut(cf_error,"cf_popen","Couldn't open the process list with command %s\n",pscomm);
-   return;
-   }
 
-while (!feof(pp))
-   {
-   CfReadLine(buffer,CF_BUFSIZE,pp);
-   EVP_DigestUpdate(&context,buffer,CF_BUFSIZE);
+   while (!feof(pp))
+      {
+      CfReadLine(buffer,CF_BUFSIZE,pp);
+      EVP_DigestUpdate(&context,buffer,CF_BUFSIZE);
+      }
    }
 
 uninitbuffer[99] = '\0';
@@ -293,11 +291,13 @@ EVP_EncryptInit(&ctx,CfengineCipher(type),key,iv);
 
 if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,in,plainlen))
    {
+   EVP_CIPHER_CTX_cleanup(&ctx);
    return -1;
    }
  
 if (!EVP_EncryptFinal(&ctx,out+cipherlen,&tmplen))
    {
+   EVP_CIPHER_CTX_cleanup(&ctx);
    return -1;
    }
  
@@ -319,36 +319,45 @@ EVP_DecryptInit(&ctx,CfengineCipher(type),key,iv);
 
 if (!EVP_DecryptUpdate(&ctx,out,&plainlen,in,cipherlen))
    {
+   printf("DECRYPT FAILED\n");
+   EVP_CIPHER_CTX_cleanup(&ctx);
    return -1;
    }
  
 if (!EVP_DecryptFinal(&ctx,out+plainlen,&tmplen))
    {
+   unsigned long err = ERR_get_error();
+   CfOut(cf_error,"","decryption FAILED at final of %d: %s\n",cipherlen,ERR_error_string(err,NULL));
+   EVP_CIPHER_CTX_cleanup(&ctx);
    return -1;
    }
  
 plainlen += tmplen;
 
 EVP_CIPHER_CTX_cleanup(&ctx);
+
 return plainlen; 
 }
 
 /*********************************************************************/
 
-void DebugBinOut(char *buffer,int len)
+void DebugBinOut(char *buffer,int len,char *comment)
 
 { char *sp;
   int check = 0;
 
-Debug("BinaryBuffer(%d)[",len);
- 
-for (sp = buffer; (sp < buffer+len); sp++)
+if (true)
    {
-   check++;
-   Debug("%x",*sp);
-   }
+   printf("BinaryBuffer(%d bytes => %s)\n -> [",len,comment);
+   
+   for (sp = buffer; (sp < buffer+len); sp++)
+      {
+      check++;
+      printf("%x",*sp);
+      }
  
-Debug("] = %d\n",check); 
+   printf("] = %d\n",check);
+   }
 }
 
 

@@ -277,7 +277,7 @@ gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
 
 /* crypto.c */
 
-void DebugBinOut(char *buffer,int len);
+void DebugBinOut(char *buffer,int len,char *com);
 void RandomSeed (void);
 void LoadSecretKeys (void);
 void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);

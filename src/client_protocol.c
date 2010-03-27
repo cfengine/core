@@ -404,26 +404,15 @@ if (server_pubkey == NULL)
 
 SetSessionKey(conn);
 
-DebugBinOut(conn->session_key,session_size);
-
 if (conn->session_key == NULL)
    {
    CfOut(cf_error,"","A random session key could not be established");
    return false;
    }
-else
-   {
-   Debug("Generated session key\n");
-   DebugBinOut(conn->session_key,session_size);
-   }
-
-/* blowfishmpisize = BN_bn2mpi((BIGNUM *)conn->session_key,in); */
-
-DebugBinOut(conn->session_key,session_size);
 
 encrypted_len = RSA_size(server_pubkey);
 
-Debug("Encrypt %d to %d\n",session_size,encrypted_len);
+Debug("Encrypt %d bytes of session key into %d RSA bytes\n",session_size,encrypted_len);
 
 if ((out = malloc(encrypted_len)) == NULL)
    {
@@ -438,10 +427,7 @@ if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS
    return false;
    }
 
-Debug("Encryption succeeded\n");
-
 SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
-DebugBinOut(out,encrypted_len);
 
 if (server_pubkey != NULL)
    {
@@ -498,9 +484,12 @@ void SetSessionKey(struct cfagent_connection *conn)
 { BIGNUM *bp;
   int session_size = CfSessionKeySize(conn->encryption_type);
 
-bp = BN_new(); 
-BN_rand(bp,session_size,0,0);
-conn->session_key = (unsigned char *)bp;
+bp = BN_new();
+BN_rand(bp,session_size,1,1);
+
+//BN_print_fp(stdout,bp);
+
+conn->session_key = (unsigned char *)bp->d;
 }
 
 /*********************************************************************/

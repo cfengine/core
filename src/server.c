@@ -1095,7 +1095,7 @@ switch (GetCommand(recvbuffer))
           }
 
        plainlen = DecryptString(conn->encryption_type,recvbuffer+CF_PROTO_OFFSET,buffer,conn->session_key,len);
-       
+
        cfscanf(buffer,strlen("GET"),strlen("dummykey"),check,sendbuffer,filename);
        
        if (strcmp(check,"GET") != 0)
@@ -1238,6 +1238,12 @@ switch (GetCommand(recvbuffer))
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
 
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
+
+       if (plainlen < 0)
+          {
+          DebugBinOut(conn->session_key,32,"Session key, check");
+          printf("BADDECRYP(%d): %s\n",len,recvbuffer);
+          }
 
        if (strncmp(recvbuffer,"SYNCH",5) != 0)
           {
@@ -2667,11 +2673,6 @@ if (keylen > CF_BUFSIZE/2)
    CfOut(cf_inform,"","Session key length received from %s is too long",conn->ipaddr);
    return false;
    }
-else
-   {
-   Debug("Got encryption size %d\n",keylen);
-   DebugBinOut(in,keylen);
-   }
 
 ThreadLock(cft_system);
 
@@ -2686,6 +2687,8 @@ if (conn->session_key == NULL)
    RSA_free(newkey); 
    return false;
    }
+
+CfOut(cf_verbose,""," -> Receiving session key from client...");
 
 if (keylen == CF_BLOWFISHSIZE) /* Support the old non-ecnrypted for upgrade */
    {
@@ -2708,8 +2711,7 @@ else
 
 ThreadUnlock(cft_system);
 
-Debug("Got a session key...\n"); 
-DebugBinOut(conn->session_key,16);
+//DebugBinOut(conn->session_key,session_size,"Session key received");
 
 BN_free(counter_challenge);
 free(out);
@@ -3010,13 +3012,13 @@ void CfEncryptGetFile(struct cfd_get_arg *args)
     
 { int sd,fd,n_read,total=0,cipherlen,sendlen=0,count = 0,finlen,cnt = 0;
   char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],filename[CF_BUFSIZE];
-  struct stat sb;
   unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
   int blocksize = CF_BUFSIZE - 4*CF_INBAND_OFFSET;
-  uid_t uid;
-  char *key,enctype;
-  int savedlen;
   EVP_CIPHER_CTX ctx;
+  char *key,enctype;
+  struct stat sb;
+  int savedlen;
+  uid_t uid;
 
 sd         = (args->connect)->sd_reply;
 key        = (args->connect)->session_key;
@@ -3294,15 +3296,17 @@ Debug("CfSecOpenDirectory(%s)\n",dirname);
 if (!IsAbsoluteFileName(dirname))
    {
    sprintf(sendbuffer,"BAD: request to access a non-absolute filename\n");
-   SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+   cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
+   SendTransaction(conn->sd_reply,out,0,CF_DONE);
    return -1;
    }
 
 if ((dirh = opendir(dirname)) == NULL)
    {
-   Debug("cfengine, couldn't open dir %s\n",dirname);
+   CfOut(cf_verbose,"","Couldn't open dir %s\n",dirname);
    snprintf(sendbuffer,CF_BUFSIZE,"BAD: cfengine, couldn't open dir %s\n",dirname);
-   SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+   cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
+   SendTransaction(conn->sd_reply,out,0,CF_DONE);
    return -1;
    }
 
@@ -3329,6 +3333,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    }
 
 strcpy(sendbuffer+offset,CFD_TERMINATOR);
+
 cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,offset+2+strlen(CFD_TERMINATOR));
 SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
 Debug("END CfSecOpenDirectory(%s)\n",dirname);

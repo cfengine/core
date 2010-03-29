@@ -1117,6 +1117,10 @@ int seteuid (uid_t euid);
 #ifndef HAVE_SETEUID
 int setegid (gid_t egid);
 #endif
+#ifdef MINGW
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+int inet_pton(int af, const char *src, void *dst);
+#endif
 
 /* pipes.c */
 

@@ -853,7 +853,7 @@ void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promi
 
 { char *lastnode = ReadLastNode(path);
 
-Debug(" -> Verifying file deletions for %s\n",path);
+CfOut(cf_verbose,""," -> Verifying file deletions for %s\n",path);
 
 if (DONTDO)
    {
@@ -869,7 +869,7 @@ else
           break;
           
       case cfa_fix:
-	
+
           if (!S_ISDIR(sb->st_mode))
              {
              if (unlink(lastnode) == -1)
@@ -889,15 +889,15 @@ else
                 return;
                 }
              
-             if (strcmp(path,pp->promiser) == 0)
+             if (attr.havedepthsearch && strcmp(path,pp->promiser) == 0)
                 {
                 /* This is the parent and we cannot delete it from here - must delete separately*/
                 return;
                 }
-             
+
              if (rmdir(lastnode) == -1)
                 {
-                cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (node called %s)\n",path,lastnode);
+                cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (cannot delete node called \"%s\")\n",path,lastnode);
                 }
              else
                 {

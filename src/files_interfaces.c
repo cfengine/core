@@ -272,6 +272,14 @@ if (!a.havedepthsearch)  /* if the search is trivial, make sure that we are in t
 
    Debug(" -> Direct file reference %s, no search implied\n",path);
    snprintf(basedir, sizeof(basedir), "%s", path);
+
+   if (strcmp(ReadLastNode(basedir),".") == 0)
+      {
+      // Handle /.  notation for deletion of directories
+      ChopLastNode(basedir);
+      ChopLastNode(path);
+      }
+
    ChopLastNode(basedir);
    chdir(basedir);
    }

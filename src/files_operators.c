@@ -852,6 +852,7 @@ if (attr.rename.rotate > 0)
 void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { char *lastnode = ReadLastNode(path);
+  char buf[CF_MAXVARSIZE];
 
 CfOut(cf_verbose,""," -> Verifying file deletions for %s\n",path);
 
@@ -881,7 +882,7 @@ else
                 cfPS(cf_inform,CF_CHG,"",pp,attr," -> Deleted file %s\n",path);
                 }
              }
-          else
+          else  // directory
              {
              if (!attr.delete.rmdirs)
                 {
@@ -895,9 +896,23 @@ else
                 return;
                 }
 
-             if (rmdir(lastnode) == -1)
+
+
+	     // use the full path if we are to delete the current dir
+	     if((strcmp(lastnode, ".") == 0) && strlen(path) > 2)
+	       {
+               snprintf(buf, sizeof(buf), "%s", path); 
+	       buf[strlen(path) - 1] = '\0';
+	       buf[strlen(path) - 2] = '\0';
+	       }
+	     else
+	       {
+               snprintf(buf, sizeof(buf), "%s", lastnode);
+	       }
+
+             if (rmdir(buf) == -1)
                 {
-                cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (cannot delete node called \"%s\")\n",path,lastnode);
+                cfPS(cf_verbose,CF_FAIL,"rmdir",pp,attr," !! Delete directory %s failed (cannot delete node called \"%s\")\n",path,buf);
                 }
              else
                 {

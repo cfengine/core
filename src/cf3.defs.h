@@ -1592,7 +1592,6 @@ struct Attributes
    struct ExecContain contain;
    char *args;
    int module;
-   int exec_timeout;
 
    struct Rlist *signals;
    char *process_stop;

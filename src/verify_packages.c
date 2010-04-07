@@ -1317,7 +1317,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package reinstallation cannot be promised -- insufficient version info or no match\n");
+          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package reinstallation cannot be promised -- insufficient version info or no match\n");
           }
        
        break;
@@ -1418,7 +1418,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package updating is as promised -- no match or not installed\n");
+          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package cannot be updated -- no match or not installed");
           }
        break;
        
@@ -1446,7 +1446,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> No package verification is promised -- no match\n");
+          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package cannot be verified -- no match\n");
           }
        
        break;

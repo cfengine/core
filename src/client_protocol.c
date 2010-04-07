@@ -485,7 +485,12 @@ void SetSessionKey(struct cfagent_connection *conn)
   int session_size = CfSessionKeySize(conn->encryption_type);
 
 bp = BN_new();
-BN_rand(bp,session_size,1,1);
+
+// session_size is in bytes
+if(!BN_rand(bp,session_size*8,1,1))
+  {
+  FatalError("Can't generate cryptographic key");
+  }
 
 //BN_print_fp(stdout,bp);
 

@@ -1241,8 +1241,8 @@ switch (GetCommand(recvbuffer))
 
        if (plainlen < 0)
           {
-          DebugBinOut(conn->session_key,32,"Session key, check");
-          printf("BADDECRYP(%d): %s\n",len,recvbuffer);
+          DebugBinOut(conn->session_key,32,"Session key");
+          CfOut(cf_error, "", "!! Bad decrypt (%d)",len);
           }
 
        if (strncmp(recvbuffer,"SYNCH",5) != 0)
@@ -2688,7 +2688,9 @@ if (conn->session_key == NULL)
    return false;
    }
 
-CfOut(cf_verbose,""," -> Receiving session key from client...");
+ CfOut(cf_verbose,""," -> Receiving session key from client (size=%d)...", keylen);
+
+ Debug("keylen=%d, session_size=%d\n", keylen, session_size);
 
 if (keylen == CF_BLOWFISHSIZE) /* Support the old non-ecnrypted for upgrade */
    {

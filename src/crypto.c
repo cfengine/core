@@ -319,7 +319,7 @@ EVP_DecryptInit(&ctx,CfengineCipher(type),key,iv);
 
 if (!EVP_DecryptUpdate(&ctx,out,&plainlen,in,cipherlen))
    {
-   printf("DECRYPT FAILED\n");
+   CfOut(cf_error, "", "!! Decrypt FAILED");
    EVP_CIPHER_CTX_cleanup(&ctx);
    return -1;
    }
@@ -343,21 +343,25 @@ return plainlen;
 
 void DebugBinOut(char *buffer,int len,char *comment)
 
-{ char *sp;
-  int check = 0;
+{ unsigned char *sp;
+  char buf[CF_BUFSIZE];
+  char hexStr[3];  // one byte as hex
 
-if (true)
-   {
-   printf("BinaryBuffer(%d bytes => %s)\n -> [",len,comment);
+  if(len >= (sizeof(buf) / 2))  // hex uses two chars per byte
+    {
+    Debug(cf_verbose, "", "Debug binary print is too large (len=%d)", len);
+    return;
+    }
+
+  memset(buf, 0, sizeof(buf));
    
-   for (sp = buffer; (sp < buffer+len); sp++)
-      {
-      check++;
-      printf("%x",*sp);
-      }
- 
-   printf("] = %d\n",check);
-   }
+  for (sp = buffer; (sp < buffer+len); sp++)
+    {
+    snprintf(hexStr, sizeof(hexStr), "%2.2x", (int)*sp);
+    strcat(buf, hexStr);
+    }
+  
+  CfOut(cf_verbose, "", "BinaryBuffer(%d bytes => %s) -> [%s]",len,comment,buf);
 }
 
 

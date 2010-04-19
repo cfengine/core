@@ -487,7 +487,7 @@ void SetSessionKey(struct cfagent_connection *conn)
 bp = BN_new();
 
 // session_size is in bytes
-if(!BN_rand(bp,session_size*8,1,1))
+if(!BN_rand(bp,session_size*8,-1,0))
   {
   FatalError("Can't generate cryptographic key");
   }

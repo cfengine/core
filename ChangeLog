@@ -1,5 +1,7 @@
 3.0.5
-	Attribute package_delete_convention added, to allow customizable
+        Encryption problems fixed - client key buffer was uninitialized.
+
+        Attribute package_delete_convention added, to allow customizable
 	package name in delete command during update.
 
         Bad initialization of BSD flags fixed

@@ -2004,26 +2004,28 @@ void GatherSensorData()
 void GatherPromisedMeasures()
 
 { struct Bundle *bp;
- struct SubType *sp;
- struct Promise *pp;
- char *scope;
+  struct SubType *sp;
+  struct Promise *pp;
+  char *scope;
   
- for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
-    {
-    scope = bp->name;
-    SetNewScope(bp->name);
+for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
+   {
+   scope = bp->name;
+   SetNewScope(bp->name);
+   
+   if ((strcmp(bp->type,CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
+      {
+      for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
+         {
+         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+            {
+            ExpandPromise(cf_monitor,scope,pp,KeepMonitorPromise);
+            }
+         }
+      }
+   }
 
-    if ((strcmp(bp->type,CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
-       {
-       for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
-          {
-          for (pp = sp->promiselist; pp != NULL; pp=pp->next)
-             {
-             ExpandPromise(cf_monitor,scope,pp,KeepMonitorPromise);
-             }
-          }
-       }
-    }
+DeleteAllScope();
 }
 
 /******************************************************************************/
@@ -2310,44 +2312,43 @@ void KeepMonitorPromise(struct Promise *pp)
 
 { char *sp = NULL;
  
- if (!IsDefinedClass(pp->classes))
-    {
-    CfOut(cf_verbose,"","\n");
-    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-    CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not relevant\n",pp->promiser,pp->classes);
-    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-    return;
-    }
- 
- if (VarClassExcluded(pp,&sp))
-    {
-    CfOut(cf_verbose,"","\n");
-    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-    CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
-    CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-    return;
-    }
+if (!IsDefinedClass(pp->classes))
+   {
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not relevant\n",pp->promiser,pp->classes);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   return;
+   }
 
- if (strcmp("classes",pp->agentsubtype) == 0)
-    {
-    KeepClassContextPromise(pp);
-    return;
-    }
+if (VarClassExcluded(pp,&sp))
+   {
+   CfOut(cf_verbose,"","\n");
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
+   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+   return;
+   }
 
- if (strcmp("measurements",pp->agentsubtype) == 0)
-    {
-    VerifyMeasurementPromise(CF_THIS,pp);
-    *pp->donep = false;
-    return;
-    }
+if (strcmp("classes",pp->agentsubtype) == 0)
+   {
+   KeepClassContextPromise(pp);
+   return;
+   }
+
+if (strcmp("measurements",pp->agentsubtype) == 0)
+   {
+   VerifyMeasurementPromise(CF_THIS,pp);
+   *pp->donep = false;
+   return;
+   }
 }
-
-
-#ifndef MINGW
 
 /*******************************************************************/
 /* Unix implementations                                            */
 /*******************************************************************/
+
+#ifndef MINGW
 
 int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
     

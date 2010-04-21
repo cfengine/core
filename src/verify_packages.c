@@ -44,7 +44,7 @@ a = GetPackageAttributes(pp);
 
 #ifdef MINGW
 
-a.packages.package_list_command = "/mingw-unused";
+a.packages.package_list_command = "/Windows_Installer";
 
 #endif
 

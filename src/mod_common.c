@@ -226,7 +226,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"dryrun",cf_opts,CF_BOOL,"All talk and no action mode"},
    {"editbinaryfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum binary file size to be edited"},
    {"editfilesize",cf_int,CF_VALRANGE,"Integer limit on maximum text file size to be edited"},
-   {"environment",cf_slist,"[A-Za-z_]+=.*","List of environment variables to be inherited by children"},
+   {"environment",cf_slist,"[A-Za-z0-9_]+=.*","List of environment variables to be inherited by children"},
    {"exclamation",cf_opts,CF_BOOL,"true/false print exclamation marks during security warnings"},
    {"expireafter",cf_int,CF_VALRANGE,"Global default for time before on-going promise repairs are interrupted"},
    {"files_single_copy",cf_slist,"","List of filenames to be watched for multiple-source conflicts"},

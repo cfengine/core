@@ -189,7 +189,7 @@ DeleteRvalItem(args,CF_LIST);
 
 /******************************************************************/
 
-void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes,struct Rlist *realargs)
+void ArgTemplate(struct FnCall *fp,struct FnCallArg *argtemplate,struct Rlist *realargs)
 
 { int argnum,i;
   struct Rlist *rp = fp->args;
@@ -197,12 +197,12 @@ void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes
 
 snprintf(id,CF_MAXVARSIZE,"built-in FnCall %s-arg",fp->name);
   
-for (argnum = 0; rp != NULL && argtemplate[argnum] != NULL; argnum++)
+for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     {
     if (rp->type != CF_FNCALL)
        {
        /* Nested functions will not match to lval so don't bother checking */
-       CheckConstraintTypeMatch(id,rp->item,rp->type,argtypes[argnum],argtemplate[argnum],1);
+       CheckConstraintTypeMatch(id,rp->item,rp->type,argtemplate[argnum].dtype,argtemplate[argnum].pattern,1);
        }
 
     rp = rp->next;

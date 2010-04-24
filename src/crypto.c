@@ -347,21 +347,21 @@ void DebugBinOut(char *buffer,int len,char *comment)
   char buf[CF_BUFSIZE];
   char hexStr[3];  // one byte as hex
 
-  if(len >= (sizeof(buf) / 2))  // hex uses two chars per byte
-    {
-    Debug(cf_verbose, "", "Debug binary print is too large (len=%d)", len);
-    return;
-    }
+if (len >= (sizeof(buf) / 2))  // hex uses two chars per byte
+   {
+   Debug("Debug binary print is too large (len=%d)", len);
+   return;
+   }
 
-  memset(buf, 0, sizeof(buf));
-   
-  for (sp = buffer; (sp < buffer+len); sp++)
-    {
-    snprintf(hexStr, sizeof(hexStr), "%2.2x", (int)*sp);
-    strcat(buf, hexStr);
-    }
-  
-  CfOut(cf_verbose, "", "BinaryBuffer(%d bytes => %s) -> [%s]",len,comment,buf);
+memset(buf, 0, sizeof(buf));
+
+for (sp = buffer; sp < (unsigned char *)(buffer+len); sp++)
+   {
+   snprintf(hexStr, sizeof(hexStr), "%2.2x", (int)*sp);
+   strcat(buf, hexStr);
+   }
+
+CfOut(cf_verbose, "", "BinaryBuffer(%d bytes => %s) -> [%s]",len,comment,buf);
 }
 
 

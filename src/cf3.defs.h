@@ -495,6 +495,14 @@ struct FnCallType
    char *name;
    enum cfdatatype dtype;
    int numargs;
+   struct FnCallArg *args;
+   char *description;
+   };
+
+struct FnCallArg
+   {
+   char *pattern;
+   enum cfdatatype dtype;
    char *description;
    };
 

@@ -40,7 +40,8 @@ bundle agent storage
 {
 storage:
 
-  "/usr" volume  => mycheck("10%");
+  "/usr" volume  => mycheck("11G");
+  "/" volume  => mycheck("60%");
 
 }
 

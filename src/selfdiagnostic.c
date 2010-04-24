@@ -53,9 +53,10 @@ else
    }
        
 printf("----------------------------------------------------------\n");
-printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
+printf("Cfengine - Performing level 2 self-diagnostic \n");
 printf("----------------------------------------------------------\n\n");
 TestVariableScan();
+TestFunctionIntegrity();
 TestExpandPromise();
 TestExpandVariables();
 TestRegularExpressions();
@@ -109,6 +110,34 @@ for (i = 0; varstrings[i] != NULL; i++)
       }
    }
  
+}
+
+/*****************************************************************************/
+
+void TestFunctionIntegrity()
+
+{ int i,j;
+  struct FnCallArg *args;
+
+printf("%d. Testing internal function templates and knowledge\n",++NR);
+ 
+for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+   {
+   args = CF_FNCALL_TYPES[i].args;
+   
+   for (j = 0; args[j].pattern != NULL; j++)
+      {
+      CfOut(cf_verbose,""," -> .. arg %d %s = %s\n",j,args[j].pattern,args[j].description);
+      }
+   
+   CfOut(cf_verbose,""," -> function %s (%d=%d args)\n",CF_FNCALL_TYPES[i].name,CF_FNCALL_TYPES[i].numargs,j);
+
+   if (j != CF_FNCALL_TYPES[i].numargs)
+      {
+      printf(" !! Broken internal function declaration for \"%s\", prototype does not match declared number of args",CF_FNCALL_TYPES[i].name);
+      }
+   }
+
 }
 
 /*****************************************************************************/
@@ -267,8 +296,8 @@ printf("%d. Testing regular expression engine\n",++NR);
 printf(" -> Regex engine is the Perl Compatible Regular Expression library\n");
 #else
 printf(" -> Regex engine is the POSIX Regular Expression library\n");
-printf(" !! Note if any of these tests hang, we recommend using the PCRE library\n");
-printf(" !! as the POSIX implementation suffers from memory corruption\n");
+printf(" -> Some Cfengine are features will not work in this current state.\n");
+printf(" !! This diagnostic might hang if the library is broken\n");
 #endif
 
 rex = CompileRegExp("#.*");
@@ -371,7 +400,7 @@ void TestAgentPromises()
 pp.conlist = NULL;
 pp.audit = NULL;
 
-printf("%d. Testing promise attribute completeness\n",++NR);
+printf("%d. Testing promise attribute completeness (with no desired intention)\n",++NR);
 
 a = GetFilesAttributes(&pp);
 a = GetReportsAttributes(&pp);

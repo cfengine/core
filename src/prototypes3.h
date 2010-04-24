@@ -57,7 +57,7 @@ void AgentDiagnostic(void);
 
 int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take);
 struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp);
-void ArgTemplate(struct FnCall *fp,char **argtemplate, enum cfdatatype *argtypes,struct Rlist *finalargs);
+void ArgTemplate(struct FnCall *fp,struct FnCallArg *argtemplate,struct Rlist *finalargs);
 void DeleteExpArgs(struct Rlist *args);
 
 /* assoc.c */
@@ -979,6 +979,16 @@ void AuditStatusMessage(FILE*fp,char status);
 /* manual.c */
 
 void TexinfoManual(char *mandir);
+void TexinfoHeader(FILE *fout);
+void TexinfoFooter(FILE *fout);
+void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
+void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context);
+void TexinfoVariables(FILE *fout,char *scope);
+void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
+void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
+void IncludeManualFile(FILE *fout,char *file);
+void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
+void PrintPattern(FILE *fout,char *pattern);
 
 /* matching.c */
 
@@ -1264,6 +1274,7 @@ void TestExpandVariables(void);
 void TestSearchFilePromiser(void);
 void TestRegularExpressions(void);
 void TestAgentPromises(void);
+void TestFunctionIntegrity(void);
 
 /* server_transform.c */
 

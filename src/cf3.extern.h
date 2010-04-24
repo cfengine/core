@@ -156,6 +156,9 @@ extern struct BodySyntax CF_COMMON_BODIES[];
 
 extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
 extern struct SubTypeSyntax CF_ALL_BODIES[];
+#endif
+
+#ifndef CF3_MOD_FUNCTIONS
 extern struct FnCallType CF_FNCALL_TYPES[];
 #endif
 

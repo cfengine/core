@@ -6,6 +6,8 @@
 
         Bad initialization of BSD flags fixed
 	Multiple variable expansion issues in control fixed for server and agent
+	Allow ignore_missing_bundles to affect methods: bundles too
+	Run agent trust dialogue fixed
 	
 3.0.4
 	Class cancellation in promises to create better class feedback,

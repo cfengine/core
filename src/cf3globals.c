@@ -60,6 +60,7 @@ FILE *FREPORT_HTML = NULL;
 FILE *FREPORT_TXT = NULL;
 FILE *FKNOW = NULL;
 int XML = false;
+
 struct FnCallStatus FNCALL_STATUS;
 
 int CFA_MAXTHREADS = 10;
@@ -134,7 +135,6 @@ struct Rlist *ACCESSLIST = NULL;
 struct Rlist *SINGLE_COPY_LIST = NULL;
 struct Rlist *AUTO_DEFINE_LIST = NULL;
 struct Rlist *SINGLE_COPY_CACHE = NULL;
-
 struct Rlist *CF_STCK = NULL;
 
 int CF_STCKFRAME = 0;

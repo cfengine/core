@@ -570,8 +570,30 @@ fprintf(fout,"\n");
 void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn)
 
 { char filename[CF_BUFSIZE];
+  struct FnCallArg *args = fn.args;
+  int i;
  
-fprintf(fout,"\n@noindent @b{Synopsis}: %s(%d args) returns type %s\n\n",fn.name,fn.numargs,CF_DATATYPES[fn.dtype]);
+fprintf(fout,"\n@noindent @b{Synopsis}: %s(",fn.name);
+
+for (i = 0; args[i].pattern != NULL; i++)
+   {
+   fprintf(fout,"arg%d",i);
+
+   if (args[i+1].pattern != NULL)
+      {
+      fprintf(fout,",");
+      }
+   }
+
+fprintf(fout,") returns type @b{%s}\n\n@*\n",CF_DATATYPES[fn.dtype]);
+
+for (i = 0; args[i].pattern != NULL; i++)
+   {
+   fprintf(fout,"@noindent @code{  } @i{arg%d} : %s, @i{in the range} ",i,args[i].description);
+   PrintPattern(fout,args[i].pattern);
+   fprintf(fout,"\n@*\n");
+   }
+
 fprintf(fout,"\n@noindent %s\n\n",fn.description);
 fprintf(fout,"\n@noindent @b{Example}:@*\n");
 
@@ -581,4 +603,22 @@ IncludeManualFile(fout,filename);
 fprintf(fout,"\n@noindent @b{Notes}:@*\n");
 snprintf(filename,CF_BUFSIZE-1,"function_%s_notes.texinfo",fn.name);
 IncludeManualFile(fout,filename);
+}
+
+/*****************************************************************************/
+
+void PrintPattern(FILE *fout,char *pattern)
+
+{ char *sp;
+
+for (sp = pattern; *sp != '\0'; sp++)
+   {
+   switch (*sp)
+      {
+      case '@':
+          fputc((int)'@',fout);
+      default:
+          fputc((int)*sp,fout);
+      }
+   }
 }

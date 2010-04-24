@@ -217,7 +217,7 @@ if (argnum != RlistLen(realargs))
 
    for (i = 0, rp = realargs; i < argnum; i++)
       {
-      printf("  arg[%d] range %s\t",i,argtemplate[i]);
+      printf("  arg[%d] range %s\t",i,argtemplate[i].pattern);
       if (rp != NULL)
          {
          ShowRval(stdout,rp->item,rp->type);

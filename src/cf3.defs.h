@@ -262,11 +262,9 @@ enum cfacontrol
    cfa_expireafter,
    cfa_fsinglecopy,
    cfa_fautodefine,
-   cfa_fullencryption,
    cfa_hostnamekeys,
    cfa_ifelapsed,
    cfa_inform,
-   cfa_lastseen,
    cfa_intermittency,
    cfa_max_children,
    cfa_maxconnections,
@@ -477,6 +475,12 @@ struct BodySyntax
    enum cfdatatype dtype;
    void *range;               /* either char or struct BodySyntax **/
    char *description;
+   };
+
+struct BodyDefault
+   {
+   char *lval;
+   char *rval;
    };
 
 /*************************************************************************/

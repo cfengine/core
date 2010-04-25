@@ -105,7 +105,7 @@ for (i = 0; i < CF3_MODULES; i++)
       {
       CfOut(cf_verbose,"","Dealing with chapter / bundle type %s\n",st->btype);
       fprintf(fout,"@c *****************************************************\n");
-     fprintf(fout,"@c * CHAPTER \n");
+      fprintf(fout,"@c * CHAPTER \n");
       fprintf(fout,"@c *****************************************************\n");
       
       if (strcmp(st->btype,"*") == 0)
@@ -347,7 +347,7 @@ for (j = 0; st[j].btype != NULL; j++)
 void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
 
 { int i;
-  char filename[CF_BUFSIZE];
+ char filename[CF_BUFSIZE],*res;
   
 if (bs == NULL)
    {
@@ -371,6 +371,16 @@ for (i = 0; bs[i].lval != NULL; i++)
       {
       fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
+
+      if (res = GetControlDefault(bs[i].lval))
+         {
+         fprintf(fout,"@noindent @b{Default value:} %s\n",res);
+         }
+      else if (res = GetBodyDefault(bs[i].lval))
+         {
+         fprintf(fout,"@noindent @b{Default value:} %s\n",res);
+         }
+
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
       fprintf(fout,"\n@noindent @b{Example}:@*\n");
       snprintf(filename,CF_BUFSIZE-1,"bodypart_%s_example.texinfo",bs[i].lval);
@@ -483,7 +493,7 @@ else
 void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs)
 
 { int i;
-  char filename[CF_BUFSIZE];
+ char filename[CF_BUFSIZE],*res;
   
 if (bs == NULL)
    {
@@ -508,6 +518,16 @@ for (i = 0; bs[i].lval != NULL; i++)
       fprintf(fout,"@item @code{%s}\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
+
+      if (res = GetControlDefault(bs[i].lval))
+         {
+         fprintf(fout,"\n@noindent @b{Default value:} %s\n",res);
+         }
+      else if (res = GetBodyDefault(bs[i].lval))
+         {
+         fprintf(fout,"\n@noindent @b{Default value:} %s\n",res);
+         }
+
       fprintf(fout,"\n@b{Example}:@*\n");
       snprintf(filename,CF_BUFSIZE-1,"bodypart_%s_example.texinfo",bs[i].lval);
       IncludeManualFile(fout,filename);

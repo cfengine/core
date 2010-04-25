@@ -38,7 +38,9 @@ int NR = 0;
 
 void SelfDiagnostic()
 
-{
+{ int intval;
+  char *def;
+ 
 if (VERBOSE || DEBUG)
    {
    FREPORT_TXT = stdout;
@@ -53,7 +55,19 @@ else
    }
        
 printf("----------------------------------------------------------\n");
-printf("Cfengine - Performing level 2 self-diagnostic \n");
+printf("Cfengine - Level 1 self-diagnostic \n");
+printf("----------------------------------------------------------\n\n");
+
+SDIntegerDefault("editfilesize",EDITFILESIZE);
+SDIntegerDefault("editbinaryfilesize",EDITBINFILESIZE);
+SDIntegerDefault("sensiblesize",SENSIBLEFSSIZE);
+SDIntegerDefault("sensiblecount",SENSIBLEFILECOUNT);
+
+
+printf(" -> Internal consistency done\n\n");
+
+printf("----------------------------------------------------------\n");
+printf("Cfengine - Level 2 self-diagnostic \n");
 printf("----------------------------------------------------------\n\n");
 TestVariableScan();
 TestFunctionIntegrity();
@@ -418,4 +432,29 @@ GetColumnAttributes(&pp);
 GetReplaceAttributes(&pp);
 
 printf(" -> All non-listed items are accounted for\n");
+}
+
+/*****************************************************************************/
+
+void SDIntegerDefault(char *ref,int cmp)
+
+{ char *def;
+  int intval;
+
+if (def = GetControlDefault(ref))
+   {
+   sscanf(def,"%d",&intval);
+   if (intval != cmp)
+      {
+      printf(" !! Mismatch in default specs for \"%s\" (%d/%d)\n",ref,intval,cmp);
+      }
+   else
+      {
+      printf(" -> %s ok (%d/%d)\n",ref,intval,cmp);
+      }
+   }
+else
+   {
+   printf(" !! Missing default specs for \"%s\"\n",ref);
+   }
 }

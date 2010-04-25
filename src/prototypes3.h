@@ -1009,6 +1009,11 @@ int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring);
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
 
+/* mod_defaults.c */
+
+char *GetControlDefault(char *bodypart);
+char *GetBodyDefault(char *bodypart);
+
 /* modes.c */
 
 int ParseModeString (char *modestring, mode_t *plusmask, mode_t *minusmask);
@@ -1275,6 +1280,7 @@ void TestSearchFilePromiser(void);
 void TestRegularExpressions(void);
 void TestAgentPromises(void);
 void TestFunctionIntegrity(void);
+void SDIntegerDefault(char *ref,int cmp);
 
 /* server_transform.c */
 

@@ -144,11 +144,9 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"expireafter",cf_int,CF_VALRANGE,"Global default for time before on-going promise repairs are interrupted"},
    {"files_single_copy",cf_slist,"","List of filenames to be watched for multiple-source conflicts"},
    {"files_auto_define",cf_slist,"","List of filenames to define classes if copied"},
-   {"fullencryption",cf_opts,CF_BOOL,"Full encryption mode in server connections, includes directory listings"},
    {"hostnamekeys",cf_opts,CF_BOOL,"true/false label ppkeys by hostname not IP address"},
    {"ifelapsed",cf_int,CF_VALRANGE,"Global default for time that must elapse before promise will be rechecked"},
    {"inform",cf_opts,CF_BOOL,"true/false set inform level default"},
-   {"lastseen",cf_opts,CF_BOOL,"true/false record last observed times for each client-server connections for intermittency modelling"},
    {"intermittency",cf_opts,CF_BOOL,"true/false store detailed recordings of last observed time for all client-server connections for reliability assessment (false)"},
    {"max_children",cf_int,CF_VALRANGE,"Maximum number of background tasks that should be allowed concurrently"},
    {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of outgoing connections to cf-serverd"},
@@ -265,7 +263,7 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {"reports",cf_olist,"all,audit,performance,all_locks,active_locks,hashes,classes,last_seen,monitor_now,monitor_history,monitor_summary,compliance,setuid,file_changes,installed_software,software_patches,value,variables","A list of reports that may be generated"},
    {"report_output",cf_opts,"csv,html,text,xml","Menu option for generated output format. Applies only to text reports, graph data remain in xydy format."},
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
-   {"time_stamps",cf_opts,CF_BOOL,"true/false whether to generate timestamps on the output directory"},
+   {"time_stamps",cf_opts,CF_BOOL,"true/false whether to generate timestamps in the output directory name"},
    {NULL,cf_notype,NULL,NULL}
    };
 

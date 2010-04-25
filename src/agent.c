@@ -603,6 +603,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET ifelapsed = %d\n",VEXPIREAFTER);
       continue;
       }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_timeout].lval) == 0)
+      {
+      CF_TIMEOUT = Str2Int(retval);
+      CfOut(cf_verbose,"","SET timeout = %d\n",CF_TIMEOUT);
+      continue;
+      }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_max_children].lval) == 0)
       {
@@ -633,13 +640,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          SetEnvironment(rp->item);
          }
       
-      continue;
-      }
-
-   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_lastseen].lval) == 0)
-      {
-      LASTSEEN = GetBoolean(retval);
-      CfOut(cf_verbose,"","SET lastseen to %d",LASTSEEN);
       continue;
       }
    }

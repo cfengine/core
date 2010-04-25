@@ -183,7 +183,7 @@ void KeepControlPromises()
   void *retval;
   int i;
 
-CFD_MAXPROCESSES = 10;
+CFD_MAXPROCESSES = 30;
 MAXTRIES = 5;
 CFD_INTERVAL = 0;
 CHECKSUMUPDATES = true;

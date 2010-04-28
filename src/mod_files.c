@@ -364,7 +364,8 @@ struct SubTypeSyntax CF_FILES_SUBTYPES[] =
   {"agent","files",CF_FILES_BODIES},
 
   /* Body lists belonging to th edit_line sub-bundle of files: */
-     
+
+  {"edit_line","*",CF_COMMON_EDITBODIES},   
   {"edit_line","delete_lines",CF_DELETELINES_BODIES},
   {"edit_line","insert_lines",CF_INSERTLINES_BODIES},
   {"edit_line","field_edits",CF_COLUMN_BODIES},

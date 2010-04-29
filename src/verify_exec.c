@@ -152,6 +152,7 @@ if (DONTDO && !a.contain.preview)
    }
 else
    {
+   
    CommPrefix(execstr,comm);
    
    if (a.transaction.background)
@@ -231,7 +232,7 @@ else
 
          if (a.module)
             {
-            ModuleProtocol(comm,line,!a.contain.nooutput);
+            ModuleProtocol(execstr,line,!a.contain.nooutput);
             }
          else if (!a.contain.nooutput && NonEmptyLine(line))
             {

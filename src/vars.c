@@ -72,8 +72,8 @@ Debug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 
 { struct Rval rvald;
-   
-Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
+
+  Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
 // Newscalar allocates memory through NewAssoc
 

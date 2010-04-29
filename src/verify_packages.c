@@ -1528,6 +1528,12 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
       
       for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 	{
+	  if(dirp->d_type == DT_REG || dirp->d_type == DT_LNK)
+	    {
+	    CfOut(cf_verbose, "", "Skipping \"%s\" (not a file)", dirp->d_name);
+	    continue;
+	    }
+
 	  if (FullTextMatch(refAnyVer, dirp->d_name))
 	    {
 	      matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);

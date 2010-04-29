@@ -280,7 +280,7 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
          {
          if (strcmp(lval,bs[l].lval) == 0)
             {
-            Debug("Matched syntatically correct body (lval,rval) item = (%s,%s)\n",lval,rval);
+            Debug("Matched syntatically correct body (lval) item = (%s)\n",lval);
             
             if (bs[l].dtype == cf_body)
                {

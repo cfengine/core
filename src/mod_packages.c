@@ -49,7 +49,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {"package_list_command",cf_str,CF_PATHRANGE,"Command to obtain a list of available packages"},
    {"package_list_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
    {"package_list_update_command",cf_str,"","Command to update the list of available packages (if any)" },
-   {"package_list_update_ifelapsed",cf_int,"","The ifelapsed locking time in between updates of the package list" },
+   {"package_list_update_ifelapsed",cf_int,CF_INTRANGE,"The ifelapsed locking time in between updates of the package list" },
    {"package_list_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {"package_name_convention",cf_str,"","This is how the package manager expects the package to be referred to, e.g. $(name).$(arch)"},
    {"package_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },

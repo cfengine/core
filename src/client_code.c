@@ -124,11 +124,11 @@ static sigset_t   signal_mask;
 
 signal(SIGPIPE,SIG_IGN);
 
-sigemptyset (&signal_mask);
-sigaddset (&signal_mask, SIGPIPE);
-pthread_sigmask (SIG_BLOCK, &signal_mask, NULL);
+sigemptyset(&signal_mask);
+sigaddset(&signal_mask,SIGPIPE);
+pthread_sigmask (SIG_BLOCK,&signal_mask, NULL);
 #endif  /* NOT MINGW */
- 
+
 if ((conn = NewAgentConn()) == NULL)
    {
    cfPS(cf_error,CF_FAIL,"malloc",pp,attr,"Unable to allocate connection structure for %s",server);

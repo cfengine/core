@@ -587,8 +587,6 @@ do
       NewScalar("this","handle",PromiseID(pp),cf_str);
       }
 
-   NewScalar("this","promiser",pp->promiser,cf_str);
-
    pexp = ExpandDeRefPromise("this",pp);
 
    switch (agent)

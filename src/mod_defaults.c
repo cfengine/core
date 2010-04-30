@@ -53,6 +53,7 @@ struct BodyDefault CONTROL_DEFAULT[] =
    {"editfilesize","10000"},
    {"exclamation","true"},
    {"expireafter","1 min"},
+   {"execresult_newlines","false"},
    {"hostnamekeys","false"},
    {"ifelapsed","1"},
    {"inform","false"},

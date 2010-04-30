@@ -637,6 +637,7 @@ struct Promise
    {
    char *classes;
    char *ref;                   /* comment */
+   char ref_alloc;
    char *promiser;
    void *promisee;              /* Can be a general rval */
    char  petype;                /* rtype of promisee - list or scalar recipient? */

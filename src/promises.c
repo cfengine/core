@@ -310,6 +310,7 @@ pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->bundle = strdup(pp->bundle);
 pcopy->ref = pp->ref;
+
 pcopy->agentsubtype = pp->agentsubtype;
 pcopy->conlist = NULL;
 pcopy->next = NULL;
@@ -349,6 +350,13 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       else
          {
          pcopy->ref = final.item; /* No alloc reference to comment item */
+         
+         if (pcopy->ref && strstr(pcopy->ref,"$(this.promiser)"))
+            {
+            DereferenceComment(pcopy);
+            }
+         
+
          }
       }
 
@@ -594,6 +602,11 @@ if (pp->next != NULL)
    DeletePromises(pp->next);
    }
 
+if (pp->ref_alloc == 'y')
+   {
+   free(pp->ref);
+   }
+
 DeletePromise(pp);
 }
 
@@ -770,19 +783,19 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    // don't hash rvals that change (e.g. times)
    doHash = true;
 
-   for(i = 0; noRvalHash[i] != NULL; i++ )
-     {
-       if(strcmp(cp->lval, noRvalHash[i]) == 0)
+   for (i = 0; noRvalHash[i] != NULL; i++ )
+      {
+      if(strcmp(cp->lval, noRvalHash[i]) == 0)
 	 {
-	   doHash = false;
-	   break;
+         doHash = false;
+         break;
 	 }
-     }
-
+      }
+   
    if(!doHash)
-     {
-       continue;
-     }
+      {
+      continue;
+      }
    
    switch(cp->type)
       {
@@ -817,3 +830,31 @@ EVP_DigestFinal(&context,digest,&md_len);
    
 /* Digest length stored in md_len */
 }
+
+/*******************************************************************/
+
+void DereferenceComment(struct Promise *pp)
+
+{ char pre_buffer[CF_BUFSIZE],post_buffer[CF_BUFSIZE],buffer[CF_BUFSIZE],*sp;
+  int offset = 0;
+
+strncpy(pre_buffer,pp->ref,CF_BUFSIZE);
+
+if (sp = strstr(pre_buffer,"$(this.promiser)"))
+   {
+   *sp = '\0';
+   offset = sp - pre_buffer + strlen("$(this.promiser)");
+   strncpy(post_buffer,pp->ref+offset,CF_BUFSIZE);
+   snprintf(buffer,CF_BUFSIZE,"%s%s%s",pre_buffer,pp->promiser,post_buffer);
+
+   if (pp->ref_alloc == 'y')
+      {
+      free(pp->ref);
+      }
+ 
+   pp->ref = strdup(buffer);
+   pp->ref_alloc = 'y';
+   }
+}
+
+

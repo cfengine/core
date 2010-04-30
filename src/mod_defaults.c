@@ -153,7 +153,8 @@ struct BodyDefault BODY_DEFAULT[] =
    {"ifencrypted","false"},
    {"create","false"},
    {"insert_match_policy","exact_match"},
-   {"recognize_join","false"},   
+   {"recognize_join","false"},
+   {"include_start_delimiter","false"},   
    {NULL,NULL},
    };
 

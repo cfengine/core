@@ -706,11 +706,14 @@ return false;
 
 /*******************************************************************/
 
-void NewClass(char *class)
+void NewClass(char *oclass)
 
 { struct Item *ip;
- 
-Chop(class);
+  char class[CF_MAXVARSIZE];
+
+Chop(oclass);
+strncpy(class,CanonifyName(oclass),CF_MAXVARSIZE);  
+
 Debug("NewClass(%s)\n",class);
 
 if (strlen(class) == 0)
@@ -758,7 +761,6 @@ if (!ABORTBUNDLE)
          }
       }
    }
-
 }
 
 /*********************************************************************/

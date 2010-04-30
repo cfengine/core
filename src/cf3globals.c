@@ -137,6 +137,8 @@ struct Rlist *AUTO_DEFINE_LIST = NULL;
 struct Rlist *SINGLE_COPY_CACHE = NULL;
 struct Rlist *CF_STCK = NULL;
 
+struct Item *EDIT_ANCHORS = NULL;
+
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = CF_WEEK;
 int LASTSEEN = false;

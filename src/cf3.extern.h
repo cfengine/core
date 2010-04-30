@@ -43,6 +43,8 @@ extern char STYLESHEET[CF_BUFSIZE];
 extern int CF_NODES;
 extern int CF_EDGES;
 
+extern struct Item *EDIT_ANCHORS;
+
 extern struct Bundle *BUNDLES;
 extern struct Body *BODIES;
 extern struct Scope *VSCOPE;

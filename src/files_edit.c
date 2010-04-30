@@ -61,7 +61,6 @@ if (a.edits.empty_before_use)
    }
 
 EDIT_MODEL = true;
-
 return ec;
 }
 

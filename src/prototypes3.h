@@ -875,6 +875,7 @@ void CfHtmlFooter(FILE *fp,char *footer);
 
 /* item-lib.c */
 
+struct Item *ReturnItemIn(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);
 int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 void AppendItemList(struct Item **liststart,char *itemstring);

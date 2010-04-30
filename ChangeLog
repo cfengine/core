@@ -1,6 +1,8 @@
 3.0.5
         Encryption problems fixed - client key buffer was uninitialized.
 
+        Classes-promisers are automatically canonified.
+
         Attribute package_delete_convention added, to allow customizable
 	package name in delete command during update.
 

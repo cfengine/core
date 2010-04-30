@@ -1393,6 +1393,7 @@ struct EditDefaults
    enum cfbackupoptions backup;
    int empty_before_use;
    int maxfilesize;
+   int joinlines;
    };
 
 /*************************************************************************/

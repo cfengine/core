@@ -222,6 +222,7 @@ struct BodySyntax CF_EDITS_BODY[] =
    {"edit_backup",cf_opts,"true,false,timestamp,rotate","Menu option for backup policy on edit changes"},
    {"empty_file_before_editing",cf_opts,CF_BOOL,"Baseline memory model of file to zero/empty before commencing promised edits"},
    {"max_file_size",cf_int,CF_VALRANGE,"Do not edit files bigger than this number of bytes"},
+   {"recognize_join",cf_opts,CF_BOOL,"Join together lines that end with a backslash, up to 4kB limit"},
    {NULL,cf_notype,NULL,NULL}
    };
 

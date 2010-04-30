@@ -914,6 +914,8 @@ else
 
 e.empty_before_use = GetBooleanConstraint("empty_file_before_editing",pp);
 
+e.joinlines = GetBooleanConstraint("recognize_join",pp);
+
 return e;
 }
 

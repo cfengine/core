@@ -97,7 +97,7 @@ struct BodySyntax CF_PROCESS_BODIES[] =
    {"process_count",cf_body,CF_MATCHCLASS_BODY,"Criteria for constraining the number of processes matching other criteria"},
    {"process_select",cf_body,CF_PROCFILTER_BODY,"Criteria for matching processes in the system process table"},
    {"process_stop",cf_str,CF_PATHRANGE,"A command used to stop a running process"},
-   {"restart_class",cf_str,CF_IDRANGE,"A class to be set if the process is not running, so that a command: rule can be referred to restart the process"},
+   {"restart_class",cf_str,CF_IDRANGE,"A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process"},
    {"signals",cf_olist,CF_SIGNALRANGE,"A list of menu options representing signals to be sent to a process"},
    {NULL,cf_notype,NULL,NULL}
    };

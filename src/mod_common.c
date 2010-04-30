@@ -61,11 +61,11 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
 
 struct BodySyntax CF_DEFINECLASS_BODY[] =
    {
-   {"promise_repaired",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
-   {"repair_failed",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
-   {"repair_denied",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
-   {"repair_timeout",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
-   {"promise_kept",cf_slist,CF_IDRANGE,"A list of classes to be defined"},
+   {"promise_repaired",cf_slist,CF_IDRANGE,"A list of classes to be defined globally"},
+   {"repair_failed",cf_slist,CF_IDRANGE,"A list of classes to be defined globally"},
+   {"repair_denied",cf_slist,CF_IDRANGE,"A list of classes to be defined globally"},
+   {"repair_timeout",cf_slist,CF_IDRANGE,"A list of classes to be defined globally"},
+   {"promise_kept",cf_slist,CF_IDRANGE,"A list of classes to be defined globally"},
    {"cancel_kept",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is kept"},
    {"cancel_repaired",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is repaired"},
    {"cancel_notkept",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is not kept for any reason"},

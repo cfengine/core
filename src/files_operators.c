@@ -2005,7 +2005,6 @@ void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes a
   u_long newflags;
 #endif
 
-
 maskvalue = umask(0);                 /* This makes the DEFAULT modes absolute */
 
 newperm = (dstat->st_mode & 07777);
@@ -2207,6 +2206,9 @@ if (attr.copy.preserve)
 
    newplus = (sstat->st_mode & 07777) | attr.perms.plus;
    newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+   attr.perms.plus = newplus;
+   attr.perms.minus = newminus;
+   VerifyFileAttributes(file,dstat,attr,pp);
    }
 else
    {
@@ -2222,14 +2224,15 @@ else
       (attr.perms.groups)->gid = dstat->st_gid;
       }
 
-   newplus = (dstat->st_mode & 07777) | attr.perms.plus;
-   newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+   if (attr.haveperms)
+      {      
+      newplus = (dstat->st_mode & 07777) | attr.perms.plus;
+      newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+      attr.perms.plus = newplus;
+      attr.perms.minus = newminus;   
+      VerifyFileAttributes(file,dstat,attr,pp);
+      }
    }
-
-attr.perms.plus = newplus;
-attr.perms.minus = newminus;
-
-VerifyFileAttributes(file,dstat,attr,pp);
 
 (attr.perms.owners)->uid = save_uid;
 (attr.perms.groups)->gid = save_gid;

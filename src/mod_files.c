@@ -98,6 +98,7 @@ struct BodySyntax CF_REPLACEWITH_BODY[] =
 
 struct BodySyntax CF_EDSCOPE_BODY[] =
    {
+   {"include_start_delimiter",cf_opts,CF_BOOL,"Whether to include the section delimiter"},
    {"select_start",cf_str,CF_ANYSTRING,"Regular expression matching start of edit region"},
    {"select_end",cf_str,CF_ANYSTRING,"Regular expression matches end of edit region from start"},
    {NULL,cf_notype,NULL,NULL}

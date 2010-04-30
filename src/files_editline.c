@@ -476,7 +476,20 @@ for (ip = start; ip != NULL; ip = ip->next)
       {
       if (beg == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_start,ip->name))
          {
-         beg = ip;
+         if (!a.region.include_start)
+            {
+            beg = ip->next;
+            
+            if (beg == NULL)
+               {
+               cfPS(cf_verbose,CF_INTERPT,"",pp,a," !! The promised start pattern (%s) found an empty region at the end of file %s",a.region.select_start,pp->this_server);
+               return false;
+               }
+            }
+         else
+            {
+            beg = ip;
+            }
          continue;
          }
       }

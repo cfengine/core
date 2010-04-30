@@ -152,7 +152,7 @@ struct BodyDefault BODY_DEFAULT[] =
    {"db_server_type","none"},
    {"ifencrypted","false"},
    {"create","false"},
-   {"",""},   
+   {"insert_match_policy","exact_match"},   
    {NULL,NULL},
    };
 

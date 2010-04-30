@@ -337,6 +337,81 @@ return(false);
 
 /*********************************************************************/
 
+int MatchPolicy(char *needle,char *haystack,struct Attributes a,struct Promise *pp)
+
+{ struct Rlist *rp;
+  char *sp,*spto;
+  enum insert_match opt;
+  char work[CF_BUFSIZE],final[CF_BUFSIZE];
+
+/* First construct the matching policy */
+
+memset(final,0,CF_BUFSIZE);
+strncpy(final,needle,CF_BUFSIZE-1);
+  
+for (rp = a.insert_match; rp != NULL; rp=rp->next)
+   {
+   opt = String2InsertMatch(rp->item);
+
+   /* Exact match can be done immediately */
+   
+   if (opt == cf_exact_match)
+      {
+      if (rp->next != NULL || rp != a.insert_match)
+         {
+         CfOut(cf_error,""," !! Multiple policies conflict with \"exact_match\", using exact match");
+         PromiseRef(cf_error,pp);
+         }
+      
+      return (strcmp(needle,haystack) == 0);
+      }
+
+   if (opt == cf_ignore_embedded)
+      {
+      memset(work,0,CF_BUFSIZE);
+      
+      for (sp = final,spto = work; *sp != '\0'; sp++)
+         {
+         if (strlen(sp) > 0 && isspace(*sp))
+            {
+            while (isspace(*(sp+1)))
+               {
+               sp++;
+               }
+
+            strcat(spto,"\\s+");
+            spto += 3;
+            }
+         else
+            {
+            *spto++ = *sp;
+            }
+         }
+
+      strcpy(final,work);
+      }
+   
+   if (opt == cf_ignore_leading)
+      {
+      for (sp = final; isspace(*sp); sp++)
+         {
+         }
+      strcpy(work,sp);
+      snprintf(final,CF_BUFSIZE,"\\s*%s",work);
+      }
+   
+   if (opt == cf_ignore_trailing)
+      {
+      strcpy(work,final);
+      snprintf(final,CF_BUFSIZE,"%s\\s*",work);
+      }
+   }
+
+return FullTextMatch(final,haystack);
+}
+
+/*********************************************************************/
+
 int MatchRlistItem(struct Rlist *listofregex,char *teststring)
 
    /* Checks whether item matches a list of wildcards */

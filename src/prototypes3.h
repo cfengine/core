@@ -233,6 +233,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+enum insert_match String2InsertMatch(char *s);
 long Months2Seconds(int m);
 enum cfinterval Str2Interval(char *s);
 int SyslogPriority2Int(char *s);
@@ -875,7 +876,7 @@ void CfHtmlFooter(FILE *fp,char *footer);
 /* item-lib.c */
 
 struct Item *EndOfList(struct Item *start);
-int IsItemInRegion(char *item,struct Item *begin,struct Item *end);
+int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 void AppendItemList(struct Item **liststart,char *itemstring);
 void PrependItemList(struct Item **liststart,char *itemstring);
 int SelectItemMatching(char *regex,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev,char *fl);
@@ -883,7 +884,7 @@ int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,stru
 int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
 int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp);
 void InsertAfter(struct Item **filestart,struct Item *ptr,char *string);
-int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,enum cfeditorder pos);
+int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,enum cfeditorder pos,struct Attributes a,struct Promise *pp);
 int RawSaveItemList(struct Item *liststart, char *file);
 struct Item *SplitStringAsItemList(char *string,char sep);
 struct Item *SplitString(char *string,char sep);
@@ -1008,6 +1009,7 @@ int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring);
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
+int MatchPolicy(char *needle,char *haystack,struct Attributes a,struct Promise *pp);
 
 /* mod_defaults.c */
 

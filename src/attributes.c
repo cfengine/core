@@ -1165,6 +1165,7 @@ printf(".....................................................\n\n");
 struct Attributes GetInsertionAttributes(struct Promise *pp)
 
 { struct Attributes attr;
+  char *value;
 
 attr.havelocation = GetBooleanConstraint("location",pp);
 attr.location = GetLocationAttributes(pp);
@@ -1174,6 +1175,8 @@ attr.expandvars = GetBooleanConstraint("expand_scalars",pp);
 
 attr.haveinsertselect = GetBooleanConstraint("insert_select",pp);
 attr.line_select = GetInsertSelectConstraints(pp);
+
+attr.insert_match = GetListConstraint("whitespace_policy",pp);
 
 /* Common ("included") */
 

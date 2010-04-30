@@ -34,6 +34,25 @@
 
 /***************************************************************************/
 
+enum insert_match String2InsertMatch(char *s)
+
+{ static char *names[] = { "ignore_leading","ignore_trailing","ignore_embedded",
+                           "exact_match", NULL };
+ int i;
+
+for (i = 0; names[i] != NULL; i++)
+   {
+   if (s && strcmp(s,names[i]) == 0)
+      {
+      return i;
+      }
+   }
+
+return cf_exact_match;
+}
+    
+/***************************************************************************/
+
 int SyslogPriority2Int(char *s)
 
 { int i;

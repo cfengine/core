@@ -980,6 +980,13 @@ typedef enum
   INHERIT_ACCESS_AND_DEFAULT
   }inherit_t;
 
+enum insert_match
+   {
+   cf_ignore_leading,
+   cf_ignore_trailing,
+   cf_ignore_embedded,
+   cf_exact_match
+   };
 
 /*************************************************************************/
 /* Runtime constraint structures                                         */
@@ -1653,6 +1660,7 @@ struct Attributes
    char *sourcetype;
    int expandvars;
    int not_matching;
+   struct Rlist *insert_match;
 
       /* knowledge */
 

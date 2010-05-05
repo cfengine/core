@@ -162,7 +162,7 @@ for (i = 0; names[i] != NULL; i++)
 
       if (value == CF_NOINT)
          {
-         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",names[i],line[i]);
          return false;
          }
       

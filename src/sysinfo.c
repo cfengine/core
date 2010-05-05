@@ -264,6 +264,10 @@ NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
+NewScalar("sys","cf_version",VERSION,cf_str);
+#ifdef HAVE_LIBCFNOVA
+NewScalar("sys","nova_version",Nova_GetVersion(),cf_str);
+#endif
 
 for (i = 0; components[i] != NULL; i++)
    {

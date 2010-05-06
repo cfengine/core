@@ -922,6 +922,10 @@ enum action_policy
   };
 
 enum cf_thread_mutex
+/* Adding:
+ *) Add enum here
+ *) Add mutex in cf3globals.c and cf.extern.h
+ *) Add enum -> mutex in NameToThreadMutex() */
   {
   cft_system,
   cft_count,
@@ -929,6 +933,7 @@ enum cf_thread_mutex
   cft_lock,
   cft_output,
   cft_dbhandle,
+  cft_policy,  // protects structs for refreshing policy files
   cft_no_tpolicy
   };
 

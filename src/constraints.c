@@ -572,7 +572,13 @@ void ReCheckAllConstraints(struct Promise *pp)
   struct Item *ptr;
 
 if (handle)
-   {
+  {
+    if (!ThreadLock(cft_policy))
+    {
+      CfOut(cf_error, "", "!! Could not lock cft_policy in ReCheckAllConstraints() -- aborting");
+      return;
+    }
+
    if (prid = PromiseIdExists(handle))
       {
       if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->lineno != pp->lineno))
@@ -582,10 +588,15 @@ if (handle)
          }
       }
    else
-      {
-      prid = NewPromiseId(handle,pp);
-      }
-   }
+     {
+       NewPromiseId(handle,pp);
+     }
+
+
+   prid = NULL; // we can't access this after unlocking
+   ThreadUnlock(cft_policy);
+  }
+   
 
 if (REQUIRE_COMMENTS == true)
    {
@@ -791,9 +802,12 @@ return false;
 /* Level                                                                     */
 /*****************************************************************************/
 
+// NOTE: PROMISE_ID_LIST must be thread-safe here (locked by caller)
 struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp)
 
 { struct PromiseIdent *ptr;
+
+  AssertThreadLocked(cft_policy, "NewPromiseId");
 
 if ((ptr = malloc(sizeof(struct PromiseIdent))) == NULL)
    {
@@ -810,9 +824,46 @@ return ptr;
 
 /*****************************************************************************/
 
+void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key)
+{
+  AssertThreadLocked(cft_policy, "DeleteAllPromiseIdsRecurse");
+
+  if(key->next != NULL)
+    {
+      DeleteAllPromiseIds(key->next);
+    }
+
+  free(key->filename);
+  free(key->handle);
+  free(key);
+}
+
+/*****************************************************************************/
+
+void DeleteAllPromiseIds()
+{
+  if (!ThreadLock(cft_policy))
+    {
+      CfOut(cf_error, "", "!! Could not lock cft_policy in DelteAllPromiseIds() -- aborting");
+      return;
+    }
+  
+  if(PROMISE_ID_LIST)
+    {
+      DeleteAllPromiseIdsRecurse(PROMISE_ID_LIST);
+      PROMISE_ID_LIST = NULL;
+    }
+
+  ThreadUnlock(cft_policy);
+}
+
+/*****************************************************************************/
+
 struct PromiseIdent *PromiseIdExists(char *handle)
 
 { struct PromiseIdent *key;
+
+  AssertThreadLocked(cft_policy, "PromiseIdExists");
  
 for (key = PROMISE_ID_LIST; key != NULL; key=key->next)
    {

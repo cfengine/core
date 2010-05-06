@@ -190,6 +190,9 @@ if (ag == cf_keygen)
    return;
    }
 
+// in case we are re-reading, delete old handles
+DeleteAllPromiseIds();
+
 /* Parse the files*/
 
 Cf3ParseFiles();

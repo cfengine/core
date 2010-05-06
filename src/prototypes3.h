@@ -229,6 +229,8 @@ void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rval
 int GetBundleConstraint(char *lval,struct Promise *list);
 int VerifyConstraintName(char *lval);
 struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp);
+void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
+void DeleteAllPromiseIds();
 struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
@@ -1380,6 +1382,10 @@ CF_DB *OpenLock(void);
 void CloseLock(CF_DB *dbp);
 int ThreadLock(enum cf_thread_mutex name);
 int ThreadUnlock(enum cf_thread_mutex name);
+void AssertThreadLocked(enum cf_thread_mutex name, char *fname);
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name);
+#endif
 
 /* timeout.c */
 

@@ -37,6 +37,8 @@ extern pthread_mutex_t MUTEX_LOCK;
 extern pthread_attr_t PTHREADDEFAULTS;
 extern pthread_mutex_t MUTEX_COUNT;
 extern pthread_mutex_t MUTEX_OUTPUT;
+extern pthread_mutex_t MUTEX_DBHANDLE;
+extern pthread_mutex_t MUTEX_POLICY;
 extern pthread_mutex_t MUTEX_GETADDR;
 # endif
 

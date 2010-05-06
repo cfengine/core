@@ -3,8 +3,13 @@
 
         Classes-promisers are automatically canonified.
 
+        New scalars sys.cf_version and sys.nova_version that hold Cfengine version information.
+
         Attribute package_delete_convention added, to allow customizable
 	package name in delete command during update.
+
+	Some of the threading code is rewritten and made more robust. This includes
+     	synchronizing access to the lastseen database from the server.
 
         Bad initialization of BSD flags fixed
 	Multiple variable expansion issues in control fixed for server and agent

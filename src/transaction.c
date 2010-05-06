@@ -358,6 +358,10 @@ pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name)
       return &MUTEX_POLICY;
       break;
 
+    case cft_db_lastseen:
+      return &MUTEX_DB_LASTSEEN;
+      break;
+
    default:
      CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);
      FatalError("Internal software error\n");

@@ -27,6 +27,11 @@
 /*                                                                           */
 /* File: dbm_api.c                                                           */
 /*                                                                           */
+/* NOTE: The functions supplied here are *NOT* neccessarily thread safe.     */
+/*       This means that threaded calls to OpenDB()/CloseDB() should be      */
+/*        wrapped by ThreadLock() and ThreadUnlock().                        */
+/*                                                                           */
+/*                                                                           */
 /*****************************************************************************/
 
 #include "cf3.defs.h"

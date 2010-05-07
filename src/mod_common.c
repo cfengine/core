@@ -175,7 +175,7 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"allowconnects",cf_slist,"","List of IPs or hostnames that may connect to the server port"},
    {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
    {"allowallconnects",cf_slist,"","List of IPs or hostnames that may have more than one connection to the server port"},
-   {"trustkeysfrom",cf_slist,"","List of IPs or hostnames from whom we accept public keys on trust"},
+   {"trustkeysfrom",cf_slist,"","List of IPs from whom we accept public keys on trust"},
    {"allowusers",cf_slist,"","List of usernames who may execute requests from this server"},
    {"dynamicaddresses",cf_slist,"","List of IPs or hostnames for which the IP/name binding is expected to change"},
    {"skipverify",cf_slist,"","List of IPs or hostnames for which we expect no DNS binding and cannot verify"},

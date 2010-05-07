@@ -1042,7 +1042,7 @@ struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
   char *sp,*hostnameip,*maxbytes,*port,*sendstring;
   int val = 0, n_read = 0;
   short portnum;
-  struct Attributes attr;
+  struct Attributes attr = {0};
 
 memset(buffer, 0, sizeof(buffer));
 ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readtcp].args,finalargs); /* Arg validation */
@@ -1693,7 +1693,7 @@ struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
   char *sp,*maxbytes,*port,*sendstring,*regex,*array_lval,*listvar;
   int val = 0, n_read = 0,count = 0;
   short portnum;
-  struct Attributes attr;
+  struct Attributes attr = {0};
   void *retval;
   struct Promise *pp;
 

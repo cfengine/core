@@ -222,7 +222,7 @@ struct FnCallArg HOSTRANGE_ARGS[] =
 
 struct FnCallArg HOSTSSEEN_ARGS[] =
     {
-    {CF_INTRANGE,cf_int,"Horizon since last seen in hours"},
+    {CF_VALRANGE,cf_int,"Horizon since last seen in hours"},
     {"lastseen,notseen",cf_opts,"Complements for selection policy"},
     {"name,address",cf_opts,"Type of return value desired"},
     {NULL,cf_notype,NULL}
@@ -575,7 +575,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"host2ip",cf_str,1,HOST2IP_ARGS,"Returns the primary name-service IP address for the named host"},
    {"hostinnetgroup",cf_class,1,HOSTINNETGROUP_ARGS,"True if the current host is in the named netgroup"},
    {"hostrange",cf_class,2,HOSTRANGE_ARGS,"True if the current host lies in the range of enumerated hostnames specified"},
-   {"hostsseen",cf_str,3,HOSTSSEEN_ARGS,"Extract the list of hosts last seen/not seen within the last arg1 minutes"},
+   {"hostsseen",cf_str,3,HOSTSSEEN_ARGS,"Extract the list of hosts last seen/not seen within the last arg1 hours"},
    {"iprange",cf_class,1,IPRANGE_ARGS,"True if the current host lies in the range of IP addresses specified"},
    {"irange",cf_irange,2,IRANGE_ARGS,"Define a range of integer values for cfengine internal use"},
    {"isdir",cf_class,1,FILESTAT_ARGS,"True if the named object is a directory"},

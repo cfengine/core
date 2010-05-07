@@ -1528,13 +1528,13 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
       
       for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 	{
-#ifndef AIX
+#ifdef LINUX 
 	  if(dirp->d_type == DT_REG || dirp->d_type == DT_LNK)
 	    {
 	    CfOut(cf_verbose, "", "Skipping \"%s\" (not a file)", dirp->d_name);
 	    continue;
 	    }
-#endif  /* NOT AIX */
+#endif  /* LINUX */
 
 	  if (FullTextMatch(refAnyVer, dirp->d_name))
 	    {

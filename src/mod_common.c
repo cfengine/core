@@ -334,19 +334,21 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
-   CF_COMMON_SUBTYPES,     /* Add modules after this, mod_report.c is here */
-   CF_EXEC_SUBTYPES,       /* mod_exec.c */
-   CF_DATABASES_SUBTYPES,  /* mod_databases.c */
-   CF_FILES_SUBTYPES,      /* mod_files.c */
-   CF_INTERFACES_SUBTYPES, /* mod_interfaces.c */
-   CF_METHOD_SUBTYPES,     /* mod_methods.c */
-   CF_PACKAGES_SUBTYPES,   /* mod_packages.c */
-   CF_PROCESS_SUBTYPES,    /* mod_process.c */
-   CF_SERVICES_SUBTYPES,   /* mod_services.c */
-   CF_STORAGE_SUBTYPES,    /* mod_storage.c */
-   CF_REMACCESS_SUBTYPES,  /* mod_access.c */
-   CF_KNOWLEDGE_SUBTYPES,  /* mod_knowledge.c */
-   CF_MEASUREMENT_SUBTYPES,/* mod_measurement.c */
+   CF_COMMON_SUBTYPES,       /* Add modules after this, mod_report.c is here */
+   CF_ENVIRONMENT_SUBTYPES,  /* mod_environ.c */
+   CF_EXEC_SUBTYPES,         /* mod_exec.c */
+   CF_DATABASES_SUBTYPES,    /* mod_databases.c */
+   CF_FILES_SUBTYPES,        /* mod_files.c */
+   CF_INTERFACES_SUBTYPES,   /* mod_interfaces.c */
+   CF_METHOD_SUBTYPES,       /* mod_methods.c */
+   CF_OUTPUTS_SUBTYPES,      /* mod_outputs.c */
+   CF_PACKAGES_SUBTYPES,     /* mod_packages.c */
+   CF_PROCESS_SUBTYPES,      /* mod_process.c */
+   CF_SERVICES_SUBTYPES,     /* mod_services.c */
+   CF_STORAGE_SUBTYPES,      /* mod_storage.c */
+   CF_REMACCESS_SUBTYPES,    /* mod_access.c */
+   CF_KNOWLEDGE_SUBTYPES,    /* mod_knowledge.c */
+   CF_MEASUREMENT_SUBTYPES,  /* mod_measurement.c */
    
    /* update CF3_MODULES in cf3.defs.h */
    };

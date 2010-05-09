@@ -160,6 +160,18 @@ extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
 extern struct SubTypeSyntax CF_ALL_BODIES[];
 #endif
 
+#ifndef CF3_MOD_ENVIRON
+extern struct BodySyntax CF_RESOURCE_BODY[];
+extern struct BodySyntax CF_DESIGNATION_BODY[];
+extern struct BodySyntax CF_ENVIRON_BODIES[];
+extern struct SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_OUTPUTS
+extern struct BodySyntax CF_OUTPUTS_BODIES[];
+extern struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
+#endif
+
 #ifndef CF3_MOD_FUNCTIONS
 extern struct FnCallType CF_FNCALL_TYPES[];
 #endif

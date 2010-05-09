@@ -102,6 +102,8 @@ libpromises_la_SOURCES =                                                \
         mod_databases.c                                                 \
         mod_services.c                                                  \
         mod_process.c   			                        \
+	mod_environ.c							\
+	mod_outputs.c							\
         unix.c
 
 

@@ -99,7 +99,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
 
-#define CF3_MODULES 13 /* This value needs to be incremented when adding modules */
+#define CF3_MODULES 15 /* This value needs to be incremented when adding modules */
 
 /*************************************************************************/
 

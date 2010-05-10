@@ -447,7 +447,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       }
 
    memset(currentitem,0,CF_EXPANDSIZE);
-   
+
    sscanf(sp,"%[^$]",currentitem);
    
    if (ExpandOverflow(buffer,currentitem))
@@ -458,7 +458,12 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    strcat(buffer,currentitem);
    sp += strlen(currentitem);
 
-   Debug("  Add |%s| to str, waiting at |%s|\n",buffer,sp);
+   if (strlen(currentitem) == 0)
+      {
+      break;
+      }
+   
+   Debug("  Add |%s| to str, waiting at |%s| (past %s)\n",buffer,sp,currentitem);
    
    if (*sp == '\0')
       {
@@ -470,17 +475,18 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       switch (*(sp+1))
          {
          case '(':
-                   ExtractOuterCf3VarString(sp,var);
-                   varstring = ')';
-                   break;
-         case '{':
-                   ExtractOuterCf3VarString(sp,var);
-                   varstring = '}';
-                   break;
+             ExtractOuterCf3VarString(sp,var);
+             varstring = ')';
+             break;
 
+         case '{':
+             ExtractOuterCf3VarString(sp,var);
+             varstring = '}';
+             break;
+         
          default: 
-                   strcat(buffer,"$");
-                   continue;
+             strcat(buffer,"$");
+             continue;
          }
       }
 
@@ -489,7 +495,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    temp[0] = '\0';
    ExtractInnerCf3VarString(sp,temp);
    
-   if (strstr(temp,"$"))
+   if (IsCf3VarString(temp))
       {
       Debug("  Nested variables - %s\n",temp);
       ExpandPrivateScalar(scopeid,temp,currentitem);

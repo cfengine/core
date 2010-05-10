@@ -647,6 +647,9 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
    }
 else
    {
+   int multiline = a.sourcetype && strcmp(a.sourcetype,"preserve_block") == 0;
+   int need_insert = false;
+
    if (strchr(pp->promiser,'\n') != NULL) /* Multi-line string */
       {
       char *sp;
@@ -668,18 +671,30 @@ else
             cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised file line \"%s\" exists within file %s (promise kept)",buf,pp->this_server);
             continue;
             }
-         
-         retval |= InsertMissingLineAtLocation(buf,start,loc,prev,a,pp);
-         
-         if (prev && prev != CF_UNDEFINED_ITEM)
+
+         if (!multiline)
             {
-            prev = prev->next;
-            }
+            retval |= InsertMissingLineAtLocation(buf,start,loc,prev,a,pp);
          
-         if (loc)
-            {
-            loc = loc->next;
+            if (prev && prev != CF_UNDEFINED_ITEM)
+               {
+               prev = prev->next;
+               }
+            
+            if (loc)
+               {
+               loc = loc->next;
+               }
             }
+         else
+            {
+            need_insert = true;            
+            }
+         }
+
+      if (need_insert)
+         {
+         return InsertMissingLineAtLocation(pp->promiser,start,location,prev,a,pp);
          }
 
       return retval;

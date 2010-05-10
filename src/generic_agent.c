@@ -553,6 +553,9 @@ if (VINPUTLIST != NULL)
                 break;
             }
          }
+
+      HashVariables();
+      HashControls();
       }
    }
 

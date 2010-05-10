@@ -78,7 +78,7 @@ LoadPersistentContext();
 LoadSystemConstants();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
-NewClass(CanonifyName(THIS_AGENT));
+NewClass(THIS_AGENT);
 THIS_AGENT_TYPE = ag;
 
 snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
@@ -1472,7 +1472,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       NewScalar("sys","fqhost",VFQNAME,cf_str);
       NewScalar("sys","domain",VDOMAIN,cf_str);
       DeleteClass("undefined_domain");
-      NewClass(CanonifyName(VDOMAIN));
+      NewClass(VDOMAIN);
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)

@@ -301,7 +301,7 @@ for (sp = local; *sp != '\0'; sp++)
       FatalError("cfengine: You cannot use -D to define a reserved class!");
       }
 
-   NewClass(CanonifyName(currentitem));
+   NewClass(currentitem);
    }
 }
 
@@ -366,7 +366,7 @@ for (sp = local; *sp != '\0'; sp++)
       FatalError("cfengine: You cannot use -D to define a reserved class!");
       }
 
-   NewClass(CanonifyName(pref));
+   NewClass(pref);
    }
 }
 
@@ -792,7 +792,7 @@ for (sp = local; *sp != '\0'; sp++)
       FatalError("cfengine: You cannot use -D to define a reserved class!");
       }
 
-   NewClass(CanonifyName(pref));
+   NewClass(pref);
    }
 }
 

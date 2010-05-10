@@ -458,7 +458,7 @@ char *CanonifyName(char *str)
 
 { static char buffer[CF_BUFSIZE];
   char *sp;
-
+          
 memset(buffer,0,CF_BUFSIZE);
 strcpy(buffer,str);
 

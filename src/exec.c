@@ -427,7 +427,6 @@ if (!NO_FORK)
    
 #endif  /* NOT MINGW */
 
-   
 if (!ONCE)
    {
    MYTWIN = StartTwin(argc,argv);
@@ -628,6 +627,8 @@ if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR))
   exit(1);
   }
 
+DeleteItemList(IPADDRESSES);
+IPADDRESSES = NULL;
 DeleteScope("this");
 DeleteScope("mon");
 DeleteScope("sys");

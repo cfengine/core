@@ -458,12 +458,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    strcat(buffer,currentitem);
    sp += strlen(currentitem);
 
-   if (strlen(currentitem) == 0)
-      {
-      break;
-      }
-   
-   Debug("  Add |%s| to str, waiting at |%s| (past %s)\n",buffer,sp,currentitem);
+   Debug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n",buffer,sp,currentitem);
    
    if (*sp == '\0')
       {
@@ -477,11 +472,21 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
          case '(':
              ExtractOuterCf3VarString(sp,var);
              varstring = ')';
+             if (strlen(var) == 0)
+                {
+                strcat(buffer,"$");
+                continue;
+                }
              break;
 
          case '{':
              ExtractOuterCf3VarString(sp,var);
              varstring = '}';
+             if (strlen(var) == 0)
+                {
+                strcat(buffer,"$");
+                continue;
+                }
              break;
          
          default: 
@@ -502,6 +507,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       }
    else
       {
+      Debug("  Delta - %s\n",temp);
       strncpy(currentitem,temp,CF_BUFSIZE-1);
       }
 
@@ -545,7 +551,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
           return false;
 
       }
-   
+
    sp += increment;
    currentitem[0] = '\0';
    }

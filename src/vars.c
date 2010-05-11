@@ -756,7 +756,7 @@ char *ExtractOuterCf3VarString(char *str,char *substr)
   int bracks = 0, onebrack = false;
   int nobracks = true;
 
-Debug("ExtractOuterVarString(%s) - syntax verify\n",str);
+Debug("ExtractOuterVarString(\"%s\") - syntax verify\n",str);
 
 memset(substr,0,CF_BUFSIZE);
  

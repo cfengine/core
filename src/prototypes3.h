@@ -230,7 +230,7 @@ int GetBundleConstraint(char *lval,struct Promise *list);
 int VerifyConstraintName(char *lval);
 struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp);
 void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
-void DeleteAllPromiseIds();
+void DeleteAllPromiseIds(void);
 struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */

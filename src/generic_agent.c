@@ -190,8 +190,7 @@ if (ag == cf_keygen)
    return;
    }
 
-// in case we are re-reading, delete old handles
-DeleteAllPromiseIds();
+DeleteAllPromiseIds(); // in case we are re-reading, delete old handles
 
 /* Parse the files*/
 

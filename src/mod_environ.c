@@ -71,7 +71,9 @@ struct BodySyntax CF_RESOURCE_BODY[] =
 
 struct BodySyntax CF_DESIGNATION_BODY[] =
    {
-   {"env_ipv4",cf_str,"","The IP address of the environment's interface"},
+   {"env_address",cf_str,"","The IP address of the environment's interface"},
+   {"env_netmask",cf_str,"","The IPv4 netmask of the environment's interface"},
+   {"env_name",cf_str,"","The hostname"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -80,7 +82,7 @@ struct BodySyntax CF_DESIGNATION_BODY[] =
 struct BodySyntax CF_ENVIRON_BODIES[] =
    {
    {"resources",cf_body,CF_RESOURCE_BODY,"Virtual environment resource description"},
-   {"designations",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
+   {"instantiation",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
    {"environment_type",cf_opts,"vm,xen,kvm,zone,cloud","Virtual environment type"},
    {NULL,cf_notype,NULL,NULL}
    };

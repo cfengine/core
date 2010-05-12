@@ -92,23 +92,20 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
 
           lval = (char *)rpt->item;
           rval = rpg->item;
-
           Debug("MapBodyArgs(SCALAR,%s,%s)\n",lval,rval);
           AddVariableHash(scopeid,lval,rval,CF_SCALAR,dtg,NULL,0);
           break;
 
       case CF_LIST:
+
           lval = (char *)rpt->item;
           rval = rpg->item;
-
           AddVariableHash(scopeid,lval,rval,CF_LIST,dtg,NULL,0);
-          
           break;
           
       case CF_FNCALL:
           fp = (struct FnCall *)rpt->item;
           dtg = FunctionReturnType(fp->name);
-
           // Should not happen in this context?
           break;
           
@@ -116,7 +113,6 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           /* Nothing else should happen */
           FatalError("Software error: something not a scalar/function in argument literal");
       }
-   
    }
 
 Debug("MapBodyArgs(end)\n");

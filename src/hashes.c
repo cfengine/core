@@ -245,29 +245,34 @@ if (strlen(lval) > CF_MAXVARSIZE)
    return false;
    }
 
-switch (rtype)
+/* If we are not expanding a body template, check for recursive singularities */
+
+if (strcmp(scope,"body") != 0)
    {
-   case CF_SCALAR:
-
-       if (StringContainsVar((char *)rval,lval))
-          {
-          CfOut(cf_error,"","Scalar variable %s contains itself (non-convergent): %s",lval,(char *)rval);
-          return false;
-          }
-       break;
-
-   case CF_LIST:
-
-       for (rp = rval; rp != NULL; rp=rp->next)
-          {
-          if (StringContainsVar((char *)rp->item,lval))
+   switch (rtype)
+      {
+      case CF_SCALAR:
+          
+          if (StringContainsVar((char *)rval,lval))
              {
-             CfOut(cf_error,"","List variable %s contains itself (non-convergent)",lval);
+             CfOut(cf_error,"","Scalar variable %s.%s contains itself (non-convergent): %s",scope,lval,(char *)rval);
              return false;
              }
-          }
-       break;
-       
+          break;
+          
+      case CF_LIST:
+          
+          for (rp = rval; rp != NULL; rp=rp->next)
+             {
+             if (StringContainsVar((char *)rp->item,lval))
+                {
+                CfOut(cf_error,"","List variable %s contains itself (non-convergent)",lval);
+                return false;
+                }
+             }
+          break;
+          
+      }
    }
 
 ptr = GetScope(scope);

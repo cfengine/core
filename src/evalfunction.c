@@ -3538,9 +3538,11 @@ maxsize = Str2Int(finalargs->next->next->next->next->next->item);
 
 // Read once to validate structure of file in itemlist
 
-Debug("Read string data from file %s - , maxent %d\n",filename,maxent);
+Debug("Read string data from file %s - , maxent %d, maxsize %d\n",filename,maxent,maxsize);
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
+
+Debug("FILE: %s\n",file_buffer);
 
 if (file_buffer == NULL)
    {

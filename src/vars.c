@@ -277,6 +277,7 @@ void DeleteVariable(char *scope,char *id)
   struct Scope *ptr;
   
 i = slot = GetHash(id);
+
 ptr = GetScope(scope);
 
 if (ptr == NULL)
@@ -292,7 +293,7 @@ if (CompareVariable(id,ptr->hashtable[slot]) != 0)
       
       if (i == slot)
          {
-         Debug("No variable matched\n");
+         Debug("No variable matched %s\n",id);
          break;
          }
       
@@ -303,14 +304,14 @@ if (CompareVariable(id,ptr->hashtable[slot]) != 0)
       
       if (CompareVariable(id,ptr->hashtable[i]) == 0)
          {
-         free(ptr->hashtable[i]);
+         DeleteAssoc(ptr->hashtable[i]);
          ptr->hashtable[i] = NULL;
          }
       }
    }
  else
     {
-    free(ptr->hashtable[i]);
+    DeleteAssoc(ptr->hashtable[i]);
     ptr->hashtable[i] = NULL;
     }   
 }

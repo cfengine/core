@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
 /*******************************************************************/
 /* Hashes                                                          */
 /*******************************************************************/
@@ -146,13 +145,10 @@ void DeleteHashes(struct CfAssoc **hashtable)
 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   for (i = 0; i < CF_HASHTABLESIZE; i++)
+   if (hashtable[i] != NULL)
       {
-      if (hashtable[i] != NULL)
-         {
-         DeleteAssoc(hashtable[i]);
-         hashtable[i] = NULL;
-         }
+      DeleteAssoc(hashtable[i]);
+      hashtable[i] = NULL;
       }
    }
 }

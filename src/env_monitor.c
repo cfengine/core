@@ -2470,11 +2470,11 @@ while (!feof(fp))
    
    CF_THIS[index] = dq;
    LASTQ[index] = q;
-   LASTT[index] = total_time;
    
    CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,CF_THIS[index],total_time);         
    }
 
+LASTT[index] = total_time;
 fclose(fp);
 }
 

@@ -632,8 +632,6 @@ IPADDRESSES = NULL;
 DeleteScope("this");
 DeleteScope("mon");
 DeleteScope("sys");
-NewScope("this");
-NewScope("mon");
 
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();

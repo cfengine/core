@@ -105,6 +105,21 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetOutputsAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+memset(&attr,0,sizeof(attr));
+
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+
+attr.output.promiser_type = GetConstraint("promiser_type",pp,CF_SCALAR);
+attr.output.level = GetConstraint("output_level",pp,CF_SCALAR);
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetReportsAttributes(struct Promise *pp)
 
 { struct Attributes attr;

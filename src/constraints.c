@@ -107,6 +107,28 @@ return cp;
 
 /*****************************************************************************/
 
+void EditScalarConstraint(struct Constraint *conlist,char *lval,char *rval)
+
+{ struct Constraint *cp;
+ 
+for (cp = conlist; cp != NULL; cp = cp->next)
+   {
+   if (strcmp(lval,cp->lval) == 0)
+      {
+      if (cp->rval)
+         {
+         DeleteRvalItem(cp->rval,cp->type);
+         }      
+
+      cp->rval = strdup(rval);
+      cp->type = CF_SCALAR;
+      return;
+      }
+   }
+}
+
+/*****************************************************************************/
+
 void DeleteConstraintList(struct Constraint *conlist)
 
 { struct Constraint *cp, *next;

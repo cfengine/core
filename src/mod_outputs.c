@@ -62,6 +62,7 @@
 struct BodySyntax CF_OUTPUTS_BODIES[] =
    {
    {"output_level",cf_opts,"verbose,debug,inform","Output level to observe for the named promise or bundle (meta-promise)"},
+   {"promiser_type",cf_opts,"promise,bundle","Output level to observe for the named promise or bundle (meta-promise)"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -40,6 +40,7 @@ enum typesequence
    {
    kp_vars,
    kp_classes,
+   kp_outputs,
    kp_interfaces,
    kp_processes,
    kp_storage,
@@ -57,6 +58,7 @@ char *TYPESEQUENCE[] =
    {
    "vars",
    "classes",    /* Maelstrom order 2 */
+   "outputs",
    "interfaces",
    "processes",
    "storage",
@@ -757,11 +759,13 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
 
    if ((bp = GetBundle(name,"agent")) || (bp = GetBundle(name,"common")))
       {
+      SetBundleOutputs(bp->name);
       AugmentScope(bp->name,bp->args,params);
       BannerBundle(bp,params);
       THIS_BUNDLE = bp->name;
       DeletePrivateClassContext(); // Each time we change bundle
       ScheduleAgentOperations(bp);
+      ResetBundleOutputs(bp->name);
       }
    }
 }
@@ -924,6 +928,14 @@ if (strcmp("classes",pp->agentsubtype) == 0)
    KeepClassContextPromise(pp);
    return;
    }
+
+if (strcmp("outputs",pp->agentsubtype) == 0)
+   {
+   VerifyOutputsPromise(pp);
+   return;
+   }
+
+SetPromiseOutputs(pp);
 
 if (strcmp("interfaces",pp->agentsubtype) == 0)
    {

@@ -61,9 +61,10 @@
 
 struct BodySyntax CF_RESOURCE_BODY[] =
    {
-   {"env_cpu",cf_int,CF_VALRANGE,"CPU...."},
-   {"env_memory",cf_int,CF_VALRANGE,"CPU...."},
-   {"env_disk",cf_int,CF_VALRANGE,"CPU...."},
+   {"env_cpus",cf_int,CF_VALRANGE,"Number of CPUs in virtual environment"},
+   {"env_memory",cf_int,CF_VALRANGE,"Amount of primary storage (RAM) in the virtual environment"},
+   {"env_disk",cf_int,CF_VALRANGE,"Amount of secondary storage (DISK) in the virtual environment"},
+   {"env_image",cf_str,CF_PATHRANGE,"The path to an image with which to baseline the virtual environment"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -71,9 +72,9 @@ struct BodySyntax CF_RESOURCE_BODY[] =
 
 struct BodySyntax CF_DESIGNATION_BODY[] =
    {
-   {"env_address",cf_str,"","The IP address of the environment's interface"},
-   {"env_netmask",cf_str,"","The IPv4 netmask of the environment's interface"},
-   {"env_name",cf_str,"","The hostname"},
+   {"env_address",cf_str,"","The IP address of the environment's network interface"},
+   {"env_netmask",cf_str,"","The IPv4 netmask of the environment's network interface"},
+   {"env_name",cf_str,"","The hostname of the virtual environment"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -83,7 +84,8 @@ struct BodySyntax CF_ENVIRON_BODIES[] =
    {
    {"resources",cf_body,CF_RESOURCE_BODY,"Virtual environment resource description"},
    {"instantiation",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
-   {"environment_type",cf_opts,"vm,xen,kvm,zone,cloud","Virtual environment type"},
+   {"environment_type",cf_opts,"vm,xen,kvm,zone,amazon,eucalyptus","Virtual environment type"},
+   {"environment_provider",cf_str,"","Virtual environment host hypervisor"},
    {NULL,cf_notype,NULL,NULL}
    };
 

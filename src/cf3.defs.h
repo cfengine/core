@@ -1587,11 +1587,20 @@ struct CfServices
 
 /*************************************************************************/
 
+struct Outputs
+   {
+   char *level;
+   char *promiser_type;
+   };
+
+/*************************************************************************/
+
  /* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
 struct Attributes
    {
+   struct Outputs output;
    struct FileSelect select;
    struct FilePerms perms;
    struct FileCopy copy;

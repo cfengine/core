@@ -1672,7 +1672,7 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
    if (strcmp(bdp->name,"control") == 0)
       {
       snprintf(buf,CF_BUFSIZE,"%s_%s",bdp->name,bdp->type);
-      CfOut(cf_verbose,"","Initiate control variable convergence...%s\n",buf);
+      Debug("Initiate control variable convergence...%s\n",buf);
       DeleteScope(buf);
       SetNewScope(buf);
       CheckControlPromises(buf,bdp->type,bdp->conlist);

@@ -411,6 +411,44 @@ void SyntaxCompletion(char *s)
 }
 
 /*****************************************************************************/
+
+void VerifyOutputsPromise(struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_VerifyOutputsPromise(pp);
+#else
+ printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
+#endif
+}
+
+/*****************************************************************************/
+
+void SetPromiseOutputs(struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_SetPromiseOutputs(pp);
+#endif
+}
+
+/*****************************************************************************/
+
+void SetBundleOutputs(char *name)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_SetBundleOutputs(name);
+#endif
+}
+
+/*****************************************************************************/
+
+void ResetBundleOutputs(char *name)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_ResetBundleOutputs(name);
+#endif
+}
+
+/*****************************************************************************/
 /* Monitord                                                                  */
 /*****************************************************************************/
 

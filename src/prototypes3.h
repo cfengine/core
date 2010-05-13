@@ -69,6 +69,7 @@ void ShowAssoc (struct CfAssoc *cp);
 
 /* attributes.c */
 
+struct Attributes GetOutputsAttributes(struct Promise *pp);
 struct Attributes GetServicesAttributes(struct Promise *pp);
 struct CfServices GetServicesConstraints(struct Promise *pp);
 struct Attributes GetFilesAttributes(struct Promise *pp);
@@ -215,6 +216,7 @@ char *CompressedArrayValue (struct CompressedArray *start, int key);
 
 struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body);
 void DeleteConstraintList(struct Constraint *conlist);
+void EditScalarConstraint(struct Constraint *conlist,char *lval,char *rval);
 void *GetConstraint(char *lval,struct Promise *list,char type);
 int GetBooleanConstraint(char *lval,struct Promise *list);
 int GetRawBooleanConstraint(char *lval,struct Constraint *list);
@@ -443,6 +445,9 @@ void TranslatePath(char *new,char *old);
 void ReviveOther(int argc,char **argv);
 void GrandSummary(void);
 void TrackValue(char *date,double kept,double repaired, double notkept);
+void SetBundleOutputs(char *name);
+void ResetBundleOutputs(char *name);
+void SetPromiseOutputs(struct Promise *pp);
 
 /* env_context.c */
 

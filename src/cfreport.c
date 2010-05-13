@@ -617,7 +617,7 @@ for (rp  = REPORTS; rp != NULL; rp = rp->next)
       ShowLocks(CF_ACTIVE);
       }
 
-   if (all || strcmp("hashes",rp->item) == 0)
+   if (strcmp("hashes",rp->item) == 0)
       {
       CfOut(cf_verbose,""," -> Creating file-hash report...\n");
       ShowChecksums();

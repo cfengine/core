@@ -85,7 +85,7 @@ struct BodySyntax CF_ENVIRON_BODIES[] =
    {"resources",cf_body,CF_RESOURCE_BODY,"Virtual environment resource description"},
    {"instantiation",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
    {"environment_type",cf_opts,"vm,xen,kvm,zone,amazon,eucalyptus","Virtual environment type"},
-   {"environment_provider",cf_str,"","Virtual environment host hypervisor"},
+   {"environment_manager",cf_str,"","Virtual environment host hypervisor URI"},
    {NULL,cf_notype,NULL,NULL}
    };
 

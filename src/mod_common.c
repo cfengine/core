@@ -335,9 +335,9 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    {
    CF_COMMON_SUBTYPES,       /* Add modules after this, mod_report.c is here */
-   CF_ENVIRONMENT_SUBTYPES,  /* mod_environ.c */
    CF_EXEC_SUBTYPES,         /* mod_exec.c */
    CF_DATABASES_SUBTYPES,    /* mod_databases.c */
+   CF_ENVIRONMENT_SUBTYPES,  /* mod_environ.c */
    CF_FILES_SUBTYPES,        /* mod_files.c */
    CF_INTERFACES_SUBTYPES,   /* mod_interfaces.c */
    CF_METHOD_SUBTYPES,       /* mod_methods.c */

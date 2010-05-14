@@ -263,7 +263,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
 
-      pid = ExtractPid(ip->name);
+      pid = ExtractPid(ip->name,names,start,end);
 
       if (pid == -1)
          {
@@ -271,7 +271,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
       
-      Debug("Found matching pid %d\n",pid);
+      printf("Found matching pid %d\n",pid);
       
       matches++;
       
@@ -313,7 +313,9 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
       SetItemListCounter(*killlist,saveuid,pid);
       }
    }
- 
+
+// Free up allocated memory
+
 for (i = 0; i < CF_PROCCOLS; i++)
    {
    if (names[i] != NULL)
@@ -341,12 +343,24 @@ return Unix_DoAllSignals(siglist,a,pp);
 /* Level                                                                          */
 /**********************************************************************************/
 
-int ExtractPid(char *psentry)
+int ExtractPid(char *psentry,char **names,int *start,int *end)
 
 { char *sp;
-  int pid = -1;
-      
-for (sp = psentry; *sp != '\0'; sp++) /* if first field contains alpha, skip */
+ int col,pid = -1,offset = 0;
+
+for (col = 0; col < CF_PROCCOLS; col++)
+   {
+   if (strcmp(names[col],"PID") == 0)
+      {
+      if (col > 0)
+         {
+         offset=end[col-1];
+         }
+      break;
+      }
+   }
+
+for (sp = psentry+offset; *sp != '\0'; sp++) /* if first field contains alpha, skip */
    {
    /* If start with alphanum then skip it till the first space */
    
@@ -362,7 +376,7 @@ for (sp = psentry; *sp != '\0'; sp++) /* if first field contains alpha, skip */
       {
       sp++;
       }
-   
+
    sscanf(sp,"%d",&pid);
    
    if (pid != -1)

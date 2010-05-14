@@ -1513,7 +1513,7 @@ int LoadProcessTable(struct Item **procdata,char *psopts);
 void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
 int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
-int ExtractPid(char *psentry);
+int ExtractPid(char *psentry,char **names,int *start,int *end);
 void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 int GracefulTerminate(pid_t pid);
 

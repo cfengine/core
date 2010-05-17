@@ -1595,6 +1595,40 @@ struct Outputs
 
 /*************************************************************************/
 
+enum cfhypervisors
+   {
+   cfv_virt,
+   cfv_zone,
+   cfv_ec2,
+   cfv_eucalyptus,
+   cfv_none
+   };
+
+enum cfenvironment_state
+   {
+   cfvs_create,
+   cfvs_delete,
+   cfvs_up,
+   cfvs_paused,
+   cfvs_down,
+   cfvs_none
+   };
+
+struct CfEnvironments
+   {
+   int cpus;
+   int memory;
+   int disk;
+   char *baseline;
+   struct Rlist *addresses;
+   char *name;
+   enum cfhypervisors type;
+   char *supervisor;
+   enum cfenvironment_state state;
+   };
+
+/*************************************************************************/
+
  /* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
@@ -1615,6 +1649,7 @@ struct Attributes
    struct CfACL acl;
    struct CfDatabase database;
    struct CfServices service;
+   struct CfEnvironments env;
    char *transformer;
    char *pathtype;
    char *repository;

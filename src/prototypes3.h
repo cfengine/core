@@ -69,6 +69,8 @@ void ShowAssoc (struct CfAssoc *cp);
 
 /* attributes.c */
 
+struct Attributes GetEnvironmentsAttributes(struct Promise *pp);
+struct CfEnvironments GetEnvironmentsConstraints(struct Promise *pp);
 struct Attributes GetOutputsAttributes(struct Promise *pp);
 struct Attributes GetServicesAttributes(struct Promise *pp);
 struct CfServices GetServicesConstraints(struct Promise *pp);
@@ -237,6 +239,8 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+enum cfhypervisors Str2Hypervisors(char *s);
+enum cfenvironment_state Str2EnvState(char *s);
 enum insert_match String2InsertMatch(char *s);
 long Months2Seconds(int m);
 enum cfinterval Str2Interval(char *s);
@@ -1444,6 +1448,10 @@ void VerifyDatabasePromises(struct Promise *pp);
 int CheckDatabaseSanity(struct Attributes a, struct Promise *pp);
 void VerifySQLPromise(struct Attributes a,struct Promise *pp);
 void VerifyRegistryPromise(struct Attributes a,struct Promise *pp);
+
+/* verify_environments.c */
+
+void VerifyEnvironmentsPromise(struct Promise *pp);
 
 /* verify_exec.c */
 

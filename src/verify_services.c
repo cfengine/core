@@ -42,7 +42,7 @@ a = GetServicesAttributes(pp);
 
 SetServiceDefaults(&a);
 
-if(ServicesSanityChecks(a,pp))
+if (ServicesSanityChecks(a,pp))
    {
    VerifyServices(a,pp);
    }
@@ -52,8 +52,7 @@ if(ServicesSanityChecks(a,pp))
 
 int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
     
-{
- struct Rlist *dep;
+{ struct Rlist *dep;
 
  switch(a.service.service_policy)
     {

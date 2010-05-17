@@ -135,6 +135,21 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetEnvironmentsAttributes(struct Promise *pp)
+
+{ struct Attributes attr;
+
+memset(&attr,0,sizeof(attr));
+ 
+attr.transaction = GetTransactionConstraints(pp);
+attr.classes = GetClassDefinitionConstraints(pp);
+attr.env = GetEnvironmentsConstraints(pp);
+
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetServicesAttributes(struct Promise *pp)
 
 { struct Attributes attr;
@@ -143,8 +158,8 @@ memset(&attr,0,sizeof(attr));
  
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
-
 attr.service = GetServicesConstraints(pp);
+
 return attr;
 }
 
@@ -381,6 +396,25 @@ s.service_depend = GetListConstraint("service_dependencies",pp);
 s.service_depend_chain = GetConstraint("service_dependence_chain",pp,CF_SCALAR);
 
 return s;
+}
+
+/*******************************************************************/
+
+struct CfEnvironments GetEnvironmentsConstraints(struct Promise *pp)
+
+{ struct CfEnvironments e;
+
+e.cpus = GetIntConstraint("env_cpus",pp);
+e.memory = GetIntConstraint("env_memory",pp);
+e.disk = GetIntConstraint("env_disk",pp);
+e.baseline = GetConstraint("env_baseline",pp,CF_SCALAR);
+e.addresses = GetListConstraint("env_addresses",pp);
+e.name = GetConstraint("env_name",pp,CF_SCALAR);
+e.type = Str2Hypervisors(GetConstraint("environment_type",pp,CF_SCALAR));
+e.supervisor = GetConstraint("environment_supervisor",pp,CF_SCALAR);
+e.state = Str2EnvState(GetConstraint("environment_state",pp,CF_SCALAR));
+
+return e;
 }
 
 /*******************************************************************/

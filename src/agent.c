@@ -50,6 +50,7 @@ enum typesequence
    kp_files,
    kp_databases,
    kp_services,
+   kp_environments,
    kp_reports,
    kp_none
    };
@@ -68,6 +69,7 @@ char *TYPESEQUENCE[] =
    "files",
    "databases",
    "services",
+   "environments",
    "reports",
    NULL
    };
@@ -1002,6 +1004,13 @@ if (strcmp("methods",pp->agentsubtype) == 0)
 if (strcmp("services",pp->agentsubtype) == 0)
    {
    VerifyServicesPromise(pp);
+   EndMeasurePromise(start,pp);
+   return;
+   }
+
+if (strcmp("environments",pp->agentsubtype) == 0)
+   {
+   VerifyEnvironmentsPromise(pp);
    EndMeasurePromise(start,pp);
    return;
    }

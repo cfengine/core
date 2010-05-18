@@ -65,6 +65,7 @@ struct BodySyntax CF_RESOURCE_BODY[] =
    {"env_memory",cf_int,CF_VALRANGE,"Amount of primary storage (RAM) in the virtual environment"},
    {"env_disk",cf_int,CF_VALRANGE,"Amount of secondary storage (DISK) in the virtual environment"},
    {"env_baseline",cf_str,CF_PATHRANGE,"The path to an image with which to baseline the virtual environment"},
+   {"env_specfile",cf_str,CF_PATHRANGE,"The path to a set of promises specifying the vitual instance"},
    {NULL,cf_notype,NULL,NULL}
    };
 

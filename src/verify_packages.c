@@ -1203,19 +1203,35 @@ void SchedulePackageOp(char *name,char *version,char *arch,int installed,int mat
   char largestPackAvail[CF_MAXVARSIZE];
   char instVer[CF_MAXVARSIZE];
   char instArch[CF_MAXVARSIZE];
+  char idBuf[CF_MAXVARSIZE];
   char *id,*id_del;
+  char *pathName = NULL;
   int package_select_in_range = false;
  
 /* Now we need to know the name-convention expected by the package manager */
 
-if (a.packages.package_name_convention)
+if (a.packages.package_name_convention || a.packages.package_delete_convention)
    {
    SetNewScope("cf_pack_context");
    NewScalar("cf_pack_context","name",name,cf_str);
    NewScalar("cf_pack_context","version",version,cf_str);
    NewScalar("cf_pack_context","arch",arch,cf_str);
-   ExpandScalar(a.packages.package_name_convention,reference);
-   id = reference;
+
+   if(a.packages.package_delete_convention && (a.packages.package_policy == cfa_deletepack))
+     {
+     ExpandScalar(a.packages.package_delete_convention,reference);
+     id = reference;
+     }
+   else if(a.packages.package_name_convention)
+     {
+     ExpandScalar(a.packages.package_name_convention,reference);
+     id = reference;
+     }
+   else
+     {
+     id = name;
+     }
+
    DeleteScope("cf_pack_context");
    }
 else
@@ -1280,6 +1296,32 @@ switch(a.packages.package_policy)
        if (matched && package_select_in_range || installed && no_version_specified)
           {
           CfOut(cf_verbose,""," -> Schedule package for deletion\n");
+
+
+	  // expand local repository in the name convetion, if present
+	  if(a.packages.package_file_repositories)
+	    {
+	    // remove any "$(repo)" from the name convention string
+
+	    if(strncmp(id, "$(firstrepo)", 12) == 0)
+	      {
+	      snprintf(idBuf, sizeof(idBuf), "%s", id + 12);
+	      
+	      // and add the correct repo
+	      pathName = PrefixLocalRepository(a.packages.package_file_repositories, idBuf);
+
+	      if(pathName)
+		{
+		  snprintf(id, CF_MAXVARSIZE, "%s", pathName);
+		  CfOut(cf_verbose, "", "Expanded the package repository to %s", id);
+		}
+	      else
+		{
+		  CfOut(cf_error, "", "!! Package \"%s\" can't be found in any of the listed repositories", idBuf);
+		}
+	      }
+	    }
+
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
           }

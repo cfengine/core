@@ -8,6 +8,10 @@
         Attribute package_delete_convention added, to allow customizable
 	package name in delete command during update.
 
+	Private variable $(firstrepo) is available in package_name_convention
+        and package_delete_convention in order to expand the full path to 
+	a package, which is required by some managers.
+
 	Some of the threading code is rewritten and made more robust. This includes
      	synchronizing access to the lastseen database from the server.
 

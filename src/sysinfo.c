@@ -121,9 +121,10 @@ VFQNAME[0] = VUQNAME[0] = '\0';
 
 if (uname(&VSYSNAME) == -1)
    {
-   perror("uname ");
-   FatalError("Uname couldn't get kernel name info!!\n");
+   CfOut(cf_error, "uname", "!!! Couldn't get kernel name info!");
+   memset(&VSYSNAME, 0, sizeof(VSYSNAME));
    }
+
 
 #ifdef AIX
 snprintf(real_version,_SYS_NMLN,"%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);

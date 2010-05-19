@@ -1048,12 +1048,15 @@ Debug("CheckWorkingDirectories()\n");
 
 if (uname(&VSYSNAME) == -1)
    {
-   perror("uname ");
-   FatalError("Uname couldn't get kernel name info!!\n");
+   CfOut(cf_error, "uname", "!!! Couldn't get kernel name info!");
+   memset(&VSYSNAME, 0, sizeof(VSYSNAME));
+   }
+else
+   {
+   snprintf(LOGFILE,CF_BUFSIZE,"%s%ccfagent.%s.log",CFWORKDIR,FILE_SEPARATOR,VSYSNAME.nodename);
+   VSETUIDLOG = strdup(LOGFILE);
    }
 
-snprintf(LOGFILE,CF_BUFSIZE,"%s%ccfagent.%s.log",CFWORKDIR,FILE_SEPARATOR,VSYSNAME.nodename);
-VSETUIDLOG = strdup(LOGFILE);
 
 snprintf(vbuff,CF_BUFSIZE,"%s%c.",CFWORKDIR,FILE_SEPARATOR);
 MakeParentDirectory(vbuff,false);

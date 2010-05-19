@@ -1,7 +1,8 @@
 3.0.5
         Encryption problems fixed - client key buffer was uninitialized.
 
-        Classes-promisers are automatically canonified.
+        Classes-promisers are now automatically canonified when class
+	strings are defined, to simplifying the use of variables in classes.
 
         New scalars sys.cf_version and sys.nova_version that hold Cfengine version information.
 
@@ -19,6 +20,9 @@
 	Multiple variable expansion issues in control fixed for server and agent
 	Allow ignore_missing_bundles to affect methods: bundles too
 	Run agent trust dialogue fixed
+
+	Bug in CPU monitoring, increasing time scale caused linear decay
+	of CPU measurement.
 	
 3.0.4
 	Class cancellation in promises to create better class feedback,

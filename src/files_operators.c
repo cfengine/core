@@ -1597,7 +1597,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
          {
          if (amroot)
             {
-            cfPS(cf_inform,CF_WARN,"",pp,attr,"NEW SETUID root PROGRAM %s\n",file);
+            cfPS(cf_error,CF_WARN,"",pp,attr,"NEW SETUID root PROGRAM %s\n",file);
             }
 
          PrependItem(&VSETUIDLIST,file,NULL);

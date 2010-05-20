@@ -408,10 +408,12 @@ e.cpus = GetIntConstraint("env_cpus",pp);
 e.memory = GetIntConstraint("env_memory",pp);
 e.disk = GetIntConstraint("env_disk",pp);
 e.baseline = GetConstraint("env_baseline",pp,CF_SCALAR);
+e.specfile = GetConstraint("env_spec_file",pp,CF_SCALAR);
+e.host = GetConstraint("environment_host",pp,CF_SCALAR);
+
 e.addresses = GetListConstraint("env_addresses",pp);
 e.name = GetConstraint("env_name",pp,CF_SCALAR);
-e.type = Str2Hypervisors(GetConstraint("environment_type",pp,CF_SCALAR));
-e.supervisor = GetConstraint("environment_supervisor",pp,CF_SCALAR);
+e.type = GetConstraint("environment_type",pp,CF_SCALAR);
 e.state = Str2EnvState(GetConstraint("environment_state",pp,CF_SCALAR));
 
 return e;

@@ -65,7 +65,7 @@ struct BodySyntax CF_RESOURCE_BODY[] =
    {"env_memory",cf_int,CF_VALRANGE,"Amount of primary storage (RAM) in the virtual environment"},
    {"env_disk",cf_int,CF_VALRANGE,"Amount of secondary storage (DISK) in the virtual environment"},
    {"env_baseline",cf_str,CF_PATHRANGE,"The path to an image with which to baseline the virtual environment"},
-   {"env_specfile",cf_str,CF_PATHRANGE,"The path to a set of promises specifying the vitual instance"},
+   {"env_spec_file",cf_str,CF_PATHRANGE,"The path to a set of promises specifying the vitual instance"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -75,6 +75,7 @@ struct BodySyntax CF_DESIGNATION_BODY[] =
    {
    {"env_addresses",cf_slist,"","The IP addresses of the environment's network interfaces"},
    {"env_name",cf_str,"","The hostname of the virtual environment"},
+   {"env_network",cf_str,"","The hostname of the virtual network"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -82,11 +83,11 @@ struct BodySyntax CF_DESIGNATION_BODY[] =
 
 struct BodySyntax CF_ENVIRON_BODIES[] =
    {
-   {"environment_resources",cf_body,CF_RESOURCE_BODY,"Virtual environment resource description"},
+   {"environment_host",cf_str,CF_IDRANGE,"The name of the virtual environment host (this must be promised uniquely)"},
    {"environment_interface",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
-   {"environment_type",cf_opts,"virt,zone,ec2,eucalyptus","Virtual environment type"},
-   {"environment_supervisor",cf_str,"","The environment's super/hypervisor URI"},
-   {"environment_state",cf_opts,"create,delete,up,paused,down","The desired dynamical state of the specified environment"},
+   {"environment_resources",cf_body,CF_RESOURCE_BODY,"Virtual environment resource description"},
+   {"environment_state",cf_opts,"create,delete,running,suspended,down","The desired dynamical state of the specified environment"},
+   {"environment_type",cf_opts,"virt_xen,virt_kvm,virt_esx,virt_test,virt_network,zone,ec2,eucalyptus","Virtual environment type"},
    {NULL,cf_notype,NULL,NULL}
    };
 

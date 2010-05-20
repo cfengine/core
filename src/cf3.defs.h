@@ -1597,7 +1597,11 @@ struct Outputs
 
 enum cfhypervisors
    {
-   cfv_virt,
+   cfv_virt_xen,
+   cfv_virt_kvm,
+   cfv_virt_esx,
+   cfv_virt_test,
+   cfv_virt_network,
    cfv_zone,
    cfv_ec2,
    cfv_eucalyptus,
@@ -1608,8 +1612,8 @@ enum cfenvironment_state
    {
    cfvs_create,
    cfvs_delete,
-   cfvs_up,
-   cfvs_paused,
+   cfvs_running,
+   cfvs_suspended,
    cfvs_down,
    cfvs_none
    };
@@ -1620,10 +1624,11 @@ struct CfEnvironments
    int memory;
    int disk;
    char *baseline;
+   char *specfile;
    struct Rlist *addresses;
    char *name;
-   enum cfhypervisors type;
-   char *supervisor;
+   char *host;
+   char *type;
    enum cfenvironment_state state;
    };
 

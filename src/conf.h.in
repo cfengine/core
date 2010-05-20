@@ -257,6 +257,9 @@
 /* Define to 1 if you have the `tokyocabinet' library (-ltokyocabinet). */
 #undef HAVE_LIBTOKYOCABINET
 
+/* Define to 1 if you have the `virt' library (-lvirt). */
+#undef HAVE_LIBVIRT
+
 /* Define to 1 if you have the <mach/mach.h> header file. */
 #undef HAVE_MACH_MACH_H
 

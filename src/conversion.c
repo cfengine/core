@@ -36,7 +36,7 @@
 
 enum cfhypervisors Str2Hypervisors(char *s)
 
-{ static char *names[] = { "virt", "zone", "ec2", "eucalyptus", NULL };
+{ static char *names[] = { "virt_xen", "virt_kvm", "virt_esx", "virt_test", "virt_network", "zone", "ec2", "eucalyptus", NULL };
   int i;
 
 for (i = 0; names[i] != NULL; i++)
@@ -54,7 +54,7 @@ return (enum cfhypervisors) i;
 
 enum cfenvironment_state Str2EnvState(char *s)
 
-{ static char *names[] = { "create", "delete", "up", "paused", "down", NULL };
+{ static char *names[] = { "create", "delete", "running", "suspended", "down", NULL };
   int i;
  
 for (i = 0; names[i] != NULL; i++)

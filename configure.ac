@@ -467,6 +467,24 @@ AC_SUBST(OPENSSL_LIB_LDFLAGS)
 AC_SUBST(OPENSSL_LIB_CPPFLAGS)
 AC_SUBST(OPENSSL_LIB_LIB)
 
+#
+# Others
+#
+
+AC_ARG_WITH(libvirt,
+	AS_HELP_STRING(--with-libvirt, [support virtual machine management]),with_virt=yes,
+	with_virt=no)
+
+if test "x$with_virt" = xyes; then
+   AC_MSG_CHECKING(for libvirt)
+   WITH_VIRT=1
+else
+   WITH_VIRT=0
+fi
+
+if test $WITH_VIRT = 1; then
+  AC_CHECK_LIB(virt,main, [], [AC_MSG_ERROR(Cannot find libvirt)])
+fi
 
 
 dnl ######################################################################
@@ -1017,6 +1035,12 @@ elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT( -> Configured with QDBM)
 else
   AC_MSG_RESULT( -> Will look for BerkeleyDB in $BERKELEY_DB_DIR)
+fi
+
+if test $WITH_VIRT = 1; then
+  AC_MSG_RESULT( -> Configured with libvirt support)
+else
+  AC_MSG_RESULT( -> No libvirt support included)
 fi
 
 AC_MSG_RESULT( )

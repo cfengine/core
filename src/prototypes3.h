@@ -452,6 +452,7 @@ void TrackValue(char *date,double kept,double repaired, double notkept);
 void SetBundleOutputs(char *name);
 void ResetBundleOutputs(char *name);
 void SetPromiseOutputs(struct Promise *pp);
+void VerifyOutputsPromise(struct Promise *pp);
 
 /* env_context.c */
 

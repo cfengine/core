@@ -371,7 +371,7 @@ pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name)
   return NULL;
 }
 
-#endif HAVE_PTHREAD_H
+#endif
 
 /************************************************************************/
 

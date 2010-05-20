@@ -1047,10 +1047,13 @@ int NewTypeContext(enum typesequence type)
 
 switch(type)
    {
+   case kp_environments:
+
+       SERVERLIST = NULL;
+       break;
+
    case kp_files:
-       
-       /* Prepare shared connection array for non-threaded remote copies */
-       
+
        SERVERLIST = NULL;
        break;
 
@@ -1093,6 +1096,10 @@ void DeleteTypeContext(enum typesequence type)
  
 switch(type)
    {
+   case kp_environments:
+       DeleteRlist(SERVERLIST);
+       break;
+
    case kp_files:
 
        /* Cleanup shared connection array for non-threaded remote copies */

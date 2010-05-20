@@ -86,6 +86,10 @@ void SetEnvironment(char *s);
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
 
+#ifdef HAVE_LIBVIRT
+extern virConnectPtr CFVC;
+#endif
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
@@ -1047,11 +1051,6 @@ int NewTypeContext(enum typesequence type)
 
 switch(type)
    {
-   case kp_environments:
-
-       SERVERLIST = NULL;
-       break;
-
    case kp_files:
 
        SERVERLIST = NULL;
@@ -1097,7 +1096,14 @@ void DeleteTypeContext(enum typesequence type)
 switch(type)
    {
    case kp_environments:
-       DeleteRlist(SERVERLIST);
+
+#ifdef HAVE_LIBVIRT
+       if (CFVC != NULL)
+          {
+          virConnectClose(CFVC);
+          CFVC = NULL;
+          }
+#endif
        break;
 
    case kp_files:

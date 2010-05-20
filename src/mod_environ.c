@@ -87,7 +87,7 @@ struct BodySyntax CF_ENVIRON_BODIES[] =
    {"environment_interface",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
    {"environment_resources",cf_body,CF_RESOURCE_BODY,"Virtual environment resource description"},
    {"environment_state",cf_opts,"create,delete,running,suspended,down","The desired dynamical state of the specified environment"},
-   {"environment_type",cf_opts,"virt_xen,virt_kvm,virt_esx,virt_test,virt_network,zone,ec2,eucalyptus","Virtual environment type"},
+   {"environment_type",cf_opts,"xen,kvm,esx,test,network,zone,ec2,eucalyptus","Virtual environment type"},
    {NULL,cf_notype,NULL,NULL}
    };
 

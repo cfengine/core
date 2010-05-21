@@ -1284,8 +1284,8 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    }
 else
    {
-   CfOut(cf_error,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
-   PromiseRef(cf_error,pp);
+   CfOut(cf_inform,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
+   PromiseRef(cf_inform,pp);
    }
 }
 
@@ -1313,8 +1313,8 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    }
 else
    {
-   CfOut(cf_error,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
-   PromiseRef(cf_error,pp);
+   CfOut(cf_inform,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
+   PromiseRef(cf_inform,pp);
    }
 }
 

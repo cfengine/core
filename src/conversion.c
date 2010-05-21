@@ -64,7 +64,7 @@ enum cfenvironment_state Str2EnvState(char *s)
  
 if (s == NULL)
    {
-   return cfvs_suspended;
+   return cfvs_create;
    }
 
 for (i = 0; names[i] != NULL; i++)

@@ -1051,6 +1051,11 @@ int NewTypeContext(enum typesequence type)
 
 switch(type)
    {
+   case kp_environments:
+
+       strcpy(WEBDRIVER,"");
+       break;
+       
    case kp_files:
 
        SERVERLIST = NULL;

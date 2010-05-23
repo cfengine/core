@@ -235,6 +235,15 @@ if (thislock.lock == NULL)
 
 CF_NODES++;
 
+snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+MapName(filename);
+
+if (!LoadFileAsItemList(&VSETUIDLIST,filename,b,pp))
+   {
+   CfOut(cf_verbose,"","Did not find any previous setuid log %s, creating a new one",filename);
+   save = false;
+   }
+
 if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
    {
    if (a.create||a.touch)
@@ -340,15 +349,6 @@ if (a.link.link_children)
       }
    }
 
-snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
-MapName(filename);
-
-if (!LoadFileAsItemList(&VSETUIDLIST,filename,a,pp))
-   {
-   CfOut(cf_verbose,"","Did not find any previous setuid log %s, creating a new one",filename);
-   save = false;
-   }
-
 /* Phase 1 - */
 
 if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer))
@@ -413,7 +413,6 @@ if (save && VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename,a,pp))
 
 DeleteItemList(VSETUIDLIST);
 VSETUIDLIST = NULL;
-
 YieldCurrentLock(thislock);
 }
 
@@ -1744,9 +1743,10 @@ if (lstat(new,&dstat) == -1)
    return false;
    }
 
-if (dstat.st_size != sstat.st_size)
+if (S_ISREG(dstat.st_mode) && dstat.st_size != sstat.st_size)
    {
    CfOut(cf_error,""," !! New file %s seems to have been corrupted in transit (dest %d and src %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
+
    if (backupok)
       {
       cf_rename(backup,dest); /* ignore failure */
@@ -1761,6 +1761,7 @@ if (attr.copy.verify)
    if (CompareFileHashes(source,new,&sstat,&dstat,attr,pp))
       {
       CfOut(cf_verbose,""," !! New file %s seems to have been corrupted in transit, aborting!\n",new);
+
       if (backupok)
          {
          cf_rename(backup,dest); /* ignore failure */

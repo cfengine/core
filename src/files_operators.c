@@ -1589,7 +1589,7 @@ if (!IsPrivileged())
    amroot = false;
    }
 
-if (dstat->st_uid == 0 && (dstat->st_mode & S_ISUID))
+if ((dstat->st_uid == 0) && (dstat->st_mode & S_ISUID))
    {
    if (newperm & S_ISUID)
       {

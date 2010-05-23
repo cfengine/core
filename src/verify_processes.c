@@ -271,7 +271,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
       
-      printf("Found matching pid %d\n",pid);
+      Debug("Found matching pid %d\n",pid);
       
       matches++;
       

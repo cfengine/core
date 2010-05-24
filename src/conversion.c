@@ -36,7 +36,9 @@
 
 enum cfhypervisors Str2Hypervisors(char *s)
 
-{ static char *names[] = { "xen", "kvm", "esx", "test", "network", "zone", "ec2", "eucalyptus", NULL };
+{ static char *names[] = { "xen", "kvm", "esx", "test",
+                           "xen_net", "kvm_net", "esx_net", "test_net",
+                           "zone", "ec2", "eucalyptus", NULL };
   int i;
 
 if (s == NULL)

@@ -99,7 +99,7 @@ struct Item *DONELIST = NULL;
 struct Rlist *CBUNDLESEQUENCE = NULL;
 
 #ifdef HAVE_LIBVIRT
-virConnectPtr CFVC = NULL;
+virConnectPtr CFVC[cfv_none];
 #endif
 
 int EDIT_MODEL = false;

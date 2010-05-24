@@ -87,7 +87,7 @@ extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
 
 #ifdef HAVE_LIBVIRT
-extern virConnectPtr CFVC;
+extern virConnectPtr CFVC[];
 #endif
 
 /*******************************************************************/
@@ -1053,7 +1053,10 @@ switch(type)
    {
    case kp_environments:
 
-       strcpy(WEBDRIVER,"");
+       for (i = 0; i < cfv_none; i++)
+          {
+          CFVC[i] = NULL;
+          }
        break;
        
    case kp_files:
@@ -1097,16 +1100,20 @@ void DeleteTypeContext(enum typesequence type)
 { struct Rlist *rp;
   struct ServerItem *svp;
   struct Attributes a;
+  int i;
  
 switch(type)
    {
    case kp_environments:
 
 #ifdef HAVE_LIBVIRT
-       if (CFVC != NULL)
+       for (i = 0; i < cfv_none; i++)
           {
-          virConnectClose(CFVC);
-          CFVC = NULL;
+          if (CFVC[i] != NULL)
+             {
+             virConnectClose(CFVC[i]);
+             CFVC[i] = NULL;
+             }
           }
 #endif
        break;

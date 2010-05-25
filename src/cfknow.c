@@ -221,7 +221,7 @@ void CheckOpts(int argc,char **argv)
 strcpy(TOPIC_CMD,"");
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:k:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -2865,7 +2865,7 @@ if (strchr(topic,':'))
    }
 else
    {
-   snprintf(url,CF_BUFSIZE,"%s?map1=%s::%s",WEBDRIVER,type,topic);
+   snprintf(url,CF_BUFSIZE,"%s?%s=%s::%s",WEBDRIVER,webtype,type,topic);
    }
 
 return url;

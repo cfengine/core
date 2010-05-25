@@ -32,6 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+enum cfknow_image
+   {
+   cf_no_image,
+   cf_full_image,
+   cf_impact_image,
+   };
+
 int main (int argc,char *argv[]);
 void CheckOpts(int argc,char **argv);
 void ThisAgentInit(void);
@@ -57,7 +64,9 @@ void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc
 char *Name2Id(char *s);
 void ShowTextResults(char *name,char *type,char *comm,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
 void ShowHtmlResults(char *name,char *type,char *comm,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *others);
+void ShowImageMap(char *this_name,char *this_type,char *this_comment,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *topics_this_type);
 char *NextTopic(char *link,char* type);
+char *NextMap(char *topic,char *type,enum cfknow_image imgtype);
 void GenerateGraph(void);
 void GenerateManual(void);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
@@ -98,6 +107,7 @@ enum cfdbtype SQL_TYPE = cfd_notype;
 int HTML = false;
 int WRITE_SQL = false;
 int ISREGEX = false;
+int SHOWMAP = cf_no_image;
 int GRAPH = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
@@ -115,7 +125,7 @@ char MANDIR[CF_BUFSIZE];
             "and cf-know can assemble and converge the reference manual\n"
             "for the current version of the Cfengine software.";
  
- struct option OPTIONS[13] =
+ struct option OPTIONS[16] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -125,6 +135,9 @@ char MANDIR[CF_BUFSIZE];
       { "graphs",no_argument,0,'g'},
       { "html",no_argument,0,'H'},
       { "manual",no_argument,0,'m'},
+      { "manpage",no_argument,0,'M'},
+      { "map-full",required_argument,0,'K'},
+      { "map-impact",required_argument,0,'k'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
@@ -132,7 +145,7 @@ char MANDIR[CF_BUFSIZE];
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[14] =
+ char *HINTS[16] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -142,6 +155,9 @@ char MANDIR[CF_BUFSIZE];
       "Generate graphs from topic map data",
       "Output queries in HTML",
       "Generate reference manual from internal data",
+      "Generate reference manpage from internal data",
+      "Show full image map for argument",
+      "Show impact map for argument",
       "Specify a regular expression for searching the topic map",
       "Store topic map in defined SQL database",
       "Print a syntax summary of the optional keyword or this cfengine version",
@@ -205,7 +221,7 @@ void CheckOpts(int argc,char **argv)
 strcpy(TOPIC_CMD,"");
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -253,6 +269,20 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mM",OPTIONS,&optindex)) != EOF)
           strcpy(TOPIC_CMD,optarg);
           LOOKUP = true;
           SHOWREPORTS = false;
+          break;
+
+      case 'K':
+          strcpy(TOPIC_CMD,optarg);
+          LOOKUP = true;
+          SHOWREPORTS = false;
+          SHOWMAP = 1;
+          break;
+          
+      case 'k':
+          strcpy(TOPIC_CMD,optarg);
+          LOOKUP = true;
+          SHOWREPORTS = false;
+          SHOWMAP = 2;
           break;
 
       case 's':
@@ -2027,7 +2057,14 @@ CfDeleteQuery(cfdb);
 
 if (HTML)
    {
-   ShowHtmlResults(this_name,this_type,this_comment,other_topics,associations,occurrences,topics_this_type);
+   if (SHOWMAP)
+      {
+      ShowImageMap(this_name,this_type,this_comment,other_topics,associations,occurrences,topics_this_type);
+      }
+   else
+      {
+      ShowHtmlResults(this_name,this_type,this_comment,other_topics,associations,occurrences,topics_this_type);
+      }
    }
 else
    {
@@ -2455,11 +2492,10 @@ CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
 fprintf(fout,"<div id=\"image\">");
 
 snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
-snprintf(filename,CF_BUFSIZE,"graphs/%s.html",CanonifyName(TypedTopic(this_name,this_type)));
 
-if (cfstat(filename,&sb) != -1)
+if (cfstat(pngfile,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\"><img src=\"%s\"></a></div>",filename,pngfile);
+   fprintf(fout,"<div id=\"tribe\"><a href=\"%s\"><img src=\"%s\"></a></div>",NextMap(this_name,this_type,cf_full_image),pngfile);
    }
 else
    {
@@ -2470,11 +2506,10 @@ else
    }
 
 snprintf(pngfile,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
-snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.html",CanonifyName(TypedTopic(this_name,this_type)));
 
-if (cfstat(filename,&sb) != -1)
+if (cfstat(pngfile,&sb) != -1)
    {
-   fprintf(fout,"<div id=\"influence\"><a href=\"%s\"><img src=\"%s\"></a></div>",filename,pngfile);
+   fprintf(fout,"<div id=\"influence\"><a href=\"%s\"><img src=\"%s\"></a></div>",NextMap(this_name,this_type,cf_impact_image),pngfile);
    }
 
 fprintf(fout,"</div>\n");
@@ -2702,6 +2737,65 @@ CfHtmlFooter(stdout,FOOTER);
 
 /*********************************************************************/
 
+void ShowImageMap(char *this_name,char *this_type,char *this_comment,struct Topic *other_topics,struct TopicAssociation *associations,struct Occurrence *occurrences,struct Topic *topics_this_type)
+
+{ FILE *fout = stdout, *fin;
+  char banner[CF_BUFSIZE],filename[CF_BUFSIZE],pngfile[CF_BUFSIZE];
+  char *v,rettype;
+  void *retval;
+  
+if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   {
+   v = (char *)retval;
+   }
+else
+   {
+   v = "not specified";
+   }
+
+snprintf(banner,CF_BUFSIZE,"%s",TypedTopic(this_name,this_type));  
+CfHtmlHeader(fout,banner,STYLESHEET,WEBDRIVER,BANNER);
+
+/* Images */
+
+switch (SHOWMAP)
+   {
+   case cf_full_image:
+       snprintf(filename,CF_BUFSIZE,"graphs/%s.map",CanonifyName(TypedTopic(this_name,this_type)));
+       break;
+   case cf_impact_image:
+       snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.map",CanonifyName(TypedTopic(this_name,this_type)));
+       break;
+   default:
+       break;
+   }
+
+snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+
+if ((fin = fopen(filename,"r")) == NULL)
+   {
+   fprintf(fout,"Unable to open the map fragment %s",filename);
+   }
+else
+   {
+   char line[CF_BUFSIZE],buffer[CF_BUFSIZE];
+
+   while (!feof(fin))
+      {
+      line[0] = '\0';
+      fgets(line,CF_BUFSIZE,fin);
+      snprintf(buffer,CF_BUFSIZE-1,line,WEBDRIVER);
+      fprintf(fout,"%s",buffer);
+      }
+   
+   fclose(fin);
+   }
+
+CfHtmlFooter(fout,FOOTER);
+}
+
+/*********************************************************************/
+
 char *NextTopic(char *topic,char *type)
 
 { static char url[CF_BUFSIZE];
@@ -2728,6 +2822,50 @@ if (strchr(topic,':'))
 else
    {
    snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s::%s\">%s</a>",WEBDRIVER,type,topic,topic);
+   }
+
+return url;
+}
+
+/*********************************************************************/
+
+char *NextMap(char *topic,char *type,enum cfknow_image imgtype)
+
+{ static char url[CF_BUFSIZE];
+  char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
+  char *webtype;
+
+switch(imgtype)
+   {
+   case cf_impact_image:
+       webtype = "map2";
+       break;
+   default:
+       webtype = "map1";
+       break;
+   }
+
+if (strlen(WEBDRIVER) == 0)
+   {
+   CfOut(cf_error,""," !! No query_engine is defined\n");
+   exit(1);
+   }
+
+if (strchr(topic,':'))
+   {
+   DeTypeTopic(topic,ctopic,ctype);
+   if (ctype && strlen(ctype) > 0)
+      {
+      snprintf(url,CF_BUFSIZE,"%s?%s=%s",WEBDRIVER,webtype,topic);
+      }
+   else
+      {
+      snprintf(url,CF_BUFSIZE,"%s?%s=%s::%s",WEBDRIVER,webtype,type,topic);
+      }
+   }
+else
+   {
+   snprintf(url,CF_BUFSIZE,"%s?map1=%s::%s",WEBDRIVER,type,topic);
    }
 
 return url;

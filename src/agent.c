@@ -513,7 +513,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
       {
       char output[CF_BUFSIZE];
-      snprintf(output,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",retval);
+      snprintf(output,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",(char *)retval);
       if (putenv(strdup(output)) == 0)
          {
          CfOut(cf_verbose,"","Setting %s\n",output);
@@ -1053,10 +1053,12 @@ switch(type)
    {
    case kp_environments:
 
+#ifdef HAVE_LIBVIRT
        for (i = 0; i < cfv_none; i++)
           {
           CFVC[i] = NULL;
           }
+#endif
        break;
        
    case kp_files:

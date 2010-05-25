@@ -23,6 +23,10 @@
 
 	Bug in CPU monitoring, increasing time scale caused linear decay
 	of CPU measurement.
+
+	Bug in Setuid log storage, fix.
+	
+	Hooks added for new Nova virtualization promises.
 	
 3.0.4
 	Class cancellation in promises to create better class feedback,

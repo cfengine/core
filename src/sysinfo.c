@@ -526,7 +526,7 @@ if (statbuf.st_mtime < (now - 60*60))
 snprintf(value,CF_MAXVARSIZE-1,"%s",cf_ctime(&statbuf.st_mtime));
 Chop(value);
 
-DeleteVariable("mon","env_time");
+//DeleteVariable("mon","env_time");
 NewScalar("mon","env_time",value,cf_str);
 
 CfOut(cf_verbose,"","Loading environment...\n");
@@ -553,7 +553,7 @@ while (!feof(fp))
    if (strstr(class,"="))
       {
       sscanf(class,"%255[^=]=%255[^\n]",name,value);
-      DeleteVariable("mon",name);
+//      DeleteVariable("mon",name);
       NewScalar("mon",name,value,cf_str);
       Debug(" -> Setting new monitoring scalar %s => %s",name,value);
       }

@@ -309,11 +309,11 @@ if (CompareVariable(id,ptr->hashtable[slot]) != 0)
          }
       }
    }
- else
-    {
-    DeleteAssoc(ptr->hashtable[i]);
-    ptr->hashtable[i] = NULL;
-    }   
+else
+   {
+   DeleteAssoc(ptr->hashtable[i]);
+   ptr->hashtable[i] = NULL;
+   }   
 }
 
 /*******************************************************************/

@@ -51,11 +51,12 @@ char VMAILSERVER[CF_BUFSIZE];
 struct Item *SCHEDULE = NULL;
 
 pid_t MYTWIN = 0;
-int   MAXLINES = 30;
-int   SPLAYTIME = 0;
+int MAXLINES = 30;
+int SPLAYTIME = 0;
 const int INF_LINES = -2;
 int NOSPLAY = false;
 int NOWINSERVICE = false;
+int THREADS = 0;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
 
@@ -612,11 +613,8 @@ int ScheduleRun()
   struct Item *ip;
   
 CfOut(cf_verbose,"","Sleeping...\n");
-
 SignalTwin();
-
 sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 
-
 now = time(NULL);
 
 // recheck license (in case of license updates or expiry)
@@ -627,19 +625,19 @@ if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR))
   exit(1);
   }
 
+ThreadLock(cft_system);
 DeleteItemList(IPADDRESSES);
 IPADDRESSES = NULL;
 DeleteScope("this");
 DeleteScope("mon");
 DeleteScope("sys");
-
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();
-
 SetReferenceTime(true);
 snprintf(timekey,63,"%s",cf_ctime(&now)); 
 AddTimeClass(timekey); 
+ThreadUnlock(cft_system);
 
 for (ip = SCHEDULE; ip != NULL; ip = ip->next)
    {
@@ -648,18 +646,22 @@ for (ip = SCHEDULE; ip != NULL; ip = ip->next)
    if (IsDefinedClass(ip->name))
       {
       CfOut(cf_verbose,"","Waking up the agent at %s ~ %s \n",timekey,ip->name);
+      ThreadLock(cft_system);
       DeleteItemList(VHEAP);
       VHEAP = NULL;
       DeleteItemList(VADDCLASSES);
       VADDCLASSES = NULL;
+      ThreadUnlock(cft_system);
       return true;
       }
    }
 
+ThreadLock(cft_system);
 DeleteItemList(VHEAP);
 VHEAP = NULL;
 DeleteItemList(VADDCLASSES);
 VADDCLASSES = NULL;
+ThreadUnlock(cft_system);
 return false;
 }
 

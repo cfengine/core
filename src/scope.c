@@ -179,6 +179,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    if (ptr->hashtable[i] != NULL)
       {
       retval = ExpandPrivateRval(scope,(char *)(ptr->hashtable[i]->rval),ptr->hashtable[i]->rtype);
+      // Retain the assoc, just replace rval
       DeleteRvalItem(ptr->hashtable[i]->rval,ptr->hashtable[i]->rtype);
       ptr->hashtable[i]->rval = retval.item;
       ptr->hashtable[i]->rtype = retval.rtype;

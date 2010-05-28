@@ -594,7 +594,9 @@ if (pp == NULL)
 
 if (pp->this_server != NULL)
    {
+   ThreadLock(cft_system);
    free(pp->this_server);
+   ThreadUnlock(cft_system);
    }
  
 if (pp->next != NULL)
@@ -604,7 +606,9 @@ if (pp->next != NULL)
 
 if (pp->ref_alloc == 'y')
    {
+   ThreadLock(cft_system);
    free(pp->ref);
+   ThreadUnlock(cft_system);
    }
 
 DeletePromise(pp);
@@ -615,7 +619,9 @@ DeletePromise(pp);
 struct Promise *NewPromise(char *typename,char *promiser)
 
 { struct Promise *pp;
- 
+
+ThreadLock(cft_system); 
+
 if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    {
    CfOut(cf_error,"malloc","Unable to allocate Promise");
@@ -626,6 +632,9 @@ pp->audit = AUDITPTR;
 pp->lineno = 0;
 pp->bundle =  strdup("independent");
 pp->promiser = strdup(promiser);
+
+ThreadUnlock(cft_system);
+
 pp->promisee = NULL;
 pp->petype = CF_NOPROMISEE;
 pp->classes = NULL;
@@ -658,6 +667,8 @@ if (pp == NULL)
    return;
    }
 
+ThreadLock(cft_system);
+
 if (pp->promiser != NULL)
    {
    free(pp->promiser);
@@ -676,6 +687,7 @@ free(pp->classes);
 DeleteConstraintList(pp->conlist);
 
 free((char *)pp);
+ThreadUnlock(cft_system);
 }
 
 /*****************************************************************************/

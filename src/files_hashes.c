@@ -371,7 +371,7 @@ return buffer;
 
 /***************************************************************/
 
-void PurgeHashes(struct Attributes attr,struct Promise *pp)
+void PurgeHashes(char *path,struct Attributes attr,struct Promise *pp)
 
 /* Go through the database and purge records about non-existent files */
 
@@ -384,6 +384,16 @@ void PurgeHashes(struct Attributes attr,struct Promise *pp)
 
 if (!OpenDB(HASHDB,&dbp))
    {
+   return;
+   }
+
+if (path)
+   {
+   if (cfstat(path,&statbuf) == -1)
+      {
+      DeleteDB(dbp,path);
+      }
+   
    return;
    }
 

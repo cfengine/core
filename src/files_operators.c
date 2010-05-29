@@ -2078,6 +2078,8 @@ if (attr.acl.acl_entries)
    VerifyACL(file,attr,pp);
    }
 
+VerifySetUidGid(file,dstat,dstat->st_mode,pp,attr);
+
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
    {
    Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));

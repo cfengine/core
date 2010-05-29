@@ -35,6 +35,23 @@
 
 /*********************************************************************/
 
+void PurgeItemList(struct Item **list,char *name)
+
+{ struct Item *ip;
+  struct stat sb;
+ 
+for (ip = *list; ip != NULL; ip=ip->next)
+   {
+   if (cfstat(ip->name,&sb) == -1)
+      {
+      CfOut(cf_verbose,""," -> Purging file \"%s\" from %s list as it no longer exists",ip->name,name);
+      DeleteItem(list,ip);
+      }
+   }
+}
+
+/*********************************************************************/
+
 struct Item *ReturnItemIn(struct Item *list,char *item)
 
 { struct Item *ptr; 

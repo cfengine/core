@@ -210,16 +210,11 @@ cf_closedir(dirh);
 void VerifyFilePromise(char *path,struct Promise *pp)
 
 { struct stat osb,oslb,dsb,dslb;
-  struct Attributes a,b;
+  struct Attributes a;
   struct CfLock thislock;
   int exists,success,rlevel = 0,isthere,save = true;
-  char filename[CF_BUFSIZE];
 
 a = GetFilesAttributes(pp);
-
-b = a;
-b.edits.backup = cfa_nobackup;
-b.edits.maxfilesize = 0;
 
 if (!FileSanityChecks(path,a,pp))
    {
@@ -235,14 +230,7 @@ if (thislock.lock == NULL)
 
 CF_NODES++;
 
-snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
-MapName(filename);
-
-if (!LoadFileAsItemList(&VSETUIDLIST,filename,b,pp))
-   {
-   CfOut(cf_verbose,"","Did not find any previous setuid log %s, creating a new one",filename);
-   save = false;
-   }
+LoadSetuid(a,pp);
 
 if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
    {
@@ -250,6 +238,7 @@ if (lstat(path,&oslb) == -1)  /* Careful if the object is a link */
       {
       if (!CfCreateFile(path,pp,a))
          {
+         SaveSetuid(a,pp);
          YieldCurrentLock(thislock);
          return;
          }
@@ -297,6 +286,7 @@ if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
    {
    if (!S_ISDIR(oslb.st_mode))
       {
+      SaveSetuid(a,pp);
       YieldCurrentLock(thislock);
       return;
       }
@@ -308,6 +298,7 @@ if (cfstat(path,&osb) == -1)
       {
       if (!CfCreateFile(path,pp,a))
          {
+         SaveSetuid(a,pp);
          YieldCurrentLock(thislock);
          return;
          }
@@ -328,6 +319,7 @@ else
       if (a.havedepthsearch)
          {
          CfOut(cf_error,"","Warning: depth_search (recursion) is promised for a base object %s that is not a directory",path);
+         SaveSetuid(a,pp);
          YieldCurrentLock(thislock);
          return;
          }
@@ -343,6 +335,7 @@ if (a.link.link_children)
       if (!S_ISDIR(dsb.st_mode))
          {
          CfOut(cf_error,"","Cannot promise to link the children of %s as it is not a directory!",a.link.source);
+         SaveSetuid(a,pp);
          YieldCurrentLock(thislock);
          return;
          }
@@ -377,7 +370,14 @@ if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transfor
 
    if (a.change.report_changes == cfa_contentchange || a.change.report_changes == cfa_allchanges)
       {
-      PurgeHashes(a,pp);
+      if (a.havedepthsearch)
+         {
+         PurgeHashes(NULL,a,pp);
+         }
+      else
+         {
+         PurgeHashes(path,a,pp);
+         }
       }
    }
 
@@ -406,13 +406,7 @@ if (a.haveedit)
    ScheduleEditOperation(path,a,pp);
    }
 
-if (save && VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename,a,pp))
-   {
-   SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
-   }
-
-DeleteItemList(VSETUIDLIST);
-VSETUIDLIST = NULL;
+SaveSetuid(a,pp);
 YieldCurrentLock(thislock);
 }
 
@@ -1319,6 +1313,51 @@ if (a.havedepthsearch && a.change.report_diffs)
    }
 
 return true;
+}
+
+/*********************************************************************/
+
+void LoadSetuid(struct Attributes a,struct Promise *pp)
+
+{ struct Attributes b;
+  char filename[CF_BUFSIZE];
+
+b = a;
+b.edits.backup = cfa_nobackup;
+b.edits.maxfilesize = 1000000;
+
+snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+MapName(filename);
+
+if (!LoadFileAsItemList(&VSETUIDLIST,filename,b,pp))
+   {
+   CfOut(cf_verbose,"","Did not find any previous setuid log %s, creating a new one",filename);
+   }
+}
+
+/*********************************************************************/
+
+void SaveSetuid(struct Attributes a,struct Promise *pp)
+
+{ struct Attributes b;
+  char filename[CF_BUFSIZE];
+
+b = a;
+b.edits.backup = cfa_nobackup;
+b.edits.maxfilesize = 1000000;
+
+snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
+MapName(filename);
+
+PurgeItemList(&VSETUIDLIST,"SETUID/SETGID");
+
+if (VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename,a,pp))
+   {
+   SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
+   }
+
+DeleteItemList(VSETUIDLIST);
+VSETUIDLIST = NULL;
 }
 
 /*********************************************************************/

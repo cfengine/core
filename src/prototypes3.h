@@ -648,7 +648,7 @@ int ExpandLinks(char *dest,char *from,int level);
 /* files_hashes.c */
 
 int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp);
-void PurgeHashes(struct Attributes attr,struct Promise *pp);
+void PurgeHashes(char *file,struct Attributes attr,struct Promise *pp);
 int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 void DeleteHash(CF_DB *dbp,enum cfhashes type,char *name);
@@ -685,6 +685,8 @@ void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise 
 void FileAutoDefine(char *destfile);
 int CfReadLine(char *buff,int size,FILE *fp);
 int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
+void LoadSetuid(struct Attributes a,struct Promise *pp);
+void SaveSetuid(struct Attributes a,struct Promise *pp);
 
 /* files_names.c */
 
@@ -887,6 +889,7 @@ void CfHtmlFooter(FILE *fp,char *footer);
 
 /* item-lib.c */
 
+void PurgeItemList(struct Item **list,char *name);
 struct Item *ReturnItemIn(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);
 int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);

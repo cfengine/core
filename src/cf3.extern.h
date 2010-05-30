@@ -204,6 +204,9 @@ extern struct BodySyntax CF_SQLSERVER_BODY[];
 extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
 extern struct BodySyntax CF_TOPICS_BODIES[];
 extern struct BodySyntax CF_OCCUR_BODIES[];
+extern struct BodySyntax CF_INFER_BODIES[];
+extern struct BodySyntax CF_INFERENCE_BODY[];
+extern struct BodySyntax CF_RELATE_BODY[];
 #endif
 
 #ifndef CF3_MOD_PACKAGES

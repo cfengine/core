@@ -48,6 +48,16 @@
  /*                                                         */
  /***********************************************************/
 
+struct BodySyntax CF_INFERENCE_BODY[] =
+   {
+   {"pre_assoc_pattern",cf_str,"","Name of forward association between promiser topic and associates"},
+   {"post_assoc_pattern",cf_str,"","Name of backward/inverse association from associates to promiser topic"},
+   {"inference",cf_str,"","Result of the syllogism"},
+   {NULL,cf_notype,NULL,NULL}
+   };
+
+/***************************************************************/
+
 struct BodySyntax CF_RELATE_BODY[] =
    {
    {"forward_relationship",cf_str,"","Name of forward association between promiser topic and associates"},
@@ -69,12 +79,19 @@ struct BodySyntax CF_OCCUR_BODIES[] =
 
 /***************************************************************/
 
-/* This is the primary set of constraints for a file object */
-
 struct BodySyntax CF_TOPICS_BODIES[] =
    {
    {"association",cf_body,CF_RELATE_BODY,"Declare associated topics"},
    {"comment",cf_str,"","Retained comment about this promise's real intention"},
+   {NULL,cf_notype,NULL,NULL}
+   };
+
+/***************************************************************/
+
+struct BodySyntax CF_INFER_BODIES[] =
+   {
+   {"follow_topics",cf_str,"","Use the knowledge promised by topics matching this pattern"},
+   {"infer",cf_body,CF_INFERENCE_BODY,"Specify the promise-inference triangle from this topic"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -86,6 +103,7 @@ struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
   {"knowledge","topics",CF_TOPICS_BODIES},
   {"knowledge","occurrences",CF_OCCUR_BODIES},
+  {"knowledge","inferences",CF_INFER_BODIES},
   {NULL,NULL,NULL},
   };
 

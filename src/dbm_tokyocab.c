@@ -70,7 +70,6 @@ if (!tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
 (*hdbp)->valmemp = NULL;
 
 ThreadUnlock(cft_system);
-
 return true;
 }
 

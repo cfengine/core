@@ -594,9 +594,9 @@ if (pp == NULL)
 
 if (pp->this_server != NULL)
    {
-   ThreadLock(cft_system);
+   ThreadLock(cft_policy);
    free(pp->this_server);
-   ThreadUnlock(cft_system);
+   ThreadUnlock(cft_policy);
    }
  
 if (pp->next != NULL)
@@ -606,9 +606,9 @@ if (pp->next != NULL)
 
 if (pp->ref_alloc == 'y')
    {
-   ThreadLock(cft_system);
+   ThreadLock(cft_policy);
    free(pp->ref);
-   ThreadUnlock(cft_system);
+   ThreadUnlock(cft_policy);
    }
 
 DeletePromise(pp);
@@ -620,7 +620,7 @@ struct Promise *NewPromise(char *typename,char *promiser)
 
 { struct Promise *pp;
 
-ThreadLock(cft_system); 
+ThreadLock(cft_policy); 
 
 if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    {
@@ -633,7 +633,7 @@ pp->lineno = 0;
 pp->bundle =  strdup("independent");
 pp->promiser = strdup(promiser);
 
-ThreadUnlock(cft_system);
+ThreadUnlock(cft_policy);
 
 pp->promisee = NULL;
 pp->petype = CF_NOPROMISEE;
@@ -667,7 +667,7 @@ if (pp == NULL)
    return;
    }
 
-ThreadLock(cft_system);
+ThreadLock(cft_policy);
 
 if (pp->promiser != NULL)
    {
@@ -687,7 +687,7 @@ free(pp->classes);
 DeleteConstraintList(pp->conlist);
 
 free((char *)pp);
-ThreadUnlock(cft_system);
+ThreadUnlock(cft_policy);
 }
 
 /*****************************************************************************/

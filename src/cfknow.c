@@ -37,6 +37,7 @@ enum cfknow_image
    cf_no_image,
    cf_full_image,
    cf_impact_image,
+   cf_special_quote
    };
 
 int main (int argc,char *argv[]);
@@ -125,7 +126,7 @@ char MANDIR[CF_BUFSIZE];
             "and cf-know can assemble and converge the reference manual\n"
             "for the current version of the Cfengine software.";
  
- struct option OPTIONS[16] =
+ struct option OPTIONS[17] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -138,6 +139,7 @@ char MANDIR[CF_BUFSIZE];
       { "manpage",no_argument,0,'M'},
       { "map-full",required_argument,0,'K'},
       { "map-impact",required_argument,0,'k'},
+      { "quote",required_argument,0,'q'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
@@ -145,7 +147,7 @@ char MANDIR[CF_BUFSIZE];
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[16] =
+ char *HINTS[17] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -158,6 +160,7 @@ char MANDIR[CF_BUFSIZE];
       "Generate reference manpage from internal data",
       "Show full image map for argument",
       "Show impact map for argument",
+      "Quote encapsulated HTML output through the query engine",
       "Specify a regular expression for searching the topic map",
       "Store topic map in defined SQL database",
       "Print a syntax summary of the optional keyword or this cfengine version",
@@ -221,7 +224,7 @@ void CheckOpts(int argc,char **argv)
 strcpy(TOPIC_CMD,"");
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:k:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:k:q:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -283,6 +286,13 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:k:",OPTIONS,&optindex)) != 
           LOOKUP = true;
           SHOWREPORTS = false;
           SHOWMAP = 2;
+          break;
+
+      case 'q':
+          strcpy(TOPIC_CMD,optarg);
+          LOOKUP = true;
+          SHOWREPORTS = false;
+          SHOWMAP = 3;
           break;
 
       case 's':
@@ -2766,8 +2776,14 @@ switch (SHOWMAP)
    case cf_impact_image:
        snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.map",CanonifyName(TypedTopic(this_name,this_type)));
        break;
+   case cf_special_quote:
+       SpecialQuote(this_name,this_type);
+       CfHtmlFooter(fout,FOOTER);
+       return;
    default:
-       break;
+       printf("<h1>No directive promised</h1>");
+       CfHtmlFooter(fout,FOOTER);
+       return;
    }
 
 snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
@@ -2837,6 +2853,9 @@ char *NextMap(char *topic,char *type,enum cfknow_image imgtype)
 
 switch(imgtype)
    {
+   case cf_special_quote:
+       webtype = "quote";
+       break;
    case cf_impact_image:
        webtype = "map2";
        break;
@@ -2854,6 +2873,7 @@ if (strlen(WEBDRIVER) == 0)
 if (strchr(topic,':'))
    {
    DeTypeTopic(topic,ctopic,ctype);
+
    if (ctype && strlen(ctype) > 0)
       {
       snprintf(url,CF_BUFSIZE,"%s?%s=%s",WEBDRIVER,webtype,topic);

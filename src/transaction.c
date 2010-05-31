@@ -327,48 +327,49 @@ for (rp = params; rp != NULL; rp=rp->next)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 
 pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name)
+
 {
-  switch(name)
-    {
-    case cft_system:
-      return &MUTEX_SYSCALL;
-      break;
-
+switch(name)
+   {
+   case cft_system:
+       return &MUTEX_SYSCALL;
+       break;
+       
    case cft_count:
-     return &MUTEX_COUNT;
-     break;
-
-    case cft_getaddr:
-      return &MUTEX_GETADDR;
-      break;
-
-    case cft_lock:
-      return &MUTEX_LOCK;
-      break;
-
-    case cft_output:
-      return &MUTEX_OUTPUT;
-      break;
-
-    case cft_dbhandle:
-      return &MUTEX_DBHANDLE;
-      break;
-
-    case cft_policy:
-      return &MUTEX_POLICY;
-      break;
-
-    case cft_db_lastseen:
-      return &MUTEX_DB_LASTSEEN;
-      break;
-
+       return &MUTEX_COUNT;
+       break;
+       
+   case cft_getaddr:
+       return &MUTEX_GETADDR;
+       break;
+       
+   case cft_lock:
+       return &MUTEX_LOCK;
+       break;
+       
+   case cft_output:
+       return &MUTEX_OUTPUT;
+       break;
+       
+   case cft_dbhandle:
+       return &MUTEX_DBHANDLE;
+       break;
+       
+   case cft_policy:
+       return &MUTEX_POLICY;
+       break;
+       
+   case cft_db_lastseen:
+       return &MUTEX_DB_LASTSEEN;
+       break;
+       
    default:
-     CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);
-     FatalError("Internal software error\n");
-     break;
-    }
+       CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);
+       FatalError("Internal software error\n");
+       break;
+   }
 
-  return NULL;
+return NULL;
 }
 
 #endif
@@ -381,19 +382,19 @@ int ThreadLock(enum cf_thread_mutex name)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 pthread_mutex_t *mutex;
 
- mutex = NameToThreadMutex(name);
+mutex = NameToThreadMutex(name);
 
- if (pthread_mutex_lock(mutex) != 0)
+if (pthread_mutex_lock(mutex) != 0)
    {
-     CfOut(cf_error,"pthread_mutex_lock","!! Could not lock: %d", name);
-     return false;
+   CfOut(cf_error,"pthread_mutex_lock","!! Could not lock: %d", name);
+   return false;
    }
 
- return true;
+return true;
 
 #else  // NOT_HAVE_PTHREAD
 
- return true;
+return true;
 
 #endif
 
@@ -407,47 +408,46 @@ int ThreadUnlock(enum cf_thread_mutex name)
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 pthread_mutex_t *mutex;
 
- mutex = NameToThreadMutex(name);
+mutex = NameToThreadMutex(name);
 
- if (pthread_mutex_unlock(mutex) != 0)
+if (pthread_mutex_unlock(mutex) != 0)
    {
-     CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
-     return false;
+   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+   return false;
    }
 
- return true;
+return true;
 
 #else  // NOT_HAVE_PTHREAD 
 
- return true;
+return true;
 
 #endif
-
 }
 
 /*****************************************************************************/
 
 void AssertThreadLocked(enum cf_thread_mutex name, char *fname)
+
 /* Verifies that a given lock is taken (not neccessary by the current thread) */
+
 {
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-
 pthread_mutex_t *mutex;
 int status;
 
- mutex = NameToThreadMutex(name);
+mutex = NameToThreadMutex(name);
 
- status = pthread_mutex_trylock(mutex);
+status = pthread_mutex_trylock(mutex);
 
- if(status != EBUSY)
+if (status != EBUSY)
    {
-     CfOut(cf_error, "", "!! The mutex %d was not locked in %s() -- status=%d", name, fname, status);
-     FatalError("Software assertion failure\n");
+   CfOut(cf_error, "", "!! The mutex %d was not locked in %s() -- status=%d", name, fname, status);
+   FatalError("Software assertion failure\n");
    }
 
 #endif
 }
-
 
 /*****************************************************************************/
 /* Level                                                                     */

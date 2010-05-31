@@ -453,6 +453,7 @@ void SetBundleOutputs(char *name);
 void ResetBundleOutputs(char *name);
 void SetPromiseOutputs(struct Promise *pp);
 void VerifyOutputsPromise(struct Promise *pp);
+void SpecialQuote(char *topic,char *type);
 
 /* env_context.c */
 

@@ -410,7 +410,9 @@ while (true)
    if ((sd_reply = accept(sd,(struct sockaddr *)&cin,&addrlen)) != -1)
       {
       memset(ipaddr,0,CF_MAXVARSIZE);
+      ThreadLock(cft_getaddr);
       snprintf(ipaddr,CF_MAXVARSIZE-1,"%s",sockaddr_ntop((struct sockaddr *)&cin));
+      ThreadUnlock(cft_getaddr);
       
       Debug("Obtained IP address of %s on socket %d from accept\n",ipaddr,sd_reply);
       
@@ -439,7 +441,7 @@ while (true)
          {
          if (IsItemIn(CONNECTIONLIST,MapAddress(ipaddr)))
             {
-            CfOut(cf_error,"","Denying repeated connection from %s\n",ipaddr);
+            CfOut(cf_error,"","Denying repeated connection from \"%s\"\n",ipaddr);
             cf_closesocket(sd_reply);
             continue;
             }
@@ -447,7 +449,7 @@ while (true)
       
       if (LOGCONNS)
          {
-         CfOut(cf_inform,"","Accepting connection from %s\n",ipaddr);
+         CfOut(cf_inform,"","Accepting connection from \"%s\"\n",ipaddr);
          }
       
       snprintf(intime,63,"%d",(int)now);
@@ -573,8 +575,13 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
 
    if (bind(sd,ap->ai_addr,ap->ai_addrlen) == 0)
       {
-      Debug("Bound to address %s on %s=%d\n",sockaddr_ntop(ap->ai_addr),CLASSTEXT[VSYSTEMHARDCLASS],VSYSTEMHARDCLASS);
-
+      if (DEBUG)
+         {
+         ThreadLock(cft_getaddr);
+         printf("Bound to address %s on %s=%d\n",sockaddr_ntop(ap->ai_addr),CLASSTEXT[VSYSTEMHARDCLASS],VSYSTEMHARDCLASS);
+         ThreadUnlock(cft_getaddr);
+         }
+      
       if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == openbsd || VSYSTEMHARDCLASS == freebsd || VSYSTEMHARDCLASS == netbsd || VSYSTEMHARDCLASS == dragonfly)
          {
          continue;  /* *bsd doesn't map ipv6 addresses */
@@ -1770,13 +1777,15 @@ if ((err=getaddrinfo(dns_assert,NULL,&query,&response)) != 0)
  
 for (ap = response; ap != NULL; ap = ap->ai_next)
    {
-   Debug("CMP: %s %s\n",MapAddress(conn->ipaddr),sockaddr_ntop(ap->ai_addr));
+   ThreadLock(cft_getaddr);
    
    if (strcmp(MapAddress(conn->ipaddr),sockaddr_ntop(ap->ai_addr)) == 0)
       {
       Debug("Found match\n");
       matched = true;
       }
+
+   ThreadUnlock(cft_getaddr);
    }
 
 if (response != NULL)
@@ -1850,26 +1859,25 @@ else
       }   
    }
  
- 
+ThreadUnlock(cft_getaddr); 
+  
 #ifdef MINGW  /* NT uses security identifier instead of uid */
- if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
+if (!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
    {
    memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
    }
 	 
 #else  /* NOT MINGW */
- if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
-    {      
-    conn->uid = -2;
-    }
- else
-    {
-    conn->uid = pw->pw_uid;
-    }
+if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
+   {      
+   conn->uid = -2;
+   }
+else
+   {
+   conn->uid = pw->pw_uid;
+   }
 #endif  /* NOT MINGW */
 
-ThreadUnlock(cft_getaddr); 
- 
 #endif
 
 if (!matched)

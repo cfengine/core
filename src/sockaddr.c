@@ -35,6 +35,7 @@
 /*****************************************************************************/
 /* TOOLKIT                                                                   */
 /* INET independent address/struct conversion routines                       */
+/* Note these functions are not thread safe                                  */
 /*****************************************************************************/
 
 char *sockaddr_ntop(struct sockaddr *sa)
@@ -48,8 +49,6 @@ char *sockaddr_ntop(struct sockaddr *sa)
  struct in_addr addr;
 #endif
 
-ThreadLock(cft_system);
- 
 switch (sa->sa_family)
    {
    case AF_INET:
@@ -76,7 +75,6 @@ switch (sa->sa_family)
        FatalError("Software failure in sockaddr_ntop\n");
    }
 
-ThreadUnlock(cft_system);
 Debug("sockaddr_ntop(%s)\n",addrbuf);
 return addrbuf;
 }

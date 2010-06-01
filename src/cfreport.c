@@ -813,10 +813,8 @@ if (HTML && !EMBEDDED)
    {
    snprintf(name,CF_BUFSIZE,"Peers as last seen by %s",VFQNAME);
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
-   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
-
+   fprintf(fout,"<div id=\"reporttext\">\n");
    fprintf(fout,"<h4>This report was last updated at %s</h4>",cf_ctime(&tid));
-
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 else if (XML)
@@ -937,7 +935,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
 if (HTML && !EMBEDDED)
    {
-   fprintf(fout,"</table></div></div>\n");
+   fprintf(fout,"</table></div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1014,7 +1012,7 @@ if (HTML && !EMBEDDED)
    {
    snprintf(name,CF_BUFSIZE,"Promises last kept by %s",VFQNAME);
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
-   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
+   fprintf(fout,"<div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1103,7 +1101,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
-   fprintf(fout,"</div></div>\n");
+   fprintf(fout,"</div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1183,7 +1181,7 @@ if (HTML && !EMBEDDED)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"Classes last observed on %s at %s",VFQNAME,cf_ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
-   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
+   fprintf(fout,"<div id=\"reporttext\">\n");
 
    fprintf(fout,"<h4>Soft classes</h4>");
    fprintf(fout,"<table class=\"border\" cellpadding=\"5\">\n");
@@ -1345,7 +1343,7 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
-   fprintf(fout,"</div></div>\n");
+   fprintf(fout,"</div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1407,7 +1405,7 @@ if ((fout = fopen(name,"w")) == NULL)
 if (HTML && !EMBEDDED)
    {
    CfHtmlHeader(fout,"File hashes",STYLESHEET,WEBDRIVER,BANNER);
-   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
+   fprintf(fout,"<div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1472,7 +1470,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
-   fprintf(fout,"</div></div>\n");
+   fprintf(fout,"</div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 
@@ -1544,7 +1542,7 @@ if (HTML && !EMBEDDED)
    time_t now = time(NULL);
    snprintf(name,CF_BUFSIZE,"%s lock data observed on %s at %s",lockdb,VFQNAME,cf_ctime(&now));
    CfHtmlHeader(fout,name,STYLESHEET,WEBDRIVER,BANNER);
-   fprintf(fout,"<div id=\"primary\"><div id=\"reporttext\">\n");
+   fprintf(fout,"<div id=\"reporttext\">\n");
    fprintf(fout,"<table class=border cellpadding=5>\n");
    }
 
@@ -1630,7 +1628,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 if (HTML && !EMBEDDED)
    {
    fprintf(fout,"</table>");
-   fprintf(fout,"</div></div>\n");
+   fprintf(fout,"</div>\n");
    CfHtmlFooter(fout,FOOTER);
    }
 

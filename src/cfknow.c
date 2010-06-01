@@ -71,6 +71,7 @@ char *NextMap(char *topic,char *type,enum cfknow_image imgtype);
 void GenerateGraph(void);
 void GenerateManual(void);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
+char *URLControl(char *url);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -195,7 +196,13 @@ if (strlen(TOPIC_CMD) == 0)
    }
 else
    {
-   if (ISREGEX)
+   if (SHOWMAP == cf_special_quote)
+      {
+      CfHtmlHeader(stdout,NULL,STYLESHEET,WEBDRIVER,BANNER);
+      SpecialQuote(TOPIC_CMD,"quoted");
+      CfHtmlFooter(stdout,FOOTER);
+      }
+ else if (ISREGEX)
       {
       LookupMatchingTopics(TOPIC_CMD);
       }
@@ -449,7 +456,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       strncpy(WEBDRIVER,retval,CF_MAXVARSIZE);
       continue;
       }
-   
+
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_htmlbanner].lval) == 0)
       {
       strncpy(BANNER,retval,2*CF_BUFSIZE-1);
@@ -2580,16 +2587,16 @@ if (occurrences != NULL)
       switch (oc->rep_type)
          {
          case cfk_url:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",oc->locator,oc->locator);
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",URLControl(oc->locator),oc->locator);
              break;
          case cfk_web:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\" target=\"_blank\"> ...%s</a> </span>(URL)",oc->locator,URLHint(oc->locator));
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\"> ...%s</a> </span>(URL)",URLControl(oc->locator),URLHint(oc->locator));
              break;
          case cfk_file:
-             fprintf(fout," <a href=\"file://%s\">%s</a> (file)",oc->locator,oc->locator);
+             fprintf(fout," <a href=\"file://%s\">%s</a> (file)",URLControl(oc->locator),oc->locator);
              break;
          case cfk_db:
-             fprintf(fout," %s (DB)",oc->locator);
+             fprintf(fout," %s (DB)",URLControl(oc->locator));
              break;          
          case cfk_literal:
              fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
@@ -2597,15 +2604,15 @@ if (occurrences != NULL)
          case cfk_image:
              if (strlen(embed_link)> 0)
                 {
-                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",embed_link,oc->locator);
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",embed_link,URLControl(oc->locator));
                 }
              else
                 {
-                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\" border=\"0\"></a></div></p>",oc->locator,oc->locator);
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\" border=\"0\"></a></div></p>",URLControl(oc->locator),oc->locator);
                 }
              break;
          case cfk_portal:
-             fprintf(fout,"<p><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",oc->locator,oc->locator);
+             fprintf(fout,"<p><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",URLControl(oc->locator),oc->locator);
              break;
 
          default:
@@ -2812,6 +2819,88 @@ CfHtmlFooter(fout,FOOTER);
 
 /*********************************************************************/
 
+void VerifyOccurrenceGroup(char *file,struct Promise *pp)
+    
+{ struct Attributes a;
+  struct Topic *tp;
+  enum representations rep_type;
+  struct stat sb;
+  char *sp,url[CF_BUFSIZE];
+  struct Rval retval;
+
+a = GetOccurrenceAttributes(pp);
+
+if (a.rep_type)
+   {
+   rep_type = String2Representation(a.rep_type);
+   }
+else
+   {
+   rep_type = cfk_url;
+   }
+
+if (cfstat(file,&sb) == -1)
+   {
+   CfOut(cf_verbose,""," !! File %s matched but could not be read",file);
+   return;
+   }
+
+if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
+   {
+   CfOut(cf_error,""," !! Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
+   return;
+   }
+
+if (a.path_root == NULL || a.web_root == NULL)
+   {
+   CfOut(cf_error,""," !! No pathroot/webroot defined in representation");
+   PromiseRef(cf_error,pp);
+   return;
+   }
+
+Chop(a.path_root);
+DeleteSlash(a.path_root);
+sp = file + strlen(a.path_root) + 1;
+
+FullTextMatch(pp->promiser,sp);
+retval = ExpandPrivateRval("this",a.represents,CF_LIST);
+DeleteScope("match");
+
+if (strlen(a.web_root) > 0)
+   {
+   snprintf(url,CF_BUFSIZE-1,"%s/%s",a.web_root,sp);
+   }
+else
+   {
+   snprintf(url,CF_BUFSIZE-1,"%s",sp);
+   }
+
+AddOccurrence(&(tp->occurrences),url,retval.item,cfk_url);
+CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
+
+DeleteRvalItem(retval.item,CF_LIST);
+}
+
+/*********************************************************************/
+/* Referrals                                                         */
+/*********************************************************************/
+
+char *URLControl(char *url)
+
+{ static char transform[CF_BUFSIZE];
+
+if (*url == '/' || strncmp(url,"http",4) == 0)
+   {
+   return url;
+   }
+
+snprintf(transform,CF_BUFSIZE-1,"%s?quote=%s",WEBDRIVER,url);
+
+return transform;
+}
+
+/*********************************************************************/
+
 char *NextTopic(char *topic,char *type)
 
 { static char url[CF_BUFSIZE];
@@ -2891,69 +2980,6 @@ else
 return url;
 }
 
-/*********************************************************************/
-
-void VerifyOccurrenceGroup(char *file,struct Promise *pp)
-    
-{ struct Attributes a;
-  struct Topic *tp;
-  enum representations rep_type;
-  struct stat sb;
-  char *sp,url[CF_BUFSIZE];
-  struct Rval retval;
-
-a = GetOccurrenceAttributes(pp);
-
-if (a.rep_type)
-   {
-   rep_type = String2Representation(a.rep_type);
-   }
-else
-   {
-   rep_type = cfk_url;
-   }
-
-if (cfstat(file,&sb) == -1)
-   {
-   CfOut(cf_verbose,""," !! File %s matched but could not be read",file);
-   return;
-   }
-
-if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
-   {
-   CfOut(cf_error,""," !! Class missing - canonical identifier \"%s\" was not previously defined so we can't map it to occurrences (problem with bundlesequence?)",pp->classes);
-   return;
-   }
-
-if (a.path_root == NULL || a.web_root == NULL)
-   {
-   CfOut(cf_error,""," !! No pathroot/webroot defined in representation");
-   PromiseRef(cf_error,pp);
-   return;
-   }
-
-Chop(a.path_root);
-DeleteSlash(a.path_root);
-sp = file + strlen(a.path_root) + 1;
-
-FullTextMatch(pp->promiser,sp);
-retval = ExpandPrivateRval("this",a.represents,CF_LIST);
-DeleteScope("match");
-
-if (strlen(a.web_root) > 0)
-   {
-   snprintf(url,CF_BUFSIZE-1,"%s/%s",a.web_root,sp);
-   }
-else
-   {
-   snprintf(url,CF_BUFSIZE-1,"%s",sp);
-   }
-
-AddOccurrence(&(tp->occurrences),url,retval.item,cfk_url);
-CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
-
-DeleteRvalItem(retval.item,CF_LIST);
-}
 
 /* EOF */
 

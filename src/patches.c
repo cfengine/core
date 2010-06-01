@@ -135,6 +135,7 @@ return s;
 /*********************************************************/
 
 char *MapNameForward(char *s)
+
 /* Like MapName(), but maps all slashes to forward */
 
 { char *sp;

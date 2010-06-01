@@ -36,6 +36,7 @@
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *header)
 {
+#ifndef HAVE_CFLIBNOVA
 fprintf(fp,"<html>"
         "  <head>"
         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />"
@@ -46,14 +47,18 @@ fprintf(fp,"<html>"
         "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />"
         "  </head>"
         "  <body>",title,css,css);
+#endif
 
-if (strlen(header) > 0)
+if (header && strlen(header) > 0)
    {
    fprintf(fp,"%s\n",header);
    }
 
-
-fprintf(fp,"<h1>%s</h1>",title);
+if (title)
+   {
+   fprintf(fp,"<h1>%s</h1>",title);
+   fprintf(fp,"<div id=\"primary\">\n");
+   }
 }
 
 /*****************************************************************************/
@@ -68,5 +73,7 @@ void CfHtmlFooter(FILE *fp,char *footer)
     }
 /* end */
 
+#ifndef HAVE_CFLIBNOVA
 fprintf(fp,"</div></body></html>\n");
+#endif
 }

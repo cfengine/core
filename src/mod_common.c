@@ -228,23 +228,23 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 
 struct BodySyntax CFK_CONTROLBODY[] =
    {
-   {"id_prefix",cf_str,".*","The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},
    {"build_directory",cf_str,".*","The directory in which to generate output files"},
+   {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
+   {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
+   {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
+   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
+   {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
+   {"id_prefix",cf_str,".*","The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},
+   {"manual_source_directory",cf_str,CF_PATHRANGE,"Path to directory where raw text about manual topics is found (defaults to build_directory)"},
+   {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
+   {"query_output",cf_opts,"html,text","Menu option for generated output format"},
    {"sql_type",cf_opts,"mysql,postgres","Menu option for supported database type"},
    {"sql_database",cf_str,"","Name of database used for the topic map"},
    {"sql_owner",cf_str,"","User id of sql database user"},
    {"sql_passwd",cf_str,"","Embedded password for accessing sql database"},
    {"sql_server",cf_str,"","Name or IP of database server (or localhost)"},
    {"sql_connection_db",cf_str,"","The name of an existing database to connect to in order to create/manage other databases"},
-   {"query_output",cf_opts,"html,text","Menu option for generated output format"},
-   {"query_engine",cf_str,"","Name of a dynamic web-page used to accept and drive queries in a browser"},
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
-   {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
-   {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
-   {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
-   {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
-   {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
-   {"manual_source_directory",cf_str,CF_PATHRANGE,"Path to directory where raw text about manual topics is found (defaults to build_directory)"},
    {"view_projections",cf_opts,CF_BOOL,"Perform view-projection analytics in graph generation"},
    {NULL,cf_notype,NULL,NULL}
    };

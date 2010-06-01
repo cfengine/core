@@ -354,24 +354,25 @@ enum cfscontrol
 
 enum cfkcontrol
    {
-   cfk_tm_prefix,
    cfk_builddir,
+   cfk_genman,
+   cfk_graph_dir,
+   cfk_graph_output,
+   cfk_htmlbanner,
+   cfk_htmlfooter,
+   cfk_tm_prefix,
+   cfk_mandir,
+   cfk_query_engine,   
+   cfk_query_output,
    cfk_sql_type,
    cfk_sql_database,
    cfk_sql_owner,
    cfk_sql_passwd,
    cfk_sql_server,
    cfk_sql_connect_db,
-   cfk_query_output,
-   cfk_query_engine,
    cfk_stylesheet,
-   cfk_htmlbanner,
-   cfk_htmlfooter,
-   cfk_graph_output,
-   cfk_graph_dir,
-   cfk_genman,
-   cfk_mandir,
    cfk_views,
+   cfk_view_projection,
    cfk_notype
    };
 

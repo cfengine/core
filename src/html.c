@@ -77,3 +77,21 @@ void CfHtmlFooter(FILE *fp,char *footer)
 fprintf(fp,"</div></body></html>\n");
 #endif
 }
+
+/*********************************************************************/
+
+char *URLControl(char *url)
+
+{ static char transform[CF_BUFSIZE];
+
+if (strncmp(url,"http",4) == 0)
+   {
+   return url;
+   }
+
+snprintf(transform,CF_BUFSIZE-1,"/index.php?quote=%s",url);
+
+return transform;
+}
+
+

@@ -71,7 +71,6 @@ char *NextMap(char *topic,char *type,enum cfknow_image imgtype);
 void GenerateGraph(void);
 void GenerateManual(void);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
-char *URLControl(char *url);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -2604,7 +2603,7 @@ if (occurrences != NULL)
          case cfk_image:
              if (strlen(embed_link)> 0)
                 {
-                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",embed_link,URLControl(oc->locator));
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",URLControl(embed_link),oc->locator);
                 }
              else
                 {
@@ -2883,22 +2882,6 @@ DeleteRvalItem(retval.item,CF_LIST);
 
 /*********************************************************************/
 /* Referrals                                                         */
-/*********************************************************************/
-
-char *URLControl(char *url)
-
-{ static char transform[CF_BUFSIZE];
-
-if (*url == '/' || strncmp(url,"http",4) == 0)
-   {
-   return url;
-   }
-
-snprintf(transform,CF_BUFSIZE-1,"%s?quote=%s",WEBDRIVER,url);
-
-return transform;
-}
-
 /*********************************************************************/
 
 char *NextTopic(char *topic,char *type)

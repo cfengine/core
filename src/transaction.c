@@ -440,7 +440,7 @@ mutex = NameToThreadMutex(name);
 
 status = pthread_mutex_trylock(mutex);
 
-if (status != EBUSY)
+if (status != EBUSY && status != EDEADLK)
    {
    CfOut(cf_error, "", "!! The mutex %d was not locked in %s() -- status=%d", name, fname, status);
    FatalError("Software assertion failure\n");

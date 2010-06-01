@@ -1691,6 +1691,12 @@ ThreadLock(cft_system);
 strncpy(dns_assert,ToLowerStr(fqname),CF_MAXVARSIZE-1);
 strncpy(ip_assert,ipstring,CF_MAXVARSIZE-1);
 
+if (strcmp(ip_assert,MapAddress(conn->ipaddr)) != 0)
+   {
+   CfOut(cf_verbose,"","IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",ip_assert,conn->ipaddr);
+   return false;
+   }
+
 ThreadUnlock(cft_system);
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
@@ -1706,10 +1712,10 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
    strncpy(conn->username,username,CF_MAXVARSIZE);
 
 #ifdef MINGW  /* NT uses security identifier instead of uid */
-   if(!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
-     {
-     memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
-     }
+   if (!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
+      {
+      memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
+      }
    
 #else  /* NOT MINGW */
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
@@ -1721,17 +1727,11 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
       conn->uid = pw->pw_uid;
       }
 #endif  /* NOT MINGW */
-
+   
    LastSaw(dns_assert,cf_accept);
    return true;
    }
  
-if (strcmp(ip_assert,MapAddress(conn->ipaddr)) != 0)
-   {
-   CfOut(cf_verbose,"","IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",ip_assert,conn->ipaddr);
-   return false;
-   }
-
 if (strlen(dns_assert) == 0)
    {
    CfOut(cf_verbose,"","DNS asserted name was empty - untrustworthy connection\n");
@@ -3780,7 +3780,6 @@ SavePublicKey(keyname,newkey);
 
 CloseDB(dbp);
 cf_chmod(keydb,0644); 
- 
 return trust; 
 }
 
@@ -3872,7 +3871,7 @@ if (conn->ipaddr != NULL)
       }
    }
  
-free ((char *)conn);
+free((char *)conn);
 }
 
 /***************************************************************/

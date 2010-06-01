@@ -321,9 +321,9 @@ snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 
 
- if(!ThreadLock(cft_db_lastseen))
+if (!ThreadLock(cft_db_lastseen))
    {
-     return;
+   return;
    }
 
 if (!OpenDB(name,&dbp))
@@ -388,7 +388,6 @@ if (intermittency)
 
 CloseDB(dbp);
 ThreadUnlock(cft_db_lastseen);
-
 }
 
 /*****************************************************************************/

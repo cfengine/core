@@ -209,12 +209,16 @@ if ((fp = fopen(filename, "w")) == NULL )
    return;
    }
 
+ThreadLock(cft_system);
+
 if (!PEM_write_RSAPublicKey(fp,key))
    {
    err = ERR_get_error();
    CfOut(cf_error,"PEM_write","Error saving public key %s = %s\n",filename,ERR_reason_error_string(err));
    }
- 
+
+ThreadUnlock(cft_system);
+
 fclose(fp);
 }
 

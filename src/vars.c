@@ -694,6 +694,11 @@ char *ExtractInnerCf3VarString(char *str,char *substr)
 
 Debug("ExtractInnerVarString( %s ) - syntax verify\n",str);
 
+if (str == NULL || strlen(str) == 0)
+   {
+   return NULL;
+   }
+
 memset(substr,0,CF_BUFSIZE);
 
 if (*(str+1) != '(' && *(str+1) != '{')

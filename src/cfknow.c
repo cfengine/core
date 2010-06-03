@@ -2586,16 +2586,16 @@ if (occurrences != NULL)
       switch (oc->rep_type)
          {
          case cfk_url:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",URLControl(oc->locator),oc->locator);
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\">%s</a> </span>(URL)",URLControl(WEBDRIVER,oc->locator),oc->locator);
              break;
          case cfk_web:
-             fprintf(fout,"<span id=\"url\"><a href=\"%s\"> ...%s</a> </span>(URL)",URLControl(oc->locator),URLHint(oc->locator));
+             fprintf(fout,"<span id=\"url\"><a href=\"%s\"> ...%s</a> </span>(URL)",URLControl(WEBDRIVER,oc->locator),URLHint(oc->locator));
              break;
          case cfk_file:
-             fprintf(fout," <a href=\"file://%s\">%s</a> (file)",URLControl(oc->locator),oc->locator);
+             fprintf(fout," <a href=\"file://%s\">%s</a> (file)",URLControl(WEBDRIVER,oc->locator),oc->locator);
              break;
          case cfk_db:
-             fprintf(fout," %s (DB)",URLControl(oc->locator));
+             fprintf(fout," %s (DB)",URLControl(WEBDRIVER,oc->locator));
              break;          
          case cfk_literal:
              fprintf(fout,"<p> \"%s\" (Text)</p>",oc->locator);
@@ -2603,15 +2603,15 @@ if (occurrences != NULL)
          case cfk_image:
              if (strlen(embed_link)> 0)
                 {
-                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",URLControl(embed_link),oc->locator);
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\"></a></div></p>",URLControl(WEBDRIVER,embed_link),oc->locator);
                 }
              else
                 {
-                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\" border=\"0\"></a></div></p>",URLControl(oc->locator),oc->locator);
+                fprintf(fout,"<p><div id=\"embedded_image\"><a href=\"%s\"><img src=\"%s\" border=\"0\"></a></div></p>",URLControl(WEBDRIVER,oc->locator),oc->locator);
                 }
              break;
          case cfk_portal:
-             fprintf(fout,"<p><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",URLControl(oc->locator),oc->locator);
+             fprintf(fout,"<p><a href=\"%s\" target=\"_blank\">%s</a> </span>(URL)",URLControl(WEBDRIVER,oc->locator),oc->locator);
              break;
 
          default:
@@ -2777,9 +2777,11 @@ CfHtmlHeader(fout,banner,STYLESHEET,WEBDRIVER,BANNER);
 switch (SHOWMAP)
    {
    case cf_full_image:
+       fprintf(fout,"<div id=\"fullimage\">\n");
        snprintf(filename,CF_BUFSIZE,"graphs/%s.map",CanonifyName(TypedTopic(this_name,this_type)));
        break;
    case cf_impact_image:
+       fprintf(fout,"<div id=\"impactimage\">\n");
        snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.map",CanonifyName(TypedTopic(this_name,this_type)));
        break;
    case cf_special_quote:
@@ -2811,6 +2813,15 @@ else
       }
    
    fclose(fin);
+   }
+
+
+switch (SHOWMAP)
+   {
+   case cf_full_image:
+   case cf_impact_image:
+       fprintf(fout,"</div>\n");
+       break;
    }
 
 CfHtmlFooter(fout,FOOTER);

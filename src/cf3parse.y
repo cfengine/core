@@ -494,7 +494,11 @@ char *s;
 
 { char *sp = yytext;
 
-if (*sp == '\"')
+if (sp == NULL)
+   {
+   fprintf (stderr, "%s:%s:%d,%d: %s, near token \'NULL\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s);
+   }
+else if (*sp == '\"' && strlen(sp) > 1)
    {
    sp++;
    }

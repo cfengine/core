@@ -37,6 +37,12 @@
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *header)
 {
 #ifndef HAVE_CFLIBNOVA
+
+if (title == NULL)
+   {
+   title = "Cfengine Knowledge";
+   }
+ 
 fprintf(fp,"<html>"
         "  <head>"
         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />"
@@ -80,7 +86,7 @@ fprintf(fp,"</div></body></html>\n");
 
 /*********************************************************************/
 
-char *URLControl(char *url)
+char *URLControl(char *driver,char *url)
 
 { static char transform[CF_BUFSIZE];
 
@@ -89,7 +95,7 @@ if (strncmp(url,"http",4) == 0)
    return url;
    }
 
-snprintf(transform,CF_BUFSIZE-1,"/index.php?quote=%s",url);
+snprintf(transform,CF_BUFSIZE-1,"%s?quote=%s",driver,url);
 
 return transform;
 }

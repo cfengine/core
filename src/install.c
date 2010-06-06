@@ -284,7 +284,7 @@ if ((strcmp(spe,"any") == 0) && (strcmp(type->name,"reports") == 0))
 
 if (strcmp(type->name,"classes") == 0 || strcmp(type->name,"vars") == 0)
    {
-   if (Str2Int(promiser) != CF_NOINT)
+   if (isdigit(*promiser) && Str2Int(promiser) != CF_NOINT)
       {
       yyerror("Variable or class identifier is purely numerical, which is not allowed");
       }

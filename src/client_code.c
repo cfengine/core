@@ -150,7 +150,7 @@ if (conn->sd == CF_NOT_CONNECTED)
    
    if (!ServerConnect(conn,server,attr,pp))
       {
-      CfOut(cf_inform,"socket","No server is responding on this port");
+      CfOut(cf_inform,"socket"," !! No server is responding on this port");
 
       if (conn->sd != CF_NOT_CONNECTED)
          {
@@ -961,17 +961,17 @@ if (!attr.copy.force_ipv4)
 
    if ((err = getaddrinfo(host,strport,&query,&response)) != 0)
       {
-      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Unable to find host or service: (%s/%s) %s",host,strport,gai_strerror(err));
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr," !! Unable to find host or service: (%s/%s) %s",host,strport,gai_strerror(err));
       return false;
       }
    
    for (ap = response; ap != NULL; ap = ap->ai_next)
       {
-      CfOut(cf_verbose,"","Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
+      CfOut(cf_verbose,""," -> Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
       
       if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
          {
-         CfOut(cf_inform,"socket","Couldn't open a socket");
+         CfOut(cf_inform,"socket"," !! Couldn't open a socket");
          continue;
          }
       

@@ -359,7 +359,7 @@ else
 
    if (conn == NULL)
       {
-      CfOut(cf_verbose,"","No suitable server responded to hail\n");
+      CfOut(cf_verbose,""," -> No suitable server responded to hail\n");
       return false;
       }
    }

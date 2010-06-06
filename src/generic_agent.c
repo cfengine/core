@@ -227,6 +227,8 @@ CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
 fprintf(FREPORT_TXT,"Expanded promise list for %s component\n\n",agents);
 
 ShowContext();
+
+fprintf(FREPORT_HTML,"<div id=\"reporttext\">\n");
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
 
 VerifyPromises(cf_common);
@@ -238,8 +240,8 @@ if (ag != cf_common)
    ShowScopedVariables();
    }
 
+fprintf(FREPORT_HTML,"</div>\n");
 CfHtmlFooter(FREPORT_HTML,FOOTER);
-
 CloseReports(agents);
 }
 

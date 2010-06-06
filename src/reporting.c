@@ -120,33 +120,6 @@ if (VERBOSE||DEBUG)
    }
 
 CfOut(cf_verbose,"","");
-
-/* HTML output */
-
-/*
-fprintf(FREPORT_HTML,"<div id=\"contextclasses\">");
-fprintf(FREPORT_HTML,"<table class=border><tr>");
-fprintf(FREPORT_HTML,"<tr><th colspan=2><h1>Agent's hard context classes</h1></th></tr>\n");
-
-fprintf(FREPORT_HTML,"<th>Defined Classes</th><td><ul>");
-fprintf(FREPORT_HTML,"<a name=\"class_context\"></a>");
-
-for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
-   {
-   fprintf(FREPORT_HTML,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
-   }
-
-fprintf(FREPORT_HTML,"</ul></td></tr><tr>\n");
-
-fprintf(FREPORT_HTML,"<th>Negated Classes</th><td><ul>");
-
-for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
-   {
-   fprintf(FREPORT_HTML,"<li>%s%s%s \n",CFH[cfx_class][cfb],ptr->name,CFH[cfx_class][cfe]);
-   }
-
-fprintf(FREPORT_HTML,"</ul></td></tr></table></div><p>\n");
-*/
 }
 
 /*******************************************************************/

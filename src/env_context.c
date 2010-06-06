@@ -36,6 +36,79 @@ extern char *DAY_TEXT[];
 
 /*****************************************************************************/
 
+void ValidateClassSyntax(char *str)
+
+{ char *cp = str;
+  int pcount = 0;
+
+if (*cp == '&' || *cp == '|' || *cp == '.' || *cp == ')') 
+   {
+   yyerror("Illegal initial character for class specification");
+   return;
+   }
+
+for (; *cp; cp++)
+   {
+   if (*cp == '(')
+      {
+      if (*(cp-1) == ')')
+         {
+         yyerror("Illegal use of parenthesis - you have ')(' with no intervening operator in your class specification");
+         return;
+         }
+
+      pcount++;
+      }
+   else if (*cp == ')')
+      {
+      if (--pcount < 0)
+         {
+         yyerror("Unbalanced parenthesis - too many ')' in class specification");
+         return;
+         }
+      if (*(cp-1) == '(')
+         {
+         yyerror("Empty parenthesis '()' illegal in class specifications");
+         return;
+         }
+      }
+
+// Rule out x&|y, x&.y, etc (but allow x&!y)
+   else if (*cp == '.')
+      {
+      if (*(cp-1) == '|' || *(cp-1) == '&' || *(cp-1) == '!')
+         {
+         yyerror("Illegal operator combination");
+         return;
+         }
+      }
+   else if (*cp == '&')
+      {
+      if (*(cp-1) == '|' || *(cp-1) == '.' || *(cp-1) == '!')
+         {
+         yyerror("Illegal operator combination");
+         return;
+         }
+      }
+   else if (*cp == '|')
+      {
+      if (*(cp-1) == '&' || *(cp-1) == '.' || *(cp-1) == '!')
+         {
+         yyerror("Illegal operator combination");
+         return;
+         }
+      }
+   }
+
+if (pcount)
+   {
+   yyerror("Unbalanced parenthesis - too many '(' in class specification");
+   return;
+   }
+}
+
+/*****************************************************************************/
+
 void KeepClassContextPromise(struct Promise *pp)
 
 { struct Attributes a;
@@ -1219,13 +1292,15 @@ for (sp = class; *sp != '\0'; sp++)
       }
    }
 
-if (bracklevel != 0)
-   {
-   char output[CF_BUFSIZE];
-   snprintf(output,CF_BUFSIZE,"Bracket mismatch, in [class=\"%s\"], level = %d\n",class,bracklevel);
-   yyerror(output);
-   FatalError("Aborted");
-   }
+// This is checked in the lexer now, and so can be eliminated?
+//
+// if (bracklevel != 0)
+//    {
+//    char output[CF_BUFSIZE];
+//    snprintf(output,CF_BUFSIZE,"Bracket mismatch, in [class=\"%s\"], level = %d\n",class,bracklevel);
+//    yyerror(output);
+//    FatalError("Aborted");
+//    }
 
 return count+1;
 }

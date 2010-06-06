@@ -120,6 +120,7 @@ category   [a-zA-Z_]+:
                          }
 
                       yytext[strlen(yytext)-2] = '\0';
+		      ValidateClassSyntax(yytext);
                       P.currentclasses = strdup(yytext);
                       return CLASS;
                       }
@@ -182,5 +183,6 @@ category   [a-zA-Z_]+:
 
 
 %%
+
 
 /* EOF */

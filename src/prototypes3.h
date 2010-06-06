@@ -457,6 +457,7 @@ void SpecialQuote(char *topic,char *type);
 
 /* env_context.c */
 
+void ValidateClassSyntax(char *str);
 int Abort(void);
 int ValidClassName(char *name);
 void KeepClassContextPromise(struct Promise *pp);

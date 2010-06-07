@@ -1698,12 +1698,6 @@ ThreadLock(cft_system);
 strncpy(dns_assert,ToLowerStr(fqname),CF_MAXVARSIZE-1);
 strncpy(ip_assert,ipstring,CF_MAXVARSIZE-1);
 
-if (strcmp(ip_assert,MapAddress(conn->ipaddr)) != 0)
-   {
-   CfOut(cf_verbose,"","IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",ip_assert,conn->ipaddr);
-   return false;
-   }
-
 ThreadUnlock(cft_system);
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
@@ -1738,7 +1732,13 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
    LastSaw(dns_assert,cf_accept);
    return true;
    }
- 
+
+if (strcmp(ip_assert,MapAddress(conn->ipaddr)) != 0)
+   {
+   CfOut(cf_verbose,"","IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",ip_assert,conn->ipaddr);
+   return false;
+   }
+
 if (strlen(dns_assert) == 0)
    {
    CfOut(cf_verbose,"","DNS asserted name was empty - untrustworthy connection\n");

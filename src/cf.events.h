@@ -49,8 +49,8 @@
 //
 // MessageText:
 //
-// A promise by %1 to %2 was already kept. Details follow.%r%r
-// %3
+// %1A promise by %2 to %3 was already kept. Details follow.%r%r
+// %4
 //
 #define EVMSG_PROMISE_KEPT               0x40000064L
 
@@ -59,8 +59,8 @@
 //
 // MessageText:
 //
-// A promise by %1 to %2 has been repaired. Details follow.%r%r
-// %3
+// %1A promise by %2 to %3 has been repaired. Details follow.%r%r
+// %4
 //
 #define EVMSG_PROMISE_REPAIRED           0x40000065L
 
@@ -69,9 +69,9 @@
 //
 // MessageText:
 //
-// A promise by %1 to %2 was not kept and has not been repaired due to
+// %1A promise by %2 to %3 was not kept and has not been repaired due to
 // policy reasons (dry-run or action_policy set to warn). Details follow.%r%r
-// %3
+// %4
 //
 #define EVMSG_PROMISE_NOT_REPAIRED_POLICY 0xC0000066L
 
@@ -80,8 +80,8 @@
 //
 // MessageText:
 //
-// A promise by %1 to %2 was not kept and has not been repaired. Details follow.%r%r
-// %3
+// %1A promise by %2 to %3 was not kept and has not been repaired. Details follow.%r%r
+// %4
 //
 #define EVMSG_PROMISE_NOT_REPAIRED       0xC0000067L
 
@@ -90,8 +90,8 @@
 //
 // MessageText:
 //
-// A report promise follows.%r%r
-// %1
+// %1A report-promise follows.%r%r
+// %2
 //
 #define EVMSG_REPORT                     0x40000068L
 
@@ -100,7 +100,7 @@
 //
 // MessageText:
 //
-// %1
+// %1%2
 //
 #define EVMSG_DEFAULT_INFO               0x40000069L
 
@@ -109,7 +109,7 @@
 //
 // MessageText:
 //
-// %1
+// %1%2
 //
 #define EVMSG_DEFAULT_VERBOSE            0x4000006AL
 
@@ -118,7 +118,7 @@
 //
 // MessageText:
 //
-// %1
+// %1%2
 //
 #define EVMSG_DEFAULT_WARN               0x8000006BL
 
@@ -127,7 +127,7 @@
 //
 // MessageText:
 //
-// %1
+// %1%2
 //
 #define EVMSG_DEFAULT_ERROR              0xC000006CL
 

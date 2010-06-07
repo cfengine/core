@@ -499,6 +499,12 @@ for (ip = start; ip != NULL; ip = ip->next)
       if (end == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_end,ip->name))
          {
          end = ip;
+
+         if (a.region.include_end && end != NULL)
+            {
+            end = end->next;
+            }
+         
          break;
          }
       }

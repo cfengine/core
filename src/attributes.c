@@ -1351,7 +1351,8 @@ struct EditRegion GetRegionConstraints(struct Promise *pp)
 
 e.select_start = GetConstraint("select_start",pp,CF_SCALAR);
 e.select_end = GetConstraint("select_end",pp,CF_SCALAR);
-e.include_start = GetBooleanConstraint("include_start_delimiter",pp); 
+e.include_start = GetBooleanConstraint("include_start_delimiter",pp);
+e.include_end = GetBooleanConstraint("include_end_delimiter",pp); 
 return e;
 }
 

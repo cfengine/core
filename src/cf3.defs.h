@@ -1427,6 +1427,7 @@ struct EditRegion
    char *select_start;
    char *select_end;
    int include_start;
+   int include_end;
    };
 
 struct EditColumn

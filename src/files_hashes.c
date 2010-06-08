@@ -402,6 +402,7 @@ if (path)
 if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan hash database");
+   CloseDB(dbp);
    return;
    }
 

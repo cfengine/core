@@ -289,6 +289,24 @@ switch(level)
           MakeLog(mess,level);
           }
        break;
+
+   case cf_reporting:
+   case cf_cmdout:
+
+       if (attr.report.to_file)
+          {
+          FileReport(mess,verbose,attr.report.to_file);
+          }
+       else
+          {
+          MakeReport(mess,verbose);
+          }
+
+       if (attr.transaction.log_level == cf_inform)
+          {
+          MakeLog(mess,level);
+          }
+       break;
        
    case cf_verbose:
        
@@ -305,8 +323,6 @@ switch(level)
        break;
 
    case cf_error:
-   case cf_reporting:
-   case cf_cmdout:
 
        if (attr.report.to_file)
           {
@@ -316,13 +332,13 @@ switch(level)
           {
           MakeReport(mess,verbose);
           }
-       
-       if (attr.transaction.log_level == level)
-          {   
+
+       if (attr.transaction.log_level == cf_error)
+          {
           MakeLog(mess,level);
           }
-       break;   
-	   
+       break;
+
    case cf_log:
        
        MakeLog(mess,level);
@@ -337,7 +353,7 @@ switch(level)
 #ifdef MINGW
 if(pp != NULL)
   {
-  NovaWin_LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, mess);
+  NovaWin_LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, attr.transaction.log_level, mess);
   }
 #endif
 

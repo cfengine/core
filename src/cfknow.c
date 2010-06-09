@@ -369,6 +369,7 @@ strcpy(SQL_CONNECT_NAME,"");
 strcpy(SQL_PASSWD,"");
 strcpy(SQL_SERVER,"localhost");
 strcpy(GRAPHDIR,"");
+SHOWREPORTS = false;
 }
 
 /*****************************************************************************/

@@ -872,6 +872,33 @@ return buffer;
 
 /*********************************************************************/
 
+char *Titleize (char *str)
+
+{ static char buffer[CF_BUFSIZE];
+  int i;
+
+if (str == NULL)
+   {
+   return NULL;
+   }
+  
+strcpy(buffer,str);
+
+if (strlen(buffer) > 1)
+   {
+   for (i = 1; buffer[i] != '\0'; i++)
+      {  
+      buffer[i] = ToLower(str[i]);
+      }
+   }
+
+*buffer = ToUpper(*buffer);
+
+return buffer;
+}
+
+/*********************************************************************/
+
 int SubStrnCopyChr(char *to,char *from,int len,char sep)
 
 { char *sp,*sto = to;

@@ -692,6 +692,7 @@ void SaveSetuid(struct Attributes a,struct Promise *pp);
 
 /* files_names.c */
 
+char *Titleize (char *str);
 int DeEscapeQuotedString(char *in, char *out);
 void DeEscapeFilename(char *in,char *out);
 int IsDir(char *path);

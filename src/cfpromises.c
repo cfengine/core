@@ -214,6 +214,7 @@ Debug("Set debugging\n");
 void ThisAgentInit()
 
 {
+SHOWREPORTS = false;
 }
 
 

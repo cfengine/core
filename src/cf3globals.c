@@ -79,6 +79,7 @@ time_t PROMISETIME;
 
 int LICENSES = 0;
 char EXPIRY[32];
+char LICENSE_COMPANY[CF_SMALLBUF];
 int INSTALL_SKIP = false;
 
 // These are used to measure graph complexity in know/agent

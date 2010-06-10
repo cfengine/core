@@ -156,6 +156,7 @@ struct BodyDefault BODY_DEFAULT[] =
    {"insert_match_policy","exact_match"},
    {"recognize_join","false"},
    {"include_start_delimiter","false"},
+   {"include_end_delimiter","false"},
    {"output_level","verbose"},
    {"promiser_type","promise"},   
    {NULL,NULL},

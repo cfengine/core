@@ -34,6 +34,7 @@ extern char POLICY_SERVER[CF_BUFSIZE];
 extern int VIEWS;
 extern int LICENSES;
 extern char EXPIRY[32];
+extern char LICENSE_COMPANY[CF_SMALLBUF];
 extern int IGNORE_MISSING_INPUTS;
 extern int IGNORE_MISSING_BUNDLES;
 extern char WEBDRIVER[CF_MAXVARSIZE];

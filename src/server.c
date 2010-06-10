@@ -1952,19 +1952,22 @@ CompressPath(realname,path);
 AddSlash(realname);
 strcat(realname,lastnode);
 
-ThreadLock(cft_system);
-
 strncpy(transrequest,MapName(realname),CF_BUFSIZE-1);
+
 #ifdef MINGW
 // NT has case-insensitive path names
 int i;
+
+ThreadLock(cft_system);
+
 for (i = 0; i < strlen(transrequest); i++)
    {
    transrequest[i] = ToLower(transrequest[i]);
    }
-#endif  /* MINGW */
 
 ThreadUnlock(cft_system);
+
+#endif  /* MINGW */
 
 if (lstat(transrequest,&statbuf) == -1)
    {
@@ -1987,10 +1990,8 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
    int res = false;
    Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
 
-   ThreadLock(cft_system);
    strncpy(transpath,ap->path,CF_BUFSIZE-1);
    MapName(transpath);
-   ThreadUnlock(cft_system);
 
    if ((strlen(transrequest) > strlen(transpath)) && strncmp(transpath,transrequest,strlen(transpath)) == 0 && transrequest[strlen(transpath)] == FILE_SEPARATOR)
       {
@@ -2542,7 +2543,7 @@ if ((newkey->n = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
 
 /* proposition C3 */ 
 
-if ((len=ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
+if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
    CfOut(cf_inform,"","Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
@@ -2697,9 +2698,9 @@ if (conn->session_key == NULL)
    return false;
    }
 
- CfOut(cf_verbose,""," -> Receiving session key from client (size=%d)...", keylen);
+CfOut(cf_verbose,""," -> Receiving session key from client (size=%d)...", keylen);
 
- Debug("keylen=%d, session_size=%d\n", keylen, session_size);
+Debug("keylen=%d, session_size=%d\n", keylen, session_size);
 
 if (keylen == CF_BLOWFISHSIZE) /* Support the old non-ecnrypted for upgrade */
    {
@@ -2728,7 +2729,6 @@ BN_free(counter_challenge);
 free(out);
 RSA_free(newkey); 
 conn->rsa_auth = true;
-
 return true; 
 }
 

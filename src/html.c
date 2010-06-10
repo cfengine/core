@@ -57,7 +57,14 @@ fprintf(fp,"<html>"
 
 if (header && strlen(header) > 0)
    {
-   fprintf(fp,"%s\n",header);
+   if (strlen(LICENSE_COMPANY) > 0)
+      {
+      fprintf(fp,"<div id=\"company\">%s</div>\n%s\n",LICENSE_COMPANY,header);
+      }
+   else
+      {
+      fprintf(fp,"%s\n",header);
+      }
    }
 
 if (title)
@@ -71,13 +78,10 @@ if (title)
 
 void CfHtmlFooter(FILE *fp,char *footer)
 {
- /* This section should be conditional */
-
- if (strlen(footer) > 0)
-    {
-    fprintf(fp,"%s",footer);
-    }
-/* end */
+if (strlen(footer) > 0)
+   {
+   fprintf(fp,"%s",footer);
+   }
 
 #ifndef HAVE_CFLIBNOVA
 fprintf(fp,"</div></body></html>\n");

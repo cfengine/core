@@ -362,6 +362,7 @@ strcpy(BANNER,"");
 strcpy(FOOTER,"");
 strcpy(STYLESHEET,"");
 strcpy(BUILD_DIR,".");
+strcpy(LICENSE_COMPANY,"");
 strcpy(MANDIR,".");
 strcpy(SQL_DATABASE,"cf_topic_map");
 strcpy(SQL_OWNER,"");

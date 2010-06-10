@@ -1015,6 +1015,15 @@ struct CfRegEx
    char *regexp;
 };
 
+/*******************************************************************/
+
+struct CfKeyBinding
+   {
+   char *ipaddress;
+   RSA public_key;
+   time_t timestamp;
+   };
+
 /*************************************************************************/
 
 struct CfLock

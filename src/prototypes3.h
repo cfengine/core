@@ -296,6 +296,8 @@ RSA *HavePublicKey (char *ipaddress);
 void SavePublicKey (char *ipaddress, RSA *key);
 void DeletePublicKey (char *ipaddress);
 char *KeyPrint(RSA *key);
+RSA *SelectKeyRing(char *name);
+void IdempAddToKeyRing(char *name,RSA *key);
 
 /* dbm_api.c */
 

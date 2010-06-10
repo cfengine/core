@@ -137,8 +137,12 @@ snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
 MapName(filename);
 
 // Check memory cache rlist
- 
-if (cfstat(filename,&statbuf) == -1)
+
+if (newkey = SelectKeyRing(name))
+   {
+   return newkey;
+   }
+else if (cfstat(filename,&statbuf) == -1)
    {
    Debug("Did not have key %s\n",name);
    return NULL;
@@ -208,7 +212,7 @@ if (!PEM_write_RSAPublicKey(fp,key))
 
 ThreadUnlock(cft_system);
 
-// Store the key in ram
+IdempAddToKeyRing(name,key);
 
 fclose(fp);
 }

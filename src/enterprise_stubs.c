@@ -648,6 +648,29 @@ strncpy(new,old,CF_BUFSIZE-1);
 }
 
 /*****************************************************************************/
+
+RSA *SelectKeyRing(char *name)
+{
+#ifdef HAVE_LIBCFNOVA
+
+#else
+strncpy(new,old,CF_BUFSIZE-1);
+#endif 
+}
+
+/*****************************************************************************/
+
+void IdempAddToKeyRing(char *name,RSA *key)
+{
+#ifdef HAVE_LIBCFNOVA
+
+#else
+strncpy(new,old,CF_BUFSIZE-1);
+#endif 
+}
+
+
+/*****************************************************************************/
 /* Reporting                                                                 */
 /*****************************************************************************/
 

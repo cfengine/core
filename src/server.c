@@ -376,6 +376,7 @@ while (true)
    if (ACTIVE_THREADS == 0)
       {
       CheckFileChanges(argc,argv,sd);
+      PurgeKeyRing();
       }
    
    FD_ZERO(&rset);

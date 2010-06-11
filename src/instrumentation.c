@@ -320,7 +320,6 @@ ThreadUnlock(cft_getaddr);
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 
-
 if (!ThreadLock(cft_db_lastseen))
    {
    return;
@@ -344,7 +343,6 @@ if (intermittency)
       return;
       }
    }
-
    
 if (ReadDB(dbp,databuf,&q,sizeof(q)))
    {

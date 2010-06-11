@@ -1019,8 +1019,8 @@ struct CfRegEx
 
 struct CfKeyBinding
    {
-   char *ipaddress;
-   RSA public_key;
+   char *name;
+   RSA key;
    time_t timestamp;
    };
 

@@ -542,11 +542,15 @@ switch(type)
        return NULL;
    }
 
+ThreadLock(cft_system);
+
 if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
    {
    CfOut(cf_error,"malloc","Unable to allocate Rlist");
    FatalError("");
    }
+
+ThreadUnlock(cft_system);
 
 rp->next = *start;
 rp->item = CopyRvalItem(item,type);

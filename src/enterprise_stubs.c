@@ -652,9 +652,9 @@ strncpy(new,old,CF_BUFSIZE-1);
 RSA *SelectKeyRing(char *name)
 {
 #ifdef HAVE_LIBCFNOVA
-
+return Nova_SelectKeyRing(name);
 #else
-strncpy(new,old,CF_BUFSIZE-1);
+return NULL;
 #endif 
 }
 
@@ -663,12 +663,22 @@ strncpy(new,old,CF_BUFSIZE-1);
 void IdempAddToKeyRing(char *name,RSA *key)
 {
 #ifdef HAVE_LIBCFNOVA
-
+Nova_IdempAddToKeyRing(name,key);
 #else
-strncpy(new,old,CF_BUFSIZE-1);
+return;
 #endif 
 }
 
+/*****************************************************************************/
+
+void PurgeKeyRing()
+{
+#ifdef HAVE_LIBCFNOVA
+ Nova_PurgeKeyRing();
+#else
+return;
+#endif 
+}
 
 /*****************************************************************************/
 /* Reporting                                                                 */

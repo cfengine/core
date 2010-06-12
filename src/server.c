@@ -56,6 +56,7 @@ void CfGetFile (struct cfd_get_arg *args);
 void CfEncryptGetFile(struct cfd_get_arg *args);
 void CompareLocalHash(struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
 void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted);
+void GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer);
 int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *oldDirname);
 int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 void Terminate (int sd);
@@ -1435,6 +1436,43 @@ switch (GetCommand(recvbuffer))
        ReplyServerContext(conn,sendbuffer,recvbuffer,encrypted,classes);
        return true;
 
+   case cfd_squery:
+
+       sscanf(recvbuffer,"SQUERY %u",&len);
+
+       if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
+          {
+          CfOut(cf_inform,"","Decrypt error SQUERY\n");
+          RefuseAccess(conn,sendbuffer,0,"decrypt error SVAR");
+          return true;
+          }
+
+       memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
+       plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
+       
+       if (strncmp(recvbuffer,"QUERY",3) !=0)
+          {
+          CfOut(cf_inform,"","QUERY protocol defect\n");
+          RefuseAccess(conn,sendbuffer,0,"decryption failure");
+          return false;
+          }
+
+       if (! conn->id_verified)
+          {
+          CfOut(cf_inform,"","ID not verified\n");
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return true;
+          }
+       
+       if (!LiteralAccessControl(recvbuffer,conn,"true",VARADMIT,VARDENY))
+          {
+          CfOut(cf_inform,"","Query access failure\n");
+          RefuseAccess(conn,sendbuffer,0,recvbuffer);
+          return false;   
+          }       
+
+       GetServerQuery(conn,sendbuffer,recvbuffer);
+       return true;
    }
  
 sprintf (sendbuffer,"BAD: Request denied\n");
@@ -3181,8 +3219,10 @@ else
 void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted)
 
 { char handle[CF_BUFSIZE],out[CF_BUFSIZE];
- int cipherlen, ok = false;
+  int cipherlen, ok = false;
 
+sscanf(recvbuffer,"VAR %[^\n]",handle);
+ 
 if (ok = ReturnLiteralData(handle,out))
    {
    memset(sendbuffer,0,CF_BUFSIZE);
@@ -3194,8 +3234,6 @@ else
    snprintf(sendbuffer,CF_BUFSIZE-1,"BAD: Not found");
    }
 
-sscanf(recvbuffer,"VAR %[^\n]",handle);
-
 if (encrypted)
    {
    cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
@@ -3205,6 +3243,23 @@ else
    {
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
+}
+
+/********************************************************************/
+
+void GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
+
+{ char query[CF_BUFSIZE],out[CF_BUFSIZE];
+  int cipherlen, ok = false;
+
+sscanf(recvbuffer,"QUERY %[^\n]",query);
+
+#ifdef HAVE_LIBCFNOVA
+Nova_ReturnQueryData(query,sendbuffer);
+#else
+cipherlen = EncryptString(conn->encryption_type,"BAD: Nova feature",out,conn->session_key,strlen(sendbuffer)+1);
+SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
+#endif
 }
 
 /**************************************************************/

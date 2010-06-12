@@ -681,7 +681,7 @@ return;
 void PurgeKeyRing()
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_PurgeKeyRing();
+Nova_PurgeKeyRing();
 #else
 return;
 #endif 

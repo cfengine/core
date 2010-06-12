@@ -345,6 +345,7 @@ char *PROTOCOL[] =
    "SVAR",
    "CONTEXT",
    "SCONTEXT",
+   "SQUERY",
    NULL
    };
 

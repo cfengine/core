@@ -298,6 +298,7 @@ void DeletePublicKey (char *ipaddress);
 char *KeyPrint(RSA *key);
 RSA *SelectKeyRing(char *name);
 void IdempAddToKeyRing(char *name,RSA *key);
+void PurgeKeyRing(void);
 
 /* dbm_api.c */
 

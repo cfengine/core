@@ -777,6 +777,7 @@ enum PROTOS
    cfd_svar,
    cfd_context,
    cfd_scontext,
+   cfd_squery,
    cfd_bad
    };
 

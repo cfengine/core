@@ -652,7 +652,14 @@ strncpy(new,old,CF_BUFSIZE-1);
 RSA *SelectKeyRing(char *name)
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_SelectKeyRing(name);
+if (KEYTTL > 0)
+   {
+   return Nova_SelectKeyRing(name);
+   }
+else
+   {
+   return NULL;
+   }
 #else
 return NULL;
 #endif 

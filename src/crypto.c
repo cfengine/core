@@ -171,6 +171,7 @@ else
       FatalError("RSA Exponent too small or not odd");
       }
 
+   IdempAddToKeyRing(name,newkey);
    return newkey;
    }
 }
@@ -185,6 +186,8 @@ void SavePublicKey(char *name,RSA *key)
   int err;
 
 Debug("SavePublicKey %s\n",name); 
+
+IdempAddToKeyRing(name,key);
 
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
 MapName(filename);
@@ -211,9 +214,6 @@ if (!PEM_write_RSAPublicKey(fp,key))
    }
 
 ThreadUnlock(cft_system);
-
-IdempAddToKeyRing(name,key);
-
 fclose(fp);
 }
 

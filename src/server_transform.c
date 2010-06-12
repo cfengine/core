@@ -375,6 +375,13 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
+      {
+      KEYTTL = (short)Str2Int(retval);
+      CfOut(cf_verbose,"","SET key TTL = %d\n",KEYTTL);
+      continue;
+      }
+
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
       {
       strncpy(BINDINTERFACE,retval,CF_BUFSIZE-1);

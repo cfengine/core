@@ -43,6 +43,7 @@ extern char FOOTER[CF_BUFSIZE];
 extern char STYLESHEET[CF_BUFSIZE];
 extern int CF_NODES;
 extern int CF_EDGES;
+extern int KEYTTL;
 
 extern struct Item *EDIT_ANCHORS;
 

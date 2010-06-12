@@ -186,6 +186,7 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"bindtointerface",cf_str,"","IP of the interface to which the server should bind on multi-homed hosts"},
    {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
    {"port",cf_int,"1024,99999","Default port for cfengine server"},
+   {"keycacheTTL",cf_int,CF_VALRANGE,"Maximum number of hours to hold public keys in the cache"},
    {NULL,cf_notype,NULL,NULL}
    };
 

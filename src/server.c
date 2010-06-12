@@ -283,6 +283,7 @@ void ThisAgentInit()
 NewScope("remote_access");
 umask(077);
 CFDSTARTTIME = time(NULL);
+KEYTTL = 24;
 }
 
 /*******************************************************************/
@@ -1714,12 +1715,14 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
    strncpy(conn->username,username,CF_MAXVARSIZE);
 
 #ifdef MINGW  /* NT uses security identifier instead of uid */
+
    if (!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
       {
       memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
       }
    
 #else  /* NOT MINGW */
+
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
       {      
       conn->uid = -2;
@@ -1728,6 +1731,7 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
       {
       conn->uid = pw->pw_uid;
       }
+
 #endif  /* NOT MINGW */
    
    LastSaw(dns_assert,cf_accept);
@@ -3632,7 +3636,7 @@ else
    {
    snprintf(keyname,CF_MAXVARSIZE,"%s-%s",conn->username,MapAddress(conn->ipaddr));
    }
- 
+
 if (savedkey = HavePublicKey(keyname))
    {
    CfOut(cf_verbose,"","A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
@@ -3686,6 +3690,7 @@ else if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
       int result;
       result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
       RSA_free(savedkey);
+
       if (result)
          {
          SendTransaction(conn->sd_reply,"OK: key accepted",0,CF_DONE);

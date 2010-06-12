@@ -347,6 +347,7 @@ enum cfscontrol
    cfs_bindtointerface,
    cfs_serverfacility,
    cfs_portnumber,
+   cfs_keyttl,
    cfs_notype,
    };
 
@@ -1020,7 +1021,7 @@ struct CfRegEx
 struct CfKeyBinding
    {
    char *name;
-   RSA key;
+   RSA *key;
    time_t timestamp;
    };
 

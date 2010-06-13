@@ -892,6 +892,7 @@ void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist)
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner);
 void CfHtmlFooter(FILE *fp,char *footer);
+void CfHtmlTitle(FILE *fp,char *title);
 char *URLControl(char *driver,char *url);
 
 /* item-lib.c */

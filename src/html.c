@@ -36,8 +36,6 @@
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *header)
 {
-#ifndef HAVE_CFLIBNOVA
-
 if (title == NULL)
    {
    title = "Cfengine Knowledge";
@@ -53,7 +51,6 @@ fprintf(fp,"<html>"
         "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />"
         "  </head>"
         "  <body>",title,css,css);
-#endif
 
 if (header && strlen(header) > 0)
    {
@@ -67,11 +64,7 @@ if (header && strlen(header) > 0)
       }
    }
 
-if (title)
-   {
-   fprintf(fp,"<h1>%s</h1>",title);
-   fprintf(fp,"<div id=\"primary\">\n");
-   }
+fprintf(fp,"<div id=\"primary\">\n");
 }
 
 /*****************************************************************************/
@@ -86,6 +79,13 @@ if (strlen(footer) > 0)
 #ifndef HAVE_CFLIBNOVA
 fprintf(fp,"</div></body></html>\n");
 #endif
+}
+
+/*****************************************************************************/
+
+void CfHtmlTitle(FILE *fp,char *title)
+{
+fprintf(fp,"<h1>%s</h1>\n",title);
 }
 
 /*********************************************************************/

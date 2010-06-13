@@ -198,7 +198,6 @@ else
    if (SHOWMAP == cf_special_quote)
       {
       CfHtmlHeader(stdout,TOPIC_CMD,STYLESHEET,WEBDRIVER,BANNER);
-      CfHtmlTitle(stdout,TOPIC_CMD);
       SpecialQuote(TOPIC_CMD,"quoted");
       CfHtmlFooter(stdout,FOOTER);
       }

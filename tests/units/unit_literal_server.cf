@@ -92,12 +92,11 @@ vars:
 
 access:
 
-  "This is a $(localvar) for remote access"
+  "Embed a $(localvar) for remote access"
  
         handle  => "test_scalar1",
   resource_type => "literal",
         admit   => { "127.0.0.1" };
-
 
 
   "Mary had a little lamb whose fleece was white as snow and everywhere that Mary went she wore it lovingly"

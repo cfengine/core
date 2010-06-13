@@ -314,16 +314,15 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    if (strcmp(kp->name,databuf) == 0)
       {
       known = true;
-      break;
+      kp = (  struct CfKeyBinding *) rp->item;
+      kp->timestamp = now;
+      return;
       }
    }
 
 CfOut(cf_verbose,""," -> Last saw %s (%s) now",hostname,databuf);
 
-if (!known)
-   {
-   rp = PrependRlist(&SERVER_KEYSEEN,"nothing",CF_SCALAR);
-   }
+rp = PrependRlist(&SERVER_KEYSEEN,"nothing",CF_SCALAR);
 
 ThreadLock(cft_system);
 
@@ -439,6 +438,9 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    }
 
 CloseDB(dbp);
+
+// Should we purge the list DeleteRlist(SERVER_KEYSEEN)?
+// Careful to dealloc Keyring
 }
 
 /*****************************************************************************/

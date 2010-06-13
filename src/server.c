@@ -379,6 +379,7 @@ while (true)
       {
       CheckFileChanges(argc,argv,sd);
       PurgeKeyRing();
+      UpdateLastSeen();
       }
    
    FD_ZERO(&rset);
@@ -1875,9 +1876,11 @@ else
    if (hp->h_addr_list[0] != NULL)
       {
       CfOut(cf_verbose,"","Checking address number %d for non-canonical names (aliases)\n",i);
+
       for (j = 0; hp->h_aliases[j] != NULL; j++)
          {
          CfOut(cf_verbose,"","Comparing [%s][%s]\n",hp->h_aliases[j],ip_assert);
+
          if (strcmp(hp->h_aliases[j],ip_assert) == 0)
             {
             CfOut(cf_verbose,"","Non-canonical name (alias) matched host's assertion - id confirmed as %s\n",dns_assert);

@@ -894,6 +894,7 @@ void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner);
 void CfHtmlFooter(FILE *fp,char *footer);
 void CfHtmlTitle(FILE *fp,char *title);
 char *URLControl(char *driver,char *url);
+int IsHtmlHeader(char *s);
 
 /* item-lib.c */
 
@@ -966,6 +967,7 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct Item *list);
 void LastSaw(char *hostname,enum roles role);
+void UpdateLastSeen(void);
 double GAverage(double anew,double aold,double p);
 
 

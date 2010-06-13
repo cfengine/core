@@ -41,16 +41,14 @@ if (title == NULL)
    title = "Cfengine Knowledge";
    }
  
-fprintf(fp,"<html>"
-        "  <head>"
-        "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />"
-        "    <title>"
-        "      %s"
-        "    </title>"
-        "    <link rel=\"stylesheet\" href=\"%s\" type=\"text/css\" media=\"screen\" />"
-        "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />"
-        "  </head>"
-        "  <body>",title,css,css);
+fprintf(fp,"<html>\n"
+        "  <head>\n"
+        "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />\n"
+        "    <title>%s</title>\n"
+        "    <link rel=\"stylesheet\" href=\"%s\" type=\"text/css\" media=\"screen\" />\n"
+        "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />\n"
+        "  </head>\n"
+        "  <body>\n",title,css,css);
 
 if (header && strlen(header) > 0)
    {
@@ -76,9 +74,27 @@ if (strlen(footer) > 0)
    fprintf(fp,"%s",footer);
    }
 
-#ifndef HAVE_CFLIBNOVA
 fprintf(fp,"</div></body></html>\n");
-#endif
+}
+
+/*****************************************************************************/
+
+int IsHtmlHeader(char *s)
+
+{ char *str[] = { "<html>", "</html>", "<body>", "</body>",
+                  "<title>", "<meta", "<link", "head>",
+                  "<div id=\"primary\">", NULL};
+  int i;
+
+for (i = 0; str[i] != NULL; i++)
+   {
+   if (strstr(s,str[i]))
+      {
+      return true;
+      }
+   }
+
+return false;
 }
 
 /*****************************************************************************/

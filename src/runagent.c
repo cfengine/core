@@ -139,6 +139,7 @@ if (HOSTLIST)
       }
    }
 
+UpdateLastSeen();
 return 0;
 }
 

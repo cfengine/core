@@ -1464,7 +1464,7 @@ switch (GetCommand(recvbuffer))
           return true;
           }
        
-       if (!LiteralAccessControl(recvbuffer,conn,"true",VARADMIT,VARDENY))
+       if (!LiteralAccessControl(recvbuffer,conn,true,VARADMIT,VARDENY))
           {
           CfOut(cf_inform,"","Query access failure\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);

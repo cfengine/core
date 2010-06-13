@@ -99,6 +99,7 @@ struct Item *FSTABLIST = NULL;
 struct Item *ABORTBUNDLEHEAP = NULL;
 struct Item *DONELIST = NULL;
 struct Rlist *CBUNDLESEQUENCE = NULL;
+struct Rlist *SERVER_KEYSEEN = NULL;
 
 #ifdef HAVE_LIBVIRT
 virConnectPtr CFVC[cfv_none];

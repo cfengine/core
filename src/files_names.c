@@ -680,18 +680,18 @@ return false;
 /*********************************************************************/
 
 int IsStrIn(char *str, char **strs)
-{
-  int i;
 
-  for(i = 0; strs[i] != NULL; i++)
-    {
-      if(strcmp(str, strs[i]) == 0)
-	{
-	return true;
-	}
-    }
+{ int i;
 
-  return false;
+for(i = 0; strs[i] != NULL; i++)
+   {
+   if (strcmp(str,strs[i]) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
 }
 
 /*********************************************************************/

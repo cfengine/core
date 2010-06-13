@@ -281,26 +281,17 @@ DeleteItemList(list);
 
 void LastSaw(char *hostname,enum roles role)
 
-{ CF_DB *dbp,*dbpent;
-  char name[CF_BUFSIZE],databuf[CF_BUFSIZE],varbuf[CF_BUFSIZE],rtype;
+{ char databuf[CF_BUFSIZE],varbuf[CF_BUFSIZE],rtype;
   time_t now = time(NULL);
-  struct QPoint q,newq;
-  double lastseen,delta2;
-  int lsea = LASTSEENEXPIREAFTER, intermittency = false;
+  int known = false;
+  struct Rlist *rp;
+  struct CfKeyBinding *kp;
 
 if (strlen(hostname) == 0)
    {
    CfOut(cf_inform,"","LastSeen registry for empty hostname with role %d",role);
    return;
    }
-
-if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
-   {
-   CfOut(cf_inform,""," -> Recording intermittency");
-   intermittency = true;
-   }
-
-CfOut(cf_verbose,"","LastSaw host %s now\n",hostname);
 
 ThreadLock(cft_getaddr);
 
@@ -316,14 +307,73 @@ switch (role)
 
 ThreadUnlock(cft_getaddr);
 
-/* Tidy old versions - temporary */
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
-MapName(name);
-
-if (!ThreadLock(cft_db_lastseen))
+for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {
+   kp = (struct CfKeyBinding *) rp->item;
+
+   if (strcmp(kp->name,databuf) == 0)
+      {
+      known = true;
+      break;
+      }
+   }
+
+CfOut(cf_verbose,""," -> Last saw %s (%s) now",hostname,databuf);
+
+if (!known)
+   {
+   rp = PrependRlist(&SERVER_KEYSEEN,"nothing",CF_SCALAR);
+   }
+
+ThreadLock(cft_system);
+
+kp = (struct CfKeyBinding *)malloc((sizeof(struct CfKeyBinding)));
+
+if (kp == NULL)
+   {
+   ThreadUnlock(cft_system);
    return;
    }
+
+free(rp->item);
+rp->item = kp;
+
+if ((kp->name = strdup(databuf)) == NULL)
+   {
+   free(kp);
+   ThreadUnlock(cft_system);
+   return;
+   }
+
+kp->key = NULL;
+
+ThreadUnlock(cft_system);
+kp->timestamp = now;
+}
+
+/***************************************************************/
+
+void UpdateLastSeen()
+
+{ int lsea = LASTSEENEXPIREAFTER, intermittency = false;
+  struct QPoint q,newq;
+  double lastseen,delta2;
+  CF_DB *dbp,*dbpent;
+  char name[CF_BUFSIZE];
+  struct Rlist *rp;
+  struct CfKeyBinding *kp;
+  time_t now;
+
+CfOut(cf_verbose,""," -> Writing last-seen observations");
+  
+if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
+   {
+   CfOut(cf_inform,""," -> Recording intermittency");
+   intermittency = true;
+   }
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
@@ -331,61 +381,64 @@ if (!OpenDB(name,&dbp))
    return;
    }
 
-if (intermittency)
+for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {
-   /* Open special file for peer entropy record - INRIA intermittency */
-   snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,hostname);
-   MapName(name);
+   kp = (struct CfKeyBinding *) rp->item;
+
+   now = kp->timestamp;
    
-   if (!OpenDB(name,&dbpent))
-      {
-      ThreadUnlock(cft_db_lastseen);
-      return;
-      }
-   }
-   
-if (ReadDB(dbp,databuf,&q,sizeof(q)))
-   {
-   lastseen = (double)now - q.q;
-   newq.q = (double)now;                   /* Last seen is now-then */
-   newq.expect = GAverage(lastseen,q.expect,0.3);
-   delta2 = (lastseen - q.expect)*(lastseen - q.expect);
-   newq.var = GAverage(delta2,q.var,0.3);
-   }
-else
-   {
-   lastseen = 0.0;
-   newq.q = (double)now;
-   newq.expect = 0.0;
-   newq.var = 0.0;
-   }
-
-ThreadLock(cft_getaddr);
-
-if (lastseen > (double)lsea)
-   {
-   CfOut(cf_verbose,"","Last seen %s expired\n",databuf);
-   DeleteDB(dbp,databuf);   
-   }
-else
-   {
-   WriteDB(dbp,databuf,&newq,sizeof(newq));
-
    if (intermittency)
       {
-      WriteDB(dbpent,GenTimeKey(now),&newq,sizeof(newq));
+      /* Open special file for peer entropy record - INRIA intermittency */
+      snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s.%s",CFWORKDIR,CF_LASTDB_FILE,kp->name);
+      MapName(name);
+      
+      if (!OpenDB(name,&dbpent))
+         {
+         ThreadUnlock(cft_db_lastseen);
+         return;
+         }
       }
-   }
-
-ThreadUnlock(cft_getaddr);
-
-if (intermittency)
-   {
-   CloseDB(dbpent);
+   
+   if (ReadDB(dbp,kp->name,&q,sizeof(q)))
+      {
+      lastseen = (double)now - q.q;
+      newq.q = (double)now;                   /* Last seen is now-then */
+      newq.expect = GAverage(lastseen,q.expect,0.3);
+      delta2 = (lastseen - q.expect)*(lastseen - q.expect);
+      newq.var = GAverage(delta2,q.var,0.3);
+      }
+   else
+      {
+      lastseen = 0.0;
+      newq.q = (double)now;
+      newq.expect = 0.0;
+      newq.var = 0.0;
+      }
+   
+   if (lastseen > (double)lsea)
+      {
+      CfOut(cf_verbose,""," -> Last seen %s expired\n",kp->name);
+      DeleteDB(dbp,kp->name);
+      }
+   else
+      {
+      CfOut(cf_verbose,""," -> Last saw %s at %s\n",kp->name,ctime(&(kp->timestamp)));
+      WriteDB(dbp,kp->name,&newq,sizeof(newq));
+      
+      if (intermittency)
+         {
+         WriteDB(dbpent,GenTimeKey(now),&newq,sizeof(newq));
+         }
+      }
+   
+   if (intermittency)
+      {
+      CloseDB(dbpent);
+      }
    }
 
 CloseDB(dbp);
-ThreadUnlock(cft_db_lastseen);
 }
 
 /*****************************************************************************/

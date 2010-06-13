@@ -197,7 +197,8 @@ else
    {
    if (SHOWMAP == cf_special_quote)
       {
-      CfHtmlHeader(stdout,NULL,STYLESHEET,WEBDRIVER,BANNER);
+      CfHtmlHeader(stdout,TOPIC_CMD,STYLESHEET,WEBDRIVER,BANNER);
+      CfHtmlTitle(stdout,TOPIC_CMD);
       SpecialQuote(TOPIC_CMD,"quoted");
       CfHtmlFooter(stdout,FOOTER);
       }
@@ -2549,7 +2550,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   fprintf(fout,"\n<h2>References to '%s':</h2>\n\n",this_name);
+   fprintf(fout,"\n<h2>References to '%s' (in %s)</h2>\n\n",this_name,this_type);
    
    fprintf(fout,"<ul>\n");
    
@@ -2681,7 +2682,7 @@ if (other_topics || topics_this_type)
    
    fprintf(fout,"<p><div id=\"others\">\n");
    
-   fprintf(fout,"\n<h2>Category \"%s\" :</h2>\n\n",this_type);
+   fprintf(fout,"\n<h2>The rest of the category \"%s\" :</h2>\n\n",this_type);
    
    fprintf(fout,"<ul>\n");
 
@@ -2810,6 +2811,12 @@ else
       {
       line[0] = '\0';
       fgets(line,CF_BUFSIZE,fin);
+
+      if (IsHtmlHeader(line))
+         {
+         continue;
+         }
+      
       snprintf(buffer,CF_BUFSIZE-1,line,WEBDRIVER);
       fprintf(fout,"%s",buffer);
       }

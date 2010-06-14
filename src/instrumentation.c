@@ -361,7 +361,7 @@ void UpdateLastSeen()
   char name[CF_BUFSIZE];
   struct Rlist *rp;
   struct CfKeyBinding *kp;
-  time_t now;
+  time_t now = time(NULL);
   static time_t then;
   
 if (now < then + 300 && then > 0 && then <= now + 300)

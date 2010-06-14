@@ -44,7 +44,7 @@ if (title == NULL)
 fprintf(fp,"<html>\n"
         "  <head>\n"
         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />\n"
-        "    <meta http-equiv=\"refresh\" CONTENT=\"5\">\n"
+        "    <meta http-equiv=\"refresh\" CONTENT=\"150\">\n"
         "    <title>%s</title>\n"
         "    <link rel=\"stylesheet\" href=\"%s\" type=\"text/css\" media=\"screen\" />\n"
         "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />\n"

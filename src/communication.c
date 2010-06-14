@@ -386,29 +386,29 @@ return hostbuffer;
 /*****************************************************************************/
 
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
-{
-  char *ip;
+
+{ char *ip;
   struct hostent *hostinfo;
 
-  if(gethostname(nameBuf, MAXHOSTNAMELEN) == 0)
-    {
-      if((hostinfo = gethostbyname(nameBuf)) != NULL)
-	{
-	  ip = inet_ntoa(*(struct in_addr *)*hostinfo->h_addr_list);
-	  strncpy(ipBuf, ip, MAXIP4CHARLEN - 1);
-	  ipBuf[MAXIP4CHARLEN - 1] = '\0';
-	  return true;
-	}
-      else
-	{
-	  CfOut(cf_error, "gethostbyname", "!! Could not get host entry for local host");
-	}
-    }
-  else
-    {
-      CfOut(cf_error, "gethostname", "!! Could not get host name");
-    }
+if (gethostname(nameBuf, MAXHOSTNAMELEN) == 0)
+   {
+   if ((hostinfo = gethostbyname(nameBuf)) != NULL)
+      {
+      ip = inet_ntoa(*(struct in_addr *)*hostinfo->h_addr_list);
+      strncpy(ipBuf, ip, MAXIP4CHARLEN - 1);
+      ipBuf[MAXIP4CHARLEN - 1] = '\0';
+      return true;
+      }
+   else
+      {
+      CfOut(cf_error, "gethostbyname", "!! Could not get host entry for local host");
+      }
+   }
+else
+   {
+   CfOut(cf_error, "gethostname", "!! Could not get host name");
+   }
 
-  return false;
+return false;
 }
 

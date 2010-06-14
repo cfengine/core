@@ -868,6 +868,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    snprintf(tbuf,CF_BUFSIZE-1,"%s",cf_ctime(&fthen));
    tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
 
+   CfOut(cf_verbose,""," -> Reporting on %s",hostname);
+   
    if (strlen(hostname+1) > 15)
       {
       snprintf(addr,15,"...%s",hostname+strlen(hostname)-10); /* ipv6 */

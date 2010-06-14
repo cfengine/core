@@ -362,6 +362,15 @@ void UpdateLastSeen()
   struct Rlist *rp;
   struct CfKeyBinding *kp;
   time_t now;
+  static time_t then;
+  
+if (now < then + 300 && then > 0 && then <= now + 300)
+   {
+   // Rate limiter
+   return;
+   }
+
+then = now;
 
 CfOut(cf_verbose,""," -> Writing last-seen observations");
   

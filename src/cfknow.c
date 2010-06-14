@@ -2549,7 +2549,7 @@ if (occurrences != NULL)
    
    fprintf(fout,"<p><div id=\"occurrences\">");
    
-   fprintf(fout,"\n<h2>References to '%s' (in %s)</h2>\n\n",this_name,this_type);
+   fprintf(fout,"\n<h2>References to '<span id=\"subject\">%s</span>' (in %s)</h2>\n\n",this_name,this_type);
    
    fprintf(fout,"<ul>\n");
    

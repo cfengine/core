@@ -412,6 +412,17 @@ void SyntaxCompletion(char *s)
 
 /*****************************************************************************/
 
+void SyntaxExport()
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_SyntaxTree2JavaScript();
+#else
+printf("Syntax export is available in cfengine Nova,Constellation or Galaxy\n\n");
+#endif
+}
+
+/*****************************************************************************/
+
 void VerifyOutputsPromise(struct Promise *pp)
 {
 #ifdef HAVE_LIBCFNOVA

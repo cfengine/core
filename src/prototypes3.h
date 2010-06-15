@@ -438,6 +438,7 @@ char *PromiseID(struct Promise *pp);
 void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 void SyntaxCompletion(char *s);
+void SyntaxExport(void);
 int GetRegistryValue(char *key,char *value,char *buffer);
 void NoteVarUsage(void);
 void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);

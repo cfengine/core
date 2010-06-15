@@ -106,7 +106,7 @@ struct Rlist *CSVLIST = NULL;
             "data stored in cfengine's embedded databases in human\n"
             "readable form.";
 
- struct option OPTIONS[22] =
+ struct option OPTIONS[23] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -125,6 +125,7 @@ struct Rlist *CSVLIST = NULL;
       { "timestamps",no_argument,0,'T'},
       { "resolution",no_argument,0,'R'},
       { "syntax",no_argument,0,'S'},
+      { "syntax-export",no_argument,0,'S'},
       { "no-error-bars",no_argument,0,'e'},
       { "no-scaling",no_argument,0,'n'},
       { "verbose",no_argument,0,'v'},
@@ -132,7 +133,7 @@ struct Rlist *CSVLIST = NULL;
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[22] =
+ char *HINTS[23] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -151,6 +152,7 @@ struct Rlist *CSVLIST = NULL;
       "Add a time stamp to directory name for graph file data",
       "Print graph data in high resolution",
       "Print a syntax summary for this cfengine version",
+      "Export a syntax tree in Javascript format",
       "Do not add error bars to the printed graphs",
       "Do not automatically scale the axes",
       "Generate verbose output",
@@ -289,6 +291,12 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
 
       case 'S':
           SyntaxTree();
+          exit(0);
+          break;
+
+      case 's':
+          SyntaxExport();
+          exit(0);
           break;
 
       case'K':

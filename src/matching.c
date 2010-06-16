@@ -49,7 +49,7 @@ rex = CompileRegExp(regexp);
 
 if (rex.failed)
    {
-   CfOut(cf_error, "CompileRegExp", "!! Could not parse regular expression '%s'", regexp);
+   CfOut(cf_error,"","!! Could not parse regular expression '%s'", regexp);
    return false;
    }
 
@@ -337,18 +337,25 @@ return(false);
 
 /*********************************************************************/
 
-int MatchPolicy(char *needle,char *haystack,struct Attributes a,struct Promise *pp)
+int MatchPolicy(char *camel,char *haystack,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp;
   char *sp,*spto;
   enum insert_match opt;
-  char work[CF_BUFSIZE],final[CF_BUFSIZE];
+  char work[CF_BUFSIZE],final[CF_BUFSIZE],needle[CF_BUFSIZE];
 
 /* First construct the matching policy */
 
+EscapeSpecialChars(camel,needle,CF_BUFSIZE-1," ");
+
 memset(final,0,CF_BUFSIZE);
 strncpy(final,needle,CF_BUFSIZE-1);
-  
+
+if (a.insert_match == NULL)
+   {
+   return (strcmp(needle,haystack) == 0);
+   }
+
 for (rp = a.insert_match; rp != NULL; rp=rp->next)
    {
    opt = String2InsertMatch(rp->item);

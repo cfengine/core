@@ -1321,7 +1321,9 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
       continue;
       }
 
-   if (strncmp(ip->name,"Min",3) == 0 || strncmp(ip->name,"Hr",2) == 0 || strncmp(ip->name,"Q",1) == 0)
+   if (strncmp(ip->name,"Min",3) == 0 || strncmp(ip->name,"Hr",2) == 0 || strncmp(ip->name,"Q",1) == 0
+       || strncmp(ip->name,"Yr",1) == 0 || strncmp(ip->name,"Day",1) == 0 || strncmp(ip->name,"Morning",1) == 0
+       || strncmp(ip->name,"Afternoon",1) == 0 || strncmp(ip->name,"Evening",1) == 0 || strncmp(ip->name,"Night",1) == 0)
       {
       continue;
       }
@@ -1330,7 +1332,7 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
       fprintf(fout,"%s%s%s",CFRX[cfx_event][cfb],ip->name,CFRX[cfx_event][cfe]);
-      fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],"always",CFRX[cfx_date][cfe]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],"often",CFRX[cfx_date][cfe]);
       fprintf(fout,"%s%.4lf%s",CFRX[cfx_av][cfb],1.0,CFRX[cfx_av][cfe]);
       fprintf(fout,"%s%.4lf%s",CFRX[cfx_dev][cfb],0.0,CFRX[cfx_dev][cfe]);
       fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
@@ -1339,14 +1341,14 @@ for (ip = VHEAP; ip != NULL; ip=ip->next)
       {
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
       fprintf(fout,"%s%s%s",CFRH[cfx_event][cfb],ip->name,CFRH[cfx_event][cfe]);
-      fprintf(fout,"%s occured %s%s",CFRH[cfx_date][cfb],"always",CFRH[cfx_date][cfe]);
+      fprintf(fout,"%s occurred %s%s",CFRH[cfx_date][cfb],"often",CFRH[cfx_date][cfe]);
       fprintf(fout,"%s Probability %.4lf %s",CFRH[cfx_av][cfb],1.0,CFRH[cfx_av][cfe]);
       fprintf(fout,"%s &plusmn; %.4lf %s",CFRH[cfx_dev][cfb],0.0,CFRH[cfx_dev][cfe]);
       fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
       }
    else if (CSV)
       {
-      fprintf(fout,"%7.4lf,%7.4lf,%s,%s\n",1.0,0.0,ip->name,"always");
+      fprintf(fout,"%7.4lf,%7.4lf,%s,%s\n",1.0,0.0,ip->name,"often");
       }
    }
 

@@ -346,15 +346,15 @@ int MatchPolicy(char *camel,char *haystack,struct Attributes a,struct Promise *p
 
 /* First construct the matching policy */
 
+if (a.insert_match == NULL)
+   {
+   return (strcmp(camel,haystack) == 0);
+   }
+  
 EscapeSpecialChars(camel,needle,CF_BUFSIZE-1," ");
 
 memset(final,0,CF_BUFSIZE);
 strncpy(final,needle,CF_BUFSIZE-1);
-
-if (a.insert_match == NULL)
-   {
-   return (strcmp(needle,haystack) == 0);
-   }
 
 for (rp = a.insert_match; rp != NULL; rp=rp->next)
    {

@@ -540,7 +540,7 @@ int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct
 
 /* find prev for region */
 
- if (IsItemInRegion(pp->promiser,begin_ptr,end_ptr,a,pp))
+if (IsItemInRegion(pp->promiser,begin_ptr,end_ptr,a,pp))
    {
    cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised line \"%s\" exists within selected region of %s (promise kept)",pp->promiser,pp->this_server);
    return false;

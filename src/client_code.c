@@ -844,6 +844,7 @@ while (more)
    {
    if ((cipherlen = ReceiveTransaction(conn->sd,buf,&more)) == -1)
       {
+      free(buf);
       return false;
       }
 

@@ -131,18 +131,14 @@ void ShowControlBodies()
 printf("<h1>Control bodies for cfengine components</h1>\n");
 
 printf("<div id=\"bundles\">");
-printf("<ul>\n");
 
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
-   printf("<li>COMPONENT %s</li>\n", CF_ALL_BODIES[i].btype);
+   printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
 
-   printf("<li><h4>PROMISE TYPE %s</h4>\n",CF_ALL_BODIES[i].subtype);
+   printf("<h4>PROMISE TYPE %s</h4>\n",CF_ALL_BODIES[i].subtype);
    ShowBodyParts(CF_ALL_BODIES[i].bs);
-   printf("</li>\n");
    }
-
-printf("</ul></div>\n\n");
 }
 
 /*******************************************************************/
@@ -592,17 +588,14 @@ fprintf(FREPORT_TXT,"}\n");
 void SyntaxTree(void)
 
 {
-printf("%s",CFH[0][0]);
-
-printf("<table class=frame><tr><td>\n");
 printf("<h1>CFENGINE %s SYNTAX</h1><p>",VERSION);
 
+printf("<table class=\"frame\"><tr><td>\n");
 ShowDataTypes();
 ShowControlBodies();
 ShowBundleTypes();
 ShowBuiltinFunctions();
 printf("</td></tr></table>\n");
-printf("%s",CFH[0][1]);
 }
 
 /*******************************************************************/
@@ -629,21 +622,34 @@ printf("</ol></td></tr></table>\n\n");
 void ShowBundleTypes()
 
 { int i;
+  struct SubTypeSyntax *st;
 
 printf("<h1>Bundle types (software components)</h1>\n");
 
 printf("<div id=\"bundles\">");
-printf("<ul>\n");
 
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
-   printf("<li>COMPONENT %s</li>\n", CF_ALL_BODIES[i].btype);
+   printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
    ShowPromiseTypesFor(CF_ALL_BODIES[i].btype);
    }
 
-printf("</ul></div>\n\n");
-}
+printf("<h4>EMBEDDED BUNDLE edit_line<h4>\n");
 
+ShowPromiseTypesFor("*");
+
+st = CF_FILES_SUBTYPES;
+
+for (i = 0; st[i].btype != NULL; i++)
+   {
+   if (strcmp("edit_line",st[i].btype) == 0)
+      {
+      ShowBodyParts(st[i].bs);
+      }
+   }
+
+printf("</div>\n\n");
+}
 
 /*******************************************************************/
 
@@ -654,7 +660,6 @@ void ShowPromiseTypesFor(char *s)
 
 printf("<div id=\"promisetype\">");
 printf("<h4>Promise types for %s bundles</h4>\n",s);
-printf("<ul>\n");
 printf("<table class=border><tr><td>\n");
 
 for (i = 0; i < CF3_MODULES; i++)
@@ -665,15 +670,14 @@ for (i = 0; i < CF3_MODULES; i++)
       {
       if (strcmp(s,st[j].btype) == 0 || strcmp("*",st[j].btype) == 0)
          {
-         printf("<li><h4>PROMISE TYPE %s</h4>\n",st[j].subtype);
+         printf("<h4>PROMISE TYPE %s</h4>\n",st[j].subtype);
          ShowBodyParts(st[j].bs);
-         printf("</li>\n");
          }
       }
    }
 
 printf("</td></tr></table>\n");
-printf("</ul></div>\n\n");
+printf("</div>\n\n");
 }
 
 /*******************************************************************/
@@ -687,7 +691,7 @@ if (bs == NULL)
    return;
    }
  
-printf("<div id=bodies><table class=border>\n");
+printf("<div id=\"bodies\"><table class=\"border\">\n");
 
 for (i = 0; bs[i].lval != NULL; i++)
    {

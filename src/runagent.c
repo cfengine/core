@@ -38,6 +38,7 @@ void ThisAgentInit(void);
 int ParseHostname(char *hostname,char *new_hostname);
 void SendClassData(struct cfagent_connection *conn);
 struct Promise *MakeDefaultRunAgentPromise(void);
+void HailExec(struct cfagent_connection *conn,char *peer,char *recvbuffer,char *sendbuffer);
 FILE *NewStream(char *name);
 void DeleteStream(FILE *fp);
 
@@ -71,6 +72,7 @@ void DeleteStream(FILE *fp);
       { "diagnostic",no_argument,0,'x'},
       { "hail",required_argument,0,'H'},
       { "interactive",no_argument,0,'i'},
+      { "query",optional_argument,0,'q'},
       { NULL,0,0,'\0' }
       };
 
@@ -89,6 +91,7 @@ void DeleteStream(FILE *fp);
       "Activate internal diagnostics (developers only)",
       "Hail the following comma-separated lists of hosts, overriding default list",
       "Enable interactive mode for key trust",
+      "Query a server for a knowledge menu",
       NULL
       };
 
@@ -104,6 +107,7 @@ struct Attributes RUNATTR;
 struct Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
 char DEFINECLASSES[CF_MAXVARSIZE];
+char MENU[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
@@ -182,6 +186,19 @@ while ((c=getopt_long(argc,argv,"d:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != 
                  break;
              }
           break;
+
+      case 'q': 
+
+          if (optarg==NULL)
+             {
+             strcpy(MENU,"fast");
+             }
+          else
+             {
+             strncpy(MENU,optarg,CF_MAXVARSIZE);
+             }
+          
+          break;
           
       case 'K': IGNORELOCK = true;
           break;
@@ -252,6 +269,8 @@ void ThisAgentInit()
 {
 umask(077);
 
+strcpy(MENU,"");
+
 if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
    {
    CfOut(cf_error,"","The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.\n");
@@ -264,9 +283,7 @@ if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
 int HailServer(char *host,struct Attributes a,struct Promise *pp)
 
 { struct cfagent_connection *conn;
-  FILE *fp = stdout;
   char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE];
-  int n_read;
   void *gotkey;
   char reply[8];
   
@@ -370,74 +387,17 @@ else
 
 pp->cache = NULL;
 
-if (strlen(DEFINECLASSES))
+if (strlen(MENU) > 0)
    {
-   snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s -D%s",REMOTE_AGENT_OPTIONS,DEFINECLASSES);
+   QueryForKnowledgeMap(MENU,time(NULL) - 3600);
    }
 else
    {
-   snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s",REMOTE_AGENT_OPTIONS);
-   }
-
-if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
-   {
-   CfOut(cf_error,"send","Transmission rejected");
-   ServerDisconnection(conn);
-   return false;
-   }
-
-fp = NewStream(peer);
-SendClassData(conn);
-
-while (true)
-   {
-   memset(recvbuffer,0,CF_BUFSIZE);
-
-   if ((n_read = ReceiveTransaction(conn->sd,recvbuffer,NULL)) == -1)
-      {
-      if (errno == EINTR) 
-         {
-         continue;
-         }
-      
-      break;
-      }
-
-   if (n_read == 0)
-      {
-      break;
-      }
-   
-   if (strlen(recvbuffer) == 0)
-      {
-      continue;
-      }
-
-   if ((sp = strstr(recvbuffer,CFD_TERMINATOR)) != NULL)
-      {
-      CfFile(fp," !!\n\n");
-      break;
-      }
-
-   if ((sp = strstr(recvbuffer,"BAD:")) != NULL)
-      {
-      CfFile(fp," !! %s",recvbuffer+4);
-      continue;
-      }   
-
-   if (strstr(recvbuffer,"too soon"))
-      {
-      CfFile(fp," !! %s",recvbuffer);
-      continue;
-      }
-
-   CfFile(fp," -> %s",recvbuffer);
+   HailExec(conn,peer,recvbuffer,sendbuffer);
    }
 
 ServerDisconnection(conn);
 DeleteRlist(a.copy.servers);
-
-DeleteStream(fp);
 
 #ifndef MINGW
 if (BACKGROUND)
@@ -608,6 +568,83 @@ if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
    }
 }
 
+/********************************************************************/
+
+void HailExec(struct cfagent_connection *conn,char *peer,char *recvbuffer,char *sendbuffer)
+
+{ FILE *fp = stdout;
+  char *sp;
+  int n_read;
+
+if (strlen(DEFINECLASSES))
+   {
+   snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s -D%s",REMOTE_AGENT_OPTIONS,DEFINECLASSES);
+   }
+else
+   {
+   snprintf(sendbuffer,CF_BUFSIZE,"EXEC %s",REMOTE_AGENT_OPTIONS);
+   }
+
+if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
+   {
+   CfOut(cf_error,"send","Transmission rejected");
+   ServerDisconnection(conn);
+   return;
+   }
+
+fp = NewStream(peer);
+SendClassData(conn);
+
+while (true)
+   {
+   memset(recvbuffer,0,CF_BUFSIZE);
+
+   if ((n_read = ReceiveTransaction(conn->sd,recvbuffer,NULL)) == -1)
+      {
+      if (errno == EINTR) 
+         {
+         continue;
+         }
+      
+      break;
+      }
+
+   if (n_read == 0)
+      {
+      break;
+      }
+   
+   if (strlen(recvbuffer) == 0)
+      {
+      continue;
+      }
+
+   if ((sp = strstr(recvbuffer,CFD_TERMINATOR)) != NULL)
+      {
+      CfFile(fp," !!\n\n");
+      break;
+      }
+
+   if ((sp = strstr(recvbuffer,"BAD:")) != NULL)
+      {
+      CfFile(fp," !! %s",recvbuffer+4);
+      continue;
+      }   
+
+   if (strstr(recvbuffer,"too soon"))
+      {
+      CfFile(fp," !! %s",recvbuffer);
+      continue;
+      }
+
+   CfFile(fp," -> %s",recvbuffer);
+   }
+
+DeleteStream(fp);
+}
+
+/********************************************************************/
+/* Level                                                            */
 /********************************************************************/
 
 FILE *NewStream(char *name)

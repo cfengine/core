@@ -125,7 +125,7 @@ struct Rlist *CSVLIST = NULL;
       { "timestamps",no_argument,0,'T'},
       { "resolution",no_argument,0,'R'},
       { "syntax",no_argument,0,'S'},
-      { "syntax-export",no_argument,0,'S'},
+      { "syntax-export",no_argument,0,'s'},
       { "no-error-bars",no_argument,0,'e'},
       { "no-scaling",no_argument,0,'n'},
       { "verbose",no_argument,0,'v'},

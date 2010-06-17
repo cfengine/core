@@ -393,7 +393,7 @@ if (path)
       {
       DeleteDB(dbp,path);
       }
-   
+   CloseDB(dbp);
    return;
    }
 

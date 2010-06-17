@@ -389,7 +389,7 @@ pp->cache = NULL;
 
 if (strlen(MENU) > 0)
    {
-   QueryForKnowledgeMap(MENU,time(NULL) - 3600);
+//   QueryForKnowledgeMap(MENU,time(NULL) - 3600);
    }
 else
    {

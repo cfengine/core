@@ -416,7 +416,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       continue;
       }
 
-   fprintf(FREPORT_HTML,"<p>\nScope %s:\n<br><p>",ptr->scope);
+   fprintf(FREPORT_HTML,"<h4>\nScope %s:<h4>",ptr->scope);
    fprintf(FREPORT_TXT,"\nScope %s:\n",ptr->scope);
    
    if (ptr->hashtable)

@@ -31,7 +31,9 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#ifndef HAVE_SERV_H
 #include "cf3.server.h"
+#endif
 
 extern struct BodySyntax CFS_CONTROLBODY[];
 extern struct BodySyntax CF_REMROLE_BODIES[];
@@ -62,6 +64,7 @@ extern struct Auth *ROLESTOP;
 
 void KeepFileAccessPromise(struct Promise *pp);
 void KeepLiteralAccessPromise(struct Promise *pp, char *type);
+void KeepQueryAccessPromise(struct Promise *pp,char *type);
 
 /*******************************************************************/
 /* Level                                                           */
@@ -526,6 +529,12 @@ if (strcmp(pp->agentsubtype,"access") == 0 && sp && strcmp(sp,"literal") == 0)
    return;
    }
 
+if (strcmp(pp->agentsubtype,"access") == 0 && sp && strcmp(sp,"query") == 0)
+   {
+   KeepQueryAccessPromise(pp,"query");
+   return;
+   }
+
 if (strcmp(pp->agentsubtype,"access") == 0 && sp && strcmp(sp,"context") == 0)
    {
    KeepLiteralAccessPromise(pp,"context");
@@ -668,6 +677,88 @@ if (strcmp(type,"literal") == 0)
 if (strcmp(type,"context") == 0)
    {
    ap->classpattern = true;
+   }
+
+for (cp = pp->conlist; cp != NULL; cp = cp->next)
+   {
+   if (!IsDefinedClass(cp->classes))
+      {
+      continue;
+      }
+
+   switch (cp->type)
+      {
+      case CF_SCALAR:
+
+          val = (char *)cp->rval;
+
+          if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+             {
+             ap->encrypt = true;
+             }
+             
+          break;
+
+      case CF_LIST:
+          
+          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+             {
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                {
+                PrependItem(&(ap->accesslist),rp->item,NULL);
+                continue;
+                }
+             
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                {
+                PrependItem(&(dp->accesslist),rp->item,NULL);
+                continue;
+                }
+
+             if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                {
+                PrependItem(&(ap->maproot),rp->item,NULL);
+                continue;
+                }
+             }
+          break;
+
+      case CF_FNCALL:
+          /* Shouldn't happen */
+          break;
+      }
+   }
+}
+
+/*********************************************************************/
+
+void KeepQueryAccessPromise(struct Promise *pp,char *type)
+
+{ struct Constraint *cp;
+  struct Body *bp;
+  struct FnCall *fp;
+  struct Rlist *rp;
+  struct Auth *ap,*dp;
+  char *val;
+
+if (!GetAuthPath(pp->promiser,VARADMIT))
+   {
+   InstallServerAuthPath(pp->promiser,&VARADMIT,&VARADMITTOP);
+   }
+
+RegisterLiteralServerData(pp->promiser,pp);
+
+if (!GetAuthPath(pp->promiser,VARDENY))
+   {
+   InstallServerAuthPath(pp->promiser,&VARDENY,&VARDENYTOP);
+   }
+
+ap = GetAuthPath(pp->promiser,VARADMIT);
+dp = GetAuthPath(pp->promiser,VARDENY);
+
+if (strcmp(type,"query") == 0)
+   {
+   ap->literal = true;
    }
 
 for (cp = pp->conlist; cp != NULL; cp = cp->next)

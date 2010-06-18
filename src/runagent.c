@@ -159,7 +159,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"d:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"q:d:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -268,8 +268,6 @@ void ThisAgentInit()
 
 {
 umask(077);
-
-strcpy(MENU,"");
 
 if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
    {
@@ -389,7 +387,9 @@ pp->cache = NULL;
 
 if (strlen(MENU) > 0)
    {
-//   QueryForKnowledgeMap(MENU,time(NULL) - 3600);
+#ifdef HAVE_LIBCFNOVA
+   Nova_QueryForKnowledgeMap(conn,MENU,time(NULL) - 3600);
+#endif
    }
 else
    {

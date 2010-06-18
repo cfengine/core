@@ -31,8 +31,6 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-#include "cf3.server.h"
-
 
 void HandleSignals(int signum)
  

@@ -31,7 +31,9 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#ifndef HAVE_SERV_H
 #include "cf3.server.h"
+#endif
 
 int main (int argc,char *argv[]);
 void StartServer (int argc, char **argv);
@@ -2143,8 +2145,15 @@ int LiteralAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct
   char *sp;
   struct stat statbuf;
   char name[CF_BUFSIZE];
- 
-sscanf(in,"VAR %[^\n]",name);
+
+if (strncmp(in,"VAR",4) == 0)
+   {
+   sscanf(in,"VAR %[^\n]",name);
+   }
+else
+   {
+   sscanf(in,"QUERY %s",name);
+   }
 
 Debug("\n\nLiteralAccessControl(%s)\n",name);
 
@@ -2153,7 +2162,7 @@ conn->maproot = false;
 for (ap = vadmit; ap != NULL; ap=ap->next)
    {
    int res = false;
-   Debug("Examining rule in access list (%s,%s)?\n",name,ap->path);
+   CfOut(cf_verbose,"","Examining rule in access list (%s,%s)?\n",name,ap->path);
       
    if (strcmp(ap->path,name) == 0)
       {
@@ -2166,7 +2175,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
 
       if (ap->literal == false)
          {
-         CfOut(cf_error,"","Variable %s requires a literal server item...cannot set variable directly by path\n",ap->path);
+         CfOut(cf_error,"","Variable/query \"%s\" requires a literal server item...cannot set variable directly by path\n",ap->path);
          access = false;
          break;
          }
@@ -2315,7 +2324,7 @@ for (ip = candidates; ip != NULL; ip=ip->next)
          
          if (ap->classpattern == false)
             {
-            CfOut(cf_error,"","Variable %s requires a literal server item...cannot set variable directly by path\n",ap->path);
+            CfOut(cf_error,"","Context %s requires a literal server item...cannot set variable directly by path\n",ap->path);
             access = false;
             continue;
             }
@@ -3258,7 +3267,7 @@ void GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffe
 sscanf(recvbuffer,"QUERY %[^\n]",query);
 
 #ifdef HAVE_LIBCFNOVA
-Nova_ReturnQueryData(query,sendbuffer);
+Nova_ReturnQueryData(conn,query,sendbuffer);
 #else
 cipherlen = EncryptString(conn->encryption_type,"BAD: Nova feature",out,conn->session_key,strlen(sendbuffer)+1);
 SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);

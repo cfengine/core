@@ -20,7 +20,7 @@ vars:
 
  "cf_server_hosts"         string => "cfengine_policy.example.org";
  "cf_doc_root"             string => "/srv/www/html";
- "zCfengineComplianceFile" string => "/tmp/summary.z";
+ "zCfengineComplianceFile" string => "/home/zenoss/compliance.zen";
 
 files: 
 
@@ -31,6 +31,7 @@ files:
   "$(zCfengineComplianceFile)"
 
          comment => "Collect data from the Cfengine policy server",
+           perms => mo("644","zenoss"),
        copy_from => secure_cp("$(cf_doc_root)/reports/summary.z","$(cf_server_host)");
 
 }

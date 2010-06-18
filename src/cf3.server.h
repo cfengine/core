@@ -25,6 +25,7 @@
 /*                                                                 */
 /*******************************************************************/
 
+#define HAVE_SERV_H 1
 #define queuesize 50
 #define connection 1
 #define RFC931_PORT 113

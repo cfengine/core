@@ -58,7 +58,7 @@ void CfGetFile (struct cfd_get_arg *args);
 void CfEncryptGetFile(struct cfd_get_arg *args);
 void CompareLocalHash(struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
 void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted);
-void GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer);
+int GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer);
 int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *oldDirname);
 int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
 void Terminate (int sd);
@@ -970,7 +970,7 @@ switch (GetCommand(recvbuffer))
    {
    case cfd_exec:
        memset(args,0,CF_BUFSIZE);
-       sscanf(recvbuffer,"EXEC %[^\n]",args);
+       sscanf(recvbuffer,"EXEC %255[^\n]",args);
        
        if (!conn->id_verified)
           {
@@ -1474,8 +1474,10 @@ switch (GetCommand(recvbuffer))
           return false;   
           }       
 
-       GetServerQuery(conn,sendbuffer,recvbuffer);
-       return true;
+       if (GetServerQuery(conn,sendbuffer,recvbuffer))
+          {
+          return true;
+          }
    }
  
 sprintf (sendbuffer,"BAD: Request denied\n");
@@ -2148,11 +2150,11 @@ int LiteralAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct
 
 if (strncmp(in,"VAR",4) == 0)
    {
-   sscanf(in,"VAR %[^\n]",name);
+   sscanf(in,"VAR %255[^\n]",name);
    }
 else
    {
-   sscanf(in,"QUERY %s",name);
+   sscanf(in,"QUERY %128s",name);
    }
 
 Debug("\n\nLiteralAccessControl(%s)\n",name);
@@ -2266,7 +2268,7 @@ struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encry
   struct Item *ip,*matches = NULL, *candidates = NULL;
   char filename[CF_BUFSIZE];
 
-sscanf(in,"CONTEXT %[^\n]",client_regex);
+sscanf(in,"CONTEXT %255[^\n]",client_regex);
 
 Debug("\n\nContextAccessControl(%s)\n",client_regex);
 
@@ -3197,7 +3199,7 @@ void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuf
 
 /* TODO - when safe change this to sha2 */
   
-sscanf(recvbuffer,"MD5 %[^\n]",rfilename);
+sscanf(recvbuffer,"MD5 %255[^\n]",rfilename);
 
 sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
  
@@ -3233,7 +3235,7 @@ void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuf
 { char handle[CF_BUFSIZE],out[CF_BUFSIZE];
   int cipherlen, ok = false;
 
-sscanf(recvbuffer,"VAR %[^\n]",handle);
+sscanf(recvbuffer,"VAR %255[^\n]",handle);
  
 if (ok = ReturnLiteralData(handle,out))
    {
@@ -3259,18 +3261,23 @@ else
 
 /********************************************************************/
 
-void GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
+int GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
 
 { char query[CF_BUFSIZE],out[CF_BUFSIZE];
   int cipherlen, ok = false;
 
-sscanf(recvbuffer,"QUERY %[^\n]",query);
+query[0] = '\0';
+sscanf(recvbuffer,"QUERY %255[^\n]",query);
+
+if (strlen(query) == 0)
+   {
+   return false;
+   }
 
 #ifdef HAVE_LIBCFNOVA
-Nova_ReturnQueryData(conn,query,sendbuffer);
+return Nova_ReturnQueryData(conn,query,sendbuffer);
 #else
-cipherlen = EncryptString(conn->encryption_type,"BAD: Nova feature",out,conn->session_key,strlen(sendbuffer)+1);
-SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
+return false;
 #endif
 }
 

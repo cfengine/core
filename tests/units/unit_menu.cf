@@ -69,7 +69,10 @@ bundle server access_rules()
 {
 access:
 
-  "menu1"
+  "delta"
+    resource_type => "query",
+          admit   => { "127.0.0.1" };
+  "full"
     resource_type => "query",
           admit   => { "127.0.0.1" };
 }

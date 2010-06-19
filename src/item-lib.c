@@ -35,6 +35,24 @@
 
 /*********************************************************************/
 
+int ItemListSize(struct Item *list)
+
+{ int size = 0;
+  struct Item *ip;
+ 
+for (ip = list; ip != NULL; ip=ip->next)
+   {
+   if (ip->name)
+      {
+      size += strlen(ip->name);
+      }
+   }
+
+return size;
+}
+
+/*********************************************************************/
+
 void PurgeItemList(struct Item **list,char *name)
 
 { struct Item *ip;
@@ -177,7 +195,7 @@ else
 
 /*********************************************************************/
 
-void AppendItemList(struct Item **liststart,char *itemstring)
+void AppendItem(struct Item **liststart,char *itemstring,char *classes)
 
 { struct Item *ip, *lp;
 
@@ -208,7 +226,15 @@ else
 
 ip->next = NULL;
 ip->counter = 0;
-ip->classes = NULL; /* unused now */
+
+if (classes)
+   {
+   ip->classes = strdup(classes); /* unused now */
+   }
+else
+   {
+   ip->classes = NULL;
+   }
 }
 
 /*********************************************************************/
@@ -786,13 +812,13 @@ void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 
 if (*filestart == NULL || ptr == *filestart || ptr == CF_UNDEFINED_ITEM)
    {
-   AppendItemList(filestart,string);
+   AppendItem(filestart,string,NULL);
    return;
    }
 
 if (ptr == NULL)
    {
-   AppendItemList(filestart,string);
+   AppendItem(filestart,string,NULL);
    return;
    }
 
@@ -969,57 +995,6 @@ return s;
 
 /*********************************************************************/
 /* Basic operations                                                  */
-/*********************************************************************/
-
-void AppendItem (struct Item **liststart,char *itemstring,char *classes)
-
-{ struct Item *ip, *lp;
-  char *sp,*spe = NULL;
-
-if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
-   {
-   FatalError("Memory allocation failure");
-   }
-
-if ((sp = malloc(strlen(itemstring)+CF_EXTRASPC)) == NULL)
-   {
-   FatalError("Memory allocation failure");
-   }
-
-if (*liststart == NULL)
-   {
-   *liststart = ip;
-   }
-else
-   {
-   for (lp = *liststart; lp->next != NULL; lp=lp->next)
-      {
-      }
-
-   lp->next = ip;
-   }
-
-if ((classes != NULL) && (spe = malloc(strlen(classes)+2)) == NULL)
-   {
-   CfOut(cf_error,"","malloc failure");
-   }
-
-strcpy(sp,itemstring);
-ip->name = sp;
-ip->next = NULL;
-ip->counter = 0;
- 
-if (classes != NULL)
-   {
-   strcpy(spe,classes);
-   ip->classes = spe;
-   }
-else
-   {
-   ip->classes = NULL;
-   }
-}
-
 /*********************************************************************/
 
 void IncrementItemListCounter(struct Item *list,char *item)

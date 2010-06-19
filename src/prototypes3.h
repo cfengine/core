@@ -903,7 +903,6 @@ void PurgeItemList(struct Item **list,char *name);
 struct Item *ReturnItemIn(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);
 int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
-void AppendItemList(struct Item **liststart,char *itemstring);
 void PrependItemList(struct Item **liststart,char *itemstring);
 int SelectItemMatching(char *regex,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev,char *fl);
 int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
@@ -914,6 +913,8 @@ int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,e
 int RawSaveItemList(struct Item *liststart, char *file);
 struct Item *SplitStringAsItemList(char *string,char sep);
 struct Item *SplitString(char *string,char sep);
+void DeleteItemPtrList(struct Item *item);
+void AppendItemPtr(struct Item **liststart,char *itemstring);
 int DeleteItemGeneral (struct Item **filestart, char *string, enum matchtypes type);
 int DeleteItemLiteral (struct Item **filestart, char *string);
 int DeleteItemStarting (struct Item **list,char *string);
@@ -933,14 +934,14 @@ int IsFuzzyItemIn (struct Item *list, char *item);
 int IsMatchItemIn(struct Item *list,char *item);
 int GetItemListCounter (struct Item *list, char *item);
 struct Item *ConcatLists (struct Item *list1, struct Item *list2);
-void CopyList (struct Item **dest,struct Item *source);
-int FuzzySetMatch (char *s1, char *s2);
-int FuzzyMatchParse (char *item);
-int FuzzyHostMatch (char *arg0, char *arg1,char *basename);
-int FuzzyHostParse (char *arg1,char *arg2);
+void CopyList(struct Item **dest,struct Item *source);
+int FuzzySetMatch(char *s1, char *s2);
+int FuzzyMatchParse(char *item);
+int FuzzyHostMatch(char *arg0, char *arg1,char *basename);
+int FuzzyHostParse(char *arg1,char *arg2);
 void IdempPrependItem(struct Item **liststart,char *itemstring,char *classes);
-void PrependItem  (struct Item **liststart, char *itemstring, char *classes);
-void AppendItem  (struct Item **liststart, char *itemstring, char *classes);
+void PrependItem(struct Item **liststart, char *itemstring, char *classes);
+void AppendItem(struct Item **liststart, char *itemstring, char *classes);
 void DeleteItemList (struct Item *item);
 void DeleteItem (struct Item **liststart, struct Item *item);
 void DebugListItemList (struct Item *liststart);
@@ -952,6 +953,7 @@ struct Item *SortItemListNames(struct Item *list);
 struct Item *SortItemListCounters(struct Item *list);
 struct Item *SortItemListTimes(struct Item *list);
 char *ItemList2CSV(struct Item *list);
+int ItemListSize(struct Item *list);
 
 /* iteration.c */
 

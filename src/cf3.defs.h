@@ -356,6 +356,7 @@ enum cfscontrol
 enum cfkcontrol
    {
    cfk_builddir,
+   cfk_docroot,
    cfk_genman,
    cfk_graph_dir,
    cfk_graph_output,

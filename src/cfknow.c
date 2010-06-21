@@ -498,7 +498,6 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET view_projections = %d\n",VIEWS);
       continue;
       }
-
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_dir].lval) == 0)
       {
@@ -518,6 +517,13 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       {
       strncpy(MANDIR,retval,CF_MAXVARSIZE);
       CfOut(cf_verbose,"","SET manual_source_directory = %s\n",MANDIR);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_docroot].lval) == 0)
+      {
+      strncpy(DOCROOT,retval,CF_MAXVARSIZE);
+      CfOut(cf_verbose,"","SET document root = %s\n",DOCROOT);
       continue;
       }
    }

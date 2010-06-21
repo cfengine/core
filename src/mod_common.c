@@ -230,6 +230,7 @@ struct BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 struct BodySyntax CFK_CONTROLBODY[] =
    {
    {"build_directory",cf_str,".*","The directory in which to generate output files"},
+   {"document_root",cf_str,".*","The directory in which the web root resides"},
    {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
    {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
    {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},

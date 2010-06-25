@@ -1038,6 +1038,7 @@ int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
 int RegExMatchFullString(struct CfRegEx rex,char *teststring);
 char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring);
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
+char *EscapeChar(char *str, int strSz, char esc);
 int MatchPolicy(char *needle,char *haystack,struct Attributes a,struct Promise *pp);
 
 /* mod_defaults.c */

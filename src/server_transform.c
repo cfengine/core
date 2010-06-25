@@ -87,39 +87,35 @@ void Summarize()
 
 CfOut(cf_verbose,"","Summarize control promises\n");
   
-if (DEBUG || D2)
-   {
-   printf("\nACCESS GRANTED ----------------------:\n");
+ CfOut(cf_verbose, "", "Granted access to paths :\n");
 
-   for (ptr = VADMIT; ptr != NULL; ptr=ptr->next)
-      {
-      printf("Path: %s (encrypt=%d)\n",ptr->path,ptr->encrypt);
+ for (ptr = VADMIT; ptr != NULL; ptr=ptr->next)
+    {
+    CfOut(cf_verbose, "", "Path: %s (encrypt=%d)\n",ptr->path,ptr->encrypt);
 
-      for (ip = ptr->accesslist; ip != NULL; ip=ip->next)
-         {
-         printf("   Admit: %s root=",ip->name);
-         for (ipr = ptr->maproot; ipr !=NULL; ipr=ipr->next)
-            {
-            printf("%s,",ipr->name);
-            }
-         printf("\n");
-         }
-      }
+    for (ip = ptr->accesslist; ip != NULL; ip=ip->next)
+       {
+       CfOut(cf_verbose, "", "   Admit: %s root=",ip->name);
+       for (ipr = ptr->maproot; ipr !=NULL; ipr=ipr->next)
+          {
+          CfOut(cf_verbose, "", "%s,",ipr->name);
+          }
+       }
+    }
    
-   printf("\nACCESS DENIAL ------------------------ :\n");
+
+ CfOut(cf_verbose, "", "Denied access to paths :\n");
    
-   for (ptr = VDENY; ptr != NULL; ptr=ptr->next)
-      {
-      printf("Path: %s\n",ptr->path);
+ for (ptr = VDENY; ptr != NULL; ptr=ptr->next)
+    {
+    CfOut(cf_verbose, "", "Path: %s\n",ptr->path);
       
-      for (ip = ptr->accesslist; ip != NULL; ip=ip->next)
-         {
-         printf("   Deny: %s\n",ip->name);
-         }      
-      }
+    for (ip = ptr->accesslist; ip != NULL; ip=ip->next)
+       {
+       CfOut(cf_verbose, "", "   Deny: %s\n",ip->name);
+       }      
+    }
 
-   printf("\n");
-   }
 
 CfOut(cf_verbose,""," -> Host IPs allowed connection access :\n");
 

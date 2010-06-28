@@ -556,7 +556,7 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
 if (dollar && (bracks != 0))
    {
    char output[CF_BUFSIZE];
-   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
+   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in string (%s)",str);
    yyerror(output);
    return false;
    }
@@ -638,7 +638,7 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
 if (dollar && (bracks != 0))
    {
    char output[CF_BUFSIZE];
-   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch in (%s)",str);
+   snprintf(output,CF_BUFSIZE,"Broken scalar variable syntax or bracket mismatch in \"%s\"",str);
    yyerror(output);
    return false;
    }
@@ -743,8 +743,11 @@ for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
 if (bracks != 0)
    {
    char output[CF_BUFSIZE];
-   snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch - inner (%s/%s)",str,substr);
-   yyerror(output);
+   if (strlen(substr) > 0)
+      {
+      snprintf(output,CF_BUFSIZE,"Broken variable syntax or bracket mismatch - inner (%s/%s)",str,substr);
+      yyerror(output);
+      }
    return NULL;
    }
 

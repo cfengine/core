@@ -4036,23 +4036,29 @@ else
    size = sb.st_size;
    }
 
+ if(size == 0)
+   {
+     CfOut(cf_verbose,"","Aborting read: file %s has zero bytes",filename);
+     return NULL;
+   }
+
 result = malloc(size+1);
    
 if (result == NULL)
    {
-   CfOut(cf_error,"stat","Could not allocate file %s in readfile",filename);
+   CfOut(cf_error,"malloc","Could not allocate file %s in readfile",filename);
    return NULL;
    }
 
 if ((fp = fopen(filename,"r")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Could not open file %s in readfile",filename);
+   CfOut(cf_verbose,"fopen","Could not open file %s in readfile",filename);
    return NULL;
    }
 
 if (fread(result,size,1,fp) != 1)
    {
-   CfOut(cf_inform,"fread","Could not read expected amount from file %s in readfile",filename);
+   CfOut(cf_verbose,"fread","Could not read expected amount from file %s in readfile",filename);
    fclose(fp);
    return NULL;
    }

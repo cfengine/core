@@ -148,8 +148,6 @@ pcopy->edcontext = pp->edcontext;
 
 Debug("Copying promise constraints\n\n");
 
-
-
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -247,6 +245,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
    else
       {
+      CfOut(cf_error,"","body \"%s()\" was undeclared, but used in a promise near line %d of %s",bodyname,pp->lineno,(pp->audit)->filename);
       rnew = CopyRvalItem(cp->rval,cp->type);
       scp = AppendConstraint(&(pcopy->conlist),cp->lval,rnew,cp->type,cp->classes,false);
       }
@@ -355,11 +354,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             {
             DereferenceComment(pcopy);
             }
-         
-
          }
       }
-
    }
 
 return pcopy;
@@ -777,14 +773,14 @@ md = EVP_get_digestbyname(FileHashName(type));
 EVP_DigestInit(&context,md);
 
 // multiple packages (promisers) may share same package_list_update_ifelapsed lock
- if(!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
+if(!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
    {
-     EVP_DigestUpdate(&context,pp->promiser,strlen(pp->promiser));
+   EVP_DigestUpdate(&context,pp->promiser,strlen(pp->promiser));
    }
 
 if (pp->ref)
    {
-     EVP_DigestUpdate(&context,pp->ref,strlen(pp->ref));
+   EVP_DigestUpdate(&context,pp->ref,strlen(pp->ref));
    }
 
 if (salt)

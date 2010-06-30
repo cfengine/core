@@ -382,6 +382,7 @@ typedef int clockid_t;
 #define CF_EXEC_EXPIREAFTER 1
 
 #define MAXIP4CHARLEN 16
+#define PACK_UPIFELAPSED_SALT "packageuplist"
 
 /*******************************************************************/
 /*  DBM                                                            */

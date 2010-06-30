@@ -59,7 +59,7 @@ PromiseBanner(pp);
 
 if (a.packages.package_list_update_command)
    {
-   snprintf(lockname,CF_BUFSIZE-1,"package-%s-%s",pp->promiser,a.packages.package_list_update_command);
+     snprintf(lockname,CF_BUFSIZE-1,"%s-%s",PACK_UPIFELAPSED_SALT,a.packages.package_list_update_command);
 
    al = a;
    
@@ -67,15 +67,14 @@ if (a.packages.package_list_update_command)
       {
       al.transaction.ifelapsed = a.packages.package_list_update_ifelapsed;
       }
-   
+
    thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,al,pp);
    
    if (thislock.lock != NULL)
       {
       ExecPackageCommand(a.packages.package_list_update_command,false,al,pp);   
+      YieldCurrentLock(thislock);
       }
-   
-   YieldCurrentLock(thislock);
    }
 
 // Now verify the package itself

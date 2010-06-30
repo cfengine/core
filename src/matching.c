@@ -1387,7 +1387,7 @@ for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
       sp += strlen(noEsc);
       }
    
-   if (!isalnum(*sp))
+   if (*sp != '\0' && !isalnum(*sp))
       {
       strEsc[strEscPos++] = '\\';
       }

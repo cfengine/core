@@ -245,7 +245,11 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
    else
       {
-      CfOut(cf_error,"","body \"%s()\" was undeclared, but used in a promise near line %d of %s",bodyname,pp->lineno,(pp->audit)->filename);
+      if (cp->isbody && !IsBundle(BUNDLES,bodyname))
+         {
+         CfOut(cf_error,"","body \"%s()\" was undeclared, but used in a promise near line %d of %s",bodyname,pp->lineno,(pp->audit)->filename);
+         }
+      
       rnew = CopyRvalItem(cp->rval,cp->type);
       scp = AppendConstraint(&(pcopy->conlist),cp->lval,rnew,cp->type,cp->classes,false);
       }

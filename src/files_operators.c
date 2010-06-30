@@ -1108,7 +1108,7 @@ if (cmpsb.st_dev != sb->st_dev)
 
 if (cmpsb.st_ino != sb->st_ino)
    {
-   CfOut(cf_error,"","ALERT: inode for %s changed %d -> %d",file,cmpsb.st_ino,sb->st_ino);
+   CfOut(cf_error,"","ALERT: inode for %s changed %lu -> %lu",file,cmpsb.st_ino,sb->st_ino);
    }
 
 if (cmpsb.st_mtime != sb->st_mtime)

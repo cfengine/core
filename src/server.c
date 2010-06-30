@@ -3810,13 +3810,12 @@ int IsKnownHost(RSA *oldkey,RSA *newkey,char *mipaddr,char *username)
   char keyname[CF_MAXVARSIZE];
   char keydb[CF_MAXVARSIZE];
   char vbuff[CF_BUFSIZE];
-  void *value;
 
 snprintf(keyname,CF_MAXVARSIZE,"%s-%s",username,mipaddr);
 snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR); 
 
-Debug("The key does not match a known key but the host could have a dynamic IP...\n"); 
- 
+Debug("************ The key does not match a known key but the host could have a dynamic IP...\n"); 
+
 if ((TRUSTKEYLIST != NULL) && IsMatchItemIn(TRUSTKEYLIST,MapAddress(mipaddr)))
    {
    Debug("We will accept a new key for this IP on trust\n");
@@ -3838,7 +3837,7 @@ if (!OpenDB(keydb,&dbp))
    return false;
    }
 
-if (!ReadComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),&value,CF_BUFSIZE))
+if (!ReadComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),vbuff,CF_BUFSIZE))
    {
    Debug("The new key is not previously known, so we need to use policy for trusting the host %s\n",mipaddr);
  
@@ -3855,7 +3854,7 @@ if (!ReadComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),&value,CF_BUFSIZE))
    }
 else
    {
-   CfOut(cf_verbose,"","Public key was previously owned by %s now by %s - updating\n",value,mipaddr);
+   CfOut(cf_verbose,"","Public key was previously owned by %s now by %s - updating\n",vbuff,mipaddr);
    Debug("Now trusting this new key, because we have seen it before\n");
    DeletePublicKey(keyname);
    trust = true;

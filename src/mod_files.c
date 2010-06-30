@@ -322,7 +322,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"force_ipv4",cf_opts,CF_BOOL,"true/false force use of ipv4 on ipv6 enabled network"},
    {"portnumber",cf_int,"1024,99999","Port number to connect to on server host"},
    {"preserve",cf_opts,CF_BOOL,"true/false whether to preserve file permissions on copied file"},
-   {"purge",cf_opts,CF_BOOL,"true/false purge files on client that do not match files on server when depth_search"},
+   {"purge",cf_opts,CF_BOOL,"true/false purge files on client that do not match files on server when a depth_search is used"},
    {"stealth",cf_opts,CF_BOOL,"true/false whether to preserve time stamps on copied file"},
    {"trustkey",cf_opts,CF_BOOL,"true/false trust public keys from remote server if previously unknown"},
    {"type_check",cf_opts,CF_BOOL,"true/false compare file types before copying and require match"},

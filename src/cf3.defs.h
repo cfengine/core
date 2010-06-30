@@ -632,6 +632,7 @@ struct edit_context
    struct Item *file_start;
    struct Item *file_classes;
    int num_edits;
+   int empty_first;
    };
 
 /*************************************************************************/

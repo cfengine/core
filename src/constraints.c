@@ -647,16 +647,16 @@ if (VarClassExcluded(pp,&sp))
 
 if (strcmp(pp->agentsubtype,"insert_lines") == 0)
    {
-   /* Multiple additions with same criterion will not be convergent */
+   /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
    
-   if (sp = GetConstraint("select_line_matching",pp,CF_SCALAR))
+   if ((sp = GetConstraint("select_line_matching",pp,CF_SCALAR)))
       {
       if (ptr = ReturnItemIn(EDIT_ANCHORS,sp))
          {
          if (strcmp(ptr->classes,pp->bundle) == 0)
             {
-            CfOut(cf_error,""," !! insert_lines promise uses the same select_line_matching anchor (\"%s\") as another promise. This will lead to non-convergent behaviour.",sp);
-            PromiseRef(cf_error,pp);
+            CfOut(cf_inform,""," !! insert_lines promise uses the same select_line_matching anchor (\"%s\") as another promise. This will lead to non-convergent behaviour unless \"empty_file_before_editing\" is set.",sp);
+            PromiseRef(cf_inform,pp);
             }
          }
       else

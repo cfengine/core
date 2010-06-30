@@ -47,6 +47,7 @@ ec->filename = filename;
 ec->file_start = NULL;
 ec->file_classes = NULL;
 ec->num_edits = 0;
+ec->empty_first = a.edits.empty_before_use;
 
 if (!LoadFileAsItemList(&(ec->file_start),filename,a,pp))
    {

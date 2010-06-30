@@ -159,7 +159,10 @@ struct BodyDefault BODY_DEFAULT[] =
    {"include_end_delimiter","false"},
    {"output_level","verbose"},
    {"promiser_type","promise"},
-   {"keycacheTTL","24"},   
+   {"keycacheTTL","24"},
+   {"copy_backup","true"},
+   {"copy_size","any size range"},
+   {"stealth","false"},
    {NULL,NULL},
    };
 

@@ -1707,7 +1707,9 @@ int BadBundleSequence(enum cfagenttype agent)
   int ok = true;
   struct FnCall *fp;
 
-if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know && THIS_AGENT_TYPE != cf_common)
+if ((THIS_AGENT_TYPE != cf_agent) && 
+    (THIS_AGENT_TYPE != cf_know) && 
+    (THIS_AGENT_TYPE != cf_common))
    {
    return false;
    }
@@ -1736,7 +1738,7 @@ if (rettype != CF_LIST)
    FatalError("Promised bundlesequence was not a list");
    }
 
-if (agent == cf_agent || agent == cf_common)
+if ((agent == cf_agent) || (agent == cf_common))
    {
    for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       {

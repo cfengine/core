@@ -86,7 +86,7 @@ if (S_ISDIR(ssb.st_mode)) /* could be depth_search */
       {
       if (attr.copy.check_root)
          {
-         VerifyCopiedFileAttributes(source,&dsb,&ssb,attr,pp);
+         VerifyCopiedFileAttributes(destination,&dsb,&ssb,attr,pp);
          }
       }
    }

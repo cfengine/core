@@ -331,10 +331,9 @@ for (rp = list; rp != NULL; rp=rp->next)
 
 if (!found)
    {
-   CfOut(cf_verbose,""," !! File system %s seems not to be mounted correctly\n",name);
-
    if (! a.mount.unmount)
       {
+      CfOut(cf_verbose,""," !! File system %s seems not to be mounted correctly\n",name);
       CF_MOUNTALL = true;
       }
    }

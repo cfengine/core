@@ -388,7 +388,7 @@ pp->cache = NULL;
 if (strlen(MENU) > 0)
    {
 #ifdef HAVE_LIBCFNOVA
-   Nova_QueryForKnowledgeMap(conn,MENU,time(0) - 24*3600*7);
+   Nova_QueryForKnowledgeMap(conn,MENU,0);
 #endif
    }
 else

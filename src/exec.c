@@ -781,7 +781,7 @@ else
          twin_exists = true;
          }
       
-      if (IsExecutable(cmd))
+      if (twin_exists && IsExecutable(cmd))
 	 {
          snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
                   CFWORKDIR,

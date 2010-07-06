@@ -57,9 +57,10 @@ void DeleteStream(FILE *fp);
             "The latter type is regulated by cf-serverd's role based\n"
             "access control.";
  
- struct option OPTIONS[15] =
+ struct option OPTIONS[16] =
       {
       { "help",no_argument,0,'h' },
+      { "background",optional_argument,0,'b' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
@@ -76,9 +77,10 @@ void DeleteStream(FILE *fp);
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[15] =
+ char *HINTS[16] =
       {
       "Print the help message",
+      "Parallelize connections (50 by default)",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
       "All talk and no action mode - make no changes, only inform of promises not kept",
@@ -94,7 +96,6 @@ void DeleteStream(FILE *fp);
       "Query a server for a knowledge menu",
       NULL
       };
-
 
 extern struct BodySyntax CFR_CONTROLBODY[];
 
@@ -159,7 +160,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"q:d:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -167,6 +168,14 @@ while ((c=getopt_long(argc,argv,"q:d:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) !
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
           VINPUTFILE[CF_BUFSIZE-1] = '\0';
           MINUSF = true;
+          break;
+
+      case 'b':
+          BACKGROUND = true;
+          if (optarg)
+             {
+             MAXCHILD = atoi(optarg);
+             }
           break;
 
       case 'd': 
@@ -388,7 +397,7 @@ pp->cache = NULL;
 if (strlen(MENU) > 0)
    {
 #ifdef HAVE_LIBCFNOVA
-   Nova_QueryForKnowledgeMap(conn,MENU,0);
+   Nova_QueryForKnowledgeMap(conn,MENU,time(0) - 7*24*3600);
 #endif
    }
 else
@@ -468,6 +477,18 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_background].lval) == 0)
+      {
+      BACKGROUND = GetBoolean(retval);
+      continue;
+      }
+   
+   if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_maxchild].lval) == 0)
+      {
+      MAXCHILD = (short)Str2Int(retval);
+      continue;
+      }
+   
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_output_to_file].lval) == 0)
       {
       OUTPUT_TO_FILE = GetBoolean(retval);

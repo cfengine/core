@@ -230,7 +230,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
          if (fp != NULL)
             {
-            CfOut(cf_error,"","body \"%s()\" was undeclared, but used in a promise near line %d of %s",bodyname,pp->lineno,(pp->audit)->filename);
+            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->lineno,(pp->audit)->filename);
             }
          else
             {
@@ -247,7 +247,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (cp->isbody && !IsBundle(BUNDLES,bodyname))
          {
-         CfOut(cf_error,"","body \"%s()\" was undeclared, but used in a promise near line %d of %s",bodyname,pp->lineno,(pp->audit)->filename);
+         CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->lineno,(pp->audit)->filename);
          }
       
       rnew = CopyRvalItem(cp->rval,cp->type);

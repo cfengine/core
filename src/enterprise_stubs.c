@@ -443,6 +443,15 @@ Nova_SetPromiseOutputs(pp);
 
 /*****************************************************************************/
 
+void LastSawBundle(char *name)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_LastSawBundle(name);
+#endif
+}
+
+/*****************************************************************************/
+
 void SetBundleOutputs(char *name)
 {
 #ifdef HAVE_LIBCFNOVA

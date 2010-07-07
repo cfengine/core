@@ -859,6 +859,7 @@ int BadBundleSequence(enum cfagenttype agent);
 
 char *ConvTimeKey (char *str);
 char *GenTimeKey (time_t now);
+int GetTimeSlot(time_t here_and_now);
 
 /* graph.c */
 

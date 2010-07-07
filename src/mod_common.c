@@ -323,7 +323,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
      {"*","vars",CF_VARBODY},
      {"*","classes",CF_CLASSBODY},
      {"*","reports",CF_REPORT_BODIES},
-     {"agent","*",CF_COMMON_BODIES},
+     {"*","*",CF_COMMON_BODIES},
      {NULL,NULL,NULL}
      };
 

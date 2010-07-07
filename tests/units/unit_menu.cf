@@ -59,7 +59,7 @@ body server control
 allowconnects         => { "127.0.0.1" , "::1" };
 allowallconnects      => { "127.0.0.1" , "::1" };
 trustkeysfrom         => { "127.0.0.1" , "::1" };
-allowusers            => { "mark" };
+allowusers            => { "mark", "root" };
 }
 
 #########################################################

@@ -468,6 +468,26 @@ AC_SUBST(OPENSSL_LIB_CPPFLAGS)
 AC_SUBST(OPENSSL_LIB_LIB)
 
 #
+# Report database driver - MongoDB C interface
+#
+
+AC_ARG_WITH(mongo,
+	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
+	with_mongo=no)
+
+if test "x$with_mongo" = xyes; then
+   AC_MSG_CHECKING(for libmongoc)
+   WITH_MONGO=1
+else
+   WITH_MONGO=0
+fi
+
+if test $WITH_MONGO = 1; then
+  AC_CHECK_LIB(mongoc,main, [], [AC_MSG_ERROR(Cannot find libmongoc)])
+fi
+
+
+#
 # Others
 #
 

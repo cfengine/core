@@ -1194,7 +1194,7 @@ char *GetProcessOptions()
 #ifdef HAVE_LIBCFNOVA
  return Nova_GetProcessOptions();
 #else
-CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
+CfOut(cf_verbose,"","Extended process options are only available with Cfengine Nova or above");
 return VPSOPTS[VSYSTEMHARDCLASS];
 #endif
 }
@@ -1204,6 +1204,14 @@ return VPSOPTS[VSYSTEMHARDCLASS];
 /*****************************************************************************/
 
 #ifdef HAVE_LIBCFNOVA
+
+int Nova_DBDummy()
+// never used but needed to link in Nova_DB* functions into libpromises.so
+{
+#ifdef HAVE_LIBMONGOC
+  return Nova_DBOpen(NULL, "", 1);
+#endif
+}
 
 int Nova_VerifyTablePromise(CfdbConn *cfdb,char *table_path,struct Rlist *columns,struct Attributes a,struct Promise *pp)
 

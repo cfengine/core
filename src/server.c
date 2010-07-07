@@ -2479,7 +2479,7 @@ int AuthenticationDialogue(struct cfd_connection *conn,char *recvbuffer, int rec
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   unsigned int crypt_len, nonce_len = 0,encrypted_len = 0;
   char sauth[10], iscrypt ='n',enterprise_field = 'c';
-  int len = 0,keylen, session_size;
+  int len_n = 0,len_e = 0,keylen, session_size;
   unsigned long err;
   RSA *newkey;
 
@@ -2576,21 +2576,21 @@ newkey = RSA_new();
 ThreadUnlock(cft_system);
 
 /* proposition C2 */ 
-if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
+if ((len_n = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
    CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
    }
 
-if (len == 0)
+if (len_n == 0)
    {
    CfOut(cf_inform,"","Protocol error 2 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
    }
 
-if ((newkey->n = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
+if ((newkey->n = BN_mpi2bn(recvbuffer,len_n,NULL)) == NULL)
    {
    err = ERR_get_error();
    CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
@@ -2600,21 +2600,21 @@ if ((newkey->n = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
 
 /* proposition C3 */ 
 
-if ((len = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
+if ((len_e = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
    CfOut(cf_inform,"","Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
    }
 
-if (len == 0)
+if (len_e == 0)
    {
    CfOut(cf_inform,"","Protocol error 4 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
    }
 
-if ((newkey->e = BN_mpi2bn(recvbuffer,len,NULL)) == NULL)
+if ((newkey->e = BN_mpi2bn(recvbuffer,len_e,NULL)) == NULL)
    {
    err = ERR_get_error();
    CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
@@ -2676,13 +2676,13 @@ if (iscrypt != 'y')
    {
    /* proposition S4  - conditional */
    memset(in,0,CF_BUFSIZE); 
-   len = BN_bn2mpi(PUBKEY->n,in);
-   SendTransaction(conn->sd_reply,in,len,CF_DONE);
+   len_n = BN_bn2mpi(PUBKEY->n,in);
+   SendTransaction(conn->sd_reply,in,len_n,CF_DONE);
 
    /* proposition S5  - conditional */
    memset(in,0,CF_BUFSIZE);  
-   len = BN_bn2mpi(PUBKEY->e,in); 
-   SendTransaction(conn->sd_reply,in,len,CF_DONE); 
+   len_e = BN_bn2mpi(PUBKEY->e,in); 
+   SendTransaction(conn->sd_reply,in,len_e,CF_DONE); 
    }
 
 /* Receive reply to counter_challenge */

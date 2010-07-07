@@ -173,7 +173,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,str
   BIGNUM *nonce_challenge, *bn = NULL;
   unsigned long err;
   unsigned char digest[EVP_MAX_MD_SIZE];
-  int encrypted_len,nonce_len = 0,len,session_size;;
+  int encrypted_len,nonce_len = 0,len_n,len_e,len,session_size;
   char dont_implicitly_trust_server, keyname[CF_BUFSIZE], enterprise_field = 'c';
   RSA *server_pubkey = NULL;
 
@@ -217,6 +217,8 @@ else
    dont_implicitly_trust_server = 'n';        /* have to trust server, since we can't verify id */
    encrypted_len = nonce_len;
    }
+
+// Server pubkey is what we want to has as a unique ID
 
 snprintf(sendbuffer,CF_BUFSIZE,"SAUTH %c %d %d %c",dont_implicitly_trust_server,encrypted_len,nonce_len,enterprise_field);
  
@@ -356,12 +358,11 @@ free(decrypted_cchall);
 
 /* If we don't have the server's public key, it will be sent */
 
-
 if (server_pubkey == NULL)
    {
    RSA *newkey = RSA_new();
 
-   Debug("Collecting public key from server!\n"); 
+   CfOut(cf_verbose,""," -> Collecting public key from server!\n"); 
 
    /* proposition S4 - conditional */  
    if ((len = ReceiveTransaction(conn->sd,in,NULL)) <= 0)
@@ -428,6 +429,9 @@ if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS
    }
 
 SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
+
+HashPubKey(server_pubkey->n,BN_num_bytes(server_pubkey->n),server_pubkey->e,BN_num_bytes(server_pubkey->e),conn->digest,cf_md5);
+CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
 
 if (server_pubkey != NULL)
    {

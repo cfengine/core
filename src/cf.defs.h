@@ -1112,6 +1112,7 @@ struct cfagent_connection
    int family;                              /* AF_INET or AF_INET6 */
    char localip[CF_MAX_IP_LEN];
    char remoteip[CF_MAX_IP_LEN];
+   unsigned char digest[EVP_MAX_MD_SIZE+1];
    unsigned char *session_key;
    char encryption_type;
    short error;

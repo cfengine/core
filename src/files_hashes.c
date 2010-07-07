@@ -327,6 +327,39 @@ switch (type)
 
 /*******************************************************************/
 
+void HashPubKey(BIGNUM *n,int len_n,BIGNUM *e,int len_e,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+
+{ EVP_MD_CTX context;
+  const EVP_MD *md = NULL;
+  char *file_buffer;
+  int md_len;
+
+Debug("HashPubKey(%c)\n",type);
+
+switch (type)
+   {
+   case cf_crypt:
+       CfOut(cf_error,"","The crypt support is not presently implemented, please use md5 instead");
+       break;
+       
+   default:
+       md = EVP_get_digestbyname(FileHashName(type));
+
+       if (md == NULL)
+          {
+          CfOut(cf_inform,""," !! Digest type %s not supported by OpenSSL library",CF_DIGEST_TYPES[type][0]);
+          }
+       
+       EVP_DigestInit(&context,md); 
+       EVP_DigestUpdate(&context,(unsigned char*)n,len_n);
+       EVP_DigestUpdate(&context,(unsigned char*)e,len_e);
+       EVP_DigestFinal(&context,digest,&md_len);
+       break;
+   }
+}
+
+/*******************************************************************/
+
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE+1],unsigned char digest2[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { int i,size = EVP_MAX_MD_SIZE;

@@ -319,7 +319,7 @@ switch (type)
           }
        
        EVP_DigestInit(&context,md); 
-       EVP_DigestUpdate(&context,(unsigned char*)buffer,len);
+       EVP_DigestUpdate(&context,(unsigned char*)buffer,(size_t)len);
        EVP_DigestFinal(&context,digest,&md_len);
        break;
    }
@@ -327,14 +327,35 @@ switch (type)
 
 /*******************************************************************/
 
-void HashPubKey(BIGNUM *n,int len_n,BIGNUM *e,int len_e,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { EVP_MD_CTX context;
   const EVP_MD *md = NULL;
   char *file_buffer;
-  int md_len;
+  int md_len,i,buf_len, actlen;
+  unsigned char *buffer;
 
 Debug("HashPubKey(%c)\n",type);
+
+RSA_print_fp(stdout,key,0);
+
+if (key->n)
+   {
+   buf_len = (size_t)BN_num_bytes(key->n);
+   }
+
+if (key->e)
+   {
+   if (buf_len < (i = (size_t)BN_num_bytes(key->e)))
+      {
+      buf_len = i;
+      }
+   }
+
+if ((buffer = malloc(buf_len+10)) == NULL)
+   {
+   FatalError("Memory alloc in HashPubKey");
+   }
 
 switch (type)
    {
@@ -351,11 +372,16 @@ switch (type)
           }
        
        EVP_DigestInit(&context,md); 
-       EVP_DigestUpdate(&context,(unsigned char*)n,len_n);
-       EVP_DigestUpdate(&context,(unsigned char*)e,len_e);
+
+       actlen = BN_bn2bin(key->n,buffer);
+       EVP_DigestUpdate(&context,buffer,actlen);
+       actlen = BN_bn2bin(key->e,buffer);
+       EVP_DigestUpdate(&context,buffer,actlen);
        EVP_DigestFinal(&context,digest,&md_len);
        break;
    }
+
+free(buffer);
 }
 
 /*******************************************************************/

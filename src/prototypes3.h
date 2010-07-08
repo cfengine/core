@@ -672,7 +672,7 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE+1],unsigned char digest2[E
 char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 char *FileHashName(enum cfhashes id);
 int FileHashSize(enum cfhashes id);
-void HashPubKey(BIGNUM *n,int len_n,BIGNUM *e,int len_e,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
+void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 
 /* files_interfaces.c */
 

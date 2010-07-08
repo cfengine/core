@@ -211,6 +211,10 @@ if (server_pubkey = HavePublicKey(keyname))
    {
    dont_implicitly_trust_server = 'y';
    encrypted_len = RSA_size(server_pubkey);
+
+   HashPubKey(server_pubkey,conn->digest,cf_md5);
+   CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
+
    }
 else 
    {
@@ -430,7 +434,7 @@ if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS
 
 SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
 
-HashPubKey(server_pubkey->n,BN_num_bytes(server_pubkey->n),server_pubkey->e,BN_num_bytes(server_pubkey->e),conn->digest,cf_md5);
+HashPubKey(server_pubkey,conn->digest,cf_md5);
 CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
 
 if (server_pubkey != NULL)

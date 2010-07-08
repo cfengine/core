@@ -337,7 +337,7 @@ void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes t
 
 Debug("HashPubKey(%c)\n",type);
 
-RSA_print_fp(stdout,key,0);
+//RSA_print_fp(stdout,key,0);
 
 if (key->n)
    {

@@ -211,10 +211,6 @@ if (server_pubkey = HavePublicKey(keyname))
    {
    dont_implicitly_trust_server = 'y';
    encrypted_len = RSA_size(server_pubkey);
-
-   HashPubKey(server_pubkey,conn->digest,cf_md5);
-   CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
-
    }
 else 
    {

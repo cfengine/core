@@ -1286,7 +1286,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package already installed, so we never add it again\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package \"%s\" already installed, so we never add it again\n",pp->promiser);
           }
        break;
        
@@ -1296,31 +1296,30 @@ switch(a.packages.package_policy)
           {
           CfOut(cf_verbose,""," -> Schedule package for deletion\n");
 
-
 	  // expand local repository in the name convetion, if present
 	  if(a.packages.package_file_repositories)
 	    {
 	    // remove any "$(repo)" from the name convention string
 
-	    if(strncmp(id, "$(firstrepo)", 12) == 0)
-	      {
-	      snprintf(idBuf, sizeof(idBuf), "%s", id + 12);
-	      
-	      // and add the correct repo
-	      pathName = PrefixLocalRepository(a.packages.package_file_repositories, idBuf);
-
-	      if(pathName)
-		{
+	    if (strncmp(id, "$(firstrepo)", 12) == 0)
+               {
+               snprintf(idBuf, sizeof(idBuf), "%s", id + 12);
+               
+               // and add the correct repo
+               pathName = PrefixLocalRepository(a.packages.package_file_repositories, idBuf);
+               
+               if(pathName)
+                  {
 		  snprintf(id, CF_MAXVARSIZE, "%s", pathName);
 		  CfOut(cf_verbose, "", "Expanded the package repository to %s", id);
-		}
-	      else
-		{
+                  }
+               else
+                  {
 		  CfOut(cf_error, "", "!! Package \"%s\" can't be found in any of the listed repositories", idBuf);
-		}
-	      }
+                  }
+               }
 	    }
-
+          
           manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
           PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
           }
@@ -1415,35 +1414,35 @@ switch(a.packages.package_policy)
 
 	     // we need to have the version of installed package
 	     if (a.packages.package_delete_convention)
-	       {
-		 if(*instVer == '\0')
+                {
+                if (*instVer == '\0')
 		   {
-		     instVer[0] == '*';
-		     instVer[1] == '\0';
+                   instVer[0] == '*';
+                   instVer[1] == '\0';
 		   }
-
-		 if(*instArch == '\0')
+                
+                if (*instArch == '\0')
 		   {
-		     instArch[0] == '*';
-		     instArch[1] == '\0';
+                   instArch[0] == '*';
+                   instArch[1] == '\0';
 		   }
-
-		 SetNewScope("cf_pack_context");
-		 NewScalar("cf_pack_context","name",name,cf_str);
-		 NewScalar("cf_pack_context","version",instVer,cf_str);
-		 NewScalar("cf_pack_context","arch",instArch,cf_str);
-		 ExpandScalar(a.packages.package_delete_convention,reference2);
-		 id_del = reference2;
-		 DeleteScope("cf_pack_context");
-	       }
+                
+                SetNewScope("cf_pack_context");
+                NewScalar("cf_pack_context","name",name,cf_str);
+                NewScalar("cf_pack_context","version",instVer,cf_str);
+                NewScalar("cf_pack_context","arch",instArch,cf_str);
+                ExpandScalar(a.packages.package_delete_convention,reference2);
+                id_del = reference2;
+                DeleteScope("cf_pack_context");
+                }
 	     else
-	       {
-		 id_del = id; // defaults to the package_name_convention
-	       }
-
-
+                {
+                id_del = id; // defaults to the package_name_convention
+                }
+             
+             
 	     CfOut(cf_verbose, "", "Scheduling package with id \"%s\" for deletion", id_del);
-
+             
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
              PrependPackageItem(&(manager->pack_list),id_del,"any","any",a,pp);
 
@@ -1459,7 +1458,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package cannot be updated -- no match or not installed");
+          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be updated -- no match or not installed",pp->promiser);
           }
        break;
        
@@ -1473,7 +1472,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state is as promised -- already installed\n");
+          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state of \"%s\" is as promised -- already installed\n",pp->promiser);
           }
        break;
 
@@ -1487,7 +1486,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package cannot be verified -- no match\n");
+          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\"cannot be verified -- no match\n",pp->promiser);
           }
        
        break;

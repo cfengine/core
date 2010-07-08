@@ -215,9 +215,6 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
-/* Define to 1 if you have the `mongoc' library (-lmongoc). */
-#undef HAVE_LIBMONGOC
-
 /* Define to 1 if you have the `mysqlclient' library (-lmysqlclient). */
 #undef HAVE_LIBMYSQLCLIENT
 
@@ -377,10 +374,10 @@
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
 
-/* Define to 1 if `struct nlist' is a member of `n_un.n_name'. */
+/* Define to 1 if `n_un.n_name' is member of `struct nlist'. */
 #undef HAVE_STRUCT_NLIST_N_UN_N_NAME
 
-/* Define to 1 if `struct sockaddr' is a member of `sa_len'. */
+/* Define to 1 if `sa_len' is member of `struct sockaddr'. */
 #undef HAVE_STRUCT_SOCKADDR_SA_LEN
 
 /* Define to 1 if you have the `sysconf' function. */
@@ -497,9 +494,6 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
-
-/* Define to the home page for this package. */
-#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

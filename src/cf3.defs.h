@@ -999,6 +999,14 @@ enum insert_match
    cf_exact_match
    };
 
+enum monitord_rep
+   {
+   mon_rep_mag,
+   mon_rep_week,
+   mon_rep_yr
+   };
+
+
 /*************************************************************************/
 /* Runtime constraint structures                                         */
 /*************************************************************************/

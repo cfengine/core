@@ -308,7 +308,7 @@ for (ip = siglist; ip != NULL; ip=ip->next)
          
          if (kill((pid_t)pid,signal) < 0)
             {
-            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," !! Couldn't send promised signal \'%s\' (%d) to pid %d\n",rp->item,signal,pid);
+            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," !! Couldn't send promised signal \'%s\' (%d) to pid %d (might be dead)\n",rp->item,signal,pid);
             }
          else
             {

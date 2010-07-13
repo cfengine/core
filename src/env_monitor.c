@@ -1050,7 +1050,7 @@ void GatherProcessData()
   int numRootProcs = 0;
   int numOtherProcs = 0;
 
-if(!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
+if (!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
    {
    return;
    }
@@ -2373,45 +2373,48 @@ if (strcmp("measurements",pp->agentsubtype) == 0)
 
 int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
     
-{
- FILE *pp;
- char pscomm[CF_BUFSIZE];
- char user[CF_MAXVARSIZE];
- char vbuff[CF_BUFSIZE];
+{ FILE *pp;
+  char pscomm[CF_BUFSIZE];
+  char user[CF_MAXVARSIZE];
+  char vbuff[CF_BUFSIZE];
  
- snprintf(pscomm,CF_BUFSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],VPSOPTS[VSYSTEMHARDCLASS]);
+snprintf(pscomm,CF_BUFSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],VPSOPTS[VSYSTEMHARDCLASS]);
 
- if ((pp = cf_popen(pscomm,"r")) == NULL)
-    {
-    return false;
-    }
+if ((pp = cf_popen(pscomm,"r")) == NULL)
+   {
+   return false;
+   }
 
- CfReadLine(vbuff,CF_BUFSIZE,pp); 
+CfReadLine(vbuff,CF_BUFSIZE,pp); 
 
- while (!feof(pp))
-    {
-    CfReadLine(vbuff,CF_BUFSIZE,pp);
-    sscanf(vbuff,"%s",user);
+while (!feof(pp))
+   {
+   CfReadLine(vbuff,CF_BUFSIZE,pp);
+   sscanf(vbuff,"%s",user);
+
+   if (strcmp(user,"USER") == 0)
+      {
+      continue;
+      }
    
-    if (!IsItemIn(*userList,user))
-       {
-       PrependItem(userList,user,NULL);
-       (*userListSz)++;
-       }
+   if (!IsItemIn(*userList,user))
+      {
+      PrependItem(userList,user,NULL);
+      (*userListSz)++;
+      }
+   
+   if (strcmp(user,"root") == 0)
+      {
+      (*numRootProcs)++;
+      }
+   else
+      {
+      (*numOtherProcs)++;
+      }
+   }
 
-    if (strcmp(user,"root") == 0)
-       {
-       (*numRootProcs)++;
-       }
-    else
-       {
-       (*numOtherProcs)++;
-       }
-    }
-
- cf_pclose(pp);
-
- return true;
+cf_pclose(pp);
+return true;
 }
 
 /*****************************************************************************/

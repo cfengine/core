@@ -23,36 +23,50 @@
 
 body common control
 {
-!trusted::
+myclass1::
 
-bundlesequence  => { @(felles.sequence) };
+    bundlesequence  => { @(categories.common), "extra1" };
+    inputs          => { @(categories.in1), @(categories.in_any) };
  
-inputs          => { @(felles.inn) };
- 
- 
-trusted::
+myclass2::
 
-    bundlesequence  => { @(felles.sequence),
-                                "hemmelig" };
- 
-    inputs          => { @(felles.inn),
-                                "hemmelig.cf" };
+    bundlesequence  => { @(categories.common), "extra2" };
+    inputs          => { @(categories.in1), @(categories.in_any) };
  
 }
 
-bundle common felles
- {
- vars:
-          "sequence" slist => { "get_the_classes",
-                                "get_the_roles",
-                                "update",
-                                "update_servers" };
+bundle common categories
+{
+classes:
+
+   "myclass1" expression => "xxany"; 
+   "myclass2" expression => "xxany"; 
+
+vars:
+          
+  "common" slist => {
+                    "update.cf",
+                    }
+
+  "extra1" slist => { 
+                    "reasons to be cheerful, part 1",
+                    };
+
+  "extra2" slist => { 
+                    "reasons to be cheerful, part 2",
+                    };
  
-          "inn" slist =>  { "update.cf",
-                               "classes.cf",
-                               "serverconfig.cf" };
+  "in_any" slist => { 
+                    "update.cf",
+                    };
 
- classes:
+  "in1"    slist => { 
+                    "in1/in1.cf",
+                    };
 
-   "trusted" expression => "xxany"; 
+  "in1"    slist => { 
+                    "in2/in1.cf",
+                    };
  }
+
+

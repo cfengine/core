@@ -309,12 +309,10 @@ for (ip = siglist; ip != NULL; ip=ip->next)
          if (kill((pid_t)pid,signal) < 0)
             {
             cfPS(cf_verbose,CF_FAIL,"kill",pp,a," !! Couldn't send promised signal \'%s\' (%d) to pid %d\n",rp->item,signal,pid);
-            continue;
             }
          else
             {
             cfPS(cf_inform,CF_CHG,"",pp,a," -> Signalled \'%s\' (%d) to observed process match \'%s\'\n",rp->item,signal,ip->name);
-            break;
             }
          }
       else

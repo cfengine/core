@@ -1006,6 +1006,13 @@ enum monitord_rep
    mon_rep_yr
    };
 
+enum promiselog_rep
+   {
+   plog_repaired,
+   plog_notkept
+   };
+
+
 
 /*************************************************************************/
 /* Runtime constraint structures                                         */

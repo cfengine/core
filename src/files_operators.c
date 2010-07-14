@@ -1395,7 +1395,7 @@ void LogHashChange(char *file)
 
 /* This is inefficient but we don't want to lose any data */
 
-snprintf(fname,CF_BUFSIZE,"%s/state/file_hash_event_history",CFWORKDIR);
+snprintf(fname,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_FILECHANGE);
 MapName(fname);
 
 #ifndef MINGW
@@ -1414,9 +1414,7 @@ if ((fp = fopen(fname,"a")) == NULL)
    return;
    }
 
-snprintf(timebuf,CF_MAXVARSIZE-1,"%s",cf_ctime(&now));
-Chop(timebuf);
-fprintf(fp,"%s,%s\n",timebuf,file);
+fprintf(fp,"%ld,%s\n",(long)now,file);
 fclose(fp);
 
 cf_chmod(fname,perm);

@@ -225,6 +225,8 @@ extern int errno;
 #  include <time.h>
 #endif
 
+#define _GNU_SOURCE
+
 #ifdef HAVE_TIME_H
 # include <time.h>
 #endif
@@ -526,7 +528,8 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 /* end database file names */
 
 #define CF_VALUE_LOG      "cf_value.log"
-
+#define CF_FILECHANGE     "file_change.log"
+#define CF_PROMISE_LOG    "promise_summary.log"
 
 #define CF_STATELOG_FILE "state_log"
 #define CF_ENVNEW_FILE   "env_data.new"

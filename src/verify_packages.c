@@ -1486,7 +1486,7 @@ switch(a.packages.package_policy)
           }
        else
           {
-          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\"cannot be verified -- no match\n",pp->promiser);
+          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be verified -- no match\n",pp->promiser);
           }
        
        break;

@@ -423,10 +423,10 @@ op[i] = '\0';
 void PromiseLog(char *s)
 
 { char filename[CF_BUFSIZE],start[CF_BUFSIZE],end[CF_BUFSIZE];
-  FILE *fout;
   time_t now = time(NULL);
+  FILE *fout;
 
-snprintf(filename,CF_BUFSIZE,"%s/promise.log",CFWORKDIR);
+snprintf(filename,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_PROMISE_LOG);
 
 if ((fout = fopen(filename,"a")) == NULL)
    {
@@ -434,12 +434,7 @@ if ((fout = fopen(filename,"a")) == NULL)
    return;
    }
 
-strcpy(start,cf_ctime(&CFSTARTTIME));
-Chop(start);
-strcpy(end,cf_ctime(&now));
-Chop(end);
-
-fprintf(fout,"%s -> %s: %s",start,end,s);
+fprintf(fout,"%ld,%ld: %s",CFSTARTTIME,now,start,end,s);
 fclose(fout);
 }
 

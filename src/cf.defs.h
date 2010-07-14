@@ -519,7 +519,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define CF_CHKDB          "checksum_digests" "." DB_FEXT
 #define CF_AVDB_FILE      "cf_observations" "." DB_FEXT
 #define CF_STATEDB_FILE   "cf_state" "." DB_FEXT
-#define CF_LASTDB_FILE    "cf_LastSeen" "." DB_FEXT
+#define CF_LASTDB_FILE    "cf_lastseen" "." DB_FEXT
 #define CF_AUDITDB_FILE   "cf_Audit" "." DB_FEXT
 #define CF_LOCKDB_FILE    "cf_lock" "." DB_FEXT
 
@@ -533,8 +533,6 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define CF_ENV_FILE      "env_data"
 
 #define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"
-#define CF_SCLI_COMM "/usr/local/bin/scli"
-
 
 #define CF_INPUTSVAR "CFINPUTS"          /* default name for file path var */
 #define CF_ALLCLASSESVAR "CFALLCLASSES"  /* default name for CFALLCLASSES env */
@@ -1117,7 +1115,6 @@ struct cfagent_connection
    char encryption_type;
    short error;
    };
-
 
 /*******************************************************************/
 

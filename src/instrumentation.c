@@ -279,7 +279,7 @@ DeleteItemList(list);
 
 /***************************************************************/
 
-void LastSaw(char *hostname,enum roles role)
+void LastSaw(unsigned char digest[EVP_MAX_MD_SIZE+1],char *hostname,enum roles role)
 
 { char databuf[CF_BUFSIZE],varbuf[CF_BUFSIZE],rtype;
   time_t now = time(NULL);
@@ -298,10 +298,10 @@ ThreadLock(cft_getaddr);
 switch (role)
    {
    case cf_accept:
-       snprintf(databuf,CF_BUFSIZE-1,"-%s",Hostname2IPString(hostname));
+       snprintf(databuf,CF_BUFSIZE-1,"-%s",HashPrint(cf_md5,digest));
        break;
    case cf_connect:
-       snprintf(databuf,CF_BUFSIZE-1,"+%s",Hostname2IPString(hostname));
+       snprintf(databuf,CF_BUFSIZE-1,"+%s",HashPrint(cf_md5,digest));
        break;
    }
 
@@ -337,6 +337,8 @@ if (kp == NULL)
 free(rp->item);
 rp->item = kp;
 
+kp->address = strdup(Hostname2IPString(hostname));
+
 if ((kp->name = strdup(databuf)) == NULL)
    {
    free(kp);
@@ -344,7 +346,7 @@ if ((kp->name = strdup(databuf)) == NULL)
    return;
    }
 
-kp->key = NULL;
+kp->key = HavePublicKey(hostname);
 
 ThreadUnlock(cft_system);
 kp->timestamp = now;
@@ -355,7 +357,7 @@ kp->timestamp = now;
 void UpdateLastSeen()
 
 { int lsea = LASTSEENEXPIREAFTER, intermittency = false;
-  struct QPoint q,newq;
+  struct CfKeyHostSeen q,newq; 
   double lastseen,delta2;
   CF_DB *dbp,*dbpent;
   char name[CF_BUFSIZE];
@@ -410,18 +412,20 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    
    if (ReadDB(dbp,kp->name,&q,sizeof(q)))
       {
-      lastseen = (double)now - q.q;
-      newq.q = (double)now;                   /* Last seen is now-then */
-      newq.expect = GAverage(lastseen,q.expect,0.3);
-      delta2 = (lastseen - q.expect)*(lastseen - q.expect);
-      newq.var = GAverage(delta2,q.var,0.3);
+      lastseen = (double)now - q.Q.q;
+      newq.Q.q = (double)now;                   /* Last seen is now-then */
+      newq.Q.expect = GAverage(lastseen,q.Q.expect,0.3);
+      delta2 = (lastseen - q.Q.expect)*(lastseen - q.Q.expect);
+      newq.Q.var = GAverage(delta2,q.Q.var,0.3);
+      strncpy(newq.address,q.address,CF_ADDRSIZE-1);;
       }
    else
       {
       lastseen = 0.0;
-      newq.q = (double)now;
-      newq.expect = 0.0;
-      newq.var = 0.0;
+      newq.Q.q = (double)now;
+      newq.Q.expect = 0.0;
+      newq.Q.var = 0.0;
+      strncpy(newq.address,kp->address,CF_ADDRSIZE);
       }
    
    if (lastseen > (double)lsea)
@@ -431,7 +435,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       }
    else
       {
-      CfOut(cf_verbose,""," -> Last saw %s at %s\n",kp->name,ctime(&(kp->timestamp)));
+      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",kp->name,kp->address,ctime(&(kp->timestamp)));
       WriteDB(dbp,kp->name,&newq,sizeof(newq));
       
       if (intermittency)

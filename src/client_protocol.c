@@ -432,6 +432,7 @@ SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
 
 HashPubKey(server_pubkey,conn->digest,cf_md5);
 CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
+LastSaw(conn->digest,conn->remoteip,cf_connect);
 
 if (server_pubkey != NULL)
    {

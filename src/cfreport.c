@@ -192,7 +192,8 @@ enum cf_format
    cfx_index,
    cfx_min,
    cfx_max,
-   cfx_end
+   cfx_end,
+   cfx_alias
    };
 
 char *CFRX[][2] =
@@ -213,6 +214,7 @@ char *CFRX[][2] =
     "<min>\n","\n</min>\n",
     "<max>\n","\n</max>\n",
     "<end>\n","\n</end>\n",
+    "<alias>\n","\n</alias>\n",
     NULL,NULL
    };
 
@@ -231,6 +233,7 @@ char *CFRH[][2] =
     "<td bgcolor=#e0ffff>","</td>\n",
     "<td bgcolor=#fafafa><small>","</small></td>\n",
     "<td bgcolor=#fafafa><small>","</small></td>\n",
+    "<td>","</td>\n",
     "<td>","</td>\n",
     "<td>","</td>\n",
     "<td>","</td>\n",
@@ -782,8 +785,8 @@ void ShowLastSeen()
   time_t tid = time(NULL);
   double now = (double)tid,average = 0, var = 0;
   double ticksperhr = (double)CF_TICKS_PER_HOUR;
-  char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
-  struct QPoint entry;
+  char name[CF_BUFSIZE],hostname[CF_BUFSIZE],address[CF_MAXVARSIZE];
+  struct CfKeyHostSeen entry;
   int ret,ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
@@ -851,14 +854,15 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
 
    memcpy(&then,value,sizeof(then));
-   strncpy(hostname,(char *)key,ksize);
-
+   
    if (value != NULL)
       {
+      strncpy(hostname,(char *)key,ksize);
+      strncpy(address,(char *)entry.address,ksize);   
       memcpy(&entry,value,sizeof(entry));
-      then = entry.q;
-      average = (double)entry.expect;
-      var = (double)entry.var;
+      then = entry.Q.q;
+      average = (double)entry.Q.expect;
+      var = (double)entry.Q.var;
       }
    else
       {
@@ -891,8 +895,9 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);
       fprintf(fout,"%s%c%s",CFRX[cfx_pm][cfb],*hostname,CFRX[cfx_pm][cfe]);
-      fprintf(fout,"%s%s%s",CFRX[cfx_host][cfb],IPString2Hostname(hostname+1),CFRX[cfx_host][cfe]);
-      fprintf(fout,"%s%s%s",CFRX[cfx_ip][cfb],hostname+1,CFRX[cfx_ip][cfe]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_host][cfb],hostname+1,CFRX[cfx_host][cfe]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_alias][cfb],IPString2Hostname(address),CFRX[cfx_ip][cfe]);
+      fprintf(fout,"%s%s%s",CFRX[cfx_ip][cfb],address,CFRX[cfx_ip][cfe]);
       fprintf(fout,"%s%s%s",CFRX[cfx_date][cfb],tbuf,CFRX[cfx_date][cfe]);
       fprintf(fout,"%s%.2lf%s",CFRX[cfx_q][cfb],((double)(now-then))/ticksperhr,CFRX[cfx_q][cfe]);
       fprintf(fout,"%s%.2lf%s",CFRX[cfx_av][cfb],average/ticksperhr,CFRX[cfx_av][cfe]);
@@ -911,8 +916,9 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          {
          fprintf(fout,"%s in (%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
          }
-      fprintf(fout,"%s%s%s",CFRH[cfx_host][cfb],IPString2Hostname(hostname+1),CFRH[cfx_host][cfe]);
-      fprintf(fout,"%s%s%s",CFRH[cfx_ip][cfb],hostname+1,CFRH[cfx_ip][cfe]);
+      fprintf(fout,"%s%s%s",CFRH[cfx_host][cfb],hostname+1,CFRH[cfx_host][cfe]);
+      fprintf(fout,"%s%s%s",CFRH[cfx_ip][cfb],address,CFRH[cfx_ip][cfe]);
+      fprintf(fout,"%s%s%s",CFRH[cfx_alias][cfb],IPString2Hostname(address),CFRH[cfx_ip][cfe]);
       fprintf(fout,"%s Last seen at %s%s",CFRH[cfx_date][cfb],tbuf,CFRH[cfx_date][cfe]);
       fprintf(fout,"%s %.2lf hrs ago %s",CFRH[cfx_q][cfb],((double)(now-then))/ticksperhr,CFRH[cfx_q][cfe]);
       fprintf(fout,"%s Av %.2lf hrs %s",CFRH[cfx_av][cfb],average/ticksperhr,CFRH[cfx_av][cfe]);
@@ -921,9 +927,10 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       }
    else if (CSV)
       {
-      fprintf(fout,"%c,%25.25s,%15.15s,%s,%.2lf,%.2lf,%.2lf hrs\n",
+      fprintf(fout,"%c,%25.25s,%25.25s,%15.15s,%s,%.2lf,%.2lf,%.2lf hrs\n",
              *hostname,
-             IPString2Hostname(hostname+1),
+             hostname+1,
+             IPString2Hostname(address),
              addr,
              tbuf,
              ((double)(now-then))/ticksperhr,
@@ -932,9 +939,10 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       }
    else
       {
-      fprintf(fout,"IP %c %25.25s %15.15s  @ [%s] not seen for (%.2lf) hrs, Av %.2lf +/- %.2lf hrs\n",
+      fprintf(fout,"IP %c %25.25s %25.25s %15.15s  @ [%s] not seen for (%.2lf) hrs, Av %.2lf +/- %.2lf hrs\n",
              *hostname,
-             IPString2Hostname(hostname+1),
+             hostname+1,
+             IPString2Hostname(address),
              addr,
              tbuf,
              ((double)(now-then))/ticksperhr,

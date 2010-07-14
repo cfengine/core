@@ -120,9 +120,6 @@
 /* Define to 1 if you have the `bcopy' function. */
 #undef HAVE_BCOPY
 
-/* Define to 1 if you have the <bson.h> header file. */
-#undef HAVE_BSON_H
-
 /* Define to 1 if you have the `chflags' function. */
 #undef HAVE_CHFLAGS
 
@@ -278,12 +275,6 @@
 /* Define to 1 if you have the `mkfifo' function. */
 #undef HAVE_MKFIFO
 
-/* Define to 1 if you have the <mongo_except.h> header file. */
-#undef HAVE_MONGO_EXCEPT_H
-
-/* Define to 1 if you have the <mongo.h> header file. */
-#undef HAVE_MONGO_H
-
 /* Define to 1 if you have the <mysql/mysql.h> header file. */
 #undef HAVE_MYSQL_MYSQL_H
 
@@ -301,9 +292,6 @@
 
 /* Define to 1 if you have the <pgsql/libpq-fe.h> header file. */
 #undef HAVE_PGSQL_LIBPQ_FE_H
-
-/* Define to 1 if you have the <platform_hacks.h> header file. */
-#undef HAVE_PLATFORM_HACKS_H
 
 /* Define to 1 if you have the `pstat_getdynamic' function. */
 #undef HAVE_PSTAT_GETDYNAMIC

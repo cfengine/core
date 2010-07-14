@@ -972,10 +972,9 @@ void EndMeasure(char *eventname,struct timespec start);
 void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct Item *list);
-void LastSaw(char *hostname,enum roles role);
+void LastSaw(unsigned char digest[EVP_MAX_MD_SIZE+1],char *hostname,enum roles role);
 void UpdateLastSeen(void);
 double GAverage(double anew,double aold,double p);
-
 
 /* install.c */
 

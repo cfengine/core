@@ -1032,7 +1032,16 @@ struct CfKeyBinding
    {
    char *name;
    RSA *key;
+   char *address;
    time_t timestamp;
+   };
+
+/*************************************************************************/
+
+struct CfKeyHostSeen
+   {
+   char address[CF_ADDRSIZE];
+   struct QPoint Q;   
    };
 
 /*************************************************************************/

@@ -1776,8 +1776,6 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
       }
 
 #endif  /* NOT MINGW */
-   
-   LastSaw(dns_assert,cf_accept);
    return true;
    }
 
@@ -1939,7 +1937,6 @@ if (!matched)
  
 CfOut(cf_verbose,"","Host ID is %s\n",dns_assert);
 strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE-1);
-LastSaw(dns_assert,cf_accept); 
  
 CfOut(cf_verbose,"","User ID seems to be %s\n",username); 
 strncpy(conn->username,username,CF_MAXVARSIZE-1);
@@ -2627,6 +2624,10 @@ if (DEBUG||D2)
    RSA_print_fp(stdout,newkey,0);
    }
 
+HashPubKey(newkey,conn->digest,cf_md5);
+CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->ipaddr,HashPrint(cf_md5,conn->digest));
+LastSaw(conn->digest,conn->hostname,cf_accept);
+   
 if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
    {
    if (!conn->trust)

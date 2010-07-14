@@ -42,6 +42,7 @@ struct cfd_connection
    int  trust;
    int  sd_reply;
    unsigned char *session_key;
+   unsigned char digest[EVP_MAX_MD_SIZE+1];
    char hostname[CF_MAXVARSIZE];
    char username[CF_MAXVARSIZE];
    #ifdef MINGW

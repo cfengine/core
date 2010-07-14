@@ -1092,7 +1092,6 @@ if (!attr.copy.force_ipv4)
    signal(SIGALRM,SIG_DFL);
    }
 
-LastSaw(host,cf_connect);
 return true; 
 }
 

@@ -502,9 +502,9 @@ char *TCPNAMES[CF_NETATTR] =
 
 char *OBS[CF_OBSERVABLES][2] =
     {
-    "users","Users logged in",
-    "rootprocs","Privileged system processes",
-    "otherprocs","Non-privileged process",
+    "users","Users with active processes",
+    "rootprocs","Sum privileged system processes",
+    "otherprocs","Sum non-privileged process",
     "diskfree","Free disk on / partition",
     "loadavg","% kernel load utilization",
     "netbiosns_in","netbios name lookups (in)",

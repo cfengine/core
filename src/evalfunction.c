@@ -86,8 +86,8 @@ struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
   time_t tid = time(NULL);
   double now = (double)tid,average = 0, var = 0;
   double ticksperhr = (double)CF_TICKS_PER_HOUR;
-  char name[CF_BUFSIZE],hostname[CF_BUFSIZE];
-  struct QPoint entry;
+  char name[CF_BUFSIZE],hosthash[CF_BUFSIZE],address[CF_MAXVARSIZE];
+  struct CfKeyHostSeen entry;
   int horizon;
   
 buffer[0] = '\0';  
@@ -139,14 +139,15 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
 
    memcpy(&then,value,sizeof(then));
-   strcpy(hostname,(char *)(key+1));
-
+   strcpy(hosthash,(char *)(key+1));
+   
    if (value != NULL)
       {
       memcpy(&entry,value,sizeof(entry));
-      then = entry.q;
-      average = (double)entry.expect;
-      var = (double)entry.var;
+      then = entry.Q.q;
+      average = (double)entry.Q.expect;
+      var = (double)entry.Q.var;
+      strcpy(address,entry.address);
       }
    else
       {
@@ -170,11 +171,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
    if (strcmp(format,"address") == 0)
       {
-      IdempPrependRScalar(&returnlist,hostname,CF_SCALAR);
+      IdempPrependRScalar(&returnlist,address,CF_SCALAR);
       }
    else
       {
-      strncpy(name,IPString2Hostname(hostname),CF_MAXVARSIZE);
+      strncpy(name,IPString2Hostname(address),CF_MAXVARSIZE);
       IdempPrependRScalar(&returnlist,name,CF_SCALAR);
       }
    }

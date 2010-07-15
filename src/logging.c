@@ -100,7 +100,7 @@ if (total == 0)
    }
 else
    {   
-   snprintf(string,CF_BUFSIZE,"Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%\n",
+   snprintf(string,CF_BUFSIZE,"Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
             sp,
             THIS_AGENT,
             CFA_BACKGROUND,
@@ -426,6 +426,11 @@ void PromiseLog(char *s)
   time_t now = time(NULL);
   FILE *fout;
 
+if (s == NULL || strlen(s) ==  0)
+   {
+   return;
+   }
+  
 snprintf(filename,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_PROMISE_LOG);
 
 if ((fout = fopen(filename,"a")) == NULL)
@@ -434,7 +439,7 @@ if ((fout = fopen(filename,"a")) == NULL)
    return;
    }
 
-fprintf(fout,"%ld,%ld: %s",CFSTARTTIME,now,start,end,s);
+fprintf(fout,"%ld,%ld: %s\n",CFSTARTTIME,now,s);
 fclose(fout);
 }
 

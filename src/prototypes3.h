@@ -1255,6 +1255,7 @@ void Banner(char *s);
 
 /* rlist.c */
 
+struct Rlist *ParseShownRlist(char *string);
 int IsStringIn(struct Rlist *list,char *s);
 int IsRegexIn(struct Rlist *list,char *s);
 struct Rlist *KeyInRlist(struct Rlist *list,char *key);

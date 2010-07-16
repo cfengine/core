@@ -854,3 +854,23 @@ for (sp = var; *sp != '\0'; sp++)
 return false;
 }
 
+/*********************************************************************/
+
+int IsCfList(char *type)
+{
+  char *listTypes[] = { "sl", "il", "rl", "ml", NULL };
+  int i;
+  
+
+  for(i = 0; listTypes[i] != NULL; i++)
+    {
+      if(strcmp(type, listTypes[i]) == 0)
+	{
+	  return true;
+	}
+    }
+
+  return false;
+}
+
+

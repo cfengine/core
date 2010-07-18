@@ -126,7 +126,7 @@ char MANDIR[CF_BUFSIZE];
             "and cf-know can assemble and converge the reference manual\n"
             "for the current version of the Cfengine software.";
  
- struct option OPTIONS[17] =
+ struct option OPTIONS[18] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -141,13 +141,14 @@ char MANDIR[CF_BUFSIZE];
       { "map-impact",required_argument,0,'k'},
       { "quote",required_argument,0,'q'},
       { "regex",required_argument,0,'r'},
+      { "report",required_argument,0,'R'},
       { "sql",no_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
       { "topic",required_argument,0,'t'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[17] =
+ char *HINTS[18] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -162,6 +163,7 @@ char MANDIR[CF_BUFSIZE];
       "Show impact map for argument",
       "Quote encapsulated HTML output through the query engine",
       "Specify a regular expression for searching the topic map",
+      "Specify a report to extract from the CFDB",
       "Store topic map in defined SQL database",
       "Print a syntax summary of the optional keyword or this cfengine version",
       "Specify a literal string topic to look up in the topic map",
@@ -230,7 +232,7 @@ void CheckOpts(int argc,char **argv)
 strcpy(TOPIC_CMD,"");
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:k:q:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -274,6 +276,13 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:st:r:mMK:k:q:",OPTIONS,&optindex)) !
           LOOKUP = true;
           SHOWREPORTS = false;
 
+      case 'R':
+#ifdef HAVE_LIBCFNOVA
+          Nova_ReportDB();
+          exit(0);
+#endif
+          break;
+          
       case 't':
           strcpy(TOPIC_CMD,optarg);
           LOOKUP = true;

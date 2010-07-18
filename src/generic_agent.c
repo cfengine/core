@@ -1191,6 +1191,11 @@ void CompilationReport(char *fname)
 
 { char filename[CF_BUFSIZE],output[CF_BUFSIZE];
 
+if (THIS_AGENT_TYPE != cf_common)
+   {
+   return;
+   }
+
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
 printf("Summarizing promises as text to %s\n",filename);
 

@@ -123,6 +123,28 @@ if test $WITH_SQL = 1; then
   AC_CHECK_HEADERS(libpq-fe.h)
 fi
 
+#
+# Report database driver - MongoDB C interface
+#
+
+AC_ARG_WITH(mongo,
+	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
+	with_mongo=no)
+
+if test "x$with_mongo" = xyes; then
+   AC_MSG_CHECKING(for libmongoc)
+   WITH_MONGO=1
+else
+   WITH_MONGO=0
+fi
+
+if test $WITH_MONGO = 1; then
+  AC_CHECK_LIB(mongoc,main, [], [AC_MSG_ERROR(Cannot find libmongoc)])
+fi
+
+
+
+
 
 AC_ARG_WITH(nova,
 	AS_HELP_STRING(--without-nova, [support some graphic functions]),with_nova=no,
@@ -466,26 +488,6 @@ fi
 AC_SUBST(OPENSSL_LIB_LDFLAGS)
 AC_SUBST(OPENSSL_LIB_CPPFLAGS)
 AC_SUBST(OPENSSL_LIB_LIB)
-
-#
-# Report database driver - MongoDB C interface
-#
-
-AC_ARG_WITH(mongo,
-	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
-	with_mongo=no)
-
-if test "x$with_mongo" = xyes; then
-   AC_MSG_CHECKING(for libmongoc)
-   WITH_MONGO=1
-else
-   WITH_MONGO=0
-fi
-
-if test $WITH_MONGO = 1; then
-  AC_CHECK_LIB(mongoc,main, [], [AC_MSG_ERROR(Cannot find libmongoc)])
-fi
-
 
 #
 # Others
@@ -1063,7 +1065,15 @@ else
   AC_MSG_RESULT( -> No libvirt support included)
 fi
 
+if test $WITH_MONGO = 1; then
+  AC_MSG_RESULT( -> Configured with libmongoc support)
+else
+  AC_MSG_RESULT( -> No libmongoc support included)
+fi
+
 AC_MSG_RESULT( )
+
+
 
 dnl ######################################################################
 dnl Now make the Makefiles

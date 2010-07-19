@@ -989,7 +989,8 @@ typedef enum
   INHERIT_ACCESS_ONLY,
   INHERIT_DEFAULT_ONLY,
   INHERIT_ACCESS_AND_DEFAULT
-  }inherit_t;
+  }
+inherit_t;
 
 enum insert_match
    {
@@ -1004,6 +1005,13 @@ enum monitord_rep
    mon_rep_mag,
    mon_rep_week,
    mon_rep_yr
+   };
+
+enum software_rep
+   {
+   sw_rep_installed,
+   sw_rep_patch_avail,
+   sw_rep_patch_installed
    };
 
 enum promiselog_rep

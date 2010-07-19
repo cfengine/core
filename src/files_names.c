@@ -309,6 +309,22 @@ return path;
 
 /*********************************************************************/
 
+char *Join(char *path,char *leaf)
+
+{ int len = strlen(leaf);
+
+if ((strlen(path)+len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
+   {
+   CfOut(cf_error,"","Buffer overflow constructing string. Tried to add %s to %s\n",leaf,path);
+   return NULL;
+   }
+
+strcat(path,leaf);
+return path;
+}
+
+/*********************************************************************/
+
 int IsAbsPath(char *path)
 
 {

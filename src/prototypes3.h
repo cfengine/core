@@ -707,6 +707,7 @@ int EmptyString(char *s);
 int ExpandOverflow(char *str1,char *str2);
 char *JoinPath(char *path,char *leaf);
 char *JoinSuffix(char *path,char *leaf);
+char *Join(char *path,char *leaf);
 int IsAbsPath(char *path);
 void AddSlash(char *str);
 void DeleteSlash(char *str);

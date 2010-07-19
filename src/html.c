@@ -111,7 +111,7 @@ char *URLControl(char *driver,char *url)
 
 { static char transform[CF_BUFSIZE];
 
-if (strncmp(url,"http",4) == 0)
+if (strncmp(url,"http",4) == 0 || strstr(url,"php"))
    {
    return url;
    }

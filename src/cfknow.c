@@ -143,7 +143,6 @@ char MANDIR[CF_BUFSIZE];
       { "query_cfdb",required_argument,0,'Q'},
       { "quote",required_argument,0,'q'},
       { "regex",required_argument,0,'r'},
-      { "report",required_argument,0,'R'},
       { "sql",no_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
       { "topic",required_argument,0,'t'},
@@ -166,7 +165,6 @@ char MANDIR[CF_BUFSIZE];
       "Query the CFDB for testing, etc",
       "Quote encapsulated HTML output through the query engine",
       "Specify a regular expression for searching the topic map",
-      "Specify a report to extract from the CFDB",
       "Store topic map in defined SQL database",
       "Print a syntax summary of the optional keyword or this cfengine version",
       "Specify a literal string topic to look up in the topic map",
@@ -279,13 +277,6 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:Q:",OPTIONS,&optindex
           LOOKUP = true;
           SHOWREPORTS = false;
 
-      case 'R':
-#ifdef HAVE_LIBCFNOVA
-          Nova_ReportDB();
-          exit(0);
-#endif
-          break;
-          
       case 't':
           strcpy(TOPIC_CMD,optarg);
           LOOKUP = true;

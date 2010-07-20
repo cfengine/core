@@ -1205,14 +1205,6 @@ return VPSOPTS[VSYSTEMHARDCLASS];
 
 #ifdef HAVE_LIBCFNOVA
 
-int Nova_DBDummy()
-// never used but needed to link in Nova_DB* functions into libpromises.so
-{
-#ifdef HAVE_LIBMONGOC
-  return Nova_DBOpen(NULL, "", 1);
-#endif
-}
-
 int Nova_VerifyTablePromise(CfdbConn *cfdb,char *table_path,struct Rlist *columns,struct Attributes a,struct Promise *pp)
 
 { char name[CF_MAXVARSIZE],type[CF_MAXVARSIZE],query[CF_MAXVARSIZE],table[CF_MAXVARSIZE],db[CF_MAXVARSIZE];

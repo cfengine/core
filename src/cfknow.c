@@ -71,6 +71,7 @@ char *NextMap(char *topic,char *type,enum cfknow_image imgtype);
 void GenerateGraph(void);
 void GenerateManual(void);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
+void CfQueryCFDB(char *query);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -126,7 +127,7 @@ char MANDIR[CF_BUFSIZE];
             "and cf-know can assemble and converge the reference manual\n"
             "for the current version of the Cfengine software.";
  
- struct option OPTIONS[18] =
+ struct option OPTIONS[19] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -139,6 +140,7 @@ char MANDIR[CF_BUFSIZE];
       { "manpage",no_argument,0,'M'},
       { "map-full",required_argument,0,'K'},
       { "map-impact",required_argument,0,'k'},
+      { "query_cfdb",required_argument,0,'Q'},
       { "quote",required_argument,0,'q'},
       { "regex",required_argument,0,'r'},
       { "report",required_argument,0,'R'},
@@ -148,7 +150,7 @@ char MANDIR[CF_BUFSIZE];
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[18] =
+ char *HINTS[19] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -161,6 +163,7 @@ char MANDIR[CF_BUFSIZE];
       "Generate reference manpage from internal data",
       "Show full image map for argument",
       "Show impact map for argument",
+      "Query the CFDB for testing, etc",
       "Quote encapsulated HTML output through the query engine",
       "Specify a regular expression for searching the topic map",
       "Specify a report to extract from the CFDB",
@@ -232,7 +235,7 @@ void CheckOpts(int argc,char **argv)
 strcpy(TOPIC_CMD,"");
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:Q:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -310,6 +313,12 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:",OPTIONS,&optindex))
           SHOWMAP = 3;
           break;
 
+      case 'Q':
+          strcpy(TOPIC_CMD,optarg);
+          CfQueryCFDB(TOPIC_CMD);
+          exit(0);
+          break;
+          
       case 's':
           WRITE_SQL = true;
           break;
@@ -1303,6 +1312,15 @@ if (strcmp("reports",pp->agentsubtype) == 0)
    VerifyReportPromise(pp);
    return;
    }
+}
+
+/*********************************************************************/
+
+void CfQueryCFDB(char *query)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_CfQueryCFDB(query);
+#endif
 }
 
 /*********************************************************************/

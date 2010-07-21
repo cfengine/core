@@ -343,6 +343,10 @@ if (key->n)
    {
    buf_len = (size_t)BN_num_bytes(key->n);
    }
+else
+   {
+   buf_len = 0;
+   }
 
 if (key->e)
    {

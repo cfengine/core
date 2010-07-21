@@ -750,7 +750,9 @@ if (rval == NULL)
 switch(type)
    {
    case CF_SCALAR:
+       ThreadLock(cft_lock);
        free((char *)rval);
+       ThreadUnlock(cft_lock);
        break;
 
    case CF_LIST:

@@ -1,3 +1,8 @@
+3.0.6
+	Change two log formats to use time() instead of date()
+	- filechanges
+	- total compliance
+
 3.0.5p1
         Showing paths allowed/denied access to when cf-serverd is run in verbose mode.
 	Bug in server fixed for dynamic addresses.

@@ -499,6 +499,7 @@ void SaveClassEnvironment(void);
 
 /* evalfunction.c */
 
+struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs);
@@ -1258,6 +1259,7 @@ void Banner(char *s);
 
 struct Rlist *ParseShownRlist(char *string);
 int IsStringIn(struct Rlist *list,char *s);
+int IsIntIn(struct Rlist *list,int i);
 int IsRegexIn(struct Rlist *list,char *s);
 struct Rlist *KeyInRlist(struct Rlist *list,char *key);
 int RlistLen(struct Rlist *start);

@@ -421,6 +421,9 @@ switch (this)
    case cfn_userexists:
        rval = FnCallUserExists(fp,expargs);
        break;
+   case cfn_getusers:
+       rval = FnCallGetUsers(fp,expargs);
+       break;
    case cfn_groupexists:
        rval = FnCallGroupExists(fp,expargs);
        break;

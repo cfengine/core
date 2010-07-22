@@ -297,6 +297,57 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs)
+    
+#ifndef MINGW
+{ struct Rlist *rp,*newlist = NULL,*except_names,*except_uids;
+  struct Rval rval;
+  struct passwd *pw;
+  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char *except_name,*except_uid;
+  int limit;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getusers].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+except_name = finalargs->item;
+except_uid = finalargs->next->item;
+
+except_names = SplitStringAsRList(except_name,',');
+except_uids = SplitStringAsRList(except_uid,',');
+
+setpwent();
+
+while (pw = getpwent())
+   {
+   if (!IsStringIn(except_names,pw->pw_name) && !IsIntIn(except_uids,(int)pw->pw_uid))
+      {
+      IdempPrependRScalar(&newlist,pw->pw_name,CF_SCALAR);
+      }
+   }
+
+endpwent();
+
+SetFnCallReturnStatus("getusers",FNCALL_SUCCESS,NULL,NULL);
+
+rval.item = newlist;
+rval.rtype = CF_LIST;
+return rval;
+}
+#else
+{
+struct Rval rval;
+CfOut(cf_error,""," -> getusers is not yet implemented on Windows"); 
+rval.item = NULL;
+rval.rtype = CF_LIST;
+return rval;
+}
+#endif
+
+/*********************************************************************/
+
 struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;

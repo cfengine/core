@@ -174,7 +174,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,str
   unsigned long err;
   unsigned char digest[EVP_MAX_MD_SIZE];
   int encrypted_len,nonce_len = 0,len_n,len_e,len,session_size;
-  char dont_implicitly_trust_server, keyname[CF_BUFSIZE], enterprise_field = 'c';
+  char dont_implicitly_trust_server,ipaddr[CF_BUFSIZE], enterprise_field = 'c';
   RSA *server_pubkey = NULL;
 
 if (PUBKEY == NULL || PRIVKEY == NULL) 
@@ -196,18 +196,7 @@ HashString(in,nonce_len,digest,cf_md5);
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
-if (BooleanControl("control_agent","hostnamekeys"))
-   {
-   snprintf(keyname,CF_BUFSIZE,"root-%s",pp->this_server); 
-   Debug("AuthenticateAgent(with hostname key %s)\n",keyname);
-   }
-else
-   {
-   snprintf(keyname,CF_BUFSIZE,"root-%s",conn->remoteip); 
-   Debug("AuthenticateAgent(with IP keyname %s)\n",keyname);
-   }
-
-if (server_pubkey = HavePublicKey(keyname))
+if (server_pubkey = HavePublicKeyByIP(conn->username,conn->remoteip))
    {
    dont_implicitly_trust_server = 'y';
    encrypted_len = RSA_size(server_pubkey);
@@ -396,7 +385,7 @@ if (server_pubkey == NULL)
       return false;
       }
 
-   SavePublicKey(keyname,newkey);
+   SavePublicKey(conn->username,conn->remoteip,conn->digest,newkey);
    server_pubkey = RSAPublicKey_dup(newkey);
    RSA_free(newkey);
    }
@@ -432,7 +421,7 @@ SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
 
 HashPubKey(server_pubkey,conn->digest,cf_md5);
 CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
-LastSaw(conn->digest,conn->remoteip,cf_connect);
+LastSaw(conn->username,conn->remoteip,HashPrint(cf_md5,conn->digest),cf_connect);
 
 if (server_pubkey != NULL)
    {

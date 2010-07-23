@@ -2626,7 +2626,7 @@ if (DEBUG||D2)
 
 HashPubKey(newkey,conn->digest,cf_md5);
 CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->ipaddr,HashPrint(cf_md5,conn->digest));
-LastSaw(conn->digest,conn->hostname,cf_accept);
+LastSaw(conn->username,conn->ipaddr,conn->digest,cf_accept);
    
 if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
    {
@@ -3701,21 +3701,14 @@ else
 int CheckStoreKey(struct cfd_connection *conn,RSA *key)
 
 { RSA *savedkey;
- char keyname[CF_MAXVARSIZE];
+  char udigest[CF_MAXVARSIZE];
+ 
+snprintf(udigest,CF_MAXVARSIZE-1,"%s",HashPrint(cf_md5,conn->digest));
 
-if (BooleanControl("control_server","hostnamekeys"))
-   {
-   snprintf(keyname,CF_MAXVARSIZE,"%s-%s",conn->username,conn->hostname);
-   }
-else
-   {
-   snprintf(keyname,CF_MAXVARSIZE,"%s-%s",conn->username,MapAddress(conn->ipaddr));
-   }
-
-if (savedkey = HavePublicKey(keyname))
+if (savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest))
    {
    CfOut(cf_verbose,"","A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
-
+   
    CfOut(cf_verbose,"","Adding IP %s to SkipVerify - no need to check this if we have a key\n",conn->ipaddr);
    PrependItem(&SKIPVERIFY,MapAddress(conn->ipaddr),NULL);
    
@@ -3725,56 +3718,6 @@ if (savedkey = HavePublicKey(keyname))
       SendTransaction(conn->sd_reply,"OK: key accepted",0,CF_DONE);
       RSA_free(savedkey);
       return true;
-      }
-   else
-      {
-      /* If we find a key, but it doesn't match, see if we permit dynamical IP addressing */
-      
-      if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
-         {
-         int result;
-         result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
-         RSA_free(savedkey);
-         if (result)
-            {
-            SendTransaction(conn->sd_reply,"OK: key accepted",0,CF_DONE);
-            }
-         else
-            {
-            SendTransaction(conn->sd_reply,"BAD: keys did not match",0,CF_DONE);
-            }
-         return result;
-         }
-      else /* if not, reject it */
-         {
-         CfOut(cf_verbose,"","The new public key does not match the old one! Spoofing attempt!\n");
-         SendTransaction(conn->sd_reply,"BAD: keys did not match",0,CF_DONE);
-         RSA_free(savedkey);
-         return false;
-         }
-      }
-   
-   return true;
-   }
-else if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
-   {
-   /* If the host is expected to have a dynamic address, check for the key */
-   
-   if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(conn->ipaddr)))
-      {
-      int result;
-      result = IsKnownHost(savedkey,key,MapAddress(conn->ipaddr),conn->username);
-      RSA_free(savedkey);
-
-      if (result)
-         {
-         SendTransaction(conn->sd_reply,"OK: key accepted",0,CF_DONE);
-         }
-      else
-         {
-         SendTransaction(conn->sd_reply,"BAD: keys did not match",0,CF_DONE);
-         }
-      return result;
       }
    }
 
@@ -3786,8 +3729,7 @@ if ((TRUSTKEYLIST != NULL) && IsMatchItemIn(TRUSTKEYLIST,MapAddress(conn->ipaddr
    conn->trust = true;
    /* conn->maproot = false; ?? */
    SendTransaction(conn->sd_reply,"OK: unknown key was accepted on trust",0,CF_DONE);
-   SavePublicKey(keyname,key);
-   AddToKeyDB(key,MapAddress(conn->ipaddr));
+   SavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest,key);
    return true;
    }
 else
@@ -3795,103 +3737,6 @@ else
    CfOut(cf_verbose,"","No previous key found, and unable to accept this one on trust\n");
    SendTransaction(conn->sd_reply,"BAD: key could not be accepted on trust",0,CF_DONE);
    return false; 
-   }
-}
-
-/***************************************************************/
-
-int IsKnownHost(RSA *oldkey,RSA *newkey,char *mipaddr,char *username)
-
-/* This builds security from trust only gradually with DHCP - takes time!
-   But what else are we going to do? ssh doesn't have this problem - it
-   just asks the user interactively. We can't do that ... */
-
-{ CF_DB *dbp;
-  int trust = false;
-  char keyname[CF_MAXVARSIZE];
-  char keydb[CF_MAXVARSIZE];
-  char vbuff[CF_BUFSIZE];
-
-snprintf(keyname,CF_MAXVARSIZE,"%s-%s",username,mipaddr);
-snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR); 
-
-Debug("************ The key does not match a known key but the host could have a dynamic IP...\n"); 
-
-if ((TRUSTKEYLIST != NULL) && IsMatchItemIn(TRUSTKEYLIST,MapAddress(mipaddr)))
-   {
-   Debug("We will accept a new key for this IP on trust\n");
-   trust = true;
-   }
-else
-   {
-   Debug("Will not accept this key, unless we have seen it before\n");
-   }
-
-/* If the host is allowed to have a variable IP range, we can accept
-   the new key on trust for the given IP address provided we have seen
-   the key before.  Check for it in a database .. */
-
-Debug("Checking to see if we have seen the key before..\n"); 
-
-if (!OpenDB(keydb,&dbp))
-   {
-   return false;
-   }
-
-if (!ReadComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),vbuff,CF_BUFSIZE))
-   {
-   Debug("The new key is not previously known, so we need to use policy for trusting the host %s\n",mipaddr);
- 
-   if (trust)
-      {
-      Debug("Policy says to trust the changed key from %s and note that it could vary in future\n",mipaddr);
-      WriteComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),mipaddr,strlen(mipaddr)+1);
-      DeletePublicKey(keyname);
-      }
-   else
-      {
-      Debug("Found no grounds for trusting this new from %s\n",mipaddr);
-      }
-   }
-else
-   {
-   CfOut(cf_verbose,"","Public key was previously owned by %s now by %s - updating\n",vbuff,mipaddr);
-   Debug("Now trusting this new key, because we have seen it before\n");
-   DeletePublicKey(keyname);
-   trust = true;
-   }
-
-/* save this new key in the database, for future reference, regardless
-   of whether we accept, but only change IP if trusted  */ 
-
-SavePublicKey(keyname,newkey);
-
-CloseDB(dbp);
-cf_chmod(keydb,0644); 
-return trust; 
-}
-
-/***************************************************************/
-
-void AddToKeyDB(RSA *newkey,char *mipaddr)
-
-{ CF_DB *dbp;
-  char keydb[CF_MAXVARSIZE];
-
-snprintf(keydb,CF_MAXVARSIZE,"%s/ppkeys/dynamic",CFWORKDIR); 
-  
-if ((DHCPLIST != NULL) && IsMatchItemIn(DHCPLIST,MapAddress(mipaddr)))
-   {
-   /* Cache keys in the db as we see them is there are dynamical addresses */
-
-   if (!OpenDB(keydb,&dbp))
-      {
-      return;
-      }
-
-   WriteComplexKeyDB(dbp,(char *)newkey,sizeof(RSA),mipaddr,strlen(mipaddr)+1);
-   CloseDB(dbp);
-   cf_chmod(keydb,0644); 
    }
 }
 

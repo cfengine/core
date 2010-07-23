@@ -117,79 +117,102 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
    {
    FatalError("RSA Exponent too small or not odd");
    }
-
 }
 
 /*********************************************************************/
 
-RSA *HavePublicKey(char *name)
+RSA *HavePublicKeyByIP(char *username,char *ipaddress)
 
-{ char filename[CF_BUFSIZE],*sp;
+{ char md5[CF_SMALLBUF];
+ 
+IPString2KeyDigest(ipaddress,md5);
+
+return HavePublicKey(username,ipaddress,md5);
+}
+
+/*********************************************************************/
+
+RSA *HavePublicKey(char *username,char *ipaddress,char *digest)
+
+{ char keyname[CF_MAXVARSIZE],newname[CF_BUFSIZE],oldname[CF_BUFSIZE],*sp;
   struct stat statbuf; 
   static char *passphrase = "public";
   unsigned long err;
   FILE *fp;
   RSA *newkey = NULL;
 
-Debug("HavePublickey(%s)\n",name);
+snprintf(keyname,CF_MAXVARSIZE,"%s-%s",username,digest);  
+
+Debug("HavePublickey(%s)\n",keyname);
   
-snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);   
-MapName(filename);
+snprintf(newname,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,keyname);   
+MapName(newname);
 
 // Check memory cache rlist
 
-if (newkey = SelectKeyRing(name))
+if (newkey = SelectKeyRing(keyname))
    {
+   CfOut(cf_verbose,""," -> Retrived %s from cache",keyname);
    return newkey;
    }
-else if (cfstat(filename,&statbuf) == -1)
+else if (cfstat(newname,&statbuf) == -1)
    {
-   Debug("Did not have key %s\n",name);
-   return NULL;
-   }
-else
-   {
-   if ((fp = fopen(filename,"r")) == NULL)
-      {
-      CfOut(cf_error,"fopen","Couldn't find a public key (%s) - use cf-key to get one",filename);
+   strcpy(newname,newname);
+   snprintf(oldname,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,username,ipaddress);   
+   MapName(oldname);
+   
+   if (cfstat(oldname,&statbuf) == -1)
+      {      
+      Debug("Did not have old-style key %s\n",oldname);
       return NULL;
-      }
-   
-   if ((newkey = PEM_read_RSAPublicKey(fp,NULL,NULL,passphrase)) == NULL)
-      {
-      err = ERR_get_error();
-      CfOut(cf_error,"PEM_read","Error reading Private Key = %s\n",ERR_reason_error_string(err));
-      fclose(fp);
-      return NULL;
-      }
-   
-   CfOut(cf_verbose,"","Loaded %s\n",filename);  
-   fclose(fp);
-   
-   if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))
-      {
-      FatalError("RSA Exponent too small or not odd");
       }
 
-   IdempAddToKeyRing(name,newkey);
-   return newkey;
+   CfOut(cf_inform,""," -> Renaming old key from %s to %s",oldname,newname);
+   rename(oldname,newname);
    }
+
+if ((fp = fopen(newname,"r")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Couldn't find a public key (%s)",newname);
+   return NULL;
+   }
+
+if ((newkey = PEM_read_RSAPublicKey(fp,NULL,NULL,passphrase)) == NULL)
+   {
+   err = ERR_get_error();
+   CfOut(cf_error,"PEM_read","Error reading Private Key = %s\n",ERR_reason_error_string(err));
+   fclose(fp);
+   return NULL;
+   }
+
+CfOut(cf_verbose,""," -> Loaded key %s\n",newname);  
+fclose(fp);
+
+if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))
+   {
+   FatalError("RSA Exponent too small or not odd");
+   }
+
+IdempAddToKeyRing(keyname,newkey);
+return newkey;
 }
 
 /*********************************************************************/
 
-void SavePublicKey(char *name,RSA *key)
+void SavePublicKey(char *user,char *ipaddress,char *digest,RSA *key)
 
-{ char filename[CF_BUFSIZE],*sp;
+{ char keyname[CF_MAXVARSIZE],filename[CF_BUFSIZE],*sp;
   struct stat statbuf;
   FILE *fp;
   int err;
 
-Debug("SavePublicKey %s\n",name); 
+Debug("SavePublicKey %s\n",ipaddress); 
 
-IdempAddToKeyRing(name,key);
+snprintf(keyname,CF_MAXVARSIZE,"%s-%s",user,digest);
 
-snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
+IdempAddToKeyRing(keyname,key);
+
+snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,keyname);
 MapName(filename);
 
 if (cfstat(filename,&statbuf) != -1)
@@ -219,13 +242,13 @@ fclose(fp);
 
 /*********************************************************************/
 
-void DeletePublicKey(name)
-
-char *name;
+void DeletePublicKey(char *user,char *ipaddress,char *digest)
 
 { char filename[CF_BUFSIZE],*sp;
 
-snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,name);
+snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,ipaddress);
+unlink(filename);
+snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,digest);
 unlink(filename);
 }
 

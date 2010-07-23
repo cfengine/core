@@ -1111,6 +1111,7 @@ struct cfagent_connection
    int authenticated;
    int protoversion;
    int family;                              /* AF_INET or AF_INET6 */
+   char username[CF_SMALLBUF];
    char localip[CF_MAX_IP_LEN];
    char remoteip[CF_MAX_IP_LEN];
    unsigned char digest[EVP_MAX_MD_SIZE+1];

@@ -239,6 +239,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+void IPString2KeyDigest(char *ipv4,char *result);
 time_t StrToTime(char *s);
 enum cfhypervisors Str2Hypervisors(char *s);
 enum cfenvironment_state Str2EnvState(char *s);
@@ -293,9 +294,10 @@ void LoadSecretKeys (void);
 void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
 int EncryptString (char type,char *in, char *out, unsigned char *key, int len);
 int DecryptString (char type,char *in, char *out, unsigned char *key, int len);
-RSA *HavePublicKey (char *ipaddress);
-void SavePublicKey (char *ipaddress, RSA *key);
-void DeletePublicKey (char *ipaddress);
+RSA *HavePublicKey (char *username,char *ipaddress,char *digest);
+RSA *HavePublicKeyByIP(char *username,char *ipaddress);
+void SavePublicKey (char *username,char *ipaddress,char *digest,RSA *key);
+void DeletePublicKey (char *username,char *ipaddress,char *digest);
 char *KeyPrint(RSA *key);
 RSA *SelectKeyRing(char *name);
 void IdempAddToKeyRing(char *name,RSA *key);
@@ -975,7 +977,7 @@ void EndMeasure(char *eventname,struct timespec start);
 void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct Item *list);
-void LastSaw(unsigned char digest[EVP_MAX_MD_SIZE+1],char *hostname,enum roles role);
+void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
 void UpdateLastSeen(void);
 double GAverage(double anew,double aold,double p);
 

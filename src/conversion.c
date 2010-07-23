@@ -32,6 +32,59 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*****************************************************************************/
+
+void IPString2KeyDigest(char *ipv4,char *result)
+
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  char name[CF_BUFSIZE],address[CF_MAXVARSIZE];
+  void *value;
+  struct CfKeyHostSeen entry;
+  int ret,ksize,vsize, ok = false;
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
+
+result[0] = '\0';
+
+if (!OpenDB(name,&dbp))
+   {
+   return;
+   }
+
+if (!NewDBCursor(dbp,&dbcp))
+   {
+   CfOut(cf_inform,""," !! Unable to scan last-seen database");
+   return;
+   }
+
+ /* Initialize the key/data return pair. */
+
+memset(&entry, 0, sizeof(entry));
+
+ /* Walk through the database and print out the key/data pairs. */
+
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
+   {
+   if (value != NULL)
+      {
+      memcpy(&entry,value,sizeof(entry));
+
+      if (strncmp(address,(char *)entry.address,strlen(address)) == 0)
+         {
+         CfOut(cf_verbose,""," -> Matched IP %s to key %s",ipv4,key+1);
+         strncpy(result,key+1,CF_SMALLBUF-1);
+         break;
+         }
+      }
+   }
+
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
+}
+
 /***************************************************************************/
 
 enum cfhypervisors Str2Hypervisors(char *s)

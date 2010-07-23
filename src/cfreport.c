@@ -857,9 +857,9 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    
    if (value != NULL)
       {
+      memcpy(&entry,value,sizeof(entry));
       strncpy(hostname,(char *)key,ksize);
       strncpy(address,(char *)entry.address,ksize);   
-      memcpy(&entry,value,sizeof(entry));
       then = entry.Q.q;
       average = (double)entry.Q.expect;
       var = (double)entry.Q.var;

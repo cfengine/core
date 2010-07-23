@@ -118,12 +118,12 @@ return NULL;
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
-  
+  char username[CF_SMALLBUF];
+ 
 #ifndef MINGW
 static sigset_t   signal_mask;
 
 signal(SIGPIPE,SIG_IGN);
-
 sigemptyset(&signal_mask);
 sigaddset(&signal_mask,SIGPIPE);
 pthread_sigmask (SIG_BLOCK,&signal_mask, NULL);
@@ -143,6 +143,7 @@ if (strcmp(server,"localhost") == 0)
 
 conn->authenticated = false;
 conn->encryption_type = CfEnterpriseOptions();
+GetCurrentUserName(conn->username,CF_SMALLBUF);
 
 if (conn->sd == CF_NOT_CONNECTED)
    {   

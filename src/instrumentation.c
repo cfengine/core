@@ -279,7 +279,7 @@ DeleteItemList(list);
 
 /***************************************************************/
 
-void LastSaw(unsigned char digest[EVP_MAX_MD_SIZE+1],char *hostname,enum roles role)
+void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role)
 
 { char databuf[CF_BUFSIZE],varbuf[CF_BUFSIZE],rtype;
   time_t now = time(NULL);
@@ -287,13 +287,11 @@ void LastSaw(unsigned char digest[EVP_MAX_MD_SIZE+1],char *hostname,enum roles r
   struct Rlist *rp;
   struct CfKeyBinding *kp;
 
-if (strlen(hostname) == 0)
+if (strlen(ipaddress) == 0)
    {
-   CfOut(cf_inform,"","LastSeen registry for empty hostname with role %d",role);
+   CfOut(cf_inform,"","LastSeen registry for empty IP with role %d",role);
    return;
    }
-
-ThreadLock(cft_getaddr);
 
 switch (role)
    {
@@ -305,8 +303,6 @@ switch (role)
        break;
    }
 
-ThreadUnlock(cft_getaddr);
-
 for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {
    kp = (struct CfKeyBinding *) rp->item;
@@ -316,11 +312,16 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       known = true;
       kp = (  struct CfKeyBinding *) rp->item;
       kp->timestamp = now;
+
+      // Refresh address
+      
+      ThreadLock(cft_system);
+      kp->address = strdup(ipaddress);
       return;
       }
    }
 
-CfOut(cf_verbose,""," -> Last saw %s (%s) now",hostname,databuf);
+CfOut(cf_verbose,""," -> Last saw %s (%s) now",ipaddress,databuf);
 
 rp = PrependRlist(&SERVER_KEYSEEN,"nothing",CF_SCALAR);
 
@@ -337,7 +338,7 @@ if (kp == NULL)
 free(rp->item);
 rp->item = kp;
 
-kp->address = strdup(Hostname2IPString(hostname));
+kp->address = strdup(ipaddress);
 
 if ((kp->name = strdup(databuf)) == NULL)
    {
@@ -346,7 +347,7 @@ if ((kp->name = strdup(databuf)) == NULL)
    return;
    }
 
-kp->key = HavePublicKey(hostname);
+kp->key = HavePublicKey(username,ipaddress,databuf);
 
 ThreadUnlock(cft_system);
 kp->timestamp = now;
@@ -417,7 +418,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       newq.Q.expect = GAverage(lastseen,q.Q.expect,0.3);
       delta2 = (lastseen - q.Q.expect)*(lastseen - q.Q.expect);
       newq.Q.var = GAverage(delta2,q.Q.var,0.3);
-      strncpy(newq.address,q.address,CF_ADDRSIZE-1);;
+      strncpy(newq.address,kp->address,CF_ADDRSIZE-1);;
       }
    else
       {
@@ -425,7 +426,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       newq.Q.q = (double)now;
       newq.Q.expect = 0.0;
       newq.Q.var = 0.0;
-      strncpy(newq.address,kp->address,CF_ADDRSIZE);
+      strncpy(newq.address,kp->address,CF_ADDRSIZE-1);
       }
    
    if (lastseen > (double)lsea)

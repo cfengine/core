@@ -16,7 +16,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.0.6a1)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.1.0a1)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -115,7 +115,7 @@ if test $WITH_MONGO = 1; then
   AC_CHECK_HEADERS(mongo_except.h)
   AC_CHECK_HEADERS(bson.h)
   AC_CHECK_HEADERS(platform_hacks.h)
-  AC_CHECK_LIB(mongoc,main, [], [AC_MSG_ERROR(Cannot find libmongoc)])
+  AC_CHECK_LIB(mongoc,main)
 fi
 
 dnl ######################################################################
@@ -145,28 +145,6 @@ if test $WITH_SQL = 1; then
   AC_CHECK_HEADERS(pgsql/libpq-fe.h)
   AC_CHECK_HEADERS(libpq-fe.h)
 fi
-
-#
-# Report database driver - MongoDB C interface
-#
-
-AC_ARG_WITH(mongo,
-	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
-	with_mongo=no)
-
-if test "x$with_mongo" = xyes; then
-   AC_MSG_CHECKING(for libmongoc)
-   WITH_MONGO=1
-else
-   WITH_MONGO=0
-fi
-
-if test $WITH_MONGO = 1; then
-  AC_CHECK_LIB(mongoc,main, [], [AC_MSG_ERROR(Cannot find libmongoc)])
-fi
-
-
-
 
 
 AC_ARG_WITH(nova,
@@ -1060,17 +1038,6 @@ else
   AC_MSG_RESULT( -> No SQL library support for knowledge map)
 fi
 
-if test $WITH_MONGO = 1; then
-
-  if test $ac_cv_lib_mongoc_main = "yes"; then
-    AC_MSG_RESULT( -> Configured with MONGODB libraries)
-  fi
-else
-  AC_MSG_RESULT( -> No MONGO library support for knowledge map)
-fi
-
-
-
 if test $WITH_GVC = 1; then
  if test $ac_cv_lib_gvc_main = "yes"; then
    AC_MSG_RESULT( -> Configured with Graphviz libraries)
@@ -1100,9 +1067,9 @@ else
 fi
 
 if test $WITH_MONGO = 1; then
-  AC_MSG_RESULT( -> Configured with libmongoc support)
+   AC_MSG_RESULT( -> Configured with libmongoc support)
 else
-  AC_MSG_RESULT( -> No libmongoc support included)
+   AC_MSG_RESULT( -> No libmongoc support included)
 fi
 
 AC_MSG_RESULT( )

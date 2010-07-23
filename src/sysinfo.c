@@ -91,6 +91,7 @@ void GetNameInfo3()
   time_t tloc;
   struct hostent *hp;
   struct sockaddr_in cin;
+  unsigned char digest[EVP_MAX_MD_SIZE+1];
 #ifdef AIX
   char real_version[_SYS_NMLN];
 #endif
@@ -269,6 +270,11 @@ NewScalar("sys","cf_version",VERSION,cf_str);
 #ifdef HAVE_LIBCFNOVA
 NewScalar("sys","nova_version",Nova_GetVersion(),cf_str);
 #endif
+HashPubKey(PUBKEY,digest,cf_md5);
+NewScalar("sys","key_digest",HashPrint(cf_md5,digest),cf_str);
+
+snprintf(workbuf,CF_MAXVARSIZE-1,"PK_%s",CanonifyName(HashPrint(cf_md5,digest)));
+NewClass(workbuf);
 
 for (i = 0; components[i] != NULL; i++)
    {

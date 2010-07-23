@@ -93,7 +93,7 @@ if ((PRIVKEY = PEM_read_RSAPrivateKey(fp,(RSA **)NULL,NULL,passphrase)) == NULL)
 
 fclose(fp);
 
-CfOut(cf_verbose,"","Loaded %s\n",CFPRIVKEYFILE); 
+CfOut(cf_verbose,""," -> Loaded private key %s\n",CFPRIVKEYFILE); 
 
 if ((fp = fopen(CFPUBKEYFILE,"r")) == NULL)
    {
@@ -110,7 +110,7 @@ if ((PUBKEY = PEM_read_RSAPublicKey(fp,NULL,NULL,passphrase)) == NULL)
    return;
    }
 
-CfOut(cf_verbose,"","Loaded %s\n",CFPUBKEYFILE);  
+CfOut(cf_verbose,""," -> Loaded public key %s\n",CFPUBKEYFILE);  
 fclose(fp);
 
 if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))

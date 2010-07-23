@@ -46,9 +46,6 @@ void GenericInitialize(int argc,char **argv,char *agents)
 
 InitializeGA(argc,argv);
 
-printf("Do not use this version. Unstable\n");
-exit(1);
-
 SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();

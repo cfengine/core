@@ -783,16 +783,6 @@ void CSV2XML(struct Rlist *list)
 
 /*****************************************************************************/
 
-void Aggregate(char *stylesheet,char *banner,char *footer,char *webdriver)
-
-{
-#ifdef HAVE_LIBCFNOVA
-Nova_Aggregate(stylesheet,banner,footer,webdriver);
-#endif 
-}
-
-/*****************************************************************************/
-
 void NoteVarUsage()
 
 {

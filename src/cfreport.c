@@ -250,7 +250,6 @@ GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
 KeepReportsControlPromises();
 KeepReportsPromises();
-Aggregate(STYLESHEET,BANNER,FOOTER,WEBDRIVER);
 return 0;
 }
 

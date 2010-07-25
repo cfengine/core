@@ -269,6 +269,12 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
    {NULL,cf_notype,NULL,NULL}
    };
 
+struct BodySyntax CFH_CONTROLBODY[] = /* enum cfh_control */
+   {
+   {"splaytime",cf_int,CF_VALRANGE,"Time in minutes to splay this host based on its name hash"},
+   {NULL,cf_notype,NULL,NULL}
+   };
+
 
 /*********************************************************/
 
@@ -284,6 +290,7 @@ struct SubTypeSyntax CF_ALL_BODIES[] =
    {CF_EXECC,"control",CFEX_CONTROLBODY},
    {CF_KNOWC,"control",CFK_CONTROLBODY},
    {CF_REPORTC,"control",CFRE_CONTROLBODY},
+   {CF_HUBC,"control",CFH_CONTROLBODY},
 
    //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 

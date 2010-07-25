@@ -250,6 +250,7 @@ char *CF_AGENTTYPES[] = /* see enum cfagenttype */
    CF_KNOWC,
    CF_REPORTC,
    CF_KEYGEN,
+   CF_HUBC,
    "<notype>",
    };
 

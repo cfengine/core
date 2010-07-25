@@ -107,7 +107,7 @@ libpromises_la_SOURCES =                                                \
         unix.c
 
 
-sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report
+sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report cf-hub
 
 cf_promises_SOURCES =                                                   \
         cfpromises.c
@@ -142,6 +142,9 @@ cf_monitord_SOURCES =                                                   \
 
 cf_execd_SOURCES =                                                      \
         exec.c
+
+cf_hub_SOURCES =							\
+        hub.c
 
 cf_runagent_SOURCES =                                                   \
         runagent.c

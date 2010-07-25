@@ -113,8 +113,8 @@ int GetTimeSlot(time_t here_and_now)
   int slot = 0;
   char timekey[CF_MAXVARSIZE];
   
-strcpy(timekey,GenTimeKey(now));
-     
+strcpy(timekey,GenTimeKey(here_and_now));
+
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL,slot++)
    {
    if (strcmp(timekey,GenTimeKey(now)) == 0)

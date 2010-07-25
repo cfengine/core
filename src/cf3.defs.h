@@ -204,6 +204,7 @@ enum cfx_format
 #define CF_RUNC     "runagent"
 #define CF_REPORTC  "reporter"
 #define CF_KEYGEN   "keygenerator"
+#define CF_HUBC     "hub"
 
 enum cfagenttype
    {
@@ -216,6 +217,7 @@ enum cfagenttype
    cf_know,
    cf_report,
    cf_keygen,
+   cf_hub,
    cf_noagent
    };
 
@@ -396,6 +398,13 @@ enum cfrecontrol
    cfre_stylesheet,
    cfre_timestamps,
    cfre_notype
+   };
+
+/*************************************************************************/
+
+enum cfhcontrol
+   {
+   cfh_schedule
    };
 
 /*************************************************************************/

@@ -148,6 +148,7 @@ extern struct BodySyntax CF_BODY_TRANSACTION[];
 extern struct BodySyntax CF_VARBODY[];
 extern struct BodySyntax CF_CLASSBODY[];
 extern struct BodySyntax CFG_CONTROLBODY[];
+extern struct BodySyntax CFH_CONTROLBODY[];
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct BodySyntax CFS_CONTROLBODY[];
 extern struct BodySyntax CFE_CONTROLBODY[];

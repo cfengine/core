@@ -1,5 +1,5 @@
 # Info used in building the MAN files
-man_MANS = cf-agent.8 cf-serverd.8 cf-execd.8 cf-monitord.8 cf-report.8 cf-know.8 cf-runagent.8 cf-promises.8 cf-key.8
+man_MANS = cf-agent.8 cf-serverd.8 cf-execd.8 cf-monitord.8 cf-report.8 cf-know.8 cf-runagent.8 cf-promises.8 cf-key.8 cf-hub.8
 
 # Info used in building the Info files
 #info_TEXINFOS = cf3-Reference.texinfo

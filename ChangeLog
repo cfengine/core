@@ -1,8 +1,15 @@
-3.0.6
+3.1.0
 	Change two log formats to use time() instead of date()
 	- filechanges
 	- total compliance
 
+        Change in storage of public keys. Cfengine now hashes the public key and uses this
+	as the keyname. 
+
+	The old dynamic addresses lists are deprecated.
+	Caching of dns and key information for greater server speed.
+	Change in last-seen format reflects the public key usage.
+	
 3.0.5p1
         Showing paths allowed/denied access to when cf-serverd is run in verbose mode.
 	Bug in server fixed for dynamic addresses.

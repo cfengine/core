@@ -104,7 +104,7 @@ extern virConnectPtr CFVC[];
       { "bundlesequence",required_argument,0,'b' },
       { "debug",optional_argument,0,'d' },
       { "define",required_argument,0,'D' },
-      { "diagnostic",no_argument,0,'x'},
+      { "diagnostic",optional_argument,0,'x'},
       { "dry-run",no_argument,0,'n'},
       { "file",required_argument,0,'f'},
       { "help",no_argument,0,'h' },
@@ -123,7 +123,7 @@ extern virConnectPtr CFVC[];
       "Set or override bundlesequence from command line",
       "Set debugging level 0,1,2",
       "Define a list of comma separated classes to be defined at the start of execution",
-      "Activate internal diagnostics (developers only)",
+      "Do internal diagnostic (developers only) level in optional argument",
       "All talk and no action mode - make no changes, only inform of promises not kept",
       "Specify an alternative input file than the default",      
       "Print the help message",
@@ -171,7 +171,7 @@ void CheckOpts(int argc,char **argv)
 
 POLICY_SERVER[0] = '\0';
   
-while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMBb:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -292,9 +292,20 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:xMBb:",OPTIONS,&optindex)) != E
           exit(0);
 
       case 'x':
+          
+          switch ((optarg==NULL) ? '3' : *optarg)
+             {
+             case '1':
+                 CFTEST_CLASS = CF_CLASS_ALL;
+                 break;
+             default:
+                 CFTEST_CLASS = CF_CLASS_TOP10;                         
+                 break;
+             }
+          
           AgentDiagnostic();
           exit(0);
-
+          
       case 'r':
           SHOWREPORTS = true;
           break;

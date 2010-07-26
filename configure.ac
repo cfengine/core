@@ -82,6 +82,15 @@ dnl ######################################################################
 
 AC_CHECK_LIB(m,main)
 
+AC_ARG_WITH(diagnostics,
+	AS_HELP_STRING(--with-diagnostics, [support test suite]),with_diagnostics=yes,
+	with_diagnostics=no)
+
+if test "x$with_diagnostics" != xno; then
+   AC_DEFINE(BUILD_TESTSUITE, 1, [Build Test suite])
+fi
+
+
 dnl Look for ldap
 
 AC_ARG_WITH(ldap,
@@ -731,14 +740,13 @@ AC_ARG_ENABLE(DCE,[  --enable-DCE            support for DCE and ACLs],[
 dnl ######################################################################
 dnl Give the chance to enable SELINUX
 dnl ######################################################################
-dnl 
-AC_ARG_ENABLE(selinux, dnl 
+
+AC_ARG_ENABLE(selinux,
                [  --enable-selinux              Enable use of the SELINUX libraries],
                [AC_DEFINE(WITH_SELINUX, 1, [Define if you want to use SELINUX])
                LIB_SELINUX="-lselinux"
                LIBS="$LIBS $LIB_SELINUX"
                AC_SUBST(LIB_SELINUX)])
-
 
 dnl ######################################################################
 dnl OS specific stuff

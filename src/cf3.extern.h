@@ -46,6 +46,7 @@ extern int CF_NODES;
 extern int CF_EDGES;
 extern int KEYTTL;
 extern struct Rlist *SERVER_KEYSEEN;
+extern unsigned int CFTEST_CLASS;
 
 extern struct Item *EDIT_ANCHORS;
 

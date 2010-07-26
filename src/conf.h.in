@@ -95,6 +95,9 @@
 #undef AUTOCONF_HOSTNAME
 #undef AUTOCONF_SYSNAME
 
+/* Build Test suite */
+#undef BUILD_TESTSUITE
+
 /* Cygwin NT build */
 #undef CFCYG
 

@@ -54,6 +54,8 @@ int VIEWS = true;
 int IGNORE_MISSING_INPUTS = false;
 int IGNORE_MISSING_BUNDLES = false;
 
+unsigned int CFTEST_CLASS = 0;
+
 struct utsname VSYSNAME;
 
 FILE *FREPORT_HTML = NULL;

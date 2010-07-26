@@ -1,0 +1,812 @@
+################################################################
+
+LISTS
+{
+ class:
+ top10
+ 
+ prepare:
+NA
+ 
+ execute:
+ policy("/working/tests/lists.cf", "K")
+ 
+ output:
+reports("/working/tmp/lists.out")
+ 
+ cleanup:
+ NA
+}
+
+################################################################
+
+# line_exists = line(".*edit variable.*", "/working/tmp/cf3_hello","EXISTS")
+
+# line_exists = line(".*edit variable.*", "/working/tmp/cf3_hello","EXISTS")
+
+
+################################################################
+
+ACCESSED_BEFORE
+{
+class:
+top10
+
+prepare:     
+file ("/working/tmp/earlier",ACCESS); 
+file ("/working/tmp/later",ACCESS)
+
+execute:
+policy("/working/tests/unit_accessed_before.cf","K")
+
+output:
+report("The earlier file has been accessed before the later")
+
+cleanup:
+file ("/working/tmp/earlier",DELETE) 
+file ("/working/tmp/later",DELETE)
+}
+
+################################################################
+
+BACKREFERENCES_FILES
+{
+class:
+top10
+
+prepare:
+NA
+file ("/working/tmp/cf3_hello",CREATE); 
+
+execute:
+policy("/working/tests/unit_backreferences_files.cf","KI")
+
+output:
+addline("private edit variable is .*","/working/tmp/cf3_hello")
+#file("/working/tmp/cf3_hello.cf-before-edit",EXISTS)
+
+
+ cleanup:
+ file("/working/tmp/cf3_hello", DELETE)
+ file("/working/tmp/cf3_hello.cf-before-edit", DELETE)
+
+}
+
+################################################################
+
+ARRAYS
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_arrays.cf", "K")
+
+output:
+report("Global ([a-z]+) and ([a-z]+)")
+
+cleanup:
+NA
+}
+
+################################################################
+
+#killprocess("test")
+#     info(".*Transformer .*")     
+################################################################
+SELECT_MODE
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_select_mode.cf", "KI")
+
+output:
+info(".*DETECTED.*")
+
+cleanup:
+NA
+}
+
+###############################################################
+
+INSERT_USERS
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_insert_users.cf", "K")
+
+output:
+adduser("mark")
+
+cleanup:
+NA
+}
+
+################################################################
+	
+INSERT_LINES
+{
+class:
+top10
+
+prepare:
+file("/working/tests/", EXISTS)
+
+execute:
+policy("/working/tests/insert_lines.cf", "K")
+
+output:       
+
+# used as: addlines("template_file", "modified_file")
+addlines("/working/tmp/insert_lines.out","/working/tmp/insert_lines.actual")
+
+#lines("/working/tmp/test_template","/working/tmp/test","EXISTS")
+
+cleanup:
+file("/working/tmp/insert_lines.actual", DELETE)
+}
+
+################################################################
+
+# killprocess
+
+################################################################
+	
+UNIT_ACL
+{
+class:
+top10
+
+prepare:
+file("/working/tmp/unit_acl.tmp", CREATE)
+
+execute:
+policy("/working/tests/unit_acl.cf", "K")
+
+output:       
+checkfileperms ("/working/tmp/unit_acl.tmp","0755")
+
+cleanup:
+file("/working/tmp/unit_acl.tmp", DELETE)
+}
+
+################################################################
+	
+UNIT_FILEPERMS
+{
+class:
+top10
+
+prepare:
+file("/working/tmp/unit_fileperms.tmp", CREATE)
+
+execute:
+policy("/working/tests/unit_fileperms.cf", "K")
+
+output:       
+checkfileperms ("/working/tmp/unit_fileperms.tmp","0755")
+checkowner("/working/tmp/unit_fileperms.tmp","bishwa")
+  # Check Get the file owner
+  
+cleanup:
+file("/working/tmp/unit_fileperms.tmp", DELETE)
+}
+
+################################################################
+# this is a negative test
+UNIT_FILES_NOT_EXIST
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_filesexist.cf", "K")
+
+output:
+report("Does not yet exist")
+
+cleanup:
+NA
+}
+################################################################
+
+UNIT_FILESEXIST
+{
+class:
+top10
+
+prepare:
+file("/working/tmp/a", CREATE)
+file("/working/tmp/b", CREATE)
+file("/working/tmp/c", CREATE)
+
+execute:
+policy("/working/tests/unit_filesexist.cf", "K")
+
+output:
+report("File does exist")
+
+cleanup:
+file("/working/tmp/a", DELETE)
+file("/working/tmp/b", DELETE)
+file("/working/tmp/c", DELETE)
+}
+################################################################
+# this is a negative test
+UNIT_FILES_NOT_EXIST2
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_filesexist2.cf", "K")
+
+output:
+report("Does not yet exist")
+
+cleanup:
+NA
+}
+################################################################
+
+UNIT_FILESEXIST2
+{
+class:
+top10
+
+prepare:
+file("/working/tmp/x", CREATE)
+file("/working/tmp/y", CREATE)
+file("/working/tmp/z", CREATE)
+
+execute:
+policy("/working/tests/unit_filesexist2.cf", "K")
+
+output:
+report("File does exist")
+
+cleanup:
+file("/working/tmp/x", DELETE)
+file("/working/tmp/y", DELETE)
+file("/working/tmp/z", DELETE)
+}
+
+################################################################
+
+UNIT_FILENAMES
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_filenames.cf", "K")
+
+output:
+file("/working/tmp/etc/passwd", EXISTS)
+
+cleanup:
+file("/working/tmp/etc/passwd", DELETE)
+file("/working/tmp/etc/", DELETE)
+
+}
+
+################################################################
+CHANGED_BEFORE
+{
+class:
+top10
+
+prepare:
+file ("/working/tmp/later.tmp", ACCESS)
+file ("/working/tmp/earlier.tmp", ACCESS);
+
+execute:
+policy("/working/tests/unit_changedbefore.cf","K")
+
+output:
+report("Earlier than later!")
+
+cleanup:
+file ("/working/tmp/earlier.tmp",DELETE)
+file ("/working/tmp/later.tmp",DELETE)
+}
+
+################################################################
+
+CHDIR
+{
+class:
+top10
+
+prepare:
+file ("/working/tmp/chdir.out", EXISTS)
+
+execute:
+policy("/working/tests/unit_chdir.cf","K")
+
+output:
+reports("/working/tmp/chdir.out")
+
+cleanup:
+NA
+}
+
+################################################################
+CLASSES_GLOBAL
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_classes_global.cf","K")
+
+output:
+report("Success")
+
+cleanup:
+NA
+}
+
+################################################################
+CLASSMATCH
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_classmatch.cf","K")
+
+output:
+report("Host matches pattern")
+
+cleanup:
+NA
+}
+
+################################################################
+
+CLASSVAR_CONVERGENCE
+{
+class:
+top10
+
+prepare:
+file ("/working/tmp/classvar_convergence.out", EXISTS)
+
+execute:
+policy("/working/tests/unit_classvar_convergence.cf","K")
+
+output:
+reports("/working/tmp/classvar_convergence.out")
+
+cleanup:
+NA
+}
+
+################################################################
+
+COMPARE
+{
+class:
+top10
+
+prepare:
+NA
+
+execute:
+policy("/working/tests/unit_compare.cf","K")
+
+output:
+report("Assertion is true")
+
+cleanup:
+NA
+}
+
+################################################################
+
+COPY_EDIT
+{
+class:
+top10
+
+prepare:
+file("/working/tmp/source-template",EXISTS)
+file("/working/tmp/staging-file",NOTEXISTS)
+file("/working/tmp/copy_edit.out",EXISTS)
+
+execute:
+policy("/working/tests/unit_copy_edit.cf","K")
+
+output:
+file("/working/tmp/staging-file",EXISTS)
+#file("/working/tmp/staging-file.cfsaved",EXISTS)
+#file("/working/tmp/final-file.cf-before-edit",EXISTS)
+addlines("/working/tmp/copy_edit.out","/working/tmp/final-file")
+
+cleanup:
+file("/working/tmp/staging-file",DELETE)
+file("/working/tmp/staging-file.cfsaved",DELETE)
+file("/working/tmp/final-file.cf-before-edit",DELETE)
+}
+
+################################################################
+COPYLINKS
+{
+class:
+top10
+
+prepare:
+file("/working/tmp/copylinks_from",EXISTS)
+
+execute:
+policy("/working/tests/unit_copylinks.cf","K")
+
+output:
+file("/working/tmp/copylinks_to",EXISTS)
+islink("/working/tmp/copylinks_to")
+#file("/working/tmp/final-file.cf-before-edit",EXISTS)
+#addlines("/working/tmp/copy_edit.out","/working/tmp/final-file")
+
+cleanup:
+file("/working/tmp/copylinks_to",DELETE)
+}
+
+################################################################
+
+COUNTCLASSESMATCHING
+{
+class:
+top10
+
+prepare:
+file("/working/tests/unit_countclassesmatching.cf",EXISTS)
+
+execute:
+policy("/working/tests/unit_countclassesmatching.cf","K")
+
+output:
+report("Found 3 classes matching cf.*")
+
+cleanup:
+NA
+}
+
+################################################################
+
+COUNTLINESMATCHING
+{
+class:
+top10
+
+prepare:
+file("/working/tests/unit_countlinesmatching.cf",EXISTS)
+file("/working/tmp/countlinesmatching.txt", CREATE)
+appendLine("Hello test","/working/tmp/countlinesmatching.txt")
+appendLine("Hello test test","/working/tmp/countlinesmatching.txt")
+appendLine("Hello testing","/working/tmp/countlinesmatching.txt")
+appendLine("test Hellynr","/working/tmp/countlinesmatching.txt")
+appendLine("Testing Hello","/working/tmp/countlinesmatching.txt")
+
+execute:
+policy("/working/tests/unit_countlinesmatching.cf","K")
+
+output:
+report("Found 3 lines matching")
+
+cleanup:
+file("/working/tmp/countlinesmatching.txt", DELETE)
+}
+################################################################
+CREATE_FILEDIR
+{
+ class:
+ top10
+ 
+ prepare:
+ dir("/working/tmp/create_dir", NOTEXISTS)
+ file("/working/tmp/create_file.tmp", NOTEXISTS)
+ 
+ execute:
+ policy("/working/tests/unit_create_filedir.cf","K")
+ 
+ output:
+ dir("/working/tmp/create_dir", EXISTS)
+ file("/working/tmp/create_file.tmp", EXISTS)
+ 
+ cleanup:
+ dir("/working/tmp/create_dir", DELETE)
+ file("/working/tmp/create_file.tmp", DELETE)
+}
+
+################################################################
+
+DISABLE_AND_ROTATE_FILES
+{
+ class:
+ top10
+ 
+ prepare:
+ file("/working/tmp/disableme", CREATE)
+ file("/working/tmp/rotateme", CREATE)
+ 
+ execute:
+ policy("/working/tests/unit_disable_and_rotate_files.cf","K")
+ 
+ output:
+ file("/working/tmp/disableme_blownaway", EXISTS)
+# file("/working/tmp/disableme", NOTEXISTS) # not working
+ file("/working/tmp/rotateme", EXISTS)
+ file("/working/tmp/rotateme.1", EXISTS)
+ 
+ cleanup:
+ file("/working/tmp/disableme_blownaway", DELETE)
+ file("/working/tmp/rotateme", DELETE)
+ file("/working/tmp/rotateme.1", DELETE)
+}
+
+################################################################
+DISKFREE
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_diskfree.cf","K")
+ 
+ output:
+ report("Freedisk [0-9]+")
+ 
+ cleanup:
+ 
+}
+
+################################################################
+DOLLAR
+{
+ class:
+ top10
+ 
+ prepare:
+ file("/working/tmp/dollar.out", EXISTS)
+ 
+ execute:
+ policy("/working/tests/unit_dollar.cf","K")
+ 
+ output:
+ reports("/working/tmp/dollar.out")
+ 
+ cleanup:
+ NA
+}
+
+################################################################
+EDIT_COLUMN_FILES
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_edit_column_files.cf","K")
+ 
+ output:
+ addline(".*:.*:.*:.*:.*:/home/dir:.*","/working/tmp/passwd")
+ addline("mark:.+:.+:one,three,two.*","/working/tmp/group")
+ 
+ cleanup:
+ NA
+}
+
+################################################################
+
+DELETENOTMATCH
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_edit_deletenotmatch.cf","K")
+ 
+ output:
+ addlines("/working/tmp/deletenotmatch.out","/working/tmp/passwd")
+ 
+ cleanup:
+ NA
+}
+
+################################################################
+
+EDIT_INSERT_FUZZYLINES
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_edit_insert_fuzzylines.cf","K")
+ 
+ output:
+ addline("    One potato","/working/tmp/fuzzylines.tmp")
+ file("/working/tmp/fuzzylines.tmp.cf-before-edit", EXISTS)
+
+ cleanup:
+ file("/working/tmp/fuzzylines.tmp.cf-before-edit", DELETE)
+ file("/working/tmp/fuzzylines.tmp", DELETE)
+ 
+}
+
+################################################################
+
+EDIT_INSERT_LINES_SILLY
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_edit_insert_lines_silly.cf","K")
+ 
+ output:
+ addlines("/working/tmp/sillylines.out","/working/tmp/sillylines.tmp")
+ file("/working/tmp/sillylines.tmp.cf-before-edit", EXISTS)
+
+ cleanup:
+ file("/working/tmp/sillylines.tmp.cf-before-edit", DELETE)
+ file("/working/tmp/sillylines.tmp", DELETE)
+ 
+}
+
+################################################################
+
+EDIT_INSERT_LINES_SILLY
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_edit_insert_lines_silly.cf","K")
+ 
+ output:
+ addlines("/working/tmp/sillylines.out","/working/tmp/sillylines.tmp")
+ file("/working/tmp/sillylines.tmp.cf-before-edit", EXISTS)
+
+ cleanup:
+ file("/working/tmp/sillylines.tmp.cf-before-edit", DELETE)
+ file("/working/tmp/sillylines.tmp", DELETE)
+ 
+}
+
+################################################################
+
+EDIT_PASSWD_FILE
+{
+ class:
+ top10
+ 
+ prepare:
+ NA
+ 
+ execute:
+ policy("/working/tests/unit_edit_passwd_file.cf","K")
+ 
+ output:
+# addline("mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash","/working/tmp/mypasswd")
+ addline("fred:x:1001:100:Right Said:/home/fred:/bin/bash","/working/tmp/mypasswd")
+ addline("jane:x:1002:100:Jane Doe:/home/jane:/bin/bash","/working/tmp/mypasswd")
+
+ cleanup:
+ file("/working/tmp/mypasswd", DELETE)
+ file("/working/tmp/mypasswd.cf-before-edit", DELETE)
+ 
+}
+
+################################################################
+
+EDIT_REPLACESTRING
+{
+ class:
+ top10
+ 
+ prepare:
+ file("/working/tmp/replacestring.tmp", CREATE)
+ appendLine("Hello puppet","/working/tmp/replacestring.tmp")
+ 
+ execute:
+ policy("/working/tests/unit_edit_replace_string.cf","K")
+ 
+ output:
+ addline("Hello cfengine 3","/working/tmp/replacestring.tmp")
+
+ cleanup:
+ file("/working/tmp/replacestring.tmp", DELETE)
+ file("/working/tmp/replacestring.tmp.cf-before-edit", DELETE)
+}
+
+################################################################
+EDIT_SETVAR
+{
+ class:
+ top10
+ 
+ prepare:
+ file("/working/tmp/test_setvar", CREATE)
+ 
+ execute:
+ policy("/working/tests/unit_edit_setvar.cf","K")
+ 
+ output:
+ addline("variable_1 = value_1","/working/tmp/test_setvar")
+ addline("variable_2 = value_2","/working/tmp/test_setvar")
+ cmpenv("PGK_PATH","/tmp")
+
+ cleanup:
+ file("/working/tmp/test_setvar", DELETE)
+ file("/working/tmp/test_setvar.cf-before-edit", DELETE)
+}
+
+################################################################
+
+UNIT_ENV
+{
+ class:
+ top10
+ 
+ prepare:
+ file("/working/tmp/test_setvar", CREATE)
+ 
+ execute:
+ policy("/working/tests/unit_edit_setvar.cf","K")
+ 
+ output:
+
+
+ cleanup:
+ file("/working/tmp/test_setvar", DELETE)
+ file("/working/tmp/test_setvar.cf-before-edit", DELETE)
+}
+
+################################################################

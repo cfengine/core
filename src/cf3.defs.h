@@ -1795,8 +1795,8 @@ enum cf_meter
 meter_compliance_week,
 meter_compliance_day,
 meter_compliance_hour,
-meter_patch_day,
-meter_soft_day,
+meter_perf_day,
+meter_other_day,
 meter_comms_hour,
 meter_anomalies_day,
 meter_endmark

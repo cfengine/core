@@ -280,7 +280,7 @@ void PrintChars(char *);
 void AgentDiagnostic()
 
 { char cwd[CF_BUFSIZE];
- 
+
 if (VERBOSE || DEBUG)
    {
    FREPORT_TXT = stdout;
@@ -326,15 +326,28 @@ void TestSearchFilePromiser()
   struct FnCall *fp;
 
 /* Still have diagnostic scope */
-  
-pp.promiser = "/var/.*/[c|l].*";
-pp.promisee = "the monitor";
+THIS_AGENT_TYPE = cf_agent;
+   
+pp.promiser = "the originator";
+pp.promisee = "the recipient with $(two)";
 pp.classes = "proletariat";
 pp.petype = CF_SCALAR;
-pp.lineno = 0;
+pp.lineno = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
-pp.bundle = "mybundle";
+pp.agentsubtype = "none";
+
+pp.bundletype = "bundle_type";
+pp.bundle = "test_bundle";
+pp.ref = "commentary";
+pp.agentsubtype = strdup("files");
+pp.done = false;
+pp.next = NULL;
+pp.cache = NULL;
+pp.inode_cache = NULL;
+pp.this_server = NULL;
+pp.donep = &(pp.done);
+pp.conn = NULL;
 
 printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
 LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);

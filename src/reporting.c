@@ -153,6 +153,9 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
   char *v,rettype,vbuff[CF_BUFSIZE];
   void *retval;
 
+#ifdef HAVE_LIBCFNOVA
+Nova_StoreUnExpandedPromises(bundles,bodies);
+#else  
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
    v = (char *)retval;
@@ -236,6 +239,7 @@ for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    }
 
 CfHtmlFooter(FREPORT_HTML,FOOTER);
+#endif
 }
 
 /*******************************************************************/

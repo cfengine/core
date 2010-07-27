@@ -1553,7 +1553,6 @@ for (i=0; options[i].name != NULL; i++)
       }
    }
 
-
 printf("\nBug reports: bug-cfengine@cfengine.org, ");
 printf("Community help: help-cfengine@cfengine.org\n");
 printf("Community info: http://www.cfengine.org, ");

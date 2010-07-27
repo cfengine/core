@@ -78,7 +78,7 @@ int main (int argc,char *argv[]);
       "Print basic information about changes made to the system, i.e. promises repaired",
       "Activate internal diagnostics (developers only)",
       "Perform additional analysis of configuration",
-      "Generate reports about configuration",
+      "Generate reports about configuration and insert into CFDB",
       NULL
       };
 
@@ -190,7 +190,6 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
           exit(0);
 
       case 'a':
-
           printf("Self-analysis is not yet implemented.");
           exit(0);
           break;

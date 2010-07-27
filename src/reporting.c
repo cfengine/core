@@ -154,7 +154,7 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
   void *retval;
 
 #ifdef HAVE_LIBCFNOVA
-Nova_StoreUnExpandedPromises(bundles,bodies);
+//Nova_StoreUnExpandedPromises(bundles,bodies);
 #else  
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {

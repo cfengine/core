@@ -69,6 +69,16 @@ return false;
 
 /*****************************************************************************/
 
+void EnterpriseModuleTrick()
+
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_EnterpriseModuleTrick();
+#endif
+}
+
+/*****************************************************************************/
+
 void EnterpriseContext()
 
 {

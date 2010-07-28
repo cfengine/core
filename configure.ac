@@ -104,29 +104,6 @@ fi
 dnl Now check for database connectors
 
 
-#
-# Report database driver - MongoDB C interface
-#
-
-AC_ARG_WITH(mongo,
-	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
-	with_mongo=no)
-
-if test "x$with_mongo" = xyes; then
-   AC_MSG_CHECKING(for libmongoc)
-   WITH_MONGO=1
-else
-   WITH_MONGO=0
-fi
-
-if test $WITH_MONGO = 1; then
-  AC_CHECK_HEADERS(mongo.h)
-  AC_CHECK_HEADERS(mongo_except.h)
-  AC_CHECK_HEADERS(bson.h)
-  AC_CHECK_HEADERS(platform_hacks.h)
-  AC_CHECK_LIB(mongoc,main)
-fi
-
 dnl ######################################################################
 dnl  Look for SQL connectors.
 dnl ######################################################################
@@ -502,6 +479,30 @@ AC_SUBST(OPENSSL_LIB_LIB)
 #
 # Others
 #
+
+#
+# Report database driver - MongoDB C interface
+#
+
+AC_ARG_WITH(mongo,
+	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
+	with_mongo=no)
+
+if test "x$with_mongo" = xyes; then
+   AC_MSG_CHECKING(for libmongoc)
+   WITH_MONGO=1
+else
+   WITH_MONGO=0
+fi
+
+if test $WITH_MONGO = 1; then
+  AC_CHECK_HEADERS(mongo.h)
+  AC_CHECK_HEADERS(mongo_except.h)
+  AC_CHECK_HEADERS(bson.h)
+  AC_CHECK_HEADERS(platform_hacks.h)
+  AC_CHECK_LIB(mongoc,main)
+fi
+
 
 AC_ARG_WITH(libvirt,
 	AS_HELP_STRING(--with-libvirt, [support virtual machine management]),with_virt=yes,

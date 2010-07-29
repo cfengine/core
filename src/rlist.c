@@ -764,7 +764,7 @@ return size;
 
 int PrintRval(char *buffer,int bufsize,void *rval,char type)
 
-{ int size;
+{ int size = 0;
 
 if (rval == NULL)
    {
@@ -794,6 +794,8 @@ switch (type)
        // fprintf(fp,"(no-one)");
        break;
    }
+
+return size;
 }
 
 /*******************************************************************/

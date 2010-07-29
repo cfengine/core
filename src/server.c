@@ -2719,7 +2719,7 @@ else
       }
    }
 
-/* Receive random session key, blowfish style ... */ 
+/* Receive random session key,... */ 
 
 /* proposition C5 */
 

@@ -853,6 +853,8 @@ enum cfhashes
    cf_nohash
    };
 
+#define CF_DEFAULT_DIGEST cf_sha256
+
 enum cfnofile
    {
    cfa_force,

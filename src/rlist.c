@@ -724,32 +724,32 @@ int PrintRlist(char *buffer,int bufsize,struct Rlist *list)
 { struct Rlist *rp;
   int size = 0;
 
+buffer[0] = '\0';
+ 
 if (bufsize < CF_SMALLBUF)
    {
    CfOut(cf_error,""," !! Buffer too small");
    return 0;
    }
   
-buffer[0] = '\0';
-
 strcat(buffer," {");
  
 for (rp = list; rp != NULL; rp=rp->next)
    {
    strcat(buffer,"\'");
    
-   size += PrintRval(buffer,bufsize,rp->item,rp->type);
+   PrintRval(buffer,bufsize,rp->item,rp->type);
+
    strcat(buffer,"\'");
    
    if (rp->next != NULL)
       {
       strcat(buffer,",");
-      size++;
       }
 
    size = strlen(buffer);
    
-   if (size > CF_SMALLBUF - CF_BUFFERMARGIN)
+   if (size > bufsize - CF_BUFFERMARGIN)
       {
       strcat(buffer,"... ");
       break;
@@ -764,7 +764,7 @@ return size;
 
 int PrintRval(char *buffer,int bufsize,void *rval,char type)
 
-{ int size = 0;
+{ int size = 0,delta;
 
 if (rval == NULL)
    {
@@ -774,15 +774,25 @@ if (rval == NULL)
 switch (type)
    {
    case CF_SCALAR:
-       size = strlen(rval);
-       if (strlen(buffer) + size < bufsize - CF_BUFFERMARGIN)
+
+       delta += strlen(rval);
+       
+       if (strlen(buffer) + delta < bufsize - CF_BUFFERMARGIN)
           {
           strcat(buffer,(char *)rval);
+          size += delta;
+          }
+       else
+          {
+          strcat(buffer,"...");
+          size += 3;
           }
        break;
        
    case CF_LIST:
-       size = PrintRlist(buffer,bufsize,(struct Rlist *)rval);
+
+       size += PrintRlist(buffer,bufsize,(struct Rlist *)rval);
+
        break;
        
    case CF_FNCALL:

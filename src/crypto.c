@@ -123,11 +123,11 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
 
 RSA *HavePublicKeyByIP(char *username,char *ipaddress)
 
-{ char md5[CF_SMALLBUF];
+{ char hash[CF_SMALLBUF];
  
-IPString2KeyDigest(ipaddress,md5);
+IPString2KeyDigest(ipaddress,hash);
 
-return HavePublicKey(username,ipaddress,md5);
+return HavePublicKey(username,ipaddress,hash);
 }
 
 /*********************************************************************/

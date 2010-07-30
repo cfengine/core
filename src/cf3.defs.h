@@ -1821,8 +1821,6 @@ meter_endmark
 #define CF_CLASS_OTHER 512
 #define CF_CLASS_TOP10 1024
 
-
-
 #include "prototypes3.h"
 
 #ifdef HAVE_LIBCFNOVA

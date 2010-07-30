@@ -71,6 +71,7 @@ libpromises_la_SOURCES =                                                \
         granules.c                                                      \
         timeout.c                                                       \
         promises.c                                                      \
+        ontology.c							\
         constraints.c                                                   \
         iteration.c                                                     \
         rlist.c                                                         \
@@ -152,9 +153,7 @@ cf_runagent_SOURCES =                                                   \
 cf_know_SOURCES =                                                       \
         cfknow.c                                                        \
         graph.c                                                         \
-        manual.c                                                        \
-        ontology.c
-
+        manual.c  
 EXTRA_DIST = cf3lex.c cf3parse.c
 
 #

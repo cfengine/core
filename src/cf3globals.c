@@ -163,6 +163,13 @@ char FOOTER[CF_BUFSIZE];
 char STYLESHEET[CF_BUFSIZE];
 char AGGREGATION[CF_BUFSIZE];
 
+char SQL_DATABASE[CF_MAXVARSIZE];
+char SQL_OWNER[CF_MAXVARSIZE];
+char SQL_PASSWD[CF_MAXVARSIZE];
+char SQL_SERVER[CF_MAXVARSIZE];
+char SQL_CONNECT_NAME[CF_MAXVARSIZE];
+enum cfdbtype SQL_TYPE = cfd_notype;
+
 /*****************************************************************************/
 /* Windows version constants                                                 */
 /*****************************************************************************/

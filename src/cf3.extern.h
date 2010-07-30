@@ -128,6 +128,13 @@ extern time_t DATESTAMPS[CF_OBSERVABLES];
 extern char AGGREGATION[CF_BUFSIZE];
 extern char *UNITS[CF_OBSERVABLES];
 
+extern char SQL_DATABASE[CF_MAXVARSIZE];
+extern char SQL_OWNER[CF_MAXVARSIZE];
+extern char SQL_PASSWD[CF_MAXVARSIZE];
+extern char SQL_SERVER[CF_MAXVARSIZE];
+extern char SQL_CONNECT_NAME[CF_MAXVARSIZE];
+extern enum cfdbtype SQL_TYPE;
+
 extern double VAL_KEPT;
 extern double VAL_REPAIRED;
 extern double VAL_NOTKEPT;

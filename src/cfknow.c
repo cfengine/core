@@ -99,13 +99,8 @@ char *TYPESEQUENCE[] =
 
 char TM_PREFIX[CF_MAXVARSIZE];
 char BUILD_DIR[CF_BUFSIZE];
-char SQL_DATABASE[CF_MAXVARSIZE];
-char SQL_OWNER[CF_MAXVARSIZE];
-char SQL_PASSWD[CF_MAXVARSIZE];
-char SQL_SERVER[CF_MAXVARSIZE];
-char SQL_CONNECT_NAME[CF_MAXVARSIZE];
 char TOPIC_CMD[CF_MAXVARSIZE];
-enum cfdbtype SQL_TYPE = cfd_notype;
+
 int HTML = false;
 int WRITE_SQL = false;
 int ISREGEX = false;
@@ -423,6 +418,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
       {
       SQL_TYPE = Str2dbType(retval);
+      WebCache("SQL_TYPE",retval);
       
       if (SQL_TYPE == cfd_notype)
          {
@@ -434,30 +430,35 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_database].lval) == 0)
       {
       strncpy(SQL_DATABASE,retval,CF_MAXVARSIZE);
+      WebCache("SQL_DATABASE",retval);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_owner].lval) == 0)
       {
       strncpy(SQL_OWNER,retval,CF_MAXVARSIZE);
+      WebCache("SQL_OWNER",retval);
       continue;
       }
       
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_passwd].lval) == 0)
       {
       strncpy(SQL_PASSWD,retval,CF_MAXVARSIZE);
+      WebCache("SQL_PASSWD",retval);
       continue;
       }
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_server].lval) == 0)
       {
       strncpy(SQL_SERVER,retval,CF_MAXVARSIZE);
+      WebCache("SQL_SERVER",retval);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_connect_db].lval) == 0)
       {
       strncpy(SQL_CONNECT_NAME,retval,CF_MAXVARSIZE);
+      WebCache("SQL_CONNECT_NAME",retval);
       continue;
       }
    
@@ -1642,6 +1643,7 @@ fprintf(fout,"# USE %s_topic_map\n",TM_PREFIX);
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE topics"
         "("
+        "pid integer PRIMARY KEY,"
         "topic_name varchar(256),"
         "topic_comment varchar(1024),",
         "topic_id varchar(256),"
@@ -1651,6 +1653,7 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
+AppendRScalar(&columns,"pid,int,primary key",CF_SCALAR);
 AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"topic_comment,varchar,1024",CF_SCALAR);
 AppendRScalar(&columns,"topic_id,varchar,256",CF_SCALAR);
@@ -1669,6 +1672,7 @@ columns = NULL;
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE associations"
         "("
+        "pid integer PRIMARY KEY,"
         "from_name varchar(256),"
         "from_type varchar(256),"
         "from_assoc varchar(256),"
@@ -1680,6 +1684,7 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
+AppendRScalar(&columns,"pid,int,primary key",CF_SCALAR);
 AppendRScalar(&columns,"from_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"from_type,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"from_assoc,varchar,256,",CF_SCALAR);
@@ -1700,6 +1705,7 @@ columns = NULL;
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE occurrences"
         "("
+        "pid integer PRIMARY KEY,"
         "topic_name varchar(256),"
         "locator varchar(1024),"
         "locator_type varchar(256),"
@@ -1709,6 +1715,7 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
+AppendRScalar(&columns,"pid,integer,primary key",CF_SCALAR);
 AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"locator,varchar,1024",CF_SCALAR);
 AppendRScalar(&columns,"locator_type,varchar,256",CF_SCALAR);

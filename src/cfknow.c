@@ -359,7 +359,8 @@ if (argv[optind] != NULL)
 void ThisAgentInit()
 
 { char vbuff[CF_BUFSIZE];
-
+  int s1,s2;
+ 
 strcpy(TM_PREFIX,"");
 strcpy(WEBDRIVER,"");
 strcpy(BANNER,"");
@@ -375,6 +376,17 @@ strcpy(SQL_PASSWD,"");
 strcpy(SQL_SERVER,"localhost");
 strcpy(GRAPHDIR,"");
 SHOWREPORTS = false;
+
+#ifdef HAVE_LIBCFNOVA
+s1 = Nova_SizeCfSQLContainer();
+s2 = SizeCfSQLContainer();
+
+if (s1 != s2)
+   {
+   CfOut(cf_error,""," !!! Pathological build. Nova module has different database combinations than core. %d (Nova) versus %d (Core)\n",s1,s2);
+   FatalError("stop");
+   }
+#endif
 }
 
 /*****************************************************************************/
@@ -1653,7 +1665,7 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
-AppendRScalar(&columns,"pid,int,primary key",CF_SCALAR);
+AppendRScalar(&columns,"pid,int",CF_SCALAR);
 AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"topic_comment,varchar,1024",CF_SCALAR);
 AppendRScalar(&columns,"topic_id,varchar,256",CF_SCALAR);
@@ -1672,9 +1684,9 @@ columns = NULL;
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE associations"
         "("
-        "pid integer PRIMARY KEY,"
         "from_name varchar(256),"
         "from_type varchar(256),"
+        "from_id int,"
         "from_assoc varchar(256),"
         "to_assoc varchar(256),"
         "to_type varchar(256),"
@@ -1684,9 +1696,9 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
-AppendRScalar(&columns,"pid,int,primary key",CF_SCALAR);
 AppendRScalar(&columns,"from_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"from_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"from_id,int",CF_SCALAR);
 AppendRScalar(&columns,"from_assoc,varchar,256,",CF_SCALAR);
 AppendRScalar(&columns,"to_assoc,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"to_type,varchar,256",CF_SCALAR);
@@ -1705,7 +1717,7 @@ columns = NULL;
 snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE occurrences"
         "("
-        "pid integer PRIMARY KEY,"
+        "from_id,int"
         "topic_name varchar(256),"
         "locator varchar(1024),"
         "locator_type varchar(256),"
@@ -1715,7 +1727,7 @@ snprintf(query,CF_BUFSIZE-1,
 
 fprintf(fout,"%s",query);
 
-AppendRScalar(&columns,"pid,integer,primary key",CF_SCALAR);
+AppendRScalar(&columns,"from_id,int",CF_SCALAR);
 AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"locator,varchar,1024",CF_SCALAR);
 AppendRScalar(&columns,"locator_type,varchar,256",CF_SCALAR);
@@ -1752,11 +1764,11 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    if (tp->topic_comment)
       {
       strncpy(safe2,EscapeSQL(&cfdb,tp->topic_comment),CF_BUFSIZE);
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,topic_comment) values ('%s','%s','%s','%s')\n",safe,Name2Id(tp->topic_name),tp->topic_type,safe2);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,topic_comment,pid) values ('%s','%s','%s','%s','%d')\n",safe,Name2Id(tp->topic_name),tp->topic_type,safe2,tp->id);
       }
    else
       {
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type) values ('%s','%s','%s')\n",safe,Name2Id(tp->topic_name),tp->topic_type);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,pid) values ('%s','%s','%s','%d')\n",safe,Name2Id(tp->topic_name),tp->topic_type,tp->id);
       }
    fprintf(fout,"%s",query);
    Debug(" -> Add topic %s\n",tp->topic_name);
@@ -1777,7 +1789,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          
          DeTypeTopic(rp->item,to_topic,to_type);
          
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type) values ('%s','%s','%s','%s','%s','%s');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_type,to_type);
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type,from_id) values ('%s','%s','%s','%s','%s','%s','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_type,to_type,tp->id);
 
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
@@ -1799,7 +1811,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          char safeexpr[CF_BUFSIZE];
          strcpy(safeexpr,EscapeSQL(&cfdb,op->locator));
 
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (topic_name,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",CanonifyName(tp->topic_name),safeexpr,op->rep_type,rp->item);
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (from_id,topic_name,locator,locator_type,subtype) values ('%d','%s','%s','%d','%s')\n",tp->id,CanonifyName(tp->topic_name),safeexpr,op->rep_type,rp->item);
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
          Debug(" -> Add occurrence of %s\n",tp->topic_name);

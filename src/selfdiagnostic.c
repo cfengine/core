@@ -38,7 +38,7 @@ int NR = 0;
 
 void SelfDiagnostic()
 
-{ int intval;
+{ int intval,s1,s2;
   char *def;
  
 if (VERBOSE || DEBUG)
@@ -57,6 +57,21 @@ else
 printf("----------------------------------------------------------\n");
 printf("Cfengine - Level 1 self-diagnostic \n");
 printf("----------------------------------------------------------\n\n");
+
+#ifdef HAVE_LIBCFNOVA
+s1 = Nova_SizeCfSQLContainer();
+s2 = SizeCfSQLContainer();
+
+if (s1 != s2)
+   {
+   printf(" !!! Pathological build. Nova module has different database combinations than core. %d (Nova) versus %d (Core)\n",s1,s2);
+   FatalError("stop");
+   }
+else
+   {
+   printf(" -> Consistent sql containers at %d bytes\n",s1);
+   }
+#endif
 
 SDIntegerDefault("editfilesize",EDITFILESIZE);
 SDIntegerDefault("editbinaryfilesize",EDITBINFILESIZE);

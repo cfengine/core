@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+int GLOBAL_ID = 0; // Used as a primary key for convenience
+
 /*****************************************************************************/
 
 void AddTopic(struct Topic **list,char *name,char *type)
@@ -40,7 +42,7 @@ void AddTopic(struct Topic **list,char *name,char *type)
 
 if (tp = TopicExists(*list,name,type))
    {
-   CfOut(cf_verbose,""," ! Topic %s already defined\n",name);
+   CfOut(cf_verbose,""," ! Topic \"%s\" has already been defined\n",name);
    }
 else
    {
@@ -65,6 +67,7 @@ else
    tp->topic_comment = NULL;
    tp->associations = NULL;
    tp->occurrences = NULL;
+   tp->id = GLOBAL_ID++;
    tp->next = *list;
    *list = tp;
 
@@ -124,7 +127,8 @@ else
       CfOut(cf_error,"malloc","Memory failure in AddTopic");
       FatalError("");
       }
-   
+
+   tp->id = GLOBAL_ID++;
    tp->occurrences = NULL;
    tp->associations = NULL;
    tp->next = *list;
@@ -264,6 +268,11 @@ void DeTypeTopic(char *typed_topic,char *topic,char *type)
 type[0] = '\0';
 topic[0] = '\0';
 
+if (typed_topic == NULL)
+   {
+   return;
+   }
+
 if (*typed_topic == ':')
    {
    sscanf(typed_topic,"::%255[^\n]",topic);
@@ -376,7 +385,7 @@ for (tp = list; tp != NULL; tp=tp->next)
       {
       if (topic_type && strcmp(tp->topic_type,topic_type) != 0)
          {
-         CfOut(cf_inform,""," !! Topic \"%s\" already exists, but it promises type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
+         CfOut(cf_inform,""," !! Topic \"%s\" already exists, with type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
          return NULL;         
          }
       else

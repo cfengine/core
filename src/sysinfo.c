@@ -241,6 +241,7 @@ else
    }
 
 CfOut(cf_verbose,"","Cfengine - %s %s\n\n",VERSION,CF3COPYRIGHT);
+
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);
 CfOut(cf_verbose,"","Operating System Type is %s\n",VSYSNAME.sysname);
@@ -252,6 +253,7 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 
 snprintf(workbuf,CF_MAXVARSIZE,"%s",cf_ctime(&tloc));
 Chop(workbuf);
+
 NewScalar("sys","date",workbuf,cf_str);
 NewScalar("sys","cdate",CanonifyName(workbuf),cf_str);
 NewScalar("sys","host",VSYSNAME.nodename,cf_str);
@@ -270,11 +272,14 @@ NewScalar("sys","cf_version",VERSION,cf_str);
 #ifdef HAVE_LIBCFNOVA
 NewScalar("sys","nova_version",Nova_GetVersion(),cf_str);
 #endif
-HashPubKey(PUBKEY,digest,cf_md5);
-NewScalar("sys","key_digest",HashPrint(cf_md5,digest),cf_str);
 
-snprintf(workbuf,CF_MAXVARSIZE-1,"PK_%s",CanonifyName(HashPrint(cf_md5,digest)));
-NewClass(workbuf);
+if (PUBKEY)
+   {
+   HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
+   NewScalar("sys","key_digest",HashPrint(CF_DEFAULT_DIGEST,digest),cf_str);
+   snprintf(workbuf,CF_MAXVARSIZE-1,"PK_%s",CanonifyName(HashPrint(CF_DEFAULT_DIGEST,digest)));
+   NewClass(workbuf);
+   }
 
 for (i = 0; components[i] != NULL; i++)
    {

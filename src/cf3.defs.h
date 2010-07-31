@@ -1150,6 +1150,7 @@ struct DefineClasses
 
 struct Topic
    {
+   int id;
    char *topic_type;
    char *topic_name;
    char *topic_comment;
@@ -1213,8 +1214,8 @@ typedef struct
    int connected;
    int result;
    int row;
-   int maxcolumns;
-   int maxrows;
+   unsigned int maxcolumns;
+   unsigned int maxrows;
    int column;
    char **rowdata;
    char *blank;

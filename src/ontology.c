@@ -32,7 +32,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-int GLOBAL_ID = 0; // Used as a primary key for convenience
+int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
 
 /*****************************************************************************/
 
@@ -355,6 +355,20 @@ else
    }
 
 return false;
+}
+
+/*****************************************************************************/
+
+int GetTopicPid(char *typed_topic)
+
+{ struct Topic *tp;
+ 
+if (tp = GetTopic(TOPIC_MAP,typed_topic))
+   {
+   return tp->id;
+   }
+
+return 0;
 }
 
 /*****************************************************************************/

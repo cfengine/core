@@ -1691,6 +1691,7 @@ snprintf(query,CF_BUFSIZE-1,
         "to_assoc varchar(256),"
         "to_type varchar(256),"
         "to_name varchar(256)"
+        "to_id int,"
         ");\n"
         );
 
@@ -1703,6 +1704,7 @@ AppendRScalar(&columns,"from_assoc,varchar,256,",CF_SCALAR);
 AppendRScalar(&columns,"to_assoc,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"to_type,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"to_name,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"to_id,int",CF_SCALAR);
 
 snprintf(query,CF_MAXVARSIZE-1,"%s.associations",SQL_DATABASE);
 
@@ -1786,10 +1788,11 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
          char to_type[CF_MAXVARSIZE],to_topic[CF_MAXVARSIZE];
+         int to_id = GetTopicPid(rp->item);
          
          DeTypeTopic(rp->item,to_topic,to_type);
          
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type,from_id) values ('%s','%s','%s','%s','%s','%s','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_type,to_type,tp->id);
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_type,to_type,tp->id,to_id);
 
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);

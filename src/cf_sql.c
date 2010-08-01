@@ -219,7 +219,6 @@ cfdb->rowdata = NULL;
 cfdb->maxcolumns = 0;
 cfdb->maxrows = 0;
 
-printf("PTRin = %u, type = %d\n",cfdb,cfdb->type);
 Debug("Before Query succeeded: %s - %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
 
 switch (cfdb->type)

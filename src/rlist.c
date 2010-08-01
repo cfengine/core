@@ -764,7 +764,7 @@ return size;
 
 int PrintRval(char *buffer,int bufsize,void *rval,char type)
 
-{ int size = 0,delta;
+{ int size = 0,delta = 0;
 
 if (rval == NULL)
    {

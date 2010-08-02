@@ -2600,7 +2600,7 @@ CfOut(cf_verbose,"","Examining known peers...\n");
 
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   strcpy(hostname,IPString2Hostname((char *)key+1));
+   strcpy(hostname,(char *)key+1);
 
    if (!IsItemIn(hostlist,hostname))
       {

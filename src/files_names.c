@@ -309,13 +309,13 @@ return path;
 
 /*********************************************************************/
 
-char *Join(char *path,char *leaf)
+char *Join(char *path,char *leaf,int bufsize)
 
 { int len = strlen(leaf);
 
-if ((strlen(path)+len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
+if ((strlen(path)+len) > (bufsize - CF_BUFFERMARGIN))
    {
-   CfOut(cf_error,"","Buffer overflow constructing string. Tried to add %s to %s\n",leaf,path);
+   CfOut(cf_error,"","Buffer overflow constructing string, len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
    return NULL;
    }
 

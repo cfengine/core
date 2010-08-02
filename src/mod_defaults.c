@@ -163,6 +163,7 @@ struct BodyDefault BODY_DEFAULT[] =
    {"copy_backup","true"},
    {"copy_size","any size range"},
    {"stealth","false"},
+   {"fips_mode","false"},
    {NULL,NULL},
    };
 

@@ -269,7 +269,12 @@ void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE+1])
  
 CfOut(cf_verbose,"","Looking for a random number seed...\n");
 
+#ifdef HAVE_LIBCFNOVA
+md = EVP_get_digestbyname("sha256");
+#else
 md = EVP_get_digestbyname("md5");
+#endif
+
 EVP_DigestInit(&context,md);
 
 CfOut(cf_verbose,"","...\n");
@@ -399,6 +404,6 @@ for (i = 0; i < EVP_MAX_MD_SIZE+1; i++)
    digest[i] = 0;
    }
  
-HashString((char *)pubkey,sizeof(BIGNUM)-4,digest,cf_md5);
-return HashPrint(cf_md5,digest);
+HashString((char *)pubkey,sizeof(BIGNUM)-4,digest,CF_DEFAULT_DIGEST);
+return HashPrint(CF_DEFAULT_DIGEST,digest);
 }

@@ -226,7 +226,7 @@ fprintf(fout,
         "in this document. All efforts have been made to ensure the correctness of\n"
         "the information contained herein.\n"
         "@end cartouche\n"
-        "Copyright @copyright{} from 2008 to the year of issue Cfengine AS\n"
+        "Copyright @copyright{} 2008,2010 to the year of issue Cfengine AS\n"
         "@end titlepage\n"
         "@c *************************** File begins here ************************\n"
         "@ifinfo\n"

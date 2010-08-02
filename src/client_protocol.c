@@ -192,7 +192,15 @@ nonce_challenge = BN_new();
 BN_rand(nonce_challenge,CF_NONCELEN,0,0);
 
 nonce_len = BN_bn2mpi(nonce_challenge,in);
-HashString(in,nonce_len,digest,cf_md5);
+
+if (FIPS_MODE)
+   {
+   HashString(in,nonce_len,digest,CF_DEFAULT_DIGEST);
+   }
+else
+   {
+   HashString(in,nonce_len,digest,cf_md5);
+   }
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
@@ -275,7 +283,7 @@ if (BadProtoReply(in))
    return false;
    }
 
-/* Get challenge response - should be md5 of challenge */
+/* Get challenge response - should be CF_DEFAULT_DIGEST of challenge */
 
 /* proposition S2 */   
 memset(in,0,CF_BUFSIZE);  
@@ -286,12 +294,7 @@ if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    return false;   
    }
 
-if (!HashesMatch(digest,in,cf_md5)) 
-   {
-   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Challenge response from server %s/%s was incorrect!",pp->this_server,conn->remoteip);
-   return false;
-   }
-else
+if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5)) // Legacy
    {
    if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */ 
       {
@@ -312,6 +315,12 @@ else
          }
       }
    }
+else
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Challenge response from server %s/%s was incorrect!",pp->this_server,conn->remoteip);
+   return false;
+   }
+
 
 /* Receive counter challenge from server */ 
 
@@ -340,8 +349,8 @@ if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADD
    }
 
 /* proposition C4 */   
-HashString(decrypted_cchall,nonce_len,digest,cf_md5);
-Debug("Replying to counter challenge with md5\n"); 
+HashString(decrypted_cchall,nonce_len,digest,CF_DEFAULT_DIGEST);
+Debug("Replying to counter challenge with hash\n"); 
 SendTransaction(conn->sd,digest,16,CF_DONE);
 free(decrypted_cchall); 
 
@@ -419,9 +428,9 @@ if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS
 
 SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
 
-HashPubKey(server_pubkey,conn->digest,cf_md5);
-CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(cf_md5,conn->digest));
-LastSaw(conn->username,conn->remoteip,HashPrint(cf_md5,conn->digest),cf_connect);
+HashPubKey(server_pubkey,conn->digest,CF_DEFAULT_DIGEST);
+CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
+LastSaw(conn->username,conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest),cf_connect);
 
 if (server_pubkey != NULL)
    {

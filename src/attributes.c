@@ -784,15 +784,31 @@ value = (char *)GetConstraint("hash",pp,CF_SCALAR);
 
 if (value && strcmp(value,"best") == 0)
    {
+#ifdef HAVE_LIBCFNOVA
+   c.hash = cf_sha512;
+#else
    c.hash = cf_besthash;
+#endif   
    }
 else if (value && strcmp(value,"sha1") == 0)
    {
    c.hash = cf_sha1;
    }
+else if (value && strcmp(value,"sha256") == 0)
+   {
+   c.hash = cf_sha256;
+   }
+else if (value && strcmp(value,"sha512") == 0)
+   {
+   c.hash = cf_sha512;
+   }
+else if (value && strcmp(value,"sha384") == 0)
+   {
+   c.hash = cf_sha384;
+   }
 else
    {
-   c.hash = cf_md5;
+   c.hash = CF_DEFAULT_DIGEST;
    }
 
 value = (char *)GetConstraint("report_changes",pp,CF_SCALAR);

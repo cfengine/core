@@ -296,10 +296,10 @@ if (strlen(ipaddress) == 0)
 switch (role)
    {
    case cf_accept:
-       snprintf(databuf,CF_BUFSIZE-1,"-%s",HashPrint(cf_md5,digest));
+       snprintf(databuf,CF_BUFSIZE-1,"-%s",HashPrint(CF_DEFAULT_DIGEST,digest));
        break;
    case cf_connect:
-       snprintf(databuf,CF_BUFSIZE-1,"+%s",HashPrint(cf_md5,digest));
+       snprintf(databuf,CF_BUFSIZE-1,"+%s",HashPrint(CF_DEFAULT_DIGEST,digest));
        break;
    }
 

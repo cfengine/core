@@ -1356,7 +1356,7 @@ if (cfstat(file,&statbuf) == -1)
    return;
    }
 
-HashFile(file,AUDITPTR->digest,cf_md5);
+HashFile(file,AUDITPTR->digest,CF_DEFAULT_DIGEST);
 
 AUDITPTR->next = VAUDIT;
 AUDITPTR->filename = strdup(file);
@@ -1557,7 +1557,7 @@ printf("\nBug reports: bug-cfengine@cfengine.org, ");
 printf("Community help: help-cfengine@cfengine.org\n");
 printf("Community info: http://www.cfengine.org, ");
 printf("Support services: http://www.cfengine.com\n\n");
-printf("This software is Copyright (C) 2008-present Cfengine AS.\n");
+printf("This software is Copyright (C) 2008,2010-present Cfengine AS.\n");
 }
 
 /*******************************************************************/

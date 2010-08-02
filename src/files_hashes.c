@@ -166,8 +166,8 @@ if (sstat->st_size != dstat->st_size)
   
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
-   HashFile(file1,digest1,cf_md5);
-   HashFile(file2,digest2,cf_md5);
+   HashFile(file1,digest1,CF_DEFAULT_DIGEST);
+   HashFile(file2,digest2,CF_DEFAULT_DIGEST);
 
    for (i = 0; i < EVP_MAX_MD_SIZE; i++)
       {
@@ -228,7 +228,7 @@ if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 
    }
 else
    {
-   Debug("Using network md5 checksum instead\n");
+   Debug("Using network checksum instead\n");
    return CompareHashNet(file1,file2,attr,pp); /* client.c */
    }
 }
@@ -307,7 +307,7 @@ Debug2("HashString(%c)\n",type);
 switch (type)
    {
    case cf_crypt:
-       CfOut(cf_error,"","The crypt support is not presently implemented, please use md5 instead");
+       CfOut(cf_error,"","The crypt support is not presently implemented, please use sha256 instead");
        break;
        
    default:
@@ -364,7 +364,7 @@ if ((buffer = malloc(buf_len+10)) == NULL)
 switch (type)
    {
    case cf_crypt:
-       CfOut(cf_error,"","The crypt support is not presently implemented, please use md5 instead");
+       CfOut(cf_error,"","The crypt support is not presently implemented, please use sha256 instead");
        break;
        
    default:

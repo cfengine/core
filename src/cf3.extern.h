@@ -30,6 +30,7 @@
 
 extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
+extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
 extern int VIEWS;
 extern int LICENSES;

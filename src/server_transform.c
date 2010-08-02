@@ -398,6 +398,12 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&
    {
    strncpy(SYSLOGHOST,Hostname2IPString(retval),CF_MAXVARSIZE-1);
    }
+
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_fips_mode].lval,&retval,&rettype) != cf_notype)
+   {
+   FIPS_MODE = GetBoolean(retval);
+   CfOut(cf_verbose,"","SET FIPS_MODE = %d\n",FIPS_MODE);
+   }
 }
 
 /*********************************************************************/

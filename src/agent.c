@@ -669,6 +669,12 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,&
    LASTSEENEXPIREAFTER = Str2Int(retval);
    }
 
+if (GetVariable("control_common",CFG_CONTROLBODY[cfg_fips_mode].lval,&retval,&rettype) != cf_notype)
+   {
+   FIPS_MODE = GetBoolean(retval);
+   CfOut(cf_verbose,"","SET FIPS_MODE = %d\n",FIPS_MODE);
+   }
+
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
    {
    SYSLOGPORT = (unsigned short)Str2Int(retval);

@@ -563,13 +563,13 @@ pp->cache = NULL;
 
 int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp)
 
-{ static unsigned char d[CF_MD5_LEN];
+{ static unsigned char d[CF_DEFAULT_DIGEST_LEN];
   char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],in[CF_BUFSIZE],out[CF_BUFSIZE];
   int i,tosend,cipherlen;
   struct cfagent_connection *conn = pp->conn;
 
-HashFile(file2,d,cf_md5);
-Debug("Send digest of %s to server, %s\n",file2,HashPrint(cf_md5,d));
+HashFile(file2,d,CF_DEFAULT_DIGEST);
+Debug("Send digest of %s to server, %s\n",file2,HashPrint(CF_DEFAULT_DIGEST,d));
 
 memset(recvbuffer,0,CF_BUFSIZE);
 
@@ -579,12 +579,12 @@ if (attr.copy.encrypt)
 
    sp = in + strlen(in) + CF_SMALL_OFFSET;
 
-   for (i = 0; i < CF_MD5_LEN; i++)
+   for (i = 0; i < CF_DEFAULT_DIGEST_LEN; i++)
       {
       *sp++ = d[i];
       }
    
-   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+CF_SMALL_OFFSET+CF_MD5_LEN);
+   cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+CF_SMALL_OFFSET+CF_DEFAULT_DIGEST_LEN);
    snprintf(sendbuffer,CF_BUFSIZE,"SMD5 %d",cipherlen);
    memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
    tosend = cipherlen + CF_PROTO_OFFSET;
@@ -594,12 +594,12 @@ else
    snprintf(sendbuffer,CF_BUFSIZE,"MD5 %s",file1);
    sp = sendbuffer + strlen(sendbuffer) + CF_SMALL_OFFSET;
 
-   for (i = 0; i < CF_MD5_LEN; i++)
+   for (i = 0; i < CF_DEFAULT_DIGEST_LEN; i++)
       {
       *sp++ = d[i];
       }
    
-   tosend = strlen(sendbuffer)+CF_SMALL_OFFSET+CF_MD5_LEN;
+   tosend = strlen(sendbuffer)+CF_SMALL_OFFSET+CF_DEFAULT_DIGEST_LEN;
    } 
  
 if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
@@ -617,12 +617,12 @@ if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
 
 if (strcmp(CFD_TRUE,recvbuffer) == 0)
    {
-   Debug("MD5 mismatch: (reply - %s)\n",recvbuffer);
+   Debug("Hash mismatch: (reply - %s)\n",recvbuffer);
    return true; /* mismatch */
    }
 else
    {
-   Debug("MD5 matched ok: (reply - %s)\n",recvbuffer);
+   Debug("Hash matched ok: (reply - %s)\n",recvbuffer);
    return false;
    }
  

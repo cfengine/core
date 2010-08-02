@@ -2563,7 +2563,15 @@ ThreadUnlock(cft_system);
 
 /* Client's ID is now established by key or trusted, reply with md5 */
 
-HashString(decrypted_nonce,nonce_len,digest,cf_md5);
+if (FIPS_MODE)
+   {
+   HashString(decrypted_nonce,nonce_len,digest,CF_DEFAULT_DIGEST);
+   }
+else
+   {
+   HashString(decrypted_nonce,nonce_len,digest,cf_md5);
+   }
+
 free(decrypted_nonce);
 
 /* Get the public key from the client */
@@ -2624,8 +2632,8 @@ if (DEBUG||D2)
    RSA_print_fp(stdout,newkey,0);
    }
 
-HashPubKey(newkey,conn->digest,cf_md5);
-CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->ipaddr,HashPrint(cf_md5,conn->digest));
+HashPubKey(newkey,conn->digest,CF_DEFAULT_DIGEST);
+CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->ipaddr,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
 LastSaw(conn->username,conn->ipaddr,conn->digest,cf_accept);
    
 if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
@@ -2649,7 +2657,16 @@ ThreadLock(cft_system);
 counter_challenge = BN_new();
 BN_rand(counter_challenge,256,0,0);
 nonce_len = BN_bn2mpi(counter_challenge,in);
-HashString(in,nonce_len,digest,cf_md5);
+
+if (FIPS_MODE)
+   {
+   HashString(in,nonce_len,digest,CF_DEFAULT_DIGEST);
+   }
+else
+   {
+   HashString(in,nonce_len,digest,cf_md5);
+   }
+
 encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
 
 if ((out = malloc(encrypted_len+1)) == NULL)
@@ -2699,15 +2716,7 @@ if (ReceiveTransaction(conn->sd_reply,in,NULL) == -1)
    return false;
    }
  
-if (!HashesMatch(digest,in,cf_md5))  /* replay / piggy in the middle attack ? */
-   {
-   BN_free(counter_challenge);
-   free(out);
-   RSA_free(newkey);
-   CfOut(cf_inform,"","Challenge response from client %s was incorrect - ID false?",conn->ipaddr);
-   return false; 
-   }
-else
+if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5))  /* replay / piggy in the middle attack ? */
    {
    if (!conn->trust)
       {
@@ -2717,6 +2726,14 @@ else
       {
       CfOut(cf_verbose,"","Weak authentication of trusted client %s/%s (key accepted on trust).\n",conn->hostname,conn->ipaddr);
       }
+   }
+else
+   {
+   BN_free(counter_challenge);
+   free(out);
+   RSA_free(newkey);
+   CfOut(cf_inform,"","Challenge response from client %s was incorrect - ID false?",conn->ipaddr);
+   return false; 
    }
 
 /* Receive random session key,... */ 
@@ -3194,7 +3211,7 @@ close(fd);
 void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1],digest2[EVP_MAX_MD_SIZE+1];
- char filename[CF_BUFSIZE],rfilename[CF_BUFSIZE];
+  char filename[CF_BUFSIZE],rfilename[CF_BUFSIZE];
   char *sp;
   int i;
 
@@ -3204,7 +3221,7 @@ sscanf(recvbuffer,"MD5 %255[^\n]",rfilename);
 
 sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
  
-for (i = 0; i < CF_MD5_LEN; i++)
+for (i = 0; i < CF_DEFAULT_DIGEST_LEN; i++)
    {
    digest1[i] = *sp++;
    }
@@ -3213,18 +3230,18 @@ memset(sendbuffer,0,CF_BUFSIZE);
 
 TranslatePath(filename,rfilename);
 
-HashFile(filename,digest2,cf_md5);
+HashFile(filename,digest2,CF_DEFAULT_DIGEST);
 
-if (!HashesMatch(digest1,digest2,cf_md5))
+if (HashesMatch(digest1,digest2,CF_DEFAULT_DIGEST) || HashesMatch(digest1,digest2,cf_md5))
    {
-   sprintf(sendbuffer,"%s",CFD_TRUE);
-   Debug("Hashes didn't match\n");
+   sprintf(sendbuffer,"%s",CFD_FALSE);
+   Debug("Hashes matched ok\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
 else
    {
-   sprintf(sendbuffer,"%s",CFD_FALSE);
-   Debug("Hashes matched ok\n");
+   sprintf(sendbuffer,"%s",CFD_TRUE);
+   Debug("Hashes didn't match\n");
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    }
 }
@@ -3703,7 +3720,7 @@ int CheckStoreKey(struct cfd_connection *conn,RSA *key)
 { RSA *savedkey;
   char udigest[CF_MAXVARSIZE];
  
-snprintf(udigest,CF_MAXVARSIZE-1,"%s",HashPrint(cf_md5,conn->digest));
+snprintf(udigest,CF_MAXVARSIZE-1,"%s",HashPrint(CF_DEFAULT_DIGEST,conn->digest));
 
 if (savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest))
    {

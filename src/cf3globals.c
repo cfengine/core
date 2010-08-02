@@ -53,6 +53,7 @@ int LOOKUP = false;
 int VIEWS = true;
 int IGNORE_MISSING_INPUTS = false;
 int IGNORE_MISSING_BUNDLES = false;
+int FIPS_MODE = false;
 
 unsigned int CFTEST_CLASS = 0;
 

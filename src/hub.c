@@ -196,10 +196,10 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:VhFV1gMW",OPTIONS,&optindex)) != EOF)
       case 'h': Syntax("cf-hub - cfengine's report aggregator",OPTIONS,HINTS,ID);
           exit(0);
 
-      case 'M': ManPage("cf-execd - cfengine's report aggregator",OPTIONS,HINTS,ID);
+      case 'M': ManPage("cf-hub - cfengine's report aggregator",OPTIONS,HINTS,ID);
           exit(0);
           
-      default: Syntax("cf-execd - cfengine's report aggregator",OPTIONS,HINTS,ID);
+      default: Syntax("cf-hub - cfengine's report aggregator",OPTIONS,HINTS,ID);
           exit(1);
           
       }
@@ -219,10 +219,6 @@ void ThisAgentInit()
 
 umask(077);
 LOGGING = true;
-MAILTO[0] = '\0';
-MAILFROM[0] = '\0';
-VMAILSERVER[0] = '\0';
-EXECCOMMAND[0] = '\0';
 
 if (SCHEDULE == NULL)
    {
@@ -287,7 +283,7 @@ void StartHub(int argc,char **argv)
 #ifdef HAVE_LIBCFNOVA
 Nova_StartHub(argc,argv);
 #else
-CfLog(cf_error,"","This component is only used in commercial editions of the Cfengine software");
+CfOut(cf_error,"","This component is only used in commercial editions of the Cfengine software");
 #endif
 }
 

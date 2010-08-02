@@ -237,6 +237,7 @@ enum cfgcontrol
    cfg_licenses,
    cfg_syslog_host,
    cfg_syslog_port,
+   cfg_fips_mode,
    cfg_noagent
    };
     
@@ -853,7 +854,13 @@ enum cfhashes
    cf_nohash
    };
 
+#ifdef HAVE_LIBCFNOVA
 #define CF_DEFAULT_DIGEST cf_sha256
+#define CF_DEFAULT_DIGEST_LEN CF_SHA256_LEN
+#else
+#define CF_DEFAULT_DIGEST cf_md5
+#define CF_DEFAULT_DIGEST_LEN CF_MD5_LEN
+#endif
 
 enum cfnofile
    {

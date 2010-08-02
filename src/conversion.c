@@ -39,7 +39,7 @@ void IPString2KeyDigest(char *ipv4,char *result)
 { CF_DB *dbp;
   CF_DBC *dbcp;
   char *key;
-  char name[CF_BUFSIZE],address[CF_MAXVARSIZE];
+  char name[CF_BUFSIZE];
   void *value;
   struct CfKeyHostSeen entry;
   int ret,ksize,vsize, ok = false;
@@ -72,10 +72,10 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       {
       memcpy(&entry,value,sizeof(entry));
 
-      if (strncmp(address,(char *)entry.address,strlen(address)) == 0)
+      if (strncmp(ipv4,(char *)entry.address,strlen(ipv4)) == 0)
          {
          CfOut(cf_verbose,""," -> Matched IP %s to key %s",ipv4,key+1);
-         strncpy(result,key+1,CF_SMALLBUF-1);
+         strncpy(result,key+1,CF_MAXVARSIZE-1);
          break;
          }
       }

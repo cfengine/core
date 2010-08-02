@@ -862,6 +862,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       then = entry.Q.q;
       average = (double)entry.Q.expect;
       var = (double)entry.Q.var;
+      strncpy(addr,entry.address,CF_MAXVARSIZE);
       }
    else
       {
@@ -881,15 +882,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
    CfOut(cf_verbose,""," -> Reporting on %s",hostname);
    
-   if (strlen(hostname+1) > 15)
-      {
-      snprintf(addr,15,"...%s",hostname+strlen(hostname)-10); /* ipv6 */
-      }
-   else
-      {
-      snprintf(addr,15,"%s",hostname+1);
-      }
-
    if (XML)
       {
       fprintf(fout,"%s",CFRX[cfx_entry][cfb]);

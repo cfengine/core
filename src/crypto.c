@@ -123,7 +123,7 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
 
 RSA *HavePublicKeyByIP(char *username,char *ipaddress)
 
-{ char hash[CF_SMALLBUF];
+{ char hash[CF_MAXVARSIZE];
  
 IPString2KeyDigest(ipaddress,hash);
 

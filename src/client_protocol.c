@@ -349,7 +349,15 @@ if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADD
    }
 
 /* proposition C4 */   
-HashString(decrypted_cchall,nonce_len,digest,CF_DEFAULT_DIGEST);
+if (FIPS_MODE)
+   {
+   HashString(decrypted_cchall,nonce_len,digest,CF_DEFAULT_DIGEST);
+   }
+else
+   {
+   HashString(decrypted_cchall,nonce_len,digest,cf_md5);
+   }
+
 Debug("Replying to counter challenge with hash\n"); 
 SendTransaction(conn->sd,digest,16,CF_DONE);
 free(decrypted_cchall); 

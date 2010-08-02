@@ -317,6 +317,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       
       ThreadLock(cft_system);
       kp->address = strdup(ipaddress);
+      ThreadUnlock(cft_system);
       return;
       }
    }

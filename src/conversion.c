@@ -72,6 +72,14 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       {
       memcpy(&entry,value,sizeof(entry));
 
+      // Warning this is not 1:1
+
+      if (*entry.address == '+')
+         {
+         // From the horse's mouth
+         continue;
+         }
+      
       if (strncmp(ipv4,(char *)entry.address,strlen(ipv4)) == 0)
          {
          CfOut(cf_verbose,""," -> Matched IP %s to key %s",ipv4,key+1);

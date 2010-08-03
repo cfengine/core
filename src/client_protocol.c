@@ -174,7 +174,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,str
   unsigned long err;
   unsigned char digest[EVP_MAX_MD_SIZE];
   int encrypted_len,nonce_len = 0,len_n,len_e,len,session_size;
-  char dont_implicitly_trust_server,ipaddr[CF_BUFSIZE], enterprise_field = 'c';
+  char dont_implicitly_trust_server,enterprise_field = 'c';
   RSA *server_pubkey = NULL;
 
 if (PUBKEY == NULL || PRIVKEY == NULL) 
@@ -436,12 +436,11 @@ if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS
 
 SendTransaction(conn->sd,out,encrypted_len,CF_DONE);
 
-HashPubKey(server_pubkey,conn->digest,CF_DEFAULT_DIGEST);
-CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
-LastSaw(conn->username,conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest),cf_connect);
-
 if (server_pubkey != NULL)
    {
+   HashPubKey(server_pubkey,conn->digest,CF_DEFAULT_DIGEST);
+   CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
+   LastSaw(conn->username,conn->remoteip,conn->digest,cf_connect);
    RSA_free(server_pubkey);
    }
 

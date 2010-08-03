@@ -438,7 +438,10 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    else
       {
       CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",kp->name,kp->address,ctime(&(kp->timestamp)));
+
+      ThreadLock(cft_dbhandle);
       WriteDB(dbp,kp->name,&newq,sizeof(newq));
+      ThreadUnlock(cft_dbhandle);
       
       if (intermittency)
          {

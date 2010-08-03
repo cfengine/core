@@ -160,7 +160,9 @@ else if (cfstat(newname,&statbuf) == -1)
    strcpy(newname,newname);
    snprintf(oldname,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,username,ipaddress);   
    MapName(oldname);
-   
+
+   CfOut(cf_verbose,""," -> Trying old style %s",oldname);
+      
    if (cfstat(oldname,&statbuf) == -1)
       {      
       Debug("Did not have old-style key %s\n",oldname);

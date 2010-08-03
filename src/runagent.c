@@ -304,11 +304,11 @@ if (INTERACTIVE)
    {
    CfOut(cf_verbose,""," -> Using interactive key trust...\n");
    
-   gotkey = (long)HavePublicKey(user,peer,md5);
+   gotkey = (long)HavePublicKey(user,peer,CF_DEFAULT_DIGEST);
    
    if (!gotkey)
       {
-      gotkey = (long)HavePublicKey(user,ipv4,md5);
+      gotkey = (long)HavePublicKey(user,ipv4,CF_DEFAULT_DIGEST);
       }
 
    if (!gotkey)

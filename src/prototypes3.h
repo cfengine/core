@@ -380,6 +380,7 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
+void EnterpriseModuleTrick(void);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);

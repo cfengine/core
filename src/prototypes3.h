@@ -961,6 +961,7 @@ struct Item *SplitStringAsItemList (char *string, char sep);
 void IncrementItemListCounter (struct Item *ptr, char *string);
 void SetItemListCounter (struct Item *ptr, char *string,int value);
 struct Item *SortItemListNames(struct Item *list);
+struct Item *SortItemListClasses(struct Item *list);
 struct Item *SortItemListCounters(struct Item *list);
 struct Item *SortItemListTimes(struct Item *list);
 char *ItemList2CSV(struct Item *list);

@@ -190,7 +190,6 @@ session_size = CfSessionKeySize(enterprise_field);
  
 nonce_challenge = BN_new();
 BN_rand(nonce_challenge,CF_NONCELEN,0,0);
-
 nonce_len = BN_bn2mpi(nonce_challenge,in);
 
 if (FIPS_MODE)
@@ -348,7 +347,7 @@ if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADD
    return false;
    }
 
-/* proposition C4 */   
+/* proposition C4 */
 if (FIPS_MODE)
    {
    HashString(decrypted_cchall,nonce_len,digest,CF_DEFAULT_DIGEST);
@@ -359,7 +358,16 @@ else
    }
 
 Debug("Replying to counter challenge with hash\n"); 
-SendTransaction(conn->sd,digest,16,CF_DONE);
+
+if (FIPS_MODE)
+   {
+   SendTransaction(conn->sd,digest,CF_DEFAULT_DIGEST_LEN,CF_DONE);
+   }
+else
+   {
+   SendTransaction(conn->sd,digest,CF_MD5_LEN,CF_DONE);
+   }
+
 free(decrypted_cchall); 
 
 /* If we don't have the server's public key, it will be sent */

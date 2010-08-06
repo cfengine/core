@@ -2561,7 +2561,7 @@ else
 
 ThreadUnlock(cft_system);
 
-/* Client's ID is now established by key or trusted, reply with md5 */
+/* Client's ID is now established by key or trusted, reply with digest */
 
 if (FIPS_MODE)
    {
@@ -2645,18 +2645,28 @@ if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
       }
    }
 
-/* Reply with md5 of original challenge */
+/* Reply with digest of original challenge */
 
-/* proposition S2 */ 
-SendTransaction(conn->sd_reply,digest,16,CF_DONE);
+/* proposition S2 */
+
+if (FIPS_MODE)
+   {
+   SendTransaction(conn->sd_reply,digest,CF_DEFAULT_DIGEST_LEN,CF_DONE);
+   }
+else
+   {
+   SendTransaction(conn->sd_reply,digest,CF_MD5_LEN,CF_DONE);
+   }
 
 /* Send counter challenge to be sure this is a live session */
 
 ThreadLock(cft_system);
 
 counter_challenge = BN_new();
-BN_rand(counter_challenge,256,0,0);
+BN_rand(counter_challenge,CF_NONCELEN,0,0);
 nonce_len = BN_bn2mpi(counter_challenge,in);
+
+// hash the challenge from the client
 
 if (FIPS_MODE)
    {
@@ -2720,11 +2730,11 @@ if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5))  
    {
    if (!conn->trust)
       {
-      CfOut(cf_verbose,"","Strong authentication of client %s/%s achieved",conn->hostname,conn->ipaddr);
+      CfOut(cf_verbose,""," -> Strong authentication of client %s/%s achieved",conn->hostname,conn->ipaddr);
       }
    else
       {
-      CfOut(cf_verbose,"","Weak authentication of trusted client %s/%s (key accepted on trust).\n",conn->hostname,conn->ipaddr);
+      CfOut(cf_verbose,""," -> Weak authentication of trusted client %s/%s (key accepted on trust).\n",conn->hostname,conn->ipaddr);
       }
    }
 else

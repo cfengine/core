@@ -290,25 +290,25 @@ if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
 int HailServer(char *host,struct Attributes a,struct Promise *pp)
 
 { struct cfagent_connection *conn;
- char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],md5[CF_MAXVARSIZE],user[CF_SMALLBUF];
+ char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
   long gotkey;
   char reply[8];
   
 a.copy.portnumber = (short)ParseHostname(host,peer);
 
 snprintf(ipv4,CF_MAXVARSIZE,"%s",Hostname2IPString(peer));
-IPString2KeyDigest(ipv4,md5);
+IPString2KeyDigest(ipv4,digest);
 GetCurrentUserName(user,CF_SMALLBUF);
 
 if (INTERACTIVE)
    {
    CfOut(cf_verbose,""," -> Using interactive key trust...\n");
    
-   gotkey = (long)HavePublicKey(user,peer,CF_DEFAULT_DIGEST);
+   gotkey = (long)HavePublicKey(user,peer,digest);
    
    if (!gotkey)
       {
-      gotkey = (long)HavePublicKey(user,ipv4,CF_DEFAULT_DIGEST);
+      gotkey = (long)HavePublicKey(user,ipv4,digest);
       }
 
    if (!gotkey)

@@ -393,13 +393,17 @@ free(buffer);
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE+1],unsigned char digest2[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { int i,size = EVP_MAX_MD_SIZE;
- 
+
 size = FileHashSize(type);
+
+Debug("1. CHECKING DIGEST type %d - size %d (%s)\n",type,size,HashPrint(type,digest1));
+Debug("2. CHECKING DIGEST type %d - size %d (%s)\n",type,size,HashPrint(type,digest2));
 
 for (i = 0; i < size; i++)
    {
    if (digest1[i] != digest2[i])
       {
+      printf("FAIL AT: %d (%x = %x)\n",i,digest1[i],digest2[i]);
       return false;
       }
    }

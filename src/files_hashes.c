@@ -403,7 +403,6 @@ for (i = 0; i < size; i++)
    {
    if (digest1[i] != digest2[i])
       {
-      printf("FAIL AT: %d (%x = %x)\n",i,digest1[i],digest2[i]);
       return false;
       }
    }

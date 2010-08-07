@@ -44,7 +44,7 @@ void VerifyGraph(struct Topic *map, struct Rlist *assoc_views,char *view)
   struct TopicAssociation *ta;
   struct Occurrence *op;
   struct Rlist *rp;
-  int i,j,topic_count = 0, assoc_count = 0;
+  int i,j,topic_count = 0;
   int size,*k,max_k = 0;
   double **adj,*evc;
   char **n;
@@ -59,21 +59,27 @@ if (view)
 for (tp = map; tp != NULL; tp=tp->next)
    {
    topic_count++;
-   
-   for (ta = tp->associations; ta != NULL; ta=ta->next)
-      {      
-      assoc_count++;
-      }
    }
 
 /* Allocate an array we can pass to a subroutine */
 
+topic_count++;
+
 adj = (double **)malloc(sizeof(double *)*topic_count);
+
+if (adj == NULL)
+   {
+   FatalError("memory allocation in graphs");
+   }
 
 for (i = 0; i < topic_count; i++)
    {
    adj[i] = (double *)malloc(sizeof(double)*topic_count);
    }
+
+/* And a vector to contain the names */
+    
+n = (char **)malloc(sizeof(char *)*topic_count);
 
 for (i = 0; i < topic_count; i++)
    {
@@ -81,25 +87,15 @@ for (i = 0; i < topic_count; i++)
       {
       adj[i][j] = 0.0;
       }
+
+   n[i] = NULL;
    }
 
-/* And a vector to contain the names */
-    
-n = (char **)malloc(sizeof(char *)*topic_count);
-
-i = 0;
-
-for (tp = map; tp != NULL; tp=tp->next,i++)
+for (tp = map; tp != NULL; tp=tp->next)
    {
-   n[i] = strdup(TypedTopic(tp->topic_name,tp->topic_type));
+   n[tp->id] = strdup(TypedTopic(tp->topic_name,tp->topic_type));
+   CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
    }
-
-if (i != topic_count)
-   {
-   CfOut(cf_error,"","Node mismatch %d != %d\n",i,topic_count);
-   }
-
-i = j = 0;
 
 /* Construct the adjacency matrix for the map */
 
@@ -119,20 +115,12 @@ for (tp = map; tp != NULL; tp=tp->next)
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
          int count = 0;
+         int to_id = GetTopicPid(rp->item);
+         int from_id = tp->id;
 
-         for (j = 0; j < topic_count; j++)
+         if (to_id > 0 && from_id > 0)
             {
-            if (TypedTopicMatch(TypedTopic(rp->item,""),n[j])||TypedTopicMatch(TypedTopic(rp->item,ta->associate_topic_type),n[j]))
-               {
-               if (i == j)
-                  {
-                  continue;
-                  }
-               
-               
-               adj[i][j] = adj[j][i] = 1.0;
-               count++;
-               }
+            adj[from_id][to_id] = adj[to_id][from_id] = 1.0;
             }
          }
       }
@@ -171,25 +159,6 @@ for (i = max_k; i >= 0; i--)
       }
    }
 
-
-/* Look at centrality */
-
-evc = (double *)malloc(sizeof(double)*topic_count);
-
-/*
-  EigenvectorCentrality(adj,evc,topic_count);
-
-CfOut(cf_verbose,"","EVC tops:\n");
-
-for (i = 0; i < topic_count; i++)
-   {
-   if (IsTop(adj,evc,i,topic_count))
-      {
-      CfOut(cf_verbose,"","  Topic %d - \"%s\" is an island\n",i,n[i]);      
-      }
-   }
-*/
-
 for (i = 0; i < topic_count; i++)
    {
 #if defined HAVE_LIBCFNOVA && defined HAVE_LIBGD
@@ -199,15 +168,19 @@ for (i = 0; i < topic_count; i++)
 #endif
    }
 
-// Nova_PlotTopicCosmos(2484,adj,n,topic_count,view);
-
-
 /* Clean up */
 
 for (i = 0; i < topic_count; i++)
    {
-   free(n[i]);
-   free(adj[i]);
+   if (n[i])
+      {
+      free(n[i]);
+      }
+
+   if (adj[i])
+      {
+      free(adj[i]);
+      }
    }
 
 free(adj);

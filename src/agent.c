@@ -1267,10 +1267,10 @@ void ParallelFindAndVerifyFilesPromises(struct Promise *pp)
 
 #ifdef MINGW
 
-if(background)
-  {
+if (background)
+   {
    CfOut(cf_verbose, "", "Background processing of files promises is not supported on Windows");
-  }
+   }
   
 FindAndVerifyFilesPromises(pp);
 
@@ -1296,9 +1296,8 @@ else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
    {
    CfOut(cf_verbose,""," !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
    }
-
-   
-if (child || !background)
+ 
+if (child == 0 || !background)
    {
    FindAndVerifyFilesPromises(pp);
    }

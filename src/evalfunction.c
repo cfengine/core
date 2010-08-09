@@ -1155,15 +1155,9 @@ if (strlen(sendstring) > 0)
       return rval;   
       }
 
-   signal(SIGALRM,(void *)TimeOut);
-   alarm(CF_TIMEOUT);
-   
    if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
       {
       }
-
-   alarm(0);
-   signal(SIGALRM,SIG_DFL);
 
    if (n_read == -1)
       {
@@ -1852,15 +1846,9 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
          continue;
          }
       
-      signal(SIGALRM,(void *)TimeOut);
-      alarm(CF_TIMEOUT);
-      
       if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
          {
          }
-      
-      alarm(0);
-      signal(SIGALRM,SIG_DFL);
       
       if (n_read == -1)
          {

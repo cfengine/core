@@ -867,6 +867,7 @@ value = (char *)GetConstraint("link_type",pp,CF_SCALAR);
 f.link_type = String2LinkType(value);
 f.servers = GetListConstraint("servers",pp);
 f.portnumber = (short)GetIntConstraint("portnumber",pp);
+f.timeout = (short)GetIntConstraint("timeout",pp);
 f.link_instead = GetListConstraint("linkcopy_patterns",pp);
 f.copy_links = GetListConstraint("copylink_patterns",pp);
 

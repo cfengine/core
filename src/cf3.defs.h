@@ -1296,6 +1296,7 @@ struct FileCopy
    int verify;
    int purge;
    short portnumber;
+   short timeout;
    };
 
 struct ServerItem

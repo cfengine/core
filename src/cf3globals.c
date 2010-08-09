@@ -335,7 +335,6 @@ pthread_mutex_t MUTEX_DB_LASTSEEN = PTHREAD_MUTEX_INITIALIZER;
 
 unsigned short PORTNUMBER = 0;
 char VIPADDRESS[18];
-int  CF_TIMEOUT = 10;
 int  CFSIGNATURE = 0;
 
 char *PROTOCOL[] =
@@ -440,7 +439,8 @@ time_t CFINITSTARTTIME;
 dev_t ROOTDEVICE = 0;
 char  STR_CFENGINEPORT[16];
 unsigned short SHORT_CFENGINEPORT;
-int RPCTIMEOUT = 60;          /* seconds */
+unsigned short SHORT_CONNTIMEOUT = 10;	/* seconds */
+int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
 int SENSIBLEFILECOUNT = 2;
 int SENSIBLEFSSIZE = 1000;

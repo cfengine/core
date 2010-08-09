@@ -626,8 +626,8 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_timeout].lval) == 0)
       {
-      CF_TIMEOUT = Str2Int(retval);
-      CfOut(cf_verbose,"","SET timeout = %d\n",CF_TIMEOUT);
+      SHORT_CONNTIMEOUT = (short)Str2Int(retval);
+      CfOut(cf_verbose,"","SET timeout = %d\n",SHORT_CONNTIMEOUT);
       continue;
       }
    

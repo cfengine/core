@@ -815,31 +815,39 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_returnszero].args,finalargs); /* Arg validati
 
 /* begin fn specific content */
 
-if (strcmp(finalargs->next->item,"useshell") == 0)
+if (!IsExecutable(GetArg0(finalargs->item)))
    {
-   useshell = true;
-   snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
+   CfOut(cf_error,"","ExecResult \"%s\" is assumed to be executable but isn't\n",finalargs->next->item);
+   SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
    }
 else
    {
-   useshell = false;
-   snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
-   }
-
-if (cfstat(GetArg0(finalargs->item),&statbuf) == -1)
-   {
-   SetFnCallReturnStatus("returnszero",FNCALL_FAILURE,strerror(errno),NULL);   
-   strcpy(buffer,"!any");   
-   }
-else if (ShellCommandReturnsZero(comm,useshell))
-   {
-   SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,NULL,NULL);
-   strcpy(buffer,"any");
-   }
-else
-   {
-   SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,strerror(errno),NULL);   
-   strcpy(buffer,"!any");
+   if (strcmp(finalargs->next->item,"useshell") == 0)
+      {
+      useshell = true;
+      snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
+      }
+   else
+      {
+      useshell = false;
+      snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
+      }
+   
+   if (cfstat(GetArg0(finalargs->item),&statbuf) == -1)
+      {
+      SetFnCallReturnStatus("returnszero",FNCALL_FAILURE,strerror(errno),NULL);   
+      strcpy(buffer,"!any");   
+      }
+   else if (ShellCommandReturnsZero(comm,useshell))
+      {
+      SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,NULL,NULL);
+      strcpy(buffer,"any");
+      }
+   else
+      {
+      SetFnCallReturnStatus("returnszero",FNCALL_SUCCESS,strerror(errno),NULL);   
+      strcpy(buffer,"!any");
+      }
    }
  
 if ((rval.item = strdup(buffer)) == NULL)
@@ -1849,7 +1857,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
       if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
          {
          }
-      
+            
       if (n_read == -1)
          {
          cf_closesocket(conn->sd);

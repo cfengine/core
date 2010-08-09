@@ -17,14 +17,14 @@
 3.0.5p1
         Showing paths allowed/denied access to when cf-serverd is run in verbose mode.
 	Bug in server fixed for dynamic addresses.
-	File handle closure bugfix - too many open databases
+	File handle closure bugfix - too many open databases.
 	Seg fault in mount files fix.
 	Twin used in cf-execd without checking.
 	Check_root set wrong directory permissions at source not destination.
 	Error message degraded in body definition.
 	Undefined body not warned as error.
 	Various build enahncements.
-	Package_list_update called only once per manager, and crash
+	Package_list_update called only once per manager, and fixed crash.
 	Version number bug in packages.
 
 3.0.5

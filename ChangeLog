@@ -10,7 +10,7 @@
 	Caching of dns and key information for greater server speed.
 	Change in last-seen format reflects the public key usage.
 
-	Change from using md5 to sha256 as default digest
+	Change from using md5 to sha256 as default digest.
 
 	Redesign of the knowledge map infrastructure.
 	

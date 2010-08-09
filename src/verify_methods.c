@@ -118,7 +118,14 @@ if (bp = GetBundle(method_name,"agent"))
    }
 else
    {
-   cfPS(cf_error,CF_FAIL,"",pp,a," !! Method \"%s\" was used but was not defined!\n",bp->name);
+   if (bp && bp->name)
+      {
+      cfPS(cf_error,CF_FAIL,"",pp,a," !! Method \"%s\" was used but was not defined!\n",bp->name);
+      }
+   else
+      {
+      cfPS(cf_error,CF_FAIL,"",pp,a," !! A method attempted to use a bundle that was apparently not defined!\n");
+      }
    }
 
 YieldCurrentLock(thislock);

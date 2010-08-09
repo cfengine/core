@@ -38,7 +38,7 @@
         Attribute package_delete_convention added, to allow customizable
 	package name in delete command during update.
 
-	package_list_update_ifelapsed limit added
+	package_list_update_ifelapsed limit added.
 	
 	Private variable $(firstrepo) is available in package_name_convention
         and package_delete_convention in order to expand the full path to 

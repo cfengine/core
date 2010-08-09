@@ -310,7 +310,6 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    if (strcmp(kp->name,databuf) == 0)
       {
       known = true;
-      kp = (  struct CfKeyBinding *) rp->item;
       kp->timestamp = now;
 
       // Refresh address

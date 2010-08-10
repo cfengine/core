@@ -316,9 +316,9 @@ for (rp = list; rp != NULL; rp=rp->next)
 
       found = true;
       
-      if (a.mount.mount_source && strcmp(mp->source,a.mount.mount_source) != 0)
+      if (a.mount.mount_source && (strcmp(mp->source,a.mount.mount_source) != 0))
          {
-         CfOut(cf_inform,"","A different files system (%s:%s) is mounted on %s than what is promised\n",mp->host,mp->source,name);
+         CfOut(cf_inform,"","A different file system (%s:%s) is mounted on %s than what is promised\n",mp->host,mp->source,name);
          return false;
          }
       else

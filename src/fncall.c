@@ -183,6 +183,8 @@ for (rp = fp->args; rp != NULL; rp=rp->next)
       strcat(buffer,",");
       }
    }
+
+return strlen(buffer);
 }
 
 /*******************************************************************/

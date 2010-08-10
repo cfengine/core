@@ -75,8 +75,6 @@ else
 
 SDIntegerDefault("editfilesize",EDITFILESIZE);
 SDIntegerDefault("editbinaryfilesize",EDITBINFILESIZE);
-SDIntegerDefault("sensiblesize",SENSIBLEFSSIZE);
-SDIntegerDefault("sensiblecount",SENSIBLEFILECOUNT);
 
 
 printf(" -> Internal consistency done\n\n");

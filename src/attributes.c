@@ -1447,6 +1447,18 @@ value = GetConstraint("sensible_count",pp,CF_SCALAR);
 v.sensible_count = (int) Str2Int(value);
 v.scan_arrivals = GetBooleanConstraint("scan_arrivals",pp);
 
+// defaults
+ if(v.sensible_size == CF_NOINT)
+   {
+     v.sensible_size = 1000;
+   }
+ 
+ if(v.sensible_count == CF_NOINT)
+   {
+     v.sensible_count = 2;
+   }
+
+
 return v;
 }
 

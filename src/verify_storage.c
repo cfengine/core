@@ -119,8 +119,12 @@ if (a.havemount)
 
 if (a.havevolume)
    {
-   VerifyFileSystem(path,a,pp);   
-   VerifyFreeSpace(path,a,pp);
+   VerifyFileSystem(path,a,pp);
+   
+   if(a.volume.freespace != CF_NOINT)
+     {
+       VerifyFreeSpace(path,a,pp);
+     }
    
    if (a.volume.scan_arrivals)
       {
@@ -206,13 +210,13 @@ if (S_ISDIR(statbuf.st_mode))
       return true;
       }
 
-   if (sizeinbytes < SENSIBLEFSSIZE)
+   if (sizeinbytes < a.volume.sensible_size)
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," !! File system %s is suspiciously small! (%d bytes)\n",name,sizeinbytes);
       return(false);
       }
 
-   if (filecount < SENSIBLEFILECOUNT)
+   if (filecount < a.volume.sensible_count)
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," !! Filesystem %s has only %d files/directories.\n",name,filecount);
       return(false);

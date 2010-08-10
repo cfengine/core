@@ -442,8 +442,6 @@ unsigned short SHORT_CFENGINEPORT;
 unsigned short SHORT_CONNTIMEOUT = 10;	/* seconds */
 int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
-int SENSIBLEFILECOUNT = 2;
-int SENSIBLEFSSIZE = 1000;
 int SKIPIDENTIFY = false;
 int ALL_SINGLECOPY = false;
 int FULLENCRYPT = false;

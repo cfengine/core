@@ -154,7 +154,7 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
   void *retval;
 
 #ifdef HAVE_LIBCFNOVA
-//Nova_StoreUnExpandedPromises(bundles,bodies);
+Nova_StoreUnExpandedPromises(bundles,bodies);
 #else  
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
@@ -264,6 +264,9 @@ else
    v = "not specified";
    }
 
+#ifdef HAVE_LIBCFNOVA
+Nova_StoreExpandedPromise(pp);
+#else
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 MapPromiseToTopic(FKNOW,pp,v);
@@ -346,42 +349,13 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       Indent(indent);
       fprintf(FREPORT_HTML," , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",cp->classes);
       fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
-      }
-     
+      }     
    }
 
 av = 0;
 var = 0;
 val = 0;
 last = 0;
-
-#ifdef HAVE_LIBCFNOVA
-lastseen = GetPromiseCompliance(pp,&val,&av,&var,&last);
-
-if (lastseen) /* This only gives something in Nova or higher */
-   {
-   strncpy(vbuff,cf_ctime(&lastseen),CF_MAXVARSIZE);
-   Chop(vbuff);
-   
-   fprintf(FREPORT_HTML,"<hr><p><div id=\"compliance\">Compliance last checked on %s. At that time the system was ",vbuff);
-   if (val = 1.0)
-      {
-      fprintf(FREPORT_HTML,"COMPLIANT.");
-      }
-   else if (val = 0.5)
-      {
-      fprintf(FREPORT_HTML,"REPAIRED.");
-      }
-   else if (val = 0.0)
-      {
-      fprintf(FREPORT_HTML,"NON-COMPLIANT.");
-      }
-
-   fprintf(FREPORT_HTML," Average compliance %.1lf pm %.1lf percent. </div>",av*100.0,sqrt(var)*100.0);
-   }
-#else
-fprintf(FREPORT_HTML,"<hr><p><div id=\"compliance\">Compliance level checking only in Cfengine Nova and above</div>",vbuff);
-#endif
 
 if (pp->audit)
    {
@@ -403,6 +377,8 @@ else
    Indent(indent);
    fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n\n",v,pp->bundle,pp->bundletype,pp->lineno);
    }
+
+#endif
 }
 
 /*******************************************************************/

@@ -814,6 +814,7 @@ int IsBuiltinFnCall(void *rval,char rtype);
 struct FnCall *NewFnCall(char *name, struct Rlist *args);
 struct FnCall *CopyFnCall(struct FnCall *f);
 void PrintFunctions(void);
+int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp);
 void DeleteFnCall(struct FnCall *fp);
 void ShowFnCall(FILE *fout,struct FnCall *fp);
 struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);

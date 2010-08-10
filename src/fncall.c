@@ -139,7 +139,7 @@ struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked)
 void PrintFunctions()
 
 { struct FnCall *fp;
- int i;
+  int i;
 
  for (i = 0; i < 3; i++)
     {
@@ -152,6 +152,38 @@ void PrintFunctions()
     } 
 }
 
+/*******************************************************************/
+
+int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp)
+    
+{ struct Rlist *rp;
+  char work[CF_MAXVARSIZE];
+
+snprintf(buffer,bufsize,"%s(",fp->name);
+
+for (rp = fp->args; rp != NULL; rp=rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+          Join(buffer,(char *)rp->item,bufsize);
+          break;
+
+      case CF_FNCALL:
+          PrintFnCall(work,CF_MAXVARSIZE,(struct FnCall *)rp->item);
+          Join(buffer,work,bufsize);
+          break;
+
+      default:
+          break;
+      }
+   
+   if (rp->next != NULL)
+      {
+      strcat(buffer,",");
+      }
+   }
+}
 
 /*******************************************************************/
 

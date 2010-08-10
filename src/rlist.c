@@ -790,14 +790,11 @@ switch (type)
        break;
        
    case CF_LIST:
-
        size += PrintRlist(buffer,bufsize,(struct Rlist *)rval);
-
        break;
        
    case CF_FNCALL:
-       // ShowFnCall(fp,(struct FnCall *)rval);
-       // Finish me...
+       size += PrintFnCall(buffer,bufsize,(struct FnCall *)rval);
        break;
 
    case CF_NOPROMISEE:

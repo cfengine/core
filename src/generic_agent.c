@@ -106,7 +106,7 @@ else
    ReadPromises(ag,agents);
    }
 
-if (SHOWREPORTS || ERRORCOUNT)
+if (SHOWREPORTS)
    {
    CompilationReport(VINPUTFILE);
    }
@@ -719,12 +719,14 @@ void CloseReports(char *agents)
 
 { char name[CF_BUFSIZE];
 
+#ifndef HAVE_LIBCFNOVA 
 if (SHOWREPORTS)
    {
    CfOut(cf_cmdout,"","Wrote compilation report %s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
    CfOut(cf_cmdout,"","Wrote compilation report %s%creports%cpromise_output_%s.html",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
    CfOut(cf_cmdout,"","Wrote knowledge map %s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR,agents);
    }
+#endif
 
 fprintf(FKNOW,"}\n");
 fclose(FKNOW);

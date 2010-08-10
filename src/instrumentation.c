@@ -357,11 +357,13 @@ kp->timestamp = now;
 
 void UpdateLastSeen()
 
-{ int lsea = LASTSEENEXPIREAFTER, intermittency = false;
+{ int lsea = LASTSEENEXPIREAFTER, intermittency = false,qsize,ksize;
   struct CfKeyHostSeen q,newq; 
   double lastseen,delta2;
+  void *stored;
   CF_DB *dbp,*dbpent;
-  char name[CF_BUFSIZE];
+  CF_DBC *dbcp;
+  char name[CF_BUFSIZE],*key;
   struct Rlist *rp;
   struct CfKeyBinding *kp;
   time_t now = time(NULL);
@@ -392,6 +394,38 @@ if (!OpenDB(name,&dbp))
    return;
    }
 
+/* First scan for hosts that have moved address and purge their records so that
+   the database always has a 1:1 relationship between keyhash and IP address    */
+
+if (!NewDBCursor(dbp,&dbcp))
+   {
+   CfOut(cf_inform,""," !! Unable to scan class db");
+   return;
+   }
+
+while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
+   {
+   memcpy(&q,stored,sizeof(q));
+   
+   for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
+      {
+      kp = (struct CfKeyBinding *) rp->item;
+
+      if (strcmp(q.address,kp->address) == 0)
+         {
+         CfOut(cf_verbose,""," ! Deleting %s's address as this host seems to have moved elsewhere",kp->name);
+         newq.Q = q.Q;
+         strncpy(newq.address,"moved",CF_ADDRSIZE-1);
+         }
+
+      WriteDB(dbp,kp->name,&newq,sizeof(newq));      
+      }
+   }
+
+DeleteDBCursor(dbp,dbcp);
+
+/* Now perform updates with the latest data */
+
 for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {
    kp = (struct CfKeyBinding *) rp->item;
@@ -418,7 +452,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       newq.Q.expect = GAverage(lastseen,q.Q.expect,0.3);
       delta2 = (lastseen - q.Q.expect)*(lastseen - q.Q.expect);
       newq.Q.var = GAverage(delta2,q.Q.var,0.3);
-      strncpy(newq.address,kp->address,CF_ADDRSIZE-1);;
+      strncpy(newq.address,kp->address,CF_ADDRSIZE-1);
       }
    else
       {

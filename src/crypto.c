@@ -169,8 +169,11 @@ else if (cfstat(newname,&statbuf) == -1)
       return NULL;
       }
 
-   CfOut(cf_inform,""," -> Renaming old key from %s to %s",oldname,newname);
-   rename(oldname,newname);
+   if (strlen(keyname) > 0)
+      {
+      CfOut(cf_inform,""," -> Renaming old key from %s to %s",oldname,newname);
+      rename(oldname,newname);
+      }
    }
 
 if ((fp = fopen(newname,"r")) == NULL)

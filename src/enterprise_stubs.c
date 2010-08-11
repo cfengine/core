@@ -72,7 +72,7 @@ return false;
 void EnterpriseModuleTrick()
 
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBMONGOC && defined HAVE_LIBCFNOVA
 Nova_EnterpriseModuleTrick();
 #endif
 }
@@ -275,7 +275,7 @@ CfOut(cf_verbose,"","Remote logging requires version Nova or above");
 
 void WebCache(char *s,char *t)
 {
-#ifdef HAVE_LIBCFNOVA
+#if defined HAVE_LIBCFNOVA && defined HAVE_LIBMONGOC
 CFDB_PutValue(s,t);
 #endif 
 }

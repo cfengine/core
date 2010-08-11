@@ -43,7 +43,7 @@ int main (int argc,char *argv[]);
 /*******************************************************************/
 
 int  NO_FORK = false;
-int  ONCE = false;
+int  CONTINUOUS = false;
 char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
 char EXECCOMMAND[CF_BUFSIZE];
@@ -84,7 +84,7 @@ int ScheduleRun(void);
       { "file",required_argument,0,'f'},
       { "no-lock",no_argument,0,'K'},
       { "no-fork",no_argument,0,'F' },
-      { "no-winsrv",no_argument,0,'W' },
+      { "continuous",no_argument,0,'c' },
       { NULL,0,0,'\0' }
       };
 
@@ -98,7 +98,7 @@ int ScheduleRun(void);
       "Specify an alternative input file than the default",
       "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
       "Run as a foreground processes (do not fork)",
-      "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
+      "Continuous update mode of operation",
       NULL
       };
 
@@ -134,7 +134,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vnKIf:VhFV1gMW",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"cd:vnKIf:VhFV1gMW",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -184,9 +184,12 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:VhFV1gMW",OPTIONS,&optindex)) != EOF)
           IGNORELOCK = true;
           NewClass("opt_dry_run");
           break;
+
+      case 'c':
+          CONTINUOUS = true;
+          break;
           
       case 'F':
-          ONCE = true;
           NO_FORK = true;
           break;
 
@@ -220,7 +223,11 @@ void ThisAgentInit()
 umask(077);
 LOGGING = true;
 
-if (SCHEDULE == NULL)
+if (CONTINUOUS)
+   {
+   AppendItem(&SCHEDULE,"any",NULL);
+   }
+else if (SCHEDULE == NULL)
    {
    AppendItem(&SCHEDULE,"Min00",NULL);
    AppendItem(&SCHEDULE,"Min05",NULL);

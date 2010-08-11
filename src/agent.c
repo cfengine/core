@@ -119,7 +119,7 @@ extern virConnectPtr CFVC[];
 
  char *HINTS[15] =
       {
-      "Bootstrap/repair a cfengine configuration from failsafe file in the current directory",
+      "Bootstrap/repair a cfengine configuration from failsafe file in the WORKDIR else in current directory",
       "Set or override bundlesequence from command line",
       "Set debugging level 0,1,2",
       "Define a list of comma separated classes to be defined at the start of execution",

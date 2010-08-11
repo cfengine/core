@@ -388,7 +388,7 @@ if (server_pubkey == NULL)
    if ((newkey->n = BN_mpi2bn(in,len,NULL)) == NULL)
       {
       err = ERR_get_error();
-      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private key decrypt failed = %s\n",ERR_reason_error_string(err));
       RSA_free(newkey);
       return false;
       }
@@ -405,12 +405,11 @@ if (server_pubkey == NULL)
    if ((newkey->e = BN_mpi2bn(in,len,NULL)) == NULL)
       {
       err = ERR_get_error();
-      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private decrypt failed = %s\n",ERR_reason_error_string(err));
+      cfPS(cf_error,CF_INTERPT,"",pp,attr,"Public key decrypt failed = %s\n",ERR_reason_error_string(err));
       RSA_free(newkey);
       return false;
       }
 
-   SavePublicKey(conn->username,conn->remoteip,conn->digest,newkey);
    server_pubkey = RSAPublicKey_dup(newkey);
    RSA_free(newkey);
    }
@@ -448,6 +447,7 @@ if (server_pubkey != NULL)
    {
    HashPubKey(server_pubkey,conn->digest,CF_DEFAULT_DIGEST);
    CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
+   SavePublicKey(conn->username,conn->remoteip,conn->digest,server_pubkey);
    LastSaw(conn->username,conn->remoteip,conn->digest,cf_connect);
    RSA_free(server_pubkey);
    }

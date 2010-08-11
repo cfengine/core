@@ -52,6 +52,14 @@ SetSignals();
 
 // See cf3.defs.h for these settings
 
+#ifdef HAVE_LIBCFNOVA
+CF_DEFAULT_DIGEST = cf_sha256;
+CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
+#else
+CF_DEFAULT_DIGEST = cf_md5;
+CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
+#endif
+
 if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");

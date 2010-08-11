@@ -416,6 +416,9 @@ int CF_DIGEST_SIZES[10] =
      0
      };
 
+enum cfhashes CF_DEFAULT_DIGEST;
+int CF_DEFAULT_DIGEST_LEN;
+
 /***********************************************************/
 
 struct Audit *AUDITPTR;

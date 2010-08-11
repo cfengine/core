@@ -447,7 +447,7 @@ if (server_pubkey != NULL)
    {
    HashPubKey(server_pubkey,conn->digest,CF_DEFAULT_DIGEST);
    CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
-   SavePublicKey(conn->username,conn->remoteip,conn->digest,server_pubkey);
+   SavePublicKey(conn->username,conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest),server_pubkey);
    LastSaw(conn->username,conn->remoteip,conn->digest,cf_connect);
    RSA_free(server_pubkey);
    }

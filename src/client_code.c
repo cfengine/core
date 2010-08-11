@@ -563,7 +563,7 @@ pp->cache = NULL;
 
 int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp)
 
-{ static unsigned char d[CF_DEFAULT_DIGEST_LEN];
+{ static unsigned char d[EVP_MAX_MD_SIZE+1];
   char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],in[CF_BUFSIZE],out[CF_BUFSIZE];
   int i,tosend,cipherlen;
   struct cfagent_connection *conn = pp->conn;

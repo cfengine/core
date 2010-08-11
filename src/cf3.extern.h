@@ -48,7 +48,8 @@ extern int CF_EDGES;
 extern int KEYTTL;
 extern struct Rlist *SERVER_KEYSEEN;
 extern unsigned int CFTEST_CLASS;
-
+extern enum cfhashes CF_DEFAULT_DIGEST;
+extern int CF_DEFAULT_DIGEST_LEN;
 extern struct Item *EDIT_ANCHORS;
 
 extern struct Bundle *BUNDLES;

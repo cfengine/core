@@ -726,6 +726,7 @@ int CompressPath(char *dest,char *src);
 void Chop(char *str);
 int IsIn(char c,char *str);
 int IsStrIn(char *str, char **strs);
+void FreeStringArray(char **strs);
 int IsAbsoluteFileName(char *f);
 int RootDirLength(char *f);
 char ToLower (char ch);

@@ -712,6 +712,27 @@ return false;
 
 /*********************************************************************/
 
+void FreeStringArray(char **strs)
+/* Frees a null-terminated array of strings */
+{
+  int i;
+
+  if(strs == NULL)
+    {
+      return;
+    }
+  
+  for(i = 0; strs[i] != NULL; i++)
+    {
+      free(strs[i]);
+    }
+  
+  free(strs);
+  strs = NULL;
+}
+
+/*********************************************************************/
+
 int IsAbsoluteFileName(char *f)
 
 {

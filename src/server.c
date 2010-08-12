@@ -75,7 +75,6 @@ time_t SecondsTillAuto (void);
 void SetAuto (int seconds);
 int cfscanf (char *in, int len1, int len2, char *out1, char *out2, char *out3);
 int AuthenticationDialogue (struct cfd_connection *conn,char *buffer, int buffersize);
-char *MapAddress (char *addr);
 int IsKnownHost (RSA *oldkey,RSA *newkey,char *addr,char *user);
 void AddToKeyDB (RSA *key,char *addr);
 int SafeOpen (char *filename);
@@ -3704,22 +3703,6 @@ snprintf(buffer,CF_BUFSIZE,"Hello %s (%s), nothing relevant to do here...\n\n",c
 if (SendTransaction(conn->sd_reply,buffer,0,CF_DONE) == -1)
    {
    CfOut(cf_error,"send","");
-   }
-}
-
-/***************************************************************/
-
-char *MapAddress(char *unspec_address)
-
-{ /* Is the address a mapped ipv4 over ipv6 address */
-
-if (strncmp(unspec_address,"::ffff:",7) == 0)
-   {
-   return (char *)(unspec_address+7);
-   }
-else
-   {
-   return unspec_address;
    }
 }
 

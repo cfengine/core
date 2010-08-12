@@ -73,14 +73,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       memcpy(&entry,value,sizeof(entry));
 
       // Warning this is not 1:1
-
-      if (*entry.address == '+')
-         {
-         // From the horse's mouth
-         continue;
-         }
       
-      if (strncmp(ipv4,(char *)entry.address,strlen(ipv4)) == 0)
+      if (strncmp(ipv4,MapAddress((char *)entry.address),strlen(ipv4)) == 0)
          {
          CfOut(cf_verbose,""," -> Matched IP %s to key %s",ipv4,key+1);
          strncpy(result,key+1,CF_MAXVARSIZE-1);
@@ -91,6 +85,22 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
+}
+
+/***************************************************************/
+
+char *MapAddress(char *unspec_address)
+
+{ /* Is the address a mapped ipv4 over ipv6 address */
+
+if (strncmp(unspec_address,"::ffff:",7) == 0)
+   {
+   return (char *)(unspec_address+7);
+   }
+else
+   {
+   return unspec_address;
+   }
 }
 
 /***************************************************************************/

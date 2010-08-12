@@ -378,7 +378,13 @@ if (now < then + 300 && then > 0 && then <= now + 300)
 then = now;
 
 CfOut(cf_verbose,""," -> Writing last-seen observations");
-  
+
+if (SERVER_KEYSEEN == NULL)
+   {
+   CfOut(cf_verbose,""," -> Keyring is empty");
+   return;
+   }
+
 if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
    {
    CfOut(cf_inform,""," -> Recording intermittency");
@@ -411,7 +417,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
       {
       kp = (struct CfKeyBinding *) rp->item;
 
-      if (strcmp(q.address,kp->address) == 0 && strcmp(key,kp->name) != 0)
+      if ((strcmp(q.address,kp->address) == 0) && (strcmp(key+1,kp->name+1) != 0))
          {
          CfOut(cf_verbose,""," ! Deleting %s's address as this host seems to have moved elsewhere",kp->name);
          newq.Q = q.Q;
@@ -447,8 +453,16 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    
    if (ReadDB(dbp,kp->name,&q,sizeof(q)))
       {
-      lastseen = (double)now - q.Q.q;
-      newq.Q.q = (double)now;                   /* Last seen is now-then */
+      if ((int)q.Q.q > 0) // To avoid immediate expiry of keys ...
+         {
+         lastseen = (double)now - q.Q.q;  /* Last seen is now-then */
+         }
+      else
+         {
+         lastseen = 5*60;
+         }
+      
+      newq.Q.q = (double)now;
       newq.Q.expect = GAverage(lastseen,q.Q.expect,0.3);
       delta2 = (lastseen - q.Q.expect)*(lastseen - q.Q.expect);
       newq.Q.var = GAverage(delta2,q.Q.var,0.3);
@@ -465,7 +479,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    
    if (lastseen > (double)lsea)
       {
-      CfOut(cf_verbose,""," -> Last seen %s expired\n",kp->name);
+      CfOut(cf_verbose,""," -> Last seen %s expired after %d > %d hours\n",kp->name,(int)lastseen/3600,lsea/3600);
       DeleteDB(dbp,kp->name);
       }
    else

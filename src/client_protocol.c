@@ -304,7 +304,7 @@ if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5)) /
       {
       if (attr.copy.trustkey)
          {
-         CfOut(cf_cmdout,""," -> Trusting server identity, promise to accept key from %s=%s",pp->this_server,conn->remoteip);
+         CfOut(cf_verbose,""," -> Trusting server identity, promise to accept key from %s=%s",pp->this_server,conn->remoteip);
          }
       else
          {

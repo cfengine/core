@@ -125,3 +125,20 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE
 
 return -1;
 }
+
+/*****************************************************************************/
+
+char *PrintTimeSlot(int slot)
+
+{ time_t now,i;
+  
+for (now = CF_MONDAY_MORNING, i = 0; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL,i++)
+   {
+   if (i == slot)
+      {
+      return GenTimeKey(now);
+      }
+   }
+
+return "UNKNOWN";
+}

@@ -411,7 +411,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
       {
       kp = (struct CfKeyBinding *) rp->item;
 
-      if (strcmp(q.address,kp->address) == 0)
+      if (strcmp(q.address,kp->address) == 0 && strcmp(key,kp->name) != 0)
          {
          CfOut(cf_verbose,""," ! Deleting %s's address as this host seems to have moved elsewhere",kp->name);
          newq.Q = q.Q;

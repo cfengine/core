@@ -699,7 +699,7 @@ int IsStrIn(char *str, char **strs)
 
 { int i;
 
-for(i = 0; strs[i] != NULL; i++)
+for (i = 0; strs[i] != NULL; i++)
    {
    if (strcmp(str,strs[i]) == 0)
       {
@@ -713,22 +713,21 @@ return false;
 /*********************************************************************/
 
 void FreeStringArray(char **strs)
-/* Frees a null-terminated array of strings */
-{
-  int i;
 
-  if(strs == NULL)
-    {
-      return;
-    }
-  
-  for(i = 0; strs[i] != NULL; i++)
-    {
-      free(strs[i]);
-    }
-  
-  free(strs);
-  strs = NULL;
+{ int i;
+
+if (strs == NULL)
+   {
+   return;
+   }
+
+for(i = 0; strs[i] != NULL; i++)
+   {
+   free(strs[i]);
+   }
+
+free(strs);
+strs = NULL;
 }
 
 /*********************************************************************/

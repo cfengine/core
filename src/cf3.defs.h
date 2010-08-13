@@ -1822,6 +1822,12 @@ meter_endmark
 #define CF_CLASS_OTHER 512
 #define CF_CLASS_TOP10 1024
 
+/*************************************************************************/
+/* common macros                                                         */
+/*************************************************************************/
+
+#define EMPTY(str) ((str == NULL) || (strlen(str) == 0))
+
 #include "prototypes3.h"
 
 #ifdef HAVE_LIBCFNOVA

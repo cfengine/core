@@ -42,7 +42,7 @@ void BeginAudit()
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
 
-ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP);
+ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP,"");
 }
 
 /*****************************************************************************/
@@ -114,15 +114,15 @@ else
 
 if (strlen(string) > 0)
    {
-   ClassAuditLog(&dummyp,dummyattr,string,CF_REPORT);
+   ClassAuditLog(&dummyp,dummyattr,string,CF_REPORT,"");
    }
 
-ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP);
+ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP,"");
 }
 
 /*****************************************************************************/
 
-void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status)
+void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *reason)
 
 { time_t now = time(NULL);
   char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE],id[CF_MAXVARSIZE];
@@ -148,7 +148,7 @@ switch(status)
 
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_change);
-       NotePromiseCompliance(pp,0.5,cfn_repaired);
+       NotePromiseCompliance(pp,0.5,cfn_repaired,reason);
        SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
        break;
        
@@ -156,7 +156,7 @@ switch(status)
 
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
-       NotePromiseCompliance(pp,1.0,cfn_notkept);
+       NotePromiseCompliance(pp,1.0,cfn_notkept,reason);
        break;
        
    case CF_TIMEX:
@@ -165,7 +165,7 @@ switch(status)
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
-       NotePromiseCompliance(pp,0.0,cfn_notkept);
+       NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
 
@@ -175,7 +175,7 @@ switch(status)
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
-       NotePromiseCompliance(pp,0.0,cfn_notkept);
+       NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
        
@@ -185,7 +185,7 @@ switch(status)
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
-       NotePromiseCompliance(pp,0.0,cfn_notkept);
+       NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
        
@@ -195,7 +195,7 @@ switch(status)
        VAL_NOTKEPT += attr.transaction.value_notkept;
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
-       NotePromiseCompliance(pp,0.0,cfn_notkept);
+       NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
        SummarizeTransaction(attr,pp,attr.transaction.log_failed);
        break;
 
@@ -204,7 +204,7 @@ switch(status)
 
        AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_kept);
-       NotePromiseCompliance(pp,1.0,cfn_nop);
+       NotePromiseCompliance(pp,1.0,cfn_nop,reason);
        SummarizeTransaction(attr,pp,attr.transaction.log_kept);              
        PR_KEPT++;
        VAL_KEPT += attr.transaction.value_kept;

@@ -363,7 +363,7 @@ if (pp != NULL)
    {
    for (ip = mess; ip != NULL; ip = ip->next)
       {
-      ClassAuditLog(pp,attr,ip->name,status);
+      ClassAuditLog(pp,attr,ip->name,status,buffer);
       }
    }
 

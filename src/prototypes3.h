@@ -442,7 +442,7 @@ void RegisterLiteralServerData(char *handle,struct Promise *pp);
 int ReturnLiteralData(char *handle,char *ret);
 char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv);
 char *PromiseID(struct Promise *pp);
-void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status);
+void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status,char *reasoin);
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 void SyntaxCompletion(char *s);
 void SyntaxExport(void);
@@ -1013,7 +1013,7 @@ void SetPromisedDefaultRoute(void);
 
 void BeginAudit(void);
 void EndAudit(void);
-void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status);
+void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *error);
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void DeleteAllClasses(struct Rlist *list);
 void ExtractOperationLock(char *op);

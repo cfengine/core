@@ -284,39 +284,6 @@ CFDB_PutValue(s,t);
 /* Knowledge                                                                 */
 /*****************************************************************************/
 
-void BundleNode(FILE *fp,char *bundle)
-
-{
-#ifdef HAVE_LIBCFNOVA
-Nova_BundleNode(fp,bundle);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-void BodyNode(FILE *fp,char *bundle,int calltype)
-
-{
-#ifdef HAVE_LIBCFNOVA
- Nova_BodyNode(fp,bundle,calltype);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-void TypeNode(FILE *fp,char *type)
-
-{
-#ifdef HAVE_LIBCFNOVA
- Nova_TypeNode(fp,type);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
 char *PromiseID(struct Promise *pp)
 
 {
@@ -374,17 +341,6 @@ return time(NULL);
 
 /*****************************************************************************/
 
-void PromiseNode(FILE *fp,struct Promise *pp,int type)
-
-{
-#ifdef HAVE_LIBCFNOVA
- Nova_PromiseNode(fp,pp,type);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version)
 
 {
@@ -400,7 +356,7 @@ void ShowTopicRepresentation(FILE *fp)
 
 {
 #ifdef HAVE_LIBCFNOVA
- Nova_ShowTopicRepresentation(fp);
+Nova_ShowTopicRepresentation(fp);
 #else
  CfOut(cf_verbose,"","# Knowledge map reporting feature is only available in version Nova and above\n");
 #endif

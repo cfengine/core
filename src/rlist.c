@@ -350,7 +350,10 @@ return start;
 void DeleteRlist(struct Rlist *list)
 
 {
-DeleteRvalItem(list,CF_LIST);
+if (list != NULL)
+   {
+   DeleteRvalItem(list,CF_LIST);
+   }
 }
 
 /*******************************************************************/
@@ -1045,6 +1048,11 @@ struct Rlist *SplitStringAsRList(char *string,char sep)
   
 Debug("SplitStringAsRList(%s)\n",string);
 
+if (string == NULL)
+   {
+   return NULL;
+   }
+
 for (sp = string; *sp != '\0'; sp++)
    {
    if (*sp == '\0' || sp > string+maxlen)
@@ -1074,6 +1082,11 @@ struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
   char node[CF_MAXVARSIZE];
   int start,end,b = 0;
   int delta, count = 0;
+
+if (string == NULL)
+   {
+   return NULL;
+   }
 
 Debug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n",string,regex,max);
   

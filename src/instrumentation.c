@@ -464,9 +464,9 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
          }
       
       newq.Q.q = (double)now;
-      newq.Q.expect = GAverage(lastseen,q.Q.expect,0.3);
+      newq.Q.expect = GAverage(lastseen,q.Q.expect,0.4);
       delta2 = (lastseen - q.Q.expect)*(lastseen - q.Q.expect);
-      newq.Q.var = GAverage(delta2,q.Q.var,0.3);
+      newq.Q.var = GAverage(delta2,q.Q.var,0.4);
       strncpy(newq.address,kp->address,CF_ADDRSIZE-1);
       }
    else
@@ -485,7 +485,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       }
    else
       {
-      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",kp->name,kp->address,ctime(&(kp->timestamp)));
+      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",kp->name,kp->address,ctime(&now));
 
       ThreadLock(cft_dbhandle);
       WriteDB(dbp,kp->name,&newq,sizeof(newq));

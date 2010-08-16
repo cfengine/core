@@ -389,7 +389,7 @@ while (true)
    timeout.tv_sec = 10;  /* Set a 10 second timeout for select */
    timeout.tv_usec = 0;
 
-   CfOut(cf_verbose,""," -> Waiting at incoming select...\n");
+   Debug(" -> Waiting at incoming select...\n");
    
    ret_val = select((sd+1),&rset,NULL,NULL,&timeout);
 
@@ -963,7 +963,7 @@ if (strlen(recvbuffer) == 0)
    return false;
    }
   
-CfOut(cf_verbose,"","Received: [%s] on socket %d\n",recvbuffer,conn->sd_reply);
+Debug("Received: [%s] on socket %d\n",recvbuffer,conn->sd_reply);
 
 switch (GetCommand(recvbuffer))
    {

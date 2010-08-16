@@ -311,6 +311,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       {
       known = true;
       kp->timestamp = now;
+      CfOut(cf_verbose,""," -> Last saw %s (%s) now",ipaddress,databuf);
 
       // Refresh address
       

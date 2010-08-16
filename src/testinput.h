@@ -1,0 +1,106 @@
+char *CF_TEST_INPUT = "################################# Hello###############################\n\
+CHDIR\n\
+{\n\
+class:\n\
+top10\n\
+\n\
+prepare:\n\
+file (\"/var/cfengine/tmp/chdir.out\", EXISTS)\n\
+\n\
+execute:\n\
+policy(\"/var/cfengine/tests/unit_chdir.cf\",\"K\")\n\
+\n\
+output:\n\
+reports(\"O_CHDIR\")\n\
+\n\
+cleanup:\n\
+NA\n\
+}\n\
+\n\
+################################################################\n\
+\n\
+LISTS\n\
+{\n\
+class:\n\
+all\n\
+\n\
+prepare:\n\
+NA\n\
+\n\
+execute:\n\
+policy(\"/var/cfengine/tests/lists.cf\", \"K\")\n\
+\n\
+output:\n\
+reports(\"O_LISTS\")\n\
+\n\
+cleanup:\n\
+NA\n\
+}\n\
+\n\
+################################################################\n\
+\n\
+CLASSVAR_CONVERGENCE\n\
+{\n\
+class:\n\
+all\n\
+\n\
+prepare:\n\
+file (\"/var/cfengine/tmp/classvar_convergence.out\", EXISTS)\n\
+\n\
+execute:\n\
+policy(\"/var/cfengine/tests/unit_classvar_convergence.cf\",\"K\")\n\
+\n\
+output:\n\
+reports(\"O_CLASSVAR_CONVERGENCE\")\n\
+\n\
+cleanup:\n\
+NA\n\
+}\n\
+\n\
+################################################################\n\
+\n\
+DOLLAR\n\
+{\n\
+class:\n\
+all\n\
+\n\
+prepare:\n\
+file(\"/var/cfengine/tmp/dollar.out\", EXISTS)\n\
+\n\
+execute:\n\
+policy(\"/var/cfengine/tests/unit_dollar.cf\",\"K\")\n\
+\n\
+output:\n\
+reports(\"O_DOLLAR\")\n\
+\n\
+cleanup:\n\
+NA\n\
+}\n\
+\n\
+################################################################\n\
+\n\
+INSERT_LINES\n\
+{\n\
+class:\n\
+all\n\
+\n\
+prepare:\n\
+file(\"/var/cfengine/tests/\", EXISTS)\n\
+\n\
+execute:\n\
+policy(\"/var/cfengine/tests/insert_lines.cf\", \"K\")\n\
+\n\
+output:\n\
+\n\
+# used as: addlines(\"template_file\", \"modified_file\")\n\
+addlines(\"O_INSERT_LINES\",\"/var/cfengine/tmp/insert_lines.actual\")\n\
+\n\
+#lines(\"/var/cfengine/tmp/test_template\",\"/var/cfengine/tmp/test\",\"EXISTS\")\n\
+\n\
+cleanup:\n\
+#file(\"/var/cfengine/tmp/insert_lines.actual\", DELETE)\n\
+}\n\
+\n\
+################################################################\n\
+\0\
+";

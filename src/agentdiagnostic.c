@@ -1,4 +1,4 @@
-/* 
+/*  
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -35,6 +35,11 @@
 /*****************************************************************************/
 /* new test suite                                                            */
 /*****************************************************************************/
+
+#ifdef BUILD_TESTSUITE
+
+#include "testoutput.h"
+#include "testinput.h"
 
 // types: 1-100
 
@@ -258,6 +263,7 @@ int AppendTextToFile(char *, char *);
 // Verify Output Section
 int FindTextInFile(char *str, char *f);
 int FindProcess(char *);
+int MemGetExpectedOutput(char *buf, char *name);
 
 // Show the results
 void ShowResults(struct cfoutput* a, int n1);
@@ -271,9 +277,12 @@ int ReplaceChar(char *str, char to, char frm);
 int FlattenText(char *str);
 int GetOptions(int argc, char *argv[]);
 int MyCreate(struct line_data *);
+int ReadLineInput(char *dst, char *frm );
 
 //used only for internal testing
 void PrintChars(char *);
+
+#endif
 
 /*****************************************************************************/
 
@@ -294,7 +303,7 @@ else
    FKNOW = fopen(NULLFILE,"w");
    }
 
-getcwd(cwd,CF_BUFSIZE);
+//getcwd(cwd,CF_BUFSIZE);
 
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
@@ -302,14 +311,16 @@ printf("----------------------------------------------------------\n\n");
 TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
-TestSearchFilePromiser();
+printf("bishwa\n");
+//TestSearchFilePromiser();
 
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing test suite                        \n");
 printf("----------------------------------------------------------\n\n");
 
-
+#ifdef BUILD_TESTSUITE
 TestSuite(cwd);
+#endif
 }
 
 /******************************************************************/
@@ -324,7 +335,7 @@ void TestSearchFilePromiser()
   struct Rlist *rp, *args, *listvars = NULL, *scalarvars = NULL;
   struct Constraint *cp;
   struct FnCall *fp;
-
+   
 /* Still have diagnostic scope */
 THIS_AGENT_TYPE = cf_agent;
    
@@ -348,7 +359,6 @@ pp.inode_cache = NULL;
 pp.this_server = NULL;
 pp.donep = &(pp.done);
 pp.conn = NULL;
-
 printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
 LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 
@@ -379,7 +389,7 @@ void TestSuite(char *cwd)
 { char output[CF_EXPANDSIZE],command[CF_BUFSIZE], c[CF_BUFSIZE];  
   int i = 0, j = 0, nMap = 0, nInput = 0;
 
-chdir(cwd);
+//chdir(cwd);
   
 printf("Parsing Input file...");
 int count = Parse(DATA);
@@ -497,7 +507,7 @@ switch(p->type)
 
        if (CfCreateFile(p->buf,NULL,a))
 	  {
-          printf("MyCreate(): Created file \"%s\n ",p->buf);
+          Debug("MyCreate(): Created file \"%s\n ",p->buf);
           return 1;
 	  }
        break;
@@ -508,7 +518,7 @@ switch(p->type)
        strcat(buf, "/a");
        if(MakeParentDirectory(buf,true))
 	  {
-          printf("MyCreate(): Created dir \"%s\n ",p->buf);
+          Debug("MyCreate(): Created dir \"%s\n ",p->buf);
           return 1;
 	  }
        break;
@@ -570,7 +580,7 @@ switch(p->action)
    case CF_EXECUTE: //106
        if (GetExecOutput(p->text,buf,false))
 	  {
-          printf("Output of \"%s\": %s\n", p->text, buf);
+          Debug("DoIt(): Output of \"%s\": %s\n", p->text, buf);
 	  }
        break;
        
@@ -589,7 +599,7 @@ switch(p->action)
           case CF_EXTERNAL:
               if (GetExecOutput(p->text,buf,false))
                  {
-                 printf("Output of \"%s\": %s\n", p->text, buf);
+                 Debug("DoIt(): Output of \"%s\": %s\n", p->text, buf);
                  }
               
               break;
@@ -618,7 +628,7 @@ switch(p->action)
               if ((pBuf = getenv(p->buf)) != NULL)
                  {
                  //if(strcmp)
-                 printf("######## ENV = %s\n", buf);
+                 Debug("######## ENV = %s\n", buf);
                  return 1;
                  }
               
@@ -685,13 +695,15 @@ switch(p->type)
           return -1;
 	  }
        
-       text = (char *) CfReadFile(p->text, CF_BUFSIZE);
-
-       if(text == NULL)
+       if (MemGetExpectedOutput(text, p->text) != 0)
 	  {
-          printf("CheckExists(): Error opening file \"%s\"!!\n",p->text);
-          return -1;
+	  if (text == NULL)
+	     {
+             printf("CheckExists(): Error reading Expected Output for \"%s\"!!\n",p->text);
+             return -1;
+	     }   
 	  }
+       //text = (char *) CfReadFile(p->text, CF_BUFSIZE);
        
        FlattenText(text);
        Chop(text);
@@ -720,13 +732,13 @@ int RunPolicies(struct cfoutput *actual, int nInput, struct input *map, int nMap
   char command[CF_BUFSIZE], c[CF_BUFSIZE], output[CF_EXPANDSIZE];
   int failures = 0;   
   snprintf(c, CF_BUFSIZE, "./cf-agent -f ");
-
+   
 for (i = 0; i < nInput; i++)
    {
-   if ((map[i].test_class != CFTEST_CLASS) && (CFTEST_CLASS != 0))
-      {
-      continue;
-      }
+//   if ((map[i].test_class != CFTEST_CLASS) && (CFTEST_CLASS != 0))
+//      {
+//      continue;
+//      }
    
    snprintf(command,CF_BUFSIZE, "%s",c);
    snprintf(actual[k].id,CF_SMALLBUF,"%s", map[i].id);
@@ -734,10 +746,9 @@ for (i = 0; i < nInput; i++)
    strcat(command, opts);
    strcat(command, map[i].policy_opt);
 
-   // printf("%s\n",command);
+//   printf("RunPolicies: Command = %s\n",command);
    
    // prepare
-   
    for (j = 0; j < map[i].nPre; j++)
       {
       if (DoIt(&map[i].PRE[j]) > 0)
@@ -746,23 +757,23 @@ for (i = 0; i < nInput; i++)
             {
             actual[k].results[map[i].PRE[j].var_index].value = 1;
             actual[k].results[map[i].PRE[j].var_index].var_index = map[i].PRE[j].var_index; // TODO: this might not be necessary, instead of struct decision[], int [] will do in the srtuct defn
-		    }
+	    }
          }
       
       }
-   
+      
    //		  execute policy
    if (GetExecOutput(command,output,false))
-      {
+      {      
       snprintf(actual[k].output,CF_EXPANDSIZE, "%s",output);
       actual[k].exec_ok = 1;
-      printf("RunPolicies(%d): %s, %s\n", nInput,output, actual[k].id);
+      Debug("RunPolicies(%d): %s, %s\n", nInput,output, actual[k].id);
       }
    else
       {
       actual[k].exec_ok = 0;
       failures++;
-      printf("FAILURE%%%%%%%%%%%%%%%%%%%%%%%%\n");
+      printf("RunPolicies(): Error running Cfengine Test Policy \"%s\"\n", actual[k].id);
       }
    k++;
    }
@@ -775,11 +786,11 @@ void ShowResults(struct cfoutput* a, int n1)//, struct input *m, int n2)
 
 { int i, j, k;
 
-printf("\n \n############ SHOW RESULTS ##############\n");
+printf("\n \n----------------------- Report -----------------------\n");
 
 for (i = 0; i < n1; i++)
    {
-   printf("ShowResults(): TEST ID = %s, ", a[i].id);
+   printf("TEST ID = %s, ", a[i].id);
    
    printf(" Result = ");
 
@@ -812,14 +823,14 @@ int CompareOutput(struct cfoutput* a, int n1, struct input *m, int n2)
   char buf[CF_BUFSIZE];
   int temp;
   
-for(i = 0; i < n1; i++)
+ for(i = 0; i < n1; i++)
    {
    for(j = 0; j < n2; j++)
       {
-      if((m[j].test_class != CFTEST_CLASS) && (CFTEST_CLASS != 0) )
-         {
-         continue;
-         }
+//      if((m[j].test_class != CFTEST_CLASS) && (CFTEST_CLASS != 0) )
+//         {
+//         continue;
+//         }
       
       if( strcmp(a[i].id, m[j].id) == 0)
          {
@@ -833,7 +844,7 @@ for(i = 0; i < n1; i++)
                       
                       strcpy(expected, r);
                       strcat(expected, m[j].expected[k].text);
-                      
+		     
                       if(FullTextMatch(expected, a[i].output))
                          {
                          a[i].pass = 1;
@@ -946,7 +957,7 @@ for(i = 0; i < n1; i++)
                       
                   case CF_OUT_REMOVELINES:
                   case CF_OUT_ADDLINES:
-			    case CF_LINES:
+		   case CF_LINES:
                       if(DoIt(&m[j].expected[k]) > 0)
                          {
                          a[i].pass = 1;
@@ -960,31 +971,29 @@ for(i = 0; i < n1; i++)
                       
                   case CF_OUT_REPORTS:
                       
-                      text = textToFind;
-                      
-                      text = (char *) CfReadFile(m[j].expected[k].text, CF_BUFSIZE);
-                      
-                      if(text == NULL)
-                         {
-                         printf("Error Reading File: %s", m[j].expected[k].text);
-                         a[i].pass = 0;
-                         k = m[j].nOutput; // proceed to next ID
-                         count++;
-                         }else
-                         {
-                         FlattenText(a[i].output);
-                         FlattenText(text);
+		      if (MemGetExpectedOutput(buf, m[j].expected[k].text) == 0)
+		       {			  
+                         if(buf == NULL)
+                          {
+                            printf("CompareOutput(): Error Reading Expected Output for: %s", m[j].id);
+                          }
+		         else
+                          {
+                            FlattenText(a[i].output);
+                            FlattenText(buf);
                          
-                         if(FullTextMatch(text, a[i].output))
-                            {
-                            a[i].pass = 1;
-                            }else
-                            {
-                            a[i].pass = 0;
-                            k = m[j].nOutput; // proceed to next ID
-                            count++;
-                            }
-                         }			      
+			    if(FullTextMatch(buf, a[i].output))
+                             {
+                               a[i].pass = 1;
+			       break;
+                             }
+                           }
+		        }
+
+		       // The test failed
+		       a[i].pass = 0;
+		       k = m[j].nOutput; // proceed to next ID
+                       count++;
                       break;
                       
                   case CF_OUT_FILEPERMS:
@@ -1072,6 +1081,40 @@ return count; // failed Count
 
 /*********************************************************/
 
+int MemGetExpectedOutput(char *buf, char *name)
+
+{ 
+  if (strcmp(name, O_CHDIR_TEXT) == 0)
+  {
+    snprintf(buf, CF_BUFSIZE, "%s", O_CHDIR);
+    return 0;
+  }
+  else if (strcmp(name, O_LISTS_TEXT) == 0)
+  {
+    snprintf(buf, CF_BUFSIZE, "%s", O_LISTS);
+    return 0;
+  }
+  else if (strcmp(name, O_CLASSVAR_CONVERGENCE_TEXT) == 0)
+  {
+    snprintf(buf, CF_BUFSIZE, "%s", O_CLASSVAR_CONVERGENCE);
+    return 0;
+  }
+  else if (strcmp(name, O_DOLLAR_TEXT) == 0)
+  {
+    snprintf(buf, CF_BUFSIZE, "%s", O_DOLLAR);
+    return 0;
+  }
+  else if (strcmp(name, O_INSERT_LINES_TEXT) == 0)
+  {
+    snprintf(buf, CF_BUFSIZE, "%s", O_INSERT_LINES);
+    return 0;
+  }
+   
+ return -1;
+}
+
+/*********************************************************/
+
 int AppendTextToFile(char *text, char *file)
 
 { FILE *f = fopen(file, "a");
@@ -1102,14 +1145,28 @@ int Parse(struct input *data)
   struct input *in = data;
   FILE *inFile = fopen(f,"r");
 
-if (inFile == NULL)
+/* Locals for reading line from test script in memory */
+  int nPointer = 0;
+  int total_size;
+  int size;
+  char *frm;
+
+
+if (CF_TEST_INPUT == NULL)
    {
-   printf("Parse(): Error opening file: %s\n", f);
+   printf("Parse(): Error in input test script!\n");
    return -1;
    }
+total_size = strlen(CF_TEST_INPUT);
+frm = CF_TEST_INPUT;
+   
+THIS_AGENT_TYPE = cf_agent;
+//while(fgets(line, CF_SMALLBUF, inFile))
+while(nPointer < total_size)
+   { 
+   size = ReadLineInput(line, frm + nPointer);
+   nPointer += size + 1;
 
-while(fgets(line,CF_SMALLBUF,inFile))
-   {
    nLineNum++;
    if (n > CF_MAX_TESTS)
       {
@@ -1141,7 +1198,7 @@ while(fgets(line,CF_SMALLBUF,inFile))
       // trim spaces
       
       FullTextMatch("^[ \t]*(.+)[ \t]*$",line);
-
+      
       if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
          {
          if (strcmp(retval,"{") == 0) //start of block
@@ -1181,7 +1238,6 @@ while(fgets(line,CF_SMALLBUF,inFile))
                }
 
             // inside a sub-section
-
             switch(section)
                {
                case CF_VARS:
@@ -1226,15 +1282,17 @@ while(fgets(line,CF_SMALLBUF,inFile))
                default: // TODO: not required??
                    Debug("Switch Default\n");
                    break;
-               }
-            }
-         }
-      }     
-   }
+               } /*switch*/
+            } /* if -> inside block*/
+         } /* if -> getvar*/
+      }  /* if -> non-empty line */
+      
+//      free(line);
+   } /*while getline*/
 fclose(inFile);
 
-/*
 // PRINT INPUT DATA
+/*
 for(i = 0; i<n; i++)
 {
 printf("\nParse(): ##### Test Policy %d  #####\n\n", i);
@@ -1507,7 +1565,7 @@ else
        if (GetVariable("match","3",(void *)&retval,&rtype) != cf_notype)
 	  {
           snprintf(o->text, CF_BUFSIZE, "%s", retval);
-          //	     printf(" GetExpectedOutput(): Filename Bishwa = %s\n", retval);
+	     
           if (GetVariable("match","2",(void *)&retval,&rtype) != cf_notype)
              {
              // Debug(" GetExpectedOutput(): type = %s\n", retval);
@@ -1519,7 +1577,7 @@ else
              
              if((tmp = GetVarIndex(id, retval)) < 0)
                 {
-                printf(" GetExpectedOutput(): Error!! Variable %s is not defined in test \"%s\"\n",retval, id);
+                Debug(" GetExpectedOutput(): Error!! Variable %s is not defined in test \"%s\"\n",retval, id);
                 o->var_index = -1;
                 }else
                 {
@@ -1548,7 +1606,7 @@ else
                  // Debug(" GetExpectedOutput(): type = %s\n", retval);
                  o->type = GetType1(retval);
 		 }
-              //	     printf(" GetExpectedOutput(): Filename Bishwa = %s\n", retval);
+
               if (GetVariable("match","3",(void *)&retval,&rtype) != cf_notype)
 		 {
                  Debug(" GetExpectedOutput(): Buffer = %s\n", retval);
@@ -1570,7 +1628,7 @@ else
                          o->type = tmp;
                          }
                   
-                  printf("GetExpectedOutput(2): TYPE = %s; %d\n",retval,o->type);
+                  Debug("GetExpectedOutput(2): TYPE = %s; %d\n",retval,o->type);
                   }
                
                if (GetVariable("match","2",(void *)&retval,&rtype) != cf_notype)
@@ -1579,7 +1637,7 @@ else
                      {
                      snprintf(o->buf, CF_BUFSIZE, "%s", retval);
                      }
-                  printf("GetExpectedOutput(): NAME = %s\n", o->buf);
+                  Debug("GetExpectedOutput(): NAME = %s\n", o->buf);
                   }       
                
                if (GetVariable("match","3",(void *)&retval,&rtype) != cf_notype)
@@ -1591,7 +1649,7 @@ else
                      o->action= GetAction(retval);
                      }
                   
-                  printf("GetExpectedOutput(): ACTION = %s, %d\n",retval, o->action);
+                  Debug("GetExpectedOutput(): ACTION = %s, %d\n",retval, o->action);
                   }
                }   
 
@@ -2154,10 +2212,10 @@ FlattenText(buf);
 snprintf(tmp, CF_BUFSIZE, "%s", any);
 strcat(tmp, str);
 strcat(tmp, any);
-
+printf("FindTextInFile(): \n 1 =  \n%s\n 2= \n%s\n\n", tmp, buf);
 if(FullTextMatch(tmp,buf))
    {
-   //printf("FindTextInFile(): Found text!!\n");
+   printf("FindTextInFile(): Found text!!\n");
    return 1; 
    }
 free(buf);
@@ -2207,6 +2265,24 @@ return ret;
 int FlattenText(char *str)
 {
 return ReplaceChar(str, ' ', '\n');
+}
+
+/*********************************************************/
+
+int ReadLineInput(char *dst, char *frm )
+
+{ int len_prev, len_after, size;
+  char buf[CF_BUFSIZE];
+  char *tmp1, *tmp2;
+
+tmp1 = frm;
+tmp2 = buf;
+len_prev = strlen(tmp1);
+tmp2 = strstr(tmp1, "\n");
+len_after = strlen(tmp2);
+size = len_prev - len_after;
+snprintf(dst, size + 1, "%s", frm);
+return size;
 }
 
 /*********************************************************/
@@ -2262,11 +2338,5 @@ for(i = 0; i <= nInput; i++)
    }   
 return -1;
 }
-
-#else
-
-void TestSuite(char *s)
-{
-}
-
+/*********************************************************/
 #endif

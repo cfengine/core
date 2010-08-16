@@ -1012,6 +1012,32 @@ return count;
 
 /*********************************************************************/
 
+void ReplaceChar(char *in, char *out, int outSz, char from, char to)
+/* Replaces all occurences of 'from' to 'to' in preallocated
+ * string 'out'. */
+{
+  int len;
+  int i;
+
+  memset(out,0,outSz);
+  len = strlen(in);
+  
+  for(i = 0; (i < len) && (i < outSz - 1); i++)
+    {
+      if(in[i] == from)
+	{
+	  out[i] = to;
+	}
+      else
+	{
+	  out[i] = in[i];
+	}
+    }
+}
+
+
+/*********************************************************************/
+
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 
 void *ThreadUniqueName(pthread_t tid)

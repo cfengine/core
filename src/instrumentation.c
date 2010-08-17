@@ -358,7 +358,8 @@ kp->timestamp = now;
 
 void UpdateLastSeen()
 
-{ int lsea = LASTSEENEXPIREAFTER, intermittency = false,qsize,ksize;
+{ double lsea = LASTSEENEXPIREAFTER;
+  int intermittency = false,qsize,ksize;
   struct CfKeyHostSeen q,newq; 
   double lastseen,delta2;
   void *stored;
@@ -454,13 +455,11 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    
    if (ReadDB(dbp,kp->name,&q,sizeof(q)))
       {
-      if ((int)q.Q.q > 0) // To avoid immediate expiry of keys ...
+      lastseen = now - q.Q.q;
+      
+      if (lastseen < 0)
          {
-         lastseen = (double)now - q.Q.q;  /* Last seen is now-then */
-         }
-      else
-         {
-         lastseen = 5*60;
+         lastseen = 0;
          }
       
       newq.Q.q = (double)now;
@@ -478,14 +477,14 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       strncpy(newq.address,kp->address,CF_ADDRSIZE-1);
       }
    
-   if (lastseen > (double)lsea)
+   if (lastseen > lsea)
       {
-      CfOut(cf_verbose,""," -> Last seen %s expired after %d > %d hours\n",kp->name,(int)lastseen/3600,lsea/3600);
+      CfOut(cf_verbose,""," -> Last-seen record for %s expired after %.1lf > %.1lf hours\n",kp->name,lastseen/3600,lsea/3600);
       DeleteDB(dbp,kp->name);
       }
    else
       {
-      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",kp->name,kp->address,ctime(&now));
+      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s (expiry %.1lf > %.1lf)\n",kp->name,kp->address,ctime(&now),lastseen/3600,lsea/3600);
 
       ThreadLock(cft_dbhandle);
       WriteDB(dbp,kp->name,&newq,sizeof(newq));

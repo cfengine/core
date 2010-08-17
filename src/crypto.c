@@ -152,11 +152,12 @@ MapName(newname);
 
 if (newkey = SelectKeyRing(keyname))
    {
-   CfOut(cf_verbose,""," -> Retrived %s from cache",keyname);
+   CfOut(cf_verbose,""," -> Retrieved %s from cache",keyname);
    return newkey;
    }
 else if (cfstat(newname,&statbuf) == -1)
    {
+   CfOut(cf_verbose,""," -> Did not find new key format %s",newname);
    strcpy(newname,newname);
    snprintf(oldname,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,username,ipaddress);   
    MapName(oldname);

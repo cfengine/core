@@ -273,7 +273,7 @@ int Cleanup(struct cfoutput*,struct input*, int );
 
 // Utility methods
 long fsize(char *);
-int ReplaceChar(char *str, char to, char frm);
+int ReplaceCharTS(char *str, char to, char frm);
 int FlattenText(char *str);
 int GetOptions(int argc, char *argv[]);
 int MyCreate(struct line_data *);
@@ -2244,7 +2244,7 @@ return ret;
 		   
 /*********************************************************/
 
-int ReplaceChar(char *str, char to, char frm)
+int ReplaceCharTS(char *str, char to, char frm)
 
 { int ret = 0;
  char *sp;
@@ -2264,7 +2264,7 @@ return ret;
 
 int FlattenText(char *str)
 {
-return ReplaceChar(str, ' ', '\n');
+return ReplaceCharTS(str, ' ', '\n');
 }
 
 /*********************************************************/

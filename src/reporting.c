@@ -175,8 +175,6 @@ fprintf(FREPORT_HTML,"<p>");
   
 for (bp = bundles; bp != NULL; bp=bp->next)
    {
-   BundleNode(FREPORT_HTML,bp->name);
-
    fprintf(FREPORT_HTML,"%s Bundle %s%s%s %s%s%s\n",
            CFH[cfx_bundle][cfb],
            CFH[cfx_blocktype][cfb],bp->type,CFH[cfx_blocktype][cfe],
@@ -228,7 +226,6 @@ for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    fprintf(FREPORT_HTML,"%s%s\n",CFH[cfx_line][cfb],CFH[cfx_block][cfb]);
    fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 
-   BodyNode(FREPORT_HTML,bdp->name,0);
    ShowBody(bdp,3);
 
    fprintf(FREPORT_TXT,"\n");

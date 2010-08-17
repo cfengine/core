@@ -348,7 +348,7 @@ if ((kp->name = strdup(databuf)) == NULL)
    return;
    }
 
-kp->key = HavePublicKey(username,ipaddress,databuf);
+kp->key = HavePublicKey(username,ipaddress,databuf+1);
 
 ThreadUnlock(cft_system);
 kp->timestamp = now;
@@ -455,11 +455,13 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    
    if (ReadDB(dbp,kp->name,&q,sizeof(q)))
       {
-      lastseen = now - q.Q.q;
+      lastseen = (double)now - q.Q.q;
       
-      if (lastseen < 0)
+      if (q.Q.q <= 0)
          {
-         lastseen = 0;
+         lastseen = 300;
+         q.Q.expect = 0;
+         q.Q.var = 0;
          }
       
       newq.Q.q = (double)now;
@@ -484,7 +486,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       }
    else
       {
-      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s (expiry %.1lf > %.1lf)\n",kp->name,kp->address,ctime(&now),lastseen/3600,lsea/3600);
+      CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s (noexpiry %.1lf <= %.1lf)\n",kp->name,kp->address,ctime(&now),lastseen/3600,lsea/3600);
 
       ThreadLock(cft_dbhandle);
       WriteDB(dbp,kp->name,&newq,sizeof(newq));

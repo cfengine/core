@@ -843,7 +843,7 @@ if (NewPromiseProposals())
    }
 else
    {
-   CfOut(cf_verbose,""," -> No new promises found\n");
+   Debug(" -> No new promises found\n");
    }
 }
 

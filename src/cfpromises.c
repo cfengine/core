@@ -94,6 +94,30 @@ GenericInitialize(argc,argv,"common");
 ThisAgentInit();
 GenericDeInitialize();
 
+mongo_connection dbconn;
+
+if (!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
+   {
+   CfOut(cf_verbose,"", "!! Could not open connection to report database");
+   return -1;
+   }
+
+ struct Rlist *matched;
+
+ matched = CFDB_QueryBundles(&dbconn, NULL, NULL);
+
+   if(matched)
+     {
+       ShowRlist(stdout,matched);
+       DeleteRlist(matched);
+     }
+   
+
+if (!CFDB_Close(&dbconn))
+   {
+   CfOut(cf_verbose,"", "!! Could not close connection to report database");
+   }
+
 if (ERRORCOUNT > 0)
    {
    CfOut(cf_verbose,""," !! Inputs are invalid\n");

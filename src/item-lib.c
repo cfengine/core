@@ -156,6 +156,17 @@ if (!IsItemIn(*liststart,itemstring))
 
 /*********************************************************************/
 
+void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes)
+
+{
+if (!IsItemIn(*liststart,itemstring))
+   {
+   AppendItem(liststart,itemstring,classes);
+   }
+}
+
+/*********************************************************************/
+
 void PrependItem(struct Item **liststart,char *itemstring,char *classes)
 
 { struct Item *ip;

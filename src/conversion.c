@@ -212,7 +212,7 @@ return cfd_notype;
 enum package_actions Str2PackageAction(char *s)
 
 { int i;
-  static char *types[] = { "add","delete","reinstall","update","patch","verify", NULL };
+  static char *types[] = { "add","delete","reinstall","update","addupdate","patch","verify", NULL };
     
 for (i = 0; types[i] != NULL; i++)
    {

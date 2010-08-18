@@ -1206,6 +1206,7 @@ void SchedulePackageOp(char *name,char *version,char *arch,int installed,int mat
   char *id,*id_del;
   char *pathName = NULL;
   int package_select_in_range = false;
+  enum package_actions policy;
  
 /* Now we need to know the name-convention expected by the package manager */
 
@@ -1248,7 +1249,22 @@ if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge |
    package_select_in_range = true;
    }
 
-switch(a.packages.package_policy)
+
+ policy = a.packages.package_policy;
+
+ if(policy == cfa_addupdate)
+   {
+   if(!installed)
+     {
+     policy = cfa_addpack;
+     }
+   else
+     {
+     policy = cfa_update;
+     }
+   }
+
+switch(policy)
    {
    case cfa_addpack:
 
@@ -1406,7 +1422,7 @@ switch(a.packages.package_policy)
 	     }
           }
        
-       if (matched && package_select_in_range && !no_version_specified || installed)
+       if ((matched && package_select_in_range && !no_version_specified) || installed)
           {
           if (a.packages.package_update_command == NULL)
              {

@@ -1,4 +1,7 @@
 3.1.0
+	New package policy addupdate - installs package if not there and
+	updates it otherwise.
+
 	Change two log formats to use time() instead of date()
 	- filechanges
 	- total compliance

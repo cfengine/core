@@ -913,6 +913,7 @@ enum package_actions
   cfa_deletepack,
   cfa_reinstall,
   cfa_update,
+  cfa_addupdate,
   cfa_patch,
   cfa_verifypack,
   cfa_pa_none

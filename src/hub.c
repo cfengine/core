@@ -334,7 +334,7 @@ ThreadUnlock(cft_system);
 
 for (ip = SCHEDULE; ip != NULL; ip = ip->next)
    {
-   CfOut(cf_verbose,"","Checking schedule %s...\n",ip->name);
+   Debug("Checking schedule %s...\n",ip->name);
 
    if (IsDefinedClass(ip->name))
       {

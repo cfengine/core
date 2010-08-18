@@ -1237,7 +1237,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    
    if (svp->busy)
       {
-      CfOut(cf_verbose,"","Existing connection seems to be busy...\n",ipname);
+      CfOut(cf_verbose,"","Existing connection seems to be active...\n",ipname);
       return NULL;
       }
    

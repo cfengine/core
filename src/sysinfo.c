@@ -919,7 +919,6 @@ NewScalar("sys","flavor","windows",cf_str);
 
 #endif  /* MINGW */
 
-
 #ifndef NT
 if ((pw = getpwuid(getuid())) == NULL)
    {
@@ -938,6 +937,27 @@ else
    }
 
 NewScalar("sys","crontab",vbuff,cf_str);
+#endif
+
+#if defined(HAVE_LIBCFNOVA) && defined(HAVE_LIBMONGOC)
+
+if (IsDefinedClass("redhat"))
+   {
+   CfOut(cf_verbose,""," -> Recording default document root /var/www/html");
+   CFDB_PutValue("document_root","/var/www/html");
+   }
+
+if (IsDefinedClass("SuSE"))
+   {
+   CfOut(cf_verbose,""," -> Recording default document root /srv/www/htdocs");
+   CFDB_PutValue("document_root","/srv/www/htdocs");
+   }
+
+if (IsDefinedClass("debian"))
+   {
+   CfOut(cf_verbose,""," -> Recording default document root /var/www");
+   CFDB_PutValue("document_root","/var/www");
+   }
 #endif
 }
 

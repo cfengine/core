@@ -740,6 +740,11 @@ fprintf(FKNOW,"}\n");
 fclose(FKNOW);
 fclose(FREPORT_HTML);
 fclose(FREPORT_TXT);
+
+// Make the knowledge readable in situ
+
+snprintf(name,CF_BUFSIZE,"%s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR);
+chmod(name,0644);
 }
 
 /*******************************************************************/

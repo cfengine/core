@@ -798,7 +798,7 @@ return (mode_t)a;
 
 /****************************************************************************/
 
-int Str2Double(char *s)
+double Str2Double(char *s)
 
 { double a = CF_NODOUBLE;
   char remainder[CF_BUFSIZE];
@@ -812,7 +812,7 @@ if (s == NULL)
 remainder[0] = '\0';
 
 sscanf(s,"%lf%s",&a,remainder);
- 
+
 if (a == CF_NODOUBLE || strlen(remainder) > 0)
    {
    snprintf(output,CF_BUFSIZE,"Error reading assumed real value %s\n",s);

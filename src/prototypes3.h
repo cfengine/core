@@ -267,7 +267,7 @@ long Str2Int(char *s);
 long TimeCounter2Int(char *s);
 long TimeAbs2Int(char *s);
 mode_t Str2Mode(char *s);
-int Str2Double(char *s);
+double Str2Double(char *s);
 void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);
 int Month2Int(char *string);
 char *GetArg0(char *execstr);
@@ -505,6 +505,9 @@ void SaveClassEnvironment(void);
 
 /* evalfunction.c */
 
+struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallSum(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallProduct(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs);

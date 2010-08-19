@@ -502,6 +502,15 @@ switch (this)
    case cfn_ago:
        rval = FnCallAgoDate(fp,expargs);
        break;
+   case cfn_laterthan:
+       rval = FnCallLaterThan(fp,expargs);
+       break;
+   case cfn_sum:
+       rval = FnCallSum(fp,expargs);
+       break;
+   case cfn_product:
+       rval = FnCallProduct(fp,expargs);
+       break;
    case cfn_accum:
        rval = FnCallAccumulatedDate(fp,expargs);
        break;

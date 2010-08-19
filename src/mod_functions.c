@@ -67,6 +67,17 @@ struct FnCallArg AGO_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg LATERTHAN_ARGS[] =
+    {
+    {"0,1000",cf_int,"Years"},
+    {"0,1000",cf_int,"Months"},    
+    {"0,1000",cf_int,"Days"},      
+    {"0,1000",cf_int,"Hours"},     
+    {"0,1000",cf_int,"Minutes"},   
+    {"0,40000",cf_int,"Seconds"},   
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg CANONIFY_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"String containing non-identifer characters"},
@@ -234,8 +245,6 @@ struct FnCallArg HOSTSSEEN_ARGS[] =
     {"name,address",cf_opts,"Type of return value desired"},
     {NULL,cf_notype,NULL}
     };
-
-
     
 struct FnCallArg IPRANGE_ARGS[] =
     {
@@ -326,6 +335,18 @@ struct FnCallArg LDAPVALUE_ARGS[] =
 
 struct FnCallArg NOW_ARGS[] =
     {
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg SUM_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"A list of arbitrary real values"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PRODUCT_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"A list of arbitrary real values"},
     {NULL,cf_notype,NULL}
     };
 
@@ -595,6 +616,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"isvariable",cf_class,1,ISVARIABLE_ARGS,"True if the named variable is defined"},
    {"join",cf_str,2,JOIN_ARGS,"Join the items of arg2 into a string, using the conjunction in arg1"},
    {"lastnode",cf_str,2,LASTNODE_ARGS,"Extract the last of a separated string, e.g. filename from a path"},
+   {"laterthan",cf_class,6,LATERTHAN_ARGS,"True if the current time is later than the given date"},
    {"ldaparray",cf_class,6,LDAPARRAY_ARGS,"Extract all values from an ldap record"},
    {"ldaplist",cf_slist,6,LDAPLIST_ARGS,"Extract all named values from multiple ldap records"},
    {"ldapvalue",cf_str,6,LDAPVALUE_ARGS,"Extract the first matching named value from ldap"},
@@ -603,6 +625,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"peers",cf_slist,3,PEERS_ARGS,"Get a list of peers (not including ourself) from the partition to which we belong"},
    {"peerleader",cf_str,3,PEERLEADER_ARGS,"Get the assigned peer-leader of the partition to which we belong"},
    {"peerleaders",cf_slist,3,PEERLEADERS_ARGS,"Get a list of peer leaders from the named partitioning"},
+   {"product",cf_real,1,PRODUCT_ARGS,"Return the product of a list of reals"},
    {"randomint",cf_int,2,RANDOMINT_ARGS,"Generate a random integer between the given limits"},
    {"readfile",cf_str,2,READFILE_ARGS,"Read max number of bytes from named file and assign to variable"},
    {"readintarray",cf_int,6,READSTRINGARRAY_ARGS,"Read an array of integers from a file and assign the dimension to a variable"},
@@ -627,6 +650,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"splayclass",cf_class,2,SPLAYCLASS_ARGS,"True if the first argument's time-slot has arrived, according to a policy in arg2"},
    {"splitstring",cf_slist,3,SPLITSTRING_ARGS,"Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
    {"strcmp",cf_class,2,STRCMP_ARGS,"True if the two strings match exactly"},
+   {"sum",cf_real,1,SUM_ARGS,"Return the sum of a list of reals"},
    {"translatepath",cf_str,1,TRANSLATEPATH_ARGS,"Translate path separators from Unix style to the host's native"},
    {"usemodule",cf_class,2,USEMODULE_ARGS,"Execute cfengine module script and set class if successful"},
    {"userexists",cf_class,1,USEREXISTS_ARGS,"True if user name or numerical id exists on this host"},

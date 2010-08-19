@@ -1505,6 +1505,178 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallSum(struct FnCall *fp,struct Rlist *finalargs)
+
+{ char lval[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE];
+  char *name,*regex,index[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  struct Rval rval,rval2;
+  struct Rlist *rp,*returnlist = NULL;
+  struct Scope *ptr;
+  double sum = 0;
+  int i;
+
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_sum].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+name = finalargs->item;
+
+/* Locate the array */
+
+if (strstr(name,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,name);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function \"sum\" was promised a list in scope \"%s\" but this was not found\n",scopeid);
+   SetFnCallReturnStatus("sum",FNCALL_FAILURE,"List not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("sum",FNCALL_FAILURE,"List not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+if (rval2.rtype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("sum",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
+   {
+   double x;
+   
+   if ((x = Str2Double(rp->item)) == CF_NODOUBLE)
+      {
+      SetFnCallReturnStatus("sum",FNCALL_FAILURE,"Illegal real number",NULL);
+      rval.item = NULL;
+      rval.rtype = CF_SCALAR;
+      return rval;
+      }
+   else
+      {
+      sum += x;
+      }
+   }
+
+snprintf(buffer,CF_MAXVARSIZE,"%lf",sum);
+
+SetFnCallReturnStatus("sum",FNCALL_SUCCESS,NULL,NULL);
+rval.item = strdup(buffer);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallProduct(struct FnCall *fp,struct Rlist *finalargs)
+
+{ char lval[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE];
+  char *name,*regex,index[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  struct Rval rval,rval2;
+  struct Rlist *rp,*returnlist = NULL;
+  struct Scope *ptr;
+  double product = 1.0;
+  int i;
+
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_product].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+name = finalargs->item;
+
+/* Locate the array */
+
+if (strstr(name,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,name);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function \"product\" was promised a list in scope \"%s\" but this was not found\n",scopeid);
+   SetFnCallReturnStatus("product",FNCALL_FAILURE,"List not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;            
+   }
+
+if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+   {
+   CfOut(cf_error,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("product",FNCALL_FAILURE,"List not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+if (rval2.rtype != CF_LIST)
+   {
+   CfOut(cf_error,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
+   SetFnCallReturnStatus("product",FNCALL_FAILURE,"Array not found in scope",NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;
+   }
+
+for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
+   {
+   double x;
+   
+   if ((x = Str2Double(rp->item)) == CF_NODOUBLE)
+      {
+      SetFnCallReturnStatus("product",FNCALL_FAILURE,"Illegal real number",NULL);
+      rval.item = NULL;
+      rval.rtype = CF_SCALAR;
+      return rval;
+      }
+   else
+      {
+      product *= x;
+      }
+   }
+
+snprintf(buffer,CF_MAXVARSIZE,"%lf",product);
+
+SetFnCallReturnStatus("product",FNCALL_SUCCESS,NULL,NULL);
+rval.item = strdup(buffer);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],*joined;
@@ -3267,6 +3439,73 @@ if ((rval.item = strdup(buffer)) == NULL)
    }
 
 SetFnCallReturnStatus("on",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs)
+
+{ struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  long d[6];
+  time_t cftime,now = time(NULL);
+  struct tm tmv;
+  enum cfdatetemplate i;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_laterthan].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+rp = finalargs;
+
+for (i = 0; i < 6; i++)
+   {
+   if (rp != NULL)
+      {
+      d[i] = Str2Int(rp->item);
+      rp = rp->next;
+      }
+   }
+
+/* (year,month,day,hour,minutes,seconds) */
+
+tmv.tm_year = d[cfa_year] - 1900;
+tmv.tm_mon  = d[cfa_month] -1;
+tmv.tm_mday = d[cfa_day];
+tmv.tm_hour = d[cfa_hour];
+tmv.tm_min  = d[cfa_min];
+tmv.tm_sec  = d[cfa_sec];
+tmv.tm_isdst= -1;
+
+if ((cftime=mktime(&tmv))== -1)
+   {
+   CfOut(cf_inform,"","Illegal time value");
+   }
+
+Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
+
+if (now > cftime)
+   {
+   strcpy(buffer,CF_ANYCLASS);
+   }
+else
+   {
+   strcpy(buffer,"!any");
+   }
+
+if ((rval.item = strdup(buffer)) == NULL)
+   {
+   FatalError("Memory allocation in FnCallLaterThan");
+   }
+
+SetFnCallReturnStatus("laterthan",FNCALL_SUCCESS,NULL,NULL);
 
 /* end fn specific content */
 

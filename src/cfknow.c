@@ -108,6 +108,7 @@ int SHOWMAP = cf_no_image;
 int GRAPH = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
+int PASS;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -609,6 +610,8 @@ if (!ok)
 
 /* If all is okay, go ahead and evaluate */
 
+PASS = 1;
+
 for (type = 0; TYPESEQUENCE[type] != NULL; type++)
    {
    for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
@@ -648,6 +651,8 @@ for (type = 0; TYPESEQUENCE[type] != NULL; type++)
    }
 
 /* Second pass association processing */
+
+PASS = 2;
 
 for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
    {
@@ -1462,8 +1467,11 @@ switch (rep_type)
 
        if ((tp = GetCanonizedTopic(TOPIC_MAP,pp->classes)) == NULL)
           {
-          CfOut(cf_error,""," !! Type context \"%s\" must be defined in order to map it to occurrences (ordering problem with bundlesequence?)",pp->classes);
-          PromiseRef(cf_error,pp);
+          if (PASS > 1)
+             {
+             CfOut(cf_inform,""," !! Type context \"%s\" must be defined in order to map it to occurrences (ordering problem with bundlesequence?)",pp->classes);
+             PromiseRef(cf_error,pp);
+             }
           return;
           }
        

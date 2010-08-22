@@ -950,7 +950,7 @@ else
    
 CfOut(cf_verbose,"","Set cfengine port number to %s = %u\n",strport,(int)ntohs(shortport));
 
-if (attr.copy.timeout == (short)CF_NOINT)
+if (attr.copy.timeout == (short)CF_NOINT || attr.copy.timeout <= 0)
    {
    tv.tv_sec = SHORT_CONNTIMEOUT;
    }

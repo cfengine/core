@@ -167,15 +167,14 @@ Debug("RecordClassUsage\n");
 
 for (ip = baselist; ip != NULL; ip=ip->next)
    {
-   if (IsHardClass(ip->name))
+   if (strncmp(ip->name,"Min",3) == 0 || strncmp(ip->name,"Hr",2) == 0 || strncmp(ip->name,"Q",1) == 0
+       || strncmp(ip->name,"Yr",2) == 0 || strncmp(ip->name,"Day",1) == 0 || strncmp(ip->name,"Morning",1) == 0
+       || strncmp(ip->name,"Afternoon",1) == 0 || strncmp(ip->name,"Evening",1) == 0 || strncmp(ip->name,"Night",1) == 0)
       {
       continue;
       }
    
-   if (!IsItemIn(list,ip->name))
-      {
-      PrependItem(&list,ip->name,NULL);
-      }
+   IdempPrependItem(&list,ip->name,NULL);
    }
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);

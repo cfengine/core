@@ -956,7 +956,7 @@ if (attr.copy.timeout == (short)CF_NOINT)
    }
 else
    {
-   tv.tv_sec = htons(attr.copy.portnumber);
+   tv.tv_sec = attr.copy.timeout;
    }
 
 CfOut(cf_verbose,"","Set connection timeout to %d\n",tv.tv_sec);
@@ -994,11 +994,6 @@ if (!attr.copy.force_ipv4)
          continue;
          }
 
-      if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv))
-         {
-         CfOut(cf_inform,"setsockopt"," !! setsockopt error");
-         }
-
       if (BINDINTERFACE[0] != '\0')
          {
          memset(&query2,0,sizeof(struct addrinfo));   
@@ -1009,6 +1004,8 @@ if (!attr.copy.force_ipv4)
          if ((err = getaddrinfo(BINDINTERFACE,NULL,&query2,&response2)) != 0)
             {
             cfPS(cf_error,CF_FAIL,"",pp,attr," !! Unable to lookup hostname or cfengine service: %s",gai_strerror(err));
+            cf_closesocket(conn->sd);
+            conn->sd = CF_NOT_CONNECTED;
             return false;
             }
          
@@ -1030,8 +1027,7 @@ if (!attr.copy.force_ipv4)
 
       /* set non-blocking socket */
       arg = fcntl(conn->sd, F_GETFL, NULL);
-      arg |= O_NONBLOCK;
-      fcntl(conn->sd, F_SETFL, arg);
+      fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
 
       res = connect(conn->sd,ap->ai_addr,ap->ai_addrlen);
 
@@ -1053,21 +1049,20 @@ if (!attr.copy.force_ipv4)
             if (valopt || res <= 0)
                {
                CfOut(cf_inform,"connect"," !! connection error: %s", strerror(valopt));
+               cf_closesocket(conn->sd);
                continue;
                }
             }
          else
             {
             CfOut(cf_inform,"connect"," !! connection error: %s", strerror(errno));
+            cf_closesocket(conn->sd);
             continue;
             }
          }
       
       /* connection is succeed; return to blocking mode */
-      arg = fcntl(conn->sd, F_GETFL, NULL);
-      arg ^= O_NONBLOCK;
       fcntl(conn->sd, F_SETFL, arg);
-      
       connected = true;
       break;
       }
@@ -1076,6 +1071,11 @@ if (!attr.copy.force_ipv4)
       {
       conn->family = ap->ai_family;
       snprintf(conn->remoteip,CF_MAX_IP_LEN-1,"%s",sockaddr_ntop(ap->ai_addr));
+
+      if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv))
+         {
+         CfOut(cf_inform,"setsockopt"," !! setsockopt error: couldn't set SO_RCVTIMEO");
+         }
       }
    else
       {
@@ -1124,11 +1124,6 @@ if (!attr.copy.force_ipv4)
       return false;
       }
 
-   if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv))
-      {
-      cfPS(cf_inform,CF_INTERPT,"setsockopt",pp,attr,"Couldn't set socket timeout");
-      }
-
    if (BINDINTERFACE[0] != '\0')
       {
       CfOut(cf_verbose,"","Cannot bind interface with this OS.\n");
@@ -1140,8 +1135,7 @@ if (!attr.copy.force_ipv4)
 
    /* set non-blocking socket */
    arg = fcntl(conn->sd, F_GETFL, NULL);
-   arg |= O_NONBLOCK;
-   fcntl(conn->sd, F_SETFL, arg);
+   fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
 
    res = connect(conn->sd,(void *)&cin,sizeof(cin));
 
@@ -1172,11 +1166,14 @@ if (!attr.copy.force_ipv4)
          return false;
          }
       }
-   
+
    /* connection is succeed; return to blocking mode */
-   arg = fcntl(conn->sd, F_GETFL, NULL);
-   arg ^= O_NONBLOCK;
    fcntl(conn->sd, F_SETFL, arg);
+
+   if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv))
+      {
+      cfPS(cf_inform,CF_INTERPT,"setsockopt",pp,attr,"Couldn't set socket timeout");
+      }
    }
 
 return true; 

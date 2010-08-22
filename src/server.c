@@ -3224,7 +3224,7 @@ void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuf
   char *sp;
   int i;
 
-/* TODO - when safe change this to sha2 */
+/* TODO - when safe change this proto string to sha2 */
   
 sscanf(recvbuffer,"MD5 %255[^\n]",rfilename);
 

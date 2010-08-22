@@ -156,6 +156,24 @@ if (!IsItemIn(*liststart,itemstring))
 
 /*********************************************************************/
 
+void IdempItemCount(struct Item **liststart,char *itemstring,char *classes)
+
+{ struct Item *ip;
+ 
+if (ip = ReturnItemIn(*liststart,itemstring))
+   {
+   ip->counter++;
+   }
+else
+   {
+   PrependItem(liststart,itemstring,classes);
+   }
+
+// counter+1 is the histogram of occurrences
+}
+
+/*********************************************************************/
+
 void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes)
 
 {

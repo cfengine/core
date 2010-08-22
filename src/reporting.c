@@ -153,7 +153,7 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
   char *v,rettype,vbuff[CF_BUFSIZE];
   void *retval;
 
-#ifdef HAVE_LIBCFNOVA
+#if defined(HAVE_LIBCFNOVA) && defined(HAVE_LIBMONGOC)
 Nova_StoreUnExpandedPromises(bundles,bodies);
 #else  
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
@@ -260,7 +260,7 @@ else
    v = "not specified";
    }
 
-#ifdef HAVE_LIBCFNOVA
+#if defined(HAVE_LIBCFNOVA) && defined(HAVE_LIBMONGOC)
 Nova_StoreExpandedPromise(pp);
 MapPromiseToTopic(FKNOW,pp,v);
 #else

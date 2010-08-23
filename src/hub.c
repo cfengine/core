@@ -85,6 +85,7 @@ int ScheduleRun(void);
       { "no-lock",no_argument,0,'K'},
       { "no-fork",no_argument,0,'F' },
       { "continuous",no_argument,0,'c' },
+      { "logging",no_argument,0,'l' },
       { NULL,0,0,'\0' }
       };
 
@@ -99,6 +100,7 @@ int ScheduleRun(void);
       "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
       "Run as a foreground processes (do not fork)",
       "Continuous update mode of operation",
+      "Enable logging of updates to the promise log",
       NULL
       };
 
@@ -134,7 +136,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"cd:vnKIf:VhFV1gMW",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"cd:vKf:VhFl",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -151,6 +153,10 @@ while ((c=getopt_long(argc,argv,"cd:vnKIf:VhFV1gMW",OPTIONS,&optindex)) != EOF)
           MINUSF = true;
           break;
 
+      case 'l':
+          LOGGING = true;
+          break;
+          
       case 'd': 
           NewClass("opt_debug");
           switch ((optarg==NULL) ? '3' : *optarg)
@@ -221,7 +227,6 @@ void ThisAgentInit()
 { char vbuff[CF_BUFSIZE];
 
 umask(077);
-LOGGING = true;
 
 if (CONTINUOUS)
    {

@@ -351,9 +351,9 @@ if ((kp->name = strdup(databuf)) == NULL)
    return;
    }
 
-kp->key = HavePublicKey(username,ipaddress,databuf+1);
-
 ThreadUnlock(cft_system);
+
+kp->key = HavePublicKey(username,ipaddress,databuf+1);
 kp->timestamp = now;
 }
 
@@ -401,7 +401,6 @@ MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
-   ThreadUnlock(cft_db_lastseen);
    return;
    }
 
@@ -424,7 +423,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
 
       if ((strcmp(q.address,kp->address) == 0) && (strcmp(key+1,kp->name+1) != 0))
          {
-         CfOut(cf_verbose,""," ! Deleting %s's address as this host seems to have moved elsewhere",kp->name);
+         CfOut(cf_verbose,""," ! Deleting %s's address %s as this host seems to have moved elsewhere (%s)",kp->name,kp->address,kp->name+1);
          newq.Q = q.Q;
          strncpy(newq.address,"moved",CF_ADDRSIZE-1);
          }
@@ -451,7 +450,6 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       
       if (!OpenDB(name,&dbpent))
          {
-         ThreadUnlock(cft_db_lastseen);
          return;
          }
       }

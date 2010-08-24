@@ -309,8 +309,6 @@ int ScheduleRun()
   char timekey[64];
   struct Item *ip;
   
-CfOut(cf_verbose,"","Sleeping...\n");
-sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 
 now = time(NULL);
 
 if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 

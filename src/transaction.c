@@ -140,7 +140,7 @@ if (IGNORELOCK)
    }
 
 promise = BodyName(pp);
-strncpy(cc_operator,promise,CF_MAXVARSIZE-1);
+snprintf(cc_operator,CF_MAXVARSIZE-1,"%s-%s",promise,host);
 strncpy(cc_operand,CanonifyName(operand),CF_BUFSIZE-1);
 free(promise);
 

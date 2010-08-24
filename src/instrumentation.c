@@ -292,6 +292,8 @@ if (strlen(ipaddress) == 0)
    return;
    }
 
+ThreadLock(cft_output);
+
 switch (role)
    {
    case cf_accept:
@@ -301,6 +303,8 @@ switch (role)
        snprintf(databuf,CF_BUFSIZE-1,"+%s",HashPrint(CF_DEFAULT_DIGEST,digest));
        break;
    }
+
+ThreadUnlock(cft_output);
 
 for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {

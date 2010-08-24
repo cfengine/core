@@ -136,7 +136,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"cd:vKf:VhFl",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"cd:vKf:VhFlM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {

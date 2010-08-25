@@ -2615,7 +2615,9 @@ else
          }
       else
          {
-         SetFnCallReturnStatus("remotescalar",FNCALL_FAILURE,NULL,NULL);
+         // This function should never fail
+         snprintf(buffer,2,"");
+         SetFnCallReturnStatus("remotescalar",FNCALL_SUCCESS,NULL,NULL);
          }
       }
    else

@@ -229,7 +229,7 @@ if (LICENSES)
    }
 else
    {
-   strcpy(buffer,"EXPIRED");
+   strcpy(buffer,"NO LICENSE");
    }
 #else
 strcpy(buffer,"community");

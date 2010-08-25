@@ -505,6 +505,7 @@ void SaveClassEnvironment(void);
 
 /* evalfunction.c */
 
+struct Rval FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallSum(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallProduct(struct FnCall *fp,struct Rlist *finalargs);

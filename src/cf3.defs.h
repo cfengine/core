@@ -555,6 +555,7 @@ enum fncalltype
    cfn_hostinnetgroup,
    cfn_hostrange,
    cfn_hostsseen,
+   cfn_hubknowledge,
    cfn_iprange,
    cfn_irange,
    cfn_isdir,

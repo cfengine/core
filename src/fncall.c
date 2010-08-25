@@ -493,6 +493,9 @@ switch (this)
    case cfn_remotescalar:
        rval = FnCallRemoteScalar(fp,expargs);
        break;
+   case cfn_hubknowledge:
+       rval = FnCallHubKnowledge(fp,expargs);
+       break;
    case cfn_remoteclassesmatching:
        rval = FnCallRemoteClasses(fp,expargs);
        break;

@@ -493,6 +493,12 @@ struct FnCallArg REMOTESCALAR_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg HUB_KNOWLEDGE_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Variable identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg REMOTECLASSESMATCHING_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"Regular expression"},
@@ -605,6 +611,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"hostinnetgroup",cf_class,1,HOSTINNETGROUP_ARGS,"True if the current host is in the named netgroup"},
    {"hostrange",cf_class,2,HOSTRANGE_ARGS,"True if the current host lies in the range of enumerated hostnames specified"},
    {"hostsseen",cf_str,3,HOSTSSEEN_ARGS,"Extract the list of hosts last seen/not seen within the last arg1 hours"},
+   {"hubknowledge",cf_str,1,HUB_KNOWLEDGE_ARGS,"Read global knowledge from the hub host by id (commercial extension)"},
    {"iprange",cf_class,1,IPRANGE_ARGS,"True if the current host lies in the range of IP addresses specified"},
    {"irange",cf_irange,2,IRANGE_ARGS,"Define a range of integer values for cfengine internal use"},
    {"isdir",cf_class,1,FILESTAT_ARGS,"True if the named object is a directory"},

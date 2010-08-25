@@ -2638,6 +2638,53 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs)
+
+{ struct Rlist *rp;
+  struct Rval rval;
+  char buffer[CF_BUFSIZE];
+  char *handle;
+  int encrypted;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hubknowledge].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+handle = finalargs->item;
+
+if (THIS_AGENT_TYPE == cf_common)
+   {
+   if ((rval.item = strdup("<remote scalar>")) == NULL)
+      {
+      FatalError("Memory allocation in FnCallRemoteSCalar");
+      }
+   }
+else
+   {
+   GetRemoteScalar("VAR",handle,POLICY_SERVER,true,buffer);
+
+   // This should always be successful
+   
+   if (strncmp(buffer,"BAD:",4) == 0)
+      {
+      snprintf(buffer,CF_MAXVARSIZE,"0");
+      }
+   
+   if ((rval.item = strdup(buffer)) == NULL)
+      {
+      FatalError("Memory allocation in FnCallRemoteSCalar");
+      }
+   }
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*classlist;

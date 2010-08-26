@@ -1362,7 +1362,7 @@ if (pp->ref != NULL)
       {
       struct Rlist *list = NULL;
       char ref[CF_MAXVARSIZE];
-      snprintf(ref,CF_MAXVARSIZE,"knowledge.php?%s",pp->promiser);
+      snprintf(ref,CF_MAXVARSIZE,"knowledge.php?topic=%s",pp->promiser);
       AddCommentedTopic(&TOPIC_MAP,handle,pp->ref,"synonym");
       PrependRScalar(&list,"Go to topic",CF_SCALAR);
       tp= GetTopic(TOPIC_MAP,handle);      
@@ -1383,7 +1383,7 @@ else
       {
       struct Rlist *list = NULL;
       char ref[CF_MAXVARSIZE];      
-      snprintf(ref,CF_MAXVARSIZE,"knowledge.php?%s",pp->promiser);
+      snprintf(ref,CF_MAXVARSIZE,"knowledge.php?topic=%s",pp->promiser);
       AddTopic(&TOPIC_MAP,handle,pp->classes);
       tp= GetTopic(TOPIC_MAP,handle);      
       PrependRScalar(&list,"Go to topic",CF_SCALAR);
@@ -1413,6 +1413,14 @@ else
    {
    CfOut(cf_inform,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
    PromiseRef(cf_inform,pp);
+   }
+
+if (handle)
+   {
+   struct Rlist *list = NULL;
+   PrependRScalar(&list,handle,CF_SCALAR);
+   AddTopicAssociation(&(tp->associations),"is the promise of","stands for",list,true);
+   DeleteRlist(list);
    }
 }
 

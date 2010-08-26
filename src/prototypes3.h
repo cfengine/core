@@ -1309,6 +1309,7 @@ struct Rlist *AppendRlist(struct Rlist **start,void *item, char type);
 struct Rlist *PrependRlist(struct Rlist **start,void *item, char type);
 struct Rlist *SplitStringAsRList(char *string,char sep);
 struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);
+struct Rlist *SortRlist(struct Rlist *list, int (*CompareItems)());
 struct Rlist *AlphaSortRListNames(struct Rlist *list);
 
 void ShowRlist(FILE *fp,struct Rlist *list);

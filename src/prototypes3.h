@@ -919,6 +919,7 @@ int IsHtmlHeader(char *s);
 
 /* item-lib.c */
 
+void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int counter,time_t t);
 void PurgeItemList(struct Item **list,char *name);
 struct Item *ReturnItemIn(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);

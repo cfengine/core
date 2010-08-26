@@ -224,6 +224,47 @@ else
 
 /*********************************************************************/
 
+void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int counter,time_t t)
+
+{ struct Item *ip;
+  char *sp,*spe = NULL;
+
+if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
+   {
+   FatalError("memory allocation in prepend item");
+   }
+
+if ((sp = malloc(strlen(itemstring)+2)) == NULL)
+   {
+   FatalError("memory allocation in prepend item");
+   }
+
+if ((classes != NULL) && (spe = malloc(strlen(classes)+2)) == NULL)
+   {
+   FatalError("Memory allocation in prepend item");
+   }
+
+strcpy(sp,itemstring);
+ip->name = sp;
+ip->next = *liststart;
+ip->counter = counter;
+ip->time = t;
+*liststart = ip;
+
+if (classes != NULL)
+   {
+   strcpy(spe,classes);
+   ip->classes = spe;
+   }
+else
+   {
+   ip->classes = NULL;
+   }
+}
+
+
+/*********************************************************************/
+
 void AppendItem(struct Item **liststart,char *itemstring,char *classes)
 
 { struct Item *ip, *lp;

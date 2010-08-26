@@ -1342,6 +1342,7 @@ void VerifyTopicPromise(struct Promise *pp)
   char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
   struct Attributes a;
   struct Topic *tp;
+  char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
 // Put all this in subfunc if LTM output specified
 
@@ -1354,10 +1355,32 @@ CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->
 if (pp->ref != NULL)
    {
    AddCommentedTopic(&TOPIC_MAP,pp->promiser,pp->ref,pp->classes);
+
+   if (handle)
+      {
+      struct Rlist *list = NULL;
+      char ref[CF_MAXVARSIZE];
+      snprintf(ref,CF_MAXVARSIZE,"knowledge.php?%s",pp->promiser);
+      AddCommentedTopic(&TOPIC_MAP,handle,pp->ref,"synonym");
+      PrependRScalar(&list,"Go to topic",CF_SCALAR);
+      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      DeleteRlist(list);
+      }
    }
 else
    {
    AddTopic(&TOPIC_MAP,pp->promiser,pp->classes);
+
+   if (handle)
+      {
+      struct Rlist *list = NULL;
+      char ref[CF_MAXVARSIZE];      
+      snprintf(ref,CF_MAXVARSIZE,"knowledge.php?%s",pp->promiser);
+      AddTopic(&TOPIC_MAP,handle,pp->classes);
+      PrependRScalar(&list,"Go to topic",CF_SCALAR);
+      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      DeleteRlist(list);
+      }
    }
 
 if (tp = GetTopic(TOPIC_MAP,pp->promiser))

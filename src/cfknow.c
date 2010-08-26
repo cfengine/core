@@ -388,6 +388,8 @@ if (s1 != s2)
    FatalError("stop");
    }
 #endif
+
+AddCommentedTopic(&TOPIC_MAP,"synonym","An alternative short form for a topic using its handle","any");
 }
 
 /*****************************************************************************/
@@ -758,7 +760,7 @@ CfOut(cf_verbose,"","Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen"," !! Cannot write to %s\n",filename);
+   CfOut(cf_verbose,"fopen"," !! Cannot write ontology to %s\n",filename);
    return;
    }
 
@@ -871,7 +873,7 @@ CfOut(cf_verbose,"","Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen"," !! Cannot write to %s\n",filename);
+   CfOut(cf_verbose,"fopen"," !! Cannot write to %s\n",filename);
    return;
    }
 
@@ -1341,7 +1343,7 @@ void VerifyTopicPromise(struct Promise *pp)
 { char id[CF_BUFSIZE];
   char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
   struct Attributes a;
-  struct Topic *tp;
+  struct Topic *tp,*tp_sub;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
 // Put all this in subfunc if LTM output specified
@@ -1363,6 +1365,12 @@ if (pp->ref != NULL)
       snprintf(ref,CF_MAXVARSIZE,"knowledge.php?%s",pp->promiser);
       AddCommentedTopic(&TOPIC_MAP,handle,pp->ref,"synonym");
       PrependRScalar(&list,"Go to topic",CF_SCALAR);
+      tp= GetTopic(TOPIC_MAP,handle);      
+      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      DeleteRlist(list);
+      list = NULL;
+      tp_sub= GetTopic(TOPIC_MAP,"synonym");      
+      PrependRScalar(&list,handle,CF_SCALAR);
       AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
       DeleteRlist(list);
       }
@@ -1377,7 +1385,13 @@ else
       char ref[CF_MAXVARSIZE];      
       snprintf(ref,CF_MAXVARSIZE,"knowledge.php?%s",pp->promiser);
       AddTopic(&TOPIC_MAP,handle,pp->classes);
+      tp= GetTopic(TOPIC_MAP,handle);      
       PrependRScalar(&list,"Go to topic",CF_SCALAR);
+      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      DeleteRlist(list);
+      list =  NULL;
+      tp_sub= GetTopic(TOPIC_MAP,"synonym");      
+      PrependRScalar(&list,handle,CF_SCALAR);
       AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
       DeleteRlist(list);
       }
@@ -1390,7 +1404,7 @@ if (tp = GetTopic(TOPIC_MAP,pp->promiser))
    if (pp->ref)
       {
       struct Rlist *list = NULL;
-      PrependRScalar(&list,"About",CF_SCALAR);
+      PrependRScalar(&list,"Go to topic",CF_SCALAR);
       AddOccurrence(&(tp->occurrences),pp->ref,list,cfk_literal);
       DeleteRlist(list);
       }
@@ -1642,7 +1656,7 @@ CfOut(cf_verbose,""," -> Writing %s\n",filename);
 
 if ((fout = fopen(filename,"w")) == NULL)
    {
-   CfOut(cf_error,"fopen"," !! Cannot write to %s\n",filename);
+   CfOut(cf_verbose,"fopen"," !! Cannot write to %s\n",filename);
    return;
    }
 

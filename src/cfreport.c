@@ -1546,7 +1546,8 @@ else
 if ((fout = fopen(name,"w")) == NULL)
    {
    CfOut(cf_error,"fopen"," !! Unable to write to %s/%s\n",OUTPUTDIR,name);
-   exit(1);
+   CloseDB(dbp);
+   return;
    }
 
 if (HTML && !EMBEDDED)
@@ -1568,6 +1569,8 @@ if (XML)
 if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan last-seen db");
+   CloseDB(dbp);
+   fclose(fout);
    return;
    }
 

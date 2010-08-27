@@ -416,14 +416,22 @@ if (!NewDBCursor(dbp,&dbcp))
 while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
    {
    memcpy(&q,stored,sizeof(q));
-   
+
+   lastseen = (double)now - q.Q.q;
+
+   if (lastseen > lsea)
+      {
+      CfOut(cf_verbose,""," -> Last-seen record for %s expired after %.1lf > %.1lf hours\n",key,lastseen/3600,lsea/3600);
+      DeleteDB(dbp,key);
+      }
+
    for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       {
       kp = (struct CfKeyBinding *) rp->item;
 
-      if ((strcmp(q.address,kp->address) == 0) && (strcmp(key+1,kp->name+1) != 0))
+      if ((strcmp(q.address,kp->address) != 0) && (strcmp(key+1,kp->name+1) == 0))
          {
-         CfOut(cf_verbose,""," ! Deleting %s's address %s as this host (%s) seems to have moved elsewhere (%s)",key,kp->name,kp->address,q.address);
+         CfOut(cf_verbose,""," ! Deleting %s's address %s as this host (%s) seems to have moved elsewhere (%s)",key,kp->address,kp->name,q.address);
          newq.Q = q.Q;
          strncpy(newq.address,"moved",CF_ADDRSIZE-1);
          }

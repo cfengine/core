@@ -45,8 +45,8 @@ int TCDB_OpenDB(char *filename, CF_TCDB **hdbp)
 { int errCode;
 
 ThreadLock(cft_system);
-
 *hdbp = malloc(sizeof(CF_TCDB));
+ThreadUnlock(cft_system);
 
 if (*hdbp == NULL)
    {
@@ -60,16 +60,14 @@ if (!tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
    errCode = tchdbecode((*hdbp)->hdb);
    CfOut(cf_error, "", "!! tchdbopen: Opening database \"%s\" failed: %s", filename, tchdberrmsg(errCode));
 
+   ThreadLock(cft_system);
    free(*hdbp);
    *hdbp = NULL;
-
    ThreadUnlock(cft_system);
    return false;
    }
 
 (*hdbp)->valmemp = NULL;
-
-ThreadUnlock(cft_system);
 return true;
 }
 

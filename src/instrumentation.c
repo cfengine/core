@@ -423,7 +423,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
 
       if ((strcmp(q.address,kp->address) == 0) && (strcmp(key+1,kp->name+1) != 0))
          {
-         CfOut(cf_verbose,""," ! Deleting %s's address %s as this host seems to have moved elsewhere (%s)",kp->name,kp->address,kp->name+1);
+         CfOut(cf_verbose,""," ! Deleting %s's address %s as this host (%s) seems to have moved elsewhere (%s)",key,kp->name,kp->address,q.address);
          newq.Q = q.Q;
          strncpy(newq.address,"moved",CF_ADDRSIZE-1);
          }

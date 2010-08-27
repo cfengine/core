@@ -2632,7 +2632,14 @@ if (DEBUG||D2)
    }
 
 HashPubKey(newkey,conn->digest,CF_DEFAULT_DIGEST);
-CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->ipaddr,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
+
+if (VERBOSE)
+   {
+   ThreadLock(cft_output);
+   CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->ipaddr,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
+   ThreadUnlock(cft_output);
+   }
+
 LastSaw(conn->username,conn->ipaddr,conn->digest,cf_accept);
    
 if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
@@ -3712,8 +3719,10 @@ int CheckStoreKey(struct cfd_connection *conn,RSA *key)
 
 { RSA *savedkey;
   char udigest[CF_MAXVARSIZE];
- 
+
+ThreadLock(cft_output);  
 snprintf(udigest,CF_MAXVARSIZE-1,"%s",HashPrint(CF_DEFAULT_DIGEST,conn->digest));
+ThreadUnlock(cft_output);
 
 if (savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest))
    {

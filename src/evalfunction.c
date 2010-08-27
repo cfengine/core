@@ -2666,7 +2666,7 @@ else
    {
    GetRemoteScalar("VAR",handle,POLICY_SERVER,true,buffer);
 
-   // This should always be successful
+   // This should always be successful - and this one doesn't cache
    
    if (strncmp(buffer,"BAD:",4) == 0)
       {

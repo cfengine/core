@@ -388,8 +388,6 @@ if (s1 != s2)
    FatalError("stop");
    }
 #endif
-
-AddCommentedTopic(&TOPIC_MAP,"synonym","An alternative short form for a topic using its handle","any");
 }
 
 /*****************************************************************************/
@@ -1353,6 +1351,13 @@ a = GetTopicsAttributes(pp);
 strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
 CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->promiser);
+
+// Add a standard reserved word
+
+if (TOPIC_MAP == NULL) 
+   {
+   AddCommentedTopic(&TOPIC_MAP,"synonym","An alternative short form for a topic using its handle","any");
+   }
 
 if (pp->ref != NULL)
    {
@@ -3006,7 +3011,7 @@ char *NextTopic(char *topic,char *type)
 
 { static char url[CF_BUFSIZE];
   char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
-
+  
 if (strlen(WEBDRIVER) == 0)
    {
    CfOut(cf_error,""," !! No query_engine is defined\n");

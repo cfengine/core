@@ -2655,15 +2655,16 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hubknowledge].args,finalargs); /* Arg validat
 
 handle = finalargs->item;
 
-if (THIS_AGENT_TYPE == cf_common)
+if (THIS_AGENT_TYPE != cf_agent)
    {
-   if ((rval.item = strdup("<remote scalar>")) == NULL)
+   if ((rval.item = strdup("<inaccessible remote scalar>")) == NULL)
       {
       FatalError("Memory allocation in FnCallRemoteSCalar");
       }
    }
 else
    {
+   CfOut(cf_verbose,""," -> Accessing hub knowledge bank for \"%s\"",handle);
    GetRemoteScalar("VAR",handle,POLICY_SERVER,true,buffer);
 
    // This should always be successful - and this one doesn't cache

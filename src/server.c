@@ -2144,6 +2144,8 @@ int LiteralAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct
   struct stat statbuf;
   char name[CF_BUFSIZE];
 
+name[0] = '\0';
+
 if (strncmp(in,"VAR",4) == 0)
    {
    sscanf(in,"VAR %255[^\n]",name);

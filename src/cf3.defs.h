@@ -955,7 +955,8 @@ enum cf_thread_mutex
   cft_dbhandle,
   cft_policy,       // protects structs for refreshing policy files
   cft_db_lastseen,  // lastseen dbs (in cf-serverd)
-  cft_no_tpolicy
+  cft_no_tpolicy,
+  cft_report
   };
 
 enum cf_status

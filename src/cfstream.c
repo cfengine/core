@@ -407,7 +407,7 @@ void MakeReport(struct Item *mess,int prefix)
 
 for (ip = mess; ip != NULL; ip = ip->next)
    {
-   ThreadLock(cft_output);
+   ThreadLock(cft_report);
    
    if (prefix)
       {
@@ -418,7 +418,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
       printf("%s\n",ip->name);
       }
 
-   ThreadUnlock(cft_output);
+   ThreadUnlock(cft_report);
    }
 }
 

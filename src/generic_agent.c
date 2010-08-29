@@ -60,6 +60,12 @@ CF_DEFAULT_DIGEST = cf_md5;
 CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
 
+strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
+NewClass(THIS_AGENT);
+THIS_AGENT_TYPE = ag;
+
+snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
+
 if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
@@ -84,12 +90,6 @@ if (!NOHARDCLASSES)
 
 LoadPersistentContext();
 LoadSystemConstants();
-
-strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
-NewClass(THIS_AGENT);
-THIS_AGENT_TYPE = ag;
-
-snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 
 SetNewScope(vbuff);
 NewScope("this");

@@ -318,7 +318,6 @@ if ((newkey = PEM_read_RSAPublicKey(fp,NULL,NULL,passphrase)) == NULL)
    return NULL;
    }
 
-CfOut(cf_verbose,""," -> Loaded key %s\n",newname);  
 fclose(fp);
 
 if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))

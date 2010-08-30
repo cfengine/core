@@ -44,14 +44,6 @@ void GenericInitialize(int argc,char **argv,char *agents)
   char vbuff[CF_BUFSIZE];
   int ok;
 
-InitializeGA(argc,argv);
-
-SetReferenceTime(true);
-SetStartTime(false);
-SetSignals();
-
-// See cf3.defs.h for these settings
-
 #ifdef HAVE_LIBCFNOVA
 CF_DEFAULT_DIGEST = cf_sha256;
 CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
@@ -59,6 +51,12 @@ CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
 CF_DEFAULT_DIGEST = cf_md5;
 CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
+ 
+InitializeGA(argc,argv);
+
+SetReferenceTime(true);
+SetStartTime(false);
+SetSignals();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
 NewClass(THIS_AGENT);

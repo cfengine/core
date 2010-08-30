@@ -102,7 +102,7 @@ void GetNameInfo3()
   long sz;
 #endif
   char *components[] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
-                         "cf-report", "cf-key", "cf-runagent", "cf-execd",
+                         "cf-report", "cf-key", "cf-runagent", "cf-execd", "cf-hub",
                          "cf-promises", NULL };
   int have_component[11];
   struct stat sb;

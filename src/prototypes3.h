@@ -291,6 +291,7 @@ gid_t Str2Gid(char *gidbuff,char *copy,struct Promise *pp);
 
 /* crypto.c */
 
+void KeepKeyPromises(void);
 void DebugBinOut(char *buffer,int len,char *com);
 void RandomSeed (void);
 void LoadSecretKeys (void);

@@ -68,14 +68,133 @@ while (!RAND_status())
    }
 }
 
+/*****************************************************************************/
+
+void KeepKeyPromises()
+
+{ unsigned long err;
+  RSA *pair;
+  FILE *fp;
+  struct stat statbuf;
+  int fd;
+  static char *passphrase = "Cfengine passphrase";
+  const EVP_CIPHER *cipher;
+  char vbuff[CF_BUFSIZE];
+
+NewScope("common");
+  
+cipher = EVP_des_ede3_cbc();
+
+if (cfstat(CFPUBKEYFILE,&statbuf) != -1)
+   {
+   CfOut(cf_cmdout,"","A key file already exists at %s\n",CFPUBKEYFILE);
+   return;
+   }
+
+if (cfstat(CFPRIVKEYFILE,&statbuf) != -1)
+   {
+   CfOut(cf_cmdout,"","A key file already exists at %s\n",CFPRIVKEYFILE);
+   return;
+   }
+
+printf("Making a key pair for cfengine, please wait, this could take a minute...\n"); 
+
+pair = RSA_generate_key(2048,35,NULL,NULL);
+
+if (pair == NULL)
+   {
+   err = ERR_get_error();
+   CfOut(cf_error,"","Unable to generate key: %s\n",ERR_reason_error_string(err));
+   return;
+   }
+
+if (DEBUG)
+   {
+   RSA_print_fp(stdout,pair,0);
+   }
+ 
+fd = open(CFPRIVKEYFILE,O_WRONLY | O_CREAT | O_TRUNC, 0600);
+
+if (fd < 0)
+   {
+   CfOut(cf_error,"open","Open %s failed: %s.",CFPRIVKEYFILE,strerror(errno));
+   return;
+   }
+ 
+if ((fp = fdopen(fd, "w")) == NULL )
+   {
+   CfOut(cf_error,"fdopen","Couldn't open private key %s.",CFPRIVKEYFILE);
+   close(fd);
+   return;
+   }
+
+CfOut(cf_verbose,"","Writing private key to %s\n",CFPRIVKEYFILE);
+ 
+if (!PEM_write_RSAPrivateKey(fp,pair,cipher,passphrase,strlen(passphrase),NULL,NULL))
+   {
+   err = ERR_get_error();
+   CfOut(cf_error,"","Couldn't write private key: %s\n",ERR_reason_error_string(err));
+   return;
+   }
+
+fclose(fp);
+ 
+fd = open(CFPUBKEYFILE,O_WRONLY | O_CREAT | O_TRUNC, 0600);
+
+if (fd < 0)
+   {
+   CfOut(cf_error,"open","Unable to open public key %s.",CFPUBKEYFILE);
+   return;
+   }
+ 
+if ((fp = fdopen(fd, "w")) == NULL )
+   {
+   CfOut(cf_error,"fdopen","Open %s failed.",CFPUBKEYFILE);
+   close(fd);
+   return;
+   }
+
+CfOut(cf_verbose,"","Writing public key to %s\n",CFPUBKEYFILE);
+ 
+if (!PEM_write_RSAPublicKey(fp,pair))
+   {
+   err = ERR_get_error();
+   CfOut(cf_error,"","Unable to write public key: %s\n",ERR_reason_error_string(err));
+   return;
+   }
+
+fclose(fp);
+ 
+snprintf(vbuff,CF_BUFSIZE,"%s/randseed",CFWORKDIR);
+RAND_write_file(vbuff);
+cf_chmod(vbuff,0644); 
+}
+
 /*********************************************************************/
 
 void LoadSecretKeys()
 
 { FILE *fp;
-  static char *passphrase = "Cfengine passphrase";
+ static char *passphrase = "Cfengine passphrase",name[CF_BUFSIZE];
+  unsigned char digest[EVP_MAX_MD_SIZE+1];
   unsigned long err;
-  
+  struct stat sb;
+  int newkey = false, nofile = false;
+
+if (stat(CFPRIVKEYFILE,&sb) == -1)
+   {
+   KeepKeyPromises();
+   newkey = true;
+   }
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
+
+if (stat(name,&sb) == -1)
+   {
+   nofile = true;
+   }
+
 if ((fp = fopen(CFPRIVKEYFILE,"r")) == NULL)
    {
    CfOut(cf_inform,"fopen","Couldn't find a private key (%s) - use cf-key to get one",CFPRIVKEYFILE);
@@ -116,6 +235,14 @@ fclose(fp);
 if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
    {
    FatalError("RSA Exponent too small or not odd");
+   }
+
+if (newkey || nofile)
+   {
+   HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
+   CfOut(cf_verbose,""," -> Public key identity of host is \"%s\"",HashPrint(CF_DEFAULT_DIGEST,digest));
+   LastSaw("root",POLICY_SERVER,digest,cf_connect);
+   UpdateLastSeen();
    }
 }
 

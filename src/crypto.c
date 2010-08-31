@@ -179,21 +179,6 @@ void LoadSecretKeys()
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   unsigned long err;
   struct stat sb;
-  int newkey = false, nofile = false;
-
-if (stat(CFPRIVKEYFILE,&sb) == -1)
-   {
-   KeepKeyPromises();
-   newkey = true;
-   }
-
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
-MapName(name);
-
-if (stat(name,&sb) == -1)
-   {
-   nofile = true;
-   }
 
 if ((fp = fopen(CFPRIVKEYFILE,"r")) == NULL)
    {
@@ -237,13 +222,9 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
    FatalError("RSA Exponent too small or not odd");
    }
 
-if (newkey || nofile)
-   {
-   HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
-   CfOut(cf_verbose,""," -> Public key identity of host is \"%s\"",HashPrint(CF_DEFAULT_DIGEST,digest));
-   LastSaw("root",POLICY_SERVER,digest,cf_connect);
-   UpdateLastSeen();
-   }
+HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
+LastSaw("root",POLICY_SERVER,digest,cf_connect);
+UpdateLastSeen();
 }
 
 /*********************************************************************/

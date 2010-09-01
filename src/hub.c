@@ -289,6 +289,8 @@ for (cp = ControlBodyConstraints(cf_hub); cp != NULL; cp=cp->next)
 
 /*****************************************************************************/
 
+#ifndef MINGW
+
 void StartHub(int argc,char **argv)
 
 {
@@ -298,6 +300,8 @@ Nova_StartHub(argc,argv);
 CfOut(cf_error,"","This component is only used in commercial editions of the Cfengine software");
 #endif
 }
+
+#endif  /* NOT MINGW */
 
 /*****************************************************************************/
 /* Level                                                                     */

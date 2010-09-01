@@ -654,11 +654,20 @@ return times;
 int cf_closesocket(int sd)
 
 {
+int res;
+
 #ifdef MINGW
-return closesocket(sd);
+res = closesocket(sd);
 #else
-return close(sd);
+res = close(sd);
 #endif
+
+if(res != 0)
+  {
+  CfOut(cf_error,"cf_closesocket","!! Could not close socket");
+  }
+
+return res;
 }
 
 /*******************************************************************/

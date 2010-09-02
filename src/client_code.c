@@ -1048,15 +1048,13 @@ if (!attr.copy.force_ipv4)
 
             if (valopt || res <= 0)
                {
-               CfOut(cf_inform,"connect"," !! connection error: %s", strerror(valopt));
-               cf_closesocket(conn->sd);
+               CfOut(cf_inform,"connect"," !! Error connecting to server (timeout)");
                continue;
                }
             }
          else
             {
-            CfOut(cf_inform,"connect"," !! connection error: %s", strerror(errno));
-            cf_closesocket(conn->sd);
+            CfOut(cf_inform,"connect"," !! Error connecting to server");
             continue;
             }
          }
@@ -1156,7 +1154,7 @@ if (!attr.copy.force_ipv4)
 
          if (valopt || res <= 0)
             {
-            cfPS(cf_verbose,CF_INTERPT,"connect",pp,attr,"Unable to connect to server %s (old ipv4): %s",host,strerror(valopt));
+            cfPS(cf_verbose,CF_INTERPT,"connect",pp,attr,"Unable to connect to server (timeout) %s (old ipv4): %s",host,strerror(valopt));
             return false;
             }
          }

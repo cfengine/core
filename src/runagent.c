@@ -57,7 +57,7 @@ void DeleteStream(FILE *fp);
             "The latter type is regulated by cf-serverd's role based\n"
             "access control.";
  
- struct option OPTIONS[16] =
+ struct option OPTIONS[17] =
       {
       { "help",no_argument,0,'h' },
       { "background",optional_argument,0,'b' },
@@ -74,10 +74,11 @@ void DeleteStream(FILE *fp);
       { "hail",required_argument,0,'H'},
       { "interactive",no_argument,0,'i'},
       { "query",optional_argument,0,'q'},
+      { "timeout",required_argument,0,'t'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[16] =
+ char *HINTS[17] =
       {
       "Print the help message",
       "Parallelize connections (50 by default)",
@@ -94,6 +95,7 @@ void DeleteStream(FILE *fp);
       "Hail the following comma-separated lists of hosts, overriding default list",
       "Enable interactive mode for key trust",
       "Query a server for a knowledge menu",
+      "Connection timeout, seconds",
       NULL
       };
 
@@ -103,6 +105,7 @@ int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
 int BACKGROUND = false;
 int MAXCHILD = 50;
+int AGENT_TIMEOUT = 120; /* seconds */
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
 struct Attributes RUNATTR;
 struct Rlist *HOSTLIST = NULL;
@@ -160,7 +163,7 @@ void CheckOpts(int argc,char **argv)
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
   
-while ((c=getopt_long(argc,argv,"q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -248,6 +251,10 @@ while ((c=getopt_long(argc,argv,"q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex))
       case 'n': DONTDO = true;
           IGNORELOCK = true;
           NewClass("opt_dry_run");
+          break;
+
+      case 't':
+             AGENT_TIMEOUT = atoi(optarg);
           break;
           
       case 'V': Version("cf-runagent Run agent");
@@ -435,6 +442,7 @@ RUNATTR.copy.trustkey = false;
 RUNATTR.copy.encrypt = true;
 RUNATTR.copy.force_ipv4 = false;
 RUNATTR.copy.portnumber = SHORT_CFENGINEPORT;
+RUNATTR.copy.timeout = AGENT_TIMEOUT;
 
 /* Keep promised agent behaviour - control bodies */
 
@@ -494,6 +502,12 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_output_to_file].lval) == 0)
       {
       OUTPUT_TO_FILE = GetBoolean(retval);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_timeout].lval) == 0)
+      {
+      RUNATTR.copy.timeout = (short)Str2Int(retval);
       continue;
       }
 

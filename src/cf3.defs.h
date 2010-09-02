@@ -326,6 +326,7 @@ enum cfrcontrol
    cfr_background,
    cfr_maxchild,
    cfr_output_to_file,
+   cfr_timeout,
    cfr_notype
    };
 

@@ -1222,7 +1222,7 @@ if (THIS_AGENT_TYPE != cf_common)
    }
 
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
-printf("Summarizing promises as text to %s\n",filename);
+CfOut(cf_inform,"","Summarizing promises as text to %s\n",filename);
 
 if ((FREPORT_TXT = fopen(filename,"w")) == NULL)
    {
@@ -1231,7 +1231,7 @@ if ((FREPORT_TXT = fopen(filename,"w")) == NULL)
    }
 
 snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
-printf("Summarizing promises as html to %s\n",filename);
+CfOut(cf_inform,"Summarizing promises as html to %s\n",filename);
 
 if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
    {

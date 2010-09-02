@@ -175,7 +175,7 @@ cf_chmod(vbuff,0644);
 void LoadSecretKeys()
 
 { FILE *fp;
- static char *passphrase = "Cfengine passphrase",name[CF_BUFSIZE];
+  static char *passphrase = "Cfengine passphrase",name[CF_BUFSIZE],source[CF_BUFSIZE];
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   unsigned long err;
   struct stat sb;
@@ -222,9 +222,32 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
    FatalError("RSA Exponent too small or not odd");
    }
 
+snprintf(name,CF_MAXVARSIZE-1,"%s%cpolicy_server.dat",CFWORKDIR,FILE_SEPARATOR);
+
+if ((fp = fopen(name,"r")) != NULL)
+   {
+   fscanf(fp,"%s",POLICY_SERVER);
+   fclose(fp);
+   }
+
 HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
-LastSaw("root",POLICY_SERVER,digest,cf_connect);
-UpdateLastSeen();
+snprintf(name,CF_MAXVARSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,"root",HashPrint(CF_DEFAULT_DIGEST,digest));
+MapName(name);
+snprintf(source,CF_MAXVARSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
+MapName(source);
+
+// need to use cf_stat
+
+if (stat(name,&sb) == -1)
+   {
+   LastSaw("root",POLICY_SERVER,digest,cf_connect);
+   UpdateLastSeen();
+
+   if (link(source,name) == -1)
+      {
+      CfOut(cf_error,""," -> Unable to clone server's key file as %s\n",name);
+      }
+   }
 }
 
 /*********************************************************************/

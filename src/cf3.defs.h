@@ -52,12 +52,12 @@
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
-#define CF3COPYRIGHT "(C) Cfengine AS 2008-"
+#define CF3COPYRIGHT "Copyright (C) Cfengine AS 2008,2010-"
 
-
-#define LIC_DAY "1"
-#define LIC_MONTH "July"
-#define LIC_YEAR "2000"
+#define LIC_DAY "15"
+#define LIC_MONTH "December"
+#define LIC_YEAR "2001"
+#define LIC_COMPANY "PARTNER TEST LICENSE - NOT FOR PRODUCTION"
 
 #define CF_SCALAR 's'
 #define CF_LIST   'l'

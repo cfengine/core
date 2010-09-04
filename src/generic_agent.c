@@ -64,7 +64,7 @@ THIS_AGENT_TYPE = ag;
 
 snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 
-if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
+if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
    exit(1);

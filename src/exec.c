@@ -622,7 +622,7 @@ now = time(NULL);
 
 // recheck license (in case of license updates or expiry)
 
-if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR)) 
+if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
   {
   CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
   exit(1);

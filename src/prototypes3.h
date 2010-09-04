@@ -392,7 +392,7 @@ int IsEnterprise(void);
 void EnterpriseVersion(void);
 void EnterpriseContext(void);
 char *GetProcessOptions(void);
-int EnterpriseExpiry(char *day,char *month,char *year);
+int EnterpriseExpiry(char *day,char *month,char *year,char *company);
 char *GetConsolePrefix(void);
 char *MailSubject(void);
 void CheckAutoBootstrap(void);

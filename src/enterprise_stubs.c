@@ -132,11 +132,11 @@ return EVP_bf_cbc();
 
 /*****************************************************************************/
 
-int EnterpriseExpiry(char *day,char *month,char *year)
+int EnterpriseExpiry(char *day,char *month,char *year,char *company)
 
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_EnterpriseExpiry(day,month,year);
+ return Nova_EnterpriseExpiry(day,month,year,company);
 #else
 return false;
 #endif

@@ -824,6 +824,7 @@ if (NewPromiseProposals())
       NewScope("control_common");
       NewScope("mon");
       NewScope("remote_access");
+      NewScalar("sys","policy_hub",POLICY_SERVER,cf_str);
       GetNameInfo3();
       CfGetInterfaceInfo(cf_server);
       Get3Environment();

@@ -311,7 +311,7 @@ else
    max_sample = 0;
    }
 
-strncat(lockname,locktype,CF_BUFSIZE/10);
+strncpy(lockname,locktype,CF_BUFSIZE/10);
 strcat(lockname,"_");
 strncat(lockname,base,CF_BUFSIZE/10);
 strcat(lockname,"_");

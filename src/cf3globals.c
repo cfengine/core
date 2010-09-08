@@ -81,7 +81,7 @@ int FACILITY = 0;
 time_t PROMISETIME;
 
 int LICENSES = 0;
-char EXPIRY[32];
+char EXPIRY[CF_SMALLBUF];
 char LICENSE_COMPANY[CF_SMALLBUF];
 int INSTALL_SKIP = false;
 int KEYTTL = 0;

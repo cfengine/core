@@ -95,12 +95,10 @@ NewScope("match");
 
 if (BOOTSTRAP)
    {
-   SetPolicyServer(POLICY_SERVER);
    CheckAutoBootstrap();
    }
 else
    {
-   SetPolicyServer(POLICY_SERVER);
    if (strlen(POLICY_SERVER) > 0)
       {
       CfOut(cf_verbose,""," -> Found a policy server (hub) on %s",POLICY_SERVER);
@@ -110,6 +108,8 @@ else
       CfOut(cf_verbose,""," -> No policy server (hub) watch yet registered");
       }
    }
+
+SetPolicyServer(POLICY_SERVER);
 
 ok = BOOTSTRAP || CheckPromises(ag);
 

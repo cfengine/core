@@ -430,7 +430,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
 
    if (cfstat(vbuff,&sb) == -1)
       {
-      FatalError(" !!! No access to workspace");
+      FatalError(" !!! No access to WORKSPACE/inputs dir");
       }
    else
       {
@@ -441,7 +441,7 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
 
    if (cfstat(vbuff,&sb) == -1)
       {
-      FatalError(" !!! No access to workspace");
+      FatalError(" !!! No access to WORKSPACE/outputs dir");
       }
    else
       {

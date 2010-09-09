@@ -176,6 +176,7 @@ void LoadSecretKeys()
 
 { FILE *fp;
   static char *passphrase = "Cfengine passphrase",name[CF_BUFSIZE],source[CF_BUFSIZE];
+  char guard[CF_MAXVARSIZE];
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   unsigned long err;
   struct stat sb;
@@ -230,15 +231,24 @@ if ((fp = fopen(name,"r")) != NULL)
    fclose(fp);
    }
 
+
+/* Check that we have our own SHA key form of the key in the IP on the hub */
+
 HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
 snprintf(name,CF_MAXVARSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,"root",HashPrint(CF_DEFAULT_DIGEST,digest));
 MapName(name);
+
 snprintf(source,CF_MAXVARSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
 MapName(source);
 
+// During bootstrap we need the pre-registered IP/hash pair on the hub
+
+snprintf(guard,sizeof(guard),"%s/state/am_policy_hub",CFWORKDIR);
+MapName(guard);
+
 // need to use cf_stat
 
-if (stat(name,&sb) == -1)
+if (stat(name,&sb) == -1 && stat(guard,&sb) != -1)
    {
    LastSaw("root",POLICY_SERVER,digest,cf_connect);
    UpdateLastSeen();
@@ -248,6 +258,7 @@ if (stat(name,&sb) == -1)
       CfOut(cf_error,""," -> Unable to clone server's key file as %s\n",name);
       }
    }
+
 }
 
 /*********************************************************************/

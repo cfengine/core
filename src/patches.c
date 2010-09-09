@@ -771,6 +771,7 @@ return 0;
 }
 #endif  /* MINGW */
 
+/*******************************************************************/
 
 #ifdef MINGW
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
@@ -821,5 +822,47 @@ int inet_pton(int af, const char *src, void *dst)
   freeaddrinfo(ressave);
   return 0;
 }
+#endif  /* MINGW */
 
-#endif
+/*******************************************************************/
+
+int LinkOrCopy(const char *from, const char *to, int symlink)
+/**
+ *  Creates symlink to file on platforms supporting it, copies on
+ *  others.
+ **/
+{
+
+#ifdef MINGW  // only copy on Windows for now
+
+
+if (!CopyFile(from,to,TRUE))
+  {
+  return false;
+  }
+
+
+#else  /* NOT MINGW */
+
+
+if(symlink)
+  {
+    if (symlink(from,to) == -1)
+      {
+	return false;
+      }
+  }
+ else  // hardlink
+   {
+     if(link(from,to) == -1)
+       {
+	 return false;
+       }
+   }
+
+   
+#endif  /* NOT MINGW */
+
+
+ return true;
+}

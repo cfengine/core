@@ -473,11 +473,6 @@ if (!LOOKUP) /* cf-know should not do this in lookup mode */
 
 OpenNetwork();
 
-// cleanup db file from v. 3.0.2 (can be removed later)
-char oldLockDb[CF_BUFSIZE];
-snprintf(oldLockDb, sizeof(oldLockDb), "%s/cfengine_lock_db", CFWORKDIR);
-unlink(oldLockDb);
-
 /* Init crypto stuff */
 
 OpenSSL_add_all_algorithms();

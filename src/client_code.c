@@ -143,11 +143,19 @@ if (strcmp(server,"localhost") == 0)
 
 conn->authenticated = false;
 conn->encryption_type = CfEnterpriseOptions();
+
+
+/* username of the client - say root from Windows */
+
+#ifdef MINGW
+snprintf(conn->username,CF_SMALLBUF,"root");
+#else
 GetCurrentUserName(conn->username,CF_SMALLBUF);
+#endif  /* NOT MINGW */
 
 if (conn->sd == CF_NOT_CONNECTED)
    {   
-   Debug("Opening server connnection to %s\n",server);
+   Debug("Opening server connection to %s\n",server);
    
    if (!ServerConnect(conn,server,attr,pp))
       {
@@ -938,6 +946,7 @@ int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes a
 { int err;
   short shortport;
   char strport[CF_MAXVARSIZE];
+  struct sockaddr_in cin;
   struct timeval tv;
 
 if (attr.copy.portnumber == (short)CF_NOINT)
@@ -987,7 +996,6 @@ if (!attr.copy.force_ipv4)
    for (ap = response; ap != NULL; ap = ap->ai_next)
       {
       int  res;
-      long arg;
       
       CfOut(cf_verbose,""," -> Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
       
@@ -1028,44 +1036,12 @@ if (!attr.copy.force_ipv4)
             }
          }
 
-      /* set non-blocking socket */
-      arg = fcntl(conn->sd, F_GETFL, NULL);
-      fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
+      if(TryConnect(conn,&tv,ap->ai_addr,ap->ai_addrlen))
+	{
+	  connected = true;
+	  break;
+	}
 
-      res = connect(conn->sd,ap->ai_addr,ap->ai_addrlen);
-
-      if (res < 0)
-         {
-         if (errno == EINPROGRESS)
-            {
-            fd_set myset;
-            int valopt;
-            socklen_t lon = sizeof(int);
-
-            FD_ZERO(&myset);
-            FD_SET(conn->sd,&myset);
-
-            /* now wait for connect, but no more than tv.sec */
-            res = select(conn->sd + 1, NULL, &myset, NULL, &tv);
-            getsockopt(conn->sd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
-
-            if (valopt || res <= 0)
-               {
-               CfOut(cf_inform,"connect"," !! Error connecting to server (timeout)");
-               continue;
-               }
-            }
-         else
-            {
-            CfOut(cf_inform,"connect"," !! Error connecting to server");
-            continue;
-            }
-         }
-      
-      /* connection is succeed; return to blocking mode */
-      fcntl(conn->sd, F_SETFL, arg);
-      connected = true;
-      break;
       }
    
    if (connected)
@@ -1073,7 +1049,7 @@ if (!attr.copy.force_ipv4)
       conn->family = ap->ai_family;
       snprintf(conn->remoteip,CF_MAX_IP_LEN-1,"%s",sockaddr_ntop(ap->ai_addr));
 
-      if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv))
+      if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv)))
          {
          CfOut(cf_inform,"setsockopt"," !! setsockopt error: couldn't set SO_RCVTIMEO");
          }
@@ -1094,6 +1070,8 @@ if (!attr.copy.force_ipv4)
       cfPS(cf_verbose,CF_FAIL,"connect",pp,attr," !! Unable to connect to server %s",host);
       return false;
       }
+
+   return true;
    }
  
  else
@@ -1102,9 +1080,7 @@ if (!attr.copy.force_ipv4)
 
    {
    int  res;
-   long arg;
    struct hostent *hp;
-   struct sockaddr_in cin;
    memset(&cin,0,sizeof(cin));
    
    if ((hp = gethostbyname(host)) == NULL)
@@ -1134,50 +1110,9 @@ if (!attr.copy.force_ipv4)
    conn->family = AF_INET;
    snprintf(conn->remoteip,CF_MAX_IP_LEN-1,"%s",inet_ntoa(cin.sin_addr));
 
-   /* set non-blocking socket */
-   arg = fcntl(conn->sd, F_GETFL, NULL);
-   fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
 
-   res = connect(conn->sd,(void *)&cin,sizeof(cin));
-
-   if (res < 0)
-      {
-      if (errno == EINPROGRESS)
-         {
-         fd_set myset;
-         int valopt;
-         socklen_t lon = sizeof(int);
-         
-         FD_ZERO(&myset);
-         FD_SET(conn->sd,&myset);
-
-         /* now wait for connect, but no more than tv.sec */
-         res = select(conn->sd + 1, NULL, &myset, NULL, &tv);
-         getsockopt(conn->sd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
-
-         if (valopt || res <= 0)
-            {
-            cfPS(cf_verbose,CF_INTERPT,"connect",pp,attr,"Unable to connect to server (timeout) %s (old ipv4): %s",host,strerror(valopt));
-            return false;
-            }
-         }
-      else
-         {
-         cfPS(cf_verbose,CF_INTERPT,"connect",pp,attr,"Unable to connect to server %s (old ipv4): %s",host,strerror(errno));
-         return false;
-         }
-      }
-
-   /* connection is succeed; return to blocking mode */
-   fcntl(conn->sd, F_SETFL, arg);
-
-   if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv))
-      {
-      cfPS(cf_inform,CF_INTERPT,"setsockopt",pp,attr,"Couldn't set socket timeout");
-      }
+   return TryConnect(conn,&tv,&cin,sizeof(cin));
    }
-
-return true; 
 }
 
 /*********************************************************************/
@@ -1372,7 +1307,7 @@ int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes a
 
 { struct cfstat *sp;
 
-Debug("CacheStat(%s,%d)\n",file,pp);
+Debug("CacheStat(%s)\n",file);
 
 for (sp = pp->cache; sp != NULL; sp=sp->next)
    {
@@ -1429,4 +1364,109 @@ for (i = 0; i < toget; i++)
 }
 
 
+/*********************************************************************/
 
+int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr_in *cinp, int cinpSz)
+/** 
+ * Tries a nonblocking connect and then restores blocking if
+ * successful. Returns true on success, false otherwise.
+ **/
+{
+  int res;
+  long arg;
+  struct sockaddr_in emptyCin = {0};
+
+  if(!cinp)
+    {
+      cinp = &emptyCin;
+      cinpSz = sizeof(emptyCin);
+    }
+  
+
+   /* set non-blocking socket */
+#ifdef MINGW
+
+   u_long nonBlock = true;
+   if(ioctlsocket(conn->sd,FIONBIO,&nonBlock) != 0)
+     {
+     CfOut(cf_error,"ioctlsocket","!! Could not disable socket blocking mode");
+     }
+
+#else  /* NOT MINGW */
+
+   arg = fcntl(conn->sd, F_GETFL, NULL);
+   fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
+
+#endif
+
+   res = connect(conn->sd,cinp,cinpSz);
+
+   if (
+#ifdef MINGW
+       res == SOCKET_ERROR
+#else
+       res < 0
+#endif
+       )
+      {
+      if (
+#ifdef MINGW
+	  true
+#else
+	  errno == EINPROGRESS
+#endif
+	  )
+         {
+         fd_set myset;
+         int valopt;
+         socklen_t lon = sizeof(int);
+         
+         FD_ZERO(&myset);
+         FD_SET(conn->sd,&myset);
+
+         /* now wait for connect, but no more than tvp.sec */
+         res = select(conn->sd + 1, NULL, &myset, NULL, tvp);
+         if(getsockopt(conn->sd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) != 0)
+	   {
+	     CfOut(cf_error,"getsockopt","!! Could not check connection status");
+	     return false;
+	   }
+
+         if (valopt || res <= 0)
+            {
+            CfOut(cf_inform,"connect"," !! Error connecting to server (timeout)");
+            return false;
+            }
+         }
+      else
+         {
+         CfOut(cf_inform,"connect"," !! Error connecting to server");
+         return false;
+         }
+      }
+
+
+   /* connection is succeed; return to blocking mode */
+
+#ifdef MINGW
+
+   nonBlock = false;
+
+   if(ioctlsocket(conn->sd,FIONBIO,&nonBlock) != 0)
+     {
+     CfOut(cf_error,"ioctlsocket","!! Could not enable socket blocking mode");
+     }
+
+#else  /* NOT MINGW */
+
+   fcntl(conn->sd, F_SETFL, arg);
+
+#endif
+
+   if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)tvp, sizeof(struct timeval)))
+      {
+      CfOut(cf_inform,"setsockopt","!! Couldn't set socket timeout");
+      }
+  
+  return true;
+}

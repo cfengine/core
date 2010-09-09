@@ -253,7 +253,7 @@ if (stat(name,&sb) == -1 && stat(guard,&sb) != -1)
    LastSaw("root",POLICY_SERVER,digest,cf_connect);
    UpdateLastSeen();
 
-   if (link(source,name) == -1)
+   if (!LinkOrCopy(source,name,false))
       {
       CfOut(cf_error,""," -> Unable to clone server's key file as %s\n",name);
       }
@@ -394,8 +394,11 @@ void DeletePublicKey(char *user,char *ipaddress,char *digest)
 { char filename[CF_BUFSIZE],*sp;
 
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,ipaddress);
+MapName(filename);
 unlink(filename);
+
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,digest);
+MapName(filename);
 unlink(filename);
 }
 

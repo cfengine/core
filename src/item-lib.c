@@ -1297,7 +1297,6 @@ if (item != NULL)
 
    if (item->name != NULL)
       {
-      Debug("Unappending %s\n",item->name);
       free (item->name);
       }
 

@@ -180,6 +180,7 @@ struct cfagent_connection *ServerConnectionReady(char *server);
 void MarkServerOffline(char *server);
 void CacheServerConnection(struct cfagent_connection *conn,char *server);
 void ServerNotBusy(struct cfagent_connection *conn);
+int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr_in *cinp, int cinpSz);
 
 /* client_protocols.c */
 
@@ -1193,6 +1194,7 @@ int setegid (gid_t egid);
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
 int inet_pton(int af, const char *src, void *dst);
 #endif
+int LinkOrCopy(const char *from, const char *to, int symlink);
 
 /* pipes.c */
 

@@ -969,23 +969,11 @@ if (!ThreadLock(cft_count))
 
 unlink(prev_file);
 
-#ifdef MINGW
-
-if (!CopyFile(filename, prev_file, TRUE))
-  {
-  CfOut(cf_inform,"CopyFile","Could copy %s to %s",filename,prev_file);
-  rtn = 1;
-  }
-
-#else  /* NOT MINGW */
-
-if (symlink(filename, prev_file) == -1)
+ if(!LinkOrCopy(filename,prev_file,true))
    {
-   CfOut(cf_inform,"symlink","Could not link %s and %s",filename,prev_file);
-   rtn = 1;
+     CfOut(cf_inform,"","Could symlink or copy %s to %s",filename,prev_file);
+     rtn = 1;
    }
-   
-#endif  /* NOT MINGW */
 
 ThreadUnlock(cft_count);
 return(rtn);

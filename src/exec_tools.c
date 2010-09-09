@@ -127,6 +127,7 @@ while (!feof(pp))
       {
       snprintf(buffer+offset,CF_EXPANDSIZE,"%s\n",line);
       }
+
    offset += strlen(line)+1;
    }
 

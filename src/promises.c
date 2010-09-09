@@ -651,6 +651,7 @@ pp->cache = NULL;
 pp->bundletype = NULL;
 pp->agentsubtype = typename;   /* cache this, not copy strdup(typename);*/
 pp->ref = NULL;                /* cache a reference if given*/
+pp->ref_alloc = 'n';
 pp->next = NULL;
 return pp;
 }

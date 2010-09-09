@@ -1970,7 +1970,7 @@ int AccessControl(char *oldFilename,struct cfd_connection *conn,int encrypt,stru
   char transrequest[CF_BUFSIZE],transpath[CF_BUFSIZE];
   struct stat statbuf;
 
-TranslatePath(filename, oldFilename);
+TranslatePath(filename,oldFilename);
 
 Debug("AccessControl(%s)\n",filename);
 

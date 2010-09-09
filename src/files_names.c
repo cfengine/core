@@ -604,7 +604,7 @@ if (strlen(str) > CF_EXPANDSIZE)
    return;
    }
 
-for (i = strlen(str)-1; isspace((int)str[i]); i--)
+for (i = strlen(str)-1; isspace((int)str[i]) && i >= 0; i--)
    {
    str[i] = '\0';
    }
@@ -1013,26 +1013,27 @@ return count;
 /*********************************************************************/
 
 void ReplaceChar(char *in, char *out, int outSz, char from, char to)
+
 /* Replaces all occurences of 'from' to 'to' in preallocated
  * string 'out'. */
 {
   int len;
   int i;
 
-  memset(out,0,outSz);
-  len = strlen(in);
+memset(out,0,outSz);
+len = strlen(in);
   
-  for(i = 0; (i < len) && (i < outSz - 1); i++)
-    {
-      if(in[i] == from)
-	{
-	  out[i] = to;
-	}
-      else
-	{
-	  out[i] = in[i];
-	}
-    }
+for(i = 0; (i < len) && (i < outSz - 1); i++)
+   {
+   if (in[i] == from)
+      {
+      out[i] = to;
+      }
+   else
+      {
+      out[i] = in[i];
+      }
+   }
 }
 
 

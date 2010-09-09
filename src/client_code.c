@@ -151,7 +151,7 @@ if (conn->sd == CF_NOT_CONNECTED)
    
    if (!ServerConnect(conn,server,attr,pp))
       {
-      CfOut(cf_inform,"socket"," !! No server is responding on this port");
+      CfOut(cf_inform,""," !! No server is responding on this port");
 
       if (conn->sd != CF_NOT_CONNECTED)
          {
@@ -204,8 +204,11 @@ Debug("Closing current server connection\n");
 
 if (conn)
    {
-   cf_closesocket(conn->sd);
-   conn->sd = CF_NOT_CONNECTED;
+   if (conn->sd > 0)
+      {
+      cf_closesocket(conn->sd);
+      conn->sd = CF_NOT_CONNECTED;
+      }
    DeleteAgentConn(conn);
    }
 }
@@ -1088,7 +1091,7 @@ if (!attr.copy.force_ipv4)
    
    if (!connected && pp)
       {
-      cfPS(cf_verbose,CF_FAIL,"connect",pp,attr,"Unable to connect to server %s",host);
+      cfPS(cf_verbose,CF_FAIL,"connect",pp,attr," !! Unable to connect to server %s",host);
       return false;
       }
    }
@@ -1232,7 +1235,7 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    
    if (svp->busy)
       {
-      CfOut(cf_verbose,"","Existing connection seems to be active...\n",ipname);
+      CfOut(cf_verbose,"","Existing connection to %s seems to be active...\n",ipname);
       return NULL;
       }
    
@@ -1329,6 +1332,8 @@ if (svp->conn = NewAgentConn())
    /* If we couldn't connect, mark this server unavailable for everyone */
    svp->conn->sd = CF_COULD_NOT_CONNECT;
    }
+
+svp->busy = false;
 
 ThreadUnlock(cft_getaddr);
 }

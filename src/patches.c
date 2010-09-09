@@ -662,7 +662,7 @@ res = closesocket(sd);
 res = close(sd);
 #endif
 
-if(res != 0)
+if (res != 0)
   {
   CfOut(cf_error,"cf_closesocket","!! Could not close socket");
   }

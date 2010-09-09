@@ -366,7 +366,7 @@ void UpdateLastSeen()
   struct CfKeyHostSeen q,newq; 
   double lastseen,delta2;
   void *stored;
-  CF_DB *dbp,*dbpent;
+  CF_DB *dbp = NULL,*dbpent = NULL;
   CF_DBC *dbcp;
   char name[CF_BUFSIZE],*key;
   struct Rlist *rp;
@@ -455,7 +455,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       
       if (!OpenDB(name,&dbpent))
          {
-         return;
+         continue;
          }
       }
    
@@ -504,7 +504,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
          }
       }
    
-   if (intermittency)
+   if (intermittency && dbpent)
       {
       CloseDB(dbpent);
       }

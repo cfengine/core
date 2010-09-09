@@ -826,7 +826,7 @@ int inet_pton(int af, const char *src, void *dst)
 
 /*******************************************************************/
 
-int LinkOrCopy(const char *from, const char *to, int symlink)
+int LinkOrCopy(const char *from, const char *to, int sym)
 /**
  *  Creates symlink to file on platforms supporting it, copies on
  *  others.
@@ -845,7 +845,7 @@ if (!CopyFile(from,to,TRUE))
 #else  /* NOT MINGW */
 
 
-if(symlink)
+if(sym)
   {
     if (symlink(from,to) == -1)
       {

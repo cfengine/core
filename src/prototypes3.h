@@ -1194,7 +1194,7 @@ int setegid (gid_t egid);
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
 int inet_pton(int af, const char *src, void *dst);
 #endif
-int LinkOrCopy(const char *from, const char *to, int symlink);
+int LinkOrCopy(const char *from, const char *to, int sym);
 
 /* pipes.c */
 

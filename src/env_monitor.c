@@ -646,7 +646,7 @@ if (++LDT_POS >= LDT_BUFSIZE)
    
    if (!LDT_FULL)
       {
-      CfOut(cf_log,"","LDT Buffer full at %d\n",LDT_BUFSIZE);
+      Debug("LDT Buffer full at %d\n",LDT_BUFSIZE);
       LDT_FULL = true;
       }
    }

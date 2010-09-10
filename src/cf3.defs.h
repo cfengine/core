@@ -585,6 +585,7 @@ enum fncalltype
    cfn_readrealarray,
    cfn_readreallist,
    cfn_readstringarray,
+   cfn_readstringarrayidx,
    cfn_readstringlist,   
    cfn_readtcp,
    cfn_regarray,

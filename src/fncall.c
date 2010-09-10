@@ -476,13 +476,16 @@ switch (this)
        rval = FnCallReadStringList(fp,expargs,cf_real);
        break;
    case cfn_readstringarray:
-       rval = FnCallReadStringArray(fp,expargs,cf_str);
+       rval = FnCallReadStringArray(fp,expargs,cf_str,false);
+       break;
+   case cfn_readstringarrayidx:
+       rval = FnCallReadStringArray(fp,expargs,cf_str,true);
        break;
    case cfn_readintarray:
-       rval = FnCallReadStringArray(fp,expargs,cf_int);
+       rval = FnCallReadStringArray(fp,expargs,cf_int,false);
        break;
    case cfn_readrealarray:
-       rval = FnCallReadStringArray(fp,expargs,cf_real);
+       rval = FnCallReadStringArray(fp,expargs,cf_real,false);
        break;
    case cfn_irange:
        rval = FnCallIRange(fp,expargs);

@@ -2,6 +2,10 @@
 	New package policy addupdate - installs package if not there and
 	updates it otherwise.
 
+ 	New special function readstringarrayidx, similar to readstringarray,
+	but uses integer indeces. Very useful if first row elements are
+	not good identifiers (e.g. contains spaces, non-unique, etc.).
+
 	Change two log formats to use time() instead of date()
 	- filechanges
 	- total compliance

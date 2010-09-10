@@ -411,6 +411,17 @@ struct FnCallArg READSTRINGARRAY_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg READSTRINGLIST_ARGS[] =
     {
     {CF_PATHRANGE,cf_str,"File name to read"},
@@ -640,6 +651,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"readrealarray",cf_int,6,READSTRINGARRAY_ARGS,"Read an array of real numbers from a file and assign the dimension to a variable"},
    {"readreallist",cf_rlist,5,READSTRINGLIST_ARGS,"Read and assign a list variable from a file of separated real numbers"},
    {"readstringarray",cf_int,6,READSTRINGARRAY_ARGS,"Read an array of strings from a file and assign the dimension to a variable"},
+   {"readstringarrayidx",cf_int,6,READSTRINGARRAYIDX_ARGS,"Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
    {"readstringlist",cf_slist,5,READSTRINGLIST_ARGS,"Read and assign a list variable from a file of separated strings"},
    {"readtcp",cf_str,4,READTCP_ARGS,"Connect to tcp port, send string and assign result to variable"},
    {"regarray",cf_class,2,REGARRAY_ARGS,"True if arg1 matches any item in the associative array with id=arg2"},

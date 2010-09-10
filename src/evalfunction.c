@@ -3848,7 +3848,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
+struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
 
 /* lval,filename,separator,comment,Max number of bytes  */
 
@@ -3858,11 +3858,23 @@ struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum
   int maxent,maxsize,count = 0,noerrors = false,entries = 0;
   char *file_buffer = NULL;
 
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs); /* Arg validation */
+ /* Arg validation */
+
+  if(intIndex)
+    {
+      ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarrayidx].args,finalargs);
+      snprintf(fnname,CF_MAXVARSIZE-1,"read%sarrayidx",CF_DATATYPES[type]);
+    }
+  else
+    {
+      ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs);
+      snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
+    }
+
 
 /* begin fn specific content */
 
-snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
+
 
  /* 6 args: array_lval,filename,comment_regex,split_regex,max number of entries,maxfilesize  */
 
@@ -3900,7 +3912,7 @@ else
       }
    else
       {
-      entries = BuildLineArray(array_lval,file_buffer,split,maxent,type);
+	entries = BuildLineArray(array_lval,file_buffer,split,maxent,type,intIndex);
       }
    }
 
@@ -4455,7 +4467,7 @@ for (sp = s + start; *(sp+off) != '\0'; sp++)
 
 /*********************************************************************/
 
-int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type)
+int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex)
 
 { char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
@@ -4480,7 +4492,15 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    
    for (rp = newlist; rp != NULL; rp=rp->next)
       {
-      snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,newlist->item,vcount);
+      if(intIndex)
+	{
+	snprintf(name,CF_MAXVARSIZE,"%s[%d][%d]",array_lval,hcount,vcount);
+	}
+      else
+	{
+	snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,newlist->item,vcount);
+	}
+
       NewScalar(THIS_BUNDLE,name,rp->item,type);
       vcount++;
       }

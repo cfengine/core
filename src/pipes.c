@@ -862,7 +862,7 @@ if (status == 0)
    }
 else
    {
-   cfPS(cf_inform,CF_INTERPT,"",pp,a," !! Finished script %s -- an error occurred\n",pp->promiser);
+   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script %s -- an error occurred\n",pp->promiser);
    }
 
 return status; 

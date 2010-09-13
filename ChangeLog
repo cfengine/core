@@ -19,6 +19,9 @@
 
 	Change from using md5 to sha256 as default digest.
 
+	Commands not returning 0 in commands-promises are flagged
+	as repair_failed.
+
 	Redesign of the knowledge map infrastructure.
 	
 3.0.5p1

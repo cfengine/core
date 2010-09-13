@@ -122,18 +122,22 @@ if (ReadHash(dbp,type,filename,dbdigest))
          
          if (attr.change.update)
             {
-            CfOut(cf_verbose,""," -> Updating cryptohash for %s to %s\n",filename,HashPrint(type,digest));
+	    cfPS(warnlevel,CF_CHG,"",pp,attr," -> Updating hash for %s to %s",filename,HashPrint(type,digest));
             
             DeleteHash(dbp,type,filename);
             WriteHash(dbp,type,filename,digest);
             }
+	 else
+	   {
+	   cfPS(warnlevel,CF_FAIL,"",pp,attr,"!! Hash for file %s changed from %s to %s",filename,HashPrint(type,digest),HashPrint(type,digest));
+	   }
          
 	 CloseDB(dbp);
-         return true;                        /* Checksum updated but was changed */
+         return true;
          }
       }
    
-   Debug("Found checksum for %s in database and it matched\n",filename);
+   cfPS(warnlevel,CF_NOP,"",pp,attr," -> File hash for %s is correct",filename);
    CloseDB(dbp);
    return false;
    }
@@ -335,7 +339,7 @@ void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes t
   int md_len,i,buf_len, actlen;
   unsigned char *buffer;
 
-Debug("HashPubKey(%c)\n",type);
+Debug("HashPubKey(%d)\n",type);
 
 //RSA_print_fp(stdout,key,0);
 

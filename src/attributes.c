@@ -790,6 +790,10 @@ if (value && strcmp(value,"best") == 0)
    c.hash = cf_besthash;
 #endif   
    }
+else if (value && strcmp(value,"md5") == 0)
+   {
+   c.hash = cf_md5;
+   }
 else if (value && strcmp(value,"sha1") == 0)
    {
    c.hash = cf_sha1;
@@ -798,13 +802,13 @@ else if (value && strcmp(value,"sha256") == 0)
    {
    c.hash = cf_sha256;
    }
-else if (value && strcmp(value,"sha512") == 0)
-   {
-   c.hash = cf_sha512;
-   }
 else if (value && strcmp(value,"sha384") == 0)
    {
    c.hash = cf_sha384;
+   }
+else if (value && strcmp(value,"sha512") == 0)
+   {
+   c.hash = cf_sha512;
    }
 else
    {

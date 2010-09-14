@@ -137,7 +137,7 @@ if (ReadHash(dbp,type,filename,dbdigest))
          }
       }
    
-   cfPS(warnlevel,CF_NOP,"",pp,attr," -> File hash for %s is correct",filename);
+   cfPS(cf_inform,CF_NOP,"",pp,attr," -> File hash for %s is correct",filename);
    CloseDB(dbp);
    return false;
    }

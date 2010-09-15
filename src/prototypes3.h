@@ -1281,6 +1281,8 @@ void Banner(char *s);
 
 int PrintRval(char *buffer,int bufsize,void *item,char type);
 int PrintRlist(char *buffer,int bufsize,struct Rlist *list);
+int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
+int StripListSep(char *strList, char *outBuf, int outBufSz);
 struct Rlist *ParseShownRlist(char *string);
 int IsStringIn(struct Rlist *list,char *s);
 int IsIntIn(struct Rlist *list,int i);

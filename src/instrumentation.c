@@ -167,12 +167,9 @@ Debug("RecordClassUsage\n");
 
 for (ip = baselist; ip != NULL; ip=ip->next)
    {
-   if (strncmp(ip->name,"Min",3) == 0 || strncmp(ip->name,"Hr",2) == 0 || strcmp(ip->name,"Q1") == 0
-       || strcmp(ip->name,"Q2") == 0 || strcmp(ip->name,"Q3") == 0 || strcmp(ip->name,"Q4") == 0
-       || strncmp(ip->name,"GMT_Hr",6) || strncmp(ip->name,"Lcycle_",7)
-       || strncmp(ip->name,"Yr",2) == 0 || strncmp(ip->name,"Day",3) == 0 || strcmp(ip->name,"Morning") == 0
-       || strcmp(ip->name,"Afternoon") == 0 || strcmp(ip->name,"Evening") == 0 || strcmp(ip->name,"Night") == 0)
+     if (IGNORECLASS(ip->name))
       {
+      Debug("Ignoring class %s (not packing)", ip->name);
       continue;
       }
    

@@ -1836,6 +1836,16 @@ meter_endmark
 
 #define EMPTY(str) ((str == NULL) || (strlen(str) == 0))
 
+// classes not interesting in reports
+#define IGNORECLASS(c)                                                         \
+ (strncmp(c,"Min",3) == 0 || strncmp(c,"Hr",2) == 0 || strcmp(c,"Q1") == 0     \
+  || strcmp(c,"Q2") == 0 || strcmp(c,"Q3") == 0 || strcmp(c,"Q4") == 0         \
+  || strncmp(c,"GMT_Hr",6) == 0  || strncmp(c,"Yr",2) == 0                     \
+  || strncmp(c,"Day",3) == 0 || strcmp(c,"Morning") == 0                       \
+  || strcmp(c,"Afternoon") == 0 || strcmp(c,"Evening") == 0                    \
+  || strcmp(c,"Night") == 0)
+
+
 #include "prototypes3.h"
 
 #ifdef HAVE_LIBCFNOVA

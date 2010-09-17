@@ -945,9 +945,9 @@ int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes a
 
 { int err;
   short shortport;
-  char strport[CF_MAXVARSIZE];
-  struct sockaddr_in cin;
-  struct timeval tv;
+  char strport[CF_MAXVARSIZE] = {0};
+  struct sockaddr_in cin = {0};
+  struct timeval tv = {0};
 
 if (attr.copy.portnumber == (short)CF_NOINT)
    {
@@ -979,11 +979,10 @@ tv.tv_usec = 0;
  
 if (!attr.copy.force_ipv4)
    {
-   struct addrinfo query, *response, *ap;
-   struct addrinfo query2, *response2, *ap2;
+   struct addrinfo query = {0}, *response, *ap;
+   struct addrinfo query2 = {0}, *response2, *ap2;
    int err,connected = false;
 
-   memset(&query,0,sizeof(struct addrinfo));   
    query.ai_family = AF_UNSPEC;
    query.ai_socktype = SOCK_STREAM;
 
@@ -1007,10 +1006,8 @@ if (!attr.copy.force_ipv4)
 
       if (BINDINTERFACE[0] != '\0')
          {
-         memset(&query2,0,sizeof(struct addrinfo));   
-         
-         query.ai_family = AF_UNSPEC;
-         query.ai_socktype = SOCK_STREAM;
+         query2.ai_family = AF_UNSPEC;
+         query2.ai_socktype = SOCK_STREAM;
          
          if ((err = getaddrinfo(BINDINTERFACE,NULL,&query2,&response2)) != 0)
             {

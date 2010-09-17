@@ -1039,6 +1039,15 @@ enum promiselog_rep
    plog_notkept
    };
 
+/*************************************************************************/
+
+// Special Purpose Policy types
+typedef enum spp_report
+{
+  spp_acls,
+  spp_services
+}spp_t;
+
 
 
 /*************************************************************************/
@@ -1843,7 +1852,8 @@ meter_endmark
   || strncmp(c,"GMT_Hr",6) == 0  || strncmp(c,"Yr",2) == 0                     \
   || strncmp(c,"Day",3) == 0 || strcmp(c,"Morning") == 0                       \
   || strcmp(c,"Afternoon") == 0 || strcmp(c,"Evening") == 0                    \
-  || strcmp(c,"Night") == 0)
+  || strcmp(c,"Night") == 0 || strcmp(c,"license_expired") == 0                \
+  || strcmp(c,"unlabelled_promise") == 0)
 
 
 #include "prototypes3.h"

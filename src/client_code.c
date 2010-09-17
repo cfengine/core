@@ -983,6 +983,7 @@ if (!attr.copy.force_ipv4)
    struct addrinfo query2 = {0}, *response2, *ap2;
    int err,connected = false;
 
+   memset(&query,0,sizeof(query));
    query.ai_family = AF_UNSPEC;
    query.ai_socktype = SOCK_STREAM;
 
@@ -1006,6 +1007,7 @@ if (!attr.copy.force_ipv4)
 
       if (BINDINTERFACE[0] != '\0')
          {
+	 memset(&query2,0,sizeof(query2));
          query2.ai_family = AF_UNSPEC;
          query2.ai_socktype = SOCK_STREAM;
          

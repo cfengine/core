@@ -3860,21 +3860,18 @@ struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum
 
  /* Arg validation */
 
-  if(intIndex)
-    {
-      ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarrayidx].args,finalargs);
-      snprintf(fnname,CF_MAXVARSIZE-1,"read%sarrayidx",CF_DATATYPES[type]);
-    }
-  else
-    {
-      ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs);
-      snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
-    }
-
+if (intIndex)
+   {
+   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarrayidx].args,finalargs);
+   snprintf(fnname,CF_MAXVARSIZE-1,"read%sarrayidx",CF_DATATYPES[type]);
+   }
+else
+   {
+   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs);
+   snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
+   }
 
 /* begin fn specific content */
-
-
 
  /* 6 args: array_lval,filename,comment_regex,split_regex,max number of entries,maxfilesize  */
 
@@ -3912,7 +3909,7 @@ else
       }
    else
       {
-	entries = BuildLineArray(array_lval,file_buffer,split,maxent,type,intIndex);
+      entries = BuildLineArray(array_lval,file_buffer,split,maxent,type,intIndex);
       }
    }
 
@@ -4469,7 +4466,7 @@ for (sp = s + start; *(sp+off) != '\0'; sp++)
 
 int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex)
 
-{ char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE];
+{ char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE],first_one[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
   int allowblanks = true, vcount,hcount;
 
@@ -4489,19 +4486,50 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    newlist = SplitRegexAsRList(linebuf,split,maxent,allowblanks);
    
    vcount = 0;
+   first_one[0] = '\0';
    
    for (rp = newlist; rp != NULL; rp=rp->next)
       {
-      if(intIndex)
+      char this_rval[CF_MAXVARSIZE];
+      long ival;
+      double rval;
+
+      switch (type)
+         {
+         case cf_str:
+             strncpy(this_rval,rp->item,CF_MAXVARSIZE-1);
+             break;
+             
+         case cf_int:
+             ival = Str2Int(rp->item);
+             snprintf(this_rval,CF_MAXVARSIZE,"%d",(int)ival);
+             break;
+             
+         case cf_real:
+             rval = Str2Int(rp->item);
+             sscanf(rp->item,"%255s",this_rval);
+             break;
+             
+         default:
+             
+             FatalError("Software error readstringarray - abused type");       
+         }
+
+      if (strlen(first_one) == 0)
+         {
+         strncpy(first_one,this_rval,CF_MAXVARSIZE-1);
+         }
+          
+      if (intIndex)
 	{
 	snprintf(name,CF_MAXVARSIZE,"%s[%d][%d]",array_lval,hcount,vcount);
 	}
       else
 	{
-	snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,newlist->item,vcount);
+	snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,first_one,vcount);
 	}
 
-      NewScalar(THIS_BUNDLE,name,rp->item,type);
+      NewScalar(THIS_BUNDLE,name,this_rval,type);
       vcount++;
       }
 

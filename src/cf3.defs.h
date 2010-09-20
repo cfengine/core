@@ -1045,7 +1045,12 @@ enum promiselog_rep
 typedef enum spp_report
 {
   spp_acls,
-  spp_services
+  spp_commands,
+  spp_filechanges,
+  spp_filediffs,
+  spp_registry,
+  spp_services,
+  spp_unknown
 }spp_t;
 
 

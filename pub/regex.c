@@ -40,6 +40,7 @@
 
 /* We need this for `regex.h', and perhaps for the Emacs include files.  */
 #include <sys/types.h>
+#include <string.h>
 #include "gnuregex.h"
 
 /* The `emacs' switch turns on certain matching commands

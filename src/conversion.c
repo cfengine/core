@@ -561,9 +561,11 @@ remainder[0] = '\0';
 
 sscanf(s,"%ld%c%s",&a,&c,remainder);
 
-if (a == CF_NOINT || strlen(remainder) > 0)
+// Test whether remainder is space only
+
+if (a == CF_NOINT || !IsSpace(remainder))
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\"\n",s);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%d\"\n",s,a);
    ReportError(output);
    }
 else
@@ -600,6 +602,10 @@ else
              a = -a;
              }
           break;
+
+      case ' ':
+          break;
+          
       default:          
           break;
       }
@@ -813,7 +819,7 @@ remainder[0] = '\0';
 
 sscanf(s,"%lf%s",&a,remainder);
 
-if (a == CF_NODOUBLE || strlen(remainder) > 0)
+if (a == CF_NODOUBLE || !IsSpace(remainder))
    {
    snprintf(output,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
    ReportError(output);
@@ -1066,6 +1072,22 @@ char *Item2String(struct Item *ip)
   return buf;
 }
 
+/*******************************************************************/
+
+int IsSpace(char *remainder)
+
+{ char *sp;
+
+for (sp = remainder; *sp != '\0'; sp++)
+    {
+    if (!isspace(*sp))
+       {
+       return false;
+       }    
+    }
+
+return true;
+}
 
 /*******************************************************************/
 /* Unix-only functions                                             */

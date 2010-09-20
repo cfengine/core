@@ -965,6 +965,7 @@ enum cf_status
   {
   cfn_repaired,
   cfn_notkept,
+  cfn_kept,
   cfn_nop
   };
 

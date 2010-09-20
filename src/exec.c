@@ -286,6 +286,7 @@ if (SCHEDULE == NULL)
    AppendItem(&SCHEDULE,"Min25",NULL);   
    AppendItem(&SCHEDULE,"Min30",NULL);
    AppendItem(&SCHEDULE,"Min35",NULL);
+   AppendItem(&SCHEDULE,"Min40",NULL);
    AppendItem(&SCHEDULE,"Min45",NULL);
    AppendItem(&SCHEDULE,"Min50",NULL);
    AppendItem(&SCHEDULE,"Min55",NULL);

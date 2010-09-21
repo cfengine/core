@@ -51,7 +51,7 @@ int ScheduleAgentOperations(struct Bundle *bp);
 
 /* agentdiagnostic.c */
 
-void AgentDiagnostic(void);
+void AgentDiagnostic(char *inputfile);
 
 /* args.c */
 

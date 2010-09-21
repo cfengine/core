@@ -179,7 +179,7 @@ if (expandregex) /* Expand one regex link and hand down */
 
             if (!FullTextMatch(pp->promiser,nextbuffer))
                {
-               CfOut(cf_error,"","Error recomputing references");
+               Debug("Error recomputing references for \"%s\" in: %s",pp->promiser,nextbuffer);
                }
 
             /* If there were back references there could still be match.x vars to expand */

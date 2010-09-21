@@ -486,7 +486,7 @@ void DeletePersistentContext(char *name);
 void LoadPersistentContext(void);
 int EvalClassExpression(struct Constraint *cp,struct Promise *pp);
 void AddEphemeralClasses(struct Rlist *classlist);
-void NewClass(char *class);
+void NewClass(char *oclass);
 void NewBundleClass(char *class,char *bundle);
 void DeleteClass(char *class);
 int VarClassExcluded(struct Promise *pp,char **classes);

@@ -171,7 +171,7 @@ void CheckOpts(int argc,char **argv)
 
 POLICY_SERVER[0] = '\0';
   
-while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x::MBb:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -292,18 +292,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != 
           exit(0);
 
       case 'x':
-          
-          switch ((optarg==NULL) ? '3' : *optarg)
-             {
-             case '1':
-                 CFTEST_CLASS = CF_CLASS_ALL;
-                 break;
-             default:
-                 CFTEST_CLASS = CF_CLASS_TOP10;                         
-                 break;
-             }
-          
-          AgentDiagnostic();
+	 AgentDiagnostic(optarg);
           exit(0);
           
       case 'r':

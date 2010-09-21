@@ -152,6 +152,10 @@
 #define CF_OTHER_TEXT "other"
 #define CF_TOP10_TEXT "top10"
 
+// predefined operations
+#define BOOTSTRAP_TEXT "bootstrap"
+#define BOOTSTRAP 601
+
 // Functions: 701 - +
 #define CF_FXN_APPENDLINE 701
 #define CF_APPENDLINE_TEXT "appendLine"
@@ -161,6 +165,9 @@
 
 #define CF_FXN_CLEARENV 703
 #define CF_CLEARENV_TEXT "clearEnv"
+
+
+
 
 /*****************************************************************************/
 
@@ -195,6 +202,7 @@ struct decision
 struct input 
    {
    char id[CF_SMALLBUF];
+   int predefinedId;
    struct line_data PRE[10];
    int nPre;
    char policy_file[CF_SMALLBUF];
@@ -241,7 +249,7 @@ int LoadInput(struct cfoutput*, char*);
 int RunPolicies(struct cfoutput*, int, struct input*, int);
 int CompareOutput(struct cfoutput*, int, struct input*, int);
 
-int Parse(struct input*);
+int Parse(struct input*, char *);
 int GetSubSection(char *);
 int GetExec(char *, char *, char *);
 int GetExpectedOutput(char *, struct line_data *, char *);
@@ -278,15 +286,21 @@ int FlattenText(char *str);
 int GetOptions(int argc, char *argv[]);
 int MyCreate(struct line_data *);
 int ReadLineInput(char *dst, char *frm );
+void CheckInstalledLibraries(void);
 
 //used only for internal testing
 void PrintChars(char *);
 
+// check if the operation is predefined
+int CheckPredefined(char *);
+int ExecutePreDefined(int id, char *);
+int PerformBootstrap(char *);
+int FileExists(char *file);
 #endif
 
 /*****************************************************************************/
 
-void AgentDiagnostic()
+void AgentDiagnostic(char *file)
 
 { char cwd[CF_BUFSIZE];
 
@@ -311,15 +325,17 @@ printf("----------------------------------------------------------\n\n");
 TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
-printf("bishwa\n");
 //TestSearchFilePromiser();
 
+#ifdef BUILD_TESTSUITE
+if(file != NULL)
+{	
+   
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing test suite                        \n");
 printf("----------------------------------------------------------\n\n");
-
-#ifdef BUILD_TESTSUITE
-TestSuite(cwd);
+ TestSuite(file);
+}
 #endif
 }
 
@@ -384,35 +400,48 @@ LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 
 #ifdef BUILD_TESTSUITE
 
-void TestSuite(char *cwd)
+void TestSuite(char *s)
 
 { char output[CF_EXPANDSIZE],command[CF_BUFSIZE], c[CF_BUFSIZE];  
   int i = 0, j = 0, nMap = 0, nInput = 0;
 
-//chdir(cwd);
-  
-printf("Parsing Input file...");
-int count = Parse(DATA);
-printf("Done\n");
-printf("Number of tests  = %d\n", count);
-printf("Prepare and run ... \n");
+printf("\tChecking for installed libraries...\n");
+CheckInstalledLibraries();
+printf("\tDone.\n\n");   
+if(RemoveChars(s,"=") != 1)
+{
+   printf("\tFatal Error: Filename not supplied!\n",s);
+   return;
+}
+   
+if(FileExists(s) != 1)
+  {
+     printf("\tFatal Error: Couldn't find file \"%s\"\n",s);
+     return;
+  }
+   
+printf("\tParsing Input file (%s)... ",s);
+int count = Parse(DATA,s);
+printf("\tDone\n\n");
+printf("\tNumber of tests  = %d\n", count);
+printf("\tPrepare and run ... \n");
 
 struct cfoutput ACTUAL[200];
 
 int nErr = RunPolicies(ACTUAL, count, DATA, count);
-printf("Done\n");
+printf("\tDone\n\n");
 // TODO: what to do if some cases failed?
 
-printf("Comparing Outputs...");
+printf("\tComparing Outputs...");
 int nFailed = CompareOutput(ACTUAL, count, DATA, count);
-printf("Done\n");
+printf("\tDone\n\n");
 
-printf("Cleaning up ...");
+printf("\tCleaning up ...");
 Cleanup(ACTUAL, DATA, count);
-printf("Done\n");
+printf("Done\n\n");
 
 ShowResults(ACTUAL, count);
-printf("\nFailed Tests count = %d\n", nFailed);
+//printf("\nFailed Tests count = %d\n", nFailed);
 }
 
 /*********************************************************/
@@ -731,7 +760,7 @@ int RunPolicies(struct cfoutput *actual, int nInput, struct input *map, int nMap
   char opts[] = " -";
   char command[CF_BUFSIZE], c[CF_BUFSIZE], output[CF_EXPANDSIZE];
   int failures = 0;   
-  snprintf(c, CF_BUFSIZE, "./cf-agent -f ");
+  snprintf(c, CF_BUFSIZE, "%s/bin/cf-agent -f ",CFWORKDIR);
    
 for (i = 0; i < nInput; i++)
    {
@@ -739,9 +768,23 @@ for (i = 0; i < nInput; i++)
 //      {
 //      continue;
 //      }
-   
-   snprintf(command,CF_BUFSIZE, "%s",c);
+
+   // execute predefined
+   // ExecutePreDefined
    snprintf(actual[k].id,CF_SMALLBUF,"%s", map[i].id);
+   if(map[i].predefinedId > 0)
+	{
+	   if(ExecutePreDefined(map[i].predefinedId, map[i].policy_file) == 1) //TODO: change policy_file to buf
+	     {
+		actual[k].pass = 1;
+	     }
+	   else
+	     {
+		actual[k].pass = 0;
+	     }
+	}
+	
+   snprintf(command,CF_BUFSIZE, "%s",c);
    strcat(command, map[i].policy_file);
    strcat(command, opts);
    strcat(command, map[i].policy_opt);
@@ -786,7 +829,7 @@ void ShowResults(struct cfoutput* a, int n1)//, struct input *m, int n2)
 
 { int i, j, k;
 
-printf("\n \n----------------------- Report -----------------------\n");
+printf("\n \n------------------- Regression test Report -------------------\n");
 
 for (i = 0; i < n1; i++)
    {
@@ -802,6 +845,7 @@ for (i = 0; i < n1; i++)
       printf("FAIL\n");
       }
    }
+printf("\n");
 }
 
 /*********************************************************/
@@ -1132,17 +1176,20 @@ return 1;
 
 /*********************************************************/
 
-int Parse(struct input *data)
+int Parse(struct input *data,char *inputfile)
 
 { char line[CF_SMALLBUF], temp[CF_SMALLBUF];
-  char f[] = "input.in";
+  char f[CF_SMALLBUF];
   int n = 0, j, i;
   int section = -1;
   int nLineCount = 0;
   int isDuplicate = 0;
-  int nLineNum = 0;
+  int nLineNum = 0, preDefinedType = -1;
   unsigned int nTemp;
+  int blockStarted = 0;
   struct input *in = data;
+   
+  snprintf(f,CF_SMALLBUF,"%s",inputfile);
   FILE *inFile = fopen(f,"r");
 
 /* Locals for reading line from test script in memory */
@@ -1150,22 +1197,21 @@ int Parse(struct input *data)
   int total_size;
   int size;
   char *frm;
-
-
-if (CF_TEST_INPUT == NULL)
-   {
-   printf("Parse(): Error in input test script!\n");
-   return -1;
-   }
-total_size = strlen(CF_TEST_INPUT);
-frm = CF_TEST_INPUT;
+   
+//if (CF_TEST_INPUT == NULL)
+//   {
+//   printf("Parse(): Error in input test script!\n");
+//   return -1;
+//   }
+//total_size = strlen(CF_TEST_INPUT);
+//frm = CF_TEST_INPUT;
    
 THIS_AGENT_TYPE = cf_agent;
-//while(fgets(line, CF_SMALLBUF, inFile))
-while(nPointer < total_size)
+while(fgets(line, CF_SMALLBUF, inFile))
+//while(nPointer < total_size)
    { 
-   size = ReadLineInput(line, frm + nPointer);
-   nPointer += size + 1;
+//   size = ReadLineInput(line, frm + nPointer);
+//   nPointer += size + 1;
 
    nLineNum++;
    if (n > CF_MAX_TESTS)
@@ -1183,26 +1229,48 @@ while(nPointer < total_size)
          }
       }
    
+   char rtype,*retval;
    if (FullTextMatch("^[ ]*#.*",line))
       {
       // lINE IS A comment: ignore
       }
-   else if (FullTextMatch("^[ \t]*$",line))
-      {
+   else if (!blockStarted && FullTextMatch("^[ ]*([a-z0-9]+)(.*)[ ]*$",line))
+	{
+	   if (GetVariable("match","2",(void *)&retval,&rtype) != cf_notype)
+	     {
+		if( RemoveChars(retval,"();"))
+		  {
+		     snprintf(in[n].policy_file,CF_SMALLBUF,"%s",retval); // TODO: rename policy_file to a more generic name (eg. buffer)
+		  }
+	     }
+	   
+	   if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
+	     {
+		if( RemoveChars(retval,"();"))
+		  {
+		     preDefinedType = CheckPredefined(retval);
+		     if(preDefinedType > 0)
+		       {
+			  snprintf(in[n].id, CF_SMALLBUF, "%s",retval);
+			  in[n].predefinedId = preDefinedType;
+			  n++;
+		       }
+		  }
+	     }
+	}
+      else if (FullTextMatch("^[ \t]*$",line))
+     {
       // Line is empty: ignore
       }else	  
       {
-      
-      char rtype,*retval;
-      
       // trim spaces
-      
       FullTextMatch("^[ \t]*(.+)[ \t]*$",line);
       
       if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
          {
          if (strcmp(retval,"{") == 0) //start of block
             {
+	       blockStarted = 1;
             if(IsDuplicate(temp,in,n))
                {
                isDuplicate = 1;
@@ -1210,6 +1278,7 @@ while(nPointer < total_size)
                {
                snprintf(in[n].id, CF_SMALLBUF, "%s",temp);
                Debug("Parse(%d): %s\n", n, temp);
+	       in[n].predefinedId = -1;
                }
             }
          else if(strcmp(retval,"}") == 0) //end of block of block
@@ -1221,6 +1290,7 @@ while(nPointer < total_size)
                }
             isDuplicate = 0;
             section = -1;
+	       blockStarted = 0;
             }
          else if(!isDuplicate) // inside a block
             {
@@ -1520,7 +1590,7 @@ if(FullTextMatch("[ \t]*([A-Za-z0-9_]+)[ \t]*=[ \t]*(.+)[ \t]*[^A-Za-z0-9_/\"][ 
             {
             o->type = tmp;		    
             }
-         printf("Type = %s, %d\n", retval,tmp);
+        // printf("Type = %s, %d\n", retval,tmp);
          }
       }
    
@@ -2212,10 +2282,9 @@ FlattenText(buf);
 snprintf(tmp, CF_BUFSIZE, "%s", any);
 strcat(tmp, str);
 strcat(tmp, any);
-printf("FindTextInFile(): \n 1 =  \n%s\n 2= \n%s\n\n", tmp, buf);
 if(FullTextMatch(tmp,buf))
    {
-   printf("FindTextInFile(): Found text!!\n");
+//   printf("FindTextInFile(): Found text!!\n");
    return 1; 
    }
 free(buf);
@@ -2294,6 +2363,7 @@ int FindProcess(char *str)
   char *psopts = "aux";
   char any[] = ".*";
   char tmp[CF_SMALLBUF]; 
+  int count = 0;
    
 snprintf(tmp,CF_SMALLBUF,"%s",any);
 strcat(tmp,str);
@@ -2305,14 +2375,15 @@ if (LoadProcessTable(&PROCESSTABLE,psopts))
       {
       if(FullTextMatch(tmp, ip->name))
          {
-         //printf("FindProcess(): Found Process %s\n", ip->name);
-         retval = 1;
-         break;
+         count++;
          }
       }
    }
-
 DeleteItemList(PROCESSTABLE);
+if(count > 0)
+  {
+     retval = count;
+  }
 return retval;
 }
 
@@ -2338,5 +2409,115 @@ for(i = 0; i <= nInput; i++)
    }   
 return -1;
 }
+/*********************************************************/
+int CheckPredefined(char *name)
+{
+   if(strcmp(name, BOOTSTRAP_TEXT) == 0)
+     {
+	return BOOTSTRAP;
+     }
+   else 
+     {
+	return -1;
+     }
+}
+/*********************************************************/
+int ExecutePreDefined(int id, char *opt)
+{
+   switch(id)
+     {
+      case BOOTSTRAP:
+	return PerformBootstrap(opt);
+	break;
+     }
+   
+}
+/*********************************************************/
+int PerformBootstrap(char *server)
+{
+   char buf[CF_BUFSIZE], output[CF_BUFSIZE];;
+   snprintf(buf,CF_BUFSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
+   if(!FileExists(buf))
+     {
+	snprintf(buf,CF_BUFSIZE,"%s/bin/cf-key",CFWORKDIR);
+	if (GetExecOutput(buf,output,false))
+	  {
+	     
+	  }
+     }
+
+   // bootstrapping
+   snprintf(buf,CF_BUFSIZE,"%s/bin/cf-agent --bootstrap --policy-server %s",CFWORKDIR,server);
+   printf("\tBootstrapping... [Command = \"%s\"]\n",buf);
+   GetExecOutput(buf,output,false);
+  // printf("%s\n",output);
+
+   // check for promises.cf
+   snprintf(buf,CF_BUFSIZE,"%s/inputs/promises.cf",CFWORKDIR);
+   //printf("PerformBootstrap(): Checking for %s\n",buf);   
+   if(!FileExists(buf))
+     {
+	return -1;
+     }
+   
+   // check for 2 cf-execd processes
+   snprintf(buf,CF_SMALLBUF,"cf-execd");
+   if(FindProcess(buf) != 2)
+     {
+	return -1;
+     }
+   return 1;
+}
+
+/*********************************************************/
+int FileExists(char *file)
+{
+   struct stat sb;
+   if(cfstat(file, &sb) != 0)
+     {
+	return -1;
+     }
+   return 1;
+}
+/*********************************************************/
+void CheckInstalledLibraries(void)
+{
+   #ifndef HAVE_LIBCFNOVA
+   printf("\t->LIBCFNOVA not found!!\n");
+   #endif
+   
+   #ifndef HAVE_LIBLDAP
+   printf("\t->LIBLDAP not found!!\n");
+   #endif
+   
+   #ifndef HAVE_LIBACL
+   printf("\t->LIBACL not found!!\n");
+   #endif
+   
+   #ifndef HAVE_LIBPCRE
+   printf("\t->LIBPCRE not found!!\n");
+   #endif
+   
+   #ifndef HAVE_LIBPTHREAD
+   printf("\t->LIBPTHREAD not found!!\n");
+   #endif
+   
+   #ifndef HAVE_LIBVIRT
+   printf("\t->LIBVIRT not found!!\n");
+   #endif
+   
+   #if !defined(TCDB) && !defined(QDB) 
+   printf("\t->TCDB and QDB  not found!!\n");
+   #endif
+   
+   #ifndef HAVE_LIBMONGOC
+   printf("\t->LIBMONGOC  not found!!\n");
+   #endif
+
+   #ifndef HAVE_LIBMYSQLCLIENT
+   printf("\t->LIBMYSQLCLIENT not found!!\n");
+   #endif
+}
+
 /*********************************************************/
 #endif

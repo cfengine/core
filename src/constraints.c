@@ -589,10 +589,26 @@ return retval;
 void ReCheckAllConstraints(struct Promise *pp)
 
 { struct Constraint *cp;
-  char *sp,*handle = GetConstraint("handle",pp,CF_SCALAR);
+ char *sp,*handle = GetConstraint("handle",pp,CF_SCALAR);
   struct PromiseIdent *prid;
   struct Item *ptr;
+  int in_class_any = false;
 
+if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
+   {
+   char *cl = GetConstraint("ifvarclass",pp,CF_SCALAR);
+   
+   if (cl == NULL || strcmp(cl,"any") == 0)
+      {
+      in_class_any = true;
+      }
+   
+   if (in_class_any)
+      {
+      yyerror("reports promises may not be in class \'any\' - risk of a notification explosion");
+      }
+   }
+  
 if (handle)
    {
    if (!ThreadLock(cft_policy))

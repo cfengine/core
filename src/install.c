@@ -277,11 +277,6 @@ else
       }
    }
 
-if ((strcmp(spe,"any") == 0) && (strcmp(type->name,"reports") == 0))
-   {
-   yyerror("reports promises may not be in class \'any\' - risk of a notification explosion");
-   }
-
 if (strcmp(type->name,"classes") == 0 || strcmp(type->name,"vars") == 0)
    {
    if (isdigit(*promiser) && Str2Int(promiser) != CF_NOINT)

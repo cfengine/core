@@ -3892,10 +3892,7 @@ Debug("FILE: %s\n",file_buffer);
 
 if (file_buffer == NULL)
    {
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   SetFnCallReturnStatus(fnname,FNCALL_FAILURE,NULL,NULL);
-   return rval;
+   entries = 0;
    }
 else
    {
@@ -3903,9 +3900,7 @@ else
 
    if (file_buffer == NULL)
       {
-      rval.item = NULL;
-      rval.rtype = CF_LIST;
-      return rval;
+      entries = 0;
       }
    else
       {

@@ -1211,16 +1211,6 @@ if (count < max)
       AppendRScalar(&liststart,node,CF_SCALAR);
       }
    }
-else
-   {
-   memset(node,0,CF_MAXVARSIZE);
-   strncpy(node,sp,CF_MAXVARSIZE-1);
-   
-   if (blanks || strlen(node) > 0)
-      {
-      AppendRScalar(&liststart,node,CF_SCALAR);
-      }
-   }
 
 return liststart;
 }

@@ -1174,7 +1174,7 @@ int CfReadLine(char *buff,int size,FILE *fp)
 buff[0] = '\0';
 buff[size - 1] = '\0';                        /* mark end of buffer */
 
-if (fgets(buff, size, fp) == NULL)
+if (fgets(buff,size,fp) == NULL)
    {
    *buff = '\0';                   /* EOF */
    return false;

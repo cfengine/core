@@ -140,7 +140,7 @@ return Unix_cf_pclose_def(pfp, a, pp);
 /*****************************************************************************/
 
 pid_t *CHILDREN;
-int    MAX_FD = 20; /* Max number of simultaneous pipes */
+int    MAX_FD = 128; /* Max number of simultaneous pipes */
 
 /*****************************************************************************/
 
@@ -281,7 +281,9 @@ else
       }
    else
       {
+      ThreadLock(cft_count);
       CHILDREN[fileno(pp)] = pid;
+      ThreadUnlock(cft_count);
       }
 
    return pp;
@@ -308,13 +310,21 @@ if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    return NULL;
    }
 
+if (!ThreadLock(cft_count))
+   {
+   return NULL;
+   }
+
 if (CHILDREN == NULL)   /* first time */
    {
    if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
       {
+      ThreadUnlock(cft_count);
       return NULL;
       }
    }
+
+ThreadUnlock(cft_count);
 
 if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
    {
@@ -446,7 +456,9 @@ else
       }
    else
       {
+      ThreadLock(cft_count);
       CHILDREN[fileno(pp)] = pid;
+      ThreadUnlock(cft_count);
       }
    
    return pp;
@@ -474,13 +486,21 @@ if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    return NULL;
    }
 
+if (!ThreadLock(cft_count))
+   {
+   return NULL;
+   }
+
 if (CHILDREN == NULL)   /* first time */
    {
    if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
       {
+      ThreadUnlock(cft_count);
       return NULL;
       }
    }
+
+ThreadUnlock(cft_count);
 
 if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
    {
@@ -567,7 +587,9 @@ else
       }
    else
       {
+      ThreadLock(cft_count);
       CHILDREN[fileno(pp)] = pid;
+      ThreadUnlock(cft_count);
       }
    
    return pp;
@@ -593,13 +615,21 @@ if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    return NULL;
    }
 
+if (!ThreadLock(cft_count))
+   {
+   return NULL;
+   }
+
 if (CHILDREN == NULL)   /* first time */
    {
    if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
       {
+      ThreadUnlock(cft_count);
       return NULL;
       }
    }
+
+ThreadUnlock(cft_count);
 
 if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
    {
@@ -711,7 +741,9 @@ else
       }
    else
       {
+      ThreadLock(cft_count);
       CHILDREN[fileno(pp)] = pid;
+      ThreadUnlock(cft_count);
       }
    return pp;
    }
@@ -776,10 +808,18 @@ int Unix_cf_pclose(FILE *pp)
 
 Debug("Unix_cf_pclose(pp)\n");
 
-if (CHILDREN == NULL)  /* popen hasn't been called */
+if (!ThreadLock(cft_count))
    {
    return -1;
    }
+
+if (CHILDREN == NULL)  /* popen hasn't been called */
+   {
+   ThreadUnlock(cft_count);
+   return -1;
+   }
+
+ThreadUnlock(cft_count);
 
 ALARM_PID = -1;
 fd = fileno(pp);
@@ -795,8 +835,10 @@ else
       {
       return -1;
       }
-   
+
+   ThreadLock(cft_count);
    CHILDREN[fd] = 0;
+   ThreadUnlock(cft_count);
    }
 
 if (fclose(pp) == EOF)
@@ -816,10 +858,18 @@ int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
 
 Debug("Unix_cf_pclose_def(pfp)\n");
 
-if (CHILDREN == NULL)  /* popen hasn't been called */
+if (!ThreadLock(cft_count))
    {
    return -1;
    }
+
+if (CHILDREN == NULL)  /* popen hasn't been called */
+   {
+   ThreadUnlock(cft_count);
+   return -1;
+   }
+
+ThreadUnlock(cft_count);
 
 ALARM_PID = -1;
 fd = fileno(pfp);
@@ -836,7 +886,9 @@ if ((pid = CHILDREN[fd]) == 0)
    return -1;
    }
 
+ThreadLock(cft_count);
 CHILDREN[fd] = 0;
+ThreadUnlock(cft_count);
 
 if (fclose(pfp) == EOF)
    {

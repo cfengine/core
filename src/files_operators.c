@@ -2212,8 +2212,6 @@ if (attr.copy.preserve)
    }
 else
    {
-   CfOut(cf_verbose,""," -> Not attempting to preserve file permissions from the source");
-   
    if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
       {
       (attr.perms.owners)->uid = dstat->st_uid;

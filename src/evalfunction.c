@@ -817,7 +817,7 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_returnszero].args,finalargs); /* Arg validati
 
 if (!IsExecutable(GetArg0(finalargs->item)))
    {
-   CfOut(cf_error,"","ExecResult \"%s\" is assumed to be executable but isn't\n",finalargs->next->item);
+   CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
    }
 else

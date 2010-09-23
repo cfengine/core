@@ -396,6 +396,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
                   if (rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
                      {
                      /* Unexpanded function must be skipped.*/
+                     printf("HERE......\n");
                      return;
                      }
                   

@@ -983,7 +983,7 @@ if (i > 2)
    return;
    }
 
-// More consideration needs to be given to using these
+//More consideration needs to be given to using these
 //a.transaction = GetTransactionConstraints(pp);
 //a.classes = GetClassDefinitionConstraints(pp);
 
@@ -1013,6 +1013,7 @@ if (rval != NULL)
    else
       {
       /* See if the variable needs recursively expanding again */
+      
       returnval = EvaluateFinalRval(scope,rval,cp->type,true,pp);
       DeleteRvalItem(cp->rval,cp->type);
       cp->rval = rval = returnval.item;
@@ -1088,6 +1089,7 @@ void ConvergePromiseValues(struct Promise *pp)
 { struct Constraint *cp;
   struct Rlist *rp;
   char expandbuf[CF_EXPANDSIZE];
+  struct FnCall *fp;
 
 switch (pp->petype)
    {
@@ -1152,6 +1154,21 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
                    }
                 }          
              }
+          break;
+
+      case CF_FNCALL:
+
+       fp = (struct FnCall *)cp->rval;
+       for (rp = fp->args; rp != NULL; rp=rp->next)
+          {
+          if (rp->type == CF_SCALAR && IsCf3VarString(rp->item))
+             {
+             ExpandPrivateScalar(CONTEXTID,(char *)rp->item,expandbuf);
+             free(rp->item);
+             rp->item = strdup(expandbuf);
+             }
+          }
+
           break;
       }
    }

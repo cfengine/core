@@ -161,14 +161,18 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
       else
          {
          CfOut(cf_error,"","List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);
-         NewScalar(scope,lval,rpr->item,cf_str);         
+         NewScalar(scope,lval,rpr->item,cf_str);
          }
       }
    else
       {
       NewScalar(scope,lval,rpr->item,cf_str);
       }
+
+   printf("AUG: %s.%s = %s\n",scope,lval,rpr->item);
    }
+
+ShowScope("my_set_passwd_field");
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 

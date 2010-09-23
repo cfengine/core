@@ -97,7 +97,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          pp->edcontext = parentp->edcontext;
          pp->this_server = filename;
          pp->donep = &(pp->done);
-         
+
          ExpandPromise(cf_agent,bp->name,pp,KeepEditLinePromise);
          
          if (Abort())

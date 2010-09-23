@@ -36,12 +36,13 @@
 
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
 
-{ struct Rlist *this,*rp,*deref_listoflists = NULL;
+{ struct Rlist *this,*rp,*rps,*deref_listoflists = NULL;
   char *lval,rtype;
   void *returnval;
   enum cfdatatype dtype;
   struct Scope *ptr = NULL;
   struct CfAssoc *new;
+  struct Rval newret;
 
 Debug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
@@ -67,6 +68,21 @@ for (rp = namelist; rp != NULL; rp = rp->next)
    
    /* Make a copy of list references in scope only, without the names */
 
+   if (rtype == CF_LIST)
+      {
+      for (rps = (struct Rlist *)returnval; rps != NULL; rps=rps->next)
+         {
+         if (rps->type == CF_FNCALL)
+            {
+            struct FnCall *fp = (struct FnCall *)rps->item;
+            newret = EvaluateFunctionCall(fp,NULL);
+            DeleteFnCall(fp);
+            rps->item = newret.item;
+            rps->type = newret.rtype;
+            }
+         }
+      }
+   
    if (new = NewAssoc(rp->item,returnval,rtype,dtype))
       {
       this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);

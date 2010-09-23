@@ -409,7 +409,7 @@ Apoptosis();
 
 #ifdef MINGW
 
-if(!NO_FORK)
+if (!NO_FORK)
   {
   CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
   }
@@ -587,7 +587,7 @@ AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any",f
 AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any",false);
 AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any",false);
 AppendConstraint(&(pp.conlist),"process_count",strdup("true"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"match_range",strdup("0,4"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"match_range",strdup("0,2"),CF_SCALAR,"any",false);
 AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.process_count"),CF_SCALAR,"any",false);
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);

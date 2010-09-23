@@ -168,11 +168,7 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
       {
       NewScalar(scope,lval,rpr->item,cf_str);
       }
-
-   printf("AUG: %s.%s = %s\n",scope,lval,rpr->item);
    }
-
-ShowScope("my_set_passwd_field");
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 

@@ -40,8 +40,15 @@ void CheckBundle(char *name,char *type)
 
 { struct Bundle *bp;
   char output[CF_BUFSIZE];
+  char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
 
 Debug("Checking for bundle (%s,%s)\n",name,type);
+  
+if (IsStrIn(name,reserved))
+   {
+   snprintf(output,CF_BUFSIZE,"Use of a reserved context as a bundle name \"%s\" ",name);
+   ReportError(output);      
+   }
 
 for (bp = BUNDLES; bp != NULL; bp=bp->next)
    {

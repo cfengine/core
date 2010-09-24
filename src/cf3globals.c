@@ -445,6 +445,7 @@ dev_t ROOTDEVICE = 0;
 char  STR_CFENGINEPORT[16];
 unsigned short SHORT_CFENGINEPORT;
 unsigned short SHORT_CONNTIMEOUT = 10;	/* seconds */
+unsigned short SHORT_RECVTIMEOUT = 30;	/* seconds */
 int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
 int SKIPIDENTIFY = false;

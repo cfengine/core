@@ -83,6 +83,7 @@ extern char PIDFILE[CF_BUFSIZE];
 extern char  STR_CFENGINEPORT[16];
 extern unsigned short SHORT_CFENGINEPORT;
 extern unsigned short SHORT_CONNTIMEOUT;
+extern unsigned short SHORT_RECVTIMEOUT;
 
 extern char CFLOCK[CF_BUFSIZE];
 extern char SAVELOCK[CF_BUFSIZE];

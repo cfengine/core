@@ -1382,6 +1382,7 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
   int res;
   long arg;
   struct sockaddr_in emptyCin = {0};
+  struct timeval tvRecv = {0};
 
   if(!cinp)
     {
@@ -1392,7 +1393,10 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
 
    /* set non-blocking socket */
    arg = fcntl(conn->sd, F_GETFL, NULL);
-   fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
+   if(fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK) == -1)
+     {
+     CfOut(cf_error,"","!! Could not set socket to non-blocking mode");
+     }
 
    res = connect(conn->sd,cinp,cinpSz);
 
@@ -1431,12 +1435,17 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
 
    /* connection is succeed; return to blocking mode */
 
-   fcntl(conn->sd, F_SETFL, arg);
+   if(fcntl(conn->sd, F_SETFL, arg) == -1)
+     {
+     CfOut(cf_error,"","!! Could not set socket to blocking mode");
+     }
 
+   tvRecv.tv_sec = SHORT_RECVTIMEOUT;
+   tvRecv.tv_usec = 0;
 
-   if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)tvp, sizeof(struct timeval)))
+   if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tvRecv, sizeof(tvRecv)))
       {
-      CfOut(cf_inform,"setsockopt","!! Couldn't set socket timeout");
+      CfOut(cf_error,"setsockopt","!! Couldn't set socket timeout");
       }
   
   return true;

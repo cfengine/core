@@ -134,12 +134,6 @@ if (a.packages.package_list_command == NULL && a.packages.package_file_repositor
    return false;
    }
 
-if (a.packages.package_file_repositories && a.packages.package_changes != cfa_individual)
-   {
-   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must use individual installation when specifying a reposiroty list");
-   return false;   
-   }
-
 if (a.packages.package_file_repositories)
    {
    struct Rlist *rp;
@@ -573,7 +567,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              
          case cfa_bulk:
 
-             estimated_size += size;
+	     estimated_size += size + CF_MAXVARSIZE;
              break;
 
          default:
@@ -724,7 +718,24 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                 {
                 if (pi->name)
                    {
-                   strcat(command_string,pi->name);
+		   char *sp, *offset = command_string + strlen(command_string);
+
+                    if (a.packages.package_file_repositories && ( action == cfa_addpack || action == cfa_update ) )
+                       {
+    	               if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
+                          {
+                          strcat(offset,sp);
+                          }
+                       else
+                          {
+                          break;
+                          }
+                       }
+                    else
+                       {
+                       strcat(offset,pi->name);
+    	               }
+
                    strcat(command_string," ");
                    }
                 }

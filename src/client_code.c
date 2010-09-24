@@ -1370,7 +1370,15 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
  * Tries a nonblocking connect and then restores blocking if
  * successful. Returns true on success, false otherwise.
  **/
+#ifdef MINGW
+
 {
+  return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
+}
+
+#else  /* NOT MINGW */
+{
+
   int res;
   long arg;
   struct sockaddr_in emptyCin = {0};
@@ -1383,38 +1391,14 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
   
 
    /* set non-blocking socket */
-#ifdef MINGW
-
-   u_long nonBlock = true;
-   if(ioctlsocket(conn->sd,FIONBIO,&nonBlock) != 0)
-     {
-     CfOut(cf_error,"ioctlsocket","!! Could not disable socket blocking mode");
-     }
-
-#else  /* NOT MINGW */
-
    arg = fcntl(conn->sd, F_GETFL, NULL);
    fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK);
 
-#endif
-
    res = connect(conn->sd,cinp,cinpSz);
 
-   if (
-#ifdef MINGW
-       res == SOCKET_ERROR
-#else
-       res < 0
-#endif
-       )
+   if (res < 0)
       {
-      if (
-#ifdef MINGW
-	  true
-#else
-	  errno == EINPROGRESS
-#endif
-	  )
+      if (errno == EINPROGRESS)
          {
          fd_set myset;
          int valopt;
@@ -1447,20 +1431,8 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
 
    /* connection is succeed; return to blocking mode */
 
-#ifdef MINGW
-
-   nonBlock = false;
-
-   if(ioctlsocket(conn->sd,FIONBIO,&nonBlock) != 0)
-     {
-     CfOut(cf_error,"ioctlsocket","!! Could not enable socket blocking mode");
-     }
-
-#else  /* NOT MINGW */
-
    fcntl(conn->sd, F_SETFL, arg);
 
-#endif
 
    if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)tvp, sizeof(struct timeval)))
       {
@@ -1469,3 +1441,7 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
   
   return true;
 }
+
+#endif  /* NOT MINGW */
+
+

@@ -561,7 +561,9 @@ if (cfstat(filename,&sb) == -1)
       return;
       }
 
+#ifdef HAVE_LIBCFNOVA
    fprintf(fp,"\n@i{History}: Was introduced in version %s,Nova %s (%s)\n\n",VERSION,Nova_GetVersion(),VYEAR);
+#endif
    fprintf(fp,"\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n",filename);
    fclose(fp);
    CfOut(cf_verbose,"","Created %s template\n",filename);  

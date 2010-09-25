@@ -217,7 +217,8 @@ VSCOPE = NULL;
 void DeleteScope(char *name)
 
 { struct Scope *ptr, *prev = NULL;
-  
+  int found = false;
+ 
 Debug1("Deleting scope %s\n", name);
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
@@ -225,13 +226,14 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    if (strcmp(ptr->scope,name) == 0)
       {
       Debug("Object %s exists\n",name);
+      found = true;
       break;
       }
    
    prev = ptr;
    }
 
-if (ptr == NULL)
+if (!found)
    {
    Debug("No such scope to delete\n");
    return;

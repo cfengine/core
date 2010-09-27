@@ -534,7 +534,8 @@ void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr
 { DIR *dirh;
   struct stat sb; 
   struct dirent *dirp;
-  char filename[CF_BUFSIZE];
+  char filename[CF_BUFSIZE] = {0};
+  char *relPath = {0};
 
 Debug("PurgeLocalFiles(%s)\n",localdir);
 
@@ -583,8 +584,21 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
       strncpy(filename,localdir,CF_BUFSIZE-2);
       AddSlash(filename);
-      strncat(filename,dirp->d_name,CF_BUFSIZE-2);
+
+      // dirp->d_name may start with "./", which we strip out
       
+      if(strncmp(dirp->d_name,"./",2) == 0)
+	{
+	relPath = dirp->d_name + 2;
+	}
+      else
+	{
+	relPath = dirp->d_name;
+	}
+      
+      Join(filename,relPath,CF_BUFSIZE-1);
+      
+
       if (DONTDO)
          {
          printf(" !! Need to purge %s from copy dest directory\n",filename);
@@ -1630,7 +1644,7 @@ if (sstat.st_nlink > 1)  /* Preserve hard links, if possible */
 
 if (attr.copy.servers != NULL && strcmp(attr.copy.servers->item,"localhost") != 0)
    {
-   Debug("This is a remote copy from server: %s\n",attr.copy.servers->item);
+   Debug("This is a remote copy from server: %s\n",(char *)attr.copy.servers->item);
    remote = true;
    }
 
@@ -1720,7 +1734,7 @@ if (!discardbackup)
    if (attr.copy.backup == cfa_timestamp)
       {
       stampnow = time((time_t *)NULL);   
-      snprintf(stamp,CF_BUFSIZE-1,"_%d_%s", CFSTARTTIME, CanonifyName(cf_ctime(&stampnow)));
+      snprintf(stamp,CF_BUFSIZE-1,"_%lu_%s", CFSTARTTIME, CanonifyName(cf_ctime(&stampnow)));
 
       if (!JoinSuffix(backup,stamp))
          {

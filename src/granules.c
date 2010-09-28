@@ -163,7 +163,7 @@ sscanf(cstr,"%s %*s %*s %d",cbuf,&chour);
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_INTERVAL,slot++)
    {
    snprintf(str,sizeof(str),"%s",cf_ctime(&now)); 
-   sscanf(str,"%s %*s %*s %d",buf1,&hour);
+   sscanf(str,"%s %*s %*s %d",buf,&hour);
    
    if (hour/6 == chour/6 && strcmp(cbuf,buf) == 0)
       {

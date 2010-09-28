@@ -572,12 +572,9 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    {
    *start = ovector[0];
    *end = ovector[1];
-
-   if (rc > 1)
-      {
-      DeleteScope("match");
-      NewScope("match");
-      }
+   
+   DeleteScope("match");
+   NewScope("match");
    
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
@@ -678,11 +675,8 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    match_start = teststring + ovector[0];
    match_len = ovector[1] - ovector[0];
 
-   if (rc > 1)
-      {
-      DeleteScope("match");
-      NewScope("match");
-      }
+   DeleteScope("match");
+   NewScope("match");
    
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {

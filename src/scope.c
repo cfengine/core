@@ -248,7 +248,11 @@ else
    prev->next = ptr->next;
    }
 
-DeleteHashes(ptr->hashtable);
+if (ptr->hashtable)
+   {
+   DeleteHashes(ptr->hashtable);
+   }
+
 free(ptr->scope);
 free((char *)ptr);
 }

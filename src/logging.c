@@ -39,6 +39,11 @@ void BeginAudit()
 { struct Promise dummyp;
   struct Attributes dummyattr;
 
+if (THIS_AGENT_TYPE != cf_agent)
+   {
+   return;
+   }
+  
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));
 
@@ -54,6 +59,11 @@ void EndAudit()
   void *retval;
   struct Promise dummyp;
   struct Attributes dummyattr;
+
+if (THIS_AGENT_TYPE != cf_agent)
+   {
+   return;
+   }
 
 memset(&dummyp,0,sizeof(dummyp));
 memset(&dummyattr,0,sizeof(dummyattr));

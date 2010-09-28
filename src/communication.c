@@ -310,7 +310,7 @@ memset(hostbuffer,0,MAXHOSTNAMELEN);
 if ((err = getaddrinfo(ipaddress,NULL,&query,&response)) != 0)
    {
    CfOut(cf_inform,"","Unable to lookup IP address (%s): %s",ipaddress,gai_strerror(err));
-   snprintf(hostbuffer,MAXHOSTNAMELEN-1,ipaddress); 
+   snprintf(hostbuffer,MAXHOSTNAMELEN,ipaddress); 
    return hostbuffer;
    }
 
@@ -318,7 +318,7 @@ for (ap = response; ap != NULL; ap = ap->ai_next)
    {   
    if ((err = getnameinfo(ap->ai_addr,ap->ai_addrlen,hostbuffer,MAXHOSTNAMELEN,0,0,0)) != 0)
       {
-      snprintf(hostbuffer,MAXHOSTNAMELEN-1,ipaddress);
+      snprintf(hostbuffer,MAXHOSTNAMELEN,ipaddress);
       freeaddrinfo(response);
       return hostbuffer;
       }

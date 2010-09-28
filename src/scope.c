@@ -229,8 +229,10 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       found = true;
       break;
       }
-   
-   prev = ptr;
+   else
+      {
+      prev = ptr;
+      }
    }
 
 if (!found)

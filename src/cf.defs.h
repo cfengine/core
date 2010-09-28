@@ -631,6 +631,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define CF_HOUR   3600
 #define CF_RELIABLE_CLASSES 7*24         /* CF_WEEK/CF_HOUR */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
+#define CF_MEASURE_INTERVAL (6*3600.0)
 
 #define CF_OBSERVABLES 91
 

@@ -142,3 +142,45 @@ for (now = CF_MONDAY_MORNING, i = 0; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_
 
 return "UNKNOWN";
 }
+
+/*****************************************************************************/
+
+int GetShiftSlot(time_t here_and_now)
+
+{ time_t now = time(NULL);
+  int slot = 0;
+  static char str1[64];
+  
+snprintf(str,sizeof(str),"%s",cf_ctime(&now));
+
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_INTERVAL,slot++)
+   {
+   char str2[64];
+   char buf1[10],buf2[10],buf3[10],buf4[10],buf5[10],buf[10],out[10];
+
+   snprintf(str,sizeof(str),"%s",cf_ctime(&now));
+   
+  
+   sscanf(str,"%s %s %s %s %s",buf1,buf2,buf3,buf4,buf5);
+  
+  /* Day */
+  
+  sprintf(timekey,"%s:",buf1);
+  
+  /* Hours */
+  
+  sscanf(buf4,"%[^:]",buf);
+  sprintf(out,"Hr%s",buf);
+  
+
+   
+   if (matched)
+      {
+      return slot;
+      }
+   }
+
+return -1;
+}
+
+

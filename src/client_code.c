@@ -964,7 +964,7 @@ CfOut(cf_verbose,"","Set cfengine port number to %s = %u\n",strport,(int)ntohs(s
 
 if (attr.copy.timeout == (short)CF_NOINT || attr.copy.timeout <= 0)
    {
-   tv.tv_sec = SHORT_CONNTIMEOUT;
+   tv.tv_sec = CONNTIMEOUT;
    }
 else
    {
@@ -1440,13 +1440,15 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
      CfOut(cf_error,"","!! Could not set socket to blocking mode");
      }
 
-   tvRecv.tv_sec = SHORT_RECVTIMEOUT;
+
+   tvRecv.tv_sec = RECVTIMEOUT;
    tvRecv.tv_usec = 0;
 
    if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tvRecv, sizeof(tvRecv)))
       {
       CfOut(cf_error,"setsockopt","!! Couldn't set socket timeout");
       }
+
   
   return true;
 }

@@ -82,8 +82,8 @@ extern struct Item *IPADDRESSES;
 extern char PIDFILE[CF_BUFSIZE];
 extern char  STR_CFENGINEPORT[16];
 extern unsigned short SHORT_CFENGINEPORT;
-extern unsigned short SHORT_CONNTIMEOUT;
-extern unsigned short SHORT_RECVTIMEOUT;
+extern time_t CONNTIMEOUT;
+extern time_t RECVTIMEOUT;
 
 extern char CFLOCK[CF_BUFSIZE];
 extern char SAVELOCK[CF_BUFSIZE];

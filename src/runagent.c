@@ -105,7 +105,6 @@ int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
 int BACKGROUND = false;
 int MAXCHILD = 50;
-int AGENT_TIMEOUT = 120; /* seconds */
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
 struct Attributes RUNATTR;
 struct Rlist *HOSTLIST = NULL;
@@ -254,7 +253,7 @@ while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex
           break;
 
       case 't':
-             AGENT_TIMEOUT = atoi(optarg);
+             CONNTIMEOUT = atoi(optarg);
           break;
           
       case 'V': Version("cf-runagent Run agent");
@@ -442,7 +441,6 @@ RUNATTR.copy.trustkey = false;
 RUNATTR.copy.encrypt = true;
 RUNATTR.copy.force_ipv4 = false;
 RUNATTR.copy.portnumber = SHORT_CFENGINEPORT;
-RUNATTR.copy.timeout = AGENT_TIMEOUT;
 
 /* Keep promised agent behaviour - control bodies */
 

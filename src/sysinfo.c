@@ -2006,7 +2006,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             strcpy(VIPADDRESS,inet_ntoa(sin->sin_addr));
             }
 
-         AppendItem(&IPADDRESSES,VIPADDRESS,"");
+         AppendItem(&IPADDRESSES,inet_ntoa(sin->sin_addr),"");
 
          for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {

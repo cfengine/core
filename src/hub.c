@@ -331,6 +331,7 @@ IPADDRESSES = NULL;
 DeleteScope("this");
 DeleteScope("mon");
 DeleteScope("sys");
+DeleteScope("match");
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();

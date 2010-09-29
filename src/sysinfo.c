@@ -794,8 +794,6 @@ if (cfstat("/etc/gentoo-release",&statbuf) != -1)
    NewClass("gentoo");
    }
 
-Lsb_Version();
-
 #else
 
 strncpy(vbuff,VSYSNAME.release,CF_MAXVARSIZE);
@@ -1037,6 +1035,8 @@ if (major != -1 && (strcmp(vendor,"") != 0))
    strcat(classbuf, "_");
    strcat(classbuf, strmajor);
    NewClass(classbuf);
+   NewScalar("sys","flavour",classbuf,cf_str);
+   NewScalar("sys","flavor",classbuf,cf_str);
    }
 
 return 0;
@@ -1232,6 +1232,9 @@ if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
    strcat(classbuf, strmajor);
    NewClass(classbuf);
 
+   NewScalar("sys","flavour",classbuf,cf_str);
+   NewScalar("sys","flavor",classbuf,cf_str);
+
    if (minor != -2)
       {
       strcat(classbuf, "_");
@@ -1336,13 +1339,17 @@ release = strstr(relstring, SUSE_RELEASE_FLAG);
 
 if (release == NULL)
    {
+   release = strstr(relstring,"opensuse");
+   }
+
+if (release == NULL)
+   {
    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",SUSE_REL_FILENAME);
    return 2;
    }
 else
    {
-   release += strlen(SUSE_RELEASE_FLAG);
-   sscanf(release, "%d.%d", &major, &minor);
+   sscanf(release, "%*s %d.%d", &major, &minor);
    sprintf(strmajor, "%d", major);
    sprintf(strminor, "%d", minor);
    }
@@ -1358,6 +1365,11 @@ if (major != -1 && minor != -1)
    strcat(classbuf, "_");
    strcat(classbuf, strminor);
    NewClass(classbuf);
+
+   CfOut(cf_verbose,""," -> Discovered SuSE version %s",classbuf);
+
+   NewScalar("sys","flavour",classbuf,cf_str);
+   NewScalar("sys","flavor",classbuf,cf_str);
    }
 
 return 0;
@@ -1439,6 +1451,10 @@ switch (fscanf(fp, "%d.%d", &major, &release))
         return 2;
     }
 
+NewScalar("sys","flavour",classname,cf_str);
+NewScalar("sys","flavor",classname,cf_str);
+
+
 fclose(fp);
 return 0;
 }
@@ -1493,6 +1509,8 @@ else
 return Linux_Mandriva_Version_Real(MANDRAKE_REL_FILENAME, relstring, vendor);
 }
 
+/******************************************************************/
+
 int Linux_New_Mandriva_Version(void)
 
 {
@@ -1528,6 +1546,8 @@ else
 return Linux_Mandriva_Version_Real(MANDRIVA_REL_FILENAME, relstring, vendor);
 
 }
+
+/******************************************************************/
 
 int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor)
 
@@ -1579,57 +1599,6 @@ if (major != -1 && minor != -1 && strcmp(vendor, ""))
 return 0;
 }
 
-/******************************************************************/
-
-int Lsb_Version(void)
-
-{ char vbuff[CF_BUFSIZE];
-  char codename[CF_MAXVARSIZE];
-  char distrib[CF_MAXVARSIZE];
-  char release[CF_MAXVARSIZE];
-  char classname[CF_MAXVARSIZE];;
-  char *ret;
-  int major = 0;
-  int minor = 0;
-  
-if ((ret = Lsb_Release("--id")) != NULL)
-   {
-   strncpy(distrib,ret,CF_MAXVARSIZE);
-   snprintf(classname, CF_MAXVARSIZE, "%s",ret);
-   NewClass(classname);
-
-   if ((ret = Lsb_Release("--codename")) != NULL)
-      {
-      strncpy(codename,ret,CF_MAXVARSIZE);
-      snprintf(classname, CF_MAXVARSIZE, "%s_%s", distrib,codename);
-      NewClass(classname);
-      }
-
-   if ((ret  = Lsb_Release("--release")) != NULL)
-      {
-      strncpy(release,ret,CF_MAXVARSIZE);
-      
-      switch (sscanf(release, "%d.%d\n", &major, &minor))
-         {
-         case 2:
-             snprintf(classname, CF_MAXVARSIZE, "%s_%u_%u", distrib, major, minor);
-             NewClass(classname);
-         case 1:
-             snprintf(classname, CF_MAXVARSIZE, "%s_%u", distrib, major);
-             NewClass(classname);
-         }
-      }
-
-   NewScalar("sys","flavour",classname,cf_str);
-   NewScalar("sys","flavor",classname,cf_str);
-   return 0;
-   }
-else
-   {
-   CfOut(cf_verbose,""," !! No LSB information available on this Linux host - you should install the LSB packages");
-   return -1;
-   }
-}
 
 /******************************************************************/
 
@@ -1772,40 +1741,6 @@ return 1;
 /******************************************************************/
 /* User info                                                      */
 /******************************************************************/
-
-void *Lsb_Release(char *key)
-
-{ char vbuff[CF_BUFSIZE];
-  char info[CF_MAXVARSIZE];
-  FILE *pp;
-  struct stat sb;
-
-snprintf(vbuff,CF_BUFSIZE, "/usr/bin/lsb_release");
-
-if (cfstat(vbuff,&sb) == -1)
-   {
-   CfOut(cf_verbose,"","LSB probe \"%s\" doesn't exist",vbuff);
-   return NULL;
-   }
-
-snprintf(vbuff,CF_BUFSIZE, "/usr/bin/lsb_release %s",key);
-
-if ((pp = cf_popen(vbuff, "r")) == NULL)
-   {
-   return NULL;
-   }
-
-memset(info,0,CF_MAXVARSIZE);
-
-if (CfReadLine(vbuff,CF_BUFSIZE,pp))
-   {
-   sscanf(vbuff,"%*[^:]: %255s",info);
-   }
-
-cf_pclose(pp);
-return ToLowerStr(info);
-}
-
 /******************************************************************/
 
 int GetCurrentUserName(char *userName, int userNameLen)

@@ -152,20 +152,20 @@ int GetShiftSlot(time_t here_and_now)
   char cstr[64];
   char cday[10];
   char str[64];
-  char buf[10],cbuf[0];
+  char buf[10],cbuf[10];
   int hour = -1;
   
 snprintf(cstr,sizeof(str),"%s",cf_ctime(&now));
 sscanf(cstr,"%s %*s %*s %d",cbuf,&chour);
 
-// Tue Sep 28 14:58:27 CEST 2010
+// Format Tue Sep 28 14:58:27 CEST 2010
 
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_INTERVAL,slot++)
    {
    snprintf(str,sizeof(str),"%s",cf_ctime(&now)); 
    sscanf(str,"%s %*s %*s %d",buf,&hour);
    
-   if (hour/6 == chour/6 && strcmp(cbuf,buf) == 0)
+   if ((hour/6 == chour/6) && (strcmp(cbuf,buf) == 0))
       {
       return slot;
       }

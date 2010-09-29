@@ -100,7 +100,7 @@ char *GenTimeKey(time_t now)
  
 { static char str[64];
     
-sprintf(str,"%s",cf_ctime(&now));
+snprintf(str,sizeof(str),"%s",cf_ctime(&now));
 
 return ConvTimeKey(str);
 }

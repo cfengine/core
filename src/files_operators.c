@@ -1404,6 +1404,17 @@ void LogHashChange(char *file)
   time_t now = time(NULL);
   struct stat sb;
   mode_t perm = 0600;
+  static char prevFile[CF_MAXVARSIZE] = {0};
+
+
+  // we might get called twice..
+  if(strcmp(file,prevFile) == 0)
+    {
+    return;
+    }
+  
+  snprintf(prevFile,sizeof(prevFile),file);
+
 
 /* This is inefficient but we don't want to lose any data */
 

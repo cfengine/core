@@ -429,11 +429,6 @@ if (!NO_FORK)
    
 #endif  /* NOT MINGW */
 
-if (!ONCE)
-   {
-   MYTWIN = StartTwin(argc,argv);
-   }
-
 WritePID("cf-execd.pid");
 signal(SIGINT,HandleSignals);
 signal(SIGTERM,HandleSignals);
@@ -520,8 +515,6 @@ else
          LocalExec((void *)1);  
 #endif
          }
-
-      ReviveOther(argc,argv);
       }
    }
 
@@ -614,8 +607,6 @@ int ScheduleRun()
 { time_t now;
   char timekey[64];
   struct Item *ip;
-  
-SignalTwin();
 
 CfOut(cf_verbose,"","Sleeping...\n");
 sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 

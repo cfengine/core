@@ -179,46 +179,6 @@ char *GetConsolePrefix()
 
 /*****************************************************************************/
 
-pid_t StartTwin(int argc,char **argv)
-
-/* Self-monitor in case of crash or binary change */
-    
-{
-#ifdef HAVE_LIBCFNOVA
-return Nova_StartTwin(argc,argv);
-#else
-return 0;
-#endif
-}
-
-/*****************************************************************************/
-
-void SignalTwin()
-
-/* Self-monitor in case of crash or binary change */
-    
-{
-#ifdef HAVE_LIBCFNOVA
- Nova_SignalTwin();
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-void ReviveOther(int argc,char **argv)
-
-/* Self-monitor in case of crash or binary change */
-    
-{
-#ifdef HAVE_LIBCFNOVA
- Nova_ReviveOther(argc,argv);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
 char *MailSubject()
 
 { static char buffer[CF_BUFSIZE];

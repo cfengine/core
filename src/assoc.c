@@ -64,6 +64,11 @@ return ap;
 void DeleteAssoc(struct CfAssoc *ap)
 
 {
+if (ap == NULL)
+   {
+   return;
+   }
+
 Debug(" ----> Delete variable association %s\n",ap->lval);
 
 if (ap->lval)
@@ -100,9 +105,9 @@ return NewAssoc(old->lval,old->rval,old->rtype,old->dtype);
 void ShowAssoc (struct CfAssoc *cp)
 
 {
- printf("ShowAssoc: lval = %s\n",cp->lval);
- printf("ShowAssoc: rval = ");
- ShowRval(stdout,cp->rval,cp->rtype);
+printf("ShowAssoc: lval = %s\n",cp->lval);
+printf("ShowAssoc: rval = ");
+ShowRval(stdout,cp->rval,cp->rtype);
  
- printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
+printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
 }

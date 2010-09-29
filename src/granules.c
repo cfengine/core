@@ -155,7 +155,7 @@ int GetShiftSlot(time_t here_and_now)
   char buf[10],cbuf[10];
   int hour = -1;
   
-snprintf(cstr,sizeof(str),"%s",cf_ctime(&now));
+snprintf(cstr,sizeof(str),"%s",cf_ctime(&here_and_now));
 sscanf(cstr,"%s %*s %*s %d",cbuf,&chour);
 
 // Format Tue Sep 28 14:58:27 CEST 2010

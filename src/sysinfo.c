@@ -1469,6 +1469,8 @@ switch (result)
         CfOut(cf_verbose,"","This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         NewClass(classname);
+        snprintf(classname, CF_MAXVARSIZE, "debian_%u",major);
+        NewClass(classname);
         NewScalar("sys","flavour",classname,cf_str);
         NewScalar("sys","flavor",classname,cf_str);
         return 0;
@@ -1499,13 +1501,13 @@ fclose(fp);
 os[0] = '\0';
 sscanf(buffer,"%250s",os);
 
-if (strcmp(os,"Debian"))
+if (strcmp(os,"Debian") == 0)
    {
    sscanf(buffer,"%*s %*s %[^/]",version);
    snprintf(buffer,CF_MAXVARSIZE, "debian_%s",version);
+   NewClass(buffer);
    }
-
-if (strcmp(os,"Ubuntu"))
+else if (strcmp(os,"Ubuntu") == 0)
    {
    sscanf(buffer,"%*s %[^.]",version);
    snprintf(buffer,CF_MAXVARSIZE, "ubuntu_%s",version);

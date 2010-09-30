@@ -1232,6 +1232,26 @@ if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
    strcat(classbuf, strmajor);
    NewClass(classbuf);
 
+   if (minor != -2)
+      {
+      strcat(classbuf, "_");
+      strcat(classbuf, strminor);
+      NewClass(classbuf);
+      }
+   }
+
+// Now a version without the edition
+
+if (major != -1 && minor != -1 && (strcmp(vendor,"") != 0))
+   {
+   classbuf[0] = '\0';
+   strcat(classbuf, vendor);
+   NewClass(classbuf);
+   strcat(classbuf, "_");
+
+   strcat(classbuf, strmajor);
+   NewClass(classbuf);
+
    NewScalar("sys","flavour",classbuf,cf_str);
    NewScalar("sys","flavor",classbuf,cf_str);
 
@@ -1422,40 +1442,79 @@ return 0;
 int Linux_Debian_Version(void)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
+#define DEBIAN_ISSUE_FILENAME "/etc/issue"
 int major = -1;
 int release = -1;
-char classname[CF_MAXVARSIZE] = "";
+int result;
+char classname[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE],os[CF_MAXVARSIZE],version[CF_MAXVARSIZE];
 FILE *fp;
+
+buffer[0] = classname[0] = '\0';
+
+CfOut(cf_verbose,"","Looking for Debian version...\n");
 
 if ((fp = fopen(DEBIAN_VERSION_FILENAME,"r")) == NULL)
    {
    return 1;
    }
 
-CfOut(cf_verbose,"","Looking for Debian version...\n");
-switch (fscanf(fp, "%d.%d", &major, &release))
+fgets(buffer,CF_MAXVARSIZE,fp);
+fclose(fp);
+
+result = sscanf(buffer,"%d.%d", &major, &release); 
+
+switch (result)
     {
     case 2:
         CfOut(cf_verbose,"","This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         NewClass(classname);
+        NewScalar("sys","flavour",classname,cf_str);
+        NewScalar("sys","flavor",classname,cf_str);
+        return 0;
         /* Fall-through */
     case 1:
         CfOut(cf_verbose,"","This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         NewClass(classname);
+        NewScalar("sys","flavour",classname,cf_str);
+        NewScalar("sys","flavor",classname,cf_str);
+        return 0;
+
+    default:
+        sscanf(buffer,"%*s %*s %[^/]",version);
+        snprintf(classname,CF_MAXVARSIZE, "debian_%s",version);
+        NewClass(classname);
         break;
-    case 0:
-        CfOut(cf_verbose,"","No Debian version number found.\n");
-        fclose(fp);
-        return 2;
     }
+
+if ((fp = fopen(DEBIAN_VERSION_FILENAME,"r")) == NULL)
+   {
+   return 1;
+   }
+
+fgets(buffer,CF_MAXVARSIZE,fp);
+fclose(fp);
+
+os[0] = '\0';
+sscanf(buffer,"%250s",os);
+
+if (strcmp(os,"Debian"))
+   {
+   sscanf(buffer,"%*s %*s %[^/]",version);
+   snprintf(buffer,CF_MAXVARSIZE, "debian_%s",version);
+   }
+
+if (strcmp(os,"Ubuntu"))
+   {
+   sscanf(buffer,"%*s %[^.]",version);
+   snprintf(buffer,CF_MAXVARSIZE, "ubuntu_%s",version);
+   NewClass(buffer);
+   }
 
 NewScalar("sys","flavour",classname,cf_str);
 NewScalar("sys","flavor",classname,cf_str);
 
-
-fclose(fp);
 return 0;
 }
 

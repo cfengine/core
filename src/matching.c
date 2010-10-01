@@ -1390,6 +1390,8 @@ for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
    }
 }
 
+/*********************************************************************/
+
 char *EscapeChar(char *str, int strSz, char esc)
 /* Escapes characters esc in the string str of size strSz  */
 {
@@ -1416,6 +1418,21 @@ char *EscapeChar(char *str, int strSz, char esc)
     }
   
   return str;
+}
+
+/*********************************************************************/
+
+void AnchorRegex(char *regex, char *out, int outSz)
+{
+
+if(EMPTY(regex))
+  {
+  memset(out,0,outSz);
+  }
+else
+  {
+  snprintf(out,outSz,"^(%s)$",regex);
+  }
 }
 
 

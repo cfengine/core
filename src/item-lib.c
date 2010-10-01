@@ -63,7 +63,7 @@ for (ip = *list; ip != NULL; ip=ip->next)
    if (cfstat(ip->name,&sb) == -1)
       {
       CfOut(cf_verbose,""," -> Purging file \"%s\" from %s list as it no longer exists",ip->name,name);
-      DeleteItem(*list,ip);
+      DeleteItem(list,ip);
       }
    }
 }

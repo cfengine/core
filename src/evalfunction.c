@@ -4247,7 +4247,7 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_userexists].args,finalargs); /* Arg validatio
 
 strcpy(buffer,CF_ANYCLASS);
 
-if (isdigit((int)*arg))
+if (IsNumber(arg))
    {
    uid = Str2Uid(arg,NULL,NULL);
    

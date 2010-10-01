@@ -858,7 +858,14 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
           break;
 
       default:
-          CfOut(cf_error,"","RHS of authorize promise for %s should be a list\n",pp->promiser);
+
+          if (strcmp(cp->lval,"comment") == 0 || strcmp(cp->lval,"handle") == 0)
+             {
+             }
+          else
+             {
+             CfOut(cf_error,"","RHS of authorize promise for %s should be a list\n",pp->promiser);
+             }
           break;
       }
    }

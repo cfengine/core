@@ -139,6 +139,8 @@ if (IGNORELOCK)
    return this;
    }
 
+RemoveDates(operand);
+
 promise = BodyName(pp);
 snprintf(cc_operator,CF_MAXVARSIZE-1,"%s-%s",promise,host);
 strncpy(cc_operand,CanonifyName(operand),CF_BUFSIZE-1);
@@ -672,5 +674,69 @@ void CloseLock(CF_DB *dbp)
 if (dbp)
    {
    CloseDB(dbp);
+   }
+}
+
+/*****************************************************************************/
+
+void RemoveDates(char *s)
+
+{ int i,a = 0,b = 0,c = 0,d = 0;
+  char *dayp = NULL, *monthp = NULL, *sp;
+  char *days[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+  char *months[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+// Canonifies or blanks our times/dates for locks where there would be an explosion of state
+  
+if (strlen(s) < strlen("Fri Oct 1 15:15:23 EST 2010"))
+   {
+   // Probably not a full date
+   return;
+   }
+
+for (i = 0; i < 7; i++)
+   {
+   if (dayp = strstr(s,days[i]))
+      {
+      *dayp = 'D';
+      *(dayp+1) = 'A';
+      *(dayp+2) = 'Y';
+      break;
+      }
+   }
+
+for (i = 0; i < 12; i++)
+   {
+   if (monthp = strstr(s,months[i]))
+      {
+      *monthp = 'M';
+      *(monthp+1) = 'O';
+      *(monthp+2) = 'N';
+      break;
+      }
+   }
+
+if (dayp && monthp) // looks like a full date
+   {
+   sscanf(monthp+4,"%d %d:%d:%d",&a,&b,&c,&d);
+
+   if (a*b*c*d == 0)
+      {
+      // Probably not a date
+      return;
+      }
+
+   for (sp = monthp+4; *sp != '\0'; sp++)
+      {
+      if (sp > monthp+15)
+         {
+         break;
+         }
+      
+      if (isdigit(*sp))
+         {
+         *sp = 't';
+         }
+      }
    }
 }

@@ -1452,6 +1452,7 @@ void AssertThreadLocked(enum cf_thread_mutex name, char *fname);
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name);
 #endif
+void RemoveDates(char *s);
 
 /* timeout.c */
 

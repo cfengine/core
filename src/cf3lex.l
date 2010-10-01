@@ -155,7 +155,12 @@ category   [a-zA-Z_]+:
                          yyless(less);    
                          }
 
-                      P.currentstring = strdup(tmp);                      
+                      P.currentstring = strdup(tmp);
+                      if (THIS_AGENT_TYPE == cf_common)
+                         {
+                         IsCf3VarString(tmp);
+                         }
+
                       free(tmp);
                       return QSTRING;
                       }

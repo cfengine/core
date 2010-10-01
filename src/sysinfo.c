@@ -1484,7 +1484,7 @@ switch (result)
         return 0;
 
     default:
-        sscanf(buffer,"%*s %*s %[^/]",version);
+        sscanf(buffer,"%25[^/]",version);
         snprintf(classname,CF_MAXVARSIZE, "debian_%s",version);
         NewClass(classname);
         break;

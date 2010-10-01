@@ -743,6 +743,7 @@ char *ToLowerStr (char *str);
 int SubStrnCopyChr(char *to,char *from,int len,char sep);
 int CountChar(char *string,char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
+void TimeToDateStr(time_t t, char *outStr, int outStrSz);
     
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 void *ThreadUniqueName(pthread_t tid);

@@ -2091,7 +2091,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
    else
       {
-      CfOut(cf_verbose,"","%2d. MAX <%-10s-in>   = %10lf - %10lf u %10lf\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
+      fprintf(fout,"%2d. MAX <%-10s-in>   = %10lf - %10lf u %10lf\n",i,name,MIN.Q[i].expect,MAX.Q[i].expect,sqrt(MAX.Q[i].var));
       }
    }
 

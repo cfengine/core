@@ -272,6 +272,7 @@ while ((c=getopt_long(argc,argv,"d:vIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
 if (argv[optind] != NULL)
    {
    CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
+   FatalError("Aborted");
    }
 
 Debug("Set debugging\n");

@@ -897,7 +897,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
    if (!BlockTextMatch(a.column.column_separator,ip->name,&s,&e))
       {
-      cfPS(cf_error,CF_INTERPT,"",pp,a,"Field edit - no fields found by promised pattern %s in %s",a.column.column_separator,pp->this_server);
+      cfPS(cf_verbose,CF_INTERPT,"",pp,a," ! Field edit - no fields found by promised pattern %s in %s",a.column.column_separator,pp->this_server);
       return false;
       }
 

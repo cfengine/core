@@ -1302,7 +1302,7 @@ for (i = 0; i < 1024; i++)
       }
    else
       {
-      fprintf(fout,"Probability %7.4lf +/- %7.4lf for %s (last oberved @ %s)\n",array[i].q,sqrt(array[i].d),array[i].name,array[i].date);
+      fprintf(fout,"Probability %7.4lf +/- %7.4lf for %s (last observed @ %s)\n",array[i].q,sqrt(array[i].d),array[i].name,array[i].date);
       }
    }
 

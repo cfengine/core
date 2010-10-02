@@ -349,7 +349,7 @@ typedef int clockid_t;
 #define CF_MACROALPHABET 61    /* a-z, A-Z plus a bit */
 #define CF_MAXSHELLARGS 64
 #define CF_MAX_SCLICODES 16
-#define CF_SAMEMODE 0
+#define CF_SAMEMODE -1
 #define CF_SAME_OWNER ((uid_t)-1)
 #define CF_UNKNOWN_OWNER ((uid_t)-2)
 #define CF_SAME_GROUP ((gid_t)-1)

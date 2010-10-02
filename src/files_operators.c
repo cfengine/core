@@ -94,7 +94,7 @@ int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Prom
 
 {
 /* Here we can assume that we are in the parent directory of the leaf */
-
+ 
 if (!SelectLeaf(path,sb,attr,pp))
    {
    Debug("Skipping non-selected file %s\n",path);

@@ -392,7 +392,8 @@ mutex = NameToThreadMutex(name);
 
 if (pthread_mutex_lock(mutex) != 0)
    {
-   CfOut(cf_error,"pthread_mutex_lock","!! Could not lock: %d", name);
+   // Don't use CfOut here as it also requires locking
+   printf("!! Could not lock: %d", name);
    return false;
    }
 
@@ -418,7 +419,8 @@ mutex = NameToThreadMutex(name);
 
 if (pthread_mutex_unlock(mutex) != 0)
    {
-   CfOut(cf_error,"pthread_mutex_unlock","pthread_mutex_unlock failed");
+   // Don't use CfOut here as it also requires locking
+   printf("pthread_mutex_unlock","pthread_mutex_unlock failed");
    return false;
    }
 

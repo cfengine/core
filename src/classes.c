@@ -181,7 +181,7 @@ char *VPSOPTS[CF_CLASSATTR] =
    "-ef",    /* hpux */
    "-ef",    /* aix */
    "auxw",   /* linux */
-   "-elf",   /* solaris */
+   "-elyf",   /* solaris */
    "-ef",    /* osf1 */
    "auxw",   /* digital */   
    "auxw",   /* sun3 */

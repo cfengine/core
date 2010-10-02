@@ -185,6 +185,12 @@ int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr)
 
 // attr.move_obstructions for MakeParentDirectory
 
+if (!IsAbsoluteFileName(file))
+   {
+   cfPS(cf_inform,CF_FAIL,"creat",pp,attr," !! Cannot create a relative filename %s - has no invariant meaning\n",file);
+   return false;
+   }
+ 
 if (strcmp(".",ReadLastNode(file)) == 0)
    {
    Debug("File object \"%s \"seems to be a directory\n",file);

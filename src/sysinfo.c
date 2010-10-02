@@ -1484,13 +1484,17 @@ switch (result)
         return 0;
 
     default:
+        version[0] = '\0';
         sscanf(buffer,"%25[^/]",version);
-        snprintf(classname,CF_MAXVARSIZE, "debian_%s",version);
-        NewClass(classname);
+        if (strlen(version) > 0)
+           {
+           snprintf(classname,CF_MAXVARSIZE, "debian_%s",version);
+           NewClass(classname);
+           }
         break;
     }
 
-if ((fp = fopen(DEBIAN_VERSION_FILENAME,"r")) == NULL)
+if ((fp = fopen(DEBIAN_ISSUE_FILENAME,"r")) == NULL)
    {
    return 1;
    }

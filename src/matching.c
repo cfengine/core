@@ -572,7 +572,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    {
    *start = ovector[0];
    *end = ovector[1];
-   
+
    DeleteScope("match");
    NewScope("match");
    

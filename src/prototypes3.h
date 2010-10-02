@@ -586,7 +586,7 @@ struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
 #endif  /* NOT MINGW */
 
 void *CfReadFile(char *filename,int maxsize);
-char *StripPatterns(char *file_buffer,char *pattern);
+char *StripPatterns(char *file_buffer,char *pattern,char *filename);
 void CloseStringHole(char *s,int start,int end);
 int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex);
 int ExecModule(char *command);

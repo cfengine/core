@@ -2791,7 +2791,7 @@ if (file_buffer == NULL)
    }
 else
    {
-   file_buffer = StripPatterns(file_buffer,comment);
+   file_buffer = StripPatterns(file_buffer,comment,filename);
 
    if (file_buffer == NULL)
       {
@@ -2894,7 +2894,7 @@ if (file_buffer == NULL)
    }
 else
    {
-   file_buffer = StripPatterns(file_buffer,comment);
+   file_buffer = StripPatterns(file_buffer,comment,filename);
 
    if (file_buffer == NULL)
       {
@@ -2997,7 +2997,7 @@ if (file_buffer == NULL)
    }
 else
    {
-   file_buffer = StripPatterns(file_buffer,comment);
+   file_buffer = StripPatterns(file_buffer,comment,filename);
 
    if (file_buffer == NULL)
       {
@@ -3785,7 +3785,7 @@ if (file_buffer == NULL)
    }
 else
    {
-   file_buffer = StripPatterns(file_buffer,comment);
+   file_buffer = StripPatterns(file_buffer,comment,filename);
 
    if (file_buffer == NULL)
       {
@@ -3896,7 +3896,7 @@ if (file_buffer == NULL)
    }
 else
    {
-   file_buffer = StripPatterns(file_buffer,comment);
+   file_buffer = StripPatterns(file_buffer,comment,filename);
 
    if (file_buffer == NULL)
       {
@@ -4425,13 +4425,20 @@ return (void *)result;
 
 /*********************************************************************/
 
-char *StripPatterns(char *file_buffer,char *pattern)
+char *StripPatterns(char *file_buffer,char *pattern,char *filename)
 
 { int start,end;
+  int count = 0;
 
 while(BlockTextMatch(pattern,file_buffer,&start,&end))
    {
    CloseStringHole(file_buffer,start,end);
+
+   if (count++ > strlen(file_buffer))
+      {
+      CfOut(cf_error,""," !! Comment regex \"%s\" was irreconcilable reading file %s probably because it legally matches nothing",pattern,filename);
+      return file_buffer;
+      }
    }
 
 return file_buffer;

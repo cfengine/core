@@ -141,14 +141,15 @@ void DeleteHashes(struct CfAssoc **hashtable)
 
 { int i;
 
-/* Involved no memory copying, as this is just pointers */
-
-for (i = 0; i < CF_HASHTABLESIZE; i++)
+if (hashtable)
    {
-   if (hashtable[i] != NULL)
+   for (i = 0; i < CF_HASHTABLESIZE; i++)
       {
-      DeleteAssoc(hashtable[i]);
-      hashtable[i] = NULL;
+      if (hashtable[i] != NULL)
+         {
+         DeleteAssoc(hashtable[i]);
+         hashtable[i] = NULL;
+         }
       }
    }
 }

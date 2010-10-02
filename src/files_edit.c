@@ -38,7 +38,7 @@ struct edit_context *NewEditContext(char *filename,struct Attributes a,struct Pr
 
 { struct edit_context *ec;
 
-if (!IsAbsoliuteFilename(filename))
+if (!IsAbsoluteFileName(filename))
    {
    CfOut(cf_error,"","Relative file name %s was marked for editing but has no invariant meaning\n",filename);
    return NULL;

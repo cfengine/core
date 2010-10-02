@@ -55,17 +55,21 @@ return size;
 
 void PurgeItemList(struct Item **list,char *name)
 
-{ struct Item *ip;
+{ struct Item *ip,*copy;
   struct stat sb;
- 
-for (ip = *list; ip != NULL; ip=ip->next)
+
+CopyList(&copy,*list);
+  
+for (ip = copy; ip != NULL; ip=ip->next)
    {
    if (cfstat(ip->name,&sb) == -1)
       {
       CfOut(cf_verbose,""," -> Purging file \"%s\" from %s list as it no longer exists",ip->name,name);
-      DeleteItem(list,ip);
+      DeleteItemLiteral(list,ip->name);
       }
    }
+
+DeleteItemList(copy);
 }
 
 /*********************************************************************/
@@ -1335,11 +1339,14 @@ if (item != NULL)
       }
    else
       {
-      for (ip = *liststart; ip->next != item; ip=ip->next)
+      for (ip = *liststart; ip != NULL && ip->next != item && ip->next != NULL; ip=ip->next)
          {
          }
 
-      ip->next = sp;
+      if (ip != NULL)
+         {
+         ip->next = sp;
+         }
       }
 
    free((char *)item);

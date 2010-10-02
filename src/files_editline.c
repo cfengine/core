@@ -1131,9 +1131,16 @@ if (a.column.value_separator != '\0')
    {
    /* internal separator, single char so split again */
 
-   this_column = SplitStringAsRList(rp->item,a.column.value_separator);
-   retval = EditColumn(&this_column,a,pp);
-
+   if (strcmp(rp->item,a.column.column_value) == 0)
+      {
+      retval = false;
+      }
+   else
+      {
+      this_column = SplitStringAsRList(rp->item,a.column.value_separator);
+      retval = EditColumn(&this_column,a,pp);
+      }
+   
    if (retval)
       {
       if (a.transaction.action == cfa_warn)
@@ -1336,7 +1343,7 @@ if (a.column.column_operation && strcmp(a.column.column_operation,"set") == 0)
          return false;
          }
       }
-   
+
    CfOut(cf_inform,""," -> Setting field sub-value %s in %s",a.column.column_value,pp->this_server);
    DeleteRlist(*columns);
    *columns = NULL;

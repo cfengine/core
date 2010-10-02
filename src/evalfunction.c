@@ -4377,10 +4377,10 @@ else
    size = sb.st_size;
    }
 
- if(size == 0)
+if (size == 0)
    {
-     CfOut(cf_verbose,"","Aborting read: file %s has zero bytes",filename);
-     return NULL;
+   CfOut(cf_verbose,"","Aborting read: file %s has zero bytes",filename);
+   return NULL;
    }
 
 result = malloc(size+1);

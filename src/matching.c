@@ -462,7 +462,7 @@ struct CfRegEx CompileRegExp(char *regexp)
 
 memset(&this,0,sizeof(struct CfRegEx)); 
 
-rx = pcre_compile(regexp,0,&errorstr,&erroffset,NULL);
+rx = pcre_compile(regexp,PCRE_MULTILINE,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {
@@ -516,7 +516,7 @@ struct CfRegEx CaseCompileRegExp(char *regexp)
  int erroffset;
 
 memset(&this,0,sizeof(struct CfRegEx)); 
-rx = pcre_compile(regexp,PCRE_CASELESS,&errorstr,&erroffset,NULL);
+rx = pcre_compile(regexp,PCRE_CASELESS|PCRE_MULTILINE,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {

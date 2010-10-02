@@ -93,6 +93,7 @@ if (bp = GetBundle(method_name,"agent"))
    char *bp_stack = THIS_BUNDLE;
 
    BannerSubBundle(bp,params);
+   DeleteScope(bp->name);
    NewScope(bp->name);
 
    AugmentScope(bp->name,bp->args,params);

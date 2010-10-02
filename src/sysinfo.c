@@ -1518,8 +1518,8 @@ else if (strcmp(os,"Ubuntu") == 0)
    NewClass(buffer);
    }
 
-NewScalar("sys","flavour",classname,cf_str);
-NewScalar("sys","flavor",classname,cf_str);
+NewScalar("sys","flavour",buffer,cf_str);
+NewScalar("sys","flavor",buffer,cf_str);
 
 return 0;
 }

@@ -406,6 +406,7 @@ enum cfrecontrol
 
 enum cfhcontrol
    {
+   cfh_export_zenoss,
    cfh_schedule
    };
 

@@ -273,7 +273,8 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 
 struct BodySyntax CFH_CONTROLBODY[] = /* enum cfh_control */
    {
-   {"splaytime",cf_int,CF_VALRANGE,"Time in minutes to splay this host based on its name hash"},
+   {"export_zenoss",cf_opts,CF_BOOL,"Make data available for Zenoss integration in docroot/reports/summary.z"},
+   {"hub_schedule",cf_slist,"","The class schedule used by cf-hub for report collation"},
    {NULL,cf_notype,NULL,NULL}
    };
 

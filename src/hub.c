@@ -57,6 +57,7 @@ const int INF_LINES = -2;
 int NOSPLAY = false;
 int NOWINSERVICE = false;
 int THREADS = 0;
+int CFH_ZENOSS = false;
 
 extern struct BodySyntax CFEX_CONTROLBODY[];
 
@@ -284,6 +285,14 @@ for (cp = ControlBodyConstraints(cf_hub); cp != NULL; cp=cp->next)
             }
          }
       }
+
+   if (strcmp(cp->lval,CFH_CONTROLBODY[cfh_export_zenoss].lval) == 0)
+      {
+      CFH_ZENOSS = GetBoolean(retval);
+      CfOut(cf_verbose,"","SET export_zenoss = %d\n",CFH_ZENOSS);
+      continue;
+      }
+
    }
 }
 

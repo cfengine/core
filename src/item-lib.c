@@ -55,7 +55,7 @@ return size;
 
 void PurgeItemList(struct Item **list,char *name)
 
-{ struct Item *ip,*copy;
+{ struct Item *ip,*copy = NULL;
   struct stat sb;
 
 CopyList(&copy,*list);

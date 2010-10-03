@@ -1048,6 +1048,7 @@ if (rval != NULL)
 
    if (drop_undefined && cp->type == CF_LIST)
       {
+      last = NULL;
       for (rp = rval; rp != NULL; rp=rp->next)
          {
          if (IsNakedVar(rp->item,'@'))

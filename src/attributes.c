@@ -274,7 +274,10 @@ attr.havemount = GetBooleanConstraint("mount",pp);
 
 /* Common ("included") */
 
-attr.edits.maxfilesize = EDITFILESIZE;
+if (attr.edits.maxfilesize <= 0)
+   {
+   attr.edits.maxfilesize = EDITFILESIZE;
+   }
 
 attr.havetrans = GetBooleanConstraint(CF_TRANSACTION,pp);
 attr.transaction = GetTransactionConstraints(pp);

@@ -830,9 +830,6 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       continue;
       }
    
-   CfOut(cf_verbose,""," -> << \"%s\"\n",ip->name);
-   CfOut(cf_verbose,""," -> >> \"%s\"\n",line_buff);
-   
    if (a.transaction.action == cfa_warn)
       {
       cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to replace line \"%s\" in %s - but only a warning was promised",pp->promiser,pp->this_server);
@@ -845,6 +842,9 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       cfPS(cf_verbose,CF_CHG,"",pp,a," -> Replaced pattern \"%s\" in %s",pp->promiser,pp->this_server);
       (pp->edcontext->num_edits)++;
       retval = true;
+
+      CfOut(cf_verbose,""," -> << \"%s\"\n",ip->name);
+      CfOut(cf_verbose,""," -> >> \"%s\"\n",line_buff);
 
       if (once_only)
          {

@@ -582,7 +582,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
 
 lol = NewIterationContext(scopeid,listvars);
 
-if (EndOfIteration(lol))
+if (lol && EndOfIteration(lol))
    {
    return;
    }

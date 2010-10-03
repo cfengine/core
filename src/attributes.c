@@ -1398,6 +1398,12 @@ struct EditColumn GetColumnConstraints(struct Promise *pp)
 
 c.column_separator = GetConstraint("field_separator",pp,CF_SCALAR);
 c.select_column = GetIntConstraint("select_field",pp);
+
+if (c.select_column != CF_NOINT && GetBooleanConstraint("start_fields_from_zero",pp))
+   {
+   c.select_column++;
+   }
+
 value = GetConstraint("value_separator",pp,CF_SCALAR);
 
 if (value)

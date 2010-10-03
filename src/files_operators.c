@@ -195,7 +195,7 @@ if (strcmp(".",ReadLastNode(file)) == 0)
    {
    Debug("File object \"%s \"seems to be a directory\n",file);
 
-   if (!DONTDO)
+   if (!DONTDO && attr.transaction.action != cfa_warn)
       {
       if (!MakeParentDirectory(file,attr.move_obstructions))
          {
@@ -205,10 +205,15 @@ if (strcmp(".",ReadLastNode(file)) == 0)
 
       cfPS(cf_inform,CF_CHG,"",pp,attr," -> Created directory %s\n",file);
       }
+   else
+      {
+      CfOut(cf_error,""," !! Warning promised, need to create directory %s",file);
+      return false;
+      }
    }
 else
    {
-   if (!DONTDO)
+   if (!DONTDO && attr.transaction.action != cfa_warn)
       {
       mode_t saveumask = umask(0);
       mode_t filemode = 0600;  /* Decide the mode for filecreation */
@@ -238,6 +243,11 @@ else
          close(fd);
          umask(saveumask);
          }
+      }
+   else
+      {
+      CfOut(cf_error,""," !! Warning promised, need to create file %s\n",file);
+      return false;
       }
    }
 

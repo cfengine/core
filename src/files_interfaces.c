@@ -212,7 +212,7 @@ void VerifyFilePromise(char *path,struct Promise *pp)
 { struct stat osb,oslb,dsb,dslb;
   struct Attributes a;
   struct CfLock thislock;
-  int exists,success,rlevel = 0,isthere,save = true;
+  int exists,success,rlevel = 0,isthere,save = true,isdirectory = false;
 
 a = GetFilesAttributes(pp);
 

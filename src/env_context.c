@@ -720,6 +720,13 @@ cum = 0.0;
 
 /* If we get here, anything remaining on the RHS must be a clist */
 
+if (cp->type != CF_LIST)
+   {
+   CfOut(cf_error,""," !! RHS of promise body attribute \"%s\" is not a list\n",cp->lval);
+   PromiseRef(cf_error,pp);
+   return true;
+   }
+
 for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
    {
    if (rp->type != CF_SCALAR)

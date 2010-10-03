@@ -466,6 +466,7 @@ enum cfeditorder
 #define CF_INTRANGE  "-99999999999,9999999999"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
 #define CF_CHARRANGE "^.$"
+#define CF_NULL_VALUE "cf_null"
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"

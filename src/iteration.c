@@ -163,7 +163,14 @@ else
    {
    /* Update the current wheel */
    iterator->state_ptr = state->next;
+
    Debug(" <- Incrementing wheel (%s) to \"%s\"\n",cp->lval,iterator->state_ptr->item);
+
+   if (strcmp(iterator->state_ptr->item,CF_NULL_VALUE) == 0)
+      {
+      iterator->state_ptr = iterator->state_ptr->next;
+      }
+   
    return true;
    }
 }
@@ -184,6 +191,11 @@ if (iterator == NULL)
 for (rp = iterator; rp != NULL; rp = rp->next)
    {
    state = rp->state_ptr;
+
+   if (state == NULL)
+      {
+      break;
+      }
    
    if (state->next != NULL)
       {

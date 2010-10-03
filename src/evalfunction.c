@@ -1376,8 +1376,9 @@ else
 if ((ptr = GetScope(scopeid)) == NULL)
    {
    CfOut(cf_error,"","Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
-   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
-   rval.item = NULL;
+   SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,"Array not found in scope",NULL);
+   IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
+   rval.item = returnlist;
    rval.rtype = CF_LIST;
    return rval;            
    }
@@ -1413,10 +1414,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
 
 if (returnlist == NULL)
    {
-   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   return rval;               
+   IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
    }
 
 SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);

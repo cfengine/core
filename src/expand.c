@@ -582,6 +582,11 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
 
 lol = NewIterationContext(scopeid,listvars);
 
+if (EndOfIteration(lol))
+   {
+   return;
+   }
+
 do
    {
    /* Set scope "this" first to ensure list expansion ! */

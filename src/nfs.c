@@ -44,7 +44,7 @@ int LoadMountInfo(struct Rlist **list)
 { FILE *pp;
   char buf1[CF_BUFSIZE],buf2[CF_BUFSIZE],buf3[CF_BUFSIZE];
   char host[CF_MAXVARSIZE],source[CF_BUFSIZE],mounton[CF_BUFSIZE],vbuff[CF_BUFSIZE];
-  int i;
+  int i, nfs = false;
 
 for (i=0; VMOUNTCOMM[VSYSTEMHARDCLASS][i] != ' '; i++)
    {
@@ -77,6 +77,11 @@ do
       {
       CfOut(cf_error,"ferror","Error getting mount info\n");
       break;
+      }
+
+   if (strstr(vbuff,"nfs"))
+      {
+      nfs = true;
       }
    
    sscanf(vbuff,"%s%s%s",buf1,buf2,buf3);
@@ -201,7 +206,14 @@ do
 
    Debug("GOT: host=%s, source=%s, mounton=%s\n",host,source,mounton);
 
-   AugmentMountInfo(list,host,source,mounton,NULL);
+   if (nfs)
+      {
+      AugmentMountInfo(list,host,source,mounton,"nfs");
+      }
+   else
+      {
+      AugmentMountInfo(list,host,source,mounton,NULL);
+      }
    }
 while (!feof(pp));
 

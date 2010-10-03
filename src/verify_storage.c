@@ -91,7 +91,6 @@ else if (a.havemount)
       }
    }
 
-
 thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
 
 if (thislock.lock == NULL)
@@ -102,15 +101,15 @@ if (thislock.lock == NULL)
 /* Do mounts first */
 
 #ifndef MINGW
+if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
+   {
+   CfOut(cf_error,"","Couldn't obtain a list of mounted filesystems - aborting\n");
+   YieldCurrentLock(thislock);
+   return;
+   }
+
 if (a.havemount)
    {
-   if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
-      {
-      CfOut(cf_error,"","Couldn't obtain a list of mounted filesystems - aborting\n");
-	  YieldCurrentLock(thislock);
-      return;
-      }
-
    VerifyMountPromise(path,a,pp);
    }
 #endif  /* NOT MINGW */
@@ -121,10 +120,10 @@ if (a.havevolume)
    {
    VerifyFileSystem(path,a,pp);
    
-   if(a.volume.freespace != CF_NOINT)
-     {
-       VerifyFreeSpace(path,a,pp);
-     }
+   if (a.volume.freespace != CF_NOINT)
+      {
+      VerifyFreeSpace(path,a,pp);
+      }
    
    if (a.volume.scan_arrivals)
       {
@@ -377,14 +376,28 @@ if (cfstat(vbuff,&parentstat) == -1)
 
 if (childstat->st_dev != parentstat.st_dev)
    {
-   Debug2("[%s is on a different file system, not descending]\n",dir);
-   return (true);
+   struct Rlist *rp;
+   struct CfMount *entry;
+
+   Debug("[%s is on a different file system, not descending]\n",dir);
+
+   for (rp = MOUNTEDFSLIST; rp != NULL; rp=rp->next)
+      {
+      entry = (struct CfMount *)rp->item;
+
+      if (strncmp(entry->mounton,dir,strlen(entry->mounton)) == 0)
+         {
+         if (entry->options && strstr(entry->options,"nfs"))
+            {
+            return (true);
+            }
+         }
+      }
    }
 
 Debug("NotMountedFileSystem\n");
 return(false);
 }
-
 
 /*********************************************************************/
 /*  Unix-specific implementations                                    */

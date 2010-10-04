@@ -1,5 +1,5 @@
 ################################################################
-@CF_DIR=/root/cf3
+@CF_DIR=/tmp
 ################################################################
 ACCESSED_BEFORE
 {
@@ -29,7 +29,6 @@ class:
 top10
 
 prepare:
-NA
 file ("cf3_hello",CREATE); 
 
 execute:
@@ -67,47 +66,7 @@ NA
 }
 
 ################################################################
-SELECT_MODE
-{
-class:
-top10
 
-prepare:
-NA
-
-execute:
-policy("unit_select_mode.cf", "KI")
-
-output:
-info(".*DETECTED.*")
-
-cleanup:
-NA
-}
-
-################################################################
-	
-UNIT_FILEPERMS
-{
-class:
-top10
-
-prepare:
-file("unit_fileperms.tmp", CREATE)
-
-execute:
-policy("unit_fileperms.cf", "K")
-
-output:       
-checkfileperms ("unit_fileperms.tmp","0755")
-checkowner("unit_fileperms.tmp","bishwa")
-  # Check Get the file owner
-  
-cleanup:
-file("unit_fileperms.tmp", DELETE)
-}
-
-################################################################
 # this is a negative test
 UNIT_FILES_NOT_EXIST
 {
@@ -150,25 +109,6 @@ file("b", DELETE)
 file("c", DELETE)
 }
 ################################################################
-# this is a negative test
-UNIT_FILES_NOT_EXIST2
-{
-class:
-top10
-
-prepare:
-NA
-
-execute:
-policy("unit_filesexist2.cf", "K")
-
-output:
-report("Does not yet exist")
-
-cleanup:
-NA
-}
-################################################################
 
 UNIT_FILESEXIST2
 {
@@ -200,8 +140,8 @@ class:
 top10
 
 prepare:
-file ("later.tmp", ACCESS)
-file ("earlier.tmp", ACCESS);
+file ("later", ACCESS)
+file ("earlier", ACCESS);
 
 execute:
 policy("unit_changedbefore.cf","K")
@@ -210,8 +150,8 @@ output:
 report("Earlier than later!")
 
 cleanup:
-file ("earlier.tmp",DELETE)
-file ("later.tmp",DELETE)
+file ("earlier",DELETE)
+file ("later",DELETE)
 }
 ################################################################
 CLASSES_GLOBAL
@@ -293,78 +233,6 @@ NA
 
 ################################################################
 
-COUNTLINESMATCHING
-{
-class:
-top10
-
-prepare:
-file("unit_countlinesmatching.cf",EXISTS)
-file("countlinesmatching.txt", CREATE)
-appendLine("Hello test","countlinesmatching.txt")
-appendLine("Hello test test","countlinesmatching.txt")
-appendLine("Hello testing","countlinesmatching.txt")
-appendLine("test Hellynr","countlinesmatching.txt")
-appendLine("Testing Hello","countlinesmatching.txt")
-
-execute:
-policy("unit_countlinesmatching.cf","K")
-
-output:
-report("Found 3 lines matching")
-
-cleanup:
-file("countlinesmatching.txt", DELETE)
-}
-################################################################
-CREATE_FILEDIR
-{
- class:
- top10
- 
- prepare:
- dir("create_dir", NOTEXISTS)
- file("create_file.tmp", NOTEXISTS)
- 
- execute:
- policy("unit_create_filedir.cf","K")
- 
- output:
- dir("create_dir", EXISTS)
- file("create_file.tmp", EXISTS)
- 
- cleanup:
- dir("create_dir", DELETE)
- file("create_file.tmp", DELETE)
-}
-
-################################################################
-
-DISABLE_AND_ROTATE_FILES
-{
- class:
- top10
- 
- prepare:
- file("disableme", CREATE)
- file("rotateme", CREATE)
- 
- execute:
- policy("unit_disable_and_rotate_files.cf","K")
- 
- output:
- file("disableme_blownaway", EXISTS)
-# file("disableme", NOTEXISTS) # not working
- file("rotateme", EXISTS)
- file("rotateme.1", EXISTS)
- 
- cleanup:
- file("disableme_blownaway", DELETE)
- file("rotateme", DELETE)
- file("rotateme.1", DELETE)
-}
-
-################################################################
 DISKFREE
 {
  class:
@@ -384,48 +252,6 @@ DISKFREE
 }
 
 ################################################################
-EDIT_COLUMN_FILES
-{
- class:
- top10
- 
- prepare:
- NA
- 
- execute:
- policy("unit_edit_column_files.cf","K")
- 
- output:
- addline(".*:.*:.*:.*:.*:/home/dir:.*","passwd")
- addline("mark:.+:.+:one,three,two.*","group")
- 
- cleanup:
- NA
-}
-
-################################################################
-
-EDIT_INSERT_FUZZYLINES
-{
- class:
- top10
- 
- prepare:
- NA
- 
- execute:
- policy("unit_edit_insert_fuzzylines.cf","K")
- 
- output:
- addline("    One potato","fuzzylines.tmp")
- file("fuzzylines.tmp.cf-before-edit", EXISTS)
-
- cleanup:
- file("fuzzylines.tmp.cf-before-edit", DELETE)
- file("fuzzylines.tmp", DELETE)
- 
-}
-################################################################
 
 EDIT_PASSWD_FILE
 {
@@ -439,36 +265,14 @@ EDIT_PASSWD_FILE
  policy("unit_edit_passwd_file.cf","K")
  
  output:
-# addline("mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash","mypasswd")
- addline("fred:x:1001:100:Right Said:/home/fred:/bin/bash","mypasswd")
- addline("jane:x:1002:100:Jane Doe:/home/jane:/bin/bash","mypasswd")
+# addline("mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash","passwd")
+ addline("fred:x:1001:100:Right Said:/home/fred:/bin/bash","passwd")
+ addline("jane:x:1002:100:Jane Doe:/home/jane:/bin/bash","passwd")
 
  cleanup:
- file("mypasswd", DELETE)
- file("mypasswd.cf-before-edit", DELETE)
+ file("passwd", DELETE)
+ file("passwd.cf-before-edit", DELETE)
  
-}
-
-################################################################
-
-EDIT_REPLACESTRING
-{
- class:
- top10
- 
- prepare:
- file("replacestring.tmp", CREATE)
- appendLine("Hello cf2","replacestring.tmp")
- 
- execute:
- policy("unit_edit_replace_string.cf","K")
- 
- output:
- addline("Hello cfengine 3","replacestring.tmp")
-
- cleanup:
- file("replacestring.tmp", DELETE)
- file("replacestring.tmp.cf-before-edit", DELETE)
 }
 
 ################################################################
@@ -487,27 +291,6 @@ EDIT_SETVAR
  addline("variable_1 = value_1","test_setvar")
  addline("variable_2 = value_2","test_setvar")
  cmpenv("PGK_PATH","/tmp")
-
- cleanup:
- file("test_setvar", DELETE)
- file("test_setvar.cf-before-edit", DELETE)
-}
-
-################################################################
-
-UNIT_ENV
-{
- class:
- top10
- 
- prepare:
- file("test_setvar", CREATE)
- 
- execute:
- policy("unit_edit_setvar.cf","K")
- 
- output:
-
 
  cleanup:
  file("test_setvar", DELETE)

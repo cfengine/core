@@ -37,7 +37,9 @@ bundle agent example
 {     
 classes:
 
-  "do_it" and => { accessedbefore("/tmp/earlier","/tmp/later") }; 
+  "do_it" and => {
+accessedbefore("earlier","later")
+}; 
 
 reports:
 

@@ -171,7 +171,7 @@ void CheckOpts(int argc,char **argv)
 
 POLICY_SERVER[0] = '\0';
   
-while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x::MBb:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {

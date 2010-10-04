@@ -408,9 +408,9 @@ void TestSuite(char *s)
 printf("\tChecking for installed libraries...\n");
 CheckInstalledLibraries();
 printf("\tDone.\n\n");   
-if(RemoveChars(s,"=") != 1)
+if(s == NULL)
 {
-   printf("\tFatal Error: Filename not supplied!\n",s);
+   snprintf(s,CF_BUFSIZE,"%s","input.in");
    return;
 }
    

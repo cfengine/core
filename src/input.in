@@ -9,10 +9,10 @@ LISTS
 NA
  
  execute:
- policy("/working/tests/lists.cf", "K")
+ policy("../tests/units/lists.cf", "K")
  
  output:
-reports("/working/tmp/lists.out")
+reports("../tests/regression_test/tmp/lists.out")
  
  cleanup:
  NA
@@ -20,9 +20,9 @@ reports("/working/tmp/lists.out")
 
 ################################################################
 
-# line_exists = line(".*edit variable.*", "/working/tmp/cf3_hello","EXISTS")
+# line_exists = line(".*edit variable.*", "../tests/regression_test/tmp/cf3_hello","EXISTS")
 
-# line_exists = line(".*edit variable.*", "/working/tmp/cf3_hello","EXISTS")
+# line_exists = line(".*edit variable.*", "../tests/regression_test/tmp/cf3_hello","EXISTS")
 
 
 ################################################################
@@ -33,18 +33,18 @@ class:
 top10
 
 prepare:     
-file ("/working/tmp/earlier",ACCESS); 
-file ("/working/tmp/later",ACCESS)
+file ("../tests/regression_test/tmp/earlier",ACCESS); 
+file ("../tests/regression_test/tmp/later",ACCESS)
 
 execute:
-policy("/working/tests/unit_accessed_before.cf","K")
+policy("../tests/units/unit_accessed_before.cf","K")
 
 output:
 report("The earlier file has been accessed before the later")
 
 cleanup:
-file ("/working/tmp/earlier",DELETE) 
-file ("/working/tmp/later",DELETE)
+file ("../tests/regression_test/tmp/earlier",DELETE) 
+file ("../tests/regression_test/tmp/later",DELETE)
 }
 
 ################################################################
@@ -56,19 +56,19 @@ top10
 
 prepare:
 NA
-file ("/working/tmp/cf3_hello",CREATE); 
+file ("../tests/regression_test/tmp/cf3_hello",CREATE); 
 
 execute:
-policy("/working/tests/unit_backreferences_files.cf","KI")
+policy("../tests/units/unit_backreferences_files.cf","KI")
 
 output:
-addline("private edit variable is .*","/working/tmp/cf3_hello")
-#file("/working/tmp/cf3_hello.cf-before-edit",EXISTS)
+addline("private edit variable is .*","../tests/regression_test/tmp/cf3_hello")
+#file("../tests/regression_test/tmp/cf3_hello.cf-before-edit",EXISTS)
 
 
  cleanup:
- file("/working/tmp/cf3_hello", DELETE)
- file("/working/tmp/cf3_hello.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/cf3_hello", DELETE)
+ file("../tests/regression_test/tmp/cf3_hello.cf-before-edit", DELETE)
 
 }
 
@@ -83,7 +83,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_arrays.cf", "K")
+policy("../tests/units/unit_arrays.cf", "K")
 
 output:
 report("Global ([a-z]+) and ([a-z]+)")
@@ -106,7 +106,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_select_mode.cf", "KI")
+policy("../tests/units/unit_select_mode.cf", "KI")
 
 output:
 info(".*DETECTED.*")
@@ -126,7 +126,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_insert_users.cf", "K")
+policy("../tests/units/unit_insert_users.cf", "K")
 
 output:
 adduser("mark")
@@ -143,20 +143,20 @@ class:
 top10
 
 prepare:
-file("/working/tests/", EXISTS)
+file("../tests/units/", EXISTS)
 
 execute:
-policy("/working/tests/insert_lines.cf", "K")
+policy("../tests/units/insert_lines.cf", "K")
 
 output:       
 
 # used as: addlines("template_file", "modified_file")
-addlines("/working/tmp/insert_lines.out","/working/tmp/insert_lines.actual")
+addlines("../tests/regression_test/tmp/insert_lines.out","../tests/regression_test/tmp/insert_lines.actual")
 
-#lines("/working/tmp/test_template","/working/tmp/test","EXISTS")
+#lines("../tests/regression_test/tmp/test_template","../tests/regression_test/tmp/test","EXISTS")
 
 cleanup:
-file("/working/tmp/insert_lines.actual", DELETE)
+file("../tests/regression_test/tmp/insert_lines.actual", DELETE)
 }
 
 ################################################################
@@ -171,16 +171,16 @@ class:
 top10
 
 prepare:
-file("/working/tmp/unit_acl.tmp", CREATE)
+file("../tests/regression_test/tmp/unit_acl.tmp", CREATE)
 
 execute:
-policy("/working/tests/unit_acl.cf", "K")
+policy("../tests/units/unit_acl.cf", "K")
 
 output:       
-checkfileperms ("/working/tmp/unit_acl.tmp","0755")
+checkfileperms ("../tests/regression_test/tmp/unit_acl.tmp","0755")
 
 cleanup:
-file("/working/tmp/unit_acl.tmp", DELETE)
+file("../tests/regression_test/tmp/unit_acl.tmp", DELETE)
 }
 
 ################################################################
@@ -191,18 +191,18 @@ class:
 top10
 
 prepare:
-file("/working/tmp/unit_fileperms.tmp", CREATE)
+file("../tests/regression_test/tmp/unit_fileperms.tmp", CREATE)
 
 execute:
-policy("/working/tests/unit_fileperms.cf", "K")
+policy("../tests/units/unit_fileperms.cf", "K")
 
 output:       
-checkfileperms ("/working/tmp/unit_fileperms.tmp","0755")
-checkowner("/working/tmp/unit_fileperms.tmp","bishwa")
+checkfileperms ("../tests/regression_test/tmp/unit_fileperms.tmp","0755")
+checkowner("../tests/regression_test/tmp/unit_fileperms.tmp","bishwa")
   # Check Get the file owner
   
 cleanup:
-file("/working/tmp/unit_fileperms.tmp", DELETE)
+file("../tests/regression_test/tmp/unit_fileperms.tmp", DELETE)
 }
 
 ################################################################
@@ -216,7 +216,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_filesexist.cf", "K")
+policy("../tests/units/unit_filesexist.cf", "K")
 
 output:
 report("Does not yet exist")
@@ -232,20 +232,20 @@ class:
 top10
 
 prepare:
-file("/working/tmp/a", CREATE)
-file("/working/tmp/b", CREATE)
-file("/working/tmp/c", CREATE)
+file("../tests/regression_test/tmp/a", CREATE)
+file("../tests/regression_test/tmp/b", CREATE)
+file("../tests/regression_test/tmp/c", CREATE)
 
 execute:
-policy("/working/tests/unit_filesexist.cf", "K")
+policy("../tests/units/unit_filesexist.cf", "K")
 
 output:
 report("File does exist")
 
 cleanup:
-file("/working/tmp/a", DELETE)
-file("/working/tmp/b", DELETE)
-file("/working/tmp/c", DELETE)
+file("../tests/regression_test/tmp/a", DELETE)
+file("../tests/regression_test/tmp/b", DELETE)
+file("../tests/regression_test/tmp/c", DELETE)
 }
 ################################################################
 # this is a negative test
@@ -258,7 +258,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_filesexist2.cf", "K")
+policy("../tests/units/unit_filesexist2.cf", "K")
 
 output:
 report("Does not yet exist")
@@ -274,20 +274,20 @@ class:
 top10
 
 prepare:
-file("/working/tmp/x", CREATE)
-file("/working/tmp/y", CREATE)
-file("/working/tmp/z", CREATE)
+file("../tests/regression_test/tmp/x", CREATE)
+file("../tests/regression_test/tmp/y", CREATE)
+file("../tests/regression_test/tmp/z", CREATE)
 
 execute:
-policy("/working/tests/unit_filesexist2.cf", "K")
+policy("../tests/units/unit_filesexist2.cf", "K")
 
 output:
 report("File does exist")
 
 cleanup:
-file("/working/tmp/x", DELETE)
-file("/working/tmp/y", DELETE)
-file("/working/tmp/z", DELETE)
+file("../tests/regression_test/tmp/x", DELETE)
+file("../tests/regression_test/tmp/y", DELETE)
+file("../tests/regression_test/tmp/z", DELETE)
 }
 
 ################################################################
@@ -301,14 +301,14 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_filenames.cf", "K")
+policy("../tests/units/unit_filenames.cf", "K")
 
 output:
-file("/working/tmp/etc/passwd", EXISTS)
+file("../tests/regression_test/tmp/etc/passwd", EXISTS)
 
 cleanup:
-file("/working/tmp/etc/passwd", DELETE)
-file("/working/tmp/etc/", DELETE)
+file("../tests/regression_test/tmp/etc/passwd", DELETE)
+file("../tests/regression_test/tmp/etc/", DELETE)
 
 }
 
@@ -319,18 +319,18 @@ class:
 top10
 
 prepare:
-file ("/working/tmp/later.tmp", ACCESS)
-file ("/working/tmp/earlier.tmp", ACCESS);
+file ("../tests/regression_test/tmp/later.tmp", ACCESS)
+file ("../tests/regression_test/tmp/earlier.tmp", ACCESS);
 
 execute:
-policy("/working/tests/unit_changedbefore.cf","K")
+policy("../tests/units/unit_changedbefore.cf","K")
 
 output:
 report("Earlier than later!")
 
 cleanup:
-file ("/working/tmp/earlier.tmp",DELETE)
-file ("/working/tmp/later.tmp",DELETE)
+file ("../tests/regression_test/tmp/earlier.tmp",DELETE)
+file ("../tests/regression_test/tmp/later.tmp",DELETE)
 }
 
 ################################################################
@@ -341,13 +341,13 @@ class:
 top10
 
 prepare:
-file ("/working/tmp/chdir.out", EXISTS)
+file ("../tests/regression_test/tmp/chdir.out", EXISTS)
 
 execute:
-policy("/working/tests/unit_chdir.cf","K")
+policy("../tests/units/unit_chdir.cf","K")
 
 output:
-reports("/working/tmp/chdir.out")
+reports("../tests/regression_test/tmp/chdir.out")
 
 cleanup:
 NA
@@ -363,7 +363,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_classes_global.cf","K")
+policy("../tests/units/unit_classes_global.cf","K")
 
 output:
 report("Success")
@@ -382,7 +382,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_classmatch.cf","K")
+policy("../tests/units/unit_classmatch.cf","K")
 
 output:
 report("Host matches pattern")
@@ -399,13 +399,13 @@ class:
 top10
 
 prepare:
-file ("/working/tmp/classvar_convergence.out", EXISTS)
+file ("../tests/regression_test/tmp/classvar_convergence.out", EXISTS)
 
 execute:
-policy("/working/tests/unit_classvar_convergence.cf","K")
+policy("../tests/units/unit_classvar_convergence.cf","K")
 
 output:
-reports("/working/tmp/classvar_convergence.out")
+reports("../tests/regression_test/tmp/classvar_convergence.out")
 
 cleanup:
 NA
@@ -422,7 +422,7 @@ prepare:
 NA
 
 execute:
-policy("/working/tests/unit_compare.cf","K")
+policy("../tests/units/unit_compare.cf","K")
 
 output:
 report("Assertion is true")
@@ -439,23 +439,23 @@ class:
 top10
 
 prepare:
-file("/working/tmp/source-template",EXISTS)
-file("/working/tmp/staging-file",NOTEXISTS)
-file("/working/tmp/copy_edit.out",EXISTS)
+file("../tests/regression_test/tmp/source-template",EXISTS)
+file("../tests/regression_test/tmp/staging-file",NOTEXISTS)
+file("../tests/regression_test/tmp/copy_edit.out",EXISTS)
 
 execute:
-policy("/working/tests/unit_copy_edit.cf","K")
+policy("../tests/units/unit_copy_edit.cf","K")
 
 output:
-file("/working/tmp/staging-file",EXISTS)
-#file("/working/tmp/staging-file.cfsaved",EXISTS)
-#file("/working/tmp/final-file.cf-before-edit",EXISTS)
-addlines("/working/tmp/copy_edit.out","/working/tmp/final-file")
+file("../tests/regression_test/tmp/staging-file",EXISTS)
+#file("../tests/regression_test/tmp/staging-file.cfsaved",EXISTS)
+#file("../tests/regression_test/tmp/final-file.cf-before-edit",EXISTS)
+addlines("../tests/regression_test/tmp/copy_edit.out","../tests/regression_test/tmp/final-file")
 
 cleanup:
-file("/working/tmp/staging-file",DELETE)
-file("/working/tmp/staging-file.cfsaved",DELETE)
-file("/working/tmp/final-file.cf-before-edit",DELETE)
+file("../tests/regression_test/tmp/staging-file",DELETE)
+file("../tests/regression_test/tmp/staging-file.cfsaved",DELETE)
+file("../tests/regression_test/tmp/final-file.cf-before-edit",DELETE)
 }
 
 ################################################################
@@ -465,19 +465,19 @@ class:
 top10
 
 prepare:
-file("/working/tmp/copylinks_from",EXISTS)
+file("../tests/regression_test/tmp/copylinks_from",EXISTS)
 
 execute:
-policy("/working/tests/unit_copylinks.cf","K")
+policy("../tests/units/unit_copylinks.cf","K")
 
 output:
-file("/working/tmp/copylinks_to",EXISTS)
-islink("/working/tmp/copylinks_to")
-#file("/working/tmp/final-file.cf-before-edit",EXISTS)
-#addlines("/working/tmp/copy_edit.out","/working/tmp/final-file")
+file("../tests/regression_test/tmp/copylinks_to",EXISTS)
+islink("../tests/regression_test/tmp/copylinks_to")
+#file("../tests/regression_test/tmp/final-file.cf-before-edit",EXISTS)
+#addlines("../tests/regression_test/tmp/copy_edit.out","../tests/regression_test/tmp/final-file")
 
 cleanup:
-file("/working/tmp/copylinks_to",DELETE)
+file("../tests/regression_test/tmp/copylinks_to",DELETE)
 }
 
 ################################################################
@@ -488,10 +488,10 @@ class:
 top10
 
 prepare:
-file("/working/tests/unit_countclassesmatching.cf",EXISTS)
+file("../tests/units/unit_countclassesmatching.cf",EXISTS)
 
 execute:
-policy("/working/tests/unit_countclassesmatching.cf","K")
+policy("../tests/units/unit_countclassesmatching.cf","K")
 
 output:
 report("Found 3 classes matching cf.*")
@@ -508,22 +508,22 @@ class:
 top10
 
 prepare:
-file("/working/tests/unit_countlinesmatching.cf",EXISTS)
-file("/working/tmp/countlinesmatching.txt", CREATE)
-appendLine("Hello test","/working/tmp/countlinesmatching.txt")
-appendLine("Hello test test","/working/tmp/countlinesmatching.txt")
-appendLine("Hello testing","/working/tmp/countlinesmatching.txt")
-appendLine("test Hellynr","/working/tmp/countlinesmatching.txt")
-appendLine("Testing Hello","/working/tmp/countlinesmatching.txt")
+file("../tests/units/unit_countlinesmatching.cf",EXISTS)
+file("../tests/regression_test/tmp/countlinesmatching.txt", CREATE)
+appendLine("Hello test","../tests/regression_test/tmp/countlinesmatching.txt")
+appendLine("Hello test test","../tests/regression_test/tmp/countlinesmatching.txt")
+appendLine("Hello testing","../tests/regression_test/tmp/countlinesmatching.txt")
+appendLine("test Hellynr","../tests/regression_test/tmp/countlinesmatching.txt")
+appendLine("Testing Hello","../tests/regression_test/tmp/countlinesmatching.txt")
 
 execute:
-policy("/working/tests/unit_countlinesmatching.cf","K")
+policy("../tests/units/unit_countlinesmatching.cf","K")
 
 output:
 report("Found 3 lines matching")
 
 cleanup:
-file("/working/tmp/countlinesmatching.txt", DELETE)
+file("../tests/regression_test/tmp/countlinesmatching.txt", DELETE)
 }
 ################################################################
 CREATE_FILEDIR
@@ -532,19 +532,19 @@ CREATE_FILEDIR
  top10
  
  prepare:
- dir("/working/tmp/create_dir", NOTEXISTS)
- file("/working/tmp/create_file.tmp", NOTEXISTS)
+ dir("../tests/regression_test/tmp/create_dir", NOTEXISTS)
+ file("../tests/regression_test/tmp/create_file.tmp", NOTEXISTS)
  
  execute:
- policy("/working/tests/unit_create_filedir.cf","K")
+ policy("../tests/units/unit_create_filedir.cf","K")
  
  output:
- dir("/working/tmp/create_dir", EXISTS)
- file("/working/tmp/create_file.tmp", EXISTS)
+ dir("../tests/regression_test/tmp/create_dir", EXISTS)
+ file("../tests/regression_test/tmp/create_file.tmp", EXISTS)
  
  cleanup:
- dir("/working/tmp/create_dir", DELETE)
- file("/working/tmp/create_file.tmp", DELETE)
+ dir("../tests/regression_test/tmp/create_dir", DELETE)
+ file("../tests/regression_test/tmp/create_file.tmp", DELETE)
 }
 
 ################################################################
@@ -555,22 +555,22 @@ DISABLE_AND_ROTATE_FILES
  top10
  
  prepare:
- file("/working/tmp/disableme", CREATE)
- file("/working/tmp/rotateme", CREATE)
+ file("../tests/regression_test/tmp/disableme", CREATE)
+ file("../tests/regression_test/tmp/rotateme", CREATE)
  
  execute:
- policy("/working/tests/unit_disable_and_rotate_files.cf","K")
+ policy("../tests/units/unit_disable_and_rotate_files.cf","K")
  
  output:
- file("/working/tmp/disableme_blownaway", EXISTS)
-# file("/working/tmp/disableme", NOTEXISTS) # not working
- file("/working/tmp/rotateme", EXISTS)
- file("/working/tmp/rotateme.1", EXISTS)
+ file("../tests/regression_test/tmp/disableme_blownaway", EXISTS)
+# file("../tests/regression_test/tmp/disableme", NOTEXISTS) # not working
+ file("../tests/regression_test/tmp/rotateme", EXISTS)
+ file("../tests/regression_test/tmp/rotateme.1", EXISTS)
  
  cleanup:
- file("/working/tmp/disableme_blownaway", DELETE)
- file("/working/tmp/rotateme", DELETE)
- file("/working/tmp/rotateme.1", DELETE)
+ file("../tests/regression_test/tmp/disableme_blownaway", DELETE)
+ file("../tests/regression_test/tmp/rotateme", DELETE)
+ file("../tests/regression_test/tmp/rotateme.1", DELETE)
 }
 
 ################################################################
@@ -583,7 +583,7 @@ DISKFREE
  NA
  
  execute:
- policy("/working/tests/unit_diskfree.cf","K")
+ policy("../tests/units/unit_diskfree.cf","K")
  
  output:
  report("Freedisk [0-9]+")
@@ -599,13 +599,13 @@ DOLLAR
  top10
  
  prepare:
- file("/working/tmp/dollar.out", EXISTS)
+ file("../tests/regression_test/tmp/dollar.out", EXISTS)
  
  execute:
- policy("/working/tests/unit_dollar.cf","K")
+ policy("../tests/units/unit_dollar.cf","K")
  
  output:
- reports("/working/tmp/dollar.out")
+ reports("../tests/regression_test/tmp/dollar.out")
  
  cleanup:
  NA
@@ -621,11 +621,11 @@ EDIT_COLUMN_FILES
  NA
  
  execute:
- policy("/working/tests/unit_edit_column_files.cf","K")
+ policy("../tests/units/unit_edit_column_files.cf","K")
  
  output:
- addline(".*:.*:.*:.*:.*:/home/dir:.*","/working/tmp/passwd")
- addline("mark:.+:.+:one,three,two.*","/working/tmp/group")
+ addline(".*:.*:.*:.*:.*:/home/dir:.*","../tests/regression_test/tmp/passwd")
+ addline("mark:.+:.+:one,three,two.*","../tests/regression_test/tmp/group")
  
  cleanup:
  NA
@@ -642,10 +642,10 @@ DELETENOTMATCH
  NA
  
  execute:
- policy("/working/tests/unit_edit_deletenotmatch.cf","K")
+ policy("../tests/units/unit_edit_deletenotmatch.cf","K")
  
  output:
- addlines("/working/tmp/deletenotmatch.out","/working/tmp/passwd")
+ addlines("../tests/regression_test/tmp/deletenotmatch.out","../tests/regression_test/tmp/passwd")
  
  cleanup:
  NA
@@ -662,15 +662,15 @@ EDIT_INSERT_FUZZYLINES
  NA
  
  execute:
- policy("/working/tests/unit_edit_insert_fuzzylines.cf","K")
+ policy("../tests/units/unit_edit_insert_fuzzylines.cf","K")
  
  output:
- addline("    One potato","/working/tmp/fuzzylines.tmp")
- file("/working/tmp/fuzzylines.tmp.cf-before-edit", EXISTS)
+ addline("    One potato","../tests/regression_test/tmp/fuzzylines.tmp")
+ file("../tests/regression_test/tmp/fuzzylines.tmp.cf-before-edit", EXISTS)
 
  cleanup:
- file("/working/tmp/fuzzylines.tmp.cf-before-edit", DELETE)
- file("/working/tmp/fuzzylines.tmp", DELETE)
+ file("../tests/regression_test/tmp/fuzzylines.tmp.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/fuzzylines.tmp", DELETE)
  
 }
 
@@ -685,15 +685,15 @@ EDIT_INSERT_LINES_SILLY
  NA
  
  execute:
- policy("/working/tests/unit_edit_insert_lines_silly.cf","K")
+ policy("../tests/units/unit_edit_insert_lines_silly.cf","K")
  
  output:
- addlines("/working/tmp/sillylines.out","/working/tmp/sillylines.tmp")
- file("/working/tmp/sillylines.tmp.cf-before-edit", EXISTS)
+ addlines("../tests/regression_test/tmp/sillylines.out","../tests/regression_test/tmp/sillylines.tmp")
+ file("../tests/regression_test/tmp/sillylines.tmp.cf-before-edit", EXISTS)
 
  cleanup:
- file("/working/tmp/sillylines.tmp.cf-before-edit", DELETE)
- file("/working/tmp/sillylines.tmp", DELETE)
+ file("../tests/regression_test/tmp/sillylines.tmp.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/sillylines.tmp", DELETE)
  
 }
 
@@ -708,15 +708,15 @@ EDIT_INSERT_LINES_SILLY
  NA
  
  execute:
- policy("/working/tests/unit_edit_insert_lines_silly.cf","K")
+ policy("../tests/units/unit_edit_insert_lines_silly.cf","K")
  
  output:
- addlines("/working/tmp/sillylines.out","/working/tmp/sillylines.tmp")
- file("/working/tmp/sillylines.tmp.cf-before-edit", EXISTS)
+ addlines("../tests/regression_test/tmp/sillylines.out","../tests/regression_test/tmp/sillylines.tmp")
+ file("../tests/regression_test/tmp/sillylines.tmp.cf-before-edit", EXISTS)
 
  cleanup:
- file("/working/tmp/sillylines.tmp.cf-before-edit", DELETE)
- file("/working/tmp/sillylines.tmp", DELETE)
+ file("../tests/regression_test/tmp/sillylines.tmp.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/sillylines.tmp", DELETE)
  
 }
 
@@ -731,16 +731,16 @@ EDIT_PASSWD_FILE
  NA
  
  execute:
- policy("/working/tests/unit_edit_passwd_file.cf","K")
+ policy("../tests/units/unit_edit_passwd_file.cf","K")
  
  output:
-# addline("mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash","/working/tmp/mypasswd")
- addline("fred:x:1001:100:Right Said:/home/fred:/bin/bash","/working/tmp/mypasswd")
- addline("jane:x:1002:100:Jane Doe:/home/jane:/bin/bash","/working/tmp/mypasswd")
+# addline("mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash","../tests/regression_test/tmp/mypasswd")
+ addline("fred:x:1001:100:Right Said:/home/fred:/bin/bash","../tests/regression_test/tmp/mypasswd")
+ addline("jane:x:1002:100:Jane Doe:/home/jane:/bin/bash","../tests/regression_test/tmp/mypasswd")
 
  cleanup:
- file("/working/tmp/mypasswd", DELETE)
- file("/working/tmp/mypasswd.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/mypasswd", DELETE)
+ file("../tests/regression_test/tmp/mypasswd.cf-before-edit", DELETE)
  
 }
 
@@ -752,18 +752,18 @@ EDIT_REPLACESTRING
  top10
  
  prepare:
- file("/working/tmp/replacestring.tmp", CREATE)
- appendLine("Hello puppet","/working/tmp/replacestring.tmp")
+ file("../tests/regression_test/tmp/replacestring.tmp", CREATE)
+ appendLine("Hello puppet","../tests/regression_test/tmp/replacestring.tmp")
  
  execute:
- policy("/working/tests/unit_edit_replace_string.cf","K")
+ policy("../tests/units/unit_edit_replace_string.cf","K")
  
  output:
- addline("Hello cfengine 3","/working/tmp/replacestring.tmp")
+ addline("Hello cfengine 3","../tests/regression_test/tmp/replacestring.tmp")
 
  cleanup:
- file("/working/tmp/replacestring.tmp", DELETE)
- file("/working/tmp/replacestring.tmp.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/replacestring.tmp", DELETE)
+ file("../tests/regression_test/tmp/replacestring.tmp.cf-before-edit", DELETE)
 }
 
 ################################################################
@@ -773,19 +773,19 @@ EDIT_SETVAR
  top10
  
  prepare:
- file("/working/tmp/test_setvar", CREATE)
+ file("../tests/regression_test/tmp/test_setvar", CREATE)
  
  execute:
- policy("/working/tests/unit_edit_setvar.cf","K")
+ policy("../tests/units/unit_edit_setvar.cf","K")
  
  output:
- addline("variable_1 = value_1","/working/tmp/test_setvar")
- addline("variable_2 = value_2","/working/tmp/test_setvar")
+ addline("variable_1 = value_1","../tests/regression_test/tmp/test_setvar")
+ addline("variable_2 = value_2","../tests/regression_test/tmp/test_setvar")
  cmpenv("PGK_PATH","/tmp")
 
  cleanup:
- file("/working/tmp/test_setvar", DELETE)
- file("/working/tmp/test_setvar.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/test_setvar", DELETE)
+ file("../tests/regression_test/tmp/test_setvar.cf-before-edit", DELETE)
 }
 
 ################################################################
@@ -796,17 +796,17 @@ UNIT_ENV
  top10
  
  prepare:
- file("/working/tmp/test_setvar", CREATE)
+ file("../tests/regression_test/tmp/test_setvar", CREATE)
  
  execute:
- policy("/working/tests/unit_edit_setvar.cf","K")
+ policy("../tests/units/unit_edit_setvar.cf","K")
  
  output:
 
 
  cleanup:
- file("/working/tmp/test_setvar", DELETE)
- file("/working/tmp/test_setvar.cf-before-edit", DELETE)
+ file("../tests/regression_test/tmp/test_setvar", DELETE)
+ file("../tests/regression_test/tmp/test_setvar.cf-before-edit", DELETE)
 }
 
 ################################################################

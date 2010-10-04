@@ -44,14 +44,14 @@ files:
   # The back reference in a path only applies to the last link
   # of the pathname, so the (tmp) gets ignored
 
-  "/home/mark/tmp/(cf3)_(.*)"
+  "/tmp/(cf3)_(.*)"
 
        edit_line => myedit("second $(match.2)");
 
 
   # but ...
 
-#  "/home/mark/(tmp)/cf3_test"
+#  "/tmp/cf3_test"
 #       create    => "true",
 #       edit_line => myedit("second $(match.1)");
 

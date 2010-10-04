@@ -296,6 +296,9 @@ int CheckPredefined(char *);
 int ExecutePreDefined(int id, char *);
 int PerformBootstrap(char *);
 int FileExists(char *file);
+
+char TEST_ROOT_DIR[CF_BUFSIZE]; 
+
 #endif
 
 /*****************************************************************************/
@@ -399,6 +402,7 @@ LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 /*******************************************************************************/
 
 #ifdef BUILD_TESTSUITE
+
 
 void TestSuite(char *s)
 
@@ -529,21 +533,22 @@ int MyCreate(struct line_data *p)
 
 { struct Attributes a;
  char buf[CF_BUFSIZE];
-
+ char file[CF_BUFSIZE];
+snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
 switch(p->type)
    {
    case CF_FILE:
-
-       if (CfCreateFile(p->buf,NULL,a))
+       
+       if (CfCreateFile(file,NULL,a))
 	  {
-          Debug("MyCreate(): Created file \"%s\n ",p->buf);
+          Debug("MyCreate(): Created file \"%s\n ",file);
           return 1;
 	  }
        break;
        
    case CF_DIR:
        memset(buf, 0, CF_BUFSIZE);
-       snprintf(buf, CF_BUFSIZE, "%s", p->buf);
+       snprintf(buf, CF_BUFSIZE, "%s", file);
        strcat(buf, "/a");
        if(MakeParentDirectory(buf,true))
 	  {
@@ -564,25 +569,27 @@ int DoIt(struct line_data *p)
 { char buf[CF_EXPANDSIZE];
   char *pBuf = buf;
   struct Attributes a;
+  char file[CF_BUFSIZE];
  
 switch(p->action)
    {
    case CF_ACCESS: //101
-       if (CfCreateFile(p->buf,NULL,a))
+       snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
+       if (CfCreateFile(file,NULL,a))
 	  {
-          Debug("DoIt(): Created file \"%s\" ",p->buf);
+          Debug("DoIt(): Created file \"%s\" ",file);
 	  }
        sleep(1); // this is just a workaround (for time difference for the touch operation) 
        //TODO: find better method
-       TouchFile(p->buf,NULL,a,NULL);
+       TouchFile(file,NULL,a,NULL);
        break;
        
    case CF_BACKUP: //102
        break;
        
    case CF_DELETE: //103
-
-       if(remove(p->buf) == 0)
+      snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
+       if(remove(file) == 0)
 	  {
           return 1;
 	  }       
@@ -639,7 +646,8 @@ switch(p->action)
               
           case CF_FXN_APPENDLINE:
               //if (cfstat(m[j].expected[k].text, &sb) != -1)
-              strcat(p->buf, "\n");
+	     snprintf(file,CF_BUFSIZE,"%s/tests/regression_test/tmp/%s",TEST_ROOT_DIR,p->buf);      
+              strcat(file, "\n");
               if (AppendTextToFile(p->buf, p->text) != -1)
                  {                 
                  }
@@ -676,12 +684,13 @@ int CheckExists(struct line_data *p)
 
 { char *text;
  struct stat sb;
+ char file[CF_BUFSIZE];
 
 switch(p->type)
    {
    case CF_DIR:
    case CF_FILE:
-
+      snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
        if(cfstat(p->buf, &sb) == 0)
 	  {
           // printf("\"%s\" exists!!\n", p->buf);
@@ -696,11 +705,12 @@ switch(p->type)
    case CF_OUT_REMOVELINE:
    case CF_OUT_ADDLINE:
       case CF_LINE:
+      
        if ((strlen(p->buf) < 1) || (strlen(p->text) < 1))
           {
           return -1;
           }
-       
+       snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
        if(FindTextInFile(p->text, p->buf) > 0)
           {
           return 1;
@@ -760,7 +770,8 @@ int RunPolicies(struct cfoutput *actual, int nInput, struct input *map, int nMap
   char opts[] = " -";
   char command[CF_BUFSIZE], c[CF_BUFSIZE], output[CF_EXPANDSIZE];
   int failures = 0;   
-  snprintf(c, CF_BUFSIZE, "%s/bin/cf-agent -f ",CFWORKDIR);
+  char full_filepath[CF_BUFSIZE]; 
+  snprintf(c, CF_BUFSIZE, "%s","cf-agent -f ");
    
 for (i = 0; i < nInput; i++)
    {
@@ -785,7 +796,8 @@ for (i = 0; i < nInput; i++)
 	}
 	
    snprintf(command,CF_BUFSIZE, "%s",c);
-   strcat(command, map[i].policy_file);
+   snprintf(full_filepath,CF_BUFSIZE,"%s/tests/units/%s",TEST_ROOT_DIR,map[i].policy_file);
+   strcat(command, full_filepath);
    strcat(command, opts);
    strcat(command, map[i].policy_opt);
 
@@ -810,7 +822,7 @@ for (i = 0; i < nInput; i++)
       {      
       snprintf(actual[k].output,CF_EXPANDSIZE, "%s",output);
       actual[k].exec_ok = 1;
-      Debug("RunPolicies(%d): %s, %s\n", nInput,output, actual[k].id);
+      Debug("RunPolicies(%d): %s, %s\n%s\n", nInput,output, actual[k].id, command);
       }
    else
       {
@@ -866,7 +878,11 @@ int CompareOutput(struct cfoutput* a, int n1, struct input *m, int n2)
   
   char buf[CF_BUFSIZE];
   int temp;
+   
+  char file[CF_BUFSIZE];
   
+//  snprintf(TMP_DIR,CF_BUFSIZE,"%s%s",CFWORKDIR,"/regression_test/tmp/");
+   
  for(i = 0; i < n1; i++)
    {
    for(j = 0; j < n2; j++)
@@ -901,7 +917,8 @@ int CompareOutput(struct cfoutput* a, int n1, struct input *m, int n2)
                       break;
                       
                   case CF_OUT_ADDLINE:
-                      if(FindTextInFile(m[j].expected[k].text,m[j].expected[k].buf) > 0)
+		     snprintf(file,CF_BUFSIZE,"/tmp/%s",m[j].expected[k].buf);      
+                      if(FindTextInFile(m[j].expected[k].text,file) > 0)
                          {
                          a[i].pass = 1;				   
                          }else
@@ -913,7 +930,8 @@ int CompareOutput(struct cfoutput* a, int n1, struct input *m, int n2)
                       break;
                       
                   case CF_OUT_REMOVELINE:
-                      if((FindTextInFile(m[j].expected[k].text,m[j].expected[k].buf))<=0)
+		     snprintf(file,CF_BUFSIZE,"/tmp/%s",m[j].expected[k].buf);      
+                      if((FindTextInFile(m[j].expected[k].text,file))<=0)
                          {
                          a[i].pass = 1;
                          }
@@ -966,13 +984,14 @@ int CompareOutput(struct cfoutput* a, int n1, struct input *m, int n2)
                       filename = m[j].expected[k].buf;
                       
                       // just checking in the passwd file, and not shadow and group
-                      snprintf(filename, CF_SMALLBUF, "%s", "/working/tmp/passwd");
+                      snprintf(filename, CF_SMALLBUF, "%s", "passwd");
+		     snprintf(file,CF_BUFSIZE,"/tmp/%s",filename);      
                       snprintf(textToFind, CF_SMALLBUF, "%s", "[ ]*");
                       strcat(textToFind, user);
                       strcat(textToFind, ":");
                       strcat(textToFind, any);
                       
-                      if((FindTextInFile(textToFind, filename))>0)
+                      if((FindTextInFile(textToFind, file))>0)
                          {
                          a[i].pass = 1;
                          }else
@@ -1197,6 +1216,8 @@ int Parse(struct input *data,char *inputfile)
   int total_size;
   int size;
   char *frm;
+  
+  int global_var_found = 0;
    
 //if (CF_TEST_INPUT == NULL)
 //   {
@@ -1255,6 +1276,24 @@ while(fgets(line, CF_SMALLBUF, inFile))
 			  in[n].predefinedId = preDefinedType;
 			  n++;
 		       }
+		  }
+	     }
+	}
+      else if (!blockStarted && FullTextMatch("^[ ]*@([A-Z_]+)=(.*)[ ]*$",line))
+	{
+	   global_var_found = 0;
+	   if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
+	     {
+		if (strcmp(retval, "CF_DIR") == 0)
+		  {
+		     global_var_found = 1;
+		  }
+	     }
+	  if (GetVariable("match","2",(void *)&retval,&rtype) != cf_notype)
+	     {
+		if(global_var_found == 1)
+		  {
+		     snprintf(TEST_ROOT_DIR,CF_BUFSIZE,"%s",retval); 
 		  }
 	     }
 	}
@@ -2086,7 +2125,7 @@ else
    printf("GetPrepareCleanup(): Syntax Error; %s\n",s); // display line number
    return -1;
    }
-
+   
 return 1;
 }
 
@@ -2259,8 +2298,8 @@ int FindTextInFile(char *str, char *file)
 
 { char *buf, tmp[CF_BUFSIZE], bufEsc[CF_BUFSIZE];
   char any[] = ".*";
-   
-buf = (char *) malloc(CF_BUFSIZE * sizeof(char));
+
+   buf = (char *) malloc(CF_BUFSIZE * sizeof(char));
 
 if(buf == NULL)
    {
@@ -2482,10 +2521,7 @@ int FileExists(char *file)
 /*********************************************************/
 void CheckInstalledLibraries(void)
 {
-   #ifndef HAVE_LIBCFNOVA
-   printf("\t->LIBCFNOVA not found!!\n");
-   #endif
-   
+
    #ifndef HAVE_LIBLDAP
    printf("\t->LIBLDAP not found!!\n");
    #endif
@@ -2508,10 +2544,6 @@ void CheckInstalledLibraries(void)
    
    #if !defined(TCDB) && !defined(QDB) 
    printf("\t->TCDB and QDB  not found!!\n");
-   #endif
-   
-   #ifndef HAVE_LIBMONGOC
-   printf("\t->LIBMONGOC  not found!!\n");
    #endif
 
    #ifndef HAVE_LIBMYSQLCLIENT

@@ -47,7 +47,7 @@ bundle agent testbundle
 
 files:
 
-  "/home/mark/tmp/cf3_test"
+  "/tmp/replacestring"
 
        create    => "true",
        edit_line => myedit("second");

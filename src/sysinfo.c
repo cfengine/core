@@ -1510,16 +1510,22 @@ if (strcmp(os,"Debian") == 0)
    sscanf(buffer,"%*s %*s %[^/]",version);
    snprintf(buffer,CF_MAXVARSIZE, "debian_%s",version);
    NewClass(buffer);
+   NewScalar("sys","flavour",buffer,cf_str);
+   NewScalar("sys","flavor",buffer,cf_str);
    }
 else if (strcmp(os,"Ubuntu") == 0)
    {
-   sscanf(buffer,"%*s %[^.]",version);
+   sscanf(buffer,"%*s %[^.].%d",version,&release);
    snprintf(buffer,CF_MAXVARSIZE, "ubuntu_%s",version);
+   NewScalar("sys","flavour",buffer,cf_str);
+   NewScalar("sys","flavor",buffer,cf_str);
    NewClass(buffer);
+   if (release >= 0)
+      {
+      snprintf(buffer,CF_MAXVARSIZE, "ubuntu_%s_%d",version,release);
+      NewClass(buffer);
+      }
    }
-
-NewScalar("sys","flavour",buffer,cf_str);
-NewScalar("sys","flavor",buffer,cf_str);
 
 return 0;
 }

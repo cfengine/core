@@ -815,6 +815,12 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_returnszero].args,finalargs); /* Arg validati
 
 /* begin fn specific content */
 
+if (!IsAbsoluteFileName(finalargs->item))
+   {
+   CfOut(cf_error,"","execresult \"%s\" does not have an absolute path\n",finalargs->item);
+   SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   }
+
 if (!IsExecutable(GetArg0(finalargs->item)))
    {
    CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
@@ -877,10 +883,15 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_execresult].args,finalargs); /* Arg validatio
 
 /* begin fn specific content */
 
+if (!IsAbsoluteFileName(finalargs->item))
+   {
+   CfOut(cf_error,"","execresult \"%s\" does not have an absolute path\n",finalargs->item);
+   SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   }
 
 if (!IsExecutable(GetArg0(finalargs->item)))
    {
-   CfOut(cf_error,"","ExecResult \"%s\" is assumed to be executable but isn't\n",finalargs->next->item);
+   CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
    }
 else
@@ -2241,6 +2252,13 @@ else
 
    switch (fn)
       {
+      case cfn_isexecutable:
+          if (IsExecutable(finalargs->item))
+             {
+             strcpy(buffer,"any");
+             }
+          break;
+          
       case cfn_isdir:
           if (S_ISDIR(statbuf.st_mode))
              {

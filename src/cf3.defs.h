@@ -562,6 +562,7 @@ enum fncalltype
    cfn_iprange,
    cfn_irange,
    cfn_isdir,
+   cfn_isexecutable,
    cfn_isgreaterthan,
    cfn_islessthan,
    cfn_islink,

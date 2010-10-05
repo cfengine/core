@@ -626,6 +626,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"iprange",cf_class,1,IPRANGE_ARGS,"True if the current host lies in the range of IP addresses specified"},
    {"irange",cf_irange,2,IRANGE_ARGS,"Define a range of integer values for cfengine internal use"},
    {"isdir",cf_class,1,FILESTAT_ARGS,"True if the named object is a directory"},
+   {"isexecutable",cf_class,1,FILESTAT_ARGS,"True if the named object has execution rights for the current user"},
    {"isgreaterthan",cf_class,2,ISGREATERTHAN_ARGS,"True if arg1 is numerically greater than arg2, else compare strings like strcmp"},
    {"islessthan",cf_class,2,ISLESSTHAN_ARGS,"True if arg1 is numerically less than arg2, else compare strings like NOT strcmp"},
    {"islink",cf_class,1,FILESTAT_ARGS,"True if the named object is a symbolic link"},

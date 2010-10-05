@@ -382,6 +382,9 @@ switch (this)
    case cfn_isdir:
        rval = FnCallStatInfo(fp,expargs,this);
        break;
+   case cfn_isexecutable:
+       rval = FnCallStatInfo(fp,expargs,this);
+       break;
    case cfn_islink:
        rval = FnCallStatInfo(fp,expargs,this);
        break;

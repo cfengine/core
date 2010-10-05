@@ -992,6 +992,7 @@ struct Rlist *NewIterationContext(char *scopeid,struct Rlist *listvars);
 void DeleteIterationContext(struct Rlist *lol);
 int IncrementIterationContext(struct Rlist *iterators,int count);
 int EndOfIteration(struct Rlist *iterator);
+int NullIterators(struct Rlist *iterator);
 
 /* instrumentation.c */
 

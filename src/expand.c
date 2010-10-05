@@ -587,11 +587,16 @@ if (lol && EndOfIteration(lol))
    return;
    }
 
+while (NullIterators(lol))
+   {
+   IncrementIterationContext(lol,1);
+   }
+
 do
    {
    /* Set scope "this" first to ensure list expansion ! */
    SetScope("this");  
-   DeRefListsInHashtable("this",listvars,lol);   
+   DeRefListsInHashtable("this",listvars,lol);
 
    /* Allow $(this.handle) */
    
@@ -605,14 +610,14 @@ do
       }
 
    pexp = ExpandDeRefPromise("this",pp);
-   
+
    switch (agent)
       {
       case cf_common:
           ShowPromise(pexp,6);
           ReCheckAllConstraints(pexp);
           break;
-          
+
       default:
 
           if (fnptr != NULL)
@@ -621,7 +626,7 @@ do
              }
           break;
       }
-      
+
    if (strcmp(pp->agentsubtype,"vars") == 0)
       {
       ConvergeVarHashPromise(pp->bundle,pexp,true);

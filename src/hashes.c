@@ -405,7 +405,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
                   
                      cphash->rval = rp->state_ptr->item;
                      }
-                                    
+
                   switch(cphash->dtype)
                      {
                      case cf_slist:
@@ -430,3 +430,5 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       }
    }
 }
+
+

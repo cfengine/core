@@ -58,7 +58,7 @@ if (namelist == NULL)
 for (rp = namelist; rp != NULL; rp = rp->next)
    {
    dtype = GetVariable(scopeid,rp->item,&returnval,&rtype);
-
+   
    if (dtype == cf_notype)
       {
       CfOut(cf_error,""," !! Couldn't locate variable %s apparently in %s\n",rp->item,scopeid);
@@ -87,6 +87,12 @@ for (rp = namelist; rp != NULL; rp = rp->next)
       {
       this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
       rp->state_ptr = new->rval;
+      
+      while (rp->state_ptr && strcmp(rp->state_ptr->item,CF_NULL_VALUE) == 0)
+         {
+         rp->state_ptr = rp->state_ptr->next;         
+         }
+
       Debug("SETTING state to %s\n",rp->state_ptr->item);
       }
    }
@@ -166,7 +172,7 @@ else
 
    Debug(" <- Incrementing wheel (%s) to \"%s\"\n",cp->lval,iterator->state_ptr->item);
 
-   if (strcmp(iterator->state_ptr->item,CF_NULL_VALUE) == 0)
+   while (iterator->state_ptr && strcmp(iterator->state_ptr->item,CF_NULL_VALUE) == 0)
       {
       iterator->state_ptr = iterator->state_ptr->next;
       }
@@ -196,7 +202,7 @@ for (rp = iterator; rp != NULL; rp = rp->next)
       {
       break;
       }
-   
+
    if (state->next != NULL)
       {
       return false;
@@ -204,6 +210,32 @@ for (rp = iterator; rp != NULL; rp = rp->next)
    }
 
 return true;
+}
+
+/*****************************************************************************/
+
+int NullIterators(struct Rlist *iterator)
+
+{ struct Rlist *rp,*state;
+
+if (iterator == NULL)
+   {
+   return false;
+   }
+
+/* When all the wheels are at NULL, we have reached the end*/
+
+for (rp = iterator; rp != NULL; rp = rp->next)
+   {
+   state = rp->state_ptr;
+
+   if (state && strcmp(state->item,CF_NULL_VALUE) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
 }
 
 /*******************************************************************/

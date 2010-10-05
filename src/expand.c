@@ -1053,24 +1053,13 @@ if (rval != NULL)
 
    if (drop_undefined && cp->type == CF_LIST)
       {
-      last = NULL;
       for (rp = rval; rp != NULL; rp=rp->next)
          {
          if (IsNakedVar(rp->item,'@'))
             {
-            if (rp == rval)
-               {
-               DeleteRvalItem(rp->item,rp->type);
-               rval = rp->next;
-               }
-            else if (last)
-               {
-               last->next = rp->next;
-               DeleteRvalItem(rp->item,rp->type);
-               }
+            free(rp->item);
+            rp->item = strdup("cf_null");
             }
-
-         last = rp;
          }
       }
 

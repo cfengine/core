@@ -219,7 +219,7 @@ if (ptr == NULL || ptr->hashtable == NULL)
    return cf_notype;
    }
 
-Debug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n",scopeid,vlval,ptr->scope,vlval);
+Debug("GetVariable(%s,%s): using scope '%s' for variable '%s' (slot =%d)\n",scopeid,vlval,ptr->scope,vlval,slot);
 
 if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
    {

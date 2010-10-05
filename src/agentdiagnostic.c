@@ -331,12 +331,14 @@ TestExpandVariables();
 //TestSearchFilePromiser();
 
 #ifdef BUILD_TESTSUITE
+
 if(file != NULL)
 {	
    
 printf("----------------------------------------------------------\n");
 printf("Cfengine 3 - Performing test suite                        \n");
 printf("----------------------------------------------------------\n\n");
+InitializeGA(0,NULL);
  TestSuite(file);
 }
 #endif
@@ -402,7 +404,6 @@ LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
 /*******************************************************************************/
 
 #ifdef BUILD_TESTSUITE
-
 
 void TestSuite(char *s)
 
@@ -531,10 +532,12 @@ return n;
 
 int MyCreate(struct line_data *p)
 
-{ struct Attributes a;
+{ struct Attributes a = {0};
  char buf[CF_BUFSIZE];
  char file[CF_BUFSIZE];
-snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
+
+a.transaction.report_level = cf_noreport;
+snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);
 switch(p->type)
    {
    case CF_FILE:

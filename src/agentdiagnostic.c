@@ -774,7 +774,7 @@ int RunPolicies(struct cfoutput *actual, int nInput, struct input *map, int nMap
   char command[CF_BUFSIZE], c[CF_BUFSIZE], output[CF_EXPANDSIZE];
   int failures = 0;   
   char full_filepath[CF_BUFSIZE]; 
-  snprintf(c, CF_BUFSIZE, "%s","cf-agent -f ");
+  snprintf(c, CF_BUFSIZE, "%s%cbin%ccf-agent -f ",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
    
 for (i = 0; i < nInput; i++)
    {

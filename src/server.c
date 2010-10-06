@@ -189,7 +189,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"d:vIf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {

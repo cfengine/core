@@ -715,6 +715,12 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       case CF_SCALAR:
           name = (char *)rp->item;
           params = NULL;
+
+          if (strcmp(name,CF_NULL_VALUE) == 0)
+             {
+             continue;
+             }
+          
           break;
       case CF_FNCALL:
           fp = (struct FnCall *)rp->item;

@@ -1791,6 +1791,11 @@ if ((agent == cf_agent) || (agent == cf_common))
              break;
          }
 
+      if (strcmp(name,CF_NULL_VALUE) == 0)
+         {
+         continue;
+         }             
+
       if (!IGNORE_MISSING_BUNDLES && !GetBundle(name,NULL))
          {
          CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n",name);

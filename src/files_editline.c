@@ -770,7 +770,7 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
   int match_len,start_off,end_off,once_only = false,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
-  int notfound = true;
+  int notfound = true, cutoff = 1;
 
 if (a.replace.occurrences && (strcmp(a.replace.occurrences,"first") == 0))
    {
@@ -784,15 +784,22 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       {
       continue;
       }
-   
+
+   cutoff = 1;
    strncpy(line_buff,ip->name,CF_BUFSIZE);
 
    while (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
       {
+      if (cutoff++ > CF_MAX_REPLACE)
+         {
+         CfOut(cf_verbose,""," !! Too many replacements on this line");
+         break;
+         }
+      
       match_len = end_off - start_off;
       ExpandScalar(a.replace.replace_value,replace);
 
-      CfOut(cf_verbose,""," -> Verifying replacement of \"%s\" with \"%s\"\n",pp->promiser,replace);  
+      CfOut(cf_verbose,""," -> Verifying replacement of \"%s\" with \"%s\" (%d)\n",pp->promiser,replace,cutoff);  
 
       before[0] = after[0] = '\0';         
 
@@ -802,14 +809,6 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       strncat(after,line_buff+end_off,CF_BUFSIZE);
       snprintf(line_buff,CF_EXPANDSIZE-1,"%s%s",before,replace);
       notfound = false;
-
-      if (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
-         {
-         cfPS(cf_error,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",line_buff,ip->name,pp->promiser,pp->this_server);
-         CfOut(cf_error,"","Because the regular expression \"%s\" still matches the replacement string \"%s\"",pp->promiser,line_buff);
-         PromiseRef(cf_error,pp);
-         break;
-         }
 
       // Model the full substitution in line_buff
       
@@ -822,12 +821,12 @@ for (ip = file_start; ip != file_end; ip=ip->next)
          }
       }
 
-   if (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
+   if (NotAnchored(pp->promiser) && BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",line_buff,ip->name,pp->promiser,pp->this_server);
       CfOut(cf_error,"","Because the regular expression \"%s\" still matches the replacement string \"%s\"",pp->promiser,line_buff);
       PromiseRef(cf_error,pp);
-      continue;
+      break;
       }
    
    if (a.transaction.action == cfa_warn)
@@ -843,13 +842,20 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       (pp->edcontext->num_edits)++;
       retval = true;
 
-      CfOut(cf_verbose,""," -> << \"%s\"\n",ip->name);
-      CfOut(cf_verbose,""," -> >> \"%s\"\n",line_buff);
+      CfOut(cf_verbose,""," -> << (%d)\"%s\"\n",cutoff,ip->name);
+      CfOut(cf_verbose,""," -> >> (%d)\"%s\"\n",cutoff,line_buff);
 
       if (once_only)
          {
          CfOut(cf_verbose,""," -> Replace first occurrence only (warning, this is not a convergent policy)");
          break;
+         }
+
+      if (BlockTextMatch(pp->promiser,ip->name,&start_off,&end_off))
+         {
+         cfPS(cf_inform,CF_INTERPT,"",pp,a," -> Promised replacement \"%s\" for pattern \"%s\" is not properly convergent while editing %s",ip->name,pp->promiser,pp->this_server);
+         CfOut(cf_inform,"","Because the regular expression \"%s\" still matches the end-state replacement string \"%s\"",pp->promiser,line_buff);
+         PromiseRef(cf_inform,pp);
          }
       }
    }
@@ -1391,3 +1397,19 @@ else
 return false;
 }
 
+/********************************************************************/
+
+int NotAnchored(char *s)
+{
+if (*s != '^')
+   {
+   return true;
+   }
+
+if (*(s+strlen(s)-1) != '$')
+   {
+   return true;
+   }
+
+return false;
+}

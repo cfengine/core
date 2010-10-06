@@ -77,6 +77,7 @@
 #define CF_INBUNDLE 2
 
 #define CF_MAX_NESTING 3
+#define CF_MAX_REPLACE 20
 #define CF_DONEPASSES  4
 
 #define CF_TIME_SIZE 32

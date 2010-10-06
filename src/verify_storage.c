@@ -235,7 +235,7 @@ int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
   long kilobytes;
   
 #ifdef MINGW
-if(!a.volume.check_foreign)
+if (!a.volume.check_foreign)
 {
 CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows (checking every mount)");
 }

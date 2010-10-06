@@ -2045,37 +2045,41 @@ void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes a
 maskvalue = umask(0);                 /* This makes the DEFAULT modes absolute */
 
 newperm = (dstat->st_mode & 07777);
-newperm |= attr.perms.plus;
-newperm &= ~(attr.perms.minus);
 
-Debug("Unix_VerifyFileAttributes(%s -> %o)\n",file,newperm);
-
- /* directories must have x set if r set, regardless  */
-
-if (S_ISDIR(dstat->st_mode))
+if ((attr.perms.plus != CF_SAMEMODE) && (attr.perms.minus != CF_SAMEMODE))
    {
-   if (attr.perms.rxdirs)
+   newperm |= attr.perms.plus;
+   newperm &= ~(attr.perms.minus);
+
+   Debug("Unix_VerifyFileAttributes(%s -> %o)\n",file,newperm);
+   
+   /* directories must have x set if r set, regardless  */
+   
+   if (S_ISDIR(dstat->st_mode))
       {
-      Debug("Directory...fixing x bits\n");
-
-      if (newperm & S_IRUSR)
+      if (attr.perms.rxdirs)
          {
-         newperm  |= S_IXUSR;
+         Debug("Directory...fixing x bits\n");
+         
+         if (newperm & S_IRUSR)
+            {
+            newperm  |= S_IXUSR;
+            }
+         
+         if (newperm & S_IRGRP)
+            {
+            newperm |= S_IXGRP;
+            }
+         
+         if (newperm & S_IROTH)
+            {
+            newperm |= S_IXOTH;
+            }
          }
-
-      if (newperm & S_IRGRP)
+      else
          {
-         newperm |= S_IXGRP;
+         CfOut(cf_verbose,"","NB: rxdirs is set to false - x for r bits not checked\n");
          }
-
-      if (newperm & S_IROTH)
-         {
-         newperm |= S_IXOTH;
-         }
-      }
-   else
-      {
-      CfOut(cf_verbose,"","NB: rxdirs is set to false - x for r bits not checked\n");
       }
    }
 

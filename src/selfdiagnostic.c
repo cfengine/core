@@ -471,3 +471,11 @@ else
    printf(" !! Missing default specs for \"%s\"\n",ref);
    }
 }
+
+
+/*****************************************************************************/
+
+void DebugBreak()
+{
+  /* Called on error condition to break for inspection */
+}

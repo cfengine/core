@@ -913,7 +913,7 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
   struct Attributes a;
-  char *lval,rtype;
+  char *lval,rtype,type;
   void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;;
   struct Rval returnval; /* Must expand naked functions here for consistency */
@@ -1000,13 +1000,12 @@ if (i > 2)
 if (rval != NULL)
    {
    struct FnCall *fp = (struct FnCall *)rval;
-   
+
    if (cp->type == CF_FNCALL)
       {
       returnval = EvaluateFunctionCall(fp,pp);
-      cp->rval = rval = returnval.item;
-      cp->type = returnval.rtype;
-      DeleteFnCall(fp);
+      rval = returnval.item;
+      type = returnval.rtype;
       
       if (FNCALL_STATUS.status == FNCALL_FAILURE)
          {
@@ -1014,8 +1013,13 @@ if (rval != NULL)
          return;
          }
       }
+   else
+      {
+      rval = CopyRvalItem(cp->rval,cp->type);
+      type = cp->type;
+      }
 
-   if (Epimenides(pp->promiser,rval,cp->type,0))
+   if (Epimenides(pp->promiser,rval,type,0))
       {
       CfOut(cf_error,"","Variable \"%s\" contains itself indirectly - an unkeepable promise",pp->promiser);
       exit(1);
@@ -1024,10 +1028,10 @@ if (rval != NULL)
       {
       /* See if the variable needs recursively expanding again */
       
-      returnval = EvaluateFinalRval(scope,rval,cp->type,true,pp);
-      DeleteRvalItem(cp->rval,cp->type);
-      cp->rval = rval = returnval.item;
-      cp->type = returnval.rtype;
+      returnval = EvaluateFinalRval(scope,rval,type,true,pp);
+      DeleteRvalItem(rval,type);
+      rval = returnval.item;
+      returnval.rtype;
       }
 
    if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
@@ -1036,7 +1040,7 @@ if (rval != NULL)
          {
          DeleteVariable(scope,pp->promiser);
          }
-      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rtype,rval,cp->type) == false))
+      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rtype,rval,type) == false))
          {
          CfOut(cf_error,""," !! Redefinition of a constant variable \"%s\"",pp->promiser);
          PromiseRef(cf_error,pp);
@@ -1056,7 +1060,7 @@ if (rval != NULL)
       return;
       }
 
-   if (drop_undefined && cp->type == CF_LIST)
+   if (drop_undefined && type == CF_LIST)
       {
       for (rp = rval; rp != NULL; rp=rp->next)
          {
@@ -1068,7 +1072,7 @@ if (rval != NULL)
          }
       }
 
-   if (!AddVariableHash(scope,pp->promiser,rval,cp->type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
+   if (!AddVariableHash(scope,pp->promiser,rval,type,Typename2Datatype(cp->lval),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
       PromiseRef(cf_verbose,pp);
@@ -1079,7 +1083,6 @@ else
    CfOut(cf_error,"","Variable %s has no promised value\n",pp->promiser);
    CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    }     
-
 }
 
 /*********************************************************************/

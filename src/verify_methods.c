@@ -96,7 +96,8 @@ if (bp = GetBundle(method_name,"agent"))
 
    DeleteScope(bp->name);
    NewScope(bp->name);
-
+   HashVariables(bp->name);
+      
    AugmentScope(bp->name,bp->args,params);
 
    THIS_BUNDLE = bp->name;

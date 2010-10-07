@@ -538,7 +538,7 @@ Cf3ParseFile(VINPUTFILE);
 
 // Expand any lists in this list now
 
-HashVariables();
+HashVariables(NULL);
 HashControls();
 
 if (VINPUTLIST != NULL)
@@ -568,12 +568,12 @@ if (VINPUTLIST != NULL)
             }
          }
 
-      HashVariables();
+      HashVariables(NULL);
       HashControls();
       }
    }
 
-HashVariables();
+HashVariables(NULL);
 
 PARSING = false;
 }
@@ -1348,7 +1348,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       }
    }
 
-HashVariables();
+HashVariables(NULL);
 HashControls();
 
 /* Now look once through the sequences bundles themselves */
@@ -1657,16 +1657,21 @@ fclose(fp);
 
 /*******************************************************************/
 
-void HashVariables()
+void HashVariables(char *name)
 
 { struct Bundle *bp,*bundles;
   struct SubType *sp;
   struct Scope *ptr;
 
 CfOut(cf_verbose,"","Initiate variable convergence...\n");
-
+    
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
+   if (name && strcmp(name,bp->name) != 0)
+      {
+      continue;
+      }
+   
    SetNewScope(bp->name);
    THIS_BUNDLE = bp->name;
 

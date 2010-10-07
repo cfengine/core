@@ -535,7 +535,7 @@ void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr
   struct stat sb; 
   struct dirent *dirp;
   char filename[CF_BUFSIZE] = {0};
-  char *relPath = {0};
+  int flen = 0;
 
 Debug("PurgeLocalFiles(%s)\n",localdir);
 
@@ -583,20 +583,21 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    if (!IsItemIn(filelist,dirp->d_name))
       {
       strncpy(filename,localdir,CF_BUFSIZE-2);
-      AddSlash(filename);
-
-      // dirp->d_name may start with "./", which we strip out
       
-      if(strncmp(dirp->d_name,"./",2) == 0)
+      // filename may end with "/." which we strip out
+      
+      flen = strlen(filename);
+      
+      if(filename[flen-2] == FILE_SEPARATOR && filename[flen-1] == '.')
 	{
-	relPath = dirp->d_name + 2;
+	filename[flen-1] = '\0';
 	}
       else
 	{
-	relPath = dirp->d_name;
+	AddSlash(filename);
 	}
-      
-      Join(filename,relPath,CF_BUFSIZE-1);
+
+      Join(filename,dirp->d_name,CF_BUFSIZE-1);
       
 
       if (DONTDO)

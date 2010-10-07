@@ -594,6 +594,7 @@ while (NullIterators(lol))
 
 do
    {
+   char number[CF_SMALLBUF];
    /* Set scope "this" first to ensure list expansion ! */
    SetScope("this");  
    DeRefListsInHashtable("this",listvars,lol);
@@ -608,6 +609,10 @@ do
       {
       NewScalar("this","handle",PromiseID(pp),cf_str);
       }
+
+   NewScalar("this","filename",pp->audit->filename,cf_str);
+   snprintf(number,CF_SMALLBUF,"%d",pp->lineno);
+   NewScalar("this","line",number,cf_str);
 
    pexp = ExpandDeRefPromise("this",pp);
 

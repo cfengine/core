@@ -233,7 +233,7 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
          {
          i = 0;
          }
-
+      
       if (CompareVariable(vlval,ptr->hashtable[i]) == 0)
          {
          found = true;
@@ -242,7 +242,7 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
 
       /* Removed autolookup in Unix environment variables -
          implement as getenv() fn instead */
-
+      
       if (i == slot)
          {
          found = false;

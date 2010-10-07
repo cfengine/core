@@ -212,7 +212,7 @@ int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype
 { struct Scope *ptr;
   struct CfAssoc *ap;
   struct Rlist *rp;
-  int slot;
+  int slot,sslot;
 
 if (rtype == CF_SCALAR)
    {
@@ -301,6 +301,8 @@ if (THIS_AGENT_TYPE == cf_common)
       }
    }
 
+sslot = slot;
+
 while (ptr->hashtable[slot])
    {
    Debug("Hash table Collision! - slot %d = (%s|%s)\n",slot,lval,ptr->hashtable[slot]->lval);
@@ -338,11 +340,17 @@ while (ptr->hashtable[slot])
       }
    else
       {
-      Debug("Recover from collision\n");
+      struct CfAssoc *ap2 = ptr->hashtable[slot];
 
       if (++slot >= CF_HASHTABLESIZE-1)
          {
          slot = 0;
+         }
+
+      if (slot == sslot)
+         {
+         CfOut(cf_error,""," !! Out of variable allocation in context \"%s\"",scope);
+         return false;
          }
       }
    }

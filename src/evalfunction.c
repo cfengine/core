@@ -4486,7 +4486,7 @@ int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enu
 
 { char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE],first_one[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
-  int allowblanks = true, vcount,hcount;
+  int allowblanks = true, vcount,hcount,lcount = 0;
 
 memset(linebuf,0,CF_BUFSIZE);
 hcount = 0;
@@ -4499,6 +4499,12 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    if (strlen(linebuf) == 0)
       {
       continue;
+      }
+
+   if (lcount++ > CF_HASHTABLESIZE)
+      {
+      CfOut(cf_error,""," !! Array is too big to be read into Cfengine (max 4000)");
+      break;
       }
 
    newlist = SplitRegexAsRList(linebuf,split,maxent,allowblanks);

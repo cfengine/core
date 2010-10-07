@@ -35,6 +35,7 @@
 #ifdef NT
 #  define MAX_FILENAME 227
 #  define WINVER 0x501
+#  define FD_SETSIZE 512  // increase select(2) FD limit from 64
 #else
 #  define MAX_FILENAME 254
 #endif

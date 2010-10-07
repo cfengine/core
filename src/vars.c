@@ -252,7 +252,7 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
 
    if (!found)
       {
-      Debug("No such variable found %s.%s\n",scope,lval);
+      Debug("No such variable found %s.%s\n\n",scopeid,lval);
       *returnv = lval;
       *rtype   = CF_SCALAR;
       return cf_notype;

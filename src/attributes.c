@@ -487,8 +487,8 @@ struct FilePerms GetPermissionConstraints(struct Promise *pp)
                 
 value = (char *)GetConstraint("mode",pp,CF_SCALAR);
 
-p.plus = -1;
-p.minus = -1;
+p.plus = CF_SAMEMODE;
+p.minus = CF_SAMEMODE;
 
 if (!ParseModeString(value,&p.plus,&p.minus))
    {

@@ -4,7 +4,7 @@
 
 	Support for package_changes => "bulk" in file repository as well.
 
- 	New special function readstringarrayidx, similar to readstringarray,
+	New special function readstringarrayidx, similar to readstringarray,
 	but uses integer indeces. Very useful if first row elements are
 	not good identifiers (e.g. contains spaces, non-unique, etc.).
 
@@ -12,7 +12,7 @@
 	- filechanges
 	- total compliance
 
-        Change in storage of public keys. Cfengine now hashes the public key and uses this
+	Change in storage of public keys. Cfengine now hashes the public key and uses this
 	as the keyname. 
 
 	The old dynamic addresses lists are deprecated.
@@ -23,6 +23,9 @@
 
 	Commands not returning 0 in commands-promises are flagged
 	as repair_failed.
+
+	Adjustable timeout on connect(). Defaults to 10 seconds, adjustable 
+	with default_timeout in agent control.
 
 	Redesign of the knowledge map infrastructure.
 	

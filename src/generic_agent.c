@@ -1216,6 +1216,19 @@ if (THIS_AGENT_TYPE != cf_common)
    return;
    }
 
+#if defined(HAVE_LIBCFNOVA) && defined(HAVE_LIBMONGOC)
+if ((FREPORT_TXT = fopen(NULLFILE,"w")) == NULL)
+   {
+   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
+   FatalError(output);
+   }
+
+if ((FREPORT_HTML = fopen(NULLFILE,"w")) == NULL)
+   {
+   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
+   FatalError(output);
+   }
+#else
 snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
 CfOut(cf_inform,"","Summarizing promises as text to %s\n",filename);
 
@@ -1233,6 +1246,7 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
    snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
    FatalError(output);
    }
+#endif
 
 if ((FKNOW = fopen(NULLFILE,"w")) == NULL)
    {

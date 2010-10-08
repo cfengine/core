@@ -272,7 +272,7 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
-   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off");
+   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (1)");
    return false;
    }
 
@@ -289,7 +289,7 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
-   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off");
+   cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (2)");
    return false;   
    }
 

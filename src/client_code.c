@@ -1047,11 +1047,6 @@ if (!attr.copy.force_ipv4)
       {
       conn->family = ap->ai_family;
       snprintf(conn->remoteip,CF_MAX_IP_LEN-1,"%s",sockaddr_ntop(ap->ai_addr));
-
-      if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv)))
-         {
-         CfOut(cf_inform,"setsockopt"," !! setsockopt error: couldn't set SO_RCVTIMEO");
-         }
       }
    else
       {
@@ -1369,6 +1364,7 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
 /** 
  * Tries a nonblocking connect and then restores blocking if
  * successful. Returns true on success, false otherwise.
+ * NB! Do not use recv() timeout - see note below.
  **/
 #ifdef MINGW
 
@@ -1382,7 +1378,6 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
   int res;
   long arg;
   struct sockaddr_in emptyCin = {0};
-  struct timeval tvRecv = {0};
 
   if(!cinp)
     {
@@ -1433,7 +1428,7 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
       }
 
 
-   /* connection is succeed; return to blocking mode */
+   /* connection suceeded; return to blocking mode */
 
    if(fcntl(conn->sd, F_SETFL, arg) == -1)
      {
@@ -1441,6 +1436,13 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
      }
 
 
+   /*
+    * NB: recv() timeout is a bad idea.  struct timeval is very
+    *     unstable - interpreted differently on different
+    *     platforms. E.g. setting tv_sec to 50 (and tv_usec to 0)
+    *     results in a timeout of 0.5 seconds on Windows, but 50
+    *     seconds on Linux.
+    *
    tvRecv.tv_sec = RECVTIMEOUT;
    tvRecv.tv_usec = 0;
 
@@ -1448,6 +1450,7 @@ int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sock
       {
       CfOut(cf_error,"setsockopt","!! Couldn't set socket timeout");
       }
+   */
 
   
   return true;

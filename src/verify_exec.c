@@ -150,6 +150,10 @@ if (DONTDO && !a.contain.preview)
    {
    CfOut(cf_error,"","-> Would execute script %s\n",execstr);
    }
+else if(a.transaction.action != cfa_fix)
+  {
+  cfPS(cf_error,CF_WARN,"",pp,a," !! Command \"%s\" needs to be executed, but only warning was promised", execstr);
+  }
 else
    {
    

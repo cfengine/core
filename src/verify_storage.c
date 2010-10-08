@@ -369,9 +369,8 @@ else
 
 if (cfstat(vbuff,&parentstat) == -1)
    {
-   Debug2("File %s couldn't stat its parent directory! Assuming permission\n",dir);
-   Debug2("is denied because the file system is mounted from another host.\n");
-   return(true);
+   CfOut(cf_verbose,"stat"," !! Unable to stat %s",vbuff);
+   return(false);
    }
 
 if (childstat->st_dev != parentstat.st_dev)

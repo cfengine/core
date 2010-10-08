@@ -38,8 +38,8 @@
 
 enum typesequence
    {
-   kp_classes,
    kp_vars,
+   kp_classes,
    kp_outputs,
    kp_interfaces,
    kp_files,
@@ -57,8 +57,8 @@ enum typesequence
 
 char *TYPESEQUENCE[] =
    {
-   "classes",    /* Maelstrom order 2 */
    "vars",
+   "classes",    /* Maelstrom order 2 */
    "outputs",
    "interfaces",
    "files",

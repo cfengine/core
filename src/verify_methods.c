@@ -121,6 +121,10 @@ if (bp = GetBundle(method_name,"agent"))
    }
 else
    {
+   if (IsCf3VarString(method_name))
+      {
+      CfOut(cf_error,""," !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the uique name of the method");
+      }
    if (bp && bp->name)
       {
       cfPS(cf_error,CF_FAIL,"",pp,a," !! Method \"%s\" was used but was not defined!\n",bp->name);
@@ -128,11 +132,6 @@ else
    else
       {
       cfPS(cf_error,CF_FAIL,"",pp,a," !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n",method_name);
-      }
-
-   if (IsCf3VarString(method_name))
-      {
-      CfOut(cf_error,""," !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the nuique name of the method");
       }
    }
 

@@ -405,6 +405,12 @@ litem:                 ID
 functionid:            ID
                           {
                           Debug("Found function identifier %s\n",P.currentid);
+                          }
+                     | NAKEDVAR
+                          {
+                          P.currentid = P.currentstring; // Make a var look like an ID
+                          P.currentstring = NULL;
+                          Debug("Found variable in place of a function identifier %s\n",P.currentid);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

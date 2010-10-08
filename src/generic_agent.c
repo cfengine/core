@@ -1317,7 +1317,7 @@ for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
 
           fp = (struct FnCall *)rp->item;
 
-          if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(BUNDLES,fp->name))
+          if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(BUNDLES,fp->name))
              {
              CfOut(cf_error,"","Undeclared promise bundle \"%s()\" was referenced in a promise\n",fp->name);
              ERRORCOUNT++;

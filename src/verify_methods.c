@@ -51,7 +51,7 @@ int VerifyMethod(struct Attributes a,struct Promise *pp)
 { struct Bundle *bp;
   void *vp;
   struct FnCall *fp;
-  char *method_name = NULL;
+  char method_name[CF_EXPANDSIZE];
   struct Rlist *params = NULL;
   int retval = false;
   struct CfLock thislock;
@@ -63,12 +63,12 @@ if (a.havebundle)
    if (vp = GetConstraint("usebundle",pp,CF_FNCALL))
       {
       fp = (struct FnCall *)vp;
-      method_name = fp->name;
+      ExpandScalar(fp->name,method_name);
       params = fp->args;
       }
    else if (vp = GetConstraint("usebundle",pp,CF_SCALAR))
       {
-      method_name = (char *)vp;
+      ExpandScalar((char *)vp,method_name);
       params = NULL;
       }
    else
@@ -127,7 +127,12 @@ else
       }
    else
       {
-      cfPS(cf_error,CF_FAIL,"",pp,a," !! A method attempted to use a bundle that was apparently not defined!\n");
+      cfPS(cf_error,CF_FAIL,"",pp,a," !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n",method_name);
+      }
+
+   if (IsCf3VarString(method_name))
+      {
+      CfOut(cf_error,""," !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the nuique name of the method");
       }
    }
 

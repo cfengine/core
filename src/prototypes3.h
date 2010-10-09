@@ -386,6 +386,7 @@ int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
+void WebCache(char *s,char *t);
 void EnterpriseModuleTrick(void);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
@@ -1357,7 +1358,7 @@ void TestAgentPromises(void);
 void TestFunctionIntegrity(void);
 void SDIntegerDefault(char *ref,int cmp);
 void DebugBreak();
-
+void TestHashEntropy(char *s,char *s1);
 
 /* server_transform.c */
 

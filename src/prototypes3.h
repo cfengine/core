@@ -1357,7 +1357,7 @@ void TestRegularExpressions(void);
 void TestAgentPromises(void);
 void TestFunctionIntegrity(void);
 void SDIntegerDefault(char *ref,int cmp);
-void DebugBreak();
+void CfDebugBreak();
 void TestHashEntropy(char *s,char *s1);
 
 /* server_transform.c */

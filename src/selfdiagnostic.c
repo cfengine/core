@@ -593,4 +593,4 @@ for (j = 1; j < 10; j++)
 
 /*****************************************************************************/
 
-void DebugBreak() {   /* Called on error condition to break for inspection */ }
+void CfDebugBreak() {   /* Called on error condition to break for inspection */ }

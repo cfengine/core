@@ -271,6 +271,9 @@ mode_t Str2Mode(char *s);
 double Str2Double(char *s);
 void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);
 int Month2Int(char *string);
+int MonthLen2Int(char *string, int len);
+void TimeToDateStr(time_t t, char *outStr, int outStrSz);
+void DateStrToTime(char *inStr, time_t *t);
 char *GetArg0(char *execstr);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
@@ -747,7 +750,6 @@ char *ToLowerStr (char *str);
 int SubStrnCopyChr(char *to,char *from,int len,char sep);
 int CountChar(char *string,char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
-void TimeToDateStr(time_t t, char *outStr, int outStrSz);
     
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 void *ThreadUniqueName(pthread_t tid);

@@ -1038,22 +1038,6 @@ for(i = 0; (i < len) && (i < outSz - 1); i++)
 
 /*********************************************************************/
 
-void TimeToDateStr(time_t t, char *outStr, int outStrSz)
-/**
- * Formats a time as "30 Sep 2010".
- */
-{
-char month[CF_SMALLBUF],day[CF_SMALLBUF],year[CF_SMALLBUF];
-char tmp[CF_SMALLBUF];
-
-snprintf(tmp,sizeof(tmp),"%s",cf_ctime(&t));
-sscanf(tmp,"%*s %5s %3s %*s %5s",month,day,year);
-snprintf(outStr,outStrSz,"%s %s %s",day,month,year);
-}
-
-
-/*********************************************************************/
-
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 
 void *ThreadUniqueName(pthread_t tid)

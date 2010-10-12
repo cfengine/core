@@ -993,6 +993,14 @@ return cfsrv_nostatus;
 
 int Month2Int(char *string)
 
+{
+return MonthLen2Int(string,10);  // no month names longer than 10 chars
+}
+
+/*************************************************************/
+
+int MonthLen2Int(char *string, int len)
+
 { int i;
 
 if (string == NULL)
@@ -1012,7 +1020,65 @@ for (i = 0; i < 12; i++)
 return -1;
 }
 
+/*********************************************************************/
+
+void TimeToDateStr(time_t t, char *outStr, int outStrSz)
+/**
+ * Formats a time as "30 Sep 2010".
+ */
+{
+char month[CF_SMALLBUF],day[CF_SMALLBUF],year[CF_SMALLBUF];
+char tmp[CF_SMALLBUF];
+
+snprintf(tmp,sizeof(tmp),"%s",cf_ctime(&t));
+sscanf(tmp,"%*s %5s %3s %*s %5s",month,day,year);
+snprintf(outStr,outStrSz,"%s %s %s",day,month,year);
+}
+
+/*********************************************************************/
+
+void DateStrToTime(char *inStr, time_t *t)
+/**
+ * Takes a time str as "30 Sep 2010" and returns a time_t struct in
+ * that day.
+ */
+{
+  char monthStr[CF_SMALLBUF] = {0};
+  int day = 0, month = 0, year = 0;
+  struct tm tmTime = {0};
+  time_t tTime = 0;
+  
+  sscanf(inStr,"%d %3s %d",&day,monthStr,&year);
+
+  month = MonthLen2Int(monthStr,3);
+
+  if(month == -1)
+    {
+    CfOut(cf_error, "", "!! Could not convert month to int in DateStrToTime()");
+    *t = 0;
+    return;
+    }
+
+  tmTime.tm_mday = day;
+  tmTime.tm_mon = month - 1;
+  tmTime.tm_year = year - 1900;
+  tmTime.tm_isdst = -1;
+
+  tTime = mktime(&tmTime);
+
+  if(tTime == -1)
+    {
+    CfOut(cf_error, "mktime", "!! Could not convert \"%s\" from string to time_t", inStr);
+    *t = 0;
+    }
+  else
+    {
+    *t = tTime;
+    }
+}
+
 /*************************************************************/
+
 
 char *GetArg0(char *execstr)
 

@@ -33,6 +33,8 @@
 #undef VERSION
 #undef Verbose
 
+#define CF3_REVISION "$Rev$"
+
 #include "conf.h"
 
 #ifdef HAVE_PCRE_H

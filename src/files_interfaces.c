@@ -535,7 +535,6 @@ void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr
   struct stat sb; 
   struct dirent *dirp;
   char filename[CF_BUFSIZE] = {0};
-  int flen = 0;
 
 Debug("PurgeLocalFiles(%s)\n",localdir);
 
@@ -584,18 +583,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
       strncpy(filename,localdir,CF_BUFSIZE-2);
       
-      // filename may end with "/." which we strip out
-      
-      flen = strlen(filename);
-      
-      if(filename[flen-2] == FILE_SEPARATOR && filename[flen-1] == '.')
-	{
-	filename[flen-1] = '\0';
-	}
-      else
-	{
-	AddSlash(filename);
-	}
+      AddSlash(filename);
 
       Join(filename,dirp->d_name,CF_BUFSIZE-1);
       
@@ -633,6 +621,12 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
                {
                cfPS(cf_verbose,CF_INTERPT,"rmdir",pp,attr," !! Couldn't empty directory %s while purging\n",filename);
                }
+
+
+	    if (chdir("..") != 0)
+	       {
+	       CfOut(cf_error, "chdir", "!! Can't step out of directory \"%s\" before deletion",filename);
+	       }
             
             if (rmdir(filename) == -1)
                {

@@ -40,7 +40,7 @@
 	Changes to normal ordering to optimize execution.
 
 	Source control revision added in version string if run in verbose mode
-	(e.g. "cf-promises -vV").
+	(e.g. "cf-promises -vV"). This needs some refining, uses revision of a header now.
 	
 3.0.5p1
         Showing paths allowed/denied access to when cf-serverd is run in verbose mode.

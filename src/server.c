@@ -716,7 +716,7 @@ conn = NewConn(sd_reply);
 
 strncpy(conn->ipaddr,ipaddr,CF_MAX_IP_LEN-1);
 
-CfOut(cf_verbose,"","New connection...(from %s/%d)\n",conn->ipaddr,sd_reply);
+CfOut(cf_verbose,"","New connection...(from %s:sd %d)\n",conn->ipaddr,sd_reply);
  
 #if defined HAVE_LIBPTHREAD || defined BUILTIN_GCC_THREAD
 

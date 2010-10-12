@@ -243,7 +243,7 @@ if (pid == 0)
    
    if (execv(arg[0],argv) == -1)
       {
-      CfOut(cf_error,"execv","Couldn't run %s",arg[0]);
+      CfOut(cf_error,"execv","Couldn'vt run %s",arg[0]);
       }
    
    free((char *)argv);

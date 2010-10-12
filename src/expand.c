@@ -1023,7 +1023,22 @@ if (rval != NULL)
       }
    else
       {
-      rval = CopyRvalItem(cp->rval,cp->type);
+      char conv[CF_MAXVARSIZE];
+
+      if (strcmp(cp->lval,"int") == 0)
+         {
+         snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval));
+         rval = CopyRvalItem(conv,cp->type);
+         }
+      else if (strcmp(cp->lval,"real") == 0)
+         {
+         snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval));
+         rval = CopyRvalItem(conv,cp->type);
+         }
+      else
+         {
+         rval = CopyRvalItem(cp->rval,cp->type);
+         }
       type = cp->type;
       }
 
@@ -1050,7 +1065,7 @@ if (rval != NULL)
          }
       else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rtype,rval,type) == false))
          {
-         CfOut(cf_error,""," !! Redefinition of a constant variable \"%s\"",pp->promiser);
+         CfOut(cf_error,""," !! Redefinition of a constant variable \"%s\" (was %s now %s)",pp->promiser,retval,rval);
          PromiseRef(cf_error,pp);
          }
       }

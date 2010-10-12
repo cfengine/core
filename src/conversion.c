@@ -565,7 +565,7 @@ sscanf(s,"%ld%c%s",&a,&c,remainder);
 
 if (a == CF_NOINT || !IsSpace(remainder))
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%d\"\n",s,a);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%d\" (found remainder \"%s\")\n",s,a,remainder);
    ReportError(output);
    }
 else
@@ -809,6 +809,7 @@ double Str2Double(char *s)
 { double a = CF_NODOUBLE;
   char remainder[CF_BUFSIZE];
   char output[CF_BUFSIZE];
+  char c = 'X';
   
 if (s == NULL)
    {
@@ -817,12 +818,54 @@ if (s == NULL)
 
 remainder[0] = '\0';
 
-sscanf(s,"%lf%s",&a,remainder);
+sscanf(s,"%lf%c%s",&a,&c,remainder);
 
 if (a == CF_NODOUBLE || !IsSpace(remainder))
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed real value %s\n",s);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed real value %s (anomalous remainder %s)\n",s,remainder);
    ReportError(output);
+   }
+else
+   {
+   switch (c)
+      {
+      case 'k':
+          a = 1000 * a;
+          break;
+      case 'K':
+          a = 1024 * a;
+          break;          
+      case 'm':
+          a = 1000 * 1000 * a;
+          break;
+      case 'M':
+          a = 1024 * 1024 * a;
+          break;          
+      case 'g':
+          a = 1000 * 1000 * 1000 * a;
+          break;
+      case 'G':
+          a = 1024 * 1024 * 1024 * a;
+          break;          
+      case '%':
+          if (a < 0 || a > 100)
+             {
+             CfOut(cf_error,"","Percentage out of range (%d)",a);
+             return CF_NOINT;
+             }
+          else
+             {
+             /* Represent percentages internally as negative numbers */
+             a = -a;
+             }
+          break;
+
+      case ' ':
+          break;
+          
+      default:          
+          break;
+      }
    }
 
 return a;

@@ -511,7 +511,7 @@ else
       {
       if (rp->type != CF_SCALAR)
          {
-         FatalError("ShowBody - non-scalar paramater container");
+         FatalError("ShowBody - non-scalar parameter container");
          }
 
       fprintf(FREPORT_HTML,"%s%s%s,\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);

@@ -1192,21 +1192,28 @@ if (!IsExecutable(GetArg0(comm)))
    return false;
    }
 
-if ((pop = cf_popen(comm,"r")) == NULL)
+if (!DONTDO)
    {
-   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
-   return false;
+   if ((pop = cf_popen(comm,"r")) == NULL)
+      {
+      cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
+      return false;
+      }
+   
+   while (!feof(pop))
+      {
+      CfReadLine(line,CF_BUFSIZE,pop);
+      CfOut(cf_inform,"",line);
+      }
+   
+   cf_pclose(pop);
+   cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed to work ok",file,comm);   
    }
-
-while (!feof(pop))
+else
    {
-   CfReadLine(line,CF_BUFSIZE,pop);
-   CfOut(cf_inform,"",line);
+   CfOut(cf_error,""," -> Need to transform file \"%s\" with \"%s\"",file,comm);
    }
-
-cf_pclose(pop);
-cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed to work ok",file,comm);   
-
+       
 return true;
 }
 

@@ -1176,7 +1176,7 @@ CloseDB(dbp);
 int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 
 { char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
-  FILE *pop;
+  FILE *pop = NULL;
 
 if (attr.transformer == NULL || file == NULL)
    {
@@ -1185,6 +1185,12 @@ if (attr.transformer == NULL || file == NULL)
 
 ExpandScalar(attr.transformer,comm);
 CfOut(cf_inform,"","Transforming: %s ",comm);
+
+if (!IsExecutable(GetArg0(comm)))
+   {
+   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
+   return false;
+   }
 
 if ((pop = cf_popen(comm,"r")) == NULL)
    {
@@ -1199,8 +1205,8 @@ while (!feof(pop))
    }
 
 cf_pclose(pop);
+cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed to work ok",file,comm);   
 
-cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed ok",file,comm);
 return true;
 }
 

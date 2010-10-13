@@ -427,8 +427,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
    for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       {
       kp = (struct CfKeyBinding *) rp->item;
-
-      if ((strcmp(q.address,kp->address) != 0) && (strcmp(key+1,kp->name+1) == 0))
+      
+      if ((strcmp(q.address,kp->address) == 0) && (strcmp(key+1,kp->name+1) != 0))
          {
          CfOut(cf_verbose,""," ! Deleting %s's address (%s=%d) as this host %s seems to have moved elsewhere (%s=5d)",key,kp->address,strlen(kp->address),kp->name,q.address,strlen(q.address));
          DeleteDB(dbp,key);

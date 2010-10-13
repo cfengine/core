@@ -287,7 +287,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
             }
          }
 
-      if (pid < 4)
+      if (pid < 4 && a.signals)
          {
          CfOut(cf_verbose,"","Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",pp->promiser);
          continue;

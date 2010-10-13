@@ -2476,17 +2476,30 @@ int AuthenticationDialogue(struct cfd_connection *conn,char *recvbuffer, int rec
 
 { char in[CF_BUFSIZE],*out, *decrypted_nonce;
   BIGNUM *counter_challenge = NULL;
-  unsigned char digest[EVP_MAX_MD_SIZE+1];
+  unsigned char digest[EVP_MAX_MD_SIZE+1] = {0};
   unsigned int crypt_len, nonce_len = 0,encrypted_len = 0;
   char sauth[10], iscrypt ='n',enterprise_field = 'c';
   int len_n = 0,len_e = 0,keylen, session_size;
   unsigned long err;
   RSA *newkey;
+  int digestLen = 0;
+  enum cfhashes digestType;
 
 if (PRIVKEY == NULL || PUBKEY == NULL)
    {
    CfOut(cf_error,"","No public/private key pair exists, create one with cf-key\n");
    return false;
+   }
+
+ if(FIPS_MODE)
+   {
+   digestType = CF_DEFAULT_DIGEST;
+   digestLen = CF_DEFAULT_DIGEST_LEN;
+   }
+ else
+   {
+   digestType = cf_md5;
+   digestLen = CF_MD5_LEN;
    }
  
 /* proposition C1 */
@@ -2566,14 +2579,7 @@ ThreadUnlock(cft_system);
 
 /* Client's ID is now established by key or trusted, reply with digest */
 
-if (FIPS_MODE)
-   {
-   HashString(decrypted_nonce,nonce_len,digest,CF_DEFAULT_DIGEST);
-   }
-else
-   {
-   HashString(decrypted_nonce,nonce_len,digest,cf_md5);
-   }
+HashString(decrypted_nonce,nonce_len,digest,digestType);
 
 free(decrypted_nonce);
 
@@ -2659,14 +2665,8 @@ if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
 
 /* proposition S2 */
 
-if (FIPS_MODE)
-   {
-   SendTransaction(conn->sd_reply,digest,CF_DEFAULT_DIGEST_LEN,CF_DONE);
-   }
-else
-   {
-   SendTransaction(conn->sd_reply,digest,CF_MD5_LEN,CF_DONE);
-   }
+SendTransaction(conn->sd_reply,digest,digestLen,CF_DONE);
+
 
 /* Send counter challenge to be sure this is a live session */
 
@@ -2678,14 +2678,7 @@ nonce_len = BN_bn2mpi(counter_challenge,in);
 
 // hash the challenge from the client
 
-if (FIPS_MODE)
-   {
-   HashString(in,nonce_len,digest,CF_DEFAULT_DIGEST);
-   }
-else
-   {
-   HashString(in,nonce_len,digest,cf_md5);
-   }
+HashString(in,nonce_len,digest,digestType);
 
 encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
 
@@ -2736,7 +2729,7 @@ if (ReceiveTransaction(conn->sd_reply,in,NULL) == -1)
    return false;
    }
  
-if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5))  /* replay / piggy in the middle attack ? */
+if (HashesMatch(digest,in,digestType))  /* replay / piggy in the middle attack ? */
    {
    if (!conn->trust)
       {

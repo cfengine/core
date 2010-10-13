@@ -1,0 +1,103 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#######################################################
+#
+# Virtual environments
+#
+#######################################################
+
+body common control
+
+{
+bundlesequence  => { "my_vm_cloud" };   
+}
+
+#######################################################
+
+bundle agent my_vm_cloud
+
+{
+environments:
+
+ scope||any::  # These should probably be in class "any" to ensure uniqueness
+
+   "test2"
+
+       environment_resources => my_environment,
+       environment_interface => vnet("eth0,192.168.1.100/24"),
+       environment_type      => "test",
+       environment_state     => "create",
+       environment_host      => "atlas";
+
+
+   "test2"
+
+       environment_resources => my_environment,
+       environment_interface => vnet("eth0,192.168.1.101/24"),
+       environment_type      => "test",
+       environment_state     => "delete",
+       environment_host      => "atlas";
+
+
+   "test4"
+
+       environment_resources => my_environment,
+       environment_interface => vnet("eth0,192.168.1.102/24"),
+       environment_type      => "test",
+       environment_state     => "create",
+       environment_host      => "atlas";
+
+    "network1"
+       environment_type      => "test_net",
+       environment_state     => "create",
+       environment_host      => "atlas";
+
+
+      # default environment_state => "create" on host, and "suspended elsewhere"
+}
+
+#######################################################
+
+body environment_resources my_environment
+{
+env_cpus => "2";
+env_memory => "512"; # in KB
+env_disk => "1024";  # in MB
+}
+
+#######################################################
+
+body environment_interface vnet(primary)
+{
+env_name      => "$(this.promiser)";
+env_addresses => { "$(primary)" };
+
+host1::
+
+  env_network => "default_vnet1";
+
+host2::
+
+  env_network => "default_vnet2";
+
+}

@@ -89,10 +89,22 @@ int main (int argc,char *argv[]);
 int main(int argc,char *argv[])
 
 {
+
 CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();
 GenericDeInitialize();
+
+
+// TEMP
+
+ if(INFORM)
+   {
+     //LastSaw("root","192.168.122.34","lgsdgiuyhdybfd8yb098y129ihrflwjnsdlfkjsdsfsnflksnflkj",cf_accept);
+     //UpdateLastSeen();
+   }
+
+ // END TEMP
 
 if (ERRORCOUNT > 0)
    {

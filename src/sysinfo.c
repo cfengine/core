@@ -1382,14 +1382,13 @@ if (major != -1 && minor != -1)
    strcat(classbuf, "_");
    strcat(classbuf, strmajor);
    NewClass(classbuf);
+   NewScalar("sys","flavour",classbuf,cf_str);
+   NewScalar("sys","flavor",classbuf,cf_str);
    strcat(classbuf, "_");
    strcat(classbuf, strminor);
    NewClass(classbuf);
 
    CfOut(cf_verbose,""," -> Discovered SuSE version %s",classbuf);
-
-   NewScalar("sys","flavour",classbuf,cf_str);
-   NewScalar("sys","flavor",classbuf,cf_str);
    }
 
 return 0;

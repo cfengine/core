@@ -113,8 +113,12 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           if (FNCALL_STATUS.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)
              {
              // Unresolved variables
-             CfOut(cf_error,""," !! Embedded function argument does not resolve to a name");
-             ShowFnCall(stdout,fp);
+             CfOut(cf_verbose,""," !! Embedded function argument does not resolve to a name");
+             if (VERBOSE)
+                {
+                ShowFnCall(stdout,fp);
+                printf("\n");
+                }
              }
           else
              {

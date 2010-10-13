@@ -472,6 +472,7 @@ if (strstr(s,varstr) != NULL)
    }
 
 snprintf(varstr,CF_MAXVARSIZE-1,"@{%s}",v);
+
 if (strstr(s,varstr) != NULL)
    {
    return true;

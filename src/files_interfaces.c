@@ -1388,7 +1388,7 @@ switch (attr.copy.compare)
        
        if (ok_to_copy)
           { 
-          CfOut(cf_verbose,""," !! Image file %s has a wrong MD5 checksum (should be copy of %s)\n",destfile,sourcefile);
+          CfOut(cf_verbose,""," !! Image file %s has a wrong digest/checksum (should be copy of %s)\n",destfile,sourcefile);
           return ok_to_copy;
           }
        break;

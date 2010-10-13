@@ -51,7 +51,7 @@ bundle agent testbundle
 {
 vars:
 
- "1" string => "numerical backreference";
+ "v1" string => "numerical backreference";
 
 files:
 

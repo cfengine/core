@@ -1354,7 +1354,7 @@ MapName(filename);
 
 PurgeItemList(&VSETUIDLIST,"SETUID/SETGID");
 
-if (VSETUIDLIST && !CompareToFile(VSETUIDLIST,filename,a,pp))
+if (!CompareToFile(VSETUIDLIST,filename,a,pp))
    {
    SaveItemListAsFile(VSETUIDLIST,filename,b,pp);
    }

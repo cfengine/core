@@ -1183,6 +1183,13 @@ if (attr.transformer == NULL || file == NULL)
    return false;
    }
 
+if (pp->done)
+   {
+   return;
+   }
+
+pp->done = true;
+
 ExpandScalar(attr.transformer,comm);
 CfOut(cf_inform,"","Transforming: %s ",comm);
 

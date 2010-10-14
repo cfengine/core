@@ -107,17 +107,17 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
       case CF_FNCALL:
           fp = (struct FnCall *)rpg->item;
           dtg = FunctionReturnType(fp->name);
-          
-          returnval = EvaluateFunctionCall(fp,NULL);
 
+          returnval = EvaluateFunctionCall(fp,NULL);
+          
           if (FNCALL_STATUS.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)
              {
              // Unresolved variables
-             CfOut(cf_verbose,""," !! Embedded function argument does not resolve to a name");
              if (VERBOSE)
                 {
+                printf(" !! Embedded function argument does not resolve to a name - probably too many evaluation levels for ");
                 ShowFnCall(stdout,fp);
-                printf("\n");
+                printf(" (try simplifying)\n");
                 }
              }
           else
@@ -129,7 +129,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
              
              lval = (char *)rpt->item;
              rval = rpg->item;
-             
+
              AddVariableHash(scopeid,lval,rval,CF_SCALAR,dtg,NULL,0);
              }
 

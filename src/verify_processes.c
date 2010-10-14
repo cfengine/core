@@ -215,7 +215,7 @@ DeleteItemList(killlist);
  
 if (!need_to_restart)
    {
-   cfPS(cf_verbose,CF_NOP,"",pp,a," -- Matches in range for %s - process count promise kept\n",pp->promiser);
+   cfPS(cf_verbose,CF_NOP,"",pp,a," -> No restart promised for %s\n",pp->promiser);
    return;
    }
 else

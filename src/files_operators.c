@@ -2253,7 +2253,7 @@ save_gid = (attr.perms.groups)->gid;
 
 if (attr.copy.preserve)
    {
-   CfOut(cf_verbose,""," -> Attempting to preserve file permissions from the source");
+   CfOut(cf_verbose,""," -> Attempting to preserve file permissions from the source: %o",(sstat->st_mode & 07777));
       
    if ((attr.perms.owners)->uid == CF_SAME_OWNER)          /* Preserve uid and gid  */
       {
@@ -2267,8 +2267,8 @@ if (attr.copy.preserve)
 
 // Will this preserve if no mode set?
 
-   newplus = (sstat->st_mode & 07777) | attr.perms.plus;
-   newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
+   newplus = (sstat->st_mode & 07777);
+   newminus = ~newplus & 07777;
    attr.perms.plus = newplus;
    attr.perms.minus = newminus;
    VerifyFileAttributes(file,dstat,attr,pp);

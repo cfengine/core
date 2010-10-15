@@ -1276,9 +1276,9 @@ struct EditLocation GetLocationAttributes(struct Promise *pp)
 { struct EditLocation e;
   char *value;
 
-e.line_matching = GetConstraint("select_line_matching",pp,CF_SCALAR);;
+e.line_matching = GetConstraint("select_line_matching",pp,CF_SCALAR);
 
-value = GetConstraint("before_after",pp,CF_SCALAR);;
+value = GetConstraint("before_after",pp,CF_SCALAR);
 
 if (value && strcmp(value,"before") == 0)
    {
@@ -1289,7 +1289,7 @@ else
    e.before_after = cfe_after;
    }
 
-e.first_last = GetConstraint("first_last",pp,CF_SCALAR);;
+e.first_last = GetConstraint("first_last",pp,CF_SCALAR);
 return e;
 }
 

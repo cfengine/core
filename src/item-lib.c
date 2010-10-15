@@ -511,7 +511,7 @@ return false;
 
 int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
 
-{ struct Item *ip,*ip_last = NULL,*ip_prev = CF_UNDEFINED_ITEM;;
+{ struct Item *ip,*ip_last = NULL,*ip_prev = CF_UNDEFINED_ITEM;
  
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;

@@ -2477,7 +2477,7 @@ int ExecutePreDefined(int id, char *opt)
 /*********************************************************/
 int PerformBootstrap(char *server)
 {
-   char buf[CF_BUFSIZE], output[CF_BUFSIZE];;
+   char buf[CF_BUFSIZE], output[CF_BUFSIZE];
    snprintf(buf,CF_BUFSIZE,"%s/ppkeys/localhost.pub",CFWORKDIR);
    if(!FileExists(buf))
      {

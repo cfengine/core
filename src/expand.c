@@ -923,7 +923,7 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
   struct Attributes a;
   char *lval,rtype,type;
   void *rval = NULL,*retval;
-  int i = 0,ok_redefine = false,drop_undefined = false;;
+  int i = 0,ok_redefine = false,drop_undefined = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
   struct Rlist *rp,*last = NULL;
   

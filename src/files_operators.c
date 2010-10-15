@@ -445,7 +445,7 @@ if (a.haveeditline)
       {
       fp = (struct FnCall *)vp;
       edit_bundle_name = fp->name;
-      params = fp->args;;
+      params = fp->args;
       }
    else if (vp = GetConstraint("edit_line",pp,CF_SCALAR))
       {

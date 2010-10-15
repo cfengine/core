@@ -636,7 +636,7 @@ return newvals;
 
 void LeapDetection()
 
-{ int i,j,last_pos = LDT_POS;;
+{ int i,j,last_pos = LDT_POS;
   double n1,n2,d;
   double padding = 0.2;
 

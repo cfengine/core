@@ -54,7 +54,7 @@ body:                  BODY
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 typeid:                ID {
-                          P.blocktype = P.currentid;;
+                          P.blocktype = P.currentid;
                           Debug("Found block type %s for %s\n",P.blocktype,P.block);
                           P.useargs = NULL;
                           };

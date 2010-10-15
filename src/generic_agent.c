@@ -1377,7 +1377,7 @@ if (BadBundleSequence(agent))
 
 void PrependAuditFile(char *file)
 
-{ struct stat statbuf;;
+{ struct stat statbuf;
 
 if ((AUDITPTR = (struct Audit *)malloc(sizeof(struct Audit))) == NULL)
    {
@@ -1438,7 +1438,7 @@ void CheckBundleParameters(char *scope,struct Rlist *args)
 
 { struct Rlist *rp;
   struct Rval retval;
-  char *lval,rettype;;
+  char *lval,rettype;
 
 for (rp = args; rp != NULL; rp = rp->next)
    {

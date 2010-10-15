@@ -105,7 +105,7 @@ return res;
 static int DoCloseDB(CF_DB *dbp)
 {
 #ifdef TCDB
-return TCDB_CloseDB(dbp);;
+return TCDB_CloseDB(dbp);
 #elif defined QDB
 return QDB_CloseDB(dbp);
 #else

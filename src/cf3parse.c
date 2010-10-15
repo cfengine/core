@@ -1453,7 +1453,7 @@ yyreduce:
   case 12:
 #line 56 "cf3parse.y"
     {
-                          P.blocktype = P.currentid;;
+                          P.blocktype = P.currentid;
                           Debug("Found block type %s for %s\n",P.blocktype,P.block);
                           P.useargs = NULL;
                           }

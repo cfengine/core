@@ -65,7 +65,7 @@ commands:
 
    "$(sys.workdir)/bin/cfagent"
 
-        action => longjob;
+        action => if_elapsed("240");
 
 files:
 
@@ -74,9 +74,9 @@ files:
   "$(sys.workdir)/inputs/.*"
 
        comment     => "Check if there are still promises about cfengine 2 that need removing",
-       edit_line   => DeleteLinesMatching(".*$(cf2bits).*"),
+       edit_line   => delete_lines_matching(".*$(cf2bits).*"),
        file_select => OldCf2Files,
-       action      => WarnOnly;
+       action      => warn_only;
 
   # Check cf-execd and schedule is in crontab
 
@@ -288,3 +288,36 @@ roles:
 }
 
 
+########################################################
+
+bundle edit_line upgrade_cfexecd
+  {
+  classes:
+
+    "exec_fix" not => regline(".*cf-execd.*","$(edit.filename)");
+
+  insert_lines:
+
+    exec_fix::
+
+      "0,5,10,15,20,25,30,35,40,45,50,55 * * * * /var/cfengine/bin/cf-execd -F";
+
+  replace_patterns:
+
+    "cfexecd" replace_with => value("cf-execd");
+
+  reports:
+
+    exec_fix::
+
+    "Added a 5 minute schedule to crontabs";
+  }
+
+#######################################################
+
+body edit_defaults def
+{
+empty_file_before_editing => "false";
+edit_backup => "false";
+max_file_size => "100000";
+}

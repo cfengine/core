@@ -39,7 +39,7 @@ bundlesequence  => {
 inputs          => {
                    "update.cf",
                    "site.cf",
-                   "library.cf" 
+                   "cfengine_stdlib.cf" 
                    };
 }
 

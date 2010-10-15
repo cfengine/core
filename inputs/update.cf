@@ -35,14 +35,14 @@ files:
     perms => u_p("600"),
     copy_from => mycopy("$(master_location)","localhost"),
     depth_search => recurse("inf"),
-    action => immediate;
+    action => uimmediate;
 
   "/var/cfengine/bin" 
 
     perms => u_p("700"),
     copy_from => mycopy("/usr/local/sbin","localhost"),
     depth_search => recurse("inf"),
-    action => immediate;
+    action => uimmediate;
 }
 
 ############################################
@@ -74,7 +74,7 @@ compare     => "digest";
 
 #########################################################
 
-body action immediate
+body action uimmediate
 {
 ifelapsed => "1";
 }

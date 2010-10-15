@@ -456,8 +456,8 @@ else
 
 void TestAgentPromises()
 
-{ struct Attributes a;
-  struct Promise pp;
+{ struct Attributes a = {0};
+  struct Promise pp = {0};
 
 pp.conlist = NULL;
 pp.audit = NULL;

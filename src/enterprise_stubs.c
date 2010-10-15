@@ -419,7 +419,7 @@ Nova_SpecialQuote(topic,type);
 void HistoryUpdate(struct Averages newvals)
 
 { struct Promise *pp = NewPromise("history_db","the long term memory");
-  struct Attributes dummyattr;
+  struct Attributes dummyattr = {0};
   struct CfLock thislock;
   time_t now = time(NULL);
   char timekey[CF_MAXVARSIZE];
@@ -1104,7 +1104,7 @@ void NoteEfficiency(double e)
 
 {
 #ifdef HAVE_LIBCFNOVA
- struct Attributes a;
+ struct Attributes a = {0};
  struct Promise p;
  
 NovaNamedEvent("Configuration model efficiency",e,a,&p);

@@ -300,7 +300,7 @@ void StartServer(int argc,char **argv)
   struct timeval timeout;
   int ret_val;
   struct Promise *pp = NewPromise("server_cfengine","the server daemon");
-  struct Attributes dummyattr;
+  struct Attributes dummyattr = {0};
   struct CfLock thislock;
 
 memset(&dummyattr,0,sizeof(dummyattr));

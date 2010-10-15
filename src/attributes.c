@@ -36,7 +36,7 @@
 
 struct Attributes GetFilesAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
  
 memset(&attr,0,sizeof(attr));
  
@@ -107,7 +107,7 @@ return attr;
 
 struct Attributes GetOutputsAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 memset(&attr,0,sizeof(attr));
 
 attr.transaction = GetTransactionConstraints(pp);
@@ -122,7 +122,7 @@ return attr;
 
 struct Attributes GetReportsAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -137,7 +137,7 @@ return attr;
 
 struct Attributes GetEnvironmentsAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
  
@@ -152,7 +152,7 @@ return attr;
 
 struct Attributes GetServicesAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
  
@@ -167,7 +167,7 @@ return attr;
 
 struct Attributes GetPackageAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
  
@@ -181,7 +181,7 @@ return attr;
 
 struct Attributes GetDatabaseAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -210,7 +210,7 @@ return a;
 
 struct Attributes GetExecAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -235,7 +235,7 @@ return attr;
 
 struct Attributes GetProcessAttributes(struct Promise *pp)
 
-{ static struct Attributes attr;
+{ static struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -263,7 +263,7 @@ return attr;
 
 struct Attributes GetStorageAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -292,7 +292,7 @@ return attr;
 
 struct Attributes GetMethodAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -313,7 +313,7 @@ return attr;
 
 struct Attributes GetInterfacesAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -335,7 +335,7 @@ return attr;
 
 struct Attributes GetTopicsAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
 
@@ -349,7 +349,7 @@ return attr;
 
 struct Attributes GetOccurrenceAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
   char *value;
 
 memset(&attr,0,sizeof(attr));
@@ -366,7 +366,7 @@ return attr;
 
 struct Attributes GetMeasurementAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 memset(&attr,0,sizeof(attr));
  
@@ -1241,7 +1241,7 @@ printf(".....................................................\n\n");
 
 struct Attributes GetInsertionAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
   char *value;
 
 attr.havelocation = GetBooleanConstraint("location",pp);
@@ -1297,7 +1297,7 @@ return e;
 
 struct Attributes GetDeletionAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 attr.not_matching = GetBooleanConstraint("not_matching",pp);
 
@@ -1322,7 +1322,7 @@ return attr;
 
 struct Attributes GetColumnAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 attr.havecolumn = GetBooleanConstraint("edit_field",pp);
 attr.column = GetColumnConstraints(pp);
@@ -1345,7 +1345,7 @@ return attr;
 
 struct Attributes GetReplaceAttributes(struct Promise *pp)
 
-{ struct Attributes attr;
+{ struct Attributes attr = {0};
 
 attr.havereplace = GetBooleanConstraint("replace_patterns",pp);
 attr.replace = GetReplaceConstraints(pp);

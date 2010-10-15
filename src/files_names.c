@@ -108,7 +108,7 @@ if (expandregex) /* Expand one regex link and hand down */
    char nextbuffer[CF_BUFSIZE],nextbufferOrig[CF_BUFSIZE],regex[CF_BUFSIZE];
    struct dirent *dirp;
    DIR *dirh;
-   struct Attributes dummyattr;
+   struct Attributes dummyattr = {0};
 
    memset(&dummyattr,0,sizeof(dummyattr));
    memset(regex,0,CF_BUFSIZE);

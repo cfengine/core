@@ -36,7 +36,7 @@
 
 void VerifyExecPromise(struct Promise *pp)
 
-{ struct Attributes a;
+{ struct Attributes a = {0};
 
 a = GetExecAttributes(pp);
 ExecSanityChecks(a,pp);

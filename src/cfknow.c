@@ -1340,7 +1340,7 @@ void VerifyTopicPromise(struct Promise *pp)
 
 { char id[CF_BUFSIZE];
   char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
-  struct Attributes a;
+  struct Attributes a = {0};
   struct Topic *tp,*tp_sub;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
@@ -1435,7 +1435,7 @@ void KeepAssociationPromise(struct Promise *pp)
 
 { char id[CF_BUFSIZE];
   char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
-  struct Attributes a;
+  struct Attributes a = {0};
   struct Topic *tp;
 
 a = GetTopicsAttributes(pp);
@@ -1463,7 +1463,7 @@ else
 
 void VerifyOccurrencePromises(struct Promise *pp)
 
-{ struct Attributes a;
+{ struct Attributes a = {0};
   struct Topic *tp;
   char name[CF_BUFSIZE];
   enum representations rep_type;
@@ -1643,7 +1643,7 @@ void GenerateSQL()
   struct Rlist *columns = NULL,*rp;
   int i,sql_database_defined = false;
   struct Promise *pp;
-  struct Attributes a;
+  struct Attributes a = {0};
   CfdbConn cfdb;
 
 AddSlash(BUILD_DIR);
@@ -2943,7 +2943,7 @@ CfHtmlFooter(fout,FOOTER);
 
 void VerifyOccurrenceGroup(char *file,struct Promise *pp)
     
-{ struct Attributes a;
+{ struct Attributes a = {0};
   struct Topic *tp;
   enum representations rep_type;
   struct stat sb;

@@ -571,7 +571,7 @@ int DoIt(struct line_data *p)
 
 { char buf[CF_EXPANDSIZE];
   char *pBuf = buf;
-  struct Attributes a;
+  struct Attributes a = {0};
   char file[CF_BUFSIZE];
  
 switch(p->action)

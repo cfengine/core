@@ -36,7 +36,7 @@
 
 void VerifyProcessesPromise(struct Promise *pp)
 
-{ struct Attributes a;
+{ struct Attributes a = {0};
 
 a = GetProcessAttributes(pp);
 ProcessSanityChecks(a,pp);

@@ -38,7 +38,7 @@
 
 void VerifyReportPromise(struct Promise *pp)
 
-{ struct Attributes a;
+{ struct Attributes a = {0};
   struct CfLock thislock;
   struct Rlist *rp;
 

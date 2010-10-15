@@ -36,7 +36,7 @@
 
 void VerifyMethodsPromise(struct Promise *pp)
 
-{ struct Attributes a;
+{ struct Attributes a = {0};
 
 a = GetMethodAttributes(pp);
 

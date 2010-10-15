@@ -106,7 +106,7 @@ int OUTPUT_TO_FILE = false;
 int BACKGROUND = false;
 int MAXCHILD = 50;
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
-struct Attributes RUNATTR;
+struct Attributes RUNATTR = {0};
 struct Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
 char DEFINECLASSES[CF_MAXVARSIZE];

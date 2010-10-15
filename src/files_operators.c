@@ -1488,7 +1488,7 @@ void RotateFiles(char *name,int number)
 { int i, fd;
   struct stat statbuf;
   char from[CF_BUFSIZE],to[CF_BUFSIZE];
-  struct Attributes attr;
+  struct Attributes attr = {0};
   struct Promise dummyp;
 
 if (IsItemIn(ROTATED,name))

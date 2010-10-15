@@ -180,7 +180,7 @@ struct cfagent_connection *ServerConnectionReady(char *server);
 void MarkServerOffline(char *server);
 void CacheServerConnection(struct cfagent_connection *conn,char *server);
 void ServerNotBusy(struct cfagent_connection *conn);
-int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr_in *cinp, int cinpSz);
+int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 /* client_protocols.c */
 

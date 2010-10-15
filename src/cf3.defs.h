@@ -1048,17 +1048,17 @@ enum promiselog_rep
 
 /*************************************************************************/
 
-// Special Purpose Policy types
-typedef enum spp_report
+// Content-Driven Policy types
+typedef enum cdp_report
 {
-  spp_acls,
-  spp_commands,
-  spp_filechanges,
-  spp_filediffs,
-  spp_registry,
-  spp_services,
-  spp_unknown
-}spp_t;
+  cdp_acls,
+  cdp_commands,
+  cdp_filechanges,
+  cdp_filediffs,
+  cdp_registry,
+  cdp_services,
+  cdp_unknown
+}cdp_t;
 
 
 

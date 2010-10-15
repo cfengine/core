@@ -1105,7 +1105,7 @@ if (!attr.copy.force_ipv4)
    snprintf(conn->remoteip,CF_MAX_IP_LEN-1,"%s",inet_ntoa(cin.sin_addr));
 
 
-   return TryConnect(conn,&tv,&cin,sizeof(cin));
+   return TryConnect(conn,&tv,(struct sockaddr *)&cin,sizeof(cin));
    }
 }
 
@@ -1360,7 +1360,7 @@ for (i = 0; i < toget; i++)
 
 /*********************************************************************/
 
-int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr_in *cinp, int cinpSz)
+int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 /** 
  * Tries a nonblocking connect and then restores blocking if
  * successful. Returns true on success, false otherwise.

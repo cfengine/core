@@ -1,6 +1,6 @@
 
 inputsdir = @docdir@/inputs
-inputs_DATA = failsafe.cf  library.cf  promises.cf  site.cf  update.cf
+inputs_DATA = failsafe.cf  cfengine_stdlib.cf  promises.cf  site.cf  update.cf
 EXTRA_DIST = *.cf
 
 #

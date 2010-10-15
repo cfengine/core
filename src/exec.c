@@ -530,7 +530,7 @@ if (!ONCE)
 
 void Apoptosis()
 
-{ struct Promise pp;
+{ struct Promise pp = {0};
   struct Rlist *signals = NULL, *owners = NULL;
   char mypid[32],pidrange[32];
   char *psopts = GetProcessOptions();

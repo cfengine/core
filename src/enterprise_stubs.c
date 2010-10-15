@@ -1105,7 +1105,7 @@ void NoteEfficiency(double e)
 {
 #ifdef HAVE_LIBCFNOVA
  struct Attributes a = {0};
- struct Promise p;
+ struct Promise p = {0};
  
 NovaNamedEvent("Configuration model efficiency",e,a,&p);
 CfOut(cf_verbose,"","Configuration model efficiency for %s = %.2lf%%",VUQNAME,e);

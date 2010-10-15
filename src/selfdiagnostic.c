@@ -206,7 +206,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
 
 void TestExpandPromise()
 
-{ struct Promise pp,*pcopy;
+{ struct Promise pp = {0},*pcopy;
   struct Body *bp;
 
 printf("%d. Testing promise duplication and expansion\n",++NR);
@@ -253,7 +253,7 @@ DeletePromise(pcopy);
 
 void TestExpandVariables()
 
-{ struct Promise pp,*pcopy;
+{ struct Promise pp = {0},*pcopy;
   struct Body *bp;
   int i;
   char *list_text1 = "a,b,c,d,e,f,g";

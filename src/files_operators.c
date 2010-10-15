@@ -1489,7 +1489,7 @@ void RotateFiles(char *name,int number)
   struct stat statbuf;
   char from[CF_BUFSIZE],to[CF_BUFSIZE];
   struct Attributes attr = {0};
-  struct Promise dummyp;
+  struct Promise dummyp = {0};
 
 if (IsItemIn(ROTATED,name))
    {
@@ -1580,7 +1580,7 @@ else
 
 void DeleteDirectoryTree(char *path,struct Promise *pp)
 
-{ struct Promise promise;
+{ struct Promise promise = {0};
   char s[CF_MAXVARSIZE];
   time_t now = time(NULL);
 

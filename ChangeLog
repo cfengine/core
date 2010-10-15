@@ -39,6 +39,9 @@
 
 	Changes to normal ordering to optimize execution.
 
+	Increased stability by always initializing Attribute and Promise
+	structures.
+
 	Source control revision added in version string if run in verbose mode
 	(e.g. "cf-promises -vV"). This needs some refining, uses revision of a header now.
 	

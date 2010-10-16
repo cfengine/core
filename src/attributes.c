@@ -100,6 +100,19 @@ else
       }
    }
 
+if ((THIS_AGENT_TYPE == cf_common) && attr.create && attr.havecopy)
+   {
+   if (attr.copy.compare != cfa_checksum && attr.copy.compare != cfa_hash)
+      {
+      CfOut(cf_error,""," !! Promise constraint conflicts - %s file will never be copied as created file is always newer",pp->promiser);
+      PromiseRef(cf_error,pp);
+      }
+   else
+      {      
+      CfOut(cf_verbose,""," !! Promise constraint conflicts - %s file cannot strictly both be created empty and copied from a source file.",pp->promiser);
+      }
+   }
+
 return attr;
 }
 
@@ -912,6 +925,7 @@ f.encrypt = GetBooleanConstraint("encrypt",pp);
 f.verify = GetBooleanConstraint("verify",pp);
 f.purge = GetBooleanConstraint("purge",pp);
 f.destination = NULL;
+
 return f;
 }
 

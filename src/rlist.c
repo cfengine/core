@@ -616,7 +616,7 @@ struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type)
   struct FnCall *fp;
   char *sp = NULL;
   struct CfAssoc *cp;
-
+  
 Debug("OrthogAppendRlist\n");
  
 switch(type)
@@ -649,15 +649,18 @@ else
    }
 
 
-// This is item is infact a struct CfAssoc pointing to a list
+// This is item is in fact a struct CfAssoc pointing to a list
 
 cp = (struct CfAssoc *)item;
-rp->state_ptr = (struct Rlist *)cp->rval;
+
+// Note, we pad all iterators will a blank so the ptr arithmetic works
+// else EndOfIteration will not see lists with only element
+
+rp->state_ptr = PrependRlist((struct Rlist **)&(cp->rval),"cf_null",CF_SCALAR);
 
 rp->item = item;
 rp->type = CF_LIST;
 rp->next = NULL;
-
 return rp;
 }
 

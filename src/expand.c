@@ -600,7 +600,7 @@ do
    DeRefListsInHashtable("this",listvars,lol);
 
    /* Allow $(this.handle) */
-   
+
    if (handle)
       {
       NewScalar("this","handle",handle,cf_str);

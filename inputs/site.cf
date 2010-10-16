@@ -34,9 +34,14 @@ vars:
 
    "crontab" string => "/var/spool/cron/tabs/root";
 
- !SuSE::
+  redhat::
+
+   "crontab" string => "/var/spool/cron/root";
+
+ (!SuSE).(!redhat)::
 
    "crontab" string => "/var/spool/cron/crontabs/root";
+
 }
 
 #######################################################

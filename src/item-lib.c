@@ -1644,6 +1644,11 @@ if (cfstat(file,&statbuf) == -1)
    return false;
    }
 
+if (liststart == NULL && statbuf.st_size == 0)
+   {
+   return true;
+   }
+
 if (liststart == NULL)
    {
    return false;

@@ -343,10 +343,15 @@ EDITFILESIZE = 100000;
 
 snprintf(filename,CF_BUFSIZE,"%s/cfagent.%s.log",CFWORKDIR,VSYSNAME.nodename);
 MapName(filename);
+
 if ((fp = fopen(filename,"a")) != NULL)
    {
    fclose(fp);
    }
+
+#ifdef HAVE_LIBCFNOVA
+Nova_Initialize();
+#endif
 }
 
 /*******************************************************************/

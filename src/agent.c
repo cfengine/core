@@ -87,6 +87,8 @@ extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
 
 #ifdef HAVE_LIBVIRT
+# include <libvirt/libvirt.h>
+# include <libvirt/virterror.h>
 extern virConnectPtr CFVC[];
 #endif
 
@@ -348,10 +350,6 @@ if ((fp = fopen(filename,"a")) != NULL)
    {
    fclose(fp);
    }
-
-#ifdef HAVE_LIBCFNOVA
-Nova_Initialize();
-#endif
 }
 
 /*******************************************************************/
@@ -681,6 +679,10 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&
    strncpy(SYSLOGHOST,Hostname2IPString(retval),CF_MAXVARSIZE-1);
    CfOut(cf_verbose,"","SET syslog_host to %s",SYSLOGHOST);
    }
+
+#ifdef HAVE_LIBCFNOVA
+Nova_Initialize();
+#endif
 }
 
 /*********************************************************************/

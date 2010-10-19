@@ -1185,7 +1185,7 @@ if (attr.transformer == NULL || file == NULL)
 
 if (pp->done)
    {
-   return;
+   return false;
    }
 
 pp->done = true;

@@ -1088,7 +1088,7 @@ else
 
 int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
 
-{ struct Rlist *rp,*this_column;
+{ struct Rlist *rp,*this_column = NULL;
   char sep[CF_MAXVARSIZE];
   int i,count = 0,retval = false;
 
@@ -1168,7 +1168,7 @@ if (a.column.value_separator != '\0')
       {
       cfPS(cf_verbose,CF_NOP,"",pp,a," -> No need to edit field in %s",pp->this_server);
       }
-   
+
    DeleteRlist(this_column);
    return retval;
    }

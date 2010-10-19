@@ -831,6 +831,12 @@ else
    c.hash = CF_DEFAULT_DIGEST;
    }
 
+if (FIPS_MODE && c.hash == cf_md5)
+   {
+   CfOut(cf_error,""," !! FIPS mode is enabled, and md5 is not an approved algorithm");
+   PromiseRef(cf_error,pp);
+   }
+
 value = (char *)GetConstraint("report_changes",pp,CF_SCALAR);
 
 if (value && strcmp(value,"content") == 0)

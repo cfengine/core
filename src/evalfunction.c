@@ -529,6 +529,12 @@ string = finalargs->item;
 typestring = finalargs->next->item;
 
 type = String2HashType(typestring);
+
+if (FIPS_MODE && type == cf_md5)
+   {
+   CfOut(cf_error,""," !! FIPS mode is enabled, and md5 is not an approved algorithm in call to hash()");
+   }
+
 HashString(string,strlen(string),digest,type);
 
 snprintf(buffer,CF_BUFSIZE-1,"%s",HashPrint(type,digest));

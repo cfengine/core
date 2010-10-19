@@ -311,7 +311,8 @@ Debug2("HashString(%c)\n",type);
 switch (type)
    {
    case cf_crypt:
-       CfOut(cf_error,"","The crypt support is not presently implemented, please use sha256 instead");
+       CfOut(cf_error,"","The crypt support is not presently implemented, please use another algorithm instead");
+       memset(digest,0,EVP_MAX_MD_SIZE+1);
        break;
        
    default:

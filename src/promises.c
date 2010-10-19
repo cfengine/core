@@ -632,7 +632,7 @@ if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
 
 pp->audit = AUDITPTR;
 pp->lineno = 0;
-pp->bundle =  strdup("independent");
+pp->bundle =  strdup("internal_bundle");
 pp->promiser = strdup(promiser);
 
 ThreadUnlock(cft_policy);
@@ -640,7 +640,6 @@ ThreadUnlock(cft_policy);
 pp->promisee = NULL;
 pp->petype = CF_NOPROMISEE;
 pp->classes = NULL;
-pp->conlist = NULL;
 pp->done = false;
 pp->donep = &(pp->done);
 
@@ -655,6 +654,11 @@ pp->agentsubtype = typename;   /* cache this, not copy strdup(typename);*/
 pp->ref = NULL;                /* cache a reference if given*/
 pp->ref_alloc = 'n';
 pp->next = NULL;
+
+
+pp->conlist = NULL;  // this fn is used for internal promises only
+AppendConstraint(&(pp->conlist), "handle", strdup("internal_promise"),CF_SCALAR,NULL,false);
+
 return pp;
 }
 

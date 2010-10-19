@@ -437,6 +437,7 @@ if (s == NULL || strlen(s) ==  0)
    }
   
 snprintf(filename,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_PROMISE_LOG);
+MapName(filename);
 
 if ((fout = fopen(filename,"a")) == NULL)
    {

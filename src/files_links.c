@@ -90,6 +90,7 @@ if (cfstat(absto,&sb) == -1)
 if (nofile && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
    {
    CfOut(cf_inform,"","Source %s for linking is absent",absto);
+   cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Unable to create link %s -> %s, no source",destination,to);
    return CF_WARN;
    }
 
@@ -105,12 +106,14 @@ if (readlink(destination,linkbuf,CF_BUFSIZE-1) == -1)
    {
    if (!MakeParentDirectory(destination,attr.move_obstructions))                  /* link doesn't exist */
       {
+      cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Unable to create link %s -> %s",destination,to);
       return CF_FAIL;
       }
    else
       {
       if (!MoveObstruction(destination,attr,pp))
          {
+         cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Unable to create link %s -> %s",destination,to);
          return CF_FAIL;
          }
 
@@ -118,24 +121,18 @@ if (readlink(destination,linkbuf,CF_BUFSIZE-1) == -1)
       }
    }
 else
-   { int off1 = 0, off2 = 0;  /* Link exists */
-   
-   if (*to && !IsFileSep(to[strlen(to)-1]))
+   { int ok = false;
+
+   if (attr.link.link_type == cfa_symlink && strcmp(linkbuf,to) != 0 && strcmp(linkbuf,source) != 0)
       {
-      DeleteSlash(linkbuf);
+      ok = true;
       }
-   
-   if (strncmp(linkbuf,"./",2) == 0)   /* Ignore ./ at beginning */
+   else if (strcmp(linkbuf,source) != 0)
       {
-      off1 = 2;
+      ok = true;
       }
-   
-   if (strncmp(to,"./",2) == 0)
-      {
-      off2 = 2;
-      }
-   
-   if (strcmp(linkbuf+off1,to+off2) != 0)
+
+   if (ok)
       {
       if (attr.move_obstructions)
          {
@@ -145,7 +142,7 @@ else
             
             if (unlink(destination) == -1)
                {
-               CfOut(cf_error,"unlink"," !! Error removing link %s",destination);
+               cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! Link %s points to %s not %s - error removing link",destination,linkbuf,to);
                return CF_FAIL;
                }
             
@@ -154,7 +151,7 @@ else
          else
             {
             CfOut(cf_error,""," !! Must remove incorrect link %s\n",destination);
-            return CF_FAIL;
+            return CF_NOP;
             }
          }
       else
@@ -247,8 +244,7 @@ commonfrom = destination;
 
 if (strcmp(commonto,commonfrom) == 0)
    {
-   CfOut(cf_error,""," !! Can't link file %s to itself!\n",commonto);
-   PromiseRef(cf_error,pp);
+   cfPS(cf_error,CF_INTERPT,"",pp,attr," !! Failed to link %s to %s - can't link file %s to itself\n",destination,source,commonto);
    return CF_FAIL;
    }
 
@@ -293,7 +289,7 @@ if (!JoinPath(buff,commonto))
    {
    return CF_FAIL;
    }
- 
+
 return VerifyLink(destination,buff,attr,pp);
 }
 

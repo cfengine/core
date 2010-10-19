@@ -1232,6 +1232,13 @@ if (a.havelink && a.havecopy)
    return false;
    }
 
+if (a.havelink && !a.link.source)
+   {
+   CfOut(cf_error,""," !! Promise to establish a link at %s has no source",path);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
 if (a.haveeditline && a.haveeditxml)
    {
    CfOut(cf_error,""," !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",path);

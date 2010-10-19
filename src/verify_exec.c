@@ -201,7 +201,7 @@ else
 
       if (pfp == NULL)
          {
-         cfPS(cf_error,CF_FAIL,"cf_popen",pp,a,"Couldn't open pipe to command %s\n",execstr);
+         cfPS(cf_error,CF_FAIL,"cf_popen",pp,a,"!! Couldn't open pipe to command %s\n",execstr);
          YieldCurrentLock(thislock);
          return;
          }
@@ -210,7 +210,7 @@ else
          {
          if (ferror(pfp))  /* abortable */
             {
-            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Command pipe %s\n",execstr);
+            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"!! Command pipe %s\n",execstr);
             YieldCurrentLock(thislock);
             return;
             }
@@ -224,7 +224,7 @@ else
          
          if (ferror(pfp))  /* abortable */
             {
-            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"Command pipe %s\n",execstr);
+            cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"!! Command pipe %s\n",execstr);
             YieldCurrentLock(thislock);   
             return;
             }

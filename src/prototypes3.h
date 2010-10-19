@@ -739,7 +739,7 @@ char *ReadLastNode(char *str);
 int CompressPath(char *dest,char *src);
 void Chop(char *str);
 int IsIn(char c,char *str);
-int IsStrIn(char *str, char **strs);
+int IsStrIn(char *str, char **strs, int ignoreCase);
 void FreeStringArray(char **strs);
 int IsAbsoluteFileName(char *f);
 int RootDirLength(char *f);

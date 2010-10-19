@@ -695,16 +695,27 @@ return false;
 
 /*********************************************************************/
 
-int IsStrIn(char *str, char **strs)
+int IsStrIn(char *str, char **strs, int ignoreCase)
 
 { int i;
 
 for (i = 0; strs[i] != NULL; i++)
    {
-   if (strcmp(str,strs[i]) == 0)
-      {
-      return true;
-      }
+
+   if(ignoreCase)
+     {
+     if (strcasecmp(str,strs[i]) == 0)
+       {
+       return true;
+       }
+     }
+   else
+     {
+     if (strcmp(str,strs[i]) == 0)
+       {
+       return true;
+       }
+     }
    }
 
 return false;

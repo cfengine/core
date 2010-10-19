@@ -44,7 +44,7 @@ void CheckBundle(char *name,char *type)
 
 Debug("Checking for bundle (%s,%s)\n",name,type);
   
-if (IsStrIn(name,reserved))
+if (IsStrIn(name,reserved,false))
    {
    snprintf(output,CF_BUFSIZE,"Use of a reserved context as a bundle name \"%s\" ",name);
    ReportError(output);      

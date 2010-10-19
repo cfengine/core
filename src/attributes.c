@@ -113,6 +113,12 @@ if ((THIS_AGENT_TYPE == cf_common) && attr.create && attr.havecopy)
       }
    }
 
+if ((THIS_AGENT_TYPE == cf_common) && attr.create && attr.havelink)
+   {
+   CfOut(cf_error,""," !! Promise constraint conflicts - %s cannot be created and linked at the same time",pp->promiser);
+   PromiseRef(cf_error,pp);
+   }
+
 return attr;
 }
 

@@ -1501,6 +1501,8 @@ if (rval2.rtype != CF_LIST)
    return rval;
    }
 
+AppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
+
 for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    {
    if (FullTextMatch(regex,rp->item))

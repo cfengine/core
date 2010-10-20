@@ -39,7 +39,7 @@
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
-  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE];
+  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
   struct Item *ip,*mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
@@ -51,9 +51,10 @@ memset(output,0,CF_BUFSIZE);
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
-SanitizeBuffer(buffer);
-Chop(buffer);
-AppendItem(&mess,buffer,NULL);
+ExpandScalar(buffer,expand);
+SanitizeBuffer(expand);
+Chop(expand);
+AppendItem(&mess,expand,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
@@ -110,7 +111,7 @@ DeleteItemList(mess);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
-  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE];
+ char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
   struct Item *ip,*mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
@@ -122,9 +123,10 @@ memset(output,0,CF_BUFSIZE);
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
-SanitizeBuffer(buffer);
-Chop(buffer);
-AppendItem(&mess,buffer,NULL);
+ExpandScalar(buffer,expand);
+SanitizeBuffer(expand);
+Chop(expand);
+AppendItem(&mess,expand,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
@@ -181,7 +183,7 @@ DeleteItemList(mess);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
 
 { va_list ap;
-  char rettype,*sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
+  char rettype,*sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE],expand[CF_EXPANDSIZE];
   struct Item *ip,*mess = NULL;
   int verbose;
   struct Rlist *rp;
@@ -195,10 +197,10 @@ if ((fmt == NULL) || (strlen(fmt) == 0))
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
-
-SanitizeBuffer(buffer);
-Chop(buffer);
-AppendItem(&mess,buffer,NULL);
+ExpandScalar(buffer,expand);
+SanitizeBuffer(expand);
+Chop(expand);
+AppendItem(&mess,expand,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {

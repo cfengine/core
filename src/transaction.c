@@ -46,7 +46,7 @@ if (logname && attr.transaction.log_string)
       }
    else if (strcmp(logname,"stdout") == 0)
       {
-      printf("L: %s\n",attr.transaction.log_string);
+      CfOut(cf_reporting,"","L: %s\n",attr.transaction.log_string);
       }
    else
       {

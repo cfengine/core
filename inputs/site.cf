@@ -87,6 +87,7 @@ files:
 
   "$(g.crontab)"
        comment => "Add cfengine as a cron job, or check for cfengine 2 jobs to replace",
+          create => "true",
        edit_line => upgrade_cfexecd;
 
 processes:

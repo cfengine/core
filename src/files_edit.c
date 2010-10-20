@@ -262,7 +262,7 @@ if (fclose(fp) == -1)
    return false;
    }
  
-cfPS(cf_inform,CF_CHG,"",pp,a,"Edited file %s \n",file); 
+cfPS(cf_inform,CF_CHG,"",pp,a," -> Edited file %s \n",file); 
 
 if (cf_rename(file,backup) == -1)
    {

@@ -321,11 +321,11 @@ while (ptr->hashtable[slot])
       
          if (fname)
             {
-            CfOut(cf_inform,"","Rule from %s at/before line %d\n",fname,lineno);
+            CfOut(cf_inform,""," !! Rule from %s at/before line %d\n",fname,lineno);
             }
          else
             {
-            CfOut(cf_inform,"","in bundle parameterization\n",fname,lineno);
+            CfOut(cf_inform,""," !! in bundle parameterization\n",fname,lineno);
             }
          }
       else

@@ -1103,8 +1103,8 @@ if (rval != NULL)
    }
 else
    {
-   CfOut(cf_error,"","Variable %s has no promised value\n",pp->promiser);
-   CfOut(cf_error,"","Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+   CfOut(cf_error,""," !! Variable %s has no promised value\n",pp->promiser);
+   CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    }     
 }
 

@@ -4383,7 +4383,7 @@ if (cfstat(filename,&sb) == -1)
          }
       else
          {
-         CfOut(cf_inform,"stat","Could not examine file %s in readfile",filename);
+         CfOut(cf_inform,"stat"," !! Could not examine file \"%s\" in readfile",filename);
          }
       }
    return NULL;

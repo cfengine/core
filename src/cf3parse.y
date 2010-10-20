@@ -509,7 +509,7 @@ else if (*sp == '\"' && strlen(sp) > 1)
    sp++;
    }
 
-fprintf (stderr, "%s:%s:%d,%d: %s, near token \'%s\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s,sp);
+fprintf (stderr, "%s:%s:%d,%d: %s, near token \'%.20s\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s,sp);
 
 ERRORCOUNT++;
 

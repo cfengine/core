@@ -3283,43 +3283,46 @@ switch (ch)
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
 
-a = Str2Double(argv0);
-b = Str2Double(argv1);
-
-if (a == CF_NODOUBLE || b == CF_NODOUBLE)
+if (IsRealNumber(argv0) && IsRealNumber(argv1))
    {
-   SetFnCallReturnStatus("is*than",FNCALL_FAILURE,NULL,NULL);
-   rval.item = NULL;
-   rval.rtype = CF_SCALAR;
-   return rval;
-   }
+   a = Str2Double(argv0); 
+   b = Str2Double(argv1);
+
+   if (a == CF_NODOUBLE || b == CF_NODOUBLE)
+      {
+      SetFnCallReturnStatus("is*than",FNCALL_FAILURE,NULL,NULL);
+      rval.item = NULL;
+      rval.rtype = CF_SCALAR;
+      return rval;
+      }
 
 /* begin fn specific content */
-
-if ((a != CF_NOVAL) && (b != CF_NOVAL)) 
-   {
-   Debug("%s and %s are numerical\n",argv0,argv1);
    
-   if (ch == '+')
+   if ((a != CF_NOVAL) && (b != CF_NOVAL)) 
       {
-      if (a > b)
+      Debug("%s and %s are numerical\n",argv0,argv1);
+      
+      if (ch == '+')
          {
-         strcpy(buffer,"any");
+         if (a > b)
+            {
+            strcpy(buffer,"any");
+            }
+         else
+            {
+            strcpy(buffer,"!any");
+            }
          }
       else
          {
-         strcpy(buffer,"!any");
-         }
-      }
-   else
-      {
-      if (a < b)  
-         {
-         strcpy(buffer,"any");
-         }
-      else
-         {
-         strcpy(buffer,"!any");
+         if (a < b)  
+            {
+            strcpy(buffer,"any");
+            }
+         else
+            {
+            strcpy(buffer,"!any");
+            }
          }
       }
    }

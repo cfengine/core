@@ -288,6 +288,7 @@ enum cf_acl_inherit Str2ServicePolicy(char *string);
 char *Item2String(struct Item *ip);
 int IsSpace(char *remainder);
 int IsNumber(char *s);
+int IsRealNumber(char *s);
 
 #ifndef MINGW
 struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);

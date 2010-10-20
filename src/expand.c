@@ -294,6 +294,20 @@ return ExpandPrivateScalar(CONTEXTID,string,buffer);
 
 /*********************************************************************/
 
+int ExpandThis(enum cfreport level,char *string,char buffer[CF_EXPANDSIZE])
+
+{
+if (level == cf_error || (strstr(string,"$(this.") == 0) && (strstr(string,"${this.") == 0))
+   {
+   strncpy(buffer,string,CF_EXPANDSIZE-1);
+   return true;
+   }
+
+return ExpandPrivateScalar(CONTEXTID,string,buffer); 
+}
+
+/*********************************************************************/
+
 struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked)
 
 { struct Rlist *rp, *start = NULL;

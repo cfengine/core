@@ -608,6 +608,7 @@ void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,i
 
 int IsExpandable(char *str);
 int ExpandScalar(char *string,char buffer[CF_EXPANDSIZE]);
+int ExpandThis(enum cfreport level,char *string,char buffer[CF_EXPANDSIZE]);
 int ExpandPrivateScalar(char *contextid,char *string,char buffer[CF_EXPANDSIZE]);
 struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);

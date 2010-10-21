@@ -42,6 +42,10 @@
 	Increased stability by always initializing Attribute and Promise
 	structures.
 
+	When running cf-promises in dry-run mode (-n), the user does not need
+	to put binaries in WORKDIR/bin. For example, non-privileged users can verify root
+	policies.
+
 	Source control revision added in version string if run in verbose mode
 	(e.g. "cf-promises -vV"). This needs some refining, uses revision of a header now.
 	

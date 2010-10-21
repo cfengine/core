@@ -289,6 +289,11 @@ void LoadPersistentContext()
   struct CfState q;
   char filename[CF_BUFSIZE];
 
+if(LOOKUP)
+  {
+  return;
+  }
+
 Banner("Loading persistent classes");
   
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);

@@ -171,6 +171,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
           
       case 'n': DONTDO = true;
           IGNORELOCK = true;
+	  LOOKUP = true;
           NewClass("opt_dry_run");
           break;
           

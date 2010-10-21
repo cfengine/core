@@ -478,7 +478,12 @@ OpenNetwork();
 OpenSSL_add_all_algorithms();
 OpenSSL_add_all_digests();
 ERR_load_crypto_strings();
-CheckWorkingDirectories();
+
+if(!LOOKUP)
+  {
+  CheckWorkingDirectories();
+  }
+
 RandomSeed();
 
 RAND_bytes(s,16);

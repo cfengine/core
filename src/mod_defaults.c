@@ -61,6 +61,7 @@ struct BodyDefault CONTROL_DEFAULT[] =
    {"max_children","1 concurrent agent promise"},
    {"maxconnections","30 remote queries"},
    {"mountfilesystems","false"},
+   {"move_obstructions","false"},
    {"nonalphanumfiles","false"},
    {"repchar","_"},
    {"default_repository","in situ"},

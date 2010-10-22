@@ -1279,7 +1279,10 @@ if (lstat(pathbuf,&statbuf) != -1)
 
    if (force)   /* force in-the-way directories aside */
       {
-      if (!S_ISDIR(statbuf.st_mode))  /* if the dir exists - no problem */
+      struct stat dir;
+      stat(pathbuf,&dir);
+   
+      if (!S_ISDIR(dir.st_mode))  /* if the dir exists - no problem */
          {
          struct stat sbuf;
 

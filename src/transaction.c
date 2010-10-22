@@ -187,59 +187,58 @@ if (elapsedtime < attr.transaction.ifelapsed)
 
 /* Look for existing (current) processes */
 
- if(!ignoreProcesses)
+if (!ignoreProcesses)
    {
-     lastcompleted = FindLock(cflock);
-     elapsedtime = (time_t)(now-lastcompleted) / 60;
-
-     if (lastcompleted != 0)
-       {
-	 if (elapsedtime >= attr.transaction.expireafter)
-	   {
-	     CfOut(cf_inform,"","Lock %s expired (after %u/%u minutes)\n",cflock,elapsedtime,attr.transaction.expireafter);
-
-	     pid = FindLockPid(cflock);
-
-	     if (pid == -1)
-	       {
-		 CfOut(cf_error,"","Illegal pid in corrupt lock %s - ignoring lock\n",cflock);
-	       }
+   lastcompleted = FindLock(cflock);
+   elapsedtime = (time_t)(now-lastcompleted) / 60;
+   
+   if (lastcompleted != 0)
+      {
+      if (elapsedtime >= attr.transaction.expireafter)
+         {
+         CfOut(cf_inform,"","Lock %s expired (after %u/%u minutes)\n",cflock,elapsedtime,attr.transaction.expireafter);
+         
+         pid = FindLockPid(cflock);
+         
+         if (pid == -1)
+            {
+            CfOut(cf_error,"","Illegal pid in corrupt lock %s - ignoring lock\n",cflock);
+            }
 #ifdef MINGW  // killing processes with e.g. task manager does not allow for termination handling
-	     else if(!NovaWin_IsProcessRunning(pid))
-	       {
-		 CfOut(cf_verbose,"","Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",pid);
-		 LogLockCompletion(cflog,pid,"Lock expired, process not running",cc_operator,cc_operand);
-		 unlink(cflock);
-	       }
+         else if(!NovaWin_IsProcessRunning(pid))
+            {
+            CfOut(cf_verbose,"","Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",pid);
+            LogLockCompletion(cflog,pid,"Lock expired, process not running",cc_operator,cc_operand);
+            unlink(cflock);
+            }
 #endif  /* MINGW */
-	     else
+         else
 	       {
-		 CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
-
-		 err = GracefulTerminate(pid);
-
-		 if (err || errno == ESRCH)
-		   {
-		     LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
-		     unlink(cflock);
-		   }
-		 else
-		   {
-		     CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
-
-		     FatalError("");
-		   }
+               CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
+               
+               err = GracefulTerminate(pid);
+               
+               if (err || errno == ESRCH)
+                  {
+                  LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
+                  unlink(cflock);
+                  }
+               else
+                  {
+                  CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
+                  
+                  FatalError("");
+                  }
 	       }
-	   }
+         }
 	 else
-	   {
-	     CfOut(cf_verbose,"","Couldn't obtain lock for %s (already running!)\n",cflock);
-	     return this;
-	   }
-       }
-
-     WriteLock(cflock);
-
+            {
+            CfOut(cf_verbose,"","Couldn't obtain lock for %s (already running!)\n",cflock);
+            return this;
+            }
+      }
+   
+   WriteLock(cflock);   
    }
 
 this.lock = strdup(cflock);

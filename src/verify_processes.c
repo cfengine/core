@@ -105,7 +105,7 @@ else
    snprintf(lockname,CF_BUFSIZE-1,"proc-%s-norestart",pp->promiser);
    }
  
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

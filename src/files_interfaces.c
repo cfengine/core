@@ -221,7 +221,7 @@ if (!FileSanityChecks(path,a,pp))
    return;
    }
 
-thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

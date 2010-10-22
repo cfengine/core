@@ -133,7 +133,7 @@ else
    strncpy(execstr,pp->promiser,CF_BUFSIZE);
    }
 
-thislock = AcquireLock(execstr,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(execstr,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

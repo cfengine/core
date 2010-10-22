@@ -422,7 +422,7 @@ int ScheduleEditOperation(char *filename,struct Attributes a,struct Promise *pp)
   struct CfLock thislock;
 
 snprintf(lockname,CF_BUFSIZE-1,"fileedit-%s",pp->promiser);
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

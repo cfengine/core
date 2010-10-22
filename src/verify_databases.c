@@ -80,7 +80,7 @@ void VerifySQLPromise(struct Attributes a,struct Promise *pp)
 
 snprintf(lockname,CF_BUFSIZE-1,"db-%s",pp->promiser);
  
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

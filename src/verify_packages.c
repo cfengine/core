@@ -68,7 +68,7 @@ if (a.packages.package_list_update_command)
       al.transaction.ifelapsed = a.packages.package_list_update_ifelapsed;
       }
 
-   thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,al,pp);
+   thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,al,pp,false);
    
    if (thislock.lock != NULL)
       {
@@ -81,7 +81,7 @@ if (a.packages.package_list_update_command)
 
 snprintf(lockname,CF_BUFSIZE-1,"package-%s-%s",pp->promiser,a.packages.package_list_command);
  
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

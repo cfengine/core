@@ -91,7 +91,7 @@ else if (a.havemount)
       }
    }
 
-thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(path,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

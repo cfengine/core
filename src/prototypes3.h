@@ -1445,7 +1445,7 @@ char *GetHome(uid_t uid);
 /* transaction.c */
 
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname);
-struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp);
+struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(struct CfLock this);
 void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params);
 time_t FindLock(char *last);

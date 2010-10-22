@@ -396,7 +396,7 @@ dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
 
 if (!ONCE)
    {
-   thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
+   thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
 
    if (thislock.lock == NULL)
       {

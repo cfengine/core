@@ -380,7 +380,7 @@ void StartServer(int argc,char **argv)
  dummyattr.transaction.ifelapsed = 0;
  dummyattr.transaction.expireafter = 0;
 
- thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp);
+ thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
 
  if (thislock.lock == NULL)
     {

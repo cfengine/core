@@ -79,7 +79,7 @@ if (a.havebundle)
 
 GetLockName(lockname,"method",pp->promiser,params);
 
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

@@ -438,7 +438,7 @@ if (strlen(CURRENT_SHIFT) == 0)
 memset(&dummyattr,0,sizeof(dummyattr));
 dummyattr.transaction.ifelapsed = 59;
 
-thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp);
+thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp,false);
 
 if (thislock.lock == NULL)
    {

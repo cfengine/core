@@ -44,7 +44,7 @@ void VerifyReportPromise(struct Promise *pp)
 
 a = GetReportsAttributes(pp);
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp);
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {

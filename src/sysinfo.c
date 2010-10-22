@@ -1518,6 +1518,7 @@ else if (strcmp(os,"Ubuntu") == 0)
    snprintf(buffer,CF_MAXVARSIZE, "ubuntu_%s",version);
    NewScalar("sys","flavour",buffer,cf_str);
    NewScalar("sys","flavor",buffer,cf_str);
+   NewClass("ubuntu");
    NewClass(buffer);
    if (release >= 0)
       {

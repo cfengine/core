@@ -231,7 +231,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
          if (fp != NULL)
             {
-            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->lineno,(pp->audit)->filename);
+            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->lineno,(pp->audit)->filename);
             }
          else
             {

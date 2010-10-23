@@ -297,17 +297,34 @@ for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2!= NULL; rp1=rp1->next,rp2=rp2-
    {
    if (rp1->item && rp2->item)
       {
+      struct Rlist *rc1,*rc2;
+      
       if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
          {
          return -1; // inconclusive
          }
+
+      rc1 = rp1;
+      rc2 = rp2;
+
+      // Check for list nesting with { fncall(), "x" ... }
       
-      if (IsCf3VarString(rp1->item) || IsCf3VarString(rp2->item))
+      if (rp1->type == CF_LIST)
+         {   
+         rc1 = rp1->item;
+         }
+      
+      if (rp2->type == CF_LIST)
+         {
+         rc2 = rp2->item;
+         }
+
+      if (IsCf3VarString(rc1->item) || IsCf3VarString(rp2->item))
          {
          return -1; // inconclusive
          }
 
-      if (strcmp(rp1->item,rp2->item) != 0)
+      if (strcmp(rc1->item,rc2->item) != 0)
          {
          return false;
          }

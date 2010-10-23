@@ -1079,11 +1079,24 @@ if (rval != NULL)
          }
       else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rtype,rval,type) == false))
          {
-         CfOut(cf_error,""," !! Redefinition of a constant variable \"%s\" (was %s now %s)",pp->promiser,retval,rval);
-         PromiseRef(cf_error,pp);
+         switch (type)
+            {
+            case CF_SCALAR:
+                CfOut(cf_error,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",pp->promiser,retval,rval);
+                PromiseRef(cf_error,pp);
+                break;
+            case CF_LIST:
+                CfOut(cf_error,""," !! Redefinition of a constant list \"%s\"",pp->promiser,retval,rval);
+                printf("%s  -- Was ",VPREFIX);
+                ShowRlist(stdout,retval);      
+                printf(" now ",VPREFIX);
+                ShowRlist(stdout,rval);      
+                printf("\n",VPREFIX);
+                PromiseRef(cf_error,pp);
+            }
          }
       }
-
+   
    if (IsCf3VarString(pp->promiser))
       {
       // Unexpanded variables, we don't do anything with

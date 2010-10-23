@@ -745,19 +745,26 @@ strs = NULL;
 
 int IsAbsoluteFileName(char *f)
 
-{
+{ int quoted,off = 0;
+
+// Check for quoted strings
+ 
+for (off = 0; f[off] == '\"'; off++)
+   {
+   }
+ 
 #ifdef NT
-if (IsFileSep(f[0]) && IsFileSep(f[1]))
+if (IsFileSep(f[off]) && IsFileSep(f[off+1]))
    {
    return true;
    }
 
-if (isalpha(f[0]) && f[1] == ':' && IsFileSep(f[2]))
+if (isalpha(f[off]) && f[off+1] == ':' && IsFileSep(f[off+2]))
    {
    return true;
    }
 #endif
-if (*f == '/')
+if (f[off] == '/')
    {
    return true;
    }

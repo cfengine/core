@@ -466,7 +466,11 @@ if (a.haveeditline)
    if (bp = GetBundle(edit_bundle_name,"edit_line"))
       {
       BannerSubBundle(bp,params);
+
+      DeleteScope(bp->name);
       NewScope(bp->name);
+      HashVariables(bp->name);
+
       AugmentScope(bp->name,bp->args,params);
       PushPrivateClassContext();
       retval = ScheduleEditLineOperations(filename,bp,a,pp);

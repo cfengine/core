@@ -2080,11 +2080,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
             {
             conn->maproot = true;
-            CfOut(cf_verbose,"","Mapping root privileges\n");
-            }
-         else
-            {
-            CfOut(cf_verbose,"","No root privileges granted\n");
+            CfOut(cf_verbose,"","Mapping root privileges to access non-root files\n");
             }
          
          if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))

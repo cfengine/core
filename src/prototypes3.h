@@ -312,7 +312,7 @@ void SavePublicKey (char *username,char *ipaddress,char *digest,RSA *key);
 void DeletePublicKey (char *username,char *ipaddress,char *digest);
 char *KeyPrint(RSA *key);
 RSA *SelectKeyRing(char *name);
-void IdempAddToKeyRing(char *name,RSA *key);
+void IdempAddToKeyRing(char *name,char *ip,RSA *key);
 void PurgeKeyRing(void);
 
 /* dbm_api.c */

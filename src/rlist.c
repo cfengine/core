@@ -606,8 +606,6 @@ rp->next = *start;
 rp->item = CopyRvalItem(item,type);
 rp->type = type;  /* scalar, builtin function */
 
-ThreadLock(cft_lock);
-
 if (type == CF_LIST)
    {
    rp->state_ptr = rp->item;
@@ -617,8 +615,8 @@ else
    rp->state_ptr = NULL;
    }
 
+ThreadLock(cft_lock);
 *start = rp;
-
 ThreadUnlock(cft_lock);
 return rp;
 }

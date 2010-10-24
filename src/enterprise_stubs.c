@@ -622,10 +622,10 @@ return NULL;
 
 /*****************************************************************************/
 
-void IdempAddToKeyRing(char *name,RSA *key)
+void IdempAddToKeyRing(char *name,char *ip,RSA *key)
 {
 #ifdef HAVE_LIBCFNOVA
-Nova_IdempAddToKeyRing(name,key);
+Nova_IdempAddToKeyRing(name,ip,key);
 #else
 return;
 #endif 

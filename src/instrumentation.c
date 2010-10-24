@@ -318,26 +318,32 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       // Refresh address
       
       ThreadLock(cft_system);
+
+      if (kp->address)
+         {
+         free(kp->address);
+         }
+      
       kp->address = strdup(ipaddress);
       ThreadUnlock(cft_system);
       return;
       }
    }
 
-CfOut(cf_verbose,""," -> Last saw %s (%s) now",ipaddress,databuf);
+CfOut(cf_verbose,""," -> Last saw %s (%s) first time now",ipaddress,databuf);
+
+ThreadLock(cft_system);
+kp = (struct CfKeyBinding *)malloc((sizeof(struct CfKeyBinding)));
+ThreadUnlock(cft_system);
+
+if (kp == NULL)
+   {
+   return;
+   }
 
 rp = PrependRlist(&SERVER_KEYSEEN,"nothing",CF_SCALAR);
 
 ThreadLock(cft_system);
-
-kp = (struct CfKeyBinding *)malloc((sizeof(struct CfKeyBinding)));
-
-if (kp == NULL)
-   {
-   ThreadUnlock(cft_system);
-   return;
-   }
-
 free(rp->item);
 rp->item = kp;
 

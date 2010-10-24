@@ -48,16 +48,6 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_INFERENCE_BODY[] =
-   {
-   {"pre_assoc_pattern",cf_str,"","Name of forward association between promiser topic and associates"},
-   {"post_assoc_pattern",cf_str,"","Name of backward/inverse association from associates to promiser topic"},
-   {"inference",cf_str,"","Result of the syllogism"},
-   {NULL,cf_notype,NULL,NULL}
-   };
-
-/***************************************************************/
-
 struct BodySyntax CF_RELATE_BODY[] =
    {
    {"forward_relationship",cf_str,"","Name of forward association between promiser topic and associates"},
@@ -90,8 +80,8 @@ struct BodySyntax CF_TOPICS_BODIES[] =
 
 struct BodySyntax CF_INFER_BODIES[] =
    {
-   {"follow_topics",cf_str,"","Use the knowledge promised by topics matching this pattern"},
-   {"infer",cf_body,CF_INFERENCE_BODY,"Specify the promise-inference triangle from this topic"},
+   {"precedent",cf_str,"","The foundational vector for a trinary inference"},
+   {"qualifier",cf_str,"","The second vector in a trinary inference"},
    {NULL,cf_notype,NULL,NULL}
    };
 

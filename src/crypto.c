@@ -319,6 +319,8 @@ else if (cfstat(newname,&statbuf) == -1)
       }
    }
 
+CfOut(cf_verbose,""," -> Going to secondary storage for key");
+
 if ((fp = fopen(newname,"r")) == NULL)
    {
    CfOut(cf_error,"fopen","Couldn't find a public key (%s)",newname);
@@ -340,7 +342,7 @@ if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))
    FatalError("RSA Exponent too small or not odd");
    }
 
-IdempAddToKeyRing(keyname,newkey);
+IdempAddToKeyRing(keyname,ipaddress,newkey);
 return newkey;
 }
 
@@ -357,7 +359,7 @@ Debug("SavePublicKey %s\n",ipaddress);
 
 snprintf(keyname,CF_MAXVARSIZE,"%s-%s",user,digest);
 
-IdempAddToKeyRing(keyname,key);
+IdempAddToKeyRing(keyname,ipaddress,key);
 
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,keyname);
 MapName(filename);

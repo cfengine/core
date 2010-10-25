@@ -433,7 +433,7 @@ pp->edcontext = NewEditContext(filename,a,pp);
 
 if (pp->edcontext == NULL)
    {
-   CfOut(cf_error,"","File %s was marked for editing but could not be opened\n",filename);
+   cfPS(cf_error,CF_FAIL,"",pp,a,"File %s was marked for editing but could not be opened\n",filename);
    FinishEditContext(pp->edcontext,a,pp);
    YieldCurrentLock(thislock);
    return false;

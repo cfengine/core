@@ -3938,11 +3938,7 @@ else
 switch(type)
    {
    case cf_str:
-       break;
-
    case cf_int:
-       break;
-
    case cf_real:
        break;
 
@@ -4498,6 +4494,7 @@ int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enu
 { char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE],first_one[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
   int allowblanks = true, vcount,hcount,lcount = 0;
+  int lineLen;
 
 memset(linebuf,0,CF_BUFSIZE);
 hcount = 0;
@@ -4507,10 +4504,23 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    linebuf[0] = '\0';
    sscanf(sp,"%1023[^\n]",linebuf);
 
-   if (strlen(linebuf) == 0)
+   lineLen = strlen(linebuf);
+
+   if (lineLen == 0)
       {
       continue;
       }
+   else if (lineLen == 1 && linebuf[0] == '\r')
+      {
+      continue;
+      }
+
+
+   if(linebuf[lineLen - 1] == '\r')
+     {
+     linebuf[lineLen - 1] = '\0';
+     }
+
 
    if (lcount++ > CF_HASHTABLESIZE)
       {
@@ -4569,7 +4579,12 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       }
 
    hcount++;
-   sp += strlen(linebuf);
+   sp += lineLen;
+
+   if(*sp == '\0')  // either \n or \0
+     {
+     break;
+     }
    }
 
 /* Don't free data - goes into vars */

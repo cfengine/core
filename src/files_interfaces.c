@@ -291,7 +291,7 @@ if (exists && !VerifyFileLeaf(path,&oslb,a,pp))
       return;
       }
    }
-
+     
 if (cfstat(path,&osb) == -1)
    {
    if (a.create||a.touch)
@@ -343,7 +343,7 @@ if (a.link.link_children)
    }
 
 /* Phase 1 - */
-
+     
 if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transformer))
    {
    lstat(path,&oslb); /* if doesn't exist have to stat again anyway */

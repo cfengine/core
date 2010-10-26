@@ -1181,18 +1181,13 @@ int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 
 { char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
   FILE *pop = NULL;
+  int print = false;
+  struct CfLock thislock;
 
 if (attr.transformer == NULL || file == NULL)
    {
    return false;
    }
-
-if (pp->done)
-   {
-   return false;
-   }
-
-pp->done = true;
 
 ExpandScalar(attr.transformer,comm);
 CfOut(cf_inform,"","Transforming: %s ",comm);
@@ -1203,28 +1198,50 @@ if (!IsExecutable(GetArg0(comm)))
    return false;
    }
 
+if (strncmp(comm,"/bin/echo",strlen("/bin/echo")) == 0)
+   {
+   print = true;
+   }
+
 if (!DONTDO)
    {
+   thislock = AcquireLock(comm,VUQNAME,CFSTARTTIME,attr,pp,false);
+   
+   if (thislock.lock == NULL)
+      {
+      return false;
+      }
+   
    if ((pop = cf_popen(comm,"r")) == NULL)
       {
       cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
+      YieldCurrentLock(thislock);
       return false;
       }
    
    while (!feof(pop))
       {
       CfReadLine(line,CF_BUFSIZE,pop);
-      CfOut(cf_inform,"",line);
+
+      if (print)
+         {
+         CfOut(cf_reporting,"",line);
+         }
+      else
+         {
+         CfOut(cf_inform,"",line);
+         }
       }
    
    cf_pclose(pop);
-   cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed to work ok",file,comm);   
+   cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed to work ok",file,comm);
    }
 else
    {
    CfOut(cf_error,""," -> Need to transform file \"%s\" with \"%s\"",file,comm);
    }
-       
+
+YieldCurrentLock(thislock);
 return true;
 }
 

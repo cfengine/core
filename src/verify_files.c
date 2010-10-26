@@ -63,7 +63,6 @@ void FindFilePromiserObjects(struct Promise *pp)
 if (literal)
    {
    VerifyFilePromise(pp->promiser,pp);
-   return;
    }
 else // Default is to expand regex paths
    {

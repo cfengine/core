@@ -309,18 +309,49 @@ return path;
 
 /*********************************************************************/
 
-char *Join(char *path,char *leaf,int bufsize)
+int StartJoin(char *path,char *leaf,int bufsize)
+{
+  *path = '\0';
+  return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
+}
 
-{ int len = strlen(leaf);
+/*********************************************************************/
 
-if ((strlen(path)+len) > (bufsize - CF_BUFFERMARGIN))
+int Join(char *path,char *leaf,int bufsize)
+
+{
+  return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
+}
+
+/*********************************************************************/
+
+int EndJoin(char *path,char *leaf,int bufsize)
+
+{
+  return JoinMargin(path,leaf,bufsize,0);
+}
+
+/*********************************************************************/
+
+int JoinMargin(char *path,char *leaf,int bufsize,int margin)
+
+{ 
+  if(margin < 0)
+    {
+    FatalError("Negative margin in JoinMargin()");
+    }
+
+  int len = strlen(leaf);
+
+if ((strlen(path)+len) > (bufsize - margin))
    {
    CfOut(cf_error,"","Buffer overflow constructing string, len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
-   return NULL;
+   return false;
    }
 
 strcat(path,leaf);
-return path;
+
+return true;
 }
 
 /*********************************************************************/

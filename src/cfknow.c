@@ -1356,7 +1356,7 @@ CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->
 
 if (TOPIC_MAP == NULL) 
    {
-   AddCommentedTopic(&TOPIC_MAP,"synonym","An alternative short form for a topic using its handle","any");
+   AddCommentedTopic(&TOPIC_MAP,"nicknames","An alternative short form for a topic using its handle","any");
    }
 
 if (pp->ref != NULL)

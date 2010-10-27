@@ -24,6 +24,9 @@
 # the online docs
 #
 
+# Subversion : $Rev: 53 $
+# For Cfengine Core: 3.1.0
+
 ###################################################
 # If you find Cfengine useful, please consider    #
 # purchasing a commercial version of the software.#
@@ -771,6 +774,16 @@ owners => { "$(user)" };
 ## ACLS (extended Unix perms)
 ##
 
+body acl access_generic(acl)
+# default/inherited ACLs are left unchanged,
+# applicable for both files and directory on all platforms
+{
+acl_method => "overwrite";
+aces => { "@(acl)" };
+}
+
+##
+
 body acl strict
 # NOTE: May need to take ownership of file/dir
 # to be sure no-one else is allowed access
@@ -851,7 +864,7 @@ file_result => "mtime.leaf_name";
 
 body file_select days_old(days)
 {
-mtime       => irange(ago(1,0,0,0,0,0),ago(0,0,"$(days)",0,0,0));
+mtime       => irange(0,ago(0,0,"$(days)",0,0,0));
 file_result => "mtime";
 }
 
@@ -987,6 +1000,7 @@ package_list_name_regex    => "ii\s+([^\s]+).*";
 package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
 package_installed_regex => ".*"; # all reported are installed
 package_name_convention => "$(name)";
+package_list_update_ifelapsed => "240";		# 4 hours
 
 have_aptitude::
    package_add_command => "/usr/bin/aptitude --assume-yes install";
@@ -1089,6 +1103,33 @@ package_verify_command => "/bin/rpm -V";
 
 ##
 
+body package_method yum_rpm
+# Contributed by Trond Hasle Amundsen
+
+# More efficient package method for RedHat - uses rpm to list instead of yum
+# Notes:
+# - using $(name).$(arch) instead of $(name) for package_name_convention
+#   causes uninstallation to fail.
+# - using allmatches to remove for all architectures
+#
+{
+  package_changes => "bulk";
+  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+
+  package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
+  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
+  package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+
+  package_installed_regex => ".*";
+  package_name_convention => "$(name)";
+
+  package_add_command    => "/usr/bin/yum -y install";
+  package_delete_command => "/bin/rpm -e --allmatches";
+  package_verify_command => "/bin/rpm -V";
+}
+
+##
+
 # The solaris package system is poorly designed, with too many different
 # names to track. See the example in tests/units/unit_package_solaris.cf
 # to see how to use this
@@ -1176,6 +1217,7 @@ debian::
  package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
  package_installed_regex => ".*"; # all reported are installed
  package_name_convention => "$(name)";
+ package_list_update_ifelapsed => "240";		# 4 hours
 
 debian.have_aptitude::
    package_add_command => "/usr/bin/aptitude --assume-yes install";

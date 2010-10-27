@@ -1,4 +1,11 @@
 3.1.0
+	Change in storage of public keys. Cfengine now hashes the public key and uses this
+	as the keyname. Keys will be converted automatically.
+
+	The old dynamic addresses lists are deprecated.
+	Caching of dns and key information for greater server speed.
+	Change in last-seen format reflects the public key usage.
+
 	New package policy addupdate - installs package if not there and
 	updates it otherwise.
 
@@ -12,14 +19,8 @@
 	- filechanges
 	- total compliance
 
-	Change in storage of public keys. Cfengine now hashes the public key and uses this
-	as the keyname. 
-
-	The old dynamic addresses lists are deprecated.
-	Caching of dns and key information for greater server speed.
-	Change in last-seen format reflects the public key usage.
-
-	Change from using md5 to sha256 as default digest.
+	Change from using md5 to sha256 as default digest for commercial version,
+	community retains md5 for compat.
 
 	Commands not returning 0 in commands-promises are flagged
 	as repair_failed.
@@ -48,7 +49,6 @@
 
 	Source control revision added in version string if run in verbose mode
 	(e.g. "cf-promises -vV"). This needs some refining, uses revision of a header now.
-
 
 	New semantics in return values of list functions. Null values are now allowed
 	and there is no iteration over empty lists. The value "cf_null" is reserved for

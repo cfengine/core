@@ -1508,6 +1508,7 @@ if (strcmp(os,"Debian") == 0)
    {
    sscanf(buffer,"%*s %*s %[^/]",version);
    snprintf(buffer,CF_MAXVARSIZE, "debian_%s",version);
+   NewClass("debian");
    NewClass(buffer);
    NewScalar("sys","flavour",buffer,cf_str);
    NewScalar("sys","flavor",buffer,cf_str);

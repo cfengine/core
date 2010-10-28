@@ -1293,7 +1293,7 @@ uid_t Str2Uid(char *uidbuff,char *usercopy,struct Promise *pp)
 
 { struct Item *ip, *tmplist;
   struct passwd *pw;
-  int offset,uid = -1,tmp = -1;
+  int offset,uid = -2,tmp = -2;
   char *machine,*user,*domain;
  
 if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout     */
@@ -1321,14 +1321,14 @@ if (uidbuff[0] == '+')        /* NIS group - have to do this in a roundabout    
       {
       if ((pw = getpwnam(ip->name)) == NULL)
          {
-         CfOut(cf_inform,"","Unknown user \'%s\'\n",ip->name);
+         CfOut(cf_inform,""," !! Unknown user in promise \'%s\'\n",ip->name);
 
          if (pp != NULL)
             {
             PromiseRef(cf_inform,pp);
             }
 
-         uid = CF_SAME_OWNER; /* signal user not found */
+         uid = CF_UNKNOWN_OWNER; /* signal user not found */
          }
       else
          {
@@ -1358,7 +1358,7 @@ else
       }
    else if ((pw = getpwnam(uidbuff)) == NULL)
       {
-      CfOut(cf_inform,"","Unknown user %s\n",uidbuff);
+      CfOut(cf_inform,""," !! Unknown user %s in promise\n",uidbuff);
       uid = CF_UNKNOWN_OWNER;  /* signal user not found */
 
       if (usercopy != NULL)
@@ -1380,7 +1380,7 @@ return uid;
 gid_t Str2Gid(char *gidbuff,char *groupcopy,struct Promise *pp)
 
 { struct group *gr;
-  int gid, tmp = -1;
+  int gid = -2, tmp = -2;
 
 if (isdigit((int)gidbuff[0]))
    {
@@ -1395,14 +1395,14 @@ else
       }
    else if ((gr = getgrnam(gidbuff)) == NULL)
       {
-      CfOut(cf_inform,"","Unknown group \'%s\'\n",gidbuff);
+      CfOut(cf_inform,""," !! Unknown group \'%s\' in promise\n",gidbuff);
 
       if (pp)
-         {
+         {         
          PromiseRef(cf_inform,pp);
          }
 
-      gid = CF_SAME_GROUP;
+      gid = CF_UNKNOWN_GROUP;
       }
    else
       {

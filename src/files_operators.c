@@ -1762,18 +1762,6 @@ Debug("Unix_VerifyOwner: %d\n",sb->st_uid);
 
 for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
    {
-   if (ulp->uid == CF_UNKNOWN_OWNER)
-      {
-      unknownulp = MakeUidList(ulp->uidname); /* Will only match one */
-
-      if (unknownulp != NULL && sb->st_uid == unknownulp->uid)
-         {
-         uid = unknownulp->uid;
-         uidmatch = true;
-         break;
-         }
-      }
-
    if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)   /* "same" matches anything */
       {
       uid = ulp->uid;
@@ -1782,20 +1770,18 @@ for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
       }
    }
 
+if (attr.perms.groups->next == NULL && attr.perms.groups->gid == CF_UNKNOWN_GROUP) // Only one non.existent item
+   {   
+   cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Unable to make file belong to an unknown group");
+   }
+
+if (attr.perms.owners->next == NULL && attr.perms.owners->uid == CF_UNKNOWN_OWNER) // Only one non.existent item
+   {   
+   cfPS(cf_inform,CF_FAIL,"",pp,attr," !! Unable to make file belong to an unknown user");
+   }
+
 for (glp = attr.perms.groups; glp != NULL; glp=glp->next)
    {
-   if (glp->gid == CF_UNKNOWN_GROUP) /* means not found while parsing */
-      {
-      unknownglp = MakeGidList(glp->gidname); /* Will only match one */
-
-      if (unknownglp != NULL && sb->st_gid == unknownglp->gid)
-         {
-         gid = unknownglp->gid;
-         gidmatch = true;
-         break;
-         }
-      }
-
    if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)  /* "same" matches anything */
       {
       gid = glp->gid;
@@ -1840,7 +1826,7 @@ else
 
           if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
              {
-             CfOut(cf_verbose,"","%s:   touching %s\n",VPREFIX,file);
+             CfOut(cf_verbose,""," -> Touching %s\n",file);
              }
           else
              {
@@ -1968,7 +1954,7 @@ for (sp = uidnames; *sp != '\0'; sp+=strlen(uidbuff))
             {
             if ((pw = getpwnam(ip->name)) == NULL)
                {
-               CfOut(cf_inform,"","Unknown user \'%s\'\n",ip->name);
+               CfOut(cf_inform,""," !! Unknown user \'%s\'\n",ip->name);
                uid = CF_UNKNOWN_OWNER; /* signal user not found */
                usercopy = ip->name;
                }
@@ -2054,7 +2040,7 @@ for (sp = gidnames; *sp != '\0'; sp+=strlen(gidbuff))
             }
          else if ((gr = getgrnam(gidbuff)) == NULL)
             {
-            CfOut(cf_inform,"","Unknown group %s\n",gidbuff);
+            CfOut(cf_inform,""," !! Unknown group %s\n",gidbuff);
             gid = CF_UNKNOWN_GROUP;
             groupcopy = gidbuff;
             }
@@ -2325,7 +2311,7 @@ else
 
 /*******************************************************************/
 
-void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname)
+void AddSimpleUidItem(struct UidList **uidlist,uid_t uid,char *uidname)
 
 { struct UidList *ulp, *u;
   char *copyuser;
@@ -2368,7 +2354,7 @@ else
 
 /*******************************************************************/
 
-void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname)
+void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname)
 
 { struct GidList *glp,*g;
   char *copygroup;

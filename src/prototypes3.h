@@ -796,8 +796,8 @@ struct UidList *MakeUidList(char *uidnames);
 struct GidList *MakeGidList(char *gidnames);
 void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
-void AddSimpleUidItem(struct UidList **uidlist,int uid,char *uidname);
-void AddSimpleGidItem(struct GidList **gidlist,int gid,char *gidname);
+void AddSimpleUidItem(struct UidList **uidlist,uid_t uid,char *uidname);
+void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname);
 #endif  /* NOT MINGW */
 
 /* files_properties.c */

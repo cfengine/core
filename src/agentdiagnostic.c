@@ -286,7 +286,6 @@ int FlattenText(char *str);
 int GetOptions(int argc, char *argv[]);
 int MyCreate(struct line_data *);
 int ReadLineInput(char *dst, char *frm );
-void CheckInstalledLibraries(void);
 
 //used only for internal testing
 void PrintChars(char *);
@@ -329,6 +328,7 @@ TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
 //TestSearchFilePromiser();
+CheckInstalledLibraries();
 
 #ifdef BUILD_TESTSUITE
 
@@ -341,7 +341,11 @@ printf("----------------------------------------------------------\n\n");
 InitializeGA(0,NULL);
  TestSuite(file);
 }
+
+#else  
+printf("!! Extensive self-diagnostic capabilities not built in\n");
 #endif
+
 }
 
 /******************************************************************/
@@ -410,9 +414,6 @@ void TestSuite(char *s)
 { char output[CF_EXPANDSIZE],command[CF_BUFSIZE], c[CF_BUFSIZE];  
   int i = 0, j = 0, nMap = 0, nInput = 0;
 
-printf("\tChecking for installed libraries...\n");
-CheckInstalledLibraries();
-printf("\tDone.\n\n");   
 if(s == NULL)
 {
    snprintf(s,CF_BUFSIZE,"%s","input.in");
@@ -2521,9 +2522,17 @@ int FileExists(char *file)
      }
    return 1;
 }
+
+#endif  /* BUILD_TESTSUITE */
+
+
 /*********************************************************/
+
+
 void CheckInstalledLibraries(void)
 {
+  printf("---- INSTALLED LIBRARIES ----\n");
+
 
    #ifndef HAVE_LIBLDAP
    printf("\t->LIBLDAP not found!!\n");
@@ -2561,5 +2570,3 @@ void CheckInstalledLibraries(void)
    #endif
 }
 
-/*********************************************************/
-#endif

@@ -1472,7 +1472,7 @@ switch (result)
         NewClass(classname);
         NewScalar("sys","flavour",classname,cf_str);
         NewScalar("sys","flavor",classname,cf_str);
-        return 0;
+        break;
         /* Fall-through */
     case 1:
         CfOut(cf_verbose,"","This appears to be a Debian %u system.", major);
@@ -1480,7 +1480,7 @@ switch (result)
         NewClass(classname);
         NewScalar("sys","flavour",classname,cf_str);
         NewScalar("sys","flavor",classname,cf_str);
-        return 0;
+        break;
 
     default:
         version[0] = '\0';

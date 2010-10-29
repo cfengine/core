@@ -2552,6 +2552,13 @@ void CheckInstalledLibraries(void)
    #ifndef HAVE_LIBMYSQLCLIENT
    printf("\t->LIBMYSQLCLIENT not found!!\n");
    #endif
+
+   #ifdef HAVE_LIBCFNOVA
+   if(!Nova_HaveFIPS())
+     {
+     printf("\t->FIPS OpenSSL canister not found!!\n");
+     } 
+   #endif
 }
 
 /*********************************************************/

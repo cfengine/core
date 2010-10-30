@@ -621,7 +621,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"host2ip",cf_str,1,HOST2IP_ARGS,"Returns the primary name-service IP address for the named host"},
    {"hostinnetgroup",cf_class,1,HOSTINNETGROUP_ARGS,"True if the current host is in the named netgroup"},
    {"hostrange",cf_class,2,HOSTRANGE_ARGS,"True if the current host lies in the range of enumerated hostnames specified"},
-   {"hostsseen",cf_str,3,HOSTSSEEN_ARGS,"Extract the list of hosts last seen/not seen within the last arg1 hours"},
+   {"hostsseen",cf_slist,3,HOSTSSEEN_ARGS,"Extract the list of hosts last seen/not seen within the last arg1 hours"},
    {"hubknowledge",cf_str,1,HUB_KNOWLEDGE_ARGS,"Read global knowledge from the hub host by id (commercial extension)"},
    {"iprange",cf_class,1,IPRANGE_ARGS,"True if the current host lies in the range of IP addresses specified"},
    {"irange",cf_irange,2,IRANGE_ARGS,"Define a range of integer values for cfengine internal use"},

@@ -1,0 +1,46 @@
+#########################################################################
+#
+#   app_baseline.cf - Verify Existence of Applications
+#
+#   NOTE: Sometimes applications are not correctly installed even
+#         though the native package manager reports them to be.
+#         Cfengine can check for application-specific configuration
+#         and act upon or report any anomalies.
+#
+#########################################################################
+
+
+bundle agent app_baseline
+{
+
+methods:
+windows::
+"any" usebundle => detect_adobereader;
+
+}
+
+###
+
+bundle agent detect_adobereader
+{
+vars:
+
+windows::
+  "value1" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer", "ENU_GUID");
+  "value2" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer", "VersionMax");
+  "value3" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer", "VersionMin");
+ 
+classes:
+
+windows::
+  "is_correct" and => { 
+                       strcmp("$(value1)", "{AC76BA86-7AD7-1033-7B44-A93000000001}"),
+                       strcmp("$(value2)", "90003"),
+                       islessthan("$(value3)", "10001" )
+                      };
+ 
+ reports:
+
+windows.!is_correct::
+ "Adobe Reader is not correctly deployed - got \"$(value1)\", \"$(value2)\", \"$(value3)\"";
+}

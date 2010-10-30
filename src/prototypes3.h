@@ -52,6 +52,7 @@ int ScheduleAgentOperations(struct Bundle *bp);
 /* agentdiagnostic.c */
 
 void AgentDiagnostic(char *inputfile);
+void CheckInstalledLibraries(void);
 
 /* args.c */
 

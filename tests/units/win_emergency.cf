@@ -1,0 +1,67 @@
+#########################################################################
+#
+#   win_emergency.cf - Emergency Policy To Close Potential Security Holes
+#
+#   NOTE: The class "emergency" may be set automatically by Cfengine
+#         based on some criteria, or it may be explicitly set by a remote
+#         execution of cf-agent through cf-runagent (if this is allowed
+#         by the server control policy).
+#
+#########################################################################
+
+bundle agent win_emergency
+{
+vars:
+  "disable_services"   slist => { 
+                                "RemoteRegistry"           # Windows Remote Management
+                                };
+								
+  "secure_files"       slist => {
+                                "C:\Secret",
+						        "$(sys.workdir)\secret.txt"
+                                };
+								
+  "close_ports"	       slist => {
+                                "6510",
+                                "9300"
+                                };
+
+								
+commands:
+ 
+ emergency::
+ 
+  "\"$(sys.winsysdir)\netsh.exe\""
+    args => "firewall add portopening ALL $(close_ports) \"Port $(close_ports)\" DISABLE",
+    comment => "Close firewall ports on emergency";
+
+   
+databases:								
+
+ emergency::
+ 
+  "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+    database_operation => "create", 
+    database_rows => { "emergency,REG_SZ,This is an emergency!" } ,
+    database_type     => "ms_registry",
+    comment => "Create emergency policy registry settings";
+
+	
+files:
+
+ emergency::	
+ 
+   "$(secure_files)"
+     acl         => strict,
+     comment     => "Secure important file access on emergency";
+		
+		
+services:
+
+ emergency::
+ 
+  "$(disable_services)"
+     service_policy => "disable",
+     comment => "Disable security-relevant services on emergency";
+
+}

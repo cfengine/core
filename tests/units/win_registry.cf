@@ -1,0 +1,94 @@
+#########################################################################
+#
+#   win_registry.cf - Windows Registry Management
+#
+#########################################################################
+
+bundle agent win_registry
+{
+vars:
+
+  "cache_keys" slist => {
+                        "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS"
+                        };
+						
+  "reg_create" slist =>
+                        {
+                        "value1,REG_SZ,this is the first value...", 
+                        "value2,REG_SZ,...and this is the second!"
+                        };
+						
+  "reg_delete" slist =>
+                        {
+                        "value1"
+                        };
+						
+
+methods:
+
+# 1) Cfengine can cache and restore any part of the registry
+
+#  "any" usebundle => registry_cache("@(win_registry.cache_keys)");
+#  "any" usebundle => registry_restore("@(win_registry.cache_keys)");
+
+# 2) Registry settings may also be explicitly defined/deleted in policy
+
+#  "any" usebundle => registry_define("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine", "@(win_registry.reg_create)");
+#  "any" usebundle => registry_delete("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine", "@(win_registry.reg_delete)");
+}
+
+#########################################################################
+
+bundle agent registry_cache(keys)
+{
+ databases:
+  windows::
+
+     "$(keys)"
+        database_operation => "cache",
+        database_type      => "ms_registry",
+        comment => "Save correct registry settings";
+}
+
+#########################################################################
+
+bundle agent registry_restore(keys)
+{
+ databases:
+  windows::
+
+     "$(keys)"
+        database_operation => "restore",
+        database_type      => "ms_registry",
+        comment => "Make sure correct registry settings are set, according to cached version";
+}
+
+#########################################################################
+
+bundle agent registry_define(key, contents)
+{
+databases:
+  windows::
+  
+  "$(key)"
+
+    database_operation => "create", 
+    database_rows => { "$(contents)" } ,
+    database_type     => "ms_registry",
+    comment => "Explicitly define important registry settings";
+}
+
+#########################################################################
+
+bundle agent registry_delete(key, values)
+{
+databases:
+  windows::
+
+  "$(key)"
+
+    database_operation => "delete", 
+    database_columns => { "@(values)" } ,
+    database_type => "ms_registry",
+    comment => "Remove unwanted registry values";
+}

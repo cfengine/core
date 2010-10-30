@@ -1,0 +1,50 @@
+#########################################################################
+#
+#   win_services.cf - Windows Service Management
+#
+#########################################################################
+
+bundle agent win_services
+{
+vars:
+
+# NOTE: Use "Service Name" (not "Display Name");
+#       Administrative Tools -> Services -> Double Click on one to see its name
+
+  "bad_services"       slist => { 
+                                "RemoteRegistry"
+                                };
+  
+
+Windows_Server_2003_R2::
+
+  "autostart_services" slist => { 
+                                "Alerter",
+                                "W32Time"  # Windows Time
+                                };
+
+Windows_Server_2008::
+
+  "autostart_services" slist => { 
+                                "MpsSvc",  # Windows Firewall
+                                "W32Time"  # Windows Time
+                                };
+
+
+services:
+
+  "$(bad_services)"
+     service_policy => "disable",
+     service_method => force_deps,
+     comment => "Disable services that create security issues";
+  
+
+Windows_Server_2003_R2|Windows_Server_2008::
+  
+  "$(autostart_services)"
+     service_policy => "start",
+     service_method => bootstart,
+     comment => "Make sure important services are running and set to start at boot time";
+
+}
+

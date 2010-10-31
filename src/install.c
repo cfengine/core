@@ -232,6 +232,8 @@ struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promise
 
 { struct Promise *pp,*lp;
   char *sp = NULL,*spe = NULL;
+  char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", NULL };
+  char output[CF_BUFSIZE];
 
 if (INSTALL_SKIP)
    {
@@ -284,7 +286,16 @@ if (strcmp(type->name,"classes") == 0 || strcmp(type->name,"vars") == 0)
       yyerror("Variable or class identifier is purely numerical, which is not allowed");
       }
    }
-   
+
+if (strcmp(type->name,"vars") == 0)
+   {
+   if (IsStrIn(promiser,reserved,false))
+      {
+      snprintf(output,CF_BUFSIZE,"Use of a reserved variable name \"%s\" ",promiser);
+      ReportError(output);      
+      }
+   }
+
 if (type->promiselist == NULL)
    {
    type->promiselist = pp;

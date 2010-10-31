@@ -626,9 +626,9 @@ do
 
    if (pp->audit && pp->audit->filename)
       {
-      NewScalar("this","filename",pp->audit->filename,cf_str);
+      NewScalar("this","promise_filename",pp->audit->filename,cf_str);
       snprintf(number,CF_SMALLBUF,"%d",pp->lineno);
-      NewScalar("this","line",number,cf_str);
+      NewScalar("this","promise_linenumber",number,cf_str);
       }
    
    pexp = ExpandDeRefPromise("this",pp);

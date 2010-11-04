@@ -32,6 +32,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+int SHOWHOSTS = false;
+
+void ShowLastSeenHosts(void);
 int main (int argc,char *argv[]);
 
 /*******************************************************************/
@@ -47,6 +50,7 @@ char *ID = "The cfengine's generator makes key pairs for remote authentication.\
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "output-file",required_argument,0,'f'},
+      { "show-hosts",no_argument,0,'s'}, 	
       { NULL,0,0,'\0' }
       };
 
@@ -57,6 +61,7 @@ char *ID = "The cfengine's generator makes key pairs for remote authentication.\
       "Output verbose information about the behaviour of the agent",
       "Output the version of the software",
       "Specify an alternative output file than the default (localhost)",
+      "Show lastseen hostnames and IP addresses",   	
       NULL
       };
 
@@ -70,6 +75,11 @@ CheckOpts(argc,argv);
 THIS_AGENT_TYPE = cf_keygen;
 
 GenericInitialize(argc,argv,"keygenerator");
+if(SHOWHOSTS)
+{
+ ShowLastSeenHosts();
+ return 0; 	
+}
 KeepKeyPromises();
 return 0;
 }
@@ -86,7 +96,7 @@ void CheckOpts(int argc,char **argv)
   int c;
   char ld_library_path[CF_BUFSIZE];
 
-while ((c=getopt_long(argc,argv,"d:vf:VM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vf:VMs",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -119,7 +129,9 @@ while ((c=getopt_long(argc,argv,"d:vf:VM",OPTIONS,&optindex)) != EOF)
       case 'v':
           VERBOSE = true;
           break;
-          
+      case 's':
+          SHOWHOSTS = true;
+          break;    
       case 'h': Syntax("cf-key - cfengine's key generator",OPTIONS,HINTS,ID);
           exit(0);
 
@@ -132,4 +144,63 @@ while ((c=getopt_long(argc,argv,"d:vf:VM",OPTIONS,&optindex)) != EOF)
       }
   }
 }
+/*****************************************************************************/
+void ShowLastSeenHosts()
 
+{ CF_DB *dbp;
+  CF_DBC *dbcp;
+  char *key;
+  void *value;
+  char name[CF_BUFSIZE],hostname[CF_BUFSIZE],address[CF_MAXVARSIZE];
+  struct CfKeyHostSeen entry;
+  int ret,ksize,vsize;
+  int count = 0;
+
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
+
+if (!OpenDB(name,&dbp))
+   {
+   return;
+   }
+
+/* Acquire a cursor for the database. */
+
+if (!NewDBCursor(dbp,&dbcp))
+   {
+   CfOut(cf_inform,""," !! Unable to scan last-seen database");
+   return;
+   }
+
+ /* Initialize the key/data return pair. */
+
+memset(&entry, 0, sizeof(entry));
+
+printf("%15.15s %-25.25s %15.15s \n","IP","Name","Key");
+ /* Walk through the database and print out the key/data pairs. */
+while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
+   {
+   if (value != NULL)
+      {
+      memcpy(&entry,value,sizeof(entry));
+      strncpy(hostname,(char *)key,ksize);
+      strncpy(address,(char *)entry.address,ksize); 
+      ++count;  
+      }
+   else
+      {
+      continue;
+      }
+   CfOut(cf_verbose,""," -> Reporting on %s",hostname);
+      
+   printf("%15.15s %-25.25s %25.25s \n",
+     	     address,	     
+	     IPString2Hostname(address),
+             hostname+1);
+   }
+printf("Total Entries: %d\n",count);
+DeleteDBCursor(dbp,dbcp);
+CloseDB(dbp);
+}
+
+/*eof*/

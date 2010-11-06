@@ -51,6 +51,13 @@ ap->rval = CopyRvalItem(rval,rtype);
 ap->dtype = dt;
 ap->rtype = rtype;
 
+if (ap->rval == NULL)
+   {
+   free(ap->lval);
+   free(ap);
+   return NULL;
+   }
+
 if (lval == NULL)
    {
    FatalError("Bad association in NewAssoc\n");

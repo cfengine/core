@@ -606,6 +606,11 @@ while (NullIterators(lol))
    IncrementIterationContext(lol,1);
    }
 
+if (lol && EndOfIteration(lol))
+   {
+   return;
+   }
+
 do
    {
    char number[CF_SMALLBUF];

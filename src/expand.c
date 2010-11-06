@@ -591,8 +591,9 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
 { struct Rlist *lol = NULL; 
   struct Promise *pexp;
   struct Scope *ptr;
-  int i = 1;
+  const int cf_null_cutoff = 5;
   char *handle = GetConstraint("handle",pp,CF_SCALAR);
+  int i = 1, cutoff = 0;
 
 lol = NewIterationContext(scopeid,listvars);
 
@@ -604,6 +605,17 @@ if (lol && EndOfIteration(lol))
 while (NullIterators(lol))
    {
    IncrementIterationContext(lol,1);
+
+   // In case a list is completely blank
+   if (cutoff++ > cf_null_cutoff)
+      {
+      break;
+      }
+   }
+
+if (lol && EndOfIteration(lol))
+   {
+   return;
    }
 
 do

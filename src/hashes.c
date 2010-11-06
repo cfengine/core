@@ -373,6 +373,7 @@ void DeRefListsInHashtable(char *scope,struct Rlist *namelist,struct Rlist *dere
 
 if ((len = RlistLen(namelist)) != RlistLen(dereflist))
    {
+   CfOut(cf_error,""," !! Name list %d, dereflist %d\n",len, RlistLen(dereflist));
    FatalError("Software Error DeRefLists... correlated lists not same length");
    }
 
@@ -401,9 +402,9 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 
                   state = (struct Rlist *)(cplist->rval);
 
-                  if (rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
+                  if (rp->state_ptr == NULL || rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
                      {
-                     /* Unexpanded function must be skipped.*/
+                     /* Unexpanded function, or blank variable must be skipped.*/
                      return;
                      }
                   

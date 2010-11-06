@@ -4515,12 +4515,10 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       continue;
       }
 
-
    if(linebuf[lineLen - 1] == '\r')
      {
      linebuf[lineLen - 1] = '\0';
      }
-
 
    if (lcount++ > CF_HASHTABLESIZE)
       {
@@ -4566,14 +4564,14 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
          }
           
       if (intIndex)
-	{
-	snprintf(name,CF_MAXVARSIZE,"%s[%d][%d]",array_lval,hcount,vcount);
-	}
+         {
+         snprintf(name,CF_MAXVARSIZE,"%s[%d][%d]",array_lval,hcount,vcount);
+         }
       else
-	{
-	snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,first_one,vcount);
-	}
-
+         {
+         snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,first_one,vcount);
+         }
+      
       NewScalar(THIS_BUNDLE,name,this_rval,type);
       vcount++;
       }
@@ -4582,9 +4580,9 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    sp += lineLen;
 
    if(*sp == '\0')  // either \n or \0
-     {
-     break;
-     }
+      {
+      break;
+      }
    }
 
 /* Don't free data - goes into vars */

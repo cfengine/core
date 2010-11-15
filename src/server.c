@@ -1586,6 +1586,13 @@ CfOut(cf_verbose,"","Examining command string: %s\n",args);
 
 for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
    {
+   if (*sp == ';' || *sp == '&' || *sp == '|')
+      {
+      sprintf(sendbuffer,"You are not authorized to activate these classes/roles on host %s\n",VFQNAME);
+      SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
+      return;
+      }
+   
    if (OptionFound(args,sp,"-K")||OptionFound(args,sp,"-f"))
       {
       *sp = ' ';

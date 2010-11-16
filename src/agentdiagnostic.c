@@ -2566,7 +2566,10 @@ void CheckInstalledLibraries(void)
    if(!Nova_HaveFIPS())
      {
      printf("\t->FIPS OpenSSL canister not found!!\n");
-     } 
+     }
+
+   #else
+   printf("\t->Nova not found!!\n");
    #endif
 
    printf("---- INSTALLED LIBRARIES POLICY SERVER ONLY ----\n");

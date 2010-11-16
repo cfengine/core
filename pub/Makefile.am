@@ -2,9 +2,9 @@
 AM_CFLAGS = @CFLAGS@ @GCC_CFLAG@ -fPIC -DPIC
 INCLUDES = @BERKELEY_DB_CFLAGS@ @OPENSSL_LIB_CPPFLAGS@
 
-noinst_LIBRARIES = libcfpub.a
+noinst_LTLIBRARIES = libcfpub.la
 
-libcfpub_a_SOURCES =							\
+libcfpub_la_SOURCES =							\
 	getopt.c							\
 	getopt1.c							\
 	full-write.c							\

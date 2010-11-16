@@ -1635,7 +1635,7 @@ if (strlen(ebuff)+strlen(args)+6 > CF_BUFSIZE)
    }
 else
    {
-   if ((args != NULL) & (strlen(args) > 0))
+   if ((args != NULL) && (strlen(args) > 0))
       {
       strcat(ebuff," ");
       strncat(ebuff,args,CF_BUFSIZE-strlen(ebuff));

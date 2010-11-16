@@ -672,6 +672,7 @@ cp = (struct CfAssoc *)item;
 // else EndOfIteration will not see lists with only element
 
 rp->state_ptr = PrependRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
+AppendRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
 
 rp->item = item;
 rp->type = CF_LIST;

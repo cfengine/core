@@ -82,7 +82,7 @@ for (rp = namelist; rp != NULL; rp = rp->next)
             }
          }
       }
-
+   
    if (new = NewAssoc(rp->item,returnval,rtype,dtype))
       {
       this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
@@ -95,8 +95,6 @@ for (rp = namelist; rp != NULL; rp = rp->next)
             rp->state_ptr = rp->state_ptr->next;
             }
          }
-
-      Debug("SETTING state to %s\n",rp->state_ptr->item);
       }
    }
 

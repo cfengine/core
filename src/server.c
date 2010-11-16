@@ -356,7 +356,7 @@ if(!NO_FORK)
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   CfOut(cf_inform,"","cfServerd starting %.24s\n",cf_ctime(&CFDSTARTTIME));
+   CfOut(cf_inform,"","cf-serverd starting %.24s\n",cf_ctime(&CFDSTARTTIME));
    GenericDeInitialize();
    exit(0);
    }
@@ -961,7 +961,7 @@ if ((received = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
 
 if (strlen(recvbuffer) == 0)
    {
-   Debug("cfServerd terminating NULL transmission!\n");
+   Debug("cf-serverd terminating NULL transmission!\n");
    return false;
    }
   
@@ -1639,7 +1639,7 @@ else
       {
       strcat(ebuff," ");
       strncat(ebuff,args,CF_BUFSIZE-strlen(ebuff));
-      snprintf(sendbuffer,CF_BUFSIZE,"cfServerd Executing %s\n",ebuff);
+      snprintf(sendbuffer,CF_BUFSIZE,"cf-serverd Executing %s\n",ebuff);
       SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
       }
    }
@@ -1855,7 +1855,7 @@ ThreadLock(cft_getaddr);
  
 if ((hp = gethostbyname(dns_assert)) == NULL)
    {
-   CfOut(cf_verbose,"","cfServerd Couldn't look up name %s\n",fqname);
+   CfOut(cf_verbose,"","cf-serverd Couldn't look up name %s\n",fqname);
    CfOut(cf_log,"gethostbyname","DNS lookup of %s failed",dns_assert);
    matched = false;
    }
@@ -2034,7 +2034,7 @@ Debug("AccessControl, match(%s,%s) encrypt request=%d\n",transrequest,conn->host
 
 if (vadmit == NULL)
    {
-   CfOut(cf_verbose,"","cfServerd access list is empty, no files are visible\n");
+   CfOut(cf_verbose,"","cf-serverd access list is empty, no files are visible\n");
    return false;
    }
  

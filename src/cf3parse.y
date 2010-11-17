@@ -134,7 +134,6 @@ statement:             category
 bodybody:            '{'
                         {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
-
                         P.useargs = NULL;
                         P.currenttype = NULL;
                         strcpy(P.currentid,"");
@@ -435,7 +434,8 @@ functionid:            ID
 
 promiser:                QSTRING
                           {
-                          P.promiser = P.currentstring; 
+                          P.promiser = P.currentstring;
+                          P.currentstring = NULL;
                           Debug("Promising object name \'%s\'\n",P.promiser);
                           };
 

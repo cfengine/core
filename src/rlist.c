@@ -246,8 +246,8 @@ switch(type)
        return start;
    }
 
-snprintf(output,CF_BUFSIZE,"Unknown type %c in CopyRvalItem - should not happen",type);
-FatalError(output);
+//snprintf(output,CF_BUFSIZE,"Unknown type %c in CopyRvalItem - should not happen",type);
+//FatalError(output);
 return NULL;
 }
 

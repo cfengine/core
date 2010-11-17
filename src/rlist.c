@@ -669,7 +669,7 @@ else
 cp = (struct CfAssoc *)item;
 
 // Note, we pad all iterators will a blank so the ptr arithmetic works
-// else EndOfIteration will not see lists with only element
+// else EndOfIteration will not see lists with only one element
 
 rp->state_ptr = PrependRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
 AppendRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
@@ -997,6 +997,8 @@ switch(type)
           {
           DeleteRvalItem(clist->item,clist->type);
           }
+
+       free(clist);
        break;
        
    case CF_FNCALL:

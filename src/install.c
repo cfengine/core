@@ -89,12 +89,6 @@ if ((bp = (struct Bundle *)malloc(sizeof(struct Bundle))) == NULL)
    FatalError("");
    }
 
-if ((sp = strdup(name)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Bundle");
-   FatalError("");
-   }
-
 if (*start == NULL)
    {
    *start = bp;
@@ -108,9 +102,9 @@ else
    lp->next = bp;
    }
 
-bp->name = sp;
+bp->name = strdup(name);
 bp->next = NULL;
-bp->type = type;
+bp->type = strdup(type);
 bp->args = args;
 bp->subtypes = NULL;
 return bp;
@@ -140,12 +134,6 @@ if ((bp = (struct Body *)malloc(sizeof(struct Body))) == NULL)
    FatalError("");
    }
 
-if ((sp = strdup(name)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Body");
-   FatalError("");
-   }
-
 if (*start == NULL)
    {
    *start = bp;
@@ -159,9 +147,9 @@ else
    lp->next = bp;
    }
 
-bp->name = sp;
+bp->name = strdup(name);
 bp->next = NULL;
-bp->type = type;
+bp->type = strdup(type);
 bp->args = args;
 bp->conlist = NULL;
 return bp;
@@ -355,8 +343,14 @@ if (bp->name != NULL)
    free(bp->name);
    }
 
+if (bp->name != NULL)
+   {
+   free(bp->name);
+   }
+
 DeleteRlist(bp->args);
 DeleteSubTypes(bp->subtypes);
+free(bp);
 }
 
 /*******************************************************************/
@@ -380,6 +374,8 @@ if (tp->name != NULL)
    {
    free(tp->name);
    }
+
+free(tp);
 }
 
 /*******************************************************************/
@@ -402,6 +398,12 @@ if (bp->name != NULL)
    free(bp->name);
    }
 
+if (bp->type != NULL)
+   {
+   free(bp->type);
+   }
+
 DeleteRlist(bp->args);
 DeleteConstraintList(bp->conlist);
+free(bp);
 }

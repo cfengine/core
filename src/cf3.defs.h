@@ -109,8 +109,8 @@
 struct PromiseParser
    {
    char *block;                     /* body/bundle  */
-   char *blocktype;
-   char *blockid;
+   char blocktype[CF_MAXVARSIZE];
+   char blockid[CF_MAXVARSIZE];
 
    char *filename;
    int line_pos;
@@ -119,7 +119,7 @@ struct PromiseParser
    int arg_nesting;
    int list_nesting;
       
-   char *lval;
+   char lval[CF_MAXVARSIZE];
    void *rval;
    char rtype;
    int isbody;
@@ -127,7 +127,7 @@ struct PromiseParser
    char *promiser;
    void *promisee;
 
-   char *currentid;
+   char currentid[CF_MAXVARSIZE];
    char *currentstring;
    char *currenttype;
    char *currentclasses;

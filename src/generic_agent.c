@@ -809,13 +809,15 @@ P.list_nesting = 0;
 P.arg_nesting = 0;
 P.filename = strdup(wfilename);
 
-P.currentid = NULL;
+P.currentid[0] = '\0';
 P.currentstring = NULL;
 P.currenttype = NULL;
 P.currentclasses = NULL;
 P.currentRlist = NULL;
 P.currentpromise = NULL;
 P.promiser = NULL;
+P.blockid[0] = '\0';
+P.blocktype[0] = '\0';
 
 while (!feof(yyin))
    {
@@ -829,6 +831,7 @@ while (!feof(yyin))
    }
 
 fclose (yyin);
+free(P.filename);
 }
 
 /*******************************************************************/
@@ -1504,7 +1507,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       }
 
    DeleteVariable(scope,cp->lval);
-   
+
    if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
       {
       CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);

@@ -133,7 +133,7 @@ double Q_MIN;
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-struct PromiseParser P;
+struct PromiseParser P = {0};
 struct Bundle *BUNDLES = NULL;
 struct Body *BODIES = NULL;
 struct Scope *VSCOPE = NULL;

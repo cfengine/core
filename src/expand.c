@@ -144,12 +144,14 @@ switch (rval.rtype)
           }
        else
           {
-          final = rval;
+          final.item = CopyRvalItem(rval.item,rval.rtype);
+          final.rtype = rval.rtype;
           }
        break;
 
    default:
-       final = rval;
+       final.item = CopyRvalItem(rval.item,rval.rtype);
+       final.rtype = rval.rtype;
        break;
    }
 

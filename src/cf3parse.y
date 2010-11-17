@@ -41,6 +41,9 @@ bundle:                BUNDLE
                           P.block = "bundle";
                           P.rval = NULL;
                           P.currentRlist = NULL;
+                          P.currentstring = NULL;
+                          strcpy(P.blockid,"");
+                          strcpy(P.blocktype,"");
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -49,12 +52,16 @@ body:                  BODY
                           {
                           DebugBanner("Body");
                           P.block = "body";
+                          strcpy(P.blockid,"");
+                          P.currentRlist = NULL;
+                          P.currentstring = NULL;
+                          strcpy(P.blocktype,"");
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 typeid:                ID {
-                          P.blocktype = P.currentid;
+                          strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
                           Debug("Found block type %s for %s\n",P.blocktype,P.block);
                           P.useargs = NULL;
                           };
@@ -62,7 +69,7 @@ typeid:                ID {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 blockid:               ID {
-                          P.blockid = P.currentid;
+                          strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
                           Debug("Found identifier %s for %s\n",P.currentid,P.block);
                           };
 
@@ -83,7 +90,6 @@ aitems:                 aitem
 aitem:                 ID  /* recipient of argument is never a literal */
                           {
                           AppendRlist(&(P.useargs),P.currentid,CF_SCALAR);
-                          free(P.currentid);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -101,10 +107,10 @@ bundlebody:         '{'
                           INSTALL_SKIP = true;
                           }
                        
-                       P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs); 
+                       P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
+
                        P.useargs = NULL;
                        P.currenttype = NULL;
-                       /* The append functions gobble these strdups, so no memory leak */
                        }
                      statements
                     '}'
@@ -128,12 +134,10 @@ statement:             category
 bodybody:            '{'
                         {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
-                          
+
                         P.useargs = NULL;
                         P.currenttype = NULL;
-                        P.currentid = NULL;
-
-                        /* The append functions gobble these strdups, so no memory leak */
+                        strcpy(P.currentid,"");
                         Debug("Starting block\n");
                         }
 
@@ -248,8 +252,13 @@ promise:              promiser                    /* BUNDLE ONLY */
                       constraints ';'
                         {
                         Debug("End implicit promise %s\n\n",P.promiser);
-                        P.currentid = NULL;
+                        strcpy(P.currentid,"");
                         P.currentRlist = NULL;
+                        free(P.promiser);
+                        if (P.currentstring)
+                           {
+                           free(P.currentstring);
+                           }
                         P.currentstring = NULL;
                         P.promiser = NULL;
                         P.promisee = NULL;
@@ -275,8 +284,12 @@ promise:              promiser                    /* BUNDLE ONLY */
                         Debug("End full promise with promisee %s\n\n",P.promiser);
 
                         /* Don't free these */
-                        P.currentid = NULL;
+                        strcpy(P.currentid,"");
                         P.currentRlist = NULL;
+                        if (P.currentstring)
+                           {
+                           free(P.currentstring);
+                           }
                         P.currentstring = NULL;
                         P.promiser = NULL;
                         P.promisee = NULL;
@@ -304,7 +317,7 @@ constraint:           id                        /* BUNDLE ONLY */
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
                            AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            P.rval = NULL;
-                           P.lval = NULL;
+                           strcpy(P.lval,"no lval");
                            P.currentRlist = NULL;
                            }  
                         };
@@ -320,7 +333,7 @@ class:                CLASS
 
 id:                    ID
                          {
-                         P.lval = P.currentid;
+                         strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                          P.currentRlist = NULL;
                          Debug("Recorded LVAL %s\n",P.lval);
                          };
@@ -329,7 +342,7 @@ id:                    ID
 
 rval:                  ID
                          {
-                         P.rval = P.currentid;
+                         P.rval = strdup(P.currentid);
                          P.rtype = CF_SCALAR;
                          P.isbody = true;
                          Debug("Recorded IDRVAL %s\n",P.rval);
@@ -337,6 +350,7 @@ rval:                  ID
                      | QSTRING
                          {
                          P.rval = P.currentstring;
+                         P.currentstring = NULL;
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
                          Debug("Recorded scalarRVAL %s\n",P.rval);
@@ -344,6 +358,7 @@ rval:                  ID
                      | NAKEDVAR
                          {
                          P.rval = P.currentstring;
+                         P.currentstring = NULL;
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
                          Debug("Recorded saclarvariableRVAL %s\n",P.rval);
@@ -351,6 +366,7 @@ rval:                  ID
                      | list
                          {
                          P.rval = P.currentRlist;
+                         P.currentRlist = NULL;
                          P.isbody = false;
                          P.rtype = CF_LIST;
                          }
@@ -378,26 +394,27 @@ litems:                litem
 litem:                 ID
                           {
                           AppendRlist((struct Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
-                          free(P.currentid);
                           }
 
                      | QSTRING
                           {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
+                          P.currentstring = NULL;
                           }
 
                      | NAKEDVAR
                           {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
+                          P.currentstring = NULL;
                           }
 
                      | usefunction
                           {
                           Debug("Install function call as list item from level %d\n",P.arg_nesting+1);
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
-                          DeleteRvalItem(P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                          DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -408,7 +425,8 @@ functionid:            ID
                           }
                      | NAKEDVAR
                           {
-                          P.currentid = P.currentstring; // Make a var look like an ID
+                          strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
+                          free(P.currentstring);
                           P.currentstring = NULL;
                           Debug("Found variable in place of a function identifier %s\n",P.currentid);
                           };
@@ -417,7 +435,7 @@ functionid:            ID
 
 promiser:                QSTRING
                           {
-                          P.promiser = P.currentstring; //strdup(P.currentstring);
+                          P.promiser = P.currentstring; 
                           Debug("Promising object name \'%s\'\n",P.promiser);
                           };
 
@@ -436,7 +454,7 @@ givearglist:            '('
                               {
                               yyerror("Nesting of functions is deeper than recommended");
                               }
-                           P.currentfnid[P.arg_nesting] = P.currentid; //strdup(P.currentid);
+                           P.currentfnid[P.arg_nesting] = strdup(P.currentid);
                            Debug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                            }
 
@@ -445,9 +463,8 @@ givearglist:            '('
                            {
                            Debug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
-                           P.giveargs[P.arg_nesting] = NULL;
-                           
-                           P.currentid = NULL;
+                           P.giveargs[P.arg_nesting] = NULL;                           
+                           strcpy(P.currentid,"");
                            free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
@@ -466,7 +483,6 @@ gaitem:               ID
                           {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
-                          free(P.currentid);
                           }
 
                      | QSTRING
@@ -474,6 +490,7 @@ gaitem:               ID
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
                           free(P.currentstring);
+                          P.currentstring = NULL;
                           }
 
                      | NAKEDVAR
@@ -481,6 +498,7 @@ gaitem:               ID
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
                           free(P.currentstring);
+                          P.currentstring = NULL;
                           }
 
                      | usefunction
@@ -520,5 +538,6 @@ if (ERRORCOUNT > 10)
 }
 
 /*****************************************************************/
+
 
 /* EOF */

@@ -96,7 +96,11 @@ category   [a-zA-Z_]+:
 
 {id}                  {
                       P.line_pos += strlen(yytext);
-                      P.currentid = strdup(yytext);
+                      if (strlen(yytext) > CF_MAXVARSIZE-1)
+                         {
+                         yyerror("identifier too long");
+                         }
+                      strncpy(P.currentid,yytext,CF_MAXVARSIZE);
                       return ID;
                       }
 
@@ -128,6 +132,12 @@ category   [a-zA-Z_]+:
 {category}            {
                       P.line_pos += strlen(yytext);
                       yytext[strlen(yytext)-1] = '\0';
+
+                      if (P.currenttype != NULL)
+                         {
+                         free(P.currenttype);
+                         }
+
                       P.currenttype = strdup(yytext);
 
                       if (P.currentclasses != NULL)
@@ -155,7 +165,13 @@ category   [a-zA-Z_]+:
                          yyless(less);    
                          }
 
+                      if (P.currentstring)
+                        {       
+                        free(P.currentstring);
+                        }
+
                       P.currentstring = strdup(tmp);
+
                       if (THIS_AGENT_TYPE == cf_common)
                          {
                          IsCf3VarString(tmp);

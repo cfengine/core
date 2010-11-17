@@ -189,7 +189,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (strcmp(bp->type,cp->lval) != 0)
          {
-         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
+         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %d of %s (%s != %s)\n",bodyname,pp->lineno,(pp->audit)->filename,bp->type,cp->lval);
          ERRORCOUNT++;
          }
       
@@ -341,6 +341,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
       final = ExpandDanglers(scopeid,returnval,pp);
+      DeleteRvalItem(returnval.item,returnval.rtype);
       }
 
    AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes,false);

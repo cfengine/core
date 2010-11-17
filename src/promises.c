@@ -601,7 +601,7 @@ if (pp->this_server != NULL)
    free(pp->this_server);
    ThreadUnlock(cft_policy);
    }
- 
+
 if (pp->next != NULL)
    {
    DeletePromises(pp->next);

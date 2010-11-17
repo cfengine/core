@@ -102,6 +102,7 @@ return fp;
 struct FnCall *CopyFnCall(struct FnCall *f)
 
 {
+Debug("CopyFnCall()\n");
 return NewFnCall(f->name,CopyRlist(f->args));
 }
 
@@ -110,8 +111,6 @@ return NewFnCall(f->name,CopyRlist(f->args));
 void DeleteFnCall(struct FnCall *fp)
 
 {
-Debug("DeleteFnCall %s\n",fp->name);
-
 if (fp->name)
    {
    free(fp->name);
@@ -130,6 +129,7 @@ free(fp);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked)
 
 {
+ Debug("ExpandFnCall()\n");
 //return NewFnCall(f->name,ExpandList(contextid,f->args,expandnaked));
 return NewFnCall(f->name,ExpandList(contextid,f->args,false));
 }
@@ -141,15 +141,15 @@ void PrintFunctions()
 { struct FnCall *fp;
   int i;
 
- for (i = 0; i < 3; i++)
-    {
-    if (P.currentfncall[i] != NULL)
-       {
-       printf("(%d) =========================\n|",i);
-       ShowFnCall(stdout,P.currentfncall[i]);
-       printf("|\n==============================\n");
-       }
-    } 
+for (i = 0; i < 3; i++)
+   {
+   if (P.currentfncall[i] != NULL)
+      {
+      printf("(%d) =========================\n|",i);
+      ShowFnCall(stdout,P.currentfncall[i]);
+      printf("|\n==============================\n");
+      }
+   } 
 }
 
 /*******************************************************************/

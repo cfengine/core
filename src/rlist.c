@@ -1002,7 +1002,7 @@ switch(type)
        break;
        
    case CF_FNCALL:
-       
+
        if (rval)
           {
           DeleteFnCall((struct FnCall *)rval);

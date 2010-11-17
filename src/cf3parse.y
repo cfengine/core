@@ -171,13 +171,20 @@ selection:            id                         /* BODY ONLY */
  
                         CheckSelection(P.blocktype,P.blockid,P.lval,P.rval,P.rtype);
 
-                        if (P.currentclasses == NULL)
+                        if (!INSTALL_SKIP)
                            {
-                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
+                           if (P.currentclasses == NULL)
+                              {
+                              AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
+                              }
+                           else
+                              {
+                              AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
+                              }
                            }
                         else
                            {
-                           AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
+                           DeleteRvalItem(P.rval,P.rtype);
                            }
 
                         if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
@@ -318,7 +325,11 @@ constraint:           id                        /* BUNDLE ONLY */
                            P.rval = NULL;
                            strcpy(P.lval,"no lval");
                            P.currentRlist = NULL;
-                           }  
+                           }
+                        else
+                           {
+                           DeleteRvalItem(P.rval,P.rtype);
+                           }
                         };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

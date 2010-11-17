@@ -343,9 +343,9 @@ if (bp->name != NULL)
    free(bp->name);
    }
 
-if (bp->name != NULL)
+if (bp->type != NULL)
    {
-   free(bp->name);
+   free(bp->type);
    }
 
 DeleteRlist(bp->args);

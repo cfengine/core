@@ -825,12 +825,14 @@ if (!IsAbsoluteFileName(finalargs->item))
    {
    CfOut(cf_error,"","execresult \"%s\" does not have an absolute path\n",finalargs->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   strcpy(buffer,"!any");   
    }
 
 if (!IsExecutable(GetArg0(finalargs->item)))
    {
    CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   strcpy(buffer,"!any");   
    }
 else
    {
@@ -893,12 +895,14 @@ if (!IsAbsoluteFileName(finalargs->item))
    {
    CfOut(cf_error,"","execresult \"%s\" does not have an absolute path\n",finalargs->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   strcpy(buffer,"!any");   
    }
 
 if (!IsExecutable(GetArg0(finalargs->item)))
    {
    CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
    SetFnCallReturnStatus("execresult",FNCALL_FAILURE,strerror(errno),NULL);
+   strcpy(buffer,"!any");   
    }
 else
    {

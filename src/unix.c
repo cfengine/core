@@ -215,7 +215,7 @@ else if (pid == 0)                     /* child */
 
       if (execv(arg[0],argv) == -1)
          {
-         CfOut(cf_error,"execvp","Command %s failed",argv);
+         CfOut(cf_error,"execv","Command %s failed (%d args)",argv[0],argc - 1);
          exit(1);
          }
 

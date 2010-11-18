@@ -430,10 +430,15 @@ int SelectExecRegexMatch(char *filename,char *crit,char *prog)
 { char line[CF_BUFSIZE];
   int s,e;
   FILE *pp;
+  char buf[CF_MAXVARSIZE];
+ 
+// insert real value of $(this.promiser) in command
 
-if ((pp = cf_popen(prog,"r")) == NULL)
+ReplaceStr(prog,buf,sizeof(buf),"$(this.promiser)",filename);
+
+if ((pp = cf_popen(buf,"r")) == NULL)
    {
-   CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",crit);
+   CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",buf);
    return false;
    }
 
@@ -485,14 +490,20 @@ return false;
 
 /*******************************************************************/
 
-int SelectExecProgram(char *filename,char *crit)
+int SelectExecProgram(char *filename,char *command)
 
-  /* command can include $(this) for the name of the file */
+  /* command can include $(this.promiser) for the name of the file */
 
 {
-if (ShellCommandReturnsZero(filename,false))
+char buf[CF_MAXVARSIZE];
+
+// insert real value of $(this.promiser) in command
+
+ReplaceStr(command,buf,sizeof(buf),"$(this.promiser)",filename);
+
+if (ShellCommandReturnsZero(buf,false))
    {
-   Debug(" - ? Select ExecProgram match for %s\n",crit);
+   Debug(" - ? Select ExecProgram match for %s\n",buf);
    return true;
    }
 else

@@ -756,6 +756,7 @@ char *ToLowerStr (char *str);
 int SubStrnCopyChr(char *to,char *from,int len,char sep);
 int CountChar(char *string,char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
+int ReplaceStr(char *in, char *out, int outSz, char* from, char *to);
     
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 void *ThreadUniqueName(pthread_t tid);
@@ -823,7 +824,7 @@ int SelectNameRegexMatch(char *filename,char *crit);
 int SelectPathRegexMatch(char *filename,char *crit);
 int SelectExecRegexMatch(char *filename,char *crit,char *prog);
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
-int SelectExecProgram(char *filename,char *crit);
+int SelectExecProgram(char *filename,char *command);
 int SelectSizeMatch(size_t size,size_t min,size_t max);
 int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp);
 #ifndef MINGW

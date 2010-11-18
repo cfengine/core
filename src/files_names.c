@@ -1087,6 +1087,54 @@ for(i = 0; (i < len) && (i < outSz - 1); i++)
 
 /*********************************************************************/
 
+int ReplaceStr(char *in, char *out, int outSz, char* from, char *to)
+
+/* Replaces all occurences of strings 'from' to 'to' in preallocated
+ * string 'out'. Returns true on success, false otherwise. */
+{
+  int inSz;
+  int outCount;
+  int inCount;
+  int fromSz, toSz;
+
+memset(out,0,outSz);
+
+inSz = strlen(in);
+fromSz = strlen(from);
+toSz = strlen(to);
+
+inCount = 0;
+outCount = 0;
+
+while((inCount < inSz) && (outCount < outSz))
+   {
+    if (strncmp(in + inCount, from, fromSz) == 0)
+      {
+      if(outCount + toSz >= outSz)
+	{
+	CfOut(cf_error, "", "!! Out of buffer in ReplaceStr");
+	return false;
+	}
+
+      strcat(out,to);
+
+      inCount += fromSz;
+      outCount += toSz;
+      }
+   else
+      {
+      out[outCount] = in[inCount];
+
+      inCount++;
+      outCount++;
+      }
+   }
+
+ return true;
+}
+
+/*********************************************************************/
+
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 
 void *ThreadUniqueName(pthread_t tid)

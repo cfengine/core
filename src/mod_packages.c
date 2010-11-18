@@ -40,7 +40,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {
    {"package_add_command",cf_str,CF_PATHRANGE,"Command to install a package to the system"},
    {"package_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
-   {"package_changes",cf_opts,"individual,bulk,bulk_no_names","Menu option - whether to group packages into a single aggregate command"},
+   {"package_changes",cf_opts,"individual,bulk","Menu option - whether to group packages into a single aggregate command"},
    {"package_delete_command",cf_str,CF_PATHRANGE,"Command to remove a package from the system"},
    {"package_delete_convention",cf_str,"","This is how the package manager expects the package to be referred to in the deletion part of a package update, e.g. $(name)"},
    {"package_file_repositories",cf_slist,"","A list of machine-local directories to search for packages"},

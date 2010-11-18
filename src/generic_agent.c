@@ -811,7 +811,7 @@ P.filename = strdup(wfilename);
 
 P.currentid[0] = '\0';
 P.currentstring = NULL;
-P.currenttype = NULL;
+P.currenttype[0] = '\0';
 P.currentclasses = NULL;
 P.currentRlist = NULL;
 P.currentpromise = NULL;

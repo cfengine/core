@@ -432,7 +432,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       
       for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
          {
-         if (strcmp(sp->name,"access") == 0)
+         if (strcmp(sp->name,"vars") != 0 && strcmp(sp->name,"classes") != 0)
             {
             continue;
             }
@@ -476,7 +476,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       
       for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
          {
-         if (strcmp(sp->name,"access") != 0)
+         if (strcmp(sp->name,"access") != 0 && strcmp(sp->name,"roles") != 0)
             {
             continue;
             }

@@ -831,9 +831,7 @@ if (NewPromiseProposals())
       Get3Environment();
       OSClasses();
       SetReferenceTime(true);
-
       ReadPromises(cf_server,CF_SERVERC);
-
       KeepPromises();
       Summarize();
       }

@@ -897,13 +897,7 @@ YY_RULE_SETUP
 {
                       P.line_pos += strlen(yytext);
                       yytext[strlen(yytext)-1] = '\0';
-
-                      if (P.currenttype != NULL)
-                         {
-                         free(P.currenttype);
-                         }
-
-                      P.currenttype = strdup(yytext);
+                      strncpy(P.currenttype,yytext,CF_MAXVARSIZE);
 
                       if (P.currentclasses != NULL)
                          {
@@ -917,7 +911,7 @@ YY_RULE_SETUP
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 152 "cf3lex.l"
+#line 146 "cf3lex.l"
 {
                       char *tmp = NULL;
                       int less = 0;
@@ -952,7 +946,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 185 "cf3lex.l"
+#line 179 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       P.currentstring = strdup(yytext);                      
@@ -961,20 +955,20 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 192 "cf3lex.l"
+#line 186 "cf3lex.l"
 {
                       P.line_pos += strlen(yytext);
                       }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 196 "cf3lex.l"
+#line 190 "cf3lex.l"
 {
                       }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 200 "cf3lex.l"
+#line 194 "cf3lex.l"
 {
                       P.line_pos++;
                       return yytext[0];
@@ -982,10 +976,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 206 "cf3lex.l"
+#line 200 "cf3lex.l"
 ECHO;
 	YY_BREAK
-#line 989 "lex.yy.c"
+#line 983 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1983,7 +1977,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 206 "cf3lex.l"
+#line 200 "cf3lex.l"
 
 
 

@@ -128,8 +128,8 @@ struct PromiseParser
    void *promisee;
 
    char currentid[CF_MAXVARSIZE];
+   char currenttype[CF_MAXVARSIZE];
    char *currentstring;
-   char *currenttype;
    char *currentclasses;
 
    struct Bundle *currentbundle;

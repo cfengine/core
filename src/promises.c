@@ -668,12 +668,12 @@ return pp;
 void DeletePromise(struct Promise *pp)
 
 {
-Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
-
 if (pp == NULL)
    {
    return;
    }
+
+Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
 
 ThreadLock(cft_policy);
 

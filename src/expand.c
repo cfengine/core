@@ -342,6 +342,7 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
       }
 
    AppendRlist(&start,returnval.item,returnval.rtype);
+   DeleteRvalItem(returnval.item,returnval.rtype);
    }
 
 return start;

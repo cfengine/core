@@ -110,7 +110,6 @@ bundlebody:         '{'
                        P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
 
                        P.useargs = NULL;
-                       P.currenttype = NULL;
                        }
                      statements
                     '}'
@@ -135,7 +134,6 @@ bodybody:            '{'
                         {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
                         P.useargs = NULL;
-                        P.currenttype = NULL;
                         strcpy(P.currentid,"");
                         Debug("Starting block\n");
                         }
@@ -292,6 +290,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                         /* Don't free these */
                         strcpy(P.currentid,"");
                         P.currentRlist = NULL;
+                        free(P.promiser);
                         if (P.currentstring)
                            {
                            free(P.currentstring);

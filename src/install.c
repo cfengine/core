@@ -313,9 +313,9 @@ pp->cache = NULL;
 pp->conn = NULL;
 pp->inode_cache = NULL;
 
-pp->bundletype = bundletype;   /* cache agent,common,server etc*/
-pp->agentsubtype = type->name; /* Cache the typename */
-pp->ref = NULL;                /* cache a reference if given*/
+pp->bundletype = strdup(bundletype); /* cache agent,common,server etc*/
+pp->agentsubtype = type->name;       /* Cache the typename */
+pp->ref = NULL;                      /* cache a reference if given*/
 pp->ref_alloc = 'n';
 pp->next = NULL;
 return pp;

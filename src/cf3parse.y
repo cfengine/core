@@ -108,7 +108,6 @@ bundlebody:         '{'
                           }
                        
                        P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
-
                        P.useargs = NULL;
                        }
                      statements
@@ -274,7 +273,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                      promiser
                         {
                         if (P.currentclasses == NULL)
-                           {
+                           {                           
                            P.currentpromise = AppendPromise(P.currentstype,P.promiser,NULL,CF_NOPROMISEE,"any",P.blockid,P.blocktype);
                            }
                         else

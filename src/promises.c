@@ -129,7 +129,7 @@ if (pcopy->promiser == NULL || (pp->promisee != NULL && pcopy->promisee == NULL)
    FatalError("memory");
    }
 
-pcopy->bundletype = pp->bundletype;
+pcopy->bundletype = strdup(pp->bundletype);
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient? */
@@ -307,7 +307,7 @@ if (pcopy->promiser == NULL || pcopy->classes == NULL)
    FatalError("memory");
    }
 
-pcopy->bundletype = pp->bundletype;
+pcopy->bundletype = strdup(pp->bundletype);
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
@@ -413,7 +413,7 @@ if (pcopy->promiser == NULL || pcopy->classes == NULL)
    FatalError("memory");
    }
 
-pcopy->bundletype = pp->bundletype;
+pcopy->bundletype = strdup(pp->bundletype);
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
@@ -494,12 +494,14 @@ if (pp->promisee != NULL)
    {
    fprintf(stdout,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
    ShowRval(stdout,pp->promisee,pp->petype);
-   fprintf(stdout," if context is %s\n\n",pp->classes);
+   fprintf(stdout," if context is %s\n",pp->classes);
    }
 else
    {
-   fprintf(stdout,"%s promise by \'%s\' (implicit) if context is %s\n\n",pp->agentsubtype,pp->promiser,pp->classes);
+   fprintf(stdout,"%s promise by \'%s\' (implicit) if context is %s\n",pp->agentsubtype,pp->promiser,pp->classes);
    }
+
+fprintf(stdout,"in bundle %s of type %s\n",pp->bundle,pp->bundletype);
 
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
@@ -688,6 +690,7 @@ if (pp->promisee != NULL)
    }
 
 free(pp->bundle);
+free(pp->bundletype);
 free(pp->classes);
 
 // ref and agentsubtype are only references, do not free

@@ -277,7 +277,7 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {"ctime",cf_irange,CF_TIMERANGE,"Range of change times (ctime) for acceptable files"},
    {"mtime",cf_irange,CF_TIMERANGE,"Range of modification times (mtime) for acceptable files"},
    {"atime",cf_irange,CF_TIMERANGE,"Range of access times (atime) for acceptable files"},
-   {"exec_regex",cf_str,CF_PATHRANGE,"Matches file if this regular expression matches any full line returned by the command"},
+   {"exec_regex",cf_str,CF_ANYSTRING,"Matches file if this regular expression matches any full line returned by the command"},
    {"exec_program",cf_str,CF_PATHRANGE,"Execute this command on each file and match if the exit status is zero"},
    {"file_types",cf_olist,"plain,reg,symlink,dir,socket,fifo,door,char,block","List of acceptable file types from menu choices"},
    {"issymlinkto",cf_slist,"","List of regular expressions to match file objects"},

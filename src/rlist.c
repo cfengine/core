@@ -988,11 +988,6 @@ switch(type)
        /* rval is now a list whose first item is list->item */
        clist = (struct Rlist *)rval;
 
-       if (clist && clist->next != NULL)
-          {
-          DeleteRvalItem(clist->next,CF_LIST);
-          }
-       
        if (clist && clist->item != NULL)
           {
           DeleteRvalItem(clist->item,clist->type);

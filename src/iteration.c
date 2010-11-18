@@ -183,6 +183,11 @@ else
       iterator->state_ptr = iterator->state_ptr->next;
       }
 
+   if (EndOfIteration(iterator))
+      {
+      return false;
+      }
+   
    return true;
    }
 }

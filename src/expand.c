@@ -645,7 +645,7 @@ do
       snprintf(number,CF_SMALLBUF,"%d",pp->lineno);
       NewScalar("this","promise_linenumber",number,cf_str);
       }
-   
+
    pexp = ExpandDeRefPromise("this",pp);
 
    switch (agent)
@@ -668,13 +668,8 @@ do
       {
       ConvergeVarHashPromise(pp->bundle,pexp,true);
       }
-
+   
    DeletePromise(pexp);
-
-   if (lol && EndOfIteration(lol))
-      {
-      return;
-      }
 
    /* End thread monitor */
    }

@@ -2510,7 +2510,7 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_strcmp].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-SetFnCallReturnStatus("isvariable",FNCALL_SUCCESS,NULL,NULL);   
+SetFnCallReturnStatus("strcmp",FNCALL_SUCCESS,NULL,NULL);   
 
 if (strcmp(finalargs->item,finalargs->next->item) == 0)
    {

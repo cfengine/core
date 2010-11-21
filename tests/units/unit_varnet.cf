@@ -4,6 +4,8 @@ body common control
 bundlesequence => { "test" };
 }
 
+
+
 bundle agent test
 {
 classes:

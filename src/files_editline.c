@@ -359,7 +359,7 @@ void VerifyLineInsertions(struct Promise *pp)
   struct Attributes a = {0};
 
 /* *(pp->donep) = true; */
-
+  
 a = GetInsertionAttributes(pp);
 
 if (!SanityCheckInsertions(a))
@@ -536,6 +536,8 @@ int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,stru
   char buf[CF_BUFSIZE],exp[CF_EXPANDSIZE];
   struct Item *loc = NULL;
   int retval = false;
+
+*(pp->donep) = true;
   
 if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
    {
@@ -571,7 +573,7 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
          {
          continue;
          }
-      
+
       if (IsItemInRegion(exp,begin_ptr,end_ptr,a,pp))
          {
          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised file line \"%s\" exists within file %s (promise kept)",exp,pp->this_server);

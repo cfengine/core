@@ -227,7 +227,7 @@ else
    else 
       {
       cfPS(cf_inform,CF_CHG,"",pp,a," -> Making a one-time restart promise for %s",pp->promiser);
-      NewBundleClass(a.restart_class,pp->bundle);
+      NewClass(a.restart_class);
       }
    }
 }

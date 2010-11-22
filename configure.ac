@@ -546,7 +546,6 @@ AC_CHECK_HEADERS(sys/param.h)
 AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)
-AC_CHECK_HEADERS(regex.h rxposix.h)
 AC_CHECK_HEADERS(sys/systeminfo.h)
 AC_CHECK_HEADERS(sys/acl.h winsock2.h)
 

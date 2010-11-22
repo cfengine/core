@@ -389,10 +389,10 @@
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
 
-/* Define to 1 if `n_un.n_name' is member of `struct nlist'. */
+/* Define to 1 if `struct nlist' is a member of `n_un.n_name'. */
 #undef HAVE_STRUCT_NLIST_N_UN_N_NAME
 
-/* Define to 1 if `sa_len' is member of `struct sockaddr'. */
+/* Define to 1 if `struct sockaddr' is a member of `sa_len'. */
 #undef HAVE_STRUCT_SOCKADDR_SA_LEN
 
 /* Define to 1 if you have the `sysconf' function. */
@@ -509,6 +509,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

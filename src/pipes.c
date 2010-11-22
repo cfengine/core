@@ -277,7 +277,7 @@ else
    
    if (fileno(pp) >= MAX_FD)
       {
-      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
+      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD in Unix_cf_popen, check for defunct children", fileno(pp), pid);
       }
    else
       {
@@ -452,7 +452,7 @@ else
    
    if (fileno(pp) >= MAX_FD)
       {
-      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
+      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD in Unix_cf_popensetuid, check for defunct children", fileno(pp), pid);
       }
    else
       {
@@ -583,7 +583,7 @@ else
    
    if (fileno(pp) >= MAX_FD)
       {
-      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
+      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD in Unix_cf_popen_sh, check for defunct children", fileno(pp), pid);
       }
    else
       {
@@ -735,7 +735,7 @@ else
    
    if (fileno(pp) >= MAX_FD)
       {
-      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD, check for defunct children", fileno(pp), pid);
+      CfOut(cf_error,"","File descriptor %d of child %d higher than MAX_FD in Unix_cf_popen_shsetuid, check for defunct children", fileno(pp), pid);
       cf_pwait(pid);
       return NULL;
       }
@@ -826,7 +826,7 @@ fd = fileno(pp);
 
 if (fd >= MAX_FD)
    {
-   CfOut(cf_error,"","File descriptor %d of child higher than MAX_FD, check for defunct children", fd);
+   CfOut(cf_error,"","File descriptor %d of child higher than MAX_FD in Unix_cf_pclose, check for defunct children", fd);
    pid = -1;
    }
 else
@@ -876,7 +876,7 @@ fd = fileno(pfp);
 
 if (fd >= MAX_FD)
    {
-   CfOut(cf_error,"","File descriptor %d of child higher than MAX_FD, check for defunct children", fd);
+   CfOut(cf_error,"","File descriptor %d of child higher than MAX_FD in Unix_cf_pclose_def, check for defunct children", fd);
    fclose(pfp);
    return -1;
    }

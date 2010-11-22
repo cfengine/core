@@ -1165,6 +1165,8 @@ switch(type)
           }
 
        DeleteRlist(SERVERLIST);
+       SERVERLIST = NULL;
+
        break;
 
    case kp_processes:

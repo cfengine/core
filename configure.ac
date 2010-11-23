@@ -514,12 +514,8 @@ AS_IF([test "x$with_pcre" != "xno"], [
 ])
 
 if test "x$ac_cv_lib_pcre_main" != "xyes"; then
-	AC_CHECK_HEADERS([regex.h rxposix.h])
-	AC_CHECK_FUNC([regcomp])
 
-	if test "x$ac_cv_header_regex_h" != "xyes" -a "x$ac_cv_header_rxposix_h" != "xyes" ; then
-		AC_MSG_ERROR([Either PCRE, rxposix or GNU regex is required])
-	fi
+	AC_MSG_ERROR([PCRE is required])
 fi
 
 LIBS="$LIBS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"

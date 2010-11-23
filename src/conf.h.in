@@ -323,12 +323,6 @@
 /* Define to 1 if you have the `realpath' function. */
 #undef HAVE_REALPATH
 
-/* Define to 1 if you have the <regex.h> header file. */
-#undef HAVE_REGEX_H
-
-/* Define to 1 if you have the <rxposix.h> header file. */
-#undef HAVE_RXPOSIX_H
-
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
 

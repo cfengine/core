@@ -29,7 +29,7 @@
 #endif
 
 
-#if defined(HAVE_REGEX_H) || defined(HAVE_LIBRX)
+#if defined(HAVE_REGEX_H) || defined(HAVE_LIBRX) || defined(HAVE_LIBPCRE)
 /* Nothing */
 #else
 

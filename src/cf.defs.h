@@ -293,10 +293,6 @@ extern int errno;
 
 #ifdef HAVE_PCRE_H
 # include <pcreposix.h>
-#elif HAVE_RXPOSIX_H
-# include <rxposix.h>
-#elif  HAVE_REGEX_H
-# include <regex.h>
 #endif
 
 #ifndef HAVE_SNPRINTF

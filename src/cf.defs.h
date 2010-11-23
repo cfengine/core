@@ -141,11 +141,14 @@ struct utsname
 #define LOG_LOCAL7      (23<<3)
 #define LOG_USER        (1<<3)
 #define LOG_DAEMON      (3<<3)
-#else
+
+#else  /* NOT MINGW */
+
 #include <syslog.h>
-#endif
 
 extern int errno;
+#endif
+
 
 /* Do this for ease of configuration from the Makefile */
 

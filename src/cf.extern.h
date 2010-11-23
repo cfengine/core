@@ -91,7 +91,6 @@ extern char CFLAST[CF_BUFSIZE];
 extern char LOCKDB[CF_BUFSIZE];
 extern char EDITBUFF[CF_BUFSIZE];
 
-extern char *tzname[2];
 extern int CFSIGNATURE;
 extern char CFDES1[8];
 extern char CFDES2[8];
@@ -509,7 +508,9 @@ extern mode_t UMASK;
 
 extern char *SIGNALS[];
 
+#ifndef MINGW
 extern char *tzname[2]; /* see man ctime */
+#endif
 
 extern int SENSIBLEFILECOUNT;
 extern int SENSIBLEFSSIZE;

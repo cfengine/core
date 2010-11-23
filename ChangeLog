@@ -3,6 +3,7 @@
 	Memory leaks in server tracked down and fixed.
 	List expansion bug (one list items not executed) fixed.
 	Security issue introduced by change of runcommand shell policy fixed. If users defined a runcommand for cf-runagent/cf-serverd communication, possible to execute commands.
+	cf-key -s command for showing key hash/IP address identity pairs
 
 3.1.0
 	Change in storage of public keys. Cfengine now hashes the public key and uses this

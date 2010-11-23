@@ -4583,7 +4583,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    hcount++;
    sp += lineLen;
 
-   if(*sp == '\0')  // either \n or \0
+   if (*sp == '\0')  // either \n or \0
       {
       break;
       }

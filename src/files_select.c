@@ -455,8 +455,6 @@ while (!feof(pp))
    }
 
 cf_pclose(pp); 
-
-
 return false;      
 }
 

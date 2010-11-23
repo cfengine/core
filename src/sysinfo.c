@@ -2077,7 +2077,7 @@ close(fd);
 
 void Unix_FindV6InterfaceInfo(void)
 
-{ FILE *pp;
+{ FILE *pp = NULL;
   char buffer[CF_BUFSIZE];
 
 /* Whatever the manuals might say, you cannot get IPV6

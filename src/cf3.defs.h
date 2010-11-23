@@ -1855,7 +1855,7 @@ meter_endmark
 /* common macros                                                         */
 /*************************************************************************/
 
-#define EMPTY(str) ((str == NULL) || (strlen(str) == 0))
+#define EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 
 // classes not interesting in reports
 #define IGNORECLASS(c)                                                         \

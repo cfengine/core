@@ -183,6 +183,8 @@ if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
 
 if ((pid = fork()) == -1)
    {
+   close(pd[0]);
+   close(pd[1]);
    return NULL;
    }
 
@@ -333,6 +335,8 @@ if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
 
 if ((pid = fork()) == -1)
    {
+   close(pd[0]);
+   close(pd[1]);
    return NULL;
    }
 
@@ -509,6 +513,8 @@ if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
 
 if ((pid = fork()) == -1)
    {
+   close(pd[0]);
+   close(pd[1]);
    return NULL;
    }
 
@@ -638,6 +644,8 @@ if (pipe(pd) < 0)        /* Create a pair of descriptors to this process */
 
 if ((pid = fork()) == -1)
    {
+   close(pd[0]);
+   close(pd[1]);
    return NULL;
    }
 

@@ -62,7 +62,7 @@ if (!LoadFileAsItemList(&(ec->file_start),filename,a,pp))
 
 if (a.edits.empty_before_use)
    {
-   CfOut(cf_verbose,"","Build file model from a blank slate (emptying)\n");
+   CfOut(cf_verbose,""," -> Build file model from a blank slate (emptying)\n");
    DeleteItemList(ec->file_start);
    ec->file_start = NULL;
    }

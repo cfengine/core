@@ -77,6 +77,19 @@ NewScalar("edit","filename",filename,cf_str);
          
 /* Reset the done state for every call here, since bundle is reusable */
 
+for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
+   {
+   if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type],bp)) == NULL)
+      {
+      continue;      
+      }
+   
+   for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+      {
+      pp->donep = false;
+      }
+   }
+
 for (pass = 1; pass < CF_DONEPASSES; pass++)
    {
    for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
@@ -107,21 +120,6 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
             return false;
             }         
          }
-      }
-   }
-
-/* Reset the promises after 3 passes since edit bundles are reusable */
-
-for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
-   {
-   if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type],bp)) == NULL)
-      {
-      continue;      
-      }
-   
-   for (pp = sp->promiselist; pp != NULL; pp=pp->next)
-      {
-      pp->donep = false;
       }
    }
 
@@ -171,7 +169,7 @@ if (!IsDefinedClass(pp->classes))
 
 if (pp->done)
    {
-   return;
+//   return;
    }
 
 if (VarClassExcluded(pp,&sp))
@@ -231,6 +229,8 @@ void VerifyLineDeletions(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a = {0};
   struct Item *begin_ptr,*end_ptr;
+  struct CfLock thislock;
+  char lockname[CF_BUFSIZE];
 
 /* *(pp->donep) = true;	*/
 	 
@@ -249,10 +249,20 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
+snprintf(lockname,CF_BUFSIZE-1,"deleteline-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 if (DeletePromisedLinesMatching(start,begin_ptr,end_ptr,a,pp))
    {
    (pp->edcontext->num_edits)++;
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -262,7 +272,9 @@ void VerifyColumnEdits(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a = {0};
   struct Item *begin_ptr,*end_ptr;
-
+  struct CfLock thislock;
+  char lockname[CF_BUFSIZE];
+  
 /* *(pp->donep) = true; */
 
 a = GetColumnAttributes(pp);
@@ -303,10 +315,20 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
 
 /* locate and split line */
 
+snprintf(lockname,CF_BUFSIZE-1,"column-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 if (EditColumns(begin_ptr,end_ptr,a,pp))
    {
    (pp->edcontext->num_edits)++;
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -316,7 +338,9 @@ void VerifyPatterns(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Attributes a = {0};
   struct Item *begin_ptr,*end_ptr;
-
+  struct CfLock thislock;
+  char lockname[CF_BUFSIZE];
+  
 /* *(pp->donep) = true; */
 
 CfOut(cf_verbose,""," -> Looking at pattern %s\n",pp->promiser);
@@ -342,12 +366,22 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
+snprintf(lockname,CF_BUFSIZE-1,"replace-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 /* Make sure back references are expanded */
 
 if (ReplacePatterns(begin_ptr,end_ptr,a,pp))
    {
    (pp->edcontext->num_edits)++;
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -357,7 +391,9 @@ void VerifyLineInsertions(struct Promise *pp)
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Item *begin_ptr,*end_ptr;
   struct Attributes a = {0};
-
+  struct CfLock thislock;
+  char lockname[CF_BUFSIZE];
+  
 /* *(pp->donep) = true; */
   
 a = GetInsertionAttributes(pp);
@@ -381,6 +417,14 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
+snprintf(lockname,CF_BUFSIZE-1,"insertline-%s",pp->promiser);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
 /* Are we looking for an anchored line inside the region? */
 
 if (a.location.line_matching == NULL)
@@ -395,6 +439,7 @@ else
    if (!SelectItemMatching(a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s",pp->promiser,a.location.line_matching,pp->this_server);
+      YieldCurrentLock(thislock);
       return;
       }
 
@@ -403,6 +448,8 @@ else
       (pp->edcontext->num_edits)++;
       }
    }
+
+YieldCurrentLock(thislock);
 }
 
 /***************************************************************************/
@@ -537,7 +584,7 @@ int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,stru
   struct Item *loc = NULL;
   int retval = false;
 
-*(pp->donep) = true;
+//*(pp->donep) = true;
   
 if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
    {

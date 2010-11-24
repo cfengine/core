@@ -125,8 +125,8 @@ dnl
 dnl Enterprise extensions
 dnl
 
-AC_ARG_WITH(nonova,
-	AS_HELP_STRING(--without-nova, [discard Nova enterprise extensions, if found]),with_nova=no,
+AC_ARG_WITH(nova,
+	AS_HELP_STRING(--without-nova, [disable Nova enterprise extensions (enabled by default)]),[],
 	with_nova=yes)
 
 if test "x$with_nova" != xno; then

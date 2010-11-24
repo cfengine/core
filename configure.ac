@@ -121,10 +121,17 @@ if test $WITH_SQL = 1; then
   AC_CHECK_HEADERS(libpq-fe.h)
 fi
 
+dnl
+dnl Enterprise extensions
+dnl
 
-AC_ARG_WITH([nova],
-    [AS_HELP_STRING([--with-nova], [use Nova commercial extensions])])
-AS_IF([test "x$with_nova" = "xyes"], [AC_CHECK_LIB([cfnova], [main])])
+AC_ARG_WITH(nonova,
+	AS_HELP_STRING(--without-nova, [discard Nova enterprise extensions, if found]),with_nova=no,
+	with_nova=yes)
+
+if test "x$with_nova" != xno; then
+   AC_CHECK_LIB(cfnova,main)
+fi
 
 AC_ARG_WITH([constellation],
     [AS_HELP_STRING([--with-constellation], [use Constellation commercial extensions])])
@@ -133,6 +140,9 @@ AS_IF([test "x$with_constellation" == "xyes"], [AC_CHECK_LIB([cfconstellation], 
 AC_ARG_WITH([galaxy],
     [AS_HELP_STRING([--with-galaxy], [use Galaxy commercial extensions])])
 AS_IF([test "x$with_galaxy" = "xyes"], [AC_CHECK_LIB([cfgalaxy], [main])])
+
+
+
 
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))

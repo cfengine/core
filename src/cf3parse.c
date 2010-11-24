@@ -85,7 +85,7 @@ extern char *yytext;
 
 
 /* Line 189 of yacc.c  */
-#line 89 "y.tab.c"
+#line 89 "cf3parse.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -149,7 +149,7 @@ typedef int YYSTYPE;
 
 
 /* Line 264 of yacc.c  */
-#line 153 "y.tab.c"
+#line 153 "cf3parse.c"
 
 #ifdef short
 # undef short
@@ -1951,7 +1951,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1955 "y.tab.c"
+#line 1955 "cf3parse.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);

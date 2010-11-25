@@ -249,7 +249,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
-snprintf(lockname,CF_BUFSIZE-1,"deleteline-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"deleteline-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
 
 if (thislock.lock == NULL)
@@ -315,7 +315,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
 
 /* locate and split line */
 
-snprintf(lockname,CF_BUFSIZE-1,"column-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"column-%s-%",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
 
 if (thislock.lock == NULL)
@@ -366,7 +366,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
-snprintf(lockname,CF_BUFSIZE-1,"replace-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"replace-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
 
 if (thislock.lock == NULL)
@@ -417,7 +417,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
-snprintf(lockname,CF_BUFSIZE-1,"insertline-%s",pp->promiser);
+snprintf(lockname,CF_BUFSIZE-1,"insertline-%s-%",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
 
 if (thislock.lock == NULL)

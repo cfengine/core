@@ -21,7 +21,6 @@
 
 /* AIX requires this to be the first thing in the file. */
 
-
 #include "../src/conf.h"
 
 #if defined (_AIX) && !defined (REGEX_MALLOC)

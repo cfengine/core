@@ -788,7 +788,7 @@ md = EVP_get_digestbyname(FileHashName(type));
 EVP_DigestInit(&context,md);
 
 // multiple packages (promisers) may share same package_list_update_ifelapsed lock
-if(!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
+if (!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
    {
    EVP_DigestUpdate(&context,pp->promiser,strlen(pp->promiser));
    }
@@ -796,6 +796,11 @@ if(!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT)
 if (pp->ref)
    {
    EVP_DigestUpdate(&context,pp->ref,strlen(pp->ref));
+   }
+
+if (pp->this_server)
+   {
+   EVP_DigestUpdate(&context,pp->this_server,strlen(pp->this_server));
    }
 
 if (salt)

@@ -671,7 +671,8 @@ cp = (struct CfAssoc *)item;
 // Note, we pad all iterators will a blank so the ptr arithmetic works
 // else EndOfIteration will not see lists with only one element
 
-rp->state_ptr = PrependRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
+lp = PrependRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
+rp->state_ptr = lp->next; // Always skip the null value
 AppendRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
 
 rp->item = item;

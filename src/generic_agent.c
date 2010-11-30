@@ -42,7 +42,7 @@ void GenericInitialize(int argc,char **argv,char *agents)
 
 { enum cfagenttype ag = Agent2Type(agents);
   char vbuff[CF_BUFSIZE];
-  int ok;
+  int ok = false;
 
 #ifdef HAVE_LIBCFNOVA
 CF_DEFAULT_DIGEST = cf_sha256;
@@ -111,7 +111,16 @@ else
 
 SetPolicyServer(POLICY_SERVER);
 
-ok = BOOTSTRAP || CheckPromises(ag);
+if (NewPromiseProposals())
+   {
+   CfOut(cf_verbose,""," -> New promises proposals detected...\n");
+   ok = BOOTSTRAP || CheckPromises(ag);
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> No new promises proposals - so policy is already validated\n");
+   ok = true;
+   }
 
 if (ok)
    {
@@ -154,14 +163,16 @@ CloseAllDB();
 int CheckPromises(enum cfagenttype ag)
 
 { char cmd[CF_BUFSIZE],path[CF_BUFSIZE];
+  char filename[CF_MAXVARSIZE];
   struct stat sb;
+  int fd;
 
 if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
    {
    return true;
    }
 
-CfOut(cf_verbose,""," > Verifying the syntax of the inputs...\n");
+CfOut(cf_verbose,""," -> Verifying the syntax of the inputs...\n");
 
 snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX);
 
@@ -186,6 +197,18 @@ else
 
 if (ShellCommandReturnsZero(cmd,true))
    {
+   snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+
+   if ((fd = creat(filename,0600)) != -1)
+      {
+      close(fd);
+      CfOut(cf_verbose,""," -> Caching the state of validation\n");
+      }
+   else
+      {
+      CfOut(cf_verbose,"creat"," -> Failed to caching the state of validation\n");
+      }
+   
    return true;
    }
 else
@@ -590,6 +613,14 @@ int NewPromiseProposals()
 { struct Rlist *rp,*sl;
   struct stat sb;
   int result = false;
+  char filename[CF_MAXVARSIZE];
+
+snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+
+if (stat(filename,&sb) != -1)
+   {
+   PROMISETIME = sb.st_mtime;
+   }
 
 if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
    {

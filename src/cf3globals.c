@@ -78,7 +78,7 @@ enum cfagenttype THIS_AGENT_TYPE;
 char SYSLOGHOST[CF_MAXVARSIZE];
 unsigned short SYSLOGPORT = 514;
 int FACILITY = 0;
-time_t PROMISETIME;
+time_t PROMISETIME = 0;
 
 int LICENSES = 0;
 char EXPIRY[CF_SMALLBUF];

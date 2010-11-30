@@ -243,6 +243,7 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+char *EscapeQuotes(char *s);
 char *MapAddress (char *addr);
 void IPString2KeyDigest(char *ipv4,char *result);
 time_t StrToTime(char *s);

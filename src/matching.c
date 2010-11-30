@@ -1394,38 +1394,38 @@ for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
 
 char *EscapeChar(char *str, int strSz, char esc)
 /* Escapes characters esc in the string str of size strSz  */
-{
-  char strDup[CF_BUFSIZE];
+
+{ char strDup[CF_BUFSIZE];
   int strPos, strDupPos;
   
-  if(sizeof(strDup) < strSz)
-    {
-      FatalError("Too large string passed to EscapeCharInplace()\n");
-    }
-  
-  snprintf(strDup, sizeof(strDup), "%s", str);
-  memset(str, 0, strSz);
-  
-  for(strPos = 0, strDupPos = 0; strPos < strSz - 2; strPos++, strDupPos++)
-    {
-      if(strDup[strDupPos] == esc)
-	{
-	  str[strPos] = '\\';
-	  strPos++;
-	}
+if(sizeof(strDup) < strSz)
+   {
+   FatalError("Too large string passed to EscapeCharInplace()\n");
+   }
 
-      str[strPos] = strDup[strDupPos];
-    }
-  
-  return str;
+snprintf(strDup, sizeof(strDup), "%s", str);
+memset(str, 0, strSz);
+
+for(strPos = 0, strDupPos = 0; strPos < strSz - 2; strPos++, strDupPos++)
+   {
+   if(strDup[strDupPos] == esc)
+      {
+      str[strPos] = '\\';
+      strPos++;
+      }
+   
+   str[strPos] = strDup[strDupPos];
+   }
+
+return str;
 }
 
 /*********************************************************************/
 
 void AnchorRegex(char *regex, char *out, int outSz)
-{
 
-if(EMPTY(regex))
+{
+if (EMPTY(regex))
   {
   memset(out,0,outSz);
   }

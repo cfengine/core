@@ -938,7 +938,7 @@ if (rval == NULL)
 switch (type)
    {
    case CF_SCALAR:
-       fprintf(fp,"%s",(char *)rval);
+       fprintf(fp,"%s",EscapeQuotes((char *)rval));
        break;
        
    case CF_LIST:

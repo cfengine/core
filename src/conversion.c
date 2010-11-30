@@ -105,6 +105,33 @@ else
 
 /***************************************************************************/
 
+char *EscapeQuotes(char *s)
+
+{ char v[CF_BUFSIZE],*spt,*spf;
+
+memset(v,0,CF_BUFSIZE);
+ 
+for (spf = s, spt = v; *spf != '\0'; spf++,spt++)
+   {
+   switch (*spf)
+      {
+      case '\'':
+      case '\"':
+          *spt++ = '\\';
+          *spt = *spf;
+          break;
+
+      default:
+          *spt = *spf;
+          break;
+      }
+   }
+
+return v;
+}
+
+/***************************************************************************/
+
 enum cfhypervisors Str2Hypervisors(char *s)
 
 { static char *names[] = { "xen", "kvm", "esx", "test",

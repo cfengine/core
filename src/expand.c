@@ -595,7 +595,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
   struct Promise *pexp;
   struct Scope *ptr;
   const int cf_null_cutoff = 5;
-  char *handle = GetConstraint("handle",pp,CF_SCALAR);
+  char *handle = GetConstraint("handle",pp,CF_SCALAR),v[CF_MAXVARSIZE];
   int i = 1, cutoff = 0;
 
 lol = NewIterationContext(scopeid,listvars);
@@ -628,7 +628,7 @@ do
    SetScope("this");  
    DeRefListsInHashtable("this",listvars,lol);
 
-   /* Allow $(this.handle) */
+   /* Allow $(this.handle) etc variables */
 
    if (handle)
       {
@@ -646,6 +646,13 @@ do
       NewScalar("this","promise_linenumber",number,cf_str);
       }
 
+   snprintf(v,CF_MAXVARSIZE,"%d",(int)getuid());
+   NewScalar("this","promiser_uid",v,cf_int);
+   snprintf(v,CF_MAXVARSIZE,"%d",(int)getgid());
+   NewScalar("this","promiser_gid",v,cf_int);
+   
+   /* End special variables */
+   
    pexp = ExpandDeRefPromise("this",pp);
 
    switch (agent)

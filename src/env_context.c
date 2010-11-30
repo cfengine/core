@@ -385,32 +385,33 @@ for (sp = local; *sp != '\0'; sp++)
 
 /*********************************************************************/
 
-void NegateClassesFromString(char *class,struct Item **heap)
+void NegateClassesFromString(char *classlist,struct Item **heap)
 
-{ char *sp = class;
-  char cbuff[CF_MAXVARSIZE];
+{ char *sp, currentitem[CF_MAXVARSIZE],local[CF_MAXVARSIZE];
 
-while(*sp != '\0')
+if ((classlist == NULL) || strlen(classlist) == 0)
    {
-   sscanf(sp,"%255[^.]",cbuff);
+   return;
+   }
 
-   while ((*sp != '\0') && ((*sp !='.')||(*sp == '&')))
-      {
-      sp++;
-      }
+memset(local,0,CF_MAXVARSIZE);
+strncpy(local,classlist,CF_MAXVARSIZE-1);
 
-   if ((*sp == '.') || (*sp == '&'))
-      {
-      sp++;
-      }
+for (sp = local; *sp != '\0'; sp++)
+   {
+   memset(currentitem,0,CF_MAXVARSIZE);
 
-   if (IsHardClass(cbuff))
+   sscanf(sp,"%250[^.:,]",currentitem);
+
+   sp += strlen(currentitem);
+
+   if (IsHardClass(currentitem))
       { char err[CF_BUFSIZE];
-      sprintf (err,"Cannot negate the reserved class [%s]\n",cbuff);
+      sprintf (err,"Cannot negate the reserved class [%s]\n",currentitem);
       FatalError(err);
       }
 
-   AppendItem(heap,cbuff,NULL);
+   AppendItem(heap,currentitem,NULL);
    }
 }
 

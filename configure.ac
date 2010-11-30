@@ -16,7 +16,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.1.1)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.1.2a1)   dnl remember to set version
 
 AM_CONFIG_HEADER(src/conf.h)
 
@@ -140,7 +140,6 @@ AS_IF([test "x$with_constellation" == "xyes"], [AC_CHECK_LIB([cfconstellation], 
 AC_ARG_WITH([galaxy],
     [AS_HELP_STRING([--with-galaxy], [use Galaxy commercial extensions])])
 AS_IF([test "x$with_galaxy" = "xyes"], [AC_CHECK_LIB([cfgalaxy], [main])])
-
 
 
 

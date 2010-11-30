@@ -253,6 +253,7 @@ enum cfacontrol
    cfa_addclasses,
    cfa_agentaccess,
    cfa_agentfacility,
+   cfa_alwaysvalidate,
    cfa_auditing,
    cfa_binarypaddingchar,
    cfa_bindtointerface,

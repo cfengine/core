@@ -130,6 +130,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"addclasses",cf_slist,".*","A list of classes to be defined always in the current context"},
    {"agentaccess",cf_slist,".*","A list of user names allowed to execute cf-agent"},
    {"agentfacility",cf_opts,CF_FACILITY,"The syslog facility for cf-agent"},
+   {"alwaysvalidate",cf_opts,CF_BOOL,"true/false flag to determine whether configurations will always be checked before executing, or only after updates"},
    {"auditing",cf_opts,CF_BOOL,"true/false flag to activate the cf-agent audit log"},
    {"binarypaddingchar",cf_str,"","Character used to pad unequal replacements in binary editing"},
    {"bindtointerface",cf_str,".*","Use this interface for outgoing connections"},

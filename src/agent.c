@@ -479,6 +479,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET auditing = %d\n",AUDIT);
       continue;
       }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_alwaysvalidate].lval) == 0)
+      {
+      ALWAYS_VALIDATE = GetBoolean(retval);
+      CfOut(cf_verbose,"","SET alwaysvalidate = %d\n",ALWAYS_VALIDATE);
+      continue;
+      }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
       {

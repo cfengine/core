@@ -692,7 +692,7 @@ if (VINPUTLIST != NULL)
       }
    }
 
-return result;
+return result | ALWAYS_VALIDATE;
 }
 
 /*******************************************************************/

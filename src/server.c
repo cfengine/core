@@ -834,6 +834,11 @@ if (NewPromiseProposals())
       ReadPromises(cf_server,CF_SERVERC);
       KeepPromises();
       Summarize();
+      
+      if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
+         {
+         CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
+         }
       }
    else
       {

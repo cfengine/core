@@ -1280,17 +1280,15 @@ int Linux_Suse_Version(void)
 /* The full string read in from SuSE-release */
 char relstring[CF_MAXVARSIZE];
 char classbuf[CF_MAXVARSIZE];
-char vbuf[CF_BUFSIZE];
+char vbuf[CF_BUFSIZE],strversion[CF_MAXVARSIZE],strpatch[CF_MAXVARSIZE];
 
 /* Where the numerical release will be found */
 char *release=NULL;
-
 int i,version;
 int major = -1;
 char strmajor[CF_MAXVARSIZE];
 int minor = -1;
 char strminor[CF_MAXVARSIZE];
-
 FILE *fp;
 
 /* Grab the first line from the file and then close it. */
@@ -1302,6 +1300,26 @@ if ((fp = fopen(SUSE_REL_FILENAME,"r")) == NULL)
 
 fgets(relstring, sizeof(relstring), fp);
 Chop(relstring);
+strversion[0] = '\0';
+strpatch[0] = '\0';
+
+while (!feof(fp))
+   {
+   fgets(vbuf,sizeof(vbuf),fp);
+
+   if (strncmp(vbuf,"VERSION",strlen("version")) == 0)
+      {
+      strncpy(strversion,vbuf,sizeof(strversion));
+      sscanf(strversion,"VERSION = %d",&major);
+      }
+
+   if (strncmp(vbuf,"PATCH",strlen("PATCH")) == 0)
+      {
+      strncpy(strpatch,vbuf,sizeof(strpatch));
+      sscanf(strpatch,"PATCHLEVEL = %d",&minor);
+      }
+   }
+
 fclose(fp);
 
    /* Check if it's a SuSE Enterprise version  */
@@ -1324,6 +1342,21 @@ if (!strncmp(relstring, SUSE_SLES8_ID, strlen(SUSE_SLES8_ID)))
    classbuf[0] = '\0';
    strcat(classbuf, "SLES8");
    NewClass(classbuf);
+   }
+else if (strncmp(relstring,"sles",4) == 0)
+   {
+   struct Item *list, *ip;
+   sscanf(relstring,"%[-_a-zA-Z0-9]",vbuf);
+   NewClass(vbuf);
+
+   list = SplitString(vbuf,'-');
+
+   for (ip = list; ip != NULL; ip=ip->next)
+      {
+      NewClass(ip->name);
+      }
+   
+   DeleteItemList(list);
    }
 else
    {
@@ -1364,32 +1397,66 @@ if (release == NULL)
 
 if (release == NULL)
    {
+   release = strversion;
+   }
+
+if (release == NULL)
+   {
    CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",SUSE_REL_FILENAME);
    return 2;
    }
 else
    {
-   sscanf(release, "%*s %d.%d", &major, &minor);
-   sprintf(strmajor, "%d", major);
-   sprintf(strminor, "%d", minor);
+   if (strchr(release,'.'))
+      {
+      sscanf(release, "%*s %d.%d", &major, &minor);
+      sprintf(strmajor, "%d", major);
+      sprintf(strminor, "%d", minor);
+
+      if (major != -1 && minor != -1)
+         {
+         strcpy(classbuf, "SuSE");
+         NewClass(classbuf);
+         strcat(classbuf, "_");
+         strcat(classbuf, strmajor);
+         NewClass(classbuf);
+         NewScalar("sys","flavour",classbuf,cf_str);
+         NewScalar("sys","flavor",classbuf,cf_str);
+         strcat(classbuf, "_");
+         strcat(classbuf, strminor);
+         NewClass(classbuf);
+         
+         CfOut(cf_verbose,""," -> Discovered SuSE version %s",classbuf);
+         return 0;
+         }
+      }
+   else
+      {
+      sscanf(strversion,"VERSION = %s",strmajor);
+      sscanf(strpatch,"PATCHLEVEL = %s",strminor);
+      
+      if (major != -1 && minor != -1)
+         {
+         strcpy(classbuf, "SLES");
+         NewClass(classbuf);
+         strcat(classbuf, "_");
+         strcat(classbuf, strmajor);
+         NewClass(classbuf);
+         strcat(classbuf, "_");
+         strcat(classbuf, strminor);
+         NewClass(classbuf);
+         snprintf(classbuf,CF_MAXVARSIZE,"SuSE_%d",major);
+         NewScalar("sys","flavour",classbuf,cf_str);
+         NewScalar("sys","flavor",classbuf,cf_str);
+         NewClass(classbuf);
+         
+         CfOut(cf_verbose,""," -> Discovered SuSE version %s",classbuf);
+         return 0;
+         }
+      }
    }
 
-if (major != -1 && minor != -1)
-   {
-   classbuf[0] = '\0';
-   strcat(classbuf, "SuSE");
-   NewClass(classbuf);
-   strcat(classbuf, "_");
-   strcat(classbuf, strmajor);
-   NewClass(classbuf);
-   NewScalar("sys","flavour",classbuf,cf_str);
-   NewScalar("sys","flavor",classbuf,cf_str);
-   strcat(classbuf, "_");
-   strcat(classbuf, strminor);
-   NewClass(classbuf);
-
-   CfOut(cf_verbose,""," -> Discovered SuSE version %s",classbuf);
-   }
+CfOut(cf_verbose,"","Could not find a numeric OS release in %s\n",SUSE_REL_FILENAME);
 
 return 0;
 }

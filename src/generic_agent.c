@@ -198,6 +198,7 @@ else
 if (ShellCommandReturnsZero(cmd,true))
    {
    snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+   MapName(filename);
 
    if ((fd = creat(filename,0600)) != -1)
       {
@@ -206,7 +207,7 @@ if (ShellCommandReturnsZero(cmd,true))
       }
    else
       {
-      CfOut(cf_verbose,"creat"," -> Failed to caching the state of validation\n");
+      CfOut(cf_verbose,"creat"," -> Failed to cache the state of validation\n");
       }
    
    return true;
@@ -616,6 +617,7 @@ int NewPromiseProposals()
   char filename[CF_MAXVARSIZE];
 
 snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+MapName(filename);
 
 if (stat(filename,&sb) != -1)
    {

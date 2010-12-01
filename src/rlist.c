@@ -930,6 +930,8 @@ ShowRval(fp,list->state_ptr->item,list->type);
 void ShowRval(FILE *fp,void *rval,char type)
 
 {
+char buf[CF_BUFSIZE];
+
 if (rval == NULL)
    {
    return;
@@ -938,7 +940,8 @@ if (rval == NULL)
 switch (type)
    {
    case CF_SCALAR:
-       fprintf(fp,"%s",EscapeQuotes((char *)rval));
+       EscapeQuotes((char *)rval,buf,sizeof(buf));
+       fprintf(fp,"%s",buf);
        break;
        
    case CF_LIST:

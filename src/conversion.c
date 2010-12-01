@@ -105,13 +105,14 @@ else
 
 /***************************************************************************/
 
-char *EscapeQuotes(char *s)
+char *EscapeQuotes(char *s, char *out, int outSz)
 
-{ char v[CF_BUFSIZE],*spt,*spf;
+{ char *spt,*spf;
+  int i = 0;
 
-memset(v,0,CF_BUFSIZE);
+memset(out,0,outSz);
  
-for (spf = s, spt = v; *spf != '\0'; spf++,spt++)
+ for (spf = s, spt = out; (i < outSz - 2) && (*spf != '\0'); spf++,spt++,i++)
    {
    switch (*spf)
       {
@@ -119,15 +120,17 @@ for (spf = s, spt = v; *spf != '\0'; spf++,spt++)
       case '\"':
           *spt++ = '\\';
           *spt = *spf;
+	  i+=2;
           break;
 
       default:
           *spt = *spf;
+	  i++;
           break;
       }
    }
 
-return v;
+return out;
 }
 
 /***************************************************************************/

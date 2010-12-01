@@ -607,7 +607,7 @@ return false;
 
 void FindDomainName(char *hostname)
 
-{ char fqn[CF_MAXVARSIZE];
+{ char fqn[CF_MAXVARSIZE] = {0};
   char *ptr;
   char buffer[CF_BUFSIZE];
 
@@ -1907,7 +1907,7 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
 { int fd,len,i,j,first_address = false,ipdefault = false;
-  struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
+  struct ifreq ifbuf[CF_IFREQ] = {0},ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
   struct hostent *hp;
@@ -1944,7 +1944,7 @@ last_name[0] = '\0';
 for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
    {
    int skip = false;
-   
+
    if (ifp->ifr_addr.sa_family == 0)
       {
       continue;

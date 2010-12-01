@@ -74,16 +74,16 @@ int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
 char *THIS_BUNDLE = NULL;
-char THIS_AGENT[CF_MAXVARSIZE];
+char THIS_AGENT[CF_MAXVARSIZE] = {0};
 enum cfagenttype THIS_AGENT_TYPE;
-char SYSLOGHOST[CF_MAXVARSIZE];
+char SYSLOGHOST[CF_MAXVARSIZE] = {0};
 unsigned short SYSLOGPORT = 514;
 int FACILITY = 0;
 time_t PROMISETIME = 0;
 
 int LICENSES = 0;
-char EXPIRY[CF_SMALLBUF];
-char LICENSE_COMPANY[CF_SMALLBUF];
+char EXPIRY[CF_SMALLBUF] = {0};
+char LICENSE_COMPANY[CF_SMALLBUF] = {0};
 int INSTALL_SKIP = false;
 int KEYTTL = 0;
 
@@ -116,7 +116,7 @@ int FSTAB_EDITS;
 int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
-char HASHDB[CF_BUFSIZE];
+char HASHDB[CF_BUFSIZE] = {0};
 
 /*****************************************************************************/
 /* Measurements                                                              */
@@ -156,20 +156,20 @@ int LASTSEEN = false;
 
 struct Topic *TOPIC_MAP = NULL;
 
-char POLICY_SERVER[CF_BUFSIZE];
+char POLICY_SERVER[CF_BUFSIZE] = {0};
 
-char WEBDRIVER[CF_MAXVARSIZE];
-char DOCROOT[CF_MAXVARSIZE];
-char BANNER[2*CF_BUFSIZE];
-char FOOTER[CF_BUFSIZE];
-char STYLESHEET[CF_BUFSIZE];
-char AGGREGATION[CF_BUFSIZE];
+char WEBDRIVER[CF_MAXVARSIZE] = {0};
+char DOCROOT[CF_MAXVARSIZE] = {0};
+char BANNER[2*CF_BUFSIZE] = {0};
+char FOOTER[CF_BUFSIZE] = {0};
+char STYLESHEET[CF_BUFSIZE] = {0};
+char AGGREGATION[CF_BUFSIZE] = {0};
 
-char SQL_DATABASE[CF_MAXVARSIZE];
-char SQL_OWNER[CF_MAXVARSIZE];
-char SQL_PASSWD[CF_MAXVARSIZE];
-char SQL_SERVER[CF_MAXVARSIZE];
-char SQL_CONNECT_NAME[CF_MAXVARSIZE];
+char SQL_DATABASE[CF_MAXVARSIZE] = {0};
+char SQL_OWNER[CF_MAXVARSIZE] = {0};
+char SQL_PASSWD[CF_MAXVARSIZE] = {0};
+char SQL_SERVER[CF_MAXVARSIZE] = {0};
+char SQL_CONNECT_NAME[CF_MAXVARSIZE] = {0};
 enum cfdbtype SQL_TYPE = cfd_notype;
 
 /*****************************************************************************/
@@ -279,32 +279,32 @@ int D2 = false;
 int AUDIT = false;
 int LOGGING = false;
 
-char  VFQNAME[CF_MAXVARSIZE];
-char  VUQNAME[CF_MAXVARSIZE];
-char  VDOMAIN[CF_MAXVARSIZE];
+char  VFQNAME[CF_MAXVARSIZE] = {0};
+char  VUQNAME[CF_MAXVARSIZE] = {0};
+char  VDOMAIN[CF_MAXVARSIZE] = {0};
 
-char  VYEAR[5];
-char  VDAY[3];
-char  VMONTH[4];
-char  VHR[3];
-char  VMINUTE[3];
-char  VSEC[3];
-char  VSHIFT[12];
-char  VLIFECYCLE[12];
+char  VYEAR[5] = {0};
+char  VDAY[3] = {0};
+char  VMONTH[4] = {0};
+char  VHR[3] = {0};
+char  VMINUTE[3] = {0};
+char  VSEC[3] = {0};
+char  VSHIFT[12] = {0};
+char  VLIFECYCLE[12] = {0};
 
 char PADCHAR = ' ';
 char PURGE = 'n';
 
 int ERRORCOUNT = 0;
-char VPREFIX[CF_MAXVARSIZE];
-char VINPUTFILE[CF_BUFSIZE];
+char VPREFIX[CF_MAXVARSIZE] = {0};
+char VINPUTFILE[CF_BUFSIZE] = {0};
 
-char CONTEXTID[32];
-char CFPUBKEYFILE[CF_BUFSIZE];
-char CFPRIVKEYFILE[CF_BUFSIZE];
-char AVDB[CF_MAXVARSIZE];
-char CFWORKDIR[CF_BUFSIZE];
-char PIDFILE[CF_BUFSIZE];
+char CONTEXTID[32] = {0};
+char CFPUBKEYFILE[CF_BUFSIZE] = {0};
+char CFPRIVKEYFILE[CF_BUFSIZE] = {0};
+char AVDB[CF_MAXVARSIZE] = {0};
+char CFWORKDIR[CF_BUFSIZE] = {0};
+char PIDFILE[CF_BUFSIZE] = {0};
 
 char *DEFAULT_COPYTYPE = NULL;
 
@@ -337,7 +337,7 @@ pthread_mutex_t MUTEX_DB_REPORT = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 unsigned short PORTNUMBER = 0;
-char VIPADDRESS[18];
+char VIPADDRESS[18] = {0};
 int  CFSIGNATURE = 0;
 
 char *PROTOCOL[] =
@@ -379,8 +379,8 @@ double VAL_KEPT = 0;
 double VAL_REPAIRED = 0;
 double VAL_NOTKEPT = 0;
 
-char FILE_SEPARATOR;
-char FILE_SEPARATOR_STR[2];
+char FILE_SEPARATOR = {0};
+char FILE_SEPARATOR_STR[2] = {0};
 
 /*******************************************************************/
 /*                                                                 */
@@ -429,13 +429,13 @@ struct Audit *VAUDIT = NULL;
 FILE *VLOGFP = NULL; 
 CF_DB  *AUDITDBP = NULL;
 
-char GRAPHDIR[CF_BUFSIZE];
-char CFLOCK[CF_BUFSIZE];
-char SAVELOCK[CF_BUFSIZE]; 
-char CFLOG[CF_BUFSIZE];
-char CFLAST[CF_BUFSIZE]; 
-char LOCKDB[CF_BUFSIZE];
-char LOGFILE[CF_MAXVARSIZE];
+char GRAPHDIR[CF_BUFSIZE] = {0};
+char CFLOCK[CF_BUFSIZE] = {0};
+char SAVELOCK[CF_BUFSIZE] = {0}; 
+char CFLOG[CF_BUFSIZE] = {0};
+char CFLAST[CF_BUFSIZE] = {0}; 
+char LOCKDB[CF_BUFSIZE] = {0};
+char LOGFILE[CF_MAXVARSIZE] = {0};
 
 char *SIGNALS[highest_signal];
 char *VSETUIDLOG = NULL;
@@ -443,7 +443,7 @@ char *VSETUIDLOG = NULL;
 time_t CFSTARTTIME;
 time_t CFINITSTARTTIME;
 dev_t ROOTDEVICE = 0;
-char  STR_CFENGINEPORT[16];
+char  STR_CFENGINEPORT[16] = {0};
 unsigned short SHORT_CFENGINEPORT;
 time_t CONNTIMEOUT = 10;	   /* seconds */
 int RPCTIMEOUT = 60;			/* seconds */
@@ -458,7 +458,7 @@ int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;
 int UNDERSCORE_CLASSES=false;
 int CHECKSUMUPDATES = false;
-char BINDINTERFACE[CF_BUFSIZE];
+char BINDINTERFACE[CF_BUFSIZE] = {0};
 int MINUSF = false;
 int EXCLAIM = true;
 
@@ -610,5 +610,5 @@ char *OBS[CF_OBSERVABLES][2] =
     "spare","unused",
     };
 
-char *UNITS[CF_OBSERVABLES];
-time_t DATESTAMPS[CF_OBSERVABLES];
+char *UNITS[CF_OBSERVABLES] = {0};
+time_t DATESTAMPS[CF_OBSERVABLES] = {0};

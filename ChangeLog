@@ -1,5 +1,12 @@
 3.1.2
 
+	Big efficiency improvements by caching output from
+	cf-promises. Can also be used for much more efficent policy
+	deployment (only pull if changed).
+	
+        Fixed issue where certain promiser strings got corrupted.
+
+	Minor memory access issues fixed.
 
 	Iterator bug introduced in 3.1.0 fixed
 

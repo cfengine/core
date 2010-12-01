@@ -139,11 +139,11 @@ if (IGNORELOCK)
    return this;
    }
 
-RemoveDates(operand);
-
 promise = BodyName(pp);
 snprintf(cc_operator,CF_MAXVARSIZE-1,"%s-%s",promise,host);
 strncpy(cc_operand,CanonifyName(operand),CF_BUFSIZE-1);
+RemoveDates(cc_operand);
+
 free(promise);
 
 Debug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n",cc_operator,cc_operand,attr.transaction.expireafter,attr.transaction.ifelapsed);

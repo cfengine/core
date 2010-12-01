@@ -214,6 +214,63 @@ DeleteItemList(path);
 
 /*********************************************************************/
 
+int IsNewerFileTree(char *dir,time_t reftime)
+
+{ struct dirent *dirp;
+  char path[CF_BUFSIZE];
+  DIR *dirh;
+  struct stat sb;
+
+// Assumes that race conditions on the file path are unlikely and unimportant
+  
+if ((dirh=opendir(dir)) == NULL)
+   {
+   CfOut(cf_error,"opendir"," !! Unable to open directory %s in IsNewerFileTree",dir);
+   return false;
+   }
+else
+   {
+   for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+      {
+      strncpy(path,dir,CF_BUFSIZE-1);
+
+      if (!JoinPath(path,dir))
+         {
+         CfOut(cf_error,""," !! Buffer overflow adding %s to %s in IsNewerFileTree",dir,path);
+         return false;
+         }
+      
+      if (lstat(path,&sb) == -1)
+         {
+         CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",dir);
+         return false;
+         }
+
+      if (S_ISDIR(sb.st_mode))
+         {
+         if (sb.st_mtime > reftime)
+            {
+            closedir(dirh);
+            return true;
+            }
+         else
+            {
+            if (IsNewerFileTree(path,reftime))
+               {
+               closedir(dirh);
+               return true;
+               }
+            }
+         }
+      }   
+   }
+
+closedir(dirh);
+return false;
+}
+
+/*********************************************************************/
+
 int IsDir(char *path)
 /*
 Checks if the object pointed to by path exists and is a directory.
@@ -310,9 +367,10 @@ return path;
 /*********************************************************************/
 
 int StartJoin(char *path,char *leaf,int bufsize)
+
 {
-  *path = '\0';
-  return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
+*path = '\0';
+return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
 }
 
 /*********************************************************************/

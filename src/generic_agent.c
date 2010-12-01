@@ -635,6 +635,17 @@ if (sb.st_mtime > PROMISETIME)
    return true;
    }
 
+// Check the directories first for speed and because non-input/data files should trigger an update
+
+snprintf(filename,CF_MAXVARSIZE,"%s/inputs",CFWORKDIR);
+
+if (IsNewerFileTree(filename,PROMISETIME))
+   {
+   return true;
+   }
+
+// Check files in case there are any abs paths
+
 if (VINPUTLIST != NULL)
    {
    for (rp = VINPUTLIST; rp != NULL; rp=rp->next)

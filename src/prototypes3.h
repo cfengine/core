@@ -724,6 +724,7 @@ void SaveSetuid(struct Attributes a,struct Promise *pp);
 
 /* files_names.c */
 
+int IsNewerFileTree(char *dir,time_t reftime);
 char *Titleize (char *str);
 int DeEscapeQuotedString(char *in, char *out);
 void DeEscapeFilename(char *in,char *out);

@@ -347,8 +347,6 @@ switch(level)
        break;
        
    default:
-       
-       FatalError("Software error: report level unknown: require cf_error, cf_inform, cf_verbose");
        break;       
    }
 

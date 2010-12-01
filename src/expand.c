@@ -951,7 +951,7 @@ strncpy(s2,s1+2,strlen(s1)-3);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
-  struct Attributes a;
+ struct Attributes a = {0};
   char *lval,rtype,type;
   void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;
@@ -1143,12 +1143,18 @@ if (rval != NULL)
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
       PromiseRef(cf_verbose,pp);
+      cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
+      }
+   else
+      {
+      cfPS(cf_noreport,CF_CHG,"",pp,a," -> Added variable %s",pp->promiser);
       }
    }
 else
    {
    CfOut(cf_error,""," !! Variable %s has no promised value\n",pp->promiser);
    CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+   cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
 }
 

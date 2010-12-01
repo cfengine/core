@@ -1034,7 +1034,7 @@ if (i > 2)
 
 //More consideration needs to be given to using these
 //a.transaction = GetTransactionConstraints(pp);
-//a.classes = GetClassDefinitionConstraints(pp);
+a.classes = GetClassDefinitionConstraints(pp);
 
 if (rval != NULL)
    {

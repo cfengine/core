@@ -1415,7 +1415,6 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          char *sp;
          index[0] = '\0';
          sscanf(ptr->hashtable[i]->lval+strlen(match),"%127s",index);
-
          if (sp = strchr(index,']'))
             {
             *sp = '\0';

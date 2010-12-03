@@ -217,7 +217,7 @@ DeleteItemList(path);
 int IsNewerFileTree(char *dir,time_t reftime)
 
 { struct dirent *dirp;
-  char path[CF_BUFSIZE],pbuffer[CF_BUFSIZE];
+  char path[CF_BUFSIZE] = {0},pbuffer[CF_BUFSIZE];
   struct Attributes dummyattr = {0};
   DIR *dirh;
   struct stat sb;
@@ -243,12 +243,14 @@ else
       if (!JoinPath(path,dirp->d_name))
          {
          CfOut(cf_error,""," !! Buffer overflow adding %s to %s in IsNewerFileTree",dir,path);
+	 closedir(dirh);
          return false;
          }
 
       if (lstat(path,&sb) == -1)
          {
          CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",path);
+	 closedir(dirh);
          return false;
          }
 

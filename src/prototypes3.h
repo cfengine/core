@@ -61,6 +61,7 @@ int InAlphaList(struct AlphaList *al,char *string);
 int MatchInAlphaList(struct AlphaList *al,char *string);
 void PrependAlphaList(struct AlphaList *al,char *string);
 void ShowAlphaList(struct AlphaList al);
+void DeleteAlphaList(struct AlphaList *al);
 
 /* args.c */
 

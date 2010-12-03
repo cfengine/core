@@ -54,6 +54,14 @@ int ScheduleAgentOperations(struct Bundle *bp);
 void AgentDiagnostic(char *inputfile);
 void CheckInstalledLibraries(void);
 
+/* alphalist.c */
+
+void InitAlphaList(struct AlphaList *al);
+int InAlphaList(struct AlphaList *al,char *string);
+int MatchInAlphaList(struct AlphaList *al,char *string);
+void PrependAlphaList(struct AlphaList *al,char *string);
+void ShowAlphaList(struct AlphaList al);
+
 /* args.c */
 
 int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take);
@@ -983,7 +991,7 @@ int FuzzyHostParse(char *arg1,char *arg2);
 void IdempItemCount(struct Item **liststart,char *itemstring,char *classes);
 void IdempPrependItem(struct Item **liststart,char *itemstring,char *classes);
 void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes);
-void PrependItem(struct Item **liststart, char *itemstring, char *classes);
+struct Item *PrependItem(struct Item **liststart, char *itemstring, char *classes);
 void AppendItem(struct Item **liststart, char *itemstring, char *classes);
 void DeleteItemList (struct Item *item);
 void DeleteItem (struct Item **liststart, struct Item *item);

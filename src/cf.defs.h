@@ -1176,15 +1176,9 @@ struct Item
 
 /*******************************************************************/
 
-struct TwoDimList
+struct AlphaList  // Indexed itemlist
    {
-   short is2d;                  /* true if list > 1 */
-   short rounds;
-   short tied;                  /* do variables march together or in rounds ? */
-   char  sep;                   /* list separator */
-   struct Item *ilist;          /* Each node contains a list */
-   struct Item *current;        /* A static working pointer */
-   struct TwoDimList *next;
+   struct Item *list[256];
    };
 
 /*******************************************************************/

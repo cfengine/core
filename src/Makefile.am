@@ -43,6 +43,7 @@ libpromises_la_SOURCES =                                                \
         exec_tools.c                                                    \
         nfs.c                                                           \
         item-lib.c                                                      \
+        alphalist.c                                                     \
         cf_sql.c                                                        \
         client_protocol.c                                               \
         client_code.c                                                   \

@@ -62,14 +62,20 @@ if (a.signals != NULL && a.process_stop != NULL)
 promised_zero = (a.process_count.min_range == 0 && a.process_count.max_range == 0);
 promised_any = (a.process_count.min_range == CF_NOINT);
 
-
 if (a.restart_class)
    {
    if (IsStringIn(a.signals,"term") || IsStringIn(a.signals,"kill"))
       {
       CfOut(cf_inform,""," -> (warning) Promise %s kills then restarts - never strictly converges",pp->promiser);
       PromiseRef(cf_inform,pp);
-      }   
+      }
+
+   if (a.have_process_count)
+      {
+      CfOut(cf_inform,""," !! process_count and restart_class should not be used in the same promise",pp->promiser);
+      PromiseRef(cf_inform,pp);
+      ret = false;
+      }
    }
 
 if (promised_zero && a.restart_class)

@@ -365,11 +365,6 @@ char *PROTOCOL[] =
    };
 
 struct Item *IPADDRESSES = NULL;
-struct Item *VHEAP = NULL;
-struct Item *VNEGHEAP = NULL;
-struct Item *VDELCLASSES = NULL;
-struct Item *VADDCLASSES=NULL;           /* Action sequence defs  */
-struct Rlist *PRIVCLASSHEAP = NULL;
 
 int PR_KEPT = 0;
 int PR_REPAIRED = 0;
@@ -381,6 +376,17 @@ double VAL_NOTKEPT = 0;
 
 char FILE_SEPARATOR = {0};
 char FILE_SEPARATOR_STR[2] = {0};
+
+
+/*******************************************************************/
+/* Context Management                                              */
+/*******************************************************************/
+
+struct AlphaList VHEAP;
+struct AlphaList VADDCLASSES;
+struct Item *VNEGHEAP = NULL;
+struct Item *VDELCLASSES = NULL;
+struct Rlist *PRIVCLASSHEAP = NULL;
 
 /*******************************************************************/
 /*                                                                 */

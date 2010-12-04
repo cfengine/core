@@ -612,25 +612,16 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_classmatch].args,finalargs); /* Arg validatio
 
 /* begin fn specific content */
 
-for (ip = VHEAP; ip != NULL; ip=ip->next)
+if (MatchInAlphaList(VHEAP,(char *)finalargs->item))
    {
-   if (FullTextMatch((char *)finalargs->item,ip->name))
-      {
-      SetFnCallReturnStatus("classmatch",FNCALL_SUCCESS,NULL,NULL);
-      strcpy(buffer,"any");
-      break;
-      }
+   SetFnCallReturnStatus("classmatch",FNCALL_SUCCESS,NULL,NULL);
+   strcpy(buffer,"any");
    }
-
-for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
-   {
-   if (FullTextMatch((char *)finalargs->item,ip->name))
-      {
-      SetFnCallReturnStatus("classmatch",FNCALL_SUCCESS,NULL,NULL);
-      strcpy(buffer,"any");
-      break;
-      }
-   }
+else if (MatchInAlphaList(VADDCLASSES,(char *)finalargs->item))
+    {
+    SetFnCallReturnStatus("classmatch",FNCALL_SUCCESS,NULL,NULL);
+    strcpy(buffer,"any");
+    }
 
 /*
 There is no case in which the function can "fail" to find an answer
@@ -654,27 +645,52 @@ struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs
 
 { struct Rlist *rp;
   struct Rval rval;
-  char buffer[CF_BUFSIZE];
+  char buffer[CF_BUFSIZE], *string = ((char *)finalargs->item);
   struct Item *ip;
   int count = 0;
+  int i = (int)*string;
   
 ArgTemplate(fp,CF_FNCALL_TYPES[cfn_countclassesmatching].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-for (ip = VHEAP; ip != NULL; ip=ip->next)
+if (isalnum(i) || *string == '_')
    {
-   if (FullTextMatch((char *)finalargs->item,ip->name))
+   for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
       {
-      count++;
+      if (FullTextMatch(string,ip->name))          
+         {
+         count++;
+         }
+      }
+
+   for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
+      {
+      if (FullTextMatch(string,ip->name))          
+         {
+         count++;
+         }
       }
    }
-
-for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+else
    {
-   if (FullTextMatch((char *)finalargs->item,ip->name))
+   for (i = 0; i < CF_ALPHABETSIZE; i++)
       {
-      count++;
+      for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
+         {
+         if (FullTextMatch((char *)finalargs->item,ip->name))
+            {
+            count++;
+            }
+         }
+      
+      for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
+         {
+         if (FullTextMatch((char *)finalargs->item,ip->name))
+            {
+            count++;
+            }
+         }
       }
    }
 

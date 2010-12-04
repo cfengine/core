@@ -621,10 +621,12 @@ if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY))
   }
 
 ThreadLock(cft_system);
-DeleteItemList(VHEAP);
-VHEAP = NULL;
-DeleteItemList(VADDCLASSES);
-VADDCLASSES = NULL;
+
+DeleteAlphaList(&VHEAP);
+InitAlphaList(&VHEAP);
+DeleteAlphaList(&VADDCLASSES);
+InitAlphaList(&VADDCLASSES);
+
 DeleteItemList(IPADDRESSES);
 IPADDRESSES = NULL;
 DeleteScope("this");

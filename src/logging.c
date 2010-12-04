@@ -305,7 +305,9 @@ CloseDB(AUDITDBP);
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
 
 { struct Rlist *rp;
-
+  int slot;
+  char *string;
+ 
 if (list == NULL)
    {
    return;
@@ -318,16 +320,19 @@ for (rp = list; rp != NULL; rp=rp->next)
       CfOut(cf_error,""," !! You cannot use reserved hard class \"%s\" as post-condition class",CanonifyName(rp->item));
       }
 
+   string = (char *)(rp->item);
+   slot = (int)*string;
+
    if (persist > 0)
       {
       CfOut(cf_verbose,""," ?> defining persistent promise result class %s\n",(char *)CanonifyName(rp->item));
       NewPersistentContext(CanonifyName(rp->item),persist,policy);
-      IdempPrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
+      IdempPrependItem(&(VHEAP.list[slot]),CanonifyName((char *)rp->item),NULL);
       }
    else
       {
       CfOut(cf_verbose,""," ?> defining promise result class %s\n",(char *)CanonifyName(rp->item));
-      IdempPrependItem(&VHEAP,CanonifyName((char *)rp->item),NULL);
+      IdempPrependItem(&(VHEAP.list[slot]),CanonifyName((char *)rp->item),NULL);
       }
    }
 }
@@ -337,7 +342,9 @@ for (rp = list; rp != NULL; rp=rp->next)
 void DeleteAllClasses(struct Rlist *list)
 
 { struct Rlist *rp;
-
+  char *string;
+  int slot;
+ 
 if (list == NULL)
    {
    return;
@@ -355,11 +362,14 @@ for (rp = list; rp != NULL; rp=rp->next)
       CfOut(cf_error,""," !! You cannot cancel a reserved hard class \"%s\" in post-condition classes", rp->item);
       }
 
-   CfOut(cf_verbose,""," -> Cancelling class %s\n",(char *)rp->item);
-   DeletePersistentContext(rp->item);
-   DeleteItemLiteral(&VHEAP,CanonifyName((char *)rp->item));
-   DeleteItemLiteral(&VADDCLASSES,CanonifyName((char *)rp->item));
-   AppendItem(&VDELCLASSES,CanonifyName((char *)rp->item),NULL);
+   string = (char *)(rp->item);
+   slot = (int)*string;
+          
+   CfOut(cf_verbose,""," -> Cancelling class %s\n",string);
+   DeletePersistentContext(string);
+   DeleteItemLiteral(&(VHEAP.list[slot]),CanonifyName(string));
+   DeleteItemLiteral(&(VADDCLASSES.list[slot]),CanonifyName(string));
+   AppendItem(&VDELCLASSES,CanonifyName(string),NULL);
    }
 }
 

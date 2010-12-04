@@ -94,7 +94,6 @@ extern char HASHDB[CF_BUFSIZE];
 extern int FSTAB_EDITS;
 extern char GRAPHDIR[CF_BUFSIZE];
 
-
 extern int CFA_MAXTHREADS;
 extern char *THIS_BUNDLE;
 extern char THIS_AGENT[CF_MAXVARSIZE];

@@ -36,13 +36,15 @@
 
 int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp)
 
-{ struct Item *proc_attr = NULL;
- int result = true,s,e;
+{ struct AlphaList proc_attr;
+  int result = true,s,e;
   char *criteria = NULL;
   char *column[CF_PROCCOLS];
   struct Rlist *rp;
     
 Debug("SelectProcess(%s)\n",procentry);
+
+InitAlphaList(&proc_attr);
 
 if (!a.haveselect)
    {
@@ -58,69 +60,69 @@ for (rp = a.process_select.owner; rp != NULL; rp = rp->next)
    {
    if (SelectProcRegexMatch("USER","UID",(char *)rp->item,names,column))
       {
-      PrependItem(&proc_attr,"process_owner","");
+      PrependAlphaList(&proc_attr,"process_owner");
       break;
       }
    }
 
 if (SelectProcRangeMatch("PID","PID",a.process_select.min_pid,a.process_select.max_pid,names,column))
    {
-   PrependItem(&proc_attr,"pid","");
+   PrependAlphaList(&proc_attr,"pid");
    }
 
 if (SelectProcRangeMatch("PPID","PPID",a.process_select.min_ppid,a.process_select.max_ppid,names,column))
    {
-   PrependItem(&proc_attr,"ppid","");
+   PrependAlphaList(&proc_attr,"ppid");
    }
 
 if (SelectProcRangeMatch("PGID","PGID",a.process_select.min_pgid,a.process_select.max_pgid,names,column))
    {
-   PrependItem(&proc_attr,"pgid","");
+   PrependAlphaList(&proc_attr,"pgid");
    }
 
 if (SelectProcRangeMatch("SZ","VSZ",a.process_select.min_vsize,a.process_select.max_vsize,names,column))
    {
-   PrependItem(&proc_attr,"vsize","");
+   PrependAlphaList(&proc_attr,"vsize");
    }
 
 if (SelectProcRangeMatch("RSS","RSS",a.process_select.min_rsize,a.process_select.max_rsize,names,column))
    {
-   PrependItem(&proc_attr,"rsize","");
+   PrependAlphaList(&proc_attr,"rsize");
    }
 
 if (SelectProcTimeCounterRangeMatch("TIME","TIME",a.process_select.min_ttime,a.process_select.max_ttime,names,column))
    {
-   PrependItem(&proc_attr,"ttime","");
+   PrependAlphaList(&proc_attr,"ttime");
    }
 
 if (SelectProcTimeAbsRangeMatch("STIME","START",a.process_select.min_stime,a.process_select.max_stime,names,column))
    {
-   PrependItem(&proc_attr,"stime","");
+   PrependAlphaList(&proc_attr,"stime");
    }
 
 if (SelectProcRangeMatch("NI","PRI",a.process_select.min_pri,a.process_select.max_pri,names,column))
    {
-   PrependItem(&proc_attr,"priority","");
+   PrependAlphaList(&proc_attr,"priority");
    }
 
 if (SelectProcRangeMatch("NLWP","NLWP",a.process_select.min_thread,a.process_select.max_thread,names,column))
    {
-   PrependItem(&proc_attr,"threads","");
+   PrependAlphaList(&proc_attr,"threads");
    }
 
 if (SelectProcRegexMatch("S","STAT",a.process_select.status,names,column))
    {
-   PrependItem(&proc_attr,"status","");
+   PrependAlphaList(&proc_attr,"status");
    }
 
 if (SelectProcRegexMatch("CMD","COMMAND",a.process_select.command,names,column))
    {
-   PrependItem(&proc_attr,"command","");
+   PrependAlphaList(&proc_attr,"command");
    }
 
 if (SelectProcRegexMatch("TTY","TTY",a.process_select.tty,names,column))
    {
-   PrependItem(&proc_attr,"tty","");
+   PrependAlphaList(&proc_attr,"tty");
    }
 
 if (result = EvaluateORString(a.process_select.process_result,proc_attr,0))
@@ -128,7 +130,7 @@ if (result = EvaluateORString(a.process_select.process_result,proc_attr,0))
    //ClassesFromString(fp->defines);
    }
 
-DeleteItemList(proc_attr);
+DeleteAlphaList(&proc_attr);
 
 if (result)
    {

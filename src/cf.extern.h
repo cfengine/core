@@ -279,7 +279,6 @@ extern struct Item *VSTRATEGYBUILD;
 
 
 extern struct Item *VMOUNTLIST;
-extern struct Item *VHEAP;      /* Points to the base of the attribute heap */
 extern struct Item *VNEGHEAP;
 extern struct Item *VDELCLASSES;
 extern struct Item *ABORTHEAP;
@@ -344,8 +343,8 @@ extern struct MiscMount *VMISCMOUNTTOP;
 extern struct Item *VIMPORT;
 extern struct Item *VACTIONSEQ;
 extern struct Item *VACCESSLIST;
-extern struct Item *VADDCLASSES;
-extern struct Item *VALLADDCLASSES;
+extern struct AlphaList VHEAP; 
+extern struct AlphaList VADDCLASSES;
 extern struct Rlist *PRIVCLASSHEAP;
 
 extern struct Item *VJUSTACTIONS;

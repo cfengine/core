@@ -2464,7 +2464,9 @@ int CheckPredefined(char *name)
 	return -1;
      }
 }
+
 /*********************************************************/
+
 int ExecutePreDefined(int id, char *opt)
 {
    switch(id)
@@ -2474,7 +2476,9 @@ int ExecutePreDefined(int id, char *opt)
 	break;
      }
    
+   return -1;   
 }
+
 /*********************************************************/
 int PerformBootstrap(char *server)
 {

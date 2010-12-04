@@ -57,11 +57,13 @@ void CheckInstalledLibraries(void);
 /* alphalist.c */
 
 void InitAlphaList(struct AlphaList *al);
-int InAlphaList(struct AlphaList *al,char *string);
-int MatchInAlphaList(struct AlphaList *al,char *string);
+int InAlphaList(struct AlphaList al,char *string);
+int MatchInAlphaList(struct AlphaList al,char *string);
 void PrependAlphaList(struct AlphaList *al,char *string);
 void ShowAlphaList(struct AlphaList al);
+void ListAlphaList(FILE *fp,struct AlphaList al,char sep);
 void DeleteAlphaList(struct AlphaList *al);
+struct AlphaList *CopyAlphaListPointers(struct AlphaList *al,struct AlphaList *ap);
 
 /* args.c */
 
@@ -516,8 +518,8 @@ int IsHardClass (char *sp);
 int IsSpecialClass (char *class);
 int IsExcluded (char *exception);
 int IsDefinedClass (char *class);
-int EvaluateORString (char *class, struct Item *list,int fromIsInstallable);
-int EvaluateANDString (char *class, struct Item *list,int fromIsInstallable);
+int EvaluateORString (char *class, struct AlphaList list,int fromIsInstallable);
+int EvaluateANDString (char *class, struct AlphaList list,int fromIsInstallable);
 int GetORAtom (char *start, char *buffer);
 int GetANDAtom (char *start, char *buffer);
 int CountEvalAtoms (char *class);
@@ -1022,7 +1024,7 @@ struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname,struct timespec start);
 void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
-void NoteClassUsage(struct Item *list);
+void NoteClassUsage(struct AlphaList list);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
 void UpdateLastSeen(void);
 double GAverage(double anew,double aold,double p);

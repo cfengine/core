@@ -149,31 +149,35 @@ CloseDB(dbp);
 
 /***************************************************************/
 
-void NoteClassUsage(struct Item *baselist)
+void NoteClassUsage(struct AlphaList baselist)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
   void *stored;
   char *key,name[CF_BUFSIZE];
-  int ksize,vsize;
+  int i,ksize,vsize;
   struct Event e,entry,newe;
   double lsea = CF_WEEK * 52; /* expire after a year */
   time_t now = time(NULL);
   struct Item *ip,*list = NULL;
+  struct AlphaList *ap;
   double lastseen,delta2;
   double vtrue = 1.0;      /* end with a rough probability */
 
 Debug("RecordClassUsage\n");
 
-for (ip = baselist; ip != NULL; ip=ip->next)
+for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
-     if (IGNORECLASS(ip->name))
+   for (ip = baselist.list[i]; ip != NULL; ip=ip->next)
       {
-      Debug("Ignoring class %s (not packing)", ip->name);
-      continue;
-      }
+      if (IGNORECLASS(ip->name))
+         {
+         Debug("Ignoring class %s (not packing)", ip->name);
+         continue;
+         }
    
-   IdempPrependItem(&list,ip->name,NULL);
+      IdempPrependItem(&list,ip->name,NULL);
+      }
    }
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);

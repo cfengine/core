@@ -34,10 +34,12 @@
 
 int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
-{ struct Item *leaf_attr = NULL;
+{ struct AlphaList leaf_attr;
   int result = true, tmpres;
   char *criteria = NULL;
   struct Rlist *rp;
+
+InitAlphaList(&leaf_attr);  
 
 #ifdef MINGW
 if(attr.select.issymlinkto != NULL)
@@ -63,107 +65,107 @@ if (!attr.haveselect)
 
 if (attr.select.name == NULL)
    {
-   PrependItem(&leaf_attr,"leaf_name","");
+   PrependAlphaList(&leaf_attr,"leaf_name");
    }
 
 for (rp = attr.select.name; rp != NULL; rp = rp->next)
    {
    if (SelectNameRegexMatch(path,rp->item))
       {
-      PrependItem(&leaf_attr,"leaf_name","");
+      PrependAlphaList(&leaf_attr,"leaf_name");
       break;
       }
    }
 
 if (attr.select.path == NULL)
    {
-   PrependItem(&leaf_attr,"leaf_path","");
+   PrependAlphaList(&leaf_attr,"leaf_path");
    }
 
 for (rp = attr.select.path; rp != NULL; rp = rp->next)
    {
    if (SelectPathRegexMatch(path,rp->item))
       {
-      PrependItem(&leaf_attr,"path_name","");
+      PrependAlphaList(&leaf_attr,"path_name");
       break;         
       }
    }
 
 if (SelectTypeMatch(sb,attr.select.filetypes))
    {
-   PrependItem(&leaf_attr,"file_types","");
+   PrependAlphaList(&leaf_attr,"file_types");
    }
 
 if (attr.select.owners && SelectOwnerMatch(path,sb,attr.select.owners))
    {
-   PrependItem(&leaf_attr,"owner","");
+   PrependAlphaList(&leaf_attr,"owner");
    }
 
 if (attr.select.owners == NULL)
    {
-   PrependItem(&leaf_attr,"owner","");
+   PrependAlphaList(&leaf_attr,"owner");
    }
 
 #ifdef MINGW
-PrependItem(&leaf_attr,"group","");
+PrependAlphaList(&leaf_attr,"group");
 
 #else  /* NOT MINGW */
 if (attr.select.groups && SelectGroupMatch(sb,attr.select.groups))
    {
-   PrependItem(&leaf_attr,"group","");
+   PrependAlphaList(&leaf_attr,"group");
    }
    
 if (attr.select.groups == NULL)
    {
-   PrependItem(&leaf_attr,"group","");
+   PrependAlphaList(&leaf_attr,"group");
    }
 #endif  /* NOT MINGW */
 
 if (SelectModeMatch(sb,attr.select.perms))
    {
-   PrependItem(&leaf_attr,"mode","");
+   PrependAlphaList(&leaf_attr,"mode");
    }
 
 #if defined HAVE_CHFLAGS 
 if (SelectBSDMatch(sb,attr.select.bsdflags,pp))
    {
-   PrependItem(&leaf_attr,"bsdflags","");
+   PrependAlphaList(&leaf_attr,"bsdflags");
    }
 #endif
 
 if (SelectTimeMatch(sb->st_atime,attr.select.min_atime,attr.select.max_atime))
    { 
-   PrependItem(&leaf_attr,"atime","");
+   PrependAlphaList(&leaf_attr,"atime");
    }
 
 if (SelectTimeMatch(sb->st_ctime,attr.select.min_ctime,attr.select.max_ctime))
    { 
-   PrependItem(&leaf_attr,"ctime","");
+   PrependAlphaList(&leaf_attr,"ctime");
    }
 
 if (SelectSizeMatch(sb->st_size,attr.select.min_size,attr.select.max_size))
    { 
-   PrependItem(&leaf_attr,"size","");
+   PrependAlphaList(&leaf_attr,"size");
    }
 
 if (SelectTimeMatch(sb->st_mtime,attr.select.min_mtime,attr.select.max_mtime))
    { 
-   PrependItem(&leaf_attr,"mtime","");
+   PrependAlphaList(&leaf_attr,"mtime");
    }
 
 if (attr.select.issymlinkto && SelectIsSymLinkTo(path,attr.select.issymlinkto))
    {
-   PrependItem(&leaf_attr,"issymlinkto","");
+   PrependAlphaList(&leaf_attr,"issymlinkto");
    }
 
 if (attr.select.exec_regex && SelectExecRegexMatch(path,attr.select.exec_regex,attr.select.exec_program))
    {
-   PrependItem(&leaf_attr,"exec_regex","");
+   PrependAlphaList(&leaf_attr,"exec_regex");
    }
 
 if (attr.select.exec_program && SelectExecProgram(path,attr.select.exec_program))
    {
-   PrependItem(&leaf_attr,"exec_program","");
+   PrependAlphaList(&leaf_attr,"exec_program");
    }
 
 if (result = EvaluateORString(attr.select.result,leaf_attr,0))
@@ -173,7 +175,7 @@ if (result = EvaluateORString(attr.select.result,leaf_attr,0))
  
 Debug("Select result \"%s\"on %s was %d\n",attr.select.result,path,result);
 
-DeleteItemList(leaf_attr);
+DeleteAlphaList(&leaf_attr);
 
 return result; 
 }
@@ -184,9 +186,7 @@ return result;
 
 int SelectSizeMatch(size_t size,size_t min,size_t max)
 
-{ struct Item *leafattrib = NULL;
-  struct Rlist *rp;
-
+{
 if (size <= max && size >= min)
    {
    return true;
@@ -199,51 +199,53 @@ return false;
 
 int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit)
 
-{ struct Item *leafattrib = NULL;
+{ struct AlphaList leafattrib;
   struct Rlist *rp;
- 
+
+InitAlphaList(&leafattrib);
+  
 if (S_ISREG(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"reg","");
-   PrependItem(&leafattrib,"plain","");
+   PrependAlphaList(&leafattrib,"reg");
+   PrependAlphaList(&leafattrib,"plain");
    }
 
 if (S_ISDIR(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"dir","");
+   PrependAlphaList(&leafattrib,"dir");
    }
 
 #ifndef MINGW   
 if (S_ISLNK(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"symlink","");
+   PrependAlphaList(&leafattrib,"symlink");
    }   
  
 if (S_ISFIFO(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"fifo","");
+   PrependAlphaList(&leafattrib,"fifo");
    }
 
 if (S_ISSOCK(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"socket","");
+   PrependAlphaList(&leafattrib,"socket");
    }
 
 if (S_ISCHR(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"char","");
+   PrependAlphaList(&leafattrib,"char");
    }
 
 if (S_ISBLK(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"block","");
+   PrependAlphaList(&leafattrib,"block");
    }
 #endif  /* NOT MINGW */
 
 #ifdef HAVE_DOOR_CREATE
 if (S_ISDOOR(lstatptr->st_mode))
    {
-   PrependItem(&leafattrib,"door","");
+   PrependAlphaList(&leafattrib,"door");
    }
 #endif
 
@@ -251,12 +253,12 @@ for (rp = crit; rp != NULL; rp=rp->next)
    {
    if (EvaluateORString((char *)rp->item,leafattrib,0))
       {
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
    }
 
-DeleteItemList(leafattrib);
+DeleteAlphaList(&leafattrib);
 return false;
 }
 
@@ -264,6 +266,7 @@ return false;
 
 /* Writes the owner of file 'path', with stat 'lstatptr' into buffer 'owner' of
  * size 'ownerSz'. Returns true on success, false otherwise                      */
+
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
 
 {
@@ -278,26 +281,28 @@ return Unix_GetOwnerName(lstatptr, owner, ownerSz);
 
 int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit)
 
-{ struct Item *leafattrib = NULL;
+{ struct AlphaList leafattrib;
   struct Rlist *rp;
   char ownerName[CF_BUFSIZE];
   int gotOwner;
 
+InitAlphaList(&leafattrib);
+  
 #ifndef MINGW  // no uids on Windows
 char buffer[CF_SMALLBUF];
 sprintf(buffer,"%d",lstatptr->st_uid);
-PrependItem(&leafattrib,buffer,""); 
+PrependAlphaList(&leafattrib,buffer); 
 #endif  /* MINGW */
 
 gotOwner = GetOwnerName(path, lstatptr, ownerName, sizeof(ownerName));
 
 if (gotOwner)
    {
-   PrependItem(&leafattrib,ownerName,""); 
+   PrependAlphaList(&leafattrib,ownerName); 
    }
 else
    {
-   PrependItem(&leafattrib,"none",""); 
+   PrependAlphaList(&leafattrib,"none"); 
    }
 
 for (rp = crit; rp != NULL; rp = rp->next)
@@ -305,14 +310,14 @@ for (rp = crit; rp != NULL; rp = rp->next)
    if (EvaluateORString((char *)rp->item,leafattrib,0))
       {
       Debug(" - ? Select owner match\n");
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
 
    if (gotOwner && FullTextMatch((char *)rp->item,ownerName))
       {
       Debug(" - ? Select owner match\n");
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
 
@@ -320,13 +325,13 @@ for (rp = crit; rp != NULL; rp = rp->next)
    if (FullTextMatch((char *)rp->item,buffer))
       {
       Debug(" - ? Select owner match\n");
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
 #endif  /* NOT MINGW */
    }
 
-DeleteItemList(leafattrib);
+DeleteAlphaList(&leafattrib);
 return false;
 } 
 
@@ -540,21 +545,23 @@ return true;
 
 int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit)
 
-{ struct Item *leafattrib = NULL;
+{ struct AlphaList leafattrib;
   char buffer[CF_SMALLBUF];
   struct group *gr;
   struct Rlist *rp;
+
+InitAlphaList(&leafattrib);
   
 sprintf(buffer,"%d",lstatptr->st_gid);
-PrependItem(&leafattrib,buffer,""); 
+PrependAlphaList(&leafattrib,buffer); 
 
 if ((gr = getgrgid(lstatptr->st_gid)) != NULL)
    {
-   PrependItem(&leafattrib,gr->gr_name,""); 
+   PrependAlphaList(&leafattrib,gr->gr_name); 
    }
 else
    {
-   PrependItem(&leafattrib,"none",""); 
+   PrependAlphaList(&leafattrib,"none"); 
    }
 
 for (rp = crit; rp != NULL; rp = rp->next)
@@ -562,26 +569,26 @@ for (rp = crit; rp != NULL; rp = rp->next)
    if (EvaluateORString((char *)rp->item,leafattrib,0))
       {
       Debug(" - ? Select group match\n");
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
 
    if (gr && FullTextMatch((char *)rp->item,gr->gr_name))
       {
       Debug(" - ? Select owner match\n");
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
 
    if (FullTextMatch((char *)rp->item,buffer))
       {
       Debug(" - ? Select owner match\n");
-      DeleteItemList(leafattrib);
+      DeleteAlphaList(&leafattrib);
       return true;
       }
    }
 
-DeleteItemList(leafattrib);
+DeleteAlphaList(&leafattrib);
 return false;
 } 
 

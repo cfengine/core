@@ -136,6 +136,7 @@ return true;
 void EditClassBanner(enum editlinetypesequence type)
 
 { struct Item *ip;
+  int i;
  
 if (type != elp_delete)   /* Just parsed all local classes */
    {
@@ -144,9 +145,12 @@ if (type != elp_delete)   /* Just parsed all local classes */
 
 CfOut(cf_verbose,"","     ??  Private class context\n");
 
-for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
-   CfOut(cf_verbose,"","     ??       %s\n",ip->name);
+   for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
+      {
+      CfOut(cf_verbose,"","     ??       %s\n",ip->name);
+      }
    }
 
 CfOut(cf_verbose,"","\n");

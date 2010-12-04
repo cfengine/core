@@ -85,13 +85,17 @@ void ShowContext(void)
 
 { struct Item *ptr;
   char vbuff[CF_BUFSIZE];
-
+  int i;
+  
  /* Text output */
 
 CfOut(cf_verbose,"","");
 
-ptr = SortItemListNames(VHEAP);
-VHEAP = ptr;
+for (i = 0; i < CF_ALPHABETSIZE; i++)
+   {
+   ptr = SortItemListNames(VHEAP.list[i]);
+   VHEAP.list[i] = ptr;
+   }
 
 if (VERBOSE||DEBUG)
    {
@@ -99,11 +103,8 @@ if (VERBOSE||DEBUG)
    ReportBanner(vbuff);
    
    printf("%s  -> Defined classes = { ",VPREFIX);
-   
-   for (ptr = VHEAP; ptr != NULL; ptr=ptr->next)
-      {
-      printf("%s ",ptr->name);
-      }
+
+   ListAlphaList(stdout,VHEAP,' ');
    
    printf("}\n");
 
@@ -440,7 +441,8 @@ CfOut(cf_verbose,"","\n");
 
 void BannerSubSubType(char *bundlename,char *type)
 
-{
+{ int i;
+ 
 if (strcmp(type,"processes") == 0)
    {
    struct Item *ip;
@@ -448,11 +450,14 @@ if (strcmp(type,"processes") == 0)
 
    CfOut(cf_verbose,"","     ??? Local class context: \n");
 
-   for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+   for (i = 0; i < CF_ALPHABETSIZE; i++)
       {
-      printf("       %sǹ",ip->name);
+      for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
+         {
+         printf("       %sǹ",ip->name);
+         }
       }
-
+   
    CfOut(cf_verbose,"","\n");
    }
 

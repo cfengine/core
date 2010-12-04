@@ -1230,6 +1230,7 @@ switch(type)
 void ClassBanner(enum typesequence type)
 
 { struct Item *ip;
+  int i;
  
 if (type != kp_interfaces)   /* Just parsed all local classes */
    {
@@ -1239,9 +1240,12 @@ if (type != kp_interfaces)   /* Just parsed all local classes */
 CfOut(cf_verbose,"","\n");
 CfOut(cf_verbose,"","     +  Private classes augmented:\n");
 
-for (ip = VADDCLASSES; ip != NULL; ip=ip->next)
+for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
-   CfOut(cf_verbose,"","     +       %s\n",ip->name);
+   for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
+      {
+      CfOut(cf_verbose,"","     +       %s\n",ip->name);
+      }
    }
 
 NoteClassUsage(VADDCLASSES);
@@ -1259,13 +1263,15 @@ CfOut(cf_verbose,"","\n");
 
 Debug("     ?  Public class context:\n");
 
-for (ip = VHEAP; ip != NULL; ip=ip->next)
+for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
-   Debug("     ?       %s\n",ip->name);
+   for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
+      {
+      Debug("     ?       %s\n",ip->name);
+      }
    }
 
 CfOut(cf_verbose,"","\n");
-
 }
 
 /**************************************************************/

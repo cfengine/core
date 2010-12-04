@@ -782,7 +782,11 @@ if (NewPromiseProposals())
       
       /* Free & reload -- lock this to avoid access errors during reload */
       
-      DeleteItemList(VHEAP);
+      DeleteAlphaList(&VHEAP);
+      InitAlphaList(&VHEAP);
+      DeleteAlphaList(&VADDCLASSES);
+      InitAlphaList(&VADDCLASSES);
+
       DeleteItemList(VNEGHEAP);
       DeleteItemList(TRUSTKEYLIST);
       DeleteItemList(SKIPVERIFY);
@@ -802,7 +806,7 @@ if (NewPromiseProposals())
       
       VADMIT = VADMITTOP = NULL;
       VDENY  = VDENYTOP  = NULL;
-      VHEAP  = VNEGHEAP  = NULL;
+      VNEGHEAP = NULL;
       TRUSTKEYLIST = NULL;
       SKIPVERIFY = NULL;
       DHCPLIST = NULL;
@@ -1540,7 +1544,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
          return true;
          }
 
-      if (IsRegexItemIn(VHEAP,ip->name))
+      if (MatchInAlphaList(VHEAP,ip->name))
          {
          Debug("Class matched regular expression %s, accepting...\n",ip->name);
          DeleteItemList(classlist);

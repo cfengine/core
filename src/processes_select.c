@@ -204,14 +204,15 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
       CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
       return false;
       }
-   
+
    if (min < value && value < max)
       {
-      CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+      CfOut(cf_verbose,"","Selection filter matched counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n",name1,name2,line[i],min,max,value);
       return true;
       }
    else
       {   
+      Debug("Selection filter REJECTED counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n",name1,name2,line[i],min,max,value);
       return false;
       }
    }
@@ -238,7 +239,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    
    if (min < value && value < max)
       {
-      CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+      CfOut(cf_verbose,"","Selection filter matched absolute %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
       return true;
       }
    else

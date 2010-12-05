@@ -991,7 +991,11 @@ int SanityCheckInsertions(struct Attributes a)
 { long not = 0;
   long with = 0;
   long ok = true;
-  
+  struct Rlist *rp;
+  enum insert_match opt;
+  int exact = false, ignore_something = false;
+  int multiline = a.sourcetype && strcmp(a.sourcetype,"preserve_block") == 0;
+
 if (a.line_select.startwith_from_list)
    {
    with++;
@@ -1024,13 +1028,39 @@ if (a.line_select.not_contains_from_list)
 
 if (not > 1)
    {
-   CfOut(cf_error,"","Line insertion selection promise is meaningless - the alternatives are mutually exclusive (only one is allowed)");
+   CfOut(cf_error,""," !! Line insertion selection promise is meaningless - the alternatives are mutually exclusive (only one is allowed)");
    ok = false;
    }
 
 if (with && not)
    {
-   CfOut(cf_error,"","Line insertion selection promise is meaningless - cannot mix positive and negative constraints");
+   CfOut(cf_error,""," !! Line insertion selection promise is meaningless - cannot mix positive and negative constraints");
+   ok = false;
+   }
+
+for (rp = a.insert_match; rp != NULL; rp=rp->next)
+   {
+   opt = String2InsertMatch(rp->item);
+
+   switch (opt)
+      {
+      case cf_exact_match:
+          exact = true;
+          break;
+      default:
+          ignore_something = true;
+          if (multiline)
+             {
+             CfOut(cf_error,""," !! Line insertion should not use whitespace policy with preserve_block");
+             ok = false;
+             }
+          break;
+      }
+   }
+
+if (exact && ignore_something)
+   {
+   CfOut(cf_error,""," !! Line insertion selection promise is meaningless - cannot mix exact_match with other ignore whitespace options");
    ok = false;
    }
 

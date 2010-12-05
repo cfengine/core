@@ -75,11 +75,13 @@ CheckOpts(argc,argv);
 THIS_AGENT_TYPE = cf_keygen;
 
 GenericInitialize(argc,argv,"keygenerator");
-if(SHOWHOSTS)
-{
- ShowLastSeenHosts();
- return 0; 	
-}
+
+if (SHOWHOSTS)
+   {
+   ShowLastSeenHosts();
+   return 0; 	
+   }
+
 KeepKeyPromises();
 return 0;
 }

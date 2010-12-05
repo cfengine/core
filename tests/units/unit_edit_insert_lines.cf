@@ -78,5 +78,5 @@ insert_lines:
 body edit_defaults empty
 
 {
-empty_file_before_editing => "true";
+empty_file_before_editing => "false";
 }

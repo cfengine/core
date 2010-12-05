@@ -63,7 +63,7 @@ process_owner  => { "avahi", "bin" };
 command        => "$(p)";
 pid            => "100,199";
 vsize          => "0,1000";
-process_result => "command.(process_owner|rsize)";
+process_result => "command.(process_owner|vsize)";
 }
 
 

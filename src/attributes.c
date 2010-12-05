@@ -39,6 +39,9 @@ struct Attributes GetFilesAttributes(struct Promise *pp)
 { struct Attributes attr = {0};
  
 memset(&attr,0,sizeof(attr));
+
+// default for file copy
+attr.link.when_no_file = cfa_force;
  
 attr.havedepthsearch = GetBooleanConstraint("depth_search",pp);
 attr.haveselect = GetBooleanConstraint("file_select",pp);

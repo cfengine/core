@@ -1612,6 +1612,7 @@ int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int ExtractPid(char *psentry,char **names,int *start,int *end);
 void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 int GracefulTerminate(pid_t pid);
+int GetProcColumnIndex(char *name1,char *name2,char **names);
 
 /* verify_services.c */
 

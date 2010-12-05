@@ -131,7 +131,13 @@ YieldCurrentLock(thislock);
 
 int LoadProcessTable(struct Item **procdata,char *psopts)
 
-{ 
+{
+if (PROCESSTABLE)
+   {
+   CfOut(cf_verbose,"","Reuse cached process state");
+   return true;
+   }
+ 
 #ifdef MINGW
 return NovaWin_LoadProcessTable(procdata);
 #else

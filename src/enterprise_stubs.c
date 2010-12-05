@@ -47,6 +47,10 @@ should be free, please let us know and we will consider this carefully.
 # include <cf.nova.h>
 #endif
 
+#ifdef HAVE_ZONE_H
+# include <zone.h>
+#endif
+
 void *Nova_LDAPValue(char *uri,char *basedn,char *filter,char *name,char *scope,char *sec);
 void *Nova_LDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
 void *Nova_LDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
@@ -1116,11 +1120,19 @@ CfOut(cf_verbose,"","Configuration model efficiency for %s = %.2lf%%",VUQNAME,e)
 
 char *GetProcessOptions()
 {
-#ifdef HAVE_LIBCFNOVA
- return Nova_GetProcessOptions();
-#else
-CfOut(cf_verbose,"","Extended process options are only available with Cfengine Nova or above");
-return VPSOPTS[VSYSTEMHARDCLASS];
+#ifdef HAVE_GETZONEID
+ zoneid_t zid;
+ char zone[ZONENAME_MAX];
+ 
+zid = getzoneid();
+getzonenamebyid(zid,zone,ZONENAME_MAX);
+
+if (cf_strcmp(zone,"global") == 0)
+   {
+   return "-z global";
+   }
 #endif
+
+return VPSOPTS[VSYSTEMHARDCLASS];
 }
 

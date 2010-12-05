@@ -815,6 +815,9 @@ int ScheduleAgentOperations(struct Bundle *bp)
   enum typesequence type;
   int pass;
 
+DeleteItemList(PROCESSTABLE);
+PROCESSTABLE = NULL;
+
 for (pass = 1; pass < CF_DONEPASSES; pass++)
    {
    for (type = 0; TYPESEQUENCE[type] != NULL; type++)
@@ -1177,11 +1180,6 @@ switch(type)
        break;
 
    case kp_processes:
-
-       /* should cleanup proc memory list */
-
-       DeleteItemList(PROCESSTABLE);
-       PROCESSTABLE = NULL;
        break;
 
    case kp_storage:

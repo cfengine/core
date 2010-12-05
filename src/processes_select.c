@@ -56,6 +56,15 @@ if (!SplitProcLine(procentry,names,start,end,column))
    return false;
    }
 
+if (DEBUG)
+   {
+   int i;
+   for (i = 0; column[i] != NULL; i++)
+      {
+      printf("COL[%s] = \"%s\"\n",names[i],column[i]);
+      }
+   }
+
 for (rp = a.process_select.owner; rp != NULL; rp = rp->next)
    {
    if (SelectProcRegexMatch("USER","UID",(char *)rp->item,names,column))
@@ -80,7 +89,7 @@ if (SelectProcRangeMatch("PGID","PGID",a.process_select.min_pgid,a.process_selec
    PrependAlphaList(&proc_attr,"pgid");
    }
 
-if (SelectProcRangeMatch("SZ","VSZ",a.process_select.min_vsize,a.process_select.max_vsize,names,column))
+if (SelectProcRangeMatch("VSZ","SZ",a.process_select.min_vsize,a.process_select.max_vsize,names,column))
    {
    PrependAlphaList(&proc_attr,"vsize");
    }
@@ -155,27 +164,24 @@ int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,ch
 
 { int i;
   long value;
- 
-for (i = 0; names[i] != NULL; i++)
-   {
-   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
-      {
-      value = Str2Int(line[i]);
 
-      if (value == CF_NOINT)
-         {
-         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",names[i],line[i]);
-         return false;
-         }
-      
-      if (min < value && value < max)
-         {
-         return true;
-         }
-      else
-         {   
-         return false;
-         }
+if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
+   {
+   value = Str2Int(line[i]);
+   
+   if (value == CF_NOINT)
+      {
+      CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",names[i],line[i]);
+      return false;
+      }
+   
+   if (min < value && value < max)
+      {
+      return true;
+      }
+   else
+      {   
+      return false;
       }
    }
 
@@ -188,28 +194,25 @@ int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t ma
 
 { int i;
   time_t value;
- 
-for (i = 0; names[i] != NULL; i++)
+
+if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    {
-   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
+   value = (time_t) TimeCounter2Int(line[i]);
+   
+   if (value == CF_NOINT)
       {
-      value = (time_t) TimeCounter2Int(line[i]);
-               
-      if (value == CF_NOINT)
-         {
-         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
-         return false;
-         }
-      
-      if (min < value && value < max)
-         {
-         CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
-         return true;
-         }
-      else
-         {   
-         return false;
-         }
+      CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+      return false;
+      }
+   
+   if (min < value && value < max)
+      {
+      CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+      return true;
+      }
+   else
+      {   
+      return false;
       }
    }
 
@@ -222,28 +225,25 @@ int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,ch
 
 { int i;
   time_t value;
- 
-for (i = 0; names[i] != NULL; i++)
+
+if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    {
-   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
+   value = (time_t)TimeAbs2Int(line[i]);
+   
+   if (value == CF_NOINT)
       {
-      value = (time_t)TimeAbs2Int(line[i]);
-               
-      if (value == CF_NOINT)
-         {
-         CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
-         return false;
-         }
-      
-      if (min < value && value < max)
-         {
-         CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
-         return true;
-         }
-      else
-         {
-         return false;
-         }
+      CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+      return false;
+      }
+   
+   if (min < value && value < max)
+      {
+      CfOut(cf_verbose,"","Selection filter matched %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
+      return true;
+      }
+   else
+      {
+      return false;
       }
    }
 
@@ -260,19 +260,16 @@ if (regex == NULL)
    {
    return false;
    }
- 
-for (i = 0; names[i] != NULL; i++)
+
+if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    {
-   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
+   if (FullTextMatch(regex,line[i]))
       {
-      if (FullTextMatch(regex,line[i]))
-         {
-         return true;
-         }
-      else
-         {   
-         return false;
-         }
+      return true;
+      }
+   else
+      {   
+      return false;
       }
    }
 
@@ -299,6 +296,7 @@ for (i = 0; i < CF_PROCCOLS; i++)
  
 for (i = 0; names[i] != NULL; i++)
    {
+   // Start from the header/column tab marker and count backwards until we find 0 or space
    for (s = start[i]; (s >= 0) && !isspace((int)*(proc+s)); s--)
       {
       }
@@ -307,7 +305,8 @@ for (i = 0; names[i] != NULL; i++)
       {
       s = 0;
       }
-   
+
+   // Make sure to strip off leading spaces
    while (isspace((int)proc[s]))
       {
       s++;
@@ -343,7 +342,27 @@ for (i = 0; names[i] != NULL; i++)
       line[i] = (char *)malloc(1);
       line[i][0] = '\0';
       }
+
+   Chop(line[i]);
    }
 
 return true;
+}
+
+/*******************************************************************/
+
+int GetProcColumnIndex(char *name1,char *name2,char **names)
+
+{ int i;
+ 
+for (i = 0; names[i] != NULL; i++)
+   {
+   if ((strcmp(names[i],name1) == 0) || (strcmp(names[i],name2) == 0))
+      {
+      return i;
+      }
+   }
+
+CfOut(cf_verbose,""," INFO - process column %s/%s was not supported on this system",name1,name2);
+return -1;
 }

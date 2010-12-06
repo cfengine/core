@@ -639,7 +639,7 @@ if (sb.st_mtime > PROMISETIME)
 
 snprintf(filename,CF_MAXVARSIZE,"%s/inputs",CFWORKDIR);
 
-if (IsNewerFileTree(filename,PROMISETIME))
+if (!MINUSF && IsNewerFileTree(filename,PROMISETIME))
    {
    return true;
    }

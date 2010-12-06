@@ -851,7 +851,7 @@ P.line_no = 1;
 P.line_pos = 1;
 P.list_nesting = 0;
 P.arg_nesting = 0;
-P.filename = strdup(wfilename);
+strncpy(P.filename,wfilename,CF_MAXVARSIZE);
 
 P.currentid[0] = '\0';
 P.currentstring = NULL;
@@ -875,7 +875,6 @@ while (!feof(yyin))
    }
 
 fclose (yyin);
-free(P.filename);
 }
 
 /*******************************************************************/

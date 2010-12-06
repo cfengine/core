@@ -605,7 +605,8 @@ if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
    
    if (in_class_any)
       {
-      yyerror("reports promises may not be in class \'any\' - risk of a notification explosion");
+      CfOut(cf_error,"","reports promises may not be in class \'any\' - risk of a notification explosion");
+      PromiseRef(cf_error,pp);
       }
    }
   

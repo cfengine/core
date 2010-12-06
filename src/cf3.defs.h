@@ -112,7 +112,7 @@ struct PromiseParser
    char blocktype[CF_MAXVARSIZE];
    char blockid[CF_MAXVARSIZE];
 
-   char *filename;
+   char filename[CF_MAXVARSIZE];
    int line_pos;
    int line_no;
 

@@ -281,7 +281,7 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {"exec_program",cf_str,CF_PATHRANGE,"Execute this command on each file and match if the exit status is zero"},
    {"file_types",cf_olist,"plain,reg,symlink,dir,socket,fifo,door,char,block","List of acceptable file types from menu choices"},
    {"issymlinkto",cf_slist,"","List of regular expressions to match file objects"},
-   {"file_result",cf_str,"[(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program|bsdflags)[|&!.]*]*","Logical expression combining classes defined by file search criteria"},
+   {"file_result",cf_str,"[!*(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program|bsdflags)[|&.]*]*","Logical expression combining classes defined by file search criteria"},
    {NULL,cf_notype,NULL,NULL}
    };
 

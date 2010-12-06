@@ -197,22 +197,22 @@ FindDomainName(VSYSNAME.nodename);
 
 if (!StrStr(VSYSNAME.nodename,VDOMAIN))
    {
-   snprintf(VFQNAME,CF_BUFSIZE,"%s.%s",VSYSNAME.nodename,ToLowerStr(VDOMAIN));
-   NewClass(VFQNAME);
-   strcpy(VUQNAME,VSYSNAME.nodename);
-   NewClass(VUQNAME);
+   strcpy(VUQNAME,ToLowerStr(VSYSNAME.nodename));
+   NewClass(ToLowerStr(VUQNAME));
+   snprintf(VFQNAME,CF_BUFSIZE,"%s.%s",VUQNAME,ToLowerStr(VDOMAIN));
+   NewClass(ToLowerStr(VFQNAME));
    }
 else
    {
    int n = 0;
-   strcpy(VFQNAME,VSYSNAME.nodename);
+   strcpy(VFQNAME,ToLowerStr(VSYSNAME.nodename));
    NewClass(VFQNAME);
 
    while(VSYSNAME.nodename[n++] != '.' && VSYSNAME.nodename[n] != '\0')
       {
       }
 
-   strncpy(VUQNAME,VSYSNAME.nodename,n);
+   strncpy(VUQNAME,ToLowerStr(VSYSNAME.nodename),n);
 
    if (VUQNAME[n-1] == '.')
       {

@@ -1902,9 +1902,10 @@ filename = finalargs->next->item;
 
 if ((fin = fopen(filename,"r")) == NULL)
    {
-   CfOut(cf_error,"fopen"," !! File \"%s\" could not be read in countlinesmatching()",filename);
-   SetFnCallReturnStatus("countlinesmatching",FNCALL_FAILURE,"File unreadable",NULL);
-   rval.item = NULL;
+   CfOut(cf_verbose,"fopen"," !! File \"%s\" could not be read in countlinesmatching()",filename);
+   snprintf(retval,CF_SMALLBUF-1,"0",lcount);
+   SetFnCallReturnStatus("countlinesmatching",FNCALL_SUCCESS,NULL,NULL);
+   rval.item = strdup(retval);
    rval.rtype = CF_SCALAR;
    return rval;               
    }

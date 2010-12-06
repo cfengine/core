@@ -422,13 +422,14 @@ Nova_SpecialQuote(topic,type);
 
 void HistoryUpdate(struct Averages newvals)
 
-{ struct Promise *pp = NewPromise("history_db","the long term memory");
+{
+#ifdef HAVE_LIBCFNOVA  
+  struct Promise *pp = NewPromise("history_db","the long term memory");
   struct Attributes dummyattr = {0};
   struct CfLock thislock;
   time_t now = time(NULL);
   char timekey[CF_MAXVARSIZE];
 
-#ifdef HAVE_LIBCFNOVA  
 /* We do this only once per hour - this should not be changed */
 
 Banner("Update long-term history");

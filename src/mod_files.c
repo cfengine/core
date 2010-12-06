@@ -314,7 +314,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
    {"copy_backup",cf_opts,"true,false,timestamp","Menu option policy for file backup/version control"},
    {"encrypt",cf_opts,CF_BOOL,"true/false use encrypted data stream to connect to remote host"},
    {"check_root",cf_opts,CF_BOOL,"true/false check permissions on the root directory when depth_search"},
-   {"copylink_patterns",cf_slist,"","List of patterns matching files that should be linked instead of copied"},
+   {"copylink_patterns",cf_slist,"","List of patterns matching files that should be copied instead of linked"},
    {"copy_size",cf_irange,"0,inf","Integer range of file sizes that may be copied"},
    {"findertype",cf_opts,"MacOSX","Menu option for default finder type on MacOSX"},
    {"linkcopy_patterns",cf_slist,"","List of patterns matching files that should be replaced with symbolic links"},

@@ -260,7 +260,7 @@ int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promis
 
 { struct cfagent_connection *conn;
 
- CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,attr.copy.source);
+CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,attr.copy.source);
 
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {

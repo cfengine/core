@@ -289,14 +289,15 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleLinkChildrenOperation(char *destination,struct Attributes attr,struct Promise *pp)
+int ScheduleLinkChildrenOperation(char *destination,char *source,int recurse,struct Attributes attr,struct Promise *pp)
 
 { DIR *dirh;
   struct dirent *dirp;
   char promiserpath[CF_BUFSIZE],sourcepath[CF_BUFSIZE];
   struct stat lsb;
+  int ret;
 
-if (lstat(destination,&lsb) != -1)
+if ((ret = lstat(destination,&lsb)) != -1)
    {
    if (attr.move_obstructions && S_ISLNK(lsb.st_mode))
       {
@@ -311,13 +312,13 @@ if (lstat(destination,&lsb) != -1)
 
 snprintf(promiserpath,CF_BUFSIZE,"%s/.",destination);
 
-if (!CfCreateFile(promiserpath,pp,attr))
+if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(promiserpath,pp,attr))
    {
    CfOut(cf_error,"","Cannot promise to link multiple files to children of %s as it is not a directory!",destination);
    return false;
    }
 
-if ((dirh = opendir(attr.link.source)) == NULL)
+if ((dirh = opendir(source)) == NULL)
    {
    cfPS(cf_error,CF_FAIL,"opendir",pp,attr,"Can't open source of children to link %s\n",attr.link.source);
    return false;
@@ -325,7 +326,7 @@ if ((dirh = opendir(attr.link.source)) == NULL)
 
 for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    {
-   if (!ConsiderFile(dirp->d_name,attr.link.source,attr,pp))
+   if (!ConsiderFile(dirp->d_name,source,attr,pp))
       {
       continue;
       }
@@ -342,7 +343,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       return false;
       }
 
-   strncpy(sourcepath,attr.link.source,CF_BUFSIZE-1);
+   strncpy(sourcepath,source,CF_BUFSIZE-1);
    AddSlash(sourcepath);
 
    if (!JoinPath(sourcepath,dirp->d_name))
@@ -352,7 +353,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       return false;
       }
 
-   if ((lstat(promiserpath,&lsb) != -1) && !S_ISLNK(lsb.st_mode))
+   if ((lstat(promiserpath,&lsb) != -1) && !S_ISLNK(lsb.st_mode) && !S_ISDIR(lsb.st_mode))
       {
       if (attr.link.when_linking_children == cfa_override)
          {
@@ -365,7 +366,14 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          }
       }
 
-   ScheduleLinkOperation(promiserpath,sourcepath,attr,pp);
+   if ((attr.recursion.depth > recurse) && (lstat(sourcepath,&lsb) != -1) && S_ISDIR(lsb.st_mode))
+      {
+      ScheduleLinkChildrenOperation(promiserpath,sourcepath,recurse+1,attr,pp);
+      }
+   else
+      {
+      ScheduleLinkOperation(promiserpath,sourcepath,attr,pp);
+      }
    }
 
 closedir(dirh);

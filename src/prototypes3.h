@@ -782,7 +782,7 @@ int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Prom
 int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr);
 FILE *CreateEmptyStream(void);
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp);
-int ScheduleLinkChildrenOperation(char *destination,struct Attributes attr,struct Promise *pp);
+int ScheduleLinkChildrenOperation(char *destination,char *source,int rec,struct Attributes attr,struct Promise *pp);
 int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int ScheduleEditOperation(char *filename,struct Attributes attr,struct Promise *pp);
 struct FileCopy *NewFileCopy(struct Promise *pp);

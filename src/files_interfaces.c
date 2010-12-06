@@ -392,7 +392,7 @@ if (a.havecopy)
 
 if (a.havelink && a.link.link_children)
    {
-   ScheduleLinkChildrenOperation(path,a,pp);
+   ScheduleLinkChildrenOperation(path,a.link.source,1,a,pp);
    }
 else if (a.havelink)
    {

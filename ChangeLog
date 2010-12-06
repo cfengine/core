@@ -1,8 +1,12 @@
-3.1.2
+3.1.2   (Scalability/efficiency release)
 
 	Big efficiency improvements by caching output from
 	cf-promises. Can also be used for much more efficent policy
 	deployment (only pull if changed).
+
+	Caching state of ps command for greater efficiency. Reloaded for each bundle.
+
+	Index class lookup improves efficiency of class evaluation for huge configurations.
 	
         Fixed issue where certain promiser strings got corrupted.
 
@@ -10,7 +14,7 @@
 
 	Iterator bug introduced in 3.1.0 fixed
 
-3.1.1
+3.1.1   (Bugfix release)
 
 	Memory leaks in server tracked down and fixed.
 	List expansion bug (one list items not executed) fixed.

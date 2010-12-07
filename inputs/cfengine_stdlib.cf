@@ -1,4 +1,20 @@
-
+###########################################################################
+#  Copyright (C) Cfengine AS
+# 
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+#   
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  To the extent this program is licensed as part of the Enterprise
+#  versions of Cfengine, the applicable Commerical Open Source License
+#  (COSL) may apply to this file if you as a licensee so wish it. See
+#  included file COSL.txt.
+###########################################################################
 #
 # Cfengine Community Open Promise-Body Library
 #
@@ -12,7 +28,6 @@
 #
 # Names should be intuitive and parameters should be
 # minimal to assist readability and comprehensibility.
-#
 
 # Contributions to this file are voluntarily given to
 # the cfengine community, and are moderated by Cfengine.
@@ -24,7 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev: 53 $
+# Subversion : $Rev: 61 $
 # For Cfengine Core: 3.1.0
 
 ###################################################
@@ -40,7 +55,8 @@ bundle edit_line insert_lines(lines)
 {
 insert_lines:
 
-  "$(lines)";
+  "$(lines)"
+    comment => "Append lines if they don't exist";
 }
 
 ##
@@ -671,6 +687,14 @@ source      => "$(from)";
 
 ##
 
+body copy_from perms_cp(from)
+{
+source      => "$(from)";
+preserve    => "true";
+}
+
+##
+
 # Copy only if the file does not already exist, i.e. seed the placement
 
 body copy_from seed_cp(from)
@@ -1004,11 +1028,13 @@ package_list_update_ifelapsed => "240";		# 4 hours
 
 have_aptitude::
    package_add_command => "/usr/bin/aptitude --assume-yes install";
+   package_list_update_command => "/usr/bin/aptitude update";
    package_delete_command => "/usr/bin/aptitude --assume-yes remove";
    package_update_command =>  "/usr/bin/aptitude --assume-yes install";
 
 !have_aptitude::
    package_add_command => "/usr/bin/apt-get --yes install";
+   package_list_update_command => "/usr/bin/apt-get update";
    package_delete_command => "/usr/bin/apt-get --yes remove";
    package_update_command =>  "/usr/bin/apt-get --yes install";
 }
@@ -1124,6 +1150,7 @@ body package_method yum_rpm
   package_name_convention => "$(name)";
 
   package_add_command    => "/usr/bin/yum -y install";
+  package_update_command => "/usr/bin/yum -y update";
   package_delete_command => "/bin/rpm -e --allmatches";
   package_verify_command => "/bin/rpm -V";
 }
@@ -1221,11 +1248,13 @@ debian::
 
 debian.have_aptitude::
    package_add_command => "/usr/bin/aptitude --assume-yes install";
+   package_list_update_command => "/usr/bin/aptitude update";
    package_delete_command => "/usr/bin/aptitude --assume-yes remove";
    package_update_command =>  "/usr/bin/aptitude --assume-yes install";
 
 debian.!have_aptitude::
    package_add_command => "/usr/bin/apt-get --yes install";
+   package_list_update_command => "/usr/bin/apt-get update";
    package_delete_command => "/usr/bin/apt-get --yes remove";
    package_update_command =>  "/usr/bin/apt-get --yes install";
 
@@ -1289,7 +1318,7 @@ unmount => "true";
 ## process promises
 ##-------------------------------------------------------
 
-body select_process exclude_procs(x)
+body process_select exclude_procs(x)
 {
 command => "$(x)";
 process_result => "!command";

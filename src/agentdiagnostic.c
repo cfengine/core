@@ -2566,6 +2566,13 @@ void CheckInstalledLibraries(void)
    printf("\t->LIBMYSQLCLIENT not found!!\n");
    #endif
 
+   #ifdef HAVE_LIBPQ
+     printf("\t-> LIBPQ (postgresql) version ???\n");
+   #else
+     printf("\t!! LIBPQ (postgresql) not found\n");
+   #endif
+
+
    #ifdef HAVE_LIBCFNOVA
    if(!Nova_HaveFIPS())
      {

@@ -638,6 +638,7 @@ if (sb.st_mtime > PROMISETIME)
 // Check the directories first for speed and because non-input/data files should trigger an update
 
 snprintf(filename,CF_MAXVARSIZE,"%s/inputs",CFWORKDIR);
+MapName(filename);
 
 if (!MINUSF && IsNewerFileTree(filename,PROMISETIME))
    {

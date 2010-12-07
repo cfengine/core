@@ -1293,26 +1293,24 @@ return(false);
 void DeleteItemList(struct Item *item)  /* delete starting from item */
  
 {
-if (item != NULL)
-   {
-   if (item->next)
-      {
-      DeleteItemList(item->next);
-      item->next = NULL;
-      }
+  struct Item *ip, *next;
 
-   if (item->name != NULL)
-      {
-      free (item->name);
-      }
+  for(ip = item; ip != NULL; ip = next)
+    {
+      next = ip->next;  // save before free
 
-   if (item->classes != NULL)
-      {
-      free (item->classes);
-      }
-
-   free((char *)item);
-   }
+      if (ip->name != NULL)
+	{
+	  free (ip->name);
+	}
+      
+      if (ip->classes != NULL)
+	{
+	  free (ip->classes);
+	}
+      
+      free((char *)ip);
+    }
 }
 
 /*********************************************************************/

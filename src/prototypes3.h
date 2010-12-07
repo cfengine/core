@@ -1334,6 +1334,7 @@ void DeleteReferenceRlist(struct Rlist *list);
 void ShowRlistState(FILE *fp,struct Rlist *list);
 void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
 struct Rlist *AppendRlistAlien(struct Rlist **start,void *item);
+struct Rlist *PrependRlistAlien(struct Rlist **start,void *item);
 struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type);
 struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type);
 struct Rlist *AppendRScalar(struct Rlist **start,void *item, char type);

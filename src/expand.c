@@ -652,7 +652,7 @@ do
    NewScalar("this","promiser_gid",v,cf_int);
    
    /* End special variables */
-   
+
    pexp = ExpandDeRefPromise("this",pp);
 
    switch (agent)

@@ -408,7 +408,7 @@ if (a.haveedit)
 
 // Once more in case a file has been created as a result of editing or copying
 
-if (cfstat(path,&osb) != -1)
+if (cfstat(path,&osb) != -1 && S_ISREG(osb.st_mode))
    {
    VerifyFileLeaf(path,&oslb,a,pp);
    }
@@ -670,6 +670,8 @@ if(attr.copy.copy_links != NULL)
    CfOut(cf_verbose, "", "copy_from.copylink_patterns is ignored on Windows (source files cannot be symbolic links)");
    }
 #endif  /* MINGW */
+
+attr.link.when_no_file = cfa_force;
 
 if (attr.copy.servers)
    {

@@ -2111,8 +2111,7 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strncmp(transpath,transrequest,strlen(transpath)) == 0)
       {
-      if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) ||
-          IsRegexItemIn(ap->accesslist,conn->hostname))
+      if (IsRegexItemIn(ap->accesslist,conn->hostname))
          {
          access = false;
          CfOut(cf_verbose,"","Host %s explicitly denied access to %s\n",conn->hostname,transrequest);

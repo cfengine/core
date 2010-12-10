@@ -89,12 +89,15 @@ int res;
 
 res = DoCloseDB(dbp);
 
-if (res)
+if (!res)
    {
-   if (!RemoveDBHandle(dbp))
-      {
-      FatalError("CloseDB: Could not find DB handle in open pool\n");
-      }
+   CfOut(cf_error, "", "CloseDB: Could not close DB handle.");
+   CfOut(cf_error, "", "CloseDB: Trying to remove handle from open pool anyway.");
+   }
+
+if (!RemoveDBHandle(dbp))
+   {
+   CfOut(cf_error, "", "CloseDB: Could not find DB handle in open pool.");
    }
 
 return res;

@@ -823,7 +823,7 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
   int match_len,start_off,end_off,once_only = false,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
-  int notfound = true, cutoff = 1;
+  int notfound = true, cutoff = 1, replaced=false;
 
 if (a.replace.occurrences && (strcmp(a.replace.occurrences,"first") == 0))
    {
@@ -840,6 +840,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
    cutoff = 1;
    strncpy(line_buff,ip->name,CF_BUFSIZE);
+   replaced = false;
 
    while (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
       {
@@ -862,7 +863,8 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       strncat(after,line_buff+end_off,CF_BUFSIZE);
       snprintf(line_buff,CF_EXPANDSIZE-1,"%s%s",before,replace);
       notfound = false;
-
+      replaced = true;
+      
       // Model the full substitution in line_buff
       
       snprintf(line_buff,CF_EXPANDSIZE-1,"%s%s%s",before,replace,after);
@@ -887,7 +889,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to replace line \"%s\" in %s - but only a warning was promised",pp->promiser,pp->this_server);
       continue;
       }
-   else
+   else if (replaced)
       {
       free(ip->name);
       ip->name = strdup(line_buff);

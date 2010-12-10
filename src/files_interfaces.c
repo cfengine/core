@@ -406,6 +406,13 @@ if (a.haveedit)
    ScheduleEditOperation(path,a,pp);
    }
 
+// Once more in case a file has been created as a result of editing or copying
+
+if (cfstat(path,&osb) != -1)
+   {
+   VerifyFileLeaf(path,&oslb,a,pp);
+   }
+
 SaveSetuid(a,pp);
 YieldCurrentLock(thislock);
 }

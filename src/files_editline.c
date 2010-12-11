@@ -444,7 +444,7 @@ if (a.location.line_matching == NULL)
    }
 else
    {
-   if (!SelectItemMatching(a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
+   if (!SelectItemMatching(*start,a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s",pp->promiser,a.location.line_matching,pp->this_server);
       YieldCurrentLock(thislock);

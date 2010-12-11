@@ -239,7 +239,8 @@ void VerifyLineDeletions(struct Promise *pp)
 /* *(pp->donep) = true;	*/
 	 
 a = GetDeletionAttributes(pp);
-
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    
 /* Are we working in a restricted region? */
 
 if (!a.haveregion)
@@ -282,6 +283,7 @@ void VerifyColumnEdits(struct Promise *pp)
 /* *(pp->donep) = true; */
 
 a = GetColumnAttributes(pp);
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
 if (a.column.column_separator == NULL)
    {
@@ -352,6 +354,7 @@ CfOut(cf_verbose,""," -> Looking at pattern %s\n",pp->promiser);
 /* Are we working in a restricted region? */
 
 a = GetReplaceAttributes(pp);
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
 if (!a.replace.replace_value)
    {
@@ -401,6 +404,7 @@ void VerifyLineInsertions(struct Promise *pp)
 /* *(pp->donep) = true; */
   
 a = GetInsertionAttributes(pp);
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
 if (!SanityCheckInsertions(a))
    {

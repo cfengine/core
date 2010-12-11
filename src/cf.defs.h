@@ -382,6 +382,7 @@ typedef int clockid_t;
 /* these should be >0 to prevent contention */
 
 #define CF_EXEC_IFELAPSED 1
+#define CF_EDIT_IFELAPSED 300
 #define CF_EXEC_EXPIREAFTER 1
 
 #define MAXIP4CHARLEN 16

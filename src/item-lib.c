@@ -455,7 +455,7 @@ int SelectItemMatching(struct Item *start,char *regex,struct Item *begin_ptr,str
 
 { struct Item *ip;
  int ret = false;
- 
+
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;
 
@@ -1006,7 +1006,7 @@ void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 { struct Item *ip;
   char *sp;
 
-if (*filestart == NULL || ptr == *filestart || ptr == CF_UNDEFINED_ITEM)
+if (*filestart == NULL || ptr == CF_UNDEFINED_ITEM)
    {
    AppendItem(filestart,string,NULL);
    return;

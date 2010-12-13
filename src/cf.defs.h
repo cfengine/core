@@ -40,6 +40,21 @@
 #  define MAX_FILENAME 254
 #endif
 
+#ifdef MINGW
+# include <winsock2.h>
+# include <windows.h>
+# include <accctrl.h>
+# include <aclapi.h>
+# include <psapi.h>
+# include <wchar.h>
+# include <sddl.h>
+# include <tlhelp32.h>
+# include <iphlpapi.h>
+# include <ws2tcpip.h>
+# include <objbase.h>  // for disphelper
+#endif
+
+
 #include <stdio.h>
 #include <math.h>
 
@@ -248,24 +263,7 @@ extern int errno;
 # include <sys/sockio.h>
 #endif
 
-
-#ifdef MINGW
-# include <windows.h>
-# include <accctrl.h>
-# include <aclapi.h>
-# include <psapi.h>
-# include <wchar.h>
-# include <sddl.h>
-# include <tlhelp32.h>
-# include <iphlpapi.h>
-# include <ws2tcpip.h>
-# include <objbase.h>  // for disphelper
-# ifdef HAVE_WINSOCK2_H
-#  include <winsock2.h>
-# else
-#  include <winsock.h>
-# endif
-#else
+#ifndef MINGW
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 # include <net/if.h>

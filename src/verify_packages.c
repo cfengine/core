@@ -59,8 +59,8 @@ PromiseBanner(pp);
 
 if (a.packages.package_list_update_command)
    {
-     snprintf(lockname,CF_BUFSIZE-1,"%s-%s",PACK_UPIFELAPSED_SALT,a.packages.package_list_update_command);
-
+   snprintf(lockname,CF_BUFSIZE-1,"%s-%s",PACK_UPIFELAPSED_SALT,a.packages.package_list_update_command);
+   
    al = a;
    
    if (a.packages.package_list_update_ifelapsed != CF_NOINT)
@@ -258,10 +258,10 @@ if (manager->pack_list != NULL)
 
 #ifdef MINGW
 
- if(!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
+if(!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
    {
-     CfOut(cf_error, "", "!! Could not get list of installed packages");
-     return false;
+   CfOut(cf_error, "", "!! Could not get list of installed packages");
+   return false;
    }
 
 #else

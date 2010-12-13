@@ -1108,14 +1108,13 @@ switch(type)
 
    case kp_storage:
 
-       #ifndef MINGW  // TODO: Run if implemented on Windows
+#ifndef MINGW  // TODO: Run if implemented on Windows
        if (MOUNTEDFSLIST != NULL)
           {
           DeleteMountInfo(MOUNTEDFSLIST);
           MOUNTEDFSLIST = NULL;
           }
-	   #endif  /* NOT MINGW */
-
+#endif  /* NOT MINGW */
        break;
 
    case kp_packages:

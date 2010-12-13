@@ -278,6 +278,7 @@ enum cfacontrol
    cfa_mountfilesystems,
    cfa_nonalphanumfiles,
    cfa_repchar,
+   cfa_refresh_processes,
    cfa_repository,
    cfa_secureinput,
    cfa_sensiblecount,

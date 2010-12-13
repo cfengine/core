@@ -155,6 +155,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"mountfilesystems",cf_opts,CF_BOOL,"true/false mount any filesystems promised"},
    {"nonalphanumfiles",cf_opts,CF_BOOL,"true/false warn about filenames with no alphanumeric content"},
    {"repchar",cf_str,".","The character used to canonize pathnames in the file repository"},
+   {"refresh_processes",cf_slist,CF_IDRANGE,"Reload the process table before verifying the bundles named in this list (lazy evaluation)"},
    {"default_repository",cf_str,CF_PATHRANGE,"Path to the default file repository"},
    {"secureinput",cf_opts,CF_BOOL,"true/false check whether input files are writable by unauthorized users"},
    {"sensiblecount",cf_int,CF_VALRANGE,"Minimum number of files a mounted filesystem is expected to have"},

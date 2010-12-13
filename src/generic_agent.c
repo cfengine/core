@@ -1,3 +1,4 @@
+
 /*
    Copyright (C) Cfengine AS
 
@@ -197,9 +198,17 @@ else
 
 if (ShellCommandReturnsZero(cmd,true))
    {
-   snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
-   MapName(filename);
-
+   if (MINUSF)
+      {
+      snprintf(filename,CF_MAXVARSIZE,"%s/state/validated_%s",CFWORKDIR,CanonifyName(VINPUTFILE));
+      MapName(filename);   
+      }
+   else
+      {
+      snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+      MapName(filename);
+      }
+   
    if ((fd = creat(filename,0600)) != -1)
       {
       close(fd);
@@ -616,9 +625,17 @@ int NewPromiseProposals()
   int result = false;
   char filename[CF_MAXVARSIZE];
 
-snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
-MapName(filename);
-
+if (MINUSF)
+   {
+   snprintf(filename,CF_MAXVARSIZE,"%s/state/validated_%s",CFWORKDIR,CanonifyName(VINPUTFILE));
+   MapName(filename);   
+   }
+else
+   {
+   snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+   MapName(filename);
+   }
+  
 if (stat(filename,&sb) != -1)
    {
    PROMISETIME = sb.st_mtime;
@@ -640,7 +657,7 @@ if (sb.st_mtime > PROMISETIME)
 snprintf(filename,CF_MAXVARSIZE,"%s/inputs",CFWORKDIR);
 MapName(filename);
 
-if (!MINUSF && IsNewerFileTree(filename,PROMISETIME))
+if (IsNewerFileTree(filename,PROMISETIME))
    {
    return true;
    }

@@ -1601,6 +1601,7 @@ int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promi
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);
+struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

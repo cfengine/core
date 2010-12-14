@@ -256,9 +256,17 @@ if (manager->pack_list != NULL)
    return true;
    }
 
+manager->pack_list = GetCachedPackageList(manager,a,pp);
+
+if (manager->pack_list != NULL)
+   {
+   CfOut(cf_verbose,""," ?? Already have a (cached) package list for this manager ");
+   return true;
+   }
+
 #ifdef MINGW
 
-if(!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
+if (!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
    {
    CfOut(cf_error, "", "!! Could not get list of installed packages");
    return false;
@@ -984,6 +992,45 @@ for (np = newlist; np != NULL; np = next)
    DeletePackageItems(np->pack_list);
    free((char *)np);
    }
+}
+
+/*****************************************************************************/
+
+struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp)
+
+{ struct CfPackageItem *list = NULL;
+  char name[CF_MAXVARSIZE],version[CF_MAXVARSIZE],arch[CF_MAXVARSIZE],mgr[CF_MAXVARSIZE],line[CF_BUFSIZE];
+  char thismanager[CF_MAXVARSIZE];
+  FILE *fin;
+
+snprintf(name,CF_MAXVARSIZE-1,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
+MapName(name);
+
+if ((fin = cf_fopen(name,"r")) == NULL)
+   {
+   CfOut(cf_inform,"cf_fopen","Cannot open the source log %s - you need to run a package discovery promise to create it in cf-agent",name);
+   return NULL;
+   }
+
+/* Max 2016 entries - at least a week */
+
+snprintf(thismanager,CF_MAXVARSIZE-1,"%s",ReadLastNode(GetArg0(manager->manager)));
+             
+while (!feof(fin))
+   {
+   line[0] = '\0';
+   fgets(line,CF_BUFSIZE-1,fin);
+   sscanf(line,"%250[^,],%250[^,],%250[^,],%250[^\n]",name,version,arch,mgr);
+
+   if (strcmp(thismanager,mgr) == 0)
+      {
+      printf("READ: %s\n",line);
+      PrependPackageItem(&list,name,version,arch,a,pp);
+      }
+   }
+
+cf_fclose(fin);
+return list;
 }
 
 /*****************************************************************************/

@@ -65,9 +65,9 @@ dnl Checks for programs.
 dnl ######################################################################
 
 AC_PROG_CC
+LT_INIT
 AM_PROG_LEX
 AC_PROG_YACC
-AC_PROG_RANLIB
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL

@@ -1183,7 +1183,6 @@ if (PackageInItemList(chklist,name,version,arch))
    return false;
    }
 
-CfOut(cf_verbose,""," -> Update for (%s,%s,%s) found, and it is not installed",name,version,arch);
 return PrependPackageItem(list,name,version,arch,a,pp);
 }
 
@@ -2028,6 +2027,8 @@ if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
    {
    return false;
    }
+
+CfOut(cf_verbose,""," -> Package info for (%s,%s,%s) found, and it is not installed",name,version,arch);
 
 if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
    {

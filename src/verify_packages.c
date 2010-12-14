@@ -1020,8 +1020,12 @@ if (a.packages.package_list_update_ifelapsed != CF_NOINT)
     
 if (now - sb.st_mtime < horizon*60)
    {
-   CfOut(cf_verbose,""," -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
+   CfOut(cf_verbose,""," -> Cache file exists and is sufficiently fresh according to (package_list_update_ifelapsed)");
    return NULL;
+   }
+else
+   {
+   CfOut(cf_verbose,""," -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
    }
 
 if ((fin = cf_fopen(name,"r")) == NULL)

@@ -47,6 +47,12 @@ if (*cp == '&' || *cp == '|' || *cp == '.' || *cp == ')')
    return;
    }
 
+if (!FullTextMatch(CF_CLASSRANGE,str))
+   {
+   yyerror("Illegal characters in class specification");
+   return;   
+   }
+
 for (; *cp; cp++)
    {
    if (*cp == '(')

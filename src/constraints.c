@@ -49,6 +49,12 @@ switch(type)
    {
    case CF_SCALAR:
        Debug("   Appending Constraint: %s => %s\n",lval,rval);
+       
+       if (PARSING && strcmp(lval,"ifvarclass") == 0)
+          {
+          ValidateClassSyntax(rval);
+          }
+
        break;
    case CF_FNCALL:
        Debug("   Appending a function call to rhs\n");

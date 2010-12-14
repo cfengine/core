@@ -595,7 +595,7 @@ sscanf(s,"%ld%c%s",&a,&c,remainder);
 
 if (a == CF_NOINT || !IsSpace(remainder))
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%d\" (found remainder \"%s\")\n",s,a,remainder);
+   snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",s,"non-value",remainder);
    ReportError(output);
    }
 else

@@ -3202,7 +3202,8 @@ else
 
       cnt++;
       
-      if (n_read < blocksize) // Last transaction
+      //if (n_read < blocksize) // Last transaction
+      if (total >= savedlen)
          {
          if (SendTransaction(sd,out,cipherlen+finlen,CF_DONE) == -1)
             {

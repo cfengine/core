@@ -1010,7 +1010,7 @@ MapName(name);
 
 if (stat(name,&sb) == -1)
    {
-   return false;
+   return NULL;
    }
 
 if (a.packages.package_list_update_ifelapsed != CF_NOINT)
@@ -1021,7 +1021,7 @@ if (a.packages.package_list_update_ifelapsed != CF_NOINT)
 if (now - sb.st_mtime < horizon*60)
    {
    CfOut(cf_verbose,""," -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
-   return;
+   return NULL;
    }
 
 if ((fin = cf_fopen(name,"r")) == NULL)

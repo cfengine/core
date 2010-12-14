@@ -1002,9 +1002,27 @@ struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,stru
   char name[CF_MAXVARSIZE],version[CF_MAXVARSIZE],arch[CF_MAXVARSIZE],mgr[CF_MAXVARSIZE],line[CF_BUFSIZE];
   char thismanager[CF_MAXVARSIZE];
   FILE *fin;
+  time_t horizon = 24*60,now = time(NULL);
+  struct stat sb;
 
 snprintf(name,CF_MAXVARSIZE-1,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
 MapName(name);
+
+if (stat(name,&sb) == -1)
+   {
+   return false;
+   }
+
+if (a.packages.package_list_update_ifelapsed != CF_NOINT)
+   {
+   horizon = a.packages.package_list_update_ifelapsed;
+   }
+    
+if (now - sb.st_mtime < horizon*60)
+   {
+   CfOut(cf_verbose,""," -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
+   return;
+   }
 
 if ((fin = cf_fopen(name,"r")) == NULL)
    {

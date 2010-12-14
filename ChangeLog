@@ -1,3 +1,6 @@
+3.1.3
+	Added 60 second timeout on recv() on Linux.
+
 3.1.2   (Scalability/efficiency release)
 
 	Big efficiency improvements by caching output from

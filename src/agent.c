@@ -835,7 +835,7 @@ int ScheduleAgentOperations(struct Bundle *bp)
   enum typesequence type;
   int pass;
 
-if (PROCESSREFRESH == NULL || PROCESSREFRESH && IsRegexItemIn(PROCESSREFRESH,bp->name))
+if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(PROCESSREFRESH,bp->name)))
    {
    DeleteItemList(PROCESSTABLE);
    PROCESSTABLE = NULL;

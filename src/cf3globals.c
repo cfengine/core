@@ -98,6 +98,7 @@ struct Rlist *MOUNTEDFSLIST = NULL;
 struct Rlist *SERVERLIST = NULL;
 struct PromiseIdent *PROMISE_ID_LIST = NULL;
 struct Item *PROCESSTABLE = NULL;
+struct Item *PROCESSREFRESH = NULL;
 struct Item *ROTATED = NULL;
 struct Item *FSTABLIST = NULL;
 struct Item *ABORTBUNDLEHEAP = NULL;

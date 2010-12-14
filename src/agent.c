@@ -426,7 +426,27 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       CheckAgentAccess(ACCESSLIST);
       continue;
       }
-   
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_refresh_processes].lval) == 0)
+      {
+      struct Rlist *rp;
+
+      if (VERBOSE)
+         {
+         printf("%s SET refresh_processes when starting: ",VPREFIX);
+
+         for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+            {
+            printf(" %s",rp->item);
+            PrependItem(&PROCESSREFRESH,rp->item,NULL);
+            }
+
+         printf("\n");
+         }
+      
+      continue;
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
       {
       struct Rlist *rp;
@@ -815,8 +835,11 @@ int ScheduleAgentOperations(struct Bundle *bp)
   enum typesequence type;
   int pass;
 
-DeleteItemList(PROCESSTABLE);
-PROCESSTABLE = NULL;
+if (PROCESSREFRESH == NULL || PROCESSREFRESH && IsRegexItemIn(PROCESSREFRESH,bp->name))
+   {
+   DeleteItemList(PROCESSTABLE);
+   PROCESSTABLE = NULL;
+   }
 
 for (pass = 1; pass < CF_DONEPASSES; pass++)
    {

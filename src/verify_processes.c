@@ -134,7 +134,7 @@ int LoadProcessTable(struct Item **procdata,char *psopts)
 {
 if (PROCESSTABLE)
    {
-   CfOut(cf_verbose,"","Reuse cached process state");
+   CfOut(cf_verbose,""," -> Reusing cached process state");
    return true;
    }
  

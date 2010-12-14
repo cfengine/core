@@ -1540,6 +1540,10 @@ switch (attr.copy.link_type)
    case cfa_absolute:
        status = VerifyAbsoluteLink(destfile,linkbuf,attr,pp);
        break;
+
+   case cfa_hardlink:
+       status = VerifyHardLink(destfile,linkbuf,attr,pp);
+       break;
        
    default:
        FatalError("LinkCopy software error");

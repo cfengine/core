@@ -476,11 +476,11 @@ enum cfeditorder
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
-#define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()]+"
-#define CF_IDRANGE     "[a-zA-Z0-9_$()\\[\\].]+"
+#define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}]+"
+#define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
-#define CF_IPRANGE     "[a-zA-Z0-9_$().:-]+"
-#define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
+#define CF_IPRANGE     "[a-zA-Z0-9_$(){}.:-]+"
+#define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
 #define CF_PATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"  // can start with e.g. c:\... or "c:\...  |  unix

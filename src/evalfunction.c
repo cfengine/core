@@ -4712,7 +4712,7 @@ switch (*line)
    default:
        if (print)
           {
-          CfOut(cf_error,"","M \"%s\": %s\n",command,line);
+          CfOut(cf_cmdout,"","M \"%s\": %s\n",command,line);
           }
        break;
    }

@@ -94,7 +94,7 @@ return true;
 void VerifyExec(struct Attributes a, struct Promise *pp)
     
 { struct CfLock thislock;
-  char line[CF_BUFSIZE],eventname[CF_BUFSIZE];
+  char unsafeLine[CF_BUFSIZE], line[sizeof(unsafeLine)*2],eventname[CF_BUFSIZE];
   char comm[20], *sp;
   char execstr[CF_EXPANDSIZE];
   struct timespec start;
@@ -215,7 +215,8 @@ else
             return;
             }
 
-         CfReadLine(line,CF_BUFSIZE-1,pfp);
+         CfReadLine(unsafeLine,CF_BUFSIZE-1,pfp);
+	 ReplaceStr(unsafeLine,line,sizeof(line),"%","%%");  // escape format char
          
          if (strstr(line,"cfengine-die"))
             {

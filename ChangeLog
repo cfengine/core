@@ -4,7 +4,7 @@
 
 	package_noverify_returncode implemented (bug #256).
 
-	New feature package_good_returncodes addded. Allows to flag
+	New feature package_accept_returncodes addded. Allows to flag
 	packages promises as not kept based on the return code from the
 	package manager (bug #248).
 

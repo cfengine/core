@@ -53,7 +53,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
    {"package_list_version_regex",cf_str,"","Regular expression with one backreference to extract package version string" },
    {"package_name_convention",cf_str,"","This is how the package manager expects the package to be referred to, e.g. $(name).$(arch)"},
    {"package_name_regex",cf_str,"","Regular expression with one backreference to extract package name string" },
-   {"package_good_returncodes",cf_slist,"","List of integer return codes which indicate successful package manager operation"},
+   {"package_accept_returncodes",cf_slist,"","List of integer return codes which indicate successful package manager operation"},
    {"package_noverify_regex",cf_str,"","Regular expression to match verification failure output"},
    {"package_noverify_returncode",cf_int,CF_INTRANGE,"Integer return code indicating package verification failure"},
    {"package_patch_arch_regex",cf_str,"","Regular expression with one backreference to extract update architecture string" },

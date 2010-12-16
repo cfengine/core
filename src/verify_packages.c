@@ -1883,11 +1883,11 @@ while (!feof(pfp))
      CfOut(cf_verbose, "", " Package sucessfully verified from return code");
      }
    }
- else if(a.packages.package_good_returncodes)  // generic return code check
+ else if(a.packages.package_accept_returncodes)  // generic return code check
    {
    snprintf(packmanRetvalStr,sizeof(packmanRetvalStr),"%d",packmanRetval);
 
-   if(!KeyInRlist(a.packages.package_good_returncodes, packmanRetvalStr))
+   if(!KeyInRlist(a.packages.package_accept_returncodes, packmanRetvalStr))
      {
      cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package manager returned bad code (%d)",packmanRetval);
      retval = false;

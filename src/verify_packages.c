@@ -1805,7 +1805,8 @@ int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promi
 { int offset = 0, retval = true;
   char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 
   FILE *pfp;
-  int verifyRetval = 0;
+  int packmanRetval = 0;
+  char packmanRetvalStr[64] = {0};
 
 if (!IsExecutable(GetArg0(command)))
    {
@@ -1868,19 +1869,30 @@ while (!feof(pfp))
    
    }
 
- verifyRetval = cf_pclose(pfp);
+ packmanRetval = cf_pclose(pfp);
 
- if(verify && (a.packages.package_noverify_returncode != CF_NOINT))
+ if(verify && (a.packages.package_noverify_returncode != CF_NOINT))  // return code check for verify policy
    {
-   if(a.packages.package_noverify_returncode == verifyRetval)
+   if(a.packages.package_noverify_returncode == packmanRetval)
      {
-     cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error (returned %d)",verifyRetval);
+     cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
      retval = false;
      }
    else
      {
      CfOut(cf_verbose, "", " Package sucessfully verified from return code");
      }
+   }
+ else if(a.packages.package_good_returncodes)  // generic return code check
+   {
+   snprintf(packmanRetvalStr,sizeof(packmanRetvalStr),"%d",packmanRetval);
+
+   if(!KeyInRlist(a.packages.package_good_returncodes, packmanRetvalStr))
+     {
+     cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package manager returned bad code (%d)",packmanRetval);
+     retval = false;
+     }
+   
    }
 
 return retval; 

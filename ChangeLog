@@ -1,7 +1,12 @@
-3.1.3
-	Added 60 second timeout on recv() on Linux.
+3.1.3   (Feature addition release)
 
-	package_noverify_returncode implemented.
+	Added 30 second timeout on recv() on Linux.
+
+	package_noverify_returncode implemented (bug #256).
+
+	New feature package_good_returncodes addded. Allows to flag
+	packages promises as not kept based on the return code from the
+	package manager (bug #248).
 
 3.1.2   (Scalability/efficiency release)
 

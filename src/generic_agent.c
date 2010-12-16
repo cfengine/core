@@ -112,7 +112,11 @@ else
 
 SetPolicyServer(POLICY_SERVER);
 
-if (NewPromiseProposals())
+if (MissingInputFile())
+   {
+   ok = false;
+   }
+else if (NewPromiseProposals())
    {
    CfOut(cf_verbose,""," -> New promises proposals detected...\n");
    ok = BOOTSTRAP || CheckPromises(ag);
@@ -614,6 +618,21 @@ if (VINPUTLIST != NULL)
 HashVariables(NULL);
 
 PARSING = false;
+}
+
+/*******************************************************************/
+
+int MissingInputFile()
+
+{ struct stat sb;
+
+if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
+   {
+   CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
+   return true;
+   }
+
+return false;
 }
 
 /*******************************************************************/

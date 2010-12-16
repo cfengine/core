@@ -4681,6 +4681,8 @@ for (sp = content+strlen(content)-1; sp >= content && *sp != FILE_SEPARATOR; sp-
    }
 
 NewScope(context);
+name[0] = '\0';
+content[0] = '\0';
 
 switch (*line)
    {
@@ -4716,11 +4718,8 @@ switch (*line)
        if (CheckID(name))
           {
           CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
-          }
-       else
-          {
           struct Rlist *list = ParseShownRlist(content);
-          NewList(context,name,list,cf_str);
+          NewList(context,name,list,cf_str);          
           }
        break;
        

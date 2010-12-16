@@ -29,18 +29,19 @@ body common control
    any::
 
       bundlesequence  => { 
-                         test
+                         def,
+                         modtest
                          };
    }
 
 ###################################################################
 
-bundle agent test
+bundle agent def
 
 {
 commands:
 
-  "$(sys.workdir)/modules/test" module => "true";
+  "$(sys.workdir)/modules/module_name" module => "true";
 
 reports:
 
@@ -50,6 +51,27 @@ reports:
 
  module_class::
 
-  "Module set variable $(testmodule.myvar)";
+  "Module set variable $(module_name.myscalar)";
+
+}
+
+###################################################################
+
+bundle agent modtest
+
+{
+vars:
+
+ "mylist" slist => { @(module_name.mylist) };
+
+reports:
+
+  #
+  # Each module forms a private context with its name as id
+  #
+
+ module_class::
+
+  "Module set variable $(mylist)";
 
 }

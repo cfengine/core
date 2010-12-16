@@ -1145,13 +1145,15 @@ char *GetProcessOptions()
 #ifdef HAVE_GETZONEID
  zoneid_t zid;
  char zone[ZONENAME_MAX];
+ static psopts[CF_BUFSIZE];
  
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 if (cf_strcmp(zone,"global") == 0)
    {
-   return "-z global";
+   snprintf(psopts,CF_BUFSIZE,"%s -z global",VPSOPTS[VSYSTEMHARDCLASS]);
+   return psopts;
    }
 #endif
 

@@ -275,12 +275,17 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
 
+      if(EMPTY(ip->name))
+	{
+	continue;
+	}
+
       pid = ExtractPid(ip->name,names,start,end);
 
       if (pid == -1)
          {
-         CfOut(cf_verbose,"","Unable to extract pid while looking for %s\n",pp->promiser);
-         continue;
+	   CfOut(cf_verbose,"","Unable to extract pid while looking for %s\n",pp->promiser);
+	   continue;
          }
       
       Debug("Found matching pid %d\n",pid);
@@ -314,9 +319,9 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
       
-      if (pid == cfengine_pid)
+      if (pid == cfengine_pid && a.signals)
          {
-         CfOut(cf_verbose,"","cf-agent will not kill itself!\n");
+         CfOut(cf_verbose,"","cf-agent will not signal itself!\n");
          continue;
          }
       

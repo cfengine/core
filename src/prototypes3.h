@@ -536,6 +536,7 @@ struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs);

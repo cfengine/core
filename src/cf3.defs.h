@@ -564,6 +564,7 @@ enum fncalltype
    cfn_hash,
    cfn_hashmatch,
    cfn_host2ip,
+   cfn_ip2host,
    cfn_hostinnetgroup,
    cfn_hostrange,
    cfn_hostsseen,

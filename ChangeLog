@@ -8,6 +8,8 @@
 	packages promises as not kept based on the return code from the
 	package manager (bug #248).
 
+	New function ip2host - reverse DNS lookup (bug #146).
+
 3.1.2   (Scalability/efficiency release)
 
 	Big efficiency improvements by caching output from

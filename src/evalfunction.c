@@ -386,7 +386,7 @@ struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rlist *rp;
   struct Rval rval;
   struct passwd *pw;
-  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char buffer[CF_BUFSIZE];
   char *name;
   int limit;
   
@@ -409,6 +409,38 @@ SetFnCallReturnStatus("host2ip",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
 }
+
+/*********************************************************************/
+
+struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs)
+
+{ struct Rlist *rp;
+  struct Rval rval;
+  struct passwd *pw;
+  char buffer[CF_BUFSIZE];
+  char *ip;
+  int limit;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ip2host].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+ip = finalargs->item;
+
+if ((rval.item = strdup(IPString2Hostname(ip))) == NULL)
+   {
+   FatalError("Memory allocation in FnCallIP2Host");
+   }
+
+SetFnCallReturnStatus("ip2host",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
 
 /*********************************************************************/
 

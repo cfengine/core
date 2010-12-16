@@ -316,6 +316,9 @@ switch (this)
    case cfn_host2ip:
        rval = FnCallHost2IP(fp,expargs);
        break;
+   case cfn_ip2host:
+       rval = FnCallIP2Host(fp,expargs);
+       break;
    case cfn_join:
        rval = FnCallJoin(fp,expargs);
        break;

@@ -224,6 +224,12 @@ struct FnCallArg HOST2IP_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg IP2HOST_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"IP address (IPv4 or IPv6)"},
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg HOSTINNETGROUP_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"Host name"},
@@ -619,6 +625,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"hash",cf_str,2,HASH_ARGS,"Return the hash of arg1, type arg2 and assign to a variable"},
    {"hashmatch",cf_class,3,HASHMATCH_ARGS,"Compute the hash of arg1, of type arg2 and test if it matches the value in arg 3"},
    {"host2ip",cf_str,1,HOST2IP_ARGS,"Returns the primary name-service IP address for the named host"},
+   {"ip2host",cf_str,1,IP2HOST_ARGS,"Returns the primary name-service host name for the IP address"},
    {"hostinnetgroup",cf_class,1,HOSTINNETGROUP_ARGS,"True if the current host is in the named netgroup"},
    {"hostrange",cf_class,2,HOSTRANGE_ARGS,"True if the current host lies in the range of enumerated hostnames specified"},
    {"hostsseen",cf_slist,3,HOSTSSEEN_ARGS,"Extract the list of hosts last seen/not seen within the last arg1 hours"},

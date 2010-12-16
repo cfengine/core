@@ -169,15 +169,35 @@ if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.
 
 if (a.packages.package_add_command == NULL || a.packages.package_delete_command == NULL)
    {
-   cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package add/delete command undefined");
+   cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Package add/delete command undefined");
    return false;
    }
 
 if (!a.packages.package_installed_regex)
    {
-   cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package installed regex undefined");
+   cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Package installed regex undefined");
    return false;
    }
+
+if(a.packages.package_policy == cfa_verifypack)
+  {
+  if(!a.packages.package_verify_command)
+    {
+    cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Package verify policy is used, but no package_verify_command is defined");
+    return false;
+    }
+  else if((a.packages.package_noverify_returncode == CF_NOINT) && (a.packages.package_noverify_regex == NULL))
+    {
+    cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Package verify policy is used, but no definition of verification failiure is set (package_noverify_returncode or packages.package_noverify_regex)");
+    return false;    
+    }
+  }
+
+if((a.packages.package_noverify_returncode != CF_NOINT) && a.packages.package_noverify_regex)
+  {
+  cfPS(cf_verbose,CF_FAIL,"",pp,a,"!! Both package_noverify_returncode and package_noverify_regex are defined, pick one of them");
+  return false;    
+  }
 
 return true;
 }
@@ -1783,8 +1803,9 @@ return false;
 int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp)
 
 { int offset = 0, retval = true;
-  char line[CF_BUFSIZE], *cmd; 
+  char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 
   FILE *pfp;
+  int verifyRetval = 0;
 
 if (!IsExecutable(GetArg0(command)))
    {
@@ -1829,26 +1850,39 @@ while (!feof(pfp))
 
    line[0] = '\0';
    CfReadLine(line,CF_BUFSIZE-1,pfp);
-   CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,line);
+   
+   ReplaceStr(line,lineSafe,sizeof(lineSafe),"%","%%");
+   CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,lineSafe);
 
-   if (strlen(line) > 0 && verify)
+   if (line[0] != '\0' && verify)
       {
-      if (a.packages.package_noverify_regex && FullTextMatch(a.packages.package_noverify_regex,line))
+      if (a.packages.package_noverify_regex)
          {
-         cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error in %-.40s ... :%s",cmd,line);
-         retval = false;
+	 if(FullTextMatch(a.packages.package_noverify_regex,line))
+	   {
+	   cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error in %-.40s ... :%s",cmd,lineSafe);
+	   retval = false;
+	   }
          }
       }
    
-   if (ferror(pfp))  /* abortable */
-      {
-      fflush(pfp);
-      cfPS(cf_error,CF_INTERPT,"read",pp,a,"Couldn't start command %20s...\n",command);
-      break;
-      }  
    }
 
-cf_pclose(pfp);
+ verifyRetval = cf_pclose(pfp);
+
+ if(verify && (a.packages.package_noverify_returncode != CF_NOINT))
+   {
+   if(a.packages.package_noverify_returncode == verifyRetval)
+     {
+     cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error (returned %d)",verifyRetval);
+     retval = false;
+     }
+   else
+     {
+     CfOut(cf_verbose, "", " Package sucessfully verified from return code");
+     }
+   }
+
 return retval; 
 }
 

@@ -40,7 +40,7 @@ bundle agent test
 {
 commands:
 
-  "/home/mark/tmp/testmodule" module => "true";
+  "$(sys.workdir)/modules/test" module => "true";
 
 reports:
 

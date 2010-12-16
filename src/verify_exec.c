@@ -242,7 +242,6 @@ else
             }
          else if (!a.contain.nooutput && NonEmptyLine(line))
             {
-
 	    lineOutLen = strlen(comm) + strlen(line) + 12;
 
 	    // if buffer is to small for this line, output it directly

@@ -4708,6 +4708,21 @@ switch (*line)
           NewScalar(context,name,content,cf_str);
           }
        break;
+
+   case '@':
+       content[0] = '\0';
+       sscanf(line+1,"%[^=]=%[^\n]",name,content);
+
+       if (CheckID(name))
+          {
+          CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
+          }
+       else
+          {
+          struct Rlist *list = ParseShownRlist(content);
+          NewList(context,name,list,cf_str);
+          }
+       break;
        
    default:
        if (print)
@@ -4730,7 +4745,7 @@ for (sp = id; *sp != '\0'; sp++)
    {
    if (!isalnum((int)*sp) && (*sp != '_'))
       {
-      CfOut(cf_error,"","Module protocol contained an illegal character (%c) in class/variable identifier %s.",*sp,id);
+      CfOut(cf_error,"","Module protocol contained an illegal character \'%c\' in class/variable identifier \'%s\'.",*sp,id);
       return false;
       }
    }

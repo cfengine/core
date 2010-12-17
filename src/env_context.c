@@ -609,7 +609,7 @@ int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
 { int result_and = true;
   int result_or = false;
   int result_xor = 0;
-  int result,total = 0;
+  int result = 0,total = 0;
   char *lval = cp->lval,buffer[CF_MAXVARSIZE];
   struct Rlist *rp;
   double prob,cum = 0,fluct;
@@ -741,7 +741,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
 
    result_and = result_and && result;
    result_or  = result_or || result;
-   result_xor += result;
+   result_xor ^= result;
 
    if (total > 0) // dist class
       {

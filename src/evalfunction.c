@@ -4505,16 +4505,19 @@ char *StripPatterns(char *file_buffer,char *pattern,char *filename)
 { int start,end;
   int count = 0;
 
-while(BlockTextMatch(pattern,file_buffer,&start,&end))
-   {
-   CloseStringHole(file_buffer,start,end);
-
-   if (count++ > strlen(file_buffer))
+if(!EMPTY(pattern))
+  {
+  while(BlockTextMatch(pattern,file_buffer,&start,&end))
+    {
+    CloseStringHole(file_buffer,start,end);
+	
+    if (count++ > strlen(file_buffer))
       {
       CfOut(cf_error,""," !! Comment regex \"%s\" was irreconcilable reading file %s probably because it legally matches nothing",pattern,filename);
       return file_buffer;
       }
-   }
+    }
+  }
 
 return file_buffer;
 }

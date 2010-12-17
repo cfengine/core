@@ -1076,6 +1076,7 @@ void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
 void IncludeManualFile(FILE *fout,char *file);
 void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
 void PrintPattern(FILE *fout,char *pattern);
+char *TexInfoEscape(char *s);
 
 /* matching.c */
 

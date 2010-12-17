@@ -655,6 +655,8 @@ char *TexInfoEscape(char *s)
 { char *spf,*spt;
   static char buffer[CF_BUFSIZE];
 
+memset(buffer,0,CF_BUFSIZE);
+  
 for (spf = s,spt = buffer; *spf != '\0'; spf++)
    {
    switch (*spf)

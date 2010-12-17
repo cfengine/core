@@ -142,7 +142,23 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   double keyval;
   int lineno = pp->lineno;
   char name[CF_BUFSIZE];
+  char *exceptions[] = { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+  int i;
 
+  // Don't log these items
+
+if (pp->agentsubtype == NULL)
+   {
+   return;
+   }
+  
+for (i = 0; exceptions[i] != NULL; i++)
+   {
+   if (strcmp(pp->agentsubtype,exceptions[i]) == 0)
+      {
+      return;
+      }
+   }
 
 Debug("ClassAuditLog(%s)\n",str);
 

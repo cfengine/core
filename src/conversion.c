@@ -409,7 +409,7 @@ return cf_nohash;
 enum cflinktype String2LinkType(char *s)
 
 { int i;
-  static char *types[] = { "symlink","hardlink","relative","absolute","none",NULL };
+  static char *types[] = { "symlink","hardlink","relative","absolute",NULL };
 
 for (i = 0; types[i] != NULL; i++)
    {

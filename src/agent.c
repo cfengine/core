@@ -1159,6 +1159,9 @@ void DeleteTypeContext(enum typesequence type)
  
 switch(type)
    {
+   case kp_classes:
+       HashVariables(NULL);
+       break;
    case kp_environments:
 
 #ifdef HAVE_LIBVIRT

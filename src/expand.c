@@ -173,7 +173,6 @@ if (rval == NULL)
 switch(type)
    {
    case CF_SCALAR:
-
        ScanScalar(scopeid,scalarvars,listvars,(char *)rval,0,pp);
        break;
        
@@ -228,7 +227,7 @@ for (sp = string; (*sp != '\0') ; sp++)
          {
          char absscope[CF_MAXVARSIZE];
 
-         if (strstr(v,"."))
+         if (IsQualifiedVariable(v))
             {
             strncpy(temp,var,CF_BUFSIZE-1);  
             absscope[0] = '\0';
@@ -240,14 +239,13 @@ for (sp = string; (*sp != '\0') ; sp++)
             }
 
          ExpandPrivateScalar(absscope,v,var); 
-
+         
          RegisterBundleDependence(absscope,pp);
 
          if (GetVariable(absscope,var,&rval,&rtype) != cf_notype)
             {
             if (rtype == CF_LIST)
                {
-               Debug("Found list %s\n",var);
                ExpandScalar(var,exp); 
 
                /* embedded iterators should be incremented fastest,

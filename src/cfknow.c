@@ -704,7 +704,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       { 
       for (rp = ta->associates; rp != NULL; rp=rp->next)
          {
-         char *reverse_type = GetTopicType(TOPIC_MAP,rp->item);
+         char *reverse_type = GetTopicContext(TOPIC_MAP,rp->item);
          
          if (reverse_type == NULL)
             {
@@ -714,19 +714,19 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          
          /* First populator sets the reverse type others must conform to */
          
-         if (ta->associate_topic_type == NULL)
+         if (ta->bwd_context == NULL)
             {
-            if ((ta->associate_topic_type = strdup(CanonifyName(reverse_type))) == NULL)
+            if ((ta->bwd_context = strdup(CanonifyName(reverse_type))) == NULL)
                {
                CfOut(cf_error,"malloc"," !! Memory failure in AddTopicAssociation");
                FatalError("");
                }
             }
          
-         if (ta->associate_topic_type && strcmp(ta->associate_topic_type,reverse_type) != 0)
+         if (ta->bwd_context && strcmp(ta->bwd_context,reverse_type) != 0)
             {
             CfOut(cf_inform,""," ! Associates in the relationship \"%s\" do not all have the same topic type",ta->fwd_name);
-            CfOut(cf_inform,""," ! Found \"%s\" but expected \"%s\"",ta->associate_topic_type,reverse_type);
+            CfOut(cf_inform,""," ! Found \"%s\" but expected \"%s\"",ta->bwd_context,reverse_type);
             }
          }
       }
@@ -776,11 +776,11 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
 
    if (tp->topic_comment)
       {
-      snprintf(longname,CF_BUFSIZE,"%s (%s)",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+      snprintf(longname,CF_BUFSIZE,"%s (%s)",NextTopic(tp->topic_name,tp->topic_context),tp->topic_comment);
       }
    else
       {
-      snprintf(longname,CF_BUFSIZE,"%s",NextTopic(tp->topic_name,tp->topic_type));
+      snprintf(longname,CF_BUFSIZE,"%s",NextTopic(tp->topic_name,tp->topic_context));
       }
 
    if (tp->occurrences == NULL)
@@ -793,9 +793,9 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
       PrependItemList(&generic_topics,longname);            
       }
 
-   if (!IsItemIn(generic_types,NextTopic(tp->topic_type,"")))
+   if (!IsItemIn(generic_types,NextTopic(tp->topic_context,"")))
       {
-      PrependItemList(&generic_types,NextTopic(tp->topic_type,""));            
+      PrependItemList(&generic_types,NextTopic(tp->topic_context,""));            
       }
    }
 
@@ -886,11 +886,11 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    if (tp->topic_comment)
       {
       snprintf(longname,CF_BUFSIZE,"%s (%s)",tp->topic_comment,tp->topic_name);
-      ShowTopicLTM(fout,id,tp->topic_type,longname);
+      ShowTopicLTM(fout,id,tp->topic_context,longname);
       }
    else
       {
-      ShowTopicLTM(fout,id,tp->topic_type,tp->topic_name);
+      ShowTopicLTM(fout,id,tp->topic_context,tp->topic_name);
       }
 
    for (ta = tp->associations; ta != NULL; ta=ta->next)
@@ -913,7 +913,7 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    {
    for (ta = tp->associations; ta != NULL; ta=ta->next)
       {
-      ShowAssociationsLTM(fout,tp->topic_name,tp->topic_type,ta);
+      ShowAssociationsLTM(fout,tp->topic_name,tp->topic_context,ta);
       }
    }
 
@@ -938,12 +938,12 @@ fclose(fout);
 
 /*********************************************************************/
 
-void LookupUniqueTopic(char *typed_topic)
+void LookupUniqueTopic(char *classified_topic)
 
-{ char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
+{ char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_context[CF_BUFSIZE],to_type[CF_BUFSIZE];
   char topic_comment[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
-  char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
+  char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_context[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
   int sql_database_defined = false,trymatch = false,count = 0,matched = 0;
   struct Topic *tp,*tmatches = NULL;
@@ -952,7 +952,7 @@ void LookupUniqueTopic(char *typed_topic)
   int s,e;
 
 
-DeTypeTopic(typed_topic,topic,type);
+DeClassifyTopic(classified_topic,topic,type);
 
 /* We need to set a scope for the regex stuff */
 
@@ -984,11 +984,11 @@ strcpy(safetype,EscapeSQL(&cfdb,type));
 
 if (strlen(type) > 0)
    {
-   snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where (topic_name='%s' or topic_id='%s') and topic_type='%s'",safe,CanonifyName(safe),safetype);
+   snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_context,topic_comment from topics where (topic_name='%s' or topic_id='%s') and topic_context='%s'",safe,CanonifyName(safe),safetype);
    }
 else
    {
-   snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where topic_name='%s' or topic_id='%s'",safe,CanonifyName(safe));
+   snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_context,topic_comment from topics where topic_name='%s' or topic_id='%s'",safe,CanonifyName(safe));
    }
 
 CfNewQueryDB(&cfdb,query);
@@ -1004,7 +1004,7 @@ while(CfFetchRow(&cfdb))
    {
    strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
    
    if (CfFetchColumn(&cfdb,3))
       {
@@ -1015,7 +1015,7 @@ while(CfFetchRow(&cfdb))
       strncpy(topic_comment,"",CF_BUFSIZE-1);
       }
 
-   AddCommentedTopic(&tmatches,topic_name,topic_comment,topic_type);   
+   AddCommentedTopic(&tmatches,topic_name,topic_comment,topic_context);   
    count++;
    }
 
@@ -1023,7 +1023,7 @@ CfDeleteQuery(&cfdb);
 
 if (count >= 1)
    {
-   ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_type,topic_comment);
+   ShowTopicCosmology(&cfdb,topic_name,topic_id,topic_context,topic_comment);
    CfCloseDB(&cfdb);
    return;
    }
@@ -1061,7 +1061,7 @@ if (cfdb.maxcolumns != 6)
 while (CfFetchRow(&cfdb))
    {
    strncpy(from_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
    strncpy(from_assoc,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
    strncpy(to_assoc,CfFetchColumn(&cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(&cfdb,4),CF_BUFSIZE-1);
@@ -1071,7 +1071,7 @@ while (CfFetchRow(&cfdb))
       {
       matched++;
       AddTopic(&tmatches,from_assoc,to_assoc);
-      strncpy(ctopic_type,topic_type,CF_BUFSIZE-1);
+      strncpy(ctopic_context,topic_context,CF_BUFSIZE-1);
       strncpy(cfrom_assoc,from_assoc,CF_BUFSIZE-1);
       strncpy(cto_assoc,to_assoc,CF_BUFSIZE-1);
       strncpy(cto_type,to_type,CF_BUFSIZE-1);
@@ -1084,7 +1084,7 @@ CfDeleteQuery(&cfdb);
 
 if (matched == 0)
    {
-   NothingFound(typed_topic);
+   NothingFound(classified_topic);
    CfCloseDB(&cfdb);
    return;
    }
@@ -1100,7 +1100,7 @@ if (matched > 1)
    
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      ShowAssociationSummary(&cfdb,tp->topic_name,tp->topic_type);
+      ShowAssociationSummary(&cfdb,tp->topic_name,tp->topic_context);
       }
 
    if (HTML)
@@ -1114,7 +1114,7 @@ if (matched > 1)
 
 if (matched == 1)
    {
-   ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_type,cto_type);
+   ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_context,cto_type);
    }
 
 CfCloseDB(&cfdb);
@@ -1122,19 +1122,19 @@ CfCloseDB(&cfdb);
 
 /*********************************************************************/
 
-void LookupMatchingTopics(char *typed_topic)
+void LookupMatchingTopics(char *classified_topic)
 
-{ char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],to_type[CF_BUFSIZE];
+{ char query[CF_BUFSIZE],topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_context[CF_BUFSIZE],to_type[CF_BUFSIZE];
   char topic_comment[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
-  char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_type[CF_BUFSIZE],cto_type[CF_BUFSIZE];
+  char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_context[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
   int  sql_database_defined = false,trymatch = false,count = 0,matched = 0;
   struct Topic *tp,*tmatches = NULL;
   CfdbConn cfdb;
   int s,e;
 
-DeTypeTopic(typed_topic,topic,type);
+DeClassifyTopic(classified_topic,topic,type);
 
 CfOut(cf_verbose,""," -> Looking up topics matching \"%s\"\n",topic);
 
@@ -1161,7 +1161,7 @@ if (!cfdb.connected)
 
 /* First assume the item is a topic */
 
-snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics");
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_context,topic_comment from topics");
 
 CfNewQueryDB(&cfdb,query);
 
@@ -1176,11 +1176,11 @@ while(CfFetchRow(&cfdb))
    {
    strncpy(topic_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
 
    if (BlockTextCaseMatch(topic,topic_name,&s,&e))
       {
-      AddTopic(&tmatches,topic_name,topic_type);
+      AddTopic(&tmatches,topic_name,topic_context);
       matched++;
       }
    }
@@ -1198,7 +1198,7 @@ if (matched == 1)
    {
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      ShowTopicCosmology(&cfdb,tp->topic_name,topic_id,tp->topic_type,tp->topic_comment);
+      ShowTopicCosmology(&cfdb,tp->topic_name,topic_id,tp->topic_context,tp->topic_comment);
       }
    CfCloseDB(&cfdb);
    return;
@@ -1226,7 +1226,7 @@ if (cfdb.maxcolumns != 6)
 while(CfFetchRow(&cfdb))
    {
    strncpy(from_name,CfFetchColumn(&cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(&cfdb,1),CF_BUFSIZE-1);
    strncpy(from_assoc,CfFetchColumn(&cfdb,2),CF_BUFSIZE-1);
    strncpy(to_assoc,CfFetchColumn(&cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(&cfdb,4),CF_BUFSIZE-1);
@@ -1238,7 +1238,7 @@ while(CfFetchRow(&cfdb))
          {
          matched++;
          AddTopic(&tmatches,from_assoc,to_assoc);
-         strncpy(ctopic_type,topic_type,CF_BUFSIZE-1);
+         strncpy(ctopic_context,topic_context,CF_BUFSIZE-1);
          strncpy(cfrom_assoc,from_assoc,CF_BUFSIZE-1);
          strncpy(cto_assoc,to_assoc,CF_BUFSIZE-1);
          strncpy(cto_type,to_type,CF_BUFSIZE-1);
@@ -1250,7 +1250,7 @@ CfDeleteQuery(&cfdb);
 
 if (matched == 0)
    {
-   NothingFound(typed_topic);
+   NothingFound(classified_topic);
    CfCloseDB(&cfdb);
    return;
    }
@@ -1266,7 +1266,7 @@ if (matched > 1)
    
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      ShowAssociationSummary(&cfdb,tp->topic_name,tp->topic_type);
+      ShowAssociationSummary(&cfdb,tp->topic_name,tp->topic_context);
       }
 
    if (HTML)
@@ -1280,7 +1280,7 @@ if (matched > 1)
 
 if (matched == 1)
    {
-   ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_type,cto_type);
+   ShowAssociationCosmology(&cfdb,cfrom_assoc,cto_assoc,ctopic_context,cto_type);
    }
 
 CfCloseDB(&cfdb);
@@ -1560,9 +1560,9 @@ if (from_id == NULL)
    {
    fprintf(fout,"\n[%s = \"%s\" \n",assoc_id,ta->fwd_name);
    
-   if (ta->associate_topic_type)
+   if (ta->bwd_context)
       {
-      fprintf(fout,"          = \"%s\" / %s]\n\n",ta->bwd_name,ta->associate_topic_type);
+      fprintf(fout,"          = \"%s\" / %s]\n\n",ta->bwd_name,ta->bwd_context);
       }
    else
       {
@@ -1574,7 +1574,7 @@ else
    struct Rlist *rp;
    char to_id[CF_BUFSIZE],*to_type;
    
-   to_type = ta->associate_topic_type;
+   to_type = ta->bwd_context;
 
    if (!to_type)
       {
@@ -1717,7 +1717,7 @@ snprintf(query,CF_BUFSIZE-1,
         "topic_name varchar(256),"
         "topic_comment varchar(1024),",
         "topic_id varchar(256),"
-        "topic_type varchar(256)"
+        "topic_context varchar(256)"
         ");\n"
         );
 
@@ -1727,7 +1727,7 @@ AppendRScalar(&columns,"pid,int",CF_SCALAR);
 AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"topic_comment,varchar,1024",CF_SCALAR);
 AppendRScalar(&columns,"topic_id,varchar,256",CF_SCALAR);
-AppendRScalar(&columns,"topic_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"topic_context,varchar,256",CF_SCALAR);
 
 snprintf(query,CF_MAXVARSIZE-1,"%s.topics",SQL_DATABASE);
 
@@ -1743,11 +1743,11 @@ snprintf(query,CF_BUFSIZE-1,
         "CREATE TABLE associations"
         "("
         "from_name varchar(256),"
-        "from_type varchar(256),"
+        "from_context varchar(256),"
         "from_id int,"
         "from_assoc varchar(256),"
         "to_assoc varchar(256),"
-        "to_type varchar(256),"
+        "to_context varchar(256),"
         "to_name varchar(256)"
         "to_id int,"
         ");\n"
@@ -1756,11 +1756,11 @@ snprintf(query,CF_BUFSIZE-1,
 fprintf(fout,"%s",query);
 
 AppendRScalar(&columns,"from_name,varchar,256",CF_SCALAR);
-AppendRScalar(&columns,"from_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"from_context,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"from_id,int",CF_SCALAR);
 AppendRScalar(&columns,"from_assoc,varchar,256,",CF_SCALAR);
 AppendRScalar(&columns,"to_assoc,varchar,256",CF_SCALAR);
-AppendRScalar(&columns,"to_type,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"to_context,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"to_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"to_id,int",CF_SCALAR);
 
@@ -1824,11 +1824,11 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    if (tp->topic_comment)
       {
       strncpy(safe2,EscapeSQL(&cfdb,tp->topic_comment),CF_BUFSIZE);
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,topic_comment,pid) values ('%s','%s','%s','%s','%d')\n",safe,Name2Id(tp->topic_name),tp->topic_type,safe2,tp->id);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_context,topic_comment,pid) values ('%s','%s','%s','%s','%d')\n",safe,Name2Id(tp->topic_name),tp->topic_context,safe2,tp->id);
       }
    else
       {
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_type,pid) values ('%s','%s','%s','%d')\n",safe,Name2Id(tp->topic_name),tp->topic_type,tp->id);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO topics (topic_name,topic_id,topic_context,pid) values ('%s','%s','%s','%d')\n",safe,Name2Id(tp->topic_name),tp->topic_context,tp->id);
       }
    fprintf(fout,"%s",query);
    Debug(" -> Add topic %s\n",tp->topic_name);
@@ -1848,9 +1848,9 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          char to_type[CF_MAXVARSIZE],to_topic[CF_MAXVARSIZE];
          int to_id = GetTopicPid(rp->item);
          
-         DeTypeTopic(rp->item,to_topic,to_type);
+         DeClassifyTopic(rp->item,to_topic,to_type);
          
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_type,to_type,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_type,to_type,tp->id,to_id);
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_context,to_context,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_context,to_type,tp->id,to_id);
 
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
@@ -1953,8 +1953,8 @@ if (HTML)
    
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      printf("<li>Topic \"%s\" found ",NextTopic(tp->topic_name,tp->topic_type));
-      printf("in the context of \"%s\"\n",NextTopic(tp->topic_type,""));
+      printf("<li>Topic \"%s\" found ",NextTopic(tp->topic_name,tp->topic_context));
+      printf("in the context of \"%s\"\n",NextTopic(tp->topic_context,""));
       }
 
    printf("</ul>");
@@ -1965,7 +1965,7 @@ else
    {
    for (tp = tmatches; tp != NULL; tp=tp->next)
       {
-      printf("Topic \"%s\" found in the context of \"%s\"\n",tp->topic_name,tp->topic_type);
+      printf("Topic \"%s\" found in the context of \"%s\"\n",tp->topic_name,tp->topic_context);
       }
    }
 }
@@ -1999,7 +1999,7 @@ void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_id,char *this_
 { struct Topic *other_topics = NULL,*topics_this_type = NULL;
   struct TopicAssociation *associations = NULL;
   struct Occurrence *occurrences = NULL;
-  char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],associate[CF_BUFSIZE];
+  char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_context[CF_BUFSIZE],associate[CF_BUFSIZE];
   char query[CF_BUFSIZE],fassociation[CF_BUFSIZE],bassociation[CF_BUFSIZE],safe[CF_BUFSIZE];
   char locator[CF_BUFSIZE],subtype[CF_BUFSIZE],to_type[CF_BUFSIZE],topic_comment[CF_BUFSIZE];
   enum representations locator_type;
@@ -2007,7 +2007,7 @@ void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_id,char *this_
 
 /* Collect data - first other topics of same type */
 
-snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where topic_type='%s' order by topic_name desc",this_type);
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_context,topic_comment from topics where topic_context='%s' order by topic_name desc",this_type);
 
 CfNewQueryDB(cfdb,query);
 
@@ -2021,7 +2021,7 @@ while(CfFetchRow(cfdb))
    {
    strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
    if (CfFetchColumn(cfdb,3))
       {
@@ -2037,14 +2037,14 @@ while(CfFetchRow(cfdb))
       continue;
       }
 
-   AddCommentedTopic(&other_topics,topic_name,topic_comment,topic_type);
+   AddCommentedTopic(&other_topics,topic_name,topic_comment,topic_context);
    }
 
 CfDeleteQuery(cfdb);
 
 /* Collect data - then topics of this topic-type */
 
-snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_type,topic_comment from topics where topic_type='%s' order by topic_name desc",CanonifyName(this_name));
+snprintf(query,CF_BUFSIZE,"SELECT topic_name,topic_id,topic_context,topic_comment from topics where topic_context='%s' order by topic_name desc",CanonifyName(this_name));
 
 CfNewQueryDB(cfdb,query);
 
@@ -2058,7 +2058,7 @@ while(CfFetchRow(cfdb))
    {
    strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
    strncpy(topic_id,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
 
    if (CfFetchColumn(cfdb,3))
       {
@@ -2074,7 +2074,7 @@ while(CfFetchRow(cfdb))
       continue;
       }
 
-   AddCommentedTopic(&topics_this_type,topic_name,topic_comment,topic_type);
+   AddCommentedTopic(&topics_this_type,topic_name,topic_comment,topic_context);
    }
 
 CfDeleteQuery(cfdb);
@@ -2097,13 +2097,13 @@ while(CfFetchRow(cfdb))
    {
    struct Rlist *this = NULL;
    strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
    strncpy(fassociation,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
    strncpy(bassociation,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
 
-   AppendRlist(&this,TypedTopic(topic_name,topic_type),CF_SCALAR);
+   AppendRlist(&this,ClassifiedTopic(topic_name,topic_context),CF_SCALAR);
    AddTopicAssociation(&associations,bassociation,NULL,this,false);
    DeleteRlist(this);
    }
@@ -2126,13 +2126,13 @@ while(CfFetchRow(cfdb))
    {
    struct Rlist *this = NULL;
    strncpy(topic_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
    strncpy(fassociation,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
    strncpy(bassociation,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
    strncpy(associate,CfFetchColumn(cfdb,5),CF_BUFSIZE-1);
 
-   AppendRlist(&this,TypedTopic(associate,to_type),CF_SCALAR);
+   AppendRlist(&this,ClassifiedTopic(associate,to_type),CF_SCALAR);
    AddTopicAssociation(&associations,fassociation,NULL,this,false);
    DeleteRlist(this);
    }
@@ -2217,7 +2217,7 @@ else
 
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type)
 
-{ char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_type[CF_BUFSIZE],query[CF_BUFSIZE];
+{ char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_context[CF_BUFSIZE],query[CF_BUFSIZE];
   char banner[CF_BUFSIZE],output[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   struct Rlist *flist = NULL,*tlist = NULL,*ftlist = NULL,*ttlist = NULL,*rp;
@@ -2240,7 +2240,7 @@ if (cfdb->maxcolumns != 6)
 while(CfFetchRow(cfdb))
    {
    strncpy(from_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
-   strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+   strncpy(topic_context,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
    strncpy(from_assoc,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
    strncpy(to_assoc,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
    strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
@@ -2248,15 +2248,15 @@ while(CfFetchRow(cfdb))
 
    if (HTML)
       {
-      snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(from_name,topic_type),topic_type);
+      snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(from_name,topic_context),topic_context);
       }
    else
       {
-      snprintf(output,CF_BUFSIZE,"    %s (%s)\n",from_name,topic_type);
+      snprintf(output,CF_BUFSIZE,"    %s (%s)\n",from_name,topic_context);
       }
 
    IdempPrependRScalar(&flist,output,CF_SCALAR);
-   IdempPrependRScalar(&ftlist,topic_type,CF_SCALAR);
+   IdempPrependRScalar(&ftlist,topic_context,CF_SCALAR);
 
    if (HTML)
       {
@@ -2292,7 +2292,7 @@ if (count == 0)
    while(CfFetchRow(cfdb))
       {
       strncpy(from_name,CfFetchColumn(cfdb,0),CF_BUFSIZE-1);
-      strncpy(topic_type,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
+      strncpy(topic_context,CfFetchColumn(cfdb,1),CF_BUFSIZE-1);
       strncpy(from_assoc,CfFetchColumn(cfdb,2),CF_BUFSIZE-1);
       strncpy(to_assoc,CfFetchColumn(cfdb,3),CF_BUFSIZE-1);
       strncpy(to_type,CfFetchColumn(cfdb,4),CF_BUFSIZE-1);
@@ -2300,7 +2300,7 @@ if (count == 0)
 
       if (HTML)
          {
-         snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(from_name,topic_type),topic_type);
+         snprintf(output,CF_BUFSIZE,"<li>%s (%s)</li>\n",NextTopic(from_name,topic_context),topic_context);
          }
       else
          {
@@ -2308,7 +2308,7 @@ if (count == 0)
          }
       
       IdempPrependRScalar(&flist,output,CF_SCALAR);
-      IdempPrependRScalar(&ftlist,topic_type,CF_SCALAR);
+      IdempPrependRScalar(&ftlist,topic_context,CF_SCALAR);
       
       if (HTML)
          {
@@ -2606,14 +2606,14 @@ else
    v = "not specified";
    }
 
-snprintf(banner,CF_BUFSIZE,"%s",TypedTopic(this_name,this_type));  
+snprintf(banner,CF_BUFSIZE,"%s",ClassifiedTopic(this_name,this_type));  
 CfHtmlHeader(stdout,banner,STYLESHEET,WEBDRIVER,BANNER);
 
 /* Images */
 
 fprintf(fout,"<div id=\"image\">");
 
-snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(ClassifiedTopic(this_name,this_type)));
 
 if (cfstat(pngfile,&sb) != -1)
    {
@@ -2627,7 +2627,7 @@ else
       }   
    }
 
-snprintf(pngfile,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(pngfile,CF_BUFSIZE,"graphs/influence_%s.png",CanonifyName(ClassifiedTopic(this_name,this_type)));
 
 if (cfstat(pngfile,&sb) != -1)
    {
@@ -2803,11 +2803,11 @@ if (other_topics || topics_this_type)
       {
       if (tp->topic_comment)
          {
-         fprintf(fout,"<li>  %s &nbsp; <span id=\"subcomment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+         fprintf(fout,"<li>  %s &nbsp; <span id=\"subcomment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_context),tp->topic_comment);
          }
       else
          {
-         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_type));
+         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_context));
          }
       count++;
       }
@@ -2827,16 +2827,16 @@ if (other_topics || topics_this_type)
          {
          if (strncmp(tp->topic_comment,"A promise of type",strlen("A promise of type")) == 0)
             {
-            fprintf(fout,"<li>  %s &nbsp; <span id=\"comment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+            fprintf(fout,"<li>  %s &nbsp; <span id=\"comment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_context),tp->topic_comment);
             }
          else
             {
-            fprintf(fout,"<li>  %s &nbsp; <span id=\"comment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_type),tp->topic_comment);
+            fprintf(fout,"<li>  %s &nbsp; <span id=\"comment\">%s</span>\n",NextTopic(tp->topic_name,tp->topic_context),tp->topic_comment);
             }
          }
       else
          {
-         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_type));
+         fprintf(fout,"<li>  %s\n",NextTopic(tp->topic_name,tp->topic_context));
          }
 
       subcount++;
@@ -2875,7 +2875,7 @@ else
    v = "not specified";
    }
 
-snprintf(banner,CF_BUFSIZE,"%s",TypedTopic(this_name,this_type));  
+snprintf(banner,CF_BUFSIZE,"%s",ClassifiedTopic(this_name,this_type));  
 CfHtmlHeader(fout,banner,STYLESHEET,WEBDRIVER,BANNER);
 
 /* Images */
@@ -2884,11 +2884,11 @@ switch (SHOWMAP)
    {
    case cf_full_image:
        fprintf(fout,"<div id=\"fullimage\">\n");
-       snprintf(filename,CF_BUFSIZE,"graphs/%s.map",CanonifyName(TypedTopic(this_name,this_type)));
+       snprintf(filename,CF_BUFSIZE,"graphs/%s.map",CanonifyName(ClassifiedTopic(this_name,this_type)));
        break;
    case cf_impact_image:
        fprintf(fout,"<div id=\"impactimage\">\n");
-       snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.map",CanonifyName(TypedTopic(this_name,this_type)));
+       snprintf(filename,CF_BUFSIZE,"graphs/influence_%s.map",CanonifyName(ClassifiedTopic(this_name,this_type)));
        break;
    case cf_special_quote:
        SpecialQuote(this_name,this_type);
@@ -2900,7 +2900,7 @@ switch (SHOWMAP)
        return;
    }
 
-snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(TypedTopic(this_name,this_type)));
+snprintf(pngfile,CF_BUFSIZE,"graphs/%s.png",CanonifyName(ClassifiedTopic(this_name,this_type)));
 
 if ((fin = fopen(filename,"r")) == NULL)
    {
@@ -3020,7 +3020,7 @@ if (strlen(WEBDRIVER) == 0)
 
 if (strchr(topic,':'))
    {
-   DeTypeTopic(topic,ctopic,ctype);
+   DeClassifyTopic(topic,ctopic,ctype);
    if (ctype && strlen(ctype) > 0)
       {
       snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a> (in %s)",WEBDRIVER,topic,ctopic,ctype);
@@ -3067,7 +3067,7 @@ if (strlen(WEBDRIVER) == 0)
 
 if (strchr(topic,':'))
    {
-   DeTypeTopic(topic,ctopic,ctype);
+   DeClassifyTopic(topic,ctopic,ctype);
 
    if (ctype && strlen(ctype) > 0)
       {

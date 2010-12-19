@@ -36,11 +36,11 @@ int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
 
 /*****************************************************************************/
 
-void AddTopic(struct Topic **list,char *name,char *type)
+void AddTopic(struct Topic **list,char *name,char *context)
 
 { struct Topic *tp;
 
-if (tp = TopicExists(*list,name,type))
+if (tp = TopicExists(*list,name,context))
    {
    CfOut(cf_verbose,""," ! Topic \"%s\" has already been defined\n",name);
    }
@@ -58,7 +58,7 @@ else
       FatalError("");
       }
    
-   if ((tp->topic_type = strdup(type)) == NULL)
+   if ((tp->topic_context = strdup(context)) == NULL)
       {
       CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
       FatalError("");
@@ -78,11 +78,11 @@ else
 
 /*****************************************************************************/
 
-void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type)
+void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *context)
 
 { struct Topic *tp;
 
-if (tp = TopicExists(*list,name,type))
+if (tp = TopicExists(*list,name,context))
    {
    CfOut(cf_verbose,""," -> Topic %s already defined, ok\n",name);
 
@@ -122,7 +122,7 @@ else
       tp->topic_comment = NULL;
       }
    
-   if ((tp->topic_type = strdup(type)) == NULL)
+   if ((tp->topic_context = strdup(context)) == NULL)
       {
       CfOut(cf_error,"malloc","Memory failure in AddTopic");
       FatalError("");
@@ -142,10 +142,10 @@ else
 void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *associates,int verify)
 
 { struct TopicAssociation *ta = NULL,*texist;
-  char assoc_type[CF_MAXVARSIZE];
+  char fwd_context[CF_MAXVARSIZE];
   struct Rlist *rp;
 
-strncpy(assoc_type,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
+strncpy(fwd_context,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
 
 if (associates == NULL || associates->item == NULL)
    {
@@ -175,14 +175,14 @@ if ((texist = AssociationExists(*list,fwd_name,bwd_name,verify)) == NULL)
       FatalError("");
       }
    
-   if (assoc_type && (ta->assoc_type = strdup(assoc_type)) == NULL)
+   if (fwd_context && (ta->fwd_context = strdup(fwd_context)) == NULL)
       {
       CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
       FatalError("");
       }
 
    ta->associates = NULL;
-   ta->associate_topic_type = NULL;
+   ta->bwd_context = NULL;
    ta->next = *list;
    *list = ta;
    }
@@ -195,7 +195,7 @@ else
 
 for (rp = associates; rp != NULL; rp=rp->next)
    {
-   /* Defer checking until we have whole ontlogy - all types */
+   /* Defer checking until we have whole ontlogy - all contexts */
    CfOut(cf_verbose,""," ---> Adding associate '%s'",rp->item);
    IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
    CF_EDGES++;
@@ -243,14 +243,14 @@ for (rp = represents; rp != NULL; rp=rp->next)
 
 /*********************************************************************/
 
-char *TypedTopic(char *topic,char *type)
+char *ClassifiedTopic(char *topic,char *context)
 
 { static char name[CF_MAXVARSIZE];
 
-Debug("TYPE(%s)/TOPIC(%s)",type,topic);
-if (type && strlen(type) > 0)
+Debug("CONTEXT(%s)/TOPIC(%s)",context,topic);
+if (context && strlen(context) > 0)
    {
-   snprintf(name,CF_MAXVARSIZE,"%s::%s",type,topic);
+   snprintf(name,CF_MAXVARSIZE,"%s::%s",context,topic);
    }
 else
    {
@@ -262,86 +262,86 @@ return name;
 
 /*********************************************************************/
 
-void DeTypeTopic(char *typed_topic,char *topic,char *type)
+void DeClassifyTopic(char *classified_topic,char *topic,char *context)
 
 {
-type[0] = '\0';
+context[0] = '\0';
 topic[0] = '\0';
 
-if (typed_topic == NULL)
+if (classified_topic == NULL)
    {
    return;
    }
 
-if (*typed_topic == ':')
+if (*classified_topic == ':')
    {
-   sscanf(typed_topic,"::%255[^\n]",topic);
+   sscanf(classified_topic,"::%255[^\n]",topic);
    }
-else if (strstr(typed_topic,"::"))
+else if (strstr(classified_topic,"::"))
    {
-   sscanf(typed_topic,"%255[^:]::%255[^\n]",type,topic);
+   sscanf(classified_topic,"%255[^:]::%255[^\n]",context,topic);
    
    if (strlen(topic) == 0)
       {
-      sscanf(typed_topic,"::%255[^\n]",topic);
+      sscanf(classified_topic,"::%255[^\n]",topic);
       }
    }
 else
    {
-   strncpy(topic,typed_topic,CF_MAXVARSIZE-1);
+   strncpy(topic,classified_topic,CF_MAXVARSIZE-1);
    }
 }
 
 /*********************************************************************/
 
-void DeTypeCanonicalTopic(char *typed_topic,char *topic,char *type)
+void DeClassifyCanonicalTopic(char *classified_topic,char *topic,char *context)
 
 {
-type[0] = '\0';
+context[0] = '\0';
 topic[0] = '\0';
 
-if (*typed_topic == '.')
+if (*classified_topic == '.')
    {
-   sscanf(typed_topic,".%255[^\n]",topic);
+   sscanf(classified_topic,".%255[^\n]",topic);
    }
-else if (strstr(typed_topic,"."))
+else if (strstr(classified_topic,"."))
    {
-   sscanf(typed_topic,"%255[^.].%255[^\n]",type,topic);
+   sscanf(classified_topic,"%255[^.].%255[^\n]",context,topic);
    
    if (strlen(topic) == 0)
       {
-      sscanf(typed_topic,".%255[^\n]",topic);
+      sscanf(classified_topic,".%255[^\n]",topic);
       }
    }
 else
    {
-   strncpy(topic,typed_topic,CF_MAXVARSIZE-1);
+   strncpy(topic,classified_topic,CF_MAXVARSIZE-1);
    }
 }
 
 /*********************************************************************/
 
-int TypedTopicMatch(char *ttopic1,char *ttopic2)
+int ClassifiedTopicMatch(char *ttopic1,char *ttopic2)
 
-{ char type1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
-  char type2[CF_MAXVARSIZE],topic2[CF_MAXVARSIZE];
+{ char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
+  char context2[CF_MAXVARSIZE],topic2[CF_MAXVARSIZE];
 
 if (strcmp(ttopic1,ttopic2) == 0)
    {
    return true;
    }
    
-type1[0] = '\0';
+context1[0] = '\0';
 topic1[0] = '\0';
-type2[0] = '\0';
+context2[0] = '\0';
 topic2[0] = '\0';
 
-DeTypeTopic(ttopic1,topic1,type1);
-DeTypeTopic(ttopic2,topic2,type2);
+DeClassifyTopic(ttopic1,topic1,context1);
+DeClassifyTopic(ttopic2,topic2,context2);
 
-if (strlen(type1) > 0 && strlen(type2) > 0)
+if (strlen(context1) > 0 && strlen(context2) > 0)
    {
-   if (strcmp(topic1,topic2) == 0 && strcmp(type1,type2) == 0)
+   if (strcmp(topic1,topic2) == 0 && strcmp(context1,context2) == 0)
       {
       return true;
       }
@@ -359,11 +359,11 @@ return false;
 
 /*****************************************************************************/
 
-int GetTopicPid(char *typed_topic)
+int GetTopicPid(char *classified_topic)
 
 { struct Topic *tp;
  
-if (tp = GetTopic(TOPIC_MAP,typed_topic))
+if (tp = GetTopic(TOPIC_MAP,classified_topic))
    {
    return tp->id;
    }
@@ -388,7 +388,7 @@ return sp;
 /* Level                                                                     */
 /*****************************************************************************/
 
-struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_type)
+struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_context)
 
 { struct Topic *tp;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
@@ -397,9 +397,9 @@ for (tp = list; tp != NULL; tp=tp->next)
    {
    if (strcmp(tp->topic_name,topic_name) == 0)
       {
-      if (topic_type && strcmp(tp->topic_type,topic_type) != 0)
+      if (topic_context && strcmp(tp->topic_context,topic_context) != 0)
          {
-         CfOut(cf_inform,""," !! Topic \"%s\" already exists, with type \"%s\" not \"%s\"\n",topic_name,tp->topic_type,topic_type);
+         CfOut(cf_inform,""," !! Topic \"%s\" already exists, with context \"%s\" not \"%s\"\n",topic_name,tp->topic_context,topic_context);
          return NULL;         
          }
       else
@@ -539,16 +539,16 @@ return NULL;
 struct Topic *GetTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
-  char type[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
+  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
 
-strncpy(type,topic_name,CF_MAXVARSIZE-1);
+strncpy(context,topic_name,CF_MAXVARSIZE-1);
 name[0] = '\0';
 
-DeTypeTopic(topic_name,name,type);
+DeClassifyTopic(topic_name,name,context);
 
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strlen(type) == 0)
+   if (strlen(context) == 0)
       {
       if (strcmp(topic_name,tp->topic_name) == 0)
          {
@@ -557,7 +557,7 @@ for (tp = list; tp != NULL; tp=tp->next)
       }
    else
       {
-      if ((strcmp(name,tp->topic_name)) == 0 && (strcmp(type,tp->topic_type) == 0))
+      if ((strcmp(name,tp->topic_name)) == 0 && (strcmp(context,tp->topic_context) == 0))
          {
          return tp;          
          }
@@ -572,13 +572,13 @@ return NULL;
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
-  char type[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
+  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
 
-DeTypeCanonicalTopic(topic_name,name,type);
+DeClassifyCanonicalTopic(topic_name,name,context);
 
 for (tp = list; tp != NULL; tp=tp->next)
    {
-   if (strlen(type) == 0)
+   if (strlen(context) == 0)
       {
       if (strcmp(name,CanonifyName(tp->topic_name)) == 0)
          {
@@ -587,7 +587,7 @@ for (tp = list; tp != NULL; tp=tp->next)
       }
    else
       {
-      if ((strcmp(name,CanonifyName(tp->topic_name))) == 0 && (strcmp(type,CanonifyName(tp->topic_type)) == 0))
+      if ((strcmp(name,CanonifyName(tp->topic_name))) == 0 && (strcmp(context,CanonifyName(tp->topic_context)) == 0))
          {
          return tp;          
          }
@@ -599,24 +599,24 @@ return NULL;
 
 /*****************************************************************************/
 
-char *GetTopicType(struct Topic *list,char *topic_name)
+char *GetTopicContext(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
-  static char type1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
+  static char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
 
-type1[0] = '\0';
-DeTypeTopic(topic_name,topic1,type1);
+context1[0] = '\0';
+DeClassifyTopic(topic_name,topic1,context1);
 
-if (strlen(type1) > 0)
+if (strlen(context1) > 0)
    {
-   return type1;
+   return context1;
    }
 
 for (tp = list; tp != NULL; tp=tp->next)
    {
    if (strcmp(topic1,tp->topic_name) == 0)
       {
-      return tp->topic_type;
+      return tp->topic_context;
       }
    }
 

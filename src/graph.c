@@ -93,7 +93,7 @@ for (i = 0; i < topic_count; i++)
 
 for (tp = map; tp != NULL; tp=tp->next)
    {
-   n[tp->id] = strdup(TypedTopic(tp->topic_name,tp->topic_type));
+   n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
    CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
    }
 
@@ -273,7 +273,7 @@ agsafeset(t[0], "root", "true", "");
 for (j = 1; tribe[j] >= 0; j++)
    {
    CfOut(cf_verbose,"","Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
-   DeTypeTopic(names[tribe[j]],ltopic,ltype);
+   DeClassifyTopic(names[tribe[j]],ltopic,ltype);
 
    if (!KeyInRlist(nodelist,ltopic))
       {

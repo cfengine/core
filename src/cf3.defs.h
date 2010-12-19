@@ -1186,7 +1186,7 @@ struct DefineClasses
 struct Topic
    {
    int id;
-   char *topic_type;
+   char *topic_context;
    char *topic_name;
    char *topic_comment;
    struct Occurrence *occurrences;
@@ -1196,16 +1196,17 @@ struct Topic
 
 struct TopicAssociation
    {
-   char *assoc_type;
+   char *fwd_context;
    char *fwd_name;
    char *bwd_name;
    struct Rlist *associates;
-   char *associate_topic_type;
+   char *bwd_context;
    struct TopicAssociation *next;
    };
 
 struct Occurrence
    {
+   char *occurrence_context;
    char *locator; /* Promiser */
    enum representations rep_type;
    struct Rlist *represents; /* subtype represented by promiser */

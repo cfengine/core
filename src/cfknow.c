@@ -1623,11 +1623,6 @@ for (rp = op->represents; rp != NULL; rp=rp->next)
           fprintf(fout,"{%s,%s,\"Image at %s\"}\n",topic_id,subtype,op->locator);
           break;
       }
-
-   if (!GetCanonizedTopic(TOPIC_MAP,subtype))
-      {
-      CfOut(cf_inform,""," !! Occurrence of %s makes reference to a sub-topic %s but that has not (yet) been defined",topic_id,subtype);
-      }
    }
 }
 

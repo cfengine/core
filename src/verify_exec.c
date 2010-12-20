@@ -210,7 +210,7 @@ else
          if (ferror(pfp))  /* abortable */
             {
             cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"!! Command pipe %s\n",execstr);
-            cf_pclose_def(pfp,a,pp);
+            cf_pclose(pfp);
             YieldCurrentLock(thislock);
             return;
             }
@@ -226,7 +226,7 @@ else
          if (ferror(pfp))  /* abortable */
             {
             cfPS(cf_error,CF_TIMEX,"ferror",pp,a,"!! Command pipe %s\n",execstr);
-            cf_pclose_def(pfp,a,pp);
+            cf_pclose(pfp);
             YieldCurrentLock(thislock);   
             return;
             }
@@ -364,3 +364,6 @@ if (line[0] == ':')
 
 CfOut(cf_verbose,"","%s (preview of %s)\n",message,comm);
 }
+
+
+

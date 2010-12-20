@@ -69,6 +69,9 @@ struct BodySyntax CF_DEFINECLASS_BODY[] =
    {"cancel_kept",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is kept"},
    {"cancel_repaired",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is repaired"},
    {"cancel_notkept",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is not kept for any reason"},
+   {"kept_returncodes",cf_slist,CF_INTLISTRANGE,"A list of return codes indicating a kept command promise"},
+   {"repaired_returncodes",cf_slist,CF_INTLISTRANGE,"A list of return codes indicating a repaired command promise"},
+   {"failed_returncodes",cf_slist,CF_INTLISTRANGE,"A list of return codes indicating a failed command promise"},
    {"persist_time",cf_int,CF_VALRANGE,"A number of minutes the specified classes should remain active"},
    {"timer_policy",cf_opts,"absolute,reset","Whether a persistent class restarts its counter when rediscovered"},
    {NULL,cf_notype,NULL,NULL}

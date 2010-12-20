@@ -731,6 +731,10 @@ c.del_change = (struct Rlist *)GetListConstraint("cancel_repaired",pp);
 c.del_kept = (struct Rlist *)GetListConstraint("cancel_kept",pp);
 c.del_notkept = (struct Rlist *)GetListConstraint("cancel_notkept",pp);
 
+c.retcode_kept = (struct Rlist *)GetListConstraint("kept_returncodes",pp);
+c.retcode_repaired = (struct Rlist *)GetListConstraint("repaired_returncodes",pp);
+c.retcode_failed = (struct Rlist *)GetListConstraint("failed_returncodes",pp);
+
 c.persist = GetIntConstraint("persist_time",pp);
 
 if (c.persist == CF_NOINT)
@@ -1100,7 +1104,6 @@ p.package_patch_command = (char *)GetConstraint("package_patch_command",pp,CF_SC
 p.package_verify_command = (char *)GetConstraint("package_verify_command",pp,CF_SCALAR);
 p.package_noverify_regex = (char *)GetConstraint("package_noverify_regex",pp,CF_SCALAR);
 p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode",pp);
-p.package_accept_returncodes = GetListConstraint("package_accept_returncodes",pp);
 
 p.package_name_convention = (char *)GetConstraint("package_name_convention",pp,CF_SCALAR);
 p.package_delete_convention = (char *)GetConstraint("package_delete_convention",pp,CF_SCALAR);

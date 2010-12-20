@@ -1241,6 +1241,7 @@ FILE *cf_popen_sh(char *command,char *type);
 FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+int VerifyCommandRetcode(int retcode, int fallback, struct Attributes a, struct Promise *pp);
 
 #ifndef MINGW
 FILE *Unix_cf_popen(char *command,char *type);
@@ -1600,7 +1601,7 @@ char *PrefixLocalRepository(struct Rlist *repositories,char *package);
 int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
 int VersionCmp(char *vs1, char *vs2);
 int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr);
-int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
+int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);

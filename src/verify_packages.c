@@ -72,7 +72,7 @@ if (a.packages.package_list_update_command)
    
    if (thislock.lock != NULL)
       {
-      ExecPackageCommand(a.packages.package_list_update_command,false,al,pp);   
+      ExecPackageCommand(a.packages.package_list_update_command,false,false,al,pp);   
       YieldCurrentLock(thislock);
       }
    }
@@ -685,13 +685,13 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       {
       *(command_string+strlen(command_string)-1) = '\0';
       CfOut(cf_verbose,"","Command does not allow arguments");
-      if (ExecPackageCommand(command_string,verify,a,pp))
+      if (ExecPackageCommand(command_string,verify,true,a,pp))
          {
-         cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok (outcome cannot be promised by cf-agent)");
+	 CfOut(cf_verbose,"","Package schedule execution ok (outcome cannot be promised by cf-agent)");
          }
       else
          {
-         cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed");
+         CfOut(cf_error,"","!! Package schedule execution failed");
          }
       }
    else
@@ -724,13 +724,13 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 		    strcat(offset,pi->name);
 		  }
 
-                if (ExecPackageCommand(command_string,verify,a,pp))
+                if (ExecPackageCommand(command_string,verify,true,a,pp))
                    {
-                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   CfOut(cf_verbose,"","Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
                    }
                 else
                    {
-                   cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                   CfOut(cf_error,"","Package schedule execution failed for %s",pi->name);
                    }
                 
                 *offset = '\0';
@@ -766,17 +766,17 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                    }
                 }
              
-             ok = ExecPackageCommand(command_string,verify,a,pp);
+             ok = ExecPackageCommand(command_string,verify,true,a,pp);
              
              for (pi = pm->pack_list; pi != NULL; pi=pi->next)
                 {
                 if (ok)
                    {
-                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   CfOut(cf_verbose,"","Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
                    }
                 else
                    {
-                   cfPS(cf_error,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                   CfOut(cf_error,"","Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
                    }
                 }
              
@@ -878,13 +878,13 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       {
       *(command_string+strlen(command_string)-1) = '\0';
       CfOut(cf_verbose,"","Command does not allow arguments");
-      if (ExecPackageCommand(command_string,verify,a,pp))
+      if (ExecPackageCommand(command_string,verify,true,a,pp))
          {
-         cfPS(cf_verbose,CF_CHG,"",pp,a,"Package patching seemed to succeed (outcome cannot be promised by cf-agent)");
+         CfOut(cf_verbose,"","Package patching seemed to succeed (outcome cannot be promised by cf-agent)");
          }
       else
          {
-         cfPS(cf_error,CF_FAIL,"",pp,a,"Package patching failed");
+         CfOut(cf_error,"","Package patching failed");
          }
       }
    else
@@ -905,13 +905,13 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                 
                 strcat(offset,pi->name);
                 
-                if (ExecPackageCommand(command_string,verify,a,pp))
+                if (ExecPackageCommand(command_string,verify,true,a,pp))
                    {
-                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   CfOut(cf_verbose,"","Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
                    }
                 else
                    {
-                   cfPS(cf_error,CF_FAIL,"",pp,a,"Package schedule execution failed for %s",pi->name);
+                   CfOut(cf_error,"","Package schedule execution failed for %s",pi->name);
                    }
                 
                 *offset = '\0';
@@ -930,17 +930,17 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                    }
                 }
              
-             ok = ExecPackageCommand(command_string,verify,a,pp);
+             ok = ExecPackageCommand(command_string,verify,true,a,pp);
              
              for (pi = pm->patch_list; pi != NULL; pi=pi->next)
                 {
                 if (ok)
                    {
-                   cfPS(cf_verbose,CF_CHG,"",pp,a,"Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   CfOut(cf_verbose,"","Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
                    }
                 else
                    {
-                   cfPS(cf_error,CF_INTERPT,"",pp,a,"Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                   CfOut(cf_error,"","Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
                    }
                 }
              
@@ -1066,7 +1066,7 @@ while (!feof(fin))
 
    if (strcmp(thismanager,mgr) == 0)
       {
-      printf("READ: %s\n",line);
+      Debug("READPKG: %s\n",line);
       PrependPackageItem(&list,name,version,arch,a,pp);
       }
    }
@@ -1800,7 +1800,7 @@ return false;
 
 /*****************************************************************************/
 
-int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp)
+int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
 
 { int offset = 0, retval = true;
   char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 
@@ -1871,28 +1871,24 @@ while (!feof(pfp))
 
  packmanRetval = cf_pclose(pfp);
 
- if(verify && (a.packages.package_noverify_returncode != CF_NOINT))  // return code check for verify policy
+ if(verify)  // return code check for verify policy
    {
-   if(a.packages.package_noverify_returncode == packmanRetval)
-     {
-     cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
-     retval = false;
-     }
-   else
-     {
-     CfOut(cf_verbose, "", " Package sucessfully verified from return code");
-     }
+    if(a.packages.package_noverify_returncode != CF_NOINT)
+      {
+	if(a.packages.package_noverify_returncode == packmanRetval)
+	  {
+	    cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
+	    retval = false;
+	  }
+	else
+	  {
+	    CfOut(cf_verbose, "", " Package sucessfully verified from return code");
+	  }
+      }
    }
- else if(a.packages.package_accept_returncodes)  // generic return code check
+ else if(setCmdClasses)  // generic return code check
    {
-   snprintf(packmanRetvalStr,sizeof(packmanRetvalStr),"%d",packmanRetval);
-
-   if(!KeyInRlist(a.packages.package_accept_returncodes, packmanRetvalStr))
-     {
-     cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package manager returned bad code (%d)",packmanRetval);
-     retval = false;
-     }
-   
+   retval = VerifyCommandRetcode(packmanRetval,false,a,pp);
    }
 
 return retval; 

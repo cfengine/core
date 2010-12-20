@@ -470,6 +470,7 @@ enum cfeditorder
 #define CF_TIMERANGE "0,2147483647"
 #define CF_VALRANGE  "0,99999999999"
 #define CF_INTRANGE  "-99999999999,9999999999"
+#define CF_INTLISTRANGE  "[-0-9_$(){}\\[\\].]+"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
 #define CF_CHARRANGE "^.$"
 #define CF_NULL_VALUE "cf_null"
@@ -1176,6 +1177,9 @@ struct DefineClasses
    struct Rlist *del_change;
    struct Rlist *del_kept;
    struct Rlist *del_notkept;
+   struct Rlist *retcode_kept;
+   struct Rlist *retcode_repaired;
+   struct Rlist *retcode_failed;
    };
 
 
@@ -1587,7 +1591,6 @@ struct Packages
    enum version_cmp package_select;
    enum action_policy package_changes;
    struct Rlist *package_file_repositories;
-   struct Rlist *package_accept_returncodes;
 
    char *package_list_command;
    char *package_list_version_regex;

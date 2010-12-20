@@ -1191,6 +1191,7 @@ int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
   FILE *pop = NULL;
   int print = false;
   struct CfLock thislock;
+  int transRetcode = 0;
 
 if (attr.transformer == NULL || file == NULL)
    {
@@ -1241,8 +1242,17 @@ if (!DONTDO)
          }
       }
    
-   cf_pclose(pop);
-   cfPS(cf_inform,CF_CHG,"",pp,attr,"Transformer %s => %s seemed to work ok",file,comm);
+   transRetcode = cf_pclose(pop);
+   
+   if(VerifyCommandRetcode(transRetcode,true,attr,pp))
+     {
+     CfOut(cf_inform,"","-> Transformer %s => %s seemed to work ok",file,comm);
+     }
+   else
+     {
+     CfOut(cf_error,"","-> Transformer %s => %s returned error",file,comm);
+     }
+   
    }
 else
    {

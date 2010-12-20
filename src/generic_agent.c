@@ -1530,17 +1530,18 @@ void CheckBundleParameters(char *scope,struct Rlist *args)
 { struct Rlist *rp;
   struct Rval retval;
   char *lval,rettype;
-
+/*
 for (rp = args; rp != NULL; rp = rp->next)
    {
    lval = (char *)rp->item;
-
+   
    if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
       {
-      CfOut(cf_error,"","Variable and bundle parameter %s collide",lval);
+      CfOut(cf_error,"","Variable and bundle parameter \"%s\" collide in scope \"%s\"",lval,scope);
       FatalError("Aborting");
       }
    }
+*/
 }
 
 /*******************************************************************/

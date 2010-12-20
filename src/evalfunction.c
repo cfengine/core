@@ -1091,7 +1091,7 @@ switch(policy)
 
 SetFnCallReturnStatus("splayclass",FNCALL_SUCCESS,strerror(errno),NULL);   
 
-hash = (double)Hash(splay);
+hash = (double)GetHash(splay);
 box = (int)(0.5 + period*hash/(double)CF_HASHTABLESIZE);
 
 minblocks = box % 12;

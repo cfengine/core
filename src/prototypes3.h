@@ -930,8 +930,9 @@ void MatrixOperation(double **A,double *v,int dim);
 
 /* hashes.c */
 
-int Hash(char *name);
+int RefHash(char *name);
 int ElfHash(char *key);
+int OatHash(char *key);
 void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
 void BlankHashes(char *scope);

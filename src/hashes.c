@@ -195,14 +195,8 @@ if (html)
 
 int GetHash(char *name)
 
-{ int i, slot = 0;
-
-for (i = 0; name[i] != '\0'; i++)
-   {
-   slot = (CF_MACROALPHABET * slot + name[i]) % CF_HASHTABLESIZE;
-   }
-
-return slot;
+{
+return OatHash(name);
 }
 
 /*******************************************************************/

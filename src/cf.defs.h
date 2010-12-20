@@ -343,7 +343,8 @@ typedef int clockid_t;
 #define CF_MAXFARGS 8
 #define CF_MAX_IP_LEN 64       /* numerical ip length */
 #define CF_PROCCOLS 16
-#define CF_HASHTABLESIZE 7919 /* prime number */
+//#define CF_HASHTABLESIZE 7919 /* prime number */
+#define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61    /* a-z, A-Z plus a bit */
 #define CF_ALPHABETSIZE 256
 #define CF_MAXSHELLARGS 64
@@ -1121,25 +1122,6 @@ struct cfagent_connection
    char encryption_type;
    short error;
    };
-
-/*******************************************************************/
-
-struct cfObject
-   {
-   char *scope;                         /* Name of object (scope) */
-   void *hashtable[CF_HASHTABLESIZE];   /* Variable heap  */
-   char type[CF_HASHTABLESIZE];         /* scalar or itlist? */
-   char *classlist;                     /* Private classes -- ? */
-   struct Item *actionsequence;
-   struct cfObject *next;
-   };
-
-/*
-
- $(globalvar)
- $(obj.name)
-
-*/
 
 /*******************************************************************/
 

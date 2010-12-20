@@ -35,11 +35,11 @@
 
 /*******************************************************************/
 
-int Hash(char *name)
+int RefHash(char *name) // This function wants HASHTABLESIZE to be prime
 
 { int i, slot = 0;
 
- for (i = 0; name[i] != '\0'; i++)
+for (i = 0; name[i] != '\0'; i++)
    {
    slot = (CF_MACROALPHABET * slot + name[i]) % CF_HASHTABLESIZE;
    }
@@ -51,24 +51,49 @@ return slot;
 
 int ElfHash(char *key)
 
-{ unsigned int h = 0;
-  unsigned int g;
+{ unsigned char *p = key;
+  int len = strlen(key);
+  unsigned h = 0, g;
+  unsigned int hashtablesize = CF_HASHTABLESIZE;
+  int i;
+ 
+for ( i = 0; i < len; i++ )
+   {
+   h = ( h << 4 ) + p[i];
+   g = h & 0xf0000000L;
+   
+   if ( g != 0 )
+      {
+      h ^= g >> 24;
+      }
+   
+   h &= ~g;
+   }
 
-while (*key)
-  {
-  h = (h << 4) + *key++;
+return (h & (hashtablesize-1));
+}
 
-  g = h & 0xF0000000;         /* Assumes int is 32 bit */
+/*******************************************************************/
 
-  if (g) 
-     {
-     h ^= g >> 24;
-     }
+int OatHash(char *key)
 
-  h &= ~g;
-  }
+{ unsigned int hashtablesize = CF_HASHTABLESIZE;
+  unsigned char *p = key;
+  unsigned h = 0;
+  int i, len = strlen(key);
+  
+for ( i = 0; i < len; i++ )
+   {
+   h += p[i];
+   h += ( h << 10 );
+   h ^= ( h >> 6 );
+   }
 
-return (h % CF_HASHTABLESIZE);
+h += ( h << 3 );
+h ^= ( h >> 11 );
+h += ( h << 15 );
+
+return (h & (hashtablesize-1));
 }
 
 /*****************************************************************************/

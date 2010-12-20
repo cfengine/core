@@ -355,7 +355,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       {
       int hash,time = Str2Int(retval);
       snprintf(splay,CF_BUFSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
-      hash = Hash(splay);
+      hash = GetHash(splay);
       SPLAYTIME = (int)(time*60*hash/CF_HASHTABLESIZE);
       }
 

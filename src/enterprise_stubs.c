@@ -79,6 +79,7 @@ void EnterpriseModuleTrick()
 #if defined HAVE_LIBMONGOC && defined HAVE_LIBCFNOVA
 Nova_EnterpriseModuleTrick();
 #endif
+
 }
 
 /*****************************************************************************/
@@ -1160,3 +1161,33 @@ if (cf_strcmp(zone,"global") == 0)
 return VPSOPTS[VSYSTEMHARDCLASS];
 }
 
+/*****************************************************************************/
+
+int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+
+return Nova_GetInstalledPkgsRpath(pkgList, a, pp);
+
+#else
+
+CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
+return false;
+
+#endif
+}
+
+
+int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+
+return Nova_ExecPackageCommandRpath(command,verify,setCmdClasses,a,pp);
+
+#else
+
+CfOut(cf_error, "", "!! rPath internal package commands only available in Nova or above");
+return false;
+
+#endif
+}

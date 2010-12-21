@@ -1476,3 +1476,80 @@ if (list == NULL)
     }
 }
 
+/*****************************************************************************/
+
+int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char *arch,struct Attributes a,struct Promise *pp)
+
+{ struct CfPackageItem *pi;
+
+if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
+   {
+   return false;
+   }
+
+CfOut(cf_verbose,""," -> Package (%s,%s,%s) found",name,version,arch);
+
+if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Can't allocate new package\n");
+   return false;
+   }
+
+if (list)
+   {
+   pi->next = *list;
+   }
+else
+   {
+   pi->next = NULL;
+   }
+
+pi->name = strdup(name);
+pi->version = strdup(version);
+pi->arch = strdup(arch);
+*list = pi;
+
+/* Finally we need these for later schedule exec, once this iteration context has gone */
+
+pi->pp = DeRefCopyPromise("this",pp);
+return true;
+}
+
+
+/*****************************************************************************/
+
+int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp)
+
+{ char name[CF_MAXVARSIZE];
+  char arch[CF_MAXVARSIZE];
+  char version[CF_MAXVARSIZE];
+  char vbuff[CF_MAXVARSIZE];
+
+strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
+sscanf(vbuff,"%s",name); /* trim */
+
+strncpy(vbuff,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
+sscanf(vbuff,"%s",version); /* trim */
+
+if (a.packages.package_list_arch_regex)
+   {
+   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_arch_regex,item),CF_MAXVARSIZE-1);
+   sscanf(vbuff,"%s",arch); /* trim */
+   }
+else
+   {
+   strncpy(arch,"default",CF_MAXVARSIZE-1);
+   }
+
+if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcmp(arch,"CF_NOMATCH") == 0)
+   {
+   return false;
+   }
+
+Debug(" -? Package line \"%s\"\n",item);
+Debug(" -?      with name \"%s\"\n",name);
+Debug(" -?      with version \"%s\"\n",version);
+Debug(" -?      with architecture \"%s\"\n",arch);
+
+return PrependPackageItem(list,name,version,arch,a,pp);
+}

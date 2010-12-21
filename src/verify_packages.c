@@ -286,6 +286,8 @@ if (manager->pack_list != NULL)
 
 #ifdef MINGW
 
+CfOut(cf_verbose, "", " Using internal list command for Windows");
+
 if (!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
    {
    CfOut(cf_error, "", "!! Could not get list of installed packages");
@@ -293,57 +295,73 @@ if (!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
    }
 
 #else
+
 if (a.packages.package_list_command != NULL)
    {
-   CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
-   CfOut(cf_verbose,"","   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
-   CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
 
-   if (!IsExecutable(GetArg0(a.packages.package_list_command)))
-      {
-      CfOut(cf_error,"","The proposed package list command \"%s\" was not executable",a.packages.package_list_command);
-      return false;
-      }
-   
-   if ((prp = cf_popen(a.packages.package_list_command,"r")) == NULL)
-      {
-      CfOut(cf_error,"cf_popen","Couldn't open the package list with command %s\n",a.packages.package_list_command);
-      return false;
-      }
-   
-   while (!feof(prp))
-      {
-      memset(vbuff,0,CF_BUFSIZE);
-      CfReadLine(vbuff,CF_BUFSIZE,prp);
-      CF_NODES++;
+     if(strcmp(a.packages.package_list_command,"/cf_internal_rpath_list") == 0)
+       {
+	 CfOut(cf_verbose, "", " Using internal list command for rPath");
+	 
+	 if(!GetInstalledPkgsRpath(&(manager->pack_list),a,pp))
+	   {
+	     CfOut(cf_error, "", "!! Could not get list of installed packages");
+	     return false;
+	   }
+       }
+     else
+       {
+	 CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
+	 CfOut(cf_verbose,"","   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
+	 CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
 
-      if (a.packages.package_multiline_start)
-         {
-         if (FullTextMatch(a.packages.package_multiline_start,vbuff))
-            {
-            PrependMultiLinePackageItem(&(manager->pack_list),vbuff,reset,a,pp);
-            }
-         else
-            {
-            PrependMultiLinePackageItem(&(manager->pack_list),vbuff,update,a,pp);
-            }
-         }
-      else
-         {
-         if (!FullTextMatch(a.packages.package_installed_regex,vbuff))
-            {
-            continue;
-            }
+	 if (!IsExecutable(GetArg0(a.packages.package_list_command)))
+	   {
+	     CfOut(cf_error,"","The proposed package list command \"%s\" was not executable",a.packages.package_list_command);
+	     return false;
+	   }
+   
+	 if ((prp = cf_popen(a.packages.package_list_command,"r")) == NULL)
+	   {
+	     CfOut(cf_error,"cf_popen","Couldn't open the package list with command %s\n",a.packages.package_list_command);
+	     return false;
+	   }
+   
+	 while (!feof(prp))
+	   {
+	     memset(vbuff,0,CF_BUFSIZE);
+	     CfReadLine(vbuff,CF_BUFSIZE,prp);
+	     CF_NODES++;
+
+	     if (a.packages.package_multiline_start)
+	       {
+		 if (FullTextMatch(a.packages.package_multiline_start,vbuff))
+		   {
+		     PrependMultiLinePackageItem(&(manager->pack_list),vbuff,reset,a,pp);
+		   }
+		 else
+		   {
+		     PrependMultiLinePackageItem(&(manager->pack_list),vbuff,update,a,pp);
+		   }
+	       }
+	     else
+	       {
+		 if (!FullTextMatch(a.packages.package_installed_regex,vbuff))
+		   {
+		     continue;
+		   }
          
-         if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
-            {
-            continue;
-            }
-         }
-      }
+		 if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
+		   {
+		     continue;
+		   }
+	       }
+	   }
    
-   cf_pclose(prp);
+	 cf_pclose(prp);
+       }
    }
+
 #endif  /* NOT MINGW */
 
 ReportSoftware(INSTALLED_PACKAGE_LISTS);
@@ -766,20 +784,27 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                    }
                 }
              
-             ok = ExecPackageCommand(command_string,verify,true,a,pp);
-             
-             for (pi = pm->pack_list; pi != NULL; pi=pi->next)
-                {
-                if (ok)
-                   {
-                   CfOut(cf_verbose,"","Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
-                   }
-                else
-                   {
-                   CfOut(cf_error,"","Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
-                   }
-                }
-             
+	     if(strncmp(command_string,"/cf_internal_rpath",sizeof("/cf_internal_rpath") - 1) == 0)
+	       {
+		 ok = ExecPackageCommandRpath(command_string,verify,true,a,pp);
+	       }
+	     else
+	       {
+		 ok = ExecPackageCommand(command_string,verify,true,a,pp);
+	       }
+	     
+	     for (pi = pm->pack_list; pi != NULL; pi=pi->next)
+	       {
+		 if (ok)
+		   {
+		     CfOut(cf_verbose,"","Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+		   }
+		 else
+		   {
+		     CfOut(cf_error,"","Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+		   }
+	       }
+	       
              break;
              
          default:
@@ -1075,43 +1100,6 @@ cf_fclose(fin);
 return list;
 }
 
-/*****************************************************************************/
-
-int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp)
-
-{ char name[CF_MAXVARSIZE];
-  char arch[CF_MAXVARSIZE];
-  char version[CF_MAXVARSIZE];
-  char vbuff[CF_MAXVARSIZE];
-
-strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
-sscanf(vbuff,"%s",name); /* trim */
-
-strncpy(vbuff,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
-sscanf(vbuff,"%s",version); /* trim */
-
-if (a.packages.package_list_arch_regex)
-   {
-   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_arch_regex,item),CF_MAXVARSIZE-1);
-   sscanf(vbuff,"%s",arch); /* trim */
-   }
-else
-   {
-   strncpy(arch,"default",CF_MAXVARSIZE-1);
-   }
-
-if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcmp(arch,"CF_NOMATCH") == 0)
-   {
-   return false;
-   }
-
-Debug(" -? Package line \"%s\"\n",item);
-Debug(" -?      with name \"%s\"\n",name);
-Debug(" -?      with version \"%s\"\n",version);
-Debug(" -?      with architecture \"%s\"\n",arch);
-
-return PrependPackageItem(list,name,version,arch,a,pp);
-}
 
 /*****************************************************************************/
 
@@ -2063,44 +2051,6 @@ for (pi = list; pi != NULL; pi = pi->next)
 return false;
 }
 
-/*****************************************************************************/
-
-int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char *arch,struct Attributes a,struct Promise *pp)
-
-{ struct CfPackageItem *pi;
-
-if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
-   {
-   return false;
-   }
-
-CfOut(cf_verbose,""," -> Package info for (%s,%s,%s) found, and it is not installed",name,version,arch);
-
-if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Can't allocate new package\n");
-   return false;
-   }
-
-if (list)
-   {
-   pi->next = *list;
-   }
-else
-   {
-   pi->next = NULL;
-   }
-
-pi->name = strdup(name);
-pi->version = strdup(version);
-pi->arch = strdup(arch);
-*list = pi;
-
-/* Finally we need these for later schedule exec, once this iteration context has gone */
-
-pi->pp = DeRefCopyPromise("this",pp);
-return true;
-}
 
 /*****************************************************************************/
 /* Level                                                                     */

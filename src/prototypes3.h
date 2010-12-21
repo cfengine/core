@@ -489,6 +489,8 @@ void SetPromiseOutputs(struct Promise *pp);
 void VerifyOutputsPromise(struct Promise *pp);
 void SpecialQuote(char *topic,char *type);
 void LastSawBundle(char *name);
+int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp);
+int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 
 /* env_context.c */
 
@@ -1356,6 +1358,10 @@ struct Rlist *AlphaSortRListNames(struct Rlist *list);
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);
 
+int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
+int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
+
+
 
 /* scope.c */
 
@@ -1589,8 +1595,6 @@ int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes
 void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);
 struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
 void DeletePackageManagers(struct CfPackageManager *newlist);
-int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
-int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
 void DeletePackageItems(struct CfPackageItem *pi);
 int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);

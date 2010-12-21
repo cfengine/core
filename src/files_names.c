@@ -217,7 +217,7 @@ DeleteItemList(path);
 int IsNewerFileTree(char *dir,time_t reftime)
 
 { struct dirent *dirp;
-  char path[CF_BUFSIZE] = {0},pbuffer[CF_BUFSIZE];
+  char path[CF_BUFSIZE] = {0};
   struct Attributes dummyattr = {0};
   DIR *dirh;
   struct stat sb;
@@ -233,7 +233,7 @@ else
    {
    for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
-      if (!ConsiderFile(dirp->d_name,pbuffer,dummyattr,NULL))
+      if (!ConsiderFile(dirp->d_name,dir,dummyattr,NULL))
          {
          continue;
          }

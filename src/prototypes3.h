@@ -1137,8 +1137,7 @@ void MountAll(void);
 /* ontology.c */
 
 int GetTopicPid(char *typed_topic);
-void AddTopic(struct Topic **list,char *name,char *type);
-void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type);
+struct Topic *AddTopic(struct Topic **list,char *name,char *comment,char *type);
 void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int verify);
 void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype);
 struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_type);

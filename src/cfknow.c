@@ -45,7 +45,6 @@ void CheckOpts(int argc,char **argv);
 void ThisAgentInit(void);
 void KeepKnowControlPromises(void);
 void KeepKnowledgePromise(struct Promise *pp);
-void KeepAssociationPromise(struct Promise *pp);
 void VerifyTopicPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyOntology(void);
@@ -649,45 +648,6 @@ for (type = 0; TYPESEQUENCE[type] != NULL; type++)
          }      
       }
    }
-
-/* Second pass association processing */
-
-PASS = 2;
-
-for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
-   {
-   switch (rp->type)
-      {
-      case CF_FNCALL:
-          fp = (struct FnCall *)rp->item;
-          name = (char *)fp->name;
-          params = (struct Rlist *)fp->args;
-          break;
-      default:
-          name = (char *)rp->item;
-          params = NULL;
-          break;
-      }
-   
-   if ((bp = GetBundle(name,"knowledge")) || (bp = GetBundle(name,"common")))
-      {
-      BannerBundle(bp,params);
-      AugmentScope(bp->name,bp->args,params);
-      DeletePrivateClassContext(); // Each time we change bundle      
-      }
-   
-   if ((sp = GetSubTypeForBundle(TYPESEQUENCE[kp_topics],bp)) == NULL)
-      {
-      continue;      
-      }
-   
-   BannerSubType(bp->name,sp->name,1);
-      
-   for (pp = sp->promiselist; pp != NULL; pp=pp->next)
-      {
-      ExpandPromise(cf_know,bp->name,pp,KeepAssociationPromise);
-      }      
-   }
 }
 
 /*********************************************************************/
@@ -1015,7 +975,7 @@ while(CfFetchRow(&cfdb))
       strncpy(topic_comment,"",CF_BUFSIZE-1);
       }
 
-   AddCommentedTopic(&tmatches,topic_name,topic_comment,topic_context);   
+   AddTopic(&tmatches,topic_name,topic_comment,topic_context);   
    count++;
    }
 
@@ -1070,7 +1030,7 @@ while (CfFetchRow(&cfdb))
    if (!TopicExists(tmatches,from_assoc,to_assoc))
       {
       matched++;
-      AddTopic(&tmatches,from_assoc,to_assoc);
+      AddTopic(&tmatches,from_assoc,NULL,to_assoc);
       strncpy(ctopic_context,topic_context,CF_BUFSIZE-1);
       strncpy(cfrom_assoc,from_assoc,CF_BUFSIZE-1);
       strncpy(cto_assoc,to_assoc,CF_BUFSIZE-1);
@@ -1180,7 +1140,7 @@ while(CfFetchRow(&cfdb))
 
    if (BlockTextCaseMatch(topic,topic_name,&s,&e))
       {
-      AddTopic(&tmatches,topic_name,topic_context);
+      AddTopic(&tmatches,topic_name,NULL,topic_context);
       matched++;
       }
    }
@@ -1237,7 +1197,7 @@ while(CfFetchRow(&cfdb))
       if (!TopicExists(tmatches,from_assoc,to_assoc))
          {
          matched++;
-         AddTopic(&tmatches,from_assoc,to_assoc);
+         AddTopic(&tmatches,from_assoc,NULL,to_assoc);
          strncpy(ctopic_context,topic_context,CF_BUFSIZE-1);
          strncpy(cfrom_assoc,from_assoc,CF_BUFSIZE-1);
          strncpy(cto_assoc,to_assoc,CF_BUFSIZE-1);
@@ -1341,7 +1301,8 @@ void VerifyTopicPromise(struct Promise *pp)
 { char id[CF_BUFSIZE];
   char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
   struct Attributes a = {0};
-  struct Topic *tp,*tp_sub;
+  struct Topic *tp,*tpn,*tp_sub;
+  struct Item *ip;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
 // Put all this in subfunc if LTM output specified
@@ -1356,63 +1317,66 @@ CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->
 
 if (TOPIC_MAP == NULL) 
    {
-   AddCommentedTopic(&TOPIC_MAP,"nicknames","An alternative short form for a topic using its handle","any");
+   AddTopic(&TOPIC_MAP,"nicknames","An alternative short form for a topic using its handle","any");
    }
 
 if (pp->ref != NULL)
    {
-   AddCommentedTopic(&TOPIC_MAP,pp->promiser,pp->ref,pp->classes);
+   tp = AddTopic(&TOPIC_MAP,pp->promiser,pp->ref,pp->classes);
 
    if (handle)
       {
       struct Rlist *list = NULL;
       char ref[CF_MAXVARSIZE];
       snprintf(ref,CF_MAXVARSIZE,"knowledge.php?topic=%s",pp->promiser);
-      AddCommentedTopic(&TOPIC_MAP,handle,pp->ref,"synonym");
+      tpn = AddTopic(&TOPIC_MAP,handle,pp->ref,"synonym");
       PrependRScalar(&list,"Go to topic",CF_SCALAR);
-      tp= GetTopic(TOPIC_MAP,handle);      
-      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      AddOccurrence(&(tpn->occurrences),ref,list,cfk_url);
       DeleteRlist(list);
       list = NULL;
       tp_sub= GetTopic(TOPIC_MAP,"synonym");      
       PrependRScalar(&list,handle,CF_SCALAR);
-      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      AddOccurrence(&(tpn->occurrences),ref,list,cfk_url);
       DeleteRlist(list);
       }
    }
 else
    {
-   AddTopic(&TOPIC_MAP,pp->promiser,pp->classes);
+   tp = AddTopic(&TOPIC_MAP,pp->promiser,NULL,pp->classes);
 
    if (handle)
       {
       struct Rlist *list = NULL;
       char ref[CF_MAXVARSIZE];      
       snprintf(ref,CF_MAXVARSIZE,"knowledge.php?topic=%s",pp->promiser);
-      AddTopic(&TOPIC_MAP,handle,pp->classes);
-      tp= GetTopic(TOPIC_MAP,handle);      
+      tpn = AddTopic(&TOPIC_MAP,handle,NULL,pp->classes);
       PrependRScalar(&list,"Go to topic",CF_SCALAR);
-      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      AddOccurrence(&(tpn->occurrences),ref,list,cfk_url);
       DeleteRlist(list);
       list =  NULL;
       tp_sub= GetTopic(TOPIC_MAP,"synonym");      
       PrependRScalar(&list,handle,CF_SCALAR);
-      AddOccurrence(&(tp->occurrences),ref,list,cfk_url);
+      AddOccurrence(&(tpn->occurrences),ref,list,cfk_url);
       DeleteRlist(list);
       }
    }
 
-if (tp = GetTopic(TOPIC_MAP,pp->promiser))
+if (a.fwd_name && a.bwd_name)
    {
-   CfOut(cf_verbose,""," -> Topic \"%s\" installed\n",pp->promiser);
+   AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+   }
 
-   if (pp->ref)
-      {
-      struct Rlist *list = NULL;
-      PrependRScalar(&list,"Go to topic",CF_SCALAR);
-      AddOccurrence(&(tp->occurrences),pp->ref,list,cfk_literal);
-      DeleteRlist(list);
-      }
+for (ip = a.synonyms; ip != NULL; ip=ip->next)
+   {
+   IdempPrependItem(&(tp->synonyms),ip->name,NULL);
+   }
+
+if (tp && pp->ref)
+   {
+   struct Rlist *list = NULL;
+   PrependRScalar(&list,"Go to topic",CF_SCALAR);
+   AddOccurrence(&(tp->occurrences),pp->ref,list,cfk_literal);
+   DeleteRlist(list);
    }
 else
    {
@@ -1420,41 +1384,12 @@ else
    PromiseRef(cf_inform,pp);
    }
 
-if (handle)
+if (tp && handle)
    {
    struct Rlist *list = NULL;
    PrependRScalar(&list,handle,CF_SCALAR);
    AddTopicAssociation(&(tp->associations),"is the promise of","stands for",list,true);
    DeleteRlist(list);
-   }
-}
-
-/*********************************************************************/
-
-void KeepAssociationPromise(struct Promise *pp)
-
-{ char id[CF_BUFSIZE];
-  char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
-  struct Attributes a = {0};
-  struct Topic *tp;
-
-a = GetTopicsAttributes(pp);
- 
-strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
-
-if (tp = GetTopic(TOPIC_MAP,pp->promiser))
-   {
-   CfOut(cf_verbose,""," -> Topic \"%s\" installed\n",pp->promiser);
-   
-   if (a.fwd_name && a.bwd_name)
-      {
-      AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
-      }
-   }
-else
-   {
-   CfOut(cf_inform,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
-   PromiseRef(cf_inform,pp);
    }
 }
 
@@ -1827,14 +1762,9 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
    fprintf(fout,"%s",query);
    Debug(" -> Add topic %s\n",tp->topic_name);
    CfVoidQueryDB(&cfdb,query);
-   }
 
-/* Associations */
-
-for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
-   {
-   strncpy(safe,EscapeSQL(&cfdb,tp->topic_name),CF_BUFSIZE);
-
+   // Associations
+   
    for (ta = tp->associations; ta != NULL; ta=ta->next)
       {
       for (rp = ta->associates; rp != NULL; rp=rp->next)
@@ -1851,12 +1781,9 @@ for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
          Debug(" -> Add association %s\n",ta->fwd_name);
          }
       }
-   }
 
-/* Occurrences */
-
-for (tp = TOPIC_MAP; tp != NULL; tp=tp->next)
-   {
+   // Occurrences
+   
    strncpy(safe,EscapeSQL(&cfdb,tp->topic_name),CF_BUFSIZE);
 
    for (op = tp->occurrences; op != NULL; op=op->next)
@@ -2031,7 +1958,7 @@ while(CfFetchRow(cfdb))
       continue;
       }
 
-   AddCommentedTopic(&other_topics,topic_name,topic_comment,topic_context);
+   AddTopic(&other_topics,topic_name,topic_comment,topic_context);
    }
 
 CfDeleteQuery(cfdb);
@@ -2068,7 +1995,7 @@ while(CfFetchRow(cfdb))
       continue;
       }
 
-   AddCommentedTopic(&topics_this_type,topic_name,topic_comment,topic_context);
+   AddTopic(&topics_this_type,topic_name,topic_comment,topic_context);
    }
 
 CfDeleteQuery(cfdb);

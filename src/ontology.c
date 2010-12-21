@@ -36,49 +36,7 @@ int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
 
 /*****************************************************************************/
 
-void AddTopic(struct Topic **list,char *name,char *context)
-
-{ struct Topic *tp;
-
-if (tp = TopicExists(*list,name,context))
-   {
-   CfOut(cf_verbose,""," ! Topic \"%s\" has already been defined\n",name);
-   }
-else
-   {
-   if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
-      {
-      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-      FatalError("");
-      }
-   
-   if ((tp->topic_name = strdup(name)) == NULL)
-      {
-      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-      FatalError("");
-      }
-   
-   if ((tp->topic_context = strdup(context)) == NULL)
-      {
-      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-      FatalError("");
-      }
-   
-   tp->topic_comment = NULL;
-   tp->associations = NULL;
-   tp->occurrences = NULL;
-   tp->id = GLOBAL_ID++;
-   tp->next = *list;
-   *list = tp;
-
-   CF_NODES++;
-   }
-}
-
-
-/*****************************************************************************/
-
-void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *context)
+struct Topic *AddTopic(struct Topic **list,char *name,char *comment,char *context)
 
 { struct Topic *tp;
 
@@ -135,6 +93,8 @@ else
    *list = tp;
    CF_NODES++;
    }
+
+return tp;
 }
 
 /*****************************************************************************/

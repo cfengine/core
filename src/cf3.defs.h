@@ -1192,9 +1192,7 @@ struct Topic
    int id;
    char *topic_context;
    char *topic_name;
-   char *topic_comment;
    struct Item *synonyms;
-   struct Occurrence *occurrences;
    struct TopicAssociation *associations;
    struct Topic *next;
    };

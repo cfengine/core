@@ -28,6 +28,7 @@
 
 /* See variables in cf3globals.c and syntax.c */
 
+extern struct Topic *TOPICHASH[CF_HASHTABLESIZE];
 extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;

@@ -33,25 +33,35 @@
 #include "cf3.extern.h"
 
 int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
+extern struct Occurrences *OCCURRENCES;
 
 /*****************************************************************************/
 
-struct Topic *AddTopic(struct Topic **list,char *name,char *comment,char *context)
+struct Topic *StoreTopic(char *name,char *context)
+
+{ int slot = GetHash(name);
+
+return AddTopic(&(TOPICHASH[slot]),name,context);
+}
+
+/*****************************************************************************/
+
+struct Topic *FindTopic(char *name,char *context)
+
+{ int slot = GetHash(name);
+
+return TopicExists(TOPICHASH[slot],name,context);
+}
+
+/*****************************************************************************/
+
+struct Topic *AddTopic(struct Topic **list,char *name,char *context)
 
 { struct Topic *tp;
 
 if (tp = TopicExists(*list,name,context))
    {
    CfOut(cf_verbose,""," -> Topic %s already defined, ok\n",name);
-
-   if (comment && tp->topic_comment == NULL)
-      {
-      if ((tp->topic_comment = strdup(comment)) == NULL)
-         {
-         CfOut(cf_error,"malloc","Memory failure in AddTopic");
-         FatalError("");
-         }
-      }
    }
 else
    {
@@ -67,19 +77,6 @@ else
       FatalError("");
       }
    
-   if (comment)
-      {
-      if ((tp->topic_comment = strdup(comment)) == NULL)
-         {
-         CfOut(cf_error,"malloc","Memory failure in AddTopic");
-         FatalError("");
-         }
-      }
-   else
-      {
-      tp->topic_comment = NULL;
-      }
-   
    if ((tp->topic_context = strdup(context)) == NULL)
       {
       CfOut(cf_error,"malloc","Memory failure in AddTopic");
@@ -87,8 +84,8 @@ else
       }
 
    tp->id = GLOBAL_ID++;
-   tp->occurrences = NULL;
    tp->associations = NULL;
+   tp->synonyms = NULL;
    tp->next = *list;
    *list = tp;
    CF_NODES++;
@@ -164,7 +161,7 @@ for (rp = associates; rp != NULL; rp=rp->next)
 
 /*****************************************************************************/
 
-void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype)
+void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context)
 
 { struct Occurrence *op = NULL;
   struct TopRepresentation *tr;
@@ -179,6 +176,7 @@ if ((op = OccurrenceExists(*list,reference,rtype)) == NULL)
       }
 
    op->represents = NULL;
+   op->occurrence_context = strdup(context);
    op->locator = strdup(reference);
    op->rep_type = rtype;   
    op->next = *list;
@@ -353,7 +351,8 @@ struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_contex
 
 { struct Topic *tp;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
-  
+  int slot = GetHash(topic_name);
+
 for (tp = list; tp != NULL; tp=tp->next)
    {
    if (strcmp(tp->topic_name,topic_name) == 0)

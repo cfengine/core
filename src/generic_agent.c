@@ -116,7 +116,7 @@ if (MissingInputFile())
    {
    ok = false;
    }
-else if (NewPromiseProposals())
+else if (SHOWREPORTS || NewPromiseProposals())
    {
    CfOut(cf_verbose,""," -> New promises proposals detected...\n");
    ok = BOOTSTRAP || CheckPromises(ag);
@@ -776,6 +776,8 @@ if (SHOWREPORTS)
       CfOut(cf_error,"fopen","Cannot open output file %s",name);
       FKNOW = fopen(NULLFILE,"w");
       }
+
+   CfOut(cf_inform,""," -> Writing knowledge output to %s",CFWORKDIR);
    }
 else
    {

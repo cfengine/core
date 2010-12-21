@@ -1828,6 +1828,7 @@ struct Attributes
    char *bwd_name;
    struct Rlist *associates;
    struct Rlist *represents;
+   struct Rlist *synonyms;
    char *rep_type;
    char *path_root;
    char *web_root;

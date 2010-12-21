@@ -1525,27 +1525,6 @@ for (pp = classlist; pp != NULL; pp=pp->next)
 
 /*******************************************************************/
 
-void CheckBundleParameters(char *scope,struct Rlist *args)
-
-{ struct Rlist *rp;
-  struct Rval retval;
-  char *lval,rettype;
-/*
-for (rp = args; rp != NULL; rp = rp->next)
-   {
-   lval = (char *)rp->item;
-   
-   if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
-      {
-      CfOut(cf_error,"","Variable and bundle parameter \"%s\" collide in scope \"%s\"",lval,scope);
-      FatalError("Aborting");
-      }
-   }
-*/
-}
-
-/*******************************************************************/
-
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
 
 { struct Constraint *cp;
@@ -1805,9 +1784,12 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          {
          CheckCommonClassPromises(sp->promiselist);
          }
-      }
 
-   CheckBundleParameters(bp->name,bp->args);
+      if (THIS_AGENT_TYPE == cf_common)
+         {
+         CheckBundleParameters(bp->name,bp->args);
+         }
+      }
    }
 }
 
@@ -1937,3 +1919,24 @@ if ((agent == cf_agent) || (agent == cf_common))
 
 return false;
 }
+
+/*******************************************************************/
+
+void CheckBundleParameters(char *scope,struct Rlist *args)
+
+{ struct Rlist *rp;
+  struct Rval retval;
+  char *lval,rettype;
+
+for (rp = args; rp != NULL; rp = rp->next)
+   {
+   lval = (char *)rp->item;
+   
+   if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
+      {
+      CfOut(cf_error,"","Variable and bundle parameter \"%s\" collide in scope \"%s\"",lval,scope);
+      FatalError("Aborting");
+      }
+   }
+}
+

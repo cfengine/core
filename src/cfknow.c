@@ -1458,7 +1458,6 @@ else
    }
 }
 
-
 /*********************************************************************/
 
 void VerifyOccurrencePromises(struct Promise *pp)

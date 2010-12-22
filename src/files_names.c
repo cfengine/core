@@ -798,7 +798,6 @@ int IsStrIn(char *str, char **strs, int ignoreCase)
 
 for (i = 0; strs[i] != NULL; i++)
    {
-
    if(ignoreCase)
      {
      if (strcasecmp(str,strs[i]) == 0)

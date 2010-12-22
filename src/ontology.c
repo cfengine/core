@@ -53,7 +53,7 @@ return InsertTopic(topic,context);
 
 struct Topic *InsertTopic(char *name,char *context)
 
-{ int slot = GetHash(name);
+{ int slot = GetHash(ToLowerStr(name));
 
 return AddTopic(&(TOPICHASH[slot]),name,context);
 }
@@ -62,7 +62,7 @@ return AddTopic(&(TOPICHASH[slot]),name,context);
 
 struct Topic *FindTopic(char *name)
 
-{ int slot = GetHash(name);
+{ int slot = GetHash(ToLowerStr(name));
 
 return GetTopic(TOPICHASH[slot],name);
 }
@@ -84,20 +84,19 @@ else
       CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
       FatalError("");
       }
-   
-   if ((tp->topic_name = strdup(name)) == NULL)
-      {
-      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-      FatalError("");
-      }
 
+   if (NoSpecialCharacters(name))
+      {
+      tp->topic_name = strdup(ToLowerStr(name));
+      }
+   else
+      {
+      tp->topic_name = strdup(name);
+      }
+   
    if (context && strlen(context) > 0)
       {
-      if ((tp->topic_context = strdup(context)) == NULL)
-         {
-         CfOut(cf_error,"malloc","Memory failure in AddTopic");
-         FatalError("");
-         }
+      tp->topic_context = strdup(context);
       }
    else
       {
@@ -173,9 +172,16 @@ else
 
 for (rp = associates; rp != NULL; rp=rp->next)
    {
-   /* Defer checking until we have whole ontlogy - all contexts */
-   CfOut(cf_verbose,""," ---> Adding associate '%s'",rp->item);
-   IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
+   if (NoSpecialCharacters(rp->item))
+      {
+      IdempPrependRScalar(&(ta->associates),ToLowerStr(rp->item),rp->type);
+      }
+   else
+      {
+      IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
+      }
+
+   CfOut(cf_verbose,""," --> Adding associate '%s'",rp->item);
    IdempInsertTopic(rp->item);
    CF_EDGES++;
    }
@@ -349,7 +355,7 @@ int GetTopicPid(char *classified_topic)
 name[0] = '\0';
 
 DeClassifyTopic(classified_topic,name,context);
-slot = GetHash(name);
+slot = GetHash(ToLowerStr(name));
 
 if (tp = GetTopic(TOPICHASH[slot],classified_topic))
    {
@@ -386,23 +392,10 @@ for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
    {
    if (strcmp(tp->topic_name,topic_name) == 0)
       {
-      if (topic_context && strcmp(tp->topic_context,topic_context) != 0)
-         {
-         CfOut(cf_inform,""," !! Topic \"%s\" already exists, with context \"%s\" not \"%s\"\n",topic_name,tp->topic_context,topic_context);
-         return NULL;         
-         }
-      else
+      if (topic_context && strcmp(tp->topic_context,topic_context) == 0)
          {
          return tp;
          }
-      }
-
-   strncpy(l,ToLowerStr(tp->topic_name),CF_MAXVARSIZE);
-   strncpy(r,ToLowerStr(topic_name),CF_MAXVARSIZE);
-   
-   if (strcmp(l,r) == 0)
-      {
-      CfOut(cf_inform,""," ! Topic \"%s\" exists with different capitalization \"%s\" this could be a broken promise\n",topic_name,tp->topic_name);
       }
    }
 
@@ -613,3 +606,26 @@ for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
 return NULL;
 }
 
+/*****************************************************************************/
+
+int NoSpecialCharacters(char *s)
+
+{ char *sp;
+
+for (sp = s; *sp != '\0'; sp++)
+   {
+   switch (*sp)
+      {
+      case '/':
+      case '\\':
+      case '&':
+      case '|':
+      case '=':
+      case '$':
+      case '@':
+          return false;
+      }
+   }
+
+return true; 
+}

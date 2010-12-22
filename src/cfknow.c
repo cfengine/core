@@ -1038,11 +1038,7 @@ void VerifyTopicPromise(struct Promise *pp)
   struct Rlist *rp;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
-// Put all this in subfunc if LTM output specified
-
 a = GetTopicsAttributes(pp);
- 
-strncpy(id,CanonifyName(pp->promiser),CF_BUFSIZE-1);
 
 CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->promiser);
 
@@ -1069,7 +1065,7 @@ for (rp = a.synonyms; rp != NULL; rp=rp->next)
 if (handle)
    {
    IdempPrependRScalar(&(tp->synonyms),handle,CF_SCALAR);
-   InsertTopic(rp->item,"handles");
+   InsertTopic(handle,"handles");
    }
 
 // Treat comments as occurrences of information.
@@ -1080,11 +1076,6 @@ if (pp->ref)
    PrependRScalar(&list,"Go to topic",CF_SCALAR);
    AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,pp->classes);
    DeleteRlist(list);
-   }
-else
-   {
-   CfOut(cf_inform,""," -> Topic/Association \"%s\" did not install\n",pp->promiser);
-   PromiseRef(cf_inform,pp);
    }
 
 if (handle)
@@ -1196,7 +1187,7 @@ CfOut(cf_verbose,""," -> Writing %s\n",filename);
 if ((fout = fopen(filename,"w")) == NULL)
    {
    CfOut(cf_verbose,"fopen"," !! Cannot write to %s\n",filename);
-   return;
+   fout = fopen("/dev/null","w");
    }
 
 if (sql_database_defined)
@@ -1228,6 +1219,7 @@ if (sql_database_defined)
    }
 else
    {
+   CfOut(cf_verbose,""," -> Unable to connect to \"%s\"\n",SQL_DATABASE);
    cfdb.connected = false;
    }
 
@@ -1377,7 +1369,7 @@ for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
          
          DeClassifyTopic(rp->item,to_topic,to_type);
          
-         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_context,to_context,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_context,to_type,tp->id,to_id);
+         snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_context,to_context,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,EscapeSQL(&cfdb,to_topic),NOVA_SYNONYM,NOVA_SYNONYM,tp->topic_context,to_type,tp->id,to_id);
          
          fprintf(fout,"%s",query);
          CfVoidQueryDB(&cfdb,query);
@@ -1393,7 +1385,7 @@ for (op = OCCURRENCES; op != NULL; op=op->next)
       char safeexpr[CF_BUFSIZE];
       strcpy(safeexpr,EscapeSQL(&cfdb,op->locator));
       
-      snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (context,topic_name,locator,locator_type,subtype) values ('%s','%s','%s','%d','%s')\n",op->occurrence_context ,safeexpr,op->rep_type,rp->item);
+      snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (context,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",op->occurrence_context,safeexpr,op->rep_type,rp->item);
       fprintf(fout,"%s",query);
       CfVoidQueryDB(&cfdb,query);
       Debug(" -> Add occurrence of %s\n",tp->topic_name);

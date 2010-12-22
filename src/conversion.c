@@ -43,7 +43,15 @@ void IPString2KeyDigest(char *ipv4,char *result)
   void *value;
   struct CfKeyHostSeen entry;
   int ret,ksize,vsize, ok = false;
+  unsigned char digest[EVP_MAX_MD_SIZE+1];
 
+if (strcmp(ipv4,"127.0.0.1") == 0 || strcmp(ipv4,"::1") == 0 || strcmp(ipv4,VIPADDRESS) == 0)
+   {
+   HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
+   snprintf(result,CF_MAXVARSIZE,"%s",HashPrint(CF_DEFAULT_DIGEST,digest));
+   return;
+   }
+  
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 

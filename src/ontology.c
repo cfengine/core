@@ -37,7 +37,21 @@ extern struct Occurrences *OCCURRENCES;
 
 /*****************************************************************************/
 
-struct Topic *StoreTopic(char *name,char *context)
+struct Topic *IdempInsertTopic(char *classified_name)
+
+{ char context[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
+   
+context[0] = '\0';
+topic[0] = '\0';
+
+DeClassifyTopic(classified_name,topic,context);
+
+return InsertTopic(topic,context);
+}
+
+/*****************************************************************************/
+
+struct Topic *InsertTopic(char *name,char *context)
 
 { int slot = GetHash(name);
 
@@ -46,11 +60,11 @@ return AddTopic(&(TOPICHASH[slot]),name,context);
 
 /*****************************************************************************/
 
-struct Topic *FindTopic(char *name,char *context)
+struct Topic *FindTopic(char *name)
 
 { int slot = GetHash(name);
 
-return TopicExists(TOPICHASH[slot],name,context);
+return GetTopic(TOPICHASH[slot],name);
 }
 
 /*****************************************************************************/
@@ -59,7 +73,7 @@ struct Topic *AddTopic(struct Topic **list,char *name,char *context)
 
 { struct Topic *tp;
 
-if (tp = TopicExists(*list,name,context))
+if (tp = TopicExists(name,context))
    {
    CfOut(cf_verbose,""," -> Topic %s already defined, ok\n",name);
    }
@@ -76,11 +90,18 @@ else
       CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
       FatalError("");
       }
-   
-   if ((tp->topic_context = strdup(context)) == NULL)
+
+   if (context && strlen(context) > 0)
       {
-      CfOut(cf_error,"malloc","Memory failure in AddTopic");
-      FatalError("");
+      if ((tp->topic_context = strdup(context)) == NULL)
+         {
+         CfOut(cf_error,"malloc","Memory failure in AddTopic");
+         FatalError("");
+         }
+      }
+   else
+      {
+      tp->topic_context = strdup("any");
       }
 
    tp->id = GLOBAL_ID++;
@@ -155,6 +176,7 @@ for (rp = associates; rp != NULL; rp=rp->next)
    /* Defer checking until we have whole ontlogy - all contexts */
    CfOut(cf_verbose,""," ---> Adding associate '%s'",rp->item);
    IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
+   IdempInsertTopic(rp->item);
    CF_EDGES++;
    }
 }
@@ -321,8 +343,15 @@ return false;
 int GetTopicPid(char *classified_topic)
 
 { struct Topic *tp;
- 
-if (tp = GetTopic(TOPIC_MAP,classified_topic))
+  int slot;
+  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
+
+name[0] = '\0';
+
+DeClassifyTopic(classified_topic,name,context);
+slot = GetHash(name);
+
+if (tp = GetTopic(TOPICHASH[slot],classified_topic))
    {
    return tp->id;
    }
@@ -347,13 +376,13 @@ return sp;
 /* Level                                                                     */
 /*****************************************************************************/
 
-struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_context)
+struct Topic *TopicExists(char *topic_name,char *topic_context)
 
 { struct Topic *tp;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
   int slot = GetHash(topic_name);
 
-for (tp = list; tp != NULL; tp=tp->next)
+for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
    {
    if (strcmp(tp->topic_name,topic_name) == 0)
       {
@@ -559,11 +588,12 @@ return NULL;
 
 /*****************************************************************************/
 
-char *GetTopicContext(struct Topic *list,char *topic_name)
+char *GetTopicContext(char *topic_name)
 
 { struct Topic *tp;
   static char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
-
+  int slot = GetHash(topic_name);
+ 
 context1[0] = '\0';
 DeClassifyTopic(topic_name,topic1,context1);
 
@@ -572,7 +602,7 @@ if (strlen(context1) > 0)
    return context1;
    }
 
-for (tp = list; tp != NULL; tp=tp->next)
+for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
    {
    if (strcmp(topic1,tp->topic_name) == 0)
       {

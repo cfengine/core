@@ -916,7 +916,7 @@ int GetShiftSlot(time_t here_and_now);
 
 /* graph.c */
 
-void VerifyGraph(struct Topic *map,struct Rlist *list,char *view);
+void VerifyGraph(struct Rlist *list,char *view);
 int AlreadyInTribe(int node, int *tribe);
 int Degree(double *m,int dim);
 int IsTop(double **adj,double *evc,int topic,int dim);
@@ -1138,14 +1138,15 @@ void MountAll(void);
 
 /* ontology.c */
 
-struct Topic *StoreTopic(char *name,char *context);
-struct Topic *FindTopic(char *name,char *context);
+struct Topic *IdempInsertTopic(char *classified_name);
+struct Topic *InsertTopic(char *name,char *context);
+struct Topic *FindTopic(char *name);
 int GetTopicPid(char *typed_topic);
 struct Topic *AddTopic(struct Topic **list,char *name,char *type);
 void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int verify);
 void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context);
-struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_type);
-char *GetTopicContext(struct Topic *list,char *topic_name);
+struct Topic *TopicExists(char *topic_name,char *topic_type);
+char *GetTopicContext(char *topic_name);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify);

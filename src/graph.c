@@ -38,7 +38,7 @@
 
 /*****************************************************************************/
 
-void VerifyGraph(struct Topic *map, struct Rlist *assoc_views,char *view)
+void VerifyGraph(struct Rlist *assoc_views,char *view)
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -56,10 +56,7 @@ if (view)
 
 /* Just count up the topics */
 
-for (tp = map; tp != NULL; tp=tp->next)
-   {
-   topic_count++;
-   }
+topic_count = CF_NODES;
 
 /* Allocate an array we can pass to a subroutine */
 
@@ -91,43 +88,45 @@ for (i = 0; i < topic_count; i++)
    n[i] = NULL;
    }
 
-for (tp = map; tp != NULL; tp=tp->next)
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
-   CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
+   for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
+      {
+      n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
+      CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
+      }
    }
 
 /* Construct the adjacency matrix for the map */
 
-for (tp = map; tp != NULL; tp=tp->next)
+for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   for (ta = tp->associations; ta != NULL; ta=ta->next)
+   for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
       {
-      /* Semantic projection if selected a view... */
-      
-      if (assoc_views && !KeyInRlist(assoc_views,ta->fwd_name))
+      for (ta = tp->associations; ta != NULL; ta=ta->next)
          {
-         continue;
-         }
-
-      /* ...else all associations in play */
-
-      for (rp = ta->associates; rp != NULL; rp=rp->next)
-         {
-         int count = 0;
-         int to_id = GetTopicPid(rp->item);
-         int from_id = tp->id;
-
-         if (to_id > 0 && from_id > 0)
+         /* Semantic projection if selected a view... */
+         
+         if (assoc_views && !KeyInRlist(assoc_views,ta->fwd_name))
             {
-            adj[from_id][to_id] = adj[to_id][from_id] = 1.0;
+            continue;
+            }
+         
+         /* ...else all associations in play */
+         
+         for (rp = ta->associates; rp != NULL; rp=rp->next)
+            {
+            int count = 0;
+            int to_id = GetTopicPid(rp->item);
+            int from_id = tp->id;
+            
+            if (to_id > 0 && from_id > 0)
+               {
+               adj[from_id][to_id] = adj[to_id][from_id] = 1.0;
+               }
             }
          }
-      }
-   
-   if (++i == topic_count)
-      {
-      break;
       }
    }
 

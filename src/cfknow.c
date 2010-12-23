@@ -1073,6 +1073,7 @@ if (handle)
 if (pp->ref)
    {
    struct Rlist *list = NULL;
+   snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
    PrependRScalar(&list,"Go to topic",CF_SCALAR);
    AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,pp->classes);
    DeleteRlist(list);
@@ -1387,7 +1388,7 @@ for (op = OCCURRENCES; op != NULL; op=op->next)
       
       snprintf(query,CF_BUFSIZE-1,"INSERT INTO occurrences (context,locator,locator_type,subtype) values ('%s','%s','%d','%s')\n",op->occurrence_context,safeexpr,op->rep_type,rp->item);
       fprintf(fout,"%s",query);
-      CfVoidQueryDB(&cfdb,query);
+ CfVoidQueryDB(&cfdb,query);
       Debug(" -> Add occurrence of %s\n",tp->topic_name);
       }
    }

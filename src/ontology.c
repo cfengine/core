@@ -387,7 +387,7 @@ struct Topic *TopicExists(char *topic_name,char *topic_context)
 
 { struct Topic *tp;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
-  int slot = GetHash(topic_name);
+  int slot = GetHash(ToLowerStr(topic_name));
 
 for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
    {

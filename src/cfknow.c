@@ -1075,7 +1075,7 @@ if (pp->ref)
    struct Rlist *list = NULL;
    snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
    PrependRScalar(&list,"Go to topic",CF_SCALAR);
-   AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,pp->classes);
+   AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
    DeleteRlist(list);
    }
 

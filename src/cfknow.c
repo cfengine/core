@@ -182,7 +182,7 @@ if (strlen(TOPIC_CMD) == 0)
    GenerateGraph();
    complete = (double)CF_NODES*(CF_NODES-1);
    percent = 100.0 * (double)CF_EDGES/(double)complete;
-   CfOut(cf_inform,""," -> Complexity of knowledge model yields %d/%d = %.1lf%%\n",CF_EDGES,complete,percent);
+   CfOut(cf_inform,""," -> Complexity of knowledge model yields %d/%d = %.4lf%%\n",CF_EDGES,complete,percent);
    }
 else
    {

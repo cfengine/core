@@ -211,6 +211,7 @@ if ((op = OccurrenceExists(*list,reference,rtype)) == NULL)
    *list = op;
    CF_EDGES++;
    CF_NODES++;
+   CfOut(cf_verbose,""," -> Noted occurrence for %s::%s",context,reference);
    }
 
 /* Occurrence now exists, so add new subtype promises */

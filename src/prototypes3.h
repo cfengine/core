@@ -1157,7 +1157,7 @@ void DeClassifyCanonicalTopic(char *typed_topic,char *topic,char *type);
 char *ClassifiedTopic(char *topic,char *type);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 char *URLHint(char *s);
-int NoSpecialCharacters(char *s);
+char *NormalizeTopic(char *s);
 
 /* patches.c */
 

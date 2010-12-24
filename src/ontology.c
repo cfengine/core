@@ -85,18 +85,11 @@ else
       FatalError("");
       }
 
-   if (NoSpecialCharacters(name))
-      {
-      tp->topic_name = strdup(ToLowerStr(name));
-      }
-   else
-      {
-      tp->topic_name = strdup(name);
-      }
+   tp->topic_name = strdup(NormalizeTopic(name));
    
    if (context && strlen(context) > 0)
       {
-      tp->topic_context = strdup(context);
+      tp->topic_context = strdup(NormalizeTopic(context));
       }
    else
       {
@@ -172,15 +165,7 @@ else
 
 for (rp = associates; rp != NULL; rp=rp->next)
    {
-   if (NoSpecialCharacters(rp->item))
-      {
-      IdempPrependRScalar(&(ta->associates),ToLowerStr(rp->item),rp->type);
-      }
-   else
-      {
-      IdempPrependRScalar(&(ta->associates),rp->item,rp->type);
-      }
-
+   IdempPrependRScalar(&(ta->associates),NormalizeTopic(rp->item),rp->type);
    CfOut(cf_verbose,""," --> Adding associate '%s'",rp->item);
    IdempInsertTopic(rp->item);
    CF_EDGES++;
@@ -386,16 +371,26 @@ return sp;
 struct Topic *TopicExists(char *topic_name,char *topic_context)
 
 { struct Topic *tp;
-  char l[CF_BUFSIZE],r[CF_BUFSIZE];
-  int slot = GetHash(ToLowerStr(topic_name));
+  char c[CF_BUFSIZE];
+  int slot;
 
+slot = GetHash(ToLowerStr(topic_name));
+  
 for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
    {
-   if (strcmp(tp->topic_name,topic_name) == 0)
+   if (strcmp(tp->topic_name,NormalizeTopic(topic_name)) == 0)
       {
-      if (topic_context && strcmp(tp->topic_context,topic_context) == 0)
+      if (topic_context)
          {
-         return tp;
+         if (strlen(topic_context) > 0 && strcmp(tp->topic_context,NormalizeTopic(topic_context)) == 0)
+            {
+            return tp;
+            }
+
+         if (strlen(topic_context) == 0 && strcmp(tp->topic_context,"any") == 0)
+            {
+            return tp;
+            }
          }
       }
    }
@@ -609,24 +604,26 @@ return NULL;
 
 /*****************************************************************************/
 
-int NoSpecialCharacters(char *s)
+char *NormalizeTopic(char *s)
 
 { char *sp;
+  int special = false;
 
 for (sp = s; *sp != '\0'; sp++)
    {
-   switch (*sp)
+   if (IsIn(*sp,"/\\&|=$@"))
       {
-      case '/':
-      case '\\':
-      case '&':
-      case '|':
-      case '=':
-      case '$':
-      case '@':
-          return false;
+      special = true;
+      break;
       }
    }
 
-return true; 
+if (special)
+   {
+   return s;
+   }
+else
+   {
+   return ToLowerStr(s);
+   }
 }

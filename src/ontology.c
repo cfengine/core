@@ -180,7 +180,7 @@ void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *repres
   struct TopRepresentation *tr;
   struct Rlist *rp;
 
-if ((op = OccurrenceExists(*list,reference,rtype)) == NULL)
+  if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
    {
    if ((op = (struct Occurrence *)malloc(sizeof(struct Occurrence))) == NULL)
       {
@@ -497,13 +497,13 @@ return NULL;
 
 /*****************************************************************************/
 
-struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations rep_type)
+struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations rep_type,char *context)
 
 { struct Occurrence *op;
   
 for (op = list; op != NULL; op=op->next)
    {
-   if (strcmp(locator,op->locator) == 0)
+   if (strcmp(locator,op->locator) == 0 && strcmp(op->occurrence_context,context) == 0)
       {
       return op;
       }

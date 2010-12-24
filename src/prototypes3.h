@@ -1150,7 +1150,7 @@ char *GetTopicContext(char *topic_name);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify);
-struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
+struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
 int ClassifiedTopicMatch(char *ttopic1,char *ttopic2);
 void DeClassifyTopic(char *typdetopic,char *topic,char *type);
 void DeClassifyCanonicalTopic(char *typed_topic,char *topic,char *type);

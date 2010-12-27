@@ -175,24 +175,25 @@ struct BodySyntax CFA_CONTROLBODY[] =
 
 struct BodySyntax CFS_CONTROLBODY[] =
    {
-   {"cfruncommand",cf_str,CF_PATHRANGE,"Path to the cf-agent command or cf-execd wrapper for remote execution"},
-   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of connections that will be accepted by cf-serverd"},
-   {"denybadclocks",cf_opts,CF_BOOL,"true/false accept connections from hosts with clocks that are out of sync"},
-   {"allowconnects",cf_slist,"","List of IPs or hostnames that may connect to the server port"},
-   {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
    {"allowallconnects",cf_slist,"","List of IPs or hostnames that may have more than one connection to the server port"},
-   {"trustkeysfrom",cf_slist,"","List of IPs from whom we accept public keys on trust"},
+   {"allowconnects",cf_slist,"","List of IPs or hostnames that may connect to the server port"},
    {"allowusers",cf_slist,"","List of usernames who may execute requests from this server"},
-   {"dynamicaddresses",cf_slist,"","List of IPs or hostnames for which the IP/name binding is expected to change"},
-   {"skipverify",cf_slist,"","List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
-   {"logallconnections",cf_opts,CF_BOOL,"true/false causes the server to log all new connections to syslog"},
-   {"logencryptedtransfers",cf_opts,CF_BOOL,"true/false log all successful transfers required to be encrypted"},
-   {"hostnamekeys",cf_opts,CF_BOOL,"true/false store keys using hostname lookup instead of IP addresses"},
    {"auditing",cf_opts,CF_BOOL,"true/false activate auditing of server connections"},
    {"bindtointerface",cf_str,"","IP of the interface to which the server should bind on multi-homed hosts"},
-   {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
-   {"port",cf_int,"1024,99999","Default port for cfengine server"},
+   {"bindtoport",cf_str,"","Port number of the cfengine service (defaults to the standard port 5308)"},
+   {"cfruncommand",cf_str,CF_PATHRANGE,"Path to the cf-agent command or cf-execd wrapper for remote execution"},
+   {"denybadclocks",cf_opts,CF_BOOL,"true/false accept connections from hosts with clocks that are out of sync"},
+   {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
+   {"dynamicaddresses",cf_slist,"","List of IPs or hostnames for which the IP/name binding is expected to change"},
+   {"hostnamekeys",cf_opts,CF_BOOL,"true/false store keys using hostname lookup instead of IP addresses"},
    {"keycacheTTL",cf_int,CF_VALRANGE,"Maximum number of hours to hold public keys in the cache"},
+   {"logallconnections",cf_opts,CF_BOOL,"true/false causes the server to log all new connections to syslog"},
+   {"logencryptedtransfers",cf_opts,CF_BOOL,"true/false log all successful transfers required to be encrypted"},
+   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of connections that will be accepted by cf-serverd"},
+   {"port",cf_int,"1024,99999","Default port for cfengine server"},
+   {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
+   {"skipverify",cf_slist,"","List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
+   {"trustkeysfrom",cf_slist,"","List of IPs from whom we accept public keys on trust"},
    {NULL,cf_notype,NULL,NULL}
    };
 

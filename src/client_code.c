@@ -1035,12 +1035,12 @@ if (!attr.copy.force_ipv4)
             }
          }
 
-      if(TryConnect(conn,&tv,ap->ai_addr,ap->ai_addrlen))
-	{
-	  connected = true;
-	  break;
-	}
-
+      if (TryConnect(conn,&tv,ap->ai_addr,ap->ai_addrlen))
+         {
+         connected = true;
+         break;
+         }
+      
       }
    
    if (connected)

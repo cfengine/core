@@ -2304,7 +2304,16 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_fileexists].args,finalargs); /* Arg validatio
 
 if (lstat(finalargs->item,&statbuf) == -1)
    {
-   strcpy(buffer,"!any");
+   if (fn == cfn_filesize)
+      {      
+      strcpy(buffer,"-1");
+      }
+   else
+      {
+      strcpy(buffer,"!any");
+      }
+
+   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_FAILURE,NULL,NULL);
    }
 else
    {
@@ -2339,6 +2348,10 @@ else
           break;
       case cfn_fileexists:
           strcpy(buffer,"any");
+          break;
+
+      case cfn_filesize:
+          snprintf(buffer,CF_MAXVARSIZE,"%ld",statbuf.st_size);
           break;
       }
 

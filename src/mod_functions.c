@@ -614,6 +614,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"execresult",cf_str,2,EXECRESULT_ARGS,"Execute named command and assign output to variable"},
    {"fileexists",cf_class,1,FILESTAT_ARGS,"True if the named file can be accessed"},
    {"filesexist",cf_class,1,FILESEXIST_ARGS,"True if the named list of files can ALL be accessed"},
+   {"filesize",cf_int,1,FILESTAT_ARGS,"Returns the size in bytes of the file"},
    {"getenv",cf_str,2,GETENV_ARGS,"Return the environment variable named arg1, truncated at arg2 characters"},
    {"getfields",cf_int,4,GETFIELDS_ARGS,"Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4"},
    {"getgid",cf_int,1,GETGID_ARGS,"Return the integer group id of the named group on this host"},

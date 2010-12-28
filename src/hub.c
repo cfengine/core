@@ -293,6 +293,15 @@ for (cp = ControlBodyConstraints(cf_hub); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET export_zenoss = %d\n",CFH_ZENOSS);
       continue;
       }
+   
+   if (strcmp(cp->lval,CFH_CONTROLBODY[cfh_port].lval) == 0)
+      {
+      SHORT_CFENGINEPORT = (short)Str2Int(retval);
+      strncpy(STR_CFENGINEPORT,retval,15);
+      CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT,retval);
+      continue;
+      }
+
 
    }
 }

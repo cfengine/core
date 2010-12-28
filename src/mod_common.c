@@ -180,7 +180,6 @@ struct BodySyntax CFS_CONTROLBODY[] =
    {"allowusers",cf_slist,"","List of usernames who may execute requests from this server"},
    {"auditing",cf_opts,CF_BOOL,"true/false activate auditing of server connections"},
    {"bindtointerface",cf_str,"","IP of the interface to which the server should bind on multi-homed hosts"},
-   {"bindtoport",cf_str,"","Port number of the cfengine service (defaults to the standard port 5308)"},
    {"cfruncommand",cf_str,CF_PATHRANGE,"Path to the cf-agent command or cf-execd wrapper for remote execution"},
    {"denybadclocks",cf_opts,CF_BOOL,"true/false accept connections from hosts with clocks that are out of sync"},
    {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
@@ -281,6 +280,7 @@ struct BodySyntax CFH_CONTROLBODY[] = /* enum cfh_control */
    {
    {"export_zenoss",cf_opts,CF_BOOL,"Make data available for Zenoss integration in docroot/reports/summary.z"},
    {"hub_schedule",cf_slist,"","The class schedule used by cf-hub for report collation"},
+   {"port",cf_int,"1024,99999","Default port for contacting hub nodes"},
    {NULL,cf_notype,NULL,NULL}
    };
 

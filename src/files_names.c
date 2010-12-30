@@ -223,6 +223,24 @@ int IsNewerFileTree(char *dir,time_t reftime)
   struct stat sb;
 
 // Assumes that race conditions on the file path are unlikely and unimportant
+
+if (lstat(dir,&sb) == -1)
+   {
+   CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",dir);
+   // return true to provoke update
+   return true;
+   }
+
+if (S_ISDIR(sb.st_mode))
+   {
+   CfOut(cf_verbose,""," ?? Looking at %s (%ld)",path,sb.st_mtime-reftime);      
+   
+   if (sb.st_mtime > reftime)
+      {
+      CfOut(cf_verbose,""," >> Detected change in %s",dir);      
+      return true;
+      }
+   }
   
 if ((dirh=opendir(dir)) == NULL)
    {
@@ -251,13 +269,15 @@ else
          {
          CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",path);
 	 closedir(dirh);
-         return false;
+         // return true to provoke update
+         return true;
          }
 
       if (S_ISDIR(sb.st_mode))
          {
          if (sb.st_mtime > reftime)
             {
+            CfOut(cf_verbose,""," >> Detected change in %s",path);      
             closedir(dirh);
             return true;
             }

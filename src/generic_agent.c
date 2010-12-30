@@ -661,15 +661,20 @@ if (stat(filename,&sb) != -1)
    {
    PROMISETIME = sb.st_mtime;
    }
+else
+   {
+   PROMISETIME = 0;
+   }
 
 if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
    {
-   CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
-   return false;
+   CfOut(cf_verbose,"stat","There is no readable input file at %s",VINPUTFILE);
+   return true;
    }
 
 if (sb.st_mtime > PROMISETIME)
    {
+   CfOut(cf_verbose,""," -> Promises seem to changed");
    return true;
    }
 
@@ -680,6 +685,7 @@ MapName(filename);
 
 if (IsNewerFileTree(filename,PROMISETIME))
    {
+   CfOut(cf_verbose,""," -> Quick search detected file changes");
    return true;
    }
 
@@ -703,7 +709,8 @@ if (VINPUTLIST != NULL)
 
                 if (cfstat(InputLocation((char *)returnval.item),&sb) == -1)
                    {
-                   CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)returnval.item);
+                   CfOut(cf_error,"stat","Unreadable promise proposals at %s",(char *)returnval.item);
+                   result = true;
                    break;
                    }
 
@@ -720,7 +727,8 @@ if (VINPUTLIST != NULL)
                    {
                    if (cfstat(InputLocation((char *)sl->item),&sb) == -1)
                       {
-                      CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl->item);
+                      CfOut(cf_error,"stat","Unreadable promise proposals at %s",(char *)sl->item);
+                      result = true;
                       break;
                       }
 

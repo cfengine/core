@@ -1723,7 +1723,7 @@ void Version(char *component)
 {
 char vStr[CF_SMALLBUF];
 
-if(INFORM || VERBOSE)
+if (INFORM || VERBOSE)
   {
   snprintf(vStr,sizeof(vStr),"%s (%s)",VERSION,CF3_REVISION);
   }

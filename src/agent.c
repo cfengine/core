@@ -1160,7 +1160,7 @@ void DeleteTypeContext(enum typesequence type)
 switch(type)
    {
    case kp_classes:
-       HashVariables(NULL);
+       HashVariables(THIS_BUNDLE);
        break;
    case kp_environments:
 

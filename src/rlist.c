@@ -173,7 +173,7 @@ void *CopyRvalItem(void *item, char type)
   struct FnCall *fp;
   void *new,*rval;
   char rtype = CF_SCALAR,output[CF_BUFSIZE];
-  char naked[CF_MAXVARSIZE];
+  char naked[CF_BUFSIZE];
   
 Debug("CopyRvalItem(%c)\n",type);
 

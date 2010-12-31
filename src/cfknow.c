@@ -65,6 +65,7 @@ void GenerateGraph(void);
 void GenerateManual(void);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
 void CfQueryCFDB(char *query);
+struct Rlist *SplitContextExpression(char *s,struct Promise *pp);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -1034,8 +1035,8 @@ void VerifyTopicPromise(struct Promise *pp)
 { char id[CF_BUFSIZE];
   char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
   struct Attributes a = {0};
-  struct Topic *tp,*tpn,*tp_sub;
-  struct Rlist *rp;
+  struct Topic *tp = NULL,*tpn,*tp_sub;
+  struct Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
 a = GetTopicsAttributes(pp);
@@ -1044,48 +1045,57 @@ CfOut(cf_verbose,""," -> Attempting to install topic %s::%s \n",pp->classes,pp->
 
 // Add a standard reserved word
 
-if ((tp = InsertTopic(pp->promiser,pp->classes)) == NULL)
-   {
-   return;
-   }
+contexts = SplitContextExpression(pp->classes,pp);
 
-if (a.fwd_name && a.bwd_name)
+for (rp = contexts; rp != NULL; rp = rp->next)
    {
-   AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
-   }
+   if ((tp = InsertTopic(pp->promiser,rp->item)) == NULL)
+      {
+      return;
+      }
 
+   CfOut(cf_verbose,""," -> New topic promise for \"%s\" about context \"%s\"",pp->promiser,rp->item);
+   
+   if (a.fwd_name && a.bwd_name)
+      {
+      AddTopicAssociation(&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+      }
+   
 // Handle all synonyms as associations later
-
-for (rp = a.synonyms; rp != NULL; rp=rp->next)
-   {
-   IdempPrependRScalar(&(tp->synonyms),rp->item,CF_SCALAR);
-   IdempInsertTopic(rp->item);
-   }
-
-if (handle)
-   {
-   IdempPrependRScalar(&(tp->synonyms),handle,CF_SCALAR);
-   InsertTopic(handle,"handles");
-   }
-
+   
+   for (rps = a.synonyms; rps != NULL; rps=rps->next)
+      {
+      IdempPrependRScalar(&(tp->synonyms),rps->item,CF_SCALAR);
+      IdempInsertTopic(rps->item);
+      }
+   
+   if (handle)
+      {
+      IdempPrependRScalar(&(tp->synonyms),handle,CF_SCALAR);
+      InsertTopic(handle,"handles");
+      }
+   
 // Treat comments as occurrences of information.
 
-if (pp->ref)
-   {
-   struct Rlist *list = NULL;
-   snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
-   PrependRScalar(&list,"description",CF_SCALAR);
-   AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
-   DeleteRlist(list);
+   if (pp->ref)
+      {
+      struct Rlist *list = NULL;
+      snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
+      PrependRScalar(&list,"description",CF_SCALAR);
+      AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
+      DeleteRlist(list);
+      }
+   
+   if (handle)
+      {
+      struct Rlist *list = NULL;
+      PrependRScalar(&list,handle,CF_SCALAR);
+      AddTopicAssociation(&(tp->associations),"is the promise of","stands for",list,true);
+      DeleteRlist(list);
+      }
    }
 
-if (handle)
-   {
-   struct Rlist *list = NULL;
-   PrependRScalar(&list,handle,CF_SCALAR);
-   AddTopicAssociation(&(tp->associations),"is the promise of","stands for",list,true);
-   DeleteRlist(list);
-   }
+DeleteRlist(contexts);
 }
 
 /*********************************************************************/
@@ -1096,6 +1106,7 @@ void VerifyOccurrencePromises(struct Promise *pp)
   struct Topic *tp;
   char name[CF_BUFSIZE];
   enum representations rep_type;
+  struct Rlist *contexts,*rp;
   int s,e;
 
 a = GetOccurrenceAttributes(pp);
@@ -1115,38 +1126,43 @@ else
    rep_type = cfk_url;
    }
 
-if (BlockTextMatch("[()]+",pp->classes,&s,&e))
+contexts = SplitContextExpression(pp->classes,pp);
+
+for (rp = contexts; rp != NULL; rp = rp->next)
    {
-   CfOut(cf_error,""," !! Class should be a single topic or typed TYPE.TOPIC for occurrences - %s does not make sense",pp->classes);
-   return;
+   CfOut(cf_verbose,""," -> New occurrence promise for \"%s\" about context \"%s\"",pp->promiser,rp->item);
+   
+   switch (rep_type)
+      {
+      case cfk_file:
+          
+          if (a.web_root == NULL || a.path_root == NULL)
+             {
+             CfOut(cf_error,""," !! File pattern but no complete url mapping path_root -> web_root");
+             return;
+             }
+          
+          strncpy(name,a.path_root,CF_BUFSIZE-1);
+          
+          if (!JoinPath(name,pp->promiser))
+             {
+             CfOut(cf_error,""," !! Unable to form pathname in search for local files");
+             return;
+             }
+
+          // FIXME - this should pass rp->item instead of pp->classes if we want to keep this
+          
+          LocateFilePromiserGroup(name,pp,VerifyOccurrenceGroup);
+          break;
+          
+      default:
+          
+          AddOccurrence(&OCCURRENCES,pp->promiser,a.represents,rep_type,rp->item);
+          break;
+      }
    }
 
-switch (rep_type)
-   {
-   case cfk_file:
-
-       if (a.web_root == NULL || a.path_root == NULL)
-          {
-          CfOut(cf_error,""," !! File pattern but no complete url mapping path_root -> web_root");
-          return;
-          }
-
-       strncpy(name,a.path_root,CF_BUFSIZE-1);
-
-       if (!JoinPath(name,pp->promiser))
-          {
-          CfOut(cf_error,""," !! Unable to form pathname in search for local files");
-          return;
-          }
-       
-       LocateFilePromiserGroup(name,pp,VerifyOccurrenceGroup);
-       break;
-       
-   default:
-
-       AddOccurrence(&OCCURRENCES,pp->promiser,a.represents,rep_type,pp->classes);
-       break;
-   }
+DeleteRlist(contexts);
 }
 
 /*********************************************************************/
@@ -2461,6 +2477,116 @@ AddOccurrence(&OCCURRENCES,url,retval.item,cfk_url,pp->classes);
 CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 
 DeleteRvalItem(retval.item,CF_LIST);
+}
+
+/*********************************************************************/
+
+struct Rlist *SplitContextExpression(char *context,struct Promise *pp)
+
+{ struct Rlist *list = NULL;
+  char *sp,*spsub,cbuff[CF_MAXVARSIZE],csub[CF_MAXVARSIZE];
+  int result = false;
+  
+if (context == NULL)
+   {
+   PrependRScalar(&list,"any",CF_SCALAR);
+   }
+else
+   {
+   for (sp = context; *sp != '\0'; sp++)
+      {
+      while (*sp == '|')
+         {
+         sp++;
+         }
+      
+      memset(cbuff,0,CF_MAXVARSIZE);
+      
+      sp += GetORAtom(sp,cbuff);
+      
+      if (strlen(cbuff) == 0)
+         {
+         break;
+         }
+      
+      if (IsBracketed(cbuff))
+         {
+         // Fully bracketed atom (protected)
+         cbuff[strlen(cbuff)-1] = '\0';
+         PrependRScalar(&list,cbuff+1,CF_SCALAR);
+         }
+      else
+         {
+         if (HasBrackets(cbuff,pp))             
+            {
+            struct Rlist *andlist = SplitRegexAsRList(cbuff,"[.&]+",99,false);
+            struct Rlist *rp,*orlist = NULL;
+            char buff[CF_MAXVARSIZE];
+            char orstring[CF_MAXVARSIZE] = {0};
+            char andstring[CF_MAXVARSIZE] = {0};
+
+            // Apply distribution P.(A|B) -> P.A|P.B
+            
+            for (rp = andlist; rp != NULL; rp=rp->next)
+               {
+               if (IsBracketed(rp->item))
+                  {
+                  // This must be an OR string to be ORed and split into a list
+                  *((char *)rp->item+strlen((char *)rp->item)-1) = '\0';
+
+                  if (strlen(orstring) > 0)
+                     {
+                     strcat(orstring,"|");
+                     }
+                  
+                  Join(orstring,rp->item+1,CF_MAXVARSIZE);
+                  }
+               else
+                  {
+                  if (strlen(andstring) > 0)
+                     {
+                     strcat(andstring,".");
+                     }
+                  
+                  Join(andstring,rp->item,CF_MAXVARSIZE);
+                  }
+
+               // foreach ORlist, AND with AND string
+               }
+
+            if (strlen(orstring) > 0)
+               {
+               orlist = SplitRegexAsRList(orstring,"[|]+",99,false);
+               
+               for (rp = orlist; rp != NULL; rp=rp->next)
+                  {
+                  snprintf(buff,CF_MAXVARSIZE,"%s.%s",rp->item,andstring);
+                  PrependRScalar(&list,buff,CF_SCALAR);
+                  }
+               }
+            else
+               {
+               PrependRScalar(&list,andstring,CF_SCALAR);
+               }
+            
+            DeleteRlist(orlist);
+            DeleteRlist(andlist);
+            }
+         else
+            {
+            // Clean atom
+            PrependRScalar(&list,cbuff,CF_SCALAR);
+            }
+         }
+      
+      if (*sp == '\0')
+         {
+         break;
+         }
+      }
+   }
+ 
+return list;
 }
 
 /*********************************************************************/

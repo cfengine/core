@@ -526,6 +526,7 @@ int GetORAtom (char *start, char *buffer);
 int GetANDAtom (char *start, char *buffer);
 int CountEvalAtoms (char *class);
 int IsBracketed (char *s);
+int HasBrackets(char *s,struct Promise *pp);
 void SaveClassEnvironment(void);
 
 /* evalfunction.c */

@@ -63,7 +63,8 @@ topic_count = CF_NODES;
 topic_count++;
 
 adj = (double **)malloc(sizeof(double *)*topic_count);
-
+evc = (double *)malloc(sizeof(double)*topic_count);
+   
 if (adj == NULL)
    {
    FatalError("memory allocation in graphs");
@@ -86,17 +87,9 @@ for (i = 0; i < topic_count; i++)
       }
 
    n[i] = NULL;
+   evc[i] = 0;
    }
 
-
-for (i = 0; i < CF_HASHTABLESIZE; i++)
-   {
-   for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
-      {
-      n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
-      CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
-      }
-   }
 
 /* Construct the adjacency matrix for the map */
 
@@ -130,7 +123,19 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
       }
    }
 
-/* Node degree ranking */
+/* Node degree ranking - global ranking is too non-specific as the data are highly clustered or very sparse */
+
+EigenvectorCentrality(adj,evc,topic_count);
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
+      {
+      n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
+      CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
+      tp->evc = evc[tp->id];
+      }
+   }
 
 k = (int *)malloc(sizeof(int)*topic_count);
 
@@ -161,7 +166,7 @@ for (i = max_k; i >= 0; i--)
 for (i = 0; i < topic_count; i++)
    {
 #if defined HAVE_LIBCFNOVA && defined HAVE_LIBGD
-   Nova_PlotTopicCosmos(i,adj,n,topic_count,view);
+   Nova_PlotTopicCosmos(i,adj,n,topic_count,view,evc);
 #else
    PlotTopicCosmos(i,adj,n,topic_count,view);
 #endif
@@ -182,6 +187,7 @@ for (i = 0; i < topic_count; i++)
       }
    }
 
+free(evc);
 free(adj);
 free(k);
 free(n);

@@ -1195,6 +1195,7 @@ struct Topic
    int id;
    char *topic_context;
    char *topic_name;
+   double evc;
    struct Rlist *synonyms;
    struct TopicAssociation *associations;
    struct Topic *next;

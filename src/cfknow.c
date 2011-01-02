@@ -178,9 +178,9 @@ if (strlen(TOPIC_CMD) == 0)
    int complete;
    double percent;
    KeepPromiseBundles();
+   GenerateGraph();
    GenerateSQL();
    GenerateManual();
-   GenerateGraph();
    complete = (double)CF_NODES*(CF_NODES-1);
    percent = 100.0 * (double)CF_EDGES/(double)complete;
    CfOut(cf_inform,""," -> Complexity of knowledge model yields %d/%d = %.4lf%%\n",CF_EDGES,complete,percent);
@@ -1251,7 +1251,8 @@ snprintf(query,CF_BUFSIZE-1,
         "pid integer PRIMARY KEY,"
         "topic_name varchar(256),"
         "topic_id varchar(256),"
-        "topic_context varchar(256)"
+        "topic_context varchar(256),"
+        "topic_evc float(24)"
         ");\n"
         );
 
@@ -1261,6 +1262,7 @@ AppendRScalar(&columns,"pid,int",CF_SCALAR);
 AppendRScalar(&columns,"topic_name,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"topic_id,varchar,256",CF_SCALAR);
 AppendRScalar(&columns,"topic_context,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"topic_evc,float,24",CF_SCALAR);
 
 snprintf(query,CF_MAXVARSIZE-1,"%s.topics",SQL_DATABASE);
 

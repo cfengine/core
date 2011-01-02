@@ -166,7 +166,8 @@ for (i = max_k; i >= 0; i--)
 for (i = 0; i < topic_count; i++)
    {
 #if defined HAVE_LIBCFNOVA && defined HAVE_LIBGD
-   Nova_PlotTopicCosmos(i,adj,n,topic_count,view,evc);
+   char buffer[CF_BUFSIZE];
+   Nova_PlotTopicCosmos(i,adj,n,topic_count,view,evc,buffer,CF_BUFSIZE);
 #else
    PlotTopicCosmos(i,adj,n,topic_count,view);
 #endif

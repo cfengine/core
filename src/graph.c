@@ -137,41 +137,14 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
       }
    }
 
-k = (int *)malloc(sizeof(int)*topic_count);
-
-for (i = 0; i < topic_count; i++)
-   {
-   k[i] = Degree(adj[i],topic_count);
-
-   if (k[i] > max_k)
-      {
-      max_k = k[i];
-      }
-   
-   CfOut(cf_verbose,"","Topic %d - \"%s\" has degree %d\n",i,n[i],k[i]);
-   PrintNeighbours(adj[i],topic_count,n);
-   }
-
-for (i = max_k; i >= 0; i--)
-   {
-   for (j = 0; j < topic_count; j++)
-      {
-      if (k[j] == i)
-         {
-         CfOut(cf_verbose,"","  k = %d, %s @ %d\n",k[j],n[j],j);
-         }
-      }
-   }
-
-for (i = 0; i < topic_count; i++)
-   {
 #if defined HAVE_LIBCFNOVA && defined HAVE_LIBGD
-   char buffer[CF_BUFSIZE];
-   Nova_PlotTopicCosmos(i,adj,n,topic_count,view,evc,buffer,CF_BUFSIZE);
+// Superior/Lazy approach avoids this
 #else
+for (i = 0; i < topic_count; i++)
+   {
    PlotTopicCosmos(i,adj,n,topic_count,view);
-#endif
    }
+#endif
 
 /* Clean up */
 
@@ -190,7 +163,6 @@ for (i = 0; i < topic_count; i++)
 
 free(evc);
 free(adj);
-free(k);
 free(n);
 }
 

@@ -294,6 +294,7 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:Q:",OPTIONS,&optindex
           break;
 
       case 'Q':
+
           strcpy(TOPIC_CMD,optarg);
           CfQueryCFDB(TOPIC_CMD);
           exit(0);

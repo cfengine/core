@@ -1101,7 +1101,8 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       PrependRScalar(&list,handle,CF_SCALAR);
       AddTopicAssociation(&(tp->associations),"is the promise of","stands for",list,true);
       DeleteRlist(list);
-      snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(handle));
+      list = NULL;
+      snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,handle);
       PrependRScalar(&list,"description",CF_SCALAR);
       AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
       DeleteRlist(list);

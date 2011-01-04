@@ -359,7 +359,8 @@ void InitializeGA(int argc,char *argv[])
   char ebuff[CF_EXPANDSIZE];
 
 SHORT_CFENGINEPORT = 5308;
-  
+snprintf(STR_CFENGINEPORT,15,"5308");
+
 #ifdef NT
 if (cfstat("/cygdrive",&statbuf) == 0)
    {

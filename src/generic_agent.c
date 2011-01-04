@@ -358,7 +358,7 @@ void InitializeGA(int argc,char *argv[])
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
 
-SHORT_CFENGINEPORT = 5308;
+SHORT_CFENGINEPORT =  htons((unsigned short)5308);
 snprintf(STR_CFENGINEPORT,15,"5308");
 
 #ifdef NT

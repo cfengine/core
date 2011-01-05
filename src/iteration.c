@@ -272,7 +272,7 @@ if (list == NULL)
    return;
    }
 
-DeleteAssoc(list->item);
+DeleteAssoc(list->item, false);
 
 /* Delete infrastructure assuming content remains allocated */
 

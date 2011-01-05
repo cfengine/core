@@ -1132,7 +1132,7 @@ if (rval != NULL)
          if (IsNakedVar(rp->item,'@'))
             {
             free(rp->item);
-            rp->item = strdup("cf_null");
+            rp->item = strdup(CF_NULL_VALUE);
             }
          }
       }

@@ -124,7 +124,7 @@ if (ptr == NULL)
  
 if (ap = (struct CfAssoc *)(ptr->hashtable[slot]))
    {
-   DeleteAssoc(ap);
+   DeleteAssoc(ap,true);
    ptr->hashtable[slot] = NULL;
    }
 else
@@ -308,14 +308,14 @@ if (CompareVariable(id,ptr->hashtable[slot]) != 0)
       
       if (CompareVariable(id,ptr->hashtable[i]) == 0)
          {
-         DeleteAssoc(ptr->hashtable[i]);
+	 DeleteAssoc(ptr->hashtable[i],true);
          ptr->hashtable[i] = NULL;
          }
       }
    }
 else
    {
-   DeleteAssoc(ptr->hashtable[i]);
+   DeleteAssoc(ptr->hashtable[i],true);
    ptr->hashtable[i] = NULL;
    }   
 }
@@ -441,7 +441,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
    if (ptr->hashtable[i] != NULL)
       {
-      DeleteAssoc(ptr->hashtable[i]);
+      DeleteAssoc(ptr->hashtable[i],true);
       ptr->hashtable[i] = NULL;
       }
    }

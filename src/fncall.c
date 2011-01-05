@@ -118,7 +118,7 @@ if (fp->name)
 
 if (fp->args)
    {
-   DeleteRvalItem(fp->args,CF_LIST);
+   DeleteRlist(fp->args);
    }
 
 free(fp);

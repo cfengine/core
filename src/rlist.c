@@ -365,12 +365,24 @@ return start;
 /*******************************************************************/
 
 void DeleteRlist(struct Rlist *list)
-
+/* Delete a rlist and all it references */
 {
-if (list != NULL)
-   {
-   DeleteRvalItem(list,CF_LIST);
-   }
+  struct Rlist *rl, *next;
+
+  if(list != NULL)
+    {
+      for(rl = list; rl != NULL; rl = next)
+	{
+	  next = rl->next;
+	  
+	  if (rl->item != NULL)
+	    {
+	    DeleteRvalItem(rl->item,rl->type);
+	    }
+	  
+	  free(rl);
+	}
+    }
 }
 
 /*******************************************************************/
@@ -962,7 +974,7 @@ switch (type)
 
 void DeleteRvalItem(void *rval, char type)
 
-{ struct Rlist *clist;
+{ struct Rlist *clist, *next = NULL;
 
 Debug("DeleteRvalItem(%c)",type);
 
@@ -982,22 +994,29 @@ if (rval == NULL)
 switch(type)
    {
    case CF_SCALAR:
+
        ThreadLock(cft_lock);
        free((char *)rval);
        ThreadUnlock(cft_lock);
        break;
 
    case CF_LIST:
-       
-       /* rval is now a list whose first item is list->item */
-       clist = (struct Rlist *)rval;
+     
+       /* rval is now a list whose first item is clist->item */
 
-       if (clist && clist->item != NULL)
+     for(clist = (struct Rlist *)rval; clist != NULL; clist = next)
+       {
+
+       next = clist->next;
+
+       if (clist->item)
           {
           DeleteRvalItem(clist->item,clist->type);
           }
 
        free(clist);
+       }
+
        break;
        
    case CF_FNCALL:

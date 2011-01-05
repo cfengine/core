@@ -68,7 +68,7 @@ return ap;
 
 /*******************************************************************/
 
-void DeleteAssoc(struct CfAssoc *ap)
+void DeleteAssoc(struct CfAssoc *ap, int deleteRval)
 
 {
 if (ap == NULL)
@@ -83,15 +83,14 @@ if (ap->lval)
    free(ap->lval);
    }
 
-if (ap->rval)
+if (deleteRval && ap->rval)
    {
    DeleteRvalItem(ap->rval,ap->rtype);
    }
 
-if (ap != NULL)
-   {
-   free((char *)ap);
-   }
+
+free((char *)ap);
+
 }
 
 /*******************************************************************/

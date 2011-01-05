@@ -2492,7 +2492,7 @@ else
 AddOccurrence(&OCCURRENCES,url,retval.item,cfk_url,pp->classes);
 CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 
-DeleteRvalItem(retval.item,CF_LIST);
+DeleteRlist((struct Rlist *)retval.item);
 }
 
 /*********************************************************************/

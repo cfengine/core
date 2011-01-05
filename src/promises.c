@@ -707,7 +707,7 @@ void DeleteDeRefPromise(char *scopeid,struct Promise *pp)
 
 { struct Constraint *cp;
 
-Debug("ExpandDerefPromise()\n");
+Debug("DeleteDeRefPromise()\n");
 
 free(pp->promiser);
 

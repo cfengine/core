@@ -1082,8 +1082,10 @@ if (rval != NULL)
       
       returnval = EvaluateFinalRval(scope,rval,type,true,pp);
       DeleteRvalItem(rval,type);
+
+      // freed before function exit
       rval = returnval.item;
-      returnval.rtype;
+      type = returnval.rtype;
       }
 
    if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
@@ -1108,6 +1110,7 @@ if (rval != NULL)
                 ShowRlist(stdout,rval);      
                 printf("\n",VPREFIX);
                 PromiseRef(cf_error,pp);
+		break;
             }
          }
       }
@@ -1115,6 +1118,7 @@ if (rval != NULL)
    if (IsCf3VarString(pp->promiser))
       {
       // Unexpanded variables, we don't do anything with
+      DeleteRvalItem(rval,type);
       return;
       }
    
@@ -1122,6 +1126,7 @@ if (rval != NULL)
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");
       PromiseRef(cf_error,pp);
+      DeleteRvalItem(rval,type);
       return;
       }
 
@@ -1154,6 +1159,8 @@ else
    CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
+
+ DeleteRvalItem(rval,type);
 }
 
 /*********************************************************************/

@@ -32,26 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-/*****************************************************************************/
-
-FILE *cf_fopen(char *file,char *type)
-
-{
-/* Windows native eventually? */
-
-return fopen(file,type);
-}
-
-/*****************************************************************************/
-
-int cf_fclose(FILE *fp)
-
-{
-/* Windows native eventually? */
-
-return fclose(fp);
-}
-
 /*******************************************************************/
 /* Pipe API - OS function mapping                                  */
 /*******************************************************************/

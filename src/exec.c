@@ -629,9 +629,14 @@ InitAlphaList(&VADDCLASSES);
 
 DeleteItemList(IPADDRESSES);
 IPADDRESSES = NULL;
+
 DeleteScope("this");
 DeleteScope("mon");
 DeleteScope("sys");
+NewScope("this");
+NewScope("mon");
+NewScope("sys");
+
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();

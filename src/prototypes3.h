@@ -1239,9 +1239,6 @@ int LinkOrCopy(const char *from, const char *to, int sym);
 
 /* pipes.c */
 
-FILE *cf_fopen(char *file,char *type);
-int cf_fclose(FILE *fp);
-
 FILE *cf_popen(char *command,char *type);
 FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background);
 FILE *cf_popen_sh(char *command,char *type);

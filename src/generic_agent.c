@@ -63,7 +63,8 @@ strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
 NewClass(THIS_AGENT);
 THIS_AGENT_TYPE = ag;
 
-snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
+// need scope sys to set vars in expiry function
+SetNewScope("sys");
 
 if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
    {
@@ -76,7 +77,6 @@ if (!NOHARDCLASSES)
    NewScope("const");
    NewScope("match");
    NewScope("mon");
-   SetNewScope("sys");
    GetNameInfo3();
    CfGetInterfaceInfo(ag);
       
@@ -90,6 +90,7 @@ if (!NOHARDCLASSES)
 LoadPersistentContext();
 LoadSystemConstants();
 
+snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 SetNewScope(vbuff);
 NewScope("this");
 NewScope("match");

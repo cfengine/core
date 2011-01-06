@@ -783,8 +783,9 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                    strcat(command_string," ");
                    }
                 }
-             
-	     if(strncmp(command_string,"/cf_internal_rpath",sizeof("/cf_internal_rpath") - 1) == 0)
+
+
+	     if(strncmp(command_string,"/cf_internal_rpath",strlen("/cf_internal_rpath")) == 0)
 	       {
 		 ok = ExecPackageCommandRpath(command_string,verify,true,a,pp);
 	       }
@@ -1073,9 +1074,9 @@ else
    CfOut(cf_verbose,""," -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
    }
 
-if ((fin = cf_fopen(name,"r")) == NULL)
+if ((fin = fopen(name,"r")) == NULL)
    {
-   CfOut(cf_inform,"cf_fopen","Cannot open the source log %s - you need to run a package discovery promise to create it in cf-agent",name);
+   CfOut(cf_inform,"fopen","Cannot open the source log %s - you need to run a package discovery promise to create it in cf-agent",name);
    return NULL;
    }
 
@@ -1096,7 +1097,7 @@ while (!feof(fin))
       }
    }
 
-cf_fclose(fin);
+fclose(fin);
 return list;
 }
 

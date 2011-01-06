@@ -795,9 +795,9 @@ void ReportSoftware(struct CfPackageManager *list)
 snprintf(name,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
 MapName(name);
 
-if ((fout = cf_fopen(name,"w")) == NULL)
+if ((fout = fopen(name,"w")) == NULL)
    {
-   CfOut(cf_error,"cf_fopen","Cannot open the destination file %s",name);
+   CfOut(cf_error,"fopen","Cannot open the destination file %s",name);
    return;
    }
 
@@ -809,7 +809,7 @@ for (mp = list; mp != NULL; mp = mp->next)
       }
    }
 
-cf_fclose(fout);
+fclose(fout);
 }
 
 /*****************************************************************************/

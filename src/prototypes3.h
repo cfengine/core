@@ -660,6 +660,7 @@ struct edit_context *NewEditContext(char *filename,struct Attributes a,struct Pr
 void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promise *pp);
 int LoadFileAsItemList(struct Item **liststart,char *file,struct Attributes a,struct Promise *pp);
 int SaveItemListAsFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp);
+int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */
 

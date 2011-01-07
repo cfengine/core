@@ -1608,6 +1608,7 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
 int VersionCmp(char *vs1, char *vs2);
 int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr);
 int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
+int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);

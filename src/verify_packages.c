@@ -784,15 +784,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                    }
                 }
 
-
-	     if(strncmp(command_string,"/cf_internal_rpath",strlen("/cf_internal_rpath")) == 0)
-	       {
-		 ok = ExecPackageCommandRpath(command_string,verify,true,a,pp);
-	       }
-	     else
-	       {
-		 ok = ExecPackageCommand(command_string,verify,true,a,pp);
-	       }
+	     ok = ExecPackageCommand(command_string,verify,true,a,pp);
 	     
 	     for (pi = pm->pack_list; pi != NULL; pi=pi->next)
 	       {
@@ -1067,11 +1059,11 @@ if (a.packages.package_list_update_ifelapsed != CF_NOINT)
 if (now - sb.st_mtime < horizon*60)
    {
    CfOut(cf_verbose,""," -> Cache file exists and is sufficiently fresh according to (package_list_update_ifelapsed)");
-   return NULL;
    }
 else
    {
    CfOut(cf_verbose,""," -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
+   return NULL;
    }
 
 if ((fin = fopen(name,"r")) == NULL)
@@ -1790,6 +1782,20 @@ return false;
 /*****************************************************************************/
 
 int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
+{
+  if(strncmp(command,"/cf_internal_rpath",sizeof("/cf_internal_rpath") - 1) == 0)
+    {
+      return ExecPackageCommandRpath(command,verify,setCmdClasses,a,pp);
+    }
+  else
+    {
+      return ExecPackageCommandGeneric(command,verify,setCmdClasses,a,pp);
+    }
+}
+
+/*****************************************************************************/
+
+int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
 
 { int offset = 0, retval = true;
   char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 

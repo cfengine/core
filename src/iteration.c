@@ -47,6 +47,7 @@ struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
 Debug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
 CopyScope("this",scopeid);
+
 ptr=GetScope("this");
 
 if (namelist == NULL)

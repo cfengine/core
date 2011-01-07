@@ -600,6 +600,7 @@ lol = NewIterationContext(scopeid,listvars);
 
 if (lol && EndOfIteration(lol))
    {
+   DeleteIterationContext(lol);
    return;
    }
 
@@ -616,6 +617,7 @@ while (NullIterators(lol))
 
 if (lol && EndOfIteration(lol))
    {
+   DeleteIterationContext(lol);
    return;
    }
 

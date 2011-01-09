@@ -1153,12 +1153,36 @@ getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 if (cf_strcmp(zone,"global") == 0)
    {
-   snprintf(psopts,CF_BUFSIZE,"%s -z global",VPSOPTS[VSYSTEMHARDCLASS]);
+   snprintf(psopts,CF_BUFSIZE,"%s,zone",VPSOPTS[VSYSTEMHARDCLASS]);
    return psopts;
    }
 #endif
 
 return VPSOPTS[VSYSTEMHARDCLASS];
+}
+
+/*****************************************************************************/
+
+int ForeignZone(char *s)
+{
+#ifdef HAVE_GETZONEID
+ zoneid_t zid;
+ char zone[ZONENAME_MAX];
+ static psopts[CF_BUFSIZE];
+ 
+zid = getzoneid();
+getzonenamebyid(zid,zone,ZONENAME_MAX);
+
+if (cf_strcmp(zone,"global") == 0)
+   {
+   if (strcmp(s+strlen(s)-7,"global"))
+      {
+      return true;
+      }
+   }
+#endif
+
+return false;
 }
 
 /*****************************************************************************/

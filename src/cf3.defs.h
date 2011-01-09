@@ -414,6 +414,7 @@ enum cfhcontrol
    cfh_export_zenoss,
    cfh_schedule,
    cfh_port,
+   cfh_notype
    };
 
 /*************************************************************************/

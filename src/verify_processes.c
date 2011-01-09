@@ -126,11 +126,9 @@ DeleteScalar("this","promiser");
 YieldCurrentLock(thislock);
 }
 
-
 /*******************************************************************/
 
 int LoadProcessTable(struct Item **procdata,char *psopts)
-
 {
 if (PROCESSTABLE)
    {

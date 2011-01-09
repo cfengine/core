@@ -332,7 +332,7 @@ return killed;
 int Unix_LoadProcessTable(struct Item **procdata,char *psopts)
 
 { FILE *prp;
-  char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE];
+ char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
   struct Item *rootprocs = NULL;
   struct Item *otherprocs = NULL;
 
@@ -350,6 +350,17 @@ while (!feof(prp))
    {
    memset(vbuff,0,CF_BUFSIZE);
    CfReadLine(vbuff,CF_BUFSIZE,prp);
+
+   for (sp = vbuff+strlen(vbuff)-1; sp > vbuff && isspace(*sp); sp--)
+      {
+      *sp = '\0';
+      }
+   
+   if (ForeignZone())
+      {
+      continue;
+      }
+
    AppendItem(procdata,vbuff,"");
    }
 

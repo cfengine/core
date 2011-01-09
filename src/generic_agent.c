@@ -113,38 +113,41 @@ else
 
 SetPolicyServer(POLICY_SERVER);
 
-if (MissingInputFile())
+if (ag != cf_keygen)
    {
-   ok = false;
-   }
-else if (SHOWREPORTS || NewPromiseProposals())
-   {
-   CfOut(cf_verbose,""," -> New promises proposals detected...\n");
-   ok = BOOTSTRAP || CheckPromises(ag);
-   }
-else
-   {
-   CfOut(cf_verbose,""," -> No new promises proposals - so policy is already validated\n");
-   ok = true;
-   }
+   if (MissingInputFile())
+      {
+      ok = false;
+      }
+   else if (SHOWREPORTS || NewPromiseProposals())
+      {
+      CfOut(cf_verbose,""," -> New promises proposals detected...\n");
+      ok = BOOTSTRAP || CheckPromises(ag);
+      }
+   else
+      {
+      CfOut(cf_verbose,""," -> No new promises proposals - so policy is already validated\n");
+      ok = true;
+      }
+   
+   if (ok)
+      {
+      ReadPromises(ag,agents);
+      }
+   else
+      {
+      CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+      snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
+      ReadPromises(ag,agents);
+      }
 
-if (ok)
-   {
-   ReadPromises(ag,agents);
-   }
-else
-   {
-   CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-   snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
-   ReadPromises(ag,agents);
-   }
+   if (SHOWREPORTS)
+      {
+      CompilationReport(VINPUTFILE);
+      }
 
-if (SHOWREPORTS)
-   {
-   CompilationReport(VINPUTFILE);
+   CheckLicenses();
    }
-
-CheckLicenses();
 
 XML = 0;
 }

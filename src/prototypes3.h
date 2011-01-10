@@ -75,7 +75,7 @@ void DeleteExpArgs(struct Rlist *args);
 /* assoc.c */
 
 struct CfAssoc *NewAssoc(char *lval,void *rval,char rtype,enum cfdatatype dt);
-void DeleteAssoc(struct CfAssoc *ap, int deleteRval);
+void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
 void ShowAssoc (struct CfAssoc *cp);
 
@@ -1339,6 +1339,7 @@ struct Rlist *CopyRlist(struct Rlist *list);
 int CompareRlist(struct Rlist *list1, struct Rlist *list2);
 int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
 void DeleteRlist(struct Rlist *list);
+void DeleteRlistNoRef(struct Rlist *list);
 void DeleteReferenceRlist(struct Rlist *list);
 void ShowRlistState(FILE *fp,struct Rlist *list);
 void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);

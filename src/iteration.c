@@ -267,15 +267,15 @@ return false;
 
 void DeleteReferenceRlist(struct Rlist *list)
 
+/* Delete infrastructure assuming content remains allocated */
 {
 if (list == NULL)
    {
    return;
    }
 
-DeleteAssoc(list->item, false);
+DeleteAssoc((struct CfAssoc *)list->item);
 
-/* Delete infrastructure assuming content remains allocated */
 
 DeleteReferenceRlist(list->next);
 free((char *)list);

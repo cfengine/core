@@ -387,6 +387,23 @@ void DeleteRlist(struct Rlist *list)
 
 /*******************************************************************/
 
+void DeleteRlistNoRef(struct Rlist *list)
+/* Delete a rlist, but not its references */
+{
+  struct Rlist *rl, *next;
+
+  if(list != NULL)
+    {
+      for(rl = list; rl != NULL; rl = next)
+	{
+	  next = rl->next;
+	  free(rl);
+	}
+    }
+}
+
+/*******************************************************************/
+
 struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type)
 
 { char *scalar = item;

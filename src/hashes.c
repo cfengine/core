@@ -63,7 +63,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
          {
          if (ptr->hashtable[i] != NULL)
             {
-	    DeleteAssoc(ptr->hashtable[i], true);
+	    DeleteAssoc(ptr->hashtable[i]);
             ptr->hashtable[i] = NULL;
             }
          }
@@ -147,7 +147,7 @@ if (hashtable)
       {
       if (hashtable[i] != NULL)
          {
-	 DeleteAssoc(hashtable[i], true);
+	 DeleteAssoc(hashtable[i]);
          hashtable[i] = NULL;
          }
       }
@@ -305,7 +305,7 @@ while (ptr->hashtable[slot])
       {
       if (CompareVariableValue(rval,rtype,ptr->hashtable[slot]) == 0)
          {
-	 DeleteAssoc(ap,true);
+	 DeleteAssoc(ap);
          return true;
          }
 
@@ -327,7 +327,7 @@ while (ptr->hashtable[slot])
          CfOut(cf_inform,""," !! Unresolved variables in rval of \"%s\" in scope %s",lval,ptr->scope);
          }
 
-      DeleteAssoc(ptr->hashtable[slot],true);
+      DeleteAssoc(ptr->hashtable[slot]);
       ptr->hashtable[slot] = ap;
       Debug("Stored \"%s\" in context %s at position %d\n",lval,scope,slot);
       return true;

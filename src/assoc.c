@@ -68,7 +68,7 @@ return ap;
 
 /*******************************************************************/
 
-void DeleteAssoc(struct CfAssoc *ap, int deleteRval)
+void DeleteAssoc(struct CfAssoc *ap)
 
 {
 if (ap == NULL)
@@ -83,9 +83,18 @@ if (ap->lval)
    free(ap->lval);
    }
 
-if (deleteRval && ap->rval)
-   {
-   DeleteRvalItem(ap->rval,ap->rtype);
+if (ap->rval)
+  { 
+    // don't free referenced values
+    
+     if(ap->rtype == CF_LIST)
+       {
+       DeleteRlistNoRef(ap->rval);
+       }
+     else
+       {
+       DeleteRvalItem(ap->rval,ap->rtype);
+       }
    }
 
 

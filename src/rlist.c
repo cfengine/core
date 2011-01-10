@@ -344,7 +344,6 @@ struct Rlist *CopyRlist(struct Rlist *list)
 
 { struct Rlist *rp,*start = NULL;
   struct FnCall *fp;
-  void *new;
 
 Debug("CopyRlist()\n");
   
@@ -353,10 +352,9 @@ if (list == NULL)
    return NULL;
    }
 
-for (rp = list; rp != NULL; rp= rp->next)
+for (rp = list; rp != NULL; rp = rp->next)
    {
-   new = CopyRvalItem(rp->item,rp->type);
-   AppendRlist(&start,new,rp->type);
+   AppendRlist(&start,rp->item,rp->type);  // allocates memory for objects
    }
 
 return start;

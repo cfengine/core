@@ -516,14 +516,14 @@ void Get3Environment()
   struct stat statbuf;
   time_t now = time(NULL);
 
-CfOut(cf_verbose,"","Looking for environment from cf-monitor...\n");
+CfOut(cf_verbose,"","Looking for environment from cf-monitord...\n");
 
 snprintf(env,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
 MapName(env);
 
 if (cfstat(env,&statbuf) == -1)
    {
-   CfOut(cf_verbose,"","Unable to detect environment from cfMonitord\n\n");
+   CfOut(cf_verbose,"","Unable to detect environment from cf-monitord\n\n");
    return;
    }
 

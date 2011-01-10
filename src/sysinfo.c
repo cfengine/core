@@ -261,6 +261,7 @@ NewScalar("sys","uqhost",VUQNAME,cf_str);
 NewScalar("sys","fqhost",VFQNAME,cf_str);
 NewScalar("sys","os",VSYSNAME.sysname,cf_str);
 NewScalar("sys","release",VSYSNAME.release,cf_str);
+NewScalar("sys","version",VSYSNAME.version,cf_str);
 NewScalar("sys","arch",VSYSNAME.machine,cf_str);
 NewScalar("sys","workdir",CFWORKDIR,cf_str);
 NewScalar("sys","fstab",VFSTAB[VSYSTEMHARDCLASS],cf_str);
@@ -891,8 +892,8 @@ NewScalar("sys","crontab","",cf_str);
 #endif  /* CFCYG */
 
 #ifdef MINGW
-NewClass(VSYSNAME.version);  // code name - e.g. Windows Vista
-NewClass(VSYSNAME.release);  // service pack number - e.g. Service Pack 3
+NewClass(VSYSNAME.release);  // code name - e.g. Windows Vista
+NewClass(VSYSNAME.version);  // service pack number - e.g. Service Pack 3
 
 if (strstr(VSYSNAME.sysname, "workstation"))
    {

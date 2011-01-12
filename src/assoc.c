@@ -85,16 +85,7 @@ if (ap->lval)
 
 if (ap->rval)
   { 
-    // don't free referenced values
-    
-     if(ap->rtype == CF_LIST)
-       {
-       DeleteRlistNoRef(ap->rval);
-       }
-     else
-       {
-       DeleteRvalItem(ap->rval,ap->rtype);
-       }
+   DeleteRvalItem(ap->rval,ap->rtype);
    }
 
 

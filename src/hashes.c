@@ -402,7 +402,10 @@ if (len == 0)
            if (rp->state_ptr)
               {
               Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],rp->state_ptr->item);
-                      
+
+              // must first free existing rval in scope, then allocate new (should always be string)
+              DeleteRvalItem(cphash->rval,cphash->rtype);
+                    
               // avoids double free - borrowing value from lol (freed in DeleteScope())
               cphash->rval = strdup(rp->state_ptr->item);
               }

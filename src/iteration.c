@@ -111,8 +111,6 @@ void DeleteIterationContext(struct Rlist *deref)
 {
 DeleteScope("this");
 
-/* Cannot use DeleteRlist(deref) as we are referencing memory from hashtable */
-
 if (deref != NULL)
    {
    DeleteReferenceRlist(deref);
@@ -267,7 +265,7 @@ return false;
 
 void DeleteReferenceRlist(struct Rlist *list)
 
-/* Delete infrastructure assuming content remains allocated */
+/* Delete all contents, hash table in scope has own copy */
 {
 if (list == NULL)
    {

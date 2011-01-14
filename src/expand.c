@@ -1049,6 +1049,7 @@ if (rval != NULL)
       if (FNCALL_STATUS.status == FNCALL_FAILURE)
          {
          /* We do not assign variables to failed fn calls */
+         DeleteRvalItem(rval,type);
          return;
          }
       }

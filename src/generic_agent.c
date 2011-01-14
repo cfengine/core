@@ -615,6 +615,8 @@ if (VINPUTLIST != NULL)
                    }
                 break;
             }
+
+         DeleteRvalItem(returnval.item,returnval.rtype);
          }
 
       HashVariables(NULL);

@@ -371,6 +371,11 @@ switch(name)
    case cft_report:
        return &MUTEX_DB_REPORT;
        break;
+
+   case cft_vscope:
+       return &MUTEX_VSCOPE;
+       break;
+
        
    default:
        CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);

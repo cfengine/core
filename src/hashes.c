@@ -46,30 +46,6 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    }
 }
 
-/*******************************************************************/
-
-void BlankHashes(char *scope)
-
-{ int i;
-  struct Scope *ptr;
-
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   if (strcmp(ptr->scope,scope) == 0)
-      {
-      CfOut(cf_verbose,"","Clearing macros in scope(%s)\n",scope);
-      
-      for (i = 0; i < CF_HASHTABLESIZE; i++)
-         {
-         if (ptr->hashtable[i] != NULL)
-            {
-	    DeleteAssoc(ptr->hashtable[i]);
-            ptr->hashtable[i] = NULL;
-            }
-         }
-      }
-   }
-}
 
 /******************************************************************/
 

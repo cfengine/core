@@ -35,7 +35,9 @@
 /*******************************************************************/
 
 void DebugVariables(char *label)
-
+/* 
+ * Not thread safe 
+ */
 { struct Scope *ptr;
 
  printf("----------------------%s ---------------------------\n",label);
@@ -56,11 +58,13 @@ printf("--------------------------------------------------\n");
 /*******************************************************************/
 
 struct Scope *GetScope(char *scope)
-
+/* 
+ * Not thread safe - returns pointer to global memory
+ */
 { struct Scope *cp = NULL;
 
 Debug("Searching for scope context %s\n",scope);
- 
+
 for (cp = VSCOPE; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->scope,scope) == 0)
@@ -93,15 +97,24 @@ strncpy(CONTEXTID,id,31);
 /*******************************************************************/
 
 void NewScope(char *name)
-
+/*
+ * Thread safe
+ */
 { struct Scope *ptr;
   
 Debug("Adding scope data %s\n", name);
 
+if (!ThreadLock(cft_vscope))
+   {
+   CfOut(cf_error, "", "!! Could not lock VSCOPE");
+   return;
+   }
+ 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,name) == 0)
       {
+      ThreadUnlock(cft_vscope);
       Debug("SCOPE Object %s already exists\n",name);
       return;
       }
@@ -116,7 +129,8 @@ InitHashes((struct CfAssoc**)ptr->hashtable);
 
 ptr->next = VSCOPE;
 ptr->scope = strdup(name);
-VSCOPE = ptr; 
+VSCOPE = ptr;
+ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
@@ -203,6 +217,12 @@ void DeleteAllScope()
   
 Debug("Deleting all scoped variables\n");
 
+if (!ThreadLock(cft_vscope))
+   {
+   CfOut(cf_error, "", "!! Could not lock VSCOPE");
+   return;
+   }
+ 
 ptr = VSCOPE;
 
 while (ptr != NULL)
@@ -216,16 +236,28 @@ while (ptr != NULL)
    }
 
 VSCOPE = NULL;
+
+ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
 
 void DeleteScope(char *name)
+/*
+ * Thread safe
+ */
 
 { struct Scope *ptr, *prev = NULL;
   int found = false;
  
 Debug1("Deleting scope %s\n", name);
+
+if (!ThreadLock(cft_vscope))
+   {
+   CfOut(cf_error, "", "!! Could not lock VSCOPE");
+   return;
+   }
+
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
@@ -244,6 +276,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 if (!found)
    {
    Debug("No such scope to delete\n");
+   ThreadUnlock(cft_vscope);
    return;
    }
 
@@ -263,6 +296,8 @@ if (ptr->hashtable)
 
 free(ptr->scope);
 free((char *)ptr);
+
+ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
@@ -282,24 +317,36 @@ for (rp = args; rp != NULL; rp=rp->next)
 /*******************************************************************/
 
 void CopyScope(char *new, char *old)
-
+/*
+ * Thread safe
+ */
 { struct Scope *op, *np;
  
 Debug("\n*\nCopying scope data %s to %s\n*\n",old,new);
 
 NewScope(new);
 
+if (!ThreadLock(cft_vscope))
+   {
+   CfOut(cf_error, "", "!! Could not lock VSCOPE");
+   return;
+   }
+
 if (op = GetScope(old))
    {
    np = GetScope(new);
    CopyHashes(np->hashtable,op->hashtable);
    }
+
+ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
 
 void ShowScope(char *name)
-
+/*
+ * Not thread safe - access to global variable
+ */
 { struct Scope *ptr;
 
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)

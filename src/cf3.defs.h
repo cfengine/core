@@ -976,7 +976,8 @@ enum cf_thread_mutex
   cft_policy,       // protects structs for refreshing policy files
   cft_db_lastseen,  // lastseen dbs (in cf-serverd)
   cft_no_tpolicy,
-  cft_report
+  cft_report,
+  cft_vscope        // protects VSCOPE
   };
 
 enum cf_status

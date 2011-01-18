@@ -42,6 +42,7 @@ extern pthread_mutex_t MUTEX_POLICY;
 extern pthread_mutex_t MUTEX_GETADDR;
 extern pthread_mutex_t MUTEX_DB_LASTSEEN;
 extern pthread_mutex_t MUTEX_DB_REPORT;
+extern pthread_mutex_t MUTEX_VSCOPE;
 # endif
 
 extern pid_t ALARM_PID;

@@ -939,7 +939,6 @@ int ElfHash(char *key);
 int OatHash(char *key);
 void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
-void BlankHashes(char *scope);
 int GetHash(char *name);
 void PrintHashes(FILE *sp,struct CfAssoc **table,int html);
 int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);

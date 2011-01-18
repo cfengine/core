@@ -380,7 +380,7 @@ else
 /*******************************************************************/
 
 void ShowScopedVariables()
-
+/* WARNING: Not thread safe (access to VSCOPE) */
 { struct Scope *ptr;
 
 fprintf(FREPORT_HTML,"<div id=\"showvars\">");

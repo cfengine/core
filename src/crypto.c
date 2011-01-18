@@ -249,6 +249,7 @@ MapName(guard);
 // need to use cf_stat
 
 if (stat(name,&sb) == -1 && stat(guard,&sb) != -1)
+  // copy localhost.pub to root-HASH.pub on policy server
    {
    LastSaw("root",POLICY_SERVER,digest,cf_connect);
    UpdateLastSeen();
@@ -300,7 +301,6 @@ if (newkey = SelectKeyRing(keyname))
 else if (cfstat(newname,&statbuf) == -1)
    {
    CfOut(cf_verbose,""," -> Did not find new key format %s",newname);
-   strcpy(newname,newname);
    snprintf(oldname,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,username,ipaddress);   
    MapName(oldname);
 
@@ -312,10 +312,14 @@ else if (cfstat(newname,&statbuf) == -1)
       return NULL;
       }
 
-   if (strlen(keyname) > 0)
+   if (strlen(digest) > 0)
       {
       CfOut(cf_inform,""," -> Renaming old key from %s to %s",oldname,newname);
-      rename(oldname,newname);
+
+      if(rename(oldname,newname) != 0)
+	{
+	CfOut(cf_error, "rename", "!! Could not rename from old key format (%s) to new (%s)",oldname,newname);
+	}
       }
    }
 

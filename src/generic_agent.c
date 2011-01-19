@@ -217,6 +217,8 @@ if (ShellCommandReturnsZero(cmd,true))
       MapName(filename);
       }
    
+   MakeParentDirectory(filename,true);
+   
    if ((fd = creat(filename,0600)) != -1)
       {
       close(fd);
@@ -681,7 +683,7 @@ if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
 
 if (sb.st_mtime > PROMISETIME)
    {
-   CfOut(cf_verbose,""," -> Promises seem to changed");
+   CfOut(cf_verbose,""," -> Promises seem to change");
    return true;
    }
 

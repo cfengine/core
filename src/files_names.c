@@ -233,7 +233,7 @@ if (lstat(dir,&sb) == -1)
 
 if (S_ISDIR(sb.st_mode))
    {
-   CfOut(cf_verbose,""," ?? Looking at %s (%ld)",dir,sb.st_mtime-reftime);      
+   //CfOut(cf_verbose,""," ?? Looking at %s (%ld)",dir,sb.st_mtime-reftime);      
    
    if (sb.st_mtime > reftime)
       {

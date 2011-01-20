@@ -2555,7 +2555,7 @@ else
                      strcat(orstring,"|");
                      }
                   
-                  Join(orstring,rp->item+1,CF_MAXVARSIZE);
+                  Join(orstring,(char *)(rp->item)+1,CF_MAXVARSIZE);
                   }
                else
                   {

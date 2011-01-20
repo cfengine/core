@@ -223,14 +223,16 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
    FatalError("RSA Exponent too small or not odd");
    }
 
-snprintf(name,CF_MAXVARSIZE-1,"%s%cpolicy_server.dat",CFWORKDIR,FILE_SEPARATOR);
+if(EMPTY(POLICY_SERVER))
+  {
+  snprintf(name,CF_MAXVARSIZE-1,"%s%cpolicy_server.dat",CFWORKDIR,FILE_SEPARATOR);
 
-if ((fp = fopen(name,"r")) != NULL)
-   {
-   fscanf(fp,"%s",POLICY_SERVER);
-   fclose(fp);
-   }
-
+  if ((fp = fopen(name,"r")) != NULL)
+     {
+     fscanf(fp,"%s",POLICY_SERVER);
+     fclose(fp);
+     }
+  }
 
 /* Check that we have our own SHA key form of the key in the IP on the hub */
 

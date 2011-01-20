@@ -321,7 +321,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
 
 /* locate and split line */
 
-snprintf(lockname,CF_BUFSIZE-1,"column-%s-%",pp->promiser,pp->this_server);
+snprintf(lockname,CF_BUFSIZE-1,"column-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
 
 if (thislock.lock == NULL)
@@ -425,7 +425,7 @@ else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    return;
    }
 
-snprintf(lockname,CF_BUFSIZE-1,"insertline-%s-%",pp->promiser,pp->this_server);
+snprintf(lockname,CF_BUFSIZE-1,"insertline-%s-%s",pp->promiser,pp->this_server);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
 
 if (thislock.lock == NULL)
@@ -862,7 +862,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       // Model the partial substitution in line_buff to check convergence
       
       strncat(before,line_buff,start_off);
-      strncat(after,line_buff+end_off,CF_BUFSIZE);
+      strncat(after,line_buff+end_off,sizeof(after) - 1);
       snprintf(line_buff,CF_EXPANDSIZE-1,"%s%s",before,replace);
       notfound = false;
       replaced = true;

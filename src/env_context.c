@@ -1336,7 +1336,7 @@ for (i = 0; i < strlen(s); i++)
       {
       yes++;
       level++;
-      if (i > 0 && !IsIn(s[i-1],".&|"))
+      if (i > 0 && !IsIn(s[i-1],".&|!"))
          {
          CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator in front of '('",s);
          }
@@ -1346,7 +1346,7 @@ for (i = 0; i < strlen(s); i++)
       {
       yes++;
       level--;
-      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|"))
+      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|!"))
          {
          CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator after of ')'",s);
          }
@@ -1384,7 +1384,7 @@ for (i = 0; i < strlen(s); i++)
       {
       yes++;
       level++;
-      if (i > 0 && !IsIn(s[i+1],".&|"))
+      if (i > 0 && !IsIn(s[i+1],".&|!"))
          {
          CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator in front of '('",s);
          }
@@ -1393,7 +1393,7 @@ for (i = 0; i < strlen(s); i++)
    if (s[i] == ')')
       {
       level--;
-      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|"))
+      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|!"))
          {
          CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator after ')'",s);
          }

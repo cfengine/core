@@ -455,6 +455,10 @@ while (true)
       
       if (LOGCONNS)
          {
+         CfOut(cf_log,"","Accepting connection from \"%s\"\n",ipaddr);
+         }
+      else
+         {
          CfOut(cf_inform,"","Accepting connection from \"%s\"\n",ipaddr);
          }
       

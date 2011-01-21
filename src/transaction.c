@@ -516,7 +516,7 @@ entry.time = time((time_t *)NULL);
 
 ThreadLock(cft_lock);
 WriteDB(dbp,name,&entry,sizeof(entry));
-ThreadUnLock(cft_lock);
+ThreadUnlock(cft_lock);
 
 CloseLock(dbp);
 return 0;
@@ -580,7 +580,7 @@ if ((dbp = OpenLock()) == NULL)
 
 ThreadLock(cft_lock);
 DeleteDB(dbp,name);
-ThreadUnLock(cft_lock);
+ThreadUnlock(cft_lock);
 
 CloseLock(dbp);
 return 0;

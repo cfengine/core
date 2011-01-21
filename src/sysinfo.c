@@ -1053,7 +1053,8 @@ int Linux_Redhat_Version(void)
 #define REDHAT_ES_ID "Red Hat Enterprise Linux ES"
 #define REDHAT_WS_ID "Red Hat Enterprise Linux WS"
 #define REDHAT_C_ID "Red Hat Enterprise Linux Client"
-#define REDHAT_S_ID "Red Hat Enterprise Linux Server"
+#define REDHAT_S_ID "Red Hat Enterprise Linux Server" 
+#define REDHAT_W_ID "Red Hat Enterprise Linux Workstation"
 #define MANDRAKE_ID "Linux Mandrake"
 #define MANDRAKE_10_1_ID "Mandrakelinux"
 #define WHITEBOX_ID "White Box Enterprise Linux"
@@ -1136,7 +1137,7 @@ else if(!strncmp(relstring, REDHAT_S_ID, strlen(REDHAT_S_ID)))
    vendor = "redhat";
    edition = "s";
    }
-else if(!strncmp(relstring, REDHAT_C_ID, strlen(REDHAT_C_ID)))
+else if(!strncmp(relstring, REDHAT_C_ID, strlen(REDHAT_C_ID)) || !strncmp(relstring, REDHAT_W_ID, strlen(REDHAT_W_ID)))
    {
    vendor = "redhat";
    edition = "c";

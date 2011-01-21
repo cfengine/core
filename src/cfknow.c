@@ -1383,11 +1383,15 @@ for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
          for (rp = ta->associates; rp != NULL; rp=rp->next)
             {
             char to_type[CF_MAXVARSIZE],to_topic[CF_MAXVARSIZE];
+            char tcontext[CF_MAXVARSIZE],ttype[CF_MAXVARSIZE],ttopic[CF_MAXVARSIZE];
             int to_id = GetTopicPid(rp->item);
             
             DeClassifyTopic(rp->item,to_topic,to_type);
+            strncpy(tcontext,EscapeSQL(&cfdb,tp->topic_context),CF_MAXVARSIZE-1);
+            strncpy(ttype,EscapeSQL(&cfdb,to_type),CF_MAXVARSIZE-1);
+            strncpy(ttopic,EscapeSQL(&cfdb,to_topic),CF_MAXVARSIZE-1);
             
-            snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_context,to_context,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,EscapeSQL(&cfdb,to_topic),ta->fwd_name,ta->bwd_name,tp->topic_context,to_type,tp->id,to_id);
+            snprintf(query,CF_BUFSIZE-1,"INSERT INTO associations (from_name,to_name,from_assoc,to_assoc,from_context,to_context,from_id,to_id) values ('%s','%s','%s','%s','%s','%s','%d','%d');\n",safe,ttopic,ta->fwd_name,ta->bwd_name,tcontext,ttype,tp->id,to_id);
             
             fprintf(fout,"%s",query);
             CfVoidQueryDB(&cfdb,query);

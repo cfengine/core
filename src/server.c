@@ -303,8 +303,6 @@ void StartServer(int argc,char **argv)
   struct Attributes dummyattr = {0};
   struct CfLock thislock;
 
-memset(&dummyattr,0,sizeof(dummyattr));
-  
 #if defined(HAVE_GETADDRINFO)
   int addrlen=sizeof(struct sockaddr_in6);
   struct sockaddr_in6 cin;
@@ -312,7 +310,9 @@ memset(&dummyattr,0,sizeof(dummyattr));
   int addrlen=sizeof(struct sockaddr_in);
   struct sockaddr_in cin;
 #endif
-  
+
+memset(&dummyattr,0,sizeof(dummyattr));
+
 if ((sd = OpenReceiverChannel()) == -1)
    {
    CfOut(cf_error,"","Unable to start server");

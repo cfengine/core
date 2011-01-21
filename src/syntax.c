@@ -645,7 +645,7 @@ if (s == NULL)
    return false;
    }
   
-Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
+Debug("\nCheckParseClass(%s => %s/%s)\n",lval,s,range);
   
 if (strlen(range) == 0)
    {

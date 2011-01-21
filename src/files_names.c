@@ -421,13 +421,12 @@ int EndJoin(char *path,char *leaf,int bufsize)
 
 int JoinMargin(char *path,char *leaf,int bufsize,int margin)
 
-{ 
-  if(margin < 0)
-    {
-    FatalError("Negative margin in JoinMargin()");
-    }
+{ int len = strlen(leaf);
 
-  int len = strlen(leaf);
+if (margin < 0)
+   {
+   FatalError("Negative margin in JoinMargin()");
+   }
 
 if ((strlen(path)+len) > (bufsize - margin))
    {

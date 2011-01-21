@@ -506,7 +506,7 @@ Debug("WriteLock(%s)\n",name);
 
 if ((dbp = OpenLock()) == NULL)
    {
-   return 0;
+   return -1;
    }
 
 DeleteDB(dbp,name);
@@ -514,21 +514,9 @@ DeleteDB(dbp,name);
 entry.pid = getpid();
 entry.time = time((time_t *)NULL);
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-   }
-#endif
-
+ThreadLock(cft_lock);
 WriteDB(dbp,name,&entry,sizeof(entry));
-
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
+ThreadUnLock(cft_lock);
 
 CloseLock(dbp);
 return 0;
@@ -590,21 +578,9 @@ if ((dbp = OpenLock()) == NULL)
    return -1;
    }
 
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_lock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"pthread_mutex_lock","pthread_mutex_lock failed");
-   }
-#endif
-
+ThreadLock(cft_lock);
 DeleteDB(dbp,name);
-
-#if defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD
-if (pthread_mutex_unlock(&MUTEX_LOCK) != 0)
-   {
-   CfOut(cf_error,"unlock","pthread_mutex_unlock failed");
-   }
-#endif
+ThreadUnLock(cft_lock);
 
 CloseLock(dbp);
 return 0;

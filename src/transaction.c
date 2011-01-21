@@ -376,6 +376,10 @@ switch(name)
        return &MUTEX_VSCOPE;
        break;
 
+   case cft_server_keyseen:
+       return &MUTEX_SERVER_KEYSEEN;
+       break;
+
        
    default:
        CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);

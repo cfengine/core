@@ -977,7 +977,8 @@ enum cf_thread_mutex
   cft_db_lastseen,  // lastseen dbs (in cf-serverd)
   cft_no_tpolicy,
   cft_report,
-  cft_vscope        // protects VSCOPE
+  cft_vscope,           // protects VSCOPE
+  cft_server_keyseen  // protects   SERVER_KEYSEEN
   };
 
 enum cf_status

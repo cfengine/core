@@ -309,6 +309,8 @@ switch (role)
 
 ThreadUnlock(cft_output);
 
+ThreadLock(cft_server_keyseen);
+
 for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {
    kp = (struct CfKeyBinding *) rp->item;
@@ -330,6 +332,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       
       kp->address = strdup(ipaddress);
       ThreadUnlock(cft_system);
+      ThreadUnlock(cft_server_keyseen);
       return;
       }
    }
@@ -342,6 +345,7 @@ ThreadUnlock(cft_system);
 
 if (kp == NULL)
    {
+   ThreadUnlock(cft_server_keyseen);
    return;
    }
 
@@ -357,6 +361,7 @@ if ((kp->name = strdup(databuf)) == NULL)
    {
    free(kp);
    ThreadUnlock(cft_system);
+   ThreadUnlock(cft_server_keyseen);
    return;
    }
 
@@ -364,6 +369,8 @@ ThreadUnlock(cft_system);
 
 kp->key = HavePublicKey(username,ipaddress,databuf+1);
 kp->timestamp = now;
+
+ThreadUnlock(cft_server_keyseen);
 }
 
 /***************************************************************/
@@ -393,11 +400,17 @@ then = now;
 
 CfOut(cf_verbose,""," -> Writing last-seen observations");
 
+ThreadLock(cft_server_keyseen);
+
 if (SERVER_KEYSEEN == NULL)
    {
+   ThreadUnlock(cft_server_keyseen);
    CfOut(cf_verbose,""," -> Keyring is empty");
    return;
    }
+
+ThreadUnlock(cft_server_keyseen);
+
 
 if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
    {
@@ -434,6 +447,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
       DeleteDB(dbp,key);
       }
 
+   ThreadLock(cft_server_keyseen);
+
    for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       {
       kp = (struct CfKeyBinding *) rp->item;
@@ -444,11 +459,16 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
          DeleteDB(dbp,key);
          }
       }
+
+   ThreadUnlock(cft_server_keyseen);
+
    }
 
 DeleteDBCursor(dbp,dbcp);
 
 /* Now perform updates with the latest data */
+
+ThreadLock(cft_server_keyseen);
 
 for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {
@@ -518,6 +538,8 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       CloseDB(dbpent);
       }
    }
+
+ThreadUnlock(cft_server_keyseen);
 
 CloseDB(dbp);
 

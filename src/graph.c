@@ -132,7 +132,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
       {
       n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
-      CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
+      CfOut(cf_verbose,""," -> Populating %d = %s (%s)\n",tp->id,tp->topic_name,tp->topic_context);
       tp->evc = evc[tp->id];
       }
    }

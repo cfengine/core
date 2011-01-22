@@ -491,6 +491,7 @@ void SpecialQuote(char *topic,char *type);
 void LastSawBundle(char *name);
 int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp);
 int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
+int ForeignZone(char *s);
 
 /* env_context.c */
 

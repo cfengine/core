@@ -356,7 +356,7 @@ while (!feof(prp))
       *sp = '\0';
       }
    
-   if (ForeignZone())
+   if (ForeignZone(vbuff))
       {
       continue;
       }

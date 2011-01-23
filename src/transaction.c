@@ -747,6 +747,7 @@ if (ReadDB(dbp,"lock_horizon",&entry,sizeof(entry)))
    {
    if (now - entry.time < CF_MONTH)
       {
+      CfOut(cf_verbose,""," -> No lock purging scheduled");
       CloseLock(dbp);
       return;
       }

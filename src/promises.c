@@ -817,14 +817,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    for (i = 0; noRvalHash[i] != NULL; i++ )
       {
-      if(strcmp(cp->lval, noRvalHash[i]) == 0)
+      if (strcmp(cp->lval, noRvalHash[i]) == 0)
 	 {
          doHash = false;
          break;
 	 }
       }
    
-   if(!doHash)
+   if (!doHash)
       {
       continue;
       }

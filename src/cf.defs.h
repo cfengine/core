@@ -628,7 +628,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define ATTR     11
 #define CF_NETATTR   7 /* icmp udp dns tcpsyn tcpfin tcpack */
 #define PH_LIMIT 10
-#define CF_MONTH  3600*7*24*30
+#define CF_MONTH  (time_t)(3600*24*30)
 #define CF_WEEK   (7.0*24.0*3600.0)
 #define CF_HOUR   3600
 #define CF_DAY    3600*24

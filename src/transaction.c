@@ -509,12 +509,11 @@ if ((dbp = OpenLock()) == NULL)
    return -1;
    }
 
-DeleteDB(dbp,name);
-
 entry.pid = getpid();
 entry.time = time((time_t *)NULL);
 
 ThreadLock(cft_lock);
+printf("WRITING %d,%d\n",entry.pid,entry.time);
 WriteDB(dbp,name,&entry,sizeof(entry));
 ThreadUnlock(cft_lock);
 
@@ -744,15 +743,12 @@ void PurgeLocks()
 
 memset(&entry, 0, sizeof(entry)); 
 
-if (!IGNORELOCK)
+if (ReadDB(dbp,"lock_horizon",&entry,sizeof(entry)))
    {
-   if (ReadDB(dbp,"lock_horizon",&entry,sizeof(entry)))
+   if (now - entry.time < CF_MONTH)
       {
-      if (now - entry.time < CF_MONTH)
-         {
-         CloseLock(dbp);
-         return;
-         }
+      CloseLock(dbp);
+      return;
       }
    }
 
@@ -760,12 +756,19 @@ CfOut(cf_verbose,""," -> Looking for stale locks to purge");
 
 if (!NewDBCursor(dbp,&dbcp))
    {
+   CloseLock(dbp);
    return;
    }
 
 while(NextDB(dbp,dbcp,&key,&ksize,(void *)&entry,&vsize))
    {
-   if (entry.time > 0 && now - entry.time > (time_t)CF_LOCKHORIZON)
+   if (strncmp(key,"last.internal_bundle.track_license.handle",
+               strlen("last.internal_bundle.track_license.handle")) == 0)
+      {
+      continue;
+      }
+
+   if (now - entry.time > (time_t)CF_LOCKHORIZON)
       {
       CfOut(cf_verbose,""," --> Purging lock (%d) %s",now-entry.time,key);
       DeleteDB(dbp,key);

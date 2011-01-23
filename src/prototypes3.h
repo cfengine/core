@@ -492,9 +492,12 @@ void LastSawBundle(char *name);
 int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp);
 int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 int ForeignZone(char *s);
+void NewPromiser(struct Promise *pp);
+void AnalyzePromiseConflicts(void);
 
 /* env_context.c */
 
+struct Rlist *SplitContextExpression(char *s,struct Promise *pp);
 void ValidateClassSyntax(char *str);
 int Abort(void);
 int ValidClassName(char *name);

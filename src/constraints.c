@@ -615,7 +615,12 @@ if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
       PromiseRef(cf_error,pp);
       }
    }
-  
+
+if (SHOWREPORTS)
+   {
+   NewPromiser(pp);
+   }
+
 if (handle)
    {
    if (!ThreadLock(cft_policy))
@@ -636,7 +641,6 @@ if (handle)
       {
       NewPromiseId(handle,pp);
       }
-   
    
    prid = NULL; // we can't access this after unlocking
    ThreadUnlock(cft_policy);

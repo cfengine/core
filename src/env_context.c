@@ -300,7 +300,7 @@ void LoadPersistentContext()
   struct CfState q;
   char filename[CF_BUFSIZE];
 
-if(LOOKUP)
+if (LOOKUP)
   {
   return;
   }
@@ -598,6 +598,118 @@ if ((fp = fopen(file,"w")) == NULL)
 ListAlphaList(fp,VHEAP,'\n');
 ListAlphaList(fp,VADDCLASSES,'\n');
 fclose(fp);
+}
+
+/*******************************************************************/
+
+/*********************************************************************/
+
+struct Rlist *SplitContextExpression(char *context,struct Promise *pp)
+
+{ struct Rlist *list = NULL;
+  char *sp,*spsub,cbuff[CF_MAXVARSIZE],csub[CF_MAXVARSIZE];
+  int result = false;
+  
+if (context == NULL)
+   {
+   PrependRScalar(&list,"any",CF_SCALAR);
+   }
+else
+   {
+   for (sp = context; *sp != '\0'; sp++)
+      {
+      while (*sp == '|')
+         {
+         sp++;
+         }
+      
+      memset(cbuff,0,CF_MAXVARSIZE);
+      
+      sp += GetORAtom(sp,cbuff);
+      
+      if (strlen(cbuff) == 0)
+         {
+         break;
+         }
+      
+      if (IsBracketed(cbuff))
+         {
+         // Fully bracketed atom (protected)
+         cbuff[strlen(cbuff)-1] = '\0';
+         PrependRScalar(&list,cbuff+1,CF_SCALAR);
+         }
+      else
+         {
+         if (HasBrackets(cbuff,pp))             
+            {
+            struct Rlist *andlist = SplitRegexAsRList(cbuff,"[.&]+",99,false);
+            struct Rlist *rp,*orlist = NULL;
+            char buff[CF_MAXVARSIZE];
+            char orstring[CF_MAXVARSIZE] = {0};
+            char andstring[CF_MAXVARSIZE] = {0};
+
+            // Apply distribution P.(A|B) -> P.A|P.B
+            
+            for (rp = andlist; rp != NULL; rp=rp->next)
+               {
+               if (IsBracketed(rp->item))
+                  {
+                  // This must be an OR string to be ORed and split into a list
+                  *((char *)rp->item+strlen((char *)rp->item)-1) = '\0';
+
+                  if (strlen(orstring) > 0)
+                     {
+                     strcat(orstring,"|");
+                     }
+                  
+                  Join(orstring,(char *)(rp->item)+1,CF_MAXVARSIZE);
+                  }
+               else
+                  {
+                  if (strlen(andstring) > 0)
+                     {
+                     strcat(andstring,".");
+                     }
+                  
+                  Join(andstring,rp->item,CF_MAXVARSIZE);
+                  }
+
+               // foreach ORlist, AND with AND string
+               }
+
+            if (strlen(orstring) > 0)
+               {
+               orlist = SplitRegexAsRList(orstring,"[|]+",99,false);
+               
+               for (rp = orlist; rp != NULL; rp=rp->next)
+                  {
+                  snprintf(buff,CF_MAXVARSIZE,"%s.%s",rp->item,andstring);
+                  PrependRScalar(&list,buff,CF_SCALAR);
+                  }
+               }
+            else
+               {
+               PrependRScalar(&list,andstring,CF_SCALAR);
+               }
+            
+            DeleteRlist(orlist);
+            DeleteRlist(andlist);
+            }
+         else
+            {
+            // Clean atom
+            PrependRScalar(&list,cbuff,CF_SCALAR);
+            }
+         }
+      
+      if (*sp == '\0')
+         {
+         break;
+         }
+      }
+   }
+ 
+return list;
 }
 
 /*****************************************************************************/

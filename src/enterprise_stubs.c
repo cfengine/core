@@ -330,6 +330,27 @@ Nova_ShowTopicRepresentation(fp);
 
 /*****************************************************************************/
 
+void NewPromiser(struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_NewPromiser(pp);
+#else
+#endif 
+}
+
+/*****************************************************************************/
+
+void AnalyzePromiseConflicts()
+{
+#ifdef HAVE_LIBCFNOVA
+Nova_AnalyzePromiseConflicts();
+#else
+#endif
+}
+
+
+/*****************************************************************************/
+
 void RegisterBundleDependence(char *name,struct Promise *pp)
 
 {

@@ -92,6 +92,7 @@ int main(int argc,char *argv[])
 CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();
+AnalyzePromiseConflicts();
 GenericDeInitialize();
 
 if (ERRORCOUNT > 0)

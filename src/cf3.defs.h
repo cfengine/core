@@ -707,6 +707,7 @@ struct PromiseIdent
    {
    char *handle;
    char *filename;
+   char *classes;
    int lineno;
    struct PromiseIdent *next;
    };

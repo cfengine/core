@@ -152,6 +152,7 @@ KeepPromises();
 NoteClassUsage(VHEAP);
 NoteVarUsage();
 UpdateLastSeen();
+PurgeLocks();
 GenericDeInitialize();
 return 0;
 }

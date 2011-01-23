@@ -105,6 +105,7 @@ extern int FACILITY;
 extern char SYSLOGHOST[CF_MAXVARSIZE];
 extern unsigned short SYSLOGPORT;
 extern time_t PROMISETIME;
+extern time_t CF_LOCKHORIZON;
 extern int ABORTBUNDLE;
 extern struct Item *ABORTBUNDLEHEAP;
 extern int LASTSEENEXPIREAFTER;

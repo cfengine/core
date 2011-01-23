@@ -1498,6 +1498,7 @@ void AssertThreadLocked(enum cf_thread_mutex name, char *fname);
 pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name);
 #endif
 void RemoveDates(char *s);
+void PurgeLocks(void);
 
 /* timeout.c */
 

@@ -730,3 +730,51 @@ if (dayp && monthp) // looks like a full date
       }
    }
 }
+
+/************************************************************************/
+
+void PurgeLocks()
+
+{ CF_DB *dbp = OpenLock();
+  CF_DBC *dbcp;
+  char *key,name[CF_BUFSIZE];
+  int i,ksize,vsize;
+  struct LockData entry;
+  time_t now = time(NULL);
+
+memset(&entry, 0, sizeof(entry)); 
+
+if (!IGNORELOCK)
+   {
+   if (ReadDB(dbp,"lock_horizon",&entry,sizeof(entry)))
+      {
+      if (now - entry.time < CF_MONTH)
+         {
+         CloseLock(dbp);
+         return;
+         }
+      }
+   }
+
+CfOut(cf_verbose,""," -> Looking for stale locks to purge");
+
+if (!NewDBCursor(dbp,&dbcp))
+   {
+   return;
+   }
+
+while(NextDB(dbp,dbcp,&key,&ksize,(void *)&entry,&vsize))
+   {
+   if (entry.time > 0 && now - entry.time > (time_t)CF_LOCKHORIZON)
+      {
+      CfOut(cf_verbose,""," --> Purging lock (%d) %s",now-entry.time,key);
+      DeleteDB(dbp,key);
+      }
+   }
+
+entry.time = now;
+WriteDB(dbp,"lock_horizon",&entry,sizeof(entry));
+
+DeleteDBCursor(dbp,dbcp);
+CloseLock(dbp);
+}

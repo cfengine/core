@@ -80,6 +80,7 @@ char SYSLOGHOST[CF_MAXVARSIZE] = {0};
 unsigned short SYSLOGPORT = 514;
 int FACILITY = 0;
 time_t PROMISETIME = 0;
+time_t CF_LOCKHORIZON = CF_MONTH;
 
 int LICENSES = 0;
 char EXPIRY[CF_SMALLBUF] = {0};

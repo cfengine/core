@@ -513,7 +513,6 @@ entry.pid = getpid();
 entry.time = time((time_t *)NULL);
 
 ThreadLock(cft_lock);
-printf("WRITING %d,%d\n",entry.pid,entry.time);
 WriteDB(dbp,name,&entry,sizeof(entry));
 ThreadUnlock(cft_lock);
 

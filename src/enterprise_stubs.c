@@ -1173,6 +1173,13 @@ int ForeignZone(char *s)
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
 
+// We want to keep the banner
+
+if (strstr(s,"%CPU") == 0)
+   {
+   return true;
+   }
+
 if (cf_strcmp(zone,"global") == 0)
    {
    if (strcmp(s+strlen(s)-7,"global"))

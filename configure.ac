@@ -7,7 +7,7 @@ dnl # script => aclocal; automake -a -c; autoconf
 dnl #
 dnl ##########################################################################
 
-AC_PREREQ(2.64)
+AC_PREREQ(2.63)
 
 AC_INIT
 AC_CONFIG_SRCDIR([src/cfpromises.c])
@@ -17,7 +17,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.1.3a1)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.1.4)   dnl remember to set version
 
 AC_CONFIG_HEADERS([src/conf.h])
 

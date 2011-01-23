@@ -332,7 +332,7 @@ return killed;
 int Unix_LoadProcessTable(struct Item **procdata,char *psopts)
 
 { FILE *prp;
- char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
+  char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
   struct Item *rootprocs = NULL;
   struct Item *otherprocs = NULL;
 
@@ -382,7 +382,10 @@ while (DeleteItemContaining(&otherprocs,"root"))
    {
    }
 
-PrependItem(&rootprocs,otherprocs->name,NULL);
+if (otherprocs)
+   {
+   PrependItem(&rootprocs,otherprocs->name,NULL);
+   }
 
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_rootprocs",CFWORKDIR);
 RawSaveItemList(rootprocs,vbuff);

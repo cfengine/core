@@ -286,7 +286,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
       
-      Debug("Found matching pid %d\n",pid);
+      CfOut(cf_verbose,""," ->  Found matching pid %d\n     (%s)",pid,ip->name);
       
       matches++;
       
@@ -319,7 +319,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
       
       if (pid == cfengine_pid && a.signals)
          {
-         CfOut(cf_verbose,"","cf-agent will not signal itself!\n");
+         CfOut(cf_verbose,""," !! cf-agent will not signal itself!\n");
          continue;
          }
       

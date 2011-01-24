@@ -9,6 +9,7 @@ libcfpub_la_SOURCES =							\
 	getopt1.c							\
 	full-write.c							\
 	regex.c								\
+	sort.c								\
 	getloadavg.c							\
 	snprintf.c
 

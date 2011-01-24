@@ -355,7 +355,7 @@ while (!feof(prp))
       {
       *sp = '\0';
       }
-   
+
    if (ForeignZone(vbuff))
       {
       continue;
@@ -390,7 +390,7 @@ if (otherprocs)
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_rootprocs",CFWORKDIR);
 RawSaveItemList(rootprocs,vbuff);
 DeleteItemList(rootprocs);
-    
+
 snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_otherprocs",CFWORKDIR);
 RawSaveItemList(otherprocs,vbuff);
 DeleteItemList(otherprocs);

@@ -1167,7 +1167,7 @@ char *GetProcessOptions()
 #ifdef HAVE_GETZONEID
  zoneid_t zid;
  char zone[ZONENAME_MAX];
- static psopts[CF_BUFSIZE];
+ static char psopts[CF_BUFSIZE];
  
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
@@ -1196,9 +1196,9 @@ getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 // We want to keep the banner
 
-if (strstr(s,"%CPU") == 0)
+if (strstr(s,"%CPU"))
    {
-   return true;
+   return false;
    }
 
 if (cf_strcmp(zone,"global") == 0)

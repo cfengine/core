@@ -265,7 +265,7 @@ GetProcessColumnNames(procdata->name,(char **)names,start,end);
 for (ip = procdata->next; ip != NULL; ip=ip->next)
    {
    CF_NODES++;
-   
+
    if (BlockTextMatch(pp->promiser,ip->name,&s,&e))
       {
       if (!SelectProcess(ip->name,names,start,end,a,pp))
@@ -282,8 +282,8 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
 
       if (pid == -1)
          {
-	   CfOut(cf_verbose,"","Unable to extract pid while looking for %s\n",pp->promiser);
-	   continue;
+         CfOut(cf_verbose,"","Unable to extract pid while looking for %s\n",pp->promiser);
+         continue;
          }
       
       Debug("Found matching pid %d\n",pid);

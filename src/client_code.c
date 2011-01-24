@@ -1035,12 +1035,12 @@ if (!attr.copy.force_ipv4)
             }
          }
 
-      if(TryConnect(conn,&tv,ap->ai_addr,ap->ai_addrlen))
-	{
-	  connected = true;
-	  break;
-	}
-
+      if (TryConnect(conn,&tv,ap->ai_addr,ap->ai_addrlen))
+         {
+         connected = true;
+         break;
+         }
+      
       }
    
    if (connected)
@@ -1378,6 +1378,7 @@ return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
 { int res;
   long arg;
   struct sockaddr_in emptyCin = {0};
+  struct timeval tvRecv = {0};
 
   if (!cinp)
      {
@@ -1438,12 +1439,16 @@ return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
 
 
    /*
-    * NB: recv() timeout is a bad idea.  struct timeval is very
+    * NB: recv() timeout is not portable.  struct timeval is very
     *     unstable - interpreted differently on different
     *     platforms. E.g. setting tv_sec to 50 (and tv_usec to 0)
     *     results in a timeout of 0.5 seconds on Windows, but 50
-    *     seconds on Linux.
-    *
+    *     seconds on Linux. Thus it must be tested thoroughly on
+    *     the affected platforms. */
+
+   
+#ifdef LINUX
+    
    tvRecv.tv_sec = RECVTIMEOUT;
    tvRecv.tv_usec = 0;
 
@@ -1451,8 +1456,8 @@ return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
       {
       CfOut(cf_error,"setsockopt","!! Couldn't set socket timeout");
       }
-   */
 
+#endif
   
   return true;
 }

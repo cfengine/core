@@ -41,7 +41,6 @@ struct Attributes GetFilesAttributes(struct Promise *pp)
 memset(&attr,0,sizeof(attr));
 
 // default for file copy
-attr.link.when_no_file = cfa_force;
  
 attr.havedepthsearch = GetBooleanConstraint("depth_search",pp);
 attr.haveselect = GetBooleanConstraint("file_select",pp);
@@ -364,6 +363,7 @@ memset(&attr,0,sizeof(attr));
 attr.fwd_name = GetConstraint("forward_relationship",pp,CF_SCALAR);
 attr.bwd_name = GetConstraint("backward_relationship",pp,CF_SCALAR);
 attr.associates = GetListConstraint("associates",pp);
+attr.synonyms = GetListConstraint("synonyms",pp);
 return attr;
 }
 
@@ -731,6 +731,10 @@ c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp);
 c.del_change = (struct Rlist *)GetListConstraint("cancel_repaired",pp);
 c.del_kept = (struct Rlist *)GetListConstraint("cancel_kept",pp);
 c.del_notkept = (struct Rlist *)GetListConstraint("cancel_notkept",pp);
+
+c.retcode_kept = (struct Rlist *)GetListConstraint("kept_returncodes",pp);
+c.retcode_repaired = (struct Rlist *)GetListConstraint("repaired_returncodes",pp);
+c.retcode_failed = (struct Rlist *)GetListConstraint("failed_returncodes",pp);
 
 c.persist = GetIntConstraint("persist_time",pp);
 

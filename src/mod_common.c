@@ -52,7 +52,7 @@ struct BodySyntax CF_TRANSACTION_BODY[] =
    {"value_notkept",cf_real,"","A real number value (possibly negative) attributed to not keeping this promise"},
    {"audit",cf_opts,CF_BOOL,"true/false switch for detailed audit records of this promise"},
    {"background",cf_opts,CF_BOOL,"true/false switch for parallelizing the promise repair"},
-   {"report_level",cf_opts,"inform,verbose,error,log","The reporting level for standard output"},
+   {"report_level",cf_opts,"inform,verbose,error,log","The reporting level for standard output for this promise"},
    {"measurement_class",cf_str,"","If set performance will be measured and recorded under this identifier"},
    {NULL,cf_notype,NULL,NULL}
    };
@@ -69,6 +69,9 @@ struct BodySyntax CF_DEFINECLASS_BODY[] =
    {"cancel_kept",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is kept"},
    {"cancel_repaired",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is repaired"},
    {"cancel_notkept",cf_slist,CF_IDRANGE,"A list of classes to be cancelled if the promise is not kept for any reason"},
+   {"kept_returncodes",cf_slist,CF_INTLISTRANGE,"A list of return codes indicating a kept command-related promise"},
+   {"repaired_returncodes",cf_slist,CF_INTLISTRANGE,"A list of return codes indicating a repaired command-related promise"},
+   {"failed_returncodes",cf_slist,CF_INTLISTRANGE,"A list of return codes indicating a failed command-related promise"},
    {"persist_time",cf_int,CF_VALRANGE,"A number of minutes the specified classes should remain active"},
    {"timer_policy",cf_opts,"absolute,reset","Whether a persistent class restarts its counter when rediscovered"},
    {NULL,cf_notype,NULL,NULL}
@@ -155,6 +158,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"mountfilesystems",cf_opts,CF_BOOL,"true/false mount any filesystems promised"},
    {"nonalphanumfiles",cf_opts,CF_BOOL,"true/false warn about filenames with no alphanumeric content"},
    {"repchar",cf_str,".","The character used to canonize pathnames in the file repository"},
+   {"refresh_processes",cf_slist,CF_IDRANGE,"Reload the process table before verifying the bundles named in this list (lazy evaluation)"},
    {"default_repository",cf_str,CF_PATHRANGE,"Path to the default file repository"},
    {"secureinput",cf_opts,CF_BOOL,"true/false check whether input files are writable by unauthorized users"},
    {"sensiblecount",cf_int,CF_VALRANGE,"Minimum number of files a mounted filesystem is expected to have"},
@@ -171,24 +175,24 @@ struct BodySyntax CFA_CONTROLBODY[] =
 
 struct BodySyntax CFS_CONTROLBODY[] =
    {
-   {"cfruncommand",cf_str,CF_PATHRANGE,"Path to the cf-agent command or cf-execd wrapper for remote execution"},
-   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of connections that will be accepted by cf-serverd"},
-   {"denybadclocks",cf_opts,CF_BOOL,"true/false accept connections from hosts with clocks that are out of sync"},
-   {"allowconnects",cf_slist,"","List of IPs or hostnames that may connect to the server port"},
-   {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
    {"allowallconnects",cf_slist,"","List of IPs or hostnames that may have more than one connection to the server port"},
-   {"trustkeysfrom",cf_slist,"","List of IPs from whom we accept public keys on trust"},
+   {"allowconnects",cf_slist,"","List of IPs or hostnames that may connect to the server port"},
    {"allowusers",cf_slist,"","List of usernames who may execute requests from this server"},
-   {"dynamicaddresses",cf_slist,"","List of IPs or hostnames for which the IP/name binding is expected to change"},
-   {"skipverify",cf_slist,"","List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
-   {"logallconnections",cf_opts,CF_BOOL,"true/false causes the server to log all new connections to syslog"},
-   {"logencryptedtransfers",cf_opts,CF_BOOL,"true/false log all successful transfers required to be encrypted"},
-   {"hostnamekeys",cf_opts,CF_BOOL,"true/false store keys using hostname lookup instead of IP addresses"},
    {"auditing",cf_opts,CF_BOOL,"true/false activate auditing of server connections"},
    {"bindtointerface",cf_str,"","IP of the interface to which the server should bind on multi-homed hosts"},
-   {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
-   {"port",cf_int,"1024,99999","Default port for cfengine server"},
+   {"cfruncommand",cf_str,CF_PATHRANGE,"Path to the cf-agent command or cf-execd wrapper for remote execution"},
+   {"denybadclocks",cf_opts,CF_BOOL,"true/false accept connections from hosts with clocks that are out of sync"},
+   {"denyconnects",cf_slist,"","List of IPs or hostnames that may NOT connect to the server port"},
+   {"dynamicaddresses",cf_slist,"","List of IPs or hostnames for which the IP/name binding is expected to change"},
+   {"hostnamekeys",cf_opts,CF_BOOL,"true/false store keys using hostname lookup instead of IP addresses"},
    {"keycacheTTL",cf_int,CF_VALRANGE,"Maximum number of hours to hold public keys in the cache"},
+   {"logallconnections",cf_opts,CF_BOOL,"true/false causes the server to log all new connections to syslog"},
+   {"logencryptedtransfers",cf_opts,CF_BOOL,"true/false log all successful transfers required to be encrypted"},
+   {"maxconnections",cf_int,CF_VALRANGE,"Maximum number of connections that will be accepted by cf-serverd"},
+   {"port",cf_int,"1024,99999","Default port for cfengine server"},
+   {"serverfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility level"},
+   {"skipverify",cf_slist,"","List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
+   {"trustkeysfrom",cf_slist,"","List of IPs from whom we accept public keys on trust"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -276,6 +280,7 @@ struct BodySyntax CFH_CONTROLBODY[] = /* enum cfh_control */
    {
    {"export_zenoss",cf_opts,CF_BOOL,"Make data available for Zenoss integration in docroot/reports/summary.z"},
    {"hub_schedule",cf_slist,"","The class schedule used by cf-hub for report collation"},
+   {"port",cf_int,"1024,99999","Default port for contacting hub nodes"},
    {NULL,cf_notype,NULL,NULL}
    };
 

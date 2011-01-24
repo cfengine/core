@@ -89,8 +89,7 @@ TestExpandVariables();
 TestRegularExpressions();
 TestAgentPromises();
 
-#ifdef BUILD_TESTSUITE
-
+//#ifdef BUILD_TESTSUITE
 printf("7. Test expected non-local load balancing efficiency\n");
 
  char *names = "company comparison competition complete omplex condition connection conscious control cook copper copy cord cork cotton cough country cover dead dear death debt decision deep degree delicate dependent design desire destruction detail development different digestion direction dirty discovery discussion disease disgust distance distribution division do og door end engine enough equal error even event ever every example exchange group growth guide gun hair hammer hand hanging happy harbour hard harmony hat hate have he head healthy hear hearing heart heat help high history hole hollow hook hope horn horse hospital hour house how humour I ice idea if ill important impulse in increase industry ink insect instrument insurance interest invention iron island jelly jewel join journey judge jump keep kettle key kick kind kiss knee knife knot knowledge land language last late laugh law lead leaf learning leather left leg let letter level library lift light like limit line linen lip liquid list little living lock long look loose loss loud love low machine make male man manager map mark market married mass match material may meal measure meat medical meeting memory metal middle military milk mind mine minute mist mixed money monkey month moon morning mother motion mountain mouth move much muscle music nail name narrow nation natural near necessary neck need needle nerve net new news night no noise normal north nose not note now number nut observation of off offer office oil old on only open operation opinion opposite or orange order organization ornament other out oven over owner page pain paint paper parallel parcel part past paste payment peace pen pencil person physical picture pig pin pipe place plane plant plate play please pleasure plough pocket point poison polish political poor porter position possible pot potato powder power present price print prison private probable process produce profit property prose protest public pull pump punishment purpose push put quality question quick quiet quite rail rain range rat rate ray reaction reading ready reason receipt record red regret regular relation religion representative request respect responsible rest reward rhythm rice right ring river road rod roll roof room root rough round rub rule run sad safe sail salt same sand say scale school science scissors screw sea seat second secret secretary see seed seem selection self send sense separate serious servant sex shade shake shame sharp sheep shelf ship shirt shock shoe short shut side sign silk silver simple sister size skin  skirt sky sleep slip slope slow small smash smell smile smoke smooth snake sneeze snow so soap society sock soft solid some  son song sort sound soup south space spade special sponge spoon spring square stage stamp star start statement station steam steel stem step stick sticky stiff still stitch stocking stomach stone stop store story straight strange street stretch strong structure substance such sudden sugar suggestion summer sun support surprise sweet swim system table tail take talk tall taste tax teaching tendency test than that the then theory there thick thin thing this thought thread throat through through thumb thunder ticket tight till time tin tired to toe together tomorrow tongue tooth top touch town trade train transport tray tree trick trouble trousers true turn twist umbrella under unit up use value verse very vessel view violent voice waiting walk wall war warm wash waste watch water wave wax way weather week weight well west ";
@@ -121,9 +120,7 @@ for (i = 0, j= 0; i < 2000; i++)
     }
 
 TestHashEntropy(pattern,"pattern 2");
-#else
-printf("\nFurther details requires build --with-diagnostics \n\n");
-#endif
+//#endif
 }
 
 /*****************************************************************************/
@@ -513,19 +510,23 @@ else
 void TestHashEntropy(char *names,char *title)
 
 {char word[32],*sp;
- int i,j,slot,eslot,hashtable[CF_HASHTABLESIZE],ehashtable[CF_HASHTABLESIZE];
- int freq[10], efreq[10];
+ int i,j,slot,eslot,sslot,hashtable[CF_HASHTABLESIZE],ehashtable[CF_HASHTABLESIZE],shashtable[CF_HASHTABLESIZE];
+ int freq[10], efreq[10],sfreq[10];
+ double tot = 0,etot = 0,stot = 0;
  
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
    hashtable[i] = 0;
    ehashtable[i] = 0;
+   shashtable[i] = 0;
    }
 
-printf(" -> Trial of \"%s\" with collisions at ",title); 
+printf(" -> Trial of \"%s\":\n",title); 
 
 for (i = 0,sp = names; *sp != '\0'; sp += strlen(word)+1,i++)
    {
+   struct timespec start,stop;
+  
    word[0] = '\0';
    sscanf(sp,"%s",word);
 
@@ -534,24 +535,36 @@ for (i = 0,sp = names; *sp != '\0'; sp += strlen(word)+1,i++)
       break;
       }
 
-   slot = Hash(word);
+   clock_gettime(CLOCK_REALTIME, &start);
+   slot = RefHash(word);
+   clock_gettime(CLOCK_REALTIME, &stop);
+   tot += (double)(stop.tv_sec - start.tv_sec)+(double)(stop.tv_nsec-start.tv_nsec);
+
+   clock_gettime(CLOCK_REALTIME, &start);
    eslot = ElfHash(word);
+   clock_gettime(CLOCK_REALTIME, &stop);
+   etot += (double)(stop.tv_sec - start.tv_sec)+(double)(stop.tv_nsec-start.tv_nsec);
+
+   clock_gettime(CLOCK_REALTIME, &start);
+   sslot = OatHash(word);
+   clock_gettime(CLOCK_REALTIME, &stop);
+   stot += (double)(stop.tv_sec - start.tv_sec)+(double)(stop.tv_nsec-start.tv_nsec);
+   
    hashtable[slot]++;
    ehashtable[eslot]++;
-
-   if (hashtable[slot] > 1 || ehashtable[slot] > 1)
-      {
-      printf("%d ",i);
-      }
+   shashtable[sslot]++;
+   printf("SLOTS: %d,%d,%d\n",slot,eslot,sslot);
    }
 
-printf("\n");
+printf("reference time %lf\n",tot/(double)CF_BILLION);
+printf("elf time %lf\n",etot/(double)CF_BILLION);
+printf("fast time %lf\n",stot/(double)CF_BILLION);
 
 printf(" -> Hashed %d %s words into %d slots with the following spectra:\n",i,title,CF_HASHTABLESIZE);
 
 for (j = 0; j < 10; j++)
    {
-   freq[j] = efreq[j] = 0;
+   freq[j] = efreq[j] = sfreq[j] = 0;
    }
 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
@@ -567,6 +580,11 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          {
          efreq[j]++;
          }
+
+      if (shashtable[i] == j)
+         {
+         sfreq[j]++;
+         }      
       }
    }
 
@@ -587,6 +605,16 @@ for (j = 1; j < 10; j++)
    if (efreq[j] > 0)
       {
       printf(" -> eF[%d] = %d\n",j,efreq[j]);
+      }
+   }
+
+printf("\n");
+
+for (j = 1; j < 10; j++)
+   {
+   if (sfreq[j] > 0)
+      {
+      printf(" -> sF[%d] = %d\n",j,sfreq[j]);
       }
    }
 }

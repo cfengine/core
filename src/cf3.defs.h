@@ -278,6 +278,7 @@ enum cfacontrol
    cfa_mountfilesystems,
    cfa_nonalphanumfiles,
    cfa_repchar,
+   cfa_refresh_processes,
    cfa_repository,
    cfa_secureinput,
    cfa_sensiblecount,
@@ -338,24 +339,24 @@ enum cfrcontrol
 
 enum cfscontrol
    {
-   cfs_cfruncommand,
-   cfs_maxconnections,
-   cfs_denybadclocks,
-   cfs_allowconnects,
-   cfs_denyconnects,
    cfs_allowallconnects,
-   cfs_trustkeysfrom,
+   cfs_allowconnects,
    cfs_allowusers,
-   cfs_dynamicaddresses,
-   cfs_skipverify,
-   cfs_logallconnections,
-   cfs_logencryptedtransfers,
-   cfs_hostnamekeys,
    cfs_auditing,
    cfs_bindtointerface,
-   cfs_serverfacility,
-   cfs_portnumber,
+   cfs_cfruncommand,
+   cfs_denybadclocks,
+   cfs_denyconnects,
+   cfs_dynamicaddresses,
+   cfs_hostnamekeys,
    cfs_keyttl,
+   cfs_logallconnections,
+   cfs_logencryptedtransfers,
+   cfs_maxconnections,
+   cfs_portnumber,
+   cfs_serverfacility,
+   cfs_skipverify,
+   cfs_trustkeysfrom,
    cfs_notype,
    };
 
@@ -411,7 +412,9 @@ enum cfrecontrol
 enum cfhcontrol
    {
    cfh_export_zenoss,
-   cfh_schedule
+   cfh_schedule,
+   cfh_port,
+   cfh_notype
    };
 
 /*************************************************************************/
@@ -465,27 +468,33 @@ enum cfeditorder
 
 #define CF_SIGNALRANGE "hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"
 #define CF_BOOL      "true,false,yes,no,on,off"
-#define CF_LINKRANGE "symlink,hardlink,relative,absolute,none"
+#define CF_LINKRANGE "symlink,hardlink,relative,absolute"
 #define CF_TIMERANGE "0,2147483647"
 #define CF_VALRANGE  "0,99999999999"
 #define CF_INTRANGE  "-99999999999,9999999999"
+#define CF_INTLISTRANGE  "[-0-9_$(){}\\[\\].]+"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
 #define CF_CHARRANGE "^.$"
 #define CF_NULL_VALUE "cf_null"
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
-#define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()]+"
-#define CF_IDRANGE     "[a-zA-Z0-9_$()\\[\\].]+"
+#define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}]+"
+#define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
-#define CF_IPRANGE     "[a-zA-Z0-9_$().:-]+"
-#define CF_FNCALLRANGE "[a-zA-Z0-9_().$@]+"
+#define CF_IPRANGE     "[a-zA-Z0-9_$(){}.:-]+"
+#define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
 #define CF_PATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"  // can start with e.g. c:\... or "c:\...  |  unix
 #define CF_LOGRANGE    "stdout|udp_syslog|(\042?[a-zA-Z]:\\\\.*)|(/.*)"
 
 #define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
+
+// Put this here now for caching efficiency
+
+#define NOVA_SOFTWARE_INSTALLED "software_packages.csv"
+#define NOVA_SYNONYM "has synonym"
 
 /*************************************************************************/
 
@@ -548,6 +557,7 @@ enum fncalltype
    cfn_execresult,
    cfn_fileexists,
    cfn_filesexist,
+   cfn_filesize,
    cfn_getenv,
    cfn_getfields,
    cfn_getgid,
@@ -559,6 +569,7 @@ enum fncalltype
    cfn_hash,
    cfn_hashmatch,
    cfn_host2ip,
+   cfn_ip2host,
    cfn_hostinnetgroup,
    cfn_hostrange,
    cfn_hostsseen,
@@ -1170,6 +1181,9 @@ struct DefineClasses
    struct Rlist *del_change;
    struct Rlist *del_kept;
    struct Rlist *del_notkept;
+   struct Rlist *retcode_kept;
+   struct Rlist *retcode_repaired;
+   struct Rlist *retcode_failed;
    };
 
 
@@ -1180,26 +1194,27 @@ struct DefineClasses
 struct Topic
    {
    int id;
-   char *topic_type;
+   char *topic_context;
    char *topic_name;
-   char *topic_comment;
-   struct Occurrence *occurrences;
+   double evc;
+   struct Rlist *synonyms;
    struct TopicAssociation *associations;
    struct Topic *next;
    };
 
 struct TopicAssociation
    {
-   char *assoc_type;
+   char *fwd_context;
    char *fwd_name;
    char *bwd_name;
    struct Rlist *associates;
-   char *associate_topic_type;
+   char *bwd_context;
    struct TopicAssociation *next;
    };
 
 struct Occurrence
    {
+   char *occurrence_context;
    char *locator; /* Promiser */
    enum representations rep_type;
    struct Rlist *represents; /* subtype represented by promiser */
@@ -1816,6 +1831,7 @@ struct Attributes
    char *bwd_name;
    struct Rlist *associates;
    struct Rlist *represents;
+   struct Rlist *synonyms;
    char *rep_type;
    char *path_root;
    char *web_root;
@@ -1855,6 +1871,7 @@ meter_endmark
 /*************************************************************************/
 
 #define EMPTY(str) ((str == NULL) || (str[0] == '\0'))
+#define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
 // classes not interesting in reports
 #define IGNORECLASS(c)                                                         \

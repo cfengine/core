@@ -38,7 +38,7 @@
 
 /*****************************************************************************/
 
-void VerifyGraph(struct Topic *map, struct Rlist *assoc_views,char *view)
+void VerifyGraph(struct Rlist *assoc_views,char *view)
 
 { struct Topic *tp;
   struct TopicAssociation *ta;
@@ -56,17 +56,15 @@ if (view)
 
 /* Just count up the topics */
 
-for (tp = map; tp != NULL; tp=tp->next)
-   {
-   topic_count++;
-   }
+topic_count = CF_NODES;
 
 /* Allocate an array we can pass to a subroutine */
 
 topic_count++;
 
 adj = (double **)malloc(sizeof(double *)*topic_count);
-
+evc = (double *)malloc(sizeof(double)*topic_count);
+   
 if (adj == NULL)
    {
    FatalError("memory allocation in graphs");
@@ -89,84 +87,64 @@ for (i = 0; i < topic_count; i++)
       }
 
    n[i] = NULL;
+   evc[i] = 0;
    }
 
-for (tp = map; tp != NULL; tp=tp->next)
-   {
-   n[tp->id] = strdup(TypedTopic(tp->topic_name,tp->topic_type));
-   CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
-   }
 
 /* Construct the adjacency matrix for the map */
 
-for (tp = map; tp != NULL; tp=tp->next)
+for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   for (ta = tp->associations; ta != NULL; ta=ta->next)
+   for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
       {
-      /* Semantic projection if selected a view... */
-      
-      if (assoc_views && !KeyInRlist(assoc_views,ta->fwd_name))
+      for (ta = tp->associations; ta != NULL; ta=ta->next)
          {
-         continue;
-         }
-
-      /* ...else all associations in play */
-
-      for (rp = ta->associates; rp != NULL; rp=rp->next)
-         {
-         int count = 0;
-         int to_id = GetTopicPid(rp->item);
-         int from_id = tp->id;
-
-         if (to_id > 0 && from_id > 0)
+         /* Semantic projection if selected a view... */
+         
+         if (assoc_views && !KeyInRlist(assoc_views,ta->fwd_name))
             {
-            adj[from_id][to_id] = adj[to_id][from_id] = 1.0;
+            continue;
+            }
+         
+         /* ...else all associations in play */
+         
+         for (rp = ta->associates; rp != NULL; rp=rp->next)
+            {
+            int count = 0;
+            int to_id = GetTopicPid(rp->item);
+            int from_id = tp->id;
+            
+            if (to_id > 0 && from_id > 0)
+               {
+               adj[from_id][to_id] = adj[to_id][from_id] = 1.0;
+               }
             }
          }
       }
-   
-   if (++i == topic_count)
+   }
+
+/* Node degree ranking - global ranking is too non-specific as the data are highly clustered or very sparse */
+
+EigenvectorCentrality(adj,evc,topic_count);
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   for (tp = TOPICHASH[i]; tp != NULL; tp=tp->next)
       {
-      break;
+      n[tp->id] = strdup(ClassifiedTopic(tp->topic_name,tp->topic_context));
+      CfOut(cf_verbose,""," -> Populating %d = %s\n",tp->id,tp->topic_name);
+      tp->evc = evc[tp->id];
       }
    }
 
-/* Node degree ranking */
-
-k = (int *)malloc(sizeof(int)*topic_count);
-
-for (i = 0; i < topic_count; i++)
-   {
-   k[i] = Degree(adj[i],topic_count);
-
-   if (k[i] > max_k)
-      {
-      max_k = k[i];
-      }
-   
-   CfOut(cf_verbose,"","Topic %d - \"%s\" has degree %d\n",i,n[i],k[i]);
-   PrintNeighbours(adj[i],topic_count,n);
-   }
-
-for (i = max_k; i >= 0; i--)
-   {
-   for (j = 0; j < topic_count; j++)
-      {
-      if (k[j] == i)
-         {
-         CfOut(cf_verbose,"","  k = %d, %s @ %d\n",k[j],n[j],j);
-         }
-      }
-   }
-
-for (i = 0; i < topic_count; i++)
-   {
 #if defined HAVE_LIBCFNOVA && defined HAVE_LIBGD
-   Nova_PlotTopicCosmos(i,adj,n,topic_count,view);
+// Superior/Lazy approach avoids this
 #else
+for (i = 0; i < topic_count; i++)
+   {
    PlotTopicCosmos(i,adj,n,topic_count,view);
-#endif
    }
+#endif
 
 /* Clean up */
 
@@ -183,8 +161,8 @@ for (i = 0; i < topic_count; i++)
       }
    }
 
+free(evc);
 free(adj);
-free(k);
 free(n);
 }
 
@@ -273,7 +251,7 @@ agsafeset(t[0], "root", "true", "");
 for (j = 1; tribe[j] >= 0; j++)
    {
    CfOut(cf_verbose,"","Making Node %d for %s (%d)\n",counter,names[tribe[j]],j);
-   DeTypeTopic(names[tribe[j]],ltopic,ltype);
+   DeClassifyTopic(names[tribe[j]],ltopic,ltype);
 
    if (!KeyInRlist(nodelist,ltopic))
       {

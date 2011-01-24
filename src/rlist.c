@@ -173,7 +173,7 @@ void *CopyRvalItem(void *item, char type)
   struct FnCall *fp;
   void *new,*rval;
   char rtype = CF_SCALAR,output[CF_BUFSIZE];
-  char naked[CF_MAXVARSIZE];
+  char naked[CF_BUFSIZE];
   
 Debug("CopyRvalItem(%c)\n",type);
 
@@ -344,7 +344,6 @@ struct Rlist *CopyRlist(struct Rlist *list)
 
 { struct Rlist *rp,*start = NULL;
   struct FnCall *fp;
-  void *new;
 
 Debug("CopyRlist()\n");
   
@@ -353,10 +352,9 @@ if (list == NULL)
    return NULL;
    }
 
-for (rp = list; rp != NULL; rp= rp->next)
+for (rp = list; rp != NULL; rp = rp->next)
    {
-   new = CopyRvalItem(rp->item,rp->type);
-   AppendRlist(&start,new,rp->type);
+   AppendRlist(&start,rp->item,rp->type);  // allocates memory for objects
    }
 
 return start;
@@ -365,12 +363,41 @@ return start;
 /*******************************************************************/
 
 void DeleteRlist(struct Rlist *list)
-
+/* Delete a rlist and all it references */
 {
-if (list != NULL)
-   {
-   DeleteRvalItem(list,CF_LIST);
-   }
+  struct Rlist *rl, *next;
+
+  if(list != NULL)
+    {
+      for(rl = list; rl != NULL; rl = next)
+	{
+	  next = rl->next;
+	  
+	  if (rl->item != NULL)
+	    {
+	    DeleteRvalItem(rl->item,rl->type);
+	    }
+	  
+	  free(rl);
+	}
+    }
+}
+
+/*******************************************************************/
+
+void DeleteRlistNoRef(struct Rlist *list)
+/* Delete a rlist, but not its references */
+{
+  struct Rlist *rl, *next;
+
+  if(list != NULL)
+    {
+      for(rl = list; rl != NULL; rl = next)
+	{
+	  next = rl->next;
+	  free(rl);
+	}
+    }
 }
 
 /*******************************************************************/
@@ -710,7 +737,7 @@ splitlist = SplitStringAsRList(string,',');
 for (rp =  splitlist; rp != NULL; rp = rp->next)
    {
    value[0];
-   sscanf(rp->item,"%*[{ ']%255[^']",value);
+   sscanf(rp->item,"%*[{ '\"]%255[^'\"]",value);
    AppendRlist(&newlist,value,CF_SCALAR);
    }
 
@@ -962,7 +989,7 @@ switch (type)
 
 void DeleteRvalItem(void *rval, char type)
 
-{ struct Rlist *clist;
+{ struct Rlist *clist, *next = NULL;
 
 Debug("DeleteRvalItem(%c)",type);
 
@@ -982,22 +1009,29 @@ if (rval == NULL)
 switch(type)
    {
    case CF_SCALAR:
+
        ThreadLock(cft_lock);
        free((char *)rval);
        ThreadUnlock(cft_lock);
        break;
 
    case CF_LIST:
-       
-       /* rval is now a list whose first item is list->item */
-       clist = (struct Rlist *)rval;
+     
+       /* rval is now a list whose first item is clist->item */
 
-       if (clist && clist->item != NULL)
+     for(clist = (struct Rlist *)rval; clist != NULL; clist = next)
+       {
+
+       next = clist->next;
+
+       if (clist->item)
           {
           DeleteRvalItem(clist->item,clist->type);
           }
 
        free(clist);
+       }
+
        break;
        
    case CF_FNCALL:
@@ -1085,6 +1119,30 @@ ThreadUnlock(cft_lock);
 return rp;
 }
 
+/*******************************************************************/
+
+struct Rlist *PrependRlistAlien(struct Rlist **start,void *item)
+
+   /* Allocates new memory for objects - careful, could leak!  */
+    
+{ struct Rlist *rp,*lp = *start;
+
+ThreadLock(cft_lock); 
+
+if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Unable to allocate Rlist");
+   FatalError("");
+   }
+
+rp->next = *start;
+*start = rp;
+ThreadUnlock(cft_lock);
+
+rp->item = item;
+rp->type = CF_SCALAR;
+return rp;
+}
 
 /*******************************************************************/
 /* Stack                                                           */
@@ -1452,3 +1510,80 @@ if (list == NULL)
     }
 }
 
+/*****************************************************************************/
+
+int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char *arch,struct Attributes a,struct Promise *pp)
+
+{ struct CfPackageItem *pi;
+
+if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
+   {
+   return false;
+   }
+
+CfOut(cf_verbose,""," -> Package (%s,%s,%s) found",name,version,arch);
+
+if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Can't allocate new package\n");
+   return false;
+   }
+
+if (list)
+   {
+   pi->next = *list;
+   }
+else
+   {
+   pi->next = NULL;
+   }
+
+pi->name = strdup(name);
+pi->version = strdup(version);
+pi->arch = strdup(arch);
+*list = pi;
+
+/* Finally we need these for later schedule exec, once this iteration context has gone */
+
+pi->pp = DeRefCopyPromise("this",pp);
+return true;
+}
+
+
+/*****************************************************************************/
+
+int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp)
+
+{ char name[CF_MAXVARSIZE];
+  char arch[CF_MAXVARSIZE];
+  char version[CF_MAXVARSIZE];
+  char vbuff[CF_MAXVARSIZE];
+
+strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
+sscanf(vbuff,"%s",name); /* trim */
+
+strncpy(vbuff,ExtractFirstReference(a.packages.package_list_version_regex,item),CF_MAXVARSIZE-1);
+sscanf(vbuff,"%s",version); /* trim */
+
+if (a.packages.package_list_arch_regex)
+   {
+   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_arch_regex,item),CF_MAXVARSIZE-1);
+   sscanf(vbuff,"%s",arch); /* trim */
+   }
+else
+   {
+   strncpy(arch,"default",CF_MAXVARSIZE-1);
+   }
+
+if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcmp(arch,"CF_NOMATCH") == 0)
+   {
+   return false;
+   }
+
+Debug(" -? Package line \"%s\"\n",item);
+Debug(" -?      with name \"%s\"\n",name);
+Debug(" -?      with version \"%s\"\n",version);
+Debug(" -?      with architecture \"%s\"\n",arch);
+
+return PrependPackageItem(list,name,version,arch,a,pp);
+}

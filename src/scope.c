@@ -127,7 +127,7 @@ void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
   struct Rlist *rpl,*rpr;
   struct Rval retval;
   void *result;
-  char *lval,rettype,naked[CF_MAXVARSIZE];
+  char *lval,rettype,naked[CF_BUFSIZE];
   int i;
 
 if (RlistLen(lvals) != RlistLen(rvals))
@@ -145,23 +145,29 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
    {
    lval = (char *)rpl->item;
 
-   CfOut(cf_verbose,"","    ? Augment scope %s with %s\n",scope,lval);
+   CfOut(cf_verbose,"","    ? Augment scope %s with %s (%c)\n",scope,lval,rpr->type);
 
    // CheckBundleParameters() already checked that there is no namespace collision
    // By this stage all functions should have been expanded, so we only have scalars left
 
    if (IsNakedVar(rpr->item,'@'))
       {
+      enum cfdatatype vtype;
       GetNaked(naked,rpr->item);
 
-      if (GetVariable(scope,naked,&(retval.item),&(retval.rtype)) != cf_notype)
+      vtype = GetVariable(scope,naked,&(retval.item),&(retval.rtype));
+
+      switch(vtype)
          {
-         NewList(scope,lval,CopyRvalItem(retval.item,CF_LIST),cf_slist);
-         }
-      else
-         {
-         CfOut(cf_error,"","List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);
-         NewScalar(scope,lval,rpr->item,cf_str);
+         case cf_slist:
+         case cf_ilist:
+         case cf_rlist:
+             NewList(scope,lval,CopyRvalItem(retval.item,CF_LIST),cf_slist);
+             break;
+         default:
+             CfOut(cf_error,""," !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);
+             NewScalar(scope,lval,rpr->item,cf_str);             
+             break;
          }
       }
    else

@@ -173,7 +173,6 @@ if (rval == NULL)
 switch(type)
    {
    case CF_SCALAR:
-
        ScanScalar(scopeid,scalarvars,listvars,(char *)rval,0,pp);
        break;
        
@@ -228,7 +227,7 @@ for (sp = string; (*sp != '\0') ; sp++)
          {
          char absscope[CF_MAXVARSIZE];
 
-         if (strstr(v,"."))
+         if (IsQualifiedVariable(v))
             {
             strncpy(temp,var,CF_BUFSIZE-1);  
             absscope[0] = '\0';
@@ -240,14 +239,13 @@ for (sp = string; (*sp != '\0') ; sp++)
             }
 
          ExpandPrivateScalar(absscope,v,var); 
-
+         
          RegisterBundleDependence(absscope,pp);
 
          if (GetVariable(absscope,var,&rval,&rtype) != cf_notype)
             {
             if (rtype == CF_LIST)
                {
-               Debug("Found list %s\n",var);
                ExpandScalar(var,exp); 
 
                /* embedded iterators should be incremented fastest,
@@ -602,6 +600,7 @@ lol = NewIterationContext(scopeid,listvars);
 
 if (lol && EndOfIteration(lol))
    {
+   DeleteIterationContext(lol);
    return;
    }
 
@@ -618,6 +617,7 @@ while (NullIterators(lol))
 
 if (lol && EndOfIteration(lol))
    {
+   DeleteIterationContext(lol);
    return;
    }
 
@@ -652,7 +652,7 @@ do
    NewScalar("this","promiser_gid",v,cf_int);
    
    /* End special variables */
-   
+
    pexp = ExpandDeRefPromise("this",pp);
 
    switch (agent)
@@ -1049,6 +1049,7 @@ if (rval != NULL)
       if (FNCALL_STATUS.status == FNCALL_FAILURE)
          {
          /* We do not assign variables to failed fn calls */
+         DeleteRvalItem(rval,type);
          return;
          }
       }
@@ -1084,8 +1085,10 @@ if (rval != NULL)
       
       returnval = EvaluateFinalRval(scope,rval,type,true,pp);
       DeleteRvalItem(rval,type);
+
+      // freed before function exit
       rval = returnval.item;
-      returnval.rtype;
+      type = returnval.rtype;
       }
 
    if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
@@ -1110,6 +1113,7 @@ if (rval != NULL)
                 ShowRlist(stdout,rval);      
                 printf("\n",VPREFIX);
                 PromiseRef(cf_error,pp);
+		break;
             }
          }
       }
@@ -1117,6 +1121,7 @@ if (rval != NULL)
    if (IsCf3VarString(pp->promiser))
       {
       // Unexpanded variables, we don't do anything with
+      DeleteRvalItem(rval,type);
       return;
       }
    
@@ -1124,6 +1129,7 @@ if (rval != NULL)
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");
       PromiseRef(cf_error,pp);
+      DeleteRvalItem(rval,type);
       return;
       }
 
@@ -1134,7 +1140,7 @@ if (rval != NULL)
          if (IsNakedVar(rp->item,'@'))
             {
             free(rp->item);
-            rp->item = strdup("cf_null");
+            rp->item = strdup(CF_NULL_VALUE);
             }
          }
       }
@@ -1156,6 +1162,8 @@ else
    CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
    cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
+
+ DeleteRvalItem(rval,type);
 }
 
 /*********************************************************************/

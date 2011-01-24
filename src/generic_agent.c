@@ -1,3 +1,4 @@
+
 /*
    Copyright (C) Cfengine AS
 
@@ -62,7 +63,8 @@ strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
 NewClass(THIS_AGENT);
 THIS_AGENT_TYPE = ag;
 
-snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
+// need scope sys to set vars in expiry function
+SetNewScope("sys");
 
 if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
    {
@@ -75,7 +77,6 @@ if (!NOHARDCLASSES)
    NewScope("const");
    NewScope("match");
    NewScope("mon");
-   SetNewScope("sys");
    GetNameInfo3();
    CfGetInterfaceInfo(ag);
       
@@ -89,6 +90,7 @@ if (!NOHARDCLASSES)
 LoadPersistentContext();
 LoadSystemConstants();
 
+snprintf(vbuff,CF_BUFSIZE,"control_%s",THIS_AGENT);
 SetNewScope(vbuff);
 NewScope("this");
 NewScope("match");
@@ -111,34 +113,41 @@ else
 
 SetPolicyServer(POLICY_SERVER);
 
-if (NewPromiseProposals())
+if (ag != cf_keygen)
    {
-   CfOut(cf_verbose,""," -> New promises proposals detected...\n");
-   ok = BOOTSTRAP || CheckPromises(ag);
-   }
-else
-   {
-   CfOut(cf_verbose,""," -> No new promises proposals - so policy is already validated\n");
-   ok = true;
-   }
+   if (MissingInputFile())
+      {
+      ok = false;
+      }
+   else if (SHOWREPORTS || NewPromiseProposals())
+      {
+      CfOut(cf_verbose,""," -> New promises proposals detected...\n");
+      ok = BOOTSTRAP || CheckPromises(ag);
+      }
+   else
+      {
+      CfOut(cf_verbose,""," -> No new promises proposals - so policy is already validated\n");
+      ok = true;
+      }
+   
+   if (ok)
+      {
+      ReadPromises(ag,agents);
+      }
+   else
+      {
+      CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+      snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
+      ReadPromises(ag,agents);
+      }
 
-if (ok)
-   {
-   ReadPromises(ag,agents);
-   }
-else
-   {
-   CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-   snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
-   ReadPromises(ag,agents);
-   }
+   if (SHOWREPORTS)
+      {
+      CompilationReport(VINPUTFILE);
+      }
 
-if (SHOWREPORTS)
-   {
-   CompilationReport(VINPUTFILE);
+   CheckLicenses();
    }
-
-CheckLicenses();
 
 XML = 0;
 }
@@ -197,9 +206,17 @@ else
 
 if (ShellCommandReturnsZero(cmd,true))
    {
-   snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
-   MapName(filename);
-
+   if (MINUSF)
+      {
+      snprintf(filename,CF_MAXVARSIZE,"%s/state/validated_%s",CFWORKDIR,CanonifyName(VINPUTFILE));
+      MapName(filename);   
+      }
+   else
+      {
+      snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+      MapName(filename);
+      }
+   
    if ((fd = creat(filename,0600)) != -1)
       {
       close(fd);
@@ -344,6 +361,9 @@ void InitializeGA(int argc,char *argv[])
   struct stat statbuf,sb;
   unsigned char s[16],vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
+
+SHORT_CFENGINEPORT =  htons((unsigned short)5308);
+snprintf(STR_CFENGINEPORT,15,"5308");
 
 #ifdef NT
 if (cfstat("/cygdrive",&statbuf) == 0)
@@ -595,6 +615,8 @@ if (VINPUTLIST != NULL)
                    }
                 break;
             }
+
+         DeleteRvalItem(returnval.item,returnval.rtype);
          }
 
       HashVariables(NULL);
@@ -609,6 +631,21 @@ PARSING = false;
 
 /*******************************************************************/
 
+int MissingInputFile()
+
+{ struct stat sb;
+
+if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
+   {
+   CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
+   return true;
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
 int NewPromiseProposals()
 
 { struct Rlist *rp,*sl;
@@ -616,22 +653,35 @@ int NewPromiseProposals()
   int result = false;
   char filename[CF_MAXVARSIZE];
 
-snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
-MapName(filename);
-
+if (MINUSF)
+   {
+   snprintf(filename,CF_MAXVARSIZE,"%s/state/validated_%s",CFWORKDIR,CanonifyName(VINPUTFILE));
+   MapName(filename);   
+   }
+else
+   {
+   snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+   MapName(filename);
+   }
+  
 if (stat(filename,&sb) != -1)
    {
    PROMISETIME = sb.st_mtime;
    }
+else
+   {
+   PROMISETIME = 0;
+   }
 
 if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)
    {
-   CfOut(cf_error,"stat","There is no readable input file at %s",VINPUTFILE);
-   return false;
+   CfOut(cf_verbose,"stat","There is no readable input file at %s",VINPUTFILE);
+   return true;
    }
 
 if (sb.st_mtime > PROMISETIME)
    {
+   CfOut(cf_verbose,""," -> Promises seem to changed");
    return true;
    }
 
@@ -640,8 +690,9 @@ if (sb.st_mtime > PROMISETIME)
 snprintf(filename,CF_MAXVARSIZE,"%s/inputs",CFWORKDIR);
 MapName(filename);
 
-if (!MINUSF && IsNewerFileTree(filename,PROMISETIME))
+if (IsNewerFileTree(filename,PROMISETIME))
    {
+   CfOut(cf_verbose,""," -> Quick search detected file changes");
    return true;
    }
 
@@ -665,7 +716,8 @@ if (VINPUTLIST != NULL)
 
                 if (cfstat(InputLocation((char *)returnval.item),&sb) == -1)
                    {
-                   CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)returnval.item);
+                   CfOut(cf_error,"stat","Unreadable promise proposals at %s",(char *)returnval.item);
+                   result = true;
                    break;
                    }
 
@@ -682,7 +734,8 @@ if (VINPUTLIST != NULL)
                    {
                    if (cfstat(InputLocation((char *)sl->item),&sb) == -1)
                       {
-                      CfOut(cf_error,"stat","There are no readable promise proposals at %s",(char *)sl->item);
+                      CfOut(cf_error,"stat","Unreadable promise proposals at %s",(char *)sl->item);
+                      result = true;
                       break;
                       }
 
@@ -740,6 +793,8 @@ if (SHOWREPORTS)
       CfOut(cf_error,"fopen","Cannot open output file %s",name);
       FKNOW = fopen(NULLFILE,"w");
       }
+
+   CfOut(cf_inform,""," -> Writing knowledge output to %s",CFWORKDIR);
    }
 else
    {
@@ -1489,26 +1544,6 @@ for (pp = classlist; pp != NULL; pp=pp->next)
 
 /*******************************************************************/
 
-void CheckBundleParameters(char *scope,struct Rlist *args)
-
-{ struct Rlist *rp;
-  struct Rval retval;
-  char *lval,rettype;
-
-for (rp = args; rp != NULL; rp = rp->next)
-   {
-   lval = (char *)rp->item;
-
-   if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
-      {
-      CfOut(cf_error,"","Variable and bundle parameter %s collide",lval);
-      FatalError("Aborting");
-      }
-   }
-}
-
-/*******************************************************************/
-
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
 
 { struct Constraint *cp;
@@ -1703,7 +1738,7 @@ void Version(char *component)
 {
 char vStr[CF_SMALLBUF];
 
-if(INFORM || VERBOSE)
+if (INFORM || VERBOSE)
   {
   snprintf(vStr,sizeof(vStr),"%s (%s)",VERSION,CF3_REVISION);
   }
@@ -1768,9 +1803,12 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
          {
          CheckCommonClassPromises(sp->promiselist);
          }
-      }
 
-   CheckBundleParameters(bp->name,bp->args);
+      if (THIS_AGENT_TYPE == cf_common)
+         {
+         CheckBundleParameters(bp->name,bp->args);
+         }
+      }
    }
 }
 
@@ -1900,3 +1938,24 @@ if ((agent == cf_agent) || (agent == cf_common))
 
 return false;
 }
+
+/*******************************************************************/
+
+void CheckBundleParameters(char *scope,struct Rlist *args)
+
+{ struct Rlist *rp;
+  struct Rval retval;
+  char *lval,rettype;
+
+for (rp = args; rp != NULL; rp = rp->next)
+   {
+   lval = (char *)rp->item;
+   
+   if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
+      {
+      CfOut(cf_error,"","Variable and bundle parameter \"%s\" collide in scope \"%s\"",lval,scope);
+      FatalError("Aborting");
+      }
+   }
+}
+

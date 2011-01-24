@@ -98,6 +98,7 @@ struct Rlist *MOUNTEDFSLIST = NULL;
 struct Rlist *SERVERLIST = NULL;
 struct PromiseIdent *PROMISE_ID_LIST = NULL;
 struct Item *PROCESSTABLE = NULL;
+struct Item *PROCESSREFRESH = NULL;
 struct Item *ROTATED = NULL;
 struct Item *FSTABLIST = NULL;
 struct Item *ABORTBUNDLEHEAP = NULL;
@@ -164,6 +165,7 @@ char BANNER[2*CF_BUFSIZE] = {0};
 char FOOTER[CF_BUFSIZE] = {0};
 char STYLESHEET[CF_BUFSIZE] = {0};
 char AGGREGATION[CF_BUFSIZE] = {0};
+struct Topic *TOPICHASH[CF_HASHTABLESIZE];
 
 char SQL_DATABASE[CF_MAXVARSIZE] = {0};
 char SQL_OWNER[CF_MAXVARSIZE] = {0};
@@ -452,6 +454,7 @@ dev_t ROOTDEVICE = 0;
 char  STR_CFENGINEPORT[16] = {0};
 unsigned short SHORT_CFENGINEPORT;
 time_t CONNTIMEOUT = 10;	   /* seconds */
+time_t RECVTIMEOUT = 30;	   /* seconds */
 int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
 int SKIPIDENTIFY = false;

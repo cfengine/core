@@ -426,7 +426,27 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       CheckAgentAccess(ACCESSLIST);
       continue;
       }
-   
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_refresh_processes].lval) == 0)
+      {
+      struct Rlist *rp;
+
+      if (VERBOSE)
+         {
+         printf("%s SET refresh_processes when starting: ",VPREFIX);
+
+         for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+            {
+            printf(" %s",rp->item);
+            PrependItem(&PROCESSREFRESH,rp->item,NULL);
+            }
+
+         printf("\n");
+         }
+      
+      continue;
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
       {
       struct Rlist *rp;
@@ -815,8 +835,11 @@ int ScheduleAgentOperations(struct Bundle *bp)
   enum typesequence type;
   int pass;
 
-DeleteItemList(PROCESSTABLE);
-PROCESSTABLE = NULL;
+if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(PROCESSREFRESH,bp->name)))
+   {
+   DeleteItemList(PROCESSTABLE);
+   PROCESSTABLE = NULL;
+   }
 
 for (pass = 1; pass < CF_DONEPASSES; pass++)
    {
@@ -1108,14 +1131,13 @@ switch(type)
 
    case kp_storage:
 
-       #ifndef MINGW  // TODO: Run if implemented on Windows
+#ifndef MINGW  // TODO: Run if implemented on Windows
        if (MOUNTEDFSLIST != NULL)
           {
           DeleteMountInfo(MOUNTEDFSLIST);
           MOUNTEDFSLIST = NULL;
           }
-	   #endif  /* NOT MINGW */
-
+#endif  /* NOT MINGW */
        break;
 
    case kp_packages:
@@ -1137,6 +1159,9 @@ void DeleteTypeContext(enum typesequence type)
  
 switch(type)
    {
+   case kp_classes:
+       HashVariables(THIS_BUNDLE);
+       break;
    case kp_environments:
 
 #ifdef HAVE_LIBVIRT

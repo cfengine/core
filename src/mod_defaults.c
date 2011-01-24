@@ -146,6 +146,7 @@ struct BodyDefault BODY_DEFAULT[] =
    {"no_output","false"},
    {"module","false"},
    {"package_policy","verify"},
+   {"package_accept_returncodes","unset (ignored)"},
    {"check_foreign","false"},
    {"scan_arrivals","false"},
    {"edit_fstab","false"},

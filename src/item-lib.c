@@ -451,9 +451,11 @@ return list1;
 /* Search                                                                  */
 /***************************************************************************/
 
-int SelectItemMatching(char *regex,struct Item *begin_ptr,struct Item *end_ptr,struct Item **match,struct Item **prev,char *fl)
+int SelectItemMatching(struct Item *start,char *regex,struct Item *begin_ptr,struct Item *end_ptr,struct Item **match,struct Item **prev,char *fl)
 
-{
+{ struct Item *ip;
+ int ret = false;
+
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;
 
@@ -466,18 +468,26 @@ if (fl && (strcmp(fl,"first") == 0))
    {
    if (SelectNextItemMatching(regex,begin_ptr,end_ptr,match,prev))
       {
-      return true;
+      ret = true;
       }
    }
 else
    {
    if (SelectLastItemMatching(regex,begin_ptr,end_ptr,match,prev))
       {
-      return true;
+      ret = true;
       }
    }
 
-return false;
+if (*match != CF_UNDEFINED_ITEM && *prev == CF_UNDEFINED_ITEM)
+   {
+   for (ip = start; ip != NULL && ip != *match; ip = ip->next)
+      {
+      *prev = ip;
+      }
+   }
+
+return ret;
 }
 
 /*********************************************************************/ 
@@ -996,7 +1006,7 @@ void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 { struct Item *ip;
   char *sp;
 
-if (*filestart == NULL || ptr == *filestart || ptr == CF_UNDEFINED_ITEM)
+if (*filestart == NULL || ptr == *filestart|| ptr == CF_UNDEFINED_ITEM)
    {
    AppendItem(filestart,string,NULL);
    return;

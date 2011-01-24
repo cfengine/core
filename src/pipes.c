@@ -32,26 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-/*****************************************************************************/
-
-FILE *cf_fopen(char *file,char *type)
-
-{
-/* Windows native eventually? */
-
-return fopen(file,type);
-}
-
-/*****************************************************************************/
-
-int cf_fclose(FILE *fp)
-
-{
-/* Windows native eventually? */
-
-return fclose(fp);
-}
-
 /*******************************************************************/
 /* Pipe API - OS function mapping                                  */
 /*******************************************************************/
@@ -129,6 +109,62 @@ return Unix_cf_pclose_def(pfp, a, pp);
 /*******************************************************************/
 /* End pipe API                                                    */
 /*******************************************************************/
+
+int VerifyCommandRetcode(int retcode, int fallback, struct Attributes a, struct Promise *pp)
+{
+  char retcodeStr[128] = {0};
+  int result = true;
+  int matched = false;
+
+if(a.classes.retcode_kept || a.classes.retcode_repaired || a.classes.retcode_failed)
+  {
+  
+  snprintf(retcodeStr,sizeof(retcodeStr),"%d",retcode);
+    
+  if(KeyInRlist(a.classes.retcode_kept, retcodeStr))
+    {
+    cfPS(cf_inform,CF_NOP,"",pp,a,"-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser, retcode);
+    result = true;
+    matched = true;
+    }
+
+  if(KeyInRlist(a.classes.retcode_repaired, retcodeStr))
+    {
+    cfPS(cf_inform,CF_CHG,"",pp,a,"-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser, retcode);
+    result = true;
+    matched = true;
+    }
+
+  if(KeyInRlist(a.classes.retcode_failed, retcodeStr))
+    {
+    cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser, retcode);
+    result = false;
+    matched = true;
+    }
+
+  if(!matched)
+    {
+    CfOut(cf_verbose, "", "Command related to promiser \"%s\" returned code %d -- did not match any failed, repaired or kept lists", pp->promiser, retcode);
+    }
+
+  }
+ else if(fallback)  // default: 0 is success, != 0 is failure
+   {
+   if (retcode == 0)
+     {
+     cfPS(cf_verbose,CF_CHG,"",pp,a," -> Finished command related to promiser \"%s\" -- succeeded",pp->promiser);
+     result = true;
+     }
+   else
+     {
+     cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)",pp->promiser, retcode);
+     result = false;
+     }
+   }
+
+ return result;
+}
+
 
 
 #ifndef MINGW
@@ -780,7 +816,12 @@ while(waitpid(pid,&status,0) < 0)
       }
    }
 
-return status; 
+if (!WIFEXITED(status))
+   {
+   return -1;
+   }
+
+return WEXITSTATUS(status);
  
 #else
 
@@ -798,7 +839,7 @@ if (WIFSIGNALED(status))
    return -1;
    }
  
-if (! WIFEXITED(status))
+if (!WIFEXITED(status))
    {
    return -1;
    }
@@ -860,7 +901,9 @@ return cf_pwait(pid);
 /*******************************************************************/
 
 int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
-
+/**
+ * Defines command failure/success with cfPS based on exit code.
+ */
 { int fd, status, wait_result;
   pid_t pid;
 
@@ -915,15 +958,13 @@ while(waitpid(pid,&status,0) < 0)
       }
    }
 
-if (status == 0)
+if (!WIFEXITED(status))
    {
-   Debug(" -> Finished script %s ok\n",pp->promiser);
-   cfPS(cf_verbose,CF_CHG,"",pp,a," -> Finished script - succeeded %s\n",pp->promiser);
+   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script \"%s\" - failed (abnormal termination)",pp->promiser);
+   return -1;
    }
-else
-   {
-   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script %s -- an error occurred\n",pp->promiser);
-   }
+
+VerifyCommandRetcode(WEXITSTATUS(status),true,a,pp);
 
 return status; 
  
@@ -946,26 +987,11 @@ if (WIFSIGNALED(status))
 
 if (!WIFEXITED(status))
    {
-   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script - failed %s\n",pp->promiser);
+   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script \"%s\" - failed (abnormal termination)",pp->promiser);
    return -1;
    }
 
-if (WEXITSTATUS(status) == 0)
-   {
-   cfPS(cf_verbose,CF_CHG,"",pp,a," -> Finished script - succeeded %s\n",pp->promiser);
-   }
-else
-   {
-   if (errno != EINTR)
-      {
-      cfPS(cf_inform,CF_FAIL,"",pp,a," !! Finished script - failed %s\n",pp->promiser);
-      return -1;
-      }
-   else
-      {
-      cfPS(cf_inform,CF_INTERPT,"",pp,a," !! Script %s - interrupt\n",pp->promiser);
-      }
-   }
+VerifyCommandRetcode(WEXITSTATUS(status),true,a,pp);
 
 return (WEXITSTATUS(status));
 #endif

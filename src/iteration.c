@@ -47,6 +47,7 @@ struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
 Debug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
 CopyScope("this",scopeid);
+
 ptr=GetScope("this");
 
 if (namelist == NULL)
@@ -109,8 +110,6 @@ void DeleteIterationContext(struct Rlist *deref)
 
 {
 DeleteScope("this");
-
-/* Cannot use DeleteRlist(deref) as we are referencing memory from hashtable */
 
 if (deref != NULL)
    {
@@ -266,15 +265,15 @@ return false;
 
 void DeleteReferenceRlist(struct Rlist *list)
 
+/* Delete all contents, hash table in scope has own copy */
 {
 if (list == NULL)
    {
    return;
    }
 
-DeleteAssoc(list->item);
+DeleteAssoc((struct CfAssoc *)list->item);
 
-/* Delete infrastructure assuming content remains allocated */
 
 DeleteReferenceRlist(list->next);
 free((char *)list);

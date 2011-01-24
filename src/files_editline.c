@@ -239,7 +239,8 @@ void VerifyLineDeletions(struct Promise *pp)
 /* *(pp->donep) = true;	*/
 	 
 a = GetDeletionAttributes(pp);
-
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    
 /* Are we working in a restricted region? */
 
 if (!a.haveregion)
@@ -282,6 +283,7 @@ void VerifyColumnEdits(struct Promise *pp)
 /* *(pp->donep) = true; */
 
 a = GetColumnAttributes(pp);
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
 if (a.column.column_separator == NULL)
    {
@@ -352,6 +354,7 @@ CfOut(cf_verbose,""," -> Looking at pattern %s\n",pp->promiser);
 /* Are we working in a restricted region? */
 
 a = GetReplaceAttributes(pp);
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
 if (!a.replace.replace_value)
    {
@@ -401,6 +404,7 @@ void VerifyLineInsertions(struct Promise *pp)
 /* *(pp->donep) = true; */
   
 a = GetInsertionAttributes(pp);
+a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
 if (!SanityCheckInsertions(a))
    {
@@ -440,7 +444,7 @@ if (a.location.line_matching == NULL)
    }
 else
    {
-   if (!SelectItemMatching(a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
+   if (!SelectItemMatching(*start,a.location.line_matching,begin_ptr,end_ptr,&match,&prev,a.location.first_last))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s",pp->promiser,a.location.line_matching,pp->this_server);
       YieldCurrentLock(thislock);
@@ -588,8 +592,6 @@ int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,stru
   struct Item *loc = NULL;
   int retval = false;
 
-//*(pp->donep) = true;
-  
 if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
    {
    if ((fin = fopen(pp->promiser,"r")) == NULL)
@@ -656,7 +658,7 @@ else
       {
       char *sp;
       loc = location;
-      
+
       for (sp = pp->promiser; sp <= pp->promiser+strlen(pp->promiser); sp++)
          {
          memset(buf,0,CF_BUFSIZE);
@@ -667,7 +669,7 @@ else
             {
             continue;
             }
-         
+
          if (IsItemInRegion(buf,begin_ptr,end_ptr,a,pp))
             {
             cfPS(cf_verbose,CF_NOP,"",pp,a," -> Promised file line \"%s\" exists within file %s (promise kept)",buf,pp->this_server);
@@ -823,7 +825,7 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
   int match_len,start_off,end_off,once_only = false,retval = false;
   struct CfRegEx rex;
   struct Item *ip;
-  int notfound = true, cutoff = 1;
+  int notfound = true, cutoff = 1, replaced=false;
 
 if (a.replace.occurrences && (strcmp(a.replace.occurrences,"first") == 0))
    {
@@ -840,6 +842,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
 
    cutoff = 1;
    strncpy(line_buff,ip->name,CF_BUFSIZE);
+   replaced = false;
 
    while (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
       {
@@ -862,7 +865,8 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       strncat(after,line_buff+end_off,CF_BUFSIZE);
       snprintf(line_buff,CF_EXPANDSIZE-1,"%s%s",before,replace);
       notfound = false;
-
+      replaced = true;
+      
       // Model the full substitution in line_buff
       
       snprintf(line_buff,CF_EXPANDSIZE-1,"%s%s%s",before,replace,after);
@@ -887,7 +891,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
       cfPS(cf_verbose,CF_WARN,"",pp,a," -> Need to replace line \"%s\" in %s - but only a warning was promised",pp->promiser,pp->this_server);
       continue;
       }
-   else
+   else if (replaced)
       {
       free(ip->name);
       ip->name = strdup(line_buff);

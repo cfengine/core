@@ -1,3 +1,19 @@
+3.1.3   (Feature addition release)
+
+	Added 30 second timeout on recv() on Linux.
+
+	package_noverify_returncode implemented (bug #256).
+
+	A flexible mechanism for setting classes based on return codes of
+	commands has been introduced. Allows for setting promise kept,
+	repaired or failed based on any return codes. This is currently
+	implemented for commands-promises, package-manager commands and
+	transformer in files. In classes body, see attributes
+	kept_returncodes, repaired_returncodes, failed_returncodes (bug
+	#248, #329)
+	
+	New function ip2host - reverse DNS lookup (bug #146).
+
 3.1.2   (Scalability/efficiency release)
 
 	Big efficiency improvements by caching output from

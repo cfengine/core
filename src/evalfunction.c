@@ -386,7 +386,7 @@ struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rlist *rp;
   struct Rval rval;
   struct passwd *pw;
-  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char buffer[CF_BUFSIZE];
   char *name;
   int limit;
   
@@ -409,6 +409,38 @@ SetFnCallReturnStatus("host2ip",FNCALL_SUCCESS,NULL,NULL);
 rval.rtype = CF_SCALAR;
 return rval;
 }
+
+/*********************************************************************/
+
+struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs)
+
+{ struct Rlist *rp;
+  struct Rval rval;
+  struct passwd *pw;
+  char buffer[CF_BUFSIZE];
+  char *ip;
+  int limit;
+  
+buffer[0] = '\0';  
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ip2host].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+ip = finalargs->item;
+
+if ((rval.item = strdup(IPString2Hostname(ip))) == NULL)
+   {
+   FatalError("Memory allocation in FnCallIP2Host");
+   }
+
+SetFnCallReturnStatus("ip2host",FNCALL_SUCCESS,NULL,NULL);
+
+/* end fn specific content */
+
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
 
 /*********************************************************************/
 
@@ -1059,7 +1091,7 @@ switch(policy)
 
 SetFnCallReturnStatus("splayclass",FNCALL_SUCCESS,strerror(errno),NULL);   
 
-hash = (double)Hash(splay);
+hash = (double)GetHash(splay);
 box = (int)(0.5 + period*hash/(double)CF_HASHTABLESIZE);
 
 minblocks = box % 12;
@@ -2272,7 +2304,16 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_fileexists].args,finalargs); /* Arg validatio
 
 if (lstat(finalargs->item,&statbuf) == -1)
    {
-   strcpy(buffer,"!any");
+   if (fn == cfn_filesize)
+      {      
+      strcpy(buffer,"-1");
+      }
+   else
+      {
+      strcpy(buffer,"!any");
+      }
+
+   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_FAILURE,NULL,NULL);
    }
 else
    {
@@ -2307,6 +2348,10 @@ else
           break;
       case cfn_fileexists:
           strcpy(buffer,"any");
+          break;
+
+      case cfn_filesize:
+          snprintf(buffer,CF_MAXVARSIZE,"%ld",statbuf.st_size);
           break;
       }
 
@@ -4473,16 +4518,19 @@ char *StripPatterns(char *file_buffer,char *pattern,char *filename)
 { int start,end;
   int count = 0;
 
-while(BlockTextMatch(pattern,file_buffer,&start,&end))
-   {
-   CloseStringHole(file_buffer,start,end);
-
-   if (count++ > strlen(file_buffer))
+if(!EMPTY(pattern))
+  {
+  while(BlockTextMatch(pattern,file_buffer,&start,&end))
+    {
+    CloseStringHole(file_buffer,start,end);
+	
+    if (count++ > strlen(file_buffer))
       {
       CfOut(cf_error,""," !! Comment regex \"%s\" was irreconcilable reading file %s probably because it legally matches nothing",pattern,filename);
       return file_buffer;
       }
-   }
+    }
+  }
 
 return file_buffer;
 }
@@ -4681,6 +4729,8 @@ for (sp = content+strlen(content)-1; sp >= content && *sp != FILE_SEPARATOR; sp-
    }
 
 NewScope(context);
+name[0] = '\0';
+content[0] = '\0';
 
 switch (*line)
    {
@@ -4708,11 +4758,23 @@ switch (*line)
           NewScalar(context,name,content,cf_str);
           }
        break;
+
+   case '@':
+       content[0] = '\0';
+       sscanf(line+1,"%[^=]=%[^\n]",name,content);
+
+       if (CheckID(name))
+          {
+          CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
+          struct Rlist *list = ParseShownRlist(content);
+          NewList(context,name,list,cf_str);          
+          }
+       break;
        
    default:
        if (print)
           {
-          CfOut(cf_error,"","M \"%s\": %s\n",command,line);
+          CfOut(cf_cmdout,"","M \"%s\": %s\n",command,line);
           }
        break;
    }
@@ -4730,7 +4792,7 @@ for (sp = id; *sp != '\0'; sp++)
    {
    if (!isalnum((int)*sp) && (*sp != '_'))
       {
-      CfOut(cf_error,"","Module protocol contained an illegal character (%c) in class/variable identifier %s.",*sp,id);
+      CfOut(cf_error,"","Module protocol contained an illegal character \'%c\' in class/variable identifier \'%s\'.",*sp,id);
       return false;
       }
    }

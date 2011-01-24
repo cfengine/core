@@ -20,58 +20,29 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#
-# Test module execution as class function
-#
 
 body common control
-   {
-   any::
-
-      bundlesequence  => { 
-                         def,
-                         modtest
-                         };
-   }
-
-###################################################################
-
-bundle agent def
 
 {
-commands:
-
-  "$(sys.workdir)/modules/module_name" module => "true";
-
-reports:
-
-  #
-  # Each module forms a private context with its name as id
-  #
-
- module_class::
-
-  "Module set variable $(module_name.myscalar)";
-
+bundlesequence  => { "example" };
 }
 
-###################################################################
+###########################################################
 
-bundle agent modtest
+bundle agent example
 
-{
+{     
 vars:
 
- "mylist" slist => { @(module_name.mylist) };
+  "exists" int => filesize("/etc/passwd");
+  "nexists" int => filesize("/etc/passwdx");
 
 reports:
 
-  #
-  # Each module forms a private context with its name as id
-  #
+  !xyz::
 
- module_class::
-
-  "Module set variable $(mylist)";
+    "File size $(exists)";
+    "Does not exist $(nexists)";
 
 }
+

@@ -355,7 +355,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       {
       int hash,time = Str2Int(retval);
       snprintf(splay,CF_BUFSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
-      hash = Hash(splay);
+      hash = GetHash(splay);
       SPLAYTIME = (int)(time*60*hash/CF_HASHTABLESIZE);
       }
 
@@ -629,9 +629,14 @@ InitAlphaList(&VADDCLASSES);
 
 DeleteItemList(IPADDRESSES);
 IPADDRESSES = NULL;
+
 DeleteScope("this");
 DeleteScope("mon");
 DeleteScope("sys");
+NewScope("this");
+NewScope("mon");
+NewScope("sys");
+
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();
@@ -676,7 +681,7 @@ return buf;
 void *LocalExec(void *scheduled_run)
 
 { FILE *pp; 
-  char line[CF_BUFSIZE],filename[CF_BUFSIZE],*sp;
+  char line[CF_BUFSIZE],lineEscaped[sizeof(line)*2],filename[CF_BUFSIZE],*sp;
   char cmd[CF_BUFSIZE],esc_command[CF_BUFSIZE];
   int print,count = 0;
   void *threadName;
@@ -818,23 +823,28 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
    
    if (print)
       {
-      fprintf(fp,"%s\n",line);
+      // we must escape print format chars (%) from output
+
+      ReplaceStr(line,lineEscaped,sizeof(lineEscaped),"%","%%");
+
+      fprintf(fp,"%s\n",lineEscaped);
       count++;
       
       /* If we can't send mail, log to syslog */
       
       if (strlen(MAILTO) == 0)
          {
-         strncat(line,"\n",CF_BUFSIZE-1-strlen(line));
-         if ((strchr(line,'\n')) == NULL)
+	 strncat(lineEscaped,"\n",sizeof(lineEscaped)-1-strlen(lineEscaped));
+         if ((strchr(lineEscaped,'\n')) == NULL)
             {
-            line[CF_BUFSIZE-2] = '\n';
+	    lineEscaped[sizeof(lineEscaped)-2] = '\n';
             }
          
-         CfOut(cf_inform,"",line);
+         CfOut(cf_inform,"",lineEscaped);
          }
       
       line[0] = '\0';
+      lineEscaped[0] = '\0';
       }
    }
  

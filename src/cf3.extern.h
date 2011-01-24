@@ -28,6 +28,7 @@
 
 /* See variables in cf3globals.c and syntax.c */
 
+extern struct Topic *TOPICHASH[CF_HASHTABLESIZE];
 extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
@@ -111,6 +112,7 @@ extern int LASTSEEN;
 extern char *DEFAULT_COPYTYPE;
 extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
+extern struct Item *PROCESSREFRESH;
 extern struct Item *FSTABLIST;
 extern struct Rlist *MOUNTEDFSLIST;
 extern struct CfPackageManager *INSTALLED_PACKAGE_LISTS;

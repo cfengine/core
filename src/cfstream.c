@@ -461,19 +461,15 @@ if (fp != stdout)
 
 void SanitizeBuffer(char *buffer)
 
-{ char *sp;
-
+{ char *spf,*spt; 
+  char buf[CF_EXPANDSIZE];
+  int change = false;
+ 
  /* Check for %s %m which someone might be able to insert into
    an error message in order to get a syslog buffer overflow...
    bug reported by Pekka Savola */
- 
-for (sp = buffer; *sp != '\0'; sp++)
-   {
-   if ((*sp == '%') && (*(sp+1) >= 'a'))
-      {
-      *sp = '?';
-      }
-   }
+
+// No longer necessary
 }
 
 /*********************************************************************************/

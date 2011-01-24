@@ -7,18 +7,19 @@ dnl # script => aclocal; automake -a -c; autoconf
 dnl #
 dnl ##########################################################################
 
-AC_PREREQ(2.52)
+AC_PREREQ(2.64)
 
-AC_INIT(src/cfpromises.c)
+AC_INIT
+AC_CONFIG_SRCDIR([src/cfpromises.c])
 AC_CANONICAL_TARGET
 
 dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.1.2)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.1.3a1)   dnl remember to set version
 
-AM_CONFIG_HEADER(src/conf.h)
+AC_CONFIG_HEADERS([src/conf.h])
 
 #
 # Add to the default list of places in LDFLAGS to compensate for
@@ -65,11 +66,10 @@ dnl Checks for programs.
 dnl ######################################################################
 
 AC_PROG_CC
+LT_INIT([disable-static])
 AM_PROG_LEX
 AC_PROG_YACC
-AC_PROG_RANLIB
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
@@ -320,8 +320,7 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0; then
 
     AC_MSG_CHECKING(Berkeley DB API)
 
-    AC_TRY_RUN(
-       [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <db.h>
 #include <stdio.h>
 int main(void)
@@ -336,10 +335,8 @@ int main(void)
         exit(0);
         }
 }
-       ],
-       [AC_MSG_RESULT(OK)],
-       [AC_DEFINE(CF_OLD_DB,1,Define if old Berkeley API)]
-    )
+       ]])],[AC_MSG_RESULT(OK)],[AC_DEFINE(CF_OLD_DB,1,Define if old Berkeley API)
+    ],[])
 
     AC_CHECK_LIB(db, db_create)
 
@@ -417,8 +414,7 @@ else
 
     AC_MSG_CHECKING(OpenSSL Version)
 
-    AC_TRY_RUN(
-       [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <openssl/opensslv.h>
 int main(void)
 {
@@ -426,11 +422,8 @@ int main(void)
         exit(1);
     exit(0);
 }
-       ],
-       [AC_MSG_RESULT(OK)],
-       [AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)],
-       [AC_MSG_WARN(Assuming 0.9.7 or later when cross-compiling)]
-    )
+       ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)],[AC_MSG_WARN(Assuming 0.9.7 or later when cross-compiling)
+    ])
 
     dnl ######################################################################
     dnl Checks for OpenSSL crypto lib
@@ -1034,7 +1027,8 @@ dnl ######################################################################
 dnl Now make the Makefiles
 dnl ######################################################################
 
-AC_OUTPUT(Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile inputs/Makefile)
+AC_CONFIG_FILES([Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile inputs/Makefile])
+AC_OUTPUT
 
 rm -f src/cf3parse.c src/cf3parse.h
 

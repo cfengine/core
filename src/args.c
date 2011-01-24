@@ -195,6 +195,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
 
    Debug("EXPARG: %s.%s\n",CONTEXTID,rval.item);
    AppendRlist(&newargs,rval.item,rval.rtype);
+   DeleteRvalItem(rval.item,rval.rtype);
    }
 
 return newargs;
@@ -204,9 +205,10 @@ return newargs;
 
 void DeleteExpArgs(struct Rlist *args)
 
-{ struct Rlist *rp;
+{
 
-DeleteRvalItem(args,CF_LIST);
+DeleteRlist(args);
+
 }
 
 /******************************************************************/

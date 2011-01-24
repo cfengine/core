@@ -84,14 +84,13 @@ if (ap->lval)
    }
 
 if (ap->rval)
-   {
+  { 
    DeleteRvalItem(ap->rval,ap->rtype);
    }
 
-if (ap != NULL)
-   {
-   free((char *)ap);
-   }
+
+free((char *)ap);
+
 }
 
 /*******************************************************************/

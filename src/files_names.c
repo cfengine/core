@@ -217,12 +217,30 @@ DeleteItemList(path);
 int IsNewerFileTree(char *dir,time_t reftime)
 
 { struct dirent *dirp;
-  char path[CF_BUFSIZE] = {0},pbuffer[CF_BUFSIZE];
+  char path[CF_BUFSIZE] = {0};
   struct Attributes dummyattr = {0};
   DIR *dirh;
   struct stat sb;
 
 // Assumes that race conditions on the file path are unlikely and unimportant
+
+if (lstat(dir,&sb) == -1)
+   {
+   CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",dir);
+   // return true to provoke update
+   return true;
+   }
+
+if (S_ISDIR(sb.st_mode))
+   {
+   CfOut(cf_verbose,""," ?? Looking at %s (%ld)",dir,sb.st_mtime-reftime);      
+   
+   if (sb.st_mtime > reftime)
+      {
+      CfOut(cf_verbose,""," >> Detected change in %s",dir);      
+      return true;
+      }
+   }
   
 if ((dirh=opendir(dir)) == NULL)
    {
@@ -233,7 +251,7 @@ else
    {
    for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       {
-      if (!ConsiderFile(dirp->d_name,pbuffer,dummyattr,NULL))
+      if (!ConsiderFile(dirp->d_name,dir,dummyattr,NULL))
          {
          continue;
          }
@@ -251,13 +269,15 @@ else
          {
          CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",path);
 	 closedir(dirh);
-         return false;
+         // return true to provoke update
+         return true;
          }
 
       if (S_ISDIR(sb.st_mode))
          {
          if (sb.st_mtime > reftime)
             {
+            CfOut(cf_verbose,""," >> Detected change in %s",path);      
             closedir(dirh);
             return true;
             }
@@ -798,7 +818,6 @@ int IsStrIn(char *str, char **strs, int ignoreCase)
 
 for (i = 0; strs[i] != NULL; i++)
    {
-
    if(ignoreCase)
      {
      if (strcasecmp(str,strs[i]) == 0)

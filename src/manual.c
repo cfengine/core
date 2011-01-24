@@ -472,7 +472,7 @@ if (strlen(s) == 0)
 if (type == cf_opts || type == cf_olist)
    {
    list = SplitStringAsRList(s,',');
-   fprintf(fout,"@noindent @b{Allowed input range}: @*\n@example",s);
+   fprintf(fout,"@noindent @b{Allowed input range}: @*\n@example",TexInfoEscape(s));
    
    for (rp = list; rp != NULL; rp=rp->next)
       {
@@ -484,7 +484,7 @@ if (type == cf_opts || type == cf_olist)
    }
 else
    {
-   fprintf(fout,"@noindent @b{Allowed input range}: @code{%s}\n\n",s);
+   fprintf(fout,"@noindent @b{Allowed input range}: @code{%s}\n\n",TexInfoEscape(s));
    }
 }
 
@@ -639,9 +639,37 @@ for (sp = pattern; *sp != '\0'; sp++)
    switch (*sp)
       {
       case '@':
+      case '{':
+      case '}':
           fputc((int)'@',fout);
       default:
           fputc((int)*sp,fout);
       }
    }
+}
+
+/*****************************************************************************/
+
+char *TexInfoEscape(char *s)
+
+{ char *spf,*spt;
+  static char buffer[CF_BUFSIZE];
+
+memset(buffer,0,CF_BUFSIZE);
+  
+for (spf = s,spt = buffer; *spf != '\0'; spf++)
+   {
+   switch (*spf)
+      {
+      case '{':
+      case '}':
+      case '@':
+          *spt++ = '@';
+          break;
+      }
+   
+   *spt++ = *spf;
+   }
+
+return buffer;
 }

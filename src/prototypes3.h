@@ -489,6 +489,8 @@ void SetPromiseOutputs(struct Promise *pp);
 void VerifyOutputsPromise(struct Promise *pp);
 void SpecialQuote(char *topic,char *type);
 void LastSawBundle(char *name);
+int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp);
+int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 
 /* env_context.c */
 
@@ -524,6 +526,7 @@ int GetORAtom (char *start, char *buffer);
 int GetANDAtom (char *start, char *buffer);
 int CountEvalAtoms (char *class);
 int IsBracketed (char *s);
+int HasBrackets(char *s,struct Promise *pp);
 void SaveClassEnvironment(void);
 
 /* evalfunction.c */
@@ -536,6 +539,7 @@ struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs);
+struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs);
@@ -656,6 +660,7 @@ struct edit_context *NewEditContext(char *filename,struct Attributes a,struct Pr
 void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promise *pp);
 int LoadFileAsItemList(struct Item **liststart,char *file,struct Attributes a,struct Promise *pp);
 int SaveItemListAsFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp);
+int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */
 
@@ -876,6 +881,7 @@ void ReadPromises(enum cfagenttype ag,char *agents);
 void Cf3ParseFile(char *filename);
 void Cf3ParseFiles(void);
 int NewPromiseProposals(void);
+int MissingInputFile(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);
 void HashControls(void);
@@ -912,7 +918,7 @@ int GetShiftSlot(time_t here_and_now);
 
 /* graph.c */
 
-void VerifyGraph(struct Topic *map,struct Rlist *list,char *view);
+void VerifyGraph(struct Rlist *list,char *view);
 int AlreadyInTribe(int node, int *tribe);
 int Degree(double *m,int dim);
 int IsTop(double **adj,double *evc,int topic,int dim);
@@ -928,8 +934,9 @@ void MatrixOperation(double **A,double *v,int dim);
 
 /* hashes.c */
 
-int Hash(char *name);
+int RefHash(char *name);
 int ElfHash(char *key);
+int OatHash(char *key);
 void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
 void BlankHashes(char *scope);
@@ -956,7 +963,7 @@ struct Item *ReturnItemIn(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);
 int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 void PrependItemList(struct Item **liststart,char *itemstring);
-int SelectItemMatching(char *regex,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev,char *fl);
+int SelectItemMatching(struct Item *s,char *regex,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev,char *fl);
 int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
 int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
 int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp);
@@ -1074,6 +1081,7 @@ void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
 void IncludeManualFile(FILE *fout,char *file);
 void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
 void PrintPattern(FILE *fout,char *pattern);
+char *TexInfoEscape(char *s);
 
 /* matching.c */
 
@@ -1132,23 +1140,26 @@ void MountAll(void);
 
 /* ontology.c */
 
+struct Topic *IdempInsertTopic(char *classified_name);
+struct Topic *InsertTopic(char *name,char *context);
+struct Topic *FindTopic(char *name);
 int GetTopicPid(char *typed_topic);
-void AddTopic(struct Topic **list,char *name,char *type);
-void AddCommentedTopic(struct Topic **list,char *name,char *comment,char *type);
+struct Topic *AddTopic(struct Topic **list,char *name,char *type);
 void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int verify);
-void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype);
-struct Topic *TopicExists(struct Topic *list,char *topic_name,char *topic_type);
-char *GetTopicType(struct Topic *list,char *topic_name);
+void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context);
+struct Topic *TopicExists(char *topic_name,char *topic_type);
+char *GetTopicContext(char *topic_name);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify);
-struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type);
-int TypedTopicMatch(char *ttopic1,char *ttopic2);
-void DeTypeTopic(char *typdetopic,char *topic,char *type);
-void DeTypeCanonicalTopic(char *typed_topic,char *topic,char *type);
-char *TypedTopic(char *topic,char *type);
+struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
+int ClassifiedTopicMatch(char *ttopic1,char *ttopic2);
+void DeClassifyTopic(char *typdetopic,char *topic,char *type);
+void DeClassifyCanonicalTopic(char *typed_topic,char *topic,char *type);
+char *ClassifiedTopic(char *topic,char *type);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 char *URLHint(char *s);
+char *NormalizeTopic(char *s);
 
 /* patches.c */
 
@@ -1229,15 +1240,13 @@ int LinkOrCopy(const char *from, const char *to, int sym);
 
 /* pipes.c */
 
-FILE *cf_fopen(char *file,char *type);
-int cf_fclose(FILE *fp);
-
 FILE *cf_popen(char *command,char *type);
 FILE *cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background);
 FILE *cf_popen_sh(char *command,char *type);
 FILE *cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv,int background);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+int VerifyCommandRetcode(int retcode, int fallback, struct Attributes a, struct Promise *pp);
 
 #ifndef MINGW
 FILE *Unix_cf_popen(char *command,char *type);
@@ -1330,10 +1339,12 @@ struct Rlist *CopyRlist(struct Rlist *list);
 int CompareRlist(struct Rlist *list1, struct Rlist *list2);
 int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
 void DeleteRlist(struct Rlist *list);
+void DeleteRlistNoRef(struct Rlist *list);
 void DeleteReferenceRlist(struct Rlist *list);
 void ShowRlistState(FILE *fp,struct Rlist *list);
 void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
 struct Rlist *AppendRlistAlien(struct Rlist **start,void *item);
+struct Rlist *PrependRlistAlien(struct Rlist **start,void *item);
 struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type);
 struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type);
 struct Rlist *AppendRScalar(struct Rlist **start,void *item, char type);
@@ -1350,6 +1361,10 @@ struct Rlist *AlphaSortRListNames(struct Rlist *list);
 
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);
+
+int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
+int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
+
 
 
 /* scope.c */
@@ -1413,6 +1428,7 @@ int Unix_GetDiskUsage(char *file, enum cfsizes type);
 
 /* syntax.c */
 
+int CheckParseVariableName(char *name);
 void CheckBundle(char *name,char *type);
 void CheckBody(char *name,char *type);
 struct SubTypeSyntax CheckSubType(char *btype,char *type);
@@ -1583,8 +1599,6 @@ int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes
 void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);
 struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
 void DeletePackageManagers(struct CfPackageManager *newlist);
-int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
-int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
 void DeletePackageItems(struct CfPackageItem *pi);
 int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
@@ -1595,10 +1609,12 @@ char *PrefixLocalRepository(struct Rlist *repositories,char *package);
 int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
 int VersionCmp(char *vs1, char *vs2);
 int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr);
-int ExecPackageCommand(char *command,int verify,struct Attributes a,struct Promise *pp);
+int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
+int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);
+struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 

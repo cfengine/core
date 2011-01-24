@@ -79,6 +79,7 @@ void EnterpriseModuleTrick()
 #if defined HAVE_LIBMONGOC && defined HAVE_LIBCFNOVA
 Nova_EnterpriseModuleTrick();
 #endif
+
 }
 
 /*****************************************************************************/
@@ -782,12 +783,33 @@ void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *h
 /*****************************************************************************/
 
 void ReportSoftware(struct CfPackageManager *list)
-{
-#ifdef HAVE_LIBCFNOVA
- Nova_ReportSoftware(list);
-#else
- CfOut(cf_verbose,"","# Software reporting feature is only available in version Nova and above\n");
-#endif
+
+{ FILE *fout;
+  struct CfPackageManager *mp = NULL;
+  struct CfPackageItem *pi;
+  char name[CF_BUFSIZE],line[CF_BUFSIZE];
+  struct Item *ip,*file = NULL;
+  char start[32];
+  int i = 0;
+
+snprintf(name,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
+MapName(name);
+
+if ((fout = fopen(name,"w")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Cannot open the destination file %s",name);
+   return;
+   }
+
+for (mp = list; mp != NULL; mp = mp->next)
+   {
+   for (pi = mp->pack_list; pi != NULL; pi=pi->next)
+      {
+      fprintf(fout,"%s,%s,%s,%s\n",pi->name,pi->version,pi->arch,ReadLastNode(GetArg0(mp->manager)));
+      }
+   }
+
+fclose(fout);
 }
 
 /*****************************************************************************/
@@ -1113,7 +1135,7 @@ void NoteEfficiency(double e)
  struct Promise p = {0};
  
 NovaNamedEvent("Configuration model efficiency",e,a,&p);
-CfOut(cf_verbose,"","Configuration model efficiency for %s = %.2lf%%",VUQNAME,e);
+CfOut(cf_verbose,"","Configuration model efficiency for %s = %.4lf%%",VUQNAME,e);
 #endif 
 }
 
@@ -1124,16 +1146,72 @@ char *GetProcessOptions()
 #ifdef HAVE_GETZONEID
  zoneid_t zid;
  char zone[ZONENAME_MAX];
+ static psopts[CF_BUFSIZE];
  
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 if (cf_strcmp(zone,"global") == 0)
    {
-   return "-z global";
+   snprintf(psopts,CF_BUFSIZE,"%s,zone",VPSOPTS[VSYSTEMHARDCLASS]);
+   return psopts;
    }
 #endif
 
 return VPSOPTS[VSYSTEMHARDCLASS];
 }
 
+/*****************************************************************************/
+
+int ForeignZone(char *s)
+{
+#ifdef HAVE_GETZONEID
+ zoneid_t zid;
+ char zone[ZONENAME_MAX];
+ static psopts[CF_BUFSIZE];
+ 
+zid = getzoneid();
+getzonenamebyid(zid,zone,ZONENAME_MAX);
+
+if (cf_strcmp(zone,"global") == 0)
+   {
+   if (strcmp(s+strlen(s)-7,"global"))
+      {
+      return true;
+      }
+   }
+#endif
+
+return false;
+}
+
+/*****************************************************************************/
+
+int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+
+return Nova_GetInstalledPkgsRpath(pkgList, a, pp);
+
+#else
+
+CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
+return false;
+
+#endif
+}
+
+
+int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
+{
+#ifdef HAVE_LIBCFNOVA
+
+return Nova_ExecPackageCommandRpath(command,verify,setCmdClasses,a,pp);
+
+#else
+
+CfOut(cf_error, "", "!! rPath internal package commands only available in Nova or above");
+return false;
+
+#endif
+}

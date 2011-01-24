@@ -40,6 +40,21 @@
 #  define MAX_FILENAME 254
 #endif
 
+#ifdef MINGW
+# include <winsock2.h>
+# include <windows.h>
+# include <accctrl.h>
+# include <aclapi.h>
+# include <psapi.h>
+# include <wchar.h>
+# include <sddl.h>
+# include <tlhelp32.h>
+# include <iphlpapi.h>
+# include <ws2tcpip.h>
+# include <objbase.h>  // for disphelper
+#endif
+
+
 #include <stdio.h>
 #include <math.h>
 
@@ -248,24 +263,7 @@ extern int errno;
 # include <sys/sockio.h>
 #endif
 
-
-#ifdef MINGW
-# include <windows.h>
-# include <accctrl.h>
-# include <aclapi.h>
-# include <psapi.h>
-# include <wchar.h>
-# include <sddl.h>
-# include <tlhelp32.h>
-# include <iphlpapi.h>
-# include <ws2tcpip.h>
-# include <objbase.h>  // for disphelper
-# ifdef HAVE_WINSOCK2_H
-#  include <winsock2.h>
-# else
-#  include <winsock.h>
-# endif
-#else
+#ifndef MINGW
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 # include <net/if.h>
@@ -345,7 +343,8 @@ typedef int clockid_t;
 #define CF_MAXFARGS 8
 #define CF_MAX_IP_LEN 64       /* numerical ip length */
 #define CF_PROCCOLS 16
-#define CF_HASHTABLESIZE 7919 /* prime number */
+//#define CF_HASHTABLESIZE 7919 /* prime number */
+#define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61    /* a-z, A-Z plus a bit */
 #define CF_ALPHABETSIZE 256
 #define CF_MAXSHELLARGS 64
@@ -382,6 +381,7 @@ typedef int clockid_t;
 /* these should be >0 to prevent contention */
 
 #define CF_EXEC_IFELAPSED 1
+#define CF_EDIT_IFELAPSED 300
 #define CF_EXEC_EXPIREAFTER 1
 
 #define MAXIP4CHARLEN 16
@@ -630,6 +630,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define PH_LIMIT 10
 #define CF_WEEK   (7.0*24.0*3600.0)
 #define CF_HOUR   3600
+#define CF_DAY    3600*24
 #define CF_RELIABLE_CLASSES 7*24         /* CF_WEEK/CF_HOUR */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600.0)
@@ -1121,25 +1122,6 @@ struct cfagent_connection
    char encryption_type;
    short error;
    };
-
-/*******************************************************************/
-
-struct cfObject
-   {
-   char *scope;                         /* Name of object (scope) */
-   void *hashtable[CF_HASHTABLESIZE];   /* Variable heap  */
-   char type[CF_HASHTABLESIZE];         /* scalar or itlist? */
-   char *classlist;                     /* Private classes -- ? */
-   struct Item *actionsequence;
-   struct cfObject *next;
-   };
-
-/*
-
- $(globalvar)
- $(obj.name)
-
-*/
 
 /*******************************************************************/
 

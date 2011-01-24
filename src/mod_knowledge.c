@@ -72,6 +72,7 @@ struct BodySyntax CF_OCCUR_BODIES[] =
 struct BodySyntax CF_TOPICS_BODIES[] =
    {
    {"association",cf_body,CF_RELATE_BODY,"Declare associated topics"},
+   {"synonyms",cf_slist,"","A list of words to be treated as equivalents in the defined context"},
    {"comment",cf_str,"","Retained comment about this promise's real intention"},
    {NULL,cf_notype,NULL,NULL}
    };

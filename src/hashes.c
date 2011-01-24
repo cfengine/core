@@ -63,7 +63,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
          {
          if (ptr->hashtable[i] != NULL)
             {
-            DeleteAssoc(ptr->hashtable[i]);
+	    DeleteAssoc(ptr->hashtable[i]);
             ptr->hashtable[i] = NULL;
             }
          }
@@ -147,7 +147,7 @@ if (hashtable)
       {
       if (hashtable[i] != NULL)
          {
-         DeleteAssoc(hashtable[i]);
+	 DeleteAssoc(hashtable[i]);
          hashtable[i] = NULL;
          }
       }
@@ -195,14 +195,8 @@ if (html)
 
 int GetHash(char *name)
 
-{ int i, slot = 0;
-
-for (i = 0; name[i] != '\0'; i++)
-   {
-   slot = (CF_MACROALPHABET * slot + name[i]) % CF_HASHTABLESIZE;
-   }
-
-return slot;
+{
+return OatHash(name);
 }
 
 /*******************************************************************/
@@ -311,7 +305,7 @@ while (ptr->hashtable[slot])
       {
       if (CompareVariableValue(rval,rtype,ptr->hashtable[slot]) == 0)
          {
-         DeleteAssoc(ap);
+	 DeleteAssoc(ap);
          return true;
          }
 
@@ -382,62 +376,61 @@ if (len == 0)
    return;
    }
 
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
+ ptr = GetScope(scope);
+ for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   if (strcmp(ptr->scope,scope) == 0)
-      {
-      for (i = 0; i < CF_HASHTABLESIZE; i++)
-         {
-         cphash = ptr->hashtable[i];
+   cphash = ptr->hashtable[i];
          
-         if (cphash != NULL)
-            {
-            for (rp = dereflist; rp != NULL; rp = rp->next)
-               {
-               cplist = (struct CfAssoc *)rp->item;
+   if (cphash != NULL)
+      {
+      for (rp = dereflist; rp != NULL; rp = rp->next)
+        {
+        cplist = (struct CfAssoc *)rp->item;
 
-               if (strcmp(cplist->lval,cphash->lval) == 0)
-                  {
-                  /* Link up temp hash to variable lol */
+        if (strcmp(cplist->lval,cphash->lval) == 0)
+           {
+           /* Link up temp hash to variable lol */
 
-                  state = (struct Rlist *)(cplist->rval);
+           state = (struct Rlist *)(cplist->rval);
 
-                  if (rp->state_ptr == NULL || rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
-                     {
-                     /* Unexpanded function, or blank variable must be skipped.*/
-                     return;
-                     }
+           if (rp->state_ptr == NULL || rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
+              {
+              /* Unexpanded function, or blank variable must be skipped.*/
+              return;
+              }
                   
-                  if (rp->state_ptr)
-                     {
-                     Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],rp->state_ptr->item);
-                  
-                     cphash->rval = rp->state_ptr->item;
-                     }
+           if (rp->state_ptr)
+              {
+              Debug("Rewriting expanded type for %s from %s to %s\n",cphash->lval,CF_DATATYPES[cphash->dtype],rp->state_ptr->item);
 
-                  switch(cphash->dtype)
-                     {
-                     case cf_slist:
-                         cphash->dtype = cf_str;
-                         cphash->rtype = CF_SCALAR;
-                         break;
-                     case cf_ilist:
-                         cphash->dtype = cf_int;
-                         cphash->rtype = CF_SCALAR;
-                         break;
-                     case cf_rlist:
-                         cphash->dtype = cf_real;
-                         cphash->rtype = CF_SCALAR;
-                         break;
-                     }
+              // must first free existing rval in scope, then allocate new (should always be string)
+              DeleteRvalItem(cphash->rval,cphash->rtype);
+                    
+              // avoids double free - borrowing value from lol (freed in DeleteScope())
+              cphash->rval = strdup(rp->state_ptr->item);
+              }
 
-                  Debug(" to %s\n",CF_DATATYPES[cphash->dtype]);
-                  }
+           switch(cphash->dtype)
+                {
+                case cf_slist:
+                  cphash->dtype = cf_str;
+                  cphash->rtype = CF_SCALAR;
+                  break;
+                case cf_ilist:
+                  cphash->dtype = cf_int;
+                  cphash->rtype = CF_SCALAR;
+                  break;
+                case cf_rlist:
+                  cphash->dtype = cf_real;
+                  cphash->rtype = CF_SCALAR;
+                  break;
+                }
+
+               Debug(" to %s\n",CF_DATATYPES[cphash->dtype]);
                }
-            }
-         }
-      }
-   }
+        }
+     }
+  }
 }
 
 

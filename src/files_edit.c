@@ -303,3 +303,72 @@ if (selinux_enabled)
 
 return true;
 }
+
+/*********************************************************************/
+
+int AppendIfNoSuchLine(char *filename, char *line)
+/* Appends line to the file with path filename if it is not already
+   there. line should not contain newline.
+   Returns true if the line is there on exit, false on error. */
+{
+  FILE *fread,*fappend;
+  char lineCp[CF_MAXVARSIZE], lineBuf[CF_MAXVARSIZE];
+  int lineExists = false;
+  int result = false;
+  size_t written = 0;
+  
+  if ((fread = fopen(filename,"rw")) == NULL)
+   {
+   CfOut(cf_error,"fopen","!! Cannot open the file \"%s\" for read", filename);
+   return false;
+   }
+  
+  while(CfReadLine(lineBuf,sizeof(lineBuf),fread))  // strips newlines automatically
+    {
+    if(strcmp(line,lineBuf) == 0)
+      {
+      lineExists = true;
+      result = true;
+      break;
+      }
+    }
+
+  fclose(fread);
+
+
+  if(!lineExists)
+    // we are at EOF and line does not exist already
+    {
+      if((fappend = fopen(filename,"a")) == NULL)
+	{
+	CfOut(cf_error,"fopen","!! Cannot open the file \"%s\" for append", filename);
+	return false;
+	}
+      
+      if(line[strlen(line) - 1] == '\n')
+	{
+	snprintf(lineCp,sizeof(lineCp),"%s",line);
+	}
+      else
+	{
+	snprintf(lineCp,sizeof(lineCp),"%s\n",line);
+	}
+
+      written = fwrite(lineCp, sizeof(char), strlen(lineCp), fappend);
+	
+      if(written == strlen(lineCp))
+	{
+	result = true;
+	}
+      else
+	{
+	CfOut(cf_error, "fwrite", "!! Could not write %d characters to \"%s\" (wrote %d)", strlen(lineCp), filename, written);
+	result = false;
+	}
+      
+      fclose(fappend);
+    }
+  
+
+  return result;
+}

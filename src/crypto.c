@@ -323,6 +323,13 @@ else if (cfstat(newname,&statbuf) == -1)
 	CfOut(cf_error, "rename", "!! Could not rename from old key format (%s) to new (%s)",oldname,newname);
 	}
       }
+   else  // we don't know the digest (e.g. because we are a client and
+	 // have no lastseen-map and/or root-SHA...pub of the server's key
+	 // yet) Just using old file format (root-IP.pub) without renaming for now.
+     {
+     CfOut(cf_verbose, "", " -> Could not map key file to new format - we have no digest yet (using %s)", oldname);
+     snprintf(newname,sizeof(newname),"%s",oldname);
+     }
    }
 
 CfOut(cf_verbose,""," -> Going to secondary storage for key");

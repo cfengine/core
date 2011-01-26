@@ -83,7 +83,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
       // Warning this is not 1:1
       
-      if (strncmp(ipv4,MapAddress((char *)entry.address),strlen(ipv4)) == 0)
+      if (strcmp(ipv4,MapAddress((char *)entry.address)) == 0)
          {
          CfOut(cf_verbose,""," -> Matched IP %s to key %s",ipv4,key+1);
          strncpy(result,key+1,CF_MAXVARSIZE-1);

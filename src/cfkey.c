@@ -171,6 +171,7 @@ if (!OpenDB(name,&dbp))
 if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan last-seen database");
+   CloseDB(dbp);
    return;
    }
 
@@ -195,7 +196,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       }
    CfOut(cf_verbose,""," -> Reporting on %s",hostname);
       
-   printf("%15.15s %-25.25s %25.25s \n",
+   printf("%15.15s %-25.25s %s \n",
      	     address,	     
 	     IPString2Hostname(address),
              hostname+1);

@@ -1179,6 +1179,15 @@ if (cf_strcmp(zone,"global") == 0)
    }
 #endif
 
+#ifdef LINUX
+if (strncmp(VSYSNAME.release,"2.4",3) == 0)
+   {
+   // No threads on 2.4 kernels
+   return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
+   }
+
+#endif
+
 return VPSOPTS[VSYSTEMHARDCLASS];
 }
 

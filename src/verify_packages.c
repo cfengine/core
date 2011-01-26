@@ -431,24 +431,32 @@ if (a.packages.package_version)
    /* The version is specified separately */
    CfOut(cf_verbose,""," -> Package version specified explicitly in promise body");
 
-   for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
-      {
-      CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
-      strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
-      strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
-      strncpy(arch,rp->item,CF_MAXVARSIZE-1);
-      installed += PackageMatch(name,"*","*",a,pp);
-      matches += PackageMatch(name,version,arch,a,pp);
-      }
-
    if (a.packages.package_architectures == NULL)
       {
       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
       strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
       strncpy(arch,"*",CF_MAXVARSIZE-1);
-      installed = PackageMatch(name,"*","*",a,pp);
+      installed = PackageMatch(name,"*",arch,a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
       }
+   else
+      {
+      for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
+        {
+	CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
+	strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+	strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
+	strncpy(arch,rp->item,CF_MAXVARSIZE-1);
+
+	installed = PackageMatch(name,"*",arch,a,pp);
+	matches = PackageMatch(name,version,arch,a,pp);
+
+	SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+	}
+      }
+
+   SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+
    }
 else if (a.packages.package_version_regex)
    {
@@ -463,44 +471,57 @@ else if (a.packages.package_version_regex)
       {
       strncpy(arch,"*",CF_MAXVARSIZE-1);
       }
-   
-   installed = PackageMatch(name,"*","*",a,pp);
+
+   if(strcmp(arch,"CF_NOMATCH") == 0)  // no match on arch regex, use any arch
+     {
+     strcpy(arch,"*");
+     }
+
+   installed = PackageMatch(name,"*",arch,a,pp);
    matches = PackageMatch(name,version,arch,a,pp);
+   
+   SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+
    }
 else
    {
    no_version = true;
    CfOut(cf_verbose,""," -> Package version was not specified");
-      
-   for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
-      {
-      CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
-      strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
-      strncpy(version,"*",CF_MAXVARSIZE-1);
-      strncpy(arch,rp->item,CF_MAXVARSIZE-1);
-      installed += PackageMatch(name,"*","*",a,pp);
-      matches += PackageMatch(name,version,arch,a,pp);
-      }
-   
+         
    if (a.packages.package_architectures == NULL)
       {
       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
       strncpy(version,"*",CF_MAXVARSIZE-1);
       strncpy(arch,"*",CF_MAXVARSIZE-1);
-      installed = PackageMatch(name,"*","*",a,pp);
+      installed = PackageMatch(name,"*",arch,a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
+
+      SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
       }
+   else
+     {
+     for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
+       {
+       CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
+       strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+       strncpy(version,"*",CF_MAXVARSIZE-1);
+       strncpy(arch,rp->item,CF_MAXVARSIZE-1);
+       installed = PackageMatch(name,"*",arch,a,pp);
+       matches = PackageMatch(name,version,arch,a,pp);
+
+       SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+       }
+
+     }
+
    }
 
-CfOut(cf_verbose,""," -> %d package(s) matching the name \"%s\" already installed\n",installed,name);
-CfOut(cf_verbose,""," -> %d package(s) match the promise body's criteria fully\n",matches,name);
-
-SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 }
 
 /*****************************************************************************/
 
 void VerifyPromisedPatch(struct Attributes a,struct Promise *pp)
+// NOTE: Should be acting the same as VerifyPromisedPackage()
 
 { char version[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
@@ -1209,7 +1230,9 @@ if (pi)
 /*****************************************************************************/
 
 int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp)
-
+/*
+ * Returns true if any installed packatges match (n,v,a), false otherwise.
+ */
 { struct CfPackageManager *mp = NULL;
   struct CfPackageItem  *pi;
   
@@ -1231,7 +1254,7 @@ for (pi = mp->pack_list; pi != NULL; pi=pi->next)
       }
    }
 
-CfOut(cf_verbose,""," !! Unsatisfied constraints in promise (%s,%s,%s)\n",n,v,a);
+CfOut(cf_verbose,"","No installed packages matched (%s,%s,%s)\n",n,v,a);
 return false;
 }
 
@@ -1285,6 +1308,9 @@ void SchedulePackageOp(char *name,char *version,char *arch,int installed,int mat
   char *pathName = NULL;
   int package_select_in_range = false;
   enum package_actions policy;
+
+  CfOut(cf_verbose, "", "Checking if package (%s,%s,%s) is at the desired state (installed=%d,matched=%d)",
+	name, version, arch, installed, matched);
  
 /* Now we need to know the name-convention expected by the package manager */
 

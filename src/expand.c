@@ -695,7 +695,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
   struct FnCall *fp;
 
 Debug("EvaluateFinalRval -- type %c\n",rtype);
-  
+
 if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here */
    {
    GetNaked(naked,rval);

@@ -4639,7 +4639,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
          {
          snprintf(name,CF_MAXVARSIZE,"%s[%s][%d]",array_lval,first_one,vcount);
          }
-      
+
       NewScalar(THIS_BUNDLE,name,this_rval,type);
       vcount++;
       }

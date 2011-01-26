@@ -74,7 +74,7 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
       
 NewScope("edit");
 NewScalar("edit","filename",filename,cf_str);
-         
+
 /* Reset the done state for every call here, since bundle is reusable */
 
 for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
@@ -124,7 +124,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
    }
 
 DeleteScope("edit");
-
+SetScope(parentp->bundle);
 THIS_BUNDLE = bp_stack;
 return true;
 }

@@ -324,7 +324,9 @@ pcopy->this_server = pp->this_server;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
 
+
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
+
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {

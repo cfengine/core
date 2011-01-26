@@ -1163,6 +1163,7 @@ switch(type)
    case kp_classes:
        HashVariables(THIS_BUNDLE);
        break;
+
    case kp_environments:
 
 #ifdef HAVE_LIBVIRT

@@ -2020,7 +2020,7 @@ else
 
 if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    {
-   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found\n",listvar);
+   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found from context %s\n",listvar,CONTEXTID);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
    rval.item = strdup(buffer);

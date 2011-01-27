@@ -356,6 +356,11 @@ while (!feof(prp))
       *sp = '\0';
       }
 
+   if (ForeignZone(vbuff))
+      {
+      continue;
+      }
+
    AppendItem(procdata,vbuff,"");
    }
 

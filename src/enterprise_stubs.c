@@ -1205,21 +1205,16 @@ getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 // We want to keep the banner
 
-if (strstr(s,"%CPU"))
-   {
-   return false;
-   }
-
 if (cf_strcmp(zone,"global") == 0)
    {
-   if (strcmp(s+strlen(s)-7,"global"))
+   if (strcmp(s+strlen(s)-6,"global") == 0)
       {
       return true;
       }
    }
 #endif
 
-return false;
+return true;
 }
 
 /*****************************************************************************/

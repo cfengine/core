@@ -2307,13 +2307,13 @@ if (lstat(finalargs->item,&statbuf) == -1)
    if (fn == cfn_filesize)
       {      
       strcpy(buffer,"-1");
+      SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_FAILURE,NULL,NULL);
       }
    else
       {
       strcpy(buffer,"!any");
+      SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_SUCCESS,NULL,NULL);
       }
-
-   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_FAILURE,NULL,NULL);
    }
 else
    {
@@ -2364,7 +2364,7 @@ if ((rval.item = strdup(buffer)) == NULL)
    }
 
 /* end fn specific content */
-
+   
 rval.rtype = CF_SCALAR;
 return rval;
 }

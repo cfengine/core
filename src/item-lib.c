@@ -563,7 +563,7 @@ void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 { struct Item *ip;
   char *sp;
 
-if (*filestart == NULL || ptr == *filestart|| ptr == CF_UNDEFINED_ITEM)
+if (*filestart == NULL || ptr == CF_UNDEFINED_ITEM)
    {
    AppendItem(filestart,string,NULL);
    return;

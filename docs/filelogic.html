@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>File handling in cfengine 3</title>
+  </head>
+
+  <body>
+    <h1>File handling in cfengine 3</h1>
+
+
+<p>
+File handling in cfengine 3 is more integrated than in cfengine 3.
+This helps both the logic and the efficiency of implementation.  File
+handling is now more powerful, and uses regular expressions everywhere
+for pattern matching. The old "wildcard" expressions * and ?  are
+deprecated, and everything is based consistently on POSIX extended
+regular expressions.
+
+<p>
+There is a natural ordering in file processing that obviates the need
+for the actionsequence. The trick of using multiple actionsequence
+items with different classes, e.g.
+
+<pre>
+ actionsequence = ( ... files.one  ..  files.two )
+</pre>
+
+can now be handled more elegantly using bundles. The natural ordering 
+uses that fact that some operations are mutually exclusive and that
+some operations do not make sense in reverse order. For example,
+editing a file and then copying onto it would be nonsense.
+Similarly, you cannot both remove a file and rename it.
+
+<h2>File copying</h2>
+
+One of the first things you will notice is that copying is now "backwards".
+Instead of the default object being source and the option being the destination,
+in cfengine 3 the destination is paramount and the source is an option.
+This is because the model fo voluntary cooperation tells us that it is the
+object that is changed which is the agent making the promise. One cannot
+force change onto a destination with cfengine, one can only invite change from
+a source.
+
+<h2>Normal ordering</h2>
+
+<pre>
+Delete-create (normal ordering) makes sense
+Create-delete does not
+</pre>
+<p>
+The diagram below shows the ordering. Notice that the same ordering
+applies regardless of file type (plain-file or directory).
+
+<p>
+<img src="filelogic.png">
+<p>
+
+<pre>
+ for each file promise-object
+    {
+    if (depth_search) 
+
+      do 
+        DepthSearch (HandleLeaf)
+      else 
+        (HandleLeaf)
+      done
+    }
+
+ HandleLeaf()
+   {
+   Does leaf-file exist?
+
+     NO:  create
+     YES: rename,delete,touch, 
+
+     do
+      for all servers in {localhost, @(servers)}
+         {
+         if (server-will-provide)
+            do
+              if (depth_search)
+                 embedded source-depth-search (use file source)
+                 break
+              else
+                 (use file source)
+                 break
+              done
+            done
+         }
+     done
+      
+   Do all links (always local)
+
+   Check Permissions
+
+   Do edits
+   }
+</pre>
+
+<h2>Depth searches (recursion) and path matches</h2>
+
+In cfengine 2 there was the concept of recursion during file
+searches. Recursion is now called "depth-search". 
+
+In addition, in both cfengine 2 and 3 it was possible to specify
+wildcards in the base-path for this search. e.g.
+
+<pre> 
+      Cfengine 2               Cfengine 3
+
+/one/*/two/thr*/four    /one/.*/two/thr.*/four
+</pre>
+
+When we talk about a depth search it refers to a search which starts
+from the one or more matched base-paths.
+
+<p>
+Promise theory tells us that there are two distinct kinds of depth
+search:
+
+<ul>
+<li>A local search over promiser agents.
+<li>A remote search over provider agents.
+</ul>
+
+It is the destination or resulting files that all promises in
+cfengine, not the source. That is due to voluntary cooperation,
+i.e. because we never push files, only pull.
+
+<p>
+When we are copying or linking to a source, it is the search over the
+remote source that drives the content of a promise. In general, the
+sources are on a different device to the images that make the
+promises.  For all other promises, we search over existing local
+objects.
+
+<p>
+If we specify depth search together with copy of a directory, then the
+implied remote source search is assumed, and it is made after the
+search over local objects. Since this could lead to confusion a
+warning is issued. In general it is not recommended to mix searches
+without a full understanding of the consequences, but this might
+occasionally be useful, e.g.  tidy and then copy.
+
+This would not be a convergent operation however.
+
+<p>
+Depth search is not allowed with editfiles promises.
+
+
+<h2>File editing in cfengine 3</h2>
+
+Cfengine 2 assumed that all files were line-edited, because it was
+based on Unix traditions. Since then many new file formats have
+emerged, including XML.  Cfengine 3 opens up the possibiltiy for
+multiple models of file editing. Line based editing is still present and
+is both much simplified and much more powerful than previously.
+
+<p>
+File editing is not just a single kind of promise but a whole range of
+"promises within files". It is therefore not merely a body to a single
+promise but a bundle of sub-promises. After all, inside each file is a new
+world of objects that can make promises, quite separate from files' external
+attributes.
+
+<p>
+A typical file editing stanza has the elements in the following
+example.
+
+
+<pre>
+######################################################################
+#
+# File editing
+#
+######################################################################
+
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "outerbundle"  };
+}
+
+########################################################
+
+bundle agent outerbundle
+
+{
+files:
+
+  "/home/mark/tmp/cf3_test"
+
+       create    => "true",            # Like autocreate in cf2
+       edit_line => inner_bundle;
+}
+
+########################################################
+
+bundle edit_line inner_bundle
+  {
+  vars:
+
+   "edit_variable" string => "private edit variable"; 
+  
+  replace_patterns:
+
+   # replace shell comments with C comments
+
+   "#(.*)"
+
+      replace_with => C_comment,
+     select_region => MySection("New section");
+
+  }
+
+########################################
+# Bodies for the library ...
+########################################
+
+body replace_with C_comment
+
+{
+replace_value => "/* $(1) */"; # backreference 0
+occurrences => "all";          # first, last all
+}
+
+########################################################
+
+body select_region MySection(x)
+
+{
+select_start => "\[$(x)\]";
+select_end => "\[.*\]";
+}
+
+</pre>
+
+
+There are several things to notice:
+
+<ul>
+<li> The line-editing promises are all convergent promises about patterns within
+the file. They have bodies, just like other attributes do and these allow us to make
+simple templates about file editing while extending the power of the basic primitives.
+
+<li> All pattern matching is through perl compatible regular expressions
+<li> Editing takes place within a marked region (which default to the whole file).
+<li> Search/replace functions now allow back-references
+<li> The line edit model now contains a column model for dealing with tabular files such
+as Unix passwd and group files. We can now apply powerful convergent editing operations
+to single fields inside a table, to append, order and delete items from lists inside fields.
+</ul>
+
+In the example above, back references are used to allow conversion of comments from shell-style
+to C-style.
+
+  </body>
+</html>

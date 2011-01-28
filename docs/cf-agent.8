@@ -1,0 +1,59 @@
+.TH cf-agent 8 "Maintenance Commands"
+.SH NAME
+cf-agent - cfengine's change agent
+
+.SH SYNOPSIS:
+
+ cf-agent [options]
+
+.SH DESCRIPTION:
+
+The main Cfengine agent is the instigator of change
+in the system. In that sense it is the most important
+part of the Cfengine suite.
+
+.B cfengine
+is a self-healing configuration and change management based system. You can think of.B cfengine
+as a very high level language, much higher level than Perl or shell. Asingle statement is called a promise, and compliance can result in many hundreds of filesbeing created, or the permissions of many hundreds offiles being set. The idea of .B cfengine
+is to create a one or more sets of configuration files which willclassify and describe the setup of every host in a network.
+.SH COMMAND LINE OPTIONS:
+.IP "--bootstrap, -B"
+Bootstrap/repair a cfengine configuration from failsafe file in the WORKDIR else in current directory
+.IP "--bundlesequence, -b" value
+Set or override bundlesequence from command line
+.IP "--debug, -d" value
+Set debugging level 0,1,2
+.IP "--define, -D" value
+Define a list of comma separated classes to be defined at the start of execution
+.IP "--diagnostic, -x" value
+Do internal diagnostic (developers only) level in optional argument
+.IP "--dry-run, -n"
+All talk and no action mode - make no changes, only inform of promises not kept
+.IP "--file, -f" value
+Specify an alternative input file than the default
+.IP "--help, -h"
+Print the help message
+.IP "--inform, -I"
+Print basic information about changes made to the system, i.e. promises repaired
+.IP "--negate, -N" value
+Define a list of comma separated classes to be undefined at the start of execution
+.IP "--no-lock, -K"
+Ignore locking constraints during execution (ifelapsed/expireafter) if "too soon" to run
+.IP "--policy-server, -s" value
+Define the server name or IP address of the a policy server (for use with bootstrap)
+.IP "--verbose, -v"
+Output verbose information about the behaviour of the agent
+.IP "--version, -V"
+Output the version of the software
+.SH AUTHOR
+Mark Burgess and Cfengine AS
+.SH INFORMATION
+
+Bug reports: http://bug.cfengine.com, .pp
+Community help: http://forum.cfengine.com
+.pp
+Community info: http://www.cfengine.org
+.pp
+Support services: http://www.cfengine.com
+.pp
+This software is Copyright (C) 2008- Cfengine AS.

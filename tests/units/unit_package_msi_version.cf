@@ -1,0 +1,48 @@
+
+#
+# MSI package managment using version criteria
+#
+
+body common control
+{
+bundlesequence => { "packages" };
+}
+
+#############################################
+
+bundle agent packages
+{
+vars:
+
+ "match_package" slist => { 
+                          "7zip"
+                          };
+packages:
+
+  "$(match_package)"
+
+     package_policy => "update",
+     package_select => ">=",
+     package_architectures => { "x86_64" },
+     package_version => "3.00",
+     package_method => msi_vmatch;
+
+}
+
+#############################################
+
+body package_method msi_vmatch
+
+{
+ package_changes => "individual";
+ package_file_repositories => { "$(sys.workdir)\software_updates\windows", "s:\su" };
+
+ package_installed_regex => ".*";
+ 
+ package_name_convention => "$(name)-$(version)-$(arch).msi";
+
+ package_add_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
+ package_update_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
+ package_delete_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /x";
+}
+

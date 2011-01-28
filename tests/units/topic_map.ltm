@@ -1,0 +1,67 @@
+/*********************/
+/* Class types       */
+/*********************/
+
+[WWW: Services = "World Wide Web service (WWW)"]
+
+[looks_up_addresses_with = "looks up addresses with" 
+          = "serves addresses to" / Programs]
+
+
+[is_implemented_by = "is implemented by" 
+          = "implements" / Programs]
+
+[named: Programs = "A name service process (named)"]
+[httpd: Programs = "A web service process (httpd)"]
+[desktop: Computers = "Common name for a computer for end users (desktop)"]
+[server: Computers = "Common name for a computer in a datacentre without separate screen and keyboard (server)"]
+[Computers = "Generic boxes (Computers)"]
+
+[run = "run" 
+ = "are run on" / unknown_association_counterpart]
+[Processes = "Programs running on a computer (Processes)"]
+
+/*********************/
+/* Association types */
+/*********************/
+
+looks_up_addresses_with( WWW : Services, named : Programs)
+is_implemented_by( WWW : Services, httpd : Programs)
+run( Computers : any, Services : any)
+
+/*********************/
+/* Occurrences       */
+/*********************/
+
+
+ /* occurrences of WWW */
+
+{WWW,Explanation, [[World Wide Web service]]}
+
+ /* occurrences of named */
+
+{named,Explanation, [[A name service process]]}
+
+ /* occurrences of httpd */
+
+{httpd,website, "http://www.apache.org"}
+
+ /* occurrences of httpd */
+
+{httpd,Explanation, [[A web service process]]}
+
+ /* occurrences of desktop */
+
+{desktop,Explanation, [[Common name for a computer for end users]]}
+
+ /* occurrences of server */
+
+{server,Explanation, [[Common name for a computer in a datacentre without separate screen and keyboard]]}
+
+ /* occurrences of Computers */
+
+{Computers,Explanation, [[Generic boxes]]}
+
+ /* occurrences of Processes */
+
+{Processes,Explanation, [[Programs running on a computer]]}

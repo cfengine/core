@@ -1,0 +1,31 @@
+######################################################################
+# Function regline(regex,file)
+######################################################################
+
+body common control
+
+{
+version => "1.2.3";
+bundlesequence  => { "testbundle" };
+}
+
+########################################################
+
+bundle agent testbundle
+
+{
+classes:
+
+    # Extract regular backreferences and put them in an array
+
+    "ok" expression => regextract("xx ([^\s]+) ([^\s]+).* xx","xx one two three four xx","myarray");
+
+reports:
+
+ ok::
+
+   "ok - \"$(myarray[0])\" = xx + \"$(myarray[1])\" + \"$(myarray[2])\" + .. + xx";
+
+
+}
+

@@ -1,0 +1,3 @@
+regex.lo: regex.c ../src/conf.h
+
+../src/conf.h:

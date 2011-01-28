@@ -1,0 +1,107 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+
+body common control
+{
+bundlesequence => { "setvars" };
+}
+
+bundle agent setvars
+{
+vars:
+
+  # want to set these values by the names of their array keys
+
+  "rhs[lhs1]" string => " Mary had a little pig";
+  "rhs[lhs2]" string => "Whose Fleece was white as snow";
+  "rhs[lhs3]" string => "And everywhere that Mary went";
+
+  "rhs[net/ipv4/tcp_syncookies]" string => "1";
+  "rhs[net/ipv4/icmp_echo_ignore_broadcasts]" string => "1";
+  "rhs[net/ipv4/ip_forward]" string => "0";
+
+  # oops, now change pig -> lamb
+
+files:
+
+
+  "/tmp/system"
+
+        create => "true",
+     edit_line => set_variable_values("setvars.rhs");
+
+}
+
+############################################################
+# Library stuff
+############################################################
+
+bundle edit_line set_variable_values(v)
+
+{
+vars:
+
+  "index" slist => getindices("$(v)");
+
+  # Be careful if the index string contains funny chars
+
+  "cindex[$(index)]" string => canonify("$(index)");
+
+field_edits:
+
+  # match a line starting like the key = something
+
+  "$(index)\s*=.*"
+
+     edit_field => col("=","2","$($(v)[$(index)])","set"),
+        classes => if_ok("not_$(cindex[$(index)])");
+
+insert_lines:
+
+  "$(index)=$($(v)[$(index)])",
+
+      ifvarclass => "!not_$(cindex[$(index)])";
+}
+
+############################################################
+
+body edit_field col(split,col,newval,method)
+
+{
+field_separator    => "$(split)";
+select_field       => "$(col)";
+value_separator    => ",";
+field_value        => "$(newval)";
+field_operation    => "$(method)";
+extend_fields      => "true";
+allow_blank_fields => "true";
+}
+
+
+#
+
+body classes if_ok(x)
+{
+promise_repaired => { "$(x)" };
+promise_kept => { "$(x)" };
+}

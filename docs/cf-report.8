@@ -1,0 +1,75 @@
+.TH cf-report 8 "Maintenance Commands"
+.SH NAME
+cf-report - cfengine's reporting agent
+
+.SH SYNOPSIS:
+
+ cf-report [options]
+
+.SH DESCRIPTION:
+
+The reporting agent is a merger between the older
+cfengine programs cfshow and cfenvgraph. It outputs
+data stored in cfengine's embedded databases in human
+readable form.
+.B cfengine
+is a self-healing configuration and change management based system. You can think of.B cfengine
+as a very high level language, much higher level than Perl or shell. Asingle statement is called a promise, and compliance can result in many hundreds of filesbeing created, or the permissions of many hundreds offiles being set. The idea of .B cfengine
+is to create a one or more sets of configuration files which willclassify and describe the setup of every host in a network.
+.SH COMMAND LINE OPTIONS:
+.IP "--help, -h"
+Print the help message
+.IP "--debug, -d" value
+Set debugging level 0,1,2,3
+.IP "--verbose, -v"
+Output verbose information about the behaviour of the agent
+.IP "--inform, -I"
+Output information about actions performed by the agent
+.IP "--version, -V"
+Output the version of the software
+.IP "--no-lock, -K"
+Ignore ifelapsed locks
+.IP "--file, -f" value
+Specify an alternative input file than the default
+.IP "--html, -H"
+Print output in HTML
+.IP "--xml, -X"
+Print output in XML
+.IP "--version, -V"
+Print version string for software
+.IP "--purge, -P"
+Purge data about peers not seen beyond the threshold horizon for assumed-dead
+.IP "--erasehistory, -E" value
+Erase historical data from the cf-monitord monitoring database
+.IP "--outputdir, -o" value
+Set output directory for printing graph data
+.IP "--titles, -t"
+Add title data to generated graph files
+.IP "--timestamps, -T"
+Add a time stamp to directory name for graph file data
+.IP "--resolution, -R"
+Print graph data in high resolution
+.IP "--syntax, -S"
+Print a syntax summary for this cfengine version
+.IP "--syntax-export, -s"
+Export a syntax tree in Javascript format
+.IP "--no-error-bars, -e"
+Do not add error bars to the printed graphs
+.IP "--no-scaling, -n"
+Do not automatically scale the axes
+.IP "--verbose, -v"
+Generate verbose output
+.IP "--remove-hosts, -r" value
+Remove comma separated list of IP address entries from the hosts-seen database
+.SH AUTHOR
+Mark Burgess and Cfengine AS
+.SH INFORMATION
+
+Bug reports: http://bug.cfengine.com, .pp
+Community help: http://forum.cfengine.com
+.pp
+Community info: http://www.cfengine.org
+.pp
+Support services: http://www.cfengine.com
+.pp
+This software is Copyright (C) 2008- Cfengine AS.

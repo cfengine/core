@@ -1,0 +1,329 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#######################################################
+#
+# Site specific promises
+#
+#######################################################
+
+bundle common g
+{
+vars:
+
+  SuSE::
+
+   "crontab" string => "/var/spool/cron/tabs/root";
+
+  redhat::
+
+   "crontab" string => "/var/spool/cron/root";
+
+ (!SuSE).(!redhat)::
+
+   "crontab" string => "/var/spool/cron/crontabs/root";
+
+}
+
+#######################################################
+# Start with cfengine itself
+#######################################################
+
+bundle agent cfengine
+
+{
+classes:
+
+  "integrate_cfengine2" 
+
+      and => { 
+             fileexists("$(sys.workdir)/inputs/cfagent.conf"), 
+             fileexists("$(sys.workdir)/bin/cfagent")
+             };
+
+vars:
+
+   "cf2bits" slist => { "cfenvd", "cfservd", "cfexecd" };
+
+commands:
+
+ integrate_cfengine2:: 
+
+   "$(sys.workdir)/bin/cfagent"
+
+        action => if_elapsed("240");
+
+files:
+
+  # Warn about rules relating to cfengine 2 in inputs - could conflict
+
+  "$(sys.workdir)/inputs/.*"
+
+       comment     => "Check if there are still promises about cfengine 2 that need removing",
+       edit_line   => delete_lines_matching(".*$(cf2bits).*"),
+       file_select => OldCf2Files,
+       action      => warn_only;
+
+  # Check cf-execd and schedule is in crontab
+
+  "$(g.crontab)"
+       comment => "Add cfengine as a cron job, or check for cfengine 2 jobs to replace",
+          create => "true",
+       edit_line => upgrade_cfexecd;
+
+processes:
+
+  exec_fix::
+
+    "cron" signals => { "hup" };
+
+
+}
+
+#######################################################
+# General site issues can be in bundles like this one
+#######################################################
+
+bundle agent main
+
+{
+vars:
+
+  "component" slist => { "cf-monitord", "cf-serverd" };
+
+ # - - - - - - - - - - - - - - - - - - - - - - - -
+
+files:
+
+  "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
+
+     comment       => "Edit the resolver file",
+     create        => "true",
+     edit_line     => resolver,
+     edit_defaults => def;
+
+ # Uncomment this to perform a change-detection scan
+
+ #  "/usr"         
+ #     changes      => lay_trip_wire,
+ #     depth_search => recurse("inf"),
+ #     action       => measure;
+
+processes:
+
+  "cfenvd"             signals => { "term" };
+
+ # Uncomment this if/when you are ready to upgrade a cf2 server
+ #
+ #  "cfservd"             signals => { "term" };
+ #
+
+ # Now make sure the new parts are running, cf-serverd will fail if
+ # the old server is still running 
+
+  "$(component)" restart_class => canonify("start_$(component)");
+
+ # - - - - - - - - - - - - - - - - - - - - - - - -
+
+commands:
+
+   "$(sys.workdir)/bin/$(component)"
+
+       ifvarclass => canonify("start_$(component)");
+
+}
+
+#######################################################
+# Garbage collection issues
+#######################################################
+
+bundle agent garbage_collection
+{
+files:
+
+  "$(sys.workdir)/outputs" 
+
+    delete => tidy,
+    file_select => days_old("3"),
+    depth_search => recurse("inf");
+
+
+}
+
+#######################################################
+
+bundle edit_line resolver
+
+{
+vars:
+
+ "search" slist => { "search cfengine.com" };
+
+delete_lines:
+
+  "search.*";
+
+insert_lines:
+
+  "$(search)" location => start;
+}
+
+###########################################################
+
+body file_select OldCf2Files
+{
+leaf_name => { 
+             "promises.cf", 
+             "site.cf", 
+             "library.cf", 
+             "failsafe.cf", 
+             ".*.txt", 
+             ".*.html", 
+             ".*~",
+             "#.*" 
+             };
+
+file_result => "!leaf_name";
+}
+
+###########################################################
+
+body action measure
+{
+measurement_class => "Detect Changes in /usr";
+ifelapsed => "240";
+expireafter => "240";
+}
+
+#######################################################
+# Anomaly monitoring
+#######################################################
+
+bundle agent anomalies
+{
+reports:
+
+rootprocs_high_dev2::
+
+   "RootProc anomaly high 2 dev on $(mon.host) at $(mon.env_time) 
+    measured value $(mon.value_rootprocs) av $(mon.av_rootprocs) pm $(mon.dev_rootprocs)"
+
+      showstate => { "rootprocs" };
+
+entropy_www_in_high&anomaly_hosts.www_in_high_anomaly::
+
+   "HIGH ENTROPY Incoming www anomaly high anomaly dev!! on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_www_in) av $(mon.av_www_in) pm $(mon.dev_www_in)"
+   
+      showstate => { "incoming.www" };
+
+ entropy_www_in_low.anomaly_hosts.www_in_high_anomaly::
+
+   "LOW ENTROPY Incoming www anomaly high anomaly dev!! on $(mon.host) at $(mon.env_time)
+     - measured value $(svalue_www_in) av $(av_www_in) pm $(dev_www_in)"
+
+     showstate => { "incoming.www" };
+
+entropy_tcpsyn_in_low.anomaly_hosts.tcpsyn_in_high_dev2::
+
+   "Anomalous number of new TCP connections on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_tcpsyn_in) av $(mon.av_tcpsyn_in) pm $(mon.dev_tcpsyn_in)"
+
+     showstate => { "incoming.tcpsyn" };
+
+ entropy_dns_in_low.anomaly_hosts.dns_in_high_anomaly::
+
+   "Anomalous (3dev) incoming DNS packets on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_dns_in) av $(av_dns_in) pm $(mon.dev_dns_in)"
+   
+     showstate => { "incoming.dns" };
+
+ entropy_dns_in_low.anomaly_hosts.udp_in_high_dev2::
+
+   "Anomalous (2dev) incoming (non-DNS) UDP traffic on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_udp_in) av $(mon.av_udp_in) pm $(mon.dev_udp_in)"
+
+     showstate => { "incoming.udp" };
+
+ anomaly_hosts.icmp_in_high_anomaly.!entropy_icmp_in_high::
+
+   "Anomalous low entropy (3dev) incoming ICMP traffic on $(mon.host) at $(mon.env_time) 
+    - measured value $(mon.value_icmp_in) av $(mon.av_icmp_in) pm $(mon.dev_icmp_in)"
+   
+     showstate => { "incoming.icmp" };
+}
+
+#######################################################
+# Server configuration
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "/home/mark/LapTop"
+
+    admit   => { "127.0.0.1" };
+
+  "/home/mark/.cfagent/bin/cf-agent"
+
+    admit   => { "127.0.0.1" };
+
+roles:
+
+  ".*"  authorize => { "mark" };
+}
+
+
+########################################################
+
+bundle edit_line upgrade_cfexecd
+  {
+  classes:
+
+    "exec_fix" not => regline(".*cf-execd.*","$(edit.filename)");
+
+  insert_lines:
+
+    exec_fix::
+
+      "0,5,10,15,20,25,30,35,40,45,50,55 * * * * /var/cfengine/bin/cf-execd -F";
+
+  replace_patterns:
+
+    "cfexecd" replace_with => value("cf-execd");
+
+  reports:
+
+    exec_fix::
+
+    "Added a 5 minute schedule to crontabs";
+  }
+
+#######################################################
+
+body edit_defaults def
+{
+empty_file_before_editing => "false";
+edit_backup => "false";
+max_file_size => "100000";
+}

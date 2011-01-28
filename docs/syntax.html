@@ -1,0 +1,269 @@
+<html><head>
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/menus.css" />
+<link rel="stylesheet" type="text/css" href="http://www.cfengine.org/cf_blue.css"/>
+</head>
+<table class=frame><tr><td>
+<h1>CFENGINE 3.0.0-training SYNTAX</h1><p><table class=border><tr><td><h1>Promise datatype legend</h1>
+<ol>
+<li>string</li>
+<li>int</li>
+<li>real</li>
+<li>slist</li>
+<li>ilist</li>
+<li>rlist</li>
+<li>(option)</li>
+<li>(option list)</li>
+<li>(ext body)</li>
+<li>class</li>
+<li>clist</li>
+<li>irange [int,int]</li>
+<li>rrange [real,real]</li>
+</ol></td></tr></table>
+
+<h1>Bundle types (software components)</h1>
+<div id="bundles"><ul>
+<li>COMPONENT common</li>
+<div id="promisetype"><h4>Promise types for common bundles</h4>
+<ul>
+<table class=border><tr><td><li><h4>PROMISE TYPE vars</h4>
+<div id=bodies><table class=border>
+<tr><td>string</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>int</td><td>int</td><td>-9999999,999999</td></tr>
+<tr><td>real</td><td>real</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>slist</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>ilist</td><td>ilist</td><td>-9999999,999999</td></tr>
+<tr><td>rlist</td><td>rlist</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>policy</td><td>(option)</td><td>free,overridable,constant</td></tr>
+</table></div>
+</li>
+</td></tr></table>
+</ul></div>
+
+<li>COMPONENT agent</li>
+<div id="promisetype"><h4>Promise types for agent bundles</h4>
+<ul>
+<table class=border><tr><td><li><h4>PROMISE TYPE vars</h4>
+<div id=bodies><table class=border>
+<tr><td>string</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>int</td><td>int</td><td>-9999999,999999</td></tr>
+<tr><td>real</td><td>real</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>slist</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>ilist</td><td>ilist</td><td>-9999999,999999</td></tr>
+<tr><td>rlist</td><td>rlist</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>policy</td><td>(option)</td><td>free,overridable,constant</td></tr>
+</table></div>
+</li>
+<li><h4>PROMISE TYPE files</h4>
+<div id=bodies><table class=border>
+<tr><td>file_select</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>name</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>path</td><td>slist</td><td>/.*</td></tr>
+<tr><td>mode</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>size</td><td>irange [int,int]</td><td>(arbitrary string)</td></tr>
+<tr><td>owner</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>group</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>ctime</td><td>irange [int,int]</td><td>0,4026531839</td></tr>
+<tr><td>mtime</td><td>irange [int,int]</td><td>0,4026531839</td></tr>
+<tr><td>atime</td><td>irange [int,int]</td><td>0,4026531839</td></tr>
+<tr><td>exec_regex</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>filetypes</td><td>(option list)</td><td>reg,link,dir,socket,fifo,door,char,block</td></tr>
+<tr><td>issymlinkto</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>filetype</td><td>string</td><td>[(plain|<br>link|<br>dir|<br>socket|<br>fifo|<br>door|<br>char|<br>block)[|<br>]*]*</td></tr>
+<tr><td>result</td><td>string</td><td>[(name|<br>path|<br>filetype|<br>mode|<br>size|<br>owner|<br>group|<br>atime|<br>ctime|<br>mtime|<br>issymlinkto|<br>exec_regex)[|<br>&!.]*]*</td></tr>
+</table></div>
+</td></tr>
+<tr><td>copyfrom</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>source</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>servers</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>action</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>backup</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>repository</td><td>string</td><td>/.*</td></tr>
+<tr><td>stealth</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>preserve</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>linkpattern</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>xdev</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>compare</td><td>(option)</td><td>atime,mtime,ctime,checksum</td></tr>
+<tr><td>linktype</td><td>(option)</td><td>absolute,relative,hard</td></tr>
+<tr><td>typecheck</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>forceupdate</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>forcedirs</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>forceipv4</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>size</td><td>int</td><td>0,inf</td></tr>
+<tr><td>trigger</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>trustkey</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>encrypt</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>verify</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>purge</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>findertype</td><td>(option)</td><td>MacOSX</td></tr>
+</table></div>
+</td></tr>
+<tr><td>linkto</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>link_type</td><td>(option)</td><td>symbolic,absolute,abs,hard,relative,rel</td></tr>
+<tr><td>copy_patterns</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>deadlinks</td><td>(option)</td><td>kill,force</td></tr>
+<tr><td>when_no_file</td><td>(option)</td><td>force,kill</td></tr>
+</table></div>
+</td></tr>
+<tr><td>access</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>mode</td><td>string</td><td>[0-7ugorwx,+-]*</td></tr>
+<tr><td>owner</td><td>slist</td><td>.*</td></tr>
+<tr><td>group</td><td>slist</td><td>.*</td></tr>
+</table></div>
+</td></tr>
+<tr><td>changes</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>hash</td><td>(option)</td><td>md5,sha1</td></tr>
+<tr><td>update</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+</table></div>
+</td></tr>
+<tr><td>tidy</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>age</td><td>irange [int,int]</td><td>0,inf</td></tr>
+<tr><td>size</td><td>irange [int,int]</td><td>0,inf</td></tr>
+<tr><td>age_type</td><td>(option)</td><td>mtime,ctime,mtime,atime</td></tr>
+<tr><td>dirlinks</td><td>(option)</td><td>delete,keep,tidy</td></tr>
+<tr><td>rmdirs</td><td>(option)</td><td>yes,no,true,false,sub</td></tr>
+<tr><td>links</td><td>(option)</td><td>stop,keep,traverse,tidy</td></tr>
+</table></div>
+</td></tr>
+<tr><td>rename</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>newname</td><td>string</td><td>filename</td></tr>
+<tr><td>type</td><td>(option)</td><td>plain,file,link</td></tr>
+<tr><td>rotate</td><td>int</td><td>0,99</td></tr>
+<tr><td>size</td><td>irange [int,int]</td><td>0,inf</td></tr>
+</table></div>
+</td></tr>
+<tr><td>repository</td><td>string</td><td>/.*</td></tr>
+<tr><td>edit_line</td><td>(ext body)</td><td>(Separate Bundle)</td></tr>
+<tr><td>edit_xml</td><td>(ext body)</td><td>(Separate Bundle)</td></tr>
+<tr><td>acl</td><td>(ext body)</td><td></td></tr>
+<tr><td>recurse</td><td>int</td><td>0,inf</td></tr>
+</table></div>
+</li>
+<li><h4>PROMISE TYPE executables</h4>
+<div id=bodies><table class=border>
+<tr><td>args</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>containment</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>useshell</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>umask</td><td>int</td><td>0,77</td></tr>
+<tr><td>owner</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>group</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>chdir</td><td>string</td><td>/.*</td></tr>
+<tr><td>chroot</td><td>slist</td><td>/.*</td></tr>
+</table></div>
+</td></tr>
+<tr><td>module</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+<tr><td>timeout</td><td>int</td><td>1,3600</td></tr>
+<tr><td>background</td><td>(option)</td><td>true,false,yes,no,on,off</td></tr>
+</table></div>
+</li>
+<li><h4>PROMISE TYPE processes</h4>
+<div id=bodies><table class=border>
+<tr><td>signals</td><td>(option list)</td><td>hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv</td></tr>
+<tr><td>number</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>match_range</td><td>irange [int,int]</td><td>(arbitrary string)</td></tr>
+<tr><td>in_range_define</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>out_of_range_define</td><td>slist</td><td>(arbitrary string)</td></tr>
+</table></div>
+</td></tr>
+<tr><td>process_select</td><td>(ext body)</td><td><div id=bodies><table class=border>
+<tr><td>owner</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>pid</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>ppid</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>pgid</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>rsize</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>vsize</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>status</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>ttime_range</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>stime_range</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>command</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>tty</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>priority</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>threads</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>result</td><td>(option)</td><td>owner,pid,ppid,pgid,rsize,vsize,status,command,ttime,stime,tty,priority,threads</td></tr>
+</table></div>
+</td></tr>
+<tr><td>restart</td><td>string</td><td>[a-zA-Z0-9_]+</td></tr>
+</table></div>
+</li>
+</td></tr></table>
+</ul></div>
+
+<li>COMPONENT server</li>
+<div id="promisetype"><h4>Promise types for server bundles</h4>
+<ul>
+<table class=border><tr><td><li><h4>PROMISE TYPE vars</h4>
+<div id=bodies><table class=border>
+<tr><td>string</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>int</td><td>int</td><td>-9999999,999999</td></tr>
+<tr><td>real</td><td>real</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>slist</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>ilist</td><td>ilist</td><td>-9999999,999999</td></tr>
+<tr><td>rlist</td><td>rlist</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>policy</td><td>(option)</td><td>free,overridable,constant</td></tr>
+</table></div>
+</li>
+<li><h4>PROMISE TYPE access</h4>
+<div id=bodies><table class=border>
+<tr><td>admit</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>deny</td><td>slist</td><td>(arbitrary string)</td></tr>
+</table></div>
+</li>
+</td></tr></table>
+</ul></div>
+
+<li>COMPONENT monitor</li>
+<div id="promisetype"><h4>Promise types for monitor bundles</h4>
+<ul>
+<table class=border><tr><td><li><h4>PROMISE TYPE vars</h4>
+<div id=bodies><table class=border>
+<tr><td>string</td><td>string</td><td>(arbitrary string)</td></tr>
+<tr><td>int</td><td>int</td><td>-9999999,999999</td></tr>
+<tr><td>real</td><td>real</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>slist</td><td>slist</td><td>(arbitrary string)</td></tr>
+<tr><td>ilist</td><td>ilist</td><td>-9999999,999999</td></tr>
+<tr><td>rlist</td><td>rlist</td><td>-9.99999E100,9.99999E100</td></tr>
+<tr><td>policy</td><td>(option)</td><td>free,overridable,constant</td></tr>
+</table></div>
+</li>
+</td></tr></table>
+</ul></div>
+
+</ul></div>
+
+<h1>builtin functions</h1>
+<center><table id=functionshow>
+<tr><th>Return type</th><th>Function name</th><th>Arguments</th></tr>
+<tr><td>int</td><td>randomint()</td><td>2 args expected</td></tr>
+<tr><td>int</td><td>getuid()</td><td>1 args expected</td></tr>
+<tr><td>int</td><td>getgid()</td><td>1 args expected</td></tr>
+<tr><td>string</td><td>execresult()</td><td>2 args expected</td></tr>
+<tr><td>string</td><td>readtcp()</td><td>4 args expected</td></tr>
+<tr><td>class</td><td>returnszero()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>isnewerthan()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>accessedbefore()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>changedbefore()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>fileexists()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>isdir()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>islink()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>isplain()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>iprange()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>hostrange()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>isvariable()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>strcmp()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>regcmp()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>isgreaterthan()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>islessthan()</td><td>2 args expected</td></tr>
+<tr><td>class</td><td>userexists()</td><td>1 args expected</td></tr>
+<tr><td>class</td><td>groupexists()</td><td>1 args expected</td></tr>
+<tr><td>slist</td><td>readstringlist()</td><td>4 args expected</td></tr>
+<tr><td>ilist</td><td>readintlist()</td><td>4 args expected</td></tr>
+<tr><td>rlist</td><td>readreallist()</td><td>4 args expected</td></tr>
+<tr><td>irange [int,int]</td><td>irange()</td><td>2 args expected</td></tr>
+<tr><td>rrange [real,real]</td><td>rrange()</td><td>2 args expected</td></tr>
+<tr><td>int</td><td>ondate()</td><td>6 args expected</td></tr>
+<tr><td>int</td><td>ago()</td><td>6 args expected</td></tr>
+<tr><td>int</td><td>now()</td><td>0 args expected</td></tr>
+<tr><td>class</td><td>persiststate()</td><td>3 args expected</td></tr>
+<tr><td>class</td><td>erasestate()</td><td>1 args expected</td></tr>
+</table></center>
+</td></tr></table>
+</html>

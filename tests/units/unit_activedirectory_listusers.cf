@@ -1,0 +1,19 @@
+# List users from Active Directory through LDAP
+# Note: Anonymous LDAP binding must be allowed, and the Anonymous user
+# must have read access to CN=Users
+
+bundle agent ldap
+{
+vars:
+   "userlist" slist => ldaplist(
+                                    "ldap://cf-win2003",
+                                    "CN=Users,DC=domain,DC=cf-win2003",
+                                    "(objectClass=user)",
+                                    "sAMAccountName",
+                                    "subtree",
+                                    "none");
+reports:
+Yr2010::
+  "Username: \"$(userlist)\"";
+}
+

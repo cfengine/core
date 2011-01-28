@@ -1,0 +1,69 @@
+.TH cf-know 8 "Maintenance Commands"
+.SH NAME
+cf-know - cfengine's knowledge agent
+
+.SH SYNOPSIS:
+
+ cf-know [options]
+
+.SH DESCRIPTION:
+
+The knowledge management agent is capable of building
+and analysing a semantic knowledge network. It can
+configure a relational database to contain an ISO
+standard topic map and permit regular-expression based
+searching of the map. Analysis of the semantic network
+can be performed providing graphical output of the data,
+and cf-know can assemble and converge the reference manual
+for the current version of the Cfengine software.
+.B cfengine
+is a self-healing configuration and change management based system. You can think of.B cfengine
+as a very high level language, much higher level than Perl or shell. Asingle statement is called a promise, and compliance can result in many hundreds of filesbeing created, or the permissions of many hundreds offiles being set. The idea of .B cfengine
+is to create a one or more sets of configuration files which willclassify and describe the setup of every host in a network.
+.SH COMMAND LINE OPTIONS:
+.IP "--help, -h"
+Print the help message
+.IP "--debug, -d" value
+Set debugging level 0,1,2,3
+.IP "--verbose, -v"
+Output verbose information about the behaviour of the agent
+.IP "--version, -V"
+Output the version of the software
+.IP "--file, -f" value
+Specify an alternative input file than the default
+.IP "--graphs, -g"
+Generate graphs from topic map data
+.IP "--html, -H"
+Output queries in HTML
+.IP "--manual, -m"
+Generate reference manual from internal data
+.IP "--manpage, -M"
+Generate reference manpage from internal data
+.IP "--map-full, -K" value
+Show full image map for argument
+.IP "--map-impact, -k" value
+Show impact map for argument
+.IP "--query_cfdb, -Q" value
+Query the CFDB for testing, etc
+.IP "--quote, -q" value
+Quote encapsulated HTML output through the query engine
+.IP "--regex, -r" value
+Specify a regular expression for searching the topic map
+.IP "--sql, -s"
+Store topic map in defined SQL database
+.IP "--syntax, -S" value
+Print a syntax summary of the optional keyword or this cfengine version
+.IP "--topic, -t" value
+Specify a literal string topic to look up in the topic map
+.SH AUTHOR
+Mark Burgess and Cfengine AS
+.SH INFORMATION
+
+Bug reports: http://bug.cfengine.com, .pp
+Community help: http://forum.cfengine.com
+.pp
+Community info: http://www.cfengine.org
+.pp
+Support services: http://www.cfengine.com
+.pp
+This software is Copyright (C) 2008- Cfengine AS.

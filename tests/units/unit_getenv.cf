@@ -1,0 +1,27 @@
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+vars:
+
+   "myvar" string => getenv("PATH","20");
+
+classes:
+
+  "isdefined" not => strcmp("$(myvar)","");
+
+reports:
+
+  isdefined::
+
+   "The path is $(myvar)";
+
+  !isdefined::
+
+   "The named variable PATH does not exist";
+
+}

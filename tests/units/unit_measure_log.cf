@@ -1,0 +1,40 @@
+#cop measurements,example
+
+#######################################################
+#
+# Test file: log scanner
+#
+#######################################################
+
+#
+# Look for a file in /var/cfengine/state/line_counter_measure.log 
+#
+
+bundle monitor watch
+{
+measurements:
+
+   "/home/mark/tmp/file"
+
+         handle => "line_counter",
+    stream_type => "file",
+      data_type => "counter",
+    match_value => scan_log("MYLINE.*"),
+   history_type => "log",
+         action => sample_rate("0");
+
+}
+
+##########################################################
+
+body match_value scan_log(x)
+{
+select_line_matching => "^$(x)$";
+track_growing_file => "true";
+}
+
+body action sample_rate(x)
+{
+ifelapsed => "$(x)";
+expireafter => "10";
+}

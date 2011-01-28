@@ -1,0 +1,367 @@
+3.1.2   (Scalability/efficiency release)
+
+	Big efficiency improvements by caching output from
+	cf-promises. Can also be used for much more efficent policy
+	deployment (only pull if changed).
+
+	Caching state of ps command for greater efficiency. Reloaded for each bundle.
+
+	Index class lookup improves efficiency of class evaluation for huge configurations.
+	
+        Fixed issue where certain promiser strings got corrupted.
+
+	Minor memory access issues fixed.
+
+	Iterator bug introduced in 3.1.0 fixed
+
+3.1.1   (Bugfix release)
+
+	Memory leaks in server tracked down and fixed.
+	List expansion bug (one list items not executed) fixed.
+	Security issue introduced by change of runcommand shell policy fixed. If users defined a runcommand for cf-runagent/cf-serverd communication, possible to execute commands.
+	cf-key -s command for showing key hash/IP address identity pairs
+
+3.1.0
+	Change in storage of public keys. Cfengine now hashes the public key and uses this
+	as the keyname. Keys will be converted automatically.
+
+	The old dynamic addresses lists are deprecated.
+	Caching of dns and key information for greater server speed.
+	Change in last-seen format reflects the public key usage.
+
+	New package policy addupdate - installs package if not there and
+	updates it otherwise.
+
+	Support for package_changes => "bulk" in file repository as well.
+
+	New special function readstringarrayidx, similar to readstringarray,
+	but uses integer indeces. Very useful if first row elements are
+	not good identifiers (e.g. contains spaces, non-unique, etc.).
+
+	Change two log formats to use time() instead of date()
+	- filechanges
+	- total compliance
+
+	Change from using md5 to sha256 as default digest for commercial version,
+	community retains md5 for compat.
+
+	Commands not returning 0 in commands-promises are flagged
+	as repair_failed.
+
+	Adjustable timeout on connect(). Defaults to 10 seconds, adjustable 
+	with default_timeout in agent control.
+
+	Redesign of the knowledge map infrastructure.
+
+	Now possible to use variables to call methods, e.g
+
+	methods:
+
+	  "name $(list)" usebundle => $(list)("abc");	
+
+	See reference manual notes
+
+	Changes to normal ordering to optimize execution.
+
+	Increased stability by always initializing Attribute and Promise
+	structures.
+
+	When running cf-promises in dry-run mode (-n), the user does not need
+	to put binaries in WORKDIR/bin. For example, non-privileged users can verify root
+	policies.
+
+	Source control revision added in version string if run in verbose mode
+	(e.g. "cf-promises -vV"). This needs some refining, uses revision of a header now.
+
+	New semantics in return values of list functions. Null values are now allowed
+	and there is no iteration over empty lists. The value "cf_null" is reserved for
+	use as a null iterator.
+	
+3.0.5p1
+        Showing paths allowed/denied access to when cf-serverd is run in verbose mode.
+	Bug in server fixed for dynamic addresses.
+	File handle closure bugfix - too many open databases.
+	Seg fault in mount files fix.
+	Twin used in cf-execd without checking.
+	Check_root set wrong directory permissions at source not destination.
+	Error message degraded in body definition.
+	Undefined body not warned as error.
+	Various build enahncements.
+	Package_list_update called only once per manager, and fixed crash.
+	Version number bug in packages.
+
+3.0.5
+        Encryption problems fixed - client key buffer was uninitialized.
+
+        Classes-promisers are now automatically canonified when class
+	strings are defined, to simplifying the use of variables in classes.
+
+        New scalars sys.cf_version and sys.nova_version that hold Cfengine version information.
+
+        Attribute package_delete_convention added, to allow customizable
+	package name in delete command during update.
+
+	package_list_update_ifelapsed limit added.
+	
+	Private variable $(firstrepo) is available in package_name_convention
+        and package_delete_convention in order to expand the full path to 
+	a package, which is required by some managers.
+
+	Some of the threading code is rewritten and made more robust. This includes
+     	synchronizing access to the lastseen database from the server.
+
+        Bad initialization of BSD flags fixed
+	Multiple variable expansion issues in control fixed for server and agent
+	Allow ignore_missing_bundles to affect methods: bundles too
+	Run agent trust dialogue fixed
+
+	Bug in CPU monitoring, increasing time scale caused linear decay
+	of CPU measurement.
+
+	Bug in Setuid log storage, fix.
+	
+	Hooks added for new Nova virtualization promises.
+
+	Multithreading mutex failed to collide during cfservd leading to dropped authentication under heavy load.
+	
+	
+3.0.4
+	Class cancellation in promises to create better class feedback,
+	allows emulation of switch/case semantics etc
+	
+	Value of SA measurement promises
+
+	Special function getenv() which returns the contents of an
+	environment variable (on all platforms).
+	New function translatepath for generic Windows
+	New function escape() to escape literals as regular expressions (like SQL)
+        New function host2ip for caching IP address lookup
+	New function regextract for setting variables with backreferences
+	
+	New variables for the components $(sys.cf_agent), $(sys.cf_know) etc
+	pointing to the binaries.
+
+	More robust integrated database implementation; closing all
+	handles when receiving signals, self-healing on corruption.
+
+	Package installation on localhost without a manager like yum completed,
+	multiple repositories searched, and universal methods.
+	
+	Numerous bugfixes
+
+
+3.0.3
+	sha256 .. new hashes in openssl included in syntax tree.
+
+	End of line autocropping in readfile (hopefully intelligent)
+
+	hashmatch function incorrectly implemented - old debugging code left behind. Fix.
+
+	sys.crontab variable
+
+	Unknown user is now interpretated as "same user", so that we give cfengine a chance to
+	fix
+
+	Unregistered addresses no longer report "(Non registered IP)", but return as the address
+	itself when doing reverse lookups.
+	
+3.0.2
+	IMPORTANT: Change in normal ordering of editing. replace comes
+	after insert lines Much testing and minor bug fixing
+
+	Memory leaks fixed
+	Many hooks added for Nova enterprise extensions.
+	
+        promise_output reports now placed in WORKDIR/reports directory
+
+	Initialization correction and self-correx in monitord
+
+	Many new body constraints added.
+
+	Code readied for enterprise version Nova.
+
+	-b option can override the bundlesequence (must not contain parameters yet)
+
+	collapse_destination_dir option added to copy so that files can be
+	aggregated from subdirectories into a single destination.
+
+	Preparation for release:
+	unit_accessed_before.cf           x
+	unit_accumulated_time.cf          x
+	unit_acl.cf                       x
+        unit_acl_generic.cf               x
+        unit_ago.cf                       x
+        unit_arrays.cf                    x
+        unit_backreferences_files.cf      x
+        unit_badpromise.cf                x
+        unit_badtype.cf                   x
+        unit_bsdflags.cf                  x
+        unit_cf2_integration.cf           x
+        unit_changedbefore.cf             x
+        unit_change_detect.cf             x
+        unit_chdir.cf                     x
+        unit_classes_global.cf            x
+        unit_classmatch.cf                x
+        unit_classvar_convergence.cf      x
+        unit_compare.cf                   x
+        unit_controlclasses.cf            x
+        unit_control_expand.cf            x
+        unit_copy.cf                      x
+        unit_copy_edit.cf                 x
+        unit_copylinks.cf                 x
+        unit_createdb.cf                  x
+        unit_create_filedir.cf            x
+        unit_definitions.cf               x
+        unit_deletelines.cf               x
+        unit_disable_and_rotate_files.cf  x
+        unit_dollar.cf                    x
+        unit_edit_column_files.cf         x
+        unit_edit_comment_lines.cf        x
+        unit_edit_deletenotmatch.cf       x
+        unit_edit_insert_lines.cf         x
+        unit_edit_insert_lines_silly.cf   x
+        unit_edit_replace_string.cf       x
+        unit_edit_sectioned_file.cf       x
+        unit_edit_setvar.cf               x
+        unit_edit_triggerclass.cf         x
+        unit-env.cf                       x
+        unit_epimenides.cf                x
+        unit_exec_args.cf                 x
+        unit_execd.cf                     x
+        unit_exec_in_sequence.cf          x
+        unit_execresult.cf                x
+        unit_expand.cf                    x
+        unit_failsafe.cf                  x
+        unit_file_change_detection.cf     x
+        unit_fileexists.cf                x
+        unit_file_owner_list_template.cf  x
+        unit_fileperms.cf                 x
+        unit_filesexist2.cf               x
+        unit_filesexist.cf                x
+        unit_getgid.cf                    x
+        unit_getindices.cf                x
+        unit_getregistry.cf               x
+        unit_getuid.cf                    x
+        unit_global_list_expansion_2.cf   x
+        unit_global_list_expansion.cf     x
+        unit_groupexists.cf               x
+        unit_hash.cf                      x
+        unit_hashcomment.cf               x
+        unit_hashmatch.cf                 x
+        unit_helloworld.cf                x
+        unit_hostrange.cf                 x
+        unit_intarray.cf                  x
+        unit_iprange.cf                   x
+        unit_irange.cf                    x
+        unit_isdir.cf                     x
+        unit_islink.cf                    x
+        unit_isnewerthan.cf               x
+        unit_isplain.cf                   x
+        unit_isvariable.cf                x
+        unit_iteration.cf                 x
+        unit_knowledge_txt.cf             x
+        unit_lastnode.cf                  x
+        unit_ldap.cf                      x
+        unit_linking.cf                   x
+        unit_literal_server.cf            x
+        unit_locate_files_and_compress.cf x
+        unit_log_private.cf               x
+        unit_loops.cf                     x
+        unit_measurements.cf              x
+        unit_method.cf                    x
+        unit_method_validate.cf           x
+        unit_module_exec_2.cf
+        unit_module_exec.cf
+        unit_mount_fs.cf                  x
+        unit_neighbourhood_watch.cf       x
+        unit_null_config.cf               x
+        unit_occurrences.cf               x
+        unit_ordering.cf                  x
+        unit_package_apt.cf               x
+        unit_package_hash.cf              x
+        unit_package_rpm.cf               x
+        unit_package_yum.cf               x
+        unit_package_zypper.cf            x
+        unit_parallel_exec.cf             x
+        unit_pathtype.cf                  x
+        unit_pattern_and_edit.cf          x
+        unit_peers.cf                     x
+        unit_postfix.cf                   x
+        unit_process_kill.cf              x
+        unit_process_matching2.cf         x
+        unit_process_matching.cf          x
+        unit_process_signalling.cf        x
+        unit_readlist.cf                  x
+        unit_readtcp.cf                   x
+        unit_regarray.cf                  x
+        unit_registry.cf                  x
+        unit_regline.cf                   x
+        unit_reglist.cf                   x
+        unit_remove_deadlinks.cf          x
+        unit_rename.cf                    x
+        unit_report_state.cf              x
+        unit_reporttofile.cf              x
+        unit_returnszero.cf               x
+        unit_select_mode.cf               x
+        unit_select_region.cf             x
+        unit_selectservers.cf             x
+        unit_select_size.cf               x
+        unit_server_copy_localhost.cf     x
+        unit_server_copy_remote.cf        x
+        unit_server_copy_purge.cf         x
+        unit_splitstring.cf               x
+        unit_sql.cf                       x
+        unit_storage.cf                   x
+        unit_strcmp.cf                    x
+        unit_stringarray.cf               x
+        unit_syslog.cf                    x
+        unit_template.cf                  x
+        unit_tidy_all_files.cf            x
+        unit_user_edit.cf                 x
+        unit_user_edit_method.cf          x
+        unit_userexists.cf                x
+        unit_varclass.cf                  x
+        unit_vars.cf                      x
+        unit_warnifline.cf                x
+        unit_webserver.cf                 x
+
+	
+3.0.1
+	First standalone release, independent of cfengine 2 
+	Purge old definitions and check consistency.
+
+	NB: changed search_mode to be a list of matching values
+	
+	Reporting rationalized in cf-promises with -r only to avoid
+	leaving output files everywhere.
+
+	Hooks added for upcoming commerical additions to cfengine.
+
+	Added classify() and hostinnetgroup() functions
+	Added additional change management options for change detection
+
+	Package management added - generic mechanisms.
+
+	Limits on backgrounding added to avoid resource contention during cfengine runs.
+	Image type added to cf-know.
+
+	New classes for quartly shifts: Morning,Afternoon,Evening,Night
+
+	Bug fixes in editfiles - line insertion for multiple line objects
+
+	Change the name of the variables and context from the monitord for
+	better separation of data, and shorter names. sys -> mon
+	average -> av, stddev -> dev
+
+	canonical name for windows changed from "nt" to "windows", also version names
+	added "vista","xp" etc..
+
+	License notices updated for dual license editions.
+	
+3.0.0
+	First release of cfengine 3. Known omissions:
+	- no support for ACLs
+	- no support for packages
+	- no support for interface configuration
+	These will be added in the next release.
+	

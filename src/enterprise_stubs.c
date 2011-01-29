@@ -1174,7 +1174,7 @@ getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 if (cf_strcmp(zone,"global") == 0)
    {
-   snprintf(psopts,CF_BUFSIZE,"%s -z global",VPSOPTS[VSYSTEMHARDCLASS]);
+   snprintf(psopts,CF_BUFSIZE,"%s,zone -z global",VPSOPTS[VSYSTEMHARDCLASS]);
    return psopts;
    }
 #endif
@@ -1207,13 +1207,15 @@ getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 if (cf_strcmp(zone,"global") == 0)
    {
-   if (strcmp(s+strlen(s)-6,"global") == 0)
+   if (cf_strcmp(s+strlen(s)-6,"global") == 0)
       {
-      return true;
+      return false;
       }
    }
-#endif
 
+#else
+return true;
+#endif
 return false;
 }
 

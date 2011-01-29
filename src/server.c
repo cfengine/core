@@ -3320,7 +3320,10 @@ if (strlen(query) == 0)
    }
 
 #ifdef HAVE_LIBCFCONSTELLATION
-
+if (cf_strncmp(query,"RELAY",5) == 0)
+   {
+   return Constellation_ReturnRelayQueryData(conn,query+5,sendbuffer);
+   }
 #endif
 
 #ifdef HAVE_LIBCFNOVA

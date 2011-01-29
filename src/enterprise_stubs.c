@@ -1176,7 +1176,7 @@ getzonenamebyid(zid,zone,ZONENAME_MAX);
 
 if (cf_strcmp(zone,"global") == 0)
    {
-   snprintf(psopts,CF_BUFSIZE,"%s,zone -z global",VPSOPTS[VSYSTEMHARDCLASS]);
+   snprintf(psopts,CF_BUFSIZE,"%s,zone",VPSOPTS[VSYSTEMHARDCLASS]);
    return psopts;
    }
 #endif
@@ -1197,6 +1197,13 @@ return VPSOPTS[VSYSTEMHARDCLASS];
 
 int ForeignZone(char *s)
 {
+// We want to keep the banner
+
+if (strstr(s,"%CPU"))
+   {
+   return false;
+   }
+
 #ifdef HAVE_GETZONEID
  zoneid_t zid;
  char zone[ZONENAME_MAX];
@@ -1205,18 +1212,17 @@ int ForeignZone(char *s)
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
 
-// We want to keep the banner
-
 if (cf_strcmp(zone,"global") == 0)
    {
    if (cf_strcmp(s+strlen(s)-6,"global") == 0)
       {
       return false;
       }
+   else
+      {
+      return true;
+      }
    }
-
-#else
-return true;
 #endif
 return false;
 }

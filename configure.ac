@@ -137,6 +137,11 @@ AC_ARG_WITH([constellation],
     [AS_HELP_STRING([--with-constellation], [use Constellation commercial extensions])])
 AS_IF([test "x$with_constellation" == "xyes"], [AC_CHECK_LIB([cfconstellation], [main])])
 
+if test "x$with_constellation" != xno; then
+   AC_CHECK_LIB(cfconstellation,main)
+fi
+
+
 AC_ARG_WITH([galaxy],
     [AS_HELP_STRING([--with-galaxy], [use Galaxy commercial extensions])])
 AS_IF([test "x$with_galaxy" = "xyes"], [AC_CHECK_LIB([cfgalaxy], [main])])

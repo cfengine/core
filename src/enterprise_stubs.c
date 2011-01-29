@@ -175,10 +175,12 @@ void CheckAutoBootstrap()
 char *GetConsolePrefix()
     
 {
-#ifdef HAVE_LIBCFNOVA
- return "nova>";
+#ifdef HAVE_LIBCFCONSTELLATION
+return "constellation>"; 
+#elif defined HAVE_LIBCFNOVA
+return "nova>";
 #else
- return "cf3";
+return "community>";
 #endif
 }
 

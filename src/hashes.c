@@ -352,11 +352,12 @@ if (len == 0)
    return;
    }
 
- ptr = GetScope(scope);
- for (i = 0; i < CF_HASHTABLESIZE; i++)
+ptr = GetScope(scope);
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
    cphash = ptr->hashtable[i];
-         
+   
    if (cphash != NULL)
       {
       for (rp = dereflist; rp != NULL; rp = rp->next)

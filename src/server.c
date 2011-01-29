@@ -3319,6 +3319,10 @@ if (strlen(query) == 0)
    return false;
    }
 
+#ifdef HAVE_LIBCFCONSTELLATION
+
+#endif
+
 #ifdef HAVE_LIBCFNOVA
 return Nova_ReturnQueryData(conn,query,sendbuffer);
 #else

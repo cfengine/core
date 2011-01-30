@@ -744,7 +744,7 @@ for (ip = *start; ip != NULL; ip = np)
       match = FullTextMatch(pp->promiser,ip->name);
       }
 
-   if (!SelectLine(ip->name,a,pp))
+   if (!SelectLine(ip->name,a,pp)) // Start search from location
       {
       np = ip->next;
       continue;

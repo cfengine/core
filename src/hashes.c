@@ -53,8 +53,6 @@ void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash)
 
 { int i;
 
-/* Involved no memory copying, as this is just pointers */
-
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
    newhash[i] = CopyAssoc(oldhash[i]);

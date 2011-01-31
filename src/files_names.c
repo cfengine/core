@@ -398,7 +398,18 @@ int StartJoin(char *path,char *leaf,int bufsize)
 
 {
 *path = '\0';
-return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
+return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
+}
+
+/*********************************************************************/
+
+int StartJoinFast(char *path,char *leaf,char **nextFree,int bufsize)
+
+{
+*path = '\0';
+*nextFree = path;
+
+return JoinMargin(path,leaf,nextFree,bufsize,CF_BUFFERMARGIN);
 }
 
 /*********************************************************************/
@@ -406,35 +417,64 @@ return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
 int Join(char *path,char *leaf,int bufsize)
 
 {
-  return JoinMargin(path,leaf,bufsize,CF_BUFFERMARGIN);
+  return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
 }
+
+/*********************************************************************/
+
+int JoinFast(char *path,char *leaf,char **nextFree,int bufsize)
+/*
+ * Faster stringjoin by keeping track of where we last stopped
+ */
+{
+  return JoinMargin(path,leaf,nextFree,bufsize,CF_BUFFERMARGIN);
+}
+
 
 /*********************************************************************/
 
 int EndJoin(char *path,char *leaf,int bufsize)
 
 {
-  return JoinMargin(path,leaf,bufsize,0);
+  return JoinMargin(path,leaf,NULL,bufsize,0);
 }
 
 /*********************************************************************/
 
-int JoinMargin(char *path,char *leaf,int bufsize,int margin)
+int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin)
 
-{ int len = strlen(leaf);
+{ 
+  int len = strlen(leaf);
+
 
 if (margin < 0)
    {
    FatalError("Negative margin in JoinMargin()");
    }
 
-if ((strlen(path)+len) > (bufsize - margin))
-   {
-   CfOut(cf_error,"","Buffer overflow constructing string, len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
-   return false;
-   }
 
-strcat(path,leaf);
+ if(nextFree)
+   {
+   if((*nextFree - path) + len > (bufsize - margin) )
+     {
+     CfOut(cf_error,"","Buffer overflow constructing string (using nextFree), len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
+     return false;
+     }
+   
+   strcpy(*nextFree, leaf);
+   *nextFree += len;
+   }
+ else
+   {
+
+   if ((strlen(path)+len) > (bufsize - margin))
+     {
+     CfOut(cf_error,"","Buffer overflow constructing string, len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
+     return false;
+     }
+
+   strcat(path,leaf);
+   }
 
 return true;
 }

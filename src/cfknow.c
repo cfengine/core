@@ -371,7 +371,7 @@ strcpy(STYLESHEET,"");
 strcpy(BUILD_DIR,".");
 strcpy(LICENSE_COMPANY,"");
 strcpy(MANDIR,".");
-strcpy(SQL_DATABASE,"cf_topic_map");
+strcpy(SQL_DATABASE,"cf_kmdb");
 strcpy(SQL_OWNER,"");
 strcpy(SQL_CONNECT_NAME,"");
 strcpy(SQL_PASSWD,"");

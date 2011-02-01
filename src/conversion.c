@@ -604,7 +604,7 @@ sscanf(s,"%ld%c%s",&a,&c,remainder);
 
 if (a == CF_NOINT || !IsSpace(remainder))
    {
-   if (THIS_AGENT_TYPE != cf_agent)
+   if (THIS_AGENT_TYPE == cf_common)
       {
       snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",s,"non-value",remainder);
       ReportError(output);

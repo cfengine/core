@@ -380,6 +380,7 @@ void KeepControlPromises()
 { struct Constraint *cp;
   char rettype;
   void *retval;
+  struct Rlist *rp;
 
 for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    {
@@ -607,6 +608,18 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       {
       SKIPIDENTIFY = GetBoolean(retval);
       CfOut(cf_verbose,"","SET skipidentify = %d\n",SKIPIDENTIFY);
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_suspiciousnames].lval) == 0)
+      {
+
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+	{
+	PrependItem(&SUSPICIOUSLIST,rp->item,NULL);
+	CfOut(cf_verbose,"", "-> Concidering %s as suspicious file", rp->item);
+	}
+
       continue;
       }
 

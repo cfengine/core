@@ -164,7 +164,7 @@ struct BodySyntax CFA_CONTROLBODY[] =
    {"sensiblecount",cf_int,CF_VALRANGE,"Minimum number of files a mounted filesystem is expected to have"},
    {"sensiblesize",cf_int,CF_VALRANGE,"Minimum number of bytes a mounted filesystem is expected to have"},
    {"skipidentify",cf_opts,CF_BOOL,"Do not send IP/name during server connection because address resolution is broken"},
-   {"suspiciousnames",cf_slist,"List of names to warn about if found during any file search"},
+   {"suspiciousnames",cf_slist,"","List of names to warn about if found during any file search"},
    {"syslog",cf_opts,CF_BOOL,"true/false switches on output to syslog at the inform level"},
    {"track_value",cf_opts,CF_BOOL,"true/false switches on tracking of promise valuation"},
    {"timezone",cf_slist,"","List of allowed timezones this machine must comply with"},

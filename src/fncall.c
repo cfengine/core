@@ -296,8 +296,6 @@ ClearFnCallStatus();
 
 expargs = NewExpArgs(fp,pp);
 
-THIS_BUNDLE = pp->bundle;
-
 if (UnresolvedArgs(expargs))
    {
    FNCALL_STATUS.status = FNCALL_FAILURE;

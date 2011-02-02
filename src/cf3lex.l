@@ -37,7 +37,7 @@
 
 %}
 
-
+%option noyywrap
 
 space      [ \t]+
 

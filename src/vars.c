@@ -78,15 +78,15 @@ void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 { struct Rval rvald;
   struct Scope *ptr;
 
-  Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
+Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
-  ptr = GetScope(scope);
-  
-  if(ptr == NULL)
-    {
-    CfOut(cf_error, "", "!! Attempt to add variable \"%s\" to non-existant scope \"%s\" - ignored", lval, scope);
-    return;
-    }
+ptr = GetScope(scope);
+
+if (ptr == NULL)
+   {
+   CfOut(cf_error, "", "!! Attempt to add variable \"%s\" to non-existant scope \"%s\" - ignored", lval, scope);
+   return;
+   }
 
 // Newscalar allocates memory through NewAssoc
 

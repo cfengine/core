@@ -102,6 +102,8 @@ Debug("****************************************************\n\n");
 
 DeleteScope("match"); /* in case we expand something expired accidentially */
 
+THIS_BUNDLE = scopeid;
+
 pcopy = DeRefCopyPromise(scopeid,pp);
 
 ScanRval(scopeid,&scalarvars,&listvars,pcopy->promiser,CF_SCALAR,pp);

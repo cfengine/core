@@ -169,7 +169,8 @@ noinst_HEADERS =                                                        \
         cf3.defs.h                                                      \
         cf3.server.h                                                    \
         cf3parse.h                                                      \
-        cf3.extern.h
+        cf3.extern.h                                                    \
+        cf.events.h
 
 #
 # Some basic clean ups

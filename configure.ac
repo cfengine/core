@@ -133,9 +133,9 @@ if test "x$with_nova" != xno; then
    AC_CHECK_LIB(cfnova,main)
 fi
 
-AC_ARG_WITH([constellation],
-    [AS_HELP_STRING([--with-constellation], [use Constellation commercial extensions])])
-AS_IF([test "x$with_constellation" == "xyes"], [AC_CHECK_LIB([cfconstellation], [main])])
+AC_ARG_WITH(constellation,
+        AS_HELP_STRING(--without-constellation, [disable Constellation enterprise extensions (enabled by default)]),[],
+        with_constellation=yes)
 
 if test "x$with_constellation" != xno; then
    AC_CHECK_LIB(cfconstellation,main)

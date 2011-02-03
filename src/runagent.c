@@ -405,8 +405,27 @@ pp->cache = NULL;
 if (strlen(MENU) > 0)
    {
 #ifdef HAVE_LIBCFNOVA
-   Nova_QueryForKnowledgeMap(conn,MENU,time(0) - 7*24*3600);
+     
+   enum cfd_menu menu = String2Menu(MENU);
+
+   switch(menu)
+     {
+     case cfd_menu_delta:
+     case cfd_menu_full:
+       Nova_QueryForKnowledgeMap(conn,MENU,time(0) - 7*24*3600);
+       break;
+
+     case cfd_menu_relay:
+#ifdef HAVE_LIBCFCONSTELLATION
+       Constellation_QueryRelay(conn,MENU,time(0) - 7*24*3600);
 #endif
+	 break;
+
+     default:
+       break;
+     }
+
+#endif  /* HAVE_LIBCFNOVA */
    }
 else
    {

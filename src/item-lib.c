@@ -553,6 +553,52 @@ if (ip_last)
 return false;
 }
 
+/*********************************************************************/ 
+
+int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end)
+
+{ struct Item *ip = location;
+  char *sp,buf[CF_BUFSIZE];
+  int ended = false;
+  
+for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
+   {
+   memset(buf,0,CF_BUFSIZE);
+   sscanf(sp,"%[^\n]",buf);
+   sp += strlen(buf);
+
+   if (ended)
+      {
+      return false;
+      }
+   
+   if (!FullTextMatch(buf,ip->name))
+      {
+      return false;
+      }
+
+   if (ip == end)
+      {
+      ended = true;   
+      }
+   
+   if (ip->next)
+      {
+      ip = ip->next;
+      }
+   else
+      {
+      if (++sp <= chunk+strlen(chunk))
+         {
+         return false;
+         }
+      
+      break;
+      }
+   }
+
+return true;
+}
 
 /*********************************************************************/
 /* Level                                                             */

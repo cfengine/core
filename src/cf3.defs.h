@@ -1064,6 +1064,7 @@ enum promiselog_rep
 /*************************************************************************/
 
 // Content-Driven Policy types
+
 typedef enum cdp_report
 {
   cdp_acls,
@@ -1075,7 +1076,15 @@ typedef enum cdp_report
   cdp_unknown
 }cdp_t;
 
+/*************************************************************************/
 
+enum cfd_menu
+   {
+   cfd_menu_delta,
+   cfd_menu_full,
+   cfd_menu_relay,
+   cfd_menu_error
+   };
 
 /*************************************************************************/
 /* Runtime constraint structures                                         */
@@ -1888,6 +1897,3 @@ meter_endmark
 
 #include "prototypes3.h"
 
-#ifdef HAVE_LIBCFNOVA
-#include <cf.nova.h>
-#endif

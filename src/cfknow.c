@@ -1462,14 +1462,8 @@ if (GRAPH)
 #ifdef HAVE_LIBCFNOVA
    VerifyGraph(NULL,NULL);
    if (VIEWS)
-      { 
-      PrependRScalar(&semantics,NOVA_GIVES,CF_SCALAR);
-      PrependRScalar(&semantics,NOVA_USES,CF_SCALAR);
-      PrependRScalar(&semantics,NOVA_IMPACTS,CF_SCALAR);
-      PrependRScalar(&semantics,NOVA_ISIMPACTED,CF_SCALAR);
-      PrependRScalar(&semantics,NOVA_BUNDLE_DATA,CF_SCALAR);
-      PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_B,CF_SCALAR);
-      PrependRScalar(&semantics,NOVA_BUNDLE_DATA_INV_P,CF_SCALAR);
+      {
+      Nova_PrimeGraph(&semantics);
       VerifyGraph(semantics,"influence");
       }
 #else

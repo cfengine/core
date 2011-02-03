@@ -32,7 +32,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#ifndef HAVE_LIBCFNOVA
+#ifndef CF_TRIBE_SIZE
 #define CF_TRIBE_SIZE 30
 #endif
 

@@ -462,9 +462,9 @@ static const yytype_uint16 yyrline[] =
       97,   122,   123,   127,   128,   133,   132,   149,   150,   154,
      155,   159,   160,   167,   164,   211,   212,   216,   217,   221,
      222,   226,   244,   239,   274,   273,   306,   307,   308,   312,
-     335,   342,   351,   358,   370,   378,   385,   394,   400,   401,
-     402,   406,   411,   418,   425,   434,   438,   448,   457,   465,
-     464,   489,   490,   491,   495,   501,   509,   517
+     335,   342,   351,   358,   374,   382,   389,   398,   404,   405,
+     406,   410,   415,   422,   429,   438,   442,   452,   461,   469,
+     468,   493,   494,   495,   499,   505,   513,   521
 };
 #endif
 
@@ -1752,9 +1752,13 @@ yyreduce:
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
                          Debug("Recorded scalarRVAL %s\n",P.rval);
-                         if (LvalWantsBody(P.currentpromise->agentsubtype,P.lval))
+
+                         if (P.currentpromise)
                             {
-                            yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
+                            if (LvalWantsBody(P.currentpromise->agentsubtype,P.lval))
+                               {
+                               yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
+                               }
                             }
                          }
     break;
@@ -1762,7 +1766,7 @@ yyreduce:
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 371 "cf3parse.y"
+#line 375 "cf3parse.y"
     {
                          P.rval = P.currentstring;
                          P.currentstring = NULL;
@@ -1775,7 +1779,7 @@ yyreduce:
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 379 "cf3parse.y"
+#line 383 "cf3parse.y"
     {
                          P.rval = P.currentRlist;
                          P.currentRlist = NULL;
@@ -1787,7 +1791,7 @@ yyreduce:
   case 56:
 
 /* Line 1455 of yacc.c  */
-#line 386 "cf3parse.y"
+#line 390 "cf3parse.y"
     {
                          P.isbody = false;
                          P.rval = P.currentfncall[P.arg_nesting+1];
@@ -1798,7 +1802,7 @@ yyreduce:
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 407 "cf3parse.y"
+#line 411 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                           }
@@ -1807,7 +1811,7 @@ yyreduce:
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 412 "cf3parse.y"
+#line 416 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
@@ -1818,7 +1822,7 @@ yyreduce:
   case 63:
 
 /* Line 1455 of yacc.c  */
-#line 419 "cf3parse.y"
+#line 423 "cf3parse.y"
     {
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
@@ -1829,7 +1833,7 @@ yyreduce:
   case 64:
 
 /* Line 1455 of yacc.c  */
-#line 426 "cf3parse.y"
+#line 430 "cf3parse.y"
     {
                           Debug("Install function call as list item from level %d\n",P.arg_nesting+1);
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
@@ -1840,7 +1844,7 @@ yyreduce:
   case 65:
 
 /* Line 1455 of yacc.c  */
-#line 435 "cf3parse.y"
+#line 439 "cf3parse.y"
     {
                           Debug("Found function identifier %s\n",P.currentid);
                           }
@@ -1849,7 +1853,7 @@ yyreduce:
   case 66:
 
 /* Line 1455 of yacc.c  */
-#line 439 "cf3parse.y"
+#line 443 "cf3parse.y"
     {
                           strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
                           free(P.currentstring);
@@ -1861,7 +1865,7 @@ yyreduce:
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 449 "cf3parse.y"
+#line 453 "cf3parse.y"
     {
                           P.promiser = P.currentstring;
                           P.currentstring = NULL;
@@ -1872,7 +1876,7 @@ yyreduce:
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 458 "cf3parse.y"
+#line 462 "cf3parse.y"
     {
                          Debug("Finished with function call, now at level %d\n\n",P.arg_nesting);
                          }
@@ -1881,7 +1885,7 @@ yyreduce:
   case 69:
 
 /* Line 1455 of yacc.c  */
-#line 465 "cf3parse.y"
+#line 469 "cf3parse.y"
     {
                            if (++P.arg_nesting > CF_MAX_NESTING)
                               {
@@ -1895,7 +1899,7 @@ yyreduce:
   case 70:
 
 /* Line 1455 of yacc.c  */
-#line 476 "cf3parse.y"
+#line 480 "cf3parse.y"
     {
                            Debug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
@@ -1910,7 +1914,7 @@ yyreduce:
   case 74:
 
 /* Line 1455 of yacc.c  */
-#line 496 "cf3parse.y"
+#line 500 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
@@ -1920,7 +1924,7 @@ yyreduce:
   case 75:
 
 /* Line 1455 of yacc.c  */
-#line 502 "cf3parse.y"
+#line 506 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
@@ -1932,7 +1936,7 @@ yyreduce:
   case 76:
 
 /* Line 1455 of yacc.c  */
-#line 510 "cf3parse.y"
+#line 514 "cf3parse.y"
     {
                           /* currently inside a use function */
                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
@@ -1944,7 +1948,7 @@ yyreduce:
   case 77:
 
 /* Line 1455 of yacc.c  */
-#line 518 "cf3parse.y"
+#line 522 "cf3parse.y"
     {
                           /* Careful about recursion */
                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
@@ -1955,7 +1959,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1959 "cf3parse.c"
+#line 1963 "cf3parse.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2167,7 +2171,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 524 "cf3parse.y"
+#line 528 "cf3parse.y"
 
 
 /*****************************************************************/

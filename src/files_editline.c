@@ -1203,6 +1203,7 @@ else
          }
       else
          {
+         printf("two %s\n",location->name);
          InsertAfter(start,location,newline);
          cfPS(cf_verbose,CF_CHG,"",pp,a," -> Inserting the promised line \"%s\" into %s after locator",newline,pp->this_server);
          (pp->edcontext->num_edits)++;

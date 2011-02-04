@@ -362,6 +362,10 @@ rval:                  ID
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
                          Debug("Recorded scalarRVAL %s\n",P.rval);
+                         if (LvalWantsBody(P.currentpromise->agentsubtype,P.lval))
+                            {
+                            yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
+                            }
                          }
                      | NAKEDVAR
                          {

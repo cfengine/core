@@ -27,8 +27,8 @@
 
 /* These files are hard links to the cfengine 2 sources */
 
-#include "../../core/src/cf.defs.h"
-#include "../../core/src/cf.extern.h"
+#include "cf.defs.h"
+#include "cf.extern.h"
 
 #undef VERSION
 #undef Verbose
@@ -1895,4 +1895,4 @@ meter_endmark
   || strcmp(c,"Night") == 0 || strcmp(c,"license_expired") == 0)
 
 
-#include "../../core/src/prototypes3.h"
+#include "prototypes3.h"

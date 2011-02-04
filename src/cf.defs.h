@@ -1376,4 +1376,4 @@ struct Checksum_Value
 /* All prototypes                                                   */
 /********************************************************************/
 
-#include "../../core/src/prototypes.h"
+#include "prototypes.h"

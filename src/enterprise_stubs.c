@@ -126,6 +126,7 @@ return 'c';
 
 /*****************************************************************************/
 
+const EVP_CIPHER *Nova_CfengineCipher(char type);
 const EVP_CIPHER *CfengineCipher(char type)
 {
 #ifdef HAVE_LIBCFNOVA
@@ -153,7 +154,7 @@ void CheckLicenses()
 
 {
 #ifdef HAVE_LIBCFNOVA
-return Nova_CheckLicensePromise();
+Nova_CheckLicensePromise();
 #else
 return;
 #endif
@@ -251,6 +252,7 @@ CFDB_PutValue(s,t);
 /* Knowledge                                                                 */
 /*****************************************************************************/
 
+char *Nova_PromiseID(struct Promise *pp);
 char *PromiseID(struct Promise *pp)
 
 {
@@ -583,6 +585,7 @@ return 0;
 
 /*****************************************************************************/
 
+char *Nova_GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv);
 char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv)
 
 {
@@ -633,6 +636,7 @@ strncpy(new,old,CF_BUFSIZE-1);
 
 /*****************************************************************************/
 
+RSA *Nova_SelectKeyRing(char *name);
 RSA *SelectKeyRing(char *name)
 {
 #ifdef HAVE_LIBCFNOVA

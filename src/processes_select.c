@@ -37,7 +37,7 @@
 int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp)
 
 { struct AlphaList proc_attr;
-  int result = true,s,e;
+ int result = true,s,e,i;
   char *criteria = NULL;
   char *column[CF_PROCCOLS];
   struct Rlist *rp;
@@ -58,7 +58,6 @@ if (!SplitProcLine(procentry,names,start,end,column))
 
 if (DEBUG)
    {
-   int i;
    for (i = 0; column[i] != NULL; i++)
       {
       printf("COL[%s] = \"%s\"\n",names[i],column[i]);
@@ -151,6 +150,11 @@ if (result)
       {
       CfOut(cf_inform,""," !! Matched: %s\n",procentry);
       }
+   }
+
+for (i = 0; column[i] != NULL; i++)
+   {
+   free(column[i]);
    }
 
 return result; 
@@ -282,6 +286,7 @@ return false;
 int SplitProcLine(char *proc,char **names,int *start,int *end,char **line)
 
 { int i,s,e;
+  char *sp,cols[CF_PROCCOLS][CF_SMALLBUF];
 
 Debug("SplitProcLine(%s)\n",proc); 
 
@@ -293,8 +298,44 @@ if (proc == NULL || strlen(proc) == 0)
 for (i = 0; i < CF_PROCCOLS; i++)
    {
    line[i] = NULL;
+   cols[i][0] = '\0';
    }
- 
+
+// First try looking at all the separable items
+
+sp = proc;
+
+for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
+   {
+   while(*sp == ' ')
+      {
+      sp++;
+      }
+
+   if (strcmp(names[i],"CMD") == 0 || strcmp(names[i],"COMMAND") == 0)
+      {
+      sscanf(sp,"%[^\n]",&(cols[i]));
+      sp += strlen(cols[i]);
+      }
+   else
+      {
+      sscanf(sp,"%s",&(cols[i]));
+      sp += strlen(cols[i]);
+      }
+   
+   // Some ps stimes may contain spaces, e.g. "Jan 25"
+   if (strcmp(names[i],"STIME") == 0 && strlen(cols[i]) == 3)
+      {
+      char s[CF_SMALLBUF] = {0};
+      sscanf(sp,"%s",s);
+      strcat(cols[i]," ");
+      strcat(cols[i],s);
+      sp += strlen(s)+1;
+      }
+   }
+
+// Now try looking at columne alignment
+
 for (i = 0; names[i] != NULL; i++)
    {
    // Start from the header/column tab marker and count backwards until we find 0 or space
@@ -345,6 +386,11 @@ for (i = 0; names[i] != NULL; i++)
       }
 
    Chop(line[i]);
+
+   if (strcmp(line[i],cols[i]) != 0)
+      {
+      CfOut(cf_inform,""," !! Unacceptable model uncertainty examining processes");
+      }
    }
 
 return true;

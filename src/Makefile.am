@@ -195,3 +195,8 @@ DISTCLEANFILES = cflex.c cfparse.c cfparse.h
 # "configure; make; make install"
 #
 MAINTAINERCLEANFILES = Makefile.in conf.h.in stamp-h.in
+
+SUFFIXES= .h
+cf3.defs.h:
+	cd ./../core/src; svn update
+	ln -fs ../../core/src/cf3.defs.h cf3.defs.h

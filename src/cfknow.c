@@ -293,15 +293,6 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:Q:",OPTIONS,&optindex
           break;
 
       case 'Q':
-/*
-  { char buffer[CF_BUFSIZE];
-
-  Nova_WebTopicMap_Initialize();
-  Nova_PlotTopicCosmos(711,NULL,buffer,CF_BUFSIZE);
-  printf("GOT %s\n",buffer);
-  return;
-  }
-*/
           strcpy(TOPIC_CMD,optarg);
           CfQueryCFDB(TOPIC_CMD);
           exit(0);
@@ -405,7 +396,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       {
       continue;
       }
-
+   
    if (GetVariable("control_knowledge",cp->lval,&retval,&rettype) == cf_notype)
       {
       CfOut(cf_error,""," !! Unknown lval %s in knowledge control body",cp->lval);

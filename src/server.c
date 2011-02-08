@@ -31,9 +31,7 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-#ifndef HAVE_SERV_H
 #include "cf3.server.h"
-#endif
 
 int main (int argc,char *argv[]);
 void StartServer (int argc, char **argv);

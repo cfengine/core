@@ -25,6 +25,7 @@
 /*                                                                 */
 /*******************************************************************/
 
+#ifndef HAVE_SERV_H
 #define HAVE_SERV_H 1
 #define queuesize 50
 #define connection 1
@@ -85,4 +86,6 @@ extern char *realpath(/* char *path; char resolved_path[MAXPATHLEN] */);
 
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned long int) 0xffffffff)
+#endif
+
 #endif

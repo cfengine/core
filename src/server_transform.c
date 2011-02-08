@@ -31,9 +31,7 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-#ifndef HAVE_SERV_H
 #include "cf3.server.h"
-#endif
 
 extern struct BodySyntax CFS_CONTROLBODY[];
 extern struct BodySyntax CF_REMROLE_BODIES[];

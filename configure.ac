@@ -7,7 +7,7 @@ dnl # script => aclocal; automake -a -c; autoconf
 dnl #
 dnl ##########################################################################
 
-AC_PREREQ(2.63)
+AC_PREREQ(2.59)
 
 AC_INIT
 AC_CONFIG_SRCDIR([src/cfpromises.c])

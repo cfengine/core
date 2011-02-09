@@ -21,6 +21,10 @@ AM_INIT_AUTOMAKE(cfengine, 3.1.5a1)   dnl remember to set version
 
 AC_CONFIG_HEADERS([src/conf.h])
 
+dnl Libtool madness
+
+AC_CONFIG_MACRO_DIR([m4])
+
 #
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems

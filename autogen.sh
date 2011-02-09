@@ -6,7 +6,7 @@ test -z "$srcdir" && srcdir=.
 ORIGDIR=$(pwd)
 cd $srcdir
 
-autoreconf --force -v --install || exit 1
+autoreconf --force -v --install -I m4 || exit 1
 cd $ORIGDIR || exit $?
 
 if [ -z "$NO_CONFIGURE" ]; then

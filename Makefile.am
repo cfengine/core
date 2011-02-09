@@ -31,3 +31,8 @@ DISTCLEANFILES =
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
 	configure install-sh missing mkinstalldirs depcomp ylwrap \
 	ltmain.sh mdate-sh
+
+#
+# Pass proper flags to aclocal to pick up Libtool macros
+#
+ACLOCAL_AMFLAGS = -I m4

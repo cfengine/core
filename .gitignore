@@ -1,0 +1,47 @@
+# intermediate / autogen
+
+*.la
+*.lo
+*.o
+.deps
+.libs
+INSTALL
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+config.guess
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+m4/libtool.m4
+m4/lt*.m4
+missing
+stamp-h1
+ylwrap
+
+# binaries
+
+src/cf-agent
+src/cf-execd
+src/cf-hub
+src/cf-key
+src/cf-know
+src/cf-monitord
+src/cf-promises
+src/cf-report
+src/cf-runagent
+src/cf-serverd
+
+# autogen
+
+src/cf3lex.c
+src/cf3lex.l
+src/cf3parse.c
+src/cf3parse.h
+src/conf.h

@@ -1463,7 +1463,7 @@ switch (GetCommand(recvbuffer))
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
        
-       if (strncmp(recvbuffer,"QUERY",3) !=0)
+       if (strncmp(recvbuffer,"QUERY",5) !=0)
           {
           CfOut(cf_inform,"","QUERY protocol defect\n");
           RefuseAccess(conn,sendbuffer,0,"decryption failure");
@@ -3320,7 +3320,7 @@ if (strlen(query) == 0)
 #ifdef HAVE_LIBCFCONSTELLATION
 if (cf_strncmp(query,"relay",5) == 0)
    {
-   return Constellation_ReturnRelayQueryData(conn,query+5,sendbuffer);
+   return Constellation_ReturnRelayQueryData(conn,query,sendbuffer);
    }
 #endif
 

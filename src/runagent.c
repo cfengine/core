@@ -202,7 +202,7 @@ while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex
 
           if (optarg==NULL)
              {
-             strcpy(MENU,"fast");
+             strcpy(MENU,"delta");
              }
           else
              {

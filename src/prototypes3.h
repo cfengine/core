@@ -968,6 +968,7 @@ int IsHtmlHeader(char *s);
 void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int counter,time_t t);
 void PurgeItemList(struct Item **list,char *name);
 struct Item *ReturnItemIn(struct Item *list,char *item);
+int GetItemIndex(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);
 int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 void PrependItemList(struct Item **liststart,char *itemstring);

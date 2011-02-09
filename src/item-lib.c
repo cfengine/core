@@ -96,6 +96,33 @@ return NULL;
 
 /*********************************************************************/
 
+int GetItemIndex(struct Item *list,char *item)
+/*
+ * Returns index of first occurence of item.
+ */
+{ struct Item *ptr; 
+  int i = 0;
+
+if ((item == NULL) || (strlen(item) == 0))
+   {
+   return -1;
+   }
+ 
+for (ptr = list; ptr != NULL; ptr=ptr->next)
+   {
+   if (strcmp(ptr->name,item) == 0)
+      {
+      return i;
+      }
+
+   i++;
+   }
+ 
+return -1;
+}
+
+/*********************************************************************/
+
 int IsItemIn(struct Item *list,char *item)
 
 { struct Item *ptr; 

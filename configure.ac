@@ -625,11 +625,11 @@ rtry=none
 AC_MSG_CHECKING(for either struct rtentry or struct ortentry)
 AC_EGREP_HEADER(rtentry, net/route.h, rtry=rtentry)
 if test "$rtry" = rtentry; then
- AC_DEFINE(HAVE_RTENTRY)
+ AC_DEFINE(HAVE_RTENTRY, 1, [Do we have any route entry structure?])
 fi
 AC_EGREP_HEADER(ortentry, net/route.h, rtry=ortentry)
 if test "$rtry" = ortentry; then
- AC_DEFINE(HAVE_ORTENTRY)
+ AC_DEFINE(HAVE_ORTENTRY, 1)
 fi
 AC_MSG_RESULT([$rtry])
 
@@ -663,10 +663,10 @@ fi
 
 
 
-AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN))
+AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, [], [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE), AC_CHECK_LIB(pthread, pthread_create))
-AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK), AC_CHECK_LIB(pthread, pthread_create))
+AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]), AC_CHECK_LIB(pthread, pthread_create))
+AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]), AC_CHECK_LIB(pthread, pthread_create))
 
 
 AC_ARG_ENABLE([DCE], [AS_HELP_STRING([--enable-DCE], [support for DCE and ACLs])])
@@ -704,10 +704,10 @@ fi
 case "$target_os" in
 
    sunos3*)
-	AC_DEFINE(SUN3)
+	AC_DEFINE(SUN3, [], [SunOS 3.x build])
         ;;
    sunos4*)
-	AC_DEFINE(SUN4)
+	AC_DEFINE(SUN4, [], [SunOS 4.x build])
         ;;
    solaris2.4*)
 	AC_DEFINE(SOLARIS)
@@ -717,13 +717,13 @@ case "$target_os" in
         ;;
    solaris2.5*)
 	AC_DEFINE(SOLARIS)
-        AC_DEFINE(_POSIX_C_SOURCE)
-        AC_DEFINE(__EXTENSIONS__)
+        AC_DEFINE(_POSIX_C_SOURCE, [], [SVR4 header stuff])
+        AC_DEFINE(__EXTENSIONS__, [], [SVR4 header stuff])
         LIBS="$LIBS -lelf -lsec"
         ;;
    solaris2*)
-	AC_DEFINE(SOLARIS)
-        AC_DEFINE(__BIT_TYPES_DEFINED__) # avoid conflict with db.h
+	AC_DEFINE(SOLARIS, [], [Solaris build])
+        AC_DEFINE(__BIT_TYPES_DEFINED__, [], [Solaris 2.6-related stuff]) # avoid conflict with db.h
 
        AC_PREPROC_IFELSE([
                          AC_LANG_PROGRAM([[
@@ -736,25 +736,25 @@ case "$target_os" in
         LIBS="$LIBS -lelf -lsec"
         ;;
    ultrix*)
-	AC_DEFINE(ULTRIX)
+	AC_DEFINE(ULTRIX, [], [Ultrix build])
         ;;
    hpux*|hp-ux*) 
-	AC_DEFINE(HPuUX)
+	AC_DEFINE(HPuUX, [], [HP/UX build])
         if test "$GCC" != "yes"; then
-	  AC_DEFINE(REGEX_MALLOC)
+	  AC_DEFINE(REGEX_MALLOC, [], [Whether to use the local regex functions])
         fi
 
         LIBS="$LIBS -lc"
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)
-	AC_DEFINE(AIX)
+	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
 	AC_CHECK_LIB(pthreads, main)
         AC_CHECK_HEADER(pthreads.h)
         ;;
    osf*)
-	AC_DEFINE(OSF)
+	AC_DEFINE(OSF, [], [OSF/1 build])
 	if test "$GCC" = yes; then
 	   AC_MSG_WARN([pthreads may not work with GCC under Tru64])
 	   AC_MSG_WARN([If you get build errors mentioning PTHREADDEFAULTS etc.,])
@@ -763,8 +763,8 @@ case "$target_os" in
         ;;
    irix6*)
 	# rtentry is detected OK on a 6.5.19 system.
-        AC_DEFINE(HAVE_ORTENTRY) # Have to hack this for 6.* owing to bug
-	AC_DEFINE(IRIX)
+        AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs]) # Have to hack this for 6.* owing to bug
+	AC_DEFINE(IRIX, [], [IRIX build])
         CFLAGS="$CFLAGS -w"
         ;;
    irix4*)
@@ -777,37 +777,37 @@ case "$target_os" in
         CFLAGS="$CFLAGS -w"
         ;;
    linux*)
-	AC_DEFINE(LINUX)
+	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         AC_CHECK_LIB(acl,main)
         AC_CHECK_HEADERS(acl.h sys/acl.h acl/libacl.h)
         ;;
    freebsd*|dragonfly*)
-	AC_DEFINE(FREEBSD)
+	AC_DEFINE(FREEBSD, [], [FreeBSD build])
         CFLAGS="$CFLAGS -pthread -D_THREAD_SAFE -DBUILDTIN_GCC_THREAD"
         AC_CHECK_HEADERS(pthread.h)
         ;;
    netbsd*)
-	AC_DEFINE(NETBSD)
+	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
    newsos*)
-	AC_DEFINE(NEWS_OS)
+	AC_DEFINE(NEWS_OS, [], [NewsOS build])
         ;;
    bsd/os*)
-	AC_DEFINE(BSDOS)
+	AC_DEFINE(BSDOS, [], [BSD/OS build])
         ;;
    bsd*)
-	AC_DEFINE(BSD43)
+	AC_DEFINE(BSD43, [], [4.3BSD build])
         ;;
    aos*)
-	AC_DEFINE(AOS)
+	AC_DEFINE(AOS, [], [AOS build])
         ;;
    nextstep*)
-	AC_DEFINE(NEXTSTEP)
+	AC_DEFINE(NEXTSTEP, [], [NeXTSTEP build])
         ;;
 
    unicos*)
-	AC_DEFINE(CFCRAY)
+	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;
 
    cray*)
@@ -815,19 +815,19 @@ case "$target_os" in
         ;;
 
    qnx*)
-        AC_DEFINE(CFQNX)
+        AC_DEFINE(CFQNX, [], [QNX build])
         ;;
 
    openbsd*|obsd*)
-	AC_DEFINE(OPENBSD)
+	AC_DEFINE(OPENBSD, [], [OpenBSD build])
         ;;
 
    gnu*)
-	AC_DEFINE(CFGNU)
+	AC_DEFINE(CFGNU, [], [GNU build])
         ;;
 
    sysv4.2MP|unix_sv*)
-	AC_DEFINE(UNIXWARE)
+	AC_DEFINE(UNIXWARE, [], [Unixware build])
         AC_CHECK_LIB(thread,main)         dnl POSIX threads, weird setup
         if test "$ac_cv_lib_thread_main" = "yes"; then
 	   AC_CHECK_HEADERS(thread.h)
@@ -836,7 +836,7 @@ case "$target_os" in
 
    cygwin*)
         AC_DEFINE(CFCYG, 1, [Cygwin NT build])
-        AC_DEFINE(NT)
+        AC_DEFINE(NT, [], [NT build])
         ;;
 
    mingw*)
@@ -846,11 +846,11 @@ case "$target_os" in
         ;;
 
    sco*)
-        AC_DEFINE(SCO)
+        AC_DEFINE(SCO, [], [SCO build])
         ;;
 
    darwin*)
-        AC_DEFINE(DARWIN)
+        AC_DEFINE(DARWIN, [], [Darwin build])
         LDFLAGS="-Xlinker -m $LDFLAGS"
         ;;
 
@@ -874,7 +874,7 @@ AC_ARG_WITH(workdir,
   		        WORKDIR=/var/cfengine
 		fi
 
-     	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
+     	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [lock and log directories])
         AC_SUBST(workdir, "${WORKDIR}")
 	],
 	[
@@ -937,8 +937,8 @@ dnl #####################################################################
 
 AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 
-AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`")
-AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os")
+AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special Cfengine symbol])
+AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial Cfengine symbol])
 
 
 dnl #####################################################################

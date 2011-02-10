@@ -727,7 +727,7 @@ else               /* date Month */
       }
    }
 
-Debug("(%s)\n%d=%s,%d=%s,%d,%d,%d\n",s,year,VYEAR,month,VMONTH,day,hour,min);
+Debug("(%s)\n%d=%s,%ld=%s,%ld,%ld,%ld\n",s,year,VYEAR,month,VMONTH,day,hour,min);
 
 cftime = 0;
 cftime += min * 60;
@@ -1028,6 +1028,25 @@ for (i = 0; i < 3; i++)
 return cfsrv_nostatus;
 }
 
+/*********************************************************************/
+
+enum cfl_view Str2View(char *s)
+
+{ static char *views[] = { "SumComp",  // NOTE: must match cfl_view enum
+			   NULL };
+  int i;
+
+for (i = 0; views[i] != NULL; i++)
+   {
+   if (strcmp(s,views[i]) == 0)
+      {
+      return i;
+      }
+   }
+
+return cfl_view_error;
+}
+
 
 /*********************************************************************/
 /* Level                                                             */
@@ -1273,6 +1292,8 @@ if (a == CF_NODOUBLE)
 return true;
 }
 
+
+
 /*******************************************************************/
 /* Unix-only functions                                             */
 /*******************************************************************/
@@ -1456,4 +1477,3 @@ else
 return gid;
 }
 #endif  /* NOT MINGW */
-

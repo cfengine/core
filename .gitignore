@@ -46,3 +46,4 @@ src/cf3parse.c
 src/cf3parse.h
 src/conf.h
 src/conf.h.in
+src/conf.h.in~

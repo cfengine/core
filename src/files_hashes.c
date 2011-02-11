@@ -443,9 +443,26 @@ return true;
 /*********************************************************************/
 
 char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1])
-
-{ unsigned int i;
+/** 
+ * WARNING: Not thread-safe (returns pointer to global memory).
+ * Use HashPrintSafe for a thread-safe equivalent
+ */
+{
   static char buffer[EVP_MAX_MD_SIZE*4];
+  
+  HashPrintSafe(type,digest,buffer);
+
+  return buffer;
+}    
+
+/*********************************************************************/
+
+char *HashPrintSafe(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1], char buffer[EVP_MAX_MD_SIZE*4])
+/**
+ * Thread safe. Note the buffer size.
+ */
+{
+ unsigned int i;
 
 switch (type)
    {
@@ -462,8 +479,8 @@ for (i = 0; i < CF_DIGEST_SIZES[type]; i++)
    sprintf((char *)(buffer+4+2*i),"%02x", digest[i]);
    }
 
-return buffer; 
-}    
+return buffer;   
+}
 
 /***************************************************************/
 

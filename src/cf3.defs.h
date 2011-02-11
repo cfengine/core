@@ -1090,7 +1090,7 @@ enum cfd_menu
 
 enum cfl_view
    {
-   cfl_view_sumcomp,
+   cfl_view_sumcomp_wk,
    cfl_view_error
    };
 

@@ -1032,7 +1032,7 @@ return cfsrv_nostatus;
 
 enum cfl_view Str2View(char *s)
 
-{ static char *views[] = { "SumComp",  // NOTE: must match cfl_view enum
+{ static char *views[] = { "SumCompWk",  // NOTE: must match cfl_view enum
 			   NULL };
   int i;
 

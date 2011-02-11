@@ -35,6 +35,14 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void CacheServerConnection(struct cfagent_connection *conn,char *server);
+static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
+static void MarkServerOffline(char *server);
+static struct cfagent_connection *ServerConnectionReady(char *server);
+static int ServerOffline(char *server);
+static void FlushFileStream(int sd,int toget);
+static int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp);
+
 /*********************************************************************/
 
 void DetermineCfenginePort()

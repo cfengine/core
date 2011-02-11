@@ -1111,7 +1111,7 @@ if (!attr.copy.force_ipv4)
 
 /*********************************************************************/
 
-int ServerOffline(char *server)
+static int ServerOffline(char *server)
     
 { struct Rlist *rp;
   struct cfagent_connection *conn;
@@ -1142,7 +1142,7 @@ return false;
 
 /*********************************************************************/
 
-struct cfagent_connection *ServerConnectionReady(char *server)
+static struct cfagent_connection *ServerConnectionReady(char *server)
 
 { struct Rlist *rp;
   struct cfagent_connection *conn;
@@ -1203,7 +1203,7 @@ CfOut(cf_verbose,"","Existing connection just became free...\n");
 
 /*********************************************************************/
 
-void MarkServerOffline(char *server)
+static void MarkServerOffline(char *server)
 
 /* Unable to contact the server so don't waste time trying for
    other connections, mark it offline */
@@ -1269,7 +1269,7 @@ ThreadUnlock(cft_getaddr);
 
 /*********************************************************************/
 
-void CacheServerConnection(struct cfagent_connection *conn,char *server)
+static void CacheServerConnection(struct cfagent_connection *conn,char *server)
 
 /* First time we open a connection, so store it */
     
@@ -1297,7 +1297,7 @@ ThreadUnlock(cft_getaddr);
 
 /*********************************************************************/
 
-int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp)
+static int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp)
 
 { struct cfstat *sp;
 
@@ -1344,7 +1344,7 @@ return false;
 
 /*********************************************************************/
 
-void FlushFileStream(int sd,int toget)
+static void FlushFileStream(int sd,int toget)
 
 { int i;
   char buffer[2]; 
@@ -1360,7 +1360,7 @@ for (i = 0; i < toget; i++)
 
 /*********************************************************************/
 
-int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
+static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 
 /** 
  * Tries a nonblocking connect and then restores blocking if

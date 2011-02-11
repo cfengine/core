@@ -188,14 +188,9 @@ int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp);
-int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attributes attr,struct Promise *pp);
-void FlushFileStream(int sd,int toget);
-int ServerOffline(char *server);
-struct cfagent_connection *ServerConnectionReady(char *server);
-void MarkServerOffline(char *server);
-void CacheServerConnection(struct cfagent_connection *conn,char *server);
+
+/* Mark connection as free */
 void ServerNotBusy(struct cfagent_connection *conn);
-int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 /* client_protocols.c */
 

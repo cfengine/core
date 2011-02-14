@@ -929,7 +929,12 @@ if test x"$GCC" = "xyes"; then
 	
 dnl # -Wformat - to be considered
 
-	GCC_CFLAG="-g -Wreturn-type -Wmissing-prototypes -Wuninitialized"		
+	GCC_CFLAG="-g -Wreturn-type -Wmissing-prototypes"
+	case "$CFLAGS" in "-O"*|*" -O"*)
+		GCC_CFLAG="$GCC_CFLAG -Wuninitialized"
+		;;
+	esac
+
 	AC_MSG_RESULT(yes)
 	AC_SUBST(GCC_CFLAG)
 else 

@@ -884,9 +884,16 @@ for (ip = file_start; ip != file_end; ip=ip->next)
    cutoff = 1;
    strncpy(line_buff,ip->name,CF_BUFSIZE);
    replaced = false;
+   match_len = 0;
 
    while (BlockTextMatch(pp->promiser,line_buff,&start_off,&end_off))
       {
+      if (match_len == strlen(line_buff))
+         {
+         CfOut(cf_verbose,""," -> Improper convergent expression matches defacto convergence, so accepting");
+         break;
+         }      
+
       if (cutoff++ > CF_MAX_REPLACE)
          {
          CfOut(cf_verbose,""," !! Too many replacements on this line");

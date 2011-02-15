@@ -63,7 +63,7 @@ return Unix_GetDiskUsage(file, type);
 
 int Unix_GetDiskUsage(char *file,enum cfsizes type)
 {
-#if defined SOLARIS || defined OSF || defined UNIXWARE  || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+#if defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
 #elif defined ULTRIX
     struct fs_data buf;

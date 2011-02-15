@@ -388,6 +388,8 @@ if (ReplacePatterns(begin_ptr,end_ptr,a,pp))
    (pp->edcontext->num_edits)++;
    }
 
+DeleteScope("match"); // because this might pollute the parent promise in next iteration
+
 YieldCurrentLock(thislock);
 }
 

@@ -750,7 +750,6 @@ int DeEscapeQuotedString(char *in, char *out);
 void DeEscapeFilename(char *in,char *out);
 int IsDir(char *path);
 int EmptyString(char *s);
-int ExpandOverflow(char *str1,char *str2);
 char *JoinPath(char *path,char *leaf);
 char *JoinSuffix(char *path,char *leaf);
 int StartJoin(char *path,char *leaf,int bufsize);

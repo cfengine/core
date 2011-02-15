@@ -433,6 +433,21 @@ return returnval;
 
 /*********************************************************************/
 
+static int ExpandOverflow(char *str1,char *str2)
+
+{ int len = strlen(str2);
+
+if ((strlen(str1)+len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
+   {
+   CfOut(cf_error,"","Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n",str2,str1);
+   return true;
+   }
+
+return false;
+}
+
+/*********************************************************************/
+
 int ExpandPrivateScalar(char *scopeid,char *string,char buffer[CF_EXPANDSIZE]) 
 
 { char *sp,rtype;

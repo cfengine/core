@@ -341,21 +341,6 @@ return true;
 
 /*********************************************************************/
 
-int ExpandOverflow(char *str1,char *str2)   /* Should be an inline ! */
-
-{ int len = strlen(str2);
-
-if ((strlen(str1)+len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
-   {
-   CfOut(cf_error,"","Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n",str2,str1);
-   return true;
-   }
-
-return false;
-}
-
-/*********************************************************************/
-
 char *JoinPath(char *path,char *leaf)
 
 { int len = strlen(leaf);

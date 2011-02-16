@@ -3190,6 +3190,7 @@ else
          if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,sendbuffer,n_read))
             {
             FailedTransfer(sd,sendbuffer,filename);
+            EVP_CIPHER_CTX_cleanup(&ctx);
             close(fd);
             return;
             }
@@ -3197,6 +3198,7 @@ else
          if (!EVP_EncryptFinal(&ctx,out+cipherlen,&finlen))
             {
             FailedTransfer(sd,sendbuffer,filename);
+            EVP_CIPHER_CTX_cleanup(&ctx);
             close(fd);
             return;
             }
@@ -3210,6 +3212,7 @@ else
          if (SendTransaction(sd,out,cipherlen+finlen,CF_DONE) == -1)
             {
             CfOut(cf_verbose,"send","Send failed in GetFile");
+            EVP_CIPHER_CTX_cleanup(&ctx);
             close(fd);
             return;
             }
@@ -3221,6 +3224,7 @@ else
             {
             CfOut(cf_verbose,"send","Send failed in GetFile");
             close(fd);
+            EVP_CIPHER_CTX_cleanup(&ctx);
             return;
             }
          }

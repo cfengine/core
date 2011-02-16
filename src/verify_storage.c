@@ -384,7 +384,7 @@ if (childstat->st_dev != parentstat.st_dev)
       {
       entry = (struct CfMount *)rp->item;
 
-      if (strncmp(entry->mounton,dir,strlen(entry->mounton)) == 0)
+      if (!strcmp(entry->mounton, dir))
          {
          if (entry->options && strstr(entry->options,"nfs"))
             {

@@ -783,7 +783,7 @@ return f;
 
 struct FileRename GetRenameConstraints(struct Promise *pp)
 
-{ struct FileRename r = {};
+{ struct FileRename r;
   char *value;
 
 value = (char *)GetConstraint("disable_mode",pp,CF_SCALAR);

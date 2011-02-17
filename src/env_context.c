@@ -32,8 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#include <stdbool.h>
-
 extern char *DAY_TEXT[];
 
 /*****************************************************************************/
@@ -1083,250 +1081,27 @@ return false;
 
 /*********************************************************************/
 
-typedef struct EvalResult
-{
-    bool result; /* evaluation result */
-    int position; /* How much of string was matched */
-} EvalResult;
-
-static bool eval(const char *str, int start, int end, EvalResult *r);
-static bool eval2(const char *str, int start, int end, EvalResult *r);
-static bool eval3(const char *str, int start, int end, EvalResult *r);
-static bool eval4(const char *str, int start, int end, EvalResult *r);
-static bool eval5(const char *str, int start, int end, EvalResult *r);
-static bool evaluate_class(const char *classname);
-
-/*
- *
- * Returns true if evaluation matched the string and false if there was an error
- * during parsing.
- *
- * In case evaluation was succesfull result of evaluation and length of string
- * consumed is returned in last argument.
- *
- * In case of failure error position is returned in last argument.
- *
- */
-
-/*
- * <expr> ::= <expr2>
- *            <expr2> | <expr2>
- */
-static bool eval(const char *str, int start, int end, EvalResult *r)
-{
-    bool eval_result;
-
-    if (!eval2(str, start, end, r))
-        return false;
-
-    eval_result = r->result;
-
-    for (;;)
-    {
-        if (r->position < end && str[r->position] == '|')
-        {
-            if (!eval2(str, r->position + 1, end, r))
-                return false;
-
-            eval_result = eval_result || r->result;
-        }
-        else
-        {
-            r->result = eval_result;
-            return true;
-        }
-    }
-}
-
-/*
- * <expr2> ::= <expr3>
- *             <expr3> . <expr3>
- *             <expr3> & <expr3>
- */
-static bool eval2(const char *str, int start, int end, EvalResult *r)
-{
-    bool eval_result;
-
-    if (!eval3(str, start, end, r))
-        return false;
-
-    eval_result = r->result;
-
-    for (;;)
-    {
-        if (r->position < end && (str[r->position] == '.' || str[r->position] == '&'))
-        {
-            if (!eval3(str, r->position + 1, end, r))
-                return false;
-
-            eval_result = eval_result && r->result;
-        }
-        else
-        {
-            r->result = eval_result;
-            return true;
-        }
-    }
-}
-
-
-/*
- * <expr3> ::= ! <expr4>
- *               <expr4>
- */
-static bool eval3(const char *str, int start, int end, EvalResult *r)
-{
-    if (start < end && str[start] == '!')
-    {
-        if (!eval4(str, start + 1, end, r))
-            return false;
-        r->result = !r->result;
-        return true;
-    }
-    else
-        return eval4(str, start, end, r);
-}
-
-/*
- * <expr3> ::= ( <expr> )
- *             <expr5>
- */
-static bool eval4(const char *str, int start, int end, EvalResult *r)
-{
-    if (start < end && str[start] == '(' && str[end-1] == ')')
-    {
-        if (eval(str, start + 1, end - 1, r))
-        {
-            r->position++; /* Account for ')' also matched */
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        return eval5(str, start, end, r);
-    }
-}
-
-static bool is_class_char(char c)
-{
-    if (c >= 'a' && c <= 'z') return true;
-    if (c >= 'A' && c <= 'Z') return true;
-    if (c >= '0' && c <= '9') return true;
-    if (c == '@' || c == '_' || c == '$'
-        || c == '[' || c == ']'
-        || c == '{' || c == '}')
-        return true;
-    return false;
-}
-
-/*
- * expr5 ::= [a-zA-Z0-9_@$[]{}]+
- */
-static bool eval5(const char *str, int start, int end, EvalResult *r)
-{
-    int endlit = start;
-
-    while (endlit < end && is_class_char(str[endlit]))
-        endlit++;
-
-    if (endlit > start)
-    {
-        char *class_name = calloc(1, endlit - start + 1);
-        memcpy(class_name, str + start, endlit - start);
-        r->result = evaluate_class(class_name);
-        r->position = endlit;
-        free(class_name);
-        return true;
-    }
-    else
-    {
-        r->position = endlit;
-        return false;
-    }
-}
-
-static bool evaluate_class(const char *classname)
-{
-    if (IsItemIn(VNEGHEAP, classname))
-    {
-        return false;
-    }
-    if (IsItemIn(VDELCLASSES, classname))
-    {
-        return false;
-    }
-    if (InAlphaList(VHEAP, classname))
-    {
-        return true;
-    }
-    if (InAlphaList(VADDCLASSES, classname))
-    {
-        return true;
-    }
-    return false;
-}
-
-
-
-
-
-
-int IsDefinedClass(char *class)
+int IsDefinedClass(char *class) 
 
   /* Evaluates a.b.c|d.e.f etc and returns true if the class */
   /* is currently true, given the defined heap and negations */
 
-{
-    int ret;
-    EvalResult res;
+{ int ret;
 
-    if (class == NULL)
-    {
-        return true;
-    }
+if (class == NULL)
+   {
+   return true;
+   }
 
-    Debug("IsDefinedClass(%s,VADDCLASSES)\n",class);
+Debug("IsDefinedClass(%s,VADDCLASSES)\n",class);
 
-    if (eval(class, 0, strlen(class), &res))
-    {
-        /* Check that string was matched fully */
-        if (res.position != strlen(class))
-        {
-            return false; /* FIXME: output debug info */
-        }
-        else
-        {
-            return res.result;
-        }
-    }
-    else
-    {
-        /* FIXME: output debug info */
-        return false;
-    }
+ret = EvaluateORString(class,VADDCLASSES,0);
+
+return ret;
 }
 
 
 /*********************************************************************/
-
-int ValidClassName(char *name)
-{
-if (FullTextMatch(CF_CLASSRANGE,name))
-   {
-   return true;
-   }
-else
-   {
-   return false;
-   }
-}
-
-
-
 /* Level 2                                                           */
 /*********************************************************************/
 
@@ -1379,6 +1154,20 @@ for (sp = class; *sp != '\0'; sp++)
 
 Debug("EvaluateORString(%s) returns %d\n",class,result); 
 return result;
+}
+
+/*********************************************************************/
+
+int ValidClassName(char *name)
+{
+if (FullTextMatch(CF_CLASSRANGE,name))
+   {
+   return true;
+   }
+else
+   {
+   return false;
+   }
 }
 
 /*********************************************************************/

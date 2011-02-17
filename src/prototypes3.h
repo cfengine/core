@@ -60,7 +60,7 @@ void CheckInstalledLibraries(void);
 /* alphalist.c */
 
 void InitAlphaList(struct AlphaList *al);
-int InAlphaList(struct AlphaList al,const char *string);
+int InAlphaList(struct AlphaList al,char *string);
 int MatchInAlphaList(struct AlphaList al,char *string);
 void PrependAlphaList(struct AlphaList *al,char *string);
 void ShowAlphaList(struct AlphaList al);
@@ -993,7 +993,7 @@ int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct P
 struct Item *String2List(char *string);
 int ListLen (struct Item *list);
 int ByteSizeList (struct Item *list);
-int IsItemIn (struct Item *list, const char *item);
+int IsItemIn (struct Item *list, char *item);
 int IsFuzzyItemIn (struct Item *list, char *item);
 int IsMatchItemIn(struct Item *list,char *item);
 int GetItemListCounter (struct Item *list, char *item);

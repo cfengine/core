@@ -888,7 +888,7 @@ while (more)
       return false;      
       }
 
-   EVP_DecryptInit(&ctx,CfengineCipher(CfEnterpriseOptions()),conn->session_key,iv);
+   EVP_DecryptInit_ex(&ctx,CfengineCipher(CfEnterpriseOptions()),NULL,conn->session_key,iv);
 
    if (!EVP_DecryptUpdate(&ctx,workbuf,&plainlen,buf,cipherlen))
       {
@@ -898,7 +898,7 @@ while (more)
       return false;
       }
 
-   if (!EVP_DecryptFinal(&ctx,workbuf+plainlen,&finlen))
+   if (!EVP_DecryptFinal_ex(&ctx,workbuf+plainlen,&finlen))
       {
       Debug("Final decrypt failed\n");
       close(dd);

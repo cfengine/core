@@ -3185,7 +3185,7 @@ else
 
       if (n_read > 0)
          {
-         EVP_EncryptInit(&ctx,CfengineCipher(enctype),key,iv);    
+         EVP_EncryptInit_ex(&ctx,CfengineCipher(enctype),NULL,key,iv);
          
          if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,sendbuffer,n_read))
             {
@@ -3195,7 +3195,7 @@ else
             return;
             }
          
-         if (!EVP_EncryptFinal(&ctx,out+cipherlen,&finlen))
+         if (!EVP_EncryptFinal_ex(&ctx,out+cipherlen,&finlen))
             {
             FailedTransfer(sd,sendbuffer,filename);
             EVP_CIPHER_CTX_cleanup(&ctx);

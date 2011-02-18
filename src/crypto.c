@@ -479,7 +479,7 @@ int EncryptString(char type,char *in,char *out,unsigned char *key,int plainlen)
   EVP_CIPHER_CTX ctx;
  
 EVP_CIPHER_CTX_init(&ctx);
-EVP_EncryptInit(&ctx,CfengineCipher(type),key,iv);
+EVP_EncryptInit_ex(&ctx,CfengineCipher(type),NULL,key,iv);
 
 if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,in,plainlen))
    {
@@ -487,7 +487,7 @@ if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,in,plainlen))
    return -1;
    }
  
-if (!EVP_EncryptFinal(&ctx,out+cipherlen,&tmplen))
+if (!EVP_EncryptFinal_ex(&ctx,out+cipherlen,&tmplen))
    {
    EVP_CIPHER_CTX_cleanup(&ctx);
    return -1;
@@ -507,7 +507,7 @@ int DecryptString(char type,char *in,char *out,unsigned char *key,int cipherlen)
   EVP_CIPHER_CTX ctx;
 
 EVP_CIPHER_CTX_init(&ctx);
-EVP_DecryptInit(&ctx,CfengineCipher(type),key,iv);
+EVP_DecryptInit_ex(&ctx,CfengineCipher(type),NULL,key,iv);
 
 if (!EVP_DecryptUpdate(&ctx,out,&plainlen,in,cipherlen))
    {
@@ -516,7 +516,7 @@ if (!EVP_DecryptUpdate(&ctx,out,&plainlen,in,cipherlen))
    return -1;
    }
  
-if (!EVP_DecryptFinal(&ctx,out+plainlen,&tmplen))
+if (!EVP_DecryptFinal_ex(&ctx,out+plainlen,&tmplen))
    {
    unsigned long err = ERR_get_error();
    CfOut(cf_error,"","decryption FAILED at final of %d: %s\n",cipherlen,ERR_error_string(err,NULL));

@@ -333,7 +333,7 @@ else
 
 int CompareVariable(char *lval,struct CfAssoc *ap)
 
-{ char buffer[CF_BUFSIZE];
+{
 
 if (ap == NULL || lval == NULL)
    {

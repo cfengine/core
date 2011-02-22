@@ -1061,6 +1061,14 @@ enum promiselog_rep
    plog_notkept
    };
 
+enum time_window
+   {
+   time_hour,
+   time_day,
+   time_week
+   };
+
+
 /*************************************************************************/
 
 // Content-Driven Policy types

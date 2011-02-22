@@ -608,7 +608,7 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
       {
       buf[0] = '\0';
       fgets(buf,CF_BUFSIZE,fin);
-      Chop(buf);
+      StripTrailingNewline(buf);
 
       if (feof(fin) && strlen(buf) == 0)
          {

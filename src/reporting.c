@@ -770,6 +770,6 @@ if (PARSING)
 else
    {
    Chop(s);
-   fprintf(stderr,"Validation: %s\n",s);
+   FatalError("Validation: %s\n",s);
    }
 }

@@ -921,22 +921,6 @@ int GetTimeSlot(time_t here_and_now);
 char *PrintTimeSlot(int slot);
 int GetShiftSlot(time_t here_and_now);
 
-/* graph.c */
-
-void VerifyGraph(struct Rlist *list,char *view);
-int AlreadyInTribe(int node, int *tribe);
-int Degree(double *m,int dim);
-int IsTop(double **adj,double *evc,int topic,int dim);
-void PrintNeighbours(double *m,int dim,char **names);
-void PlotTopicCosmos(int topic,double **adj,char **names,int dim,char *view);
-
-/* graph_lib.c */
-
-void GetTribe(int *tribe,char **n,int *neigh,int topic,double **adj,int dim);
-int AlreadyInTribe(int node, int *tribe);
-void EigenvectorCentrality(double **A,double *v,int dim);
-void MatrixOperation(double **A,double *v,int dim);
-
 /* hashes.c */
 
 int RefHash(char *name);

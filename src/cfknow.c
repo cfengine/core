@@ -1446,25 +1446,14 @@ if (GENERATE_MANUAL)
 
 void GenerateGraph()
 {
-struct Rlist *semantics = NULL;
-
-if (GRAPH)
-   {
 #ifdef HAVE_LIBCFNOVA
-   VerifyGraph(NULL,NULL);
-   if (VIEWS)
-      {
-      Nova_PrimeGraph(&semantics);
-      VerifyGraph(semantics,"influence");
-      }
-#else
-# ifdef HAVE_LIBGVC
-   VerifyGraph(NULL,NULL);
-# endif
-#endif
+if (GRAPH && VIEWS)
+   {
+   struct Rlist *semantics = NULL;
+   Nova_PrimeGraph(&semantics);
+   DeleteRlist(semantics);
    }
-
-DeleteRlist(semantics);
+#endif
 }
 
 /*********************************************************************/

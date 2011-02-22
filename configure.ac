@@ -574,17 +574,6 @@ dnl ######################################################################
 dnl Checks for graph support
 dnl ######################################################################
 
-AC_ARG_WITH([graphviz],
-    [AS_HELP_STRING([--with-graphviz], [support some graphic functions])])
-AS_IF([test "x$with_graphviz" = "xyes"], [WITH_GVC=1], [WITH_GVC=0])
-
-if test $WITH_GVC = 1; then
-  AC_MSG_CHECKING(for Graphviz)
-  AC_CHECK_HEADERS(graphviz/gvc.h)
-  AC_CHECK_LIB(gvc,main)
-fi
-
-
 AC_ARG_WITH([gd],
     [AS_HELP_STRING([--with-gd], [support some graphic functions])])
 AS_IF([test "x$with_gd" = "xyes"], [
@@ -1001,14 +990,6 @@ if test $WITH_SQL = 1; then
 
 else
   AC_MSG_RESULT( -> No SQL library support for knowledge map)
-fi
-
-if test $WITH_GVC = 1; then
- if test "x$ac_cv_lib_gvc_main" = "xyes"; then
-   AC_MSG_RESULT( -> Configured with Graphviz libraries)
- fi
-else
-  AC_MSG_RESULT( -> No Graphviz libraries included)
 fi
 
 if test "x$ac_cv_lib_ldap_ldap_get_values_len" = "xyes"; then

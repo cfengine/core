@@ -381,7 +381,7 @@ for (sp = local; *sp != '\0'; sp++)
    {
    memset(currentitem,0,CF_MAXVARSIZE);
 
-   sscanf(sp,"%250[^.:,]",currentitem);
+   sscanf(sp,"%250[^,]",currentitem);
 
    sp += strlen(currentitem);
       
@@ -412,7 +412,7 @@ for (sp = local; *sp != '\0'; sp++)
    {
    memset(currentitem,0,CF_MAXVARSIZE);
 
-   sscanf(sp,"%250[^.:,]",currentitem);
+   sscanf(sp,"%250[^,]",currentitem);
 
    sp += strlen(currentitem);
 

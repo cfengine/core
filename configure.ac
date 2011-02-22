@@ -571,17 +571,6 @@ AC_HEADER_DIRENT
 
 
 dnl ######################################################################
-dnl Checks for graph support
-dnl ######################################################################
-
-AC_ARG_WITH([gd],
-    [AS_HELP_STRING([--with-gd], [support some graphic functions])])
-AS_IF([test "x$with_gd" = "xyes"], [
-    AC_CHECK_LIB(gd,main)
-    AC_CHECK_HEADERS(gd.h)
-])
-
-dnl ######################################################################
 dnl Checks for data types
 dnl ######################################################################
 

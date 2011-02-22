@@ -2582,12 +2582,5 @@ void CheckInstalledLibraries(void)
    #else
    printf("\t->Nova not found!!\n");
    #endif
-
-   printf("---- INSTALLED LIBRARIES POLICY SERVER ONLY ----\n");
-
-   #ifndef HAVE_LIBGD
-   printf("\t->LIBGD not found!!\n");
-   #endif
-
 }
 

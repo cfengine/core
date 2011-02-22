@@ -80,6 +80,10 @@ void EnterpriseModuleTrick()
 Nova_EnterpriseModuleTrick();
 #endif
 
+#if defined HAVE_LIBMONGOC && defined HAVE_LIBCFCONSTELLATION
+Constellation_EnterpriseModuleTrick();
+#endif
+
 }
 
 /*****************************************************************************/

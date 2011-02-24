@@ -20,6 +20,8 @@ dnl
 AM_INIT_AUTOMAKE(cfengine, 3.1.5a1)   dnl remember to set version
 AM_MAINTAINER_MODE
 
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+
 AC_CONFIG_HEADERS([src/conf.h])
 
 dnl Libtool madness

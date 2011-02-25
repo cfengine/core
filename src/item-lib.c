@@ -96,6 +96,28 @@ return NULL;
 
 /*********************************************************************/
 
+struct Item *ReturnItemInClass(struct Item *list,char *item,char *classes)
+
+{ struct Item *ptr; 
+
+if ((item == NULL) || (strlen(item) == 0))
+   {
+   return NULL;
+   }
+ 
+for (ptr = list; ptr != NULL; ptr=ptr->next)
+   {
+   if (strcmp(ptr->name,item) == 0 && strcmp(ptr->classes,classes) == 0)
+      {
+      return ptr;
+      }
+   }
+ 
+return NULL;
+}
+
+/*********************************************************************/
+
 int GetItemIndex(struct Item *list,char *item)
 /*
  * Returns index of first occurence of item.
@@ -184,6 +206,26 @@ if (!IsItemIn(*liststart,itemstring))
    PrependItem(liststart,itemstring,classes);
    }
 }
+
+/*********************************************************************/
+
+struct Item *IdempPrependItemClass(struct Item **liststart,char *itemstring,char *classes)
+
+{
+  struct Item *ip;
+
+  ip = ReturnItemInClass(*liststart,itemstring,classes);
+
+  if(ip)  // already exists
+    {
+    return ip;
+    }
+
+  PrependItem(liststart,itemstring,classes);
+
+  return *liststart;
+}
+
 
 /*********************************************************************/
 

@@ -990,7 +990,7 @@ int FuzzyMatchParse(char *item);
 int FuzzyHostMatch(char *arg0, char *arg1,char *basename);
 int FuzzyHostParse(char *arg1,char *arg2);
 void IdempItemCount(struct Item **liststart,char *itemstring,char *classes);
-void IdempPrependItem(struct Item **liststart,char *itemstring,char *classes);
+struct Item *IdempPrependItem(struct Item **liststart,char *itemstring,char *classes);
 struct Item *IdempPrependItemClass(struct Item **liststart,char *itemstring,char *classes);
 void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes);
 struct Item *PrependItem(struct Item **liststart, char *itemstring, char *classes);

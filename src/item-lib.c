@@ -198,13 +198,21 @@ return false;
 
 /*********************************************************************/
 
-void IdempPrependItem(struct Item **liststart,char *itemstring,char *classes)
+struct Item *IdempPrependItem(struct Item **liststart,char *itemstring,char *classes)
 
 {
-if (!IsItemIn(*liststart,itemstring))
-   {
-   PrependItem(liststart,itemstring,classes);
-   }
+  struct Item *ip;
+
+  ip = ReturnItemIn(*liststart,itemstring);
+
+  if(ip)
+    {
+    return ip;
+    }
+
+ PrependItem(liststart,itemstring,classes);
+
+ return *liststart;
 }
 
 /*********************************************************************/

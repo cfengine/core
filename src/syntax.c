@@ -686,9 +686,7 @@ return true;
 
 int CheckParseClass(char *lval,char *s,char *range)
 
-{ regex_t rx;
-  regmatch_t pmatch;
-  char output[CF_BUFSIZE];
+{ char output[CF_BUFSIZE];
 
 if (s == NULL)
    {

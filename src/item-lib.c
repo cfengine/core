@@ -1160,8 +1160,6 @@ int DeleteItemGeneral(struct Item **list,char *string,enum matchtypes type)
 
 { struct Item *ip,*last = NULL;
   int match = 0, matchlen = 0;
-  regex_t rx,rxcache;
-  regmatch_t pmatch;
 
 if (list == NULL)
    {
@@ -1208,7 +1206,6 @@ switch (type)
        case NOTregexComplete:
        case regexComplete:
            /* To fix a bug on some implementations where rx gets emptied */
-           memcpy(&rx,&rxcache,sizeof(rx));
            match = FullTextMatch(string,ip->name);
            
            if (type == NOTregexComplete)

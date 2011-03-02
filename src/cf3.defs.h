@@ -1241,16 +1241,6 @@ struct Occurrence
 /* SQL Database connectors                                               */
 /*************************************************************************/
 
-#ifdef HAVE_MYSQL_MYSQL_H
-#include <mysql/mysql.h>
-#endif
-
-#ifdef HAVE_PGSQL_LIBPQ_FE_H
- #include <pgsql/libpq-fe.h>
-#elif defined(HAVE_LIBPQ_FE_H)
- #include <libpq-fe.h>
-#endif
-
 enum cfdbtype
    {
    cfd_mysql,
@@ -1260,14 +1250,6 @@ enum cfdbtype
 
 typedef struct 
    {
-#ifdef HAVE_MYSQL_MYSQL_H
-   MYSQL my_conn;
-   MYSQL_RES *my_res;
-#endif
-#if defined HAVE_PGSQL_LIBPQ_FE_H || defined HAVE_LIBPQ_FE_H
-   PGconn *pq_conn;
-   PGresult   *pq_res;
-#endif
    int connected;
    int result;
    int row;
@@ -1277,6 +1259,7 @@ typedef struct
    char **rowdata;
    char *blank;
    enum cfdbtype type;
+   void *data; /* Generic pointer to RDBMS-specific data */
    }
 CfdbConn;
 

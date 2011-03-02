@@ -1078,21 +1078,16 @@ char *TexInfoEscape(char *s);
 
 /* matching.c */
 
+bool ValidateRegEx(const char *regex);
 int FullTextMatch (char *regptr,char *cmpptr);
 int FullTextCaseMatch (char *regexp,char *teststring);
 char *ExtractFirstReference(char *regexp,char *teststring);
-void CfRegFree(struct CfRegEx rex);
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
 int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
 int MatchRlistItem(struct Rlist *listofregex,char *teststring);
-struct CfRegEx CompileRegExp(char *regexp);
-struct CfRegEx CaseCompileRegExp(char *regexp);
-int RegExMatchSubString(struct CfRegEx rx,char *teststring,int *s,int *e);
-int RegExMatchFullString(struct CfRegEx rex,char *teststring);
-char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring);
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
 char *EscapeChar(char *str, int strSz, char esc);
 void AnchorRegex(char *regex, char *out, int outSz);

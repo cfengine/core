@@ -37,15 +37,6 @@
 
 #include "conf.h"
 
-#ifdef HAVE_PCRE_H
-#include <pcre.h>
-#endif
-
-#ifdef HAVE_PCRE_PCRE_H
-#include <pcre/pcre.h>
-#endif
-
-
 #ifndef NGROUPS
 # define NGROUPS 20
 #endif
@@ -1094,19 +1085,6 @@ enum cfl_view
 /*************************************************************************/
 
 #define OVECCOUNT 30
-
-struct CfRegEx
-{
-#if defined HAVE_PCRE_H || defined HAVE_PCRE_PCRE_H
-   pcre *rx;
-   const char *err;
-   int err_offset;
-#else
-   regex_t rx;
-#endif
-   int failed;
-   char *regexp;
-};
 
 /*******************************************************************/
 

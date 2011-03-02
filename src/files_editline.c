@@ -980,16 +980,13 @@ int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes 
 
 { char separator[CF_MAXVARSIZE]; 
   int s,e,retval = false;
-  struct CfRegEx rex;
   struct Item *ip;
   struct Rlist *columns = NULL;
- 
-rex = CompileRegExp(pp->promiser);
 
-if (rex.failed)
-   {
+if (!ValidateRegEx(pp->promiser))
+{
    return false;
-   }
+}
 
 for (ip = file_start; ip != file_end; ip=ip->next)
    {

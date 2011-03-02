@@ -305,10 +305,6 @@ extern int errno;
 #endif
 #endif
 
-#ifdef HAVE_PCRE_H
-# include <pcreposix.h>
-#endif
-
 #ifndef HAVE_SNPRINTF
 #include "../pub/snprintf.h"
 #endif

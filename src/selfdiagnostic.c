@@ -347,8 +347,7 @@ ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);
 
 void TestRegularExpressions()
 
-{ struct CfRegEx rex;
-  int start,end;
+{ int start,end;
 
 printf("%d. Testing regular expression engine\n",++NR);
 

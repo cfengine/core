@@ -253,7 +253,6 @@ int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attribute
   char *names[CF_PROCCOLS];      /* ps headers */
   int start[CF_PROCCOLS];
   int end[CF_PROCCOLS];
-  struct CfRegEx rex;
 
 if (procdata == NULL)
    {

@@ -866,7 +866,6 @@ int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attribu
 { char *sp, *start = NULL,*end,replace[CF_EXPANDSIZE],line_buff[CF_EXPANDSIZE];
   char before[CF_BUFSIZE],after[CF_BUFSIZE];
   int match_len,start_off,end_off,once_only = false,retval = false;
-  struct CfRegEx rex;
   struct Item *ip;
   int notfound = true, cutoff = 1, replaced=false;
 

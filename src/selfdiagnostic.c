@@ -359,38 +359,6 @@ printf(" -> Some Cfengine are features will not work in this current state.\n");
 printf(" !! This diagnostic might hang if the library is broken\n");
 #endif
 
-rex = CompileRegExp("#.*");
-
-if (rex.failed)
-   {
-   CfOut(cf_error,"","Failed regular expression compilation\n");
-   }
-else
-   {
-   CfOut(cf_error,""," -> Regular expression compilation - ok\n");
-   }
-
-if (!RegExMatchSubString(rex,"line 1:\nline2: # comment to end\nline 3: blablab",&start,&end))
-   {
-   CfOut(cf_error,"","Failed regular expression extraction +1\n");
-   }
-else
-   {
-   CfOut(cf_error,""," -> Regular expression extraction - ok %d - %d\n",start,end);
-   }
-
-/* We have to recompile this for each test - else seg fault - is this a bug? */
-rex = CompileRegExp("#.*");
-
-if (RegExMatchFullString(rex,"line 1:\nline2: # comment to end\nline 3: blablab"))
-   {
-   CfOut(cf_error,"","Failed regular expression extraction -1\n");
-   }
-else
-   {
-   CfOut(cf_error,""," -> Regular expression extraction - ok\n");
-   }
-
 if (FullTextMatch("[a-z]*","1234abcd6789"))
    {
    CfOut(cf_error,"","Failed regular expression match 1\n");

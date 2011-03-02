@@ -43,7 +43,7 @@
 struct CfRegEx
 {
    int failed;
-   char *regexp;
+   const char *regexp;
 #ifdef HAVE_LIBPCRE
     pcre *rx;
     const char *err;
@@ -57,7 +57,7 @@ struct CfRegEx
 /* Wrappers                                                          */
 /*********************************************************************/
 
-static struct CfRegEx CompileRegExp(char *regexp)
+static struct CfRegEx CompileRegExp(const char *regexp)
 
 { struct CfRegEx this;
  
@@ -112,7 +112,7 @@ return this;
 
 /*********************************************************************/
 
-static struct CfRegEx CaseCompileRegExp(char *regexp)
+static struct CfRegEx CaseCompileRegExp(const char *regexp)
 
 { struct CfRegEx this;
  

@@ -192,7 +192,14 @@ selection:            id                         /* BODY ONLY */
                                  {
                                  if (VINPUTLIST == NULL)
                                     {
-                                    VINPUTLIST = P.rval;
+                                    if (P.rtype == CF_LIST)
+                                       {
+                                       VINPUTLIST = P.rval;
+                                       }
+                                    else
+                                       {
+                                       yyerror("inputs promise must have a list as rvalue");
+                                       }                                    
                                     }
                                  else
                                     {

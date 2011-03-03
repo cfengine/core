@@ -229,6 +229,8 @@ for (ip = list; ip != NULL; ip=ip->next)
 if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan class db");
+   CloseDB(dbp);
+   DeleteItemList(list);
    return;
    }
 

@@ -1049,6 +1049,32 @@ for (i = 0; views[i] != NULL; i++)
 return cfl_view_error;
 }
 
+/*********************************************************************/
+
+char *Dtype2Str(enum cfdatatype dtype)
+{
+  switch(dtype)
+    {
+    case cf_str:
+      return "s";
+    case cf_slist:
+      return "sl";      
+    case cf_int:
+      return "i";
+    case cf_ilist:
+      return "il";
+    case cf_real:
+      return "r";
+    case cf_rlist:
+      return "rl";
+    case cf_opts:
+      return "m";
+    case cf_olist:
+      return "ml";
+    default:
+      return "D?";
+    }
+}
 
 /*********************************************************************/
 /* Level                                                             */

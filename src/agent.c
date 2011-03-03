@@ -150,7 +150,7 @@ PromiseManagement("agent");
 ThisAgentInit();
 KeepPromises();
 NoteClassUsage(VHEAP);
-NoteVarUsage();
+NoteVarUsageDB();
 UpdateLastSeen();
 PurgeLocks();
 GenericDeInitialize();

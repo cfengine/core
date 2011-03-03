@@ -756,7 +756,7 @@ void CSV2XML(struct Rlist *list)
 /*****************************************************************************/
 
 void NoteVarUsage()
-
+/* DEPRECATED: Use NoteVarUsageDB() */
 {
 #ifdef HAVE_LIBCFNOVA
 Nova_NoteVarUsage();

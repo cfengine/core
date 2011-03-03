@@ -772,42 +772,26 @@ fprintf(fp,"}");
 int PrintRlist(char *buffer,int bufsize,struct Rlist *list)
 
 { struct Rlist *rp;
-  int size = 0;
 
-buffer[0] = '\0';
- 
-if (bufsize < CF_SMALLBUF)
-   {
-   CfOut(cf_error,""," !! Buffer too small");
-   return 0;
-   }
-  
-strcat(buffer,"{");
+StartJoin(buffer,"{",bufsize);
  
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   strcat(buffer,"\'");
+   Join(buffer,"\'",bufsize);
    
    PrintRval(buffer,bufsize,rp->item,rp->type);
 
-   strcat(buffer,"\'");
+   Join(buffer,"\'",bufsize);
    
    if (rp->next != NULL)
       {
-      strcat(buffer,",");
-      }
-
-   size = strlen(buffer);
-   
-   if (size > bufsize - CF_BUFFERMARGIN)
-      {
-      strcat(buffer,"... ");
-      break;
+      Join(buffer,",",bufsize);
       }
    }
 
-strcat(buffer,"}");
-return size;
+EndJoin(buffer,"}",bufsize);
+
+return true;
 }
 
 /*******************************************************************/
@@ -902,7 +886,7 @@ int StripListSep(char *strList, char *outBuf, int outBufSz)
 
 int PrintRval(char *buffer,int bufsize,void *rval,char type)
 
-{ int size = 0,delta = 0;
+{
 
 if (rval == NULL)
    {
@@ -912,27 +896,15 @@ if (rval == NULL)
 switch (type)
    {
    case CF_SCALAR:
-
-       delta += strlen(rval);
-       
-       if (strlen(buffer) + delta < bufsize - CF_BUFFERMARGIN)
-          {
-          strcat(buffer,(char *)rval);
-          size += delta;
-          }
-       else
-          {
-          strcat(buffer,"...");
-          size += 3;
-          }
+       Join(buffer,(char *)rval,bufsize);
        break;
        
    case CF_LIST:
-       size += PrintRlist(buffer,bufsize,(struct Rlist *)rval);
+       PrintRlist(buffer,bufsize,(struct Rlist *)rval);
        break;
        
    case CF_FNCALL:
-       size += PrintFnCall(buffer,bufsize,(struct FnCall *)rval);
+       PrintFnCall(buffer,bufsize,(struct FnCall *)rval);
        break;
 
    case CF_NOPROMISEE:
@@ -940,7 +912,7 @@ switch (type)
        break;
    }
 
-return size;
+return true;
 }
 
 /*******************************************************************/

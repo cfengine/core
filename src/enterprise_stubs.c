@@ -101,7 +101,9 @@ void EnterpriseContext()
 void EnterpriseVersion()
 
 {
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_LIBCFCONSTELLATION
+Constellation_Version();
+#elif defined HAVE_LIBCFNOVA
 Nova_Version();
 #endif 
 }

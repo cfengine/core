@@ -250,7 +250,14 @@ if (!a.haveregion)
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region in %s",pp->promiser,pp->this_server);
+   if (a.region.include_end && a.region.include_start)
+      {
+      cfPS(cf_verbose,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region in %s (this is a good thing)",pp->promiser,pp->this_server);
+      }
+   else
+      {
+      cfPS(cf_inform,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) could not select an edit region in %s (but the delimiters were expected in the file)",pp->promiser,pp->this_server);
+      }
    return;
    }
 
@@ -752,6 +759,12 @@ for (ip = *start; ip != NULL; ip = np)
       in_region = true;
       }
 
+   if (a.region.include_end == false && ip == end)
+      {
+      in_region = false;
+      break;
+      }
+   
    if (!in_region)
       {
       np = ip->next;
@@ -843,7 +856,7 @@ for (ip = *start; ip != NULL; ip = np)
       {
       np = ip->next;
       }
-   
+
    if (ip == end)
       {
       in_region = false;

@@ -51,7 +51,7 @@ if (pp->conn != NULL && !pp->conn->authenticated)
   
 if (cf_stat(attr.copy.source,&ssb,attr,pp) == -1)
    {
-   cfPS(cf_verbose,CF_FAIL,"",pp,attr,"Can't stat %s in files.copyfrom promise\n",source);
+   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Can't stat %s in files.copyfrom promise\n",source);
    return NULL;
    }
   

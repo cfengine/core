@@ -297,32 +297,38 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0; then
             fi
         done
 
-        BERKELEY_DB_LIB="-ldb"
-        for v in db-4.8 db48 db-4.7 db4.7 db47 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
-            if test -f "$BERKELEY_DB_DIR/lib/lib$v.so"; then
-                BERKELEY_DB_LIB="-l$v"
-		break
-            fi
-            if test -f "$BERKELEY_DB_DIR/lib64/lib$v.so"; then
-                BERKELEY_DB_LIB="-l$v"
-		break
-            fi
-        done
+        if test -f "$BERKELEY_DB_CFLAGS/db.h"; then
+            BERKELEY_DB_LIB="-ldb"
+            for v in db-4.8 db48 db-4.7 db4.7 db47 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
+                if test -f "$BERKELEY_DB_DIR/lib/lib$v.so"; then
+                    BERKELEY_DB_LIB="-l$v"
+                    break
+                fi
+                if test -f "$BERKELEY_DB_DIR/lib64/lib$v.so"; then
+                    BERKELEY_DB_LIB="-l$v"
+                    break
+                fi
+            done
 
-        case "$target_os" in
-        solaris*)
-            #If we are staticlly linking the BDB files, we do not want a
-            #-R flag.  If .so's are present, assume we are dynamic linking
-            if test -n "`ls $BERKELEY_DB_DIR/lib/*.so 2>/dev/null`"
-            then
-                BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib -R$BERKELEY_DB_DIR/lib"
-            else
-                BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib"
-            fi;;
-        *)         BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib";;
-        esac
+            case "$target_os" in
+            solaris*)
+                #If we are staticlly linking the BDB files, we do not want a
+                #-R flag.  If .so's are present, assume we are dynamic linking
+                if test -n "`ls $BERKELEY_DB_DIR/lib/*.so 2>/dev/null`"
+                then
+                    BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib -R$BERKELEY_DB_DIR/lib"
+                else
+                    BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib"
+                fi;;
+            *)         BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib";;
+
+            esac
   
-        AC_MSG_RESULT($BERKELEY_DB_DIR)
+            AC_MSG_RESULT($BERKELEY_DB_DIR)
+        else
+           AC_MSG_ERROR(Cannot find BerkeleyDB)
+        fi
+
     else
         AC_MSG_ERROR(Cannot find BerkeleyDB)
     fi

@@ -611,21 +611,25 @@ return ret;
 
 /*********************************************************************/
 
+void CanonifyNameInplace(char *s)
+{
+    for (; *s != '\0'; s++)
+    {
+        if (!isalnum(*s) || *s == '.')
+        {
+            *s = '_';
+        }
+    }
+}
+
 char *CanonifyName(char *str)
 
 { static char buffer[CF_BUFSIZE];
-  char *sp;
           
 memset(buffer,0,CF_BUFSIZE);
 strcpy(buffer,str);
 
-for (sp = buffer; *sp != '\0'; sp++)
-    {
-    if (!isalnum((int)*sp) || *sp == '.')
-       {
-       *sp = '_';
-       }
-    }
+CanonifyNameInplace(buffer);
 
 return buffer;
 }

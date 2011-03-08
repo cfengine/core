@@ -39,6 +39,17 @@ extern void CheckOpts(int argc,char **argv);
 
 /*****************************************************************************/
 
+static void SanitizeEnvironment()
+{
+    /* ps(1) and other utilities invoked by Cfengine may be affected */
+    unsetenv("COLUMNS");
+
+    /* Make sure subprocesses output is not localized */
+    unsetenv("LANG");
+    unsetenv("LANGUAGE");
+    unsetenv("LC_MESSAGES");
+}
+
 void GenericInitialize(int argc,char **argv,char *agents)
 
 { enum cfagenttype ag = Agent2Type(agents);
@@ -58,6 +69,7 @@ InitializeGA(argc,argv);
 SetReferenceTime(true);
 SetStartTime(false);
 SetSignals();
+SanitizeEnvironment();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
 NewClass(THIS_AGENT);

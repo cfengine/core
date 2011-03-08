@@ -197,7 +197,7 @@ int BDB_RevealDB(DB *dbp,char *name,void **result,int *rsize)
     {
         if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
         {
-            Debug("Key %*s does not exist in database", name);
+            Debug("Key %s does not exist in database", name);
         }
         else
         {

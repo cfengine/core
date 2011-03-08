@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include <libgen.h>
+
   /* assume args are all scalar literals by the time we get here
      and each handler allocates the memory it returns. There is
      a protocol to be followed here:
@@ -4717,16 +4719,25 @@ return true;
 
 void ModuleProtocol(char *command,char *line,int print)
 
-{ char name[CF_BUFSIZE],content[CF_BUFSIZE],context[CF_BUFSIZE];
-  char *sp;
+{
+    char name[CF_BUFSIZE],content[CF_BUFSIZE],context[CF_BUFSIZE];
+    char *sp;
 
-memset(content,0,CF_BUFSIZE);  
-strncpy(content,GetArg0(command),CF_BUFSIZE-1);
+    /* Infer namespace from script name */
 
-for (sp = content+strlen(content)-1; sp >= content && *sp != FILE_SEPARATOR; sp--)
-   {
-   strncpy(context,sp,CF_MAXVARSIZE);
-   }
+    char arg0[CF_BUFSIZE];
+    char *filename;
+
+    snprintf(arg0, CF_BUFSIZE, "%s", GetArg0(command));
+    filename = basename(arg0);
+
+    /* Canonicalize filename into acceptable namespace name*/
+
+    CanonifyNameInplace(filename);
+
+    strcpy(context, filename);
+
+    CfOut(cf_verbose, "", "Module context: %s\n", context);
 
 NewScope(context);
 name[0] = '\0';

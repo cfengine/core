@@ -278,6 +278,7 @@ int GetBoolean(char *val);
 long Str2Int(char *s);
 long TimeCounter2Int(char *s);
 long TimeAbs2Int(char *s);
+void CtimeHourInterval(time_t t, char *out, int outSz);
 mode_t Str2Mode(char *s);
 double Str2Double(char *s);
 void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);

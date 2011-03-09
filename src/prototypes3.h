@@ -1012,7 +1012,7 @@ struct Item *SortItemListCounters(struct Item *list);
 struct Item *SortItemListTimes(struct Item *list);
 char *ItemList2CSV(struct Item *list);
 int ItemListSize(struct Item *list);
-int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end);
+int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end,int inc_start,int inc_end);
 
 /* iteration.c */
 

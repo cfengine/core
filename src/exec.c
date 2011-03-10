@@ -533,7 +533,6 @@ void Apoptosis()
 { struct Promise pp = {0};
   struct Rlist *signals = NULL, *owners = NULL;
   char mypid[32],pidrange[32];
-  char *psopts = GetProcessOptions();
   static char promiserBuf[CF_SMALLBUF];
 
 if (ONCE || VSYSTEMHARDCLASS == cfnt)
@@ -585,7 +584,7 @@ AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.process_co
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 
-if (LoadProcessTable(&PROCESSTABLE,psopts))
+if (LoadProcessTable(&PROCESSTABLE))
    {
    VerifyProcessesPromise(&pp);   
    }

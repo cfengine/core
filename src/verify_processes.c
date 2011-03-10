@@ -128,7 +128,7 @@ YieldCurrentLock(thislock);
 
 /*******************************************************************/
 
-int LoadProcessTable(struct Item **procdata,char *psopts)
+int LoadProcessTable(struct Item **procdata)
 {
 if (PROCESSTABLE)
    {
@@ -139,7 +139,7 @@ if (PROCESSTABLE)
 #ifdef MINGW
 return NovaWin_LoadProcessTable(procdata);
 #else
-return Unix_LoadProcessTable(procdata,psopts);
+return Unix_LoadProcessTable(procdata);
 #endif
 }
 

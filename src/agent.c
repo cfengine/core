@@ -1113,7 +1113,6 @@ int NewTypeContext(enum typesequence type)
 
 { int maxconnections,i;
   struct Item *procdata = NULL;
-  char *psopts = GetProcessOptions();
 
 // get maxconnections
 
@@ -1136,7 +1135,7 @@ switch(type)
 
    case kp_processes:
      
-       if (!LoadProcessTable(&PROCESSTABLE,psopts))
+       if (!LoadProcessTable(&PROCESSTABLE))
           {
           CfOut(cf_error,"","Unable to read the process table - cannot keep process promises\n","");
           return false;

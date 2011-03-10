@@ -1510,7 +1510,7 @@ int Unix_GracefulTerminate(pid_t pid);
 int Unix_GetCurrentUserName(char *userName, int userNameLen);
 int Unix_ShellCommandReturnsZero(char *comm,int useshell);
 int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
-int Unix_LoadProcessTable(struct Item **procdata,char *psopts);
+int Unix_LoadProcessTable(struct Item **procdata);
 void Unix_CreateEmptyFile(char *name);
 int Unix_IsExecutable(char *file);
 char *Unix_GetErrorStr(void);
@@ -1616,7 +1616,7 @@ struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,stru
 void VerifyProcessesPromise(struct Promise *pp);
 int ProcessSanityChecks(struct Attributes a,struct Promise *pp);
 void VerifyProcesses(struct Attributes a, struct Promise *pp);
-int LoadProcessTable(struct Item **procdata,char *psopts);
+int LoadProcessTable(struct Item **procdata);
 void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
 int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);

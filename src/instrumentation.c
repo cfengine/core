@@ -164,6 +164,13 @@ void NoteClassUsage(struct AlphaList baselist)
   double lastseen,delta2;
   double vtrue = 1.0;      /* end with a rough probability */
 
+/* Only do this for the default policy, too much
+       "downgrading" otherwise                     */
+if (MINUSF) 
+   {
+   return;
+   }
+
 Debug("RecordClassUsage\n");
 
 for (i = 0; i < CF_ALPHABETSIZE; i++)
@@ -240,7 +247,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
    {
    double measure,av,var;
    time_t then;
-   char tbuf[CF_BUFSIZE],eventname[CF_BUFSIZE];
+   char eventname[CF_BUFSIZE];
 
    memset(eventname,0,CF_BUFSIZE);
    strncpy(eventname,(char *)key,ksize);
@@ -255,9 +262,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
       var = entry.Q.var;
       lastseen = now - then;
             
-      snprintf(tbuf,CF_BUFSIZE-1,"%s",cf_ctime(&then));
-      tbuf[strlen(tbuf)-9] = '\0';                     /* Chop off second and year */
-
       if (lastseen > lsea)
          {
          Debug("Class usage record %s expired\n",eventname);

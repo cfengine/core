@@ -200,15 +200,22 @@ if (do_signals && matches > 0)
    {
    if (a.process_stop != NULL)
       {
-      if (IsExecutable(GetArg0(a.process_stop)))
+      if (DONTDO)
          {
-         ShellCommandReturnsZero(a.process_stop,false);
+         cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep process-stop promise for %s, but only a warning is promised",pp->promiser);         
          }
       else
          {
-         cfPS(cf_verbose,CF_FAIL,"",pp,a,"Process promise to stop %s could not be kept because %s the stop operator failed",pp->promiser,a.process_stop);
-         DeleteItemList(killlist);
-         return;
+         if (IsExecutable(GetArg0(a.process_stop)))
+            {
+            ShellCommandReturnsZero(a.process_stop,false);
+            }
+         else
+            {
+            cfPS(cf_verbose,CF_FAIL,"",pp,a,"Process promise to stop %s could not be kept because %s the stop operator failed",pp->promiser,a.process_stop);
+            DeleteItemList(killlist);
+            return;
+            }
          }
       }
    else

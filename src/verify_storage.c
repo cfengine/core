@@ -57,10 +57,8 @@ LocateFilePromiserGroup(pp->promiser,pp,VerifyStoragePromise);
 
 void VerifyStoragePromise(char *path,struct Promise *pp)
 
-{ struct stat osb,oslb,dsb,dslb;
-  struct Attributes a = {0};
+{ struct Attributes a = {0};
   struct CfLock thislock;
-  int success,rlevel = 0,isthere;
 
 a = GetStorageAttributes(pp);
 
@@ -353,7 +351,7 @@ int IsForeignFileSystem (struct stat *childstat,char *dir)
  /* Is FS NFS mounted ? */
 
 { struct stat parentstat;
-  char host[CF_MAXVARSIZE], vbuff[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE];
  
 strncpy(vbuff,dir,CF_BUFSIZE-1);
 
@@ -406,8 +404,7 @@ return(false);
 
 int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
 
-{ struct CfMount mount;
-  char *options;
+{ char *options;
   char dir[CF_BUFSIZE];
   int changes = 0;
  

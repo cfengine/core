@@ -135,6 +135,12 @@ if test $WITH_SQL = 1; then
 fi
 
 dnl
+dnl Enable large file support
+dnl
+AC_SYS_LARGEFILE
+AC_TYPE_OFF_T
+
+dnl
 dnl Enterprise extensions
 dnl
 

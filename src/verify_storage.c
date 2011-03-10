@@ -142,7 +142,8 @@ int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
 { struct stat statbuf, localstat;
   DIR *dirh;
   struct dirent *dirp;
-  long sizeinbytes = 0, filecount = 0;
+  off_t sizeinbytes = 0;
+  long filecount = 0;
   char buff[CF_BUFSIZE];
 
 CfOut(cf_verbose,""," -> Checking required filesystem %s\n",name);
@@ -229,7 +230,7 @@ return(true);
 int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf;
-  int free;
+  off_t free;
   long kilobytes;
   
 #ifdef MINGW

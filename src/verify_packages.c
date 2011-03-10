@@ -439,6 +439,8 @@ if (a.packages.package_version)
       strncpy(arch,"*",CF_MAXVARSIZE-1);
       installed = PackageMatch(name,"*",arch,a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
+
+      SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
       }
    else
       {
@@ -455,8 +457,6 @@ if (a.packages.package_version)
 	SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 	}
       }
-
-   SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 
    }
 else if (a.packages.package_version_regex)

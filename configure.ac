@@ -2,8 +2,7 @@ dnl ##########################################################################
 dnl #
 dnl # BUILD CFENGINE
 dnl #
-dnl # Process this file with autoconf then autoheader to build a configure
-dnl # script => aclocal; automake -a -c; autoconf
+dnl # Run ./autogen.sh to build configure script
 dnl #
 dnl ##########################################################################
 
@@ -583,7 +582,6 @@ AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 AC_HEADER_STDBOOL
-
 
 dnl ######################################################################
 dnl Checks for data types

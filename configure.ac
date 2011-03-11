@@ -84,7 +84,6 @@ AC_PROG_YACC
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
-AC_REPLACE_FUNCS([unsetenv])
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
 dnl ######################################################################
@@ -602,6 +601,8 @@ AC_C_CONST
 dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
+
+AC_REPLACE_FUNCS([unsetenv])
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname realpath chflags)

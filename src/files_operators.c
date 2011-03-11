@@ -1313,7 +1313,7 @@ if (lstat(pathbuf,&statbuf) != -1)
    {
    if (S_ISLNK(statbuf.st_mode))
       {
-      CfOut(cf_verbose,"","%s: INFO: %s is a symbolic link, not a true directory!\n",VPREFIX,pathbuf);
+      CfOut(cf_verbose,"","%s> INFO: %s is a symbolic link, not a true directory!\n",VPREFIX,pathbuf);
       }
 
    if (force)   /* force in-the-way directories aside */

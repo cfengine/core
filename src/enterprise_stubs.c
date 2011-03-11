@@ -183,11 +183,11 @@ char *GetConsolePrefix()
     
 {
 #ifdef HAVE_LIBCFCONSTELLATION
-return "constellation>"; 
+return "constellation";
 #elif defined HAVE_LIBCFNOVA
-return "nova>";
+return "nova";
 #else
-return "community>";
+return "cf3";
 #endif
 }
 

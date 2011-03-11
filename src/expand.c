@@ -1124,11 +1124,11 @@ if (rval != NULL)
                 break;
             case CF_LIST:
                 CfOut(cf_error,""," !! Redefinition of a constant list \"%s\"",pp->promiser,retval,rval);
-                printf("%s  -- Was ",VPREFIX);
+                printf("%s>  -- Was ",VPREFIX);
                 ShowRlist(stdout,retval);      
-                printf(" now ",VPREFIX);
+                printf("%s> now ",VPREFIX);
                 ShowRlist(stdout,rval);      
-                printf("\n",VPREFIX);
+                printf("%s>\n",VPREFIX);
                 PromiseRef(cf_error,pp);
 		break;
             }

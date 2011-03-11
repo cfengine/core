@@ -102,7 +102,7 @@ if (VERBOSE||DEBUG)
    snprintf(vbuff,CF_BUFSIZE,"Host %s's basic classified context",VFQNAME);
    ReportBanner(vbuff);
    
-   printf("%s  -> Defined classes = { ",VPREFIX);
+   printf("%s>  -> Defined classes = { ",VPREFIX);
 
    ListAlphaList(stdout,VHEAP,' ');
    
@@ -110,7 +110,7 @@ if (VERBOSE||DEBUG)
 
    CfOut(cf_verbose,"","");
    
-   printf("%s  -> Negated Classes = { ",VPREFIX);
+   printf("%s>  -> Negated Classes = { ",VPREFIX);
    
    for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
       {

@@ -435,7 +435,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
       if (VERBOSE)
          {
-         printf("%s SET refresh_processes when starting: ",VPREFIX);
+         printf("%s> SET refresh_processes when starting: ",VPREFIX);
 
          for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
             {
@@ -803,7 +803,7 @@ if (!ok)
 
 if (VERBOSE || DEBUG)
    {
-   printf("%s -> Bundlesequence => ",VPREFIX);
+   printf("%s> -> Bundlesequence => ",VPREFIX);
    ShowRval(stdout,retval,rettype);
    printf("\n");
    }

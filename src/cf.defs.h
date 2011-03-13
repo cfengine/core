@@ -1385,8 +1385,9 @@ struct Checksum_Value
 #endif
 
 
-/********************************************************************/
-/* All prototypes                                                   */
-/********************************************************************/
+/* Nobody already knows why it was needed in first place. Please test whether
+   removing this variable is harmless on HP/UX nowadays. */
 
-#include "prototypes.h"
+#ifdef HPuUX
+int Error;
+#endif

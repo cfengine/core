@@ -48,3 +48,7 @@ src/cf3parse.h
 src/conf.h
 src/conf.h.in
 src/conf.h.in~
+
+# autogen docs
+
+docs/*.8

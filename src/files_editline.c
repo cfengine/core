@@ -69,9 +69,19 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
 { enum editlinetypesequence type;
   struct SubType *sp;
   struct Promise *pp;
-  int pass;
+  char lockname[CF_BUFSIZE];
   char *bp_stack = THIS_BUNDLE;
-      
+  struct CfLock thislock;
+  int pass;
+
+snprintf(lockname,CF_BUFSIZE-1,"masterfilelock-%s",parentp->this_server);
+thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,true);
+
+if (thislock.lock == NULL)
+   {
+   return false;
+   }
+  
 NewScope("edit");
 NewScalar("edit","filename",filename,cf_str);
 
@@ -117,6 +127,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
             {
             THIS_BUNDLE = bp_stack;
             DeleteScope("edit");
+            YieldCurrentLock(thislock);
             return false;
             }         
          }
@@ -126,6 +137,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
 DeleteScope("edit");
 SetScope(parentp->bundle);
 THIS_BUNDLE = bp_stack;
+YieldCurrentLock(thislock);
 return true;
 }
 

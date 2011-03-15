@@ -201,7 +201,7 @@ struct BodySyntax CFM_CONTROLBODY[] =
    {
    {"forgetrate",cf_real,"0,1","Decimal fraction [0,1] weighting of new values over old in 2d-average computation"},
    {"monitorfacility",cf_opts,CF_FACILITY,"Menu option for syslog facility"},
-   {"histograms",cf_opts,CF_BOOL,"true/false store signal histogram data"},
+   {"histograms",cf_opts,CF_BOOL,"Ignored, kept for backward compatibility"},
    {"tcpdump",cf_opts,CF_BOOL,"true/false use tcpdump if found"},
    {"tcpdumpcommand",cf_str,CF_PATHRANGE,"Path to the tcpdump command on this system"},
    {NULL,cf_notype,NULL,NULL}

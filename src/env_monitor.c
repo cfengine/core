@@ -47,8 +47,6 @@ included file COSL.txt.
 
 double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
-int HISTO = true;
-
 /* persistent observations */
 
 double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current observation */
@@ -297,8 +295,6 @@ void LoadHistogram()
   int i,day,position;
   double maxval[CF_OBSERVABLES];
 
-if (HISTO)
-   {
    char filename[CF_BUFSIZE];
    
    snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
@@ -340,7 +336,6 @@ if (HISTO)
       }
    
    fclose(fp);
-   }
 } 
 
 /*********************************************************************/
@@ -1457,7 +1452,7 @@ void UpdateDistributions(char *timekey,struct Averages *av)
    std-deviation for the current time.
 */
 
-if (HISTO && IsDefinedClass("Min40_45"))
+if (IsDefinedClass("Min40_45"))
    {
    day = Day2Number(timekey);
    

@@ -41,7 +41,6 @@ int main (int argc,char *argv[]);
 /*****************************************************************************/
 
 extern int NO_FORK;
-extern int HISTO;
 extern short TCPDUMP;
 
 extern struct BodySyntax CFM_CONTROLBODY[];
@@ -86,7 +85,7 @@ extern struct BodySyntax CFM_CONTROLBODY[];
       "Print basic information about changes made to the system, i.e. promises repaired",
       "Activate internal diagnostics (developers only)",
       "Run process in foreground, not as a daemon",
-      "Store informatino about histograms / distributions",
+      "Ignored for backward compatibility",
       "Interface with tcpdump if available to collect data about network",
       NULL
       };
@@ -158,7 +157,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
       case 'F': NO_FORK = true;
          break;
 
-      case 'H': HISTO = true;
+      case 'H': /* Keep accepting this option for compatibility -- no longer used */
          break;
 
       case 'T': TCPDUMP = true;
@@ -208,8 +207,7 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_histograms].lval) == 0)
       {
-      HISTO = GetBoolean(retval);
-      Debug("histograms = %d\n",HISTO);
+      /* Keep accepting this option for backward compatibility. */
       }
    
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
@@ -250,7 +248,6 @@ signal(SIGCHLD,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
 
-HISTO = true;
 FORGETRATE = 0.6;
 
 InitMeasurements();

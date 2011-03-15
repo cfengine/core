@@ -47,7 +47,7 @@ MOSTLYCLEANFILES = *~ *.orig
 # Get everything removed down to where rebuilding requires:
 # "make; make install"
 # 
-CLEANFILES = $(htmlfiles) $(psfiles)
+CLEANFILES = $(htmlfiles) $(psfiles) $(man_MANS)
 
 #
 # Get everything removed down to where rebuilding requires:

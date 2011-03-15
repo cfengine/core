@@ -40,6 +40,12 @@ void *FindAndVerifyFilesPromises(struct Promise *pp)
 PromiseBanner(pp); 
 FindFilePromiserObjects(pp);
 
+/*
+ * 'done' flag is set on acquiring locks on per-file operations. Unfortunately
+ * if no files were matched at all, then no 'done' flag will be set on promise.
+ */
+*(pp->donep) = true;
+
 if (AM_BACKGROUND_PROCESS && !pp->done)
    {
    CfOut(cf_verbose,"","Exiting backgrounded promise");

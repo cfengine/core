@@ -35,6 +35,8 @@ included file COSL.txt.
 
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>
+#else
+# define LOADAVG_5MIN    1
 #endif
 
 #include <math.h>
@@ -159,7 +161,7 @@ void MonInitialize()
    
 { int i,j,k;
  struct stat statbuf;
-  char vbuff[CF_BUFSIZE];
+ char vbuff[CF_BUFSIZE];
   
  for (i = 0; i < ATTR; i++)
     {

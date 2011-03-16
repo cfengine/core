@@ -502,10 +502,7 @@ Debug("========================= GET Q ==============================\n");
 
 ENTROPIES = NULL;
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   CF_THIS[i] = 0.0;
-   }
+ZeroArrivals();
 
 GatherProcessData();
 GatherCPUData();

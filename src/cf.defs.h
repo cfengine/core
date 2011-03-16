@@ -338,8 +338,6 @@ typedef int clockid_t;
 /* Various defines                                                 */
 /*******************************************************************/
 
-#define true  1
-#define false 0
 #define CF_BUFSIZE 4096
 #define CF_BILLION 1000000000L
 #define CF_EXPANDSIZE (2*CF_BUFSIZE)

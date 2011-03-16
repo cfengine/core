@@ -38,11 +38,54 @@
 
 #ifdef BDB
 
+static bool BDB_VerifyDB(const char *filename)
+{
+    int ret;
+    DB *dbp;
+
+    if ((ret = db_create(&dbp, NULL, 0)) != 0)
+    {
+        CfOut(cf_error, "",
+              "BDB_VerifyDB: Couldn't get database environment for %s: %s\n",
+              filename, db_strerror(ret));
+        return false;
+    }
+
+    if ((ret = (dbp->verify)(dbp, filename, NULL, NULL, 0)) != 0)
+    {
+        if (ret != ENOENT)
+        {
+            CfOut(cf_error, "", "BDB_VerifyDB: database %s is corrupted: %s\n",
+                  filename, db_strerror(ret));
+        return false;
+        }
+    }
+
+    return true;
+}
+
 int BDB_OpenDB(char *filename,DB **dbp)
 
 {
     DB_ENV *dbenv = NULL;
     int ret;
+
+    if (!BDB_VerifyDB(filename))
+    {
+        char asidefile[CF_BUFSIZE];
+        snprintf(asidefile, CF_BUFSIZE, "%s.corrupted", filename);
+
+        /* Try to recover from corrupted database by moving it aside */
+        if ((ret = cf_rename(filename, asidefile)) != 0)
+        {
+            if (errno != ENOENT)
+            {
+                CfOut(cf_error, "rename", "BDB_OpenDB: error trying to move"
+                      " corrupted database %s aside to %s", filename, asidefile);
+                return false;
+            }
+        }
+    }
 
     if ((ret = db_create(dbp,dbenv,0)) != 0)
     {

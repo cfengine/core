@@ -155,7 +155,7 @@ void NoteClassUsage(struct AlphaList baselist)
   CF_DBC *dbcp;
   void *stored;
   char *key,name[CF_BUFSIZE];
-  int i,ksize,vsize;
+  int i,j,ksize,vsize;
   struct Event e,entry,newe;
   double lsea = CF_WEEK * 52; /* expire after a year */
   time_t now = time(NULL);
@@ -164,8 +164,8 @@ void NoteClassUsage(struct AlphaList baselist)
   double lastseen,delta2;
   double vtrue = 1.0;      /* end with a rough probability */
 
-/* Only do this for the default policy, too much
-       "downgrading" otherwise                     */
+/* Only do this for the default policy, too much "downgrading" otherwise */
+
 if (MINUSF) 
    {
    return;
@@ -181,6 +181,30 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
          {
          Debug("Ignoring class %s (not packing)", ip->name);
          continue;
+         }
+
+      for (j = 0; j < 4; j++)
+         {
+         if (strcmp(ip->name,SHIFT_TEXT[j]) == 0)
+            {
+            continue;
+            }
+         }
+
+      for (j = 0; j < 7; j++)
+         {
+         if (strcmp(ip->name,DAY_TEXT[j]) == 0)
+            {
+            continue;
+            }
+         }
+
+      for (j = 0; j < 12; j++)
+         {
+         if (strcmp(ip->name,MONTH_TEXT[j]) == 0)
+            {
+            continue;
+            }
          }
    
       IdempPrependItem(&list,ip->name,NULL);
@@ -204,9 +228,9 @@ for (ip = list; ip != NULL; ip=ip->next)
       lastseen = now - e.t;
       newe.t = now;
       newe.Q.q = vtrue;
-      newe.Q.expect = GAverage(vtrue,e.Q.expect,0.3);
+      newe.Q.expect = GAverage(vtrue,e.Q.expect,0.7);
       delta2 = (vtrue - e.Q.expect)*(vtrue - e.Q.expect);
-      newe.Q.var = GAverage(delta2,e.Q.var,0.3);
+      newe.Q.var = GAverage(delta2,e.Q.var,0.7);
       }
    else
       {

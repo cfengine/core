@@ -37,7 +37,7 @@ bundle agent databases
 
 databases:
 
-  "cf_topic_maps/topics"
+  "knowledge_bank/topics"
 
     database_operation => "create",
     database_type => "sql",
@@ -59,13 +59,13 @@ databases:
 
 body database_server myserver
 {
-any::
+none::
  db_server_owner => "postgres";
  db_server_password => "";
  db_server_host => "localhost";
  db_server_type => "postgres";
  db_server_connection_db => "postgres";
-none::
+any::
  db_server_owner => "root";
  db_server_password => "";
  db_server_host => "localhost";

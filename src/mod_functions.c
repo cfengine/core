@@ -621,6 +621,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"getindices",cf_slist,1,GETINDICES_ARGS,"Get a list of keys to the array whose id is the argument and assign to variable"},
    {"getuid",cf_int,1,GETUID_ARGS,"Return the integer user id of the named user on this host"},
    {"getusers",cf_slist,2,GETUSERS_ARGS,"Get a list of all system users defined, minus those names defined in args 1 and uids in args"},
+   {"getvalues",cf_slist,1,GETINDICES_ARGS,"Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable"},
    {"grep",cf_slist,2,GREP_ARGS,"Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2"},
    {"groupexists",cf_class,1,GROUPEXISTS_ARGS,"True if group or numerical id exists on this host"},
    {"hash",cf_str,2,HASH_ARGS,"Return the hash of arg1, type arg2 and assign to a variable"},

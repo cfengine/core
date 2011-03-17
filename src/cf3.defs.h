@@ -555,6 +555,7 @@ enum fncalltype
    cfn_getindices,
    cfn_getuid,
    cfn_getusers,
+   cfn_getvalues,
    cfn_grep,
    cfn_groupexists,
    cfn_hash,

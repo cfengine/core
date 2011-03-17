@@ -1498,6 +1498,87 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallGetValues(struct FnCall *fp,struct Rlist *finalargs)
+
+{ char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE],rettype;
+  char *arrayname,index[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  struct Scope *ptr;
+  struct Rval rval;
+  struct Rlist *rp,*returnlist = NULL;
+  int i;
+
+ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getvalues].args,finalargs); /* Arg validation */
+
+/* begin fn specific content */
+
+arrayname = finalargs->item;
+
+/* Locate the array */
+
+if (strstr(arrayname,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(arrayname,"%127[^.].%127s",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,arrayname);
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_error,"","Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
+   SetFnCallReturnStatus("getvalues",FNCALL_SUCCESS,"Array not found in scope",NULL);
+   IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
+   rval.item = returnlist;
+   rval.rtype = CF_LIST;
+   return rval;            
+   }
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
+
+   if (ptr->hashtable[i] != NULL)
+      {
+      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+         {         
+         switch(ptr->hashtable[i]->rtype)
+            {
+            case CF_SCALAR:
+                IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
+                break;
+                
+            case CF_LIST:
+
+                for (rp = ptr->hashtable[i]->rval; rp != NULL; rp = rp->next)
+                   {
+                   IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
+                   }
+
+                break;
+            }
+         }
+      }
+   }   
+
+if (returnlist == NULL)
+   {
+   IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
+   }
+
+SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
+rval.item = returnlist;
+
+/* end fn specific content */
+
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE];

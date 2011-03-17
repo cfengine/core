@@ -448,6 +448,9 @@ switch (this)
    case cfn_getindices:
        rval = FnCallGetIndices(fp,expargs);
        break;
+   case cfn_getvalues:
+       rval = FnCallGetValues(fp,expargs);
+       break;
    case cfn_countlinesmatching:
        rval = FnCallCountLinesMatching(fp,expargs);
        break;

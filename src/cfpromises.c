@@ -88,32 +88,7 @@ int main (int argc,char *argv[]);
 
 int main(int argc,char *argv[])
 
-{/*
- mongo_connection dbconn;
-
-
-  if (!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
-    {
-    CfOut(cf_verbose, "", " !! Could not open connection to report database");
-    return false;
-    }
-
-
- struct Item *it = CFDB_QueryDistinct(&dbconn, MONGO_BASE, "logs_nk", "kH", "h", "update_commands_start_cf_hub");
-
- struct Item *ip;
-
- for(ip = it; ip != NULL; ip = ip->next)
-    {
-    printf("Name is:%s\n",ip->name);
-    }
-
- DeleteItemList(ip);
-
- CFDB_Close(&dbconn);
-
- return 0;*/
- 
+{
 CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();

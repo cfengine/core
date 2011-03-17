@@ -603,6 +603,7 @@ dnl Check for special functions
 dnl ######################################################################
 
 AC_REPLACE_FUNCS([unsetenv])
+AC_REPLACE_FUNCS(strndup)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname realpath chflags)

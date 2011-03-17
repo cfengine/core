@@ -1887,6 +1887,11 @@ if (rval2.rtype != CF_LIST)
 
 for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    {
+   if (strcmp(rp->item,CF_NULL_VALUE) == 0)
+      {
+      continue;
+      }
+
    size += strlen(rp->item) + strlen(join);
    }
 

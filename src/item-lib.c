@@ -290,6 +290,7 @@ strcpy(sp,itemstring);
 ip->name = sp;
 ip->next = *liststart;
 ip->counter = 0;
+ip->time = 0;
 *liststart = ip;
 
 if (classes != NULL)

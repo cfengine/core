@@ -1088,6 +1088,7 @@ enum cfd_menu
 enum cfl_view
    {
    cfl_view_sumcomp_wk,
+   cfl_view_sumrepaired_wk,
    cfl_view_sumnotkept_wk,
    cfl_view_notkeptreason,
    cfl_view_error

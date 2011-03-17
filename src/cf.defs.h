@@ -121,6 +121,7 @@ struct utsname
 #endif
 
 #include "bool.h"
+#include "compiler.h"
 
 #include <openssl/err.h>
 #include <openssl/pem.h>

@@ -98,7 +98,7 @@ return ap;
 
 /*****************************************************************************/
 
-int InAlphaList(struct AlphaList al,char *string)
+int InAlphaList(struct AlphaList al,const char *string)
 
 { int i = (int)*string;
   

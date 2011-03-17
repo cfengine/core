@@ -145,7 +145,7 @@ return -1;
 
 /*********************************************************************/
 
-int IsItemIn(struct Item *list,char *item)
+int IsItemIn(struct Item *list,const char *item)
 
 { struct Item *ptr; 
 

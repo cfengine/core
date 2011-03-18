@@ -1524,6 +1524,7 @@ char *Unix_GetErrorStr(void);
 
 void LoadSystemConstants(void);
 void ForceScalar(char *lval,char *rval);
+void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 void DeleteScalar(char *scope,char *lval);

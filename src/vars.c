@@ -160,6 +160,49 @@ AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
 
 /*******************************************************************/
 
+void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt)
+
+{ char *sp1;
+  struct Rval rvald;
+  struct Rlist *list,*rp;
+
+if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
+   {
+   list = rvald.item;
+   
+   switch(rvald.rtype)
+      {
+      case CF_SCALAR:
+          AppendRlist(&list,rval,CF_SCALAR);
+          break;
+          
+      case CF_LIST:
+          for (rp = rval; rp != NULL; rp = rp->next)
+             {
+             AppendRlist(&list,rval,CF_SCALAR);
+             }
+          break;
+          
+      case CF_FNCALL:
+          rp = AppendRScalar(&list,"dummy",CF_SCALAR);
+          free(rp->item);
+          rp->item = rval;
+          rp->type = CF_FNCALL;
+          break;
+          
+      default:
+          CfOut(cf_error,"","Attempt to extend a list with something unknown");
+          break;
+      }
+   }
+else
+   {
+   NewList(scope,lval,rval,dt);
+   }
+}
+
+/*******************************************************************/
+
 enum cfdatatype GetVariable(char *scope,char *lval,void **returnv, char *rtype)
 
 { char *sp;

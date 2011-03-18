@@ -1230,6 +1230,7 @@ if (cf_strcmp(zone,"global") == 0)
       }
    else
       {
+      *(s+strlen(s)-6) = '\0';
       return true;
       }
    }

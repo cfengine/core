@@ -28,6 +28,8 @@ libpromises_la_SOURCES =                                                \
         dtypes.c                                                        \
         classes.c                                                       \
         env_context.c                                                   \
+        string_expressions.c                                            \
+        logic_expressions.c                                             \
         files_interfaces.c                                              \
         files_properties.c                                              \
         files_select.c                                                  \
@@ -170,6 +172,8 @@ noinst_HEADERS =                                                        \
         cf3parse.h                                                      \
         cf3.extern.h                                                    \
         cf.events.h                                                     \
+        string_expressions.h                                            \
+        logic_expressions.h                                             \
         compiler.h                                                      \
         bool.h
 

@@ -133,7 +133,7 @@ if (SelectProcRegexMatch("TTY","TTY",a.process_select.tty,names,column))
    PrependAlphaList(&proc_attr,"tty");
    }
 
-if (result = EvaluateORString(a.process_select.process_result,proc_attr,0))
+if (result = EvalProcessResult(a.process_select.process_result,&proc_attr))
    {
    //ClassesFromString(fp->defines);
    }

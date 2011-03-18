@@ -27,6 +27,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "compiler.h"
+
 char *Nova_GetVersion(void);
 char * Nova_StrVersion(void);
 
@@ -499,12 +501,17 @@ void AnalyzePromiseConflicts(void);
 
 /* env_context.c */
 
-struct Rlist *SplitContextExpression(char *s,struct Promise *pp);
+/* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(char *str);
+int IsDefinedClass (char *class);
+int IsExcluded (char *exception);
+
+bool EvalProcessResult(const char *process_result, struct AlphaList *proc_attr);
+bool EvalFileResult(const char *file_result, struct AlphaList *leaf_attr);
+
+/* - Rest - */
 int Abort(void);
-int ValidClassName(char *name);
 void KeepClassContextPromise(struct Promise *pp);
-int ContextSanityCheck(struct Attributes a);
 void PushPrivateClassContext(void);
 void PopPrivateClassContext(void);
 void DeletePrivateClassContext(void);
@@ -512,7 +519,6 @@ void DeleteEntireHeap(void);
 void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy policy);
 void DeletePersistentContext(char *name);
 void LoadPersistentContext(void);
-int EvalClassExpression(struct Constraint *cp,struct Promise *pp);
 void AddEphemeralClasses(struct Rlist *classlist);
 void NewClass(char *oclass);
 void NewBundleClass(char *class,char *bundle);
@@ -521,18 +527,7 @@ int VarClassExcluded(struct Promise *pp,char **classes);
 void NewClassesFromString(char *classlist);
 void NegateClassesFromString(char *class,struct Item **heap);
 void AddPrefixedClasses(char *name,char *classlist);
-void NewPrefixedClasses(char *name,char *classlist);
 int IsHardClass (char *sp);
-int IsSpecialClass (char *class);
-int IsExcluded (char *exception);
-int IsDefinedClass (char *class);
-int EvaluateORString (char *class, struct AlphaList list,int fromIsInstallable);
-int EvaluateANDString (char *class, struct AlphaList list,int fromIsInstallable);
-int GetORAtom (char *start, char *buffer);
-int GetANDAtom (char *start, char *buffer);
-int CountEvalAtoms (char *class);
-int IsBracketed (char *s);
-int HasBrackets(char *s,struct Promise *pp);
 void SaveClassEnvironment(void);
 
 /* evalfunction.c */

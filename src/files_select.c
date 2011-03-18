@@ -168,7 +168,7 @@ if (attr.select.exec_program && SelectExecProgram(path,attr.select.exec_program)
    PrependAlphaList(&leaf_attr,"exec_program");
    }
 
-if (result = EvaluateORString(attr.select.result,leaf_attr,0))
+if (result = EvalFileResult(attr.select.result,&leaf_attr))
    {
    //NewClassesFromString(fp->defines);
    }
@@ -251,7 +251,7 @@ if (S_ISDOOR(lstatptr->st_mode))
 
 for (rp = crit; rp != NULL; rp=rp->next)
    {
-   if (EvaluateORString((char *)rp->item,leafattrib,0))
+   if (EvalFileResult((char *)rp->item,&leafattrib))
       {
       DeleteAlphaList(&leafattrib);
       return true;
@@ -307,7 +307,7 @@ else
 
 for (rp = crit; rp != NULL; rp = rp->next)
    {
-   if (EvaluateORString((char *)rp->item,leafattrib,0))
+   if (EvalFileResult((char *)rp->item,&leafattrib))
       {
       Debug(" - ? Select owner match\n");
       DeleteAlphaList(&leafattrib);
@@ -566,7 +566,7 @@ else
 
 for (rp = crit; rp != NULL; rp = rp->next)
    {
-   if (EvaluateORString((char *)rp->item,leafattrib,0))
+   if (EvalFileResult((char *)rp->item,&leafattrib))
       {
       Debug(" - ? Select group match\n");
       DeleteAlphaList(&leafattrib);

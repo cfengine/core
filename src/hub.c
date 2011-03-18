@@ -49,6 +49,7 @@ char MAILFROM[CF_BUFSIZE];
 char EXECCOMMAND[CF_BUFSIZE];
 char VMAILSERVER[CF_BUFSIZE];
 struct Item *SCHEDULE = NULL;
+struct Item *FEDERATION = NULL;
 
 pid_t MYTWIN = 0;
 int MAXLINES = 30;
@@ -283,6 +284,22 @@ for (cp = ControlBodyConstraints(cf_hub); cp != NULL; cp=cp->next)
          if (!IsItemIn(SCHEDULE,rp->item))
             {
             AppendItem(&SCHEDULE,rp->item,NULL);
+            }
+         }
+      }
+   
+   if (strcmp(cp->lval,CFH_CONTROLBODY[cfh_federation].lval) == 0)
+      {
+      struct Rlist *rp;
+      Debug("federation ...\n");
+      DeleteItemList(FEDERATION);
+      SCHEDULE = NULL;
+      
+      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         {
+         if (!IsItemIn(FEDERATION,rp->item))
+            {
+            AppendItem(&FEDERATION,rp->item,NULL);
             }
          }
       }

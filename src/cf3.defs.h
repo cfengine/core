@@ -403,6 +403,7 @@ enum cfrecontrol
 enum cfhcontrol
    {
    cfh_export_zenoss,
+   cfh_federation,
    cfh_schedule,
    cfh_port,
    cfh_notype

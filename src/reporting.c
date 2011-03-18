@@ -380,7 +380,9 @@ else
 /*******************************************************************/
 
 void ShowScopedVariables()
+
 /* WARNING: Not thread safe (access to VSCOPE) */
+
 { struct Scope *ptr;
 
 fprintf(FREPORT_HTML,"<div id=\"showvars\">");
@@ -408,18 +410,19 @@ fprintf(FREPORT_HTML,"</div>");
 /*******************************************************************/
 
 void NoteVarUsageDB(void)
+
 /* WARNING: Not thread safe (access to VSCOPE) */
-{
-struct Scope *ptr;
-char filename[CF_MAXVARSIZE];
-CF_DB *dbp;
-CF_DBC *dbcp;
-char key[CF_MAXVARSIZE], *keyDb;  // scope.varname
-void *val;
-struct Variable var = {0}, *varDb;
-int i, keyDbSize, valSize;
-time_t varExpireAge = CF_MONTH;  // remove vars from DB after one month
-time_t now = time(NULL);
+
+{ struct Scope *ptr;
+  char filename[CF_BUFSIZE];
+  CF_DB *dbp;
+  CF_DBC *dbcp;
+  char key[CF_MAXVARSIZE], *keyDb;  // scope.varname
+  void *val;
+  struct Variable var = {0}, *varDb;
+  int i, keyDbSize, valSize;
+  time_t varExpireAge = CF_MONTH;  // remove vars from DB after one month
+  time_t now = time(NULL);
 
 if (MINUSF) /* Only do this for the default policy */
    {
@@ -437,32 +440,32 @@ if (!OpenDB(filename,&dbp))
 /* sync db with current vars */
 
 // NOTE: can extend to support avg and stddev in future
- var.e.t = now;  // all are last seen now
+var.e.t = now;  // all are last seen now
 
- for(ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
+for(ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,"this") == 0)
       {
       continue;
       }
-
+   
    for (i = 0; i < CF_HASHTABLESIZE; i++)
-     {
-       if(ptr->hashtable[i] != NULL)
+      {
+      if(ptr->hashtable[i] != NULL)
 	 {
-	   snprintf(key, sizeof(key), "%s.%s", ptr->scope, ptr->hashtable[i]->lval);
-	   var.dtype = ptr->hashtable[i]->dtype;
-	   var.rtype = ptr->hashtable[i]->rtype;
-	   var.rval[0] = '\0';
-	   PrintRval(var.rval, sizeof(var.rval), ptr->hashtable[i]->rval, ptr->hashtable[i]->rtype);
-	   
-	   WriteDB(dbp,key,&var,VARSTRUCTUSAGE(var));
+         snprintf(key, sizeof(key), "%s.%s", ptr->scope, ptr->hashtable[i]->lval);
+         var.dtype = ptr->hashtable[i]->dtype;
+         var.rtype = ptr->hashtable[i]->rtype;
+         var.rval[0] = '\0';
+         PrintRval(var.rval, sizeof(var.rval), ptr->hashtable[i]->rval, ptr->hashtable[i]->rtype);
+	 
+         WriteDB(dbp,key,&var,VARSTRUCTUSAGE(var));
 	 }
-     } 
+      } 
    }
 
- /* purge old entries from DB */
- if (!NewDBCursor(dbp,&dbcp))
+/* purge old entries from DB */
+if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to purge variable db");
    CloseDB(dbp);
@@ -475,7 +478,7 @@ while(NextDB(dbp,dbcp,&keyDb,&keyDbSize,&val,&valSize))
    if (val != NULL)
       {
       varDb = (struct Variable *)val;
-
+      
       if (varDb->e.t < now - varExpireAge)
          {
          Debug("Variable record %s expired\n",keyDb);

@@ -1075,6 +1075,7 @@ enum cfl_view Str2View(char *s)
 { static char *views[] = { "SumCompWk",  // NOTE: must match cfl_view enum
 			   "SumRepairedWk",
 			   "SumNotKeptWk",
+			   "RepairedReason",                           
 			   "NotKeptReason",
 			   NULL };
   int i;

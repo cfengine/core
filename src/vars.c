@@ -173,18 +173,18 @@ if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    switch(rvald.rtype)
       {
       case CF_SCALAR:
-          AppendRlist(&list,rval,CF_SCALAR);
+          IdempAppendRlist(&list,rval,CF_SCALAR);
           break;
           
       case CF_LIST:
           for (rp = rval; rp != NULL; rp = rp->next)
              {
-             AppendRlist(&list,rval,CF_SCALAR);
+             IdempAppendRlist(&list,rval,CF_SCALAR);
              }
           break;
           
       case CF_FNCALL:
-          rp = AppendRScalar(&list,"dummy",CF_SCALAR);
+          rp = IdempAppendRScalar(&list,"dummy",CF_SCALAR);
           free(rp->item);
           rp->item = rval;
           rp->type = CF_FNCALL;

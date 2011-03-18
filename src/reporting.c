@@ -426,7 +426,7 @@ if (MINUSF) /* Only do this for the default policy */
    return;
    }
  
-snprintf(filename,CF_BUFSIZE-1,"%s/state/%s",CFWORKDIR,CF_VARIABLES);
+snprintf(filename,sizeof(filename),"%s/state/%s",CFWORKDIR,CF_VARIABLES);
 MapName(filename);
 
 if (!OpenDB(filename,&dbp))

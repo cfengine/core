@@ -94,7 +94,7 @@ if (c >= '0' && c <= '9')
    return true;
    }
 
-if (c == '_')
+if (c == '_' || c == '[' || c == ']')
    {
    return true;
    }

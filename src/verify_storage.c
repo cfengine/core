@@ -266,7 +266,7 @@ if (kilobytes < 0)
 
    if (free < (int)kilobytes)
       {
-      cfPS(cf_error,CF_FAIL,"",pp,a," !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",kilobytes,file,free);
+      cfPS(cf_error,CF_FAIL,"",pp,a," !! Free disk space is under %d% for volume containing %s (%d% free)\n",kilobytes,file,free);
       return false;
       }
    }

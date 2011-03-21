@@ -29,6 +29,9 @@
 #include "../src/cf.defs.h"
 #include <sys/types.h>
 
+/* Forward declaration copied from prototypes.h to avoid compile-time warning */
+int cf_full_write (int desc, char *ptr, size_t len);
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

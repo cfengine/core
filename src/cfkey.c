@@ -179,7 +179,7 @@ if (!NewDBCursor(dbp,&dbcp))
 
 memset(&entry, 0, sizeof(entry));
 
-printf("%15.15s %-25.25s %15.15s \n","IP","Name","Key");
+printf("%9.9s %15.15s %-25.25s %15.15s\n","Direction","IP","Name","Key");
  /* Walk through the database and print out the key/data pairs. */
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
@@ -196,10 +196,12 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       }
    CfOut(cf_verbose,""," -> Reporting on %s",hostname);
       
-   printf("%15.15s %-25.25s %s \n",
+   printf("%-9.9s %15.15s %-25.25s %s\n",
+             hostname[0] == '+' ? "Incoming" : "Outgoing",
      	     address,	     
 	     IPString2Hostname(address),
-             hostname+1);
+             hostname+1
+          );
    }
 printf("Total Entries: %d\n",count);
 DeleteDBCursor(dbp,dbcp);

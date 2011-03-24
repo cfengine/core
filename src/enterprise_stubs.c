@@ -1226,6 +1226,7 @@ if (cf_strcmp(zone,"global") == 0)
    {
    if (cf_strcmp(s+strlen(s)-6,"global") == 0)
       {
+      *(s+strlen(s)-6) = '\0';
       return false;
       }
    else

@@ -784,6 +784,7 @@ char *ToLowerStr (char *str);
 int SubStrnCopyChr(char *to,char *from,int len,char sep);
 int CountChar(char *string,char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
+void ReplaceTrailingChar(char *str, char from, char to);
 int ReplaceStr(char *in, char *out, int outSz, char* from, char *to);
     
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)

@@ -1871,9 +1871,10 @@ meter_endmark
  (strncmp(c,"Min",3) == 0 || strncmp(c,"Hr",2) == 0 || strcmp(c,"Q1") == 0     \
   || strcmp(c,"Q2") == 0 || strcmp(c,"Q3") == 0 || strcmp(c,"Q4") == 0         \
   || strncmp(c,"GMT_Hr",6) == 0  || strncmp(c,"Yr",2) == 0                     \
-  || strncmp(c,"Day",3) == 0 || strcmp(c,"Morning") == 0                       \
-  || strcmp(c,"Afternoon") == 0 || strcmp(c,"Evening") == 0                    \
-  || strcmp(c,"Night") == 0 || strcmp(c,"license_expired") == 0)
+  || strncmp(c,"Day",3) == 0 || strcmp(c,"license_expired") == 0               \
+  || strcmp(c,"any") == 0 || strcmp(c,"from_cfexecd") == 0                     \
+  || IsStrIn(c,MONTH_TEXT,false) || IsStrIn(c,DAY_TEXT,false)                  \
+  || IsStrIn(c,SHIFT_TEXT,false))
 
 
 #include "prototypes3.h"

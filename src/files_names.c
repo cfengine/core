@@ -1215,6 +1215,27 @@ for(i = 0; (i < len) && (i < outSz - 1); i++)
 
 /*********************************************************************/
 
+void ReplaceTrailingChar(char *str, char from, char to)
+
+/* Replaces any unwanted last char in str. */
+{
+ int strLen;
+
+ strLen = strlen(str);
+
+ if(strLen == 0)
+    {
+    return;
+    }
+ 
+ if(str[strLen - 1] == from)
+    {
+    str[strLen - 1] = to;
+    }
+}
+
+/*********************************************************************/
+
 int ReplaceStr(char *in, char *out, int outSz, char* from, char *to)
 
 /* Replaces all occurences of strings 'from' to 'to' in preallocated

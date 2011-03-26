@@ -154,7 +154,7 @@ if (ReadHash(dbp,type,filename,dbdigest))
             }
 	 else
 	   {
-	   cfPS(warnlevel,CF_FAIL,"",pp,attr,"!! Hash for file %s changed from %s to %s",filename,HashPrint(type,dbdigest),HashPrint(type,digest));
+	   cfPS(warnlevel,CF_FAIL,"",pp,attr,"!! Hash for file \"%s\" changed",filename);
 	   }
          
 	 CloseDB(dbp);

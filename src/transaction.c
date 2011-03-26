@@ -205,7 +205,7 @@ if (!ignoreProcesses)
             CfOut(cf_error,"","Illegal pid in corrupt lock %s - ignoring lock\n",cflock);
             }
 #ifdef MINGW  // killing processes with e.g. task manager does not allow for termination handling
-         else if(!NovaWin_IsProcessRunning(pid))
+         else if (!NovaWin_IsProcessRunning(pid))
             {
             CfOut(cf_verbose,"","Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",pid);
             LogLockCompletion(cflog,pid,"Lock expired, process not running",cc_operator,cc_operand);
@@ -213,29 +213,29 @@ if (!ignoreProcesses)
             }
 #endif  /* MINGW */
          else
-	       {
-               CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
-               
-               err = GracefulTerminate(pid);
-               
-               if (err || errno == ESRCH)
-                  {
-                  LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
-                  unlink(cflock);
-                  }
-               else
-                  {
-                  CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
-                  
-                  FatalError("");
-                  }
-	       }
-         }
-	 else
             {
-            CfOut(cf_verbose,"","Couldn't obtain lock for %s (already running!)\n",cflock);
-            return this;
+            CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
+            
+            err = GracefulTerminate(pid);
+            
+            if (err || errno == ESRCH)
+               {
+               LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
+               unlink(cflock);
+               }
+            else
+               {
+               CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
+               
+               FatalError("");
+               }
             }
+         }
+      else
+         {
+         CfOut(cf_verbose,"","Couldn't obtain lock for %s (already running!)\n",cflock);
+         return this;
+         }
       }
    
    WriteLock(cflock);   

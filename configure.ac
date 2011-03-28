@@ -76,8 +76,8 @@ AC_PROG_CC
 dnl Those two lines will emit deprecation warnings on sufficiently new
 dnl systems. Unfortunately those cannot be replaced by LT_INIT due to older
 dnl systems not having libtool >= 2
-AC_PROG_LIBTOOL
 AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
 
 AM_PROG_LEX
 AC_PROG_YACC

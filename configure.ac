@@ -19,6 +19,9 @@ dnl
 AM_INIT_AUTOMAKE(cfengine, 3.1.5a1)   dnl remember to set version
 AM_MAINTAINER_MODE([enable])
 
+AC_DEFINE(NOVA_VERSION, "2.0.3a1", "Nova version")
+AC_DEFINE(CONSTELLATION_VERSION, "1.0.0a1", "Constellation version")
+
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_CONFIG_HEADERS([src/conf.h])

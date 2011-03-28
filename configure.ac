@@ -149,6 +149,9 @@ AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test
 sinclude([galaxy/options.m4])
 AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
+dnl
+dnl Various functions
+dnl
 
 AC_CHECK_FUNC(door_create,door)
 AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))

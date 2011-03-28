@@ -44,7 +44,7 @@ NewScalar("const","t","\t",cf_str);
 NewScalar("const","endl","\n",cf_str);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 Nova_EnterpriseDiscovery();
 #endif
 }

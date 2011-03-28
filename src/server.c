@@ -3324,14 +3324,14 @@ if (strlen(query) == 0)
    return false;
    }
 
-#ifdef HAVE_LIBCFCONSTELLATION
+#ifdef HAVE_CONSTELLATION
 if (cf_strncmp(query,"relay",5) == 0)
    {
    return Constellation_ReturnRelayQueryData(conn,query,sendbuffer);
    }
 #endif
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 return Nova_ReturnQueryData(conn,query,sendbuffer);
 #else
 return false;

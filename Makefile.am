@@ -1,7 +1,8 @@
+SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src tests docs inputs
 
-SUBDIRS = pub src tests docs inputs
+DIST_SUBDIRS = pub src tests docs inputs
 
-EXTRA_DIST = acconfig.h COPYING ChangeLog INSTALL NEWS README LICENSE
+EXTRA_DIST = COPYING ChangeLog INSTALL NEWS README LICENSE
 
 docdir = @docdir@
 doc_DATA = README ChangeLog INSTALL NEWS

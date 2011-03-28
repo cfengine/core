@@ -142,27 +142,12 @@ dnl
 dnl Enterprise extensions
 dnl
 
-AC_ARG_WITH(nova,
-	AS_HELP_STRING(--without-nova, [disable Nova enterprise extensions (enabled by default)]),[],
-	with_nova=yes)
-
-if test "x$with_nova" != xno; then
-   AC_CHECK_LIB(cfnova,main)
-fi
-
-AC_ARG_WITH(constellation,
-        AS_HELP_STRING(--without-constellation, [disable Constellation enterprise extensions (enabled by default)]),[],
-        with_constellation=yes)
-
-if test "x$with_constellation" != xno; then
-   AC_CHECK_LIB(cfconstellation,main)
-fi
-
-
-AC_ARG_WITH([galaxy],
-    [AS_HELP_STRING([--with-galaxy], [use Galaxy commercial extensions])])
-AS_IF([test "x$with_galaxy" = "xyes"], [AC_CHECK_LIB([cfgalaxy], [main])])
-
+sinclude([nova/options.m4])
+AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
+sinclude([constellation/options.m4])
+AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
+sinclude([galaxy/options.m4])
+AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
 
 AC_CHECK_FUNC(door_create,door)
@@ -1031,6 +1016,11 @@ dnl Now make the Makefiles
 dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile tests/Makefile tests/file_masters/Makefile tests/file_operands/Makefile tests/units/Makefile inputs/Makefile])
+
+m4_sinclude([nova/output.m4])
+m4_sinclude([constellation/output.m4])
+m4_sinclude([galaxy/output.m4])
+
 AC_OUTPUT
 
 rm -f src/cf3parse.c src/cf3parse.h

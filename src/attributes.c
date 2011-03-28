@@ -813,7 +813,7 @@ value = (char *)GetConstraint("hash",pp,CF_SCALAR);
 
 if (value && strcmp(value,"best") == 0)
    {
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
    c.hash = cf_sha512;
 #else
    c.hash = cf_besthash;

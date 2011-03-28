@@ -52,3 +52,9 @@ src/conf.h.in~
 # autogen docs
 
 docs/*.8
+
+# links
+
+nova
+constellation
+galaxy

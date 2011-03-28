@@ -270,7 +270,7 @@ NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
 NewScalar("sys","cf_version",VERSION,cf_str);
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 NewScalar("sys","nova_version",Nova_GetVersion(),cf_str);
 #endif
 
@@ -938,7 +938,7 @@ else
 NewScalar("sys","crontab",vbuff,cf_str);
 #endif
 
-#if defined(HAVE_LIBCFNOVA) && defined(HAVE_LIBMONGOC)
+#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
 
 if (IsDefinedClass("redhat"))
    {

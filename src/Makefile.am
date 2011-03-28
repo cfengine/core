@@ -1,4 +1,4 @@
-AM_CFLAGS = $(GCC_CFLAG) @CFLAGS@
+AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
 LEXLIB = @LEXLIB@
 LDADD = libpromises.la # $(BERKELEY_DB_LDFLAGSD) $(BERKELEY_DB_LIB) $(OPENSSL_LIB_LDFLAGS) $(OPENSSL_LIB_LIB)
@@ -9,7 +9,7 @@ BUILT_SOURCES = cf3parse.h
 lib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libpromises_la_LIBADD = ../pub/libcfpub.la $(BERKELEY_DB_LDFLAGSD) $(BERKELEY_DB_LIB) $(OPENSSL_LIB_LDFLAGS) $(OPENSSL_LIB_LIB)
+libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD) $(BERKELEY_DB_LDFLAGSD) $(BERKELEY_DB_LIB) $(OPENSSL_LIB_LDFLAGS) $(OPENSSL_LIB_LIB)
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
 # Separate out a library
@@ -112,7 +112,11 @@ libpromises_la_SOURCES =                                                \
         unix.c
 
 
-sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report cf-hub
+sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report
+
+if HAVE_NOVA
+  sbin_PROGRAMS += cf-hub
+endif
 
 cf_promises_SOURCES =                                                   \
         cfpromises.c
@@ -148,8 +152,12 @@ cf_monitord_SOURCES =                                                   \
 cf_execd_SOURCES =                                                      \
         exec.c
 
-cf_hub_SOURCES =							\
-        hub.c
+if HAVE_NOVA
+cf_hub_SOURCES =
+
+cf_hub_LDADD =                                                          \
+        libpromises.la ../nova/src/libcfhub.la
+endif
 
 cf_runagent_SOURCES =                                                   \
         runagent.c

@@ -39,7 +39,7 @@
 void VerifyEnvironmentsPromise(struct Promise *pp)
 
 {
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
  Nova_VerifyEnvironmentsPromise(pp);
 #else
  CfOut(cf_inform,""," !! Environments promises are not available in the Community Edition of Cfengine"); 

@@ -1879,6 +1879,6 @@ meter_endmark
 
 #include "prototypes3.h"
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 #include <cf.nova.h>
 #endif

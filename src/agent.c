@@ -721,7 +721,7 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&
    CfOut(cf_verbose,"","SET syslog_host to %s",SYSLOGHOST);
    }
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 Nova_Initialize();
 #endif
 }

@@ -370,7 +370,7 @@ strcpy(SQL_SERVER,"localhost");
 strcpy(GRAPHDIR,"");
 SHOWREPORTS = false;
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 s1 = Nova_SizeCfSQLContainer();
 s2 = SizeCfSQLContainer();
 
@@ -1020,7 +1020,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 
 void CfQueryCFDB(char *query)
 {
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 Nova_CfQueryCFDB(query);
 #endif
 }
@@ -1449,7 +1449,7 @@ if (GENERATE_MANUAL)
 
 void GenerateGraph()
 {
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 if (GRAPH && VIEWS)
    {
    struct Rlist *semantics = NULL;

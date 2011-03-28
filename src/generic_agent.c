@@ -58,7 +58,7 @@ void GenericInitialize(int argc,char **argv,char *agents)
   char vbuff[CF_BUFSIZE];
   int ok = false;
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 CF_DEFAULT_DIGEST = cf_sha256;
 CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
 #else
@@ -394,7 +394,7 @@ strcpy(FILE_SEPARATOR_STR,"/");
 
 NewClass("any");
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 NewClass("nova_edition");
 #else
 NewClass("community_edition");
@@ -848,7 +848,7 @@ void CloseReports(char *agents)
 
 { char name[CF_BUFSIZE];
 
-#ifndef HAVE_LIBCFNOVA 
+#ifndef HAVE_NOVA 
 if (SHOWREPORTS)
    {
    CfOut(cf_verbose,"","Wrote compilation report %s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
@@ -1336,7 +1336,7 @@ if (THIS_AGENT_TYPE != cf_common)
    return;
    }
 
-#if defined(HAVE_LIBCFNOVA) && defined(HAVE_LIBMONGOC)
+#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
 if ((FREPORT_TXT = fopen(NULLFILE,"w")) == NULL)
    {
    snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);

@@ -2573,7 +2573,7 @@ void CheckInstalledLibraries(void)
    #endif
 
 
-   #ifdef HAVE_LIBCFNOVA
+   #ifdef HAVE_NOVA
    if(!Nova_HaveFIPS())
      {
      printf("\t->FIPS OpenSSL canister not found!!\n");

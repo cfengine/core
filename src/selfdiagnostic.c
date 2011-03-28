@@ -59,7 +59,7 @@ printf("----------------------------------------------------------\n");
 printf("Cfengine - Level 1 self-diagnostic \n");
 printf("----------------------------------------------------------\n\n");
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 s1 = Nova_SizeCfSQLContainer();
 s2 = SizeCfSQLContainer();
 

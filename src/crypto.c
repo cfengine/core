@@ -434,7 +434,7 @@ void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE+1])
  
 CfOut(cf_verbose,"","Looking for a random number seed...\n");
 
-#ifdef HAVE_LIBCFNOVA
+#ifdef HAVE_NOVA
 md = EVP_get_digestbyname("sha256");
 #else
 md = EVP_get_digestbyname("md5");

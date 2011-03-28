@@ -26,7 +26,7 @@ doc_DATA = $(psfiles) $(pdffiles)
 
 # Make sure these get distributed with everything else.
 
-EXTRA_DIST = *.8 *.texinfo *.png *.pdf *.html
+EXTRA_DIST = $(man_MANS) *.png *.pdf *.html
 
 SUFFIXES = html pdf dvi
 

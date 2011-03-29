@@ -58,7 +58,7 @@ if (!SplitProcLine(procentry,names,start,end,column))
 
 if (DEBUG)
    {
-   for (i = 0; column[i] != NULL; i++)
+   for (i = 0; names[i] != NULL; i++)
       {
       printf("COL[%s] = \"%s\"\n",names[i],column[i]);
       }

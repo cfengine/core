@@ -75,6 +75,7 @@ dnl Checks for programs.
 dnl ######################################################################
 
 AC_PROG_CC
+AC_EXEEXT
 
 dnl Those two lines will emit deprecation warnings on sufficiently new
 dnl systems. Unfortunately those cannot be replaced by LT_INIT due to older

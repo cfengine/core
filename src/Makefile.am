@@ -156,7 +156,7 @@ if HAVE_NOVA
 cf_hub_SOURCES =
 
 cf_hub_LDADD =                                                          \
-        libpromises.la ../nova/src/libcfhub.la
+        ../nova/src/libcfhub.la libpromises.la
 endif
 
 cf_runagent_SOURCES =                                                   \

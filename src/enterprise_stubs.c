@@ -1216,7 +1216,7 @@ if (strstr(s,"%CPU"))
 
 #ifdef HAVE_GETZONEID
  zoneid_t zid;
- char zone[ZONENAME_MAX];
+ char *sp,zone[ZONENAME_MAX];
  static psopts[CF_BUFSIZE];
  
 zid = getzoneid();
@@ -1227,6 +1227,12 @@ if (cf_strcmp(zone,"global") == 0)
    if (cf_strcmp(s+strlen(s)-6,"global") == 0)
       {
       *(s+strlen(s)-6) = '\0';
+
+      for (sp = s+strlen(s)-1; isspace(*sp); sp--)
+         {
+         *sp = '\0';
+         }
+
       return false;
       }
    else

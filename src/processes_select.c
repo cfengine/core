@@ -169,6 +169,11 @@ int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,ch
 { int i;
   long value;
 
+if (min == CF_NOINT || max == CF_NOINT)
+   {
+   return false;
+   }
+
 if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    {
    value = Str2Int(line[i]);
@@ -198,6 +203,11 @@ int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t ma
 
 { int i;
   time_t value;
+
+if (min == CF_NOINT || max == CF_NOINT)
+   {
+   return false;
+   }
 
 if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    {
@@ -230,6 +240,11 @@ int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,ch
 
 { int i;
   time_t value;
+
+if (min == CF_NOINT || max == CF_NOINT)
+   {
+   return false;
+   }
 
 if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    {

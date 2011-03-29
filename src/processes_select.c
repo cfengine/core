@@ -328,12 +328,12 @@ for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
 
    if (strcmp(names[i],"CMD") == 0 || strcmp(names[i],"COMMAND") == 0)
       {
-      sscanf(sp,"%[^\n]",&(cols1[i]));
+      sscanf(sp,"%127[^\n]",&(cols1[i]));
       sp += strlen(cols1[i]);
       }
    else
       {
-      sscanf(sp,"%s",&(cols1[i]));
+      sscanf(sp,"%127s",&(cols1[i]));
       sp += strlen(cols1[i]);
       }
    
@@ -341,7 +341,7 @@ for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
    if (strcmp(names[i],"STIME") == 0 && strlen(cols1[i]) == 3)
       {
       char s[CF_SMALLBUF] = {0};
-      sscanf(sp,"%s",s);
+      sscanf(sp,"%127s",s);
       strcat(cols1[i]," ");
       strcat(cols1[i],s);
       sp += strlen(s)+1;

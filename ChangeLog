@@ -1,4 +1,7 @@
 3.1.5   
+	New class parser, '||' is no longer allowed in expressions (use '|').
+	Class setting in the promise types insert_lines, delete_lines, 
+	replace_patterns, field_edits, vars, classes is restored.
 	suspiciousnames implemented
 	New function getvalues()
 

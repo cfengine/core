@@ -190,9 +190,9 @@ switch (expr->op)
                                            nameevalfn,
                                            varrefevalfn,
                                            param);
-      if (lhs == ERROR)
+      if (lhs == EXP_ERROR)
          {
-         return ERROR;
+         return EXP_ERROR;
          }
 
       ExpressionValue rhs = EvalExpression(expr->val.andor.rhs,
@@ -200,9 +200,9 @@ switch (expr->op)
                                            varrefevalfn,
                                            param);
 
-      if (rhs == ERROR)
+      if (rhs == EXP_ERROR)
          {
-         return ERROR;
+         return EXP_ERROR;
          }
 
       if (expr->op == OR)
@@ -222,9 +222,9 @@ switch (expr->op)
                                            varrefevalfn,
                                            param);
 
-      if (arg == ERROR)
+      if (arg == EXP_ERROR)
          {
-         return ERROR;
+         return EXP_ERROR;
          }
       else
          {
@@ -240,7 +240,7 @@ switch (expr->op)
 
       if (name == NULL)
          {
-         return ERROR;
+         return EXP_ERROR;
          }
 
       ExpressionValue ret = (*nameevalfn)(name, param);

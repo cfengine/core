@@ -102,9 +102,9 @@ ParseResult ParseExpression(const char *expr, int start, int end);
 
 typedef enum ExpressionValue
    {
-   ERROR = -1,
-   FALSE = false,
-   TRUE = true,
+   EXP_ERROR = -1,
+   EXP_FALSE = false,
+   EXP_TRUE = true,
    } ExpressionValue;
 
 /*

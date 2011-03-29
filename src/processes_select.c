@@ -298,6 +298,8 @@ if (proc == NULL || strlen(proc) == 0)
    return false;
    }
 
+memset(line, 0, sizeof(char *) * CF_PROCCOLS);
+
 // First try looking at all the separable items
 
 sp = proc;

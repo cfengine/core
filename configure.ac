@@ -959,6 +959,11 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+dnl
+dnl
+dnl
+
+AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
 dnl ######################################################################
 dnl Summarize

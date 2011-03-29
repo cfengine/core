@@ -335,7 +335,7 @@ for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
 
 // Now try looking at columne alignment
 
-for (i = 0; names[i] != NULL; i++)
+for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
    {
    // Start from the header/column tab marker and count backwards until we find 0 or space
    for (s = start[i]; (s >= 0) && !isspace((int)*(proc+s)); s--)

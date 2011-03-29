@@ -97,7 +97,6 @@ extern struct BodySyntax CFS_CONTROLBODY[];
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
-      { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f'},
       { "define",required_argument,0,'D' },

@@ -926,6 +926,7 @@ char *GenTimeKey (time_t now);
 int GetTimeSlot(time_t here_and_now);
 char *PrintTimeSlot(int slot);
 int GetShiftSlot(time_t here_and_now);
+time_t GetShiftSlotStart(time_t t);
 
 /* hashes.c */
 

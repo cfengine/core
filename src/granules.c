@@ -174,4 +174,50 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_I
 return -1;
 }
 
+/*****************************************************************************/
 
+time_t GetShiftSlotStart(time_t t)
+/**
+ * Returns the absolute time_t start of the slot of the aregument.
+ **/
+{
+ struct tm split;
+ time_t slotstart;
+
+if(!localtime_r(&t, &split))
+   {
+   printf("Error!\n");
+   CfOut(cf_error, "localtime_r", "!! Could not convert time");
+   return -1;
+   }
+
+split.tm_sec = 0;
+split.tm_min = 0;
+
+if(split.tm_hour < 6)
+   {
+   split.tm_hour = 0;
+   }
+else if(split.tm_hour < 12)
+   {
+   split.tm_hour = 6;
+   }
+else if(split.tm_hour < 18)
+   {
+   split.tm_hour = 12;
+   }
+else
+   {
+   split.tm_hour = 18;
+   }
+
+slotstart = mktime(&split);
+
+if(slotstart == -1)
+   {
+   CfOut(cf_error, "mktime", "!! Could not convert time");
+   return -1;
+   }
+
+return slotstart;
+}

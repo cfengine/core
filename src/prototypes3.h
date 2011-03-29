@@ -292,6 +292,7 @@ char *GetArg0(char *execstr);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
 int Day2Number(char *datestring);
+void CtimeHourInterval(time_t t, char *out, int outSz);
 enum action_policy Str2ActionPolicy(char *s);
 enum version_cmp Str2PackageSelect(char *s);
 enum package_actions Str2PackageAction(char *s);

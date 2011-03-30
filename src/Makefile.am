@@ -111,6 +111,8 @@ libpromises_la_SOURCES =                                                \
 	mod_outputs.c							\
         unix.c
 
+# Automake need to be guided due to symlinking
+libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
 
 sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report
 

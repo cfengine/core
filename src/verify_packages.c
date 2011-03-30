@@ -1825,95 +1825,95 @@ int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attribu
 int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
 
 { int offset = 0, retval = true;
-  char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 
-  FILE *pfp;
-  int packmanRetval = 0;
-  char packmanRetvalStr[64] = {0};
+ char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 
+ FILE *pfp;
+ int packmanRetval = 0;
+ char packmanRetvalStr[64] = {0};
 
-if (!IsExecutable(GetArg0(command)))
-   {
-   cfPS(cf_error,CF_FAIL,"",pp,a,"The proposed package schedule command \"%s\" was not executable",command);
-   return false;
-   }
+ if (!IsExecutable(GetArg0(command)))
+    {
+    cfPS(cf_error,CF_FAIL,"",pp,a,"The proposed package schedule command \"%s\" was not executable",command);
+    return false;
+    }
 
-if (DONTDO)
-   {
-   CfOut(cf_error,""," -> Need to execute %-.39s...\n",command);
-   return true;
-   }
+ if (DONTDO)
+    {
+    CfOut(cf_error,""," -> Need to execute %-.39s...\n",command);
+    return true;
+    }
 
 /* Use this form to avoid limited, intermediate argument processing - long lines */
 
-if ((pfp = cf_popen_sh(command,"r")) == NULL)
-   {
-   cfPS(cf_error,CF_FAIL,"cf_popen",pp,a,"Couldn't start command %20s...\n",command);
-   return false;
-   }
+ if ((pfp = cf_popen_sh(command,"r")) == NULL)
+    {
+    cfPS(cf_error,CF_FAIL,"cf_popen",pp,a,"Couldn't start command %20s...\n",command);
+    return false;
+    }
 
-CfOut(cf_verbose,"","Executing %-.60s...\n",command);
+ CfOut(cf_verbose,"","Executing %-.60s...\n",command);
 
 /* Look for short command summary */
-for (cmd = command; *cmd != '\0' && *cmd != ' '; cmd++)
-   {
-   }
+ for (cmd = command; *cmd != '\0' && *cmd != ' '; cmd++)
+    {
+    }
 
-while (*(cmd-1) != FILE_SEPARATOR && cmd >= command)
-   {
-   cmd--;
-   }
+ while (*(cmd-1) != FILE_SEPARATOR && cmd >= command)
+    {
+    cmd--;
+    }
 
-while (!feof(pfp))
-   {
-   if (ferror(pfp))  /* abortable */
-      {
-      fflush(pfp);
-      cfPS(cf_error,CF_INTERPT,"read",pp,a,"Couldn't start command %20s...\n",command);
-      break;
-      }
+ while (!feof(pfp))
+    {
+    if (ferror(pfp))  /* abortable */
+       {
+       fflush(pfp);
+       cfPS(cf_error,CF_INTERPT,"read",pp,a,"Couldn't start command %20s...\n",command);
+       break;
+       }
 
-   line[0] = '\0';
-   CfReadLine(line,CF_BUFSIZE-1,pfp);
+    line[0] = '\0';
+    CfReadLine(line,CF_BUFSIZE-1,pfp);
    
-   ReplaceStr(line,lineSafe,sizeof(lineSafe),"%","%%");
-   CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,lineSafe);
+    ReplaceStr(line,lineSafe,sizeof(lineSafe),"%","%%");
+    CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,lineSafe);
 
-   if (line[0] != '\0' && verify)
-      {
-      if (a.packages.package_noverify_regex)
-         {
-	 if(FullTextMatch(a.packages.package_noverify_regex,line))
-	   {
-	   cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error in %-.40s ... :%s",cmd,lineSafe);
-	   retval = false;
-	   }
-         }
-      }
+    if (line[0] != '\0' && verify)
+       {
+       if (a.packages.package_noverify_regex)
+          {
+          if(FullTextMatch(a.packages.package_noverify_regex,line))
+             {
+             cfPS(cf_inform,CF_FAIL,"",pp,a,"Package verification error in %-.40s ... :%s",cmd,lineSafe);
+             retval = false;
+             }
+          }
+       }
    
-   }
+    }
 
  packmanRetval = cf_pclose(pfp);
 
  if(verify)  // return code check for verify policy
-   {
+    {
     if(a.packages.package_noverify_returncode != CF_NOINT)
-      {
-	if(a.packages.package_noverify_returncode == packmanRetval)
+       {
+       if(a.packages.package_noverify_returncode == packmanRetval)
 	  {
-	    cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
-	    retval = false;
+          cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
+          retval = false;
 	  }
-	else
+       else
 	  {
-	    CfOut(cf_verbose, "", " Package sucessfully verified from return code");
+          CfOut(cf_verbose, "", " Package sucessfully verified from return code");
 	  }
-      }
-   }
+       }
+    }
  else if(setCmdClasses)  // generic return code check
-   {
-   retval = VerifyCommandRetcode(packmanRetval,false,a,pp);
-   }
+    {
+    retval = VerifyCommandRetcode(packmanRetval,true,a,pp);
+    }
 
-return retval; 
+ return retval; 
 }
 
 /*****************************************************************************/

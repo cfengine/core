@@ -838,8 +838,8 @@ for (mp = list; mp != NULL; mp = mp->next)
    {
    for (pi = mp->pack_list; pi != NULL; pi=pi->next)
       {
-      fprintf(fout,"%s,%s,%s,%s\n",pi->name);
-      fprintf(fout,"%s,%s,%s,%s\n",pi->version);
+      fprintf(fout,"%s,%s,%s,%s\n",CanonifyChar(pi->name,','));
+      fprintf(fout,"%s,%s,%s,%s\n",CanonifyChar(pi->version,','));
       fprintf(fout,"%s,%s,%s,%s\n",pi->arch,ReadLastNode(GetArg0(mp->manager)));
       }
    }

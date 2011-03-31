@@ -1702,73 +1702,81 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
 	    continue;
 	    }
 #endif  /* LINUX */
-
+          
 	  if (FullTextMatch(refAnyVer, dirp->d_name))
-	    {
-	      matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);
-
-	      // check if match is largest so far
-	      if(VersionCmp(largestVer, matchVer))
+             {
+             matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);
+             
+             // check if match is largest so far
+             if(VersionCmp(largestVer, matchVer))
 		{
-		  snprintf(largestVer, sizeof(largestVer), "%s", matchVer);
-		  snprintf(largestVerName, sizeof(largestVerName), "%s", dirp->d_name);
-		  match = true;
+                snprintf(largestVer, sizeof(largestVer), "%s", matchVer);
+                snprintf(largestVerName, sizeof(largestVerName), "%s", dirp->d_name);
+                match = true;
 		}
-	    }
+             }
 	  
-	}      
-      closedir(dirh);
+	}
+      
+    closedir(dirh);
     }
-
+  
   Debug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
   Debug("match=%d\n", match);
   
   if(match)
     {
-      snprintf(matchName, CF_MAXVARSIZE, "%s", largestVerName);
-      snprintf(matchVers, CF_MAXVARSIZE, "%s", largestVer);
+    snprintf(matchName, CF_MAXVARSIZE, "%s", largestVerName);
+    snprintf(matchVers, CF_MAXVARSIZE, "%s", largestVer);
     }
   
-  return match;
+return match;
 }
 
 /*****************************************************************************/
 
-int VersionCmp(char *vs1, char *vs2)
+int VersionCmp(char *vs1,char *vs2)
+
 /* Returns true if vs2 is a larger or equal version than vs1, false otherwise */
-{
-  int i;
-  
-  if(strlen(vs1) > strlen(vs2))
-    {
-      return false;
-    }
 
-  if(strlen(vs1) < strlen(vs2))
-    {
+{ int i;
+  char ch1,ch2;
+  
+if (strlen(vs1) > strlen(vs2))
+   {
+   return false;
+   }
+
+if (strlen(vs1) < strlen(vs2))
+   {
+   return true;
+   }
+
+for (i = 0; i < strlen(vs1); i++)
+   {
+   ch1 = (vs1[i] == ',') ? '_' : vs1[i]; // CSV protection. Names will be canonified of commas
+   ch2 = (vs2[i] == ',') ? '_' : vs2[i]; // CSV protection. Names will be canonified of commas
+   
+   if (ch1 < ch2)
+      {
       return true;
-    }
+      }
+   else if (ch1 > ch2)
+      {
+      return false;
+      }
+   }
 
-  for(i = 0; i < strlen(vs1); i++)
-    {
-      if(vs1[i] < vs2[i])
-	{
-	  return true;
-	}
-      else if(vs1[i] > vs2[i])
-	{
-	  return false;
-	}
-    }
-  
-  return true;
+return true;
 }
 
 /*****************************************************************************/
 
 int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr)
+
 /* Returns true if a package (n, a) is installed and v is larger than
  * the installed version. instV and instA are the version and arch installed. */
+
 { struct CfPackageManager *mp = NULL;
   struct CfPackageItem  *pi;
   
@@ -1784,22 +1792,22 @@ CfOut(cf_verbose,"","Looking for an installed package older than (%s,%s,%s)",n,v
 
 for (pi = mp->pack_list; pi != NULL; pi=pi->next)
    {
-     if((strcmp(n, pi->name) == 0) && ((strcmp(a, pi->arch) == 0) || (strcmp("default", pi->arch) == 0)))
-       {
-	 CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
-	 
-	 snprintf(instV, CF_MAXVARSIZE, "%s", pi->version);
-	 snprintf(instA, CF_MAXVARSIZE, "%s", pi->arch);
-
-	 if(!VersionCmp(v, pi->version))
-	   {
-	     return true;
-	   }
-	 else
-	   {
-	     return false;
-	   }
-       }
+   if ((strcmp(n, pi->name) == 0) && ((strcmp(a, pi->arch) == 0) || (strcmp("default", pi->arch) == 0)))
+      {
+      CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
+      
+      snprintf(instV, CF_MAXVARSIZE, "%s", pi->version);
+      snprintf(instA, CF_MAXVARSIZE, "%s", pi->arch);
+      
+      if (!VersionCmp(v,pi->version))
+         {
+         return true;
+         }
+      else
+         {
+         return false;
+         }
+      }
    }
 
 CfOut(cf_verbose,""," !! Package (%s,%s) is not installed\n",n,a);

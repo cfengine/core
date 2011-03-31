@@ -628,9 +628,28 @@ char *CanonifyName(const char *str)
 
 { static char buffer[CF_BUFSIZE];
           
-memset(buffer,0,CF_BUFSIZE);
-strcpy(buffer,str);
+strncpy(buffer,str,CF_BUFSIZE);
 CanonifyNameInPlace(buffer);
+return buffer;
+}
+
+/*********************************************************************/
+
+char *CanonifyChar(const char *str,char ch)
+
+{ static char buffer[CF_BUFSIZE];
+  char *sp;
+
+strncpy(buffer,str,CF_BUFSIZE-1);
+
+for (sp = buffer; *sp != '\0'; sp++)
+   {
+   if (*sp == ch)
+      {
+      *sp = '_';
+      }
+   }
+
 return buffer;
 }
 

@@ -113,7 +113,6 @@ YieldCurrentLock(thislock);
 int PackageSanityCheck(struct Attributes a,struct Promise *pp)
 
 {
-
 #ifndef MINGW
 if (a.packages.package_list_version_regex == NULL)
    {
@@ -149,23 +148,24 @@ if (a.packages.package_file_repositories)
    }
 
 if (a.packages.package_name_regex||a.packages.package_version_regex||a.packages.package_arch_regex)
-  if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
-    {
+   {
+   if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
+      {
       if(a.packages.package_version || a.packages.package_architectures)
-	{
-	cfPS(cf_error,CF_FAIL,"",pp,a," !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
-        return false;            
-	}
-    }
-  else
-    {
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
+         return false;            
+         }
+      }
+   else
+      {
       if (a.packages.package_version && a.packages.package_architectures)
-	{
-	cfPS(cf_error,CF_FAIL,"",pp,a," !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
-	return false;
-	}
-    }
- 
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
+         return false;
+         }
+       }
+   }
 
 if (a.packages.package_add_command == NULL || a.packages.package_delete_command == NULL)
    {
@@ -298,68 +298,67 @@ if (!NovaWin_GetInstalledPkgs(&(manager->pack_list),a,pp))
 
 if (a.packages.package_list_command != NULL)
    {
-
-     if(strcmp(a.packages.package_list_command,"/cf_internal_rpath_list") == 0)
-       {
-	 CfOut(cf_verbose, "", " Using internal list command for rPath");
-	 
-	 if(!GetInstalledPkgsRpath(&(manager->pack_list),a,pp))
-	   {
-	     CfOut(cf_error, "", "!! Could not get list of installed packages");
-	     return false;
-	   }
-       }
-     else
-       {
-	 CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
-	 CfOut(cf_verbose,"","   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
-	 CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
-
-	 if (!IsExecutable(GetArg0(a.packages.package_list_command)))
-	   {
-	     CfOut(cf_error,"","The proposed package list command \"%s\" was not executable",a.packages.package_list_command);
-	     return false;
-	   }
-   
-	 if ((prp = cf_popen(a.packages.package_list_command,"r")) == NULL)
-	   {
-	     CfOut(cf_error,"cf_popen","Couldn't open the package list with command %s\n",a.packages.package_list_command);
-	     return false;
-	   }
-   
-	 while (!feof(prp))
-	   {
-	     memset(vbuff,0,CF_BUFSIZE);
-	     CfReadLine(vbuff,CF_BUFSIZE,prp);
-	     CF_NODES++;
-
-	     if (a.packages.package_multiline_start)
-	       {
-		 if (FullTextMatch(a.packages.package_multiline_start,vbuff))
-		   {
-		     PrependMultiLinePackageItem(&(manager->pack_list),vbuff,reset,a,pp);
-		   }
-		 else
-		   {
-		     PrependMultiLinePackageItem(&(manager->pack_list),vbuff,update,a,pp);
-		   }
-	       }
-	     else
-	       {
-		 if (!FullTextMatch(a.packages.package_installed_regex,vbuff))
-		   {
-		     continue;
-		   }
+   if(strcmp(a.packages.package_list_command,"/cf_internal_rpath_list") == 0)
+      {
+      CfOut(cf_verbose, "", " Using internal list command for rPath");
+      
+      if(!GetInstalledPkgsRpath(&(manager->pack_list),a,pp))
+         {
+         CfOut(cf_error, "", "!! Could not get list of installed packages");
+         return false;
+         }
+      }
+   else
+      {
+      CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
+      CfOut(cf_verbose,"","   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
+      CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
+      
+      if (!IsExecutable(GetArg0(a.packages.package_list_command)))
+         {
+         CfOut(cf_error,"","The proposed package list command \"%s\" was not executable",a.packages.package_list_command);
+         return false;
+         }
+      
+      if ((prp = cf_popen(a.packages.package_list_command,"r")) == NULL)
+         {
+         CfOut(cf_error,"cf_popen","Couldn't open the package list with command %s\n",a.packages.package_list_command);
+         return false;
+         }
+      
+      while (!feof(prp))
+         {
+         memset(vbuff,0,CF_BUFSIZE);
+         CfReadLine(vbuff,CF_BUFSIZE,prp);
+         CF_NODES++;
          
-		 if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
-		   {
-		     continue;
-		   }
-	       }
-	   }
-   
-	 cf_pclose(prp);
-       }
+         if (a.packages.package_multiline_start)
+            {
+            if (FullTextMatch(a.packages.package_multiline_start,vbuff))
+               {
+               PrependMultiLinePackageItem(&(manager->pack_list),vbuff,reset,a,pp);
+               }
+            else
+               {
+               PrependMultiLinePackageItem(&(manager->pack_list),vbuff,update,a,pp);
+               }
+            }
+         else
+            {
+            if (!FullTextMatch(a.packages.package_installed_regex,vbuff))
+               {
+               continue;
+               }
+            
+            if (!PrependListPackageItem(&(manager->pack_list),vbuff,a,pp))
+               {
+               continue;
+               }
+            }
+         }
+      
+      cf_pclose(prp);
+      }
    }
 
 #endif  /* NOT MINGW */
@@ -750,7 +749,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
                 if (a.packages.package_file_repositories && ( action == cfa_addpack || action == cfa_update ) )
                    {
-		     if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
+                   if ((sp = PrefixLocalRepository(a.packages.package_file_repositories,pi->name)) != NULL)
                       {
                       strcat(offset,sp);
                       }
@@ -760,10 +759,10 @@ for (pm = schedule; pm != NULL; pm = pm->next)
                       }
                    }
 		else
-		  {
-		    strcat(offset,pi->name);
-		  }
-
+                   {
+                   strcat(offset,pi->name);
+                   }
+                
                 if (ExecPackageCommand(command_string,verify,true,a,pp))
                    {
                    CfOut(cf_verbose,"","Package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
@@ -812,14 +811,14 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 	       {
 		 if (ok)
 		   {
-		     CfOut(cf_verbose,"","Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
+                   CfOut(cf_verbose,"","Bulk package schedule execution ok for %s (outcome cannot be promised by cf-agent)",pi->name);
 		   }
 		 else
-		   {
-		     CfOut(cf_error,"","Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
-		   }
+                    {
+                    CfOut(cf_error,"","Bulk package schedule execution failed somewhere - unknown outcome for %s",pi->name);
+                    }
 	       }
-	       
+             
              break;
              
          default:
@@ -1937,7 +1936,7 @@ int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum versio
 
 Debug("Compare (%s,%s,%s) and (%s,%s,%s)\n",n,v,a,pi->name,pi->version,pi->arch);
   
-if (strcmp(n,pi->name) != 0)
+if (CompareCSVName(n,pi->name) != 0)
    {
    return false;
    }
@@ -1960,8 +1959,8 @@ if (strcmp(v,"*") == 0)
    return true;
    }
 
-ParsePackageVersion(v,numbers_1,separators_1);
-ParsePackageVersion(pi->version,numbers_2,separators_2);
+ParsePackageVersion(CanonifyChar(v,','),numbers_1,separators_1);
+ParsePackageVersion(CanonifyChar(pi->version,','),numbers_2,separators_2);
 
 /* If the format of the version string doesn't match, we're already doomed */
 

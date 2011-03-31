@@ -752,6 +752,7 @@ int IsNewerFileTree(char *dir,time_t reftime);
 char *Titleize (char *str);
 int DeEscapeQuotedString(char *in, char *out);
 void DeEscapeFilename(char *in,char *out);
+int CompareCSVName(char *s1,char *s2);
 int IsDir(char *path);
 int EmptyString(char *s);
 char *JoinPath(char *path,char *leaf);

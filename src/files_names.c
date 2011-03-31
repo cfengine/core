@@ -655,6 +655,31 @@ return buffer;
 
 /*********************************************************************/
 
+int CompareCSVName(char *s1,char *s2)
+
+{ char *sp1,*sp2;
+  char ch1,ch2;
+
+for (sp1 = s1,sp2 = s2; *sp1 != '\0' && *sp2 != '\0'; sp1++,sp2++)
+   {
+   ch1 = (*sp1 == ',') ? '_' : *sp1;
+   ch2 = (*sp2 == ',') ? '_' : *sp2;
+
+   if (ch1 > ch2)
+      {
+      return 1;
+      }
+   else if (ch1 < ch2)
+      {
+      return -1;
+      }
+   }
+
+return 0;
+}
+
+/*********************************************************************/
+
 char *ReadLastNode(char *str)
 
 /* Return the last node of a pathname string  */

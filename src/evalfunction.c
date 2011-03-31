@@ -4676,7 +4676,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       continue;
       }
 
-   if(linebuf[lineLen - 1] == '\r')
+   if (linebuf[lineLen - 1] == '\r')
      {
      linebuf[lineLen - 1] = '\0';
      }
@@ -4747,6 +4747,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
    }
 
 /* Don't free data - goes into vars */
+
 return hcount;
 }
 
@@ -4810,25 +4811,21 @@ return true;
 
 void ModuleProtocol(char *command,char *line,int print)
 
-{
-    char name[CF_BUFSIZE],content[CF_BUFSIZE],context[CF_BUFSIZE];
-    char *sp;
+{ char name[CF_BUFSIZE],content[CF_BUFSIZE],context[CF_BUFSIZE];
+  char *sp;
+  char arg0[CF_BUFSIZE];
+  char *filename;
 
-    /* Infer namespace from script name */
+/* Infer namespace from script name */
 
-    char arg0[CF_BUFSIZE];
-    char *filename;
+snprintf(arg0, CF_BUFSIZE, "%s", GetArg0(command));
+filename = basename(arg0);
 
-    snprintf(arg0, CF_BUFSIZE, "%s", GetArg0(command));
-    filename = basename(arg0);
+/* Canonicalize filename into acceptable namespace name*/
 
-    /* Canonicalize filename into acceptable namespace name*/
-
-    CanonifyNameInplace(filename);
-
-    strcpy(context, filename);
-
-    CfOut(cf_verbose, "", "Module context: %s\n", context);
+CanonifyNameInPlace(filename);
+strcpy(context,filename);
+CfOut(cf_verbose, "", "Module context: %s\n", context);
 
 NewScope(context);
 name[0] = '\0';
@@ -4853,18 +4850,18 @@ switch (*line)
    case '=':
        content[0] = '\0';
        sscanf(line+1,"%[^=]=%[^\n]",name,content);
-
+       
        if (CheckID(name))
           {
           CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
           NewScalar(context,name,content,cf_str);
           }
        break;
-
+       
    case '@':
        content[0] = '\0';
        sscanf(line+1,"%[^=]=%[^\n]",name,content);
-
+       
        if (CheckID(name))
           {
           CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);

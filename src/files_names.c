@@ -611,16 +611,18 @@ return ret;
 
 /*********************************************************************/
 
-void CanonifyNameInplace(char *s)
+void CanonifyNameInPlace(char *s)
 {
-    for (; *s != '\0'; s++)
-    {
-        if (!isalnum(*s) || *s == '.')
-        {
-            *s = '_';
-        }
-    }
+for (; *s != '\0'; s++)
+   {
+   if (!isalnum(*s) || *s == '.')
+      {
+      *s = '_';
+      }
+   }
 }
+
+/*********************************************************************/
 
 char *CanonifyName(const char *str)
 
@@ -628,9 +630,7 @@ char *CanonifyName(const char *str)
           
 memset(buffer,0,CF_BUFSIZE);
 strcpy(buffer,str);
-
-CanonifyNameInplace(buffer);
-
+CanonifyNameInPlace(buffer);
 return buffer;
 }
 

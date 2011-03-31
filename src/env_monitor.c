@@ -45,7 +45,7 @@ included file COSL.txt.
 /* Globals                                                                   */
 /*****************************************************************************/
 
-double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
+static double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
 /* persistent observations */
 
@@ -108,8 +108,6 @@ long LASTT[CF_OBSERVABLES];
 
 void MonInitialize(void);
 void StartServer (int argc, char **argv);
-void yyerror (char *s);
-void RotateFiles (char *s, int n);
 
 void GetDatabaseAge (void);
 void LoadHistogram  (void);
@@ -137,7 +135,6 @@ void UpdateDistributions (char *timekey, struct Averages *av);
 double WAverage (double newvals,double oldvals, double age);
 double SetClasses (char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey);
 void SetVariable (char *name,double now, double average, double stddev, struct Item **list);
-void RecordChangeOfState  (struct Item *list,char *timekey);
 double RejectAnomaly (double new,double av,double var,double av2,double var2);
 void SetEntropyClasses (char *service,struct Item *list,char *inout);
 void AnalyzeArrival (char *tcpbuffer);
@@ -1681,13 +1678,6 @@ void SetVariable(char *name,double value,double average,double stddev,struct Ite
 
  snprintf(var,CF_MAXVARSIZE,"dev_%s=%.2lf",name,stddev);
  AppendItem(classlist,var,""); 
-}
-
-/*****************************************************************************/
-
-void RecordChangeOfState(struct Item *classlist,char *timekey)
-
-{
 }
 
 /*****************************************************************************/

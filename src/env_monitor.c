@@ -59,14 +59,11 @@ int BATCH_MODE = false;
 double ITER = 0.0;           /* Iteration since start */
 double AGE,WAGE;             /* Age and weekly age of database */
 
-char BATCHFILE[CF_BUFSIZE];
-char STATELOG[CF_BUFSIZE];
 char ENVFILE_NEW[CF_BUFSIZE];
 char ENVFILE[CF_BUFSIZE];
 
 short ACPI = false;
 short LMSENSORS = false;
-short SCLI = false;
 short TCPDUMP = false;
 short TCPPAUSE = false;
 FILE *TCPPIPE;
@@ -90,10 +87,6 @@ int LDT_POS = 0;
 int LDT_FULL = false;
 
 /* Entropy etc */
-
-double ENTROPY = 0.0;
-double LAST_HOUR_ENTROPY = 0.0;
-double LAST_DAY_ENTROPY = 0.0;
 
 struct Item *PREVIOUS_STATE = NULL;
 struct Item *ENTROPIES = NULL;
@@ -183,9 +176,6 @@ void MonInitialize()
  
  snprintf(AVDB,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
  MapName(AVDB);
-
- snprintf(STATELOG,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATELOG_FILE);
- MapName(STATELOG);
 
  snprintf(ENVFILE_NEW,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENVNEW_FILE);
  MapName(ENVFILE_NEW);

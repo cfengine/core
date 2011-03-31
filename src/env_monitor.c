@@ -113,7 +113,6 @@ void Sniff(void);
 
 void GatherProcessData (void);
 void GatherCPUData (void);
-void Unix_GatherCPUData(void);
 void GatherDiskData (void);
 void GatherLoadData (void);
 void GatherSocketData (void);
@@ -1055,17 +1054,6 @@ int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProc
  return NovaWin_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
 #else
  return Unix_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
-#endif
-}
-
-/*****************************************************************************/
-
-void GatherCPUData()
-{
-#ifdef MINGW
-NovaWin_GatherCPUData(CF_THIS);
-#else
-Unix_GatherCPUData();
 #endif
 }
 
@@ -2391,7 +2379,7 @@ return true;
 
 /*****************************************************************************/
 
-void Unix_GatherCPUData()
+void GatherCPUData()
 
 { double q,dq;
   char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];

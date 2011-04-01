@@ -1607,7 +1607,7 @@ void DeletePackageItems(struct CfPackageItem *pi);
 int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
-void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep);
+void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist **sep);
 void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
 char *PrefixLocalRepository(struct Rlist *repositories,char *package);
 int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);

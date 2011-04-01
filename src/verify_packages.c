@@ -1959,16 +1959,14 @@ if (strcmp(v,"*") == 0)
    return true;
    }
 
-ParsePackageVersion(CanonifyChar(v,','),numbers_1,separators_1);
-ParsePackageVersion(CanonifyChar(pi->version,','),numbers_2,separators_2);
+ParsePackageVersion(CanonifyChar(v,','),numbers_1,&separators_1);
+ParsePackageVersion(CanonifyChar(pi->version,','),numbers_2,&separators_2);
 
 /* If the format of the version string doesn't match, we're already doomed */
 
 CfOut(cf_verbose,""," -> Check for compatible versioning model in (%s,%s)\n",v,pi->version);
 
-for (rp_1 = separators_1,rp_2 = separators_2;
-     rp_1 != NULL & rp_2 != NULL;
-     rp_1= rp_1->next,rp_2=rp_2->next)
+for (rp_1 = separators_1,rp_2 = separators_2; rp_1 != NULL && rp_2 != NULL; rp_1= rp_1->next,rp_2=rp_2->next)
    {
    if (strcmp(rp_1->item,rp_2->item) != 0)
       {
@@ -2097,7 +2095,7 @@ return false;
 /* Level                                                                     */
 /*****************************************************************************/
 
-void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist *sep)
+void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist **sep)
 
 { char *sp,numeral[30],separator[2];
 
@@ -2126,7 +2124,7 @@ for (sp = version; *sp != '\0'; sp++)
       }
    
    sscanf(sp,"%1[^0-9a-zA-Z]",separator);
-   PrependRScalar(&sep,separator,CF_SCALAR);
+   PrependRScalar(sep,separator,CF_SCALAR);
    }
 }
 

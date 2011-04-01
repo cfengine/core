@@ -142,26 +142,23 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   double keyval;
   int lineno = pp->lineno;
   char name[CF_BUFSIZE];
-  char *noLogTypes[] = { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+  char *noStatusTypes[] = { "vars", "classes", NULL };
+  char *noLogTypes[] = { "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
   bool log = true;
   int i;
 
-  // Don't log these items
+  Debug("ClassAuditLog(%s)\n",str);
 
-if (pp->agentsubtype == NULL)
-   {
-   return;
-   }
+  // never count vars or classes as repaired (creates messy reports)
+  if (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,noStatusTypes,false))
+     {
+     return;
+     }
   
-for (i = 0; noLogTypes[i] != NULL; i++)
-   {
-   if (strcmp(pp->agentsubtype,noLogTypes[i]) == 0)
-      {
-      log = false;
-      }
-   }
-
-Debug("ClassAuditLog(%s)\n",str);
+  if(IsStrIn(pp->agentsubtype,noLogTypes,false))
+     {
+     log = false;
+     }
 
 switch(status)
    {

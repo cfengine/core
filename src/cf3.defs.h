@@ -360,6 +360,7 @@ enum cfkcontrol
    cfk_genman,
    cfk_graph_dir,
    cfk_graph_output,
+   cfk_goalpatterns,
    cfk_htmlbanner,
    cfk_htmlfooter,
    cfk_tm_prefix,

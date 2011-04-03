@@ -102,7 +102,7 @@ int GRAPH = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
 int PASS;
-
+struct Rlist *GOALS = NULL;
 struct Occurrence *OCCURRENCES = NULL;
 
 /*******************************************************************/
@@ -370,6 +370,8 @@ strcpy(SQL_SERVER,"localhost");
 strcpy(GRAPHDIR,"");
 SHOWREPORTS = false;
 
+PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
+
 #ifdef HAVE_NOVA
 s1 = Nova_SizeCfSQLContainer();
 s2 = SizeCfSQLContainer();
@@ -420,6 +422,13 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       continue;
       }
 
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_goalpatterns].lval) == 0)
+      {
+      GOALS = (struct Rlist *)retval;
+      CfOut(cf_verbose,"","SET goal_patterns list\n");
+      continue;
+      }
+   
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
       {
       SQL_TYPE = Str2dbType(retval);

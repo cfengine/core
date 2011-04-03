@@ -241,6 +241,7 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
    {"graph_directory",cf_str,CF_PATHRANGE,"Path to directory where rendered .png files will be created"},
    {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
+   {"goal_patterns",cf_slist,"","A list of regular expressions that match promisees/topics considered to be organizational goals"},
    {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
    {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
    {"id_prefix",cf_str,".*","The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},

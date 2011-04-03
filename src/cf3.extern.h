@@ -72,6 +72,7 @@ extern struct Item *DONELIST;
 extern struct Rlist *CBUNDLESEQUENCE;
 extern struct Item *ROTATED;
 extern double FORGETRATE;
+extern struct Rlist *GOALS;
 
 extern struct Rlist *CF_STCK;
 extern int EDIT_MODEL;

@@ -102,7 +102,7 @@ int GRAPH = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
 int PASS;
-struct Rlist *GOALS = NULL;
+
 struct Occurrence *OCCURRENCES = NULL;
 
 /*******************************************************************/

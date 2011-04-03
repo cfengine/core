@@ -395,6 +395,8 @@ struct Item *VNEGHEAP = NULL;
 struct Item *VDELCLASSES = NULL;
 struct Rlist *PRIVCLASSHEAP = NULL;
 
+struct Rlist *GOALS = NULL;
+
 /*******************************************************************/
 /*                                                                 */
 /* Checksums                                                       */

@@ -41,6 +41,7 @@ extern char *DAY_TEXT[];
 /**********************************************************************/
 
 /* Return expression with error position highlighted. Result is on the heap. */
+
 static char *HighlightExpressionError(const char *str, int position)
 {
 char *errmsg = malloc(strlen(str) + 3);
@@ -55,6 +56,7 @@ free(firstpart);
 return errmsg;
 }
 
+/**********************************************************************/
 /* Debugging output */
 
 static void IndentL(int level)
@@ -70,6 +72,8 @@ if (level > 0)
    }
 }
 
+/**********************************************************************/
+
 static int IncIndent(int level, int inc)
 {
 if (level < 0)
@@ -81,6 +85,8 @@ else
    return level + inc;
    }
 }
+
+/**********************************************************************/
 
 static void EmitStringExpression(StringExpression *e, int level)
 {
@@ -112,6 +118,8 @@ switch (e->op)
       break;
    }
 }
+
+/**********************************************************************/
 
 static void EmitExpression(Expression *e, int level)
 {
@@ -158,6 +166,8 @@ yyerror(errmsg);
 free(errmsg);
 }
 
+/**********************************************************************/
+
 /* To be used from parser only (uses yyerror) */
 void ValidateClassSyntax(char *str)
 {
@@ -180,6 +190,8 @@ if (!res.result || res.position != strlen(str))
    }
 }
 
+/**********************************************************************/
+
 static bool ValidClassName(const char *str)
 {
 ParseResult res = ParseExpression(str, 0, strlen(str));
@@ -191,6 +203,8 @@ if (res.result)
 
 return res.result && res.position == strlen(str);
 }
+
+/**********************************************************************/
 
 static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
 {
@@ -213,6 +227,8 @@ if (InAlphaList(VADDCLASSES, classname))
 return false;
 }
 
+/**********************************************************************/
+
 static char *EvalVarRef(const char *varname, void *param)
 {
 /*
@@ -222,6 +238,8 @@ static char *EvalVarRef(const char *varname, void *param)
  */
 return NULL;
 }
+
+/**********************************************************************/
 
 int IsDefinedClass(char *class)
 {
@@ -255,15 +273,21 @@ else
    }
 }
 
+/**********************************************************************/
+
 int IsExcluded(char *exception)
 {
 return !IsDefinedClass(exception);
 }
 
+/**********************************************************************/
+
 static ExpressionValue EvalTokenFromList(const char *token, void *param)
 {
 return InAlphaList(*(struct AlphaList *)param, token);
 }
+
+/**********************************************************************/
 
 static bool EvalWithTokenFromList(const char *expr, struct AlphaList *token_list)
 {
@@ -290,12 +314,16 @@ else
    }
 }
 
+/**********************************************************************/
+
 /* Process result expression */
 
 bool EvalProcessResult(const char *process_result, struct AlphaList *proc_attr)
 {
 return EvalWithTokenFromList(process_result, proc_attr);
 }
+
+/**********************************************************************/
 
 /* File result expressions */
 

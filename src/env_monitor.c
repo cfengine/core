@@ -1516,7 +1516,14 @@ if (aold == 0 && anew == 0)
    return 0;
    }
 
-av = (wnew*anew + wold*aold)/(wnew+wold); 
+/*
+ * AV = (Wnew*Anew + Wold*Aold) / (Wnew + Wold).
+ *
+ * Wnew + Wold always equals to 1, so we omit it for better precision and
+ * performance.
+ */
+
+av = (wnew*anew + wold*aold);
 
 if (av < 0)
    {

@@ -499,6 +499,18 @@ switch (this)
    case cfn_readrealarray:
        rval = FnCallReadStringArray(fp,expargs,cf_real,false);
        break;
+   case cfn_parsestringarray:
+       rval = FnCallParseStringArray(fp,expargs,cf_str,false);
+       break;
+   case cfn_parsestringarrayidx:
+       rval = FnCallParseStringArray(fp,expargs,cf_str,true);
+       break;
+   case cfn_parseintarray:
+       rval = FnCallParseStringArray(fp,expargs,cf_int,false);
+       break;
+   case cfn_parserealarray:
+       rval = FnCallParseStringArray(fp,expargs,cf_real,false);
+       break;
    case cfn_irange:
        rval = FnCallIRange(fp,expargs);
        break;

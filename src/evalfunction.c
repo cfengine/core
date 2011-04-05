@@ -4118,6 +4118,87 @@ return rval;
 
 /*********************************************************************/
 
+struct Rval FnCallParseStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
+
+/* lval,filename,separator,comment,Max number of bytes  */
+
+{ struct Rlist *rp,*newlist = NULL;
+  struct Rval rval;
+  char *array_lval,*instring,*comment,*split,fnname[CF_MAXVARSIZE];
+  int maxent,maxsize,count = 0,noerrors = false,entries = 0;
+  char *file_buffer = NULL;
+
+ /* Arg validation */
+
+if (intIndex)
+   {
+   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarrayidx].args,finalargs);
+   snprintf(fnname,CF_MAXVARSIZE-1,"read%sarrayidx",CF_DATATYPES[type]);
+   }
+else
+   {
+   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs);
+   snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
+   }
+
+/* begin fn specific content */
+
+ /* 6 args: array_lval,instring,comment_regex,split_regex,max number of entries,maxfilesize  */
+
+array_lval = (char *)(finalargs->item);
+instring = strdup((char *)(finalargs->next->item));
+comment = (char *)(finalargs->next->next->item);
+split = (char *)(finalargs->next->next->next->item);
+maxent = Str2Int(finalargs->next->next->next->next->item);
+maxsize = Str2Int(finalargs->next->next->next->next->next->item);
+
+// Read once to validate structure of file in itemlist
+
+Debug("Parse string data from string %s - , maxent %d, maxsize %d\n",instring,maxent,maxsize);
+
+if (instring == NULL)
+   {
+   entries = 0;
+   }
+else
+   {
+   instring = StripPatterns(instring,comment,"string argument 2");
+
+   if (instring == NULL)
+      {
+      entries = 0;
+      }
+   else
+      {
+      entries = BuildLineArray(array_lval,instring,split,maxent,type,intIndex);
+      }
+   }
+
+switch(type)
+   {
+   case cf_str:
+   case cf_int:
+   case cf_real:
+       break;
+
+   default:
+       FatalError("Software error parsestringarray - abused type");       
+   }
+
+SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
+
+/* Return the number of lines in array */
+
+snprintf(fnname,CF_MAXVARSIZE-1,"%d",entries);
+rval.item = strdup(fnname);
+
+free(instring);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
     
 { struct Rlist *newlist = NULL;
@@ -4614,15 +4695,15 @@ char *StripPatterns(char *file_buffer,char *pattern,char *filename)
 if(!EMPTY(pattern))
   {
   while(BlockTextMatch(pattern,file_buffer,&start,&end))
-    {
-    CloseStringHole(file_buffer,start,end);
-	
-    if (count++ > strlen(file_buffer))
-      {
-      CfOut(cf_error,""," !! Comment regex \"%s\" was irreconcilable reading file %s probably because it legally matches nothing",pattern,filename);
-      return file_buffer;
-      }
-    }
+     {
+     CloseStringHole(file_buffer,start,end);
+     
+     if (count++ > strlen(file_buffer))
+        {
+        CfOut(cf_error,""," !! Comment regex \"%s\" was irreconcilable reading input \"%s\" probably because it legally matches nothing",pattern,filename);
+        return file_buffer;
+        }
+     }
   }
 
 return file_buffer;

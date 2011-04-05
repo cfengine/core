@@ -590,6 +590,7 @@ struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type);
 struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex);
+struct Rval FnCallParseStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex);
 struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs);
 struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs);

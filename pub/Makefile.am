@@ -9,9 +9,7 @@ noinst_LTLIBRARIES = libcfpub.la
 libcfpub_la_SOURCES =							\
 	getopt.c							\
 	getopt1.c							\
-	full-write.c							\
 	regex.c								\
-	sort.c								\
 	snprintf.c
 
 libcfpub_la_LIBADD = $(LTLIBOBJS)

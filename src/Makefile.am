@@ -68,6 +68,8 @@ libpromises_la_SOURCES =                                                \
         args.c                                                          \
         hashes.c                                                        \
         crypto.c                                                        \
+        sort.c                                                          \
+        full-write.c                                                    \
         expand.c                                                        \
         matching.c                                                      \
         selfdiagnostic.c                                                \

@@ -213,11 +213,6 @@ void MonInitialize()
     LDT_SUM[i] = 0;
     LASTQ[i] = 0;
     LASTT[i] = 0;
-   
-    for (j = 0; j < LDT_BUFSIZE; j++)
-       {
-       LDT_BUF[i][j];
-       }
     }
 
  srand((unsigned int)time(NULL)); 

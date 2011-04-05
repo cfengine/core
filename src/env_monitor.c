@@ -244,7 +244,7 @@ void MonInitialize()
 
 void GetDatabaseAge()
 
-{ int err_no;
+{
  CF_DB *dbp;
 
  if (!OpenDB(AVDB,&dbp))
@@ -325,7 +325,6 @@ void StartServer(int argc,char **argv)
 
 { char *timekey;
  struct Averages averages;
- int i;
  struct Promise *pp = NewPromise("monitor_cfengine","the monitor daemon");
  struct Attributes dummyattr;
  struct CfLock thislock;
@@ -436,7 +435,7 @@ void OpenSniffer()
 
 void Sniff()
 
-{ int i;
+{
  char tcpbuffer[CF_BUFSIZE];
  
 CfOut(cf_verbose,"","Reading from tcpdump...\n");
@@ -479,7 +478,7 @@ fflush(TCPPIPE);
 
 void GetQ()
 
-{ int i;
+{
 
 Debug("========================= GET Q ==============================\n");
 
@@ -521,7 +520,7 @@ return ConvTimeKey(str);
 struct Averages EvalAvQ(char *t)
 
 { struct Averages *currentvals,newvals;
-  double This[CF_OBSERVABLES],delta2;
+  double This[CF_OBSERVABLES];
   char name[CF_MAXVARSIZE];
   int i; 
 
@@ -609,7 +608,7 @@ return newvals;
 
 void LeapDetection()
 
-{ int i,j,last_pos = LDT_POS;
+{ int i,last_pos = LDT_POS;
   double n1,n2,d;
   double padding = 0.2;
 
@@ -683,7 +682,7 @@ void ArmClasses(struct Averages av,char *timekey)
 
 { double sigma;
  struct Item *classlist = NULL, *ip;
- int i,j,k,pos;
+ int i,j,k;
  FILE *fp;
  char buff[CF_BUFSIZE],ldt_buff[CF_BUFSIZE],name[CF_MAXVARSIZE];
  static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
@@ -1352,7 +1351,7 @@ for (i = 0; i < CF_NETATTR; i++)
 
 struct Averages *GetCurrentAverages(char *timekey)
 
-{ int err_no;
+{
   CF_DB *dbp;
   static struct Averages entry;
 
@@ -1387,7 +1386,7 @@ return &entry;
 
 void UpdateAverages(char *timekey,struct Averages newvals)
 
-{ int err_no;
+{
   CF_DB *dbp;
 
 if (!OpenDB(AVDB,&dbp))
@@ -1410,7 +1409,7 @@ HistoryUpdate(newvals);
 
 void UpdateDistributions(char *timekey,struct Averages *av)
 
-{ int position,day,i,time_to_update = true;
+{ int position,day,i;
   char filename[CF_BUFSIZE];
   FILE *fp;
  
@@ -1955,7 +1954,7 @@ return (int)(dq+0.5);
 
 void GatherSensorData()
 
-{ char buffer[CF_BUFSIZE];
+{
 
  Debug("GatherSensorData()\n");
  

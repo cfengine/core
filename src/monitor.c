@@ -109,7 +109,6 @@ return 0;
 void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  struct Item *actionList;
   int optindex = 0;
   int c;
   

@@ -1943,11 +1943,11 @@ LASTQ[index] = q;
 return (int)(dq+0.5);
 }
 
-/******************************************************************************/
-/* Motherboard sensors - how to standardize this somehow                      *
-/* We're mainly interested in temperature and power consumption, but only the */
-/* temperature is generally available. Several temperatures exist too ...     */
-/******************************************************************************/
+/******************************************************************************
+ * Motherboard sensors - how to standardize this somehow
+ * We're mainly interested in temperature and power consumption, but only the
+ * temperature is generally available. Several temperatures exist too ...
+ ******************************************************************************/
 
 void GatherSensorData()
 

@@ -370,7 +370,8 @@ void InitializeGA(int argc,char *argv[])
 { char *sp;
   int i,j,seed,force = false;
   struct stat statbuf,sb;
-  unsigned char s[16],vbuff[CF_BUFSIZE];
+  unsigned char s[16];
+  char vbuff[CF_BUFSIZE];
   char ebuff[CF_EXPANDSIZE];
 
 SHORT_CFENGINEPORT =  htons((unsigned short)5308);

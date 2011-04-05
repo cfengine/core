@@ -307,13 +307,13 @@ else
    if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
       {
       Debug("Trying to remove from database non-existing key %.*s\n",
-            name, size);
+            size, name);
       }
    else
       {
       CfOut(cf_error, "", "BDB_DeleteComplexKeyDB: "
             "Unable to remove key %.*s from database: %s\n",
-            name, size, db_strerror(ret));
+            size, name, db_strerror(ret));
       }
 
    BDB_DeleteDBKey(key);

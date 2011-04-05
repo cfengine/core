@@ -939,7 +939,7 @@ if (count != 0)
    return false;
    }
 
-Debug1("IsNakedVar(%s,%c)!!\n",str,vtype);
+Debug("IsNakedVar(%s,%c)!!\n",str,vtype);
 return true;
 }
 

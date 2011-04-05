@@ -303,8 +303,8 @@ int SplitProcLine(char *proc,char **names,int *start,int *end,char **line)
 { int i,s,e;
 
 char *sp = NULL;
-char cols1[CF_PROCCOLS][CF_SMALLBUF] = {};
-char cols2[CF_PROCCOLS][CF_SMALLBUF] = {};
+char cols1[CF_PROCCOLS][CF_SMALLBUF] = { "" };
+char cols2[CF_PROCCOLS][CF_SMALLBUF] = { "" };
 
 Debug("SplitProcLine(%s)\n",proc); 
 

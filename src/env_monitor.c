@@ -2400,8 +2400,8 @@ while (!feof(fp))
    {
    fgets(buf,CF_BUFSIZE,fp);
    
-   sscanf(buf,"%s%ld%ld%ld%ld%ld%ld%ld",&cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
-   snprintf(name,16,"cpu%d",count);
+   sscanf(buf,"%s%ld%ld%ld%ld%ld%ld%ld",cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
+   snprintf(name,16,"cpu%ld",count);
    
    total_time = (userticks+niceticks+systemticks+idle); 
    

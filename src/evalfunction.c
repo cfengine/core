@@ -4574,7 +4574,7 @@ if (result == NULL)
 
 if ((fp = fopen(filename,"r")) == NULL)
    {
-   CfOut(cf_verbose,"fopen","Could not open file %s in readfile",filename);
+   CfOut(cf_verbose,"fopen","Could not open file \"%s\" in readfile",filename);
    return NULL;
    }
 

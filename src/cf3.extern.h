@@ -130,7 +130,6 @@ extern char *SHIFT_TEXT[];
 extern char FILE_SEPARATOR;
 extern char FILE_SEPARATOR_STR[2];
 
-extern time_t DATESTAMPS[CF_OBSERVABLES];
 extern char AGGREGATION[CF_BUFSIZE];
 extern char *UNITS[CF_OBSERVABLES];
 

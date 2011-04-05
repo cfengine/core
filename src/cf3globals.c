@@ -627,4 +627,3 @@ char *OBS[CF_OBSERVABLES][2] =
     };
 
 char *UNITS[CF_OBSERVABLES] = {0};
-time_t DATESTAMPS[CF_OBSERVABLES] = {0};

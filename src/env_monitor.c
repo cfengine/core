@@ -1067,8 +1067,6 @@ CfOut(cf_verbose,"","Disk free = %d %%\n",CF_THIS[ob_diskfree]);
 
 switch(VSYSTEMHARDCLASS)
    {
-   linuxx:
-   
    default:
        strcpy(accesslog,"/var/log/apache2/access_log");
        strcpy(errorlog,"/var/log/apache2/error_log");
@@ -1975,7 +1973,7 @@ void GatherSensorData()
 
         break;
 
-    case solaris:
+    default:
         break;
     }
 }

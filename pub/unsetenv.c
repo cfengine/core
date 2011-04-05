@@ -23,27 +23,26 @@
 
 */
 
-#include "../src/conf.h"
-#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
 int unsetenv(const char *name)
 {
-    int retval = 0;
-    int namelen = strlen(name);
-    char *buf = malloc(strlen(name) + 2);
+int retval;
+char *buf = malloc(strlen(name) + 2);
 
-    if (!buf)
-        return ENOMEM;
+if (!buf)
+   {
+   return ENOMEM;
+   }
 
-    sprintf(buf, "%s=", name);
-
-    retval = putenv(buf);
-
-    free(buf);
-
-    return retval;
+sprintf(buf, "%s=", name);
+retval = putenv(buf);
+free(buf);
+return retval;
 }
 
 #endif

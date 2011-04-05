@@ -417,7 +417,29 @@ struct FnCallArg READSTRINGARRAY_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg PARSESTRINGARRAY_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"A string to parse for input data"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"A string to parse for input data"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
     {
     {CF_IDRANGE,cf_str,"Array identifer to populate"},
     {CF_PATHRANGE,cf_str,"File name to read"},
@@ -650,6 +672,10 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"ldapvalue",cf_str,6,LDAPVALUE_ARGS,"Extract the first matching named value from ldap"},
    {"now",cf_int,0,NOW_ARGS,"Convert the current time into system representation"},
    {"on",cf_int,6,DATE_ARGS,"Convert an exact date/time to an integer system representation"},
+   {"parseintarray",cf_int,6,PARSESTRINGARRAY_ARGS,"Read an array of integers from a file and assign the dimension to a variable"},
+   {"parserealarray",cf_int,6,PARSESTRINGARRAY_ARGS,"Read an array of real numbers from a file and assign the dimension to a variable"},
+   {"parsestringarray",cf_int,6,PARSESTRINGARRAY_ARGS,"Read an array of strings from a file and assign the dimension to a variable"},
+   {"parsestringarrayidx",cf_int,6,PARSESTRINGARRAYIDX_ARGS,"Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
    {"peers",cf_slist,3,PEERS_ARGS,"Get a list of peers (not including ourself) from the partition to which we belong"},
    {"peerleader",cf_str,3,PEERLEADER_ARGS,"Get the assigned peer-leader of the partition to which we belong"},
    {"peerleaders",cf_slist,3,PEERLEADERS_ARGS,"Get a list of peer leaders from the named partitioning"},

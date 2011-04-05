@@ -131,7 +131,6 @@ double RejectAnomaly (double new,double av,double var,double av2,double var2);
 void SetEntropyClasses (char *service,struct Item *list,char *inout);
 void AnalyzeArrival (char *tcpbuffer);
 void ZeroArrivals (void);
-void CfenvTimeOut (void);
 void IncrementCounter (struct Item **list,char *name);
 void SaveTCPEntropyData (struct Item *list,int i, char *inout);
 int GetFileGrowth(char *filename,enum observables index);
@@ -393,7 +392,7 @@ void StartServer(int argc,char **argv)
 /* Level 3                                                           */
 /*********************************************************************/
   
-void CfenvTimeOut()
+static void CfenvTimeOut(int signum)
  
 {
 alarm(0);
@@ -440,7 +439,7 @@ void Sniff()
  
 CfOut(cf_verbose,"","Reading from tcpdump...\n");
 memset(tcpbuffer,0,CF_BUFSIZE);      
-signal(SIGALRM,(void *)CfenvTimeOut);
+signal(SIGALRM,CfenvTimeOut);
 alarm(SLEEPTIME);
 TCPPAUSE = false;
 

@@ -9,7 +9,7 @@ endif
 
 # Make sure these get distributed with everything else.
 
-EXTRA_DIST = $(man_MANS) *.png *.html *.txt
+EXTRA_DIST = $(man_MANS) *.png *.html
 
 %.8 : ../src/%
 	../src/$< -M > `echo $<.8 | sed s/src/docs/`

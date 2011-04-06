@@ -150,15 +150,16 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   Debug("ClassAuditLog(%s)\n",str);
 
   // never count vars or classes as repaired (creates messy reports)
-  if (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,noStatusTypes,false))
-     {
-     return;
-     }
-  
-  if(IsStrIn(pp->agentsubtype,noLogTypes,false))
-     {
-     log = false;
-     }
+
+if (pp && (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,noStatusTypes,false)))
+   {
+   return;
+   }
+
+if (pp && IsStrIn(pp->agentsubtype,noLogTypes,false))
+   {
+   log = false;
+   }
 
 switch(status)
    {
@@ -173,7 +174,7 @@ switch(status)
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_change);
        
-       if(log)
+       if (log)
           {
           NotePromiseCompliance(pp,0.5,cfn_repaired,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_repaired);

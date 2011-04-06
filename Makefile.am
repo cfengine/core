@@ -1,6 +1,6 @@
-SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src tests docs inputs
+SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs
 
-DIST_SUBDIRS = pub src tests docs inputs
+DIST_SUBDIRS = pub src docs examples inputs
 
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 

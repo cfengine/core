@@ -202,7 +202,8 @@ char *DAY_TEXT[] =
    "Thursday",
    "Friday",
    "Saturday",
-   "Sunday"
+   "Sunday",
+   NULL
    };
 
 char *MONTH_TEXT[] =
@@ -218,7 +219,8 @@ char *MONTH_TEXT[] =
    "September",
    "October",
    "November",
-   "December"
+   "December",
+   NULL
    };
 
 char *SHIFT_TEXT[] =
@@ -226,7 +228,8 @@ char *SHIFT_TEXT[] =
    "Night",
    "Morning",
    "Afternoon",
-   "Evening"
+   "Evening",
+   NULL
    };
 
 /*****************************************************************************/

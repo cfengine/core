@@ -1,0 +1,108 @@
+#######################################################
+#
+# Test  join()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"zeros" slist => { "solo" };
+	"zero" string => join("NOISE", "zeros");
+
+	"ones" slist => { "a", "bb", "ccc" };
+	"one" string => join(":", "ones");
+
+	"twos" slist => { "xx", "xx", "xx" };
+	"two" string => join("..", "twos");
+
+	"threes" slist => { "" };
+	"three" string => join("", "threes");
+
+	"fours" slist => { "1", "", "3" };
+	"four" string => join("", "fours");
+
+	"fives" slist => { "1", "", "3" };
+	"five" string => join(",", "fives");
+
+	"sixs" slist => { "one ", " two ", " three" };
+	"six" string => join(" and ", "sixs");
+
+classes:
+	"ok1" expression => strcmp("solo", "$(zero)");
+	"ok2" expression => strcmp("a:bb:ccc", "$(one)");
+	"ok3" expression => strcmp("xx..xx..xx", "$(two)");
+	"ok4" expression => strcmp("", "$(three)");
+	"ok5" expression => strcmp("13", "$(four)");
+	"ok6" expression => strcmp("1,,3", "$(five)");
+	"ok7" expression => strcmp("one  and  two  and  three", "$(six)");
+	"ok" and => { ok1, ok2, ok3, ok4, ok5, ok6, ok7 };
+
+reports:
+    DEBUG.ok1:: "ok1";
+    DEBUG.ok2:: "ok2";
+    DEBUG.ok3:: "ok3";
+    DEBUG.ok4:: "ok4";
+    DEBUG.ok5:: "ok5";
+    DEBUG.ok6:: "ok6";
+    DEBUG.ok7:: "ok7";
+    DEBUG::
+	'strcmp("solo", "$(zero)")';
+	'strcmp("a:bb:ccc", "$(one)")';
+	'strcmp("xx..xx..xx", "$(two)")';
+	'strcmp("", "$(three)")';
+	'strcmp("13", "$(four)")';
+	'strcmp("1,,3", "$(five)")';
+	'strcmp("one  and  two  and  three", "$(six)")';
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

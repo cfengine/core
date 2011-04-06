@@ -1,0 +1,133 @@
+#######################################################
+#
+# Ensure that the transformer does not run when --dry-run is used
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    any::
+	"files" slist => { "1", "2", "3" };
+    bin_gzip::
+	"gzip" string => "/bin/gzip",
+	    policy => "free";
+    usr_bin_gzip::
+	"gzip" string => "/usr/bin/gzip",
+	    policy => "free";
+
+classes:
+    "bin_gzip" expression => fileexists("/bin/gzip");
+    "usr_bin_gzip" expression => fileexists("/usr/bin/gzip");
+
+files:
+	"$(g.testdir)/."
+	    create => "true";
+
+	"$(g.testdir)/$(files)"
+	    copy_from => init_copy("/etc/group");
+}
+
+body copy_from init_copy(file)
+{
+	source => "$(file)";
+}
+
+body classes init_set_class(class)
+{
+promise_kept => { "$(class)" };
+promise_repaired => { "$(class)" };
+}
+
+#######################################################
+
+bundle agent test
+{
+commands:
+	"$(sys.cf_agent) -f $(this.promise_filename) -D AUTO,MAIN -K -b test_dry_run --dry-run";
+}
+
+bundle agent test_dry_run
+{
+files:
+	"$(g.testdir)"
+	    transformer => "$(init.gzip) $(this.promiser)",
+	    file_select => test_plain,
+	    depth_search => test_recurse;
+
+reports:
+    !opt_dry_run::
+	"$(this.promise_filename) --dry-run FAIL";
+    MAIN.!opt_dry_run::
+	"$(this.promise_filename) --dry-run FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+body file_select test_plain
+{
+	file_types => { "plain" };
+	file_result => "file_types";
+}
+
+body depth_search test_recurse
+{
+	depth => "inf";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"files" slist => { @{init.files} };
+
+classes:
+	"ok$(files)" expression => fileexists("$(g.testdir)/$(files)");
+	"no$(files)" expression => fileexists("$(g.testdir)/$(files).gz");
+	"ok" and => {
+		    "ok1", "ok2", "ok3",
+		    "!no1", "!no2", "!no3",
+		    };
+
+reports:
+    DEBUG::
+	"$(g.testdir)/$(files) exists with no $(g.testdir)/$(files).gz"
+	    ifvarclass => "ok$(files).!no$(files)";
+	"$(g.testdir)/$(files).gz was created during --dry-run!"
+	    ifvarclass => "no$(files)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

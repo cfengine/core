@@ -1,0 +1,70 @@
+#######################################################
+#
+# Test initial class negation with -N
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+    "$(g.testfile)"
+	create => "true",
+	classes => set_bingo;
+}
+
+body classes set_bingo
+{
+promise_kept => { "bingo" };
+promise_repaired => { "bingo" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "dummy" expression => regextract("(.*)\.sub\d", $(this.promise_filename), "fn");
+    "ok" expression => "bingo";
+
+reports:
+    DEBUG::
+	"This is $(this.promise_filename), the setup stage of the test only";
+    DEBUG.bingo::
+	"bingo is set in $(this.promise_filename)";
+    DEBUG.!bingo::
+	"bingo is not set in $(this.promise_filename)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

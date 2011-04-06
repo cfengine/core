@@ -1,0 +1,97 @@
+#######################################################
+#
+# Create a file, expect simultaneous link with default and move_obstructions
+# to succeed
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+
+	# This extracts the inode number
+	"command" string => 'printf "%d", (stat("$(g.testfile)"))[1]';
+
+	"source" string => "/etc/group";
+	"source_command" string => 'printf "%d", (stat("$(g.source)"))[1]';
+	"source_ino" string => execresult(
+	    "/usr/bin/perl -le '$(g.source_command)'",
+	    "noshell");
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    delete => init_delete;
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    move_obstructions => "true",
+	    link_from => test_link;
+}
+
+body link_from test_link
+{
+	source => "/etc/group";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"result" string => execresult(
+	    "/usr/bin/perl -le '$(g.command)'",
+	    "noshell");
+
+classes:
+	"ok" expression => strcmp("$(g.source_ino)", "$(result)");
+
+reports:
+    DEBUG::
+	"expected: '$(g.source_ino)'";
+	"got:      '$(result)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

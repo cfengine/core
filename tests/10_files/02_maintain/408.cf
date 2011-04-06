@@ -1,0 +1,97 @@
+#######################################################
+#
+# Copy symlink over file, test that file is correctly saved aside.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+	"srcfile" string => "/tmp/TEST.cfengine.source";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    move_obstructions => "true",
+	    copy_from => init_copy;
+
+	"$(g.srcfile)"
+	    move_obstructions => "true",
+	    link_from => init_link;
+}
+
+body copy_from init_copy
+{
+	source => "/etc/group";
+	compare => "digest";
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+body link_from init_link
+{
+	source => "/etc/motd";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile)"
+	    move_obstructions => "true",
+	    copy_from => test_copy;
+}
+
+body copy_from test_copy
+{
+	source => "$(g.srcfile)";
+	compare => "digest";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "ok" expression => fileexists("$(g.testfile).cfsaved");
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

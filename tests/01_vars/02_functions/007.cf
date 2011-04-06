@@ -1,0 +1,112 @@
+#######################################################
+#
+# Test canonify()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "in1" string => "hello";
+    "expect1" string => "hello";
+    "out1" string => canonify("$(in1)");
+
+    "in2" string => "hello there";
+    "expect2" string => "hello_there";
+    "out2" string => canonify("$(in2)");
+
+    "in3" string => "/etc/passwd";
+    "expect3" string => "_etc_passwd";
+    "out3" string => canonify("$(in3)");
+
+    "in4" string => "hello@mumble.com";
+    "expect4" string => "hello_mumble_com";
+    "out4" string => canonify("$(in4)");
+
+    "in5" string => "!@#$%^&*()_-+={}[]\:;<>,?";
+    "expect5" string => "_________________________";
+    "out5" string => canonify("$(in5)");
+
+    "in6" string => "Eystein Måløy Stenberg";
+    "expect6" string => "Eystein_M__l__y_Stenberg";
+    "out6" string => canonify("$(in6)");
+
+    "in7" string => "$(in1) $(in1)";
+    "expect7" string => "$(in1)_$(in1)";
+    "out7" string => canonify("$(in1) $(in1)");
+
+    "in8" string => "'\"hello\"'";
+    "expect8" string => "__hello__";
+    "out8" string => canonify("$(in8)");
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" and => {
+		    strcmp("$(test.expect1)", "$(test.out1)"),
+		    strcmp("$(test.expect2)", "$(test.out2)"),
+		    strcmp("$(test.expect3)", "$(test.out3)"),
+		    strcmp("$(test.expect4)", "$(test.out4)"),
+		    strcmp("$(test.expect5)", "$(test.out5)"),
+		    strcmp("$(test.expect6)", "$(test.out6)"),
+		    strcmp("$(test.expect7)", "$(test.out7)"),
+		    strcmp("$(test.expect8)", "$(test.out8)"),
+		    };
+
+reports:
+    DEBUG::
+	"Expected canonify('$(test.in1)') => $(test.out1) == $(test.expect1)";
+	"Expected canonify('$(test.in2)') => $(test.out2) == $(test.expect2)";
+	"Expected canonify('$(test.in3)') => $(test.out3) == $(test.expect3)";
+	"Expected canonify('$(test.in4)') => $(test.out4) == $(test.expect4)";
+	"Expected canonify('$(test.in5)') => $(test.out5) == $(test.expect5)";
+	"Expected canonify('$(test.in6)') => $(test.out6) == $(test.expect6)";
+	"Expected canonify('$(test.in7)') => $(test.out7) == $(test.expect7)";
+	"Expected canonify('$(test.in8)') => $(test.out8) == $(test.expect8)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

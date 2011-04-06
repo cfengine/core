@@ -1,0 +1,81 @@
+#######################################################
+#
+# Test command modules
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "script_name" string => "$(this.promise_filename).script"; 
+}
+
+#######################################################
+
+bundle agent test
+{
+classes:
+  "matched" expression => regextract(".+/([^/]+)$",
+                                     "${init.script_name}",
+                                     "script_basename");
+
+commands:
+  "$(this.promise_filename).script" module => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+  "canonical_script_basename" string => canonify("${test.script_basename[1]}");
+
+classes:
+
+  CLASSTOBEDEFINED.!UNDEFINEDCLASS::
+    "classok" expression => "any";
+
+  any::
+    "varok" expression => strcmp("${${canonical_script_basename}.answer}", "42");
+
+    "ok" and => { "classok", "varok" };
+
+reports:
+    DEBUG::
+        "${${canonical_script_basename}.answer} =?= 42";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

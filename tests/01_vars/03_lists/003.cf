@@ -1,0 +1,95 @@
+#######################################################
+#
+# Iteration on slist of size 1
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected" };
+
+	"actual" string => "";
+
+	"expected" string =>
+"
+a";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile).actual"
+	    edit_line => test_insert;
+
+}
+
+bundle edit_line test_insert
+{
+vars:
+	"one" slist => { "a" };
+ 
+insert_lines:
+	"$(one)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_sort("$(g.testfile).actual", "$(g.testfile).actual.sorted");
+	"any" usebundle => default_sort("$(g.testfile).expected", "$(g.testfile).expected.sorted");
+	"any" usebundle => default_check_diff("$(g.testfile).actual.sorted",
+					      "$(g.testfile).expected.sorted",
+					      "$(this.promise_filename)");
+}
+
+body contain check_in_shell
+{
+useshell => "true";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

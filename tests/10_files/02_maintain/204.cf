@@ -1,0 +1,125 @@
+#######################################################
+#
+# Copy a file, then ensure that subsequent create=true doesn't
+# overwrite mode, size or change owner/group (different ordering of groups)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+	#
+	# This extracts the octal mode, and decimal nlink, uid, gid, size
+	"command" string => 'printf "%o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    any::
+	"mode" int => "01751";
+    linux::
+	"owner" string => "sys";
+	"group" string => "sys";
+    freebsd::
+	"owner" string => "bin";
+	"group" string => "sys";
+    !(linux|freebsd)::
+	"owner" string => "undefined-please-fix";
+	"group" string => "undefined-please-fix";
+
+    pass2::
+	"result" string => execresult(
+	    "/usr/bin/perl -le '$(g.command)'",
+	    "noshell");
+
+files:
+	"$(g.testfile)"
+	    copy_from => init_copy("/etc/group"),
+	    perms => init_perms("$(mode)", "$(owner)", "$(group)"),
+	    classes => init_set_class("pass2");
+}
+
+body copy_from init_copy(file)
+{
+	source => "$(file)";
+}
+
+body perms init_perms(m, o, g)
+{
+mode => "$(m)";
+owners => { "$(o)" };
+groups => { "$(g)" };
+}
+
+
+body classes init_set_class(class)
+{
+promise_kept => { "$(class)" };
+promise_repaired => { "$(class)" };
+}
+
+#######################################################
+
+bundle agent test
+{
+
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    perms => test_perms("$(init.mode)");
+}
+
+body perms test_perms(m)
+{
+mode => "$(m)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"result" string => execresult(
+	    "/usr/bin/perl -le '$(g.command)'",
+	    "noshell");
+
+classes:
+	"ok" expression => strcmp("$(init.result)", "$(result)");
+
+reports:
+    DEBUG::
+	"init.result  is '$(init.result)'";
+	"check.result is '$(result)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

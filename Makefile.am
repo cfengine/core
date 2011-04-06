@@ -44,3 +44,13 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
 # Pass proper flags to aclocal to pick up Libtool macros
 #
 ACLOCAL_AMFLAGS = -I m4
+
+check:
+	@echo "In order to run testsuite, you need to run the following command as root:"
+	@echo "cd $(srcdir)/tests; $(srcdir)/src/cf-agent -Kf ./MAIN.cf -DDETAILS"
+	@echo
+	@echo "Refer to $(srcdir)/tests/README for further info"
+
+dist-hook:
+	mkdir $(distdir)/tests
+	cd $(srcdir)/tests && find . -name README -o -name '*.cf' | tar -c -f - -T- | tar -x -C $(distdir)/tests -v -f -

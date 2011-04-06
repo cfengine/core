@@ -1,0 +1,32 @@
+#######################################################
+#
+# This is a special test - it exercises runtime switches
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { test };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "cmd" string =>
+	"$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO,MAIN,ok,";
+
+commands:
+    "$(cmd)";
+
+reports:
+    DEBUG::
+	"Running: $(cmd)";
+	"Test results come from $(this.promise_filename).sub";
+}
+

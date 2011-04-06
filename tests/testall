@@ -1,0 +1,235 @@
+#!/bin/sh
+#
+#  Copyright (C) Cfengine AS
+#
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License  
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+#
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+#
+
+#
+# Simple stuipd test runner which is
+#  - stupid (overwrites full test logs with single test log)
+#  - fast (2.5 times faster than MAIN.cf)
+#  - runs tests as root automatically (needs passwordless sudo)
+#  - produces test logs with sane permissions
+#  - portable POSIX shell
+#
+
+LOG=test.log
+TESTRESULT=testresult.log
+QUIET=
+NOVA=
+STAGING=
+AGENT=/var/cfengine/bin/cf-agent
+
+PASSED_TESTS=0
+FALED_TESTS=0
+FAILED_TO_CRASH_TESTS=0
+SKIPPED_TESTS=0
+
+usage() {
+  echo "testall [-q] [--no-nova] [--staging] [<test> <test>...]"
+  echo
+  echo "If no test is given, all tests in subdirectories are run:"
+  echo "  Tests with names of form NNN.cf are expected to run succesfully"
+  echo "  Tests with names of form NNNx.cf are expected to crash"
+  echo "  Tests with names of form NNNn.cf and NNNnx.cf are run only under Nova"
+  echo "    (and may be disabled by --no-nova option)"
+  echo "  Tests inside directories called 'staging' are not run"
+  echo "    (unless --staging option is passed)"
+  echo
+  echo "If arguments are given, those are executed as tests"
+  echo
+  echo " -q makes script much quieter"
+}
+
+runtest() {
+  AGENT="$1"
+  TEST="$2"
+
+  if [ -z "$QUIET" ]; then
+    echo -n "$TEST "
+  fi
+
+  if echo "$TEST" | grep -q -F -e x.cf ; then
+    EXPECTED_CRASH=1
+  else
+    EXPECTED_CRASH=
+  fi
+
+  if [ -z "$NOVA" ] && echo "$TEST" | grep -q -e 'nx\?\.cf'; then
+    SKIP=1
+    SKIPREASON="Nova tests are disabled"
+  elif [ -z "$STAGING" ] && echo "$TEST" | grep -q -e 'staging'; then
+    SKIP=1
+    SKIPREASON="Staging tests are disabled"
+  else
+    SKIP=
+    SKIPREASON=
+  fi
+
+  ( echo ----------------------------------------------------------------------
+    echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \(skipped due to $SKIPREASON\)}
+    echo ----------------------------------------------------------------------
+  ) >> $LOG
+
+  if [ -z "$SKIP" ]; then
+    OUT=$(sudo $AGENT -Kf "$TEST" -D AUTO,DEBUG 2>&1)
+    RETVAL=$?
+    echo "$OUT" >> $LOG
+    echo >> $LOG
+    echo "Return code is $RETVAL." >> $LOG
+
+    if [ -z "$EXPECTED_CRASH" ]; then
+      if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -F -e "R: $TEST Pass"; then
+        RESULT=Pass
+      else
+        RESULT=FAIL
+      fi
+    else
+      if [ $RETVAL -ne 0 ]; then
+        RESULT=Pass
+      else
+        RESULT="FAILed to crash"
+      fi
+    fi
+
+    FLATNAME=$(echo "$TEST" | sed 's,/,_,g')
+
+    if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
+      echo $TEST $RESULT '(UNEXPECTED FAILURE)' >> $TESTRESULT
+    else
+      echo $TEST $RESULT >> $TESTRESULT
+    fi
+
+    if [ -z "$QUIET" ]; then
+      if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
+        echo $RESULT '(UNEXPECTED FAILURE)'
+      else
+        echo $RESULT
+      fi
+    else
+      if [ "$RESULT" = Pass ]; then
+        echo -n '.'
+      else
+        if [ -n "$EXPECTED_CRASH" ]; then
+          echo -n '!'
+        else
+          echo -n 'x'
+        fi
+      fi
+    fi
+
+    (
+      echo
+      echo '  ==>' $RESULT
+      echo
+    ) >> $LOG
+
+    if [ "$RESULT" = Pass ]; then
+      PASSED_TESTS=$(($PASSED_TESTS + 1))
+
+      mkdir -p '.succeeded'
+      touch .succeeded/"$FLATNAME"
+    elif [ "$RESULT" = FAIL ]; then
+      FAILED_TESTS=$(($FAILED_TESTS + 1))
+    elif [ "$RESULT" = "FAILed to crash" ]; then
+      FAILED_TO_CRASH_TESTS=$(($FAILED_TO_CRASH_TESTS + 1))
+    fi
+  else
+    echo $TEST Skipped >> $TESTRESULT
+
+    if [ -z "$QUIET" ]; then
+      echo Skipped
+    else
+      echo -- '-'
+    fi
+    SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
+  fi
+}
+
+if $AGENT -V | grep -q 'Nova'; then
+  NOVA=1
+fi
+
+while true; do
+  case "$1" in
+    --help)
+      usage
+      exit;;
+    -q)
+      QUIET=1;;
+    --no-nova)
+      NOVA=;;
+    --staging)
+      STAGING=1;;
+    -*)
+      echo "Unknown option: $1"
+      exit 1;;
+    *)
+      break;;
+  esac
+  shift
+done
+
+# Check for nova
+
+if [ $# -gt 0 ]; then
+  for test in "$@"; do
+    if expr "$test" : '^[/.]' >/dev/null; then
+      TESTS="$TESTS $test"
+    else
+      TESTS="$TESTS ./$test"
+    fi
+  done
+else
+  TESTS=$(find . -name '[0-9][0-9][0-9]*.cf' | sort)
+fi
+
+TESTS_COUNT=$(echo $TESTS | wc -w)
+START_TIME=$(date +%s)
+
+: > $TESTRESULT
+
+( echo ======================================================================
+  echo Testsuite started at $(date "+%F %T")
+  echo ----------------------------------------------------------------------
+  echo Total tests: $TESTS_COUNT
+) > $LOG
+
+for test in $TESTS; do
+  if [ -n "$USE_VALGRIND" ]; then
+    runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
+  else
+    runtest $AGENT "$test"
+  fi
+done
+
+END_TIME=$(date +%s)
+
+( echo
+  echo ======================================================================
+  echo Testsuite finished at $(date  "+%F %T") \($(($END_TIME - $START_TIME)) seconds\)
+  echo
+  echo Passed tests: $PASSED_TESTS
+  echo Failed tests: $FAILED_TESTS
+  echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
+  echo Skipped tests: $SKIPPED_TESTS
+) | tee -a $LOG

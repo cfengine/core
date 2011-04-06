@@ -1,0 +1,113 @@
+#######################################################
+#
+# Ensure that the transformer runs only once for every file in a recursive tree
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine";
+	#
+	# This extracts the octal mode, and decimal nlink, uid, gid, size
+	"command" string => 'printf "%#o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+
+	"source" string => "/etc/group";
+	"source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
+	"source_size" string => execresult(
+	    "/usr/bin/perl -le '$(g.source_command)'",
+	    "noshell");
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "files" slist => { "1", "2", "3" };
+
+files:
+	"$(g.testdir)/."
+	    create => "true";
+
+	"$(g.testdir)/$(files)"
+	    copy_from => init_copy("/etc/group");
+}
+
+body copy_from init_copy(file)
+{
+	source => "$(file)";
+}
+
+body classes init_set_class(class)
+{
+promise_kept => { "$(class)" };
+promise_repaired => { "$(class)" };
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    	"counter" string => "$(g.testdir)/counter";
+
+files:
+	"$(g.testdir)"
+	    transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
+	    file_select => test_plain,
+	    depth_search => test_recurse;
+}
+
+body file_select test_plain
+{
+	file_types => { "plain" };
+	file_result => "file_types";
+}
+
+body depth_search test_recurse
+{
+	depth => "inf";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"count" string => execresult("/usr/bin/wc $(test.counter)", "noshell");
+
+classes:
+	"ok" expression => regcmp("\s*3\s.*", "$(count)");
+
+reports:
+    DEBUG::
+	"3 transformations expected, saw '$(count)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

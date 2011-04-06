@@ -1,0 +1,95 @@
+#######################################################
+#
+# Test readstringlist() issue 364, also 366
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    delete => init_delete;
+	
+	"$(g.testfile)"
+	    create => "true",
+	    edit_line => init_fill_in;
+}
+
+bundle edit_line init_fill_in
+{
+insert_lines:
+	"123,,,456,789";	# "empty" fields
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"nums" slist => readstringlist("$(g.testfile)","NoComment",",",5,100);
+	"sum" real => sum("nums");
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"nums" slist => { @{test.nums} };
+
+classes:
+	"ok_list" not => strcmp("won't match", "$(nums)");
+	"ok123" expression => strcmp("123", "$(nums)");
+	"ok456" expression => strcmp("456", "$(nums)");
+	"ok789" expression => strcmp("789", "$(nums)");
+	"ok" and => { "ok_list", "ok123", "ok456", "ok789",
+			islessthan("$(test.sum)", "1368.1"),
+			isgreaterthan("$(test.sum)", "1367.9")
+			};
+
+reports:
+    DEBUG::
+	"nums: $(nums)";
+	"sum: $(test.sum)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

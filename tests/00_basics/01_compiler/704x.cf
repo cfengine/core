@@ -1,0 +1,77 @@
+#######################################################
+#
+# Related to Issue 377
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+processes:
+	".*"
+	    process_select => test_plain,
+	    signals => { "child" };
+}
+
+body process_select test_plain
+{
+	command => "should-never-find-this";
+	process_result => "command|bfd.pms.wtf!";	# Illegal test names
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"count" string => execresult("/usr/bin/wc $(test.counter)", "noshell");
+
+classes:
+	"ok" expression => regcmp("\s*3\s.*", "$(count)");
+
+reports:
+    DEBUG::
+	"Expected to crash - illegal test names";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

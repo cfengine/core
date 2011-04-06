@@ -1,0 +1,98 @@
+#######################################################
+#
+# Test exec_program on file_select (issue 294) - test negative match on existing file
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"find_this" string => "bibbetygargle";
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    edit_line => init_data;
+}
+
+bundle edit_line init_data
+{
+insert_lines:
+    	"Gabba gabba hey!";
+	"yibbity $(find_this) bletch";
+	"torchecol bum adder";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    linux::
+	"prefix" string => "";
+    freebsd::
+	"prefix" string => "/usr";
+    !(linux|freebsd)::
+	"prefix" string => "FIX ME";
+
+files:
+	"/tmp"
+	    file_select => test_hunt("$(prefix)"),
+	    delete => test_delete;
+}
+
+body file_select test_hunt(prefix)
+{
+exec_program => "$(prefix)/bin/grep XX$(init.find_this)XX $(this.promiser)";
+file_result => "exec_program";
+}
+
+body delete test_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" expression => fileexists("$(g.testfile)");
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

@@ -1,0 +1,86 @@
+#######################################################
+#
+# Test host2ip()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    # Neither of these are likely to change...
+    "localhost" string => host2ip("localhost");
+    "a" string => host2ip("a.root-servers.net");
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+    "localhost" string => "127.0.0.1";
+    "localhost_6" string => "::1";
+    "a" string => "198.41.0.4";
+    "a_6" string => "2001:503:ba3e::2:30";
+
+classes:
+	"ok_a" or => {
+		    strcmp("$(test.a)", "$(a)"),
+		    strcmp("$(test.a)", "$(a_6)"),
+		    };
+        "ok_localhost" or => {
+                    strcmp("$(test.localhost)", "$(localhost)"),
+                    strcmp("$(test.localhost)", "$(localhost_6)"),
+                    };
+	"ok" and => {
+		    "ok_a",
+                    "ok_localhost",
+		    };
+
+reports:
+    DEBUG::
+	"Expected $(test.localhost) == $(localhost)";
+	"Expected $(test.a) == ( $(a) or $(a_6) )";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

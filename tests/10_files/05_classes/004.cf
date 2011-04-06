@@ -1,0 +1,122 @@
+#######################################################
+#
+# Delete a line that isn't there, action_policy=>"warn", ensure that a promise_kept class gets set
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected" };
+
+	"actual" string =>
+"keep this
+and this
+keep this too";
+ 
+	"expected" string =>
+"keep this
+and this
+keep this too";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+      "tstr" string => ".*delete.*";
+ 
+files:
+	"$(g.testfile).actual"
+	    edit_line => test_delete("$(test.tstr)");
+
+}
+
+bundle edit_line test_delete(str)
+{
+delete_lines:
+	"$(str)"
+	    action => warn_only,
+	    classes => full_set;
+}
+
+body action warn_only
+{
+action_policy => "warn";
+}
+
+body classes full_set
+{
+promise_kept     => { "pass" };
+promise_repaired => { "fail" };
+repair_failed    => { "fail" };
+repair_denied    => { "fail" };
+repair_timeout   => { "fail" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"no_difference" expression => returnszero(
+	    "/usr/bin/diff -q $(g.testfile).actual $(g.testfile).expected",
+	    "noshell");
+	"ok" and => { "pass", "!fail", "no_difference" };
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

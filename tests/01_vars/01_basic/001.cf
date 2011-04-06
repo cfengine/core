@@ -1,0 +1,74 @@
+#######################################################
+#
+# Test simple variables
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "ten" int => "10";
+    "ten[ten]" int => "11";
+    "nine" string => "hello",
+	policy => "free";
+    "nine" int => "9",
+	policy => "free";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok_10" not => strcmp("$(test.ten)", "$(test.ten[ten])");
+	"ok" and => { "ok_10", strcmp("$(test.nine)", "9") };
+
+reports:
+    DEBUG::
+	"ten == $(test.ten)";
+	"ten[ten] == $(test.ten[ten])";
+	"nine == $(test.nine)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

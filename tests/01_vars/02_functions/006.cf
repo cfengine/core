@@ -1,0 +1,78 @@
+#######################################################
+#
+# Test diskfree()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "positive_disk" string => "/etc";
+    "p_disk" string => "/etc/passwd";
+    "zero_disk" string => "/lkjqeroiu";
+
+    "positive" int => diskfree("$(positive_disk)");
+    "p" int => diskfree("$(p_disk)");
+    "zero" int => diskfree("$(zero_disk)");
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" and => {
+		    strcmp("$(test.zero)", "0"),
+		    isgreaterthan("$(test.p)", "0"),
+		    isgreaterthan("$(test.positive)", "0"),
+		    };
+
+reports:
+    DEBUG::
+	"Expected 0 size on $(test.zero_disk), found $(test.zero)";
+	"Expected >1 size on $(test.p_disk), found $(test.p)";
+	"Expected >1 size on $(test.positive_disk), found $(test.positive)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

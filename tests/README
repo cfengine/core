@@ -1,0 +1,72 @@
+NOTE: Users are encouraged to create tests that demonstrate any bugs
+that they may find (so that after the bug is fied, the test will pass,
+and can be used in future versions of Cfengine to ensure reliability).
+
+Currently, all tests are assumed to be run by root.  All tests should
+only create files or directories in /tmp, and should not modify other
+working files.
+
+The file MAIN.cf and default.cf are used to drive the main testing.
+    cf-agent -Kf ./MAIN.cf		# Run all tests in order
+			    -D DETAILS	# Include information about each test
+					# in the log file
+
+    cf-agent -Kf ./001.cf -D AUTO	# Run one test completely
+			    -D DEBUG	# Print additional information about
+					# test (for some tests)
+
+    cf-agent -Kf ./001.cf		# See how to run pieces (you must use
+    					# either -D or -b)
+
+
+    cd 10_files				# Run all tests in subdirectory
+    cf-agent -Kf ../MAIN.cf
+
+    cd 10_files/01_create		# Run all tests in sub-subdirectory
+    cf-agent -Kf ../../MAIN.cf
+
+The file TEST.log contains a summary of all test results, and */TEST.log
+contains summaries for just the subdirectory.
+
+Each test should be 100% standalone, and must contain at least 4 main bundles:
+	init		setup, create initial and hoped-for final states
+	test		the actual test code
+	check		the comparison of expected and actual results
+	fini		cleanup, restore to pre-test state
+
+Look in default.cf for some standard check and fini bundles (for example, to
+compare files when testing file edits, or for cleaning up temporary files).
+
+Tests should be named with only digits (e.g., "001.cf") unless they are
+expected to crash (that is, if they contan syntax errors or other faults),
+in which case the filename should end in an 'x' (e.g., "001x.cf").
+
+Tests which use Nova-only features should have a name which ends in an 'n'
+if they are expected to pass, and 'nx' if they are expected to crash (e.g.,
+"007n.cf" or "007nx.cf").
+
+=============================================================================
+
+For purposes of testing, here is what our terms mean:
+
+Pass: the test did what we expected (whether that was setting a variable,
+editing a file, killing or starting a process, or correctly failing to do
+these actions in the light of existing conditions or attributes).  Note that
+in the case of tests that end in an 'x', a Pass is generated when the test
+abnormally terminates and we wanted it to do that.
+
+FAIL: not doing what we wanted, but still running the test to completion.
+
+CRASH: the test did not run to completion.  We have no way of determining
+what went wrong - cf-agent might have dropped core, cf-promises may have
+denied execution of the promises, etc.  We just don't know, so we mark it
+as a crash.
+
+Skipped: the test was not run.  The only time this should happen is if you
+are running th tests on the Community edition and there are tests which
+exercise Nova-only features.
+
+=============================================================================
+
+NOTE: Since the class 'ok' is used in most tests, never create a persistent
+class called 'ok' in any test.

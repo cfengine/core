@@ -1,0 +1,294 @@
+body common control
+{
+bundlesequence => { clean_start, setup, test, consolidate, intermezzo, coda, finish };
+inputs => { "default.cf" };
+version => "1.5";
+
+nova_edition::
+    host_licenses_paid => "5";
+}
+
+###########################################################################
+
+bundle agent clean_start
+{
+files:
+    # First, delete all old logfiles and intermediates...
+    "$(G.cwd)/"
+	depth_search => top_down,
+	file_select => logfile_leaves,
+	delete => delete;
+}
+
+body file_select logfile_leaves
+{
+leaf_name => {
+	    "$(G.logfile_leafname).*",
+	    };
+file_result => "leaf_name";
+}
+
+###########################################################################
+
+bundle agent setup
+{
+commands:
+    # Second, create a list of every test file there is, and every file we'll
+    # be testing... (the latter may be fewer if we're running Commnunity).
+	"/usr/bin/find $(G.cwd) -name '[0-9]*.cf' | /usr/bin/sort > $(G.logfile).all-test-files",
+	    contain => shell_command;
+    nova_edition::
+	"/bin/cp $(G.logfile).all-test-files $(G.logfile).files-to-test",
+	contain => shell_command;
+    !nova_edition::
+	"/bin/egrep -v 'nx?.cf' $(G.logfile).all-test-files > $(G.logfile).files-to-test",
+	contain => shell_command;
+}
+
+###########################################################################
+
+bundle agent test
+{
+vars:
+    "files_to_test" slist => readstringlist(
+				"$(G.logfile).files-to-test",
+				"#not expecting any comments",
+				"\s+",
+				"10K",
+				"1M"
+				);
+
+    # ftt == files_to_test, short names without leading $(G.cwd)
+    "ftt" slist => readstringlist(
+				"$(G.logfile).files-to-test",
+				"$(G.cwd)/",
+				"\s+",
+				"10K",
+				"1M"
+				);
+
+    # This is the first textual comment line in the test file
+    "comment[$(ftt)]" string => execresult("/bin/egrep '^# [A-Z]' $(G.cwd)/$(ftt) | head -1", "useshell");
+
+methods:
+    "test" usebundle => do_test("$(files_to_test)");
+}
+
+bundle agent do_test(file)
+{
+vars:
+    "cfile" string => canonify("$(file)");
+
+classes:
+    # Any files which generate syntax errors or other failures from cf-promises
+    # are not marked "can_run" (so that we don't wind up running and reporting
+    # on failsafe.cf)
+    "can_run_$(cfile)" expression => returnszero(
+	    "$(sys.cf_promises) -f $(file) > /dev/null 2>&1",
+	    "useshell");
+
+    "not_significant" expression => regextract(
+    					"$(G.cwd)/(.*)",
+    					"$(file)",
+					"path");
+
+files:
+    # This is a no-op (the file should already exist), but it allows
+    # us to print an action on the file
+    "$(file)"
+	create => "true",
+	action => report("$(path[1])");
+
+    # Then run the test for any file which passed cf-promises
+    "$(file)"
+	transformer => "$(sys.cf_agent) -f $(file) -D AUTO,MAIN -K",
+	ifvarclass => "can_run_$(cfile)";
+}
+
+body action report(msg)
+{
+log_kept => "stdout";
+log_failed => "stdout";
+log_repaired => "stdout";
+log_string => "$(msg)";
+}
+
+###########################################################################
+
+bundle agent consolidate
+{
+commands:
+    # Sort the consolidated entries and remove duplicates
+    # The /dev/null is just in case no files are found
+    "/usr/bin/sort -n /dev/null `/usr/bin/find $(G.cwd) -name $(G.logfile_leafname)` | /usr/bin/uniq > $(G.logfile).sort; /bin/mv $(G.logfile).sort $(G.logfile)",
+	contain => shell_command;
+}
+
+###########################################################################
+
+bundle agent intermezzo
+{
+vars:
+    "cnt" int => readstringarray("pf", "$(G.logfile)", "^not expecting comments$", "\s+", "10k", "200k");
+    "passfail" slist => getindices("pf"),
+	policy => "free";		# XXX Why is this required?
+	# The bundle intermezzo seems to be called even before it is
+	# specified in the bundlesequence - try deleting the policy,
+	# and see what happens... Remove it when issue 312 is resolved
+
+files:
+    # Insert any CRASH and/or Skipped lines for which there is no Pass or FAIL
+    # to be found
+    "$(G.logfile)"
+	create => "true",	# in case EVERYTHING crashed
+	edit_line => insert_missing;
+    "$(G.logfile)"
+	edit_line => fixup_pass_fail_crash;
+}
+
+bundle edit_line insert_missing
+{
+insert_lines:
+    "$(G.logfile).all-test-files"
+       insert_type => "file",		# copy non-matching file lines
+       insert_select => except_startswith("@{intermezzo.passfail}");
+}
+
+bundle edit_line fixup_pass_fail_crash
+{
+replace_patterns:
+    # Tests whose filename ends in 'x' we expect to crash - their crash
+    # is a success, but if they ran, that is a failure!  But all other
+    # missing tests are true crashes (unless we are running Community and
+    # the test is skipped)...
+	"([\d]+n?x\.cf) (Pass|FAIL)$"
+	    replace_with => add_result("$(match.1) FAILed to crash");
+	"([\d]+n?x\.cf)$"
+	    replace_with => add_result("$(match.1) Passes with expected crash");
+	"([\d]+\.cf)$"
+	    replace_with => add_result("$(match.1) CRASH");
+    nova_edition::
+	"([\d]+n\.cf)$"
+	    replace_with => add_result("$(match.1) CRASH");
+    !nova_edition::
+	"([\d]+n\.cf)$"
+	    replace_with => add_result("$(match.1) Skipped (Nova-only feature)");
+}
+
+body replace_with add_result(type)
+{
+replace_value => "$(type)";
+}
+
+body insert_select except_startswith(s)
+{
+insert_if_not_startwith_from_list => { "@(s)" };
+}
+
+###########################################################################
+
+bundle agent coda
+{
+commands:
+    # Re-sort (with the CRASH entries now in place).  There is no need to run
+    # uniq this time - all the duplicates have already been removed
+    "/usr/bin/sort -n $(G.logfile) | /bin/sed 's|$(G.cwd)/||' > $(G.logfile).sort2; /bin/mv $(G.logfile).sort2 $(G.logfile)",
+	contain => shell_command;
+}
+
+###########################################################################
+
+bundle agent finish
+{
+vars:
+    "total" string => execresult("/bin/egrep -c 'Pass|FAIL|CRASH|Skipped' $(G.logfile)", "noshell");
+    "pass" string => execresult("/bin/grep -c Pass $(G.logfile)", "noshell");
+    "fail" string => execresult("/bin/grep -c FAIL $(G.logfile)", "noshell");
+    "crash" string => execresult("/bin/grep -c CRASH $(G.logfile)", "noshell");
+    "skip" string => execresult("/bin/grep -c Skipped $(G.logfile)", "noshell");
+
+classes:
+    "all_passed" and => { strcmp("$(fail)", "0"), strcmp("$(crash)", "0") };
+
+files:
+    any::
+	"$(G.logfile)"
+	    edit_line => when_run;
+
+    DETAILS::
+	"$(G.logfile)"
+	    edit_line => document_test;
+
+    any::
+	"$(G.logfile).all-test-files"
+	    delete => delete;
+
+	"$(G.logfile).files-to-test"
+	    delete => delete;
+
+	"$(G.logfile).cf-before-edit"
+	    delete => delete;
+
+reports:
+    cfengine_3::
+	"Finished - see $(G.logfile) for details";
+    !DETAILS::
+	"For more information about each test, run with -D DETAILS";
+    all_passed::
+	"All $(pass) tests passed, none failed";
+    !all_passed::
+	"$(pass) tests passed";
+	"$(fail) tests FAILed";
+	"$(crash) tests CRASHed (did not complete for some reason)";
+    !all_passed.!nova_edition::
+	"$(skip) tests skipped (Nova-only features)";
+    !all_passed::
+	"----------------------";
+	"$(total) total tests";
+}
+
+bundle edit_line when_run
+{
+insert_lines:
+    any::
+	"------------------------------------";
+	"Tests run on $(sys.date)";
+    !DETAILS::
+	"To get more information in this file, run the tests with -D DETAILS";
+
+}
+
+bundle edit_line document_test
+{
+vars:
+    "ftt" slist => { "@{test.ftt}" };
+
+insert_lines:
+    "# $(ftt) $(test.comment[$(ftt)])"
+	location => before("$(ftt)");
+}
+
+#######################################################
+
+body delete delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+body depth_search top_down
+{
+depth => "inf";
+exclude_dirs => { "\..*" };
+}
+
+body contain shell_command
+{
+useshell => "true";
+}
+
+body location before(fn)
+{
+before_after => "before";
+select_line_matching =>".*$(fn).*";
+}

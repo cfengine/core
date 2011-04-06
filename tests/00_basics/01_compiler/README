@@ -1,0 +1,15 @@
+0*.cf:
+
+This suite of tests is essentially 5 different tests repeated for various
+attributes.
+
+1) prove that the test case works
+2) show that it fails as expected with an illegal value
+3) attempt to show failure when that illegal value is a parameter to the body
+4) attempt to show failure when that illegal value is a parameter to the bundle
+5) attempt to show failure when that illegal value is a parameter to a method
+
+7*.cf:
+
+These tests are slightly different, but also address issues in constraint
+checking

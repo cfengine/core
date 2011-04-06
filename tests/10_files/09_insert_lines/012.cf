@@ -1,0 +1,113 @@
+#######################################################
+#
+# Insert a number of lines before the last instance of a line
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected", "insert" };
+
+	"actual" string =>
+"BEGIN
+    One potato
+    Two potato
+    Two potatos
+    Four
+END";
+ 
+      "insert" string =>
+"    One potato
+    Two potato
+    Three potatoe
+	    Spuds spuds spuds
+    Four";
+
+	"expected" string =>
+"BEGIN
+    One potato
+    Two potato
+    Three potatoe
+	    Spuds spuds spuds
+    Two potatos
+    Four
+END";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile).actual"
+	    edit_line => test_insert("$(g.testfile).insert");
+
+}
+
+bundle edit_line test_insert(str)
+{
+insert_lines:
+	"$(str)"
+	    insert_type => "file",
+	    location => test_before_last(".*potato.*");
+}
+
+body location test_before_last(line)
+{
+before_after => "before";
+first_last => "last";
+select_line_matching => "$(line)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

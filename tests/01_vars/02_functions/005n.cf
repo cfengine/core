@@ -1,0 +1,106 @@
+#######################################################
+#
+# Test product()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "six" ilist => { "1", "2", "3" };
+    "product_six" real => product("six");
+
+    "minus_six" ilist => { "-1", "-2", "-3" };
+    "product_minus_six" real => product("minus_six");
+
+    "zero" ilist => { "-1", "0", "3" };
+    "product_zero" real => product("zero");
+
+    "sixpoint" rlist => { "1.", "2", "3" };
+    "product_sixpoint" real => product("sixpoint");
+
+    "minus_sixpoint" rlist => { "-1.", "-2", "-3" };
+    "product_minus_sixpoint" real => product("minus_sixpoint");
+
+    "zeropoint" rlist => { "-1.", "0", "3" };
+    "product_zeropoint" real => product("zeropoint");
+
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" and => {
+		    isgreaterthan("$(test.product_six)", "5.9999999"),
+		    islessthan("$(test.product_six)", "6.0000001"),
+
+		    islessthan("$(test.product_minus_six)", "-5.9999999"),
+		    isgreaterthan("$(test.product_minus_six)", "-6.0000001"),
+
+		    isgreaterthan("$(test.product_zero)", "-.0000001"),
+		    islessthan("$(test.product_zero)", ".0000001"),
+
+		    isgreaterthan("$(test.product_sixpoint)", "5.9999999"),
+		    islessthan("$(test.product_sixpoint)", "6.0000001"),
+
+		    islessthan("$(test.product_minus_sixpoint)", "-5.9999999"),
+		    isgreaterthan("$(test.product_minus_sixpoint)", "-6.0000001"),
+
+		    isgreaterthan("$(test.product_zeropoint)", "-.0000001"),
+		    islessthan("$(test.product_zeropoint)", ".0000001"),
+		    };
+
+reports:
+    DEBUG::
+	"test.product_six = $(test.product_six)";
+	"test.product_minus_six = $(test.product_minus_six)";
+	"test.product_zero = $(test.product_zero)";
+	"test.product_sixpoint = $(test.product_sixpoint)";
+	"test.product_minus_sixpoint = $(test.product_minus_sixpoint)";
+	"test.product_zeropoint = $(test.product_zeropoint)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

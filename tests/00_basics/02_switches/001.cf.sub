@@ -1,0 +1,67 @@
+#######################################################
+#
+# Test class creation with -D
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+reports:
+    DEBUG::
+	"This should only pass if you run it with: -D ok";
+	"Look at $(fn[1]) to see which flags are passed in";
+    ok::
+	"$(fn[1]) Pass";
+    MAIN.ok::
+	"$(fn[1]) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(fn[1]) FAIL";
+    MAIN.!ok::
+	"$(fn[1]) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

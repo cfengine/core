@@ -1,0 +1,72 @@
+#######################################################
+#
+# Test simple variables failures
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "zero_p" real => "0e2345678"; # Exponent too big, but still zero
+    "zero_n" real => "0e-2345678"; # Exponent too big, but still zero
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "ok" and => {
+    		isgreaterthan("$(test.zero_p)", "-0.1"),
+    		islessthan("$(test.zero_p)", "0.1"),
+    		isgreaterthan("$(test.zero_n)", "-0.1"),
+    		islessthan("$(test.zero_n)", "0.1"),
+		};
+reports:
+    DEBUG::
+	"zero_p == $(test.zero_p)";
+	"zero_n == $(test.zero_n)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

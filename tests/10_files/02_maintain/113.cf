@@ -1,0 +1,102 @@
+#######################################################
+#
+# Create a file, expect simultaneous link with hardlink and move_obstructions
+# to succeed
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+        "sourcefile" string => "$(testfile).SOURCE";
+
+	# This extracts the inode number
+	"command" string => 'printf "%d", (stat("$(g.testfile)"))[1]';
+
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    delete => init_delete;
+
+        "$(g.sourcefile)"
+            create => "true";
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    move_obstructions => "true",
+	    link_from => test_link;
+}
+
+body link_from test_link
+{
+	source => "$(g.sourcefile)";
+	link_type => "hardlink";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"source_command" string => 'printf "%d", (stat("$(g.sourcefile)"))[1]';
+	"source_ino" string => execresult(
+	    "/usr/bin/perl -le '$(source_command)'",
+	    "noshell");
+
+	"result" string => execresult(
+	    "/usr/bin/perl -le '$(g.command)'",
+	    "noshell");
+
+classes:
+	"ok" expression => strcmp("$(source_ino)", "$(result)");
+
+reports:
+    DEBUG::
+	"expected: '$(source_ino)'";
+	"got:      '$(result)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

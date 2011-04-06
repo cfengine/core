@@ -1,0 +1,95 @@
+#######################################################
+#
+# Test wrong type of link_type.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+
+	# This extracts the octal mode, and decimal nlink, uid, gid, size
+	"command" string => 'printf "%o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    delete => init_delete;
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "mode" int => "0600";
+
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    link_from => test_link;
+}
+
+body link_from test_link
+{
+	source => "/etc/group";
+	link_type => "none";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"expect" string => "$(test.mode) 1 0 0 0";
+
+	"result" string => execresult(
+	    "/usr/bin/perl -le '$(g.command)'",
+	    "noshell");
+
+classes:
+	"ok" expression => strcmp("$(expect)", "$(result)");
+
+reports:
+    DEBUG::
+	"expected: '$(expect)'";
+	"got:      '$(result)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

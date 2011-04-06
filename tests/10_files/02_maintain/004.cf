@@ -1,0 +1,116 @@
+#######################################################
+#
+# Create a file, expect simultaneous copy with atime compare to succeed
+# but not change owner/group
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+
+	# This extracts the octal mode, and decimal nlink, uid, gid, size
+	"command" string => 'printf "%o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+
+	"source" string => "/etc/group";
+	"source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
+	"source_size" string => execresult(
+	    "/usr/bin/perl -le '$(g.source_command)'",
+	    "noshell");
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    delete => init_delete;
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "mode" int => "0600";
+
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    perms => test_og,
+	    copy_from => test_copy;
+}
+
+body perms test_og
+{
+linux::
+    owners => { "sys" };
+    groups => { "sys" };
+freebsd::
+    owners => { "bin" };
+    groups => { "sys" };
+!(linux|freebsd)::
+    owners => { "undefined-please-fix" };
+    groups => { "undefined-please-fix" };
+}
+
+body copy_from test_copy
+{
+	source => "/etc/group";
+	compare => "atime";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"expect" string => "$(test.mode) 1 3 3 $(g.source_size)";
+
+	"result" string => execresult(
+	    "/usr/bin/perl -le '$(g.command)'",
+	    "noshell");
+
+classes:
+	"ok" expression => strcmp("$(expect)", "$(result)");
+
+reports:
+    DEBUG::
+	"expected: '$(expect)'";
+	"got:      '$(result)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

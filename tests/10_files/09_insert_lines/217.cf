@@ -1,0 +1,108 @@
+#######################################################
+#
+# Insert lines from a file, verify that whitespace_policy other than
+# ignore_leading works when given a not-close-enough match
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected", "insert" };
+
+	"actual" string =>
+"BEGIN
+    One potato
+    Two potato
+    Two potatos
+    Leading   embedded   and trailing spaces   
+    Four
+END";
+ 
+      "insert" string =>
+"    One potato
+    Two potato
+    Three potatoe
+Leading embedded and trailing spaces
+    Four";
+
+	"expected" string =>
+"BEGIN
+    One potato
+    Two potato
+    Two potatos
+    Leading   embedded   and trailing spaces   
+    Four
+END
+    Three potatoe
+Leading embedded and trailing spaces";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile).actual"
+	    edit_line => test_insert("$(g.testfile).insert");
+}
+
+bundle edit_line test_insert(filename)
+{
+insert_lines:
+	"$(filename)"
+	    insert_type => "file",
+	    whitespace_policy => { "ignore_embedded" };
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

@@ -1,0 +1,114 @@
+#######################################################
+#
+# Create a file using copy, expect second copy to have "promise_kept"
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+
+classes:
+	"cxl_succ" expression => "any";
+	"cxl_fail" expression => "any";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    perms => init_mog,
+	    copy_from => init_copy("/etc/group");
+}
+
+body perms init_mog
+{
+mode => "751";
+owners => { "bin" };
+groups => { "bin" };
+}
+
+body copy_from init_copy(fn)
+{
+	source => "$(fn)";
+	compare => "digest";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile)"
+	    perms => init_mog,
+	    copy_from => init_copy("/etc/group"),
+	    classes => test_classes("success", "failure", "failure", "failure", "cxl_succ", "cxl_fail", "cxl_fail");
+}
+
+body classes test_classes(kep, rep, fai, xxx, cxl_kep, cxl_rep, cxl_nkp)
+{
+promise_kept => { "$(kep)" };
+promise_repaired => { "$(rep)" };
+repair_failed => { "$(fai)" };
+repair_denied => { "$(fai)" };
+repair_timeout => { "$(fai)" };
+cancel_kept => { "$(cxl_kep)" };
+cancel_repaired => { "$(cxl_rep)" };
+cancel_notkept => { "$(cxl_nkp)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "ok" and => { "success", "!cxl_succ", "!failure", "cxl_fail" };
+
+reports:
+    DEBUG.success::
+	"class 'success' was set (should be)";
+    DEBUG.!success::
+	"class 'success' was not set (should be)";
+    DEBUG.cxl_succ::
+	"class 'cxl_succ' was still set (should not be)";
+    DEBUG.!cxl_succ::
+	"class 'cxl_succ' was not still set (should not be)";
+    DEBUG.failure::
+	"class 'failure' was set (should not be)";
+    DEBUG.!failure::
+	"class 'failure' was not set (should not be)";
+    DEBUG.cxl_fail::
+	"class 'cxl_fail' was still set (should be)";
+    DEBUG.!cxl_fail::
+	"class 'cxl_fail' was not still set (should not be)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

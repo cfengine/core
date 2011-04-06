@@ -1,0 +1,116 @@
+#######################################################
+#
+# Delete a number of lines via an slist, original way, different patterns (different order than original)
+# Region editing, include_start_delimiter and include_end_delimiter
+# Second edit destroys the region
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected" };
+
+	"actual" string =>
+"header
+header
+BEGIN
+    One potato
+    Two potato
+    Three potatoe
+    Four
+END
+trailer
+trailer";
+ 
+	"expected" string =>
+"header
+header
+    One potato
+    Two potato
+    Four
+END
+trailer
+trailer";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+      "tstr" slist => { ".*Three.*", ".*BEGIN.*", ".*END.*" };
+ 
+files:
+	"$(g.testfile).actual"
+	    edit_line => test_delete("$(tstr)");
+}
+
+bundle edit_line test_delete(str)
+{
+delete_lines:
+	# Second edit destroys the region
+	"$(str)"
+	    select_region => test_select;
+}
+
+body select_region test_select
+{
+select_start => "BEGIN";
+select_end => "END";
+include_start_delimiter => "true";
+include_end_delimiter => "true";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

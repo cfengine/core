@@ -1,0 +1,79 @@
+######################################################
+#
+#  Issue 375 setup (precursor to actual tickle of bug)
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { g, default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.testfile)"
+	    delete => init_delete;
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile)"
+	    create => "true",
+	    action => test_action;
+}
+
+body action test_action
+{
+log_priority => "alert";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "ok" expression => fileexists("$(g.testfile)");
+
+reports:
+    DEBUG::
+	"This test should pass as a precursor to a bunch of related failures";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+#######################################################
+
+bundle agent fini
+{
+files:
+	"$(g.testfile).*"
+	    delete => default_fini_cleanup;
+}

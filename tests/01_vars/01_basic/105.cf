@@ -1,0 +1,76 @@
+#######################################################
+#
+# Test Scoping of "this" variables (issue 349)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+        # $(this.promiser) is not available in this context
+	"not_valid"    not => strcmp("xyzzy", "$(this.promiser)");
+	"valid" expression => strcmp("xyzzy", "$(this.promiser)");
+        "any_promiser" and => { "not_valid", "valid" };
+	"ok" not => "any_promiser";
+
+reports:
+    DEBUG.not_valid::
+	"not_valid IS set (and should not be)";
+    DEBUG.!not_valid::
+	"not_valid is not set (and should not be)";
+    DEBUG.valid::
+	"valid IS set (and should not be)";
+    DEBUG.!valid::
+	"valid is not set (and should not be)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

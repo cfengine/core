@@ -1,0 +1,88 @@
+#######################################################
+#
+# Test getuid()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    any::
+	"uid_root" int => getuid("root");
+	"uid_daemon" int => getuid("daemon");
+	"uid_bin" int => getuid("bin");
+    linux::
+	"num_root" int => "0";
+	"num_daemon" int => "1";
+	"num_bin" int => "2";
+    freebsd::
+	"num_root" int => "0";
+	"num_daemon" int => "1";
+	"num_bin" int => "3";
+    !(freebsd|linux)::
+	"num_root" string => "fixme";
+	"num_daemon" string => "fixme";
+	"num_bin" string => "fixme";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" and => {
+		    strcmp("$(test.uid_root)", "$(test.num_root)"),
+		    strcmp("$(test.uid_daemon)", "$(test.num_daemon)"),
+		    strcmp("$(test.uid_bin)", "$(test.num_bin)"),
+		    };
+
+reports:
+    DEBUG::
+	"root is UID $(test.uid_root), expected $(test.num_root)";
+	"daemon is UID $(test.uid_daemon), expected $(test.num_daemon)";
+	"bin is UID $(test.uid_bin), expected $(test.num_bin)";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

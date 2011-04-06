@@ -1,0 +1,57 @@
+#######################################################
+#
+# Test hash()
+#
+#######################################################
+
+body common control
+{
+  bundlesequence  => { test };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent test
+{
+vars:
+    # The nulls terminate the string here
+    "test1" string => execresult("/usr/bin/perl -e 'print \"Test of \0\1\2\n nulls in a string\";'", "noshell");
+
+    # Write the same string to a file and read it in again, they are converted
+    "test2" string => execresult("/usr/bin/perl -e 'print \"Test of \0\1\2\n nulls in a string\";' > /tmp/foo", "useshell");
+    "test3" string => readfile("/tmp/foo","100");
+
+    # They are converted here, too, so the split fails
+    "test4a" slist => readstringlist("/tmp/foo","#no comments", "\0", "2", "100");
+    # And simply quoting the backslash doesn't work, because I think the
+    # regex is also converted
+    "test4b" slist => readstringlist("/tmp/foo","#no comments", "\\0", "2", "100");
+
+    # So this doubly incorrect split succeeds because of the two conversions
+    "test4c" slist => readstringlist("/tmp/foo","#no comments", "\\\0", "2", "100");
+
+    # readstringarray() (or perhaps getindices) simply breaks
+    "i" int => readstringarray("test5", "/tmp/foo","#no comments", "no split", "2", "100");
+    "test5_idx" slist => getindices("test5");
+
+    # readstringarrayidx() converts the results (same split issues as test4)
+    "j" int => readstringarrayidx("test6", "/tmp/foo","#no comments", "no split", "2", "100");
+    "test6_idx" slist => getindices("test6");
+
+    # This shows that the nulls are really there in the file
+    "od_file" string => execresult("/usr/bin/od -c /tmp/foo", "noshell");
+
+reports:
+    cfengine_3::
+	"test1: $(test1)";
+	"test2: $(test2) (<== we expect nothing here)";
+	"test3: $(test3)";
+	"test4a: $(test4a)";
+	"test4b: $(test4b)";
+	"test4c: $(test4c)";
+	"test5, $(i) entries: $(test5[$(test5_idx)])";
+	"test5_idx: $(test5_idx)";
+	"test6, $(j) entries: $(test6[$(test6_idx)][0])";
+	"od_file: $(od_file)";
+}

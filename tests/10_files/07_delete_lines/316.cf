@@ -1,0 +1,115 @@
+#######################################################
+#
+# Delete a number of lines as separate lines, using regexes (different order than in original)
+# select_region, only include_start_delimiter
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected" };
+
+	"actual" string =>
+"header
+header
+BEGIN
+    One potato
+    Two potato
+    Three potatoe
+    Four
+END
+trailer
+trailer";
+ 
+	"expected" string =>
+"header
+header
+    One potato
+    Two potato
+    Four
+END
+trailer
+trailer";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(g.testfile).actual"
+	    edit_line => test_delete;
+
+}
+
+bundle edit_line test_delete
+{
+delete_lines:
+    "\s+Three.*"
+	select_region => test_select;
+    "BEGIN"
+	select_region => test_select;
+    "END"
+	select_region => test_select;
+}
+
+body select_region test_select
+{
+select_start => "BEGIN";
+select_end => "END";
+include_start_delimiter => "true";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

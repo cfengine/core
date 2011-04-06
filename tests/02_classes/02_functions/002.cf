@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test islessthan()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok1" expression => islessthan("0", "1");
+	"ok2" expression => islessthan("1", "2.7e3");
+	"ok3" expression => islessthan("1.1", "2");
+	"ok4" expression => islessthan("2.7e3", "1e9");
+	"ok5" expression => islessthan("2z", "3b");
+	"ok6" expression => islessthan("alpha", "beta");
+	"ok7" expression => islessthan("", "beta");
+	"ok8" expression => islessthan("-75", "beta");
+	"ok9" expression => islessthan("", "3");
+
+	"ok" and => { ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9 };
+
+reports:
+    DEBUG.ok1:: "ok1";
+    DEBUG.ok2:: "ok2";
+    DEBUG.ok3:: "ok3";
+    DEBUG.ok4:: "ok4";
+    DEBUG.ok5:: "ok5";
+    DEBUG.ok6:: "ok6";
+    DEBUG.ok7:: "ok7";
+    DEBUG.ok8:: "ok8";
+    DEBUG.ok9:: "ok9";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

@@ -1,0 +1,69 @@
+#######################################################
+#
+# Test class creation with -D
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "dummy" expression => regextract("(.*)\.sub\d", $(this.promise_filename), "fn");
+
+reports:
+    DEBUG::
+	"This is $(this.promise_filename)";
+	"This should only pass if you run it with the 'bingo' class defined";
+	"The main tester does NOT set it, but it is created in the 'setup'";
+	"config file, $(fn[1]).sub1";
+    bingo::
+	"$(fn[1]) FAIL";
+    MAIN.bingo::
+	"$(fn[1]) FAIL"
+		report_to_file => "$(G.logfile)";
+    !bingo::
+	"$(fn[1]) Pass";
+    MAIN.!bingo::
+	"$(fn[1]) Pass"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

@@ -1,0 +1,78 @@
+#######################################################
+#
+# Test getvalues(), size 0
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+
+files:
+    "$(g.testfile).expected"
+	create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "array" string => "zero"; # Intentionally not an array
+
+    "vals" slist => getvalues("array");
+
+files:
+    "$(g.testfile).actual"
+	create => "true",
+	edit_line => test_insert;
+
+reports:
+    DEBUG::
+	"Inserting line: $(vals)";
+}
+
+bundle edit_line test_insert
+{
+vars:
+    "vals" slist => { @{test.vals} };
+
+insert_lines:
+    "$(vals)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => sorted_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

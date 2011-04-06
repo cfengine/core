@@ -1,6 +1,6 @@
-3.1.5   
+3.1.5
 	New class parser, '||' is no longer allowed in expressions (use '|').
-	Class setting in the promise types insert_lines, delete_lines, 
+	Class setting in the promise types insert_lines, delete_lines,
 	replace_patterns, field_edits, vars, classes is restored.
 	suspiciousnames implemented
 	New function getvalues()
@@ -8,7 +8,7 @@
 	Testsuite added to check for core functionality.
 
 3.1.4	(Bugfix and Stability release)
-	
+
 	Some urgent patches to 3.1.3.
 	Class validation parse bug fixed.
 	Global zone handling error for solaris fixed.
@@ -36,7 +36,7 @@
 	transformer in files. In classes body, see attributes
 	kept_returncodes, repaired_returncodes, failed_returncodes (bug
 	#248, #329).
-	
+
 	New function ip2host - reverse DNS lookup (bug #146).
 
 3.1.2   (Scalability/efficiency release)
@@ -48,7 +48,7 @@
 	Caching state of ps command for greater efficiency. Reloaded for each bundle.
 
 	Index class lookup improves efficiency of class evaluation for huge configurations.
-	
+
         Fixed issue where certain promiser strings got corrupted.
 
 	Minor memory access issues fixed.
@@ -89,7 +89,7 @@
 	Commands not returning 0 in commands-promises are flagged
 	as repair_failed.
 
-	Adjustable timeout on connect(). Defaults to 10 seconds, adjustable 
+	Adjustable timeout on connect(). Defaults to 10 seconds, adjustable
 	with default_timeout in agent control.
 
 	Redesign of the knowledge map infrastructure.
@@ -98,7 +98,7 @@
 
 	methods:
 
-	  "name $(list)" usebundle => $(list)("abc");	
+	  "name $(list)" usebundle => $(list)("abc");
 
 	See reference manual notes
 
@@ -117,7 +117,7 @@
 	New semantics in return values of list functions. Null values are now allowed
 	and there is no iteration over empty lists. The value "cf_null" is reserved for
 	use as a null iterator.
-	
+
 3.0.5p1
         Showing paths allowed/denied access to when cf-serverd is run in verbose mode.
 	Bug in server fixed for dynamic addresses.
@@ -143,9 +143,9 @@
 	package name in delete command during update.
 
 	package_list_update_ifelapsed limit added.
-	
+
 	Private variable $(firstrepo) is available in package_name_convention
-        and package_delete_convention in order to expand the full path to 
+        and package_delete_convention in order to expand the full path to
 	a package, which is required by some managers.
 
 	Some of the threading code is rewritten and made more robust. This includes
@@ -160,16 +160,16 @@
 	of CPU measurement.
 
 	Bug in Setuid log storage, fix.
-	
+
 	Hooks added for new Nova virtualization promises.
 
 	Multithreading mutex failed to collide during cfservd leading to dropped authentication under heavy load.
-	
-	
+
+
 3.0.4
 	Class cancellation in promises to create better class feedback,
 	allows emulation of switch/case semantics etc
-	
+
 	Value of SA measurement promises
 
 	Special function getenv() which returns the contents of an
@@ -178,7 +178,7 @@
 	New function escape() to escape literals as regular expressions (like SQL)
         New function host2ip for caching IP address lookup
 	New function regextract for setting variables with backreferences
-	
+
 	New variables for the components $(sys.cf_agent), $(sys.cf_know) etc
 	pointing to the binaries.
 
@@ -187,7 +187,7 @@
 
 	Package installation on localhost without a manager like yum completed,
 	multiple repositories searched, and universal methods.
-	
+
 	Numerous bugfixes
 
 
@@ -205,14 +205,14 @@
 
 	Unregistered addresses no longer report "(Non registered IP)", but return as the address
 	itself when doing reverse lookups.
-	
+
 3.0.2
 	IMPORTANT: Change in normal ordering of editing. replace comes
 	after insert lines Much testing and minor bug fixing
 
 	Memory leaks fixed
 	Many hooks added for Nova enterprise extensions.
-	
+
         promise_output reports now placed in WORKDIR/reports directory
 
 	Initialization correction and self-correx in monitord
@@ -366,13 +366,13 @@
         unit_warnifline.cf                x
         unit_webserver.cf                 x
 
-	
+
 3.0.1
-	First standalone release, independent of cfengine 2 
+	First standalone release, independent of cfengine 2
 	Purge old definitions and check consistency.
 
 	NB: changed search_mode to be a list of matching values
-	
+
 	Reporting rationalized in cf-promises with -r only to avoid
 	leaving output files everywhere.
 
@@ -398,11 +398,10 @@
 	added "vista","xp" etc..
 
 	License notices updated for dual license editions.
-	
+
 3.0.0
 	First release of cfengine 3. Known omissions:
 	- no support for ACLs
 	- no support for packages
 	- no support for interface configuration
 	These will be added in the next release.
-	

@@ -4,6 +4,8 @@
 	replace_patterns, field_edits, vars, classes is restored.
 	suspiciousnames implemented
 	New function getvalues()
+	New functions parse{read,int,string}array to match read{read,int,string}array.
+	Testsuite added to check for core functionality.
 
 3.1.4	(Bugfix and Stability release)
 	

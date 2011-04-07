@@ -121,6 +121,7 @@ value_separator  => ",";
 field_value     => "$(newval)";
 field_operation => "$(method)";
 extend_fields => "true";
+allow_blank_fields => "true";
 }
 
 ########################################

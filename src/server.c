@@ -760,7 +760,7 @@ void CheckFileChanges(int argc,char **argv,int sd)
 memset(&newstat,0,sizeof(struct stat));
 memset(filename,0,CF_BUFSIZE);
 
-if ((*VINPUTFILE != '.') && !IsAbsoluteFileName(VINPUTFILE)) /* Don't prepend to absolute names */
+if (!IsFileOutsideDefaultRepository(VINPUTFILE)) /* Don't prepend to absolute names */
    {
    snprintf(filename,CF_BUFSIZE,"%s/inputs/",CFWORKDIR);
    }

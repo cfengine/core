@@ -207,7 +207,7 @@ if (cfstat(cmd,&sb) == -1)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
-if ((*VINPUTFILE == '.') || IsAbsoluteFileName(VINPUTFILE))
+if (IsFileOutsideDefaultRepository(VINPUTFILE))
    {
    snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises%s\" -f \"%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX,VINPUTFILE);
    }
@@ -1307,14 +1307,14 @@ char *InputLocation(char *filename)
 
 { static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-if (MINUSF && (filename != VINPUTFILE) && (*VINPUTFILE == '.' || IsAbsoluteFileName(VINPUTFILE)) && !IsAbsoluteFileName(filename))
+if (MINUSF && (filename != VINPUTFILE) && IsFileOutsideDefaultRepository(VINPUTFILE) && !IsAbsoluteFileName(filename))
    {
    /* If -f assume included relative files are in same directory */
    strncpy(path,VINPUTFILE,CF_BUFSIZE-1);
    ChopLastNode(path);
    snprintf(wfilename,CF_BUFSIZE-1,"%s%c%s",path,FILE_SEPARATOR,filename);
    }
-else if ((*filename == '.') || IsAbsoluteFileName(filename))
+else if (IsFileOutsideDefaultRepository(filename))
    {
    strncpy(wfilename,filename,CF_BUFSIZE-1);
    }

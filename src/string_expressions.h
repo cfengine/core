@@ -36,8 +36,11 @@
 
    <token> ::= [a-zA-Z0-9_]+
 
-   <var-ref> ::= $( <name> )
-                 ${ <name> }
+   <var-ref> ::= $( <qname> )
+                 ${ <qname> }
+
+   <qname> ::= <name>
+               <name> . <name>
 
    Subsequent <term>s are concatenated during evaluation.
 */

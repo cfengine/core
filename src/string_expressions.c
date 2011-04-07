@@ -35,6 +35,50 @@
 #include "cf3.defs.h"
 #include "prototypes3.h"
 
+/* <qname> */
+
+static StringParseResult ParseQname(const char *expr, int start, int end)
+{
+StringParseResult lhs, rhs;
+StringExpression *ret, *subret, *dot;
+
+lhs = ParseStringExpression(expr, start, end);
+
+if (!lhs.result)
+   {
+   return lhs;
+   }
+
+if (lhs.position == end || expr[lhs.position] != '.')
+   {
+   return lhs;
+   }
+
+rhs = ParseStringExpression(expr, lhs.position + 1, end);
+
+if (!rhs.result)
+   {
+   FreeStringExpression(lhs.result);
+   return rhs;
+   }
+
+dot = calloc(1, sizeof(StringExpression));
+dot->op = LITERAL;
+dot->val.literal.literal = strdup(".");
+
+subret = calloc(1, sizeof(StringExpression));
+subret->op = CONCAT;
+subret->val.concat.lhs = dot;
+subret->val.concat.rhs = rhs.result;
+
+ret = calloc(1, sizeof(StringExpression));
+ret->op = CONCAT;
+ret->val.concat.lhs = lhs.result;
+ret->val.concat.rhs = subret;
+
+return (StringParseResult) { ret, rhs.position };
+}
+
 /* <var-ref> */
 
 static StringParseResult ParseVarRef(const char *expr, int start, int end)
@@ -44,7 +88,7 @@ if (start + 1 < end && expr[start] == '$')
    if (expr[start+1] == '(' || expr[start+1] == '{')
       {
       char closing_bracket = expr[start+1] == '(' ? ')' : '}';
-      StringParseResult res = ParseStringExpression(expr, start + 2, end);
+      StringParseResult res = ParseQname(expr, start + 2, end);
       if (res.result)
          {
          if (res.position < end && expr[res.position] == closing_bracket)

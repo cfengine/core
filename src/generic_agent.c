@@ -129,19 +129,40 @@ SetPolicyServer(POLICY_SERVER);
 
 if (ag != cf_keygen)
    {
-   if (MissingInputFile())
+   if (!MissingInputFile())
       {
-      ok = false;
-      }
-   else if (SHOWREPORTS || NewPromiseProposals())
-      {
-      CfOut(cf_verbose,""," -> New promises proposals detected...\n");
-      ok = BOOTSTRAP || CheckPromises(ag);
-      }
-   else
-      {
-      CfOut(cf_verbose,""," -> No new promises proposals - so policy is already validated\n");
-      ok = true;
+      bool check_promises = false;
+
+      if (SHOWREPORTS)
+         {
+         check_promises = true;
+         CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
+         }
+      if (IsFileOutsideDefaultRepository(VINPUTFILE))
+         {
+         check_promises = true;
+         CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
+         }
+      if (NewPromiseProposals())
+         {
+         check_promises = true;
+         CfOut(cf_verbose, "", " -> Input file is changed since last valiadtion, validating it");
+         }
+
+      if (check_promises)
+         {
+         ok = CheckPromises(ag);
+         if (BOOTSTRAP && !ok)
+            {
+            CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
+            ok = true;
+            }
+         }
+      else
+         {
+         CfOut(cf_verbose, "", " -> Policy is already validated");
+         ok = true;
+         }
       }
    
    if (ok)

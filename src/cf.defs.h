@@ -199,6 +199,10 @@ extern int errno;
 #define bzero(s, n)     memset ((s), 0, (n))
 #endif
 
+#ifndef HAVE_STRNDUP
+char *strndup(const char *s, size_t n);
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

@@ -41,7 +41,7 @@ int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attrib
   char *criteria = NULL;
   char *column[CF_PROCCOLS];
   struct Rlist *rp;
-    
+
 Debug("SelectProcess(%s)\n",procentry);
 
 InitAlphaList(&proc_attr);

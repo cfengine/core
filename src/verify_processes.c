@@ -279,13 +279,13 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          continue;
          }
 
-      if(EMPTY(ip->name))
-	{
-	continue;
-	}
-
+      if (EMPTY(ip->name))
+         {
+         continue;
+         }
+      
       pid = ExtractPid(ip->name,names,start,end);
-
+      
       if (pid == -1)
          {
          CfOut(cf_verbose,"","Unable to extract pid while looking for %s\n",pp->promiser);

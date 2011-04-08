@@ -164,9 +164,11 @@ snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,
 
 Debug("LOCK(%s)[%s]\n",pp->bundle,cflock);
 
-/* for signal handler - not threadsafe so applies only to main thread */
+// Now see if we can get exclusivity to edit the locks
 
 CFINITSTARTTIME = time(NULL);
+
+WaitForCriticalSection();
 
 /* Look for non-existent (old) processes */
 
@@ -175,13 +177,15 @@ elapsedtime = (time_t)(now-lastcompleted) / 60;
 
 if (elapsedtime < 0)
    {
-   CfOut(cf_verbose,""," XX Another cfengine seems to have done this since I started (elapsed=%d)\n",elapsedtime);
+   CfOut(cf_verbose,""," XX Another cf-agent seems to have done this since I started (elapsed=%d)\n",elapsedtime);
+   ReleaseCriticalSection();
    return this;
    }
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
    CfOut(cf_verbose,""," XX Nothing promised here [%.40s] (%u/%u minutes elapsed)\n",cflock,elapsedtime,attr.transaction.ifelapsed);
+   ReleaseCriticalSection();
    return this;
    }
 
@@ -225,6 +229,7 @@ if (!ignoreProcesses)
                }
             else
                {
+               ReleaseCriticalSection();
                CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
                
                FatalError("");
@@ -233,6 +238,7 @@ if (!ignoreProcesses)
          }
       else
          {
+         ReleaseCriticalSection();
          CfOut(cf_verbose,"","Couldn't obtain lock for %s (already running!)\n",cflock);
          return this;
          }
@@ -240,6 +246,8 @@ if (!ignoreProcesses)
    
    WriteLock(cflock);   
    }
+
+ReleaseCriticalSection();
 
 this.lock = strdup(cflock);
 this.last = strdup(cflast);
@@ -780,4 +788,33 @@ WriteDB(dbp,"lock_horizon",&entry,sizeof(entry));
 
 DeleteDBCursor(dbp,dbcp);
 CloseLock(dbp);
+}
+
+/************************************************************************/
+/* Release critical section                                             */
+/************************************************************************/
+
+void WaitForCriticalSection()
+
+{ time_t now = time(NULL), then = FindLockTime("CF_CRITICAL_SECTION");
+
+/* Another agent has been waiting more than a minute, it means there
+   is likely crash detritus to clear up... After a minute we take our
+   chances ... */
+ 
+while ((then != -1) && (now - then < 60))
+   {
+   sleep(1);
+   then = FindLockTime("CF_CRITICAL_SECTION");
+   }
+
+WriteLock("CF_CRITICAL_SECTION");
+}
+
+/************************************************************************/
+
+void ReleaseCriticalSection()
+
+{
+RemoveLock("CF_CRITICAL_SECTION");
 }

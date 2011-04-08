@@ -1487,6 +1487,8 @@ char *GetHome(uid_t uid);
 
 /* transaction.c */
 
+void WaitForCriticalSection(void);
+void ReleaseCriticalSection(void);
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname);
 struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(struct CfLock this);

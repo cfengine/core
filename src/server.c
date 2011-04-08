@@ -378,8 +378,8 @@ while (true)
       {
       CheckFileChanges(argc,argv,sd);
       PurgeKeyRing();
-      UpdateLastSeen();
       }
+   UpdateLastSeen();
    
    FD_ZERO(&rset);
    FD_SET(sd,&rset);

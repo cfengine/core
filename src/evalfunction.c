@@ -76,23 +76,103 @@ return Unix_FnCallGroupExists(fp, finalargs);
 /* End FnCall API                                                  */
 /*******************************************************************/
 
+static struct Rlist *GetHostsFromLastseenDB(CF_DB *db, CF_DBC *cursor,
+                                            time_t horizon, bool return_address,
+                                            bool return_recent)
+{
+struct Rlist *recent = NULL, *aged = NULL;
+int ksize, vsize;
+char *key;
+void *value;
+time_t now = time(NULL);
+
+Debug(" | Walking through database.\n");
+
+while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+   {
+   double entrytime;
+   char address[CF_MAXVARSIZE];
+
+   Debug(" | DB Key: %s.\n", (char*)key);
+
+   if (value != NULL)
+      {
+      struct CfKeyHostSeen entry;
+      memcpy(&entry,value,sizeof(entry));
+      entrytime = entry.Q.q;
+      Debug(" | DB Value: %lf,%s.\n", entrytime, entry.address);
+
+      if (return_address)
+         {
+         strncpy(address, entry.address, CF_MAXVARSIZE);
+         }
+      else
+         {
+         strncpy(address, IPString2Hostname(entry.address), CF_MAXVARSIZE);
+         }
+
+      Debug(" | Value: %s\n", address);
+      }
+   else
+      {
+      Debug(" | DB Value: NULL.\n");
+      continue;
+      }
+
+   Debug(" | / Checking age.\n");
+
+   if (entrytime < now - horizon)
+      {
+      Debug(" | | Old entry.\n");
+
+      if (KeyInRlist(recent, address))
+         {
+         Debug(" | \\- There is recent entry for this address. Do nothing.\n");
+         }
+      else
+         {
+         Debug(" | \\- Adding to list of aged hosts.\n");
+         IdempPrependRScalar(&aged, address, CF_SCALAR);
+         }
+      }
+   else
+      {
+      struct Rlist *r;
+      Debug(" | | Recent entry.\n");
+
+      if ((r = KeyInRlist(aged, address)))
+         {
+         Debug(" | | Purging from list of aged hosts.\n");
+         DeleteRlistEntry(&aged, r);
+         }
+
+      Debug (" | \\- Adding to list of recent hosts.\n");
+      IdempPrependRScalar(&recent, address, CF_SCALAR);
+      }
+   }
+
+if (return_recent)
+   {
+   DeleteRlist(aged);
+   return recent;
+   }
+else
+   {
+   DeleteRlist(recent);
+   return aged;
+   }
+}
+
 struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rval rval;
-  struct Rlist *rp,*returnlist = NULL;
-  char *key,*policy,*format,buffer[CF_BUFSIZE];
-  int ksize,vsize,tmp,range,result,from=-1,to=-1;
-  void *value;
+struct Rlist *returnlist = NULL, *rp;
+  char *policy,*format;
   CF_DB *dbp;
   CF_DBC *dbcp;
-  time_t tid = time(NULL);
-  double now = (double)tid,average = 0, var = 0;
-  double ticksperhr = (double)CF_TICKS_PER_HOUR;
-  char name[CF_BUFSIZE],hosthash[CF_BUFSIZE],address[CF_MAXVARSIZE];
-  struct CfKeyHostSeen entry;
+  char name[CF_BUFSIZE];
   int horizon;
-  
-buffer[0] = '\0';  
+
 ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hostsseen].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
@@ -101,28 +181,28 @@ horizon = Str2Int((char *)(finalargs->item)) * 3600;
 policy = (char *)(finalargs->next->item);
 format = (char *)(finalargs->next->next->item);
 
-if (from == CF_NOINT || to == CF_NOINT)
-   {
-   SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,"unrecognized integer",NULL);
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   return rval;
-   }
+Debug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
 snprintf(name,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_LASTDB_FILE);
 
+Debug(" | Trying to open database %s.\n", name);
+
 if (!OpenDB(name,&dbp))
    {
+   Debug(" \\- Failed to open database.\n");
    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
    rval.item = NULL;
    rval.rtype = CF_LIST;
    return rval;
    }
 
+Debug(" | Database opened succesfully.\n");
+
 /* Acquire a cursor for the database. */
 
 if (!NewDBCursor(dbp,&dbcp))
    {
+   Debug(" \\- Failed to obtain currsor for database.\n");
    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
    CfOut(cf_error,""," !! Error reading from last-seen database: ");
    rval.item = NULL;
@@ -130,57 +210,19 @@ if (!NewDBCursor(dbp,&dbcp))
    return rval;
    }
 
-memset(&entry,0,sizeof(entry)); 
- 
  /* Walk through the database and print out the key/data pairs. */
 
-while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
+returnlist = GetHostsFromLastseenDB(dbp, dbcp, horizon,
+                                    strcmp(format, "address") == 0,
+                                    strcmp(policy, "lastseen") == 0);
+
+Debug(" | Return value:\n");
+for(rp = returnlist; rp; rp = rp->next)
    {
-   double then;
-   time_t fthen;
-   char tbuf[CF_BUFSIZE],addr[CF_BUFSIZE];
-
-   memcpy(&then,value,sizeof(then));
-   strcpy(hosthash,(char *)(key+1));
-   
-   if (value != NULL)
-      {
-      memcpy(&entry,value,sizeof(entry));
-      then = entry.Q.q;
-      average = (double)entry.Q.expect;
-      var = (double)entry.Q.var;
-      strcpy(address,entry.address);
-      }
-   else
-      {
-      continue;
-      }
-
-   if (strcmp(policy,"lastseen") == 0)
-      {
-      if (now - then > horizon)
-         {
-         continue;
-         }
-      }
-   else
-      {
-      if (now - then <= horizon)
-         {
-         continue;
-         }      
-      }
-
-   if (strcmp(format,"address") == 0)
-      {
-      IdempPrependRScalar(&returnlist,address,CF_SCALAR);
-      }
-   else
-      {
-      strncpy(name,IPString2Hostname(address),CF_MAXVARSIZE);
-      IdempPrependRScalar(&returnlist,name,CF_SCALAR);
-      }
+   Debug(" |  %s\n", rp->item);
    }
+
+Debug(" \\- Closing database.\n");
 
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);

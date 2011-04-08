@@ -83,56 +83,48 @@ return addrbuf;
 
  /* Example:
    
- struct sockaddr_in *p;
- struct sockaddr_in6 *p6;
+ struct sockaddr_in p;
+ struct sockaddr_in6 p6;
  
- p = (struct sockaddr_in *) sockaddr_pton(AF_INET,"128.39.89.10");
- p6 = (struct sockaddr_in6 *) sockaddr_pton(AF_INET6,"2001:700:700:3:290:27ff:fea2:477b");
+sockaddr_pton(AF_INET,"128.39.89.10", &p);
+sockaddr_pton(AF_INET6,"2001:700:700:3:290:27ff:fea2:477b", &p6);
 
- printf("Coded %s\n",sockaddr_ntop((struct sockaddr *)p));
-
+printf("Coded %s\n",sockaddr_ntop((struct sockaddr *)&p));
  */
 
 /*****************************************************************************/
 
-void *sockaddr_pton(int af,void *src)
-
-{ int err;
-#if defined(HAVE_GETADDRINFO)
-  static struct sockaddr_in6 adr6;
-#endif
-  static struct sockaddr_in adr; 
-
+bool sockaddr_pton(int af,void *src, void *genaddr)
+{
 switch (af)
    {
    case AF_INET:
-       memset(&adr,0,sizeof(adr));
-       adr.sin_family = AF_INET;
-       adr.sin_addr.s_addr = inet_addr(src);
-       Debug("Coded ipv4 %s\n",sockaddr_ntop((struct sockaddr *)&adr));
-       return (void *)&adr;
-       
+      {
+      struct sockaddr_in *addr = (struct sockaddr_in *)genaddr;
+      memset(addr, 0, sizeof(struct sockaddr_in));
+      addr->sin_family = AF_INET;
+      addr->sin_addr.s_addr = inet_addr(src);
+
+      Debug("Coded ipv4 %s\n",sockaddr_ntop((struct sockaddr *)genaddr));
+
+      return addr->sin_addr.s_addr != INADDR_NONE;
+      }
 #if defined(HAVE_GETADDRINFO)
    case AF_INET6:
-       memset(&adr6,0,sizeof(adr6)); 
-       adr6.sin6_family = AF_INET6;
-       err = inet_pton(AF_INET6,src,&(adr6.sin6_addr));
-       
-       if (err > 0)
-          {
-          Debug("Coded ipv6 %s\n",sockaddr_ntop((struct sockaddr *)&adr6));
-          return (void *)&adr6;
-          }
-       else
-          {
-          return NULL;
-          }
-       break;
+      {
+      int err;
+      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)genaddr;
+      memset(addr, 0, sizeof(struct sockaddr_in6));
+      addr->sin6_family = AF_INET6;
+      err = inet_pton(AF_INET6, src, &addr->sin6_addr);
+
+      Debug("Coded ipv6 %s\n",sockaddr_ntop((struct sockaddr *)genaddr));
+
+      return err > 0;
+      }
 #endif
    default:
-       Debug("Address family was %d\n",af);
-       FatalError("Software failure in sockaddr_pton\n");
+      Debug("Address family was %d\n",af);
+      FatalError("Software failure in sockaddr_pton\n");
    }
-
- return NULL; 
 }

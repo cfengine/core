@@ -1423,8 +1423,12 @@ void SelfTerminatePrelude(void);
 
 /* sockaddr.c */
 
+/* Not thread-safe */
 char *sockaddr_ntop (struct sockaddr *sa);
-void *sockaddr_pton (int af,void *src);
+
+/* Thread-safe. Returns boolean success.
+   It's up to caller to provide large enough addr. */
+bool sockaddr_pton (int af,void *src, void *addr);
 
 /* storage_tools.c */
 

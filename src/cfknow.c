@@ -1218,6 +1218,7 @@ void GenerateSQL()
 { struct Topic *tp;
   struct TopicAssociation *ta;
   struct Occurrence *op;
+  struct Inference *ip;
   FILE *fout = stdout;
   char filename[CF_BUFSIZE],longname[CF_BUFSIZE],query[CF_BUFSIZE],safe[CF_BUFSIZE],safe2[CF_BUFSIZE];
   struct Rlist *columns = NULL,*rp;
@@ -1424,7 +1425,7 @@ fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
 
 
-/* Class types */
+/* Class types and topics */
 
 for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
    {
@@ -1477,6 +1478,8 @@ for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
       }
    }
 
+// Occurrences
+
 for (op = OCCURRENCES; op != NULL; op=op->next)
    {
    for (rp = op->represents; rp != NULL; rp=rp->next)
@@ -1491,6 +1494,14 @@ for (op = OCCURRENCES; op != NULL; op=op->next)
       }
    }
 
+//
+
+for (ip = INFERENCES; ip != NULL; ip=ip->next)
+   {
+   snprintf(query,CF_BUFSIZE-1,"INSERT INTO inferences (precedent,qualifier,inference) values ('%s','%s','%s')\n",ip->precedent,ip->qualifier,ip->inference);
+   fprintf(fout,"%s",query);
+   CfVoidQueryDB(&cfdb,query);
+   }
 
 /* Close channels */
 

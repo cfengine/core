@@ -1125,11 +1125,11 @@ switch(policy)
    {
    default:
    case cfa_daily:
-       period = 12.0*24.0;
+       period = 12.0*23.0; // 0-23
        break;
 
    case cfa_hourly:
-       period = 12.0;
+       period = 11.0;     // 0-11
        break;
    }
 

@@ -62,8 +62,8 @@ struct BodySyntax CF_OCCUR_BODIES[] =
    {
    {"represents",cf_slist,"","List of subtopics that explains the type(s) of information represented by the occurrence"},
    {"representation",cf_opts,"literal,url,db,file,web,image,portal","How to interpret the promiser string e.g. actual data or reference to data"},
-   {"web_root",cf_str,"","Base URL of the occurrence when rendered as a web-URL (replaces path_root)"},
-   {"path_root",cf_str,"","Base path of the occurrence when locating file (replaced by web_root)"},
+   {"web_root",cf_str,"","Base URL of the occurrence when rendered as a web-URL (deprecated)"},
+   {"path_root",cf_str,"","Base path of the occurrence when locating file (deprecated)"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -81,8 +81,8 @@ struct BodySyntax CF_TOPICS_BODIES[] =
 
 struct BodySyntax CF_INFER_BODIES[] =
    {
-   {"precedent",cf_str,"","The foundational vector for a trinary inference"},
-   {"qualifier",cf_str,"","The second vector in a trinary inference"},
+   {"precedents",cf_slist,"","The foundational vector for a trinary inference"},
+   {"qualifiers",cf_slist,"","The second vector in a trinary inference"},
    {NULL,cf_notype,NULL,NULL}
    };
 

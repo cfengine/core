@@ -1239,6 +1239,13 @@ struct Occurrence
    struct Occurrence *next;
    };
 
+struct Inference
+   {
+   char *inference; // Promiser
+   char *precedent;
+   char *qualifier;
+   struct Inference *next;
+   };
 
 /*************************************************************************/
 /* SQL Database connectors                                               */
@@ -1830,6 +1837,8 @@ struct Attributes
 
    char *fwd_name;
    char *bwd_name;
+   struct Rlist *precedents;
+   struct Rlist *qualifiers;
    struct Rlist *associates;
    struct Rlist *represents;
    struct Rlist *synonyms;

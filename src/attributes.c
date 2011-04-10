@@ -129,7 +129,6 @@ return attr;
 struct Attributes GetOutputsAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-memset(&attr,0,sizeof(attr));
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -145,8 +144,6 @@ struct Attributes GetReportsAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
-
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 
@@ -160,8 +157,6 @@ struct Attributes GetEnvironmentsAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
- 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 attr.env = GetEnvironmentsConstraints(pp);
@@ -175,8 +170,6 @@ struct Attributes GetServicesAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
- 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 attr.service = GetServicesConstraints(pp);
@@ -189,8 +182,6 @@ return attr;
 struct Attributes GetPackageAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-
-memset(&attr,0,sizeof(attr));
  
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -204,8 +195,6 @@ struct Attributes GetDatabaseAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
-
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 attr.database = GetDatabaseConstraints(pp);
@@ -217,8 +206,6 @@ return attr;
 struct Attributes GetClassContextAttributes(struct Promise *pp)
 
 { struct Attributes a;
-
-memset(&a,0,sizeof(a));
 
 a.transaction = GetTransactionConstraints(pp);
 a.classes = GetClassDefinitionConstraints(pp);
@@ -232,8 +219,6 @@ return a;
 struct Attributes GetExecAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-
-memset(&attr,0,sizeof(attr));
 
 attr.contain = GetExecContainConstraints(pp);
 attr.havecontain = GetBooleanConstraint("contain",pp);
@@ -257,8 +242,6 @@ return attr;
 struct Attributes GetProcessAttributes(struct Promise *pp)
 
 { static struct Attributes attr = {0};
-
-memset(&attr,0,sizeof(attr));
 
 attr.signals = GetListConstraint("signals",pp);
 attr.process_stop = (char *)GetConstraint("process_stop",pp,CF_SCALAR);
@@ -285,8 +268,6 @@ return attr;
 struct Attributes GetStorageAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-
-memset(&attr,0,sizeof(attr));
 
 attr.mount = GetMountConstraints(pp);
 attr.volume = GetVolumeConstraints(pp);
@@ -315,8 +296,6 @@ struct Attributes GetMethodAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
-
 attr.havebundle = GetBundleConstraint("usebundle",pp);
 
 /* Common ("included") */
@@ -335,8 +314,6 @@ return attr;
 struct Attributes GetInterfacesAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-
-memset(&attr,0,sizeof(attr));
 
 attr.havetcpip = GetBundleConstraint("usebundle",pp);
 attr.tcpip = GetTCPIPAttributes(pp);
@@ -358,8 +335,6 @@ struct Attributes GetTopicsAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
-
 attr.fwd_name = GetConstraint("forward_relationship",pp,CF_SCALAR);
 attr.bwd_name = GetConstraint("backward_relationship",pp,CF_SCALAR);
 attr.associates = GetListConstraint("associates",pp);
@@ -369,12 +344,21 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetInferencesAttributes(struct Promise *pp)
+
+{ struct Attributes attr = {0};
+
+attr.precedents = GetListConstraint("precedents",pp);
+attr.qualifiers = GetListConstraint("qualifers",pp);
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetOccurrenceAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
   char *value;
-
-memset(&attr,0,sizeof(attr));
 
 attr.represents = GetListConstraint("represents",pp);
 attr.rep_type = GetConstraint("representation",pp,CF_SCALAR);
@@ -390,8 +374,6 @@ struct Attributes GetMeasurementAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
 
-memset(&attr,0,sizeof(attr));
- 
 attr.measure = GetMeasurementConstraint(pp);
     
 /* Common ("included") */

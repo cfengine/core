@@ -47,6 +47,7 @@ void KeepKnowControlPromises(void);
 void KeepKnowledgePromise(struct Promise *pp);
 void VerifyTopicPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
+void VerifyInferencePromise(struct Promise *pp);
 void GenerateSQL(void);
 void LookupUniqueTopic(char *typed_topic);
 void LookupMatchingTopics(char *typed_topic);
@@ -104,6 +105,7 @@ char MANDIR[CF_BUFSIZE];
 int PASS;
 
 struct Occurrence *OCCURRENCES = NULL;
+struct Inference *INFERENCES = NULL;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -1006,6 +1008,12 @@ if (strcmp("classes",pp->agentsubtype) == 0)
    return;
    }
 
+if (strcmp("inferences",pp->agentsubtype) == 0)
+   {
+   VerifyInferencePromise(pp);
+   return;
+   }
+
 if (strcmp("topics",pp->agentsubtype) == 0)
    {
    VerifyTopicPromise(pp);
@@ -1038,6 +1046,28 @@ Nova_CfQueryCFDB(query);
 /* Level                                                             */
 /*********************************************************************/
 
+void VerifyInferencePromise(struct Promise *pp)
+
+{ struct Attributes a = {0};
+ struct Rlist *rpp,*rpq;
+
+if (!IsDefinedClass(pp->classes))
+   {
+   CfOut(cf_verbose,""," -> Skipping inference for \"%s\" as class \"%s\" is not defined",pp->promiser,pp->classes);
+   return;
+   }
+ 
+a = GetInferencesAttributes(pp);
+
+for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
+   {
+   for (rpq = a.qualifiers; rpq != NULL; rpq=rpq->next)
+      {
+      CfOut(cf_verbose,""," -> Add inference: (%s,%s,%s)\n",rpp->item,rpq->item,pp->promiser);
+      AddInference(&INFERENCES,pp->promiser,rpp->item,rpq->item);
+      }
+   }
+}
 
 /*********************************************************************/
 
@@ -1352,6 +1382,32 @@ if (sql_database_defined)
 DeleteRlist(columns);
 columns = NULL;
 
+snprintf(query,CF_BUFSIZE-1,
+        "CREATE TABLE inferences"
+        "("
+        "precedent varchar(256),"
+        "qualifier varchar(256),"
+        "inference varchar(256),"
+        ");\n"
+        );
+
+fprintf(fout,"%s",query);
+
+AppendRScalar(&columns,"precedent,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"qualifier,varchar,256",CF_SCALAR);
+AppendRScalar(&columns,"inference,varchar,256",CF_SCALAR);
+
+snprintf(query,CF_MAXVARSIZE-1,"%s.inferences",SQL_DATABASE);
+
+if (sql_database_defined)
+   {
+   CfVerifyTablePromise(&cfdb,query,columns,a,pp);
+   }
+
+DeleteRlist(columns);
+columns = NULL;
+
+
 /* Delete existing data and recreate */
 
 snprintf(query,CF_BUFSIZE-1,"delete from topics\n",TM_PREFIX);
@@ -1363,6 +1419,10 @@ CfVoidQueryDB(&cfdb,query);
 snprintf(query,CF_BUFSIZE-1,"delete from occurrences\n",TM_PREFIX);
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
+snprintf(query,CF_BUFSIZE-1,"delete from inferences\n",TM_PREFIX);
+fprintf(fout,"%s",query);
+CfVoidQueryDB(&cfdb,query);
+
 
 /* Class types */
 

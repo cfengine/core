@@ -101,6 +101,7 @@ struct Attributes GetProcessAttributes(struct Promise *pp);
 struct Attributes GetStorageAttributes(struct Promise *pp);
 struct Attributes GetClassContextAttributes(struct Promise *pp);
 struct Attributes GetTopicsAttributes(struct Promise *pp);
+struct Attributes GetInferencesAttributes(struct Promise *pp);
 struct Attributes GetOccurrenceAttributes(struct Promise *pp);
 struct Attributes GetPackageAttributes(struct Promise *pp);
 struct Attributes GetMeasurementAttributes(struct Promise *pp);
@@ -1143,6 +1144,7 @@ void MountAll(void);
 
 /* ontology.c */
 
+void AddInference(struct Inference **list,char *result,char *pre,char *qual);
 struct Topic *IdempInsertTopic(char *classified_name);
 struct Topic *InsertTopic(char *name,char *context);
 struct Topic *FindTopic(char *name);

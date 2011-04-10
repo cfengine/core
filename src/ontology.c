@@ -180,7 +180,7 @@ void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *repres
   struct TopRepresentation *tr;
   struct Rlist *rp;
 
-  if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
+if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
    {
    if ((op = (struct Occurrence *)malloc(sizeof(struct Occurrence))) == NULL)
       {
@@ -211,6 +211,25 @@ for (rp = represents; rp != NULL; rp=rp->next)
    {
    IdempPrependRScalar(&(op->represents),rp->item,rp->type);
    }
+}
+
+/*********************************************************************/
+
+void AddInference(struct Inference **list,char *result,char *pre,char *qual)
+
+{ struct Inference *ip;
+ 
+if ((ip = (struct Inference *)malloc(sizeof(struct Occurrence))) == NULL)
+   {
+   CfOut(cf_error,"malloc","Memory failure in AddOccurrence");
+   FatalError("");
+   }
+
+ip->inference = strdup(result);
+ip->precedent = strdup(pre);
+ip->qualifier = strdup(qual);
+ip->next = *list;
+*list = ip;
 }
 
 /*********************************************************************/

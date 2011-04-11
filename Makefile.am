@@ -7,7 +7,7 @@ DIST_SUBDIRS = pub src docs examples inputs
 DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS COPYING aclocal.m4 \
 	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp install-sh \
 	ltmain.sh missing ylwrap m4/acinclude.m4 m4/libtool.m4 m4/ltoptions.m4 \
-	m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 configure.ac
+	m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 configure.ac autogen.sh
 
 EXTRA_DIST = COPYING ChangeLog INSTALL NEWS README LICENSE
 

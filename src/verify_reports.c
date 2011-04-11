@@ -189,10 +189,10 @@ if (cfstat(buffer,&statbuf) == 0)
             /* If we get here this is a process thing */
             if (offset == NULL)
                {
-               if (offset = strstr(buffer,"CMD"))
+               if ((offset = strstr(buffer,"CMD")))
                   {
                   }
-               else if (offset = strstr(buffer,"COMMAND"))
+               else if ((offset = strstr(buffer,"COMMAND")))
                   {
                   }
                

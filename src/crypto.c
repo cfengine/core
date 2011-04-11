@@ -295,7 +295,7 @@ MapName(newname);
 
 // Check memory cache rlist
 
-if (newkey = SelectKeyRing(keyname))
+if ((newkey = SelectKeyRing(keyname)))
    {
    CfOut(cf_verbose,""," -> Retrieved %s from cache",keyname);
    return newkey;

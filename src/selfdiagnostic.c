@@ -448,7 +448,7 @@ void SDIntegerDefault(char *ref,int cmp)
 { char *def;
   int intval;
 
-if (def = GetControlDefault(ref))
+if ((def = GetControlDefault(ref)))
    {
    sscanf(def,"%d",&intval);
    if (intval != cmp)

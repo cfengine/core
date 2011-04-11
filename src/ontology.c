@@ -73,7 +73,7 @@ struct Topic *AddTopic(struct Topic **list,char *name,char *context)
 
 { struct Topic *tp;
 
-if (tp = TopicExists(name,context))
+if ((tp = TopicExists(name,context)))
    {
    CfOut(cf_verbose,""," -> Topic %s already defined, ok\n",name);
    }
@@ -361,7 +361,7 @@ name[0] = '\0';
 DeClassifyTopic(classified_topic,name,context);
 slot = GetHash(ToLowerStr(name));
 
-if (tp = GetTopic(TOPICHASH[slot],classified_topic))
+if ((tp = GetTopic(TOPICHASH[slot],classified_topic)))
    {
    return tp->id;
    }

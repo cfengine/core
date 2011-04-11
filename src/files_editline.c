@@ -1416,7 +1416,7 @@ int SelectLine(char *line,struct Attributes a,struct Promise *pp)
   int s,e;
   char *selector;
 
-if (c = a.line_select.startwith_from_list)
+if ((c = a.line_select.startwith_from_list))
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1431,7 +1431,7 @@ if (c = a.line_select.startwith_from_list)
    return false;
    }
 
-if (c = a.line_select.not_startwith_from_list)
+if ((c = a.line_select.not_startwith_from_list))
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1446,7 +1446,7 @@ if (c = a.line_select.not_startwith_from_list)
    return true;
    }
 
-if (c = a.line_select.match_from_list)
+if ((c = a.line_select.match_from_list))
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1461,7 +1461,7 @@ if (c = a.line_select.match_from_list)
    return false;
    }
 
-if (c = a.line_select.not_match_from_list)
+if ((c = a.line_select.not_match_from_list))
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1476,7 +1476,7 @@ if (c = a.line_select.not_match_from_list)
    return true;
    }
 
-if (c = a.line_select.contains_from_list)
+if ((c = a.line_select.contains_from_list))
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1491,7 +1491,7 @@ if (c = a.line_select.contains_from_list)
    return false;
    }
 
-if (c = a.line_select.not_contains_from_list)
+if ((c = a.line_select.not_contains_from_list))
    {
    for (rp = c; rp != NULL; rp=rp->next)
       {
@@ -1520,7 +1520,7 @@ int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
 
 if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
    {
-   if (found = KeyInRlist(*columns,a.column.column_value))
+   if ((found = KeyInRlist(*columns,a.column.column_value)))
       {
       CfOut(cf_inform,""," -> Deleting column field sub-value %s in %s",a.column.column_value,pp->this_server);
       DeleteRlistEntry(columns,found);

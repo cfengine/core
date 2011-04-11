@@ -241,7 +241,7 @@ void IdempItemCount(struct Item **liststart,char *itemstring,char *classes)
 
 { struct Item *ip;
  
-if (ip = ReturnItemIn(*liststart,itemstring))
+if ((ip = ReturnItemIn(*liststart,itemstring)))
    {
    ip->counter++;
    }

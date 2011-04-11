@@ -692,7 +692,7 @@ if (strlen(s) < strlen("Fri Oct 1 15:15:23 EST 2010"))
 
 for (i = 0; i < 7; i++)
    {
-   if (dayp = strstr(s,days[i]))
+   if ((dayp = strstr(s,days[i])))
       {
       *dayp = 'D';
       *(dayp+1) = 'A';
@@ -703,7 +703,7 @@ for (i = 0; i < 7; i++)
 
 for (i = 0; i < 12; i++)
    {
-   if (monthp = strstr(s,months[i]))
+   if ((monthp = strstr(s,months[i])))
       {
       *monthp = 'M';
       *(monthp+1) = 'O';

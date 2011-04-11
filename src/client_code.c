@@ -95,7 +95,7 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
       }
    else
       {   
-      if (conn = ServerConnectionReady(rp->item))
+      if ((conn = ServerConnectionReady(rp->item)))
          {
          return conn;
          }
@@ -1258,7 +1258,7 @@ if ((svp->server = strdup(ipname)) == NULL)
 free(rp->item);
 rp->item = svp;
 
-if (svp->conn = NewAgentConn())
+if ((svp->conn = NewAgentConn()))
    {
    /* If we couldn't connect, mark this server unavailable for everyone */
    svp->conn->sd = CF_COULD_NOT_CONNECT;

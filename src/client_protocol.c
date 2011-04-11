@@ -201,7 +201,7 @@ else
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
-if (server_pubkey = HavePublicKeyByIP(conn->username,conn->remoteip))
+if ((server_pubkey = HavePublicKeyByIP(conn->username,conn->remoteip)))
    {
    dont_implicitly_trust_server = 'y';
    encrypted_len = RSA_size(server_pubkey);

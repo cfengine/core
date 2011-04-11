@@ -356,7 +356,7 @@ except_uids = SplitStringAsRList(except_uid,',');
 
 setpwent();
 
-while (pw = getpwent())
+while ((pw = getpwent()))
    {
    if (!IsStringIn(except_names,pw->pw_name) && !IsIntIn(except_uids,(int)pw->pw_uid))
       {
@@ -1486,7 +1486,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          char *sp;
          index[0] = '\0';
          sscanf(ptr->hashtable[i]->lval+strlen(match),"%127[^\n]",index);
-         if (sp = strchr(index,']'))
+         if ((sp = strchr(index,']')))
             {
             *sp = '\0';
             }
@@ -2939,7 +2939,7 @@ else
          }
       }
 
-   if (classlist = SplitStringAsRList(buffer,','))
+   if ((classlist = SplitStringAsRList(buffer,',')))
       {
       for (rp = classlist; rp != NULL; rp=rp->next)
          {
@@ -4328,7 +4328,7 @@ filter = (char *)(finalargs->next->next->item);
 
 snprintf(handle,CF_BUFSIZE,"%s_%s_%s_%s",dn,filter,name,scope);
    
-if (newval = CfLDAPValue(uri,dn,filter,name,scope,sec))
+if ((newval = CfLDAPValue(uri,dn,filter,name,scope,sec)))
    {
    CacheUnreliableValue("ldapvalue",handle,newval);
    }
@@ -4375,7 +4375,7 @@ filter = (char *)(finalargs->next->next->next->item);
  scope = (char *)(finalargs->next->next->next->next->item);
    sec = (char *)(finalargs->next->next->next->next->next->item);
    
-if (newval = CfLDAPArray(array,uri,dn,filter,scope,sec))
+if ((newval = CfLDAPArray(array,uri,dn,filter,scope,sec)))
    {
    SetFnCallReturnStatus("ldaparray",FNCALL_SUCCESS,NULL,NULL);
    }
@@ -4409,7 +4409,7 @@ filter = (char *)(finalargs->next->next->item);
  scope = (char *)(finalargs->next->next->next->next->item);
    sec = (char *)(finalargs->next->next->next->next->next->item);
 
-if (newval = CfLDAPList(uri,dn,filter,name,scope,sec))
+if ((newval = CfLDAPList(uri,dn,filter,name,scope,sec)))
    {
    SetFnCallReturnStatus("ldaplist",FNCALL_SUCCESS,NULL,NULL);
    }
@@ -4444,7 +4444,7 @@ filter = (char *)(finalargs->next->next->item);
  regex = (char *)(finalargs->next->next->next->next->next->item);
    sec = (char *)(finalargs->next->next->next->next->next->next->item);
 
-if (newval = CfRegLDAP(uri,dn,filter,name,scope,regex,sec))
+if ((newval = CfRegLDAP(uri,dn,filter,name,scope,regex,sec)))
    {
    SetFnCallReturnStatus("regldap",FNCALL_SUCCESS,NULL,NULL);
    }

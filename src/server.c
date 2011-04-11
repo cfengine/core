@@ -3274,11 +3274,11 @@ else
 void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted)
 
 { char handle[CF_BUFSIZE],out[CF_BUFSIZE];
-  int cipherlen, ok = false;
+  int cipherlen;
 
 sscanf(recvbuffer,"VAR %255[^\n]",handle);
  
-if (ok = ReturnLiteralData(handle,out))
+if (ReturnLiteralData(handle,out))
    {
    memset(sendbuffer,0,CF_BUFSIZE);
    snprintf(sendbuffer,CF_BUFSIZE-1,"%s",out);
@@ -3737,7 +3737,7 @@ ThreadLock(cft_output);
 snprintf(udigest,CF_MAXVARSIZE-1,"%s",HashPrint(CF_DEFAULT_DIGEST,conn->digest));
 ThreadUnlock(cft_output);
 
-if (savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest))
+if ((savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest)))
    {
    CfOut(cf_verbose,"","A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
    

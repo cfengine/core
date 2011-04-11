@@ -371,11 +371,11 @@ for (i = 0; bs[i].lval != NULL; i++)
       fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
 
-      if (res = GetControlDefault(bs[i].lval))
+      if ((res = GetControlDefault(bs[i].lval)))
          {
          fprintf(fout,"@noindent @b{Default value:} %s\n",res);
          }
-      else if (res = GetBodyDefault(bs[i].lval))
+      else if ((res = GetBodyDefault(bs[i].lval)))
          {
          fprintf(fout,"@noindent @b{Default value:} %s\n",res);
          }
@@ -518,11 +518,11 @@ for (i = 0; bs[i].lval != NULL; i++)
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
 
-      if (res = GetControlDefault(bs[i].lval))
+      if ((res = GetControlDefault(bs[i].lval)))
          {
          fprintf(fout,"\n@noindent @b{Default value:} %s\n",res);
          }
-      else if (res = GetBodyDefault(bs[i].lval))
+      else if ((res = GetBodyDefault(bs[i].lval)))
          {
          fprintf(fout,"\n@noindent @b{Default value:} %s\n",res);
          }

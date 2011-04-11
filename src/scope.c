@@ -331,7 +331,7 @@ if (!ThreadLock(cft_vscope))
    return;
    }
 
-if (op = GetScope(old))
+if ((op = GetScope(old)))
    {
    np = GetScope(new);
    CopyHashes(np->hashtable,op->hashtable);

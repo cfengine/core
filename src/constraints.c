@@ -642,7 +642,7 @@ if (handle)
       return;
       }
    
-   if (prid = PromiseIdExists(handle))
+   if ((prid = PromiseIdExists(handle)))
       {
       if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->lineno != pp->lineno))
          {
@@ -679,7 +679,7 @@ if (strcmp(pp->agentsubtype,"insert_lines") == 0)
    
    if ((sp = GetConstraint("select_line_matching",pp,CF_SCALAR)))
       {
-      if (ptr = ReturnItemIn(EDIT_ANCHORS,sp))
+      if ((ptr = ReturnItemIn(EDIT_ANCHORS,sp)))
          {
          if (strcmp(ptr->classes,pp->bundle) == 0)
             {

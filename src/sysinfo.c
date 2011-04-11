@@ -622,7 +622,7 @@ if (strstr(VFQNAME,".") == 0)
       {
       struct hostent *hp;
 
-      if (hp = gethostbyname(fqn))
+      if ((hp = gethostbyname(fqn)))
          {
          if (strstr(hp->h_name,"."))
             {

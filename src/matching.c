@@ -699,7 +699,7 @@ int IsPathRegex(char *str)
 { char *sp;
   int result = false,s = 0,r = 0;
 
-if (result = IsRegex(str))
+if ((result = IsRegex(str)))
    {
    for (sp = str; *sp != '\0'; sp++)
       {

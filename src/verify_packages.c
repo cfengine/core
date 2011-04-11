@@ -652,7 +652,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
           CfOut(cf_verbose,"","Execute scheduled package addition");
 
-          if (command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2)))
+          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2))))
              {
              strcpy(command_string,a.packages.package_add_command);
              }
@@ -668,7 +668,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
           CfOut(cf_verbose,"","Execute scheduled package deletion");
 
-          if (command_string = (malloc(estimated_size + strlen(a.packages.package_delete_command) + 2)))
+          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_delete_command) + 2))))
              {
              strcpy(command_string,a.packages.package_delete_command);
              }
@@ -684,7 +684,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              return false;
              }
 
-          if (command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2)))
+          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2))))
              {
              memset(command_string, 0, strlen(a.packages.package_update_command) + 2);
              strcpy(command_string,a.packages.package_update_command);
@@ -702,7 +702,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              return false;
              }
           
-          if (command_string = (malloc(estimated_size + strlen(a.packages.package_verify_command) + 2)))
+          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_verify_command) + 2))))
              {
              strcpy(command_string,a.packages.package_verify_command);
              }
@@ -897,7 +897,7 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              return false;
              }
           
-          if (command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2)))
+          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2))))
              {
              strcpy(command_string,a.packages.package_patch_command);
              }

@@ -84,7 +84,7 @@ for (rp = namelist; rp != NULL; rp = rp->next)
          }
       }
 
-   if (new = NewAssoc(rp->item,returnval,rtype,dtype))
+   if ((new = NewAssoc(rp->item,returnval,rtype,dtype)))
       {
       this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
       rp->state_ptr = new->rval;

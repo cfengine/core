@@ -449,13 +449,13 @@ if (pp->edcontext == NULL)
 
 if (a.haveeditline)
    {
-   if (vp = GetConstraint("edit_line",pp,CF_FNCALL))
+   if ((vp = GetConstraint("edit_line",pp,CF_FNCALL)))
       {
       fp = (struct FnCall *)vp;
       edit_bundle_name = fp->name;
       params = fp->args;
       }
-   else if (vp = GetConstraint("edit_line",pp,CF_SCALAR))
+   else if ((vp = GetConstraint("edit_line",pp,CF_SCALAR)))
       {
       edit_bundle_name = (char *)vp;
       params = NULL;
@@ -471,7 +471,7 @@ if (a.haveeditline)
 
    // add current filename to context - already there?
 
-   if (bp = GetBundle(edit_bundle_name,"edit_line"))
+   if ((bp = GetBundle(edit_bundle_name,"edit_line")))
       {
       BannerSubBundle(bp,params);
 

@@ -167,7 +167,7 @@ if (attr.select.exec_program && SelectExecProgram(path,attr.select.exec_program)
    PrependAlphaList(&leaf_attr,"exec_program");
    }
 
-if (result = EvalFileResult(attr.select.result,&leaf_attr))
+if ((result = EvalFileResult(attr.select.result,&leaf_attr)))
    {
    //NewClassesFromString(fp->defines);
    }

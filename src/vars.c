@@ -131,7 +131,7 @@ if (ptr == NULL)
    return;
    }
  
-if (ap = (struct CfAssoc *)(ptr->hashtable[slot]))
+if ((ap = (struct CfAssoc *)(ptr->hashtable[slot])))
    {
    DeleteAssoc(ap);
    ptr->hashtable[slot] = NULL;

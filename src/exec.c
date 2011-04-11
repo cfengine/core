@@ -907,7 +907,7 @@ else
    
    EVP_DigestInit(&context,md);
 
-   while (len = fread(buffer,1,1024,file))
+   while ((len = fread(buffer,1,1024,file)))
       {
       EVP_DigestUpdate(&context,buffer,len);
       }

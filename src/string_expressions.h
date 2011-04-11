@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef STRING_EXPRESSIONS_H
-#define STRING_EXPRESSIONS_H
+#ifndef CFENGINE_STRING_EXPRESSIONS_H
+#define CFENGINE_STRING_EXPRESSIONS_H
 
 /*
    String expressions grammar:

@@ -28,6 +28,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#ifndef CFENGINE_CF3_DEFS_H
+#define CFENGINE_CF3_DEFS_H
+
 /* These files are hard links to the cfengine 2 sources */
 
 #include "cf.defs.h"
@@ -1900,4 +1903,6 @@ meter_endmark
 
 #ifdef HAVE_NOVA
 #include <cf.nova.h>
+#endif
+
 #endif

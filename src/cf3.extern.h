@@ -30,6 +30,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#ifndef CFENGINE_CF3_EXTERN_H
+#define CFENGINE_CF3_EXTERN_H
+
 /* See variables in cf3globals.c and syntax.c */
 
 extern struct Topic *TOPICHASH[CF_HASHTABLESIZE];
@@ -282,4 +285,6 @@ extern struct BodySyntax CF_MEASURE_BODIES[];
 extern struct SubTypeSyntax CF_SERVICES_SUBTYPES[];
 extern struct BodySyntax CF_SERVMETHOD_BODY[];
 extern struct BodySyntax CF_SERVICES_BODIES[];
+#endif
+
 #endif

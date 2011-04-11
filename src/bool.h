@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CF_BOOL_H
-#define CF_BOOL_H
+#ifndef CFENGINE_BOOL_H
+#define CFENGINE_BOOL_H
 
 #ifdef HAVE_CONFIG_H
 # include "conf.h"

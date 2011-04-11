@@ -1,3 +1,6 @@
+#ifndef CFENGINE_CF_EVENTS_H
+#define CFENGINE_CF_EVENTS_H
+
 // cf.events.mc: Definition of logging events for windows.
 // This file is used to generate cf.events.h and cf.events.dll as follows:
 // mc cf.events.mc
@@ -141,3 +144,4 @@
 //
 #define EVMSG_DEFAULT_ERROR              0xC000006CL
 
+#endif

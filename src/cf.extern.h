@@ -22,6 +22,9 @@
   included file COSL.txt.
 */
 
+#ifndef CFENGINE_CF_EXTERN_H
+#define CFENGINE_CF_EXTERN_H
+
 #include "../pub/getopt.h"
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
@@ -553,3 +556,5 @@ extern int CF_DIGEST_SIZES[10];
 extern unsigned int WINVER_MAJOR;
 extern unsigned int WINVER_MINOR;
 extern unsigned int WINVER_BUILD;
+
+#endif

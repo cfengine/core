@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef LOGIC_EXPRESSIONS_H
-#define LOGIC_EXPRESSIONS_H
+#ifndef CFENIGNE_LOGIC_EXPRESSIONS_H
+#define CFENGINE_LOGIC_EXPRESSIONS_H
 
 #include "bool.h"
 #include "string_expressions.h"

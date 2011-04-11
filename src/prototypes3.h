@@ -30,6 +30,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#ifndef CFENGINE_PROTOTYPES3_H
+#define CFENGINE_PROTOTYPES3_H
+
 #include "compiler.h"
 
 char *Nova_GetVersion(void);
@@ -1677,4 +1680,4 @@ void FriendStatus(struct Attributes a,struct Promise *pp);
 void VerifyFriendReliability(struct Attributes a,struct Promise *pp);
 void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp);
 
-
+#endif

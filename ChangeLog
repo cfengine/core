@@ -1,11 +1,18 @@
-3.1.5
+3.1.5b1
 	New class parser, '||' is no longer allowed in expressions (use '|').
+
 	Class setting in the promise types insert_lines, delete_lines,
 	replace_patterns, field_edits, vars, classes is restored.
-	suspiciousnames implemented
-	New function getvalues()
+
+	suspiciousnames implemented.
+
+	New function getvalues().
+
 	New functions parse{read,int,string}array to match read{read,int,string}array.
+
 	Testsuite added to check for core functionality.
+
+	Syslog prefix is fixed to say 'cf3' instead of 'community'.
 
 3.1.4	(Bugfix and Stability release)
 

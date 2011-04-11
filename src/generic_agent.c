@@ -1242,7 +1242,7 @@ if (strlen(CFPRIVKEYFILE) == 0)
    }
 
 CfOut(cf_verbose,"","Checking integrity of the state database\n");
-snprintf(vbuff,CF_BUFSIZE,"%s%cstate",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR);
+snprintf(vbuff,CF_BUFSIZE,"%s%cstate",CFWORKDIR,FILE_SEPARATOR);
 
 if (cfstat(vbuff,&statbuf) == -1)
    {

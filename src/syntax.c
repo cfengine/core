@@ -87,7 +87,7 @@ struct SubTypeSyntax CheckSubType(char *bundletype,char *subtype)
   
 if (subtype == NULL)
    {
-   snprintf(output,CF_BUFSIZE,"Missing promise type category for %s bundle",subtype,bundletype);
+   snprintf(output,CF_BUFSIZE,"Missing promise type category for %s bundle",bundletype);
    ReportError(output);
    return CF_NOSTYPE;
    }

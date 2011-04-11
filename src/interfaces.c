@@ -418,7 +418,7 @@ while (!feof(pp))
       {
       /* extract the default route */
       /* format: default|0.0.0.0 <whitespace> route <whitespace> etc */
-      if ((sscanf(vbuff, "%*[default0. ]%s%*[ ]", &oldroute)) == 1)
+      if ((sscanf(vbuff, "%*[default0. ]%s%*[ ]", oldroute)) == 1)
         {
         if ((strncmp(VDEFAULTROUTE->name, oldroute, INET_ADDRSTRLEN)) == 0)
           {

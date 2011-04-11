@@ -1404,16 +1404,16 @@ columns = NULL;
 
 /* Delete existing data and recreate */
 
-snprintf(query,CF_BUFSIZE-1,"delete from topics\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from %s_topics\n",TM_PREFIX);
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
-snprintf(query,CF_BUFSIZE-1,"delete from associations\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from %s_associations\n",TM_PREFIX);
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
-snprintf(query,CF_BUFSIZE-1,"delete from occurrences\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from %s_occurrences\n",TM_PREFIX);
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
-snprintf(query,CF_BUFSIZE-1,"delete from inferences\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from %s_inferences\n",TM_PREFIX);
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
 

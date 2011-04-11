@@ -301,28 +301,22 @@ struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
-  char buffer[CF_BUFSIZE],ctrlstr[CF_SMALLBUF];
+  char buffer[CF_BUFSIZE] = "",ctrlstr[CF_SMALLBUF];
   char *name;
   int limit;
   
-buffer[0] = '\0';  
 ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getenv].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
 name = finalargs->item;
 limit = Str2Int(finalargs->next->item);
-buffer[0] = '\0';
 
 snprintf(ctrlstr,CF_SMALLBUF,"%%.%ds",limit); // -> %45s
 
 if (getenv(name))
    {
    snprintf(buffer,CF_BUFSIZE-1,ctrlstr,getenv(name));
-   }
-else
-   {
-   snprintf(buffer,CF_BUFSIZE-1,"");
    }
 
 if ((rval.item = strdup(buffer)) == NULL)
@@ -2051,7 +2045,7 @@ filename = finalargs->next->item;
 if ((fin = fopen(filename,"r")) == NULL)
    {
    CfOut(cf_verbose,"fopen"," !! File \"%s\" could not be read in countlinesmatching()",filename);
-   snprintf(retval,CF_SMALLBUF-1,"0",lcount);
+   snprintf(retval,CF_SMALLBUF-1,"0");
    SetFnCallReturnStatus("countlinesmatching",FNCALL_SUCCESS,NULL,NULL);
    rval.item = strdup(retval);
    rval.rtype = CF_SCALAR;
@@ -2818,7 +2812,7 @@ else
       else
          {
          // This function should never fail
-         snprintf(buffer,2,"");
+         buffer[0] = '\0';
          SetFnCallReturnStatus("remotescalar",FNCALL_SUCCESS,NULL,NULL);
          }
       }

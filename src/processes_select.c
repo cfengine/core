@@ -327,12 +327,12 @@ for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
 
    if (strcmp(names[i],"CMD") == 0 || strcmp(names[i],"COMMAND") == 0)
       {
-      sscanf(sp,"%127[^\n]",&(cols1[i]));
+      sscanf(sp,"%127[^\n]",cols1[i]);
       sp += strlen(cols1[i]);
       }
    else
       {
-      sscanf(sp,"%127s",&(cols1[i]));
+      sscanf(sp,"%127s",cols1[i]);
       sp += strlen(cols1[i]);
       }
    

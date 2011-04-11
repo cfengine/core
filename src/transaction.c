@@ -440,7 +440,7 @@ mutex = NameToThreadMutex(name);
 if (pthread_mutex_unlock(mutex) != 0)
    {
    // Don't use CfOut here as it also requires locking
-   printf("pthread_mutex_unlock","pthread_mutex_unlock failed");
+   printf("pthread_mutex_unlock: pthread_mutex_unlock failed");
    return false;
    }
 

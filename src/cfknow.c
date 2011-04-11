@@ -215,10 +215,8 @@ void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char arg[CF_BUFSIZE];
-  struct Item *actionList;
   int optindex = 0;
   int c;
-  char ld_library_path[CF_BUFSIZE];
 
 strcpy(TOPIC_CMD,"");
 LOOKUP = false;
@@ -353,8 +351,8 @@ if (argv[optind] != NULL)
 
 void ThisAgentInit()
 
-{ char vbuff[CF_BUFSIZE];
-  int s1,s2;
+{
+int s1,s2;
  
 strcpy(TM_PREFIX,"");
 strcpy(WEBDRIVER,"");
@@ -662,12 +660,10 @@ void LookupUniqueTopic(char *classified_topic)
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_context[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
-  int sql_database_defined = false,trymatch = false,count = 0,matched = 0;
+  int sql_database_defined = false,count = 0,matched = 0;
   struct Topic *tp,*tmatches = NULL;
   char safe[CF_MAXVARSIZE],safetype[CF_MAXVARSIZE];
   CfdbConn cfdb;
-  int s,e;
-
 
 DeClassifyTopic(classified_topic,topic,type);
 
@@ -834,7 +830,7 @@ void LookupMatchingTopics(char *classified_topic)
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   char cfrom_assoc[CF_BUFSIZE],cto_assoc[CF_BUFSIZE],ctopic_context[CF_BUFSIZE],cto_type[CF_BUFSIZE];
   char type[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
-  int  sql_database_defined = false,trymatch = false,count = 0,matched = 0;
+  int  sql_database_defined = false,count = 0,matched = 0;
   struct Topic *tp,*tmatches = NULL;
   CfdbConn cfdb;
   int s,e;
@@ -1074,9 +1070,8 @@ for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
 void VerifyTopicPromise(struct Promise *pp)
 
 { char id[CF_BUFSIZE];
-  char fwd[CF_BUFSIZE],bwd[CF_BUFSIZE];
   struct Attributes a = {0};
-  struct Topic *tp = NULL,*tpn,*tp_sub;
+  struct Topic *tp = NULL;
   struct Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
 
@@ -1149,11 +1144,9 @@ DeleteRlist(contexts);
 void VerifyOccurrencePromises(struct Promise *pp)
 
 { struct Attributes a = {0};
-  struct Topic *tp;
   char name[CF_BUFSIZE];
   enum representations rep_type;
   struct Rlist *contexts,*rp;
-  int s,e;
 
 a = GetOccurrenceAttributes(pp);
 
@@ -1220,9 +1213,9 @@ void GenerateSQL()
   struct Occurrence *op;
   struct Inference *ip;
   FILE *fout = stdout;
-  char filename[CF_BUFSIZE],longname[CF_BUFSIZE],query[CF_BUFSIZE],safe[CF_BUFSIZE],safe2[CF_BUFSIZE];
+  char filename[CF_BUFSIZE],query[CF_BUFSIZE],safe[CF_BUFSIZE];
   struct Rlist *columns = NULL,*rp;
-  int i,sql_database_defined = false, slot;
+  int sql_database_defined = false, slot;
   struct Promise *pp;
   struct Attributes a = {0};
   CfdbConn cfdb;
@@ -1580,7 +1573,6 @@ else
 void NothingFound(char *name)
 
 { char banner[CF_BUFSIZE];
-  struct Topic *tp;
 
 if (HTML)
    {
@@ -1608,7 +1600,6 @@ void ShowTopicCosmology(CfdbConn *cfdb,char *this_name,char *this_id,char *this_
   char query[CF_BUFSIZE],fassociation[CF_BUFSIZE],bassociation[CF_BUFSIZE],safe[CF_BUFSIZE];
   char locator[CF_BUFSIZE],subtype[CF_BUFSIZE],to_type[CF_BUFSIZE];
   enum representations locator_type;
-  struct Rlist *rp;
 
 /* Collect data - first other topics of same type */
 
@@ -1786,8 +1777,7 @@ else
 
 void ShowAssociationSummary(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc)
 
-{ char banner[CF_BUFSIZE];
- 
+{
 if (HTML)
    {
    printf("<div id=\"intro\">");
@@ -1805,7 +1795,7 @@ else
 
 void ShowAssociationCosmology(CfdbConn *cfdb,char *this_fassoc,char *this_tassoc,char *from_type,char *to_type)
 
-{ char topic_name[CF_BUFSIZE],topic_id[CF_BUFSIZE],topic_context[CF_BUFSIZE],query[CF_BUFSIZE];
+{ char topic_context[CF_BUFSIZE],query[CF_BUFSIZE];
   char banner[CF_BUFSIZE],output[CF_BUFSIZE];
   char from_name[CF_BUFSIZE],to_name[CF_BUFSIZE],from_assoc[CF_BUFSIZE],to_assoc[CF_BUFSIZE];
   struct Rlist *flist = NULL,*tlist = NULL,*ftlist = NULL,*ttlist = NULL,*rp;
@@ -2173,7 +2163,7 @@ void ShowHtmlResults(char *this_name,char *this_type,struct Topic *other_topics,
   struct stat sb;
   int count = 0, subcount = 0;
   FILE *fout = stdout;
-  char banner[CF_BUFSIZE],filename[CF_BUFSIZE],pngfile[CF_BUFSIZE];
+  char banner[CF_BUFSIZE],pngfile[CF_BUFSIZE];
   char *v,rettype;
   void *retval;
 
@@ -2502,7 +2492,6 @@ CfHtmlFooter(fout,FOOTER);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp)
     
 { struct Attributes a = {0};
-  struct Topic *tp;
   enum representations rep_type;
   struct stat sb;
   char *sp,url[CF_BUFSIZE];

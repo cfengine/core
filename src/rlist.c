@@ -172,7 +172,7 @@ void *CopyRvalItem(void *item, char type)
 { struct Rlist *rp,*srp,*start = NULL;
   struct FnCall *fp;
   void *new,*rval;
-  char rtype = CF_SCALAR,output[CF_BUFSIZE];
+  char rtype = CF_SCALAR;
   char naked[CF_BUFSIZE];
   
 Debug("CopyRvalItem(%c)\n",type);
@@ -343,7 +343,6 @@ return true;
 struct Rlist *CopyRlist(struct Rlist *list)
 
 { struct Rlist *rp,*start = NULL;
-  struct FnCall *fp;
 
 Debug("CopyRlist()\n");
   
@@ -506,7 +505,6 @@ struct Rlist *AppendRlist(struct Rlist **start,void *item, char type)
     
 { struct Rlist *rp,*lp = *start;
   struct FnCall *fp;
-  char *sp = NULL;
 
 switch(type)
    {
@@ -587,7 +585,6 @@ struct Rlist *PrependRlist(struct Rlist **start,void *item, char type)
     
 { struct Rlist *rp,*lp = *start;
   struct FnCall *fp;
-  char *sp = NULL;
 
 switch(type)
    {
@@ -655,8 +652,6 @@ struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type)
    /* Allocates new memory for objects - careful, could leak!  */
     
 { struct Rlist *rp,*lp;
-  struct FnCall *fp;
-  char *sp = NULL;
   struct CfAssoc *cp;
   
 Debug("OrthogAppendRlist\n");
@@ -857,8 +852,6 @@ return true;
 
 int StripListSep(char *strList, char *outBuf, int outBufSz)
 {
-  char *sp;
-
   memset(outBuf,0,outBufSz);
 
   if(EMPTY(strList))
@@ -919,8 +912,7 @@ return true;
 
 void ShowRlistState(FILE *fp,struct Rlist *list)
 
-{ struct Rlist *rp;
-
+{
 ShowRval(fp,list->state_ptr->item,list->type);
 }
 
@@ -1097,7 +1089,7 @@ struct Rlist *PrependRlistAlien(struct Rlist **start,void *item)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
-{ struct Rlist *rp,*lp = *start;
+{ struct Rlist *rp;
 
 ThreadLock(cft_lock); 
 
@@ -1181,7 +1173,7 @@ struct Rlist *SplitStringAsRList(char *string,char sep)
     escaping separators, e.g. \, */
 
 { struct Rlist *liststart = NULL;
-  char format[9], *sp;
+  char *sp;
   char node[CF_MAXVARSIZE];
   int maxlen = strlen(string);
   
@@ -1217,9 +1209,9 @@ struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
     into a linked list of separate items, */
 
 { struct Rlist *liststart = NULL;
-  char format[9], *sp;
+  char *sp;
   char node[CF_MAXVARSIZE];
-  int start,end,b = 0;
+  int start,end;
   int delta, count = 0;
 
 if (string == NULL)

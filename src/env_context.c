@@ -367,7 +367,7 @@ InitAlphaList(&VADDCLASSES);
 
 void PopPrivateClassContext()
 
-{ struct Item *list;
+{
   struct AlphaList *ap;
  
 DeleteAlphaList(&VADDCLASSES);
@@ -447,7 +447,7 @@ void LoadPersistentContext()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
-  int ret,ksize,vsize;
+  int ksize,vsize;
   char *key;
   void *value;
   time_t now = time(NULL);
@@ -737,7 +737,7 @@ else
 
 void SaveClassEnvironment()
 
-{ struct AlpahList *ap;
+{
   char file[CF_BUFSIZE];
   FILE *fp;
  
@@ -764,7 +764,7 @@ static int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
   int result_or = false;
   int result_xor = 0;
   int result = 0,total = 0;
-  char *lval = cp->lval,buffer[CF_MAXVARSIZE];
+  char buffer[CF_MAXVARSIZE];
   struct Rlist *rp;
   double prob,cum = 0,fluct;
   struct Rval newret;
@@ -1177,8 +1177,7 @@ if (!ABORTBUNDLE)
 struct Rlist *SplitContextExpression(char *context,struct Promise *pp)
 
 { struct Rlist *list = NULL;
-  char *sp,*spsub,cbuff[CF_MAXVARSIZE],csub[CF_MAXVARSIZE];
-  int result = false;
+  char *sp,cbuff[CF_MAXVARSIZE];
   
 if (context == NULL)
    {

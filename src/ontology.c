@@ -177,7 +177,6 @@ for (rp = associates; rp != NULL; rp=rp->next)
 void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context)
 
 { struct Occurrence *op = NULL;
-  struct TopRepresentation *tr;
   struct Rlist *rp;
 
 if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
@@ -390,7 +389,6 @@ return sp;
 struct Topic *TopicExists(char *topic_name,char *topic_context)
 
 { struct Topic *tp;
-  char c[CF_BUFSIZE];
   int slot;
 
 slot = GetHash(ToLowerStr(topic_name));
@@ -536,7 +534,7 @@ return NULL;
 struct Topic *GetTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
-  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
+  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
 
 strncpy(context,topic_name,CF_MAXVARSIZE-1);
 name[0] = '\0';
@@ -569,7 +567,7 @@ return NULL;
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
 
 { struct Topic *tp;
-  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE],*sp;
+  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
 
 DeClassifyCanonicalTopic(topic_name,name,context);
 

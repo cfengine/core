@@ -279,7 +279,7 @@ return HavePublicKey(username,ipaddress,hash);
 
 RSA *HavePublicKey(char *username,char *ipaddress,char *digest)
 
-{ char keyname[CF_MAXVARSIZE],newname[CF_BUFSIZE],oldname[CF_BUFSIZE],*sp;
+{ char keyname[CF_MAXVARSIZE],newname[CF_BUFSIZE],oldname[CF_BUFSIZE];
   struct stat statbuf; 
   static char *passphrase = "public";
   unsigned long err;
@@ -363,7 +363,7 @@ return newkey;
 
 void SavePublicKey(char *user,char *ipaddress,char *digest,RSA *key)
 
-{ char keyname[CF_MAXVARSIZE],filename[CF_BUFSIZE],*sp;
+{ char keyname[CF_MAXVARSIZE],filename[CF_BUFSIZE];
   struct stat statbuf;
   FILE *fp;
   int err;
@@ -406,7 +406,7 @@ fclose(fp);
 
 void DeletePublicKey(char *user,char *ipaddress,char *digest)
 
-{ char filename[CF_BUFSIZE],*sp;
+{ char filename[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,ipaddress);
 MapName(filename);

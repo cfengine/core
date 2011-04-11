@@ -1478,7 +1478,7 @@ else
 void LogHashChange(char *file)
 
 { FILE *fp;
-  char fname[CF_BUFSIZE],timebuf[CF_MAXVARSIZE];
+  char fname[CF_BUFSIZE];
   time_t now = time(NULL);
   struct stat sb;
   mode_t perm = 0600;
@@ -1770,8 +1770,8 @@ int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct
 
 { struct passwd *pw;
   struct group *gp;
-  struct UidList *ulp, *unknownulp;
-  struct GidList *glp, *unknownglp;
+  struct UidList *ulp;
+  struct GidList *glp;
   short uidmatch = false, gidmatch = false;
   uid_t uid = CF_SAME_OWNER;
   gid_t gid = CF_SAME_GROUP;

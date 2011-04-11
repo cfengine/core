@@ -62,7 +62,7 @@ int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take)
   enum cfdatatype dtg = cf_notype,dtt = cf_notype;
   char *lval;
   void *rval;
-  struct Rval returnval,extra;
+  struct Rval returnval;
   int len1,len2;
   
 Debug("MapBodyArgs(begin)\n");

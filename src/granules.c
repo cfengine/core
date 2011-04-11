@@ -150,7 +150,6 @@ int GetShiftSlot(time_t here_and_now)
 { time_t now = time(NULL);
   int slot = 0, chour = -1;
   char cstr[64];
-  char cday[10];
   char str[64];
   char buf[10],cbuf[10];
   int hour = -1;

@@ -37,8 +37,7 @@
 int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp)
 
 { struct AlphaList proc_attr;
- int result = true,s,e,i;
-  char *criteria = NULL;
+ int result = true,i;
   char *column[CF_PROCCOLS];
   struct Rlist *rp;
 

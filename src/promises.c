@@ -80,7 +80,6 @@ struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp)
 
 { struct Promise *pcopy;
   struct Constraint *cp,*scp;
-  char scope[CF_BUFSIZE],naked[CF_MAXVARSIZE];
   struct Rval returnval;
 
 if (pp->promisee)
@@ -155,8 +154,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    struct Body *bp = NULL;
    struct FnCall *fp = NULL;
-   struct Rlist *rp,*rnew;
-   enum cfdatatype dtype;
+   struct Rlist *rnew;
    char *bodyname = NULL;
 
    /* A body template reference could look like a scalar or fn to the parser w/w () */
@@ -265,8 +263,7 @@ return pcopy;
 struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp)
 
 { struct Promise *pcopy;
-  struct Constraint *cp,*scp;
-  char scope[CF_BUFSIZE],naked[CF_MAXVARSIZE];
+  struct Constraint *cp;
   struct Rval returnval,final;
 
 Debug("ExpandDerefPromise()\n");
@@ -330,10 +327,7 @@ pcopy->edcontext = pp->edcontext;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   struct FnCall *fp;
-   struct Rlist *rp;
    struct Rval returnval;
-   char type;
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
@@ -374,8 +368,7 @@ return pcopy;
 struct Promise *CopyPromise(char *scopeid,struct Promise *pp)
 
 { struct Promise *pcopy;
-  struct Constraint *cp,*scp;
-  char scope[CF_BUFSIZE],naked[CF_MAXVARSIZE];
+  struct Constraint *cp;
   struct Rval returnval,final;
 
 Debug("CopyPromise()\n");
@@ -436,10 +429,7 @@ pcopy->edcontext = pp->edcontext;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   struct FnCall *fp;
-   struct Rlist *rp;
    struct Rval returnval;
-   char type;
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
@@ -478,10 +468,8 @@ void DebugPromise(struct Promise *pp)
   struct Body *bp;
   struct FnCall *fp;
   struct Rlist *rp;
-  char *v,rettype,vbuff[CF_BUFSIZE];
+  char *v,rettype;
   void *retval;
-  time_t lastseen,last;
-  double val,av,var;
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
@@ -775,7 +763,7 @@ if (pp->ref)
 void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { EVP_MD_CTX context;
-  int len, md_len;
+  int md_len;
   const EVP_MD *md = NULL;
   struct Constraint *cp;
   struct Rlist *rp;

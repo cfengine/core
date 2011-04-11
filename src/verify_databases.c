@@ -73,7 +73,7 @@ void VerifySQLPromise(struct Attributes a,struct Promise *pp)
 
 { char database[CF_MAXVARSIZE],table[CF_MAXVARSIZE],query[CF_BUFSIZE];
   char *sp,sep = 'x';
-  int count = 0, need_connector = false;
+  int count = 0;
   CfdbConn cfdb;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];

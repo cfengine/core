@@ -206,7 +206,7 @@ CloseAllDB();
 
 int CheckPromises(enum cfagenttype ag)
 
-{ char cmd[CF_BUFSIZE],path[CF_BUFSIZE];
+{ char cmd[CF_BUFSIZE];
   char filename[CF_MAXVARSIZE];
   struct stat sb;
   int fd;
@@ -279,7 +279,6 @@ void ReadPromises(enum cfagenttype ag,char *agents)
 { char *v,rettype;
   void *retval;
   char vbuff[CF_BUFSIZE];
-  struct Constraint *cp;
 
 if (ag == cf_keygen)
    {
@@ -388,8 +387,8 @@ switch (ag)
 
 void InitializeGA(int argc,char *argv[])
 
-{ char *sp;
-  int i,j,seed,force = false;
+{
+  int seed,force = false;
   struct stat statbuf,sb;
   unsigned char s[16];
   char vbuff[CF_BUFSIZE];
@@ -896,10 +895,8 @@ chmod(name,0644);
 
 void Cf3ParseFile(char *filename)
 
-{ FILE *save_yyin = yyin;
+{
   struct stat statbuf;
-  struct Rlist *rp;
-  int access = false;
   char wfilename[CF_BUFSIZE];
 
 strncpy(wfilename,InputLocation(filename),CF_BUFSIZE);
@@ -970,7 +967,6 @@ fclose (yyin);
 struct Constraint *ControlBodyConstraints(enum cfagenttype agent)
 
 { struct Body *body;
-  char scope[CF_BUFSIZE];
 
 for (body = BODIES; body != NULL; body = body->next)
    {
@@ -1203,8 +1199,7 @@ void CheckWorkingDirectories()
 /* NOTE: We do not care about permissions (ACLs) in windows */
 
 { struct stat statbuf;
-  int result;
-  char *sp,vbuff[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE];
   char output[CF_BUFSIZE];
 
 Debug("CheckWorkingDirectories()\n");
@@ -1406,15 +1401,13 @@ fclose(FKNOW);
 
 void VerifyPromises(enum cfagenttype agent)
 
-{ struct Bundle *bp,*bundles;
+{ struct Bundle *bp;
   struct SubType *sp;
   struct Promise *pp;
   struct Body *bdp;
-  struct Scope *ptr;
-  struct Rlist *rp,*params;
+  struct Rlist *rp;
   struct FnCall *fp;
-  char buf[CF_BUFSIZE], *scope;
-  char rettype,*name;
+  char *scope;
 
 Debug("\n\nVerifyPromises()\n");
 
@@ -1579,13 +1572,9 @@ for (pp = classlist; pp != NULL; pp=pp->next)
 void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
 
 { struct Constraint *cp;
-  struct SubTypeSyntax *sp;
   struct BodySyntax *bp = NULL;
-  char *lval;
-  void *rval = NULL,*retval;
-  int i = 0,override = true;
+  int i = 0;
   struct Rval returnval;
-  char rettype,rtype;
 
 Debug("CheckControlPromises(%s)\n",agent);
 
@@ -1806,9 +1795,8 @@ fclose(fp);
 
 void HashVariables(char *name)
 
-{ struct Bundle *bp,*bundles;
+{ struct Bundle *bp;
   struct SubType *sp;
-  struct Scope *ptr;
 
 CfOut(cf_verbose,"","Initiate variable convergence...\n");
     
@@ -1870,7 +1858,7 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
 
 void UnHashVariables()
 
-{ struct Bundle *bp,*bundles;
+{ struct Bundle *bp;
 
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {

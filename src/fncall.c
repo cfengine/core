@@ -68,7 +68,6 @@ struct FnCall *NewFnCall(char *name, struct Rlist *args)
 
 { struct FnCall *fp;
   char *sp = NULL;
-  struct Rlist *rp;
 
 Debug("Installing Function Call %s\n",name);
 
@@ -138,8 +137,8 @@ return NewFnCall(f->name,ExpandList(contextid,f->args,false));
 
 void PrintFunctions()
 
-{ struct FnCall *fp;
-  int i;
+{
+int i;
 
 for (i = 0; i < 3; i++)
    {
@@ -236,8 +235,8 @@ else
 
 enum cfdatatype FunctionReturnType(char *name)
 
-{ struct FnCallType fncall;
-  int i;
+{
+int i;
 
 for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    {

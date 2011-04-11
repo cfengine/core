@@ -453,8 +453,7 @@ CfDeleteQuery(cfdb);
 
 void CfNewQueryDB(CfdbConn *cfdb,char *query)
 
-{ int result;
-
+{
 cfdb->result = false;
 cfdb->row = 0;
 cfdb->column = 0;
@@ -486,8 +485,7 @@ Debug("Query succeeded: (%s) %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
 
 char **CfFetchRow(CfdbConn *cfdb)
 
-{ int i;
-
+{
 switch (cfdb->type)
    {
    case cfd_mysql:
@@ -554,7 +552,6 @@ if (cfdb->rowdata)
 char *EscapeSQL(CfdbConn *cfdb,char *query)
 
 { static char result[CF_BUFSIZE];
-  char *spf,*spt;
 
 if (!cfdb->connected)
    {

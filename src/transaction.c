@@ -743,8 +743,8 @@ void PurgeLocks()
 
 { CF_DB *dbp = OpenLock();
   CF_DBC *dbcp;
-  char *key,name[CF_BUFSIZE];
-  int i,ksize,vsize;
+  char *key;
+  int ksize,vsize;
   struct LockData entry;
   time_t now = time(NULL);
 

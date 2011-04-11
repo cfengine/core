@@ -52,9 +52,8 @@ void TexinfoManual(char *mandir)
 { char filename[CF_BUFSIZE];
   struct SubTypeSyntax *st;
   struct Item *done = NULL;
-  char *thischapter = NULL;
   FILE *fout;
-  int i,j;
+  int i;
 
 snprintf(filename,CF_BUFSIZE-1,"%scf3-Reference.texinfo",BUILD_DIR);
 
@@ -310,7 +309,7 @@ void TexinfoFooter(FILE *fout)
 
 void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
 
-{ int i,j;
+{ int j;
   char filename[CF_BUFSIZE];
 
 /* Each array element is SubtypeSyntax representing an agent-promise assoc */
@@ -459,9 +458,9 @@ if (strcmp(scope,"mon") == 0)
 
 void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type)
 
-{ char *sp;
-  struct Rlist *list = NULL,*rp;
- 
+{
+struct Rlist *list = NULL,*rp;
+
 if (strlen(s) == 0)
    {
    fprintf(fout,"@noindent @b{Allowed input range}: (arbitrary string)\n\n");

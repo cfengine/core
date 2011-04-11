@@ -802,7 +802,7 @@ return NULL;
 
 int cf_pwait(pid_t pid)
 
-{ int status, wait_result;
+{ int status;
 
 Debug("cf_pwait - Waiting for process %d\n",pid); 
 
@@ -852,7 +852,7 @@ return (WEXITSTATUS(status));
 
 int Unix_cf_pclose(FILE *pp)
 
-{ int fd, status, wait_result;
+{ int fd;
   pid_t pid;
 
 Debug("Unix_cf_pclose(pp)\n");
@@ -904,7 +904,7 @@ int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
 /**
  * Defines command failure/success with cfPS based on exit code.
  */
-{ int fd, status, wait_result;
+{ int fd, status;
   pid_t pid;
 
 Debug("Unix_cf_pclose_def(pfp)\n");

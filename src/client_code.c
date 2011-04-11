@@ -126,7 +126,6 @@ return NULL;
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp)
 
 { struct cfagent_connection *conn;
-  char username[CF_SMALLBUF];
  
 #ifndef MINGW
 static sigset_t   signal_mask;
@@ -652,10 +651,10 @@ else
 
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
 
-{ int dd, buf_size,n_read = 0,toget,towrite,plainlen,more = true, finlen;
-  int last_write_made_hole = 0, done = false,tosend,cipherlen=0,value;
-  char *buf,in[CF_BUFSIZE],out[CF_BUFSIZE],workbuf[CF_BUFSIZE],cfchangedstr[265];
-  unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
+{ int dd, buf_size,n_read = 0,toget,towrite;
+  int last_write_made_hole = 0, done = false,tosend,value;
+  char *buf,workbuf[CF_BUFSIZE],cfchangedstr[265];
+
   long n_read_total = 0;  
   EVP_CIPHER_CTX ctx;
   struct cfagent_connection *conn = pp->conn;
@@ -806,8 +805,8 @@ return true;
 
 int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
 
-{ int dd, blocksize = 2048,n_read = 0,toget,towrite,plainlen,more = true, finlen,cnt = 0;
-  int last_write_made_hole = 0, done = false,tosend,cipherlen=0,value;
+{ int dd, blocksize = 2048,n_read = 0,towrite,plainlen,more = true, finlen,cnt = 0;
+  int last_write_made_hole = 0, tosend,cipherlen=0;
   char *buf,in[CF_BUFSIZE],out[CF_BUFSIZE],workbuf[CF_BUFSIZE],cfchangedstr[265];
   unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
   long n_read_total = 0;  
@@ -951,7 +950,7 @@ return true;
 
 int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp) 
 
-{ int err;
+{
   short shortport;
   char strport[CF_MAXVARSIZE] = {0};
   struct sockaddr_in cin = {0};
@@ -1003,8 +1002,6 @@ if (!attr.copy.force_ipv4)
    
    for (ap = response; ap != NULL; ap = ap->ai_next)
       {
-      int  res;
-      
       CfOut(cf_verbose,""," -> Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
       
       if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
@@ -1081,7 +1078,6 @@ if (!attr.copy.force_ipv4)
 #endif /* ---------------------- only have ipv4 ---------------------------------*/ 
 
    {
-   int  res;
    struct hostent *hp;
    memset(&cin,0,sizeof(cin));
    
@@ -1122,7 +1118,6 @@ if (!attr.copy.force_ipv4)
 static int ServerOffline(char *server)
     
 { struct Rlist *rp;
-  struct cfagent_connection *conn;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
@@ -1153,7 +1148,6 @@ return false;
 static struct cfagent_connection *ServerConnectionReady(char *server)
 
 { struct Rlist *rp;
-  struct cfagent_connection *conn;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 

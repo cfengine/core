@@ -140,8 +140,7 @@ void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
 { struct Scope *ptr;
   struct Rlist *rpl,*rpr;
   struct Rval retval;
-  void *result;
-  char *lval,rettype,naked[CF_BUFSIZE];
+  char *lval,naked[CF_BUFSIZE];
   int i;
 
 if (RlistLen(lvals) != RlistLen(rvals))

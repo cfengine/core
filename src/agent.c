@@ -142,8 +142,7 @@ extern virConnectPtr CFVC[];
 
 int main(int argc,char *argv[])
 
-{ struct stat sar;
-
+{
 CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent");
 PromiseManagement("agent");
@@ -165,7 +164,6 @@ void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
  char arg[CF_BUFSIZE],*sp;
-  struct Item *actionList;
   int optindex = 0;
   int c,alpha = false,v6 = false;
 
@@ -910,8 +908,7 @@ void CheckAgentAccess(struct Rlist *list)
 {
 }
 #else  /* NOT MINGW */
-{ char id[CF_MAXVARSIZE];
-  struct passwd *pw;
+{
   struct Rlist *rp,*rp2;
   struct stat sb;
   uid_t uid;
@@ -1119,9 +1116,7 @@ if (putenv(s) != 0)
 
 int NewTypeContext(enum typesequence type)
 
-{ int maxconnections,i;
-  struct Item *procdata = NULL;
-
+{
 // get maxconnections
 
 switch(type)
@@ -1176,7 +1171,6 @@ void DeleteTypeContext(enum typesequence type)
 { struct Rlist *rp;
   struct ServerItem *svp;
   struct Attributes a = {0};
-  int i;
  
 switch(type)
    {

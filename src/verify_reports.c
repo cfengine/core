@@ -351,14 +351,14 @@ void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
   char *key;
   void *value;
   int ksize,vsize;
-  int ret, secs = CF_TICKS_PER_HOUR*hours, criterion, overdue, regex=false;
+  int secs = CF_TICKS_PER_HOUR*hours, criterion, overdue;
   time_t now = time(NULL),lsea = (time_t)CF_WEEK, tthen, then;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
   char addr[CF_BUFSIZE],type[CF_BUFSIZE],output[CF_BUFSIZE];
   struct QPoint entry;
   double average = 0.0, var = 0.0, ticksperminute = 60.0;
-  double ticksperhour = (double)CF_TICKS_PER_HOUR,ticksperday = (double)CF_TICKS_PER_DAY;
- 
+  double ticksperhour = (double)CF_TICKS_PER_HOUR;
+
 CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
 snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
@@ -501,7 +501,7 @@ void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
-  int i,ret,ksize,vsize;
+  int i,ksize,vsize;
   char *key;
   void *value;
   double n[CF_RELIABLE_CLASSES],n_av[CF_RELIABLE_CLASSES],total;
@@ -509,7 +509,7 @@ void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   struct QPoint entry;
   struct Item *ip, *hostlist = NULL;
-  double entropy,average,var,sum,sum_av,expect,actual;
+  double average,var,sum,sum_av,expect,actual;
   time_t now = time(NULL), then, lastseen = CF_WEEK;
 
 CfOut(cf_verbose,"","CheckFriendReliability()\n");

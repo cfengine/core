@@ -304,8 +304,6 @@ while (ptr->hashtable[slot])
       }
    else
       {
-      struct CfAssoc *ap2 = ptr->hashtable[slot];
-
       if (++slot >= CF_HASHTABLESIZE-1)
          {
          slot = 0;

@@ -146,14 +146,7 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
 
 void ShowPromises(struct Bundle *bundles,struct Body *bodies)
 
-{ struct Bundle *bp;
-  struct Rlist *rp;
-  struct SubType *sp;
-  struct Promise *pp;
-  struct Body *bdp;
-  char *v,rettype,vbuff[CF_BUFSIZE];
-  void *retval;
-
+{
 #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
 Nova_StoreUnExpandedPromises(bundles,bodies);
 #else  
@@ -243,14 +236,9 @@ CfHtmlFooter(FREPORT_HTML,FOOTER);
 
 void ShowPromise(struct Promise *pp, int indent)
 
-{ struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
-  struct Rlist *rp;
-  char *v,rettype,vbuff[CF_BUFSIZE];
+{
+  char *v,rettype;
   void *retval;
-  time_t lastseen,last;
-  double val,av,var;
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {

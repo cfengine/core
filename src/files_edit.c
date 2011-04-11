@@ -75,7 +75,7 @@ return ec;
 
 void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promise *pp)
 
-{ int retval = false;
+{
   struct Item *ip;
 
 EDIT_MODEL = false;

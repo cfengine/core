@@ -820,10 +820,7 @@ void ReportSoftware(struct CfPackageManager *list)
 { FILE *fout;
   struct CfPackageManager *mp = NULL;
   struct CfPackageItem *pi;
-  char name[CF_BUFSIZE],line[CF_BUFSIZE];
-  struct Item *ip,*file = NULL;
-  char start[32];
-  int i = 0;
+  char name[CF_BUFSIZE];
 
 snprintf(name,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
 MapName(name);

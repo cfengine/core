@@ -155,7 +155,6 @@ return 0;
 void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  struct Item *actionList;
   int optindex = 0;
   int c;
 
@@ -296,7 +295,7 @@ if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
 int HailServer(char *host,struct Attributes a,struct Promise *pp)
 
 { struct cfagent_connection *conn;
- char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
+ char sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
   long gotkey;
   char reply[8];
   
@@ -545,8 +544,7 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
 
 struct Promise *MakeDefaultRunAgentPromise()
 
-{ struct Promise *pp,*lp;
-  char *sp = NULL,*spe = NULL;
+{ struct Promise *pp;
   
 /* The default promise here is to hail associates */
 
@@ -603,7 +601,6 @@ void SendClassData(struct cfagent_connection *conn)
 
 { struct Rlist *classes,*rp;
   char sendbuffer[CF_BUFSIZE];
-  int used;
 
 classes = SplitRegexAsRList(SENDCLASSES,"[,: ]",99,false);
 

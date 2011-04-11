@@ -74,7 +74,7 @@ ap = NULL;
 void DePort(char *address)
 
 { char *sp,*chop,*fc = NULL,*fd = NULL,*ld =  NULL;
-  int i = 0,ccount = 0, dcount = 0;
+  int ccount = 0, dcount = 0;
 
 /* Start looking for ethernet/ipv6 addresses */
  

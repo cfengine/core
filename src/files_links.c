@@ -42,7 +42,7 @@ CfOut(cf_verbose, "", "Windows does not support symbolic links (at VerifyLink())
 return CF_FAIL;
 }
 #else  /* NOT MINGW */
-{ char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE];
+{ char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],absto[CF_BUFSIZE];
   int nofile = false;
   struct stat sb;
       
@@ -297,7 +297,7 @@ return VerifyLink(destination,buff,attr,pp);
 
 char VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
-{ char to[CF_BUFSIZE],linkbuf[CF_BUFSIZE],saved[CF_BUFSIZE],absto[CF_BUFSIZE];
+{ char to[CF_BUFSIZE],absto[CF_BUFSIZE];
  struct stat ssb,dsb;
 
 memset(to,0,CF_BUFSIZE);

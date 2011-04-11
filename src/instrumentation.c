@@ -160,7 +160,6 @@ void NoteClassUsage(struct AlphaList baselist)
   double lsea = CF_WEEK * 52; /* expire after a year */
   time_t now = time(NULL);
   struct Item *ip,*list = NULL;
-  struct AlphaList *ap;
   double lastseen,delta2;
   double vtrue = 1.0;      /* end with a rough probability */
 
@@ -313,7 +312,7 @@ DeleteItemList(list);
 
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role)
 
-{ char databuf[CF_BUFSIZE],varbuf[CF_BUFSIZE],rtype;
+{ char databuf[CF_BUFSIZE];
   time_t now = time(NULL);
   int known = false;
   struct Rlist *rp;

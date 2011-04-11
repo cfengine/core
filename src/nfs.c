@@ -405,7 +405,7 @@ int VerifyNotInFstab(char *name,struct Attributes a,struct Promise *pp)
 
 /* Ensure filesystem is NOT in fstab, and return no of changes */
     
-{ char fstab[CF_BUFSIZE],regex[CF_BUFSIZE],aixcomm[CF_BUFSIZE],line[CF_BUFSIZE];
+{ char regex[CF_BUFSIZE],aixcomm[CF_BUFSIZE],line[CF_BUFSIZE];
   char *host,*rmountpt,*mountpt,*fstype,*opts;
   FILE *pfp;
   struct Item *ip;
@@ -507,7 +507,7 @@ int VerifyMount(char *name,struct Attributes a,struct Promise *pp)
 
 { char comm[CF_BUFSIZE],line[CF_BUFSIZE];
   FILE *pfp;
-  char *host,*rmountpt,*mountpt,*fstype,*opts;
+  char *host,*rmountpt,*mountpt,*fstype;
  
 host = a.mount.mount_server;
 rmountpt = a.mount.mount_source;
@@ -547,7 +547,7 @@ int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp)
 
 { char comm[CF_BUFSIZE],line[CF_BUFSIZE];
   FILE *pfp;
-  char *host,*rmountpt,*mountpt,*fstype,*opts;
+  char *host,*rmountpt,*mountpt,*fstype;
  
 host = a.mount.mount_server;
 rmountpt = a.mount.mount_source;

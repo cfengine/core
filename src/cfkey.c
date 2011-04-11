@@ -93,10 +93,8 @@ return 0;
 void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  struct Item *actionList;
   int optindex = 0;
   int c;
-  char ld_library_path[CF_BUFSIZE];
 
 while ((c=getopt_long(argc,argv,"d:vf:VMs",OPTIONS,&optindex)) != EOF)
   {
@@ -155,7 +153,7 @@ void ShowLastSeenHosts()
   void *value;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],address[CF_MAXVARSIZE];
   struct CfKeyHostSeen entry;
-  int ret,ksize,vsize;
+  int ksize,vsize;
   int count = 0;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);

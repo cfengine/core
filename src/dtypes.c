@@ -71,8 +71,7 @@ return false;
 
 int IsProcessType(char *s)
 
-{ int i;
-
+{
  if (strcmp(s,"procs") == 0)
     {
     return true;

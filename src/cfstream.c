@@ -39,8 +39,8 @@
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
-  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
-  struct Item *ip,*mess = NULL;
+  char buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
+  struct Item *mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -111,8 +111,8 @@ DeleteItemList(mess);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
- char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
-  struct Item *ip,*mess = NULL;
+ char buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
+  struct Item *mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -375,8 +375,7 @@ DeleteItemList(mess);
 void CfFile(FILE *fp,char *fmt, ...)
 
 { va_list ap;
-  char *sp,buffer[CF_BUFSIZE];
-  int endl = false;
+  char buffer[CF_BUFSIZE];
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -461,15 +460,8 @@ if (fp != stdout)
 
 void SanitizeBuffer(char *buffer)
 
-{ char *spf,*spt; 
-  char buf[CF_EXPANDSIZE];
-  int change = false;
- 
- /* Check for %s %m which someone might be able to insert into
-   an error message in order to get a syslog buffer overflow...
-   bug reported by Pekka Savola */
-
-// No longer necessary
+{
+/* No longer necessary */
 }
 
 /*********************************************************************************/

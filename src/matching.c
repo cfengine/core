@@ -782,7 +782,7 @@ int MatchPolicy(char *camel,char *haystack,struct Attributes a,struct Promise *p
 { struct Rlist *rp;
   char *sp,*spto,*firstchar,*lastchar;
   enum insert_match opt;
-  char work[CF_BUFSIZE],final[CF_BUFSIZE],needle[CF_BUFSIZE];
+  char work[CF_BUFSIZE],final[CF_BUFSIZE];
   struct Item *list = SplitString(camel,'\n'),*ip;
   int direct_cmp = false, ok = false;
   
@@ -1354,7 +1354,7 @@ return -1;
 
 int FuzzyHostParse(char *arg1,char *arg2)
 
-{ struct Item *args;
+{
   long start = -1, end = -1, where = -1;
   int n;
 
@@ -1373,7 +1373,7 @@ return true;
 
 int FuzzyHostMatch(char *arg0, char* arg1, char *refhost)
 
-{ struct Item *args;
+{
   char *sp, refbase[CF_MAXVARSIZE];
   long cmp = -1, start = -1, end = -1;
   char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE];

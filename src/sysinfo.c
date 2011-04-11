@@ -87,7 +87,7 @@ void SetSignals()
 void GetNameInfo3()
 
 { int i,found = false;
-  char *sp,*sp2,workbuf[CF_BUFSIZE];
+  char *sp,workbuf[CF_BUFSIZE];
   time_t tloc;
   struct hostent *hp;
   struct sockaddr_in cin;
@@ -98,7 +98,7 @@ void GetNameInfo3()
 #ifdef IRIX
   char real_version[256]; /* see <sys/syssgi.h> */
 #endif
-#ifdef HAVE_SYSINFO
+#if defined(HAVE_SYSINFO) && (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
   long sz;
 #endif
   char *components[] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
@@ -680,7 +680,7 @@ NewClass(VDOMAIN);
 void OSClasses()
 
 { struct stat statbuf;
-  char vbuff[CF_BUFSIZE],class[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE];
   char *sp;
   int i = 0;
   struct passwd *pw;
@@ -1747,9 +1747,7 @@ int VM_Version(void)
 
 { FILE *fp;
   char *sp,buffer[CF_BUFSIZE],classbuf[CF_BUFSIZE],version[CF_BUFSIZE];
-  struct stat statbuf;
   int major,minor,bug;
-  int len = 0;
   int sufficient = 0;
 
 /* VMware Server ESX >= 3 has version info in /proc */
@@ -1945,7 +1943,6 @@ last_name[0] = '\0';
 
 for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*ifp),j++,ifp=(struct ifreq *)((char *)ifp+SIZEOF_IFREQ(*ifp)))
    {
-   int skip = false;
 
    if (ifp->ifr_addr.sa_family == 0)
       {

@@ -174,11 +174,8 @@ for (ip = DHCPLIST; ip != NULL; ip=ip->next)
 void KeepControlPromises()
     
 { struct Constraint *cp;
-  struct Scope *ptr;
-  struct Rval rrval;
   char rettype;
   void *retval;
-  int i;
 
 CFD_MAXPROCESSES = 30;
 MAXTRIES = 5;
@@ -412,8 +409,7 @@ void KeepContextBundles()
 { struct Bundle *bp;
   struct SubType *sp;
   struct Promise *pp;
-  char *scope, *rettype;
-  void *retval;
+  char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
@@ -456,8 +452,7 @@ void KeepPromiseBundles()
 { struct Bundle *bp;
   struct SubType *sp;
   struct Promise *pp;
-  char *scope, *rettype;
-  void *retval;
+  char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
@@ -562,8 +557,6 @@ if (strcmp(pp->agentsubtype,"roles") == 0)
 void KeepFileAccessPromise(struct Promise *pp)
 
 { struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
   char *val;
@@ -642,8 +635,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 void KeepLiteralAccessPromise(struct Promise *pp,char *type)
 
 { struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
   char *handle = GetConstraint("handle",pp,CF_SCALAR);
@@ -736,8 +727,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 void KeepQueryAccessPromise(struct Promise *pp,char *type)
 
 { struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
   char *val;
@@ -818,11 +807,8 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 void KeepServerRolePromise(struct Promise *pp)
 
 { struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
   struct Rlist *rp;
-  struct Auth *ap,*dp;
-  char *val;
+  struct Auth *ap;
 
 if (!GetAuthPath(pp->promiser,ROLES))
    {
@@ -877,7 +863,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop)
 
 { struct Auth *ptr;
-  char ebuff[CF_EXPANDSIZE]; 
 
 #ifdef MINGW
 int i;
@@ -921,7 +906,6 @@ ptr->next = NULL;
 struct Auth *GetAuthPath(char *path,struct Auth *list)
 
 { struct Auth *ap;
-  char ebuff[CF_EXPANDSIZE]; 
 
 #ifdef MINGW
 int i;

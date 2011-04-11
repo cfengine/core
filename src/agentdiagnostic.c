@@ -304,8 +304,7 @@ char TEST_ROOT_DIR[CF_BUFSIZE];
 
 void AgentDiagnostic(char *file)
 
-{ char cwd[CF_BUFSIZE];
-
+{
 if (VERBOSE || DEBUG)
    {
    FREPORT_TXT = stdout;
@@ -352,15 +351,8 @@ printf("!! Extensive self-diagnostic capabilities not built in\n");
 
 void TestSearchFilePromiser()
 
-{ struct Promise pp,*pcopy;
-  struct Body *bp;
-  int i;
-  char *list_text1 = "a,b,c,d,e,f,g";
-  char *list_text2 = "1,2,3,4,5,6,7";
-  struct Rlist *rp, *args, *listvars = NULL, *scalarvars = NULL;
-  struct Constraint *cp;
-  struct FnCall *fp;
-   
+{ struct Promise pp;
+
 /* Still have diagnostic scope */
 THIS_AGENT_TYPE = cf_agent;
    

@@ -65,8 +65,6 @@ return false;
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args)
 
 { struct Bundle *bp,*lp;
-  char *sp;
-  struct Rlist *rp;
 
 if (INSTALL_SKIP)
    {
@@ -115,7 +113,6 @@ return bp;
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args)
 
 { struct Body *bp,*lp;
-  char *sp;
   struct Rlist *rp;
 
 Debug("Appending new promise body %s %s(",type,name);

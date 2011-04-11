@@ -242,7 +242,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 
 void VerifyLineDeletions(struct Promise *pp)
 
-{ struct Item **start = &(pp->edcontext->file_start), *match, *prev;
+{ struct Item **start = &(pp->edcontext->file_start);
   struct Attributes a = {0};
   struct Item *begin_ptr,*end_ptr;
   struct CfLock thislock;
@@ -293,7 +293,7 @@ YieldCurrentLock(thislock);
 
 void VerifyColumnEdits(struct Promise *pp)
 
-{ struct Item **start = &(pp->edcontext->file_start), *match, *prev;
+{ struct Item **start = &(pp->edcontext->file_start);
   struct Attributes a = {0};
   struct Item *begin_ptr,*end_ptr;
   struct CfLock thislock;
@@ -360,7 +360,7 @@ YieldCurrentLock(thislock);
 
 void VerifyPatterns(struct Promise *pp)
 
-{ struct Item **start = &(pp->edcontext->file_start), *match, *prev;
+{ struct Item **start = &(pp->edcontext->file_start);
   struct Attributes a = {0};
   struct Item *begin_ptr,*end_ptr;
   struct CfLock thislock;
@@ -889,7 +889,7 @@ return retval;
 
 int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
 
-{ char *sp, *start = NULL,*end,replace[CF_EXPANDSIZE],line_buff[CF_EXPANDSIZE];
+{ char replace[CF_EXPANDSIZE],line_buff[CF_EXPANDSIZE];
   char before[CF_BUFSIZE],after[CF_BUFSIZE];
   int match_len,start_off,end_off,once_only = false,retval = false;
   struct Item *ip;
@@ -1149,7 +1149,7 @@ return ok;
 
 int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
 
-{ char *sp;
+{
   int result = false;
   char buf[CF_EXPANDSIZE];
 
@@ -1516,7 +1516,7 @@ return true;
 int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp, *found;
- int count = 0,retval = false;
+ int retval = false;
 
 if (a.column.column_operation && strcmp(a.column.column_operation,"delete") == 0)
    {

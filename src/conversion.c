@@ -42,7 +42,7 @@ void IPString2KeyDigest(char *ipv4,char *result)
   char name[CF_BUFSIZE];
   void *value;
   struct CfKeyHostSeen entry;
-  int ret,ksize,vsize, ok = false;
+  int ksize,vsize;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
 
 if (strcmp(ipv4,"127.0.0.1") == 0 || strcmp(ipv4,"::1") == 0 || strcmp(ipv4,VIPADDRESS) == 0)
@@ -750,7 +750,7 @@ return (long) cftime;
 
 long Months2Seconds(int m)
 
-{ time_t cftime;
+{
   static long days[] = {31,28,31,30,31,30,31,31,30,31,30,31};
   long tot_days = 0;
   int this_month,i,month,year;

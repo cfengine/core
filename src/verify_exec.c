@@ -95,13 +95,12 @@ void VerifyExec(struct Attributes a, struct Promise *pp)
     
 { struct CfLock thislock;
   char unsafeLine[CF_BUFSIZE], line[sizeof(unsafeLine)*2],eventname[CF_BUFSIZE];
-  char comm[20], *sp;
+  char comm[20];
   char execstr[CF_EXPANDSIZE];
   struct timespec start;
-  int print, outsourced,count = 0;
+  int outsourced,count = 0;
   mode_t maskval = 0;
   FILE *pfp;
-  int preview = false;
   char cmdOutBuf[CF_BUFSIZE];
   int cmdOutBufPos = 0;
   int lineOutLen;

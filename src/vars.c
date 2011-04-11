@@ -102,7 +102,7 @@ AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 
 void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 
-{ char *sp1,*sp2;
+{
   struct Rval rvald;
  
 Debug("IdempNewScalar(%s,%s,%s)\n",scope,lval,rval);
@@ -162,7 +162,7 @@ AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
 
 void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 
-{ char *sp1;
+{
   struct Rval rvald;
   struct Rlist *list,*rp;
 
@@ -205,7 +205,7 @@ else
 
 enum cfdatatype GetVariable(char *scope,char *lval,void **returnv, char *rtype)
 
-{ char *sp;
+{
   int slot,i,found = false;
   struct Scope *ptr = NULL;
   char scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE],sval[CF_MAXVARSIZE];
@@ -390,7 +390,7 @@ return strcmp(ap->lval,lval);
 
 int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap)
 
-{ char buffer[CF_BUFSIZE];
+{
   struct Rlist *list, *rp;
 
 if (ap == NULL || rval == NULL)
@@ -427,7 +427,7 @@ return strcmp(ap->rval,rval);
 
 int UnresolvedVariables(struct CfAssoc *ap,char rtype)
 
-{ char buffer[CF_BUFSIZE];
+{
   struct Rlist *list, *rp;
 
 if (ap == NULL)

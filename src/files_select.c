@@ -35,8 +35,7 @@
 int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { struct AlphaList leaf_attr;
-  int result = true, tmpres;
-  char *criteria = NULL;
+  int result = true;
   struct Rlist *rp;
 
 InitAlphaList(&leaf_attr);  
@@ -433,7 +432,6 @@ return false;
 int SelectExecRegexMatch(char *filename,char *crit,char *prog)
 
 { char line[CF_BUFSIZE];
-  int s,e;
   FILE *pp;
   char buf[CF_MAXVARSIZE];
  

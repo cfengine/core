@@ -156,7 +156,6 @@ void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char arg[CF_BUFSIZE];
-  struct Item *actionList;
   int optindex = 0;
   int c;
   char ld_library_path[CF_BUFSIZE];
@@ -267,8 +266,7 @@ if (argv[optind] != NULL)
 
 void ThisAgentInit()
 
-{ char vbuff[CF_BUFSIZE];
-
+{
 umask(077);
 LOGGING = true;
 MAILTO[0] = '\0';
@@ -381,7 +379,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
 void StartServer(int argc,char **argv)
 
-{ int pid,time_to_run = false;
+{ int time_to_run = false;
   time_t now = time(NULL);
   struct Promise *pp = NewPromise("exec_cfengine","the executor agent"); 
   struct Attributes dummyattr;
@@ -446,13 +444,14 @@ if (ONCE)
    LocalExec((void *)0);
    }
 else
-   { char **nargv;
-     int i;
+   {
 #ifdef HAVE_PTHREAD_H
-     pthread_t tid;
+   pthread_t tid;
 #endif
 
-#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD) 
+#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+   int i;
+   char **nargv;
    /*
     * Append --once option to our arguments for spawned monitor process.
     */
@@ -532,7 +531,7 @@ void Apoptosis()
 
 { struct Promise pp = {0};
   struct Rlist *signals = NULL, *owners = NULL;
-  char mypid[32],pidrange[32];
+  char mypid[32];
   static char promiserBuf[CF_SMALLBUF];
 
 if (ONCE || VSYSTEMHARDCLASS == cfnt)
@@ -987,7 +986,7 @@ return(rtn);
 void MailResult(char *file,char *to)
 
 { int sd, sent, count = 0, anomaly = false;
- char domain[256], prev_file[CF_BUFSIZE],vbuff[CF_BUFSIZE];
+  char prev_file[CF_BUFSIZE],vbuff[CF_BUFSIZE];
   struct hostent *hp;
   struct sockaddr_in raddr;
   struct servent *server;

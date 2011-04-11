@@ -147,10 +147,8 @@ return Unix_LoadProcessTable(procdata);
 
 void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp)
 
-{ char line[CF_BUFSIZE];
+{
   int matches = 0,do_signals = true,out_of_range,killed = 0,need_to_restart = true;
-  mode_t maskval;
-  struct stat statbuf;
   struct Item *killlist = NULL;
 
 Debug("VerifyProcessOp\n");
@@ -253,9 +251,9 @@ else
 
 int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp)
 
-{ struct Item *ip, *ip2;
-  char *sp,saveuid[16];
-  int pid=-1,ret,matches=0,got,i,one_space,s,e,promised_zero;
+{ struct Item *ip;
+  char saveuid[16];
+  int pid=-1,matches=0,i,s,e,promised_zero;
   pid_t cfengine_pid = getpid();
   char *names[CF_PROCCOLS];      /* ps headers */
   int start[CF_PROCCOLS];

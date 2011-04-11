@@ -224,7 +224,9 @@ else if (pid == 0)                     /* child */
    }
 else                                    /* parent */
    {
+#ifndef HAVE_WAITPID
    pid_t wait_result;
+#endif
    ALARM_PID = pid;
 
 #ifdef HAVE_WAITPID

@@ -115,7 +115,6 @@ void CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char arg[CF_BUFSIZE];
-  struct Item *actionList;
   int optindex = 0;
   int c;
   

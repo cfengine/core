@@ -57,9 +57,7 @@ else
 
 char *MapName(char *s)
 
-{ char buffer[CF_BUFSIZE];
-  char *spf,*spto;
-
+{
 #ifdef NT
 memset(buffer,0,CF_BUFSIZE);
 
@@ -711,8 +709,7 @@ return rename(oldpath,newpath);
 void *cf_malloc(size_t size, char *errLocation)
 /* Stops on memory allocation error */
 {
- char buf[CF_SMALLBUF];
- void *ptr = NULL;
+void *ptr = NULL;
  
  ptr = malloc(size);
 

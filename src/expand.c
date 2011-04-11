@@ -92,7 +92,7 @@ since these cannot be mapped into "this" without some magic.
 
 void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void *fnptr)
 
-{ struct Rlist *rp, *listvars = NULL, *scalarvars = NULL;
+{ struct Rlist *listvars = NULL, *scalarvars = NULL;
   struct Constraint *cp;
   struct Promise *pcopy;
 
@@ -132,7 +132,6 @@ DeleteRlist(listvars);
 struct Rval ExpandDanglers(char *scopeid,struct Rval rval,struct Promise *pp)
 
 { struct Rval final;
-  struct Rlist *rp;
 
  /* If there is still work left to do, expand and replace alloc */
  
@@ -205,7 +204,7 @@ switch(type)
 
 void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *string,int level,struct Promise *pp)
 
-{ struct Rlist *rp;
+{
   char *sp,rtype;
   void *rval;
   char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
@@ -353,9 +352,8 @@ return start;
 struct Rval ExpandPrivateRval(char *scopeid,void *rval,char type)
 
 { char buffer[CF_EXPANDSIZE];
- struct Rlist *rp, *start = NULL;
  struct FnCall *fp,*fpe;
- struct Rval returnval,extra;
+ struct Rval returnval;
      
 Debug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,type);
 
@@ -397,9 +395,8 @@ return returnval;
 struct Rval ExpandBundleReference(char *scopeid,void *rval,char type)
 
 { char buffer[CF_EXPANDSIZE];
- struct Rlist *rp, *start = NULL;
  struct FnCall *fp,*fpe;
- struct Rval returnval,extra;
+ struct Rval returnval;
      
 Debug("ExpandBundleReference(scope=%s,type=%c)\n",scopeid,type);
 
@@ -454,8 +451,7 @@ int ExpandPrivateScalar(char *scopeid,char *string,char buffer[CF_EXPANDSIZE])
   void *rval;
   int varstring = false;
   char currentitem[CF_EXPANDSIZE],temp[CF_BUFSIZE],name[CF_MAXVARSIZE];
-  int len,increment, returnval = true;
-  time_t tloc;
+  int increment, returnval = true;
   
 memset(buffer,0,CF_EXPANDSIZE);
 
@@ -608,10 +604,9 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
 
 { struct Rlist *lol = NULL; 
   struct Promise *pexp;
-  struct Scope *ptr;
   const int cf_null_cutoff = 5;
   char *handle = GetConstraint("handle",pp,CF_SCALAR),v[CF_MAXVARSIZE];
-  int i = 1, cutoff = 0;
+  int cutoff = 0;
 
 lol = NewIterationContext(scopeid,listvars);
 
@@ -969,11 +964,11 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
   struct Attributes a = {0};
-  char *lval,rtype,type = 'x',*sp = NULL;
+  char rtype,type = 'x',*sp = NULL;
   void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
-  struct Rlist *rp,*last = NULL;
+  struct Rlist *rp;
   
 if (pp->done)
    {

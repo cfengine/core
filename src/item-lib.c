@@ -437,11 +437,8 @@ return count;
 int RawSaveItemList(struct Item *liststart,char *file)
 
 { struct Item *ip;
-  struct stat statbuf;
   char new[CF_BUFSIZE],backup[CF_BUFSIZE];
   FILE *fp;
-  mode_t mask;
-  char stamp[CF_BUFSIZE]; 
   time_t STAMPNOW;
   STAMPNOW = time((time_t *)NULL);
 
@@ -679,7 +676,6 @@ return true;
 void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
 
 { struct Item *ip;
-  char *sp;
 
 if (*filestart == NULL || ptr == CF_UNDEFINED_ITEM)
    {
@@ -1313,11 +1309,9 @@ int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct P
 
 /* returns true if file on disk is identical to file in memory */
 
-{ FILE *fp;
+{
   struct stat statbuf;
-  struct Item *ip = liststart,*cmplist = NULL;
-  unsigned char *finmem = NULL, fdata;
-  unsigned long fip = 0, tmplen, idx;
+  struct Item *cmplist = NULL;
 
 Debug("CompareToFile(%s)\n",file);
 

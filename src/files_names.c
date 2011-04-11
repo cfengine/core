@@ -944,7 +944,7 @@ strs = NULL;
 
 int IsAbsoluteFileName(const char *f)
 
-{ int quoted,off = 0;
+{ int off = 0;
 
 // Check for quoted strings
  
@@ -982,9 +982,7 @@ int RootDirLength(char *f)
 
   /* Return length of Initial directory in path - */
 
-{ int len;
-  char *sp;
-
+{
 #ifdef NT
 
 if (IsFileSep(f[0]) && IsFileSep(f[1]))

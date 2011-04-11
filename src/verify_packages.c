@@ -259,10 +259,7 @@ int VerifyInstalledPackages(struct CfPackageManager **all_mgrs,struct Attributes
 { struct CfPackageManager *manager = NewPackageManager(all_mgrs,a.packages.package_list_command,cfa_pa_none,cfa_no_ppolicy);
   const int reset = true, update = false;
   char vbuff[CF_BUFSIZE];
-  struct dirent *dirp;
-  struct Rlist *rp;
   FILE *prp;
-  DIR *dirh;
   
 if (manager == NULL)
    {
@@ -1831,11 +1828,10 @@ int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attribu
 
 int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
 
-{ int offset = 0, retval = true;
+{ int retval = true;
  char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd; 
  FILE *pfp;
  int packmanRetval = 0;
- char packmanRetvalStr[64] = {0};
 
  if (!IsExecutable(GetArg0(command)))
     {

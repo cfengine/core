@@ -209,10 +209,10 @@ cf_closedir(dirh);
 
 void VerifyFilePromise(char *path,struct Promise *pp)
 
-{ struct stat osb,oslb,dsb,dslb;
+{ struct stat osb,oslb,dsb;
   struct Attributes a = {0};
   struct CfLock thislock;
-  int exists,success,rlevel = 0,isthere,save = true,isdirectory = false;
+  int exists,success,rlevel = 0;
 
 a = GetFilesAttributes(pp);
 
@@ -428,7 +428,7 @@ void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Pro
   char destfile[CF_BUFSIZE];
   struct stat ssb, dsb;
   struct cfdirent *dirp;
-  int save_uid, save_gid, found;
+  int found;
   
 Debug("VerifyCopy (source=%s destination=%s)\n",source,destination);
 
@@ -658,8 +658,7 @@ void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attribute
 
 { char *lastnode,*server;
   struct stat dsb;
-  struct Item *ptr, *ptr1;
-  int found,succeed = false;
+  int found;
   mode_t srcmode = ssb.st_mode;
 
 Debug2("CopyFile(%s,%s)\n",sourcefile,destfile);
@@ -1584,7 +1583,7 @@ int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,
 { char backup[CF_BUFSIZE];
   char new[CF_BUFSIZE], *linkable;
   struct cfagent_connection *conn = pp->conn;
-  int remote = false, silent, backupisdir=false, backupok=false,discardbackup;
+  int remote = false, backupisdir=false, backupok=false,discardbackup;
   struct stat s;
 #ifdef HAVE_UTIME_H
   struct utimbuf timebuf;

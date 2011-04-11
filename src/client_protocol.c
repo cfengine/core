@@ -38,8 +38,6 @@
 int IdentifyAgent(int sd,char *localip,int family)
 
 { char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE],dnsname[CF_BUFSIZE];
-  struct in_addr *iaddr;
-  struct hostent *hp;
   int len,err;
 #if defined(HAVE_GETADDRINFO)
   char myaddr[256]; /* Compilation trick for systems that don't know ipv6 */
@@ -173,7 +171,7 @@ int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,str
   BIGNUM *nonce_challenge, *bn = NULL;
   unsigned long err;
   unsigned char digest[EVP_MAX_MD_SIZE];
-  int encrypted_len,nonce_len = 0,len_n,len_e,len,session_size;
+  int encrypted_len,nonce_len = 0,len,session_size;
   char dont_implicitly_trust_server,enterprise_field = 'c';
   RSA *server_pubkey = NULL;
 

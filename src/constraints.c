@@ -702,8 +702,7 @@ PreSanitizePromise(pp);
 void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype)
 
 { struct SubTypeSyntax ss;
-  int lmatch = false;
-  int i,j,k,l,m;
+  int i,j,l,m;
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
 
@@ -785,8 +784,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 int VerifyConstraintName(char *lval)
 
 { struct SubTypeSyntax ss;
-  int lmatch = false;
-  int i,j,k,l,m;
+  int i,j,l,m;
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
 

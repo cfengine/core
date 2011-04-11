@@ -164,7 +164,7 @@ selections:            selection                 /* BODY ONLY */
 selection:            id                         /* BODY ONLY */
                       ASSIGN 
                       rval
-                        { char *contextid = NULL;
+                        {
  
                         CheckSelection(P.blocktype,P.blockid,P.lval,P.rval,P.rtype);
 
@@ -236,7 +236,7 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                                                  
                          if (strcmp(P.block,"bundle") == 0)
                             {
-                            struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);
+                            CheckSubType(P.blocktype,P.currenttype); /* FIXME: unused? */
                             P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
                             }
                          };
@@ -319,9 +319,7 @@ constraints:           constraint               /* BUNDLE ONLY */
 constraint:           id                        /* BUNDLE ONLY */
                       ASSIGN 
                       rval
-                        { struct SubTypeSyntax ss;
-                          char *contextid = NULL;
-
+                        {
                         if (!INSTALL_SKIP)
                            {                           
                            AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);

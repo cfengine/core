@@ -358,7 +358,6 @@ return attr;
 struct Attributes GetOccurrenceAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-  char *value;
 
 attr.represents = GetListConstraint("represents",pp);
 attr.rep_type = GetConstraint("representation",pp,CF_SCALAR);
@@ -1043,7 +1042,6 @@ struct Packages GetPackageConstraints(struct Promise *pp)
   enum package_actions action;
   enum version_cmp operator;
   enum action_policy change_policy;
-  char *value;
 
 p.have_package_methods = GetBooleanConstraint("havepackage_method",pp);
 p.package_version = (char *)GetConstraint("package_version",pp,CF_SCALAR);
@@ -1257,7 +1255,6 @@ printf(".....................................................\n\n");
 struct Attributes GetInsertionAttributes(struct Promise *pp)
 
 { struct Attributes attr = {0};
-  char *value;
 
 attr.havelocation = GetBooleanConstraint("location",pp);
 attr.location = GetLocationAttributes(pp);

@@ -56,7 +56,6 @@ int VerifyMethod(struct Attributes a,struct Promise *pp)
   int retval = false;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
-  struct Rlist *expargs;
 
 if (a.havebundle)
    {

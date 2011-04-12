@@ -137,6 +137,7 @@ struct Inference *INFERENCES = NULL;
       { "quote",required_argument,0,'q'},
       { "regex",required_argument,0,'r'},
       { "sql",no_argument,0,'s'},
+      { "stories",required_argument,0,'p'},
       { "syntax",required_argument,0,'S'},
       { "topic",required_argument,0,'t'},
       { NULL,0,0,'\0' }
@@ -159,6 +160,7 @@ struct Inference *INFERENCES = NULL;
       "Quote encapsulated HTML output through the query engine",
       "Specify a regular expression for searching the topic map",
       "Store topic map in defined SQL database",
+      "Look up stories for a given topic on the command line",
       "Print a syntax summary of the optional keyword or this cfengine version",
       "Specify a literal string topic to look up in the topic map",
       NULL
@@ -295,6 +297,12 @@ while ((c=getopt_long(argc,argv,"ghHd:vVf:S:R:st:r:mMK:k:q:Q:",OPTIONS,&optindex
       case 'Q':
           strcpy(TOPIC_CMD,optarg);
           CfQueryCFDB(TOPIC_CMD);
+          exit(0);
+          break;
+
+      case 'p':
+          strcpy(TOPIC_CMD,optarg);
+          CfGenerateStories(TOPIC_CMD);
           exit(0);
           break;
           
@@ -1035,6 +1043,15 @@ void CfQueryCFDB(char *query)
 {
 #ifdef HAVE_NOVA
 Nova_CfQueryCFDB(query);
+#endif
+}
+
+/*********************************************************************/
+
+void CfGenerateStories(char *query)
+{
+#ifdef HAVE_CONSTELLATION
+Constellation_CfGenerateStories(query);
 #endif
 }
 

@@ -12,5 +12,5 @@ fi
 
 NO_SUBPROJECTS=1 ./autogen.sh --disable-maintainer-mode
 
-make
+make -j8
 make dist

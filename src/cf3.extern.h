@@ -140,6 +140,9 @@ extern char FILE_SEPARATOR_STR[2];
 extern char AGGREGATION[CF_BUFSIZE];
 extern char *UNITS[CF_OBSERVABLES];
 
+extern char *BASIC_REPORTS[cfrep_unknown][2];
+extern char *CDP_REPORTS[cdp_unknown][2];
+
 extern char SQL_DATABASE[CF_MAXVARSIZE];
 extern char SQL_OWNER[CF_MAXVARSIZE];
 extern char SQL_PASSWD[CF_MAXVARSIZE];

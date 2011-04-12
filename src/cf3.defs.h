@@ -1863,6 +1863,46 @@ meter_endmark
 };
 
 /*************************************************************************/
+/* definitions for reporting                                            */
+/*************************************************************************/
+
+typedef enum cdp_report
+   {
+   cdp_acls,
+   cdp_commands,
+   cdp_filechanges,
+   cdp_filediffs,
+   cdp_registry,
+   cdp_services,
+   cdp_unknown
+   }
+cdp_t;
+
+typedef enum basic_reports
+   {
+   cfrep_bundle,
+   cfrep_business,
+   cfrep_classes,
+   cfrep_promise_compliance,
+   cfrep_total_compliance,
+   cfrep_change,
+   cfrep_diff,
+   cfrep_lastseen,
+   cfrep_patch_avail,
+   cfrep_patch_status,
+   cfrep_performance,
+   cfrep_repaired,
+   cfrep_repair_summary,
+   cfrep_notkept,
+   cfrep_notkept_summary,
+   cfrep_setuid,
+   cfrep_software_installed,
+   cfrep_variables,
+   cfrep_unknown
+   }
+cfrep_t;
+
+/*************************************************************************/
 /* definitions for test suite                                            */
 /*************************************************************************/
 

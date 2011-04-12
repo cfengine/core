@@ -805,7 +805,7 @@ void StripTrailingNewline(char *str)
         return;
     }
 
-    for (; c > str && (*c == '\0' || *c == '\n'); --c)
+    for (; c >= str && (*c == '\0' || *c == '\n'); --c)
     {
         *c = '\0';
     }

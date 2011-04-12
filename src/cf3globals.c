@@ -635,6 +635,8 @@ char *UNITS[CF_OBSERVABLES] = {0};
 /* Report names                                                                   */
 /**********************************************************************************/
 
+// See enum in cf3.defs.h
+
 char *BASIC_REPORTS[cfrep_unknown+1][2] =
     {
     "Bundle profile","Status of promise bundles and when they were last verified",
@@ -658,6 +660,7 @@ char *BASIC_REPORTS[cfrep_unknown+1][2] =
     NULL,NULL
     };
 
+// See enum in cf3.defs.h
 
 char *CDP_REPORTS[cdp_unknown+1][2] =
     {

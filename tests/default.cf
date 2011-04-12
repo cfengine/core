@@ -55,6 +55,7 @@ vars:
         "file1h" string => execresult("/usr/bin/hexdump -C $(file1)", "useshell");
         "file2r" string => readfile("$(file2)", "9999999999");
         "file2h" string => execresult("/usr/bin/hexdump -C $(file2)", "useshell");
+        "diffu"  string => execresult("/usr/bin/diff -u $(file2) $(file1)", "noshell");
 
 classes:
 	"no_difference" expression => returnszero(
@@ -93,6 +94,7 @@ reports:
 $(file1h)";
         "hexdump $(file2):
 $(file2h)";
+        "$(diffu)";
     DEBUG.no_difference.expected_difference::
         "Contents of $(file1) and $(file) is the same.";
 }

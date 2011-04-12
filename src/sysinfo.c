@@ -688,16 +688,12 @@ void OSClasses()
 NewClass("any");      /* This is a reserved word / wildcard */
 
 snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
-NewClass(vbuff);
 
-for (sp = vbuff+strlen(vbuff); i < 2; sp--)
+NewClass(vbuff);
+while ((sp = strrchr(vbuff, '_')))
    {
-   if (*sp == '_')
-      {
-      i++;
-      *sp = '\0';
-      NewClass(vbuff);
-      }
+   *sp = 0;
+   NewClass(vbuff);
    }
 
 #ifdef LINUX

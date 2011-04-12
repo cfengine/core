@@ -535,10 +535,7 @@ gaitem:               ID
 
 /*****************************************************************/
 
-void yyerror(s)
-
-char *s;
-
+void yyerror(const char *s)
 { char *sp = yytext;
 
 if (sp == NULL)

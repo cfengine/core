@@ -6,16 +6,24 @@ test -z "$srcdir" && srcdir=.
 ORIGDIR=$(pwd)
 cd $srcdir
 
-#
-# Include nova/constellation
-#
+if [ -z "$NO_SUBPROJECTS" ]; then
+  #
+  # Include nova/constellation
+  #
 
-if [ -d ${srcdir}/../nova ]; then
-  ln -sTf ${srcdir}/../nova ${srcdir}/nova
-fi
+  if [ -d ${srcdir}/../nova ]; then
+    ln -sTf ${srcdir}/../nova ${srcdir}/nova
+  fi
 
-if [ -d ${srcdir}/../constellation ]; then
-  ln -sTf ${srcdir}/../constellation ${srcdir}/constellation
+  if [ -d ${srcdir}/../constellation ]; then
+    ln -sTf ${srcdir}/../constellation ${srcdir}/constellation
+  fi
+else
+  #
+  # Clean up just in case
+  #
+  rm -f ${srcdir}/nova
+  rm -f ${srcdir}/constellation
 fi
 
 autoreconf --force -v --install -I m4 || exit 1

@@ -149,7 +149,17 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
 {
 #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
 Nova_StoreUnExpandedPromises(bundles,bodies);
-#else  
+#else
+char rettype;
+void *retval;
+char *v;
+char vbuff[CF_BUFSIZE];
+struct Bundle *bp;
+struct Rlist *rp;
+struct SubType *sp;
+struct Promise *pp;
+struct Body *bdp;
+
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
    v = (char *)retval;
@@ -237,8 +247,18 @@ CfHtmlFooter(FREPORT_HTML,FOOTER);
 void ShowPromise(struct Promise *pp, int indent)
 
 {
-  char *v,rettype;
-  void *retval;
+char *v,rettype;
+void *retval;
+#if !defined(HAVE_NOVA) || !defined(HAVE_LIBMONGOC)
+struct Constraint *cp;
+struct Body *bp;
+struct Rlist *rp;
+struct FnCall *fp;
+double av;
+double var;
+double val;
+time_t last;
+#endif
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {

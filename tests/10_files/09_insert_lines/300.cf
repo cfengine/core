@@ -1,0 +1,177 @@
+#######################################################
+#
+# Test insertion of newlines (Issue 555)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"states" slist => { "template", "expected" };
+
+	"template" string =>
+"##
+# Sendmail Alias File 
+# @(#)B11.23_LRaliases $Revision: 1.1.212.1 $ $Date: 99/09/13 15:13:16 $
+#
+# Mail to an alias in this file will be sent to the users, programs, or
+# files designated following the colon.
+# Aliases defined in this file will NOT be expanded in headers from
+# mailx(1), but WILL be visible over networks and in headers from
+# rmail(1).
+#
+# >>>>>>>>>> The program \"/usr/sbin/newaliases\" must be run after
+# >> NOTE >> this file is updated, or else any changes will not be
+# >>>>>>>>>> visible to sendmail.
+##
+
+# Alias for mailer daemon
+MAILER-DAEMON : root
+
+# RFC 822 requires that every host have a mail address \"postmaster\" 
+postmaster : root
+
+# Aliases to handle mail to msgs and news
+nobody : /dev/null
+
+# System Admistration aliases
+operator : root
+uucp : root
+daemon : root
+
+# Ftp maintainer.
+ftp-bugs : root
+
+# Local aliases
+root : dcpds.sysadmin@dcpds.cpms.osd.mil,:include:/etc/mail/aliases.root
+oracle : dcpds.dba@dcpds.cpms.osd.mil
+exinfac : dcpds.exits@dcpds.cpms.osd.mil
+applmgr : dcpds.dba@dcpds.cpms.osd.mil";
+
+	"expected" string =>
+"##
+# Sendmail Alias File 
+# @(#)B11.23_LRaliases $Revision: 1.1.212.1 $ $Date: 99/09/13 15:13:16 $
+#
+# Mail to an alias in this file will be sent to the users, programs, or
+# files designated following the colon.
+# Aliases defined in this file will NOT be expanded in headers from
+# mailx(1), but WILL be visible over networks and in headers from
+# rmail(1).
+#
+# >>>>>>>>>> The program \"/usr/sbin/newaliases\" must be run after
+# >> NOTE >> this file is updated, or else any changes will not be
+# >>>>>>>>>> visible to sendmail.
+##
+
+# Alias for mailer daemon
+MAILER-DAEMON : root
+
+# RFC 822 requires that every host have a mail address \"postmaster\" 
+postmaster : root
+
+# Aliases to handle mail to msgs and news
+nobody : /dev/null
+
+# System Admistration aliases
+operator : root
+uucp : root
+daemon : root
+
+# Ftp maintainer.
+ftp-bugs : root
+
+# Local aliases
+root : dcpds.sysadmin@dcpds.cpms.osd.mil,:include:/etc/mail/aliases.root
+oracle : dcpds.dba@dcpds.cpms.osd.mil
+exinfac : dcpds.exits@dcpds.cpms.osd.mil
+applmgr : dcpds.dba@dcpds.cpms.osd.mil
+stgmgmt : :include:/etc/mail/aliases.stgmgmt";
+ 
+files:
+	"$(g.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+        "MailAliases" slist => { "stgmgmt : :include:/etc/mail/aliases.stgmgmt" };
+
+files:
+        "$(g.testfile).actual"
+                edit_line => copy_and_append_lines("$(g.testfile).template",
+                                   "@(this.MailAliases)"),
+                edit_defaults => empty,
+                create => "true";
+}
+
+
+bundle edit_line copy_and_append_lines(file,lines)
+{
+insert_lines:
+
+        "$(file)"
+                insert_type => "file";
+
+        "$(lines)"
+                insert_type => "string";
+
+}
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+max_file_size => "300000";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile).*");
+}

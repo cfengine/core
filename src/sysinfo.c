@@ -684,6 +684,9 @@ void OSClasses()
   char *sp;
   int i = 0;
   struct passwd *pw;
+#ifndef LINUX
+  char class[CF_BUFSIZE];
+#endif
 
 NewClass("any");      /* This is a reserved word / wildcard */
 

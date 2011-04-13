@@ -298,7 +298,7 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0; then
             fi
         done
 
-        if test -f "$BERKELEY_DB_CFLAGS/db.h"; then
+        if test -f "$BERKELEY_DB_DIR/db.h"; then
             BERKELEY_DB_LIB="-ldb"
             for v in db-4.8 db48 db-4.7 db4.7 db47 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
                 if test -f "$BERKELEY_DB_DIR/lib/lib$v.so"; then

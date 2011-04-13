@@ -293,12 +293,13 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0; then
         BERKELEY_DB_CFLAGS="-I$BERKELEY_DB_DIR/include"
         for v in . db48 db47 db46 db45 db44 db43 db42 db41 db40 db4 db33 db32 db3 db; do
             if test -f "$BERKELEY_DB_DIR/include/$v/db.h"; then
-                BERKELEY_DB_CFLAGS="-I$BERKELEY_DB_DIR/include/$v"
+                BERKELEY_DB_INCLUDEDIR="$BERKELEY_DB_DIR/include/$v"
+                BERKELEY_DB_CFLAGS="-I$BERKELEY_DB_INCLUDEDIR"
 		break
             fi
         done
 
-        if test -f "$BERKELEY_DB_DIR/db.h"; then
+        if test -f "$BERKELEY_DB_INCLUDEDIR/db.h"; then
             BERKELEY_DB_LIB="-ldb"
             for v in db-4.8 db48 db-4.7 db4.7 db47 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
                 if test -f "$BERKELEY_DB_DIR/lib/lib$v.so"; then

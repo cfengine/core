@@ -180,6 +180,7 @@ struct CfDbMysqlConn *mc = c->data;
 if (mc->res)
    {
    mysql_free_result(mc->res);
+   mc->res = NULL;
    }
 }
 

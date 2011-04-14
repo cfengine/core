@@ -101,7 +101,7 @@ dnl ######################################################################
 AC_CHECK_LIB(m,main)
 
 AC_ARG_WITH(diagnostics,
-	AS_HELP_STRING(--with-diagnostics, [support test suite]),with_diagnostics=yes,
+	AS_HELP_STRING(--with-diagnostics, [enable test suite]),with_diagnostics=yes,
 	with_diagnostics=no)
 
 if test "x$with_diagnostics" != xno; then
@@ -123,7 +123,7 @@ dnl  Look for SQL connectors.
 dnl ######################################################################
 
 AC_ARG_WITH([sql],
-    [AS_HELP_STRING([--with-sql], [support database functions])])
+    [AS_HELP_STRING([--with-sql], [build with SQL database connectors])])
 AS_IF([test "x$with_sql" = "xyes"], [WITH_SQL=1], [WITH_SQL=0])
 
 if test $WITH_SQL = 1; then
@@ -174,7 +174,7 @@ dnl Choose a database
 dnl
 
 AC_ARG_WITH([tokyocabinet],
-    [AS_HELP_STRING([--with-tokyocabinet], [support database functions])])
+    [AS_HELP_STRING([--with-tokyocabinet], [use Tokyo Cabinet to store runtime data])])
 AS_IF([test "x$with_tokyocabinet" = "xyes"], [WITH_TOKYO=1], [WITH_TOKYO=0])
 
 if test $WITH_TOKYO = 1; then
@@ -188,7 +188,7 @@ fi
 dnl else qdbm?
 
 AC_ARG_WITH([qdbm],
-    [AS_HELP_STRING([--with-qdbm], [support database functions qdbm])])
+    [AS_HELP_STRING([--with-qdbm], [use QDBM to store runtime data])])
 AS_IF([test "x$with_qdbm" = "xyes"], [WITH_QDBM=1], [WITH_QDBM=0])
 
 if test $WITH_QDBM = 1; then
@@ -343,7 +343,7 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0; then
     CFLAGS="$CFLAGS $BERKELEY_DB_CFLAGS"
     LIBS="$LIBS $BERKELEY_DB_LIB"
 
-    AC_MSG_CHECKING(Berkeley DB API)
+    AC_MSG_CHECKING(for Berkeley DB API)
 
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <db.h>
@@ -437,7 +437,7 @@ else
     CPPFLAGS="$CPPFLAGS $OPENSSL_LIB_CPPFLAGS"
     LIBS="$LIBS $OPENSSL_LIB_LIB"
 
-    AC_MSG_CHECKING(OpenSSL Version)
+    AC_MSG_CHECKING(for OpenSSL Version)
 
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <openssl/opensslv.h>
@@ -509,9 +509,9 @@ dnl Checks for perl compatible regular expressions
 dnl ######################################################################
 
 AC_ARG_WITH([pcre],
-			[AS_HELP_STRING([--with-pcre[[=PATH]]], [support for Perl compatible regex (optionally search in PATH)])])
+			[AS_HELP_STRING([--with-pcre[[=PATH]]], [Build with support for PCRE (optionally search in PATH)])])
 AS_IF([test "x$with_pcre" != "xno"], [
-    AC_MSG_CHECKING([pcre])
+    AC_MSG_CHECKING([for PCRE])
     if test "x$with_pcre" = "xyes" -o "x$with_pcre" = "x" ; then
 		for d in $prefix /usr/local /usr; do
 			if test -f "$d/include/pcre.h" ; then
@@ -668,25 +668,13 @@ AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, [], [Whether to use lchown(3) to ch
 AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]), AC_CHECK_LIB(pthread, pthread_create))
 AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]), AC_CHECK_LIB(pthread, pthread_create))
 
-
-AC_ARG_ENABLE([DCE], [AS_HELP_STRING([--enable-DCE], [support for DCE and ACLs])])
-AS_IF([test "x$enable_DCE" = "xyes"], [
-    AC_CHECK_LIB(thread, main)
-    AC_CHECK_LIB(dce, main)            dnl DFS
-    AC_CHECK_HEADERS(dce/daclif.h)
-    AC_CHECK_HEADERS(pthread.h)
-    AC_CHECK_HEADERS(sched.h)
-])
-
-
 dnl ######################################################################
 dnl Give the chance to enable SELINUX
 dnl ######################################################################
 
-AC_ARG_ENABLE([selinux], dnl
-    [AS_HELP_STRING([--enable-selinux], [Enable use of the SELINUX libraries])])
+AC_ARG_ENABLE([selinux], [AS_HELP_STRING([--enable-selinux], [Enable SELinux support])])
 AS_IF([test "x$enable_selinux" = "xyes"], [
-    AC_DEFINE(WITH_SELINUX, 1, [Define if you want to use SELINUX])
+    AC_DEFINE(WITH_SELINUX, 1, [Define if you want to use SELinux])
     LIB_SELINUX="-lselinux"
     LIBS="$LIBS $LIB_SELINUX"
     AC_SUBST(LIB_SELINUX)
@@ -896,7 +884,7 @@ dnl #####################################################################
 dnl Fix for lex/flex
 dnl #####################################################################
 
-AC_MSG_CHECKING(8-bit support in Flex)
+AC_MSG_CHECKING(for 8-bit support in Flex)
 
 if test "$LEX" = "flex"; then
    EIGHTBIT="\200-\377"
@@ -914,7 +902,7 @@ dnl ####################################################################
 dnl Set GCC CFLAGS only if using GCC.
 dnl ####################################################################
 
-AC_MSG_CHECKING(Checking for GCC Specific compile flags)
+AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes"; then
 	
 dnl # -Wformat - to be considered
@@ -948,7 +936,7 @@ dnl #####################################################################
 dnl xen cpuid-based hvm detection
 dnl #####################################################################
 
-AC_MSG_CHECKING(Checking for Xen cpuid-based HVM detection)
+AC_MSG_CHECKING(for Xen cpuid-based HVM detection)
 if test x"$GCC" = "xyes"; then
 	case $host_cpu in
 		i[[3456]]86*|x86_64*)

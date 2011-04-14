@@ -101,7 +101,7 @@ dnl ######################################################################
 AC_CHECK_LIB(m,main)
 
 AC_ARG_WITH(diagnostics,
-	AS_HELP_STRING(--with-diagnostics, [enable test suite]),with_diagnostics=yes,
+	AS_HELP_STRING(--with-diagnostics, [enable test suite]),[],
 	with_diagnostics=no)
 
 if test "x$with_diagnostics" != xno; then

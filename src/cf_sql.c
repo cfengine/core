@@ -81,102 +81,114 @@ struct CfDbMysqlConn
     MYSQL_RES *res;
 };
 
+/*****************************************************************************/
+
 static struct CfDbMysqlConn *CfConnectMysqlDB(const char *host,
                                               const char *user,
                                               const char *password,
                                               const char *database)
 {
-    struct CfDbMysqlConn *c;
+struct CfDbMysqlConn *c;
 
-    CfOut(cf_verbose,""," -> This is a MySQL database\n");
+CfOut(cf_verbose,""," -> This is a MySQL database\n");
 
-    c = malloc(sizeof(struct CfDbMysqlConn));
-    if (!c)
-    {
-        CfOut(cf_error, "", "Failed to allocate memory to store MySQL database information");
-        return NULL;
-    }
+c = malloc(sizeof(struct CfDbMysqlConn));
+if (!c)
+   {
+   CfOut(cf_error, "", "Failed to allocate memory to store MySQL database information");
+   return NULL;
+   }
 
-    mysql_init(&c->conn);
+mysql_init(&c->conn);
 
-    if (!mysql_real_connect(&c->conn, host, user, password,
-                            database, 0, NULL, 0))
-    {
-        CfOut(cf_error,"","Failed to connect to existing MySQL database: %s\n",mysql_error(&c->conn));
-        free(c);
-        return NULL;
-    }
+if (!mysql_real_connect(&c->conn, host, user, password,
+                        database, 0, NULL, 0))
+   {
+   CfOut(cf_error,"","Failed to connect to existing MySQL database: %s\n",mysql_error(&c->conn));
+   free(c);
+   return NULL;
+   }
 
-    return c;
+return c;
 }
+
+/*****************************************************************************/
 
 static void CfCloseMysqlDB(struct CfDbMysqlConn *c)
 {
-    mysql_close(&c->conn);
-    free(c);
+mysql_close(&c->conn);
+free(c);
 }
+
+/*****************************************************************************/
 
 static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 {
-    struct CfDbMysqlConn *mc = c->data;
+struct CfDbMysqlConn *mc = c->data;
 
-    if (mysql_query(&mc->conn, query) != 0)
-    {
-        CfOut(cf_inform,"","MySQL query failed: %s, (%s)\n",query,mysql_error(&mc->conn));
-    }
-    else
-    {
-        mc->res = mysql_store_result(&mc->conn);
+if (mysql_query(&mc->conn, query) != 0)
+   {
+   CfOut(cf_inform,"","MySQL query failed: %s, (%s)\n",query,mysql_error(&mc->conn));
+   }
+else
+   {
+   mc->res = mysql_store_result(&mc->conn);
 
-        if (mc->res)
-        {
-            c->result = true;
-            c->maxcolumns = mysql_num_fields(mc->res);
-            c->maxrows = mysql_num_rows(mc->res);
-        }
-    }
+   if (mc->res)
+      {
+      c->result = true;
+      c->maxcolumns = mysql_num_fields(mc->res);
+      c->maxrows = mysql_num_rows(mc->res);
+      }
+   }
 }
+
+/*****************************************************************************/
 
 static void CfFetchMysqlRow(CfdbConn *c)
 {
-    int i;
-    MYSQL_ROW thisrow;
-    struct CfDbMysqlConn *mc = c->data;
+int i;
+MYSQL_ROW thisrow;
+struct CfDbMysqlConn *mc = c->data;
 
-    if (c->maxrows > 0)
-    {
-        thisrow = mysql_fetch_row(mc->res);
+if (c->maxrows > 0)
+   {
+   thisrow = mysql_fetch_row(mc->res);
 
-        if (thisrow)
-        {
-            c->rowdata = malloc(sizeof(char *) * c->maxcolumns);
+   if (thisrow)
+      {
+      c->rowdata = malloc(sizeof(char *) * c->maxcolumns);
 
-            for (i = 0; i < c->maxcolumns; i++)
-            {
-                c->rowdata[i] = (char *)thisrow[i];
-            }
-        }
-        else
-        {
-            c->rowdata = NULL;
-        }
-    }
+      for (i = 0; i < c->maxcolumns; i++)
+         {
+         c->rowdata[i] = (char *)thisrow[i];
+         }
+      }
+   else
+      {
+      c->rowdata = NULL;
+      }
+   }
 }
+
+/*****************************************************************************/
 
 static void CfDeleteMysqlQuery(CfdbConn *c)
 {
-    struct CfDbMysqlConn *mc = c->data;
+struct CfDbMysqlConn *mc = c->data;
 
-    if (mc->res)
-    {
-        mysql_free_result(mc->res);
-    }
+if (mc->res)
+   {
+   mysql_free_result(mc->res);
+   }
 }
+
+/*****************************************************************************/
 
 static void CfEscapeMysqlSQL(CfdbConn *c, const char *query, char *result)
 {
-    struct CfDbMysqlConn *mc = c->data;
-    mysql_real_escape_string(&mc->conn, result, query, strlen(query));
+struct CfDbMysqlConn *mc = c->data;
+mysql_real_escape_string(&mc->conn, result, query, strlen(query));
 }
 
 #else
@@ -187,8 +199,8 @@ static void *CfConnectMysqlDB(const char *host,
                               const char *database)
 
 {
-    CfOut(cf_inform,"","There is no MySQL support compiled into this version");
-    return NULL;
+CfOut(cf_inform,"","There is no MySQL support compiled into this version");
+return NULL;
 }
 
 static void CfCloseMysqlDB(void *c)
@@ -217,119 +229,130 @@ static void CfEscapeMysqlSQL(CfdbConn *c, const char *query, char *result)
 
 struct CfDbPostgresqlConn
 {
-   PGconn *conn;
-   PGresult *res;
+PGconn *conn;
+PGresult *res;
 };
+
+/*****************************************************************************/
 
 static struct CfDbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
                                                         const char *user,
                                                         const char *password,
                                                         const char *database)
 {
-    struct CfDbPostgresqlConn *c;
-    char format[CF_BUFSIZE];
+struct CfDbPostgresqlConn *c;
+char format[CF_BUFSIZE];
 
-    CfOut(cf_verbose,""," -> This is a PotsgreSQL database\n");
+CfOut(cf_verbose,""," -> This is a PotsgreSQL database\n");
 
-    c = malloc(sizeof(struct CfDbPostgresqlConn));
-    if (!c)
-    {
-        CfOut(cf_error, "", "Failed to allocate memory to store PostgreSQL database information");
-        return NULL;
-    }
+c = malloc(sizeof(struct CfDbPostgresqlConn));
+if (!c)
+   {
+   CfOut(cf_error, "", "Failed to allocate memory to store PostgreSQL database information");
+   return NULL;
+   }
 
-    if (strcmp(host,"localhost") == 0)
-    {
-        /* Some authentication problem - ?? */
-        if (database)
-        {
-            snprintf(format,CF_BUFSIZE-1,"dbname=%s user=%s password=%s",database,user,password);
-        }
-        else
-        {
-            snprintf(format,CF_BUFSIZE-1,"user=%s password=%s",user,password);
-        }
-    }
-    else
-    {
-        if (database)
-        {
-            snprintf(format,CF_BUFSIZE-1,"dbname=%s host=%s user=%s password=%s",database,host,user,password);
-        }
-        else
-        {
-            snprintf(format,CF_BUFSIZE-1,"host=%s user=%s password=%s",host,user,password);
-        }
-    }
+if (strcmp(host,"localhost") == 0)
+   {
+   /* Some authentication problem - ?? */
+   if (database)
+      {
+      snprintf(format,CF_BUFSIZE-1,"dbname=%s user=%s password=%s",database,user,password);
+      }
+   else
+      {
+      snprintf(format,CF_BUFSIZE-1,"user=%s password=%s",user,password);
+      }
+   }
+else
+   {
+   if (database)
+      {
+      snprintf(format,CF_BUFSIZE-1,"dbname=%s host=%s user=%s password=%s",database,host,user,password);
+      }
+   else
+      {
+      snprintf(format,CF_BUFSIZE-1,"host=%s user=%s password=%s",host,user,password);
+      }
+   }
 
-    c->conn = PQconnectdb(format);
+c->conn = PQconnectdb(format);
 
-    if (PQstatus(c->conn) == CONNECTION_BAD)
-    {
-        CfOut(cf_error,"","Failed to connect to existing PostgreSQL database: %s\n",PQerrorMessage(c->conn));
-        free(c);
-        return NULL;
-    }
+if (PQstatus(c->conn) == CONNECTION_BAD)
+   {
+   CfOut(cf_error,"","Failed to connect to existing PostgreSQL database: %s\n",PQerrorMessage(c->conn));
+   free(c);
+   return NULL;
+   }
 
-    return c;
+return c;
 }
+
+/*****************************************************************************/
 
 static void CfClosePostgresqlDb(struct CfDbPostgresqlConn *c)
 {
-    PQfinish(c->conn);
-    free(c);
+PQfinish(c->conn);
+free(c);
 }
+
+/*****************************************************************************/
 
 static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 {
-    struct CfDbPostgresqlConn *pc = c->data;
+struct CfDbPostgresqlConn *pc = c->data;
 
-    pc->res = PQexec(pc->conn, query);
+pc->res = PQexec(pc->conn, query);
 
-    if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
-    {
-        CfOut(cf_inform,"","PostgreSQL query failed: %s, %s\n",query,PQerrorMessage(pc->conn));
-    }
-    else
-    {
-        c->result = true;
-        c->maxcolumns = PQnfields(pc->res);
-        c->maxrows = PQntuples(pc->res);
-    }
+if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
+   {
+   CfOut(cf_inform,"","PostgreSQL query failed: %s, %s\n",query,PQerrorMessage(pc->conn));
+   }
+else
+   {
+   c->result = true;
+   c->maxcolumns = PQnfields(pc->res);
+   c->maxrows = PQntuples(pc->res);
+   }
 }
+
+/*****************************************************************************/
 
 static void CfFetchPostgresqlRow(CfdbConn *c)
 {
-    int i;
-    struct CfDbPostgresqlConn *pc = c->data;
+int i;
+struct CfDbPostgresqlConn *pc = c->data;
 
-    if (c->row >= c->maxrows)
-    {
-        c->rowdata = NULL;
-        return;
-    }
+if (c->row >= c->maxrows)
+   {
+   c->rowdata = NULL;
+   return;
+   }
 
-    if (c->maxrows > 0)
-    {
-        c->rowdata = malloc(sizeof(char *) * c->maxcolumns);
-    }
+if (c->maxrows > 0)
+   {
+   c->rowdata = malloc(sizeof(char *) * c->maxcolumns);
+   }
 
-    for (i = 0; i < c->maxcolumns; i++)
-    {
-        c->rowdata[i] = PQgetvalue(pc->res,c->row,i);
-    }
+for (i = 0; i < c->maxcolumns; i++)
+   {
+   c->rowdata[i] = PQgetvalue(pc->res,c->row,i);
+   }
 }
+
+/*****************************************************************************/
 
 static void CfDeletePostgresqlQuery(CfdbConn *c)
 {
-    struct CfDbPostgresqlConn *pc = c->data;
-
-    PQclear(pc->res);
+struct CfDbPostgresqlConn *pc = c->data;
+PQclear(pc->res);
 }
+
+/*****************************************************************************/
 
 static void CfEscapePostgresqlSQL(CfdbConn *c, const char *query, char *result)
 {
-    PQescapeString(result, query, strlen(query));
+PQescapeString(result, query, strlen(query));
 }
 
 #else
@@ -339,8 +362,8 @@ static void *CfConnectPostgresqlDB(const char *host,
                                    const char *password,
                                    const char *database)
 {
-    CfOut(cf_inform,"","There is no PostgreSQL support compiled into this version");
-    return NULL;
+CfOut(cf_inform,"","There is no PostgreSQL support compiled into this version");
+return NULL;
 }
 
 static void CfClosePostgresqlDb(void *c)
@@ -365,9 +388,11 @@ static void CfEscapePostgresqlSQL(CfdbConn *c, const char *query, char *result)
 
 #endif
 
+/*****************************************************************************/
+
 int CfConnectDB(CfdbConn *cfdb,enum cfdbtype dbtype,char *remotehost,char *dbuser, char *passwd, char *db)
 
-{ 
+{
 
 cfdb->connected = false;
 cfdb->type = dbtype;
@@ -437,7 +462,7 @@ free(cfdb->blank);
 /*****************************************************************************/
 
 void CfVoidQueryDB(CfdbConn *cfdb,char *query)
-    
+
 {
 if (!cfdb->connected)
    {
@@ -512,7 +537,7 @@ char *CfFetchColumn(CfdbConn *cfdb,int col)
 {
 if (cfdb->rowdata && cfdb->rowdata[col])
    {
-   return cfdb->rowdata[col];  
+   return cfdb->rowdata[col];
    }
 else
    {
@@ -551,7 +576,8 @@ if (cfdb->rowdata)
 
 char *EscapeSQL(CfdbConn *cfdb,char *query)
 
-{ static char result[CF_BUFSIZE];
+{
+static char result[CF_BUFSIZE];
 
 if (!cfdb->connected)
    {
@@ -583,13 +609,13 @@ return result;
 
 void Debugcfdb(CfdbConn *cfdb)
 {
- printf("SIZE of CfdbConn: %d = %d\n",sizeof(CfdbConn),sizeof(*cfdb));
- printf( "cfdb->result = %d\n",cfdb->result);
- printf( "cfdb->row = %d\n",cfdb->row);
- printf( "cfdb->column = %d\n",cfdb->column);
- printf( "cfdb->maxcolumns = %d\n",cfdb->maxcolumns);
- printf( "cfdb->maxrows = %d\n",cfdb->maxrows);
- printf( "cfdb->type = %d\n",cfdb->type);
+printf("SIZE of CfdbConn: %d = %d\n",sizeof(CfdbConn),sizeof(*cfdb));
+printf( "cfdb->result = %d\n",cfdb->result);
+printf( "cfdb->row = %d\n",cfdb->row);
+printf( "cfdb->column = %d\n",cfdb->column);
+printf( "cfdb->maxcolumns = %d\n",cfdb->maxcolumns);
+printf( "cfdb->maxrows = %d\n",cfdb->maxrows);
+printf( "cfdb->type = %d\n",cfdb->type);
 }
 
 /*****************************************************************************/

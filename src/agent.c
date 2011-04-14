@@ -86,12 +86,6 @@ void SetEnvironment(char *s);
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
 
-#ifdef HAVE_LIBVIRT
-# include <libvirt/libvirt.h>
-# include <libvirt/virterror.h>
-extern virConnectPtr CFVC[];
-#endif
-
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
@@ -1122,14 +1116,10 @@ int NewTypeContext(enum typesequence type)
 switch(type)
    {
    case kp_environments:
-
-#ifdef HAVE_LIBVIRT
-       for (i = 0; i < cfv_none; i++)
-          {
-          CFVC[i] = NULL;
-          }
+#ifdef HAVE_NOVA
+      Nova_NewEnvironmentsContext();
 #endif
-       break;
+      break;
        
    case kp_files:
 
@@ -1179,18 +1169,10 @@ switch(type)
        break;
 
    case kp_environments:
-
-#ifdef HAVE_LIBVIRT
-       for (i = 0; i < cfv_none; i++)
-          {
-          if (CFVC[i] != NULL)
-             {
-             virConnectClose(CFVC[i]);
-             CFVC[i] = NULL;
-             }
-          }
+#ifdef HAVE_NOVA
+      Nova_DeleteEnvironmentsContext();
 #endif
-       break;
+      break;
 
    case kp_files:
 

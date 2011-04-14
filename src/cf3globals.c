@@ -107,10 +107,6 @@ struct Item *DONELIST = NULL;
 struct Rlist *CBUNDLESEQUENCE = NULL;
 struct Rlist *SERVER_KEYSEEN = NULL;
 
-#ifdef HAVE_LIBVIRT
-virConnectPtr CFVC[cfv_none];
-#endif
-
 int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
 int CF_SAVEFSTAB = false;

@@ -64,6 +64,7 @@ char *NextTopic(char *link,char* type);
 char *NextMap(char *topic,char *type,enum cfknow_image imgtype);
 void GenerateGraph(void);
 void GenerateManual(void);
+void CfGenerateStories(char *query);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
 void CfQueryCFDB(char *query);
 
@@ -1281,6 +1282,7 @@ if (sql_database_defined)
       
       if (!VerifyDatabasePromise(&cfdb,SQL_DATABASE,a,pp))
          {
+         CfOut(cf_verbose,""," -> Failed to create database \"%s\"\n",SQL_DATABASE);
          return;
          }
       
@@ -1421,16 +1423,16 @@ columns = NULL;
 
 /* Delete existing data and recreate */
 
-snprintf(query,CF_BUFSIZE-1,"delete from %s_topics\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from topics\n");
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
-snprintf(query,CF_BUFSIZE-1,"delete from %s_associations\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from associations\n");
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
-snprintf(query,CF_BUFSIZE-1,"delete from %s_occurrences\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from occurrences\n");
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
-snprintf(query,CF_BUFSIZE-1,"delete from %s_inferences\n",TM_PREFIX);
+snprintf(query,CF_BUFSIZE-1,"delete from inferences\n");
 fprintf(fout,"%s",query);
 CfVoidQueryDB(&cfdb,query);
 

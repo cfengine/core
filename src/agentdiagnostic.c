@@ -2530,9 +2530,6 @@ void CheckInstalledLibraries(void)
   printf("---- INSTALLED LIBRARIES ----\n");
 
 
-   #ifndef HAVE_LIBLDAP
-   printf("\t->LIBLDAP not found!!\n");
-   #endif
    
    #ifndef HAVE_LIBACL
    printf("\t->LIBACL not found!!\n");
@@ -2545,11 +2542,7 @@ void CheckInstalledLibraries(void)
    #ifndef HAVE_LIBPTHREAD
    printf("\t->LIBPTHREAD not found!!\n");
    #endif
-   
-   #ifndef HAVE_LIBVIRT
-   printf("\t->LIBVIRT not found!!\n");
-   #endif
-   
+
    #if !defined(TCDB) && !defined(QDB) 
    printf("\t->TCDB and QDB  not found!!\n");
    #endif
@@ -2564,13 +2557,8 @@ void CheckInstalledLibraries(void)
      printf("\t!! LIBPQ (postgresql) not found\n");
    #endif
 
-
    #ifdef HAVE_NOVA
-   if(!Nova_HaveFIPS())
-     {
-     printf("\t->FIPS OpenSSL canister not found!!\n");
-     }
-
+   Nova_CheckInstalledLibraries();
    #else
    printf("\t->Nova not found!!\n");
    #endif

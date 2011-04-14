@@ -143,7 +143,9 @@ PromiseManagement("agent");
 ThisAgentInit();
 KeepPromises();
 NoteClassUsage(VHEAP);
-NoteVarUsageDB();
+#ifdef HAVE_NOVA
+Nova_NoteVarUsageDB();
+#endif
 UpdateLastSeen();
 PurgeLocks();
 GenericDeInitialize();

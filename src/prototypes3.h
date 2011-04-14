@@ -1311,7 +1311,6 @@ void ShowContext(void);
 void ShowPromises(struct Bundle *bundles,struct Body *bodies);
 void ShowPromise(struct Promise *pp, int indent);
 void ShowScopedVariables(void);
-void NoteVarUsageDB();
 void SyntaxTree(void);
 void ShowBody(struct Body *body,int ident);
 void DebugBanner(char *s);

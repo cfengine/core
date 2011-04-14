@@ -995,51 +995,39 @@ return 0;
 /* LDAP                                                                      */
 /*****************************************************************************/
 
+#if !defined(HAVE_NOVA)
+
 void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
 {
-#if defined HAVE_NOVA && defined HAVE_LIBLDAP
- return Nova_LDAPValue(uri,dn,filter,name,scope,sec);
-#else
- CfOut(cf_error,"","LDAP support available in Nova and above");
+CfOut(cf_error, "", "LDAP support is available in Nova and above");
 return NULL;
-#endif
 }
 
 /*****************************************************************************/
 
 void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
 {
-#if defined HAVE_NOVA && defined HAVE_LIBLDAP
- return Nova_LDAPList(uri,dn,filter,name,scope,sec);
-#else
- CfOut(cf_error,"","LDAP support available in Nova and above");
+CfOut(cf_error,"","LDAP support available in Nova and above");
 return NULL;
-#endif
 }
 
 /*****************************************************************************/
 
 void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec)
 {
-#if defined HAVE_NOVA && defined HAVE_LIBLDAP
- return Nova_LDAPArray(array,uri,dn,filter,scope,sec);
-#else
- CfOut(cf_error,"","LDAP support available in Nova and above");
+CfOut(cf_error,"","LDAP support available in Nova and above");
 return NULL;
-#endif
 }
 
 /*****************************************************************************/
 
 void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec)
 {
-#if defined HAVE_NOVA && defined HAVE_LIBLDAP
-return Nova_RegLDAP(uri,dn,filter,name,scope,regex,sec);
-#else
 CfOut(cf_error,"","LDAP support available in Nova and above");
 return NULL;
-#endif
 }
+
+#endif
 
 /*****************************************************************************/
 /* SQL                                                                       */

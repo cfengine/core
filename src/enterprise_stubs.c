@@ -754,16 +754,6 @@ void CSV2XML(struct Rlist *list)
 
 /*****************************************************************************/
 
-void NoteVarUsage()
-/* DEPRECATED: Use NoteVarUsageDB() */
-{
-#ifdef HAVE_NOVA
-Nova_NoteVarUsage();
-#endif 
-}
-
-/*****************************************************************************/
-
 void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
 
 {

@@ -880,7 +880,6 @@ int StripListSep(char *strList, char *outBuf, int outBufSz)
 int PrintRval(char *buffer,int bufsize,void *rval,char type)
 
 {
-
 if (rval == NULL)
    {
    return 0;

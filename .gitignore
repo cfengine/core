@@ -53,6 +53,11 @@ src/conf.h.in~
 
 docs/*.8
 
+# tests
+
+tests/*.log
+tests/.succeeded
+
 # links
 
 nova

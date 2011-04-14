@@ -116,8 +116,8 @@ dnl  Look for SQL connectors.
 dnl ######################################################################
 
 AC_ARG_WITH([sql],
-    [AS_HELP_STRING([--without-sql], [disable SQL database connectors])])
-AS_IF([test "x$with_sql" = "xyes"], [WITH_SQL=0], [WITH_SQL=1])
+    [AS_HELP_STRING([--without-sql], [disable SQL database connectors])],[],[with_sql=yes])
+AS_IF([test "x$with_sql" = "xyes"], [WITH_SQL=1], [WITH_SQL=0])
 
 if test $WITH_SQL = 1; then
   case "$target_os" in

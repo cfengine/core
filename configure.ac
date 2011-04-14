@@ -108,13 +108,6 @@ if test "x$with_diagnostics" != xno; then
    AC_DEFINE(BUILD_TESTSUITE, 1, [Build Test suite])
 fi
 
-
-dnl Look for ldap
-
-AC_ARG_WITH([ldap],
-    [AS_HELP_STRING([--with-ldap], [support ldap functions])])
-AS_IF([test "x$with_ldap" = "xyes"], [AC_CHECK_LIB([ldap], [ldap_get_values_len])])
-
 dnl Now check for database connectors
 
 
@@ -469,40 +462,6 @@ AC_SUBST(OPENSSL_LIB_LIB)
 #
 # Others
 #
-
-#
-# Report database driver - MongoDB C interface
-#
-
-AC_ARG_WITH(mongo,
-	AS_HELP_STRING(--with-mongo, [support client MongoDB report aggregation database]),with_mongo=yes,
-	with_mongo=no)
-
-if test "x$with_mongo" = xyes; then
-   AC_MSG_CHECKING(for libmongoc)
-   WITH_MONGO=1
-else
-   WITH_MONGO=0
-fi
-
-if test $WITH_MONGO = 1; then
-  AC_CHECK_HEADERS(mongo.h)
-  AC_CHECK_HEADERS(mongo_except.h)
-  AC_CHECK_HEADERS(bson.h)
-  AC_CHECK_HEADERS(platform_hacks.h)
-  AC_CHECK_LIB(mongoc,main)
-fi
-
-
-AC_ARG_WITH([libvirt],
-    [AS_HELP_STRING([--with-libvirt], [support virtual machine management])])
-AS_IF([test "x$with_libvirt" = "xyes"], [WITH_VIRT=1], [WITH_VIRT=0])
-
-if test $WITH_VIRT = 1; then
-  AC_MSG_CHECKING(for libvirt)
-  AC_CHECK_LIB(virt,main, [], [AC_MSG_ERROR(Cannot find libvirt)])
-fi
-
 
 dnl ######################################################################
 dnl Checks for perl compatible regular expressions
@@ -967,50 +926,41 @@ AC_MSG_RESULT(    Summary of options...)
 
 
 if test "x$ac_cv_lib_pcre_main" = "xyes"; then
-  AC_MSG_RESULT( -> Configured with PCRE libraries)
+  AC_MSG_RESULT([-> PCRE: enabled])
 else
-  AC_MSG_RESULT( -> No PCRE library support - reverting to POSIX builtins)
+  AC_MSG_RESULT([-> PCRE: disabled, falling back to POSIX builtins])
 fi
 
-if test $WITH_SQL = 1; then
-
-  if test "x$ac_cv_lib_mysqlclient_main" = "xyes"; then
-    AC_MSG_RESULT( -> Configured with MYSQL libraries)
-  fi
-
-  if test "x$ac_cv_lib_pq_main" = "xyes"; then
-    AC_MSG_RESULT( -> Configured with Postgres libraries)
-  fi
-
+if test "x$ac_cv_lib_mysqlclient_main" = "xyes"; then
+  AC_MSG_RESULT([-> MySQL connector: enabled])
 else
-  AC_MSG_RESULT( -> No SQL library support for knowledge map)
+  AC_MSG_RESULT([-> MySQL connector: disabled])
 fi
 
-if test "x$ac_cv_lib_ldap_ldap_get_values_len" = "xyes"; then
-  AC_MSG_RESULT( -> Configured with LDAP libraries)
+if test "x$ac_cv_lib_pq_main" = "xyes"; then
+  AC_MSG_RESULT([-> PostgreSQL connector: enabled])
 else
-  AC_MSG_RESULT( -> No LDAP libraries included)
+  AC_MSG_RESULT([-> PostgreSQL connector: disabled])
+fi
+
+if test "x$ac_cv_lib_mysqlclient_main" = "xyes" || test "x$ac_cv_lib_pq_main" = "xyes"
+then
+  AC_MSG_RESULT([-> Knowledge map: enabled])
+else
+  AC_MSG_RESULT([-> Knowledge map: disabled, no SQL connector is configured])
 fi
 
 if test $WITH_TOKYO = 1; then
-  AC_MSG_RESULT( -> Configured with Tokyo Cabinet)
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet])
 elif test $WITH_QDBM = 1; then
-  AC_MSG_RESULT( -> Configured with QDBM)
+  AC_MSG_RESULT([-> DB: QDBM])
 else
-  AC_MSG_RESULT( -> Will look for BerkeleyDB in $BERKELEY_DB_DIR)
+  AC_MSG_RESULT([-> DB: Berkeley DB (path: $BERKELEY_DB_DIR)])
 fi
 
-if test $WITH_VIRT = 1; then
-  AC_MSG_RESULT( -> Configured with libvirt support)
-else
-  AC_MSG_RESULT( -> No libvirt support included)
-fi
-
-if test $WITH_MONGO = 1; then
-   AC_MSG_RESULT( -> Configured with libmongoc support)
-else
-   AC_MSG_RESULT( -> No libmongoc support included)
-fi
+m4_sinclude([nova/config.m4])
+m4_sinclude([constellation/config.m4])
+m4_sinclude([galaxy/config.m4])
 
 AC_MSG_RESULT( )
 

@@ -92,7 +92,7 @@ struct CfDbMysqlConn *c;
 
 CfOut(cf_verbose,""," -> This is a MySQL database\n");
 
-c = malloc(sizeof(struct CfDbMysqlConn));
+c = calloc(1, sizeof(struct CfDbMysqlConn));
 if (!c)
    {
    CfOut(cf_error, "", "Failed to allocate memory to store MySQL database information");
@@ -245,7 +245,7 @@ char format[CF_BUFSIZE];
 
 CfOut(cf_verbose,""," -> This is a PotsgreSQL database\n");
 
-c = malloc(sizeof(struct CfDbPostgresqlConn));
+c = calloc(1, sizeof(struct CfDbPostgresqlConn));
 if (!c)
    {
    CfOut(cf_error, "", "Failed to allocate memory to store PostgreSQL database information");

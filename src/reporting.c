@@ -77,6 +77,18 @@ char *CFH[][2] =
     NULL,NULL
    };
 
+/* Prototypes */
+
+static void ShowControlBodies(void);
+static void ReportBanner(char *s);
+static void Indent(int i);
+static void ShowDataTypes(void);
+static void ShowBundleTypes(void);
+static void ShowPromiseTypesFor(char *s);
+static void ShowBodyParts(struct BodySyntax *bs);
+static void ShowRange(char *s,enum cfdatatype type);
+static void ShowBuiltinFunctions(void);
+
 /*******************************************************************/
 /* Generic                                                         */
 /*******************************************************************/
@@ -125,7 +137,7 @@ CfOut(cf_verbose,"","");
 
 /*******************************************************************/
 
-void ShowControlBodies()
+static void ShowControlBodies()
 
 { int i;
 
@@ -511,7 +523,7 @@ CfOut(cf_verbose,"","***********************************************************
     
 /*******************************************************************/
 
-void ReportBanner(char *s)
+static void ReportBanner(char *s)
 
 {
 fprintf(FREPORT_TXT,"***********************************************************\n");
@@ -574,7 +586,7 @@ Debug("----------------------------------------------------------------\n");
 
 /*******************************************************************/
 
-void Indent(int i)
+static void Indent(int i)
 
 { int j;
 
@@ -672,7 +684,7 @@ printf("</td></tr></table>\n");
 /* Level 2                                                         */
 /*******************************************************************/
 
-void ShowDataTypes()
+static void ShowDataTypes()
 
 { int i;
 
@@ -689,7 +701,7 @@ printf("</ol></td></tr></table>\n\n");
 
 /*******************************************************************/
 
-void ShowBundleTypes()
+static void ShowBundleTypes()
 
 { int i;
   struct SubTypeSyntax *st;
@@ -723,7 +735,7 @@ printf("</div>\n\n");
 
 /*******************************************************************/
 
-void ShowPromiseTypesFor(char *s)
+static void ShowPromiseTypesFor(char *s)
 
 { int i,j;
   struct SubTypeSyntax *st;
@@ -752,7 +764,7 @@ printf("</div>\n\n");
 
 /*******************************************************************/
 
-void ShowBodyParts(struct BodySyntax *bs)
+static void ShowBodyParts(struct BodySyntax *bs)
 
 { int i;
 
@@ -790,7 +802,7 @@ printf("</table></div>\n");
 
 /*******************************************************************/
 
-void ShowRange(char *s,enum cfdatatype type)
+static void ShowRange(char *s,enum cfdatatype type)
 
 { char *sp;
  
@@ -830,7 +842,7 @@ switch (type)
 
 /*******************************************************************/
 
-void ShowBuiltinFunctions()
+static void ShowBuiltinFunctions()
 
 { int i;
 

@@ -159,9 +159,15 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
 void ShowPromises(struct Bundle *bundles,struct Body *bodies)
 
 {
-#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+#if defined(HAVE_NOVA)
 Nova_StoreUnExpandedPromises(bundles,bodies);
 #else
+ShowPromisesInReport(bundles, bodies);
+#endif
+}
+
+void ShowPromisesInReport(struct Bundle *bundles, struct Body *bodies)
+{
 char rettype;
 void *retval;
 char *v;
@@ -251,7 +257,6 @@ for (bdp = bodies; bdp != NULL; bdp=bdp->next)
    }
 
 CfHtmlFooter(FREPORT_HTML,FOOTER);
-#endif
 }
 
 /*******************************************************************/
@@ -261,16 +266,6 @@ void ShowPromise(struct Promise *pp, int indent)
 {
 char *v,rettype;
 void *retval;
-#if !defined(HAVE_NOVA) || !defined(HAVE_LIBMONGOC)
-struct Constraint *cp;
-struct Body *bp;
-struct Rlist *rp;
-struct FnCall *fp;
-double av;
-double var;
-double val;
-time_t last;
-#endif
 
 if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
    {
@@ -281,10 +276,24 @@ else
    v = "not specified";
    }
 
-#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
-Nova_StoreExpandedPromise(pp);
-MapPromiseToTopic(FKNOW,pp,v);
+#if defined(HAVE_NOVA)
+Nova_ShowPromise(v, pp, indent);
 #else
+ShowPromiseInReport(v, pp, indent);
+#endif
+}
+
+void ShowPromiseInReport(const char *version, struct Promise* pp, int indent)
+{
+struct Constraint *cp;
+struct Body *bp;
+struct Rlist *rp;
+struct FnCall *fp;
+double av;
+double var;
+double val;
+time_t last;
+
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_subtype][cfb],pp->agentsubtype,CFH[cfx_subtype][cfe]);
@@ -376,7 +385,7 @@ last = 0;
 if (pp->audit)
    {
    Indent(indent);
-   fprintf(FREPORT_HTML,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT_HTML,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
    }
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
@@ -385,16 +394,14 @@ fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
 if (pp->audit)
    {
    Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",v,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
    fprintf(FREPORT_TXT,"\n\n");
    }
 else
    {
    Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n\n",v,pp->bundle,pp->bundletype,pp->lineno);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n\n",version,pp->bundle,pp->bundletype,pp->lineno);
    }
-
-#endif
 }
 
 /*******************************************************************/

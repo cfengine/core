@@ -76,14 +76,13 @@ return false;
 void EnterpriseModuleTrick()
 
 {
-#if defined HAVE_LIBMONGOC && defined HAVE_NOVA
+#if defined HAVE_NOVA
 Nova_EnterpriseModuleTrick();
 #endif
 
-#if defined HAVE_LIBMONGOC && defined HAVE_CONSTELLATION
+#if defined HAVE_CONSTELLATION
 Constellation_EnterpriseModuleTrick();
 #endif
-
 }
 
 /*****************************************************************************/
@@ -247,12 +246,11 @@ CfOut(cf_verbose,"","Remote logging requires version Nova or above");
 
 /*****************************************************************************/
 
+#if !defined(HAVE_NOVA)
 void WebCache(char *s,char *t)
 {
-#if defined HAVE_NOVA && defined HAVE_LIBMONGOC
-CFDB_PutValue(s,t);
-#endif 
 }
+#endif
 
 /*****************************************************************************/
 /* Knowledge                                                                 */
@@ -316,12 +314,11 @@ return time(NULL);
 
 /*****************************************************************************/
 
-void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version)
+void MapPromiseToTopic(FILE *fp,struct Promise *pp,const char *version)
 
 {
 #ifdef HAVE_NOVA
  Nova_MapPromiseToTopic(fp,pp,version); 
-#else
 #endif
 }
 

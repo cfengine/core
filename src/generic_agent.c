@@ -1346,43 +1346,16 @@ return MapName(wfilename);
 
 void CompilationReport(char *fname)
 
-{ char filename[CF_BUFSIZE],output[CF_BUFSIZE];
-
+{
 if (THIS_AGENT_TYPE != cf_common)
    {
    return;
    }
 
-#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
-if ((FREPORT_TXT = fopen(NULLFILE,"w")) == NULL)
-   {
-   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(output);
-   }
-
-if ((FREPORT_HTML = fopen(NULLFILE,"w")) == NULL)
-   {
-   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(output);
-   }
+#if defined(HAVE_NOVA)
+Nova_OpenCompilationReportFiles(fname);
 #else
-snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
-CfOut(cf_inform,"","Summarizing promises as text to %s\n",filename);
-
-if ((FREPORT_TXT = fopen(filename,"w")) == NULL)
-   {
-   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(output);
-   }
-
-snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
-CfOut(cf_inform,"","Summarizing promises as html to %s\n",filename);
-
-if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
-   {
-   snprintf(output,CF_BUFSIZE,"Could not write output log to %s",filename);
-   FatalError(output);
-   }
+OpenCompilationReportFiles(fname);
 #endif
 
 if ((FKNOW = fopen(NULLFILE,"w")) == NULL)
@@ -1396,6 +1369,28 @@ fclose(FREPORT_HTML);
 fclose(FREPORT_TXT);
 fclose(FKNOW);
 }
+
+void OpenCompilationReportFiles(const char *fname)
+{
+char filename[CF_BUFSIZE];
+
+snprintf(filename,CF_BUFSIZE-1,"%s.txt",fname);
+CfOut(cf_inform,"","Summarizing promises as text to %s\n",filename);
+
+if ((FREPORT_TXT = fopen(filename,"w")) == NULL)
+   {
+   FatalError("Could not write output log to %s",filename);
+   }
+
+snprintf(filename,CF_BUFSIZE-1,"%s.html",fname);
+CfOut(cf_inform,"","Summarizing promises as html to %s\n",filename);
+
+if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
+   {
+   FatalError("Could not write output log to %s",filename);
+   }
+}
+
 
 /*******************************************************************/
 

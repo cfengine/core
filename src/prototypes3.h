@@ -438,8 +438,7 @@ void BodyNode(FILE *fp,char *bundle,int call);
 void TypeNode(FILE *fp,char *type);
 void PromiseNode(FILE *fp,struct Promise *pp,int type);
 void RegisterBundleDependence(char *absscope,struct Promise *pp);
-void MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
-void Nova_MapPromiseToTopic(FILE *fp,struct Promise *pp,char *version);
+void MapPromiseToTopic(FILE *fp,struct Promise *pp,const char *version);
 void ShowTopicRepresentation(FILE *fp);
 void PreSanitizePromise(struct Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
@@ -931,6 +930,7 @@ void OpenReports(char *agents);
 void CloseReports(char *agents);
 char *InputLocation(char *filename);
 int BadBundleSequence(enum cfagenttype agent);
+void OpenCompilationReportFiles(const char *fname);
 
 /* granules.c  */
 
@@ -1319,6 +1319,8 @@ void ReportError(char *s);
 void BannerSubType(char *bundlename,char *type,int p);
 void BannerSubSubType(char *bundlename,char *type);
 void Banner(char *s);
+void ShowPromisesInReport(struct Bundle *bundles, struct Body *bodies);
+void ShowPromiseInReport(const char *version, struct Promise* pp, int indent);
 
 /* rlist.c */
 

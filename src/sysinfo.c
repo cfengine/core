@@ -682,7 +682,6 @@ void OSClasses()
 { struct stat statbuf;
   char vbuff[CF_BUFSIZE];
   char *sp;
-  int i = 0;
   struct passwd *pw;
 #ifndef LINUX
   char class[CF_BUFSIZE];

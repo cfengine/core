@@ -1065,40 +1065,6 @@ if (!ABORTBUNDLE)
 
 /*********************************************************************/
 
-static void NewPrefixedClasses(char *name,char *classlist)
-
-{ char *sp, currentitem[CF_MAXVARSIZE],local[CF_MAXVARSIZE],pref[CF_BUFSIZE];
- 
-if ((classlist == NULL) || strlen(classlist) == 0)
-   {
-   return;
-   }
-
-memset(local,0,CF_MAXVARSIZE);
-strncpy(local,classlist,CF_MAXVARSIZE-1);
-
-for (sp = local; *sp != '\0'; sp++)
-   {
-   memset(currentitem,0,CF_MAXVARSIZE);
-
-   sscanf(sp,"%250[^.:,]",currentitem);
-
-   sp += strlen(currentitem);
-
-   pref[0] = '\0';
-   snprintf(pref,CF_BUFSIZE,"%s_%s",name,currentitem);
-
-   if (IsHardClass(pref))
-      {
-      FatalError("cfengine: You cannot use -D to define a reserved class!");
-      }
-
-   NewClass(pref);
-   }
-}
-
-/*******************************************************************/
-
 void DeleteClass(char *class)
 
 { int i = (int)*class;

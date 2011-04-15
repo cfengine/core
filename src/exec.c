@@ -861,7 +861,8 @@ int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char typ
 
 { FILE *file;
   EVP_MD_CTX context;
-  int len, md_len;
+  int len;
+  unsigned int md_len;
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
@@ -907,8 +908,8 @@ return 0;
 int CompareResult(char *filename,char *prev_file)
 
 { int i;
-  char digest1[EVP_MAX_MD_SIZE+1];
-  char digest2[EVP_MAX_MD_SIZE+1];
+  unsigned char digest1[EVP_MAX_MD_SIZE+1];
+  unsigned char digest2[EVP_MAX_MD_SIZE+1];
   int  md_len1, md_len2;
   FILE *fp;
   int rtn = 0;

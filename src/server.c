@@ -1266,7 +1266,7 @@ switch (GetCommand(recvbuffer))
 
        if (plainlen < 0)
           {
-          DebugBinOut(conn->session_key,32,"Session key");
+          DebugBinOut((char *)conn->session_key,32,"Session key");
           CfOut(cf_error, "", "!! Bad decrypt (%d)",len);
           }
 

@@ -2052,7 +2052,7 @@ for (sp = ret; *sp != '\0'; sp++)
   
 strncpy(detox,CanonifyName(ret),CF_BUFSIZE-1);
 
-if (TM_PREFIX && strlen(TM_PREFIX) > 0)
+if (strlen(TM_PREFIX) > 0)
    {
    snprintf(ret,CF_BUFSIZE,"%s_%s",TM_PREFIX,detox);
    }
@@ -2581,7 +2581,7 @@ if (strlen(WEBDRIVER) == 0)
 if (strchr(topic,':'))
    {
    DeClassifyTopic(topic,ctopic,ctype);
-   if (ctype && strlen(ctype) > 0)
+   if (strlen(ctype) > 0)
       {
       snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a> (in %s)",WEBDRIVER,topic,ctopic,ctype);
       }
@@ -2629,7 +2629,7 @@ if (strchr(topic,':'))
    {
    DeClassifyTopic(topic,ctopic,ctype);
 
-   if (ctype && strlen(ctype) > 0)
+   if (strlen(ctype) > 0)
       {
       snprintf(url,CF_BUFSIZE,"%s?%s=%s",WEBDRIVER,webtype,topic);
       }

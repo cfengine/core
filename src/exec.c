@@ -64,7 +64,6 @@ extern struct BodySyntax CFEX_CONTROLBODY[];
 
 void StartServer(int argc,char **argv);
 int ScheduleRun(void);
-static char *timestamp(time_t stamp, char *buf, size_t len);
 void *LocalExec(void *scheduled_run);
 int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
 int CompareResult(char *filename,char *prev_file);
@@ -658,23 +657,6 @@ return false;
 }
 
 /*************************************************************************/
-
-static char *timestamp(time_t stamp, char *buf, size_t len)
-
-{ struct tm *ltime;
- 
-ltime = localtime(&stamp);
-snprintf(buf, len, "%04d-%02d-%02d--%02d-%02d-%02d",
-         ltime->tm_year+1900,
-         ltime->tm_mon+1,
-         ltime->tm_mday,
-         ltime->tm_hour,
-         ltime->tm_min,
-         ltime->tm_sec);
-return buf;
-}
-
-/**************************************************************/
 
 void *LocalExec(void *scheduled_run)
 

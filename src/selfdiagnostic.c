@@ -415,7 +415,7 @@ else
 
 void TestAgentPromises()
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
   struct Promise pp = {0};
 
 pp.conlist = NULL;

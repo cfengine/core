@@ -57,7 +57,7 @@ LocateFilePromiserGroup(pp->promiser,pp,VerifyStoragePromise);
 
 void VerifyStoragePromise(char *path,struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
   struct CfLock thislock;
 
 a = GetStorageAttributes(pp);

@@ -36,7 +36,7 @@
 
 void VerifyPackagesPromise(struct Promise *pp)
 
-{ struct Attributes a = {0},al = {0};
+{ struct Attributes a = {{0}},al = {{0}};
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
 
@@ -595,7 +595,7 @@ int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions actio
   struct CfPackageManager *pm;
   int size,estimated_size,retval = true,verify = false;
   char *command_string = NULL;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Promise *pp;
   int ok;       
 
@@ -841,7 +841,7 @@ int ExecutePatch(struct CfPackageManager *schedule,enum package_actions action)
   struct CfPackageManager *pm;
   int size,estimated_size,retval = true,verify = false;
   char *command_string = NULL;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Promise *pp;
 
 for (pm = schedule; pm != NULL; pm = pm->next)

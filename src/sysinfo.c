@@ -1889,7 +1889,7 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
 { int fd,len,i,j,first_address = false,ipdefault = false;
-  struct ifreq ifbuf[CF_IFREQ] = {0},ifr, *ifp;
+  struct ifreq ifbuf[CF_IFREQ] = {{{{0}}}},ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
   struct hostent *hp;

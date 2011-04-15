@@ -37,7 +37,7 @@
 void BeginAudit()
 
 { struct Promise dummyp = {0};
-  struct Attributes dummyattr = {0};
+  struct Attributes dummyattr = {{0}};
 
 if (THIS_AGENT_TYPE != cf_agent)
    {
@@ -58,7 +58,7 @@ void EndAudit()
   char *sp,rettype,string[CF_BUFSIZE];
   void *retval;
   struct Promise dummyp = {0};
-  struct Attributes dummyattr = {0};
+  struct Attributes dummyattr = {{0}};
 
 if (THIS_AGENT_TYPE != cf_agent)
    {

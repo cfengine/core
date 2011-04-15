@@ -34,7 +34,7 @@
 
 void VerifyMeasurementPromise(double *this,struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
 
 if (pp->done)
    {

@@ -36,7 +36,7 @@
 
 void VerifyServicesPromise(struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
 
 a = GetServicesAttributes(pp);
 

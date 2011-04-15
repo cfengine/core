@@ -36,7 +36,7 @@
 
 void VerifyInterfacesPromise(struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
 
 a = GetInterfacesAttributes(pp);
 VerifyInterface(a,pp);

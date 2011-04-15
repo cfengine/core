@@ -36,7 +36,7 @@
 
 struct Attributes GetFilesAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
  
 memset(&attr,0,sizeof(attr));
 
@@ -128,7 +128,7 @@ return attr;
 
 struct Attributes GetOutputsAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -142,7 +142,7 @@ return attr;
 
 struct Attributes GetReportsAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -155,7 +155,7 @@ return attr;
 
 struct Attributes GetEnvironmentsAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -168,7 +168,7 @@ return attr;
 
 struct Attributes GetServicesAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -181,7 +181,7 @@ return attr;
 
 struct Attributes GetPackageAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
  
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -193,7 +193,7 @@ return attr;
 
 struct Attributes GetDatabaseAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -218,7 +218,7 @@ return a;
 
 struct Attributes GetExecAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.contain = GetExecContainConstraints(pp);
 attr.havecontain = GetBooleanConstraint("contain",pp);
@@ -241,7 +241,7 @@ return attr;
 
 struct Attributes GetProcessAttributes(struct Promise *pp)
 
-{ static struct Attributes attr = {0};
+{ static struct Attributes attr = {{0}};
 
 attr.signals = GetListConstraint("signals",pp);
 attr.process_stop = (char *)GetConstraint("process_stop",pp,CF_SCALAR);
@@ -267,7 +267,7 @@ return attr;
 
 struct Attributes GetStorageAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.mount = GetMountConstraints(pp);
 attr.volume = GetVolumeConstraints(pp);
@@ -294,7 +294,7 @@ return attr;
 
 struct Attributes GetMethodAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.havebundle = GetBundleConstraint("usebundle",pp);
 
@@ -313,7 +313,7 @@ return attr;
 
 struct Attributes GetInterfacesAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.havetcpip = GetBundleConstraint("usebundle",pp);
 attr.tcpip = GetTCPIPAttributes(pp);
@@ -333,7 +333,7 @@ return attr;
 
 struct Attributes GetTopicsAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.fwd_name = GetConstraint("forward_relationship",pp,CF_SCALAR);
 attr.bwd_name = GetConstraint("backward_relationship",pp,CF_SCALAR);
@@ -346,7 +346,7 @@ return attr;
 
 struct Attributes GetInferencesAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.precedents = GetListConstraint("precedents",pp);
 attr.qualifiers = GetListConstraint("qualifers",pp);
@@ -357,7 +357,7 @@ return attr;
 
 struct Attributes GetOccurrenceAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.represents = GetListConstraint("represents",pp);
 attr.rep_type = GetConstraint("representation",pp,CF_SCALAR);
@@ -371,7 +371,7 @@ return attr;
 
 struct Attributes GetMeasurementAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.measure = GetMeasurementConstraint(pp);
     
@@ -1254,7 +1254,7 @@ printf(".....................................................\n\n");
 
 struct Attributes GetInsertionAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.havelocation = GetBooleanConstraint("location",pp);
 attr.location = GetLocationAttributes(pp);
@@ -1309,7 +1309,7 @@ return e;
 
 struct Attributes GetDeletionAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.not_matching = GetBooleanConstraint("not_matching",pp);
 
@@ -1334,7 +1334,7 @@ return attr;
 
 struct Attributes GetColumnAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.havecolumn = GetBooleanConstraint("edit_field",pp);
 attr.column = GetColumnConstraints(pp);
@@ -1357,7 +1357,7 @@ return attr;
 
 struct Attributes GetReplaceAttributes(struct Promise *pp)
 
-{ struct Attributes attr = {0};
+{ struct Attributes attr = {{0}};
 
 attr.havereplace = GetBooleanConstraint("replace_patterns",pp);
 attr.replace = GetReplaceConstraints(pp);

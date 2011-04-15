@@ -963,7 +963,7 @@ strncpy(s2,s1+2,strlen(s1)-3);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   char rtype,type = 'x',*sp = NULL;
   void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;

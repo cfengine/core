@@ -1162,7 +1162,7 @@ void DeleteTypeContext(enum typesequence type)
 
 { struct Rlist *rp;
   struct ServerItem *svp;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
  
 switch(type)
    {

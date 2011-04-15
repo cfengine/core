@@ -243,7 +243,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 void VerifyLineDeletions(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start);
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Item *begin_ptr,*end_ptr;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
@@ -294,7 +294,7 @@ YieldCurrentLock(thislock);
 void VerifyColumnEdits(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start);
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Item *begin_ptr,*end_ptr;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
@@ -361,7 +361,7 @@ YieldCurrentLock(thislock);
 void VerifyPatterns(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start);
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Item *begin_ptr,*end_ptr;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
@@ -418,7 +418,7 @@ void VerifyLineInsertions(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Item *begin_ptr,*end_ptr;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
   

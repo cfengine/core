@@ -38,7 +38,7 @@
 
 void VerifyReportPromise(struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
   struct CfLock thislock;
   struct Rlist *rp;
   char unique_name[CF_EXPANDSIZE];

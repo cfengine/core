@@ -210,7 +210,7 @@ cf_closedir(dirh);
 void VerifyFilePromise(char *path,struct Promise *pp)
 
 { struct stat osb,oslb,dsb;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct CfLock thislock;
   int exists,success,rlevel = 0;
 
@@ -609,7 +609,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
             }
          else if (S_ISDIR(sb.st_mode))
             {
-            struct Attributes purgeattr = {0};
+            struct Attributes purgeattr = {{0}};
             memset(&purgeattr,0,sizeof(purgeattr));
 
             /* Deletion is based on a files promise */
@@ -1337,7 +1337,7 @@ return true;
 
 void LoadSetuid(struct Attributes a,struct Promise *pp)
 
-{ struct Attributes b = {0};
+{ struct Attributes b = {{0}};
   char filename[CF_BUFSIZE];
 
 b = a;
@@ -1357,7 +1357,7 @@ if (!LoadFileAsItemList(&VSETUIDLIST,filename,b,pp))
 
 void SaveSetuid(struct Attributes a,struct Promise *pp)
 
-{ struct Attributes b = {0};
+{ struct Attributes b = {{0}};
   char filename[CF_BUFSIZE];
 
 b = a;

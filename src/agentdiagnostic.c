@@ -525,7 +525,7 @@ return n;
 
 int MyCreate(struct line_data *p)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
  char buf[CF_BUFSIZE];
  char file[CF_BUFSIZE];
 
@@ -564,7 +564,7 @@ int DoIt(struct line_data *p)
 
 { char buf[CF_EXPANDSIZE];
   char *pBuf = buf;
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   char file[CF_BUFSIZE];
  
 switch(p->action)

@@ -331,7 +331,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    switch (cp->type)
       {
       case CF_SCALAR:
-          if (bp = IsBody(BODIES,(char *)cp->rval))
+         if ((bp = IsBody(BODIES,(char *)cp->rval)))
              {
              ShowBody(bp,15);
              }
@@ -357,7 +357,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       case CF_FNCALL:
           fp = (struct FnCall *)cp->rval;
 
-          if (bp = IsBody(BODIES,fp->name))
+          if ((bp = IsBody(BODIES,fp->name)))
              {
              ShowBody(bp,15);
              }

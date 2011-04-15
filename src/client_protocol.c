@@ -43,6 +43,8 @@ int IdentifyAgent(int sd,char *localip,int family)
   char myaddr[256]; /* Compilation trick for systems that don't know ipv6 */
 #else
   struct sockaddr_in myaddr;
+  struct in_addr *iaddr;
+  struct hostent *hp;
 #endif
   
 memset(sendbuff,0,CF_BUFSIZE);

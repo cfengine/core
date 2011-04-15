@@ -978,13 +978,20 @@ return (*f == '.') || IsAbsoluteFileName(f);
 
 /*******************************************************************/
 
-int RootDirLength(char *f)
-
-  /* Return length of Initial directory in path - */
-
+static int UnixRootDirLength(char *f)
 {
-#ifdef NT
+if (IsFileSep(*f))
+   {
+   return 1;
+   }
 
+return 0;
+}
+
+#ifdef NT
+static int NTRootDirLength(char *f)
+{
+int len;
 if (IsFileSep(f[0]) && IsFileSep(f[1]))
    {
    /* UNC style path */
@@ -1023,15 +1030,23 @@ if (isalpha(f[0]) && f[1] == ':')
 
    return 2;  
    }
+
+return UnixRootDirLength(f);
+}
 #endif
 
-if (IsFileSep(*f))
-   {
-   return 1;
-   }
+int RootDirLength(char *f)
 
-return 0;
+  /* Return length of Initial directory in path - */
+
+{
+#ifdef NT
+return NTRootDirLength(f);
+#else
+return UnixRootDirLength(f);
+#endif
 }
+
 
 /*********************************************************************/
 /* TOOLKIT : String                                                  */

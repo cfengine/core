@@ -1540,14 +1540,14 @@ switch(policy)
                 {
                 if (*instVer == '\0')
 		   {
-                   instVer[0] == '*';
-                   instVer[1] == '\0';
+                   instVer[0] = '*';
+                   instVer[1] = '\0';
 		   }
                 
                 if (*instArch == '\0')
 		   {
-                   instArch[0] == '*';
-                   instArch[1] == '\0';
+                   instArch[0] = '*';
+                   instArch[1] = '\0';
 		   }
                 
                 SetNewScope("cf_pack_context");

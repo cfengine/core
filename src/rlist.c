@@ -731,7 +731,6 @@ splitlist = SplitStringAsRList(string,',');
 
 for (rp =  splitlist; rp != NULL; rp = rp->next)
    {
-   value[0];
    sscanf(rp->item,"%*[{ '\"]%255[^'\"]",value);
    AppendRlist(&newlist,value,CF_SCALAR);
    }

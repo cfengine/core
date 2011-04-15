@@ -55,10 +55,13 @@ else
 /* We assume that s is at least MAX_FILENAME large.
  * MapName() is thread-safe, but the argument is modified. */
 
-char *MapName(char *s)
-
-{
 #ifdef NT
+char *MapName(char *s)
+{
+char buffer[CF_BUFSIZE];
+char *spto;
+char *spf;
+
 memset(buffer,0,CF_BUFSIZE);
 
 if (UseUnixStandard(s))
@@ -125,10 +128,15 @@ else
 memset(s,0,MAX_FILENAME);
 strncpy(s,buffer,MAX_FILENAME-1);
 
-#endif  /* NT */
-
 return s;
 }
+#else
+char *MapName(char *s)
+{
+return s;
+}
+
+#endif  /* NT */
 
 /*********************************************************/
 

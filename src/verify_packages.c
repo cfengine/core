@@ -1995,7 +1995,7 @@ else
 if (result != false)
    {
    for (rp_1 = numbers_1,rp_2 = numbers_2;
-        rp_1 != NULL & rp_2 != NULL;
+        rp_1 != NULL && rp_2 != NULL;
         rp_1= rp_1->next,rp_2=rp_2->next)
       {
       switch (cmp)

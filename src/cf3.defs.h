@@ -39,8 +39,6 @@
 #undef VERSION
 #undef Verbose
 
-#define CF3_REVISION "$Rev$"
-
 #include "conf.h"
 
 #ifndef NGROUPS

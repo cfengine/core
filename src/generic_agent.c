@@ -1752,18 +1752,7 @@ printf(".pp\nThis software is Copyright (C) 2008- Cfengine AS.\n");
 void Version(char *component)
 
 {
-char vStr[CF_SMALLBUF];
-
-if (INFORM || VERBOSE)
-  {
-  snprintf(vStr,sizeof(vStr),"%s (%s)",VERSION,CF3_REVISION);
-  }
-else
-  {
-  snprintf(vStr,sizeof(vStr),"%s",VERSION);
-  }
-
-printf("This comprises %s core community version %s - Copyright %s%s\n",component,vStr,CF3COPYRIGHT,VYEAR);
+printf("This comprises %s core community version %s - Copyright %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
 EnterpriseVersion();
 }
 

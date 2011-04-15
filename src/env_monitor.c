@@ -112,7 +112,7 @@ void OpenSniffer(void);
 void Sniff(void);
 
 void GatherProcessData (void);
-void GatherCPUData (void);
+void GatherCPUData (double *CF_THIS);
 void GatherDiskData (void);
 void GatherLoadData (void);
 void GatherSocketData (void);
@@ -486,7 +486,7 @@ ENTROPIES = NULL;
 ZeroArrivals();
 
 GatherProcessData();
-GatherCPUData();
+GatherCPUData(CF_THIS);
 #ifndef MINGW
 GatherLoadData(); 
 GatherDiskData();
@@ -2377,7 +2377,7 @@ return true;
 
 /*****************************************************************************/
 
-void GatherCPUData()
+void GatherCPUData(double *CF_THIS)
 
 { double q,dq;
   char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];

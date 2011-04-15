@@ -541,6 +541,11 @@ void AddPrefixedClasses(char *name,char *classlist);
 int IsHardClass (char *sp);
 void SaveClassEnvironment(void);
 
+/* env_monitor.c */
+
+void MonInitialize(void);
+void StartServer (int argc, char **argv);
+
 /* evalfunction.c */
 
 struct Rval FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs);

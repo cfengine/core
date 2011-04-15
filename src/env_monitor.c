@@ -99,9 +99,6 @@ long LASTT[CF_OBSERVABLES];
 /* Prototypes                                                      */
 /*******************************************************************/
 
-void MonInitialize(void);
-void StartServer (int argc, char **argv);
-
 void GetDatabaseAge (void);
 void LoadHistogram  (void);
 void GetQ (void);
@@ -145,7 +142,7 @@ void Unix_GatherProcessData (void);
 
 /****************************************************************/
 
-void MonInitialize()
+void MonInitialize(void)
    
 { int i,j,k;
  struct stat statbuf;

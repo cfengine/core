@@ -1976,7 +1976,7 @@ for (rp_1 = separators_1,rp_2 = separators_2; rp_1 != NULL && rp_2 != NULL; rp_1
       break;
       }
 
-   if (rp_1->next != NULL && rp_2->next == NULL || rp_1->next == NULL && rp_2->next != NULL)
+   if ((rp_1->next != NULL && rp_2->next == NULL) || (rp_1->next == NULL && rp_2->next != NULL))
       {
       result = false;
       break;

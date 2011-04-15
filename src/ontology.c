@@ -145,7 +145,7 @@ if ((texist = AssociationExists(*list,fwd_name,bwd_name,verify)) == NULL)
       FatalError("");
       }
    
-   if (fwd_context && (ta->fwd_context = strdup(fwd_context)) == NULL)
+   if ((ta->fwd_context = strdup(fwd_context)) == NULL)
       {
       CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
       FatalError("");

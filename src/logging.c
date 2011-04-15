@@ -336,7 +336,7 @@ else
 
 newaudit.status = status;
 
-if (AUDITDBP && attr.transaction.audit || AUDITDBP && AUDIT)
+if (AUDITDBP && (attr.transaction.audit || AUDIT))
    {
    WriteDB(AUDITDBP,key,&newaudit,sizeof(newaudit));
    }

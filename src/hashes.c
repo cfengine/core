@@ -362,7 +362,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
 
            state = (struct Rlist *)(cplist->rval);
 
-           if (rp->state_ptr == NULL || rp->state_ptr && rp->state_ptr->type == CF_FNCALL)
+           if (rp->state_ptr == NULL || rp->state_ptr->type == CF_FNCALL)
               {
               /* Unexpanded function, or blank variable must be skipped.*/
               return;

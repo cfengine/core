@@ -1758,8 +1758,8 @@ if ((fp = fopen("/proc/vmware/version","r")) != NULL)
 
 /* Fall back to checking for other files */
 
-if (sufficient < 1 && ((fp = fopen("/etc/vmware-release","r")) != NULL) ||
-    (fp = fopen("/etc/issue","r")) != NULL)
+if (sufficient < 1 && (((fp = fopen("/etc/vmware-release","r")) != NULL) ||
+    (fp = fopen("/etc/issue","r")) != NULL))
    {
    CfReadLine(buffer,CF_BUFSIZE,fp);
    Chop(buffer);

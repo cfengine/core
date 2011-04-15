@@ -298,7 +298,7 @@ return ExpandPrivateScalar(CONTEXTID,string,buffer);
 int ExpandThis(enum cfreport level,char *string,char buffer[CF_EXPANDSIZE])
 
 {
-if (level == cf_error || (strstr(string,"$(this.") == 0) && (strstr(string,"${this.") == 0))
+if (level == cf_error || ((strstr(string,"$(this.") == 0) && (strstr(string,"${this.") == 0)))
    {
    strncpy(buffer,string,CF_EXPANDSIZE-1);
    return true;

@@ -73,7 +73,20 @@ struct BodySyntax CF_TOPICS_BODIES[] =
    {
    {"association",cf_body,CF_RELATE_BODY,"Declare associated topics"},
    {"synonyms",cf_slist,"","A list of words to be treated as equivalents in the defined context"},
-   {"comment",cf_str,"","Retained comment about this promise's real intention"},
+   {"generalizations",cf_slist,"","A list of words to be treated as super-sets for the current topic, used when reasoning"},
+   {NULL,cf_notype,NULL,NULL}
+   };
+
+/***************************************************************/
+
+struct BodySyntax CF_THING_BODIES[] =
+   {
+   {"is_part_of",cf_slist,"","Special fixed relation for describing topics that are things"},
+   {"determines",cf_slist,"","Special fixed relation for describing topics that are things"},
+   {"uses",cf_slist,"","Special fixed relation for describing topics that are things"},
+   {"provides",cf_slist,"","Special fixed relation for describing topics that are things"},
+   {"belongs_to",cf_slist,"","Special fixed relation for describing topics that are things"},
+   {"affects",cf_slist,"","Special fixed relation for describing topics that are things"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -93,6 +106,7 @@ struct BodySyntax CF_INFER_BODIES[] =
 struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
   {"knowledge","topics",CF_TOPICS_BODIES},
+  {"knowledge","things",CF_THING_BODIES},
   {"knowledge","occurrences",CF_OCCUR_BODIES},
   {"knowledge","inferences",CF_INFER_BODIES},
   {NULL,NULL,NULL},

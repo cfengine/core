@@ -109,21 +109,22 @@ return tp;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *associates,int verify)
+void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *passociates,int ok_to_add_inverse)
 
 { struct TopicAssociation *ta = NULL,*texist;
   char fwd_context[CF_MAXVARSIZE];
-  struct Rlist *rp;
+  struct Rlist *rp,*rpc;
+  struct Topic *new_tp;
 
 strncpy(fwd_context,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
 
-if (associates == NULL || associates->item == NULL)
+if (passociates == NULL || passociates->item == NULL)
    {
    CfOut(cf_error," !! A topic must have at least one associate in association %s",fwd_name);
    return;
    }
 
-if ((texist = AssociationExists(*list,fwd_name,bwd_name,verify)) == NULL)
+if ((texist = AssociationExists(*list,fwd_name,bwd_name)) == NULL)
    {
    if ((ta = (struct TopicAssociation *)malloc(sizeof(struct TopicAssociation))) == NULL)
       {
@@ -163,11 +164,39 @@ else
 
 /* Association now exists, so add new members */
 
-for (rp = associates; rp != NULL; rp=rp->next)
+// First make sure topics pointed to exist so that they can point to us also
+
+for (rp = passociates; rp != NULL; rp=rp->next)
    {
-   IdempPrependRScalar(&(ta->associates),NormalizeTopic(rp->item),rp->type);
-   CfOut(cf_verbose,""," --> Adding associate '%s'",rp->item);
-   IdempInsertTopic(rp->item);
+   char normalform[CF_BUFSIZE] = {0};
+
+   strncpy(normalform,NormalizeTopic(rp->item),CF_BUFSIZE-1);
+   new_tp = IdempInsertTopic(rp->item);
+
+   if (ok_to_add_inverse)
+      {
+      CfOut(cf_verbose,""," --> Adding '%s' with id %d as an associate of '%s'",normalform,new_tp->id,this_tp->topic_name);
+      }
+   else
+      {
+      CfOut(cf_verbose,""," ---> Reverse '%s' with id %d as an associate of '%s' (inverse)",normalform,new_tp->id,this_tp->topic_name);
+      }
+
+   if (!IsItemIn(ta->associates,normalform))
+      {
+      PrependFullItem(&(ta->associates),normalform,NULL,new_tp->id,0);
+      }
+   
+   if (ok_to_add_inverse)
+      {
+      char rev[CF_BUFSIZE];
+      struct Rlist *rlist = 0;
+      snprintf(rev,CF_BUFSIZE-1,"%s::%s",this_tp->topic_context,this_tp->topic_name);
+      PrependRScalar(&rlist,rev,CF_SCALAR);
+      AddTopicAssociation(new_tp,&(new_tp->associations),bwd_name,fwd_name,rlist,false);
+      DeleteRlist(rlist);
+      }
+       
    CF_EDGES++;
    }
 }
@@ -281,6 +310,11 @@ else
    {
    strncpy(topic,classified_topic,CF_MAXVARSIZE-1);
    }
+
+if (strlen(context) == 0)
+   {
+   strcpy(context,"any");
+   }
 }
 
 /*********************************************************************/
@@ -307,6 +341,11 @@ else if (strstr(classified_topic,"."))
 else
    {
    strncpy(topic,classified_topic,CF_MAXVARSIZE-1);
+   }
+
+if (strlen(context) == 0)
+   {
+   strcpy(context,"any");
    }
 }
 
@@ -417,21 +456,14 @@ return NULL;
 
 /*****************************************************************************/
 
-struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd,int verify)
+struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd)
 
 { struct TopicAssociation *ta;
   int yfwd = false,ybwd = false;
   enum cfreport level;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
 
-if (verify)
-   {
-   level = cf_error;
-   }
-else
-   {
-   level = cf_verbose;
-   }
+level = cf_verbose;
 
 if (fwd == NULL || (fwd && strlen(fwd) == 0))
    {
@@ -448,7 +480,7 @@ for (ta = list; ta != NULL; ta=ta->next)
    {
    if (fwd && (strcmp(fwd,ta->fwd_name) == 0))
       {
-      CfOut(cf_verbose,"","Association %s exists already\n",fwd);
+      CfOut(cf_verbose,"","Association '%s' exists already\n",fwd);
       yfwd = true;
       }
    else if (fwd && ta->fwd_name)
@@ -473,7 +505,7 @@ for (ta = list; ta != NULL; ta=ta->next)
 
    if (bwd && (strcmp(bwd,ta->bwd_name) == 0))
       {
-      CfOut(cf_verbose,""," ! Association %s exists already\n",bwd);
+      CfOut(cf_verbose,""," ! Association '%s' exists already\n",bwd);
       ybwd = true;
       }
    else if (bwd && ta->bwd_name)

@@ -200,38 +200,34 @@ return false;
 
 struct Item *IdempPrependItem(struct Item **liststart,char *itemstring,char *classes)
 
-{
-  struct Item *ip;
+{ struct Item *ip;
 
-  ip = ReturnItemIn(*liststart,itemstring);
+ip = ReturnItemIn(*liststart,itemstring);
 
-  if(ip)
-    {
-    return ip;
-    }
+if (ip)
+   {
+   return ip;
+   }
 
- PrependItem(liststart,itemstring,classes);
-
- return *liststart;
+PrependItem(liststart,itemstring,classes);
+return *liststart;
 }
 
 /*********************************************************************/
 
 struct Item *IdempPrependItemClass(struct Item **liststart,char *itemstring,char *classes)
 
-{
-  struct Item *ip;
+{ struct Item *ip;
 
-  ip = ReturnItemInClass(*liststart,itemstring,classes);
+ip = ReturnItemInClass(*liststart,itemstring,classes);
 
-  if(ip)  // already exists
-    {
-    return ip;
-    }
+if (ip)  // already exists
+   {
+   return ip;
+   }
 
-  PrependItem(liststart,itemstring,classes);
-
-  return *liststart;
+PrependItem(liststart,itemstring,classes);
+return *liststart;
 }
 
 
@@ -266,7 +262,7 @@ if (!IsItemIn(*liststart,itemstring))
 
 /*********************************************************************/
 
-struct Item * PrependItem(struct Item **liststart,char *itemstring,char *classes)
+struct Item *PrependItem(struct Item **liststart,char *itemstring,char *classes)
 
 { struct Item *ip;
   char *sp,*spe = NULL;
@@ -1042,7 +1038,14 @@ void DebugListItemList(struct Item *liststart)
 
 for (ptr = liststart; ptr != NULL; ptr=ptr->next)
    {
-   printf("CFDEBUG: [%s]\n",ptr->name);
+   if (ptr->classes)
+      {
+      printf("CFDEBUG: %s::[%s]\n",ptr->classes,ptr->name);
+      }
+   else
+      {
+      printf("CFDEBUG: [%s]\n",ptr->name);
+      }
    }
 }
 

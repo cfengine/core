@@ -491,7 +491,6 @@ enum cfeditorder
 // Put this here now for caching efficiency
 
 #define NOVA_SOFTWARE_INSTALLED "software_packages.csv"
-#define NOVA_SYNONYM "has synonym"
 
 /*************************************************************************/
 
@@ -1216,7 +1215,7 @@ struct Topic
    char *topic_context;
    char *topic_name;
    double evc;
-   struct Rlist *synonyms;
+   struct Item *synonyms;
    struct TopicAssociation *associations;
    struct Topic *next;
    };
@@ -1226,7 +1225,7 @@ struct TopicAssociation
    char *fwd_context;
    char *fwd_name;
    char *bwd_name;
-   struct Rlist *associates;
+   struct Item *associates;
    char *bwd_context;
    struct TopicAssociation *next;
    };
@@ -1843,6 +1842,7 @@ struct Attributes
    struct Rlist *associates;
    struct Rlist *represents;
    struct Rlist *synonyms;
+   struct Rlist *general;
    char *rep_type;
    char *path_root;
    char *web_root;

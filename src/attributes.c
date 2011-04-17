@@ -339,6 +339,7 @@ attr.fwd_name = GetConstraint("forward_relationship",pp,CF_SCALAR);
 attr.bwd_name = GetConstraint("backward_relationship",pp,CF_SCALAR);
 attr.associates = GetListConstraint("associates",pp);
 attr.synonyms = GetListConstraint("synonyms",pp);
+attr.general = GetListConstraint("generalizations",pp);
 return attr;
 }
 

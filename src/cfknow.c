@@ -222,13 +222,6 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
 
       case 's':
           strcpy(TOPIC_CMD,optarg);
-          {
-          char buffer[CF_BUFSIZE];
-
-          Nova_ScanLeadsAssociations(2,buffer,CF_BUFSIZE);
-          printf("GOT1 %s\n",buffer);
-          }
-          CfGenerateStories(TOPIC_CMD);
           exit(0);
           break;
           

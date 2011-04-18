@@ -395,6 +395,7 @@ struct Item *VDELCLASSES = NULL;
 struct Rlist *PRIVCLASSHEAP = NULL;
 
 struct Rlist *GOALS = NULL;
+struct Rlist *GOALCATEGORIES = NULL;
 
 /*******************************************************************/
 /*                                                                 */

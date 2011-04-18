@@ -364,6 +364,7 @@ enum cfkcontrol
    cfk_genman,
    cfk_graph_dir,
    cfk_graph_output,
+   cfk_goalcategories,
    cfk_goalpatterns,
    cfk_htmlbanner,
    cfk_htmlfooter,

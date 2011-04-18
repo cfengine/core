@@ -222,6 +222,20 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
 
       case 's':
           strcpy(TOPIC_CMD,optarg);
+          {
+          char buffer[CF_BUFSIZE];
+
+          ThisAgentInit();
+          Nova_ScanLeadsAssociations(2,buffer,CF_BUFSIZE);
+          printf("GOT1 %s\n",buffer);
+          Nova_ScanOccurrences(2,buffer,CF_BUFSIZE);
+          printf("----OCCUR----\n %s\n",buffer);
+          }
+
+          struct Item *n = Nova_GetUniqueBusinessGoals();
+          DebugListItemList(n);
+          CfGenerateStories(TOPIC_CMD);
+          
           exit(0);
           break;
           
@@ -287,6 +301,7 @@ strcpy(GRAPHDIR,"");
 SHOWREPORTS = false;
 
 PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
+PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
 
 if (InsertTopic("any","any"))
    {
@@ -342,7 +357,14 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET goal_patterns list\n");
       continue;
       }
-   
+
+   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_goalcategories].lval) == 0)
+      {
+      GOALCATEGORIES = (struct Rlist *)retval;
+      CfOut(cf_verbose,"","SET goal_categories list\n");
+      continue;
+      }
+
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
       {
       SQL_TYPE = Str2dbType(retval);
@@ -730,12 +752,6 @@ void VerifyOccurrencePromises(struct Promise *pp)
 
 a = GetOccurrenceAttributes(pp);
 
-if (a.represents == NULL)
-   {
-   CfOut(cf_error,""," ! Occurrence \"%s\" (type) promises no topics");
-   return;
-   }
-
 if (a.rep_type)
    {
    rep_type = String2Representation(a.rep_type);
@@ -743,6 +759,19 @@ if (a.rep_type)
 else
    {
    rep_type = cfk_url;
+   }
+
+if (a.represents == NULL)
+   {
+   if (rep_type == cfk_literal)
+      {
+      CfOut(cf_error,""," ! Occurrence of text information \"%s\" does not promise any topics to represent",pp->promiser);
+      }
+   else
+      {
+      CfOut(cf_error,""," ! Occurrence or reference to information \"%s\" does not promise any topics to represent",pp->promiser);
+      }
+   return;
    }
 
 contexts = SplitContextExpression(pp->classes,pp);

@@ -166,6 +166,7 @@ struct BodyDefault BODY_DEFAULT[] =
    {"copy_size","any size range"},
    {"stealth","false"},
    {"fips_mode","false"},
+   {"select_class","random_selection"},
    {NULL,NULL},
    };
 

@@ -221,6 +221,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
           break;
 
       case 's':
+#ifdef HAVE_NOVA
           strcpy(TOPIC_CMD,optarg);
           {
           char buffer[CF_BUFSIZE];
@@ -235,7 +236,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
           struct Item *n = Nova_GetUniqueBusinessGoals();
           DebugListItemList(n);
           CfGenerateStories(TOPIC_CMD);
-          
+#endif
           exit(0);
           break;
           

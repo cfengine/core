@@ -493,6 +493,52 @@ enum cfeditorder
 
 #define NOVA_SOFTWARE_INSTALLED "software_packages.csv"
 
+#define KM_PARTOF_CERT_F "is a part of"
+#define KM_PARTOF_CERT_B "has a part"
+#define KM_DETERMINES_CERT_F "determines"
+#define KM_DETERMINES_CERT_B "is determined by"
+#define KM_USES_CERT_F "uses"
+#define KM_USES_CERT_B "is used by"
+#define KM_PROVIDES_CERT_F "provides"
+#define KM_PROVIDES_CERT_B "is provided by"
+#define KM_BELONGS_CERT_F "belongs to"
+#define KM_BELONGS_CERT_B "owns"
+#define KM_AFFECTS_CERT_F "affects"
+#define KM_AFFECTS_CERT_B "is affected by"
+
+#define KM_PARTOF_POSS_F "can be a part of"
+#define KM_PARTOF_POSS_B "can have a part"
+#define KM_DETERMINES_POSS_F "can determine"
+#define KM_DETERMINES_POSS_B "can be determined by"
+#define KM_USES_POSS_F "can use"
+#define KM_USES_POSS_B "can be used by"
+#define KM_PROVIDES_POSS_F "can provide"
+#define KM_PROVIDES_POSS_B "can be provided by"
+#define KM_BELONGS_POSS_F "can belong to"
+#define KM_BELONGS_POSS_B "can own"
+#define KM_AFFECTS_POSS_F "can affect"
+#define KM_AFFECTS_POSS_B "can be affected by"
+
+#define KM_PARTOF_UNCERT_F "might be a part of"
+#define KM_PARTOF_UNCERT_B "might have a part"
+#define KM_DETERMINES_UNCERT_F "might determine"
+#define KM_DETERMINES_UNCERT_B "might be determined by"
+#define KM_USES_UNCERT_F "might use"
+#define KM_USES_UNCERT_B "might be used by"
+#define KM_PROVIDES_UNCERT_F "might provide"
+#define KM_PROVIDES_UNCERT_B "might be provided by"
+#define KM_BELONGS_UNCERT_F "might belong to"
+#define KM_BELONGS_UNCERT_B "might own"
+#define KM_AFFECTS_UNCERT_F "might affect"
+#define KM_AFFECTS_UNCERT_B "might be affected by"
+
+enum knowledgecertainty
+   {
+   cfk_certain,
+   cfk_uncertain,
+   cfk_possible
+   };
+
 /*************************************************************************/
 
 struct BodySyntax

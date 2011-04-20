@@ -345,6 +345,154 @@ return attr;
 
 /*******************************************************************/
 
+struct Attributes GetThingsAttributes(struct Promise *pp)
+
+{ struct Attributes attr = {{0}};
+  struct Rlist *rp;
+  char *cert = GetConstraint("certainty",pp,CF_SCALAR);
+  enum knowledgecertainty certainty;
+  
+if (strcmp(cert,"possible") == 0)
+   {
+   certainty = cfk_possible;
+   }
+else if (strcmp(cert,"uncertain") == 0)
+   {
+   certainty = cfk_uncertain;
+   }
+else
+   {
+   certainty = cfk_certain;
+   }
+
+// Select predefined physics
+
+if (rp = GetConstraint("is_part_of",pp,CF_SCALAR))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_PARTOF_CERT_F;
+          attr.bwd_name = KM_PARTOF_CERT_B;
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_PARTOF_UNCERT_F;
+          attr.bwd_name = KM_PARTOF_UNCERT_B;
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_PARTOF_POSS_F;
+          attr.bwd_name = KM_PARTOF_POSS_B;
+          break;
+      }
+
+   attr.associates = rp;
+   }
+else if (rp = GetConstraint("determines",pp,CF_SCALAR))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_DETERMINES_CERT_F;
+          attr.bwd_name = KM_DETERMINES_CERT_B;
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_DETERMINES_UNCERT_F;
+          attr.bwd_name = KM_DETERMINES_UNCERT_B;
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_DETERMINES_POSS_F;
+          attr.bwd_name = KM_DETERMINES_POSS_B;
+          break;
+      }
+
+   attr.associates = rp;
+   }
+else if (rp =GetConstraint("uses",pp,CF_SCALAR))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_USES_CERT_F;
+          attr.bwd_name = KM_USES_CERT_B;
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_USES_UNCERT_F;
+          attr.bwd_name = KM_USES_UNCERT_B;
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_USES_POSS_F;
+          attr.bwd_name = KM_USES_POSS_B;
+          break;
+      }
+
+   attr.associates = rp;
+   }
+else if (rp = GetConstraint("provides",pp,CF_SCALAR))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_PROVIDES_CERT_F;
+          attr.bwd_name = KM_PROVIDES_CERT_B;   
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_PROVIDES_UNCERT_F;
+          attr.bwd_name = KM_PROVIDES_UNCERT_B;   
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_PROVIDES_POSS_F;
+          attr.bwd_name = KM_PROVIDES_POSS_B;   
+          break;
+      }
+
+   attr.associates = rp;
+   }
+else if (rp = GetConstraint("belongs_to",pp,CF_SCALAR))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_BELONGS_CERT_F;
+          attr.bwd_name = KM_BELONGS_CERT_B;   
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_BELONGS_UNCERT_F;
+          attr.bwd_name = KM_BELONGS_UNCERT_B;   
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_BELONGS_POSS_F;
+          attr.bwd_name = KM_BELONGS_POSS_B;   
+          break;
+      }
+
+   attr.associates = rp;
+   }
+else if (rp = GetConstraint("affects",pp,CF_SCALAR))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_AFFECTS_CERT_F;
+          attr.bwd_name = KM_AFFECTS_CERT_B;   
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_AFFECTS_UNCERT_F;
+          attr.bwd_name = KM_AFFECTS_UNCERT_B;   
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_AFFECTS_POSS_F;
+          attr.bwd_name = KM_AFFECTS_POSS_B;   
+          break;
+      }
+
+   attr.associates = rp;
+   }
+
+return attr;
+}
+
+/*******************************************************************/
+
 struct Attributes GetInferencesAttributes(struct Promise *pp)
 
 { struct Attributes attr = {{0}};

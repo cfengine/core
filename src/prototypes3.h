@@ -104,6 +104,7 @@ struct Attributes GetProcessAttributes(struct Promise *pp);
 struct Attributes GetStorageAttributes(struct Promise *pp);
 struct Attributes GetClassContextAttributes(struct Promise *pp);
 struct Attributes GetTopicsAttributes(struct Promise *pp);
+struct Attributes GetThingsAttributes(struct Promise *pp);
 struct Attributes GetInferencesAttributes(struct Promise *pp);
 struct Attributes GetOccurrenceAttributes(struct Promise *pp);
 struct Attributes GetPackageAttributes(struct Promise *pp);

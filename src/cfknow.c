@@ -46,6 +46,7 @@ void ThisAgentInit(void);
 void KeepKnowControlPromises(void);
 void KeepKnowledgePromise(struct Promise *pp);
 void VerifyTopicPromise(struct Promise *pp);
+void VerifyThingsPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyInferencePromise(struct Promise *pp);
 void WriteKMDB(void);
@@ -602,6 +603,12 @@ if (strcmp("inferences",pp->agentsubtype) == 0)
    return;
    }
 
+if (strcmp("things",pp->agentsubtype) == 0)
+   {
+   VerifyThingsPromise(pp);
+   return;
+   }
+
 if (strcmp("topics",pp->agentsubtype) == 0)
    {
    VerifyTopicPromise(pp);
@@ -664,6 +671,76 @@ for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
       AddInference(&INFERENCES,pp->promiser,rpp->item,rpq->item);
       }
    }
+}
+
+/*********************************************************************/
+
+void VerifyThingsPromise(struct Promise *pp)
+
+{ char id[CF_BUFSIZE];
+  struct Attributes a = {0};
+  struct Topic *tp = NULL, *otp;
+  struct Rlist *rp,*rps,*contexts;
+  char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
+
+a = GetThingsAttributes(pp);
+
+CfOut(cf_verbose,""," -> Attempting to install thing-topic %s::%s \n",pp->classes,pp->promiser);
+
+// Add a standard reserved word
+
+contexts = SplitContextExpression(pp->classes,pp);
+
+for (rp = contexts; rp != NULL; rp = rp->next)
+   {
+   if ((tp = InsertTopic(pp->promiser,rp->item)) == NULL)
+      {
+      return;
+      }
+
+   CfOut(cf_verbose,""," -> New topic promise for \"%s\" about context \"%s\"",pp->promiser,rp->item);
+   
+   if (a.fwd_name && a.bwd_name)
+      {
+      AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+      }
+
+   // Handle all synonyms as associations
+   
+   if (handle)
+      {
+      char synonym[CF_BUFSIZE];
+      snprintf(synonym,CF_BUFSIZE-1,"handles::%s",handle);
+      otp = IdempInsertTopic(synonym);
+      PrependFullItem(&(tp->synonyms),otp->topic_name,NULL,otp->id,0);      
+      }
+   
+   // Treat comments as occurrences of information.
+
+   if (pp->ref)
+      {
+      struct Rlist *list = NULL;
+      snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
+      PrependRScalar(&list,"description",CF_SCALAR);
+      AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
+      DeleteRlist(list);
+      }
+   
+   if (handle)
+      {
+      struct Rlist *list = NULL;
+      PrependRScalar(&list,handle,CF_SCALAR);
+      AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true);
+      DeleteRlist(list);
+      list = NULL;
+      snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,handle);
+      PrependRScalar(&list,"description",CF_SCALAR);
+      AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
+      DeleteRlist(list);
+      }
+   }
+
+DeleteRlist(contexts);
 }
 
 /*********************************************************************/

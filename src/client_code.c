@@ -1380,7 +1380,9 @@ return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
 { int res;
   long arg;
   struct sockaddr_in emptyCin = {0};
+#ifdef LINUX
   struct timeval tvRecv = {0};
+#endif
 
   if (!cinp)
      {

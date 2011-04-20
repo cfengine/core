@@ -32,14 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-enum cfknow_image
-   {
-   cf_no_image,
-   cf_full_image,
-   cf_impact_image,
-   cf_special_quote
-   };
-
 int main (int argc,char *argv[]);
 void CheckOpts(int argc,char **argv);
 void ThisAgentInit(void);
@@ -50,8 +42,6 @@ void VerifyThingsPromise(struct Promise *pp);
 void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyInferencePromise(struct Promise *pp);
 void WriteKMDB(void);
-char *NextTopic(char *link,char* type);
-char *NextMap(char *topic,char *type,enum cfknow_image imgtype);
 void GenerateManual(void);
 void CfGenerateStories(char *query);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
@@ -66,6 +56,7 @@ extern struct BodySyntax CFK_CONTROLBODY[];
 enum typesequence
    {
    kp_classes,
+   kp_things,
    kp_topics,
    kp_occur,
    kp_reports,
@@ -75,6 +66,7 @@ enum typesequence
 char *TYPESEQUENCE[] =
    {
    "classes",
+   "things",
    "topics",
    "occurrences",
    "reports",
@@ -86,9 +78,6 @@ char TOPIC_CMD[CF_MAXVARSIZE];
 
 int HTML = false;
 int WRITE_KMDB = false;
-int ISREGEX = false;
-int SHOWMAP = cf_no_image;
-int GRAPH = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
 int PASS;
@@ -224,18 +213,6 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
       case 's':
 #ifdef HAVE_NOVA
           strcpy(TOPIC_CMD,optarg);
-          {
-          char buffer[CF_BUFSIZE];
-
-          ThisAgentInit();
-          Nova_ScanLeadsAssociations(2,buffer,CF_BUFSIZE);
-          printf("GOT1 %s\n",buffer);
-          Nova_ScanOccurrences(2,buffer,CF_BUFSIZE);
-          printf("----OCCUR----\n %s\n",buffer);
-          }
-
-          struct Item *n = Nova_GetUniqueBusinessGoals();
-          DebugListItemList(n);
           CfGenerateStories(TOPIC_CMD);
 #endif
           exit(0);
@@ -970,88 +947,4 @@ CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 
 DeleteRlist((struct Rlist *)retval.item);
 }
-
-/*********************************************************************/
-/* Referrals                                                         */
-/*********************************************************************/
-
-char *NextTopic(char *topic,char *type)
-
-{ static char url[CF_BUFSIZE];
-  char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
-  
-if (strlen(WEBDRIVER) == 0)
-   {
-   CfOut(cf_error,""," !! No query_engine is defined\n");
-   exit(1);
-   }
-
-if (strchr(topic,':'))
-   {
-   DeClassifyTopic(topic,ctopic,ctype);
-   if (ctype && strlen(ctype) > 0)
-      {
-      snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s\">%s</a> (in %s)",WEBDRIVER,topic,ctopic,ctype);
-      }
-   else
-      {
-      snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s::%s\">%s</a>",WEBDRIVER,type,topic,topic);
-      }
-   }
-else
-   {
-   snprintf(url,CF_BUFSIZE,"<a href=\"%s?next=%s::%s\">%s</a>",WEBDRIVER,type,topic,topic);
-   }
-
-return url;
-}
-
-/*********************************************************************/
-
-char *NextMap(char *topic,char *type,enum cfknow_image imgtype)
-
-{ static char url[CF_BUFSIZE];
-  char ctopic[CF_MAXVARSIZE],ctype[CF_MAXVARSIZE];
-  char *webtype;
-
-switch(imgtype)
-   {
-   case cf_special_quote:
-       webtype = "quote";
-       break;
-   case cf_impact_image:
-       webtype = "map2";
-       break;
-   default:
-       webtype = "map1";
-       break;
-   }
-
-if (strlen(WEBDRIVER) == 0)
-   {
-   CfOut(cf_error,""," !! No query_engine is defined\n");
-   exit(1);
-   }
-
-if (strchr(topic,':'))
-   {
-   DeClassifyTopic(topic,ctopic,ctype);
-
-   if (ctype && strlen(ctype) > 0)
-      {
-      snprintf(url,CF_BUFSIZE,"%s?%s=%s",WEBDRIVER,webtype,topic);
-      }
-   else
-      {
-      snprintf(url,CF_BUFSIZE,"%s?%s=%s::%s",WEBDRIVER,webtype,type,topic);
-      }
-   }
-else
-   {
-   snprintf(url,CF_BUFSIZE,"%s?%s=%s::%s",WEBDRIVER,webtype,type,topic);
-   }
-
-return url;
-}
-
 

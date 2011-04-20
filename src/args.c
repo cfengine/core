@@ -237,7 +237,7 @@ if (argnum != RlistLen(realargs))
    snprintf(output,CF_BUFSIZE,"Argument template mismatch handling function %s(",fp->name);
    ReportError(output);
    ShowRlist(stderr,realargs);
-   fprintf(stderr,")\n",fp->name);
+   fprintf(stderr,")\n");
 
    for (i = 0, rp = realargs; i < argnum; i++)
       {

@@ -20,7 +20,7 @@ dnl
 dnl 'svnversion' need to be removed before release and added back after.
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.1.5b3.svnversion)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.1.5b3)   dnl remember to set version
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(NOVA_VERSION, "2.0.3a1", "Nova version")

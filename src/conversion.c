@@ -716,7 +716,7 @@ if (strstr(s,":")) /* Hr:Min */
    }
 else               /* date Month */
    {
-   sscanf(s,"%3[a-zA-Z] %d",mon,&day);
+   sscanf(s,"%3[a-zA-Z] %ld",mon,&day);
 
    month = Month2Int(mon);
    
@@ -727,7 +727,7 @@ else               /* date Month */
       }
    }
 
-Debug("(%s)\n%d=%s,%ld=%s,%ld,%ld,%ld\n",s,year,VYEAR,month,VMONTH,day,hour,min);
+Debug("(%s)\n%ld=%s,%ld=%s,%ld,%ld,%ld\n",s,year,VYEAR,month,VMONTH,day,hour,min);
 
 cftime = 0;
 cftime += min * 60;

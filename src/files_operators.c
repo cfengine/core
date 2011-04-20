@@ -2212,11 +2212,11 @@ newflags &= ~(attr.perms.minus_flags);
 
 if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
    {
-   Debug("BSD File okay, flags = %x, current = %x\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   Debug("BSD File okay, flags = %lx, current = %lx\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
    }
 else
    {
-   Debug("BSD Fixing %s, newflags = %x, flags = %x\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   Debug("BSD Fixing %s, newflags = %lx, flags = %lx\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
 
    switch (attr.transaction.action)
       {

@@ -1242,7 +1242,7 @@ if (isv4)
             
             if ((from > cmp) || (cmp > to))
                {
-               Debug("Out of range %d > %d > %d (range %s)\n",from,cmp,to,buffer2);
+               Debug("Out of range %ld > %ld > %ld (range %s)\n",from,cmp,to,buffer2);
                return -1;
                }
             }
@@ -1326,7 +1326,7 @@ if (isv6)
             
             if ((from >= cmp) || (cmp > to))
                {
-               Debug("%x < %x < %x\n",from,cmp,to);
+               Debug("%lx < %lx < %lx\n",from,cmp,to);
                return -1;
                }
             }

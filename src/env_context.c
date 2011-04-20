@@ -36,6 +36,694 @@
 
 extern char *DAY_TEXT[];
 
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+static int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
+
+{ int result_and = true;
+  int result_or = false;
+  int result_xor = 0;
+  int result = 0,total = 0;
+  char buffer[CF_MAXVARSIZE];
+  struct Rlist *rp;
+  double prob,cum = 0,fluct;
+  struct Rval newret;
+  struct FnCall *fp;
+
+if (cp == NULL)
+   {
+   CfOut(cf_error,""," !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
+   }
+
+if (!IsDefinedClass(pp->classes))
+   {
+   return false;
+   }
+
+if (pp->done)
+   {
+   return false;
+   }
+
+if (IsDefinedClass(pp->promiser))
+   {
+   return false;
+   }
+
+switch (cp->type) 
+   {
+   case CF_FNCALL:
+       
+       fp = (struct FnCall *)cp->rval;        /* Special expansion of functions for control, best effort only */
+       newret = EvaluateFunctionCall(fp,pp);
+       DeleteFnCall(fp);
+       cp->rval = newret.item;
+       cp->type = newret.rtype;
+       break;
+
+   case CF_LIST:
+       for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+          {
+          newret = EvaluateFinalRval("this",rp->item,rp->type,true,pp);
+          DeleteRvalItem(rp->item,rp->type);
+          rp->item = newret.item;
+          rp->type = newret.rtype;
+          }
+       break;
+       
+   default:
+
+       newret = ExpandPrivateRval("this",cp->rval,cp->type);
+       DeleteRvalItem(cp->rval,cp->type);
+       cp->rval = newret.item;
+       cp->type = newret.rtype;
+       break;
+   }
+
+if (strcmp(cp->lval,"expression") == 0)
+   {
+   if (cp->type != CF_SCALAR)
+      {
+      return false;
+      }
+
+   if (IsDefinedClass((char *)cp->rval))
+      {
+      return true;
+      }
+   else
+      {
+      return false;
+      }
+   }
+
+if (strcmp(cp->lval,"not") == 0)
+   {
+   if (cp->type != CF_SCALAR)
+      {
+      return false;
+      }
+
+   if (IsDefinedClass((char *)cp->rval))
+      {
+      return false;
+      }
+   else
+      {
+      return true;
+      }
+   }
+
+// Class selection
+
+if (strcmp(cp->lval,"select_class") == 0)
+   {
+   char splay[CF_MAXVARSIZE];
+   int i,n;
+   double hash;
+   
+   total = 0;
+
+   for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+      {
+      total++;
+      }
+
+   if (total == 0)
+      {
+      CfOut(cf_error,""," !! No classes to select on RHS");
+      PromiseRef(cf_error,pp);
+      return false;      
+      }
+
+   snprintf(splay,CF_MAXVARSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
+   hash = (double)GetHash(splay);
+   n = (int)(total*hash/(double)CF_HASHTABLESIZE);
+
+   for (rp = (struct Rlist *)cp->rval,i = 0; rp != NULL; rp = rp->next,i++)
+      {
+      if (i == n)
+         {
+         NewClass(rp->item);
+         return true;
+         }
+      }
+   }
+
+// Class distributions
+
+if (strcmp(cp->lval,"dist") == 0)
+   {
+   for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+      {
+      result = Str2Int(rp->item);
+      
+      if (result < 0)
+         {
+         CfOut(cf_error,""," !! Non-positive integer in class distribution");
+         PromiseRef(cf_error,pp);
+         return false;
+         }
+      
+      total += result;
+      }
+
+   if (total == 0)
+      {
+      CfOut(cf_error,""," !! An empty distribution was specified on RHS");
+      PromiseRef(cf_error,pp);
+      return false;      
+      }
+   }
+
+fluct = drand48(); /* Get random number 0-1 */
+cum = 0.0;
+
+/* If we get here, anything remaining on the RHS must be a clist */
+
+if (cp->type != CF_LIST)
+   {
+   CfOut(cf_error,""," !! RHS of promise body attribute \"%s\" is not a list\n",cp->lval);
+   PromiseRef(cf_error,pp);
+   return true;
+   }
+
+for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+   {
+   if (rp->type != CF_SCALAR)
+      {
+      return false;
+      }
+
+   result = IsDefinedClass((char *)(rp->item));
+
+   result_and = result_and && result;
+   result_or  = result_or || result;
+   result_xor ^= result;
+
+   if (total > 0) // dist class
+      {
+      prob = ((double)Str2Int(rp->item))/((double)total);
+      cum += prob;
+
+      if ((fluct < cum) || rp->next == NULL)
+         {
+         snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser,rp->item);
+         *(pp->donep) = true;
+
+         if (strcmp(pp->bundletype,"common") == 0)
+            {
+            NewClass(buffer);
+            }
+         else
+            {
+            NewBundleClass(buffer,pp->bundle);
+            }
+
+         Debug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
+         return true;
+         }
+      }
+   }
+
+// Class combinations
+
+if (strcmp(cp->lval,"or") == 0)
+   {
+   return result_or;
+   }
+
+if (strcmp(cp->lval,"xor") == 0)
+   {
+   return (result_xor == 1) ? true : false;
+   }
+
+if (strcmp(cp->lval,"and") == 0)
+   {
+   return result_and;
+   }
+
+return false;
+}
+
+/*******************************************************************/
+
+void KeepClassContextPromise(struct Promise *pp)
+
+{ struct Attributes a;
+
+a = GetClassContextAttributes(pp);
+
+if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
+   {
+   CfOut(cf_verbose,"","Class identifier \"%s\" contains illegal characters - canonifying",pp->promiser);
+   snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
+   }
+
+if (a.context.broken)
+   {
+   cfPS(cf_error,CF_FAIL,"",pp,a,"Irreconcilable constraints in classes for %s (broken promise)",pp->promiser);
+   return;
+   }
+
+if (strcmp(pp->bundletype,"common") == 0)
+   {
+   if (EvalClassExpression(a.context.expression,pp))
+      {
+      CfOut(cf_verbose,""," ?> defining additional global class %s\n",pp->promiser);
+
+      if (!ValidClassName(pp->promiser))
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
+         }
+      else
+         {
+         NewClass(pp->promiser);
+         }
+      }
+
+   /* These are global and loaded once */
+   //*(pp->donep) = true;
+
+   return;
+   }
+
+if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundletype))
+   {
+   if (EvalClassExpression(a.context.expression,pp))
+      {
+      Debug(" ?> defining explicit class %s\n",pp->promiser);
+
+      if (!ValidClassName(pp->promiser))
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
+         }
+      else
+         {
+         NewBundleClass(pp->promiser,pp->bundle);
+         }
+      }
+
+   // Private to bundle, can be reloaded
+
+   *(pp->donep) = false;   
+   return;
+   }
+}
+
+/*******************************************************************/
+
+void NewClass(char *oclass)
+
+{ struct Item *ip;
+  char class[CF_MAXVARSIZE];
+
+Chop(oclass);
+strncpy(class,CanonifyName(oclass),CF_MAXVARSIZE);  
+
+Debug("NewClass(%s)\n",class);
+
+if (strlen(class) == 0)
+   {
+   return;
+   }
+
+if (IsRegexItemIn(ABORTBUNDLEHEAP,class))
+   {
+   CfOut(cf_error,"","Bundle aborted on defined class \"%s\"\n",class);
+   ABORTBUNDLE = true;
+   }
+
+if (IsRegexItemIn(ABORTHEAP,class))
+   {
+   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\"\n",class);
+   exit(1);
+   }
+
+if (InAlphaList(VHEAP,class))
+   {
+   return;
+   }
+
+PrependAlphaList(&VHEAP,class);
+
+for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+   {
+   if (IsDefinedClass(ip->name))
+      {
+      CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",class,THIS_BUNDLE);
+      exit(1);
+      }
+   }
+
+if (!ABORTBUNDLE)
+   {
+   for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+      {
+      if (IsDefinedClass(ip->name))
+         {
+         CfOut(cf_error,""," -> Setting abort for \"%s\" when setting \"%s\"",ip->name,class);
+         ABORTBUNDLE = true;
+         break;
+         }
+      }
+   }
+}
+
+/*********************************************************************/
+
+void DeleteClass(char *class)
+
+{ int i = (int)*class;
+
+DeleteItemLiteral(&(VHEAP.list[i]),class);
+DeleteItemLiteral(&(VADDCLASSES.list[i]),class);
+}
+
+/*******************************************************************/
+
+void NewBundleClass(char *class,char *bundle)
+
+{ char copy[CF_BUFSIZE];
+  struct Item *ip;
+
+memset(copy,0,CF_BUFSIZE);
+strncpy(copy,class,CF_MAXVARSIZE);
+Chop(copy);
+
+if (strlen(copy) == 0)
+   {
+   return;
+   }
+
+Debug("NewBundleClass(%s)\n",copy);
+
+if (IsRegexItemIn(ABORTBUNDLEHEAP,copy))
+   {
+   CfOut(cf_error,"","Bundle %s aborted on defined class \"%s\"\n",bundle,copy);
+   ABORTBUNDLE = true;
+   }
+
+if (IsRegexItemIn(ABORTHEAP,copy))
+   {
+   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",copy,bundle);
+   exit(1);
+   }
+
+if (InAlphaList(VHEAP,copy))
+   {
+   CfOut(cf_error,"","WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",copy,bundle);
+   }
+
+if (InAlphaList(VADDCLASSES,copy))
+   {
+   return;
+   }
+
+PrependAlphaList(&VADDCLASSES,copy);
+
+for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+   {
+   if (IsDefinedClass(ip->name))
+      {
+      CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",copy,bundle);
+      exit(1);
+      }
+   }
+
+if (!ABORTBUNDLE)
+   {
+   for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+      {
+      if (IsDefinedClass(ip->name))
+         {
+         CfOut(cf_error,""," -> Setting abort for \"%s\" when setting \"%s\"",ip->name,class);
+         ABORTBUNDLE = true;
+         break;
+         }
+      }
+   }
+}
+
+/*********************************************************************/
+
+struct Rlist *SplitContextExpression(char *context,struct Promise *pp)
+
+{ struct Rlist *list = NULL;
+  char *sp,cbuff[CF_MAXVARSIZE];
+  
+if (context == NULL)
+   {
+   PrependRScalar(&list,"any",CF_SCALAR);
+   }
+else
+   {
+   for (sp = context; *sp != '\0'; sp++)
+      {
+      while (*sp == '|')
+         {
+         sp++;
+         }
+      
+      memset(cbuff,0,CF_MAXVARSIZE);
+      
+      sp += GetORAtom(sp,cbuff);
+      
+      if (strlen(cbuff) == 0)
+         {
+         break;
+         }
+      
+      if (IsBracketed(cbuff))
+         {
+         // Fully bracketed atom (protected)
+         cbuff[strlen(cbuff)-1] = '\0';
+         PrependRScalar(&list,cbuff+1,CF_SCALAR);
+         }
+      else
+         {
+         if (HasBrackets(cbuff,pp))             
+            {
+            struct Rlist *andlist = SplitRegexAsRList(cbuff,"[.&]+",99,false);
+            struct Rlist *rp,*orlist = NULL;
+            char buff[CF_MAXVARSIZE];
+            char orstring[CF_MAXVARSIZE] = {0};
+            char andstring[CF_MAXVARSIZE] = {0};
+
+            // Apply distribution P.(A|B) -> P.A|P.B
+            
+            for (rp = andlist; rp != NULL; rp=rp->next)
+               {
+               if (IsBracketed(rp->item))
+                  {
+                  // This must be an OR string to be ORed and split into a list
+                  *((char *)rp->item+strlen((char *)rp->item)-1) = '\0';
+
+                  if (strlen(orstring) > 0)
+                     {
+                     strcat(orstring,"|");
+                     }
+                  
+                  Join(orstring,(char *)(rp->item)+1,CF_MAXVARSIZE);
+                  }
+               else
+                  {
+                  if (strlen(andstring) > 0)
+                     {
+                     strcat(andstring,".");
+                     }
+                  
+                  Join(andstring,rp->item,CF_MAXVARSIZE);
+                  }
+
+               // foreach ORlist, AND with AND string
+               }
+
+            if (strlen(orstring) > 0)
+               {
+               orlist = SplitRegexAsRList(orstring,"[|]+",99,false);
+               
+               for (rp = orlist; rp != NULL; rp=rp->next)
+                  {
+                  snprintf(buff,CF_MAXVARSIZE,"%s.%s",rp->item,andstring);
+                  PrependRScalar(&list,buff,CF_SCALAR);
+                  }
+               }
+            else
+               {
+               PrependRScalar(&list,andstring,CF_SCALAR);
+               }
+            
+            DeleteRlist(orlist);
+            DeleteRlist(andlist);
+            }
+         else
+            {
+            // Clean atom
+            PrependRScalar(&list,cbuff,CF_SCALAR);
+            }
+         }
+      
+      if (*sp == '\0')
+         {
+         break;
+         }
+      }
+   }
+ 
+return list;
+}
+
+/*********************************************************************/
+
+int IsBracketed(char *s)
+
+ /* return true if the entire string is bracketed, not just if
+    if contains brackets */
+
+{ int i, level= 0, yes = 0;
+
+if (*s != '(')
+   {
+   return false;
+   }
+
+if (*(s+strlen(s)-1) != ')')
+   {
+   return false;
+   }
+
+if (strstr(s,")("))
+   {
+   CfOut(cf_error,""," !! Class expression \"%s\" has broken brackets",s);
+   return false;
+   }
+
+for (i = 0; i < strlen(s); i++)
+   {
+   if (s[i] == '(')
+      {
+      yes++;
+      level++;
+      if (i > 0 && !IsIn(s[i-1],".&|!("))
+         {
+         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator in front of '('",s);
+         }
+      }
+   
+   if (s[i] == ')')
+      {
+      yes++;
+      level--;
+      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|!)"))
+         {
+         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator after of ')'",s);
+         }
+      }
+   }
+
+
+if (level != 0)
+   {
+   CfOut(cf_error,""," !! Class expression \"%s\" has broken brackets",s);
+   return false;  /* premature ) */
+   }
+
+if (yes > 2)
+   {
+   // e.g. (a|b).c.(d|e)
+   return false;
+   }
+
+
+return true;
+}
+
+/*********************************************************************/
+
+int GetORAtom(char *start,char *buffer)
+
+{ char *sp = start;
+  char *spc = buffer;
+  int bracklevel = 0, len = 0;
+
+while ((*sp != '\0') && !((*sp == '|') && (bracklevel == 0)))
+   {
+   if (*sp == '(')
+      {
+      Debug("+(\n");
+      bracklevel++;
+      }
+
+   if (*sp == ')')
+      {
+      Debug("-)\n");
+      bracklevel--;
+      }
+
+   Debug("(%c)",*sp);
+   *spc++ = *sp++;
+   len++;
+   }
+
+*spc = '\0';
+
+Debug("\nGetORATom(%s)->%s\n",start,buffer);
+return len;
+}
+
+/*********************************************************************/
+
+int HasBrackets(char *s,struct Promise *pp)
+
+ /* return true if contains brackets */
+
+{ int i, level= 0, yes = 0;
+
+for (i = 0; i < strlen(s); i++)
+   {
+   if (s[i] == '(')
+      {
+      yes++;
+      level++;
+      if (i > 0 && !IsIn(s[i+1],".&|!("))
+         {
+         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator in front of '('",s);
+         }
+      }
+   
+   if (s[i] == ')')
+      {
+      level--;
+      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|!)"))
+         {
+         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator after ')'",s);
+         }
+      }
+   }
+
+if (level != 0)
+   {
+   CfOut(cf_error,""," !! Class expression \"%s\" has unbalanced brackets",s);
+   PromiseRef(cf_error,pp);
+   return true;
+   }
+
+if (yes > 1)
+   {
+   CfOut(cf_error,""," !! Class expression \"%s\" has multiple brackets",s);
+   PromiseRef(cf_error,pp);
+   }
+else if (yes)
+   {
+   return true;
+   }
+
+return false;
+}
+
 /**********************************************************************/
 /* Utilities */
 /**********************************************************************/
@@ -752,646 +1440,5 @@ if ((fp = fopen(file,"w")) == NULL)
 ListAlphaList(fp,VHEAP,'\n');
 ListAlphaList(fp,VADDCLASSES,'\n');
 fclose(fp);
-}
-
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
-
-static int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
-
-{ int result_and = true;
-  int result_or = false;
-  int result_xor = 0;
-  int result = 0,total = 0;
-  char buffer[CF_MAXVARSIZE];
-  struct Rlist *rp;
-  double prob,cum = 0,fluct;
-  struct Rval newret;
-  struct FnCall *fp;
-
-if (cp == NULL)
-   {
-   CfOut(cf_error,""," !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
-   }
-
-if (!IsDefinedClass(pp->classes))
-   {
-   return false;
-   }
-
-if (pp->done)
-   {
-   return false;
-   }
-
-if (IsDefinedClass(pp->promiser))
-   {
-   return false;
-   }
-
-switch (cp->type) 
-   {
-   case CF_FNCALL:
-       
-       fp = (struct FnCall *)cp->rval;        /* Special expansion of functions for control, best effort only */
-       newret = EvaluateFunctionCall(fp,pp);
-       DeleteFnCall(fp);
-       cp->rval = newret.item;
-       cp->type = newret.rtype;
-       break;
-
-   case CF_LIST:
-       for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
-          {
-          newret = EvaluateFinalRval("this",rp->item,rp->type,true,pp);
-          DeleteRvalItem(rp->item,rp->type);
-          rp->item = newret.item;
-          rp->type = newret.rtype;
-          }
-       break;
-       
-   default:
-
-       newret = ExpandPrivateRval("this",cp->rval,cp->type);
-       DeleteRvalItem(cp->rval,cp->type);
-       cp->rval = newret.item;
-       cp->type = newret.rtype;
-       break;
-   }
-
-if (strcmp(cp->lval,"expression") == 0)
-   {
-   if (cp->type != CF_SCALAR)
-      {
-      return false;
-      }
-
-   if (IsDefinedClass((char *)cp->rval))
-      {
-      return true;
-      }
-   else
-      {
-      return false;
-      }
-   }
-
-if (strcmp(cp->lval,"not") == 0)
-   {
-   if (cp->type != CF_SCALAR)
-      {
-      return false;
-      }
-
-   if (IsDefinedClass((char *)cp->rval))
-      {
-      return false;
-      }
-   else
-      {
-      return true;
-      }
-   }
-
-if (strcmp(cp->lval,"dist") == 0)
-   {
-   for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
-      {
-      result = Str2Int(rp->item);
-      
-      if (result < 0)
-         {
-         CfOut(cf_error,"","Non-positive integer in class distribution");
-         PromiseRef(cf_error,pp);
-         return false;
-         }
-      
-      total += result;
-      }
-   }
-
-fluct = drand48(); /* Get random number 0-1 */
-cum = 0.0;
-
-/* If we get here, anything remaining on the RHS must be a clist */
-
-if (cp->type != CF_LIST)
-   {
-   CfOut(cf_error,""," !! RHS of promise body attribute \"%s\" is not a list\n",cp->lval);
-   PromiseRef(cf_error,pp);
-   return true;
-   }
-
-for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
-   {
-   if (rp->type != CF_SCALAR)
-      {
-      return false;
-      }
-
-   result = IsDefinedClass((char *)(rp->item));
-
-   result_and = result_and && result;
-   result_or  = result_or || result;
-   result_xor ^= result;
-
-   if (total > 0) // dist class
-      {
-      prob = ((double)Str2Int(rp->item))/((double)total);
-      cum += prob;
-
-      if ((fluct < cum) || rp->next == NULL)
-         {
-         snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser,rp->item);
-         *(pp->donep) = true;
-
-         if (strcmp(pp->bundletype,"common") == 0)
-            {
-            NewClass(buffer);
-            }
-         else
-            {
-            NewBundleClass(buffer,pp->bundle);
-            }
-
-         Debug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
-         return true;
-         }
-      }
-   }
-
-if (strcmp(cp->lval,"or") == 0)
-   {
-   return result_or;
-   }
-
-if (strcmp(cp->lval,"xor") == 0)
-   {
-   return (result_xor == 1) ? true : false;
-   }
-
-if (strcmp(cp->lval,"and") == 0)
-   {
-   return result_and;
-   }
-
-return false;
-}
-
-/*******************************************************************/
-
-void KeepClassContextPromise(struct Promise *pp)
-
-{ struct Attributes a;
-
-a = GetClassContextAttributes(pp);
-
-if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
-   {
-   CfOut(cf_verbose,"","Class identifier \"%s\" contains illegal characters - canonifying",pp->promiser);
-   snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
-   }
-
-if (a.context.broken)
-   {
-   cfPS(cf_error,CF_FAIL,"",pp,a,"Irreconcilable constraints in classes for %s (broken promise)",pp->promiser);
-   return;
-   }
-
-if (strcmp(pp->bundletype,"common") == 0)
-   {
-   if (EvalClassExpression(a.context.expression,pp))
-      {
-      CfOut(cf_verbose,""," ?> defining additional global class %s\n",pp->promiser);
-
-      if (!ValidClassName(pp->promiser))
-         {
-         cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
-         }
-      else
-         {
-         NewClass(pp->promiser);
-         }
-      }
-
-   /* These are global and loaded once */
-   //*(pp->donep) = true;
-
-   return;
-   }
-
-if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundletype))
-   {
-   if (EvalClassExpression(a.context.expression,pp))
-      {
-      Debug(" ?> defining explicit class %s\n",pp->promiser);
-
-      if (!ValidClassName(pp->promiser))
-         {
-         cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
-         }
-      else
-         {
-         NewBundleClass(pp->promiser,pp->bundle);
-         }
-      }
-
-   // Private to bundle, can be reloaded
-
-   *(pp->donep) = false;   
-   return;
-   }
-}
-
-/*******************************************************************/
-
-void NewClass(char *oclass)
-
-{ struct Item *ip;
-  char class[CF_MAXVARSIZE];
-
-Chop(oclass);
-strncpy(class,CanonifyName(oclass),CF_MAXVARSIZE);  
-
-Debug("NewClass(%s)\n",class);
-
-if (strlen(class) == 0)
-   {
-   return;
-   }
-
-if (IsRegexItemIn(ABORTBUNDLEHEAP,class))
-   {
-   CfOut(cf_error,"","Bundle aborted on defined class \"%s\"\n",class);
-   ABORTBUNDLE = true;
-   }
-
-if (IsRegexItemIn(ABORTHEAP,class))
-   {
-   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\"\n",class);
-   exit(1);
-   }
-
-if (InAlphaList(VHEAP,class))
-   {
-   return;
-   }
-
-PrependAlphaList(&VHEAP,class);
-
-for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
-   {
-   if (IsDefinedClass(ip->name))
-      {
-      CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",class,THIS_BUNDLE);
-      exit(1);
-      }
-   }
-
-if (!ABORTBUNDLE)
-   {
-   for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
-      {
-      if (IsDefinedClass(ip->name))
-         {
-         CfOut(cf_error,""," -> Setting abort for \"%s\" when setting \"%s\"",ip->name,class);
-         ABORTBUNDLE = true;
-         break;
-         }
-      }
-   }
-}
-
-/*********************************************************************/
-
-void DeleteClass(char *class)
-
-{ int i = (int)*class;
-
-DeleteItemLiteral(&(VHEAP.list[i]),class);
-DeleteItemLiteral(&(VADDCLASSES.list[i]),class);
-}
-
-/*******************************************************************/
-
-void NewBundleClass(char *class,char *bundle)
-
-{ char copy[CF_BUFSIZE];
-  struct Item *ip;
-
-memset(copy,0,CF_BUFSIZE);
-strncpy(copy,class,CF_MAXVARSIZE);
-Chop(copy);
-
-if (strlen(copy) == 0)
-   {
-   return;
-   }
-
-Debug("NewBundleClass(%s)\n",copy);
-
-if (IsRegexItemIn(ABORTBUNDLEHEAP,copy))
-   {
-   CfOut(cf_error,"","Bundle %s aborted on defined class \"%s\"\n",bundle,copy);
-   ABORTBUNDLE = true;
-   }
-
-if (IsRegexItemIn(ABORTHEAP,copy))
-   {
-   CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",copy,bundle);
-   exit(1);
-   }
-
-if (InAlphaList(VHEAP,copy))
-   {
-   CfOut(cf_error,"","WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",copy,bundle);
-   }
-
-if (InAlphaList(VADDCLASSES,copy))
-   {
-   return;
-   }
-
-PrependAlphaList(&VADDCLASSES,copy);
-
-for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
-   {
-   if (IsDefinedClass(ip->name))
-      {
-      CfOut(cf_error,"","cf-agent aborted on defined class \"%s\" defined in bundle %s\n",copy,bundle);
-      exit(1);
-      }
-   }
-
-if (!ABORTBUNDLE)
-   {
-   for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
-      {
-      if (IsDefinedClass(ip->name))
-         {
-         CfOut(cf_error,""," -> Setting abort for \"%s\" when setting \"%s\"",ip->name,class);
-         ABORTBUNDLE = true;
-         break;
-         }
-      }
-   }
-}
-
-/*********************************************************************/
-
-struct Rlist *SplitContextExpression(char *context,struct Promise *pp)
-
-{ struct Rlist *list = NULL;
-  char *sp,cbuff[CF_MAXVARSIZE];
-  
-if (context == NULL)
-   {
-   PrependRScalar(&list,"any",CF_SCALAR);
-   }
-else
-   {
-   for (sp = context; *sp != '\0'; sp++)
-      {
-      while (*sp == '|')
-         {
-         sp++;
-         }
-      
-      memset(cbuff,0,CF_MAXVARSIZE);
-      
-      sp += GetORAtom(sp,cbuff);
-      
-      if (strlen(cbuff) == 0)
-         {
-         break;
-         }
-      
-      if (IsBracketed(cbuff))
-         {
-         // Fully bracketed atom (protected)
-         cbuff[strlen(cbuff)-1] = '\0';
-         PrependRScalar(&list,cbuff+1,CF_SCALAR);
-         }
-      else
-         {
-         if (HasBrackets(cbuff,pp))             
-            {
-            struct Rlist *andlist = SplitRegexAsRList(cbuff,"[.&]+",99,false);
-            struct Rlist *rp,*orlist = NULL;
-            char buff[CF_MAXVARSIZE];
-            char orstring[CF_MAXVARSIZE] = {0};
-            char andstring[CF_MAXVARSIZE] = {0};
-
-            // Apply distribution P.(A|B) -> P.A|P.B
-            
-            for (rp = andlist; rp != NULL; rp=rp->next)
-               {
-               if (IsBracketed(rp->item))
-                  {
-                  // This must be an OR string to be ORed and split into a list
-                  *((char *)rp->item+strlen((char *)rp->item)-1) = '\0';
-
-                  if (strlen(orstring) > 0)
-                     {
-                     strcat(orstring,"|");
-                     }
-                  
-                  Join(orstring,(char *)(rp->item)+1,CF_MAXVARSIZE);
-                  }
-               else
-                  {
-                  if (strlen(andstring) > 0)
-                     {
-                     strcat(andstring,".");
-                     }
-                  
-                  Join(andstring,rp->item,CF_MAXVARSIZE);
-                  }
-
-               // foreach ORlist, AND with AND string
-               }
-
-            if (strlen(orstring) > 0)
-               {
-               orlist = SplitRegexAsRList(orstring,"[|]+",99,false);
-               
-               for (rp = orlist; rp != NULL; rp=rp->next)
-                  {
-                  snprintf(buff,CF_MAXVARSIZE,"%s.%s",rp->item,andstring);
-                  PrependRScalar(&list,buff,CF_SCALAR);
-                  }
-               }
-            else
-               {
-               PrependRScalar(&list,andstring,CF_SCALAR);
-               }
-            
-            DeleteRlist(orlist);
-            DeleteRlist(andlist);
-            }
-         else
-            {
-            // Clean atom
-            PrependRScalar(&list,cbuff,CF_SCALAR);
-            }
-         }
-      
-      if (*sp == '\0')
-         {
-         break;
-         }
-      }
-   }
- 
-return list;
-}
-
-/*********************************************************************/
-
-int IsBracketed(char *s)
-
- /* return true if the entire string is bracketed, not just if
-    if contains brackets */
-
-{ int i, level= 0, yes = 0;
-
-if (*s != '(')
-   {
-   return false;
-   }
-
-if (*(s+strlen(s)-1) != ')')
-   {
-   return false;
-   }
-
-if (strstr(s,")("))
-   {
-   CfOut(cf_error,""," !! Class expression \"%s\" has broken brackets",s);
-   return false;
-   }
-
-for (i = 0; i < strlen(s); i++)
-   {
-   if (s[i] == '(')
-      {
-      yes++;
-      level++;
-      if (i > 0 && !IsIn(s[i-1],".&|!("))
-         {
-         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator in front of '('",s);
-         }
-      }
-   
-   if (s[i] == ')')
-      {
-      yes++;
-      level--;
-      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|!)"))
-         {
-         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator after of ')'",s);
-         }
-      }
-   }
-
-
-if (level != 0)
-   {
-   CfOut(cf_error,""," !! Class expression \"%s\" has broken brackets",s);
-   return false;  /* premature ) */
-   }
-
-if (yes > 2)
-   {
-   // e.g. (a|b).c.(d|e)
-   return false;
-   }
-
-
-return true;
-}
-
-/*********************************************************************/
-
-int GetORAtom(char *start,char *buffer)
-
-{ char *sp = start;
-  char *spc = buffer;
-  int bracklevel = 0, len = 0;
-
-while ((*sp != '\0') && !((*sp == '|') && (bracklevel == 0)))
-   {
-   if (*sp == '(')
-      {
-      Debug("+(\n");
-      bracklevel++;
-      }
-
-   if (*sp == ')')
-      {
-      Debug("-)\n");
-      bracklevel--;
-      }
-
-   Debug("(%c)",*sp);
-   *spc++ = *sp++;
-   len++;
-   }
-
-*spc = '\0';
-
-Debug("\nGetORATom(%s)->%s\n",start,buffer);
-return len;
-}
-
-/*********************************************************************/
-
-int HasBrackets(char *s,struct Promise *pp)
-
- /* return true if contains brackets */
-
-{ int i, level= 0, yes = 0;
-
-for (i = 0; i < strlen(s); i++)
-   {
-   if (s[i] == '(')
-      {
-      yes++;
-      level++;
-      if (i > 0 && !IsIn(s[i+1],".&|!("))
-         {
-         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator in front of '('",s);
-         }
-      }
-   
-   if (s[i] == ')')
-      {
-      level--;
-      if (i < strlen(s)-1 && !IsIn(s[i+1],".&|!)"))
-         {
-         CfOut(cf_error,""," !! Class expression \"%s\" has a missing operator after ')'",s);
-         }
-      }
-   }
-
-if (level != 0)
-   {
-   CfOut(cf_error,""," !! Class expression \"%s\" has unbalanced brackets",s);
-   PromiseRef(cf_error,pp);
-   return true;
-   }
-
-if (yes > 1)
-   {
-   CfOut(cf_error,""," !! Class expression \"%s\" has multiple brackets",s);
-   PromiseRef(cf_error,pp);
-   }
-else if (yes)
-   {
-   return true;
-   }
-
-return false;
 }
 

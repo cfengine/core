@@ -512,6 +512,7 @@ void AnalyzePromiseConflicts(void);
 void ValidateClassSyntax(char *str);
 int IsDefinedClass (char *class);
 int IsExcluded (char *exception);
+static bool ValidClassName(const char *str);
 
 bool EvalProcessResult(const char *process_result, struct AlphaList *proc_attr);
 bool EvalFileResult(const char *file_result, struct AlphaList *leaf_attr);

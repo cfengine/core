@@ -98,10 +98,10 @@ struct BodySyntax CF_CLASSBODY[] =
    {"or",cf_clist,CF_CLASSRANGE,"Combine class sources with inclusive OR"}, 
    {"and",cf_clist,CF_CLASSRANGE,"Combine class sources with AND"},
    {"xor",cf_clist,CF_CLASSRANGE,"Combine class sources with XOR"},
-   {"dist",cf_rlist,CF_REALRANGE,"Generate a probabilistic class distribution (strategy in cfengine 2)"},
+   {"dist",cf_rlist,CF_REALRANGE,"Generate a probabilistic class distribution (from strategies in cfengine 2)"},
    {"expression",cf_class,CF_CLASSRANGE,"Evaluate string expression of classes in normal form"},
    {"not",cf_class,CF_CLASSRANGE,"Evaluate the negation of string expression in normal form"},
-   {"select_class",cf_rlist,"random_selection,host_selection","The method used to select a candidate from the list"},
+   {"select_class",cf_rlist,CF_CLASSRANGE,"Select one of the named list of classes to define based on host identity"},
    {NULL,cf_notype,NULL,NULL}
    };
 

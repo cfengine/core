@@ -507,6 +507,9 @@ enum cfeditorder
 #define KM_AFFECTS_CERT_B "is affected by"
 #define KM_CONNECTS_CERT_F "is connected to"
 #define KM_CONNECTS_CERT_B "is connected to"
+#define KM_NEEDS_CERT_F "needs"
+#define KM_NEEDS_CERT_B "is needed by"
+
 
 #define KM_PARTOF_POSS_F "can be a part of"
 #define KM_PARTOF_POSS_B "can have a part"
@@ -522,6 +525,8 @@ enum cfeditorder
 #define KM_AFFECTS_POSS_B "can be affected by"
 #define KM_CONNECTS_POSS_F "can be connected to"
 #define KM_CONNECTS_POSS_B "can be connected to"
+#define KM_NEEDS_POSS_F "can need"
+#define KM_NEEDS_POSS_B "can be needed by"
 
 #define KM_PARTOF_UNCERT_F "might be a part of"
 #define KM_PARTOF_UNCERT_B "might have a part"
@@ -537,6 +542,10 @@ enum cfeditorder
 #define KM_AFFECTS_UNCERT_B "might be affected by"
 #define KM_CONNECTS_UNCERT_F "might be connected to"
 #define KM_CONNECTS_UNCERT_B "might be connected to"
+#define KM_NEEDS_UNCERT_F "might need"
+#define KM_NEEDS_UNCERT_B "might be needed by"
+
+#define KM_THING_MASK KM_PARTOF_CERT_F."|".KM_PARTOF_CERT_B."|".KM_DETERMINES_CERT_F."|".KM_DETERMINES_CERT_B."|".KM_USES_CERT_F."|".KM_USES_CERT_B."|".KM_PROVIDES_CERT_F."|".KM_PROVIDES_CERT_B."|".KM_BELONGS_CERT_F."|".KM_BELONGS_CERT_B."|".KM_AFFECTS_CERT_F."|".KM_AFFECTS_CERT_B."|".KM_CONNECTS_CERT_F."|".KM_CONNECTS_CERT_B."|".KM_PARTOF_POSS_F."|".KM_PARTOF_POSS_B."|".KM_DETERMINES_POSS_F."|".KM_DETERMINES_POSS_B."|".KM_USES_POSS_F."|".KM_USES_POSS_B."|".KM_PROVIDES_POSS_F."|".KM_PROVIDES_POSS_B."|".KM_BELONGS_POSS_F."|".KM_BELONGS_POSS_B."|".KM_AFFECTS_POSS_F."|".KM_AFFECTS_POSS_B."|".KM_CONNECTS_POSS_F."|".KM_CONNECTS_POSS_B."|".KM_PARTOF_UNCERT_F."|".KM_PARTOF_UNCERT_B."|".KM_DETERMINES_UNCERT_F."|".KM_DETERMINES_UNCERT_B."|".KM_USES_UNCERT_F."|".KM_USES_UNCERT_B."|".KM_PROVIDES_UNCERT_F."|".KM_PROVIDES_UNCERT_B."|".KM_BELONGS_UNCERT_F."|".KM_BELONGS_UNCERT_B."|".KM_AFFECTS_UNCERT_F."|".KM_AFFECTS_UNCERT_B."|".KM_CONNECTS_UNCERT_F."|".KM_CONNECTS_UNCERT_B."|".KM_NEEDS_CERT_F."|".KM_NEEDS_CERT_B."|".KM_NEEDS_POSS_F."|".KM_NEEDS_POSS_B."|".KM_NEEDS_UNCERT_F."|".KM_NEEDS_UNCERT_B
 
 enum knowledgecertainty
    {

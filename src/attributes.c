@@ -507,6 +507,26 @@ else if (rp = GetListConstraint("affects",pp))
 
    attr.associates = rp;
    }
+else if (rp = GetListConstraint("needs",pp))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_NEEDS_CERT_F;
+          attr.bwd_name = KM_NEEDS_CERT_B;   
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_NEEDS_UNCERT_F;
+          attr.bwd_name = KM_NEEDS_UNCERT_B;   
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_NEEDS_POSS_F;
+          attr.bwd_name = KM_NEEDS_POSS_B;   
+          break;
+      }
+
+   attr.associates = rp;
+   }
 
 return attr;
 }

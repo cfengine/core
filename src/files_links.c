@@ -522,10 +522,13 @@ if (level >= CF_MAXLINKLEVEL)
    return false;
    }
 
-for (sp = from; *sp != '\0'; sp++)
+sp = from;
+
+while (*sp != '\0')
    {
    if (*sp == FILE_SEPARATOR)
       {
+      sp++;
       continue;
       }
    
@@ -619,6 +622,7 @@ for (sp = from; *sp != '\0'; sp++)
             }
          }
       }
+   sp++;
    }
  
 return true;

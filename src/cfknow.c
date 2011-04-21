@@ -211,7 +211,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
           break;
 
       case 's':
-#ifdef HAVE_NOVA
+#ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
           CfGenerateStories(TOPIC_CMD);
 #endif
@@ -948,3 +948,4 @@ CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 DeleteRlist((struct Rlist *)retval.item);
 }
 
+ 

@@ -515,8 +515,8 @@ enum cfeditorder
 #define KM_CONNECTS_CERT_B "is connected to"
 #define KM_NEEDS_CERT_F "needs"
 #define KM_NEEDS_CERT_B "is needed by"
-#define KM_NEEDS_CERT_F "is equivalent to"
-#define KM_NEEDS_CERT_B "is equivalent to"
+#define KM_EQUIV_CERT_F "is equivalent to"
+#define KM_EQUIV_CERT_B "is equivalent to"
 
 #define KM_PARTOF_POSS_F "can be a part of"
 #define KM_PARTOF_POSS_B "can have a part"
@@ -536,8 +536,8 @@ enum cfeditorder
 #define KM_CONNECTS_POSS_B "can be connected to"
 #define KM_NEEDS_POSS_F "can need"
 #define KM_NEEDS_POSS_B "can be needed by"
-#define KM_NEEDS_POSS_F "can be equivalent to"
-#define KM_NEEDS_POSS_B "can be equivalent to"
+#define KM_EQUIV_POSS_F "can be equivalent to"
+#define KM_EQUIV_POSS_B "can be equivalent to"
 
 #define KM_PARTOF_UNCERT_F "might be a part of"
 #define KM_PARTOF_UNCERT_B "might have a part"
@@ -557,8 +557,8 @@ enum cfeditorder
 #define KM_CONNECTS_UNCERT_B "might be connected to"
 #define KM_NEEDS_UNCERT_F "might need"
 #define KM_NEEDS_UNCERT_B "might be needed by"
-#define KM_NEEDS_UNCERT_F "might be equivalent to"
-#define KM_NEEDS_UNCERT_B "might be equivalent to"
+#define KM_EQUIV_UNCERT_F "might be equivalent to"
+#define KM_EQUIV_UNCERT_B "might be equivalent to"
 
 
 enum knowledgecertainty

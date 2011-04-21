@@ -493,10 +493,16 @@ enum cfeditorder
 
 #define NOVA_SOFTWARE_INSTALLED "software_packages.csv"
 
+/***************************************************************************/
+/* Knowledge relationships                                                 */
+/***************************************************************************/
+
 #define KM_PARTOF_CERT_F "is a part of"
 #define KM_PARTOF_CERT_B "has a part"
 #define KM_DETERMINES_CERT_F "determines"
 #define KM_DETERMINES_CERT_B "is determined by"
+#define KM_CONTRIBUTES_CERT_F "contibutes to"
+#define KM_CONTRIBUTES_CERT_B "is contibuted to by"
 #define KM_USES_CERT_F "uses"
 #define KM_USES_CERT_B "is used by"
 #define KM_PROVIDES_CERT_F "provides"
@@ -510,11 +516,12 @@ enum cfeditorder
 #define KM_NEEDS_CERT_F "needs"
 #define KM_NEEDS_CERT_B "is needed by"
 
-
 #define KM_PARTOF_POSS_F "can be a part of"
 #define KM_PARTOF_POSS_B "can have a part"
 #define KM_DETERMINES_POSS_F "can determine"
 #define KM_DETERMINES_POSS_B "can be determined by"
+#define KM_CONTRIBUTES_POSS_F "can contibute to"
+#define KM_CONTRIBUTES_POSS_B "can be contibuted to by"
 #define KM_USES_POSS_F "can use"
 #define KM_USES_POSS_B "can be used by"
 #define KM_PROVIDES_POSS_F "can provide"
@@ -532,6 +539,8 @@ enum cfeditorder
 #define KM_PARTOF_UNCERT_B "might have a part"
 #define KM_DETERMINES_UNCERT_F "might determine"
 #define KM_DETERMINES_UNCERT_B "might be determined by"
+#define KM_CONTRIBUTES_UNCERT_F "might contibute to"
+#define KM_CONTRIBUTES_UNCERT_B "might be contibuted to by"
 #define KM_USES_UNCERT_F "might use"
 #define KM_USES_UNCERT_B "might be used by"
 #define KM_PROVIDES_UNCERT_F "might provide"
@@ -545,7 +554,7 @@ enum cfeditorder
 #define KM_NEEDS_UNCERT_F "might need"
 #define KM_NEEDS_UNCERT_B "might be needed by"
 
-#define KM_THING_MASK KM_PARTOF_CERT_F."|".KM_PARTOF_CERT_B."|".KM_DETERMINES_CERT_F."|".KM_DETERMINES_CERT_B."|".KM_USES_CERT_F."|".KM_USES_CERT_B."|".KM_PROVIDES_CERT_F."|".KM_PROVIDES_CERT_B."|".KM_BELONGS_CERT_F."|".KM_BELONGS_CERT_B."|".KM_AFFECTS_CERT_F."|".KM_AFFECTS_CERT_B."|".KM_CONNECTS_CERT_F."|".KM_CONNECTS_CERT_B."|".KM_PARTOF_POSS_F."|".KM_PARTOF_POSS_B."|".KM_DETERMINES_POSS_F."|".KM_DETERMINES_POSS_B."|".KM_USES_POSS_F."|".KM_USES_POSS_B."|".KM_PROVIDES_POSS_F."|".KM_PROVIDES_POSS_B."|".KM_BELONGS_POSS_F."|".KM_BELONGS_POSS_B."|".KM_AFFECTS_POSS_F."|".KM_AFFECTS_POSS_B."|".KM_CONNECTS_POSS_F."|".KM_CONNECTS_POSS_B."|".KM_PARTOF_UNCERT_F."|".KM_PARTOF_UNCERT_B."|".KM_DETERMINES_UNCERT_F."|".KM_DETERMINES_UNCERT_B."|".KM_USES_UNCERT_F."|".KM_USES_UNCERT_B."|".KM_PROVIDES_UNCERT_F."|".KM_PROVIDES_UNCERT_B."|".KM_BELONGS_UNCERT_F."|".KM_BELONGS_UNCERT_B."|".KM_AFFECTS_UNCERT_F."|".KM_AFFECTS_UNCERT_B."|".KM_CONNECTS_UNCERT_F."|".KM_CONNECTS_UNCERT_B."|".KM_NEEDS_CERT_F."|".KM_NEEDS_CERT_B."|".KM_NEEDS_POSS_F."|".KM_NEEDS_POSS_B."|".KM_NEEDS_UNCERT_F."|".KM_NEEDS_UNCERT_B
+#define KM_THING_MASK KM_PARTOF_CERT_F."|".KM_PARTOF_CERT_B."|".KM_DETERMINES_CERT_F."|".KM_DETERMINES_CERT_B."|".KM_USES_CERT_F."|".KM_USES_CERT_B."|".KM_PROVIDES_CERT_F."|".KM_PROVIDES_CERT_B."|".KM_BELONGS_CERT_F."|".KM_BELONGS_CERT_B."|".KM_AFFECTS_CERT_F."|".KM_AFFECTS_CERT_B."|".KM_CONNECTS_CERT_F."|".KM_CONNECTS_CERT_B."|".KM_PARTOF_POSS_F."|".KM_PARTOF_POSS_B."|".KM_DETERMINES_POSS_F."|".KM_DETERMINES_POSS_B."|".KM_USES_POSS_F."|".KM_USES_POSS_B."|".KM_PROVIDES_POSS_F."|".KM_PROVIDES_POSS_B."|".KM_BELONGS_POSS_F."|".KM_BELONGS_POSS_B."|".KM_AFFECTS_POSS_F."|".KM_AFFECTS_POSS_B."|".KM_CONNECTS_POSS_F."|".KM_CONNECTS_POSS_B."|".KM_PARTOF_UNCERT_F."|".KM_PARTOF_UNCERT_B."|".KM_DETERMINES_UNCERT_F."|".KM_DETERMINES_UNCERT_B."|".KM_USES_UNCERT_F."|".KM_USES_UNCERT_B."|".KM_PROVIDES_UNCERT_F."|".KM_PROVIDES_UNCERT_B."|".KM_BELONGS_UNCERT_F."|".KM_BELONGS_UNCERT_B."|".KM_AFFECTS_UNCERT_F."|".KM_AFFECTS_UNCERT_B."|".KM_CONNECTS_UNCERT_F."|".KM_CONNECTS_UNCERT_B."|".KM_NEEDS_CERT_F."|".KM_NEEDS_CERT_B."|".KM_NEEDS_POSS_F."|".KM_NEEDS_POSS_B."|".KM_NEEDS_UNCERT_F."|".KM_NEEDS_UNCERT_B."|".KM_CONTRIBUTES_UNCERT_F."|".KM_CONTRIBUTES_UNCERT_B."|".KM_CONTRIBUTES_POSS_F."|".KM_CONTRIBUTES_POSS_B."|".KM_CONTRIBUTES_CERT_F."|".KM_CONTRIBUTES_CERT_B
 
 enum knowledgecertainty
    {

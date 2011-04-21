@@ -3742,7 +3742,7 @@ if ((savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest)))
    CfOut(cf_verbose,"","A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
    
    CfOut(cf_verbose,"","Adding IP %s to SkipVerify - no need to check this if we have a key\n",conn->ipaddr);
-   PrependItem(&SKIPVERIFY,MapAddress(conn->ipaddr),NULL);
+   IdempPrependItem(&SKIPVERIFY,MapAddress(conn->ipaddr),NULL);
    
    if ((BN_cmp(savedkey->e,key->e) == 0) && (BN_cmp(savedkey->n,key->n) == 0))
       {

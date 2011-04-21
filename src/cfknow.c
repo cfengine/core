@@ -675,10 +675,11 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       return;
       }
 
-   CfOut(cf_verbose,""," -> New topic promise for \"%s\" about context \"%s\"",pp->promiser,rp->item);
-   
+   CfOut(cf_verbose,""," -> New thing \"%s\" about context \"%s\"",pp->promiser,rp->item);
+
    if (a.fwd_name && a.bwd_name)
       {
+      CfOut(cf_verbose,""," -> New thing \"%s\" has a relation \"%s/%s\"",pp->promiser,a.fwd_name,a.bwd_name);
       AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
       }
 

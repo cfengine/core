@@ -505,6 +505,8 @@ enum cfeditorder
 #define KM_BELONGS_CERT_B "owns"
 #define KM_AFFECTS_CERT_F "affects"
 #define KM_AFFECTS_CERT_B "is affected by"
+#define KM_CONNECTS_CERT_F "is connected to"
+#define KM_CONNECTS_CERT_B "is connected to"
 
 #define KM_PARTOF_POSS_F "can be a part of"
 #define KM_PARTOF_POSS_B "can have a part"
@@ -518,6 +520,8 @@ enum cfeditorder
 #define KM_BELONGS_POSS_B "can own"
 #define KM_AFFECTS_POSS_F "can affect"
 #define KM_AFFECTS_POSS_B "can be affected by"
+#define KM_CONNECTS_POSS_F "can be connected to"
+#define KM_CONNECTS_POSS_B "can be connected to"
 
 #define KM_PARTOF_UNCERT_F "might be a part of"
 #define KM_PARTOF_UNCERT_B "might have a part"
@@ -531,6 +535,8 @@ enum cfeditorder
 #define KM_BELONGS_UNCERT_B "might own"
 #define KM_AFFECTS_UNCERT_F "might affect"
 #define KM_AFFECTS_UNCERT_B "might be affected by"
+#define KM_CONNECTS_UNCERT_F "might be connected to"
+#define KM_CONNECTS_UNCERT_B "might be connected to"
 
 enum knowledgecertainty
    {

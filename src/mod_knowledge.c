@@ -85,6 +85,7 @@ struct BodySyntax CF_THING_BODIES[] =
    {"affects",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"belongs_to",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"determines",cf_slist,"","Special fixed relation for describing topics that are things"},
+   {"is_connected_to",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"is_part_of",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"provides",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"uses",cf_slist,"","Special fixed relation for describing topics that are things"},

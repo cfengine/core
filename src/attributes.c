@@ -351,7 +351,7 @@ struct Attributes GetThingsAttributes(struct Promise *pp)
   struct Rlist *rp;
   char *cert = GetConstraint("certainty",pp,CF_SCALAR);
   enum knowledgecertainty certainty;
-  
+
 if (cert && strcmp(cert,"possible") == 0)
    {
    certainty = cfk_possible;
@@ -367,7 +367,7 @@ else
 
 // Select predefined physics
 
-if (rp = GetConstraint("is_part_of",pp,CF_SCALAR))
+if (rp = GetListConstraint("is_part_of",pp))
    {
    switch (certainty)
       {
@@ -387,7 +387,7 @@ if (rp = GetConstraint("is_part_of",pp,CF_SCALAR))
 
    attr.associates = rp;
    }
-else if (rp = GetConstraint("determines",pp,CF_SCALAR))
+else if (rp = GetListConstraint("determines",pp))
    {
    switch (certainty)
       {
@@ -407,7 +407,27 @@ else if (rp = GetConstraint("determines",pp,CF_SCALAR))
 
    attr.associates = rp;
    }
-else if (rp =GetConstraint("uses",pp,CF_SCALAR))
+else if (rp = GetListConstraint("is_connected_to",pp))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.fwd_name = KM_CONNECTS_CERT_F;
+          attr.bwd_name = KM_CONNECTS_CERT_B;
+          break;
+      case cfk_uncertain:
+          attr.fwd_name = KM_CONNECTS_UNCERT_F;
+          attr.bwd_name = KM_CONNECTS_UNCERT_B;
+          break;
+      case cfk_possible:
+          attr.fwd_name = KM_CONNECTS_POSS_F;
+          attr.bwd_name = KM_CONNECTS_POSS_B;
+          break;
+      }
+
+   attr.associates = rp;
+   }
+else if (rp = GetListConstraint("uses",pp))
    {
    switch (certainty)
       {
@@ -427,7 +447,7 @@ else if (rp =GetConstraint("uses",pp,CF_SCALAR))
 
    attr.associates = rp;
    }
-else if (rp = GetConstraint("provides",pp,CF_SCALAR))
+else if (rp = GetListConstraint("provides",pp))
    {
    switch (certainty)
       {
@@ -447,7 +467,7 @@ else if (rp = GetConstraint("provides",pp,CF_SCALAR))
 
    attr.associates = rp;
    }
-else if (rp = GetConstraint("belongs_to",pp,CF_SCALAR))
+else if (rp = GetListConstraint("belongs_to",pp))
    {
    switch (certainty)
       {
@@ -467,7 +487,7 @@ else if (rp = GetConstraint("belongs_to",pp,CF_SCALAR))
 
    attr.associates = rp;
    }
-else if (rp = GetConstraint("affects",pp,CF_SCALAR))
+else if (rp = GetListConstraint("affects",pp))
    {
    switch (certainty)
       {

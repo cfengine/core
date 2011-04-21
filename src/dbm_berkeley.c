@@ -38,11 +38,20 @@
 
 #ifdef BDB
 
+/* Global variables */
+
+static bool bdb_use_verification = true;
+
 static bool BDB_VerifyDB(const char *filename)
 
 {
 int ret;
 DB *dbp;
+
+if (bdb_use_verification == false)
+   {
+   return true;
+   }
 
 if ((ret = db_create(&dbp, NULL, 0)) != 0)
    {
@@ -54,7 +63,13 @@ if ((ret = db_create(&dbp, NULL, 0)) != 0)
 
 if ((ret = (dbp->verify)(dbp, filename, NULL, NULL, 0)) != 0)
    {
-   if (ret != ENOENT)
+   if (ret == ENOTSUPP || ret == EOPNOTSUPP || ret == EINVAL)
+      {
+      CfOut(cf_error, "", "BDB_VerifyDB: verification support is disabled in BerkeleyDB: skipping database verification.\n");
+      bdb_use_verification = false;
+      return true;
+      }
+   else if (ret != ENOENT)
       {
       CfOut(cf_error, "", "BDB_VerifyDB: database %s is corrupted: %s\n",
             filename, db_strerror(ret));

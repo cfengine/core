@@ -590,6 +590,14 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 # define ERESTARTSYS EINTR
 #endif
 
+#ifndef EOPNOTSUPP
+# define EOPNOTSUPP EINVAL
+#endif
+
+#ifndef ENOTSUPP
+# define ENOTSUPP EINVAL
+#endif
+
 #define CF_FAILEDSTR "BAD: Unspecified server refusal (see verbose server output)"
 #define CF_CHANGEDSTR1 "BAD: File changed "   /* Split this so it cannot be recognized */
 #define CF_CHANGEDSTR2 "while copying"

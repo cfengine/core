@@ -658,30 +658,35 @@ return a;
 
 /****************************************************************************/
 
-long TimeCounter2Int(char *s)
+long TimeCounter2Int(const char *s)
 
-{ long h = CF_NOINT,m = CF_NOINT, r = 0;
-  char output[CF_BUFSIZE];
-  
+{
+long d = 0, h = 0, m = 0;
+char output[CF_BUFSIZE];
+
 if (s == NULL)
    {
    return CF_NOINT;
    }
 
-sscanf(s,"%ld:%ld",&h,&m);
-
-if (h == CF_NOINT || m == CF_NOINT)
+if (strchr(s, '-'))
    {
-   snprintf(output,CF_BUFSIZE,"Error reading assumed time counter value \"%s\"\n",s);
-   ReportError(output);
+   if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
+      {
+      snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
+      ReportError(output);
+      }
    }
 else
    {
-   /* Returns time in secs */
-   r = 3600 * h + 60 *m;
+   if (sscanf(s, "%ld:%ld", &h, &m) != 2)
+      {
+      snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
+      ReportError(output);
+      }
    }
 
-return r;
+return 60 * (m + 60 * (h + 24 * d));
 }
 
 /****************************************************************************/

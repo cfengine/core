@@ -286,7 +286,7 @@ enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);
 int GetBoolean(char *val);
 long Str2Int(char *s);
-long TimeCounter2Int(char *s);
+long TimeCounter2Int(const char *s);
 long TimeAbs2Int(char *s);
 void CtimeHourInterval(time_t t, char *out, int outSz);
 mode_t Str2Mode(char *s);

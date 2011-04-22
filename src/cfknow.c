@@ -690,9 +690,33 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       char synonym[CF_BUFSIZE];
       snprintf(synonym,CF_BUFSIZE-1,"handles::%s",handle);
       otp = IdempInsertTopic(synonym);
-      PrependFullItem(&(tp->synonyms),otp->topic_name,NULL,otp->id,0);      
+      PrependRScalar(&(a.synonyms),otp->topic_name,CF_SCALAR);
       }
    
+   // Handle all synonyms as associations
+   
+   if (a.synonyms)
+      {
+      for (rps = a.general; rps != NULL; rps=rps->next)
+         {
+         otp = IdempInsertTopic(rps->item);
+         }
+      
+      AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true);
+      }
+
+   // Handle all generalizations as associations
+
+   if (a.general)
+      {
+      for (rps = a.general; rps != NULL; rps=rps->next)
+         {
+         otp = IdempInsertTopic(rps->item);
+         }
+      
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true);
+      }
+
    // Treat comments as occurrences of information.
 
    if (pp->ref)
@@ -754,11 +778,27 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       }
 
    // Handle all synonyms as associations
-   
-   for (rps = a.synonyms; rps != NULL; rps=rps->next)
+
+   if (a.synonyms)
       {
-      otp = IdempInsertTopic(rps->item);
-      PrependFullItem(&(tp->synonyms),otp->topic_name,NULL,otp->id,0);      
+      for (rps = a.general; rps != NULL; rps=rps->next)
+         {
+         otp = IdempInsertTopic(rps->item);
+         }
+      
+      AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true);
+      }
+
+   // Handle all generalizations as associations
+
+   if (a.general)
+      {
+      for (rps = a.general; rps != NULL; rps=rps->next)
+         {
+         otp = IdempInsertTopic(rps->item);
+         }
+      
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true);
       }
    
    if (handle)
@@ -766,7 +806,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       char synonym[CF_BUFSIZE];
       snprintf(synonym,CF_BUFSIZE-1,"handles::%s",handle);
       otp = IdempInsertTopic(synonym);
-      PrependFullItem(&(tp->synonyms),otp->topic_name,NULL,otp->id,0);      
+      PrependRScalar(&(a.synonyms),otp->topic_name,CF_SCALAR);
       }
    
    // Treat comments as occurrences of information.

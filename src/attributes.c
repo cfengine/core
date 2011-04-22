@@ -352,6 +352,9 @@ struct Attributes GetThingsAttributes(struct Promise *pp)
   char *cert = GetConstraint("certainty",pp,CF_SCALAR);
   enum knowledgecertainty certainty;
 
+attr.synonyms = GetListConstraint("synonyms",pp);
+attr.general = GetListConstraint("generalizations",pp);
+
 if (cert && strcmp(cert,"possible") == 0)
    {
    certainty = cfk_possible;

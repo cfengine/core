@@ -98,7 +98,6 @@ else
 
    tp->id = GLOBAL_ID++;
    tp->associations = NULL;
-   tp->synonyms = NULL;
    tp->next = *list;
    *list = tp;
    CF_NODES++;

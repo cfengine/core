@@ -560,6 +560,9 @@ enum cfeditorder
 #define KM_EQUIV_UNCERT_F "might be equivalent to"
 #define KM_EQUIV_UNCERT_B "might be equivalent to"
 
+#define KM_GENERALIZES_F "is a generalization of"
+#define KM_GENERALIZES_B "is a case of"
+#define KM_SYNONYM "is a synonym for"
 
 enum knowledgecertainty
    {
@@ -1291,7 +1294,6 @@ struct Topic
    char *topic_context;
    char *topic_name;
    double evc;
-   struct Item *synonyms;
    struct TopicAssociation *associations;
    struct Topic *next;
    };

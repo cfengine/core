@@ -1178,7 +1178,6 @@ if (!(isrange||isCIDR))
  
 if (isv4)
    {
-
    if (isCIDR)
       {
       struct sockaddr_in addr1,addr2;

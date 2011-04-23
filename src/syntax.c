@@ -1037,8 +1037,8 @@ if (!err)
 int CheckParseVariableName(char *name)
 
 { char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", NULL };
- char *sp,scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE];
-  int count = 0;
+  char *sp,scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE];
+  int count = 0, level = 0;
   
 if (IsStrIn(name,reserved,false))
    {
@@ -1051,22 +1051,43 @@ if (strchr(name,'.'))
    {
    for (sp = name; *sp != '\0'; sp++)
       {
-      if (*sp == '.')
+      switch (*sp)
          {
-         count++;
+         case '.':
+             if (++count > 1 && level != 1)
+                {
+                return false;
+                }
+             break;
+             
+         case '[':
+             level++;
+             break;
+             
+         case ']':
+             level--;
+             break;
+             
+         default:
+             break;
+         }
 
-         if (count > 1)
-            {
-            return false;
-            }
-         }      
+      if (level > 1)
+         {
+         yyerror("Too many levels of [] reserved for array use");
+         return false;
+         }
+
       }
-   
-   sscanf(name,"%[^.].%s",scopeid,vlval);
 
-   if (strlen(scopeid) == 0 || strlen(vlval) == 0)
+   if (count == 1)
       {
-      return false;
+      sscanf(name,"%[^.].%s",scopeid,vlval);
+   
+      if (strlen(scopeid) == 0 || strlen(vlval) == 0)
+         {
+         return false;
+         }
       }
    }
 

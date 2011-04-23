@@ -84,7 +84,7 @@ struct BodySyntax CF_THING_BODIES[] =
    {"synonyms",cf_slist,"","A list of words to be treated as equivalents in the defined context"},
    {"affects",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"belongs_to",cf_slist,"","Special fixed relation for describing topics that are things"},
-   {"certainty",cf_str,"certain,uncertain,possible","Selects the level of certainty for the proposed knowledge, for use in inferential reasoning"},
+   {"certainty",cf_opts,"certain,uncertain,possible","Selects the level of certainty for the proposed knowledge, for use in inferential reasoning"},
    {"determines",cf_slist,"","Special fixed relation for describing topics that are things"},
    {"generalizations",cf_slist,"","A list of words to be treated as super-sets for the current topic, used when reasoning"},
    {"is_connected_to",cf_slist,"","Special fixed relation for describing topics that are things"},

@@ -497,16 +497,16 @@ enum cfeditorder
 /* Knowledge relationships                                                 */
 /***************************************************************************/
 
-#define KM_PARTOF_CERT_F "is a part of"
-#define KM_PARTOF_CERT_B "has a part"
-#define KM_DETERMINES_CERT_F "determines"
-#define KM_DETERMINES_CERT_B "is determined by"
+#define KM_PARTOF_CERT_F "is/are a part of"
+#define KM_PARTOF_CERT_B "has/have as a part"
+#define KM_DETERMINES_CERT_F "determine(s)"
+#define KM_DETERMINES_CERT_B "is/are determined by"
 #define KM_CONTRIBUTES_CERT_F "contibutes to"
 #define KM_CONTRIBUTES_CERT_B "is contibuted to by"
-#define KM_USES_CERT_F "uses"
-#define KM_USES_CERT_B "is used by"
-#define KM_PROVIDES_CERT_F "provides"
-#define KM_PROVIDES_CERT_B "is provided by"
+#define KM_USES_CERT_F "use(s)"
+#define KM_USES_CERT_B "is/are used by"
+#define KM_PROVIDES_CERT_F "provide(s)"
+#define KM_PROVIDES_CERT_B "is/are provided by"
 #define KM_BELONGS_CERT_F "belongs to"
 #define KM_BELONGS_CERT_B "owns"
 #define KM_AFFECTS_CERT_F "affects"
@@ -521,8 +521,8 @@ enum cfeditorder
 #define KM_SHIELD_CERT_B "is not allowed access to"
 #define KM_ACCESS_CERT_F "grants access to"
 #define KM_ACCESS_CERT_B "is allowed to access"
-#define KM_MONITOR_CERT_F "monitors"
-#define KM_MONITOR_CERT_B "is monitored by"
+#define KM_MONITOR_CERT_F "monitor(s)"
+#define KM_MONITOR_CERT_B "is/are monitored by"
 
 
 #define KM_PARTOF_POSS_F "can be a part of"

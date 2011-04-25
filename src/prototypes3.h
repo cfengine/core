@@ -262,6 +262,8 @@ struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
+char *EscapeJson(char *s, char *out, int outSz);
+char *EscapeRegex(char *s, char *out, int outSz);
 char *EscapeQuotes(char *s, char *out, int outSz);
 char *MapAddress (char *addr);
 void IPString2KeyDigest(char *ipv4,char *result);

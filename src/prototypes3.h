@@ -1074,7 +1074,7 @@ void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 void DeleteAllClasses(struct Rlist *list);
 void ExtractOperationLock(char *op);
 void PromiseLog(char *s);
-void FatalError(char *s);
+void FatalError(char *s, ...);
 void AuditStatusMessage(FILE*fp,char status);
 
 /* manual.c */

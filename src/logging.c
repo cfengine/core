@@ -508,13 +508,18 @@ fclose(fout);
 
 /************************************************************************/
 
-void FatalError(char *s)
+void FatalError(char *s, ...)
     
 { struct CfLock best_guess;
 
 if (s)
    {
-   CfOut(cf_error,"","Fatal cfengine error: %s",s); 
+   va_list ap;
+   char buf[CF_BUFSIZE] = "";
+   va_start(ap, s);
+   vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
+   va_end(ap);
+   CfOut(cf_error,"","Fatal cfengine error: %s", buf);
    }
 
 if (strlen(CFLOCK) > 0)

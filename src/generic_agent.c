@@ -277,11 +277,6 @@ else
    v = "not specified";
    }
 
-if (strchr(retval,':'))
-   {
-   CfOut(cf_error,""," !! The version string may not contain the \":\" character");
-   }
-
 snprintf(vbuff,CF_BUFSIZE-1,"Expanded promises for %s",agents);
 CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
 

@@ -655,6 +655,7 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
          }
 
       retval |= InsertCompoundLineAtLocation(exp,start,loc,prev,a,pp);
+      //retval |= InsertMissingLineAtLocation(exp,start,loc,prev,a,pp);
 
       if (prev && prev != CF_UNDEFINED_ITEM)
          {
@@ -699,7 +700,7 @@ else
 
          if (!multiline)
             {
-            retval |= InsertMissingLineAtLocation(buf,start,loc,prev,a,pp);
+            retval |= InsertCompoundLineAtLocation(buf,start,loc,prev,a,pp);
          
             if (prev && prev != CF_UNDEFINED_ITEM)
                {
@@ -725,7 +726,7 @@ else
             sscanf(sp,"%[^\n]",buf);
             sp += strlen(buf);
             
-            retval |= InsertMissingLineAtLocation(buf,start,loc,prev,a,pp);
+            retval |= InsertCompoundLineAtLocation(buf,start,loc,prev,a,pp);
             
             if (prev && prev != CF_UNDEFINED_ITEM)
                {
@@ -743,7 +744,7 @@ else
       }
    else
       {
-      return InsertMissingLineAtLocation(pp->promiser,start,location,prev,a,pp);
+      return InsertCompoundLineAtLocation(pp->promiser,start,location,prev,a,pp);
       }
    }
 }
@@ -1166,8 +1167,17 @@ if (strchr(newline,'\n') != NULL) /* Multi-line string */
       sscanf(sp,"%2048[^\n]",buf);
       sp += strlen(buf);
 
+      if (!SelectLine(buf,a,pp))
+         {
+         continue;
+         }
+      
       result |= InsertMissingLineAtLocation(buf,start,location,prev,a,pp);
       }
+   }
+else
+   {
+   result |= InsertMissingLineAtLocation(newline,start,location,prev,a,pp);
    }
 
 return result;

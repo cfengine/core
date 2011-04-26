@@ -695,12 +695,29 @@ else
             need_insert = true;            
             }
          }
-
+      
       if (need_insert)
-         {
-         return InsertMissingLineAtLocation(pp->promiser,start,location,prev,a,pp);
+         {         
+         for (sp = pp->promiser; sp <= pp->promiser+strlen(pp->promiser); sp++)
+            {
+            memset(buf,0,CF_BUFSIZE);
+            sscanf(sp,"%[^\n]",buf);
+            sp += strlen(buf);
+            
+            retval |= InsertMissingLineAtLocation(buf,start,loc,prev,a,pp);
+            
+            if (prev && prev != CF_UNDEFINED_ITEM)
+               {
+               prev = prev->next;
+               }
+            
+            if (loc)
+               {
+               loc = loc->next;
+               }
+            }
          }
-
+      
       return retval;
       }
    else

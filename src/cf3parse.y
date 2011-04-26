@@ -473,7 +473,7 @@ usefunction:          functionid givearglist
 
 givearglist:            '('
                            {
-                           if (++P.arg_nesting > CF_MAX_NESTING)
+                           if (++P.arg_nesting >= CF_MAX_NESTING)
                               {
                               yyerror("Nesting of functions is deeper than recommended");
                               }

@@ -537,6 +537,8 @@ if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    FatalError("");
    }
 
+
+
 pp->audit = NULL;
 pp->lineno = 0;
 pp->bundle =  strdup("implicit internal bundle for runagent");
@@ -548,6 +550,7 @@ pp->conlist = NULL;
 pp->done = false;
 pp->donep = &(pp->done);
 pp->ref = NULL;
+pp->agentsubtype = NULL;
 
 pp->this_server = NULL;
 pp->cache = NULL;

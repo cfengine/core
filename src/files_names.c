@@ -89,7 +89,7 @@ for (ip = path; ip != NULL; ip=ip->next)
 
    if (!JoinPath(pbuffer,ip->name))
       {
-      CfOut(cf_error,"","Buffer overflow in LocateFilePromiserGroup\n");
+      CfOut(cf_error,"","Buffer has limited size in LocateFilePromiserGroup\n");
       return;
       }
 
@@ -260,7 +260,7 @@ else
 
       if (!JoinPath(path,dirp->d_name))
          {
-         CfOut(cf_error,""," !! Buffer overflow adding %s to %s in IsNewerFileTree",dir,path);
+         CfOut(cf_error,"","Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree",dir,path);
 	 closedir(dirh);
          return false;
          }
@@ -365,7 +365,7 @@ AddSlash(path);
 
 if ((strlen(path)+len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
    {
-   CfOut(cf_error,"","Buffer overflow constructing string. Tried to add %s to %s\n",leaf,path);
+   CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string. Tried to add %s to %s\n",leaf,path);
    return NULL;
    }
 
@@ -384,7 +384,7 @@ DeleteSlash(path);
       
 if ((strlen(path)+len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
    {
-   CfOut(cf_error,"","Buffer overflow constructing string. Tried to add %s to %s\n",leaf,path);
+   CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string. Tried to add %s to %s\n",leaf,path);
    return NULL;
    }
 
@@ -443,36 +443,32 @@ int EndJoin(char *path,char *leaf,int bufsize)
 
 int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin)
 
-{ 
-  int len = strlen(leaf);
-
+{ int len = strlen(leaf);
 
 if (margin < 0)
    {
    FatalError("Negative margin in JoinMargin()");
    }
 
-
- if(nextFree)
+if(nextFree)
    {
-   if((*nextFree - path) + len > (bufsize - margin) )
-     {
-     CfOut(cf_error,"","Buffer overflow constructing string (using nextFree), len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
-     return false;
-     }
+   if ((*nextFree - path) + len > (bufsize - margin) )
+      {
+      CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string (using nextFree), len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
+      return false;
+      }
    
    strcpy(*nextFree, leaf);
    *nextFree += len;
    }
- else
+else
    {
-
    if ((strlen(path)+len) > (bufsize - margin))
-     {
-     CfOut(cf_error,"","Buffer overflow constructing string, len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
-     return false;
-     }
-
+      {
+      CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string (%d > %d).\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
+      return false;
+      }
+   
    strcat(path,leaf);
    }
 

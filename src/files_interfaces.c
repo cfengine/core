@@ -1513,6 +1513,7 @@ lastnode=ReadLastNode(sourcefile);
 if (MatchRlistItem(attr.copy.copy_links,lastnode))
    {
    struct stat ssb;
+   ExpandLinks(linkbuf,sourcefile,0);
    CfOut(cf_verbose,"","cfengine: link item in copy %s marked for copying from %s instead\n",sourcefile,linkbuf);
    cfstat(linkbuf,&ssb);
    CfCopyFile(linkbuf,destfile,ssb,attr,pp);

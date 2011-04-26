@@ -192,7 +192,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -243,7 +243,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
          FatalError("Aborted");
          }
 
@@ -294,7 +294,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (!(cp->type == CF_FNCALL || cp->type == CF_SCALAR))
          {
-         CfOut(cf_error,"","Software error - type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,"","Anomalous type mismatch - type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -332,7 +332,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type for int constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -369,7 +369,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type for int constraint %s did not match internals\n",lval);
          FatalError("Aborted");
          }
 
@@ -408,7 +408,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type for int constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type for int constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -452,7 +452,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type for owner constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type for owner constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -497,7 +497,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Software error - expected type for group constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type for group constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -536,7 +536,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_LIST)
          {
-         CfOut(cf_error,"","Software error - expected type for list constraint %s did not match internals\n",lval);
+         CfOut(cf_error,"","Anomalous type mismatch - expected type for list constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }

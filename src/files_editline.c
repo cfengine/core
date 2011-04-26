@@ -654,7 +654,7 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
          continue;
          }
 
-      retval |= InsertMissingLineAtLocation(exp,start,loc,prev,a,pp);
+      retval |= InsertCompoundLineAtLocation(exp,start,loc,prev,a,pp);
 
       if (prev && prev != CF_UNDEFINED_ITEM)
          {
@@ -1148,6 +1148,31 @@ return ok;
 
 /***************************************************************************/
 /* Level                                                                   */
+/***************************************************************************/
+
+int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+
+{ char *sp;
+  int result = false;
+  char buf[CF_EXPANDSIZE];
+
+if (strchr(newline,'\n') != NULL) /* Multi-line string */
+   {
+   char *sp;
+   
+   for (sp = newline; sp <= newline+strlen(newline); sp++)
+      {
+      memset(buf,0,CF_BUFSIZE);
+      sscanf(sp,"%2048[^\n]",buf);
+      sp += strlen(buf);
+
+      result |= InsertMissingLineAtLocation(buf,start,location,prev,a,pp);
+      }
+   }
+
+return result;
+}
+
 /***************************************************************************/
 
 int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)

@@ -678,6 +678,7 @@ int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct
 int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
 int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
 int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
 int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
 int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);

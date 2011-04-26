@@ -175,7 +175,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
       return false;
       }
    
-   if (min < value && value < max)
+   if (min <= value && value <= max)
       {
       return true;
       }
@@ -205,7 +205,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
       return false;
       }
 
-   if (min < value && value < max)
+   if (min <= value && value <= max)
       {
       CfOut(cf_verbose,"","Selection filter matched counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n",name1,name2,line[i],min,max,value);
       return true;
@@ -237,7 +237,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
       return false;
       }
    
-   if (min < value && value < max)
+   if (min <= value && value <= max)
       {
       CfOut(cf_verbose,"","Selection filter matched absolute %s/%s = %s in [%ld,%ld]\n",name1,name2,line[i],min,max);
       return true;

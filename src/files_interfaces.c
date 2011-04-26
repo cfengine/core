@@ -1996,7 +1996,7 @@ if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))
       }
    else
       {
-      if (attr.transaction.action = cfa_warn)
+      if (attr.transaction.action == cfa_warn)
          {
          CfOut(cf_verbose,""," !! Need to remove old hard link %s to preserve structure..\n",value);
          }

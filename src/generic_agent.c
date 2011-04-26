@@ -131,7 +131,7 @@ if (ag != cf_keygen)
    {
    if (!MissingInputFile())
       {
-      bool check_promises = false;
+      int check_promises = false;
 
       if (SHOWREPORTS)
          {

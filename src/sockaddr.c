@@ -94,7 +94,7 @@ printf("Coded %s\n",sockaddr_ntop((struct sockaddr *)&p));
 
 /*****************************************************************************/
 
-bool sockaddr_pton(int af,void *src, void *genaddr)
+int sockaddr_pton(int af,void *src, void *genaddr)
 {
 switch (af)
    {

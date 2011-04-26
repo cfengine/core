@@ -143,7 +143,7 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   int lineno = pp->lineno;
   char name[CF_BUFSIZE];
   char *noLogTypes[] = { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
-  bool log = true;
+  int log = true;
   int i;
 
   // Don't log these items

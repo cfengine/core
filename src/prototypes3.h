@@ -774,7 +774,7 @@ int IsIn(char c,char *str);
 int IsStrIn(char *str, char **strs, int ignoreCase);
 void FreeStringArray(char **strs);
 int IsAbsoluteFileName(const char *f);
-bool IsFileOutsideDefaultRepository(const char *f);
+int IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(char *f);
 char ToLower (char ch);
 char ToUpper (char ch);
@@ -1430,7 +1430,7 @@ char *sockaddr_ntop (struct sockaddr *sa);
 
 /* Thread-safe. Returns boolean success.
    It's up to caller to provide large enough addr. */
-bool sockaddr_pton (int af,void *src, void *addr);
+int sockaddr_pton (int af,void *src, void *addr);
 
 /* storage_tools.c */
 

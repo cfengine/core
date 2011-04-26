@@ -77,8 +77,8 @@ return Unix_FnCallGroupExists(fp, finalargs);
 /*******************************************************************/
 
 static struct Rlist *GetHostsFromLastseenDB(CF_DB *db, CF_DBC *cursor,
-                                            time_t horizon, bool return_address,
-                                            bool return_recent)
+                                            time_t horizon, int return_address,
+                                            int return_recent)
 {
 struct Rlist *recent = NULL, *aged = NULL;
 int ksize, vsize;

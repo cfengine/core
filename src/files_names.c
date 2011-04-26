@@ -927,7 +927,7 @@ if (f[off] == '/')
 return false;
 }
 
-bool IsFileOutsideDefaultRepository(const char *f)
+int IsFileOutsideDefaultRepository(const char *f)
 {
 return (*f == '.') || IsAbsoluteFileName(f);
 }

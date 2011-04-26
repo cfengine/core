@@ -437,8 +437,6 @@ if (SERVER_KEYSEEN == NULL)
    return;
    }
 
-ThreadUnlock(cft_server_keyseen);
-
 
 if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
    {
@@ -451,6 +449,7 @@ MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
+   ThreadUnlock(cft_server_keyseen);
    return;
    }
 
@@ -459,6 +458,7 @@ if (!OpenDB(name,&dbp))
 
 if (!NewDBCursor(dbp,&dbcp))
    {
+   ThreadUnlock(cft_server_keyseen);
    CfOut(cf_inform,""," !! Unable to scan class db");
    return;
    }
@@ -475,8 +475,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
       DeleteDB(dbp,key);
       }
 
-   ThreadLock(cft_server_keyseen);
-
    for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       {
       kp = (struct CfKeyBinding *) rp->item;
@@ -488,15 +486,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
          }
       }
 
-   ThreadUnlock(cft_server_keyseen);
-
    }
 
 DeleteDBCursor(dbp,dbcp);
 
 /* Now perform updates with the latest data */
-
-ThreadLock(cft_server_keyseen);
 
 for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
    {

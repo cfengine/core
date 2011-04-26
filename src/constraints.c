@@ -616,6 +616,19 @@ if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
       }
    }
 
+
+/* Special promise type checks */
+
+if (!IsDefinedClass(pp->classes))
+   {
+   return;
+   }
+
+if (VarClassExcluded(pp,&sp))
+   {
+   return;
+   }
+
 if (SHOWREPORTS)
    {
    NewPromiser(pp);
@@ -659,18 +672,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval,cp->type);
    }     
-
-/* Special promise type checks */
-
-if (!IsDefinedClass(pp->classes))
-   {
-   return;
-   }
-
-if (VarClassExcluded(pp,&sp))
-   {
-   return;
-   }
 
 if (strcmp(pp->agentsubtype,"insert_lines") == 0)
    {

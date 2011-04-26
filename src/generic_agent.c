@@ -41,14 +41,16 @@ extern void CheckOpts(int argc,char **argv);
 
 static void SanitizeEnvironment()
 {
-    /* ps(1) and other utilities invoked by Cfengine may be affected */
-    unsetenv("COLUMNS");
-
-    /* Make sure subprocesses output is not localized */
-    unsetenv("LANG");
-    unsetenv("LANGUAGE");
-    unsetenv("LC_MESSAGES");
+ /* ps(1) and other utilities invoked by Cfengine may be affected */
+unsetenv("COLUMNS");
+ 
+ /* Make sure subprocesses output is not localized */
+unsetenv("LANG");
+unsetenv("LANGUAGE");
+unsetenv("LC_MESSAGES");
 }
+
+/*****************************************************************************/
 
 void GenericInitialize(int argc,char **argv,char *agents)
 
@@ -877,7 +879,6 @@ void Cf3ParseFile(char *filename)
   struct Rlist *rp;
   int access = false;
   char wfilename[CF_BUFSIZE];
-
 
 strncpy(wfilename,InputLocation(filename),CF_BUFSIZE);
 

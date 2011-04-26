@@ -457,7 +457,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          {
          char name[CF_MAXVARSIZE] = "";
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-         CanonifyNameInPlace(name);
+         CanonifyNameInplace(name);
 
          if (!IsItemIn(ABORTHEAP,name))
             {
@@ -477,7 +477,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          {
          char name[CF_MAXVARSIZE] = "";
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-         CanonifyNameInPlace(name);
+         CanonifyNameInplace(name);
 
          if (!IsItemIn(ABORTBUNDLEHEAP,name))
             {

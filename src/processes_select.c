@@ -282,6 +282,7 @@ return false;
 int SplitProcLine(char *proc,char **names,int *start,int *end,char **line)
 
 { int i,s,e;
+  char *sp,cols1[CF_PROCCOLS][CF_SMALLBUF],cols2[CF_PROCCOLS][CF_SMALLBUF];
 
 Debug("SplitProcLine(%s)\n",proc); 
 
@@ -293,6 +294,41 @@ if (proc == NULL || strlen(proc) == 0)
 for (i = 0; i < CF_PROCCOLS; i++)
    {
    line[i] = NULL;
+   cols1[i][0] = '\0';
+   cols2[i][0] = '\0';
+   }
+
+// First try looking at all the separable items
+
+sp = proc;
+
+for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
+   {
+   while(*sp == ' ')
+      {
+      sp++;
+      }
+
+   if (strcmp(names[i],"CMD") == 0 || strcmp(names[i],"COMMAND") == 0)
+      {
+      sscanf(sp,"%[^\n]",&(cols1[i]));
+      sp += strlen(cols1[i]);
+      }
+   else
+      {
+      sscanf(sp,"%s",&(cols1[i]));
+      sp += strlen(cols1[i]);
+      }
+   
+   // Some ps stimes may contain spaces, e.g. "Jan 25"
+   if (strcmp(names[i],"STIME") == 0 && strlen(cols1[i]) == 3)
+      {
+      char s[CF_SMALLBUF] = {0};
+      sscanf(sp,"%s",s);
+      strcat(cols1[i]," ");
+      strcat(cols1[i],s);
+      sp += strlen(s)+1;
+      }
    }
  
 for (i = 0; names[i] != NULL; i++)
@@ -334,17 +370,21 @@ for (i = 0; names[i] != NULL; i++)
    
    if (s <= e)
       {
-      line[i] = (char *)malloc(e-s+2);
-      memset(line[i],0,(e-s+2));
-      strncpy(line[i],(char *)(proc+s),(e-s+1));
+      strncpy(cols2[i],(char *)(proc+s),(e-s+1));
       }
    else
       {
-      line[i] = (char *)malloc(1);
-      line[i][0] = '\0';
+      cols2[i][0] = '\0';
       }
 
-   Chop(line[i]);
+   Chop(cols2[i]);
+
+   if (strcmp(cols2[i],cols1[i]) != 0)
+      {
+      CfOut(cf_inform,""," !! Unacceptable model uncertainty examining processes");
+      }
+
+   line[i] = strdup(cols1[i]);
    }
 
 return true;

@@ -322,6 +322,14 @@ typedef int clockid_t;
 # include <selinux/selinux.h>
 #endif
 
+#ifndef MIN
+# define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef MAX
+# define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 /*******************************************************************/
 /* Various defines                                                 */
 /*******************************************************************/

@@ -255,6 +255,56 @@ if (!lmatch || !allowed)
 
 /******************************************************************************************/
 
+int LvalWantsBody(char *stype,char *lval)
+
+{ int lmatch = false;
+  int i,j,k,l, allowed = false;
+  struct SubTypeSyntax *ss;
+  struct BodySyntax *bs,*bs2;
+  enum cfdatatype ltype;
+  char output[CF_BUFSIZE];
+
+for  (i = 0; i < CF3_MODULES; i++)
+   {
+   if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+      {
+      continue;
+      }
+  
+   for (j = 0; ss[j].subtype != NULL; j++)
+      {
+      if ((bs = ss[j].bs) == NULL)
+         {
+         continue;
+         }
+      
+      if (strcmp(ss[j].subtype,stype) != 0)
+         {
+         continue;
+         }
+
+      for (l = 0; bs[l].range != NULL; l++)
+         {
+         if (strcmp(bs[l].lval,lval) == 0)
+            {
+            if (bs[l].dtype == cf_body)
+               {
+               return true;
+               }
+            else
+               {
+               return false;
+               }
+            }
+         }
+      }
+   }
+
+return false;
+}
+
+/******************************************************************************************/
+
 void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype)
 
 { int lmatch = false;

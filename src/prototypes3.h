@@ -1434,6 +1434,7 @@ int Unix_GetDiskUsage(char *file, enum cfsizes type);
 
 /* syntax.c */
 
+int LvalWantsBody(char *stype,char *lval);
 int CheckParseVariableName(char *name);
 void CheckBundle(char *name,char *type);
 void CheckBody(char *name,char *type);

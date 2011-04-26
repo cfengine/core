@@ -110,7 +110,6 @@ long LASTT[CF_OBSERVABLES];
 
 void MonInitialize(void);
 void StartServer (int argc, char **argv);
-void yyerror (char *s);
 void RotateFiles (char *s, int n);
 
 void GetDatabaseAge (void);

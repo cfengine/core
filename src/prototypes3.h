@@ -1428,9 +1428,9 @@ void *sockaddr_pton (int af,void *src);
 
 /* storage_tools.c */
 
-int GetDiskUsage(char *file, enum cfsizes type);
+off_t GetDiskUsage(char *file, enum cfsizes type);
 #ifndef MINGW
-int Unix_GetDiskUsage(char *file, enum cfsizes type);
+off_t Unix_GetDiskUsage(char *file, enum cfsizes type);
 #endif  /* NOT MINGW */
 
 /* syntax.c */

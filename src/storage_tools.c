@@ -46,7 +46,7 @@
 
 /************************************************************************/
 
-int GetDiskUsage(char *file,enum cfsizes type)
+off_t GetDiskUsage(char *file,enum cfsizes type)
 {
 #ifdef MINGW
 return NovaWin_GetDiskUsage(file, type);
@@ -61,7 +61,7 @@ return Unix_GetDiskUsage(file, type);
 
 #ifndef MINGW
 
-int Unix_GetDiskUsage(char *file,enum cfsizes type)
+off_t Unix_GetDiskUsage(char *file,enum cfsizes type)
 {
 #if defined SOLARIS || defined OSF || defined UNIXWARE  || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
@@ -70,7 +70,7 @@ int Unix_GetDiskUsage(char *file,enum cfsizes type)
 #else
     struct statfs buf;
 #endif
-    u_long blocksize = 1024, total = 0, used = 0, avail = 0;
+    off_t blocksize = 1024, total = 0, used = 0, avail = 0;
     int capacity = 0;
     
 memset(&buf,0,sizeof(buf));

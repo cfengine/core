@@ -4290,7 +4290,7 @@ struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rlist *rp;
   struct Rval rval;
   char buffer[CF_BUFSIZE];
-  u_long df;
+  off_t df;
   
 buffer[0] = '\0';  
 ArgTemplate(fp,CF_FNCALL_TYPES[cfn_diskfree].args,finalargs); /* Arg validation */
@@ -4302,7 +4302,7 @@ if (df == CF_INFINITY)
    df = 0;
    }
 
-snprintf(buffer,CF_BUFSIZE-1,"%d", df);
+snprintf(buffer,CF_BUFSIZE-1,"%lld", df);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {

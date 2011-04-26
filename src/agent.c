@@ -455,9 +455,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
-         if (!IsItemIn(ABORTHEAP,rp->item))
+         char name[CF_MAXVARSIZE] = "";
+         strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+         CanonifyNameInPlace(name);
+
+         if (!IsItemIn(ABORTHEAP,name))
             {
-            AppendItem(&ABORTHEAP,rp->item,cp->classes);
+            AppendItem(&ABORTHEAP,name,cp->classes);
             }
          }
       
@@ -471,9 +475,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       
       for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
          {
-         if (!IsItemIn(ABORTBUNDLEHEAP,rp->item))
+         char name[CF_MAXVARSIZE] = "";
+         strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+         CanonifyNameInPlace(name);
+
+         if (!IsItemIn(ABORTBUNDLEHEAP,name))
             {
-            AppendItem(&ABORTBUNDLEHEAP,rp->item,cp->classes);
+            AppendItem(&ABORTBUNDLEHEAP,name,cp->classes);
             }
          }
       

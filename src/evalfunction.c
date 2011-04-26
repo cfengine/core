@@ -1768,7 +1768,7 @@ name = finalargs->next->item;
 if (strstr(name,"."))
    {
    scopeid[0] = '\0';
-   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   sscanf(name,"%[^.].%127s",scopeid,lval);
    }
 else
    {

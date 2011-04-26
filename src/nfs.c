@@ -86,7 +86,7 @@ do
    
    sscanf(vbuff,"%s%s%s",buf1,buf2,buf3);
 
-   if (vbuff[0] == '\n')
+   if (vbuff[0] == '\0' || vbuff[0] == '\n')
       {
       break;
       }

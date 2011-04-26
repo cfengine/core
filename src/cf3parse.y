@@ -12,6 +12,8 @@
 
 extern char *yytext;
 
+static void fatal_yyerror(const char *s);
+
 %}
 
 %token ID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
@@ -475,7 +477,7 @@ givearglist:            '('
                            {
                            if (++P.arg_nesting >= CF_MAX_NESTING)
                               {
-                              yyerror("Nesting of functions is deeper than recommended");
+                              fatal_yyerror("Nesting of functions is deeper than recommended");
                               }
                            P.currentfnid[P.arg_nesting] = strdup(P.currentid);
                            Debug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
@@ -558,6 +560,18 @@ if (ERRORCOUNT > 10)
    {
    FatalError("Too many errors");
    }
+}
+
+static void fatal_yyerror(const char *s)
+{
+char *sp = yytext;
+/* Skip quotation mark */
+if (sp && *sp == '\"' && sp[1])
+   {
+   sp++;
+   }
+
+FatalError("%s> %s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", VPREFIX, P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
 }
 
 /*****************************************************************/

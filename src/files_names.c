@@ -898,7 +898,7 @@ strs = NULL;
 
 /*********************************************************************/
 
-int IsAbsoluteFileName(char *f)
+int IsAbsoluteFileName(const char *f)
 
 { int quoted,off = 0;
 
@@ -927,6 +927,10 @@ if (f[off] == '/')
 return false;
 }
 
+bool IsFileOutsideDefaultRepository(const char *f)
+{
+return (*f == '.') || IsAbsoluteFileName(f);
+}
 
 /*******************************************************************/
 

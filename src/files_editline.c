@@ -731,16 +731,20 @@ else
     
 int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
-{ struct Item *ip,*np,*lp;
- int in_region = false, retval = false, match, noedits = true;
-
+{ struct Item *ip,*np = NULL,*lp;
+  int in_region = false, retval = false, match, noedits = true;
+  int i,lines = 0;
+  char *sp,buf[CF_BUFSIZE];
+  
 if (start == NULL)
    {
    return false;
    }
-  
+
 for (ip = *start; ip != NULL; ip = np)
    {
+   lines = 0;
+   
    if (ip == begin)
       {
       in_region = true;
@@ -754,21 +758,31 @@ for (ip = *start; ip != NULL; ip = np)
 
    if (a.not_matching)
       {
-      match = !FullTextMatch(pp->promiser,ip->name);
+      match = !MatchRegion(pp->promiser,ip,begin,end);
       }
    else
       {
-      match = FullTextMatch(pp->promiser,ip->name);
+      match = MatchRegion(pp->promiser,ip,begin,end);
       }
-
+   
    if (!SelectLine(ip->name,a,pp)) // Start search from location
       {
       np = ip->next;
       continue;
       }
-         
+
    if (in_region && match)
       {
+      for (sp = pp->promiser; sp <= pp->promiser+strlen(pp->promiser); sp++)
+         {
+         memset(buf,0,CF_BUFSIZE);
+         sscanf(sp,"%[^\n]",buf);
+         sp += strlen(buf);
+         lines++;
+         }
+      
+      CfOut(cf_verbose,""," -> Delete chunk of %d lines\n",lines,ip->name);
+      
       if (a.transaction.action == cfa_warn)
          {
          cfPS(cf_error,CF_WARN,"",pp,a," -> Need to delete line \"%s\" from %s - but only a warning was promised",ip->name,pp->this_server);
@@ -777,47 +791,57 @@ for (ip = *start; ip != NULL; ip = np)
          }
       else
          {
-         cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\" from %s",ip->name,pp->this_server);
-         retval = true;
-         noedits = false;
-         
-         if (ip->name != NULL)
-            {
-            free(ip->name);
-            }
-         
-         np = ip->next;
-         free((char *)ip);
-         
-         lp = ip;
-         
-         if (ip == *start)
-            {
-            *start = np;
-            }
-         else
-            {
-            for (lp = *start; lp->next != ip; lp=lp->next)
-               {
-               }
+         for (i = 0; i < lines; i++)
+            {                     
+            cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\" from %s",ip->name,pp->this_server);
+            retval = true;
+            noedits = false;
             
-            lp->next = np;
+            if (ip->name != NULL)
+               {
+               free(ip->name);
+               }
+
+            np = ip->next;
+            free((char *)ip);
+            
+            lp = ip;
+            
+            if (ip == *start)
+               {
+               *start = np;
+               }
+            else
+               {
+               for (lp = *start; lp->next != ip; lp=lp->next)
+                  {
+                  }
+               
+               lp->next = np;
+               }
+
+            if (ip == end)
+               {
+               in_region = false;
+               break;
+               }
+
+            (pp->edcontext->num_edits)++;
+
+            ip = np;
             }
 
-         if (ip == end)
+         if (!in_region)
             {
-            in_region = false;
             break;
-            }
-         
-         (pp->edcontext->num_edits)++;
+            }         
          }
       }
    else
       {
       np = ip->next;
       }
-
+   
    if (ip == end)
       {
       in_region = false;

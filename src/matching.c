@@ -1150,21 +1150,19 @@ if (!(isrange||isCIDR))
  
 if (isv4)
    {
-   struct sockaddr_in addr1,addr2;
-   int shift;
 
-   memset(&addr1,0,sizeof(struct sockaddr_in));
-   memset(&addr2,0,sizeof(struct sockaddr_in));
-   
    if (isCIDR)
       {
+      struct sockaddr_in addr1,addr2;
+      int shift;
+
       address[0] = '\0';
       mask = 0;
       sscanf(s1,"%16[^/]/%d",address,&mask);
       shift = 32 - mask;
-      
-      memcpy(&addr1,(struct sockaddr_in *) sockaddr_pton(AF_INET,address),sizeof(struct sockaddr_in));
-      memcpy(&addr2,(struct sockaddr_in *) sockaddr_pton(AF_INET,s2),sizeof(struct sockaddr_in));
+
+      sockaddr_pton(AF_INET, address, &addr1);
+      sockaddr_pton(AF_INET, s2, &addr2);
 
       a1 = htonl(addr1.sin_addr.s_addr);
       a2 = htonl(addr2.sin_addr.s_addr);
@@ -1243,14 +1241,13 @@ if (isv4)
 #if defined(HAVE_GETADDRINFO)
 if (isv6)
    {
-   struct sockaddr_in6 addr1,addr2;
-   int blocks, i;
+   int i;
 
-   memset(&addr1,0,sizeof(struct sockaddr_in6));
-   memset(&addr2,0,sizeof(struct sockaddr_in6));
-   
    if (isCIDR)
       {
+      int blocks;
+      struct sockaddr_in6 addr1,addr2;
+
       address[0] = '\0';
       mask = 0;
       sscanf(s1,"%40[^/]/%d",address,&mask);
@@ -1261,10 +1258,10 @@ if (isv6)
          CfOut(cf_error,"","Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
          return -1;
          }
-      
-      memcpy(&addr1,(struct sockaddr_in6 *) sockaddr_pton(AF_INET6,address),sizeof(struct sockaddr_in6));
-      memcpy(&addr2,(struct sockaddr_in6 *) sockaddr_pton(AF_INET6,s2),sizeof(struct sockaddr_in6));
-      
+
+      sockaddr_pton(AF_INET6, address, &addr1);
+      sockaddr_pton(AF_INET6, s2, &addr2);
+
       for (i = 0; i < blocks; i++) /* blocks < 16 */
          {
          if (addr1.sin6_addr.s6_addr[i] != addr2.sin6_addr.s6_addr[i])

@@ -41,13 +41,16 @@ void VerifyReportPromise(struct Promise *pp)
 { struct Attributes a = {0};
   struct CfLock thislock;
   struct Rlist *rp;
+  char unique_name[CF_EXPANDSIZE];
 
 a = GetReportsAttributes(pp);
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp,false);
+snprintf(unique_name,CF_EXPANDSIZE-1,"%s_%d",pp->promiser,pp->lineno);
+thislock = AcquireLock(unique_name,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {
+   printf("NO LOCK %s\n");
    return;
    }
 

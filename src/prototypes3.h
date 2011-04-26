@@ -765,6 +765,7 @@ void DeleteSlash(char *str);
 char *LastFileSeparator(char *str);
 int ChopLastNode(char *str);
 char *CanonifyName(char *str);
+void CanonifyNameInplace(char *str);
 char *ReadLastNode(char *str);
 int CompressPath(char *dest,char *src);
 void Chop(char *str);

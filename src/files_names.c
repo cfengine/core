@@ -637,7 +637,7 @@ void CanonifyNameInplace(char *s)
     }
 }
 
-char *CanonifyName(char *str)
+char *CanonifyName(const char *str)
 
 { static char buffer[CF_BUFSIZE];
           

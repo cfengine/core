@@ -391,7 +391,8 @@ if (a.packages.package_patch_list_command != NULL)
       memset(vbuff,0,CF_BUFSIZE);
       CfReadLine(vbuff,CF_BUFSIZE,prp);   
 
-      if (!FullTextMatch(a.packages.package_patch_installed_regex,vbuff))
+      // assume patch_list_command lists available patches/updates by default
+      if (a.packages.package_patch_installed_regex == NULL || !FullTextMatch(a.packages.package_patch_installed_regex,vbuff))
          {
          PrependPatchItem(&(manager->patch_avail),vbuff,manager->patch_list,a,pp);
          continue;

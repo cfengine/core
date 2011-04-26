@@ -282,20 +282,16 @@ return false;
 int SplitProcLine(char *proc,char **names,int *start,int *end,char **line)
 
 { int i,s,e;
-  char *sp,cols1[CF_PROCCOLS][CF_SMALLBUF],cols2[CF_PROCCOLS][CF_SMALLBUF];
+
+char *sp = NULL;
+char cols1[CF_PROCCOLS][CF_SMALLBUF] = {};
+char cols2[CF_PROCCOLS][CF_SMALLBUF] = {};
 
 Debug("SplitProcLine(%s)\n",proc); 
 
 if (proc == NULL || strlen(proc) == 0)
    {
    return false;
-   }
-
-for (i = 0; i < CF_PROCCOLS; i++)
-   {
-   line[i] = NULL;
-   cols1[i][0] = '\0';
-   cols2[i][0] = '\0';
    }
 
 // First try looking at all the separable items

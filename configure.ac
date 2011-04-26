@@ -73,6 +73,7 @@ LT_INIT
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
+AC_REPLACE_FUNCS([unsetenv])
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
 dnl ######################################################################

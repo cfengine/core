@@ -10,8 +10,9 @@ libcfpub_la_SOURCES =							\
 	full-write.c							\
 	regex.c								\
 	sort.c								\
-	getloadavg.c							\
 	snprintf.c
+
+libcfpub_la_LIBADD = $(LTLIBOBJS)
 
 EXTRA_DIST =								\
 	getopt.h							\

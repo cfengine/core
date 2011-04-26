@@ -1056,6 +1056,7 @@ int Linux_Redhat_Version(void)
 #define WHITEBOX_ID "White Box Enterprise Linux"
 #define CENTOS_ID "CentOS"
 #define SCIENTIFIC_SL_ID "Scientific Linux SL"
+#define SCIENTIFIC_SL6_ID "Scientific Linux"
 #define SCIENTIFIC_CERN_ID "Scientific Linux CERN"
 #define RELEASE_FLAG "release "
 
@@ -1163,6 +1164,11 @@ else if(!strncmp(relstring, SCIENTIFIC_CERN_ID, strlen(SCIENTIFIC_CERN_ID)))
    {
    vendor = "scientific";
    edition = "cern";
+   }
+else if(!strncmp(relstring, SCIENTIFIC_SL6_ID, strlen(SCIENTIFIC_SL6_ID)))
+   {
+   vendor = "scientific";
+   edition = "sl";
    }
 else if(!strncmp(relstring, CENTOS_ID, strlen(CENTOS_ID)))
    {

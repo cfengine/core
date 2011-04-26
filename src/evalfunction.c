@@ -1233,20 +1233,20 @@ if (strlen(sendstring) > 0)
       rval.rtype = CF_SCALAR;
       return rval;   
       }
+   }
 
-   if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
-      {
-      }
+if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
+   {
+   }
 
-   if (n_read == -1)
-      {
-      cf_closesocket(conn->sd);
-      DeleteAgentConn(conn);
-      SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
-      rval.item = NULL;
-      rval.rtype = CF_SCALAR;
-      return rval;         
-      }
+if (n_read == -1)
+   {
+   cf_closesocket(conn->sd);
+   DeleteAgentConn(conn);
+   SetFnCallReturnStatus("readtcp",FNCALL_FAILURE,strerror(errno),NULL);
+   rval.item = NULL;
+   rval.rtype = CF_SCALAR;
+   return rval;         
    }
 
 cf_closesocket(conn->sd);

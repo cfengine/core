@@ -74,7 +74,7 @@ int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attribute
   struct CfLock thislock;
   int pass;
 
-snprintf(lockname,CF_BUFSIZE-1,"masterfilelock-%s",parentp->this_server);
+snprintf(lockname,CF_BUFSIZE-1,"masterfilelock-%s",filename);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,parentp,true);
 
 if (thislock.lock == NULL)

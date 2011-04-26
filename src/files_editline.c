@@ -773,11 +773,11 @@ for (ip = *start; ip != NULL; ip = np)
 
    if (a.not_matching)
       {
-      match = !MatchRegion(pp->promiser,ip,begin,end);
+      match = !MatchRegion(pp->promiser,ip,begin,end,a.region.include_start,a.region.include_end);
       }
    else
       {
-      match = MatchRegion(pp->promiser,ip,begin,end);
+      match = MatchRegion(pp->promiser,ip,begin,end,a.region.include_start,a.region.include_end);
       }
    
    if (!SelectLine(ip->name,a,pp)) // Start search from location

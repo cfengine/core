@@ -37,7 +37,7 @@ int yylex (void);
 
 /* cfparse.y */
 
-void yyerror (char *s);
+void yyerror (const char *s);
 int yyparse (void);
 
 /* Generic stubs for the agents */

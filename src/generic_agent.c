@@ -1077,7 +1077,7 @@ CfOut(cf_verbose,"","***********************************************************
 
 if (VERBOSE || DEBUG)
    {
-   printf("%s BUNDLE %s",VPREFIX,bp->name);
+   printf("%s> BUNDLE %s",VPREFIX,bp->name);
    }
 
 if (params && (VERBOSE||DEBUG))
@@ -1106,7 +1106,7 @@ CfOut(cf_verbose,"","      * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 if (VERBOSE || DEBUG)
    {
-   printf("%s       BUNDLE %s",VPREFIX,bp->name);
+   printf("%s>       BUNDLE %s",VPREFIX,bp->name);
    }
 
 if (params && (VERBOSE||DEBUG))
@@ -1144,8 +1144,8 @@ CfOut(cf_verbose,"","    .......................................................
 
 if (VERBOSE||DEBUG)
    {
-   printf ("%s     Promise handle: %s\n",VPREFIX,handle);
-   printf ("%s     Promise made by: %s",VPREFIX,pp->promiser);
+   printf ("%s>     Promise handle: %s\n",VPREFIX,handle);
+   printf ("%s>     Promise made by: %s",VPREFIX,pp->promiser);
    }
 
 if (pp->promisee)

@@ -392,7 +392,7 @@ if (!ThreadLock(cft_output))
    return;
    }
 
-fprintf(fp,"%s %s",VPREFIX,buffer);
+fprintf(fp,"%s> %s",VPREFIX,buffer);
 
 ThreadUnlock(cft_output);
 }
@@ -411,7 +411,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
    
    if (prefix)
       {
-      printf("%s %s\n",VPREFIX,ip->name);
+      printf("%s> %s\n",VPREFIX,ip->name);
       }
    else
       {
@@ -441,7 +441,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
    
    if (prefix)
       {
-      fprintf(fp,"%s %s\n",VPREFIX,ip->name);
+      fprintf(fp,"%s> %s\n",VPREFIX,ip->name);
       }
    else
       {

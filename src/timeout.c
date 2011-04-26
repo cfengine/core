@@ -56,7 +56,7 @@ if (ALARM_PID != -1)
    }
 else
    {
-   CfOut(cf_verbose,"","%s: Time out\n",VPREFIX);
+   CfOut(cf_verbose,"","%s> Time out\n",VPREFIX);
    }
 }
 

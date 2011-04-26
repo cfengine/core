@@ -555,27 +555,16 @@ return false;
 
 /*********************************************************************/ 
 
-int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end,int inc_start,int inc_end)
+int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end)
 
 { struct Item *ip = location;
   char *sp,buf[CF_BUFSIZE];
-  int ended = false;
 
-if (!inc_start && ip && ip == begin)
-   {
-   ip = ip->next;
-   }
-  
 for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
    {
    memset(buf,0,CF_BUFSIZE);
    sscanf(sp,"%[^\n]",buf);
    sp += strlen(buf);
-
-   if (ended)
-      {
-      return false;
-      }
 
    if (!FullTextMatch(buf,ip->name))
       {
@@ -584,12 +573,7 @@ for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
    
    if (ip == end)
       {
-      ended = true;
-      
-      if (!inc_end)
-         {
-         return false;
-         }
+      return false;
       }
 
    if (ip->next)

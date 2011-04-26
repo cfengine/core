@@ -296,10 +296,6 @@ while (ptr->hashtable[slot])
             CfOut(cf_inform,""," !! in bundle parameterization\n",fname,lineno);
             }
          }
-      else
-         {
-         CfOut(cf_inform,""," !! Unresolved variables in rval of \"%s\" in scope %s",lval,ptr->scope);
-         }
 
       DeleteAssoc(ptr->hashtable[slot]);
       ptr->hashtable[slot] = ap;

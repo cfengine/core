@@ -368,7 +368,7 @@ for (i = 0; names[i] != NULL; i++)
    
    if (s <= e)
       {
-      strncpy(cols2[i],(char *)(proc+s),(e-s+1));
+      strncpy(cols2[i],(char *)(proc+s),MIN(CF_SMALLBUF-1,(e-s+1)));
       }
    else
       {

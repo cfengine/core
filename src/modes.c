@@ -43,6 +43,8 @@ int ParseModeString(char *modestring,mode_t *plusmask,mode_t *minusmask)
   enum modesort found_sort = unknown; /* Already found "sort" of mode */
   enum modesort sort = unknown; /* Sort of started but not yet finished mode */
 
+*plusmask = *minusmask = 0;
+
 if (modestring == NULL)
    {
    return true;
@@ -51,7 +53,6 @@ if (modestring == NULL)
 Debug("ParseModeString(%s)\n",modestring);
 
 gotaction = false;
-*plusmask = *minusmask = 0;
 
 for (sp = modestring; true ; sp++)
    {

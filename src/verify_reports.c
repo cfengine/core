@@ -50,7 +50,6 @@ thislock = AcquireLock(unique_name,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
    {
-   printf("NO LOCK %s\n");
    return;
    }
 

@@ -3992,7 +3992,7 @@ Debug("Read string data from file %s - , maxent %d, maxsize %d\n",filename,maxen
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
 
-Debug("FILE: %s\n",file_buffer);
+printf("FILE: %s\n",file_buffer);
 
 if (file_buffer == NULL)
    {

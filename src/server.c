@@ -827,13 +827,20 @@ if (NewPromiseProposals())
       ERRORCOUNT = 0;
       
       NewScope("sys");
+
+      NewScalar("sys","policy_hub",POLICY_SERVER,cf_str);
+
+      if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
+         {
+         CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
+         }
+
       NewScope("const");
       NewScope("this");
       NewScope("control_server");
       NewScope("control_common");
       NewScope("mon");
       NewScope("remote_access");
-      NewScalar("sys","policy_hub",POLICY_SERVER,cf_str);
       GetNameInfo3();
       CfGetInterfaceInfo(cf_server);
       Get3Environment();
@@ -843,10 +850,6 @@ if (NewPromiseProposals())
       KeepPromises();
       Summarize();
       
-      if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
-         {
-         CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-         }
       }
    else
       {

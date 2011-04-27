@@ -298,6 +298,7 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
  char sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
   long gotkey;
   char reply[8];
+  struct Item *queries;
   
 a.copy.portnumber = (short)ParseHostname(host,peer);
 
@@ -416,7 +417,9 @@ if (strlen(MENU) > 0)
 
      case cfd_menu_relay:
 #ifdef HAVE_CONSTELLATION
-       Constellation_QueryRelay(conn,MENU,time(0) - 7*24*3600);
+       queries = Constellation_CreateAllQueries();
+       Constellation_QueryRelay(conn,queries);
+       DeleteItemList(queries);
 #endif
 	 break;
 

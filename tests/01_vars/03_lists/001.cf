@@ -101,5 +101,5 @@ useshell => "true";
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testfile).*");
+	"any" usebundle => default_fini("$(g.testfile)");
 }

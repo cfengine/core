@@ -622,7 +622,6 @@ while (*sp != '\0')
             }
          }
       }
-   sp++;
    }
  
 return true;

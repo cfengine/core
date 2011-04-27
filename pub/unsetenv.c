@@ -47,3 +47,47 @@ int unsetenv(const char *name)
 }
 
 #endif
+
+/* Under Solaris8/9 we need to manually update 'environ' variable */
+
+#ifdef __sun
+
+/*
+ * Note: this function will leak memory as we don't know how to free data
+ * previously used by environment variables.
+ */
+
+extern char **environ;
+
+int unsetenv(const char *name)
+{
+char **c;
+int len;
+
+if (name == NULL || *name == 0 || strchr(name, '=') != 0)
+   {
+   errno = EINVAL;
+   return -1;
+   }
+
+len = strlen(name);
+
+/* Find variable */
+for (c = environ; *c; ++c)
+   {
+   if (strncmp(name, *c, len) == 0 && ((*c)[len] == '=' || (*c)[len] == 0))
+      {
+      break;
+      }
+   }
+
+/* Shift remaining values */
+for(; *c; ++c)
+   {
+   *c = *(c+1);
+   }
+
+return 0;
+}
+
+#endif

@@ -68,7 +68,7 @@ static struct CfRegEx CompileRegExp(const char *regexp)
 
 memset(&this,0,sizeof(struct CfRegEx)); 
 
-rx = pcre_compile(regexp,PCRE_MULTILINE,&errorstr,&erroffset,NULL);
+rx = pcre_compile(regexp,PCRE_MULTILINE|PCRE_DOTALL,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {
@@ -122,7 +122,7 @@ static struct CfRegEx CaseCompileRegExp(const char *regexp)
  int erroffset;
 
 memset(&this,0,sizeof(struct CfRegEx)); 
-rx = pcre_compile(regexp,PCRE_CASELESS|PCRE_MULTILINE,&errorstr,&erroffset,NULL);
+rx = pcre_compile(regexp,PCRE_CASELESS|PCRE_MULTILINE|PCRE_DOTALL,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stddef.h>
 
 /* Under MinGW putenv('var=') will remove variable from environment */
 

@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+/* Under MinGW putenv('var=') will remove variable from environment */
+
 #ifdef __MINGW32__
 
 int unsetenv(const char *name)

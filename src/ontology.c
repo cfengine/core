@@ -659,7 +659,7 @@ char *NormalizeTopic(char *s)
 
 for (sp = s; *sp != '\0'; sp++)
    {
-   if (IsIn(*sp,"/\\&|=$@"))
+   if (strchr("/\\&|=$@", *sp))
       {
       special = true;
       break;

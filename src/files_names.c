@@ -879,22 +879,6 @@ return true;
 
 /*********************************************************************/
 
-int IsIn(char c,char *str)
-
-{ char *sp;
-
-for(sp = str; *sp != '\0'; sp++)
-   {
-   if (*sp == c)
-      {
-      return true;
-      }
-   }
-return false;
-}
-
-/*********************************************************************/
-
 int IsStrIn(char *str, char **strs, int ignoreCase)
 
 { int i;

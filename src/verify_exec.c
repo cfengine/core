@@ -109,7 +109,7 @@ if (!IsExecutable(GetArg0(pp->promiser)))
    {
    cfPS(cf_error,CF_FAIL,"",pp,a,"%s promises to be executable but isn't\n",pp->promiser);
 
-   if (IsIn(' ', pp->promiser))
+   if (strchr(pp->promiser, ' '))
      {
      CfOut(cf_verbose, "", "Paths with spaces must be inside escaped quoutes (e.g. \\\"%s\\\")", pp->promiser);
      }

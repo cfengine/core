@@ -92,7 +92,7 @@ table[0] = '\0';
   
 for (sp = pp->promiser; *sp != '\0'; sp++)
    {
-   if (IsIn(*sp,"./\\"))
+   if (strchr("./\\", *sp))
       {
       count++;
       sep = *sp;

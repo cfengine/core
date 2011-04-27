@@ -779,7 +779,7 @@ for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
           break;
           
       default:
-          if (isalnum((int)*sp) || IsIn(*sp,"_[]$.:-"))
+          if (isalnum((int)*sp) || strchr("_[]$.:-", *sp))
              {
              }
           else

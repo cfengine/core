@@ -1343,7 +1343,7 @@ else
 
 CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\" to the manager\n",id);
 
-if(IsIn('*', id))
+if(strchr(id, '*'))
   {
   CfOut(cf_verbose,"","!! Package name contians '*' -- perhaps a missing attribute (name/version/arch) should be specified");
   }

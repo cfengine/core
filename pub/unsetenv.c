@@ -45,7 +45,8 @@ buf = malloc(strlen(name) + 2);
 
 if (!buf)
    {
-   return ENOMEM;
+   errno = ENOMEM;
+   return -1;
    }
 
 sprintf(buf, "%s=", name);

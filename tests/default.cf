@@ -106,27 +106,20 @@ useshell => "true";
 
 #######################################################
 
+# Uses rm -rf instead of selecting and deleting files to avoid side-effects in
+# tests due to problems in file deleletion promises.
+
 bundle agent default_fini(file)
 {
-files:
-	# If we're given a directory...
-	"$(file)/.*"
-	    delete => default_fini_cleanup;
-
-	# And if we're given a single file (which might have been edited)...
-	"$(file).*"
-	    delete => default_fini_cleanup;
-
-        # Remove persistent classes database to avoid carrying state from one
-        # testcase to another accidentally. Still relies on test calling
-        # default_fini though.
-
-        "$(sys.workdir)/state/cf_state.*"
-            delete => default_fini_cleanup;
+commands:
+  "/bin/rm -rf $(file)*"
+    contain => useshell;
+  "/bin/rm -rf $(sys.workdir)/state/cf_state.*"
+    contain => useshell;
 }
 
-body delete default_fini_cleanup
+body contain useshell
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+  useshell => "true";
+  chdir => "/";
 }

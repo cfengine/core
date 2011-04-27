@@ -330,6 +330,10 @@ typedef int clockid_t;
 # define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
+#ifndef INADDR_NONE
+#define INADDR_NONE ((unsigned long int) 0xffffffff)
+#endif
+
 /*******************************************************************/
 /* Various defines                                                 */
 /*******************************************************************/

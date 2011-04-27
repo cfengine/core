@@ -33,7 +33,15 @@
 int unsetenv(const char *name)
 {
 int retval;
-char *buf = malloc(strlen(name) + 2);
+char *buf;
+
+if (name == NULL || *name == 0 || strchr(name, '=') != 0)
+   {
+   errno = EINVAL;
+   return -1;
+   }
+
+buf = malloc(strlen(name) + 2);
 
 if (!buf)
    {

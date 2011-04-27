@@ -25,6 +25,7 @@
 
 #include "../src/conf.h"
 #include <errno.h>
+#include <stddef.h>
 
 #ifdef MINGW
 

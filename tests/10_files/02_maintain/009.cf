@@ -26,14 +26,6 @@ vars:
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
-}
-
-#######################################################
-
-bundle agent test
-{
 files:
     "$(g.testdir)/linkdir/" 
       comment => "Create a directory.";
@@ -45,6 +37,13 @@ files:
     "$(g.testdir)/linkdir/link"
       comment => "Create a relative link to the target.",
       link_from => ln_s("$(g.testdir)/linkdir/another/target");
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
     "$(g.testdir)/copy_file"
       comment => "Copy the file behind the link.",
       copy_from => cp_2_file("$(g.testdir)/linkdir/link");

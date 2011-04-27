@@ -47,6 +47,7 @@ extern int INSTALLALL;
 extern int ALL_SINGLECOPY;
 extern int PASS;
 extern RSA *PRIVKEY, *PUBKEY;
+extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
 extern struct sock ECGSOCKS[ATTR];
 extern char *TCPNAMES[CF_NETATTR];

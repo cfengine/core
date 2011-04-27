@@ -89,7 +89,8 @@ static struct Averages MAX,MIN;
 
 char OUTPUTDIR[CF_BUFSIZE],*sp;
 char REMOVEHOSTS[CF_BUFSIZE];
-enum cfd_menu NOVA_EXPORT_TYPE = cfd_menu_error;
+char NOVA_EXPORT_TYPE[CF_MAXVARSIZE] = {0};
+char NOVA_IMPORT_FILE[CF_MAXVARSIZE] = {0};
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -132,7 +133,7 @@ struct Rlist *CSVLIST = NULL;
       { "verbose",no_argument,0,'v'},
       { "remove-hosts",required_argument,0,'r'},
       { "nova-export",required_argument,0,'x'},
-      { "nova-import",no_argument,0,'i'},
+      { "nova-import",required_argument,0,'i'},
       { NULL,0,0,'\0' }
       };
 
@@ -161,7 +162,7 @@ struct Rlist *CSVLIST = NULL;
       "Generate verbose output",
       "Remove comma separated list of IP address entries from the hosts-seen database",
       "Export Nova reports to file - delta or full report",
-      "Import Nova reports from file - only on Nova policy hub",
+      "Import Nova reports from file - specify the path (only on Nova policy hub)",
       NULL
       };
 
@@ -270,7 +271,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -374,19 +375,21 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i",OPTIONS,&optindex)
           break;
 
       case 'x':
-          NOVA_EXPORT_TYPE = String2Menu(optarg);
           
-          if((NOVA_EXPORT_TYPE != cfd_menu_delta) &&
-             (NOVA_EXPORT_TYPE != cfd_menu_full))
+          if((String2Menu(optarg) != cfd_menu_delta) &&
+             (String2Menu(optarg) != cfd_menu_full))
              {
              Syntax("Wrong argument to export: should be delta or full",OPTIONS,HINTS,ID);
              exit(1);
              }
+          
+          snprintf(NOVA_EXPORT_TYPE, sizeof(NOVA_EXPORT_TYPE), "%s", optarg);
 
           break;
 
       case 'i':
-          // TODO!
+          
+          snprintf(NOVA_IMPORT_FILE, sizeof(NOVA_IMPORT_FILE), "%s", optarg);
           break;
 
       default: Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
@@ -443,7 +446,22 @@ InitMeasurements();
 RemoveHostSeen(REMOVEHOSTS);
 
 #ifdef HAVE_NOVA
-Nova_ExportReports(NOVA_EXPORT_TYPE);
+if(!EMPTY(NOVA_EXPORT_TYPE))
+   {
+   Nova_ExportReports(NOVA_EXPORT_TYPE);
+   }
+
+if(!EMPTY(NOVA_IMPORT_FILE))
+   {
+   if(IsDefinedClass("am_policy_hub"))
+      {
+      Nova_ImportHostReports(NOVA_IMPORT_FILE);
+      }
+   else
+      {
+      CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
+      }
+   }
 #endif
 }
 

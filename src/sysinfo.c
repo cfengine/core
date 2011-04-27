@@ -277,7 +277,8 @@ NewScalar("sys","nova_version",Nova_GetVersion(),cf_str);
 if (PUBKEY)
    {
    HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
-   NewScalar("sys","key_digest",HashPrint(CF_DEFAULT_DIGEST,digest),cf_str);
+   snprintf(PUBKEY_DIGEST, sizeof(PUBKEY_DIGEST), "%s", HashPrint(CF_DEFAULT_DIGEST,digest));
+   NewScalar("sys","key_digest",PUBKEY_DIGEST,cf_str);
    snprintf(workbuf,CF_MAXVARSIZE-1,"PK_%s",CanonifyName(HashPrint(CF_DEFAULT_DIGEST,digest)));
    NewClass(workbuf);
    }

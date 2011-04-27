@@ -90,10 +90,6 @@ time_t CFDSTARTTIME;
 extern char *realpath(/* char *path; char resolved_path[MAXPATHLEN] */);
 #endif
 
-#ifndef INADDR_NONE
-#define INADDR_NONE ((unsigned long int) 0xffffffff)
-#endif
-
 #endif
 
 #endif

@@ -1,6 +1,6 @@
 #######################################################
 #
-# Create a file, expect simultaneous copy with exists compare to fail
+# Test that copying file by relative symlink works
 #
 #######################################################
 
@@ -46,7 +46,7 @@ files:
       comment => "Create a relative link to the target.",
       link_from => ln_s("$(g.testdir)/linkdir/another/target");
     "$(g.testdir)/copy_file"
-      comment => "Copy the file behind the link. But this doesn't work.",
+      comment => "Copy the file behind the link.",
       copy_from => cp_2_file("$(g.testdir)/linkdir/link");
 }
 

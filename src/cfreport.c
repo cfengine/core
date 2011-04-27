@@ -89,6 +89,7 @@ static struct Averages MAX,MIN;
 
 char OUTPUTDIR[CF_BUFSIZE],*sp;
 char REMOVEHOSTS[CF_BUFSIZE];
+enum cfd_menu NOVA_EXPORT_TYPE = cfd_menu_error;
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -106,7 +107,7 @@ struct Rlist *CSVLIST = NULL;
             "data stored in cfengine's embedded databases in human\n"
             "readable form.";
 
- struct option OPTIONS[23] =
+ struct option OPTIONS[25] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -130,10 +131,12 @@ struct Rlist *CSVLIST = NULL;
       { "no-scaling",no_argument,0,'n'},
       { "verbose",no_argument,0,'v'},
       { "remove-hosts",required_argument,0,'r'},
+      { "nova-export",required_argument,0,'x'},
+      { "nova-import",no_argument,0,'i'},
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[23] =
+ char *HINTS[25] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -157,6 +160,8 @@ struct Rlist *CSVLIST = NULL;
       "Do not automatically scale the axes",
       "Generate verbose output",
       "Remove comma separated list of IP address entries from the hosts-seen database",
+      "Export Nova reports to file - delta or full report",
+      "Import Nova reports from file - only on Nova policy hub",
       NULL
       };
 
@@ -244,7 +249,7 @@ char *CFRH[][2] =
 
 int main(int argc,char *argv[])
 
-{
+{ 
 CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
@@ -252,6 +257,8 @@ KeepReportsControlPromises();
 KeepReportsPromises();
 return 0;
 }
+
+
 
 /*****************************************************************************/
 /* Level 1                                                                   */
@@ -263,7 +270,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -366,6 +373,22 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:",OPTIONS,&optindex)) !
           PURGE = 'y';
           break;
 
+      case 'x':
+          NOVA_EXPORT_TYPE = String2Menu(optarg);
+          
+          if((NOVA_EXPORT_TYPE != cfd_menu_delta) &&
+             (NOVA_EXPORT_TYPE != cfd_menu_full))
+             {
+             Syntax("Wrong argument to export: should be delta or full",OPTIONS,HINTS,ID);
+             exit(1);
+             }
+
+          break;
+
+      case 'i':
+          // TODO!
+          break;
+
       default: Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(1);
 
@@ -418,6 +441,10 @@ MapName(VINPUTFILE);
 
 InitMeasurements();
 RemoveHostSeen(REMOVEHOSTS);
+
+#ifdef HAVE_NOVA
+Nova_ExportReports(NOVA_EXPORT_TYPE);
+#endif
 }
 
 /*****************************************************************************/
@@ -2793,6 +2820,8 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    fclose(FPM[i]);
    }
 }
+
+
 
 
 /* EOF */

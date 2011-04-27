@@ -3322,7 +3322,7 @@ if (cf_strncmp(query,"relay",5) == 0)
 #endif
 
 #ifdef HAVE_NOVA
-return Nova_ReturnQueryData(conn,query,sendbuffer);
+return Nova_ReturnQueryData(conn,query);
 #else
 return false;
 #endif

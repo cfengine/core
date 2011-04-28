@@ -53,7 +53,6 @@ extern int TRIES;
 extern int MAXTRIES;
 extern int LOGCONNS;
 extern int LOGENCRYPT;
-extern int FACILITY;
 extern struct Item *CONNECTIONLIST;
 extern struct Auth *ROLES;
 extern struct Auth *ROLESTOP;
@@ -209,7 +208,6 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
       {
       SetFacility(retval);
-      CfOut(cf_verbose,"","SET Syslog FACILITY = %s\n",retval);
       continue;
       }
    

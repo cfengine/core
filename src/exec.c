@@ -338,7 +338,6 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
       {
       SetFacility(retval);
-      CfOut(cf_verbose,"","SET Syslog FACILITY = %s\n",retval);
       continue;
       }
 

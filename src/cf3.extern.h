@@ -110,7 +110,6 @@ extern char THIS_AGENT[CF_MAXVARSIZE];
 extern enum cfagenttype THIS_AGENT_TYPE;
 extern int INSTALL_SKIP;
 extern int SHOWREPORTS;
-extern int FACILITY;
 extern char SYSLOGHOST[CF_MAXVARSIZE];
 extern unsigned short SYSLOGPORT;
 extern time_t PROMISETIME;

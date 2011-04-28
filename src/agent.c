@@ -412,7 +412,6 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
       {
       SetFacility(retval);
-      CfOut(cf_verbose,"","SET Syslog FACILITY = %s\n",retval);
       continue;
       }
    

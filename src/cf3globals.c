@@ -78,7 +78,6 @@ char THIS_AGENT[CF_MAXVARSIZE] = {0};
 enum cfagenttype THIS_AGENT_TYPE;
 char SYSLOGHOST[CF_MAXVARSIZE] = {0};
 unsigned short SYSLOGPORT = 514;
-int FACILITY = 0;
 time_t PROMISETIME = 0;
 time_t CF_LOCKHORIZON = CF_MONTH;
 

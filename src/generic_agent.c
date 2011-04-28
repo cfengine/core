@@ -37,6 +37,8 @@ extern FILE *yyin;
 extern char *CFH[][2];
 extern void CheckOpts(int argc,char **argv);
 
+static void Cf3OpenLog(int facility);
+
 /*****************************************************************************/
 
 static void SanitizeEnvironment()
@@ -337,13 +339,13 @@ CloseReports(agents);
 
 /*****************************************************************************/
 
-void Cf3OpenLog()
+void Cf3OpenLog(int facility)
 
 {
 #ifdef MINGW
-NovaWin_OpenLog();
+NovaWin_OpenLog(facility);
 #else
-openlog(VPREFIX,LOG_PID|LOG_NOWAIT|LOG_ODELAY,FACILITY);
+openlog(VPREFIX,LOG_PID|LOG_NOWAIT|LOG_ODELAY,facility);
 #endif
 }
 
@@ -483,7 +485,7 @@ _fmode = _O_BINARY;
 strcpy(SYSLOGHOST,"localhost");
 SYSLOGPORT = htons(514);
 
-Cf3OpenLog();
+Cf3OpenLog(LOG_USER);
 
 if (!LOOKUP) /* cf-know should not do this in lookup mode */
    {
@@ -985,52 +987,57 @@ return NULL;
 
 /*******************************************************************/
 
-void SetFacility(char *retval)
-
+static int ParseFacility(const char *name)
 {
-if (strcmp(retval,"LOG_USER") == 0)
+if (strcmp(name,"LOG_USER") == 0)
    {
-   FACILITY = LOG_USER;
+   return LOG_USER;
    }
-else if (strcmp(retval,"LOG_DAEMON") == 0)
+if (strcmp(name,"LOG_DAEMON") == 0)
    {
-   FACILITY = LOG_DAEMON;
+   return LOG_DAEMON;
    }
-else if (strcmp(retval,"LOG_LOCAL0") == 0)
+if (strcmp(name,"LOG_LOCAL0") == 0)
    {
-   FACILITY = LOG_LOCAL0;
+   return LOG_LOCAL0;
    }
-else if (strcmp(retval,"LOG_LOCAL1") == 0)
+if (strcmp(name,"LOG_LOCAL1") == 0)
    {
-   FACILITY = LOG_LOCAL1;
+   return LOG_LOCAL1;
    }
-else if (strcmp(retval,"LOG_LOCAL2") == 0)
+if (strcmp(name,"LOG_LOCAL2") == 0)
    {
-   FACILITY = LOG_LOCAL2;
+   return LOG_LOCAL2;
    }
-else if (strcmp(retval,"LOG_LOCAL3") == 0)
+if (strcmp(name,"LOG_LOCAL3") == 0)
    {
-   FACILITY = LOG_LOCAL3;
+   return LOG_LOCAL3;
    }
-else if (strcmp(retval,"LOG_LOCAL4") == 0)
+if (strcmp(name,"LOG_LOCAL4") == 0)
    {
-   FACILITY = LOG_LOCAL4;
+   return LOG_LOCAL4;
    }
-else if (strcmp(retval,"LOG_LOCAL5") == 0)
+if (strcmp(name,"LOG_LOCAL5") == 0)
    {
-   FACILITY = LOG_LOCAL5;
+   return LOG_LOCAL5;
    }
-else if (strcmp(retval,"LOG_LOCAL6") == 0)
+if (strcmp(name,"LOG_LOCAL6") == 0)
    {
-   FACILITY = LOG_LOCAL6;
+   return LOG_LOCAL6;
    }
-else if (strcmp(retval,"LOG_LOCAL7") == 0)
+if (strcmp(name,"LOG_LOCAL7") == 0)
    {
-   FACILITY = LOG_LOCAL7;
+   return LOG_LOCAL7;
    }
+return -1;
+}
+
+void SetFacility(const char *retval)
+{
+CfOut(cf_verbose, "", "SET Syslog FACILITY = %s\n", retval);
 
 Cf3CloseLog();
-Cf3OpenLog();
+Cf3OpenLog(ParseFacility(retval));
 }
 
 /**************************************************************/

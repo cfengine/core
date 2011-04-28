@@ -296,19 +296,19 @@ void LoadHistogram()
          for (day = 0; day < 7; day++)
             {
             fscanf(fp,"%lf ",&(HISTOGRAM[i][day][position]));
-            }
 
-         if (HISTOGRAM[i][day][position] < 0)
-            {
-            HISTOGRAM[i][day][position] = 0;
-            }
+            if (HISTOGRAM[i][day][position] < 0)
+               {
+               HISTOGRAM[i][day][position] = 0;
+               }
 
-         if (HISTOGRAM[i][day][position] > maxval[i])
-            {
-            maxval[i] = HISTOGRAM[i][day][position];
-            }
+            if (HISTOGRAM[i][day][position] > maxval[i])
+               {
+               maxval[i] = HISTOGRAM[i][day][position];
+               }
 
-         HISTOGRAM[i][day][position] *= 1000.0/maxval[i];
+            HISTOGRAM[i][day][position] *= 1000.0/maxval[i];
+            }
          }
       }
    

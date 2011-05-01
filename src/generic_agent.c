@@ -42,6 +42,7 @@ static void Cf3OpenLog(int facility);
 /*****************************************************************************/
 
 static void SanitizeEnvironment()
+
 {
  /* ps(1) and other utilities invoked by Cfengine may be affected */
 unsetenv("COLUMNS");

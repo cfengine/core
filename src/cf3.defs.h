@@ -523,7 +523,8 @@ enum cfeditorder
 #define KM_ACCESS_CERT_B "is allowed to access"
 #define KM_MONITOR_CERT_F "monitor(s)"
 #define KM_MONITOR_CERT_B "is/are monitored by"
-
+#define KM_LOCATED_CERT_F "is located in/at"
+#define KM_LOCATED_CERT_B "situates"
 
 #define KM_PARTOF_POSS_F "can be a part of"
 #define KM_PARTOF_POSS_B "can have a part"
@@ -549,6 +550,8 @@ enum cfeditorder
 #define KM_MONITOR_POSS_B "can be monitored by"
 #define KM_ACCESS_POSS_F "can access to"
 #define KM_ACCESS_POSS_B "can be allowed to access"
+#define KM_LOCATED_POSS_F "can be located in/at"
+#define KM_LOCATED_POSS_B "can situate"
 
 #define KM_PARTOF_UNCERT_F "might be a part of"
 #define KM_PARTOF_UNCERT_B "might have a part"
@@ -576,6 +579,9 @@ enum cfeditorder
 #define KM_MONITOR_UNCERT_B "might be monitored by"
 #define KM_ACCESS_UNCERT_F "might grant access to"
 #define KM_ACCESS_UNCERT_B "might be allowed to access"
+#define KM_LOCATED_UNCERT_F "might be located in/at"
+#define KM_LOCATED_UNCERT_B "might situate"
+
 
 #define KM_GENERALIZES_F "is a generalization of"
 #define KM_GENERALIZES_B "is a case of"

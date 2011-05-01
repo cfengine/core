@@ -162,9 +162,11 @@ void ShowPromises(struct Bundle *bundles,struct Body *bodies)
 #if defined(HAVE_NOVA)
 Nova_StoreUnExpandedPromises(bundles,bodies);
 #else
-ShowPromisesInReport(bundles, bodies);
+ShowPromisesInReport(bundles,bodies);
 #endif
 }
+
+/*******************************************************************/
 
 void ShowPromisesInReport(struct Bundle *bundles, struct Body *bodies)
 {
@@ -282,6 +284,8 @@ Nova_ShowPromise(v, pp, indent);
 ShowPromiseInReport(v, pp, indent);
 #endif
 }
+
+/*******************************************************************/
 
 void ShowPromiseInReport(const char *version, struct Promise* pp, int indent)
 {

@@ -111,10 +111,10 @@ struct BodySyntax CF_INFER_BODIES[] =
 
 struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
-  {"knowledge","topics",CF_TOPICS_BODIES},
-  {"knowledge","things",CF_THING_BODIES},
-  {"knowledge","occurrences",CF_OCCUR_BODIES},
   {"knowledge","inferences",CF_INFER_BODIES},
+  {"knowledge","things",CF_THING_BODIES},
+  {"knowledge","topics",CF_TOPICS_BODIES},
+  {"knowledge","occurrences",CF_OCCUR_BODIES},
   {NULL,NULL,NULL},
   };
 

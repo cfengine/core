@@ -233,6 +233,7 @@ enum cfgcontrol
    cfg_domain,
    cfg_require_comments,
    cfg_licenses,
+   cfg_site_classes,
    cfg_syslog_host,
    cfg_syslog_port,
    cfg_fips_mode,

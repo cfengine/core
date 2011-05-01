@@ -121,6 +121,7 @@ struct BodySyntax CFG_CONTROLBODY[] =
    {"domain",cf_str,".*","Specify the domain name for this host"},
    {"require_comments",cf_opts,CF_BOOL,"Warn about promises that do not have comment documentation"},
    {"host_licenses_paid",cf_int,CF_VALRANGE,"The number of licenses that you promise to have paid for by setting this value (legally binding for commercial license)"},
+   {"site_classes",cf_clist,CF_CLASSRANGE,"A list of classes that will represent geographical site locations for hosts. These should be defined elsewhere in the configuration in a classes promise."},
    {"syslog_host",cf_str,CF_IPRANGE,"The name or address of a host to which syslog messages should be sent directly by UDP"},
    {"syslog_port",cf_int,CF_VALRANGE,"The port number of a UDP syslog service"},
    {"fips_mode",cf_opts,CF_BOOL,"Activate full FIPS mode restrictions"},

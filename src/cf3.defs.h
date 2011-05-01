@@ -513,7 +513,7 @@ enum cfeditorder
 #define KM_AFFECTS_CERT_B "is affected by"
 #define KM_CONNECTS_CERT_F "connects to"
 #define KM_CONNECTS_CERT_B "connects to"
-#define KM_NEEDS_CERT_F "needs"
+#define KM_NEEDS_CERT_F "need(s)"
 #define KM_NEEDS_CERT_B "is needed by"
 #define KM_EQUIV_CERT_F "is equivalent to"
 #define KM_EQUIV_CERT_B "is equivalent to"
@@ -523,7 +523,7 @@ enum cfeditorder
 #define KM_ACCESS_CERT_B "is allowed to access"
 #define KM_MONITOR_CERT_F "monitor(s)"
 #define KM_MONITOR_CERT_B "is/are monitored by"
-#define KM_LOCATED_CERT_F "is located in/at"
+#define KM_LOCATED_CERT_F "is located in"
 #define KM_LOCATED_CERT_B "situates"
 
 #define KM_PARTOF_POSS_F "can be a part of"
@@ -550,7 +550,7 @@ enum cfeditorder
 #define KM_MONITOR_POSS_B "can be monitored by"
 #define KM_ACCESS_POSS_F "can access to"
 #define KM_ACCESS_POSS_B "can be allowed to access"
-#define KM_LOCATED_POSS_F "can be located in/at"
+#define KM_LOCATED_POSS_F "can be located in"
 #define KM_LOCATED_POSS_B "can situate"
 
 #define KM_PARTOF_UNCERT_F "might be a part of"
@@ -579,7 +579,7 @@ enum cfeditorder
 #define KM_MONITOR_UNCERT_B "might be monitored by"
 #define KM_ACCESS_UNCERT_F "might grant access to"
 #define KM_ACCESS_UNCERT_B "might be allowed to access"
-#define KM_LOCATED_UNCERT_F "might be located in/at"
+#define KM_LOCATED_UNCERT_F "might be located in"
 #define KM_LOCATED_UNCERT_B "might situate"
 
 

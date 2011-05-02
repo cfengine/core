@@ -943,13 +943,6 @@ else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
 fi
 
-if test "x$ac_cv_lib_mysqlclient_main" = "xyes" || test "x$ac_cv_lib_pq_main" = "xyes"
-then
-  AC_MSG_RESULT([-> Knowledge map: enabled])
-else
-  AC_MSG_RESULT([-> Knowledge map: disabled, no SQL connector is configured])
-fi
-
 if test $WITH_TOKYO = 1; then
   AC_MSG_RESULT([-> DB: Tokyo Cabinet])
 elif test $WITH_QDBM = 1; then

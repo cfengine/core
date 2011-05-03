@@ -43,7 +43,7 @@ void VerifyOccurrencePromises(struct Promise *pp);
 void VerifyInferencePromise(struct Promise *pp);
 void WriteKMDB(void);
 void GenerateManual(void);
-void CfGenerateStories(char *query);
+void CfGenerateStories(char *query,enum storytype type);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
 void CfQueryCFDB(char *query);
 
@@ -213,7 +213,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
       case 's':
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
-          CfGenerateStories(TOPIC_CMD);
+          CfGenerateStories(TOPIC_CMD,cfi_none);
 #endif
           exit(0);
           break;
@@ -616,10 +616,10 @@ Nova_CfQueryCFDB(query);
 
 /*********************************************************************/
 
-void CfGenerateStories(char *query)
+void CfGenerateStories(char *query,enum storytype type)
 {
 #ifdef HAVE_CONSTELLATION
-Constellation_CfGenerateStories(query);
+Constellation_CfGenerateStories(query,type);
 #endif
 }
 

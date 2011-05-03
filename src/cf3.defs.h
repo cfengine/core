@@ -498,6 +498,15 @@ enum cfeditorder
 /* Knowledge relationships                                                 */
 /***************************************************************************/
 
+enum storytype
+   {
+   cfi_cause,
+   cfi_connect,
+   cfi_part,
+   cfi_access,
+   cfi_none
+   };
+
 #define KM_PARTOF_CERT_F "is/are a part of"
 #define KM_PARTOF_CERT_B "has/have as a part"
 #define KM_DETERMINES_CERT_F "determine(s)"
@@ -560,6 +569,7 @@ enum cfeditorder
 #define KM_DETERMINES_UNCERT_B "might be determined by"
 #define KM_CONTRIBUTES_UNCERT_F "might contibute to"
 #define KM_CONTRIBUTES_UNCERT_B "might be contibuted to by"
+
 #define KM_USES_UNCERT_F "might use"
 #define KM_USES_UNCERT_B "might be used by"
 #define KM_PROVIDES_UNCERT_F "might provide"

@@ -1312,10 +1312,17 @@ int IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux
   static char *names[] =
      {
      "any","agent","Morning","Afternoon","Evening","Night","Q1","Q2","Q3","Q4",
-     "SuSE","suse","fedora","Ubuntu","cfengine_","ipv4","lsb_compliant","localhost",
+     "SuSE","suse","fedora","Ubuntu","lsb_compliant","localhost",
      NULL
      };
- 
+
+  static char *prefixes[] =
+     {
+     "cfengine_","ipv4",
+     NULL
+     };
+
+  
 for (i = 2; CLASSTEXT[i] != '\0'; i++)
    {
    if (strcmp(CLASSTEXT[i],sp) == 0)
@@ -1342,7 +1349,15 @@ for (i = 0; i < 12; i++)
 
 for (i = 0; names[i] != NULL; i++)
    {
-   if (strncmp(names[i],sp,strlen(names[i])) == 0)
+   if (strcmp(names[i],sp) == 0)
+      {
+      return true;
+      }
+   }
+
+for (i = 0; prefixes[i] != NULL; i++)
+   {
+   if (strncmp(prefixes[i],sp,strlen(prefixes[i])) == 0)
       {
       return true;
       }

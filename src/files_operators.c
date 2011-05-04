@@ -1283,6 +1283,9 @@ rsrcfork = 0;
 char * tmpstr;
 #endif
 
+Debug("Trying to create a parent directory for %s%s",
+      parentandchild, force ? " (force applied)": "");
+
 if (!IsAbsoluteFileName(parentandchild))
    {
    CfOut(cf_error,"","Will not create directories for a relative filename (%s). Has no invariant meaning\n",parentandchild);

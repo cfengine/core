@@ -51,7 +51,7 @@ if (maxrecurse == 0)  /* reached depth limit */
    return;
    }
 
-Debug("RecursiveCopy(%s,lev=%d)\n",from,maxrecurse);
+Debug("RecursiveCopy(%s,%s,lev=%d)\n",from,to,maxrecurse);
 
 if (strlen(from) == 0)     /* Check for root dir */
    {

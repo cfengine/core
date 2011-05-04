@@ -1,0 +1,96 @@
+#######################################################
+#
+# Test that symlinks outside of copying root are NOT set aside while copying trees of directorise (Issue 585)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine.dir";
+
+	# This extracts the octal mode, and decimal nlink, uid, gid, size
+	"type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(g.testdir)/destdir"))[2]);';
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+    "$(g.testdir)/srcdir/"
+      create => "true";
+    "$(g.testdir)/srcdir/foo" 
+      create => "true";
+    "$(g.testdir)/realdestdir/" 
+      create => "true";
+    "$(g.testdir)/destdir"
+      comment => "Create a relative link to the target.",
+      link_from => ln_s("$(g.testdir)/realdestdir");
+}
+
+
+body link_from ln_s(x) {
+  link_type => "relative";
+  source => "$(x)";
+  when_no_source => "nop";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(g.testdir)/destdir/foo"
+    copy_from => sync_cp("$(g.testdir)/srcdir/foo");
+}
+
+body copy_from sync_cp(from)
+{
+source      => "$(from)";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+        "expect" string => "";
+
+        "result" string => execresult(
+            "/usr/bin/perl -le '$(g.type_command)'", "noshell");
+classes:
+	"ok" expression => strcmp("$(expect)", "$(result)");
+
+reports:
+    DEBUG::
+	"expected: '$(expect)'";
+	"got:      '$(result)'";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

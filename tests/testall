@@ -180,6 +180,8 @@ while true; do
       NOVA=;;
     --staging)
       STAGING=1;;
+    --agent=*)
+      AGENT=${1#--agent=};;
     -*)
       echo "Unknown option: $1"
       exit 1;;

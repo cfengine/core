@@ -66,10 +66,53 @@ strcat(newto,"dummy");
 
 if (attr.transaction.action != cfa_warn)
    {
+   struct stat tostat;
+
    if (!MakeParentDirectory(newto,attr.move_obstructions))
       {
       cfPS(cf_error,CF_FAIL,"",pp,attr,"Unable to make directory for %s in file-copy %s to %s\n",newto,attr.copy.source,attr.copy.destination);
       return;
+      }
+
+   DeleteSlash(to);
+
+   /* Set aside symlinks */
+
+   if (cf_lstat(to, &tostat, attr, pp) == 1)
+      {
+      cfPS(cf_error, CF_WARN, "cf_stat", pp, attr, "Unable to stat newly created directory %s", to);
+      return;
+      }
+
+   if (S_ISLNK(tostat.st_mode))
+      {
+      char backup[CF_BUFSIZE];
+      mode_t mask;
+
+      if (!attr.move_obstructions)
+         {
+         CfOut(cf_inform, "", "Path %s is a symlink. Unable to move it aside without move_obstructions is set");
+         return;
+         }
+
+      strcpy(backup, to);
+      DeleteSlash(to);
+      strcat(backup, ".cf-moved");
+
+      if (cf_rename(to, backup) == -1)
+         {
+         CfOut(cf_inform, "", "Unable to backup old %s", to);
+         unlink(to);
+         }
+
+      mask = umask(0);
+      if (cf_mkdir(to, DEFAULTMODE) == -1)
+         {
+         CfOut(cf_error, "cf_mkdir", "Unable to make directory %s", to);
+         umask(mask);
+         return;
+         }
+      umask(mask);
       }
    }
 

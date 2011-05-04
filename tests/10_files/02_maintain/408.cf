@@ -49,7 +49,7 @@ body delete init_delete
 
 body link_from init_link
 {
-	source => "/etc/motd";
+	source => "/bin/true";
 }
 
 #######################################################

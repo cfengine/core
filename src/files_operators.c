@@ -1324,7 +1324,7 @@ if (lstat(pathbuf,&statbuf) != -1)
       struct stat dir;
       stat(pathbuf,&dir);
    
-      if (!S_ISDIR(dir.st_mode) || S_ISLNK(statbuf.st_mode))  /* if the dir exists - no problem */
+      if (!S_ISDIR(dir.st_mode))  /* if the dir exists - no problem */
          {
          struct stat sbuf;
 

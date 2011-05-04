@@ -519,21 +519,11 @@ for (ta = list; ta != NULL; ta=ta->next)
 
       ybwd = true;
       }
-   else if (!bwd && ta->bwd_name == NULL)
-      {
-      ybwd = true;
-      }
    else
       {
       ybwd = false;
       }
    
-   if (ta->bwd_name && (strcmp(fwd,ta->bwd_name) == 0) && bwd && (strcmp(bwd,ta->fwd_name) == 0))
-      {
-      CfOut(cf_inform,""," ! Association \"%s\" exists already but in opposite orientation\n",fwd);
-      return ta;
-      }
-
    if (yfwd && ybwd)
       {
       return ta;

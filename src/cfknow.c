@@ -680,6 +680,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
    if (a.fwd_name && a.bwd_name)
       {
       CfOut(cf_verbose,""," -> New thing \"%s\" has a relation \"%s/%s\"",pp->promiser,a.fwd_name,a.bwd_name);
+
       AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
       }
 

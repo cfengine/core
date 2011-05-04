@@ -508,7 +508,7 @@ enum storytype
    };
 
 #define KM_PARTOF_CERT_F "is/are a part of"
-#define KM_PARTOF_CERT_B "has/have as a part"
+#define KM_PARTOF_CERT_B "has/have a part"
 #define KM_DETERMINES_CERT_F "determine(s)"
 #define KM_DETERMINES_CERT_B "is/are determined by"
 #define KM_CONTRIBUTES_CERT_F "contibutes to"

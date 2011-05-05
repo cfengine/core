@@ -1228,7 +1228,7 @@ if (pi)
 
 int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp)
 /*
- * Returns true if any installed packatges match (n,v,a), false otherwise.
+ * Returns true if any installed packages match (n,v,a), false otherwise.
  */
 { struct CfPackageManager *mp = NULL;
   struct CfPackageItem  *pi;
@@ -1489,7 +1489,7 @@ switch(policy)
 
        *instVer = '\0';
        *instArch = '\0';
-
+       
        if ((a.packages.package_file_repositories != NULL) &&
 	  (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
           {          
@@ -1512,22 +1512,29 @@ switch(policy)
              CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
              break;
 	     }
-          
-          if (installed)
-	     {
-             CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
-	     
-             if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
-                {
-                CfOut(cf_verbose, "", "Installed package is older than latest available");
-                }
-             else
-                {
-                CfOut(cf_verbose, "", "Installed package is up to date, not updating");
-                break;
-                }
-	     }
           }
+       else
+          {
+          snprintf(largestVerAvail, sizeof(largestVerAvail), "%s", version);  // user-supplied version
+          }
+       
+       
+       if (installed)
+          {
+          CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
+	  
+          if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
+             {
+             CfOut(cf_verbose, "", "Installed package (%s,%s,%s) is older than latest available (%s,%s,%s) - updating",
+                   name, instVer, instArch, name, largestVerAvail, arch);
+             }
+          else
+             {
+             CfOut(cf_verbose, "", "Installed package is up to date, not updating");
+             break;
+             }
+          }
+       
        
        if ((matched && package_select_in_range && !no_version_specified) || installed)
           {

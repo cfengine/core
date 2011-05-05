@@ -1,4 +1,8 @@
-3.1.5b1
+3.1.6 
+	package_policy update and addupdate now check if user-supplied version
+	is larger than currently installed - updates only if so
+
+3.1.5
 	New class parser, '||' is no longer allowed in expressions (use '|').
 
 	Class setting in the promise types insert_lines, delete_lines,

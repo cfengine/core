@@ -507,6 +507,10 @@ enum storytype
    cfi_none
    };
 
+#define KM_AFFECTS_CERT_F "affects"
+#define KM_AFFECTS_CERT_B "is affected by"
+#define KM_CAUSE_CERT_F "causes"
+#define KM_CAUSE_CERT_B "is caused by"
 #define KM_PARTOF_CERT_F "is/are a part of"
 #define KM_PARTOF_CERT_B "has/have a part"
 #define KM_DETERMINES_CERT_F "determine(s)"
@@ -519,8 +523,6 @@ enum storytype
 #define KM_PROVIDES_CERT_B "is/are provided by"
 #define KM_BELONGS_CERT_F "belongs to"
 #define KM_BELONGS_CERT_B "owns"
-#define KM_AFFECTS_CERT_F "affects"
-#define KM_AFFECTS_CERT_B "is affected by"
 #define KM_CONNECTS_CERT_F "connects to"
 #define KM_CONNECTS_CERT_B "connects to"
 #define KM_NEEDS_CERT_F "need(s)"
@@ -536,6 +538,8 @@ enum storytype
 #define KM_LOCATED_CERT_F "is located in"
 #define KM_LOCATED_CERT_B "situates"
 
+#define KM_CAUSE_POSS_F "can cause"
+#define KM_CAUSE_POSS_B "can be caused by"
 #define KM_PARTOF_POSS_F "can be a part of"
 #define KM_PARTOF_POSS_B "can have a part"
 #define KM_DETERMINES_POSS_F "can determine"
@@ -563,13 +567,14 @@ enum storytype
 #define KM_LOCATED_POSS_F "can be located in"
 #define KM_LOCATED_POSS_B "can situate"
 
+#define KM_CAUSE_UNCERT_F "might cause"
+#define KM_CAUSE_UNCERT_B "might be caused by"
 #define KM_PARTOF_UNCERT_F "might be a part of"
 #define KM_PARTOF_UNCERT_B "might have a part"
 #define KM_DETERMINES_UNCERT_F "might determine"
 #define KM_DETERMINES_UNCERT_B "might be determined by"
 #define KM_CONTRIBUTES_UNCERT_F "might contibute to"
 #define KM_CONTRIBUTES_UNCERT_B "might be contibuted to by"
-
 #define KM_USES_UNCERT_F "might use"
 #define KM_USES_UNCERT_B "might be used by"
 #define KM_PROVIDES_UNCERT_F "might provide"

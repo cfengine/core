@@ -530,6 +530,26 @@ else if (rp = GetListConstraint("causes",pp))
 
    attr.associates = rp;
    }
+else if (rp = GetListConstraint("caused_by",pp))
+   {
+   switch (certainty)
+      {
+      case cfk_certain:
+          attr.bwd_name = KM_CAUSE_CERT_F;
+          attr.fwd_name = KM_CAUSE_CERT_B;   
+          break;
+      case cfk_uncertain:
+          attr.bwd_name = KM_CAUSE_UNCERT_F;
+          attr.fwd_name = KM_CAUSE_UNCERT_B;   
+          break;
+      case cfk_possible:
+          attr.bwd_name = KM_CAUSE_POSS_F;
+          attr.fwd_name = KM_CAUSE_POSS_B;   
+          break;
+      }
+
+   attr.associates = rp;
+   }
 else if (rp = GetListConstraint("needs",pp))
    {
    switch (certainty)

@@ -213,7 +213,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
       case 's':
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
-          CfGenerateStories(TOPIC_CMD,cfi_none);
+          CfGenerateStories(TOPIC_CMD,cfi_cause);
 #endif
           exit(0);
           break;
@@ -698,11 +698,12 @@ for (rp = contexts; rp != NULL; rp = rp->next)
    
    if (a.synonyms)
       {
-      for (rps = a.general; rps != NULL; rps=rps->next)
+      for (rps = a.synonyms; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
+         CfOut(cf_verbose,""," ---> %s is a synonym for %s",rps->item,tp->topic_name);
          }
-      
+
       AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true);
       }
 
@@ -713,6 +714,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       for (rps = a.general; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
+         CfOut(cf_verbose,""," ---> %s is a generalization for %s",rps->item,tp->topic_name);
          }
       
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true);
@@ -782,9 +784,10 @@ for (rp = contexts; rp != NULL; rp = rp->next)
 
    if (a.synonyms)
       {
-      for (rps = a.general; rps != NULL; rps=rps->next)
+      for (rps = a.synonyms; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
+         CfOut(cf_verbose,""," ---> %s is a synonym for %s",rps->item,tp->topic_name);
          }
       
       AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true);
@@ -797,6 +800,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       for (rps = a.general; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
+         CfOut(cf_verbose,""," ---> %s is a generalization for %s",rps->item,tp->topic_name);
          }
       
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true);

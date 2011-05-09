@@ -363,7 +363,7 @@ for (i = 0; bs[i].lval != NULL; i++)
       }
    else if (bs[i].dtype == cf_body)
       {
-      fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s} (compound body)\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
+      fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoSubBodyParts(fout,(struct BodySyntax *)bs[i].range);
       }
    else

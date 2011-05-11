@@ -367,7 +367,7 @@ if (!NO_FORK)
 WritePID("cf-serverd.pid");
 
 /* Andrew Stribblehill <ads@debian.org> -- close sd on exec */ 
-#ifndef MINGW  // TODO: close in windows on exec
+#ifndef MINGW
 fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
  

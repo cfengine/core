@@ -48,6 +48,7 @@ files:
 
   "/tmp/system"
 
+       comment => "Create a file of variable assignments and manage this file",
         create => "true",
      edit_line => set_variable_values("setvars.rhs");
 

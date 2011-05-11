@@ -24,6 +24,7 @@
 body common control
 {
 bundlesequence => { "setvars" };
+inputs => { "cfengine_stdlib.cf" };
 }
 
 bundle agent setvars
@@ -52,56 +53,3 @@ files:
 
 }
 
-############################################################
-# Library stuff
-############################################################
-
-bundle edit_line set_variable_values(v)
-
-{
-vars:
-
-  "index" slist => getindices("$(v)");
-
-  # Be careful if the index string contains funny chars
-
-  "cindex[$(index)]" string => canonify("$(index)");
-
-field_edits:
-
-  # match a line starting like the key = something
-
-  "$(index)\s*=.*"
-
-     edit_field => col("=","2","$($(v)[$(index)])","set"),
-        classes => if_ok("not_$(cindex[$(index)])");
-
-insert_lines:
-
-  "$(index)=$($(v)[$(index)])",
-
-      ifvarclass => "!not_$(cindex[$(index)])";
-}
-
-############################################################
-
-body edit_field col(split,col,newval,method)
-
-{
-field_separator    => "$(split)";
-select_field       => "$(col)";
-value_separator    => ",";
-field_value        => "$(newval)";
-field_operation    => "$(method)";
-extend_fields      => "true";
-allow_blank_fields => "true";
-}
-
-
-#
-
-body classes if_ok(x)
-{
-promise_repaired => { "$(x)" };
-promise_kept => { "$(x)" };
-}

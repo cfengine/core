@@ -40,12 +40,15 @@ vars:
   "v[index_1]" string => "value_1";
   "v[index_2]" string => "value_2";
 
-  "parameter_name" slist => getindices("v");
+  "x" slist => getindices("v");
+  "y" slist => getvalues("v");
 
 reports:
 
-  Yr2008::
+  cfengine_3::
 
-   "Found index: $(parameter_name)";
-
+   "All indices:";
+   " Found index: $(x) with value \"$(v[$(x)])\"";
+   "All values:";
+   " Found value: $(y)";
 }

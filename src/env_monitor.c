@@ -71,25 +71,24 @@ int NO_FORK = false;
 /* Prototypes                                                      */
 /*******************************************************************/
 
-void GetDatabaseAge (void);
-void LoadHistogram  (void);
-void GetQ (void);
-char *GetTimeKey (void);
-struct Averages EvalAvQ (char *timekey);
-void ArmClasses (struct Averages newvals,char *timekey);
-void GatherPromisedMeasures(void);
+static void GetDatabaseAge(void);
+static void LoadHistogram(void);
+static void GetQ(void);
+static char *GetTimeKey(void);
+static struct Averages EvalAvQ(char *timekey);
+static void ArmClasses(struct Averages newvals,char *timekey);
+static void GatherPromisedMeasures(void);
 
-void LeapDetection (void);
-struct Averages *GetCurrentAverages (char *timekey);
-void UpdateAverages (char *timekey, struct Averages newvals);
-void UpdateDistributions (char *timekey, struct Averages *av);
-double WAverage (double newvals,double oldvals, double age);
-double SetClasses (char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey);
-void SetVariable (char *name,double now, double average, double stddev, struct Item **list);
-double RejectAnomaly (double new,double av,double var,double av2,double var2);
+static void LeapDetection(void);
+static struct Averages *GetCurrentAverages(char *timekey);
+static void UpdateAverages(char *timekey, struct Averages newvals);
+static void UpdateDistributions(char *timekey, struct Averages *av);
+static double WAverage(double newvals,double oldvals, double age);
+static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey);
+static void SetVariable(char *name,double now, double average, double stddev, struct Item **list);
+static double RejectAnomaly(double new,double av,double var,double av2,double var2);
 static void ZeroArrivals (void);
-void SaveTCPEntropyData (struct Item *list,int i, char *inout);
-void KeepMonitorPromise(struct Promise *pp);
+static void KeepMonitorPromise(struct Promise *pp);
 
 /****************************************************************/
 
@@ -160,8 +159,7 @@ void MonInitialize(void)
 /* Level 2                                                           */
 /*********************************************************************/
 
-void GetDatabaseAge()
-
+static void GetDatabaseAge()
 {
  CF_DB *dbp;
 
@@ -188,8 +186,7 @@ void GetDatabaseAge()
 
 /*********************************************************************/
 
-void LoadHistogram()
-
+static void LoadHistogram(void)
 { FILE *fp;
   int i,day,position;
   double maxval[CF_OBSERVABLES];
@@ -302,8 +299,7 @@ void StartServer(int argc,char **argv)
 
 /*********************************************************************/
 
-void GetQ()
-
+static void GetQ(void)
 {
 
 Debug("========================= GET Q ==============================\n");
@@ -326,7 +322,7 @@ GatherPromisedMeasures();
 
 /*********************************************************************/
 
-char *GetTimeKey()
+static char *GetTimeKey(void)
 
 { time_t now;
   char str[CF_SMALLBUF];
@@ -344,8 +340,7 @@ return ConvTimeKey(str);
 
 /*********************************************************************/
 
-struct Averages EvalAvQ(char *t)
-
+static struct Averages EvalAvQ(char *t)
 { struct Averages *currentvals,newvals;
   double This[CF_OBSERVABLES];
   char name[CF_MAXVARSIZE];
@@ -433,8 +428,7 @@ return newvals;
 
 /*********************************************************************/
 
-void LeapDetection()
-
+static void LeapDetection(void)
 { int i,last_pos = LDT_POS;
   double n1,n2,d;
   double padding = 0.2;
@@ -505,7 +499,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 /*********************************************************************/
 
-void ArmClasses(struct Averages av,char *timekey)
+static void ArmClasses(struct Averages av,char *timekey)
 
 { double sigma;
  struct Item *classlist = NULL;
@@ -619,8 +613,7 @@ MonEntropyClassesPublish(classlist);
 
 /*****************************************************************************/
 
-struct Averages *GetCurrentAverages(char *timekey)
-
+static struct Averages *GetCurrentAverages(char *timekey)
 {
   CF_DB *dbp;
   static struct Averages entry;
@@ -654,8 +647,7 @@ return &entry;
 
 /*****************************************************************************/
 
-void UpdateAverages(char *timekey,struct Averages newvals)
-
+static void UpdateAverages(char *timekey,struct Averages newvals)
 {
   CF_DB *dbp;
 
@@ -677,8 +669,7 @@ HistoryUpdate(newvals);
 
 /*****************************************************************************/
 
-void UpdateDistributions(char *timekey,struct Averages *av)
-
+static void UpdateDistributions(char *timekey,struct Averages *av)
 { int position,day,i;
   char filename[CF_BUFSIZE];
   FILE *fp;
@@ -731,12 +722,11 @@ if (IsDefinedClass("Min40_45"))
 
 /*****************************************************************************/
 
-double WAverage(double anew,double aold,double age)
-
 /* For a couple of weeks, learn eagerly. Otherwise variances will
    be way too large. Then downplay newer data somewhat, and rely on
    experience of a couple of months of data ... */
 
+static double WAverage(double anew,double aold,double age)
 { double av,cf_sane_monitor_limit = 9999999.0;
   double wnew,wold;
 
@@ -800,8 +790,7 @@ return av;
 
 /*****************************************************************************/
 
-double SetClasses(char * name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey)
-
+static double SetClasses(char * name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey)
 { char buffer[CF_BUFSIZE],buffer2[CF_BUFSIZE];
  double dev,delta,sigma,ldelta,lsigma,sig;
 
@@ -914,9 +903,7 @@ double SetClasses(char * name,double variable,double av_expect,double av_var,dou
 
 /*****************************************************************************/
 
-void SetVariable(char *name,double value,double average,double stddev,struct Item **classlist)
-
-
+static void SetVariable(char *name,double value,double average,double stddev,struct Item **classlist)
 { char var[CF_BUFSIZE];
 
  snprintf(var,CF_MAXVARSIZE,"value_%s=%.0lf",name,value);
@@ -938,8 +925,7 @@ memset(CF_THIS, 0, sizeof(CF_THIS));
 
 /*****************************************************************************/
 
-double RejectAnomaly(double new,double average,double variance,double localav,double localvar)
-
+static double RejectAnomaly(double new,double average,double variance,double localav,double localvar)
 { double dev = sqrt(variance+localvar);          /* Geometrical average dev */
   double delta;
   int bigger;
@@ -1009,14 +995,7 @@ else
 /* Level 5                                                     */
 /***************************************************************/
 
-
-/***************************************************************/
-
-
-/***************************************************************/
-
-void GatherPromisedMeasures()
-
+static void GatherPromisedMeasures(void)
 { struct Bundle *bp;
   struct SubType *sp;
   struct Promise *pp;
@@ -1046,8 +1025,7 @@ DeleteAllScope();
 /* Level                                                             */
 /*********************************************************************/
 
-void KeepMonitorPromise(struct Promise *pp)
-
+static void KeepMonitorPromise(struct Promise *pp)
 { char *sp = NULL;
  
 if (!IsDefinedClass(pp->classes))

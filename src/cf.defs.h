@@ -613,16 +613,12 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 /* Output control defines */
 
 #define Verbose if (VERBOSE || DEBUG || D2) printf
-#define EditVerbose  if (EDITVERBOSE || DEBUG || D2) printf
 #define Debug4  if (D4) printf
 #define Debug3  if (D3 || DEBUG || D2) printf
 #define Debug2  if (DEBUG || D2) printf
 #define Debug1  if (DEBUG || D1) printf
 #define Debug   if (DEBUG || D1 || D2) printf
 #define DebugVoid if (false) printf
-#define Silent if (! SILENT || VERBOSE || DEBUG || D2) printf
-#define DaemonOnly if (ISCFENGINE) yyerror("This belongs in cfservd.conf")
-#define CfengineOnly if (! ISCFENGINE) yyerror("This belongs in cfagent.conf")
 
 /* GNU REGEX */
 

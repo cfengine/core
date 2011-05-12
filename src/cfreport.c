@@ -438,7 +438,6 @@ strcpy(STYLESHEET,"");
 strcpy(WEBDRIVER,"#");
 strcpy(BANNER,"");
 strcpy(FOOTER,"");
-strcpy(AGGREGATION,"");
 snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 MapName(VINPUTFILE);
 
@@ -543,7 +542,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_aggregation_point].lval) == 0)
       {
-      strncpy(AGGREGATION,retval,CF_MAXVARSIZE);
+      /* Ignore for backward compatibility */
       continue;
       }
 

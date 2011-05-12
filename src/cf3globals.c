@@ -50,13 +50,10 @@ int PARSING = false;
 int CFPARANOID = false;
 int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
-int VIEWS = true;
 int IGNORE_MISSING_INPUTS = false;
 int IGNORE_MISSING_BUNDLES = false;
 int FIPS_MODE = false;
 int ALWAYS_VALIDATE = false;
-
-unsigned int CFTEST_CLASS = 0;
 
 struct utsname VSYSNAME;
 
@@ -108,7 +105,6 @@ struct Rlist *SERVER_KEYSEEN = NULL;
 
 int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
-int CF_SAVEFSTAB = false;
 int FSTAB_EDITS;
 int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
@@ -124,8 +120,6 @@ double METER_REPAIRED[meter_endmark];
 
 double Q_MEAN;
 double Q_SIGMA;
-double Q_MAX;
-double Q_MIN;
 
 /*****************************************************************************/
 /* Internal data structures                                                  */
@@ -149,9 +143,6 @@ struct Item *EDIT_ANCHORS = NULL;
 
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = CF_WEEK;
-int LASTSEEN = false;
-
-struct Topic *TOPIC_MAP = NULL;
 
 char POLICY_SERVER[CF_BUFSIZE] = {0};
 
@@ -160,7 +151,6 @@ char DOCROOT[CF_MAXVARSIZE] = {0};
 char BANNER[2*CF_BUFSIZE] = {0};
 char FOOTER[CF_BUFSIZE] = {0};
 char STYLESHEET[CF_BUFSIZE] = {0};
-char AGGREGATION[CF_BUFSIZE] = {0};
 struct Topic *TOPICHASH[CF_HASHTABLESIZE];
 
 char SQL_DATABASE[CF_MAXVARSIZE] = {0};
@@ -287,9 +277,6 @@ char  VDOMAIN[CF_MAXVARSIZE] = {0};
 char  VYEAR[5] = {0};
 char  VDAY[3] = {0};
 char  VMONTH[4] = {0};
-char  VHR[3] = {0};
-char  VMINUTE[3] = {0};
-char  VSEC[3] = {0};
 char  VSHIFT[12] = {0};
 char  VLIFECYCLE[12] = {0};
 
@@ -342,7 +329,6 @@ pthread_mutex_t MUTEX_SERVER_KEYSEEN = PTHREAD_MUTEX_INITIALIZER;
 # endif
 #endif
 
-unsigned short PORTNUMBER = 0;
 char VIPADDRESS[18] = {0};
 int  CFSIGNATURE = 0;
 
@@ -441,23 +427,19 @@ int CF_DEFAULT_DIGEST_LEN;
 
 struct Audit *AUDITPTR;
 struct Audit *VAUDIT = NULL; 
-FILE *VLOGFP = NULL; 
 CF_DB  *AUDITDBP = NULL;
 
 char GRAPHDIR[CF_BUFSIZE] = {0};
 char CFLOCK[CF_BUFSIZE] = {0};
-char SAVELOCK[CF_BUFSIZE] = {0}; 
 char CFLOG[CF_BUFSIZE] = {0};
 char CFLAST[CF_BUFSIZE] = {0}; 
 char LOCKDB[CF_BUFSIZE] = {0};
 char LOGFILE[CF_MAXVARSIZE] = {0};
 
 char *SIGNALS[highest_signal];
-char *VSETUIDLOG = NULL;
 
 time_t CFSTARTTIME;
 time_t CFINITSTARTTIME;
-dev_t ROOTDEVICE = 0;
 char  STR_CFENGINEPORT[16] = {0};
 unsigned short SHORT_CFENGINEPORT;
 time_t CONNTIMEOUT = 10;	   /* seconds */
@@ -465,14 +447,10 @@ time_t RECVTIMEOUT = 30;	   /* seconds */
 int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
 int SKIPIDENTIFY = false;
-int ALL_SINGLECOPY = false;
-int FULLENCRYPT = false;
 int EDITFILESIZE = 10000;
 int EDITBINFILESIZE = 100000;
-int NOHARDCLASSES=false;
 int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;
-int UNDERSCORE_CLASSES=false;
 int CHECKSUMUPDATES = false;
 char BINDINTERFACE[CF_BUFSIZE] = {0};
 int MINUSF = false;
@@ -487,9 +465,6 @@ struct Item *VDEFAULTROUTE=NULL;
 struct Item *VSETUIDLIST = NULL;
 struct Item *SUSPICIOUSLIST = NULL;
 enum classes VSYSTEMHARDCLASS = unused1;
-int NONALPHAFILES = false;
-struct Item *EXTENSIONLIST = NULL;
-struct Item *SPOOLDIRLIST = NULL;
 struct Item *NONATTACKERLIST = NULL;
 struct Item *MULTICONNLIST = NULL;
 struct Item *TRUSTKEYLIST = NULL;

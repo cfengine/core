@@ -537,7 +537,6 @@ if (! DONTDO)
    }
 
 cfPS(cf_inform,CF_CHG,"",pp,a," -> Mounting %s to keep promise\n",mountpt);
-      //DeleteItemStarting(&VMOUNTED,ptr->name);
 return 0;
 }
 
@@ -577,7 +576,6 @@ if (! DONTDO)
    }
 
 cfPS(cf_inform,CF_CHG,"",pp,a," -> Unmounting %s to keep promise\n",mountpt);
-      //DeleteItemStarting(&VMOUNTED,ptr->name);
 return 0;
 }
 

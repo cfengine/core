@@ -155,15 +155,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
          {
          if (FullTextMatch(CLASSATTRIBUTES[i][2],VSYSNAME.release))
             {
-            if (UNDERSCORE_CLASSES)
-               {
-               snprintf(workbuf,CF_BUFSIZE,"_%s",CLASSTEXT[i]);
-               NewClass(workbuf);
-               }
-            else
-               {
-               NewClass(CLASSTEXT[i]);
-               }
+            NewClass(CLASSTEXT[i]);
 
             found = true;
 
@@ -218,14 +210,7 @@ if ((tloc = time((time_t *)NULL)) == -1)
    printf("Couldn't read system clock\n");
    }
 
-if (UNDERSCORE_CLASSES)
-   {
-   snprintf(workbuf,CF_BUFSIZE,"_%s",CLASSTEXT[i]);
-   }
-else
-   {
-   snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
-   }
+snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
 
 CfOut(cf_verbose,"","Cfengine - %s %s\n\n",VERSION,CF3COPYRIGHT);
 

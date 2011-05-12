@@ -80,7 +80,6 @@ int HTML = false;
 int WRITE_KMDB = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
-int PASS;
 
 struct Occurrence *OCCURRENCES = NULL;
 struct Inference *INFERENCES = NULL;
@@ -514,8 +513,6 @@ if (!ok)
    }
 
 /* If all is okay, go ahead and evaluate */
-
-PASS = 1;
 
 for (type = 0; TYPESEQUENCE[type] != NULL; type++)
    {

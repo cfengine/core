@@ -118,6 +118,7 @@ void AddTimeClass(char *str)
 
 { int i,value;
   char buf2[10], buf3[10], buf4[10], buf5[10], buf[10], out[10];
+  char hour[10];
 
 for (i = 0; i < 7; i++)
    {
@@ -137,8 +138,8 @@ buf[0] = '\0';
 sscanf(buf4,"%[^:]",buf);
 sprintf(out,"Hr%s",buf);
 NewClass(out);
-memset(VHR,0,3);
-strncpy(VHR,buf,2); 
+memset(hour,0,3);
+strncpy(hour,buf,2); 
 
 /* Shift */
 
@@ -168,9 +169,7 @@ NewClass(VSHIFT);
 sscanf(buf4,"%*[^:]:%[^:]",buf);
 sprintf(out,"Min%s",buf);
 NewClass(out);
-memset(VMINUTE,0,3);
-strncpy(VMINUTE,buf,2); 
- 
+
 sscanf(buf,"%d",&i);
 
 switch ((i / 5))
@@ -206,19 +205,19 @@ switch ((i / 5))
 switch ((i / 15))
    {
    case 0: NewClass("Q1");
-           sprintf(out,"Hr%s_Q1",VHR);
+           sprintf(out,"Hr%s_Q1",hour);
     NewClass(out);
            break;
    case 1: NewClass("Q2");
-           sprintf(out,"Hr%s_Q2",VHR);
+           sprintf(out,"Hr%s_Q2",hour);
     NewClass(out);
            break;
    case 2: NewClass("Q3");
-           sprintf(out,"Hr%s_Q3",VHR);
+           sprintf(out,"Hr%s_Q3",hour);
     NewClass(out);
            break;
    case 3: NewClass("Q4");
-           sprintf(out,"Hr%s_Q4",VHR);
+           sprintf(out,"Hr%s_Q4",hour);
     NewClass(out);
            break;
    }

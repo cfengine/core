@@ -110,67 +110,6 @@ strcpy(vbuff,path);
 AddSlash(vbuff);
 strcat(vbuff,nodename); 
 
-if (suspicious && NONALPHAFILES)
-   {
-   CfOut(cf_error,"","Suspicious filename %s in %s has no alphanumeric content (security)",CanonifyName(nodename),path);
-   strcpy(newname,vbuff);
-
-   for (sp = newname+strlen(path); *sp != '\0'; sp++)
-      {
-      if ((*sp > 126) || (*sp < 33))
-         {
-         *sp = 50 + (*sp / 50);  /* Create a visible ASCII interpretation */
-         }
-      }
-   
-   strcat(newname,".cf-nonalpha");
-   
-   CfOut(cf_error,"","Renaming file %s to %s",vbuff,newname);
-   
-   if (cf_rename(vbuff,newname) == -1)
-      {
-      CfOut(cf_verbose,"cf_rename","Rename failed - foreign filesystem?\n");
-      }
-   if (cf_chmod(newname,0644) == -1)
-      {
-      CfOut(cf_verbose,"cf_chmod","Mode change failed - foreign filesystem?\n");
-      }
-   return false;
-   }
-
-if (strstr(nodename,".") && (EXTENSIONLIST != NULL))
-   {
-   if (cf_lstat(vbuff,&statbuf,attr,pp) == -1)
-      {
-      CfOut(cf_verbose,"lstat","Couldn't examine %s - foreign filesystem?\n",vbuff);
-      return true;
-      }
-
-   if (S_ISDIR(statbuf.st_mode))
-      {
-      if (strcmp(nodename,"...") == 0)
-         {
-         CfOut(cf_verbose,"","Hidden directory ... found in %s\n",path);
-         return true;
-         }
-      
-      for (sp = nodename+strlen(nodename)-1; *sp != '.'; sp--)
-         {
-         }
-      
-      if ((char *)sp != nodename) /* Don't get .dir */
-         {
-         sp++; /* Find file extension, look for known plain files  */
-         
-         if ((strlen(sp) > 0) && IsItemIn(EXTENSIONLIST,sp))
-            {
-            CfOut(cf_error,"","Suspicious directory %s in %s looks like plain file with extension .%s",nodename,path,sp);
-            return false;
-            }
-         }
-      }
-   }
-
 for (sp = nodename; *sp != '\0'; sp++) /* Check for files like ".. ." */
    {
    if ((*sp != '.') && ! isspace(*sp))
@@ -180,8 +119,6 @@ for (sp = nodename; *sp != '\0'; sp++) /* Check for files like ".. ." */
       }
    }
 
-
-/* removed if (EXTENSIONLIST==NULL) mb */ 
 
 if (cf_lstat(vbuff,&statbuf,attr,pp) == -1)
    {

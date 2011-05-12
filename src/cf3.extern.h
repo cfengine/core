@@ -41,7 +41,6 @@ extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
 extern int ALWAYS_VALIDATE;
-extern int VIEWS;
 extern int LICENSES;
 extern char EXPIRY[32];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
@@ -56,7 +55,6 @@ extern int CF_NODES;
 extern int CF_EDGES;
 extern int KEYTTL;
 extern struct Rlist *SERVER_KEYSEEN;
-extern unsigned int CFTEST_CLASS;
 extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 extern struct Item *EDIT_ANCHORS;
@@ -73,7 +71,6 @@ extern struct Rlist *SINGLE_COPY_LIST;
 extern struct Rlist *AUTO_DEFINE_LIST;
 extern struct Rlist *SINGLE_COPY_CACHE;
 extern struct Rlist *ACCESSLIST;
-extern struct Topic *TOPIC_MAP;
 extern struct PromiseIdent *PROMISE_ID_LIST;
 extern struct Item *DONELIST;
 extern struct Rlist *CBUNDLESEQUENCE;
@@ -117,7 +114,6 @@ extern time_t CF_LOCKHORIZON;
 extern int ABORTBUNDLE;
 extern struct Item *ABORTBUNDLEHEAP;
 extern int LASTSEENEXPIREAFTER;
-extern int LASTSEEN;
 extern char *DEFAULT_COPYTYPE;
 extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
@@ -137,7 +133,6 @@ extern char *SHIFT_TEXT[];
 extern char FILE_SEPARATOR;
 extern char FILE_SEPARATOR_STR[2];
 
-extern char AGGREGATION[CF_BUFSIZE];
 extern char *UNITS[CF_OBSERVABLES];
 
 extern char *BASIC_REPORTS[cfrep_unknown][2];
@@ -158,8 +153,6 @@ extern double METER_KEPT[meter_endmark];
 extern double METER_REPAIRED[meter_endmark];
 extern double Q_MEAN;
 extern double Q_SIGMA;
-extern double Q_MAX;
-extern double Q_MIN;
 
 /***********************************************************/
 /* SYNTAX MODULES                                          */

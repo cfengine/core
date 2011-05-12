@@ -486,20 +486,17 @@ DeletePrivateClassContext();
 DeleteEntireHeap();
 DeleteAllScope();
 
-if (!NOHARDCLASSES)
-   {
-   NewScope("sys");
-   NewScope("const");
-   NewScope("match");
-   NewScope("mon");
-   NewScope("control_monitor");
-   NewScope("control_common");
-   GetNameInfo3();
-   CfGetInterfaceInfo(cf_monitor);
-   Get3Environment();
-   OSClasses();
-   SetReferenceTime(true);
-   }
+NewScope("sys");
+NewScope("const");
+NewScope("match");
+NewScope("mon");
+NewScope("control_monitor");
+NewScope("control_common");
+GetNameInfo3();
+CfGetInterfaceInfo(cf_monitor);
+Get3Environment();
+OSClasses();
+SetReferenceTime(true);
 
 LoadPersistentContext();
 LoadSystemConstants();

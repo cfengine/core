@@ -89,19 +89,16 @@ if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY))
    exit(1);
    }
 
-if (!NOHARDCLASSES)
+NewScope("const");
+NewScope("match");
+NewScope("mon");
+GetNameInfo3();
+CfGetInterfaceInfo(ag);
+
+if (ag != cf_know)
    {
-   NewScope("const");
-   NewScope("match");
-   NewScope("mon");
-   GetNameInfo3();
-   CfGetInterfaceInfo(ag);
-      
-   if (ag != cf_know)
-      {
-      Get3Environment();
-      OSClasses();
-      }
+   Get3Environment();
+   OSClasses();
    }
 
 LoadPersistentContext();
@@ -1220,7 +1217,6 @@ if (uname(&VSYSNAME) == -1)
 else
    {
    snprintf(LOGFILE,CF_BUFSIZE,"%s%ccfagent.%s.log",CFWORKDIR,FILE_SEPARATOR,VSYSNAME.nodename);
-   VSETUIDLOG = strdup(LOGFILE);
    }
 
 

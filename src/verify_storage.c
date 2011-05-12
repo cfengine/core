@@ -451,7 +451,6 @@ if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,name,options,a,pp))
    if (changes)
       {
       CF_MOUNTALL = true;
-      CF_SAVEFSTAB = true;
       }
    }
 else
@@ -461,10 +460,7 @@ else
       VerifyUnmount(name,a,pp);
       if (a.mount.editfstab)
          {
-         if (VerifyNotInFstab(name,a,pp))
-            {
-            CF_SAVEFSTAB = true;
-            }
+         VerifyNotInFstab(name,a,pp);
          }
       }
    else

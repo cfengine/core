@@ -61,7 +61,7 @@ return retval;
 #endif
 
 /*
- * Under SUSv3 (Solaris 8/9, HP-UX 11.11) we need to manually update 'environ'
+ * Under SVR4 (Solaris 8/9, HP-UX 11.11) we need to manually update 'environ'
  * variable
  */
 

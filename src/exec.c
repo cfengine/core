@@ -600,13 +600,11 @@ CfOut(cf_verbose,""," !! Pruning complete");
 
 int ScheduleRun()
 
-{ time_t now;
-  char timekey[64];
-  struct Item *ip;
+{
+struct Item *ip;
 
 CfOut(cf_verbose,"","Sleeping...\n");
 sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 
-now = time(NULL);
 
 // recheck license (in case of license updates or expiry)
 
@@ -637,8 +635,6 @@ CfGetInterfaceInfo(cf_executor);
 Get3Environment();
 OSClasses();
 SetReferenceTime(true);
-snprintf(timekey,63,"%s",cf_ctime(&now)); 
-AddTimeClass(timekey); 
 ThreadUnlock(cft_system);
 
 for (ip = SCHEDULE; ip != NULL; ip = ip->next)
@@ -647,7 +643,7 @@ for (ip = SCHEDULE; ip != NULL; ip = ip->next)
 
    if (IsDefinedClass(ip->name))
       {
-      CfOut(cf_verbose,"","Waking up the agent at %s ~ %s \n",timekey,ip->name);
+      CfOut(cf_verbose,"","Waking up the agent at %s ~ %s \n",cf_ctime(&CFSTARTTIME),ip->name);
       return true;
       }
    }

@@ -1525,7 +1525,6 @@ void TimeOut(void);
 void DeleteTimeOut(void);
 void SetReferenceTime(int setclasses);
 void SetStartTime(int setclasses);
-void AddTimeClass(char *str);
 
 /* unix.c */
 

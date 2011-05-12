@@ -273,7 +273,7 @@ return retval;
 
 /*****************************************************************************/
 
-int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,void *ptr,int size)
+int BDB_WriteComplexKeyDB(DB *dbp,char *name,int keysize,const void *ptr,int size)
 
 {
 DBT *key,*value;
@@ -449,7 +449,7 @@ free((char *)key);
 
 /*****************************************************************************/
 
-DBT *BDB_NewDBValue(void *ptr,int size)
+DBT *BDB_NewDBValue(const void *ptr,int size)
 
 {
 void *val;

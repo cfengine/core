@@ -160,7 +160,7 @@ return BDB_RevealDB(dbp,key,result,rsize);
 
 /*****************************************************************************/
 
-int WriteComplexKeyDB(CF_DB *dbp, char *key, int keySz, void *src, int srcSz)
+int WriteComplexKeyDB(CF_DB *dbp, char *key, int keySz, const void *src, int srcSz)
 {
 #ifdef TCDB
 return TCDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
@@ -237,7 +237,7 @@ return ReadComplexKeyDB(dbp,key,strlen(key)+1,dest,destSz);
 
 /*****************************************************************************/
 
-int WriteDB(CF_DB *dbp, char *key, void *src, int srcSz)
+int WriteDB(CF_DB *dbp, char *key, const void *src, int srcSz)
 
 {
 return WriteComplexKeyDB(dbp,key,strlen(key)+1,src,srcSz);

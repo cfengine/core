@@ -457,7 +457,6 @@ void HistoryUpdate(struct Averages newvals)
   struct Attributes dummyattr = {{0}};
   struct CfLock thislock;
   time_t now = time(NULL);
-  char timekey[CF_MAXVARSIZE];
 
 /* We do this only once per hour - this should not be changed */
 
@@ -504,8 +503,7 @@ LoadSystemConstants();
 YieldCurrentLock(thislock);
 DeletePromise(pp);
 
-snprintf(timekey,CF_MAXVARSIZE-1,"%s_%s_%s_%s",VDAY,VMONTH,VLIFECYCLE,VSHIFT);
-Nova_HistoryUpdate(timekey,newvals);
+Nova_HistoryUpdate(CFSTARTTIME, &newvals);
 
 if (strcmp(CURRENT_SHIFT,VSHIFT) != 0)
    {

@@ -41,7 +41,6 @@ int main (int argc,char *argv[]);
 /*****************************************************************************/
 
 extern int NO_FORK;
-extern short TCPDUMP;
 
 extern struct BodySyntax CFM_CONTROLBODY[];
 

@@ -159,7 +159,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
       case 'H': /* Keep accepting this option for compatibility -- no longer used */
          break;
 
-      case 'T': TCPDUMP = true;
+      case 'T': MonNetworkSnifferEnable(true);
                 break;
 
       case 'V': Version("cf-monitord");
@@ -211,8 +211,7 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
       {
-      TCPDUMP = GetBoolean(retval);
-      Debug("use tcpdump = %d\n",TCPDUMP);
+      MonNetworkSnifferEnable(GetBoolean(retval));
       }
    
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)

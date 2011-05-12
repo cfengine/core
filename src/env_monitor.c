@@ -48,8 +48,6 @@ double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current obs
 
 /* Work */
 
-int BATCH_MODE = false;
-
 long ITER;           /* Iteration since start */
 double AGE,WAGE;             /* Age and weekly age of database */
 
@@ -120,16 +118,13 @@ void MonInitialize(void)
 
  MonEntropyClassesInit();
 
- if (!BATCH_MODE)
-    {
-    GetDatabaseAge();
+ GetDatabaseAge();
 
-    for (i = 0; i < CF_OBSERVABLES; i++)
-       {
-       LOCALAV.Q[i].expect = 0.0;
-       LOCALAV.Q[i].var = 0.0;
-       LOCALAV.Q[i].q = 0.0;
-       }
+ for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+    LOCALAV.Q[i].expect = 0.0;
+    LOCALAV.Q[i].var = 0.0;
+    LOCALAV.Q[i].q = 0.0;
     }
 
  for (i = 0; i < 7; i++)

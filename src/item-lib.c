@@ -1347,3 +1347,18 @@ if (!ItemListsEqual(cmplist,liststart))
 DeleteItemList(cmplist);
 return (true);
 }
+
+/*********************************************************************/
+
+int ByteSizeList(const struct Item *list)
+{
+int count = 0;
+const struct Item *ip;
+
+for (ip = list; ip; ip = ip->next)
+   {
+   count += strlen(ip->name);
+   }
+
+return count;
+}

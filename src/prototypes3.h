@@ -1004,7 +1004,7 @@ int IsClassedItemIn(struct Item *list,char *item);
 int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp);
 struct Item *String2List(char *string);
 int ListLen (struct Item *list);
-int ByteSizeList (struct Item *list);
+int ByteSizeList(const struct Item *list);
 int IsItemIn (struct Item *list, const char *item);
 int IsFuzzyItemIn (struct Item *list, char *item);
 int IsMatchItemIn(struct Item *list,char *item);

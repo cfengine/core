@@ -60,9 +60,12 @@ return retval;
 
 #endif
 
-/* Under Solaris8/9 we need to manually update 'environ' variable */
+/*
+ * Under SUSv3 (Solaris 8/9, HP-UX 11.11) we need to manually update 'environ'
+ * variable
+ */
 
-#ifdef __sun
+#if defined(__sun) || defined (__hpux)
 
 /*
  * Note: this function will leak memory as we don't know how to free data

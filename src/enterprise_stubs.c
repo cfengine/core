@@ -903,8 +903,7 @@ void LongHaul()
 
 {
 #ifdef HAVE_NOVA
- Nova_LongHaul(VDAY,VMONTH,VLIFECYCLE,VSHIFT);
-#else
+Nova_LongHaul(CFSTARTTIME);
 #endif
 }
 

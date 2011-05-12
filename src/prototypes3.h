@@ -531,7 +531,7 @@ void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy p
 void DeletePersistentContext(char *name);
 void LoadPersistentContext(void);
 void AddEphemeralClasses(struct Rlist *classlist);
-void NewClass(char *oclass);
+void NewClass(const char *oclass); /* Copies oclass */
 void NewBundleClass(char *class,char *bundle);
 struct Rlist *SplitContextExpression(char *context,struct Promise *pp);
 int GetORAtom(char *start,char *buffer);

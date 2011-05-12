@@ -337,13 +337,15 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
 
 /*******************************************************************/
 
-void NewClass(char *oclass)
+void NewClass(const char *oclass)
 
-{ struct Item *ip;
-  char class[CF_MAXVARSIZE];
+{
+struct Item *ip;
+char class[CF_MAXVARSIZE];
 
-Chop(oclass);
-strncpy(class,CanonifyName(oclass),CF_MAXVARSIZE);  
+strncpy(class, oclass, CF_MAXVARSIZE);
+Chop(class);
+CanonifyNameInPlace(class);
 
 Debug("NewClass(%s)\n",class);
 

@@ -266,13 +266,13 @@ else
 
 /*********************************************************************/
 
-static int RegExMatchFullString(struct CfRegEx rex,char *teststring)
+static int RegExMatchFullString(struct CfRegEx rex, const char *teststring)
 
 {
 #ifdef HAVE_LIBPCRE
  pcre *rx;
  int ovector[OVECCOUNT],i,rc,match_len;
- char *match_start;
+ const char *match_start;
  
 rx = rex.rx;
 
@@ -288,7 +288,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       {
       char substring[CF_MAXVARSIZE];
       char lval[4];
-      char *backref_start = teststring + ovector[i*2];
+      const char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
 
       memset(substring,0,CF_MAXVARSIZE);
@@ -476,7 +476,7 @@ bool ValidateRegEx(const char *regex)
 /* WILDCARD TOOLKIT : Level 0                                            */
 /*************************************************************************/
 
-int FullTextMatch(char *regexp,char *teststring)
+int FullTextMatch(char *regexp,const char *teststring)
 
 { struct CfRegEx rex;
 
@@ -527,7 +527,7 @@ return FirstBackReference(rex,regexp,teststring);
 
 /*************************************************************************/
 
-int FullTextCaseMatch (char *regexp,char *teststring)
+int FullTextCaseMatch (char *regexp, const char *teststring)
 
 { struct CfRegEx rex;
  
@@ -901,7 +901,7 @@ return ok;
 
 /*********************************************************************/
 
-int MatchRlistItem(struct Rlist *listofregex,char *teststring)
+int MatchRlistItem(struct Rlist *listofregex, const char *teststring)
 
    /* Checks whether item matches a list of wildcards */
 

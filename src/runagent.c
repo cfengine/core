@@ -46,18 +46,18 @@ void DeleteStream(FILE *fp);
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The run agent connects to a list of running instances of\n"
-            "the cf-serverd service. The agent allows a user to\n"
-            "forego the usual scheduling interval for the agent and\n"
-            "activate cf-agent on a remote host. Additionally, a user\n"
-            "can send additional classes to be defined on the remote\n"
-            "host. Two kinds of classes may be sent: classes to decide\n"
-            "on which hosts the agent will be started, and classes that\n"
-            "the user requests the agent should define on execution.\n"
-            "The latter type is regulated by cf-serverd's role based\n"
-            "access control.";
+const char *ID = "The run agent connects to a list of running instances of\n"
+                 "the cf-serverd service. The agent allows a user to\n"
+                 "forego the usual scheduling interval for the agent and\n"
+                 "activate cf-agent on a remote host. Additionally, a user\n"
+                 "can send additional classes to be defined on the remote\n"
+                 "host. Two kinds of classes may be sent: classes to decide\n"
+                 "on which hosts the agent will be started, and classes that\n"
+                 "the user requests the agent should define on execution.\n"
+                 "The latter type is regulated by cf-serverd's role based\n"
+                 "access control.";
  
- struct option OPTIONS[17] =
+const struct option OPTIONS[17] =
       {
       { "help",no_argument,0,'h' },
       { "background",optional_argument,0,'b' },
@@ -78,7 +78,7 @@ void DeleteStream(FILE *fp);
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[17] =
+const char *HINTS[17] =
       {
       "Print the help message",
       "Parallelize connections (50 by default)",

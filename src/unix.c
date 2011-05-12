@@ -105,7 +105,7 @@ return strerror(errno);
 
 /* from exec_tools.c */
 
-int Unix_IsExecutable(char *file)
+int Unix_IsExecutable(const char *file)
 
 { struct stat sb;
   gid_t grps[NGROUPS];

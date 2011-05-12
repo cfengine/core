@@ -41,9 +41,9 @@ int main (int argc,char *argv[]);
 /* Command line options                                            */
 /*******************************************************************/
 
-char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
+const char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
  
- struct option OPTIONS[17] =
+const struct option OPTIONS[17] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -54,7 +54,7 @@ char *ID = "The cfengine's generator makes key pairs for remote authentication.\
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[17] =
+const char *HINTS[17] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",

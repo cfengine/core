@@ -43,14 +43,14 @@ extern struct BodySyntax CFM_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
-char *ID = "The monitoring agent is a machine-learning, sampling\n"
-           "daemon which learns the normal state of the current\n"
-           "host and classifies new observations in terms of the\n"
-           "patterns formed by previous ones. The data are made\n"
-           "available to and read by cf-agent for classification\n"
-           "of responses to anomalous states.";
+const char *ID = "The monitoring agent is a machine-learning, sampling\n"
+   "daemon which learns the normal state of the current\n"
+   "host and classifies new observations in terms of the\n"
+   "patterns formed by previous ones. The data are made\n"
+   "available to and read by cf-agent for classification\n"
+   "of responses to anomalous states.";
 
-struct option OPTIONS[14] =
+const struct option OPTIONS[14] =
    {
    { "help",no_argument,0,'h' },
    { "debug",optional_argument,0,'d' },
@@ -67,7 +67,7 @@ struct option OPTIONS[14] =
    { NULL,0,0,'\0' }
    };
 
-char *HINTS[14] =
+const char *HINTS[14] =
    {
    "Print the help message",
    "Set debugging level 0,1,2,3",

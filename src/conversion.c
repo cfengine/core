@@ -1286,9 +1286,9 @@ void DateStrToTime(char *inStr, time_t *t)
 /*************************************************************/
 
 
-char *GetArg0(char *execstr)
+const char *GetArg0(const char *execstr)
 
-{ char *sp;
+{ const char *sp;
   static char arg[CF_BUFSIZE];
   int i = 0;
 

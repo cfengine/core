@@ -699,10 +699,12 @@ closedir(dirh);
 
 void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
 
-{ char *lastnode,*server;
-  struct stat dsb;
-  int found;
-  mode_t srcmode = ssb.st_mode;
+{
+char *server;
+const char *lastnode;
+struct stat dsb;
+int found;
+mode_t srcmode = ssb.st_mode;
 
 Debug2("CopyFile(%s,%s)\n",sourcefile,destfile);
 
@@ -1520,9 +1522,11 @@ CfOut(cf_verbose, "", "Windows does not support symbolic links");
 cfPS(cf_error,CF_FAIL,"",pp,attr,"Windows can't link \"%s\" to \"%s\"",sourcefile, destfile);
 }
 #else  /* NOT MINGW */
-{ char linkbuf[CF_BUFSIZE],*lastnode;
-  int status = CF_UNKNOWN;
-  struct stat dsb;
+{
+char linkbuf[CF_BUFSIZE];
+const char *lastnode;
+int status = CF_UNKNOWN;
+struct stat dsb;
 
 linkbuf[0] = '\0';
   

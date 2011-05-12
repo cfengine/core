@@ -298,7 +298,7 @@ int Month2Int(char *string);
 int MonthLen2Int(char *string, int len);
 void TimeToDateStr(time_t t, char *outStr, int outStrSz);
 void DateStrToTime(char *inStr, time_t *t);
-char *GetArg0(char *execstr);
+const char *GetArg0(const char *execstr);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);
 int Day2Number(char *datestring);
@@ -494,7 +494,7 @@ void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *
 void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
 void CacheUnreliableValue(char *caller,char *handle,char *buffer);
 int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
-void TranslatePath(char *new,char *old);
+void TranslatePath(char *new,const char *old);
 void ReviveOther(int argc,char **argv);
 void GrandSummary(void);
 void TrackValue(char *date,double kept,double repaired, double notkept);
@@ -663,7 +663,7 @@ int Epimenides(char *var,char *rval,char rtype,int level);
 
 /* exec_tool.c */
 
-int IsExecutable(char *file);
+int IsExecutable(const char *file);
 int ShellCommandReturnsZero(char *comm,int useshell);
 int GetExecOutput(char *command,char *buffer,int useshell);
 void ActAsDaemon(int preserve);
@@ -767,7 +767,7 @@ void SaveSetuid(struct Attributes a,struct Promise *pp);
 
 int IsNewerFileTree(char *dir,time_t reftime);
 char *Titleize (char *str);
-int DeEscapeQuotedString(char *in, char *out);
+int DeEscapeQuotedString(const char *in, char *out);
 void DeEscapeFilename(char *in,char *out);
 int CompareCSVName(char *s1,char *s2);
 int IsDir(char *path);
@@ -783,12 +783,12 @@ int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin);
 int IsAbsPath(char *path);
 void AddSlash(char *str);
 void DeleteSlash(char *str);
-char *LastFileSeparator(char *str);
+const char *LastFileSeparator(const char *str);
 int ChopLastNode(char *str);
 char *CanonifyName(const char *str);
 void CanonifyNameInPlace(char *str);
 char *CanonifyChar(const char *str,char ch);
-char *ReadLastNode(char *str);
+const char *ReadLastNode(const char *str);
 int CompressPath(char *dest,char *src);
 void Chop(char *str);
 void StripTrailingNewline(char *str);
@@ -869,7 +869,7 @@ int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit);
 int SelectModeMatch(struct stat *lstatptr,struct Rlist *ls);
 int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
-int SelectNameRegexMatch(char *filename,char *crit);
+int SelectNameRegexMatch(const char *filename,char *crit);
 int SelectPathRegexMatch(char *filename,char *crit);
 int SelectExecRegexMatch(char *filename,char *crit,char *prog);
 int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
@@ -904,8 +904,8 @@ void PromiseManagement(char *agent);
 void InitializeGA(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
 void CheckWorkingDirectories(void);
-void Syntax(char *comp,struct option options[],char *hints[],char *id);
-void ManPage(char *component,struct option options[],char *hints[],char *id);
+void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
+void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void Version(char *comp);
 int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);
@@ -1105,15 +1105,15 @@ char *TexInfoEscape(char *s);
 /* matching.c */
 
 bool ValidateRegEx(const char *regex);
-int FullTextMatch (char *regptr,char *cmpptr);
-int FullTextCaseMatch (char *regexp,char *teststring);
+int FullTextMatch (char *regptr, const char *cmpptr);
+int FullTextCaseMatch (char *regexp,const char *teststring);
 char *ExtractFirstReference(char *regexp,char *teststring);
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
 int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
-int MatchRlistItem(struct Rlist *listofregex,char *teststring);
+int MatchRlistItem(struct Rlist *listofregex,const char *teststring);
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
 char *EscapeChar(char *str, int strSz, char esc);
 void AnchorRegex(char *regex, char *out, int outSz);
@@ -1536,7 +1536,7 @@ int Unix_ShellCommandReturnsZero(char *comm,int useshell);
 int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int Unix_LoadProcessTable(struct Item **procdata);
 void Unix_CreateEmptyFile(char *name);
-int Unix_IsExecutable(char *file);
+int Unix_IsExecutable(const char *file);
 char *Unix_GetErrorStr(void);
 #endif  /* NOT MINGW */
 

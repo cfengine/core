@@ -553,12 +553,12 @@ if (IsFileSep(str[strlen(str)-1]))
 
 /*********************************************************************/
 
-char *LastFileSeparator(char *str)
+const char *LastFileSeparator(const char *str)
 
   /* Return pointer to last file separator in string, or NULL if 
      string does not contains any file separtors */
 
-{ char *sp;
+{ const char *sp;
 
 /* Walk through string backwards */
  
@@ -584,10 +584,12 @@ int ChopLastNode(char *str)
      last character and removing up to the first / encountered 
      e.g. /a/b/c -> /a/b
           /a/b/ -> /a/b                                        */
-{ char *sp;
- int ret; 
+{
+char *sp;
+int ret;
 
-if ((sp = LastFileSeparator(str)) == NULL)
+/* Here cast is necessary and harmless, str is modifiable */
+if ((sp = (char *)LastFileSeparator(str)) == NULL)
    {
    ret = false;
    }
@@ -676,11 +678,11 @@ return 0;
 
 /*********************************************************************/
 
-char *ReadLastNode(char *str)
+const char *ReadLastNode(const char *str)
 
 /* Return the last node of a pathname string  */
 
-{ char *sp;
+{ const char *sp;
   
 if ((sp = LastFileSeparator(str)) == NULL)
    {
@@ -715,9 +717,10 @@ for (sp_in = in; *sp_in != '\0'; sp_in++)
 
 /*****************************************************************************/
 
-int DeEscapeQuotedString(char *from,char *to)
+int DeEscapeQuotedString(const char *from,char *to)
 
-{ char *sp,*cp;
+{ char *cp;
+const char *sp;
   char start = *from;
   int len = strlen(from);
 

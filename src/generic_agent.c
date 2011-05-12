@@ -1680,7 +1680,7 @@ switch (GetVariable("control_common","cfinputs_version",&rval,&rtype))
 
 /*******************************************************************/
 
-void Syntax(char *component,struct option options[],char *hints[],char *id)
+void Syntax(const char *component, const struct option options[], const char *hints[], const char *id)
 
 { int i;
 
@@ -1710,7 +1710,7 @@ printf("This software is Copyright (C) 2008,2010-present Cfengine AS.\n");
 
 /*******************************************************************/
 
-void ManPage(char *component,struct option options[],char *hints[],char *id)
+void ManPage(const char *component, const struct option options[], const char *hints[], const char *id)
 
 { int i;
 

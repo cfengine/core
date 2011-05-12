@@ -103,12 +103,12 @@ struct Rlist *CSVLIST = NULL;
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The reporting agent is a merger between the older\n"
-            "cfengine programs cfshow and cfenvgraph. It outputs\n"
-            "data stored in cfengine's embedded databases in human\n"
-            "readable form.";
+const char *ID = "The reporting agent is a merger between the older\n"
+                 "cfengine programs cfshow and cfenvgraph. It outputs\n"
+                 "data stored in cfengine's embedded databases in human\n"
+                 "readable form.";
 
- struct option OPTIONS[25] =
+const struct option OPTIONS[25] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -137,7 +137,7 @@ struct Rlist *CSVLIST = NULL;
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[25] =
+const char *HINTS[25] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",

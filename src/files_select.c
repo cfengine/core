@@ -403,7 +403,7 @@ return ((fromtime < stattime) && (stattime < totime));
 
 /*******************************************************************/
 
-int SelectNameRegexMatch(char *filename,char *crit)
+int SelectNameRegexMatch(const char *filename,char *crit)
 
 {
 if (FullTextMatch(crit,ReadLastNode(filename)))

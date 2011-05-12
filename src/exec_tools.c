@@ -34,7 +34,7 @@
 
 /*************************************************************/
 
-int IsExecutable(char *file)
+int IsExecutable(const char *file)
 
 { 
 #ifdef MINGW

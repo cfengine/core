@@ -75,13 +75,13 @@ void Apoptosis(void);
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The executor daemon is a scheduler and wrapper for\n"
-            "execution of cf-agent. It collects the output of the\n"
-            "agent and can email it to a specified address. It can\n"
-            "splay the start time of executions across the network\n"
-            "and work as a class-based clock for scheduling.";
+const char *ID = "The executor daemon is a scheduler and wrapper for\n"
+                 "execution of cf-agent. It collects the output of the\n"
+                 "agent and can email it to a specified address. It can\n"
+                 "splay the start time of executions across the network\n"
+                 "and work as a class-based clock for scheduling.";
  
- struct option OPTIONS[15] =
+const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -100,7 +100,7 @@ void Apoptosis(void);
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[15] =
+const char *HINTS[15] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",

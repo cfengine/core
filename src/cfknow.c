@@ -89,16 +89,16 @@ struct Inference *INFERENCES = NULL;
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The knowledge management agent is capable of building\n"
-            "and analysing a semantic knowledge network. It can\n"
-            "configure a relational database to contain an ISO\n"
-            "standard topic map and permit regular-expression based\n"
-            "searching of the map. Analysis of the semantic network\n"
-            "can be performed providing graphical output of the data,\n"
-            "and cf-know can assemble and converge the reference manual\n"
-            "for the current version of the Cfengine software.";
+const char *ID = "The knowledge management agent is capable of building\n"
+                 "and analysing a semantic knowledge network. It can\n"
+                 "configure a relational database to contain an ISO\n"
+                 "standard topic map and permit regular-expression based\n"
+                 "searching of the map. Analysis of the semantic network\n"
+                 "can be performed providing graphical output of the data,\n"
+                 "and cf-know can assemble and converge the reference manual\n"
+                 "for the current version of the Cfengine software.";
  
- struct option OPTIONS[12] =
+const  struct option OPTIONS[12] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -114,7 +114,7 @@ struct Inference *INFERENCES = NULL;
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[12] =
+const char *HINTS[12] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",

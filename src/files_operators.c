@@ -384,7 +384,8 @@ return true;
 
 int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp)
 
-{ char *lastnode;
+{
+const char *lastnode;
 
 lastnode = ReadLastNode(destination);
 
@@ -891,7 +892,7 @@ if (attr.rename.rotate > 0)
 
 void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
-{ char *lastnode = ReadLastNode(path);
+{ const char *lastnode = ReadLastNode(path);
   char buf[CF_MAXVARSIZE];
 
 CfOut(cf_verbose,""," -> Verifying file deletions for %s\n",path);
@@ -1267,13 +1268,14 @@ return true;
 
 int MakeParentDirectory(char *parentandchild,int force)
 
-{ char *sp,*spc;
-  char currentpath[CF_BUFSIZE];
-  char pathbuf[CF_BUFSIZE];
-  struct stat statbuf;
-  mode_t mask;
-  int rootlen;
-  char Path_File_Separator;
+{
+char *spc, *sp;
+char currentpath[CF_BUFSIZE];
+char pathbuf[CF_BUFSIZE];
+struct stat statbuf;
+mode_t mask;
+int rootlen;
+char Path_File_Separator;
 
 #ifdef DARWIN
 /* Keeps track of if dealing w. resource fork */
@@ -1302,7 +1304,9 @@ if (strstr(pathbuf, _PATH_RSRCFORKSPEC) != NULL)
 #endif
 
 /* skip link name */
-sp = LastFileSeparator(pathbuf);
+/* This cast is necessary, as  you can't have (char* -> char*)
+   and (const char* -> const char*) functions in C */
+sp = (char *)LastFileSeparator(pathbuf);
 
 if (sp == NULL)
    {

@@ -628,7 +628,7 @@ return false;
 
 /*****************************************************************************/
 
-void TranslatePath(char *new,char *old)
+void TranslatePath(char *new, const char *old)
 {
 #ifdef HAVE_NOVA
 Nova_TranslatePath(new,old);

@@ -42,26 +42,25 @@ static double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
 /* persistent observations */
 
-double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current observation */
+static double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current observation */
 
 /* Work */
 
-long ITER;           /* Iteration since start */
-double AGE,WAGE;             /* Age and weekly age of database */
+static long ITER;           /* Iteration since start */
+static double AGE,WAGE;             /* Age and weekly age of database */
 
-struct Averages LOCALAV;
+static struct Averages LOCALAV;
 
 /* Leap Detection vars */
 
-double LDT_BUF[CF_OBSERVABLES][LDT_BUFSIZE];
-double LDT_SUM[CF_OBSERVABLES];
-double LDT_AVG[CF_OBSERVABLES];
-double CHI_LIMIT[CF_OBSERVABLES];
-double CHI[CF_OBSERVABLES];
-double LDT_MAX[CF_OBSERVABLES];
-int LDT_POS = 0;
-int LDT_FULL = false;
-
+static double LDT_BUF[CF_OBSERVABLES][LDT_BUFSIZE];
+static double LDT_SUM[CF_OBSERVABLES];
+static double LDT_AVG[CF_OBSERVABLES];
+static double CHI_LIMIT[CF_OBSERVABLES];
+static double CHI[CF_OBSERVABLES];
+static double LDT_MAX[CF_OBSERVABLES];
+static int LDT_POS = 0;
+static int LDT_FULL = false;
 
 int NO_FORK = false;
 

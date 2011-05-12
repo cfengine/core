@@ -46,7 +46,7 @@ void DoExec (struct cfd_connection *conn, char *sendbuffer, char *args);
 int GetCommand (char *str);
 int VerifyConnection (struct cfd_connection *conn, char *buf);
 void RefuseAccess (struct cfd_connection *conn, char *sendbuffer, int size, char *errormsg);
-int AccessControl(char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
+int AccessControl(const char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
 int LiteralAccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
 struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny);
 void ReplyServerContext(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted,struct Item *classes);
@@ -86,13 +86,13 @@ extern struct BodySyntax CFS_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The server daemon provides two services: it acts as a\n"
-            "file server for remote file copying and it allows an\n"
-            "authorized cf-runagent to start start a cf-agent process\n"
-            "and set certain additional classes with role-based access\n"
-            "control.\n";
+const char *ID = "The server daemon provides two services: it acts as a\n"
+                 "file server for remote file copying and it allows an\n"
+                 "authorized cf-runagent to start start a cf-agent process\n"
+                 "and set certain additional classes with role-based access\n"
+                 "control.\n";
  
- struct option OPTIONS[15] =
+const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -109,7 +109,7 @@ extern struct BodySyntax CFS_CONTROLBODY[];
       { NULL,0,0,'\0' }
       };
 
- char *HINTS[15] =
+const char *HINTS[15] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -1979,7 +1979,7 @@ return false;
 
 /**************************************************************/
 
-int AccessControl(char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+int AccessControl(const char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
 
 { struct Auth *ap;
   int access = false;

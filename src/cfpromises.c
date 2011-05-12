@@ -42,12 +42,12 @@ int main (int argc,char *argv[]);
 /* Command line options                                            */
 /*******************************************************************/
 
- char *ID = "The promise agent is a validator and analysis tool for\n"
-            "configuration files belonging to any of the components\n"
-            "of Cfengine. Configurations that make changes must be\n"
-            "approved by this validator before being executed.";
+const char *ID = "The promise agent is a validator and analysis tool for\n"
+                 "configuration files belonging to any of the components\n"
+                 "of Cfengine. Configurations that make changes must be\n"
+                 "approved by this validator before being executed.";
  
- struct option OPTIONS[14] =
+const struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -65,7 +65,7 @@ int main (int argc,char *argv[]);
       };
 
 
- char *HINTS[14] =
+const char *HINTS[14] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",

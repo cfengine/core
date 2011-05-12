@@ -162,7 +162,7 @@ return true;
 
 /*****************************************************************************/
 
-int TCDB_WriteComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, void *src, int srcSz)
+int TCDB_WriteComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, const void *src, int srcSz)
 
 { int errCode;
   int res;

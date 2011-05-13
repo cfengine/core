@@ -167,7 +167,7 @@ int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize)
 
 /*****************************************************************************/
 
-int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *src, int srcSz)
+int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, const void *src, int srcSz)
 {
   char *dbName = NULL;
 

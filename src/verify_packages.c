@@ -1914,7 +1914,7 @@ int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct 
 	  }
        else
 	  {
-          CfOut(cf_verbose, "", " Package sucessfully verified from return code");
+          CfOut(cf_verbose, "", " Package successfully verified from return code");
 	  }
        }
     }

@@ -53,7 +53,7 @@ for (i = 0; i < n; ++i)
    sum += load[i];
    }
 
-sum /= n;
+sum /= (double) n;
 
 /* Scale load average by 100 to make it visible */
 

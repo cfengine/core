@@ -84,7 +84,6 @@ return true;
 int BDB_OpenDB(char *filename,DB **dbp)
 
 {
-DB_ENV *dbenv = NULL;
 int ret;
 
 if (!BDB_VerifyDB(filename))
@@ -104,7 +103,7 @@ if (!BDB_VerifyDB(filename))
       }
    }
 
-if ((ret = db_create(dbp,dbenv,0)) != 0)
+if ((ret = db_create(dbp,NULL,0)) != 0)
    {
    CfOut(cf_error, "",
          "BDB_OpenDB: Couldn't get database environment for %s: %s\n",

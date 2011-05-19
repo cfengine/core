@@ -118,6 +118,7 @@ if (thislock.lock == NULL)
    return;
    }
 
+DeleteScalar("this","promiser");
 NewScalar("this","promiser",pp->promiser,cf_str);
 PromiseBanner(pp);
 VerifyProcessOp(PROCESSTABLE,a,pp);

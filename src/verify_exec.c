@@ -121,6 +121,7 @@ else
    CfOut(cf_verbose,""," -> Promiser string contains a valid executable (%s) - ok\n",GetArg0(pp->promiser));
    }
 
+DeleteScalar("this","promiser");
 NewScalar("this","promiser",pp->promiser,cf_str);
 
 if (a.args)

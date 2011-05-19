@@ -662,7 +662,10 @@ do
    NewScalar("this","promiser_uid",v,cf_int);
    snprintf(v,CF_MAXVARSIZE,"%d",(int)getgid());
    NewScalar("this","promiser_gid",v,cf_int);
-   
+
+   // Prime the promiser temporarily, may override later
+   NewScalar("this","promiser",pp->promiser,cf_str);
+
    /* End special variables */
 
    pexp = ExpandDeRefPromise("this",pp);

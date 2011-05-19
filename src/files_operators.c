@@ -105,6 +105,7 @@ CfOut(cf_verbose,""," -> Handling file existence constraints on %s\n",path);
 
 /* We still need to augment the scope of context "this" for commands */
 
+DeleteScalar("this","promiser");
 NewScalar("this","promiser",path,cf_str); // Parameters may only be scalars
 
 if (attr.transformer != NULL)

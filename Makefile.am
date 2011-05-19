@@ -54,3 +54,4 @@ check:
 dist-hook:
 	mkdir $(distdir)/tests
 	(cd $(srcdir)/tests && find . -name README -o -name testall -o -name '*.cf' -a \! -path '*succeeded*' | tar -c -f - -T-) | tar -x -C $(distdir)/tests -v -f -
+

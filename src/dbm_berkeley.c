@@ -38,70 +38,10 @@
 
 #ifdef BDB
 
-/* Global variables */
-
-static bool bdb_use_verification = true;
-
-static bool BDB_VerifyDB(const char *filename)
-
-{
-int ret;
-DB *dbp;
-
-if (bdb_use_verification == false)
-   {
-   return true;
-   }
-
-if ((ret = db_create(&dbp, NULL, 0)) != 0)
-   {
-   CfOut(cf_error, "",
-         "BDB_VerifyDB: Couldn't get database environment for %s: %s\n",
-         filename, db_strerror(ret));
-   return false;
-   }
-
-if ((ret = (dbp->verify)(dbp, filename, NULL, NULL, 0)) != 0)
-   {
-   if (ret == ENOTSUPP || ret == EOPNOTSUPP || ret == EINVAL)
-      {
-      CfOut(cf_error, "", "BDB_VerifyDB: verification support is disabled in BerkeleyDB: skipping database verification.\n");
-      bdb_use_verification = false;
-      return true;
-      }
-   else if (ret != ENOENT)
-      {
-      CfOut(cf_error, "", "BDB_VerifyDB: database %s is corrupted: %s\n",
-            filename, db_strerror(ret));
-      return false;
-      }
-   }
-
-return true;
-}
-
-
 int BDB_OpenDB(char *filename,DB **dbp)
 
 {
 int ret;
-
-if (!BDB_VerifyDB(filename))
-   {
-   char asidefile[CF_BUFSIZE];
-   snprintf(asidefile, CF_BUFSIZE, "%s.corrupted", filename);
-
-   /* Try to recover from corrupted database by moving it aside */
-   if ((ret = cf_rename(filename, asidefile)) != 0)
-      {
-      if (errno != ENOENT)
-         {
-         CfOut(cf_error, "rename", "BDB_OpenDB: error trying to move"
-               " corrupted database %s aside to %s", filename, asidefile);
-         return false;
-         }
-      }
-   }
 
 if ((ret = db_create(dbp,NULL,0)) != 0)
    {

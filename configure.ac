@@ -972,7 +972,5 @@ m4_sinclude([galaxy/output.m4])
 
 AC_OUTPUT
 
-rm -f src/cf3parse.c src/cf3parse.h
-
 AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build cfengine.)
 

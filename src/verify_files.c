@@ -62,6 +62,8 @@ void FindFilePromiserObjects(struct Promise *pp)
 
 if (literal)
    {
+   // Prime the promiser temporarily, may override later
+   NewScalar("this","promiser",pp->promiser,cf_str);
    VerifyFilePromise(pp->promiser,pp);
    }
 else // Default is to expand regex paths

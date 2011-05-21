@@ -861,7 +861,7 @@ free(errmsg);
 /**********************************************************************/
 
 /* To be used from parser only (uses yyerror) */
-void ValidateClassSyntax(char *str)
+void ValidateClassSyntax(const char *str)
 {
 ParseResult res = ParseExpression(str, 0, strlen(str));
 
@@ -933,7 +933,7 @@ return NULL;
 
 /**********************************************************************/
 
-int IsDefinedClass(char *class)
+bool IsDefinedClass(const char *class)
 {
 ParseResult res;
 
@@ -967,7 +967,7 @@ else
 
 /**********************************************************************/
 
-int IsExcluded(char *exception)
+bool IsExcluded(const char *exception)
 {
 return !IsDefinedClass(exception);
 }

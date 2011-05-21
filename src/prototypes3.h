@@ -501,9 +501,9 @@ void AnalyzePromiseConflicts(void);
 /* env_context.c */
 
 /* - Parsing/evaluating expressions - */
-void ValidateClassSyntax(char *str);
-int IsDefinedClass (char *class);
-int IsExcluded (char *exception);
+void ValidateClassSyntax(const char *str);
+bool IsDefinedClass(const char *class);
+bool IsExcluded(const char *exception);
 
 bool EvalProcessResult(const char *process_result, struct AlphaList *proc_attr);
 bool EvalFileResult(const char *file_result, struct AlphaList *leaf_attr);

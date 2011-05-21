@@ -173,7 +173,6 @@ char *CfFetchColumn(CfdbConn *cfdb,int col);
 void CfDeleteQuery(CfdbConn *cfdb);
 char *EscapeSQL(CfdbConn *cfdb,char *query);
 void Debugcfdb(CfdbConn *cfdb);
-int SizeCfSQLContainer(void);
 
 /* client_code.c */
 

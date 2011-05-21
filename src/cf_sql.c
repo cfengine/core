@@ -621,11 +621,6 @@ printf( "cfdb->type = %d\n",cfdb->type);
 
 /*****************************************************************************/
 
-int SizeCfSQLContainer()
-{
-return sizeof(CfdbConn);
-}
-
 /* EOF */
 
 

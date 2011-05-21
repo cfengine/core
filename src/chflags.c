@@ -63,6 +63,10 @@ struct CfBSDFlag CF_BSDFLAGS[] =
 
 /***************************************************************/
 
+static u_long ConvertBSDBits(char *s);
+
+/***************************************************************/
+
 int ParseFlagString(struct Rlist *bitlist,u_long *plusmask,u_long *minusmask)
 
 { char *flag;
@@ -105,7 +109,7 @@ return true;
 
 /***************************************************************/
 
-u_long ConvertBSDBits(char *s)
+static u_long ConvertBSDBits(char *s)
 
 { int i;
 

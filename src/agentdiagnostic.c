@@ -300,6 +300,9 @@ char TEST_ROOT_DIR[CF_BUFSIZE];
 
 #endif
 
+static void CheckInstalledLibraries(void);
+
+
 /*****************************************************************************/
 
 void AgentDiagnostic(char *file)
@@ -2525,7 +2528,7 @@ int FileExists(char *file)
 /*********************************************************/
 
 
-void CheckInstalledLibraries(void)
+static void CheckInstalledLibraries(void)
 {
   printf("---- INSTALLED LIBRARIES ----\n");
 

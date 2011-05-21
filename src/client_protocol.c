@@ -35,6 +35,10 @@
 
 /*********************************************************************/
 
+static void SetSessionKey(struct cfagent_connection *conn);
+
+/*********************************************************************/
+
 int IdentifyAgent(int sd,char *localip,int family)
 
 { char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE],dnsname[CF_BUFSIZE];
@@ -497,7 +501,7 @@ else
 /* Level                                                             */
 /*********************************************************************/
 
-void SetSessionKey(struct cfagent_connection *conn)
+static void SetSessionKey(struct cfagent_connection *conn)
 
 { BIGNUM *bp;
   int session_size = CfSessionKeySize(conn->encryption_type);

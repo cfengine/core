@@ -34,6 +34,11 @@
 
 /***************************************************************/
 
+static int CheckModeState (enum modestate stateA, enum modestate stateB,enum modesort modeA, enum modesort modeB, char ch);
+static int SetModeMask (char action, int value, int affected, mode_t *p, mode_t *m);
+
+/***************************************************************/
+
 int ParseModeString(char *modestring,mode_t *plusmask,mode_t *minusmask)
 
 { char *sp;
@@ -208,7 +213,7 @@ return no_error;
 
 /*********************************************************/
 
-int CheckModeState(enum modestate stateA,enum modestate stateB,enum modesort sortA,enum modesort sortB,char ch)
+static int CheckModeState(enum modestate stateA,enum modestate stateB,enum modesort sortA,enum modesort sortB,char ch)
 
 {
 if ((stateA != wild) && (stateB != wild) && (stateA != stateB))
@@ -228,7 +233,7 @@ return true;
 
 /*********************************************************/
 
-int SetModeMask(char action,int value,int affected,mode_t *p,mode_t *m)
+static int SetModeMask(char action,int value,int affected,mode_t *p,mode_t *m)
 
 {
 Debug1("SetMask(%c%o,%o)\n",action,value,affected);

@@ -63,7 +63,6 @@ int ScheduleAgentOperations(struct Bundle *bp);
 /* agentdiagnostic.c */
 
 void AgentDiagnostic(char *inputfile);
-void CheckInstalledLibraries(void);
 
 /* alphalist.c */
 
@@ -162,14 +161,7 @@ void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
 void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);
-void MakeReport(struct Item *mess,int prefix);
-void FileReport(struct Item *mess,int prefix,char *filename);
-void SanitizeBuffer(char *buffer);
 char *GetErrorStr(void);
-void MakeLog(struct Item *mess,enum cfreport level);
-#ifndef MINGW
-void Unix_MakeLog(struct Item *mess,enum cfreport level);
-#endif  /* NOT MINGW */
 
 /* cf_sql.c */
 
@@ -207,7 +199,6 @@ void ServerNotBusy(struct cfagent_connection *conn);
 int IdentifyAgent(int sd,char *localip,int family);
 int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);
 void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
-void SetSessionKey(struct cfagent_connection *conn);
 int BadProtoReply(char *buf);
 int OKProtoReply(char *buf);
 int FailedProtoReply(char *buf);
@@ -216,7 +207,6 @@ int FailedProtoReply(char *buf);
 /* chflags.c */
 
 int ParseFlagString (struct Rlist *flags, u_long *plusmask, u_long *minusmask);
-u_long ConvertBSDBits(char *s);
 
 /* communication.c */
 
@@ -1127,8 +1117,6 @@ char *GetBodyDefault(char *bodypart);
 /* modes.c */
 
 int ParseModeString (char *modestring, mode_t *plusmask, mode_t *minusmask);
-int CheckModeState (enum modestate stateA, enum modestate stateB,enum modesort modeA, enum modesort modeB, char ch);
-int SetModeMask (char action, int value, int affected, mode_t *p, mode_t *m);
 
 /* net.c */
 

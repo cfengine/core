@@ -153,7 +153,6 @@ void ShowAttributes(struct Attributes a);
 
 void SetAuditVersion(void);
 void VerifyPromises(enum cfagenttype ag);
-void CompilePromises(void);
 
 /* cfstream.c */
 
@@ -1051,7 +1050,6 @@ int RelevantBundle(char *agent,char *blocktype);
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args);
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args);
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
-struct SubType *AppendBodyType(struct Body *body,char *typename);
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle,char *bundletype);
 void DeleteBundles(struct Bundle *bp);
 void DeleteSubTypes(struct SubType *tp);

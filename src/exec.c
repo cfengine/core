@@ -1011,16 +1011,12 @@ if (MAXLINES == 0)
  
 Debug("Mailing results of (%s) to (%s)\n",file,to);
  
-if (strlen(to) == 0)
-   {
-   return;
-   }
 
 /* Check first for anomalies - for subject header */
  
 if ((fp = fopen(file,"r")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Couldn't open file %s",file);
+   CfOut(cf_inform,"fopen","!! Couldn't open file %s",file);
    return;
    }
 

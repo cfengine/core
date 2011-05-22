@@ -942,7 +942,8 @@ else
 
 if (!ThreadLock(cft_count))
    {
-   exit(1);
+   CfOut(cf_error, "", "!! Severe lock error when mailing in exec");
+   return 1;
    }
 
 /* replace old file with new*/   

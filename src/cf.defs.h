@@ -397,7 +397,11 @@ typedef int clockid_t;
 /* these should be >0 to prevent contention */
 
 #define CF_EXEC_IFELAPSED 0
-#define CF_EDIT_IFELAPSED 5
+#define CF_EDIT_IFELAPSED 3  /* NOTE: If doing copy template then edit working copy,
+                              the edit ifelapsed must not be higher than
+                              the copy ifelapsed. This will make the working
+                              copy equal to the copied template file - not the
+                              copied + edited file. */
 #define CF_EXEC_EXPIREAFTER 1
 
 #define MAXIP4CHARLEN 16

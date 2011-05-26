@@ -432,16 +432,13 @@ else
 
     AC_MSG_CHECKING(for OpenSSL Version)
 
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #include <openssl/opensslv.h>
-int main(void)
-{
-    if (OPENSSL_VERSION_NUMBER < 0x0090602fL)
-        exit(1);
-    exit(0);
-}
-       ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)],[AC_MSG_WARN(Assuming 0.9.7 or later when cross-compiling)
-    ])
+
+#if OPENSSL_VERSION_NUMBER < 0x0090602fL
+#This OpenSSL is too old
+#endif
+       ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)])
 
     dnl ######################################################################
     dnl Checks for OpenSSL crypto lib

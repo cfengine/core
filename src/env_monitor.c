@@ -408,11 +408,10 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
       }
 
-   CfOut(cf_verbose,"","New[%d] %s.q %lf\n",i,name,newvals.Q[i].q);
-   CfOut(cf_verbose,"","New[%d] %s.var %lf\n",i,name,newvals.Q[i].var);
-   CfOut(cf_verbose,"","New[%d] %s.ex %lf\n",i,name,newvals.Q[i].expect);
+   CfOut(cf_verbose, "", "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
+         newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
 
-   CfOut(cf_verbose,"","%s = %lf -> (%lf#%lf) local [%lf#%lf]\n",name,This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+   CfOut(cf_verbose,"","[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
 
    if (This[i] > 0)
       {

@@ -441,7 +441,7 @@ close(tempfd);
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
 { int fd,len,i,j,first_address = false,ipdefault = false;
-  struct ifreq ifbuf[CF_IFREQ] = {{{{0}}}},ifr, *ifp;
+  struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
   struct hostent *hp;
@@ -451,6 +451,8 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   char last_name[CF_BUFSIZE];
 
 Debug("Unix_GetInterfaceInfo()\n");
+
+memset(ifbuf, 0, sizeof(ifbuf));
 
 last_name[0] = '\0';
 

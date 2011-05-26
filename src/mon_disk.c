@@ -46,7 +46,7 @@ char messages[CF_BUFSIZE];
 
 CfOut(cf_verbose,"","Gathering disk data\n");
 cf_this[ob_diskfree] = GetDiskUsage("/",cfpercent);
-CfOut(cf_verbose,"","Disk free = %d %%\n",cf_this[ob_diskfree]);
+CfOut(cf_verbose,"","Disk free = %.0lf%%\n",cf_this[ob_diskfree]);
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */
 
@@ -60,13 +60,13 @@ switch(VSYSTEMHARDCLASS)
    }
 
 cf_this[ob_webaccess] = GetFileGrowth(accesslog,ob_webaccess);
-CfOut(cf_verbose,"","Webaccess = %d %%\n",cf_this[ob_webaccess]);
+CfOut(cf_verbose,"","Webaccess = %.2lf%%\n",cf_this[ob_webaccess]);
 cf_this[ob_weberrors] = GetFileGrowth(errorlog,ob_weberrors);
-CfOut(cf_verbose,"","Web error = %d %%\n",cf_this[ob_weberrors]);
+CfOut(cf_verbose,"","Web error = %.2lf%%\n",cf_this[ob_weberrors]);
 cf_this[ob_syslog] = GetFileGrowth(syslog,ob_syslog);
-CfOut(cf_verbose,"","Syslog = %d %%\n",cf_this[ob_syslog]);
+CfOut(cf_verbose,"","Syslog = %.2lf%%\n",cf_this[ob_syslog]);
 cf_this[ob_messages] = GetFileGrowth(messages,ob_messages);
-CfOut(cf_verbose,"","Messages = %d %%\n",cf_this[ob_messages]);
+CfOut(cf_verbose,"","Messages = %.2lf%%\n",cf_this[ob_messages]);
 }
 
 /****************************************************************************/

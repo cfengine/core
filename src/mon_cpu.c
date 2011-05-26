@@ -112,7 +112,7 @@ while (!feof(fp))
    cf_this[index] = dq;
    LAST_CPU_Q[count] = q;
 
-   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %d 100ths of a second \n",OBS[index][1],index,cf_this[index],total_time);
+   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %ld 100ths of a second \n",OBS[index][1],index,cf_this[index],total_time);
    }
 
 LAST_CPU_T[count] = total_time;

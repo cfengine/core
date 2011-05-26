@@ -57,8 +57,8 @@ sum /= (double) n;
 
 /* Scale load average by 100 to make it visible */
 
-cf_this[ob_loadavg] = (int) (100.0 * sum);
-CfOut(cf_verbose,"","100 x Load Average = %d\n",cf_this[ob_loadavg]);
+cf_this[ob_loadavg] = 100.0 * sum;
+CfOut(cf_verbose,"","100 x Load Average = %.2lf\n",cf_this[ob_loadavg]);
 }
 
 #else

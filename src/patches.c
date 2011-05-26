@@ -634,25 +634,51 @@ char *cf_ctime(const time_t *timep)
  * "Wed Jan  2 02:03:55 1980" (no 0-padding for days)        */
 
 {
-char *times = ctime(timep);
+static char buf[26];
+return cf_strtimestamp(*timep, buf);
+}
 
-if (times == NULL)
-  {
-  CfOut(cf_error, "ctime", "!! Could not convert time to string");
-  return NULL;
-  }
+/*
+ * This function converts passed time_t value to string timestamp used
+ * throughout the system. By sheer coincidence this timestamp has the same
+ * format as ctime(3) output on most systems (but NT differs in definition of
+ * ctime format, so those are not identical there).
+ *
+ * Buffer passed should be at least 26 bytes long (including the trailing zero).
+ *
+ * Please use this function instead of (non-portable and deprecated) ctime_r or
+ * (non-threadsafe) cf_ctime or ctime.
+ */
+char *cf_strtimestamp(const time_t time, char *buf)
+{
+struct tm tm;
 
+if (gmtime_r(&time, &tm) == NULL)
+   {
+   CfOut(cf_error, "gmtime_r", "Unable to parse passed timestamp");
+   return NULL;
+   }
 
-#ifdef MINGW
+/* Security checks */
 
-if (times[8] == '0')
-  {
-  times[8] = ' ';
-  }
+if (tm.tm_year < -2899 || tm.tm_year > 8099)
+   {
+   CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d",
+         tm.tm_year + 1900);
+   return NULL;
+   }
 
-#endif  /* MINGW */
+/* There is no easy way to replicate ctime output by using strftime */
 
-return times;
+if (snprintf(buf, 26, "%3.3s %3.3s %2d %02d:%02d:%02d %04d",
+             DAY_TEXT[tm.tm_wday ? (tm.tm_wday - 1) : 6], MONTH_TEXT[tm.tm_mon],
+             tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_year + 1900) >= 26)
+   {
+   CfOut(cf_error, "", "Unable to format timestamp: passed values are out of range");
+   return NULL;
+   }
+
+return buf;
 }
 
 /*******************************************************************/

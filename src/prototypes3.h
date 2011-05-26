@@ -1180,6 +1180,7 @@ char *MapName(char *s);
 char *MapNameForward(char *s);
 int UseUnixStandard(char *s);
 char *cf_ctime(const time_t *timep);
+char *cf_strtimestamp(time_t time, char *buf);
 int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);

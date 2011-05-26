@@ -161,6 +161,11 @@ cf_monitord_SOURCES =                                                   \
         mon_temp.c                                                      \
         monitor.c
 
+if HAVE_NOVA
+cf_monitord_LDADD =							\
+	../nova/src/libcfmonitord.la libpromises.la
+endif
+
 cf_execd_SOURCES =                                                      \
         exec.c
 

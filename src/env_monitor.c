@@ -148,6 +148,7 @@ LoadHistogram();
 /* Look for local sensors - this is unfortunately linux-centric */
 
 MonTempInit();
+MonOtherInit();
 
 Debug("Finished with initialization.\n");
 }
@@ -314,6 +315,7 @@ MonNetworkGatherData(CF_THIS);
 MonNetworkSnifferGatherData(CF_THIS);
 MonTempGatherData(CF_THIS);
 #endif  /* NOT MINGW */
+MonOtherGatherData(CF_THIS);
 GatherPromisedMeasures();
 }
 
@@ -1063,4 +1065,22 @@ if (strcmp("measurements",pp->agentsubtype) == 0)
    *pp->donep = false;
    return;
    }
+}
+
+/*****************************************************************************/
+
+void MonOtherInit(void)
+{
+#ifdef HAVE_NOVA
+Nova_MonOtherInit();
+#endif
+}
+
+/*********************************************************************/
+
+void MonOtherGatherData(double *cf_this)
+{
+#ifdef HAVE_NOVA
+Nova_MonOtherGatherData(cf_this);
+#endif
 }

@@ -463,6 +463,8 @@ void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char 
 void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void VerifyServices(struct Attributes a,struct Promise *pp);
 void LoadSlowlyVaryingObservations(void);
+void MonOtherInit(void);
+void MonOtherGatherData(double *cf_this);
 void RegisterLiteralServerData(char *handle,struct Promise *pp);
 int ReturnLiteralData(char *handle,char *ret);
 char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv);

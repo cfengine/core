@@ -56,6 +56,7 @@ for (bp = BUNDLES; bp != NULL; bp=bp->next)
       {
       snprintf(output,CF_BUFSIZE,"Redefinition of bundle %s for %s is a broken promise",name,type);
       ReportError(output);
+      ERRORCOUNT++;
       }
    }
 }
@@ -73,6 +74,7 @@ for (bp = BODIES; bp != NULL; bp=bp->next)
       {
       snprintf(output,CF_BUFSIZE,"Redefinition of body \"%s\" for \"%s\" is a broken promise",name,type);
       ReportError(output);
+      ERRORCOUNT++;
       }
    }
 }

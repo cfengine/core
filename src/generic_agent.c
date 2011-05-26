@@ -146,7 +146,7 @@ if (ag != cf_keygen)
       if (NewPromiseProposals())
          {
          check_promises = true;
-         CfOut(cf_verbose, "", " -> Input file is changed since last valiadtion, validating it");
+         CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
          }
 
       if (check_promises)

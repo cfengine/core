@@ -12,11 +12,17 @@ if [ -z "$NO_SUBPROJECTS" ]; then
   #
 
   if [ -d ${srcdir}/../nova ]; then
-    ln -sTf ${srcdir}/../nova ${srcdir}/nova
+    if [ -h ${srcdir}/nova ]; then
+      rm -f ${srcdir}/nova
+    fi
+    ln -sf ${srcdir}/../nova ${srcdir}/nova
   fi
 
   if [ -d ${srcdir}/../constellation ]; then
-    ln -sTf ${srcdir}/../constellation ${srcdir}/constellation
+    if [ -h ${srcdir}/constellation ]; then
+      rm -f ${srcdir}/constellation
+    fi
+    ln -sf ${srcdir}/../constellation ${srcdir}/constellation
   fi
 else
   #

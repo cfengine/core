@@ -210,6 +210,13 @@ char *strndup(const char *s, size_t n);
 #include <unistd.h>
 #endif
 
+#if !HAVE_DECL_STRLCPY
+size_t strlcpy(char *destination, const char *source, size_t size);
+#endif
+
+#if !HAVE_DECL_STRLCAT
+size_t strlcat(char *destination, const char *source, size_t size);
+#endif
 
 #ifdef DARWIN
 #include <sys/malloc.h>

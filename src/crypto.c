@@ -223,7 +223,7 @@ if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
    FatalError("RSA Exponent too small or not odd");
    }
 
-if(EMPTY(POLICY_SERVER))
+if (EMPTY(POLICY_SERVER))
   {
   snprintf(name,CF_MAXVARSIZE-1,"%s%cpolicy_server.dat",CFWORKDIR,FILE_SEPARATOR);
 
@@ -254,7 +254,6 @@ if (stat(name,&sb) == -1 && stat(guard,&sb) != -1)
   // copy localhost.pub to root-HASH.pub on policy server
    {
    LastSaw("root",POLICY_SERVER,digest,cf_connect);
-   UpdateLastSeen();
 
    if (!LinkOrCopy(source,name,false))
       {
@@ -293,14 +292,7 @@ Debug("HavePublickey(%s)\n",keyname);
 snprintf(newname,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,keyname);   
 MapName(newname);
 
-// Check memory cache rlist
-
-if ((newkey = SelectKeyRing(keyname)))
-   {
-   CfOut(cf_verbose,""," -> Retrieved %s from cache",keyname);
-   return newkey;
-   }
-else if (cfstat(newname,&statbuf) == -1)
+if (cfstat(newname,&statbuf) == -1)
    {
    CfOut(cf_verbose,""," -> Did not find new key format %s",newname);
    snprintf(oldname,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,username,ipaddress);   
@@ -318,10 +310,10 @@ else if (cfstat(newname,&statbuf) == -1)
       {
       CfOut(cf_inform,""," -> Renaming old key from %s to %s",oldname,newname);
 
-      if(rename(oldname,newname) != 0)
-	{
-	CfOut(cf_error, "rename", "!! Could not rename from old key format (%s) to new (%s)",oldname,newname);
-	}
+      if (rename(oldname,newname) != 0)
+         {
+         CfOut(cf_error, "rename", "!! Could not rename from old key format (%s) to new (%s)",oldname,newname);
+         }
       }
    else  // we don't know the digest (e.g. because we are a client and
 	 // have no lastseen-map and/or root-SHA...pub of the server's key
@@ -355,7 +347,6 @@ if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))
    FatalError("RSA Exponent too small or not odd");
    }
 
-IdempAddToKeyRing(keyname,ipaddress,newkey);
 return newkey;
 }
 
@@ -371,8 +362,6 @@ void SavePublicKey(char *user,char *ipaddress,char *digest,RSA *key)
 Debug("SavePublicKey %s\n",ipaddress); 
 
 snprintf(keyname,CF_MAXVARSIZE,"%s-%s",user,digest);
-
-IdempAddToKeyRing(keyname,ipaddress,key);
 
 snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s.pub",CFWORKDIR,keyname);
 MapName(filename);

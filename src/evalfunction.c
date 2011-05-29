@@ -98,6 +98,12 @@ while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
    if (value != NULL)
       {
       struct CfKeyHostSeen entry;
+      
+      if (strcmp(value,CF_UNKNOWN_IP) == 0)
+         {
+         continue;
+         }
+
       memcpy(&entry,value,sizeof(entry));
       entrytime = entry.Q.q;
       Debug(" | DB Value: %lf,%s.\n", entrytime, entry.address);
@@ -162,6 +168,8 @@ else
    return aged;
    }
 }
+
+/*******************************************************************/
 
 struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 

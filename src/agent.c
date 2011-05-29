@@ -146,7 +146,6 @@ NoteClassUsage(VHEAP);
 #ifdef HAVE_NOVA
 Nova_NoteVarUsageDB();
 #endif
-UpdateLastSeen();
 PurgeLocks();
 GenericDeInitialize();
 return 0;

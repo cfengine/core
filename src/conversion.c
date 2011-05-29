@@ -173,6 +173,7 @@ return out;
 }
 
 /***************************************************************************/
+
 char *EscapeRegex(char *s, char *out, int outSz)
 
 { char *spt,*spf;

@@ -1042,7 +1042,8 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct AlphaList list);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
-void UpdateLastSeen(void);
+void UpdateLastSawHost(char *rkey,char *ipaddress);
+void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress);
 double GAverage(double anew,double aold,double p);
 
 /* install.c */

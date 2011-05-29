@@ -633,47 +633,6 @@ strncpy(new,old,CF_BUFSIZE-1);
 }
 
 /*****************************************************************************/
-
-RSA *Nova_SelectKeyRing(char *name);
-RSA *SelectKeyRing(char *name)
-{
-#ifdef HAVE_NOVA
-if (KEYTTL > 0)
-   {
-   return Nova_SelectKeyRing(name);
-   }
-else
-   {
-   return NULL;
-   }
-#else
-return NULL;
-#endif 
-}
-
-/*****************************************************************************/
-
-void IdempAddToKeyRing(char *name,char *ip,RSA *key)
-{
-#ifdef HAVE_NOVA
-Nova_IdempAddToKeyRing(name,ip,key);
-#else
-return;
-#endif 
-}
-
-/*****************************************************************************/
-
-void PurgeKeyRing()
-{
-#ifdef HAVE_NOVA
-Nova_PurgeKeyRing();
-#else
-return;
-#endif 
-}
-
-/*****************************************************************************/
 /* Reporting                                                                 */
 /*****************************************************************************/
 

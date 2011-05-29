@@ -556,6 +556,7 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define CF_VARIABLES      "cf_variables" "." DB_FEXT
 #define CF_PERFORMANCE    "performance" "." DB_FEXT
 #define CF_CHKDB          "checksum_digests" "." DB_FEXT
+#define CF_CHKPDB         "stats" "." DB_FEXT
 #define CF_AVDB_FILE      "cf_observations" "." DB_FEXT
 #define CF_STATEDB_FILE   "cf_state" "." DB_FEXT
 #define CF_LASTDB_FILE    "cf_lastseen" "." DB_FEXT

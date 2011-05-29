@@ -1063,7 +1063,7 @@ if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_chang
    return;
    }
 
-snprintf(statdb,CF_BUFSIZE,"%s/stats.db",CFWORKDIR);
+snprintf(statdb,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_CHKPDB);
 MapName(statdb);
 
 if (!OpenDB(statdb,&dbp))

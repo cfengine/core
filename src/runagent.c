@@ -103,6 +103,7 @@ extern struct BodySyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
+char OUTPUT_DIRECTORY[CF_BUFSIZE]; 
 int BACKGROUND = false;
 int MAXCHILD = 50;
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
@@ -118,7 +119,9 @@ int main(int argc,char *argv[])
 
 { struct Rlist *rp;
   struct Promise *pp;
-  int count = 1;
+  int count = 0;
+  int status;
+  int pid;
 
 CheckOpts(argc,argv);  
 GenericInitialize(argc,argv,"runagent");
@@ -133,16 +136,60 @@ if (BACKGROUND && INTERACTIVE)
 
 pp = MakeDefaultRunAgentPromise();
 
+/* HvB */
 if (HOSTLIST)
    {
-   for (rp = HOSTLIST; rp != NULL; rp=rp->next)
-      {
-      HailServer(rp->item,RUNATTR,pp);
+   rp  = HOSTLIST;
 
-      if (count++ >= MAXCHILD)
+   while ( rp != NULL )
+      {
+
+#ifdef MINGW
+      if (BACKGROUND)
          {
+	 CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
          BACKGROUND = false;
+	 }
+#endif  /* MINGW */
+
+      if (BACKGROUND) /* parallel */
+         {
+	 if (count <= MAXCHILD)
+            {
+	    if (fork() == 0) /* child process */
+               {
+      	       HailServer(rp->item,RUNATTR,pp);
+	       exit(0);
+	       }
+            else /* parent process */
+               {
+	       rp = rp->next;
+	       count++; 
+               }
+	    }
+         else
+            {
+            pid = wait(&status);
+            Debug("child = %d, child number = %d\n", pid, count);
+            count--;
+            }
          }
+      else /* serial */
+         {
+      	 HailServer(rp->item,RUNATTR,pp);
+         rp = rp->next;
+         }
+      } /* end while */
+   } /* end if HOSTLIST */
+
+if (BACKGROUND)
+   {
+   printf("Waiting for child processes to finish\n");
+   while (count > 1)
+      {
+      pid = wait(&status);
+      CfOut(cf_verbose, "", "Child = %d ended, number = %d\n", pid, count);
+      count--;
       }
    }
 
@@ -350,11 +397,6 @@ if (INTERACTIVE)
 
 #ifdef MINGW
 
-if (BACKGROUND)
-  {
-  CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
-  }
-
 CfOut(cf_inform,"","...........................................................................\n");
 CfOut(cf_inform,""," * Hailing %s : %u, with options \"%s\" (serial)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
 CfOut(cf_inform,"","...........................................................................\n");  
@@ -364,10 +406,6 @@ CfOut(cf_inform,"","............................................................
 if (BACKGROUND)
    {
    CfOut(cf_inform,"","Hailing %s : %u, with options \"%s\" (parallel)\n",peer,a.copy.portnumber,REMOTE_AGENT_OPTIONS);
-   if (fork() != 0)
-      {
-      return true; /* Child continues*/
-      }   
    }
 else
    {
@@ -436,14 +474,6 @@ else
 ServerDisconnection(conn);
 DeleteRlist(a.copy.servers);
 
-#ifndef MINGW
-if (BACKGROUND)
-   {
-   /* Close parallel connection*/
-   exit(0);
-   }
-#endif   /* NOT MINGW */
-   
 return true;
 }
 
@@ -523,13 +553,25 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
       continue;
       }
 
+   /*
+    * HvB: add variabele output directory
+   */
+   if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_output_directory].lval) == 0)
+      {
+      if ( IsAbsPath(retval) )
+        {
+	strncpy(OUTPUT_DIRECTORY,retval,CF_BUFSIZE-1);
+        CfOut(cf_verbose,"","SET output direcory to = %s\n", OUTPUT_DIRECTORY);
+	}
+      continue;
+      }
+
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_timeout].lval) == 0)
       {
       RUNATTR.copy.timeout = (short)Str2Int(retval);
       continue;
       }
 
-   
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_hosts].lval) == 0)
       {
       if (HOSTLIST == NULL) // Don't override if command line setting
@@ -555,8 +597,6 @@ if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
    CfOut(cf_error,"malloc","Unable to allocate Promise");
    FatalError("");
    }
-
-
 
 pp->audit = NULL;
 pp->lineno = 0;
@@ -708,7 +748,15 @@ FILE *NewStream(char *name)
 { FILE *fp;
   char filename[CF_BUFSIZE];
 
-snprintf(filename,CF_BUFSIZE,"%s/outputs/%s_runagent.out",CFWORKDIR,name);
+
+if ( OUTPUT_DIRECTORY[0] != '\0')
+  {
+  snprintf(filename,CF_BUFSIZE,"%s/%s_runagent.out",OUTPUT_DIRECTORY,name);
+  }
+else
+  {
+  snprintf(filename,CF_BUFSIZE,"%s/outputs/%s_runagent.out",CFWORKDIR,name);
+  }
 
 if (OUTPUT_TO_FILE)
    {

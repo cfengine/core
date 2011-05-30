@@ -173,7 +173,6 @@ char *VPSCOMM[CF_CLASSATTR] =
 /*********************************************************************/
 
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
-
 // solaris: ps -eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args
 
 char *VPSOPTS[CF_CLASSATTR] =

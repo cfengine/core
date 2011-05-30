@@ -219,6 +219,7 @@ struct BodySyntax CFR_CONTROLBODY[] =
    {"background_children",cf_opts,CF_BOOL,"true/false parallelize connections to servers"},
    {"max_children",cf_int,CF_VALRANGE,"Maximum number of simultaneous connections to attempt"},
    {"output_to_file",cf_opts,CF_BOOL,"true/false whether to send collected output to file(s)"},
+   {"output_directory",cf_str,CF_PATHRANGE,"Directory where the output is stored"},
    {"timeout",cf_int,"1,9999","Connection timeout, sec"},
    {NULL,cf_notype,NULL,NULL}
    };

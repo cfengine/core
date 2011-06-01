@@ -1042,7 +1042,8 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct AlphaList list);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
-void UpdateLastSeen(void);
+void UpdateLastSawHost(char *rkey,char *ipaddress);
+void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress);
 double GAverage(double anew,double aold,double p);
 
 /* install.c */
@@ -1187,6 +1188,7 @@ char *MapName(char *s);
 char *MapNameForward(char *s);
 int UseUnixStandard(char *s);
 char *cf_ctime(const time_t *timep);
+char *cf_strtimestamp(const time_t time, char *buf);
 int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);

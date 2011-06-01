@@ -380,9 +380,7 @@ while (true)
    if (ACTIVE_THREADS == 0)
       {
       CheckFileChanges(argc,argv,sd);
-      PurgeKeyRing();
       }
-   UpdateLastSeen();
    
    FD_ZERO(&rset);
    FD_SET(sd,&rset);

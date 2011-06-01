@@ -651,6 +651,41 @@ return times;
 
 /*******************************************************************/
 
+char *cf_strtimestamp(const time_t time, char *buf)
+{
+struct tm tm;
+
+if (gmtime_r(&time, &tm) == NULL)
+   {
+   CfOut(cf_error, "gmtime_r", "Unable to parse passed timestamp");
+   return NULL;
+   }
+
+/* Security checks */
+
+if (tm.tm_year < -2899 || tm.tm_year > 8099)
+   {
+   CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d",
+         tm.tm_year + 1900);
+   return NULL;
+   }
+
+/* There is no easy way to replicate ctime output by using strftime */
+
+if (snprintf(buf, 26, "%3.3s %3.3s %2d %02d:%02d:%02d %04d",
+             DAY_TEXT[tm.tm_wday ? (tm.tm_wday - 1) : 6], MONTH_TEXT[tm.tm_mon],
+             tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_year + 1900) >= 26)
+   {
+   CfOut(cf_error, "", "Unable to format timestamp: passed values are out of range");
+   return NULL;
+   }
+
+return buf;
+}
+
+
+/*******************************************************************/
+
 int cf_closesocket(int sd)
 
 {

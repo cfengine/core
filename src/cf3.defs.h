@@ -74,6 +74,7 @@
 #define CF_ANYGROUP (gid_t)-1
 #define CF_UNDEFINED_ITEM (void *)0x1234
 #define CF_VARARGS 99
+#define CF_UNKNOWN_IP "location unknown"
 
 #define CF_INBODY   1
 #define CF_INBUNDLE 2

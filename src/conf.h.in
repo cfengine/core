@@ -469,6 +469,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the `unsetenv' function. */
+#undef HAVE_UNSETENV
+
 /* Define to 1 if you have the <utime.h> header file. */
 #undef HAVE_UTIME_H
 
@@ -564,6 +567,12 @@
    `char[]'. */
 #undef YYTEXT_POINTER
 
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
@@ -572,6 +581,9 @@
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef mode_t
+
+/* Define to `long int' if <sys/types.h> does not define. */
+#undef off_t
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t

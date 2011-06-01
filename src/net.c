@@ -52,6 +52,7 @@ else
     
 if (wlen > CF_BUFSIZE-CF_INBAND_OFFSET)
    {
+   CfOut(cf_error, "", "SenTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
    FatalError("SendTransaction software failure");
    }
  

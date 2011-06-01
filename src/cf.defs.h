@@ -360,6 +360,10 @@ typedef int clockid_t;
 /*******************************************************************/
 
 #define CF_BUFSIZE 4096
+/* max size of plaintext in one transaction, see
+   net.c:SendTransaction(), leave space for encryption padding
+   (assuming max 64*8 = 512-bit cipher block size)*/
+#define CF_MAXTRANSSIZE (CF_BUFSIZE - CF_INBAND_OFFSET - 64)
 #define CF_BILLION 1000000000L
 #define CF_EXPANDSIZE (2*CF_BUFSIZE)
 #define CF_ALLCLASSSIZE (4*CF_BUFSIZE)

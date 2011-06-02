@@ -350,21 +350,29 @@ void UpdateLastSawHost(char *rkey,char *ipaddress)
   time_t now = time(NULL);
   int intermittency = false;
   char timebuf[26];
-   
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
-MapName(name);
-
-if (!OpenDB(name,&dbp))
-   {
-   CfOut(cf_inform,""," !! Unable to open last seen db");
-   return;
-   }
 
 if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
    {
    CfOut(cf_inform,""," -> Recording intermittency");
    intermittency = true;
    }
+  
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
+
+if(!ThreadLock(cft_db_lastseen))
+   {
+   CfOut(cf_error, "", "!! Could not lock last-seen DB");
+   return;
+   }
+
+if (!OpenDB(name,&dbp))
+   {
+   CfOut(cf_inform,""," !! Unable to open last seen db");
+   ThreadUnlock(cft_db_lastseen);
+   return;
+   }
+
 
 if (intermittency)
    {
@@ -408,8 +416,6 @@ CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",rkey,ipaddress,cf_strti
 
 PurgeMultipleIPReferences(dbp,rkey,ipaddress);
 
-// crit section
-ThreadLock(cft_dbhandle);
 WriteDB(dbp,rkey,&newq,sizeof(newq));
 
 if (intermittency)
@@ -417,21 +423,23 @@ if (intermittency)
    WriteDB(dbpent,GenTimeKey(now),&newq,sizeof(newq));
    }
 
-ThreadUnlock(cft_dbhandle);
-// end crit section
-
 if (intermittency && dbpent)
    {
    CloseDB(dbpent);
    }
 
 CloseDB(dbp);
+
+ThreadUnlock(cft_db_lastseen);
 }
 
 /*****************************************************************************/
 
 void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
-
+/**
+ *  WARNING: This function is *NOT* thread-safe.
+ *           It must be wrapped with calls to ThreadLock/ThreadUnlock(cft_db_lastseen)
+ */
 { CF_DBC *dbcp;
   struct CfKeyHostSeen q,newq; 
   double lastseen,delta2,lsea = LASTSEENEXPIREAFTER;
@@ -468,9 +476,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
    if (lastseen > lsea)
       {
       CfOut(cf_verbose,""," -> Last-seen record for %s expired after %.1lf > %.1lf hours\n",key,lastseen/3600,lsea/3600);
-      ThreadLock(cft_dbhandle);
       DeleteDB(dbp,key);
-      ThreadUnlock(cft_dbhandle);
       }
 
       // Avoid duplicate address/key pairs
@@ -495,9 +501,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
    
    if (update_address)
       {
-      ThreadLock(cft_dbhandle);
       WriteDB(dbp,key,&q,sizeof(q));
-      ThreadUnlock(cft_dbhandle);
       }
    }
 

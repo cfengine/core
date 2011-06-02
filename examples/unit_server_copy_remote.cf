@@ -20,32 +20,55 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+
+########################################################
+#
+# Simple test copy from server connection to cfServer
+#
+########################################################
+
+ #
+ # run this as follows:
+ #
+ # cf-serverd -f runtest_1.cf [-d2] (on remote-host.example.org)
+ # cf-agent   -f runtest_2.cf (on host 1.2.3.4)
+ #
+ # Notice that the same file configures all parts of cfengine
+ # even though different parts are read by different hosts and agents
+
+########################################################
+
 body common control
-   {
-   any::
+{
+bundlesequence  => { "testbundle" };
+version => "1.2.3";
+#fips_mode => "true";
+}
 
-      bundlesequence  => { 
-                         "testbundle"
-                         };
-   }
+########################################################
 
+body common control
 
-############################################
+{
+bundlesequence  => { "testbundle"  };
+}
+
+########################################################
 
 bundle agent testbundle
 
 {
 files:
 
-  "/home/mark/tmp/testcopy" 
+  "/tmp/testcopy" 
 
     perms => system,
-    copy_from => mycopy("/home/mark/LapTop/words/RoadAhead","eternity.iu.hio.no"),
+    copy_from => mycopy("/src/document","remote-host.example.org"),
     depth_search => recurse("inf");
 
 }
 
-############################################
+########################################################
 
 body perms system
 
@@ -87,3 +110,32 @@ verify      => "true";
 purge       => "false";
 findertype  => "MacOSX";
 }
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "1.2.3.4" , "::1" };
+allowallconnects      => { "1.2.3.4" , "::1" };
+trustkeysfrom         => { "1.2.3.4" , "::1" };
+# allowusers
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+
+access:
+
+  # Grant access to the remote client to access the source docs
+
+  "/src"   admit   => { "1.2.3.4" };
+}
+
+
+

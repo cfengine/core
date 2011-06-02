@@ -214,6 +214,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
           strcpy(TOPIC_CMD,optarg);
           CfGenerateStories(TOPIC_CMD,cfi_cause);
 #endif
+          
           exit(0);
           break;
           

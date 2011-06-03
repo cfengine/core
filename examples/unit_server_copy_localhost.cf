@@ -28,7 +28,7 @@
  #
  # run this as follows:
  #
- # cf-serverd -f runtest_1.cf [-d2]
+ # cf-serverd -f runtest_1.cf [-v]
  # cf-agent   -f runtest_2.cf
  #
  # Notice that the same file configures all parts of cfengine

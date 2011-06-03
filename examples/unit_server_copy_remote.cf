@@ -30,7 +30,7 @@
  #
  # run this as follows:
  #
- # cf-serverd -f runtest_1.cf [-d2] (on remote-host.example.org)
+ # cf-serverd -f runtest_1.cf [-v] (on remote-host.example.org)
  # cf-agent   -f runtest_2.cf (on host 1.2.3.4)
  #
  # Notice that the same file configures all parts of cfengine

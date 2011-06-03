@@ -459,6 +459,8 @@ if (!NewDBCursor(dbp,&dbcp))
 
 while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
    {
+   keys_match = false;
+   
    if (strcmp(key+1,rkey+1) == 0)
       {
       keys_match = true;
@@ -477,6 +479,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
       {
       CfOut(cf_verbose,""," -> Last-seen record for %s expired after %.1lf > %.1lf hours\n",key,lastseen/3600,lsea/3600);
       DeleteDB(dbp,key);
+      continue;
       }
 
       // Avoid duplicate address/key pairs

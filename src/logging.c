@@ -148,7 +148,9 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
 
   // Don't log these items
 
-if (pp->agentsubtype == NULL)
+if (pp->agentsubtype == NULL ||
+    strcmp(pp->agentsubtype,"vars") == 0 ||
+    strcmp(pp->agentsubtype,"classes") == 0)
    {
    return;
    }

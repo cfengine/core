@@ -176,7 +176,6 @@ if (!NewDBCursor(dbp,&dbcp))
 
  /* Initialize the key/data return pair. */
 
-memset(&entry, 0, sizeof(entry));
 
 printf("%9.9s %17.17s %-25.25s %15.15s\n","Direction","IP","Name","Key");
 
@@ -186,9 +185,12 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    if (value != NULL)
       {
+      memset(&entry, 0, sizeof(entry));
+      memset(hostname, 0, sizeof(hostname));
+      memset(address, 0, sizeof(address));
       memcpy(&entry,value,sizeof(entry));
-      strncpy(hostname,(char *)key,ksize);
-      strncpy(address,(char *)entry.address,ksize); 
+      strncpy(hostname,(char *)key,sizeof(hostname)-1);
+      strncpy(address,(char *)entry.address,sizeof(hostname)-1); 
       ++count;  
       }
    else

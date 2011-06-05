@@ -17,7 +17,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.1.4p2a3)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.1.4p2a4)   dnl remember to set version
 
 AC_CONFIG_HEADERS([src/conf.h])
 

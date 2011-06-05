@@ -145,6 +145,7 @@ while ((c=getopt_long(argc,argv,"d:vf:VMs",OPTIONS,&optindex)) != EOF)
   }
 }
 /*****************************************************************************/
+
 void ShowLastSeenHosts()
 
 { CF_DB *dbp;
@@ -177,8 +178,10 @@ if (!NewDBCursor(dbp,&dbcp))
 
 memset(&entry, 0, sizeof(entry));
 
-printf("%9.9s %15.15s %-25.25s %15.15s\n","Direction","IP","Name","Key");
- /* Walk through the database and print out the key/data pairs. */
+printf("%9.9s %17.17s %-25.25s %15.15s\n","Direction","IP","Name","Key");
+
+/* Walk through the database and print out the key/data pairs. */
+
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    if (value != NULL)
@@ -192,15 +195,17 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       {
       continue;
       }
+
    CfOut(cf_verbose,""," -> Reporting on %s",hostname);
       
-   printf("%-9.9s %15.15s %-25.25s %s\n",
+   printf("%-9.9s %17.17s %-25.25s %s\n",
              hostname[0] == '+' ? "Incoming" : "Outgoing",
      	     address,	     
 	     IPString2Hostname(address),
              hostname+1
           );
    }
+
 printf("Total Entries: %d\n",count);
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);

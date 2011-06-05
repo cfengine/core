@@ -363,7 +363,7 @@ if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 
-if(!ThreadLock(cft_db_lastseen))
+if (!ThreadLock(cft_db_lastseen))
    {
    CfOut(cf_error, "", "!! Could not lock last-seen DB");
    return;

@@ -1065,6 +1065,10 @@ void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char 
 void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast);
 void SetPromisedDefaultRoute(void);
 
+/* keyring.c */
+
+int HostKeyAddressUnknown(char *value);
+
 /* logging.c */
 
 void BeginAudit(void);

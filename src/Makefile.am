@@ -69,6 +69,7 @@ libpromises_la_SOURCES =                                                \
         hashes.c                                                        \
         crypto.c                                                        \
         sort.c                                                          \
+	keyring.c							\
         full-write.c                                                    \
         expand.c                                                        \
         matching.c                                                      \

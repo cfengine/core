@@ -65,19 +65,19 @@ topic_count++;
 adj = (double **)malloc(sizeof(double *)*topic_count);
 evc = (double *)malloc(sizeof(double)*topic_count);
    
-if (adj == NULL)
+if (adj == NULL || evc == NULL)
    {
    FatalError("memory allocation in graphs");
    }
 
 for (i = 0; i < topic_count; i++)
    {
-   adj[i] = (double *)malloc(sizeof(double)*topic_count);
+   adj[i] = (double *)cf_malloc(sizeof(double)*topic_count,"graphs adj loop");
    }
 
 /* And a vector to contain the names */
     
-n = (char **)malloc(sizeof(char *)*topic_count);
+n = (char **)cf_malloc(sizeof(char *)*topic_count, "graphs n vector");
 
 for (i = 0; i < topic_count; i++)
    {

@@ -82,7 +82,6 @@ extern char VYEAR[];
 extern char VDAY[];
 extern char VMONTH[];
 extern char VSHIFT[];
-extern char VLIFECYCLE[];
 
 extern char *CLASSTEXT[];
 extern char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];

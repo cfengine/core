@@ -34,7 +34,7 @@
 
 /* Prototypes */
 
-static void AddTimeClass(const char *format);
+static void AddTimeClass(time_t time);
 
 /*************************************************************************/
   
@@ -91,11 +91,7 @@ CfOut(cf_verbose,"","Reference time set to %s\n",cf_ctime(&tloc));
 
 if (setclasses)
    {
-   struct tm *tmv = gmtime(&tloc);
-
-   AddTimeClass(vbuff);
-   snprintf(vbuff,CF_MAXVARSIZE,"GMT_Hr%d\n",tmv->tm_hour);
-   NewClass(vbuff);
+   AddTimeClass(tloc);
    }
 }
 
@@ -117,146 +113,88 @@ Debug("Job start time set to %s\n",cf_ctime(&tloc));
 
 /*********************************************************************/
 
-static void AddTimeClass(const char *str)
+static void AddTimeClass(time_t time)
 
-{ int i,value;
-  char buf2[10], buf3[10], buf4[10], buf5[10], buf[10], out[10];
-  char hour[10];
+{
+struct tm parsed_time;
+struct tm gmt_parsed_time;
+char buf[CF_BUFSIZE];
 
-for (i = 0; i < 7; i++)
+if (localtime_r(&time, &parsed_time) == NULL)
    {
-   if (strncmp(DAY_TEXT[i],str,3)==0)
-      {
-      NewClass(DAY_TEXT[i]);
-      break;
-      }
+   CfOut(cf_error, "localtime_r", "Unable to parse passed time");
+   return;
    }
 
-sscanf(str,"%*s %s %s %s %s",buf2,buf3,buf4,buf5);
-
-/* Hours */
-
-buf[0] = '\0';
-
-sscanf(buf4,"%[^:]",buf);
-sprintf(out,"Hr%s",buf);
-NewClass(out);
-memset(hour,0,3);
-strncpy(hour,buf,2); 
-
-/* Shift */
-
-sscanf(buf,"%d",&value);
-
-if (0 <= value && value < 6)
+if (gmtime_r(&time, &gmt_parsed_time) == NULL)
    {
-   snprintf(VSHIFT,11,"Night");
-   }
-else if (6 <= value && value < 12)
-   {
-   snprintf(VSHIFT,11,"Morning");
-   }
-else if (12 <= value && value < 18)
-   {
-   snprintf(VSHIFT,11,"Afternoon");
-   }
-else if (18 <= value && value < 24)
-   {
-   snprintf(VSHIFT,11,"Evening");
-   }    
-
-NewClass(VSHIFT);
-
-/* Minutes */
-
-sscanf(buf4,"%*[^:]:%[^:]",buf);
-sprintf(out,"Min%s",buf);
-NewClass(out);
-
-sscanf(buf,"%d",&i);
-
-switch ((i / 5))
-   {
-   case 0: NewClass("Min00_05");
-           break;
-   case 1: NewClass("Min05_10");
-           break;
-   case 2: NewClass("Min10_15");
-           break;
-   case 3: NewClass("Min15_20");
-           break;
-   case 4: NewClass("Min20_25");
-           break;
-   case 5: NewClass("Min25_30");
-           break;
-   case 6: NewClass("Min30_35");
-           break;
-   case 7: NewClass("Min35_40");
-           break;
-   case 8: NewClass("Min40_45");
-           break;
-   case 9: NewClass("Min45_50");
-           break;
-   case 10: NewClass("Min50_55");
-            break;
-   case 11: NewClass("Min55_00");
-            break;
+   CfOut(cf_error, "gmtime_r", "Unable to parse passed date");
+   return;
    }
 
-/* Add quarters */ 
+/* Lifecycle */
 
-switch ((i / 15))
-   {
-   case 0: NewClass("Q1");
-           sprintf(out,"Hr%s_Q1",hour);
-    NewClass(out);
-           break;
-   case 1: NewClass("Q2");
-           sprintf(out,"Hr%s_Q2",hour);
-    NewClass(out);
-           break;
-   case 2: NewClass("Q3");
-           sprintf(out,"Hr%s_Q3",hour);
-    NewClass(out);
-           break;
-   case 3: NewClass("Q4");
-           sprintf(out,"Hr%s_Q4",hour);
-    NewClass(out);
-           break;
-   }
- 
-
-/* Day */
-
-sprintf(out,"Day%s",buf3);
-NewClass(out);
-memset(VDAY,0,3);
-strncpy(VDAY,buf3,2);
- 
-/* Month */
-
-for (i = 0; i < 12; i++)
-   {
-   if (strncmp(MONTH_TEXT[i],buf2,3) == 0)
-      {
-      NewClass(MONTH_TEXT[i]);
-      memset(VMONTH,0,4);
-      strncpy(VMONTH,MONTH_TEXT[i],3);
-      break;
-      }
-   }
+snprintf(buf, CF_BUFSIZE, "Lcycle_%d",((parsed_time.tm_year + 1900)%3));
+NewClass(buf);
 
 /* Year */
 
-strcpy(VYEAR,buf5); 
-sprintf(out,"Yr%s",buf5);
-NewClass(out);
+snprintf(VYEAR, CF_BUFSIZE, "%04d", parsed_time.tm_year + 1900);
+snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
+NewClass(buf);
 
-/* Lifecycle - 3 year cycle */
+/* Month */
 
-value = -1;
-sscanf(buf5,"%d",&value);
-snprintf(VLIFECYCLE,10,"Lcycle_%d",(value%3));
-NewClass(VLIFECYCLE);
+strlcpy(VMONTH, MONTH_TEXT[parsed_time.tm_mon], 4);
+NewClass(MONTH_TEXT[parsed_time.tm_mon]);
+
+/* Day of week */
+
+/* Monday  is 1 in tm_wday, 0 in DAY_TEXT
+   Tuesday is 2 in tm_wday, 1 in DAY_TEXT
+   ...
+   Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
+int day_text_index = (parsed_time.tm_wday + 6) % 7;
+NewClass(DAY_TEXT[day_text_index]);
+
+/* Day */
+
+snprintf(VDAY, CF_BUFSIZE, "%d", parsed_time.tm_mday);
+snprintf(buf, CF_BUFSIZE, "Day%d", parsed_time.tm_mday);
+NewClass(buf);
+
+/* Shift */
+
+strcpy(VSHIFT, SHIFT_TEXT[parsed_time.tm_hour / 6]);
+NewClass(VSHIFT);
+
+/* Hour */
+
+snprintf(buf, CF_BUFSIZE, "Hr%02d", parsed_time.tm_hour);
+NewClass(buf);
+
+/* GMT hour */
+
+snprintf(buf, CF_BUFSIZE, "GMT_Hr%d\n", gmt_parsed_time.tm_hour);
+NewClass(buf);
+
+/* Quarter */
+
+int quarter = parsed_time.tm_min / 15 + 1;
+
+snprintf(buf, CF_BUFSIZE, "Q%d", quarter);
+NewClass(buf);
+snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", parsed_time.tm_hour,quarter);
+NewClass(buf);
+
+/* Minute */
+
+snprintf(buf, CF_BUFSIZE, "Min%02d", parsed_time.tm_min);
+NewClass(buf);
+
+int interval_start = (parsed_time.tm_min / 5) * 5;
+int interval_end = (interval_start + 5) % 60;
+
+snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
+NewClass(buf);
 }
-

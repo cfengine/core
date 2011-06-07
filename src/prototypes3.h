@@ -280,7 +280,6 @@ void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp);
 int Month2Int(char *string);
 int MonthLen2Int(char *string, int len);
 void TimeToDateStr(time_t t, char *outStr, int outStrSz);
-void DateStrToTime(char *inStr, time_t *t);
 const char *GetArg0(const char *execstr);
 void CommPrefix(char *execstr,char *comm);
 int NonEmptyLine(char *s);

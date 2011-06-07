@@ -770,7 +770,7 @@ const char *ReadLastNode(const char *str);
 int CompressPath(char *dest,char *src);
 void Chop(char *str);
 void StripTrailingNewline(char *str);
-int IsStrIn(char *str, char **strs, int ignoreCase);
+int IsStrIn(const char *str, char **strs, int ignoreCase);
 void FreeStringArray(char **strs);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);

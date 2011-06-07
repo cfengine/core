@@ -882,7 +882,7 @@ return true;
 
 /*********************************************************************/
 
-int IsStrIn(char *str, char **strs, int ignoreCase)
+int IsStrIn(const char *str, char **strs, int ignoreCase)
 
 { int i;
 

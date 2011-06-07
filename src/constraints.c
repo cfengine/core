@@ -34,6 +34,11 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static struct PromiseIdent *PromiseIdExists(char *handle);
+static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
+static int VerifyConstraintName(char *lval);
+static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
+
 /*******************************************************************/
 
 struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body)
@@ -699,7 +704,7 @@ PreSanitizePromise(pp);
 
 /*****************************************************************************/
 
-void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype)
+static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype)
 
 { struct SubTypeSyntax ss;
   int i,j,l,m;
@@ -781,7 +786,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 
 /*****************************************************************************/
 
-int VerifyConstraintName(char *lval)
+static int VerifyConstraintName(char *lval)
 
 { struct SubTypeSyntax ss;
   int i,j,l,m;
@@ -872,7 +877,7 @@ return ptr;
 
 /*****************************************************************************/
 
-void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key)
+static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key)
 
 {
 AssertThreadLocked(cft_policy, "DeleteAllPromiseIdsRecurse");
@@ -889,7 +894,7 @@ free(key);
 
 /*****************************************************************************/
 
-void DeleteAllPromiseIds()
+void DeleteAllPromiseIds(void)
 
 {
 if (!ThreadLock(cft_policy))
@@ -909,7 +914,7 @@ ThreadUnlock(cft_policy);
 
 /*****************************************************************************/
 
-struct PromiseIdent *PromiseIdExists(char *handle)
+static struct PromiseIdent *PromiseIdExists(char *handle)
 
 { struct PromiseIdent *key;
 

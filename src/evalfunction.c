@@ -34,7 +34,13 @@
 
 #include <libgen.h>
 
-  /* assume args are all scalar literals by the time we get here
+static char *StripPatterns(char *file_buffer,char *pattern,char *filename);
+static void CloseStringHole(char *s,int start,int end);
+static int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex);
+static int ExecModule(char *command);
+static int CheckID(char *id);
+
+/* assume args are all scalar literals by the time we get here
      and each handler allocates the memory it returns. There is
      a protocol to be followed here:
      Set args,
@@ -4698,7 +4704,7 @@ return (void *)result;
 
 /*********************************************************************/
 
-char *StripPatterns(char *file_buffer,char *pattern,char *filename)
+static char *StripPatterns(char *file_buffer,char *pattern,char *filename)
 
 { int start,end;
   int count = 0;
@@ -4722,7 +4728,7 @@ return file_buffer;
 
 /*********************************************************************/
 
-void CloseStringHole(char *s,int start,int end)
+static void CloseStringHole(char *s,int start,int end)
 
 { int off = end - start;
   char *sp;
@@ -4742,7 +4748,7 @@ for (sp = s + start; *(sp+off) != '\0'; sp++)
 
 /*********************************************************************/
 
-int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex)
+static int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex)
 
 { char *sp,linebuf[CF_BUFSIZE],name[CF_MAXVARSIZE],first_one[CF_MAXVARSIZE];
   struct Rlist *rp,*newlist = NULL;
@@ -4845,7 +4851,7 @@ return hcount;
 
 /*********************************************************************/
 
-int ExecModule(char *command)
+static int ExecModule(char *command)
 
 { FILE *pp;
   char *sp,line[CF_BUFSIZE];
@@ -4974,7 +4980,7 @@ switch (*line)
 /* Level                                                             */
 /*********************************************************************/
 
-int CheckID(char *id)
+static int CheckID(char *id)
 
 { char *sp;
 

@@ -240,13 +240,9 @@ uid_t GetUidConstraint(char *lval,struct Promise *pp);
 gid_t GetGidConstraint(char *lval,struct Promise *pp);
 struct Rlist *GetListConstraint(char *lval,struct Promise *list);
 void ReCheckAllConstraints(struct Promise *pp);
-void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
 int GetBundleConstraint(char *lval,struct Promise *list);
-int VerifyConstraintName(char *lval);
 struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp);
-void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
 void DeleteAllPromiseIds(void);
-struct PromiseIdent *PromiseIdExists(char *handle);
 
 /* conversion.c */
 
@@ -255,7 +251,6 @@ char *EscapeRegex(char *s, char *out, int outSz);
 char *EscapeQuotes(char *s, char *out, int outSz);
 char *MapAddress (char *addr);
 void IPString2KeyDigest(char *ipv4,char *result);
-time_t StrToTime(char *s);
 enum cfhypervisors Str2Hypervisors(char *s);
 enum cfenvironment_state Str2EnvState(char *s);
 enum insert_match String2InsertMatch(char *s);
@@ -408,6 +403,8 @@ int IsProcessType(char *s);
 
 void WebCache(char *s,char *t);
 void EnterpriseModuleTrick(void);
+int CheckDatabaseSanity(struct Attributes a, struct Promise *pp);
+void VerifyRegistryPromise(struct Attributes a,struct Promise *pp);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
@@ -621,12 +618,7 @@ struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
 #endif  /* NOT MINGW */
 
 void *CfReadFile(char *filename,int maxsize);
-char *StripPatterns(char *file_buffer,char *pattern,char *filename);
-void CloseStringHole(char *s,int start,int end);
-int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex);
-int ExecModule(char *command);
 void ModuleProtocol(char *command,char *line,int print);
-int CheckID(char *id);
 
 /* expand.c */
 
@@ -634,12 +626,10 @@ void ExpandPromise(enum cfagenttype ag,char *scopeid,struct Promise *pp,void *fn
 void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars,void (*fnptr)());
 struct Rval ExpandDanglers(char *scope,struct Rval rval,struct Promise *pp);
 void ScanRval(char *scope,struct Rlist **los,struct Rlist **lol,void *string,char type,struct Promise *pp);
-void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level,struct Promise *pp);
 
 int IsExpandable(char *str);
 int ExpandScalar(char *string,char buffer[CF_EXPANDSIZE]);
 int ExpandThis(enum cfreport level,char *string,char buffer[CF_EXPANDSIZE]);
-int ExpandPrivateScalar(char *contextid,char *string,char buffer[CF_EXPANDSIZE]);
 struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);
 struct Rval ExpandPrivateRval(char *contextid,void *rval,char type);
@@ -649,7 +639,6 @@ int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
 void ConvergePromiseValues(struct Promise *pp);
-int Epimenides(char *var,char *rval,char rtype,int level);
 
 /* exec_tool.c */
 
@@ -1560,9 +1549,6 @@ int IsCfList(char *type);
 /* verify_databases.c */
 
 void VerifyDatabasePromises(struct Promise *pp);
-int CheckDatabaseSanity(struct Attributes a, struct Promise *pp);
-void VerifySQLPromise(struct Attributes a,struct Promise *pp);
-void VerifyRegistryPromise(struct Attributes a,struct Promise *pp);
 
 /* verify_environments.c */
 
@@ -1571,16 +1557,13 @@ void VerifyEnvironmentsPromise(struct Promise *pp);
 /* verify_exec.c */
 
 void VerifyExecPromise(struct Promise *pp);
-int ExecSanityChecks(struct Attributes a,struct Promise *pp);
-void VerifyExec(struct Attributes a, struct Promise *pp);
-void PreviewProtocolLine(char *s,char *comm);
 
 /* verify_files.c */
 
-void FindFilePromiserObjects(struct Promise *pp);
+void VerifyFilePromise(char *path,struct Promise *pp);
+
 void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr));
 void *FindAndVerifyFilesPromises(struct Promise *pp);
-void VerifyFilePromise(char *path,struct Promise *pp);
 int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp);
 
 /* verify_interfaces.c */

@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level,struct Promise *pp);
+static int ExpandPrivateScalar(char *contextid,char *string,char buffer[CF_EXPANDSIZE]);
+static int Epimenides(char *var,char *rval,char rtype,int level);
+
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
@@ -202,7 +206,7 @@ switch(type)
 
 /*********************************************************************/
 
-void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *string,int level,struct Promise *pp)
+static void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *string,int level,struct Promise *pp)
 
 {
   char *sp,rtype;
@@ -445,7 +449,7 @@ return false;
 
 /*********************************************************************/
 
-int ExpandPrivateScalar(char *scopeid,char *string,char buffer[CF_EXPANDSIZE]) 
+static int ExpandPrivateScalar(char *scopeid,char *string,char buffer[CF_EXPANDSIZE]) 
 
 { char *sp,rtype;
   void *rval;
@@ -1279,7 +1283,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 /* Levels                                                            */
 /*********************************************************************/
 
-int Epimenides(char *var,char *rval,char rtype,int level)
+static int Epimenides(char *var,char *rval,char rtype,int level)
 
 { struct Rlist *rp,*list;
   char exp[CF_EXPANDSIZE];

@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void FindFilePromiserObjects(struct Promise *pp);
+
 /*****************************************************************************/
 
 void *FindAndVerifyFilesPromises(struct Promise *pp)
@@ -52,7 +54,7 @@ return (void *)NULL;
 
 /*****************************************************************************/
 
-void FindFilePromiserObjects(struct Promise *pp)
+static void FindFilePromiserObjects(struct Promise *pp)
 
 { char *val = GetConstraint("pathtype",pp,CF_SCALAR);
   int literal = GetBooleanConstraint("copy_from",pp) ||

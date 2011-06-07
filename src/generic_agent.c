@@ -359,28 +359,6 @@ closelog();
 #endif
 }
 
-/*****************************************************************************/
-
-void PromiseManagement(char *agent)
-
-{ enum cfagenttype ag = Agent2Type(agent);
-
-switch (ag)
-   {
-   case cf_common:
-       break;
-
-   case cf_agent:
-       break;
-
-   case cf_server:
-       break;
-
-   case cf_monitor:
-       break;
-   }
-}
-
 /*******************************************************************/
 /* Level 1                                                         */
 /*******************************************************************/

@@ -139,7 +139,6 @@ int main(int argc,char *argv[])
 {
 CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent");
-PromiseManagement("agent");
 ThisAgentInit();
 KeepPromises();
 NoteClassUsage(VHEAP);

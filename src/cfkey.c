@@ -190,7 +190,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       memset(address, 0, sizeof(address));
       memcpy(&entry,value,sizeof(entry));
       strncpy(hostname,(char *)key,sizeof(hostname)-1);
-      strncpy(address,(char *)entry.address,sizeof(hostname)-1); 
+      strncpy(address,(char *)entry.address,sizeof(address)-1);
       ++count;  
       }
    else

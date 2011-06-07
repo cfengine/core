@@ -148,12 +148,7 @@ int EnterpriseExpiry(void)
 
 {
 #ifdef HAVE_NOVA
-#define LIC_DAY "15"
-#define LIC_MONTH "December"
-#define LIC_YEAR "2001"
-#define LIC_COMPANY "PARTNER TEST LICENSE - NOT FOR PRODUCTION"
-
-return Nova_EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY);
+return Nova_EnterpriseExpiry();
 #else
 return false;
 #endif

@@ -165,10 +165,6 @@ runtest() {
   fi
 }
 
-if $AGENT -V | grep -q 'Nova'; then
-  NOVA=1
-fi
-
 while true; do
   case "$1" in
     --help)
@@ -191,7 +187,9 @@ while true; do
   shift
 done
 
-# Check for nova
+if $AGENT -V | grep -q 'Nova'; then
+  NOVA=1
+fi
 
 if [ $# -gt 0 ]; then
   for test in "$@"; do

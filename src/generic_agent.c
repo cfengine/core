@@ -83,7 +83,7 @@ THIS_AGENT_TYPE = ag;
 // need scope sys to set vars in expiry function
 SetNewScope("sys");
 
-if (EnterpriseExpiry(LIC_DAY,LIC_MONTH,LIC_YEAR,LIC_COMPANY)) 
+if (EnterpriseExpiry())
    {
    CfOut(cf_error,"","Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
    exit(1);

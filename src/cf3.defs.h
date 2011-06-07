@@ -51,11 +51,6 @@
 
 #define CF3COPYRIGHT "Copyright (C) Cfengine AS 2008,2010-"
 
-#define LIC_DAY "15"
-#define LIC_MONTH "December"
-#define LIC_YEAR "2001"
-#define LIC_COMPANY "PARTNER TEST LICENSE - NOT FOR PRODUCTION"
-
 #define CF_SCALAR 's'
 #define CF_LIST   'l'
 #define CF_FNCALL 'f'

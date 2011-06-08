@@ -371,11 +371,13 @@ return true;
 
 /*****************************************************************************/
 
+static const char *OPEN_TRANSACTION="BEGIN TRANSACTION";
+
 void SQLite3_OpenDBTransaction(sqlite3 *dbp)
 {
 char *errmsg;
 
-if (sqlite3_exec(dbp, CREATE_TABLE, NULL, NULL, &errmsg) != SQLITE_OK)
+if (sqlite3_exec(dbp, OPEN_TRANSACTION, NULL, NULL, &errmsg) != SQLITE_OK)
    {
    CfOut(cf_error, "", "SQLite3_OpenDBTransaction: Unable to begin transaction: %s",
          errmsg);
@@ -385,11 +387,13 @@ if (sqlite3_exec(dbp, CREATE_TABLE, NULL, NULL, &errmsg) != SQLITE_OK)
 
 /*****************************************************************************/
 
+static const char *COMMIT_TRANSACTION="COMMIT TRANSACTION";
+
 void SQLite3_CommitDBTransaction(sqlite3 *dbp)
 {
 char *errmsg;
 
-if (sqlite3_exec(dbp, CREATE_TABLE, NULL, NULL, &errmsg) != SQLITE_OK)
+if (sqlite3_exec(dbp, COMMIT_TRANSACTION, NULL, NULL, &errmsg) != SQLITE_OK)
    {
    CfOut(cf_error, "", "SQLite3_CommitDBTransaction: Unable to commit: %s",
          errmsg);

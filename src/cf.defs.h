@@ -478,7 +478,16 @@ CF_QDBC;
 # define DB_FEXT "qdbm"
 
 
-#else
+#elif defined(SQLITE3)
+
+#include <sqlite3.h>
+
+typedef sqlite3 CF_DB;
+typedef sqlite3_stmt CF_DBC;
+
+#define DB_FEXT "sqlite3"
+
+#else /* Berkeley DB */
 
 # ifdef SOLARIS
 #  ifndef u_int32_t

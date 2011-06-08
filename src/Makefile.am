@@ -25,6 +25,7 @@ libpromises_la_SOURCES =                                                \
         dbm_berkeley.c                                                  \
         dbm_quick.c                                                     \
         dbm_tokyocab.c                                                  \
+        dbm_sqlite3.c                                                   \
         dtypes.c                                                        \
         classes.c                                                       \
         env_context.c                                                   \

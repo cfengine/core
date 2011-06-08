@@ -37,6 +37,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#if defined(SQLITE3)
+#include "dbm_sqlite3.h"
+#endif
 
 static int DoOpenDB(char *filename, CF_DB **dbp);
 static int DoCloseDB(CF_DB *dbp);
@@ -76,6 +79,8 @@ static int DoOpenDB(char *filename, CF_DB **dbp)
 return TCDB_OpenDB(filename, dbp);
 #elif defined QDB
 return QDB_OpenDB(filename, dbp);
+#elif defined SQLITE3
+return SQLite3_OpenDB(filename, dbp);
 #else
 return BDB_OpenDB(filename, dbp);
 #endif
@@ -111,6 +116,8 @@ static int DoCloseDB(CF_DB *dbp)
 return TCDB_CloseDB(dbp);
 #elif defined QDB
 return QDB_CloseDB(dbp);
+#elif defined SQLITE3
+return SQLite3_CloseDB(dbp);
 #else
 return BDB_CloseDB(dbp);
 #endif
@@ -125,6 +132,8 @@ int ValueSizeDB(CF_DB *dbp, char *key)
 return TCDB_ValueSizeDB(dbp, key);
 #elif defined QDB
 return QDB_ValueSizeDB(dbp, key);
+#elif defined SQLITE3
+return SQLite3_ValueSizeDB(dbp, key);
 #else
 return BDB_ValueSizeDB(dbp, key);
 #endif
@@ -138,6 +147,8 @@ int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz,void *dest, int destSz)
 return TCDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
 #elif defined QDB
 return QDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
+#elif defined SQLITE3
+return SQLite3_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
 #else
 return BDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
 #endif
@@ -153,6 +164,8 @@ int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize)
 return TCDB_RevealDB(dbp,key,result,rsize);
 #elif defined QDB
 return QDB_RevealDB(dbp,key,result,rsize);
+#elif defined SQLITE3
+return SQLite3_RevealDB(dbp, key, result, rsize);
 #else
 return BDB_RevealDB(dbp,key,result,rsize);
 #endif
@@ -166,6 +179,8 @@ int WriteComplexKeyDB(CF_DB *dbp, char *key, int keySz, const void *src, int src
 return TCDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #elif defined QDB
 return QDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
+#elif defined SQLITE3
+return SQLite3_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #else
 return BDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
 #endif
@@ -182,6 +197,8 @@ int DeleteComplexKeyDB(CF_DB *dbp, char *key, int size)
 return TCDB_DeleteComplexKeyDB(dbp,key,size);
 #elif defined QDB
 return QDB_DeleteComplexKeyDB(dbp,key,size);
+#elif defined SQLITE3
+return SQLite3_DeleteComplexKeyDB(dbp, key, size);
 #else
 return BDB_DeleteComplexKeyDB(dbp,key,size);
 #endif
@@ -196,6 +213,8 @@ int NewDBCursor(CF_DB *dbp,CF_DBC **dbcp)
 return TCDB_NewDBCursor(dbp,dbcp);
 #elif defined QDB
 return QDB_NewDBCursor(dbp,dbcp);
+#elif defined SQLITE3
+return SQLite3_NewDBCursor(dbp, dbcp);
 #else
 return BDB_NewDBCursor(dbp,dbcp);
 #endif
@@ -209,6 +228,8 @@ int NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize
 return TCDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
 #elif defined QDB
 return QDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
+#elif defined SQLITE3
+return SQLite3_NextDB(dbp, dbcp, key, ksize, value, vsize);
 #else
 return BDB_NextDB(dbp,dbcp,key,ksize,value,vsize);
 #endif
@@ -222,6 +243,8 @@ int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp)
 return TCDB_DeleteDBCursor(dbp,dbcp);
 #elif defined QDB
 return QDB_DeleteDBCursor(dbp,dbcp);
+#elif defined SQLITE3
+return SQLite3_DeleteDBCursor(dbp, dbcp);
 #else
 return BDB_DeleteDBCursor(dbp,dbcp);
 #endif

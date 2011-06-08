@@ -178,6 +178,17 @@ if test $WITH_TOKYO = 1; then
   AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
 fi
 
+AC_ARG_WITH([sqlite3],
+  [AS_HELP_STRING([--with-sqlite3], [use SQLite 3 to store runtime data (EXPERIMENTAL, BROKEN)])])
+AS_IF([test "x$with_sqlite3" = "xyes"], [WITH_SQLITE3=1], [WITH_SQLITE3=0])
+
+if test $WITH_SQLITE3 = 1; then
+  AC_MSG_CHECKING(SQLite 3)
+  AC_CHECK_LIB(sqlite3, sqlite3_open, [], [AC_MSG_ERROR(Cannot find SQLite 3)])
+  AC_CHECK_HEADERS(sqlite3.h)
+  AC_DEFINE(SQLITE3, 1, [Define if SQLite 3 is available.])
+fi
+
 dnl else qdbm?
 
 AC_ARG_WITH([qdbm],
@@ -195,7 +206,7 @@ dnl
 dnl  Look for Berkeley DB.
 dnl 
 
-if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0; then
+if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
   AC_ARG_WITH(berkeleydb,
     [  --with-berkeleydb[=PATH] directory where BerkeleyDB exists],
     BERKELEY_DB_DIR=$with_berkeleydb,
@@ -967,6 +978,8 @@ if test $WITH_TOKYO = 1; then
   AC_MSG_RESULT([-> DB: Tokyo Cabinet])
 elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM])
+elif test $WITH_SQLITE3 = 1; then
+  AC_MSG_RESULT([-> DB: SQLite 3 (EXPERIMENTAL, BROKEN)])
 else
   AC_MSG_RESULT([-> DB: Berkeley DB (path: $BERKELEY_DB_DIR)])
 fi

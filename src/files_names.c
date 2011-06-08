@@ -882,7 +882,7 @@ return true;
 
 /*********************************************************************/
 
-bool IsStrIn(const char *str, char **strs)
+bool IsStrIn(const char *str, const char **strs)
 {
 int i;
 
@@ -896,7 +896,7 @@ for (i = 0; strs[i]; ++i)
 return false;
 }
 
-bool IsStrCaseIn(const char *str, char **strs)
+bool IsStrCaseIn(const char *str, const char **strs)
 {
 int i;
 

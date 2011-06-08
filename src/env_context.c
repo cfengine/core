@@ -34,8 +34,6 @@
 
 #include "logic_expressions.h"
 
-extern char *DAY_TEXT[];
-
 static bool ValidClassName(const char *str);
 
 /*****************************************************************************/

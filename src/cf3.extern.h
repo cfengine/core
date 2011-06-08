@@ -126,9 +126,9 @@ extern struct CfPackageManager *PACKAGE_SCHEDULE;
 extern int CF_MOUNTALL;
 extern int CF_SAVEFSTAB;
 
-extern char *DAY_TEXT[];
-extern char *MONTH_TEXT[];
-extern char *SHIFT_TEXT[];
+extern const char *DAY_TEXT[];
+extern const char *MONTH_TEXT[];
+extern const char *SHIFT_TEXT[];
 
 extern char FILE_SEPARATOR;
 extern char FILE_SEPARATOR_STR[2];

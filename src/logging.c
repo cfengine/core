@@ -142,8 +142,8 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   double keyval;
   int lineno = pp->lineno;
   char name[CF_BUFSIZE];
-  char *noStatusTypes[] = { "vars", "classes", NULL };
-  char *noLogTypes[] = { "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+  const char *noStatusTypes[] = { "vars", "classes", NULL };
+  const char *noLogTypes[] = { "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
   bool log = true;
 
   Debug("ClassAuditLog(%s)\n",str);

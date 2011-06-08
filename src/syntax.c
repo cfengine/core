@@ -40,7 +40,7 @@ void CheckBundle(char *name,char *type)
 
 { struct Bundle *bp;
   char output[CF_BUFSIZE];
-  char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
+  const char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
 
 Debug("Checking for bundle (%s,%s)\n",name,type);
   
@@ -1038,7 +1038,7 @@ if (!err)
 
 int CheckParseVariableName(char *name)
 
-{ char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", NULL };
+{ const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", NULL };
   char *sp,scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE];
   int count = 0, level = 0;
   

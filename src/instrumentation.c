@@ -264,7 +264,9 @@ if (!NewDBCursor(dbp,&dbcp))
    return;
    }
 
-memset(&entry, 0, sizeof(entry)); 
+memset(&entry, 0, sizeof(entry));
+
+OpenDBTransaction(dbp);
 
 while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
    {
@@ -302,6 +304,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
          }
       }
    }
+
+CommitDBTransaction(dbp);
 
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);

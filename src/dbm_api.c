@@ -252,6 +252,24 @@ return BDB_DeleteDBCursor(dbp,dbcp);
 
 /*****************************************************************************/
 
+void OpenDBTransaction(CF_DB *dbp)
+{
+#if defined SQLITE3
+SQLite3_OpenDBTransaction(dbp);
+#endif
+}
+
+/*****************************************************************************/
+
+void CommitDBTransaction(CF_DB *dbp)
+{
+#if defined SQLITE3
+SQLite3_CommitDBTransaction(dbp);
+#endif
+}
+
+/*****************************************************************************/
+
 int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz)
 
 {

@@ -340,6 +340,8 @@ int DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
 int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz);
 int WriteDB(CF_DB *dbp, char *key, const void *src, int srcSz);
 int DeleteDB(CF_DB *dbp, char *key);
+void OpenDBTransaction(CF_DB *dbp);
+void CommitDBTransaction(CF_DB *dbp);
 void CloseAllDB(void);
 
 /* dbm_berkely.c */

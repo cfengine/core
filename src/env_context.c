@@ -35,6 +35,9 @@
 #include "logic_expressions.h"
 
 static bool ValidClassName(const char *str);
+static int GetORAtom(char *start,char *buffer);
+static int HasBrackets(char *s,struct Promise *pp);
+static int IsBracketed(char *s);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -580,7 +583,7 @@ return list;
 
 /*********************************************************************/
 
-int IsBracketed(char *s)
+static int IsBracketed(char *s)
 
  /* return true if the entire string is bracketed, not just if
     if contains brackets */
@@ -645,7 +648,7 @@ return true;
 
 /*********************************************************************/
 
-int GetORAtom(char *start,char *buffer)
+static int GetORAtom(char *start,char *buffer)
 
 { char *sp = start;
   char *spc = buffer;
@@ -678,7 +681,7 @@ return len;
 
 /*********************************************************************/
 
-int HasBrackets(char *s,struct Promise *pp)
+static int HasBrackets(char *s,struct Promise *pp)
 
  /* return true if contains brackets */
 

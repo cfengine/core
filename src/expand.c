@@ -32,6 +32,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void ConvergePromiseValues(struct Promise *pp);
 static void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level,struct Promise *pp);
 static int ExpandPrivateScalar(char *contextid,char *string,char buffer[CF_EXPANDSIZE]);
 static int Epimenides(char *var,char *rval,char rtype,int level);
@@ -1189,7 +1190,7 @@ else
 
 /*********************************************************************/
 
-void ConvergePromiseValues(struct Promise *pp)
+static void ConvergePromiseValues(struct Promise *pp)
 
 { struct Constraint *cp;
   struct Rlist *rp;

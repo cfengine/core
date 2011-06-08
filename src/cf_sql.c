@@ -42,6 +42,9 @@
  #include <libpq-fe.h>
 #endif
 
+static char *EscapeSQL(CfdbConn *cfdb,char *query);
+static void Debugcfdb(CfdbConn *cfdb);
+
 /* Cfengine connectors for sql databases. Note that there are significant
    differences in db admin functions in the various implementations. e.g.
    sybase/mysql "use database, create database" not in postgres.
@@ -575,7 +578,7 @@ if (cfdb->rowdata)
 
 /*****************************************************************************/
 
-char *EscapeSQL(CfdbConn *cfdb,char *query)
+static char *EscapeSQL(CfdbConn *cfdb,char *query)
 
 {
 static char result[CF_BUFSIZE];
@@ -608,7 +611,7 @@ return result;
 
 /*****************************************************************************/
 
-void Debugcfdb(CfdbConn *cfdb)
+static void Debugcfdb(CfdbConn *cfdb)
 {
 printf("SIZE of CfdbConn: %d = %d\n",sizeof(CfdbConn),sizeof(*cfdb));
 printf( "cfdb->result = %d\n",cfdb->result);

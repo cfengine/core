@@ -38,6 +38,20 @@
 #include <sys/syssgi.h>
 #endif
 
+static void FindDomainName(char *hostname);
+static int Linux_Fedora_Version(void);
+static int Linux_Redhat_Version(void);
+static int Linux_Suse_Version(void);
+static int Linux_Slackware_Version(char *filename);
+static int Linux_Debian_Version(void);
+static int Linux_Old_Mandriva_Version(void);
+static int Linux_New_Mandriva_Version(void);
+static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
+static int VM_Version(void);
+static int Xen_Domain(void);
+static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
+static int Xen_Hv_Check(void);
+
 /**********************************************************************/
 
 void SetSignals()
@@ -579,7 +593,7 @@ return false;
 
 /*********************************************************************/
 
-void FindDomainName(char *hostname)
+static void FindDomainName(char *hostname)
 
 { char fqn[CF_MAXVARSIZE] = {0};
   char *ptr;
@@ -916,7 +930,7 @@ Nova_SaveDocumentRoot();
 
 /*********************************************************************************/
 
-int Linux_Fedora_Version(void)
+static int Linux_Fedora_Version(void)
 {
 #define FEDORA_ID "Fedora"
 #define RELEASE_FLAG "release "
@@ -999,7 +1013,7 @@ return 0;
 
 /*********************************************************************************/
 
-int Linux_Redhat_Version(void)
+static int Linux_Redhat_Version(void)
 {
 #define REDHAT_ID "Red Hat Linux"
 #define REDHAT_AS_ID "Red Hat Enterprise Linux AS"
@@ -1230,7 +1244,7 @@ return 0;
 
 /******************************************************************/
 
-int Linux_Suse_Version(void)
+static int Linux_Suse_Version(void)
 {
 #define SUSE_REL_FILENAME "/etc/SuSE-release"
 /* Check if it's a SuSE Enterprise version (all in lowercase) */
@@ -1425,7 +1439,7 @@ return 0;
 
 /******************************************************************/
 
-int Linux_Slackware_Version(char *filename)
+static int Linux_Slackware_Version(char *filename)
 {
 int major = -1;
 int minor = -1;
@@ -1467,7 +1481,7 @@ return 0;
 
 /******************************************************************/
 
-int Linux_Debian_Version(void)
+static int Linux_Debian_Version(void)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
 #define DEBIAN_ISSUE_FILENAME "/etc/issue"
@@ -1562,7 +1576,7 @@ return 0;
 
 /******************************************************************/
 
-int Linux_Old_Mandriva_Version(void)
+static int Linux_Old_Mandriva_Version(void)
 
 {
 /* We are looking for one of the following strings... */
@@ -1612,7 +1626,7 @@ return Linux_Mandriva_Version_Real(MANDRAKE_REL_FILENAME, relstring, vendor);
 
 /******************************************************************/
 
-int Linux_New_Mandriva_Version(void)
+static int Linux_New_Mandriva_Version(void)
 
 {
 /* We are looking for the following strings... */
@@ -1650,7 +1664,7 @@ return Linux_Mandriva_Version_Real(MANDRIVA_REL_FILENAME, relstring, vendor);
 
 /******************************************************************/
 
-int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor)
+static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor)
 
 {
  char *release=NULL;
@@ -1703,7 +1717,7 @@ return 0;
 
 /******************************************************************/
 
-int VM_Version(void)
+static int VM_Version(void)
 
 { FILE *fp;
   char *sp,buffer[CF_BUFSIZE],classbuf[CF_BUFSIZE],version[CF_BUFSIZE];
@@ -1759,7 +1773,7 @@ return sufficient < 1 ? 1 : 0;
 
 /******************************************************************/
 
-int Xen_Domain(void)
+static int Xen_Domain(void)
 
 { FILE *fp;
   char buffer[CF_BUFSIZE];
@@ -1797,7 +1811,7 @@ return sufficient < 1 ? 1 : 0;
 
 /* borrowed from Xen source/tools/libxc/xc_cpuid_x86.c */
 
-void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 asm (
     /* %ebx register need to be saved before usage and restored thereafter
@@ -1814,7 +1828,7 @@ asm (
 
 /******************************************************************/
 
-int Xen_Hv_Check(void)
+static int Xen_Hv_Check(void)
 
 { uint32_t eax, ebx, ecx, edx;
   char signature[13];

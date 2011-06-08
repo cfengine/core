@@ -35,6 +35,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void NewClientCache(struct cfstat *data,struct Promise *pp);
 static void CacheServerConnection(struct cfagent_connection *conn,char *server);
 static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 static void MarkServerOffline(char *server);
@@ -539,7 +540,7 @@ return cfdirh;
 
 /*********************************************************************/
 
-void NewClientCache(struct cfstat *data,struct Promise *pp)
+static void NewClientCache(struct cfstat *data,struct Promise *pp)
 
 { struct cfstat *sp;
 

@@ -33,6 +33,8 @@
 #include "cf3.extern.h"
 #include <math.h>
 
+static char *PrintTimeSlot(int slot);
+
 /*****************************************************************************/
 
 char *ConvTimeKey(char *str)
@@ -128,7 +130,7 @@ return -1;
 
 /*****************************************************************************/
 
-char *PrintTimeSlot(int slot)
+static char *PrintTimeSlot(int slot)
 
 { time_t now,i;
   

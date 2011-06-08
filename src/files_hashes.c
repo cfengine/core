@@ -33,6 +33,14 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
+static int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
+static char *NewIndexKey(char type,char *name, int *size);
+static void DeleteIndexKey(char *key);
+static void DeleteHashValue(struct Checksum_Value *value);
+static void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
+static int FileHashSize(enum cfhashes id);
+
 /*******************************************************************/
 
 int RefHash(char *name) // This function wants HASHTABLESIZE to be prime
@@ -297,7 +305,7 @@ else
 
 /*******************************************************************/
 
-void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+static void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { struct Item *ip;
   EVP_MD_CTX context;
@@ -547,7 +555,7 @@ CloseDB(dbp);
 
 /*****************************************************************************/
 
-int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
+static int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
 { char *key;
   int size;
@@ -571,7 +579,7 @@ else
 
 /*****************************************************************************/
 
-int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
+static int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
 { char *key;
   struct Checksum_Value *value;
@@ -601,7 +609,7 @@ DeleteIndexKey(key);
 /* level                                                                     */
 /*****************************************************************************/
 
-char *NewIndexKey(char type,char *name, int *size)
+static char *NewIndexKey(char type,char *name, int *size)
 
 { char *chk_key;
 
@@ -625,7 +633,7 @@ return chk_key;
 
 /*****************************************************************************/
 
-void DeleteIndexKey(char *key)
+static void DeleteIndexKey(char *key)
 
 {
 free(key);
@@ -652,7 +660,7 @@ return chk_val;
 
 /*****************************************************************************/
 
-void DeleteHashValue(struct Checksum_Value *chk_val)
+static void DeleteHashValue(struct Checksum_Value *chk_val)
 
 {
 free((char *)chk_val);
@@ -668,7 +676,7 @@ return CF_DIGEST_TYPES[id][0];
 
 /***************************************************************************/
 
-int FileHashSize(enum cfhashes id)
+static int FileHashSize(enum cfhashes id)
 
 {
 return CF_DIGEST_SIZES[id];

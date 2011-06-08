@@ -70,7 +70,6 @@ void InitAlphaList(struct AlphaList *al);
 int InAlphaList(struct AlphaList al,const char *string);
 int MatchInAlphaList(struct AlphaList al,char *string);
 void PrependAlphaList(struct AlphaList *al,char *string);
-void ShowAlphaList(struct AlphaList al);
 void ListAlphaList(FILE *fp,struct AlphaList al,char sep);
 void DeleteAlphaList(struct AlphaList *al);
 struct AlphaList *CopyAlphaListPointers(struct AlphaList *al,struct AlphaList *ap);
@@ -87,7 +86,6 @@ void DeleteExpArgs(struct Rlist *args);
 struct CfAssoc *NewAssoc(char *lval,void *rval,char rtype,enum cfdatatype dt);
 void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
-void ShowAssoc (struct CfAssoc *cp);
 
 /* attributes.c */
 
@@ -147,13 +145,6 @@ struct Measurement GetMeasurementConstraint(struct Promise *pp);
 struct CfACL GetAclConstraints(struct Promise *pp);
 struct CfDatabase GetDatabaseConstraints(struct Promise *pp);
 
-void ShowAttributes(struct Attributes a);
-
-/* cfpromises.c */
-
-void SetAuditVersion(void);
-void VerifyPromises(enum cfagenttype ag);
-
 /* cfstream.c */
 
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
@@ -171,8 +162,6 @@ void CfNewQueryDB(CfdbConn *cfdb,char *query);
 char **CfFetchRow(CfdbConn *cfdb);
 char *CfFetchColumn(CfdbConn *cfdb,int col);
 void CfDeleteQuery(CfdbConn *cfdb);
-char *EscapeSQL(CfdbConn *cfdb,char *query);
-void Debugcfdb(CfdbConn *cfdb);
 
 /* client_code.c */
 
@@ -182,7 +171,6 @@ struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,
 void ServerDisconnection(struct cfagent_connection *conn);
 int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes attr,struct Promise *pp);
 CFDIR *cf_remote_opendir(char *dirname,struct Attributes attr,struct Promise *pp);
-void NewClientCache(struct cfstat *data,struct Promise *pp);
 void DeleteClientCache(struct Attributes attr,struct Promise *pp);
 int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp);
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
@@ -196,7 +184,6 @@ void ServerNotBusy(struct cfagent_connection *conn);
 
 int IdentifyAgent(int sd,char *localip,int family);
 int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp);
-void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
 int BadProtoReply(char *buf);
 int OKProtoReply(char *buf);
 int FailedProtoReply(char *buf);
@@ -215,7 +202,6 @@ int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
 char *Hostname2IPString(char *hostname);
 char *IPString2Hostname(char *ipaddress);
-char *IPString2UQHostname(char *ipaddress);
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
 
 /* comparray.c */
@@ -295,7 +281,6 @@ enum cf_acl_inherit Str2ServicePolicy(char *string);
 enum cfl_view Str2View(char *s);
 char *Dtype2Str(enum cfdatatype dtype);
 char *Item2String(struct Item *ip);
-int IsSpace(char *remainder);
 int IsNumber(char *s);
 int IsRealNumber(char *s);
 enum cfd_menu String2Menu(char *s);
@@ -313,17 +298,11 @@ void KeepKeyPromises(void);
 void DebugBinOut(char *buffer,int len,char *com);
 void RandomSeed (void);
 void LoadSecretKeys (void);
-void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
 int EncryptString (char type,char *in, char *out, unsigned char *key, int len);
 int DecryptString (char type,char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey (char *username,char *ipaddress,char *digest);
 RSA *HavePublicKeyByIP(char *username,char *ipaddress);
 void SavePublicKey (char *username,char *ipaddress,char *digest,RSA *key);
-void DeletePublicKey (char *username,char *ipaddress,char *digest);
-char *KeyPrint(RSA *key);
-RSA *SelectKeyRing(char *name);
-void IdempAddToKeyRing(char *name,char *ip,RSA *key);
-void PurgeKeyRing(void);
 
 /* dbm_api.c */
 
@@ -357,11 +336,6 @@ int BDB_DeleteComplexKeyDB(DB *dbp,char *name,int size);
 int BDB_NewDBCursor(CF_DB *dbp,CF_DBC **dbcp);
 int BDB_NextDB(CF_DB *dbp,CF_DBC *dbcp,char **key,int *ksize,void **value,int *vsize);
 int BDB_DeleteDBCursor(CF_DB *dbp,CF_DBC *dbcp);
-DBT *BDB_NewDBKey(char *name);
-DBT *BDB_NewDBComplexKey(char *key,int size);
-void BDB_DeleteDBKey(DBT *key);
-DBT *BDB_NewDBValue(const void *ptr,int size);
-void BDB_DeleteDBValue(DBT *value);
 #endif
 
 /* dbm_quick.c */
@@ -398,7 +372,6 @@ int TCDB_DeleteDBCursor(CF_TCDB *hdbp,CF_TCDBC *hdbcp);
 
 int IsSocketType(char *s);
 int IsTCPType(char *s);
-int IsProcessType(char *s);
 
 /* enterprise_stubs.c */
 
@@ -522,9 +495,6 @@ void AddEphemeralClasses(struct Rlist *classlist);
 void NewClass(const char *oclass); /* Copies oclass */
 void NewBundleClass(char *class,char *bundle);
 struct Rlist *SplitContextExpression(char *context,struct Promise *pp);
-int GetORAtom(char *start,char *buffer);
-int HasBrackets(char *s,struct Promise *pp);
-int IsBracketed(char *s);
 void DeleteClass(char *class);
 int VarClassExcluded(struct Promise *pp,char **classes);
 void NewClassesFromString(char *classlist);
@@ -639,7 +609,6 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
-void ConvergePromiseValues(struct Promise *pp);
 
 /* exec_tool.c */
 
@@ -668,23 +637,6 @@ int AppendIfNoSuchLine(char *filename, char *line);
 /* files_editline.c */
 
 int ScheduleEditLineOperations(char *filename,struct Bundle *bp,struct Attributes a,struct Promise *pp);
-void KeepEditLinePromise(struct Promise *pp);
-void VerifyLineDeletions(struct Promise *pp);
-void VerifyColumnEdits(struct Promise *pp);
-void VerifyPatterns(struct Promise *pp);
-void VerifyLineInsertions(struct Promise *pp);
-int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp);
-int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
-int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
-int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
-int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
-int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
-int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
-int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
-int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
-int SanityCheckInsertions(struct Attributes a);
-int SelectLine(char *line,struct Attributes a,struct Promise *pp);
-int NotAnchored(char *s);
 
 /* files_links.c */
 
@@ -693,73 +645,51 @@ char VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,st
 char VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 char VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp);
-int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
 int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp);
-char *AbsLinkPath (char *from,char *relto);
 int ExpandLinks(char *dest,char *from,int level);
 
 /* files_hashes.c */
 
 int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp);
 void PurgeHashes(char *file,struct Attributes attr,struct Promise *pp);
-int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
-int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 void DeleteHash(CF_DB *dbp,enum cfhashes type,char *name);
-char *NewIndexKey(char type,char *name, int *size);
-void DeleteIndexKey(char *key);
 struct Checksum_Value *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1]);
-void DeleteHashValue(struct Checksum_Value *value);
 int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
-void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE+1],unsigned char digest2[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 char *HashPrintSafe(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1], char buffer[EVP_MAX_MD_SIZE*4]);
 char *FileHashName(enum cfhashes id);
-int FileHashSize(enum cfhashes id);
 void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 
 /* files_interfaces.c */
 
 void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes attr,struct Promise *pp);
 void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Promise *pp);
-void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes attr,struct Promise *pp);
-void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
-int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
 void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp);
 int cfstat(const char *path, struct stat *buf);
 int cf_stat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
 int cf_lstat(char *file,struct stat *buf,struct Attributes attr, struct Promise *pp);
-CFDIR *cf_opendir(char *name,struct Attributes attr, struct Promise *pp);
 struct cfdirent *cf_readdir(CFDIR *cfdirh,struct Attributes attr, struct Promise *pp);
-void cf_closedir(CFDIR *dirh);
 int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct Attributes attr, struct Promise *pp);
-void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
-void FileAutoDefine(char *destfile);
 int CfReadLine(char *buff,int size,FILE *fp);
 int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr, struct Promise *pp);
-void LoadSetuid(struct Attributes a,struct Promise *pp);
-void SaveSetuid(struct Attributes a,struct Promise *pp);
 
 /* files_names.c */
 
 int IsNewerFileTree(char *dir,time_t reftime);
 char *Titleize (char *str);
 int DeEscapeQuotedString(const char *in, char *out);
-void DeEscapeFilename(char *in,char *out);
 int CompareCSVName(char *s1,char *s2);
 int IsDir(char *path);
 int EmptyString(char *s);
 char *JoinPath(char *path,char *leaf);
 char *JoinSuffix(char *path,char *leaf);
 int StartJoin(char *path,char *leaf,int bufsize);
-int StartJoinFast(char *path,char *leaf,char **nextFree,int bufsize);
 int Join(char *path,char *leaf,int bufsize);
-int JoinFast(char *path,char *leaf,char **nextFree,int bufsize);
 int EndJoin(char *path,char *leaf,int bufsize);
-int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin);
 int IsAbsPath(char *path);
 void AddSlash(char *str);
 void DeleteSlash(char *str);
@@ -794,7 +724,6 @@ void *ThreadUniqueName(pthread_t tid);
 
 /* files_operators.c */
 
-void TruncateFile(char *name);
 int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr);
 FILE *CreateEmptyStream(void);
@@ -808,26 +737,15 @@ void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,s
 void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp);
 int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *statbuf);
 void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
-int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp);
-int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
 int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp);
-void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 int MakeParentDirectory(char *parentandchild,int force);
-void LogHashChange(char *file);
-void DeleteDirectoryTree(char *path,struct Promise *pp);
 void RotateFiles(char *name,int number);
-void DeleteDirectoryTree(char *path,struct Promise *pp);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp);
 #ifndef MINGW
-void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
-int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
 struct UidList *MakeUidList(char *uidnames);
 struct GidList *MakeGidList(char *gidnames);
-void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
-void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
 void AddSimpleUidItem(struct UidList **uidlist,uid_t uid,char *uidname);
 void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname);
 #endif  /* NOT MINGW */
@@ -845,36 +763,19 @@ int ArchiveToRepository(char *file,struct Attributes attr,struct Promise *pp);
 /* files_select.c */
 
 int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit);
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
-int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit);
-int SelectModeMatch(struct stat *lstatptr,struct Rlist *ls);
-int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
-int SelectNameRegexMatch(const char *filename,char *crit);
-int SelectPathRegexMatch(char *filename,char *crit);
-int SelectExecRegexMatch(char *filename,char *crit,char *prog);
-int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
-int SelectExecProgram(char *filename,char *command);
-int SelectSizeMatch(size_t size,size_t min,size_t max);
-int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp);
-#ifndef MINGW
-int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz);
-int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
-#endif  /* NOT MINGW */
 
 /* fncall.c */
 
 int IsBuiltinFnCall(void *rval,char rtype);
 struct FnCall *NewFnCall(char *name, struct Rlist *args);
 struct FnCall *CopyFnCall(struct FnCall *f);
-void PrintFunctions(void);
 int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp);
 void DeleteFnCall(struct FnCall *fp);
 void ShowFnCall(FILE *fout,struct FnCall *fp);
 struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
 enum cfdatatype FunctionReturnType(char *name);
 enum fncalltype FnCallName(char *name);
-void ClearFnCallStatus(void);
 void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
 
 /* generic_agent.c */
@@ -883,20 +784,15 @@ void GenericInitialize(int argc,char **argv,char *agents);
 void GenericDeInitialize(void);
 void InitializeGA(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
-void CheckWorkingDirectories(void);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void Version(char *comp);
 int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);
-void Cf3ParseFile(char *filename);
-void Cf3ParseFiles(void);
 int NewPromiseProposals(void);
-int MissingInputFile(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);
 void HashControls(void);
-void UnHashVariables(void);
 void TheAgent(enum cfagenttype ag);
 void Cf3CloseLog(void);
 void *ExitCleanly(int signum);
@@ -904,19 +800,11 @@ struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(const char *retval);
 struct Bundle *GetBundle(char *name,char *agent);
 struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
-void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
-void CheckVariablePromises(char *scope,struct Promise *varlist);
-void CheckCommonClassPromises(struct Promise *classlist);
 void CheckBundleParameters(char *scope,struct Rlist *args);
 void PromiseBanner(struct Promise *pp);
 void BannerBundle(struct Bundle *bp,struct Rlist *args);
 void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
-void PrependAuditFile(char *file);
 void WritePID(char *filename);
-void OpenReports(char *agents);
-void CloseReports(char *agents);
-char *InputLocation(char *filename);
-int BadBundleSequence(enum cfagenttype agent);
 void OpenCompilationReportFiles(const char *fname);
 
 /* granules.c  */
@@ -924,7 +812,6 @@ void OpenCompilationReportFiles(const char *fname);
 char *ConvTimeKey (char *str);
 char *GenTimeKey (time_t now);
 int GetTimeSlot(time_t here_and_now);
-char *PrintTimeSlot(int slot);
 int GetShiftSlot(time_t here_and_now);
 time_t GetShiftSlotStart(time_t t);
 
@@ -939,7 +826,6 @@ int GetHash(char *name);
 void PrintHashes(FILE *sp,struct CfAssoc **table,int html);
 int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);
 void DeleteHashes(struct CfAssoc **hashtable);
-void EditHashValue(char *scopeid,char *lval,void *rval);
 void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
 /* html.c */
@@ -947,7 +833,6 @@ void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist)
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner);
 void CfHtmlFooter(FILE *fp,char *footer);
 void CfHtmlTitle(FILE *fp,char *title);
-char *URLControl(char *driver,char *url);
 int IsHtmlHeader(char *s);
 
 /* item-lib.c */
@@ -963,7 +848,6 @@ void PrependItemList(struct Item **liststart,char *itemstring);
 int SelectItemMatching(struct Item *s,char *regex,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev,char *fl);
 int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
 int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev);
-int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp);
 void InsertAfter(struct Item **filestart,struct Item *ptr,char *string);
 int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,enum cfeditorder pos,struct Attributes a,struct Promise *pp);
 int RawSaveItemList(struct Item *liststart, char *file);
@@ -979,14 +863,11 @@ int DeleteItemMatching (struct Item **list,char *string);
 int DeleteItemNotMatching (struct Item **list,char *string);
 int DeleteItemContaining (struct Item **list,char *string);
 int DeleteItemNotContaining (struct Item **list,char *string);
-int OrderedListsMatch(struct Item *list1,struct Item *list2);
-int IsClassedItemIn(struct Item *list,char *item);
 int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp);
 struct Item *String2List(char *string);
 int ListLen (struct Item *list);
 int ByteSizeList(const struct Item *list);
 int IsItemIn (struct Item *list, const char *item);
-int IsFuzzyItemIn (struct Item *list, char *item);
 int IsMatchItemIn(struct Item *list,char *item);
 int GetItemListCounter (struct Item *list, char *item);
 struct Item *ConcatLists (struct Item *list1, struct Item *list2);
@@ -998,13 +879,11 @@ int FuzzyHostParse(char *arg1,char *arg2);
 void IdempItemCount(struct Item **liststart,char *itemstring,char *classes);
 struct Item *IdempPrependItem(struct Item **liststart,char *itemstring,char *classes);
 struct Item *IdempPrependItemClass(struct Item **liststart,char *itemstring,char *classes);
-void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes);
 struct Item *PrependItem(struct Item **liststart, char *itemstring, char *classes);
 void AppendItem(struct Item **liststart, char *itemstring, char *classes);
 void DeleteItemList (struct Item *item);
 void DeleteItem (struct Item **liststart, struct Item *item);
 void DebugListItemList (struct Item *liststart);
-int ItemListsEqual (struct Item *list1, struct Item *list2);
 struct Item *SplitStringAsItemList (char *string, char sep);
 void IncrementItemListCounter (struct Item *ptr, char *string);
 void SetItemListCounter (struct Item *ptr, char *string,int value);
@@ -1029,11 +908,8 @@ int NullIterators(struct Rlist *iterator);
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname,struct timespec start);
 void EndMeasurePromise(struct timespec start,struct Promise *pp);
-void NotePerformance(char *eventname,time_t t,double value);
 void NoteClassUsage(struct AlphaList list);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
-void UpdateLastSawHost(char *rkey,char *ipaddress);
-void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress);
 double GAverage(double anew,double aold,double p);
 
 /* install.c */
@@ -1044,16 +920,11 @@ struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
 struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle,char *bundletype);
 void DeleteBundles(struct Bundle *bp);
-void DeleteSubTypes(struct SubType *tp);
 void DeleteBodies(struct Body *bp);
 
 /* interfaces.c */
 
 void VerifyInterfacePromise(char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
-int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
-void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
-void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast);
-void SetPromisedDefaultRoute(void);
 
 /* keyring.c */
 
@@ -1064,9 +935,6 @@ int HostKeyAddressUnknown(char *value);
 void BeginAudit(void);
 void EndAudit(void);
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *error);
-void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
-void DeleteAllClasses(struct Rlist *list);
-void ExtractOperationLock(char *op);
 void PromiseLog(char *s);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN;
 void AuditStatusMessage(FILE*fp,char status);
@@ -1074,26 +942,13 @@ void AuditStatusMessage(FILE*fp,char status);
 /* manual.c */
 
 void TexinfoManual(char *mandir);
-void TexinfoHeader(FILE *fout);
-void TexinfoFooter(FILE *fout);
-void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
-void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context);
-void TexinfoVariables(FILE *fout,char *scope);
-void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
-void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
-void IncludeManualFile(FILE *fout,char *file);
-void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
-void PrintPattern(FILE *fout,char *pattern);
-char *TexInfoEscape(char *s);
 
 /* matching.c */
 
 bool ValidateRegEx(const char *regex);
 int FullTextMatch (char *regptr, const char *cmpptr);
-int FullTextCaseMatch (char *regexp,const char *teststring);
 char *ExtractFirstReference(char *regexp,char *teststring);
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
-int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
@@ -1123,14 +978,11 @@ int SendSocketStream (int sd, char *buffer, int toget, int flags);
 
 #ifndef MINGW
 int LoadMountInfo(struct Rlist **list);
-void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
 void DeleteMountInfo(struct Rlist *list);
 int VerifyNotInFstab(char *name,struct Attributes a,struct Promise *pp);
 int VerifyInFstab(char *name,struct Attributes a,struct Promise *pp);
 int VerifyMount(char *name,struct Attributes a,struct Promise *pp);
 int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp);
-int MatchFSInFstab(char *match);
-void DeleteThisItem(struct Item **liststart,struct Item *entry);
 void MountAll(void);
 #endif  /* NOT MINGW */
 
@@ -1145,23 +997,16 @@ struct Topic *AddTopic(struct Topic **list,char *name,char *type);
 void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int ok);
 void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context);
 struct Topic *TopicExists(char *topic_name,char *topic_type);
-char *GetTopicContext(char *topic_name);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
 struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
-int ClassifiedTopicMatch(char *ttopic1,char *ttopic2);
 void DeClassifyTopic(char *typdetopic,char *topic,char *type);
-void DeClassifyCanonicalTopic(char *typed_topic,char *topic,char *type);
-char *ClassifiedTopic(char *topic,char *type);
 char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
-char *URLHint(char *s);
-char *NormalizeTopic(char *s);
 
 /* patches.c */
 
 int IsPrivileged (void);
-int IntMin (int a,int b);
 char *StrStr (char *s1,char *s2);
 int StrnCmp (char *s1,char *s2,size_t n);
 int cf_strcmp(char *s1,char *s2);
@@ -1173,7 +1018,6 @@ char *cf_strchr(char *s, int c);
 char *cf_strcpy(char *s1,char *s2);
 char *MapName(char *s);
 char *MapNameForward(char *s);
-int UseUnixStandard(char *s);
 char *cf_ctime(const time_t *timep);
 char *cf_strtimestamp(time_t time, char *buf);
 int cf_closesocket(int sd);
@@ -1250,24 +1094,12 @@ int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
 int VerifyCommandRetcode(int retcode, int fallback, struct Attributes a, struct Promise *pp);
 
 #ifndef MINGW
-FILE *Unix_cf_popen(char *command,char *type);
-FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
-FILE *Unix_cf_popen_sh(char *command,char *type);
-FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
-int Unix_cf_pclose(FILE *pp);
-int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
 int cf_pwait(pid_t pid);
-int CfSetuid(uid_t uid,gid_t gid);
 #endif  /* NOT MINGW */
 
 /* processes_select.c */
 
 int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp);
-int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,char **line);
-int SelectProcRegexMatch(char *name1,char *name2,char *regex,char **names,char **line);
-int SplitProcLine(char *proc,char **names,int *start,int *end,char **line);
-int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line);
-int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line);
 
 /* promises.c */
 
@@ -1279,21 +1111,15 @@ struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp);
 struct Promise *CopyPromise(char *scopeid,struct Promise *pp);
 void DeletePromise(struct Promise *pp);
 void DeletePromises(struct Promise *pp);
-void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
 void PromiseRef(enum cfreport level,struct Promise *pp);
 struct Promise *NewPromise(char *typename,char *promiser);
 void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
-void DebugPromise(struct Promise *pp);
-void DereferenceComment(struct Promise *pp);
 
 /* recursion.c */
 
 int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp);
-int PushDirState(char *name,struct stat *sb);
-void PopDirState(int goback,char * name,struct stat *sb,struct Recursion r);
 int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
 int SensibleFile(char *nodename,char *path,struct Attributes,struct Promise *pp);
-void CheckLinkSecurity(struct stat *sb,char *name);
 
 /* reporting.c */
 
@@ -1320,7 +1146,6 @@ int StripListSep(char *strList, char *outBuf, int outBufSz);
 struct Rlist *ParseShownRlist(char *string);
 int IsStringIn(struct Rlist *list,char *s);
 int IsIntIn(struct Rlist *list,int i);
-int IsRegexIn(struct Rlist *list,char *s);
 struct Rlist *KeyInRlist(struct Rlist *list,char *key);
 int RlistLen(struct Rlist *start);
 void PopStack(struct Rlist **liststart, void **item,size_t size);
@@ -1330,12 +1155,8 @@ int IsInListOfRegex(struct Rlist *list,char *str);
 void *CopyRvalItem(void *item, char type);
 void DeleteRvalItem(void *rval, char type);
 struct Rlist *CopyRlist(struct Rlist *list);
-int CompareRlist(struct Rlist *list1, struct Rlist *list2);
 int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
 void DeleteRlist(struct Rlist *list);
-void DeleteRlistNoRef(struct Rlist *list);
-void DeleteReferenceRlist(struct Rlist *list);
-void ShowRlistState(FILE *fp,struct Rlist *list);
 void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
 struct Rlist *AppendRlistAlien(struct Rlist **start,void *item);
 struct Rlist *PrependRlistAlien(struct Rlist **start,void *item);
@@ -1363,7 +1184,6 @@ int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char
 
 /* scope.c */
 
-void DebugVariables(char *label);
 void SetScope(char *id);
 void SetNewScope(char *id);
 void NewScope(char *name);
@@ -1383,22 +1203,11 @@ void SelfDiagnostic(void);
 void TestVariableScan(void);
 void TestExpandPromise(void);
 void TestExpandVariables(void);
-void TestSearchFilePromiser(void);
-void TestRegularExpressions(void);
-void TestAgentPromises(void);
-void TestFunctionIntegrity(void);
-void SDIntegerDefault(char *ref,int cmp);
-void CfDebugBreak();
-void TestHashEntropy(char *s,char *s1);
 
 /* server_transform.c */
 
 void KeepPromiseBundles(void);
 void KeepControlPromises(void);
-void KeepContextBundles(void);
-void KeepServerPromise(struct Promise *pp);
-void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
-void KeepServerRolePromise(struct Promise *pp);
 void KeepServerAccessPromise(struct Promise *pp);
 struct Auth *GetAuthPath(char *path,struct Auth *list);
 void Summarize(void);
@@ -1420,9 +1229,6 @@ bool sockaddr_pton (int af,void *src, void *addr);
 /* storage_tools.c */
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
-#ifndef MINGW
-off_t Unix_GetDiskUsage(char *file, enum cfsizes type);
-#endif  /* NOT MINGW */
 
 /* syntax.c */
 
@@ -1434,14 +1240,7 @@ struct SubTypeSyntax CheckSubType(char *btype,char *type);
 void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,struct SubTypeSyntax ss);
 void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype);
 void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range,int level);
-int CheckParseString(char *lv,char *s,char *range);
 int CheckParseClass(char *lv,char *s,char *range);
-void CheckParseInt(char *lv,char *s,char *range);
-void CheckParseReal(char *lv,char *s,char *range);
-void CheckParseRealRange(char *lval,char *s,char *range);
-void CheckParseIntRange(char *lval,char *s,char *range);
-void CheckParseOpts(char *lv,char *s,char *range);
-void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
 
@@ -1450,22 +1249,9 @@ enum cfdatatype ExpectedDataType(char *lvalname);
 void GetNameInfo3(void);
 void CfGetInterfaceInfo(enum cfagenttype ag);
 void Get3Environment(void);
-void FindDomainName(char *hostname);
 void OSClasses(void);
-int Linux_Fedora_Version(void);
-int Linux_Redhat_Version(void);
-int Linux_Suse_Version(void);
-int Linux_Slackware_Version(char *filename);
-int Linux_Debian_Version(void);
-int Linux_Old_Mandriva_Version(void);
-int Linux_New_Mandriva_Version(void);
-int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
 void *Lsb_Release(char *key);
 int Lsb_Version(void);
-int VM_Version(void);
-int Xen_Domain(void);
-void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
-int Xen_Hv_Check(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);
 char *Cf_GetVersion(void);
@@ -1478,34 +1264,19 @@ char *GetHome(uid_t uid);
 
 /* transaction.c */
 
-void WaitForCriticalSection(void);
-void ReleaseCriticalSection(void);
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname);
 struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(struct CfLock this);
 void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params);
-time_t FindLock(char *last);
-int WriteLock(char *lock);
-int RemoveLock(char *name);
-void LogLockCompletion(char *cflog,int pid,char *str,char *operator,char *operand);
-time_t FindLockTime(char *name);
-pid_t FindLockPid(char *name);
-CF_DB *OpenLock(void);
-void CloseLock(CF_DB *dbp);
 int ThreadLock(enum cf_thread_mutex name);
 int ThreadUnlock(enum cf_thread_mutex name);
 void AssertThreadLocked(enum cf_thread_mutex name, char *fname);
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name);
-#endif
-void RemoveDates(char *s);
 void PurgeLocks(void);
 
 /* timeout.c */
 
 void SetTimeOut(int timeout);
 void TimeOut(void);
-void DeleteTimeOut(void);
 void SetReferenceTime(int setclasses);
 void SetStartTime(int setclasses);
 
@@ -1526,20 +1297,16 @@ char *Unix_GetErrorStr(void);
 
 void LoadSystemConstants(void);
 void ForceScalar(char *lval,char *rval);
-void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
-void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 void DeleteScalar(char *scope,char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 enum cfdatatype GetVariable(char *scope,char *lval,void **returnv,char *rtype);
 void DeleteVariable(char *scope,char *id);
 int CompareVariable(char *lval,struct CfAssoc *ap);
 int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap);
-void DeleteAllVariables(char *scope);
 int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);
 int IsCf3VarString(char *str);
-int IsCf3Scalar(char *str);
 int BooleanControl(char *scope,char *name);
 char *ExtractInnerCf3VarString(char *str,char *substr);
 char *ExtractOuterCf3VarString(char *str,char *substr);
@@ -1576,7 +1343,6 @@ void VerifyInterfacesPromise(struct Promise *pp);
 /* verify_measurements.c */
 
 void VerifyMeasurementPromise(double *this,struct Promise *pp);
-int CheckMeasureSanity(struct Attributes a,struct Promise *pp);
 
 /* verify_methods.c */
 
@@ -1585,74 +1351,31 @@ int VerifyMethod(struct Attributes a,struct Promise *pp);
 
 /* verify_packages.c */
 
-void VerifyPromisedPatch(struct Attributes a,struct Promise *pp);
 void VerifyPackagesPromise(struct Promise *pp);
 void ExecutePackageSchedule(struct CfPackageManager *schedule);
-int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action);
-int ExecutePatch(struct CfPackageManager *schedule,enum package_actions action);
-int PackageSanityCheck(struct Attributes a,struct Promise *pp);
-int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes a,struct Promise *pp);
-void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);
 struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
 void DeletePackageManagers(struct CfPackageManager *newlist);
-void DeletePackageItems(struct CfPackageItem *pi);
-int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
-int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
-int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
-void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist **sep);
-void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
-char *PrefixLocalRepository(struct Rlist *repositories,char *package);
-int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
-int VersionCmp(char *vs1, char *vs2);
-int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr);
-int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
-int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
-int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
-int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
-int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);
 struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp);
 
 /* verify_processes.c */
 
 void VerifyProcessesPromise(struct Promise *pp);
-int ProcessSanityChecks(struct Attributes a,struct Promise *pp);
 void VerifyProcesses(struct Attributes a, struct Promise *pp);
 int LoadProcessTable(struct Item **procdata);
-void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
-int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
-int ExtractPid(char *psentry,char **names,int *start,int *end);
-void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 int GracefulTerminate(pid_t pid);
-int GetProcColumnIndex(char *name1,char *name2,char **names);
 
 /* verify_services.c */
 
 void VerifyServicesPromise(struct Promise *pp);
-int ServicesSanityChecks(struct Attributes a,struct Promise *pp);
-void SetServiceDefaults(struct Attributes *a);
 
 /* verify_storage.c */
 
 void *FindAndVerifyStoragePromises(struct Promise *pp);
-void FindStoragePromiserObjects(struct Promise *pp);
 void VerifyStoragePromise(char *path,struct Promise *pp);
-int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
-int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
-void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
-int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp);
-int IsForeignFileSystem (struct stat *childstat,char *dir);
-#ifndef MINGW
-int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp);
-#endif  /* NOT MINGW */
 
 /* verify_reports.c */
 
 void VerifyReportPromise(struct Promise *pp);
-void PrintFile(struct Attributes a,struct Promise *pp);
-void ShowState(char *type,struct Attributes a,struct Promise *pp);
-void FriendStatus(struct Attributes a,struct Promise *pp);
-void VerifyFriendReliability(struct Attributes a,struct Promise *pp);
-void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp);
 
 #endif

@@ -32,6 +32,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void FriendStatus(struct Attributes a,struct Promise *pp);
+static void VerifyFriendReliability(struct Attributes a,struct Promise *pp);
+static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp);
+static void ShowState(char *type,struct Attributes a,struct Promise *pp);
+static void PrintFile(struct Attributes a,struct Promise *pp);
+
 /*******************************************************************/
 /* Agent reporting                                                 */
 /*******************************************************************/
@@ -97,7 +103,7 @@ YieldCurrentLock(thislock);
 /* Level                                                           */
 /*******************************************************************/
 
-void PrintFile(struct Attributes a,struct Promise *pp)
+static void PrintFile(struct Attributes a,struct Promise *pp)
 
 { FILE *fp;
   char buffer[CF_BUFSIZE];
@@ -129,7 +135,7 @@ fclose(fp);
 
 /*********************************************************************/
 
-void ShowState(char *type,struct Attributes a,struct Promise *pp)
+static void ShowState(char *type,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf;
   char buffer[CF_BUFSIZE],vbuff[CF_BUFSIZE],assemble[CF_BUFSIZE];
@@ -336,7 +342,7 @@ if (dist)
 
 /*********************************************************************/
 
-void FriendStatus(struct Attributes a,struct Promise *pp)
+static void FriendStatus(struct Attributes a,struct Promise *pp)
 
 {
 VerifyFriendConnections(a.report.lastseen,a,pp);
@@ -347,7 +353,7 @@ VerifyFriendReliability(a,pp);
 /* Level                                                             */
 /*********************************************************************/
 
-void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
+static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
 
 /* Go through the database of recent connections and check for
    Long Time No See ...*/
@@ -503,7 +509,7 @@ CloseDB(dbp);
 
 /***************************************************************/
 
-void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
+static void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;

@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void ShowAttributes(struct Attributes a);
+
 /*******************************************************************/
 
 struct Attributes GetFilesAttributes(struct Promise *pp)
@@ -1442,7 +1444,7 @@ return p;
 
 /*******************************************************************/
 
-void ShowAttributes(struct Attributes a)
+static void ShowAttributes(struct Attributes a)
 
 {
 printf(".....................................................\n");

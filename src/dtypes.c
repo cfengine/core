@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int IsProcessType(char *s);
+
 /*****************************************************************/
 
 int IsSocketType(char *s)
@@ -69,7 +71,7 @@ return false;
 
 /*****************************************************************/
 
-int IsProcessType(char *s)
+static int IsProcessType(char *s)
 
 {
  if (strcmp(s,"procs") == 0)

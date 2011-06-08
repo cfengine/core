@@ -35,6 +35,19 @@
 extern int CFA_MAXTHREADS;
 extern struct cfagent_connection *COMS;
 
+static void TruncateFile(char *name);
+static int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp);
+static int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
+static void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
+static void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
+static void LogHashChange(char *file);
+static void DeleteDirectoryTree(char *path,struct Promise *pp);
+#ifndef MINGW
+static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
+static int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
+static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
+static void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
+#endif
 
 /*******************************************************************/
 /* File API - OS function mapping                                  */
@@ -590,7 +603,7 @@ return true;
 
 #ifdef DARWIN
 
-int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp)
+static int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp)
 
 { /* Code modeled after hfstar's extract.c */
  typedef struct t_fndrinfo
@@ -698,7 +711,7 @@ else
 /* Level                                                             */
 /*********************************************************************/
 
-void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+static void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { mode_t newperm;
   struct stat dsb;
@@ -891,7 +904,7 @@ if (attr.rename.rotate > 0)
 
 /*********************************************************************/
 
-void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+static void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { const char *lastnode = ReadLastNode(path);
   char buf[CF_MAXVARSIZE];
@@ -1187,7 +1200,7 @@ CloseDB(dbp);
 /* Level                                                             */
 /*********************************************************************/
 
-int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
+static int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 
 { char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
   FILE *pop = NULL;
@@ -1459,7 +1472,7 @@ return(true);
 
 /**********************************************************************/
 
-void TruncateFile(char *name)
+static void TruncateFile(char *name)
 
 { struct stat statbuf;
   int fd;
@@ -1483,7 +1496,7 @@ else
 
 /*********************************************************************/
 
-void LogHashChange(char *file)
+static void LogHashChange(char *file)
 
 { FILE *fp;
   char fname[CF_BUFSIZE];
@@ -1628,7 +1641,7 @@ else
 /* Level                                                           */
 /*******************************************************************/
 
-void DeleteDirectoryTree(char *path,struct Promise *pp)
+static void DeleteDirectoryTree(char *path,struct Promise *pp)
 
 { struct Promise promise = {0};
   char s[CF_MAXVARSIZE];
@@ -1687,7 +1700,7 @@ rmdir(path);
 /* Unix-specific implementations of file functions                 */
 /*******************************************************************/
 
-void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr)
+static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr)
 
 { int amroot = true;
 
@@ -1774,7 +1787,7 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
 
 /*****************************************************************************/
 
-int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
+static int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
 
 { struct passwd *pw;
   struct group *gp;
@@ -2090,7 +2103,7 @@ return(gidlist);
 
 /*****************************************************************************/
 
-void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+static void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
 
 { mode_t newperm = dstat->st_mode, maskvalue;
 
@@ -2274,7 +2287,7 @@ Debug("Unix_VerifyFileAttributes(Done)\n");
 
 /*****************************************************************************/
 
-void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
+static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
 
 { mode_t newplus,newminus;
   uid_t save_uid;

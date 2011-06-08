@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void DeleteSubTypes(struct SubType *tp);
+
 /*******************************************************************/
 
 int RelevantBundle(char *agent,char *blocktype)
@@ -351,7 +353,7 @@ free(bp);
 
 /*******************************************************************/
 
-void DeleteSubTypes(struct SubType *tp)
+static void DeleteSubTypes(struct SubType *tp)
 
 {
 if (tp == NULL)

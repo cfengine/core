@@ -53,6 +53,9 @@ struct CfRegEx
 #endif
 };
 
+static int FullTextCaseMatch (char *regexp,const char *teststring);
+static int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
+
 /*********************************************************************/
 /* Wrappers                                                          */
 /*********************************************************************/
@@ -527,7 +530,7 @@ return FirstBackReference(rex,regexp,teststring);
 
 /*************************************************************************/
 
-int FullTextCaseMatch (char *regexp, const char *teststring)
+static int FullTextCaseMatch (char *regexp, const char *teststring)
 
 { struct CfRegEx rex;
  
@@ -573,7 +576,7 @@ else
 
 /*************************************************************************/
 
-int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end)
+static int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end)
 
 { struct CfRegEx rex;
  

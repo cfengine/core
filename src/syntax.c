@@ -34,6 +34,14 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int CheckParseString(char *lv,char *s,char *range);
+static void CheckParseInt(char *lv,char *s,char *range);
+static void CheckParseReal(char *lv,char *s,char *range);
+static void CheckParseRealRange(char *lval,char *s,char *range);
+static void CheckParseIntRange(char *lval,char *s,char *range);
+static void CheckParseOpts(char *lv,char *s,char *range);
+static void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range);
+
 /*********************************************************/
 
 void CheckBundle(char *name,char *type)
@@ -626,7 +634,7 @@ return cf_str;
 /* Level 1                                                                  */
 /****************************************************************************/
 
-int CheckParseString(char *lval,char *s,char *range)
+static int CheckParseString(char *lval,char *s,char *range)
 
 { char output[CF_BUFSIZE];
   
@@ -711,7 +719,7 @@ return false;
 
 /****************************************************************************/
 
-void CheckParseInt(char *lval,char *s,char *range)
+static void CheckParseInt(char *lval,char *s,char *range)
     
 { struct Item *split;
   int n;
@@ -773,7 +781,7 @@ Debug("CheckParseInt - syntax verified\n\n");
 
 /****************************************************************************/
 
-void CheckParseIntRange(char *lval,char *s,char *range)
+static void CheckParseIntRange(char *lval,char *s,char *range)
     
 { struct Item *split,*ip,*rangep;
   int n;
@@ -857,7 +865,7 @@ Debug("CheckParseIntRange - syntax verified\n\n");
 
 /****************************************************************************/
 
-void CheckParseReal(char *lval,char *s,char *range)
+static void CheckParseReal(char *lval,char *s,char *range)
     
 { struct Item *split;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
@@ -916,7 +924,7 @@ Debug("CheckParseReal - syntax verified\n\n");
 
 /****************************************************************************/
 
-void CheckParseRealRange(char *lval,char *s,char *range)
+static void CheckParseRealRange(char *lval,char *s,char *range)
     
 { struct Item *split,*rangep,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
@@ -996,7 +1004,7 @@ Debug("CheckParseRealRange - syntax verified\n\n");
 
 /****************************************************************************/
 
-void CheckParseOpts(char *lval,char *s,char *range)
+static void CheckParseOpts(char *lval,char *s,char *range)
 
 { struct Item *split;
   int err = false;
@@ -1098,7 +1106,7 @@ return true;
 
 /****************************************************************************/
 
-void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range)
+static void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range)
 
 { int i;
   enum cfdatatype dt;

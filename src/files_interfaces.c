@@ -32,6 +32,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes attr,struct Promise *pp);
+static void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
+static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
+static CFDIR *cf_opendir(char *name,struct Attributes attr, struct Promise *pp);
+static void cf_closedir(CFDIR *dirh);
+static void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
+static void FileAutoDefine(char *destfile);
+static void LoadSetuid(struct Attributes a,struct Promise *pp);
+static void SaveSetuid(struct Attributes a,struct Promise *pp);
+
 /*****************************************************************************/
 
 /* File copying is a special case, particularly complex - cannot be integrated */
@@ -579,7 +589,7 @@ DeleteClientCache(attr,pp);
 
 /*********************************************************************/
 
-void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr,struct Promise *pp)
+static void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr,struct Promise *pp)
 
 { DIR *dirh;
   struct stat sb; 
@@ -697,7 +707,7 @@ closedir(dirh);
 
 /*********************************************************************/
 
-void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
+static void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
 
 {
 char *server;
@@ -1142,7 +1152,7 @@ return -1;
 
 /*********************************************************************/
 
-CFDIR *cf_opendir(char *name,struct Attributes attr,struct Promise *pp)
+static CFDIR *cf_opendir(char *name,struct Attributes attr,struct Promise *pp)
 
 { CFDIR *returnval;
 
@@ -1214,7 +1224,7 @@ else
  
 /*********************************************************************/
 
-void cf_closedir(CFDIR *dirh)
+static void cf_closedir(CFDIR *dirh)
 
 {
 if ((dirh != NULL) && (dirh->cf_dirh != NULL))
@@ -1380,7 +1390,7 @@ return true;
 
 /*********************************************************************/
 
-void LoadSetuid(struct Attributes a,struct Promise *pp)
+static void LoadSetuid(struct Attributes a,struct Promise *pp)
 
 { struct Attributes b = {{0}};
   char filename[CF_BUFSIZE];
@@ -1400,7 +1410,7 @@ if (!LoadFileAsItemList(&VSETUIDLIST,filename,b,pp))
 
 /*********************************************************************/
 
-void SaveSetuid(struct Attributes a,struct Promise *pp)
+static void SaveSetuid(struct Attributes a,struct Promise *pp)
 
 { struct Attributes b = {{0}};
   char filename[CF_BUFSIZE];
@@ -1427,7 +1437,7 @@ VSETUIDLIST = NULL;
 /* Level 4                                                           */
 /*********************************************************************/
 
-int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp)
+static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp)
 
 { int ok_to_copy;
  
@@ -2018,7 +2028,7 @@ return true;
 
 /*********************************************************************/
 
-void FileAutoDefine(char *destfile)
+static void FileAutoDefine(char *destfile)
 
 { char class[CF_MAXVARSIZE];
 
@@ -2031,7 +2041,7 @@ CfOut(cf_inform,"","Auto defining class %s\n",class);
 /* Level 3                                                           */
 /*********************************************************************/
 
-void RegisterAHardLink(int i,char *value,struct Attributes attr,struct Promise *pp)
+static void RegisterAHardLink(int i,char *value,struct Attributes attr,struct Promise *pp)
 
 {
 if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))

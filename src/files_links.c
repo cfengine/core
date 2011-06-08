@@ -32,6 +32,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int MakeLink(char *from,char *to,struct Attributes attr,struct Promise *pp);
+static char *AbsLinkPath(char *from,char *relto);
+
 /*****************************************************************************/
 
 char VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
@@ -435,7 +438,7 @@ return false;
 
 /*****************************************************************************/
 
-int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
+static int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
 #ifdef MINGW  // TODO: Remove? Should never get called.
 {
 CfOut(cf_verbose, "", "Windows does not support symbolic links");
@@ -630,7 +633,7 @@ return true;
 
 /*********************************************************************/
 
-char *AbsLinkPath (char *from,char *relto)
+static char *AbsLinkPath (char *from,char *relto)
 
 /* Take an abolute source and a relative destination object
    and find the absolute name of the to object */

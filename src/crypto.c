@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
+static void DeletePublicKey(char *username,char *ipaddress,char *digest);
+static char *KeyPrint(RSA *key);
+
 /**********************************************************************/
 
 void RandomSeed()
@@ -393,7 +397,7 @@ fclose(fp);
 
 /*********************************************************************/
 
-void DeletePublicKey(char *user,char *ipaddress,char *digest)
+static void DeletePublicKey(char *user,char *ipaddress,char *digest)
 
 { char filename[CF_BUFSIZE];
 
@@ -408,7 +412,7 @@ unlink(filename);
 
 /*********************************************************************/
 
-void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE+1])
+static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE+1])
 
    /* Make a decent random number by crunching some system states & garbage through
       MD5. We can use this as a seed for pseudo random generator */
@@ -548,7 +552,7 @@ CfOut(cf_verbose, "", "BinaryBuffer(%d bytes => %s) -> [%s]",len,comment,buf);
 
 /*********************************************************************/
 
-char *KeyPrint(RSA *pubkey)
+static char *KeyPrint(RSA *pubkey)
 
 { unsigned char digest[EVP_MAX_MD_SIZE+1];
  int i;

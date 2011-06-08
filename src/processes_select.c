@@ -32,6 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,char **line);
+static int SelectProcRegexMatch(char *name1,char *name2,char *regex,char **names,char **line);
+static int SplitProcLine(char *proc,char **names,int *start,int *end,char **line);
+static int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line);
+static int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line);
+static int GetProcColumnIndex(char *name1,char *name2,char **names);
+
 /***************************************************************************/
 
 int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp)
@@ -163,7 +170,7 @@ return result;
 /* Level                                                                   */
 /***************************************************************************/
 
-int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,char **line)
+static int SelectProcRangeMatch(char *name1,char *name2,int min,int max,char **names,char **line)
 
 { int i;
   long value;
@@ -198,7 +205,7 @@ return false;
 
 /***************************************************************************/
 
-int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line)
+static int SelectProcTimeCounterRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line)
 
 { int i;
   time_t value;
@@ -235,7 +242,7 @@ return false;
 
 /***************************************************************************/
 
-int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line)
+static int SelectProcTimeAbsRangeMatch(char *name1,char *name2,time_t min,time_t max,char **names,char **line)
 
 { int i;
   time_t value;
@@ -271,7 +278,7 @@ return false;
 
 /***************************************************************************/
 
-int SelectProcRegexMatch(char *name1,char *name2,char *regex,char **names,char **line)
+static int SelectProcRegexMatch(char *name1,char *name2,char *regex,char **names,char **line)
 
 { int i;
 
@@ -297,7 +304,7 @@ return false;
 
 /*******************************************************************/
 
-int SplitProcLine(char *proc,char **names,int *start,int *end,char **line)
+static int SplitProcLine(char *proc,char **names,int *start,int *end,char **line)
 
 { int i,s,e;
 
@@ -410,7 +417,7 @@ return true;
 
 /*******************************************************************/
 
-int GetProcColumnIndex(char *name1,char *name2,char **names)
+static int GetProcColumnIndex(char *name1,char *name2,char **names)
 
 { int i;
  

@@ -36,6 +36,9 @@
 
 extern struct FnCallType CF_FNCALL_TYPES[];
 
+static void PrintFunctions(void);
+static void ClearFnCallStatus(void);
+
 /*******************************************************************/
 
 int IsBuiltinFnCall(void *rval,char rtype)
@@ -135,7 +138,7 @@ return NewFnCall(f->name,ExpandList(contextid,f->args,false));
 
 /*******************************************************************/
 
-void PrintFunctions()
+static void PrintFunctions(void)
 
 {
 int i;
@@ -607,7 +610,7 @@ return cfn_unknown;
 
 /*****************************************************************************/
 
-void ClearFnCallStatus()
+static void ClearFnCallStatus(void)
 
 {
 FNCALL_STATUS.status = CF_NOP;

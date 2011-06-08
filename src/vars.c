@@ -32,6 +32,11 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt);
+static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
+static void DeleteAllVariables(char *scope);
+static int IsCf3Scalar(char *str);
+
 /*******************************************************************/
 
 void LoadSystemConstants()
@@ -100,7 +105,7 @@ AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 
 /*******************************************************************/
 
-void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
+static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 
 {
   struct Rval rvald;
@@ -160,7 +165,7 @@ AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
 
 /*******************************************************************/
 
-void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt)
+static void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 
 {
   struct Rval rvald;
@@ -482,7 +487,7 @@ return false;
 
 /*******************************************************************/
 
-void DeleteAllVariables(char *scope)
+static void DeleteAllVariables(char *scope)
 
 { int i;
   struct Scope *ptr;
@@ -624,7 +629,7 @@ return vars;
 
 /*********************************************************************/
 
-int IsCf3Scalar(char *str)
+static int IsCf3Scalar(char *str)
 
 { char *sp;
   char left = 'x', right = 'x';

@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int CheckMeasureSanity(struct Attributes a,struct Promise *pp);
+
+/*****************************************************************************/
+
 void VerifyMeasurementPromise(double *this,struct Promise *pp)
 
 { struct Attributes a = {{0}};
@@ -71,7 +75,7 @@ VerifyMeasurement(this,a,pp);
 
 /*****************************************************************************/
 
-int CheckMeasureSanity(struct Attributes a,struct Promise *pp)
+static int CheckMeasureSanity(struct Attributes a,struct Promise *pp)
 
 { int retval = true;
  

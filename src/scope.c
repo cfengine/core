@@ -32,9 +32,11 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void DebugVariables(char *label);
+
 /*******************************************************************/
 
-void DebugVariables(char *label)
+static void DebugVariables(char *label)
 /* 
  * Not thread safe 
  */

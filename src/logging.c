@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void ExtractOperationLock(char *op);
+static void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
+static void DeleteAllClasses(struct Rlist *list);
+
 /*****************************************************************************/
 
 void BeginAudit()
@@ -346,7 +350,7 @@ CloseDB(AUDITDBP);
 
 /*****************************************************************************/
 
-void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
+static void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
 
 { struct Rlist *rp;
   int slot;
@@ -383,7 +387,7 @@ for (rp = list; rp != NULL; rp=rp->next)
 
 /*****************************************************************************/
 
-void DeleteAllClasses(struct Rlist *list)
+static void DeleteAllClasses(struct Rlist *list)
 
 { struct Rlist *rp;
   char *string;
@@ -419,7 +423,7 @@ for (rp = list; rp != NULL; rp=rp->next)
 
 /************************************************************************/
 
-void ExtractOperationLock(char *op)
+static void ExtractOperationLock(char *op)
 
 { char *sp, lastch = 'x'; 
   int i = 0, dots = 0;

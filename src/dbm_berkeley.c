@@ -38,6 +38,14 @@
 
 #ifdef BDB
 
+static DBT *BDB_NewDBKey(char *name);
+static DBT *BDB_NewDBComplexKey(char *key,int size);
+static void BDB_DeleteDBKey(DBT *key);
+static DBT *BDB_NewDBValue(const void *ptr,int size);
+static void BDB_DeleteDBValue(DBT *value);
+
+/*****************************************************************************/
+
 int BDB_OpenDB(char *filename,DB **dbp)
 
 {
@@ -350,7 +358,7 @@ else
 /* Level 2                                                                   */
 /*****************************************************************************/
 
-DBT *BDB_NewDBKey(char *name)
+static DBT *BDB_NewDBKey(char *name)
 
 {
 char *dbkey;
@@ -379,7 +387,7 @@ return key;
 
 /*****************************************************************************/
 
-void BDB_DeleteDBKey(DBT *key)
+static void BDB_DeleteDBKey(DBT *key)
 
 {
 free((char *)key->data);
@@ -388,7 +396,7 @@ free((char *)key);
 
 /*****************************************************************************/
 
-DBT *BDB_NewDBValue(const void *ptr,int size)
+static DBT *BDB_NewDBValue(const void *ptr,int size)
 
 {
 void *val;
@@ -415,7 +423,7 @@ return value;
 
 /*****************************************************************************/
 
-void BDB_DeleteDBValue(DBT *value)
+static void BDB_DeleteDBValue(DBT *value)
 
 {
 free((char *)value->data);

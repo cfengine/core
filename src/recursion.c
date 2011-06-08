@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int PushDirState(char *name,struct stat *sb);
+static void PopDirState(int goback,char * name,struct stat *sb,struct Recursion r);
+static void CheckLinkSecurity(struct stat *sb,char *name);
+
 /*********************************************************************/
 /* Depth searches                                                    */
 /*********************************************************************/
@@ -174,7 +178,7 @@ return true;
 /* Level                                                           */
 /*******************************************************************/
 
-int PushDirState(char *name,struct stat *sb)
+static int PushDirState(char *name,struct stat *sb)
 
 {
 if (chdir(name) == -1)
@@ -193,7 +197,7 @@ return true;
 
 /**********************************************************************/
 
-void PopDirState(int goback,char *name,struct stat *sb,struct Recursion r)
+static void PopDirState(int goback,char *name,struct stat *sb,struct Recursion r)
 
 {
 if (goback && r.travlinks)
@@ -247,7 +251,7 @@ return false;
 
 /**********************************************************************/
 
-void CheckLinkSecurity(struct stat *sb,char *name)
+static void CheckLinkSecurity(struct stat *sb,char *name)
 
 { struct stat security;
 

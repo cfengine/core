@@ -33,6 +33,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int OrderedListsMatch(struct Item *list1,struct Item *list2);
+static int IsClassedItemIn(struct Item *list,char *item);
+static int IsFuzzyItemIn(struct Item *list, char *item);
+static void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes);
+static int ItemListsEqual(struct Item *list1, struct Item *list2);
+
 /*********************************************************************/
 
 int ItemListSize(struct Item *list)
@@ -251,7 +257,7 @@ else
 
 /*********************************************************************/
 
-void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes)
+static void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes)
 
 {
 if (!IsItemIn(*liststart,itemstring))
@@ -934,7 +940,7 @@ return(false);
 
 /*********************************************************************/
 
-int IsFuzzyItemIn(struct Item *list,char *item)
+static int IsFuzzyItemIn(struct Item *list,char *item)
 
  /* This is for matching ranges of IP addresses, like CIDR e.g.
 
@@ -1051,7 +1057,7 @@ for (ptr = liststart; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
-int ItemListsEqual(struct Item *list1,struct Item *list2)
+static int ItemListsEqual(struct Item *list1,struct Item *list2)
 
 { struct Item *ip1, *ip2;
 
@@ -1084,7 +1090,7 @@ return true;
 
 /*********************************************************************/
 
-int OrderedListsMatch(struct Item *list1,struct Item *list2)
+static int OrderedListsMatch(struct Item *list1,struct Item *list2)
 
 { struct Item *ip1,*ip2;
 
@@ -1108,7 +1114,7 @@ return true;
 
 /*********************************************************************/
 
-int IsClassedItemIn(struct Item *list,char *item)
+static int IsClassedItemIn(struct Item *list,char *item)
 
 { struct Item *ptr; 
 

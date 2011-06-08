@@ -44,6 +44,10 @@
 #include <sys/statvfs.h>
 #endif
 
+#ifndef MINGW
+static off_t Unix_GetDiskUsage(char *file, enum cfsizes type);
+#endif  /* NOT MINGW */
+
 /************************************************************************/
 
 off_t GetDiskUsage(char *file,enum cfsizes type)
@@ -61,7 +65,7 @@ return Unix_GetDiskUsage(file, type);
 
 #ifndef MINGW
 
-off_t Unix_GetDiskUsage(char *file,enum cfsizes type)
+static off_t Unix_GetDiskUsage(char *file,enum cfsizes type)
 {
 #if defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;

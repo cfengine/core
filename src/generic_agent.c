@@ -35,9 +35,24 @@
 
 extern FILE *yyin;
 extern char *CFH[][2];
-extern void CheckOpts(int argc,char **argv);
 
+static void VerifyPromises(enum cfagenttype ag);
+static void SetAuditVersion(void);
+static void CheckWorkingDirectories(void);
+static void Cf3ParseFile(char *filename);
+static void Cf3ParseFiles(void);
+static int MissingInputFile(void);
+static void UnHashVariables(void);
+static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
+static void CheckVariablePromises(char *scope,struct Promise *varlist);
+static void CheckCommonClassPromises(struct Promise *classlist);
+static void PrependAuditFile(char *file);
+static void OpenReports(char *agents);
+static void CloseReports(char *agents);
+static char *InputLocation(char *filename);
+extern void CheckOpts(int argc,char **argv);
 static void Cf3OpenLog(int facility);
+static int BadBundleSequence(enum cfagenttype agent);
 
 /*****************************************************************************/
 
@@ -582,7 +597,7 @@ if (BOOTSTRAP)
 
 /*******************************************************************/
 
-void Cf3ParseFiles()
+static void Cf3ParseFiles()
 
 { struct Rlist *rp,*sl;
 
@@ -641,7 +656,7 @@ PARSING = false;
 
 /*******************************************************************/
 
-int MissingInputFile()
+static int MissingInputFile()
 
 { struct stat sb;
 
@@ -774,7 +789,7 @@ return result | ALWAYS_VALIDATE;
 
 /*******************************************************************/
 
-void OpenReports(char *agents)
+static void OpenReports(char *agents)
 
 { char name[CF_BUFSIZE];
 
@@ -843,7 +858,7 @@ fprintf(FKNOW,"}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
 
 /*******************************************************************/
 
-void CloseReports(char *agents)
+static void CloseReports(char *agents)
 
 { char name[CF_BUFSIZE];
 
@@ -871,7 +886,7 @@ chmod(name,0644);
 /* Level                                                           */
 /*******************************************************************/
 
-void Cf3ParseFile(char *filename)
+static void Cf3ParseFile(char *filename)
 
 {
   struct stat statbuf;
@@ -1177,7 +1192,7 @@ CfOut(cf_verbose,"","\n");
 
 /*********************************************************************/
 
-void CheckWorkingDirectories()
+static void CheckWorkingDirectories()
     
 /* NOTE: We do not care about permissions (ACLs) in windows */
 
@@ -1301,7 +1316,7 @@ else
 /* Level 2                                                         */
 /*******************************************************************/
 
-char *InputLocation(char *filename)
+static char *InputLocation(char *filename)
 
 { static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
@@ -1376,7 +1391,7 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
 
 /*******************************************************************/
 
-void VerifyPromises(enum cfagenttype agent)
+static void VerifyPromises(enum cfagenttype agent)
 
 { struct Bundle *bp;
   struct SubType *sp;
@@ -1487,7 +1502,7 @@ if (BadBundleSequence(agent))
 
 /********************************************************************/
 
-void PrependAuditFile(char *file)
+static void PrependAuditFile(char *file)
 
 { struct stat statbuf;
 
@@ -1517,7 +1532,7 @@ VAUDIT = AUDITPTR;
 /* Level 3                                                         */
 /*******************************************************************/
 
-void CheckVariablePromises(char *scope,struct Promise *varlist)
+static void CheckVariablePromises(char *scope,struct Promise *varlist)
 
 { struct Promise *pp;
   int allow_redefine = false;
@@ -1532,7 +1547,7 @@ for (pp = varlist; pp != NULL; pp=pp->next)
 
 /*******************************************************************/
 
-void CheckCommonClassPromises(struct Promise *classlist)
+static void CheckCommonClassPromises(struct Promise *classlist)
 
 { struct Promise *pp;
 
@@ -1546,7 +1561,7 @@ for (pp = classlist; pp != NULL; pp=pp->next)
 
 /*******************************************************************/
 
-void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
+static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
 
 { struct Constraint *cp;
   struct BodySyntax *bp = NULL;
@@ -1629,7 +1644,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
 /*******************************************************************/
 
-void SetAuditVersion()
+static void SetAuditVersion()
 
 { void *rval;
   char rtype = 'x';
@@ -1822,7 +1837,7 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
 
 /*******************************************************************/
 
-void UnHashVariables()
+static void UnHashVariables()
 
 { struct Bundle *bp;
 
@@ -1834,7 +1849,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 /********************************************************************/
 
-int BadBundleSequence(enum cfagenttype agent)
+static int BadBundleSequence(enum cfagenttype agent)
 
 { struct Rlist *rp,*params;
   char rettype,*name;

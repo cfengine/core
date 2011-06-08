@@ -33,6 +33,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
+
 /*********************************************************************/
 
 static void SetSessionKey(struct cfagent_connection *conn);
@@ -462,7 +464,7 @@ return true;
 
 /*********************************************************************/
 
-void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp)
+static void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp)
 
 { char sendbuffer[CF_BUFSIZE];
   char recvbuffer[CF_BUFSIZE];

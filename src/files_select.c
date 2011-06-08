@@ -32,6 +32,22 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit);
+static int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit);
+static int SelectModeMatch(struct stat *lstatptr,struct Rlist *ls);
+static int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
+static int SelectNameRegexMatch(const char *filename,char *crit);
+static int SelectPathRegexMatch(char *filename,char *crit);
+static int SelectExecRegexMatch(char *filename,char *crit,char *prog);
+static int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
+static int SelectExecProgram(char *filename,char *command);
+static int SelectSizeMatch(size_t size,size_t min,size_t max);
+static int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp);
+#ifndef MINGW
+static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz);
+static int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
+#endif
+
 int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
 
 { struct AlphaList leaf_attr;
@@ -183,7 +199,7 @@ return result;
 /* Level                                                           */
 /*******************************************************************/
 
-int SelectSizeMatch(size_t size,size_t min,size_t max)
+static int SelectSizeMatch(size_t size,size_t min,size_t max)
 
 {
 if (size <= max && size >= min)
@@ -196,7 +212,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit)
+static int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit)
 
 { struct AlphaList leafattrib;
   struct Rlist *rp;
@@ -278,7 +294,7 @@ return Unix_GetOwnerName(lstatptr, owner, ownerSz);
 
 /*******************************************************************/
 
-int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit)
+static int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit)
 
 { struct AlphaList leafattrib;
   struct Rlist *rp;
@@ -336,7 +352,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectModeMatch(struct stat *lstatptr,struct Rlist *list)
+static int SelectModeMatch(struct stat *lstatptr,struct Rlist *list)
 
 { mode_t newperm,plus,minus;
   struct Rlist *rp;
@@ -367,7 +383,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp)
+static int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp)
 
 {
 #if defined HAVE_CHFLAGS
@@ -395,7 +411,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime)
+static int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime)
 
 {
 return ((fromtime < stattime) && (stattime < totime));
@@ -403,7 +419,7 @@ return ((fromtime < stattime) && (stattime < totime));
 
 /*******************************************************************/
 
-int SelectNameRegexMatch(const char *filename,char *crit)
+static int SelectNameRegexMatch(const char *filename,char *crit)
 
 {
 if (FullTextMatch(crit,ReadLastNode(filename)))
@@ -416,7 +432,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectPathRegexMatch(char *filename,char *crit)
+static int SelectPathRegexMatch(char *filename,char *crit)
 
 {
 if (FullTextMatch(crit,filename))
@@ -429,7 +445,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectExecRegexMatch(char *filename,char *crit,char *prog)
+static int SelectExecRegexMatch(char *filename,char *crit,char *prog)
 
 { char line[CF_BUFSIZE];
   FILE *pp;
@@ -463,7 +479,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectIsSymLinkTo(char *filename,struct Rlist *crit)
+static int SelectIsSymLinkTo(char *filename,struct Rlist *crit)
 
 {
 #ifndef MINGW
@@ -491,7 +507,7 @@ return false;
 
 /*******************************************************************/
 
-int SelectExecProgram(char *filename,char *command)
+static int SelectExecProgram(char *filename,char *command)
 
   /* command can include $(this.promiser) for the name of the file */
 
@@ -520,7 +536,7 @@ else
 /* Unix implementations                                            */
 /*******************************************************************/
 
-int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz)
+static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz)
 
 {
 struct passwd *pw;
@@ -541,7 +557,7 @@ return true;
 
 /*******************************************************************/
 
-int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit)
+static int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit)
 
 { struct AlphaList leafattrib;
   char buffer[CF_SMALLBUF];

@@ -58,7 +58,25 @@ char *EDITLINETYPESEQUENCE[] =
    NULL
    };
 
-void EditClassBanner(enum editlinetypesequence type);
+static void KeepEditLinePromise(struct Promise *pp);
+static void VerifyLineDeletions(struct Promise *pp);
+static void VerifyColumnEdits(struct Promise *pp);
+static void VerifyPatterns(struct Promise *pp);
+static void VerifyLineInsertions(struct Promise *pp);
+static int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp);
+static int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+static int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);
+static int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+static int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp);
+static int ReplacePatterns(struct Item *start,struct Item *end,struct Attributes a,struct Promise *pp);
+static int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp);
+static int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
+static int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
+static int SanityCheckInsertions(struct Attributes a);
+static int SelectLine(char *line,struct Attributes a,struct Promise *pp);
+static int NotAnchored(char *s);
+static void EditClassBanner(enum editlinetypesequence type);
+static int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -145,7 +163,7 @@ return true;
 /* Level                                                                   */
 /***************************************************************************/
 
-void EditClassBanner(enum editlinetypesequence type)
+static void EditClassBanner(enum editlinetypesequence type)
 
 { struct Item *ip;
   int i;
@@ -170,7 +188,7 @@ CfOut(cf_verbose,"","\n");
 
 /***************************************************************************/
 
-void KeepEditLinePromise(struct Promise *pp)
+static void KeepEditLinePromise(struct Promise *pp)
 
 { char *sp = NULL;
  
@@ -240,7 +258,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 /* Level                                                                   */
 /***************************************************************************/
 
-void VerifyLineDeletions(struct Promise *pp)
+static void VerifyLineDeletions(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start);
   struct Attributes a = {{0}};
@@ -291,7 +309,7 @@ YieldCurrentLock(thislock);
 
 /***************************************************************************/
 
-void VerifyColumnEdits(struct Promise *pp)
+static void VerifyColumnEdits(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start);
   struct Attributes a = {{0}};
@@ -358,7 +376,7 @@ YieldCurrentLock(thislock);
 
 /***************************************************************************/
 
-void VerifyPatterns(struct Promise *pp)
+static void VerifyPatterns(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start);
   struct Attributes a = {{0}};
@@ -414,7 +432,7 @@ YieldCurrentLock(thislock);
 
 /***************************************************************************/
 
-void VerifyLineInsertions(struct Promise *pp)
+static void VerifyLineInsertions(struct Promise *pp)
 
 { struct Item **start = &(pp->edcontext->file_start), *match, *prev;
   struct Item *begin_ptr,*end_ptr;
@@ -485,7 +503,7 @@ YieldCurrentLock(thislock);
 /* Level                                                                   */
 /***************************************************************************/
 
-int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp)
+static int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip,*beg = CF_UNDEFINED_ITEM,*end = CF_UNDEFINED_ITEM;
 
@@ -553,7 +571,7 @@ return true;
 
 /***************************************************************************/
 
-int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp)
+static int InsertMissingLinesToRegion(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip, *prev = CF_UNDEFINED_ITEM;
 
@@ -606,7 +624,7 @@ return false;
 
 /***************************************************************************/
 
-int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+static int InsertMissingLinesAtLocation(struct Item **start,struct Item *begin_ptr,struct Item *end_ptr,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
 
 { FILE *fin;
   char buf[CF_BUFSIZE],exp[CF_EXPANDSIZE];
@@ -751,7 +769,7 @@ else
 
 /***************************************************************************/
     
-int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
+static int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip,*np = NULL,*lp;
   int in_region = false, retval = false, match, noedits = true;
@@ -887,7 +905,7 @@ return retval;
 
 /********************************************************************/
 
-int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
+static int ReplacePatterns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
 
 { char replace[CF_EXPANDSIZE],line_buff[CF_EXPANDSIZE];
   char before[CF_BUFSIZE],after[CF_BUFSIZE];
@@ -1002,7 +1020,7 @@ return retval;
 
 /********************************************************************/
 
-int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
+static int EditColumns(struct Item *file_start,struct Item *file_end,struct Attributes a,struct Promise *pp)
 
 { char separator[CF_MAXVARSIZE]; 
   int s,e,retval = false;
@@ -1062,7 +1080,7 @@ return retval;
 
 /***************************************************************************/
 
-int SanityCheckInsertions(struct Attributes a)
+static int SanityCheckInsertions(struct Attributes a)
 
 { long not = 0;
   long with = 0;
@@ -1147,7 +1165,7 @@ return ok;
 /* Level                                                                   */
 /***************************************************************************/
 
-int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+static int InsertCompoundLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
 
 {
   int result = false;
@@ -1181,7 +1199,7 @@ return result;
 
 /***************************************************************************/
 
-int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
+static int InsertMissingLineAtLocation(char *newline,struct Item **start,struct Item *location,struct Item *prev,struct Attributes a,struct Promise *pp)
 
 /* Check line neighbourhood in whole file to avoid edge effects */
     
@@ -1279,7 +1297,7 @@ else
 
 /***************************************************************************/
 
-int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
+static int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp,*this_column = NULL;
   char sep[CF_MAXVARSIZE];
@@ -1410,7 +1428,7 @@ return false;
 
 /***************************************************************************/
 
-int SelectLine(char *line,struct Attributes a,struct Promise *pp)
+static int SelectLine(char *line,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp,*c;
   int s,e;
@@ -1513,7 +1531,7 @@ return true;
 /* Level                                                                   */
 /***************************************************************************/
 
-int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
+static int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp, *found;
  int retval = false;
@@ -1592,7 +1610,7 @@ return false;
 
 /********************************************************************/
 
-int NotAnchored(char *s)
+static int NotAnchored(char *s)
 {
 if (*s != '^')
    {

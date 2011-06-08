@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void DeleteReferenceRlist(struct Rlist *list);
+
 /*****************************************************************************/
 
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
@@ -262,7 +264,7 @@ return false;
 
 /*******************************************************************/
 
-void DeleteReferenceRlist(struct Rlist *list)
+static void DeleteReferenceRlist(struct Rlist *list)
 
 /* Delete all contents, hash table in scope has own copy */
 {

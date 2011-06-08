@@ -73,6 +73,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void SetPromisedDefaultRoute(void);
+static int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
+static void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast);
+static void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast);
+
+/*******************************************************************/
+
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN sizeof("255.255.255.255")
 #endif
@@ -162,7 +169,7 @@ cf_closesocket(sk);
 
 /*******************************************************************/
 
-int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
+static int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
 
 { struct sockaddr_in *sin;
   struct sockaddr_in netmask;
@@ -248,7 +255,7 @@ return(insane);
 
 /*******************************************************************/
 
-void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
+static void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
 
 { struct sockaddr_in *sin;
   struct sockaddr_in netmask, broadcast;
@@ -318,7 +325,7 @@ else
 
 /*****************************************************/
 
-void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast)
+static void GetDefaultBroadcastAddr(char *ipaddr,char *vifdev,char *vnetmask,char *vbroadcast)
 
 { unsigned int na,nb,nc,nd;
   unsigned int ia,ib,ic,id;
@@ -364,7 +371,7 @@ sprintf(VNUMBROADCAST,"%u.%u.%u.%u",ba,bb,bc,bd);
 /*                                                              */
 /****************************************************************/
 
-void SetPromisedDefaultRoute()
+static void SetPromisedDefaultRoute()
 
 { int sk, defaultokay = 1;
   struct sockaddr_in sindst,singw;

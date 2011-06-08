@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static char *URLControl(char *driver,char *url);
+
 /*****************************************************************************/
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *header)

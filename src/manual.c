@@ -35,15 +35,17 @@
 extern char BUILD_DIR[CF_BUFSIZE];
 extern char MANDIR[CF_BUFSIZE];
 
-void TexinfoHeader(FILE *fout);
-void TexinfoFooter(FILE *fout);
-void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context);
-void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
-void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
-void IncludeManualFile(FILE *fout,char *filename);
-void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
-void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
-void TexinfoVariables(FILE *fout,char *scope);
+static void TexinfoHeader(FILE *fout);
+static void TexinfoFooter(FILE *fout);
+static void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context);
+static void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
+static void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
+static void IncludeManualFile(FILE *fout,char *filename);
+static void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
+static void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
+static void TexinfoVariables(FILE *fout,char *scope);
+static char *TexInfoEscape(char *s);
+static void PrintPattern(FILE *fout,char *pattern);
 
 /*****************************************************************************/
 
@@ -188,7 +190,7 @@ fclose(fout);
 /* Level                                                                     */
 /*****************************************************************************/
 
-void TexinfoHeader(FILE *fout)
+static void TexinfoHeader(FILE *fout)
 
 {
 fprintf(fout,
@@ -265,7 +267,7 @@ fprintf(fout,
 
 /*****************************************************************************/
 
-void TexinfoFooter(FILE *fout)
+static void TexinfoFooter(FILE *fout)
 
 {
  fprintf(fout,
@@ -307,7 +309,7 @@ void TexinfoFooter(FILE *fout)
 
 /*****************************************************************************/
 
-void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
+static void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
 
 { int j;
   char filename[CF_BUFSIZE];
@@ -343,7 +345,7 @@ for (j = 0; st[j].btype != NULL; j++)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
+static void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
 
 { int i;
  char filename[CF_BUFSIZE],*res;
@@ -393,7 +395,7 @@ for (i = 0; bs[i].lval != NULL; i++)
 
 /*******************************************************************/
 
-void TexinfoVariables(FILE *fout,char *scope)
+static void TexinfoVariables(FILE *fout,char *scope)
 
 { struct Scope *sp;
   struct CfAssoc **ap;
@@ -456,7 +458,7 @@ if (strcmp(scope,"mon") == 0)
 /* Level                                                           */
 /*******************************************************************/
 
-void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type)
+static void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type)
 
 {
 struct Rlist *list = NULL,*rp;
@@ -489,7 +491,7 @@ else
 
 /*****************************************************************************/
 
-void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs)
+static void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs)
 
 { int i;
  char filename[CF_BUFSIZE],*res;
@@ -541,7 +543,7 @@ fprintf(fout,"@end table\n");
 
 /*****************************************************************************/
 
-void IncludeManualFile(FILE *fout,char *file)
+static void IncludeManualFile(FILE *fout,char *file)
 
 { struct stat sb;
  char buffer[CF_BUFSIZE],filename[CF_BUFSIZE];
@@ -591,7 +593,7 @@ fprintf(fout,"\n");
 
 /*****************************************************************************/
 
-void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn)
+static void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn)
 
 { char filename[CF_BUFSIZE];
   struct FnCallArg *args = fn.args;
@@ -631,7 +633,7 @@ IncludeManualFile(fout,filename);
 
 /*****************************************************************************/
 
-void PrintPattern(FILE *fout,char *pattern)
+static void PrintPattern(FILE *fout,char *pattern)
 
 { char *sp;
 

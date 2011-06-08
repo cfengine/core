@@ -35,9 +35,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int IntMin (int a,int b);
+static int UseUnixStandard(char *s);
+
 /*********************************************************/
 
-int IntMin (int a,int b)
+static int IntMin (int a,int b)
 
 {
 if (a > b)
@@ -160,7 +163,7 @@ return s;
 
 /*********************************************************/
 
-int UseUnixStandard(char *s)
+static int UseUnixStandard(char *s)
 
 {
 #ifdef MINGW

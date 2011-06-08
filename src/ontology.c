@@ -32,6 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static char *GetTopicContext(char *topic_name);
+static int ClassifiedTopicMatch(char *ttopic1,char *ttopic2);
+static void DeClassifyCanonicalTopic(char *typed_topic,char *topic,char *type);
+static char *ClassifiedTopic(char *topic,char *type);
+static char *URLHint(char *s);
+static char *NormalizeTopic(char *s);
+
 int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
 extern struct Occurrences *OCCURRENCES;
 
@@ -261,7 +268,7 @@ ip->next = *list;
 
 /*********************************************************************/
 
-char *ClassifiedTopic(char *topic,char *context)
+static char *ClassifiedTopic(char *topic,char *context)
 
 { static char name[CF_MAXVARSIZE];
 
@@ -318,7 +325,7 @@ if (strlen(context) == 0)
 
 /*********************************************************************/
 
-void DeClassifyCanonicalTopic(char *classified_topic,char *topic,char *context)
+static void DeClassifyCanonicalTopic(char *classified_topic,char *topic,char *context)
 
 {
 context[0] = '\0';
@@ -350,7 +357,7 @@ if (strlen(context) == 0)
 
 /*********************************************************************/
 
-int ClassifiedTopicMatch(char *ttopic1,char *ttopic2)
+static int ClassifiedTopicMatch(char *ttopic1,char *ttopic2)
 
 { char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
   char context2[CF_MAXVARSIZE],topic2[CF_MAXVARSIZE];
@@ -409,7 +416,7 @@ return 0;
 
 /*****************************************************************************/
 
-char *URLHint(char *url)
+static char *URLHint(char *url)
 
 { char *sp;
 
@@ -615,7 +622,7 @@ return NULL;
 
 /*****************************************************************************/
 
-char *GetTopicContext(char *topic_name)
+static char *GetTopicContext(char *topic_name)
 
 { struct Topic *tp;
   static char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
@@ -642,7 +649,7 @@ return NULL;
 
 /*****************************************************************************/
 
-char *NormalizeTopic(char *s)
+static char *NormalizeTopic(char *s)
 
 { char *sp;
   int special = false;

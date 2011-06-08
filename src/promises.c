@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
+static void DebugPromise(struct Promise *pp);
+static void DereferenceComment(struct Promise *pp);
+
 /*****************************************************************************/
 
 char *BodyName(struct Promise *pp)
@@ -462,7 +466,7 @@ return pcopy;
 
 /*******************************************************************/
 
-void DebugPromise(struct Promise *pp)
+static void DebugPromise(struct Promise *pp)
 
 { struct Constraint *cp;
   struct Body *bp;
@@ -693,7 +697,7 @@ ThreadUnlock(cft_policy);
 
 /*****************************************************************************/
 
-void DeleteDeRefPromise(char *scopeid,struct Promise *pp)
+static void DeleteDeRefPromise(char *scopeid,struct Promise *pp)
 
 { struct Constraint *cp;
 
@@ -855,7 +859,7 @@ EVP_DigestFinal(&context,digest,&md_len);
 
 /*******************************************************************/
 
-void DereferenceComment(struct Promise *pp)
+static void DereferenceComment(struct Promise *pp)
 
 { char pre_buffer[CF_BUFSIZE],post_buffer[CF_BUFSIZE],buffer[CF_BUFSIZE],*sp;
   int offset = 0;

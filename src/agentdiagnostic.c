@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void TestSearchFilePromiser();
+
 /*****************************************************************************/
 /* new test suite                                                            */
 /*****************************************************************************/
@@ -352,7 +354,7 @@ printf("!! Extensive self-diagnostic capabilities not built in\n");
 
 /******************************************************************/
 
-void TestSearchFilePromiser()
+static void TestSearchFilePromiser()
 
 { struct Promise pp;
 

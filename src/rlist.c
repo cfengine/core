@@ -32,6 +32,11 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int IsRegexIn(struct Rlist *list,char *s);
+static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
+static void DeleteRlistNoRef(struct Rlist *list);
+static void ShowRlistState(FILE *fp,struct Rlist *list);
+
 /*******************************************************************/
 
 struct Rlist *KeyInRlist(struct Rlist *list,char *key)
@@ -113,7 +118,7 @@ return false;
 
 /*******************************************************************/
 
-int IsRegexIn(struct Rlist *list,char *regex)
+static int IsRegexIn(struct Rlist *list,char *regex)
 
 { struct Rlist *rp;
 
@@ -289,7 +294,7 @@ return true;
 
 /*******************************************************************/
 
-int CompareRlist(struct Rlist *list1, struct Rlist *list2)
+static int CompareRlist(struct Rlist *list1, struct Rlist *list2)
 
 { struct Rlist *rp1,*rp2;
 
@@ -384,7 +389,7 @@ void DeleteRlist(struct Rlist *list)
 
 /*******************************************************************/
 
-void DeleteRlistNoRef(struct Rlist *list)
+static void DeleteRlistNoRef(struct Rlist *list)
 /* Delete a rlist, but not its references */
 {
   struct Rlist *rl, *next;
@@ -908,7 +913,7 @@ return true;
 
 /*******************************************************************/
 
-void ShowRlistState(FILE *fp,struct Rlist *list)
+static void ShowRlistState(FILE *fp,struct Rlist *list)
 
 {
 ShowRval(fp,list->state_ptr->item,list->type);

@@ -32,6 +32,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void FindStoragePromiserObjects(struct Promise *pp);
+static int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
+static int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
+static void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
+static int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp);
+static int IsForeignFileSystem (struct stat *childstat,char *dir);
+#ifndef MINGW
+static int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp);
+#endif  /* NOT MINGW */
+
 /*****************************************************************************/
 
 void *FindAndVerifyStoragePromises(struct Promise *pp)
@@ -45,7 +55,7 @@ return (void *)NULL;
 
 /*****************************************************************************/
 
-void FindStoragePromiserObjects(struct Promise *pp)
+static void FindStoragePromiserObjects(struct Promise *pp)
 
 {
 /* Check if we are searching over a regular expression */
@@ -137,7 +147,7 @@ YieldCurrentLock(thislock);
 /** Level                                                          */
 /*******************************************************************/
 
-int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
+static int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf, localstat;
   DIR *dirh;
@@ -227,7 +237,7 @@ return(true);
 
 /*******************************************************************/
 
-int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
+static int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf;
   off_t free;
@@ -287,7 +297,7 @@ return true;
 
 /*******************************************************************/
 
-void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
+static void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
 
 {
  CfOut(cf_verbose,"","Scan arrival sequence . not yet implemented\n");
@@ -295,7 +305,7 @@ void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
 
 /*******************************************************************/
 
-int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp)
+static int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp)
 
 { struct Rlist *rp;
   struct CfMount *mp;
@@ -347,7 +357,7 @@ return found;
 /* Mounting */
 /*********************************************************************/
 
-int IsForeignFileSystem (struct stat *childstat,char *dir)
+static int IsForeignFileSystem (struct stat *childstat,char *dir)
 
  /* Is FS NFS mounted ? */
 
@@ -403,7 +413,7 @@ return(false);
 
 #ifndef MINGW
 
-int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
+static int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
 
 { char *options;
   char dir[CF_BUFSIZE];

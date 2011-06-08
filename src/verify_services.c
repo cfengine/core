@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int ServicesSanityChecks(struct Attributes a,struct Promise *pp);
+static void SetServiceDefaults(struct Attributes *a);
 /*****************************************************************************/
 
 void VerifyServicesPromise(struct Promise *pp)
@@ -50,7 +52,7 @@ if (ServicesSanityChecks(a,pp))
 
 /*****************************************************************************/
 
-int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
+static int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
     
 { struct Rlist *dep;
 
@@ -109,7 +111,7 @@ int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
 
 /*****************************************************************************/
 
-void SetServiceDefaults(struct Attributes *a)
+static void SetServiceDefaults(struct Attributes *a)
 {
  
  if(a->service.service_autostart_policy == NULL)

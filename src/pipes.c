@@ -32,6 +32,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#ifndef MINGW
+static FILE *Unix_cf_popen(char *command,char *type);
+static FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+static FILE *Unix_cf_popen_sh(char *command,char *type);
+static FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
+static int Unix_cf_pclose(FILE *pp);
+static int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+static int CfSetuid(uid_t uid,gid_t gid);
+#endif
+
 /*******************************************************************/
 /* Pipe API - OS function mapping                                  */
 /*******************************************************************/
@@ -180,7 +190,7 @@ int    MAX_FD = 128; /* Max number of simultaneous pipes */
 
 /*****************************************************************************/
 
-FILE *Unix_cf_popen(char *command,char *type)
+static FILE *Unix_cf_popen(char *command,char *type)
 
  { static char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
    int i, argc, pd[2];
@@ -332,7 +342,7 @@ return NULL; /* Cannot reach here */
 
 /*****************************************************************************/
 
-FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+static FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
     
  { static char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
    int i, argc, pd[2];
@@ -511,7 +521,7 @@ return NULL; /* cannot reach here */
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *Unix_cf_popen_sh(char *command,char *type)
+static FILE *Unix_cf_popen_sh(char *command,char *type)
     
  { int i,pd[2];
    pid_t pid;
@@ -642,7 +652,7 @@ return NULL;
 
 /******************************************************************************/
 
-FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
+static FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
     
  { int i,pd[2];
    pid_t pid;
@@ -850,7 +860,7 @@ return (WEXITSTATUS(status));
 
 /*******************************************************************/
 
-int Unix_cf_pclose(FILE *pp)
+static int Unix_cf_pclose(FILE *pp)
 
 { int fd;
   pid_t pid;
@@ -900,7 +910,7 @@ return cf_pwait(pid);
 
 /*******************************************************************/
 
-int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
+static int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
 /**
  * Defines command failure/success with cfPS based on exit code.
  */
@@ -999,7 +1009,7 @@ return (WEXITSTATUS(status));
 
 /*******************************************************************/
 
-int CfSetuid(uid_t uid,gid_t gid)
+static int CfSetuid(uid_t uid,gid_t gid)
 
 { struct passwd *pw;
  

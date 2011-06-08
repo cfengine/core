@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void EditHashValue(char *scopeid,char *lval,void *rval);
+
 /*******************************************************************/
 /* Hashes                                                          */
 /*******************************************************************/
@@ -61,7 +63,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
 
 /******************************************************************/
 
-void EditHashValue(char *scopeid,char *lval,void *rval)
+static void EditHashValue(char *scopeid,char *lval,void *rval)
 
 { int found, slot, i = slot = GetHash(lval);
   struct Scope *ptr = GetScope(scopeid);

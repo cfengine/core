@@ -32,8 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static void TestRegularExpressions(void);
+static void TestAgentPromises(void);
+static void TestFunctionIntegrity(void);
+static void SDIntegerDefault(char *ref,int cmp);
+static void TestHashEntropy(char *s,char *s1);
+
 int NR = 0;
-void CfDebugBreak(void);
 
 /*****************************************************************************/
 
@@ -158,7 +163,7 @@ for (i = 0; varstrings[i] != NULL; i++)
 
 /*****************************************************************************/
 
-void TestFunctionIntegrity()
+static void TestFunctionIntegrity()
 
 { int i,j;
   struct FnCallArg *args;
@@ -324,7 +329,7 @@ ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);
 
 /*****************************************************************************/
 
-void TestRegularExpressions()
+static void TestRegularExpressions()
 
 { int start,end;
 
@@ -398,7 +403,7 @@ else
 
 /*****************************************************************************/
 
-void TestAgentPromises()
+static void TestAgentPromises()
 
 { struct Attributes a = {{0}};
   struct Promise pp = {0};
@@ -428,7 +433,7 @@ printf(" -> All non-listed items are accounted for\n");
 
 /*****************************************************************************/
 
-void SDIntegerDefault(char *ref,int cmp)
+static void SDIntegerDefault(char *ref,int cmp)
 
 { char *def;
   int intval;
@@ -454,7 +459,7 @@ else
 
 /*****************************************************************************/
 
-void TestHashEntropy(char *names,char *title)
+static void TestHashEntropy(char *names,char *title)
 
 {char word[32],*sp;
  int i,j,slot,eslot,sslot,hashtable[CF_HASHTABLESIZE],ehashtable[CF_HASHTABLESIZE],shashtable[CF_HASHTABLESIZE];
@@ -565,7 +570,3 @@ for (j = 1; j < 10; j++)
       }
    }
 }
-
-/*****************************************************************************/
-
-void CfDebugBreak() {   /* Called on error condition to break for inspection */ }

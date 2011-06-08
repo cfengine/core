@@ -34,6 +34,10 @@
 
 #include <math.h>
 
+static void NotePerformance(char *eventname,time_t t,double value);
+static void UpdateLastSawHost(char *rkey,char *ipaddress);
+static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress);
+
 /* Alter this code at your peril. Berkeley DB is very sensitive to errors. */
 
 /***************************************************************/
@@ -90,7 +94,7 @@ if (measured_ok)
 
 /***************************************************************/
 
-void NotePerformance(char *eventname,time_t t,double value)
+static void NotePerformance(char *eventname,time_t t,double value)
 
 { CF_DB *dbp;
   char name[CF_BUFSIZE];
@@ -347,7 +351,7 @@ UpdateLastSawHost(databuf,ipaddress);
 
 /*****************************************************************************/
 
-void UpdateLastSawHost(char *rkey,char *ipaddress)
+static void UpdateLastSawHost(char *rkey,char *ipaddress)
 
 { CF_DB *dbpent = NULL,*dbp = NULL;
   struct CfKeyHostSeen q,newq; 
@@ -442,7 +446,7 @@ ThreadUnlock(cft_db_lastseen);
 
 /*****************************************************************************/
 
-void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
+static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
 /**
  *  WARNING: This function is *NOT* thread-safe.
  *           It must be wrapped with calls to ThreadLock/ThreadUnlock(cft_db_lastseen)

@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static int IsSpace(char *remainder);
+
 /*****************************************************************************/
 
 void IPString2KeyDigest(char *ipv4,char *result)
@@ -1347,7 +1349,7 @@ char *Item2String(struct Item *ip)
 
 /*******************************************************************/
 
-int IsSpace(char *remainder)
+static int IsSpace(char *remainder)
 
 { char *sp;
 

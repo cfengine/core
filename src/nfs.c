@@ -32,6 +32,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#ifndef MINGW
+static void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
+static int MatchFSInFstab(char *match);
+static void DeleteThisItem(struct Item **liststart,struct Item *entry);
+#endif
+
 /*******************************************************************/
 
 #ifndef MINGW  // use samba on windows ?
@@ -226,7 +232,7 @@ return true;
 
 /*******************************************************************/
 
-void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options)
+static void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options)
 
 { struct CfMount *entry;
 
@@ -581,7 +587,7 @@ return 0;
 
 /*******************************************************************/
 
-int MatchFSInFstab(char *match)
+static int MatchFSInFstab(char *match)
 
 { struct Item *ip;
  
@@ -693,7 +699,7 @@ cf_pclose(pp);
 /* Addendum                                                        */
 /*******************************************************************/
 
-void DeleteThisItem(struct Item **liststart,struct Item *entry)
+static void DeleteThisItem(struct Item **liststart,struct Item *entry)
  
 { struct Item *ip, *sp;
 

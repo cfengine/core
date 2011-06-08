@@ -38,7 +38,7 @@
 char *Nova_GetVersion(void);
 char * Nova_StrVersion(void);
 
-/* pub/full-write.c */
+/* full-write.c */
 
 int cf_full_write (int desc, char *ptr, size_t len);
 

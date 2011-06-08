@@ -1028,59 +1028,6 @@ void *cf_malloc(size_t size, char *errLocation);
 void OpenNetwork(void);
 void CloseNetwork(void);
 void CloseWmi(void);
-#ifndef HAVE_SETEGID
-int setegid (gid_t gid);
-#endif
-#ifndef HAVE_DRAND48
-double drand48(void);
-void srand48(long seed);
-#endif
-#ifndef HAVE_LIBRT
-int clock_gettime(clockid_t clock_id,struct timespec *tp);
-#endif
-#ifdef MINGW
-unsigned int alarm(unsigned int seconds);
-#endif
-
-#ifndef HAVE_GETNETGRENT
-int setnetgrent (const char *netgroup);
-int getnetgrent (char **host, char **user, char **domain);
-void endnetgrent (void);
-#endif
-#ifndef HAVE_UNAME
-int uname  (struct utsname *name);
-#endif
-#ifndef HAVE_STRSTR
-char *strstr (char *s1,char *s2);
-#endif
-#ifndef HAVE_STRDUP
-char *strdup (char *str);
-#endif
-#ifndef HAVE_STRRCHR
-char *strrchr (char *str,char ch);
-#endif
-#ifndef HAVE_STRERROR
-char *strerror (int err);
-#endif
-#ifndef HAVE_STRSEP
-char *strsep(char **stringp, const char *delim);
-#endif
-#ifndef HAVE_PUTENV
-int putenv  (char *s);
-#endif
-#ifndef HAVE_UNSETENV
-int unsetenv (const char *name);
-#endif
-#ifndef HAVE_SETEUID
-int seteuid (uid_t euid);
-#endif
-#ifndef HAVE_SETEUID
-int setegid (gid_t egid);
-#endif
-#ifdef MINGW
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
-int inet_pton(int af, const char *src, void *dst);
-#endif
 int LinkOrCopy(const char *from, const char *to, int sym);
 
 /* pipes.c */

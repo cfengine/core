@@ -882,28 +882,31 @@ return true;
 
 /*********************************************************************/
 
-int IsStrIn(const char *str, char **strs, int ignoreCase)
+bool IsStrIn(const char *str, char **strs)
+{
+int i;
 
-{ int i;
-
-for (i = 0; strs[i] != NULL; i++)
+for (i = 0; strs[i]; ++i)
    {
-   if(ignoreCase)
-     {
-     if (strcasecmp(str,strs[i]) == 0)
-       {
-       return true;
-       }
-     }
-   else
-     {
-     if (strcmp(str,strs[i]) == 0)
-       {
-       return true;
-       }
-     }
+   if (strcmp(str, strs[i]) == 0)
+      {
+      return true;
+      }
    }
+return false;
+}
 
+bool IsStrCaseIn(const char *str, char **strs)
+{
+int i;
+
+for (i = 0; strs[i]; ++i)
+   {
+   if (strcasecmp(str, strs[i]) == 0)
+      {
+      return true;
+      }
+   }
 return false;
 }
 

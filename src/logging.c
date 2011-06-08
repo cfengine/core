@@ -150,12 +150,12 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
 
   // never count vars or classes as repaired (creates messy reports)
 
-if (pp && (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,noStatusTypes,false)))
+if (pp && (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,noStatusTypes)))
    {
    return;
    }
 
-if (pp && IsStrIn(pp->agentsubtype,noLogTypes,false))
+if (pp && IsStrIn(pp->agentsubtype,noLogTypes))
    {
    log = false;
    }

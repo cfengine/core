@@ -44,7 +44,7 @@ void CheckBundle(char *name,char *type)
 
 Debug("Checking for bundle (%s,%s)\n",name,type);
   
-if (IsStrIn(name,reserved,false))
+if (IsStrIn(name,reserved))
    {
    snprintf(output,CF_BUFSIZE,"Use of a reserved context as a bundle name \"%s\" ",name);
    ReportError(output);      
@@ -1042,7 +1042,7 @@ int CheckParseVariableName(char *name)
   char *sp,scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE];
   int count = 0, level = 0;
   
-if (IsStrIn(name,reserved,false))
+if (IsStrIn(name,reserved))
    {
    return false;
    }

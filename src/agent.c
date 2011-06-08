@@ -881,6 +881,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
 
          if (Abort())
             {
+            NoteClassUsage(VADDCLASSES);
             DeleteTypeContext(type);
             return false;
             }
@@ -889,6 +890,8 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
       DeleteTypeContext(type);      
       }
    }
+
+NoteClassUsage(VADDCLASSES);
 
 return true;
 }
@@ -1267,8 +1270,6 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
       CfOut(cf_verbose,"","     +       %s\n",ip->name);
       }
    }
-
-NoteClassUsage(VADDCLASSES);
 
 CfOut(cf_verbose,"","\n");
 

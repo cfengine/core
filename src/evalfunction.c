@@ -34,6 +34,10 @@
 
 #include <libgen.h>
 
+#ifndef MINGW
+static struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
+static struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
+#endif  /* NOT MINGW */
 static char *StripPatterns(char *file_buffer,char *pattern,char *filename);
 static void CloseStringHole(char *s,int start,int end);
 static int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex);
@@ -56,7 +60,7 @@ static int CheckID(char *id);
 /* FnCall API - OS function mapping                                */
 /*******************************************************************/
 
-struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
 
 {
 #ifdef MINGW
@@ -68,7 +72,7 @@ return Unix_FnCallUserExists(fp, finalargs);
 
 /*********************************************************************/
 
-struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
 
 {
 #ifdef MINGW
@@ -177,7 +181,7 @@ else
 
 /*******************************************************************/
 
-struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rval rval;
 struct Rlist *returnlist = NULL, *rp;
@@ -262,7 +266,7 @@ else
 
 /*********************************************************************/
 
-struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -311,7 +315,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -348,7 +352,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs)
     
 #ifndef MINGW
 { struct Rlist *newlist = NULL,*except_names,*except_uids;
@@ -398,7 +402,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -429,7 +433,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -458,7 +462,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -488,7 +492,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
 
 #ifndef MINGW
 {
@@ -537,7 +541,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs)
 
 #ifndef MINGW
 {
@@ -586,7 +590,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs)
 
 /* Hash(string,md5|sha1|crypt) */
     
@@ -630,7 +634,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallHashMatch(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHashMatch(struct FnCall *fp,struct Rlist *finalargs)
 
 /* HashMatch(string,md5|sha1|crypt,"abdxy98edj") */
     
@@ -676,7 +680,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -716,7 +720,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -786,7 +790,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -810,7 +814,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*newlist;
   struct Rval rval;
@@ -861,7 +865,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -897,7 +901,7 @@ return rval;
 /* Executions                                                        */
 /*********************************************************************/
 
-struct Rval FnCallReturnsZero(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallReturnsZero(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -966,7 +970,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallExecResult(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallExecResult(struct FnCall *fp,struct Rlist *finalargs)
 
   /* execresult("/programpath",useshell|noshell) */
     
@@ -1027,7 +1031,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs)
 
   /* usemodule("/programpath",varargs) */
     
@@ -1099,7 +1103,7 @@ return rval;
 /* Misc                                                              */
 /*********************************************************************/
 
-struct Rval FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -1199,7 +1203,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */
     
@@ -1303,7 +1307,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*list;
   struct Rval rval;
@@ -1380,7 +1384,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
   char *regex,*arrayname,match[CF_MAXVARSIZE],buffer[CF_BUFSIZE];
@@ -1451,7 +1455,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
   char *arrayname,index[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
@@ -1533,7 +1537,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetValues(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetValues(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
   char *arrayname,match[CF_MAXVARSIZE];
@@ -1614,7 +1618,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE];
   char *name,*regex,scopeid[CF_MAXVARSIZE];
@@ -1690,7 +1694,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallSum(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallSum(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE];
   char *name,scopeid[CF_MAXVARSIZE];
@@ -1775,7 +1779,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallProduct(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallProduct(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE];
   char *name,scopeid[CF_MAXVARSIZE];
@@ -1860,7 +1864,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],*joined;
   char *name,*join,scopeid[CF_MAXVARSIZE];
@@ -1965,7 +1969,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rval rval;
   struct Rlist *rp,*newlist;
@@ -2041,7 +2045,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallCountLinesMatching(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallCountLinesMatching(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rval rval;
   char *filename,*regex;
@@ -2100,7 +2104,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */
     
@@ -2275,7 +2279,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIsNewerThan(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIsNewerThan(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2321,7 +2325,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIsAccessedBefore(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIsAccessedBefore(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2367,7 +2371,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIsChangedBefore(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIsChangedBefore(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2413,7 +2417,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallStatInfo(struct FnCall *fp,struct Rlist *finalargs,enum fncalltype fn)
+static struct Rval FnCallStatInfo(struct FnCall *fp,struct Rlist *finalargs,enum fncalltype fn)
 
 {
   struct Rval rval;
@@ -2494,7 +2498,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIPRange(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIPRange(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2555,7 +2559,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2597,7 +2601,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2645,7 +2649,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2682,7 +2686,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2720,7 +2724,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2750,7 +2754,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2783,7 +2787,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2850,7 +2854,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2897,7 +2901,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*classlist;
   struct Rval rval;  
@@ -2972,7 +2976,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*newlist,*pruned;
   struct Rval rval;
@@ -3075,7 +3079,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*newlist;
   struct Rval rval;
@@ -3178,7 +3182,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*newlist,*pruned;
   struct Rval rval;
@@ -3272,7 +3276,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3312,7 +3316,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3386,7 +3390,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3441,7 +3445,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
+static struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
 
 {
   struct Rval rval;
@@ -3548,7 +3552,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3601,7 +3605,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3647,7 +3651,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;
   struct Rval rval;
@@ -3707,7 +3711,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;
   struct Rval rval;
@@ -3774,7 +3778,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;
   struct Rval rval;
@@ -3834,7 +3838,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;
   struct Rval rval;
@@ -3885,7 +3889,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3919,7 +3923,7 @@ return rval;
 /* Read functions                                                    */
 /*********************************************************************/
 
-struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs)
     
 { struct Rval rval;
   char *filename;
@@ -3953,7 +3957,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
+static struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
     
 { struct Rlist *rp,*newlist = NULL;
   struct Rval rval;
@@ -4052,7 +4056,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
+static struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
 
 /* lval,filename,separator,comment,Max number of bytes  */
 
@@ -4137,7 +4141,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallParseStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
+static struct Rval FnCallParseStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
 
 /* lval,filename,separator,comment,Max number of bytes  */
 
@@ -4217,7 +4221,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
     
 { struct Rlist *newlist = NULL;
   struct Rval rval;
@@ -4247,7 +4251,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs)
 
 { char *listvar;
   struct Rlist *rp,*files;
@@ -4321,7 +4325,7 @@ return rval;
 /* LDAP Nova features                                                */
 /*********************************************************************/
 
-struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs)
     
 {
   struct Rval rval;
@@ -4371,7 +4375,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs)
     
 {
   struct Rval rval;
@@ -4405,7 +4409,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs)
     
 {
   struct Rval rval;
@@ -4439,7 +4443,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs)
     
 {
   struct Rval rval;
@@ -4474,7 +4478,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -4510,7 +4514,7 @@ return rval;
 /* Unix implementations                                            */
 /*******************************************************************/
 
-struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -4562,7 +4566,7 @@ return rval;
 
 /*********************************************************************/
 
-struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -4996,3 +5000,187 @@ for (sp = id; *sp != '\0'; sp++)
 return true;
 }
 
+/*********************************************************************/
+
+struct Rval CallFunction(enum fncalltype function, struct FnCall *fp, struct Rlist *expargs)
+{
+switch (function)
+   {
+   case cfn_escape:
+       return FnCallEscape(fp,expargs);
+   case cfn_countclassesmatching:
+       return FnCallCountClassesMatching(fp,expargs);
+   case cfn_host2ip:
+       return FnCallHost2IP(fp,expargs);
+   case cfn_ip2host:
+       return FnCallIP2Host(fp,expargs);
+   case cfn_join:
+       return FnCallJoin(fp,expargs);
+   case cfn_grep:
+       return FnCallGrep(fp,expargs);
+   case cfn_registryvalue:
+       return FnCallRegistryValue(fp,expargs);
+   case cfn_splayclass:
+       return FnCallSplayClass(fp,expargs);
+   case cfn_lastnode:
+       return FnCallLastNode(fp,expargs);
+   case cfn_peers:
+       return FnCallPeers(fp,expargs);
+   case cfn_peerleader:
+       return FnCallPeerLeader(fp,expargs);
+   case cfn_peerleaders:
+       return FnCallPeerLeaders(fp,expargs);
+   case cfn_canonify:
+       return FnCallCanonify(fp,expargs);
+   case cfn_randomint:
+       return FnCallRandomInt(fp,expargs);
+   case cfn_getenv:
+       return FnCallGetEnv(fp,expargs);
+   case cfn_getuid:
+       return FnCallGetUid(fp,expargs);
+   case cfn_getgid:
+       return FnCallGetGid(fp,expargs);
+   case cfn_execresult:
+       return FnCallExecResult(fp,expargs);
+   case cfn_readtcp:
+       return FnCallReadTcp(fp,expargs);
+   case cfn_returnszero:
+       return FnCallReturnsZero(fp,expargs);
+   case cfn_isnewerthan:
+       return FnCallIsNewerThan(fp,expargs);
+   case cfn_accessedbefore:
+       return FnCallIsAccessedBefore(fp,expargs);
+   case cfn_changedbefore:
+       return FnCallIsChangedBefore(fp,expargs);
+   case cfn_fileexists:
+       return FnCallStatInfo(fp,expargs,function);
+   case cfn_filesexist:
+       return FnCallFileSexist(fp,expargs);
+   case cfn_filesize:
+       return FnCallStatInfo(fp,expargs,function);
+   case cfn_isdir:
+       return FnCallStatInfo(fp,expargs,function);
+   case cfn_isexecutable:
+       return FnCallStatInfo(fp,expargs,function);
+   case cfn_islink:
+       return FnCallStatInfo(fp,expargs,function);
+   case cfn_isplain:
+       return FnCallStatInfo(fp,expargs,function);
+   case cfn_iprange:
+       return FnCallIPRange(fp,expargs);
+   case cfn_hostrange:
+       return FnCallHostRange(fp,expargs);
+   case cfn_hostinnetgroup:
+       return FnCallHostInNetgroup(fp,expargs);
+   case cfn_isvariable:
+       return FnCallIsVariable(fp,expargs);
+   case cfn_strcmp:
+       return FnCallStrCmp(fp,expargs);
+   case cfn_translatepath:
+       return FnCallTranslatePath(fp,expargs);
+   case cfn_splitstring:
+       return FnCallSplitString(fp,expargs);
+   case cfn_regcmp:
+       return FnCallRegCmp(fp,expargs);
+   case cfn_regextract:
+       return FnCallRegExtract(fp,expargs);
+   case cfn_regline:
+       return FnCallRegLine(fp,expargs);
+   case cfn_reglist:
+       return FnCallRegList(fp,expargs);
+   case cfn_regarray:
+       return FnCallRegArray(fp,expargs);
+   case cfn_regldap:
+       return FnCallRegLDAP(fp,expargs);
+   case cfn_ldaparray:
+       return FnCallLDAPArray(fp,expargs);
+   case cfn_ldaplist:
+       return FnCallLDAPList(fp,expargs);
+   case cfn_ldapvalue:
+       return FnCallLDAPValue(fp,expargs);
+   case cfn_getindices:
+       return FnCallGetIndices(fp,expargs);
+   case cfn_getvalues:
+       return FnCallGetValues(fp,expargs);
+   case cfn_countlinesmatching:
+       return FnCallCountLinesMatching(fp,expargs);
+   case cfn_getfields:
+       return FnCallGetFields(fp,expargs);
+   case cfn_isgreaterthan:
+       return FnCallGreaterThan(fp,expargs,'+');
+   case cfn_islessthan:
+       return FnCallGreaterThan(fp,expargs,'-');
+   case cfn_hostsseen:
+       return FnCallHostsSeen(fp,expargs);
+   case cfn_userexists:
+       return FnCallUserExists(fp,expargs);
+   case cfn_getusers:
+       return FnCallGetUsers(fp,expargs);
+   case cfn_groupexists:
+       return FnCallGroupExists(fp,expargs);
+   case cfn_readfile:
+       return FnCallReadFile(fp,expargs);
+   case cfn_readstringlist:
+       return FnCallReadStringList(fp,expargs,cf_str);
+   case cfn_readintlist:
+       return FnCallReadStringList(fp,expargs,cf_int);
+   case cfn_readreallist:
+       return FnCallReadStringList(fp,expargs,cf_real);
+   case cfn_readstringarray:
+       return FnCallReadStringArray(fp,expargs,cf_str,false);
+   case cfn_readstringarrayidx:
+       return FnCallReadStringArray(fp,expargs,cf_str,true);
+   case cfn_readintarray:
+       return FnCallReadStringArray(fp,expargs,cf_int,false);
+   case cfn_readrealarray:
+       return FnCallReadStringArray(fp,expargs,cf_real,false);
+   case cfn_parsestringarray:
+       return FnCallParseStringArray(fp,expargs,cf_str,false);
+   case cfn_parsestringarrayidx:
+       return FnCallParseStringArray(fp,expargs,cf_str,true);
+   case cfn_parseintarray:
+       return FnCallParseStringArray(fp,expargs,cf_int,false);
+   case cfn_parserealarray:
+       return FnCallParseStringArray(fp,expargs,cf_real,false);
+   case cfn_irange:
+       return FnCallIRange(fp,expargs);
+   case cfn_rrange:
+       return FnCallRRange(fp,expargs);
+   case cfn_remotescalar:
+       return FnCallRemoteScalar(fp,expargs);
+   case cfn_hubknowledge:
+       return FnCallHubKnowledge(fp,expargs);
+   case cfn_remoteclassesmatching:
+       return FnCallRemoteClasses(fp,expargs);
+   case cfn_date:
+       return FnCallOnDate(fp,expargs);
+   case cfn_ago:
+       return FnCallAgoDate(fp,expargs);
+   case cfn_laterthan:
+       return FnCallLaterThan(fp,expargs);
+   case cfn_sum:
+       return FnCallSum(fp,expargs);
+   case cfn_product:
+       return FnCallProduct(fp,expargs);
+   case cfn_accum:
+       return FnCallAccumulatedDate(fp,expargs);
+   case cfn_now:
+       return FnCallNow(fp,expargs);
+   case cfn_classmatch:
+       return FnCallClassMatch(fp,expargs);
+   case cfn_classify:
+       return FnCallClassify(fp,expargs);
+   case cfn_hash:
+       return FnCallHash(fp,expargs);
+   case cfn_hashmatch:
+       return FnCallHashMatch(fp,expargs);
+   case cfn_usemodule:
+       return FnCallUseModule(fp,expargs);
+   case cfn_selectservers:
+       return FnCallSelectServers(fp,expargs);
+   case cfn_diskfree:
+       return FnCallDiskFree(fp,expargs);
+   }
+
+FatalError("Unknown function is passed: %d", function);
+}

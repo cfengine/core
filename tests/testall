@@ -234,7 +234,7 @@ END_TIME=$(date +%s)
   echo Skipped tests: $SKIPPED_TESTS
 ) | tee -a $LOG
 
-if [ $FAILED_TO_TESTS -ne 0 ] || [ $FAILED_TO_CRASH_TESTS -ne 0 ]; then
+if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then
   exit 1
 else
   exit 0

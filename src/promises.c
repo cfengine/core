@@ -350,7 +350,9 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (final.rtype != CF_SCALAR)
          {
-         yyerror("Comments can only be scalar objects");
+         char err[CF_BUFSIZE];
+	 snprintf(err,CF_BUFSIZE,"Comments can only be scalar objects (not %c in \"%s\")",final.rtype,pp->promiser);
+	 yyerror(err);
          }
       else
          {

@@ -73,6 +73,7 @@ static int EditColumns(struct Item *file_start,struct Item *file_end,struct Attr
 static int EditLineByColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 static int EditColumn(struct Rlist **columns,struct Attributes a,struct Promise *pp);
 static int SanityCheckInsertions(struct Attributes a);
+static int SanityCheckDeletions(struct Attributes a,struct Promise *pp);
 static int SelectLine(char *line,struct Attributes a,struct Promise *pp);
 static int NotAnchored(char *s);
 static void EditClassBanner(enum editlinetypesequence type);
@@ -270,7 +271,13 @@ static void VerifyLineDeletions(struct Promise *pp)
 	 
 a = GetDeletionAttributes(pp);
 a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
-    
+
+if (!SanityCheckDeletions(a,pp))
+   {
+   cfPS(cf_error,CF_INTERPT,"",pp,a," !! The promised line deletion (%s) is inconsistent",pp->promiser);
+   return;
+   }
+
 /* Are we working in a restricted region? */
 
 if (!a.haveregion)
@@ -505,6 +512,16 @@ YieldCurrentLock(thislock);
 
 static int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp)
 
+/*
+
+This should provide pointers to the first and last line of text that include the
+delimiters, since we need to include those in case they are being deleted, etc.
+It returns true if a match was identified, else false.
+
+If no such region matches, begin_ptr and end_ptr should point
+
+*/
+    
 { struct Item *ip,*beg = CF_UNDEFINED_ITEM,*end = CF_UNDEFINED_ITEM;
 
 for (ip = start; ip != NULL; ip = ip->next)
@@ -515,18 +532,14 @@ for (ip = start; ip != NULL; ip = ip->next)
          {
          if (!a.region.include_start)
             {
-            beg = ip->next;
-            
-            if (beg == NULL)
+            if (ip->next == NULL)
                {
                cfPS(cf_verbose,CF_INTERPT,"",pp,a," !! The promised start pattern (%s) found an empty region at the end of file %s",a.region.select_start,pp->this_server);
                return false;
                }
             }
-         else
-            {
-            beg = ip;
-            }
+
+         beg = ip;
          continue;
          }
       }
@@ -539,9 +552,9 @@ for (ip = start; ip != NULL; ip = ip->next)
 
          if (a.region.include_end && end != NULL)
             {
-            end = end->next;
+            //end = end->next; // WRONG?
             }
-         
+
          break;
          }
       }
@@ -561,11 +574,11 @@ if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
 if (end == CF_UNDEFINED_ITEM)
    {
    end = NULL; /* End of file is null ptr if nothing else specified */
+   return false;
    }
 
 *begin_ptr = beg;
 *end_ptr = end;
-
 return true;
 }
 
@@ -673,7 +686,6 @@ if (a.sourcetype && strcmp(a.sourcetype,"file") == 0)
          }
 
       retval |= InsertCompoundLineAtLocation(exp,start,loc,prev,a,pp);
-      //retval |= InsertMissingLineAtLocation(exp,start,loc,prev,a,pp);
 
       if (prev && prev != CF_UNDEFINED_ITEM)
          {
@@ -772,10 +784,9 @@ else
 static int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip,*np = NULL,*lp;
-  int in_region = false, retval = false, match, noedits = true;
-  int i,lines = 0;
+  int i,in_region = false, retval = false, matches, noedits = true;
   char *sp,buf[CF_BUFSIZE];
-  
+
 if (start == NULL)
    {
    return false;
@@ -783,32 +794,33 @@ if (start == NULL)
 
 for (ip = *start; ip != NULL; ip = np)
    {
-   lines = 0;
-   
    if (ip == begin)
       {
       in_region = true;
+
+      if (!a.region.include_start) 
+         {
+         // Have to handle this here because
+         // MatchRegion needs to see the delimiters
+         // in case we need to delete them!
+         np = ip->next;
+         continue;
+         }
       }
 
    if (a.region.include_end == false && ip == end)
       {
-      in_region = false;
+      // Have to handle this here because
+      // MatchRegion needs to see the delimiters
+      // in case we need to delete them!
+      in_region = false;      
       break;
       }
-   
+
    if (!in_region)
       {
       np = ip->next;
       continue;
-      }
-
-   if (a.not_matching)
-      {
-      match = !MatchRegion(pp->promiser,ip,begin,end);
-      }
-   else
-      {
-      match = MatchRegion(pp->promiser,ip,begin,end);
       }
    
    if (!SelectLine(ip->name,a,pp)) // Start search from location
@@ -817,17 +829,27 @@ for (ip = *start; ip != NULL; ip = np)
       continue;
       }
 
-   if (in_region && match)
+   if (a.not_matching)
       {
-      for (sp = pp->promiser; sp <= pp->promiser+strlen(pp->promiser); sp++)
-         {
-         memset(buf,0,CF_BUFSIZE);
-         sscanf(sp,"%[^\n]",buf);
-         sp += strlen(buf);
-         lines++;
-         }
-      
-      CfOut(cf_verbose,""," -> Delete chunk of %d lines\n",lines,ip->name);
+      matches = !MatchRegion(pp->promiser,ip,begin,end);
+      }
+   else
+      {
+      matches = MatchRegion(pp->promiser,ip,begin,end);
+      }
+
+   if (matches)
+      {
+      CfOut(cf_verbose,""," -> Multi-line region (size %d) matched text in the file",matches);
+      }
+   else
+      {
+      CfOut(cf_verbose,""," -> Multi-line region didn't match text in the file");
+      }
+   
+   if (in_region && matches)
+      {
+      CfOut(cf_verbose,""," -> Delete chunk of %d lines\n",matches,ip->name);
       
       if (a.transaction.action == cfa_warn)
          {
@@ -837,7 +859,7 @@ for (ip = *start; ip != NULL; ip = np)
          }
       else
          {
-         for (i = 0; i < lines; i++)
+         for (i = 0; i < matches; i++)
             {                     
             cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\" from %s",ip->name,pp->this_server);
             retval = true;
@@ -1159,6 +1181,22 @@ if (exact && ignore_something)
    }
 
 return ok;
+}
+
+/***************************************************************************/
+
+static int SanityCheckDeletions(struct Attributes a,struct Promise *pp)
+
+{
+if (strchr(pp->promiser,'\n') != NULL) /* Multi-line string */
+   {
+   if (a.not_matching)
+      {
+      CfOut(cf_error,""," !! Makes no sense to promise multi-line delete with not_matching. Cannot be satisfied for all lines as a block.");
+      }
+   }
+
+return true;
 }
 
 /***************************************************************************/

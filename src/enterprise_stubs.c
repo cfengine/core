@@ -172,7 +172,7 @@ void CheckAutoBootstrap()
 
 {
 #ifdef HAVE_NOVA
- Nova_CheckAutoBootstrap();
+Nova_CheckAutoBootstrap();
 #else
 #endif
 }

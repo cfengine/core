@@ -634,8 +634,14 @@ return false;
 
 int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end)
 
+/*
+  Match a region in between the section delimiters. This function needs to be
+  able to see the delimiters in case the promiser contains them itself.
+*/
+    
 { struct Item *ip = location;
   char *sp,buf[CF_BUFSIZE];
+  int lines = 0;
 
 for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
    {
@@ -643,16 +649,18 @@ for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
    sscanf(sp,"%[^\n]",buf);
    sp += strlen(buf);
 
+   if (ip == end)
+      {
+      continue;
+      }
+
    if (!FullTextMatch(buf,ip->name))
       {
       return false;
       }
-   
-   if (ip == end)
-      {
-      return false;
-      }
 
+   lines++;
+   
    if (ip->next)
       {
       ip = ip->next;
@@ -668,7 +676,7 @@ for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
       }
    }
 
-return true;
+return lines;
 }
 
 /*********************************************************************/
@@ -975,25 +983,24 @@ return(false);
 
 void DeleteItemList(struct Item *item)  /* delete starting from item */
  
-{
-  struct Item *ip, *next;
+{ struct Item *ip, *next;
 
-  for(ip = item; ip != NULL; ip = next)
-    {
-      next = ip->next;  // save before free
-
-      if (ip->name != NULL)
-	{
-	  free (ip->name);
-	}
-      
-      if (ip->classes != NULL)
-	{
-	  free (ip->classes);
-	}
-      
-      free((char *)ip);
-    }
+for(ip = item; ip != NULL; ip = next)
+   {
+   next = ip->next;  // save before free
+   
+   if (ip->name != NULL)
+      {
+      free (ip->name);
+      }
+   
+   if (ip->classes != NULL)
+      {
+      free (ip->classes);
+      }
+   
+   free((char *)ip);
+   }
 }
 
 /*********************************************************************/

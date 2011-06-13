@@ -527,19 +527,21 @@ static int WriteLock(char *name)
 
 Debug("WriteLock(%s)\n",name);
 
+ThreadLock(cft_lock);
 if ((dbp = OpenLock()) == NULL)
    {
+   ThreadUnlock(cft_lock);
    return -1;
    }
 
 entry.pid = getpid();
 entry.time = time((time_t *)NULL);
 
-ThreadLock(cft_lock);
 WriteDB(dbp,name,&entry,sizeof(entry));
-ThreadUnlock(cft_lock);
 
 CloseLock(dbp);
+ThreadUnlock(cft_lock);
+
 return 0;
 }
 

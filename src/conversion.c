@@ -59,8 +59,15 @@ MapName(name);
 
 result[0] = '\0';
 
+if (!ThreadLock(cft_db_lastseen))
+   {
+   CfOut(cf_error, "", "!! Could not lock last-seen DB");
+   return;
+   }
+
 if (!OpenDB(name,&dbp))
    {
+   ThreadUnlock(cft_db_lastseen);
    return;
    }
 
@@ -68,6 +75,7 @@ if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan last-seen database");
    CloseDB(dbp);
+   ThreadUnlock(cft_db_lastseen);
    return;
    }
 
@@ -96,6 +104,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
+ThreadUnlock(cft_db_lastseen);
 }
 
 /***************************************************************/

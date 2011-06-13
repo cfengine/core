@@ -194,11 +194,11 @@ static void TexinfoHeader(FILE *fout)
 
 {
 fprintf(fout,
-        "@c \\input texinfo-altfont\n"
-        "@c \\input texinfo-logo\n"
+        "\\input texinfo-altfont\n"
+        "\\input texinfo-logo\n"
         "\\input texinfo\n"
-        "@c @selectaltfont{cmbright}\n"
-        "@c @setlogo{NewLogo}\n"
+        "@selectaltfont{cmbright}\n"
+        "@setlogo{NewLogo}\n"
         "@c *********************************************************************\n"
         "@c\n"
         "@c  This is an AUTO_GENERATED TEXINFO file. Do not submit patches against it.\n"

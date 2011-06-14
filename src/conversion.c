@@ -47,17 +47,20 @@ void IPString2KeyDigest(char *ipv4,char *result)
   int ksize,vsize;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
 
+result[0] = '\0';
+
 if (strcmp(ipv4,"127.0.0.1") == 0 || strcmp(ipv4,"::1") == 0 || strcmp(ipv4,VIPADDRESS) == 0)
    {
-   HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
-   snprintf(result,CF_MAXVARSIZE,"%s",HashPrint(CF_DEFAULT_DIGEST,digest));
+   if (PUBKEY)
+      {
+      HashPubKey(PUBKEY,digest,CF_DEFAULT_DIGEST);
+      snprintf(result,CF_MAXVARSIZE,"%s",HashPrint(CF_DEFAULT_DIGEST,digest));
+      }
    return;
    }
-  
+
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
-
-result[0] = '\0';
 
 if (!ThreadLock(cft_db_lastseen))
    {

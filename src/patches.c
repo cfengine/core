@@ -656,9 +656,9 @@ char *cf_strtimestamp(const time_t time, char *buf)
 {
 struct tm tm;
 
-if (gmtime_r(&time, &tm) == NULL)
+if (localtime_r(&time, &tm) == NULL)
    {
-   CfOut(cf_error, "gmtime_r", "Unable to parse passed timestamp");
+   CfOut(cf_error, "localtime_r", "Unable to parse passed timestamp");
    return NULL;
    }
 

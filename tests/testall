@@ -111,7 +111,7 @@ runtest() {
       fi
     fi
 
-    FLATNAME=$(echo "$TEST" | sed 's,/,_,g')
+    FLATNAME=$(echo "$TEST" | sed 's,[./],_,g')
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
       echo $TEST $RESULT '(UNEXPECTED FAILURE)' >> $TESTRESULT

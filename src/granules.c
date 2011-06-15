@@ -120,7 +120,6 @@ strcpy(timekey,GenTimeKey(here_and_now));
 
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL,slot++)
    {
-   printf("NOW:%s\n", GenTimeKey(now));
    if (strcmp(timekey,GenTimeKey(now)) == 0)
       {
       return slot;

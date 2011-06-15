@@ -911,7 +911,7 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
       {
       }
 
-   CfOut(cf_error,"","Too many threads (>=%d) -- increase MaxConnections?",CFD_MAXPROCESSES);
+   CfOut(cf_error,"","Too many threads (>=%d) -- increase server maxconnections?",CFD_MAXPROCESSES);
    snprintf(output,CF_BUFSIZE,"BAD: Server is currently too busy -- increase MaxConnections or Splaytime?");
    SendTransaction(conn->sd_reply,output,0,CF_DONE);
    DeleteConn(conn);

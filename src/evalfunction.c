@@ -86,97 +86,75 @@ return Unix_FnCallGroupExists(fp, finalargs);
 /* End FnCall API                                                  */
 /*******************************************************************/
 
-static struct Rlist *GetHostsFromLastseenDB(CF_DB *db, CF_DBC *cursor,
+static struct Rlist *GetHostsFromLastseenDB(struct Item *addresses,
                                             time_t horizon, bool return_address,
                                             bool return_recent)
 {
-struct Rlist *recent = NULL, *aged = NULL;
-int ksize, vsize;
-char *key;
-void *value;
-time_t now = time(NULL);
+ struct Rlist *recent = NULL, *aged = NULL;
+ struct Item *ip;
+ time_t now = time(NULL);
+ double entrytime;
+ char address[CF_MAXVARSIZE];
 
-Debug(" | Walking through database.\n");
+ for(ip = addresses; ip != NULL; ip = ip->next)
+    {
+    if(sscanf(ip->classes,"%lf",&entrytime) != 1)
+       {
+       CfOut(cf_error, "", "!! Could not get host entry age");
+       continue;
+       }
+   
+    if (return_address)
+       {
+       snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
+       }
+    else
+       {
+       snprintf(address, sizeof(address), "%s", ip->name);
+       }
 
-while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
-   {
-   double entrytime;
-   char address[CF_MAXVARSIZE];
+    if (entrytime < now - horizon)
+       {
+       Debug("Old entry.\n");
 
-   Debug(" | DB Key: %s.\n", (char*)key);
+       if (KeyInRlist(recent, address))
+          {
+          Debug("There is recent entry for this address. Do nothing.\n");
+          }
+       else
+          {
+          Debug("Adding to list of aged hosts.\n");
+          IdempPrependRScalar(&aged, address, CF_SCALAR);
+          }
+       }
+    else
+       {
+       struct Rlist *r;
+       Debug("Recent entry.\n");
 
-   if (value != NULL)
-      {
-      struct CfKeyHostSeen entry;
-      
-      if (HostKeyAddressUnknown(value))
-         {
-         continue;
-         }
-      
-      memcpy(&entry,value,sizeof(entry));
-      entrytime = entry.Q.q;
-      Debug(" | DB Value: %lf,%s.\n", entrytime, entry.address);
+       if ((r = KeyInRlist(aged, address)))
+          {
+          Debug("Purging from list of aged hosts.\n");
+          DeleteRlistEntry(&aged, r);
+          }
 
-      if (return_address)
-         {
-         strncpy(address, entry.address, CF_MAXVARSIZE);
-         }
-      else
-         {
-         strncpy(address, IPString2Hostname(entry.address), CF_MAXVARSIZE);
-         }
+       Debug ("Adding to list of recent hosts.\n");
+       IdempPrependRScalar(&recent, address, CF_SCALAR);
+       }
 
-      Debug(" | Value: %s\n", address);
-      }
-   else
-      {
-      Debug(" | DB Value: NULL.\n");
-      continue;
-      }
+   
+    }
 
-   Debug(" | / Checking age.\n");
-
-   if (entrytime < now - horizon)
-      {
-      Debug(" | | Old entry.\n");
-
-      if (KeyInRlist(recent, address))
-         {
-         Debug(" | \\- There is recent entry for this address. Do nothing.\n");
-         }
-      else
-         {
-         Debug(" | \\- Adding to list of aged hosts.\n");
-         IdempPrependRScalar(&aged, address, CF_SCALAR);
-         }
-      }
-   else
-      {
-      struct Rlist *r;
-      Debug(" | | Recent entry.\n");
-
-      if ((r = KeyInRlist(aged, address)))
-         {
-         Debug(" | | Purging from list of aged hosts.\n");
-         DeleteRlistEntry(&aged, r);
-         }
-
-      Debug (" | \\- Adding to list of recent hosts.\n");
-      IdempPrependRScalar(&recent, address, CF_SCALAR);
-      }
-   }
-
-if (return_recent)
-   {
-   DeleteRlist(aged);
-   return recent;
-   }
-else
-   {
-   DeleteRlist(recent);
-   return aged;
-   }
+ if (return_recent)
+    {
+    DeleteRlist(aged);
+    return recent;
+    }
+ else
+    {
+    DeleteRlist(recent);
+    return aged;
+    }
 }
 
 /*******************************************************************/
@@ -184,83 +162,105 @@ else
 static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rval rval;
-struct Rlist *returnlist = NULL, *rp;
-  char *policy,*format;
-  CF_DB *dbp;
-  CF_DBC *dbcp;
-  char name[CF_BUFSIZE];
-  int horizon;
+ struct Rlist *returnlist = NULL, *rp;
+ char *policy,*format;
+ CF_DB *dbp;
+ CF_DBC *dbcp;
+ char name[CF_BUFSIZE];
+ int horizon;
+ struct Item *addresses = NULL;
+ char entrytimeChr[CF_SMALLBUF];
+ int ksize, vsize;
+ char *key;
+ void *value;
 
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hostsseen].args,finalargs); /* Arg validation */
+
+ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hostsseen].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
-horizon = Str2Int((char *)(finalargs->item)) * 3600;
-policy = (char *)(finalargs->next->item);
-format = (char *)(finalargs->next->next->item);
+ horizon = Str2Int((char *)(finalargs->item)) * 3600;
+ policy = (char *)(finalargs->next->item);
+ format = (char *)(finalargs->next->next->item);
 
-Debug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
+ Debug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
-snprintf(name,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_LASTDB_FILE);
+ snprintf(name,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_LASTDB_FILE);
 
-Debug(" | Trying to open database %s.\n", name);
+ if (!OpenDB(name,&dbp))
+    {
+    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
+    rval.item = NULL;
+    rval.rtype = CF_LIST;
+    return rval;
+    }
 
-if (!OpenDB(name,&dbp))
-   {
-   Debug(" \\- Failed to open database.\n");
-   SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   return rval;
-   }
-
-Debug(" | Database opened succesfully.\n");
+ Debug("Database opened succesfully.\n");
 
 /* Acquire a cursor for the database. */
 
-if (!NewDBCursor(dbp,&dbcp))
-   {
-   Debug(" \\- Failed to obtain currsor for database.\n");
-   SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
-   CfOut(cf_error,""," !! Error reading from last-seen database: ");
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   return rval;
-   }
+ if (!NewDBCursor(dbp,&dbcp))
+    {
+    CloseDB(dbp);
+    Debug("Failed to obtain cursor for database\n");
+    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
+    CfOut(cf_error,""," !! Error reading from last-seen database: ");
+    rval.item = NULL;
+    rval.rtype = CF_LIST;
+    return rval;
+    }
 
  /* Walk through the database and print out the key/data pairs. */
 
-returnlist = GetHostsFromLastseenDB(dbp, dbcp, horizon,
-                                    strcmp(format, "address") == 0,
-                                    strcmp(policy, "lastseen") == 0);
+ while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+    {
+    if (value != NULL)
+       {
+       struct CfKeyHostSeen entry;
+      
+       if (HostKeyAddressUnknown(value))
+          {
+          continue;
+          }
+      
+       memcpy(&entry,value,sizeof(entry));
+       snprintf(entrytimeChr, sizeof(entrytimeChr), "%.4lf", entry.Q.q);
+       PrependItem(&addresses, entry.address, entrytimeChr);
+       }
+    }
 
-Debug(" | Return value:\n");
-for(rp = returnlist; rp; rp = rp->next)
-   {
-   Debug(" |  %s\n", rp->item);
-   }
+ DeleteDBCursor(dbp,dbcp);
+ CloseDB(dbp);
 
-Debug(" \\- Closing database.\n");
+ returnlist = GetHostsFromLastseenDB(addresses, horizon,
+                                     strcmp(format, "address") == 0,
+                                     strcmp(policy, "lastseen") == 0);
 
-DeleteDBCursor(dbp,dbcp);
-CloseDB(dbp);
+ DeleteItemList(addresses);
+
+ Debug(" | Return value:\n");
+ for(rp = returnlist; rp; rp = rp->next)
+    {
+    Debug(" |  %s\n", (char *)rp->item);
+    }
+
 
 /* end fn specific content */
 
-if (returnlist == NULL)
-   {
-   SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   return rval;
-   }
-else
-   {
-   SetFnCallReturnStatus("hostsseen",FNCALL_SUCCESS,NULL,NULL);
-   rval.item = returnlist;
-   rval.rtype = CF_LIST;
-   return rval;
-   }
+ if (returnlist == NULL)
+    {
+    SetFnCallReturnStatus("hostseen",FNCALL_FAILURE,NULL,NULL);
+    rval.item = NULL;
+    rval.rtype = CF_LIST;
+    return rval;
+    }
+ else
+    {
+    SetFnCallReturnStatus("hostsseen",FNCALL_SUCCESS,NULL,NULL);
+    rval.item = returnlist;
+    rval.rtype = CF_LIST;
+    return rval;
+    }
 }
 
 
@@ -932,12 +932,12 @@ else
    if (strcmp(finalargs->next->item,"useshell") == 0)
       {
       useshell = true;
-      snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
+      snprintf(comm,CF_BUFSIZE,"%s", (char *)finalargs->item);
       }
    else
       {
       useshell = false;
-      snprintf(comm,CF_BUFSIZE,"%s",finalargs->item);
+      snprintf(comm,CF_BUFSIZE,"%s", (char *)finalargs->item);
       }
    
    if (cfstat(GetArg0(finalargs->item),&statbuf) == -1)
@@ -2199,7 +2199,7 @@ pp = NewPromise("select_server","function");
 
 for (rp = hostnameip; rp != NULL; rp=rp->next)
    {
-   Debug("Want to read %d bytes from port %d at %s\n",val,portnum,rp->item);
+   Debug("Want to read %d bytes from port %d at %s\n",val,portnum, (char *)rp->item);
    
    conn = NewAgentConn();
    
@@ -2735,7 +2735,7 @@ ArgTemplate(fp,CF_FNCALL_TYPES[cfn_translatepath].args,finalargs); /* Arg valida
 
 /* begin fn specific content */
 
-snprintf(buffer, sizeof(buffer), "%s", finalargs->item);
+snprintf(buffer, sizeof(buffer), "%s", (char *)finalargs->item);
 MapName(buffer);
 
 
@@ -2961,7 +2961,7 @@ else
       {
       for (rp = classlist; rp != NULL; rp=rp->next)
          {
-         snprintf(class,CF_MAXVARSIZE-1,"%s_%s",prefix,rp->item);
+         snprintf(class,CF_MAXVARSIZE-1,"%s_%s",prefix,(char *)rp->item);
          NewBundleClass(class,THIS_BUNDLE);
          }
       DeleteRlist(classlist);

@@ -16,7 +16,7 @@ int HostKeyAddressUnknown(char *value)
 {
 if (strcmp(value,CF_UNKNOWN_IP) == 0)
    {
-   return false;
+   return true;
    }
 
 // Is there some other non-ip string left over?

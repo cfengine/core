@@ -103,7 +103,7 @@ char *GenTimeKey(time_t now)
 { static char str[64];
   char timebuf[26];
   
-  snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(&now,timebuf));
+  snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(now,timebuf));
 
 return ConvTimeKey(str);
 }
@@ -158,14 +158,14 @@ int GetShiftSlot(time_t here_and_now)
   int hour = -1;
   char timebuf[26];
   
-  snprintf(cstr,sizeof(str),"%s",cf_strtimestamp_utc(&here_and_now,timebuf));
+  snprintf(cstr,sizeof(str),"%s",cf_strtimestamp_utc(here_and_now,timebuf));
 sscanf(cstr,"%s %*s %*s %d",cbuf,&chour);
 
 // Format Tue Sep 28 14:58:27 CEST 2010
 
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_INTERVAL,slot++)
    {
-   snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(&now,timebuf)); 
+   snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(now,timebuf)); 
    sscanf(str,"%s %*s %*s %d",buf,&hour);
    
    if ((hour/6 == chour/6) && (strcmp(cbuf,buf) == 0))

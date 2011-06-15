@@ -629,7 +629,51 @@ typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
 #define CF_AUDITDB_FILE   "cf_Audit" "." DB_FEXT
 #define CF_LOCKDB_FILE    "cf_lock" "." DB_FEXT
 
+#define NOVA_HISTORYDB "history" "." DB_FEXT
+#define NOVA_MEASUREDB "nova_measures" "." DB_FEXT
+#define NOVA_STATICDB  "nova_static" "." DB_FEXT
+#define NOVA_PSCALARDB  "nova_pscalar" "." DB_FEXT
+#define NOVA_COMPLIANCE "promise_compliance" "." DB_FEXT
+#define NOVA_REGISTRY "mswin" "." DB_FEXT
+#define NOVA_CACHE "nova_cache" "." DB_FEXT
+#define NOVA_LICENSE "nova_track" "." DB_FEXT
+#define NOVA_VALUE "nova_value" "." DB_FEXT
+#define NOVA_NETWORK "nova_network" "." DB_FEXT
+#define NOVA_GLOBALCOUNTERS "nova_counters" "." DB_FEXT
+
+#define NOVA_BUNDLE_LOG "bundles" "." DB_FEXT
+
 /* end database file names */
+
+/* database enums */
+typedef enum
+{
+    cfdb_classes,
+    cfdb_variables,
+    cfdb_performance,
+    cfdb_cheksums_content,
+    cfdb_cheksums_stats,
+    cfdb_observations,
+    cfdb_observations_year,
+    cfdb_measurements,
+    cfdb_state,
+    cfdb_hostsseen,
+    cfdb_audit,
+    cfdb_locks,
+    cfdb_static,
+    cfdb_pscalar,
+    cfdb_compliance,
+    cfdb_winregistry,
+    cfdb_cache,
+    cfdb_license,
+    cfdb_value,
+    cfdb_network,
+    cfdb_counters,
+    cfdb_bundles
+}cfdb_t;
+
+/* end database enums */
+
 
 #define CF_VALUE_LOG      "cf_value.log"
 #define CF_FILECHANGE     "file_change.log"

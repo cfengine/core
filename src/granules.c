@@ -101,8 +101,9 @@ return timekey;
 char *GenTimeKey(time_t now)
  
 { static char str[64];
-    
-snprintf(str,sizeof(str),"%s",cf_ctime(&now));
+  char timebuf[26];
+  
+  snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(&now,timebuf));
 
 return ConvTimeKey(str);
 }
@@ -119,6 +120,7 @@ strcpy(timekey,GenTimeKey(here_and_now));
 
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL,slot++)
    {
+   printf("NOW:%s\n", GenTimeKey(now));
    if (strcmp(timekey,GenTimeKey(now)) == 0)
       {
       return slot;
@@ -155,15 +157,16 @@ int GetShiftSlot(time_t here_and_now)
   char str[64];
   char buf[10],cbuf[10];
   int hour = -1;
+  char timebuf[26];
   
-snprintf(cstr,sizeof(str),"%s",cf_ctime(&here_and_now));
+  snprintf(cstr,sizeof(str),"%s",cf_strtimestamp_utc(&here_and_now,timebuf));
 sscanf(cstr,"%s %*s %*s %d",cbuf,&chour);
 
 // Format Tue Sep 28 14:58:27 CEST 2010
 
 for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_INTERVAL,slot++)
    {
-   snprintf(str,sizeof(str),"%s",cf_ctime(&now)); 
+   snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(&now,timebuf)); 
    sscanf(str,"%s %*s %*s %d",buf,&hour);
    
    if ((hour/6 == chour/6) && (strcmp(cbuf,buf) == 0))
@@ -185,10 +188,9 @@ time_t GetShiftSlotStart(time_t t)
  struct tm split;
  time_t slotstart;
 
-if(!localtime_r(&t, &split))
+if(!gmtime_r(&t, &split))
    {
-   printf("Error!\n");
-   CfOut(cf_error, "localtime_r", "!! Could not convert time");
+   CfOut(cf_error, "gmtime_r", "!! Could not convert time");
    return -1;
    }
 

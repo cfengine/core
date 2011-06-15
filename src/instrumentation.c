@@ -423,7 +423,7 @@ else
    strncpy(newq.address,ipaddress,CF_ADDRSIZE-1);
    }
  
-CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",rkey,ipaddress,cf_strtimestamp(now,timebuf));
+CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",rkey,ipaddress,cf_strtimestamp_local(now,timebuf));
 
 PurgeMultipleIPReferences(dbp,rkey,ipaddress);
 

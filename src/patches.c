@@ -37,6 +37,8 @@
 
 static int IntMin (int a,int b);
 static int UseUnixStandard(char *s);
+static char *cf_format_strtimestamp(struct tm *tm, char *buf);
+
 
 /*********************************************************/
 
@@ -634,7 +636,7 @@ return 0;
 char *cf_ctime(const time_t *timep)
 {
 static char buf[26];
-return cf_strtimestamp(*timep, buf);
+return cf_strtimestamp_local(*timep, buf);
 }
 
 /*
@@ -648,7 +650,7 @@ return cf_strtimestamp(*timep, buf);
  * Please use this function instead of (non-portable and deprecated) ctime_r or
  * (non-threadsafe) cf_ctime or ctime.
  */
-char *cf_strtimestamp(const time_t time, char *buf)
+char *cf_strtimestamp_local(const time_t time, char *buf)
 {
 struct tm tm;
 
@@ -658,20 +660,41 @@ if (localtime_r(&time, &tm) == NULL)
    return NULL;
    }
 
-/* Security checks */
+return cf_format_strtimestamp(&tm, buf);
+}
 
-if (tm.tm_year < -2899 || tm.tm_year > 8099)
+/*******************************************************************/
+
+char *cf_strtimestamp_utc(const time_t time, char *buf)
+{
+struct tm tm;
+
+if (gmtime_r(&time, &tm) == NULL)
+   {
+   CfOut(cf_error, "gmtime_r", "Unable to parse passed timestamp");
+   return NULL;
+   }
+
+return cf_format_strtimestamp(&tm, buf);
+}
+
+/*******************************************************************/
+
+static char *cf_format_strtimestamp(struct tm *tm, char *buf)
+{
+ /* Security checks */
+if (tm->tm_year < -2899 || tm->tm_year > 8099)
    {
    CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d",
-         tm.tm_year + 1900);
+         tm->tm_year + 1900);
    return NULL;
    }
 
 /* There is no easy way to replicate ctime output by using strftime */
 
 if (snprintf(buf, 26, "%3.3s %3.3s %2d %02d:%02d:%02d %04d",
-             DAY_TEXT[tm.tm_wday ? (tm.tm_wday - 1) : 6], MONTH_TEXT[tm.tm_mon],
-             tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_year + 1900) >= 26)
+             DAY_TEXT[tm->tm_wday ? (tm->tm_wday - 1) : 6], MONTH_TEXT[tm->tm_mon],
+             tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_year + 1900) >= 26)
    {
    CfOut(cf_error, "", "Unable to format timestamp: passed values are out of range");
    return NULL;

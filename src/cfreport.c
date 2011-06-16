@@ -834,14 +834,14 @@ for (ip = list; ip != NULL; ip=ip->next)
    CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",name);
    if(!DeleteDB(dbp,name))
       {
-      CfOut(cf_inform, "", " -> Entry %s not found - skipping", name);
+      CfOut(cf_inform, "", " !! Entry %s not found - skipping", name);
       }
 
    snprintf(name,sizeof(name),"-%s",ip->name);
    CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",name);
    if(!DeleteDB(dbp,name))
       {
-      CfOut(cf_inform, "", " -> Entry %s not found - skipping", name);
+      CfOut(cf_inform, "", " !! Entry %s not found - skipping", name);
       }
    }
 

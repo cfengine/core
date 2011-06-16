@@ -447,14 +447,28 @@ RemoveHostSeen(REMOVEHOSTS);
 #ifdef HAVE_NOVA
 if(!EMPTY(NOVA_EXPORT_TYPE))
    {
-   Nova_ExportReports(NOVA_EXPORT_TYPE);
+   if(Nova_ExportReports(NOVA_EXPORT_TYPE))
+      {
+      exit(0);
+      }
+   else
+      {
+      exit(1);
+      }
    }
 
 if(!EMPTY(NOVA_IMPORT_FILE))
    {
    if(IsDefinedClass("am_policy_hub"))
       {
-      Nova_ImportHostReports(NOVA_IMPORT_FILE);
+      if(Nova_ImportHostReports(NOVA_IMPORT_FILE))
+         {
+         exit(0);
+         }
+      else
+         {
+         exit(1);
+         }
       }
    else
       {

@@ -403,8 +403,6 @@ for  (i = 0; i < CF3_MODULES; i++)
                {
                /* Either module defined or common */
 
-               Debug1("CMP-module-subtypes (%s): %s,%s\n",ss[j].btype,ss[j].subtype,type);
-               
                if (strcmp(ss[j].subtype,type) == 0 && strcmp(ss[j].subtype,"*") != 0)
                   {
                   snprintf(output,CF_BUFSIZE,"lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",lval,ss[j].subtype,type);

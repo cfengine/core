@@ -88,7 +88,7 @@ double AGE;
 static struct Averages MAX,MIN;
 
 char OUTPUTDIR[CF_BUFSIZE],*sp;
-char REMOVEHOSTS[CF_BUFSIZE];
+char REMOVEHOSTS[CF_BUFSIZE] = {0};
 char NOVA_EXPORT_TYPE[CF_MAXVARSIZE] = {0};
 char NOVA_IMPORT_FILE[CF_MAXVARSIZE] = {0};
 
@@ -160,7 +160,7 @@ const char *HINTS[25] =
       "Do not add error bars to the printed graphs",
       "Do not automatically scale the axes",
       "Generate verbose output",
-      "Remove comma separated list of IP address entries from the hosts-seen database",
+      "Remove comma separated list of key hash entries from the hosts-seen database",
       "Export Nova reports to file - delta or full report",
       "Import Nova reports from file - specify the path (only on Nova policy hub)",
       NULL
@@ -256,6 +256,7 @@ GenericInitialize(argc,argv,"reporter");
 ThisAgentInit();
 KeepReportsControlPromises();
 KeepReportsPromises();
+GenericDeInitialize();
 return 0;
 }
 
@@ -350,7 +351,11 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i:",OPTIONS,&optindex
          break;
 
       case 'r':
-          strncpy(REMOVEHOSTS,optarg,CF_BUFSIZE-1);
+          if(snprintf(REMOVEHOSTS, sizeof(REMOVEHOSTS), "%s", optarg) >= sizeof(REMOVEHOSTS))
+             {
+             CfOut(cf_error, "", "List of hosts to remove is too long");
+             exit(1);
+             }
           break;         
 
       case 'e': ERRORBARS = false;
@@ -442,17 +447,25 @@ snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 MapName(VINPUTFILE);
 
 InitMeasurements();
-RemoveHostSeen(REMOVEHOSTS);
+
+if(!EMPTY(REMOVEHOSTS))
+   {
+   RemoveHostSeen(REMOVEHOSTS);
+   GenericDeInitialize();
+   exit(0);
+   }
 
 #ifdef HAVE_NOVA
 if(!EMPTY(NOVA_EXPORT_TYPE))
    {
    if(Nova_ExportReports(NOVA_EXPORT_TYPE))
       {
+      GenericDeInitialize();
       exit(0);
       }
    else
       {
+      GenericDeInitialize();
       exit(1);
       }
    }
@@ -463,10 +476,12 @@ if(!EMPTY(NOVA_IMPORT_FILE))
       {
       if(Nova_ImportHostReports(NOVA_IMPORT_FILE))
          {
+         GenericDeInitialize();
          exit(0);
          }
       else
          {
+         GenericDeInitialize();
          exit(1);
          }
       }
@@ -801,25 +816,33 @@ GrandSummary();
 void RemoveHostSeen(char *hosts)
 
 { CF_DB *dbp;
-  char name[CF_BUFSIZE];
+  char name[CF_MAXVARSIZE];
   struct Item *ip,*list = SplitStringAsItemList(hosts,',');
 
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+snprintf(name,sizeof(name),"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 
 if (!OpenDB(name,&dbp))
    {
+   CfOut(cf_error, "", "!! Could not open hosts-seen database for removal of hosts");
    return;
    }
 
 for (ip = list; ip != NULL; ip=ip->next)
    {
-   snprintf(name,CF_MAXVARSIZE,"+%s",ip->name);
-   DeleteDB(dbp,name);
+   snprintf(name,sizeof(name),"+%s",ip->name);
    CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",name);
-   snprintf(name,CF_MAXVARSIZE,"-%s",ip->name);
-   DeleteDB(dbp,name);
+   if(!DeleteDB(dbp,name))
+      {
+      CfOut(cf_inform, "", " -> Entry %s not found - skipping", name);
+      }
+
+   snprintf(name,sizeof(name),"-%s",ip->name);
    CfOut(cf_inform,""," -> Deleting requested host-seen entry for %s\n",name);
+   if(!DeleteDB(dbp,name))
+      {
+      CfOut(cf_inform, "", " -> Entry %s not found - skipping", name);
+      }
    }
 
 CloseDB(dbp);

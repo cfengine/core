@@ -2,6 +2,9 @@
 	package_policy update and addupdate now check if user-supplied version
 	is larger than currently installed - updates only if so
 
+	Help text of cf-report -r corrected - a list of key hashes is required, not
+	ip addresses.
+
 3.1.5
 	New class parser, '||' is no longer allowed in expressions (use '|').
 

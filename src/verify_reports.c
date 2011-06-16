@@ -363,13 +363,13 @@ static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise
   char *key;
   void *value;
   int ksize,vsize;
-  int secs = CF_TICKS_PER_HOUR*hours, criterion, overdue;
+  int secs = SECONDS_PER_HOUR*hours, criterion, overdue;
   time_t now = time(NULL),lsea = (time_t)CF_WEEK, tthen, then;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
   char addr[CF_BUFSIZE],type[CF_BUFSIZE],output[CF_BUFSIZE];
   struct QPoint entry;
   double average = 0.0, var = 0.0, ticksperminute = 60.0;
-  double ticksperhour = (double)CF_TICKS_PER_HOUR;
+  double ticksperhour = (double)SECONDS_PER_HOUR;
 
 CfOut(cf_verbose,"","CheckFriendConnections(%d)\n",hours);
 snprintf(name,CF_BUFSIZE-1,"%s/lastseen/%s",CFWORKDIR,CF_LASTDB_FILE);

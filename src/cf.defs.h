@@ -445,9 +445,6 @@ int inet_pton(int af, const char *src, void *dst);
 #define CF_NOSIZE    -1
 #define CF_EXTRASPC 8      /* pads items during AppendItem for eol handling in editfiles */
 #define CF_INFINITY ((int)999999999)
-#define CF_TICKS_PER_DAY 86400 /* 60 * 60 *24 */
-#define CF_TICKS_PER_HOUR 3600 /* 60 * 60 */
-#define CF_HALF_HOUR 1800      /* 60 * 30 */
 #define CF_NOT_CONNECTED -1
 #define CF_COULD_NOT_CONNECT -2
 #define CF_RECURSION_LIMIT 100
@@ -455,7 +452,10 @@ int inet_pton(int af, const char *src, void *dst);
 #define CF_NOVAL -0.7259285297502359
 #define CF_UNUSED_CHAR (char)127
 
-
+#define SECONDS_PER_MINUTE 60
+#define SECONDS_PER_HOUR (60 * SECONDS_PER_MINUTE)
+#define SECONDS_PER_DAY (24 * SECONDS_PER_HOUR)
+#define SECONDS_PER_WEEK (7 * SECONDS_PER_DAY)
 
 #define CF_INDEX_FIELD_LEN 7
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1

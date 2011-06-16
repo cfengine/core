@@ -860,7 +860,7 @@ void ShowLastSeen()
   FILE *fout;
   time_t tid = time(NULL);
   double now = (double)tid,average = 0, var = 0;
-  double ticksperhr = (double)CF_TICKS_PER_HOUR;
+  double ticksperhr = (double)SECONDS_PER_HOUR;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],address[CF_MAXVARSIZE];
   struct CfKeyHostSeen entry;
   int ksize,vsize;
@@ -2360,7 +2360,7 @@ OpenMagnifyFiles();
 its = 1; /* detailed view */
 
 now = time(NULL);
-here_and_now = now - (time_t)(4 * CF_TICKS_PER_HOUR);
+here_and_now = now - (time_t)(4 * SECONDS_PER_HOUR);
 
 while (here_and_now < now)
    {

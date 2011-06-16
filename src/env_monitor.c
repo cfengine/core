@@ -71,7 +71,6 @@ int NO_FORK = false;
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(void);
-static char *GetTimeKey(void);
 static struct Averages EvalAvQ(char *timekey);
 static void ArmClasses(struct Averages newvals,char *timekey);
 static void GatherPromisedMeasures(void);
@@ -237,7 +236,7 @@ fclose(fp);
 
 void StartServer(int argc,char **argv)
 {
-char *timekey;
+char timekey[CF_SMALLBUF];
 struct Averages averages;
 struct Promise *pp = NewPromise("monitor_cfengine","the monitor daemon");
 struct Attributes dummyattr;
@@ -283,7 +282,7 @@ MonNetworkSnifferOpen();
 while (true)
    {
    GetQ();
-   timekey = GetTimeKey();
+   snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
    averages = EvalAvQ(timekey);
    LeapDetection();
    ArmClasses(averages,timekey);
@@ -318,24 +317,6 @@ MonTempGatherData(CF_THIS);
 MonOtherGatherData(CF_THIS);
 GatherPromisedMeasures();
 }
-
-/*********************************************************************/
-
-static char *GetTimeKey(void)
-{
-time_t now;
-char str[CF_SMALLBUF];
-
-if ((now = time((time_t *)NULL)) == -1)
-   {
-   exit(1);
-   }
-
-sprintf(str,"%s",cf_ctime(&now));
-
-return ConvTimeKey(str);
-}
-
 
 /*********************************************************************/
 

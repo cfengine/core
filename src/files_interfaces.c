@@ -70,7 +70,7 @@ if (strlen(from) == 0)     /* Check for root dir */
 
   /* Check that dest dir exists before starting */
 
-strncpy(newto,to,CF_BUFSIZE-2);
+strncpy(newto,to,CF_BUFSIZE-10);
 AddSlash(newto);
 strcat(newto,"dummy");
 

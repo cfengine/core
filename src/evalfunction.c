@@ -191,7 +191,10 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
  if (!ThreadLock(cft_db_lastseen))
    {
    CfOut(cf_error, "", "!! Could not lock last-seen DB");
-   return;
+   SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,NULL,NULL);
+   rval.item = NULL;
+   rval.rtype = CF_LIST;
+   return rval;
    }
 
  if (!OpenDB(name,&dbp))

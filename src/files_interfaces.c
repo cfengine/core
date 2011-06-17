@@ -88,9 +88,9 @@ if (attr.transaction.action != cfa_warn)
 
    /* Set aside symlinks */
 
-   if (cf_lstat(to, &tostat, attr, pp) == 1)
+   if (lstat(to, &tostat) != 0)
       {
-      cfPS(cf_error, CF_WARN, "cf_stat", pp, attr, "Unable to stat newly created directory %s", to);
+      cfPS(cf_error, CF_WARN, "lstat", pp, attr, "Unable to stat newly created directory %s", to);
       return;
       }
 

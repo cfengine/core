@@ -38,7 +38,6 @@
 
 static void MakeReport(struct Item *mess,int prefix);
 static void FileReport(struct Item *mess,int prefix,char *filename);
-static void SanitizeBuffer(char *buffer);
 static void MakeLog(struct Item *mess,enum cfreport level);
 #ifndef MINGW
 static void Unix_MakeLog(struct Item *mess,enum cfreport level);
@@ -62,7 +61,6 @@ va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
 ExpandThis(level,buffer,expand);
-SanitizeBuffer(expand);
 Chop(expand);
 AppendItem(&mess,expand,NULL);
 
@@ -134,7 +132,6 @@ va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
 ExpandThis(level,buffer,expand);
-SanitizeBuffer(expand);
 Chop(expand);
 AppendItem(&mess,expand,NULL);
 
@@ -208,7 +205,6 @@ va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
 ExpandThis(status,buffer,expand);
-SanitizeBuffer(expand);
 Chop(expand);
 AppendItem(&mess,expand,NULL);
 
@@ -464,14 +460,6 @@ if (fp != stdout)
    {
    fclose(fp);
    }
-}
-
-/*********************************************************************************/
-
-static void SanitizeBuffer(char *buffer)
-
-{
-/* No longer necessary */
 }
 
 /*********************************************************************************/

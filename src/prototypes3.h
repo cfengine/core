@@ -393,21 +393,13 @@ char *GetConsolePrefix(void);
 char *MailSubject(void);
 void CheckAutoBootstrap(void);
 void CheckLicenses(void);
-pid_t StartTwin(int argc,char **argv);
-void SignalTwin(void);
 void InitMeasurements(void);
-void BundleNode(FILE *fp,char *bundle);
-void BodyNode(FILE *fp,char *bundle,int call);
-void TypeNode(FILE *fp,char *type);
-void PromiseNode(FILE *fp,struct Promise *pp,int type);
 void RegisterBundleDependence(char *absscope,struct Promise *pp);
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,const char *version);
 void ShowTopicRepresentation(FILE *fp);
 void PreSanitizePromise(struct Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
-void NotePromiseConditionals(struct Promise *pp);
 void NoteEfficiency(double e);
-void DependencyGraph(struct Topic *map);
 void HistoryUpdate(struct Averages newvals);
 void CfGetClassName(int i,char *name);
 void LookUpClassName(int i,char *name);
@@ -456,7 +448,6 @@ void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *reg
 void CacheUnreliableValue(char *caller,char *handle,char *buffer);
 int RetrieveUnreliableValue(char *caller,char *handle,char *buffer);
 void TranslatePath(char *new,const char *old);
-void ReviveOther(int argc,char **argv);
 void GrandSummary(void);
 void TrackValue(char *date,double kept,double repaired, double notkept);
 void SetBundleOutputs(char *name);
@@ -656,7 +647,6 @@ int ScheduleLinkChildrenOperation(char *destination,char *source,int rec,struct 
 int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp);
 int ScheduleEditOperation(char *filename,struct Attributes attr,struct Promise *pp);
 struct FileCopy *NewFileCopy(struct Promise *pp);
-void DeleteFileCopy(struct FileCopy *fcp);
 void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
 void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp);
 int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *statbuf);
@@ -717,9 +707,7 @@ int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);
 void HashControls(void);
-void TheAgent(enum cfagenttype ag);
 void Cf3CloseLog(void);
-void *ExitCleanly(int signum);
 struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(const char *retval);
 struct Bundle *GetBundle(char *name,char *agent);
@@ -777,8 +765,6 @@ int NeighbourItemMatches(struct Item *start,struct Item *location,char *string,e
 int RawSaveItemList(struct Item *liststart, char *file);
 struct Item *SplitStringAsItemList(char *string,char sep);
 struct Item *SplitString(char *string,char sep);
-void DeleteItemPtrList(struct Item *item);
-void AppendItemPtr(struct Item **liststart,char *itemstring);
 int DeleteItemGeneral (struct Item **filestart, char *string, enum matchtypes type);
 int DeleteItemLiteral (struct Item **filestart, char *string);
 int DeleteItemStarting (struct Item **list,char *string);
@@ -793,7 +779,6 @@ int ListLen (struct Item *list);
 int ByteSizeList(const struct Item *list);
 int IsItemIn (struct Item *list, const char *item);
 int IsMatchItemIn(struct Item *list,char *item);
-int GetItemListCounter (struct Item *list, char *item);
 struct Item *ConcatLists (struct Item *list1, struct Item *list2);
 void CopyList(struct Item **dest,struct Item *source);
 int FuzzySetMatch(char *s1, char *s2);
@@ -926,7 +911,6 @@ struct Topic *GetTopic(struct Topic *list,char *topic_name);
 struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
 struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
 void DeClassifyTopic(char *typdetopic,char *topic,char *type);
-char *GetLongTopicName(CfdbConn *cfdb,struct Topic *list,char *topic_name);
 
 /* patches.c */
 
@@ -990,7 +974,6 @@ void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_S
 
 int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp);
 int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
-int SensibleFile(char *nodename,char *path,struct Attributes,struct Promise *pp);
 
 /* reporting.c */
 
@@ -1079,7 +1062,6 @@ void TestExpandVariables(void);
 
 void KeepPromiseBundles(void);
 void KeepControlPromises(void);
-void KeepServerAccessPromise(struct Promise *pp);
 struct Auth *GetAuthPath(char *path,struct Auth *list);
 void Summarize(void);
 
@@ -1121,8 +1103,6 @@ void GetNameInfo3(void);
 void CfGetInterfaceInfo(enum cfagenttype ag);
 void Get3Environment(void);
 void OSClasses(void);
-void *Lsb_Release(char *key);
-int Lsb_Version(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);
 char *Cf_GetVersion(void);

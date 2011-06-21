@@ -325,6 +325,7 @@ void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE
 { char databuf[CF_BUFSIZE];
   time_t now = time(NULL);
   int known = false;
+  char *mapip;
 
 if (strlen(ipaddress) == 0)
    {
@@ -346,7 +347,9 @@ switch (role)
 
 ThreadUnlock(cft_output);
 
-UpdateLastSawHost(databuf,ipaddress);
+mapip = MapAddress(ipaddress);
+
+UpdateLastSawHost(databuf,mapip);
 }
 
 /*****************************************************************************/

@@ -362,7 +362,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
 
    This[i] = RejectAnomaly(CF_THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
-
+   
    newvals.Q[i].q = This[i];
    LOCALAV.Q[i].q = This[i];
 
@@ -920,12 +920,12 @@ if (average == 0)
    return new;
    }
 
-if (new > big_number*4.0)
+if (new > MON_THRESHOLD_HIGH*4.0)
    {
    return 0.0;
    }
 
-if (new > big_number)
+if (new > MON_THRESHOLD_HIGH)
    {
    return average;
    }

@@ -448,7 +448,7 @@ int inet_pton(int af, const char *src, void *dst);
 #define CF_NOT_CONNECTED -1
 #define CF_COULD_NOT_CONNECT -2
 #define CF_RECURSION_LIMIT 100
-#define CF_MONDAY_MORNING 342000
+#define CF_MONDAY_MORNING 345600
 #define CF_NOVAL -0.7259285297502359
 #define CF_UNUSED_CHAR (char)127
 
@@ -773,7 +773,7 @@ typedef enum
 
 #define CFGRACEPERIOD 4.0     /* training period in units of counters (weeks,iterations)*/
 #define cf_noise_threshold 6  /* number that does not warrent large anomaly status */
-#define big_number 100000
+#define MON_THRESHOLD_HIGH 100000  // samples should stay below this threshold
 #define LDT_BUFSIZE 10
 #define CF_GRAINS   64
 #define ATTR     11

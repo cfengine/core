@@ -197,7 +197,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Anomalous type mismatch - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,""," !! Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",cp->type,lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -248,7 +248,7 @@ for (cp = list; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_SCALAR)
          {
-         CfOut(cf_error,"","Anomalous type mismatch - expected type (%c) for boolean constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,""," !! Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",cp->type,lval);
          FatalError("Aborted");
          }
 
@@ -541,7 +541,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       if (cp->type != CF_LIST)
          {
-         CfOut(cf_error,"","Anomalous type mismatch - expected type for list constraint %s did not match internals\n",lval);
+         CfOut(cf_error,""," !! Type mismatch on rhs - expected type for list constraint \"%s\" \n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -710,6 +710,7 @@ static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,ch
   int i,j,l,m;
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
+
 
 Debug("  Post Check Constraint %s: %s =>",type,lval);
 

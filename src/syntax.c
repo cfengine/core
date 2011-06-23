@@ -173,7 +173,7 @@ void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,s
   int i,l, allowed = false;
   struct BodySyntax *bs;
   char output[CF_BUFSIZE];
-  
+
 Debug("CheckConstraint(%s,%s,",type,lval);
 
 if (DEBUG)
@@ -182,6 +182,7 @@ if (DEBUG)
    }
 
 Debug(")\n");
+
 
 if (ss.subtype != NULL) /* In a bundle */
    {

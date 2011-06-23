@@ -101,6 +101,7 @@ void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void 
   struct Constraint *cp;
   struct Promise *pcopy;
 
+
 Debug("****************************************************\n");
 Debug("* ExpandPromises (scope = %s )\n",scopeid);
 Debug("****************************************************\n\n");

@@ -225,7 +225,7 @@ if (INSTALL_SKIP)
    {
    return NULL;
    }
- 
+
 if (type == NULL)
    {
    yyerror("Software error. Attempt to add a promise without a type\n");

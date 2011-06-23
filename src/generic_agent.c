@@ -1401,7 +1401,6 @@ static void VerifyPromises(enum cfagenttype agent)
   struct FnCall *fp;
   char *scope;
 
-Debug("\n\nVerifyPromises()\n");
 
 if (REQUIRE_COMMENTS == CF_UNDEFINED)
    {
@@ -1479,7 +1478,11 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
       if (strcmp(sp->name,"classes") == 0)
          {
          /* these should not be evaluated here */
-         continue;
+
+	 if (agent != cf_common)
+	    {
+	    continue;
+	    }
          }
 
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)

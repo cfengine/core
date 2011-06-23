@@ -471,7 +471,7 @@ switch(rvaltype)
           case cf_olist:
               if (level == 0)
                  {
-                 snprintf(output,CF_BUFSIZE,"rhs is a scalar, but lhs (%s) is not a scalar type",CF_DATATYPES[dt]);
+                 snprintf(output,CF_BUFSIZE," !! Type mismatch -- rhs is a scalar, but lhs (%s) is not a scalar type",CF_DATATYPES[dt]);
                  ReportError(output);
                  }
               break;
@@ -489,7 +489,7 @@ switch(rvaltype)
           case cf_olist:
               break;
           default:
-              snprintf(output,CF_BUFSIZE,"rhs is a list, but lhs (%s) is not a list type",CF_DATATYPES[dt]);
+              snprintf(output,CF_BUFSIZE,"!! Type mistach -- rhs is a list, but lhs (%s) is not a list type",CF_DATATYPES[dt]);
               ReportError(output);
               break;
           }

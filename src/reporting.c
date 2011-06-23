@@ -796,7 +796,7 @@ printf("</table></center>\n");
 void ReportError(char *s)
 
 {
-if (PARSING)
+if (PARSING || THIS_AGENT_TYPE == cf_common)
    {
    yyerror(s);
    }

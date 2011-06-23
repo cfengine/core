@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test brackets on "xor" (Issue 234)
+# Test no brackets on "xor" (Issue 234)
 #
 #######################################################
 
@@ -40,7 +40,8 @@ vars:
 bundle agent check
 {
 classes:
-	"ok" xor => { userexists("root") };
+	"ok" xor =>
+		    userexists("root");
 		    
 
 reports:

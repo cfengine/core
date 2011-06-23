@@ -40,8 +40,7 @@ vars:
 bundle agent check
 {
 classes:
-	"ok" and =>
-		    userexists("root");
+	"ok" and => { userexists("root") };
 		    
 
 reports:

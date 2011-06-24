@@ -268,7 +268,7 @@ if (!IsItemIn(*liststart,itemstring))
 
 /*********************************************************************/
 
-struct Item *PrependItem(struct Item **liststart,char *itemstring,char *classes)
+struct Item *PrependItem(struct Item **liststart,const char *itemstring,const char *classes)
 
 { struct Item *ip;
   char *sp,*spe = NULL;

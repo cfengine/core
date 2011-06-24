@@ -145,7 +145,7 @@ return false;
 
 /*****************************************************************************/
 
-void PrependAlphaList(struct AlphaList *al,char *string)
+void PrependAlphaList(struct AlphaList *al, const char *string)
 
 { int i = (int)*string;
 

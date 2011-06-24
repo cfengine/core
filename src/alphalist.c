@@ -154,6 +154,16 @@ al->list[i] = PrependItem(&(al->list[i]),string,NULL);
 
 /*****************************************************************************/
 
+void IdempPrependAlphaList(struct AlphaList *al, const char *string)
+{
+if (!InAlphaList(*al, string))
+   {
+   PrependAlphaList(al, string);
+   }
+}
+
+/*****************************************************************************/
+
 static void ShowAlphaList(struct AlphaList al)
 
 { int i;

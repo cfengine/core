@@ -70,6 +70,7 @@ void InitAlphaList(struct AlphaList *al);
 int InAlphaList(struct AlphaList al,const char *string);
 int MatchInAlphaList(struct AlphaList al,char *string);
 void PrependAlphaList(struct AlphaList *al, const char *string);
+void IdempPrependAlphaList(struct AlphaList *al, const char *string);
 void ListAlphaList(FILE *fp,struct AlphaList al,char sep);
 void DeleteAlphaList(struct AlphaList *al);
 struct AlphaList *CopyAlphaListPointers(struct AlphaList *al,struct AlphaList *ap);

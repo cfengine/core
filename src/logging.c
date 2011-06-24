@@ -363,25 +363,24 @@ if (list == NULL)
 
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   if (IsHardClass((char *)rp->item))
-      {
-      CfOut(cf_error,""," !! You cannot use reserved hard class \"%s\" as post-condition class",CanonifyName(rp->item));
-      }
+   char *classname = strdup(rp->item);
+   CanonifyNameInPlace(classname);
 
-   string = (char *)(rp->item);
-   slot = (int)*string;
+   if (IsHardClass(classname))
+      {
+      CfOut(cf_error,""," !! You cannot use reserved hard class \"%s\" as post-condition class",classname);
+      }
 
    if (persist > 0)
       {
-      CfOut(cf_verbose,""," ?> defining persistent promise result class %s\n",(char *)CanonifyName(rp->item));
+      CfOut(cf_verbose,""," ?> defining persistent promise result class %s\n", classname);
       NewPersistentContext(CanonifyName(rp->item),persist,policy);
-      IdempPrependItem(&(VHEAP.list[slot]),CanonifyName((char *)rp->item),NULL);
       }
    else
       {
-      CfOut(cf_verbose,""," ?> defining promise result class %s\n",(char *)CanonifyName(rp->item));
-      IdempPrependItem(&(VHEAP.list[slot]),CanonifyName((char *)rp->item),NULL);
+      CfOut(cf_verbose,""," ?> defining promise result class %s\n", classname);
       }
+   IdempPrependAlphaList(&VHEAP, classname);
    }
 }
 

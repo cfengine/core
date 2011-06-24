@@ -408,7 +408,9 @@ strcpy(FILE_SEPARATOR_STR,"/");
 
 NewClass("any");
 
-#ifdef HAVE_NOVA
+#if defined HAVE_CONSTELLATION
+NewClass("constellation_edition");
+#elif defined HAVE_NOVA
 NewClass("nova_edition");
 #else
 NewClass("community_edition");

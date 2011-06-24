@@ -133,8 +133,6 @@ extern const char *SHIFT_TEXT[];
 extern char FILE_SEPARATOR;
 extern char FILE_SEPARATOR_STR[2];
 
-extern char *UNITS[CF_OBSERVABLES];
-
 extern char *BASIC_REPORTS[cfrep_unknown][2];
 extern char *CDP_REPORTS[cdp_unknown][2];
 

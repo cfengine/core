@@ -446,8 +446,6 @@ strcpy(FOOTER,"");
 snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 MapName(VINPUTFILE);
 
-InitMeasurements();
-
 if(!EMPTY(REMOVEHOSTS))
    {
    RemoveHostSeen(REMOVEHOSTS);

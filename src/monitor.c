@@ -237,6 +237,5 @@ signal(SIGUSR2,HandleSignals);
 
 FORGETRATE = 0.6;
 
-InitMeasurements();
 MonInitialize();
 }

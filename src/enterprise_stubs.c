@@ -836,15 +836,6 @@ void VerifyServices(struct Attributes a,struct Promise *pp)
 /* Montoring                                                                 */
 /*****************************************************************************/
 
-void InitMeasurements()
-{
-#ifdef HAVE_NOVA
- NovaInitMeasurements();
-#endif
-}
-
-/*****************************************************************************/
-
 void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp)
 
 {

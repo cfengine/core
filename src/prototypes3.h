@@ -393,7 +393,6 @@ char *GetConsolePrefix(void);
 char *MailSubject(void);
 void CheckAutoBootstrap(void);
 void CheckLicenses(void);
-void InitMeasurements(void);
 void RegisterBundleDependence(char *absscope,struct Promise *pp);
 void MapPromiseToTopic(FILE *fp,struct Promise *pp,const char *version);
 void ShowTopicRepresentation(FILE *fp);

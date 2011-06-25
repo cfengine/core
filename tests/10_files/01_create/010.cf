@@ -54,7 +54,7 @@ body perms test_perms
 {
 mode => "$(test.mode)";
 linux::
-    owners => { "sys" };
+    owners => { "3" };  # sys is not necessarily 3 on all linux
     groups => { "sys" };
 freebsd::
     owners => { "bin" };

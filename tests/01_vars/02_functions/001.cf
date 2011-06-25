@@ -36,10 +36,15 @@ vars:
 	"uid_root" int => getuid("root");
 	"uid_daemon" int => getuid("daemon");
 	"uid_bin" int => getuid("bin");
-    linux::
+    !SuSE::
 	"num_root" int => "0";
 	"num_daemon" int => "1";
 	"num_bin" int => "2";
+    SuSE::
+	"num_root" int => "0";
+	"num_daemon" int => "2";
+	"num_bin" int => "1";
+
     freebsd::
 	"num_root" int => "0";
 	"num_daemon" int => "1";

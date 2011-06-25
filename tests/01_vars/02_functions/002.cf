@@ -41,9 +41,12 @@ vars:
     any::
 	"gid_daemon" int => getgid("daemon");
 	"gid_sys" int => getgid("sys");
-
-	"num_daemon" int => "1";
 	"num_sys" int => "3";
+
+   !SuSE::
+	"num_daemon" int => "1";
+   SuSE::
+	"num_daemon" int => "2";
 }
 
 #######################################################

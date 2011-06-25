@@ -282,7 +282,6 @@ if (!SanityCheckDeletions(a,pp))
 
 if (!a.haveregion)
    {
-   printf("XXXXXXXXXXXXXXX\n");
    begin_ptr = CF_UNDEFINED_ITEM;
    end_ptr = CF_UNDEFINED_ITEM;
    }
@@ -569,12 +568,12 @@ if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
    return false;
    }
 
-if (end == CF_UNDEFINED_ITEM)
+/*if (end == CF_UNDEFINED_ITEM)
    {
-   end = NULL; /* End of file is null ptr if nothing else specified */
+   end = NULL;
    return false;
    }
-
+*/
 return true;
 }
 

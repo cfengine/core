@@ -1221,6 +1221,7 @@ enum cfl_view
    cfl_view_sumnotkept_wk,
    cfl_view_repairedreason,
    cfl_view_notkeptreason,
+   cfl_view_filechange,
    cfl_view_error
    };
 

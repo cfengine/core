@@ -1167,6 +1167,7 @@ enum cfl_view Str2View(char *s)
 			   "SumNotKeptWk",
 			   "RepairedReason",                           
 			   "NotKeptReason",
+                           "FileChange",
 			   NULL };
   int i;
 

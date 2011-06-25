@@ -73,7 +73,7 @@ switch(type)
 
 if (THIS_AGENT_TYPE == cf_common)
    {
-   //  PostCheckConstraint("none","none",lval,rval,type);
+   PostCheckConstraint("none","none",lval,rval,type);
    }
 
 if ((cp = (struct Constraint *)malloc(sizeof(struct Constraint))) == NULL)
@@ -729,14 +729,14 @@ if (DEBUG)
 
 // Check class
 
-/*for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
+for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
    {
    if (strcmp(lval,CF_CLASSBODY[i].lval) == 0)
       {
       CheckConstraintTypeMatch(lval,rval,rvaltype,CF_CLASSBODY[i].dtype,CF_CLASSBODY[i].range,0);
       }
    }
-*/
+
 for  (i = 0; i < CF3_MODULES; i++)
    {
    if ((ssp = CF_ALL_SUBTYPES[i]) == NULL)

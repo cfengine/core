@@ -282,8 +282,9 @@ if (!SanityCheckDeletions(a,pp))
 
 if (!a.haveregion)
    {
-   begin_ptr = *start;
-   end_ptr = NULL; //EndOfList(*start);
+   printf("XXXXXXXXXXXXXXX\n");
+   begin_ptr = CF_UNDEFINED_ITEM;
+   end_ptr = CF_UNDEFINED_ITEM;
    }
 else if (!SelectRegion(*start,&begin_ptr,&end_ptr,a,pp))
    {
@@ -518,7 +519,7 @@ This should provide pointers to the first and last line of text that include the
 delimiters, since we need to include those in case they are being deleted, etc.
 It returns true if a match was identified, else false.
 
-If no such region matches, begin_ptr and end_ptr should point
+If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_ITEM
 
 */
     
@@ -549,12 +550,6 @@ for (ip = start; ip != NULL; ip = ip->next)
       if (end == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_end,ip->name))
          {
          end = ip;
-
-         if (a.region.include_end && end != NULL)
-            {
-            //end = end->next; // WRONG?
-            }
-
          break;
          }
       }
@@ -564,6 +559,9 @@ for (ip = start; ip != NULL; ip = ip->next)
       break;
       }
    }
+
+*begin_ptr = beg;
+*end_ptr = end;
 
 if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
    {
@@ -577,8 +575,6 @@ if (end == CF_UNDEFINED_ITEM)
    return false;
    }
 
-*begin_ptr = beg;
-*end_ptr = end;
 return true;
 }
 
@@ -783,7 +779,7 @@ else
     
 static int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
-{ struct Item *ip,*np = NULL,*lp;
+{ struct Item *ip,*np = NULL,*lp,*initiator = begin,*terminator = NULL;
   int i,in_region = false, retval = false, matches, noedits = true;
   char *sp,buf[CF_BUFSIZE];
 
@@ -792,50 +788,52 @@ if (start == NULL)
    return false;
    }
 
-for (ip = *start; ip != NULL; ip = np)
+// Get a pointer from before the region so we can patch the hole later
+
+if (begin == CF_UNDEFINED_ITEM)
    {
-   if (ip == begin)
+   initiator = *start;
+   printf("SET INIT %s\n",initiator->name);
+   }
+else
+   {
+   if (a.region.include_start)
       {
-      in_region = true;
-
-      if (!a.region.include_start) 
-         {
-         // Have to handle this here because
-         // MatchRegion needs to see the delimiters
-         // in case we need to delete them!
-         np = ip->next;
-         continue;
-         }
-      }
-
-   if (a.region.include_end == false && ip == end)
-      {
-      // Have to handle this here because
-      // MatchRegion needs to see the delimiters
-      // in case we need to delete them!
-      in_region = false;      
-      break;
-      }
-
-   if (!in_region)
-      {
-      np = ip->next;
-      continue;
-      }
-   
-   if (!SelectLine(ip->name,a,pp)) // Start search from location
-      {
-      np = ip->next;
-      continue;
-      }
-
-   if (a.not_matching)
-      {
-      matches = !MatchRegion(pp->promiser,ip,begin,end);
+      initiator = begin;
       }
    else
       {
-      matches = MatchRegion(pp->promiser,ip,begin,end);
+      initiator = begin->next;
+      }
+   }
+
+if (end == CF_UNDEFINED_ITEM)
+   {
+   terminator = NULL;
+   }
+else
+   {
+   if (a.region.include_end)
+      {
+      terminator = end->next;
+      }
+   else
+      {
+      terminator = end;
+      }
+   }
+
+// Now do the deletion
+
+for (ip = initiator; ip != terminator && ip != NULL; ip = np)
+   {
+   if (a.not_matching)
+      {
+      matches = !MatchRegion(pp->promiser,*start,ip,terminator);
+      }
+   else
+      {
+      matches = MatchRegion(pp->promiser,*start,ip,terminator);
       }
 
    if (matches)
@@ -846,8 +844,14 @@ for (ip = *start; ip != NULL; ip = np)
       {
       CfOut(cf_verbose,""," -> Multi-line region didn't match text in the file");
       }
-   
-   if (in_region && matches)
+      
+   if (!SelectLine(ip->name,a,pp)) // Start search from location
+      {
+      np = ip->next;
+      continue;
+      }
+
+   if (matches)
       {
       CfOut(cf_verbose,""," -> Delete chunk of %d lines\n",matches,ip->name);
       
@@ -859,12 +863,12 @@ for (ip = *start; ip != NULL; ip = np)
          }
       else
          {
-         for (i = 0; i < matches; i++)
+         for (i = 1; i <= matches; i++)
             {                     
-            cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line \"%s\" from %s",ip->name,pp->this_server);
+            cfPS(cf_verbose,CF_CHG,"",pp,a," -> Deleting the promised line %d \"%s\" from %s",i,ip->name,pp->this_server);
             retval = true;
             noedits = false;
-            
+
             if (ip->name != NULL)
                {
                free(ip->name);
@@ -874,46 +878,38 @@ for (ip = *start; ip != NULL; ip = np)
             free((char *)ip);
             
             lp = ip;
-            
+
             if (ip == *start)
                {
+               if (initiator == *start)
+                  {
+                  initiator = np;
+                  }
                *start = np;
                }
             else
                {
-               for (lp = *start; lp->next != ip; lp=lp->next)
+               if (ip == initiator)
                   {
+                  initiator = *start;
                   }
                
-               lp->next = np;
-               }
+               for (lp = initiator; lp->next != ip; lp=lp->next)
+                  {
+                  }
 
-            if (ip == end)
-               {
-               in_region = false;
-               break;
+               lp->next = np;
                }
 
             (pp->edcontext->num_edits)++;
 
             ip = np;
             }
-
-         if (!in_region)
-            {
-            break;
-            }         
          }
       }
    else
       {
       np = ip->next;
-      }
-
-   if (ip == end)
-      {
-      in_region = false;
-      break;
       }
    }
 

@@ -632,14 +632,15 @@ return false;
 
 /*********************************************************************/ 
 
-int MatchRegion(char *chunk,struct Item *location,struct Item *begin,struct Item *end)
+int MatchRegion(char *chunk,struct Item *start,struct Item *begin,struct Item *end)
 
 /*
-  Match a region in between the section delimiters. This function needs to be
-  able to see the delimiters in case the promiser contains them itself.
+  Match a region in between the selection delimiters. It is
+  called after SelectRegion. The end delimiter will be visible
+  here so we have to check for it.
 */
     
-{ struct Item *ip = location;
+{ struct Item *ip = begin;
   char *sp,buf[CF_BUFSIZE];
   int lines = 0;
 
@@ -649,29 +650,38 @@ for (sp = chunk; sp <= chunk+strlen(chunk); sp++)
    sscanf(sp,"%[^\n]",buf);
    sp += strlen(buf);
 
-   if (ip == end)
+   if (ip == NULL)
       {
-      continue;
+      return false;
       }
-
+   
    if (!FullTextMatch(buf,ip->name))
       {
       return false;
       }
 
    lines++;
+
+   // We have to manually exclude the marked terminator
+   
+   if (ip == end)
+      {
+      return false;
+      }
+
+   // Now see if there is more
    
    if (ip->next)
       {
       ip = ip->next;
       }
-   else
+   else // if the region runs out before the end
       {
       if (++sp <= chunk+strlen(chunk))
          {
          return false;
-         }
-      
+         }      
+
       break;
       }
    }

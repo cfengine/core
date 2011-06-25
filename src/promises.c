@@ -162,7 +162,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    char *bodyname = NULL;
 
    /* A body template reference could look like a scalar or fn to the parser w/w () */
-
+   
    switch (cp->type)
       {
       case CF_SCALAR:

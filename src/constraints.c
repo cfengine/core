@@ -49,6 +49,7 @@ struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void
     
 { struct Constraint *cp,*lp;
   char *sp = NULL;
+  int i;
 
 switch(type)
    {
@@ -66,6 +67,13 @@ switch(type)
        break;
    case CF_LIST:
        Debug("   Appending a list to rhs\n");
+   }
+
+// Check class
+
+if (THIS_AGENT_TYPE == cf_common)
+   {
+   //  PostCheckConstraint("none","none",lval,rval,type);
    }
 
 if ((cp = (struct Constraint *)malloc(sizeof(struct Constraint))) == NULL)
@@ -711,7 +719,6 @@ static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,ch
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
 
-
 Debug("  Post Check Constraint %s: %s =>",type,lval);
 
 if (DEBUG)
@@ -720,6 +727,16 @@ if (DEBUG)
    printf("\n");
    }
 
+// Check class
+
+/*for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
+   {
+   if (strcmp(lval,CF_CLASSBODY[i].lval) == 0)
+      {
+      CheckConstraintTypeMatch(lval,rval,rvaltype,CF_CLASSBODY[i].dtype,CF_CLASSBODY[i].range,0);
+      }
+   }
+*/
 for  (i = 0; i < CF3_MODULES; i++)
    {
    if ((ssp = CF_ALL_SUBTYPES[i]) == NULL)

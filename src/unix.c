@@ -124,7 +124,7 @@ if (sb.st_mode & 02)
    return false;
    }
 
-if (getuid() == sb.st_uid)
+if (getuid() == sb.st_uid || getuid() == 0)
    {
    if (sb.st_mode & 0100)
       {

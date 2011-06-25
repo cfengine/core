@@ -61,7 +61,7 @@ files:
 body perms test_og
 {
 linux::
-    owners => { "sys" };
+    owners => { "3" }; # Can't assume sys = 3
     groups => { "sys" };
 freebsd::
     owners => { "bin" };

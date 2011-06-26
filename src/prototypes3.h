@@ -146,6 +146,13 @@ struct Measurement GetMeasurementConstraint(struct Promise *pp);
 struct CfACL GetAclConstraints(struct Promise *pp);
 struct CfDatabase GetDatabaseConstraints(struct Promise *pp);
 
+/* bootstrap.c */
+
+void CheckAutoBootstrap(void);
+void SetPolicyServer(char *name);
+void CreateFailSafe(char *name);
+void SetDocRoot(char *name);
+
 /* cfstream.c */
 
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);

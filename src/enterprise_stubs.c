@@ -168,17 +168,6 @@ return;
 
 /*****************************************************************************/
 
-void CheckAutoBootstrap()
-
-{
-#ifdef HAVE_NOVA
-Nova_CheckAutoBootstrap();
-#else
-#endif
-}
-
-/*****************************************************************************/
-
 char *GetConsolePrefix()
     
 {
@@ -209,18 +198,6 @@ else
 strcpy(buffer,"community");
 #endif
 return buffer;
-}
-
-/*****************************************************************************/
-
-void SetPolicyServer(char *name)
-
-{
-#ifdef HAVE_NOVA
-Nova_SetPolicyServer(name);
-#else
-CfOut(cf_verbose,"","Setting policy server requires version Nova or above");
-#endif 
 }
 
 /*****************************************************************************/

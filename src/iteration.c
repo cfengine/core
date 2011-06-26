@@ -275,7 +275,6 @@ if (list == NULL)
 
 DeleteAssoc((struct CfAssoc *)list->item);
 
-
 DeleteReferenceRlist(list->next);
 free((char *)list);
 }

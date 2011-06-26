@@ -126,7 +126,7 @@ void DeleteScalar(char *scope,char *lval)
 
 { struct Scope *ptr;
   struct CfAssoc *ap;
-  int slot;
+  int slot,finalslot;
  
 ptr = GetScope(scope);
 slot = GetHash(lval);
@@ -135,16 +135,25 @@ if (ptr == NULL)
    {
    return;
    }
- 
-if ((ap = (struct CfAssoc *)(ptr->hashtable[slot])))
+
+// The hash value might not be correct if the table is full
+
+for (finalslot = slot; (finalslot % CF_HASHTABLESIZE) != slot-1; finalslot++)
    {
-   DeleteAssoc(ap);
-   ptr->hashtable[slot] = NULL;
+   if (ptr->hashtable[finalslot % CF_HASHTABLESIZE] && strcmp(lval,ptr->hashtable[finalslot % CF_HASHTABLESIZE]->lval) == 0)
+      {
+      Debug("Delete %s FOUND it finally at slot %d not %d\n",lval,finalslot,slot);
+      
+      if ((ap = (struct CfAssoc *)(ptr->hashtable[finalslot % CF_HASHTABLESIZE])))
+         {
+         DeleteAssoc(ap);
+         ptr->hashtable[finalslot % CF_HASHTABLESIZE] = NULL;
+         return;
+         }
+      }
    }
-else
-   {
-   Debug("Attempt to delete non existent variable %s in scope %s\n",lval,scope);
-   }
+
+Debug("Attempt to delete non existent variable %s in scope %s\n",lval,scope);
 }
 
 /*******************************************************************/

@@ -45,7 +45,6 @@ void WriteKMDB(void);
 void GenerateManual(void);
 void CfGenerateStories(char *query,enum storytype type);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
-void CfQueryCFDB(char *query);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -97,7 +96,7 @@ const char *ID = "The knowledge management agent is capable of building\n"
                  "and cf-know can assemble and converge the reference manual\n"
                  "for the current version of the Cfengine software.";
  
-const  struct option OPTIONS[12] =
+const  struct option OPTIONS[11] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -107,13 +106,12 @@ const  struct option OPTIONS[12] =
       { "file",required_argument,0,'f' },
       { "manual",no_argument,0,'m'},
       { "manpage",no_argument,0,'M'},
-      { "query_cfdb",required_argument,0,'Q'},
       { "stories",required_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[12] =
+const char *HINTS[11] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",
@@ -123,7 +121,6 @@ const char *HINTS[12] =
       "Specify an alternative input file than the default",
       "Generate reference manual from internal data",
       "Generate reference manpage from internal data",
-      "Query the CFDB for testing, etc",
       "Look up stories for a given topic on the command line",
       "Print a syntax summary of the optional keyword or this cfengine version",
       NULL
@@ -168,7 +165,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -201,12 +198,6 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMQ:s:S",OPTIONS,&optindex)) != EOF)
                  DEBUG = true;
                  break;
              }
-          break;
-
-      case 'Q':
-          strcpy(TOPIC_CMD,optarg);
-          CfQueryCFDB(TOPIC_CMD);
-          exit(0);
           break;
 
       case 's':
@@ -601,15 +592,6 @@ if (strcmp("reports",pp->agentsubtype) == 0)
    VerifyReportPromise(pp);
    return;
    }
-}
-
-/*********************************************************************/
-
-void CfQueryCFDB(char *query)
-{
-#ifdef HAVE_NOVA
-Nova_CfQueryCFDB(query);
-#endif
 }
 
 /*********************************************************************/

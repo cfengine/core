@@ -457,6 +457,14 @@ int inet_pton(int af, const char *src, void *dst);
 #define SECONDS_PER_DAY (24 * SECONDS_PER_HOUR)
 #define SECONDS_PER_WEEK (7 * SECONDS_PER_DAY)
 
+/* Long-term monitoring constants */
+
+#define HOURS_PER_SHIFT 6
+#define SECONDS_PER_SHIFT (HOURS_PER_SHIFT * SECONDS_PER_HOUR)
+#define SHIFTS_PER_DAY 4
+#define SHIFTS_PER_WEEK (4*7)
+
+
 #define CF_INDEX_FIELD_LEN 7
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 

@@ -198,7 +198,7 @@ fprintf(fout,
         "\\input texinfo-logo\n"
         "\\input texinfo\n"
         "@selectaltfont{cmbright}\n"
-        "@setlogo{NewLogo}\n"
+        "@setlogo{CFEngineFrontPage}\n"
         "@c *********************************************************************\n"
         "@c\n"
         "@c  This is an AUTO_GENERATED TEXINFO file. Do not submit patches against it.\n"

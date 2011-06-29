@@ -25,6 +25,7 @@ body common control
                     "knowledge.cf",
                     "environment_$(environments.active)/promises.cf",
 
+# Content Driven Policy - See Special Topics Guides
 
 #                    "cdp_lib/cdp.cf",
 #                    "cdp_lib/cdp_acls.cf",
@@ -33,6 +34,8 @@ body common control
 #                    "cdp_lib/cdp_file_diffs.cf",
 #                    "cdp_lib/cdp_services.cf",
 #                    "cdp_lib/cdp_commands.cf",
+
+# Orion Cloud Services - See Special Topics Guide
 
 #                    "OrionCloud/c_cpp_env.cf",
 #                    "OrionCloud/ensure_ownership.cf",
@@ -58,11 +61,11 @@ body common control
 #                    "OrionCloud/python_env.cf"
                    };
 
-   version => "Promises.cf 1.1.0";
+  version => "Promises.cf 1.1.0";
 
   nova_edition|constellation_edition::
 
-   host_licenses_paid => "1";
+  host_licenses_paid => "1";
 
 }
 

@@ -1,0 +1,21 @@
+#
+#  Content-Driven Policy
+#
+##################################################################
+#
+#  File Difference Reporting
+#
+#  FORMAT:   file_path;class_expression
+#
+#  EXAMPLE:  C:\users.txt;windows
+#
+#  NOTE:     The file is always allowed to change. 
+#            Use file_change Content-Driven Policies to revert a 
+#	     changed file. Detailed change reports will 
+#            be generated.
+#
+
+
+C:\Windows\watched.txt;windows
+C:\users.txt;windows
+

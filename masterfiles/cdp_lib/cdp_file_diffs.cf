@@ -1,0 +1,21 @@
+#
+# DO NOT EDIT: File diff management from control files
+#
+
+bundle agent cdp_file_diffs
+{
+ vars:
+
+   "df_dimension" int => readstringarrayidx("df","$(sys.workdir)/inputs/environment_$(environments.active)/cdp_inputs/file_diff_list.txt","#[^\n]*",";",500,50000);
+   "df_list"    slist => getindices("df");
+   
+files:
+
+   "$(df[$(df_list)][0])"
+      comment      => "Modification difference watch on important text files, defined in CDP input-file",
+      handle       => canonify("cdp_diff_$(df[$(df_list)][0])_$(df[$(df_list)][1])"),
+      changes      => diff,
+      ifvarclass   => "$(df[$(df_list)][1])";
+	  
+}
+ 

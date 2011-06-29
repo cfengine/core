@@ -1,0 +1,246 @@
+# 
+# The Cfengine Cloud Pack, Copyright  (C) Cfengine AS, Oslo Norway
+# --------------------------------------------------------------------
+# 
+# This file is provided under a perpetual license as part of tjhe
+# Cfengine Cloud Pack (hereby called The Software). The Software may be
+# used within a single Internet Domain. If no Internet Domain is
+# registered, it may be used within a single legal organization
+# possessing a maximum of 1024 computers, or by a single individual with
+# up to 250 computers. Multiple licenses may be purchased, as needed.
+# 
+# The Licensee may modify, adapt and create derivative works based upon
+# the Software, for use within its organisation and for sharing between
+# other consecutive licensees. However, the Licensee shall not
+# reproduce, distribute, resell, rent, lease or disclose the Software in
+# any manner or form to any other third party not holding a license for
+# the Software.
+# 
+# The Licensee may not transfer any of its rights under this agreement
+# without the prior and express written consent of Cfengine.
+# 
+# INTELLECTUAL PROPERTY RIGHTS
+# 
+# Cfengine does not transfer any copyrights or other intellectual
+# property rights relating to the Software to the Licensee. Such rights
+# are protected by intellectual property legislation in the United
+# States, Europe and other jurisdictions and by international treaty
+# provisions. Cfengine and its suppliers retain all rights in the
+# Software that are not expressly granted to the Licensee through this
+# license.
+# 
+# The Licensee is not allowed to remove, alter or destroy any proprietary,
+# trademark or copyright markings or notices placed upon or contained
+# within the Software.
+# 
+# NO WARRANTY
+# 
+# To the maximum extent permitted by law, Cfengine disclaims any
+# warranty for the Software. The Software, any services and any related
+# documentation are provided on an "as is" basis without warranty of any
+# kind, whether express or implied, including, but not limited to,
+# implied warranties of merchantability, fitness for a particular
+# purpose or non-infringement. Hereunder the parties acknowledges that
+# Cfengine does not warrant for the performance of any data centre on
+# which the Software runs, or the absence of any errors in the Software,
+# and that any such errors does not constitute a contractual defect.
+# 
+# LIABILITY
+# 
+# The liability of the parties in contract, tort (including negligence)
+# or otherwise shall for all incidents during the entire term of 30 days
+# from the date of purchase be limited to a half of the fees paid for a
+# perpetual license. Cfengine or its suppliers shall not be liable for
+# any special, incidental, indirect or consequential damages whatsoever
+# (including, without limitation, damages for loss of business profits,
+# lost savings, business interruption, loss of business information,
+# personal injury, loss of privacy, loss of goodwill or any other
+# financial loss) arising out of the use of or inability to use the
+# Software, even if advised of the possibility of such damages.
+# 
+# THIRD-PARTY TERMS
+# 
+# For third-party software that is integrated with or used by
+# Cfengine, the current terms of the relevant third party software
+# supplier shall apply.
+#
+#######################################################
+# NAGIOS
+#######################################################
+#
+# Scenario:
+# Setup NAGIOS mornitoring node
+#
+
+bundle agent monitoring_nagios
+{
+ vars:
+
+  any::
+
+   "cache_dir" string => "$(sys.workdir)/cache";
+
+   "nagios_admin"   string => "nagiosadmin";
+
+   # default password is 'nagios'
+   "nagios_htpasswd" slist => {
+                               "$(nagios_admin):Bt7edgYo3N/KA"	
+                              };
+
+  ubuntu::
+
+   "nagios_pkgs"   slist => {
+                             "apache2",
+                             "nagios3"
+                            };
+
+  centos::
+
+   "nagios_pkgs"   slist => {
+                             "nagios"
+                            };
+#
+
+ files:
+
+  ubuntu::
+
+   "/etc/nagios3/htpasswd.users"
+            comment => "Create NAGIOS passwd file for authentication",
+             create => "true",
+              perms => mog("644","root","root"),
+          edit_line => append_if_no_lines(@(nagios.nagios_htpasswd));
+
+   "/etc/apache2/conf.d/nagios3.conf"
+        comment => "Integrated NAGIOS3 to APACHE2",
+      copy_from => local_cp("/etc/nagios3/apache2.conf"),
+        classes => if_ok("nagios3_conf_ready");
+
+  centos::
+
+   "/etc/nagios/passwd"
+            comment => "Create NAGIOS passwd file for authentication",
+             create => "true",
+              perms => mog("644","root","root"),
+          edit_line => append_if_no_lines(@(nagios.nagios_htpasswd));
+   
+   "$(cache_dir)/nagios.conf"
+            comment => "Create HTTPD configuration for NAGIOS2",
+             create => "true",
+      edit_defaults => empty,
+              perms => mog("644","root","root"),
+          edit_line => httpd_nagios_conf("$(nagios_admin)");
+
+   "/etc/httpd/conf.d/nagios.conf"
+        comment => "Copy the HTTPD configuration to a right place",
+      copy_from => local_cp("$(cache_dir)/nagios.conf"),
+          perms => mog("644","root","root"),
+        classes => if_ok("nagios2_conf_ready");
+
+#
+
+ packages:
+
+  any::
+
+   "$(nagios_pkgs)"
+             comment => "Prepare NAGIOS",
+      package_policy => "add",
+      package_method => generic;
+
+#
+
+ processes:
+
+  ubuntu::
+
+   "/usr/sbin/nagios3.*"
+      restart_class => "start_nagios3";
+
+   ".*apache2.*"
+      restart_class => "start_apache2";
+
+  centos::
+
+   "/usr/sbin/nagios.*"
+      restart_class => "start_nagios2";
+
+   ".*httpd"
+      restart_class => "start_httpd";
+
+#
+
+ commands:
+
+  start_nagios3::
+
+   "/etc/init.d/nagios3 start";
+
+  start_apache2.nagios3_conf_ready::
+
+   "/etc/init.d/apache2 restart";
+
+  start_nagios2::
+
+   "/etc/init.d/nagios start";
+
+  start_httpd.nagios2_conf_ready::
+
+   "/etc/init.d/httpd restart"; 
+}
+
+######################################################################
+
+bundle edit_line httpd_nagios_conf(admin)
+{
+ insert_lines:
+"ScriptAlias /nagios/cgi-bin/ /usr/lib64/nagios/cgi-bin/
+<Directory /usr/lib64/nagios/cgi-bin/>
+   Options ExecCGI
+   order deny,allow
+   deny from all
+   allow from all
+   AuthType Basic
+   AuthUserFile /etc/nagios/passwd
+   AuthName \"$(admin)\"
+   require valid-user
+</Directory>
+
+Alias /nagios/ /usr/share/nagios/html/
+<Directory /usr/share/nagios/html/>
+   Options None
+   order deny,allow
+   deny from all
+   allow from all
+   AuthType Basic
+   AuthUserFile /etc/nagios/passwd
+   AuthName \"$(admin)\"
+   require valid-user
+</Directory>
+
+# For SSL-servers
+#<Directory /usr/lib64/nagios/cgi-bin/>
+#   Options ExecCGI
+#   SSLRequireSSL
+#   order deny,allow
+#   deny from all
+#   allow from all
+#   AuthType Basic
+#   AuthUserFile /etc/nagios/passwd
+#   AuthName \"$(admin)\"
+#   require valid-user
+#</Directory>
+#
+#Alias /nagios/ /usr/share/nagios/html/
+#<Directory /usr/share/nagios/html/>
+#   Options None
+#   SSLRequireSSL
+#   order deny,allow
+#   deny from all
+#   allow from all
+#   AuthType Basic
+#   AuthUserFile /etc/nagios/passwd
+#   AuthName \"$(admin)\"
+#   require valid-user
+#</Directory>";
+}

@@ -1,0 +1,264 @@
+# 
+# The Cfengine Cloud Pack, Copyright  (C) Cfengine AS, Oslo Norway
+# --------------------------------------------------------------------
+# 
+# This file is provided under a perpetual license as part of tjhe
+# Cfengine Cloud Pack (hereby called The Software). The Software may be
+# used within a single Internet Domain. If no Internet Domain is
+# registered, it may be used within a single legal organization
+# possessing a maximum of 1024 computers, or by a single individual with
+# up to 250 computers. Multiple licenses may be purchased, as needed.
+# 
+# The Licensee may modify, adapt and create derivative works based upon
+# the Software, for use within its organisation and for sharing between
+# other consecutive licensees. However, the Licensee shall not
+# reproduce, distribute, resell, rent, lease or disclose the Software in
+# any manner or form to any other third party not holding a license for
+# the Software.
+# 
+# The Licensee may not transfer any of its rights under this agreement
+# without the prior and express written consent of Cfengine.
+# 
+# INTELLECTUAL PROPERTY RIGHTS
+# 
+# Cfengine does not transfer any copyrights or other intellectual
+# property rights relating to the Software to the Licensee. Such rights
+# are protected by intellectual property legislation in the United
+# States, Europe and other jurisdictions and by international treaty
+# provisions. Cfengine and its suppliers retain all rights in the
+# Software that are not expressly granted to the Licensee through this
+# license.
+# 
+# The Licensee is not allowed to remove, alter or destroy any proprietary,
+# trademark or copyright markings or notices placed upon or contained
+# within the Software.
+# 
+# NO WARRANTY
+# 
+# To the maximum extent permitted by law, Cfengine disclaims any
+# warranty for the Software. The Software, any services and any related
+# documentation are provided on an "as is" basis without warranty of any
+# kind, whether express or implied, including, but not limited to,
+# implied warranties of merchantability, fitness for a particular
+# purpose or non-infringement. Hereunder the parties acknowledges that
+# Cfengine does not warrant for the performance of any data centre on
+# which the Software runs, or the absence of any errors in the Software,
+# and that any such errors does not constitute a contractual defect.
+# 
+# LIABILITY
+# 
+# The liability of the parties in contract, tort (including negligence)
+# or otherwise shall for all incidents during the entire term of 30 days
+# from the date of purchase be limited to a half of the fees paid for a
+# perpetual license. Cfengine or its suppliers shall not be liable for
+# any special, incidental, indirect or consequential damages whatsoever
+# (including, without limitation, damages for loss of business profits,
+# lost savings, business interruption, loss of business information,
+# personal injury, loss of privacy, loss of goodwill or any other
+# financial loss) arising out of the use of or inability to use the
+# Software, even if advised of the possibility of such damages.
+# 
+# THIRD-PARTY TERMS
+# 
+# For third-party software that is integrated with or used by
+# Cfengine, the current terms of the relevant third party software
+# supplier shall apply.
+#
+#########################################################################
+#
+# promises.cf for cloud pack
+#
+# Please ensure that you have gone through all cfengine scripts
+# before enabling any bundle agents.
+# 
+
+#########################################################################
+
+body common control
+{
+ bundlesequence => {
+                    "def",
+#                    "system_change_management",
+#                    "system_ownership",
+#                    "fix_broken_software",
+#                    "garbage_collection",
+#                    "system_xinetd",         # same as NovaBase
+#                    "security_access_iptables",
+#                    "system_name_resolution",
+#                    "system_time_ntp",
+#                    "app_login_sshd",
+                    "app_web_phpapache",
+#                    "j_def", "jboss_account", "app_jboss_server",
+#                    "monitoring_nagios",
+#                    "app_nginx_perlcgi",
+#                    "app_nginx_phpcgi",
+#                    "develop_c_cpp_env",
+#                    "develop_perl_env",
+#                    "develop_python_env",
+#                    "develop_ruby_on_rails",
+#                    "app_tomcat_server",
+#                    "app_db_mysql",
+#                    "app_db_postgresql",
+#                    "app_db_sqlite",
+#                    "app_varnish_method"
+                   };
+
+         inputs => { 
+                    "cfengine_stdlib.cf",
+                    "change_mgt.cf",
+                    "c_cpp_env.cf",
+                    "db_mysql.cf",
+                    "db_postgresql.cf",
+                    "db_sqlite.cf",
+                    "ensure_ownership.cf",
+                    "fix_broken_software.cf",
+                    "garbage_collection.cf",
+                    "harden_xinetd.cf",
+                    "iptables.cf",
+                    "name_resolution.cf",
+                    "sshd_conf.cf",
+                    "jboss_server.cf",
+                    "ntp.cf",
+                    "nagios.cf",
+                    "nginx_perlcgi.cf",
+                    "nginx_phpcgi.cf",
+                    "perl_env.cf",
+                    "php_webserver.cf",
+                    "python_env.cf",
+                    "ruby_env.cf",
+                    "varnish_method.cf",
+                    "tomcat_server.cf"
+                   };
+
+        version => "Cloud 1.0.0";
+}
+
+#########################################################################
+
+body agent control
+{
+ any::
+
+  ifelapsed => "0";
+
+  skipidentify => "true";
+
+ # Environment variables based on Distro
+
+ ubuntu::
+  environment => { 
+                  "DEBIAN_FRONTEND=noninteractive" 
+                 };
+}
+
+#########################################################################
+
+bundle common def
+{
+ vars:
+
+  any::
+
+   "domain"          string => "mydomain.com";
+
+   "policy_server_file" string => translatepath("$(sys.workdir)/policy_server.dat"),
+                      comment => "Path to file containing address to policy server";
+
+   "policy_server"      string => readfile("$(policy_server_file)", 40),
+                      comment => "IP address to locate your policy host.";
+
+   "acl"              slist => { "$(def.policy_server)/8" };
+
+   "dir_masterfiles" string => translatepath("$(sys.workdir)/masterfiles");
+   "dir_reports"     string => translatepath("$(sys.workdir)/reports");
+
+}
+#########################################################################
+# This part is for cf-serverd
+#
+# General IP access policy for the connection protocol
+#  i.e. access to the server itself.
+# Access to specific files must be granted in addition.
+#########################################################################
+
+body server control 
+{
+denybadclocks         => "false";
+allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
+allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
+trustkeysfrom         => { "127.0.0.1" , "::1", @(def.acl) };
+
+skipverify            => { ".*$(def.domain)", "127.0.0.1" , "::1", @(def.acl) };
+
+allowusers            => { "root" };
+}
+
+#########################################################################
+
+bundle server access_rules()
+{
+ access:
+
+  any::
+
+   "$(def.dir_masterfiles)"
+
+       handle => "grant_access_policy",
+      comment => "Grant access to the policy updates",
+      admit   => { ".*$(def.domain)", @(def.acl) };
+
+   "$(def.dir_reports)"
+
+       handle => "grant_access_reports_windows",
+      comment => "Grant access to report directory",
+      admit   => { ".*$(def.domain)", @(def.acl) };
+
+}
+
+#########################################################################
+# This part is for cf-execd
+#
+# These body settings determine the behaviour of cf-execd, 
+# including scheduling times and output capture to 
+# $(sys.workdir)/outputs and relay via email.
+#########################################################################
+
+body executor control
+{
+ any::
+
+  splaytime  => "1";
+  mailto     => "cfengine@$(def.domain)";
+  mailfrom   => "cfengine@$(sys.host).$(def.domain)";
+  smtpserver => "localhost";
+
+# Default:
+#
+# schedule => { "Min00", "Min05", "Min10", "Min15", "Min20", 
+#               "Min25", "Min30", "Min35", "Min40", "Min45",
+#               "Min50", "Min55" };
+
+# The full path and command to the executable run by default (overriding builtin).
+
+  exec_command => "$(sys.cf_agent) -f failsafe.cf && $(sys.cf_agent)";
+}
+
+#########################################################################
+
+body runagent control
+{
+# A list of hosts to contact when using cf-runagent
+
+ hosts => { "127.0.0.1" };
+
+}
+
+#########################################################################
+
+body monitor control
+{
+ forgetrate => "0.7";
+ histograms => "true";
+}
+
+#########################################################################

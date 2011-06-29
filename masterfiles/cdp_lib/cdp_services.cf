@@ -1,0 +1,24 @@
+#
+# DO NOT EDIT: Windows service management from control files
+#
+
+bundle agent cdp_services
+{
+ vars:
+
+   "srv_dimension" int => readstringarrayidx("srv","$(sys.workdir)/inputs/environment_$(environments.active)/cdp_inputs/service_list.txt","#[^\n]*",";",500,50000);
+   "srv_list"    slist => getindices("srv");
+
+
+services:
+
+  "$(srv[$(srv_list)][0])"
+    comment            => "Check service status defined in CDP input-file",
+    handle             => canonify("cdp_srv_$(srv[$(srv_list)][0])_$(srv[$(srv_list)][3])"),
+    service_policy     => "$(srv[$(srv_list)][1])",
+    service_method     => force_deps,	
+    action             => policy("$(srv[$(srv_list)][2])"),
+    ifvarclass         => "$(srv[$(srv_list)][3])";
+	
+}
+ 

@@ -1,0 +1,284 @@
+# 
+# The Cfengine Cloud Pack, Copyright  (C) Cfengine AS, Oslo Norway
+# --------------------------------------------------------------------
+# 
+# This file is provided under a perpetual license as part of tjhe
+# Cfengine Cloud Pack (hereby called The Software). The Software may be
+# used within a single Internet Domain. If no Internet Domain is
+# registered, it may be used within a single legal organization
+# possessing a maximum of 1024 computers, or by a single individual with
+# up to 250 computers. Multiple licenses may be purchased, as needed.
+# 
+# The Licensee may modify, adapt and create derivative works based upon
+# the Software, for use within its organisation and for sharing between
+# other consecutive licensees. However, the Licensee shall not
+# reproduce, distribute, resell, rent, lease or disclose the Software in
+# any manner or form to any other third party not holding a license for
+# the Software.
+# 
+# The Licensee may not transfer any of its rights under this agreement
+# without the prior and express written consent of Cfengine.
+# 
+# INTELLECTUAL PROPERTY RIGHTS
+# 
+# Cfengine does not transfer any copyrights or other intellectual
+# property rights relating to the Software to the Licensee. Such rights
+# are protected by intellectual property legislation in the United
+# States, Europe and other jurisdictions and by international treaty
+# provisions. Cfengine and its suppliers retain all rights in the
+# Software that are not expressly granted to the Licensee through this
+# license.
+# 
+# The Licensee is not allowed to remove, alter or destroy any proprietary,
+# trademark or copyright markings or notices placed upon or contained
+# within the Software.
+# 
+# NO WARRANTY
+# 
+# To the maximum extent permitted by law, Cfengine disclaims any
+# warranty for the Software. The Software, any services and any related
+# documentation are provided on an "as is" basis without warranty of any
+# kind, whether express or implied, including, but not limited to,
+# implied warranties of merchantability, fitness for a particular
+# purpose or non-infringement. Hereunder the parties acknowledges that
+# Cfengine does not warrant for the performance of any data centre on
+# which the Software runs, or the absence of any errors in the Software,
+# and that any such errors does not constitute a contractual defect.
+# 
+# LIABILITY
+# 
+# The liability of the parties in contract, tort (including negligence)
+# or otherwise shall for all incidents during the entire term of 30 days
+# from the date of purchase be limited to a half of the fees paid for a
+# perpetual license. Cfengine or its suppliers shall not be liable for
+# any special, incidental, indirect or consequential damages whatsoever
+# (including, without limitation, damages for loss of business profits,
+# lost savings, business interruption, loss of business information,
+# personal injury, loss of privacy, loss of goodwill or any other
+# financial loss) arising out of the use of or inability to use the
+# Software, even if advised of the possibility of such damages.
+# 
+# THIRD-PARTY TERMS
+# 
+# For third-party software that is integrated with or used by
+# Cfengine, the current terms of the relevant third party software
+# supplier shall apply.
+#
+#########################################################################
+# update.cf
+# Cfengine policy update
+#########################################################################
+# What you need to do is to change an IP to your policy server's IP address.
+#
+
+bundle agent update
+{
+ vars:
+
+  "policy_server_file" string => translatepath("$(sys.workdir)/policy_server.dat"),
+                     comment => "Path to file containing address to policy server";
+
+  "policy_server"      string => readfile("$(policy_server_file)", 40),
+                      comment => "IP address to locate your policy host.";
+
+  "inputs_dir"      string => translatepath("$(sys.workdir)/inputs"),
+                   comment => "Directory containing Cfengine policies";
+
+  "bin_dir"         string => translatepath("$(sys.workdir)/bin"),
+                   comment => "Directory containing Cfengine robot agents";
+
+
+  "ppkeys_file"     string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
+                   comment => "Path to public key file";
+
+  "file_check"      string => translatepath("$(inputs_dir)/promises.cf"),
+                   comment => "Path to a policy file";
+
+
+  "master_location" string => "/var/cfengine/masterfiles",
+                   comment => "The master cfengine policy directory on the policy host";
+
+#
+
+ classes:
+
+   "have_ppkeys" expression => fileexists("$(ppkeys_file)");
+
+   "policy_host_update_cf" or => {
+                                  classmatch(canonify("ipv4_$(policy_server)")),
+                                  classmatch(canonify("$(policy_server)"))
+                                 },
+                      comment => "Define the ip identity of the policy source host";
+
+   "files_ok" expression => fileexists("$(file_check)");
+
+#
+
+ processes:
+
+  files_ok::
+
+   "cf-serverd"  restart_class => "start_server";
+   "cf-monitord" restart_class => "start_monitor";
+
+  files_ok.!windows::
+
+   "cf-execd"    restart_class => "start_exec";
+
+#
+
+ commands:
+
+  start_server::
+
+   "$(sys.cf_serverd)"
+      action => u_ifwin_bg;
+
+  start_monitor::
+
+   "$(sys.cf_monitord)"
+      action => u_ifwin_bg;
+
+
+  !windows.start_exec::
+
+   "$(sys.cf_execd)";
+
+ !have_ppkeys::
+
+    "$(sys.cf_key)",
+       comment => "Generate cfengine encryption keys if necessary";
+
+#
+
+ files:
+
+   "$(inputs_dir)"
+
+         comment => "Copy policy updates from master source on policy server",
+       copy_from => u_rcp("$(master_location)","$(policy_server)"),
+    depth_search => u_recurse("inf"),
+    file_select  => u_input_files,
+      depends_on => { "grant_access_policy" },
+          action => u_immediate;
+
+  !windows::
+
+   "$(sys.workdir)/bin"
+
+           comment => "Make sure cfengine binaries have right file permissions",
+             perms => u_m("755"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+   "$(sys.workdir)/lib"
+
+           comment => "Make sure cfengine libraries have right file permissions",
+             perms => u_m("755"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+   "/usr/local/sbin"
+
+           comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
+             perms => u_m("755"),
+         copy_from => u_cp("$(sys.workdir)/bin"),
+       file_select => u_cf3_files,
+      depth_search => u_recurse("1"),
+            action => u_immediate;
+
+  policy_host_update_cf::
+
+   "$(sys.workdir)/masterfiles/."
+
+           comment => "Make sure masterfiles folder has right file permissions",
+             perms => u_m("644"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+}
+
+#########################################################################
+# Self-contained bodies from the lib to avoid dependencies
+#########################################################################
+
+body perms u_m(p)
+{
+ mode  => "$(p)";
+}
+
+#########################################################################
+
+body file_select u_cf3_files
+{
+ leaf_name => { "cf-.*" };
+ file_result => "leaf_name";
+}
+
+#########################################################################
+
+body file_select u_input_files
+{
+ leaf_name => { ".*.cf",".*.dat" };
+ file_result => "leaf_name";
+}
+
+#########################################################################
+
+body copy_from u_rcp(from,server)
+{
+ source      => "$(from)";
+ compare     => "digest";
+ trustkey    => "true";
+
+!policy_host_update_cf::
+
+ servers => { "$(server)" };
+}
+
+#########################################################################
+
+body copy_from u_cp(from)
+{
+ source      => "$(from)";
+ compare     => "digest";
+}
+
+#########################################################################
+
+body action u_immediate
+{
+ ifelapsed => "0";
+}
+
+#########################################################################
+
+body depth_search u_recurse(d)
+{
+ depth => "$(d)";
+}
+
+#########################################################################
+
+body depth_search u_recurse_basedir(d)
+{
+ include_basedir => "true";
+ depth => "$(d)";
+}
+
+#########################################################################
+
+body classes u_if_repaired(x)
+{
+ promise_repaired => { "$(x)" };
+}
+
+#########################################################################
+
+body action u_ifwin_bg
+{
+ windows::
+  background => "true";
+}
+
+#########################################################################

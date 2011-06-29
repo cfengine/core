@@ -1,0 +1,43 @@
+#
+# DO NOT EDIT: ACL management on Windows from control files
+#
+
+bundle agent cdp_acls
+{
+ vars:
+
+   "dir_dimension" int => readstringarrayidx("dir","$(sys.workdir)/inputs/environment_$(environments.active)/cdp_inputs/acl_directory_list.txt","#[^\n]*",";",500,50000);
+   "dir_list"    slist => getindices("dir");
+   
+   "file_dimension" int => readstringarrayidx("file","$(sys.workdir)/inputs/environment_$(environments.active)/cdp_inputs/acl_file_list.txt","#[^\n]*",";",500,50000);
+   "file_list"    slist => getindices("file");
+
+
+   "acls_dir_$(dir_list)" slist => splitstring("$(dir[$(dir_list)][1])", ",", "15");
+   "acls_file_$(file_list)" slist => splitstring("$(file[$(file_list)][1])", ",", "15");
+
+
+files:
+
+  "$(dir[$(dir_list)][0])"
+       comment      => "Check ACLs on directories defined in CDP input-file",
+       handle       => canonify("cdp_acl_dir_$(dir[$(dir_list)][0])_$(dir[$(dir_list)][4])"),
+       acl          => access_generic("@(cdp_acls.acls_dir_$(dir_list))"),
+       perms        => owner("$(dir[$(dir_list)][2])"),
+       action       => policy("$(dir[$(dir_list)][3])"),
+       ifvarclass   => "$(dir[$(dir_list)][4])";
+
+
+  "$(file[$(file_list)][0])"
+       comment      => "Check ACLs on files defined in CDP input-file",
+       handle       => canonify("cdp_acl_file_$(file[$(file_list)][0])_$(file[$(file_list)][4])"),
+       acl          => access_generic("@(cdp_acls.acls_file_$(file_list))"),
+       perms        => owner("$(file[$(file_list)][2])"),
+       action       => policy("$(file[$(file_list)][3])"),
+       ifvarclass   => "$(file[$(file_list)][4])";
+
+
+  
+}
+
+

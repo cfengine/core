@@ -1,0 +1,56 @@
+#########################################################################
+#
+#   file_change.cf - Change Management
+#
+#   NOTE: Be careful with the amount of data that Cfengine is to watch.
+#         Large amounts can cause resource hogs and long-running agents.
+#
+#########################################################################
+
+bundle agent change_management
+{
+vars:
+
+ windows::
+
+#  "watch_files" slist =>  {
+#                          "$(sys.windir)\important.txt",
+#                          "$(sys.windir)\important2.txt"
+#                          };
+						  
+#  "watch_dirs" slist =>   {
+#                          "$(sys.workdir)\watch"
+#                          };						  
+
+						  
+ !windows::
+
+  "watch_files" slist =>  {
+                          "/etc/passwd", 
+                          "/etc/shadow", 
+                          "/etc/group", 
+                          "/etc/services" 
+                          },
+              comment => "Define a list of files to be watched by cfengine",
+               handle => "change_management_vars_watch_files";
+
+#  "watch_dirs" slist =>   {
+#                          "/usr",
+#                          };
+
+files:
+
+   "$(watch_files)"
+      comment => "Change detection on important files",
+       handle => "change_management_files_watch_files",
+      changes => detect_all_change;
+	
+  
+#   "$(watch_dirs)" 
+#      comment      => "Change detection on important directories",
+#      pathtype     => "literal",
+#      changes      => detect_all_change,
+#      depth_search => recurse("inf");
+
+}
+

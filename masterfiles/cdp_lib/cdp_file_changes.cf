@@ -1,0 +1,45 @@
+#
+# DO NOT EDIT: Windows file change management from control files
+#
+
+
+bundle agent cdp_file_changes
+{
+ vars:
+
+   "chg_dimension" int => readstringarrayidx("chg","$(sys.workdir)/inputs/environment_$(environments.active)/cdp_inputs/file_change_list.txt","#[^\n]*",";",500,50000);
+   "chg_list"    slist => getindices("chg");
+   "filename_can_$(chg_list)" string => canonify("$(chg[$(chg_list)][0])");
+
+   
+files:
+
+   "$(chg[$(chg_list)][0])"
+      comment      => "Change detection and revert on important files, defined in CDP input-file",
+      handle       => canonify("cdp_chg_$(chg[$(chg_list)][0])_$(chg[$(chg_list)][1])"),
+      changes      => noupdate,
+      classes      => cf2_if_else( "cache_$(chg_list)", "restore_$(chg_list)" ),
+      ifvarclass   => "$(chg[$(chg_list)][1])";
+
+   
+   "$(sys.workdir)/change_cache/$(filename_can_$(chg_list))"
+      comment      => "Cache newly found files in change detection",
+      copy_from    => no_backup_cp("$(chg[$(chg_list)][0])"),
+      ifvarclass   => "cache_$(chg_list)";
+	  
+	  
+   "$(chg[$(chg_list)][0])"
+      comment      => "Restore changed files in change detection",
+      copy_from    => no_backup_exact_cp("$(sys.workdir)/change_cache/$(filename_can_$(chg_list))"),
+      ifvarclass   => "restore_$(chg_list)";
+	  
+}
+
+
+body copy_from no_backup_exact_cp(from)
+{
+source      => "$(from)";
+copy_backup => "false";
+compare     => "digest";
+}
+ 

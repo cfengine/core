@@ -1,0 +1,1155 @@
+
+#
+# Cfengine Community Open Promise-Body Library
+#
+# This initiative started by Cfengine promotes a
+# standardized set of names and promise specifications
+# for template functionality within Cfengine 3.
+#
+# The aim is to promote an industry standard for
+# naming of configuration patterns, leading to a
+# de facto middleware of standardized syntax.
+#
+# Names should be intuitive and parameters should be
+# minimal to assist readability and comprehensibility.
+#
+
+# Contributions to this file are voluntarily given to
+# the cfengine community, and are moderated by Cfengine.
+# No liability or warranty for misuse is implied.
+#
+# If you add to this file, please try to make the
+# contributions "self-documenting". Comments made
+# after the bundle/body statement are retained in
+# the online docs
+#
+
+###################################################
+# If you find Cfengine useful, please consider    #
+# purchasing a commercial version of the software.#
+###################################################
+
+###################################################
+# edit_line bundles
+###################################################
+
+bundle edit_line comment_lines_matching(regex,comment)
+
+ # Comment lines of a file matching a regex
+
+{
+replace_patterns:
+	 
+ "^($(regex))$" replace_with => comment("$(comment)");
+}
+	 
+##
+	 
+bundle edit_line uncomment_lines_matching(regex,comment)
+	 
+ # Uncomment lines of a file where the regex matches
+ # the text after the comment string
+	 
+{
+replace_patterns:
+ 
+ "^$(comment)\s?($(regex))$" replace_with => uncomment;
+}
+	 
+##
+
+bundle edit_line comment_lines_containing(regex,comment)
+
+ # Comment lines of a file containing a regex
+
+{
+replace_patterns:
+ 
+ "^(.*$(regex).*)$" replace_with => comment("$(comment)");
+}
+	 
+##
+	 
+bundle edit_line uncomment_lines_containing(regex,comment)
+	 
+ # Uncomment lines of a file where the regex matches
+ # the text after the comment string
+	 
+{
+replace_patterns:
+ 
+ "^$(comment)\s?(.*$(regex).*)$" replace_with => uncomment;
+}
+
+##
+
+bundle edit_line delete_lines_matching(regex)
+{
+delete_lines:
+
+  "$(regex)";
+}
+
+##
+
+bundle edit_line warn_lines_matching(regex)
+{
+delete_lines:
+
+  "$(regex)"  action => warn_only;
+}
+
+##
+
+bundle edit_line append_if_no_line(str)
+{
+insert_lines:
+
+ "$(str)";
+}
+
+##
+
+bundle edit_line append_if_no_lines(list)
+{
+insert_lines:
+
+ "$(list)";
+}
+
+##
+
+bundle edit_line resolvconf(search,list)
+
+ # search is the search domains with space
+ # list is an slist of nameserver addresses
+
+{
+delete_lines:
+
+  "search.*";
+  "nameserver.*";
+
+insert_lines:
+
+  "search $(search)";
+  "nameserver $(list)";
+}
+
+##
+
+bundle edit_line set_variable_values(v)
+
+ # Sets the RHS of variables in the file of the form
+ #   LHS = RHS
+ # Adds a new line if no LHS exists, repairs RHS values if one does exist
+ #
+ # To use:
+ #   1) Define an array, where the keys are the LHS and the values are the RHS
+ #        "stuff[lhs-1]" string => "rhs1";
+ #        "stuff[lhs-2]" string => "rhs2";
+ #   2) The parameter passed to the edit_line promise is the fully qualified
+ #      name of the array (i.e., "bundlename.stuff") WITHOUT any "$" or "@"
+
+{
+vars:
+
+  "index" slist => getindices("$(v)");
+
+  # Be careful if the index string contains funny chars
+
+  "cindex[$(index)]" string => canonify("$(index)");
+
+field_edits:
+
+  # match a line starting like the key = something
+
+  "\s*$(index)\s*=.*"
+
+     edit_field => col("=","2","$($(v)[$(index)])","set"),
+        classes => if_ok("$(cindex[$(index)])_in_file");
+
+insert_lines:
+
+  "$(index)=$($(v)[$(index)])",
+
+      ifvarclass => "!$(cindex[$(index)])_in_file";
+}
+
+##
+
+bundle edit_line append_users_starting(v)
+
+ # For adding to /etc/passwd or etc/shadow, needs
+ # an array v[username] string => "line..."
+
+{
+vars:
+
+  "index"        slist => getindices("$(v)");
+
+classes:
+
+  "add_$(index)" not => userexists("$(index)");
+
+insert_lines:
+
+  "$($(v)[$(index)])",
+
+      ifvarclass => "add_$(index)";
+}
+
+##
+
+bundle edit_line append_groups_starting(v)
+
+ # For adding groups to /etc/group, needs
+ # an array v[groupname] string => "line..."
+
+{
+vars:
+
+  "index"        slist => getindices("$(v)");
+
+classes:
+
+  "add_$(index)" not => groupexists("$(index)");
+
+insert_lines:
+
+  "$($(v)[$(index)])",
+
+      ifvarclass => "add_$(index)";
+
+}
+
+##
+
+bundle edit_line set_user_field(user,field,val)
+
+ # Set the value of field number "field" in
+ # a :-field formatted file like /etc/passwd
+
+{
+field_edits:
+
+ "$(user).*"
+
+     edit_field => col(":","$(field)","$(val)","set");
+}
+
+##
+
+bundle edit_line append_user_field(group,field,allusers)
+
+ # For adding users to to a file like /etc/group
+ # at field position "field", comma separated subfields
+
+{
+vars:
+
+  "val" slist => { @(allusers) };
+
+field_edits:
+
+ "$(group).*"
+
+    edit_field => col(":","$(field)","$(val)","alphanum");
+}
+
+##
+
+bundle edit_line expand_template(templatefile)
+
+ # Read in the named text file and expand $(var)
+ # inside the file
+
+{
+insert_lines:
+
+   "$(templatefile)"
+
+          insert_type => "file",
+       expand_scalars => "true";
+}
+
+##
+## editing bodies
+##
+
+body edit_field quoted_var(newval,method)
+{
+field_separator => "\"";
+select_field    => "2";
+value_separator  => " ";
+field_value     => "$(newval)";
+field_operation => "$(method)";
+extend_fields => "false";
+allow_blank_fields => "true";
+}
+
+##
+
+body edit_field col(split,col,newval,method)
+{
+field_separator    => "$(split)";
+select_field       => "$(col)";
+value_separator    => ",";
+field_value        => "$(newval)";
+field_operation    => "$(method)";
+extend_fields      => "true";
+allow_blank_fields => "true";
+}
+
+
+##
+
+body replace_with value(x)
+{
+replace_value => "$(x)";
+occurrences => "all";
+}
+
+##
+
+body select_region INI_section(x)
+{
+select_start => "\[$(x)\]\s*";
+select_end => "\[.*\]\s*";
+}
+
+##
+## edit_defaults
+##
+
+body edit_defaults std_defs
+{
+empty_file_before_editing => "false";
+edit_backup => "false";
+max_file_size => "300000";
+}
+
+##
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+max_file_size => "300000";
+}
+
+##
+## location
+##
+
+body location start
+{
+before_after => "before";
+}
+
+##
+## replace_with
+##
+
+##
+
+body replace_with comment(c)
+{
+replace_value => "$(c) $(match.1)";
+occurrences => "all";
+}
+
+##
+
+body replace_with uncomment
+{
+replace_value => "$(match.1)";
+occurrences => "all";
+}
+
+####################################################
+## agent bodyparts
+####################################################
+
+##
+## action
+##
+
+body action if_elapsed(x)
+{
+ifelapsed => "$(x)";
+expireafter => "$(x)";
+}
+
+##
+
+body action measure_performance(x)
+{
+measurement_class => "Detect changes in $(this.promiser)";
+ifelapsed => "$(x)";
+expireafter => "$(x)";
+}
+
+##
+
+body action warn_only
+{
+action_policy => "warn";
+ifelapsed => "60";
+}
+
+##
+
+body action bg(elapsed,expire)
+{
+ifelapsed   => "$(elapsed)";    # run only every 8 hours
+expireafter => "$(expire)";
+background  => "true";
+}
+
+##
+
+body action ifwin_bg
+{
+windows::
+background => "true";
+}
+
+##
+
+body action immediate
+{
+ifelapsed => "0";
+}
+
+##
+
+# Log a message to log=[/file|stdout]
+
+body action log_repaired(log,message)
+{
+log_string => "$(sys.date), $(message)";
+log_repaired => "$(log)";
+}
+
+##
+## contain
+##
+
+body contain silent
+{
+no_output => "true";
+}
+
+##
+
+body contain in_dir(s)
+{
+chdir => "$(s)";
+}
+
+##
+
+body contain silent_in_dir(s)
+{
+chdir => "$(s)";
+no_output => "true";
+}
+
+##
+
+body contain in_shell
+{
+useshell => "true";
+}
+
+##
+
+body contain setuid(x)
+{
+exec_owner => "$(x)";
+useshell => "false";
+}
+
+##
+
+body contain setuid_sh(x)
+{
+exec_owner => "$(x)";
+useshell => "true";
+}
+
+##
+
+body contain setuidgid_sh(owner,group)
+{
+exec_owner => "$(owner)";
+exec_group => "$(group)";
+useshell => "true";
+}
+
+##
+
+body contain jail(owner,root,dir)
+{
+exec_owner => "$(owner)";
+useshell => "true";
+chdir => "$(dir)";
+chroot => "$(root)";
+}
+
+
+##
+## classes
+##
+
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}
+
+##
+
+body classes if_else(yes,no)
+
+{
+promise_kept     => { "$(yes)" };
+promise_repaired => { "$(yes)" };
+repair_failed    => { "$(no)" };
+repair_denied    => { "$(no)" };
+repair_timeout   => { "$(no)" };
+}
+
+##
+
+body classes cf2_if_else(yes,no)
+
+# meant to match cf2 semantics
+
+{
+promise_repaired => { "$(yes)" };
+repair_failed    => { "$(no)" };
+repair_denied    => { "$(no)" };
+repair_timeout   => { "$(no)" };
+}
+
+##
+
+body classes if_notkept(x)
+{
+repair_failed   => { "$(x)" };
+repair_denied   => { "$(x)" };
+repair_timeout  => { "$(x)" };
+}
+
+##
+
+body classes if_ok(x)
+{
+promise_repaired => { "$(x)" };
+promise_kept => { "$(x)" };
+}
+
+##
+## Persistent classes
+##
+
+body classes state_repaired(x)
+{
+promise_repaired => { "$(x)" };
+persist_time => "10";
+}
+
+###################################################
+# agent bundles
+###################################################
+
+
+##..................................................
+## files promises
+##..................................................
+
+##
+## copy_from
+##
+
+body copy_from secure_cp(from,server)
+{
+source      => "$(from)";
+servers     => { "$(server)" };
+compare     => "digest";
+encrypt     => "true";
+verify      => "true";
+}
+
+##
+
+body copy_from remote_cp(from,server)
+{
+servers     => { "$(server)" };
+source      => "$(from)";
+compare     => "mtime";
+}
+
+##
+
+body copy_from local_cp(from)
+{
+source      => "$(from)";
+compare     => "digest";
+}
+
+##
+
+# Copy only if the file does not already exist, i.e. seed the placement
+
+body copy_from seed_cp(from)
+{
+source      => "$(from)";
+compare     => "exists";
+}
+
+##
+
+body copy_from sync_cp(from,server)
+{
+servers     => { "$(server)" };
+source      => "$(from)";
+purge       => "true";
+preserve    => "true";
+}
+
+##
+
+body copy_from no_backup_cp(from)
+{
+source      => "$(from)";
+copy_backup => "false";
+}
+
+##
+
+body copy_from no_backup_rcp(from,server)
+{
+servers     => { "$(server)" };
+source      => "$(from)";
+compare     => "mtime";
+copy_backup => "false";
+}
+
+##
+## link_from
+##
+
+body link_from ln_s(x)
+{
+link_type => "symlink";
+source => "$(x)";
+when_no_source => "force";
+}
+
+##
+
+body link_from linkchildren(tofile)
+{
+source        => "$(tofile)";
+link_type     => "symlink";
+when_no_source  => "force";
+link_children => "true";
+when_linking_children => "if_no_such_file"; # "override_file";
+}
+
+##
+## perms
+##
+
+body perms m(mode)
+{
+mode   => "$(mode)";
+}
+
+##
+
+body perms mo(mode,user)
+{
+owners => { "$(user)" };
+mode   => "$(mode)";
+}
+
+##
+
+body perms mog(mode,user,group)
+{
+owners => { "$(user)" };
+groups => { "$(group)" };
+mode   => "$(mode)";
+}
+
+##
+
+body perms og(u,g)
+{
+owners => { "${u}" };
+groups => { "${g}" };
+}
+
+##
+
+body perms owner(user)
+{
+owners => { "$(user)" };
+}
+
+##
+## depth_search
+##
+
+body depth_search recurse(d)
+
+{
+depth => "$(d)";
+xdev  => "true";
+
+exclude_dirs => { "\.X11", ".*kde.*", "\.svn" };
+}
+
+##
+
+body depth_search recurse_ignore(d,list)
+{
+depth => "$(d)";
+exclude_dirs => { @(list) };
+}
+
+##
+## delete
+##
+
+body delete tidy
+
+{
+dirlinks => "delete";
+rmdirs   => "true";
+}
+
+##
+## rename
+##
+
+body rename disable
+{
+disable => "true";
+}
+
+##
+
+body rename rotate(level)
+{
+rotate => "$(level)";
+}
+
+##
+
+body rename to(file)
+{
+newname => "$(file)";
+}
+
+##
+## file_select
+##
+
+body file_select name_age(name,days)
+{
+leaf_name   => { "$(name)" };
+mtime       => irange(0,ago(0,0,$(days),0,0,0));  
+file_result => "mtime.leaf_name"; 
+}
+
+##
+
+body file_select days_old(days)
+{
+mtime       => irange(ago(1,0,0,0,0,0),ago(0,0,$(days),0,0,0));
+file_result => "mtime";
+}
+
+##
+
+body file_select size_range(from,to)
+{
+search_size => irange("$(from)","$(to)");
+file_result => "size";
+}
+
+##
+
+body file_select exclude(name)
+{
+leaf_name  => { "$(name)"};
+file_result => "!leaf_name";
+}
+
+##
+
+body file_select plain
+{
+file_types  => { "plain" };
+file_result => "file_types";
+}
+
+body file_select dirs
+{
+file_types  => { "dir" };
+file_result => "file_types";
+}
+
+##
+
+body file_select by_name(names)
+{
+leaf_name  => { @(names)};
+file_result => "leaf_name";
+}
+
+##
+
+body file_select ex_list(names)
+{
+leaf_name  => { @(names)};
+file_result => "!leaf_name";
+}
+
+##
+## changes
+##
+
+body changes detect_all_change
+
+# This is fierce, and will cost disk cycles
+
+{
+hash           => "best";
+report_changes => "all";
+update_hashes  => "yes";
+}
+
+##
+
+body changes detect_content
+
+# This is a cheaper alternative
+
+{
+hash           => "md5";
+report_changes => "content";
+update_hashes  => "yes";
+}
+
+##--------------------------------------------------------------
+## Packages promises
+##--------------------------------------------------------------
+
+body package_method zypper
+
+{
+package_changes => "bulk";
+
+package_list_command => "/usr/bin/zypper packages";
+package_patch_list_command => "/usr/bin/zypper patches";
+package_installed_regex => "i.*";
+package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+
+package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
+package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
+package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+
+package_name_convention => "$(name)";
+package_add_command => "/usr/bin/zypper -non-interactive install";
+package_delete_command => "/usr/bin/zypper -non-interactive remove --force-resolution";
+package_update_command => "/usr/bin/zypper -non-interactive update";
+
+package_patch_command => "/usr/bin/zypper -non-interactive patch$"; # $ means no args
+package_verify_command => "/usr/bin/zypper -non-interactive verify$";
+}
+
+##
+
+body package_method apt
+{
+package_changes => "bulk";
+package_list_command => "/usr/bin/dpkg -l";
+package_list_name_regex    => "ii\s+([^\s]+).*";
+package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+package_installed_regex => ".*"; # all reported are installed
+package_name_convention => "$(name)";
+
+have_aptitude::
+   package_add_command => "/usr/bin/aptitude --assume-yes install";
+   package_delete_command => "/usr/bin/aptitude --assume-yes remove";
+   package_update_command =>  "/usr/bin/aptitude --assume-yes install";
+
+!have_aptitude::
+   package_add_command => "/usr/bin/apt-get --yes install";
+   package_delete_command => "/usr/bin/apt-get --yes remove";
+   package_update_command =>  "/usr/bin/apt-get --yes install";
+}
+
+##
+
+body package_method rpm_version(repo)
+{
+package_changes => "individual";
+
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version} | %{arch}\n\"";
+
+package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
+package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s|]+).*";
+package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+
+package_installed_regex => "i.*";
+ 
+package_file_repositories => { "$(repo)" };
+
+package_name_convention => "$(name)-$(version)-$(arch).rpm";
+
+package_add_command => "/bin/rpm -ivh ";
+package_delete_command => "/bin/rpm -e --nodeps";
+package_verify_command => "/bin/rpm -V";
+package_update_command => "/bin/rpm -Uvh ";
+package_noverify_regex => ".*[^\s].*";
+}
+
+##
+
+body package_method msi_version(repo)
+{
+package_changes => "individual";
+package_file_repositories => { "$(repo)" };
+
+package_installed_regex => ".*";
+ 
+package_name_convention => "$(name)-$(version)-$(arch).msi";
+
+package_add_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
+package_update_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
+package_delete_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /x";
+}
+
+##
+
+body package_method yum
+{
+package_changes => "bulk";
+package_list_command => "/usr/bin/yum list installed";
+
+# Remember to escape special characters like |
+
+package_list_name_regex    => "([^.]+).*";
+package_list_version_regex => "[^\s]\s+([^\s]+).*";
+package_list_arch_regex    => "[^.]+\.([^\s]+).*";
+
+package_installed_regex => ".*installed.*";
+package_name_convention => "$(name).$(arch)";
+
+package_add_command => "/usr/bin/yum -y install";
+package_delete_command => "/bin/rpm -e";
+package_verify_command => "/bin/rpm -V";
+}
+
+##
+
+# The solaris package system is poorly designed, with too many different
+# names to track. See the example in tests/units/unit_package_solaris.cf
+# to see how to use this
+
+body package_method solaris (pkgname, spoolfile, adminfile)
+{
+package_changes => "individual";
+package_list_command => "/usr/bin/pkginfo -l";
+package_multiline_start    =>  "\s*PKGINST:\s+[^\s]+";
+package_list_name_regex    => "\s*PKGINST:\s+([^\s]+)";
+package_list_version_regex => "\s*VERSION:\s+([^\s]+)";
+package_list_arch_regex    => "\s*ARCH:\s+([^\s]+)";
+package_installed_regex => "\s*STATUS:\s*(completely|partially)\s+installed.*";
+package_name_convention => "$(name)";
+package_add_command => "/usr/sbin/pkgadd -n -a /tmp/$(adminfile) -d /tmp/$(spoolfile)";
+package_delete_command => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
+}
+
+##
+
+body package_method freebsd
+{
+ package_changes => "individual";
+
+ # Could use rpm for this
+ package_list_command => "/usr/sbin/pkg_info";
+
+ # Remember to escape special characters like |
+
+ package_list_name_regex    => "([^-]+).*";
+ package_list_version_regex => "[^-]+-([^\s]+).*";
+
+ package_name_regex    => "([^-]+).*";
+ package_version_regex => "[^-]+-([^\s]+).*";
+
+ package_installed_regex => ".*";
+
+ package_name_convention => "$(name)-$(version)";
+
+
+package_add_command => "/usr/sbin/pkg_add -r";
+package_delete_command => "/usr/sbin/pkg_delete";
+}
+
+##
+
+ # Single bundle for all the similar managers simplifies promises
+
+body package_method generic
+{
+SuSE::
+ package_changes => "bulk";
+ package_list_command => "/usr/bin/zypper packages";
+ package_patch_list_command => "/usr/bin/zypper patches";
+ package_installed_regex => "i.*";
+ package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
+ package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
+ package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_name_convention => "$(name)";
+ package_add_command => "/usr/bin/zypper -non-interactive install";
+ package_delete_command => "/usr/bin/zypper -non-interactive remove --force-resolution";
+ package_update_command => "/usr/bin/zypper -non-interactive update";
+ package_patch_command => "/usr/bin/zypper -non-interactive patch$"; # $ means no args
+ package_verify_command => "/usr/bin/zypper -non-interactive verify$";
+
+redhat::
+ package_changes => "bulk";
+ package_list_command => "/usr/bin/yum list installed";
+ package_list_name_regex    => "([^.]+).*";
+ package_list_version_regex => "[^\s]\s+([^\s]+).*";
+ package_list_arch_regex    => "[^.]+\.([^\s]+).*";
+ package_installed_regex => ".*installed.*";
+ package_name_convention => "$(name).$(arch)";
+ package_add_command => "/usr/bin/yum -y install";
+ package_delete_command => "/bin/rpm -e";
+ package_verify_command => "/bin/rpm -V";
+
+debian::
+ package_changes => "bulk";
+ package_list_command => "/usr/bin/dpkg -l";
+ package_list_name_regex    => "ii\s+([^\s]+).*";
+ package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+ package_installed_regex => ".*"; # all reported are installed
+ package_name_convention => "$(name)";
+
+debian.have_aptitude::
+   package_add_command => "/usr/bin/aptitude --assume-yes install";
+   package_delete_command => "/usr/bin/aptitude --assume-yes remove";
+   package_update_command =>  "/usr/bin/aptitude --assume-yes install";
+
+debian.!have_aptitude::
+   package_add_command => "/usr/bin/apt-get --yes install";
+   package_delete_command => "/usr/bin/apt-get --yes remove";
+   package_update_command =>  "/usr/bin/apt-get --yes install";
+
+
+freebsd::
+ package_changes => "individual";
+ package_list_command => "/usr/sbin/pkg_info";
+ package_list_name_regex    => "([^-]+).*";
+ package_list_version_regex => "[^-]+-([^\s]+).*";
+ package_name_regex    => "([^-]+).*";
+ package_version_regex => "[^-]+-([^\s]+).*";
+ package_installed_regex => ".*";
+ package_name_convention => "$(name)-$(version)";
+ package_add_command => "/usr/sbin/pkg_add -r";
+ package_delete_command => "/usr/sbin/pkg_delete";
+}
+
+##-------------------------------------------------------
+## storage promises
+##-------------------------------------------------------
+
+body volume min_free_space(free)
+{
+check_foreign  => "false";
+freespace      => "$(free)";
+sensible_size  => "10000";
+sensible_count => "2";
+}
+
+##
+
+body mount nfs(server,source)
+{
+mount_type => "nfs";
+mount_source => "$(source)";
+mount_server => "$(server)";
+edit_fstab => "true";
+}
+
+
+##
+
+body mount nfs_p(server,source,perm)
+{
+mount_type => "nfs";
+mount_source => "$(source)";
+mount_server => "$(server)";
+mount_options => {"$(perm)"};
+edit_fstab => "true";
+}
+
+##
+
+body mount unmount
+{
+mount_type => "nfs";
+edit_fstab => "true";
+unmount => "true";
+}
+
+##-------------------------------------------------------
+## process promises
+##-------------------------------------------------------
+
+body select_process exclude_procs(x)
+{
+command => "$(x)";
+process_result => "!command";
+}
+
+##
+
+body process_count check_range(name,lower,upper)
+{
+match_range => irange("$(lower)","$(upper)");
+out_of_range_define => { "$(name)_out_of_range" };
+}
+
+
+####################################################
+## monitor bodyparts
+####################################################
+
+body match_value scan_log(line)
+{
+select_line_matching => "$(line)";
+track_growing_file => "true";
+}
+
+##
+
+body action sample_rate(x)
+{
+ifelapsed => "$(x)";
+expireafter => "10";
+}

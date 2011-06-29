@@ -1,0 +1,22 @@
+#
+#  Content-Driven Policy
+#
+##################################################################
+#
+#  Command Execution
+#
+#  FORMAT:   command_path;on_error_define_class;action;class_expression
+#
+#  EXAMPLE:  c:\windows\system32\cmd.exe /c "echo hello";hello_failed;fix;DomainController
+#
+#  NOTE:     You may use this Content-Driven Policy to schedule script
+#            execution on a class of hosts by using a combination of
+#            host and time classes in class_expression, e.g. set
+#            class_expression to "windows.Tuesday.Hr10.Min30_35".
+#
+
+
+c:\windows\system32\cmd.exe /c "eho hello";hello_failed;fix;windows
+c:\windows\system32\cmd.exe /c "echo hello failed > c:\reportfile.txt";report_failed;fix;hello_failed
+c:\windows\system32\cmd.exe /c "echo hello succeeded > c:\reportfile.txt";report_failed;fix;!hello_failed
+

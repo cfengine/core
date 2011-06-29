@@ -1,0 +1,49 @@
+#########################################################
+#
+# failsafe.cf - This file is used for automated policy recovery
+#
+#########################################################
+
+# The common control body refers to those promises that 
+# are hard-coded into all the components of cfengine, 
+# and therefore affect the behaviour of all the components.
+
+body common control
+{
+### List of promise bundles to verify in order 
+
+ bundlesequence => { "update_bins", "update" };
+
+### List of filenames to parse for promises.
+
+ inputs => { "update.cf" };
+ version => "Failsafe.cf 1.0.0";
+
+ nova_edition|constellation_edition::
+
+   host_licenses_paid => "1";
+
+}
+
+#########################################################
+
+body agent control
+{
+### Global default for time that must elapse before promise will be rechecked.
+
+ # This should normally be set to seom interval like 5 mins
+ # We set it to zero initially to avoid confusion - please see manual
+
+ ifelapsed => "0";
+
+### Do not send IP/name during server connection if address resolution is broken.
+
+ skipidentify => "true";
+
+### Switch on tracking of promise valuation
+ track_value => "true";
+
+}
+
+#########################################################
+

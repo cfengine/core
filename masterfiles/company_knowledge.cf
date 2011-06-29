@@ -56,19 +56,19 @@ topics:
 
  company::
 
-  "AMD"  comment => "Advanced Micro Devices";
+  "FMD"  comment => "Fictitious Micro Dongles";
   
- AMD::
+ FMD::
 
   "EGC"             comment => "Enterprise grid computing",
-                association => a("develops chips within","AMD","contains its engineering unit");
+                association => a("develops fish within","FMD","contains its engineering unit");
 
   "EBC"             comment => "Enterprise business computing",
-                association => a("handles business services within","AMD","contains its business unit");
+                association => a("handles business services within","FMD","contains its business unit");
 
-  "AMD terminology" comment => "Internal company nomenclature";
+  "FMD terminology" comment => "Internal company nomenclature";
 
- AMD_terminology::
+ FMD_terminology::
 
   "interactive job"   comment => "Interactive software running in the grid";
 

@@ -12,136 +12,165 @@
 
 bundle agent update_bins
 {
-vars:
+ vars:
 
- "cf_components"       slist => { "cf-key", "cf-know", "cf-monitord", "cf-promises", 
-                                  "cf-report", "cf-runagent", "cf-serverd", "cf-hub", "mongod" },
-                     comment => "Define cfengine robot agents",
-                      handle => "update_bins_vars_cf_components";
+   "cf_components"       slist => { "cf-key", "cf-know", "cf-monitord", "cf-promises", 
+                                    "cf-report", "cf-runagent", "cf-serverd", "cf-hub", "mongod" },
+                       comment => "Define cfengine robot agents",
+                        handle => "update_bins_vars_cf_components";
 
- "master_software_location"  string => "/var/cfengine/master_software_updates",
-                            comment => "The Cfengine binary updates directory on the policy host",
-                             handle => "update_bins_vars_master_software_location";
+   "master_software_location"  string => "/var/cfengine/master_software_updates",
+                              comment => "The Cfengine binary updates directory on the policy host",
+                               handle => "update_bins_vars_master_software_location";
 
- "local_software_dir"        string => translatepath("$(sys.workdir)/software_updates/$(sys.flavour)_$(pkgarch)"),
-                            comment => "Local directory containing binary updates for this host",
-                             handle => "update_bins_vars_local_software_dir";
+   "local_software_dir"        string => translatepath("$(sys.workdir)/software_updates/$(sys.flavour)_$(pkgarch)"),
+                              comment => "Local directory containing binary updates for this host",
+                               handle => "update_bins_vars_local_software_dir";
 
- windows::
+  windows::
 
-  "stop_signal"              string => "kill",
-                            comment => "Define a stop signal for Windows",
-                             handle => "update_bins_vars_stop_signal_windows";
+   "stop_signal"              string => "kill",
+                             comment => "Define a stop signal for Windows",
+                              handle => "update_bins_vars_stop_signal_windows";
 
- !windows::
+  !windows::
 
-  "stop_signal"              string => "term",
-                            comment => "Define a stop signal for *NIX system",
-                             handle => "update_bins_vars_stop_signal_unix";
+   "stop_signal"              string => "term",
+                             comment => "Define a stop signal for *NIX system",
+                              handle => "update_bins_vars_stop_signal_unix";
 
- solarisx86|solaris::
+  solarisx86|solaris::
+
+   "communitypkg"            string => "CFEcfengine-community",
+                            comment => "Name convention of Community package on Solaris",
+                             handle => "update_bins_vars_communitypkg_solaris";
+
    "novapkg"                 string => "CFEcfengine-nova",
                             comment => "Name convention of Nova package on Solaris",
-
-                             handle => "update_bins_vars_novapkg_solaris";
+                             handle => "update_bins_vars_novapkg_solaris",
+                         ifvarclass => "nova_edition";
  
- !(solarisx86|solaris)::
-   "novapkg"                 string => "cfengine-nova",
-                            comment => "Name convention of Nova package on Solaris",
-                             handle => "update_bins_vars_novapkg_not_solaris";
+  !(solarisx86|solaris)::
 
- solaris::
+   "communitypkg"            string => "cfengine-community",
+                            comment => "Name convention of Community package for all but not Solaris",
+                             handle => "update_bins_vars_communitypkg_not_solaris";
+
+   "novapkg"                 string => "cfengine-nova",
+                            comment => "Name convention of Nova package for all but not Solaris",
+                             handle => "update_bins_vars_novapkg_not_solaris",
+                         ifvarclass => "nova_edition";
+
+  solaris::
+
    "pkgarch"                 string => "sparc",
                             comment => "Name convention of package arch on Solaris",
                              handle => "update_bins_vars_pkgarch_solaris";
 
- freebsd|netbsd|debian::
+  freebsd|netbsd|debian::
+
    "pkgarch"                 string => "*",
                             comment => "Name convention of package arch on *BSD/Debian",
                              handle => "update_bins_vars_pkgarch_bsd";
 
- !(solaris|freebsd|netbsd|debian)::
+  !(solaris|freebsd|netbsd|debian)::
+
    "pkgarch"                 string => "$(sys.arch)",
                             comment => "Name convention of package arch for other system except Solaris and *BSD",
                              handle => "update_bins_vars_pkgarch_not_solaris_bsd";
 
 #
 
-processes:
+ processes:
 
-bin_newpkg::
+  bin_newpkg::
 
- "$(cf_components)" signals => { "$(stop_signal)" },
-                    comment => "Stop cfengine running processes before binary update",
-                     handle => "update_bins_processes_stop_cfengine",
-                    classes => u_if_repaired("stopped_cfprocs");
+   "$(cf_components)" signals => { "$(stop_signal)" },
+                      comment => "Stop cfengine running processes before binary update",
+                       handle => "update_bins_processes_stop_cfengine",
+                      classes => u_if_repaired("stopped_cfprocs");
 
-bin_newpkg.!windows::
+  bin_newpkg.!windows::
 
-  "cf-execd"  signals => { "$(stop_signal)" },
-              comment => "Stop cf-execd running process before binary update",
-               handle => "update_bins_processes_stop_cf_execd",
-              classes => u_if_repaired("stopped_cfprocs");
+   "cf-execd"  signals => { "$(stop_signal)" },
+               comment => "Stop cf-execd running process before binary update",
+                handle => "update_bins_processes_stop_cf_execd",
+               classes => u_if_repaired("stopped_cfprocs");
 
 #
 
-packages:
+ packages:
 
- # update packages after all Cfengine have been killed
+  # update packages after all Cfengine have been killed
 
-stopped_cfprocs::
+  stopped_cfprocs::
+
+   "$(communitypkg)"
+                    comment => "Update Community package to a newer version",
+                     handle => "update_bins_packages_community_update_all",
+             package_policy => "update",
+             package_select => ">=",                 # picks the newest Nova available
+      package_architectures => { "$(pkgarch)" },
+            package_version => "3.0.0",              # at least Community version 3.0.0
+             package_method => u_generic( "$(local_software_dir)" ),
+                    classes => u_if_else("bin_update_success", "bin_update_fail");
 
    "$(novapkg)"
-                    comment => "Update cfengine package to a newer version",
-                     handle => "update_bins_packages_package_update_all",
+                    comment => "Update Nova package to a newer version",
+                     handle => "update_bins_packages_nova_update_all",
              package_policy => "update",
              package_select => ">=",                 # picks the newest Nova available
       package_architectures => { "$(pkgarch)" },
             package_version => "1.0.0",              # at least Nova version 1.0.0
              package_method => u_generic( "$(local_software_dir)" ),
+                 ifvarclass => "nova_edition",
                     classes => u_if_else("bin_update_success", "bin_update_fail");
 
 #
 
-files:
+ files:
 
   "$(local_software_dir)"
-         comment => "Copy binary updates from master source on policy server",
-          handle => "update_bins_files_pkg_copy",
-       copy_from => u_rcp("$(master_software_location)/$(sys.flavour)_$(sys.arch)","$(sys.policy_hub)"),
-    depth_search => u_recurse("1"),  # Nova updates should be in root dir
-      depends_on => { "grant_access_datafiles" },
-          action => u_immediate,
-         classes => u_if_repaired("bin_newpkg");
+          comment => "Copy binary updates from master source on policy server",
+           handle => "update_bins_files_pkg_copy",
+        copy_from => u_rcp("$(master_software_location)/$(sys.flavour)_$(sys.arch)","$(sys.policy_hub)"),
+     depth_search => u_recurse("1"),  # Nova updates should be in root dir
+       depends_on => { "grant_access_datafiles" },
+           action => u_immediate,
+          classes => u_if_repaired("bin_newpkg");
 
 #
 
-services:
+ services:
 
- bin_newpkg.windows::
-  "CfengineNovaExec"
-     service_policy => "stop",
-            comment => "Stop the executor windows service before updating Cfengine",
-             handle => "update_bins_services_stop_cf_execd_windows";
+  bin_newpkg.windows::
+
+   "CfengineNovaExec"
+      service_policy => "stop",
+             comment => "Stop the executor windows service before updating Cfengine",
+              handle => "update_bins_services_stop_cf_execd_windows";
 
 #
 
-reports:
+ reports:
 
- bin_newpkg::
-  "An update for Cfengine binaries is downloaded, installing..."
-     comment => "Alert a message during installation",
-      handle => "update_bins_reports_installation";
+  bin_newpkg::
 
- bin_update_success::
-  "Successfully installed Cfengine binaries"
-     comment => "Alert a message when an update finishes",
-      handle => "update_bins_reports_finish";
+   "An update for Cfengine binaries is downloaded, installing..."
+      comment => "Alert a message during installation",
+       handle => "update_bins_reports_installation";
 
- bin_update_fail::
-  "Failed updating Cfengine binaries, should revert to old version"
-     comment => "Alert a message if an update failed",
-      handle => "update_bins_reports_fail";
+  bin_update_success::
+
+   "Successfully installed Cfengine binaries"
+      comment => "Alert a message when an update finishes",
+       handle => "update_bins_reports_finish";
+
+  bin_update_fail::
+
+   "Failed updating Cfengine binaries, should revert to old version"
+      comment => "Alert a message if an update failed",
+       handle => "update_bins_reports_fail";
 
 }
 
@@ -154,103 +183,101 @@ reports:
 
 bundle agent update
 {
-vars:
+ vars:
 
- "inputs_dir"         string => translatepath("$(sys.workdir)/inputs"),
-                     comment => "Directory containing Cfengine policies",
-                      handle => "update_vars_inputs_dir";
+   "inputs_dir"         string => translatepath("$(sys.workdir)/inputs"),
+                       comment => "Directory containing Cfengine policies",
+                        handle => "update_vars_inputs_dir";
 
- "ppkeys_file"        string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
-                     comment => "Path to public key file",
-                      handle => "update_vars_ppkeys_file";
+   "ppkeys_file"        string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
+                       comment => "Path to public key file",
+                        handle => "update_vars_ppkeys_file";
 
- "file_check"         string => translatepath("$(inputs_dir)/promises.cf"),
-                     comment => "Path to a policy file",
-                      handle => "update_vars_file_check";
+   "file_check"         string => translatepath("$(inputs_dir)/promises.cf"),
+                       comment => "Path to a policy file",
+                        handle => "update_vars_file_check";
 
-
- "master_location"    string => "/var/cfengine/masterfiles",  # NB! NOT $(sys.workdir) on Windows !
-                     comment => "The master cfengine policy directory on the policy host",
-                      handle => "update_vars_master_location";
-
-#
-
-classes:
-
-  "have_ppkeys"   expression => fileexists("$(ppkeys_file)"),
-                     comment => "Check for /var/cfengine/ppkeys/localhost.pub",
-                      handle => "update_classes_have_ppkeys";
-
-  "files_ok"      expression => fileexists("$(file_check)"),
-                     comment => "Check for /var/cfengine/masterfiles/promises.cf",
-                      handle => "update_classes_files_ok";
+   "master_location"    string => "/var/cfengine/masterfiles",  # NB! NOT $(sys.workdir) on Windows !
+                       comment => "The master cfengine policy directory on the policy host",
+                        handle => "update_vars_master_location";
 
 #
 
-processes:
+ classes:
 
- am_policy_hub::
+   "have_ppkeys"   expression => fileexists("$(ppkeys_file)"),
+                      comment => "Check for /var/cfengine/ppkeys/localhost.pub",
+                       handle => "update_classes_have_ppkeys";
+
+   "files_ok"      expression => fileexists("$(file_check)"),
+                      comment => "Check for /var/cfengine/masterfiles/promises.cf",
+                       handle => "update_classes_files_ok";
+
+#
+
+ processes:
+
+  am_policy_hub::
   
-  "mongod"      restart_class => "start_mongod",
-                      comment => "Monitor mongodb process",
-                       handle => "update_processes_mongod",
-                   ifvarclass => "nova_edition|constellation_edition";
+   "mongod"      restart_class => "start_mongod",
+                       comment => "Monitor mongodb process",
+                        handle => "update_processes_mongod",
+                    ifvarclass => "nova_edition|constellation_edition";
 
- files_ok::
+  files_ok::
 
-  "cf-serverd"  restart_class => "start_server",
-                      comment => "Monitor cf-serverd process",
-                       handle => "update_processes_cf_serverd";
+   "cf-serverd"  restart_class => "start_server",
+                       comment => "Monitor cf-serverd process",
+                        handle => "update_processes_cf_serverd";
 
-  "cf-monitord" restart_class => "start_monitor",
-                      comment => "Monitor cf-monitord process",
-                       handle => "update_processes_cf_monitord";
+   "cf-monitord" restart_class => "start_monitor",
+                       comment => "Monitor cf-monitord process",
+                        handle => "update_processes_cf_monitord";
 
- files_ok.!windows::
+  files_ok.!windows::
 
-  "cf-execd"    restart_class => "start_exec",
-                      comment => "Monitor cf-execd process",
-                       handle => "update_processes_cf_execd";
+   "cf-execd"    restart_class => "start_exec",
+                       comment => "Monitor cf-execd process",
+                        handle => "update_processes_cf_execd";
 
- am_policy_hub.files_ok.!windows::
+  am_policy_hub.files_ok.!windows::
 
-  "cf-hub"      restart_class => "start_hub",
-                      comment => "Monitor cf-hub process",
-                       handle => "update_processes_cf_hub",
-                   ifvarclass => "nova_edition|constellation_edition";
+   "cf-hub"      restart_class => "start_hub",
+                       comment => "Monitor cf-hub process",
+                        handle => "update_processes_cf_hub",
+                    ifvarclass => "nova_edition|constellation_edition";
 
 #
 
-commands:
+ commands:
 
- start_server::
+  start_server::
 
    "$(sys.cf_serverd)"
        action => u_ifwin_bg,
       comment => "Start cf-serverd process",
        handle => "update_commands_start_cf_serverd";
 
- start_monitor::
+  start_monitor::
 
    "$(sys.cf_monitord)"
        action => u_ifwin_bg,
       comment => "Start cf-monitord process",
        handle => "update_commands_start_cf_monitord";
 
-
- !windows.start_exec::
+  !windows.start_exec::
 
    "$(sys.cf_execd)"
       comment => "Start cf-execd process",
        handle => "update_commands_start_cf_execd_not_windows";
 
- !windows.am_policy_hub.start_hub::
+  !windows.am_policy_hub.start_hub::
 
    "$(sys.cf_hub)"
       comment => "Start cf-hub process",
        handle => "update_commands_start_cf_hub";
 
- !windows.am_policy_hub.start_mongod::
+  !windows.am_policy_hub.start_mongod::
 
    "/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath $(sys.workdir)/state --bind_ip 127.0.0.1 > /dev/null < /dev/null 2>&1"
       contain => u_in_shell,
@@ -258,89 +285,89 @@ commands:
       comment => "Start mongod process",
        handle => "update_commands_start_mongod";
 
- !have_ppkeys::
+  !have_ppkeys::
 
-    "$(sys.cf_key)",
-          comment => "Generate cfengine encryption keys if necessary",
-           handle => "update_commands_generate_keys";
+   "$(sys.cf_key)",
+      comment => "Generate cfengine encryption keys if necessary",
+       handle => "update_commands_generate_keys";
 
- am_policy_hub.update_report::
+  am_policy_hub.update_report::
 
-    "$(sys.cf_promises) -r"
-       contain => u_in_shell_and_silent,
-       comment => "Generate config knowledge format after update",
-        handle => "update_commands_run_cf_promises_r";
+   "$(sys.cf_promises) -r"
+      contain => u_in_shell_and_silent,
+      comment => "Generate config knowledge format after update",
+       handle => "update_commands_run_cf_promises_r";
 
 #
 
-services:
+ services:
 
- files_ok.windows::
+  files_ok.windows::
  
-  "CfengineNovaExec"
-     service_policy => "start",
-     service_method => u_bootstart,
-            comment => "Start the executor windows service now and at boot time",
-             handle => "update_services_windows_executor";
+   "CfengineNovaExec"
+      service_policy => "start",
+      service_method => u_bootstart,
+             comment => "Start the executor windows service now and at boot time",
+              handle => "update_services_windows_executor";
 
 #
 
-files:
+ files:
 
- !am_policy_hub::  # policy hub should not alter inputs/ uneccessary
+  !am_policy_hub::  # policy hub should not alter inputs/ uneccessary
 
-  "$(inputs_dir)/cf_promises_validated"
-         comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
-          handle => "check_valid_update",
-       copy_from => u_dcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
-          action => u_immediate,
-         classes => u_if_repaired("validated_updates_ready");
+   "$(inputs_dir)/cf_promises_validated"
+        comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
+         handle => "check_valid_update",
+      copy_from => u_dcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
+         action => u_immediate,
+        classes => u_if_repaired("validated_updates_ready");
 
- am_policy_hub|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
+  am_policy_hub|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
 
-  "$(inputs_dir)"
-         comment => "Copy policy updates from master source on policy server if a new validation was acquired",
-          handle => "update_files_inputs_dir",
-       copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
-    depth_search => u_recurse("inf"),
-    file_select  => u_input_files,
-      depends_on => { "grant_access_policy", "check_valid_update" },
-          action => u_immediate,
-         classes => u_if_repaired("update_report");
+   "$(inputs_dir)"
+           comment => "Copy policy updates from master source on policy server if a new validation was acquired",
+            handle => "update_files_inputs_dir",
+         copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
+      depth_search => u_recurse("inf"),
+      file_select  => u_input_files,
+        depends_on => { "grant_access_policy", "check_valid_update" },
+            action => u_immediate,
+           classes => u_if_repaired("update_report");
 
-!windows::
+  !windows::
 
-  "$(sys.workdir)/bin"
-         comment => "Make sure cfengine binaries have right file permissions",
-          handle => "update_files_sys_workdir_bin",
-           perms => u_m("755"),
-    depth_search => u_recurse_basedir("inf"),
+   "$(sys.workdir)/bin"
+           comment => "Make sure cfengine binaries have right file permissions",
+            handle => "update_files_sys_workdir_bin",
+             perms => u_m("755"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+   "$(sys.workdir)/lib"
+           comment => "Make sure cfengine libraries have right file permissions",
+            handle => "update_files_sys_workdir_lib",
+             perms => u_m("644"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+   "/usr/local/sbin"
+           comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
+            handle => "update_files_usr_local_sbin",
+             perms => u_m("755"),
+         copy_from => u_cp_nobck("$(sys.workdir)/bin"),
+       file_select => u_cf3_files,
+      depth_search => u_recurse("1"),
           action => u_immediate;
 
-  "$(sys.workdir)/lib"
-         comment => "Make sure cfengine libraries have right file permissions",
-          handle => "update_files_sys_workdir_lib",
-           perms => u_m("644"),
-    depth_search => u_recurse_basedir("inf"),
-          action => u_immediate;
+  am_policy_hub::
 
-  "/usr/local/sbin"
-         comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
-          handle => "update_files_usr_local_sbin",
-           perms => u_m("755"),
-       copy_from => u_cp_nobck("$(sys.workdir)/bin"),
-     file_select => u_cf3_files,
-    depth_search => u_recurse("1"),
-          action => u_immediate;
-
-am_policy_hub::
-
-  "$(master_location)/."
-       comment => "Make sure masterfiles folder has right file permissions",
-        handle => "update_files_sys_workdir_masterfiles",
-         perms => u_m("644"),
-  depth_search => u_recurse_basedir("inf"),
-        action => u_immediate;
+   "$(master_location)/."
+           comment => "Make sure masterfiles folder has right file permissions",
+            handle => "update_files_sys_workdir_masterfiles",
+             perms => u_m("644"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
 
 }
 
@@ -350,7 +377,7 @@ am_policy_hub::
 
 body perms u_m(p)
 {
-mode  => "$(p)";
+ mode  => "$(p)";
 }
 
 #########################################################
@@ -399,74 +426,72 @@ body copy_from u_dcp(from,server)
 
 body copy_from u_cp(from)
 {
-source  => "$(from)";
-compare => "digest";
+ source  => "$(from)";
+ compare => "digest";
 }
 
 #########################################################
 
 body copy_from u_cp_nobck(from)
 {
-source      => "$(from)";
-compare     => "digest";
-copy_backup => "false";
+ source      => "$(from)";
+ compare     => "digest";
+ copy_backup => "false";
 }
 
 #########################################################
 
 body action u_immediate
 {
-ifelapsed => "0";
+ ifelapsed => "0";
 }
 
 #########################################################
 
 body depth_search u_recurse(d)
-
 {
-depth => "$(d)";
+ depth => "$(d)";
 }
 
 #########################################################
 
 body depth_search u_recurse_basedir(d)
-
 {
-include_basedir => "true";
-depth => "$(d)";
+ include_basedir => "true";
+ depth => "$(d)";
 }
 
 #########################################################
 
 body classes u_if_repaired(x)
 {
-promise_repaired => { "$(x)" };
+ promise_repaired => { "$(x)" };
 }
 
 #########################################################
 
 body classes u_if_else(yes,no)
 {
-promise_kept     => { "$(yes)" };
-promise_repaired => { "$(yes)" };
-repair_failed    => { "$(no)" };
-repair_denied    => { "$(no)" };
-repair_timeout   => { "$(no)" };
+ promise_kept     => { "$(yes)" };
+ promise_repaired => { "$(yes)" };
+ repair_failed    => { "$(no)" };
+ repair_denied    => { "$(no)" };
+ repair_timeout   => { "$(no)" };
 }
 
 #########################################################
 
 body contain u_in_shell
 {
-useshell => "true";
+ useshell => "true";
 }
 
 #########################################################
 
 body contain u_in_shell_and_silent
 {
-useshell => "true";
-no_output => "true";
+ useshell => "true";
+ no_output => "true";
 }
 
 #########################################################
@@ -488,21 +513,20 @@ body action u_mongod_bg
 
 body service_method u_bootstart
 {
-service_autostart_policy => "boot_time";
+ service_autostart_policy => "boot_time";
 }
 
 #########################################################
 
 body contain u_silent_in_dir(s)
 {
-chdir => "$(s)";
-no_output => "true";
+ chdir => "$(s)";
+ no_output => "true";
 }
 
 #########################################################
 
 body package_method u_generic(repo)
-
 {
 
 debian::

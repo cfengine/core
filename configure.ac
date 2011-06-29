@@ -996,7 +996,7 @@ dnl ######################################################################
 dnl Now make the Makefiles
 dnl ######################################################################
 
-AC_CONFIG_FILES([Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile examples/Makefile inputs/Makefile])
+AC_CONFIG_FILES([Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile examples/Makefile inputs/Makefile masterfiles/Makefile])
 
 m4_sinclude([nova/output.m4])
 m4_sinclude([constellation/output.m4])

@@ -1,6 +1,6 @@
-SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs
+SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs masterfiles
 
-DIST_SUBDIRS = pub src docs examples inputs
+DIST_SUBDIRS = pub src docs examples inputs masterfiles masterfiles/cdp_lib masterfiles/environment_production
 
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 

@@ -1,0 +1,4 @@
+
+This constraint is used only in adding data to database columns. Rows are considered to be
+instances of individual columns. In the case of the system registry on Windows, the rows
+represent data on data-value pairs.

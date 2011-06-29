@@ -1,0 +1,3 @@
+
+Filenames are chosen automatically and placed in the
+@file{WORKDIR/outputs/@var{hostname}_runagent.out}.

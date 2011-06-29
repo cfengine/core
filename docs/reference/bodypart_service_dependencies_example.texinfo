@@ -1,0 +1,10 @@
+
+@verbatim
+
+services:
+  
+  "ftp"
+    service_policy => "start",
+    service_dependencies => { "network", "logging" };
+
+@end verbatim

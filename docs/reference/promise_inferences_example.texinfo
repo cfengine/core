@@ -1,0 +1,15 @@
+
+@verbatim
+inferences:
+
+  "is close to" 
+           comment => "Cluster property",
+         precedent => { "is close to" },
+         qualifier => { "is close to" };
+
+  "is far from" 
+           comment => "Remote cluster property",
+         precedent => { "is far from" },
+         qualifier => { "is close to" };
+
+@end verbatim

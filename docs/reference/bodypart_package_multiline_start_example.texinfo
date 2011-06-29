@@ -1,0 +1,12 @@
+
+@verbatim
+
+body package_method solaris (pkgname, spoolfile, adminfile)
+{
+package_changes => "individual";
+package_list_command => "/usr/bin/pkginfo -l";
+package_multiline_start    =>  "\s*PKGINST:\s+[^\s]+";
+...
+}
+
+@end verbatim

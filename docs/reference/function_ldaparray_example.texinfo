@@ -1,0 +1,15 @@
+
+@verbatim
+
+classes:
+
+   "gotdata" expression => ldaparray(
+                                    "myarray",
+                                    "ldap://ldap.example.org",
+                                    "dc=cfengine,dc=com",
+                                    "(uid=mark)",
+                                    "subtree",
+                                    "none");
+
+@end verbatim
+

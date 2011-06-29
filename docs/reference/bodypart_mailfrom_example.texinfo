@@ -1,0 +1,9 @@
+
+@verbatim
+
+body executor control
+{
+mailfrom => "MrCfengine@example.org";
+}
+
+@end verbatim

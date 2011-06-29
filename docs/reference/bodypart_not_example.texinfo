@@ -1,0 +1,9 @@
+
+@verbatim
+
+classes:
+
+   "others"  not => "linux|solaris";
+   "no_toor" not => userexists("toor");
+
+@end verbatim

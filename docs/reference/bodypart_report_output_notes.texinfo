@@ -1,0 +1,3 @@
+
+Sets the output format of embedded database reports.
+

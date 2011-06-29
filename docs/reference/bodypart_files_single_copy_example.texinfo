@@ -1,0 +1,10 @@
+
+@verbatim
+
+body agent control
+{
+single_copy => { "/etc/.*", "/special/file" };
+}
+
+@end verbatim
+

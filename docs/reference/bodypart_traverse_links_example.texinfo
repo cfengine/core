@@ -1,0 +1,9 @@
+
+@verbatim
+
+body depth_search example
+{
+traverse_links => "true";
+}
+
+@end verbatim

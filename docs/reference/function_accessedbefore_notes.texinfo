@@ -1,0 +1,13 @@
+
+The function accesses the @code{atime} fields of a file and makes a comparison.
+
+@smallexample
+
+ touch /tmp/reference
+ touch /tmp/secretfile
+
+ /usr/local/sbin/cf-agent -f ./unit_accessed_before.cf -K
+ R: The secret changes have been accessed after the reference time
+
+@end smallexample
+

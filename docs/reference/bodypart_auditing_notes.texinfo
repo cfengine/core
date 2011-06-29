@@ -1,0 +1,7 @@
+
+
+If this is set, cfengine will perform auditing on promises in the
+current configuration. This means that all details surrounding the
+verification of the current promise will be recorded in the audit
+database. The database may be inspected with @code{cf-report}, or
+@code{cfshow} in cfengine 2.

@@ -1,0 +1,11 @@
+
+@verbatim
+
+processes:
+
+ "snmpd"
+
+        process_stop => "/etc/init.d/snmp stop";
+
+
+@end verbatim

@@ -1,0 +1,18 @@
+
+
+control:
+
+ domain = ( iu.hio.no )
+
+ AllowConnectionsFrom = (  127.0.0.1  )
+ AllowMultipleConnectionsFrom = ( 127.0.0.1 )
+
+ TrustKeysFrom = ( 127.0.0.1 )
+
+admit:
+
+ asd.linux::
+
+  /etc           127.0.0.1/24 158.2.4.5/24 *.iu.hio.no
+
+deny:

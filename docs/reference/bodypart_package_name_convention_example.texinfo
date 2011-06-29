@@ -1,0 +1,9 @@
+
+@verbatim
+body package_method rpm
+
+{
+package_name_convention => "$(name).$(arch).rpm";
+}
+
+@end verbatim

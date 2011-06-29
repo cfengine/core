@@ -1,0 +1,12 @@
+
+A variable containing the path to the cfengine server daemon @code{cf-serverd}
+on the platform you are using.
+
+@verbatim
+commands:
+
+ restart_serverd::
+
+   "$(sys.cf_serverd)";
+
+@end verbatim

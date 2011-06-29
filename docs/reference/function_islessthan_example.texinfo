@@ -1,0 +1,31 @@
+
+@verbatim
+
+body common control
+
+{
+bundlesequence  => { "test"  };
+}
+
+###########################################################
+
+bundle agent test
+
+{
+classes:
+
+  "ok" expression => islessthan("0","1");
+
+reports:
+
+  ok::
+
+    "Assertion is true";
+
+ !ok::
+
+  "Assertion is false";
+
+}
+
+@end verbatim

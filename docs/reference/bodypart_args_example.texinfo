@@ -1,0 +1,10 @@
+
+@verbatim
+
+commands:
+
+  "/bin/echo one"
+
+   args => "two three";
+
+@end verbatim

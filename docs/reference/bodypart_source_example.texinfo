@@ -1,0 +1,19 @@
+
+
+@verbatim
+
+body copy_from example
+{
+source => "/path/to/source";
+}
+
+# or
+
+body link_from example
+{
+source => "/path/to/source";
+}
+
+@end verbatim
+
+

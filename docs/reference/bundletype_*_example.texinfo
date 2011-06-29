@@ -1,0 +1,17 @@
+
+@cartouche
+@smallexample
+
+bundle common globals
+@{
+vars:
+
+  "global_var" string => "value";
+
+classes:
+
+  "global_class" expression => "value";
+@}
+
+@end smallexample
+@end cartouche

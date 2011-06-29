@@ -1,0 +1,9 @@
+
+On the Windows version of Cfengine Nova, this is the path to the
+Windows system directory.
+
+@verbatim
+
+# winsysdir = C:\WINDOWS\system32
+
+@end verbatim

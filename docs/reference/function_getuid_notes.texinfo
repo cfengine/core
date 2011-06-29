@@ -1,0 +1,4 @@
+
+If the named user is not registered the variable will not be
+defined. On windows, which does not support user ids, the variable
+will not be defined.

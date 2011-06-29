@@ -1,0 +1,10 @@
+
+@verbatim
+body knowledge control
+
+{
+# fix/override -g option
+graph_output => "true"; 
+}
+
+@end verbatim

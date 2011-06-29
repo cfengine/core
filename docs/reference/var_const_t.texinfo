@@ -1,0 +1,10 @@
+
+@verbatim
+
+reports:
+
+ cfengine_3::
+
+  "A report with a$(const.t)tab in it";
+
+@end verbatim

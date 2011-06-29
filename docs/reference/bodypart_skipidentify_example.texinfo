@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent control
+{
+skipidentify => "true";
+}
+
+@end verbatim

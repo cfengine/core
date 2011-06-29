@@ -1,0 +1,73 @@
+
+This context @samp{this} is used to access information about promises
+during their execution. It is context dependent and not universally
+meaningful or available, but provides a context for variables where one is
+needed (such as when passing the value of a list variable into a parameterized
+@code{edit_line} promise from a @code{file} promise).  For example:
+
+@verbatim
+bundle agent resolver(s,n)
+{ 
+files:
+  "$(sys.resolv)" 
+
+      create        => "true",
+      edit_line     => doresolv("@(this.s)","@(this.n)"),
+      edit_defaults => reconstruct;
+}
+@end verbatim
+
+Note that every unqualified variable is automatically considered to be in
+context @samp{this}, so that a reference to the variable @code{$(foo)} is
+identical to referencing @code{$(this.foo)}.  You are strongly encourged to
+@b{not} take advantage of this behaviour, but simply to be aware that if you
+attempt to declare a variable name with one of the following special
+reserved names, Cfengine will issue a warning (and you can reference your
+variable by qualifying it with the bundle name in which it is declared).
+
+@subsection Variable this.handle
+
+This variable points to the promise handle of the currently handled promise;
+ it is useful for referring to the intention in log messages.
+
+@subsection Variable this.promise_filename
+
+This variable reveals the name of the file in which the current promise is defined.
+
+@subsection Variable this.promise_linenumber
+
+This variable reveals the line number in the file at which it is used.  It is
+useful to differentiate otherwise identical reports promises.
+
+@subsection Variable this.promiser
+
+The special variable @code{$(this.promiser)} is used to refer to the current
+value of the promiser itself, in a number of allowed cases, typically when
+searches can take place. Current promise types that define @code{$(this.promiser)}
+are: @code{files}, @code{processes}, @code{exec}.
+
+This variable is useful in @code{files} promises, for instance when using
+pattern matching or @code{depth_search} that implicitly match multiple
+objects.  In that case, @code{$(this.promiser)} refers to the
+currently identified file that makes the promise.  For example:
+
+@verbatim
+bundle agent find666
+{
+files:
+  "/home"
+    file_select => world_writeable,
+    transformer => "/bin/echo DETECTED $(this.promiser)",
+    depth_search => recurse("inf");
+
+  "/etc/.*"
+    file_select => world_writeable,
+    transformer => "/bin/echo DETECTED $(this.promiser)";
+}
+
+body file_select world_writeable
+{
+  search_mode => { "o+w" };
+  file_result => "mode";
+}
+@end verbatim

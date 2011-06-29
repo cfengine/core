@@ -1,0 +1,10 @@
+
+@verbatim
+
+body package_method rpm
+
+{
+package_delete_command => "/bin/rpm -e --nodeps";
+}
+
+@end verbatim

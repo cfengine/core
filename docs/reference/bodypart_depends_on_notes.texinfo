@@ -1,0 +1,9 @@
+
+This is a list of promise handles for whom this promise is a promisee. In other words,
+we acknowledge that this promise will be affected by the list of promises whose handles
+are specified. 
+
+This option is only used only for documentation currently. In
+commercial versions of cfengine, using this attribute leads to
+automatic documentation about policy relationships for the purpose of
+Knowledge Management.

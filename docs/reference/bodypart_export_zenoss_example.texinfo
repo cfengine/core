@@ -1,0 +1,11 @@
+
+@verbatim
+
+body hub control
+{
+am_policy_hub::
+
+  export_zenoss => "true";
+}
+
+@end verbatim

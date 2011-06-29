@@ -1,0 +1,9 @@
+
+@verbatim
+
+body reporter control
+{
+time_stamps => "true";
+}
+
+@end verbatim

@@ -1,0 +1,13 @@
+
+control:
+
+ actionsequence = ( files )
+
+files:
+
+ /home/mark/tmp/cftest
+  checksum=md5
+  action=warnall
+
+
+

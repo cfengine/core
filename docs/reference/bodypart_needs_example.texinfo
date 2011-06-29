@@ -1,0 +1,10 @@
+
+@verbatim
+things:
+
+  "rack 123"     needs => { "power", "cooling" };
+
+  "computer"     needs => { "cleaning", "monitoring" },
+             certainty => "possible";
+
+@end verbatim

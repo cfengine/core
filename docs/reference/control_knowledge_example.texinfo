@@ -1,0 +1,14 @@
+
+@cartouche
+@smallexample
+
+body knowledge control
+
+@{
+query_output    => "html";
+goal_categories => @{ "goals", "targets", "milestones" @};
+goal_patterns   => @{ "goal_.*", "target.*" @};
+@}
+
+@end smallexample
+@end cartouche

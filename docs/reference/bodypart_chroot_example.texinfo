@@ -1,0 +1,10 @@
+
+@verbatim
+
+body contain example
+
+{
+chroot => "/private/path";
+}
+
+@end verbatim

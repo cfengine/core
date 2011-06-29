@@ -1,0 +1,10 @@
+
+@verbatim
+
+body process_select example
+{
+ppid => irange("407","511");
+process_result => "ppid";
+}
+
+@end verbatim

@@ -1,0 +1,10 @@
+
+@verbatim
+
+body copy_from example
+{
+preserve => "true";
+}
+
+@end verbatim
+

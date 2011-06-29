@@ -1,0 +1,10 @@
+
+@verbatim
+
+reports:
+
+ cfengine_3::
+
+  "A carriage return character is $(const.r)";
+
+@end verbatim

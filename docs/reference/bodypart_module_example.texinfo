@@ -1,0 +1,10 @@
+
+@verbatim
+
+commands:
+
+   "/masterfiles/user_script"
+
+     module => "true";
+
+@end verbatim

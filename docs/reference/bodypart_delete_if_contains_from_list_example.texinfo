@@ -1,0 +1,9 @@
+
+@verbatim
+
+body delete_select example(s)
+{
+delete_if_contains_from_list => { @(s) };
+}
+
+@end verbatim

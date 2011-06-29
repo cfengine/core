@@ -1,0 +1,18 @@
+
+@verbatim
+
+bundle agent example
+{
+vars:
+
+  "num" int => countclassesmatching("entropy.*low");
+
+reports:
+
+  cfengine_3::
+
+    "Found $(num) classes matching";
+
+}
+
+@end verbatim

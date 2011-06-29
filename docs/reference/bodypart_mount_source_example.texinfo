@@ -1,0 +1,8 @@
+@verbatim
+
+body mount example
+{
+mount_source "/location/disk/directory";
+}
+
+@end verbatim

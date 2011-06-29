@@ -1,0 +1,12 @@
+
+
+@verbatim
+
+body rename example
+{
+disable => "true"; 
+disable_suffix => ".nuked";
+}
+
+@end verbatim
+

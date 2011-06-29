@@ -1,0 +1,3 @@
+
+Extra BSD file system flags (these have no effect on non-BSD versions of
+cfengine).  See the manual page for @code{chflags} for more details.

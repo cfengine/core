@@ -1,0 +1,4 @@
+
+The cfengine process must have access to the object concerned in order for
+this to work.
+

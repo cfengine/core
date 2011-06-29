@@ -1,0 +1,12 @@
+\initial {A}
+\entry {Anomalies}{5}
+\entry {anomaly}{5}
+\initial {D}
+\entry {dev1}{5}
+\entry {dev2}{5}
+\initial {E}
+\entry {Entropy}{7}
+\initial {M}
+\entry {microanomaly}{5}
+\initial {N}
+\entry {normal}{5}

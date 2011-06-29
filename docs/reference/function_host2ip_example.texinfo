@@ -1,0 +1,9 @@
+
+@verbatim
+
+bundle server control
+{
+allowconnects         => { escape(host2ip("www.example.com")) };
+}
+
+@end verbatim

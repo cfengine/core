@@ -1,0 +1,11 @@
+
+@verbatim
+
+files:
+
+  "/home/mark/tmp/testcopy" 
+
+    depends_on    => { "server_promise_1" },
+    copy_from     => mycopy("/source");
+
+@end verbatim

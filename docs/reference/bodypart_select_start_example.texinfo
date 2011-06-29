@@ -1,0 +1,12 @@
+
+@verbatim
+
+body select_region example(x)
+
+{
+select_start => "\[$(x)\]";
+select_end => "\[.*\]";
+}
+
+@end verbatim
+

@@ -1,0 +1,8 @@
+
+@verbatim
+
+body knowledge control
+{
+view_projections => "true";
+}
+@end verbatim

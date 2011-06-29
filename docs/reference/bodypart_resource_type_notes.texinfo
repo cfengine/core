@@ -1,0 +1,12 @@
+
+By default, access to resources granted by the server are
+files. However, sometimes it is useful to cache @code{literal}
+strings, hints and data in the server, e.g. the contents of variables,
+hashed passwords etc for easy access. In the case of literal data, the
+promise handle serves as the reference identifier for queries. Queries
+are instigated by function calls by any agent.
+
+The term @code{query} may also be used in commercial versions of
+Cfengine to query the server for data from embedded databases. This is
+currently for internal use only, and is used to grant access to report
+`menus'.

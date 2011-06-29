@@ -1,0 +1,10 @@
+
+@verbatim
+
+body package_method rpm
+
+{
+package_changes => "bulk";
+}
+
+@end verbatim

@@ -1,0 +1,21 @@
+
+@verbatim
+
+
+bundle server access_rules()
+
+{
+vars:
+
+  "localvar" string => "literal string";
+
+access:
+
+  "This is a $(localvar) for remote access"
+ 
+        handle  => "test_scalar",
+  resource_type => "literal",
+        admit   => { "127.0.0.1" };
+}
+
+@end verbatim

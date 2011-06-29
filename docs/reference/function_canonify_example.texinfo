@@ -1,0 +1,11 @@
+
+@verbatim
+
+commands:
+
+   "/var/cfengine/bin/$(component)"
+
+       ifvarclass => canonify("start_$(component)");
+
+@end verbatim
+

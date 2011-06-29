@@ -1,0 +1,498 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename st-editing.info
+@settitle Promising and Editing File Content
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title Promising and Editing File Content
+@subtitle A CFEngine Special Topics Handbook
+@author CFEngine AS
+
+
+@page
+
+@cartouche
+@quotation
+The ability to edit files convergently is a popular and widely used
+aspect of CFEngine. This document proposes some best practices for
+managing file content.
+
+@end quotation
+@end cartouche
+
+@vskip 2cm
+This is an incomplete draft document.
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2010 CFEngine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Modularization:
+                      CFEngine is a language based tool specifically
+                      designed for configuring and maintaining
+                      Unix-like operating systems attached
+                      to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+
+
+@node Top, What is convergent file editing?, (dir), (dir)
+@top Editing
+@menu
+* What is convergent file editing?::  
+* Why is file editing difficult?::  
+* What does file editing involve?::  
+* Editing bundles::             
+* Standard library methods for editing::  
+* Choosing an approach to file editing::  
+* Pitfalls to watch out for in file editing::  
+* Examples of file editing::    
+* Copying a file template into place::  
+* Contextual adaptation of a file template::  
+* Modifying the current state of a file::  
+@end menu
+
+
+@end ifnottex
+@iftex
+@contents
+@end iftex
+
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+@node What is convergent file editing?, Why is file editing difficult?, Top, Top
+@unnumberedsec What is convergent file editing?
+@sp 1
+
+Covergent file editing is the ability to specify the final state of a
+configuration file or document and have that result maintained over
+time, independently of its initial state. It is about keeping certain
+promises about the file's content, not on the process by which
+edits are made.
+
+Cfengine allows you to model whole files or parts of files, in any
+format, and promise that these fragments will keep certain promises
+about their state.  This is potentially different from more common templating
+approaches to file management in which pre-adjusted copies of files
+are generated for all recipients at a single location and then
+distributed.
+
+@node Why is file editing difficult?, What does file editing involve?, What is convergent file editing?, Top
+@unnumberedsec Why is file editing difficult?
+@sp 1
+
+File content is not made up of simple data objects like permission flags or
+process tables: files contain compound, ordered structures (known as
+grammars) and they cannot always be determined from a single source of
+information. To determine the outcome of a file we have to adopt either
+a fully deterministic approach, or live with a partial approximation.
+
+Some approaches to file editing try to `know' the intended format of a
+file, by hardcoding it. If the file then fails to follow this format,
+the algorithms might break. CfEngine gives you generic tools to be
+able to handle files in any line-based format, without the need to
+hard-code specialist knowledge about file formats.
+
+@cartouche
+Remember that all changes are adapted to your local context and implemented at the final
+destination by @code{cf-agent}.
+@end cartouche
+
+
+
+
+@node What does file editing involve?, Editing bundles, Why is file editing difficult?, Top
+@unnumberedsec What does file editing involve?
+@sp 1
+
+There are several ways
+to approach desired state management of file contents:
+
+@sp 1
+@enumerate
+@item Copy a finished file template to the desired location, completely overwriting existing content.
+@item Copy and adapt an almost finished template, filling in variables or macros to yield a desired content.
+@item Make corrections to whatever the existing state of the file might be.
+@end enumerate
+@sp 1
+There are advantages and disadvantages with each of these approaches and the best approach depends on
+the type of situation you need to describe.
+
+@sp 1
+@multitable @columnfractions .5 .5
+@item @b{For the approach} @tab @b{Against the approach}
+@item 1. Deterministic or certain approach. @tab Hard to specialize the result and the source must still be maintained by hand.
+@item 2. Deterministic or certain approach. @tab Limited specialization and must come from a single source, again maintained by hand.
+@item 3. Non-deterministic/partial model. @tab Full power to customize file even with multiple managers.
+@end multitable
+@sp 1
+
+
+Approaches 1 and 2 are best for situations where very few variations
+of a file are needed in different circumstances.  Approach 3 is best
+when you need to customize a file significantly, especially when you don't know the
+full details of the file you are starting from. Approach 3 is generally required
+when adapting configuration files provided by a third party, since the basic
+content is determined by them.
+
+@node Editing bundles, Standard library methods for editing, What does file editing involve?, Top
+@unnumberedsec Editing bundles
+
+Unlike other aspects of configuration, promising the content of a single
+file object involves possibly many promises about the atoms within the file.
+Thus we need to be able to state bundles of promises for what happens inside
+a file and tie it (like a body-template) to the @code{files} promise. 
+This is done using an @code{edit_line =>} or @code{edit_xml =>} constraint@footnote{At the time of writing
+only @code{edit_line} is implemented.}, for
+instance:
+
+@verbatim
+files:
+
+  "/etc/passwd"
+
+     create => "true",
+
+     # other constraints on file container ...
+
+     edit_line => mybundle("one","two","three");
+@end verbatim
+
+Editing bundles are defined like other bundles for the agent, except that they have a type
+give by the left hand side of the constraint (just like body templates):
+
+@verbatim
+bundle edit_line mybundle(arg1,arg2,arg3)
+{
+insert_lines:
+
+   "newuser:x:1111:110:A new user:/home/newuser:/bin/bash";
+   "$(arg1):x:$(arg2):110:$(arg3):/home/$(arg1):/bin/bash";
+}
+@end verbatim
+
+
+
+@node Standard library methods for editing, Choosing an approach to file editing, Editing bundles, Top
+@unnumberedsec Standard library methods for editing
+
+You may choose to write your own editing bundles for specific purposes; you can also use
+ready-made templates from the standard library for a lot of purposes. If you follow the
+guidelines for choosing an approach to editing below, you will be able to re-use standard
+methods in perhaps most cases. Using standard library code keeps your own intentions clear
+and easily communicable. Some examples of the standard editing methods are:
+
+@verbatim
+ append_groups_starting(v) 
+ append_if_no_line(str) 
+ append_if_no_lines(list) 
+ append_user_field(group,field,allusers) 
+ append_users_starting(v) 
+ comment_lines_containing(regex,comment) 
+ edit_line comment_lines_matching(regex,comment) 
+ delete_lines_matching(regex) 
+ expand_template(templatefile) 
+ insert_lines(lines) 
+ resolvconf(search,list) 
+ set_user_field(user,field,val) 
+ set_variable_values(v) 
+ set_variable_values2(v) 
+ uncomment_lines_containing(regex,comment) 
+ uncomment_lines_matching(regex,comment) 
+ warn_lines_matching(regex)
+@end verbatim
+
+You find these in the documentation for the COPBL.
+
+@node  Choosing an approach to file editing, Pitfalls to watch out for in file editing, Standard library methods for editing, Top
+@unnumberedsec Choosing an approach to file editing
+
+There are two decisions to make when choosing how to manage file content:
+
+@table @i
+@item How can the desired content be constructed from the necessary source(s)?
+Is there more than one source of infromation that needs to be merged?
+
+@item Do the contents need to be adapted to the specific environment?
+Is there context-specific information in the file?
+@end table
+
+@cartouche
+Use the simplest approach that requires the smallest number of promises to solve the
+problem.
+@end cartouche
+
+@node  Pitfalls to watch out for in file editing, Examples of file editing, Choosing an approach to file editing, Top
+@unnumberedsec Pitfalls to watch out for in file editing
+
+File editing is different from most other kinds of configuration
+promise because it is fundamentally an order dependent configuration
+process. Files contain non-regular grammars. CFEngine attempts to simplify
+the problem by using models for the file structure, essentially factoring out
+as much of the context dependence as possible.
+
+Order dependence increases the fragility of maintainence, so you should do what you can to minimize it.
+
+@itemize
+@item Try to use substitution within a known template if order is important.
+@end itemize
+
+The simplest kinds of files for configuration are line-based, with no special order. For such
+cases, simple line insertions are usually enough to configure files.
+
+The increasing introduction of XML for configuration is a major headache for configuration
+management.
+
+@node  Examples of file editing, Copying a file template into place, Pitfalls to watch out for in file editing, Top
+@unnumberedsec Examples of file editing
+
+@node Copying a file template into place, Contextual adaptation of a file template, Examples of file editing, Top
+@unnumberedsec Copying a file template into place
+
+Use this approach if a simple substution of data will solve the problem in all contexts.
+
+@enumerate
+@item Maintain the content of the file in a version controlled repository.
+@item Check out the file into a staging area.
+@item Copy the file into place.
+@end enumerate
+
+@verbatim
+bundle agent something
+{
+files:
+
+  "/important/file"
+
+  copy_from => secure_cp("/repository/important_file_template","svn-host");
+}
+@end verbatim
+
+
+@node  Contextual adaptation of a file template, Modifying the current state of a file, Copying a file template into place, Top
+@unnumberedsec Contextual adaptation of a file template
+
+There are two approaches here:
+@enumerate
+@item Copy a template then edit it.
+@item Copy a template with macro-substitution.
+@end enumerate
+
+To expand a template file on a local disk:
+@verbatim
+
+bundle agent templating
+{
+files:
+
+  "/home/mark/tmp/file_based_on_template"
+
+       create => "true",
+    edit_line => expand_template("/tmp/source_template");
+}
+
+@end verbatim
+@noindent To convergently copy a file from a source and then edit it, use the following
+construction with a staging file.
+@verbatim
+bundle agent master
+{
+files:
+
+  "$(final_destination)"
+
+         create => "true",
+     edit_line => fix_file("$(staging_file)"),
+ edit_defaults => empty,
+         perms => mo("644","root"),
+        action => ifelapsed("60");
+}
+
+#
+
+bundle edit_line fix_file(f)
+{
+insert_lines:
+
+  "$(f)"
+
+     insert_type => "file";
+
+     # expand_scalars => "true" ;
+
+replace_patterns:
+
+    "searchstring"
+
+          replace_with => With("replacestring");
+}
+
+@end verbatim
+
+@node  Modifying the current state of a file,  , Contextual adaptation of a file template, Top
+@unnumberedsec Modifying the current state of a file
+
+Use this approach if it is unsafe to make unilateral changes to a
+file, e.g. because its contents are also being managed from another
+source (e.g. a software package manager).
+
+For modifying a file, you have access to the full power of text editing
+promises. This is a powerful framework.
+
+@verbatim
+# included file COSL.txt.
+
+#######################################################
+#
+# Resolve conf
+#
+#######################################################
+
+bundle common g # globals
+{
+vars:
+
+ "searchlist"  slist => { "iu.hio.no","cfengine.com" };
+
+ "nameservers" slist => { 
+                        "128.39.89.10", 
+                        "128.39.74.16",
+                        "192.168.1.103"
+                        };
+classes:
+
+  "am_name_server" 
+
+     expression => reglist("@(nameservers)","$(sys.ipv4[eth1])");
+}
+
+#######################################################
+
+body common control
+
+{
+any::
+
+  bundlesequence  => {
+                     "g",
+                     resolver(@(g.searchlist),@(g.nameservers))
+                     };   
+
+  domain => "iu.hio.no";
+}
+
+#######################################################
+
+bundle agent resolver(s,n)
+
+{
+files:
+
+  # When passing parameters down, we have to refer to
+  # a source context
+
+  "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
+
+      create        => "true",
+      edit_line     => doresolv("@(this.s)","@(this.n)"),
+      edit_defaults => reconstruct;
+ # or edit_defaults => modify
+}
+
+#######################################################
+# For the library
+#######################################################
+
+bundle edit_line doresolv(s,n)
+
+{
+insert_lines:
+
+  "search $(s)";
+  "nameserver $(n)";
+
+delete_lines:
+
+ # To clean out junk
+  "nameserver .*| search .*" not_matching => "true";
+}
+
+#######################################################
+
+body edit_defaults reconstruct
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+max_file_size => "100000";
+}
+
+#######################################################
+
+body edit_defaults modify
+{
+empty_file_before_editing => "false";
+edit_backup => "false";
+max_file_size => "100000";
+}
+@end verbatim
+
+
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https:// 
+ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google- 
+analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+
+@bye
+

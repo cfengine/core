@@ -1,0 +1,19 @@
+
+@verbatim
+
+body acl template
+
+{
+acl_method => "overwrite";
+acl_type => "posix";
+acl_directory_inherit => "parent";
+
+aces => { 
+        "user:*:r(wwx),-r:allow", 
+        "group:*:+rw:allow", 
+        "mask:x:allow", 
+        "all:r"
+        };
+}
+
+@end verbatim

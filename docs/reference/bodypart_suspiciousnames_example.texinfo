@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body agent control
+{
+suspiciousnames => { ".mo", "lrk3", "rootkit" };
+}
+
+@end verbatim

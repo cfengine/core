@@ -1,0 +1,9 @@
+
+@verbatim
+
+body package_method zypper
+{
+package_update_command => "/usr/bin/zypper -non-interactive update";
+}
+
+@end verbatim

@@ -1,0 +1,4 @@
+
+Occurrences are pointers to information about topics. This
+might be a literal text string or a URL reference to an external
+document.

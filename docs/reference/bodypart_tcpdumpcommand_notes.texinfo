@@ -1,0 +1,3 @@
+
+If this is defined, the monitor will try to interface with the TCP stream and
+monitor generic package categories for anomalies.

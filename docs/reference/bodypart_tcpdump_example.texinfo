@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body monitor control
+{
+tcpdump => "true";
+}
+
+@end verbatim

@@ -1,0 +1,9 @@
+
+@verbatim
+
+body contain example
+{
+no_output => "true";
+}
+
+@end verbatim

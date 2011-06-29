@@ -1,0 +1,16 @@
+
+@verbatim
+
+processes:
+
+   "cfservd"
+
+     restart_class => "start_cfserv";
+
+commands:
+
+  start_cfserv::
+
+    "/usr/local/sbin/cfservd";
+
+@end verbatim

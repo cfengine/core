@@ -1,0 +1,165 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage} 
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename cf3-glossary.info
+@settitle CFEngine Glossary
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title CFEngine Glossary
+@subtitle A CFEngine Handbook
+@author CFEngine AS
+
+@c @smallbook
+    
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2009- CFEngine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Modularization:
+                        CFEngine is a language based tool specifically
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+@node Top,  , (dir), (dir)
+@top CFEngine-Best-Practices
+@end ifnottex
+
+@table @emph
+
+@item CFEngine	 
+The name of the CFEngine Company, as well as the name of the Software. CFEngine comes from
+a contraction of `ConFiguration engine'.
+
+@item CFEngine 3.x	
+Major version 3 of the CFEngine software. This comes in several @emph{editions}.
+
+@item CFEngine Community Edition
+Free and Open Source edition of the CFEngine software, published under the GPL3 license,
+and optionally under the COSL license.
+
+@item CFEngine Community Open Promise-Body Library
+A collection of standard definitions that is open to the user community for comment and standardization.
+
+@item CFEngine Constellation
+The mid-level planned enterprise edition of CFEngine, that is designed to scale to huge
+systems with a queryable integrated knowledge and inventory, replacing a traditional CMDB,
+and binding large systems together.
+
+@item CFEngine Enterprise Editions	
+Refers to commercial (paid) editions of the CFEngine software, published under the COSL license.
+
+@item CFEngine Galaxy
+The top of the range enterprise edition of CFEngine, planned for the future.
+
+@item CFEngine Nova	
+The lowest level enterprise edition of CFEngine.
+
+@item CMDB
+A Configuration Management Database. A term coined as part of the IT Infrastructure Library (ITIL)
+as an outgrowth of an inventory database.
+
+@item COPBL
+CFEngine Community Open Promise-Body Library (abbrev: CFEngine standard library). 
+A collection of standard definitions.
+
+@item COSL license
+The Commercial Open Source License used for the CFEngine
+
+@item GPL3
+The GNU Public License, version 3.
+
+@item Modular license
+A license granting partial functionality to an Enterprise Edition of CFEngine.
+
+@item Libraries	
+A library generally refers to collection of standardized CFEngine code
+that can be reused in different scenarios and environments. This might
+be bundles of promises, or reusable body-parts.
+
+@item Packages
+Software binaries or executable files. The CFEngine company compiles and tests software
+into packages suitable for different platforms.
+
+@item Knowledge Map	
+Content portal containing datacentre information, privately managed
+knowledge resources and CFEngine documentation.
+
+@item PCI compliance
+Payment Card Industry Data Security Standard (PCI DSS) is a set of
+requirements designed to ensure that ALL companies that process, store
+or transmit credit card information maintain a secure environment.
+
+@item Promise
+The CFEngine software manages every intended system outcome as `promises' to be kept.
+A CFEngine Promise corresponds roughly to a rule in other software products, but importantly
+promises are always things that can be kept and repaired continuously, on a real time basis,
+not just once at install-time.
+
+@item Policy
+A policy is a set of intentions about the system, coded as a list of
+promises. A policy is not a standard, but the result of specific
+organizational management decisions.
+
+@item SOX Compliance
+Sarbanes-Oxley Act compliance. An audited accolade for financial data security
+required by all companies on the New York stock exchange.
+
+@item Standard library
+The CFEngine Standard library is a collection of standardized definitions (see COPBL).
+
+@item Template
+A template is an incomplete piece of CFEngine code, with blanks to fill in. It is often
+a policy fragment that can be re-used in different scenarios. This is often used interchangeably
+with the term `library'.
+
+@end table
+
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+
+@bye
+

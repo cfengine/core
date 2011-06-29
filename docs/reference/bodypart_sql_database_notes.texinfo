@@ -1,0 +1,2 @@
+
+The name of an SQL database for caching knowledge.

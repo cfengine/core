@@ -1,0 +1,10 @@
+
+@verbatim
+
+vars:
+
+  "variable_id"
+
+       ilist => { "10", "11", "12" };
+
+@end verbatim

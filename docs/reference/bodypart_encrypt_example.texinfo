@@ -1,0 +1,10 @@
+
+@verbatim
+
+body copy_from example
+{
+servers  => { "remote-host.example.org" };
+encrypt => "true";
+}
+
+@end verbatim

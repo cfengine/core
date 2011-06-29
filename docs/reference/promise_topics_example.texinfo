@@ -1,0 +1,13 @@
+
+@verbatim
+
+bundle knowledge example
+{
+topics:
+
+   "Distro"
+      comment     => "Distribution of linux",              
+      association => a("is a packaging of","Linux","is packaged as a");
+}
+
+@end verbatim

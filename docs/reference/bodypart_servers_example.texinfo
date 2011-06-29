@@ -1,0 +1,10 @@
+
+@verbatim
+
+body copy_from example
+{
+servers => { "primary.example.org", "secondary.example.org", 
+                 "tertiary.other.domain" };
+}
+
+@end verbatim

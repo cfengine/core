@@ -1,0 +1,4 @@
+
+This is a numerical range for the number of occurrences of the
+process in the process table. As long as it falls within the specified
+limits, the promise is considered kept.

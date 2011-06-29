@@ -1,0 +1,9 @@
+
+@verbatim
+
+body perms rxdirs
+{
+rxdirs => "false";
+}
+
+@end verbatim

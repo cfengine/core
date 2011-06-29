@@ -1,0 +1,9 @@
+
+@verbatim
+
+body executor control
+{
+mailto => "cfengine_alias@example.org";
+}
+
+@end verbatim

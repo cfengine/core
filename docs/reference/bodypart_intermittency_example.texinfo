@@ -1,0 +1,10 @@
+
+@verbatim
+
+reports:
+
+  "Comment"
+
+    intermittency => "0.5";
+
+@end verbatim

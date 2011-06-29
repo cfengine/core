@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent control
+{
+childlibpath => "/usr/lcoal/lib:/usr/local/gnu/lib";
+}
+
+@end verbatim

@@ -1,0 +1,15 @@
+
+@verbatim
+
+environments:
+
+ linux::
+
+ "host1"
+                 comment => "Keep this vm suspended",
+   environment_resources => myresources,
+        environment_type => "kvm",
+       environment_state => "suspended",
+        environment_host => "ubuntu";
+
+@end verbatim

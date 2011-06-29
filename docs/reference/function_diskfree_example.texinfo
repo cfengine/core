@@ -1,0 +1,18 @@
+
+@verbatim
+
+bundle agent example
+{     
+vars:
+
+  "free" int => diskfree("/tmp"); 
+
+reports:
+
+  cfengine_3::
+
+    "Freedisk $(free)";
+
+}
+
+@end verbatim

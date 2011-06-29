@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent control
+{
+editfilesize => "120k";
+}
+
+@end verbatim

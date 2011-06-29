@@ -1,0 +1,10 @@
+
+@verbatim
+
+body match_value free_memory
+{
+select_line_matching => "MemFree:.*";
+extraction_regex => "MemFree:\s+([0-9]+).*";
+}
+
+@end verbatim

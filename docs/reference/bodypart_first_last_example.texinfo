@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body location example
+{
+first_last => "last";
+}
+
+@end verbatim

@@ -1,0 +1,9 @@
+
+@verbatim
+
+body depth_search example
+{
+include_dirs => { "subdir1", "subdir2", "pattern.*" };
+}
+
+@end verbatim

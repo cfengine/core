@@ -1,0 +1,13 @@
+
+
+A variable containing the path to the cfengine syntax analyxer @code{cf-promises}
+on the platform you are using.
+
+@verbatim
+
+classes:
+
+  "syntax_ok" expression => returnszero("$(sys.cf_promises)");
+
+@end verbatim
+

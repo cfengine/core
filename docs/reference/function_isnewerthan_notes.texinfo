@@ -1,0 +1,3 @@
+
+This function compares the modification time of the file, referring to changes
+of content only.

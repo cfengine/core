@@ -1,0 +1,1244 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{NewLogo} 
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename cf2-Filters.info
+@settitle Searching in cfengine
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title Searching in cfengine
+@subtitle A cfengine AS workbook
+@author cfengine AS
+
+@c @smallbook
+    
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2008 Cfengine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory Cfengine Training
+@direntry
+* cfengine Modularization:
+                        Cfengine is a language based tool specifically
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+@node Top, Searching for files, (dir), (dir)
+@top Cfengine-Anomalies
+@end ifnottex
+
+
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+
+<h2>Summary of contents</h2>
+
+@end html
+@end ifhtml
+
+@c **********************************************************************
+@c CHAPTER
+@c **********************************************************************
+
+
+@cartouche
+
+In this module you will learn about
+
+@itemize @bullet
+@item 
+How to select particular files in a search
+@item 
+How to select paricular processes in the process table
+@item
+Find and edit text in files.
+@item
+Combine powerful search criteria
+
+@end itemize
+@end cartouche
+
+
+@menu
+* Searching for files::         
+* Searching for text inside files::  
+* Searching for processes::     
+* Troubleshooting Filters::     
+* Iteration::                   
+@end menu
+
+
+
+
+@c -----------------------------------------------------------------------
+
+
+@node Searching for files, Searching for text inside files, Top, Top
+@chapter Searching for files
+
+
+@c -----------------------------------------------------------------------
+@menu
+* Controlling Directory Tree Traversal::  
+* Inclusion and Exclusion Patterns::  
+* Wildcards and Regular expressions::  
+* File Filters::                
+* Patterns self-test questions::  
+@end menu
+
+@node Controlling Directory Tree Traversal, Inclusion and Exclusion Patterns, Searching for files, Searching for files
+@section Controlling Directory Tree Traversal
+
+There are many cases in system configuration where we want to scan
+through a set of files and apply checks and controls to all or a few
+of them. A typical pattern is to specify a directory and apply a rule to all files and
+subdirectories. It is also possible to limit the search to include or exclude
+certain directories, or pick out specific files matching specified criteria.
+
+There are two options which control how subdirectories are handled. By default, rules apply only to the
+items directly within specified directories; in other words, actions
+are not recursive by default.
+
+@table @samp
+@item recurse=@var{depth}
+Perform recursive checks/operations, descending at most
+@var{depth} levels. Use the keyword @code{inf} to descend to the bottom of the directory tree.
+
+@item xdev=false
+Do not descend into subdirectories residing on different disk partitions. 
+By default, partition boundaries are not crossed.
+
+@end table
+
+Here are some examples of these options:
+@smallexample
+
+files:   # Check ownerships under /usr/local
+
+    /usr/local 
+         owner=root 
+         group=admin 
+         mode=755 
+         recurse=inf 
+
+
+tidy:    # Clear /tmp and subdirectories (>3 days old) 
+
+    /tmp 
+        age=3 
+        include=* 
+        rmdirs=sub 
+        exclude=.X11
+        recurse=inf 
+        xdev=off 
+
+@end smallexample
+
+The first rule checks the user and group owners of files in the
+@file{/usr/local} directory tree, reporting on any which are
+incorrectly set. The second rule removes files and empty
+subdirectories that not been accessed in 3 days under @file{/tmp}
+(except the @file{.X11} subdirectory), regardless of the disk
+partition on which the items reside.
+
+See the discussion of the @code{ignore} option in the next section
+for another method of controlling directory tree traversal.
+
+
+@c ----------------------------------------------------------
+@node Inclusion and Exclusion Patterns, Wildcards and Regular expressions, Controlling Directory Tree Traversal, Searching for files
+@section Inclusion and Exclusion Patterns
+
+The simplest way to limit a file search is to use the three pattern
+matching criteria below.  These directives use simple shell pattern
+matching symbols or wildcards @samp{*} and @samp{?}, not POSIX regular
+expressions.
+
+@c ...................................................
+@menu
+* Local criteria (per promise rule)::  
+* Global criteria (per promise rule)::  
+@end menu
+
+@node Local criteria (per promise rule), Global criteria (per promise rule), Inclusion and Exclusion Patterns, Inclusion and Exclusion Patterns
+@subsection Local criteria (per promise rule)
+
+@table @samp
+@item include=@var{pattern}
+Include file-only items matching the specified patterns when selecting files for verification or modification. Patterns
+may include the shell wildcards @code{*} (match any characters, including no characters) and @code{?} (match any one character).
+@item exclude=@var{pattern}
+Exclude file-only items matching the specified patterns when selecting files
+for verification or modification. Global exclusion lists can be specified for copying and 
+linking operations via the @code{ExcludeCopy} and @code{ExcludeLink} settings in the @code{control} section (respectively).
+
+@item ignore=@var{pattern}
+Ignore items matching the specified patterns. In contrast to @code{exclude}, directories matching
+an item in the @code{ignore} list are not traversed during recursive operations. A global list of directories to ignore
+can be specified via the @code{ignore} stanza (see the example below).
+
+@end table
+
+
+@c ...................................................
+@node Global criteria (per promise rule),  , Local criteria (per promise rule), Inclusion and Exclusion Patterns
+@subsection Global criteria (per promise rule)
+
+Here are some examples of global versions of settings and options:
+
+@smallexample
+
+control:
+
+    ExcludeCopy = ( *.bak *~ )
+
+ignore:
+
+    .Xll
+    /usr/local
+
+tidy:    # Remove non-recent files from /tmp and /scratch
+
+    /tmp age=1 include= * recurse=inf
+    /scratch age=1 include=* exclude=*.sav
+
+copy:    # Update local documentation from server silo
+   
+   /masterdoc dest=/usr/local/doc server=silo
+
+@end smallexample
+
+The example specifies a global exclusion list for copy operations and
+a list of subdirectories to ignore during recursive operations. The
+@code{tidy} rule will clean up files that haven't been accessed today
+from @file{/tmp} and all of its subdirectories except @file{/tmp/.X11}
+(the location of X11 semaphores).  It will also remove such files from
+the @file{/scratch} directory except ones having the extension
+@code{.sav}.
+
+The @code{copy} rule copies all files from @file{/masterdoc} on remote host @file{silo}
+that are newer than the version in @file{/usr/local/doc} (if any),
+excluding any whose names end in a tilde character (@code{emacs}
+backup files) or having the extension @file{.bak}, using the global
+copy exclusion list. Note that having @file{/usr/local} in the
+directory ignore list does not affect the file copying operation since
+the former applies only to directory traversal in recursive
+operations.
+
+
+
+@c ...........................................................
+@node Wildcards and Regular expressions, File Filters, Inclusion and Exclusion Patterns, Searching for files
+@section Wildcards and Regular expressions
+
+@cartouche
+
+HINT: @i{Use the regex tester on the cfengine.com website to make sure your regular expressions behave
+as you expect.}
+
+@end cartouche
+
+Regular expressions may be used in many contexts. They should not be
+confused with shell @i{wildcards} or @i{patterns}, which are cruder
+pattern matching strings.
+
+
+Regular expressions are used in cfengine particularly in connection with
+@code{editfiles} and @code{processes} to search for lines matching
+certain expressions.  They can also be used in @code{filter}s.
+A regular expression is a generalized wildcard. In
+cfengine wildcards, you can use the characters '*' and '?' to match any
+character or number of characters.  Regular expressions are more
+complicated than wildcards, but have far more flexibility.
+
+
+@i{NOTE: the special characters @code{*} and @code{?}  used in
+wildcards do not have the same meanings as regular expressions!}
+
+Some regular expressions match only a single string. For example, every
+string which contains no special characters is a regular expression
+which matches only a string identical to itself. Thus the regular
+expression @code{cfengine} would match only the string "cfengine", not
+"Cfengine" or "cfengin" etc.  Other regular expressions could match more
+general strings. For instance, the regular expression @code{c*} matches
+any number of c's (including none). Thus this expression would match the
+empty string, "c", "cccc", "ccccccccc", but not "cccx".
+
+
+
+
+@menu
+* Regular expressions::         
+@end menu
+
+@node Regular expressions,  , Wildcards and Regular expressions, Wildcards and Regular expressions
+@subsection Regular expressions
+
+@cindex Matching strings
+@cindex Regular expressions
+@cindex Expressions, regular
+The wildcards belong to the shell. They are used for matching
+filenames. UNIX has a more general and widely used mechanism for
+matching @emph{strings}, this is through @emph{regular expressions}.
+
+Regular expressions are used by the @code{egrep} utility, text editors
+like @code{ed}, @code{vi} and @code{emacs} and @code{sed} and @code{awk}.
+They are also used in the C programming language 
+for matching input as well as in the Perl programming language and @code{lex}
+tokenizer. Here are some examples using the @code{egrep} command
+which print lines from the file @code{/etc/rc} which match certain
+conditions. The @code{} construction is part of @code{egrep}. Everything
+in between these symbols is a regular expression. Notice that
+special shell symbols @code{! * &} have to be preceded with a backslash
+@code{\} in order to prevent the shell from expanding them!
+@cindex @code{egrep} command
+
+@smallexample
+
+# Print all lines beginning with a comment #
+
+egrep '(^#)'           /etc/rc
+
+# Print all lines which DON'T begin with #
+
+egrep '(^[^#])'        /etc/rc
+
+# Print all lines beginning with e, f or g.
+
+egrep '(^[efg])'       /etc/rc 
+
+# Print all lines beginning with uppercase
+
+egrep '(^[A-Z])'       /etc/rc
+
+# Print all lines NOT beginning with uppercase
+
+egrep '(^[^A-Z])'      /etc/rc 
+
+# Print all lines containing ! * &
+
+egrep '([\!\*\&])'     /etc/rc 
+
+# All lines containing ! * & but not starting #
+
+egrep '([^#][\!\*\&])' /etc/rc 
+@end smallexample
+
+@noindent
+Regular expressions are made up of the following `atoms'.
+
+@noindent
+These examples assume that the file @file{/etc/rc} exists.
+If it doesn't exist on the machine you are using, try to
+find the equivalent by, for instance, replacing
+@code{/etc/rc} with @code{/etc/rc*} which will try to
+find a match beginning with the rc.
+
+@vindex . in regular expressions
+@vindex ^ in regular expressions
+@vindex $ in regular expressions
+@vindex [] in regular expressions
+@vindex * in regular expressions
+@vindex + in regular expressions
+@vindex ? in regular expressions
+@cindex . in regular expressions
+@cindex ^ in regular expressions
+@cindex $ in regular expressions
+@cindex [] in regular expressions
+@cindex * in regular expressions
+@cindex + in regular expressions
+@cindex ? in regular expressions
+
+@table @samp
+@item .
+Match any single character except the end of line.
+@item ^
+Match the beginning of a line as the first character.
+@item $
+Match end of line as last character.
+@item [..]
+Match any character in the list between the square brackets.(see below).
+@item *
+Match zero or more occurrences of the preceding expression.
+@item + 
+Match one or more occurrences of the preceding expression.
+@item ?
+Match zero or one occurrence of the preceding expression.
+@end table
+
+You can find a complete list in the Unix manual pages. The square
+brackets above are used to define a @emph{class} of characters to be
+matched. Here are some examples,
+
+@itemize @bullet 
+
+@item 
+If the square brackets contain a list of
+characters, $[a-z156]$ then a single occurrence of any character in the
+list will match the regular expression: in this case any lowercase
+letter or the numbers 1, 5 and 6.
+
+@item 
+If the first character in the brackets is the caret
+symbol @samp{^} then any character @emph{except} those in the list will
+be matched. 
+
+@item 
+Normally a dash or minus sign @samp{-} means a range of characters.
+If it is the first character after the @samp{[} or after @samp{[^} then it
+is treated literally.
+@end itemize
+
+
+
+@c ----------------------------------------------------------------
+@node File Filters, Patterns self-test questions, Wildcards and Regular expressions, Searching for files
+@section File Filters
+
+Sometimes, the inclusion and exclusion options do not provide
+sufficient flexibility to select just the items we intend. For such
+cases, cfengine provides filters which can be used to build complex
+file and process selection expressions.  A filter is a description of
+items that we would like to include. Filters are declared in separate
+stanzas in their own section of the @file{cfagent.conf} configuration
+and are attached to any number of rules, as attributes, using their
+identifier.
+
+Each filter is parameterized by a number of matching criteria. Each
+filter has a result which is expressed as the logical combination of a
+number of criteria.
+
+@subsection File Filter Parameters
+
+The following components can be used to construct file filters:
+
+@itemize @bullet
+
+@item @code{Owner} and @code{Group} can use numerical id's or names, or "none" for users or groups which are undefined in the system @file{passwd}/@file{group} file. 
+
+@item @code{Mode} applies only to file objects. It shares syntax with the mode= strings in the files command. This test returns true if the bits which are specified as `should be set' are indeed set, and those which are specified as `should not be set' are not set. 
+
+@item @code{Atime}, @code{Ctime}, @code{Mtime} These specify times to time ranges (via the @code{From} and @code{To} prefixes---see the third example below). If the file's time stamps lie in the specified range, the expression evaluates to true. Times are specified by a six component vector: (@var{year}, @var{month}, @var{day}, @var{hour}, @var{minutes}, @var{seconds})
+This may be evaluated as two functions: @code{date()} or @code{tminus()} which give
+absolute times and times relative to the current time respectively. In
+addition, the keywords @code{now} and @code{inf} (infinity) may be used.
+
+@item @code{Size} Specifies the file's size (or a size range when the prefixes @code{From} or @code{To} are included). 
+The keyword @code{inf} may also be used.
+
+@item @code{Type:} applies only to file objects may be a list of file types which are to be matched. The list should be separated by the OR symbol $\mid$, since these types are mutually exclusive. Values include @code{reg}, @code{link},
+@code{dir}, @code{socket}, @code{fifo}, @code{door} and @code{char}.
+
+@item @code{NameRegex} matches the name of the file with a regular expression. 
+
+@item @code{IsSymLinkTo} applies only when the file object is a symbolic link. 
+It is true if the regular expression matches the contents of the link. 
+@item @code{ExecProgram} matches if the command returns successfully (with return code 0). Note that this feature introduces an implicit dependency on the command being called. This might be exploitable as a security weakness by advanced intruders. 
+
+@item @code{ExecRegex} matches the parenthesized test string against the output of the specified command. 
+
+@item @code{Result} A logical expression specifying the way in which the above elements are combined into a single filter. 
+
+@end itemize
+
+@c ................................................
+@menu
+* Example file filter by magic number::  
+* Example file filter by link dest::  
+* Example file filter combined::  
+* Example file filter setuid::  
+* Example file filter custom scan::  
+* Example file filter tidy junk::  
+* Example file filter compress::  
+* Example file filter find changes::  
+@end menu
+
+@node Example file filter by magic number, Example file filter by link dest, File Filters, File Filters
+@subsection Example file filter - by magic number
+
+@smallexample
+filters:
+    @{ badgif        # Look for executables disguised as GIF
+        NameRegex:  ".*gif"
+        ExecRegex: "/bin/file (.*ELF.*)"
+        Result: "ExecRegex.NameRegex"
+    @}
+
+@end smallexample
+
+@c ................................................
+@node Example file filter by link dest, Example file filter combined, Example file filter by magic number, File Filters
+@subsection Example file filter by link destination
+
+@smallexample
+
+    @{ histnull      # Check if users set history to dev/null
+        NameRegex:   ".*history"
+        IsSymLinkTo: "/dev/null"
+        Result: "IsSymLinkTo.NameRegex"
+        DefineClasses: "history"
+    @}
+
+@end smallexample
+
+@c ................................................
+@node Example file filter combined, Example file filter setuid, Example file filter by link dest, File Filters
+@subsection Example file filter combined parameters
+
+@smallexample
+    @{ old_or_big    # Find .dat files that are old or big
+       FromMtime: "date(2001,1,1,0,0,0)"
+       ToMtime: "tminus(0,0,1,0,0,0)"
+       FromSize: "5m"
+       ToSize: "inf"
+       NameRegex: "dat\$"
+       Return: "NameRegex.(Mtime|Size)"
+    @}
+@end smallexample
+
+In the final filter, @code{Size} is shorthand for @code{(FromSize.ToSize)}, and similar
+abbreviations can be used for other numerical and time-period based items (e.g.,
+@code{Mtime} in the same filter).
+
+
+@c ................................................
+@node Example file filter setuid, Example file filter custom scan, Example file filter combined, File Filters
+@subsection Example file filter - setuid
+
+
+@smallexample
+
+filters:
+  @{ setuid
+    Owner: "root"
+    Mode: "+6000"
+    Result: "Owner.Mode"
+  @}
+
+files:
+    /home recurse=inf filter=setuid mode=-6002 
+      action=fixplain inform=on syslog=on
+
+@end smallexample
+
+
+@c ................................................
+@node Example file filter custom scan, Example file filter tidy junk, Example file filter setuid, File Filters
+@subsection Example file filter - custom scanner
+
+
+Another filter example shows how you might use a custom program or script
+to scan files, e.g. for testing for viruses or harmful content.
+
+@smallexample
+
+filters:
+
+@{ virus
+
+Type: "reg"
+ExecRegex: "$(Grep) 'Content-.*EXE.*'  $(this) (.*)" # Look for EXE attacments
+Result:    "Type.ExecRegex"
+DefineClasses: "virus"
+@}
+
+###########################################################################
+
+files:
+
+/imap-dir r=inf filter=virus action=alert
+/var/mail r=inf filter=virus action=alert
+
+###########################################################################
+
+shellcommands:
+
+virus::
+
+ "/bin/echo Virus Alert on files"
+@end smallexample
+
+@c ................................................
+@node Example file filter tidy junk, Example file filter compress, Example file filter custom scan, File Filters
+@subsection Example file filter - tidy junk
+
+@smallexample
+
+# cf.users
+
+control:
+
+    # backup exclusions
+
+    excludecopy = ( *.EXE *.avi *.ZIP *.AVI *.MP3 
+                    *.mp3 *.o *.dvi *.rar  )
+
+    backupdirs = ( bkupAH:bkupIN:bkupOZ )
+
+    SensibleCount = ( 20 )
+
+filters:
+
+    @{ history  # Shell history = /dev/null
+      NameRegex:     ".*history"
+      IsSymLinkTo:   "/dev/null"
+      Result:        "IsSymLinkTo.NameRegex"
+      DefineClasses: "historyalert"
+    @}
+
+    @{ setuid  # SetUID/SetGID
+      Owner:   "root"
+      Group:   "0"
+      Mode:    "+6000"
+      Result:  "(Owner|Group).Mode"
+    @}
+
+tidy:
+
+  emergency|labs::  # emergency class used for ad-hoc runs
+    /home include=.rhosts age=0 inform=on
+    /home include=core r=inf age=1
+    /home include=a.out r=inf age=1
+    /home include=*.o r=inf age=7
+ 
+    /home/.netscape/cache include=* 
+      recurse=inf age=3 type=atime
+
+# Make sure backup disks don't get full
+   backupserver.Hr17.OnTheHour::
+     /$@{backupdirs@} include=* recurse=inf age=14
+
+@end smallexample
+
+@c ................................................
+@node Example file filter compress, Example file filter find changes, Example file filter tidy junk, File Filters
+@subsection Example file filter - compress files
+
+
+Example compressing all pdf files in sub-directories of @file{/mydirectory}.
+
+@smallexample
+control:
+
+ actionsequence = ( files )
+
+ CompressCommand = (/usr/bin/gzip )
+
+filters:
+
+    @{ pdf_files
+
+    NameRegex:     ".*.pdf|.*.fdf"
+    Result:        "NameRegex"
+    @}
+
+files:
+
+  /mydirectory
+
+    filter=pdf_files
+    r=inf  
+    action=compress
+
+@end smallexample
+
+@c ................................................
+@node Example file filter find changes,  , Example file filter compress, File Filters
+@subsection Example file filter - find files changed
+
+This example shows how to generate a list of the files that cfengine
+identifies, by promising an unrealistic condition which you know will
+not by satisfied by any file you are looking for (removing all
+permissions from the file).
+
+@smallexample
+
+control:
+
+ actionsequence = ( files )
+
+filters:
+
+    @{ new_files
+
+    # Files changed in the last 3 hr 30 mins
+    FromMtime: "tminus(0,0,0,3,30,0)"
+    ToMtime:   "inf" 
+    Result:    "Mtime"
+    @}
+
+files:
+
+  /home/user
+
+    mode=0           # trick to generate a warning
+    filter=new_files
+    r=inf  
+    action=warnall
+
+
+@end smallexample
+
+
+
+
+@c ----------------------------------------------------------
+@menu
+* Patterns self-test questions::  
+@end menu
+
+@node Patterns self-test questions,  , File Filters, Searching for files
+@section Patterns self-test questions
+
+@cartouche
+@enumerate
+
+@item How do I add a filter to a file search?
+@item How do I specify what the filter is looking for?
+@item How can I see/test what files cfengine identifies?
+
+@end enumerate
+@end cartouche
+
+
+
+
+
+@c ----------------------------------------------------------------
+@node Searching for text inside files, Searching for processes, Searching for files, Top
+@chapter Searching for text inside files
+
+The contents of a file are an independent degree of freedom to
+configure.  Most Unix files are traditionally line based (though
+increasingly Java has brought XML into play). 
+Cfengine 2's editing features are based primarily on line-based
+files.
+
+@menu
+* Line based editing patterns::  
+* Replacing Text fragments::    
+* Editing self-test questions::  
+@end menu
+
+@node Line based editing patterns, Replacing Text fragments, Searching for text inside files, Searching for text inside files
+@section Line based editing patterns
+
+There is a recurring pattern in editing features:
+
+@table @samp
+@item ..IfNoSuchLine
+Applies if there is no literal match between a line in the file and the quoted string.
+@item ..LineContaining
+Applies if there is (no) literal match between a substring of a line and the quoted string.
+@item ..LineStarting
+Applies if there is (no) literal match between the start of a line and the quoted string.
+@item ..LineMatching
+Applies if there is (no) literal match between a complete line of the file and the quoted regular expression.
+@end table
+
+@noindent For example 
+@smallexample
+
+SetLine "mark woz 'ere" 
+AppendIfNoLineMatching "mark .*" 
+
+@end smallexample
+@noindent will append the line in @code{SetLine} if no line matches the regular
+
+
+@smallexample
+
+editfiles:
+    @{ /etc/hosts.allow  # Disable access for this domain
+        HashCommentLinesContaining "bad-guys.org"
+    @}
+
+    @{ /etc/xinetd.d
+        # Make sure telnet is disabled
+        BeginGroupIfFileExists "telnet"
+          DeleteLinesMatching "disable *="
+          GotoLastLine
+          InsertLine "disable = yes"
+        EndGroup
+
+        # If no access control, limit to subnet 
+        SetLine "only_from = 192.168.9"
+        AppendIfNoLineMatching "only_from"
+    @}
+
+@end smallexample
+
+
+
+
+@c .....................................................
+@node Replacing Text fragments, Editing self-test questions, Line based editing patterns, Searching for text inside files
+@section Replacing Text fragments
+
+@smallexample
+
+ ReplaceAll @var{quoted-regex} With @var{quoted-string}
+
+@end smallexample
+
+Replace all instances of strings matching the regular expression in the
+first quotes with the exact string in the second set of quotes,
+throughout the current file. Note that cfengine matches on a left to
+right basis, with the first match taking precedence, so if your regular
+expression matches text ambiguously it is the first occurrence which is
+replaced. For example, if you replace @samp{cf.*} with @samp{CFENGINE}
+and cfengine encounters a line @samp{hello cfengine cfengine}, then this
+will be replaced with @samp{hello CFENGINE} even though two possible
+strings match the regular expression. On the other hand if the
+expression is not ambiguous, say replacing @samp{cfengine} with
+@samp{CFENGINE}, then the result would be @samp{hello CFENGINE CFENGINE}.
+
+
+Rather than replacing all occurrences, you might want to pick only
+the first.
+
+@smallexample
+
+ ReplaceFirst @var{quoted-regex} With @var{quoted-string}
+
+@end smallexample
+
+For each line of the current file, replace the first string matching the
+regular expression in the first quotes (@var{quoted-regex}) with the
+string given in the second set of quotes (@var{quoted-string}).
+Matching is done left to right.  For example, if you replace
+@samp{``YY = [[:digit:]][[:digit:]]''} with @samp{``YY = 04''} and
+cfengine encounters @samp{``YY = 03 but old YY = 70''} then it will
+be replaced with @samp{``YY = 04 but old YY = 70''}
+
+
+
+@menu
+* Examples of text matching in editfiles::  
+* Replacing fields in tabular files::  
+@end menu
+
+@node Examples of text matching in editfiles, Replacing fields in tabular files, Replacing Text fragments, Replacing Text fragments
+@subsection Examples of text matching in editfiles
+
+
+@smallexample
+
+editfiles:
+    @{ /var/spool/cron/tabs/root
+      AutoCreate
+      AppendIfNoSuchLine 
+        "0,15,30,45 * * * * /var/cfengine/bin/cfexecd -F"
+    @}
+
+    @{ /etc/sysconfig/apache2
+      BeginGroupIfNoLineMatching "APACHE_SERVER_FLAGS=\"SVN_VIEWCVS\""
+        ReplaceAll "APACHE_SERVER_FLAGS=\"\" 
+          With "APACHE_SERVER_FLAGS=\"SVN_VIEWCVS\""
+      EndGroup
+
+      BeginGroupIfNoLineMatching 
+      "APACHE_CONF_INCLUDE_FILES=\"/master/my-http.conf\""
+        ReplaceAll "APACHE_CONF_INCLUDE_FILES=\"\" 
+          With "APACHE_CONF_INCLUDE_FILES=\"/master/my-http.conf\"
+      EndGroup
+
+      BeginGroupIfNoLineMatching ".*php4 dav dav_svn.*"
+        ReplaceAll "php4" With "php4 dav dav_svn"
+      EndGroup
+    @}
+
+    @{ /etc/postfix/main.cf
+      ReplaceAll "^mydomain =.*" With "mydomain = iu.hio.no"
+      ReplaceAll "^relayhost =.*" With "relayhost = [nexus.iu.hio.no]"
+      AppendIfNoSuchLine "relayhost = [nexus.iu.hio.no]"
+      AppendIfNoSuchLine "mydomain = iu.hio.no"
+    @}
+
+# Default PHP memory model is too small
+
+    @{ /etc/php.ini
+      ReplaceAll "^memory_limit =.*" With "memory_limit = 16M"
+      AppendIfNoSuchLine "memory_limit = 16M"
+    @}
+
+@end smallexample
+
+@c .......................................................
+@node  Replacing fields in tabular files,  , Examples of text matching in editfiles, Replacing Text fragments
+@subsection Replacing fields in tabular files
+
+@smallexample
+
+ReplaceLinesMatchingField @var{quoted-number}
+
+@end smallexample
+
+This command replaces any lines in the current file with the current line
+set by @code{SetLine} or @code{ForEachLineIn}, if the lines
+are split into fields (e.g. the password file) separated by the
+@code{SplitOn} character (':' by default), and the corresponding
+fields match.
+
+The idea behind this command was to be able to override global
+passwords (from a file which gets distributed) by new passwords 
+in a local file. Rather than maintaining the files separately,
+this simply overrides the entries with the new ones.
+
+
+
+@c ----------------------------------------------------------
+@menu
+* Patterns self-test questions::  
+@end menu
+
+@node Editing self-test questions,  , Replacing Text fragments, Searching for text inside files
+@section Editing self-test questions
+
+@cartouche
+@enumerate
+
+@item How can I search and replace text in editfiles?
+@item How do I ensure that the replacement is convergent?
+@item How can I edit fields in tabular files?
+@item How can I make conditional edits based on matched patterns?
+
+
+@end enumerate
+@end cartouche
+
+
+
+
+
+
+@c ----------------------------------------------------------------
+@node Searching for processes, Troubleshooting Filters, Searching for text inside files, Top
+@chapter Searching for processes
+
+Process filters match common fields from @code{ps} command output.
+
+@itemize
+@item @code{PID:} process ID (parameter is a quoted regular expression).
+@item @code{PPID:} parent process ID (quoted regular expression).
+@item @code{PGID:} process group ID (quoted regular expression).
+@item @code{RSize:} resident size (quoted regular expression).
+@item @code{VSize:} virtual memory size (quoted regular expression).
+@item @code{Status:} status (quoted regular expression).
+@item @code{Command:} CMD or COMMAND fields (quoted regular expression).
+@item @code{TTime:} Total elapsed time in TIME field (accumulated time). The prefixes @code{From} and @code{To} may be used to specify
+a range.
+@item @code{STime:} Starting time for process in STIME or START field (accumulated time).
+The prefixes @code{From} and @code{To} may be used to specify
+a range.
+@item @code{TTY:} terminal type, or none (quoted regular expression).
+@item @code{Priority:} PRI or NI field (quoted regular expression). 
+@item @code{Threads:} NLWP field for SVR4 (quoted regular expression). 
+@item @code{Result:} logical combination of above returned by filter (quoted regular expression). 
+@end itemize
+
+Note that these names are all case sensitive.
+
+
+@c ................................................
+@menu
+* Example file process filter by accumulated time::  
+* Example file process filter started recently::  
+* Text editing self-test questions::  
+@end menu
+
+@node Example file process filter by accumulated time, Example file process filter started recently, Searching for processes, Searching for processes
+@section Example process filter by accumulated time
+
+Here is an example process filter in action:
+
+@smallexample
+
+filters:
+
+#  Processes owned by root with > 2 hrs CPU time
+    @{ program_gone_bad
+        Owner: "root"
+        FromTTime: "accumulated(0,0,0,200,0,0)"
+        ToTTime: "inf"
+        Result: "Owner.TTime"
+    @}
+
+processes:
+
+    "." filter=program_gone_bad action=warn
+
+@end smallexample
+
+In this case, the regular expression searched for among the output from
+@code{ps} is any character (specified by single period).
+
+
+
+@c ................................................
+@node Example file process filter started recently, Text editing self-test questions, Example file process filter by accumulated time, Searching for processes
+@section Example process filter - started recently
+
+
+@smallexample
+
+control:
+
+ actionsequence = ( processes )
+
+filters:
+
+    @{ new_processes
+
+    # New processes started in past hour and half
+
+    FromSTime: "tminus(0,0,0,1,30,0)"
+    ToSTime:   "inf" 
+    Result:    "STime"
+    @}
+
+processes:
+
+ "." filter=new_processes action=warn
+
+@end smallexample
+
+
+
+@c ----------------------------------------------------------
+@menu
+* Text editing self-test questions::  
+@end menu
+
+@node Text editing self-test questions,  , Example file process filter started recently, Searching for processes
+@section Text editing self-test questions
+
+@cartouche
+@enumerate
+
+@item What is the difference between STime and TTime?
+@item Do I have to run process scripts as root?
+@item How can I make a more powerful @code{killall} command?
+
+@end enumerate
+@end cartouche
+
+
+
+
+@c -----------------------------------------------------------------
+@node  Troubleshooting Filters, Iteration, Searching for processes, Top
+@chapter Troubleshooting Filters
+
+Two common causes of error in constructing filters are the following:
+
+@itemize
+@item Incorrect capitalization of the filter attributes:
+e.g. ``FromMTime'' for @code{FromMtime}.
+@item Forgetting to include a colon after the attribute name when
+specifying its value:
+@smallexample
+FromSize    "100m"         @var{Will not work without the colon!}
+@end smallexample
+@end itemize
+
+
+
+@c -----------------------------------------------------------------
+@node  Iteration,  , Troubleshooting Filters, Top
+@chapter Iteration
+
+In all cases a search for a pattern implies some iteration over the possible matches.
+Cfengine's iteration (i.e. looping) capabilities. In some cases we can think of
+iterating over files, processes or other objects. In other cases we iterate over the
+set of all possible parameters to a given configuration promise.
+
+
+@menu
+* Iteration over lists as a pattern::  
+@end menu
+
+@node Iteration over lists as a pattern,  , Iteration, Iteration
+@section Iteration over lists as a pattern
+
+Variables can be used as iterators in a limited number of scenarios in
+cfengine 2. The iteration was originally modelled on the shell list
+idea, as represented in @code{PATH} names, and the @samp{IFS}
+variable. Only in cfengine 3 has this poor decision been rectified.
+
+Iteration is implicit. When list variables are subsituted into
+expressions iteration over the list elements is assumed if i) it makes
+sense, and ii) the limitations of cfengine 2 can cope with the
+iteration.
+
+A loop is therefore made by substituing a variables that is a list. A list
+variable is one which consists of strings separated by a list separator.
+The default list separator is the colon @samp{:} character, as in the shell:
+
+@smallexample
+control:
+
+ listvar = ( one:two:three:four )
+
+@end smallexample
+The action that contains a variable to be interpreted as a list appears
+as separate actions, one for each case:
+
+@smallexample
+shellcommand:
+
+  "/bin/echo $(listvar)"
+@end smallexample
+is equivalent to
+
+@smallexample
+shellcommand:
+
+  "/bin/echo one"
+  "/bin/echo two"
+  "/bin/echo three"
+  "/bin/echo four"
+@end smallexample
+If multiple iterators are used, these are handled as nested loops:
+
+@smallexample
+cfengine::/bin/echo one 1:     one 1
+cfengine::/bin/echo one 2:     one 2
+cfengine::/bin/echo one 3:     one 3
+cfengine::/bin/echo one 4:     one 4
+cfengine::/bin/echo two 1:     two 1
+cfengine::/bin/echo two 2:     two 2
+cfengine::/bin/echo two 3:     two 3
+cfengine::/bin/echo two 4:     two 4
+cfengine::/bin/echo three:     three 1
+cfengine::/bin/echo three:     three 2
+cfengine::/bin/echo three:     three 3
+cfengine::/bin/echo three:     three 4
+cfengine::/bin/echo four :     four 1
+cfengine::/bin/echo four :     four 2
+cfengine::/bin/echo four :     four 3
+cfengine::/bin/echo four :     four 4
+@end smallexample
+Where iterators are not allowed, the implied lists are treated as scalars:
+
+@smallexample
+
+alerts:
+
+ amnexus::
+
+  "do $(list1) $(list2)"
+@end smallexample
+e.g.
+
+@smallexample
+
+cfengine:: do one:two:three:four 1:2:3:4
+@end smallexample
+
+Iterative expansion is currently restricted to:
+@itemize @bullet
+
+@item
+In the directory field of the admit/deny server access rules,
+
+@item
+In the `from' field of a copy action,
+@item
+In the server field of the copy action,
+
+@item
+In the directory field of the disable action,
+
+@item
+In the directory field of the files action,
+
+@item
+In the `to' field of a multiple link action,
+
+
+@item
+In the directory field of the required/disk action,
+
+@item
+In a resolve item.
+
+@item
+In the directory field of a tidy action,
+
+@item 
+In the arguments, replyto and server attributes of methods.
+
+@item
+Names in the ignore action.
+
+@item
+A shellcommands body.
+
+@item
+In admit/deny path and attributes of cfserver.
+
+@end itemize
+
+
+
+
+@c =========================================================================
+@c @node Index,  , Cfengine Methods, Top
+@c @unnumbered Concept Index
+@c @printindex cp
+@c =========================================================================
+
+@ifhtml
+@html
+<a name="Contents">
+@end html
+@end ifhtml
+
+@contents
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+
+@bye

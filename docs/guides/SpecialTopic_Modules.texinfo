@@ -1,0 +1,762 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage} 
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename st-orchestrate.info
+@settitle Modularizing and Orchestrating System Policy
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title Modularizing and Orchestrating System Policy
+@subtitle A CFEngine Special Topics Handbook
+@author CFEngine AS
+
+
+@page
+
+@cartouche
+@quotation
+CFEngine is a descriptive framework for promising system state. It has
+a language interface and a graphical interface, and supports a number
+of levels of expression and abstraction.
+
+Ordering of operations is less important than you probably think. We
+are taught to think of computing as an linear sequence of steps, but
+this ignores a crucial fact about distributed systems: that many parts
+are independent of each other and exist in parallel.  Nevertheless
+there are cases of strong inter-dependency where order and modularity
+are important.
+
+This guide explains the many freedoms within CFEngine's Promise Model
+for modularizing, ordering and making black, grey and white boxes. This allows us to
+retain all of the important advantages of promises (autonomy,
+convergence, atomicity etc) that lead to scalable predictability in
+huge networks.
+@end quotation
+@end cartouche
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2009 CFEngine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Modularization:
+                      CFEngine is a language based tool specifically
+                      designed for configuring and maintaining
+                      Unix-like operating systems attached
+                      to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+@node Top, What is modularity?, (dir), (dir)
+@top Orchestration
+@menu
+* What is modularity?::         
+* What is orchestration?::      
+* How does CFEngine deal with modularity and orchestration?::  
+* High level services in CFEngine::  
+* Hiding details::              
+* Black::                       
+* Bulk operations are handled by repeating patterns over lists::  
+* Ordering operations in CFEngine::  
+* Bundle ordering::             
+* Overriding order::            
+* Distributing Ordering between hosts with CFEngine Nova::  
+@end menu
+@end ifnottex
+@iftex
+@contents
+@end iftex
+
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+
+
+@node What is modularity?, What is orchestration?, Top, Top
+@unnumberedsec What is modularity?
+
+@sp 1
+Modularity is the ability to separate concerns within a total process, and hide
+the details of the different concerns in different containers. In CFEngine, this is a
+@i{service oriented view}, in which different aspects of a problem are
+separated and turned into generic components that offer a service.  We
+often talk about black boxes, grey boxes or white boxes depending on
+the extent to which the user of a service can see the details within
+the containers.
+
+@node What is orchestration?, How does CFEngine deal with modularity and orchestration?, What is modularity?, Top
+@unnumberedsec What is orchestration?
+
+@sp 1
+Orchestration is the ability to coordinate many different processes in
+a system so that the sum of those processes yields a harmonious result.
+Orchestration is not about centralized control, though this is common
+misperception.
+
+An orchestra does not manage to play a symphony because the conductor
+pulls every player's strings or blows every trumpet in person, but
+rather because each @i{autonomous} player has a copy of the script,
+knows what to do, and can use just the little additional information
+from the conductor to access a viewpoint that is not available to an
+individual. An orchestra is a weakly coupled expert system in which
+the management (conductor) provides a service to the players.
+
+CFEngine works like an orchestra -- this is why is scales so well.
+Each computer is an autonomous entity, getting its script and a few
+occasional pieces of information from the policy server (conductor).
+The coupling between the agents is weak -- there is slack that makes
+the behaviour robust to minor errors in communication or timing.
+
+@node How does CFEngine deal with modularity and orchestration?, High level services in CFEngine, What is orchestration?, Top
+@unnumberedsec How does CFEngine deal with modularity and orchestration?
+
+Promise Theory provides simple principles for hiding details: agents are
+considered to reveal a kind of @i{service interface} to peers, that is
+advertised by making a promise to someone.  We assume an agent exerts
+best effort in keeping its promises. Orchestration requires a promise
+to coordinate and the promise to use that coordination service.
+These basic ideas are built into CFEngine.
+
+CFEngine provides containers called @i{bundles} for creating modular
+parts. Bundles can be independent (and therefore parallelizable)
+or they can be dependent (in which case the sequence in which they
+verify their promises matters).
+
+In a computer centre with many different machines, there is an
+additional dimension to orchestration -- multiple orchestras. Each
+machine has a number of resources that need to be orchestrated, and
+the different machines themselves might also need to cooperate because
+they provide services to one another. The principles are the same in
+both cases, but the confusion between them is typically the reason why
+large systems do not scale well.
+
+@node Levels of policy abstraction
+@unnumberedsec Levels of policy abstraction
+
+CFEngine offers a number of layers of abstraction. The most fundamental atom
+in CFEngine is the promise. Promises can be made about many system issues, 
+and you described in what context promises are to be kept.
+
+@table @i
+@item Menu level
+At this high level, a user `selects' from a set of pre-defined `services' (or bundles in CFEngine parlance).
+In commercial editions, users may view the set of services as a Service Catalogue, from which each
+host selects its roles. The selection is not made by every host, rather one places hosts into roles that
+will keep certain promises, just as different voices in an orchestra are assigned certain parts to play.
+
+@cartouche
+@smallexample
+bundle agent service_catalogue # menu
+@{
+methods:
+  any:: # selected by everyone
+     "everyone" usebundle => @b{time_management},
+                comment => "Ensure clocks are synchronized";
+     "everyone" usebundle => garbage_collection,
+                comment => "Clear junk and rotate logs";
+
+  mailservers:: # selected by hosts in class
+    "mail server"  -> { "goal_3", "goal_1", "goal_2" }
+                  usebundle => @b{app_mail_postfix},
+                    comment => "The mail delivery agent";
+    "mail server"  -> goal_3,
+                  usebundle => @b{app_mail_imap},
+                    comment => "The mail reading service";
+    "mail server"  -> goal_3,
+                  usebundle => @b{app_mail_mailman},
+                    comment => "The mailing list handler";
+@}
+@end smallexample
+@end cartouche
+
+The resulting menu of services can be browsed in the Mission Portal interface.
+@float
+@sp 1
+@center @image{service_catalogue,15cm,,iso,png}
+@center A human-readable Service Catalogue generated from technical specifications
+@center shows what goals are being attended to automatically
+@sp 1
+@end float
+
+
+@item Bundle level
+At this level, users can switch on and off predefined features, or re-use
+standard methods, e.g. for editing files:
+
+@cartouche
+@verbatim
+body agent control 
+{ 
+bundlesequence => {
+                  webserver("on"),
+                  dns("on"),
+                  security_set("on"),
+                  ftp("off")
+                  };
+}
+@end verbatim
+@end cartouche
+The set of bundles that can be selected from is extensible by the user.
+
+@item Promise level
+This is the most detailed level of configuration, and gives full
+@i{convergent} promise behaviour to the user.  At this promise level,
+you can specificy every detail of promise-keeping behaviour, and
+combine promises together, reusing bundles and methods from standard
+libraries, or creating your own.
+
+@cartouche
+@smallexample
+bundle agent addpasswd
+@{
+vars:
+
+  # want to set these values by the names of their array keys
+
+  "pwd[mark]" string => "mark:x:1000:100:Mark B:/home/mark:/bin/bash";
+  "pwd[fred]" string => "fred:x:1001:100:Right Said:/home/fred:/bin/bash";
+  "pwd[jane]" string => "jane:x:1002:100:Jane Doe:/home/jane:/bin/bash";
+
+files:
+
+  "/etc/passwd"           # Use standard library functions
+        create => "true",
+       comment => "Ensure listed users are present", 
+         perms => mog("644","root","root"),
+     edit_line => append_users_starting("addpasswd.pwd");
+
+@}
+@end smallexample
+@end cartouche
+
+@item Spread-sheet level
+
+CFEngine commercial editions support a spreadsheet
+In a spreadsheet approach, you create only the data to be inserted into predefined
+promises. The data are entered in tabular form, and may be browsed in the web interface.
+This form of entry is preferred in some environments, especially on the Windows platform.
+
+@center @image{cdp_services_report,15cm,,The Content-Driven Policy services report,png}
+@center Content-Driven Policies
+
+@end table
+
+
+
+
+@node Is CFEngine patch or package oriented?
+@unnumberedsec Is CFEngine patch-oriented or package-oriented?
+
+Some system management products are patching systems. They package lumps
+of software and configuration along with scripts. If something goes wrong
+they simply update or replace the package with a new one. This is a patching
+model of system installation, but it is not a good model for repair as it nearly
+always leads to interruption of service or even requires a reboot.
+
+Installation of packages overwrites too much data in one go to be an effective model
+of simple repair@footnote{Sometimes it is desirable to reinstall an entire package, but normally this is only true
+for software upgrades. CFEngine has an interface for working in concert with local
+package managers (RPM,DEB,MSI, etc).}. It can be both ineffecient and destructive. CFEngine manages addressable
+entities at the lowest possible level so that ultra-fine-grained repair can be
+performed with no interruption of service, e.g. altering a field within a line in a file,
+or restarting one process, or altering one bit of a flag in each file in a set of directories. 
+The power to express sophisticated patterns is what makes CFEngine's approach both
+non-intrusive and robust.
+
+@node High level services in CFEngine, Hiding details, How does CFEngine deal with modularity and orchestration?, Top
+@unnumberedsec  High level services in CFEngine
+
+CFEngine is designed to handle high level simplicity (without
+sacrificing low level capability) by working with configuration
+@i{patterns}, after all configuration is all about promising
+consistent patterns of system @i{state} in the resources of the
+system. Lists, for instance, are a particularly common kind of
+pattern: @i{for each of the following... make a similar promise}.
+There are several ways to organize patterns, using containers, lists
+and associative arrays. Let's look at how to configure a number of
+application services.
+
+
+At the simplest or highest level, we can turn services into "genes"
+to switch on and off on your basic "stem cell" machines.
+
+@verbatim 
+body agent control 
+{ 
+bundlesequence => {
+                  webserver("on"),
+                  dns("on"),
+                  security_set("on"),
+                  ftp("off")
+                  };
+}
+@end verbatim
+
+This obviously looks simple, but this kind of simplicity is cheating
+as we are hiding @i{all} the details of what is going to happen -- we
+don't know if they are hard-coded, or whether we can decide
+ourselves. Anyone can play that game! The true test is whether we can
+retain the power to decide the low-level details without having to
+program in a low level language like Ruby, Python or Perl. Let's peel
+back some of the layers, knowing that we can hide as many of the
+details as we like.
+
+
+A simple, but low level approach to deploying a service, that veteran
+users will recognize, is the following. This is a simple example of
+orchestration between a promise to raise a signal about a missing process and
+another promise to restart said process once its absence has been
+discovered and signalled.
+
+@verbatim
+bundle agent application_services
+{
+processes:
+
+  "sshd"  restart_class => "start_ssh";
+  "httpd" restart_class => "start_spache";
+
+commands:
+
+ start_ssh::
+   "/etc/init.d/sshd restart";
+
+ start_apache::
+   "/etc/init.d/apache restart";
+
+}
+@end verbatim
+
+But the first thing we see is that there is a repeated pattern, so we could
+rewrite this as a single promise for a list of services, at the cost of a loss
+of transparency. However, this is the power of abstraction.
+
+@page
+@verbatim
+bundle agent application_services
+{
+vars:
+
+  "service" slist => { "ssh", "apache", "mysql" };
+
+ #
+ # Apply the following promises to this list...
+ #
+
+processes:
+
+  "$(daemon[$(service)])" restart_class => canonify("start_$(service)");
+
+commands:
+
+   "$(start[$(service)])"
+       ifvarclass => canonify("start_$(service)");
+
+}
+@end verbatim
+
+This assumes that we can define the necessary information about these
+services in array variables of the form @code{$(array[index])}.
+This is what other tools refer to as a @i{resource abstraction layer},
+though in some other tools this layer has to be partially hard-coded.
+We can see some more approaches below, but let's look at this abstraction for a moment.
+
+@node Hiding details, Black, High level services in CFEngine, Top
+@unnumberedsec Hiding details
+
+Resource abstraction, or hiding system specific details inside a kind of
+grey-box, is just another service as far as CFEngine is concerned -- and we
+generally map services to bundles.
+
+Many system variables are discovered automatically by CFEngine and provided
+"out of the box", e.g. the location of the filesystem table might be @code{/etc/fstab},
+or @code{/etc/vfstab} or even @code{/etc/filesystems}, but CFEngine allows you to
+refer simply to @code{<b>$(sys.fstab)</b>}. Soft-coded abstraction needs cannot
+be discovered by the system however.
+So how do we create this mythical resource abstraction layer? It is
+simple.  Elsewhere we have defined basic settings.
+
+@page
+@verbatim
+bundle common res # abstraction layer
+{
+vars:
+
+  solaris::
+
+   "cfg_file[ssh]" string => "/etc/sshd_config";
+   "daemon[ssh] "  string => "sshd";
+   "start[ssh] "   string => "/etc/init.d/sshd restart";
+
+  linux.SuSE::
+
+   "cfg_file[ssh]" string => "/etc/ssh/sshd_config";
+   "daemon[ssh] "  string => "sshd";
+   "start[ssh] "   string => "/etc/init.d/sshd restart";
+
+  default::
+
+   "cfg_file[ssh]" string => "/etc/sshd_config";
+   "daemon[ssh] "  string => "sshd";
+   "start[ssh] "   string => "/etc/init.d/sshd restart";
+
+classes:
+
+  "default" and => { "!SuSE", "solaris" };
+}
+@end verbatim
+
+
+Some of the attempts to recreate a CFEngine-like tool try to hard code
+many decisions, meaning that minor changes in operating system versions
+require basic recoding of the software. CFEngine does not make decisions
+for you without your permission.
+
+
+@node Black, Bulk operations are handled by repeating patterns over lists, Hiding details, Top
+@unnumberedsec Black, grey and white box encapsulation in CFEngine
+
+CFEngine's ability to abstract system decisions as promises also
+applies to bundles of promises. After all, we can package promises
+as bumper compendia for grouping together related matters in
+a single package. Naturally, CFEngine never abandons its insistence
+on <b>convergence</b>, merely for the sake of making things look
+simple. Using CFEngine, you can create convergent orchestration.
+
+@verbatim
+bundle agent services
+{
+vars:
+ "service" slist => { "dhcp", "ntp", "sshd" };
+methods:
+ "any" usebundle => fix_service("$(service)"),
+         comment => "Make sure the basic application services are running";
+}
+@end verbatim
+The code above is all you really want to see. The rest can be hidden in libraries that
+you rarely look at. In CFEngine, we want the intentions to shine forth and the
+low level details to be clear on inspection, but hidden from view.
+
+We can naturally modularize the packaged bundle of fully convergent
+promises and keep it as library code for reuse. Notice that
+CFEngine adds comments in the code that follow processes through
+execution, allowing you to see the full intentions behind the
+promises in logs and error messages. In commercial versions, you can
+trace these comments to see your process details.
+
+@verbatim
+bundle agent fix_service(service)
+{
+files:
+
+  "$(res.cfg_file[$(service)])"
+
+ #
+ # reserved_word => use std templates, e.g. cp(), p(), or roll your own
+ #
+     copy_from => cp("$(g.masterfiles)/$(service)","policy_host.mydomain"),
+         perms => p("0600","root","root"),
+       classes => define("$(service)_restart", "failed"),
+       comment => "Copy a stock configuration file template from repository";
+
+processes:
+
+  "$(res.daemon[$(service)])"
+
+     restart_class => canonify("$(service)_restart"),
+           comment => "Check that the server process is running...";
+
+commands:
+
+  "$(res.start[$(service)])"
+
+           comment => "Method for starting this service",
+        ifvarclass => canonify("$(service)_restart");
+
+}
+
+@end verbatim
+
+@node Bulk operations are handled by repeating patterns over lists, Ordering operations in CFEngine, Black, Top
+@unnumberedsec Bulk operations are handled by repeating patterns over lists
+
+
+The power of CFEngine is to be able to handle lists of similar
+patterns in a powerful way.  You can also wrap the whole experience in
+a method-bundle, and we can extend this kind of pattern to
+implement other interfaces, all without low level programming.
+
+@page
+@verbatim
+#
+# Remove certain services from xinetd - for system hardening
+#
+
+bundle agent linux_harden_methods
+{
+vars:
+
+   "services" slist => {
+                       "chargen",
+                       "chargen-udp",
+                       "cups-lpd",
+                       "finger",
+                       "rlogin",
+                       "rsh",
+                       "talk",
+                       "telnet",
+                       "tftp"
+                       };
+methods:
+
+    #
+    # for each $(services) in @(services) do disable_xinetd($(services))
+    #
+
+   "any"  usebundle => disable_xinetd("$(services)");
+}
+@end verbatim
+
+
+
+In the library of generic templates, we may keep one or more methods for implementing
+service disablement. For example, this simple interface to Linux's @code{chkconfig}
+is one approach, which need not be hard-coded in Ruby using Cfeninge.
+
+@verbatim
+#
+# For the standard library
+#
+
+bundle agent disable_xinetd(name)
+{
+vars:
+   "status" 
+
+     string => execresult("/sbin/chkconfig --list $(name)", "useshell");
+
+classes:
+   "on"  expression => regcmp(".*on","$(status)");
+   "off" expression => regcmp(".*off","$(status)");
+   
+commands:
+   on::
+      "/sbin/chkconfig $(name) off",
+          comment => "disable $(name) service";
+
+reports:
+   on::
+      "disable $(name) service.";
+   off::
+      "$(name) has been already disabled. Don't need to perform the action.";
+   
+}
+@end verbatim
+
+@node Ordering operations in CFEngine, Bundle ordering, Bulk operations are handled by repeating patterns over lists, Top
+@unnumberedsec Ordering operations in CFEngine
+
+Ordering of operations is less important than you probably
+think. We are taught to think of computing as an linear sequence of
+steps, but this ignores a crucial fact about distributed systems: that
+many parts are independent of each other and exist in parallel.
+
+Nevertheless there are sometimes cases of strong inter-dependency
+(that we strive to avoid, as they lead to most of the difficulties of
+system management) where order @i{is} important. In re-designing
+CFEngine, we have taken a pragmatic approach to ordering. Essentially,
+CFEngine takes care of ordering for you for most cases -- and you can
+override the order in three ways:
+
+@itemize
+@item CFEngine checks promises of the same type in the order in which they are defined, unless overridden
+@item Bulk ordering of composite promises (called bundles) is handled using an overall list using the bundlesequence (replaces the actionsequence in previous CFEngines)
+@item Dependency coupling through dynamic classes, may be used to guarantee ordering in the few cases
+where this is required,  as in the example below:
+@end itemize
+
+@node Bundle ordering, Overriding order, Ordering operations in CFEngine, Top
+@unnumberedsec Bundle ordering
+
+There are two methods, working at different levels.
+At the top-most level there is the master @code{bundlesequence}
+
+@sp 1
+@verbatim
+body common control
+{
+bundlesequence => { "bundle_one", "bundle_two", "bundle_three" };
+}
+@end verbatim
+@sp 1
+@noindent For simple cases this is good enough, but the main
+purpose of the bundlesequence is to easily be able to switch on
+or off bundles by commenting them out.
+
+A more flexible way of ordering bundles is to wrap the ordered process
+in a master-bundle.  Then you can create new sequences of bundles
+(parameterized in more sophisticated ways) using @code{methods}
+promises. Methods promises are simply promises to re-use bundles,
+possibly with different parameters.
+
+The default behaviour is to retain the order of these promises; the effect
+is to `execute' these bundles in the assumed order:
+@sp 1
+@verbatim
+bundle agent a_bundle_subsequence
+{
+methods:
+  classes::
+   "any" usebundle => bundle_one("something");
+   "any" usebundle => bundle_two("something");
+   "any" usebundle => bundle_three("something");
+
+}
+@end verbatim
+@sp 1
+@noindent Alternatively, the same effect can be achieved as follows.
+@sp 1
+@verbatim
+bundle agent a_bundle_subsequence
+{
+methods:
+  classes::
+   "any" usebundle => generic_bundle("something","one");
+   "any" usebundle => generic_bundle("something","two");
+   "any" usebundle => generic_bundle("something","three");
+
+}
+@end verbatim
+@sp 1
+@noindent Or ultimately:
+@sp 1
+@verbatim
+bundle agent a_bundle_subsequence
+{
+vars:
+  "list" slist => { "one", "two", "three"};
+
+methods:
+  classes::
+   "any" usebundle => generic_bundle("something","$(list)");
+
+}
+@end verbatim
+
+
+@page
+@node Overriding order, Distributing Ordering between hosts with CFEngine Nova, Bundle ordering, Top
+@unnumberedsec Overriding order
+
+CFEngine is designed to handle non-deterministic events, such as
+anomalies and unexpected changes to system state, so it needs to
+adapt. For this, there is no deterministic solution and approximate
+methods are required. Nevertheless, it is possible to make CFEngine
+sort out dependent orderings, even when confounded by humans, as in
+this example:
+
+@verbatim
+bundle agent order
+
+{
+vars:
+
+ "list" slist => { "three", "four" };
+
+commands:
+
+ ok_later::
+   "/bin/echo five";
+
+ any::
+
+  "/bin/echo one"     classes => define("ok_later");
+  "/bin/echo two";
+  "/bin/echo $(list)";
+
+}
+
+@end verbatim
+
+@noindent The output of which becomes:
+@verbatim
+Q: ".../bin/echo one": one
+Q: ".../bin/echo two": two
+Q: ".../bin/echo three": three
+Q: ".../bin/echo four": four
+Q: ".../bin/echo five": five
+@end verbatim
+
+@node Distributing Ordering between hosts with CFEngine Nova,  , Overriding order, Top
+@unnumberedsec Distributing Ordering between hosts with CFEngine Nova
+
+CFEngine Nova adds many powerful features to CFEngine, including
+a decentralized approach to coordinating activities across multiple
+hosts. Some tools try to approach this by centralizing data from the
+network in a single location, but this has two problems:
+
+@itemize
+@item It leads to a bottleneck by design that throttles performance seriously.
+@item It relies on the network being available.
+@end itemize
+
+With CFEngine Nova there are are both decentralized network approaches
+to this problem, and probabilistic methods that do not require the network
+at all.
+
+
+
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https:// 
+ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google- 
+analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+
+@bye
+

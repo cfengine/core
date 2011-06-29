@@ -1,0 +1,2 @@
+
+This is a pattern matching function for non-regular (enumerated) expressions.

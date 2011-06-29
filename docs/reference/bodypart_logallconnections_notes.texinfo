@@ -1,0 +1,3 @@
+
+If set, the server will record connection attempts in syslog.
+

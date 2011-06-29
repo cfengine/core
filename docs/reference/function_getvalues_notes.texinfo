@@ -1,0 +1,4 @@
+
+Make sure you specify the correct scope when supplying the name of the
+variable.  If the array contains list elements on the right hand side
+then all of the list elements are flattened into a single list to make the return value a list.

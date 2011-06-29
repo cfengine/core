@@ -1,0 +1,6 @@
+
+@verbatim
+
+federation => { "host1", "host2" };
+
+@end verbatim

@@ -1,0 +1,11 @@
+
+By setting this string you switch on performance measurement for the
+current promise, and also give the measurement a name. The identifier forms a
+partial identity for optional performance scanning of promises of the form:
+
+@example
+@var{ID:promise-type:promiser}.
+@end example
+
+These can be seen identifying  using @code{cf-reports}, e.g. in the
+generated file @file{performance.html}.

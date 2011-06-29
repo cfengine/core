@@ -1,0 +1,4 @@
+
+If this is set to true, Cfengine Nova computes additional graphical
+representations in its knowledge map, representing causal dependencies
+ between Cfengine promises.

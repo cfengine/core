@@ -1,0 +1,10 @@
+
+@verbatim
+
+body knowledge control
+
+{
+document_root => "/srv/www/htdocs";
+}
+
+@end verbatim

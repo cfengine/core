@@ -1,0 +1,6 @@
+
+@verbatim
+
+ agentaccess => { "mark", "root", "sudo" };
+
+@end verbatim

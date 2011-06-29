@@ -1,0 +1,12 @@
+
+
+@verbatim
+
+body classes example
+{
+repair_timeout => { "too_slow", "did_not_wait" };
+}
+
+@end verbatim
+
+

@@ -1,0 +1,5 @@
+
+When identifying occurrences by searching for files on the local file
+system, the web root provides the HTTP prefix for the document root
+under which we are searching so that path names can be mapped into
+URLs, @xref{path_root in occurrences}.

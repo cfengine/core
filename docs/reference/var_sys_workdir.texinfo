@@ -1,0 +1,26 @@
+
+The location of the Cfengine work directory and cache. For the
+system privileged user this is normally:
+
+@verbatim
+
+# workdir = /var/cfengine
+
+@end verbatim
+
+For non-privileged users it is in the user's home directory:
+
+@verbatim
+
+# workdir = /home/user/.cfagent
+
+@end verbatim
+
+On the Windows version of Cfengine Nova, it is normally under program
+files (the directory name may change with the language of Windows):
+
+@verbatim
+
+# workdir = C:\Program Files\Cfengine
+
+@end verbatim

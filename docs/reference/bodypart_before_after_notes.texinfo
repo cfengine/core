@@ -1,0 +1,3 @@
+
+Determines whether an edit will occur before or after the currently
+matched line.

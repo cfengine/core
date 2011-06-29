@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent control
+{
+default_repository => "/var/cfengine/repository";
+}
+
+@end verbatim

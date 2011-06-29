@@ -1,0 +1,11 @@
+
+A variable containing the path to the cfengine agent @code{cf-agent}
+on the platform you are using.
+
+@verbatim
+body executor control
+{
+exec_command => "$(sys.cf_twin) -f failsafe.cf && $(sys.cf_agent)";
+}
+
+@end verbatim

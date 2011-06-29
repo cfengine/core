@@ -1,0 +1,11 @@
+
+@verbatim
+
+body agent control
+{
+sensiblesize => "20K";
+}
+
+@end verbatim
+
+

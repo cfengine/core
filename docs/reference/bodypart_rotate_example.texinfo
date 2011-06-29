@@ -1,0 +1,9 @@
+
+@verbatim
+
+body rename example
+{
+rotate => "4";
+}
+
+@end verbatim

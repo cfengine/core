@@ -1,0 +1,2 @@
+
+If we find links that point to non-existence files, should we delete them or keep them?

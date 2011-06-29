@@ -1,0 +1,18 @@
+
+@verbatim
+
+body reporter control
+{
+html_footer => "
+               <div id=\"footer\">Bottom of the page</div>
+               ";
+}
+
+body knowledge control
+{
+html_footer => "
+               <div id=\"footer\">Bottom of the page</div>
+               ";
+}
+
+@end verbatim

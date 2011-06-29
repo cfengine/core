@@ -1,0 +1,3 @@
+
+For instance, characters in the set @samp{NRS<sl+..}. Windows
+processes do not have status fields.

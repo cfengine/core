@@ -1,0 +1,13 @@
+@unnsecentry{What is modularity?}{10000.1}{What is modularity?}{1}
+@unnsecentry{What is orchestration?}{10000.2}{What is orchestration?}{1}
+@unnsecentry{How does CFEngine deal with modularity and orchestration?}{10000.3}{How does CFEngine deal with modularity and orchestration?}{1}
+@unnsecentry{Levels of policy abstraction}{10000.4}{Levels of policy abstraction}{1}
+@unnsecentry{Is CFEngine patch-oriented or package-oriented?}{10000.5}{Is CFEngine patch or package oriented?}{4}
+@unnsecentry{High level services in CFEngine}{10000.6}{High level services in CFEngine}{4}
+@unnsecentry{Hiding details}{10000.7}{Hiding details}{6}
+@unnsecentry{Black, grey and white box encapsulation in CFEngine}{10000.8}{Black}{7}
+@unnsecentry{Bulk operations are handled by repeating patterns over lists}{10000.9}{Bulk operations are handled by repeating patterns over lists}{8}
+@unnsecentry{Ordering operations in CFEngine}{10000.10}{Ordering operations in CFEngine}{10}
+@unnsecentry{Bundle ordering}{10000.11}{Bundle ordering}{10}
+@unnsecentry{Overriding order}{10000.12}{Overriding order}{12}
+@unnsecentry{Distributing Ordering between hosts with CFEngine Nova}{10000.13}{Distributing Ordering between hosts with CFEngine Nova}{12}

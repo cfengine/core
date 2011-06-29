@@ -1,0 +1,6 @@
+
+@verbatim
+
+stream_type => "pipe";
+
+@end verbatim

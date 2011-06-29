@@ -1,0 +1,30 @@
+
+@verbatim
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "same" expression => strcmp("test","test");
+
+reports:
+
+  same::
+
+    "Strings are equal";
+
+ !same::
+
+    "Strings are not equal";
+}
+
+@end verbatim

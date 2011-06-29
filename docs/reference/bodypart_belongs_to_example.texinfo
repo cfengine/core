@@ -1,0 +1,11 @@
+
+@verbatim
+
+things:
+
+  "router-123" 
+
+           comment => "Located at 23 Marlborough Street",
+        belongs_to => { "company::Cfengine" };
+
+@end verbatim

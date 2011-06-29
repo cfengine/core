@@ -1,0 +1,28 @@
+
+@verbatim
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+vars:
+
+  "md5" string => hash("Cfengine is not cryptic","md5");
+
+reports:
+
+  Yr2008::
+
+    "Hashed to: $(md5)";
+
+}
+
+@end verbatim

@@ -1,0 +1,3 @@
+
+The variable need only exist. This says nothing about its value. Use @code{regcmp}
+to check variable values.

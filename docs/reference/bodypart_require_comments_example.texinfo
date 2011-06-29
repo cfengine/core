@@ -1,0 +1,12 @@
+
+@verbatim
+
+body common control
+
+{
+common::
+
+require_comments => "true";
+}
+
+@end verbatim

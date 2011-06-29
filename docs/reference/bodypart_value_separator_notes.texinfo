@@ -1,0 +1,3 @@
+
+For example, elements in the group file are separated by @samp{:},
+but the lists of users in these fields are separated by @samp{,}.

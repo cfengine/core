@@ -1,0 +1,8 @@
+
+@verbatim
+things:
+
+  "router one" determines => { "network connectivity" },
+                certainty => "uncertain";
+
+@end verbatim

@@ -1,0 +1,9 @@
+
+@verbatim
+
+body reporter control
+{
+html_embed => "true";
+}
+
+@end verbatim

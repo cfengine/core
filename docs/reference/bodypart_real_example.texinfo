@@ -1,0 +1,8 @@
+
+@verbatim
+
+vars:
+   
+ "scalar" real   => "0.5";
+
+@end verbatim

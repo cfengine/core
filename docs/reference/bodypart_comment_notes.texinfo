@@ -1,0 +1,3 @@
+
+Comments written in code follow the program, they are not merely discarded.
+They appear in reports and error messages.

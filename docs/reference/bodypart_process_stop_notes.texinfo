@@ -1,0 +1,3 @@
+
+As an alternative to sending a termination or kill signal to a process,
+one may call a `stop script' to perform a graceful shutdown.

@@ -1,0 +1,3 @@
+
+Files can change in permissions and contents, i.e. external or internal attributes.
+If @samp{all} is chosen all attributes are checked.

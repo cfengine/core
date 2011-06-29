@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent example
+{
+syslog => "true";
+}
+
+@end verbatim

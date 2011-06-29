@@ -1,0 +1,4 @@
+
+The standard or registered port number is tcp/5308. Cfengine does not
+presently use its registered udp port with the same number, but this
+could change in the future.

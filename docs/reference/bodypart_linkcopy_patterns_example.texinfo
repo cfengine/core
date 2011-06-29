@@ -1,0 +1,11 @@
+
+@verbatim
+
+body copy_from mycopy(from)
+
+{
+source            => "$(from)";
+linkcopy_patterns => { ".*" };
+}
+
+@end verbatim

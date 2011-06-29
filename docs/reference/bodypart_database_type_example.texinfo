@@ -1,0 +1,6 @@
+
+@verbatim
+
+database_type => "@var{ms_registry}";
+
+@end verbatim

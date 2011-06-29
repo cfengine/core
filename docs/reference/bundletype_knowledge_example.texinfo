@@ -1,0 +1,23 @@
+
+@cartouche
+@smallexample
+
+bundle knowledge system
+
+@{
+topics:
+
+ Troubleshooting::
+
+  "Segmentation fault"       
+       association => a("is caused by","Bad memory reference","can cause");
+
+  "Remote connection problem";
+  "Web server not running";
+  "Print server not running";
+  "Bad memory reference";
+@}
+
+@end smallexample
+@end cartouche
+

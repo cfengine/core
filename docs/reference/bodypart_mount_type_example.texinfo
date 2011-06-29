@@ -1,0 +1,9 @@
+
+@verbatim
+
+body mount example
+{
+mount_type => "nfs3";
+}
+
+@end verbatim

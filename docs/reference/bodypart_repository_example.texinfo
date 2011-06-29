@@ -1,0 +1,12 @@
+
+
+@verbatim
+
+files:
+
+ "/path/file"
+
+   copy_from => source,
+   repository => "/var/cfengine/repository";
+
+@end verbatim

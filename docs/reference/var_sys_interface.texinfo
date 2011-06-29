@@ -1,0 +1,8 @@
+
+The assumed (default) name of the main system interface on this host.
+
+@verbatim
+
+# interface = eth0
+
+@end verbatim

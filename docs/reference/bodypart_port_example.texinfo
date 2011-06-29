@@ -1,0 +1,23 @@
+
+@verbatim
+
+body runagent control
+{
+port => "5308";
+}
+
+body hub control
+{
+port => "5308";
+}
+
+body server control
+{
+specialhost::
+ port => "5308";
+
+!specialhost::
+ port => "5308";
+}
+
+@end verbatim

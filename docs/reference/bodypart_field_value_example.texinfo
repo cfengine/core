@@ -1,0 +1,9 @@
+
+@verbatim
+
+body edit_field example(s)
+{
+field_value => "$(s)";
+}
+
+@end verbatim

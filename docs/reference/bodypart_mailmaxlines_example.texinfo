@@ -1,0 +1,9 @@
+
+@verbatim
+
+body executor control
+{
+mailmaxlines => "100";
+}
+
+@end verbatim

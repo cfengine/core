@@ -1,0 +1,2 @@
+
+This pattern matches only the node name of the file, not its path.

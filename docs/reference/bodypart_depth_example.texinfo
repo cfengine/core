@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body depth_search example
+{
+depth => "inf";
+}
+
+@end verbatim

@@ -1,0 +1,12 @@
+
+@verbatim
+
+body volume example
+{
+sensible_size => "20K";
+}
+
+@end verbatim
+
+
+

@@ -1,0 +1,29 @@
+
+
+@verbatim
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "isdir" expression => islink("/tmp/link");
+
+reports:
+
+  isdir::
+
+    "Directory exists..";
+
+}
+
+@end verbatim
+

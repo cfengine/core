@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body edit_field example
+{
+extend_fields => "true";
+}
+
+@end verbatim

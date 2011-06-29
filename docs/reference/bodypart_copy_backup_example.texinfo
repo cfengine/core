@@ -1,0 +1,9 @@
+
+@verbatim
+
+body copy_from example
+{
+copy_backup => "timestamp";
+}
+
+@end verbatim

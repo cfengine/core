@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body agent control
+{
+edibinaryfilesize => "10M";
+}
+
+@end verbatim

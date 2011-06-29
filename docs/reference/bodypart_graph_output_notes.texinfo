@@ -1,0 +1,2 @@
+
+Equivalent to the use of the @samp{-g} option for @code{cf-know}.

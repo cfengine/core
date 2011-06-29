@@ -1,0 +1,26 @@
+
+
+@cartouche
+@smallexample
+
+body common control
+
+@{
+inputs  => @{
+           "update.cf",
+           "library.cf"
+           @};
+
+bundlesequence  => @{
+                   update("policy_host.domain.tld"),
+                   "main",
+                   "cfengine2"
+                   @};
+
+output_prefix => "cfengine>";
+version => "1.2.3";
+@}
+
+@end smallexample
+@end cartouche
+

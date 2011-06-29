@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body copy_from example
+{
+purge => "true";
+}
+
+@end verbatim

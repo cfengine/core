@@ -1,0 +1,11 @@
+
+@verbatim
+
+body action example
+{
+# ...
+
+audit => "true";
+}
+
+@end verbatim

@@ -1,0 +1,10 @@
+
+A variable containing the path to the cfengine knowledge agent @code{cf-know}
+on the platform you are using.
+
+@verbatim
+commands:
+
+   "$(sys.cf_know) -f ./build_docs.cf -sg";
+
+@end verbatim

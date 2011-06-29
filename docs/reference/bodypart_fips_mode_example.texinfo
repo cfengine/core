@@ -1,0 +1,9 @@
+
+@verbatim
+
+body common control
+{
+fips_mode => "true";
+}
+
+@end verbatim

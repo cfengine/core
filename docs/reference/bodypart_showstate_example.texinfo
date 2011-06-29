@@ -1,0 +1,10 @@
+
+@verbatim
+
+reports:
+
+  "Comment"
+
+    showstate => {"www_in", "ssh_out", "otherprocs" };
+
+@end verbatim

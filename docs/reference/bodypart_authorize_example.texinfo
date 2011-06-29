@@ -1,0 +1,9 @@
+
+
+@verbatim
+
+roles:
+
+  ".*"  authorize => { "mark", "marks_friend" };
+
+@end verbatim

@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body link_from example
+{
+when_linking_children => "if_no_such_file";
+}
+
+@end verbatim

@@ -1,0 +1,3 @@
+
+This is used in the self-healing documentation. The directory points to
+a location where the Texinfo sources for per-section commentary is maintained.

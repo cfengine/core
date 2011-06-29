@@ -1,0 +1,3 @@
+
+Cfengine defines a number of variables for embedding unprintable values 
+or values with special meanings in strings.

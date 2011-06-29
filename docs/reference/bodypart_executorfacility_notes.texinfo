@@ -1,0 +1,2 @@
+
+See the syslog manual pages.

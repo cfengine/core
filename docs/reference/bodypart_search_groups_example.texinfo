@@ -1,0 +1,11 @@
+
+
+@verbatim
+
+body file_select example
+{
+search_groups => { "users", "special_.*" };
+file_result => "group";
+}
+
+@end verbatim

@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body changes example
+{
+hash => "md5";
+}
+
+@end verbatim

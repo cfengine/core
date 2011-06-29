@@ -1,0 +1,9 @@
+
+@verbatim
+
+body server control
+{
+serverfacility => "LOG_USER";
+}
+@end verbatim
+

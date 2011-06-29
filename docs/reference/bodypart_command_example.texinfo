@@ -1,0 +1,12 @@
+
+@verbatim
+
+body process_select example
+
+{
+command => "cf-.*";
+
+process_result => "command";
+}
+
+@end verbatim

@@ -1,0 +1,10 @@
+
+@verbatim
+
+classes:
+
+  "my_dist"  
+
+    dist => { "10", "20", "40", "50" };
+
+@end verbatim

@@ -1,0 +1,7 @@
+
+@verbatim
+body knowledge control
+{
+goal_categories => { "goals", "targets", "milestones" };
+}
+@end verbatim

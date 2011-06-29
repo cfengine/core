@@ -1,0 +1,4 @@
+
+If the named group does not exist, the variable will not be
+defined. On windows, which does not support group ids, the variable
+will not be defined.

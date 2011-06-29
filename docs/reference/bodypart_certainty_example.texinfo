@@ -1,0 +1,13 @@
+
+@verbatim
+bundle knowledge test
+{
+things:
+
+  "router one" is_connected_to => { "computer one" },
+                     certainty => "uncertain";
+
+  "router"             affects => { "network services" },
+                     certainty => "possible";
+}
+@end verbatim

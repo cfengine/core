@@ -1,0 +1,9 @@
+
+
+@verbatim
+
+body knowledge control
+{
+goal_patterns => { "goal_.*", "target.*" };
+}
+@end verbatim

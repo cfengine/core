@@ -1,0 +1,10 @@
+
+@verbatim
+packages:
+
+  "$(match_package)"
+
+     package_policy => "add",
+     package_method => "xyz";
+
+@end verbatim

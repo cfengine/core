@@ -1,0 +1,4 @@
+
+Sets the agent's syslog facility level. See the manual pages for
+syslog.  This is ignored on Windows, as Cfengine Nova creates event logs.
+

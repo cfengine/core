@@ -1,0 +1,10 @@
+
+A variable containing the path to the cfengine executor @code{cf-execd}
+on the platform you are using.
+
+@verbatim
+commands:
+
+  "$(sys.cf_execd)";
+
+@end verbatim

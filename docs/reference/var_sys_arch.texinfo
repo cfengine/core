@@ -1,0 +1,9 @@
+
+
+The variable gives the kernel's short architecture description.
+
+@verbatim
+
+# arch = x86_64
+
+@end verbatim

@@ -1,0 +1,11 @@
+
+@verbatim
+
+access:
+
+   "/path/file"
+
+    admit     => { ".*\.example\.org" },
+    ifencrypted => "true";
+
+@end verbatim

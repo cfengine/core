@@ -1,0 +1,18 @@
+
+@verbatim
+
+body knowledge control
+
+{
+#..
+build_directory => "/tmp/builddir";
+}
+
+body reporter control
+
+{
+#..
+build_directory => "/tmp/builddir";
+}
+
+@end verbatim

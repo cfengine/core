@@ -1,0 +1,3 @@
+
+Bundles in the server describe access promises on specific file and class
+objects supplied by the server to clients.

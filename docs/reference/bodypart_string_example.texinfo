@@ -1,0 +1,10 @@
+
+@verbatim
+
+vars:
+
+ "xxx"    string => "Some literal string...";
+
+ "yyy"    string => readfile( "/home/mark/tmp/testfile" , "33" );
+
+@end verbatim

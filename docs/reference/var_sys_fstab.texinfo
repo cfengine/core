@@ -1,0 +1,8 @@
+
+The location of the system filesystem (mount) table.
+
+@verbatim
+
+# fstab = /etc/fstab
+
+@end verbatim

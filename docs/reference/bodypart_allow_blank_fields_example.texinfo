@@ -1,0 +1,10 @@
+
+@verbatim
+
+body edit_field example
+{
+# ...
+allow_blank_fields => "true";
+}
+
+@end verbatim

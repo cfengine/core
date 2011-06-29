@@ -1,0 +1,3 @@
+
+Windows processes are not regarded as attached to any terminal, so
+they all have tty '?'.

@@ -1,0 +1,12 @@
+
+
+@verbatim
+
+body association example(literal,scalar,list)
+
+{
+#...
+associates => { "literal", $(scalar),  @(list)};
+}
+
+@end verbatim

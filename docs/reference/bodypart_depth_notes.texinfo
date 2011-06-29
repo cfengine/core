@@ -1,0 +1,7 @@
+
+This was previous called `recurse' in earlier versions of cfengine.
+Note that the value @samp{inf} may be used for an unlimited value.
+
+When searching recursively from a directory, the parent directory is
+not part of the search. It is only the anchor point. To alter the parent,
+a separate non-recursive promise should be made.

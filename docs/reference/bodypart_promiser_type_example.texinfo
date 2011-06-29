@@ -1,0 +1,10 @@
+
+@verbatim
+
+outputs:
+
+  "web_server"
+
+     promiser_type => "bundle";
+
+@end verbatim

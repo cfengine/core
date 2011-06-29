@@ -1,0 +1,9 @@
+
+@verbatim
+
+body action example
+{
+report_level => "verbose";
+}
+
+@end verbatim

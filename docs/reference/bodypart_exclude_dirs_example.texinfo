@@ -1,0 +1,10 @@
+
+@verbatim
+
+body depth_search
+{
+# no dot directories
+exclude_dirs => { "\..*" };
+}
+
+@end verbatim

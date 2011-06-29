@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body edit_field example
+{
+field_operation => "append";
+}
+
+@end verbatim

@@ -1,0 +1,13 @@
+
+@verbatim
+bundle edit_line Insert(service, filename)
+{
+insert_lines:
+
+  "$(service).* $(filename)"
+
+      whitespace_policy => { "ignore_trailing", "ignore_embedded" };
+
+}
+
+@end verbatim

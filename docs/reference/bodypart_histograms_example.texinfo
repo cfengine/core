@@ -1,0 +1,10 @@
+
+@verbatim
+
+body monitor control
+{
+histograms => "true";
+}
+
+@end verbatim
+

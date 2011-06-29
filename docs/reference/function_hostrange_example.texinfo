@@ -1,0 +1,29 @@
+
+
+@verbatim
+
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+classes:
+
+  "compute_nodes" expression => hostrange("cpu-","01-32");
+
+reports:
+
+  compute_nodes::
+
+    "No computer is a cluster";
+
+}
+
+@end verbatim

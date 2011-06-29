@@ -1,0 +1,10 @@
+
+@verbatim
+
+vars:
+
+  guard::
+
+   "global_number" string => hubknowledge("number_variable");
+
+@end verbatim

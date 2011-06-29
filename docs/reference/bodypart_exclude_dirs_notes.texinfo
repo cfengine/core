@@ -1,0 +1,3 @@
+
+Directory names are treated specially when searching recursively through a
+file system.

@@ -1,0 +1,20 @@
+@noindent Whenever any class listed in the @code{schedule} attribute is
+present, @code{cf-execd} can schedule an execution of @code{cf-agent}.  The
+actual execution will be delayed an integer number of seconds between
+0-@code{splaytime} minutes.  The
+specific amount of delay for ``this'' host is based on a hash of the
+hostname.  Thus a collection of hosts will all execute at different
+times, and surges in network traffic can be avoided.
+
+@noindent A rough rule of thumb for scaling of small updates is set the splay
+time by:
+
+splaytime = 1 + Number of clients / 50
+
+@noindent @b{Default value}:@*
+@*
+ 
+The default value is 0 minutes.
+
+@noindent @b{See also:} The @code{splayclass()} function for a task-specific
+means for setting splay times.

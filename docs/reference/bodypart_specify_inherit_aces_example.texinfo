@@ -1,0 +1,7 @@
+
+@verbatim
+body acl template
+{
+specify_inherit_aces => {  "all:r" };
+}
+@end verbatim

@@ -1,0 +1,23 @@
+
+@verbatim
+
+ "/home/mark/tmp/testcopy"
+
+    file_select => pdf_files,
+    transformer => "/usr/bin/gzip $(this.promiser)",
+    depth_search => recurse("inf");
+
+###################
+
+ classes:
+    "do_update" or => isnewerthan("/etc/postfix/alias",
+                                  "/etc/postfix/alias.cdb") };
+
+ files:
+    "/etc/postfix/alias.cdb"
+       create => true,		# Must have this!
+       transformer => "/usr/sbin/postalias /etc/postfix/alias",
+       ifvarclass => "do_update";
+}
+
+@end verbatim

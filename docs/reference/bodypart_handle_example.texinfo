@@ -1,0 +1,11 @@
+
+@verbatim
+
+access:
+
+  "/source"
+
+    handle  => "update_rule",
+    admit   => { "127.0.0.1" };
+
+@end verbatim

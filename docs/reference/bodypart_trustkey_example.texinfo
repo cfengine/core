@@ -1,0 +1,10 @@
+
+@verbatim
+
+body copy_from example
+{
+trustkey => "true";
+}
+
+@end verbatim
+

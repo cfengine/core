@@ -1,0 +1,9 @@
+
+@verbatim
+
+body link_from example
+{
+link_children => "true";
+}
+
+@end verbatim

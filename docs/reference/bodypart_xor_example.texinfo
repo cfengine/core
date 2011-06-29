@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+classes:
+
+ "another_global" xor => { "any", "linux", "solaris"};
+
+@end verbatim
+

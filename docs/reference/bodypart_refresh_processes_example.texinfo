@@ -1,0 +1,10 @@
+
+@verbatim
+
+body agent control
+{
+refresh_processes => { "mybundle" };
+#refresh_processes => { "none" };
+}
+
+@end verbatim

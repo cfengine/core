@@ -1,0 +1,3 @@
+
+This function applies only to Windows based systems. it reads a data field for the value named
+in the second argument, which lies within the registry key given by the first argument.

@@ -1,0 +1,9 @@
+
+@verbatim
+
+body copy_from example
+{
+portnumber => "5308";
+}
+
+@end verbatim

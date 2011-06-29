@@ -1,0 +1,11 @@
+
+
+@verbatim
+
+body copy_from example
+
+{
+compare => "digest";
+}
+
+@end verbatim

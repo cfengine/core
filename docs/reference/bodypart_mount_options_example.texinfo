@@ -1,0 +1,8 @@
+
+@verbatim
+body mount example
+{
+mount_options => { "rw", "acls" };
+}
+
+@end verbatim

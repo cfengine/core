@@ -1,0 +1,12 @@
+
+@verbatim
+
+body common control
+{
+inputs  => {
+           "update.cf",
+           "library.cf"
+           };
+}
+
+@end verbatim

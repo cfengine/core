@@ -1,0 +1,2 @@
+
+This regular expression should match hosts we want to exclude from friend reports.

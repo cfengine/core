@@ -1,0 +1,9 @@
+
+
+@verbatim
+
+ mathematics::
+
+   "tree" synonyms => { "DAG", "directed acyclic graph" };
+
+@end verbatim

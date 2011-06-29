@@ -1,0 +1,3 @@
+
+Signals are presented as an ordered list to the process. On windows,
+only the kill signal is supported, which terminates the process.

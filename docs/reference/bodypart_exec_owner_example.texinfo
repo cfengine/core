@@ -1,0 +1,9 @@
+
+@verbatim
+
+body contain example
+{
+exec_owner => "mysql_user";
+}
+
+@end verbatim

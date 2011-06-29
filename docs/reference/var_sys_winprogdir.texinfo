@@ -1,0 +1,9 @@
+
+On the Windows version of Cfengine Nova, this is the path to the
+program files directory of the system.
+
+@verbatim
+
+# winprogdir = C:\Program Files
+
+@end verbatim

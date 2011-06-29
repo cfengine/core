@@ -1,0 +1,3 @@
+
+The limits must be integer values and the resulting numbers are based
+on the entropy of the md5 algorithm.

@@ -1,0 +1,15 @@
+
+@verbatim
+
+files:
+
+  "/path/plain_file"
+
+     create =>   "true";
+
+  "/path/dir/."
+  
+     create =>   "true";
+
+@end verbatim
+

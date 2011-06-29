@@ -1,0 +1,3 @@
+
+If set in the configuration, cfengine makes no changes to a
+system, only reports what it needs to do.

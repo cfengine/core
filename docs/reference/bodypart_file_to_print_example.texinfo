@@ -1,0 +1,10 @@
+
+@verbatim
+
+body printfile example
+{
+file_to_print   => "/etc/motd";
+number_of_lines => "10";
+}
+
+@end verbatim

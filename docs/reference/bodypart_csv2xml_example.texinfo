@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body reporter control
+{
+csv2xml => { "myreport.csv", "custom_report.csv"  };
+}
+
+@end verbatim

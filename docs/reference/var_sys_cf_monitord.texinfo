@@ -1,0 +1,13 @@
+
+
+A variable containing the path to the cfengine monitoring daemon @code{cf-monitord}
+on the platform you are using.
+
+@verbatim
+commands:
+
+ restart_monitord::
+
+   "$(sys.cf_monitord)";
+
+@end verbatim

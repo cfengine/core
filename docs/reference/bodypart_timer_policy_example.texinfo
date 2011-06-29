@@ -1,0 +1,9 @@
+
+@verbatim
+
+body classes example
+{
+timer_policy => "reset";
+}
+
+@end verbatim

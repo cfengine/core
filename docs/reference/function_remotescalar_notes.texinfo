@@ -1,0 +1,40 @@
+Cfengine caches the value of this variable, so that, if the network is
+unavailable, the last known value will be used. Hence use of this function
+is fault tolerant. Care should be taken in attempting to access remote variables
+that are not available, as the repeated connections needed to resolve the
+absence of a value can lead to undesirable behaviour. As a general rule,
+users are recommended to refrain from relying on the availability of network resources.
+
+@cartouche
+@example
+
+(string) remotescalar(@var{resource handle},@var{host/IP address},@var{encrypt});
+
+@end example
+@end cartouche
+
+This function downloads a string from a remote server, using the promise handle
+as a variable identifier. Availability: Enterprise editions of Cfengine only.
+
+@noindent @b{ARGUMENTS}:
+
+@table @samp
+@item resource handle
+The name of the promise on the server side
+@item host or IP address
+The location of the server on which the resource resides.
+@item encrypt
+Whether to encrypt the connection to the server.
+@smallexample
+     true
+     yes
+     false
+     no
+@end smallexample
+@end table
+
+Note that this function assumes that you have already performed a
+successful key exchange between systems, (e.g. using either a remote
+copy or @code{cf-runagent} connection). It contains no mechanism for
+trust establishment and will fail if there is no trust relationship
+pre-established.

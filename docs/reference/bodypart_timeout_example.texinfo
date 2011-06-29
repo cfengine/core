@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent control
+{
+timeout => "10";
+}
+
+@end verbatim

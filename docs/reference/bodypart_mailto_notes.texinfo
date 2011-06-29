@@ -1,0 +1,2 @@
+
+The address to whom email is sent if an smtp host is configured.

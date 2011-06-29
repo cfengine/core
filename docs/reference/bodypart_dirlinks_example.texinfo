@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body delete example
+{
+dirlinks => "keep";
+}
+
+@end verbatim

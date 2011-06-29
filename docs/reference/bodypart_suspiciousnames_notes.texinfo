@@ -1,0 +1,3 @@
+
+If cfengine sees these names during recursive (depth) file searches it will
+warn about them.

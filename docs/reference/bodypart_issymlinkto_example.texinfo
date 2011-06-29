@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body file_select example
+{
+issymlinkto => { "/etc/[^/]*", "/etc/init\.d/[a-z0-9]*" };
+}
+
+@end verbatim

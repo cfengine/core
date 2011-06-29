@@ -1,0 +1,3 @@
+
+Watch out for kernel limitations for maximum numbers of open file descriptors
+which can limit this.

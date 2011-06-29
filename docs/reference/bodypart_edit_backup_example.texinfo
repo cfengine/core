@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body edit_defaults example
+{
+edit_backup => "timestamp";
+}
+
+@end verbatim

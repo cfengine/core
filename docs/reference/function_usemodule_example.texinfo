@@ -1,0 +1,30 @@
+
+
+@verbatim
+
+body common control
+   {
+   any::
+
+      bundlesequence  => {
+                         test
+                         };
+   }
+
+###################################################################
+
+bundle agent test
+
+{
+classes:
+
+  # returns $(user)
+
+  "done" expression => usemodule("getusers","");
+
+commands:
+
+  "/bin/echo promiser text" args => "test $(user)";
+}
+
+@end verbatim

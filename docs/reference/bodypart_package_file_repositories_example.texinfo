@@ -1,0 +1,9 @@
+
+@verbatim
+
+body package_method filebased
+{
+package_file_repositories => { "/package/repos1", "/packages/repos2" };
+}
+
+@end verbatim

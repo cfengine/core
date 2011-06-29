@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+vars:
+
+  "varid" string => "value...",
+          policy => "constant";
+
+@end verbatim

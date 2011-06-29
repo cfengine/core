@@ -1,0 +1,5 @@
+
+The maximum amount of memory in the physical environment will set a
+natural limit on this value. If the number is already set in a
+specification file, this value will attempt to override it at run
+time.

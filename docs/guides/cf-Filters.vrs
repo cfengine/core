@@ -1,0 +1,14 @@
+\initial {$}
+\entry {\code {$ in regular expressions}}{6}
+\initial {*}
+\entry {\code {* in regular expressions}}{6}
+\initial {+}
+\entry {\code {+ in regular expressions}}{6}
+\initial {.}
+\entry {\code {. in regular expressions}}{6}
+\initial {?}
+\entry {\code {? in regular expressions}}{6}
+\initial {[}
+\entry {\code {[] in regular expressions}}{6}
+\initial {^}
+\entry {\code {^ in regular expressions}}{6}

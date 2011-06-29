@@ -1,0 +1,18 @@
+
+@verbatim
+
+bundle agent example
+{     
+vars:
+
+  "no" int => countlinesmatching("m.*","/etc/passwd");
+
+reports:
+
+  cfengine_3::
+
+    "Found $(no) lines matching";
+
+}
+
+@end verbatim

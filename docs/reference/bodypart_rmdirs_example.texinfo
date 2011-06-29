@@ -1,0 +1,9 @@
+
+@verbatim
+
+body delete example
+{
+rmdirs => "true";
+}
+
+@end verbatim

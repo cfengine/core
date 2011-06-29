@@ -1,0 +1,4 @@
+
+This selects the operator that compares the promiser to the state of the system
+packages currently installed. If the criterion matches, the policy action is
+scheduled for promise-keeping.

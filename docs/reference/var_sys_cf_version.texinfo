@@ -1,0 +1,8 @@
+
+The variable gives the version of the running Cfengine Community Edition.
+
+@verbatim
+
+# cf_version = 3.0.5 
+
+@end verbatim

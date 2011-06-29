@@ -1,0 +1,9 @@
+
+@verbatim
+
+body match_value example
+{
+select_line_matching => "Expression match.* whole line";
+}
+
+@end verbatim

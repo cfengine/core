@@ -1,0 +1,3 @@
+
+The user must have access permissions to the file for this to work
+faithfully.

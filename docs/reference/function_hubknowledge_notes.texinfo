@@ -1,0 +1,14 @@
+
+This function is only available in commercial releases of Cfengine.
+It is intended for use in distributed orchestration. It is recommended
+that you use this function sparingly with @i{guards}, as it
+contributes to network traffic and depends on the network for its function.
+Unlike @code{remotescalar()}, the value of hub-knowledge is not cached.
+
+This function behaves is essentially similar to the
+@code{remotescalar} function, except that it always gets its
+information from the policy server hub by an encrypted connection. It
+is designed for spreading globally calibrated information about a
+Cfengine swarm back to the client machines. The data available through
+this channel are generated automatically by discovery, unlike
+@code{remotescalar} which accesses user defined data.

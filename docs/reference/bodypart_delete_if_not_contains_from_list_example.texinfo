@@ -1,0 +1,9 @@
+
+@verbatim
+
+body delete_select discard(s)
+{
+delete_if_not_contains_from_list => { "substring1", "substring2" };
+}
+
+@end verbatim

@@ -1,0 +1,20 @@
+
+@verbatim
+
+bundle agent databases
+
+{
+databases:
+
+ windows::
+
+  # Regsitry has (value,data) pairs in "keys" which are directories
+
+  "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+
+    database_operation => "create",
+    database_rows => { "value1,REG_SZ,new value 1", "value2,REG_SZ,new val 2"} ,
+    database_type     => "ms_registry";
+}
+
+@end verbatim

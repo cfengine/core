@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body executor control
+{
+execcommand => "/usr/local/sbin/cf-agent";
+}
+
+@end verbatim

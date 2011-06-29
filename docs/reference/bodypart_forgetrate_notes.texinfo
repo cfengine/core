@@ -1,0 +1,5 @@
+
+Configurable settings for the machine-learning algorithm that
+tracks system behaviour. This is only for expert users. This parameter
+effectively determines (together with the monitoring rate) how
+quickly cfengine forgets its previous history.

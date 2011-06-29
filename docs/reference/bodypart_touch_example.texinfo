@@ -1,0 +1,10 @@
+
+@verbatim
+
+files:
+
+ "/path/file"
+
+   touch => "true";
+
+@end verbatim

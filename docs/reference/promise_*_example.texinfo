@@ -1,0 +1,12 @@
+
+@verbatim
+
+files:
+
+   "/etc/passwd" -> "Security team"
+
+      perms  => p("644"),
+      action => justcheck,
+      comment => "This was decided in internal procedures XYZ123";
+
+@end verbatim

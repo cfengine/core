@@ -1,0 +1,9 @@
+
+@verbatim
+
+body common control
+{
+output_prefix => "my_cf3";
+}
+
+@end verbatim

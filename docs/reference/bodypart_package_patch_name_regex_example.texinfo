@@ -1,0 +1,8 @@
+
+@verbatim
+
+body package_method zypper
+{
+package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
+}
+@end verbatim

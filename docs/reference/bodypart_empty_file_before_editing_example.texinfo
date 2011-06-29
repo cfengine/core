@@ -1,0 +1,9 @@
+
+@verbatim
+
+body edit_defaults example
+{
+empty_file_before_editing => "true";
+}
+
+@end verbatim

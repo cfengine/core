@@ -1,0 +1,9 @@
+
+On the Windows version of Cfengine Nova, this is the path to the
+Windows directory of this system.
+
+@verbatim
+
+# windir = C:\WINDOWS
+
+@end verbatim

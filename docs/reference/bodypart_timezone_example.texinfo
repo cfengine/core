@@ -1,0 +1,9 @@
+
+@verbatim
+
+body agent control
+{
+timezone => { "MET", "CET", "GMT+1" };
+}
+
+@end verbatim

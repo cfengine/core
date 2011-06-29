@@ -1,0 +1,12 @@
+
+@verbatim
+
+body copy_from mycopy(from,server)
+
+{
+source      => "$(from)";
+servers     => { "$(server)" };
+collapse_destination_dir => "true";
+}
+
+@end verbatim

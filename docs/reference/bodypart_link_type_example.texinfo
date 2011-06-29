@@ -1,0 +1,10 @@
+
+@verbatim
+
+body link_from example
+{
+link_type => "symlink";
+source => "/tmp/source";
+}
+
+@end verbatim

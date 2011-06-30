@@ -113,33 +113,36 @@ fi
 
 dnl Now check for database connectors
 
-
-dnl ######################################################################
-dnl  Look for SQL connectors.
-dnl ######################################################################
-
 AC_ARG_WITH([sql],
-    [AS_HELP_STRING([--without-sql], [disable SQL database connectors])],[],[with_sql=yes])
-AS_IF([test "x$with_sql" = "xyes"], [WITH_SQL=1], [WITH_SQL=0])
+    [AS_HELP_STRING([--with-sql], [Enable SQL database connectors (deprecated, use --with[[out]]-postgresql and --with[[out]]-mysql instead)])],[with_postgresql=$with_sql; with_mysql=$with_sql],[])
 
-if test $WITH_SQL = 1; then
-  case "$target_os" in
-     linux*)
-        if [ `which pg_config` ]; then
-          CPPFLAGS=-I`pg_config --includedir`
-        fi
-  esac
-  AC_CHECK_LIB(mysqlclient,main)
-  AC_CHECK_LIB(pq,main)
-  AC_CHECK_HEADERS(mysql/mysql.h)
-  AC_CHECK_HEADERS(pgsql/libpq-fe.h)
-  AC_CHECK_HEADERS(libpq-fe.h)
+dnl PostgreSQL
+
+AC_ARG_WITH([postgresql],
+    [AS_HELP_STRING([--with-postgresql[[=PATH]]],
+                    [Enable PostgreSQL connector])], [], [with_postgresql=yes])
+
+if test "x$with_postgresql" != "xno"; then
+   CF3_WITH_LIBRARY(postgresql, [
+     AC_CHECK_LIB(pq, PQconnectdb, [], [AC_MSG_ERROR(Cannot find PostgreSQL client library)])
+     AC_CHECK_HEADERS(libpq-fe.h, [], [AC_MSG_ERROR(Cannot find PostgreSQL client library)])
+   ])
 fi
 
+dnl MySQL
 
-dnl
+AC_ARG_WITH([mysql],
+    [AS_HELP_STRING([--with-mysql[[=PATH]]],
+                    [Enable MySQL connector])], [], [with_mysql=yes])
+
+if test "x$with_mysql" != "xno"; then
+   CF3_WITH_LIBRARY(mysql, [
+     AC_CHECK_LIB(mysqlclient, mysql_connect, [], [AC_MSG_ERROR(Cannot find MySQL client library)])
+     AC_CHECK_HEADERS(mysql.h, [], [AC_MSG_ERROR(Cannot find MySQL client library)])
+   ])
+fi
+
 dnl Enterprise extensions
-dnl
 
 sinclude([nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
@@ -148,21 +151,23 @@ AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test
 sinclude([galaxy/options.m4])
 AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
-dnl 
-dnl Choose a database
-dnl
+dnl Tokyo Cabinet
 
 AC_ARG_WITH([tokyocabinet],
-    [AS_HELP_STRING([--with-tokyocabinet], [use Tokyo Cabinet to store runtime data])])
-AS_IF([test "x$with_tokyocabinet" = "xyes"], [WITH_TOKYO=1], [WITH_TOKYO=0])
+    [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
+
+AS_IF([test -n "$with_tokyocabinet" && test "x$with_tokyocabinet" != "xno"], [WITH_TOKYO=1], [WITH_TOKYO=0])
 
 if test $WITH_TOKYO = 1; then
-  AC_MSG_CHECKING(for TokyoCabinet)
-  AC_CHECK_LIB(tokyocabinet,main, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
-  AC_CHECK_HEADERS(tcutil.h)
-  AC_CHECK_HEADERS(tchdb.h)
-  AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
+  CF3_WITH_LIBRARY(tokyocabinet, [
+    AC_CHECK_LIB(tokyocabinet, tchdbnew, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+    AC_CHECK_HEADERS(tcutil.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+    AC_CHECK_HEADERS(tchdb.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+    AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
+  ])
 fi
+
+dnl SQLite 3
 
 AC_ARG_WITH([sqlite3],
   [AS_HELP_STRING([--with-sqlite3], [use SQLite 3 to store runtime data (EXPERIMENTAL, BROKEN)])])
@@ -175,7 +180,7 @@ if test $WITH_SQLITE3 = 1; then
   AC_DEFINE(SQLITE3, 1, [Define if SQLite 3 is available.])
 fi
 
-dnl else qdbm?
+dnl QDBM
 
 AC_ARG_WITH([qdbm],
     [AS_HELP_STRING([--with-qdbm], [use QDBM to store runtime data])])
@@ -188,13 +193,11 @@ if test $WITH_QDBM = 1; then
   AC_DEFINE(QDB, 1, [Define if QDBM is available.])
 fi
 
-dnl
-dnl  Look for Berkeley DB.
-dnl 
+dnl Berkeley DB.
 
 if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
   AC_ARG_WITH(berkeleydb,
-    [  --with-berkeleydb[=PATH] directory where BerkeleyDB exists],
+    [  --with-berkeleydb[[=PATH]] directory where BerkeleyDB exists],
     BERKELEY_DB_DIR=$with_berkeleydb,
     BERKELEY_DB_DIR=default)
 
@@ -357,13 +360,7 @@ AC_SUBST(BERKELEY_DB_LIB)
 
 fi
 
-dnl END check database
-
-
-dnl
-dnl Search for openssl
-dnl
-
+dnl OpenSSL
 
 AC_ARG_WITH(openssl,
     [  --with-openssl[=PATH] directory where OpenSSL exists],
@@ -428,10 +425,6 @@ else
 #endif
        ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)])
 
-    dnl ######################################################################
-    dnl Checks for OpenSSL crypto lib
-    dnl ######################################################################
-
     AC_CHECK_LIB(crypto,main)
 
 
@@ -444,54 +437,24 @@ AC_SUBST(OPENSSL_LIB_LDFLAGS)
 AC_SUBST(OPENSSL_LIB_CPPFLAGS)
 AC_SUBST(OPENSSL_LIB_LIB)
 
-#
-# Others
-#
+dnl PCRE
 
-dnl ######################################################################
-dnl Checks for perl compatible regular expressions
-dnl ######################################################################
+AC_ARG_WITH([pcre], [AS_HELP_STRING([--with-pcre[[=PATH]]], [Specify PCRE path])], [], [with_pcre=yes])
 
-AC_ARG_WITH([pcre],
-			[AS_HELP_STRING([--with-pcre[[=PATH]]], [Build with support for PCRE (optionally search in PATH)])])
-AS_IF([test "x$with_pcre" != "xno"], [
-    AC_MSG_CHECKING([for PCRE])
-    if test "x$with_pcre" = "xyes" -o "x$with_pcre" = "x" ; then
-		for d in $prefix /usr/local /usr; do
-			if test -f "$d/include/pcre.h" ; then
-				CPPFLAGS="$CPPFLAGS -I$d/include"
-				LDFLAGS="$LDFLAGS -L$d/lib"
-				AC_MSG_RESULT($d)
-				FOUND_PCRE=1
-				break
-			fi
-		done
-		if test "x$FOUND_PCRE" = "x" ; then
-			AC_MSG_NOTICE([Cannot find PCRE - specify the path])
-		fi
-	else
-		if test -f "${withval}/include/pcre.h" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/include"
-			LDFLAGS="$LDFLAGS -L${withval}/lib"
-			AC_MSG_RESULT("${withval}")
-		else
-			AC_MSG_NOTICE([Cannot find PCRE in $withval])
-		fi
-	fi
-
-	AC_CHECK_HEADERS([pcre.h pcre/pcre.h])
-	AC_CHECK_LIB(pcre, main, [], [AC_MSG_WARN([Cannot find PCRE])])
-	AC_DEFINE(USE_PCRE, 1, [Define if PCRE is available.])
-])
-
-if test "x$ac_cv_lib_pcre_main" != "xyes"; then
-
-	AC_MSG_ERROR([PCRE is required])
+if test "x$with_pcre" = "xno"; then
+   AC_MSG_ERROR([PCRE is required])
 fi
 
-LIBS="$LIBS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
+CF3_WITH_LIBRARY(pcre, [
+  AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
+  AC_CHECK_HEADERS([pcre.h pcre/pcre.h], [break], [AC_MSG_ERROR(Cannot find PCRE)])
+])
 
-dnl AC_CHECK_LIB(rx, main) deprecated
+dnl
+
+CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $PCRE_CFLAGS $BERKELEY_DB_CFLAGS_OPENSSL_LIB_CPPFLAGS"
+
+LIBS="$LIBS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $PCRE_LDFLAGS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
 
 dnl ######################################################################
 dnl Checks for header files.
@@ -933,15 +896,10 @@ dnl ######################################################################
 AC_MSG_RESULT( )
 AC_MSG_RESULT(    Summary of options...)
 
+AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
 
-if test "x$ac_cv_lib_pcre_main" = "xyes"; then
-  AC_MSG_RESULT([-> PCRE: enabled])
-else
-  AC_MSG_RESULT([-> PCRE: disabled, falling back to POSIX builtins])
-fi
-
-if test "x$ac_cv_lib_mysqlclient_main" = "xyes"; then
-  AC_MSG_RESULT([-> MySQL connector: enabled])
+if test "x$with_mysql" != "xno"; then
+  AC_MSG_RESULT([-> MySQL connector: $MYSQL_PATH])
 else
   AC_MSG_RESULT([-> MySQL connector: disabled])
 fi
@@ -953,13 +911,13 @@ else
 fi
 
 if test $WITH_TOKYO = 1; then
-  AC_MSG_RESULT([-> DB: Tokyo Cabinet])
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
 elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM])
 elif test $WITH_SQLITE3 = 1; then
   AC_MSG_RESULT([-> DB: SQLite 3 (EXPERIMENTAL, BROKEN)])
 else
-  AC_MSG_RESULT([-> DB: Berkeley DB (path: $BERKELEY_DB_DIR)])
+  AC_MSG_RESULT([-> DB: Berkeley DB: $BERKELEY_DB_DIR])
 fi
 
 m4_sinclude([nova/config.m4])

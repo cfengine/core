@@ -349,21 +349,12 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
 
     AC_MSG_CHECKING(for Berkeley DB API)
 
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #include <db.h>
-#include <stdio.h>
-int main(void)
-{
-    printf("%d.%d.%d ",DB_VERSION_MAJOR,DB_VERSION_MINOR,DB_VERSION_PATCH);
-    if (DB_VERSION_MAJOR < 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR < 1))
-        {
-        exit(1);
-        }
-    else
-        {
-        exit(0);
-        }
-}
+
+#if DB_VERSION_MAJOR < 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR < 1)
+#Ancient Berkeley DB version
+#endif
        ]])],[AC_MSG_RESULT(OK)],[AC_DEFINE(CF_OLD_DB,1,Define if old Berkeley API)
     ],[])
 

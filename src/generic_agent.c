@@ -1751,11 +1751,53 @@ printf(".pp\nThis software is Copyright (C) 2008- Cfengine AS.\n");
 
 /*******************************************************************/
 
-void Version(char *component)
+static const char *banner_lines[] = {
+"   @@@      ",
+"   @@@      ",
+"            ",
+" @ @@@ @    ",
+" @ @@@ @    ",
+" @ @@@ @    ",
+" @     @    ",
+"   @@@      ",
+"   @ @      ",
+"   @ @      ",
+"   @ @      ",
+NULL
+};
 
+static void AgentBanner(const char **text)
 {
-printf("This comprises %s core community version %s - Copyright %s%s\n",component,VERSION,CF3COPYRIGHT,VYEAR);
-EnterpriseVersion();
+const char **b = banner_lines;
+
+while (*b)
+   {
+   printf("%s%s\n", *b, *text ? *text : "");
+   b++;
+   if (*text)
+      {
+      text++;
+      }
+   }
+}
+
+void Version(char *component)
+{
+const char *text[] =
+   {
+   "",
+   component,
+   "",
+   "CFEngine Core " VERSION,
+   Nova_StrVersion(),
+   Constellation_StrVersion(),
+   NULL
+   };
+
+printf("\n");
+AgentBanner(text);
+printf("\n");
+printf("Copyright (C) Cfengine AS 2008-%s\n", VYEAR);
 }
 
 /********************************************************************/

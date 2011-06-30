@@ -37,6 +37,7 @@
 
 char *Nova_GetVersion(void);
 char * Nova_StrVersion(void);
+char *Constellation_StrVersion(void);
 
 /* full-write.c */
 

@@ -1180,3 +1180,22 @@ return false;
 
 #endif
 }
+
+#ifndef HAVE_NOVA
+const char *Nova_GetVersion(void)
+{
+return "";
+}
+
+const char *Nova_StrVersion(void)
+{
+return "";
+}
+#endif
+
+#ifndef HAVE_CONSTELLATION
+char *Constellation_StrVersion(void)
+{
+return "";
+}
+#endif

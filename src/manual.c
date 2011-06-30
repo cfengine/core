@@ -213,8 +213,11 @@ fprintf(fout,
         "@titlepage\n"
         "@title CFEngine Reference Manual\n"
         "@subtitle Auto generated, self-healing knowledge\n"
-        "@subtitle Documentation for %s\n"
+        "@subtitle %s\n"
 #ifdef HAVE_NOVA
+        "@subtitle %s\n"
+#endif
+#ifdef HAVE_CONSTELLATION
         "@subtitle %s\n"
 #endif
         "@author cfengine.com\n"
@@ -261,6 +264,10 @@ fprintf(fout,
 #ifdef HAVE_NOVA
         ,
         Nova_NameVersion()
+#endif
+#ifdef HAVE_CONSTELLATION
+        ,
+        Constellation_NameVersion()
 #endif
         );
 }

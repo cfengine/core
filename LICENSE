@@ -1,4 +1,3 @@
-
 This file contains a copy of:
 
 1) The GNU General Public License version 3
@@ -6,9 +5,9 @@ This file contains a copy of:
 
 ----------------------------------------------------------------------------
 
-Cfengine is provided under the terms of the GNU public
-license (below), with explicit permission to link with the
-OpenSSL library. (http://www.openssl.org)
+Cfengine is provided under the terms of the GNU General Public License (below), with
+explicit permission to link with the OpenSSL library, BerkeleyDB library and and
+PCRE library.
 
 On some systems, code under the Frontier Artistic License
 (/pub/snprintf) might become compiled. This is compatible with the

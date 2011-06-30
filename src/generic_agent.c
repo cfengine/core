@@ -1800,10 +1800,16 @@ const char *text[] =
    NULL
    };
 
+/* We don't have VYEAR initialized here yet */
+time_t curtime;
+struct tm parsed_time;
+time(&curtime);
+localtime_r(&curtime, &parsed_time);
+
 printf("\n");
 AgentBanner(text);
 printf("\n");
-printf("Copyright (C) Cfengine AS 2008-%s\n", VYEAR);
+printf("Copyright (C) Cfengine AS 2008-%04d\n", parsed_time.tm_year + 1900);
 }
 
 /*******************************************************************/

@@ -490,7 +490,8 @@ enum cfeditorder
 #define CF_ABSPATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"
 #endif
 
-#define CF_PATHRANGE "\\.?\\.?/.*"
+/* Any non-empty string can be an absolute path under Unix */
+#define CF_PATHRANGE ".+"
 
 #define CF_LOGRANGE    "stdout|udp_syslog|(\042?[a-zA-Z]:\\\\.*)|(/.*)"
 

@@ -40,7 +40,7 @@ static void CheckParseReal(char *lv,char *s,char *range);
 static void CheckParseRealRange(char *lval,char *s,char *range);
 static void CheckParseIntRange(char *lval,char *s,char *range);
 static void CheckParseOpts(char *lv,char *s,char *range);
-static void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range);
+static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype,char *range);
 
 /*********************************************************/
 
@@ -1105,11 +1105,12 @@ return true;
 
 /****************************************************************************/
 
-static void CheckFnCallType(char *lval,char *s,enum cfdatatype dtype,char *range)
+static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype,char *range)
 
 { int i;
   enum cfdatatype dt;
   char output[CF_BUFSIZE];
+  FnCallType *fn;
 
 Debug("CheckFnCallType(%s => %s/%s)\n",lval,s,range);
 
@@ -1118,54 +1119,55 @@ if (s == NULL)
    return;
    }
 
-for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+fn = FindFunction(s);
+
+if (fn)
    {
-   if (strcmp(CF_FNCALL_TYPES[i].name,s) == 0)
+   dt = fn->dtype;
+
+   if (dtype != dt)
       {
-      dt = CF_FNCALL_TYPES[i].dtype;
-
-      if (dtype != dt)
-         {
-         /* Ok to allow fn calls of correct element-type in lists */
+      /* Ok to allow fn calls of correct element-type in lists */
          
-         if (dt == cf_str && dtype == cf_slist)
-            {
-            return;
-            }
-
-         if (dt == cf_int && dtype == cf_ilist)
-            {
-            return;
-            }
-
-         if (dt == cf_real && dtype == cf_rlist)
-            {
-            return;
-            }
-         
-         if (dt == cf_opts && dtype == cf_olist)
-            {
-            return;
-            }
-         
-         if (dt == cf_class && dtype == cf_clist)
-            {
-            return;
-            }
-
-         snprintf(output,CF_BUFSIZE,"function %s() returns type %s but lhs requires %s",s,CF_DATATYPES[dt],CF_DATATYPES[dtype]);
-         ReportError(output);
-         return;
-         }
-      else
+      if (dt == cf_str && dtype == cf_slist)
          {
          return;
          }
+
+      if (dt == cf_int && dtype == cf_ilist)
+         {
+         return;
+         }
+
+      if (dt == cf_real && dtype == cf_rlist)
+         {
+         return;
+         }
+         
+      if (dt == cf_opts && dtype == cf_olist)
+         {
+         return;
+         }
+         
+      if (dt == cf_class && dtype == cf_clist)
+         {
+         return;
+         }
+
+      snprintf(output,CF_BUFSIZE,"function %s() returns type %s but lhs requires %s",s,CF_DATATYPES[dt],CF_DATATYPES[dtype]);
+      ReportError(output);
+      return;
+      }
+   else
+      {
+      return;
       }
    }
-
-snprintf(output,CF_BUFSIZE,"Unknown built-in function %s()",s);
-ReportError(output);
+else
+   {
+   snprintf(output,CF_BUFSIZE,"Unknown built-in function %s()",s);
+   ReportError(output);
+   }
 }
 
 

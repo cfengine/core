@@ -639,14 +639,17 @@ struct SubTypeSyntax
 
 /*************************************************************************/
 
-struct FnCallType
+struct FnCall;
+
+typedef struct FnCallType
    {
    char *name;
    enum cfdatatype dtype;
    int numargs;
    struct FnCallArg *args;
+   struct Rval (*impl)(struct FnCall *, struct Rlist *);
    char *description;
-   };
+   } FnCallType;
 
 struct FnCallArg
    {
@@ -657,97 +660,7 @@ struct FnCallArg
 
 /*************************************************************************/
 
-enum fncalltype
-   {
-   cfn_accessedbefore,
-   cfn_accum,
-   cfn_ago,
-   cfn_canonify,
-   cfn_changedbefore,
-   cfn_classify,
-   cfn_classmatch,
-   cfn_countclassesmatching,
-   cfn_countlinesmatching,
-   cfn_diskfree,
-   cfn_escape,
-   cfn_execresult,
-   cfn_fileexists,
-   cfn_filesexist,
-   cfn_filesize,
-   cfn_getenv,
-   cfn_getfields,
-   cfn_getgid,
-   cfn_getindices,
-   cfn_getuid,
-   cfn_getusers,
-   cfn_getvalues,
-   cfn_grep,
-   cfn_groupexists,
-   cfn_hash,
-   cfn_hashmatch,
-   cfn_host2ip,
-   cfn_ip2host,
-   cfn_hostinnetgroup,
-   cfn_hostrange,
-   cfn_hostsseen,
-   cfn_hubknowledge,
-   cfn_iprange,
-   cfn_irange,
-   cfn_isdir,
-   cfn_isexecutable,
-   cfn_isgreaterthan,
-   cfn_islessthan,
-   cfn_islink,
-   cfn_isnewerthan,
-   cfn_isplain,
-   cfn_isvariable,
-   cfn_join,
-   cfn_lastnode,
-   cfn_laterthan,
-   cfn_ldaparray,
-   cfn_ldaplist,
-   cfn_ldapvalue,
-   cfn_now,
-   cfn_date,
-   cfn_parseintarray,
-   cfn_parserealarray,
-   cfn_parsestringarray,
-   cfn_parsestringarrayidx,
-   cfn_peers,
-   cfn_peerleader,
-   cfn_peerleaders,
-   cfn_product,
-   cfn_randomint,
-   cfn_readfile,
-   cfn_readintarray,
-   cfn_readintlist,
-   cfn_readrealarray,
-   cfn_readreallist,
-   cfn_readstringarray,
-   cfn_readstringarrayidx,
-   cfn_readstringlist,   
-   cfn_readtcp,
-   cfn_regarray,
-   cfn_regcmp,
-   cfn_regextract,
-   cfn_registryvalue,
-   cfn_regline,
-   cfn_reglist,
-   cfn_regldap,
-   cfn_remotescalar,
-   cfn_remoteclassesmatching,
-   cfn_returnszero,
-   cfn_rrange,
-   cfn_selectservers,
-   cfn_splayclass,
-   cfn_splitstring,
-   cfn_strcmp,
-   cfn_sum,
-   cfn_translatepath,
-   cfn_usemodule,
-   cfn_userexists,
-   cfn_unknown,
-   };
+#define UNKNOWN_FUNCTION -1
 
 /*************************************************************************/
 

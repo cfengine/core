@@ -153,18 +153,13 @@ struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp)
   struct Rval rval;
   struct Rlist *rp,*newargs = NULL;
   struct FnCall *subfp;
+  FnCallType *fn = FindFunction(fp->name);
 
 /* Check if numargs correct and expand recursion */
   
 len = RlistLen(fp->args); 
 
-for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
-   {
-   if (strcmp(fp->name,CF_FNCALL_TYPES[i].name) == 0)
-      {
-      ref = CF_FNCALL_TYPES[i].numargs;
-      }
-   }
+ref = fn ? fn->numargs : 0;
 
 if ((ref != CF_VARARGS) && (ref != len))
    {

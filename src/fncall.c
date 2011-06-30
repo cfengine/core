@@ -34,8 +34,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-extern struct FnCallType CF_FNCALL_TYPES[];
-
 static void PrintFunctions(void);
 static void ClearFnCallStatus(void);
 
@@ -53,16 +51,15 @@ if (rtype != CF_FNCALL)
 
 fp = (struct FnCall *)rval;
 
-for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+if (FindFunction(fp->name))
    {
-   if (strcmp(CF_FNCALL_TYPES[i].name,fp->name) == 0)
-      {
-      Debug("%s is a builtin function\n",fp->name);
-      return true;
-      }
+   Debug("%s is a builtin function\n",fp->name);
+   return true;
    }
-
-return false;
+else
+   {
+   return false;
+   }
 }
 
 /*******************************************************************/
@@ -236,20 +233,10 @@ else
 
 /*******************************************************************/
 
-enum cfdatatype FunctionReturnType(char *name)
-
+enum cfdatatype FunctionReturnType(const char *name)
 {
-int i;
-
-for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
-   {
-   if (strcmp(name,CF_FNCALL_TYPES[i].name) == 0)
-      {
-      return CF_FNCALL_TYPES[i].dtype;
-      }
-   }
-
-return cf_notype;
+FnCallType *fn = FindFunction(name);
+return fn ? fn->dtype : cf_notype;
 }
 
 /*******************************************************************/
@@ -258,12 +245,12 @@ struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp)
 
 { struct Rlist *expargs;
   struct Rval rval;
-  enum fncalltype this = FnCallName(fp->name);
+  FnCallType *this = FindFunction(fp->name);
 
 rval.item = NULL;
 rval.rtype = CF_NOPROMISEE;
 
-if (this != cfn_unknown)
+if (this)
    {
    if (DEBUG)
       {
@@ -307,25 +294,21 @@ if (UnresolvedArgs(expargs))
    return rval;
    }
 
-if (this == cfn_unknown)
-   {
-       CfOut(cf_error,"","Un-registered function call");
-       PromiseRef(cf_error,pp);
-   }
-else
+if (this)
    {
    rval = CallFunction(this, fp, expargs);
    }
-
+else
+   {
+   CfOut(cf_error,"","Un-registered function call");
+   PromiseRef(cf_error,pp);
+   }
 
 if (FNCALL_STATUS.status == FNCALL_FAILURE)
    {
    /* We do not assign variables to failed function calls */
    rval.item = CopyFnCall(fp);
    rval.rtype = CF_FNCALL;
-   }
-else
-   {
    }
 
 DeleteExpArgs(expargs);
@@ -334,19 +317,18 @@ return rval;
                 
 /*******************************************************************/
 
-enum fncalltype FnCallName(char *name)
+FnCallType *FindFunction(const char *name)
+{
+int i;
 
-{ int i;
- 
 for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    {
    if (strcmp(CF_FNCALL_TYPES[i].name,name) == 0)
       {
-      return (enum fncalltype)i;
+      return CF_FNCALL_TYPES + i;
       }
    }
-
-return cfn_unknown;
+return NULL;
 }
 
 /*****************************************************************************/

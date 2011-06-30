@@ -508,7 +508,7 @@ void StartServer (int argc, char **argv);
 
 /* evalfunction.c */
 
-struct Rval CallFunction(enum fncalltype function, struct FnCall *fp, struct Rlist *finalargs);
+struct Rval CallFunction(FnCallType *function, struct FnCall *fp, struct Rlist *finalargs);
 
 void *CfReadFile(char *filename,int maxsize);
 void ModuleProtocol(char *command,char *line,int print);
@@ -695,8 +695,8 @@ int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp);
 void DeleteFnCall(struct FnCall *fp);
 void ShowFnCall(FILE *fout,struct FnCall *fp);
 struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
-enum cfdatatype FunctionReturnType(char *name);
-enum fncalltype FnCallName(char *name);
+enum cfdatatype FunctionReturnType(const char *name);
+FnCallType *FindFunction(const char *name);
 void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
 
 /* generic_agent.c */

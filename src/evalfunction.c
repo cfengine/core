@@ -2379,7 +2379,7 @@ return rval;
 
 /*********************************************************************/
 
-static struct Rval FnCallStatInfo(struct FnCall *fp,struct Rlist *finalargs,enum fncalltype fn)
+static struct Rval FnCallFileStat(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -2392,63 +2392,64 @@ buffer[0] = '\0';
 
 if (lstat(finalargs->item,&statbuf) == -1)
    {
-   if (fn == cfn_filesize)
+   if (!strcmp(fp->name, "filesize"))
       {      
       strcpy(buffer,"-1");
-      SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_FAILURE,NULL,NULL);
+      SetFnCallReturnStatus(fp->name,FNCALL_FAILURE,NULL,NULL);
       }
    else
       {
       strcpy(buffer,"!any");
-      SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_SUCCESS,NULL,NULL);
+      SetFnCallReturnStatus(fp->name,FNCALL_SUCCESS,NULL,NULL);
       }
    }
 else
    {
    strcpy(buffer,"!any");
 
-   switch (fn)
+   if (!strcmp(fp->name, "isexecutable"))
       {
-      case cfn_isexecutable:
-          if (IsExecutable(finalargs->item))
-             {
-             strcpy(buffer,"any");
-             }
-          break;
-          
-      case cfn_isdir:
-          if (S_ISDIR(statbuf.st_mode))
-             {
-             strcpy(buffer,"any");
-             }
-          break;
-      case cfn_islink:
-          if (S_ISLNK(statbuf.st_mode))
-             {
-             strcpy(buffer,"any");
-             }
-          break;
-      case cfn_isplain:
-          if (S_ISREG(statbuf.st_mode))
-             {
-             strcpy(buffer,"any");
-             }
-          break;
-      case cfn_fileexists:
-          strcpy(buffer,"any");
-          break;
-
-      case cfn_filesize:
-          snprintf(buffer,CF_MAXVARSIZE,"%ld",statbuf.st_size);
-          break;
+      if (IsExecutable(finalargs->item))
+         {
+         strcpy(buffer,"any");
+         }
+      }
+   else if (!strcmp(fp->name, "isdir"))
+      {
+      if (S_ISDIR(statbuf.st_mode))
+         {
+         strcpy(buffer,"any");
+         }
+      }
+   else if (!strcmp(fp->name, "islink"))
+      {
+      if (S_ISLNK(statbuf.st_mode))
+         {
+         strcpy(buffer,"any");
+         }
+      }
+   else if (!strcmp(fp->name, "isplain"))
+      {
+      if (S_ISREG(statbuf.st_mode))
+         {
+         strcpy(buffer,"any");
+         }
+      }
+   else if (!strcmp(fp->name, "fileexists"))
+      {
+      strcpy(buffer,"any");
+      }
+   else if (!strcmp(fp->name, "filesize"))
+      {
+      snprintf(buffer,CF_MAXVARSIZE,"%ld",statbuf.st_size);
       }
 
-   SetFnCallReturnStatus(CF_FNCALL_TYPES[fn].name,FNCALL_SUCCESS,NULL,NULL);
+   SetFnCallReturnStatus(fp->name,FNCALL_SUCCESS,NULL,NULL);
    }
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
-   FatalError("Memory allocation in FnCallStatInfo");
+   FatalError("Memory allocation in FnCallFnCallFileStat");
    }
 
 /* end fn specific content */
@@ -2853,7 +2854,7 @@ return rval;
 
 /*********************************************************************/
 
-static struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallRemoteClassesMatching(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*classlist;
   struct Rval rval;  
@@ -2893,7 +2894,7 @@ else
 
       if ((rval.item = strdup("!any")) == NULL)
          {
-         FatalError("Memory allocation in FnCallRemoteClasses");
+         FatalError("Memory allocation in FnCallRemoteClassesMatching");
          }
       rval.rtype = CF_SCALAR;
       return rval;
@@ -2904,7 +2905,7 @@ else
 
       if ((rval.item = strdup("any")) == NULL)
          {
-         FatalError("Memory allocation in FnCallRemoteClasses");
+         FatalError("Memory allocation in FnCallRemoteClassesMatching");
          }
       }
 
@@ -3390,7 +3391,7 @@ return rval;
 
 /*********************************************************************/
 
-static struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,char ch)
+static struct Rval FnCallIsLessGreaterThan(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
@@ -3400,16 +3401,7 @@ static struct Rval FnCallGreaterThan(struct FnCall *fp,struct Rlist *finalargs,c
  
 buffer[0] = '\0';  
 
-
-switch (ch)
-   {
-   case '+':
-       SetFnCallReturnStatus("isgreaterthan",FNCALL_SUCCESS,NULL,NULL);
-       break;
-   case '-':
-       SetFnCallReturnStatus("islessthan",FNCALL_SUCCESS,NULL,NULL);
-       break;
-   }
+SetFnCallReturnStatus(fp->name,FNCALL_SUCCESS,NULL,NULL);
 
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
@@ -3433,7 +3425,7 @@ if (IsRealNumber(argv0) && IsRealNumber(argv1))
       {
       Debug("%s and %s are numerical\n",argv0,argv1);
       
-      if (ch == '+')
+      if (!strcmp(fp->name, "isgreaterthan"))
          {
          if (a > b)
             {
@@ -3461,7 +3453,7 @@ else if (strcmp(argv0,argv1) > 0)
    {
    Debug("%s and %s are NOT numerical\n",argv0,argv1);
    
-   if (ch == '+')
+   if (!strcmp(fp->name, "isgreaterthan"))
       {
       strcpy(buffer,"any");
       }
@@ -3472,7 +3464,7 @@ else if (strcmp(argv0,argv1) > 0)
    }
 else
    {
-   if (ch == '+')
+   if (!strcmp(fp->name, "isgreaterthan"))
       {
       strcpy(buffer,"!any");
       }
@@ -3592,7 +3584,7 @@ return rval;
 
 /*********************************************************************/
 
-static struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs)
+static struct Rval FnCallOn(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;
   struct Rval rval;
@@ -3638,7 +3630,7 @@ snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
-   FatalError("Memory allocation in FnCallOnDate");
+   FatalError("Memory allocation in FnCallOn");
    }
 
 SetFnCallReturnStatus("on",FNCALL_SUCCESS,NULL,NULL);
@@ -3891,7 +3883,7 @@ return rval;
 
 /*********************************************************************/
 
-static struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
+static struct Rval ReadList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
     
 { struct Rlist *rp,*newlist = NULL;
   struct Rval rval;
@@ -3986,9 +3978,24 @@ rval.rtype = CF_LIST;
 return rval;
 }
 
+static struct Rval FnCallReadStringList(struct FnCall *fp, struct Rlist *args)
+{
+return ReadList(fp, args, cf_str);
+}
+
+static struct Rval FnCallReadIntList(struct FnCall *fp, struct Rlist *args)
+{
+return ReadList(fp, args, cf_int);
+}
+
+static struct Rval FnCallReadRealList(struct FnCall *fp, struct Rlist *args)
+{
+return ReadList(fp, args, cf_real);
+}
+
 /*********************************************************************/
 
-static struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
+static struct Rval ReadArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
 
 /* lval,filename,separator,comment,Max number of bytes  */
 
@@ -4069,9 +4076,29 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+static struct Rval FnCallReadStringArray(struct FnCall *fp, struct Rlist *args)
+{
+return ReadArray(fp, args, cf_str, false);
+}
+
+static struct Rval FnCallReadStringArrayIndex(struct FnCall *fp, struct Rlist *args)
+{
+return ReadArray(fp, args, cf_str, true);
+}
+
+static struct Rval FnCallReadIntArray(struct FnCall *fp, struct Rlist *args)
+{
+return ReadArray(fp, args, cf_int, false);
+}
+
+static struct Rval FnCallReadRealArray(struct FnCall *fp, struct Rlist *args)
+{
+return ReadArray(fp, args, cf_real, false);
+}
+
 /*********************************************************************/
 
-static struct Rval FnCallParseStringArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
+static struct Rval ParseArray(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type,int intIndex)
 
 /* lval,filename,separator,comment,Max number of bytes  */
 
@@ -4145,6 +4172,26 @@ rval.item = strdup(fnname);
 free(instring);
 rval.rtype = CF_SCALAR;
 return rval;
+}
+
+static struct Rval FnCallParseStringArray(struct FnCall *fp, struct Rlist *args)
+{
+return ParseArray(fp, args, cf_str, false);
+}
+
+static struct Rval FnCallParseStringArrayIndex(struct FnCall *fp, struct Rlist *args)
+{
+return ParseArray(fp, args, cf_str, true);
+}
+
+static struct Rval FnCallParseIntArray(struct FnCall *fp, struct Rlist *args)
+{
+return ParseArray(fp, args, cf_int, false);
+}
+
+static struct Rval FnCallParseRealArray(struct FnCall *fp, struct Rlist *args)
+{
+return ParseArray(fp, args, cf_real, false);
 }
 
 /*********************************************************************/
@@ -4916,187 +4963,685 @@ return true;
 
 /*********************************************************************/
 
-struct Rval CallFunction(enum fncalltype function, struct FnCall *fp, struct Rlist *expargs)
+struct Rval CallFunction(FnCallType *function, struct FnCall *fp, struct Rlist *expargs)
 {
-ArgTemplate(fp, CF_FNCALL_TYPES[function].args, expargs);
-
-switch (function)
-   {
-   case cfn_escape:
-       return FnCallEscape(fp,expargs);
-   case cfn_countclassesmatching:
-       return FnCallCountClassesMatching(fp,expargs);
-   case cfn_host2ip:
-       return FnCallHost2IP(fp,expargs);
-   case cfn_ip2host:
-       return FnCallIP2Host(fp,expargs);
-   case cfn_join:
-       return FnCallJoin(fp,expargs);
-   case cfn_grep:
-       return FnCallGrep(fp,expargs);
-   case cfn_registryvalue:
-       return FnCallRegistryValue(fp,expargs);
-   case cfn_splayclass:
-       return FnCallSplayClass(fp,expargs);
-   case cfn_lastnode:
-       return FnCallLastNode(fp,expargs);
-   case cfn_peers:
-       return FnCallPeers(fp,expargs);
-   case cfn_peerleader:
-       return FnCallPeerLeader(fp,expargs);
-   case cfn_peerleaders:
-       return FnCallPeerLeaders(fp,expargs);
-   case cfn_canonify:
-       return FnCallCanonify(fp,expargs);
-   case cfn_randomint:
-       return FnCallRandomInt(fp,expargs);
-   case cfn_getenv:
-       return FnCallGetEnv(fp,expargs);
-   case cfn_getuid:
-       return FnCallGetUid(fp,expargs);
-   case cfn_getgid:
-       return FnCallGetGid(fp,expargs);
-   case cfn_execresult:
-       return FnCallExecResult(fp,expargs);
-   case cfn_readtcp:
-       return FnCallReadTcp(fp,expargs);
-   case cfn_returnszero:
-       return FnCallReturnsZero(fp,expargs);
-   case cfn_isnewerthan:
-       return FnCallIsNewerThan(fp,expargs);
-   case cfn_accessedbefore:
-       return FnCallIsAccessedBefore(fp,expargs);
-   case cfn_changedbefore:
-       return FnCallIsChangedBefore(fp,expargs);
-   case cfn_fileexists:
-       return FnCallStatInfo(fp,expargs,function);
-   case cfn_filesexist:
-       return FnCallFileSexist(fp,expargs);
-   case cfn_filesize:
-       return FnCallStatInfo(fp,expargs,function);
-   case cfn_isdir:
-       return FnCallStatInfo(fp,expargs,function);
-   case cfn_isexecutable:
-       return FnCallStatInfo(fp,expargs,function);
-   case cfn_islink:
-       return FnCallStatInfo(fp,expargs,function);
-   case cfn_isplain:
-       return FnCallStatInfo(fp,expargs,function);
-   case cfn_iprange:
-       return FnCallIPRange(fp,expargs);
-   case cfn_hostrange:
-       return FnCallHostRange(fp,expargs);
-   case cfn_hostinnetgroup:
-       return FnCallHostInNetgroup(fp,expargs);
-   case cfn_isvariable:
-       return FnCallIsVariable(fp,expargs);
-   case cfn_strcmp:
-       return FnCallStrCmp(fp,expargs);
-   case cfn_translatepath:
-       return FnCallTranslatePath(fp,expargs);
-   case cfn_splitstring:
-       return FnCallSplitString(fp,expargs);
-   case cfn_regcmp:
-       return FnCallRegCmp(fp,expargs);
-   case cfn_regextract:
-       return FnCallRegExtract(fp,expargs);
-   case cfn_regline:
-       return FnCallRegLine(fp,expargs);
-   case cfn_reglist:
-       return FnCallRegList(fp,expargs);
-   case cfn_regarray:
-       return FnCallRegArray(fp,expargs);
-   case cfn_regldap:
-       return FnCallRegLDAP(fp,expargs);
-   case cfn_ldaparray:
-       return FnCallLDAPArray(fp,expargs);
-   case cfn_ldaplist:
-       return FnCallLDAPList(fp,expargs);
-   case cfn_ldapvalue:
-       return FnCallLDAPValue(fp,expargs);
-   case cfn_getindices:
-       return FnCallGetIndices(fp,expargs);
-   case cfn_getvalues:
-       return FnCallGetValues(fp,expargs);
-   case cfn_countlinesmatching:
-       return FnCallCountLinesMatching(fp,expargs);
-   case cfn_getfields:
-       return FnCallGetFields(fp,expargs);
-   case cfn_isgreaterthan:
-       return FnCallGreaterThan(fp,expargs,'+');
-   case cfn_islessthan:
-       return FnCallGreaterThan(fp,expargs,'-');
-   case cfn_hostsseen:
-       return FnCallHostsSeen(fp,expargs);
-   case cfn_userexists:
-       return FnCallUserExists(fp,expargs);
-   case cfn_getusers:
-       return FnCallGetUsers(fp,expargs);
-   case cfn_groupexists:
-       return FnCallGroupExists(fp,expargs);
-   case cfn_readfile:
-       return FnCallReadFile(fp,expargs);
-   case cfn_readstringlist:
-       return FnCallReadStringList(fp,expargs,cf_str);
-   case cfn_readintlist:
-       return FnCallReadStringList(fp,expargs,cf_int);
-   case cfn_readreallist:
-       return FnCallReadStringList(fp,expargs,cf_real);
-   case cfn_readstringarray:
-       return FnCallReadStringArray(fp,expargs,cf_str,false);
-   case cfn_readstringarrayidx:
-       return FnCallReadStringArray(fp,expargs,cf_str,true);
-   case cfn_readintarray:
-       return FnCallReadStringArray(fp,expargs,cf_int,false);
-   case cfn_readrealarray:
-       return FnCallReadStringArray(fp,expargs,cf_real,false);
-   case cfn_parsestringarray:
-       return FnCallParseStringArray(fp,expargs,cf_str,false);
-   case cfn_parsestringarrayidx:
-       return FnCallParseStringArray(fp,expargs,cf_str,true);
-   case cfn_parseintarray:
-       return FnCallParseStringArray(fp,expargs,cf_int,false);
-   case cfn_parserealarray:
-       return FnCallParseStringArray(fp,expargs,cf_real,false);
-   case cfn_irange:
-       return FnCallIRange(fp,expargs);
-   case cfn_rrange:
-       return FnCallRRange(fp,expargs);
-   case cfn_remotescalar:
-       return FnCallRemoteScalar(fp,expargs);
-   case cfn_hubknowledge:
-       return FnCallHubKnowledge(fp,expargs);
-   case cfn_remoteclassesmatching:
-       return FnCallRemoteClasses(fp,expargs);
-   case cfn_date:
-       return FnCallOnDate(fp,expargs);
-   case cfn_ago:
-       return FnCallAgoDate(fp,expargs);
-   case cfn_laterthan:
-       return FnCallLaterThan(fp,expargs);
-   case cfn_sum:
-       return FnCallSum(fp,expargs);
-   case cfn_product:
-       return FnCallProduct(fp,expargs);
-   case cfn_accum:
-       return FnCallAccumulatedDate(fp,expargs);
-   case cfn_now:
-       return FnCallNow(fp,expargs);
-   case cfn_classmatch:
-       return FnCallClassMatch(fp,expargs);
-   case cfn_classify:
-       return FnCallClassify(fp,expargs);
-   case cfn_hash:
-       return FnCallHash(fp,expargs);
-   case cfn_hashmatch:
-       return FnCallHashMatch(fp,expargs);
-   case cfn_usemodule:
-       return FnCallUseModule(fp,expargs);
-   case cfn_selectservers:
-       return FnCallSelectServers(fp,expargs);
-   case cfn_diskfree:
-       return FnCallDiskFree(fp,expargs);
-   }
-
-FatalError("Unknown function is passed: %d", function);
+ArgTemplate(fp, function->args, expargs);
+return (*function->impl)(fp, expargs);
 }
+
+/*********************************************************/
+/* Function prototypes                                   */
+/*********************************************************/
+
+struct FnCallArg ACCESSEDBEFORE_ARGS[] =
+   {
+   {CF_PATHRANGE,cf_str,"Newer filename"},
+   {CF_PATHRANGE,cf_str,"Older filename"},
+   {NULL,cf_notype,NULL}
+   };
+
+struct FnCallArg ACCUM_ARGS[] =
+   {
+   {"0,1000",cf_int,"Years"},
+   {"0,1000",cf_int,"Months"},    
+   {"0,1000",cf_int,"Days"},      
+   {"0,1000",cf_int,"Hours"},     
+   {"0,1000",cf_int,"Minutes"},   
+   {"0,40000",cf_int,"Seconds"},   
+   {NULL,cf_notype,NULL}
+   };
+
+struct FnCallArg AGO_ARGS[] =
+    {
+    {"0,1000",cf_int,"Years"},
+    {"0,1000",cf_int,"Months"},    
+    {"0,1000",cf_int,"Days"},      
+    {"0,1000",cf_int,"Hours"},     
+    {"0,1000",cf_int,"Minutes"},   
+    {"0,40000",cf_int,"Seconds"},   
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg LATERTHAN_ARGS[] =
+    {
+    {"0,1000",cf_int,"Years"},
+    {"0,1000",cf_int,"Months"},    
+    {"0,1000",cf_int,"Days"},      
+    {"0,1000",cf_int,"Hours"},     
+    {"0,1000",cf_int,"Minutes"},   
+    {"0,40000",cf_int,"Seconds"},   
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg CANONIFY_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"String containing non-identifer characters"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg CHANGEDBEFORE_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Newer filename"},
+    {CF_PATHRANGE,cf_str,"Older filename"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg CLASSIFY_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Input string"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg CLASSMATCH_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg COUNTCLASSESMATCHING_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg COUNTLINESMATCHING_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {CF_PATHRANGE,cf_str,"Filename"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg DISKFREE_ARGS[] =
+   {
+   {CF_PATHRANGE,cf_str,"File system directory"},
+   {NULL,cf_notype,NULL}
+   };
+
+struct FnCallArg ESCAPE_ARGS[] =
+   {
+   {CF_ANYSTRING,cf_str,"IP address or string to escape"},
+   {NULL,cf_notype,NULL}
+   };
+
+struct FnCallArg EXECRESULT_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Fully qualified command path"},
+    {"useshell,noshell",cf_opts,"Shell encapsulation option"},
+    {NULL,cf_notype,NULL}
+    };
+
+// fileexists, isdir,isplain,islink
+
+struct FnCallArg FILESTAT_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"File object name"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg FILESEXIST_ARGS[] =
+    {
+    {CF_NAKEDLRANGE,cf_str,"Array identifier containing list"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GETFIELDS_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression to match line"},
+    {CF_PATHRANGE,cf_str,"Filename to read"},
+    {CF_ANYSTRING,cf_str,"Regular expression to split fields"},
+    {CF_ANYSTRING,cf_str,"Return array name"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GETINDICES_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Cfengine array identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GETUSERS_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Comma separated list of User names"},
+    {CF_ANYSTRING,cf_str,"Comma separated list of UserID numbers"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GETENV_ARGS[] =
+   {
+   {CF_IDRANGE,cf_str,"Name of environment variable"},
+   {CF_VALRANGE,cf_int,"Maximum number of characters to read "},
+   {NULL,cf_notype,NULL}
+   };
+
+struct FnCallArg GETGID_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Group name in text"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GETUID_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"User name in text"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GREP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {CF_IDRANGE,cf_str,"Cfengine array identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg GROUPEXISTS_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Group name or identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg HASH_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Input text"},
+    {"md5,sha1,sha256,sha512,sha384,crypt",cf_opts,"Hash or digest algorithm"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg HASHMATCH_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Filename to hash"},
+    {"md5,sha1,crypt,cf_sha224,cf_sha256,cf_sha384,cf_sha512",cf_opts,"Hash or digest algorithm"},
+    {CF_IDRANGE,cf_str,"ASCII representation of hash for comparison"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg HOST2IP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Host name in ascii"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg IP2HOST_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"IP address (IPv4 or IPv6)"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg HOSTINNETGROUP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Host name"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg HOSTRANGE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Hostname prefix"},
+    {CF_ANYSTRING,cf_str,"Enumerated range"},
+    {NULL,cf_notype,NULL}
+    };
+
+
+struct FnCallArg HOSTSSEEN_ARGS[] =
+    {
+    {CF_VALRANGE,cf_int,"Horizon since last seen in hours"},
+    {"lastseen,notseen",cf_opts,"Complements for selection policy"},
+    {"name,address",cf_opts,"Type of return value desired"},
+    {NULL,cf_notype,NULL}
+    };
+    
+struct FnCallArg IPRANGE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"IP address range syntax"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg IRANGE_ARGS[] =
+    {
+    {CF_INTRANGE,cf_int,"Integer"},
+    {CF_INTRANGE,cf_int,"Integer"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg ISGREATERTHAN_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Larger string or value"},
+    {CF_ANYSTRING,cf_str,"Smaller string or value"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg ISLESSTHAN_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Smaller string or value"},
+    {CF_ANYSTRING,cf_str,"Larger string or value"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg ISNEWERTHAN_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Newer file name"},
+    {CF_PATHRANGE,cf_str,"Older file name"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg ISVARIABLE_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Variable identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg JOIN_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Join glue-string"},
+    {CF_IDRANGE,cf_str,"Cfengine array identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg LASTNODE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Input string"},
+    {CF_ANYSTRING,cf_str,"Link separator, e.g. /,:"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg LDAPARRAY_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"URI"},
+    {CF_ANYSTRING,cf_str,"Distinguished name"},
+    {CF_ANYSTRING,cf_str,"Filter"},
+    {CF_ANYSTRING,cf_str,"Record name"},
+    {"subtree,onelevel,base",cf_opts,"Search scope policy"},
+    {"none,ssl,sasl",cf_opts,"Security level"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg LDAPLIST_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"URI"},
+    {CF_ANYSTRING,cf_str,"Distinguished name"},
+    {CF_ANYSTRING,cf_str,"Filter"},
+    {CF_ANYSTRING,cf_str,"Record name"},
+    {"subtree,onelevel,base",cf_opts,"Search scope policy"},
+    {"none,ssl,sasl",cf_opts,"Security level"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg LDAPVALUE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"URI"},
+    {CF_ANYSTRING,cf_str,"Distinguished name"},
+    {CF_ANYSTRING,cf_str,"Filter"},
+    {CF_ANYSTRING,cf_str,"Record name"},
+    {"subtree,onelevel,base",cf_opts,"Search scope policy"},
+    {"none,ssl,sasl",cf_opts,"Security level"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg NOW_ARGS[] =
+    {
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg SUM_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"A list of arbitrary real values"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PRODUCT_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"A list of arbitrary real values"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg DATE_ARGS[] =
+    {
+    {"1970,3000",cf_int,"Year"},
+    {"1,12",cf_int,"Month"},    
+    {"1,31",cf_int,"Day"},      
+    {"0,23",cf_int,"Hour"},     
+    {"0,59",cf_int,"Minute"},   
+    {"0,59",cf_int,"Second"},   
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PEERS_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"File name of host list"},
+    {CF_ANYSTRING,cf_str,"Comment regex pattern"},
+    {CF_VALRANGE,cf_int,"Peer group size"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PEERLEADER_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"File name of host list"},
+    {CF_ANYSTRING,cf_str,"Comment regex pattern"},
+    {CF_VALRANGE,cf_int,"Peer group size"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PEERLEADERS_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"File name of host list"},
+    {CF_ANYSTRING,cf_str,"Comment regex pattern"},
+    {CF_VALRANGE,cf_int,"Peer group size"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg RANDOMINT_ARGS[] =
+    {
+    {CF_INTRANGE,cf_int,"Lower inclusive bound"},
+    {CF_INTRANGE,cf_int,"Upper inclusive bound"},
+    {NULL,cf_notype,NULL}
+    };
+ 
+struct FnCallArg READFILE_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"File name"},
+    {CF_VALRANGE,cf_int,"Maximum number of bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+
+struct FnCallArg READSTRINGARRAY_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PARSESTRINGARRAY_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"A string to parse for input data"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"A string to parse for input data"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg READSTRINGLIST_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ANYSTRING,cf_str,"Regex matching comments"},
+    {CF_ANYSTRING,cf_str,"Regex to split data"},
+    {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
+    {CF_VALRANGE,cf_int,"Maximum bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg READTCP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Host name or IP address of server socket"},
+    {CF_VALRANGE,cf_int,"Port number"},
+    {CF_ANYSTRING,cf_str,"Protocol query string"},
+    {CF_VALRANGE,cf_int,"Maximum number of bytes to read"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REGARRAY_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Cfengine array identifier"},
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REGCMP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {CF_ANYSTRING,cf_str,"Match string"},
+    {NULL,cf_notype,NULL}        
+    };
+
+struct FnCallArg REGEXTRACT_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {CF_ANYSTRING,cf_str,"Match string"},
+    {CF_IDRANGE,cf_str,"Identifier for back-references"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REGISTRYVALUE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Windows registry key"},
+    {CF_ANYSTRING,cf_str,"Windows registry value-id"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REGLINE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {CF_ANYSTRING,cf_str,"Filename to search"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REGLIST_ARGS[] =
+    {
+    {CF_NAKEDLRANGE,cf_str,"Cfengine list identifier"},
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REGLDAP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"URI"},
+    {CF_ANYSTRING,cf_str,"Distinguished name"},
+    {CF_ANYSTRING,cf_str,"Filter"},
+    {CF_ANYSTRING,cf_str,"Record name"},
+    {"subtree,onelevel,base",cf_opts,"Search scope policy"},
+    {CF_ANYSTRING,cf_str,"Regex to match results"},
+    {"none,ssl,sasl",cf_opts,"Security level"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REMOTESCALAR_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Variable identifier"},
+    {CF_ANYSTRING,cf_str,"Hostname or IP address of server"},
+    {CF_BOOL,cf_opts,"Use enryption"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg HUB_KNOWLEDGE_ARGS[] =
+    {
+    {CF_IDRANGE,cf_str,"Variable identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg REMOTECLASSESMATCHING_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Regular expression"},
+    {CF_ANYSTRING,cf_str,"Server name or address"},
+    {CF_BOOL,cf_opts,"Use encryption"},
+    {CF_IDRANGE,cf_str,"Return class prefix"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg RETURNSZERO_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Fully qualified command path"},
+    {"useshell,noshell",cf_opts,"Shell encapsulation option"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg RRANGE_ARGS[] =
+    {
+    {CF_REALRANGE,cf_real,"Real number"},
+    {CF_REALRANGE,cf_real,"Real number"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg SELECTSERVERS_ARGS[] =
+    {
+    {CF_NAKEDLRANGE,cf_str,"The identifier of a cfengine list of hosts or addresses to contact"},
+    {CF_VALRANGE,cf_int,"The port number"},
+    {CF_ANYSTRING,cf_str,"A query string"},
+    {CF_ANYSTRING,cf_str,"A regular expression to match success"},     
+    {CF_VALRANGE,cf_int,"Maximum number of bytes to read from server"},
+    {CF_IDRANGE,cf_str,"Name for array of results"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg SPLAYCLASS_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Input string for classification"},
+    {"daily,hourly",cf_opts,"Splay time policy"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg SPLITSTRING_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"A data string"},
+    {CF_ANYSTRING,cf_str,"Regex to split on"},     
+    {CF_VALRANGE,cf_int,"Maximum number of pieces"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg STRCMP_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"String"},
+    {CF_ANYSTRING,cf_str,"String"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg TRANSLATEPATH_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Unix style path"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg USEMODULE_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Name of module command"},
+    {CF_ANYSTRING,cf_str,"Argument string for the module"},
+    {NULL,cf_notype,NULL}
+    };
+
+struct FnCallArg USEREXISTS_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"User name or identifier"},
+    {NULL,cf_notype,NULL}
+    };
+
+/*********************************************************/
+/* FnCalls are rvalues in certain promise constraints    */
+/*********************************************************/
+
+/* see cf3.defs.h enum fncalltype */
+
+struct FnCallType CF_FNCALL_TYPES[] = 
+   {
+   {"accessedbefore",cf_class,2,ACCESSEDBEFORE_ARGS,&FnCallIsAccessedBefore,"True if arg1 was accessed before arg2 (atime)"},
+   {"accumulated",cf_int,6,ACCUM_ARGS,&FnCallAccumulatedDate,"Convert an accumulated amount of time into a system representation"},
+   {"ago",cf_int,6,AGO_ARGS,&FnCallAgoDate,"Convert a time relative to now to an integer system representation"},
+   {"canonify",cf_str,1,CANONIFY_ARGS,&FnCallCanonify,"Convert an abitrary string into a legal class name"},
+   {"changedbefore",cf_class,2,CHANGEDBEFORE_ARGS,&FnCallIsChangedBefore,"True if arg1 was changed before arg2 (ctime)"},
+   {"classify",cf_class,1,CLASSIFY_ARGS,&FnCallClassify,"True if the canonicalization of the argument is a currently defined class"},
+   {"classmatch",cf_class,1,CLASSMATCH_ARGS,&FnCallClassMatch,"True if the regular expression matches any currently defined class"},
+   {"countclassesmatching",cf_int,1,COUNTCLASSESMATCHING_ARGS,&FnCallCountClassesMatching,"Count the number of defined classes matching regex arg1"},
+   {"countlinesmatching",cf_int,2,COUNTLINESMATCHING_ARGS,&FnCallCountLinesMatching,"Count the number of lines matching regex arg1 in file arg2"},
+   {"diskfree",cf_int,1,DISKFREE_ARGS,&FnCallDiskFree,"Return the free space (in KB) available on the directory's current partition (0 if not found)"},
+   {"escape",cf_str,1,ESCAPE_ARGS,&FnCallEscape,"Escape regular expression characters in a string"},
+   {"execresult",cf_str,2,EXECRESULT_ARGS,&FnCallExecResult,"Execute named command and assign output to variable"},
+   {"fileexists",cf_class,1,FILESTAT_ARGS,&FnCallFileStat,"True if the named file can be accessed"},
+   {"filesexist",cf_class,1,FILESEXIST_ARGS,&FnCallFileSexist,"True if the named list of files can ALL be accessed"},
+   {"filesize",cf_int,1,FILESTAT_ARGS,&FnCallFileStat,"Returns the size in bytes of the file"},
+   {"getenv",cf_str,2,GETENV_ARGS,&FnCallGetEnv,"Return the environment variable named arg1, truncated at arg2 characters"},
+   {"getfields",cf_int,4,GETFIELDS_ARGS,&FnCallGetFields,"Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4"},
+   {"getgid",cf_int,1,GETGID_ARGS,&FnCallGetGid,"Return the integer group id of the named group on this host"},
+   {"getindices",cf_slist,1,GETINDICES_ARGS,&FnCallGetIndices,"Get a list of keys to the array whose id is the argument and assign to variable"},
+   {"getuid",cf_int,1,GETUID_ARGS,&FnCallGetUid,"Return the integer user id of the named user on this host"},
+   {"getusers",cf_slist,2,GETUSERS_ARGS,&FnCallGetUsers,"Get a list of all system users defined, minus those names defined in args 1 and uids in args"},
+   {"getvalues",cf_slist,1,GETINDICES_ARGS,&FnCallGetValues,"Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable"},
+   {"grep",cf_slist,2,GREP_ARGS,&FnCallGrep,"Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2"},
+   {"groupexists",cf_class,1,GROUPEXISTS_ARGS,&FnCallGroupExists,"True if group or numerical id exists on this host"},
+   {"hash",cf_str,2,HASH_ARGS,&FnCallHash,"Return the hash of arg1, type arg2 and assign to a variable"},
+   {"hashmatch",cf_class,3,HASHMATCH_ARGS,&FnCallHashMatch,"Compute the hash of arg1, of type arg2 and test if it matches the value in arg 3"},
+   {"host2ip",cf_str,1,HOST2IP_ARGS,&FnCallHost2IP,"Returns the primary name-service IP address for the named host"},
+   {"ip2host",cf_str,1,IP2HOST_ARGS,&FnCallIP2Host,"Returns the primary name-service host name for the IP address"},
+   {"hostinnetgroup",cf_class,1,HOSTINNETGROUP_ARGS,&FnCallHostInNetgroup,"True if the current host is in the named netgroup"},
+   {"hostrange",cf_class,2,HOSTRANGE_ARGS,&FnCallHostRange,"True if the current host lies in the range of enumerated hostnames specified"},
+   {"hostsseen",cf_slist,3,HOSTSSEEN_ARGS,&FnCallHostsSeen,"Extract the list of hosts last seen/not seen within the last arg1 hours"},
+   {"hubknowledge",cf_str,1,HUB_KNOWLEDGE_ARGS,&FnCallHubKnowledge,"Read global knowledge from the hub host by id (commercial extension)"},
+   {"iprange",cf_class,1,IPRANGE_ARGS,&FnCallIPRange,"True if the current host lies in the range of IP addresses specified"},
+   {"irange",cf_irange,2,IRANGE_ARGS,&FnCallIRange,"Define a range of integer values for cfengine internal use"},
+   {"isdir",cf_class,1,FILESTAT_ARGS,&FnCallFileStat,"True if the named object is a directory"},
+   {"isexecutable",cf_class,1,FILESTAT_ARGS,&FnCallFileStat,"True if the named object has execution rights for the current user"},
+   {"isgreaterthan",cf_class,2,ISGREATERTHAN_ARGS,&FnCallIsLessGreaterThan,"True if arg1 is numerically greater than arg2, else compare strings like strcmp"},
+   {"islessthan",cf_class,2,ISLESSTHAN_ARGS,&FnCallIsLessGreaterThan,"True if arg1 is numerically less than arg2, else compare strings like NOT strcmp"},
+   {"islink",cf_class,1,FILESTAT_ARGS,&FnCallFileStat,"True if the named object is a symbolic link"},
+   {"isnewerthan",cf_class,2,ISNEWERTHAN_ARGS,&FnCallIsNewerThan,"True if arg1 is newer (modified later) than arg2 (mtime)"},
+   {"isplain",cf_class,1,FILESTAT_ARGS,&FnCallFileStat,"True if the named object is a plain/regular file"},
+   {"isvariable",cf_class,1,ISVARIABLE_ARGS,&FnCallIsVariable,"True if the named variable is defined"},
+   {"join",cf_str,2,JOIN_ARGS,&FnCallJoin,"Join the items of arg2 into a string, using the conjunction in arg1"},
+   {"lastnode",cf_str,2,LASTNODE_ARGS,&FnCallLastNode,"Extract the last of a separated string, e.g. filename from a path"},
+   {"laterthan",cf_class,6,LATERTHAN_ARGS,&FnCallLaterThan,"True if the current time is later than the given date"},
+   {"ldaparray",cf_class,6,LDAPARRAY_ARGS,&FnCallLDAPArray,"Extract all values from an ldap record"},
+   {"ldaplist",cf_slist,6,LDAPLIST_ARGS,&FnCallLDAPList,"Extract all named values from multiple ldap records"},
+   {"ldapvalue",cf_str,6,LDAPVALUE_ARGS,&FnCallLDAPValue,"Extract the first matching named value from ldap"},
+   {"now",cf_int,0,NOW_ARGS,&FnCallNow,"Convert the current time into system representation"},
+   {"on",cf_int,6,DATE_ARGS,&FnCallOn,"Convert an exact date/time to an integer system representation"},
+   {"parseintarray",cf_int,6,PARSESTRINGARRAY_ARGS,&FnCallParseIntArray,"Read an array of integers from a file and assign the dimension to a variable"},
+   {"parserealarray",cf_int,6,PARSESTRINGARRAY_ARGS,&FnCallParseRealArray,"Read an array of real numbers from a file and assign the dimension to a variable"},
+   {"parsestringarray",cf_int,6,PARSESTRINGARRAY_ARGS,&FnCallParseStringArray,"Read an array of strings from a file and assign the dimension to a variable"},
+   {"parsestringarrayidx",cf_int,6,PARSESTRINGARRAYIDX_ARGS,&FnCallParseStringArrayIndex,"Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
+   {"peers",cf_slist,3,PEERS_ARGS,&FnCallPeers,"Get a list of peers (not including ourself) from the partition to which we belong"},
+   {"peerleader",cf_str,3,PEERLEADER_ARGS,&FnCallPeerLeader,"Get the assigned peer-leader of the partition to which we belong"},
+   {"peerleaders",cf_slist,3,PEERLEADERS_ARGS,&FnCallPeerLeaders,"Get a list of peer leaders from the named partitioning"},
+   {"product",cf_real,1,PRODUCT_ARGS,&FnCallProduct,"Return the product of a list of reals"},
+   {"randomint",cf_int,2,RANDOMINT_ARGS,&FnCallRandomInt,"Generate a random integer between the given limits"},
+   {"readfile",cf_str,2,READFILE_ARGS,&FnCallReadFile,"Read max number of bytes from named file and assign to variable"},
+   {"readintarray",cf_int,6,READSTRINGARRAY_ARGS,&FnCallReadIntArray,"Read an array of integers from a file and assign the dimension to a variable"},
+   {"readintlist",cf_ilist,5,READSTRINGLIST_ARGS,&FnCallReadIntList,"Read and assign a list variable from a file of separated ints"},
+   {"readrealarray",cf_int,6,READSTRINGARRAY_ARGS,&FnCallReadRealArray,"Read an array of real numbers from a file and assign the dimension to a variable"},
+   {"readreallist",cf_rlist,5,READSTRINGLIST_ARGS,&FnCallReadRealList,"Read and assign a list variable from a file of separated real numbers"},
+   {"readstringarray",cf_int,6,READSTRINGARRAY_ARGS,&FnCallReadStringArray,"Read an array of strings from a file and assign the dimension to a variable"},
+   {"readstringarrayidx",cf_int,6,READSTRINGARRAYIDX_ARGS,&FnCallReadStringArrayIndex,"Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
+   {"readstringlist",cf_slist,5,READSTRINGLIST_ARGS,&FnCallReadStringList,"Read and assign a list variable from a file of separated strings"},
+   {"readtcp",cf_str,4,READTCP_ARGS,&FnCallReadTcp,"Connect to tcp port, send string and assign result to variable"},
+   {"regarray",cf_class,2,REGARRAY_ARGS,&FnCallRegArray,"True if arg1 matches any item in the associative array with id=arg2"},
+   {"regcmp",cf_class,2,REGCMP_ARGS,&FnCallRegCmp,"True if arg1 is a regular expression matching that matches string arg2"},
+   {"regextract",cf_class,3,REGEXTRACT_ARGS,&FnCallRegExtract,"True if the regular expression in arg 1 matches the string in arg2 and sets a non-empty array of backreferences named arg3"},
+   {"registryvalue",cf_str,2,REGISTRYVALUE_ARGS,&FnCallRegistryValue, "Returns a value for an MS-Win registry key,value pair"},
+   {"regline",cf_class,2,REGLINE_ARGS,&FnCallRegLine,"True if the regular expression in arg1 matches a line in file arg2"},
+   {"reglist",cf_class,2,REGLIST_ARGS,&FnCallRegList,"True if the regular expression in arg2 matches any item in the list whose id is arg1"},
+   {"regldap",cf_class,7,REGLDAP_ARGS,&FnCallRegLDAP,"True if the regular expression in arg6 matches a value item in an ldap search"},
+   {"remotescalar",cf_str,3,REMOTESCALAR_ARGS,&FnCallRemoteScalar,"Read a scalar value from a remote cfengine server"},
+   {"remoteclassesmatching",cf_class,4,REMOTECLASSESMATCHING_ARGS,&FnCallRemoteClassesMatching,"Read persistent classes matching a regular expression from a remote cfengine server and add them into local context with prefix"},
+   {"returnszero",cf_class,2,RETURNSZERO_ARGS,&FnCallReturnsZero,"True if named shell command has exit status zero"},
+   {"rrange",cf_rrange,2,RRANGE_ARGS,&FnCallRRange,"Define a range of real numbers for cfengine internal use"},
+   {"selectservers",cf_int,6,SELECTSERVERS_ARGS,&FnCallSelectServers,"Select tcp servers which respond correctly to a query and return their number, set array of names"},
+   {"splayclass",cf_class,2,SPLAYCLASS_ARGS,&FnCallSplayClass,"True if the first argument's time-slot has arrived, according to a policy in arg2"},
+   {"splitstring",cf_slist,3,SPLITSTRING_ARGS,&FnCallSplitString,"Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
+   {"strcmp",cf_class,2,STRCMP_ARGS,&FnCallStrCmp,"True if the two strings match exactly"},
+   {"sum",cf_real,1,SUM_ARGS,&FnCallSum,"Return the sum of a list of reals"},
+   {"translatepath",cf_str,1,TRANSLATEPATH_ARGS,&FnCallTranslatePath,"Translate path separators from Unix style to the host's native"},
+   {"usemodule",cf_class,2,USEMODULE_ARGS,&FnCallUseModule,"Execute cfengine module script and set class if successful"},
+   {"userexists",cf_class,1,USEREXISTS_ARGS,&FnCallUserExists,"True if user name or numerical id exists on this host"},
+   {NULL,cf_notype,0,NULL,NULL}
+   };

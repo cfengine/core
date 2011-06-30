@@ -5,7 +5,7 @@ This file contains a copy of:
 
 ----------------------------------------------------------------------------
 
-Cfengine is provided under the terms of the GNU General Public License (below), with
+CFEngine is provided under the terms of the GNU General Public License (below), with
 explicit permission to link with the OpenSSL library, BerkeleyDB library and and
 PCRE library.
 
@@ -14,7 +14,7 @@ On some systems, code under the Frontier Artistic License
 GPL.
 
 Users of the software may, at their option, choose the COSL license
-below as part of the enterprise Cfengine product.
+below as part of the enterprise CFEngine product.
 
 ----------------------------------------------------------------------------
 
@@ -700,7 +700,7 @@ Public License instead of this License.  But first, please read
 
                     COMMERCIAL OPEN SOURCE LICENSE
 
-This Cfengine commercial open source license ("COSL") is entered into
+This CFEngine commercial open source license ("COSL") is entered into
 between Cfengine AS, a Norwegian company, as licensor and
 
 a) the Customer entity stipulated on a complete agreement front page (“Front page”),
@@ -742,8 +742,8 @@ not holding a COSL to the Software.
 Licensee may not transfer any of its rights under this COSL without
 the prior and express written consent of Cfengine.
 
-Any Cfengine software component used by both the Cfengine enterprise
-version and Cfengine community edition is licensed under the terms of
+Any CFEngine software component used by both the CFEngine enterprise
+version and CFEngine community edition is licensed under the terms of
 this COSL if the Licensee does not state in writing to Cfengine that
 the Licensee instead wish to license the component in question under
 the GNU General Public License (GPL) v.3.0 or other applicable
@@ -783,10 +783,10 @@ edition of the Software.
 
 "Software" means: 
 
-a) the Cfengine enterprise edition Nova, Constellation and Galaxy data
+a) the CFEngine enterprise edition Nova, Constellation and Galaxy data
 centre administration software downloaded by the Licensee or otherwise
 given access to including bundled documentation and other material, as
-described at www.cfengine.com/; and
+described at http://www.cfengine.com/; and
 
 b) new versions and updates to such software provided by Cfengine, and
 

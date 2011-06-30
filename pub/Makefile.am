@@ -9,15 +9,12 @@ noinst_LTLIBRARIES = libcfpub.la
 libcfpub_la_SOURCES =							\
 	getopt.c							\
 	getopt1.c							\
-	regex.c								\
 	snprintf.c
 
 libcfpub_la_LIBADD = $(LTLIBOBJS)
 
 EXTRA_DIST =								\
 	getopt.h							\
-	global.h							\
-	gnuregex.h							\
 	snprintf.h							
 #
 # Some basic clean ups

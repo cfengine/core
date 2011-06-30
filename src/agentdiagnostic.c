@@ -2540,10 +2540,6 @@ static void CheckInstalledLibraries(void)
    printf("\t->LIBACL not found!!\n");
    #endif
    
-   #ifndef HAVE_LIBPCRE
-   printf("\t->LIBPCRE not found!!\n");
-   #endif
-   
    #ifndef HAVE_LIBPTHREAD
    printf("\t->LIBPTHREAD not found!!\n");
    #endif

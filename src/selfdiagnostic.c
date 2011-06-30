@@ -335,14 +335,6 @@ static void TestRegularExpressions()
 
 printf("%d. Testing regular expression engine\n",++NR);
 
-#ifdef HAVE_LIBPCRE
-printf(" -> Regex engine is the Perl Compatible Regular Expression library\n");
-#else
-printf(" -> Regex engine is the POSIX Regular Expression library\n");
-printf(" -> Some Cfengine are features will not work in this current state.\n");
-printf(" !! This diagnostic might hang if the library is broken\n");
-#endif
-
 if (FullTextMatch("[a-z]*","1234abcd6789"))
    {
    CfOut(cf_error,"","Failed regular expression match 1\n");

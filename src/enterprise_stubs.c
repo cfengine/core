@@ -151,6 +151,7 @@ void CheckLicenses()
 #ifdef HAVE_NOVA
 Nova_CheckLicensePromise();
 #else
+char name[CF_BUFSIZE];
 snprintf(name,sizeof(name),"%s/state/am_policy_hub",CFWORKDIR);
 MapName(name);
 

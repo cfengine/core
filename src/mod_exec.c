@@ -68,8 +68,8 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
   {"exec_owner",cf_str,"","The user name or id under which to run the process"},
   {"exec_group",cf_str,"","The group name or id under which to run the process"},
   {"exec_timeout",cf_int,"1,3600","Timeout in seconds for command completion"},
-  {"chdir",cf_str,CF_PATHRANGE,"Directory for setting current/base directory for the process"},
-  {"chroot",cf_str,CF_PATHRANGE,"Directory of root sandbox for process"},
+  {"chdir",cf_str,CF_ABSPATHRANGE,"Directory for setting current/base directory for the process"},
+  {"chroot",cf_str,CF_ABSPATHRANGE,"Directory of root sandbox for process"},
   {"preview",cf_opts,CF_BOOL,"true/false preview command when running in dry-run mode (with -n)"},
   {"no_output",cf_opts,CF_BOOL,"true/false discard all output from the command"},
   {NULL,cf_notype,NULL,NULL}

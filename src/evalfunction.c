@@ -4975,8 +4975,8 @@ return (*function->impl)(fp, expargs);
 
 struct FnCallArg ACCESSEDBEFORE_ARGS[] =
    {
-   {CF_PATHRANGE,cf_str,"Newer filename"},
-   {CF_PATHRANGE,cf_str,"Older filename"},
+   {CF_ABSPATHRANGE,cf_str,"Newer filename"},
+   {CF_ABSPATHRANGE,cf_str,"Older filename"},
    {NULL,cf_notype,NULL}
    };
 
@@ -5021,8 +5021,8 @@ struct FnCallArg CANONIFY_ARGS[] =
 
 struct FnCallArg CHANGEDBEFORE_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"Newer filename"},
-    {CF_PATHRANGE,cf_str,"Older filename"},
+    {CF_ABSPATHRANGE,cf_str,"Newer filename"},
+    {CF_ABSPATHRANGE,cf_str,"Older filename"},
     {NULL,cf_notype,NULL}
     };
 
@@ -5047,13 +5047,13 @@ struct FnCallArg COUNTCLASSESMATCHING_ARGS[] =
 struct FnCallArg COUNTLINESMATCHING_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"Regular expression"},
-    {CF_PATHRANGE,cf_str,"Filename"},
+    {CF_ABSPATHRANGE,cf_str,"Filename"},
     {NULL,cf_notype,NULL}
     };
 
 struct FnCallArg DISKFREE_ARGS[] =
    {
-   {CF_PATHRANGE,cf_str,"File system directory"},
+   {CF_ABSPATHRANGE,cf_str,"File system directory"},
    {NULL,cf_notype,NULL}
    };
 
@@ -5065,7 +5065,7 @@ struct FnCallArg ESCAPE_ARGS[] =
 
 struct FnCallArg EXECRESULT_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"Fully qualified command path"},
+    {CF_ABSPATHRANGE,cf_str,"Fully qualified command path"},
     {"useshell,noshell",cf_opts,"Shell encapsulation option"},
     {NULL,cf_notype,NULL}
     };
@@ -5074,7 +5074,7 @@ struct FnCallArg EXECRESULT_ARGS[] =
 
 struct FnCallArg FILESTAT_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"File object name"},
+    {CF_ABSPATHRANGE,cf_str,"File object name"},
     {NULL,cf_notype,NULL}
     };
 
@@ -5087,7 +5087,7 @@ struct FnCallArg FILESEXIST_ARGS[] =
 struct FnCallArg GETFIELDS_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"Regular expression to match line"},
-    {CF_PATHRANGE,cf_str,"Filename to read"},
+    {CF_ABSPATHRANGE,cf_str,"Filename to read"},
     {CF_ANYSTRING,cf_str,"Regular expression to split fields"},
     {CF_ANYSTRING,cf_str,"Return array name"},
     {NULL,cf_notype,NULL}
@@ -5147,7 +5147,7 @@ struct FnCallArg HASH_ARGS[] =
 
 struct FnCallArg HASHMATCH_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"Filename to hash"},
+    {CF_ABSPATHRANGE,cf_str,"Filename to hash"},
     {"md5,sha1,crypt,cf_sha224,cf_sha256,cf_sha384,cf_sha512",cf_opts,"Hash or digest algorithm"},
     {CF_IDRANGE,cf_str,"ASCII representation of hash for comparison"},
     {NULL,cf_notype,NULL}
@@ -5216,8 +5216,8 @@ struct FnCallArg ISLESSTHAN_ARGS[] =
 
 struct FnCallArg ISNEWERTHAN_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"Newer file name"},
-    {CF_PATHRANGE,cf_str,"Older file name"},
+    {CF_ABSPATHRANGE,cf_str,"Newer file name"},
+    {CF_ABSPATHRANGE,cf_str,"Older file name"},
     {NULL,cf_notype,NULL}
     };
 
@@ -5304,7 +5304,7 @@ struct FnCallArg DATE_ARGS[] =
 
 struct FnCallArg PEERS_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"File name of host list"},
+    {CF_ABSPATHRANGE,cf_str,"File name of host list"},
     {CF_ANYSTRING,cf_str,"Comment regex pattern"},
     {CF_VALRANGE,cf_int,"Peer group size"},
     {NULL,cf_notype,NULL}
@@ -5312,7 +5312,7 @@ struct FnCallArg PEERS_ARGS[] =
 
 struct FnCallArg PEERLEADER_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"File name of host list"},
+    {CF_ABSPATHRANGE,cf_str,"File name of host list"},
     {CF_ANYSTRING,cf_str,"Comment regex pattern"},
     {CF_VALRANGE,cf_int,"Peer group size"},
     {NULL,cf_notype,NULL}
@@ -5320,7 +5320,7 @@ struct FnCallArg PEERLEADER_ARGS[] =
 
 struct FnCallArg PEERLEADERS_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"File name of host list"},
+    {CF_ABSPATHRANGE,cf_str,"File name of host list"},
     {CF_ANYSTRING,cf_str,"Comment regex pattern"},
     {CF_VALRANGE,cf_int,"Peer group size"},
     {NULL,cf_notype,NULL}
@@ -5335,7 +5335,7 @@ struct FnCallArg RANDOMINT_ARGS[] =
  
 struct FnCallArg READFILE_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"File name"},
+    {CF_ABSPATHRANGE,cf_str,"File name"},
     {CF_VALRANGE,cf_int,"Maximum number of bytes to read"},
     {NULL,cf_notype,NULL}
     };
@@ -5344,7 +5344,7 @@ struct FnCallArg READFILE_ARGS[] =
 struct FnCallArg READSTRINGARRAY_ARGS[] =
     {
     {CF_IDRANGE,cf_str,"Array identifer to populate"},
-    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ABSPATHRANGE,cf_str,"File name to read"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
     {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
@@ -5355,7 +5355,7 @@ struct FnCallArg READSTRINGARRAY_ARGS[] =
 struct FnCallArg PARSESTRINGARRAY_ARGS[] =
     {
     {CF_IDRANGE,cf_str,"Array identifer to populate"},
-    {CF_PATHRANGE,cf_str,"A string to parse for input data"},
+    {CF_ABSPATHRANGE,cf_str,"A string to parse for input data"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
     {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
@@ -5366,7 +5366,7 @@ struct FnCallArg PARSESTRINGARRAY_ARGS[] =
 struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
     {
     {CF_IDRANGE,cf_str,"Array identifer to populate"},
-    {CF_PATHRANGE,cf_str,"A string to parse for input data"},
+    {CF_ABSPATHRANGE,cf_str,"A string to parse for input data"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
     {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
@@ -5377,7 +5377,7 @@ struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
 struct FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
     {
     {CF_IDRANGE,cf_str,"Array identifer to populate"},
-    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ABSPATHRANGE,cf_str,"File name to read"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
     {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
@@ -5387,7 +5387,7 @@ struct FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
 
 struct FnCallArg READSTRINGLIST_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"File name to read"},
+    {CF_ABSPATHRANGE,cf_str,"File name to read"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
     {CF_VALRANGE,cf_int,"Maximum number of entries to read"},
@@ -5484,7 +5484,7 @@ struct FnCallArg REMOTECLASSESMATCHING_ARGS[] =
 
 struct FnCallArg RETURNSZERO_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"Fully qualified command path"},
+    {CF_ABSPATHRANGE,cf_str,"Fully qualified command path"},
     {"useshell,noshell",cf_opts,"Shell encapsulation option"},
     {NULL,cf_notype,NULL}
     };
@@ -5531,7 +5531,7 @@ struct FnCallArg STRCMP_ARGS[] =
 
 struct FnCallArg TRANSLATEPATH_ARGS[] =
     {
-    {CF_PATHRANGE,cf_str,"Unix style path"},
+    {CF_ABSPATHRANGE,cf_str,"Unix style path"},
     {NULL,cf_notype,NULL}
     };
 

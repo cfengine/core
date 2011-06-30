@@ -1,0 +1,76 @@
+#######################################################
+#
+# Test that we can supply relative filename to link_from
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine.dir";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "dummy" string => "dummy";
+}
+
+body link_from ln_s(x) {
+  link_type => "relative";
+  source => "$(x)";
+  when_no_source => "nop";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(g.testdir)/destdir"
+    link_from => sync_cp("./srcdirrr");
+}
+
+body link_from sync_cp(from)
+{
+source      => "$(from)";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" expression => "any";
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

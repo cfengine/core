@@ -268,7 +268,7 @@ struct BodySyntax CF_ACCESS_BODIES[] =
 struct BodySyntax CF_FILEFILTER_BODY[] =
    {
    {"leaf_name",cf_slist,"","List of regexes that match an acceptable name"},
-   {"path_name",cf_slist,CF_PATHRANGE,"List of pathnames to match acceptable target"},
+   {"path_name",cf_slist,CF_ABSPATHRANGE,"List of pathnames to match acceptable target"},
    {"search_mode",cf_slist,CF_MODERANGE,"A list of mode masks for acceptable file permissions"},
    {"search_size",cf_irange,"0,inf","Integer range of file sizes"},
    {"search_owners",cf_slist,"","List of acceptable user names or ids for the file, or regexes to match"},
@@ -278,7 +278,7 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    {"mtime",cf_irange,CF_TIMERANGE,"Range of modification times (mtime) for acceptable files"},
    {"atime",cf_irange,CF_TIMERANGE,"Range of access times (atime) for acceptable files"},
    {"exec_regex",cf_str,CF_ANYSTRING,"Matches file if this regular expression matches any full line returned by the command"},
-   {"exec_program",cf_str,CF_PATHRANGE,"Execute this command on each file and match if the exit status is zero"},
+   {"exec_program",cf_str,CF_ABSPATHRANGE,"Execute this command on each file and match if the exit status is zero"},
    {"file_types",cf_olist,"plain,reg,symlink,dir,socket,fifo,door,char,block","List of acceptable file types from menu choices"},
    {"issymlinkto",cf_slist,"","List of regular expressions to match file objects"},
    {"file_result",cf_str,"[!*(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program|bsdflags)[|&.]*]*","Logical expression combining classes defined by file search criteria"},
@@ -297,7 +297,7 @@ struct BodySyntax CF_LINKTO_BODY[] =
    {"copy_patterns",cf_slist,"","A set of patterns that should be copied ansd synchronized instead of linked"},
    {"link_children",cf_opts,CF_BOOL,"true/false whether to link all directory's children to source originals"},
    {"link_type",cf_opts,CF_LINKRANGE,"The type of link used to alias the file"},
-   {"source",cf_str,"","The source file to which the link should point"},
+   {"source",cf_str,CF_PATHRANGE,"The source file to which the link should point"},
    {"when_linking_children",cf_opts,"override_file,if_no_such_file","Policy for overriding existing files when linking directories of children"},
    {"when_no_source",cf_opts,"force,delete,nop","Behaviour when the source file to link to does not exist"},
    {NULL,cf_notype,NULL,NULL}
@@ -307,6 +307,10 @@ struct BodySyntax CF_LINKTO_BODY[] =
 
 struct BodySyntax CF_COPYFROM_BODY[] =
    {
+   /* We use CF_PATHRANGE due to collision with LINKTO_BODY and a bug lurking in
+    * a verification stage -- this attribute gets picked instead of another
+    * 'source'
+    */
    {"source",cf_str,CF_PATHRANGE,"Reference source file from which to copy"},
    {"servers",cf_slist,"[A-Za-z0-9_.:-]+","List of servers in order of preference from which to copy"},
    {"collapse_destination_dir",cf_opts,CF_BOOL,"true/false Place files in subdirectories into the root destination directory during copy"},
@@ -353,9 +357,9 @@ struct BodySyntax CF_FILES_BODIES[] =
    {"pathtype",cf_opts,"literal,regex,guess","Menu option for interpreting promiser file object"},
    {"perms",cf_body,CF_ACCESS_BODIES,"Criteria for setting permissions on a file"},
    {"rename",cf_body,CF_RENAME_BODY,"Criteria for renaming files"},
-   {"repository",cf_str,CF_PATHRANGE,"Name of a repository for versioning"},
+   {"repository",cf_str,CF_ABSPATHRANGE,"Name of a repository for versioning"},
    {"touch",cf_opts,CF_BOOL,"true/false whether to touch time stamps on file"},
-   {"transformer",cf_str,CF_PATHRANGE,"Command (with full path) used to transform current file (no shell wrapper used)"},
+   {"transformer",cf_str,CF_ABSPATHRANGE,"Command (with full path) used to transform current file (no shell wrapper used)"},
    {NULL,cf_notype,NULL,NULL}
    };
 

@@ -36,7 +36,7 @@
 
 struct BodySyntax CF_PRINTFILE_BODY[] =
    {
-   {"file_to_print",cf_str,CF_PATHRANGE,"Path name to the file that is to be sent to standard output"},
+   {"file_to_print",cf_str,CF_ABSPATHRANGE,"Path name to the file that is to be sent to standard output"},
    {"number_of_lines",cf_int,CF_VALRANGE,"Integer maximum number of lines to print from selected file"},
    {NULL,cf_notype,NULL,NULL}
    };
@@ -51,7 +51,7 @@ struct BodySyntax CF_REPORT_BODIES[] =
    {"intermittency",cf_real,"0,1","Real number threshold [0,1] of intermittency about current peers, report above"},
    {"lastseen",cf_int,CF_VALRANGE,"Integer time threshold in hours since current peers were last seen, report absence"},
    {"printfile",cf_body,CF_PRINTFILE_BODY,"Quote part of a file to standard output"},
-   {"report_to_file",cf_str,CF_PATHRANGE,"The path and filename to which output should be appended"},
+   {"report_to_file",cf_str,CF_ABSPATHRANGE,"The path and filename to which output should be appended"},
    {"showstate",cf_slist,"","List of services about which status reports should be reported to standard output"},
    {NULL,cf_notype,NULL}
    };

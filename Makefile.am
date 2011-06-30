@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs masterfiles
+SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs
 
-DIST_SUBDIRS = pub src docs examples inputs masterfiles masterfiles/cdp_lib masterfiles/environment_production
+DIST_SUBDIRS = pub src docs examples inputs
 
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 
@@ -57,3 +57,6 @@ dist-hook:
 	mkdir $(distdir)/tests
 	(cd $(srcdir)/tests && find . -name README -o -name testall -o -name '*.cf' -a \! -path '*succeeded*' | tar -c -f - -T-) | tar -x -C $(distdir)/tests -v -f -
 
+
+	mkdir $(distdir)/masterfiles
+	(cd $(srcdir)/masterfiles && find . -type f | tar -c -f - -T-) | tar -x -C $(distdir)/masterfiles -v -f -

@@ -457,25 +457,21 @@ if (a.packages.package_version)
       strncpy(arch,"*",CF_MAXVARSIZE-1);
       installed = PackageMatch(name,"*",arch,a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
-
-      SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
       }
    else
       {
       for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
-        {
-	CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
-	strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
-	strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
-	strncpy(arch,rp->item,CF_MAXVARSIZE-1);
-
-	installed = PackageMatch(name,"*",arch,a,pp);
-	matches = PackageMatch(name,version,arch,a,pp);
-
-	SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
-	}
+         {
+         CfOut(cf_verbose,""," ... trying listed arch %s\n",rp->item);
+         strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
+         strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
+         strncpy(arch,rp->item,CF_MAXVARSIZE-1);
+         
+         installed = PackageMatch(name,"*",arch,a,pp);
+         matches = PackageMatch(name,version,arch,a,pp);
+         }
       }
-
+   
    if ( !installed || !matches )
       {
       SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
@@ -499,11 +495,11 @@ else if (a.packages.package_version_regex)
       strncpy(arch,"*",CF_MAXVARSIZE-1);
       }
 
-   if(strcmp(arch,"CF_NOMATCH") == 0)  // no match on arch regex, use any arch
-     {
-     strcpy(arch,"*");
-     }
-
+   if (strcmp(arch,"CF_NOMATCH") == 0)  // no match on arch regex, use any arch
+      {
+      strcpy(arch,"*");
+      }
+   
    installed = PackageMatch(name,"*",arch,a,pp);
    matches = PackageMatch(name,version,arch,a,pp);
    

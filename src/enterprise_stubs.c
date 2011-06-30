@@ -144,15 +144,22 @@ return false;
 
 /*****************************************************************************/
 
+#ifdef HAVE_NOVA
+
 void CheckLicenses()
 
-{ struct stat sb;
-  char name[CF_BUFSIZE];
- 
-#ifdef HAVE_NOVA
+{
 Nova_CheckLicensePromise();
+}
+
 #else
+
+void CheckLicenses()
+
+{
+struct stat sb;
 char name[CF_BUFSIZE];
+
 snprintf(name,sizeof(name),"%s/state/am_policy_hub",CFWORKDIR);
 MapName(name);
 
@@ -162,8 +169,9 @@ if (stat(name,&sb) != -1)
    }
 
 return;
-#endif
 }
+
+#endif
 
 /*****************************************************************************/
 

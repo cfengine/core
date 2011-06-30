@@ -2449,7 +2449,7 @@ else
 
 if ((rval.item = strdup(buffer)) == NULL)
    {
-   FatalError("Memory allocation in FnCallFnCallFileStat");
+   FatalError("Memory allocation in FnCallFileStat");
    }
 
 /* end fn specific content */

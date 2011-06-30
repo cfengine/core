@@ -174,9 +174,6 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
  char *key;
  void *value;
 
-
- ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hostsseen].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
  horizon = Str2Int((char *)(finalargs->item)) * 3600;
@@ -287,7 +284,6 @@ static struct Rval FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs)
   int tmp,range,result,from=-1,to=-1;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_randomint].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -335,8 +331,6 @@ static struct Rval FnCallGetEnv(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE] = "",ctrlstr[CF_SMALLBUF];
   char *name;
   int limit;
-  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getenv].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -375,7 +369,6 @@ static struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs)
   char *except_name,*except_uid;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getusers].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -423,7 +416,6 @@ static struct Rval FnCallEscape(struct FnCall *fp,struct Rlist *finalargs)
   char *name;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_escape].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -454,7 +446,6 @@ static struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
   char *name;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_host2ip].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -483,7 +474,6 @@ static struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs)
   char *ip;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ip2host].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -515,7 +505,6 @@ static struct Rval FnCallGetUid(struct FnCall *fp,struct Rlist *finalargs)
   uid_t uid;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getuid].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -564,7 +553,6 @@ static struct Rval FnCallGetGid(struct FnCall *fp,struct Rlist *finalargs)
   gid_t gid;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getgid].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -614,7 +602,6 @@ static struct Rval FnCallHash(struct FnCall *fp,struct Rlist *finalargs)
   enum cfhashes type;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hash].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -658,7 +645,6 @@ static struct Rval FnCallHashMatch(struct FnCall *fp,struct Rlist *finalargs)
   enum cfhashes type;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hashmatch].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -700,7 +686,6 @@ static struct Rval FnCallClassMatch(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE];
   
 strcpy(buffer,"!any");
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_classmatch].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -742,8 +727,6 @@ static struct Rval FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *fi
   int count = 0;
   int i = (int)*string;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_countclassesmatching].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 if (isalnum(i) || *string == '_')
@@ -808,8 +791,6 @@ static struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs)
 {
   struct Rval rval;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_canonify].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 SetFnCallReturnStatus("canonify",FNCALL_SUCCESS,NULL,NULL);
@@ -833,8 +814,6 @@ static struct Rval FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   char *name,*split;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_lastnode].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 name = finalargs->item;
@@ -884,8 +863,6 @@ static struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   char buffer[CF_BUFSIZE];
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_classify].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 SetFnCallReturnStatus("classify",FNCALL_SUCCESS,NULL,NULL);
@@ -923,7 +900,6 @@ static struct Rval FnCallReturnsZero(struct FnCall *fp,struct Rlist *finalargs)
   struct stat statbuf;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_returnszero].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -993,7 +969,6 @@ static struct Rval FnCallExecResult(struct FnCall *fp,struct Rlist *finalargs)
   int ret = false;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_execresult].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1055,7 +1030,6 @@ static struct Rval FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs)
   struct stat statbuf;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_usemodule].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1127,7 +1101,6 @@ static struct Rval FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs)
   double period;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_splayclass].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1229,7 +1202,6 @@ static struct Rval FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
   struct Attributes attr = {{0}};
 
 memset(buffer, 0, sizeof(buffer));
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readtcp].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1329,7 +1301,6 @@ static struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs)
   void *retval;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_reglist].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1405,8 +1376,6 @@ static struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   int i;
 
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_regarray].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 arrayname = finalargs->item;
@@ -1476,8 +1445,6 @@ static struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   struct Rlist *returnlist = NULL;
   int i;
-
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getindices].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1559,8 +1526,6 @@ static struct Rval FnCallGetValues(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp,*returnlist = NULL;
   int i;
 
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getvalues].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 arrayname = finalargs->item;
@@ -1639,8 +1604,6 @@ static struct Rval FnCallGrep(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp,*returnlist = NULL;
   struct Scope *ptr;
 
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_grep].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 regex = finalargs->item;
@@ -1715,8 +1678,6 @@ static struct Rval FnCallSum(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp;
   struct Scope *ptr;
   double sum = 0;
-
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_sum].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1801,8 +1762,6 @@ static struct Rval FnCallProduct(struct FnCall *fp,struct Rlist *finalargs)
   struct Scope *ptr;
   double product = 1.0;
 
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_product].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 name = finalargs->item;
@@ -1885,8 +1844,6 @@ static struct Rval FnCallJoin(struct FnCall *fp,struct Rlist *finalargs)
   struct Rlist *rp;
   struct Scope *ptr;
   int size = 0;
-
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_join].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -1991,8 +1948,6 @@ static struct Rval FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
   int lcount = 0,vcount = 0,nopurge = true;
   FILE *fin;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_getfields].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 regex = finalargs->item;
@@ -2066,8 +2021,6 @@ static struct Rval FnCallCountLinesMatching(struct FnCall *fp,struct Rlist *fina
   int lcount = 0;
   FILE *fin;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_countlinesmatching].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
 regex = finalargs->item;
@@ -2133,7 +2086,6 @@ static struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs
   struct Promise *pp;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_selectservers].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2300,7 +2252,6 @@ static struct Rval FnCallIsNewerThan(struct FnCall *fp,struct Rlist *finalargs)
   struct stat frombuf,tobuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_isnewerthan].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2346,7 +2297,6 @@ static struct Rval FnCallIsAccessedBefore(struct FnCall *fp,struct Rlist *finala
   struct stat frombuf,tobuf;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_accessedbefore].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2392,7 +2342,6 @@ static struct Rval FnCallIsChangedBefore(struct FnCall *fp,struct Rlist *finalar
   struct stat frombuf,tobuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_changedbefore].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2438,7 +2387,6 @@ static struct Rval FnCallStatInfo(struct FnCall *fp,struct Rlist *finalargs,enum
   struct stat statbuf;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_fileexists].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2519,7 +2467,6 @@ static struct Rval FnCallIPRange(struct FnCall *fp,struct Rlist *finalargs)
   struct Item *ip;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_iprange].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2579,7 +2526,6 @@ static struct Rval FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hostrange].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2622,7 +2568,6 @@ static struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalarg
   char *machine, *user, *domain;
    
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hostinnetgroup].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2669,7 +2614,6 @@ static struct Rval FnCallIsVariable(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_isvariable].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2706,7 +2650,6 @@ static struct Rval FnCallStrCmp(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_strcmp].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2744,7 +2687,6 @@ static struct Rval FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalargs
   char buffer[MAX_FILENAME];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_translatepath].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2774,7 +2716,6 @@ static struct Rval FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalargs
   char buffer[CF_BUFSIZE];
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_registryvalue].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2809,7 +2750,6 @@ static struct Rval FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs)
   int encrypted;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_remotescalar].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2875,7 +2815,6 @@ static struct Rval FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs)
   char *handle;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_hubknowledge].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2923,7 +2862,6 @@ static struct Rval FnCallRemoteClasses(struct FnCall *fp,struct Rlist *finalargs
   int encrypted;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_remoteclassesmatching].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -2998,7 +2936,6 @@ static struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs)
   int i,found,groupsize,maxent = 100000,maxsize = 100000;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_peers].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3101,7 +3038,6 @@ static struct Rval FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs)
   int i,found,groupsize,maxent = 100000,maxsize = 100000;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_peerleader].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3204,7 +3140,6 @@ static struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs)
   int i,found,groupsize,maxent = 100000,maxsize = 100000;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_peerleaders].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3297,7 +3232,6 @@ static struct Rval FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
   char *argv0,*argv1;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_regcmp].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3338,7 +3272,6 @@ static struct Rval FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs)
   struct Scope *ptr;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_regextract].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3412,7 +3345,6 @@ static struct Rval FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs)
   FILE *fin;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_regline].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3472,11 +3404,9 @@ buffer[0] = '\0';
 switch (ch)
    {
    case '+':
-       ArgTemplate(fp,CF_FNCALL_TYPES[cfn_isgreaterthan].args,finalargs); /* Arg validation */
        SetFnCallReturnStatus("isgreaterthan",FNCALL_SUCCESS,NULL,NULL);
        break;
    case '-':
-       ArgTemplate(fp,CF_FNCALL_TYPES[cfn_islessthan].args,finalargs); /* Arg validation */
        SetFnCallReturnStatus("islessthan",FNCALL_SUCCESS,NULL,NULL);
        break;
    }
@@ -3573,7 +3503,6 @@ static struct Rval FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
   long tmp,from=CF_NOINT,to=CF_NOINT;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_irange].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3627,7 +3556,6 @@ static struct Rval FnCallRRange(struct FnCall *fp,struct Rlist *finalargs)
   double from=CF_NODOUBLE,to=CF_NODOUBLE;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_rrange].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3675,7 +3603,6 @@ static struct Rval FnCallOnDate(struct FnCall *fp,struct Rlist *finalargs)
   enum cfdatetemplate i;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_date].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3735,7 +3662,6 @@ static struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs)
   enum cfdatetemplate i;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_laterthan].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3801,7 +3727,6 @@ static struct Rval FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
   enum cfdatetemplate i;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ago].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3860,7 +3785,6 @@ static struct Rval FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finalar
   enum cfdatetemplate i;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_accum].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3910,7 +3834,6 @@ static struct Rval FnCallNow(struct FnCall *fp,struct Rlist *finalargs)
   time_t cftime;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_now].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3941,8 +3864,6 @@ static struct Rval FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rval rval;
   char *filename;
   int maxsize;
-
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readfile].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -3977,8 +3898,6 @@ static struct Rval FnCallReadStringList(struct FnCall *fp,struct Rlist *finalarg
   char *filename,*comment,*split,fnname[CF_MAXVARSIZE];
   int maxent,maxsize,noerrors = true,blanks = false;
   char *file_buffer = NULL;
-
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringlist].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -4083,12 +4002,10 @@ static struct Rval FnCallReadStringArray(struct FnCall *fp,struct Rlist *finalar
 
 if (intIndex)
    {
-   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarrayidx].args,finalargs);
    snprintf(fnname,CF_MAXVARSIZE-1,"read%sarrayidx",CF_DATATYPES[type]);
    }
 else
    {
-   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs);
    snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
    }
 
@@ -4167,12 +4084,10 @@ static struct Rval FnCallParseStringArray(struct FnCall *fp,struct Rlist *finala
 
 if (intIndex)
    {
-   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarrayidx].args,finalargs);
    snprintf(fnname,CF_MAXVARSIZE-1,"read%sarrayidx",CF_DATATYPES[type]);
    }
 else
    {
-   ArgTemplate(fp,CF_FNCALL_TYPES[cfn_readstringarray].args,finalargs);
    snprintf(fnname,CF_MAXVARSIZE-1,"read%sarray",CF_DATATYPES[type]);
    }
 
@@ -4241,8 +4156,6 @@ static struct Rval FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
   char *string,*split;
   int max = 0;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_splitstring].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
  /* 2args: string,split_regex,max  */
@@ -4274,7 +4187,6 @@ static struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs)
   struct stat sb;
 
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_filesexist].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -4346,8 +4258,6 @@ static struct Rval FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs)
   char buffer[CF_BUFSIZE],handle[CF_BUFSIZE];
   void *newval = NULL;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ldapvalue].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
  
    uri = (char *)(finalargs->item);
@@ -4395,8 +4305,6 @@ static struct Rval FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs)
   char *array,*uri,*dn,*filter,*scope,*sec;
   void *newval;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ldaparray].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
  array = (char *)(finalargs->item);
@@ -4429,8 +4337,6 @@ static struct Rval FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs)
   char *uri,*dn,*filter,*name,*scope,*sec;
   void *newval;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_ldaplist].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
    uri = (char *)(finalargs->item);
@@ -4463,8 +4369,6 @@ static struct Rval FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs)
   char *uri,*dn,*filter,*name,*scope,*regex,*sec;
   void *newval;
   
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_regldap].args,finalargs); /* Arg validation */
-
 /* begin fn specific content */
 
    uri = (char *)(finalargs->item);
@@ -4499,7 +4403,6 @@ static struct Rval FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs)
   off_t df;
   
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_diskfree].args,finalargs); /* Arg validation */
 
 df = GetDiskUsage((char *)finalargs->item, cfabs);
 
@@ -4537,7 +4440,6 @@ static struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalar
   char *arg = finalargs->item;
  
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_userexists].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -4589,7 +4491,6 @@ static struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finala
   char *arg = finalargs->item;
  
 buffer[0] = '\0';  
-ArgTemplate(fp,CF_FNCALL_TYPES[cfn_groupexists].args,finalargs); /* Arg validation */
 
 /* begin fn specific content */
 
@@ -5017,6 +4918,8 @@ return true;
 
 struct Rval CallFunction(enum fncalltype function, struct FnCall *fp, struct Rlist *expargs)
 {
+ArgTemplate(fp, CF_FNCALL_TYPES[function].args, expargs);
+
 switch (function)
    {
    case cfn_escape:

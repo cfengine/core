@@ -34,12 +34,14 @@ dnl Libtool madness
 
 AC_CONFIG_MACRO_DIR([m4])
 
+AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
+
 #
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems
 # Don't add if cross-compiling (setting host), to avoid using native libs.
 #
-if test "x$host" = "x"; then
+if test "x$cross_compiling" = "xno"; then
   for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib /usr/pkg/lib /usr/X11R7/lib
   do
     if test -d "$x"; then
@@ -55,7 +57,7 @@ fi
 # Add to the default list of places in CPPFLAGS to match LDFLAGS above
 # Don't add if cross-compiling (setting host), to avoid using native libs.
 # 
-if test "x$host" = "x"; then
+if test "x$cross_compiling" = "xno"; then
   for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include	
   do 
     if test -d "$x"; then
@@ -886,8 +888,6 @@ fi
 dnl
 dnl
 dnl
-
-AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
 dnl ######################################################################
 dnl Summarize

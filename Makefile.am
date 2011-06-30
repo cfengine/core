@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = foreign
+
 SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs masterfiles
 
 DIST_SUBDIRS = pub src docs examples inputs masterfiles masterfiles/cdp_lib masterfiles/environment_production
@@ -5,14 +7,14 @@ DIST_SUBDIRS = pub src docs examples inputs masterfiles masterfiles/cdp_lib mast
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 
 DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS COPYING aclocal.m4 \
-	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp install-sh \
+	ChangeLog INSTALL config.guess config.sub depcomp install-sh \
 	ltmain.sh missing ylwrap m4/acinclude.m4 m4/libtool.m4 m4/ltoptions.m4 \
 	m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 configure.ac autogen.sh
 
-EXTRA_DIST = COPYING ChangeLog INSTALL NEWS README LICENSE
+EXTRA_DIST = COPYING ChangeLog INSTALL README LICENSE
 
 docdir = @docdir@
-doc_DATA = README ChangeLog INSTALL NEWS
+doc_DATA = README ChangeLog INSTALL
 
 #
 # Some basic clean ups

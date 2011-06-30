@@ -616,23 +616,6 @@ return (getuid() == 0);
 
 /*******************************************************************/
 
-#ifndef HAVE_LIBRT
-
-int clock_gettime(clockid_t clock_id,struct timespec *tp)
-
-{ static time_t now;
-
-now = time(NULL);
-
-tp->tv_sec = (time_t)now;
-tp->tv_nsec = 0;
-return 0;
-}
-
-#endif
-
-/*******************************************************************/
-
 char *cf_ctime(const time_t *timep)
 {
 static char buf[26];

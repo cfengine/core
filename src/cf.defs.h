@@ -353,7 +353,7 @@ int setegid (gid_t gid);
 double drand48(void);
 void srand48(long seed);
 #endif
-#ifndef HAVE_LIBRT
+#if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id,struct timespec *tp);
 #endif
 #ifdef MINGW

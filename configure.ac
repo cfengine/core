@@ -506,7 +506,6 @@ fi
 LIBS="$LIBS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
 
 dnl AC_CHECK_LIB(rx, main) deprecated
-AC_CHECK_LIB(rt, main)
 
 dnl ######################################################################
 dnl Checks for header files.
@@ -553,9 +552,14 @@ dnl ######################################################################
 
 AC_C_CONST
 
+AC_CHECK_LIB(rt, clock_gettime)
+
 dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
+
+AC_CHECK_DECL(clock_gettime)
+AC_REPLACE_FUNCS(clock_gettime)
 
 AC_REPLACE_FUNCS([unsetenv])
 AC_REPLACE_FUNCS(strndup)

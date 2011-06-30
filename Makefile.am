@@ -59,4 +59,4 @@ dist-hook:
 
 
 	mkdir $(distdir)/masterfiles
-	(cd $(srcdir)/masterfiles && find . -type f | tar -c -f - -T-) | tar -x -C $(distdir)/masterfiles -v -f -
+	(cd $(srcdir)/masterfiles && find . -name '*.cf' -o -name '*.png' -o -name '*.txt' -o -name 'Changelog' | tar -c -f - -T-) | tar -x -C $(distdir)/masterfiles -v -f -

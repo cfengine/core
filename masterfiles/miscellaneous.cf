@@ -4,6 +4,7 @@
 # - restart CFE processes by specific time (not in service)
 #
 ##################################################################
+
 bundle agent cfengine_processes
 {
  vars:
@@ -180,3 +181,40 @@ bundle agent cfengine_enable
       link_from => ln_s("/etc/init.d/cfengine3");
 }
 
+##################################################################
+#
+# cfengine_build_software_report 
+# - force machines to have package promises to be able to generate
+#   software reports (not in service)
+#
+##################################################################
+
+bundle agent cfengine_build_software_report
+{
+ packages:
+
+  redhat::
+
+   "wget"
+             comment => "Install packages from the list",
+              handle => "build_software_report_redhat",
+      package_policy => "add",
+      package_method => yum;
+
+  debian::
+
+   "wget"
+             comment => "Install packages from the list",
+              handle => "build_software_report_debian",
+      package_policy => "add",
+      package_method => apt;
+
+  SuSE::
+
+   "wget"
+             comment => "Install packages from the list",
+              handle => "build_software_report_suse",
+      package_policy => "add",
+      package_method => zypper;
+
+}

@@ -194,12 +194,13 @@ bundle agent service_catalogue
   any::
 
    "security" -> { goal_1, goal_2 }
- 
-                   comment => "Basic change management",
-                 usebundle => change_management;
+                comment => "Basic change management",
+              usebundle => change_management;
+
+  commercial_customer::
 
    "maintenance" 
-                   comment => "Perform log rotation and clean up of cfengine work files",
+                   comment => "Perform log rotation and clean up of CFE Nova work files",
                  usebundle => garbage_collection;
 
 }

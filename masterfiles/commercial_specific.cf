@@ -775,3 +775,86 @@ bundle agent cfengine_editor
 
 }
 
+##################################################################
+#
+# garbage_collection
+#  - do some garbage collection on  
+#
+##################################################################
+
+bundle agent garbage_collection
+{
+ files:
+
+  Sunday::
+
+   "$(sys.workdir)/cf_repair.log" 
+      comment => "Rotate the promises repaired logs each week",
+       handle => "garbage_collection_files_cf_repair_log",
+       rename => rotate("7"),
+       action => if_elapsed("10000");
+
+   "$(sys.workdir)/cf_notkept.log" 
+      comment => "Rotate the promises not kept logs each week",
+       handle => "garbage_collection_files_cf_notkept_log",
+       rename => rotate("7"),
+       action => if_elapsed("10000");
+
+   "$(sys.workdir)/promise_summary.log" 
+      comment => "Rotate the promises not kept logs each week",
+       handle => "garbage_collection_files_promise_log",
+       rename => rotate("7"),
+       action => if_elapsed("10000");
+
+   "$(sys.workdir)/state/cf_value.log" 
+      comment => "Rotate the promises not kept logs each week",
+       handle => "garbage_collection_files_cf_value_log",
+       rename => rotate("7"),
+       action => if_elapsed("10000");
+
+   "/var/log/mongod.log"
+      comment => "Rotate the mongo db transactio logs each week",
+       handle => "garbage_collection_files_mongod_log",
+       rename => rotate("7"),
+       action => if_elapsed("10000");
+
+  any::
+
+   "$(sys.workdir)/outputs" 
+           comment => "Garbage collection of any output files",
+            handle => "garbage_collection_files_tidy_outputs",
+            delete => tidy,
+       file_select => days_old("7"),
+      depth_search => recurse("inf");
+
+  # Other resources
+
+   "/tmp" 
+           comment => "Garbage collection of any temporary files",
+            handle => "garbage_collection_files_tidy_tmp",
+            delete => tidy,
+       file_select => days_old("3"),
+      depth_search => recurse("inf");
+  
+   "/var/log/apache2/.*bz" 
+          comment => "Garbage collection of rotated log files",
+           handle => "garbage_collection_files_tidy_bz",
+           delete => tidy,
+      file_select => days_old("30");
+
+
+   "/var/log/apache2/.*gz" 
+          comment => "Garbage collection of rotated log files",
+           handle => "garbage_collection_files_tidy_gz",
+           delete => tidy,
+      file_select => days_old("30");
+
+ SuSE::
+
+   "/var/log/zypper.log"
+      comment => "Prevent the zypper log from choking the disk",
+       handle => "garbage_collection_files_zypper_log",
+       rename => rotate("0"),
+       action => if_elapsed("10000");
+
+}

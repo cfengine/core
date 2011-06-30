@@ -67,8 +67,13 @@ if test "x$host" = "x"; then
   done
 fi
 
+dnl ######################################################################
+dnl Use pthreads if available
+dnl ######################################################################
+
 ACX_PTHREAD
-CC=$PTHREAD_CC
+
+CC="$PTHREAD_CC"
 CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 CPPFLAGS="$PTHREAD_CFLAGS $CPPFLAGS"
 LDFLAGS="$PTHREAD_LDFLAGS $LDFLAGS"
@@ -577,6 +582,16 @@ AC_CHECK_FUNCS(bcopy mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid strdup strrchr strerror snprintf sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 
+AC_CHECK_LIB(pthread,main)
+
+AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]), AC_CHECK_LIB(pthread, pthread_create))
+AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]), AC_CHECK_LIB(pthread, pthread_create))
+
+if test "$ac_cv_lib_pthread_main" = "yes"; then
+	AC_CHECK_HEADERS(pthread.h)
+	AC_CHECK_HEADERS(sched.h)
+fi
+
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
 dnl ######################################################################
@@ -618,23 +633,7 @@ if test "$GETCONF" != "false"; then
 fi
 AC_MSG_RESULT([$lfsresult])
 
-dnl #######################################################################
-dnl Handle DCE + threading stuff
-dnl #######################################################################
-
-AC_CHECK_LIB(pthread,main)         dnl POSIX threads
-
-if test "$ac_cv_lib_pthread_main" = "yes"; then
-	AC_CHECK_HEADERS(pthread.h)
-	AC_CHECK_HEADERS(sched.h)
-fi
-
-
-
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, [], [Whether to use lchown(3) to change ownerships]))
-
-AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]), AC_CHECK_LIB(pthread, pthread_create))
-AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]), AC_CHECK_LIB(pthread, pthread_create))
 
 dnl ######################################################################
 dnl Give the chance to enable SELINUX

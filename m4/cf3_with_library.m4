@@ -11,7 +11,7 @@ AC_DEFUN([CF3_WITH_LIBRARY],
 [
 m4_define([ULN],m4_toupper($1))
 
-  if test  "x$with_[$1]" != xyes; then
+  if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck; then
     ULN[]_PATH="$with_[$1]"
     ULN[]_CFLAGS="-I$with_[$1]/include"
     ULN[]_LDFLAGS="-L$with_[$1]/lib -R$with_[$1]/lib"

@@ -122,12 +122,20 @@ dnl PostgreSQL
 
 AC_ARG_WITH([postgresql],
     [AS_HELP_STRING([--with-postgresql[[=PATH]]],
-                    [Enable PostgreSQL connector])], [], [with_postgresql=yes])
+                    [Enable PostgreSQL connector])], [], [with_postgresql=check])
 
 if test "x$with_postgresql" != "xno"; then
+
+   # Use pg_config for native builds
+   if test "x$cross_compiling" = "xno"; then
+      if test x`which pg_config` != x ; then
+         CPPFLAGS="$CPPFLAGS -I`pg_config --includedir`"
+      fi
+   fi
+
    CF3_WITH_LIBRARY(postgresql, [
-     AC_CHECK_LIB(pq, PQconnectdb, [], [AC_MSG_ERROR(Cannot find PostgreSQL client library)])
-     AC_CHECK_HEADERS(libpq-fe.h, [], [AC_MSG_ERROR(Cannot find PostgreSQL client library)])
+     AC_CHECK_LIB(pq, PQconnectdb, [], [if test "x$with_postgresql" != xcheck; then AC_MSG_ERROR(Cannot find PostgreSQL client library); fi])
+     AC_CHECK_HEADERS(libpq-fe.h, [], [if test "x$with_postgresql" != xcheck; then AC_MSG_ERROR(Cannot find PostgreSQL client library); fi])
    ])
 fi
 
@@ -135,12 +143,20 @@ dnl MySQL
 
 AC_ARG_WITH([mysql],
     [AS_HELP_STRING([--with-mysql[[=PATH]]],
-                    [Enable MySQL connector])], [], [with_mysql=yes])
+                    [Enable MySQL connector])], [], [with_mysql=check])
 
 if test "x$with_mysql" != "xno"; then
+
+   # Use mysql_config for native builds
+   if test "x$cross_compiling" = "xno"; then
+      if test x`which mysql_config` != x ; then
+         CPPFLAGS="$CPPFLAGS `mysql_config --include`"
+      fi
+   fi
+
    CF3_WITH_LIBRARY(mysql, [
-     AC_CHECK_LIB(mysqlclient, mysql_connect, [], [AC_MSG_ERROR(Cannot find MySQL client library)])
-     AC_CHECK_HEADERS(mysql.h, [], [AC_MSG_ERROR(Cannot find MySQL client library)])
+     AC_CHECK_LIB(mysqlclient, mysql_real_connect, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
+     AC_CHECK_HEADERS(mysql.h, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
    ])
 fi
 

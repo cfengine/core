@@ -32,7 +32,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#ifdef HAVE_MYSQL_MYSQL_H
+#ifdef HAVE_MYSQL_H
+#include <mysql.h>
+#elif defined(HAVE_MYSQL_MYSQL_H)
 #include <mysql/mysql.h>
 #endif
 

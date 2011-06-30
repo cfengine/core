@@ -259,11 +259,11 @@ NewScalar("sys","expires",EXPIRY,cf_str);
 NewScalar("sys","cf_version",(char*)Version(),cf_str);
 #ifdef HAVE_NOVA
 /* FIXME: type conversion */
-NewScalar("sys","nova_version",NOVA_VERSION,cf_str);
+NewScalar("sys","nova_version",(char*)Nova_Version(),cf_str);
 #endif
 #ifdef HAVE_CONSTELLATION
 /* FIXME: type conversion */
-NewScalar("sys","constellation_version",CONSTELLATION_VERSION,cf_str);
+NewScalar("sys","constellation_version",(char*)Constellation_Version(),cf_str);
 #endif
 
 if (PUBKEY)

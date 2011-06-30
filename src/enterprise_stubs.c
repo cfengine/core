@@ -158,10 +158,19 @@ return false;
 
 void CheckLicenses()
 
-{
+{ struct stat sb;
+ 
 #ifdef HAVE_NOVA
 Nova_CheckLicensePromise();
 #else
+snprintf(name,sizeof(name),"%s/state/am_policy_hub",CFWORKDIR);
+MapName(name);
+
+if (stat(name,&sb) != -1)
+   {
+   NewClass("am_policy_hub");
+   }
+
 return;
 #endif
 }

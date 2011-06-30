@@ -40,7 +40,7 @@
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
 and identify policy hub IP in a special order to bootstrap the license and agents.
 
-During bootstrap:
+During commercial bootstrap:
 
  - InitGA (generic-agent) loads the public key
  - The verifylicense function sets the policy hub but fails to verify license yet
@@ -51,6 +51,8 @@ During bootstrap:
  - Now the license has a binding, resolves the policy hub's key and succeeds
 
 */
+
+/*****************************************************************************/
 
 void CheckAutoBootstrap()
 
@@ -154,9 +156,6 @@ else
    unlink(name);
    printf(" -> Satellite system converging on trajectory\n");
    }
-
-printf("\nNOTICE - this is a commercially licensed version of Cfengine. It is ILLEGAL to install\n");
-printf("         the software on systems for which no license has been granted by Cfengine AS.\n");
 }
 
 /********************************************************************/
@@ -194,7 +193,7 @@ else
       }
    }
 
-if(EMPTY(name))
+if (EMPTY(name))
   {
   // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
   // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 

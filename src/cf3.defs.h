@@ -484,9 +484,9 @@ enum cfeditorder
 #define CF_ANYSTRING   ".*"
 
 #ifndef MINGW
-// can start with e.g. c:\... or "c:\...  |  unix (for Cygwin-style paths)
 #define CF_ABSPATHRANGE   "\042?(/.*)"
 #else
+// can start with e.g. c:\... or "c:\...  |  unix (for Cygwin-style paths)
 #define CF_ABSPATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"
 #endif
 

@@ -103,8 +103,6 @@ dnl ######################################################################
 dnl Checks for libraries.
 dnl ######################################################################
 
-AC_CHECK_LIB(m,main)
-
 AC_ARG_WITH(diagnostics,
 	AS_HELP_STRING(--with-diagnostics, [enable test suite]),[],
 	with_diagnostics=no)
@@ -138,11 +136,6 @@ if test $WITH_SQL = 1; then
   AC_CHECK_HEADERS(libpq-fe.h)
 fi
 
-dnl
-dnl Enable large file support
-dnl
-AC_SYS_LARGEFILE
-AC_TYPE_OFF_T
 
 dnl
 dnl Enterprise extensions
@@ -154,18 +147,6 @@ sinclude([constellation/options.m4])
 AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
 sinclude([galaxy/options.m4])
 AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
-
-dnl
-dnl Various functions
-dnl
-
-AC_CHECK_FUNC(door_create,door)
-AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
-AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
-AC_CHECK_FUNC(getaddrinfo, , AC_CHECK_LIB(socket, getaddrinfo))
-
-AC_SEARCH_LIBS(socket, socket, ,
-    [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
 
 dnl 
 dnl Choose a database
@@ -557,6 +538,14 @@ dnl ######################################################################
 
 AC_C_CONST
 
+AC_SYS_LARGEFILE
+AC_TYPE_OFF_T
+
+dnl ######################################################################
+dnl Check for libraries
+dnl ######################################################################
+
+AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(rt, clock_gettime)
 
 dnl ######################################################################
@@ -581,6 +570,20 @@ AC_CHECK_FUNCS(strstr strsep putenv drand48 srand48 getaddrinfo)
 AC_CHECK_FUNCS(bcopy mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid strdup strrchr strerror snprintf sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
+
+dnl
+dnl Various functions
+dnl
+
+AC_CHECK_FUNC(door_create,door)
+AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
+AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
+AC_CHECK_FUNC(getaddrinfo, , AC_CHECK_LIB(socket, getaddrinfo))
+
+AC_SEARCH_LIBS(socket, socket, ,
+    [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
+
+AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, [], [Whether to use lchown(3) to change ownerships]))
 
 AC_CHECK_LIB(pthread,main)
 
@@ -615,25 +618,6 @@ if test "$rtry" = ortentry; then
  AC_DEFINE(HAVE_ORTENTRY, 1)
 fi
 AC_MSG_RESULT([$rtry])
-
-dnl #######################################################################
-dnl Large File Support
-dnl #######################################################################
-
-lfsresult=no
-AC_MSG_CHECKING(whether to compile with large file support)
-if test "$GETCONF" != "false"; then
-	lfscflags=`$GETCONF LFS_CFLAGS 2>/dev/null`
-	if test -n "$lfscflags"; then
-		CFLAGS="$CFLAGS $lfscflags"
-		lfsresult=yes
-	fi
-	lfsldflags=`$GETCONF LFS_LDFLAGS 2>/dev/null`
-	test -n "$lfsldflags" && LDFLAGS="$LDFLAGS $lfsldflags"
-fi
-AC_MSG_RESULT([$lfsresult])
-
-AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, [], [Whether to use lchown(3) to change ownerships]))
 
 dnl ######################################################################
 dnl Give the chance to enable SELINUX

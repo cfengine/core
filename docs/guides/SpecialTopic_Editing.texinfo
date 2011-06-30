@@ -36,11 +36,12 @@ The ability to edit files convergently is a popular and widely used
 aspect of CFEngine. This document proposes some best practices for
 managing file content.
 
+The examples contained here assume the inclusion of the standard COPBL
+library as an input.
 @end quotation
 @end cartouche
 
 @vskip 2cm
-This is an incomplete draft document.
 
 @vskip 0pt plus 1filll
 Copyright @copyright{} 2010 CFEngine AS
@@ -214,7 +215,29 @@ You may choose to write your own editing bundles for specific purposes; you can 
 ready-made templates from the standard library for a lot of purposes. If you follow the
 guidelines for choosing an approach to editing below, you will be able to re-use standard
 methods in perhaps most cases. Using standard library code keeps your own intentions clear
-and easily communicable. Some examples of the standard editing methods are:
+and easily communicable. 
+For example, to insert hello into a file at the end once only:
+@verbatim
+files:
+
+  "/tmp/test_insert"
+
+       create => "true",
+    edit_line => append_if_no_line("hello"),
+edit_defaults => empty;
+
+@end verbatim
+Or to set the shell for a user
+@verbatim
+files:
+
+  "/etc/passwd"
+       create    => "true",
+       edit_line => set_user_field("mark","7","/my/favourite/shell");
+
+@end verbatim
+
+Some other examples of the standard editing methods are:
 
 @verbatim
  append_groups_starting(v) 
@@ -281,7 +304,7 @@ management.
 @unnumberedsec Examples of file editing
 
 @node Copying a file template into place, Contextual adaptation of a file template, Examples of file editing, Top
-@unnumberedsec Copying a file template into place
+@unnumberedsubsec Copying a file template into place
 
 Use this approach if a simple substution of data will solve the problem in all contexts.
 
@@ -291,6 +314,7 @@ Use this approach if a simple substution of data will solve the problem in all c
 @item Copy the file into place.
 @end enumerate
 
+@cartouche
 @verbatim
 bundle agent something
 {
@@ -301,10 +325,10 @@ files:
   copy_from => secure_cp("/repository/important_file_template","svn-host");
 }
 @end verbatim
-
+@end cartouche
 
 @node  Contextual adaptation of a file template, Modifying the current state of a file, Copying a file template into place, Top
-@unnumberedsec Contextual adaptation of a file template
+@unnumberedsubsec Contextual adaptation of a file template
 
 There are two approaches here:
 @enumerate
@@ -313,8 +337,8 @@ There are two approaches here:
 @end enumerate
 
 To expand a template file on a local disk:
+@cartouche
 @verbatim
-
 bundle agent templating
 {
 files:
@@ -324,17 +348,23 @@ files:
        create => "true",
     edit_line => expand_template("/tmp/source_template");
 }
-
 @end verbatim
-@noindent To convergently copy a file from a source and then edit it, use the following
+@end cartouche
+@noindent For example, the file might look like this:
+@example
+mail_relay = $(sys.fqhost)
+important_user = $(mybundle.variable)
+#...
+@end example
+@noindent These variables will be filled in by CFEngine assuming they are defined.
+To convergently copy a file from a source and then edit it, use the following
 construction with a staging file.
+@cartouche
 @verbatim
 bundle agent master
 {
 files:
-
   "$(final_destination)"
-
          create => "true",
      edit_line => fix_file("$(staging_file)"),
  edit_defaults => empty,
@@ -342,134 +372,75 @@ files:
         action => ifelapsed("60");
 }
 
-#
-
 bundle edit_line fix_file(f)
 {
 insert_lines:
-
   "$(f)"
-
      insert_type => "file";
-
      # expand_scalars => "true" ;
 
 replace_patterns:
-
     "searchstring"
-
           replace_with => With("replacestring");
 }
 
 @end verbatim
+@end cartouche
 
 @node  Modifying the current state of a file,  , Contextual adaptation of a file template, Top
-@unnumberedsec Modifying the current state of a file
+@unnumberedsubsec Modifying the current state of a file
 
-Use this approach if it is unsafe to make unilateral changes to a
-file, e.g. because its contents are also being managed from another
-source (e.g. a software package manager).
+Edit a file with multiple promises about its state, when you do not want
+to determine the entire content of the file, or if it is unsafe to
+make unilateral changes, e.g. because its contents are also
+being managed from another source like a software package manager.
 
 For modifying a file, you have access to the full power of text editing
 promises. This is a powerful framework.
 
+@cartouche
 @verbatim
-# included file COSL.txt.
+# Resolve conf edit
 
-#######################################################
-#
-# Resolve conf
-#
-#######################################################
+body common control
+{
+bundlesequence => { "g", resolver(@(g.searchlist),@(g.nameservers)) };
+inputs => { "cfengine_stdlib.cf" }; 
+}
 
-bundle common g # globals
+bundle common g # global
 {
 vars:
+ "searchlist"  slist => { "example.com", "cfengine.com" };
+ "nameservers" slist => { "10.1.1.10", "10.3.2.16", "8.8.8.8" };
 
- "searchlist"  slist => { "iu.hio.no","cfengine.com" };
-
- "nameservers" slist => { 
-                        "128.39.89.10", 
-                        "128.39.74.16",
-                        "192.168.1.103"
-                        };
 classes:
-
   "am_name_server" 
-
      expression => reglist("@(nameservers)","$(sys.ipv4[eth1])");
 }
 
-#######################################################
-
-body common control
-
-{
-any::
-
-  bundlesequence  => {
-                     "g",
-                     resolver(@(g.searchlist),@(g.nameservers))
-                     };   
-
-  domain => "iu.hio.no";
-}
-
-#######################################################
-
 bundle agent resolver(s,n)
-
 {
 files:
-
-  # When passing parameters down, we have to refer to
-  # a source context
-
   "$(sys.resolv)"  # test on "/tmp/resolv.conf" #
-
       create        => "true",
       edit_line     => doresolv("@(this.s)","@(this.n)"),
-      edit_defaults => reconstruct;
- # or edit_defaults => modify
+      edit_defaults => empty;
 }
 
-#######################################################
-# For the library
-#######################################################
+# For your private library ......................
 
 bundle edit_line doresolv(s,n)
-
 {
 insert_lines:
-
   "search $(s)";
   "nameserver $(n)";
-
 delete_lines:
-
  # To clean out junk
   "nameserver .*| search .*" not_matching => "true";
 }
-
-#######################################################
-
-body edit_defaults reconstruct
-{
-empty_file_before_editing => "true";
-edit_backup => "false";
-max_file_size => "100000";
-}
-
-#######################################################
-
-body edit_defaults modify
-{
-empty_file_before_editing => "false";
-edit_backup => "false";
-max_file_size => "100000";
-}
 @end verbatim
-
+@end cartouche
 
 @ifhtml
 @html

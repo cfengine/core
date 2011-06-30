@@ -116,7 +116,7 @@ DeleteItemList(mess);
 
 /*****************************************************************************/
 
-void CfOut(enum cfreport level,char *errstr,char *fmt, ...)
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 
 { va_list ap;
  char buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];

@@ -226,8 +226,7 @@ if ((tloc = time((time_t *)NULL)) == -1)
 
 snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
 
-/* FIXME: type conversion */
-CfOut(cf_verbose,"",(char*)NameVersion());
+CfOut(cf_verbose,"",NameVersion());
 
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);

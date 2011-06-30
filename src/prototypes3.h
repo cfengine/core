@@ -158,7 +158,7 @@ void SetDocRoot(char *name);
 /* cfstream.c */
 
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
-void CfOut(enum cfreport level,char *errstr,char *fmt, ...);
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
 void CfFile(FILE *fp,char *fmt, ...);
 char *GetErrorStr(void);

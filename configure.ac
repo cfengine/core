@@ -914,14 +914,14 @@ AC_MSG_RESULT(    Summary of options...)
 
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
 
-if test "x$with_mysql" != "xno"; then
+if test "x$ac_cv_lib_mysqlclient_mysql_real_connect" != "xno"; then
   AC_MSG_RESULT([-> MySQL connector: $MYSQL_PATH])
 else
   AC_MSG_RESULT([-> MySQL connector: disabled])
 fi
 
-if test "x$ac_cv_lib_pq_main" = "xyes"; then
-  AC_MSG_RESULT([-> PostgreSQL connector: enabled])
+if test "x$ac_cv_lib_pq_PQconnectdb" = "xyes"; then
+  AC_MSG_RESULT([-> PostgreSQL connector: $POSTGRESQL_PATH])
 else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
 fi

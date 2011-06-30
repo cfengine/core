@@ -63,7 +63,7 @@ Copyright @copyright{} 2010 CFEngine AS
 
 
 @node Top, What is Cloud Computing?, (dir), (dir)
-@top Federation
+@top Cloud Computing
 @menu
 * What is Cloud Computing?::    
 * Is Cloud Computing for everything and everyone?::  

@@ -1,9 +1,8 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdfetex 2011.5.11)  29 JUN 2011 14:54
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/openSUSE) (format=pdfetex 2010.7.5)  30 JUN 2011 22:18
 entering extended mode
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**\catcode126=12 \def\normaltilde{~}\catcode126=13 \let~\normaltilde  \input ./
-SpecialTopic_Modules.texinfo
+**./SpecialTopic_Modules.texinfo
 (./SpecialTopic_Modules.texinfo (./texinfo-altfont.tex altfont (v1.0))
 (./texinfo-logo.tex logo (v1.02)) (./texinfo.tex
 Loading texinfo [version 2011-06-28.17]:
@@ -119,8 +118,7 @@ cross references,
 \footnoteno=\count52
 \SAVEfootins=\box22
 \SAVEmargin=\box23
-
-(/usr/share/texmf-texlive/tex/generic/epsf/epsf.tex
+ (/usr/share/texmf/tex/generic/epsf/epsf.tex
 This is `epsf.tex' v2.7.3 <23 July 2005>
 \epsffilein=\read1
 \epsfframemargin=\dimen38
@@ -173,7 +171,7 @@ s.toc) <./NewLogo.pdf> [-1] <./NewLogo.pdf>
 \openout0 = `SpecialTopic_Modules.toc'.
 
  <./NewLogo.pdf> [1] <./service_catalogue.png (PNG copy)>
-Overfull \hbox (50.98755pt too wide) detected at line 204
+Overfull \hbox (50.98755pt too wide) detected at line 207
  [] |
 
 @hbox(188.30766+0.0)x433.62
@@ -185,7 +183,7 @@ Overfull \hbox (50.98755pt too wide) detected at line 204
 .etc.
 
  <./NewLogo.pdf> [2] <./cdp_services_report.png>
-Overfull \hbox (50.98755pt too wide) detected at line 268
+Overfull \hbox (50.98755pt too wide) detected at line 271
  [] |
 
 @hbox(107.82097+0.0)x433.62
@@ -200,22 +198,21 @@ Overfull \hbox (50.98755pt too wide) detected at line 268
 [6] <./NewLogo.pdf> [7] <./NewLogo.pdf> [8] <./NewLogo.pdf> [9] <./NewLogo.pdf>
 [10] <./NewLogo.pdf> [11] <./NewLogo.pdf> [12] ) 
 Here is how much of TeX's memory you used:
- 1767 strings out of 497129
- 22147 string characters out of 1207599
- 54061 words of memory out of 3000000
- 2822 multiletter control sequences out of 15000+50000
+ 1767 strings out of 495586
+ 22142 string characters out of 3170756
+ 55866 words of memory out of 3500000
+ 3030 multiletter control sequences out of 15000+200000
  53213 words of font info for 178 fonts, out of 3000000 for 9000
- 51 hyphenation exceptions out of 8191
- 14i,6n,17p,356b,344s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texmf-texlive/fonts
-/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-texlive/fonts/type1/publ
-ic/amsfonts/cm/cmr7.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/c
-m/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/hfbright/hfbr10.pfb><
-/usr/share/texmf-texlive/fonts/type1/public/hfbright/hfbrbx10.pfb></usr/share/t
-exmf-texlive/fonts/type1/public/hfbright/hfbrsl10.pfb></usr/share/texmf-texlive
-/fonts/type1/public/hfbright/hftl10.pfb></usr/share/texmf-texlive/fonts/type1/p
-ublic/amsfonts/latxfont/lcircle1.pfb>
-Output written on SpecialTopic_Modules.pdf (16 pages, 462187 bytes).
+ 886 hyphenation exceptions out of 8191
+ 14i,6n,17p,281b,344s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texmf/fonts/type1/p
+ublic/amsfonts/cm/cmmi10.pfb></usr/share/texmf/fonts/type1/public/amsfonts/cm/c
+mr7.pfb></usr/share/texmf/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share
+/texmf/fonts/type1/public/hfbright/hfbr10.pfb></usr/share/texmf/fonts/type1/pub
+lic/hfbright/hfbrbx10.pfb></usr/share/texmf/fonts/type1/public/hfbright/hfbrsl1
+0.pfb></usr/share/texmf/fonts/type1/public/hfbright/hftl10.pfb></usr/share/texm
+f/fonts/type1/public/amsfonts/latxfont/lcircle1.pfb>
+Output written on SpecialTopic_Modules.pdf (16 pages, 462205 bytes).
 PDF statistics:
  200 PDF objects out of 1000 (max. 8388607)
  27 named destinations out of 1000 (max. 500000)

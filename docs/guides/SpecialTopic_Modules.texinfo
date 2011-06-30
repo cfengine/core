@@ -72,12 +72,15 @@ Copyright @copyright{} 2009 CFEngine AS
 @end ifinfo
 
 @ifnottex
+
 @node Top, What is modularity?, (dir), (dir)
 @top Orchestration
 @menu
 * What is modularity?::         
 * What is orchestration?::      
 * How does CFEngine deal with modularity and orchestration?::  
+* Levels of policy abstraction::  
+* Is CFEngine patch or package oriented?::  
 * High level services in CFEngine::  
 * Hiding details::              
 * Black::                       
@@ -136,7 +139,7 @@ occasional pieces of information from the policy server (conductor).
 The coupling between the agents is weak -- there is slack that makes
 the behaviour robust to minor errors in communication or timing.
 
-@node How does CFEngine deal with modularity and orchestration?, High level services in CFEngine, What is orchestration?, Top
+@node How does CFEngine deal with modularity and orchestration?, Levels of policy abstraction, What is orchestration?, Top
 @unnumberedsec How does CFEngine deal with modularity and orchestration?
 
 Promise Theory provides simple principles for hiding details: agents are
@@ -159,7 +162,7 @@ they provide services to one another. The principles are the same in
 both cases, but the confusion between them is typically the reason why
 large systems do not scale well.
 
-@node Levels of policy abstraction
+@node Levels of policy abstraction, Is CFEngine patch or package oriented?, How does CFEngine deal with modularity and orchestration?, Top
 @unnumberedsec Levels of policy abstraction
 
 CFEngine offers a number of layers of abstraction. The most fundamental atom
@@ -185,7 +188,7 @@ methods:
                 comment => "Clear junk and rotate logs";
 
   mailservers:: # selected by hosts in class
-    "mail server"  -> { "goal_3", "goal_1", "goal_2" }
+    "mail server"  -> @{ "goal_3", "goal_1", "goal_2" @}
                   usebundle => @b{app_mail_postfix},
                     comment => "The mail delivery agent";
     "mail server"  -> goal_3,
@@ -273,7 +276,7 @@ This form of entry is preferred in some environments, especially on the Windows 
 
 
 
-@node Is CFEngine patch or package oriented?
+@node Is CFEngine patch or package oriented?, High level services in CFEngine, Levels of policy abstraction, Top
 @unnumberedsec Is CFEngine patch-oriented or package-oriented?
 
 Some system management products are patching systems. They package lumps
@@ -292,7 +295,7 @@ or restarting one process, or altering one bit of a flag in each file in a set o
 The power to express sophisticated patterns is what makes CFEngine's approach both
 non-intrusive and robust.
 
-@node High level services in CFEngine, Hiding details, How does CFEngine deal with modularity and orchestration?, Top
+@node High level services in CFEngine, Hiding details, Is CFEngine patch or package oriented?, Top
 @unnumberedsec  High level services in CFEngine
 
 CFEngine is designed to handle high level simplicity (without

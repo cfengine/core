@@ -51,7 +51,7 @@ Copyright @copyright{} 2010 CFEngine AS
 @ifinfo
 @dircategory CFEngine Training
 @direntry
-* CFEngine Iteration:
+* CFEngine:
                       CFEngine is a language based tool specifically
                       designed for configuring and maintaining
                       Unix-like operating systems attached
@@ -63,7 +63,7 @@ Copyright @copyright{} 2010 CFEngine AS
 
 
 @node Top, What is Open Nebula, (dir), (dir)
-@top Iteration
+@top Open Nebula
 @menu
 * What is Open Nebula::         
 * How can CFEngine work with Open Nebula::  

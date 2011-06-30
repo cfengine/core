@@ -42,7 +42,7 @@ static void DeletePackageItems(struct CfPackageItem *pi);
 static int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 static int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
 static int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
-static void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist **sep);
+static void ParsePackageVersion(char *version,struct Rlist **num,struct Rlist **sep);
 static void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
 static char *PrefixLocalRepository(struct Rlist *repositories,char *package);
 static int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
@@ -476,6 +476,14 @@ if (a.packages.package_version)
 	}
       }
 
+   if ( !installed || !matches )
+      {
+      SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+      }
+   else
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
+      }
    }
 else if (a.packages.package_version_regex)
    {
@@ -499,8 +507,14 @@ else if (a.packages.package_version_regex)
    installed = PackageMatch(name,"*",arch,a,pp);
    matches = PackageMatch(name,version,arch,a,pp);
    
-   SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
-
+   if ( !installed || !matches )
+      {
+      SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+      }
+   else
+      {
+      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
+      }
    }
 else
    {
@@ -530,17 +544,13 @@ else
 
        SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
        }
-
      }
-
    }
-
 }
 
 /*****************************************************************************/
 
 static void VerifyPromisedPatch(struct Attributes a,struct Promise *pp)
-// NOTE: Should be acting the same as VerifyPromisedPackage()
 
 { char version[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
@@ -1954,10 +1964,14 @@ int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct 
 
 static int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp)
 
-{ struct Rlist *numbers_1 = NULL,*separators_1 = NULL;
-  struct Rlist *numbers_2 = NULL,*separators_2 = NULL;
-  struct Rlist *rp_1,*rp_2;
+{ struct Rlist *numbers_pr = NULL,*separators_pr = NULL;
+  struct Rlist *numbers_in = NULL,*separators_in = NULL;
+  struct Rlist *rp_pr,*rp_in;
   int result = true;
+  int version_matched = false;
+  int version_equal = false;
+  int cmp_result;
+  int break_loop = false;
 
 Debug("Compare (%s,%s,%s) and (%s,%s,%s)\n",n,v,a,pi->name,pi->version,pi->arch);
   
@@ -1984,28 +1998,28 @@ if (strcmp(v,"*") == 0)
    return true;
    }
 
-ParsePackageVersion(CanonifyChar(v,','),numbers_1,&separators_1);
-ParsePackageVersion(CanonifyChar(pi->version,','),numbers_2,&separators_2);
+ParsePackageVersion(CanonifyChar(v,','),&numbers_pr,&separators_pr);
+ParsePackageVersion(CanonifyChar(pi->version,','),&numbers_in,&separators_in);
 
 /* If the format of the version string doesn't match, we're already doomed */
 
 CfOut(cf_verbose,""," -> Check for compatible versioning model in (%s,%s)\n",v,pi->version);
 
-for (rp_1 = separators_1,rp_2 = separators_2; rp_1 != NULL && rp_2 != NULL; rp_1= rp_1->next,rp_2=rp_2->next)
+for (rp_pr = separators_pr,rp_in = separators_in; rp_pr != NULL && rp_in != NULL; rp_pr= rp_pr->next,rp_in=rp_in->next)
    {
-   if (strcmp(rp_1->item,rp_2->item) != 0)
+   if (strcmp(rp_pr->item,rp_in->item) != 0)
       {
       result = false;
       break;
       }
    
-   if (rp_1->next == NULL && rp_2->next == NULL)
+   if (rp_pr->next == NULL && rp_in->next == NULL)
       {
       result = true;
       break;
       }
 
-   if ((rp_1->next != NULL && rp_2->next == NULL) || (rp_1->next == NULL && rp_2->next != NULL))
+   if ((rp_pr->next != NULL && rp_in->next == NULL) || (rp_pr->next == NULL && rp_in->next != NULL))
       {
       result = false;
       break;
@@ -2021,61 +2035,81 @@ else
    CfOut(cf_verbose,""," !! Versioning models for (%s,%s) were incompatible\n",v,pi->version);
    }
 
-if (result != false)
+version_equal = (strcmp(pi->version,v) == 0);
+
+if (result)
    {
-   for (rp_1 = numbers_1,rp_2 = numbers_2;
-        rp_1 != NULL && rp_2 != NULL;
-        rp_1= rp_1->next,rp_2=rp_2->next)
+   for (rp_pr = numbers_pr,rp_in = numbers_in; rp_pr != NULL && rp_in != NULL; rp_pr= rp_pr->next,rp_in=rp_in->next)
       {
+      cmp_result = strcmp(rp_pr->item,rp_in->item);
+
       switch (cmp)
          {
          case cfa_eq:
          case cfa_cmp_none:
-             if (strcmp(rp_1->item,rp_2->item) != 0)
+             if (version_equal)
                 {
-                result = false;
+                version_matched = true;
                 }             
              break;
          case cfa_neq:
-             if (strcmp(rp_1->item,rp_2->item) == 0)
+             if (!version_equal)
                 {
-                result = false;
+                version_matched = true;
                 }             
              break;
          case cfa_gt:
-             if (strcmp(rp_1->item,rp_2->item) <= 0)
+             if (cmp_result < 0)
                 {
-                result = false;
+                version_matched = true;
+                }             
+             else if (cmp_result > 0)
+                {
+                break_loop = true;
                 }
              break;
          case cfa_lt:
-             if (strcmp(rp_1->item,rp_2->item) >= 0)
+             if (cmp_result > 0)
                 {
-                result = false;
+                version_matched = true;
                 }             
+             else if (cmp_result < 0)
+                {
+                break_loop = true;
+                }
              break;
          case cfa_ge:
-             if (strcmp(rp_1->item,rp_2->item) < 0)
+             if ((cmp_result < 0) || version_equal)
                 {
-                result = false;
+                version_matched = true;
                 }             
+             else if (cmp_result > 0)
+                {
+                break_loop = true;
+                }
              break;
          case cfa_le:
-             if (strcmp(rp_1->item,rp_2->item) > 0)
+             if ((cmp_result > 0) || version_equal)
                 {
-                result = false;
+                version_matched = true;
                 }             
+             else if (cmp_result < 0)
+                {
+                break_loop = true;
+                }
              break;
          default:
              break;
          }
 
-      if (result == false)
+      if ((version_matched == true) || break_loop)
          {
          break;
          }
       }
    }
+
+result = version_matched;
 
 if (result)
    {
@@ -2086,10 +2120,10 @@ else
    CfOut(cf_verbose,""," -> Versions did not match\n");
    }
 
-DeleteRlist(numbers_1);
-DeleteRlist(numbers_2);
-DeleteRlist(separators_1);
-DeleteRlist(separators_2);
+DeleteRlist(numbers_pr);
+DeleteRlist(numbers_in);
+DeleteRlist(separators_pr);
+DeleteRlist(separators_in);
 return result;
 }
 
@@ -2120,7 +2154,7 @@ return false;
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void ParsePackageVersion(char *version,struct Rlist *num,struct Rlist **sep)
+static void ParsePackageVersion(char *version,struct Rlist **num,struct Rlist **sep)
 
 { char *sp,numeral[30],separator[2];
 
@@ -2139,9 +2173,9 @@ for (sp = version; *sp != '\0'; sp++)
    sscanf(sp,"%29[0-9a-zA-Z]",numeral);
    sp += strlen(numeral);
 
-   /* Prepend to end up with right->left comparison */
+   /* Append to end up with left->right (major->minor) comparison */
 
-   PrependRScalar(&num,numeral,CF_SCALAR);
+   AppendRScalar(num,numeral,CF_SCALAR);
 
    if (*sp == '\0')
       {

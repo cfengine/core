@@ -1,0 +1,92 @@
+PREREQUISITES
+-------------
+
+In order to build CFEngine you need the following tools and libraries installed:
+
+* gcc >= 3.0
+  [CFEngine uses several C99 constructs, so gcc 2.95 is not up to the task anymore]
+* GNU make
+
+* OpenSSL library
+* PCRE library
+* POSIX threads (pthreads) library, if not provided by the operating system
+* - Berkeley DB, or
+  - Tokyo Cabinet, or
+  - QDBM
+
+* MySQL client library (optional)
+* PostgreSQL client library (optional)
+* SELinux library (optional)
+
+In order to build CFEngine checked out from Subversion, you need the following
+additional tools to regenerate build scripts and generate source code files:
+
+* GNU Automake
+* GNU Autoconf >= 2.59
+* GNU Libtool >= 1.5.4
+* Yacc
+* Lex
+
+Latest stable versions of the tools and libraries are generally advised.
+
+OPERATING SYSTEMS
+-----------------
+
+CFEngine is regularely built and tested on the following operating systems:
+
+* GNU/Linux (many distributions)
+* FreeBSD
+* NetBSD
+* Solaris
+
+HARDWARE PLATFORMS
+------------------
+
+CFEngine is regularely built and tested on the following CPU architectures:
+
+* x86
+* x86-64
+* SPARC
+
+OTHER CONFIGURATIONS
+--------------------
+
+In case you have succesfully compiled CFEngine on a different OS and/or using
+different tools or versions of tools, please report it to help-cfengine@ mailing
+list[1]. Please consider running a testsuite (see below), and posting results to
+mailing list too.
+
+[1] https://cfengine.org/mailman/listinfo/help-cfengine
+
+BUILD INSTRUCTIONS
+------------------
+
+From tarball:
+
+$ ./configure [configure options]
+$ make [-jN]
+
+From Subversion checkout:
+
+$ ./autogen.sh [configure options]
+$ make [-jN]
+
+See the available configure options:
+
+$ ./configure --help
+or
+$ ./autogen.sh --help
+
+RUNNING TESTSUITE
+-----------------
+
+$ ./configure --prefix=/var/cfengine
+$ make [-jN]
+$ sudo make install
+$ cd tests
+$ ./testall
+
+In meantime testsuite needs sudo permissions to run (due to testing various
+functionality available only for superuser). This might change in future.
+
+Results are generated in test.log (short) and testresult.log (detailed) files.

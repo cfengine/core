@@ -147,6 +147,7 @@ return false;
 void CheckLicenses()
 
 { struct stat sb;
+  char name[CF_BUFSIZE];
  
 #ifdef HAVE_NOVA
 Nova_CheckLicensePromise();

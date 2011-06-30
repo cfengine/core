@@ -1781,6 +1781,8 @@ while (*b)
    }
 }
 
+/*******************************************************************/
+
 void PrintVersionBanner(const char *component)
 {
 const char *text[] =
@@ -1804,10 +1806,14 @@ printf("\n");
 printf("Copyright (C) Cfengine AS 2008-%s\n", VYEAR);
 }
 
+/*******************************************************************/
+
 const char *Version(void)
 {
 return VERSION;
 }
+
+/*******************************************************************/
 
 const char *NameVersion(void)
 {

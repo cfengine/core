@@ -563,9 +563,9 @@ if (cfstat(filename,&sb) == -1)
       }
 
 #ifdef HAVE_CONSTELLATION
-   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%s)\n\n",Version(),Nova_Version(),Constellation_Version(),VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%s)\n\n",Version(),NOVA_VERSION,CONSTELLATION_VERSION,VYEAR);
 #elif HAVE_NOVA
-   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s (%s)\n\n",Version(),Nova_Version(),VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s (%s)\n\n",Version(),NOVA_VERSION,VYEAR);
 #else
    fprintf(fp,"\n@i{History}: Was introduced in %s (%s)\n\n", Version(), VYEAR);
 #endif

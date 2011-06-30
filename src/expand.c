@@ -34,7 +34,7 @@
 
 static void ConvergePromiseValues(struct Promise *pp);
 static void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level,struct Promise *pp);
-static int ExpandPrivateScalar(char *contextid,char *string,char buffer[CF_EXPANDSIZE]);
+static int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 static int Epimenides(char *var,char *rval,char rtype,int level);
 
 /*
@@ -245,7 +245,7 @@ for (sp = string; (*sp != '\0') ; sp++)
             strncpy(absscope,scopeid,CF_MAXVARSIZE-1);  
             }
 
-         ExpandPrivateScalar(absscope,v,var); 
+         ExpandPrivateScalar(absscope,v,var);
          
          RegisterBundleDependence(absscope,pp);
 
@@ -292,7 +292,7 @@ for (sp = string; (*sp != '\0') ; sp++)
 
 /*********************************************************************/
 
-int ExpandScalar(char *string,char buffer[CF_EXPANDSIZE])
+int ExpandScalar(const char *string,char buffer[CF_EXPANDSIZE])
 
 {
 Debug("ExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
@@ -451,9 +451,10 @@ return false;
 
 /*********************************************************************/
 
-static int ExpandPrivateScalar(char *scopeid,char *string,char buffer[CF_EXPANDSIZE]) 
+static int ExpandPrivateScalar(const char *scopeid, const char *string,char buffer[CF_EXPANDSIZE])
 
-{ char *sp,rtype;
+{ char rtype;
+  const char *sp;
   void *rval;
   int varstring = false;
   char currentitem[CF_EXPANDSIZE],temp[CF_BUFSIZE],name[CF_MAXVARSIZE];
@@ -805,9 +806,9 @@ return returnval;
 /* Tools                                                             */
 /*********************************************************************/
 
-int IsExpandable(char *str)
+int IsExpandable(const char *str)
 
-{ char *sp;
+{ const char *sp;
   char left = 'x', right = 'x';
   int dollar = false;
   int bracks = 0, vars = 0;

@@ -217,7 +217,7 @@ else
 
 /*******************************************************************/
 
-enum cfdatatype GetVariable(char *scope,char *lval,void **returnv, char *rtype)
+enum cfdatatype GetVariable(const char *scope, const char *lval, void **returnv, char *rtype)
 
 {
   int slot,i,found = false;
@@ -229,7 +229,7 @@ Debug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
 if (lval == NULL)
    {
-   *returnv = lval;
+   *returnv = (void*)lval;
    *rtype   = CF_SCALAR;
    return cf_notype;
    }
@@ -246,7 +246,7 @@ else
       }
    else
       {
-      *returnv = lval;
+      *returnv = (void*)lval;
       *rtype   = CF_SCALAR;
       Debug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
       return cf_notype;
@@ -280,7 +280,7 @@ i = slot = GetHash(vlval);
 if (ptr == NULL || ptr->hashtable == NULL)
    {
    Debug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
-   *returnv = lval;
+   *returnv = (void*)lval;
    *rtype   = CF_SCALAR;
    return cf_notype;
    }
@@ -319,7 +319,7 @@ if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
    if (!found)
       {
       Debug("No such variable found %s.%s\n\n",scopeid,lval);
-      *returnv = lval;
+      *returnv = (void*)lval;
       *rtype   = CF_SCALAR;
       return cf_notype;
       }
@@ -758,9 +758,9 @@ return false;
 
 /*******************************************************************/
 
-char *ExtractInnerCf3VarString(char *str,char *substr)
+const char *ExtractInnerCf3VarString(const char *str,char *substr)
 
-{ char *sp;
+{ const char *sp;
   int bracks = 1;
 
 Debug("ExtractInnerVarString( %s ) - syntax verify\n",str);
@@ -827,11 +827,11 @@ return sp-1;
 
 /*********************************************************************/
 
-char *ExtractOuterCf3VarString(char *str,char *substr)
+const char *ExtractOuterCf3VarString(const char *str, char *substr)
 
   /* Should only by applied on str[0] == '$' */
     
-{ char *sp;
+{ const char *sp;
   int dollar = false;
   int bracks = 0, onebrack = false;
   int nobracks = true;

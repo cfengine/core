@@ -97,18 +97,6 @@ void EnterpriseContext()
 
 /*****************************************************************************/
 
-void EnterpriseVersion()
-
-{
-#ifdef HAVE_CONSTELLATION
-Constellation_Version();
-#elif defined HAVE_NOVA
-Nova_Version();
-#endif 
-}
-
-/*****************************************************************************/
-
 int CfSessionKeySize(char c)
 {
 #ifdef HAVE_NOVA
@@ -1180,22 +1168,3 @@ return false;
 
 #endif
 }
-
-#ifndef HAVE_NOVA
-const char *Nova_GetVersion(void)
-{
-return "";
-}
-
-const char *Nova_StrVersion(void)
-{
-return "";
-}
-#endif
-
-#ifndef HAVE_CONSTELLATION
-char *Constellation_StrVersion(void)
-{
-return "";
-}
-#endif

@@ -321,7 +321,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i:",OPTIONS,&optindex
           break;
 
       case 'V':
-          Version("cf-report");
+          PrintVersionBanner("cf-report");
           exit(0);
 
       case 'h':

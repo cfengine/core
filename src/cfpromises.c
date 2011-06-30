@@ -174,7 +174,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
           NewClass("opt_dry_run");
           break;
           
-      case 'V': Version("cf-promises");
+      case 'V': PrintVersionBanner("cf-promises");
           exit(0);
           
       case 'h': Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);

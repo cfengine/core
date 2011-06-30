@@ -237,7 +237,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
           NO_FORK = true;
           break;
 
-      case 'V': Version("cf-execd");
+      case 'V': PrintVersionBanner("cf-execd");
           exit(0);
           
       case 'h': Syntax("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);

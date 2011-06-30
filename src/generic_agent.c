@@ -1781,16 +1781,20 @@ while (*b)
    }
 }
 
-void Version(char *component)
+void PrintVersionBanner(const char *component)
 {
 const char *text[] =
    {
    "",
    component,
    "",
-   "CFEngine Core " VERSION,
-   Nova_StrVersion(),
-   Constellation_StrVersion(),
+   NameVersion(),
+#ifdef HAVE_NOVA
+   Nova_NameVersion(),
+#endif
+#ifdef HAVE_CONSTELLATION
+   Constellation_NameVersion(),
+#endif
    NULL
    };
 
@@ -1798,6 +1802,16 @@ printf("\n");
 AgentBanner(text);
 printf("\n");
 printf("Copyright (C) Cfengine AS 2008-%s\n", VYEAR);
+}
+
+const char *Version(void)
+{
+return VERSION;
+}
+
+const char *NameVersion(void)
+{
+return "CFEngine Core " VERSION;
 }
 
 /********************************************************************/

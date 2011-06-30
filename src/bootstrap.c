@@ -63,7 +63,7 @@ void CheckAutoBootstrap()
 printf("\n ** Initiated the cfengine enterprise diagnostic bootstrap probe\n");
 printf(" ** This is a Nova automation extension (self-healing installer)\n\n");
 
-Version("cfengine");
+PrintVersionBanner("cfengine");
 printf("\n");
 
 printf(" -> This host is: %s\n",VSYSNAME.nodename);

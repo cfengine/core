@@ -123,7 +123,7 @@ while ((c=getopt_long(argc,argv,"d:vf:VMs",OPTIONS,&optindex)) != EOF)
              }
           break;
                     
-      case 'V': Version("cf-key");
+      case 'V': PrintVersionBanner("cf-key");
           exit(0);
 
       case 'v':

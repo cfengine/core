@@ -226,7 +226,8 @@ if ((tloc = time((time_t *)NULL)) == -1)
 
 snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
 
-CfOut(cf_verbose,"","Cfengine - %s %s\n\n",VERSION,CF3COPYRIGHT);
+/* FIXME: type conversion */
+CfOut(cf_verbose,"",(char*)NameVersion());
 
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);
@@ -255,9 +256,15 @@ NewScalar("sys","resolv",VRESOLVCONF[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","maildir",VMAILDIR[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","exports",VEXPORTS[VSYSTEMHARDCLASS],cf_str);
 NewScalar("sys","expires",EXPIRY,cf_str);
-NewScalar("sys","cf_version",VERSION,cf_str);
+/* FIXME: type conversion */
+NewScalar("sys","cf_version",(char*)Version(),cf_str);
 #ifdef HAVE_NOVA
-NewScalar("sys","nova_version",Nova_GetVersion(),cf_str);
+/* FIXME: type conversion */
+NewScalar("sys","nova_version",(char*)Nova_Version(),cf_str);
+#endif
+#ifdef HAVE_CONSTELLATION
+/* FIXME: type conversion */
+NewScalar("sys","constellation_version",(char*)Constellation_Version(),cf_str);
 #endif
 
 if (PUBKEY)
@@ -676,7 +683,7 @@ void OSClasses()
 
 NewClass("any");      /* This is a reserved word / wildcard */
 
-snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(VERSION));
+snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(Version()));
 
 NewClass(vbuff);
 while ((sp = strrchr(vbuff, '_')))
@@ -1849,14 +1856,6 @@ return 1;
 }
 
 #endif
-
-/******************************************************************/
-
-char *Cf_GetVersion(void)
-
-{
-return VERSION;
-}
 
 /******************************************************************/
 /* User info                                                      */

@@ -154,7 +154,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
       case 'T': MonNetworkSnifferEnable(true);
          break;
 
-      case 'V': Version("cf-monitord");
+      case 'V': PrintVersionBanner("cf-monitord");
          exit(0);
 
       case 'h': Syntax("cf-monitord - cfengine's monitoring agent",OPTIONS,HINTS,ID);

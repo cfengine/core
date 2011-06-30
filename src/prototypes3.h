@@ -35,9 +35,10 @@
 
 #include "compiler.h"
 
-char *Nova_GetVersion(void);
-char * Nova_StrVersion(void);
-char *Constellation_StrVersion(void);
+/* Versions */
+
+const char *Version(void);
+const char *NameVersion(void);
 
 /* full-write.c */
 
@@ -393,7 +394,6 @@ const EVP_CIPHER *CfengineCipher(char type);
 void Aggregate(char *stylesheet,char *banner,char *footer,char *webdriver);
 void SetPolicyServer(char *name);
 int IsEnterprise(void);
-void EnterpriseVersion(void);
 void EnterpriseContext(void);
 char *GetProcessOptions(void);
 int EnterpriseExpiry(void);
@@ -707,7 +707,7 @@ void InitializeGA(int argc,char **argv);
 void CheckOpts(int argc,char **argv);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
-void Version(char *comp);
+void PrintVersionBanner(const char *component);
 int CheckPromises(enum cfagenttype ag);
 void ReadPromises(enum cfagenttype ag,char *agents);
 int NewPromiseProposals(void);
@@ -1113,7 +1113,6 @@ void Get3Environment(void);
 void OSClasses(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);
-char *Cf_GetVersion(void);
 int GetCurrentUserName(char *userName, int userNameLen);
 #ifndef MINGW
 void Unix_GetInterfaceInfo(enum cfagenttype ag);

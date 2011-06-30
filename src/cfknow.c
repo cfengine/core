@@ -219,7 +219,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S",OPTIONS,&optindex)) != EOF)
           break;
           
       case 'V':
-          Version("cf-know");
+          PrintVersionBanner("cf-know");
           exit(0);
           
       case 'h':

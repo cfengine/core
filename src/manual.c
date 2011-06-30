@@ -73,7 +73,7 @@ fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
 
-fprintf(fout,"@node Getting started\n@chapter Cfengine %s -- Getting started\n\n",VERSION);
+fprintf(fout,"@node Getting started\n@chapter CFEngine %s -- Getting started\n\n",Version());
 IncludeManualFile(fout,"reference_basics.texinfo");
 
 /* Control promises */
@@ -213,7 +213,7 @@ fprintf(fout,
         "@titlepage\n"
         "@title CFEngine Reference Manual\n"
         "@subtitle Auto generated, self-healing knowledge\n"
-        "@subtitle Documentation for core version %s\n"
+        "@subtitle Documentation for %s\n"
 #ifdef HAVE_NOVA
         "@subtitle %s\n"
 #endif
@@ -257,10 +257,10 @@ fprintf(fout,
         "@iftex\n"
         "@contents\n"
         "@end iftex\n",
-        VERSION
+        NameVersion()
 #ifdef HAVE_NOVA
         ,
-        Nova_StrVersion()
+        Nova_NameVersion()
 #endif
         );
 }
@@ -563,9 +563,11 @@ if (cfstat(filename,&sb) == -1)
       }
 
 #ifdef HAVE_CONSTELLATION
-   fprintf(fp,"\n@i{History}: Was introduced in version %s, Nova %s, Constellation %s (%s)\n\n",VERSION,Nova_GetVersion(),Constellation_GetVersion(),VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%s)\n\n",Version(),Nova_Version(),Constellation_Version(),VYEAR);
 #elif HAVE_NOVA
-   fprintf(fp,"\n@i{History}: Was introduced in version %s, Nova %s (%s)\n\n",VERSION,Nova_GetVersion(),VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s (%s)\n\n",Version(),Nova_Version(),VYEAR);
+#else
+   fprintf(fp,"\n@i{History}: Was introduced in %s (%s)\n\n", Version(), VYEAR);
 #endif
    fprintf(fp,"\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n",filename);
    fclose(fp);

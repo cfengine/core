@@ -301,7 +301,7 @@ while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex
              CONNTIMEOUT = atoi(optarg);
           break;
           
-      case 'V': Version("cf-runagent Run agent");
+      case 'V': PrintVersionBanner("cf-runagent");
           exit(0);
           
       case 'h': Syntax("cf-runagent - Run agent",OPTIONS,HINTS,ID);

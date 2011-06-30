@@ -274,7 +274,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != 
           break;
           
       case 'V':
-          Version("cf-agent");
+          PrintVersionBanner("cf-agent");
           exit(0);
           
       case 'h':

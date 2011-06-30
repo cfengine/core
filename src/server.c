@@ -247,7 +247,7 @@ while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
           putenv(ld_library_path);
           break;
 
-      case 'V': Version("cf-serverd");
+      case 'V': PrintVersionBanner("cf-serverd");
           exit(0);
           
       case 'h': Syntax("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
@@ -1028,7 +1028,7 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           }
 
-       snprintf(conn->output,CF_BUFSIZE,"OK: %s",VERSION);
+       snprintf(conn->output,CF_BUFSIZE,"OK: %s",Version());
        SendTransaction(conn->sd_reply,conn->output,0,CF_DONE);
        return conn->id_verified;
        

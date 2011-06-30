@@ -597,7 +597,7 @@ fprintf(FREPORT_TXT,"}\n");
 void SyntaxTree(void)
 
 {
-printf("<h1>CFENGINE %s SYNTAX</h1><p>",VERSION);
+printf("<h1>CFENGINE %s SYNTAX</h1><p>",Version());
 
 printf("<table class=\"frame\"><tr><td>\n");
 ShowDataTypes();

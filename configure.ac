@@ -479,7 +479,15 @@ dnl Checks for header files.
 dnl ######################################################################
 
 AC_CHECK_HEADERS(unistd.h stdlib.h sys/loadavg.h)
-AC_CHECK_HEADERS(sys/mount.h)
+AC_CHECK_HEADERS(sys/param.h)
+
+# sys/param.h is required for sys/mount.h on OpenBSD
+AC_CHECK_HEADERS(sys/mount.h, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+])
+
 AC_CHECK_HEADERS(utime.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -489,7 +497,6 @@ AC_CHECK_HEADERS(sys/vfs.h)
 AC_CHECK_HEADERS(sys/sockio.h)
 AC_CHECK_HEADERS(sys/statvfs.h)
 AC_CHECK_HEADERS(sys/statfs.h)
-AC_CHECK_HEADERS(sys/param.h)
 AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)

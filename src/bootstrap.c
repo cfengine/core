@@ -350,6 +350,7 @@ fprintf(fout,
 "body depth_search u_recurse(d)\n"
 "{\n"
 "depth => \"$(d)\";\n"
+"exclude_dirs => { \"\\.svn\" };"
 "}\n"
 "############################################\n"
 "body service_method bootstart\n"

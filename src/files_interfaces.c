@@ -1825,12 +1825,10 @@ if (!discardbackup)
          return false;
          }
       }
-   else
+
+   if (!JoinSuffix(backup,CF_SAVED))
       {
-      if (!JoinSuffix(backup,CF_SAVED))
-         {
-         return false;
-         }
+      return false;
       }
    
    /* Now in case of multiple copies of same object, try to avoid overwriting original backup */

@@ -451,6 +451,7 @@ body action u_immediate
 body depth_search u_recurse(d)
 {
  depth => "$(d)";
+ exclude_dirs => { "\.svn" };
 }
 
 #########################################################
@@ -459,6 +460,7 @@ body depth_search u_recurse_basedir(d)
 {
  include_basedir => "true";
  depth => "$(d)";
+ exclude_dirs => { "\.svn" };
 }
 
 #########################################################

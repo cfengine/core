@@ -7,6 +7,7 @@ July 2011
 - "commercial_customer" or => { "nova_edition", "constellation_edition" } added
 - limited "cf-execd" upto 2 processes in case SA wants to run "cf-execd -F"
 - Supported Community self-upgrade (cfengine-community)
+- Added exclude_dirs => { "\.svn" }; not to download version control hiddend directory in update.cf
 
 June 2011
 *cfengine.cf*

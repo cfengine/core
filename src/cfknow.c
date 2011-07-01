@@ -204,9 +204,7 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S",OPTIONS,&optindex)) != EOF)
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
           CfGenerateStories(TOPIC_CMD,cfi_cause);
-
 #endif
-          
           exit(0);
           break;
           
@@ -289,6 +287,7 @@ if (InsertTopic("any","any"))
 void KeepKnowControlPromises()
 
 { struct Constraint *cp;
+  struct Rlist *rp;
   char rettype;
   void *retval;
 
@@ -324,14 +323,21 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_goalpatterns].lval) == 0)
       {
-      GOALS = (struct Rlist *)retval;
+      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+         {
+         PrependRScalar(&GOALS,rp->item,CF_SCALAR);
+         }
       CfOut(cf_verbose,"","SET goal_patterns list\n");
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_goalcategories].lval) == 0)
       {
-      GOALCATEGORIES = (struct Rlist *)retval;
+      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+         {
+         PrependRScalar(&GOALCATEGORIES,rp->item,CF_SCALAR);
+         }
+
       CfOut(cf_verbose,"","SET goal_categories list\n");
       continue;
       }

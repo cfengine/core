@@ -570,11 +570,11 @@ if (cfstat(filename,&sb) == -1)
       }
 
 #ifdef HAVE_CONSTELLATION
-   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%s)\n\n",Version(),Nova_Version(),Constellation_Version(),VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%d)\n\n",Version(),Nova_Version(),Constellation_Version(), BUILD_YEAR);
 #elif HAVE_NOVA
-   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s (%s)\n\n",Version(),Nova_Version(),VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s (%d)\n\n",Version(),Nova_Version(), BUILD_YEAR);
 #else
-   fprintf(fp,"\n@i{History}: Was introduced in %s (%s)\n\n", Version(), VYEAR);
+   fprintf(fp,"\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);
 #endif
    fprintf(fp,"\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n",filename);
    fclose(fp);

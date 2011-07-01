@@ -1746,7 +1746,7 @@ printf("\nBug reports: http://bug.cfengine.com, ");
 printf(".pp\nCommunity help: http://forum.cfengine.com\n");
 printf(".pp\nCommunity info: http://www.cfengine.org\n");
 printf(".pp\nSupport services: http://www.cfengine.com\n");
-printf(".pp\nThis software is Copyright (C) 2008- Cfengine AS.\n");
+printf(".pp\nThis software is Copyright (C) 2008-%d Cfengine AS.\n", BUILD_YEAR);
 }
 
 /*******************************************************************/
@@ -1800,16 +1800,10 @@ const char *text[] =
    NULL
    };
 
-/* We don't have VYEAR initialized here yet */
-time_t curtime;
-struct tm parsed_time;
-time(&curtime);
-localtime_r(&curtime, &parsed_time);
-
 printf("\n");
 AgentBanner(text);
 printf("\n");
-printf("Copyright (C) Cfengine AS 2008-%04d\n", parsed_time.tm_year + 1900);
+printf("Copyright (C) Cfengine AS 2008-%d\n", BUILD_YEAR);
 }
 
 /*******************************************************************/

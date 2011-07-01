@@ -35,6 +35,8 @@ dnl Libtool madness
 
 AC_CONFIG_MACRO_DIR([m4])
 
+AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
+
 #
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems

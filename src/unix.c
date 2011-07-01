@@ -328,7 +328,7 @@ for (ip = siglist; ip != NULL; ip=ip->next)
             }
          else
             {
-            cfPS(cf_inform,CF_CHG,"",pp,a," -> Signalled \'%s\' (%d) to observed process match \'%s\'\n",rp->item,signal,ip->name);
+            cfPS(cf_inform,CF_CHG,"",pp,a," -> Signalled '%s' (%d) to process %d (%s)\n", rp->item, signal, pid, ip->name);
             }
          }
       else

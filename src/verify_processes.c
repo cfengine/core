@@ -334,10 +334,9 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          CfOut(cf_verbose,""," !! cf-agent will not signal itself!\n");
          continue;
          }
-      
-      snprintf(saveuid,15,"%d",(int)pid);
-      PrependItem(killlist,saveuid,"");
-      SetItemListCounter(*killlist,saveuid,pid);
+
+      PrependItem(killlist,ip->name,"");
+      (*killlist)->counter = pid;
       }
    }
 

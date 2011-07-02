@@ -1,0 +1,134 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename st-devops.info
+@settitle CFEngine for `DevOps' or Cloud Operations Developers
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title CFEngine for `Devops' or Cloud Operations Developers
+@subtitle A CFEngine Special Topics Handbook
+@author CFEngine AS
+
+
+@page
+
+@cartouche
+@quotation
+
+@end quotation
+@end cartouche
+
+@vskip 2cm
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2010 CFEngine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Modularization:
+                      CFEngine is a language based tool specifically
+                      designed for configuring and maintaining
+                      Unix-like operating systems attached
+                      to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+
+
+@node Top, What is convergent file editing?, (dir), (dir)
+@top Cfengine for Devops
+
+
+@end ifnottex
+@iftex
+@contents
+@end iftex
+
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+@node 
+@unnumberedsec What is DevOps?
+@sp 1
+
+
+@node 
+@unnumberedsec How do I make a change in infrastructure?
+@sp 1
+
+
+@node 
+@unnumberedsec Using CFEngine to integrate software components
+@sp 1
+
+
+@node 
+@unnumberedsec Dynamical feedback in DevOps
+@sp 1
+
+
+
+
+
+
+
+
+
+
+
+
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https:// 
+ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google- 
+analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+
+@bye
+

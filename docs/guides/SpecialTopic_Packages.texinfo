@@ -1,0 +1,486 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename st-packages.info
+@settitle Package Management
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title Package Management
+@subtitle A CFEngine Special Topics Handbook
+@author CFEngine AS
+
+
+@page
+
+@cartouche
+@quotation
+CFEngine interfaces with operating system package management systems
+to offer best-effort convergent maintenance of software packages.
+@end quotation
+@end cartouche
+
+@vskip 2cm
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2011 CFEngine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Modularization:
+                      CFEngine is a language based tool specifically
+                      designed for configuring and maintaining
+                      Unix-like operating systems attached
+                      to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+
+
+@node Top
+@top Editing
+
+
+
+@end ifnottex
+@iftex
+@contents
+@end iftex
+
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+@node 
+@unnumberedsec What is package management?
+@sp 1
+
+@node 
+@unnumberedsec Strengeths and weaknesses of package management
+@sp 1
+
+@node 
+@unnumberedsec How CFEngine compares package versions
+@sp 1
+
+
+
+
+
+
+
+For example, there is a older version of wget installed on the machine.
+
+redhat$ rpm -q wget
+wget-1.10.2-7.el5 
+
+If I'd like to upgrade the package to the latest version in a repository by YUM, I write down a promise such the following;
+
+bundle agent test001
+{
+ packages:
+  redhat::
+   "wget"
+             package_policy => "addupdate",
+             package_method => yum,
+             package_select => ">=",
+            package_version => "1.11.4-2.el5_4.1",
+      package_architectures => { "x86_64" };
+
+}
+
+body package_method yum
+{
+package_changes => "bulk";
+package_list_command => "/usr/bin/yum list installed";
+package_patch_list_command => "/usr/bin/yum check-update";
+
+# Remember to escape special characters like |
+
+package_list_name_regex    => "([^.]+).*";
+package_list_version_regex => "[^\s]\s+([^\s]+).*";
+package_list_arch_regex    => "[^.]+\.([^\s]+).*";
+
+package_installed_regex => ".*installed.*";
+package_name_convention => "$(name).$(arch)";
+
+package_list_update_ifelapsed => "0"; # avoid caching of list during upgrade
+
+package_patch_installed_regex => "^\s.*";
+package_patch_name_regex    => "([^.]+).*";
+package_patch_version_regex => "[^\s]\s+([^\s]+).*";
+package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+
+package_add_command => "/usr/bin/yum -y install";
+package_update_command => "/usr/bin/yum -y update";
+package_delete_command => "/bin/rpm -e --nodeps";
+package_verify_command => "/bin/rpm -V";
+}
+
+redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+redhat$ rpm -q wget
+wget-1.11.4-2.el5_4.1
+
+and of course if there is no wget installed, CFE will install the lastest one for you.
+
+redhat$ rpm -e wget
+redhat$ rpm -q wget
+package wget is not installed
+redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+redhat$ rpm -q wget
+wget-1.11.4-2.el5_4.1
+
+#
+#
+#
+
+To install a specific version, just adapt the CFE promise a bit; (I'm going to use RPM as my YUM repository doens't support multi-version packages.)
+
+bundle agent test002
+{
+ packages:
+  redhat::
+   "wget"
+             package_policy => "addupdate",
+             package_method => rpm("/root"),
+             package_select => "==",
+            package_version => "1.10.2-7.el5",
+      package_architectures => { "x86_64" };
+
+}
+
+body package_method rpm(repo)
+{
+package_changes => "individual";
+
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
+
+package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
+package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s|]+).*";
+package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+
+package_installed_regex => "i.*";
+
+package_file_repositories => { "$(repo)" };
+
+package_name_convention => "$(name)-$(version).$(arch).rpm";
+
+package_add_command => "/bin/rpm -ivh ";
+package_update_command => "/bin/rpm -Uvh ";
+package_delete_command => "/bin/rpm -e --nodeps";
+package_noverify_regex => ".*[^\s].*";
+}
+
+redhat$ ls -l /root
+-rw-r--r-- 1 root root 595422 Apr  4  2007 wget-1.10.2-7.el5.x86_64.rpm
+-rw-r--r-- 1 root root 596335 Nov  5  2009 wget-1.11.4-2.el5_4.1.x86_64.rpm
+redhat$ rpm -q wget
+package wget is not installed
+redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+redhat$ rpm -q wget
+wget-1.10.2-7.el5
+
+#
+#
+#
+
+To upgrade the package to a newer version, just change "package_version" to a version you'd like;
+
+bundle agent test003
+{
+ packages:
+  redhat::
+   "wget"
+             package_policy => "addupdate",
+             package_method => rpm("/root"),
+             package_select => "==",
+            package_version => "1.11.4-2.el5_4.1",
+      package_architectures => { "x86_64" };
+
+}
+
+redhat$ rpm -q wget
+wget-1.10.2-7.el5
+redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+redhat$ rpm -q wget
+wget-1.11.4-2.el5_4.1
+
+###############################################################################
+
+It would apply for other distrubutions. What we need is to write down more package_method body to let CFE to know software managers.
+
+bundle agent test004
+{
+ packages:
+  ubuntu::
+   "wget"
+             package_policy => "addupdate",
+             package_method => apt,
+             package_select => ">=",
+            package_version => "1.12-1.1ubuntu2.1",
+      package_architectures => { "*" };
+}
+
+#
+# We don't aget arch from a list command so we have to pass "*" to CFE promise
+#
+
+body package_method apt
+{
+package_changes => "bulk";
+package_list_command => "/usr/bin/dpkg -l";
+package_list_name_regex    => "ii\s+([^\s]+).*";
+package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+package_installed_regex => ".*"; # all reported are installed
+package_name_convention => "$(name)";
+
+package_list_update_ifelapsed => "0";
+
+have_aptitude::
+   package_add_command => "/usr/bin/aptitude --assume-yes install";
+   package_list_update_command => "/usr/bin/aptitude update";
+   package_delete_command => "/usr/bin/aptitude --assume-yes remove";
+   package_update_command =>  "/usr/bin/aptitude --assume-yes install";
+   package_verify_command =>  "/usr/bin/aptitude show";
+   package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
+
+!have_aptitude::
+   package_add_command => "/usr/bin/apt-get --yes install";
+   package_list_update_command => "/usr/bin/apt-get update";
+   package_delete_command => "/usr/bin/apt-get --yes remove";
+   package_update_command =>  "/usr/bin/apt-get --yes install";
+   package_verify_command => "/usr/bin/dpkg -s";
+   package_noverify_returncode => "1";
+}
+
+ubuntu$ dpkg -l | grep wget
+ii  wget                            1.10.2-3ubuntu1.2                 retrieves files from the web
+ubuntu$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+ubuntu$ dpkg -l | grep wget
+ii  wget                            1.12-1.1ubuntu2.1                 retrieves files from the web
+
+#
+#
+#
+
+Similarly, we can use "dpkg" to install specific version of the software.
+
+bundle agent test005
+{
+ packages:
+  ubuntu::
+   "wget"
+             package_policy => "addupdate",
+             package_method => dpkg("/root"),
+             package_select => "==",
+            package_version => "1.10.2-3ubuntu1.2",
+      package_architectures => { "*" };
+}
+
+body package_method dpkg(repo)
+{
+package_changes => "individual";
+package_list_command => "/usr/bin/dpkg -l";
+package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
+
+package_list_name_regex    => "ii\s+([^\s]+).*";
+package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+
+package_installed_regex => ".*"; # all reported are installed
+
+package_file_repositories => { "$(repo)" };
+
+debian.x86_64::
+   package_name_convention => "$(name)_$(version)_amd64.deb";
+
+debian.i686::
+   package_name_convention => "$(name)_$(version)_i386.deb";
+
+debian::
+   package_add_command => "/usr/bin/dpkg --install";
+   package_delete_command => "/usr/bin/dpkg --purge";
+   package_update_command =>  "/usr/bin/dpkg --install";
+}
+
+ubuntu$ dpkg -l | grep wget
+ubuntu$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+ubuntu$ dpkg -l | grep wget
+ii  wget                            1.10.2-3ubuntu1.2                 retrieves files from the web
+
+#
+#
+#
+
+To upgrade to a newer version, again, reassign a newer version to package_version.
+
+bundle agent test006
+{
+ packages:
+  ubuntu::
+   "wget"
+             package_policy => "addupdate",
+             package_method => dpkg("/root"),
+             package_select => "==",
+            package_version => "1.12-1.1ubuntu2.1",
+      package_architectures => { "*" };
+}
+
+ubuntu$ dpkg -l | grep wget
+ii  wget                            1.10.2-3ubuntu1.2                 retrieves files from the web 
+ubuntu$ cf-agent -f /tmp/test.cf -K
+ubuntu$ dpkg -l | grep wget
+ii  wget                            1.12-1.1ubuntu2.1                 retrieves files from the web
+
+###############################################################################
+
+What's about ZYPPER in SuSE.
+
+bundle agent test007
+{
+ packages:
+  SuSE::
+   "tcpdump"
+             package_policy => "addupdate",
+             package_method => zypper,
+             package_select => ">=",
+            package_version => "4.1.1-1.11",
+      package_architectures => { "x86_64" };
+}
+
+body package_method zypper
+{
+package_changes => "bulk";
+
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
+
+package_patch_list_command => "/usr/bin/zypper patches";
+package_installed_regex => "i.*";
+package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+
+package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
+package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
+package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+
+package_name_convention => "$(name)";
+package_add_command => "/usr/bin/zypper --non-interactive install";
+package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
+package_update_command => "/usr/bin/zypper --non-interactive update";
+package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
+package_verify_command => "/usr/bin/zypper --non-interactive verify$";
+}
+
+suse$ rpm -q tcpdump
+tcpdump-4.0.0-2.1.x86_64
+suse$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+suse$ rpm -q tcpdump
+tcpdump-4.1.1-1.11.x86_64
+
+#
+#
+#
+
+and of course, SuSE uses RPM as a native format so we can use package_method rpm() from above.
+
+bundle agent test008
+{
+ packages:
+  SuSE::
+   "tcpdump"
+             package_policy => "addupdate",
+             package_method => rpm("/root"),
+             package_select => "==",
+            package_version => "4.0.0-2.1",
+      package_architectures => { "x86_64" };
+}
+
+suse$ ls -l /root
+-rw-r--r-- 1 root root 571158 2009-10-19 20:36 tcpdump-4.0.0-2.1.x86_64.rpm
+-rw-r--r-- 1 root root 318279 2010-07-05 23:37 tcpdump-4.1.1-1.11.x86_64.rpm
+suse$ rpm -q tcpdump
+package tcpdump is not installed
+suse$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+suse$ rpm -q tcpdump
+tcpdump-4.0.0-2.1.x86_64
+
+bundle agent test009
+{
+ packages:
+  SuSE::
+   "tcpdump"
+             package_policy => "addupdate",
+             package_method => rpm("/root"),
+             package_select => "==",
+            package_version => "4.1.1-1.11",
+      package_architectures => { "x86_64" };
+}
+
+suse$ rpm -q tcpdump
+tcpdump-4.0.0-2.1.x86_64
+suse$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+suse$ rpm -q tcpdump
+tcpdump-4.1.1-1.11.x86_64
+
+
+
+
+
+
+
+
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https:// 
+ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google- 
+analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+
+@bye
+

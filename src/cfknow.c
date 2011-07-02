@@ -892,7 +892,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
           break;
           
       default:
-          
+
           AddOccurrence(&OCCURRENCES,pp->promiser,a.represents,rep_type,rp->item);
           break;
       }

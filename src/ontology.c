@@ -223,7 +223,7 @@ if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
       }
 
    op->represents = NULL;
-   op->occurrence_context = strdup(context);
+   op->occurrence_context = strdup(ToLowerStr(context));
    op->locator = strdup(reference);
    op->rep_type = rtype;   
    op->next = *list;

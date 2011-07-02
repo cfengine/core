@@ -1,5 +1,6 @@
 
 all: SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
+     SpecialTopic_Packages.pdf SpecialTopic_DevOps.pdf SpecialTopic_MissionCritical.pdf\
      SpecialTopic_Reporting.pdf SpecialTopic_BDMA.pdf\
      SpecialTopic_Knowledge.pdf SpecialTopic_Rollback.pdf\
      SpecialTopic_Change.pdf    SpecialTopic_Modules.pdf\

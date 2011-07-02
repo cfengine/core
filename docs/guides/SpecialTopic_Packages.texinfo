@@ -34,6 +34,8 @@
 @quotation
 CFEngine interfaces with operating system package management systems
 to offer best-effort convergent maintenance of software packages.
+Package management can be subtle, due to the diverse behaviours of
+different package managers. 
 @end quotation
 @end cartouche
 
@@ -62,8 +64,18 @@ Copyright @copyright{} 2011 CFEngine AS
 @ifnottex
 
 
-@node Top
-@top Editing
+@node Top, What is package management?, (dir), (dir)
+@top Package management
+
+@menu
+* What is package management?::  
+* Strengths and weaknesses of package management::  
+* What does CFEngine bring to package management?::  
+* Package promises::            
+* How CFEngine compares package versions::  
+* Example package promises::    
+* Package management next steps::  
+@end menu
 
 
 
@@ -79,31 +91,158 @@ Copyright @copyright{} 2011 CFEngine AS
 @end html
 @end ifhtml
 
-@node 
+@node  What is package management?, Strengths and weaknesses of package management, Top, Top
 @unnumberedsec What is package management?
 @sp 1
+Package management is about managing software inventory. It includes
+ensuring that software is installed on computers, and in the correct
+versions. It includes patching and upgrading.  Each operating system generally
+has its own approved package manager and software source. Usually this
+is supplied by the operating system provider. 
 
-@node 
-@unnumberedsec Strengeths and weaknesses of package management
+Some package managers allow users to create their own software
+packages providing a uniform way of deploying software to systems.
+Packaging software is common on GNU/Linux, where well-known package formats include RPM
+and DPGK.
+
+
+@node  Strengths and weaknesses of package management, What does CFEngine bring to package management?, What is package management?, Top
+@unnumberedsec Strengths and weaknesses of package management
 @sp 1
 
-@node 
+Packages were introduced to bring a rational approach to handling software dependencies.
+By dividing up applications and libraries into packages, one can share code efficiently
+and assign the responsibility of updating and versioning to different maintainers.
+
+Package management is not a substitute for configuration
+management. It only delivers preconfigured files into a specific
+location. Packaged software cannot be customized to local needs
+without post-installation adaptation. 
+
+
+@node   What does CFEngine bring to package management?, Package promises, Strengths and weaknesses of package management, Top
+@unnumberedsec What does CFEngine bring to package management?
+@sp 1
+
+CFEngine does not try to fight against package mangers, but rather
+work with them.  CFEngine integrates the idea of convergent
+maintenance with package installation, so that one can be certain
+of maintaining a desired state. 
+
+Package managers do not usually have the
+intelligence to be able to verify the actual state of software
+configuration. Rather they assume that once a package is installed,
+it will remain in a good state until an update is required.
+
+If one reinstalls a package, changes get blown away in favour of the
+original matrix. Package installation is thus a `destructive'
+installation mechanism. It overwrites whatever currently exists with a
+prefabricated (and therefore approximate) version of what you
+need. For generic software this is exactly what is required.  However,
+for complex software such as web services, this is entirely
+insufficient to result in a working system.
+
+CFEngine brings convergent methods to package management, and allows surgically
+precise customizations to be applied and maintained even after multiple
+package upgrades.
+
+
+
+@node Package promises, How CFEngine compares package versions, What does CFEngine bring to package management?, Top
+@unnumberedsec Package promises
+@sp 1
+
+To manage software, you write @code{packages} promises, analogous to any other kind of
+promise in CFEngine. It makes sense to use lists to install packages if you
+don't need to make complex specifications about versions. Keep it simple and
+package management will be a simple matter.
+
+@cartouche
+@verbatim
+ vars:
+  "match_package" slist => { 
+                           "apache2", 
+                           "apache2-mod_php5",
+                           "apache2-prefork",
+                           "php5" 
+                           };
+ packages:
+
+    "$(match_package)"
+         package_policy => "add",
+         package_method => yum;
+
+@end verbatim
+@end cartouche
+
+Many users elect to install a basic `stem cell' image for all machines
+in their environment, and then customize each machine to a specific
+purpose by adding or subtracting packages from this stem cell starting
+state. CFEngine can be used together with other tools like
+@code{Cobbler} or @code{rPath} to accomplish this in a comfortable way
+in your environment.  If you are working in the cloud, this is the
+default approach to management. You begin from a basic image and then
+customize it by either hardening or extending the software inventory.
+
+@node  How CFEngine compares package versions, Example package promises, Package promises, Top
 @unnumberedsec How CFEngine compares package versions
 @sp 1
 
+Cfengine uses a model for packages that is generic enough to support all the known
+package managers. It classifies packages into 
+
+@table @i
+@item Name
+The name of the packet is usually the name of the software itself, e.g. @samp{cfengine}.
+@item Version
+Versions of a particular piece of software are described in wildly
+different ways, causing a lot of confusion. For instance, a common
+model is to use major version number, minor version number and patch
+release number, e.g. 3.1.5. However, many maintainers slap on their
+own additions, such as 3.1.5-2 or 3.1.5-2.el5. Because these models
+are operating system, software and release specific, you have to know
+the versioning numbers used on your operating systems and refer to
+them properly. CFEngine cannot reliabily guess these things for you.
+
+@item Architecture
+The architecture describes the hardware platform for execution, e.g.
+@samp{x86_64} or @samp{i586}. This is important when package managers
+store multiple architectures in the same repository.
+@end table
 
 
 
+@node  Example package promises, Package management next steps, How CFEngine compares package versions, Top
+@unnumberedsec Example package promises
+@sp 1
+
+Let's look at some example cases to explain the behaviour of the interaction between CFEngine and
+the package managers.
 
 
 
-For example, there is a older version of wget installed on the machine.
+@menu
+* Install latest package version example::  
+* Install specific package version example::  
+* Uprading to a newer package version example::  
+@end menu
 
+@node  Install latest package version example, Install specific package version example, Example package promises, Example package promises
+@unnumberedsubsec Install latest package version example
+@sp 1
+
+
+Suppose there is a older version of @code{wget} installed on your machine.
+@cartouche
+@verbatim
 redhat$ rpm -q wget
 wget-1.10.2-7.el5 
-
-If I'd like to upgrade the package to the latest version in a repository by YUM, I write down a promise such the following;
-
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Now suppose you'd like to upgrade the package to the latest version available in a repository by using @code{yum}.
+We make a promise such the following;
+@verbatim
 bundle agent test001
 {
  packages:
@@ -116,54 +255,35 @@ bundle agent test001
       package_architectures => { "x86_64" };
 
 }
-
-body package_method yum
-{
-package_changes => "bulk";
-package_list_command => "/usr/bin/yum list installed";
-package_patch_list_command => "/usr/bin/yum check-update";
-
-# Remember to escape special characters like |
-
-package_list_name_regex    => "([^.]+).*";
-package_list_version_regex => "[^\s]\s+([^\s]+).*";
-package_list_arch_regex    => "[^.]+\.([^\s]+).*";
-
-package_installed_regex => ".*installed.*";
-package_name_convention => "$(name).$(arch)";
-
-package_list_update_ifelapsed => "0"; # avoid caching of list during upgrade
-
-package_patch_installed_regex => "^\s.*";
-package_patch_name_regex    => "([^.]+).*";
-package_patch_version_regex => "[^\s]\s+([^\s]+).*";
-package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
-
-package_add_command => "/usr/bin/yum -y install";
-package_update_command => "/usr/bin/yum -y update";
-package_delete_command => "/bin/rpm -e --nodeps";
-package_verify_command => "/bin/rpm -V";
-}
-
+@end verbatim
+@sp 1
+@noindent Now run this bundle:
+@cartouche
+@verbatim
 redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 redhat$ rpm -q wget
 wget-1.11.4-2.el5_4.1
-
-and of course if there is no wget installed, CFE will install the lastest one for you.
-
+@end verbatim
+@end cartouche
+@sp 1
+@noindent If there is no @code{wget} installed, CFE will install the lastest one for you.
+@verbatim
 redhat$ rpm -e wget
 redhat$ rpm -q wget
 package wget is not installed
 redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
 redhat$ rpm -q wget
 wget-1.11.4-2.el5_4.1
+@end verbatim
 
-#
-#
-#
+@node Install specific package version example, Uprading to a newer package version example, Install latest package version example, Example package promises
+@unnumberedsubsec Install specific package version example
+@sp 1
 
-To install a specific version, just adapt the CFE promise a bit; (I'm going to use RPM as my YUM repository doens't support multi-version packages.)
-
+To install a specific version, we can just adapt the promise. 
+This example will use RPM as the YUM repository doesn't support multi-version packages.
+@verbatim
 bundle agent test002
 {
  packages:
@@ -176,45 +296,27 @@ bundle agent test002
       package_architectures => { "x86_64" };
 
 }
-
-body package_method rpm(repo)
-{
-package_changes => "individual";
-
-package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
-package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
-
-package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
-package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s|]+).*";
-package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
-
-package_installed_regex => "i.*";
-
-package_file_repositories => { "$(repo)" };
-
-package_name_convention => "$(name)-$(version).$(arch).rpm";
-
-package_add_command => "/bin/rpm -ivh ";
-package_update_command => "/bin/rpm -Uvh ";
-package_delete_command => "/bin/rpm -e --nodeps";
-package_noverify_regex => ".*[^\s].*";
-}
-
+@end verbatim
+@sp 1
+@noindent Now see before and after:
+@cartouche
+@verbatim
 redhat$ ls -l /root
 -rw-r--r-- 1 root root 595422 Apr  4  2007 wget-1.10.2-7.el5.x86_64.rpm
 -rw-r--r-- 1 root root 596335 Nov  5  2009 wget-1.11.4-2.el5_4.1.x86_64.rpm
+
 redhat$ rpm -q wget
 package wget is not installed
+
 redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 redhat$ rpm -q wget
 wget-1.10.2-7.el5
-
-#
-#
-#
-
-To upgrade the package to a newer version, just change "package_version" to a version you'd like;
-
+@end verbatim
+@end cartouche
+@sp 1
+@noindent To upgrade the package to a newer version, just change @samp{package_version} to a version you'd like;
+@verbatim
 bundle agent test003
 {
  packages:
@@ -227,17 +329,25 @@ bundle agent test003
       package_architectures => { "x86_64" };
 
 }
-
+@end verbatim
+@sp 1
+@noindent Now see the result:
+@cartouche
+@verbatim
 redhat$ rpm -q wget
 wget-1.10.2-7.el5
+
 redhat$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 redhat$ rpm -q wget
 wget-1.11.4-2.el5_4.1
+@end verbatim
+@end cartouche
 
-###############################################################################
+@sp 1
+@noindent Here is an example for Ubuntu, which supports both the APT and DPKG interfaces.
 
-It would apply for other distrubutions. What we need is to write down more package_method body to let CFE to know software managers.
-
+@verbatim
 bundle agent test004
 {
  packages:
@@ -249,51 +359,24 @@ bundle agent test004
             package_version => "1.12-1.1ubuntu2.1",
       package_architectures => { "*" };
 }
-
-#
-# We don't aget arch from a list command so we have to pass "*" to CFE promise
-#
-
-body package_method apt
-{
-package_changes => "bulk";
-package_list_command => "/usr/bin/dpkg -l";
-package_list_name_regex    => "ii\s+([^\s]+).*";
-package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
-package_installed_regex => ".*"; # all reported are installed
-package_name_convention => "$(name)";
-
-package_list_update_ifelapsed => "0";
-
-have_aptitude::
-   package_add_command => "/usr/bin/aptitude --assume-yes install";
-   package_list_update_command => "/usr/bin/aptitude update";
-   package_delete_command => "/usr/bin/aptitude --assume-yes remove";
-   package_update_command =>  "/usr/bin/aptitude --assume-yes install";
-   package_verify_command =>  "/usr/bin/aptitude show";
-   package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
-
-!have_aptitude::
-   package_add_command => "/usr/bin/apt-get --yes install";
-   package_list_update_command => "/usr/bin/apt-get update";
-   package_delete_command => "/usr/bin/apt-get --yes remove";
-   package_update_command =>  "/usr/bin/apt-get --yes install";
-   package_verify_command => "/usr/bin/dpkg -s";
-   package_noverify_returncode => "1";
-}
-
+@end verbatim
+@sp 1
+@noindent Before and after:
+@cartouche
+@verbatim
 ubuntu$ dpkg -l | grep wget
-ii  wget                            1.10.2-3ubuntu1.2                 retrieves files from the web
+ii  wget  1.10.2-3ubuntu1.2 retrieves files from the web
+
 ubuntu$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 ubuntu$ dpkg -l | grep wget
-ii  wget                            1.12-1.1ubuntu2.1                 retrieves files from the web
+ii  wget  1.12-1.1ubuntu2.1 retrieves files from the web
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Similarly, we can use the "dpkg" interface to install specific version of the software.
 
-#
-#
-#
-
-Similarly, we can use "dpkg" to install specific version of the software.
-
+@verbatim
 bundle agent test005
 {
  packages:
@@ -305,43 +388,27 @@ bundle agent test005
             package_version => "1.10.2-3ubuntu1.2",
       package_architectures => { "*" };
 }
-
-body package_method dpkg(repo)
-{
-package_changes => "individual";
-package_list_command => "/usr/bin/dpkg -l";
-package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
-
-package_list_name_regex    => "ii\s+([^\s]+).*";
-package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
-
-package_installed_regex => ".*"; # all reported are installed
-
-package_file_repositories => { "$(repo)" };
-
-debian.x86_64::
-   package_name_convention => "$(name)_$(version)_amd64.deb";
-
-debian.i686::
-   package_name_convention => "$(name)_$(version)_i386.deb";
-
-debian::
-   package_add_command => "/usr/bin/dpkg --install";
-   package_delete_command => "/usr/bin/dpkg --purge";
-   package_update_command =>  "/usr/bin/dpkg --install";
-}
-
+@end verbatim
+@sp 1
+@noindent Before and after:
+@cartouche
+@verbatim
 ubuntu$ dpkg -l | grep wget
+
 ubuntu$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 ubuntu$ dpkg -l | grep wget
 ii  wget                            1.10.2-3ubuntu1.2                 retrieves files from the web
+@end verbatim
+@end cartouche
+@node Uprading to a newer package version example,  , Install specific package version example, Example package promises
+@unnumberedsubsec Uprading to a newer package version example
+@sp 1
 
-#
-#
-#
 
-To upgrade to a newer version, again, reassign a newer version to package_version.
-
+To upgrade to a newer version of  apackage, we simply assign a newer version to package_version
+and change the policy to include updating.
+@verbatim
 bundle agent test006
 {
  packages:
@@ -351,19 +418,23 @@ bundle agent test006
              package_method => dpkg("/root"),
              package_select => "==",
             package_version => "1.12-1.1ubuntu2.1",
-      package_architectures => { "*" };
+      package_architectures => { "*" };  
 }
-
+@end verbatim
+@sp 1
+@noindent Before and after the keeping of this promise:
+@cartouche
+@verbatim
 ubuntu$ dpkg -l | grep wget
 ii  wget                            1.10.2-3ubuntu1.2                 retrieves files from the web 
 ubuntu$ cf-agent -f /tmp/test.cf -K
 ubuntu$ dpkg -l | grep wget
 ii  wget                            1.12-1.1ubuntu2.1                 retrieves files from the web
-
-###############################################################################
-
-What's about ZYPPER in SuSE.
-
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Here is an example using the @code{zypper} package manager:
+@verbatim
 bundle agent test007
 {
  packages:
@@ -375,44 +446,23 @@ bundle agent test007
             package_version => "4.1.1-1.11",
       package_architectures => { "x86_64" };
 }
-
-body package_method zypper
-{
-package_changes => "bulk";
-
-package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
-package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
-
-package_patch_list_command => "/usr/bin/zypper patches";
-package_installed_regex => "i.*";
-package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
-package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
-package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
-
-package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
-package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
-package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
-
-package_name_convention => "$(name)";
-package_add_command => "/usr/bin/zypper --non-interactive install";
-package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
-package_update_command => "/usr/bin/zypper --non-interactive update";
-package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
-package_verify_command => "/usr/bin/zypper --non-interactive verify$";
-}
-
+@end verbatim
+@sp 1
+@noindent Before and after running the agent:
+@cartouche
+@verbatim
 suse$ rpm -q tcpdump
 tcpdump-4.0.0-2.1.x86_64
+
 suse$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 suse$ rpm -q tcpdump
 tcpdump-4.1.1-1.11.x86_64
-
-#
-#
-#
-
-and of course, SuSE uses RPM as a native format so we can use package_method rpm() from above.
-
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Finally, since SuSE uses RPM as a native format so we can use @samp{package_method rpm()} from above.
+@verbatim
 bundle agent test008
 {
  packages:
@@ -424,16 +474,25 @@ bundle agent test008
             package_version => "4.0.0-2.1",
       package_architectures => { "x86_64" };
 }
-
+@end verbatim
+@cartouche
+@verbatim
 suse$ ls -l /root
 -rw-r--r-- 1 root root 571158 2009-10-19 20:36 tcpdump-4.0.0-2.1.x86_64.rpm
 -rw-r--r-- 1 root root 318279 2010-07-05 23:37 tcpdump-4.1.1-1.11.x86_64.rpm
+
 suse$ rpm -q tcpdump
 package tcpdump is not installed
+
 suse$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 suse$ rpm -q tcpdump
 tcpdump-4.0.0-2.1.x86_64
-
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Changing to a new version:
+@verbatim
 bundle agent test009
 {
  packages:
@@ -445,18 +504,32 @@ bundle agent test009
             package_version => "4.1.1-1.11",
       package_architectures => { "x86_64" };
 }
+@end verbatim
+@sp 1
 
+@noindent Before and after:
+@cartouche
+@verbatim
 suse$ rpm -q tcpdump
 tcpdump-4.0.0-2.1.x86_64
+
 suse$ /var/cfengine/bin/cf-agent -f /tmp/test.cf -K
+
 suse$ rpm -q tcpdump
 tcpdump-4.1.1-1.11.x86_64
+@end verbatim
+@end cartouche
 
 
 
+@node Package management next steps,  , Example package promises, Top
+@unnumberedsec Package management next steps
 
-
-
+The CFEngine standard library contains package manager methods for all
+major operating systems and managers. Check out the reference
+documentation too to learn about extended features of package
+integration. Visit also the community forum to hear about reach
+experiences.
 
 
 @ifhtml

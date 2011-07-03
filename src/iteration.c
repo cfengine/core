@@ -144,7 +144,7 @@ if (state == NULL)
 
 /* Go ahead and increment */
 
-Debug(" -> Incrementing (%s) from \"%s\"\n",cp->lval,iterator->state_ptr->item);
+Debug(" -> Incrementing (%s) from \"%s\"\n", cp->lval, (char *)iterator->state_ptr->item);
 
 if (state->next == NULL)
    {

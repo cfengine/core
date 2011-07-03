@@ -716,7 +716,7 @@ for (rp = listofregex; rp != NULL; rp=rp->next)
    
    if (FullTextMatch(rp->item,teststring))
       {
-      Debug("MatchRlistItem(%s > %s)\n",rp->item,teststring);
+      Debug("MatchRlistItem(%s > %s)\n", (char *)rp->item, teststring);
       return true;
       }
    }

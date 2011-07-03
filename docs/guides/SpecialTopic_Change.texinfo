@@ -69,7 +69,7 @@ Copyright @copyright{} 2009, updated 2011 CFEngine AS
 
 
 @node Top, What is change management?, (dir), (dir)
-@top CFEngine-Tutorial
+@top Change Management
 @menu
 * What is change management?::  
 * Regulation - authorized and unauthorized change::  

@@ -2,7 +2,7 @@
 #  Copyright (C) Cfengine AS
 # 
 #  This program is free software; you can redistribute it and/or modify it
-#  under the terms of the GNU General Public License as published by the
+#  under the terms of the GNU Lesser General Public License LGPL as published by the
 #  Free Software Foundation; version 3.
 #   
 #  This program is distributed in the hope that it will be useful,
@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev: 75 $
+# Subversion : $Rev: 80 $
 # For Cfengine Core: 3.1.0
 
 ###################################################
@@ -57,6 +57,17 @@ insert_lines:
 
   "$(lines)"
     comment => "Append lines if they don't exist";
+}
+
+##
+
+bundle edit_line insert_file(templatefile)
+{
+insert_lines:
+
+   "$(templatefile)"
+            comment => "Insert the template file into the file being edited",
+        insert_type => "file";
 }
 
 ##
@@ -467,6 +478,13 @@ max_file_size => "300000";
 }
 
 ##
+
+body edit_defaults no_backup
+{
+edit_backup => "false";
+}
+
+##
 ## location
 ##
 
@@ -776,9 +794,26 @@ compare     => "mtime";
 
 ##
 
+body copy_from remote_dcp(from,server)
+{
+servers     => { "$(server)" };
+source      => "$(from)";
+compare     => "digest";
+}
+
+##
+
 body copy_from local_cp(from)
 {
 source      => "$(from)";
+}
+
+##
+
+body copy_from local_dcp(from)
+{
+source      => "$(from)";
+compare     => "digest";
 }
 
 ##
@@ -815,6 +850,15 @@ body copy_from no_backup_cp(from)
 {
 source      => "$(from)";
 copy_backup => "false";
+}
+
+##
+
+body copy_from no_backup_dcp(from)
+{
+source      => "$(from)";
+copy_backup => "false";
+compare     => "digest";
 }
 
 ##
@@ -1081,6 +1125,16 @@ report_diffs   => "true";
 update_hashes  => "yes";
 }
 
+##
+
+body changes diff_noupdate
+{
+hash           => "sha256";
+report_changes => "content";
+report_diffs   => "true";
+update_hashes  => "no";
+}
+
 ##--------------------------------------------------------------
 ## Packages promises
 ##--------------------------------------------------------------
@@ -1090,7 +1144,11 @@ body package_method zypper
 {
 package_changes => "bulk";
 
-package_list_command => "/usr/bin/zypper packages";
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
+
 package_patch_list_command => "/usr/bin/zypper patches";
 package_installed_regex => "i.*";
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
@@ -1120,7 +1178,9 @@ package_list_name_regex    => "ii\s+([^\s]+).*";
 package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
 package_installed_regex => ".*"; # all reported are installed
 package_name_convention => "$(name)";
-package_list_update_ifelapsed => "240";		# 4 hours
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
 
 have_aptitude::
    package_add_command => "/usr/bin/aptitude --assume-yes install";
@@ -1141,26 +1201,57 @@ have_aptitude::
 
 ##
 
+body package_method dpkg_version(repo)
+{
+package_changes => "individual";
+package_list_command => "/usr/bin/dpkg -l";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
+
+package_list_name_regex    => "ii\s+([^\s]+).*";
+package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+
+package_installed_regex => ".*"; # all reported are installed
+
+package_file_repositories => { "$(repo)" };
+
+debian.x86_64::
+   package_name_convention => "$(name)_$(version)_amd64.deb";
+
+debian.i686::
+   package_name_convention => "$(name)_$(version)_i386.deb";
+
+debian::
+   package_add_command => "/usr/bin/dpkg --install";
+   package_delete_command => "/usr/bin/dpkg --purge";
+   package_update_command =>  "/usr/bin/dpkg --install";
+}
+
+##
+
 body package_method rpm_version(repo)
 {
 package_changes => "individual";
 
-package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version} | %{arch}\n\"";
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
 package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s|]+).*";
 package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
 
 package_installed_regex => "i.*";
- 
+
 package_file_repositories => { "$(repo)" };
 
-package_name_convention => "$(name)-$(version)-$(arch).rpm";
+package_name_convention => "$(name)-$(version).$(arch).rpm";
 
 package_add_command => "/bin/rpm -ivh ";
-package_delete_command => "/bin/rpm -e --nodeps";
-package_verify_command => "/bin/rpm -V";
 package_update_command => "/bin/rpm -Uvh ";
+package_delete_command => "/bin/rpm -e --nodeps";
 package_noverify_regex => ".*[^\s].*";
 }
 
@@ -1220,9 +1311,10 @@ package_list_name_regex    => "([^.]+).*";
 package_list_version_regex => "[^\s]\s+([^\s]+).*";
 package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
-package_installed_regex => ".*installed.*";
+package_installed_regex => ".*(installed|\s+@).*";
 package_name_convention => "$(name).$(arch)";
 
+# set it to "0" to avoid caching of list during upgrade
 package_list_update_ifelapsed => "240";
 
 package_patch_installed_regex => "^\s.*";
@@ -1231,7 +1323,8 @@ package_patch_version_regex => "[^\s]\s+([^\s]+).*";
 package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
 
 package_add_command => "/usr/bin/yum -y install";
-package_delete_command => "/bin/rpm -e";
+package_update_command => "/usr/bin/yum -y update";
+package_delete_command => "/bin/rpm -e --nodeps";
 package_verify_command => "/bin/rpm -V";
 }
 
@@ -1346,7 +1439,7 @@ redhat::
  package_list_name_regex    => "([^.]+).*";
  package_list_version_regex => "[^\s]\s+([^\s]+).*";
  package_list_arch_regex    => "[^.]+\.([^\s]+).*";
- package_installed_regex => ".*installed.*";
+ package_installed_regex => ".*(installed|\s+@).*";
  package_name_convention => "$(name).$(arch)";
  package_list_update_ifelapsed => "240";
  package_patch_installed_regex => "^\s.*";
@@ -1446,6 +1539,23 @@ body process_select exclude_procs(x)
 {
 command => "$(x)";
 process_result => "!command";
+}
+
+##
+
+body process_select days_older_than(d)
+{
+stime_range    => irange(ago(0,0,"$(d)",0,0,0),now);
+process_result => "stime";
+}
+
+##
+
+body process_count any_count(cl)
+
+{
+match_range => "0,0";
+out_of_range_define => { "$(cl)" };
 }
 
 ##

@@ -535,8 +535,8 @@ debian::
 
  package_changes => "individual";
  package_list_command => "/usr/bin/dpkg -l";
- package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
 
+ package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
 
  package_list_name_regex    => "ii\s+([^\s]+).*";
  package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
@@ -562,9 +562,8 @@ redhat|SuSE::
  package_changes => "individual";
 
  package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+
  package_list_update_ifelapsed => "0";  # avoid caching of list during upgrade
-
-
 
  package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
  package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s|]+).*";

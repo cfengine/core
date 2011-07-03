@@ -429,7 +429,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
          for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
             {
-            printf(" %s",rp->item);
+            printf(" %s",(char *)rp->item);
             PrependItem(&PROCESSREFRESH,rp->item,NULL);
             }
 

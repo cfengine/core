@@ -1288,6 +1288,31 @@ void ReplaceTrailingChar(char *str, char from, char to)
 
 /*********************************************************************/
 
+void ReplaceTrailingStr(char *str, char *from, char to)
+
+/* Replaces any unwanted last chars in str. */
+{
+ int strLen;
+ int fromLen;
+
+ strLen = strlen(str);
+ fromLen = strlen(from);
+
+ if(strLen == 0)
+    {
+    return;
+    }
+
+ char *startCmp = str + strLen - fromLen;
+ 
+ if(strcmp(startCmp, from) == 0)
+    {
+    memset(startCmp, to, fromLen);
+    }
+}
+
+/*********************************************************************/
+
 int ReplaceStr(char *in, char *out, int outSz, char* from, char *to)
 
 /* Replaces all occurences of strings 'from' to 'to' in preallocated

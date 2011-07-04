@@ -74,7 +74,7 @@ static off_t Unix_GetDiskUsage(char *file,enum cfsizes type)
 #else
     struct statfs buf;
 #endif
-    off_t blocksize = 1024, total = 0, used = 0, avail = 0;
+    off_t used = 0, avail = 0;
     int capacity = 0;
     
 memset(&buf,0,sizeof(buf));
@@ -106,52 +106,45 @@ if (statfs(file, &buf) != 0)
 #endif
 
 #if defined ULTRIX
-total = buf.fd_btot;
 used = buf.fd_btot - buf.fd_bfree;
 avail = buf.fd_bfreen;
 #endif
 
 #if defined SOLARIS
-total = buf.f_blocks * (buf.f_frsize / blocksize);
-used = (buf.f_blocks - buf.f_bfree) * (buf.f_frsize / blocksize);
-avail = buf.f_bavail * (buf.f_frsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * buf.f_frsize;
+avail = buf.f_bavail * buf.f_frsize;
 #endif
 
 #if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined HPuUX || defined DARWIN
-total = buf.f_blocks * buf.f_bsize / blocksize;
-used = (buf.f_blocks - buf.f_bfree)  * buf.f_bsize / blocksize;
-avail = buf.f_bavail * buf.f_bsize / blocksize;
+used = (buf.f_blocks - buf.f_bfree)  * buf.f_bsize;
+avail = buf.f_bavail * buf.f_bsize;
 #endif
 
 #if defined OSF
-total = (buf.f_blocks *  buf.f_frsize) / blocksize;
-used = ((buf.f_blocks - buf.f_bfree)* (buf.f_frsize) / blocksize);
-avail = (buf.f_bavail * buf.f_frsize) / blocksize;
+used = (buf.f_blocks - buf.f_bfree) * buf.f_frsize;
+avail = buf.f_bavail * buf.f_frsize;
 #endif
 
 #if defined AIX || defined SCO || defined CFCRAY
-total = buf.f_blocks * ((float)buf.f_bsize / blocksize);
-used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
-avail = buf.f_bfree * ((float)buf.f_bsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * (float)buf.f_bsize;
+avail = buf.f_bfree * (float)buf.f_bsize;
 #endif
 
 #if defined LINUX
-total = buf.f_blocks * ((float)buf.f_bsize / blocksize);
-used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
-avail = buf.f_bavail * ((float)buf.f_bsize / blocksize);
+used = (buf.f_blocks - buf.f_bfree) * (float)buf.f_bsize;
+avail = buf.f_bavail * (float)buf.f_bsize;
 #endif
-    
+
 #if defined IRIX
 /* Float fix by arjen@sara.nl */
-total = buf.f_blocks *  ((float)buf.f_bsize / blocksize);
-used = (buf.f_blocks - buf.f_bfree) * ((float)buf.f_bsize / blocksize);
-avail = buf.f_bfree *  ((float)buf.f_bsize/blocksize);
+used = (buf.f_blocks - buf.f_bfree) * (float)buf.f_bsize;
+avail = buf.f_bfree * (float)buf.f_bsize;
 #endif
-   
+
 capacity = (double) (avail) / (double) (avail + used) * 100;
 
 Debug2("GetDiskUsage(%s) = %d/%d\n",file,avail,capacity);
-    
+
 /* Free kilobytes */
 
 if (type == cfabs)

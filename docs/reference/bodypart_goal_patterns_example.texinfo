@@ -2,7 +2,7 @@
 
 @verbatim
 
-body knowledge control
+body common control
 {
 goal_patterns => { "goal_.*", "target.*" };
 }

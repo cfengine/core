@@ -511,7 +511,7 @@ char *OBS[CF_OBSERVABLES][2] =
     {"rootprocs","Sum privileged system processes"},
     {"otherprocs","Sum non-privileged process"},
     {"diskfree","Free disk on / partition"},
-    {"loadavg","% kernel load utilization"},
+    {"loadavg","Kernel load average utilization (sum over cores)"},
     {"netbiosns_in","netbios name lookups (in)"},
     {"netbiosns_out","netbios name lookups (out)"},
     {"netbiosdgm_in","netbios name datagrams (in)"},

@@ -325,7 +325,7 @@ bundle agent cfengine_policysrv
                              "apache2", 
                              "apache2-mod_php5",
                              "apache2-prefork",
-                             "mysql",
+#                             "mysql",
                              "php5",
                              "php5-pear",
                              "subversion"
@@ -338,8 +338,8 @@ bundle agent cfengine_policysrv
    "match_package" slist => {
                              "httpd",
                              "mod_ssl",
-                             "mysql",
-                             "mysql-server",
+#                             "mysql",
+#                             "mysql-server",
                              "php",
                              "subversion",
                              "php-bcmath",
@@ -352,7 +352,7 @@ bundle agent cfengine_policysrv
 
   "match_package" slist => {
                             "apache2",
-                            "mysql-server",
+#                            "mysql-server",
                             "php5",
                             "ssl-cert"
                            },
@@ -513,10 +513,10 @@ bundle agent cfengine_web_server(state)
             comment => "Start apache2 process if not exist",
              handle => "cfengine_web_server_processes_apache_on_suse";
 
-   "mysqld"
-      restart_class => "suse_start_mysql",
-            comment => "Start mysqld process if not exist",
-             handle => "cfengine_web_server_processes_mysqld_on_suse";
+#   "mysqld"
+#      restart_class => "suse_start_mysql",
+#            comment => "Start mysqld process if not exist",
+#             handle => "cfengine_web_server_processes_mysqld_on_suse";
 
   redhat.web_servers.on::
 
@@ -525,10 +525,10 @@ bundle agent cfengine_web_server(state)
             comment => "Start httpd process if not exist",
              handle => "cfengine_web_server_processes_httpd_on_redhat";
 
-   ".*mysqld.*"
-      restart_class => "redhat_start_mysql",
-            comment => "Start mysqld process if not exist",
-             handle => "cfengine_web_server_processes_mysqld_on_redhat";
+#   ".*mysqld.*"
+#      restart_class => "redhat_start_mysql",
+#            comment => "Start mysqld process if not exist",
+#             handle => "cfengine_web_server_processes_mysqld_on_redhat";
 
   debian.web_servers.on::
 
@@ -537,10 +537,10 @@ bundle agent cfengine_web_server(state)
             comment => "Start apache2 process if not exist",
              handle => "cfengine_web_server_processes_apache_on_debian";
 
-   "/usr/sbin/mysqld.*"
-      restart_class => "debian_start_mysql",
-            comment => "Start apache2 process if not exist",
-             handle => "cfengine_web_server_processes_mysqld_on_debian";
+#   "/usr/sbin/mysqld.*"
+#      restart_class => "debian_start_mysql",
+#            comment => "Start apache2 process if not exist",
+#             handle => "cfengine_web_server_processes_mysqld_on_debian";
 
   SuSE.off::
 
@@ -549,10 +549,10 @@ bundle agent cfengine_web_server(state)
            comment => "Stop apache2 process",
             handle => "cfengine_web_server_processes_apache_off_suse";
 
-   "mysqld"
-      process_stop => "/etc/init.d/mysql stop",
-           comment => "Stop mysqld process",
-            handle => "cfengine_web_server_processes_mysqld_off_suse";
+#   "mysqld"
+#      process_stop => "/etc/init.d/mysql stop",
+#           comment => "Stop mysqld process",
+#            handle => "cfengine_web_server_processes_mysqld_off_suse";
 
   redhat.off::
 
@@ -561,10 +561,10 @@ bundle agent cfengine_web_server(state)
            comment => "Stop httpd process",
             handle => "cfengine_web_server_processes_httpd_off_redhat";
 
-   "mysqld"
-      process_stop => "/etc/init.d/mysqld stop",
-           comment => "Stop mysqld process",
-            handle => "cfengine_web_server_processes_mysqld_off_redhat";
+#   "mysqld"
+#      process_stop => "/etc/init.d/mysqld stop",
+#           comment => "Stop mysqld process",
+#            handle => "cfengine_web_server_processes_mysqld_off_redhat";
 
   debian.off::
 
@@ -573,10 +573,10 @@ bundle agent cfengine_web_server(state)
            comment => "Stop apache2 process",
             handle => "cfengine_web_server_processes_apache_off_debian";
 
-   "mysqld"
-      process_stop => "/etc/init.d/mysql stop",
-           comment => "Stop mysqld process",
-            handle => "cfengine_web_server_processes_mysqld_off_debian";
+#   "mysqld"
+#      process_stop => "/etc/init.d/mysql stop",
+#           comment => "Stop mysqld process",
+#            handle => "cfengine_web_server_processes_mysqld_off_debian";
 
 #
 
@@ -596,11 +596,11 @@ bundle agent cfengine_web_server(state)
       comment => "Start apache2 process if not exist",
        handle => "cfengine_web_server_commands_start_apache_suse";
 
-  suse_start_mysql::
-
-   "/etc/init.d/mysql start"
-      comment => "Start mysql process if not exist",
-       handle => "cfengine_web_server_commands_start_mysql_suse";
+#  suse_start_mysql::
+#
+#   "/etc/init.d/mysql start"
+#      comment => "Start mysql process if not exist",
+#       handle => "cfengine_web_server_commands_start_mysql_suse";
 
   redhat_start_apache::
 
@@ -608,11 +608,11 @@ bundle agent cfengine_web_server(state)
       comment => "Start httpd process if not exist",
        handle => "cfengine_web_server_commands_start_httpd_redhat";
 
-  redhat_start_mysql::
-
-   "/etc/init.d/mysqld start"
-      comment => "Start mysqld process if not exist",
-       handle => "cfengine_web_server_commands_start_mysqld_redhat";
+#  redhat_start_mysql::
+#
+#   "/etc/init.d/mysqld start"
+#      comment => "Start mysqld process if not exist",
+#       handle => "cfengine_web_server_commands_start_mysqld_redhat";
 
   debian_start_apache::
 
@@ -620,11 +620,11 @@ bundle agent cfengine_web_server(state)
       comment => "Start apache process if not exist",
        handle => "cfengine_web_server_commands_start_apache_debian";
 
-  debian_start_mysql::
-
-   "/etc/init.d/mysql start"
-      comment => "Start mysql process if not exist",
-       handle => "cfengine_web_server_commands_start_mysql_debian";
+#  debian_start_mysql::
+#
+#   "/etc/init.d/mysql start"
+#      comment => "Start mysql process if not exist",
+#       handle => "cfengine_web_server_commands_start_mysql_debian";
 
 #
 
@@ -674,7 +674,8 @@ bundle edit_line fixapache
 
    "add_modules"     slist => { 
                                "php5",
-                               "ssl" 
+                               "ssl",
+                               "rewrite" 
                               };
 
    "del_modules"     slist => { 

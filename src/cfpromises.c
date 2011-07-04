@@ -214,6 +214,8 @@ Debug("Set debugging\n");
 void ThisAgentInit()
 
 {
+  PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
+  PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
 SHOWREPORTS = false;
 }
 

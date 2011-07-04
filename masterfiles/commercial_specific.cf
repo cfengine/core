@@ -327,6 +327,7 @@ bundle agent cfengine_policysrv
                              "apache2-prefork",
                              "mysql",
                              "php5",
+                             "php5-pear",
                              "subversion"
                             },
                  comment => "Define a list of packages to be installed on SuSE",

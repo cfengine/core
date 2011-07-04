@@ -541,7 +541,7 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
-AC_CHECK_DECL(clock_gettime)
+AC_CHECK_DECL(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
 AC_REPLACE_FUNCS([unsetenv])

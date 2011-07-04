@@ -1,9 +1,33 @@
-3.1.6 
-	package_policy update and addupdate now check if user-supplied version
-	is larger than currently installed - updates only if so
+3.2.0 (in development)
+	New bootstrap method with single-command bootstrapping:
+	- cf-agent --bootstrap --policy-server 123.456.789.123
+	- Associated policy template files are added, partially maintained
+	  by CFEngine
+	- See <FIXME> for upgrade procedure
 
-	Help text of cf-report -r corrected - a list of key hashes is required, not
-	ip addresses.
+	Bug fixes for file-editing, package versioning, and embedded
+	database corruption (We recommend using TokyoCabinet instead of
+	BerkeleyDB if building from source).
+
+	Improved upgrade path for Nova.
+
+	Patches for improved run-agent concurrency
+
+	Reorganization of documentation and community resources
+
+	100% on regression test suite on 3 operating systems
+	(Ubuntu, Debian, SuSE on x86-64 hardware)
+
+	Support for multiple release environments
+
+	package_policy update and addupdate now check if user-supplied
+	version is larger than currently installed - updates only if so
+
+	Help text of cf-report -r corrected - a list of key hashes is
+	required, not ip addresses.
+
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
 
 3.1.5
 	New class parser, '||' is no longer allowed in expressions (use '|').

@@ -207,7 +207,7 @@ bundle agent cfengine_setup_knowledge
 
    "$(sys.cf_know) -f $(sys.doc_root)/docs/enterprise_build.cf -b"
       comment => "Populate or update database with new knowledge",
-       handle => "knowledge_commands_cf_know_sg";
+       handle => "knowledge_commands_cf_know_b";
 
 }
 

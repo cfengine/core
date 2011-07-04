@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev: 80 $
+# Subversion : $Rev: 82 $
 # For Cfengine Core: 3.1.0
 
 ###################################################
@@ -1358,7 +1358,7 @@ body package_method yum_rpm
 
   package_add_command    => "/usr/bin/yum -y install";
   package_update_command => "/usr/bin/yum -y update";
-  package_delete_command => "/bin/rpm -e --allmatches";
+  package_delete_command => "/bin/rpm -e --nodeps --allmatches";
   package_verify_command => "/bin/rpm -V";
 }
 
@@ -1447,7 +1447,7 @@ redhat::
  package_patch_version_regex => "[^\s]\s+([^\s]+).*";
  package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
  package_add_command => "/usr/bin/yum -y install";
- package_delete_command => "/bin/rpm -e";
+ package_delete_command => "/bin/rpm -e --nodeps";
  package_verify_command => "/bin/rpm -V";
 
 debian::

@@ -1,11 +1,6 @@
 
 @verbatim
 
-body runagent control
-{
-port => "5308";
-}
-
 body hub control
 {
 port => "5308";

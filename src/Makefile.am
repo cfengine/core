@@ -202,6 +202,7 @@ noinst_HEADERS =                                                        \
         string_expressions.h                                            \
         logic_expressions.h                                             \
         compiler.h                                                      \
+        monitoring.h                                                    \
         bool.h
 
 #

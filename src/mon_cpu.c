@@ -43,10 +43,10 @@ void MonCPUGatherData(double *cf_this)
 {
 double q,dq;
 char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];
-long count,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
+long cpuidx,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
 long total_time = 1;
 FILE *fp;
-enum observables index = ob_spare;
+enum observables slot = ob_spare;
 
 if ((fp=fopen("/proc/stat","r")) == NULL)
    {
@@ -68,41 +68,41 @@ while (!feof(fp))
 
    if (strcmp(cpuname,"cpu") == 0)
       {
-      CfOut(cf_verbose,"","Found aggregate CPU\n",count);
-      index = ob_cpuall;
-      count = MON_CPU_MAX;
+      CfOut(cf_verbose,"","Found aggregate CPU\n",cpuidx);
+      slot = ob_cpuall;
+      cpuidx = MON_CPU_MAX;
       }
    else if (strncmp(cpuname, "cpu", 3) == 0)
       {
-      if (sscanf(cpuname, "cpu%d", &count) == 1)
+      if (sscanf(cpuname, "cpu%d", &cpuidx) == 1)
          {
-         if (count < 0 || count >= MON_CPU_MAX)
+         if (cpuidx < 0 || cpuidx >= MON_CPU_MAX)
             {
             continue;
             }
          }
-      index = ob_cpu0 + count;
+      slot = ob_cpu0 + cpuidx;
       }
    else
       {
       CfOut(cf_verbose,"","Found nothing (%s)\n",cpuname);
-      index = ob_spare;
+      slot = ob_spare;
       fclose(fp);
       return;
       }
 
-   dq = (q - LAST_CPU_Q[count])/(double)(total_time-LAST_CPU_T[count]); /* % Utilization */
+   dq = (q - LAST_CPU_Q[cpuidx])/(double)(total_time-LAST_CPU_T[cpuidx]); /* % Utilization */
 
    if (dq > 100 || dq < 0) // Counter wrap around
       {
       dq = 50;
       }
 
-   cf_this[index] = dq;
-   LAST_CPU_Q[count] = q;
-   LAST_CPU_T[count] = total_time;
+   cf_this[slot] = dq;
+   LAST_CPU_Q[cpuidx] = q;
+   LAST_CPU_T[cpuidx] = total_time;
 
-   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %ld 100ths of a second \n",OBS[index][1],index,cf_this[index],total_time);
+   CfOut(cf_verbose,"","Set %s=%d to %.1lf after %ld 100ths of a second \n",OBS[slot][1],slot,cf_this[slot],total_time);
    }
 
 fclose(fp);

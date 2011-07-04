@@ -12,7 +12,8 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/cfpromises.c])
 AC_CANONICAL_TARGET
 
-define([svnversion], [r]esyscmd([sh -c "svnversion --no-newline || echo exported" 2>/dev/null]))dnl
+define([svnversion], [r]esyscmd([sh -c "svnversion --no-newline || echo exported | tr -d '\n'" 2>/dev/null]))dnl
+
 
 dnl
 dnl The version in the next line is the only one to set

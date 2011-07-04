@@ -1648,7 +1648,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
       {
-      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+      for (rp = (struct Rlist *)returnval.item; rp != NULL; rp=rp->next)
          {
          PrependRScalar(&GOALS,rp->item,CF_SCALAR);
          }
@@ -1658,7 +1658,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalcategories].lval) == 0)
       {
-      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+      for (rp = (struct Rlist *)returnval.item; rp != NULL; rp=rp->next)
          {
          PrependRScalar(&GOALCATEGORIES,rp->item,CF_SCALAR);
          }

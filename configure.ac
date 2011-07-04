@@ -24,8 +24,6 @@ AM_INIT_AUTOMAKE(cfengine, 3.2.0a1.svnversion)   dnl remember to set version
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
-AC_DEFINE(NOVA_VERSION, "2.1.0a1", "Nova version")
-AC_DEFINE(CONSTELLATION_VERSION, "1.0.0a1", "Constellation version")
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 

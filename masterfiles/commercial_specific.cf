@@ -327,7 +327,7 @@ bundle agent cfengine_policysrv
                              "apache2-prefork",
                              "mysql",
                              "php5",
-                             "subversion-devel"
+                             "subversion"
                             },
                  comment => "Define a list of packages to be installed on SuSE",
                   handle => "cfengine_policysrv_vars_match_package_suse";
@@ -340,8 +340,9 @@ bundle agent cfengine_policysrv
                              "mysql",
                              "mysql-server",
                              "php",
-                             "subversion-devel",
-                             "php-bcmath"
+                             "subversion",
+                             "php-bcmath",
+                             "php-pear"
                             },
                  comment => "Define a list of packages to be installed on RedHat/CentOS/Fedora",
                   handle => "cfengine_policysrv_vars_match_package_redhat";

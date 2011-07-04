@@ -457,6 +457,16 @@ if (a.packages.package_version)
       strncpy(arch,"*",CF_MAXVARSIZE-1);
       installed = PackageMatch(name,"*",arch,a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
+
+      if ( !installed || !matches )
+         {
+         SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+	 }
+      else
+         {
+	 cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
+	 } 
+
       }
    else
       {
@@ -469,16 +479,16 @@ if (a.packages.package_version)
          
          installed = PackageMatch(name,"*",arch,a,pp);
          matches = PackageMatch(name,version,arch,a,pp);
-         }
-      }
-   
-   if ( !installed || !matches )
-      {
-      SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
-      }
-   else
-      {
-      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
+
+         if ( !installed || !matches )
+            {
+	    SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+	    }
+	 else
+	    {
+	    cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
+	    } 
+	 }
       }
    }
 else if (a.packages.package_version_regex)

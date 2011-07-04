@@ -172,7 +172,7 @@ bundle agent cfengine_setup_knowledge
    "$(sys.doc_root)"
            comment => "Copy the basic knowledge base configuration from the installation to doc root",
             handle => "knowledge_files_doc_root_1",
-         copy_from => local_cp("$(sys.workdir)/share/doc/cfnova/GUI"),
+         copy_from => local_cp("$(sys.workdir)/share/doc/cfnova/GUI2"),
       depth_search => recurse("inf");
 
    "$(sys.doc_root)/hub/."

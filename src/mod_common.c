@@ -112,6 +112,8 @@ struct BodySyntax CF_CLASSBODY[] =
 struct BodySyntax CFG_CONTROLBODY[] =
    {
    {"bundlesequence",cf_slist,".*","List of promise bundles to verify in order"},
+   {"goal_categories",cf_slist,"","A list of context names that represent parent categories for goals (goal patterns)"},
+   {"goal_patterns",cf_slist,"","A list of regular expressions that match promisees/topics considered to be organizational goals"},
    {"ignore_missing_bundles",cf_opts,CF_BOOL,"If any bundles in the bundlesequence do not exist, ignore and continue"},
    {"ignore_missing_inputs",cf_opts,CF_BOOL,"If any input files do not exist, ignore and continue"},
    {"inputs",cf_slist,".*","List of additional filenames to parse for promises"},
@@ -244,8 +246,6 @@ struct BodySyntax CFK_CONTROLBODY[] =
    {"generate_manual",cf_opts,CF_BOOL,"true/false generate texinfo manual page skeleton for this version"},
    {"graph_directory",cf_str,CF_ABSPATHRANGE,"Path to directory where rendered .png files will be created"},
    {"graph_output",cf_opts,CF_BOOL,"true/false generate png visualization of topic map if possible (requires lib)"},
-   {"goal_categories",cf_slist,"","A list of context names that represent parent categories for goals (goal patterns)"},
-   {"goal_patterns",cf_slist,"","A list of regular expressions that match promisees/topics considered to be organizational goals"},
    {"html_banner",cf_str,"","HTML code for a banner to be added to rendered in html after the header"},
    {"html_footer",cf_str,"","HTML code for a page footer to be added to rendered in html before the end body tag"},
    {"id_prefix",cf_str,".*","The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},

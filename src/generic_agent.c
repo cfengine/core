@@ -1570,8 +1570,11 @@ static void CheckControlPromises(char *scope,char *agent,struct Constraint *cont
 
 { struct Constraint *cp;
   struct BodySyntax *bp = NULL;
+  struct Rlist *rp;
   int i = 0;
   struct Rval returnval;
+  char rettype;
+  void *retval;
 
 Debug("CheckControlPromises(%s)\n",agent);
 
@@ -1643,6 +1646,28 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       IGNORE_MISSING_BUNDLES = GetBoolean(cp->rval);
       }
 
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
+      {
+      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+         {
+         PrependRScalar(&GOALS,rp->item,CF_SCALAR);
+         }
+      CfOut(cf_verbose,"","SET goal_patterns list\n");
+      continue;
+      }
+
+   if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalcategories].lval) == 0)
+      {
+      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+         {
+         PrependRScalar(&GOALCATEGORIES,rp->item,CF_SCALAR);
+         }
+
+      CfOut(cf_verbose,"","SET goal_categories list\n");
+      continue;
+      }
+
+   
    DeleteRvalItem(returnval.item,returnval.rtype);
    }
 }

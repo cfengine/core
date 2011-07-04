@@ -220,6 +220,8 @@ enum cfagenttype
 enum cfgcontrol
    {
    cfg_bundlesequence,
+   cfg_goalcategories,
+   cfg_goalpatterns,
    cfg_ignore_missing_bundles,
    cfg_ignore_missing_inputs,
    cfg_inputs,
@@ -362,8 +364,6 @@ enum cfkcontrol
    cfk_genman,
    cfk_graph_dir,
    cfk_graph_output,
-   cfk_goalcategories,
-   cfk_goalpatterns,
    cfk_htmlbanner,
    cfk_htmlfooter,
    cfk_tm_prefix,

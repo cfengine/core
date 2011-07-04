@@ -321,27 +321,6 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_goalpatterns].lval) == 0)
-      {
-      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
-         {
-         PrependRScalar(&GOALS,rp->item,CF_SCALAR);
-         }
-      CfOut(cf_verbose,"","SET goal_patterns list\n");
-      continue;
-      }
-
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_goalcategories].lval) == 0)
-      {
-      for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
-         {
-         PrependRScalar(&GOALCATEGORIES,rp->item,CF_SCALAR);
-         }
-
-      CfOut(cf_verbose,"","SET goal_categories list\n");
-      continue;
-      }
-
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
       {
       SQL_TYPE = Str2dbType(retval);

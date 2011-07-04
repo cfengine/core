@@ -34,8 +34,8 @@
 
 /* Globals */
 
-static double LAST_CPU_Q[MON_CPU_MAX];
-static long LAST_CPU_T[MON_CPU_MAX];
+static double LAST_CPU_Q[MON_CPU_MAX + 1];
+static long LAST_CPU_T[MON_CPU_MAX + 1];
 
 /* Implementation */
 
@@ -56,43 +56,32 @@ if ((fp=fopen("/proc/stat","r")) == NULL)
 
 CfOut(cf_verbose,"","Reading /proc/stat utilization data -------\n");
 
-count = 0;
-
 while (!feof(fp))
    {
    fgets(buf,CF_BUFSIZE,fp);
 
    sscanf(buf,"%s%ld%ld%ld%ld%ld%ld%ld",cpuname,&userticks,&niceticks,&systemticks,&idle,&iowait,&irq,&softirq);
-   snprintf(name,16,"cpu%ld",count);
 
    total_time = (userticks+niceticks+systemticks+idle); 
 
    q = 100.0 * (double)(total_time - idle);
 
-   if (strncmp(cpuname,name,strlen(name)) == 0)
-      {
-      CfOut(cf_verbose,"","Found CPU %d\n",count);
-
-      switch (count++)
-         {
-         case 0: index = ob_cpu0;
-             break;
-         case 1: index = ob_cpu1;
-             break;
-         case 2: index = ob_cpu2;
-             break;
-         case 3: index = ob_cpu3;
-             break;
-         default:
-             index = ob_spare;
-             CfOut(cf_verbose,"","Error reading proc/stat\n");
-             continue;
-         }
-      }
-   else if (strncmp(cpuname,"cpu",3) == 0)
+   if (strcmp(cpuname,"cpu") == 0)
       {
       CfOut(cf_verbose,"","Found aggregate CPU\n",count);
       index = ob_cpuall;
+      count = MON_CPU_MAX;
+      }
+   else if (strncmp(cpuname, "cpu", 3) == 0)
+      {
+      if (sscanf(cpuname, "cpu%d", &count) == 1)
+         {
+         if (count < 0 || count >= MON_CPU_MAX)
+            {
+            continue;
+            }
+         }
+      index = ob_cpu0 + count;
       }
    else
       {
@@ -111,11 +100,11 @@ while (!feof(fp))
 
    cf_this[index] = dq;
    LAST_CPU_Q[count] = q;
+   LAST_CPU_T[count] = total_time;
 
    CfOut(cf_verbose,"","Set %s=%d to %.1lf after %ld 100ths of a second \n",OBS[index][1],index,cf_this[index],total_time);
    }
 
-LAST_CPU_T[count] = total_time;
 fclose(fp);
 }
 

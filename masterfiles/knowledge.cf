@@ -189,6 +189,13 @@ bundle agent cfengine_setup_knowledge
       depth_search => recurse_basedir("inf"),
              perms => mog("644","$(owner[$(flavour)])","$(group[$(flavour)])");
 
+   "$(sys.doc_root)/tmp/."
+           comment => "Ensure permissions for $(sys.doc_root)/tmp (temp files to email)",
+            handle => "knowledge_files_doc_root_tmp",
+            create => "true",
+      depth_search => recurse_basedir("inf"),
+             perms => mog("644","$(owner[$(flavour)])","$(group[$(flavour)])");
+
    "$(sys.workdir)/fonts"
            comment => "Make sure font folder has right permision",
             handle => "knowledge_files_workdir_fonts",
@@ -256,7 +263,7 @@ body depth_search recurse_basedir(d)
 body depth_search recurse_exclude(d,folder1,folder2)
 {
  depth => "$(d)";
- exclude_dirs => { ".*$(folder1)$", "$(folder2)", "hub" , "graphs", "scripts" };
+ exclude_dirs => { ".*$(folder1)$", "$(folder2)", "hub" , "graphs", "scripts", "tmp" };
 }
 
 ############################################################################

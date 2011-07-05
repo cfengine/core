@@ -40,8 +40,9 @@ platform to the business applications.
 
 CFEngine has the sophistication to enable precise integration
 of software systems, and the responsiveness to determine the state of
-systems within five minutes in massive cloud-scale deployments. It
-runs on everything from handheld smartphones to mainframes.
+systems within a few minutes in massive cloud-scale deployments. It
+runs on everything from handhelds, to smartphones, to individual servers 
+to datacentres, to mainframes and clouds.
 @end quotation
 @end cartouche
 
@@ -107,7 +108,8 @@ IT infrastructure to highly integrated platforms.
 Leading the way is a group of highly innovative Web-based companies
 whose businesses depend on very specific arrangements of
 infrastructure. It is about giving software developers more influence
-over the IT infrastructure their applications run on.
+over the IT infrastructure their applications run on, and allowing
+change at the same speed as agile development teams.
 
 @node  Why is DevOps happening now? , Should Web and IT management be closely related?, What is DevOps? , Top
 @unnumberedsec Why is DevOps happening now? 
@@ -140,9 +142,9 @@ for a purpose.
 Web frameworks have seen the rise of languages like PHP, Java, Python
 and Ruby, all of which offer frameworks for fast deployment.
 Languages that work well for application development are not well
-suited to managing infrastructure however: they focus on details that
-one would like to escape from. The fact that programmers already know the
-languages does not change this.
+suited to managing infrastructure however: they focus too much on low
+level details that one would like to suppress. The fact that
+programmers already know the languages does not change this.
 
 An important principle for robustness and stability of systems is weak
 coupling between components. This brings flexibility rather than brittle
@@ -185,8 +187,8 @@ predictions, so they aid understanding and help us to avoid mistake.
 
 @cartouche
 CFEngine's promise model offers a flexible approach to weakly-coupled
-autonomous resource configuration. It simultaneously allows efficient
-convergent and repeatable implementation, and a simple definition of
+autonomous resource configuration. It simultaneously allows efficient,
+convergent, and repeatable implementation, and a simple definition of
 @i{compliance} with requirements@footnote{For an explanation of convergence,
 see the Special Topics Guide on Change Management and Incident Repair.}. All web-based companies using credit
 cards will know about the need for PCI-DSS compliance, for instance.
@@ -225,11 +227,12 @@ systems at all times. Today's programmers are more sophisticated than script mon
 CFEngine uses a pragmatic mixture of the declarative (functional) and
 imperative to represent configurations. Programmers are taught mainly
 imperative programming today, so a declarative approach could seem like
-a barrier to adoption. The principles are very simple however.
+a barrier to adoption. The principles are very simple however, and easy for
+developers to grasp.
 
 In spite of the focus on readability for documenting @i{intent},
 all the familiar structures of imperative programming are, in fact, available
-in CFEngine, just thinly disguised for clarity.
+in CFEngine, just optimized for clarity.
 
 @cartouche
 The main goals of CFEngine are @i{convergence to a desired state}, @i{repeatability}
@@ -360,7 +363,7 @@ is generally easier to comprehend than `do this to the first, do this to the nex
 so on, because our brains are wired to see patterns.
 
 Thus, loops are as useful for configuration as for programming.  We
-only want to simlify the syntax once again to hide redundant words
+only want to simplify the syntax once again to hide redundant words
 like `foreach'. To do this, CFEngine makes loops implicit. If you
 use a scalar variable reference @samp{$(mylist)} to a list variable
 @samp{@@(mylist)}, CFEngine assumes you want to iterate over each

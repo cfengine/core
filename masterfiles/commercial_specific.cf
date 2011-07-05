@@ -36,6 +36,12 @@ bundle agent cfengine_php_mod
       copy_from => local_cp("$(sys.workdir)/software_updates/json/json.ini"),
           perms => mo("644","root");
 
+   "/etc/php.d/mongo.ini"
+        comment => "Put mongo.ini to its place",
+         handle => "cfengine_php_mod_mongo_ini_redhat5",
+      copy_from => local_cp("$(sys.workdir)/software_updates/mongo/mongo.ini"),
+          perms => mo("644","root");
+
    "/usr/lib/php/modules/json.so"
          comment => "Prepare cfmod.so for 32-bit system",
          handle => "cfengine_php_mod_json_so_redhat5_32",
@@ -99,6 +105,12 @@ bundle agent cfengine_php_mod
         comment => "Put json.ini to its place",
          handle => "cfengine_php_mod_json_ini_redhat4",
       copy_from => local_cp("$(sys.workdir)/software_updates/json/json.ini"),
+          perms => mo("644","root");
+
+   "/etc/php.d/mongo.ini"
+        comment => "Put mongo.ini to its place",
+         handle => "cfengine_php_mod_mongo_ini_redhat4",
+      copy_from => local_cp("$(sys.workdir)/software_updates/mongo/mongo.ini"),
           perms => mo("644","root");
 
    "/usr/lib/php4/json.so"
@@ -205,6 +217,12 @@ bundle agent cfengine_php_mod
       copy_from => local_cp("$(sys.workdir)/software_updates/svn/svn.ini"),
           perms => mo("644","root");
 
+   "/etc/php5/conf.d/mongo.ini"
+        comment => "Put mongo.ini to its place",
+         handle => "cfengine_php_mod_mongo_ini_ubuntu8",
+      copy_from => local_cp("$(sys.workdir)/software_updates/mongo/mongo.ini"),
+          perms => mo("644","root");
+
    "/usr/lib/php5/20060613+lfs/cfmod.so"
          comment => "Prepare cfmod.so for 32-bit system",
           handle => "cfengine_php_mod_cfmod_so_ubuntu8_32",
@@ -251,6 +269,12 @@ bundle agent cfengine_php_mod
       copy_from => local_cp("$(sys.workdir)/software_updates/svn/svn.ini"),
           perms => mo("644","root");
 
+   "/etc/php5/conf.d/mongo.ini"
+        comment => "Put mongo.ini to its place",
+         handle => "cfengine_php_mod_mongo_ini_suse",
+      copy_from => local_cp("$(sys.workdir)/software_updates/mongo/mongo.ini"),
+          perms => mo("644","root");
+
    "/usr/lib/php5/extensions/cfmod.so"
          comment => "Prepare cfmod.so for 32-bit system",
           handle => "cfengine_php_mod_cfmod_so_suse_32",
@@ -289,19 +313,19 @@ bundle agent cfengine_php_mod
 
   restart_webserver.redhat::
 
-   "/etc/init.d/httpd restart"
+   "/etc/init.d/httpd  restart"
       comment => "Restart httpd service on RedHat/CentOS/Fedora",
        handle => "cfengine_php_mod_commands_httpd_redhat";
 
   restart_webserver.debian::
 
-   "/etc/init.d/apache2 restart"
+   "/etc/init.d/apache2  restart"
       comment => "Restart apache2 service on Debian/Ubuntu",
        handle => "cfengine_php_mod_commands_apache2_debian";
 
   restart_webserver.SuSE::
 
-   "/etc/init.d/apache2 restart"
+   "/etc/init.d/apache2  restart"
       comment => "Restart apache2 service on SuSE",
        handle => "cfengine_php_mod_commands_apache2_suse";
 
@@ -328,7 +352,9 @@ bundle agent cfengine_policysrv
 #                             "mysql",
                              "php5",
                              "php5-pear",
-                             "subversion"
+                             "subversion",
+                             "gcc",
+                             "php5-mcrypt"
                             },
                  comment => "Define a list of packages to be installed on SuSE",
                   handle => "cfengine_policysrv_vars_match_package_suse";
@@ -343,7 +369,9 @@ bundle agent cfengine_policysrv
                              "php",
                              "subversion",
                              "php-bcmath",
-                             "php-pear"
+                             "php-pear",
+                             "gcc",
+                             "php-mcrpyt"
                             },
                  comment => "Define a list of packages to be installed on RedHat/CentOS/Fedora",
                   handle => "cfengine_policysrv_vars_match_package_redhat";
@@ -354,7 +382,10 @@ bundle agent cfengine_policysrv
                             "apache2",
 #                            "mysql-server",
                             "php5",
-                            "ssl-cert"
+                            "ssl-cert",
+                            "gcc",
+                            "php5-pear",
+                            "php5-mcrypt"
                            },
                  comment => "Define a list of packages to be installed on Debian/Ubuntu",
                   handle => "cfengine_policysrv_vars_match_package_debian";
@@ -380,7 +411,8 @@ bundle agent cfengine_policysrv
              comment => "Install packages from the list",
               handle => "cfengine_policysrv_packages_install_package_redhat",
       package_policy => "add",
-      package_method => yum;
+      package_method => yum,
+             classes => if_repaired("pecl_mongo");
 
   debian.am_policy_hub::
 
@@ -406,7 +438,7 @@ bundle agent cfengine_policysrv
 
   a2enmod_php5_ssl::
 
-   "/usr/sbin/a2enmod php5 ssl",
+   "/usr/sbin/a2enmod php5 ssl rewrite",
       comment => "Enable apache modules on Debian/Ubuntu",
        handle => "cfengine_policysrv_commands_a2enmod_debian";
 #      classes => if_repaired("restart_apache2");
@@ -419,13 +451,29 @@ bundle agent cfengine_policysrv
 
    "/usr/sbin/a2enmod ssl && /usr/sbin/a2enflag SSL && /usr/bin/gensslcert"
       comment => "Enable apache modules on SuSE",
-       handle => "cfengine_policysrv_commands_a2enmod_suse";
+       handle => "cfengine_policysrv_commands_a2enmod_ssl_suse";
+
+   "/usr/sbin/a2enmod rewrite"
+      comment => "Enable PHP Rewrite modules on SuSE",
+       handle => "cfengine_policysrv_commands_a2enmod_rewrite_suse";
+
+   "/usr/bin/pecl install mongo"
+      comment => "Download and install PHP Mongo module on SuSE",
+       handle => "cfengine_policysrv_commands_pecl_install_mongo_suse",
+      contain => in_shell;
 
   a2ensite_ssl::
 
    "/usr/sbin/a2ensite ssl"
       comment => "Enable apache SSL on Debian/Ubuntu",
        handle => "cfengine_policysrv_commands_a2ensite_ssl";
+
+  pecl_mongo::
+
+   "/usr/bin/pecl install mongo"
+      comment => "Download and install PHP Mongo module on Redhat/CentOS/Fedora",
+       handle => "cfengine_policysrv_commands_pecl_install_mongo_redhat",
+      contain => in_shell;
 
 #
 
@@ -455,12 +503,46 @@ bundle agent cfengine_policysrv
       copy_from => local_cp("/etc/apache2/vhosts.d/vhost-ssl.template"),
          action => immediate;
 
+   "/etc/apache2/conf.d/nova.conf"
+            comment => "Allow Override all and Encoded slashes to $(sys.doc_root)",
+             handle => "cfengine_policysrv_files_apache_nova_conf_suse",
+      edit_defaults => empty,
+          edit_line => apache_nova_conf("$(sys.doc_root)");
+
+  redhat.am_policy_hub::
+
+   "/etc/httpd/conf.d/nova.conf"
+            comment => "Allow Override all and Encoded slashes to $(sys.doc_root)",
+             handle => "cfengine_policysrv_files_apache_nova_conf_redhat",
+      edit_defaults => empty,
+          edit_line => apache_nova_conf("$(sys.doc_root)");
+
+   "/etc/httpd/conf/httpd.conf"
+            comment => "To append CFE nova.conf to be used for a web server",
+             handle => "cfengine_policysrv_files_append_nova_conf_line_httpd_conf",
+      edit_defaults => empty,
+          edit_line => append_if_no_line("Include conf.d/nova.conf");
+
   remove_mongod_lock::
 
    "$(sys.workdir)/state/mongod.lock"
         comment => "Remove stale mongod lock file",
          delete => tidy;
 
+}
+
+#
+
+bundle edit_line apache_nova_conf(folder)
+{
+ insert_lines:
+"<Directory \"$(folder)\">
+  Options Indexes FollowSymLinks
+  AllowOverride All
+  Order allow,deny
+  Allow from all
+</Directory>
+AllowEncodedSlashes On";
 }
 
 ##################################################################
@@ -592,7 +674,7 @@ bundle agent cfengine_web_server(state)
 
   web_ok.suse_start_apache::
 
-   "/etc/init.d/apache2 $(start_type)"
+   "/etc/init.d/apache2 $(start_type) "
       comment => "Start apache2 process if not exist",
        handle => "cfengine_web_server_commands_start_apache_suse";
 
@@ -604,7 +686,7 @@ bundle agent cfengine_web_server(state)
 
   redhat_start_apache::
 
-   "/etc/init.d/httpd $(start_type)"
+   "/etc/init.d/httpd $(start_type) "
       comment => "Start httpd process if not exist",
        handle => "cfengine_web_server_commands_start_httpd_redhat";
 
@@ -616,7 +698,7 @@ bundle agent cfengine_web_server(state)
 
   debian_start_apache::
 
-   "/etc/init.d/apache2 $(start_type)"
+   "/etc/init.d/apache2 $(start_type) "
       comment => "Start apache process if not exist",
        handle => "cfengine_web_server_commands_start_apache_debian";
 

@@ -61,14 +61,14 @@ body common control
 #                    "OrionCloud/python_env.cf"
                    };
 
-  version => "Promises.cf 1.1.0";
-
-  goal_categories => { "goals", "targets", "milestones" };
-  goal_patterns   => { "goal_.*", "target.*","milestone.*" };
+   version => "Promises.cf 1.1.0";
 
   nova_edition|constellation_edition::
 
-  host_licenses_paid => "1";
+   host_licenses_paid => "1";
+
+   goal_categories => { "goals", "targets", "milestones" };
+   goal_patterns   => { "goal_.*", "target.*","milestone.*" };
 
 }
 
@@ -161,11 +161,11 @@ bundle agent cfengine_management
    "hub" usebundle => cfengine_policysrv,
            comment => "Prepare the policy hub";
 
-   "hub" usebundle => cfengine_web_server("on"),
-           comment => "Manage Apache Web server (on/off)";
-
    "hub" usebundle => cfengine_php_mod,
            comment => "Setup CFE PHP modules";
+
+   "hub" usebundle => cfengine_web_server("on"),
+           comment => "Manage Apache Web server (on/off)";
 
    "hub" usebundle => cfengine_setup_knowledge,
            comment => "Manage CFE Knowledge Map";

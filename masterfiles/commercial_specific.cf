@@ -351,6 +351,7 @@ bundle agent cfengine_policysrv
                              "apache2-prefork",
 #                             "mysql",
                              "php5",
+                             "php5-devel",
                              "php5-pear",
                              "subversion",
                              "gcc",
@@ -389,6 +390,34 @@ bundle agent cfengine_policysrv
                            },
                  comment => "Define a list of packages to be installed on Debian/Ubuntu",
                   handle => "cfengine_policysrv_vars_match_package_debian";
+
+#
+
+ classes:
+
+  redhat.am_policy_hub::
+
+   "no_mongo_module"        not => fileexists("/usr/lib64/php/modules/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_redhat_x86_64",
+                     ifvarclass => "x86_64";
+
+   "no_mongo_module"        not => fileexists("/usr/lib/php/modules/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_redhat_i686",
+                     ifvarclass => "i686";
+
+  SuSE.am_policy_hub::
+
+   "no_mongo_module"        not => fileexists("/usr/lib64/php5/extensions/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_suse_x86_64",
+                     ifvarclass => "x86_64";
+
+   "no_mongo_module"        not => fileexists("/usr/lib/php5/extensions/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_suse_i686",
+                     ifvarclass => "i686";
 
 #
 
@@ -457,6 +486,8 @@ bundle agent cfengine_policysrv
       comment => "Enable PHP Rewrite modules on SuSE",
        handle => "cfengine_policysrv_commands_a2enmod_rewrite_suse";
 
+  a2enmod_ssl.no_mongo_module::
+
    "/usr/bin/pecl install mongo"
       comment => "Download and install PHP Mongo module on SuSE",
        handle => "cfengine_policysrv_commands_pecl_install_mongo_suse",
@@ -468,7 +499,7 @@ bundle agent cfengine_policysrv
       comment => "Enable apache SSL on Debian/Ubuntu",
        handle => "cfengine_policysrv_commands_a2ensite_ssl";
 
-  pecl_mongo::
+  pecl_mongo.no_mongo_module::
 
    "/usr/bin/pecl install mongo"
       comment => "Download and install PHP Mongo module on Redhat/CentOS/Fedora",
@@ -505,6 +536,7 @@ bundle agent cfengine_policysrv
    "/etc/apache2/conf.d/nova.conf"
             comment => "Allow Override all and Encoded slashes to $(sys.doc_root)",
              handle => "cfengine_policysrv_files_apache_nova_conf_suse",
+             create => "true",
       edit_defaults => empty,
           edit_line => apache_nova_conf("$(sys.doc_root)");
 
@@ -673,7 +705,7 @@ bundle agent cfengine_web_server(state)
 
   web_ok.suse_start_apache::
 
-   "/etc/init.d/apache2 $(start_type) "
+   "/etc/init.d/apache2 $(start_type)"
       comment => "Start apache2 process if not exist",
        handle => "cfengine_web_server_commands_start_apache_suse";
 
@@ -685,7 +717,7 @@ bundle agent cfengine_web_server(state)
 
   redhat_start_apache::
 
-   "/etc/init.d/httpd $(start_type) "
+   "/etc/init.d/httpd $(start_type)"
       comment => "Start httpd process if not exist",
        handle => "cfengine_web_server_commands_start_httpd_redhat";
 
@@ -697,7 +729,7 @@ bundle agent cfengine_web_server(state)
 
   debian_start_apache::
 
-   "/etc/init.d/apache2 $(start_type) "
+   "/etc/init.d/apache2 $(start_type)"
       comment => "Start apache process if not exist",
        handle => "cfengine_web_server_commands_start_apache_debian";
 

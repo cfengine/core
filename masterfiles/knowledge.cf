@@ -86,9 +86,21 @@ bundle agent cfengine_setup_knowledge
             comment => "Check for a db_stamp file",
              handle => "knowledge_classes_kn_init";
 
+   "mongo_init"     not => fileexists("$(sys.doc_root)/mongo_stamp"),
+                comment => "Check for a mongo_stamp file",
+                 handle => "knowledge_classes_mongo_init";
+
 #
 
  files:
+
+  mongo_init::
+
+   "$(sys.doc_root)/mongo_stamp"
+       create => "true",
+      classes => if_repaired("init_mongo"),
+      comment => "Create a time stamp file for 1st time installation",
+       handle => "knowledge_files_mongo_stamp";     
 
   kn_init::
 
@@ -211,6 +223,13 @@ bundle agent cfengine_setup_knowledge
 #
 
  commands:
+
+  init_mongo::
+
+   "$(sys.workdir)/bin/mongorestore -d phpcfengine phpcfenginenova"
+      contain => silent_in_dir("$(sys.doc_root)"),
+      comment => "Initialise mongo authentication to access Nova Mission Portal 2.1.0 ++",
+       handle => "knowledge_commands_mongorestore";
 
   init_knowledge|(am_policy_hub.kn_update)::
 

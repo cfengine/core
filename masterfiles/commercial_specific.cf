@@ -313,19 +313,19 @@ bundle agent cfengine_php_mod
 
   restart_webserver.redhat::
 
-   "/etc/init.d/httpd  restart"
+   "/etc/init.d/httpd restart"
       comment => "Restart httpd service on RedHat/CentOS/Fedora",
        handle => "cfengine_php_mod_commands_httpd_redhat";
 
   restart_webserver.debian::
 
-   "/etc/init.d/apache2  restart"
+   "/etc/init.d/apache2 restart"
       comment => "Restart apache2 service on Debian/Ubuntu",
        handle => "cfengine_php_mod_commands_apache2_debian";
 
   restart_webserver.SuSE::
 
-   "/etc/init.d/apache2  restart"
+   "/etc/init.d/apache2 restart"
       comment => "Restart apache2 service on SuSE",
        handle => "cfengine_php_mod_commands_apache2_suse";
 
@@ -505,6 +505,12 @@ bundle agent cfengine_policysrv
       comment => "Download and install PHP Mongo module on Redhat/CentOS/Fedora",
        handle => "cfengine_policysrv_commands_pecl_install_mongo_redhat";
 
+  restart_httpd::
+
+   "/sbin/service httpd restart"
+      comment => "Restart HTTPD on Redhat/CentOS/Fedora",
+       handle => "cfengine_policysrv_commands_restart_httpd";
+
 #
 
  files:
@@ -552,7 +558,8 @@ bundle agent cfengine_policysrv
    "/etc/httpd/conf/httpd.conf"
             comment => "To append CFE nova.conf to be used for a web server",
              handle => "cfengine_policysrv_files_append_nova_conf_line_httpd_conf",
-          edit_line => append_if_no_line("Include conf.d/nova.conf");
+          edit_line => append_if_no_line("Include conf.d/nova.conf"),
+            classes => if_repaired("restart_httpd");
 
   remove_mongod_lock::
 

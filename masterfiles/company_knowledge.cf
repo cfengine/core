@@ -83,13 +83,13 @@ topics:
 
   goals::
 
-    "goal 1" comment => "The company mission depends on the reliable provision of services to our customers";
+    "goal 1" comment => "SAMPLE TEXT: The company mission depends on the reliable provision of services to our customers";
 
-    "goal 2" comment => "The company should be running the proven but recent versions of key software";
+    "goal 2" comment => "SAMPLE TEXT: The company should be running the proven but recent versions of key software";
 
-    "goal 3" comment => "As a matter of law, the company must be compliant with Sarbanes Oxley act.";
+    "goal 3" comment => "SAMPLE TEXT: As a matter of law, the company must be compliant with Sarbanes Oxley act.";
 
-    "goal 4" comment => "High tech intellectual property should comply with US Export restrictions for class D countries";
+    "goal 4" comment => "SAMPLE TEXT: High tech intellectual property should comply with US Export restrictions for class D countries";
 
 
 #######

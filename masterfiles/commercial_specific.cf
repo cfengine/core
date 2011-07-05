@@ -472,8 +472,7 @@ bundle agent cfengine_policysrv
 
    "/usr/bin/pecl install mongo"
       comment => "Download and install PHP Mongo module on Redhat/CentOS/Fedora",
-       handle => "cfengine_policysrv_commands_pecl_install_mongo_redhat",
-      contain => in_shell;
+       handle => "cfengine_policysrv_commands_pecl_install_mongo_redhat";
 
 #
 
@@ -514,13 +513,13 @@ bundle agent cfengine_policysrv
    "/etc/httpd/conf.d/nova.conf"
             comment => "Allow Override all and Encoded slashes to $(sys.doc_root)",
              handle => "cfengine_policysrv_files_apache_nova_conf_redhat",
+             create => "true",
       edit_defaults => empty,
           edit_line => apache_nova_conf("$(sys.doc_root)");
 
    "/etc/httpd/conf/httpd.conf"
             comment => "To append CFE nova.conf to be used for a web server",
              handle => "cfengine_policysrv_files_append_nova_conf_line_httpd_conf",
-      edit_defaults => empty,
           edit_line => append_if_no_line("Include conf.d/nova.conf");
 
   remove_mongod_lock::

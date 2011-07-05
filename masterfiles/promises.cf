@@ -63,6 +63,9 @@ body common control
 
   version => "Promises.cf 1.1.0";
 
+  goal_categories => { "goals", "targets", "milestones" };
+  goal_patterns   => { "goal_.*", "target.*","milestone.*" };
+
   nova_edition|constellation_edition::
 
   host_licenses_paid => "1";

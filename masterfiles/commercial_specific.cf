@@ -371,7 +371,7 @@ bundle agent cfengine_policysrv
                              "php-bcmath",
                              "php-pear",
                              "gcc",
-                             "php-mcrpyt"
+                             "php-mcrypt"
                             },
                  comment => "Define a list of packages to be installed on RedHat/CentOS/Fedora",
                   handle => "cfengine_policysrv_vars_match_package_redhat";

@@ -143,7 +143,7 @@ memset(out,0,outSz);
       case '\"':
           *spt++ = '\\';
           *spt = *spf;
-	  i+=2;
+	  i+=3;
           break;
 
       default:
@@ -169,12 +169,18 @@ memset(out,0,outSz);
    {
    switch (*spf)
       {
-//      case '\'':
       case '\"':
       case '\\':
           *spt++ = '\\';
           *spt = *spf;
           i+=2;
+          break;
+      case '\n':
+      case '\t':
+      case '\r':
+          *spt = ' ';
+          i++;
+          break;
       
       default:
           *spt = *spf;

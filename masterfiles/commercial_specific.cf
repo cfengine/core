@@ -360,6 +360,10 @@ bundle agent cfengine_policysrv
                  comment => "Define a list of packages to be installed on SuSE",
                   handle => "cfengine_policysrv_vars_match_package_suse";
 
+   "buffer"  string => readfile("/etc/sysconfig/clock", "9999"),
+            comment => "Get the whole contents of the file to extract a timezone later on",
+             handle => "cfengine_policysrv_vars_buffer_suse";
+
   redhat.am_policy_hub::
 
    "match_package" slist => {
@@ -418,6 +422,12 @@ bundle agent cfengine_policysrv
                         comment => "Check if mongo module installed or not",
                          handle => "cfengine_policysrv_classes_no_mongo_module_suse_i686",
                      ifvarclass => "i686";
+
+   "suse_ok" expression => regextract(
+                                     "TIMEZONE=\"(.*?)\"",
+                                     "$(buffer)",
+                                     "timezone"
+                                     );
 
 #
 
@@ -546,6 +556,11 @@ bundle agent cfengine_policysrv
       edit_defaults => empty,
           edit_line => apache_nova_conf("$(sys.doc_root)");
 
+   "/etc/php5/apache2/php.ini"
+        comment => "Ensure that date.timezone in php.ini has the same valuae as the machine",
+         handle => "cfengine_policysrv_files_apache_php_ini",
+      edit_line => add_php_timezone("$(timezone[1])");
+
   redhat.am_policy_hub::
 
    "/etc/httpd/conf.d/nova.conf"
@@ -581,6 +596,17 @@ bundle edit_line apache_nova_conf(folder)
   Allow from all
 </Directory>
 AllowEncodedSlashes On";
+}
+
+#
+
+bundle edit_line add_php_timezone(xxx)
+{
+ replace_patterns:
+  ";date.timezone.*"
+     replace_with => value("date.timezone = $(xxx)");
+  "date.timezone\h+=\h+(?!$(xxx)).*"
+     replace_with => value("date.timezone = $(xxx)");
 }
 
 ##################################################################

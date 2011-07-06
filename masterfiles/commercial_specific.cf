@@ -352,9 +352,11 @@ bundle agent cfengine_policysrv
 #                             "mysql",
                              "php5",
                              "php5-devel",
+                             "php5-json",
                              "php5-pear",
                              "subversion",
                              "gcc",
+                             "make",
                              "php5-mcrypt"
                             },
                  comment => "Define a list of packages to be installed on SuSE",
@@ -383,14 +385,16 @@ bundle agent cfengine_policysrv
 
  debian.am_policy_hub::
 
-  "match_package" slist => {
-                            "apache2",
-#                            "mysql-server",
-                            "php5",
-                            "ssl-cert",
-                            "gcc",
-                            "php5-pear",
-                            "php5-mcrypt"
+  "match_package"  slist => {
+                             "apache2",
+#                             "mysql-server",
+                             "php5",
+                             "ssl-cert",
+                             "gcc",
+                             "make",
+                             "php5-json",
+                             "php5-pear",
+                             "php5-mcrypt"
                            },
                  comment => "Define a list of packages to be installed on Debian/Ubuntu",
                   handle => "cfengine_policysrv_vars_match_package_debian";

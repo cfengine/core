@@ -609,8 +609,8 @@ bundle edit_line add_php_timezone(xxx)
  replace_patterns:
   ";date.timezone.*"
      replace_with => value("date.timezone = $(xxx)");
-  "date.timezone\h+=\h+(?!$(xxx)).*"
-     replace_with => value("date.timezone = $(xxx)");
+#  "date.timezone\h+=\h+(?!$(xxx)).*"
+#     replace_with => value("date.timezone = $(xxx)");
 }
 
 ##################################################################

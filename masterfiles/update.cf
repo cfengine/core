@@ -113,6 +113,7 @@ bundle agent update_bins
       package_architectures => { "$(pkgarch)" },
             package_version => "3.0.0",              # at least Community version 3.0.0
              package_method => u_generic( "$(local_software_dir)" ),
+                 ifvarclass => "!(nova_edition|constellation_edition)",
                     classes => u_if_else("bin_update_success", "bin_update_fail");
 
    "$(novapkg)"

@@ -13,7 +13,7 @@ m4_define([ULN],m4_toupper($1))
 
   if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck; then
     ULN[]_PATH="$with_[$1]"
-    if test "x$with_[$1]" != x/usr -a test "x$with_[$1]" != x/; then
+    if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
       ULN[]_CFLAGS="-I$with_[$1]/include"
       ULN[]_LDFLAGS="-L$with_[$1]/lib -R$with_[$1]/lib"
     fi

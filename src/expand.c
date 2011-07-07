@@ -970,11 +970,6 @@ if (IsExcluded(pp->classes))
    return;
    }
 
-if (VarClassExcluded(pp,&sp))
-   {
-   return;
-   }
-
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->lval,"comment") == 0)

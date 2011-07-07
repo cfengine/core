@@ -325,7 +325,9 @@ constraint:           id                        /* BUNDLE ONLY */
                           char *contextid = NULL;
 
                         if (!INSTALL_SKIP)
-                           {                           
+                           {
+                           struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
+                           CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
                            AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            
                            P.rval = NULL;

@@ -1722,7 +1722,7 @@ for (i=0; options[i].name != NULL; i++)
 
 printf("\nBug reports: http://bug.cfengine.com, ");
 printf("Community help: http://forum.cfengine.com\n");
-printf("Community info: http://www.cfengine.org, ");
+printf("Community info: http://www.cfengine.com/pages/community, ");
 printf("Support services: http://www.cfengine.com\n\n");
 printf("This software is Copyright (C) 2008,2010-present Cfengine AS.\n");
 }
@@ -1769,7 +1769,7 @@ printf(".SH AUTHOR\n"
 
 printf("\nBug reports: http://bug.cfengine.com, ");
 printf(".pp\nCommunity help: http://forum.cfengine.com\n");
-printf(".pp\nCommunity info: http://www.cfengine.org\n");
+printf(".pp\nCommunity info: http://www.cfengine.com/pages/community\n");
 printf(".pp\nSupport services: http://www.cfengine.com\n");
 printf(".pp\nThis software is Copyright (C) 2008-%d Cfengine AS.\n", BUILD_YEAR);
 }

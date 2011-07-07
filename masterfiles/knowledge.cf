@@ -119,10 +119,10 @@ bundle agent cfengine_setup_knowledge
 
   SuSE.am_policy_hub::
 
-   "/tmp/mysql.sock"
-        comment => "Create a temp link to mysql.sock",
-         handle => "knowledge_files_mysql_sock_suse",
-      link_from => ln_s("/var/lib/mysql/mysql.sock");
+#   "/tmp/mysql.sock"
+#        comment => "Create a temp link to mysql.sock",
+#         handle => "knowledge_files_mysql_sock_suse",
+#      link_from => ln_s("/var/lib/mysql/mysql.sock");
 
    "/var/lib/wwwrun/.cfagent/."
            comment => "Ensure permissions to .cfagent directory",
@@ -133,10 +133,10 @@ bundle agent cfengine_setup_knowledge
 
   debian.am_policy_hub::
 
-   "/tmp/mysql.sock"
-        comment => "Create a temp link to mysql.sock",
-         handle => "knowledge_files_mysql_sock_debian",
-      link_from => ln_s("/var/run/mysqld/mysqld.sock");
+#   "/tmp/mysql.sock"
+#        comment => "Create a temp link to mysql.sock",
+#         handle => "knowledge_files_mysql_sock_debian",
+#      link_from => ln_s("/var/run/mysqld/mysqld.sock");
 
    "/var"
            comment => "Ensure permissions to $(sys.doc_root)",
@@ -153,10 +153,10 @@ bundle agent cfengine_setup_knowledge
 	
   redhat.am_policy_hub::
 
-   "/tmp/mysql.sock"
-        comment => "Create a temp link to mysql.sock",
-         handle => "knowledge_files_mysql_sock_redhat",
-      link_from => ln_s("/var/lib/mysql/mysql.sock");
+#   "/tmp/mysql.sock"
+#        comment => "Create a temp link to mysql.sock",
+#         handle => "knowledge_files_mysql_sock_redhat",
+#      link_from => ln_s("/var/lib/mysql/mysql.sock");
 
    "/var"
            comment => "Ensure permissions to $(sys.doc_root)",

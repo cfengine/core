@@ -204,7 +204,7 @@
 	Memory leaks fixed
 	Many hooks added for Nova enterprise extensions.
 	
-        promise_output reports now placed in WORKDIR/reports directory
+	promise_output reports now placed in WORKDIR/reports directory
 
 	Initialization correction and self-correx in monitord
 

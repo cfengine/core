@@ -971,7 +971,7 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
   struct Attributes a = {{0}};
-  char rtype,type = 'x',*sp = NULL;
+  char rtype,type = 'x';
   void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;
   struct Rval returnval; /* Must expand naked functions here for consistency */
@@ -983,11 +983,6 @@ if (pp->done)
    }
 
 if (IsExcluded(pp->classes))
-   {
-   return;
-   }
-
-if (VarClassExcluded(pp,&sp))
    {
    return;
    }

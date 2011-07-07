@@ -632,6 +632,11 @@ if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
 
 /* Special promise type checks */
 
+if (SHOWREPORTS)
+   {
+   NewPromiser(pp);
+   }
+
 if (!IsDefinedClass(pp->classes))
    {
    return;
@@ -642,10 +647,6 @@ if (VarClassExcluded(pp,&sp))
    return;
    }
 
-if (SHOWREPORTS)
-   {
-   NewPromiser(pp);
-   }
 
 if (handle)
    {

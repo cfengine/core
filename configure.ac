@@ -126,10 +126,16 @@ AC_ARG_WITH([postgresql],
 
 if test "x$with_postgresql" != "xno"; then
 
-   # Use pg_config for native builds
+   if test "x$with_postgresql" != xyes && test "x$with_postgresql" != xcheck; then
+      PG_CONFIG=$with_postgresql/bin/pg_config
+   else
+      PG_CONFIG=pg_config
+   fi
+
+   # pg_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
-      if test x`which pg_config` != x ; then
-         CPPFLAGS="$CPPFLAGS -I`pg_config --includedir`"
+      if test x`which $PG_CONFIG` != x ; then
+         CPPFLAGS="$CPPFLAGS -I`$PG_CONFIG --includedir`"
       fi
    fi
 
@@ -147,10 +153,16 @@ AC_ARG_WITH([mysql],
 
 if test "x$with_mysql" != "xno"; then
 
-   # Use mysql_config for native builds
+   if test "x$with_mysql" != xyes && test "x$with_mysql" != xcheck; then
+      MYSQL_CONFIG=$with_mysql/bin/mysql_config
+   else
+      MYSQL_CONFIG=mysql_config
+   fi
+
+   # mysql_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
-      if test x`which mysql_config` != x ; then
-         CPPFLAGS="$CPPFLAGS `mysql_config --include`"
+      if test x`which $MYSQL_CONFIG` != x ; then
+         CPPFLAGS="$CPPFLAGS `$MYSQL_CONFIG --include`"
       fi
    fi
 

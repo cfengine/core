@@ -1,0 +1,67 @@
+#######################################################
+#
+# Related to bug introduced in core r1900 - allowed any body constraint name
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(g.testdir)/shouldnotexist"
+     create => "true",
+     nonexistant_attribute => "abc";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" not => fileexists("$(g.testdir)/shouldnotexist");
+reports:
+    DEBUG::
+	"Expected to crash - illegal body contstraint name";
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

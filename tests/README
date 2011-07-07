@@ -1,5 +1,5 @@
 NOTE: Users are encouraged to create tests that demonstrate any bugs
-that they may find (so that after the bug is fied, the test will pass,
+that they may find (so that after the bug is fixed, the test will pass,
 and can be used in future versions of Cfengine to ensure reliability).
 
 Currently, all tests are assumed to be run by root.  All tests should

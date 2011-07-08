@@ -328,8 +328,6 @@ if (cfstat(newname,&statbuf) == -1)
      }
    }
 
-CfOut(cf_verbose,""," -> Going to secondary storage for key");
-
 if ((fp = fopen(newname,"r")) == NULL)
    {
    CfOut(cf_error,"fopen","Couldn't find a public key (%s)",newname);

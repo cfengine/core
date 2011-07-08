@@ -108,6 +108,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
 ThreadUnlock(cft_db_lastseen);
+
+if(EMPTY(result))
+   {
+   CfOut(cf_verbose, "", "!! Unable to find a key for ip %s", ipv4);
+   }
 }
 
 /***************************************************************/
@@ -1168,9 +1173,9 @@ return cfsrv_nostatus;
 
 enum cfl_view Str2View(char *s)
 
-{ static char *views[] = { "SumCompWk",  // NOTE: must match cfl_view enum
-			   "SumRepairedWk",
-			   "SumNotKeptWk",
+{ static char *views[] = { "Comp",  // NOTE: must match cfl_view enum
+			   "Repaired",
+			   "NotKept",
 			   "RepairedReason",                           
 			   "NotKeptReason",
                            "FileChange",

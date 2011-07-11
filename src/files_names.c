@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 static void DeEscapeFilename(char *in,char *out);
-static int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin);
 static int JoinFast(char *path,char *leaf,char **nextFree,int bufsize);
 static int StartJoinFast(char *path,char *leaf,char **nextFree,int bufsize);
 
@@ -431,7 +430,7 @@ int EndJoin(char *path,char *leaf,int bufsize)
 
 /*********************************************************************/
 
-static int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin)
+int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin)
 
 { int len = strlen(leaf);
 

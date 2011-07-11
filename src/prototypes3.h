@@ -609,6 +609,7 @@ int IsDir(char *path);
 int EmptyString(char *s);
 char *JoinPath(char *path,char *leaf);
 char *JoinSuffix(char *path,char *leaf);
+int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin);
 int StartJoin(char *path,char *leaf,int bufsize);
 int Join(char *path,char *leaf,int bufsize);
 int EndJoin(char *path,char *leaf,int bufsize);

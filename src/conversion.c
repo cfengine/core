@@ -176,17 +176,36 @@ memset(out,0,outSz);
       {
       case '\"':
       case '\\':
+      case '/':
           *spt++ = '\\';
           *spt = *spf;
           i+=2;
           break;
       case '\n':
-      case '\t':
-      case '\r':
-          *spt = ' ';
-          i++;
+          *spt++ = '\\';
+          *spt = 'n';
+          i+=2;
           break;
-      
+      case '\t':
+          *spt++ = '\\';
+          *spt = 't';
+          i+=2;
+          break;          
+      case '\r':
+          *spt++ = '\\';
+          *spt = 'r';
+          i+=2;
+          break;
+      case '\b':
+          *spt++ = '\\';
+          *spt = 'b';
+          i+=2;
+          break;
+      case '\f':
+          *spt++ = '\\';
+          *spt = 'f';
+          i+=2;
+          break;
       default:
           *spt = *spf;
 	  i++;

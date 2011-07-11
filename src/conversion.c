@@ -1193,6 +1193,7 @@ return cfsrv_nostatus;
 enum cfl_view Str2View(char *s)
 
 { static char *views[] = { "Comp",  // NOTE: must match cfl_view enum
+                           "VirtBundleComp",
 			   "Repaired",
 			   "NotKept",
 			   "RepairedReason",                           

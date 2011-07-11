@@ -1140,6 +1140,7 @@ enum cfd_menu
 enum cfl_view
    {
    cfl_view_comp,
+   cfl_view_virtbundlecomp,
    cfl_view_repaired,
    cfl_view_notkept,
    cfl_view_repairedreason,

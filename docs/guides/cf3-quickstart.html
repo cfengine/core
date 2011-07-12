@@ -1,0 +1,335 @@
+<html lang="en">
+<head>
+<title>CFEngine Quick Start</title>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="description" content="CFEngine Quick Start">
+<meta name="generator" content="makeinfo 4.13">
+<link title="Top" rel="top" href="#Top">
+<link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+body {
+	font-family: Verdana, DejaVu, Vera, Geneva, sans-serif;
+	padding: 10px;
+}
+.node
+{
+	text-align: right;
+	padding: 2px;
+	font-size: smaller;
+}
+.node hr {
+	border: 0;
+	width: 100%;
+	color: #CCC;
+	background-color: #CCC;
+	height: 5px;
+}
+.section {
+	padding-right: 0px;
+	padding-bottom: 0px;
+	padding-left: 0px;
+}
+h1 {
+	font-weight: bold;
+	color: #666;
+}
+h2 {
+	font-weight: bold;
+	color: #666;
+}
+h3 {
+	margin-top: 3px;
+	margin-right: 0px;
+	margin-bottom: 10px;
+	margin-left: 0px;
+}
+
+.menu
+{
+}
+
+.contents
+{
+	background-color: #CCC;
+	padding-top: 2px;
+	padding-right: 2px;
+	padding-bottom: 2px;
+	padding-left: 10px;
+}
+
+.index-cp
+{  
+background: #fff url(index-cp.png) right repeat-y;
+}
+
+.index-vr
+{  
+background: #fff url(index-vr.png) right repeat-y;
+}
+
+.index-mb
+{  
+background: #eee url(index-faq.png) right repeat-y;
+}
+
+table.border
+{
+	border-color: #666;
+	border-width: 0px;
+}
+
+FONT.liten {font-size: 70%; }
+ 
+.tynn {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: smaller;
+        font-style: normal;
+        font-weight: lighter;
+        margin-bottom: 0em;
+     font-size: 11pt;
+        }
+.verbatim {
+	font-family: "Lucida Console", Monaco, monospace;
+	color: #000;
+	padding-top: 30px;
+	padding-right: 30px;
+	padding-bottom: 3px;
+	padding-left: 30px;
+	background-color: #FEFFCA;
+	border-left-width: medium;
+	border-left-style: outset;
+	border-left-color: #FDFFD5;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 20px;
+	margin-left: 0px;
+}
+.example {
+	font-family: "Lucida Console", Monaco, monospace;
+	color: #000;
+	width: 100%;
+	padding-top: 30px;
+	padding-right: 30px;
+	padding-bottom: 3px;
+	padding-left: 30px;
+	background-color: #FEFFCA;
+	border-left-width: medium;
+	border-left-style: outset;
+	border-left-color: #FDFFD5;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 20px;
+	margin-left: 0px;
+}
+.smallexample {
+	font-family: "Lucida Console", Monaco, monospace;
+	color: #000;
+	width: 100%;
+	padding-top: 30px;
+	padding-right: 30px;
+	padding-bottom: 3px;
+	padding-left: 30px;
+	background-color: #FEFFCA;
+	border-left-width: medium;
+	border-left-style: outset;
+	border-left-color: #FDFFD5;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 20px;
+	margin-left: 0px;
+}
+.cartouche {
+	background-color: #CCC;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	padding: 5px;
+	font-style: italic;
+}
+
+A:link { color: #2c2e70 }
+A:visited { color: black }
+A:active { color: #600041 }--></style>
+</head>
+<body>
+<h1 class="settitle">CFEngine Quick Start</h1>
+<div class="node">
+<a name="Top"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#CFEngine-Quick-Start">CFEngine Quick Start</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#dir">(dir)</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
+
+</div>
+
+<h2 class="unnumbered">CFEngine Quick Start</h2>
+
+   <p><a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+
+<ul class="menu">
+<li><a accesskey="1" href="#CFEngine-Quick-Start">CFEngine Quick Start</a>
+</ul>
+
+<!-- ***************************************************** -->
+<!-- * CHAPTER -->
+<!-- ***************************************************** -->
+<div class="node">
+<a name="CFEngine-Quick-Start"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Top">Top</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">1 CFEngine Quick Start</h2>
+
+<ul class="menu">
+<li><a accesskey="1" href="#Install-from-packages">Install from packages</a>
+<li><a accesskey="2" href="#Build-from-source-_0028CFE-Community_0029">Build from source (CFE Community)</a>
+<li><a accesskey="3" href="#Bootstrap-from-source">Bootstrap from source</a>
+</ul>
+
+<div class="node">
+<a name="Install-from-packages"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Build-from-source-_0028CFE-Community_0029">Build from source (CFE Community)</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#CFEngine-Quick-Start">CFEngine Quick Start</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Quick-Start">CFEngine Quick Start</a>
+
+</div>
+
+<h3 class="section">1.1 Install from packages</h3>
+
+<ul class="menu">
+<li><a accesskey="1" href="#Unpack-the-software">Unpack the software</a>
+<li><a accesskey="2" href="#Bootstrap-CFEngine">Bootstrap CFEngine</a>
+</ul>
+
+<div class="node">
+<a name="Unpack-the-software"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Bootstrap-CFEngine">Bootstrap CFEngine</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Install-from-packages">Install from packages</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Install-from-packages">Install from packages</a>
+
+</div>
+
+<h4 class="subsection">1.1.1 Unpack the software</h4>
+
+<p>On the hub (policy server):
+     <ul>
+<li>CFE Community
+<pre class="verbatim">        host# rpm -ihv cfengine-community-3.x.y.rpm
+</pre>
+<li>CFE Nova
+<pre class="verbatim">        host# rpm -ihv cfengine-nova-2.x.y.rpm
+        host# rpm -ihv cfengine-nova-expansion-2.x.y.rpm
+</pre>
+<br>
+A public key has been created in <samp><span class="file">/var/cfengine/ppkeys/localhost.pub</span></samp>. Send this key to CFEngine Support as an attachment in the ticket system (<a href="https://cfengine.com/otrs/customer.pl">https://cfengine.com/otrs/customer.pl</a>) to obtain a license file <samp><span class="file">license.dat</span></samp>. Save the returned license file to <samp><span class="file">/var/cfengine/masterfiles/</span></samp> on the hub.
+
+     <p>To complete the licensing setup, make a promise to accept the license terms by editing <samp><span class="file">/var/cfengine/masterfiles/promises.cf</span></samp>. Change the line &lsquo;<samp><span class="samp">host_licenses_paid =&gt; "1";</span></samp>&rsquo; in &lsquo;<samp><span class="samp">body common control</span></samp>&rsquo; to reflect the correct number of licenses that you have subscribed to.
+
+   </ul>
+
+   <pre class="sp">
+
+</pre>
+On the clients (all other machines):
+     <ul>
+<li>CFE Community
+<pre class="verbatim">        host# rpm -ihv cfengine-community-3.x.y.rpm
+</pre>
+<li>CFE Nova
+<pre class="verbatim">        host# rpm -ihv cfengine-nova-2.x.y.rpm
+</pre>
+</ul>
+
+<div class="node">
+<a name="Bootstrap-CFEngine"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Unpack-the-software">Unpack the software</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Install-from-packages">Install from packages</a>
+
+</div>
+
+<h4 class="subsection">1.1.2 Bootstrap CFEngine</h4>
+
+<p><i>CFE Community users: The following applies to version 3.2 and up, please refer to section 1.3 'Bootstrap from source' in this document for bootstrapping earlier versions.</i>
+   <pre class="sp">
+
+</pre>
+
+The remaining steps apply to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is ‘123.456.789.123’ (do not bootstrap with a localhost address).
+<pre class="verbatim">   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+</pre>
+
+   <pre class="sp">
+
+</pre>
+CFEngine should now be up and running on your system.
+
+<div class="node">
+<a name="Build-from-source-(CFE-Community)"></a>
+<a name="Build-from-source-_0028CFE-Community_0029"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Bootstrap-from-source">Bootstrap from source</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Install-from-packages">Install from packages</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Quick-Start">CFEngine Quick Start</a>
+
+</div>
+
+<h3 class="section">1.2 Build from source (CFE Community)</h3>
+
+<p>Build from source<br>
+See reference manual or INSTALL file in source code for dependencies.
+<pre class="verbatim">   host# tar zxf cfengine-3.x.y.tar.gz
+   host# cd cfengine-3.x.y
+   host# ./configure
+   host# make
+   host# make install
+</pre>
+
+<div class="node">
+<a name="Bootstrap-from-source"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Build-from-source-_0028CFE-Community_0029">Build from source (CFE Community)</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Quick-Start">CFEngine Quick Start</a>
+
+</div>
+
+<h3 class="section">1.3 Bootstrap from source</h3>
+
+<pre class="verbatim">   host# /usr/local/bin/cf-key
+   host# cp  /usr/local/share/doc/cfengine/inputs/*cf /var/cfengine/inputs/
+   host# /usr/local/bin/cf-agent --bootstrap
+</pre>
+
+<pre class="sp">
+
+</pre>
+     <ul>
+<li>The first run of cf-key will complain but it will create the local work directory tree, /var/cfengine, as well as a public and private key. 
+<li>Then we use "cp" to populate the "inputs" directory with the default configuration. 
+<li>The first run of cf-agent will populate the binaries cache in /var/cfengine/bin/. 
+</ul>
+
+   <pre class="sp">
+
+</pre>
+CFEngine should now be up and running on your system.
+
+</body></html>
+

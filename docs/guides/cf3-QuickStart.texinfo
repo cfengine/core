@@ -1,0 +1,184 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************
+@c %** start of header
+@setfilename cf3-quickstart.info
+@settitle CFEngine Quick Start
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title CFEngine Quick Start
+@subtitle A CFEngine Handbook
+@author CFEngine AS
+
+
+@page
+
+@cartouche
+@quotation
+This short guide explains how to install the software and get it running. 
+@end quotation
+@end cartouche
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2011- CFEngine AS
+
+@end titlepage
+
+
+@c *************************** File begins here ************************
+
+
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Modularization:
+                      CFEngine is a language based tool specifically
+                      designed for configuring and maintaining
+                      Unix-like operating systems attached
+                      to a TCP/IP network.
+@end direntry
+@end ifinfo
+
+@ifnottex
+@node Top, CFEngine Quick Start, (dir), (dir)
+@top CFEngine Quick Start
+@end ifnottex
+
+@iftex
+@contents
+@end iftex
+
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+@menu
+* CFEngine Quick Start::        
+@end menu
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node CFEngine Quick Start,  , Top, Top
+@chapter CFEngine Quick Start
+
+@menu
+* Install from packages::  
+* Build from source (CFE Community)::  
+* Bootstrap from source::       
+@end menu
+
+@node  Install from packages, Build from source (CFE Community), CFEngine Quick Start, CFEngine Quick Start
+@section Install from packages
+
+@menu
+* Unpack the software::       
+* Bootstrap CFEngine::          
+@end menu
+
+@node Unpack the software, Bootstrap CFEngine, Install from packages, Install from packages
+@subsection Unpack the software
+
+On the hub (policy server):
+@itemize
+@item CFE Community
+@verbatim
+   host# rpm -ihv cfengine-community-3.x.y.rpm
+@end verbatim
+@item CFE Nova
+@verbatim
+   host# rpm -ihv cfengine-nova-2.x.y.rpm
+   host# rpm -ihv cfengine-nova-expansion-2.x.y.rpm
+@end verbatim
+@*
+A public key has been created in @file{/var/cfengine/ppkeys/localhost.pub}. Send this key to CFEngine Support as an attachment in the ticket system (@url{https://cfengine.com/otrs/customer.pl}) to obtain a license file @file{license.dat}. Save the returned license file to @file{/var/cfengine/masterfiles/} on the hub.
+
+To complete the licensing setup, make a promise to accept the license terms by editing @file{/var/cfengine/masterfiles/promises.cf}. Change the line @samp{host_licenses_paid => "1";} in @samp{body common control} to reflect the correct number of licenses that you have subscribed to.
+
+@end itemize
+
+@sp 1
+@noindent On the clients (all other machines):
+@itemize
+@item CFE Community
+@verbatim
+   host# rpm -ihv cfengine-community-3.x.y.rpm
+@end verbatim
+@item CFE Nova
+@verbatim
+   host# rpm -ihv cfengine-nova-2.x.y.rpm
+@end verbatim
+@end itemize
+
+
+@node Bootstrap CFEngine,  , Unpack the software, Install from packages
+@subsection Bootstrap CFEngine
+
+@i{CFE Community users: The following applies to version 3.2 and up, please refer to section 1.3 'Bootstrap from source' in this document for bootstrapping earlier versions.}
+@sp 1
+
+The remaining steps apply to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is ‘123.456.789.123’ (do not bootstrap with a localhost address).
+@verbatim
+   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+@end verbatim
+
+@sp 1
+CFEngine should now be up and running on your system.
+
+
+@page
+@node  Build from source (CFE Community), Bootstrap from source, Install from packages, CFEngine Quick Start
+@section Build from source (CFE Community)
+
+Build from source@*
+See reference manual or INSTALL file in source code for dependencies.
+@verbatim
+   host# tar zxf cfengine-3.x.y.tar.gz
+   host# cd cfengine-3.x.y
+   host# ./configure
+   host# make
+   host# make install
+@end verbatim
+
+
+@node Bootstrap from source,  , Build from source (CFE Community), CFEngine Quick Start
+@section Bootstrap from source
+
+@verbatim
+   host# /usr/local/bin/cf-key
+   host# cp  /usr/local/share/doc/cfengine/inputs/*cf /var/cfengine/inputs/
+   host# /usr/local/bin/cf-agent --bootstrap
+@end verbatim
+
+@sp 1
+@itemize
+@item The first run of cf-key will complain but it will create the local work directory tree, /var/cfengine, as well as a public and private key.
+@item Then we use "cp" to populate the "inputs" directory with the default configuration.
+@item The first run of cf-agent will populate the binaries cache in /var/cfengine/bin/.
+@end itemize
+
+@sp 1
+CFEngine should now be up and running on your system.
+
+
+@bye

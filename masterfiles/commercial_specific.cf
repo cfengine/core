@@ -64,14 +64,6 @@ bundle agent cfengine_php_mod
       ifvarclass => "i686",
         classes => if_repaired("restart_webserver");
 
-   "/usr/lib/php/modules/svn.so"
-         comment => "Prepare svn.so for 32-bit system",
-         handle => "cfengine_php_mod_svn_so_redhat5_32",
-       copy_from => local_cp("$(sys.workdir)/software_updates/svn/32/svn.so"),
-           perms => mo("755","root"),
-      ifvarclass => "i686",
-        classes => if_repaired("restart_webserver");
-
    "/usr/lib64/php/modules/cfmod.so"
          comment => "Prepare cfmod.so for 64-bit system",
          handle => "cfengine_php_mod_cfmod_so_redhat5_64",
@@ -80,10 +72,42 @@ bundle agent cfengine_php_mod
       ifvarclass => "x86_64",
         classes => if_repaired("restart_webserver");
 
+   "/usr/lib/php/modules/svn.so"
+         comment => "Prepare svn.so for 32-bit system",
+         handle => "cfengine_php_mod_svn_so_redhat5_32",
+       copy_from => local_cp("$(sys.workdir)/software_updates/svn/32/svn.so"),
+           perms => mo("755","root"),
+      ifvarclass => "i686",
+        classes => if_repaired("restart_webserver");
+
    "/usr/lib64/php/modules/svn.so"
          comment => "Prepare svn.so for 64-bit system",
          handle => "cfengine_php_mod_svn_so_redhat5_64",
        copy_from => local_cp("$(sys.workdir)/software_updates/svn/64/svn.so"),
+           perms => mo("755","root"),
+      ifvarclass => "x86_64",
+        classes => if_repaired("restart_webserver");
+
+  redhat_5::
+
+   "/etc/php.d/mcrypt.ini"
+        comment => "Put mcrypt.ini to its place",
+         handle => "cfengine_php_mod_mcrypt_ini_redhat5",
+      copy_from => local_cp("$(sys.workdir)/software_updates/mcrypt/mcrypt.ini"),
+          perms => mo("644","root");
+
+   "/usr/lib/php/modules/mcrypt.so"
+         comment => "Prepare mcrypt.so for 32-bit system",
+         handle => "cfengine_php_mod_mcrypt_so_redhat5_32",
+       copy_from => local_cp("$(sys.workdir)/software_updates/mcrypt/32/mcrypt.so"),
+           perms => mo("755","root"),
+      ifvarclass => "i686",
+        classes => if_repaired("restart_webserver");
+
+   "/usr/lib64/php/modules/mcrypt.so"
+         comment => "Prepare mcrypt.so for 64-bit system",
+         handle => "cfengine_php_mod_mcrypt_so_redhat5_64",
+       copy_from => local_cp("$(sys.workdir)/software_updates/mcrypt/64/mcrypt.so"),
            perms => mo("755","root"),
       ifvarclass => "x86_64",
         classes => if_repaired("restart_webserver");
@@ -366,7 +390,24 @@ bundle agent cfengine_policysrv
             comment => "Get the whole contents of the file to extract a timezone later on",
              handle => "cfengine_policysrv_vars_buffer_suse";
 
-  redhat.am_policy_hub::
+  redhat_5.am_policy_hub::
+
+   "match_package" slist => {
+                             "httpd",
+                             "mod_ssl",
+#                             "mysql",
+#                             "mysql-server",
+                             "php",
+                             "subversion",
+                             "php-bcmath",
+                             "php-pear",
+                             "gcc",
+#                             "php-mcrypt"
+                            },
+                 comment => "Define a list of packages to be installed on RedHat",
+                  handle => "cfengine_policysrv_vars_match_package_redhat";
+
+  (centos|fedora).am_policy_hub::
 
    "match_package" slist => {
                              "httpd",
@@ -380,8 +421,8 @@ bundle agent cfengine_policysrv
                              "gcc",
                              "php-mcrypt"
                             },
-                 comment => "Define a list of packages to be installed on RedHat/CentOS/Fedora",
-                  handle => "cfengine_policysrv_vars_match_package_redhat";
+                 comment => "Define a list of packages to be installed on CentOS/Fedora",
+                  handle => "cfengine_policysrv_vars_match_package_centos";
 
  debian.am_policy_hub::
 

@@ -1,13 +1,15 @@
 July 2011
 *All*
 - Rewrote many files as we decided to have bootstrap feature in Community version
-- Separted CFE Nova agent bundles to commercial_specific.cf (from cfengine.cf)
+- Separated CFE Nova agent bundles to commercial_specific.cf (from cfengine.cf)
 - Moved unused agent bundles to miscellaneous.cf
 - Changed "cf-know -sg" to "cf-know -b"
 - "commercial_customer" or => { "nova_edition", "constellation_edition" } added
 - limited "cf-execd" upto 2 processes in case SA wants to run "cf-execd -F"
 - Supported Community self-upgrade (cfengine-community)
 - Added exclude_dirs => { "\.svn" }; not to download version control hiddend directory in update.cf
+- Separated php-mcrypt from CentOS on RHEL5
+
 
 June 2011
 *cfengine.cf*

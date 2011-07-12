@@ -156,29 +156,37 @@ bundle agent cfengine_management
   am_policy_hub.commercial_customer::
 
    "hub" usebundle => cfengine_update_folders,
+            handle => "cfengine_management_update_folders",
            comment => "Create empty directories for CFE self-upgrade";
 
    "hub" usebundle => cfengine_policysrv,
+            handle => "cfengine_management_policysrv",
            comment => "Prepare the policy hub";
 
    "hub" usebundle => cfengine_php_mod,
+            handle => "cfengine_management_php_mod",
            comment => "Setup CFE PHP modules";
 
    "hub" usebundle => cfengine_web_server("on"),
+            handle => "cfengine_management_web_server",
            comment => "Manage Apache Web server (on/off)";
 
    "hub" usebundle => cfengine_setup_knowledge,
+            handle => "cfengine_management_setup_knowledge",
            comment => "Manage CFE Knowledge Map";
 
    "hub" usebundle => cfengine_editor,
+            handle => "cfengine_management_online_editor",
            comment => "Prepare CFE online editing tool";
 
   any::
 
    "any" usebundle => cfengine_correct_cftwin,
+            handle => "cfengine_management_correct_cftwin",
            comment => "Ensure cf-twin in good shape";
 
    "any" usebundle => cfengine_limit_robot_agents,
+            handle => "cfengine_management_limit_cfe_agents",
            comment => "Manage CFE processes";
 
 }
@@ -196,13 +204,13 @@ bundle agent service_catalogue
 
   any::
 
-   "security" -> { goal_1, goal_2 }
+   "security"           -> { goal_1, goal_2 }
                 comment => "Basic change management",
               usebundle => change_management;
 
   commercial_customer::
 
-   "maintenance" 
+   "maintenance"           -> { goal_3 }
                    comment => "Perform log rotation and clean up of CFE Nova work files",
                  usebundle => garbage_collection;
 

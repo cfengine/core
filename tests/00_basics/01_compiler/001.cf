@@ -78,7 +78,6 @@ reports:
 
 bundle agent fini
 {
-files:
-	"$(g.testfile).*"
-	    delete => default_fini_cleanup;
+methods:
+        "any" usebundle => default_fini("$(g.testfile)");
 }

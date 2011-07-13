@@ -31,7 +31,12 @@ files:
 # and will not generate backup file which we are trying to get.
 commands:
   "/bin/echo LimpBizkit > $(g.testdir)/destfile"
-    useshell => "true";
+    contain => shell;
+}
+
+body contain shell
+{
+  useshell => "true";
 }
 
 #######################################################

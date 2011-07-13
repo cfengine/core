@@ -145,6 +145,7 @@ ParseResult ParseExpression(const char *expr, int start, int end)
 {
 ParseResult lhs, rhs;
 Expression *res;
+int position;
 
 lhs = ParseAndExpression(expr, start, end);
 
@@ -153,12 +154,22 @@ if (!lhs.result)
    return lhs;
    }
 
-if (lhs.position == end || expr[lhs.position] != '|')
+/* End of left-hand side expression */
+position = lhs.position;
+
+if (position == end || expr[position] != '|')
    {
    return lhs;
    }
 
-rhs = ParseExpression(expr, lhs.position + 1, end);
+/* Skip second '|' in 'lhs||rhs' */
+
+if (position + 1 < end && expr[position + 1] == '|')
+   {
+   position++;
+   }
+
+rhs = ParseExpression(expr, position + 1, end);
 
 if (!rhs.result)
    {

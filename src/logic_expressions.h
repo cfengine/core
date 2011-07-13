@@ -35,6 +35,7 @@
 
    <or-expr> ::= <and-expr>
                  <and-expr> | <and-expr>
+                 <and-expr> || <and-expr>
 
    <and-expr> ::= <not-expr>
                   <not-expr> . <not-expr>

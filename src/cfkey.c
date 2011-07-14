@@ -201,7 +201,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    CfOut(cf_verbose,""," -> Reporting on %s",hostname);
       
    printf("%-9.9s %17.17s %-25.25s %s\n",
-             hostname[0] == '+' ? "Outgoing" : "Incoming",
+             hostname[0] == '+' ? "Incoming" : "Outgoing",
      	     address,	     
 	     IPString2Hostname(address),
              hostname+1

@@ -37,7 +37,8 @@ static int OrderedListsMatch(struct Item *list1,struct Item *list2);
 static int IsClassedItemIn(struct Item *list,char *item);
 static int IsFuzzyItemIn(struct Item *list, char *item);
 static void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes);
-static int ItemListsEqual(struct Item *list1, struct Item *list2);
+static int ItemListsEqual(struct Item *list1, struct Item *list2,int report);
+static struct Item *NextItem(struct Item *ip);
 
 /*********************************************************************/
 
@@ -1074,10 +1075,13 @@ for (ptr = liststart; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
-static int ItemListsEqual(struct Item *list1,struct Item *list2)
+static int ItemListsEqual(struct Item *list1,struct Item *list2,int warnings)
 
+// Some complex logic here to enable warnings of diffs to be given
+    
 { struct Item *ip1, *ip2;
-
+  int retval = true;
+ 
 ip1 = list1;
 ip2 = list2;
 
@@ -1085,24 +1089,67 @@ while (true)
    {
    if ((ip1 == NULL) && (ip2 == NULL))
       {
-      return true;
+      return retval;
       }
 
    if ((ip1 == NULL) || (ip2 == NULL))
       {
+      if (warnings)
+         {
+         if (ip1 == list1 || ip2 == list2)
+            {
+            CfOut(cf_error,""," ! File content wants to change from from/to full/empty but only a warning promised");
+            }
+         else
+            {
+            if (ip1 != NULL)
+               {
+               CfOut(cf_error,""," ! edit_line change warning promised: (remove) %s",ip1->name);
+               }
+
+            if (ip2 != NULL)
+               {               
+               CfOut(cf_error,""," ! edit_line change warning promised: (add) %s",ip2->name);
+               }
+            }
+         }
+
+      if (warnings)
+         {
+         if (ip1 || ip2)
+            {
+            retval = false;
+            ip1 = NextItem(ip1);
+            ip2 = NextItem(ip2);
+            continue;
+            }
+         }
+
       return false;
       }
-   
+
    if (strcmp(ip1->name,ip2->name) != 0)
       {
-      return false;
+      if (!warnings)
+         {
+         // No need to wait
+         return false;
+         }
+      else
+         {
+         // If we want to see warnings, we need to scan the whole file
+
+         CfOut(cf_error,""," ! edit_line warning promised: - %s",ip1->name);
+         CfOut(cf_error,""," ! edit_line warning promised: + %s",ip2->name);
+         retval = false;
+         }
       }
 
-   ip1 = ip1->next;
-   ip2 = ip2->next;
+   ip1 = NextItem(ip1);
+   ip2 = NextItem(ip2);
    }
 
-return true;
+return retval;
 }
 
 /*********************************************************************/
@@ -1361,7 +1408,7 @@ if (!LoadFileAsItemList(&cmplist,file,a,pp))
    return false;
    }
 
-if (!ItemListsEqual(cmplist,liststart))
+if (!ItemListsEqual(cmplist,liststart,(a.transaction.action == cfa_warn)))
    {
    DeleteItemList(cmplist);
    return false;
@@ -1384,4 +1431,22 @@ for (ip = list; ip; ip = ip->next)
    }
 
 return count;
+}
+
+
+/*********************************************************************/
+/* helpers                                                           */
+/*********************************************************************/
+
+struct Item *NextItem(struct Item *ip)
+
+{
+if (ip)
+   {
+   return ip->next;
+   }
+else
+   {
+   return NULL;
+   }
 }

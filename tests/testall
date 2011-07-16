@@ -47,7 +47,7 @@ SKIPPED_TESTS=0
 usage() {
   echo "testall [-q] [--no-nova] [--staging] [<test> <test>...]"
   echo
-  echo "If no test is given, all tests in subdirectories are run:"
+  echo "If no test is given, all tests are run:"
   echo "  Tests with names of form NNN.cf are expected to run succesfully"
   echo "  Tests with names of form NNNx.cf are expected to crash"
   echo "  Tests with names of form NNNn.cf and NNNnx.cf are run only under Nova"

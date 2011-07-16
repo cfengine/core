@@ -58,6 +58,10 @@ Copyright @copyright{} 2009- CFEngine AS
 
 @table @emph
 
+@item Agent
+A piece of software that runs independently and automatically to carry out a task (think software robot).
+Inn CFEngine, the agent is called @code{cf-agent} and is responsible for making changes to computers.
+
 @item Amber host
 A host that has repaired more than 20% of its scheduled promises in the past 5 minutes.
 (See yellow host.)
@@ -164,6 +168,19 @@ managed hosts. The
 term hub means the centre of a wheel, from which multiple spokes
 emerge.
 
+@item Knowledge Map
+A master index of all the information known about a CFEngine managed environment, represented as
+a set of web pages with an interactive interface based on a `semantic web'. The CFEngine Mission Portal provides a
+web-based interface for browsing this knowledge map index.
+
+@item Mission
+The mission refers to the raison d'\hat etre of an organization. CFEngine's
+task is to support this mission by keeping a set of promises for its IT infrastructure.
+
+@item Mission Portal
+The name given to the user interface used in commercial CFEngine editions, where
+all reports and progress summaries are kept.
+
 @item Modular license
 A license granting partial functionality to an Enterprise Edition of CFEngine.
 
@@ -203,6 +220,22 @@ not just once at install-time.
 A policy is a set of intentions about the system, coded as a list of
 promises. A policy is not a standard, but the result of specific
 organizational management decisions.
+
+@item Semantic web
+A form of web content in which hyperlinks always explain the meaning of the
+information they point to, in relation to the
+subject of interest. Semantic web technologies include RDF, Topic Maps etc.
+
+@item Server
+A term used in many different ways, riddled with confusion.  A server
+is strictly a piece of software that runs on some computer in
+order to perform a service, e.g. a web server is a program that
+makes a computer part of the World Wide Web.  For historical reasons,
+certain computers are referred to as servers, especially when kept in
+datacentres because such computers often run services. In CFEngine, @code{cf-serverd}
+is a software component that serves files from one computer to another.
+All computers are recommended to run @code{cf-serverd}, making all computers CFEngine servers,
+whether they are laptops, phones or datacentre computers.
 
 @item Service Catalogue
 A kind of directory of `services' provided in an environment. The concept of a service

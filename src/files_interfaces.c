@@ -1306,7 +1306,7 @@ if (a.havelink && !a.link.source)
  * so we can't distinguish between link and copy source. In post-verification
  * all bodies are already expanded, so we don't have the information either */
 
-if (a.havecopy && !FullTextMatch(CF_ABSPATHRANGE, a.copy.source))
+if (a.havecopy && a.copy.source && !FullTextMatch(CF_ABSPATHRANGE, a.copy.source))
    {
    CfOut(cf_error,""," !! Non-absolute path in source attribute (have no invariant meaning): %s",path);
    PromiseRef(cf_error,pp);

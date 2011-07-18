@@ -792,7 +792,6 @@ if (start == NULL)
 if (begin == CF_UNDEFINED_ITEM)
    {
    initiator = *start;
-   printf("SET INIT %s\n",initiator->name);
    }
 else
    {

@@ -838,6 +838,7 @@ if (NewPromiseProposals())
       GetNameInfo3();
       CfGetInterfaceInfo(cf_server);
       Get3Environment();
+      BuiltinClasses();
       OSClasses();
       SetReferenceTime(true);
       ReadPromises(cf_server,CF_SERVERC);

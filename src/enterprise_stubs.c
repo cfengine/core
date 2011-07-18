@@ -479,6 +479,7 @@ NewScope("control_common");
 GetNameInfo3();
 CfGetInterfaceInfo(cf_monitor);
 Get3Environment();
+BuiltinClasses();
 OSClasses();
 SetReferenceTime(true);
 

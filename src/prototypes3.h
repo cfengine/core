@@ -1112,6 +1112,7 @@ enum cfdatatype ExpectedDataType(char *lvalname);
 void GetNameInfo3(void);
 void CfGetInterfaceInfo(enum cfagenttype ag);
 void Get3Environment(void);
+void BuiltinClasses(void);
 void OSClasses(void);
 void SetSignals(void);
 int IsInterfaceAddress(char *adr);

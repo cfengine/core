@@ -670,15 +670,10 @@ NewClass(VDOMAIN);
 
 /*******************************************************************/
 
-void OSClasses()
-
-{ struct stat statbuf;
-  char vbuff[CF_BUFSIZE];
-  char *sp;
-  struct passwd *pw;
-#ifndef LINUX
-  char class[CF_BUFSIZE];
-#endif
+void BuiltinClasses(void)
+{
+char vbuff[CF_BUFSIZE];
+char *sp;
 
 NewClass("any");      /* This is a reserved word / wildcard */
 
@@ -690,6 +685,19 @@ while ((sp = strrchr(vbuff, '_')))
    *sp = 0;
    NewClass(vbuff);
    }
+}
+
+/*******************************************************************/
+
+void OSClasses()
+
+{ struct stat statbuf;
+  char vbuff[CF_BUFSIZE];
+  char *sp;
+  struct passwd *pw;
+#ifndef LINUX
+  char class[CF_BUFSIZE];
+#endif
 
 #ifdef LINUX
 

@@ -633,6 +633,7 @@ NewScope("sys");
 
 CfGetInterfaceInfo(cf_executor);
 Get3Environment();
+BuiltinClasses();
 OSClasses();
 SetReferenceTime(true);
 ThreadUnlock(cft_system);

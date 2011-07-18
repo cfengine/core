@@ -113,6 +113,7 @@ CfGetInterfaceInfo(ag);
 if (ag != cf_know)
    {
    Get3Environment();
+   BuiltinClasses();
    OSClasses();
    }
 

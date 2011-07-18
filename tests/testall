@@ -37,7 +37,8 @@ SUMMARY=summary.log
 QUIET=
 NOVA=
 STAGING=
-AGENT=/var/cfengine/bin/cf-agent
+DEFAGENT=/var/cfengine/bin/cf-agent
+AGENT=${DEFAGENT}
 
 PASSED_TESTS=0
 FAILED_TESTS=0
@@ -45,7 +46,7 @@ FAILED_TO_CRASH_TESTS=0
 SKIPPED_TESTS=0
 
 usage() {
-  echo "testall [-q] [--no-nova] [--staging] [<test> <test>...]"
+  echo "testall [-q] [--no-nova] [--staging] [--agent=<agent>] [<test> <test>...]"
   echo
   echo "If no test is given, all tests are run:"
   echo "  Tests with names of form NNN.cf are expected to run succesfully"
@@ -58,6 +59,9 @@ usage() {
   echo "If arguments are given, those are executed as tests"
   echo
   echo " -q makes script much quieter"
+
+  echo " --agent provides a way to specify non-default cf-agent location,"
+  echo "         and defaults to $DEFAGENT."
 }
 
 runtest() {

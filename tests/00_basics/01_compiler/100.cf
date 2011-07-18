@@ -1,0 +1,69 @@
+######################################################
+#
+#  Test that ${this.promiser} is expanded in comments (Issue 691)
+#
+#####################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { g, default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "subout" string => execresult("$(sys.cf_agent) -Kvf $(this.promise_filename).sub | grep Comment", "useshell");
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "ok1" not => regcmp(".*this\.promiser.*", "$(test.subout)");
+  "ok2" expression => regcmp(".*foobar.*", "$(test.subout)");
+
+  "ok" and => { "ok1", "ok2" };
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    MAIN.ok::
+	"$(this.promise_filename) Pass"
+		report_to_file => "$(G.logfile)";
+    !ok::
+	"$(this.promise_filename) FAIL";
+    MAIN.!ok::
+	"$(this.promise_filename) FAIL"
+		report_to_file => "$(G.logfile)";
+  DEBUG::
+    "$(test.subout)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+        "any" usebundle => default_fini("$(g.testfile)");
+}

@@ -1,0 +1,11 @@
+body common control
+{
+  bundlesequence => { 'test' };
+}
+
+bundle agent test
+{
+files:
+  "/tmp/foobar"
+    comment => "${this.promiser}";
+}

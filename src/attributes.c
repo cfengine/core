@@ -1764,7 +1764,7 @@ if (r.intermittency == CF_NODOUBLE)
 
 r.haveprintfile = GetBooleanConstraint("printfile",pp);
 r.filename = (char *)GetConstraint("file_to_print",pp,CF_SCALAR);
-r.numlines = GetIntConstraint("num_lines",pp);
+r.numlines = GetIntConstraint("number_of_lines",pp);
 
 if (r.numlines == CF_NOINT)
    {

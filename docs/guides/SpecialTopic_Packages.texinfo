@@ -103,7 +103,7 @@ is supplied by the operating system provider.
 Some package managers allow users to create their own software
 packages providing a uniform way of deploying software to systems.
 Packaging software is common on GNU/Linux, where well-known package formats include RPM
-and DPGK.
+and deb.
 
 
 @node  Strengths and weaknesses of package management, What does CFEngine bring to package management?, What is package management?, Top

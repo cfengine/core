@@ -1,0 +1,76 @@
+#######################################################
+#
+# Test that disable_mode => "000" in body rename works (Issue 688)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+  "testdir" string => "/tmp/TEST.cfengine";
+  "testfile" string => "$(testdir)/testfile";
+  "command" string => 'printf "%o %d", (stat("$(g.testfile).cfdisabled"))[2]&07777, (stat(_))[3]';
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+  "$(g.testfile)"
+    create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+    "$(g.testfile)"
+      rename => disable_file;
+}
+
+body rename disable_file {
+  disable_mode => "000";
+  disable => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+  "result" string => execresult("/usr/bin/perl -le '$(g.command)'", "noshell");
+
+classes:
+  "ok" expression => strcmp("0 1", "$(result)");
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  MAIN.ok::
+    "$(this.promise_filename) Pass"
+      report_to_file => "$(G.logfile)";
+  !ok::
+    "$(this.promise_filename) FAIL";
+  MAIN.!ok::
+    "$(this.promise_filename) FAIL"
+      report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

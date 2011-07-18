@@ -1,38 +1,78 @@
+==============================================================================
+CFEngine testsuite
+==============================================================================
 
-PREREQUESITE for running on solo machine.  Build CFEngine with this
+CFEngine has an extensive testsuite which covers lot of functionality which can
+be tested as a series of cf-agent runs.
 
-./autogen.sh --with-workdir=$HOME/.cfagent --disable-shared --with-tokyocabinet
+You are encouraged to run this testsuite on any new software/hardware
+configuration, in order to
+ * verify that CFEngine functions correctly
+ * provide developers with reproducible way to fix any problems encountered in
+   new configurations / environment
 
+In case you find a bug you are encouraged to create tests in format of testsuite
+which demonstrate bug found, so the test could be added to this testsuite and
+checked for in the future.
 
-NOTE: Users are encouraged to create tests that demonstrate any bugs
-that they may find (so that after the bug is fixed, the test will pass,
-and can be used in future versions of Cfengine to ensure reliability).
+------------------------------------------------------------------------------
+Preparing for running tests
+------------------------------------------------------------------------------
 
-Currently, all tests are assumed to be run by root.  All tests should
-only create files or directories in /tmp, and should not modify other
-working files.
+* Compile and install CFEngine.
+  - It is advised to use Tokyo Cabinet as it gives much better performance in
+    test suite over Berkeley DB.
+  - You might want to run CFEngine from source tree. Then you need to provide it
+    with symlink from $workdir/bin/cf-promises to built src/cf-promises, as
+    cf-agent looks there for cf-promises. Building with --disable-shared in this
+    case might save a lot of headaches too.
 
-The file MAIN.cf and default.cf are used to drive the main testing.
-    cf-agent -Kf ./MAIN.cf		# Run all tests in order
-			    -D DETAILS	# Include information about each test
-					# in the log file
+* Make sure there is no failsafe.cf in $workdir/inputs directory, otherwise some
+  tests will be errorneously marked as failed.
 
-    cf-agent -Kf ./001.cf -D AUTO	# Run one test completely
-			    -D DEBUG	# Print additional information about
-					# test (for some tests)
+* Make sure user you are running testsuite from has sudo rights. This is
+  necessary to test functionality which is only available for root user.
 
-    cf-agent -Kf ./001.cf		# See how to run pieces (you must use
-    					# either -D or -b)
+------------------------------------------------------------------------------
+Running testsuite
+------------------------------------------------------------------------------
 
+Currently, all tests are assumed to be run by root.  All tests ought only to
+create files and directories in /tmp, and ought not to modify other files.
 
-    cd 10_files				# Run all tests in subdirectory
-    cf-agent -Kf ../MAIN.cf
+Run
 
-    cd 10_files/01_create		# Run all tests in sub-subdirectory
-    cf-agent -Kf ../../MAIN.cf
+  ./testall --agent=$workdir/bin/cf-agent
 
-The file TEST.log contains a summary of all test results, and */TEST.log
-contains summaries for just the subdirectory.
+e.g.
+
+  ./testall --agent=/var/cfengine/bin/cf-agent
+
+Testing will start. For every test case the name and result (failed / passed)
+will be produced. At the end testing summary will be provided.
+
+Test runner creates the following log files:
+
+ * test.log contains detailed information about each test case (name, standard
+   output/error contents, return code, and test status).
+ * summary.log contains summary information, like the one displayed during
+   testsuite run.
+
+Also a directory .succeeded will be created, containing stamps for each passed
+test case, so test cases which passed before and failing in subsequent testsuite
+run will be additionally marked in output as "(UNEXPECTED FAILURE)".
+
+You might run a subset of tests by passing either filenames:
+
+  ./testall --agent=$workdir/bin/cf-agent 01_vars/01_basic/001.cf 01_vars/01_basic/002x.cf
+
+or directories to 'testall':
+
+  ./testall --agent=$workdir/bin/cf-agent 01_vars
+
+------------------------------------------------------------------------------
+Creating/editing test cases
+------------------------------------------------------------------------------
 
 Each test should be 100% standalone, and must contain at least 4 main bundles:
 	init		setup, create initial and hoped-for final states
@@ -43,15 +83,26 @@ Each test should be 100% standalone, and must contain at least 4 main bundles:
 Look in default.cf for some standard check and fini bundles (for example, to
 compare files when testing file edits, or for cleaning up temporary files).
 
-Tests should be named with only digits (e.g., "001.cf") unless they are
-expected to crash (that is, if they contan syntax errors or other faults),
-in which case the filename should end in an 'x' (e.g., "001x.cf").
+Tests should be named with only digits (e.g., "001.cf") unless they are expected
+to crash (that is, if they contan syntax errors or other faults), in which case
+the filename should end in an 'x' (e.g., "001x.cf").
 
-Tests which use Nova-only features should have a name which ends in an 'n'
-if they are expected to pass, and 'nx' if they are expected to crash (e.g.,
+Tests which use Nova-only features should have a name which ends in an 'n' if
+they are expected to pass, and 'nx' if they are expected to crash (e.g.,
 "007n.cf" or "007nx.cf").
 
-=============================================================================
+Tests which are not expected to pass yet (e.g. there is a bug in code which
+prevents tests from passing) should be placed in 'staging' subdirectory in the
+test directory where they belong. Such test cases will be only run if --staging
+argument to ./testall is passed.
+
+NOTE: Since the class 'ok' is used in most tests, never create a persistent
+class called 'ok' in any test. Persistent classes are cleaned up between test
+runs, but better safe than sorry.
+
+------------------------------------------------------------------------------
+Glossary
+------------------------------------------------------------------------------
 
 For purposes of testing, here is what our terms mean:
 
@@ -61,18 +112,12 @@ these actions in the light of existing conditions or attributes).  Note that
 in the case of tests that end in an 'x', a Pass is generated when the test
 abnormally terminates and we wanted it to do that.
 
-FAIL: not doing what we wanted, but still running the test to completion.
+FAIL: not doing what we wanted: either test finished and returned "FAIL" from
+check bundle, or something went wrong - cf-agent might have dropped core,
+cf-promises may have denied execution of the promises, etc.
 
-CRASH: the test did not run to completion.  We have no way of determining
-what went wrong - cf-agent might have dropped core, cf-promises may have
-denied execution of the promises, etc.  We just don't know, so we mark it
-as a crash.
+FAILed to crash: test was expected to crash, but did not. This is another kind
+of failure, split into separate kind due to low impact.
 
-Skipped: the test was not run.  The only time this should happen is if you
-are running th tests on the Community edition and there are tests which
-exercise Nova-only features.
-
-=============================================================================
-
-NOTE: Since the class 'ok' is used in most tests, never create a persistent
-class called 'ok' in any test.
+Skipped: test is skipped due to be either explicitly disabled or being
+Nova-specific and being run on Community cf-agent.

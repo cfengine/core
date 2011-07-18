@@ -33,7 +33,7 @@
 #
 
 LOG=test.log
-TESTRESULT=testresult.log
+SUMMARY=summary.log
 QUIET=
 NOVA=
 STAGING=
@@ -114,9 +114,9 @@ runtest() {
     FLATNAME=$(echo "$TEST" | sed 's,[./],_,g')
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
-      echo $TEST $RESULT '(UNEXPECTED FAILURE)' >> $TESTRESULT
+      echo $TEST $RESULT '(UNEXPECTED FAILURE)' >> $SUMMARY
     else
-      echo $TEST $RESULT >> $TESTRESULT
+      echo $TEST $RESULT >> $SUMMARY
     fi
 
     if [ -z "$QUIET" ]; then
@@ -154,7 +154,7 @@ runtest() {
       FAILED_TO_CRASH_TESTS=$(($FAILED_TO_CRASH_TESTS + 1))
     fi
   else
-    echo $TEST Skipped >> $TESTRESULT
+    echo $TEST Skipped >> $SUMMARY
 
     if [ -z "$QUIET" ]; then
       echo Skipped
@@ -206,7 +206,7 @@ fi
 TESTS_COUNT=$(echo $TESTS | wc -w)
 START_TIME=$(date +%s)
 
-: > $TESTRESULT
+: > $SUMMARY
 
 ( echo ======================================================================
   echo Testsuite started at $(date "+%F %T")

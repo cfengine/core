@@ -1,0 +1,64 @@
+#######################################################
+#
+# Test that copy_from body with source does not crash (Issue 687)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testdir" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+    "/tmp/$(g.testdir)/."
+      create => "true",
+      move_obstructions => "true",
+      copy_from => update_nobackup;
+}
+
+body copy_from update_nobackup()
+{
+    copy_backup => "false";
+}
+
+#######################################################
+
+bundle agent check
+{
+reports:
+  cfengine_3::
+    "$(this.promise_filename) Pass";
+  MAIN::
+    "$(this.promise_filename) Pass"
+      report_to_file => "$(G.logfile)";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testdir)");
+}

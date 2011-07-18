@@ -54,6 +54,8 @@ static int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPack
 static int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);
 static int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 static void ReportSoftware(struct CfPackageManager *list);
+static const char *GetSoftwareCacheFilename(char *buffer);
+static void InvalidateSoftwareCache(void);
 
 /*****************************************************************************/
 
@@ -77,28 +79,6 @@ if (!PackageSanityCheck(a,pp))
    }
 
 PromiseBanner(pp);
-
-// First check if we need to force a repository update
-
-if (a.packages.package_list_update_command)
-   {
-   snprintf(lockname,CF_BUFSIZE-1,"%s-%s",PACK_UPIFELAPSED_SALT,a.packages.package_list_update_command);
-   
-   al = a;
-   
-   if (a.packages.package_list_update_ifelapsed != CF_NOINT)
-      {
-      al.transaction.ifelapsed = a.packages.package_list_update_ifelapsed;
-      }
-
-   thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,al,pp,false);
-   
-   if (thislock.lock != NULL)
-      {
-      ExecPackageCommand(a.packages.package_list_update_command,false,false,al,pp);   
-      YieldCurrentLock(thislock);
-      }
-   }
 
 // Now verify the package itself
 
@@ -330,6 +310,8 @@ if (a.packages.package_list_command != NULL)
       }
    else
       {
+      ExecPackageCommand(a.packages.package_list_update_command,false,false,a,pp);
+
       CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
       CfOut(cf_verbose,"","   Reading package list from %s\n",GetArg0(a.packages.package_list_command));
       CfOut(cf_verbose,""," ???????????????????????????????????????????????????????????????\n");
@@ -868,6 +850,9 @@ if (command_string)
    free(command_string);
    }
 
+/* We have performed some operation on packages, our cache is invalid */
+InvalidateSoftwareCache();
+
 return retval;
 }
 
@@ -1033,6 +1018,9 @@ if (command_string)
    free(command_string);
    }
 
+/* We have performed some operation on packages, our cache is invalid */
+InvalidateSoftwareCache();
+
 return retval;
 }
 
@@ -1100,8 +1088,7 @@ struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,stru
   time_t horizon = 24*60,now = time(NULL);
   struct stat sb;
 
-snprintf(name,CF_MAXVARSIZE-1,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
-MapName(name);
+GetSoftwareCacheFilename(name);
 
 if (stat(name,&sb) == -1)
    {
@@ -2196,6 +2183,24 @@ for (sp = version; *sp != '\0'; sp++)
 
 /*****************************************************************************/
 
+static void InvalidateSoftwareCache(void)
+{
+char name[CF_BUFSIZE];
+GetSoftwareCacheFilename(name);
+
+struct utimbuf epoch = { 0, 0 };
+
+if (utime(name, &epoch) != 0)
+   {
+   if (errno != ENOENT)
+      {
+      CfOut(cf_error, "utimes", "Cannot mark software cache as invalid");
+      }
+   }
+}
+
+/*****************************************************************************/
+
 static void ReportSoftware(struct CfPackageManager *list)
 
 { FILE *fout;
@@ -2203,8 +2208,7 @@ static void ReportSoftware(struct CfPackageManager *list)
   struct CfPackageItem *pi;
   char name[CF_BUFSIZE];
 
-snprintf(name,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
-MapName(name);
+GetSoftwareCacheFilename(name);
 
 if ((fout = fopen(name,"w")) == NULL)
    {
@@ -2223,4 +2227,14 @@ for (mp = list; mp != NULL; mp = mp->next)
    }
 
 fclose(fout);
+}
+
+/*****************************************************************************/
+
+/* Buffer should be at least CF_BUFSIZE large */
+static const char *GetSoftwareCacheFilename(char *buffer)
+{
+snprintf(buffer,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
+MapName(buffer);
+return buffer;
 }

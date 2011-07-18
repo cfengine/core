@@ -454,6 +454,7 @@ static int SelectExecRegexMatch(char *filename,char *crit,char *prog)
 // insert real value of $(this.promiser) in command
 
 ReplaceStr(prog,buf,sizeof(buf),"$(this.promiser)",filename);
+ReplaceStr(prog,buf,sizeof(buf),"${this.promiser}",filename);
 
 if ((pp = cf_popen(buf,"r")) == NULL)
    {
@@ -517,6 +518,7 @@ char buf[CF_MAXVARSIZE];
 // insert real value of $(this.promiser) in command
 
 ReplaceStr(command,buf,sizeof(buf),"$(this.promiser)",filename);
+ReplaceStr(command,buf,sizeof(buf),"${this.promiser}",filename);
 
 if (ShellCommandReturnsZero(buf,false))
    {

@@ -358,7 +358,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          {
          pcopy->ref = final.item; /* No alloc reference to comment item */
          
-         if (pcopy->ref && strstr(pcopy->ref,"$(this.promiser)"))
+         if (pcopy->ref && (strstr(pcopy->ref,"$(this.promiser)") || strstr(pcopy->ref,"${this.promiser}")))
             {
             DereferenceComment(pcopy);
             }
@@ -868,7 +868,7 @@ static void DereferenceComment(struct Promise *pp)
 
 strncpy(pre_buffer,pp->ref,CF_BUFSIZE);
 
-if ((sp = strstr(pre_buffer,"$(this.promiser)")))
+if ((sp = strstr(pre_buffer,"$(this.promiser)")) || (sp = strstr(pre_buffer, "${this.promiser}")))
    {
    *sp = '\0';
    offset = sp - pre_buffer + strlen("$(this.promiser)");

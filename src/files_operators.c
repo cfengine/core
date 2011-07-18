@@ -829,8 +829,8 @@ if (attr.rename.disable)
    if ((attr.rename.plus != CF_SAMEMODE) && (attr.rename.minus != CF_SAMEMODE))
       {
       newperm = (sb->st_mode & 07777);
-      newperm |= attr.perms.plus;
-      newperm &= ~(attr.perms.minus);
+      newperm |= attr.rename.plus;
+      newperm &= ~(attr.rename.minus);
       }
    else
       {

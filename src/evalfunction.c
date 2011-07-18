@@ -4928,7 +4928,7 @@ switch (*line)
           {
           CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
           struct Rlist *list = ParseShownRlist(content);
-          NewList(context,name,list,cf_str);          
+          NewList(context,name,list,cf_slist);
           }
        break;
        

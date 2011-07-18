@@ -427,7 +427,6 @@ void LogFileChange(char *file,int change,struct Attributes a,struct Promise *pp)
 void RemoteSyslog(struct Attributes a,struct Promise *pp);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
-void ReportSoftware(struct CfPackageManager *list);
 void ReportPatches(struct CfPackageManager *list);
 void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);

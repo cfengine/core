@@ -53,6 +53,7 @@ static int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,
 static int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
 static int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);
 static int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
+static void ReportSoftware(struct CfPackageManager *list);
 
 /*****************************************************************************/
 
@@ -2193,9 +2194,33 @@ for (sp = version; *sp != '\0'; sp++)
    }
 }
 
+/*****************************************************************************/
 
+static void ReportSoftware(struct CfPackageManager *list)
 
+{ FILE *fout;
+  struct CfPackageManager *mp = NULL;
+  struct CfPackageItem *pi;
+  char name[CF_BUFSIZE];
 
+snprintf(name,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
+MapName(name);
 
+if ((fout = fopen(name,"w")) == NULL)
+   {
+   CfOut(cf_error,"fopen","Cannot open the destination file %s",name);
+   return;
+   }
 
+for (mp = list; mp != NULL; mp = mp->next)
+   {
+   for (pi = mp->pack_list; pi != NULL; pi=pi->next)
+      {
+      fprintf(fout,"%s,",CanonifyChar(pi->name,','));
+      fprintf(fout,"%s,",CanonifyChar(pi->version,','));
+      fprintf(fout,"%s,%s\n",pi->arch,ReadLastNode(GetArg0(mp->manager)));
+      }
+   }
 
+fclose(fout);
+}

@@ -23,15 +23,6 @@
 # included file COSL.txt.
 #
 
-#
-# Simple stuipd test runner which is
-#  - stupid (overwrites full test logs with single test log)
-#  - fast (2.5 times faster than MAIN.cf)
-#  - runs tests as root automatically (needs passwordless sudo)
-#  - produces test logs with sane permissions
-#  - portable POSIX shell
-#
-
 LOG=test.log
 SUMMARY=summary.log
 QUIET=

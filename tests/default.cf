@@ -1,10 +1,19 @@
 bundle common G
 {
+classes:
+  "bin_sort" expression => fileexists("/bin/sort");
+  "usr_bin_sort" expression => fileexists("/usr/bin/sort");
+
 vars:
     "cwd" string => execresult("/bin/pwd", "noshell");
 
     "logfile_leafname" string => "TEST.log";
     "logfile" string => "$(cwd)/$(logfile_leafname)";
+
+  bin_sort::
+    "sort" string => "/bin/sort";
+  usr_bin_sort::
+    "sort" string => "/usr/bin/sort";
 }
 
 bundle agent default(filename)
@@ -28,7 +37,7 @@ reports:
 bundle agent default_sort(infile, outfile)
 {
 commands:
-    "/usr/bin/sort $(infile) > $(outfile)"
+    "$(G.sort) $(infile) > $(outfile)"
 	contain => default_shell_command;
 }
 

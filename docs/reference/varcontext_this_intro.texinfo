@@ -44,7 +44,7 @@ useful to differentiate otherwise identical reports promises.
 The special variable @code{$(this.promiser)} is used to refer to the current
 value of the promiser itself, in a number of allowed cases, typically when
 searches can take place. Current promise types that define @code{$(this.promiser)}
-are: @code{files}, @code{processes}, @code{exec}.
+are: @code{files}, @code{processes}, @code{commands}.
 
 This variable is useful in @code{files} promises, for instance when using
 pattern matching or @code{depth_search} that implicitly match multiple

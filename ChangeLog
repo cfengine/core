@@ -35,7 +35,12 @@
 
 	Warnings are on edit_line changes can now give greater degree of information
 	without spamming promise logs
-	
+
+	Class expressions parser accepts '||' as an alias for '|' again.
+
+	Invalidation of package list cache on installation/removal of
+	packages.
+
 3.1.5
 	New class parser, '||' is no longer allowed in expressions (use '|').
 

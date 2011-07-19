@@ -424,7 +424,7 @@ int inet_pton(int af, const char *src, void *dst);
 #define CF_BLOWFISHSIZE 16
 #define CF_SMALLBUF 128
 #define CF_MAXVARSIZE 1024
-#define CF_MAXSIDSIZE 2048  /* Windows only: Max size (bytes) of security identifers */
+#define CF_MAXSIDSIZE 2048  /* Windows only: Max size (bytes) of security identifiers */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
 #define CF_MAXLINKLEVEL 4

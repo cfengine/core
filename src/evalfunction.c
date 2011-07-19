@@ -5015,7 +5015,7 @@ struct FnCallArg LATERTHAN_ARGS[] =
 
 struct FnCallArg CANONIFY_ARGS[] =
     {
-    {CF_ANYSTRING,cf_str,"String containing non-identifer characters"},
+    {CF_ANYSTRING,cf_str,"String containing non-identifier characters"},
     {NULL,cf_notype,NULL}
     };
 
@@ -5343,7 +5343,7 @@ struct FnCallArg READFILE_ARGS[] =
 
 struct FnCallArg READSTRINGARRAY_ARGS[] =
     {
-    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_IDRANGE,cf_str,"Array identifier to populate"},
     {CF_ABSPATHRANGE,cf_str,"File name to read"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
@@ -5354,7 +5354,7 @@ struct FnCallArg READSTRINGARRAY_ARGS[] =
 
 struct FnCallArg PARSESTRINGARRAY_ARGS[] =
     {
-    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_IDRANGE,cf_str,"Array identifier to populate"},
     {CF_ABSPATHRANGE,cf_str,"A string to parse for input data"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
@@ -5365,7 +5365,7 @@ struct FnCallArg PARSESTRINGARRAY_ARGS[] =
 
 struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
     {
-    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_IDRANGE,cf_str,"Array identifier to populate"},
     {CF_ABSPATHRANGE,cf_str,"A string to parse for input data"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
@@ -5376,7 +5376,7 @@ struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
 
 struct FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
     {
-    {CF_IDRANGE,cf_str,"Array identifer to populate"},
+    {CF_IDRANGE,cf_str,"Array identifier to populate"},
     {CF_ABSPATHRANGE,cf_str,"File name to read"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},

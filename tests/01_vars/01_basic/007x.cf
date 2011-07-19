@@ -44,9 +44,6 @@ reports:
 	"The real variable assignment should fail";
     cfengine_3::
 	"$(this.promise_filename) FAIL";
-    MAIN.cfengine_3::
-	"$(this.promise_filename) FAIL"
-		report_to_file => "$(G.logfile)";
 }
 
 #######################################################

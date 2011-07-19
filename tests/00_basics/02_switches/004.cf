@@ -19,7 +19,7 @@ bundle agent test
 {
 vars:
     "cmd" string =>
-	"$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO,MAIN,ok.";
+	"$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO,ok.";
 
 commands:
     "$(cmd)";

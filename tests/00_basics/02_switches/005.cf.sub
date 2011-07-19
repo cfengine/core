@@ -48,14 +48,8 @@ reports:
 	"Look at $(fn[1]) to see which flags are passed in";
     ok::
 	"$(fn[1]) FAIL";
-    MAIN.ok::
-	"$(fn[1]) FAIL"
-		report_to_file => "$(G.logfile)";
     !ok::
 	"$(fn[1]) Pass";
-    MAIN.!ok::
-	"$(fn[1]) Pass"
-		report_to_file => "$(G.logfile)";
 }
 
 #######################################################

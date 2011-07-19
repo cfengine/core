@@ -50,9 +50,6 @@ bundle agent check
 reports:
   cfengine_3::
     "$(this.promise_filename) Pass";
-  MAIN::
-    "$(this.promise_filename) Pass"
-      report_to_file => "$(G.logfile)";
 }
 
 #######################################################

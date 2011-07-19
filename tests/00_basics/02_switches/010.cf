@@ -19,9 +19,9 @@ bundle agent test
 {
 vars:
     "cmd1" string =>
-	"$(sys.cf_agent) -Kf $(this.promise_filename).sub1 -D AUTO,MAIN -N bingo";
+	"$(sys.cf_agent) -Kf $(this.promise_filename).sub1 -D AUTO -N bingo";
     "cmd2" string =>
-	"$(sys.cf_agent) -Kf $(this.promise_filename).sub2 -D AUTO,MAIN";
+	"$(sys.cf_agent) -Kf $(this.promise_filename).sub2 -D AUTO";
 
 commands:
     "$(cmd1)";

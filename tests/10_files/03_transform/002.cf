@@ -61,7 +61,7 @@ promise_repaired => { "$(class)" };
 bundle agent test
 {
 commands:
-	"$(sys.cf_agent) -f $(this.promise_filename) -D AUTO,MAIN -K -b init,test_dry_run --dry-run"
+	"$(sys.cf_agent) -f $(this.promise_filename) -D AUTO -K -b init,test_dry_run --dry-run"
 	contain => start_from_cwd;
 }
 
@@ -81,9 +81,6 @@ files:
 reports:
     !opt_dry_run::
 	"$(this.promise_filename) --dry-run FAIL";
-    MAIN.!opt_dry_run::
-	"$(this.promise_filename) --dry-run FAIL"
-		report_to_file => "$(G.logfile)";
 }
 
 body file_select test_plain
@@ -120,14 +117,8 @@ reports:
 	    ifvarclass => "no$(files)";
     ok::
 	"$(this.promise_filename) Pass";
-    MAIN.ok::
-	"$(this.promise_filename) Pass"
-		report_to_file => "$(G.logfile)";
     !ok::
 	"$(this.promise_filename) FAIL";
-    MAIN.!ok::
-	"$(this.promise_filename) FAIL"
-		report_to_file => "$(G.logfile)";
 }
 
 #######################################################

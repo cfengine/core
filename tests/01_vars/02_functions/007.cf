@@ -93,14 +93,8 @@ reports:
 	"Expected canonify('$(test.in8)') => $(test.out8) == $(test.expect8)";
     ok::
 	"$(this.promise_filename) Pass";
-    MAIN.ok::
-	"$(this.promise_filename) Pass"
-		report_to_file => "$(G.logfile)";
     !ok::
 	"$(this.promise_filename) FAIL";
-    MAIN.!ok::
-	"$(this.promise_filename) FAIL"
-		report_to_file => "$(G.logfile)";
 }
 
 #######################################################

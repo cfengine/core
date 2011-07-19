@@ -102,14 +102,8 @@ reports:
 	"got:      '$(g.testfile)' => '$(link_target)'";
     ok::
 	"$(this.promise_filename) Pass";
-    MAIN.ok::
-	"$(this.promise_filename) Pass"
-		report_to_file => "$(G.logfile)";
     !ok::
 	"$(this.promise_filename) FAIL";
-    MAIN.!ok::
-	"$(this.promise_filename) FAIL"
-		report_to_file => "$(G.logfile)";
 }
 
 #######################################################

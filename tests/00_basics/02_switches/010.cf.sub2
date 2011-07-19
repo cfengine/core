@@ -50,14 +50,8 @@ reports:
 	"config file, $(fn[1]).sub1";
     bingo::
 	"$(fn[1]) FAIL";
-    MAIN.bingo::
-	"$(fn[1]) FAIL"
-		report_to_file => "$(G.logfile)";
     !bingo::
 	"$(fn[1]) Pass";
-    MAIN.!bingo::
-	"$(fn[1]) Pass"
-		report_to_file => "$(G.logfile)";
 }
 
 #######################################################

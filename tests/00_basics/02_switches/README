@@ -1,4 +1,4 @@
 There are tests in this directory that consist of two files.  The first
-file is the nnn.cf file, which is called by the MAIN.cf sequence.  The second
+file is the nnn.cf file, which is called by the test runner.  The second
 file is the nnn.cf.sub file, which is called by the nnn.cf file.  In each case
 we are testing the effects of various runtime flags.

@@ -18,7 +18,7 @@ files:
 
  files:
     "/etc/postfix/alias.cdb"
-       create => true,		# Must have this!
+       create => "true",		# Must have this!
        transformer => "/usr/sbin/postalias /etc/postfix/alias",
        ifvarclass => "do_update";
 

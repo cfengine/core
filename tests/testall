@@ -197,7 +197,7 @@ fi
 
 if [ $# -gt 0 ]; then
   for test in "$@"; do
-    if ! expr "$test" : '^[/.]' >/dev/null; then
+    if ! expr "$test" : '[/.]' >/dev/null; then
       test="./$test"
     fi
 

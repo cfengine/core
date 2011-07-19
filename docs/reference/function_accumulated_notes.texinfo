@@ -5,10 +5,11 @@ minutes of total run time.
 @noindent @b{ARGUMENTS}:
 
 The @code{accumulated} function measures total accumulated runtime.
-Arguments are applied additively, so that ago(0,0,2,27,90,0) means "2 days,
-27 hours and 90 minutes of runtime" " -- however, you are strongly encouraged
-to keep your usage of @code{accumulated} sensible and readable, e.g.,
-accumulated(0,0,0,48,0,0) or accumulated(0,0,0,0,90,0).
+Arguments are applied additively, so that accumulated(0,0,2,27,90,0)
+means "2 days, 27 hours and 90 minutes of runtime" " -- however, you
+are strongly encouraged to keep your usage of @code{accumulated}
+sensible and readable, e.g., accumulated(0,0,0,48,0,0) or
+accumulated(0,0,0,0,90,0).
 
 @table @samp
 @item Years

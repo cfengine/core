@@ -127,6 +127,7 @@ strings, etc.) and outside of Cfengine (from files, databases, arrays, etc.)
 @unnumberedsubsubsec Functions which read arrays
 @multitable @columnfractions .2 .2 .2 .2 .2
 @item @ref{Function getindices, ,getindices}
+@item @ref{Function getvalues, ,getvalues}
 @tab @ref{Function regarray, ,regarray}
 @end multitable
 

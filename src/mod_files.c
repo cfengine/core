@@ -140,7 +140,7 @@ struct BodySyntax CF_INSERTLINES_BODIES[] =
    {"insert_type",cf_opts,"literal,string,file,preserve_block","Type of object the promiser string refers to"},
    {"insert_select",cf_body,CF_INSERTSELECT_BODY,"Insert only if lines pass filter criteria"},
    {"location",cf_body,CF_LOCATION_BODY,"Specify where in a file an insertion will be made"},
-   {"whitespace_policy",cf_olist,"ignore_leading,ignore_trailing,ignore_embedded,ignore_embedded,exact_match","Criteria for matching and recognizing existing lines"},
+   {"whitespace_policy",cf_olist,"ignore_leading,ignore_trailing,ignore_embedded,exact_match","Criteria for matching and recognizing existing lines"},
    {NULL,cf_notype,NULL,NULL}
    };
 

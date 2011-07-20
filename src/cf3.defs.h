@@ -499,7 +499,7 @@ enum cfeditorder
 
 // Put this here now for caching efficiency
 
-#define NOVA_SOFTWARE_INSTALLED "software_packages.csv"
+#define SOFTWARE_PACKAGES_CACHE "software_packages.csv"
 
 /***************************************************************************/
 /* Knowledge relationships                                                 */

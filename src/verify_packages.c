@@ -2264,7 +2264,7 @@ fclose(fout);
 /* Buffer should be at least CF_BUFSIZE large */
 static const char *GetSoftwareCacheFilename(char *buffer)
 {
-snprintf(buffer,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,NOVA_SOFTWARE_INSTALLED);
+snprintf(buffer,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,SOFTWARE_PACKAGES_CACHE);
 MapName(buffer);
 return buffer;
 }

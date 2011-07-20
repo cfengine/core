@@ -89,8 +89,6 @@ int KEYTTL = 0;
 int CF_NODES = 0; // objects
 int CF_EDGES = 0; // links or promises between them
 
-struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
-struct CfPackageManager *PACKAGE_SCHEDULE = NULL;
 struct Rlist *MOUNTEDFSLIST = NULL;
 struct Rlist *SERVERLIST = NULL;
 struct PromiseIdent *PROMISE_ID_LIST = NULL;

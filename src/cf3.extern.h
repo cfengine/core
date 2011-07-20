@@ -120,8 +120,6 @@ extern struct Item *PROCESSTABLE;
 extern struct Item *PROCESSREFRESH;
 extern struct Item *FSTABLIST;
 extern struct Rlist *MOUNTEDFSLIST;
-extern struct CfPackageManager *INSTALLED_PACKAGE_LISTS;
-extern struct CfPackageManager *PACKAGE_SCHEDULE;
 
 extern int CF_MOUNTALL;
 extern int CF_SAVEFSTAB;

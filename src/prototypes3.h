@@ -1212,10 +1212,8 @@ int VerifyMethod(struct Attributes a,struct Promise *pp);
 /* verify_packages.c */
 
 void VerifyPackagesPromise(struct Promise *pp);
-void ExecutePackageSchedule(struct CfPackageManager *schedule);
-struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
-void DeletePackageManagers(struct CfPackageManager *newlist);
-struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp);
+void ExecuteScheduledPackages(void);
+void CleanScheduledPackages(void);
 
 /* verify_processes.c */
 

@@ -56,6 +56,15 @@ static int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct 
 static void ReportSoftware(struct CfPackageManager *list);
 static const char *GetSoftwareCacheFilename(char *buffer);
 static void InvalidateSoftwareCache(void);
+static void ExecutePackageSchedule(struct CfPackageManager *schedule);
+static void DeletePackageManagers(struct CfPackageManager *newlist);
+static struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
+static struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp);
+
+/*****************************************************************************/
+
+struct CfPackageManager *PACKAGE_SCHEDULE = NULL;
+struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 
 /*****************************************************************************/
 
@@ -207,7 +216,25 @@ return true;
 
 /*****************************************************************************/
 
-void ExecutePackageSchedule(struct CfPackageManager *schedule)
+void ExecuteScheduledPackages(void)
+{
+if (PACKAGE_SCHEDULE)
+   {
+   ExecutePackageSchedule(PACKAGE_SCHEDULE);
+   }
+}
+
+void CleanScheduledPackages(void)
+{
+DeletePackageManagers(PACKAGE_SCHEDULE);
+PACKAGE_SCHEDULE = NULL;
+DeletePackageManagers(INSTALLED_PACKAGE_LISTS);
+INSTALLED_PACKAGE_LISTS = NULL;
+}
+
+/*****************************************************************************/
+
+static void ExecutePackageSchedule(struct CfPackageManager *schedule)
 
 {
 CfOut(cf_verbose,""," >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
@@ -1031,7 +1058,7 @@ return retval;
 /* Level                                                                     */
 /*****************************************************************************/
 
-struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy policy)
+static struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy policy)
 
 { struct CfPackageManager *np;
 
@@ -1068,7 +1095,7 @@ return np;
 
 /*****************************************************************************/
 
-void DeletePackageManagers(struct CfPackageManager *newlist)
+static void DeletePackageManagers(struct CfPackageManager *newlist)
 
 { struct CfPackageManager *np,*next;
 
@@ -1082,7 +1109,7 @@ for (np = newlist; np != NULL; np = next)
 
 /*****************************************************************************/
 
-struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp)
+static struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,struct Attributes a,struct Promise *pp)
 
 { struct CfPackageItem *list = NULL;
   char name[CF_MAXVARSIZE],version[CF_MAXVARSIZE],arch[CF_MAXVARSIZE],mgr[CF_MAXVARSIZE],line[CF_BUFSIZE];

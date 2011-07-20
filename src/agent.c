@@ -1138,10 +1138,6 @@ switch(type)
           }
 #endif  /* NOT MINGW */
        break;
-
-   case kp_packages:
-       INSTALLED_PACKAGE_LISTS = NULL;
-       break;
    }
 
 return true;
@@ -1225,17 +1221,12 @@ switch(type)
 
    case kp_packages:
 
-       if (!DONTDO && PACKAGE_SCHEDULE)
-          {
-          ExecutePackageSchedule(PACKAGE_SCHEDULE);
-          }
-
-       DeletePackageManagers(INSTALLED_PACKAGE_LISTS);
-       DeletePackageManagers(PACKAGE_SCHEDULE);
-       INSTALLED_PACKAGE_LISTS = NULL;
-       PACKAGE_SCHEDULE = NULL;
-       break;
-
+      if (!DONTDO)
+         {
+         ExecuteScheduledPackages();
+         }
+      CleanScheduledPackages();
+      break;
    }
 }
 

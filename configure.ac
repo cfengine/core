@@ -36,6 +36,13 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
+dnl
+dnl hide [s]include macros, so old aclocal (automake < 1.10) won't find them and
+dnl won't complain about something/something.m4 not found
+dnl
+m4_define(incstart,sinc)
+m4_define(incend,lude)
+
 #
 # Add to the default list of places in LDFLAGS to compensate for
 # ... the configure default value of LIBS on some systems
@@ -174,11 +181,11 @@ fi
 
 dnl Enterprise extensions
 
-sinclude([nova/options.m4])
+m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
-sinclude([constellation/options.m4])
+m4_indir(incstart[]incend, [constellation/options.m4])
 AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
-sinclude([galaxy/options.m4])
+m4_indir(incstart[]incend, [galaxy/options.m4])
 AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
 dnl Tokyo Cabinet
@@ -955,9 +962,9 @@ else
   AC_MSG_RESULT([-> DB: Berkeley DB: $BERKELEY_DB_DIR])
 fi
 
-m4_sinclude([nova/config.m4])
-m4_sinclude([constellation/config.m4])
-m4_sinclude([galaxy/config.m4])
+m4_indir(incstart[]incend, [nova/config.m4])
+m4_indir(incstart[]incend, [constellation/config.m4])
+m4_indir(incstart[]incend, [galaxy/config.m4])
 
 AC_MSG_RESULT( )
 
@@ -969,9 +976,9 @@ dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile examples/Makefile inputs/Makefile])
 
-m4_sinclude([nova/output.m4])
-m4_sinclude([constellation/output.m4])
-m4_sinclude([galaxy/output.m4])
+m4_indir(incstart[]incend, [nova/output.m4])
+m4_indir(incstart[]incend, [constellation/output.m4])
+m4_indir(incstart[]incend, [galaxy/output.m4])
 
 AC_OUTPUT
 

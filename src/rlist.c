@@ -367,41 +367,42 @@ return start;
 /*******************************************************************/
 
 void DeleteRlist(struct Rlist *list)
-/* Delete a rlist and all it references */
-{
-  struct Rlist *rl, *next;
 
-  if(list != NULL)
-    {
-      for(rl = list; rl != NULL; rl = next)
-	{
-	  next = rl->next;
-	  
-	  if (rl->item != NULL)
-	    {
-	    DeleteRvalItem(rl->item,rl->type);
-	    }
-	  
-	  free(rl);
-	}
-    }
+/* Delete an rlist and all its references */
+
+{ struct Rlist *rl, *next;
+
+if (list != NULL)
+   {
+   for(rl = list; rl != NULL; rl = next)
+      {
+      next = rl->next;
+      
+      if (rl->item != NULL)
+         {
+         DeleteRvalItem(rl->item,rl->type);
+         }
+      
+      free(rl);
+      }
+   }
 }
 
 /*******************************************************************/
 
 static void DeleteRlistNoRef(struct Rlist *list)
 /* Delete a rlist, but not its references */
-{
-  struct Rlist *rl, *next;
 
-  if(list != NULL)
-    {
-      for(rl = list; rl != NULL; rl = next)
-	{
-	  next = rl->next;
-	  free(rl);
-	}
-    }
+{ struct Rlist *rl, *next;
+
+if(list != NULL)
+   {
+   for(rl = list; rl != NULL; rl = next)
+      {
+      next = rl->next;
+      free(rl);
+      }
+   }
 }
 
 /*******************************************************************/
@@ -538,7 +539,7 @@ switch(type)
        return lp;
        
    default:
-       Debug("Cannot append %c to rval-list [%s]\n",type,item);
+       Debug("Cannot append %c to rval-list [%s]\n",type,(char *)item);
        return NULL;
    }
 

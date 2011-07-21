@@ -706,28 +706,18 @@ void OSClasses()
 
 if (cfstat("/etc/mandriva-release",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a mandriva system.\n");
-   NewClass("Mandrake");
-   NewClass("Mandriva");
    Linux_Mandriva_Version();
    }
 else if (cfstat("/etc/mandrake-release",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
-   NewClass("Mandrake");
    Linux_Mandrake_Version();
    }
 else if (cfstat("/etc/fedora-release",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a fedora system.\n");
-   NewClass("redhat");
-   NewClass("fedora");
    Linux_Fedora_Version();
    }
 else if (cfstat("/etc/redhat-release",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a redhat system.\n");
-   NewClass("redhat");
    Linux_Redhat_Version();
    }
 
@@ -739,8 +729,6 @@ if (cfstat("/etc/generic-release",&statbuf) != -1)
 
 if (cfstat("/etc/SuSE-release",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a SuSE system.\n");
-   NewClass("SuSE");
    Linux_Suse_Version();
    }
 
@@ -748,14 +736,10 @@ if (cfstat("/etc/SuSE-release",&statbuf) != -1)
 #define SLACKWARE_VERSION_FILENAME "/etc/slackware-version"
 if (cfstat(SLACKWARE_VERSION_FILENAME,&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a slackware system.\n");
-   NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_VERSION_FILENAME);
    }
 else if (cfstat(SLACKWARE_ANCIENT_VERSION_FILENAME,&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be an ancient slackware system.\n");
-   NewClass("slackware");
    Linux_Slackware_Version(SLACKWARE_ANCIENT_VERSION_FILENAME);
    }
 
@@ -767,8 +751,6 @@ if (cfstat("/etc/generic-release",&statbuf) != -1)
 
 if (cfstat("/etc/debian_version",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a debian system.\n");
-   NewClass("debian");
    Linux_Debian_Version();
    }
 
@@ -812,24 +794,15 @@ NewScalar("sys","flavor",class,cf_str);
 if (cfstat("/proc/vmware/version",&statbuf) != -1 ||
     cfstat("/etc/vmware-release",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a VMware Server ESX system.\n");
-   NewClass("VMware");
    VM_Version();
    }
-else if (cfstat("/etc/vmware",&statbuf) != -1)
+else if (cfstat("/etc/vmware",&statbuf) != -1 && S_ISDIR(statbuf.st_mode))
    {
-   if (S_ISDIR(statbuf.st_mode))
-      {
-      CfOut(cf_verbose,"","This appears to be a VMware xSX system.\n");
-      NewClass("VMware");
-      VM_Version();
-      }
+   VM_Version();
    }
 
 if (cfstat("/proc/xen/capabilities",&statbuf) != -1)
    {
-   CfOut(cf_verbose,"","This appears to be a xen pv system.\n");
-   NewClass("xen");
    Xen_Domain();
    }
 
@@ -953,15 +926,19 @@ static int Linux_Fedora_Version(void)
 
 #define FEDORA_REL_FILENAME "/etc/fedora-release"
 
- FILE *fp;
+FILE *fp;
 
 /* The full string read in from fedora-release */
- char relstring[CF_MAXVARSIZE];
- char classbuf[CF_MAXVARSIZE];
- char *vendor="";
- char *release=NULL;
- int major = -1;
- char strmajor[CF_MAXVARSIZE];
+char relstring[CF_MAXVARSIZE];
+char classbuf[CF_MAXVARSIZE];
+char *vendor="";
+char *release=NULL;
+int major = -1;
+char strmajor[CF_MAXVARSIZE];
+
+CfOut(cf_verbose,"","This appears to be a fedora system.\n");
+NewClass("redhat");
+NewClass("fedora");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1076,6 +1053,9 @@ int major = -1;
 char strmajor[CF_MAXVARSIZE];
 int minor = -1;
 char strminor[CF_MAXVARSIZE];
+
+CfOut(cf_verbose,"","This appears to be a redhat system.\n");
+NewClass("redhat");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1277,6 +1257,9 @@ int minor = -1;
 char strminor[CF_MAXVARSIZE];
 FILE *fp;
 
+CfOut(cf_verbose,"","This appears to be a SuSE system.\n");
+NewClass("SuSE");
+
 /* Grab the first line from the file and then close it. */
 
 if ((fp = fopen(SUSE_REL_FILENAME,"r")) == NULL)
@@ -1457,6 +1440,9 @@ int release = -1;
 char classname[CF_MAXVARSIZE] = "";
 FILE *fp;
 
+CfOut(cf_verbose,"","This appears to be a slackware system.\n");
+NewClass("slackware");
+
 if ((fp = fopen(filename,"r")) == NULL)
    {
    return 1;
@@ -1500,6 +1486,9 @@ int release = -1;
 int result;
 char classname[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE],os[CF_MAXVARSIZE],version[CF_MAXVARSIZE];
 FILE *fp;
+
+CfOut(cf_verbose,"","This appears to be a debian system.\n");
+NewClass("debian");
 
 buffer[0] = classname[0] = '\0';
 
@@ -1596,9 +1585,12 @@ static int Linux_Mandrake_Version(void)
 
 #define MANDRAKE_REL_FILENAME "/etc/mandrake-release"
 
- FILE *fp;
- char relstring[CF_MAXVARSIZE];
- char *vendor=NULL;
+FILE *fp;
+char relstring[CF_MAXVARSIZE];
+char *vendor=NULL;
+
+CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
+NewClass("Mandrake");
 
 if ((fp = fopen(MANDRAKE_REL_FILENAME,"r")) == NULL)
    {
@@ -1644,9 +1636,13 @@ static int Linux_Mandriva_Version(void)
 
 #define MANDRIVA_REL_FILENAME "/etc/mandriva-release"
 
- FILE *fp;
- char relstring[CF_MAXVARSIZE];
- char *vendor=NULL;
+FILE *fp;
+char relstring[CF_MAXVARSIZE];
+char *vendor=NULL;
+
+CfOut(cf_verbose,"","This appears to be a mandriva system.\n");
+NewClass("Mandrake");
+NewClass("Mandriva");
 
 if ((fp = fopen(MANDRIVA_REL_FILENAME,"r")) == NULL)
    {
@@ -1729,10 +1725,14 @@ return 0;
 
 static int VM_Version(void)
 
-{ FILE *fp;
-  char *sp,buffer[CF_BUFSIZE],classbuf[CF_BUFSIZE],version[CF_BUFSIZE];
-  int major,minor,bug;
-  int sufficient = 0;
+{
+FILE *fp;
+char *sp,buffer[CF_BUFSIZE],classbuf[CF_BUFSIZE],version[CF_BUFSIZE];
+int major,minor,bug;
+int sufficient = 0;
+
+CfOut(cf_verbose,"","This appears to be a VMware Server ESX/xSX system.\n");
+NewClass("VMware");
 
 /* VMware Server ESX >= 3 has version info in /proc */
 if ((fp = fopen("/proc/vmware/version","r")) != NULL)
@@ -1785,9 +1785,13 @@ return sufficient < 1 ? 1 : 0;
 
 static int Xen_Domain(void)
 
-{ FILE *fp;
-  char buffer[CF_BUFSIZE];
-  int sufficient = 0;
+{
+FILE *fp;
+char buffer[CF_BUFSIZE];
+int sufficient = 0;
+
+CfOut(cf_verbose,"","This appears to be a xen pv system.\n");
+NewClass("xen");
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 

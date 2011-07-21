@@ -44,8 +44,8 @@ static int Linux_Redhat_Version(void);
 static int Linux_Suse_Version(void);
 static int Linux_Slackware_Version(char *filename);
 static int Linux_Debian_Version(void);
-static int Linux_Old_Mandriva_Version(void);
-static int Linux_New_Mandriva_Version(void);
+static int Linux_Mandrake_Version(void);
+static int Linux_Mandriva_Version(void);
 static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
 static int VM_Version(void);
 static int Xen_Domain(void);
@@ -701,25 +701,22 @@ void OSClasses()
 
 #ifdef LINUX
 
-/* {Mandrake,Fedora} has a symlink at /etc/redhat-release pointing to
- * /etc/{mandrake,fedora}-release, so we else-if around that
- */
+/* Mandrake/Mandriva and Fedora supply /etc/redhat-release, so we test for those
+   distributions first */
 
 if (cfstat("/etc/mandriva-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a mandriva system.\n");
    NewClass("Mandrake");
    NewClass("Mandriva");
-   Linux_New_Mandriva_Version();
+   Linux_Mandriva_Version();
    }
-
 else if (cfstat("/etc/mandrake-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
    NewClass("Mandrake");
-   Linux_Old_Mandriva_Version();
+   Linux_Mandrake_Version();
    }
-
 else if (cfstat("/etc/fedora-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a fedora system.\n");
@@ -727,7 +724,6 @@ else if (cfstat("/etc/fedora-release",&statbuf) != -1)
    NewClass("fedora");
    Linux_Fedora_Version();
    }
-
 else if (cfstat("/etc/redhat-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a redhat system.\n");
@@ -1590,7 +1586,7 @@ return 0;
 
 /******************************************************************/
 
-static int Linux_Old_Mandriva_Version(void)
+static int Linux_Mandrake_Version(void)
 
 {
 /* We are looking for one of the following strings... */
@@ -1640,7 +1636,7 @@ return Linux_Mandriva_Version_Real(MANDRAKE_REL_FILENAME, relstring, vendor);
 
 /******************************************************************/
 
-static int Linux_New_Mandriva_Version(void)
+static int Linux_Mandriva_Version(void)
 
 {
 /* We are looking for the following strings... */

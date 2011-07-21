@@ -449,6 +449,45 @@ ThreadUnlock(cft_db_lastseen);
 
 /*****************************************************************************/
 
+bool RemoveHostFromLastSeen(const char *hostname)
+{
+char ip[CF_BUFSIZE];
+char digest[CF_BUFSIZE];
+strcpy(ip, Hostname2IPString(hostname));
+IPString2KeyDigest(ip, digest);
+
+if (!ThreadLock(cft_db_lastseen))
+   {
+   CfOut(cf_error, "", " !! Could not lock last-seen DB");
+   return false;
+   }
+else
+   {
+   CF_DB *dbp;
+   char name[CF_BUFSIZE], key[CF_BUFSIZE];
+   snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+   MapName(name);
+
+   if (!OpenDB(name, &dbp))
+      {
+      CfOut(cf_error, "", " !! Unable to open last seen DB");
+      ThreadUnlock(cft_db_lastseen);
+      return false;
+      }
+
+   snprintf(key, CF_BUFSIZE, "-%s", digest);
+   DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
+   snprintf(key, CF_BUFSIZE, "+%s", digest);
+   DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
+
+   CloseDB(dbp);
+   ThreadUnlock(cft_db_lastseen);
+   return true;
+   }
+}
+
+/*****************************************************************************/
+
 static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
 /**
  *  WARNING: This function is *NOT* thread-safe.

@@ -37,6 +37,7 @@ bool REMOVEKEYS = false;
 const char *remove_keys_host;
 
 void ShowLastSeenHosts(void);
+static int RemoveKeys(const char *host);
 int main (int argc,char *argv[]);
 
 /*******************************************************************/
@@ -88,22 +89,7 @@ if (SHOWHOSTS)
 
 if (REMOVEKEYS)
    {
-   int removed = RemovePublicKeys(remove_keys_host);
-   if (removed < 0)
-      {
-      CfOut(cf_error, "", "Unable to remove keys for the host %s", remove_keys_host);
-      return 255;
-      }
-   else if (removed == 0)
-      {
-      CfOut(cf_error, "", "No keys for host %s were found", remove_keys_host);
-      return 1;
-      }
-   else
-      {
-      CfOut(cf_inform, "", "Removed %d key(s) for host %s", removed, remove_keys_host);
-      return 0;
-      }
+   return RemoveKeys(remove_keys_host);
    }
 
 KeepKeyPromises();
@@ -241,4 +227,28 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 printf("Total Entries: %d\n",count);
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
+}
+
+/*****************************************************************************/
+
+static int RemoveKeys(const char *host)
+{
+bool lastsaw_updated = RemoveHostFromLastSeen(host);
+int removed_keys = RemovePublicKeys(remove_keys_host);
+
+if (removed_keys < 0)
+   {
+   CfOut(cf_error, "", "Unable to remove keys for the host %s", remove_keys_host);
+   return 255;
+   }
+else if (removed_keys == 0)
+   {
+   CfOut(cf_error, "", "No keys for host %s were found", remove_keys_host);
+   return 1;
+   }
+else
+   {
+   CfOut(cf_inform, "", "Removed %d key(s) for host %s", removed_keys, remove_keys_host);
+   return 0;
+   }
 }

@@ -201,9 +201,10 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S",OPTIONS,&optindex)) != EOF)
           break;
 
       case 's':
+     
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
-          CfGenerateStories(TOPIC_CMD,cfi_cause);
+          //CfGenerateStories(TOPIC_CMD,cfi_cause);
 #endif
           exit(0);
           break;

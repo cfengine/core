@@ -235,7 +235,7 @@ return true;
 
 /*****************************************************************************/
 
-char *Hostname2IPString(char *hostname)
+const char *Hostname2IPString(const char *hostname)
 
 { static char ipbuffer[CF_SMALLBUF];
   int err;

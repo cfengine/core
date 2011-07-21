@@ -210,7 +210,7 @@ void DeleteAgentConn(struct cfagent_connection *ap);
 void DePort(char *address);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
-char *Hostname2IPString(char *hostname);
+const char *Hostname2IPString(const char *hostname);
 char *IPString2Hostname(char *ipaddress);
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
 

@@ -41,6 +41,7 @@
 static void FindDomainName(char *hostname);
 static int Linux_Fedora_Version(void);
 static int Linux_Redhat_Version(void);
+static void Linux_Oracle_Version(void);
 static int Linux_Suse_Version(void);
 static int Linux_Slackware_Version(char *filename);
 static int Linux_Debian_Version(void);
@@ -724,6 +725,14 @@ else if (cfstat("/etc/redhat-release",&statbuf) != -1)
    Linux_Redhat_Version();
    }
 
+/* Oracle Linux >= 6 supplies separate /etc/oracle-release alongside
+   /etc/redhat-release, use it to precisely identify version */
+
+if (cfstat("/etc/oracle-release",&statbuf) != -1)
+   {
+   Linux_Oracle_Version();
+   }
+
 if (cfstat("/etc/generic-release",&statbuf) != -1)
    {
    CfOut(cf_verbose,"","This appears to be a sun cobalt system.\n");
@@ -916,6 +925,50 @@ Nova_SaveDocumentRoot();
 
 /*********************************************************************************/
 
+static void Linux_Oracle_Version(void)
+{
+char relstring[CF_MAXVARSIZE];
+char *r;
+int major, minor;
+
+#define ORACLE_REL_FILENAME "/etc/oracle-release"
+#define ORACLE_ID "Oracle Linux Server"
+
+CfOut(cf_verbose,"","This appears to be Oracle Linux");
+NewClass("oracle");
+
+if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
+    {
+    return;
+    }
+
+if (strncmp(relstring, ORACLE_ID, strlen(ORACLE_ID)))
+   {
+   CfOut(cf_verbose, "", "Could not identify distribution from %s\n", ORACLE_REL_FILENAME);
+   return;
+   }
+
+if ((r = strstr(relstring, "release ")) == NULL)
+   {
+   CfOut(cf_verbose, "", "Could not find distribution version in %s\n", ORACLE_REL_FILENAME);
+   return;
+   }
+
+if (sscanf(r + strlen("release "), "%d.%d", &major, &minor) == 2)
+   {
+   char buf[CF_BUFSIZE];
+   snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
+   NewClass(buf);
+   NewScalar("sys", "flavour", buf, cf_str);
+   NewScalar("sys", "flavor", buf, cf_str);
+
+   snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
+   NewClass(buf);
+   }
+}
+
+/*********************************************************************************/
+
 static int Linux_Fedora_Version(void)
 {
 #define FEDORA_ID "Fedora"
@@ -1016,6 +1069,7 @@ static int Linux_Redhat_Version(void)
 #define SCIENTIFIC_SL6_ID "Scientific Linux"
 #define SCIENTIFIC_CERN_ID "Scientific Linux CERN"
 #define RELEASE_FLAG "release "
+#define ORACLE_4_5_ID "Enterprise Linux Enterprise Linux Server"
 
 /* We are looking for one of the following strings...
  *
@@ -1050,7 +1104,7 @@ char strmajor[CF_MAXVARSIZE];
 int minor = -1;
 char strminor[CF_MAXVARSIZE];
 
-CfOut(cf_verbose,"","This appears to be a redhat system.\n");
+CfOut(cf_verbose,"","This appears to be a redhat (or redhat-based) system.\n");
 NewClass("redhat");
 
 /* Grab the first line from the file and then close it. */
@@ -1128,6 +1182,11 @@ else if(!strncmp(relstring, SCIENTIFIC_SL6_ID, strlen(SCIENTIFIC_SL6_ID)))
 else if(!strncmp(relstring, CENTOS_ID, strlen(CENTOS_ID)))
    {
    vendor = "centos";
+   }
+else if (!strncmp(relstring, ORACLE_4_5_ID, strlen(ORACLE_4_5_ID)))
+   {
+   vendor = "oracle";
+   edition = "s";
    }
 else
    {

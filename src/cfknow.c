@@ -45,6 +45,9 @@ void WriteKMDB(void);
 void GenerateManual(void);
 void CfGenerateStories(char *query,enum storytype type);
 void VerifyOccurrenceGroup(char *file,struct Promise *pp);
+void CfGenerateTestData(int count);
+void CfRemoveTestData(void);
+void CfUpdateTestData(void);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -96,7 +99,7 @@ const char *ID = "The knowledge management agent is capable of building\n"
                  "and cf-know can assemble and converge the reference manual\n"
                  "for the current version of the Cfengine software.";
  
-const  struct option OPTIONS[11] =
+const  struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -108,10 +111,13 @@ const  struct option OPTIONS[11] =
       { "manpage",no_argument,0,'M'},
       { "stories",required_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
+      { "test",required_argument,0,'t'},
+      { "removetest",no_argument,0,'r'},
+      { "updatetest",no_argument,0,'u'},      
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[11] =
+const char *HINTS[14] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",
@@ -123,6 +129,9 @@ const char *HINTS[11] =
       "Generate reference manpage from internal data",
       "Look up stories for a given topic on the command line",
       "Print a syntax summary of the optional keyword or this cfengine version",
+      "Generate test data",
+      "Remove test data",
+      "Update test data",
       NULL
       };
 
@@ -165,7 +174,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ru",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -244,10 +253,22 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S",OPTIONS,&optindex)) != EOF)
       case 'm':
           GENERATE_MANUAL = true;
           break;
-          
+
+      case 't':
+          if (atoi(optarg))
+             {
+             CfGenerateTestData(atoi(optarg));
+             exit(0);
+             }
+          break;
+      case 'r':
+          CfRemoveTestData();
+          exit(0);
+      case 'u':
+          CfUpdateTestData();
+          exit(0);    
       default: Syntax("cf-know - knowledge agent",OPTIONS,HINTS,ID);
-          exit(1);
-          
+          exit(1);   
       }
   }
 
@@ -280,7 +301,6 @@ if (InsertTopic("any","any"))
    AddOccurrence(&OCCURRENCES,"The generic knowledge context - any time, any place, anywhere",list,cfk_literal,"any");
    DeleteRlist(list);
    }
-
 }
 
 /*****************************************************************************/
@@ -587,6 +607,29 @@ void CfGenerateStories(char *query,enum storytype type)
 {
 #ifdef HAVE_CONSTELLATION
 Constellation_CfGenerateStories(query,type);
+#endif
+}
+
+/*********************************************************************/
+
+void CfGenerateTestData(int count)
+{
+#ifdef HAVE_NOVA
+ Nova_GenerateTestData(count);
+#endif
+}
+/*********************************************************************/
+void CfUpdateTestData(void)
+{
+#ifdef HAVE_NOVA
+ Nova_UpdateTestData();
+#endif
+}
+/*********************************************************************/
+void CfRemoveTestData(void)
+{
+#ifdef HAVE_NOVA
+ Nova_RemoveTestData();
 #endif
 }
 

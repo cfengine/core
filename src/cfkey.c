@@ -33,6 +33,8 @@
 #include "cf3.extern.h"
 
 int SHOWHOSTS = false;
+bool REMOVEKEYS = false;
+const char *remove_keys_host;
 
 void ShowLastSeenHosts(void);
 int main (int argc,char *argv[]);
@@ -50,7 +52,8 @@ const struct option OPTIONS[17] =
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "output-file",required_argument,0,'f'},
-      { "show-hosts",no_argument,0,'s'}, 	
+      { "show-hosts",no_argument,0,'s'},
+      { "remove-keys",required_argument,0,'r'},
       { NULL,0,0,'\0' }
       };
 
@@ -61,7 +64,8 @@ const char *HINTS[17] =
       "Output verbose information about the behaviour of the agent",
       "Output the version of the software",
       "Specify an alternative output file than the default (localhost)",
-      "Show lastseen hostnames and IP addresses",   	
+      "Show lastseen hostnames and IP addresses",
+      "Remove keys for specified hostname/IP",
       NULL
       };
 
@@ -82,6 +86,26 @@ if (SHOWHOSTS)
    return 0; 	
    }
 
+if (REMOVEKEYS)
+   {
+   int removed = RemovePublicKeys(remove_keys_host);
+   if (removed < 0)
+      {
+      CfOut(cf_error, "", "Unable to remove keys for the host %s", remove_keys_host);
+      return 255;
+      }
+   else if (removed == 0)
+      {
+      CfOut(cf_error, "", "No keys for host %s were found", remove_keys_host);
+      return 1;
+      }
+   else
+      {
+      CfOut(cf_inform, "", "Removed %d key(s) for host %s", removed, remove_keys_host);
+      return 0;
+      }
+   }
+
 KeepKeyPromises();
 return 0;
 }
@@ -96,7 +120,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"d:vf:VMs",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"d:vf:VMsr:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -131,7 +155,13 @@ while ((c=getopt_long(argc,argv,"d:vf:VMs",OPTIONS,&optindex)) != EOF)
           break;
       case 's':
           SHOWHOSTS = true;
-          break;    
+          break;
+
+      case 'r':
+         REMOVEKEYS = true;
+         remove_keys_host = optarg;
+         break;
+
       case 'h': Syntax("cf-key - cfengine's key generator",OPTIONS,HINTS,ID);
           exit(0);
 
@@ -212,5 +242,3 @@ printf("Total Entries: %d\n",count);
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
 }
-
-/*eof*/

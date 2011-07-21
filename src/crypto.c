@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 static void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
-static void DeletePublicKey(char *username,char *ipaddress,char *digest);
 static char *KeyPrint(RSA *key);
 
 /**********************************************************************/
@@ -395,17 +394,98 @@ fclose(fp);
 
 /*********************************************************************/
 
-static void DeletePublicKey(char *user,char *ipaddress,char *digest)
+/*
+ * Returns:
+ *  amount of keys removed
+ *  -1 if there was an error
+ */
+static int RemovePublicKey(const char *id)
+{
+char keysdir[CF_BUFSIZE];
+snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
+MapName(keysdir);
+DIR *dirh;
+struct dirent *dirp;
+char suffix[CF_BUFSIZE];
+int removed = 0;
 
-{ char filename[CF_BUFSIZE];
+if ((dirh = opendir(keysdir)) == NULL)
+   {
+   if (errno == ENOENT)
+      {
+      return 0;
+      }
+   else
+      {
+      CfOut(cf_error, "opendir", "Unable to open keys directory");
+      return -1;
+      }
+   }
 
-snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,ipaddress);
-MapName(filename);
-unlink(filename);
+snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
 
-snprintf(filename,CF_BUFSIZE,"%s/ppkeys/%s-%s.pub",CFWORKDIR,user,digest);
-MapName(filename);
-unlink(filename);
+errno = 0;
+while ((dirp = readdir(dirh)))
+   {
+   char *c = strstr(dirp->d_name, suffix);
+   if (c && c[strlen(suffix)] == '\0') /* dirp->d_name ends with suffix */
+      {
+      char keyfilename[CF_BUFSIZE];
+      snprintf(keyfilename, CF_BUFSIZE, "%s/%s", keysdir, dirp->d_name);
+      MapName(keyfilename);
+
+      if (unlink(keyfilename) < 0)
+         {
+         if (errno != ENOENT)
+            {
+            CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
+            closedir(dirh);
+            return -1;
+            }
+         }
+      else
+         {
+         removed++;
+         }
+      }
+   }
+
+if (errno)
+   {
+   CfOut(cf_error, "readdir", "Unable to enumerate files in keys directory");
+   closedir(dirh);
+   return -1;
+   }
+
+closedir(dirh);
+return removed;
+}
+
+/*********************************************************************/
+
+/*
+ * Returns number of keys removed, -1 in case of error
+ */
+int RemovePublicKeys(const char *hostname)
+{
+char ip[CF_BUFSIZE];
+char digest[CF_BUFSIZE];
+int removed_by_digest, removed_by_ip;
+
+strcpy(ip, Hostname2IPString(hostname));
+IPString2KeyDigest(ip, digest);
+
+removed_by_digest = RemovePublicKey(digest);
+removed_by_ip = RemovePublicKey(ip);
+
+if (removed_by_digest >= 0 && removed_by_ip >= 0)
+   {
+   return removed_by_digest + removed_by_ip;
+   }
+else
+   {
+   return -1;
+   }
 }
 
 /*********************************************************************/

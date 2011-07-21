@@ -312,6 +312,7 @@ int DecryptString (char type,char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey (char *username,char *ipaddress,char *digest);
 RSA *HavePublicKeyByIP(char *username,char *ipaddress);
 void SavePublicKey (char *username,char *ipaddress,char *digest,RSA *key);
+int RemovePublicKeys(const char *hostname);
 
 /* dbm_api.c */
 

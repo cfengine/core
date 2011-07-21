@@ -41,6 +41,7 @@
 static void FindDomainName(char *hostname);
 static int Linux_Fedora_Version(void);
 static int Linux_Redhat_Version(void);
+static void Linux_Oracle_VM_Server_Version(void);
 static void Linux_Oracle_Version(void);
 static int Linux_Suse_Version(void);
 static int Linux_Slackware_Version(char *filename);
@@ -705,8 +706,8 @@ void OSClasses()
 
 #ifdef LINUX
 
-/* Mandrake/Mandriva and Fedora supply /etc/redhat-release, so we test for those
-   distributions first */
+/* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
+   we test for those distributions first */
 
 if (cfstat("/etc/mandriva-release",&statbuf) != -1)
    {
@@ -719,6 +720,10 @@ else if (cfstat("/etc/mandrake-release",&statbuf) != -1)
 else if (cfstat("/etc/fedora-release",&statbuf) != -1)
    {
    Linux_Fedora_Version();
+   }
+else if (cfstat("/etc/ovs-release",&statbuf) != -1)
+   {
+   Linux_Oracle_VM_Server_Version();
    }
 else if (cfstat("/etc/redhat-release",&statbuf) != -1)
    {
@@ -921,6 +926,67 @@ NewScalar("sys","crontab",vbuff,cf_str);
 #if defined(HAVE_NOVA)
 Nova_SaveDocumentRoot();
 #endif
+}
+
+/*********************************************************************************/
+
+static void Linux_Oracle_VM_Server_Version(void)
+{
+char relstring[CF_MAXVARSIZE];
+char *r;
+int major, minor, patch;
+int revcomps;
+
+#define ORACLE_VM_SERVER_REL_FILENAME "/etc/ovs-release"
+#define ORACLE_VM_SERVER_ID "Oracle VM server"
+
+CfOut(cf_verbose,"","This appears to be Oracle VM Server");
+NewClass("redhat");
+NewClass("oraclevmserver");
+
+if (!ReadLine(ORACLE_VM_SERVER_REL_FILENAME, relstring, sizeof(relstring)))
+   {
+   return;
+   }
+
+if (strncmp(relstring, ORACLE_VM_SERVER_ID, strlen(ORACLE_VM_SERVER_ID)))
+   {
+   CfOut(cf_verbose, "", "Could not identify distribution from %s\n",
+         ORACLE_VM_SERVER_REL_FILENAME);
+   return;
+   }
+
+if ((r = strstr(relstring, "release ")) == NULL)
+   {
+   CfOut(cf_verbose, "", "Could not find distribution version in %s\n",
+         ORACLE_VM_SERVER_REL_FILENAME);
+   return;
+   }
+
+revcomps = sscanf(r + strlen("release "), "%d.%d.%d", &major, &minor, &patch);
+
+if (revcomps > 0)
+   {
+   char buf[CF_BUFSIZE];
+   snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
+   NewClass(buf);
+   NewScalar("sys", "flavour", buf, cf_str);
+   NewScalar("sys", "flavor", buf, cf_str);
+   }
+
+if (revcomps > 1)
+   {
+   char buf[CF_BUFSIZE];
+   snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d", major, minor);
+   NewClass(buf);
+   }
+
+if (revcomps > 2)
+   {
+   char buf[CF_BUFSIZE];
+   snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d_%d", major, minor, patch);
+   NewClass(buf);
+   }
 }
 
 /*********************************************************************************/

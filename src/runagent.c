@@ -537,7 +537,18 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_background].lval) == 0)
       {
-      BACKGROUND = GetBoolean(retval);
+      /*
+       * Only process this option if are is no -b or -i options specified on
+       * command line.
+       */
+      if (BACKGROUND || INTERACTIVE)
+         {
+         CfOut(cf_error, "", "Warning: 'background_children' setting from 'body runagent control' is overriden by command-line option.");
+         }
+      else
+         {
+         BACKGROUND = GetBoolean(retval);
+         }
       continue;
       }
    

@@ -52,6 +52,9 @@ static int Xen_Domain(void);
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 static int Xen_Hv_Check(void);
 
+static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
+static bool ReadLine(const char *filename, char *buf, int bufsize);
+
 /**********************************************************************/
 
 void SetSignals()
@@ -926,8 +929,6 @@ static int Linux_Fedora_Version(void)
 
 #define FEDORA_REL_FILENAME "/etc/fedora-release"
 
-FILE *fp;
-
 /* The full string read in from fedora-release */
 char relstring[CF_MAXVARSIZE];
 char classbuf[CF_MAXVARSIZE];
@@ -942,13 +943,10 @@ NewClass("fedora");
 
 /* Grab the first line from the file and then close it. */
 
-if ((fp = fopen(FEDORA_REL_FILENAME,"r")) == NULL)
+if (!ReadLine(FEDORA_REL_FILENAME, relstring, sizeof(relstring)))
    {
    return 1;
    }
-
-fgets(relstring, sizeof(relstring), fp);
-fclose(fp);
 
 CfOut(cf_verbose,"","Looking for fedora core linux info...\n");
 
@@ -1036,8 +1034,6 @@ static int Linux_Redhat_Version(void)
 
 #define RH_REL_FILENAME "/etc/redhat-release"
 
-FILE *fp;
-
 /* The full string read in from redhat-release */
 char relstring[CF_MAXVARSIZE];
 char classbuf[CF_MAXVARSIZE];
@@ -1059,13 +1055,10 @@ NewClass("redhat");
 
 /* Grab the first line from the file and then close it. */
 
-if ((fp = fopen(RH_REL_FILENAME,"r")) == NULL)
-    {
-    return 1;
-    }
-
-fgets(relstring, sizeof(relstring), fp);
-fclose(fp);
+if (!ReadLine(RH_REL_FILENAME, relstring, sizeof(relstring)))
+   {
+   return 1;
+   }
 
 CfOut(cf_verbose,"","Looking for redhat linux info in \"%s\"\n",relstring);
 
@@ -1262,13 +1255,12 @@ NewClass("SuSE");
 
 /* Grab the first line from the file and then close it. */
 
-if ((fp = fopen(SUSE_REL_FILENAME,"r")) == NULL)
+fp = ReadFirstLine(SUSE_REL_FILENAME, relstring, sizeof(relstring));
+if (fp == NULL)
    {
    return 1;
    }
 
-fgets(relstring, sizeof(relstring), fp);
-Chop(relstring);
 strversion[0] = '\0';
 strpatch[0] = '\0';
 
@@ -1438,18 +1430,18 @@ int major = -1;
 int minor = -1;
 int release = -1;
 char classname[CF_MAXVARSIZE] = "";
-FILE *fp;
+char buffer[CF_MAXVARSIZE];
 
 CfOut(cf_verbose,"","This appears to be a slackware system.\n");
 NewClass("slackware");
 
-if ((fp = fopen(filename,"r")) == NULL)
+if (!ReadLine(filename, buffer, sizeof(buffer)))
    {
    return 1;
    }
 
 CfOut(cf_verbose,"","Looking for Slackware version...\n");
-switch (fscanf(fp, "Slackware %d.%d.%d", &major, &minor, &release))
+switch (sscanf(buffer, "Slackware %d.%d.%d", &major, &minor, &release))
     {
     case 3:
         CfOut(cf_verbose,"","This appears to be a Slackware %u.%u.%u system.", major, minor, release);
@@ -1468,10 +1460,8 @@ switch (fscanf(fp, "Slackware %d.%d.%d", &major, &minor, &release))
         break;
     case 0:
         CfOut(cf_verbose,"","No Slackware version number found.\n");
-        fclose(fp);
         return 2;
     }
-fclose(fp);
 return 0;
 }
 
@@ -1485,7 +1475,6 @@ int major = -1;
 int release = -1;
 int result;
 char classname[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE],os[CF_MAXVARSIZE],version[CF_MAXVARSIZE];
-FILE *fp;
 
 CfOut(cf_verbose,"","This appears to be a debian system.\n");
 NewClass("debian");
@@ -1494,13 +1483,10 @@ buffer[0] = classname[0] = '\0';
 
 CfOut(cf_verbose,"","Looking for Debian version...\n");
 
-if ((fp = fopen(DEBIAN_VERSION_FILENAME,"r")) == NULL)
+if (!ReadLine(DEBIAN_VERSION_FILENAME, buffer, sizeof(buffer)))
    {
    return 1;
    }
-
-fgets(buffer,CF_MAXVARSIZE,fp);
-fclose(fp);
 
 result = sscanf(buffer,"%d.%d", &major, &release); 
 
@@ -1535,13 +1521,10 @@ switch (result)
         break;
     }
 
-if ((fp = fopen(DEBIAN_ISSUE_FILENAME,"r")) == NULL)
+if (!ReadLine(DEBIAN_ISSUE_FILENAME, buffer, sizeof(buffer)))
    {
    return 1;
    }
-
-fgets(buffer,CF_MAXVARSIZE,fp);
-fclose(fp);
 
 os[0] = '\0';
 sscanf(buffer,"%250s",os);
@@ -1585,20 +1568,16 @@ static int Linux_Mandrake_Version(void)
 
 #define MANDRAKE_REL_FILENAME "/etc/mandrake-release"
 
-FILE *fp;
 char relstring[CF_MAXVARSIZE];
 char *vendor=NULL;
 
 CfOut(cf_verbose,"","This appears to be a mandrake system.\n");
 NewClass("Mandrake");
 
-if ((fp = fopen(MANDRAKE_REL_FILENAME,"r")) == NULL)
+if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
    {
    return 1;
    }
-
-fgets(relstring, sizeof(relstring), fp);
-fclose(fp);
 
 CfOut(cf_verbose,"","Looking for Mandrake linux info in \"%s\"\n",relstring);
 
@@ -1636,7 +1615,6 @@ static int Linux_Mandriva_Version(void)
 
 #define MANDRIVA_REL_FILENAME "/etc/mandriva-release"
 
-FILE *fp;
 char relstring[CF_MAXVARSIZE];
 char *vendor=NULL;
 
@@ -1644,13 +1622,10 @@ CfOut(cf_verbose,"","This appears to be a mandriva system.\n");
 NewClass("Mandrake");
 NewClass("Mandriva");
 
-if ((fp = fopen(MANDRIVA_REL_FILENAME,"r")) == NULL)
+if (!ReadLine(MANDRIVA_REL_FILENAME, relstring, sizeof(relstring)))
    {
    return 1;
    }
-
-fgets(relstring, sizeof(relstring), fp);
-fclose(fp);
 
 CfOut(cf_verbose,"","Looking for Mandriva linux info in \"%s\"\n",relstring);
 
@@ -1726,7 +1701,6 @@ return 0;
 static int VM_Version(void)
 
 {
-FILE *fp;
 char *sp,buffer[CF_BUFSIZE],classbuf[CF_BUFSIZE],version[CF_BUFSIZE];
 int major,minor,bug;
 int sufficient = 0;
@@ -1735,10 +1709,8 @@ CfOut(cf_verbose,"","This appears to be a VMware Server ESX/xSX system.\n");
 NewClass("VMware");
 
 /* VMware Server ESX >= 3 has version info in /proc */
-if ((fp = fopen("/proc/vmware/version","r")) != NULL)
+if (ReadLine("/proc/vmware/version", buffer, sizeof(buffer)))
    {
-   CfReadLine(buffer,CF_BUFSIZE,fp);
-   Chop(buffer);
    if (sscanf(buffer,"VMware ESX Server %d.%d.%d",&major,&minor,&bug) > 0)
       {
       snprintf(classbuf,CF_BUFSIZE,"VMware ESX Server %d",major);
@@ -1755,16 +1727,13 @@ if ((fp = fopen("/proc/vmware/version","r")) != NULL)
       NewClass(classbuf);
       sufficient = 1;
       }
-   fclose(fp);
    }
 
 /* Fall back to checking for other files */
 
-if (sufficient < 1 && (((fp = fopen("/etc/vmware-release","r")) != NULL) ||
-    (fp = fopen("/etc/issue","r")) != NULL))
+if (sufficient < 1 && (ReadLine("/etc/vmware-release", buffer, sizeof(buffer))
+                       || ReadLine("/etc/issue", buffer, sizeof(buffer))))
    {
-   CfReadLine(buffer,CF_BUFSIZE,fp);
-   Chop(buffer);
    NewClass(buffer);
 
    /* Strip off the release code name e.g. "(Dali)" */
@@ -1775,7 +1744,6 @@ if (sufficient < 1 && (((fp = fopen("/etc/vmware-release","r")) != NULL) ||
       NewClass(buffer);
       }
    sufficient = 1;
-   fclose(fp);
    }
 
 return sufficient < 1 ? 1 : 0;
@@ -1863,6 +1831,40 @@ return 1;
 }
 
 #endif
+
+/******************************************************************/
+
+static bool ReadLine(const char *filename, char *buf, int bufsize)
+{
+FILE *fp = ReadFirstLine(filename, buf, bufsize);
+if (fp == NULL)
+   {
+   return false;
+   }
+else
+   {
+   fclose(fp);
+   return true;
+   }
+}
+
+static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
+{
+FILE *fp = fopen(filename, "r");
+if (fp == NULL)
+   {
+   return NULL;
+   }
+
+if (fgets(buf, bufsize, fp) == NULL)
+   {
+   return NULL;
+   }
+
+StripTrailingNewline(buf);
+
+return fp;
+}
 
 /******************************************************************/
 /* User info                                                      */

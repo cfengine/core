@@ -608,7 +608,7 @@ PARSING = true;
 
 if ((PROMISETIME = time((time_t *)NULL)) == -1)
    {
-   printf("Couldn't read system clock\n");
+   CfOut(cf_error, "", "!! Couldn't read system clock in Cf3ParseFiles()");
    }
 
 Cf3ParseFile(VINPUTFILE);

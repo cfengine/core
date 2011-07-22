@@ -553,11 +553,15 @@ from 2:00pm to 2:59pm on Windows XP systems:
 @node Global and local classes, Filenames and paths, Hard classes
 @subsection Global and local classes
 
-Classes are defined in bundles. Bundles of type @code{common} yield classes that
-are global in scope, whereas in all other bundle types classes are local.
-Classes are evaluated when the bundle is evaluated (and the bundles are
-evaluated in the order specified in the @code{bundlesequence}).
-Consider the following example.
+User defined classes are mostly defined in bundles, but they are used as a
+signalling mechanism between promises. We'll return to those in a moment.
+
+Classes promises may be specified in any kind of bundle.
+Bundles of type @code{common} yield classes that are global in scope,
+whereas in all other bundle types classes are local.  Classes are
+evaluated when the bundle is evaluated (and the bundles are evaluated
+in the order specified in the @code{bundlesequence}).  Consider the
+following example.
 
 @verbatim
 
@@ -608,6 +612,20 @@ their respective bundles).
 The report result `Success' is therefore true because only @samp{one} and
 @samp{three} are in scope (and @samp{two} is @i{not} in scope) inside of the
 third bundle.
+
+Another type of class definition happens when you define classes based on the
+outcome of a promise, e.g. to set a class if a promise is repaired, one might write:
+
+@verbatim
+ "promiser..."
+
+    ...
+
+    classes => if_repaired("signal_class");
+@end verbatim
+
+These classes are global in scope. Finally @code{restart_class} classes in @code{processes}
+are global.
 
 @c -------------------------------------------------------------------------------
 @c SECTION

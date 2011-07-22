@@ -57,7 +57,28 @@ assign     =>
 
 arrow      ->
 
-qstring    \"((\\.)|[^"\\])*\"|\'((\\.)|[^'\\])*\'|`[^`]*`
+/*
+ * Three types of quoted strings:
+ *
+ * - string in double quotes, starts with double quote, runs until another
+ *   double quote, \" masks the double quote.
+ * - string in single quotes, starts with single quote, runs until another
+ *   single quote, \' masks the single quote.
+ * - string in backquotes, starts with backquote, runs until another backquote.
+ *
+ * The same rule formatted for the better readability:
+ *
+ * <qstring> := \" <dq> \" | \' <sq> \' | ` <bq> `
+ * <dq> = <dqs>*
+ * <dqs> = \\ <any> | [^"\\]
+ * <sq> = <sqs>*
+ * <sqs> = \\ <any> | [^'\\]
+ * <bq> = <bqs>*
+ * <bqs> = [^`]
+ * <any> = . | \n
+ *
+ */
+qstring    \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
 class      [.|&!()a-zA-Z0-9_\200-\377]+::
 

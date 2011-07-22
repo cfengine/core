@@ -556,7 +556,10 @@ from 2:00pm to 2:59pm on Windows XP systems:
 User defined classes are mostly defined in bundles, but they are used as a
 signalling mechanism between promises. We'll return to those in a moment.
 
-Classes promises may be specified in any kind of bundle.
+Classes promises define new classes based on combinations of old ones.
+This is how to make complex decisions in CFEngine, with readable results.
+It is like defining aliases for class combinations.
+Such class `aliases' may be specified in any kind of bundle.
 Bundles of type @code{common} yield classes that are global in scope,
 whereas in all other bundle types classes are local.  Classes are
 evaluated when the bundle is evaluated (and the bundles are evaluated

@@ -1146,6 +1146,7 @@ enum cfl_view
    cfl_view_repairedreason,
    cfl_view_notkeptreason,
    cfl_view_filechange,
+   cfl_view_software,
    cfl_view_error
    };
 

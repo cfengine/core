@@ -8,7 +8,7 @@ following is incorrect:
 
 @verbatim
 
-bundle edit_lines x
+bundle edit_line x
 {
 insert_lines:
 
@@ -33,7 +33,7 @@ which should be a single correlated promise.
 
 @verbatim
 
-bundle edit_lines x
+bundle edit_line x
 {
 insert_lines:
  
@@ -45,7 +45,7 @@ insert_lines:
 Or:
 @verbatim
 
-bundle edit_lines x
+bundle edit_line x
 {
 insert_lines:
  

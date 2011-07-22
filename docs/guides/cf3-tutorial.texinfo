@@ -3563,7 +3563,7 @@ concepts and can be extended indefinitely by human domain experts.
 
 You will find extensive help, examples and documentation as part of  
 the commercial
-CFEngine support. Visit the website @url{www.CFEngine.com} for more
+CFEngine support. Visit the website @url{http://www.cfengine.com} for more
 details.
 
 @end cartouche

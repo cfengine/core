@@ -1978,63 +1978,83 @@ return false;
 
 /**************************************************************/
 
-int AccessControl(const char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+/* 'resolved' argument needs to be at least CF_BUFSIZE long */
 
-{ struct Auth *ap;
-  int access = false;
-  char realname[CF_BUFSIZE],path[CF_BUFSIZE],lastnode[CF_BUFSIZE],filename[CF_BUFSIZE];
-  char transrequest[CF_BUFSIZE],transpath[CF_BUFSIZE];
-  struct stat statbuf;
+static bool ResolveFilename(const char *req_path, char *res_path)
+{
+char req_dir[CF_BUFSIZE];
+char req_filename[CF_BUFSIZE];
 
-TranslatePath(filename,oldFilename);
+/*
+ * Eliminate symlinks from path, but do not resolve the file itself if it is a
+ * symlink.
+ */
 
-Debug("AccessControl(%s)\n",filename);
+strlcpy(req_dir, req_path, CF_BUFSIZE);
+ChopLastNode(req_dir);
 
-memset(realname,0,CF_BUFSIZE);
-
-/* Separate path first, else this breaks for lastnode = symlink */
-
-strncpy(path,filename,CF_BUFSIZE-1);
-strncpy(lastnode,ReadLastNode(filename),CF_BUFSIZE-1);
-ChopLastNode(path);
-
-/* Eliminate links from path */
+strlcpy(req_filename, ReadLastNode(req_path), CF_BUFSIZE);
 
 #if defined HAVE_REALPATH && !defined NT
-if (realpath(path,realname) == NULL)
+if (realpath(req_dir,res_path) == NULL)
    {
-   CfOut(cf_verbose,"lstat","Couldn't resolve filename %s from host %s\n",filename,conn->hostname);
    return false;
    }
 #else
-CompressPath(realname,path);
+memset(res_path,0,CF_BUFSIZE);
+CompressPath(res_path,translated_req_dir);
 #endif
 
-/* Rejoin the last node and stat the real thing */
+AddSlash(res_path);
+strlcat(res_path, req_filename, CF_BUFSIZE);
 
-AddSlash(realname);
-strcat(realname,lastnode);
+/* Adjust for forward slashes */
 
-strncpy(transrequest,MapName(realname),CF_BUFSIZE-1);
+MapName(res_path);
+
+/* NT has case-insensitive path names */
 
 #ifdef MINGW
-// NT has case-insensitive path names
 int i;
-
-ThreadLock(cft_system);
-
-for (i = 0; i < strlen(transrequest); i++)
+for (i = 0; i < strlen(res_path); i++)
    {
-   transrequest[i] = ToLower(transrequest[i]);
+   res_path[i] = ToLower(res_path[i]);
    }
-
-ThreadUnlock(cft_system);
-
 #endif  /* MINGW */
+
+return true;
+}
+
+/**************************************************************/
+
+int AccessControl(const char *req_path,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+
+{ struct Auth *ap;
+  int access = false;
+  char transrequest[CF_BUFSIZE];
+  struct stat statbuf;
+  char translated_req_path[CF_BUFSIZE];
+  char transpath[CF_BUFSIZE];
+
+Debug("AccessControl(%s)\n",req_path);
+
+/*
+ * /var/cfengine -> $workdir translation.
+ */
+TranslatePath(translated_req_path,req_path);
+
+if (ResolveFilename(translated_req_path, transrequest))
+   {
+   CfOut(cf_verbose, "", "Filename %s is resolved to %s", translated_req_path, transrequest);
+   }
+else
+   {
+   CfOut(cf_verbose,"lstat","Couldn't resolve filename %s from host %s\n",translated_req_path,conn->hostname);
+   }
 
 if (lstat(transrequest,&statbuf) == -1)
    {
-   CfOut(cf_verbose,"lstat","Couldn't stat filename %s (i.e. %s) from host %s\n",filename,transrequest,conn->hostname);
+   CfOut(cf_verbose,"lstat","Couldn't stat filename %s requested by host %s\n",transrequest,conn->hostname);
    return false;
    }
 
@@ -2051,7 +2071,7 @@ conn->maproot = false;
 for (ap = vadmit; ap != NULL; ap=ap->next)
    {
    int res = false;
-   Debug("Examining rule in access list (%s,%s)?\n",realname,ap->path);
+   Debug("Examining rule in access list (%s,%s)?\n",transrequest,ap->path);
 
    strncpy(transpath,ap->path,CF_BUFSIZE-1);
    MapName(transpath);
@@ -2108,9 +2128,9 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       }
    }
 
-for (ap = vdeny; ap != NULL; ap=ap->next)
+if (strncmp(transpath,transrequest,strlen(transpath)) == 0)
    {
-   if (strncmp(transpath,transrequest,strlen(transpath)) == 0)
+   for (ap = vdeny; ap != NULL; ap=ap->next)
       {
       if (IsRegexItemIn(ap->accesslist,conn->hostname))
          {
@@ -2123,17 +2143,17 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
 
 if (access)
    {
-   CfOut(cf_verbose,"","Host %s granted access to %s\n",conn->hostname,realname);
+   CfOut(cf_verbose,"","Host %s granted access to %s\n",conn->hostname,req_path);
    
    if (encrypt && LOGENCRYPT)
       {
       /* Log files that were marked as requiring encryption */
-      CfOut(cf_log,"","Host %s granted access to %s\n",conn->hostname,realname);
+      CfOut(cf_log,"","Host %s granted access to %s\n",conn->hostname,req_path);
       }
    }
 else
    {
-   CfOut(cf_verbose,"","Host %s denied access to %s\n",conn->hostname,realname);
+   CfOut(cf_verbose,"","Host %s denied access to %s\n",conn->hostname,req_path);
    }
 
 if (!conn->rsa_auth)

@@ -15,7 +15,7 @@ m4_define([ULN],m4_toupper($1))
     ULN[]_PATH="$with_[$1]"
     if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
       ULN[]_CFLAGS="-I$with_[$1]/include"
-      ULN[]_LDFLAGS="-L$with_[$1]/lib -R$with_[$1]/lib"
+      ULN[]_LDFLAGS="-L$with_[$1]/lib"
     fi
   else
     ULN[]_PATH="default path"
@@ -34,4 +34,14 @@ m4_define([ULN],m4_toupper($1))
   CFLAGS="$save_CFLAGS"
   CPPFLAGS="$save_CPPFLAGS"
   LDFLAGS="$save_LDFLAGS"
+
+  #
+  # libtool understands -R$path, but we are not using libtool in configure
+  # snippets, so -R$path goes to $pkg_LDFLAGS only after autoconf tests
+  #
+  if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck; then
+    if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
+      ULN[]_LDFLAGS="-L$with_[$1]/lib -R$with_[$1]/lib"
+    fi
+  fi
 ])

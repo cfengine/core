@@ -359,6 +359,9 @@ int clock_gettime(clockid_t clock_id,struct timespec *tp);
 #ifdef MINGW
 unsigned int alarm(unsigned int seconds);
 #endif
+#if !HAVE_DECL_REALPATH
+char *realpath(const char *path, char *resolved_path);
+#endif
 
 #ifndef HAVE_GETNETGRENT
 int setnetgrent (const char *netgroup);

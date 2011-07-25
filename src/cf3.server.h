@@ -80,12 +80,4 @@ time_t CFDSTARTTIME;
 # undef RE_DUP_MAX
 #endif
 
-/*******************************************************************
- * Sunos4.1.4 need these prototypes
- *******************************************************************/
-
-#if defined(SUN4)
-extern char *realpath(/* char *path; char resolved_path[MAXPATHLEN] */);
-#endif
-
 #endif

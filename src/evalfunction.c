@@ -5243,6 +5243,7 @@ struct FnCallArg LASTNODE_ARGS[] =
 
 struct FnCallArg LDAPARRAY_ARGS[] =
     {
+    {CF_ANYSTRING,cf_str,"Array name"},
     {CF_ANYSTRING,cf_str,"URI"},
     {CF_ANYSTRING,cf_str,"Distinguished name"},
     {CF_ANYSTRING,cf_str,"Filter"},

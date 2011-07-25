@@ -189,7 +189,7 @@ switch(status)
        PR_NOTKEPT++;
        VAL_NOTKEPT += attr.transaction.value_notkept;
        
-       if(log)
+       if (log)
           {
           NotePromiseCompliance(pp,1.0,cfn_notkept,reason);
           }

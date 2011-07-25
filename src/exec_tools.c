@@ -209,7 +209,7 @@ for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
  *
  * single quotes start only with ', not with \'
  */
-char *WinEscapeCommand(char *s)
+char *ShEscapeCommand(char *s)
 
 { static char buffer[CF_BUFSIZE];
   char *spf,*spto;

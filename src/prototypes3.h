@@ -538,7 +538,7 @@ int IsExecutable(const char *file);
 int ShellCommandReturnsZero(char *comm,int useshell);
 int GetExecOutput(char *command,char *buffer,int useshell);
 void ActAsDaemon(int preserve);
-char *WinEscapeCommand(char *s);
+char *ShEscapeCommand(char *s);
 int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
 
 /* files_copy.c */

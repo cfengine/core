@@ -203,7 +203,7 @@ else if (pid == 0)                     /* child */
 
    if (useshell)
       {
-      strncpy(esc_command,WinEscapeCommand(comm),CF_BUFSIZE-1);
+      strncpy(esc_command,ShEscapeCommand(comm),CF_BUFSIZE-1);
 
       if (execl("/bin/sh","sh","-c",esc_command,NULL) == -1)
          {

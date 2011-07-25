@@ -603,7 +603,7 @@ if (pid == 0)
          }
       }
 
-   strncpy(esc_command,WinEscapeCommand(command),CF_BUFSIZE-1);
+   strncpy(esc_command,ShEscapeCommand(command),CF_BUFSIZE-1);
    execl("/bin/sh","sh","-c",esc_command,NULL);
    _exit(1);
    }
@@ -757,7 +757,7 @@ if (pid == 0)
       _exit(1);
       }
 
-   strncpy(esc_command,WinEscapeCommand(command),CF_BUFSIZE-1);
+   strncpy(esc_command,ShEscapeCommand(command),CF_BUFSIZE-1);
    execl("/bin/sh","sh","-c",esc_command,NULL);
    _exit(1);
    }

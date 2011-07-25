@@ -31,8 +31,6 @@
 #ifndef CFENGINE_CF3_SERVER_H
 #define CFENGINE_CF3_SERVER_H
 
-#ifndef HAVE_SERV_H
-#define HAVE_SERV_H 1
 #define queuesize 50
 #define connection 1
 #define RFC931_PORT 113
@@ -88,8 +86,6 @@ time_t CFDSTARTTIME;
 
 #if defined(SUN4)
 extern char *realpath(/* char *path; char resolved_path[MAXPATHLEN] */);
-#endif
-
 #endif
 
 #endif

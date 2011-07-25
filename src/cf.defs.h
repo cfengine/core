@@ -202,7 +202,7 @@ extern int errno;
 #define bzero(s, n)     memset ((s), 0, (n))
 #endif
 
-#ifndef HAVE_STRNDUP
+#if !HAVE_DECL_STRNDUP
 char *strndup(const char *s, size_t n);
 #endif
 
@@ -389,14 +389,17 @@ char *strsep(char **stringp, const char *delim);
 #ifndef HAVE_PUTENV
 int putenv  (char *s);
 #endif
-#ifndef HAVE_UNSETENV
-int unsetenv (const char *name);
+#if !HAVE_DECL_UNSETENV
+int unsetenv(const char *name);
 #endif
 #ifndef HAVE_SETEUID
 int seteuid (uid_t euid);
 #endif
 #ifndef HAVE_SETEUID
 int setegid (gid_t egid);
+#endif
+#if !HAVE_DECL_SETLINEBUF
+void setlinebuf(FILE *stream);
 #endif
 #ifdef MINGW
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);

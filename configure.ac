@@ -559,20 +559,26 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
-AC_CHECK_DECL(clock_gettime, [], [], [[#include <time.h>]])
+AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
-AC_REPLACE_FUNCS([unsetenv])
+AC_CHECK_DECLS(unsetenv)
+AC_REPLACE_FUNCS(unsetenv)
+
+AC_CHECK_DECLS(strndup)
 AC_REPLACE_FUNCS(strndup)
+
+AC_CHECK_DECLS(setlinebuf)
 AC_REPLACE_FUNCS(setlinebuf)
 
-AC_CHECK_DECL([strlcat])
-AC_REPLACE_FUNCS([strlcat])
-AC_CHECK_DECL([strlcpy])
-AC_REPLACE_FUNCS([strlcpy])
+AC_CHECK_DECLS(strlcat)
+AC_REPLACE_FUNCS(strlcat)
 
-AC_CHECK_DECL([realpath])
-AC_CHECK_FUNCS([realpath])
+AC_CHECK_DECLS(strlcpy)
+AC_REPLACE_FUNCS(strlcpy)
+
+AC_CHECK_DECLS(realpath)
+AC_CHECK_FUNCS(realpath)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)

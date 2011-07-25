@@ -23,9 +23,15 @@
 
 */
 
+#ifdef HAVE_CONFIG_H
+#include "../src/conf.h"
+#endif
+
 #include <stdio.h>
 
+#if !HAVE_DECL_SETLINEBUF
 void setlinebuf(FILE *stream);
+#endif
 
 void setlinebuf(FILE *stream)
 {

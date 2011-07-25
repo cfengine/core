@@ -23,11 +23,19 @@
 
 */
 
+#ifdef HAVE_CONFIG_H
+#include "../src/conf.h"
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stddef.h>
+
+#if !HAVE_DECL_UNSETENV
+int unsetenv(const char *name);
+#endif
 
 /* Under MinGW putenv('var=') will remove variable from environment */
 

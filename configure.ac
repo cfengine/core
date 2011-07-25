@@ -44,23 +44,6 @@ m4_define(incstart,sinc)
 m4_define(incend,lude)
 
 #
-# Add to the default list of places in LDFLAGS to compensate for
-# ... the configure default value of LIBS on some systems
-# Don't add if cross-compiling (setting host), to avoid using native libs.
-#
-if test "x$cross_compiling" = "xno"; then
-  for x in /usr/lib64 /usr/local/gnu/lib /usr/local/gnulib /opt/dce/lib /sw/lib /usr/pkg/lib /usr/X11R7/lib
-  do
-    if test -d "$x"; then
-      y=`expr " $LDFLAGS " : ".* -L$x "`
-      if test $y -eq 0; then
-        LDFLAGS="$LDFLAGS -L$x"
-      fi
-    fi
-  done
-fi
-
-#
 # Add to the default list of places in CPPFLAGS to match LDFLAGS above
 # Don't add if cross-compiling (setting host), to avoid using native libs.
 # 
@@ -123,7 +106,7 @@ fi
 dnl Now check for database connectors
 
 AC_ARG_WITH([sql],
-    [AS_HELP_STRING([--with-sql], [Enable SQL database connectors (deprecated, use --with[[out]]-postgresql and --with[[out]]-mysql instead)])],[with_postgresql=$with_sql; with_mysql=$with_sql],[])
+    [AS_HELP_STRING([--with-sql[[=PATH]]], [Enable SQL database connectors (deprecated, use --with[[out]]-postgresql and --with[[out]]-mysql instead)])],[with_postgresql=$with_sql; with_mysql=$with_sql],[])
 
 dnl PostgreSQL
 
@@ -207,7 +190,7 @@ fi
 dnl SQLite 3
 
 AC_ARG_WITH([sqlite3],
-  [AS_HELP_STRING([--with-sqlite3], [use SQLite 3 to store runtime data (EXPERIMENTAL, BROKEN)])])
+  [AS_HELP_STRING([--with-sqlite3[[=PATH]]], [use SQLite 3 to store runtime data (EXPERIMENTAL, BROKEN)])])
 AS_IF([test "x$with_sqlite3" = "xyes"], [WITH_SQLITE3=1], [WITH_SQLITE3=0])
 
 if test $WITH_SQLITE3 = 1; then
@@ -220,7 +203,7 @@ fi
 dnl QDBM
 
 AC_ARG_WITH([qdbm],
-    [AS_HELP_STRING([--with-qdbm], [use QDBM to store runtime data])])
+    [AS_HELP_STRING([--with-qdbm[[=PATH]]], [use QDBM to store runtime data])])
 AS_IF([test "x$with_qdbm" = "xyes"], [WITH_QDBM=1], [WITH_QDBM=0])
 
 if test $WITH_QDBM = 1; then
@@ -235,32 +218,31 @@ dnl Berkeley DB.
 if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
   AC_ARG_WITH(berkeleydb,
     [  --with-berkeleydb[[=PATH]] directory where BerkeleyDB exists],
-    BERKELEY_DB_DIR=$with_berkeleydb,
-    BERKELEY_DB_DIR=default)
+    BERKELEYDB_DIR=$with_berkeleydb,
+    BERKELEYDB_DIR=default)
 
-  AC_MSG_CHECKING(for BerkeleyDB location in $BERKELEY_DB_DIR)
+  AC_MSG_CHECKING(for BerkeleyDB location in $BERKELEYDB_DIR)
 
-  if test "x$BERKELEY_DB_DIR" = "xno" ; then
+  if test "x$BERKELEYDB_DIR" = "xno" ; then
     AC_MSG_RESULT( )
     AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.4 or later)
   else
-    if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
+    if test "x$BERKELEYDB_DIR" = "xdefault" ; then
         for v in BerkeleyDB.4.2 BerkeleyDB.4.3 BerkeleyDB.4.4 BerkeleyDB.4.5 BerkeleyDB.4.6 BerkeleyDB.4.7 BerkeleyDB.4.8; do
             for d in $prefix /opt /usr/local /usr/pkg /usr; do
-                test -d "$d/$v" && BERKELEY_DB_DIR="$d/$v"
+                test -d "$d/$v" && BERKELEYDB_DIR="$d/$v"
             done
         done
     fi
 
-    if test "x$BERKELEY_DB_DIR" = "xdefault" ; then
-
+    if test "x$BERKELEYDB_DIR" = "xdefault" ; then
         for d in $prefix /opt /usr/local /usr; do
-            for v in db-4 db4 db3 db db40; do
+            for v in db-4 db4 db3 db db40 db41 db42 db43 db44 db45 db46 db47 db48 db50 db51; do
 
                 if test -f "$d/include/$v/db.h" ; then
                     echo "Found header in $d/include/$v "
-                    test "x$d" != "x/usr" && BERKELEY_DB_LDFLAGS="-L$d/lib"
-                    BERKELEY_DB_CFLAGS="-I$d/include/$v"
+                    test "x$d" != "x/usr" && BERKELEYDB_LDFLAGS="-L$d/lib/$v"
+                    BERKELEYDB_CFLAGS="-I$d/include/$v"
                     late_LIBS=$LIBS
 		    # In RedHat 8, for instance, we have /usr/include/db4
 		    # and libdb-4.0.a.  Debian has /usr/lib/libdb-4.1.a, for
@@ -268,15 +250,15 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
                     if test $v = db4 -o $v = db40; then
 			save_CFLAGS="$CFLAGS"
 			save_LDFLAGS="$LDFLAGS"
-			CFLAGS="$CFLAGS $BERKELEY_DB_CFLAGS"
-			LDFLAGS="$LDFLAGS $BERKELEY_DB_LDFLAGS"
+			CFLAGS="$CFLAGS $BERKELEYDB_CFLAGS"
+			LDFLAGS="$LDFLAGS $BERKELEYDB_LDFLAGS"
 			AC_SEARCH_LIBS(db_create, 
 				[db-4 db4 db-4.8 db-4.7 db-4.6 db-4.5 db-4.4 db-4.3 db-4.2 db-4.1 db-4.0], 
-				[BERKELEY_DB_LIB=$ac_cv_search_db_create])
+				[BERKELEYDB_LIBS=$ac_cv_search_db_create])
 			CFLAGS="$save_CFLAGS"
 			LDFLAGS="$save_LDFLAGS"
 		    else
-                    	BERKELEY_DB_LIB="-l$v"
+                        BERKELEYDB_LIBS="-ldb"
                     fi
 		    LIBS=$late_LIBS
                     AC_MSG_RESULT($d)
@@ -284,60 +266,61 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
                 fi
             done
 
-	    test "x$BERKELEY_DB_LIB" != "x" && break
+            test "x$BERKELEYDB_LIBS" != "x" && break
             if test -f "$d/include/db.h"; then
                 if test "x$d" != "x/usr"; then
-                    BERKELEY_DB_LDFLAGS="-L$d/lib64 -L$d/lib"
-                    BERKELEY_DB_CFLAGS="-I$d/include"
+                    BERKELEYDB_LDFLAGS="-L$d/lib64 -L$d/lib"
+                    BERKELEYDB_CFLAGS="-I$d/include"
                 fi
-                BERKELEY_DB_LIB="-ldb"
+                BERKELEYDB_LIBS="-ldb"
                 AC_MSG_RESULT($d)
                 break
             fi
 	done
 
-        if test "x$BERKELEY_DB_LIB" = "x" ; then
+        if test "x$BERKELEYDB_LIBS" = "x" ; then
             AC_MSG_ERROR(Cannot find BerkeleyDB)
         fi
 
-    elif test -f "$BERKELEY_DB_DIR/include/db.h";then
+    elif test -f "$BERKELEYDB_DIR/include/db.h";then
         case "$target_os" in
         solaris*)
             #If we are staticlly linking the BDB files, we do not want a
             #-R flag.  If .so's are present, assume we are dynamic linking
-            if test -n "`ls $BERKELEY_DB_DIR/lib/*.so 2>/dev/null`"
+            if test -n "`ls $BERKELEYDB_DIR/lib/*.so 2>/dev/null`"
             then
-                BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib -R$BERKELEY_DB_DIR/lib"
+                BERKELEYDB_LDFLAGS="-L$BERKELEYDB_DIR/lib -R$BERKELEYDB_DIR/lib"
             else
-                BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib"
+                BERKELEYDB_LDFLAGS="-L$BERKELEYDB_DIR/lib"
             fi;;
-        *)         BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib";;
+        *)
+            BERKELEYDB_LDFLAGS="-L$BERKELEYDB_DIR/lib";;
         esac
   
-        BERKELEY_DB_CFLAGS="-I$BERKELEY_DB_DIR/include"
-        BERKELEY_DB_LIB="-ldb"
-        AC_MSG_RESULT($BERKELEY_DB_DIR)
+        BERKELEYDB_CFLAGS="-I$BERKELEYDB_DIR/include"
+        BERKELEYDB_LIBS="-ldb"
+        AC_MSG_RESULT($BERKELEYDB_DIR)
 
-    elif test -d "$BERKELEY_DB_DIR"; then
+    elif test -d "$BERKELEYDB_DIR"; then
 
-        BERKELEY_DB_CFLAGS="-I$BERKELEY_DB_DIR/include"
+        BERKELEYDB_CFLAGS="-I$BERKELEYDB_DIR/include"
         for v in . db48 db47 db46 db45 db44 db43 db42 db41 db40 db4 db33 db32 db3 db; do
-            if test -f "$BERKELEY_DB_DIR/include/$v/db.h"; then
-                BERKELEY_DB_INCLUDEDIR="$BERKELEY_DB_DIR/include/$v"
-                BERKELEY_DB_CFLAGS="-I$BERKELEY_DB_INCLUDEDIR"
+            if test -f "$BERKELEYDB_DIR/include/$v/db.h"; then
+                BERKELEYDB_INCLUDEDIR="$BERKELEYDB_DIR/include/$v"
+                BERKELEYDB_CFLAGS="-I$BERKELEYDB_INCLUDEDIR"
 		break
             fi
         done
 
-        if test -f "$BERKELEY_DB_INCLUDEDIR/db.h"; then
-            BERKELEY_DB_LIB="-ldb"
+        if test -f "$BERKELEYDB_INCLUDEDIR/db.h"; then
+            BERKELEYDB_LIBS="-ldb"
             for v in db-4.8 db48 db-4.7 db4.7 db47 db-4.6 db4.6 db46 db-4.5 db4.5 db45 db-4.4 db4.4 db44; do
-                if test -f "$BERKELEY_DB_DIR/lib/lib$v.so"; then
-                    BERKELEY_DB_LIB="-l$v"
+                if test -f "$BERKELEYDB_DIR/lib/lib$v.so"; then
+                    BERKELEYDB_LIBS="-l$v"
                     break
                 fi
-                if test -f "$BERKELEY_DB_DIR/lib64/lib$v.so"; then
-                    BERKELEY_DB_LIB="-l$v"
+                if test -f "$BERKELEYDB_DIR/lib64/lib$v.so"; then
+                    BERKELEYDB_LIBS="-l$v"
                     break
                 fi
             done
@@ -346,17 +329,17 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
             solaris*)
                 #If we are staticlly linking the BDB files, we do not want a
                 #-R flag.  If .so's are present, assume we are dynamic linking
-                if test -n "`ls $BERKELEY_DB_DIR/lib/*.so 2>/dev/null`"
+                if test -n "`ls $BERKELEYDB_DIR/lib/*.so 2>/dev/null`"
                 then
-                    BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib -R$BERKELEY_DB_DIR/lib"
+                    BERKELEYDB_LDFLAGS="-L$BERKELEYDB_DIR/lib -R$BERKELEYDB_DIR/lib"
                 else
-                    BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib"
+                    BERKELEYDB_LDFLAGS="-L$BERKELEYDB_DIR/lib"
                 fi;;
-            *)         BERKELEY_DB_LDFLAGS="-L$BERKELEY_DB_DIR/lib";;
+            *)         BERKELEYDB_LDFLAGS="-L$BERKELEYDB_DIR/lib";;
 
             esac
   
-            AC_MSG_RESULT($BERKELEY_DB_DIR)
+            AC_MSG_RESULT($BERKELEYDB_DIR)
         else
            AC_MSG_ERROR(Cannot find BerkeleyDB)
         fi
@@ -364,14 +347,14 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
     else
         AC_MSG_ERROR(Cannot find BerkeleyDB)
     fi
-    AC_DEFINE(USE_BERKELEY_DB, 1, [Define if BerkeleyDB is available.])
+    AC_DEFINE(USE_BERKELEYDB, 1, [Define if BerkeleyDB is available.])
 
-    BERKELEY_DB_SAVE_LDFLAGS=$LDFLAGS
-    BERKELEY_DB_SAVE_CPPFLAGS=$CPPFLAGS
-    BERKELEY_DB_SAVE_LIBS=$LIBS
-    LDFLAGS="$LDFLAGS $BERKELEY_DB_LDFLAGS"
-    CPPFLAGS="$CFLAGS $BERKELEY_DB_CFLAGS"
-    LIBS="$LIBS $BERKELEY_DB_LIB"
+    BERKELEYDB_SAVE_LDFLAGS=$LDFLAGS
+    BERKELEYDB_SAVE_CPPFLAGS=$CPPFLAGS
+    BERKELEYDB_SAVE_LIBS=$LIBS
+    LDFLAGS="$LDFLAGS $BERKELEYDB_LDFLAGS"
+    CPPFLAGS="$CFLAGS $BERKELEYDB_CFLAGS"
+    LIBS="$LIBS $BERKELEYDB_LIBS"
 
     AC_MSG_CHECKING(for Berkeley DB API)
 
@@ -386,93 +369,41 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
 
     AC_CHECK_LIB(db, db_create)
 
-    LDFLAGS=$BERKELEY_DB_SAVE_LDFLAGS
-    CPPFLAGS=$BERKELEY_DB_SAVE_CPPFLAGS
-    LIBS=$BERKELEY_DB_SAVE_LIBS
+    LDFLAGS=$BERKELEYDB_SAVE_LDFLAGS
+    CPPFLAGS=$BERKELEYDB_SAVE_CPPFLAGS
+    LIBS=$BERKELEYDB_SAVE_LIBS
 
 fi
-AC_SUBST(BERKELEY_DB_LDFLAGS)
-AC_SUBST(BERKELEY_DB_CFLAGS)
-AC_SUBST(BERKELEY_DB_LIB)
+AC_SUBST(BERKELEYDB_LDFLAGS)
+AC_SUBST(BERKELEYDB_CFLAGS)
+AC_SUBST(BERKELEYDB_LIBS)
 
 fi
 
 dnl OpenSSL
 
 AC_ARG_WITH(openssl,
-    [  --with-openssl[=PATH] directory where OpenSSL exists],
-    OPENSSL_LIB_DIR=$with_openssl,
-    OPENSSL_LIB_DIR=default)
-AC_MSG_CHECKING(for OpenSSL location)
-if test x"$OPENSSL_LIB_DIR" = xno ; then
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR(This release of cfengine requires OpenSSL 0.9.7 or later)
-else
-    if test x"$OPENSSL_LIB_DIR" = xdefault ; then
-        for d in $prefix /opt/ssl /usr/local/ssl /usr/local /usr; do
-            if test -f "$d/include/openssl/opensslv.h"; then
-                OPENSSL_LIB_LDFLAGS="-L$d/lib${libsuff}"
-                OPENSSL_LIB_CPPFLAGS="-I$d/include"
-                OPENSSL_LIB_LIB="-lcrypto"
-                AC_MSG_RESULT($d)
-                break
-            fi
-        done
+    [AS_HELP_STRING([--with-openssl[[=PATH]]],
+    [Specify OpenSSL path])], [], [with_openssl=yes])
 
-        if test x"$OPENSSL_LIB_LIB" = x ; then
-            AC_MSG_ERROR(Cannot find OpenSSL)
-        fi
-    elif test -f "$OPENSSL_LIB_DIR/include/openssl/ssl.h";then
-        case "$target_os" in
-        solaris*)
-            #If we are staticlly linking the SSL files, we do not want a
-            #-R flag.  If .so's are present, assume we are dynamic linking
-            if test -n "`ls $OPENSSL_LIB_DIR/lib/*.so 2>/dev/null`"
-            then
-                OPENSSL_LIB_LDFLAGS="-L$OPENSSL_LIB_DIR/lib -R$OPENSSL_LIB_DIR/lib"
-            else
-                OPENSSL_LIB_LDFLAGS="-L$OPENSSL_LIB_DIR/lib"
-            fi;;
-        *)         OPENSSL_LIB_LDFLAGS="-L$OPENSSL_LIB_DIR/lib";;
-        esac
-  
-        OPENSSL_LIB_CPPFLAGS="-I$OPENSSL_LIB_DIR/include"
-        OPENSSL_LIB_LIB="-lcrypto"
-        AC_MSG_RESULT($OPENSSL_LIB_DIR)
-    else
-        AC_MSG_ERROR(Cannot find OpenSSL)
-    fi
-    AC_DEFINE(USE_OPENSSL_LIB, 1, [Define if OpenSSL is available.])
-
-    OPENSSL_SAVE_LDFLAGS=$LDFLAGS
-    OPENSSL_SAVE_CPPFLAGS=$CPPFLAGS
-    OPENSSL_SAVE_LIBS=$LIBS
-
-    LDFLAGS="$LDFLAGS $OPENSSL_LIB_LDFLAGS"
-    CPPFLAGS="$CPPFLAGS $OPENSSL_LIB_CPPFLAGS"
-    LIBS="$LIBS $OPENSSL_LIB_LIB"
-
-    AC_MSG_CHECKING(for OpenSSL Version)
-
-    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
-#include <openssl/opensslv.h>
-
-#if OPENSSL_VERSION_NUMBER < 0x0090602fL
-#This OpenSSL is too old
-#endif
-       ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of cfengine requires openssl 0.9.7 or later)])
-
-    AC_CHECK_LIB(crypto,main)
-
-
-    LDFLAGS=$OPENSSL_SAVE_LDFLAGS
-    CPPFLAGS=$OPENSSL_SAVE_CPPFLAGS
-    LIBS=$OPENSSL_SAVE_LIBS
-
+if test x"$with_openssl" = xno ; then
+    AC_MSG_ERROR([This release of CFEngine requires OpenSSL >= 0.9.7])
 fi
-AC_SUBST(OPENSSL_LIB_LDFLAGS)
-AC_SUBST(OPENSSL_LIB_CPPFLAGS)
-AC_SUBST(OPENSSL_LIB_LIB)
+
+CF3_WITH_LIBRARY(openssl, [
+   AC_CHECK_LIB(crypto, RSA_generate_key, [], [AC_MSG_ERROR(Cannot find OpenSSL)])
+   AC_CHECK_HEADERS([openssl/opensslv.h], [], [AC_MSG_ERROR(Cannot find OpenSSL)])
+
+   AC_MSG_CHECKING(for OpenSSL version)
+
+   AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+   #include <openssl/opensslv.h>
+
+   #if OPENSSL_VERSION_NUMBER < 0x0090602fL
+   #This OpenSSL is too old
+   #endif
+   ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of CFEngine requires OpenSSL >= 0.9.7)])
+])
 
 dnl PCRE
 
@@ -488,10 +419,6 @@ CF3_WITH_LIBRARY(pcre, [
 ])
 
 dnl
-
-CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $PCRE_CFLAGS $BERKELEY_DB_CFLAGS_OPENSSL_LIB_CPPFLAGS"
-
-LIBS="$LIBS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $PCRE_LDFLAGS $BERKELEY_DB_LDFLAGS $BERKELEY_DB_LIB $OPENSSL_LIB_LDFLAGS $OPENSSL_LIB_LIB"
 
 dnl ######################################################################
 dnl Checks for header files.
@@ -646,6 +573,15 @@ AS_IF([test "x$enable_selinux" = "xyes"], [
     LIBS="$LIBS $LIB_SELINUX"
     AC_SUBST(LIB_SELINUX)
 ])
+
+dnl ######################################################################
+dnl Collect all the options
+dnl ######################################################################
+
+CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $PCRE_CPPFLAGS $BERKELEYDB_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS"
+CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $PCRE_CFLAGS $BERKELEYDB_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS"
+LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $PCRE_LDFLAGS $BERKELEYDB_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS"
+LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $PCRE_LIBS $BERKELEYDB_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -968,7 +904,7 @@ elif test $WITH_QDBM = 1; then
 elif test $WITH_SQLITE3 = 1; then
   AC_MSG_RESULT([-> DB: SQLite 3 (EXPERIMENTAL, BROKEN)])
 else
-  AC_MSG_RESULT([-> DB: Berkeley DB: $BERKELEY_DB_DIR])
+  AC_MSG_RESULT([-> DB: Berkeley DB: $BERKELEYDB_DIR])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])

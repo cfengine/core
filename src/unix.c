@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#ifdef HAVE_SYS_UIO_H
+# include <sys/uio.h>
+#endif
+
 #ifndef MINGW
 
 #ifdef HAVE_STRUCT_SOCKADDR_SA_LEN
@@ -438,6 +442,40 @@ close(tempfd);
 
 /******************************************************************/
 
+static bool IgnoreInterface(int ifaceidx, struct sockaddr_in *inaddr)
+{
+/* FreeBSD jails */
+#ifdef HAVE_JAIL_GET
+struct iovec fbsd_jparams[4];
+struct in_addr fbsd_jia;
+int fbsd_lastjid = 0;
+
+*(const void **)&fbsd_jparams[0].iov_base = "lastjid";
+fbsd_jparams[0].iov_len = sizeof("lastjid");
+fbsd_jparams[1].iov_base = &fbsd_lastjid;
+fbsd_jparams[1].iov_len = sizeof(fbsd_lastjid);
+
+*(const void **)&fbsd_jparams[2].iov_base = "ip4.addr";
+fbsd_jparams[2].iov_len = sizeof("ip4.addr");
+fbsd_jparams[3].iov_len = sizeof(struct in_addr);
+fbsd_jparams[3].iov_base = &fbsd_jia;
+
+while ((fbsd_lastjid = jail_get(fbsd_jparams, 4, 0)) > 0)
+   {
+   if (fbsd_jia.s_addr == inaddr->sin_addr.s_addr)
+      {
+      CfOut(cf_verbose,"","Interface %d belongs to a FreeBSD jail %s\n",
+            ifaceidx, inet_ntoa(fbsd_jia));
+      return true;
+      }
+   }
+#endif
+
+return false;
+}
+
+/******************************************************************/
+
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
 { int fd,len,i,j,first_address = false,ipdefault = false;
@@ -546,6 +584,13 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
       if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
          {
          sin=(struct sockaddr_in *)&ifp->ifr_addr;
+
+         if (IgnoreInterface(j + 1, sin))
+            {
+            CfOut(cf_verbose, "", "Ignoring interface %d", j + 1);
+            continue;
+            }
+
          Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
          NewClass(inet_ntoa(sin->sin_addr));
 

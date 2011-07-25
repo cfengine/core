@@ -61,7 +61,7 @@ Copyright @copyright{} 2010 CFEngine AS
 @ifnottex
 
 
-@node Top, What is convergent file editing?, (dir), (dir)
+@node Top, , (dir), (dir)
 @top CFEngine for Mission Critical Operations
 
 
@@ -77,27 +77,268 @@ Copyright @copyright{} 2010 CFEngine AS
 @end html
 @end ifhtml
 
-@node 
+@node  What are Mission Critical Operations?, , Top, Top
 @unnumberedsec What are Mission Critical Operations?
 @sp 1
 
+Mission Critical operation refers to the use and management of systems
+where the availability and correctness of a system has to be ensured
+at all times. A mission is said to be critical when any noticable
+failure in the system would cause a signifiant loss to some stakeholder.
 
-@node 
+Mission critical risk can deal with issues like monetary losses (e.g. in
+time critical trading applications) or, in the worst case, even the loss of human life
+(transport systems).
+
+What makes a system robust in a mission critical setting depends on a
+number of factors. This Special Topics Guide discusses the role of CFEngine
+in a mission critical environment.
+
+@node  Factors affecting Mission Criticality, , What are Mission Critical Operations?, Top
+@unnumberedsec Factors affecting Mission Criticality
+@sp 1
+
+It goes without saying that avoiding trouble is always better than
+cleaning a mess afterwards. However, it is not always practical or
+possible to predict and avoid problems. The ability to predict the
+behaviour of a system depends both on the complexity of the system
+itself and the environment around it, since interaction with the
+environment is what usually provokes failures (the environment is the most
+unpredictable element of any system, since it is the part over which
+we have little control).
+
+The cost of predicting failures, or of watching a system for possible
+signs of failure can be prohibitive in some cases -- but automated
+systems can do a lot to reduce costs. CFEngine can play a key role
+here in reducing the cost of maintaining system state, even in a
+rapidly changing environment.
+
+@itemize
+@item Planning for eventualities.
+@item Verifying system correctness often enough.
+@end itemize
+
+@cartouche
+The key observation for dealing with mission criticality is that 
+systems are dynamical entities. Most software systems only manage
+the static setup of hosts. CFEngine manages both the static
+resources and the run-time state.
+@end cartouche
+
+@node
+@unnumberedsec Model based planning
+@sp 1
+
+The key to handling mission criticality is to build a model of a scenario
+for predicting behaviour. In science and engineering, this is something one
+does all the time (e.g. wind-tunnel studies), but in Computer Engineering,
+the methods of modelling are still quite undeveloped.
+
+In the nuclear power industry and space programmes, for instance, 
+it is common to use formalized fault-analysis to avoid and secure
+against error.
+
+A model's function is to describe expectations. If a model is
+sufficiently well conceived, it should be possible to indentify key
+causal factors in the mission that bring about critical behaviour.  
+CFEngine's methodology is based on the idea of promises: a promise
+being something that aims to alter expectations of an outcome in a
+postive way.
+
+In CFEngine, one then makes promises about these factors. Promises
+cannot be guaranteed `kept' at all times, especially in time-critical
+situations (such a guarantee would require infinite resources to
+maintain), but a known schedule of verification and repair allows us
+to bring a level of predictability to a system, within certain
+tolerances.
+
+Examples of promises than can be interpreted as mission critical:
+@itemize
+@item Scan for rootkits (security breaches) every four hours.
+@item Check that key processes and applications are running.
+@end itemize
+
+The economic aspect of mission criticality is a general feature: the
+loss of a key application or subsystem for even a minute could result
+in loss of significant revenues in an online company, or the loss
+of flight systems for a few seconds could result in a plane losing
+control and crashing.
+
+
+@node  Key terminology, , Factors affecting Mission Criticality, Top
+@unnumberedsec Key terminology
+@sp 1
+
+
+@table @i
+
+@item Mean Time Before Failure (MTBF)
+The average measured time between faults occurring on a system.
+Although this is a well established measurement in the theory of
+faults and errors, estimating this quantity is not without its challenges.
+
+
+@item Mean Time To Repair (MTTR)
+The average time it takes to repair a system after a failure has occurred.
+The type or meaning of repairs is not specified.
+
+@item Sampling frequency
+The rate at which we interact with the system in order to measure or
+repair it. According to Nyquist's theorem, we have to sample a system
+twice as fast as the rate at which we expect to detect an important change.
+
+@item Single point of failure
+Any point in the design of a system that would lead to complete
+failure if destroyed.  There might be several `single points of failure'
+in a system. Single refers to the fact that it only takes the failure
+of one of these to cause the total breakdown of the system.
+For example, the axel, or a tyre on a car would be examples of single points
+of failure for the `driving system'.
+
+@end table
+
+
+
+
+@node  Aspects of Mission Critical Operations, , Key terminology, Top
+@unnumberedsec Aspects of Mission Critical Operations
+@sp 1
+
+There are many aspects to thinking about complete reliability of systems.
+
+@cartouche
+The main goal of any system is to seek predictability. Having clear
+and accurate expectations of a system helps to steer it in a low-risk direction.
+@end cartouche
+
+@noindent Usually these fall into a mixture of two categories:
+
+@table @i
+
+@item Redundancy
+Elimination of `single points of failure' when failure strikes.
+@item Avoidance
+Proactive maintainence to keep the system in a zone of low risk.
+@item Certainty of knowledge
+Knowing accurately what is going in a system can enable correct decisions
+to be made more quickly when something unexpected happens.
+@end table
+
+@node Some ways of ensuring reliability
+@unnumberedsec Some ways of ensuring reliability
+@sp 1
+
+It is impossible to discuss a comprehensive list of points for ensuring
+reliability, but a few general principles come to mind:
+@itemize
+@item Maximize Mean Time Before Failure
+@item Minimize Mean Time To Repair
+@item Maximize the relevance of information from the system
+to mission goals.
+@item Separate procedures for handling change into those for intended change (planned changes to the mission) and unintended change (changes that should not happen in an ideal world), falling into two cases: expected (for which we have written policy to repair) and unexpected (incidents that are handled manually).
+
+@item Certainty about information returned by the system, with multiple confirmation.
+
+@item Graceful failure modes: failover servers, backups, automatic elasticity (e.g. cloud technology)
+
+@item Peak load handling. (Also called Long Tail events.)
+
+
+@item Design for self-correction (negative feedback controllers).
+This includes, low-impact of management overhead on the mission system to avoid
+cascade failure.
+
+@end itemize
+
+
+
+
+
+@node How CFEngine contributes to reducing mission risks
+@unnumberedsec How CFEngine contributes to reducing mission risks
+@sp 1
+
+@itemize
+@item Automated monitoring and repair according to a policy model.
+
+@item Providing up to date knowledge about the system
+
+@item Automatic restoration of compliance with policy, with MTTR 2.5 minutes by default.
+
+@item Accuracy of knowledge: all data include running estimates of the certainty
+of the data.
+
+@item Automatic updates of statistics about the system, with continuous updating
+for accurate and up to date information with context 
+
+@item Independence of infrastructure dependencies (network/cmdb)
+CFengine will continue to work even if the network communications
+are impaired.
+
+@end itemize
+
+
+@node High availability access to the Mission Portal
+@unnumberedsec High availability access to the Mission Portal
+@sp 1
+
+CFEngine is designed to be a system that is resilient to failure.  The
+Mission Portal is a single source of information, collected,
+categorized and calibrated for system engineers.  Being a single
+source website, it is can also be regarded as a single point of
+failure from the point of view of a mission critical application.
+
+The information in the mission portal is largely status information
+about systems. Unlike older architectural designs, the content of the
+Mission Portal database is not in any way deterministic for the state
+of the system. If the Mission Portal is `down' or unavailable, it does
+not in any way imply that the actual distributed system is down or at
+fault.
+
+The need for high availability in the portal is therefore reasonable
+if access to summary information about the state is itself considered
+to be critical to the mission. Making the hub service mission critical
+is a two-pronged strategy:
+
+@itemize
+@item Adding hub redundancy for high availability of the hub aggregation service.
+This is tricky, because it can lead to cross-talk and unecessary overhead.
+
+@item Elimination of single point of failure in the storage database.
+This requires some kind of clustering solution without load balancing.@footnote{Load balancers are not generally recommended for the Mission
+Portal, as the major problem is not one of load.  A load balancer is
+designed to handle input queues where a large number of requests can
+come into a system and be handled in parallel. Ultimately this
+requires data replication on the back end in order to avoid another
+queue.  However, load balancers introduce a other problem, which is
+uncertainty about the consistency and timeliness of the data being
+shown. A lack of synchronization in the back end can lead to an
+inconsistent picture of the system.  To avoid this, one is tempted to
+have only a single source of data, e.g.  a single back-end storage
+array for all the front-end systems.  However, this only introduces
+another single point of failure.}
+
+@end itemize
+
+
+
+
+@node  How do I make a change in infrastructure?, , Use of load balancers, Top
 @unnumberedsec How do I make a change in infrastructure?
 @sp 1
 
 
-@node 
+@node  Using CFEngine for Change Management, Separating Policy Changes from ad-hoc Changes, How do I make a change in infrastructure?, Top
 @unnumberedsec Using CFEngine for Change Management
 @sp 1
 
 
-@node 
+@node  ITIL Change Management,  , Using CFEngine for Change Management, Using CFEngine for Change Management
 @unnumberedsubsec ITIL Change Management
 @sp 1
 
 
-@node Separating Policy Changes from ad-hoc Changes
+@node Separating Policy Changes from ad-hoc Changes,  , Using CFEngine for Change Management, Top
 @unnumberedsec Separating Policy Changes from @i{ad-hoc} Changes
 @sp 1
 

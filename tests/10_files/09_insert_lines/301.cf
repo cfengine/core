@@ -1,0 +1,81 @@
+#######################################################
+#
+# Test that specifying whitespace_policy escapes meta-characters (Issue 644)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+  "testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "expected" string => "*foobar*";
+ 
+files:
+  "$(g.testfile).expected"
+    create => "true",
+    edit_line => init_insert("$(init.expected)"),
+    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+  "$(str)";
+}
+
+body edit_defaults init_empty
+{
+  empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+
+  "$(g.testfile).actual"
+    edit_line => set_value_rev,
+    create => "true";
+}
+
+bundle edit_line set_value_rev
+{
+insert_lines:
+  "*foobar*"
+    whitespace_policy => { "ignore_embedded" };
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(g.testfile).actual",
+					      "$(g.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

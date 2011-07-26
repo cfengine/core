@@ -188,7 +188,7 @@ else
       }
    else
       {
-      fscanf(fin,"%s",name);
+      fscanf(fin,"%4095s",name);
       fclose(fin);
       }
    }

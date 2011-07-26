@@ -232,7 +232,7 @@ if (EMPTY(POLICY_SERVER))
 
   if ((fp = fopen(name,"r")) != NULL)
      {
-     fscanf(fp,"%s",POLICY_SERVER);
+     fscanf(fp,"%4095s",POLICY_SERVER);
      fclose(fp);
      }
   }

@@ -459,6 +459,7 @@ if (attr.copy.encrypt)
       {
       cfPS(cf_error,CF_INTERPT,"",pp,attr," !! Cannot do encrypted copy without keys (use cf-key)");
       return NULL;
+      free(cfdirh);
       }
    
    snprintf(in,CF_BUFSIZE,"OPENDIR %s",dirname);

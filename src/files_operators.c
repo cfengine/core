@@ -1205,7 +1205,6 @@ static int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
 { char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
   FILE *pop = NULL;
   int print = false;
-  struct CfLock thislock;
   int transRetcode = 0;
 
 if (attr.transformer == NULL || file == NULL)
@@ -1229,7 +1228,7 @@ if (strncmp(comm,"/bin/echo",strlen("/bin/echo")) == 0)
 
 if (!DONTDO)
    {
-   thislock = AcquireLock(comm,VUQNAME,CFSTARTTIME,attr,pp,false);
+   struct CfLock thislock = AcquireLock(comm,VUQNAME,CFSTARTTIME,attr,pp,false);
    
    if (thislock.lock == NULL)
       {
@@ -1268,13 +1267,13 @@ if (!DONTDO)
      CfOut(cf_error,"","-> Transformer %s => %s returned error",file,comm);
      }
    
+   YieldCurrentLock(thislock);
    }
 else
    {
    CfOut(cf_error,""," -> Need to transform file \"%s\" with \"%s\"",file,comm);
    }
 
-YieldCurrentLock(thislock);
 return true;
 }
 

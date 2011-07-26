@@ -222,7 +222,7 @@ else if (goback)
 
 /**********************************************************************/
 
-int SkipDirLinks(char *path,char *lastnode,struct Recursion r)
+int SkipDirLinks(char *path,const char *lastnode,struct Recursion r)
 
 {
 Debug("SkipDirLinks(%s,%s)\n",path,lastnode);

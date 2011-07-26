@@ -345,7 +345,7 @@ return true;
 
 /*********************************************************************/
 
-char *JoinPath(char *path,char *leaf)
+char *JoinPath(char *path, const char *leaf)
 
 { int len = strlen(leaf);
 

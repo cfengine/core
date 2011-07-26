@@ -607,7 +607,7 @@ int DeEscapeQuotedString(const char *in, char *out);
 int CompareCSVName(char *s1,char *s2);
 int IsDir(char *path);
 int EmptyString(char *s);
-char *JoinPath(char *path,char *leaf);
+char *JoinPath(char *path, const char *leaf);
 char *JoinSuffix(char *path,char *leaf);
 int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin);
 int StartJoin(char *path,char *leaf,int bufsize);
@@ -675,7 +675,7 @@ void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname);
 
 /* files_properties.c */
 
-int ConsiderFile(char *nodename,char *path,struct Attributes attr,struct Promise *pp);
+int ConsiderFile(const char *nodename,char *path,struct Attributes attr,struct Promise *pp);
 void SetSearchDevice(struct stat *sb,struct Promise *pp);
 int DeviceBoundary(struct stat *sb,struct Promise *pp);
 
@@ -798,7 +798,7 @@ void IdempItemCount(struct Item **liststart,char *itemstring,char *classes);
 struct Item *IdempPrependItem(struct Item **liststart,char *itemstring,char *classes);
 struct Item *IdempPrependItemClass(struct Item **liststart,char *itemstring,char *classes);
 struct Item *PrependItem(struct Item **liststart, const char *itemstring, const char *classes);
-void AppendItem(struct Item **liststart, char *itemstring, char *classes);
+void AppendItem(struct Item **liststart, const char *itemstring, char *classes);
 void DeleteItemList (struct Item *item);
 void DeleteItem (struct Item **liststart, struct Item *item);
 void DebugListItemList (struct Item *liststart);
@@ -984,7 +984,7 @@ void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_S
 /* recursion.c */
 
 int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp);
-int SkipDirLinks(char *path,char *lastnode,struct Recursion r);
+int SkipDirLinks(char *path,const char *lastnode,struct Recursion r);
 
 /* reporting.c */
 

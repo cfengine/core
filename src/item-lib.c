@@ -352,7 +352,7 @@ else
 
 /*********************************************************************/
 
-void AppendItem(struct Item **liststart,char *itemstring,char *classes)
+void AppendItem(struct Item **liststart, const char *itemstring,char *classes)
 
 { struct Item *ip, *lp;
 

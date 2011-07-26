@@ -65,7 +65,8 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
 
 static void EditHashValue(char *scopeid,char *lval,void *rval)
 
-{ int found, slot, i = slot = GetHash(lval);
+{ int found, slot = GetHash(lval);
+  int i = slot;
   struct Scope *ptr = GetScope(scopeid);
   struct CfAssoc *ap;
 

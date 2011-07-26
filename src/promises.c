@@ -866,7 +866,7 @@ static void DereferenceComment(struct Promise *pp)
 { char pre_buffer[CF_BUFSIZE],post_buffer[CF_BUFSIZE],buffer[CF_BUFSIZE],*sp;
   int offset = 0;
 
-strncpy(pre_buffer,pp->ref,CF_BUFSIZE);
+strlcpy(pre_buffer,pp->ref,CF_BUFSIZE);
 
 if ((sp = strstr(pre_buffer,"$(this.promiser)")) || (sp = strstr(pre_buffer, "${this.promiser}")))
    {

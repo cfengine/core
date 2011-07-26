@@ -509,9 +509,9 @@ else if (a.packages.package_version_regex)
    /* The name, version and arch are to be extracted from the promiser */
    CfOut(cf_verbose,""," -> Package version specified implicitly in promiser's name");
       
-   strncpy(version,ExtractFirstReference(a.packages.package_version_regex,package),CF_MAXVARSIZE-1);
-   strncpy(name,ExtractFirstReference(a.packages.package_name_regex,package),CF_MAXVARSIZE-1);
-   strncpy(arch,ExtractFirstReference(a.packages.package_arch_regex,package),CF_MAXVARSIZE-1);
+   strlcpy(version,ExtractFirstReference(a.packages.package_version_regex,package),CF_MAXVARSIZE);
+   strlcpy(name,ExtractFirstReference(a.packages.package_name_regex,package),CF_MAXVARSIZE);
+   strlcpy(arch,ExtractFirstReference(a.packages.package_arch_regex,package),CF_MAXVARSIZE);
 
    if (strlen(arch) == 0)
       {
@@ -1200,7 +1200,7 @@ if (reset)
 
 if (FullTextMatch(a.packages.package_list_name_regex,item))
    {
-   strncpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE-1);
+   strlcpy(vbuff,ExtractFirstReference(a.packages.package_list_name_regex,item),CF_MAXVARSIZE);
    sscanf(vbuff,"%s",name); /* trim */
    }
 

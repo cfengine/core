@@ -1286,7 +1286,7 @@ if (!ThreadLock(cft_getaddr))
    exit(1);
    }
 
-strncpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE-1);
+strlcpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE);
 
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
 free(rp->item);

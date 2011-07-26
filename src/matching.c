@@ -1173,7 +1173,7 @@ int FuzzyHostMatch(char *arg0, char* arg1, char *refhost)
   long cmp = -1, start = -1, end = -1;
   char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE];
 
-strncpy(refbase,refhost,CF_MAXVARSIZE-1);
+strlcpy(refbase,refhost,CF_MAXVARSIZE);
 sp = refbase + strlen(refbase) - 1;
 
 while ( isdigit((int)*sp) )

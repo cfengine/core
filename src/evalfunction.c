@@ -4638,6 +4638,7 @@ if (result == NULL)
 if ((fp = fopen(filename,"r")) == NULL)
    {
    CfOut(cf_verbose,"fopen","Could not open file \"%s\" in readfile",filename);
+   free(result);
    return NULL;
    }
 
@@ -4645,6 +4646,7 @@ if (fread(result,size,1,fp) != 1)
    {
    CfOut(cf_verbose,"fread","Could not read expected amount from file %s in readfile",filename);
    fclose(fp);
+   free(result);
    return NULL;
    }
 

@@ -2542,6 +2542,7 @@ if ((array = (double *)malloc((int)CF_WEEK)) == NULL)
 if ((dirh = opendir(CFWORKDIR)) == NULL)
    {
    CfOut(cf_error,"opendir","Can't open directory %s\n",CFWORKDIR);
+   free(array);
    return;
    }
 
@@ -2613,6 +2614,8 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
          {
          CfOut(cf_verbose,"","Unable to open %s for writing\n",filename);
          perror("fopen");
+         closedir(dirh);
+         free(array);
          return;
          }
 
@@ -2637,6 +2640,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    }
 
 closedir(dirh);
+free(array);
 }
 
 /***************************************************************/

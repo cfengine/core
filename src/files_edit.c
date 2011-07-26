@@ -57,6 +57,7 @@ ec->empty_first = a.edits.empty_before_use;
 
 if (!LoadFileAsItemList(&(ec->file_start),filename,a,pp))
    {
+   free(ec);
    return NULL;
    }
 

@@ -48,7 +48,8 @@ void VerifyOccurrenceGroup(char *file,struct Promise *pp);
 void CfGenerateTestData(int count);
 void CfRemoveTestData(void);
 void CfUpdateTestData(void);
-
+void ShowSingletons(void);
+   
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
@@ -99,7 +100,7 @@ const char *ID = "The knowledge management agent is capable of building\n"
                  "and cf-know can assemble and converge the reference manual\n"
                  "for the current version of the Cfengine software.";
  
-const  struct option OPTIONS[14] =
+const  struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -113,11 +114,12 @@ const  struct option OPTIONS[14] =
       { "syntax",required_argument,0,'S'},
       { "test",required_argument,0,'t'},
       { "removetest",no_argument,0,'r'},
-      { "updatetest",no_argument,0,'u'},      
+      { "updatetest",no_argument,0,'u'},
+      { "words",no_argument,0,'w'},
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[14] =
+const char *HINTS[15] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",
@@ -132,6 +134,7 @@ const char *HINTS[14] =
       "Generate test data",
       "Remove test data",
       "Update test data",
+      "Reserved words in CFEngine",
       NULL
       };
 
@@ -152,6 +155,8 @@ if (strlen(TOPIC_CMD) == 0)
    KeepPromiseBundles();
    WriteKMDB();
    GenerateManual();
+
+   ShowSingletons();
    
    complete = (double)CF_NODES*(CF_NODES-1);
    percent = 100.0 * (double)CF_EDGES/(double)complete;
@@ -174,7 +179,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S:t:ru",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruw",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -210,7 +215,21 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S:t:ru",OPTIONS,&optindex)) != EOF)
           break;
 
       case 's':
-     
+
+      { char buffer[1000000];
+
+      LICENSES = 1;
+      CfLDAP_JSON_GetSingleAttributeList("ldap://10.0.0.152",
+                                         "uid=sudhir,ou=people,dc=cfengine,dc=com",
+                                         "ou=groups,dc=cfengine,dc=com",
+                                         "(memberUid=sudhir)",
+                                         "cn",
+                                         "subtree",
+                                         "sasl",
+                                         "password",1,100,buffer,1000000);
+
+      printf("JSON:%s \n",buffer);
+      }   
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
           //CfGenerateStories(TOPIC_CMD,cfi_cause);
@@ -261,12 +280,20 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S:t:ru",OPTIONS,&optindex)) != EOF)
              exit(0);
              }
           break;
+
       case 'r':
           CfRemoveTestData();
           exit(0);
+
       case 'u':
           CfUpdateTestData();
-          exit(0);    
+          exit(0);
+
+      case 'w':
+          ShowAllReservedWords();
+          exit(0);
+          break;
+          
       default: Syntax("cf-know - knowledge agent",OPTIONS,HINTS,ID);
           exit(1);   
       }
@@ -618,19 +645,53 @@ void CfGenerateTestData(int count)
  Nova_GenerateTestData(count);
 #endif
 }
+
 /*********************************************************************/
+
 void CfUpdateTestData(void)
 {
 #ifdef HAVE_NOVA
  Nova_UpdateTestData();
 #endif
 }
+
 /*********************************************************************/
+
 void CfRemoveTestData(void)
 {
 #ifdef HAVE_NOVA
  Nova_RemoveTestData();
 #endif
+}
+
+/*********************************************************************/
+
+void ShowSingletons()
+
+{  struct Topic *tp;
+   struct Item *ip,*list = NULL;
+   int slot;
+
+if (VERBOSE || DEBUG)
+   {   
+   for (slot = 0; slot < 256; slot++)
+      {  
+      for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
+         {
+         if (tp->associations == NULL)
+            {
+            PrependItem(&list,tp->topic_name,tp->topic_context);
+            }
+         }
+      }
+   
+   list = SortItemListNames(list);
+
+   for (ip = list; ip != NULL; ip=ip->next)
+      {
+      printf(" ! Warning, topic \"%s::%s\" is a singleton with no connection to the map\n",ip->classes,ip->name);
+      }
+   }
 }
 
 /*********************************************************************/
@@ -691,7 +752,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       {
       CfOut(cf_verbose,""," -> New thing \"%s\" has a relation \"%s/%s\"",pp->promiser,a.fwd_name,a.bwd_name);
 
-      AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+      AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true,rp->item,pp->promiser);
       }
 
    // Handle all synonyms as associations
@@ -714,7 +775,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
          CfOut(cf_verbose,""," ---> %s is a synonym for %s",rps->item,tp->topic_name);
          }
 
-      AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true);
+      AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true,rp->item,pp->promiser);
       }
 
    // Handle all generalizations as associations
@@ -727,7 +788,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
          CfOut(cf_verbose,""," ---> %s is a generalization for %s",rps->item,tp->topic_name);
          }
       
-      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true);
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true,rp->item,pp->promiser);
       }
 
    // Treat comments as occurrences of information.
@@ -745,7 +806,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       {
       struct Rlist *list = NULL;
       PrependRScalar(&list,handle,CF_SCALAR);
-      AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true);
+      AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true,rp->item,pp->promiser);
       DeleteRlist(list);
       list = NULL;
       snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,handle);
@@ -787,7 +848,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
    
    if (a.fwd_name && a.bwd_name)
       {
-      AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true);
+      AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true,rp->item,pp->promiser);
       }
 
    // Handle all synonyms as associations
@@ -800,7 +861,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
          CfOut(cf_verbose,""," ---> %s is a synonym for %s",rps->item,tp->topic_name);
          }
       
-      AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true);
+      AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true,rp->item,pp->promiser);
       }
 
    // Handle all generalizations as associations
@@ -813,7 +874,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
          CfOut(cf_verbose,""," ---> %s is a generalization for %s",rps->item,tp->topic_name);
          }
       
-      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true);
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true,rp->item,pp->promiser);
       }
    
    if (handle)
@@ -839,7 +900,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       {
       struct Rlist *list = NULL;
       PrependRScalar(&list,handle,CF_SCALAR);
-      AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true);
+      AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true,rp->item,pp->promiser);
       DeleteRlist(list);
       list = NULL;
       snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,handle);

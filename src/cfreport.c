@@ -272,7 +272,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMISKE:x:i:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {

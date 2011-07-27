@@ -914,7 +914,7 @@ struct Topic *InsertTopic(char *name,char *context);
 struct Topic *FindTopic(char *name);
 int GetTopicPid(char *typed_topic);
 struct Topic *AddTopic(struct Topic **list,char *name,char *type);
-void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int ok);
+void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int ok,char *from_context,char *from_topic);
 void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context);
 struct Topic *TopicExists(char *topic_name,char *topic_type);
 struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);

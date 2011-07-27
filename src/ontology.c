@@ -115,7 +115,7 @@ return tp;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *passociates,int ok_to_add_inverse)
+void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
 
 { struct TopicAssociation *ta = NULL,*texist;
   char fwd_context[CF_MAXVARSIZE];
@@ -175,7 +175,16 @@ else
 for (rp = passociates; rp != NULL; rp=rp->next)
    {
    char normalform[CF_BUFSIZE] = {0};
+   char contexttopic[CF_MAXVARSIZE];
 
+   snprintf(contexttopic,CF_MAXVARSIZE,"%s::%s",from_context,from_topic);
+
+   if (strcmp(contexttopic,rp->item) == 0)
+      {
+      CfOut(cf_verbose,""," ! Excluding self-reference to %s",rp->item);
+      continue;
+      }
+   
    strncpy(normalform,NormalizeTopic(rp->item),CF_BUFSIZE-1);
    new_tp = IdempInsertTopic(rp->item);
 
@@ -199,7 +208,8 @@ for (rp = passociates; rp != NULL; rp=rp->next)
       struct Rlist *rlist = 0;
       snprintf(rev,CF_BUFSIZE-1,"%s::%s",this_tp->topic_context,this_tp->topic_name);
       PrependRScalar(&rlist,rev,CF_SCALAR);
-      AddTopicAssociation(new_tp,&(new_tp->associations),bwd_name,fwd_name,rlist,false);
+      AddTopicAssociation(new_tp,&(new_tp->associations),bwd_name,fwd_name,rlist,false,from_context,from_topic
+                          );
       DeleteRlist(rlist);
       }
        

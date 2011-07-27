@@ -280,7 +280,7 @@ much to
 tell and it is hard to convey in a simple way what the software can do.
 The picture below shows a few ways in which you can think of CFEngine.
 
-@image{boxes,13cm,,CFEngine application areas,png}
+@center @image{boxes,13cm,,CFEngine application areas,png}
 
 For many users, CFEngine is simply a configuration tool --
 i.e. software for deploying and patching systems according to a

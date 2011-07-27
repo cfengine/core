@@ -403,7 +403,7 @@ return JoinMargin(path,leaf,nextFree,bufsize,CF_BUFFERMARGIN);
 
 /*********************************************************************/
 
-int Join(char *path,char *leaf,int bufsize)
+int Join(char *path, const char *leaf, int bufsize)
 
 {
   return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
@@ -430,7 +430,7 @@ int EndJoin(char *path,char *leaf,int bufsize)
 
 /*********************************************************************/
 
-int JoinMargin(char *path,char *leaf,char **nextFree,int bufsize,int margin)
+int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int margin)
 
 { int len = strlen(leaf);
 

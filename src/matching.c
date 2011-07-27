@@ -216,13 +216,13 @@ else
 
 /*********************************************************************/
 
-static char *FirstBackReference(struct CfRegEx rex,char *regex,char *teststring)
+static char *FirstBackReference(struct CfRegEx rex,char *regex, const char *teststring)
 
 { static char backreference[CF_BUFSIZE];
 
  pcre *rx;
  int ovector[OVECCOUNT],i,rc,match_len;
- char *match_start;
+ const char *match_start;
 
 rx = rex.rx;
 memset(backreference,0,CF_BUFSIZE);
@@ -234,7 +234,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
 
    for (i = 1; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
-      char *backref_start = teststring + ovector[i*2];
+      const char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
       
       if (backref_len < CF_MAXVARSIZE)
@@ -301,7 +301,7 @@ else
 
 /*************************************************************************/
 
-char *ExtractFirstReference(char *regexp,char *teststring)
+char *ExtractFirstReference(char *regexp, const char *teststring)
     
 { struct CfRegEx rex;
   static char *nothing = "";

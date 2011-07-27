@@ -43,7 +43,8 @@ int ConsiderFile(const char *nodename,char *path,struct Attributes attr,struct P
 
 { int i, suspicious = true;
   struct stat statbuf; 
-  unsigned char *sp, newname[CF_BUFSIZE],vbuff[CF_BUFSIZE];
+  char newname[CF_BUFSIZE],vbuff[CF_BUFSIZE];
+  const char *sp;
   static char *skipfiles[] =
       {
       ".",

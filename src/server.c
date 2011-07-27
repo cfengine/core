@@ -376,9 +376,17 @@ fcntl(sd, F_SETFD, FD_CLOEXEC);
  
 while (true)
    {
-   if (ACTIVE_THREADS == 0)
+   if (ThreadLock(cft_count))
       {
-      CheckFileChanges(argc,argv,sd);
+      if (ACTIVE_THREADS == 0)
+         {
+         ThreadUnlock(cft_count);
+         CheckFileChanges(argc,argv,sd);
+         }
+      else
+         {
+         ThreadUnlock(cft_count);
+         }
       }
    
    FD_ZERO(&rset);
@@ -891,18 +899,8 @@ if (!ThreadLock(cft_count))
 
 ACTIVE_THREADS++;
 
-if (!ThreadUnlock(cft_count))
-   {
-   }
-
 if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    {
-   if (!ThreadLock(cft_count))
-      {
-      DeleteConn(conn);
-      return NULL;
-      }
-
    ACTIVE_THREADS--;
    
    if (TRIES++ > MAXTRIES)  /* When to say we're hung / apoptosis threshold */
@@ -920,6 +918,10 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    SendTransaction(conn->sd_reply,output,0,CF_DONE);
    DeleteConn(conn);
    return NULL;
+   }
+else
+   {
+   ThreadUnlock(cft_count);
    }
 
 TRIES = 0;   /* As long as there is activity, we're not stuck */

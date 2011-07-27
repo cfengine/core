@@ -424,16 +424,16 @@ return -1;
 
 /*********************************************************************/
 
-CFDIR *cf_remote_opendir(char *dirname,struct Attributes attr,struct Promise *pp)
-
+CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *pp)
 { struct cfagent_connection *conn = pp->conn;
   char sendbuffer[CF_BUFSIZE];
   char recvbuffer[CF_BUFSIZE];
   char in[CF_BUFSIZE];
   char out[CF_BUFSIZE];
-  int n, done=false, cipherlen = 0,plainlen = 0,tosend;
+  int n, cipherlen = 0,plainlen = 0,tosend;
   CFDIR *cfdirh;
   char *sp;
+  struct Item *files = NULL;
 
 Debug("CfOpenDir(%s:%s)\n",pp->this_server,dirname);
 
@@ -443,15 +443,11 @@ if (strlen(dirname) > CF_BUFSIZE - 20)
    return NULL;
    }
 
-if ((cfdirh = (CFDIR *)malloc(sizeof(CFDIR))) == NULL)
+if ((cfdirh = calloc(1, sizeof(CFDIR))) == NULL)
    {
    CfOut(cf_error,""," !! Couldn't allocate memory in cf_remote_opendir\n");
    exit(1);
    }
-
-cfdirh->cf_list = NULL;
-cfdirh->cf_listpos = NULL;
-cfdirh->cf_dirh = NULL;
 
 if (attr.copy.encrypt)
    {
@@ -480,7 +476,7 @@ if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
    return NULL;
    }
 
-while (!done)
+while (true)
    {
    if ((n = ReceiveTransaction(conn->sd,recvbuffer,NULL)) == -1)
       {
@@ -520,13 +516,30 @@ while (!done)
 
    for (sp = recvbuffer; *sp != '\0'; sp++)
       {
+      struct Item *ip;
+
       if (strncmp(sp,CFD_TERMINATOR,strlen(CFD_TERMINATOR)) == 0)    /* End transmission */
          {
-         cfdirh->cf_listpos = cfdirh->cf_list;
+         cfdirh->listpos = cfdirh->list;
          return cfdirh;
          }
 
-      AppendItem(&(cfdirh->cf_list),sp,NULL);
+      if ((ip = calloc(1, sizeof(struct Item))) == NULL)
+         {
+         FatalError("Failed to alloc in OpenDirRemote");
+         }
+      ip->name = (char*)AllocateDirentForFilename(sp);
+
+      if (files == NULL) /* First element */
+         {
+         cfdirh->list = ip;
+         files = ip;
+         }
+      else
+         {
+         files->next = ip;
+         files = ip;
+         }
 
       while(*sp != '\0')
          {
@@ -535,7 +548,7 @@ while (!done)
       }
    }
  
-cfdirh->cf_listpos = cfdirh->cf_list;
+cfdirh->listpos = cfdirh->list;
 return cfdirh;
 }
 

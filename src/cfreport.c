@@ -2523,15 +2523,15 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 void DiskArrivals(void)
 
-{ DIR *dirh;
+{ CFDIR *dirh;
   FILE *fp;
-  struct dirent *dirp;
   int count = 0, index = 0, i;
   char filename[CF_BUFSIZE],database[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   double val, maxval = 1.0, *array, grain = 0.0;
   time_t now;
   void *value;
   CF_DB *dbp = NULL;
+  const struct dirent *dirp;
 
 if ((array = (double *)malloc((int)CF_WEEK)) == NULL)
    {
@@ -2539,7 +2539,7 @@ if ((array = (double *)malloc((int)CF_WEEK)) == NULL)
    return;
    }
 
-if ((dirh = opendir(CFWORKDIR)) == NULL)
+if ((dirh = OpenDirLocal(CFWORKDIR)) == NULL)
    {
    CfOut(cf_error,"opendir","Can't open directory %s\n",CFWORKDIR);
    free(array);
@@ -2548,7 +2548,7 @@ if ((dirh = opendir(CFWORKDIR)) == NULL)
 
 CfOut(cf_verbose,"","\n\nLooking for filesystem arrival process data in %s\n",CFWORKDIR);
 
-for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    {
    if (strncmp(dirp->d_name,"scan:",5) == 0)
       {
@@ -2612,9 +2612,8 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
       if ((fp = fopen(filename,"w")) == NULL)
          {
-         CfOut(cf_verbose,"","Unable to open %s for writing\n",filename);
-         perror("fopen");
-         closedir(dirh);
+         CfOut(cf_verbose,"fopen","Unable to open %s for writing\n",filename);
+         CloseDir(dirh);
          free(array);
          return;
          }
@@ -2639,7 +2638,12 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       }
    }
 
-closedir(dirh);
+if (errno != 0)
+   {
+   CfOut(cf_error, "ReadDir", "Unable to traverse workdir");
+   }
+
+CloseDir(dirh);
 free(array);
 }
 

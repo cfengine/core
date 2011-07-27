@@ -1717,12 +1717,12 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
 /* Returns true if a version gt/ge ver is found in local repos, false otherwise */
 {
   struct Rlist *rp;
-  struct dirent *dirp;
+  const struct dirent *dirp;
   char largestVer[CF_MAXVARSIZE];
   char largestVerName[CF_MAXVARSIZE];
   char *matchVer;
   int match;
-  DIR *dirh;
+  CFDIR *dirh;
 
   Debug("FindLargestVersionAvail()\n");
 
@@ -1746,13 +1746,13 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
   for (rp = repositories; rp != NULL; rp=rp->next)
     {
 
-      if ((dirh = opendir(rp->item)) == NULL)
+      if ((dirh = OpenDirLocal(rp->item)) == NULL)
 	{
 	  CfOut(cf_error,"opendir","!! Can't open local directory \"%s\"\n", rp->item);
 	  continue;
 	}
       
-      for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+      for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
 	{
 #ifdef LINUX 
 	  if(dirp->d_type != DT_REG && dirp->d_type != DT_LNK)
@@ -1777,7 +1777,7 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, c
 	  
 	}
       
-    closedir(dirh);
+    CloseDir(dirh);
     }
   
   Debug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);

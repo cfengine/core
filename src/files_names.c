@@ -110,8 +110,8 @@ for (ip = path; ip != NULL; ip=ip->next)
 if (expandregex) /* Expand one regex link and hand down */
    {
    char nextbuffer[CF_BUFSIZE],nextbufferOrig[CF_BUFSIZE],regex[CF_BUFSIZE];
-   struct dirent *dirp;
-   DIR *dirh;
+   const struct dirent *dirp;
+   CFDIR *dirh;
    struct Attributes dummyattr = {{0}};
 
    memset(&dummyattr,0,sizeof(dummyattr));
@@ -119,7 +119,7 @@ if (expandregex) /* Expand one regex link and hand down */
 
    strncpy(regex,ip->name,CF_BUFSIZE-1);
 
-   if ((dirh=opendir(pbuffer)) == NULL)
+   if ((dirh = OpenDirLocal(pbuffer)) == NULL)
       {
       // Could be a dummy directory to be created so this is not an error.
       CfOut(cf_verbose,""," -> Using best-effort expanded (but non-existent) file base path %s\n",wildpath);
@@ -131,7 +131,7 @@ if (expandregex) /* Expand one regex link and hand down */
       {
       count = 0;
    
-      for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+      for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
          {
          if (!ConsiderFile(dirp->d_name,pbuffer,dummyattr,pp))
             {
@@ -194,7 +194,7 @@ if (expandregex) /* Expand one regex link and hand down */
             }
          }
       
-      closedir(dirh);
+      CloseDir(dirh);
       }
    }
 else
@@ -220,10 +220,10 @@ DeleteItemList(path);
 
 int IsNewerFileTree(char *dir,time_t reftime)
 
-{ struct dirent *dirp;
+{ const struct dirent *dirp;
   char path[CF_BUFSIZE] = {0};
   struct Attributes dummyattr = {{0}};
-  DIR *dirh;
+  CFDIR *dirh;
   struct stat sb;
 
 // Assumes that race conditions on the file path are unlikely and unimportant
@@ -246,14 +246,14 @@ if (S_ISDIR(sb.st_mode))
       }
    }
   
-if ((dirh=opendir(dir)) == NULL)
+if ((dirh = OpenDirLocal(dir)) == NULL)
    {
    CfOut(cf_error,"opendir"," !! Unable to open directory '%s' in IsNewerFileTree",dir);
    return false;
    }
 else
    {
-   for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+   for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
       {
       if (!ConsiderFile(dirp->d_name,dir,dummyattr,NULL))
          {
@@ -265,14 +265,14 @@ else
       if (!JoinPath(path,dirp->d_name))
          {
          CfOut(cf_error,"","Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree",dir,path);
-	 closedir(dirh);
+         CloseDir(dirh);
          return false;
          }
 
       if (lstat(path,&sb) == -1)
          {
          CfOut(cf_error,"stat"," !! Unable to stat directory %s in IsNewerFileTree",path);
-	 closedir(dirh);
+         CloseDir(dirh);
          // return true to provoke update
          return true;
          }
@@ -282,14 +282,14 @@ else
          if (sb.st_mtime > reftime)
             {
             CfOut(cf_verbose,""," >> Detected change in %s",path);      
-            closedir(dirh);
+            CloseDir(dirh);
             return true;
             }
          else
             {
             if (IsNewerFileTree(path,reftime))
                {
-               closedir(dirh);
+               CloseDir(dirh);
                return true;
                }
             }
@@ -297,7 +297,7 @@ else
       }   
    }
 
-closedir(dirh);
+CloseDir(dirh);
 return false;
 }
 

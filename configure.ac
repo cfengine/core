@@ -629,6 +629,9 @@ case "$target_os" in
         AC_DEFINE(__EXTENSIONS__)
         LIBS="$LIBS -lelf -lsec"
         ;;
+   solaris*)
+        AC_DEFINE(_POSIX_PTHREAD_SEMANTICS, 1, [Use POSIX pthread semantics on Solaris])
+        ;;
    ultrix*)
 	AC_DEFINE(ULTRIX, [], [Ultrix build])
         ;;

@@ -42,9 +42,9 @@ static void CheckLinkSecurity(struct stat *sb,char *name);
 
 int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp)
     
-{ DIR *dirh;
+{ CFDIR *dirh;
   int goback; 
-  struct dirent *dirp;
+  const struct dirent *dirp;
   char path[CF_BUFSIZE];
   struct stat lsb;
 
@@ -80,13 +80,13 @@ if (!PushDirState(name,sb))
    return false;
    }
  
-if ((dirh = opendir(".")) == NULL)
+if ((dirh = OpenDirLocal(".")) == NULL)
    {
    CfOut(cf_inform,"opendir","Could not open existing directory %s\n",name);
    return false;
    }
 
-for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    {
    if (!ConsiderFile(dirp->d_name,name,attr,pp))
       {
@@ -98,7 +98,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
 
    if (!JoinPath(path,dirp->d_name))
       {
-      closedir(dirh);
+      CloseDir(dirh);
       return true;
       }
    
@@ -170,7 +170,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       }
    }
 
-closedir(dirh);
+CloseDir(dirh);
 return true; 
 }
 

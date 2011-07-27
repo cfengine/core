@@ -305,8 +305,8 @@ return true;
 
 int ScheduleLinkChildrenOperation(char *destination,char *source,int recurse,struct Attributes attr,struct Promise *pp)
 
-{ DIR *dirh;
-  struct dirent *dirp;
+{ CFDIR *dirh;
+  const struct dirent *dirp;
   char promiserpath[CF_BUFSIZE],sourcepath[CF_BUFSIZE];
   struct stat lsb;
   int ret;
@@ -332,13 +332,13 @@ if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(promiserpath,pp,attr))
    return false;
    }
 
-if ((dirh = opendir(source)) == NULL)
+if ((dirh = OpenDirLocal(source)) == NULL)
    {
    cfPS(cf_error,CF_FAIL,"opendir",pp,attr,"Can't open source of children to link %s\n",attr.link.source);
    return false;
    }
 
-for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    {
    if (!ConsiderFile(dirp->d_name,source,attr,pp))
       {
@@ -353,7 +353,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    if (!JoinPath(promiserpath,dirp->d_name))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,attr,"Can't construct filename which verifying child links\n");
-      closedir(dirh);
+      CloseDir(dirh);
       return false;
       }
 
@@ -363,7 +363,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    if (!JoinPath(sourcepath,dirp->d_name))
       {
       cfPS(cf_error,CF_INTERPT,"",pp,attr,"Can't construct filename while verifying child links\n");
-      closedir(dirh);
+      CloseDir(dirh);
       return false;
       }
 
@@ -390,7 +390,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       }
    }
 
-closedir(dirh);
+CloseDir(dirh);
 return true;
 }
 

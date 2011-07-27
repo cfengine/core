@@ -150,8 +150,8 @@ YieldCurrentLock(thislock);
 static int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf, localstat;
-  DIR *dirh;
-  struct dirent *dirp;
+  CFDIR *dirh;
+  const struct dirent *dirp;
   off_t sizeinbytes = 0;
   long filecount = 0;
   char buff[CF_BUFSIZE];
@@ -171,13 +171,13 @@ if (S_ISLNK(statbuf.st_mode))
 
 if (S_ISDIR(statbuf.st_mode))
    {
-   if ((dirh = opendir(name)) == NULL)
+   if ((dirh = OpenDirLocal(name)) == NULL)
       {
       CfOut(cf_error,"opendir","Can't open directory %s which checking required/disk\n",name);
       return false;
       }
 
-   for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+   for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
       {
       if (!ConsiderFile(dirp->d_name,name,a,pp))
          {
@@ -210,7 +210,7 @@ if (S_ISDIR(statbuf.st_mode))
       sizeinbytes += localstat.st_size;
       }
 
-   closedir(dirh);
+   CloseDir(dirh);
 
    if (sizeinbytes < 0)
       {

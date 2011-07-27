@@ -180,12 +180,14 @@ struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Pro
 struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp);
 void ServerDisconnection(struct cfagent_connection *conn);
 int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes attr,struct Promise *pp);
-CFDIR *cf_remote_opendir(char *dirname,struct Attributes attr,struct Promise *pp);
 void DeleteClientCache(struct Attributes attr,struct Promise *pp);
 int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp);
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp);
+
+/* Only for OpenDirForPromise implementation */
+CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *pp);
 
 /* Mark connection as free */
 void ServerNotBusy(struct cfagent_connection *conn);
@@ -378,10 +380,21 @@ int TCDB_NextDB(CF_TCDB *hdbp,CF_TCDBC *hdbcp,char **key,int *ksize,void **value
 int TCDB_DeleteDBCursor(CF_TCDB *hdbp,CF_TCDBC *hdbcp);
 #endif
 
+/* dir.c */
+
+CFDIR *OpenDirForPromise(const char *dirname, struct Attributes attr, struct Promise *pp);
+CFDIR *OpenDirLocal(const char *dirname);
+const struct dirent *ReadDir(CFDIR *dir);
+void CloseDir(CFDIR *dir);
+
+/* Only for OpenDirRemote implementation */
+struct dirent *AllocateDirentForFilename(const char *filename);
+
 /* dtypes.c */
 
 int IsSocketType(char *s);
 int IsTCPType(char *s);
+
 
 /* enterprise_stubs.c */
 

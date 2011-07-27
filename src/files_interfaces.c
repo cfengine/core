@@ -35,8 +35,6 @@
 static void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes attr,struct Promise *pp);
 static void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
 static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
-static CFDIR *cf_opendir(char *name,struct Attributes attr, struct Promise *pp);
-static void cf_closedir(CFDIR *dirh);
 static void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
 static void FileAutoDefine(char *destfile);
 static void LoadSetuid(struct Attributes a,struct Promise *pp);
@@ -52,7 +50,7 @@ void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes at
   char newfrom[CF_BUFSIZE];
   char newto[CF_BUFSIZE];
   struct Item *namecache = NULL;
-  struct cfdirent *dirp;
+  const struct dirent *dirp;
   CFDIR *dirh;
 
 if (maxrecurse == 0)  /* reached depth limit */
@@ -126,13 +124,13 @@ if (attr.transaction.action != cfa_warn)
       }
    }
 
-if ((dirh = cf_opendir(from,attr,pp)) == NULL)
+if ((dirh = OpenDirForPromise(from,attr,pp)) == NULL)
    {
    cfPS(cf_inform,CF_INTERPT,"",pp,attr,"copy can't open directory [%s]\n",from);
    return;
    }
 
-for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,pp))
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    {
    if (!ConsiderFile(dirp->d_name,from,attr,pp))
       {
@@ -149,7 +147,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
 
    if (!JoinPath(newfrom,dirp->d_name))
       {
-      cf_closedir(dirh);
+      CloseDir(dirh);
       return;
       }
 
@@ -179,7 +177,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       {
       if (!S_ISDIR(sb.st_mode) && !JoinPath(newto,dirp->d_name))
          {
-         cf_closedir(dirh);
+         CloseDir(dirh);
          return;
          }      
       }
@@ -187,7 +185,7 @@ for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,
       {
       if (!JoinPath(newto,dirp->d_name))
          {
-         cf_closedir(dirh);
+         CloseDir(dirh);
          return;
          }
       }
@@ -253,7 +251,7 @@ if (attr.copy.purge)
  
 DeleteCompressedArray(pp->inode_cache);
 pp->inode_cache = NULL;
-cf_closedir(dirh);
+CloseDir(dirh);
 }
 
 /*******************************************************************/
@@ -480,7 +478,7 @@ void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Pro
   char destdir[CF_BUFSIZE];
   char destfile[CF_BUFSIZE];
   struct stat ssb, dsb;
-  struct cfdirent *dirp;
+  const struct dirent *dirp;
   int found;
   
 Debug("VerifyCopy (source=%s destination=%s)\n",source,destination);
@@ -514,7 +512,7 @@ if (S_ISDIR(ssb.st_mode))
    strcpy(destdir,destination);
    AddSlash(destdir);
 
-   if ((dirh = cf_opendir(sourcedir,attr,pp)) == NULL)
+   if ((dirh = OpenDirForPromise(sourcedir,attr,pp)) == NULL)
       {
       CfOut(cf_verbose,"opendir","Can't open directory %s\n",sourcedir);
       DeleteClientCache(attr,pp);
@@ -532,7 +530,7 @@ if (S_ISDIR(ssb.st_mode))
       VerifyCopiedFileAttributes(destdir,&dsb,&ssb,attr,pp);
       }
    
-   for (dirp = cf_readdir(dirh,attr,pp); dirp != NULL; dirp = cf_readdir(dirh,attr,pp))
+   for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
       {
       if (!ConsiderFile(dirp->d_name,sourcedir,attr,pp))
          {
@@ -575,7 +573,7 @@ if (S_ISDIR(ssb.st_mode))
       CfCopyFile(sourcefile,destfile,ssb,attr,pp);
       }
    
-   cf_closedir(dirh);
+   CloseDir(dirh);
    DeleteClientCache(attr,pp);
    return;
    }
@@ -591,9 +589,9 @@ DeleteClientCache(attr,pp);
 
 static void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr,struct Promise *pp)
 
-{ DIR *dirh;
+{ CFDIR *dirh;
   struct stat sb; 
-  struct dirent *dirp;
+  const struct dirent *dirp;
   char filename[CF_BUFSIZE] = {0};
 
 Debug("PurgeLocalFiles(%s)\n",localdir);
@@ -626,13 +624,13 @@ if (chdir(localdir) == -1)
    return;
    }
 
-if ((dirh = opendir(".")) == NULL)
+if ((dirh = OpenDirLocal(".")) == NULL)
    {
    CfOut(cf_verbose,"opendir","Can't open local directory %s\n",localdir);
    return;
    }
 
-for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    {
    if (!ConsiderFile(dirp->d_name,localdir,attr,pp))
       {
@@ -701,7 +699,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
       }
    }
  
-closedir(dirh);
+CloseDir(dirh);
 }
 
 
@@ -1149,93 +1147,6 @@ return -1;
 }
 
 #endif  /* NOT MINGW */
-
-/*********************************************************************/
-
-static CFDIR *cf_opendir(char *name,struct Attributes attr,struct Promise *pp)
-
-{ CFDIR *returnval;
-
-if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
-   {
-   if ((returnval = (CFDIR *)malloc(sizeof(CFDIR))) == NULL)
-      {
-      FatalError("Can't allocate memory in cfopendir()\n");
-      }
-   
-   returnval->cf_list = NULL;
-   returnval->cf_listpos = NULL;
-   returnval->cf_dirh = opendir(name);
-
-   if (returnval->cf_dirh != NULL)
-      {
-      return returnval;
-      }
-   else
-      {
-      free ((char *)returnval);
-      return NULL;
-      }
-   }
-else
-   {
-   return cf_remote_opendir(name,attr,pp);
-   }
-}
-
-/*********************************************************************/
-
-struct cfdirent *cf_readdir(CFDIR *cfdirh,struct Attributes attr,struct Promise *pp)
-
-  /* We need this cfdirent type to handle the weird hack */
-  /* used in SVR4/solaris dirent structures              */
-
-{ static struct cfdirent dir;
-  struct dirent *dirp;
-
-memset(dir.d_name,0,CF_BUFSIZE);
-
-if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
-   {
-   dirp = readdir(cfdirh->cf_dirh);
-
-   if (dirp == NULL)
-      {
-      return NULL;
-      }
-
-   strncpy(dir.d_name,dirp->d_name,CF_BUFSIZE-1);
-   return &dir;
-   }
-else
-   {
-   if (cfdirh->cf_listpos != NULL)
-      {
-      strncpy(dir.d_name,(cfdirh->cf_listpos)->name,CF_BUFSIZE);
-      cfdirh->cf_listpos = cfdirh->cf_listpos->next;
-      return &dir;
-      }
-   else
-      {
-      return NULL;
-      }
-   }
-}
- 
-/*********************************************************************/
-
-static void cf_closedir(CFDIR *dirh)
-
-{
-if ((dirh != NULL) && (dirh->cf_dirh != NULL))
-   {
-   closedir(dirh->cf_dirh);
-   }
-
-Debug("cfclosedir()\n");
-DeleteItemList(dirh->cf_list);
-free((char *)dirh); 
-}
 
 /*********************************************************************/
 

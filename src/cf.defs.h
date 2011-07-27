@@ -981,21 +981,16 @@ struct cfstat
 
 struct cfdir
    {
-   DIR         *cf_dirh;
-   struct Item *cf_list;
-   struct Item *cf_listpos;  /* current pos */
+   /* Local directories */
+   DIR *dirh;
+   struct dirent *entrybuf;
+
+   /* Remote directories */
+   struct Item *list;
+   struct Item *listpos;  /* current pos */
    };
 
 typedef struct cfdir CFDIR;
-
-/*******************************************************************/
-
-struct cfdirent
-   {
-   struct dirent *cf_dirp;
-   char   d_name[CF_BUFSIZE];   /* This is bigger than POSIX */
-   };
-
 
 /*******************************************************************/
 

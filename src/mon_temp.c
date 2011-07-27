@@ -91,9 +91,9 @@ if (cfstat("/usr/bin/sensors",&statbuf) != -1)
 
 static bool GetAcpi(double *cf_this)
 {
-DIR *dirh;
+CFDIR *dirh;
 FILE *fp;
-struct dirent *dirp;
+const struct dirent *dirp;
 int count = 0;
 char path[CF_BUFSIZE],buf[CF_BUFSIZE],index[4];
 double temp = 0;
@@ -104,13 +104,13 @@ attr.transaction.audit = false;
 
 Debug("ACPI temperature\n");
 
-if ((dirh = opendir("/proc/acpi/thermal_zone")) == NULL)
+if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
    {
    CfOut(cf_verbose,"opendir","Can't open directory %s\n",path);
    return false;
    }
 
-for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    {
    if (!ConsiderFile(dirp->d_name,path,attr,NULL))
       {
@@ -153,7 +153,7 @@ for (dirp = readdir(dirh); dirp != NULL; dirp = readdir(dirh))
    fclose(fp);
    }
 
-closedir(dirh);
+CloseDir(dirh);
 return true;
 }
 

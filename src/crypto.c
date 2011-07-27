@@ -404,12 +404,12 @@ static int RemovePublicKey(const char *id)
 char keysdir[CF_BUFSIZE];
 snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
 MapName(keysdir);
-DIR *dirh;
-struct dirent *dirp;
+CFDIR *dirh;
+const struct dirent *dirp;
 char suffix[CF_BUFSIZE];
 int removed = 0;
 
-if ((dirh = opendir(keysdir)) == NULL)
+if ((dirh = OpenDirLocal(keysdir)) == NULL)
    {
    if (errno == ENOENT)
       {
@@ -424,8 +424,7 @@ if ((dirh = opendir(keysdir)) == NULL)
 
 snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
 
-errno = 0;
-while ((dirp = readdir(dirh)))
+while ((dirp = ReadDir(dirh)) != NULL)
    {
    char *c = strstr(dirp->d_name, suffix);
    if (c && c[strlen(suffix)] == '\0') /* dirp->d_name ends with suffix */
@@ -439,7 +438,7 @@ while ((dirp = readdir(dirh)))
          if (errno != ENOENT)
             {
             CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
-            closedir(dirh);
+            CloseDir(dirh);
             return -1;
             }
          }
@@ -452,12 +451,12 @@ while ((dirp = readdir(dirh)))
 
 if (errno)
    {
-   CfOut(cf_error, "readdir", "Unable to enumerate files in keys directory");
-   closedir(dirh);
+   CfOut(cf_error, "ReadDir", "Unable to enumerate files in keys directory");
+   CloseDir(dirh);
    return -1;
    }
 
-closedir(dirh);
+CloseDir(dirh);
 return removed;
 }
 

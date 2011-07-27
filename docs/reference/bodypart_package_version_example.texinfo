@@ -6,7 +6,7 @@ packages:
 
      package_policy => "add",
      package_method => rpm,
-     package_select => "=",
+     package_select => "==",
      package_version => "1.2.3";
 
 @end verbatim

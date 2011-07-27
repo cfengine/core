@@ -174,7 +174,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ru",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:S:t:ru",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {

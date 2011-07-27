@@ -82,6 +82,9 @@ in_addr_t GetInetAddr (char *host);
 
 extern struct BodySyntax CFS_CONTROLBODY[];
 
+char CFRUNCOMMAND[CF_BUFSIZE];
+time_t CFDSTARTTIME;
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/

@@ -73,8 +73,8 @@ struct cfd_get_arg
 /* PARSER                                                          */
 /*******************************************************************/
 
-char CFRUNCOMMAND[CF_BUFSIZE];
-time_t CFDSTARTTIME;
+extern char CFRUNCOMMAND[];
+extern time_t CFDSTARTTIME;
 
 #ifdef RE_DUP_MAX
 # undef RE_DUP_MAX

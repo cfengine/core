@@ -156,7 +156,8 @@ if (IGNORELOCK)
 
 promise = BodyName(pp);
 snprintf(cc_operator,CF_MAXVARSIZE-1,"%s-%s",promise,host);
-strncpy(cc_operand,CanonifyName(operand),CF_BUFSIZE-1);
+strncpy(cc_operand, operand, CF_BUFSIZE-1);
+CanonifyNameInPlace(cc_operand);
 RemoveDates(cc_operand);
 
 free(promise);

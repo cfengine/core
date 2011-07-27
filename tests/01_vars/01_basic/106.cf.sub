@@ -1,0 +1,16 @@
+body common control
+{
+  bundlesequence  => { "test" };   
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent test
+{
+vars:
+  "index" slist => { "index" };
+  "array[$(index)]" string => "value";
+
+  "indices" slist => getindices("array");
+  "values" slist => getvalues("array");
+}

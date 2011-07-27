@@ -35,6 +35,8 @@
 
 #include "conf.h"
 
+#define __USE_XOPEN
+
 #ifdef NT
 #  define MAX_FILENAME 227
 #  define WINVER 0x501

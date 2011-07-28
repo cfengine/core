@@ -253,9 +253,7 @@ if (IsFileOutsideDefaultRepository(VINPUTFILE))
 else
    {
    strlcat(cmd, CFWORKDIR, CF_BUFSIZE);
-   strlcat(cmd, FILE_SEPARATOR_STR, CF_BUFSIZE);
-   strlcat(cmd, "inputs", CF_BUFSIZE);
-   strlcat(cmd, FILE_SEPARATOR_STR, CF_BUFSIZE);
+   strlcat(cmd, FILE_SEPARATOR_STR "inputs" FILE_SEPARATOR_STR, CF_BUFSIZE);
    strlcat(cmd, VINPUTFILE, CF_BUFSIZE);
    }
 
@@ -405,22 +403,6 @@ void InitializeGA(int argc,char *argv[])
 
 SHORT_CFENGINEPORT =  htons((unsigned short)5308);
 snprintf(STR_CFENGINEPORT,15,"5308");
-
-#ifdef NT
-if (cfstat("/cygdrive",&statbuf) == 0)
-   {
-   FILE_SEPARATOR = '/';
-   strcpy(FILE_SEPARATOR_STR,"/");
-   }
-else
-   {
-   FILE_SEPARATOR = '\\';
-   strcpy(FILE_SEPARATOR_STR,"\\");
-   }
-#else
-FILE_SEPARATOR = '/';
-strcpy(FILE_SEPARATOR_STR,"/");
-#endif
 
 NewClass("any");
 

@@ -365,10 +365,6 @@ double VAL_KEPT = 0;
 double VAL_REPAIRED = 0;
 double VAL_NOTKEPT = 0;
 
-char FILE_SEPARATOR = {0};
-char FILE_SEPARATOR_STR[2] = {0};
-
-
 /*******************************************************************/
 /* Context Management                                              */
 /*******************************************************************/

@@ -52,7 +52,7 @@ static void CloseReports(char *agents);
 static char *InputLocation(char *filename);
 extern void CheckOpts(int argc,char **argv);
 static void Cf3OpenLog(int facility);
-static int BadBundleSequence(enum cfagenttype agent);
+static bool VerifyBundleSequence(enum cfagenttype agent);
 
 /*****************************************************************************/
 
@@ -1500,7 +1500,7 @@ HashControls();
 
 /* Now look once through the sequences bundles themselves */
 
-if (BadBundleSequence(agent))
+if (VerifyBundleSequence(agent) == false)
    {
    FatalError("Errors in promise bundles");
    }
@@ -1942,7 +1942,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 /********************************************************************/
 
-static int BadBundleSequence(enum cfagenttype agent)
+static bool VerifyBundleSequence(enum cfagenttype agent)
 
 { struct Rlist *rp,*params;
   char rettype,*name;
@@ -1954,12 +1954,12 @@ if ((THIS_AGENT_TYPE != cf_agent) &&
     (THIS_AGENT_TYPE != cf_know) && 
     (THIS_AGENT_TYPE != cf_common))
    {
-   return false;
+   return true;
    }
 
 if (CBUNDLESEQUENCE)
    {
-   return false;
+   return true;
    }
 
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
@@ -1968,11 +1968,11 @@ if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype
 
    if (agent == cf_common)
       {
-      return false;
+      return true;
       }
    else
       {
-      return true;
+      return false;
       }
    }
 
@@ -1981,56 +1981,49 @@ if (rettype != CF_LIST)
    FatalError("Promised bundlesequence was not a list");
    }
 
-if ((agent == cf_agent) || (agent == cf_common))
+if ((agent != cf_agent) && (agent != cf_common))
    {
-   for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   return true;
+   }
+
+for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   {
+   switch (rp->type)
       {
-      switch (rp->type)
-         {
-         case CF_SCALAR:
-             name = (char *)rp->item;
-             params = NULL;
-             break;
+      case CF_SCALAR:
+         name = (char *)rp->item;
+         params = NULL;
+         break;
 
-         case CF_FNCALL:
-             fp = (struct FnCall *)rp->item;
-             name = (char *)fp->name;
-             params = (struct Rlist *)fp->args;
-             break;
+      case CF_FNCALL:
+         fp = (struct FnCall *)rp->item;
+         name = (char *)fp->name;
+         params = (struct Rlist *)fp->args;
+         break;
 
-         default:
-             name = NULL;
-             params = NULL;
-             CfOut(cf_error,"","Illegal item found in bundlesequence: ");
-             ShowRval(stdout,rp->item,rp->type);
-             printf(" = %c\n",rp->type);
-             ok = false;
-             break;
-         }
-
-      if (strcmp(name,CF_NULL_VALUE) == 0)
-         {
-         continue;
-         }             
-
-      if (!IGNORE_MISSING_BUNDLES && !GetBundle(name,NULL))
-         {
-         CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n",name);
+      default:
+         name = NULL;
+         params = NULL;
+         CfOut(cf_error,"","Illegal item found in bundlesequence: ");
+         ShowRval(stdout,rp->item,rp->type);
+         printf(" = %c\n",rp->type);
          ok = false;
-         }
+         break;
       }
 
-   if (!ok)
+   if (strcmp(name,CF_NULL_VALUE) == 0)
       {
-      return true;
+      continue;
       }
-   else
+
+   if (!IGNORE_MISSING_BUNDLES && !GetBundle(name,NULL))
       {
-      return false;
+      CfOut(cf_error,"","Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n",name);
+      ok = false;
       }
    }
 
-return false;
+return ok;
 }
 
 /*******************************************************************/

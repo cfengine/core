@@ -50,6 +50,7 @@ const char *ID = "The promise agent is a validator and analysis tool for\n"
 const struct option OPTIONS[14] =
       {
       { "help",no_argument,0,'h' },
+      { "bundlesequence",required_argument,0,'b' },
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
@@ -68,6 +69,7 @@ const struct option OPTIONS[14] =
 const char *HINTS[14] =
       {
       "Print the help message",
+      "Use the specified bundlesequence for verification",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
       "All talk and no action mode - make no changes, only inform of promises not kept",
@@ -118,7 +120,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -152,6 +154,14 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxM",OPTIONS,&optindex)) != EOF)
                  break;
              }
           break;
+
+      case 'b':
+         if (optarg)
+            {
+            CBUNDLESEQUENCE = SplitStringAsRList(optarg, ',');
+            CBUNDLESEQUENCE_STR = optarg;
+            }
+         break;
           
       case 'K': IGNORELOCK = true;
           break;

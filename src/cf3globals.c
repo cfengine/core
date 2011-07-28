@@ -101,6 +101,8 @@ struct Item *DONELIST = NULL;
 struct Rlist *CBUNDLESEQUENCE = NULL;
 struct Rlist *SERVER_KEYSEEN = NULL;
 
+char *CBUNDLESEQUENCE_STR;
+
 int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
 int FSTAB_EDITS;

@@ -244,13 +244,28 @@ if (cfstat(cmd,&sb) == -1)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
+strlcat(cmd, " -f \"", CF_BUFSIZE);
+
 if (IsFileOutsideDefaultRepository(VINPUTFILE))
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises%s\" -f \"%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX,VINPUTFILE);
+   strlcat(cmd, VINPUTFILE, CF_BUFSIZE);
    }
 else
    {
-   snprintf(cmd,CF_BUFSIZE-1,"\"%s%cbin%ccf-promises%s\" -f \"%s%cinputs%c%s\"",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX,CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,VINPUTFILE);
+   strlcat(cmd, CFWORKDIR, CF_BUFSIZE);
+   strlcat(cmd, FILE_SEPARATOR_STR, CF_BUFSIZE);
+   strlcat(cmd, "inputs", CF_BUFSIZE);
+   strlcat(cmd, FILE_SEPARATOR_STR, CF_BUFSIZE);
+   strlcat(cmd, VINPUTFILE, CF_BUFSIZE);
+   }
+
+strlcat(cmd, "\"", CF_BUFSIZE);
+
+if (CBUNDLESEQUENCE)
+   {
+   strlcat(cmd, " -b \"", CF_BUFSIZE);
+   strlcat(cmd, CBUNDLESEQUENCE_STR, CF_BUFSIZE);
+   strlcat(cmd, "\"", CF_BUFSIZE);
    }
 
 /* Check if reloading policy will succeed */
@@ -1965,15 +1980,7 @@ if (CBUNDLESEQUENCE)
 if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
    {
    CfOut(cf_error,""," !!! No bundlesequence in the common control body");
-
-   if (agent == cf_common)
-      {
-      return true;
-      }
-   else
-      {
-      return false;
-      }
+   return false;
    }
 
 if (rettype != CF_LIST)

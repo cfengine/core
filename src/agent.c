@@ -190,6 +190,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != 
           if (optarg)
              {
              CBUNDLESEQUENCE = SplitStringAsRList(optarg,',');
+             CBUNDLESEQUENCE_STR = optarg;
              }
           break;
           

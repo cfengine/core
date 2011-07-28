@@ -619,6 +619,14 @@ for (i = 0; args[i].pattern != NULL; i++)
       fprintf(fout,",");
       }
    }
+if (fn.numargs == CF_VARARGS)
+   {
+   if (i != 0)
+      {
+      fprintf(fout,",");
+      }
+   fprintf(fout, "...");
+   }
 
 fprintf(fout,") returns type @b{%s}\n\n@*\n",CF_DATATYPES[fn.dtype]);
 

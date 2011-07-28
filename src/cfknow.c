@@ -49,7 +49,8 @@ void CfGenerateTestData(int count);
 void CfRemoveTestData(void);
 void CfUpdateTestData(void);
 void ShowSingletons(void);
-   
+void ShowWords(void);
+
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
@@ -79,6 +80,7 @@ char *TYPESEQUENCE[] =
 char BUILD_DIR[CF_BUFSIZE];
 char TOPIC_CMD[CF_MAXVARSIZE];
 
+int WORDS = false;
 int HTML = false;
 int WRITE_KMDB = false;
 int GENERATE_MANUAL = false;
@@ -112,10 +114,10 @@ const  struct option OPTIONS[15] =
       { "manpage",no_argument,0,'M'},
       { "stories",required_argument,0,'s'},
       { "syntax",required_argument,0,'S'},
+      { "topics",no_argument,0,'T'},
       { "test",required_argument,0,'t'},
       { "removetest",no_argument,0,'r'},
       { "updatetest",no_argument,0,'u'},
-      { "words",no_argument,0,'w'},
       { NULL,0,0,'\0' }
       };
 
@@ -131,10 +133,10 @@ const char *HINTS[15] =
       "Generate reference manpage from internal data",
       "Look up stories for a given topic on the command line",
       "Print a syntax summary of the optional keyword or this cfengine version",
+      "Show all topic names in CFEngine",
       "Generate test data",
       "Remove test data",
       "Update test data",
-      "Reserved words in CFEngine",
       NULL
       };
 
@@ -155,7 +157,7 @@ if (strlen(TOPIC_CMD) == 0)
    KeepPromiseBundles();
    WriteKMDB();
    GenerateManual();
-
+   ShowWords();
    ShowSingletons();
    
    complete = (double)CF_TOPICS*(CF_TOPICS-1);
@@ -181,7 +183,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruw",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruT",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -291,9 +293,8 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruw",OPTIONS,&optindex)) != EOF)
           CfUpdateTestData();
           exit(0);
 
-      case 'w':
-          ShowAllReservedWords();
-          exit(0);
+      case 'T':
+          WORDS = true;
           break;
           
       default: Syntax("cf-know - knowledge agent",OPTIONS,HINTS,ID);
@@ -668,6 +669,30 @@ void CfRemoveTestData(void)
 
 /*********************************************************************/
 
+void ShowWords()
+
+{  struct Topic *tp;
+   struct Item *ip,*list = NULL;
+   int slot;
+
+for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
+   {  
+   for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
+      {
+      IdempPrependItem(&list,tp->topic_name,tp->topic_context);
+      }
+   }
+
+list = SortItemListNames(list);
+
+for (ip = list; ip != NULL; ip=ip->next)
+   {
+   printf("%s\n",ip->name);
+   }
+}
+
+/*********************************************************************/
+
 void ShowSingletons()
 
 {  struct Topic *tp;
@@ -676,7 +701,7 @@ void ShowSingletons()
 
 if (VERBOSE || DEBUG)
    {   
-   for (slot = 0; slot < 256; slot++)
+   for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
       {  
       for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
          {
@@ -847,7 +872,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       }
 
    CfOut(cf_verbose,""," -> New topic promise for \"%s\" about context \"%s\"",pp->promiser,rp->item);
-   
+
    if (a.fwd_name && a.bwd_name)
       {
       AddTopicAssociation(tp,&(tp->associations),a.fwd_name,a.bwd_name,a.associates,true,rp->item,pp->promiser);

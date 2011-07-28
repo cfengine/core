@@ -1120,18 +1120,19 @@ if (rval != NULL)
          {
          switch (type)
             {
+            char valbuf[CF_BUFSIZE];
+
             case CF_SCALAR:
-                CfOut(cf_error,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",pp->promiser,retval,rval);
-                PromiseRef(cf_error,pp);
+                CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",pp->promiser,retval,rval);
+                PromiseRef(cf_verbose,pp);
                 break;
             case CF_LIST:
-                CfOut(cf_error,""," !! Redefinition of a constant list \"%s\"",pp->promiser,retval,rval);
-                printf("%s>  -- Was ",VPREFIX);
-                ShowRlist(stdout,retval);      
-                printf("%s> now ",VPREFIX);
-                ShowRlist(stdout,rval);      
-                printf("%s>\n",VPREFIX);
-                PromiseRef(cf_error,pp);
+                CfOut(cf_verbose,""," !! Redefinition of a constant list \"%s\".",pp->promiser);
+                PrintRlist(valbuf, CF_BUFSIZE, retval);
+                CfOut(cf_verbose,"","Old value: %s", valbuf);
+                PrintRlist(valbuf, CF_BUFSIZE, rval);
+                CfOut(cf_verbose,""," New value: %s", valbuf);
+                PromiseRef(cf_verbose,pp);
 		break;
             }
          }

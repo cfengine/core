@@ -1465,7 +1465,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
+   CfOut(cf_verbose,"","Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
    SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,"Array not found in scope",NULL);
    IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
    rval.item = returnlist;
@@ -1545,7 +1545,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
+   CfOut(cf_verbose,"","Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
    SetFnCallReturnStatus("getvalues",FNCALL_SUCCESS,"Array not found in scope",NULL);
    IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
    rval.item = returnlist;

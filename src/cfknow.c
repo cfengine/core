@@ -675,6 +675,11 @@ void ShowWords()
    struct Item *ip,*list = NULL;
    int slot;
 
+if (!WORDS)
+   {
+   return;
+   }
+
 for (slot = 0; slot < CF_HASHTABLESIZE; slot++)
    {  
    for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
@@ -687,7 +692,7 @@ list = SortItemListNames(list);
 
 for (ip = list; ip != NULL; ip=ip->next)
    {
-   printf("%s\n",ip->name);
+   printf("%s::%s\n",ip->classes,ip->name);
    }
 }
 

@@ -218,15 +218,15 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruw",OPTIONS,&optindex)) != EOF)
 
       { char buffer[1000000];
 
-      LICENSES = 1;
-      CfLDAP_JSON_GetSingleAttributeList("ldap://10.0.0.152",
-                                         "uid=sudhir,ou=people,dc=cfengine,dc=com",
-                                         "ou=groups,dc=cfengine,dc=com",
-                                         "(memberUid=sudhir)",
-                                         "cn",
-                                         "subtree",
-                                         "sasl",
-                                         "password",1,100,buffer,1000000);
+      /* LICENSES = 1; */
+      /* CfLDAP_JSON_GetSingleAttributeList("ldap://10.0.0.152", */
+      /*                                    "uid=sudhir,ou=people,dc=cfengine,dc=com", */
+      /*                                    "ou=groups,dc=cfengine,dc=com", */
+      /*                                    "(memberUid=sudhir)", */
+      /*                                    "cn", */
+      /*                                    "subtree", */
+      /*                                    "sasl", */
+      /*                                    "password",1,100,buffer,1000000); */
 
       printf("JSON:%s \n",buffer);
       }   

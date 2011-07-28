@@ -107,7 +107,7 @@ else
    tp->associations = NULL;
    tp->next = *list;
    *list = tp;
-   CF_NODES++;
+   CF_TOPICS++;
    }
 
 return tp;
@@ -238,8 +238,7 @@ if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
    op->rep_type = rtype;   
    op->next = *list;
    *list = op;
-   CF_EDGES++;
-   CF_NODES++;
+   CF_OCCUR++;
    CfOut(cf_verbose,""," -> Noted occurrence for %s::%s",context,reference);
    }
 

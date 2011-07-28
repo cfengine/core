@@ -276,7 +276,7 @@ GetProcessColumnNames(procdata->name,(char **)names,start,end);
 
 for (ip = procdata->next; ip != NULL; ip=ip->next)
    {
-   CF_NODES++;
+   CF_OCCUR++;
 
    if (BlockTextMatch(pp->promiser,ip->name,&s,&e))
       {

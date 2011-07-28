@@ -387,7 +387,6 @@ if (!OpenDB(name,&dbp))
    return;
    }
 
-
 if (intermittency)
    {
    /* Open special file for peer entropy record - INRIA-like intermittency */

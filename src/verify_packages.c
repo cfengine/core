@@ -362,7 +362,7 @@ if (a.packages.package_list_command != NULL)
          {
          memset(vbuff,0,CF_BUFSIZE);
          CfReadLine(vbuff,CF_BUFSIZE,prp);
-         CF_NODES++;
+         CF_OCCUR++;
          
          if (a.packages.package_multiline_start)
             {

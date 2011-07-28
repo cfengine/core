@@ -356,11 +356,14 @@ KeepControlPromises();
 KeepPromiseBundles();
 EndAudit();
 
-CfOut(cf_verbose,"","Estimated system complexity as touched objects = %d, for %d promises",CF_NODES,CF_EDGES);
+// TOPICS counts the number of currently defined promises
+// OCCUR counts the number of objects touched while verifying config
 
-efficiency = 100.0*CF_EDGES/(double)(CF_NODES+CF_EDGES);
+efficiency = 100.0*CF_OCCUR/(double)(CF_OCCUR+CF_TOPICS);
 
 NoteEfficiency(efficiency);
+
+CfOut(cf_verbose,""," -> Checked %d objects with %d promises, efficiency %.2lf",CF_OCCUR,CF_TOPICS,efficiency);
 }
 
 /*******************************************************************/
@@ -993,7 +996,7 @@ if (VarClassExcluded(pp,&sp))
 
 // Record promises examined for efficiency calc
 
-CF_EDGES++;
+CF_TOPICS++;
 
 if (strcmp("vars",pp->agentsubtype) == 0)
    {

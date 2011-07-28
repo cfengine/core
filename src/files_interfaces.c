@@ -279,7 +279,7 @@ if (thislock.lock == NULL)
    return;
    }
 
-CF_NODES++;
+CF_OCCUR++;
 
 LoadSetuid(a,pp);
 

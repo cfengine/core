@@ -1463,49 +1463,54 @@ else
    strcpy(scopeid,CONTEXTID);
    }
 
-if ((ptr = GetScope(scopeid)) != NULL)
+if ((ptr = GetScope(scopeid)) == NULL)
    {
-   for (i = 0; i < CF_HASHTABLESIZE; i++)
+   CfOut(cf_error,"","Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
+   SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,"Array not found in scope",NULL);
+   IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
+   rval.item = returnlist;
+   rval.rtype = CF_LIST;
+   return rval;            
+   }
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
+
+   if (ptr->hashtable[i] != NULL)
       {
-      snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
-
-      if (ptr->hashtable[i] != NULL)
+      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
          {
-         if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+         char *sp;
+         index[0] = '\0';
+         sscanf(ptr->hashtable[i]->lval+strlen(match),"%127[^\n]",index);
+         if ((sp = strchr(index,']')))
             {
-            char *sp;
-            index[0] = '\0';
-            sscanf(ptr->hashtable[i]->lval+strlen(match),"%127[^\n]",index);
-            if ((sp = strchr(index,']')))
-               {
-               *sp = '\0';
-               }
-            else
-               {
-               index[strlen(index)-1] = '\0';
-               }
-
-            if (strlen(index) > 0)
-               {
-               IdempAppendRScalar(&returnlist,index,CF_SCALAR);
-               }
+            *sp = '\0';
+            }
+         else
+            {
+            index[strlen(index)-1] = '\0';
+            }
+         
+         if (strlen(index) > 0)
+            {
+            IdempAppendRScalar(&returnlist,index,CF_SCALAR);
             }
          }
       }
-   }
+   }   
 
 if (returnlist == NULL)
    {
-   CfOut(cf_verbose,"","Function getindices was promised an array called \"%s\" in scope \"%s\" but it was not found\n",lval,scopeid);
    IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
-   SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
-   }
-else
-   {
-   SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
    }
 
+SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
 rval.item = returnlist;
+
+/* end fn specific content */
+
 rval.rtype = CF_LIST;
 return rval;
 }
@@ -1538,48 +1543,53 @@ else
    strcpy(scopeid,CONTEXTID);
    }
 
-if ((ptr = GetScope(scopeid)) != NULL)
+if ((ptr = GetScope(scopeid)) == NULL)
    {
-   for (i = 0; i < CF_HASHTABLESIZE; i++)
+   CfOut(cf_error,"","Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n",lval,scopeid);
+   SetFnCallReturnStatus("getvalues",FNCALL_SUCCESS,"Array not found in scope",NULL);
+   IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
+   rval.item = returnlist;
+   rval.rtype = CF_LIST;
+   return rval;            
+   }
+
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
+
+   if (ptr->hashtable[i] != NULL)
       {
-      snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
-
-      if (ptr->hashtable[i] != NULL)
-         {
-         if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+         {         
+         switch(ptr->hashtable[i]->rtype)
             {
-            switch(ptr->hashtable[i]->rtype)
-               {
-               case CF_SCALAR:
-                  IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
-                  break;
+            case CF_SCALAR:
+                IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
+                break;
+                
+            case CF_LIST:
 
-               case CF_LIST:
+                for (rp = ptr->hashtable[i]->rval; rp != NULL; rp = rp->next)
+                   {
+                   IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
+                   }
 
-                  for (rp = ptr->hashtable[i]->rval; rp != NULL; rp = rp->next)
-                     {
-                     IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
-                     }
-
-                  break;
-               }
+                break;
             }
          }
       }
-   }
+   }   
 
 if (returnlist == NULL)
    {
-   CfOut(cf_verbose,"","Function getvalues was promised an array called \"%s\" in scope \"%s\" but it was not found\n",lval,scopeid);
    IdempAppendRScalar(&returnlist,CF_NULL_VALUE,CF_SCALAR);
-   SetFnCallReturnStatus("getvalues",FNCALL_FAILURE,"Array not found in scope",NULL);
-   }
-else
-   {
-   SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
    }
 
+SetFnCallReturnStatus("getindices",FNCALL_SUCCESS,NULL,NULL);
 rval.item = returnlist;
+
+/* end fn specific content */
+
 rval.rtype = CF_LIST;
 return rval;
 }

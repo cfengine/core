@@ -157,6 +157,38 @@ static struct Rlist *GetHostsFromLastseenDB(struct Item *addresses,
     }
 }
 
+/*********************************************************************/
+
+static struct Rval FnCallAnd(struct FnCall *fp, struct Rlist *finalargs)
+{
+struct Rval rval;
+struct Rlist *arg;
+char id[CF_BUFSIZE];
+snprintf(id, CF_BUFSIZE, "built-in FnCall and-arg");
+
+/* We need to check all the arguments, ArgTemplate does not check varadic functions */
+for(arg = finalargs; arg; arg = arg->next)
+   {
+   CheckConstraintTypeMatch(id, arg->item, arg->type, cf_str, "", 1);
+   }
+
+for(arg = finalargs; arg; arg = arg->next)
+   {
+   if (!IsDefinedClass(arg->item))
+      {
+      SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
+      rval.item = strdup("!any");
+      rval.rtype = CF_SCALAR;
+      return rval;
+      }
+   }
+
+SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
+rval.item = strdup("any");
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
 /*******************************************************************/
 
 static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
@@ -673,6 +705,41 @@ if ((rval.item = strdup(ret)) == NULL)
 
 /* end fn specific content */
 
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+static struct Rval FnCallConcat(struct FnCall *fp, struct Rlist *finalargs)
+{
+struct Rval rval;
+struct Rlist *arg;
+char id[CF_BUFSIZE];
+snprintf(id, CF_BUFSIZE, "built-in FnCall concat-arg");
+char result[CF_BUFSIZE] = "";
+
+/* We need to check all the arguments, ArgTemplate does not check varadic functions */
+for(arg = finalargs; arg; arg = arg->next)
+   {
+   CheckConstraintTypeMatch(id, arg->item, arg->type, cf_str, "", 1);
+   }
+
+for(arg = finalargs; arg; arg = arg->next)
+   {
+   if (strlcat(result, arg->item, CF_BUFSIZE) >= CF_BUFSIZE)
+      {
+      /* Complain */
+      CfOut(cf_error, "", "!! Unable to evaluate concat() function, arguments are too long");
+      SetFnCallReturnStatus("concat",FNCALL_FAILURE,"List of arguments is too long",NULL);
+      rval.item = NULL;
+      rval.rtype = CF_SCALAR;
+      return rval;
+      }
+   }
+
+SetFnCallReturnStatus("concat", FNCALL_SUCCESS, NULL, NULL);
+rval.item = strdup(result);
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -3643,6 +3710,38 @@ return rval;
 
 /*********************************************************************/
 
+static struct Rval FnCallOr(struct FnCall *fp, struct Rlist *finalargs)
+{
+struct Rval rval;
+struct Rlist *arg;
+char id[CF_BUFSIZE];
+snprintf(id, CF_BUFSIZE, "built-in FnCall or-arg");
+
+/* We need to check all the arguments, ArgTemplate does not check varadic functions */
+for(arg = finalargs; arg; arg = arg->next)
+   {
+   CheckConstraintTypeMatch(id, arg->item, arg->type, cf_str, "", 1);
+   }
+
+for(arg = finalargs; arg; arg = arg->next)
+   {
+   if (IsDefinedClass(arg->item))
+      {
+      SetFnCallReturnStatus("or", FNCALL_SUCCESS, NULL, NULL);
+      rval.item = strdup("any");
+      rval.rtype = CF_SCALAR;
+      return rval;
+      }
+   }
+
+SetFnCallReturnStatus("or", FNCALL_SUCCESS, NULL, NULL);
+rval.item = strdup("!any");
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
 static struct Rval FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp;
@@ -3812,6 +3911,17 @@ if ((rval.item = strdup(buffer)) == NULL)
 /* end fn specific content */
 
 SetFnCallReturnStatus("accumulated",FNCALL_SUCCESS,NULL,NULL);
+rval.rtype = CF_SCALAR;
+return rval;
+}
+
+/*********************************************************************/
+
+static struct Rval FnCallNot(struct FnCall *fp, struct Rlist *finalargs)
+{
+struct Rval rval;
+SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
+rval.item = strdup(IsDefinedClass(finalargs->item) ? "!any" : "any");
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -4993,6 +5103,11 @@ struct FnCallArg ACCUM_ARGS[] =
    {NULL,cf_notype,NULL}
    };
 
+struct FnCallArg AND_ARGS[] =
+   {
+   {NULL,cf_notype,NULL}
+   };
+
 struct FnCallArg AGO_ARGS[] =
     {
     {"0,1000",cf_int,"Years"},
@@ -5039,6 +5154,11 @@ struct FnCallArg CLASSMATCH_ARGS[] =
     {CF_ANYSTRING,cf_str,"Regular expression"},
     {NULL,cf_notype,NULL}
     };
+
+struct FnCallArg CONCAT_ARGS[] =
+   {
+   {NULL,cf_notype,NULL}
+   };
 
 struct FnCallArg COUNTCLASSESMATCHING_ARGS[] =
     {
@@ -5277,10 +5397,21 @@ struct FnCallArg LDAPVALUE_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg NOT_ARGS[] =
+   {
+   {CF_ANYSTRING,cf_str,"Class value"},
+   {NULL,cf_notype,NULL}
+   };
+
 struct FnCallArg NOW_ARGS[] =
     {
     {NULL,cf_notype,NULL}
     };
+
+struct FnCallArg OR_ARGS[] =
+   {
+   {NULL,cf_notype,NULL}
+   };
 
 struct FnCallArg SUM_ARGS[] =
     {
@@ -5562,7 +5693,9 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"accessedbefore",cf_class,2,ACCESSEDBEFORE_ARGS,&FnCallIsAccessedBefore,"True if arg1 was accessed before arg2 (atime)"},
    {"accumulated",cf_int,6,ACCUM_ARGS,&FnCallAccumulatedDate,"Convert an accumulated amount of time into a system representation"},
    {"ago",cf_int,6,AGO_ARGS,&FnCallAgoDate,"Convert a time relative to now to an integer system representation"},
+   {"and",cf_str,CF_VARARGS,AND_ARGS,&FnCallAnd,"Calculate whether all arguments evaluate to true"},
    {"canonify",cf_str,1,CANONIFY_ARGS,&FnCallCanonify,"Convert an abitrary string into a legal class name"},
+   {"concat",cf_str,CF_VARARGS,CONCAT_ARGS,&FnCallConcat,"Concatenate all arguments into string"},
    {"changedbefore",cf_class,2,CHANGEDBEFORE_ARGS,&FnCallIsChangedBefore,"True if arg1 was changed before arg2 (ctime)"},
    {"classify",cf_class,1,CLASSIFY_ARGS,&FnCallClassify,"True if the canonicalization of the argument is a currently defined class"},
    {"classmatch",cf_class,1,CLASSMATCH_ARGS,&FnCallClassMatch,"True if the regular expression matches any currently defined class"},
@@ -5607,8 +5740,10 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"ldaparray",cf_class,6,LDAPARRAY_ARGS,&FnCallLDAPArray,"Extract all values from an ldap record"},
    {"ldaplist",cf_slist,6,LDAPLIST_ARGS,&FnCallLDAPList,"Extract all named values from multiple ldap records"},
    {"ldapvalue",cf_str,6,LDAPVALUE_ARGS,&FnCallLDAPValue,"Extract the first matching named value from ldap"},
+   {"not",cf_str,1,NOT_ARGS,&FnCallNot,"Calculate whether argument is false"},
    {"now",cf_int,0,NOW_ARGS,&FnCallNow,"Convert the current time into system representation"},
    {"on",cf_int,6,DATE_ARGS,&FnCallOn,"Convert an exact date/time to an integer system representation"},
+   {"or",cf_str,CF_VARARGS,OR_ARGS,&FnCallOr,"Calculate whether any argument evaluates to true"},
    {"parseintarray",cf_int,6,PARSESTRINGARRAY_ARGS,&FnCallParseIntArray,"Read an array of integers from a file and assign the dimension to a variable"},
    {"parserealarray",cf_int,6,PARSESTRINGARRAY_ARGS,&FnCallParseRealArray,"Read an array of real numbers from a file and assign the dimension to a variable"},
    {"parsestringarray",cf_int,6,PARSESTRINGARRAY_ARGS,&FnCallParseStringArray,"Read an array of strings from a file and assign the dimension to a variable"},

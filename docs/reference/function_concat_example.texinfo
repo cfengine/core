@@ -1,0 +1,7 @@
+@verbatim
+
+commands:
+  "/usr/bin/generate_config $(config)"
+    ifvarclass => concat("have_config_", classify("$(config)"));
+
+@end verbatim

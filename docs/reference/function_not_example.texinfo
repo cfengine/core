@@ -1,0 +1,7 @@
+@verbatim
+
+commands:
+  "/usr/bin/generate_config $(config)"
+    ifvarclass => not(fileexists("/etc/config/$(config)"));
+
+@end verbatim

@@ -168,13 +168,6 @@ if ((ref != CF_VARARGS) && (ref != len))
    exit(1);
    }
 
-if ((ref == CF_VARARGS) && (len < 1))
-   {
-   CfOut(cf_error,"","Arguments to method call %s(.) must contain at least the name of the method",fp->name);
-   PromiseRef(cf_error,pp);
-   exit(1);
-   }
-
 for (rp = fp->args; rp != NULL; rp = rp->next)
    {
    switch (rp->type)
@@ -213,9 +206,10 @@ void ArgTemplate(struct FnCall *fp,struct FnCallArg *argtemplate,struct Rlist *r
 { int argnum,i;
   struct Rlist *rp = fp->args;
   char id[CF_BUFSIZE],output[CF_BUFSIZE];
+  FnCallType *fn = FindFunction(fp->name);
 
 snprintf(id,CF_MAXVARSIZE,"built-in FnCall %s-arg",fp->name);
-  
+
 for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     {
     if (rp->type != CF_FNCALL)
@@ -227,7 +221,7 @@ for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     rp = rp->next;
     }
 
-if (argnum != RlistLen(realargs))
+if (argnum != RlistLen(realargs) && fn->numargs != CF_VARARGS)
    {
    snprintf(output,CF_BUFSIZE,"Argument template mismatch handling function %s(",fp->name);
    ReportError(output);

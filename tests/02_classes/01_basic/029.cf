@@ -1,0 +1,130 @@
+#######################################################
+#
+# Test logical functions in ifvarclass
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+
+  "and_yes_both"
+    expression => "any",
+    ifvarclass => and("any", "any");
+  "and_no_left"
+    expression => "any",
+    ifvarclass => and("any", "none");
+  "and_no_right"
+    expression => "any",
+    ifvarclass => and("none", "any");
+  "and_no_none"
+    expression => "any",
+    ifvarclass => and("none", "none");
+
+  "and_arg_fun"
+    expression => "any",
+    ifvarclass => and(isdir("/"));
+  "and_no_arg_fun"
+    expression => "any",
+    ifvarclass => and(isdir("/bin/sh"));
+  "and_two_args_fun"
+    expression => "any",
+    ifvarclass => and(isdir("/"), isdir("/"));
+
+  "and_long"
+    expression => "any",
+    ifvarclass => and("any", "any", "any", "any", "any", "any", "any", "any");
+
+  "and_ok" and => { "and_yes_both", "!and_no_left", "!and_no_right", "!and_no_none",
+                    "and_arg_fun", "!and_no_arg_fun", "and_two_args_fun", "and_long" };
+
+
+  #
+
+  "or_yes_both"
+    expression => "any",
+    ifvarclass => or("any", "any");
+  "or_yes_left"
+    expression => "any",
+    ifvarclass => or("any", "none");
+  "or_yes_right"
+    expression => "any",
+    ifvarclass => or("none", "any");
+  "or_no_none"
+    expression => "any",
+    ifvarclass => or("none", "none");
+
+  "or_arg_fun"
+    expression => "any",
+    ifvarclass => or(isdir("/"));
+  "or_no_arg_fun"
+    expression => "any",
+    ifvarclass => or(isdir("/bin/sh"));
+  "or_two_args_fun"
+    expression => "any",
+    ifvarclass => or(isdir("/"), isexecutable("/"));
+
+  "or_long"
+    expression => "any",
+    ifvarclass => or("any", "any", "any", "any", "any", "any", "any", "any");
+
+  "or_ok" and => { "or_yes_both", "or_yes_left", "or_yes_right", "!or_no_none",
+                    "or_arg_fun", "!or_no_arg_fun", "or_two_args_fun", "or_long" };
+
+  #
+
+  "not_yes_no"
+    expression => "any",
+    ifvarclass => not("none");
+  "not_no_yes"
+    expression => "any",
+    ifvarclass => not("any");
+  "not_arg_fun"
+    expression => "any",
+    ifvarclass => not(islink("/"));
+
+  "not_ok" and => { "not_yes_no", "!not_no_yes", "not_arg_fun" };
+
+  "ok" and => { "and_ok", "or_ok", "not_ok" };
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

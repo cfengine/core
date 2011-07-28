@@ -1,0 +1,66 @@
+#######################################################
+#
+# Test concat() function
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+  "a" string => "a";
+  "b" string => "b";
+  "c" string => "c";
+  "str" string => "str";
+  "nil" string => "";
+
+classes:
+  "noarg" expression => strcmp(concat(), "");
+  "a" expression => strcmp(concat("$(a)"), "a");
+  "a_b" expression => strcmp(concat("$(a)", "$(b)"), "ab");
+  "a_b_c" expression => strcmp(concat("$(a)", "$(b)", "$(c)"), "abc");
+  "nil_nil" expression => strcmp(concat("$(nil)", "$(nil)"), "");
+  "str_str" expression => strcmp(concat("$(str)", "$(str)"), "strstr");
+
+  "ok" and => { "noarg", "a", "a_b", "a_b_c", "nil_nil", "str_str" };
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

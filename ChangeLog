@@ -26,12 +26,9 @@
 	Help text of cf-report -r corrected - a list of key hashes is
 	required, not ip addresses.
 
-	Full list of issues fixed is available on
-	https://cfengine.com/bugtracker/changelog_page.php
-
 	New Emacs mode for CFEngine policy files (thanks to Ted Zlatanov!)
 
-        After beta:
+        After beta 1:
 
 	Warnings are on edit_line changes can now give greater degree of information
 	without spamming promise logs
@@ -40,6 +37,12 @@
 
 	Invalidation of package list cache on installation/removal of
 	packages.
+
+	New functions and(), not(), or() and concat() to ease use of
+	ifvarclass() clause.
+
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
 
 3.1.5
 	New class parser, '||' is no longer allowed in expressions (use '|').

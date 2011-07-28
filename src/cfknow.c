@@ -161,6 +161,8 @@ if (strlen(TOPIC_CMD) == 0)
    complete = (double)CF_TOPICS*(CF_TOPICS-1);
    percent = 100.0 * (double)CF_EDGES/(double)complete;
    CfOut(cf_inform,""," -> Association density yields %d/%d = %.4lf%%\n",CF_EDGES,complete,percent);
+   percent = 100.0 * (double)CF_OCCUR/(double)CF_TOPICS;
+   CfOut(cf_inform,""," -> Hit probability (efficiency) yields %d/%d = %.4lf%%\n",CF_OCCUR,CF_TOPICS,percent);
    }
 
 return 0;

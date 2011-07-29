@@ -721,8 +721,11 @@ if (a == CF_NOINT || !IsSpace(remainder))
    {
    if (THIS_AGENT_TYPE == cf_common)
       {
-      snprintf(output,CF_BUFSIZE,"Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",s,"non-value",remainder);
-      ReportError(output);
+      CfOut(cf_inform,""," !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",s,"non-value",remainder);
+      if (strchr(s,'$'))
+         {
+         CfOut(cf_inform,""," !! The variable might not yet be expandable - not necessarily an error");
+         }
       }
    }
 else

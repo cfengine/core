@@ -1097,4 +1097,3 @@ CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 DeleteRlist((struct Rlist *)retval.item);
 }
 
- 

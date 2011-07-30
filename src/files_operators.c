@@ -40,7 +40,6 @@ static int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,
 static int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
 static void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 static void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-static void LogHashChange(char *file);
 static void DeleteDirectoryTree(char *path,struct Promise *pp);
 #ifndef MINGW
 static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
@@ -1495,7 +1494,7 @@ else
 
 /*********************************************************************/
 
-static void LogHashChange(char *file)
+void LogHashChange(char *file)
 
 { FILE *fp;
   char fname[CF_BUFSIZE];
@@ -1504,15 +1503,13 @@ static void LogHashChange(char *file)
   mode_t perm = 0600;
   static char prevFile[CF_MAXVARSIZE] = {0};
 
+// we might get called twice..
+if (strcmp(file,prevFile) == 0)
+   {
+   return;
+   }
 
-  // we might get called twice..
-  if(strcmp(file,prevFile) == 0)
-    {
-    return;
-    }
-  
-  snprintf(prevFile,sizeof(prevFile),file);
-
+snprintf(prevFile,sizeof(prevFile),file);
 
 /* This is inefficient but we don't want to lose any data */
 
@@ -1541,9 +1538,7 @@ fclose(fp);
 cf_chmod(fname,perm);
 }
 
-
 /*******************************************************************/
-
 
 void RotateFiles(char *name,int number)
 

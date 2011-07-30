@@ -685,6 +685,7 @@ struct GidList *MakeGidList(char *gidnames);
 void AddSimpleUidItem(struct UidList **uidlist,uid_t uid,char *uidname);
 void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname);
 #endif  /* NOT MINGW */
+void LogHashChange(char *file);
 
 /* files_properties.c */
 

@@ -823,19 +823,6 @@ struct Scope                         /* $(bundlevar) $(scope.name) */
 
 /*******************************************************************/
 
-struct Variable  /* Used to represent contents of var in DBM file -
-		    scope.name is key */
-   {
-   struct Event e;
-   enum cfdatatype dtype;
-   char rtype;
-   char rval[CF_MAXVARSIZE];    // as string, \0-terminated
-   };
-
-#define VARSTRUCTUSAGE(v) (sizeof(v) - sizeof(v.rval) + strlen(v.rval) + 1)
-
-/*******************************************************************/
-
 typedef struct CfAssoc        /* variable reference linkage , with metatype*/
    {
    char *lval;

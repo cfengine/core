@@ -769,6 +769,10 @@ bool HashDeleteElement(CfAssoc **hashtable, const char *element);
 CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element);
 /* Clear whole hash table */
 void HashClear(CfAssoc **hashtable);
+/* Insert element if it does not exist in hash table. Returns false if element
+   already exists in table or if table is full. */
+bool HashInsertElement(CfAssoc **hashtable, const char *element,
+                       void *rval, char rtype, enum cfdatatype dtype);
 
 /* Hash table iterators: call HashIteratorNext() until it returns NULL */
 HashIterator HashIteratorInit(CfAssoc **hashtable);

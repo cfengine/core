@@ -408,6 +408,36 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    }
 }
 
+/*******************************************************************/
+
+bool HashInsertElement(CfAssoc **hashtable, const char *element,
+                       void *rval, char rtype, enum cfdatatype dtype)
+{
+int bucket = GetHash(element);
+int i = bucket;
+
+do
+   {
+   /* Collision -- this element already exists */
+   if (CompareVariable(element, hashtable[i]) == 0)
+      {
+      return false;
+      }
+
+   /* Free bucket is found */
+   if (hashtable[i] == NULL)
+      {
+      hashtable[i] = NewAssoc(element, rval, rtype, dtype);
+      return true;
+      }
+
+   i = (i + 1) % CF_HASHTABLESIZE;
+   }
+while (i != bucket);
+
+/* Hash table is full */
+return false;
+}
 
 /*******************************************************************/
 

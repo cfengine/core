@@ -449,20 +449,10 @@ return false;
 /*******************************************************************/
 
 static void DeleteAllVariables(char *scope)
-
-{ int i;
-  struct Scope *ptr;
-  
+{
+struct Scope *ptr;
 ptr = GetScope(scope);
- 
-for (i = 0; i < CF_HASHTABLESIZE; i++)
-   {
-   if (ptr->hashtable[i] != NULL)
-      {
-      DeleteAssoc(ptr->hashtable[i]);
-      ptr->hashtable[i] = NULL;
-      }
-   }
+HashClear(ptr->hashtable);
 }
 
 /******************************************************************/

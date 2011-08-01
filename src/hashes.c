@@ -459,6 +459,21 @@ return NULL;
 
 /*******************************************************************/
 
+void HashClear(CfAssoc **hashtable)
+{
+int i;
+for (i = 0; i < CF_HASHTABLESIZE; i++)
+   {
+   if (hashtable[i] != NULL)
+      {
+      DeleteAssoc(hashtable[i]);
+      hashtable[i] = NULL;
+      }
+   }
+}
+
+/*******************************************************************/
+
 HashIterator HashIteratorInit(CfAssoc **hashtable)
 {
 return (HashIterator) { hashtable, 0 };

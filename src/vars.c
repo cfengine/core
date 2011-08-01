@@ -257,7 +257,7 @@ if (ptr == NULL)
    ptr = GetScope(scopeid);
    }
 
-if (ptr == NULL || ptr->hashtable == NULL)
+if (ptr == NULL)
    {
    Debug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
    *returnv = (void*)lval;

@@ -427,12 +427,8 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 
    fprintf(FREPORT_HTML,"<h4>\nScope %s:<h4>",ptr->scope);
    fprintf(FREPORT_TXT,"\nScope %s:\n",ptr->scope);
-   
-   if (ptr->hashtable)
-      {
-      PrintHashes(FREPORT_HTML,ptr->hashtable,1);
-      PrintHashes(FREPORT_TXT,ptr->hashtable,0);
-      }
+   PrintHashes(FREPORT_HTML,ptr->hashtable,1);
+   PrintHashes(FREPORT_TXT,ptr->hashtable,0);
    }
 
 fprintf(FREPORT_HTML,"</div>");

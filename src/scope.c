@@ -47,11 +47,7 @@ static void DebugVariables(char *label)
 for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    printf("\nConstant variables in SCOPE %s:\n",ptr->scope);
-   
-   if (ptr->hashtable)
-      {
-      PrintHashes(stdout,ptr->hashtable,0);
-      }
+   PrintHashes(stdout,ptr->hashtable,0);
    }
 
 printf("--------------------------------------------------\n");
@@ -127,7 +123,7 @@ if ((ptr = (struct Scope *)malloc(sizeof(struct Scope))) == NULL)
    FatalError("Memory Allocation failed for Scope");
    }
 
-InitHashes((struct CfAssoc**)ptr->hashtable);
+InitHashes(ptr->hashtable);
 
 ptr->next = VSCOPE;
 ptr->scope = strdup(name);
@@ -290,10 +286,7 @@ else
    prev->next = ptr->next;
    }
 
-if (ptr->hashtable)
-   {
-   DeleteHashes(ptr->hashtable);
-   }
+DeleteHashes(ptr->hashtable);
 
 free(ptr->scope);
 free((char *)ptr);
@@ -358,11 +351,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       }
 
    printf("\nConstant variables in SCOPE %s:\n",ptr->scope);
-   
-   if (ptr->hashtable)
-      {
-      PrintHashes(stdout,ptr->hashtable,0);
-      }
+   PrintHashes(stdout,ptr->hashtable,0);
    }
 }
 

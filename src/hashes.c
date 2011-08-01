@@ -170,7 +170,7 @@ if (html)
 
 /*******************************************************************/
 
-int GetHash(char *name)
+int GetHash(const char *name)
 
 {
 return OatHash(name);

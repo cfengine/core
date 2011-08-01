@@ -754,10 +754,10 @@ time_t GetShiftSlotStart(time_t t);
 
 int RefHash(char *name);
 int ElfHash(char *key);
-int OatHash(char *key);
+int OatHash(const char *key);
 void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
-int GetHash(char *name);
+int GetHash(const char *name);
 void PrintHashes(FILE *sp,struct CfAssoc **table,int html);
 int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);
 void DeleteHashes(struct CfAssoc **hashtable);

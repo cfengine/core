@@ -83,10 +83,10 @@ return (h & (hashtablesize-1));
 
 /*******************************************************************/
 
-int OatHash(char *key)
+int OatHash(const char *key)
 
 { unsigned int hashtablesize = CF_HASHTABLESIZE;
-  unsigned char *p = key;
+  unsigned const char *p = key;
   unsigned h = 0;
   int i, len = strlen(key);
   

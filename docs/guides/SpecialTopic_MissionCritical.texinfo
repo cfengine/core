@@ -98,9 +98,7 @@ in a mission critical environment.
 @unnumberedsec Factors affecting Mission Criticality
 @sp 1
 
-It goes without saying that avoiding trouble is always better than
-cleaning a mess afterwards. However, it is not always practical or
-possible to predict and avoid problems. The ability to predict the
+The ability to predict the
 behaviour of a system depends both on the complexity of the system
 itself and the environment around it, since interaction with the
 environment is what usually provokes failures (the environment is the most
@@ -328,7 +326,57 @@ All hubs will share the same public-private key pair.
 Next, we'll run through the operation and failure modes of the symmetric hubs.
 
 
+
+
 @image{redundhubs,15cm}
+
+\begin{enumerate}
+\item We set up three completely symmetrical hosts, with indentical keys.
+\item The underlying Mongo database infrastructure binds together these hosts into a small cluster. 
+\item A voting mechanism selects a `hub_master' from this set, which is going to be the active hub. 
+\item Each host is configured to copy the public keys from all the others, so that they all converge on the same set of keys.
+@verbatim
+vars:
+
+  "hubs" slist => { "hub1", "hub2", "hub3" };
+
+files:
+
+ am_policy_hub::
+
+   "$(sys.workdir)/ppkeys"
+
+     copy_from => secure_cp("$(sys.workdir)/ppkeys","$(hubs)"),
+  depth_search => recurse("inf");
+
+@end verbatim
+
+\item We need to set up a policy that rewrites the IP address in @file{policy_server.dat},
+and another that copies the ppkeys between all hosts in the cluster.
+
+@verbatim
+files:
+
+ am_hub_master::
+
+   "$(sys.workdir)/policy_server.dat"
+
+      edit_line => append_if_no_line("$(sys.hub_master)")
+  edit_defaults => empty;
+
+@end verbatim
+
+\end{enumerate}
+
+@cartouche
+With this configuration, all the hubs promise to synchronize their keys,
+and share `last seen' client host data with each other in order to symmetrize.
+However, only one of the hubs actually collected reports from the clients.
+This is the host that is elected by the MongoDB replica-set vote.
+@end cartouche
+
+With this approach we can be sure that data are being collected redundantly
+without duplication of network overhead.
 
 
 @node Variables and classes for hubs

@@ -1441,7 +1441,8 @@ static struct Rval FnCallRegArray(struct FnCall *fp,struct Rlist *finalargs)
   char *regex,*arrayname,match[CF_MAXVARSIZE],buffer[CF_BUFSIZE];
   struct Scope *ptr;
   struct Rval rval;
-  int i;
+  HashIterator i;
+  CfAssoc *assoc;
 
 /* begin fn specific content */
 
@@ -1472,21 +1473,20 @@ if ((ptr = GetScope(scopeid)) == NULL)
 
 strcpy(buffer,"!any");
 
-for (i = 0; i < CF_HASHTABLESIZE; i++)
+i = HashIteratorInit(ptr->hashtable);
+
+while ((assoc = HashIteratorNext(&i)))
    {
-   if (ptr->hashtable[i] != NULL)
+   snprintf(match,CF_MAXVARSIZE,"%s[",lval);
+   if (strncmp(match,assoc->lval,strlen(match)) == 0)
       {
-      snprintf(match,CF_MAXVARSIZE,"%s[",lval);
-      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+      if (FullTextMatch(regex,assoc->rval))
          {
-         if (FullTextMatch(regex,ptr->hashtable[i]->rval))
-            {
-            strcpy(buffer,"any");
-            break;
-            }
+         strcpy(buffer,"any");
+         break;
          }
       }
-   }   
+   }
 
 SetFnCallReturnStatus("regarray",FNCALL_SUCCESS,NULL,NULL);
 
@@ -1511,7 +1511,8 @@ static struct Rval FnCallGetIndices(struct FnCall *fp,struct Rlist *finalargs)
   struct Scope *ptr;
   struct Rval rval;
   struct Rlist *returnlist = NULL;
-  int i;
+  HashIterator i;
+  CfAssoc *assoc;
 
 /* begin fn specific content */
 
@@ -1540,33 +1541,32 @@ if ((ptr = GetScope(scopeid)) == NULL)
    return rval;            
    }
 
-for (i = 0; i < CF_HASHTABLESIZE; i++)
+i = HashIteratorInit(ptr->hashtable);
+
+while ((assoc = HashIteratorNext(&i)))
    {
    snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
 
-   if (ptr->hashtable[i] != NULL)
+   if (strncmp(match,assoc->lval,strlen(match)) == 0)
       {
-      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
+      char *sp;
+      index[0] = '\0';
+      sscanf(assoc->lval+strlen(match),"%127[^\n]",index);
+      if ((sp = strchr(index,']')))
          {
-         char *sp;
-         index[0] = '\0';
-         sscanf(ptr->hashtable[i]->lval+strlen(match),"%127[^\n]",index);
-         if ((sp = strchr(index,']')))
-            {
-            *sp = '\0';
-            }
-         else
-            {
-            index[strlen(index)-1] = '\0';
-            }
-         
-         if (strlen(index) > 0)
-            {
-            IdempAppendRScalar(&returnlist,index,CF_SCALAR);
-            }
+         *sp = '\0';
+         }
+      else
+         {
+         index[strlen(index)-1] = '\0';
+         }
+
+      if (strlen(index) > 0)
+         {
+         IdempAppendRScalar(&returnlist,index,CF_SCALAR);
          }
       }
-   }   
+   }
 
 if (returnlist == NULL)
    {
@@ -1591,7 +1591,8 @@ static struct Rval FnCallGetValues(struct FnCall *fp,struct Rlist *finalargs)
   struct Scope *ptr;
   struct Rval rval;
   struct Rlist *rp,*returnlist = NULL;
-  int i;
+  HashIterator i;
+  CfAssoc *assoc;
 
 /* begin fn specific content */
 
@@ -1620,32 +1621,29 @@ if ((ptr = GetScope(scopeid)) == NULL)
    return rval;            
    }
 
-for (i = 0; i < CF_HASHTABLESIZE; i++)
+i = HashIteratorInit(ptr->hashtable);
+
+while ((assoc = HashIteratorNext(&i)))
    {
    snprintf(match,CF_MAXVARSIZE-1,"%.127s[",lval);
 
-   if (ptr->hashtable[i] != NULL)
+   if (strncmp(match,assoc->lval,strlen(match)) == 0)
       {
-      if (strncmp(match,ptr->hashtable[i]->lval,strlen(match)) == 0)
-         {         
-         switch(ptr->hashtable[i]->rtype)
-            {
-            case CF_SCALAR:
-                IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
-                break;
-                
-            case CF_LIST:
+      switch(assoc->rtype)
+         {
+         case CF_SCALAR:
+            IdempAppendRScalar(&returnlist,assoc->rval,CF_SCALAR);
+            break;
 
-                for (rp = ptr->hashtable[i]->rval; rp != NULL; rp = rp->next)
-                   {
-                   IdempAppendRScalar(&returnlist,ptr->hashtable[i]->rval,CF_SCALAR);
-                   }
-
-                break;
-            }
+         case CF_LIST:
+            for (rp = assoc->rval; rp != NULL; rp = rp->next)
+               {
+               IdempAppendRScalar(&returnlist,assoc->rval,CF_SCALAR);
+               }
+            break;
          }
       }
-   }   
+   }
 
 if (returnlist == NULL)
    {
@@ -3359,30 +3357,29 @@ else
 
 ptr = GetScope("match");
 
+
 if (ptr && ptr->hashtable)
    {
-   int i;
-   
-   for (i = 0; i < CF_HASHTABLESIZE; i++)
+   HashIterator i = HashIteratorInit(ptr->hashtable);
+   CfAssoc *assoc;
+
+   while ((assoc = HashIteratorNext(&i)))
       {
       char var[CF_MAXVARSIZE];
-      
-      if (ptr->hashtable[i] != NULL)
+
+      if (assoc->rtype != CF_SCALAR)
          {
-         if (ptr->hashtable[i]->rtype != CF_SCALAR)
-            {
-            CfOut(cf_error,""," !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
-            strcpy(buffer,"!any");
-            SetFnCallReturnStatus("regextract",FNCALL_FAILURE,NULL,NULL);
-            break;
-            }
-         else
-            {
-            snprintf(var,CF_MAXVARSIZE-1,"%s[%s]",arrayname,ptr->hashtable[i]->lval);
-            NewScalar(THIS_BUNDLE,var,ptr->hashtable[i]->rval,cf_str);
-            }
+         CfOut(cf_error,""," !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
+         strcpy(buffer,"!any");
+         SetFnCallReturnStatus("regextract",FNCALL_FAILURE,NULL,NULL);
+         break;
          }
-      }   
+      else
+         {
+         snprintf(var,CF_MAXVARSIZE-1,"%s[%s]",arrayname,assoc->lval);
+         NewScalar(THIS_BUNDLE,var,assoc->rval,cf_str);
+         }
+      }
    }
 else
    {

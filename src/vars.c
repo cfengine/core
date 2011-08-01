@@ -295,47 +295,18 @@ return assoc->dtype;
 
 void DeleteVariable(char *scope,char *id)
 
-{ int slot,i;
-  struct Scope *ptr;
-  
-i = slot = GetHash(id);
-
-ptr = GetScope(scope);
+{
+struct Scope *ptr = GetScope(scope);
 
 if (ptr == NULL)
    {
    return;
    }
 
-if (CompareVariable(id,ptr->hashtable[slot]) != 0)
+if (HashDeleteElement(ptr->hashtable, id) == false)
    {
-   while (true)
-      {
-      i++;
-      
-      if (i == slot)
-         {
-         Debug("No variable matched %s\n",id);
-         break;
-         }
-      
-      if (i >= CF_HASHTABLESIZE)
-         {
-         i = 0;
-         }
-      
-      if (CompareVariable(id,ptr->hashtable[i]) == 0)
-         {
-	 DeleteAssoc(ptr->hashtable[i]);
-         ptr->hashtable[i] = NULL;
-         }
-      }
+   Debug("No variable matched %s\n",id);
    }
-else
-   {
-   DeleteAssoc(ptr->hashtable[i]);
-   ptr->hashtable[i] = NULL;
-   }   
 }
 
 /*******************************************************************/

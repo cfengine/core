@@ -154,7 +154,7 @@ runtest() {
     if [ -z "$QUIET" ]; then
       echo Skipped
     else
-      echo -- '-'
+      printf '-'
     fi
     SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
   fi

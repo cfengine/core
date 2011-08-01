@@ -489,6 +489,10 @@ else
       NewClass(hp->h_aliases[i]);
       }
    }
+
+#if defined(HAVE_NOVA)
+Nova_DefineHubMaster();
+#endif
 }
 
 /*********************************************************************/

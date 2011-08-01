@@ -759,9 +759,7 @@ void InitHashes(struct CfAssoc **table);
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
 int GetHash(const char *name);
 void PrintHashes(FILE *sp,struct CfAssoc **table,int html);
-int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);
 void DeleteHashes(struct CfAssoc **hashtable);
-void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
 /* Deletes element from hashtable, returning whether element was found */
 bool HashDeleteElement(CfAssoc **hashtable, const char *element);
@@ -1205,6 +1203,8 @@ int UnresolvedVariables(struct CfAssoc *ap,char rtype);
 int UnresolvedArgs(struct Rlist *args);
 int IsQualifiedVariable(char *var);
 int IsCfList(char *type);
+int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);
+void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
 /* verify_databases.c */
 

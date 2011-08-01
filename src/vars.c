@@ -857,4 +857,216 @@ int IsCfList(char *type)
   return false;
 }
 
+/*******************************************************************/
 
+int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int lineno)
+
+{ struct Scope *ptr;
+  struct Rlist *rp;
+  struct CfAssoc *assoc;
+
+if (rtype == CF_SCALAR)
+   {
+   Debug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,rval,CF_DATATYPES[dtype],rtype);
+   }
+else
+   {
+   Debug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
+   }
+
+if (lval == NULL || scope == NULL)
+   {
+   CfOut(cf_error,"","scope.value = %s.%s = %s",scope,lval,rval);
+   ReportError("Bad variable or scope in a variable assignment");
+   FatalError("Should not happen - forgotten to register a function call in fncall.c?");
+   }
+
+if (rval == NULL)
+   {
+   Debug("No value to assignment - probably a parameter in an unused bundle/body\n");
+   return false;
+   }
+
+if (strlen(lval) > CF_MAXVARSIZE)
+   {
+   ReportError("variable lval too long");
+   return false;
+   }
+
+/* If we are not expanding a body template, check for recursive singularities */
+
+if (strcmp(scope,"body") != 0)
+   {
+   switch (rtype)
+      {
+      case CF_SCALAR:
+
+          if (StringContainsVar((char *)rval,lval))
+             {
+             CfOut(cf_error,"","Scalar variable %s.%s contains itself (non-convergent): %s",scope,lval,(char *)rval);
+             return false;
+             }
+          break;
+
+      case CF_LIST:
+
+          for (rp = rval; rp != NULL; rp=rp->next)
+             {
+             if (StringContainsVar((char *)rp->item,lval))
+                {
+                CfOut(cf_error,"","List variable %s contains itself (non-convergent)",lval);
+                return false;
+                }
+             }
+          break;
+
+      }
+   }
+
+ptr = GetScope(scope);
+
+if (ptr == NULL)
+   {
+   return false;
+   }
+
+// Look for outstanding lists in variable rvals
+
+if (THIS_AGENT_TYPE == cf_common)
+   {
+   struct Rlist *listvars = NULL, *scalarvars = NULL;
+
+   if (strcmp(CONTEXTID,"this") != 0)
+      {
+      ScanRval(CONTEXTID,&scalarvars,&listvars,rval,rtype,NULL);
+
+      if (listvars != NULL)
+         {
+         CfOut(cf_error,""," !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",lval,CONTEXTID);
+         }
+
+      DeleteRlist(scalarvars);
+      DeleteRlist(listvars);
+      }
+   }
+
+assoc = HashLookupElement(ptr->hashtable, lval);
+
+if (assoc)
+   {
+   if (CompareVariableValue(rval, rtype, assoc) == 0)
+      {
+      /* Identical value, keep as is */
+      }
+   else
+      {
+      /* Different value, bark and replace */
+      if (!UnresolvedVariables(assoc, rtype))
+         {
+         CfOut(cf_inform,""," !! Duplicate selection of value for variable \"%s\" in scope %s",lval,ptr->scope);
+         if (fname)
+            {
+            CfOut(cf_inform,""," !! Rule from %s at/before line %d\n",fname,lineno);
+            }
+         else
+            {
+            CfOut(cf_inform,""," !! in bundle parameterization\n",fname,lineno);
+            }
+         }
+      DeleteRvalItem(assoc->rval, assoc->rtype);
+      assoc->rval = CopyRvalItem(rval, rtype);
+      assoc->rtype = rtype;
+      assoc->dtype = dtype;
+      Debug("Stored \"%s\" in context %s\n",lval,scope);
+      }
+   }
+else
+   {
+   if (!HashInsertElement(ptr->hashtable, lval, rval, rtype, dtype))
+      {
+      FatalError("Hash table is full");
+      }
+   }
+
+Debug("Added Variable %s in scope %s with value (omitted)\n",lval,scope);
+return true;
+}
+
+/*******************************************************************/
+
+void DeRefListsInHashtable(char *scope,struct Rlist *namelist,struct Rlist *dereflist)
+
+// Go through scope and for each variable in name-list, replace with a
+// value from the deref "lol" (list of lists) clock
+
+{ int len;
+  struct Scope *ptr;
+  struct Rlist *rp,*state;
+  struct CfAssoc *cplist;
+  HashIterator i;
+  CfAssoc *assoc;
+
+if ((len = RlistLen(namelist)) != RlistLen(dereflist))
+   {
+   CfOut(cf_error,""," !! Name list %d, dereflist %d\n",len, RlistLen(dereflist));
+   FatalError("Software Error DeRefLists... correlated lists not same length");
+   }
+
+if (len == 0)
+   {
+   return;
+   }
+
+ptr = GetScope(scope);
+i = HashIteratorInit(ptr->hashtable);
+
+while ((assoc = HashIteratorNext(&i)))
+   {
+   for (rp = dereflist; rp != NULL; rp = rp->next)
+      {
+      cplist = (struct CfAssoc *)rp->item;
+
+      if (strcmp(cplist->lval,assoc->lval) == 0)
+         {
+         /* Link up temp hash to variable lol */
+
+         state = (struct Rlist *)(cplist->rval);
+
+         if (rp->state_ptr == NULL || rp->state_ptr->type == CF_FNCALL)
+            {
+            /* Unexpanded function, or blank variable must be skipped.*/
+            return;
+            }
+
+         if (rp->state_ptr)
+            {
+            Debug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype],rp->state_ptr->item);
+
+            // must first free existing rval in scope, then allocate new (should always be string)
+            DeleteRvalItem(assoc->rval,assoc->rtype);
+
+            // avoids double free - borrowing value from lol (freed in DeleteScope())
+            assoc->rval = strdup(rp->state_ptr->item);
+            }
+
+         switch(assoc->dtype)
+            {
+            case cf_slist:
+               assoc->dtype = cf_str;
+               assoc->rtype = CF_SCALAR;
+               break;
+            case cf_ilist:
+               assoc->dtype = cf_int;
+               assoc->rtype = CF_SCALAR;
+               break;
+            case cf_rlist:
+               assoc->dtype = cf_real;
+               assoc->rtype = CF_SCALAR;
+               break;
+            }
+
+         Debug(" to %s\n",CF_DATATYPES[assoc->dtype]);
+         }
+      }
+   }
+}

@@ -282,45 +282,64 @@ are impaired.
 @unnumberedsec High availability access to the Mission Portal
 @sp 1
 
-CFEngine is designed to be a system that is resilient to failure.  The
-Mission Portal is a single source of information, collected,
+CFEngine is designed to be a system that is resilient to failure. 
+That, in fact, is the opposite of a high availability system,
+where failures are not supposed to occur.
+
+The Mission Portal is a single source of information, collected,
 categorized and calibrated for system engineers.  Being a single
 source website, it is can also be regarded as a single point of
 failure from the point of view of a mission critical application.
 
+@cartouche
 The information in the mission portal is largely status information
-about systems. Unlike older architectural designs, the content of the
-Mission Portal database is not in any way deterministic for the state
-of the system. If the Mission Portal is `down' or unavailable, it does
-not in any way imply that the actual distributed system is down or at
-fault.
+about systems. The content of the Mission Portal database is not in
+any way deterministic for the state of the system. If the Mission
+Portal is `down' or unavailable, it does not in any way imply that the
+actual distributed system is down or at fault.
+@end cartouche
 
-The need for high availability in the portal is therefore reasonable
-if access to summary information about the state is itself considered
-to be critical to the mission. Making the hub service mission critical
-is a two-pronged strategy:
+
+@node Setting up redundant hubs
+@unnumberedsubsec Setting up redundant hubs
+
+CFEngine commercial editions support multiple hubs for redundancy during reporting.
+By making a cluster of three hubs, you can ensure that reports will always be 
+available and up to date, at the time-resolution promised by CFEngine.
+
+To set up redundant hubs, you will need three physical computers, or
+at least three virtual machines on different physical computers.
+
+@itemize
+
+@item Install each of the three systems with the Nova/Constellation extension package for
+policy hubs.
+
+@item Configure the mongo database to set up a minimal replica set. This underlying
+mechanism for automatic failover.
+
+@item Copy the public and private key from the licensed hub to the backup hubs.
+All hubs will share the same public-private key pair.
+
+@item Start the @code{cf-hub} on each of the three machines.
+
+@end itemize
+
+Next, we'll run through the operation and failure modes of the symmetric hubs.
+
 
 @image{redundhubs,15cm}
 
-@itemize
-@item Adding hub redundancy for high availability of the hub aggregation service.
-This is tricky, because it can lead to cross-talk and unecessary overhead.
 
-@item Elimination of single point of failure in the storage database.
-This requires some kind of clustering solution without load balancing.@footnote{Load balancers are not generally recommended for the Mission
-Portal, as the major problem is not one of load.  A load balancer is
-designed to handle input queues where a large number of requests can
-come into a system and be handled in parallel. Ultimately this
-requires data replication on the back end in order to avoid another
-queue.  However, load balancers introduce a other problem, which is
-uncertainty about the consistency and timeliness of the data being
-shown. A lack of synchronization in the back end can lead to an
-inconsistent picture of the system.  To avoid this, one is tempted to
-have only a single source of data, e.g.  a single back-end storage
-array for all the front-end systems.  However, this only introduces
-another single point of failure.}
+@node Variables and classes for hubs
+@unnumberedsubsec Variables and classes for hubs
 
-@end itemize
+@verbatim
+am_policy_hub
+am_hub_master
+@end verbatim
+
+The variable @samp{$(sys.hubmaster)}
 
 
 

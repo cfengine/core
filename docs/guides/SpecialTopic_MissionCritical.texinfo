@@ -300,6 +300,8 @@ if access to summary information about the state is itself considered
 to be critical to the mission. Making the hub service mission critical
 is a two-pronged strategy:
 
+@image{redundhubs,15cm}
+
 @itemize
 @item Adding hub redundancy for high availability of the hub aggregation service.
 This is tricky, because it can lead to cross-talk and unecessary overhead.

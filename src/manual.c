@@ -402,10 +402,23 @@ for (i = 0; bs[i].lval != NULL; i++)
 
 /*******************************************************************/
 
+static void AppendVariables(struct Scope *sp, struct Rlist **list)
+{
+HashIterator i = HashIteratorInit(sp->hashtable);
+CfAssoc *assoc;
+
+while ((assoc = HashIteratorNext(&i)))
+   {
+   CfOut(cf_verbose,"","Appending variable documentation for %s (%c)\n",assoc->lval,assoc->rtype);
+   PrependRScalar(list,assoc->lval,CF_SCALAR);
+   }
+}
+
+/*******************************************************************/
+
 static void TexinfoVariables(FILE *fout,char *scope)
 
-{ struct Scope *sp;
-  struct CfAssoc **ap;
+{
   char filename[CF_BUFSIZE],varname[CF_BUFSIZE];
   struct Rlist *rp,*list = NULL;
   int i;
@@ -414,18 +427,7 @@ fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}
 snprintf(filename,CF_BUFSIZE-1,"varcontext_%s_intro.texinfo",scope);
 IncludeManualFile(fout,filename);
 
-sp = GetScope(scope);
-
-for (i = 0; i < CF_HASHTABLESIZE; i++)
-   {
-   ap = sp->hashtable;
-   
-   if (ap[i] != NULL)
-      {
-      CfOut(cf_verbose,"","Appending variable documentation for %s (%c)\n",ap[i]->lval,ap[i]->rtype);
-      PrependRScalar(&list,ap[i]->lval,CF_SCALAR);
-      }
-   }
+AppendVariables(GetScope(scope), &list);
 
 for (rp = AlphaSortRListNames(list); rp != NULL; rp = rp->next)
    {

@@ -763,6 +763,9 @@ int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype
 void DeleteHashes(struct CfAssoc **hashtable);
 void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
+/* Deletes element from hashtable, returning whether element was found */
+bool HashDeleteElement(CfAssoc **hashtable, const char *element);
+
 /* html.c */
 
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *banner);

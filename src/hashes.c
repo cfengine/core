@@ -409,3 +409,27 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
 }
 
 
+/*******************************************************************/
+
+bool HashDeleteElement(CfAssoc **hashtable, const char *element)
+{
+int bucket = GetHash(element);
+int i = bucket;
+
+do
+   {
+   /* Element is found */
+   if (hashtable[i] && strcmp(element, hashtable[i]->lval) == 0)
+      {
+      DeleteAssoc(hashtable[i]);
+      hashtable[i] = NULL;
+      return true;
+      }
+
+   i = (i + 1) % CF_HASHTABLESIZE;
+   }
+while (i != bucket);
+
+/* Looped through whole hashtable and did not find needed element */
+return false;
+}

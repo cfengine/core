@@ -836,13 +836,13 @@ struct Variable  /* Used to represent contents of var in DBM file -
 
 /*******************************************************************/
 
-struct CfAssoc        /* variable reference linkage , with metatype*/
+typedef struct CfAssoc        /* variable reference linkage , with metatype*/
    {
    char *lval;
    void *rval;
    char rtype;
    enum cfdatatype dtype;
-   };
+   } CfAssoc;
 
 /*******************************************************************/
 /* Return value signalling                                         */

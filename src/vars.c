@@ -122,38 +122,20 @@ AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 
 /*******************************************************************/
 
-void DeleteScalar(char *scope,char *lval)
+void DeleteScalar(char *scope_name, char *lval)
 
-{ struct Scope *ptr;
-  struct CfAssoc *ap;
-  int slot,finalslot;
- 
-ptr = GetScope(scope);
-slot = GetHash(lval);
+{
+struct Scope *scope = GetScope(scope_name);
 
-if (ptr == NULL)
+if (scope == NULL)
    {
    return;
    }
 
-// The hash value might not be correct if the table is full
-
-for (finalslot = slot; (finalslot % CF_HASHTABLESIZE) != slot-1; finalslot++)
+if (HashDeleteElement(scope->hashtable, lval) == false)
    {
-   if (ptr->hashtable[finalslot % CF_HASHTABLESIZE] && strcmp(lval,ptr->hashtable[finalslot % CF_HASHTABLESIZE]->lval) == 0)
-      {
-      Debug("Delete %s FOUND it finally at slot %d not %d\n",lval,finalslot,slot);
-      
-      if ((ap = (struct CfAssoc *)(ptr->hashtable[finalslot % CF_HASHTABLESIZE])))
-         {
-         DeleteAssoc(ap);
-         ptr->hashtable[finalslot % CF_HASHTABLESIZE] = NULL;
-         return;
-         }
-      }
+   Debug("Attempt to delete non-existent variable %s in scope %s\n", lval, scope_name);
    }
-
-Debug("Attempt to delete non existent variable %s in scope %s\n",lval,scope);
 }
 
 /*******************************************************************/

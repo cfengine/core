@@ -436,6 +436,29 @@ return false;
 
 /*******************************************************************/
 
+CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element)
+{
+int bucket = GetHash(element);
+int i = bucket;
+
+do
+   {
+   /* Element is found */
+   if (CompareVariable(element, hashtable[i]) == 0)
+      {
+      return hashtable[i];
+      }
+
+   i = (i + 1) % CF_HASHTABLESIZE;
+   }
+while (i != bucket);
+
+/* Looped through whole hashtable and did not find needed element */
+return NULL;
+}
+
+/*******************************************************************/
+
 HashIterator HashIteratorInit(CfAssoc **hashtable)
 {
 return (HashIterator) { hashtable, 0 };

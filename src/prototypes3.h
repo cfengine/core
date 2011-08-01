@@ -765,6 +765,8 @@ void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist)
 
 /* Deletes element from hashtable, returning whether element was found */
 bool HashDeleteElement(CfAssoc **hashtable, const char *element);
+/* Looks up element in hashtable, returns NULL if not found */
+CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element);
 
 /* Hash table iterators: call HashIteratorNext() until it returns NULL */
 HashIterator HashIteratorInit(CfAssoc **hashtable);

@@ -202,11 +202,11 @@ else
 enum cfdatatype GetVariable(const char *scope, const char *lval, void **returnv, char *rtype)
 
 {
-  int slot,i,found = false;
   struct Scope *ptr = NULL;
   char scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE],sval[CF_MAXVARSIZE];
   char expbuf[CF_EXPANDSIZE];
-  
+  CfAssoc *assoc;
+
 Debug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
 if (lval == NULL)
@@ -257,8 +257,6 @@ if (ptr == NULL)
    ptr = GetScope(scopeid);
    }
 
-i = slot = GetHash(vlval);
-
 if (ptr == NULL || ptr->hashtable == NULL)
    {
    Debug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
@@ -267,58 +265,30 @@ if (ptr == NULL || ptr->hashtable == NULL)
    return cf_notype;
    }
 
-Debug("GetVariable(%s,%s): using scope '%s' for variable '%s' (slot =%d)\n",scopeid,vlval,ptr->scope,vlval,slot);
+Debug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n",scopeid,vlval,ptr->scope,vlval);
 
-if (CompareVariable(vlval,ptr->hashtable[slot]) != 0)
+assoc = HashLookupElement(ptr->hashtable, vlval);
+
+if (assoc == NULL)
    {
-   /* Recover from previous hash collision */
-   
-   while (true)
-      {
-      i++;
-
-      if (i >= CF_HASHTABLESIZE)
-         {
-         i = 0;
-         }
-      
-      if (CompareVariable(vlval,ptr->hashtable[i]) == 0)
-         {
-         found = true;
-         break;
-         }
-
-      /* Removed autolookup in Unix environment variables -
-         implement as getenv() fn instead */
-      
-      if (i == slot)
-         {
-         found = false;
-         break;
-         }
-      }
-
-   if (!found)
-      {
-      Debug("No such variable found %s.%s\n\n",scopeid,lval);
-      *returnv = (void*)lval;
-      *rtype   = CF_SCALAR;
-      return cf_notype;
-      }
+   Debug("No such variable found %s.%s\n\n",scopeid,lval);
+   *returnv = (void*)lval;
+   *rtype   = CF_SCALAR;
+   return cf_notype;
    }
 
-Debug("return final variable type=%s, value={\n",CF_DATATYPES[(ptr->hashtable[i])->dtype]);
+Debug("return final variable type=%s, value={\n",CF_DATATYPES[assoc->dtype]);
 
 if (DEBUG)
    {
-   ShowRval(stdout,(ptr->hashtable[i])->rval,(ptr->hashtable[i])->rtype);
+   ShowRval(stdout,assoc->rval,assoc->rtype);
    }
 Debug("}\n");
 
-*returnv = ptr->hashtable[i]->rval;
-*rtype   = ptr->hashtable[i]->rtype;
+*returnv = assoc->rval;
+*rtype   = assoc->rtype;
 
-return (ptr->hashtable[i])->dtype;
+return assoc->dtype;
 }
 
 /*******************************************************************/

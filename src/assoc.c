@@ -37,7 +37,7 @@ static void ShowAssoc (struct CfAssoc *cp);
 
 /*******************************************************************/
 
-struct CfAssoc *NewAssoc(char *lval,void *rval,char rtype,enum cfdatatype dt)
+struct CfAssoc *NewAssoc(const char *lval,void *rval,char rtype,enum cfdatatype dt)
 
 { struct CfAssoc *ap;
 

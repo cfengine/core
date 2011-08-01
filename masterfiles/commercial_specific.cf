@@ -456,6 +456,10 @@ bundle agent cfengine_policysrv
                          handle => "cfengine_policysrv_classes_no_mongo_module_redhat_i686",
                      ifvarclass => "i686";
 
+   "have_httpd_conf" expression => fileexists("/etc/httpd/conf/httpd.conf"),
+                        comment => "Check if there is httpd.conf in place",
+                         handle => "cfengine_policysrv_classes_have_httpd_conf";
+
   SuSE.am_policy_hub::
 
    "no_mongo_module"        not => fileexists("/usr/lib64/php5/extensions/mongo.so"),
@@ -616,10 +620,11 @@ bundle agent cfengine_policysrv
           edit_line => apache_nova_conf("$(sys.doc_root)");
 
    "/etc/httpd/conf/httpd.conf"
-            comment => "To append CFE nova.conf to be used for a web server",
-             handle => "cfengine_policysrv_files_append_nova_conf_line_httpd_conf",
-          edit_line => append_if_no_line("Include conf.d/nova.conf"),
-            classes => if_repaired("restart_httpd");
+         comment => "To append CFE nova.conf to be used for a web server",
+          handle => "cfengine_policysrv_files_append_nova_conf_line_httpd_conf",
+       edit_line => append_if_no_line("Include conf.d/nova.conf"),
+         classes => if_repaired("restart_httpd"),
+      ifvarclass => "have_httpd_conf";
 
   remove_mongod_lock::
 

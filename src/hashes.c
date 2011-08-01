@@ -433,3 +433,27 @@ while (i != bucket);
 /* Looped through whole hashtable and did not find needed element */
 return false;
 }
+
+/*******************************************************************/
+
+HashIterator HashIteratorInit(CfAssoc **hashtable)
+{
+return (HashIterator) { hashtable, 0 };
+}
+
+/*******************************************************************/
+
+CfAssoc *HashIteratorNext(HashIterator *i)
+{
+while (i->bucket < CF_HASHTABLESIZE && i->hash[i->bucket] == NULL)
+    i->bucket++;
+
+if (i->bucket == CF_HASHTABLESIZE)
+   {
+   return NULL;
+   }
+else
+   {
+   return i->hash[i->bucket++];
+   }
+}

@@ -845,6 +845,17 @@ typedef struct CfAssoc        /* variable reference linkage , with metatype*/
    } CfAssoc;
 
 /*******************************************************************/
+
+/*
+ * Disposable iterator over hash table. Does not require deinitialization.
+ */
+typedef struct HashIterator
+   {
+   CfAssoc **hash;
+   int bucket;
+   } HashIterator;
+
+/*******************************************************************/
 /* Return value signalling                                         */
 /*******************************************************************/
 

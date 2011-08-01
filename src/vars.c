@@ -370,7 +370,7 @@ else
 
 /*******************************************************************/
 
-int CompareVariable(char *lval,struct CfAssoc *ap)
+int CompareVariable(const char *lval,struct CfAssoc *ap)
 
 {
 

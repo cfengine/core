@@ -1185,7 +1185,7 @@ void DeleteScalar(char *scope,char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 enum cfdatatype GetVariable(const char *scope, const char *lval,void **returnv,char *rtype);
 void DeleteVariable(char *scope,char *id);
-int CompareVariable(char *lval,struct CfAssoc *ap);
+int CompareVariable(const char *lval, struct CfAssoc *ap);
 int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap);
 int StringContainsVar(char *s,char *v);
 int DefinedVariable(char *name);

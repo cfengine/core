@@ -9,37 +9,41 @@ or type that the function returns or processes as inputs.
 @unnumberedsubsubsec Functions which return class
 @multitable @columnfractions .2 .2 .2 .2 .2
 @item @ref{Function accessedbefore, ,accessedbefore}
+@tab @ref{Function and, ,and}
 @tab @ref{Function changedbefore, ,changedbefore}
 @tab @ref{Function classify, ,classify}
 @tab @ref{Function classmatch, ,classmatch}
+@item @ref{Function concat, ,concat}
 @tab @ref{Function fileexists, ,fileexists}
-@item @ref{Function filesexist, ,filesexist}
+@tab @ref{Function filesexist, ,filesexist}
 @tab @ref{Function groupexists, ,groupexists}
 @tab @ref{Function hashmatch, ,hashmatch}
-@tab @ref{Function hostinnetgroup, ,hostinnetgroup}
+@item @ref{Function hostinnetgroup, ,hostinnetgroup}
 @tab @ref{Function hostrange, ,hostrange}
-@item @ref{Function iprange, ,iprange}
+@tab @ref{Function iprange, ,iprange}
 @tab @ref{Function isdir, ,isdir}
 @tab @ref{Function isexecutable, ,isexecutable}
-@tab @ref{Function isgreaterthan, ,isgreaterthan}
+@item @ref{Function isgreaterthan, ,isgreaterthan}
 @tab @ref{Function islessthan, ,islessthan}
-@item @ref{Function islink, ,islink}
+@tab @ref{Function islink, ,islink}
 @tab @ref{Function isnewerthan, ,isnewerthan}
 @tab @ref{Function isplain, ,isplain}
-@tab @ref{Function isvariable, ,isvariable}
+@item @ref{Function isvariable, ,isvariable}
 @tab @ref{Function ldaparray, ,ldaparray}
-@item @ref{Function regarray, ,regarray}
-@tab @ref{Function regcmp, ,regcmp}
+@tab @ref{Function or, ,or}
+@tab @ref{Function not, ,not}
+@tab @ref{Function regarray, ,regarray}
+@item @ref{Function regcmp, ,regcmp}
 @tab @ref{Function regextract, ,regextract}
 @tab @ref{Function regldap, ,regldap}
 @tab @ref{Function regline, ,regline}
-@item @ref{Function reglist, ,reglist}
-@tab @ref{Function remoteclassesmatching, ,remoteclassesmatching}
+@tab @ref{Function reglist, ,reglist}
+@item @ref{Function remoteclassesmatching, ,remoteclassesmatching}
 @tab @ref{Function returnszero, ,returnszero}
 @tab @ref{Function splayclass, ,splayclass}
 @tab @ref{Function strcmp, ,strcmp}
-@item @ref{Function usemodule, ,usemodule}
-@tab @ref{Function userexists, ,userexists}
+@tab @ref{Function usemodule, ,usemodule}
+@item @ref{Function userexists, ,userexists}
 @end multitable
 
 @unnumberedsubsubsec Functions which return (i,r,s)list
@@ -144,8 +148,12 @@ strings, etc.) and outside of Cfengine (from files, databases, arrays, etc.)
 
 @unnumberedsubsubsec Functions which read classes
 @multitable @columnfractions .2 .2 .2 .2 .2
-@item @ref{Function classify, ,classify}
+@item @ref{Function and, ,and}
+@tab @ref{Function classify, ,classify}
 @tab @ref{Function classmatch, ,classmatch}
+@tab @ref{Function concat, ,concat}
+@tab @ref{Function not, ,not}
+@item @ref{Function or, ,or}
 @end multitable
 
 @unnumberedsubsubsec Functions which read command output

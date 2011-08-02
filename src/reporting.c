@@ -410,6 +410,42 @@ else
 
 /*******************************************************************/
 
+static void PrintVariablesInScope(FILE *fp, struct Scope *scope)
+{
+HashIterator i = HashIteratorInit(scope->hashtable);
+CfAssoc *assoc;
+
+while ((assoc = HashIteratorNext(&i)))
+   {
+   fprintf(fp, "%8s %c %s = ", CF_DATATYPES[assoc->dtype],
+           assoc->rtype, assoc->lval);
+   ShowRval(fp, assoc->rval, assoc->rtype);
+   fprintf(fp, "\n");
+   }
+}
+
+/*******************************************************************/
+
+static void PrintVariablesInScopeHtml(FILE *fp, struct Scope *scope)
+{
+HashIterator i = HashIteratorInit(scope->hashtable);
+CfAssoc *assoc;
+
+fprintf(fp,"<table class=border width=600>\n");
+fprintf (fp,"<tr><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th></tr>\n");
+
+while ((assoc = HashIteratorNext(&i)))
+   {
+   fprintf(fp,"<tr><th>%8s</th><td> %c</td><td> %s</td><td> ",CF_DATATYPES[assoc->dtype],assoc->rtype,assoc->lval);
+   ShowRval(fp,assoc->rval,assoc->rtype);
+   fprintf(fp,"</td></tr>\n");
+   }
+
+fprintf(fp,"</table>\n");
+}
+
+/*******************************************************************/
+
 void ShowScopedVariables()
 
 /* WARNING: Not thread safe (access to VSCOPE) */
@@ -427,8 +463,9 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 
    fprintf(FREPORT_HTML,"<h4>\nScope %s:<h4>",ptr->scope);
    fprintf(FREPORT_TXT,"\nScope %s:\n",ptr->scope);
-   PrintHashes(FREPORT_HTML,ptr->hashtable,1);
-   PrintHashes(FREPORT_TXT,ptr->hashtable,0);
+
+   PrintVariablesInScope(FREPORT_TXT, ptr);
+   PrintVariablesInScopeHtml(FREPORT_HTML, ptr);
    }
 
 fprintf(FREPORT_HTML,"</div>");

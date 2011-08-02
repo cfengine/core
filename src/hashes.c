@@ -32,11 +32,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void EditHashValue(char *scopeid,char *lval,void *rval);
+#define HASH_ENTRY_DELETED ((CfAssoc*)-1)
 
-/*******************************************************************/
-/* Hashes                                                          */
-/*******************************************************************/
+/******************************************************************/
 
 void InitHashes(struct CfAssoc **table)
 
@@ -48,124 +46,48 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
    }
 }
 
-
 /******************************************************************/
 
+/* FIXME: clean first? */
 void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash)
 
 { int i;
 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   newhash[i] = CopyAssoc(oldhash[i]);
+   if (oldhash[i] == NULL)
+      {
+      newhash[i] = NULL;
+      }
+   else if (oldhash[i] == HASH_ENTRY_DELETED)
+      {
+      newhash[i] = HASH_ENTRY_DELETED;
+      }
+   else
+      {
+      newhash[i] = CopyAssoc(oldhash[i]);
+      }
    }
 }
 
-/******************************************************************/
-
-static void EditHashValue(char *scopeid,char *lval,void *rval)
-
-{ int found, slot = GetHash(lval);
-  int i = slot;
-  struct Scope *ptr = GetScope(scopeid);
-  struct CfAssoc *ap;
-
-Debug("EditHashValue(%s,%s)\n",scopeid,lval);
-  
-if (CompareVariable(lval,ptr->hashtable[slot]) != 0)
-   {
-   /* Recover from hash collision */
-   
-   while (true)
-      {
-      i++;
-
-      if (i >= CF_HASHTABLESIZE-1)
-         {
-         i = 0;
-         }
-
-      if (CompareVariable(lval,ptr->hashtable[i]) == 0)
-         {
-         found = true;
-         break;
-         }
-
-      /* Removed autolookup in Unix environment variables -
-         implement as getenv() fn instead */
-
-      if (i == slot)
-         {
-         found = false;
-         break;
-         }
-      }
-
-   if (!found)
-      {
-      Debug("No such variable found %s.%s\n",scopeid,lval);
-      return;
-      }
-   }
-
-ap = ptr->hashtable[i];
-ap->rval = rval;
-}
-   
 /******************************************************************/
 
 void DeleteHashes(struct CfAssoc **hashtable)
 
 { int i;
 
-if (hashtable)
-   {
-   for (i = 0; i < CF_HASHTABLESIZE; i++)
-      {
-      if (hashtable[i] != NULL)
-         {
-	 DeleteAssoc(hashtable[i]);
-         hashtable[i] = NULL;
-         }
-      }
-   }
-}
-
-/*******************************************************************/
-
-void PrintHashes(FILE *fp,struct CfAssoc **table,int html)
-
-{ int i;
-
-if (html)
-   {
-   fprintf(fp,"<table class=border width=600>\n");
-   fprintf (fp,"<tr><th>id</th><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th></tr>\n");         
-   }
- 
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   if (table[i] != NULL)
+   if (hashtable[i] == NULL || hashtable[i] == HASH_ENTRY_DELETED)
       {
-      if (html)
-         {
-         fprintf (fp,"<tr><td> %5d </td><th>%8s</th><td> %c</td><td> %s</td><td> ",i,CF_DATATYPES[table[i]->dtype],table[i]->rtype,table[i]->lval);
-         ShowRval(fp,table[i]->rval,table[i]->rtype);
-         fprintf(fp,"</td></tr>\n");         
-         }
-      else
-         {
-         fprintf (fp," %5d : %8s %c %s = ",i,CF_DATATYPES[table[i]->dtype],table[i]->rtype,table[i]->lval);
-         ShowRval(fp,table[i]->rval,table[i]->rtype);
-         fprintf(fp,"\n");
-         }
+      }
+   else
+      {
+      DeleteAssoc(hashtable[i]);
       }
    }
 
-if (html)
-   {
-   fprintf(fp,"</table>\n");
-   }
+InitHashes(hashtable);
 }
 
 /*******************************************************************/
@@ -186,17 +108,17 @@ int i = bucket;
 
 do
    {
+   /* Free bucket is found */
+   if (hashtable[i] == NULL || hashtable[i] == HASH_ENTRY_DELETED)
+      {
+      hashtable[i] = NewAssoc(element, rval, rtype, dtype);
+      return true;
+      }
+
    /* Collision -- this element already exists */
    if (CompareVariable(element, hashtable[i]) == 0)
       {
       return false;
-      }
-
-   /* Free bucket is found */
-   if (hashtable[i] == NULL)
-      {
-      hashtable[i] = NewAssoc(element, rval, rtype, dtype);
-      return true;
       }
 
    i = (i + 1) % CF_HASHTABLESIZE;
@@ -216,8 +138,20 @@ int i = bucket;
 
 do
    {
+   /* End of allocated chunk */
+   if (hashtable[i] == NULL)
+      {
+      break;
+      }
+
+   /* Keep looking */
+   if (hashtable[i] == HASH_ENTRY_DELETED)
+      {
+      continue;
+      }
+
    /* Element is found */
-   if (hashtable[i] && strcmp(element, hashtable[i]->lval) == 0)
+   if (strcmp(element, hashtable[i]->lval) == 0)
       {
       DeleteAssoc(hashtable[i]);
       hashtable[i] = NULL;
@@ -228,7 +162,7 @@ do
    }
 while (i != bucket);
 
-/* Looped through whole hashtable and did not find needed element */
+/* Either looped through hashtable or found a NULL */
 return false;
 }
 
@@ -241,6 +175,18 @@ int i = bucket;
 
 do
    {
+   /* End of allocated chunk */
+   if (hashtable[i] == NULL)
+      {
+      break;
+      }
+
+   /* Keep looking */
+   if (hashtable[i] == HASH_ENTRY_DELETED)
+      {
+      continue;
+      }
+
    /* Element is found */
    if (CompareVariable(element, hashtable[i]) == 0)
       {
@@ -251,7 +197,7 @@ do
    }
 while (i != bucket);
 
-/* Looped through whole hashtable and did not find needed element */
+/* Either looped through hashtable or found a NULL */
 return NULL;
 }
 
@@ -262,7 +208,7 @@ void HashClear(CfAssoc **hashtable)
 int i;
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   if (hashtable[i] != NULL)
+   if (hashtable[i] != NULL && hashtable[i] != HASH_ENTRY_DELETED)
       {
       DeleteAssoc(hashtable[i]);
       hashtable[i] = NULL;
@@ -281,8 +227,13 @@ return (HashIterator) { hashtable, 0 };
 
 CfAssoc *HashIteratorNext(HashIterator *i)
 {
-while (i->bucket < CF_HASHTABLESIZE && i->hash[i->bucket] == NULL)
-    i->bucket++;
+for(; i->bucket < CF_HASHTABLESIZE; i->bucket++)
+   {
+   if (i->hash[i->bucket] != NULL && i->hash[i->bucket] != HASH_ENTRY_DELETED)
+      {
+      break;
+      }
+   }
 
 if (i->bucket == CF_HASHTABLESIZE)
    {

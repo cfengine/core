@@ -32,27 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void DebugVariables(char *label);
-
-/*******************************************************************/
-
-static void DebugVariables(char *label)
-/* 
- * Not thread safe 
- */
-{ struct Scope *ptr;
-
- printf("----------------------%s ---------------------------\n",label);
- 
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   printf("\nConstant variables in SCOPE %s:\n",ptr->scope);
-   PrintHashes(stdout,ptr->hashtable,0);
-   }
-
-printf("--------------------------------------------------\n");
-}
-
 /*******************************************************************/
 
 struct Scope *GetScope(char *scope)
@@ -333,26 +312,6 @@ if ((op = GetScope(old)))
    }
 
 ThreadUnlock(cft_vscope);
-}
-
-/*******************************************************************/
-
-void ShowScope(char *name)
-/*
- * Not thread safe - access to global variable
- */
-{ struct Scope *ptr;
-
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   if (name && strcmp(ptr->scope,name) != 0)
-      {
-      continue;
-      }
-
-   printf("\nConstant variables in SCOPE %s:\n",ptr->scope);
-   PrintHashes(stdout,ptr->hashtable,0);
-   }
 }
 
 /*******************************************************************/

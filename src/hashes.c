@@ -32,11 +32,32 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*
+ * This associative array implementation uses array with linear search up to
+ * TINY_LIMIT elements, and then converts into full-fledged hash table.
+ *
+ * There is a lot of small hash tables, both iterating and deleting them as a
+ * hashtable takes a lot of time.
+ */
+
 #define HASH_ENTRY_DELETED ((CfAssoc*)-1)
+
+#define TINY_LIMIT 14
+
+typedef struct AssocArray
+   {
+   CfAssoc *values[TINY_LIMIT];
+   short size;
+   } AssocArray;
 
 struct AssocHashTable
    {
-   struct CfAssoc *buckets[CF_HASHTABLESIZE];
+   union
+      {
+      struct AssocArray array;
+      struct CfAssoc **buckets;
+      };
+   bool huge;
    };
 
 /******************************************************************/
@@ -48,9 +69,7 @@ return calloc(1, sizeof(AssocHashTable));
 
 /******************************************************************/
 
-/* Call only on empty newhash */
 void HashCopy(struct AssocHashTable *newhash, struct AssocHashTable *oldhash)
-
 {
 HashIterator i = HashIteratorInit(oldhash);
 CfAssoc *assoc;
@@ -64,15 +83,43 @@ while ((assoc = HashIteratorNext(&i)))
 /*******************************************************************/
 
 int GetHash(const char *name)
-
 {
 return OatHash(name);
 }
 
 /*******************************************************************/
 
-bool HashInsertElement(AssocHashTable *hashtable, const char *element,
-                       void *rval, char rtype, enum cfdatatype dtype)
+static void HashConvertToHuge(AssocHashTable *hashtable)
+{
+CfAssoc **buckets = calloc(1, sizeof(CfAssoc *) * CF_HASHTABLESIZE);
+int i;
+
+for (i = 0; i < hashtable->array.size; ++i)
+   {
+   /* This is a stripped down HugeHashInsertElement: it will fail on duplicate
+    * elements or nearly-full hash table, or table with HASH_ENTRY_DELETED */
+   CfAssoc *assoc = hashtable->array.values[i];
+   int bucket = GetHash(assoc->lval);
+
+   for(;;)
+      {
+      if (buckets[bucket] == NULL)
+         {
+         buckets[bucket] = assoc;
+         break;
+      }
+      bucket = (bucket + 1) % CF_HASHTABLESIZE;
+      }
+   }
+
+hashtable->huge = true;
+hashtable->buckets = buckets;
+}
+
+/*******************************************************************/
+
+static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element,
+                                  void *rval, char rtype, enum cfdatatype dtype)
 {
 int bucket = GetHash(element);
 int i = bucket;
@@ -102,10 +149,55 @@ return false;
 
 /*******************************************************************/
 
-bool HashDeleteElement(AssocHashTable *hashtable, const char *element)
+static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element,
+                                  void *rval, char rtype, enum cfdatatype dtype)
+{
+int i;
+
+if (hashtable->array.size == TINY_LIMIT)
+   {
+   HashConvertToHuge(hashtable);
+   return HugeHashInsertElement(hashtable, element, rval, rtype, dtype);
+   }
+
+for (i = 0; i < hashtable->array.size; ++i)
+   {
+   if (strcmp(hashtable->array.values[i]->lval, element) == 0)
+      {
+      return false;
+      }
+   }
+
+hashtable->array.values[hashtable->array.size++] = NewAssoc(element, rval, rtype, dtype);
+return true;
+}
+
+/*******************************************************************/
+
+bool HashInsertElement(AssocHashTable *hashtable, const char *element,
+                       void *rval, char rtype, enum cfdatatype dtype)
+{
+if (hashtable->huge)
+   {
+   return HugeHashInsertElement(hashtable, element, rval, rtype, dtype);
+   }
+else
+   {
+   return TinyHashInsertElement(hashtable, element, rval, rtype, dtype);
+   }
+}
+
+/*******************************************************************/
+
+static bool HugeHashDeleteElement(AssocHashTable *hashtable, const char *element)
 {
 int bucket = GetHash(element);
 int i = bucket;
+
+if (!hashtable->buckets)
+   {
+   return false;
+   }
 
 do
    {
@@ -139,10 +231,51 @@ return false;
 
 /*******************************************************************/
 
-CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element)
+static bool TinyHashDeleteElement(AssocHashTable *hashtable, const char *element)
+{
+int i;
+for (i = 0; i < hashtable->array.size; ++i)
+   {
+   if (strcmp(hashtable->array.values[i]->lval, element) == 0)
+      {
+      int j;
+      DeleteAssoc(hashtable->array.values[i]);
+      for (j = i; j < hashtable->array.size - 1; ++j)
+         {
+         hashtable->array.values[j] = hashtable->array.values[j + 1];
+         }
+      hashtable->array.size--;
+      return true;
+      }
+   }
+return false;
+}
+
+/*******************************************************************/
+
+bool HashDeleteElement(AssocHashTable *hashtable, const char *element)
+{
+if (hashtable->huge)
+   {
+   return HugeHashDeleteElement(hashtable, element);
+   }
+else
+   {
+   return TinyHashDeleteElement(hashtable, element);
+   }
+}
+
+/*******************************************************************/
+
+static CfAssoc *HugeHashLookupElement(AssocHashTable *hashtable, const char *element)
 {
 int bucket = GetHash(element);
 int i = bucket;
+
+if (!hashtable->buckets)
+   {
+   return NULL;
+   }
 
 do
    {
@@ -174,7 +307,47 @@ return NULL;
 
 /*******************************************************************/
 
-static void HashClearInt(AssocHashTable *hashtable)
+static CfAssoc *TinyHashLookupElement(AssocHashTable *hashtable, const char *element)
+{
+int i;
+for (i = 0; i < hashtable->array.size; ++i)
+   {
+   if (strcmp(hashtable->array.values[i]->lval, element) == 0)
+      {
+      return hashtable->array.values[i];
+      }
+   }
+return NULL;
+}
+
+/*******************************************************************/
+
+CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element)
+{
+if (hashtable->huge)
+   {
+   return HugeHashLookupElement(hashtable, element);
+   }
+else
+   {
+   return TinyHashLookupElement(hashtable, element);
+   }
+}
+
+/*******************************************************************/
+
+static void TinyHashClear(AssocHashTable *hashtable)
+{
+int i;
+for (i = 0; i < hashtable->array.size; ++i)
+   {
+   DeleteAssoc(hashtable->array.values[i]);
+   }
+}
+
+/*******************************************************************/
+
+static void HugeHashClear(AssocHashTable *hashtable)
 {
 int i;
 for (i = 0; i < CF_HASHTABLESIZE; i++)
@@ -187,21 +360,28 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          }
       }
    }
+free(hashtable->buckets);
 }
 
 /*******************************************************************/
 
 void HashClear(AssocHashTable *hashtable)
 {
-HashClearInt(hashtable);
-memset(hashtable->buckets, 0, sizeof(CF_HASHTABLESIZE * sizeof(CfAssoc *)));
+if (hashtable->huge)
+   {
+   HugeHashClear(hashtable);
+   }
+else
+   {
+   TinyHashClear(hashtable);
+   }
 }
 
 /*******************************************************************/
 
 void HashFree(AssocHashTable *hashtable)
 {
-HashClearInt(hashtable);
+HashClear(hashtable);
 free(hashtable);
 }
 
@@ -209,27 +389,57 @@ free(hashtable);
 
 HashIterator HashIteratorInit(AssocHashTable *hashtable)
 {
-return (HashIterator) { hashtable->buckets, 0 };
+return (HashIterator) { hashtable, 0 };
+}
+
+/*******************************************************************/
+
+static CfAssoc *HugeHashIteratorNext(HashIterator *i)
+{
+CfAssoc **buckets = i->hashtable->buckets;
+
+for(; i->pos < CF_HASHTABLESIZE; i->pos++)
+   {
+   if (buckets[i->pos] != NULL && buckets[i->pos] != HASH_ENTRY_DELETED)
+      {
+      break;
+      }
+   }
+
+if (i->pos == CF_HASHTABLESIZE)
+   {
+   return NULL;
+   }
+else
+   {
+   return buckets[i->pos++];
+   }
+}
+
+/*******************************************************************/
+
+static CfAssoc *TinyHashIteratorNext(HashIterator *i)
+{
+if (i->pos >= i->hashtable->array.size)
+   {
+   return NULL;
+   }
+else
+   {
+   return i->hashtable->array.values[i->pos++];
+   }
 }
 
 /*******************************************************************/
 
 CfAssoc *HashIteratorNext(HashIterator *i)
 {
-for(; i->bucket < CF_HASHTABLESIZE; i->bucket++)
+if (i->hashtable->huge)
    {
-   if (i->hash[i->bucket] != NULL && i->hash[i->bucket] != HASH_ENTRY_DELETED)
-      {
-      break;
-      }
-   }
-
-if (i->bucket == CF_HASHTABLESIZE)
-   {
-   return NULL;
+   return HugeHashIteratorNext(i);
    }
 else
    {
-   return i->hash[i->bucket++];
+   return TinyHashIteratorNext(i);
    }
 }

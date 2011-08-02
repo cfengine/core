@@ -843,8 +843,8 @@ typedef struct CfAssoc        /* variable reference linkage , with metatype*/
  */
 typedef struct HashIterator
    {
-   CfAssoc **hash;
-   int bucket;
+   AssocHashTable *hashtable;
+   int pos;
    } HashIterator;
 
 /*******************************************************************/

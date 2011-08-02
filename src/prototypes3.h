@@ -752,27 +752,48 @@ time_t GetShiftSlotStart(time_t t);
 
 /* hashes.c */
 
+/* - specific hashes - */
+
 int RefHash(char *name);
 int ElfHash(char *key);
 int OatHash(const char *key);
-void InitHashes(struct CfAssoc **table);
-void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash);
 int GetHash(const char *name);
-void PrintHashes(FILE *sp,struct CfAssoc **table,int html);
-void DeleteHashes(struct CfAssoc **hashtable);
 
-/* Deletes element from hashtable, returning whether element was found */
-bool HashDeleteElement(CfAssoc **hashtable, const char *element);
-/* Looks up element in hashtable, returns NULL if not found */
-CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element);
-/* Clear whole hash table */
-void HashClear(CfAssoc **hashtable);
+/* - hashtable operations - */
+
+/*
+ * Hashtable is expected to be an array of CF_HASHTABLESIZE elements, zeroed as
+ * the initialization.
+ */
+
 /* Insert element if it does not exist in hash table. Returns false if element
    already exists in table or if table is full. */
 bool HashInsertElement(CfAssoc **hashtable, const char *element,
                        void *rval, char rtype, enum cfdatatype dtype);
 
-/* Hash table iterators: call HashIteratorNext() until it returns NULL */
+/* Deletes element from hashtable, returning whether element was found */
+bool HashDeleteElement(CfAssoc **hashtable, const char *element);
+
+/* Looks up element in hashtable, returns NULL if not found */
+CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element);
+
+/* Copies all elements of old hash table to new one. */
+void HashCopy(struct CfAssoc **newhash, struct CfAssoc **oldhash);
+
+/* Clear whole hash table */
+void HashClear(CfAssoc **hashtable);
+
+/* - hashtable iterator - */
+
+/*
+HashIterator i = HashIteratorInit(hashtable);
+CfAssoc *assoc;
+while ((assoc = HashIteratorNext(&i)))
+   {
+   // do something with assoc;
+   }
+// No cleanup is required
+*/
 HashIterator HashIteratorInit(CfAssoc **hashtable);
 CfAssoc *HashIteratorNext(HashIterator *iterator);
 

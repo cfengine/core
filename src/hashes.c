@@ -36,58 +36,17 @@
 
 /******************************************************************/
 
-void InitHashes(struct CfAssoc **table)
+/* Call only on empty newhash */
+void HashCopy(struct CfAssoc **newhash, struct CfAssoc **oldhash)
 
-{ int i;
+{
+HashIterator i = HashIteratorInit(oldhash);
+CfAssoc *assoc;
 
-for (i = 0; i < CF_HASHTABLESIZE; i++)
+while ((assoc = HashIteratorNext(&i)))
    {
-   table[i] = NULL;
+   HashInsertElement(newhash, assoc->lval, assoc->rval, assoc->rtype, assoc->dtype);
    }
-}
-
-/******************************************************************/
-
-/* FIXME: clean first? */
-void CopyHashes(struct CfAssoc **newhash,struct CfAssoc **oldhash)
-
-{ int i;
-
-for (i = 0; i < CF_HASHTABLESIZE; i++)
-   {
-   if (oldhash[i] == NULL)
-      {
-      newhash[i] = NULL;
-      }
-   else if (oldhash[i] == HASH_ENTRY_DELETED)
-      {
-      newhash[i] = HASH_ENTRY_DELETED;
-      }
-   else
-      {
-      newhash[i] = CopyAssoc(oldhash[i]);
-      }
-   }
-}
-
-/******************************************************************/
-
-void DeleteHashes(struct CfAssoc **hashtable)
-
-{ int i;
-
-for (i = 0; i < CF_HASHTABLESIZE; i++)
-   {
-   if (hashtable[i] == NULL || hashtable[i] == HASH_ENTRY_DELETED)
-      {
-      }
-   else
-      {
-      DeleteAssoc(hashtable[i]);
-      }
-   }
-
-InitHashes(hashtable);
 }
 
 /*******************************************************************/
@@ -208,9 +167,12 @@ void HashClear(CfAssoc **hashtable)
 int i;
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   if (hashtable[i] != NULL && hashtable[i] != HASH_ENTRY_DELETED)
+   if (hashtable[i] != NULL)
       {
-      DeleteAssoc(hashtable[i]);
+      if (hashtable[i] != HASH_ENTRY_DELETED)
+         {
+         DeleteAssoc(hashtable[i]);
+         }
       hashtable[i] = NULL;
       }
    }

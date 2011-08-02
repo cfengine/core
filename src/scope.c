@@ -97,12 +97,10 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       }
    }
 
-if ((ptr = (struct Scope *)malloc(sizeof(struct Scope))) == NULL)
+if ((ptr = calloc(1, sizeof(struct Scope))) == NULL)
    {
    FatalError("Memory Allocation failed for Scope");
    }
-
-InitHashes(ptr->hashtable);
 
 ptr->next = VSCOPE;
 ptr->scope = strdup(name);
@@ -205,7 +203,7 @@ while (ptr != NULL)
    {
    this = ptr;
    Debug(" -> Deleting scope %s\n",ptr->scope);
-   DeleteHashes(this->hashtable);
+   HashClear(this->hashtable);
    free(this->scope);   
    ptr = this->next;
    free((char *)this);
@@ -265,7 +263,7 @@ else
    prev->next = ptr->next;
    }
 
-DeleteHashes(ptr->hashtable);
+HashClear(ptr->hashtable);
 
 free(ptr->scope);
 free((char *)ptr);
@@ -308,7 +306,7 @@ if (!ThreadLock(cft_vscope))
 if ((op = GetScope(old)))
    {
    np = GetScope(new);
-   CopyHashes(np->hashtable,op->hashtable);
+   HashCopy(np->hashtable,op->hashtable);
    }
 
 ThreadUnlock(cft_vscope);

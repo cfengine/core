@@ -38,6 +38,19 @@
 	Invalidation of package list cache on installation/removal of
 	packages.
 
+	After beta 2:
+
+	New option cf-key -r to remove host key by IP or hostname.
+
+	Added detection of network interfaces which belong to BSD jails.
+
+	Improve robustness of multi-threaded code, in particular fix
+	problems with spurious acces denials in server and losing of
+	authentication rules after policy reload.
+
+	cf-promises accepts option -b matching cf-agent, which causes it
+	to do not complain about missing bundlesequence.
+
 	New functions and(), not(), or() and concat() to ease use of
 	ifvarclass() clause.
 

@@ -2,6 +2,6 @@
 
 commands:
   "/usr/bin/generate_config $(config)"
-    ifvarclass => concat("have_config_", classify("$(config)"));
+    ifvarclass => concat("have_config_", canonify("$(config)"));
 
 @end verbatim

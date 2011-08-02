@@ -54,6 +54,7 @@ int IGNORE_MISSING_INPUTS = false;
 int IGNORE_MISSING_BUNDLES = false;
 int FIPS_MODE = false;
 int ALWAYS_VALIDATE = false;
+bool ALLCLASSESREPORT = false;
 
 struct utsname VSYSNAME;
 

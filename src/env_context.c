@@ -1446,19 +1446,22 @@ else
 void SaveClassEnvironment()
 
 {
-  char file[CF_BUFSIZE];
-  FILE *fp;
- 
-snprintf(file,CF_BUFSIZE,"%s/state/allclasses.txt",CFWORKDIR);
-
-if ((fp = fopen(file,"w")) == NULL)
+if (ALLCLASSESREPORT)
    {
-   CfOut(cf_inform,"","Could not open allclasses cache file");
-   return;
-   }
+   char file[CF_BUFSIZE];
+   FILE *fp;
 
-ListAlphaList(fp,VHEAP,'\n');
-ListAlphaList(fp,VADDCLASSES,'\n');
-fclose(fp);
+   snprintf(file,CF_BUFSIZE,"%s/state/allclasses.txt",CFWORKDIR);
+
+   if ((fp = fopen(file,"w")) == NULL)
+      {
+      CfOut(cf_inform,"","Could not open allclasses cache file");
+      return;
+      }
+
+   ListAlphaList(fp,VHEAP,'\n');
+   ListAlphaList(fp,VADDCLASSES,'\n');
+   fclose(fp);
+   }
 }
 

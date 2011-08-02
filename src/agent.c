@@ -510,7 +510,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       CfOut(cf_verbose,"","SET alwaysvalidate = %d\n",ALWAYS_VALIDATE);
       continue;
       }
-   
+
+   if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_allclassesreport].lval) == 0)
+      {
+      ALLCLASSESREPORT = GetBoolean(retval);
+      CfOut(cf_verbose,"","SET allclassesreport = %d\n", ALLCLASSESREPORT);
+      }
+
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
       {
       CFPARANOID = GetBoolean(retval);

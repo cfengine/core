@@ -41,6 +41,7 @@ extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
 extern int ALWAYS_VALIDATE;
+extern bool ALLCLASSESREPORT;
 extern int LICENSES;
 extern char EXPIRY[32];
 extern char LICENSE_COMPANY[CF_SMALLBUF];

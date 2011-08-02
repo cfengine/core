@@ -1,0 +1,6 @@
+@verbatim
+body common control
+{
+allclassesreport => "true";
+}
+@end verbatim

@@ -417,40 +417,46 @@ HashClear(ptr->hashtable);
 
 int StringContainsVar(char *s,char *v)
 
-{ char varstr[CF_MAXVARSIZE];
+{
+int vlen = strlen(v);
 
 if (s == NULL)
    {
    return false;
    }
- 
-snprintf(varstr,CF_MAXVARSIZE-1,"${%s}",v);
 
-if (strstr(s,varstr) != NULL)
+/* Look for ${v}, $(v), @{v}, $(v) */
+
+for (;;)
    {
-   return true;
+   /* Look for next $ or @ */
+   s = strpbrk(s, "$@");
+   if (s == NULL)
+      {
+      return false;
+      }
+   /* If next symbol */
+   if (*++s == '\0')
+      {
+      return false;
+      }
+   /* is { or ( */
+   if (*s != '(' && *s != '{')
+      {
+      continue;
+      }
+   /* Then match the variable starting from next symbol */
+   if (strncmp(s + 1, v, vlen) != 0)
+      {
+      continue;
+      }
+   /* And if it matched, match the closing bracket */
+   if ((s[0] == '(' && s[vlen+1] == ')')
+       || (s[0] == '{' && s[vlen+1] == '}'))
+      {
+      return true;
+      }
    }
-
-snprintf(varstr,CF_MAXVARSIZE-1,"$(%s)",v);
-if (strstr(s,varstr) != NULL)
-   {
-   return true;
-   }
-
-snprintf(varstr,CF_MAXVARSIZE-1,"@{%s}",v);
-
-if (strstr(s,varstr) != NULL)
-   {
-   return true;
-   }
-
-snprintf(varstr,CF_MAXVARSIZE-1,"@(%s)",v);
-if (strstr(s,varstr) != NULL)
-   {
-   return true;
-   }
-
-return false;
 }
 
 /*********************************************************************/

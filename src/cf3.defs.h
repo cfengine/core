@@ -814,10 +814,14 @@ struct FnCall
 /* Variable processing                                             */
 /*******************************************************************/
 
+struct AssocHashTable;
+
+typedef struct AssocHashTable AssocHashTable;
+
 struct Scope                         /* $(bundlevar) $(scope.name) */
    {
    char *scope;                                 /* Name of scope */
-   struct CfAssoc *hashtable[CF_HASHTABLESIZE]; /* Variable heap  */
+   AssocHashTable *hashtable;
    struct Scope *next;
    };
 

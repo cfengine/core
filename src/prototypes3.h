@@ -761,27 +761,27 @@ int GetHash(const char *name);
 
 /* - hashtable operations - */
 
-/*
- * Hashtable is expected to be an array of CF_HASHTABLESIZE elements, zeroed as
- * the initialization.
- */
+AssocHashTable *HashInit(void);
 
 /* Insert element if it does not exist in hash table. Returns false if element
    already exists in table or if table is full. */
-bool HashInsertElement(CfAssoc **hashtable, const char *element,
+bool HashInsertElement(AssocHashTable *hashtable, const char *element,
                        void *rval, char rtype, enum cfdatatype dtype);
 
 /* Deletes element from hashtable, returning whether element was found */
-bool HashDeleteElement(CfAssoc **hashtable, const char *element);
+bool HashDeleteElement(AssocHashTable *hashtable, const char *element);
 
 /* Looks up element in hashtable, returns NULL if not found */
-CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element);
+CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element);
 
 /* Copies all elements of old hash table to new one. */
-void HashCopy(struct CfAssoc **newhash, struct CfAssoc **oldhash);
+void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash);
 
 /* Clear whole hash table */
-void HashClear(CfAssoc **hashtable);
+void HashClear(AssocHashTable *hashtable);
+
+/* Destroy hash table */
+void HashFree(AssocHashTable *hashtable);
 
 /* - hashtable iterator - */
 
@@ -794,7 +794,7 @@ while ((assoc = HashIteratorNext(&i)))
    }
 // No cleanup is required
 */
-HashIterator HashIteratorInit(CfAssoc **hashtable);
+HashIterator HashIteratorInit(AssocHashTable *hashtable);
 CfAssoc *HashIteratorNext(HashIterator *iterator);
 
 /* html.c */

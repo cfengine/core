@@ -34,10 +34,22 @@
 
 #define HASH_ENTRY_DELETED ((CfAssoc*)-1)
 
+struct AssocHashTable
+   {
+   struct CfAssoc *buckets[CF_HASHTABLESIZE];
+   };
+
+/******************************************************************/
+
+AssocHashTable *HashInit(void)
+{
+return calloc(1, sizeof(AssocHashTable));
+}
+
 /******************************************************************/
 
 /* Call only on empty newhash */
-void HashCopy(struct CfAssoc **newhash, struct CfAssoc **oldhash)
+void HashCopy(struct AssocHashTable *newhash, struct AssocHashTable *oldhash)
 
 {
 HashIterator i = HashIteratorInit(oldhash);
@@ -59,7 +71,7 @@ return OatHash(name);
 
 /*******************************************************************/
 
-bool HashInsertElement(CfAssoc **hashtable, const char *element,
+bool HashInsertElement(AssocHashTable *hashtable, const char *element,
                        void *rval, char rtype, enum cfdatatype dtype)
 {
 int bucket = GetHash(element);
@@ -68,14 +80,14 @@ int i = bucket;
 do
    {
    /* Free bucket is found */
-   if (hashtable[i] == NULL || hashtable[i] == HASH_ENTRY_DELETED)
+   if (hashtable->buckets[i] == NULL || hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
-      hashtable[i] = NewAssoc(element, rval, rtype, dtype);
+      hashtable->buckets[i] = NewAssoc(element, rval, rtype, dtype);
       return true;
       }
 
    /* Collision -- this element already exists */
-   if (strcmp(element, hashtable[i]->lval) == 0)
+   if (strcmp(element, hashtable->buckets[i]->lval) == 0)
       {
       return false;
       }
@@ -90,7 +102,7 @@ return false;
 
 /*******************************************************************/
 
-bool HashDeleteElement(CfAssoc **hashtable, const char *element)
+bool HashDeleteElement(AssocHashTable *hashtable, const char *element)
 {
 int bucket = GetHash(element);
 int i = bucket;
@@ -98,22 +110,22 @@ int i = bucket;
 do
    {
    /* End of allocated chunk */
-   if (hashtable[i] == NULL)
+   if (hashtable->buckets[i] == NULL)
       {
       break;
       }
 
    /* Keep looking */
-   if (hashtable[i] == HASH_ENTRY_DELETED)
+   if (hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
       continue;
       }
 
    /* Element is found */
-   if (strcmp(element, hashtable[i]->lval) == 0)
+   if (strcmp(element, hashtable->buckets[i]->lval) == 0)
       {
-      DeleteAssoc(hashtable[i]);
-      hashtable[i] = NULL;
+      DeleteAssoc(hashtable->buckets[i]);
+      hashtable->buckets[i] = NULL;
       return true;
       }
 
@@ -127,7 +139,7 @@ return false;
 
 /*******************************************************************/
 
-CfAssoc *HashLookupElement(CfAssoc **hashtable, const char *element)
+CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element)
 {
 int bucket = GetHash(element);
 int i = bucket;
@@ -135,21 +147,21 @@ int i = bucket;
 do
    {
    /* End of allocated chunk */
-   if (hashtable[i] == NULL)
+   if (hashtable->buckets[i] == NULL)
       {
       break;
       }
 
    /* Keep looking */
-   if (hashtable[i] == HASH_ENTRY_DELETED)
+   if (hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
       continue;
       }
 
    /* Element is found */
-   if (strcmp(element, hashtable[i]->lval) == 0)
+   if (strcmp(element, hashtable->buckets[i]->lval) == 0)
       {
-      return hashtable[i];
+      return hashtable->buckets[i];
       }
 
    i = (i + 1) % CF_HASHTABLESIZE;
@@ -162,27 +174,42 @@ return NULL;
 
 /*******************************************************************/
 
-void HashClear(CfAssoc **hashtable)
+static void HashClearInt(AssocHashTable *hashtable)
 {
 int i;
 for (i = 0; i < CF_HASHTABLESIZE; i++)
    {
-   if (hashtable[i] != NULL)
+   if (hashtable->buckets[i] != NULL)
       {
-      if (hashtable[i] != HASH_ENTRY_DELETED)
+      if (hashtable->buckets[i] != HASH_ENTRY_DELETED)
          {
-         DeleteAssoc(hashtable[i]);
+         DeleteAssoc(hashtable->buckets[i]);
          }
-      hashtable[i] = NULL;
       }
    }
 }
 
 /*******************************************************************/
 
-HashIterator HashIteratorInit(CfAssoc **hashtable)
+void HashClear(AssocHashTable *hashtable)
 {
-return (HashIterator) { hashtable, 0 };
+HashClearInt(hashtable);
+memset(hashtable->buckets, 0, sizeof(CF_HASHTABLESIZE * sizeof(CfAssoc *)));
+}
+
+/*******************************************************************/
+
+void HashFree(AssocHashTable *hashtable)
+{
+HashClearInt(hashtable);
+free(hashtable);
+}
+
+/*******************************************************************/
+
+HashIterator HashIteratorInit(AssocHashTable *hashtable)
+{
+return (HashIterator) { hashtable->buckets, 0 };
 }
 
 /*******************************************************************/

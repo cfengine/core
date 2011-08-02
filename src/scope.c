@@ -104,6 +104,7 @@ if ((ptr = calloc(1, sizeof(struct Scope))) == NULL)
 
 ptr->next = VSCOPE;
 ptr->scope = strdup(name);
+ptr->hashtable = HashInit();
 VSCOPE = ptr;
 ThreadUnlock(cft_vscope);
 }
@@ -263,7 +264,7 @@ else
    prev->next = ptr->next;
    }
 
-HashClear(ptr->hashtable);
+HashFree(ptr->hashtable);
 
 free(ptr->scope);
 free((char *)ptr);

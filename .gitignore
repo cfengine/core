@@ -59,6 +59,8 @@ src/conf.h.in~
 docs/reference/cf3-Reference.texinfo
 docs/reference/cf3-Reference.log
 
+docs/doxygen
+
 # autogen docs
 
 docs/*.8

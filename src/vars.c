@@ -36,6 +36,7 @@ static void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 static void DeleteAllVariables(char *scope);
 static int IsCf3Scalar(char *str);
+static int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap);
 
 /*******************************************************************/
 
@@ -311,21 +312,7 @@ if (HashDeleteElement(ptr->hashtable, id) == false)
 
 /*******************************************************************/
 
-int CompareVariable(const char *lval,struct CfAssoc *ap)
-
-{
-
-if (ap == NULL || lval == NULL)
-   {
-   return 1;
-   }
-
-return strcmp(ap->lval,lval);
-}
-
-/*******************************************************************/
-
-int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap)
+static int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap)
 
 {
   struct Rlist *list, *rp;

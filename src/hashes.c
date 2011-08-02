@@ -75,7 +75,7 @@ do
       }
 
    /* Collision -- this element already exists */
-   if (CompareVariable(element, hashtable[i]) == 0)
+   if (strcmp(element, hashtable[i]->lval) == 0)
       {
       return false;
       }
@@ -147,7 +147,7 @@ do
       }
 
    /* Element is found */
-   if (CompareVariable(element, hashtable[i]) == 0)
+   if (strcmp(element, hashtable[i]->lval) == 0)
       {
       return hashtable[i];
       }

@@ -459,8 +459,8 @@ static int ExpandPrivateScalar(const char *scopeid, const char *string,char buff
   int varstring = false;
   char currentitem[CF_EXPANDSIZE],temp[CF_BUFSIZE],name[CF_MAXVARSIZE];
   int increment, returnval = true;
-  
-memset(buffer,0,CF_EXPANDSIZE);
+
+  buffer[0] ='\0';
 
 if (string == 0 || strlen(string) == 0)
    {
@@ -472,8 +472,8 @@ Debug("\nExpandPrivateScalar(%s,%s)\n",scopeid,string);
 for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    {
    char var[CF_BUFSIZE];
-   
-   memset(var,0,CF_BUFSIZE);
+   var[0] = '\0';
+
    increment = 0;
 
    if (*sp == '\0')
@@ -481,7 +481,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       break;
       }
 
-   memset(currentitem,0,CF_EXPANDSIZE);
+   currentitem[0] = '\0';
 
    sscanf(sp,"%[^$]",currentitem);
    
@@ -490,7 +490,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       FatalError("Can't expand varstring");
       }
    
-   strcat(buffer,currentitem);
+   strlcat(buffer,currentitem,CF_EXPANDSIZE);
    sp += strlen(currentitem);
 
    Debug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n",buffer,sp,currentitem);
@@ -509,7 +509,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
              varstring = ')';
              if (strlen(var) == 0)
                 {
-                strcat(buffer,"$");
+                strlcat(buffer,"$", CF_EXPANDSIZE);
                 continue;
                 }
              break;
@@ -519,18 +519,18 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
              varstring = '}';
              if (strlen(var) == 0)
                 {
-                strcat(buffer,"$");
+                strlcat(buffer,"$", CF_EXPANDSIZE);
                 continue;
                 }
              break;
          
          default: 
-             strcat(buffer,"$");
+            strlcat(buffer,"$", CF_EXPANDSIZE);
              continue;
          }
       }
 
-   memset(currentitem,0,CF_EXPANDSIZE);
+   currentitem[0] = '\0';
 
    temp[0] = '\0';
    ExtractInnerCf3VarString(sp,temp);
@@ -559,7 +559,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
              FatalError("Can't expand varstring");
              }
           
-          strcat(buffer,(char *)rval);
+          strlcat(buffer,(char *)rval, CF_EXPANDSIZE);
           break;
 
       case cf_slist:
@@ -577,7 +577,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
              snprintf(name,CF_MAXVARSIZE,"$(%s)",currentitem);
              }
 
-          strcat(buffer,name);
+          strlcat(buffer,name,CF_EXPANDSIZE);
           returnval = false;
           break;
 

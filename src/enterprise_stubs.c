@@ -299,16 +299,6 @@ return time(NULL);
 
 /*****************************************************************************/
 
-void MapPromiseToTopic(FILE *fp,struct Promise *pp,const char *version)
-
-{
-#ifdef HAVE_NOVA
- Nova_MapPromiseToTopic(fp,pp,version); 
-#endif
-}
-
-/*****************************************************************************/
-
 void ShowTopicRepresentation(FILE *fp)
 
 {

@@ -50,13 +50,11 @@ if (VERBOSE || DEBUG)
    {
    FREPORT_TXT = stdout;
    FREPORT_HTML = fopen(NULLFILE,"w");
-   FKNOW = fopen(NULLFILE,"w");
    }
 else
    {
    FREPORT_TXT= fopen(NULLFILE,"w");
    FREPORT_HTML= fopen(NULLFILE,"w");
-   FKNOW = fopen(NULLFILE,"w");
    }
        
 printf("----------------------------------------------------------\n");

@@ -816,7 +816,6 @@ if (SHOWREPORTS)
    if ((FKNOW = fopen(name,"w")) == NULL)
       {
       CfOut(cf_error,"fopen","Cannot open output file %s",name);
-      FKNOW = fopen(NULLFILE,"w");
       }
 
    CfOut(cf_inform,""," -> Writing knowledge output to %s",CFWORKDIR);
@@ -837,23 +836,19 @@ else
       snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
       FatalError(vbuff);
       }
-
-   if ((FKNOW = fopen(name,"w")) == NULL)
-      {
-      char vbuff[CF_BUFSIZE];
-      snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
-      FatalError(vbuff);
-      }
    }
 
-if (!(FKNOW && FREPORT_HTML && FREPORT_TXT))
+if (!(FREPORT_HTML && FREPORT_TXT))
    {
    FatalError("Unable to continue as the null-file is unwritable");
    }
 
-fprintf(FKNOW,"bundle knowledge CfengineEnterpriseFundamentals\n{\n");
-ShowTopicRepresentation(FKNOW);
-fprintf(FKNOW,"}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
+if (FKNOW)
+   {
+   fprintf(FKNOW,"bundle knowledge CfengineEnterpriseFundamentals\n{\n");
+   ShowTopicRepresentation(FKNOW);
+   fprintf(FKNOW,"}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
+   }
 }
 
 /*******************************************************************/
@@ -871,8 +866,11 @@ if (SHOWREPORTS)
    }
 #endif
 
-fprintf(FKNOW,"}\n");
-fclose(FKNOW);
+if (FKNOW)
+   {
+   fprintf(FKNOW,"}\n");
+   fclose(FKNOW);
+   }
 fclose(FREPORT_HTML);
 fclose(FREPORT_TXT);
 
@@ -1355,16 +1353,14 @@ Nova_OpenCompilationReportFiles(fname);
 OpenCompilationReportFiles(fname);
 #endif
 
-if ((FKNOW = fopen(NULLFILE,"w")) == NULL)
-   {
-   FatalError("Null-file failed");
-   }
-
 ShowPromises(BUNDLES,BODIES);
 
 fclose(FREPORT_HTML);
 fclose(FREPORT_TXT);
-fclose(FKNOW);
+if (FKNOW)
+   {
+   fclose(FKNOW);
+   }
 }
 
 void OpenCompilationReportFiles(const char *fname)

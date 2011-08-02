@@ -70,7 +70,7 @@ struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 
 void VerifyPackagesPromise(struct Promise *pp)
 
-{ struct Attributes a = {{0}},al = {{0}};
+{ struct Attributes a = {{0}};
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
 

@@ -657,9 +657,9 @@ return buffer;
 
 /*********************************************************************/
 
-int CompareCSVName(char *s1,char *s2)
+int CompareCSVName(const char *s1, const char *s2)
 
-{ char *sp1,*sp2;
+{ const char *sp1,*sp2;
   char ch1,ch2;
 
 for (sp1 = s1,sp2 = s2; *sp1 != '\0' || *sp2 != '\0'; sp1++,sp2++)

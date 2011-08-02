@@ -34,7 +34,7 @@
 
 /*******************************************************************/
 
-struct Scope *GetScope(char *scope)
+struct Scope *GetScope(const char *scope)
 /* 
  * Not thread safe - returns pointer to global memory
  */

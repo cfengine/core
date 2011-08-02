@@ -172,7 +172,7 @@ return false;
 
 /*******************************************************************/
 
-void *CopyRvalItem(void *item, char type)
+void *CopyRvalItem(const void *item, char type)
 
 { struct Rlist *rp,*srp,*start = NULL;
   struct FnCall *fp;
@@ -1263,7 +1263,7 @@ return liststart;
 
 /*****************************************************************************/
 
-int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char *arch,struct Attributes a,struct Promise *pp)
+int PrependPackageItem(struct CfPackageItem **list, const char *name, const char *version, const char *arch,struct Attributes a,struct Promise *pp)
 
 { struct CfPackageItem *pi;
 

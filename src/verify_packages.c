@@ -39,15 +39,15 @@ static int PackageSanityCheck(struct Attributes a,struct Promise *pp);
 static int VerifyInstalledPackages(struct CfPackageManager **alllists,struct Attributes a,struct Promise *pp);
 static void VerifyPromisedPackage(struct Attributes a,struct Promise *pp);
 static void DeletePackageItems(struct CfPackageItem *pi);
-static int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
-static int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp);
-static int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp);
+static int PackageMatch(const char *n, const char *v, const char *a,struct Attributes attr,struct Promise *pp);
+static int PatchMatch(const char *n, const char *v, const char *a,struct Attributes attr,struct Promise *pp);
+static int ComparePackages(const char *n, const char *v, const char *a,struct CfPackageItem *pi,enum version_cmp cmp);
 static void ParsePackageVersion(char *version,struct Rlist **num,struct Rlist **sep);
-static void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
+static void SchedulePackageOp(const char *name,const char *version,const char *arch,int installed,int matched,int novers,struct Attributes a,struct Promise *pp);
 static char *PrefixLocalRepository(struct Rlist *repositories,char *package);
-static int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories);
-static int VersionCmp(char *vs1, char *vs2);
-static int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr);
+static int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAnyVer, const char *ver, enum version_cmp package_select, struct Rlist *repositories);
+static int VersionCmp(const char *vs1, const char *vs2);
+static int IsNewerThanInstalled(const char *n, const char *v, const char *a, char *instV, char *instA, struct Attributes attr);
 static int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
 static int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 static int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,struct Attributes a,struct Promise *pp);
@@ -1282,7 +1282,7 @@ if (pi)
 
 /*****************************************************************************/
 
-static int PackageMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp)
+static int PackageMatch(const char *n, const char *v, const char *a,struct Attributes attr,struct Promise *pp)
 /*
  * Returns true if any installed packages match (n,v,a), false otherwise.
  */
@@ -1313,7 +1313,7 @@ return false;
 
 /*****************************************************************************/
 
-static int PatchMatch(char *n,char *v,char *a,struct Attributes attr,struct Promise *pp)
+static int PatchMatch(const char *n, const char *v, const char *a,struct Attributes attr,struct Promise *pp)
 
 { struct CfPackageManager *mp = NULL;
   struct CfPackageItem  *pi;
@@ -1346,7 +1346,7 @@ return false;
 
 /*****************************************************************************/
 
-static void SchedulePackageOp(char *name,char *version,char *arch,int installed,int matched,int no_version_specified,struct Attributes a,struct Promise *pp)
+static void SchedulePackageOp(const char *name, const char *version, const char *arch,int installed,int matched,int no_version_specified,struct Attributes a,struct Promise *pp)
 
 { struct CfPackageManager *manager;
  char reference[CF_EXPANDSIZE],reference2[CF_EXPANDSIZE];
@@ -1357,7 +1357,8 @@ static void SchedulePackageOp(char *name,char *version,char *arch,int installed,
   char instVer[CF_MAXVARSIZE];
   char instArch[CF_MAXVARSIZE];
   char idBuf[CF_MAXVARSIZE];
-  char *id,*id_del;
+  char *id_del;
+  char id[CF_EXPANDSIZE];
   char *pathName = NULL;
   int package_select_in_range = false;
   enum package_actions policy;
@@ -1377,23 +1378,23 @@ if (a.packages.package_name_convention || a.packages.package_delete_convention)
    if(a.packages.package_delete_convention && (a.packages.package_policy == cfa_deletepack))
      {
      ExpandScalar(a.packages.package_delete_convention,reference);
-     id = reference;
+     strlcpy(id, reference, CF_EXPANDSIZE);
      }
    else if(a.packages.package_name_convention)
      {
      ExpandScalar(a.packages.package_name_convention,reference);
-     id = reference;
+     strlcpy(id, reference, CF_EXPANDSIZE);
      }
    else
      {
-     id = name;
+     strlcpy(id, name, CF_EXPANDSIZE);
      }
 
    DeleteScope("cf_pack_context");
    }
 else
    {
-   id = name;
+   strlcpy(id, name, CF_EXPANDSIZE);
    }
 
 
@@ -1450,7 +1451,7 @@ switch(policy)
              if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
                 {
                 CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
-                id = largestPackAvail;
+                strlcpy(id, largestPackAvail, CF_EXPANDSIZE);
                 }
              else
                 {
@@ -1489,7 +1490,7 @@ switch(policy)
                
                if(pathName)
                   {
-		  snprintf(id, CF_MAXVARSIZE, "%s", pathName);
+                  strlcpy(id, pathName, CF_EXPANDSIZE);
 		  CfOut(cf_verbose, "", "Expanded the package repository to %s", id);
                   }
                else
@@ -1561,7 +1562,7 @@ switch(policy)
           if (FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
 	     {
              CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
-             id = largestPackAvail;
+             strlcpy(id, largestPackAvail, CF_EXPANDSIZE);
 	     }
           else
 	     {
@@ -1713,7 +1714,7 @@ return NULL;
 
 /*****************************************************************************/
 
-int FindLargestVersionAvail(char *matchName, char *matchVers, char *refAnyVer, char *ver, enum version_cmp package_select, struct Rlist *repositories)
+int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAnyVer, const char *ver, enum version_cmp package_select, struct Rlist *repositories)
 /* Returns true if a version gt/ge ver is found in local repos, false otherwise */
 {
   struct Rlist *rp;
@@ -1794,7 +1795,7 @@ return match;
 
 /*****************************************************************************/
 
-int VersionCmp(char *vs1,char *vs2)
+static int VersionCmp(const char *vs1, const char *vs2)
 
 /* Returns true if vs2 is a larger or equal version than vs1, false otherwise */
 
@@ -1831,7 +1832,7 @@ return true;
 
 /*****************************************************************************/
 
-static int IsNewerThanInstalled(char *n,char *v,char *a, char *instV, char *instA, struct Attributes attr)
+static int IsNewerThanInstalled(const char *n, const char *v, const char *a, char *instV, char *instA, struct Attributes attr)
 
 /* Returns true if a package (n, a) is installed and v is larger than
  * the installed version. instV and instA are the version and arch installed. */
@@ -1986,7 +1987,7 @@ int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct 
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int ComparePackages(char *n,char *v,char *a,struct CfPackageItem *pi,enum version_cmp cmp)
+static int ComparePackages(const char *n, const char *v, const char *a,struct CfPackageItem *pi,enum version_cmp cmp)
 
 { struct Rlist *numbers_pr = NULL,*separators_pr = NULL;
   struct Rlist *numbers_in = NULL,*separators_in = NULL;

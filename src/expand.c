@@ -33,7 +33,7 @@
 #include "cf3.extern.h"
 
 static void ConvergePromiseValues(struct Promise *pp);
-static void ScanScalar(char *scope,struct Rlist **los,struct Rlist **lol,char *string,int level,struct Promise *pp);
+static void ScanScalar(const char *scope, struct Rlist **los, struct Rlist **lol, const char *string, int level, struct Promise *pp);
 static int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 static int Epimenides(char *var,char *rval,char rtype,int level);
 
@@ -167,7 +167,7 @@ return final;
 
 /*********************************************************************/
 
-void ScanRval(char *scopeid,struct Rlist **scalarvars,struct Rlist **listvars,void *rval,char type,struct Promise *pp)
+void ScanRval(const char *scopeid, struct Rlist **scalarvars, struct Rlist **listvars, const void *rval, char type, struct Promise *pp)
 
 { struct Rlist *rp;
   struct FnCall *fp;
@@ -208,12 +208,13 @@ switch(type)
 
 /*********************************************************************/
 
-static void ScanScalar(char *scopeid,struct Rlist **scal,struct Rlist **its,char *string,int level,struct Promise *pp)
+static void ScanScalar(const char *scopeid, struct Rlist **scal, struct Rlist **its, const char *string, int level, struct Promise *pp)
 
 {
-  char *sp,rtype;
-  void *rval;
-  char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
+const char *sp;
+char rtype;
+void *rval;
+char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
 Debug("ScanScalar(\"%s\")\n",string);
 

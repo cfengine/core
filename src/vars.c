@@ -36,7 +36,7 @@ static void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
 static void DeleteAllVariables(char *scope);
 static int IsCf3Scalar(char *str);
-static int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap);
+static int CompareVariableValue(const void *rval,char rtype,struct CfAssoc *ap);
 
 /*******************************************************************/
 
@@ -79,7 +79,7 @@ Debug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval
 
 /*******************************************************************/
 
-void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
+void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt)
 
 { struct Rval rvald;
   struct Scope *ptr;
@@ -123,7 +123,7 @@ AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 
 /*******************************************************************/
 
-void DeleteScalar(char *scope_name, char *lval)
+void DeleteScalar(const char *scope_name, const char *lval)
 
 {
 struct Scope *scope = GetScope(scope_name);
@@ -312,10 +312,10 @@ if (HashDeleteElement(ptr->hashtable, id) == false)
 
 /*******************************************************************/
 
-static int CompareVariableValue(void *rval,char rtype,struct CfAssoc *ap)
+static int CompareVariableValue(const void *rval,char rtype,struct CfAssoc *ap)
 
 {
-  struct Rlist *list, *rp;
+  const struct Rlist *list, *rp;
 
 if (ap == NULL || rval == NULL)
    {
@@ -328,7 +328,7 @@ switch (rtype)
        return strcmp(ap->rval,rval);
 
    case CF_LIST:
-       list = (struct Rlist *)rval;
+       list = (const struct Rlist *)rval;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
@@ -415,8 +415,7 @@ HashClear(ptr->hashtable);
 
 /******************************************************************/
 
-int StringContainsVar(char *s,char *v)
-
+bool StringContainsVar(const char *s, const char *v)
 {
 int vlen = strlen(v);
 
@@ -852,10 +851,10 @@ int IsCfList(char *type)
 
 /*******************************************************************/
 
-int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int lineno)
+int AddVariableHash(const char *scope, const char *lval, const void *rval, char rtype, enum cfdatatype dtype, const char *fname, int lineno)
 
 { struct Scope *ptr;
-  struct Rlist *rp;
+  const struct Rlist *rp;
   struct CfAssoc *assoc;
 
 if (rtype == CF_SCALAR)

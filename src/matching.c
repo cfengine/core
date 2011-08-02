@@ -216,7 +216,7 @@ else
 
 /*********************************************************************/
 
-static char *FirstBackReference(struct CfRegEx rex,char *regex, const char *teststring)
+static char *FirstBackReference(struct CfRegEx rex, const char *regex, const char *teststring)
 
 { static char backreference[CF_BUFSIZE];
 
@@ -272,7 +272,7 @@ bool ValidateRegEx(const char *regex)
 /* WILDCARD TOOLKIT : Level 0                                            */
 /*************************************************************************/
 
-int FullTextMatch(char *regexp,const char *teststring)
+int FullTextMatch(const char *regexp,const char *teststring)
 
 { struct CfRegEx rex;
 
@@ -301,7 +301,7 @@ else
 
 /*************************************************************************/
 
-char *ExtractFirstReference(char *regexp, const char *teststring)
+char *ExtractFirstReference(const char *regexp, const char *teststring)
     
 { struct CfRegEx rex;
   static char *nothing = "";

@@ -86,7 +86,7 @@ void DeleteExpArgs(struct Rlist *args);
 
 /* assoc.c */
 
-struct CfAssoc *NewAssoc(const char *lval,void *rval,char rtype,enum cfdatatype dt);
+struct CfAssoc *NewAssoc(const char *lval, const void *rval, char rtype, enum cfdatatype dt);
 void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
 
@@ -530,7 +530,7 @@ void ModuleProtocol(char *command,char *line,int print);
 void ExpandPromise(enum cfagenttype ag,char *scopeid,struct Promise *pp,void *fnptr);
 void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars,void (*fnptr)());
 struct Rval ExpandDanglers(char *scope,struct Rval rval,struct Promise *pp);
-void ScanRval(char *scope,struct Rlist **los,struct Rlist **lol,void *string,char type,struct Promise *pp);
+void ScanRval(const char *scope,struct Rlist **los,struct Rlist **lol,const void *string,char type,struct Promise *pp);
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
@@ -616,7 +616,7 @@ int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes at
 int IsNewerFileTree(char *dir,time_t reftime);
 char *Titleize (char *str);
 int DeEscapeQuotedString(const char *in, char *out);
-int CompareCSVName(char *s1,char *s2);
+int CompareCSVName(const char *s1, const char *s2);
 int IsDir(char *path);
 int EmptyString(char *s);
 char *JoinPath(char *path, const char *leaf);
@@ -765,7 +765,7 @@ AssocHashTable *HashInit(void);
 /* Insert element if it does not exist in hash table. Returns false if element
    already exists in table or if table is full. */
 bool HashInsertElement(AssocHashTable *hashtable, const char *element,
-                       void *rval, char rtype, enum cfdatatype dtype);
+                       const void *rval, char rtype, enum cfdatatype dtype);
 
 /* Deletes element from hashtable, returning whether element was found */
 bool HashDeleteElement(AssocHashTable *hashtable, const char *element);
@@ -913,8 +913,8 @@ void TexinfoManual(char *mandir);
 /* matching.c */
 
 bool ValidateRegEx(const char *regex);
-int FullTextMatch (char *regptr, const char *cmpptr);
-char *ExtractFirstReference(char *regexp, const char *teststring);
+int FullTextMatch (const char *regptr, const char *cmpptr);
+char *ExtractFirstReference(const char *regexp, const char *teststring); /* Not thread-safe */
 int BlockTextMatch (char *regexp,char *teststring,int *s,int *e);
 int IsRegexItemIn(struct Item *list,char *regex);
 int IsPathRegex(char *str);
@@ -1064,7 +1064,7 @@ void PopStack(struct Rlist **liststart, void **item,size_t size);
 void PushStack(struct Rlist **liststart,void *item);
 int IsInListOfRegex(struct Rlist *list,char *str);
 
-void *CopyRvalItem(void *item, char type);
+void *CopyRvalItem(const void *item, char type);
 void DeleteRvalItem(void *rval, char type);
 struct Rlist *CopyRlist(struct Rlist *list);
 int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
@@ -1090,7 +1090,7 @@ void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);
 
 int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp);
-int PrependPackageItem(struct CfPackageItem **list,char *name,char *version,char* arch,struct Attributes a,struct Promise *pp);
+int PrependPackageItem(struct CfPackageItem **list, const char *name, const char *version, const char* arch, struct Attributes a, struct Promise *pp);
 
 
 
@@ -1100,7 +1100,7 @@ void SetScope(char *id);
 void SetNewScope(char *id);
 void NewScope(char *name);
 void DeleteScope(char *name);
-struct Scope *GetScope(char *scope);
+struct Scope *GetScope(const char *scope);
 void CopyScope(char *new, char *old);
 void DeleteAllScope(void);
 void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals);
@@ -1205,12 +1205,12 @@ char *Unix_GetErrorStr(void);
 
 void LoadSystemConstants(void);
 void ForceScalar(char *lval,char *rval);
-void NewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
-void DeleteScalar(char *scope,char *lval);
+void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt);
+void DeleteScalar(const char *scope, const char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
 enum cfdatatype GetVariable(const char *scope, const char *lval,void **returnv,char *rtype);
 void DeleteVariable(char *scope,char *id);
-int StringContainsVar(char *s,char *v);
+bool StringContainsVar(const char *s, const char *v);
 int DefinedVariable(char *name);
 int IsCf3VarString(char *str);
 int BooleanControl(char *scope,char *name);
@@ -1220,7 +1220,7 @@ int UnresolvedVariables(struct CfAssoc *ap,char rtype);
 int UnresolvedArgs(struct Rlist *args);
 int IsQualifiedVariable(char *var);
 int IsCfList(char *type);
-int AddVariableHash(char *scope,char *lval,void *rval,char rtype,enum cfdatatype dtype,char *fname,int no);
+int AddVariableHash(const char *scope, const char *lval, const void *rval, char rtype, enum cfdatatype dtype, const char *fname, int no);
 void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
 /* verify_databases.c */

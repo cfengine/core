@@ -119,7 +119,7 @@ hashtable->buckets = buckets;
 /*******************************************************************/
 
 static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element,
-                                  void *rval, char rtype, enum cfdatatype dtype)
+                                  const void *rval, char rtype, enum cfdatatype dtype)
 {
 int bucket = GetHash(element);
 int i = bucket;
@@ -150,7 +150,7 @@ return false;
 /*******************************************************************/
 
 static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element,
-                                  void *rval, char rtype, enum cfdatatype dtype)
+                                  const void *rval, char rtype, enum cfdatatype dtype)
 {
 int i;
 
@@ -175,7 +175,7 @@ return true;
 /*******************************************************************/
 
 bool HashInsertElement(AssocHashTable *hashtable, const char *element,
-                       void *rval, char rtype, enum cfdatatype dtype)
+                       const void *rval, char rtype, enum cfdatatype dtype)
 {
 if (hashtable->huge)
    {

@@ -45,8 +45,6 @@ struct CfRegEx
    int failed;
    const char *regexp;
     pcre *rx;
-    const char *err;
-    int err_offset;
 };
 
 /*********************************************************************/

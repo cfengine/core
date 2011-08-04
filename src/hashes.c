@@ -34,10 +34,12 @@
 
 /*
  * This associative array implementation uses array with linear search up to
- * TINY_LIMIT elements, and then converts into full-fledged hash table.
+ * TINY_LIMIT elements, and then converts into full-fledged hash table with open
+ * addressing.
  *
  * There is a lot of small hash tables, both iterating and deleting them as a
- * hashtable takes a lot of time.
+ * hashtable takes a lot of time, especially given associative hash tables are
+ * created and destroyed for each scope entered and left.
  */
 
 #define HASH_ENTRY_DELETED ((CfAssoc*)-1)

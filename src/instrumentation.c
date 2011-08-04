@@ -424,7 +424,27 @@ else
    newq.Q.var = 0.0;
    strncpy(newq.address,ipaddress,CF_ADDRSIZE-1);
    }
- 
+
+if (strcmp(rkey,PUBKEY_DIGEST) == 0)
+   {
+   struct Item *ip;
+   int match = false;
+
+   for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
+      {
+      if (strcmp(ipaddress,ip->name) == 0)
+         {
+         match = true;
+         }
+      }
+
+   if (!match)
+      {
+      CfOut(cf_verbose,""," ! Not updating last seen, as this appears to be a host with a duplicate key");
+      return;
+      }
+   }
+
 CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s\n",rkey,ipaddress,cf_strtimestamp_local(now,timebuf));
 
 PurgeMultipleIPReferences(dbp,rkey,ipaddress);
@@ -488,10 +508,12 @@ else
 /*****************************************************************************/
 
 static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
+
 /**
  *  WARNING: This function is *NOT* thread-safe.
  *           It must be wrapped with calls to ThreadLock/ThreadUnlock(cft_db_lastseen)
  */
+
 { CF_DBC *dbcp;
   struct CfKeyHostSeen q,newq; 
   double lastseen,delta2,lsea = LASTSEENEXPIREAFTER;

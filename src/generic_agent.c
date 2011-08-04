@@ -603,10 +603,9 @@ static void Cf3ParseFiles()
 
 PARSING = true;
 
-if ((PROMISETIME = time((time_t *)NULL)) == -1)
-   {
-   CfOut(cf_error, "", "!! Couldn't read system clock in Cf3ParseFiles()");
-   }
+PROMISETIME = time(NULL);
+
+printf("promisetime set to=%ld\n", PROMISETIME);
 
 Cf3ParseFile(VINPUTFILE);
 
@@ -782,6 +781,15 @@ if (VINPUTLIST != NULL)
             }
          }
       }
+   }
+
+// did policy server change (used in $(sys.policy_hub))?
+snprintf(filename,CF_MAXVARSIZE,"%s/policy_server.dat",CFWORKDIR);
+MapName(filename);
+
+if ((cfstat(filename,&sb) != -1) && (sb.st_mtime > PROMISETIME))
+   {
+   result = true;
    }
 
 return result | ALWAYS_VALIDATE;

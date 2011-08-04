@@ -605,8 +605,6 @@ PARSING = true;
 
 PROMISETIME = time(NULL);
 
-printf("promisetime set to=%ld\n", PROMISETIME);
-
 Cf3ParseFile(VINPUTFILE);
 
 // Expand any lists in this list now
@@ -695,6 +693,22 @@ if (stat(filename,&sb) != -1)
 else
    {
    PROMISETIME = 0;
+   }
+
+
+// sanity check
+
+if(PROMISETIME > time(NULL))
+   {
+   CfOut(cf_inform, "", "!! Clock seems to have jumped back in time - mtime of %s is newer than current time - touching it", filename);
+   
+   if(utime(filename,NULL) == -1)
+      {
+      CfOut(cf_error, "utime", "!! Could not touch %s", filename);
+      }
+
+   PROMISETIME = 0;
+   return true;
    }
 
 if (cfstat(InputLocation(VINPUTFILE),&sb) == -1)

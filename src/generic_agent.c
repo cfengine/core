@@ -246,7 +246,10 @@ if (cfstat(cmd,&sb) == -1)
 
 strlcat(cmd, " -f \"", CF_BUFSIZE);
 
-if (IsFileOutsideDefaultRepository(VINPUTFILE))
+
+bool outsideRepo = IsFileOutsideDefaultRepository(VINPUTFILE);
+
+if (outsideRepo)
    {
    strlcat(cmd, VINPUTFILE, CF_BUFSIZE);
    }
@@ -270,27 +273,31 @@ if (CBUNDLESEQUENCE)
 
 if (ShellCommandReturnsZero(cmd,true))
    {
-   if (MINUSF)
+
+   if(!outsideRepo)
       {
-      snprintf(filename,CF_MAXVARSIZE,"%s/state/validated_%s",CFWORKDIR,CanonifyName(VINPUTFILE));
-      MapName(filename);   
-      }
-   else
-      {
-      snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
-      MapName(filename);
-      }
+      if (MINUSF)
+         {
+         snprintf(filename,CF_MAXVARSIZE,"%s/state/validated_%s",CFWORKDIR,CanonifyName(VINPUTFILE));
+         MapName(filename);   
+         }
+      else
+         {
+         snprintf(filename,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+         MapName(filename);
+         }
    
-   MakeParentDirectory(filename,true);
+      MakeParentDirectory(filename,true);
    
-   if ((fd = creat(filename,0600)) != -1)
-      {
-      close(fd);
-      CfOut(cf_verbose,""," -> Caching the state of validation\n");
-      }
-   else
-      {
-      CfOut(cf_verbose,"creat"," -> Failed to cache the state of validation\n");
+      if ((fd = creat(filename,0600)) != -1)
+         {
+         close(fd);
+         CfOut(cf_verbose,""," -> Caching the state of validation\n");
+         }
+      else
+         {
+         CfOut(cf_verbose,"creat"," -> Failed to cache the state of validation\n");
+         }
       }
    
    return true;

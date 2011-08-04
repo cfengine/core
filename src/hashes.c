@@ -212,6 +212,7 @@ do
    /* Keep looking */
    if (hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
+      i = (i + 1) % CF_HASHTABLESIZE;
       continue;
       }
 
@@ -290,6 +291,7 @@ do
    /* Keep looking */
    if (hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
+      i = (i + 1) % CF_HASHTABLESIZE;
       continue;
       }
 

@@ -1,4 +1,7 @@
-3.2.0 (in development)
+3.3.0 (in development)
+	New function dirname() to complement lastnode()
+
+3.2.0 (see branches/3.2.x)
 	New bootstrap method with single-command bootstrapping:
 	- cf-agent --bootstrap --policy-server 123.456.789.123
 	- Associated policy template files are added, partially maintained

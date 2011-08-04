@@ -922,6 +922,20 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+static struct Rval FnCallDirname(struct FnCall *fp, struct Rlist *finalargs)
+{
+struct Rval rval;
+
+rval.rtype = CF_SCALAR;
+rval.item = strdup(finalargs->item);
+DeleteSlash(rval.item);
+ChopLastNode(rval.item);
+SetFnCallReturnStatus("dirname", FNCALL_SUCCESS, NULL, NULL);
+
+return rval;
+}
+
+
 /*********************************************************************/
 
 static struct Rval FnCallClassify(struct FnCall *fp,struct Rlist *finalargs)
@@ -5170,6 +5184,12 @@ struct FnCallArg COUNTLINESMATCHING_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg DIRNAME_ARGS[] =
+   {
+   {CF_ANYSTRING,cf_str,"File path"},
+   {NULL,cf_notype,NULL},
+   };
+
 struct FnCallArg DISKFREE_ARGS[] =
    {
    {CF_ABSPATHRANGE,cf_str,"File system directory"},
@@ -5698,6 +5718,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"classmatch",cf_class,1,CLASSMATCH_ARGS,&FnCallClassMatch,"True if the regular expression matches any currently defined class"},
    {"countclassesmatching",cf_int,1,COUNTCLASSESMATCHING_ARGS,&FnCallCountClassesMatching,"Count the number of defined classes matching regex arg1"},
    {"countlinesmatching",cf_int,2,COUNTLINESMATCHING_ARGS,&FnCallCountLinesMatching,"Count the number of lines matching regex arg1 in file arg2"},
+   {"dirname",cf_str,1,DIRNAME_ARGS,&FnCallDirname,"Return the parent directory name for given path"},
    {"diskfree",cf_int,1,DISKFREE_ARGS,&FnCallDiskFree,"Return the free space (in KB) available on the directory's current partition (0 if not found)"},
    {"escape",cf_str,1,ESCAPE_ARGS,&FnCallEscape,"Escape regular expression characters in a string"},
    {"execresult",cf_str,2,EXECRESULT_ARGS,&FnCallExecResult,"Execute named command and assign output to variable"},

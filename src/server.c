@@ -812,6 +812,7 @@ if (NewPromiseProposals())
       DeleteAllScope();
       
       strcpy(VDOMAIN,"undefined.domain");
+      POLICY_SERVER[0] = '\0';
       
       VADMIT = VADMITTOP = NULL;
       VDENY  = VDENYTOP  = NULL;
@@ -833,6 +834,7 @@ if (NewPromiseProposals())
       
       NewScope("sys");
 
+      SetPolicyServer(POLICY_SERVER);
       NewScalar("sys","policy_hub",POLICY_SERVER,cf_str);
 
       if (EnterpriseExpiry())

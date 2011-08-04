@@ -166,11 +166,25 @@ void SetPolicyServer(char *name)
  * if not, name is filled with the contents of file.
  */
 { char file[CF_BUFSIZE];
-  FILE *fout,*fin;
+ FILE *fout,*fin;
+ char fileContents[CF_MAXVARSIZE] = {0};
+ 
+ snprintf(file,CF_BUFSIZE-1,"%s/policy_server.dat",CFWORKDIR);
+ MapName(file);
 
-snprintf(file,CF_BUFSIZE-1,"%s/policy_server.dat",CFWORKDIR);
+ if((fin = fopen(file,"r")) != NULL)
+    {
+    fscanf(fin,"%1023s",fileContents);
+    fclose(fin);
+    }
 
-if (strlen(name) > 0)
+ // update file if different and we know what to put there
+
+ if(EMPTY(name) && !EMPTY(fileContents))
+    {
+    snprintf(name, CF_MAXVARSIZE, "%s", fileContents);
+    }
+ else if (!EMPTY(name) && strcmp(name,fileContents) != 0)
    {
    if ((fout = fopen(file,"w")) == NULL)
       {
@@ -180,17 +194,6 @@ if (strlen(name) > 0)
 
    fprintf(fout,"%s",name);
    fclose(fout);
-   }
-else
-   {
-   if ((fin = fopen(file,"r")) == NULL)
-      {
-      }
-   else
-      {
-      fscanf(fin,"%4095s",name);
-      fclose(fin);
-      }
    }
 
 if (EMPTY(name))

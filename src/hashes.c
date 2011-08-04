@@ -347,6 +347,7 @@ for (i = 0; i < hashtable->array.size; ++i)
    {
    DeleteAssoc(hashtable->array.values[i]);
    }
+hashtable->array.size = 0;
 }
 
 /*******************************************************************/
@@ -364,7 +365,7 @@ for (i = 0; i < CF_HASHTABLESIZE; i++)
          }
       }
    }
-free(hashtable->buckets);
+memset(hashtable->buckets, 0, sizeof(CfAssoc *) * CF_HASHTABLESIZE);
 }
 
 /*******************************************************************/

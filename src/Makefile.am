@@ -2,7 +2,7 @@ AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
 LEXLIB = @LEXLIB@
 LDADD = libpromises.la
-BUILT_SOURCES = cf3parse.h
+BUILT_SOURCES = cf3parse.h cf3lex.l
 
 lib_LTLIBRARIES = libpromises.la
 

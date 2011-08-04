@@ -540,11 +540,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&qsize))
       keys_match = true;
       }
 
-   if (*key != *rkey)
-      {
-      continue;
-      }
-
    memcpy(&q,stored,sizeof(q));
 
    lastseen = (double)now - q.Q.q;

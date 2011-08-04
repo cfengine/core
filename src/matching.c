@@ -49,9 +49,6 @@ struct CfRegEx
     int err_offset;
 };
 
-static int FullTextCaseMatch (char *regexp,const char *teststring);
-static int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end);
-
 /*********************************************************************/
 /* Wrappers                                                          */
 /*********************************************************************/
@@ -71,34 +68,6 @@ rx = pcre_compile(regexp,PCRE_MULTILINE|PCRE_DOTALL,&errorstr,&erroffset,NULL);
 if (rx == NULL)
    {
    CfOut(cf_error,"","Regular expression error \"%s\" in expression \"%s\" at %d\n",errorstr,regexp,erroffset);
-   this.failed = true;
-   }
-else
-   {
-   this.failed = false;
-   this.rx = rx;
-   }
-
-this.regexp = regexp;
-return this;
-}
-
-/*********************************************************************/
-
-static struct CfRegEx CaseCompileRegExp(const char *regexp)
-
-{ struct CfRegEx this;
- 
- pcre *rx;
- const char *errorstr; 
- int erroffset;
-
-memset(&this,0,sizeof(struct CfRegEx)); 
-rx = pcre_compile(regexp,PCRE_CASELESS|PCRE_MULTILINE|PCRE_DOTALL,&errorstr,&erroffset,NULL);
-
-if (rx == NULL)
-   {
-   CfOut(cf_error,"","Regular expression error %s in %s at %d: %s\n",errorstr,regexp,erroffset);
    this.failed = true;
    }
 else
@@ -323,57 +292,11 @@ return FirstBackReference(rex,regexp,teststring);
 
 /*************************************************************************/
 
-static int FullTextCaseMatch (char *regexp, const char *teststring)
-
-{ struct CfRegEx rex;
- 
-rex = CaseCompileRegExp(regexp);
-
-if (rex.failed)
-   {
-   return 0;
-   }
-
-if (RegExMatchFullString(rex,teststring))
-   {
-   return true;
-   }
-else
-   {
-   return false;
-   }
-}
-
-/*************************************************************************/
-
 int BlockTextMatch(char *regexp,char *teststring,int *start,int *end)
 
 { struct CfRegEx rex;
  
 rex = CompileRegExp(regexp);
-
-if (rex.failed)
-   {
-   return 0;
-   }
-
-if (RegExMatchSubString(rex,teststring,start,end))
-   {
-   return true;
-   }
-else
-   {
-   return false;
-   } 
-}
-
-/*************************************************************************/
-
-static int BlockTextCaseMatch(char *regexp,char *teststring,int *start,int *end)
-
-{ struct CfRegEx rex;
- 
-rex = CaseCompileRegExp(regexp);
 
 if (rex.failed)
    {

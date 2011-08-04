@@ -40,53 +40,33 @@
 #include <pcre/pcre.h>
 #endif
 
-struct CfRegEx
-{
-   int failed;
-   const char *regexp;
-    pcre *rx;
-};
-
 /*********************************************************************/
 /* Wrappers                                                          */
 /*********************************************************************/
 
-static struct CfRegEx CompileRegExp(const char *regexp)
+static pcre *CompileRegExp(const char *regexp)
 
-{ struct CfRegEx this;
- 
- pcre *rx;
- const char *errorstr; 
- int erroffset;
-
-memset(&this,0,sizeof(struct CfRegEx)); 
+{
+pcre *rx;
+const char *errorstr;
+int erroffset;
 
 rx = pcre_compile(regexp,PCRE_MULTILINE|PCRE_DOTALL,&errorstr,&erroffset,NULL);
 
 if (rx == NULL)
    {
    CfOut(cf_error,"","Regular expression error \"%s\" in expression \"%s\" at %d\n",errorstr,regexp,erroffset);
-   this.failed = true;
-   }
-else
-   {
-   this.failed = false;
-   this.rx = rx;
    }
 
-this.regexp = regexp;
-return this;
+return rx;
 }
 
 /*********************************************************************/
 
-static int RegExMatchSubString(struct CfRegEx rex, const char *teststring,int *start,int *end)
+static int RegExMatchSubString(pcre *rx, const char *teststring,int *start,int *end)
 
 {
- pcre *rx;
- int ovector[OVECCOUNT],i,rc;
- 
-rx = rex.rx;
+int ovector[OVECCOUNT],i,rc;
 
 if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
    {
@@ -95,7 +75,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
 
    DeleteScope("match");
    NewScope("match");
-   
+
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
       char lval[4];
@@ -123,13 +103,13 @@ return rc >= 0;
 
 /*********************************************************************/
 
-static int RegExMatchFullString(struct CfRegEx rex, const char *teststring)
+static int RegExMatchFullString(pcre *rx, const char *teststring)
 
 {
 int match_start;
 int match_len;
 
-if (RegExMatchSubString(rex, teststring, &match_start, &match_len))
+if (RegExMatchSubString(rx, teststring, &match_start, &match_len))
    {
    return match_start == 0 && match_len == strlen(teststring);
    }
@@ -141,15 +121,13 @@ else
 
 /*********************************************************************/
 
-static char *FirstBackReference(struct CfRegEx rex, const char *regex, const char *teststring)
+static char *FirstBackReference(pcre *rx, const char *teststring)
+{
+static char backreference[CF_BUFSIZE];
 
-{ static char backreference[CF_BUFSIZE];
+int ovector[OVECCOUNT],i,rc,match_len;
+const char *match_start;
 
- pcre *rx;
- int ovector[OVECCOUNT],i,rc,match_len;
- const char *match_start;
-
-rx = rex.rx;
 memset(backreference,0,CF_BUFSIZE);
 
 if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
@@ -161,7 +139,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       {
       const char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
-      
+
       if (backref_len < CF_MAXVARSIZE)
          {
          strncpy(backreference,backref_start,backref_len);
@@ -172,25 +150,14 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    }
 
 pcre_free(rx);
-   
-if (strlen(backreference) == 0)
-   {
-   Debug("The regular expression \"%s\" yielded no matching back-reference\n",regex);
-   strncpy(backreference,"CF_NOMATCH",CF_MAXVARSIZE);
-   }
-else
-   {
-   Debug("The regular expression \"%s\" yielded backreference \"%s\" on %s\n",regex,backreference,teststring);
-   }
 
 return backreference;
 }
 
 bool ValidateRegEx(const char *regex)
 {
-    struct CfRegEx rex = CompileRegExp(regex);
-
-    return !rex.failed;
+pcre *rx = CompileRegExp(regex);
+return rx != NULL;
 }
 
 /*************************************************************************/
@@ -198,23 +165,22 @@ bool ValidateRegEx(const char *regex)
 /*************************************************************************/
 
 int FullTextMatch(const char *regexp,const char *teststring)
-
-{ struct CfRegEx rex;
+{
+pcre *rx;
 
 if (strcmp(regexp,teststring) == 0)
    {
    return true;
    }
- 
-rex = CompileRegExp(regexp);
 
-if (rex.failed)
+rx = CompileRegExp(regexp);
+
+if (rx == NULL)
    {
-   CfOut(cf_error,"","!! Could not parse regular expression '%s'", regexp);
    return false;
    }
 
-if (RegExMatchFullString(rex,teststring))
+if (RegExMatchFullString(rx, teststring))
    {
    return true;
    }
@@ -227,46 +193,58 @@ else
 /*************************************************************************/
 
 char *ExtractFirstReference(const char *regexp, const char *teststring)
-    
-{ struct CfRegEx rex;
-  static char *nothing = "";
+{
+static char *nothing = "";
+char *backreference;
+
+pcre *rx;
 
 if (regexp == NULL || teststring == NULL)
    {
    return nothing;
    }
- 
-rex = CompileRegExp(regexp);
 
-if (rex.failed)
+rx = CompileRegExp(regexp);
+
+if (rx == NULL)
    {
    return nothing;
    }
 
-return FirstBackReference(rex,regexp,teststring);
+backreference = FirstBackReference(rx, teststring);
+
+if (strlen(backreference) == 0)
+   {
+   Debug("The regular expression \"%s\" yielded no matching back-reference\n",regexp);
+   strncpy(backreference,"CF_NOMATCH",CF_MAXVARSIZE);
+   }
+else
+   {
+   Debug("The regular expression \"%s\" yielded backreference \"%s\" on %s\n",regexp,backreference,teststring);
+   }
+
+return backreference;
 }
 
 /*************************************************************************/
 
-int BlockTextMatch(char *regexp,char *teststring,int *start,int *end)
+int BlockTextMatch(char *regexp, char *teststring, int *start, int *end)
+{
+pcre *rx = CompileRegExp(regexp);
 
-{ struct CfRegEx rex;
- 
-rex = CompileRegExp(regexp);
-
-if (rex.failed)
+if (rx == NULL)
    {
    return 0;
    }
 
-if (RegExMatchSubString(rex,teststring,start,end))
+if (RegExMatchSubString(rx, teststring, start, end))
    {
    return true;
    }
 else
    {
    return false;
-   } 
+   }
 }
 
 /*********************************************************************/

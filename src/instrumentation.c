@@ -425,7 +425,7 @@ else
    strncpy(newq.address,ipaddress,CF_ADDRSIZE-1);
    }
 
-if (strcmp(rkey,PUBKEY_DIGEST) == 0)
+if (strcmp(rkey+1,PUBKEY_DIGEST) == 0)
    {
    struct Item *ip;
    int match = false;

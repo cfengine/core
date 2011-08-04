@@ -80,7 +80,7 @@ return this;
 
 /*********************************************************************/
 
-static int RegExMatchSubString(struct CfRegEx rex,char *teststring,int *start,int *end)
+static int RegExMatchSubString(struct CfRegEx rex, const char *teststring,int *start,int *end)
 
 {
  pcre *rx;
@@ -98,30 +98,27 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
    
    for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
-      char substring[CF_MAXVARSIZE];
       char lval[4];
-      char *backref_start = teststring + ovector[i*2];
+      const char *backref_start = teststring + ovector[i*2];
       int backref_len = ovector[i*2+1] - ovector[i*2];
 
       if (backref_len < CF_MAXVARSIZE)
          {
-         memset(substring,0,CF_MAXVARSIZE);
-         strncpy(substring,backref_start,backref_len);
+         char substring[CF_MAXVARSIZE];
+         strlcpy(substring,backref_start,MIN(CF_MAXVARSIZE, backref_len + 1));
          snprintf(lval,3,"%d",i);
          ForceScalar(lval,substring);
          }
       }
-
-   pcre_free(rx);
-   return true;
    }
 else
    {
    *start = 0;
    *end = 0;
-   pcre_free(rx);
-   return false;
    }
+
+pcre_free(rx);
+return rc >= 0;
 }
 
 /*********************************************************************/
@@ -129,54 +126,15 @@ else
 static int RegExMatchFullString(struct CfRegEx rex, const char *teststring)
 
 {
- pcre *rx;
- int ovector[OVECCOUNT],i,rc,match_len;
- const char *match_start;
- 
-rx = rex.rx;
+int match_start;
+int match_len;
 
-if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
+if (RegExMatchSubString(rex, teststring, &match_start, &match_len))
    {
-   match_start = teststring + ovector[0];
-   match_len = ovector[1] - ovector[0];
-
-   DeleteScope("match");
-   NewScope("match");
-   
-   for (i = 0; i < rc; i++) /* make backref vars $(1),$(2) etc */
-      {
-      char substring[CF_MAXVARSIZE];
-      char lval[4];
-      const char *backref_start = teststring + ovector[i*2];
-      int backref_len = ovector[i*2+1] - ovector[i*2];
-
-      memset(substring,0,CF_MAXVARSIZE);
-
-      if (backref_len < CF_MAXVARSIZE)
-         {
-         strncpy(substring,backref_start,backref_len);
-         snprintf(lval,3,"%d",i);
-         ForceScalar(lval,substring);
-         }
-      }
-
-   if (rx)
-      {
-      pcre_free(rx);
-      }
-      
-   if ((match_start == teststring) && (match_len == strlen(teststring)))
-      {
-      return true;
-      }
-   else
-      {
-      return false;
-      }
+   return match_start == 0 && match_len == strlen(teststring);
    }
 else
    {
-   pcre_free(rx);
    return false;
    }
 }

@@ -28,7 +28,7 @@ Preparing for running tests
     case might save a lot of headaches too.
 
 * Make sure there is no failsafe.cf in $workdir/inputs directory, otherwise some
-  tests will be errorneously marked as failed.
+  tests will be erroneously marked as failed.
 
 * Make sure user you are running testsuite from has sudo rights. This is
   necessary to test functionality which is only available for root user.

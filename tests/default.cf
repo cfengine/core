@@ -7,9 +7,6 @@ classes:
 vars:
     "cwd" string => execresult("/bin/pwd", "noshell");
 
-    "logfile_leafname" string => "TEST.log";
-    "logfile" string => "$(cwd)/$(logfile_leafname)";
-
   bin_sort::
     "sort" string => "/bin/sort";
   usr_bin_sort::

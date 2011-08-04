@@ -1,0 +1,51 @@
+#
+# Test reading single-line list of packages
+#
+
+body common control
+{
+  inputs => { "../../default.cf", "107.cf.ext" };
+  bundlesequence => { "g", default("$(this.promise_filename)") };
+  nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+packages:
+  "p"
+    package_version => "",
+    package_architectures => { "" },
+    package_method => simplepkg("abug"),
+    package_policy => "add",
+    package_select => "==";
+}
+
+
+bundle agent check
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent fini
+{
+vars:
+  "dummy" string => "dummy";
+}

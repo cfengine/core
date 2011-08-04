@@ -1,0 +1,14 @@
+body package_method simplepkg(abug)
+{
+  package_list_command => "/bin/sh -c 'echo $(this.promise_filename)'";
+  package_list_update_command => "/bin/sh -c 'echo $(this.promise_filename)'";
+  package_list_update_ifelapsed => "0";
+
+  package_installed_regex => ".*";
+  package_list_name_regex => ".*";
+  package_list_version_regex => ".*";
+  package_list_arch_regex => ".*";
+
+  package_add_command => "/bin/false";
+  package_delete_command => "/bin/false";
+}

@@ -70,6 +70,12 @@ docs/*.8
 tests/*.log
 tests/.succeeded
 
+# gcov/lcov
+
+*.gcno
+*.gcda
+*.trace
+
 # links
 
 nova

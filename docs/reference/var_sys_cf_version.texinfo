@@ -1,5 +1,5 @@
 
-The variable gives the version of the running Cfengine Community Edition.
+The variable gives the version of the running CFEngine Community Edition.
 
 @verbatim
 

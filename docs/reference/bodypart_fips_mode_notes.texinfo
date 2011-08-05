@@ -1,6 +1,6 @@
 
 Appears as of Nova 2.0.
-If Cfengine commercial editions this value may be set to avoid the use
+If CFEngine commercial editions this value may be set to avoid the use
 of old deprecated algorithms that are no longer FIPS 140-2 compliant. 
 If not set, there is some degree of compatibility with older versions and
 algorithms. During an upgrade, setting this parameter can cause a lot of

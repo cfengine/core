@@ -12,19 +12,19 @@ to use the same name both when it is running and not.
 Some operating systems are bundled with a lot of unused services that
 are running as default. At the same time, faulty or inherently
 insecure services are often the cause of security issues.  With
-Cfengine Nova, one can create promises stating services that should be
+CFEngine Nova, one can create promises stating services that should be
 stopped and disabled.
 
 The operating system may start a service at boot time, or it can be
-started by Cfengine. Either way, Cfengine will ensure that the service
+started by CFEngine. Either way, CFEngine will ensure that the service
 maintains the correct state (started, stopped, or disabled). On some
-operating systems, Cfengine also allows services to be started on
+operating systems, CFEngine also allows services to be started on
 demand, i.e. when they are needed. This is implemented though the
 @code{inetd} or @code{xinetd} daemon on Unix. Windows does not support
 this.
 
-Cfengine Nova also allows for the concept of dependencies between
+CFEngine Nova also allows for the concept of dependencies between
 services, and can automatically start or stop these, if
 desired. Parameters can be passed to services that are started by
-Cfengine.
+CFEngine.
 

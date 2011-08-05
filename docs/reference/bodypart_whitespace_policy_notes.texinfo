@@ -17,7 +17,7 @@ expression meta-characters that exist in your input line will be escaped, so
 that you can still, for example,  safely insert a line like
 @samp{"authpriv.* /var/log/something"} into your syslog config file.
 
-@b{History}: This attribute was introduced in Cfengine version 3.0.5 (2010)
+@b{History}: This attribute was introduced in CFEngine version 3.0.5 (2010)
 
 @noindent @b{Default value}:@*
 

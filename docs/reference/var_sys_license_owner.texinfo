@@ -7,6 +7,6 @@ reports:
 
  nova::
 
-  "This version of cfengine is licensed to $(sys.license_owner)";
+  "This version of CFEngine is licensed to $(sys.license_owner)";
 
 @end verbatim

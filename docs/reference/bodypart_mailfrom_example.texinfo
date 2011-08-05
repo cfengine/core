@@ -3,7 +3,7 @@
 
 body executor control
 {
-mailfrom => "MrCfengine@example.org";
+mailfrom => "mrcfengine@example.org";
 }
 
 @end verbatim

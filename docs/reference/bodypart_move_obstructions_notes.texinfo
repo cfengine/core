@@ -1,7 +1,7 @@
 
 If we have promised to make file @file{X} a link, but it already
 exists as a file, or vice-versa, or if a file is blocking the creation
-of a directory etc, then normally cfengine will report an error. If
+of a directory etc, then normally CFEngine will report an error. If
 this is set, existing objects will be moved aside to allow the system
 to heal without intervention. Files and directories are saved/renamed, but
 symbolic links are deleted.

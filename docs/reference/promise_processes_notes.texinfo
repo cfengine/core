@@ -1,23 +1,23 @@
 
 
-In cfengine 2, one has two separate actions:
+In CFEngine 2, one has two separate actions:
 
 @smallexample
  processes
  shellcommands
 @end smallexample
 
-@noindent In cfengine 3 we have
+@noindent In CFEngine 3 we have
 
 @smallexample
  processes
  commands
 @end smallexample
 
-Cfengine 2 got this ontology about right intuitively, but not
+CFEngine 2 got this ontology about right intuitively, but not
 quite. It allowed a @samp{restart} command to appear in a process
 promise, which is really a command execution. This has been
-changed in cfengine 3 so that there is a cleaner separation. Let's see
+changed in CFEngine 3 so that there is a cleaner separation. Let's see
 why.
 
 Executions are about jobs, services, scripts etc. They are properties
@@ -73,7 +73,7 @@ Using an execution of a termination command, e.g. @samp{/etc/init.d/apache stop}
 @end itemize
 
 The first case makes sense if we need to qualify the termination by
-searching for the processes. The processes section of a cfengine 3
+searching for the processes. The processes section of a CFEngine 3
 policy includes a control promise to search for matching processes.
 If matches are found, signals can be sent to precisely each specific process.
 
@@ -159,7 +159,7 @@ out_of_range_define => "$(s)_up";
 
 
 Is this a step backwards?
-The cfengine 3 approach might seem like a step backwards from the simple cfengine 2 statement:
+The CFEngine 3 approach might seem like a step backwards from the simple CFEngine 2 statement:
 @verbatim
 processes:
 

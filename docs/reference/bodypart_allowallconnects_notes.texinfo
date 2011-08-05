@@ -5,7 +5,7 @@ limit. Without this, a host may only connect once (which is a very
 strong constraint, as the host must wait for the TCP FIN_WAIT to
 expire before reconnection can be attempted).
 
-In cfengine 2 this corresponds to @code{AllowMultipleConnectionsFrom}.
+In CFEngine 2 this corresponds to @code{AllowMultipleConnectionsFrom}.
 
 Note that @code{127.0.0.1} is a regular expression (i.e., ``127 any character
 0 any character 0 any character 1''), but this will only match the IP address

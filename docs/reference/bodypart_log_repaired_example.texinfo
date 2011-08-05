@@ -27,6 +27,6 @@ log_string => "$(sys.date) $(x) promise status";
 body action immediate_syslog(x) 
 {
 log_repaired => "udp_syslog"; # Nova and above 
-log_string => "cfengine repaired promise $(this.handle) - $(x)";
+log_string => "CFEngine repaired promise $(this.handle) - $(x)";
 }
 @end verbatim

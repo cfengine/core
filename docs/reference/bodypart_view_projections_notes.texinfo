@@ -1,4 +1,4 @@
 
-If this is set to true, Cfengine Nova computes additional graphical
+If this is set to true, CFEngine Nova computes additional graphical
 representations in its knowledge map, representing causal dependencies
- between Cfengine promises.
+ between CFEngine promises.

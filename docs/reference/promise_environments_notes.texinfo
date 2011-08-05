@@ -1,2 +1,2 @@
 
-Cfengine currently provides a convergent interface to @i{libvirt}.
+CFEngine currently provides a convergent interface to @i{libvirt}.

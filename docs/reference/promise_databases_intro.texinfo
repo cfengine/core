@@ -1,24 +1,24 @@
 
-@i{These features apply to Enterprise versions of cfengine only}.
+@i{These features apply to Enterprise versions of CFEngine only}.
 
-Cfengine Nova can interact with commonly used database servers to keep
+CFEngine Nova can interact with commonly used database servers to keep
 promises about the structure and content of data within them.
 
 
 There are two main cases of database management to address: small
 embedded databases and large centralized databases. 
 
-Cfengine is a tool whose strength lies distributed management of
+CFEngine is a tool whose strength lies distributed management of
 computers.  Databases are often centralized entities that have
 single point of management, so a large monolithic database
-is more easily managed with other tools. However, cfengine can still
+is more easily managed with other tools. However, CFEngine can still
 monitor changes and discrepancies, and it can manage smaller embedded
 databases that are distributed in nature, whether they are SQL,
 registry or future types.
 
 So creating 100 new databases for test purposes is a task for
-cfengine, but adding a new item to an important production database is
-not a task that we recommend using cfengine for.  
+CFEngine, but adding a new item to an important production database is
+not a task that we recommend using CFEngine for.  
 
 There are three kinds of database supported by Nova:
 
@@ -35,17 +35,17 @@ for reading and writing complex data.
 An embedded database for interfacing with system values in Microsoft Windows.
 
 @end table
-In addition, cfengine uses a  variety of embedded databases
+In addition, CFEngine uses a  variety of embedded databases
 for its own internals.
 
 
-Cfengine's ability to make promises about databases depends on the
+CFEngine's ability to make promises about databases depends on the
 good grace of the database server. Embedded databases are directly
 part of the system and promises can be made directly. However,
 databases running through a server process (either on the same host or
-on a different host) are independent agents and cfengine cannot make
+on a different host) are independent agents and CFEngine cannot make
 promises on their behalf, unless they promise (grant) permission for
-cfengine to make the changes. Thus the pre-requisite for making
+CFEngine to make the changes. Thus the pre-requisite for making
 SQL database promises is to grant a point of access on the server.
 
 

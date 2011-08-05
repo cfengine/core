@@ -29,4 +29,4 @@ commands:
 
 Notice that the function @code{canonify()} is provided to convert a
 general variable input into a string composed only of legal
-characters, using the same algorithm that cfengine uses.
+characters, using the same algorithm that CFEngine uses.

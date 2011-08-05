@@ -3,7 +3,7 @@
 
 Inference promises are used to perform simple contextual reasoning in
 the knowledge map.  This feature is currently only supported in
-commercial versions of Cfengine as it is developed.
+commercial versions of CFEngine as it is developed.
 
 The promiser of an inference promise is the @i{result} of the
 inference, i.e. the conclusion to be drawn from combining two

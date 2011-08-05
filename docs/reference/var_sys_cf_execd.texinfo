@@ -1,5 +1,5 @@
 
-A variable containing the path to the cfengine executor @code{cf-execd}
+A variable containing the path to the CFEngine executor @code{cf-execd}
 on the platform you are using.
 
 @verbatim

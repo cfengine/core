@@ -17,8 +17,8 @@ The function is similar to the @code{splaytime} feature in @code{cf-execd},
 except
 that it allows you to base the decision on any string-criterion on a
 given host.  The entropy (or string-variation) in the first argument
-determines how effectively cfengine will be able to distribute tasks.
-Cfengine instances with the same first argument will yield a true
+determines how effectively CFEngine will be able to distribute tasks.
+CFEngine instances with the same first argument will yield a true
 result at the same time (and different first argument will yield a true
 result at a different time). Thus tasks could be scheduled according to
 group names for predictability, or according to IP addresses for
@@ -29,9 +29,9 @@ argument.  If the first argument is @code{"hourly"} then the class will be
 defined for a 5-minute interval every hour (and if the first argument is
 @code{"daily"}, then the class will be defined for one 5-minute interval
 every day.  This means that @code{splayclass} assumes that you are running
-Cfengine with the default schedule of "every 5 minutes".  If you change the
+CFEngine with the default schedule of "every 5 minutes".  If you change the
 executor @code{schedule} control variable, you may prevent the splayclass
 from ever being defined (that is, if the hashed 5-minute interval that is
-selected by the splayclass is a time when you have told Cfengine @i{not} to
+selected by the splayclass is a time when you have told CFEngine @i{not} to
 run).
 

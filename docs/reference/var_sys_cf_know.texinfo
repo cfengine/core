@@ -1,5 +1,5 @@
 
-A variable containing the path to the cfengine knowledge agent @code{cf-know}
+A variable containing the path to the CFEngine knowledge agent @code{cf-know}
 on the platform you are using.
 
 @verbatim

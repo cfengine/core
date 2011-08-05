@@ -16,6 +16,6 @@ installed, and the verify command must be successful according to
 Package managers generally expect the name of a package to be passed
 as a parameter. However, in some cases we do not need to pass the name
 of a particular package to the command. Ending the command string with
-@samp{$} prevents Cfengine from appending the package name to the
+@samp{$} prevents CFEngine from appending the package name to the
 string.
 

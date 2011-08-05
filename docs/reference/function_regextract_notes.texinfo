@@ -19,4 +19,4 @@ $(identifier[1]) = back reference 1, etc
  
 @end table
 
-@b{History}: This function was introduced in Cfengine version 3.0.4 (2010)
+@b{History}: This function was introduced in CFEngine version 3.0.4 (2010)

@@ -1,5 +1,5 @@
 
-When cfengine (Nova) observes data, such as the attached partitions in
+When CFEngine (Nova) observes data, such as the attached partitions in
 the example above, the datatype determines how that data will be
 handled.  Integer and real values, counters etc., are recorded as
 time-series if the history type is `weekly', or as single values

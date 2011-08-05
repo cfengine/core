@@ -22,6 +22,6 @@ here for the time being.
 Methods are useful for encapsulating repeatedly used configuration
 issues and iterating over parameters.
 
-In cfengine 2 methods referred to separate sub-programs executed
+In CFEngine 2 methods referred to separate sub-programs executed
 as separate processes. Methods are now implemented as bundles
 that are run inline. 

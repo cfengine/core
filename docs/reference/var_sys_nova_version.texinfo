@@ -1,5 +1,5 @@
 
-The variable gives the version of the running Cfengine Nova Edition.
+The variable gives the version of the running CFEngine Nova Edition.
 
 @verbatim
 

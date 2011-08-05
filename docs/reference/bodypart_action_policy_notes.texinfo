@@ -59,7 +59,7 @@ promise that overrides anything that happens during the editing. The
 @code{action} setting for the edit bundle means that the internal
 memory modelling of the file will only warn about changes rather than
 committing them to the memory model. This makes little difference to the
-end result, but it means that cfengine will report
+end result, but it means that CFEngine will report
 
 @smallexample
 Need to delete line - ... - but only a warning was promised

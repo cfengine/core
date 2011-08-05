@@ -22,9 +22,9 @@
 
 
 Software packaging is a core paradigm in operating system release
-management today, and cfengine supports a generic approach to
+management today, and CFEngine supports a generic approach to
 integration with native operating support for packaging.  Package
-promises allow cfengine to make promises the state of software
+promises allow CFEngine to make promises the state of software
 packages @i{conditionally}, given the assumption that a native package
 manager will perform the actual manipulations. Since no agent can make
 unconditional promises about another, this is the best that can be
@@ -53,7 +53,7 @@ following promise types:
 
 If these services are promised by a package manager, @code{cf-agent}
 promises to use the service and encapsulate it within the overall
-cfengine framework. It is possible to set classes based on the return
+CFEngine framework. It is possible to set classes based on the return
 code of a package-manager command in a very flexible way. See the
 @code{kept_returncodes}, @code{repaired_returncodes} and
 @code{failed_returncodes} attributes.
@@ -61,19 +61,19 @@ code of a package-manager command in a very flexible way. See the
 
 @b{Domain knowledge}
 
-Cfengine does not maintain operating system specific expert knowledge
+CFEngine does not maintain operating system specific expert knowledge
 internally, rather it uses a generic model for dealing with promises about
 packages (which depend on the behaviour of an external package manager).
 The approach is to define package system details in body-constraints that
 can be written once and for all, for each package system.
 
 Package promises are like @code{commands} promises in the sense that
-cfengine promises nothing about the outcome of executing a
+CFEngine promises nothing about the outcome of executing a
 command. All it can promise is to interface with it, starting it and
 using the results in good faith. Packages are basically `outsourced',
 to invoke IT parlance.
 
-The possibility of a cfengine package format that enables more guaranteeable
+The possibility of a CFEngine package format that enables more guaranteeable
 behaviour for special purposes has not been excluded for the future,
 but in any case @code{cf-agent} must support native package formats
 used by operating system maintainers as these are a core part of modern
@@ -115,7 +115,7 @@ filename, using pattern matching. For example, a promiser
 
 When scanning a list of installed packages different managers present the information
 @i{(n,v,a)} in quite different forms and pattern extraction is necessary. When making a
-promise about a specific package, the cfengine user may choose one or the other model.
+promise about a specific package, the CFEngine user may choose one or the other model.
 
 
 @b{Smart and dumb package systems}

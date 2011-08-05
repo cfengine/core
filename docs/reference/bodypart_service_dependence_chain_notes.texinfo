@@ -3,7 +3,7 @@ The service dependencies include both the dependencies defined by the
 operating system and in @code{service_dependencies}, as described
 there.
 
-Defaults to @code{ignore}, which means that Cfengine Nova will never
+Defaults to @code{ignore}, which means that CFEngine Nova will never
 start or stop dependencies or dependent services, but fail if
 dependencies are not satisfied. @code{start_parent_services} means
 that all dependencies of the service will be started if they are not
@@ -18,7 +18,7 @@ so on.
 For example, consider the case where service A depends on B, which
 depends on C. If we want to start B, we must first make sure A is
 running. If @code{start_parent_services} or @code{all_related} is set,
-Cfengine Nova will start A, if it is not running. On the other hand,
+CFEngine Nova will start A, if it is not running. On the other hand,
 if we want to stop B, C needs to be stopped
 first. @code{stop_child_services} or @code{all_related} means that
-Cfengine Nova will stop C, if it is running.
+CFEngine Nova will stop C, if it is running.

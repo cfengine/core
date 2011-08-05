@@ -1,5 +1,5 @@
 
-Access Control Lists are only available with Cfengine Nova or above.
+Access Control Lists are only available with CFEngine Nova or above.
 Form of the permissions is:
 
 @cartouche

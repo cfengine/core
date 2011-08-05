@@ -1,5 +1,5 @@
 
-On the Windows version of Cfengine Nova, this is the path to the
+On the Windows version of CFEngine Nova, this is the path to the
 Windows system directory.
 
 @verbatim

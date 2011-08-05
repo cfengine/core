@@ -1,4 +1,4 @@
-There is a large number of functions built into Cfengine, and finding the 
+There is a large number of functions built into CFEngine, and finding the 
 right one to use can be a daunting task.  The following tables are designed
 to make it easier for you to find the function you need, based on the value
 or type that the function returns or processes as inputs.
@@ -125,8 +125,8 @@ depend on the number of items processed.
 @end multitable
 
 @subsection Functions which read ``large'' data
-The following functions read data from inside Cfengine (from classes, lists,
-strings, etc.) and outside of Cfengine (from files, databases, arrays, etc.)
+The following functions read data from inside CFEngine (from classes, lists,
+strings, etc.) and outside of CFEngine (from files, databases, arrays, etc.)
 
 @unnumberedsubsubsec Functions which read arrays
 @multitable @columnfractions .2 .2 .2 .2 .2
@@ -140,7 +140,7 @@ strings, etc.) and outside of Cfengine (from files, databases, arrays, etc.)
 @item @ref{Function diskfree, ,diskfree}
 @end multitable
 
-@unnumberedsubsubsec Functions which read from a remote-cfengine
+@unnumberedsubsubsec Functions which read from a remote-CFEngine
 @multitable @columnfractions .2 .2 .2 .2 .2
 @item @ref{Function remoteclassesmatching, ,remoteclassesmatching}
 @tab @ref{Function remotescalar, ,remotescalar}

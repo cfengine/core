@@ -1,7 +1,7 @@
 
 Integer lists are lists of strings that are expected to be treated as integers.
-The typing in cfengine is dynamic, so the variable types are interchangable,
-but when you declare a variable to be type @code{ilist}, Cfengine verifies that
+The typing in CFEngine is dynamic, so the variable types are interchangable,
+but when you declare a variable to be type @code{ilist}, CFEngine verifies that
 each value you assign to it looks like an integer (e.g., @samp{3}, 
 @samp{-17}, @samp{16K}, etc).
 

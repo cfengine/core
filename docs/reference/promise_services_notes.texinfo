@@ -1,4 +1,4 @@
 
-Services promises are only avaiable in Cfengine Nova and above.
+Services promises are only avaiable in CFEngine Nova and above.
 
-Windows Vista/Server 2008 and later introduced new complications to the service security policy. Therefore, when testing @code{services} promises from the command line, Cfengine may not be given proper access rights, which gives errors like "Access is denied". However, when running through the Cfengine Nova Executor service, which is done on production machines, Cfengine has sufficent rights.
+Windows Vista/Server 2008 and later introduced new complications to the service security policy. Therefore, when testing @code{services} promises from the command line, CFEngine may not be given proper access rights, which gives errors like "Access is denied". However, when running through the CFEngine Nova Executor service, which is done on production machines, CFEngine has sufficent rights.

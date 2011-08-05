@@ -5,7 +5,7 @@ bundle agent reg
 {
 vars:
 
-  "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine","value3");
+  "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\CFEngine AS\CFEngine","value3");
 
 reports:
 

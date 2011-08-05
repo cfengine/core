@@ -1,2 +1,2 @@
 
-This determines the importance of messages from Cfengine.
+This determines the importance of messages from CFEngine.

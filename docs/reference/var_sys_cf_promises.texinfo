@@ -1,6 +1,6 @@
 
 
-A variable containing the path to the cfengine syntax analyxer @code{cf-promises}
+A variable containing the path to the CFEngine syntax analyxer @code{cf-promises}
 on the platform you are using.
 
 @verbatim

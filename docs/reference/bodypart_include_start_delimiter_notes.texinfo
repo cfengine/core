@@ -18,4 +18,4 @@ the section could be deleted, but the header would be unaffected by any
 @code{delete_lines} promises.  See the next section on
 @code{include_start_delimiter} for further details.
 
-@b{History}: This attribute was introduced in Cfengine version 3.0.5 (2010)
+@b{History}: This attribute was introduced in CFEngine version 3.0.5 (2010)

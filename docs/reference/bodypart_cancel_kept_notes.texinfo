@@ -5,4 +5,4 @@ the listed classes so that they are no longer defined.
 Note that any strings passed to this list are automatically
 canonified, so it is unecessary to call a canonify function on such inputs.
 
-@b{History}: This attribute was introduced in Cfengine version 3.0.4 (2010)
+@b{History}: This attribute was introduced in CFEngine version 3.0.4 (2010)

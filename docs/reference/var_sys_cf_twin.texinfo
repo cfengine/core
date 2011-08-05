@@ -1,7 +1,7 @@
 
-A variable containing the path to the cfengine agent's twin
+A variable containing the path to the CFEngine agent's twin
 @code{cf-twin} on the platform you are using. A twin is simply a
-second copy of the agent in Cfengine's work directory @samp{bin} area,
+second copy of the agent in CFEngine's work directory @samp{bin} area,
 used during upgrades and cases where modification of the
 @code{cf-agent} binary could be attempted (this is not allowed on some
 platforms, such as Windows).

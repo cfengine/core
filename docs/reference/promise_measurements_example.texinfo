@@ -2,7 +2,7 @@
 @verbatim
 
   # Follow a special process over time
-  # using cfengine's process cache to avoid resampling
+  # using CFEngine's process cache to avoid resampling
 
    "/var/cfengine/state/cf_rootprocs"
 

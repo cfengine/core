@@ -1,8 +1,8 @@
 
 Variables can either be allowed to change their value dynamically (be
 redefined) or they can be constant. The use of private variable spaces
-in cfengine 3 makes it unlikely that variable redefinition would be
-necessary in cfengine 3.
+in CFEngine 3 makes it unlikely that variable redefinition would be
+necessary in CFEngine 3.
 
 The value @code{constant} indicates that the variable value may not be
 changed.  The values @code{free} and @code{overridable} are synonymous, and

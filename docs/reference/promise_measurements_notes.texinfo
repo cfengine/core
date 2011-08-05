@@ -40,9 +40,9 @@ IRC connections (in)
 @item irc_out:
 IRC connections (out)
 @item cfengine_in:
-cfengine connections (in)
+CFEngine connections (in)
 @item cfengine_out:
-cfengine connections (out)
+CFEngine connections (out)
 @item nfsd_in:
 nfs connections (in)
 @item nfsd_out:
@@ -123,7 +123,7 @@ CPU Temperature core 3
 %CPU utilization core 3
 @end enumerate
 
-Slots with a higher number are used for custom measurement promises in Cfengine Nova.
+Slots with a higher number are used for custom measurement promises in CFEngine Nova.
 
 These values collected and analysed by @code{cf-monitord} are
 transformed into agent variables in the @code{$(mon.@var{name})}

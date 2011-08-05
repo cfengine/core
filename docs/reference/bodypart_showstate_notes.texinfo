@@ -29,9 +29,9 @@ IRC connections (in)
 @item irc_out
 IRC connections (out)
 @item cfengine_in
-cfengine connections (in)
+CFEngine connections (in)
 @item cfengine_out
-cfengine connections (out)
+CFEngine connections (out)
 @item nfsd_in
 nfs connections (in)
 @item nfsd_out

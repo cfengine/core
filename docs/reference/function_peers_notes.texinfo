@@ -11,7 +11,7 @@ This function returns a list of hostnames that may be considered peers
 of the current host. Peers are defined according to a list of hosts,
 provided as a file in the first argument. This file should contain a
 list (one per line), possible with comments, of fully qualified host
-names. Cfengine breaks up this list into non-overlapping groups of up to
+names. CFEngine breaks up this list into non-overlapping groups of up to
 @var{groupsize}, each of which has a leader which is the first host
 in the group.
 

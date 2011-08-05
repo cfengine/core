@@ -7,5 +7,5 @@ only) `any'.
 
 The body attributes described below can thus be added to any promise rule
 in the agent. These promises address matters of a completely general
-nature -- how cfengine behaves as it attempts to keep a promise,
+nature -- how CFEngine behaves as it attempts to keep a promise,
 comments about the promises etc.

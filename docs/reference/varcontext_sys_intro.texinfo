@@ -1,5 +1,5 @@
 
-System variables are derived from cfengine's automated discovery of system values.
+System variables are derived from CFEngine's automated discovery of system values.
 They are provided as variables in order to make automatically adaptive rules for
 configuration, e.g.
 

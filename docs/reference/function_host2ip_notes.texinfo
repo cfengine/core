@@ -6,4 +6,4 @@ the standard lookup procedure for a name, so it mimics internal
 processes and can therefore be used not only to cache multiple lookups
 in the configuration, but to debug the behaviour of the resolver.
 
-@b{History}: This function was introduced in Cfengine version 3.0.4 (2010)
+@b{History}: This function was introduced in CFEngine version 3.0.4 (2010)

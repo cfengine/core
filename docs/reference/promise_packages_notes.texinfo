@@ -17,11 +17,11 @@ identifying specific patches can be cumbersome.
 Note that patching is a subtle business. There is no simple way using
 the patch settings to install `all new system patches'. Here's why:
 
-If we specify the name of a patch, then cfengine will try to see if it
+If we specify the name of a patch, then CFEngine will try to see if it
 exists and/or is installed. If it exists in the pending list, it will
 be installed.  If it exists in the installed list it will not be
 installed. Now consider the pattern @samp{.*}. This will match any
-installed package, so cfengine will assume the relevant patch has been
+installed package, so CFEngine will assume the relevant patch has been
 installed already.  On the other hand, the pattern @samp{no match}
 will not match an installed patch, but it will not match a named patch
 either.
@@ -39,7 +39,7 @@ system reporting.
 
 @noindent @b{Installers without package/patch arguments}
 
-Cfengine supports the syntax @samp{$} at the end of a command to mean
+CFEngine supports the syntax @samp{$} at the end of a command to mean
 that no package name arguments should be used or appended after the
 dollar.  This is because some commands require a list of packages,
 while others require an empty list. The default behaviour is to try to

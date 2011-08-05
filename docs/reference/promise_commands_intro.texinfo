@@ -16,12 +16,12 @@ commands:
 
 Command @i{containment} allows you to make a `sandbox' around a
 command, to run it as a non-privileged user inside an isolated
-directory tree. Cfengine @code{modules} are commands that support a simple
+directory tree. CFEngine @code{modules} are commands that support a simple
 protocol (see below) in order to set additional variables and classes
 on execution from user defined code. Modules are intended for use as
 system probes rather than additional configuration promises.
 
-In cfengine 3 commands and processes have been separated
+In CFEngine 3 commands and processes have been separated
 cleanly. Restarting of processes must be coded as a separate
 command. This stricter type separation will allow more careful
 conflict analysis to be carried out.
@@ -35,12 +35,12 @@ commands-promise in a very flexible way. See the
 @code{kept_returncodes}, @code{repaired_returncodes} and
 @code{failed_returncodes} attributes.
 
-Commands were called @code{shellcommands} in cfengine 2.
+Commands were called @code{shellcommands} in CFEngine 2.
 
 
-@i{NOTE: a common mistake in using cfengine is to embed many shell
-commands instead of using the built-in functionality. Use of cfengine
+@i{NOTE: a common mistake in using CFEngine is to embed many shell
+commands instead of using the built-in functionality. Use of CFEngine
 internals is preferred as it assures convergence and proper integrated
-checking. Extensive use of shell commands will make a cfengine
+checking. Extensive use of shell commands will make a CFEngine
 execution very heavy-weight like other management systems. To minimize
-the system cost of execution, always use cfengine internals.}
+the system cost of execution, always use CFEngine internals.}

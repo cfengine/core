@@ -25,7 +25,7 @@ knowledge management is that there are no corrective or maintenance
 operations associated with knowledge promises.
 
 Class membership in knowledge management is subtly different from
-other parts of cfengine. If a topic lies in a certain class context,
+other parts of CFEngine. If a topic lies in a certain class context,
 the topic uses it as a type-label. This is used for disambiguation of
 subject-area in searches rather than for disambiguation of rules between
 physical environments.

@@ -1,5 +1,5 @@
 
-Under normal operations, recursive copies cause cfengine to track subdirectories
+Under normal operations, recursive copies cause CFEngine to track subdirectories
 of files. So, for instance, if we copy recurively from @file{src} to @file{dest},
 then @file{src/subdir/file} will map to @file{dest/subdir/file}. 
 

@@ -10,4 +10,4 @@ expression "192.168.2.1" will also match the IP ranges "192.168.201",
 "192.168.231", etc - since the dot character means "match any character" when
 used in a regular expression).
 
-@b{History}: This function was introduced in Cfengine version 3.0.4 (2010)
+@b{History}: This function was introduced in CFEngine version 3.0.4 (2010)

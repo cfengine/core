@@ -1,6 +1,6 @@
 Int variables are strings that are expected to be used as integer numbers. The
-typing in cfengine is dynamic, so the variable types are interchangable, but
-when you declare a variable to be type @code{int}, Cfengine verifies that
+typing in CFEngine is dynamic, so the variable types are interchangable, but
+when you declare a variable to be type @code{int}, CFEngine verifies that
 the value you assign to it looks like an integer (e.g., @samp{3}, 
 @samp{-17}, @samp{16K}, etc).
 

@@ -1,7 +1,7 @@
 
 When editing binary files, it can be dangerous to replace a text
 string with one that is longer or shorter as byte references and jumps
-would be destroyed. Cfengine will therefore not allow replacements that
+would be destroyed. CFEngine will therefore not allow replacements that
 are larger in size than the original, but shorter strings can be padded
 out to the same length.
 

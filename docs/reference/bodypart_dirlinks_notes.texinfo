@@ -4,9 +4,9 @@ file objects. By keeping directory links, you preserve the logical
 directory structure of the file system so that a link to a directory
 is not removed but is treated as a directory to be descended into.
 
-The value @code{keep} instructs cfengine not to remove directory links.
+The value @code{keep} instructs CFEngine not to remove directory links.
 The values @code{delete} and @code{tidy} are synonymous, and instruct
-cfengine to remove directory links.
+CFEngine to remove directory links.
 
 @noindent @b{Default value} (only if body is present):@*
 @*

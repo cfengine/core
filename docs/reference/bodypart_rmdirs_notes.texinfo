@@ -3,8 +3,8 @@ When deleting files recursively from a base directory, should we
 delete empty directories also, or keep the directory structure intact?
 
 Note the parent directory of a search is not deleted in recursive
-deletions.  In cfengine 2 there was an option to delete the parent of
-the search, but now in cfengine 3, you must code a separate promise to
+deletions.  In CFEngine 2 there was an option to delete the parent of
+the search, but now in CFEngine 3, you must code a separate promise to
 delete the single parent object.
 
 @verbatim

@@ -7,6 +7,6 @@ promise handle serves as the reference identifier for queries. Queries
 are instigated by function calls by any agent.
 
 The term @code{query} may also be used in commercial versions of
-Cfengine to query the server for data from embedded databases. This is
+CFEngine to query the server for data from embedded databases. This is
 currently for internal use only, and is used to grant access to report
 `menus'.

@@ -1,6 +1,6 @@
 
 
-A variable containing the path to the cfengine monitoring daemon @code{cf-monitord}
+A variable containing the path to the CFEngine monitoring daemon @code{cf-monitord}
 on the platform you are using.
 
 @verbatim

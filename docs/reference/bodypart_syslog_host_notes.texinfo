@@ -1,3 +1,3 @@
 
-The hostname or IP address of a local syslog service to which all Cfengine's components
-may promise to send data. This feature is provided in Cfengine Nova and above.
+The hostname or IP address of a local syslog service to which all CFEngine's components
+may promise to send data. This feature is provided in CFEngine Nova and above.

@@ -6,6 +6,6 @@ things:
   "router-123" 
 
            comment => "Located at 23 Marlborough Street",
-        belongs_to => { "company::Cfengine" };
+        belongs_to => { "company::cfengine" };
 
 @end verbatim

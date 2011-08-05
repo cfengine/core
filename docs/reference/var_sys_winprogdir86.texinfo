@@ -1,5 +1,5 @@
 
-On 64 bit Windows versions of Cfengine Nova, this is the path to the
+On 64 bit Windows versions of CFEngine Nova, this is the path to the
 32 bit (x86) program files directory of the system.
 
 @verbatim

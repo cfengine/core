@@ -1,5 +1,5 @@
 
-Each time cfengine matches a string, these values are
+Each time CFEngine matches a string, these values are
 assigned to a special variable context @code{$(match.@var{n})}.
 The fragments can be referred to in the remainder of the promise.
 There are two places where this makes sense. One is in pattern replacement

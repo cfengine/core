@@ -1,5 +1,5 @@
 
-If set to true, this option allows Cfengine to process line based files
+If set to true, this option allows CFEngine to process line based files
 with backslash continuation. The default is to not process continuation backslashes.
 
 Back slash lines will only be concatenated if the file requires editing,

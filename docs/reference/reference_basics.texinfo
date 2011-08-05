@@ -1,15 +1,15 @@
 
-Cfengine is a suite of programs for integrated autonomic management of
+CFEngine is a suite of programs for integrated autonomic management of
 either individual or networked computers. It has existed as as
 software suite since 1993 and this version published under the GNU
 Public License (GPL v3) and a Commercial Open Source License (COSL).
-Cfengine is Copyright by @b{Cfengine AS}, a company founded by Cfengine
+CFEngine is Copyright by @b{CFEngine AS}, a company founded by CFEngine
 author Mark Burgess.
 
-This document describes major version 3 of Cfengine, which is a
+This document describes major version 3 of CFEngine, which is a
 significant departure from earlier versions, and represents the newest
 and most carefully researched technology available for configuration
-management. It is both simpler and more powerful.  Cfengine 3 will
+management. It is both simpler and more powerful.  CFEngine 3 will
 exist in four versions, each of which adds to the following
 
 @itemize
@@ -19,22 +19,22 @@ exist in four versions, each of which adds to the following
 @item @b{Galaxy} - the ultimate commerical enhancement for global enterprises (coming 2011).
 @end itemize
 
-This document is valid for @b{all versions} of Cfengine.  Whenever a feature is only
+This document is valid for @b{all versions} of CFEngine.  Whenever a feature is only
 available in a specific version, that fact will be noted in the documentation for that
 feature (if there is no note, then that feature is available in all versions).
 
-Cfengine 3 has been changed to be both a more powerful tool and a much
-simpler tool. Cfengine 3's language interface is not backwards
-compatible with the Cfengine 2 configuration language, but it
-interoperates with Cfengine 2 so that it is "run-time compatible".
+CFEngine 3 has been changed to be both a more powerful tool and a much
+simpler tool. CFEngine 3's language interface is not backwards
+compatible with the CFEngine 2 configuration language, but it
+interoperates with CFEngine 2 so that it is "run-time compatible".
 This means that you can change over to version 3 slowly, with low risk
 and at your own speed.
 
-With Cfengine 3 you can install, configure and maintain computers
+With CFEngine 3 you can install, configure and maintain computers
 using powerful hands-free tools. You can also integrate knowledge
 management and diagnosis into the processes.
 
-Cfengine differs from most management systems in being
+CFEngine differs from most management systems in being
 
 @itemize
 @item Open software (GPL or COSL).
@@ -47,17 +47,17 @@ Cfengine differs from most management systems in being
 @node Software components
 @section Software components
 
-Cfengine 3 consists of a number of components.  The names of the programs are
-intentionally different from those in Cfengine 2 to help disambiguate them (and
-some Cfengine 2 components have been merged and/or eliminated).  The
-starred components are new to Cfengine 3:
+CFEngine 3 consists of a number of components.  The names of the programs are
+intentionally different from those in CFEngine 2 to help disambiguate them (and
+some CFEngine 2 components have been merged and/or eliminated).  The
+starred components are new to CFEngine 3:
 
 
 @node cf-agent
 @subsection cf-agent
 
 Active agent -- responsible for maintaining promises about the state of
-    your system (in Cfengine 2 the agent was called @code{cfagent}).
+    your system (in CFEngine 2 the agent was called @code{cfagent}).
     You can run @code{cf-agent} manually, but if you want to have it
     run on a regular basis, you should use @ref{cf-execd, ,cf-execd}
     (instead of using @code{cron}).
@@ -70,7 +70,7 @@ control bodies.
 @node cf-execd
 @subsection cf-execd
 Scheduler -- responsible for running cf-agent on a regular (and
-    user-configurable) basis (in Cfengine 2 the scheduler was called
+    user-configurable) basis (in CFEngine 2 the scheduler was called
     @code{cfexecd}).
 
 EXECUTOR
@@ -94,7 +94,7 @@ control bodies.
 
 Passive monitoring agent -- responsible for collecting information about
     the status of your system (which can be reported upon or used to
-    enforce promises or influence when promises are enforced).  In Cfengine 2
+    enforce promises or influence when promises are enforced).  In CFEngine 2
     the passive monitoring agent was known as @code{cfenvd}.
 
 @code{cf-monitord} keeps the promises made in @ref{Bundles for common, ,common}
@@ -105,7 +105,7 @@ control bodies.
 @node cf-promises
 @subsection cf-promises
 Promise validator -- used to verify that the promises used by the other
-    components of cfengine are syntactically valid.
+    components of CFEngine are syntactically valid.
 @code{cf-promises} does not execute any promises, but is can syntax-check
 all of them.
 
@@ -113,7 +113,7 @@ all of them.
 @subsection cf-runagent
 
 Remote run agent -- used to execute @code{cf-agent} on a remote machine (in
-    Cfengine 2 the remote run agent was called @code{cfrun}).
+    CFEngine 2 the remote run agent was called @code{cfrun}).
 @code{cf-runagent} does not keep any promises, but instead is used to ask
 another machine to do so.
 
@@ -121,7 +121,7 @@ another machine to do so.
 @subsection cf-serverd
 Server -- used to distribute policy and/or data files to clients requesting
     them and used to respond to requests from @code{cf-runagent} (in  
-    Cfengine 2 the remote run agent was called @code{cfservd}).
+    CFEngine 2 the remote run agent was called @code{cfservd}).
 
 @code{cf-serverd} keeps the promises made in @ref{Bundles for common, ,common}
 and @ref{Bundles for server, ,server} bundles, and is affected by
@@ -130,7 +130,7 @@ control bodies.
 
 @node cf-report
 @subsection cf-report
-Self-knowledge extractor -- takes data stored in cfengine's embedded
+Self-knowledge extractor -- takes data stored in CFEngine's embedded
     databases and converts them to human readable form
 
 @code{cf-report} keeps the promises made in @ref{Bundles for common, ,common}
@@ -141,21 +141,21 @@ control bodies.
 @node cf-key
 @subsection cf-key
 Key generation tool -- run once on every host to create public/private key
-    pairs for secure communication (in Cfengine 2 the key generation tool
+    pairs for secure communication (in CFEngine 2 the key generation tool
     was called @code{cfkey}).  @code{cf-key} does not keep any promises.
 
 @node cf-hub
 @subsection cf-hub
 A data aggregator used as part of the commercial product. This stub is not
-used in the community edition of Cfengine.
+used in the community edition of CFEngine.
 
 
 
 @node Core concepts
 @section Core concepts
 
-Unlike previous versions of cfengine, which had no consistent model
-For its features, you can recognize @i{everything} in Cfengine 3
+Unlike previous versions of CFEngine, which had no consistent model
+For its features, you can recognize @i{everything} in CFEngine 3
 from just a few concepts.
 
 @table @i
@@ -174,50 +174,50 @@ An association of the form "LVALUE @i{represents} RVALUE", where rval may be a s
 @item Functions
 Built-in parameterized rvalues.
 @item Classes
-Cfengine's boolean classifiers that describe context.
+CFEngine's boolean classifiers that describe context.
 @end table
 
 
-If you have used cfengine before then the most visible part of
-cfengine 3 will be its new language interface.  Although it has been
+If you have used CFEngine before then the most visible part of
+CFEngine 3 will be its new language interface.  Although it has been
 clear for a long time that the organically grown language used in
-cfengine 1 and 2 developed many problems, it was not immediately
+CFEngine 1 and 2 developed many problems, it was not immediately
 clear exactly what would be better. It has taken years of research to
-simplify the successful features of cfengine to a single overarching
-model. To understand the new cfengine, it is best to set aside any
-preconceptions about what cfengine is today. Cfengine 3 is a genuine
+simplify the successful features of CFEngine to a single overarching
+model. To understand the new CFEngine, it is best to set aside any
+preconceptions about what CFEngine is today. CFEngine 3 is a genuine
 "next generation" effort, which will be a springboard into the
 future of system management.
 
-@node A renewed cfengine
-@section A renewed cfengine
+@node A renewed CFEngine
+@section A renewed CFEngine
 
 
-Cfengine 3 is a significant rewrite of underlying cfengine technology
-which preserves the core principles and methodology of cfengine's
+CFEngine 3 is a significant rewrite of underlying CFEngine technology
+which preserves the core principles and methodology of CFEngine's
 tried and tested approach.  It comes with a new, improved language,
 with a consistent syntax and powerful pattern expression features that
-display the intent behind cfengine code more clearly. The main goal in
+display the intent behind CFEngine code more clearly. The main goal in
 changing the language is to simplify and improve the robustness and
 functionality without sacrificing the basic freedoms and self-repairing
 concepts.
 
-Cfengine 3's new language is a direct implementation of a model
+CFEngine 3's new language is a direct implementation of a model
 developed at Oslo University College over the past four years, known
 colloquially as "Promise Theory".  Promises were originally introduced
-by Mark Burgess as a way to talk about cfengine's model of autonomy
+by Mark Burgess as a way to talk about CFEngine's model of autonomy
 and have since become a powerful way of modelling cooperative systems
 -- not just computers, but humans too.
 
 @quotation
 
-@i{   ``The biggest challenge of implementing cfengine in our organization@*
+@i{   ``The biggest challenge of implementing CFEngine in our organization@*
      was not technical but political -- getting everyone to agree.@*
      Promise theory was a big help in understand this.''}
 
 @end quotation
 
-Cfengine 3 is a generic implementation of the language of promises
+CFEngine 3 is a generic implementation of the language of promises
 that allows all of the aspects of configuration and change management to be
 unified under a single umbrella.
 
@@ -230,13 +230,13 @@ interested in change -- we are interested in avoiding it, i.e. being
 in a state where we don't need to make any changes. In other words we
 want to be able to promise that the system is correct, verify this and
 only make changes if our promises are not kept. If you want
-to think ITIL, think of this as a service that cfengine provides.
+to think ITIL, think of this as a service that CFEngine provides.
 
-To put it another way, cfengine is not really a @i{change
+To put it another way, CFEngine is not really a @i{change
 management} system, it is a @i{maintenance system}. Maintenance
 is the process of making small changes or corrections to a model. A
 `model' is just another word for a template or a specification of how
-we want the system to work. Cfengine's model is based on the idea of
+we want the system to work. CFEngine's model is based on the idea of
 promises, which means that it focuses on what is stable and lasting
 about a system -- not about what is changing.
 
@@ -261,10 +261,10 @@ order to keep them.
 
 
 
-@node Installation, Syntax, A renewed cfengine
+@node Installation, Syntax, A renewed CFEngine
 @section Installation
 
-In order to install cfengine, you should first ensure that the following
+In order to install CFEngine, you should first ensure that the following
 packages are installed.
 
 @table @r
@@ -277,15 +277,15 @@ Perl Compatible Regular Expression library.@*URL: @url{http://www.pcre.org/}
 
 @item
 On Windows machines, you need to install the basic Cygwin DLL from @url{http://www.cygwin.com}
-in order to run cfengine.
+in order to run CFEngine.
 @end table
 
 Additional functionality becomes available if other libraries are present, e.g.
 OpenLDAP, client libraries for MySQL and PostgreSQL, etc. It is possible to run
-cfengine without these, but related functionality will be missing.
+CFEngine without these, but related functionality will be missing.
 
 Unless you have purchased ready-to-run binaries, or are using a
-package distribution, you will need to compile cfengine. For this you
+package distribution, you will need to compile CFEngine. For this you
 will also need a build environment tools: @code{gcc}, @code{flex}, @code{bison}.
 
 @noindent
@@ -303,15 +303,15 @@ make install
 This results in binaries being installed in @file{/usr/local/sbin}.
 Since this is not necessarily a local file system on all hosts, users
 are encouraged to keep local copies of the binaries on each host, inside
-the cfengine trusted work directory.
+the CFEngine trusted work directory.
 
 @node Syntax, Work directory, Installation
 @section Syntax, identifiers and names
 
-The Cfengine 3 language has a few simple rules:
+The CFEngine 3 language has a few simple rules:
 
 @itemize
-@item Cfengine built-in words, and identifiers of your choosing (the names
+@item CFEngine built-in words, and identifiers of your choosing (the names
 of variables, bundles, body templates and classes) may only contain
 the usual alphanumeric and underscore characters (@samp{a-zA-Z0-9_}).
 
@@ -338,8 +338,8 @@ of the form
 @samp{constraint_type => template_identifier}.
 
 
-@item Cfengine uses many `constraint expressions'
-as part of the body of a promise. These take the form: left-hand-side (cfengine word)
+@item CFEngine uses many `constraint expressions'
+as part of the body of a promise. These take the form: left-hand-side (CFEngine word)
 @samp{=>} right-hand-side (user defined data). This can take several forms:
 
 @verbatim
@@ -357,15 +357,15 @@ In each of these cases, the right hand side is a user choice.
 @section The work directory
 
 In order to achieve the desired simplifications, it was decided to
-reserve a private work area for the cfengine tool-set.
+reserve a private work area for the CFEngine tool-set.
 @c chew begin Work directory
 
 @cartouche
-In cfengine 1.x, the administrator could choose the locations of
+In CFEngine 1.x, the administrator could choose the locations of
 configuration files, locks, and logging data independently. In
-cfengine 2.x, this diversity has been simplified to a single directory
+CFEngine 2.x, this diversity has been simplified to a single directory
 which defaults to @file{/var/cfengine} (similar to @file{/var/cron}), and in
-cfengine 3.x this is preserved.
+CFEngine 3.x this is preserved.
 @end cartouche
 
 @w{}
@@ -383,12 +383,12 @@ therefore be trusted to a) be present, and b) be authentic on an
 arbitrary system.
 
 Similarly, a trusted cache of the input files must now be maintained
-in the @file{inputs} subdirectory. When cfengine is invoked by the
+in the @file{inputs} subdirectory. When CFEngine is invoked by the
 scheduler, it reads only from this directory. It is up to the user to
 keep this cache updated, on each host. This simplifies and
-consolidates the cfengine resources in a single place.
+consolidates the CFEngine resources in a single place.
 
-Unlike cfengine 2, cfengine 3 does not recognize the
+Unlike CFEngine 2, CFEngine 3 does not recognize the
 @code{CFINPUTS} environment variable.
 
 The @file{outputs} directory is now a record of spooled run-reports. These
@@ -403,12 +403,12 @@ to another central location and viewed in an alternative browser.
 @node Decisions, Loops, Variables, A simple crash course in concepts
 @section Decisions
 
-Cfengine decisions are made behind the scenes and the results of
+CFEngine decisions are made behind the scenes and the results of
 certain true/false propositions are cached in Booleans referred to as
-`classes'. There are no if-then-else statements in cfengine; all
+`classes'. There are no if-then-else statements in CFEngine; all
 decisions are made with classes.
 
-Cfengine runs on every computer individually and each time it wakes up
+CFEngine runs on every computer individually and each time it wakes up
 the underlying generic agent platform discovers and classifies
 properties of the environment or context in which it runs.  This  
 information
@@ -419,13 +419,13 @@ Classes fall into hard (discovered) and soft (user-defined) types.  A
 single hard class can be one of several things:
 
 @node Hard classes, Global and local classes, Work directory
-@subsection Cfengine hard classes
+@subsection CFEngine hard classes
 
-Cfengine runs on every computer individually and each time it wakes up
+CFEngine runs on every computer individually and each time it wakes up
 the underlying generic agent platform discovers and classifies
 properties of the environment or context in which it runs.  This information
 is cached and may be used to make decisions about configuration@footnote{There are
-no if-then-else statements in cfengine; all decisions are made with classes.}.
+no if-then-else statements in CFEngine; all decisions are made with classes.}.
 
 Classes fall into hard (discovered) and soft (defined) types.  A
 single class can be one of several things:
@@ -438,7 +438,7 @@ single class can be one of several things:
 
 @item The unqualified name of a particular host (e.g., @code{www}). If your
 system returns a fully qualified domain name for your host (e.g.,
-@code{www.iu.hio.no}), cfengine will also define a hard class for the fully
+@code{www.iu.hio.no}), CFEngine will also define a hard class for the fully
 qualified name, as well as the partially-qualified component names
 @code{iu.hio.no}, @code{hio.no}, and @code{no}.
 
@@ -630,14 +630,14 @@ are global.
 @c SECTION
 @c -------------------------------------------------------------------------------
 
-@node Filenames and paths, Upgrading from cfengine 2, Global and local classes
+@node Filenames and paths, Upgrading from CFEngine 2, Global and local classes
 @section Filenames and paths
 
 @c chew start Unix filenames
 
 Filenames in Unix-like operating systems use the forward slash
 @samp{/} character for their directory separator . All references to
-file locations must be absolute pathnames in cfengine, i.e. they must
+file locations must be absolute pathnames in CFEngine, i.e. they must
 begin with a complete specification of which directory they are
 in. For example:
 
@@ -687,55 +687,55 @@ must begin with a drive letter or double-slash server name.
 Note in recent versions of Cygwin you can decide to use the
 @code{/cygdrive} to specify a path to windows file E.g
 @file{/cygdrive/c/myfile} means @file{c:\myfile} or you can do it straight away in
-cfengine as @code{c:\myfile}.
+CFEngine as @code{c:\myfile}.
 
 @c ---------------------------------------------------------------------------
-@node Upgrading from cfengine 2, Testing as a non-privilieged user, Filenames and paths
-@section Upgrading from cfengine 2
+@node Upgrading from CFEngine 2, Testing as a non-privilieged user, Filenames and paths
+@section Upgrading from CFEngine 2
 
-Cfengine 3 has a completely new syntax, designed to solve the issues
+CFEngine 3 has a completely new syntax, designed to solve the issues
 brought up from 15 years of experience with configuration
-management. Rather than clutter cfengine 3 with buggy
+management. Rather than clutter CFEngine 3 with buggy
 backward-compatability issues, it was decided to make no compromises
-with cfengine 3 and instead allow cfengine 2 and cfengine 3 to
+with CFEngine 3 and instead allow CFEngine 2 and CFEngine 3 to
 coincide in a cooperative fashion for the foreseeable future.  This
 means that users can upgrade at their own pace, in the classic
-cfengine incremental fashion. We expect that cfengine 2 installations
+CFEngine incremental fashion. We expect that CFEngine 2 installations
 will be around for years to come so this upgrade path seems the most
 defensible.
 
 The daemons and support services are fully interoperable between
-cfengine 2 and cfengine 3, so it does not matter whether you run
+CFEngine 2 and CFEngine 3, so it does not matter whether you run
 @code{cfservd} (cf2) together with @code{cf-agent} (cf3) or
 @code{cf-serverd} (cf3) together with @code{cfagent} (cf2). You can
 change the servers at your own pace.
 
-Cfengine 3's @code{cf-execd} replaces cfengine 2's @code{cfexecd} and
+CFEngine 3's @code{cf-execd} replaces CFEngine 2's @code{cfexecd} and
 it is designed to work optimally with @code{cf-agent} (cf3). Running
 this daemon has no consequences for access control, only for
 scheduling @code{cf-agent}. You can (indeed should) replace
 @code{cfexecd} with @code{cf-execd} immediately. You will want to
 alter your @file{crontab} file to run the new component instead of the
-old. The sample cfengine 3 input files asks @code{cf-agent} to do
+old. The sample CFEngine 3 input files asks @code{cf-agent} to do
 this automatically, simply replacing the string.
 
-The sample @file{inputs} files supplied with cfengine 3 contain
-promises to integrate cfengine 2 as described. What can you do to
+The sample @file{inputs} files supplied with CFEngine 3 contain
+promises to integrate CFEngine 2 as described. What can you do to
 upgrade? Here is a simple recipe that assumes you have a standardized
-cfengine 2 setup, running @code{cfexecd} in @file{crontabs} and possibly
+CFEngine 2 setup, running @code{cfexecd} in @file{crontabs} and possibly
 running @code{cfservd} and @code{cfenvd} as daemons.
 
 @enumerate
 
-@item Install the cfengine 3 software on a host.
+@item Install the CFEngine 3 software on a host.
 
 @item Go to the @file{inputs/} directory in the source and copy these
 files to your master update repository, i.e.  where you will publish
 policies for distribution.
 
-@item Remove any self-healing rules to reinstall cfengine 2, especially
-rules to add @code{cfexecd} or @code{cfagent} to @file{crontabs} etc. Cfengine 3
-will handle this from now on and encapsulate old cfengine 2 scripts.
+@item Remove any self-healing rules to reinstall CFEngine 2, especially
+rules to add @code{cfexecd} or @code{cfagent} to @file{crontabs} etc. CFEngine 3
+will handle this from now on and encapsulate old CFEngine 2 scripts.
 
 @item Move to this inputs directory: @code{cd @var{your-path}/inputs}.
 
@@ -745,16 +745,16 @@ file to the location of the master directory.
 @item Set the email options for the executor in @file{promises.cf}.
 
 @item Run @code{cf-agent --bootstrap} as the root or privileged user. This will install
-cfengine 3 in place of cfengine 2, integrate your old cfengine 2
+CFEngine 3 in place of CFEngine 2, integrate your old CFEngine 2
 configuration, and warn you about any rules that need to be removed
-from your old cfengine configuration.
+from your old CFEngine configuration.
 
-@item You should now be running cfengine 3. You can now add new rules to the files
-in your own time, or convert the old cfengine 2 rules and gradually comment them
-out of the cfengine 2 files.
+@item You should now be running CFEngine 3. You can now add new rules to the files
+in your own time, or convert the old CFEngine 2 rules and gradually comment them
+out of the CFEngine 2 files.
 
-@item Make sure there are no rules in your old cfengine 2 configuration to activate
-cfengine 2 components, i.e. rules that will fight against cfengine 3.
+@item Make sure there are no rules in your old CFEngine 2 configuration to activate
+CFEngine 2 components, i.e. rules that will fight against CFEngine 3.
 Then, when you are ready, convert @file{cfservd.conf} into a server bundle e.g. in @file{promises.cf}
 and remove all rules to run @code{cfservd} and replace them with rules to run
 @code{cf-serverd} at your own pace.
@@ -763,24 +763,24 @@ and remove all rules to run @code{cfservd} and replace them with rules to run
 
 
 @c ---------------------------------------------------------------------------
-@node Testing as a non-privilieged user, The bare necessities of a cfengine 3, Upgrading from cfengine 2
+@node Testing as a non-privilieged user, The bare necessities of a CFEngine 3, Upgrading from CFEngine 2
 @section Testing as a non-privilieged user
 
-One of the practical advantages of cfengine is that you can test it
+One of the practical advantages of CFEngine is that you can test it
 without the need for root or administrator privileges. This is
-recommended for all new users of cfengine 3.
+recommended for all new users of CFEngine 3.
 
-Cfengine operates with the notion of a work-directory. The default
+CFEngine operates with the notion of a work-directory. The default
 work directory for the @code{root} user is @file{/var/cfengine}
 (except on Debian Linux and various derivatives which prefer
 @file{/var/lib/cfengine}).  For any other user, the work directory
-lies in the user's home directory, named @file{~/.cfagent}. Cfengine
+lies in the user's home directory, named @file{~/.cfagent}. CFEngine
 prefers you to keep certain files here.  You should not resist this
 too strongly or you will make unnecessary trouble for yourself.  The
 decision to have this `known directory' was made to simplify a lot of
 configuration.
 
-To test cfengine as an ordinary user, do the following:
+To test CFEngine as an ordinary user, do the following:
 
 @itemize
 @item Compile and make the software.
@@ -803,12 +803,12 @@ host$ ~/.cfagent/bin/cf-promises
 host$ ~/.cfagent/bin/cf-promises --verbose
 @end smallexample
 
-This is always the way to start checking a configuration in cfengine
+This is always the way to start checking a configuration in CFEngine
 3. If a configuration does not pass this check/test, you will not be
 allowed to use it, and @file{cf-agent} will look for the file
 @file{failsafe.cf}.
 
-Notice that the cfengine 3 binaries have slightly different names than the cfengine
+Notice that the CFEngine 3 binaries have slightly different names than the CFEngine
 2 binaries. They all start with the @file{cf-} prefix.
 @smallexample
 host$ ~/.cfagent/bin/cf-agent
@@ -816,10 +816,10 @@ host$ ~/.cfagent/bin/cf-agent
 
 
 @c ---------------------------------------------------------------------------
-@node The bare necessities of a cfengine 3, Familiiarizing yourself, Testing as a non-privilieged user
-@section The `bare necessities' of a cfengine 3
+@node The bare necessities of a CFEngine 3, Familiiarizing yourself, Testing as a non-privilieged user
+@section The `bare necessities' of a CFEngine 3
 
-Here is the simplest `Hello world' program in cfengine 3:
+Here is the simplest `Hello world' program in CFEngine 3:
 
 @verbatim
 
@@ -842,7 +842,7 @@ reports:
 see something like this:
 
 @smallexample
-atlas$ ~/LapTop/Cfengine3/trunk/src/cf-promises -r -f ./unit_null_config.cf
+atlas$ ~/LapTop/CFEngine3/trunk/src/cf-promises -r -f ./unit_null_config.cf
 Summarizing promises as text to ./unit_null_config.cf.txt
 Summarizing promises as html to ./unit_null_config.cf.html
 @end smallexample
@@ -854,8 +854,8 @@ cat ./unit_null_config.cf.txt
 firefox ./unit_null_config.cf.html
 @end smallexample
 
-You will see a summary of how cfengine interprets the files, either in
-HTML or text. By default, the cfengine components also dump a debugging
+You will see a summary of how CFEngine interprets the files, either in
+HTML or text. By default, the CFEngine components also dump a debugging
 file, e.g. @file{promise_output_agent.html}, @file{promise_output_agent.txt}
 with an expanded view.
 
@@ -864,7 +864,7 @@ with an expanded view.
 @section Familiarizing yourself
 
 
-To familiarize yourself with cfengine 3, type or paste in the following example text:
+To familiarize yourself with CFEngine 3, type or paste in the following example text:
 
 @verbatim
 ########################################################
@@ -928,7 +928,7 @@ repair_failed => { "$(alert)" };
 }
 @end verbatim
 
-This example shows all of the main features of cfengine: bundles,
+This example shows all of the main features of CFEngine: bundles,
 bodies, control, variables, and promises.  To the casual eye it might
 look complex, but that is because it is explicit about all of the
 details. Fortunately it is easy to hide many of these details to
@@ -937,7 +937,7 @@ make the example simpler without sacrificing any functionality.
 
 The first thing to try with this example is to verify it -- did we
 make any mistakes? Are there any inconsistencies? To do this we use
-the new cfengine program @code{cf-promises}. Let's assume that you
+the new CFEngine program @code{cf-promises}. Let's assume that you
 typed this into a file called @file{test.cf} in the current directory.
 
 @smallexample
@@ -956,7 +956,7 @@ Now you see a lot of information
 @smallexample
 Reference time set to Sat Aug  2 11:26:06 2008
 
-cf3 Cfengine - 3.0.0
+cf3 CFEngine - 3.0.0
 Free Software Foundation 1994-
 Donated by Mark Burgess, Oslo University College, Norway
 cf3 ------------------------------------------------------------------------
@@ -1004,17 +1004,17 @@ cf3 Inputs are valid
 
 
 The last two lines of this are of interest. Each time a component of
-cfengine 3 parses a number of promises, it summarizes the information
+CFEngine 3 parses a number of promises, it summarizes the information
 in an HTML file called generically @code{promise_output_@i{component-type}.html}.
 In this case the @code{cf-promises} command represents all possible promises,
 by the type "common". You can view this output file in a suitable web browser
-to see exactly what cfengine has understood by the configuration.
+to see exactly what CFEngine has understood by the configuration.
 
 
 Now that you have verified it, you can execute it. To run this example you need
 to change the username `mark' to your own, or obtain root privileges to change
 to another user. 
-The non-verbose output of the script when run in the cfengine 3
+The non-verbose output of the script when run in the CFEngine 3
 directory looks something like this:
 
 @verbatim
@@ -1094,7 +1094,7 @@ file and that you have distributed and installed it to all
 participating hosts in your cluster.
 @end enumerate
 
-@noindent Always remember that you can run cfengine in verbose or
+@noindent Always remember that you can run CFEngine in verbose or
 debugging modes to see how the authentication takes place:
 
 @verbatim
@@ -1111,14 +1111,14 @@ even debugging mode @samp{-d2}.
 @node Key exchange, Time windows, Server connection, Remote access troubleshooting
 @subsection Key exchange
 
-The key exchange model used by cfengine is based on that used by
+The key exchange model used by CFEngine is based on that used by
 OpenSSH. It is a peer to peer exchange model, not a central
 certificate authority model. This means that there are no scalability
 bottlenecks (at least by design, though you might introduce your own
 if you go for an overly centralized architecture).
 
 The problem of key distribution is the conundrum of every public key
-infrastructure. Key exchange is handled automatically by cfengine and all you
+infrastructure. Key exchange is handled automatically by CFEngine and all you
 need to do is to decide which keys to trust.
 
 When public keys are offered to a server, they could be accepted
@@ -1262,7 +1262,7 @@ it might be an easier way to manage trust.
 @node Other users than root, Encryption, Time windows, Remote access troubleshooting
 @subsection Other users than root
 
-Cfengine normally runs as user "root" (except on Windows which does
+CFEngine normally runs as user "root" (except on Windows which does
 not normally have a root user), i.e. a privileged administrator. If other users
 are to be granted access to the system, they must also generate a key
 and go through the same process. In addition, the users must be added
@@ -1271,21 +1271,21 @@ to the server configuration file.
 @node Encryption,  , Other users than root, Remote access troubleshooting
 @subsection Encryption
 
-Cfengine provides encryption for keeping file contents private during
+CFEngine provides encryption for keeping file contents private during
 transfer. It is assumed that users will use this judiciously. There is
 nothing to be gained by encrypting the transfer of public files --
 overt use of encryption just contributes to global warming, burning
 unnecessary CPU cycles without offering any security.
 
 The main role for encryption in configuration management is for
-authentication. Cfengine always uses encryption during authentication, so
+authentication. CFEngine always uses encryption during authentication, so
 none of the encryption settings affect the security of authentication.
 
 
 
 
 @c ---------------------------------------------------------------------------
-@node A simple crash course, How to run cfengine 3 examples
+@node A simple crash course, How to run CFEngine 3 examples
 @chapter  A simple crash course in concepts
 
 @menu
@@ -1293,11 +1293,11 @@ none of the encryption settings affect the security of authentication.
 * Best practice for writing promises::  
 * Containers::                  
 * When and where are promises made?::  
-* Types in cfengine 3::         
-* Datatypes in cfengine 3::     
-* Variable expansion in cfengine 3::  
+* Types in CFEngine 3::         
+* Datatypes in CFEngine 3::     
+* Variable expansion in CFEngine 3::  
 * Normal ordering::             
-* Loops and lists in cfengine 3::  
+* Loops and lists in CFEngine 3::  
 * Pattern matching and referencing::  
 * Distributed discovery::       
 * Developer structures::        
@@ -1306,13 +1306,13 @@ none of the encryption settings affect the security of authentication.
 @node Rules are promises, Best practice for writing promises, A simple crash course, A simple crash course
 @section Rules are promises
 
-Everything in cfengine 3 can be interpreted as a promise. Promises can
+Everything in CFEngine 3 can be interpreted as a promise. Promises can
 be made about all kinds of different subjects, from file attributes,
 to the execution of commands, to access control decisions and
 knowledge relationships.
 
 This simple but powerful idea allows a very practical uniformity in
-cfengine syntax.  There is only one grammatical form for statements in
+CFEngine syntax.  There is only one grammatical form for statements in
 the language that you need to know and it looks generically like this:
 
 @smallexample
@@ -1364,12 +1364,12 @@ files:
        create  => "true";
 
 @end smallexample
-The list of promisees is not used by cfengine except for documentation, just
+The list of promisees is not used by CFEngine except for documentation, just
 as the comment attribute (which can be added to any promise) has no actual function
 other than to provide more information to the user in error tracing and auditing.
 
 You see several kinds of object in this example. All literal strings
-(e.g. @code{"true"}) in cfengine 3 must be quoted. This provides
+(e.g. @code{"true"}) in CFEngine 3 must be quoted. This provides
 absolute consistency and makes type-checking easy and error-correction
 powerful. All function-like objects (e.g. @code{users("..")}) are either builtin
 special functions or parameterized templates which contain the `meat' of the right hand
@@ -1377,7 +1377,7 @@ side.
 
 The words @code{commands}, and @code{files} are built-in promise
 types. Promise types generally belong each to a particular component
-of cfengine, as the components are designed to keep different kinds of
+of CFEngine, as the components are designed to keep different kinds of
 promises.  A few types, such as @code{vars}, @code{classes} and
 @code{reports} are common to all the different component bundles. You
 will find a full list of the promise types that can be made by the
@@ -1448,14 +1448,14 @@ files:
 @end verbatim
 
 Get into the habit of adding the cause-effect lines of influence.
-Enterprise editions of cfengine will track the dependencies between these
+Enterprise editions of CFEngine will track the dependencies between these
 promises and map out impact analyses.
 
 @c -----------------------------------------------------------------------
 @node Containers, When and where are promises made?, Best practice for writing promises, A simple crash course
 @section Containers
 
-Cfengine allows you to group multiple promise statements
+CFEngine allows you to group multiple promise statements
     into containers called bundles.
 @smallexample
 
@@ -1464,7 +1464,7 @@ bundle agent identifier
 @{
 commands:
 
-  "/bin/echo These commands are a silly way to use cfengine";
+  "/bin/echo These commands are a silly way to use CFEngine";
   "/bin/ls -l";
   "/bin/echo But they illustrate a point";
 
@@ -1474,8 +1474,8 @@ commands:
 
 Bundles serve two purposes: they allow us to collect related promises under a
 single heading, like a subroutine, and they allow us to mix configuration for different
-parts of cfengine in the same file. The type of a bundle is the name of the component
-of cfengine for which it is intended.
+parts of CFEngine in the same file. The type of a bundle is the name of the component
+of CFEngine for which it is intended.
 
 For instance, we can make a self-contained example agent-server
 configuration by labelling the bundles:
@@ -1514,7 +1514,7 @@ access:
 
 @end smallexample
 
-Another type of container in cfengine 3 is a `body' part. Body parts
+Another type of container in CFEngine 3 is a `body' part. Body parts
 exist to hide complex parameter information in reusable containers.
 The right hand side of some attribute assignments use body containers
 to reduce the amount of in-line information and preserve readability.
@@ -1546,19 +1546,19 @@ is defined.
 
 
 @c -----------------------------------------------------------------------
-@node When and where are promises made?, Types in cfengine 3, Containers, A simple crash course
+@node When and where are promises made?, Types in CFEngine 3, Containers, A simple crash course
 @section When and where are promises made?
 
-When you type a promise into a cfengine bundle, the promise will be
+When you type a promise into a CFEngine bundle, the promise will be
 read by every cf-agent that reads the file, each time it is
 called into being. For some promises this is okay, but for others
 you only want to verify the promise once in a while, e.g. once per day
 or once per hour. There are two ways to say when and where a promise
-applies in cfengine:
+applies in CFEngine:
 
 @table @i
 @item Classes
-Classes are the double-colon decision syntax in cfengine. They
+Classes are the double-colon decision syntax in CFEngine. They
 determine in what context a promise is made, i.e. when and
 where. Recall the basic syntax of a promise:
 @smallexample
@@ -1583,7 +1583,7 @@ in IPv4 address space.
 If the class expression is true, the promise can be considered made
 for the duration of the current execution.
 
-Cfengine 3 has a new class predicate @code{ifvarclass} which is
+CFEngine 3 has a new class predicate @code{ifvarclass} which is
 ANDed with the normal class expression, and which is evaluated
 together with the promise. It may contain variables as long as the
 resulting expansion is a legal class expression.
@@ -1593,10 +1593,10 @@ resulting expansion is a legal class expression.
 Locks determine how often a promise is verified.
 @end table
 
-Cfengine is controlled by a series of locks which prevent it from
+CFEngine is controlled by a series of locks which prevent it from
 checking promises too often, and which prevent it from spending too
 long trying to verify promises it already verified recently. The locks
-work in such a way that you can start several cfengine processes
+work in such a way that you can start several CFEngine processes
 simultaneously without them interfering with each other. You can
 control two things about each kind of action in the action sequence:
 
@@ -1652,13 +1652,13 @@ verification, causing contention and wasting CPU cycles.
 
 
 @c -----------------------------------------------------------------------
-@node Types in cfengine 3, Datatypes in cfengine 3, When and where are promises made?, A simple crash course
-@section Types in cfengine 3
+@node Types in CFEngine 3, Datatypes in CFEngine 3, When and where are promises made?, A simple crash course
+@section Types in CFEngine 3
 
-A key difference in cfengine 3 compared to earlier versions is the
+A key difference in CFEngine 3 compared to earlier versions is the
 presence of data types. Data types are a mechanism for associating
 values and checking consistency in a language. Once again, there is a
-simple pattern to types in cfengine.
+simple pattern to types in CFEngine.
 
 The principle is very simple: types exist in order to match like a
 plug-socket relationship. In the examples above, you can see two places
@@ -1689,10 +1689,10 @@ Check these by identifying the words @samp{agent} and @samp{copy_from}
 in the examples above. Types are there to make configuration more robust.
 
 @c -----------------------------------------------------------------------
-@node Datatypes in cfengine 3, Variable expansion in cfengine 3, Types in cfengine 3, A simple crash course
-@section Datatypes in cfengine 3
+@node Datatypes in CFEngine 3, Variable expansion in CFEngine 3, Types in CFEngine 3, A simple crash course
+@section Datatypes in CFEngine 3
 
-Cfengine variables have two meta-types: scalars and lists. A scalar is a single value,
+CFEngine variables have two meta-types: scalars and lists. A scalar is a single value,
 a list is a collection of scalars. Each scalar may have one of three types:
 @code{string}, @code{int} or @code{real}. Typing is dynamic, so these are
 interchangable in many instances. However arguments to special functions check legal
@@ -1724,20 +1724,20 @@ Integer constants may use suffixes to represent large numbers.
 @end itemize
 
 @c -----------------------------------------------------------------------
-@node Variable expansion in cfengine 3, Normal ordering, Datatypes in cfengine 3, A simple crash course
-@section Variable expansion in cfengine 3
+@node Variable expansion in CFEngine 3, Normal ordering, Datatypes in CFEngine 3, A simple crash course
+@section Variable expansion in CFEngine 3
 
-Cfengine 3 has some simple rules for variable expansion. These make
+CFEngine 3 has some simple rules for variable expansion. These make
 a couple of restrictions that enforce discipline of clarity and
-allow automatic dependency tracking in enterprise versions of cfengine.
+allow automatic dependency tracking in enterprise versions of CFEngine.
 
 @menu
 * Scalar variable expansion::   
 * List variable substitution and expansion::  
-* Arrays in cfengine 3::        
+* Arrays in CFEngine 3::        
 @end menu
 
-@node Scalar variable expansion, List variable substitution and expansion, Variable expansion in cfengine 3, Variable expansion in cfengine 3
+@node Scalar variable expansion, List variable substitution and expansion, Variable expansion in CFEngine 3, Variable expansion in CFEngine 3
 @subsection Scalar variable expansion
 
 Scalar variables are written @samp{$(name)} and they represent
@@ -1754,7 +1754,7 @@ may be written to access the variable `myvar' in bundle `context'.
 @end itemize
 
 @c -----------------------------------------------------------------------
-@node List variable substitution and expansion, Arrays in cfengine 3, Scalar variable expansion, Variable expansion in cfengine 3
+@node List variable substitution and expansion, Arrays in CFEngine 3, Scalar variable expansion, Variable expansion in CFEngine 3
 @subsection List variable substitution and expansion
 
 @itemize
@@ -1787,7 +1787,7 @@ explanation.
 During list expansion, only local lists can be expanded, thus global
 list references have to be mapped into a local context if you want to
 use them for iteration. Instead of doing this in some
-arbitrary way, with possibility of name collisions, cfengine
+arbitrary way, with possibility of name collisions, CFEngine
 asks you to make this explicit. There are two possible approaches.
 
 The first uses parameterization to map a global list into a local
@@ -1887,7 +1887,7 @@ reports:
 @node Special list value cf_null
 @subsection Special list value @code{cf_null}
 
-As of Cfengine core version 3.1.0, the value @samp{cf_null} may be used as a NULL
+As of CFEngine core version 3.1.0, the value @samp{cf_null} may be used as a NULL
 value within lists. This value is ignored in list variable expansion.
 
 @verbatim
@@ -1899,8 +1899,8 @@ vars:
 @end verbatim
 
 @c -----------------------------------------------------------------------
-@node Arrays in cfengine 3,  , List variable substitution and expansion, Variable expansion in cfengine 3
-@subsection Arrays in cfengine 3
+@node Arrays in CFEngine 3,  , List variable substitution and expansion, Variable expansion in CFEngine 3
+@subsection Arrays in CFEngine 3
 
 Array variables are written with @samp{[} and @samp{]} brackets, e.g.
 
@@ -1929,7 +1929,7 @@ commands:
 
 Arrays are associative and may be of type scalar or list. Enumerated
 arrays are simply treated as a special case of associative arrays, since
-there are no numerical loops in cfengine. Special functions exist to
+there are no numerical loops in CFEngine. Special functions exist to
 extract lists of keys from array variables for iteration purposes.
 
 Thus one could have written the example above in the form of the
@@ -1958,17 +1958,17 @@ reports:
 @end verbatim
 
 @c -----------------------------------------------------------------------
-@node Normal ordering, Loops and lists in cfengine 3, Variable expansion in cfengine 3, A simple crash course
+@node Normal ordering, Loops and lists in CFEngine 3, Variable expansion in CFEngine 3, A simple crash course
 @section Normal ordering
 
 
-Cfengine takes a pragmatic point of view to ordering. When promising
+CFEngine takes a pragmatic point of view to ordering. When promising
 `scalar' attributes and properties, ordering is irrelevant and need
 not be considered. More complex patterned data structures require
-ordering to be preserved, e.g. editing in files. Cfengine
+ordering to be preserved, e.g. editing in files. CFEngine
 solves this in a two-part strategy:
 @itemize
-@item Cfengine maintains a default order of promise-types. This is based
+@item CFEngine maintains a default order of promise-types. This is based
 on a simple logic of what needs to come first, e.g. it makes no sense to create something
 and then delete it, but it could make sense to delete and then create (an equilibrium).
 This is called @i{normal ordering} and is described below.
@@ -1990,7 +1990,7 @@ promise.
 
 @enumerate
 @item
-Cfengine tries to keep variable and class promises before starting to
+CFEngine tries to keep variable and class promises before starting to
 consider any other kind of promise.  In this way, global variable and
 classes can be set, as well as creating @code{classes} promises, upon
 which later agent-bundle @code{vars} promises may depend. Place these
@@ -1998,14 +1998,14 @@ at the start of your configuration (see next item).
 
 @item If you set variables based on classes that are determined by variables, in a
 complex dependency chain, then you introduce an order dependence to
-the resolution that might be non-unique. Since Cfengine starts trying
+the resolution that might be non-unique. Since CFEngine starts trying
 to converge values as soon as possible, it is best to define variables
 in bundles before using them, i.e. as early as possible in your
 configuration.  In general it is wise to avoid class-variable
 dependency as much as possible.
 
 @item
-Cfengine executes agent promise bundles in the strict order defined by
+CFEngine executes agent promise bundles in the strict order defined by
 the @code{bundlesequence} (possibly overridden by the @code{-b} or
 @code{--bundlesequence} command line option).
 @item
@@ -2032,7 +2032,7 @@ iterations of the following, converging towards a final state:
 @end verbatim
 
 Within @code{edit_line} bundles in @code{files} promises
-(See `File editing in cfengine 3' for important details),
+(See `File editing in CFEngine 3' for important details),
 the normal ordering is:
 @verbatim
    vars
@@ -2114,18 +2114,18 @@ Within a knowledge bundle, the normal ordering is:
 
 
 @c -----------------------------------------------------------------------
-@node Loops and lists in cfengine 3, Pattern matching and referencing, Normal ordering, A simple crash course
-@section Loops and lists in cfengine 3
+@node Loops and lists in CFEngine 3, Pattern matching and referencing, Normal ordering, A simple crash course
+@section Loops and lists in CFEngine 3
 
-There are no explicit loops in cfengine, instead there are lists.
-To make a loop, you simply refer to a list as a scalar and cfengine
+There are no explicit loops in CFEngine, instead there are lists.
+To make a loop, you simply refer to a list as a scalar and CFEngine
 will assume a loop over all items in the list.
 
 For example, in the examples below the list @code{component} has three
 elements. The list as a whole may be referred to as
 @code{@@(component)}, in order to pass the whole list to a promise
 where a list is expected. However, if we write @code{$(component)},
-i.e. the scalar variable, then cfengine assumes that it should substitute
+i.e. the scalar variable, then CFEngine assumes that it should substitute
 each scalar from the list in turn, and thus iterate over the list
 elements using a loop.
 
@@ -2209,14 +2209,14 @@ Q ".../bin/echo cf-ex": cf-execd is The executor, not executioner
 
 
 @c -----------------------------------------------------------------------
-@node Pattern matching and referencing, Distributed discovery, Loops and lists in cfengine 3, A simple crash course
+@node Pattern matching and referencing, Distributed discovery, Loops and lists in CFEngine 3, A simple crash course
 @section Pattern matching and referencing
 
-One of the strengths of cfengine 3 is the ability to recognize and
-exploit patterns.  All string patterns in cfengine 3 are matched using
+One of the strengths of CFEngine 3 is the ability to recognize and
+exploit patterns.  All string patterns in CFEngine 3 are matched using
 PCRE regular expressions.
 
-Cfengine has the ability to extract back-references from pattern matches.
+CFEngine has the ability to extract back-references from pattern matches.
 This makes sense in two cases. Back references are fragments of a string
 that match parenethetic expressions. For instance, suppose we have the string:
 
@@ -2243,7 +2243,7 @@ The zeroth value is the entire string matched by the
 total expression. The first value is the fragment matched
 by the first parenthesis, and so on.
 
-Each time cfengine matches a string, these values are
+Each time CFEngine matches a string, these values are
 assigned to a special variable context @code{$(match.@var{n})}.
 The fragments can be referred to in the remainder of the promise.
 There are two places where this makes sense. One is in pattern replacement
@@ -2396,12 +2396,12 @@ private edit variable is second backref: test
 @node Runaway change warning, Commenting lines, Pattern matching and referencing, Pattern matching and referencing
 @subsection Runaway change warning
 
-Be careful when using patterns to search for files that are altered by cfengine
-if you are not using a file repository. Each time cfengine makes a change it
+Be careful when using patterns to search for files that are altered by CFEngine
+if you are not using a file repository. Each time CFEngine makes a change it
 saves an old file into a copy like @file{cf3_test.cf-before-edit}. These
 new files then get matched by the same expression above -- because it ends
 in the generic@code{.*}), or does not
-specify a tail for the expression. Thus cfengine will happily edit backups
+specify a tail for the expression. Thus CFEngine will happily edit backups
 of the edit file too, and generate a recursive process, resulting in something
 like the following:
 
@@ -2419,12 +2419,12 @@ will often come back to haunt you.
 @subsection Commenting lines
 
 The following example shows how you would hash-comment lines in a file
-using cfengine 3.
+using CFEngine 3.
 
 @verbatim
 ######################################################################
 #
-# HashCommentLines implemented in cfengine 3
+# HashCommentLines implemented in CFEngine 3
 #
 ######################################################################
 
@@ -2493,10 +2493,10 @@ expressions (a @code{\d} means the same as @code{[0-9]}, but on Windows it
 could also be a path separator and a directory named @code{d}).
 
 The @code{pathtype} attribute allows you to force a specific behavior when
-interpreting pathnames.  By default, Cfengine looks at your pathname and
+interpreting pathnames.  By default, CFEngine looks at your pathname and
 makes an educated guess as to whether your pathname contains a regular
 expression.  The values @code{"literal"} and @code{"regex"} explicitly force
-Cfengine to interpret the pathname either one way or another.
+CFEngine to interpret the pathname either one way or another.
 
 (see the @code{pathtype} attribute).
 
@@ -2539,8 +2539,8 @@ Note that the path @samp{/tmp/gar.*} will only match filenames
 like @file{/tmp/gar}, @file{/tmp/garbage} and @file{/tmp/garden}.  It will
 @i{not} match filename like @file{/tmp/gar/baz} (because even though the
 @samp{.*} in a regular expression means "zero or more of any character",
-Cfengine restricts that to mean "zero or more of any character @i{in a path
-component}").  Correspondingly, Cfengine
+CFEngine restricts that to mean "zero or more of any character @i{in a path
+component}").  Correspondingly, CFEngine
 also restricts where you can use the @samp{/} character (you can't use it
 in a character class like @samp{[^/]} or in a parenthesized or repeated
 regular expression component.
@@ -2550,12 +2550,12 @@ components" won't work.  You can't have a files promise to tidy the directory
 @samp{(/usr)?/tmp}.  Instead, you need to be more verbose and specify
 @samp{/usr/tmp|/tmp}, or even better, think declaratively and create an
 @i{slist} that contains both the strings @samp{/tmp} and @samp{/usr/tmp},
-and then allow Cfengine to iterate over the list!
+and then allow CFEngine to iterate over the list!
 
 This also means that the path @samp{/tmp/.*/something} will match files like
 @file{/tmp/abc/something} or @file{/tmp/xyzzy/something}.  However, even
 though the pattern @samp{.*} means "zero or more of any character (except
-@samp{/})", Cfengine matches files bounded by directory separators.  So even
+@samp{/})", CFEngine matches files bounded by directory separators.  So even
 though the pathname @file{/tmp//something} is technically the same as the
 pathname @file{/tmp/something}, the regular expression @samp{/tmp/.*/something}
 will @i{not} match on the degenerate case of @file{/tmp//something} (or
@@ -2564,9 +2564,9 @@ will @i{not} match on the degenerate case of @file{/tmp//something} (or
 @node Anchored vs. unanchored regular expressions, Special topics on Regular Expressions, Regular expressions in paths, Pattern matching and referencing
 @subsection Anchored vs. unanchored regular expressions
 
-Cfengine uses the full power of regular expressions, but there are two ``flavors'' of regex.  Because they
+CFEngine uses the full power of regular expressions, but there are two ``flavors'' of regex.  Because they
 behave somewhat differently (while still utilizing the same syntax), it is
-important to know which one is used for a particular component of Cfengine:
+important to know which one is used for a particular component of CFEngine:
 
 @itemize
 
@@ -2612,15 +2612,15 @@ robert:bob:xyz
 i:am:not:bob
 @end verbatim
 
-If Cfengine expects an unanchored regular expression, then finding
+If CFEngine expects an unanchored regular expression, then finding
 every line that contains the letters @samp{bob} is easy.  You just
-use the regex @code{"bob"}.  But if Cfengine expects an anchored
+use the regex @code{"bob"}.  But if CFEngine expects an anchored
 regular expression, then you must use @code{".*bob.*"}.
 
 If you want to find every line that has a field which is exactly
 @samp{bob} with no characters before or after, then it is only a
-little more complicated if Cfengine expects an unanchored regex:
-@code{"(^|:)bob(:|$)"}.  But if Cfengine expects an anchored
+little more complicated if CFEngine expects an unanchored regex:
+@code{"(^|:)bob(:|$)"}.  But if CFEngine expects an anchored
 regular expression, then it starts getting ugly, and you'd need to
 use @code{"bob:.*|.*:bob:.*|.*:bob"}.
 
@@ -2650,12 +2650,12 @@ files:
 @end verbatim
 
 Note that sometimes multi-line strings are subject to be matched by
-regular expressions. Cfengine internally matches all regular
+regular expressions. CFEngine internally matches all regular
 expressions using PCRE_DOTALL option, so @code{.} matches newlines. If
 you want to match any character except newline you could use @code{\N}
 escape sequence.
 
-Another thing you might want to do is ignore capitalization.  Cfengine is
+Another thing you might want to do is ignore capitalization.  CFEngine is
 case-sensitive (in all things), so the files promise @file{/tmp/foolish} will
 not match the files @file{/tmp/Foolish} or @file{/tmp/fOoLish}, etc.  There are
 two ways to acheive case-insensitivity.  The first is to use character classes:
@@ -2667,7 +2667,7 @@ files:
 @end verbatim
 
 While this is certainly correct, it can also lead to unreadability.  The PCRE
-patterns in Cfengine have another way of introducing case-insensitvity into a
+patterns in CFEngine have another way of introducing case-insensitvity into a
 pattern:
 
 @verbatim
@@ -2695,13 +2695,13 @@ available, but use them with great care!
 @node Distributed discovery, Developer structures, Pattern matching and referencing, A simple crash course
 @section Distributed discovery
 
-Cfengine's philosophy and modus operandi is to make machines as self-reliant
+CFEngine's philosophy and modus operandi is to make machines as self-reliant
 as possible. This is the path to scalability. Sometimes we want machines
 to be able to detect one another and sample each others' behaviour. This can
 be accomplished using probes and server functions.
 
 For example, testing whether services are up and running can be a useful
-probe even from a local host. Cfengine has in-built functions for generically
+probe even from a local host. CFEngine has in-built functions for generically
 probing the environment; these are designed to encourage decentralized
 monitoring.
 
@@ -2756,10 +2756,10 @@ of internal linked lists, as in the diagram below.
 
 @c -----------------------------------------------------------------------
 
-@node How to run cfengine 3 examples, A complete configuration, A simple crash course
-@chapter How to run cfengine 3 examples
+@node How to run CFEngine 3 examples, A complete configuration, A simple crash course
+@chapter How to run CFEngine 3 examples
 
-The cfengine @file{tests} directory contains a multitude of examples of cfengine 3 code.
+The CFEngine @file{tests} directory contains a multitude of examples of CFEngine 3 code.
 These instructions assume that you have all of your configuration in a
 single test file, such as the example in the distribution directory
 @file{tests/units}.
@@ -2804,7 +2804,7 @@ system.
 
 
 @c ---------------------------------------------------------------------------
-@node A complete configuration,  , How to run cfengine 3 examples
+@node A complete configuration,  , How to run CFEngine 3 examples
 @chapter A complete configuration
 
 To illustrate a complete configuration for agents and daemons,
@@ -2971,12 +2971,12 @@ vars:
 
 @end verbatim
 
-The cfengine bundle below detects whether cfengine 2 is already
+The CFEngine bundle below detects whether CFEngine 2 is already
 running on the host or not, and if so attempts to kill off old daemon
 processes and encapsulate the agent. It also looks for rules in the
-old cfengine configuration that would potentially spoil cfengine 3's
-control of the system: the last thing we want is for cfengine 2 and
-cfengine 3 to fight each other for control of the system.  Cfengine 3
+old CFEngine configuration that would potentially spoil CFEngine 3's
+control of the system: the last thing we want is for CFEngine 2 and
+CFEngine 3 to fight each other for control of the system.  CFEngine 3
 tries to edit an existing crontab entry to replace any references to
 @code{cfexecd} with @code{cf-execd}; if none are found it will add a 5
 minute run schedule.  You should never put @code{cf-agent}or
@@ -2985,7 +2985,7 @@ wrapper.
 
 @verbatim
 #######################################################
-# Start with cfengine itself
+# Start with CFEngine itself
 #######################################################
 
 bundle agent cfengine
@@ -3014,11 +3014,11 @@ commands:
 
 files:
 
-  # Warn about rules relating to cfengine 2 in inputs - could conflict
+  # Warn about rules relating to CFEngine 2 in inputs - could conflict
 
   "$(sys.workdir)/inputs/.*"
 
-       comment     => "Check if there are still promises about cfengine 2 that need removing",
+       comment     => "Check if there are still promises about CFEngine 2 that need removing",
        edit_line   => DeleteLinesMatching(".*$(cf2bits).*"),
        file_select => OldCf2Files,
        action      => WarnOnly;
@@ -3279,9 +3279,9 @@ roles:
 @section @file{update.cf}
 
 This file should rarely if ever change.  Should you ever change it (or when you
-upgrade Cfengine), take special care to ensure the old and the new Cfengine can
+upgrade CFEngine), take special care to ensure the old and the new CFEngine can
 parse and execute this file successfully. If not, you risk losing control of
-your system (that is, if Cfengine cannot successfully execute this set of
+your system (that is, if CFEngine cannot successfully execute this set of
 promises, it has no mechanism for distributing @i{new} policy files).
 
 By default, the policy defined in @file{update.cf} is executed from two sets
@@ -3371,13 +3371,13 @@ client machine's policies are ever corrupted after downloading erroneous
 policy from a server, that client will have a failsafe method for downloading
 a corrected policy once it becomes available on the server.  Note that by
 ``corrupted'' and ``erroneous'' we typically mean ``broken via administrator
-error'' - mistakes happen, and the @file{failsafe.cf} file is Cfengine's way
+error'' - mistakes happen, and the @file{failsafe.cf} file is CFEngine's way
 of being prepared for that eventuality.
 
 If you ever change @file{failsafe.cf} (or when you
-upgrade Cfengine), make sure the old and the new Cfengine can successfully
+upgrade CFEngine), make sure the old and the new CFEngine can successfully
 parse and execute this file.  If not, you risk losing control of your system
-(that is, if Cfengine cannot successfully execute this policy file, it has no
+(that is, if CFEngine cannot successfully execute this policy file, it has no
 failsafe/fallback mechanism for distributing @i{new} policy files).
 
 @verbatim
@@ -3435,7 +3435,7 @@ other files.
 
 @end itemize
 
-@noindent A cfengine configuration will fail-over to the @code{failsafe.cf}
+@noindent A CFEngine configuration will fail-over to the @code{failsafe.cf}
 configuration
 if it is unable to read or parse the contents successfully. That means
 that any syntax errors you introduce (or any new features you utilize in a
@@ -3443,7 +3443,7 @@ configuration) will cause a
 fail-over, because the parser will not be able to interpret the policy.  If
 the failover is due to the use of new features, they will not parse until the
 software itself has been updated (so we recommend that you always update
-Cfengine before updating policy to use new features).  If you accidentally
+CFEngine before updating policy to use new features).  If you accidentally
 cause a bad (i.e., unparseable) policy to be distributed to client machines,
 the @code{failsafe.cf} policy on those machines will run (and will eventually
 download a working policy, once you fix it on the policy host).
@@ -3532,9 +3532,9 @@ encrypt      => "true";
 
 @end verbatim
 
-@noindent If the @code{copy_backup} option is true, cfengine will keep a single
+@noindent If the @code{copy_backup} option is true, CFEngine will keep a single
 previous version of the file before copy, if the value is @samp{timestamp}
-cfengine keeps time-stamped versions either in the location of the file, or in the
+CFEngine keeps time-stamped versions either in the location of the file, or in the
 file repository if one is defined. The @code{trustkey} option should normally
 be commented out so that public keys are only exchanged under controlled conditions.
 

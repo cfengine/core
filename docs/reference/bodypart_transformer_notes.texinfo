@@ -7,7 +7,7 @@ The promiser file must exist in order to effect the transformer.
 
 In the first example, the promise is made on the file that we wish to
 transform.  If the promised file exists, the transformer will change the
-file to a compressed version (and the next time Cfengine runs, the promised
+file to a compressed version (and the next time CFEngine runs, the promised
 file will no longer exist, because it now has the @samp{.gz} extension).
 
 In the second example, the promise is made on the file @i{resulting from} the
@@ -31,7 +31,7 @@ You can, for example, simply report on the existence of files with
     transformer => "/bin/echo I found a file named $(this.promiser)",
 @end verbatim
 
-The file streams @code{stdout} and @code{stderr} are redirected by Cfengine, and
+The file streams @code{stdout} and @code{stderr} are redirected by CFEngine, and
 will not appear in any output unless you run @code{cf-agent} with the
 @samp{-v} switch (or enable @code{verbose} in an @code{outputs}
 promise).

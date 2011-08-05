@@ -1,4 +1,4 @@
 
-Report on cfengine peers in the neighbourhood watch whose observed
+Report on CFEngine peers in the neighbourhood watch whose observed
 irregularity of connection exceeds 0.5 scaled entropy units, meaning
 that they show an erratic pattern of connection.

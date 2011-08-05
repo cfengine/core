@@ -12,7 +12,7 @@ is expanded. A method promise is thus never considered repaired.
 
 Starting from version 3.1.0, methods may be specified using variables.
 Care should be exercised when using this approach. In order to make
-the function call uniquely classified, Cfengine requires the promiser
+the function call uniquely classified, CFEngine requires the promiser
 to contain the variable name of the method if the variable is a list.
 
 @verbatim

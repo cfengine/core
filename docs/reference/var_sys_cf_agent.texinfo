@@ -1,5 +1,5 @@
 
-A variable containing the path to the cfengine agent @code{cf-agent}
+A variable containing the path to the CFEngine agent @code{cf-agent}
 on the platform you are using.
 
 @verbatim

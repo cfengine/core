@@ -1,4 +1,4 @@
-Cfengine caches the value of this variable, so that, if the network is
+CFEngine caches the value of this variable, so that, if the network is
 unavailable, the last known value will be used. Hence use of this function
 is fault tolerant. Care should be taken in attempting to access remote variables
 that are not available, as the repeated connections needed to resolve the
@@ -14,7 +14,7 @@ users are recommended to refrain from relying on the availability of network res
 @end cartouche
 
 This function downloads a string from a remote server, using the promise handle
-as a variable identifier. Availability: Enterprise editions of Cfengine only.
+as a variable identifier. Availability: Enterprise editions of CFEngine only.
 
 @noindent @b{ARGUMENTS}:
 

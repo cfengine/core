@@ -25,4 +25,4 @@ with them.  Note that sections can be bounded at both the start and end (as
 in the example above) or just at the start (as in the sample shown in
 @code{include_start_delimiter}).
 
-@b{History}: This attribute was introduced in Cfengine version 3.0.5 (2010)
+@b{History}: This attribute was introduced in CFEngine version 3.0.5 (2010)

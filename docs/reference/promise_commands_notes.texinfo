@@ -1,6 +1,6 @@
 
 NOTE: when referring to executables whose paths contain spaces, you
-should quote the entire program string separately so that cfengine
+should quote the entire program string separately so that CFEngine
 knows the name of the executable file. e.g.
 
 @smallexample

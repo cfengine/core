@@ -1,5 +1,5 @@
 
-The location of the Cfengine work directory and cache. For the
+The location of the CFEngine work directory and cache. For the
 system privileged user this is normally:
 
 @verbatim
@@ -16,11 +16,11 @@ For non-privileged users it is in the user's home directory:
 
 @end verbatim
 
-On the Windows version of Cfengine Nova, it is normally under program
+On the Windows version of CFEngine Nova, it is normally under program
 files (the directory name may change with the language of Windows):
 
 @verbatim
 
-# workdir = C:\Program Files\Cfengine
+# workdir = C:\Program Files\CFEngine
 
 @end verbatim

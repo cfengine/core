@@ -4,7 +4,7 @@ maintaining the most recent version of the @code{md5} hash of the file
 contents.  Similar checks can be used to examine metadata or both the contents
 and metadata, as well as using different difference checks.  The Community
 Edition only reports that changes were found, but Enterprise versions of
-Cfengine can also report on what exactly the significant changes were.
+CFEngine can also report on what exactly the significant changes were.
 
 @verbatim
 

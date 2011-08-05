@@ -1,6 +1,6 @@
 
 
-A variable containing the path to the cfengine key generator @code{cf-key}
+A variable containing the path to the CFEngine key generator @code{cf-key}
 on the platform you are using.
 
 @verbatim

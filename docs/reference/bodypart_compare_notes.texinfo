@@ -6,36 +6,36 @@ source file has been modified more recently than the destination.
 The different options are:
 @itemize
 @item
-@code{mtime} Cfengine copies the file if the modification time of the source
+@code{mtime} CFEngine copies the file if the modification time of the source
 file is more recent than that of the promised file
 
 @item
-@code{ctime} Cfengine copies the file if the creation time of the source file
+@code{ctime} CFEngine copies the file if the creation time of the source file
 is more recent than that of the promised file
 
 @item
-@code{atime} Cfengine copies the file if the modification time or creation
+@code{atime} CFEngine copies the file if the modification time or creation
 time of the source file is more recent than that of the promised file.  If the
 times are equal, a byte-for-bye comparison is done on the files to determine
 if it needs to be copied.
 
 @item
-@code{exists} Cfengine copies the file if the promised file does not already
+@code{exists} CFEngine copies the file if the promised file does not already
 exist.
 
 @item
-@code{binary} Cfengine copies the file if they are both plain files and a
+@code{binary} CFEngine copies the file if they are both plain files and a
 byte-for-byte comparison determines that they are different.  If both are not
-plain files, Cfengine reverts to comparing the @code{mtime} and @code{ctime}
+plain files, CFEngine reverts to comparing the @code{mtime} and @code{ctime}
 of the files.  If the source file is on a different machine (i.e., network
 copy), then @code{hash} is used instead to reduce network bandwidth.
 
 @item
-@code{hash} Cfengine copies the file if they are both plain files and a
+@code{hash} CFEngine copies the file if they are both plain files and a
 message digest comparison indicates that the files are different.  In
-Enterprise versions of Cfengine version 3.1.0 and later, SHA256 is used as a
+Enterprise versions of CFEngine version 3.1.0 and later, SHA256 is used as a
 message digest hash to conform with FIPS; in older Enterprise versions of
-Cfengine and all Community versions, MD5 is used.
+CFEngine and all Community versions, MD5 is used.
 
 @item
 @code{digest} a synonym for @code{hash}

@@ -10,4 +10,4 @@ $(sys.host)
 $(mon.www_in)
 @end verbatim
 
-In cfengine 2 @code{editfiles} this was called @samp{ExpandVariables}.
+In CFEngine 2 @code{editfiles} this was called @samp{ExpandVariables}.

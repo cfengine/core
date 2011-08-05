@@ -1,17 +1,17 @@
 
-Environment promises are available in the Cfengine Nova Edition and above.  
+Environment promises are available in the CFEngine Nova Edition and above.  
 Environment promises describe enclosed computing environments that can
 host physical and virtual machines, solaris zones, grids, clouds or
-other enclosures, including embedded systems.  Cfengine will support
+other enclosures, including embedded systems.  CFEngine will support
 the convergent maintenance of such inner environments in a fixed
 location, with interfaces to an external environment.
 
-Cfengine currently seeks to add convergence properties to existing
+CFEngine currently seeks to add convergence properties to existing
 interfaces for automatic self-healing of virtualized environments. The
 current implementation integrates with @i{libvirt}, supporting host
-virtualization for Xen, KVM, VMWare, etc. Thus Cfengine, running on a
+virtualization for Xen, KVM, VMWare, etc. Thus CFEngine, running on a
 virtual host, can maintain the state and deployment of virtual
 guest machines defined within the @i{libvirt} framework. Environment promises
 are not meant to manage what goes on within the virtual guests: for that
-purpose, you should run Cfengine directly on the virtual machine, as if it
+purpose, you should run CFEngine directly on the virtual machine, as if it
 were any other machine.

@@ -1,6 +1,6 @@
 
 Process promises refer to items in the system process table. Note that
-this is not the same as commands (which are instructions that Cfengine will
+this is not the same as commands (which are instructions that CFEngine will
 execute). A process
 is a command in some state of execution (with a Process Control
 Block).  Promiser objects here are patterns that match line fragments
@@ -30,8 +30,8 @@ so take care not to oversimplify your patterns (the PCRE pattern anchors
 @end smallexample
 @end cartouche
 
-In cfengine 2 there was a restart clause for directly executing a
-command to restart a process. In cfengine 3 there is instead
+In CFEngine 2 there was a restart clause for directly executing a
+command to restart a process. In CFEngine 3 there is instead
 a class to activate. You must then desribe a @code{command} in that
 class to restart the process.
 
@@ -54,5 +54,5 @@ for processes that persist. Processes are restarted at the end of a bundle's
 execution, but stop commands are executed immediately.
 
 Note: @code{process_select} was previously called process @code{filters} in
-cfengine 2 and earlier.
+CFEngine 2 and earlier.
 

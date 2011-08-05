@@ -899,6 +899,7 @@ if (FKNOW)
    {
    fprintf(FKNOW,"}\n");
    fclose(FKNOW);
+   FKNOW = NULL;
    }
 fclose(FREPORT_HTML);
 fclose(FREPORT_TXT);
@@ -1389,6 +1390,7 @@ fclose(FREPORT_TXT);
 if (FKNOW)
    {
    fclose(FKNOW);
+   FKNOW = NULL;
    }
 }
 

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo =answer[42]=Yes
+echo =answer[41]=No
+

@@ -448,6 +448,48 @@ return true;
 }
 
 /*****************************************************************************/
+static int VersionCheckSchedulePackage(struct Attributes a, struct Promise *pp, int matches, int installed)
+
+{
+/* The meaning of matches and installed depends on the package policy */
+enum package_actions policy = a.packages.package_policy;
+
+switch(policy)
+   {
+   case cfa_deletepack:
+      if (matches && installed)
+         {
+         return true;
+         }
+      break;
+
+   case cfa_reinstall:
+      if (matches && installed)
+         {
+         return true;
+         }
+      else
+         {
+	 cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria\n",pp->promiser);
+	 }
+      break;
+
+   default:
+      if (!installed || !matches)
+         {
+         return true;
+	 }
+      else
+         {
+	 cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria\n",pp->promiser);
+	 }
+      break;
+   }
+
+return false;
+}
+
+/*****************************************************************************/
 
 static void VerifyPromisedPackage(struct Attributes a,struct Promise *pp)
 
@@ -457,7 +499,7 @@ static void VerifyPromisedPackage(struct Attributes a,struct Promise *pp)
   char *package = pp->promiser;
   int matches = 0, installed = 0, no_version = false;
   struct Rlist *rp;
-  
+
 if (a.packages.package_version) 
    {
    /* The version is specified separately */
@@ -471,15 +513,10 @@ if (a.packages.package_version)
       installed = PackageMatch(name,"*",arch,a,pp);
       matches = PackageMatch(name,version,arch,a,pp);
 
-      if ( !installed || !matches )
+      if (VersionCheckSchedulePackage(a, pp, matches, installed))
          {
          SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
-	 }
-      else
-         {
-	 cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
-	 } 
-
+         }
       }
    else
       {
@@ -489,18 +526,14 @@ if (a.packages.package_version)
          strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
          strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
          strncpy(arch,rp->item,CF_MAXVARSIZE-1);
-         
+
          installed = PackageMatch(name,"*",arch,a,pp);
          matches = PackageMatch(name,version,arch,a,pp);
 
-         if ( !installed || !matches )
+         if (VersionCheckSchedulePackage(a, pp, matches, installed))
             {
-	    SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
-	    }
-	 else
-	    {
-	    cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
-	    } 
+            SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
+            }
 	 }
       }
    }
@@ -525,14 +558,10 @@ else if (a.packages.package_version_regex)
    
    installed = PackageMatch(name,"*",arch,a,pp);
    matches = PackageMatch(name,version,arch,a,pp);
-   
-   if ( !installed || !matches )
+
+   if (VersionCheckSchedulePackage(a, pp, matches, installed))
       {
       SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
-      }
-   else
-      {
-      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package (%s) already installed and matches criteria (%s)\n",pp->promiser, version);
       }
    }
 else

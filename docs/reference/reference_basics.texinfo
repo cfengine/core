@@ -272,12 +272,8 @@ packages are installed.
 Open source Secure Sockets Layer for encryption.@*URL: @url{http://www.openssl.org}
 @item @b{BerkeleyDB} (version 3.2 or later)
 Light-weight flat-file database system.@*URL: @url{http://www.oracle.com/technology/products/berkeley-db/index.html}
-
-@item @b{In addition...}
-It is recommended to make the Perl Compatible Regular Expression
-(PCRE) library available as this is a significant improvement over the
-more standard POSIX libraries. This documentation assumes the use of
-PCRE
+@item @b{PCRE}
+Perl Compatible Regular Expression library.@*URL: @url{http://www.pcre.org/}
 
 @item
 On Windows machines, you need to install the basic Cygwin DLL from @url{http://www.cygwin.com}
@@ -2218,11 +2214,7 @@ Q ".../bin/echo cf-ex": cf-execd is The executor, not executioner
 
 One of the strengths of cfengine 3 is the ability to recognize and
 exploit patterns.  All string patterns in cfengine 3 are matched using
-regular expressions. The preferred regular expression library is the
-Perl Compatible Regular Expression library. This is more powerful and
-more reliable than the default POSIX regular expression code and all
-users should make the PCRE library available during compilation if
-possible.
+PCRE regular expressions.
 
 Cfengine has the ability to extract back-references from pattern matches.
 This makes sense in two cases. Back references are fragments of a string

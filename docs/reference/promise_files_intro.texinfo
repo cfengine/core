@@ -21,10 +21,7 @@ types such as @code{files}, @code{tidy}, @code{copy}, @code{links},
 etc.  File handling in cfengine 3 uses regular expressions everywhere for pattern
 matching. The old `wildcard/globbing' expressions @samp{*} and
 @samp{?}  are deprecated, and everything is based consistently on Perl
-Compatible Regular Expressions where these are available. If PCRE is
-not available on the local system, POSIX extended regular expressions
-are used.
-
+Compatible Regular Expressions.
 
 There is a natural ordering in file processing that obviates the need
 for the actionsequence. The trick of using multiple actionsequence

@@ -390,12 +390,8 @@ Open source Secure Sockets Layer for encryption.@*URL: @url{http://www.openssl.o
 @item @b{BerkeleyDB} (version 3.2 or later)
 Light-weight flat-file database system.@*URL: @url{http://www.oracle.com/technology/products/berkeley-db/index.html 
 }
-
-@item @b{In addition...}
-It is recommended to make the Perl Compatible Regular Expression
-(PCRE) library available as this is a significant improvement over the
-more standard POSIX libraries. This documentation assumes the use of
-PCRE.
+@item @b{PCRE}
+Perl Compatible Regular Expression library.@*URL: @url{http://www.pcre.org/}
 
 @item
 On Windows machines, you need to install the basic Cygwin DLL from  

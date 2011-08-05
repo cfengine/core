@@ -157,7 +157,9 @@ return backreference;
 bool ValidateRegEx(const char *regex)
 {
 pcre *rx = CompileRegExp(regex);
-return rx != NULL;
+bool regex_valid = rx != NULL;
+pcre_free(rx);
+return regex_valid;
 }
 
 /*************************************************************************/

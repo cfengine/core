@@ -37,7 +37,7 @@ classes:
                                      "script_basename");
 
 commands:
-  "$(this.promise_filename).script" module => "true";
+  "$(init.script_name)" module => "true";
 }
 
 #######################################################

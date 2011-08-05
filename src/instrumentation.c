@@ -441,6 +441,14 @@ if (strcmp(rkey+1,PUBKEY_DIGEST) == 0)
    if (!match)
       {
       CfOut(cf_verbose,""," ! Not updating last seen, as this appears to be a host with a duplicate key");
+      CloseDB(dbp);
+
+      if (intermittency && dbpent)
+         {
+         CloseDB(dbpent);
+         }
+      
+      ThreadUnlock(cft_db_lastseen);
       return;
       }
    }

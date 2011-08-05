@@ -13,8 +13,8 @@ files:
 @verbatim
 
  classes:
-    "do_update" or => isnewerthan("/etc/postfix/alias",
-                                  "/etc/postfix/alias.cdb") };
+    "do_update" expression => isnewerthan("/etc/postfix/alias",
+                                          "/etc/postfix/alias.cdb");
 
  files:
     "/etc/postfix/alias.cdb"

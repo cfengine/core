@@ -1,9 +1,6 @@
 
-This promise refers to arbitrary text patterns in a file.
-The pattern is expressed as a regular expression and must be
-compatible with the default model for regular expressions on
-your system. The default model is PCRE (Perl Compatible Regular
-Expressions) if available.
+This promise refers to arbitrary text patterns in a file.  The pattern
+is expressed as a PCRE regular expression.
 
 @cartouche
 @smallexample

@@ -348,6 +348,8 @@ The arrangement of the hubs is shown schematically in the figure below.
 @sp 1
 @image{redundhubs,9cm}
 @sp 1
+@center Fig 1. Only one master hub at a time collects data in a symmetric cluster.
+@sp 1
 Three hubs, each running a Mongo database server and a @code{cf-hub} process
 will play the role of a virtual cluster. All three hosts make promises to one another
 to coordinate their data. The Mongo replica sub-system promises its own coordination
@@ -444,7 +446,13 @@ without duplication of network overhead.
 @node  Features of hub/policy server redundancy, Variables and classes for hubs, Setting up redundant hubs, High availability access to the Mission Portal
 @unnumberedsubsec Features of hub/policy server redundancy
 
-
+The Nova starburst hub configuration supports the following properties:
+@itemize
+@item Redundant availability of policy changes, with automatic failover.
+@item Redundant responsibility for report collection from managed hosts, with automatic reassignment of hub master.
+@item Redundant availability for the Mission Portal console, with about 15 second changeover.
+@item Fault tolerance of all parts of CFEngine to complete network failure.
+@end itemize
 
 @node Variables and classes for hubs,  , Features of hub/policy server redundancy, High availability access to the Mission Portal
 @unnumberedsubsec Variables and classes for hubs
@@ -459,7 +467,7 @@ am_hub_master
 The variable @samp{$(sys.hubmaster)} is also available on all hosts that are
 hubs, and points to that host currently voted into the role of hub master.
 
-
+@sp 1
 
 
 
@@ -468,26 +476,62 @@ hubs, and points to that host currently voted into the role of hub master.
 @unnumberedsec How do I make a change in mission-critical infrastructure?
 @sp 1
 
+To make changes in a mission critical environment, you publish a fully tested, risk-assessed policy
+to @file{/var/cfengine/masterfiles} on all three of the hubs in the cluster.
+
 
 @node  Using CFEngine for Change Management, Separating Policy Changes from ad-hoc Changes, How do I make a change in mission-critical infrastructure?, Top
 @unnumberedsec Using CFEngine for Change Management
 @sp 1
 
+All changes to a mission critical system should be classified
+according to the level of risk to the mission. Changes fall into
+different categories.
 
-@menu
-* ITIL Change Management::      
-@end menu
+@itemize
+@item Regular routine maintenance to the system (preplanned).
+@item Course or goal corrections to policy (replanned).
+@item Unforeseen repairs (unplanned).
+@end itemize
 
-@node  ITIL Change Management,  , Using CFEngine for Change Management, Using CFEngine for Change Management
-@unnumberedsubsec ITIL Change Management
-@sp 1
+In each case, we recommend that changes be made using CFEngine's
+hands-free automation. Humans should never be the instruments of
+change. By using CFEngine, you can get a documented and predictable
+handle on change, using technology designed for stability with agility.
 
+CFEngine has the ability to change entire systems of thousands of
+hosts within a timeframe of 5 to 10 minutes.
 
 @node Separating Policy Changes from ad-hoc Changes,  , Using CFEngine for Change Management, Top
 @unnumberedsec Separating Policy Changes from @i{ad-hoc} Changes
 @sp 1
 
+In mission critical environments, there are often struct processes for
+approving change. Unintelligently applied, such rules can do more harm
+than good -- i.e. when the process for approving changes causes
+greater risk to the survival of the mission than not acting at all does. It
+is important to separate changes into categories that allow the
+minimization of risk. If we take the categories in the previous
+section:
 
+@table @i
+@item Regular routine maintenance to the system (preplanned).
+Changes here have alredy gone through risk assessment, and root cause has been
+deemed understood or irrelevant. These changes should be automated and implemented
+in the minimum time. e.g. restarting a web server that crashed or was stopped accidentally.
+
+@item Course or goal corrections to policy (replanned).
+This is a change in the mission plan and requires significant impact analysis
+for each change. Although many businesses are concerned about liabilities, the
+real aim of this analysis is to mitigate loss.
+
+@item Unforeseen repairs (unplanned).
+These changes are usually discovered and repaired manually. Once some kind
+of root cause analysis is performed to the required level, there should be
+an analysis of how to automate the prevention of this kind of change in the
+future.
+
+@end table
 
 
 

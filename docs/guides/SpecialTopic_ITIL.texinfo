@@ -524,9 +524,9 @@ Management}).  ITIL recommends an advisory board for changes.
 
 We should be especially careful here to decide what we mean by
 change. ITIL assumes a traditional model of change management that
-CFEngine does not need. ITIL's ideas apply to the management of
-CFEngine's configuration, not the way in which CFEngine carries out its
-work.
+CFEngine does not necessarily need. ITIL's ideas apply to the management of
+CFEngine's configuration, not specifically to the way in which CFEngine carries out its
+automated manipulations of the system.
 
 In traditional idea of change management you start by ``base-lining'' a
 system, or establishing a known starting configuration. Then you

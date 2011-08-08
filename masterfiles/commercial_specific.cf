@@ -433,8 +433,9 @@ bundle agent cfengine_policysrv
                              "ssl-cert",
                              "gcc",
                              "make",
+			     "php5-cli",
                              "php5-json",
-                             "php5-pear",
+                             "php-pear",
                              "php5-mcrypt"
                            },
                  comment => "Define a list of packages to be installed on Debian/Ubuntu",
@@ -476,7 +477,33 @@ bundle agent cfengine_policysrv
                                      "TIMEZONE=\"(.*?)\"",
                                      "$(buffer)",
                                      "timezone"
-                                     );
+                                     ),
+                comment => "Extract system timezone to use later on",
+                 handle => "cfengine_policysrv_classes_extract_system_timezone";
+
+  ubuntu_10.am_policy_hub::
+
+   "no_mongo_module"        not => fileexists("/usr/lib/php5/20090626/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_ubuntu_10_x86_64",
+                     ifvarclass => "x86_64";
+
+   "no_mongo_module"        not => fileexists("/usr/lib/php5/20090626+lfs/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_ubuntu_10_i686",
+                     ifvarclass => "i686";
+
+  ubuntu_8.am_policy_hub::
+
+   "no_mongo_module"        not => fileexists("/usr/lib/php5/20060613/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_ubuntu_8_x86_64",
+                     ifvarclass => "x86_64";
+
+   "no_mongo_module"        not => fileexists("/usr/lib/php5/20060613+lfs/mongo.so"),
+                        comment => "Check if mongo module installed or not",
+                         handle => "cfengine_policysrv_classes_no_mongo_module_ubuntu_8_i686",
+                     ifvarclass => "i686";
 
 #
 
@@ -530,6 +557,12 @@ bundle agent cfengine_policysrv
       comment => "Enable apache modules on Debian/Ubuntu",
        handle => "cfengine_policysrv_commands_a2enmod_debian";
 #      classes => if_repaired("restart_apache2");
+
+  a2enmod_php5_ssl.no_mongo_module::
+
+   "/usr/bin/pecl install mongo"
+      comment => "Download and install PHP Mongo module on Debian/Ubuntu",
+       handle => "cfengine_policysrv_commands_pecl_install_mongo_debian";   
 
 #  restart_apache2::
 #
@@ -639,13 +672,26 @@ bundle agent cfengine_policysrv
 bundle edit_line apache_nova_conf(folder)
 {
  insert_lines:
+  am_hub_master::
 "<Directory \"$(folder)\">
   Options Indexes FollowSymLinks
   AllowOverride All
   Order allow,deny
   Allow from all
 </Directory>
-AllowEncodedSlashes On";
+AllowEncodedSlashes On",
+   comment => "Create apache2 contents for a Master HUB",
+    handle => "apache_nova_conf_insert_lines_am_hub_master";
+
+  !am_hub_master::
+"<Directory \"$(folder)\">
+  Options FollowSymLinks
+  AllowOverride None
+  RewriteEngine on
+  RewriteRule ^(.*)$ http://$(sys.hub_master)/$1 [R=307,L,QSA]
+</Directory>",
+   comment => "Create apache2 contents for Slave HUBs",
+    handle => "apache_nova_conf_insert_lines_not_am_hub_master";
 }
 
 #
@@ -654,6 +700,8 @@ bundle edit_line add_php_timezone(xxx)
 {
  replace_patterns:
   ";date.timezone.*"
+          comment => "Assign system timezone to PHP",
+           handle => "add_php_timezone_replace_patterns_date_timezone",
      replace_with => value("date.timezone = $(xxx)");
 #  "date.timezone\h+=\h+(?!$(xxx)).*"
 #     replace_with => value("date.timezone = $(xxx)");

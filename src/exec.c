@@ -64,12 +64,12 @@ extern struct BodySyntax CFEX_CONTROLBODY[];
 
 void StartServer(int argc,char **argv);
 int ScheduleRun(void);
-void *LocalExec(void *scheduled_run);
-int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
-int CompareResult(char *filename,char *prev_file);
-void MailResult(char *file,char *to);
-int Dialogue(int sd,char *s);
-void Apoptosis(void);
+static void *LocalExec(void *scheduled_run);
+static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
+static int CompareResult(char *filename,char *prev_file);
+static void MailResult(char *file,char *to);
+static int Dialogue(int sd,char *s);
+static void Apoptosis(void);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -525,7 +525,7 @@ if (!ONCE)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void Apoptosis()
+static void Apoptosis()
 
 { struct Promise pp = {0};
   struct Rlist *signals = NULL, *owners = NULL;
@@ -654,7 +654,7 @@ return false;
 
 /*************************************************************************/
 
-void *LocalExec(void *scheduled_run)
+static void *LocalExec(void *scheduled_run)
 
 { FILE *pp; 
   char line[CF_BUFSIZE],lineEscaped[sizeof(line)*2],filename[CF_BUFSIZE],*sp;
@@ -853,7 +853,7 @@ return NULL;
 /* Level 4                                                                    */
 /******************************************************************************/
 
-int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type)
+static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type)
 
 { FILE *file;
   EVP_MD_CTX context;
@@ -901,7 +901,7 @@ return 0;
 
 /*******************************************************************/
 
-int CompareResult(char *filename,char *prev_file)
+static int CompareResult(char *filename,char *prev_file)
 
 { int i;
   unsigned char digest1[EVP_MAX_MD_SIZE+1];
@@ -963,7 +963,7 @@ return(rtn);
 
 /***********************************************************************/
 
-void MailResult(char *file,char *to)
+static void MailResult(char *file,char *to)
 
 { int sd, sent, count = 0, anomaly = false;
   char prev_file[CF_BUFSIZE],vbuff[CF_BUFSIZE];
@@ -1205,7 +1205,7 @@ CfOut(cf_log,"","Cannot mail to %s.", to);
 /* Level 5                                                        */
 /******************************************************************/
 
-int Dialogue(int sd,char *s)
+static int Dialogue(int sd,char *s)
 
 { int sent;
   char ch,f = '\0';

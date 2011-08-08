@@ -64,7 +64,8 @@ extern struct BodySyntax CFEX_CONTROLBODY[];
 
 void StartServer(int argc,char **argv);
 int ScheduleRun(void);
-static void *LocalExec(void *scheduled_run);
+static void *LocalExecThread(void *scheduled_run);
+static void LocalExec(bool scheduled_run);
 static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
 static int CompareResult(char *filename,char *prev_file);
 static void MailResult(char *file,char *to);
@@ -439,7 +440,7 @@ if (ONCE)
    {
    CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
    sleep(SPLAYTIME);
-   LocalExec((void *)0);
+   LocalExec(false);
    }
 else
    {
@@ -499,17 +500,17 @@ else
          pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)2048*1024);
 #endif
 
-         if (pthread_create(&tid,&PTHREADDEFAULTS,LocalExec,(void *)1) != 0)
+         if (pthread_create(&tid,&PTHREADDEFAULTS,LocalExecThread,(void *)true) != 0)
             {
             CfOut(cf_inform,"pthread_create","Can't create thread!");
-            LocalExec((void *)1);
+            LocalExec(true);
             }
 
          ThreadLock(cft_system);
          pthread_attr_destroy(&PTHREADDEFAULTS);
          ThreadUnlock(cft_system);
 #else
-         LocalExec((void *)1);  
+         LocalExec(true);
 #endif
          }
       }
@@ -654,7 +655,7 @@ return false;
 
 /*************************************************************************/
 
-static void *LocalExec(void *scheduled_run)
+static void LocalExec(bool scheduled_run)
 
 { FILE *pp; 
   char line[CF_BUFSIZE],lineEscaped[sizeof(line)*2],filename[CF_BUFSIZE],*sp;
@@ -764,7 +765,7 @@ MapName(filename);
 if ((fp = fopen(filename,"w")) == NULL)
    {
    CfOut(cf_error,"fopen","!! Couldn't open \"%s\" - aborting exec\n",filename);
-   return NULL;
+   return;
    }
 
 CfOut(cf_verbose,""," -> Command => %s\n",cmd);
@@ -773,7 +774,7 @@ if ((pp = cf_popen_sh(esc_command,"r")) == NULL)
    {
    CfOut(cf_error,"cf_popen","!! Couldn't open pipe to command \"%s\"\n",cmd);
    fclose(fp);
-   return NULL;
+   return;
    }
 
 CfOut(cf_verbose,""," -> Command is executing...%s\n",esc_command);
@@ -845,8 +846,14 @@ else
    CfOut(cf_verbose,""," -> No output\n",cmd);
    unlink(filename);
    }
+}
 
-return NULL; 
+/*************************************************************************/
+
+static void *LocalExecThread(void *scheduled_run)
+{
+LocalExec((bool)scheduled_run);
+return NULL;
 }
 
 /******************************************************************************/

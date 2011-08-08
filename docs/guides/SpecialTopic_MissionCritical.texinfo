@@ -334,7 +334,48 @@ at least three virtual machines on different physical computers.
 policy hubs.
 
 @item Configure the mongo database to set up a minimal replica set. This underlying
-mechanism for automatic failover.
+mechanism for automatic failover. For example, a configuration like the following can should
+be typed into the mongo client on one of the hub machines.
+
+@verbatim
+host$ mongo
+
+db.runCommand({"replSetInitiate" : {
+"_id" : "CFEngineNova",
+"members" : [
+{
+"_id" : 1,
+"host" : "10.10.10.1:27017"
+},
+{
+"_id" : 2,
+"host" : "10.10.10.2:27017"
+},
+{
+"_id" : 3,
+"host" : "10.10.10.3:27017"
+}
+]}})
+
+@end verbatim
+
+@verbatim
+vars:
+
+  cf110lin::
+    "replication_server" string => "CFEngineNova/10.10.160.111:27017",
+                        comment => "The replication policy hub, for failover",
+                         handle => "update_vars_replication_server_cf110lin";
+  cf111lin|cf112lin::
+    "replication_server" string => "CFEngineNova/10.10.160.110:27017",
+                        comment => "The replication policy hub, for failover",
+                         handle => "update_vars_replication_server_cf111lin";
+
+commands:
+
+"/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath $(sys.workdir)/state --replSet $(u_def.replication_server) > /dev/null < /dev/null 2>&1"
+
+@end verbatim
 
 @item Copy the public and private key from the licensed hub to the backup hubs.
 All hubs will share the same public-private key pair.

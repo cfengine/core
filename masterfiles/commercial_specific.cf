@@ -564,9 +564,11 @@ bundle agent cfengine_policysrv
       comment => "Download and install PHP Mongo module on Debian/Ubuntu",
        handle => "cfengine_policysrv_commands_pecl_install_mongo_debian";   
 
-#  restart_apache2::
-#
-#   "/etc/init.d/apache2 restart";
+  restart_apache2::
+
+   "/sbin/service apache2 restart"
+      comment => "Restart APACHE2 on SLES/OpenSuSE",
+       handle => "cfengine_policysrv_commands_restart_apache2";
 
   a2enmod_ssl::
 
@@ -636,7 +638,8 @@ bundle agent cfengine_policysrv
              handle => "cfengine_policysrv_files_apache_nova_conf_suse",
              create => "true",
       edit_defaults => empty,
-          edit_line => apache_nova_conf("$(sys.doc_root)");
+          edit_line => apache_nova_conf("$(sys.doc_root)"),
+            classes => if_repaired("restart_apache2");
 
    "/etc/php5/apache2/php.ini"
         comment => "Ensure that date.timezone in php.ini has the same valuae as the machine",
@@ -650,7 +653,8 @@ bundle agent cfengine_policysrv
              handle => "cfengine_policysrv_files_apache_nova_conf_redhat",
              create => "true",
       edit_defaults => empty,
-          edit_line => apache_nova_conf("$(sys.doc_root)");
+          edit_line => apache_nova_conf("$(sys.doc_root)"),
+            classes => if_repaired("restart_httpd");
 
    "/etc/httpd/conf/httpd.conf"
          comment => "To append CFE nova.conf to be used for a web server",

@@ -180,7 +180,7 @@ if (ag != cf_keygen)
          ok = true;
          }
       }
-   
+
    if (ok)
       {
       ReadPromises(ag,agents);

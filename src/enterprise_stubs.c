@@ -166,6 +166,7 @@ MapName(name);
 if (stat(name,&sb) != -1)
    {
    NewClass("am_policy_hub");
+   CfOut(cf_verbose,""," -> Additional class defined: am_policy_hub");
    }
 
 return;

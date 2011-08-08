@@ -731,7 +731,7 @@ if (VERBOSE || DEBUG)
 
 void VerifyInferencePromise(struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
  struct Rlist *rpp,*rpq;
 
 if (!IsDefinedClass(pp->classes))
@@ -757,7 +757,7 @@ for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
 void VerifyThingsPromise(struct Promise *pp)
 
 { char id[CF_BUFSIZE];
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Topic *tp = NULL, *otp;
   struct Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
@@ -855,7 +855,7 @@ DeleteRlist(contexts);
 void VerifyTopicPromise(struct Promise *pp)
 
 { char id[CF_BUFSIZE];
-  struct Attributes a = {0};
+  struct Attributes a = {{0}};
   struct Topic *tp = NULL, *otp;
   struct Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
@@ -948,7 +948,7 @@ DeleteRlist(contexts);
 
 void VerifyOccurrencePromises(struct Promise *pp)
 
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
   char name[CF_BUFSIZE];
   enum representations rep_type;
   struct Rlist *contexts,*rp;
@@ -1043,7 +1043,7 @@ if (GENERATE_MANUAL)
 
 void VerifyOccurrenceGroup(char *file,struct Promise *pp)
     
-{ struct Attributes a = {0};
+{ struct Attributes a = {{0}};
   enum representations rep_type;
   struct stat sb;
   char *sp,url[CF_BUFSIZE];

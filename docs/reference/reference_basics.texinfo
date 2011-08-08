@@ -499,7 +499,7 @@ To see all of the classes defined on a particular host, run
 host# cf-promises -v
 @end smallexample
 as a privileged user. Note that some of the classes are set only
-if a trusted link can be established with cfenvd, i.e. if both
+if a trusted link can be established with cf-monitord, i.e. if both
 are running with privilege, and the @file{/var/cfengine/state/env_data}
 file is secure. More information about classes can be found in connection with
 @code{allclasses}.
@@ -974,8 +974,8 @@ cf3 Additional hard class defined as: linux_x86_64_2_6_22_18_0_2_default
 cf3 GNU autoconf class from compile time: compiled_on_linux_gnu
 cf3 Interface 1: lo
 cf3 Trying to locate my IPv6 address
-cf3 Looking for environment from cfenvd...
-cf3 Unable to detect environment from cfMonitord
+cf3 Looking for environment from cf-monitord...
+cf3 Unable to detect environment from cf-monitord
 ---------------------------------------------------------------------
 Loading persistent classes
 ---------------------------------------------------------------------

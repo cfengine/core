@@ -1148,6 +1148,11 @@ switch(type)
           }
 #endif  /* NOT MINGW */
        break;
+
+   default:
+
+      /* Initialization is not required */
+      ;
    }
 
 return true;
@@ -1237,6 +1242,12 @@ switch(type)
          }
       CleanScheduledPackages();
       break;
+
+   default:
+
+      /* Deinitialization is not required */
+      ;
+
    }
 }
 

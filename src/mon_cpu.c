@@ -42,7 +42,7 @@ static long LAST_CPU_T[MON_CPU_MAX + 1];
 void MonCPUGatherData(double *cf_this)
 {
 double q,dq;
-char name[CF_MAXVARSIZE],cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];
+char cpuname[CF_MAXVARSIZE],buf[CF_BUFSIZE];
 long cpuidx,userticks=0,niceticks=0,systemticks=0,idle=0,iowait=0,irq=0,softirq=0;
 long total_time = 1;
 FILE *fp;

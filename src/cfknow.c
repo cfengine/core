@@ -338,7 +338,6 @@ if (InsertTopic("any","any"))
 void KeepKnowControlPromises()
 
 { struct Constraint *cp;
-  struct Rlist *rp;
   char rettype;
   void *retval;
 

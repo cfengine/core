@@ -32,8 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void TestSearchFilePromiser();
-
 /*****************************************************************************/
 /* new test suite                                                            */
 /*****************************************************************************/
@@ -329,7 +327,6 @@ printf("----------------------------------------------------------\n\n");
 TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
-//TestSearchFilePromiser();
 CheckInstalledLibraries();
 
 #ifdef BUILD_TESTSUITE
@@ -350,59 +347,9 @@ printf("!! Extensive self-diagnostic capabilities not built in\n");
 
 }
 
-/******************************************************************/
-
-static void TestSearchFilePromiser()
-
-{ struct Promise pp;
-
-/* Still have diagnostic scope */
-THIS_AGENT_TYPE = cf_agent;
-   
-pp.promiser = "the originator";
-pp.promisee = "the recipient with $(two)";
-pp.classes = "proletariat";
-pp.petype = CF_SCALAR;
-pp.lineno = 12;
-pp.audit = NULL;
-pp.conlist = NULL;
-pp.agentsubtype = "none";
-
-pp.bundletype = "bundle_type";
-pp.bundle = "test_bundle";
-pp.ref = "commentary";
-pp.agentsubtype = strdup("files");
-pp.done = false;
-pp.next = NULL;
-pp.cache = NULL;
-pp.inode_cache = NULL;
-pp.this_server = NULL;
-pp.donep = &(pp.done);
-pp.conn = NULL;
-printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
-LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
-
-pp.promiser = "/var/[^/]*/[c|l].*";
-printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
-LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
-
-pp.promiser = "/var/[c|l][A-Za-z0-9_ ]*";
-printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
-LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
-
-AppendConstraint(&(pp.conlist),"path","literal",CF_SCALAR,NULL,false);
-pp.promiser = "/var/[^/]*/[c|l].*";
-printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
-LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
-
-pp.promiser = "/var/.*/h.*";
-printf("\nTestSearchFilePromiser(%s)\n\n",pp.promiser);
-LocateFilePromiserGroup(pp.promiser,&pp,VerifyFilePromise);
-}
+#ifdef BUILD_TESTSUITE
 
 /*******************************************************************************/
-
-#ifdef BUILD_TESTSUITE
 
 void TestSuite(char *s)
 

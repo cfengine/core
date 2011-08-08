@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 static int ProcessSanityChecks(struct Attributes a,struct Promise *pp);
 static void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
 static int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
@@ -260,7 +259,6 @@ else
 static int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip;
-  char saveuid[16];
   int pid=-1,matches=0,i,s,e,promised_zero;
   pid_t cfengine_pid = getpid();
   char *names[CF_PROCCOLS];      /* ps headers */

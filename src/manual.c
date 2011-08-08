@@ -482,7 +482,7 @@ if (strlen(s) == 0)
 if (type == cf_opts || type == cf_olist)
    {
    list = SplitStringAsRList(s,',');
-   fprintf(fout,"@noindent @b{Allowed input range}: @*\n@example",TexInfoEscape(s));
+   fprintf(fout,"@noindent @b{Allowed input range}: @*\n@example");
    
    for (rp = list; rp != NULL; rp=rp->next)
       {

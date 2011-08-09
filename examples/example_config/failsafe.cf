@@ -31,11 +31,3 @@ bundlesequence => { "update" };
 
 inputs => { "update.cf" };
 }
-
-############################################
-
-body depth_search recurse(d)
-
-{
-depth => "$(d)";
-}

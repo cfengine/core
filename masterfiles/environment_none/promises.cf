@@ -1,5 +1,0 @@
-bundle agent main
-{
-vars:
-        "dummy" string => "dummy";
-}

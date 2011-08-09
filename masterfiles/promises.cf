@@ -1,271 +1,37 @@
-#########################################################################
+###############################################################################
 #
-#   promises.cf - Basic Policy for Community and Enterprise
+#   promises.cf - Basic Policy for Community
 #
-#########################################################################
+###############################################################################
 
 body common control
 {
- bundlesequence => {
-                    "def",
-                    "environments",
-                    "cfengine_management",
-                    "service_catalogue",
+ bundlesequence => { "main" };
 
-#                    "cdp"
-#                    "orion"
-                   };
+ inputs => { 
+            "cfengine_stdlib.cf", 
+           };
 
-         inputs => {
-                    "cfengine.cf",
-                    "commercial_specific.cf",
-                    "update.cf",
-                    "cfengine_stdlib.cf",
-                    "file_change.cf",
-                    "knowledge.cf",
-                    "environment_$(environments.active)/promises.cf",
-
-# Content Driven Policy - See Special Topics Guides
-
-#                    "cdp_lib/cdp.cf",
-#                    "cdp_lib/cdp_acls.cf",
-#                    "cdp_lib/cdp_registry.cf",
-#                    "cdp_lib/cdp_file_changes.cf",
-#                    "cdp_lib/cdp_file_diffs.cf",
-#                    "cdp_lib/cdp_services.cf",
-#                    "cdp_lib/cdp_commands.cf",
-
-# Orion Cloud Services - See Special Topics Guide
-
-#                    "OrionCloud/c_cpp_env.cf",
-#                    "OrionCloud/ensure_ownership.cf",
-#                    "OrionCloud/jboss_server.cf",
-#                    "OrionCloud/ntp.cf",
-#                    "OrionCloud/ruby_env.cf",
-#                    "OrionCloud/sshd_conf.cf",
-#                    "OrionCloud/change_mgt.cf",
-#                    "OrionCloud/fix_broken_software.cf",
-#                    "OrionCloud/nagios.cf",
-#                    "OrionCloud/perl_env.cf",
-#                    "OrionCloud/tomcat_server.cf",
-#                    "OrionCloud/db_mysql.cf",
-#                    "OrionCloud/garbage_collection.cf",
-#                    "OrionCloud/name_resolution.cf",
-#                    "OrionCloud/php_webserver.cf",
-#                    "OrionCloud/db_postgresql.cf",
-#                    "OrionCloud/nginx_perlcgi.cf",
-#                    "OrionCloud/varnish_method.cf",
-#                    "OrionCloud/db_sqlite.cf",
-#                    "OrionCloud/iptables.cf",
-#                    "OrionCloud/nginx_phpcgi.cf",
-#                    "OrionCloud/python_env.cf"
-                   };
-
-   version => "Promises.cf 1.1.0";
-
-  nova_edition|constellation_edition::
-
-   host_licenses_paid => "1";
-
-   goal_categories => { "goals", "targets", "milestones" };
-   goal_patterns   => { "goal_.*", "target.*","milestone.*" };
-
+ version => "Community Promises.cf 1.0.0";
 }
 
-#########################################################################
+###############################################################################
 
-#
-# Assign your machines to available environments here.
-#
-# You may add and remove environments as you want, just keep the
-# environment_<NAME> class defined (for GUI to sort hosts properly) and
-# environments.active variable defined as it is used in the rest of promises.cf
-# Note that <NAME>="any" is reserved for internal purposes.
-#
-
-bundle common environments
+bundle agent main
 {
- classes:
-
-   #
-   # Classify hosts into staing environments
-   # You may use any method like or, expression, classmatch, etc. to define the classes
-   # Hosts do not need to be classified into an environment, but must not be in multiple
-   #
-
-   "environment_development" or => {
-                                    "hostname1_example_com",
-                                    "ipv4_256_256_256_256",
-                                   };
-
-
-   "environment_testing"     or => {
-                                    "hostname2_example_com",
-                                    "ipv4_256_256_257",  # subnet
-                                   };
-
-
-   "environment_production"  or => {
-                                    "hostname3_example_com",
-                                    "ipv4_256_256_258",  # subnet
-                                   };
-
-#
-
- vars:
-
-   #
-   # This variable holds active environment.
-   #
-   # * CDP reads files from inputs/environments_${active}/cdp_inputs.
-   # * inputs/environments_${active}/promises.cf file is read during execution.
-   #
-  any::
-
-   "active" string => "none", policy => "overridable";
-
-  environment_development::
-
-   "active" string => "development", policy => "overridable";
-
-  environment_testing::
-
-   "active" string => "testing", policy => "overridable";
-
-  environment_production::
-
-   "active" string => "production", policy => "overridable";
-
+ reports:
+  cfengine_3::
+   "--> CFE is running on $(sys.fqhost)"
+      comment => "Display message on screen/email",
+       handle => "main_reports_cfe_running";
 }
 
-##################################################################
-#
-# cfengine_management
-#  - manage internal CFE functionalities (any:: can be modified)  
-#
-##################################################################
-
-bundle agent cfengine_management
-{
- methods:
-
-  #
-  # Cfengine internals
-  #
-
-  am_policy_hub.commercial_customer::
-
-   "hub" usebundle => cfengine_update_folders,
-            handle => "cfengine_management_update_folders",
-           comment => "Create empty directories for CFE self-upgrade";
-
-   "hub" usebundle => cfengine_policysrv,
-            handle => "cfengine_management_policysrv",
-           comment => "Prepare the policy hub";
-
-   "hub" usebundle => cfengine_php_mod,
-            handle => "cfengine_management_php_mod",
-           comment => "Setup CFE PHP modules";
-
-   "hub" usebundle => cfengine_web_server("on"),
-            handle => "cfengine_management_web_server",
-           comment => "Manage Apache Web server (on/off)";
-
-   "hub" usebundle => cfengine_setup_knowledge,
-            handle => "cfengine_management_setup_knowledge",
-           comment => "Manage CFE Knowledge Map";
-
-   "hub" usebundle => cfengine_editor,
-            handle => "cfengine_management_online_editor",
-           comment => "Prepare CFE online editing tool";
-
-  any::
-
-   "any" usebundle => cfengine_correct_cftwin,
-            handle => "cfengine_management_correct_cftwin",
-           comment => "Ensure cf-twin in good shape";
-
-   "any" usebundle => cfengine_limit_robot_agents,
-            handle => "cfengine_management_limit_cfe_agents",
-           comment => "Manage CFE processes";
-
-}
-
-##################################################################
-#
-# service_catalogue
-#  - general purposes  
-#
-##################################################################
-
-bundle agent service_catalogue
-{							 
- methods:
-
-  any::
-
-   "security"           -> { goal_1, goal_2 }
-                comment => "Basic change management",
-              usebundle => change_management;
-
-  commercial_customer::
-
-   "maintenance"           -> { goal_3 }
-                   comment => "Perform log rotation and clean up of CFE Nova work files",
-                 usebundle => garbage_collection;
-
-}
-
-##################################################################
-#
-# orion
-#  - List of services in CFE Orion Cloud package (not in service)
-#
-##################################################################
-
-bundle agent orion
-{
- methods:
-
-  nohosts::
-
-#   "develop" usebundle => c_cpp_env;
-#   "develop" usebundle => develop_perl_env;
-#   "develop" usebundle => develop_python_env;
-#   "develop" usebundle => develop_ruby_on_rails;
-
-#   "app host" usebundle => app_web_phpapache;
-#   "app host" usebundle => app_login_sshd;
-#   "app host" usebundle => app_tomcat_server;
-#   "app host" usebundle => app_varnish_method;
-#   "app host" usebundle => app_db_mysql;
-#   "app host" usebundle => app_db_postgresql;
-#   "app host" usebundle => app_db_sqlite;
-#   "app host" usebundle => app_nginx_perlcgi;
-#   "app host" usebundle => app_nginx_phpcgi;
-#   "app host" usebundle => app_jboss_account;
-
-#   "any" usebundle => fix_broken_software;
-#   "any" usebundle => garbage_collection;
-
-#   "monitored" usebundle => monitoring_nagios;
-
-#   "any" usebundle => system_ownership;
-#   "any" usebundle => system_xinetd;
-#   "any" usebundle => system_name_resolution;
-#   "any" usebundle => system_time_ntp;
-#   "any" usebundle => system_change_management;
-
-#   "secure host" usebundle => security_access_iptables;
-
-}
-
-##################################################################
+###############################################################################
 #
 # common def
 #  - common/global variables and classes here  
 #
-##################################################################
+###############################################################################
 
 bundle common def
 {
@@ -294,27 +60,15 @@ bundle common def
   "dir_masterfiles" string => translatepath("$(sys.workdir)/masterfiles"),
                    comment => "Define masterfiles path",
                     handle => "common_def_vars_dir_masterfiles";
-  "dir_reports"     string => translatepath("$(sys.workdir)/reports"),
-                   comment => "Define reports path",
-                    handle => "common_def_vars_dir_reports";
-  "dir_software"    string => translatepath("$(sys.workdir)/master_software_updates"),
-                   comment => "Define software path",
-                    handle => "common_def_vars_dir_software";
-
- classes:
-
-  "commercial_customer" or => { "nova_edition", "constellation_edition" },
-                   comment => "Define a global class for CFE Nova and Constellation",
-                    handle => "common_def_classes_commercial_customer";
 
 }
 
-##################################################################
+###############################################################################
+# This part is for cf-agent 
 #
-# control agent
-#  - global control variables  
-#
-##################################################################
+# Settings describing the details of the fixed behavioural promises made by 
+# cf-agent.
+###############################################################################
 
 body agent control
 
@@ -341,19 +95,15 @@ body agent control
                   "DEBIAN_FRONTEND=noninteractive",
                  };
 
- # Switch on tracking of promise valuation
-
-  track_value => "true";
-
 }
 
-#########################################################
+###############################################################################
 # This part is for cf-serverd
 #
-# General IP access policy for the connection protocol
-#  i.e. access to the server itself.
-# Access to specific files must be granted in addition.
-#########################################################
+# Server controls are mainly about determining access policy for the connection 
+# protocol: i.e. access to the server itself. 
+# Access to specific files must be granted in addition. 
+###############################################################################
 
 body server control 
 {
@@ -372,7 +122,7 @@ body server control
 # cfruncommand          => "$(sys.cf_agent)";
 }
 
-#########################################################
+###############################################################################
 
 bundle server access_rules()
 {
@@ -385,30 +135,6 @@ bundle server access_rules()
       comment => "Grant access to the policy updates",
       admit   => { ".*$(def.domain)", @(def.acl) };
 
-  "$(def.dir_software)"
-       handle => "server_access_grant_access_datafiles",
-      comment => "Grant access to software updates",
-      admit   => { ".*$(def.domain)", @(def.acl) };
-
-  commercial_customer::
-  
-   "delta"
-             handle => "server_access_grant_delta",
-            comment => "Grant delta reporting query for the hub",
-      resource_type => "query",
-            admit   => { "$(sys.policy_hub)" };
-   "full"
-             handle => "server_access_grant_full",
-            comment => "Grant full reporting query for the hub",
-      resource_type => "query",
-            admit   => { "$(sys.policy_hub)" };
-
-   "relay"
-             handle => "server_access_grant_relay",
-            comment => "Grant relay reporting query to everybody",
-      resource_type => "query",
-            admit   => { @(def.acl) };
-
 # Uncomment the promise below to allow cf-runagent to
 # access cf-agent on Windows machines
 #	
@@ -417,25 +143,21 @@ bundle server access_rules()
 #    handle => "grant_access_policy_agent",
 #    comment => "Grant access to the agent (for cf-runagent)",
 #    admit   => { ".*$(def.domain)", @(def.acl) };	
-
 	
  roles:
 
 # Use roles to allow specific remote cf-runagent users to
-# define certain soft-classes when running cf-agent on this host
-
-  commercial_customer::	
+# define certain soft-classes when running cf-agent on this host	
 #  "emergency"  authorize => { "root" };
 	
 }
 
-#########################################################
+###############################################################################
 # This part is for cf-execd
 #
-# These body settings determine the behaviour of cf-execd, 
-# including scheduling times and output capture to 
-# $(sys.workdir)/outputs and relay via email.
-#########################################################
+# These body settings determine the behaviour of cf-execd, including scheduling
+# times and output capture to $(sys.workdir)/outputs and relay via email.
+###############################################################################
 
 body executor control
 {
@@ -455,21 +177,17 @@ body executor control
 # The full path and command to the executable run by default (overriding builtin).
 # cf-twin needs its own safe environment because of the update mechanism
 
- windows::
+ linux::
   exec_command => "$(sys.cf_twin) -f failsafe.cf && $(sys.cf_agent)";
-
- hpux::
-  exec_command => "SHLIB_PATH=\"/var/cfengine/lib-twin\" $(sys.cf_twin) -f failsafe.cf && $(sys.cf_agent)";
-
- aix::
-  exec_command => "LIBPATH=\"/var/cfengine/lib-twin\" $(sys.cf_twin) -f failsafe.cf && $(sys.cf_agent)";
-
- !(windows|hpux|aix)::
-  exec_command => "LD_LIBRARY_PATH=\"/var/cfengine/lib-twin\" $(sys.cf_twin) -f failsafe.cf && $(sys.cf_agent)";
 
 }
 
-#########################################################
+###############################################################################
+# This part is for cf-report
+#
+# Determines a list of reports to write into the build directory. 
+# The format may be in text, html or xml format.
+###############################################################################
 
 body reporter control
 {
@@ -485,7 +203,12 @@ body reporter control
 
 }
 
-#########################################################
+###############################################################################
+# This part is for cf-runagent
+#
+# The most important parameter here is the list of hosts that the agent will 
+# poll for connections.
+###############################################################################
 
 body runagent control
 {
@@ -499,7 +222,13 @@ body runagent control
 
 }
 
-#########################################################
+###############################################################################
+# This part is for cf-monitord
+#
+# The system defaults will be sufficient for most users. 
+# This configurability potential, however, will be a key to developing 
+# the integrated monitoring capabilities of CFE.
+###############################################################################
 
 body monitor control
 {
@@ -511,4 +240,5 @@ body monitor control
 
 }
 
-#########################################################
+###############################################################################
+

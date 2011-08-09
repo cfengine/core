@@ -1,7 +1,5 @@
-
-inputsdir = @docdir@/inputs
-inputs_DATA = failsafe.cf  cfengine_stdlib.cf  promises.cf  site.cf  update.cf
-EXTRA_DIST = *.cf
+exampleconfigdir = @docdir@/example_config
+dist_exampleconfig_DATA = $(srcdir)/failsafe.cf $(srcdir)/cfengine_stdlib.cf $(srcdir)/promises.cf $(srcdir)/site.cf $(srcdir)/update.cf
 
 #
 # Some basic clean ups

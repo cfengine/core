@@ -17,7 +17,7 @@
 @c
 @c ***********************************************************************
 @c %** start of header
-@setfilename st-missioncritical.info
+@setfilename st-critical.info
 @settitle CFEngine for Mission Critical Operations
 @setchapternewpage odd
 @c %** end of header

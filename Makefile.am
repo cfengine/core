@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples inputs masterfiles
+SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles
 
-DIST_SUBDIRS = pub src docs examples inputs masterfiles
+DIST_SUBDIRS = pub src docs examples masterfiles
 
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 

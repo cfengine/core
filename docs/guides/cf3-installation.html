@@ -1,0 +1,451 @@
+<html lang="en">
+<head>
+<title>CFEngine Installation Guide</title>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="description" content="CFEngine Installation Guide">
+<meta name="generator" content="makeinfo 4.13">
+<link title="Top" rel="top" href="#Top">
+<link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+body {
+	font-family: Verdana, DejaVu, Vera, Geneva, sans-serif;
+	padding: 10px;
+}
+.node
+{
+	text-align: right;
+	padding: 2px;
+	font-size: smaller;
+}
+.node hr {
+	border: 0;
+	width: 100%;
+	color: #CCC;
+	background-color: #CCC;
+	height: 5px;
+}
+.section {
+	padding-right: 0px;
+	padding-bottom: 0px;
+	padding-left: 0px;
+}
+h1 {
+	font-weight: bold;
+	color: #666;
+}
+h2 {
+	font-weight: bold;
+	color: #666;
+}
+h3 {
+	margin-top: 3px;
+	margin-right: 0px;
+	margin-bottom: 10px;
+	margin-left: 0px;
+}
+
+.menu
+{
+}
+
+.contents
+{
+	background-color: #CCC;
+	padding-top: 2px;
+	padding-right: 2px;
+	padding-bottom: 2px;
+	padding-left: 10px;
+}
+
+.index-cp
+{  
+background: #fff url(index-cp.png) right repeat-y;
+}
+
+.index-vr
+{  
+background: #fff url(index-vr.png) right repeat-y;
+}
+
+.index-mb
+{  
+background: #eee url(index-faq.png) right repeat-y;
+}
+
+table.border
+{
+	border-color: #666;
+	border-width: 0px;
+}
+
+FONT.liten {font-size: 70%; }
+ 
+.tynn {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: smaller;
+        font-style: normal;
+        font-weight: lighter;
+        margin-bottom: 0em;
+     font-size: 11pt;
+        }
+.verbatim {
+	font-family: "Lucida Console", Monaco, monospace;
+	color: #000;
+	padding-top: 30px;
+	padding-right: 30px;
+	padding-bottom: 3px;
+	padding-left: 30px;
+	background-color: #FEFFCA;
+	border-left-width: medium;
+	border-left-style: outset;
+	border-left-color: #FDFFD5;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 20px;
+	margin-left: 0px;
+}
+.example {
+	font-family: "Lucida Console", Monaco, monospace;
+	color: #000;
+	width: 100%;
+	padding-top: 30px;
+	padding-right: 30px;
+	padding-bottom: 3px;
+	padding-left: 30px;
+	background-color: #FEFFCA;
+	border-left-width: medium;
+	border-left-style: outset;
+	border-left-color: #FDFFD5;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 20px;
+	margin-left: 0px;
+}
+.smallexample {
+	font-family: "Lucida Console", Monaco, monospace;
+	color: #000;
+	width: 100%;
+	padding-top: 30px;
+	padding-right: 30px;
+	padding-bottom: 3px;
+	padding-left: 30px;
+	background-color: #FEFFCA;
+	border-left-width: medium;
+	border-left-style: outset;
+	border-left-color: #FDFFD5;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 20px;
+	margin-left: 0px;
+}
+.cartouche {
+	background-color: #CCC;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	padding: 5px;
+	font-style: italic;
+}
+
+A:link { color: #2c2e70 }
+A:visited { color: black }
+A:active { color: #600041 }--></style>
+</head>
+<body>
+<h1 class="settitle">CFEngine Installation Guide</h1>
+<div class="node">
+<a name="Top"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#dir">(dir)</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
+
+</div>
+
+<h2 class="unnumbered">CFEngine Installation Guide</h2>
+
+   <p><a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+
+<ul class="menu">
+<li><a accesskey="1" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>
+</ul>
+
+<!-- ***************************************************** -->
+<!-- * CHAPTER -->
+<!-- ***************************************************** -->
+<div class="node">
+<a name="CFEngine-Installation-Guide"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Top">Top</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">1 CFEngine Installation Guide</h2>
+
+<p>The quickest way to get started with CFEngine is to download and install binary packages, available from <a href="http://cfengine.com/inside/myspace">http://cfengine.com/inside/myspace</a>. Installing and bootstrapping <a rel="footnote" href="#fn-1" name="fnd-1"><sup>1</sup></a> these is a trivial operation, putting you two steps away from testing your first CFEngine policies. The other option is to download and compile the source code, available from <a href="http://cfengine.com/source_code">http://cfengine.com/source_code</a>.
+
+   <p>This guide assumes that you are logged in as root, use <code>sudo</code> if you wish to install from a regular user account (e.g. <code>host$ sudo rmp -ihv</code> <i>packages</i>).
+
+<ul class="menu">
+<li><a accesskey="1" href="#Install-from-packages">Install from packages</a>
+<li><a accesskey="2" href="#Build-from-source-_0028CFE-Community_0029">Build from source (CFE Community)</a>
+<li><a accesskey="3" href="#Bootstrap-from-source">Bootstrap from source</a>
+<li><a accesskey="4" href="#Check-installation">Check installation</a>
+<li><a accesskey="5" href="#Next-steps">Next steps</a>
+</ul>
+
+<div class="node">
+<a name="Install-from-packages"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Build-from-source-_0028CFE-Community_0029">Build from source (CFE Community)</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>
+
+</div>
+
+<h3 class="section">1.1 Install from packages</h3>
+
+<ul class="menu">
+<li><a accesskey="1" href="#Unpack-the-software">Unpack the software</a>
+<li><a accesskey="2" href="#Bootstrap-CFEngine">Bootstrap CFEngine</a>
+</ul>
+
+<div class="node">
+<a name="Unpack-the-software"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Bootstrap-CFEngine">Bootstrap CFEngine</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Install-from-packages">Install from packages</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Install-from-packages">Install from packages</a>
+
+</div>
+
+<h4 class="subsection">1.1.1 Unpack the software</h4>
+
+<p>System specific commands to unpack the software:
+     <dl>
+<dt><i>Red Hat or SUSE family</i><dd>
+     <pre class="example">          host# rpm -ihv <var>packages</var>
+</pre>
+     <br><dt><i>Debian family</i><dd>
+     <pre class="example">          host# dpkg --install  <var>packages</var>
+</pre>
+     </dl>
+
+   <p>The below examples are given for a Red Hat or SUSE, adapt them according to your system. To unpack:
+
+<pre class="example">        host# rpm -ihv cfengine-community-3.x.y.rpm
+</pre>
+   <div class="node">
+<a name="Bootstrap-CFEngine"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Unpack-the-software">Unpack the software</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Install-from-packages">Install from packages</a>
+
+</div>
+
+<h4 class="subsection">1.1.2 Bootstrap CFEngine</h4>
+
+<p><table class="cartouche" summary="cartouche" border="1"><tr><td>
+The below procedure is valid for CFE Nova and CFE Community v3.2 and up (packages for v3.2 will be released soon). For earlier versions of CFE Community binaries, you may proceed directly to section 1.5 Next steps. 
+</td></tr></table>
+
+   <p>This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
+<pre class="verbatim">   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+</pre>
+
+   <pre class="sp">
+
+</pre>
+CFEngine should now be up and running on your system. It will copy its default policy files into <samp><span class="file">masterfiles</span></samp> on the hub (policy server) provided that the directory is empty (fresh install). When the clients are bootstrapped, they will contact the hub and copy them to their <samp><span class="file">inputs</span></samp> directory.
+
+<div class="node">
+<a name="Build-from-source-(CFE-Community)"></a>
+<a name="Build-from-source-_0028CFE-Community_0029"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Bootstrap-from-source">Bootstrap from source</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Install-from-packages">Install from packages</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>
+
+</div>
+
+<h3 class="section">1.2 Build from source</h3>
+
+<p>See reference manual or INSTALL file in source code for dependencies. To build from source:
+<pre class="verbatim">   host# tar zxf cfengine-3.x.y.tar.gz
+   host# cd cfengine-3.x.y
+   host# ./configure
+   host# make
+   host# make install
+</pre>
+
+<div class="node">
+<a name="Bootstrap-from-source"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Check-installation">Check installation</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Build-from-source-_0028CFE-Community_0029">Build from source (CFE Community)</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>
+
+</div>
+
+<h3 class="section">1.3 Bootstrap from source</h3>
+
+<p>Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
+
+<p class="noindent">On the hub (policy server):
+<p><table class="cartouche" summary="cartouche" border="1"><tr><td>
+The below procedure is valid for the latest CFE Community v3.2 beta source code (available in repository). If you are using the 3.2.0b3 tar-ball, you will need to change the from-path when copying to masterfiles below:
+<pre class="verbatim">   host# cp /usr/local/share/doc/cfengine/inputs/*.cf /var/cfengine/masterfiles/
+</pre>
+</td></tr></table>
+
+<pre class="verbatim">   host# /usr/local/sbin/cf-key
+   host# cp /usr/local/sbin/cf-* /var/cfengine/bin/
+   host# cp /usr/local/share/cfengine/masterfiles/*.cf /var/cfengine/masterfiles/
+   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+</pre>
+
+     <ul>
+<li>The first run of cf-key will complain but it will create the local work directory tree, <code>/var/cfengine</code>, as well as a public and private key. 
+<li>We use "cp" to populate the the binaries cache in <code>/var/cfengine/bin/</code>. 
+<li>We also use "cp" to populate the <code>masterfiles</code> directory with the default configuration. 
+<li>The bootstrapping will copy default policy files into <samp><span class="file">masterfiles</span></samp> and make CFEngine run in the background. 
+</ul>
+
+<p class="noindent">On the clients (all other machines):
+<pre class="verbatim">   host# /usr/local/sbin/cf-key
+   host# cp  /usr/local/sbin/cf-* /var/cfengine/bin/
+   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+</pre>
+
+     <ul>
+<li>The first run of cf-key will complain but it will create the local work directory tree, <code>/var/cfengine</code>, as well as a public and private key. 
+<li>Then we use "cp" to populate the the binaries cache in <code>/var/cfengine/bin/</code>. 
+<li>The bootstrapping will contact the hub (policy server), fetch the default configuration (policy files) to place them in <code>/var/cfengine/inputs/</code>, and make CFEngine run in the background. 
+</ul>
+
+   <pre class="sp">
+
+</pre>
+CFEngine should now be up and running on your system.
+
+<div class="node">
+<a name="Check-installation"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Next-steps">Next steps</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Bootstrap-from-source">Bootstrap from source</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>
+
+</div>
+
+<h3 class="section">1.4 Check installation</h3>
+
+<p><table class="cartouche" summary="cartouche" border="1"><tr><td>
+The below procedure is valid for CFE Nova and CFE Community v3.2 and up (packages for v3.2 will be released soon). 
+</td></tr></table>
+
+   <p>The default configuration of CFEngine does nothing other than look after itself, running in the background. CFEngine will not display any messages if everything is OK, it will only look for
+possible policy updates from <samp><span class="file">/var/cfengine/masterfiles</span></samp>
+on the hub (policy server).
+
+   <p>How to actively assess the success of your installation:
+
+     <ol type=1 start=1>
+<li>Look at the process list on the systems with &lsquo;<samp><span class="samp">ps waux | grep cf</span></samp>&rsquo;. 
+You should be able to see <code>cf-execd</code> running, and eventually other processes from
+the CFEngine suite like <code>cf-monitord</code> <code>cf-serverd</code>. CFE Nova users should
+also eventually see <code>cf-hub</code> running on the hub. Note that it may take 5&ndash;10 minutes before all the
+processes get started.
+
+     <li>Look for files in <samp><span class="file">/var/cfengine/inputs</span></samp> (Unix)
+or <samp><span class="file">C:\Program Files\Cfengine\inputs</span></samp> (Windows).
+        </ol>
+
+<div class="node">
+<a name="Next-steps"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Check-installation">Check installation</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Installation-Guide">CFEngine Installation Guide</a>
+
+</div>
+
+<h3 class="section">1.5 Next steps</h3>
+
+<p>We recommend the following reading:
+
+     <ul>
+<li>CFEngine Concepts:<br> <a href="http://cfengine.com/manuals/cf3-conceptguide.html">http://cfengine.com/manuals/cf3-conceptguide.html</a>
+<li>First promises:<br>
+<a href="http://cfengine.com/manuals/cf3-tutorial.html#First-promises">http://cfengine.com/manuals/cf3-tutorial.html#First-promises</a> <!-- cf3-GetStarted -->
+</ul>
+
+<p class="noindent">For a complete overview:
+     <ul>
+<li><a href="http://cfengine.com/manuals/cf3-tutorial.html">http://cfengine.com/manuals/cf3-tutorial.html</a>
+<li><a href="http://cfengine.com/manuals/cf3-reference.html">http://cfengine.com/manuals/cf3-reference.html</a>
+</ul>
+
+<p class="noindent">Links to external resources:
+     <ul>
+<li>CFEngine 3 Beginning Examples:<br>
+<a href="http://www.verticalsysadmin.com/cfengine/beginning_examples/">http://www.verticalsysadmin.com/cfengine/beginning_examples/</a><br>
+This is, basically, a selection from /usr/local/share/doc/cfengine/ which has over 200 examples. 
+<li>"CFEngine 3 Tutorial" by Neil Watson:<br>
+<a href="http://watson-wilson.ca/2011/05/cfengine-3-cookbook-begins.html">http://watson-wilson.ca/2011/05/cfengine-3-cookbook-begins.html</a>
+</ul>
+
+<!--  -->
+   <p><a name="Contents">
+   <div class="contents">
+<h2>Table of Contents</h2>
+<ul>
+<li><a name="toc_Top" href="#Top">CFEngine Installation Guide</a>
+<li><a name="toc_CFEngine-Installation-Guide" href="#CFEngine-Installation-Guide">1 CFEngine Installation Guide</a>
+<ul>
+<li><a href="#Install-from-packages">1.1 Install from packages</a>
+<ul>
+<li><a href="#Unpack-the-software">1.1.1 Unpack the software</a>
+<li><a href="#Bootstrap-CFEngine">1.1.2 Bootstrap CFEngine</a>
+</li></ul>
+<li><a href="#Build-from-source-_0028CFE-Community_0029">1.2 Build from source</a>
+<li><a href="#Bootstrap-from-source">1.3 Bootstrap from source</a>
+<li><a href="#Check-installation">1.4 Check installation</a>
+<li><a href="#Next-steps">1.5 Next steps</a>
+</li></ul>
+</li></ul>
+</div>
+
+
+
+   <p><script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://
+ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-
+analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+
+   <div class="footnote">
+<hr>
+<a name="texinfo-footnotes-in-document"></a><h4>Footnotes</h4><p class="footnote"><small>[<a name="fn-1" href="#fnd-1">1</a>]</small> CFE Community 3.2 and up</p>
+
+   <hr></div>
+
+</body></html>
+

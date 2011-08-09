@@ -171,9 +171,9 @@ free(dir);
  * Otherwise use some other method to detect and use them where available.
  */
 
-#if defined(HAVE_FPATHCONF) && defined(HAVE_DIRFD) && defined(_PC_NAME_MAX)
+#if defined(HAVE_FPATHCONF) && defined(_PC_NAME_MAX)
 
-static size_t get_name_max(DIR *dirp)
+static size_t GetNameMax(DIR *dirp)
 {
 long name_max = fpathconf(dirfd(dirp), _PC_NAME_MAX);
 if (name_max != -1)
@@ -188,7 +188,7 @@ return (size_t)(-1);
 #endif
 }
 
-#else /* FPATHCONF && DIRFD && _PC_NAME_MAX */
+#else /* FPATHCONF && _PC_NAME_MAX */
 
 # if defined(NAME_MAX)
 static size_t GetNameMax(DIR *dirp)
@@ -199,7 +199,7 @@ return (NAME_MAX > 255) ? NAME_MAX : 255;
 #  error "buffer size for readdir_r cannot be determined"
 # endif
 
-#endif /* FPATHCONF && DIRFD && _PC_NAME_MAX */
+#endif /* FPATHCONF && _PC_NAME_MAX */
 
 /*********************************************************************/
 

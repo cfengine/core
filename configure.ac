@@ -514,6 +514,10 @@ AC_CHECK_FUNCS(strstr strsep putenv drand48 srand48 getaddrinfo)
 AC_CHECK_FUNCS(bcopy mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid strdup strrchr strerror snprintf sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
+AC_CHECK_FUNCS(fpathconf)
+
+AC_CHECK_DECLS(dirfd)
+AC_REPLACE_FUNCS(dirfd)
 
 AC_CHECK_FUNCS(jail_get)
 

@@ -61,6 +61,9 @@ Copyright @copyright{} 2010 CFEngine AS
 @ifnottex
 
 
+@node Top, What are Mission Critical Operations?, (dir), (dir)
+@top CFEngine for Mission Critical Operations
+
 @menu
 * What are Mission Critical Operations?::  
 * Factors affecting Risk::      
@@ -71,12 +74,8 @@ Copyright @copyright{} 2010 CFEngine AS
 * High availability access to the Mission Portal::  
 * Redundant hub architecture::  
 * How do I make a change in mission-critical infrastructure?::  
-* Using CFEngine for Change Management::  
 * Separating Policy Changes from ad-hoc Changes::  
 @end menu
-
-@node Top, What are Mission Critical Operations?, (dir), (dir)
-@top CFEngine for Mission Critical Operations
 
 
 @end ifnottex
@@ -564,7 +563,7 @@ deployment.
 @end cartouche
 
 
-@node  How do I make a change in mission-critical infrastructure?, Using CFEngine for Change Management, Redundant hub architecture, Top
+@node  How do I make a change in mission-critical infrastructure?, Separating Policy Changes from ad-hoc Changes, Redundant hub architecture, Top
 @unnumberedsec How do I make a change in mission-critical infrastructure?
 @sp 1
 
@@ -589,7 +588,7 @@ handle on change, using technology designed for stability with agility.
 CFEngine has the ability to change entire systems of thousands of
 hosts within a timeframe of 5 to 10 minutes.
 
-@node Separating Policy Changes from ad-hoc Changes,  , Using CFEngine for Change Management, Top
+@node Separating Policy Changes from ad-hoc Changes,  , How do I make a change in mission-critical infrastructure?, Top
 @unnumberedsec Separating Policy Changes from @i{ad-hoc} Changes
 @sp 1
 

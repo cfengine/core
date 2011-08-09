@@ -41,6 +41,7 @@ files:
 
     perms => u_p("700"),
     copy_from => mycopy("/usr/local/sbin","localhost"),
+    file_select => cf3_files,
     depth_search => urecurse("inf"),
     action => uimmediate;
 }

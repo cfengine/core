@@ -15,7 +15,7 @@ DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
 EXTRA_DIST = ChangeLog INSTALL README LICENSE
 
 docdir = @docdir@
-doc_DATA = README ChangeLog INSTALL
+doc_DATA = README ChangeLog
 
 #
 # Some basic clean ups

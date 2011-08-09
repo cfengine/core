@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev: 82 $
+# Subversion : $Rev: 84 $
 # For Cfengine Core: 3.1.0
 
 ###################################################
@@ -390,8 +390,10 @@ bundle agent cronjob(commands,user,hours,mins)
 vars:
   SuSE::
    "crontab" string => "/var/spool/cron/tabs";
- !SuSE::
-   "crontab" string => "/var/spool/cron/crontabs";
+  redhat|fedora::
+   "crontab" string => "/var/spool/cron";
+ !(SuSE|redhat|fedora)::
+    "crontab" string => "/var/spool/cron/crontabs"; 
 
 files:
 
@@ -842,6 +844,7 @@ servers     => { "$(server)" };
 source      => "$(from)";
 purge       => "true";
 preserve    => "true";
+type_check  => "false";
 }
 
 ##
@@ -1604,3 +1607,4 @@ body action sample_rate(x)
 ifelapsed => "$(x)";
 expireafter => "10";
 }
+

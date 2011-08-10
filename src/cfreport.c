@@ -97,6 +97,7 @@ char PROMISEHANDLE[CF_MAXVARSIZE] = {0};
 char HOSTKEY[CF_MAXVARSIZE] = {0};
 char CLASSREGEX[CF_MAXVARSIZE] = {0};
 char LSDATA[CF_MAXVARSIZE] = {0};
+char NAME[CF_MAXVARSIZE] = {0};
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -117,71 +118,68 @@ const char *ID = "The reporting agent is a merger between the older\n"
 const struct option OPTIONS[31] =
       {
       { "help",no_argument,0,'h' },
+      { "class-regex",required_argument,0,'c'},
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "inform",no_argument,0,'I' },
       { "version",no_argument,0,'V' },
       { "no-lock",no_argument,0,'K'},
       { "file",required_argument,0,'f' },
+      { "hostkey",required_argument,0,'k'},
       { "html",no_argument,0,'H'},
       { "xml",no_argument,0,'X'},
       { "version",no_argument,0,'V'},
       { "purge",no_argument,0,'P'},
       { "erasehistory",required_argument,0,'E' },
+      { "nova-export",required_argument,0,'x'},
+      { "nova-import",required_argument,0,'i'},
       { "outputdir",required_argument,0,'o' },
+      { "promise-handle",required_argument,0,'p'},
+      { "query-hub",optional_argument,0,'q'},
       { "titles",no_argument,0,'t'},
       { "timestamps",no_argument,0,'T'},
       { "resolution",no_argument,0,'R'},
+      { "show",required_argument,0,'1'},      
       { "syntax",no_argument,0,'S'},
       { "syntax-export",no_argument,0,'s'},
       { "no-error-bars",no_argument,0,'e'},
       { "no-scaling",no_argument,0,'n'},
       { "verbose",no_argument,0,'v'},
       { "remove-hosts",required_argument,0,'r'},
-      { "nova-export",required_argument,0,'x'},
-      { "nova-import",required_argument,0,'i'},
-
-      { "query-hub",no_argument,0,'q'},
-      { "show",no_argument,0,'2'},
-      { "promise-handle",required_argument,0,'p'},
-      { "hostkey",required_argument,0,'k'},
-      { "class-regex",required_argument,0,'c'},
-      
       { NULL,0,0,'\0' }
       };
 
 const char *HINTS[31] =
       {
       "Print the help message",
+      "Specify a class regular expression to search for",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
       "Output information about actions performed by the agent",
       "Output the version of the software",
       "Ignore ifelapsed locks",
       "Specify an alternative input file than the default",
+      "Specify a hostkey to lookup",
       "Print output in HTML",
       "Print output in XML",
       "Print version string for software",
       "Purge data about peers not seen beyond the threshold horizon for assumed-dead",
       "Erase historical data from the cf-monitord monitoring database",
+      "Export Nova reports to file - delta or full report",
+      "Import Nova reports from file - specify the path (only on Nova policy hub)",
       "Set output directory for printing graph data",
+      "Specify a promise-handle to look up",
+      "Query hub database interactively with optional regex search string",
       "Add title data to generated graph files",
       "Add a time stamp to directory name for graph file data",
       "Print graph data in high resolution",
+      "Show data matching named criteria (software,variables,classes)",
       "Print a syntax summary for this cfengine version",
       "Export a syntax tree in Javascript format",
       "Do not add error bars to the printed graphs",
       "Do not automatically scale the axes",
       "Generate verbose output",
       "Remove comma separated list of key hash entries from the hosts-seen database",
-      "Export Nova reports to file - delta or full report",
-      "Import Nova reports from file - specify the path (only on Nova policy hub)",
-      "Query hub database interactively",
-      "List hosts matching criteria",
-      "List data matching criteria",
-      "Specify a promise-handle to look up",
-      "Specify a hostkey to lookup",
-      "Specify a class regular expression to search for",
       NULL
       };
 
@@ -415,6 +413,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q1:p:k:c:",OPTIONS
 
       case 'q':
           HUBQUERY = true;
+          if (optarg)
+             {
+             strcpy(NAME,optarg);
+             }
           break;
       case '1':
           strcpy(LSDATA,optarg);
@@ -478,7 +480,7 @@ strcpy(FOOTER,"");
 snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
 MapName(VINPUTFILE);
 
-if(!EMPTY(REMOVEHOSTS))
+if (!EMPTY(REMOVEHOSTS))
    {
    RemoveHostSeen(REMOVEHOSTS);
    GenericDeInitialize();
@@ -486,44 +488,6 @@ if(!EMPTY(REMOVEHOSTS))
    }
 
 #ifdef HAVE_NOVA
-if(!EMPTY(NOVA_EXPORT_TYPE))
-   {
-   if(Nova_ExportReports(NOVA_EXPORT_TYPE))
-      {
-      GenericDeInitialize();
-      exit(0);
-      }
-   else
-      {
-      GenericDeInitialize();
-      exit(1);
-      }
-   }
-
-if(!EMPTY(NOVA_IMPORT_FILE))
-   {
-   if(IsDefinedClass("am_policy_hub"))
-      {
-      if(Nova_ImportHostReports(NOVA_IMPORT_FILE))
-         {
-         GenericDeInitialize();
-         exit(0);
-         }
-      else
-         {
-         GenericDeInitialize();
-         exit(1);
-         }
-      }
-   else
-      {
-      CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
-      }
-   }
-#endif
-
-#if defined HAVE_NOVA | defined HAVE_CONSTELLATION
-
 if (HUBQUERY)
    {
    int count = 0;
@@ -549,9 +513,48 @@ if (HUBQUERY)
       FatalError("Aborted");
       }
 
-   Nova_CommandAPI(LSDATA,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
+   Nova_CommandAPI(LSDATA,NAME,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
+   exit(0);
    }
 
+#endif
+
+
+#ifdef HAVE_NOVA
+if (!EMPTY(NOVA_EXPORT_TYPE))
+   {
+   if(Nova_ExportReports(NOVA_EXPORT_TYPE))
+      {
+      GenericDeInitialize();
+      exit(0);
+      }
+   else
+      {
+      GenericDeInitialize();
+      exit(1);
+      }
+   }
+
+if (!EMPTY(NOVA_IMPORT_FILE))
+   {
+   if (IsDefinedClass("am_policy_hub"))
+      {
+      if(Nova_ImportHostReports(NOVA_IMPORT_FILE))
+         {
+         GenericDeInitialize();
+         exit(0);
+         }
+      else
+         {
+         GenericDeInitialize();
+         exit(1);
+         }
+      }
+   else
+      {
+      CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
+      }
+   }
 #endif
 }
 

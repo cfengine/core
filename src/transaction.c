@@ -823,6 +823,7 @@ static void WaitForCriticalSection()
 while ((then != -1) && (now - then < 60))
    {
    sleep(1);
+   now = time(NULL);
    then = FindLockTime("CF_CRITICAL_SECTION");
    }
 

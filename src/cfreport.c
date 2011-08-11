@@ -93,11 +93,10 @@ char NOVA_EXPORT_TYPE[CF_MAXVARSIZE] = {0};
 char NOVA_IMPORT_FILE[CF_MAXVARSIZE] = {0};
 
 int HUBQUERY = false;
-int LSHOSTS = false;
-int LSDATA = false;
 char PROMISEHANDLE[CF_MAXVARSIZE] = {0};
 char HOSTKEY[CF_MAXVARSIZE] = {0};
 char CLASSREGEX[CF_MAXVARSIZE] = {0};
+char LSDATA[CF_MAXVARSIZE] = {0};
 
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
@@ -143,8 +142,7 @@ const struct option OPTIONS[31] =
       { "nova-import",required_argument,0,'i'},
 
       { "query-hub",no_argument,0,'q'},
-      { "ls-hosts",no_argument,0,'1'},
-      { "ls-data",no_argument,0,'2'},
+      { "show",no_argument,0,'2'},
       { "promise-handle",required_argument,0,'p'},
       { "hostkey",required_argument,0,'k'},
       { "class-regex",required_argument,0,'c'},
@@ -293,7 +291,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q12p:k:c:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q1:p:k:c:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -421,10 +419,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q12p:k:c:",OPTIONS
           HUBQUERY = true;
           break;
       case '1':
-          LSHOSTS = true;
-          break;
-      case '2':
-          LSDATA = true;
+          strcpy(LSDATA,optarg);
           break;
       case 'p':
           strcpy(PROMISEHANDLE,optarg);
@@ -556,7 +551,7 @@ if (HUBQUERY)
       FatalError("Aborted");
       }
 
-   Nova_CommandAPI(LSHOSTS,LSDATA,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
+   Nova_CommandAPI(LSDATA,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
    }
 
 #endif

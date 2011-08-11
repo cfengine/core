@@ -302,7 +302,8 @@ char PUBKEY_DIGEST[CF_MAXVARSIZE] = {0};
 
 pthread_attr_t PTHREADDEFAULTS;
 
-#ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+# ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 pthread_mutex_t MUTEX_SYSCALL = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_LOCK = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_COUNT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
@@ -314,8 +315,7 @@ pthread_mutex_t MUTEX_DB_LASTSEEN = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_DB_REPORT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_VSCOPE = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_mutex_t MUTEX_SERVER_KEYSEEN = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-#else
-# if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+# else
 pthread_mutex_t MUTEX_SYSCALL = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MUTEX_LOCK = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MUTEX_COUNT = PTHREAD_MUTEX_INITIALIZER;
@@ -328,6 +328,17 @@ pthread_mutex_t MUTEX_DB_REPORT = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MUTEX_VSCOPE = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t MUTEX_SERVER_KEYSEEN = PTHREAD_MUTEX_INITIALIZER;
 # endif
+pthread_mutex_t *cft_system = &MUTEX_SYSCALL;
+pthread_mutex_t *cft_lock = &MUTEX_LOCK;
+pthread_mutex_t *cft_count = &MUTEX_COUNT;
+pthread_mutex_t *cft_output = &MUTEX_OUTPUT;
+pthread_mutex_t *cft_dbhandle = &MUTEX_DBHANDLE;
+pthread_mutex_t *cft_policy = &MUTEX_POLICY;
+pthread_mutex_t *cft_getaddr = &MUTEX_GETADDR;
+pthread_mutex_t *cft_db_lastseen = &MUTEX_DB_LASTSEEN;
+pthread_mutex_t *cft_report = &MUTEX_DB_REPORT;
+pthread_mutex_t *cft_vscope = &MUTEX_VSCOPE;
+pthread_mutex_t *cft_server_keyseen = &MUTEX_SERVER_KEYSEEN;
 #endif
 
 char VIPADDRESS[18] = {0};

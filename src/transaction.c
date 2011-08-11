@@ -42,9 +42,6 @@ static time_t FindLockTime(char *name);
 static pid_t FindLockPid(char *name);
 static CF_DB *OpenLock(void);
 static void CloseLock(CF_DB *dbp);
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-static pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name);
-#endif
 static void RemoveDates(char *s);
 
 /*****************************************************************************/
@@ -355,104 +352,21 @@ for (rp = params; rp != NULL; rp=rp->next)
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 
-static pthread_mutex_t *NameToThreadMutex(enum cf_thread_mutex name)
-
+int ThreadLock(pthread_mutex_t *mutex)
 {
-switch(name)
-   {
-   case cft_system:
-       return &MUTEX_SYSCALL;
-       break;
-       
-   case cft_count:
-       return &MUTEX_COUNT;
-       break;
-       
-   case cft_getaddr:
-       return &MUTEX_GETADDR;
-       break;
-       
-   case cft_lock:
-       return &MUTEX_LOCK;
-       break;
-       
-   case cft_output:
-       return &MUTEX_OUTPUT;
-       break;
-       
-   case cft_dbhandle:
-       return &MUTEX_DBHANDLE;
-       break;
-       
-   case cft_policy:
-       return &MUTEX_POLICY;
-       break;
-       
-   case cft_db_lastseen:
-       return &MUTEX_DB_LASTSEEN;
-       break;
-
-   case cft_report:
-       return &MUTEX_DB_REPORT;
-       break;
-
-   case cft_vscope:
-       return &MUTEX_VSCOPE;
-       break;
-
-   case cft_server_keyseen:
-       return &MUTEX_SERVER_KEYSEEN;
-       break;
-
-       
-   default:
-       CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);
-       FatalError("Internal software error\n");
-       break;
-   }
-
-return NULL;
-}
-
-#endif
-
-/************************************************************************/
-
-int ThreadLock(enum cf_thread_mutex name)
-
-{
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-pthread_mutex_t *mutex;
-
-mutex = NameToThreadMutex(name);
-
 if (pthread_mutex_lock(mutex) != 0)
    {
    // Don't use CfOut here as it also requires locking
-   printf("!! Could not lock: %d", name);
+   printf("!! Could not lock: %d", mutex - cft_system);
    return false;
    }
-
 return true;
-
-#else  // NOT_HAVE_PTHREAD
-
-return true;
-
-#endif
-
 }
 
 /************************************************************************/
 
-int ThreadUnlock(enum cf_thread_mutex name)
-
+int ThreadUnlock(pthread_mutex_t *mutex)
 {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-pthread_mutex_t *mutex;
-
-mutex = NameToThreadMutex(name);
-
 if (pthread_mutex_unlock(mutex) != 0)
    {
    // Don't use CfOut here as it also requires locking
@@ -461,37 +375,24 @@ if (pthread_mutex_unlock(mutex) != 0)
    }
 
 return true;
-
-#else  // NOT_HAVE_PTHREAD 
-
-return true;
-
-#endif
 }
 
 /*****************************************************************************/
 
-void AssertThreadLocked(enum cf_thread_mutex name, char *fname)
-
 /* Verifies that a given lock is taken (not neccessary by the current thread) */
 
+void AssertThreadLocked(pthread_mutex_t *mutex, char *fname)
 {
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-pthread_mutex_t *mutex;
-int status;
-
-mutex = NameToThreadMutex(name);
-
-status = pthread_mutex_trylock(mutex);
+int status = pthread_mutex_trylock(mutex);
 
 if (status != EBUSY && status != EDEADLK)
    {
-   CfOut(cf_error, "", "!! The mutex %d was not locked in %s() -- status=%d", name, fname, status);
+   CfOut(cf_error, "", "!! The mutex %d was not locked in %s() -- status=%d", mutex - cft_system, fname, status);
    FatalError("Software assertion failure\n");
    }
+}
 
 #endif
-}
 
 /*****************************************************************************/
 /* Level                                                                     */

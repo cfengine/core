@@ -1022,25 +1022,28 @@ enum action_policy
   cfa_no_ppolicy
   };
 
-enum cf_thread_mutex
-/* Adding:
- *) Add enum here
- *) Add mutex in cf3globals.c and cf.extern.h
- *) Add enum -> mutex in NameToThreadMutex() */
-  {
-  cft_system,
-  cft_count,
-  cft_getaddr,
-  cft_lock,
-  cft_output,
-  cft_dbhandle,
-  cft_policy,       // protects structs for refreshing policy files
-  cft_db_lastseen,  // lastseen dbs (in cf-serverd)
-  cft_no_tpolicy,
-  cft_report,
-  cft_vscope,           // protects VSCOPE
-  cft_server_keyseen  // protects   SERVER_KEYSEEN
-  };
+/*
+Adding new mutex:
+- add declaration here,
+- define in cf3globals.c.
+*/
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+extern pthread_attr_t PTHREADDEFAULTS;
+
+extern pthread_mutex_t *cft_system;
+extern pthread_mutex_t *cft_count;
+extern pthread_mutex_t *cft_getaddr;
+extern pthread_mutex_t *cft_lock;
+extern pthread_mutex_t *cft_output;
+extern pthread_mutex_t *cft_dbhandle;
+extern pthread_mutex_t *cft_policy;
+extern pthread_mutex_t *cft_db_lastseen;
+extern pthread_mutex_t *cft_no_tpolicy;
+extern pthread_mutex_t *cft_report;
+extern pthread_mutex_t *cft_vscope;
+extern pthread_mutex_t *cft_server_keyseen;
+#endif
 
 enum cf_status
   {

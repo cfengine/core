@@ -27,21 +27,6 @@
 
 #include "../pub/getopt.h"
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-extern pthread_mutex_t MUTEX_SYSCALL;
-extern pthread_mutex_t MUTEX_LOCK;
-extern pthread_attr_t PTHREADDEFAULTS;
-extern pthread_mutex_t MUTEX_COUNT;
-extern pthread_mutex_t MUTEX_OUTPUT;
-extern pthread_mutex_t MUTEX_DBHANDLE;
-extern pthread_mutex_t MUTEX_POLICY;
-extern pthread_mutex_t MUTEX_GETADDR;
-extern pthread_mutex_t MUTEX_DB_LASTSEEN;
-extern pthread_mutex_t MUTEX_DB_REPORT;
-extern pthread_mutex_t MUTEX_VSCOPE;
-extern pthread_mutex_t MUTEX_SERVER_KEYSEEN;
-# endif
-
 extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];

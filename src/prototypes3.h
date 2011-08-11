@@ -1176,9 +1176,16 @@ void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *lognam
 struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(struct CfLock this);
 void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params);
-int ThreadLock(enum cf_thread_mutex name);
-int ThreadUnlock(enum cf_thread_mutex name);
-void AssertThreadLocked(enum cf_thread_mutex name, char *fname);
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+int ThreadLock(pthread_mutex_t *name);
+int ThreadUnlock(pthread_mutex_t *name);
+void AssertThreadLocked(pthread_mutex_t *name, char *fname);
+#else
+#define ThreadLock(name) (1)
+#define ThreadUnlock(name) (1)
+#define AssertThreadLocked(name, fname)
+#endif
+
 void PurgeLocks(void);
 
 /* timeout.c */

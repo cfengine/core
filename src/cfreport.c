@@ -131,11 +131,12 @@ const struct option OPTIONS[31] =
       { "version",no_argument,0,'V'},
       { "purge",no_argument,0,'P'},
       { "erasehistory",required_argument,0,'E' },
+      { "filter",required_argument,0,'F'},
       { "nova-export",required_argument,0,'x'},
       { "nova-import",required_argument,0,'i'},
       { "outputdir",required_argument,0,'o' },
       { "promise-handle",required_argument,0,'p'},
-      { "query-hub",optional_argument,0,'q'},
+      { "query-hub",no_argument,0,'q'},
       { "titles",no_argument,0,'t'},
       { "timestamps",no_argument,0,'T'},
       { "resolution",no_argument,0,'R'},
@@ -165,6 +166,7 @@ const char *HINTS[31] =
       "Print version string for software",
       "Purge data about peers not seen beyond the threshold horizon for assumed-dead",
       "Erase historical data from the cf-monitord monitoring database",
+      "Specify a name regular expression for filtering results",
       "Export Nova reports to file - delta or full report",
       "Import Nova reports from file - specify the path (only on Nova policy hub)",
       "Set output directory for printing graph data",
@@ -269,7 +271,10 @@ int main(int argc,char *argv[])
 
 { 
 CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"reporter");
+if (!HUBQUERY)
+   {
+   GenericInitialize(argc,argv,"reporter");
+   }
 ThisAgentInit();
 KeepReportsControlPromises();
 KeepReportsPromises();
@@ -287,7 +292,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q:1:p:k:c:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -413,6 +418,8 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q:1:p:k:c:",OPTION
 
       case 'q':
           HUBQUERY = true;
+          break;
+      case 'F':
           if (optarg)
              {
              strcpy(NAME,optarg);
@@ -451,6 +458,39 @@ void ThisAgentInit()
 {
 time_t now;
 
+
+#ifdef HAVE_NOVA
+if (HUBQUERY)
+   {
+   int count = 0;
+
+   if (strlen(PROMISEHANDLE) > 0)
+      {
+      count++;
+      }
+
+   if (strlen(HOSTKEY) > 0)
+      {
+      count++;
+      }
+
+   if (strlen(CLASSREGEX) > 0)
+      {
+      count++;
+      }
+
+   if (count > 1)
+      {
+      CfOut(cf_error,""," !! You can only specify one of the following at a time: --promise");
+      FatalError("Aborted");
+      }
+
+   Nova_CommandAPI(LSDATA,NAME,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
+   exit(0);
+   }
+
+#endif
+
 if (strlen(OUTPUTDIR) == 0)
    {
    if (TIMESTAMPS)
@@ -486,38 +526,6 @@ if (!EMPTY(REMOVEHOSTS))
    GenericDeInitialize();
    exit(0);
    }
-
-#ifdef HAVE_NOVA
-if (HUBQUERY)
-   {
-   int count = 0;
-
-   if (strlen(PROMISEHANDLE) > 0)
-      {
-      count++;
-      }
-
-   if (strlen(HOSTKEY) > 0)
-      {
-      count++;
-      }
-
-   if (strlen(CLASSREGEX) > 0)
-      {
-      count++;
-      }
-
-   if (count > 1)
-      {
-      CfOut(cf_error,""," !! You can only specify one of the following at a time: --promise");
-      FatalError("Aborted");
-      }
-
-   Nova_CommandAPI(LSDATA,NAME,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
-   exit(0);
-   }
-
-#endif
 
 #ifdef HAVE_NOVA
 if (!EMPTY(NOVA_EXPORT_TYPE))

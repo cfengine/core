@@ -92,6 +92,13 @@ char REMOVEHOSTS[CF_BUFSIZE] = {0};
 char NOVA_EXPORT_TYPE[CF_MAXVARSIZE] = {0};
 char NOVA_IMPORT_FILE[CF_MAXVARSIZE] = {0};
 
+int HUBQUERY = false;
+int LSHOSTS = false;
+int LSDATA = false;
+char PROMISEHANDLE[CF_MAXVARSIZE] = {0};
+char HOSTKEY[CF_MAXVARSIZE] = {0};
+char CLASSREGEX[CF_MAXVARSIZE] = {0};
+
 FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
 FILE *FPM[CF_OBSERVABLES];
@@ -108,7 +115,7 @@ const char *ID = "The reporting agent is a merger between the older\n"
                  "data stored in cfengine's embedded databases in human\n"
                  "readable form.";
 
-const struct option OPTIONS[25] =
+const struct option OPTIONS[31] =
       {
       { "help",no_argument,0,'h' },
       { "debug",optional_argument,0,'d' },
@@ -134,10 +141,18 @@ const struct option OPTIONS[25] =
       { "remove-hosts",required_argument,0,'r'},
       { "nova-export",required_argument,0,'x'},
       { "nova-import",required_argument,0,'i'},
+
+      { "query-hub",no_argument,0,'q'},
+      { "ls-hosts",no_argument,0,'1'},
+      { "ls-data",no_argument,0,'2'},
+      { "promise-handle",required_argument,0,'p'},
+      { "hostkey",required_argument,0,'k'},
+      { "class-regex",required_argument,0,'c'},
+      
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[25] =
+const char *HINTS[31] =
       {
       "Print the help message",
       "Set debugging level 0,1,2,3",
@@ -163,6 +178,12 @@ const char *HINTS[25] =
       "Remove comma separated list of key hash entries from the hosts-seen database",
       "Export Nova reports to file - delta or full report",
       "Import Nova reports from file - specify the path (only on Nova policy hub)",
+      "Query hub database interactively",
+      "List hosts matching criteria",
+      "List data matching criteria",
+      "Specify a promise-handle to look up",
+      "Specify a hostkey to lookup",
+      "Specify a class regular expression to search for",
       NULL
       };
 
@@ -272,7 +293,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q12p:k:c:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -379,8 +400,7 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:",OPTIONS,&optinde
           PURGE = 'y';
           break;
 
-      case 'x':
-          
+      case 'x':          
           if((String2Menu(optarg) != cfd_menu_delta) &&
              (String2Menu(optarg) != cfd_menu_full))
              {
@@ -389,13 +409,32 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:",OPTIONS,&optinde
              }
           
           snprintf(NOVA_EXPORT_TYPE, sizeof(NOVA_EXPORT_TYPE), "%s", optarg);
-
           break;
 
-      case 'i':
-          
+      case 'i':          
           snprintf(NOVA_IMPORT_FILE, sizeof(NOVA_IMPORT_FILE), "%s", optarg);
           break;
+
+      /* Some options for querying hub data - only on commercial hubs */
+
+      case 'q':
+          HUBQUERY = true;
+          break;
+      case '1':
+          LSHOSTS = true;
+          break;
+      case '2':
+          LSDATA = true;
+          break;
+      case 'p':
+          strcpy(PROMISEHANDLE,optarg);
+          break;
+      case 'k':
+          strcpy(HOSTKEY,optarg);
+          break;
+      case 'c':
+          strcpy(CLASSREGEX,optarg);
+          break;          
 
       default: Syntax("cf-report - cfengine's reporting agent",OPTIONS,HINTS,ID);
           exit(1);
@@ -488,6 +527,38 @@ if(!EMPTY(NOVA_IMPORT_FILE))
       CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
       }
    }
+#endif
+
+#if defined HAVE_NOVA | defined HAVE_CONSTELLATION
+
+if (HUBQUERY)
+   {
+   int count = 0;
+
+   if (strlen(PROMISEHANDLE) > 0)
+      {
+      count++;
+      }
+
+   if (strlen(HOSTKEY) > 0)
+      {
+      count++;
+      }
+
+   if (strlen(CLASSREGEX) > 0)
+      {
+      count++;
+      }
+
+   if (count > 1)
+      {
+      CfOut(cf_error,""," !! You can only specify one of the following at a time: --promise");
+      FatalError("Aborted");
+      }
+
+   Nova_CommandAPI(LSHOSTS,LSDATA,PROMISEHANDLE,HOSTKEY,CLASSREGEX);
+   }
+
 #endif
 }
 

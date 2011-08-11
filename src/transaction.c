@@ -48,28 +48,31 @@ static void RemoveDates(char *s);
 
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname)
 
-{ FILE *fout;
-
+{
 if (logname && attr.transaction.log_string)
    {
+   char buffer[CF_EXPANDSIZE];
+   ExpandPrivateScalar(CONTEXTID, attr.transaction.log_string, buffer);
+
    if (strcmp(logname,"udp_syslog") == 0)
       {
-      RemoteSyslog(attr,pp);
+      RemoteSysLog(attr.transaction.log_priority, buffer);
       }
    else if (strcmp(logname,"stdout") == 0)
       {
-      CfOut(cf_reporting,"","L: %s\n",attr.transaction.log_string);
+      CfOut(cf_reporting,"","L: %s\n", buffer);
       }
    else
       {
-      if ((fout = fopen(logname,"a")) == NULL)
+      FILE *fout = fopen(logname, "a");
+      if (fout == NULL)
          {
-         CfOut(cf_error,"","Unable to open private log %s",logname);
+         CfOut(cf_error,"","Unable to open private log %s", logname);
          return;
          }
 
-      CfOut(cf_verbose,""," -> Logging string \"%s\" to %s\n",attr.transaction.log_string,logname);
-      fprintf(fout,"%s\n",attr.transaction.log_string);
+      CfOut(cf_verbose, "", " -> Logging string \"%s\" to %s\n", buffer, logname);
+      fprintf(fout, "%s\n", buffer);
 
       fclose(fout);
       }

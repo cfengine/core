@@ -354,19 +354,10 @@ else
 
 void AppendItem(struct Item **liststart, const char *itemstring,char *classes)
 
-{ struct Item *ip, *lp;
-
-if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Failed to alloc in AppendItemList");
-   FatalError("");
-   }
-
-if ((ip->name = strdup(itemstring)) == NULL)
-   {
-   CfOut(cf_error,"strdup","Failed to alloc in AppendItemList");
-   FatalError("");
-   }
+{
+struct Item *lp;
+struct Item *ip = malloc(sizeof (struct Item));
+ip->name = strdup(itemstring);
 
 if (*liststart == NULL)
    {

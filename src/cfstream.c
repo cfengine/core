@@ -48,7 +48,7 @@ static void Unix_MakeLog(struct Item *mess,enum cfreport level);
 void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
-  char buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
+  char buffer[CF_BUFSIZE],output[CF_BUFSIZE];
   struct Item *mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
@@ -60,9 +60,8 @@ memset(output,0,CF_BUFSIZE);
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
-ExpandThis(level,buffer,expand);
-Chop(expand);
-AppendItem(&mess,expand,NULL);
+Chop(buffer);
+AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
@@ -119,7 +118,7 @@ DeleteItemList(mess);
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 
 { va_list ap;
- char buffer[CF_BUFSIZE],output[CF_BUFSIZE],expand[CF_EXPANDSIZE];
+  char buffer[CF_BUFSIZE],output[CF_BUFSIZE];
   struct Item *mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
@@ -131,9 +130,9 @@ memset(output,0,CF_BUFSIZE);
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
-ExpandThis(level,buffer,expand);
-Chop(expand);
-AppendItem(&mess,expand,NULL);
+
+Chop(buffer);
+AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {
@@ -177,9 +176,9 @@ switch(level)
        break;
        
    default:
-       
-       FatalError("Report level unknown");
-       break;       
+
+      CfOut(cf_error, "Trying to emit an error message with unknown level %d", level);
+      break;
    }
 
 DeleteItemList(mess);
@@ -190,7 +189,7 @@ DeleteItemList(mess);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
 
 { va_list ap;
-  char rettype,*sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE],expand[CF_EXPANDSIZE];
+  char rettype,*sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
   struct Item *ip,*mess = NULL;
   int verbose;
   struct Rlist *rp;
@@ -204,9 +203,8 @@ if ((fmt == NULL) || (strlen(fmt) == 0))
 va_start(ap,fmt);
 vsnprintf(buffer,CF_BUFSIZE-1,fmt,ap);
 va_end(ap);
-ExpandThis(status,buffer,expand);
-Chop(expand);
-AppendItem(&mess,expand,NULL);
+Chop(buffer);
+AppendItem(&mess,buffer,NULL);
 
 if ((errstr == NULL) || (strlen(errstr) > 0))
    {

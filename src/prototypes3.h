@@ -437,7 +437,7 @@ void VerifyACL(char *file,struct Attributes a, struct Promise *pp);
 int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp);
 int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void LogFileChange(char *file,int change,struct Attributes a,struct Promise *pp);
-void RemoteSyslog(struct Attributes a,struct Promise *pp);
+void RemoteSysLog(int log_priority, const char *log_string);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,struct Rlist *columns,struct Attributes a,struct Promise *pp);
 void ReportPatches(struct CfPackageManager *list);
@@ -534,7 +534,6 @@ void ScanRval(const char *scope,struct Rlist **los,struct Rlist **lol,const void
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-int ExpandThis(enum cfreport level,char *string,char buffer[CF_EXPANDSIZE]);
 struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);
 struct Rval ExpandPrivateRval(char *contextid,void *rval,char type);
@@ -543,6 +542,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);
+int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 /* exec_tool.c */
 

@@ -221,14 +221,12 @@ CfOut(cf_verbose,"","Logging file differences requires version Nova or above");
 
 /*****************************************************************************/
 
-void RemoteSyslog(struct Attributes a,struct Promise *pp)
+#ifndef HAVE_NOVA
+void RemoteSysLog(int log_priority, const char *log_string)
 {
-#ifdef HAVE_NOVA
-Nova_RemoteSyslog(a,pp);
-#else
 CfOut(cf_verbose,"","Remote logging requires version Nova or above");
-#endif 
 }
+#endif
 
 /*****************************************************************************/
 

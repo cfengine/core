@@ -69,25 +69,29 @@ Copyright @copyright{} 2009 CFEngine AS
 @end ifinfo
 
 @ifnottex
+
+
 @node Top, What are monitoring and reporting?, (dir), (dir)
 @top Reporting
 @menu
 * What are monitoring and reporting?::  
 * Should monitoring and configuration be separate?::  
-* What is a CMDB?::             
-* CMDB and CFEngine::           
-* Decentralized data collection in CFEngine::  
 * Reporting in CFEngine::       
-* Standard reports in CFEngine Nova::  
+* Standard reports in CFEngine::  
 * CFEngine output levels::      
 * Creating custom reports -- all versions::  
 * Including data in reports::   
 * Creating custom logs::        
 * Redirecting output to logs::  
-* Nova measurements::           
 * Change auditing - the all seeing eye::  
 * Cheaper options - tripwires::  
+* Commerical edition measurements promises::  
+* Hub reporting::               
+* Mission Portal access to the hub::  
+* Command line access to the hub::  
+* Example command hub searches ::  
 @end menu
+
 @end ifnottex
 @iftex
 @contents
@@ -119,15 +123,15 @@ The challenge of both these activities is to compare @i{intended} or
 @i{promised}, behaviour with the @i{actual} observed behaviour of the
 system.
 
-@node Should monitoring and configuration be separate?, What is a CMDB?, What are monitoring and reporting?, Top
+@node Should monitoring and configuration be separate?, Reporting in CFEngine, What are monitoring and reporting?, Top
 @unnumberedsec Should monitoring and configuration be separate?
 
 @sp 1
 The traditional view of IT operations is that configuration,
-monitoring and reporting a three different things that should not be
+monitoring and reporting are three different things that should not be
 joined. Traditionally, all three have been independent centralized
 processes. This view has emerged historically, but it has a major
-problem.
+problem. Humans are needed to glue these parts back together.
 
 Monitoring as an independent activity is inherently non-scalable.
 When numbers of hosts grow beyond a few thousands, centralized
@@ -141,61 +145,8 @@ CFEngine's approach is to focus on scalability. The commercial editions
 of CFEngine provide what meaningful information they can in a manner that
 can be scaled to tens of thousands of machines.
 
-@node What is a CMDB?, CMDB and CFEngine, Should monitoring and configuration be separate?, Top
-@unnumberedsec What is a CMDB?
 
-@sp 1
-
-A Configuration Management Database (CMDB), sometimes called a Change
-and Configuration Management Database (CCMDB), is a repository of
-information about hardware and its expected state. CMDBs are basically
-an outgrowth of @i{inventory databases}. They were embraced by many IT
-companies as a plausible solution to configuration management, in the
-absence of an alternative.
-
-A CMDB records so-called @i{configuration items} (CI), which record
-technical, ownership and proposed state data. A CMDB does not
-generally record actual state -- this is left for monitoring software.
-
-The term CMDB originates from the IT Infrastructure Library (ITIL)
-framework, where it is given a prominent role in system planning and
-verification. The CMDB is by definition a centralized repository.
-
-@node CMDB and CFEngine, Decentralized data collection in CFEngine, What is a CMDB?, Top
-@unnumberedsec CMDB and CFEngine
-
-@sp 1
-
-CFEngine deviates from the classical view of a CMDB to modernize the
-concept for modern scaling requirements.  Configuration management
-requires something more sophisticated than a database to describe
-system patterns. The CMDB applies a @i{brute force} approach to
-collection and searching of system data that does not scale well, and requires
-large and expensive resources to manage.
-
-CFEngine works with a highly compressed description of system
-properties that is based on category classification rather than an
-exhaustive inventory of computers. Being distributed in operation,
-CFEngine can also enforce policy on state, without brute force imaging.
-
-@node Decentralized data collection in CFEngine, Reporting in CFEngine, CMDB and CFEngine, Top
-@unnumberedsec Decentralized data collection in CFEngine
-@sp 1
-
-CFEngine is designed to scale to vast numbers of machines.  It does so
-because it is fundamentally decentralized. Data about system state are
-recorded @i{in situ} and are not transmitted over the network
-directly. CFEngine summarizes and compresses system information before
-making it available for central aggregation and analysis. This means
-that high resolution data are available where they count, processing
-is decentralized, and inexpensive summaries may be compared and mined
-for correlations. 
-
-CFEngine's distributed architecture means that no data are lost if the
-network fails temporarily. CFEngine uses the network @i{opportunistically},
-but it is not reliant on it for real-time operations.
-
-@node Reporting in CFEngine, Standard reports in CFEngine Nova, Decentralized data collection in CFEngine, Top
+@node Reporting in CFEngine, Standard reports in CFEngine, Should monitoring and configuration be separate?, Top
 @unnumberedsec Reporting in CFEngine
 @sp 1
 
@@ -222,8 +173,8 @@ data from CFEngine's self-learning agents, and the generation of a
 standard set of reports in text, HTML or XML formats. Nova summarizes
 distributed data and provides simple compression and aggregation of
 these summaries. Finally summaries are tied into a knowledge map or
-semantic index for browsing by IT operations. At this level CFEngine exceeds
-other industry CMDB solutions for configuration.
+semantic index for browsing by IT operations. Command line tools in
+@code{cf-report} are also available for Nova users to browse network-wide data.
 
 @item @b{Constellation:} In addition to Nova features, Constellation performs
 additional data extraction from the collected reports. It analyses correlations
@@ -231,16 +182,13 @@ and provides reverse look up of system attributes based on searchable expression
 At this level, CFEngine exceeds other industry CMDB solutions in both reporting
 and configuration.
 
-@item @b{Galaxy:} In addition to Constellation features, Galaxy adds a number
-of state of the art active probes that integrate network monitoring
-with system node monitoring, offering a total and integrated overview
-of networked system behaviour.
-
 @end itemize
 
-@node Standard reports in CFEngine Nova, CFEngine output levels, Reporting in CFEngine, Top
-@unnumberedsec Standard reports in CFEngine Nova
+@node Standard reports in CFEngine, CFEngine output levels, Reporting in CFEngine, Top
+@unnumberedsec Standard reports in CFEngine
 
+The following list of reports are only available in full in commercial editions of
+CFEngine. Some sample reports are provided in the Community Edition.
 @table @emph
 @item Available patches report   
 Patches already installed on system if available.
@@ -278,7 +226,7 @@ Known setuid programs found on system.
 Current variable values expanded on different hosts.
 @end table
 
-@node CFEngine output levels, Creating custom reports -- all versions, Standard reports in CFEngine Nova, Top
+@node CFEngine output levels, Creating custom reports -- all versions, Standard reports in CFEngine, Top
 @unnumberedsec CFEngine output levels
 @sp 1
 
@@ -621,7 +569,7 @@ Sun Dec  6 11:58:43 2009 /tmp/xyz promise status
 @end cartouche
 
 
-@node Redirecting output to logs, Nova measurements, Creating custom logs, Top
+@node Redirecting output to logs, Change auditing - the all seeing eye, Creating custom logs, Top
 @unnumberedsec Redirecting output to logs
 @sp 1
 
@@ -655,47 +603,9 @@ log_level => "inform";
 @end verbatim
 
 
-@node Nova measurements, Change auditing - the all seeing eye, Redirecting output to logs, Top
-@unnumberedsec Nova measurements
-@sp 1
 
-In commercial versions of CFEngine, you can extract data from the
-system in more sophisticated ways from files or pipes, using Perl
-Compatible Regular Expressions to match text. The @code{cf-monitord}
-agent is responsible for processing measurement promises.
 
-In this example, we count lines matching a pattern in a file.
-You might want to scan a log for instances of a particular
-message and trace this number over time.
-
-@verbatim
-bundle monitor watch
-{
-measurements:
-
-   "/tmp/file"
-
-         handle => "line_counter",
-    stream_type => "file",
-      data_type => "counter",
-    match_value => scanlines("MYLINE.*"),
-   history_type => "log";
-
-}
-
-#
-
-body match_value scanlines(x)
-{
-select_line_matching => "^$(x)$";
-}
-
-@end verbatim
-
-See the CFEngine Nova documentation for more possibilities of measurement
-promises.
-
-@node Change auditing - the all seeing eye, Cheaper options - tripwires, Nova measurements, Top
+@node Change auditing - the all seeing eye, Cheaper options - tripwires, Redirecting output to logs, Top
 @unnumberedsec Change auditing - the all seeing eye
 
 @sp 1
@@ -733,7 +643,7 @@ centralize the reports as they will be too large for this to be a
 scalable operation. Still, you can view them in a web browser on the
 local host, or copy them manually to a suitable location.
 
-@node Cheaper options - tripwires,  , Change auditing - the all seeing eye, Top
+@node Cheaper options - tripwires, Commerical edition measurements promises, Change auditing - the all seeing eye, Top
 @unnumberedsec Cheaper options - tripwires
 
 Doing a change detection scan is a convergent process, but it can
@@ -789,6 +699,161 @@ Sat Dec 5 18:20:45 2009  /tmp/testfile
 @noindent These reports are generated automatically in CFEngine Nova,
 and are integrated into the web browsable knowledge map. Community
 edition users have to extract the data and create these themselves.
+
+
+@node Commerical edition measurements promises, Hub reporting, Cheaper options - tripwires, Top
+@unnumberedsec Commercial edition measurements promises
+@sp 1
+
+In commercial versions of CFEngine, you can extract data from the
+system in more sophisticated ways from files or pipes, using Perl
+Compatible Regular Expressions to match text. The @code{cf-monitord}
+agent is responsible for processing measurement promises.
+
+In this example, we count lines matching a pattern in a file.
+You might want to scan a log for instances of a particular
+message and trace this number over time.
+
+@verbatim
+bundle monitor watch
+{
+measurements:
+
+   "/tmp/file"
+
+         handle => "line_counter",
+    stream_type => "file",
+      data_type => "counter",
+    match_value => scanlines("MYLINE.*"),
+   history_type => "log";
+
+}
+
+#
+
+body match_value scanlines(x)
+{
+select_line_matching => "^$(x)$";
+}
+
+@end verbatim
+
+See the CFEngine Nova documentation for more possibilities of measurement
+promises.
+
+
+
+@node Hub reporting, Mission Portal access to the hub, Commerical edition measurements promises, Top
+@unnumberedsec Hub Reporting
+
+In the commercial editions of CFEngine much more extensive and searchable
+reporting is available.
+
+
+
+@node Mission Portal access to the hub, Command line access to the hub, Hub reporting, Top
+@unnumberedsec Mission Portal access to the hub
+
+The preferred approach to querying information on a hub
+is to use the web interface in the Mission Portal.
+This gives the greatest flexibility in both search
+and presentation of data. Given the extensiveness of
+the Mission Portal user interface, the details are
+covered in a separate document.
+
+
+@node Command line access to the hub, Example command hub searches , Mission Portal access to the hub, Top
+@unnumberedsec Command line access to the hub
+
+Users with login access to the hub can also use the command line tool
+@code{cf-report} to extract a limited view of the data. 
+Currently supported reports include:
+
+@table @code
+@item compliance
+The percentage total compliance log for all hosts.
+@item file_changes
+The change log
+@item file_diffs
+The change details for text files.
+@item promises
+Compliance by promise, labelled by promise-handle.
+@item setuid
+The list of setuid/setgid root files detected on the system.
+@item software
+The installed software base of the system.
+@item summary
+A summary of how many hosts are compliant within a given set of search parameters.
+@item vars
+The values of variables set on hosts.
+@end table
+
+@noindent Some special command line options are supported in the commercial versions.
+
+@table @samp
+@item --query-hub
+or @samp{-q} Query hub database interactively. This option is the entry point
+for querying the hub data with @code{cf-report}, and must always be specified. 
+
+@item --show name
+Select the name of the report from the above list.
+
+@item --promise-handle
+or @samp{-p regex}. For promise compliance report, this defines a
+regular expression to search for promises of a specific name. Specify a promise-handle to look up
+
+@item --hostkey
+or @samp{-k hashkey}. 
+Specify a particular host to query for data, using the unique host-key. 
+
+@item --class-regex
+or @samp{-c regex} - Specify a class regular expression to search for
+
+@item --filter
+or @samp{-F regex} - Specify a name regular expression for filtering results
+@end table
+
+@node Example command hub searches ,  , Command line access to the hub, Top
+@unnumberedsec Example command hub searches 
+
+If only a host-key is specified, CFEngine returns with the last known location and identity
+of the host. (Note that, in the following examples, the SHA keys are reduced for readability).
+@verbatim
+
+host# cf-report -q --hostkey  SHA=bd6dfcc2... 
+ -> Hostname: hub.test.cfengine.com
+ -> Recent IP Addresses: 10.0.0.29
+
+@end verbatim
+To dump all values from all hosts:
+@verbatim
+
+cf-report -q --show promises
+cf-report --query-hub --show promises
+
+@end verbatim
+@noindent You can select a single host for a particular report:
+@verbatim
+cf-report -q --hostkey SHA=c40fb732c6e5... --show vars
+@end verbatim
+@noindent Or you can select a CFEngine class of hosts that will be selected to report
+@verbatim
+cf-report -q --show summary --class-regex linux
+cf-report -q --show summary --class-regex SuSE
+cf-report -q --show summary --class-regex NewYork
+@end verbatim
+@noindent Here are some examples using filters to 'grep' out certain items:
+@verbatim
+
+cf-report -q --hostkey SHA=c40fb732c6...  --show vars --filter date
+
+cf-report -q --filter "mail.*" --hostkey  SHA=bd6dfccb1a... --show setuid
+
+cf-report -q  --show promises -p knowledge_files_db_stamp
+
+@end verbatim
+
+
 
 
 @ifhtml

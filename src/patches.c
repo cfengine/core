@@ -633,6 +633,9 @@ return cf_strtimestamp_local(*timep, buf);
  * Please use this function instead of (non-portable and deprecated) ctime_r or
  * (non-threadsafe) cf_ctime or ctime.
  */
+
+/*******************************************************************/
+
 char *cf_strtimestamp_local(const time_t time, char *buf)
 {
 struct tm tm;

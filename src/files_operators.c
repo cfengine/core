@@ -286,7 +286,7 @@ else
 
    if (conn == NULL)
       {
-      cfPS(cf_inform,CF_FAIL,"",pp,attr," -> No suitable server responded to hail\n");
+      cfPS(cf_inform,CF_FAIL,"",pp,attr," -> No suitable server responded to hail");
       PromiseRef(cf_inform,pp);
       return false;
       }

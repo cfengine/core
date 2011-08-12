@@ -177,7 +177,7 @@ switch(level)
        
    default:
 
-      CfOut(cf_error, "Trying to emit an error message with unknown level %d", level);
+      CfOut(cf_error, "", "Trying to emit an error message with unknown level %d", level);
       break;
    }
 

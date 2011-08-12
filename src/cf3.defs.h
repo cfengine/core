@@ -93,7 +93,7 @@
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
 
-#define CF3_MODULES 15 /* This value needs to be incremented when adding modules */
+extern const int CF3_MODULES;
 
 /*************************************************************************/
 

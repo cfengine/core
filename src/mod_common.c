@@ -357,7 +357,7 @@ struct SubTypeSyntax CF_COMMON_SUBTYPES[] =
 /* Read in all parsable Bundle definitions */
 /* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
-struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
+struct SubTypeSyntax *CF_ALL_SUBTYPES[] =
    {
    CF_COMMON_SUBTYPES,       /* Add modules after this, mod_report.c is here */
    CF_EXEC_SUBTYPES,         /* mod_exec.c */
@@ -374,6 +374,6 @@ struct SubTypeSyntax *CF_ALL_SUBTYPES[CF3_MODULES] =
    CF_REMACCESS_SUBTYPES,    /* mod_access.c */
    CF_KNOWLEDGE_SUBTYPES,    /* mod_knowledge.c */
    CF_MEASUREMENT_SUBTYPES,  /* mod_measurement.c */
-   
-   /* update CF3_MODULES in cf3.defs.h */
    };
+
+const int CF3_MODULES = (sizeof(CF_ALL_SUBTYPES) / sizeof(CF_ALL_SUBTYPES[0]));

@@ -360,7 +360,7 @@ int ThreadLock(pthread_mutex_t *mutex)
 if (pthread_mutex_lock(mutex) != 0)
    {
    // Don't use CfOut here as it also requires locking
-   printf("!! Could not lock: %d", mutex - cft_system);
+   printf("!! Could not lock: %ld", mutex - cft_system);
    return false;
    }
 return true;
@@ -390,7 +390,7 @@ int status = pthread_mutex_trylock(mutex);
 
 if (status != EBUSY && status != EDEADLK)
    {
-   CfOut(cf_error, "", "!! The mutex %d was not locked in %s() -- status=%d", mutex - cft_system, fname, status);
+   CfOut(cf_error, "", "!! The mutex %ld was not locked in %s() -- status=%d", mutex - cft_system, fname, status);
    FatalError("Software assertion failure\n");
    }
 }

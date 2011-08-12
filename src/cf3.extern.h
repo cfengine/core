@@ -164,36 +164,22 @@ extern double Q_SIGMA;
 
 #ifndef CF3_MOD_COMMON
 extern struct SubTypeSyntax CF_COMMON_SUBTYPES[];
-extern struct BodySyntax CF_BODY_TRANSACTION[];
+extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
+extern struct BodySyntax CF_COMMON_BODIES[];
+
 extern struct BodySyntax CF_VARBODY[];
 extern struct BodySyntax CF_CLASSBODY[];
 extern struct BodySyntax CFG_CONTROLBODY[];
 extern struct BodySyntax CFH_CONTROLBODY[];
 extern struct BodySyntax CFA_CONTROLBODY[];
-extern struct BodySyntax CFS_CONTROLBODY[];
-extern struct BodySyntax CFE_CONTROLBODY[];
-extern struct BodySyntax CFR_CONTROLBODY[];
-extern struct BodySyntax CFK_CONTROLBODY[];
-extern struct BodySyntax CFEX_CONTROLBODY[];
-extern struct BodySyntax CF_TRIGGER_BODY[];
-
-extern struct BodySyntax CF_TRANSACTION_BODY[];
-extern struct BodySyntax CF_DEFINECLASS_BODY[];
-extern struct BodySyntax CF_COMMON_BODIES[];
-
-extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
 extern struct SubTypeSyntax CF_ALL_BODIES[];
 #endif
 
 #ifndef CF3_MOD_ENVIRON
-extern struct BodySyntax CF_RESOURCE_BODY[];
-extern struct BodySyntax CF_DESIGNATION_BODY[];
-extern struct BodySyntax CF_ENVIRON_BODIES[];
 extern struct SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_OUTPUTS
-extern struct BodySyntax CF_OUTPUTS_BODIES[];
 extern struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
 #endif
 
@@ -202,63 +188,42 @@ extern struct FnCallType CF_FNCALL_TYPES[];
 #endif
 
 #ifndef CF3_MOD_ACCESS
-extern struct BodySyntax CF_REMACCESS_BODIES[];
 extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
+
+extern struct BodySyntax CF_REMACCESS_BODIES[];
 #endif
 
 #ifndef CF_MOD_INTERFACES
-extern struct BodySyntax CF_TCPIP_BODY[];
-extern struct BodySyntax CF_INTERFACES_BODIES[];
 extern struct SubTypeSyntax CF_INTERFACES_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_STORAGE
-extern struct BodySyntax CF_STORAGE_BODIES[];
 extern struct SubTypeSyntax CF_STORAGE_SUBTYPES[];
-extern struct BodySyntax CF_MOUNT_BODY[];
-extern struct BodySyntax CF_CHECKVOL_BODY[];
 #endif
 
 #ifndef CF3_MOD_DATABASES
-extern struct BodySyntax CF_DATABASES_BODIES[];
 extern struct SubTypeSyntax CF_DATABASES_SUBTYPES[];
-extern struct BodySyntax CF_SQLSERVER_BODY[];
 #endif
 
 #ifndef CF3_MOD_KNOWLEGDE
 extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
-extern struct BodySyntax CF_TOPICS_BODIES[];
-extern struct BodySyntax CF_OCCUR_BODIES[];
-extern struct BodySyntax CF_INFER_BODIES[];
-extern struct BodySyntax CF_INFERENCE_BODY[];
-extern struct BodySyntax CF_RELATE_BODY[];
 #endif
 
 #ifndef CF3_MOD_PACKAGES
 extern struct SubTypeSyntax CF_PACKAGES_SUBTYPES[];
-extern struct BodySyntax CF_PACKAGES_BODIES[];
-extern struct BodySyntax CF_EXISTS_BODY[];
 #endif
 
 #ifndef CF3_MOD_REPORT
 extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
+
 extern struct BodySyntax CF_REPORT_BODIES[];
-extern struct BodySyntax CF_PRINTFILE_BODY[];
 #endif
 
 
 #ifndef CF3_MOD_FILES
-extern struct BodySyntax CF_COMMON_EDITBODIES[];
 extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
-extern struct BodySyntax CF_APPEND_REPL_BODIES[];
-extern struct BodySyntax CF_FILES_BODIES[];
-extern struct BodySyntax CF_COPYFROM_BODY[];
-extern struct BodySyntax CF_LINKTO_BODY[];
-extern struct BodySyntax CF_FILEFILTER_BODY[];
-extern struct BodySyntax CF_CHANGEMGT_BODY[];
-extern struct BodySyntax CF_TIDY_BODY[];
-extern struct BodySyntax CF_RENAME_BODY[];
-extern struct BodySyntax CF_RECURSION_BODY[];
+
+extern struct BodySyntax CF_COMMON_EDITBODIES[];
 #endif
 
 #ifndef CF3_MOD_EXEC
@@ -271,20 +236,14 @@ extern struct SubTypeSyntax CF_METHOD_SUBTYPES[];
 
 #ifndef CF3_MOD_PROCESS
 extern struct SubTypeSyntax CF_PROCESS_SUBTYPES[];
-extern struct BodySyntax CF_MATCHCLASS_BODY[];
-extern struct BodySyntax CF_PROCFILTER_BODY[];
-extern struct BodySyntax CF_PROCESS_BODIES[];
 #endif
 
 #ifndef CF3_MOD_PROCESS
 extern struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
-extern struct BodySyntax CF_MEASURE_BODIES[];
 #endif
 
 #ifndef CF3_MOD_SERVICES
 extern struct SubTypeSyntax CF_SERVICES_SUBTYPES[];
-extern struct BodySyntax CF_SERVMETHOD_BODY[];
-extern struct BodySyntax CF_SERVICES_BODIES[];
 #endif
 
 #endif

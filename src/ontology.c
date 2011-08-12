@@ -211,12 +211,6 @@ for (rp = passociates; rp != NULL; rp=rp->next)
       AddTopicAssociation(new_tp,&(new_tp->associations),bwd_name,fwd_name,rlist,false,from_context,from_topic);
       DeleteRlist(rlist);
       }
-   else
-      {
-      char rev[CF_BUFSIZE];
-      snprintf(rev,CF_BUFSIZE-1,"%s::%s",this_tp->topic_context,this_tp->topic_name);
-      CfOut(cf_inform,""," !! Could not add inverse association %s %s (%s::%s)",rev,bwd_name,from_context,from_topic);
-      }
        
    CF_EDGES++;
    }

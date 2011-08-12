@@ -102,7 +102,7 @@ const char *ID = "The knowledge management agent is capable of building\n"
                  "and cf-know can assemble and converge the reference manual\n"
                  "for the current version of the Cfengine software.";
  
-const  struct option OPTIONS[15] =
+const  struct option OPTIONS[16] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -110,6 +110,7 @@ const  struct option OPTIONS[15] =
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f' },
+      { "inform",no_argument,0,'I'},
       { "manual",no_argument,0,'m'},
       { "manpage",no_argument,0,'M'},
       { "stories",required_argument,0,'s'},
@@ -121,7 +122,7 @@ const  struct option OPTIONS[15] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[15] =
+const char *HINTS[16] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",
@@ -129,6 +130,7 @@ const char *HINTS[15] =
       "Output verbose information about the behaviour of the agent",
       "Output the version of the software",
       "Specify an alternative input file than the default",
+      "Print basic information about changes made to the system, i.e. promises repaired",
       "Generate reference manual from internal data",
       "Generate reference manpage from internal data",
       "Look up stories for a given topic on the command line",
@@ -183,7 +185,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruT",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMs:St:ruT",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -216,6 +218,10 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruT",OPTIONS,&optindex)) != EOF)
                  DEBUG = true;
                  break;
              }
+          break;
+
+      case 'I':
+          INFORM = true;
           break;
 
       case 's':

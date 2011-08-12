@@ -1536,10 +1536,7 @@ static void PrependAuditFile(char *file)
 
 { struct stat statbuf;
 
-if ((AUDITPTR = (struct Audit *)malloc(sizeof(struct Audit))) == NULL)
-   {
-   FatalError("Memory allocation failure in PrependAuditFile");
-   }
+AUDITPTR = xmalloc(sizeof(struct Audit));
 
 if (cfstat(file,&statbuf) == -1)
    {
@@ -1550,8 +1547,8 @@ if (cfstat(file,&statbuf) == -1)
 HashFile(file,AUDITPTR->digest,CF_DEFAULT_DIGEST);
 
 AUDITPTR->next = VAUDIT;
-AUDITPTR->filename = strdup(file);
-AUDITPTR->date = strdup(cf_ctime(&statbuf.st_mtime));
+AUDITPTR->filename = xstrdup(file);
+AUDITPTR->date = xstrdup(cf_ctime(&statbuf.st_mtime));
 Chop(AUDITPTR->date);
 AUDITPTR->version = NULL;
 VAUDIT = AUDITPTR;
@@ -1713,11 +1710,11 @@ switch (GetVariable("control_common","cfinputs_version",&rval,&rtype))
           {
           yyerror("non-scalar version string");
           }
-       AUDITPTR->version = strdup((char *)rval);
+       AUDITPTR->version = xstrdup((char *)rval);
        break;
 
    default:
-       AUDITPTR->version = strdup("no specified version");
+       AUDITPTR->version = xstrdup("no specified version");
        break;
    }
 }

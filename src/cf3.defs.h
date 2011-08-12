@@ -1974,8 +1974,6 @@ cfrep_t;
 
 #define EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 #define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
-#define CFSTRDUP(str) ((str != NULL) ? strdup(str) : NULL)
-#define CFFREE(ptr) if(ptr) free(ptr)
 
 // classes not interesting in reports
 #define IGNORECLASS(c)                                                         \

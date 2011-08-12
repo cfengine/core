@@ -737,9 +737,9 @@ return false;
 
 static char *HighlightExpressionError(const char *str, int position)
 {
-char *errmsg = malloc(strlen(str) + 3);
-char *firstpart = strndup(str, position);
-char *secondpart = strndup(str + position, strlen(str) - position);
+char *errmsg = xmalloc(strlen(str) + 3);
+char *firstpart = xstrndup(str, position);
+char *secondpart = xstrndup(str + position, strlen(str) - position);
 
 sprintf(errmsg, "%s->%s", firstpart, secondpart);
 
@@ -1049,7 +1049,7 @@ VDELCLASSES = NULL;
 
 void PushPrivateClassContext()
 
-{ struct AlphaList *ap = malloc(sizeof(struct AlphaList));
+{ struct AlphaList *ap = xmalloc(sizeof(struct AlphaList));
 
 // copy to heap
 PushStack(&PRIVCLASSHEAP,CopyAlphaListPointers(ap,&VADDCLASSES));

@@ -66,7 +66,7 @@ struct AssocHashTable
 
 AssocHashTable *HashInit(void)
 {
-return calloc(1, sizeof(AssocHashTable));
+return xcalloc(1, sizeof(AssocHashTable));
 }
 
 /******************************************************************/
@@ -93,7 +93,7 @@ return OatHash(name);
 
 static void HashConvertToHuge(AssocHashTable *hashtable)
 {
-CfAssoc **buckets = calloc(1, sizeof(CfAssoc *) * CF_HASHTABLESIZE);
+CfAssoc **buckets = xcalloc(1, sizeof(CfAssoc *) * CF_HASHTABLESIZE);
 int i;
 
 for (i = 0; i < hashtable->array.size; ++i)

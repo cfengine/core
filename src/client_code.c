@@ -137,11 +137,7 @@ sigaddset(&signal_mask,SIGPIPE);
 pthread_sigmask (SIG_BLOCK,&signal_mask, NULL);
 #endif  /* NOT MINGW */
 
-if ((conn = NewAgentConn()) == NULL)
-   {
-   cfPS(cf_error,CF_FAIL,"malloc",pp,attr,"Unable to allocate connection structure for %s",server);
-   return NULL;
-   }
+conn = NewAgentConn();
  
 if (strcmp(server,"localhost") == 0)
    {
@@ -352,7 +348,7 @@ if (OKProtoReply(recvbuffer))
 
    if (strlen(recvbuffer) > 3)
       {
-      cfst.cf_readlink = strdup(recvbuffer+3);
+      cfst.cf_readlink = xstrdup(recvbuffer+3);
       }
    else
       {
@@ -378,8 +374,8 @@ if (OKProtoReply(recvbuffer))
       }
 
 
-   cfst.cf_filename = strdup(file);
-   cfst.cf_server =  strdup(pp->this_server);
+   cfst.cf_filename = xstrdup(file);
+   cfst.cf_server =  xstrdup(pp->this_server);
 
    if ((cfst.cf_filename == NULL) ||(cfst.cf_server) == NULL)
       {
@@ -443,11 +439,7 @@ if (strlen(dirname) > CF_BUFSIZE - 20)
    return NULL;
    }
 
-if ((cfdirh = calloc(1, sizeof(CFDIR))) == NULL)
-   {
-   CfOut(cf_error,""," !! Couldn't allocate memory in cf_remote_opendir\n");
-   exit(1);
-   }
+cfdirh = xcalloc(1, sizeof(CFDIR));
 
 if (attr.copy.encrypt)
    {
@@ -524,10 +516,7 @@ while (true)
          return cfdirh;
          }
 
-      if ((ip = calloc(1, sizeof(struct Item))) == NULL)
-         {
-         FatalError("Failed to alloc in OpenDirRemote");
-         }
+      ip = xcalloc(1, sizeof(struct Item));
       ip->name = (char*)AllocateDirentForFilename(sp);
 
       if (files == NULL) /* First element */
@@ -559,12 +548,8 @@ static void NewClientCache(struct cfstat *data,struct Promise *pp)
 { struct cfstat *sp;
 
 Debug("NewClientCache\n");
- 
-if ((sp = (struct cfstat *) malloc(sizeof(struct cfstat))) == NULL)
-   {
-   CfOut(cf_error,""," !! Memory allocation faliure in CacheData()\n");
-   return;
-   }
+
+sp = xmalloc(sizeof(struct cfstat));
 
 memcpy(sp,data,sizeof(struct cfstat));
 
@@ -707,7 +692,7 @@ if (SendTransaction(conn->sd,workbuf,tosend,CF_DONE) == -1)
    return false;
    }
 
-buf = (char *) malloc(CF_BUFSIZE + sizeof(int)); /* Note CF_BUFSIZE not buf_size !! */
+buf = xmalloc(CF_BUFSIZE + sizeof(int)); /* Note CF_BUFSIZE not buf_size !! */
 n_read_total = 0;
 
 while (!done)
@@ -870,7 +855,7 @@ if (SendTransaction(conn->sd,workbuf,tosend,CF_DONE) == -1)
    return false;
    }
 
-buf = (char *) malloc(CF_BUFSIZE + sizeof(int));
+buf = xmalloc(CF_BUFSIZE + sizeof(int));
 
 n_read_total = 0;
 
@@ -1258,26 +1243,14 @@ ThreadLock(cft_getaddr);
 
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
 
-svp = (struct ServerItem *)malloc((sizeof(struct ServerItem)));
+svp = xmalloc(sizeof(struct ServerItem));
 
-if (svp == NULL)
-   {
-   return;
-   }
-
-if ((svp->server = strdup(ipname)) == NULL)
-   {
-   return;
-   }
+svp->server = xstrdup(ipname);
 
 free(rp->item);
 rp->item = svp;
 
-if ((svp->conn = NewAgentConn()))
-   {
-   /* If we couldn't connect, mark this server unavailable for everyone */
-   svp->conn->sd = CF_COULD_NOT_CONNECT;
-   }
+svp->conn = NewAgentConn();
 
 svp->busy = false;
 
@@ -1303,9 +1276,9 @@ strlcpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE);
 
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
 free(rp->item);
-svp = (struct ServerItem *)malloc((sizeof(struct ServerItem)));
+svp = xmalloc(sizeof(struct ServerItem));
 rp->item = svp;
-svp->server = strdup(ipname);
+svp->server = xstrdup(ipname);
 svp->conn = conn;
 svp->busy = true;
 

@@ -97,13 +97,10 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       }
    }
 
-if ((ptr = calloc(1, sizeof(struct Scope))) == NULL)
-   {
-   FatalError("Memory Allocation failed for Scope");
-   }
+ptr = xcalloc(1, sizeof(struct Scope));
 
 ptr->next = VSCOPE;
-ptr->scope = strdup(name);
+ptr->scope = xstrdup(name);
 ptr->hashtable = HashInit();
 VSCOPE = ptr;
 ThreadUnlock(cft_vscope);
@@ -333,7 +330,7 @@ CF_STCKFRAME++;
 PushStack(&CF_STCK,(void *)op);
 snprintf(name,CF_MAXVARSIZE,"this_%d",CF_STCKFRAME);
 free(op->scope);
-op->scope = strdup(name);
+op->scope = xstrdup(name);
 }
 
 /*******************************************************************/
@@ -353,7 +350,7 @@ if (CF_STCKFRAME > 0)
    
    CF_STCKFRAME--;
    free(op->scope);
-   op->scope = strdup("this");
+   op->scope = xstrdup("this");
    }    
 }
 

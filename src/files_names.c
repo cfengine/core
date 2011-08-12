@@ -1093,10 +1093,7 @@ memset(buffer,0,CF_BUFSIZE);
   
 if (strlen(str) >= CF_BUFSIZE)
    {
-   char *tmp;
-   tmp = malloc(40+strlen(str));
-   sprintf(tmp,"String too long in ToUpperStr: %s",str);
-   FatalError(tmp);
+   FatalError("String too long in ToUpperStr: %s", str);
    }
 
 for (i = 0;  (str[i] != '\0') && (i < CF_BUFSIZE-1); i++)
@@ -1120,10 +1117,7 @@ memset(buffer,0,CF_BUFSIZE);
 
 if (strlen(str) >= CF_BUFSIZE-1)
    {
-   char *tmp;
-   tmp = malloc(40+strlen(str));
-   snprintf(tmp,CF_BUFSIZE-1,"String too long in ToLowerStr: %s",str);
-   FatalError(tmp);
+   FatalError("String too long in ToLowerStr: %s", str);
    }
 
 for (i = 0; (str[i] != '\0') && (i < CF_BUFSIZE-1); i++)

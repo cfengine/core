@@ -224,7 +224,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
           
       case 'L': 
           snprintf(ld_library_path,CF_BUFSIZE-1,"LD_LIBRARY_PATH=%s",optarg);
-          if (putenv(strdup(ld_library_path)) != 0)
+          if (putenv(xstrdup(ld_library_path)) != 0)
              {
              }
           break;
@@ -455,14 +455,14 @@ else
     * Append --once option to our arguments for spawned monitor process.
     */
 
-   nargv = malloc(sizeof(char *) * (argc+2));
+   nargv = xmalloc(sizeof(char *) * (argc+2));
      
    for (i = 0; i < argc; i++)
       {
       nargv[i] = argv[i];
       }
    
-   nargv[i++] = strdup("-FK");
+   nargv[i++] = xstrdup("-FK");
    nargv[i++] = NULL;
 #endif
    
@@ -573,12 +573,12 @@ PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);
 
 AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any",false);
-AppendConstraint(&(pp.conlist),"process_select",strdup("true"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"process_select",xstrdup("true"),CF_SCALAR,"any",false);
 AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any",false);
-AppendConstraint(&(pp.conlist),"ifelapsed",strdup("0"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"process_count",strdup("true"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"match_range",strdup("0,2"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"process_result",strdup("process_owner.process_count"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"ifelapsed",xstrdup("0"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"process_count",xstrdup("true"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"match_range",xstrdup("0,2"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist),"process_result",xstrdup("process_owner.process_count"),CF_SCALAR,"any",false);
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 

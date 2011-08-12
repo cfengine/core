@@ -23,11 +23,7 @@ else
 
 CFDIR *OpenDirLocal(const char *dirname)
 {
-CFDIR *ret;
-if ((ret = calloc(1, sizeof(CFDIR))) == NULL)
-   {
-   FatalError("Unable to allocate memory for CFDIR");
-   }
+CFDIR *ret = xcalloc(1, sizeof(CFDIR));
 
 ret->dirh  = opendir(dirname);
 if (ret->dirh == NULL)
@@ -42,10 +38,7 @@ if (dirent_buf_size == (size_t)-1)
    FatalError("Unable to determine directory entry buffer size for directory %s", dirname);
    }
 
-if ((ret->entrybuf = calloc(1, dirent_buf_size)) == NULL)
-   {
-   FatalError("Unable to allocate memory for directory entry buffer for directory %s", dirname);
-   }
+ret->entrybuf = xcalloc(1, dirent_buf_size);
 
 return ret;
 }
@@ -216,7 +209,7 @@ return (name_end > sizeof(struct dirent) ? name_end : sizeof(struct dirent));
 
 struct dirent *AllocateDirentForFilename(const char *filename)
 {
-struct dirent *entry = calloc(1, GetDirentBufferSize(strlen(filename)));
+struct dirent *entry = xcalloc(1, GetDirentBufferSize(strlen(filename)));
 strcpy(entry->d_name, filename);
 return entry;
 }

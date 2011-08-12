@@ -363,7 +363,7 @@ if (list == NULL)
 
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   char *classname = strdup(rp->item);
+   char *classname = xstrdup(rp->item);
    CanonifyNameInPlace(classname);
 
    if (IsHardClass(classname))
@@ -524,9 +524,9 @@ if (s)
 
 if (strlen(CFLOCK) > 0)
    {
-   best_guess.lock = strdup(CFLOCK);
-   best_guess.last = strdup(CFLAST);
-   best_guess.log = strdup(CFLOG);
+   best_guess.lock = xstrdup(CFLOCK);
+   best_guess.last = xstrdup(CFLAST);
+   best_guess.log = xstrdup(CFLOG);
    YieldCurrentLock(best_guess);
    }
 

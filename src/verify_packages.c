@@ -732,10 +732,8 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
           CfOut(cf_verbose,"","Execute scheduled package addition");
 
-          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_add_command) + 2))))
-             {
-             strcpy(command_string,a.packages.package_add_command);
-             }
+          command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
+          strcpy(command_string,a.packages.package_add_command);
           break;
 
       case cfa_deletepack:
@@ -748,10 +746,8 @@ for (pm = schedule; pm != NULL; pm = pm->next)
 
           CfOut(cf_verbose,"","Execute scheduled package deletion");
 
-          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_delete_command) + 2))))
-             {
-             strcpy(command_string,a.packages.package_delete_command);
-             }
+          command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
+          strcpy(command_string,a.packages.package_delete_command);
           break;
           
       case cfa_update:
@@ -764,11 +760,8 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              return false;
              }
 
-          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_update_command) + 2))))
-             {
-             memset(command_string, 0, strlen(a.packages.package_update_command) + 2);
-             strcpy(command_string,a.packages.package_update_command);
-             }
+          command_string = xcalloc(1, estimated_size + strlen(a.packages.package_update_command) + 2);
+          strcpy(command_string,a.packages.package_update_command);
 
           break;
 
@@ -782,10 +775,8 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              return false;
              }
           
-          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_verify_command) + 2))))
-             {
-             strcpy(command_string,a.packages.package_verify_command);
-             }
+          command_string = xmalloc(estimated_size + strlen(a.packages.package_verify_command) + 2);
+          strcpy(command_string,a.packages.package_verify_command);
 
           verify = true;
           break;
@@ -980,10 +971,8 @@ for (pm = schedule; pm != NULL; pm = pm->next)
              return false;
              }
           
-          if ((command_string = (malloc(estimated_size + strlen(a.packages.package_patch_command) + 2))))
-             {
-             strcpy(command_string,a.packages.package_patch_command);
-             }
+          command_string = xmalloc(estimated_size + strlen(a.packages.package_patch_command) + 2);
+          strcpy(command_string,a.packages.package_patch_command);
           break;
           
       default:
@@ -1105,18 +1094,11 @@ for (np = *lists; np != NULL; np=np->next)
       }
    }
 
-if ((np = (struct CfPackageManager *)malloc(sizeof(struct CfPackageManager))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Can't allocate new package\n");
-   return NULL;
-   }
+np = xcalloc(1, sizeof(struct CfPackageManager));
 
-np->manager = strdup(mgr);
+np->manager = xstrdup(mgr);
 np->action = pa;
 np->policy = policy;
-np->pack_list = NULL;
-np->patch_list = NULL;
-np->patch_avail = NULL;
 np->next = *lists;
 *lists = np;
 return np;

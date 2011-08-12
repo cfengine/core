@@ -672,13 +672,7 @@ switch(p->type)
           return -1;
           }
        
-       text = (char *) malloc(CF_BUFSIZE * sizeof(char));
-
-       if(text == NULL)
-	  {
-          printf("CheckExists(): Memory allocation error!!\n");
-          return -1;
-	  }
+       text = xmalloc(CF_BUFSIZE * sizeof(char));
        
        if (MemGetExpectedOutput(text, p->text) != 0)
 	  {
@@ -2245,13 +2239,7 @@ int FindTextInFile(char *str, char *file)
 { char *buf, tmp[CF_BUFSIZE], bufEsc[CF_BUFSIZE];
   char any[] = ".*";
 
-   buf = (char *) malloc(CF_BUFSIZE * sizeof(char));
-
-if(buf == NULL)
-   {
-   printf("FindTextInFile(): Memory allocation error!!\n");
-   return -1;
-   }
+   buf = xmalloc(CF_BUFSIZE * sizeof(char));
 
 buf = (char *) CfReadFile(file, CF_BUFSIZE);
 if(buf == NULL)

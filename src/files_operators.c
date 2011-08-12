@@ -271,14 +271,13 @@ return true;
 
 int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp)
 
-{ struct cfagent_connection *conn;
+{ struct cfagent_connection *conn = NULL;
 
 CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,attr.copy.source);
 
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
-   conn = NULL;
-   pp->this_server = strdup("localhost");
+   pp->this_server = xstrdup("localhost");
    }
 else
    {
@@ -1437,7 +1436,7 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
             /* Ck if rsrc fork */
             if (rsrcfork)
                {
-               tmpstr = malloc(CF_BUFSIZE);
+               tmpstr = xmalloc(CF_BUFSIZE);
                strncpy(tmpstr, currentpath, CF_BUFSIZE);
                strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
 
@@ -1652,7 +1651,7 @@ if (pp != NULL)
    {
    promise.bundletype = pp->bundletype;
    promise.lineno = pp->lineno;
-   promise.bundle = strdup(pp->bundle);
+   promise.bundle = xstrdup(pp->bundle);
    promise.ref = pp->ref;
    }
 else
@@ -2346,31 +2345,15 @@ else
 
 void AddSimpleUidItem(struct UidList **uidlist,uid_t uid,char *uidname)
 
-{ struct UidList *ulp, *u;
-  char *copyuser;
-
-if ((ulp = (struct UidList *)malloc(sizeof(struct UidList))) == NULL)
-   {
-   FatalError("cfengine: malloc() failed #1 in AddSimpleUidItem()");
-   }
+{
+struct UidList *ulp = xcalloc(1, sizeof(struct UidList));
 
 ulp->uid = uid;
 
 if (uid == CF_UNKNOWN_OWNER)   /* unknown user */
    {
-   if ((copyuser = strdup(uidname)) == NULL)
-      {
-      FatalError("cfengine: malloc() failed #2 in AddSimpleUidItem()");
-      }
-
-   ulp->uidname = copyuser;
+   ulp->uidname = xstrdup(uidname);
    }
-else
-   {
-   ulp->uidname = NULL;
-   }
-
-ulp->next = NULL;
 
 if (*uidlist == NULL)
    {
@@ -2378,6 +2361,8 @@ if (*uidlist == NULL)
    }
 else
    {
+   struct UidList *u;
+
    for (u = *uidlist; u->next != NULL; u = u->next)
       {
       }
@@ -2389,31 +2374,15 @@ else
 
 void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname)
 
-{ struct GidList *glp,*g;
-  char *copygroup;
-
-if ((glp = (struct GidList *)malloc(sizeof(struct GidList))) == NULL)
-   {
-   FatalError("cfengine: malloc() failed #1 in AddSimpleGidItem()");
-   }
+{
+struct GidList *glp = xcalloc(1, sizeof(struct GidList));
 
 glp->gid = gid;
 
 if (gid == CF_UNKNOWN_GROUP)   /* unknown group */
    {
-   if ((copygroup = strdup(gidname)) == NULL)
-      {
-      FatalError("cfengine: malloc() failed #2 in AddSimpleGidItem()");
-      }
-
-   glp->gidname = copygroup;
+   glp->gidname = xstrdup(gidname);
    }
-else
-   {
-   glp->gidname = NULL;
-   }
-
-glp->next = NULL;
 
 if (*gidlist == NULL)
    {
@@ -2421,6 +2390,8 @@ if (*gidlist == NULL)
    }
 else
    {
+   struct GidList *g;
+
    for (g = *gidlist; g->next != NULL; g = g->next)
       {
       }

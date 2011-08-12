@@ -83,11 +83,7 @@ Debug(")\n");
 
 CheckBundle(name,type);
 
-if ((bp = (struct Bundle *)malloc(sizeof(struct Bundle))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to alloc Bundle");
-   FatalError("");
-   }
+bp = xcalloc(1, sizeof(struct Bundle));
 
 if (*start == NULL)
    {
@@ -102,11 +98,9 @@ else
    lp->next = bp;
    }
 
-bp->name = strdup(name);
-bp->next = NULL;
-bp->type = strdup(type);
+bp->name = xstrdup(name);
+bp->type = xstrdup(type);
 bp->args = args;
-bp->subtypes = NULL;
 return bp;
 }
 
@@ -127,11 +121,7 @@ for (rp = args; rp!= NULL; rp=rp->next)
    }
 Debug(")\n");
 
-if ((bp = (struct Body *)malloc(sizeof(struct Body))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Body");
-   FatalError("");
-   }
+bp = xcalloc(1, sizeof(struct Body));
 
 if (*start == NULL)
    {
@@ -146,11 +136,9 @@ else
    lp->next = bp;
    }
 
-bp->name = strdup(name);
-bp->next = NULL;
-bp->type = strdup(type);
+bp->name = xstrdup(name);
+bp->type = xstrdup(type);
 bp->args = args;
-bp->conlist = NULL;
 return bp;
 }
 
@@ -159,7 +147,6 @@ return bp;
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename)
 
 { struct SubType *tp,*lp;
-  char *sp;
   
 if (INSTALL_SKIP)
    {
@@ -182,17 +169,7 @@ for (lp = bundle->subtypes; lp != NULL; lp=lp->next)
       }
    }
 
-if ((tp = (struct SubType *)malloc(sizeof(struct SubType))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate SubType");
-   FatalError("");
-   }
-
-if ((sp = strdup(typename)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate SubType");
-   FatalError("");
-   }
+tp = xcalloc(1, sizeof(struct SubType));
 
 if (bundle->subtypes == NULL)
    {
@@ -207,9 +184,7 @@ else
    lp->next = tp;
    }
 
-tp->promiselist = NULL;
-tp->name = sp;
-tp->next = NULL;
+tp->name = xstrdup(typename);
 return tp;
 }
 
@@ -236,33 +211,17 @@ if (type == NULL)
 
 Debug("Appending Promise from bundle %s %s if context %s\n",bundle,promiser,classes);
 
-if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Promise");
-   FatalError("");
-   }
+pp = xcalloc(1, sizeof(struct Promise));
 
-if ((sp = strdup(promiser)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Promise");
-   FatalError("");
-   }
+sp = xstrdup(promiser);
 
 if (strlen(classes) > 0)
    {
-   if ((spe = strdup(classes)) == NULL)
-      {
-      CfOut(cf_error,"malloc","Unable to allocate Promise");
-      FatalError("");
-      }
+   spe = xstrdup(classes);
    }
 else
    {
-   if ((spe = strdup("any")) == NULL)
-      {
-      CfOut(cf_error,"malloc","Unable to allocate Promise");
-      FatalError("");
-      }
+   spe = xstrdup("any");
    }
 
 if (strcmp(type->name,"classes") == 0 || strcmp(type->name,"vars") == 0)
@@ -297,25 +256,16 @@ else
 
 pp->audit = AUDITPTR;
 pp->lineno = P.line_no;
-pp->bundle =  strdup(bundle);
+pp->bundle =  xstrdup(bundle);
 pp->promiser = sp;
 pp->promisee = promisee;  /* this is a list allocated separately */
 pp->petype = petype;      /* rtype of promisee - list or scalar recipient? */
 pp->classes = spe;
-pp->conlist = NULL;
-pp->done = false;
 pp->donep = &(pp->done);
 
-pp->this_server = NULL;
-pp->cache = NULL;
-pp->conn = NULL;
-pp->inode_cache = NULL;
-
-pp->bundletype = strdup(bundletype); /* cache agent,common,server etc*/
+pp->bundletype = xstrdup(bundletype); /* cache agent,common,server etc*/
 pp->agentsubtype = type->name;       /* Cache the typename */
-pp->ref = NULL;                      /* cache a reference if given*/
 pp->ref_alloc = 'n';
-pp->next = NULL;
 return pp;
 }
 

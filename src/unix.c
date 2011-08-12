@@ -216,13 +216,8 @@ else if (pid == 0)                     /* child */
          }
       }
    else
-      {      
-      argv = (char **) malloc((argc+1)*sizeof(char *));
-
-      if (argv == NULL)
-         {
-         FatalError("Out of memory");
-         }
+      {
+      argv = xmalloc((argc+1)*sizeof(char *));
 
       for (i = 0; i < argc; i++)
          {

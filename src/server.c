@@ -2578,10 +2578,7 @@ Debug("Challenge encryption = %c, nonce = %d, buf = %d\n",iscrypt,nonce_len,cryp
 
 ThreadLock(cft_system);
  
-if ((decrypted_nonce = malloc(crypt_len)) == NULL)
-   {
-   FatalError("memory failure");
-   }
+decrypted_nonce = xmalloc(crypt_len);
  
 if (iscrypt == 'y')
    { 
@@ -2715,10 +2712,7 @@ HashString(in,nonce_len,digest,digestType);
 
 encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
 
-if ((out = malloc(encrypted_len+1)) == NULL)
-   {
-   FatalError("memory failure");
-   }
+out = xmalloc(encrypted_len+1);
 
 if (RSA_public_encrypt(nonce_len,in,out,newkey,RSA_PKCS1_PADDING) <= 0)
    {
@@ -2808,16 +2802,8 @@ if (keylen > CF_BUFSIZE/2)
 ThreadLock(cft_system);
 
 session_size = CfSessionKeySize(enterprise_field);
-conn->session_key = malloc(session_size); 
+conn->session_key = xmalloc(session_size); 
 conn->encryption_type = enterprise_field;
-
-if (conn->session_key == NULL)
-   {
-   BN_free(counter_challenge);
-   free(out);
-   RSA_free(newkey); 
-   return false;
-   }
 
 CfOut(cf_verbose,""," -> Receiving session key from client (size=%d)...", keylen);
 
@@ -3808,15 +3794,9 @@ struct cfd_connection *NewConn(int sd)  /* construct */
 
 ThreadLock(cft_system);
  
-conn = (struct cfd_connection *) malloc(sizeof(struct cfd_connection));
+conn = xmalloc(sizeof(struct cfd_connection));
 
 ThreadUnlock(cft_system);
- 
-if (conn == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate conn");
-   HandleSignals(SIGTERM);
-   }
  
 conn->sd_reply = sd;
 conn->id_verified = false;

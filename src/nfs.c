@@ -234,34 +234,27 @@ return true;
 
 static void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options)
 
-{ struct CfMount *entry;
-
-if ((entry = malloc(sizeof(struct CfMount))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Memory allocation error - augmenting mount info");
-   return;
-   }
-
-entry->host = entry->source = entry->mounton = entry->options = NULL;
+{
+struct CfMount *entry = xcalloc(1, sizeof(struct CfMount));
 
 if (host)
    {
-   entry->host = strdup(host);
+   entry->host = xstrdup(host);
    }
 
 if (source)
    {
-   entry->source = strdup(source);
+   entry->source = xstrdup(source);
    }
 
 if (mounton)
    {
-   entry->mounton = strdup(mounton);
+   entry->mounton = xstrdup(mounton);
    }
 
 if (options)
    {
-   entry->options = strdup(options);
+   entry->options = xstrdup(options);
    }
 
 AppendRlistAlien(list,(void *)entry);
@@ -331,7 +324,7 @@ if (a.mount.mount_options)
    }
 else
    {
-   opts = strdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
+   opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
    }
 
 host = a.mount.mount_server;

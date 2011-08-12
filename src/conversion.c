@@ -434,7 +434,7 @@ for(rp = list; rp != NULL; rp=rp->next)
       }
    }
   
-return strdup(line);
+return xstrdup(line);
 }
 
 /***************************************************************************/
@@ -1374,12 +1374,7 @@ char *Item2String(struct Item *ip)
   
   // we automatically get \0-termination because we are not appending a \n after the last item
 
-  buf = calloc(1, stringSz);
-
-  if(buf == NULL)
-    {
-      FatalError("Memory allocation in ItemToString()");
-    }
+  buf = xcalloc(1, stringSz);
   
   // do the copy
   for(currItem = ip; currItem != NULL; currItem = currItem->next)

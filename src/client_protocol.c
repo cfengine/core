@@ -224,10 +224,7 @@ else
 
 snprintf(sendbuffer,CF_BUFSIZE,"SAUTH %c %d %d %c",dont_implicitly_trust_server,encrypted_len,nonce_len,enterprise_field);
  
-if ((out = malloc(encrypted_len)) == NULL)
-   {
-   FatalError("memory failure");
-   }
+out = xmalloc(encrypted_len);
 
 if (server_pubkey != NULL)
    {
@@ -341,10 +338,7 @@ if (encrypted_len <= 0)
    return false;      
    }
 
-if ((decrypted_cchall = malloc(encrypted_len)) == NULL)
-   {
-   FatalError("memory failure");
-   }
+decrypted_cchall = xmalloc(encrypted_len);
  
 if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADDING) <= 0)
    {
@@ -434,10 +428,7 @@ encrypted_len = RSA_size(server_pubkey);
 
 Debug("Encrypt %d bytes of session key into %d RSA bytes\n",session_size,encrypted_len);
 
-if ((out = malloc(encrypted_len)) == NULL)
-   {
-   FatalError("memory failure");
-   }
+out = xmalloc(encrypted_len);
 
 if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS1_PADDING) <= 0)
    {

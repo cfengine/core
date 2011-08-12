@@ -309,7 +309,7 @@ if (cfstat(buffer,&statbuf) == 0)
       CfOut(cf_error,"","R: %s \t(%d/%d)\n",assemble,ip->counter,conns);
       }
    
-   dist = (double *) malloc((tot+1)*sizeof(double));
+   dist = xmalloc((tot+1)*sizeof(double));
    
    if (conns > min_signal_diversity)
       {

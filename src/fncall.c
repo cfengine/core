@@ -67,23 +67,12 @@ else
 struct FnCall *NewFnCall(char *name, struct Rlist *args)
 
 { struct FnCall *fp;
-  char *sp = NULL;
 
 Debug("Installing Function Call %s\n",name);
 
-if ((fp = (struct FnCall *)malloc(sizeof(struct FnCall))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate FnCall");
-   FatalError("");
-   }
+fp = xmalloc(sizeof(struct FnCall));
 
-if ((sp = strdup(name)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Promise");
-   FatalError("");
-   }
-
-fp->name = sp;
+fp->name = xstrdup(name);
 fp->args = args;
 fp->argc = RlistLen(args);
 

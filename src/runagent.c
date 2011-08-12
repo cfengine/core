@@ -603,30 +603,13 @@ struct Promise *MakeDefaultRunAgentPromise()
   
 /* The default promise here is to hail associates */
 
-if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Promise");
-   FatalError("");
-   }
+pp = xcalloc(1, sizeof(struct Promise));
 
-pp->audit = NULL;
-pp->lineno = 0;
-pp->bundle =  strdup("implicit internal bundle for runagent");
-pp->promiser = strdup("runagent");
-pp->promisee = NULL;
+pp->bundle =  xstrdup("implicit internal bundle for runagent");
+pp->promiser = xstrdup("runagent");
 pp->petype = CF_NOPROMISEE;
-pp->classes = NULL;
-pp->conlist = NULL;
-pp->done = false;
 pp->donep = &(pp->done);
-pp->ref = NULL;
-pp->agentsubtype = NULL;
 
-pp->this_server = NULL;
-pp->cache = NULL;
-pp->conn = NULL;
-pp->inode_cache = NULL;
-pp->next = NULL;
 return pp;
 }
 

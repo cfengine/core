@@ -45,13 +45,8 @@ int TCDB_OpenDB(char *filename, CF_TCDB **hdbp)
 { int errCode;
 
 ThreadLock(cft_system);
-*hdbp = malloc(sizeof(CF_TCDB));
+*hdbp = xmalloc(sizeof(CF_TCDB));
 ThreadUnlock(cft_system);
-
-if (*hdbp == NULL)
-   {
-   FatalError("Memory allocation in TCDB_OpenDB(");
-   }
 
 (*hdbp)->hdb = tchdbnew();
 
@@ -211,17 +206,9 @@ if (!tchdbiterinit(hdbp->hdb))
 
 ThreadLock(cft_system);
 
-*hdbcp = malloc(sizeof(CF_TCDBC));
+*hdbcp = xcalloc(1, sizeof(CF_TCDBC));
 
 ThreadUnlock(cft_system);
-
-if (*hdbcp == NULL)
-   {
-   FatalError("Memory allocation in TCDB_NewDBCursor()");
-   }
-
-(*hdbcp)->curkey = NULL;
-(*hdbcp)->curval = NULL;
 
 return true;  
 }

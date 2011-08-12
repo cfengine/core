@@ -86,7 +86,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
          free(kp->address);
          }
       
-      kp->address = strdup(ipaddress);
+      kp->address = xstrdup(ipaddress);
       ThreadUnlock(cft_system);
       ThreadUnlock(cft_server_keyseen);
       return;
@@ -96,14 +96,8 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
 CfOut(cf_verbose,""," -> Last saw %s (%s) first time now",ipaddress,databuf);
 
 ThreadLock(cft_system);
-kp = (struct CfKeyBinding *)malloc((sizeof(struct CfKeyBinding)));
+kp = xmalloc((sizeof(struct CfKeyBinding)));
 ThreadUnlock(cft_system);
-
-if (kp == NULL)
-   {
-   ThreadUnlock(cft_server_keyseen);
-   return;
-   }
 
 rp = PrependRlist(&SERVER_KEYSEEN,"nothing",CF_SCALAR);
 
@@ -111,15 +105,7 @@ ThreadLock(cft_system);
 free(rp->item);
 rp->item = kp;
 
-kp->address = strdup(ipaddress);
-
-if ((kp->name = strdup(databuf)) == NULL)
-   {
-   free(kp);
-   ThreadUnlock(cft_system);
-   ThreadUnlock(cft_server_keyseen);
-   return;
-   }
+kp->address = xstrdup(ipaddress);
 
 ThreadUnlock(cft_system);
 

@@ -42,12 +42,7 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
 {
   ThreadLock(cft_system);
 
-  *qdbp = malloc(sizeof(CF_QDB));
-
-  if(*qdbp == NULL)
-    {
-      FatalError("Memory allocation in QDB_OpenDB()");
-    }
+  *qdbp = xmalloc(sizeof(CF_QDB));
 
   (*qdbp)->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
   
@@ -213,17 +208,9 @@ int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp)
 
   ThreadLock(cft_system);
 
-  *qdbcp = malloc(sizeof(CF_QDBC));
+  *qdbcp = xcalloc(1, sizeof(CF_QDBC));
 
   ThreadUnlock(cft_system);
-
-  if(*qdbcp == NULL)
-    {
-      FatalError("Memory allocation in QDB_NewDBCursor");
-    }
-
-  (*qdbcp)->curkey = NULL;
-  (*qdbcp)->curval = NULL;
 
   return true;
 }

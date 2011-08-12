@@ -37,7 +37,6 @@
 int FixCompressedArrayValue(int i,char *value,struct CompressedArray **start)
 
 { struct CompressedArray *ap;
-  char *sp;
 
 for (ap = *start; ap != NULL; ap = ap->next)
    {
@@ -50,19 +49,10 @@ for (ap = *start; ap != NULL; ap = ap->next)
 
 Debug("FixCompressedArrayValue(%d,%s)\n",i,value);
 
-if ((ap = (struct CompressedArray *)malloc(sizeof(struct CompressedArray))) == NULL)
-   {
-   FatalError("Memory allocation in FixCompressedArray");
-   }
+ap = xmalloc(sizeof(struct CompressedArray));
 
-if ((sp = malloc(strlen(value)+2)) == NULL)
-   {
-   FatalError("Memory allocation in FixCompressedArray");
-   }
-
-strcpy(sp,value);
 ap->key = i;
-ap->value = sp;
+ap->value = xstrdup(value);
 ap->next = *start;
 *start = ap;
 return true;

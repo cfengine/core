@@ -64,7 +64,7 @@ else
    StringParseResult strres = ParseStringExpression(expr, start, end);
    if (strres.result)
       {
-      Expression *res = calloc(1, sizeof(Expression));
+      Expression *res = xcalloc(1, sizeof(Expression));
       res->op = EVAL;
       res->val.eval.name = strres.result;
 
@@ -86,7 +86,7 @@ if (start < end && expr[start] == '!')
    ParseResult primres = ParsePrimary(expr, start + 1, end);
    if (primres.result)
       {
-      Expression *res = calloc(1, sizeof(Expression));
+      Expression *res = xcalloc(1, sizeof(Expression));
       res->op = NOT;
       res->val.not.arg = primres.result;
 
@@ -131,7 +131,7 @@ if (!rhs.result)
    return rhs;
    }
 
-res = calloc(1, sizeof(Expression));
+res = xcalloc(1, sizeof(Expression));
 res->op = AND;
 res->val.andor.lhs = lhs.result;
 res->val.andor.rhs = rhs.result;
@@ -177,7 +177,7 @@ if (!rhs.result)
    return rhs;
    }
 
-res = calloc(1, sizeof(Expression));
+res = xcalloc(1, sizeof(Expression));
 res->op = OR;
 res->val.andor.lhs = lhs.result;
 res->val.andor.rhs = rhs.result;

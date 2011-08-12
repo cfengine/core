@@ -73,9 +73,9 @@ void SelfTerminatePrelude()
 struct CfLock best_guess;
 
 CfOut(cf_verbose,"","Trying to remove lock - try %s",CFLOCK);
-best_guess.lock = strdup(CFLOCK);
-best_guess.last = strdup(CFLAST);
-best_guess.log = strdup(CFLOG);
+best_guess.lock = xstrdup(CFLOCK);
+best_guess.last = xstrdup(CFLAST);
+best_guess.log = xstrdup(CFLOG);
 YieldCurrentLock(best_guess);
 unlink(PIDFILE);
 EndAudit();

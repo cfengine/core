@@ -76,17 +76,9 @@ if (THIS_AGENT_TYPE == cf_common)
    PostCheckConstraint("none","none",lval,rval,type);
    }
 
-if ((cp = (struct Constraint *)malloc(sizeof(struct Constraint))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Constraint");
-   FatalError("");
-   }
+cp = xcalloc(1, sizeof(struct Constraint));
 
-if ((sp = strdup(lval)) == NULL)
-   {
-   CfOut(cf_error,"strdup","Unable to allocate Constraint lval");
-   FatalError("");
-   }
+sp = xstrdup(lval);
 
 if (*conlist == NULL)
    {
@@ -103,15 +95,7 @@ else
 
 if (classes != NULL)
    {
-   if ((cp->classes = strdup(classes)) == NULL)
-      {
-      CfOut(cf_error,"mstrdup","Unable to allocate Constraint classes");
-      FatalError("");
-      }
-   }
-else
-   {
-   cp->classes = NULL;
+   cp->classes = xstrdup(classes);
    }
 
 cp->audit = AUDITPTR;
@@ -120,7 +104,6 @@ cp->lval = sp;
 cp->rval = rval;
 cp->type = type;  /* literal, bodyname, builtin function */
 cp->isbody = body;
-cp->next = NULL;
 return cp;
 }
 
@@ -139,7 +122,7 @@ for (cp = conlist; cp != NULL; cp = cp->next)
          DeleteRvalItem(cp->rval,cp->type);
          }      
 
-      cp->rval = strdup(rval);
+      cp->rval = xstrdup(rval);
       cp->type = CF_SCALAR;
       return;
       }
@@ -881,14 +864,11 @@ struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp)
 
 AssertThreadLocked(cft_policy,"NewPromiseId");
 
-if ((ptr = malloc(sizeof(struct PromiseIdent))) == NULL)
-   {
-   FatalError("MemoryAlloc NewPromiseId\n");
-   }
+ptr = xmalloc(sizeof(struct PromiseIdent));
 
-ptr->filename = strdup(pp->audit->filename);
+ptr->filename = xstrdup(pp->audit->filename);
 ptr->lineno = pp->lineno;
-ptr->handle = strdup(handle);
+ptr->handle = xstrdup(handle);
 ptr->next = PROMISE_ID_LIST;
 PROMISE_ID_LIST = ptr;
 return ptr;     

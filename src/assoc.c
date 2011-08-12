@@ -41,14 +41,11 @@ struct CfAssoc *NewAssoc(const char *lval, const void *rval, char rtype, enum cf
 
 { struct CfAssoc *ap;
 
-if ((ap= malloc(sizeof(struct CfAssoc))) == NULL)
-   {
-   FatalError("malloc failure in NewAssoc\n");
-   }
+ap = xmalloc(sizeof(struct CfAssoc));
 
 /* Make a private copy because promises are ephemeral in expansion phase */
 
-ap->lval = strdup(lval);
+ap->lval = xstrdup(lval);
 ap->rval = CopyRvalItem(rval,rtype);
 ap->dtype = dt;
 ap->rtype = rtype;

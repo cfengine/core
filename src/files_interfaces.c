@@ -1647,10 +1647,8 @@ if (attr.copy.servers != NULL && strcmp(attr.copy.servers->item,"localhost") != 
 if (strstr(dest, _PATH_RSRCFORKSPEC))
    {
    rsrcfork = 1;
-   tmpstr = malloc(CF_BUFSIZE);
-   
+   tempstr = xstrndup(dest, CF_BUFSIZE);
    /* Drop _PATH_RSRCFORKSPEC */
-   strncpy(tmpstr, dest, CF_BUFSIZE);
    forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
    *forkpointer = '\0';
    
@@ -1828,7 +1826,7 @@ if (rsrcfork)
       return(false);
       }
    
-   rsrcbuf = malloc(CF_BUFSIZE);
+   rsrcbuf = xmalloc(CF_BUFSIZE);
    
    rsrcbytesr = 0;
    

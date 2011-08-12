@@ -63,27 +63,27 @@ void SetSignals()
 
 { int i;
 
- SIGNALS[SIGHUP] = strdup("SIGHUP");
- SIGNALS[SIGINT] = strdup("SIGINT");
- SIGNALS[SIGTRAP] = strdup("SIGTRAP");
- SIGNALS[SIGKILL] = strdup("SIGKILL");
- SIGNALS[SIGPIPE] = strdup("SIGPIPE");
- SIGNALS[SIGCONT] = strdup("SIGCONT");
- SIGNALS[SIGABRT] = strdup("SIGABRT");
- SIGNALS[SIGSTOP] = strdup("SIGSTOP");
- SIGNALS[SIGQUIT] = strdup("SIGQUIT");
- SIGNALS[SIGTERM] = strdup("SIGTERM");
- SIGNALS[SIGCHLD] = strdup("SIGCHLD");
- SIGNALS[SIGUSR1] = strdup("SIGUSR1");
- SIGNALS[SIGUSR2] = strdup("SIGUSR2");
- SIGNALS[SIGBUS] = strdup("SIGBUS");
- SIGNALS[SIGSEGV] = strdup("SIGSEGV");
+ SIGNALS[SIGHUP] = "SIGHUP";
+ SIGNALS[SIGINT] = "SIGINT";
+ SIGNALS[SIGTRAP] = "SIGTRAP";
+ SIGNALS[SIGKILL] = "SIGKILL";
+ SIGNALS[SIGPIPE] = "SIGPIPE";
+ SIGNALS[SIGCONT] = "SIGCONT";
+ SIGNALS[SIGABRT] = "SIGABRT";
+ SIGNALS[SIGSTOP] = "SIGSTOP";
+ SIGNALS[SIGQUIT] = "SIGQUIT";
+ SIGNALS[SIGTERM] = "SIGTERM";
+ SIGNALS[SIGCHLD] = "SIGCHLD";
+ SIGNALS[SIGUSR1] = "SIGUSR1";
+ SIGNALS[SIGUSR2] = "SIGUSR2";
+ SIGNALS[SIGBUS] = "SIGBUS";
+ SIGNALS[SIGSEGV] = "SIGSEGV";
 
  for (i = 0; i < highest_signal; i++)
     {
     if (SIGNALS[i] == NULL)
        {
-       SIGNALS[i] = strdup("NOSIG");
+       SIGNALS[i] = "NOSIG";
        }
     }
 }
@@ -448,13 +448,13 @@ if (strlen(workbuf) > CF_MAXVARSIZE-2)
    CfOut(cf_verbose,"","cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
    }
 
-sp = strdup(CanonifyName(workbuf));
+sp = xstrdup(CanonifyName(workbuf));
 NewScalar("sys","long_arch",sp,cf_str);
 NewClass(sp);
 free(sp);
 
 snprintf(workbuf,CF_BUFSIZE,"%s_%s",VSYSNAME.sysname,VSYSNAME.machine);
-sp = strdup(CanonifyName(workbuf));
+sp = xstrdup(CanonifyName(workbuf));
 NewScalar("sys","ostype",sp,cf_str);
 NewClass(sp);
 free(sp);

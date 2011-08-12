@@ -46,10 +46,7 @@ char *BodyName(struct Promise *pp)
 
 /* Return a type template for the promise body for lock-type identification */
  
-if ((name = malloc(CF_MAXVARSIZE)) == NULL)
-   {
-   FatalError("BodyName");
-   }
+name = xmalloc(CF_MAXVARSIZE);
 
 sp = pp->agentsubtype;
 
@@ -100,15 +97,11 @@ else
    Debug("CopyPromise(%s->)\n",pp->promiser);
    }
 
-if ((pcopy = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Promise allocation failure");
-   FatalError("memory");
-   }
+pcopy = xcalloc(1, sizeof(struct Promise));
 
 if (pp->promiser)
    {
-   pcopy->promiser = strdup(pp->promiser);
+   pcopy->promiser = xstrdup(pp->promiser);
    }
 
 if (pp->promisee)
@@ -116,34 +109,26 @@ if (pp->promisee)
    pcopy->promisee = CopyRvalItem(pp->promisee,pp->petype);
    pcopy->petype = pp->petype;
    }
-else
-   {
-   pcopy->promisee = NULL;
-   }
 
 if (pp->classes)
    {
-   pcopy->classes  = strdup(pp->classes);
+   pcopy->classes  = xstrdup(pp->classes);
    }
 
-if (pcopy->promiser == NULL || (pp->promisee != NULL && pcopy->promisee == NULL) || pcopy->classes == NULL)
+if ((pp->promisee != NULL && pcopy->promisee == NULL))
    {
-   CfOut(cf_error,"malloc","Promise detail allocation failure");
-   FatalError("memory");
+   FatalError("Unable to copy promise");
    }
 
-pcopy->bundletype = strdup(pp->bundletype);
+pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
 pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient? */
-pcopy->bundle = strdup(pp->bundle);
+pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->ref_alloc = pp->ref_alloc;
 pcopy->agentsubtype = pp->agentsubtype;
 pcopy->done = pp->done;
-pcopy->conlist = NULL;
-pcopy->next = NULL;
-pcopy->cache = NULL;
 pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
 pcopy->donep = pp->donep;
@@ -197,7 +182,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       
       /* Keep the referent body type as a boolean for convenience when checking later */
       
-      AppendConstraint(&(pcopy->conlist),cp->lval,strdup("true"),CF_SCALAR,cp->classes,false);
+      AppendConstraint(&(pcopy->conlist),cp->lval,xstrdup("true"),CF_SCALAR,cp->classes,false);
 
       Debug("Handling body-lval \"%s\"\n",cp->lval);
       
@@ -272,11 +257,7 @@ struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp)
 
 Debug("ExpandDerefPromise()\n");
 
-if ((pcopy = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Promise allocation failure");
-   FatalError("memory");
-   }
+pcopy = xcalloc(1, sizeof(struct Promise));
 
 returnval = ExpandPrivateRval("this",pp->promiser,CF_SCALAR);
 pcopy->promiser = (char *)returnval.item;
@@ -295,30 +276,27 @@ else
 
 if (pp->classes)
    {
-   pcopy->classes = strdup(pp->classes);
+   pcopy->classes = xstrdup(pp->classes);
    }
 else
    {
-   pcopy->classes = strdup("any");
+   pcopy->classes = xstrdup("any");
    }
 
-if (pcopy->promiser == NULL || pcopy->classes == NULL)
+if (pcopy->promiser == NULL)
    {
-   CfOut(cf_error,"malloc","ExpandPromise detail allocation failure");
-   FatalError("memory");
+   FatalError("ExpandPromise returned NULL");
    }
 
-pcopy->bundletype = strdup(pp->bundletype);
+pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
-pcopy->bundle = strdup(pp->bundle);
+pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->ref_alloc = pp->ref_alloc;
 pcopy->agentsubtype = pp->agentsubtype;
-pcopy->conlist = NULL;
-pcopy->next = NULL;
 pcopy->cache = pp->cache;
 pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
@@ -379,13 +357,9 @@ struct Promise *CopyPromise(char *scopeid,struct Promise *pp)
 
 Debug("CopyPromise()\n");
 
-if ((pcopy = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Promise allocation failure");
-   FatalError("memory");
-   }
+pcopy = xcalloc(1, sizeof(struct Promise));
 
-pcopy->promiser = strdup(pp->promiser);
+pcopy->promiser = xstrdup(pp->promiser);
 
 if (pp->promisee)
    {
@@ -396,35 +370,26 @@ if (pp->promisee)
 else
    {
    pcopy->petype = CF_NOPROMISEE;
-   pcopy->promisee = NULL;
    }
 
 if (pp->classes)
    {
-   pcopy->classes = strdup(pp->classes);
+   pcopy->classes = xstrdup(pp->classes);
    }
 else
    {
-   pcopy->classes = strdup("any");
+   pcopy->classes = xstrdup("any");
    }
 
-if (pcopy->promiser == NULL || pcopy->classes == NULL)
-   {
-   CfOut(cf_error,"malloc","ExpandPromise detail allocation failure");
-   FatalError("memory");
-   }
-
-pcopy->bundletype = strdup(pp->bundletype);
+pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
 pcopy->lineno = pp->lineno;
-pcopy->bundle = strdup(pp->bundle);
+pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->ref_alloc = pp->ref_alloc;
 pcopy->agentsubtype = pp->agentsubtype;
-pcopy->conlist = NULL;
-pcopy->next = NULL;
 pcopy->cache = pp->cache;
 pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
@@ -623,40 +588,21 @@ struct Promise *NewPromise(char *typename,char *promiser)
 
 ThreadLock(cft_policy); 
 
-if ((pp = (struct Promise *)malloc(sizeof(struct Promise))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Promise");
-   FatalError("");
-   }
+pp = xcalloc(1, sizeof(struct Promise));
 
 pp->audit = AUDITPTR;
-pp->lineno = 0;
-pp->bundle =  strdup("internal_bundle");
-pp->promiser = strdup(promiser);
+pp->bundle =  xstrdup("internal_bundle");
+pp->promiser = xstrdup(promiser);
 
 ThreadUnlock(cft_policy);
 
-pp->promisee = NULL;
 pp->petype = CF_NOPROMISEE;
-pp->classes = NULL;
-pp->done = false;
 pp->donep = &(pp->done);
 
-pp->this_server = NULL;
-pp->cache = NULL;
-pp->conn = NULL;
-pp->inode_cache = NULL;
-pp->cache = NULL;
-
-pp->bundletype = NULL;
-pp->agentsubtype = typename;   /* cache this, not copy strdup(typename);*/
-pp->ref = NULL;                /* cache a reference if given*/
+pp->agentsubtype = typename;   /* cache this, do not copy string */
 pp->ref_alloc = 'n';
-pp->next = NULL;
 
-
-pp->conlist = NULL;  // this fn is used for internal promises only
-AppendConstraint(&(pp->conlist), "handle", strdup("internal_promise"),CF_SCALAR,NULL,false);
+AppendConstraint(&(pp->conlist), "handle", xstrdup("internal_promise"),CF_SCALAR,NULL,false);
 
 return pp;
 }
@@ -880,7 +826,7 @@ if ((sp = strstr(pre_buffer,"$(this.promiser)")) || (sp = strstr(pre_buffer, "${
       free(pp->ref);
       }
  
-   pp->ref = strdup(buffer);
+   pp->ref = xstrdup(buffer);
    pp->ref_alloc = 'y';
    }
 }

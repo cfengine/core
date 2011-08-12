@@ -213,11 +213,7 @@ if (!ThreadLock(cft_count))
 
 if (CHILDREN == NULL)   /* first time */
    {
-   if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
-      {
-      ThreadUnlock(cft_count);
-      return NULL;
-      }
+   CHILDREN = xcalloc(MAX_FD,sizeof(pid_t));
    }
 
 ThreadUnlock(cft_count);
@@ -275,12 +271,7 @@ if (pid == 0)
       }
    
    argc = ArgSplitCommand(command,arg);
-   argv = (char **) malloc((argc+1)*sizeof(char *));
-   
-   if (argv == NULL)
-      {
-      FatalError("Out of memory");
-      }
+   argv = xmalloc((argc+1)*sizeof(char *));
    
    for (i = 0; i < argc; i++)
       {
@@ -365,11 +356,7 @@ if (!ThreadLock(cft_count))
 
 if (CHILDREN == NULL)   /* first time */
    {
-   if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
-      {
-      ThreadUnlock(cft_count);
-      return NULL;
-      }
+   CHILDREN = xcalloc(MAX_FD,sizeof(pid_t));
    }
 
 ThreadUnlock(cft_count);
@@ -426,12 +413,7 @@ if (pid == 0)
       }
    
    argc = ArgSplitCommand(command,arg);
-   argv = (char **) malloc((argc+1)*sizeof(char *));
-   
-   if (argv == NULL)
-      {
-      FatalError("Out of memory");
-      }
+   argv = xmalloc((argc+1)*sizeof(char *));
    
    for (i = 0; i < argc; i++)
       {
@@ -543,11 +525,7 @@ if (!ThreadLock(cft_count))
 
 if (CHILDREN == NULL)   /* first time */
    {
-   if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
-      {
-      ThreadUnlock(cft_count);
-      return NULL;
-      }
+   CHILDREN = xcalloc(MAX_FD,sizeof(pid_t));
    }
 
 ThreadUnlock(cft_count);
@@ -674,11 +652,7 @@ if (!ThreadLock(cft_count))
 
 if (CHILDREN == NULL)   /* first time */
    {
-   if ((CHILDREN = calloc(MAX_FD,sizeof(pid_t))) == NULL)
-      {
-      ThreadUnlock(cft_count);
-      return NULL;
-      }
+   CHILDREN = xcalloc(MAX_FD,sizeof(pid_t));
    }
 
 ThreadUnlock(cft_count);

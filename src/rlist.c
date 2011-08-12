@@ -187,7 +187,7 @@ if (item == NULL)
    switch (type)
       {
       case CF_SCALAR:
-          return strdup("");
+          return xstrdup("");
 
       case CF_LIST:
           return NULL;
@@ -199,14 +199,8 @@ naked[0] = '\0';
 switch(type)
    {
    case CF_SCALAR:
-       /* the rval is just a string */
-       if ((new = strdup((char *)item)) ==  NULL)
-          {
-          CfOut(cf_error,"strdup","Memory allocation");
-          FatalError("CopyRvalItem");
-          }
-
-       return new;
+      /* the rval is just a string */
+      return xstrdup((char *)item);
 
    case CF_FNCALL:
        /* the rval is a fncall */
@@ -463,7 +457,7 @@ if (type == CF_LIST)
    return ins;
    }
 
-scalar = strdup((char *)item);
+scalar = xstrdup((char *)item);
 
 if (!KeyInRlist(*start,(char *)item))
    {
@@ -543,11 +537,7 @@ switch(type)
        return NULL;
    }
 
-if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Rlist");
-   FatalError("");
-   }
+rp = xmalloc(sizeof(struct Rlist));
 
 if (*start == NULL)
    {
@@ -624,11 +614,7 @@ switch(type)
 
 ThreadLock(cft_system);
 
-if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Rlist");
-   FatalError("");
-   }
+rp = xmalloc(sizeof(struct Rlist));
 
 ThreadUnlock(cft_system);
 
@@ -672,11 +658,7 @@ switch(type)
        return NULL;
    }
 
-if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Rlist");
-   FatalError("");
-   }
+rp = xmalloc(sizeof(struct Rlist));
 
 if (*start == NULL)
    {
@@ -1057,11 +1039,7 @@ struct Rlist *AppendRlistAlien(struct Rlist **start,void *item)
     
 { struct Rlist *rp,*lp = *start;
 
-if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Rlist");
-   FatalError("");
-   }
+rp = xmalloc(sizeof(struct Rlist));
 
 if (*start == NULL)
    {
@@ -1097,11 +1075,7 @@ struct Rlist *PrependRlistAlien(struct Rlist **start,void *item)
 
 ThreadLock(cft_lock); 
 
-if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Rlist");
-   FatalError("");
-   }
+rp = xmalloc(sizeof(struct Rlist));
 
 rp->next = *start;
 *start = rp;
@@ -1117,9 +1091,9 @@ return rp;
 /*******************************************************************/
 
 /*
-char *sp1 = strdup("String 1\n");
-char *sp2 = strdup("String 2\n");
-char *sp3 = strdup("String 3\n");
+char *sp1 = xstrdup("String 1\n");
+char *sp2 = xstrdup("String 2\n");
+char *sp3 = xstrdup("String 3\n");
 
 PushStack(&stack,(void *)sp1);
 PopStack(&stack,(void *)&sp,sizeof(sp));
@@ -1131,11 +1105,7 @@ void PushStack(struct Rlist **liststart,void *item)
 
 /* Have to keep track of types personally */
 
-if ((rp = (struct Rlist *)malloc(sizeof(struct Rlist))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Unable to allocate Rlist");
-   FatalError("");
-   }
+rp = xmalloc(sizeof(struct Rlist));
 
 rp->next = *liststart;
 rp->item = item;
@@ -1274,11 +1244,7 @@ if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
 
 CfOut(cf_verbose,""," -> Package (%s,%s,%s) found",name,version,arch);
 
-if ((pi = (struct CfPackageItem *)malloc(sizeof(struct CfPackageItem))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Can't allocate new package\n");
-   return false;
-   }
+pi = xmalloc(sizeof(struct CfPackageItem));
 
 if (list)
    {
@@ -1289,9 +1255,9 @@ else
    pi->next = NULL;
    }
 
-pi->name = strdup(name);
-pi->version = strdup(version);
-pi->arch = strdup(arch);
+pi->name = xstrdup(name);
+pi->version = xstrdup(version);
+pi->arch = xstrdup(arch);
 *list = pi;
 
 /* Finally we need these for later schedule exec, once this iteration context has gone */

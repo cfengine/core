@@ -1003,7 +1003,7 @@ for (ip = file_start; ip != file_end; ip=ip->next)
    else if (replaced)
       {
       free(ip->name);
-      ip->name = strdup(line_buff);
+      ip->name = xstrdup(line_buff);
       cfPS(cf_verbose,CF_CHG,"",pp,a," -> Replaced pattern \"%s\" in %s",pp->promiser,pp->this_server);
       (pp->edcontext->num_edits)++;
       retval = true;
@@ -1359,7 +1359,7 @@ if (a.column.select_column > count)
       {
       for (i = 0; i < (a.column.select_column - count); i++)
          {
-         AppendRScalar(columns,strdup(""),CF_SCALAR);
+         AppendRScalar(columns,xstrdup(""),CF_SCALAR);
          }
 
       count = 0;
@@ -1431,7 +1431,7 @@ else
          cfPS(cf_inform,CF_CHG,"",pp,a," -> Deleting column field value %s in %s",rp->item,pp->this_server);
          (pp->edcontext->num_edits)++;
          free(rp->item);
-         rp->item = strdup("");
+         rp->item = xstrdup("");
          return true;
          }
       }
@@ -1446,7 +1446,7 @@ else
          {
          cfPS(cf_inform,CF_CHG,"",pp,a," -> Setting whole column field value %s to %s in %s",rp->item,a.column.column_value,pp->this_server);
          free(rp->item);
-         rp->item = strdup(a.column.column_value);
+         rp->item = xstrdup(a.column.column_value);
          (pp->edcontext->num_edits)++;
          return true;
          }

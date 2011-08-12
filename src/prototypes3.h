@@ -58,6 +58,14 @@ int yyparse (void);
 void ThisAgentInit(void);
 void KeepPromises(void);
 
+/* alloc.c */
+
+void *xcalloc(size_t nmemb, size_t size);
+void *xmalloc(size_t size);
+void *xrealloc(void *ptr, size_t size);
+char *xstrdup(const char *str);
+char *xstrndup(const char *str, size_t n);
+
 /* agent.c */
 
 int ScheduleAgentOperations(struct Bundle *bp);
@@ -977,7 +985,6 @@ char *StrStr (char *s1,char *s2);
 int StrnCmp (char *s1,char *s2,size_t n);
 int cf_strcmp(char *s1,char *s2);
 int cf_strncmp(char *s1,char *s2,size_t n);
-char *cf_strdup(char *s);
 int cf_strlen(char *s);
 char *cf_strncpy(char *s1,char *s2,size_t n);
 char *cf_strchr(char *s, int c);

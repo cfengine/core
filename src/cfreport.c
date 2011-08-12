@@ -2601,17 +2601,12 @@ void DiskArrivals(void)
   FILE *fp;
   int count = 0, index = 0, i;
   char filename[CF_BUFSIZE],database[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
-  double val, maxval = 1.0, *array, grain = 0.0;
+  double val, maxval = 1.0, grain = 0.0;
   time_t now;
   void *value;
   CF_DB *dbp = NULL;
   const struct dirent *dirp;
-
-if ((array = (double *)malloc((int)CF_WEEK)) == NULL)
-   {
-   CfOut(cf_error,"MALLOC","Memory error");
-   return;
-   }
+  double *array = xmalloc((int)CF_WEEK);
 
 if ((dirh = OpenDirLocal(CFWORKDIR)) == NULL)
    {

@@ -86,21 +86,17 @@ if ((tp = TopicExists(name,context)))
    }
 else
    {
-   if ((tp = (struct Topic *)malloc(sizeof(struct Topic))) == NULL)
-      {
-      CfOut(cf_error,"malloc"," !! Memory failure in AddTopic");
-      FatalError("");
-      }
+   tp = xmalloc(sizeof(struct Topic));
 
-   tp->topic_name = strdup(NormalizeTopic(name));
+   tp->topic_name = xstrdup(NormalizeTopic(name));
    
    if (context && strlen(context) > 0)
       {
-      tp->topic_context = strdup(NormalizeTopic(context));
+      tp->topic_context = xstrdup(NormalizeTopic(context));
       }
    else
       {
-      tp->topic_context = strdup("any");
+      tp->topic_context = xstrdup("any");
       }
 
    tp->id = GLOBAL_ID++;
@@ -132,34 +128,17 @@ if (passociates == NULL || passociates->item == NULL)
 
 if ((texist = AssociationExists(*list,fwd_name,bwd_name)) == NULL)
    {
-   if ((ta = (struct TopicAssociation *)malloc(sizeof(struct TopicAssociation))) == NULL)
+   ta = xcalloc(1, sizeof(struct TopicAssociation));
+
+   ta->fwd_name = xstrdup(fwd_name);
+
+   if (bwd_name)
       {
-      CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
-      FatalError("");
-      }
-   
-   if ((ta->fwd_name = strdup(fwd_name)) == NULL)
-      {
-      CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
-      FatalError("");
+      ta->bwd_name = xstrdup(bwd_name);
       }
 
-   ta->bwd_name = NULL;
-       
-   if (bwd_name && ((ta->bwd_name = strdup(bwd_name)) == NULL))
-      {
-      CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
-      FatalError("");
-      }
-   
-   if ((ta->fwd_context = strdup(fwd_context)) == NULL)
-      {
-      CfOut(cf_error,"malloc","Memory failure in AddTopicAssociation");
-      FatalError("");
-      }
+   ta->fwd_context = xstrdup(fwd_context);
 
-   ta->associates = NULL;
-   ta->bwd_context = NULL;
    ta->next = *list;
    *list = ta;
    }
@@ -225,15 +204,10 @@ void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *repres
 
 if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
    {
-   if ((op = (struct Occurrence *)malloc(sizeof(struct Occurrence))) == NULL)
-      {
-      CfOut(cf_error,"malloc","Memory failure in AddOccurrence");
-      FatalError("");
-      }
+   op = xcalloc(1, sizeof(struct Occurrence));
 
-   op->represents = NULL;
-   op->occurrence_context = strdup(ToLowerStr(context));
-   op->locator = strdup(reference);
+   op->occurrence_context = xstrdup(ToLowerStr(context));
+   op->locator = xstrdup(reference);
    op->rep_type = rtype;   
    op->next = *list;
    *list = op;
@@ -260,16 +234,12 @@ for (rp = represents; rp != NULL; rp=rp->next)
 void AddInference(struct Inference **list,char *result,char *pre,char *qual)
 
 { struct Inference *ip;
- 
-if ((ip = (struct Inference *)malloc(sizeof(struct Occurrence))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Memory failure in AddOccurrence");
-   FatalError("");
-   }
 
-ip->inference = strdup(result);
-ip->precedent = strdup(pre);
-ip->qualifier = strdup(qual);
+ip = xmalloc(sizeof(struct Occurrence));
+
+ip->inference = xstrdup(result);
+ip->precedent = xstrdup(pre);
+ip->qualifier = xstrdup(qual);
 ip->next = *list;
 *list = ip;
 }

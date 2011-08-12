@@ -361,25 +361,9 @@ else
 static DBT *BDB_NewDBKey(char *name)
 
 {
-char *dbkey;
-DBT *key;
+DBT *key = xcalloc(1, sizeof(DBT));
 
-if ((dbkey = malloc(strlen(name)+1)) == NULL)
-   {
-   FatalError("NewChecksumKey malloc error");
-   }
-
-if ((key = (DBT *)malloc(sizeof(DBT))) == NULL)
-   {
-   FatalError("DBT  malloc error");
-   }
-
-memset(key,0,sizeof(DBT));
-memset(dbkey,0,strlen(name)+1);
-
-strncpy(dbkey,name,strlen(name));
-
-key->data = (void *)dbkey;
+key->data = xstrcpy(name);
 key->size = strlen(name)+1;
 
 return key;
@@ -399,24 +383,12 @@ free((char *)key);
 static DBT *BDB_NewDBValue(const void *ptr,int size)
 
 {
-void *val;
-DBT *value;
+DBT *value = xcalloc(1, sizeof(DBT));
 
-if ((val = (void *)malloc(size)) == NULL)
-   {
-   FatalError("BDB_NewDBKey malloc error");
-   }
-
-if ((value = (DBT *) malloc(sizeof(DBT))) == NULL)
-   {
-   FatalError("DBT Value malloc error");
-   }
-
-memset(value,0,sizeof(DBT));
-memcpy(val,ptr,size);
-
-value->data = val;
+value->data = xmalloc(size);
 value->size = size;
+
+memcpy(value->data, ptr, size);
 
 return value;
 }

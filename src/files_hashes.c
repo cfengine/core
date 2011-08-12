@@ -393,10 +393,7 @@ if (key->e)
       }
    }
 
-if ((buffer = malloc(buf_len+10)) == NULL)
-   {
-   FatalError("Memory alloc in HashPubKey");
-   }
+buffer = xmalloc(buf_len+10);
 
 switch (type)
    {
@@ -624,15 +621,10 @@ static char *NewIndexKey(char type,char *name, int *size)
 // Filename plus index_str in one block + \0
 
 *size = strlen(name)+CF_INDEX_OFFSET+1;
- 
-if ((chk_key = malloc(*size)) == NULL)
-   {
-   FatalError("NewIndexKey malloc error");
-   }
+
+chk_key = xcalloc(1, *size);
 
 // Data start after offset for index
-
-memset(chk_key,0,*size);
 
 strncpy(chk_key,FileHashName(type),CF_INDEX_FIELD_LEN);
 strncpy(chk_key+CF_INDEX_OFFSET,name,strlen(name));
@@ -653,12 +645,8 @@ struct Checksum_Value *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1])
     
 { struct Checksum_Value *chk_val;
 
-if ((chk_val = (struct Checksum_Value *)malloc(sizeof(struct Checksum_Value))) == NULL)
-   {
-   FatalError("NewHashValue malloc error");
-   }
+chk_val = xcalloc(1, sizeof(struct Checksum_Value));
 
-memset(chk_val,0,sizeof(struct Checksum_Value));
 memcpy(chk_val->mess_digest,digest,EVP_MAX_MD_SIZE+1);
 
 /* memcpy(chk_val->attr_digest,attr,EVP_MAX_MD_SIZE+1); depricated */

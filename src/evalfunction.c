@@ -177,14 +177,14 @@ for(arg = finalargs; arg; arg = arg->next)
    if (!IsDefinedClass(arg->item))
       {
       SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
-      rval.item = strdup("!any");
+      rval.item = xstrdup("!any");
       rval.rtype = CF_SCALAR;
       return rval;
       }
    }
 
 SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
-rval.item = strdup("any");
+rval.item = xstrdup("any");
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -341,10 +341,7 @@ range = fabs(to-from);
 result = from + (int)(drand48()*(double)range);
 snprintf(buffer,CF_BUFSIZE-1,"%d",result);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRandomInt");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -376,10 +373,7 @@ if (getenv(name))
    snprintf(buffer,CF_BUFSIZE-1,ctrlstr,getenv(name));
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallGetUid");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("getenv",FNCALL_SUCCESS,NULL,NULL);
 
@@ -455,10 +449,7 @@ name = finalargs->item;
 
 EscapeSpecialChars(name,buffer,CF_BUFSIZE-1,"");
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallEscape");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("escape",FNCALL_SUCCESS,NULL,NULL);
 
@@ -483,10 +474,7 @@ buffer[0] = '\0';
 
 name = finalargs->item;
 
-if ((rval.item = strdup(Hostname2IPString(name))) == NULL)
-   {
-   FatalError("Memory allocation in FnCallHost2IP");
-   }
+rval.item = xstrdup(Hostname2IPString(name));
 
 SetFnCallReturnStatus("host2ip",FNCALL_SUCCESS,NULL,NULL);
 
@@ -511,10 +499,7 @@ buffer[0] = '\0';
 
 ip = finalargs->item;
 
-if ((rval.item = strdup(IPString2Hostname(ip))) == NULL)
-   {
-   FatalError("Memory allocation in FnCallIP2Host");
-   }
+rval.item = xstrdup(IPString2Hostname(ip));
 
 SetFnCallReturnStatus("ip2host",FNCALL_SUCCESS,NULL,NULL);
 
@@ -553,10 +538,7 @@ else
 
 snprintf(buffer,CF_BUFSIZE-1,"%d",uid);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallGetUid");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -567,7 +549,7 @@ return rval;
 {
 struct Rval rval;
 SetFnCallReturnStatus("getuid",FNCALL_FAILURE,"Windows does not have user ids",NULL);
-rval.item = strdup("\0");
+rval.item = xstrdup("");
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -601,10 +583,7 @@ else
 
 snprintf(buffer,CF_BUFSIZE-1,"%d",gid);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallGetGid");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -615,7 +594,7 @@ return rval;
 {
 struct Rval rval;
 SetFnCallReturnStatus("getgid",FNCALL_FAILURE,"Windows does not have group ids",NULL);
-rval.item = strdup("\0");
+rval.item = xstrdup("");
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -653,10 +632,7 @@ snprintf(buffer,CF_BUFSIZE-1,"%s",HashPrint(type,digest));
 
 /* lopp off prefix */
 
-if ((rval.item = strdup(buffer+4)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallHash");
-   }
+rval.item = xstrdup(buffer+4);
 
 /* end fn specific content */
 
@@ -698,10 +674,7 @@ else
    strcpy(ret,"!any");
    }
 
-if ((rval.item = strdup(ret)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallHashMatch");
-   }
+rval.item = xstrdup(ret);
 
 /* end fn specific content */
 
@@ -739,7 +712,7 @@ for(arg = finalargs; arg; arg = arg->next)
    }
 
 SetFnCallReturnStatus("concat", FNCALL_SUCCESS, NULL, NULL);
-rval.item = strdup(result);
+rval.item = xstrdup(result);
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -772,10 +745,7 @@ There is no case in which the function can "fail" to find an answer
 SetFnCallReturnStatus("classmatch",FNCALL_FAILURE,strerror(errno),NULL);
 */
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnClassMatch");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -840,10 +810,7 @@ SetFnCallReturnStatus("countclassesmatching",FNCALL_SUCCESS,NULL,NULL);
 
 snprintf(buffer,CF_MAXVARSIZE,"%d",count);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnClassMatch");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -862,10 +829,7 @@ static struct Rval FnCallCanonify(struct FnCall *fp,struct Rlist *finalargs)
 
 SetFnCallReturnStatus("canonify",FNCALL_SUCCESS,NULL,NULL);
 
-if ((rval.item = strdup(CanonifyName((char *)finalargs->item))) == NULL)
-   {
-   FatalError("Memory allocation in FnCanonify");
-   }
+rval.item = xstrdup(CanonifyName((char *)finalargs->item));
 
 /* end fn specific content */
 
@@ -900,19 +864,13 @@ if (rp && rp->item)
    {
    SetFnCallReturnStatus("lastnode",FNCALL_SUCCESS,NULL,NULL);
 
-   if ((rval.item = strdup(rp->item)) == NULL)
-      {
-      FatalError("Memory allocation in FnLastNode");
-      }
+   rval.item = xstrdup(rp->item);
    }
 else
    {
    SetFnCallReturnStatus("lastnode",FNCALL_FAILURE,NULL,NULL);
 
-   if ((rval.item = strdup("")) == NULL)
-      {
-      FatalError("Memory allocation in FnLastNode");
-      }
+   rval.item = xstrdup("");
    }
 
 /* end fn specific content */
@@ -927,7 +885,7 @@ static struct Rval FnCallDirname(struct FnCall *fp, struct Rlist *finalargs)
 struct Rval rval;
 
 rval.rtype = CF_SCALAR;
-rval.item = strdup(finalargs->item);
+rval.item = xstrdup(finalargs->item);
 DeleteSlash(rval.item);
 ChopLastNode(rval.item);
 SetFnCallReturnStatus("dirname", FNCALL_SUCCESS, NULL, NULL);
@@ -957,10 +915,7 @@ else
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnClassify");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1027,10 +982,7 @@ else
       }
    }
  
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallReturnsZero");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1087,10 +1039,7 @@ else
       }
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallExecResult");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1156,10 +1105,7 @@ else
       }
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallExecResult");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1257,10 +1203,7 @@ else
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in SplayClass");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1358,10 +1301,7 @@ if (n_read == -1)
 cf_closesocket(conn->sd);
 DeleteAgentConn(conn);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallReadTcp");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("readtcp",FNCALL_SUCCESS,NULL,NULL);
 
@@ -1396,7 +1336,7 @@ else
    {
    CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;            
    }
@@ -1405,7 +1345,7 @@ if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    {
    CfOut(cf_error,"","Function REGLIST was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;         
    }
@@ -1414,7 +1354,7 @@ if (rettype != CF_LIST)
    {
    CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;         
    }
@@ -1436,10 +1376,7 @@ for (rp = list; rp != NULL; rp = rp->next)
 
 SetFnCallReturnStatus("reglist",FNCALL_SUCCESS,NULL,NULL);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRegList");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1480,7 +1417,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
    {
    CfOut(cf_error,"","Function regarray was promised an array called \"%s\" but this was not found\n",arrayname);
    SetFnCallReturnStatus("regarray",FNCALL_FAILURE,"Array not found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;            
    }
@@ -1504,10 +1441,7 @@ while ((assoc = HashIteratorNext(&i)))
 
 SetFnCallReturnStatus("regarray",FNCALL_SUCCESS,NULL,NULL);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRegList");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1822,7 +1756,7 @@ for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
 snprintf(buffer,CF_MAXVARSIZE,"%lf",sum);
 
 SetFnCallReturnStatus("sum",FNCALL_SUCCESS,NULL,NULL);
-rval.item = strdup(buffer);
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1905,7 +1839,7 @@ for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
 snprintf(buffer,CF_MAXVARSIZE,"%lf",product);
 
 SetFnCallReturnStatus("product",FNCALL_SUCCESS,NULL,NULL);
-rval.item = strdup(buffer);
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -1980,14 +1914,7 @@ for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    size += strlen(rp->item) + strlen(join);
    }
 
-if ((joined = malloc(size)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Function \"join\" was not able to allocate memory\n",name);
-   SetFnCallReturnStatus("join",FNCALL_FAILURE,"Memory error",NULL);
-   rval.item = NULL;
-   rval.rtype = CF_SCALAR;
-   return rval;
-   }
+joined = xmalloc(size);
 
 size = 0;
 
@@ -2082,7 +2009,7 @@ fclose(fin);
 snprintf(retval,CF_SMALLBUF-1,"%d",lcount);
 
 SetFnCallReturnStatus("getfields",FNCALL_SUCCESS,NULL,NULL);
-rval.item = strdup(retval);
+rval.item = xstrdup(retval);
 
 /* end fn specific content */
 
@@ -2110,7 +2037,7 @@ if ((fin = fopen(filename,"r")) == NULL)
    CfOut(cf_verbose,"fopen"," !! File \"%s\" could not be read in countlinesmatching()",filename);
    snprintf(retval,CF_SMALLBUF-1,"0");
    SetFnCallReturnStatus("countlinesmatching",FNCALL_SUCCESS,NULL,NULL);
-   rval.item = strdup(retval);
+   rval.item = xstrdup(retval);
    rval.rtype = CF_SCALAR;
    return rval;               
    }
@@ -2139,7 +2066,7 @@ fclose(fin);
 snprintf(retval,CF_SMALLBUF-1,"%d",lcount);
 
 SetFnCallReturnStatus("countlinesmatching",FNCALL_SUCCESS,NULL,NULL);
-rval.item = strdup(retval);
+rval.item = xstrdup(retval);
 
 /* end fn specific content */
 
@@ -2184,7 +2111,7 @@ else
    CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
-   rval.item = strdup(buffer);
+   rval.item = xstrdup(buffer);
    rval.rtype = CF_SCALAR;
    return rval;            
    }
@@ -2194,7 +2121,7 @@ if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",listvar,CONTEXTID,naked);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
-   rval.item = strdup(buffer);
+   rval.item = xstrdup(buffer);
    rval.rtype = CF_SCALAR;
    return rval;         
    }
@@ -2204,7 +2131,7 @@ if (rettype != CF_LIST)
    CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
-   rval.item = strdup(buffer);
+   rval.item = xstrdup(buffer);
    rval.rtype = CF_SCALAR;
    return rval;         
    }
@@ -2217,7 +2144,7 @@ if (val < 0 || portnum < 0)
    {
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"port number or maxbytes out of range",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
-   rval.item = strdup(buffer);
+   rval.item = xstrdup(buffer);
    rval.rtype = CF_SCALAR;
    return rval;         
    }
@@ -2234,7 +2161,7 @@ if (val > CF_BUFSIZE-1)
 if (THIS_AGENT_TYPE != cf_agent)
    {
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
-   rval.item = strdup(buffer);
+   rval.item = xstrdup(buffer);
    rval.rtype = CF_SCALAR;
    return rval;         
    }
@@ -2311,7 +2238,7 @@ DeletePromise(pp);
 /* Return the number of lines in array */
 
 snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
-rval.item = strdup(buffer);
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("selectservers",FNCALL_SUCCESS,NULL,NULL);
 
@@ -2355,10 +2282,7 @@ else
    SetFnCallReturnStatus("isnewerthan",FNCALL_SUCCESS,strerror(errno),NULL);   
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallNewerThan");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2400,10 +2324,7 @@ else
    SetFnCallReturnStatus("isaccessedbefore",FNCALL_SUCCESS,NULL,NULL);   
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallIsAccessedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2445,10 +2366,7 @@ else
    SetFnCallReturnStatus("changedbefore",FNCALL_SUCCESS,NULL,NULL);   
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2526,10 +2444,7 @@ else
    SetFnCallReturnStatus(fp->name,FNCALL_SUCCESS,NULL,NULL);
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallFileStat");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
    
@@ -2585,10 +2500,7 @@ else
       }
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2627,10 +2539,7 @@ else
    SetFnCallReturnStatus("IPRange",FNCALL_SUCCESS,NULL,NULL);   
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2674,10 +2583,7 @@ while (getnetgrent(&machine,&user,&domain))
 
 endnetgrent();
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2708,10 +2614,7 @@ else
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("isvariable",FNCALL_SUCCESS,NULL,NULL);   
 
@@ -2744,10 +2647,7 @@ else
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("strcmp",FNCALL_SUCCESS,NULL,NULL);
 
@@ -2774,10 +2674,7 @@ snprintf(buffer, sizeof(buffer), "%s", (char *)finalargs->item);
 MapName(buffer);
 
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("translatepath",FNCALL_SUCCESS,NULL,NULL);   
 
@@ -2808,10 +2705,7 @@ else
    SetFnCallReturnStatus("registryvalue",FNCALL_FAILURE,NULL,NULL);
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRegistrtValue");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -2845,10 +2739,7 @@ if (strcmp(server,"localhost") == 0)
 
 if (THIS_AGENT_TYPE == cf_common)
    {
-   if ((rval.item = strdup("<remote scalar>")) == NULL)
-      {
-      FatalError("Memory allocation in FnCallRemoteSCalar");
-      }
+   rval.item = xstrdup("<remote scalar>");
    }
 else
    {
@@ -2873,10 +2764,7 @@ else
       CacheUnreliableValue("remotescalar",handle,buffer);
       }
    
-   if ((rval.item = strdup(buffer)) == NULL)
-      {
-      FatalError("Memory allocation in FnCallRemoteSCalar");
-      }
+   rval.item = xstrdup(buffer);
    }
 
 /* end fn specific content */
@@ -2902,10 +2790,7 @@ handle = finalargs->item;
 
 if (THIS_AGENT_TYPE != cf_agent)
    {
-   if ((rval.item = strdup("<inaccessible remote scalar>")) == NULL)
-      {
-      FatalError("Memory allocation in FnCallRemoteSCalar");
-      }
+   rval.item = xstrdup("<inaccessible remote scalar>");
    }
 else
    {
@@ -2919,10 +2804,7 @@ else
       snprintf(buffer,CF_MAXVARSIZE,"0");
       }
    
-   if ((rval.item = strdup(buffer)) == NULL)
-      {
-      FatalError("Memory allocation in FnCallRemoteSCalar");
-      }
+   rval.item = xstrdup(buffer);
    }
 
 /* end fn specific content */
@@ -2958,10 +2840,7 @@ if (strcmp(server,"localhost") == 0)
 
 if (THIS_AGENT_TYPE == cf_common)
    {
-   if ((rval.item = strdup("<remote classes>")) == NULL)
-      {
-      FatalError("Memory allocation in FnCallRemoteSCalar");
-      }
+   rval.item = xstrdup("<remote classes>");
    }
 else
    {
@@ -2971,10 +2850,7 @@ else
       {
       SetFnCallReturnStatus("remoteclassesmatching",FNCALL_FAILURE,NULL,NULL);
 
-      if ((rval.item = strdup("!any")) == NULL)
-         {
-         FatalError("Memory allocation in FnCallRemoteClassesMatching");
-         }
+      rval.item = xstrdup("!any");
       rval.rtype = CF_SCALAR;
       return rval;
       }
@@ -2982,10 +2858,7 @@ else
       {
       SetFnCallReturnStatus("remoteclassesmatching",FNCALL_SUCCESS,NULL,NULL);
 
-      if ((rval.item = strdup("any")) == NULL)
-         {
-         FatalError("Memory allocation in FnCallRemoteClassesMatching");
-         }
+      rval.item = xstrdup("any");
       }
 
    if ((classlist = SplitStringAsRList(buffer,',')))
@@ -3204,7 +3077,7 @@ else
    }
 
 free(file_buffer);
-rval.item = strdup(buffer);
+rval.item = xstrdup(buffer);
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -3330,10 +3203,7 @@ else
 
 SetFnCallReturnStatus("regcmp",FNCALL_SUCCESS,NULL,NULL);   
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRegCmp");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -3402,10 +3272,7 @@ else
 
 SetFnCallReturnStatus("regextract",FNCALL_SUCCESS,NULL,NULL);   
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRegCmp");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -3456,10 +3323,7 @@ else
    
 SetFnCallReturnStatus("regline",FNCALL_SUCCESS,NULL,NULL);   
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRegLine");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -3552,10 +3416,7 @@ else
       }
    } 
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallChangedBefore");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -3602,10 +3463,7 @@ if (from > to)
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld,%ld",from,to);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallIRange");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("irange",FNCALL_SUCCESS,NULL,NULL);
 
@@ -3647,10 +3505,7 @@ if (from > to)
 
 snprintf(buffer,CF_BUFSIZE-1,"%lf,%lf",from,to);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallRRange");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("rrange",FNCALL_SUCCESS,NULL,NULL);
 
@@ -3706,10 +3561,7 @@ Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallOn");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("on",FNCALL_SUCCESS,NULL,NULL);
 
@@ -3739,14 +3591,14 @@ for(arg = finalargs; arg; arg = arg->next)
    if (IsDefinedClass(arg->item))
       {
       SetFnCallReturnStatus("or", FNCALL_SUCCESS, NULL, NULL);
-      rval.item = strdup("any");
+      rval.item = xstrdup("any");
       rval.rtype = CF_SCALAR;
       return rval;
       }
    }
 
 SetFnCallReturnStatus("or", FNCALL_SUCCESS, NULL, NULL);
-rval.item = strdup("!any");
+rval.item = xstrdup("!any");
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -3804,10 +3656,7 @@ else
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallLaterThan");
-   }
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("laterthan",FNCALL_SUCCESS,NULL,NULL);
 
@@ -3864,10 +3713,7 @@ if (cftime < 0)
    snprintf(buffer,CF_BUFSIZE-1,"%ld",0);
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallAgo");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -3914,10 +3760,7 @@ cftime += d[cfa_year] * 365 * 24 * 3600;
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallAgo");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -3932,7 +3775,7 @@ static struct Rval FnCallNot(struct FnCall *fp, struct Rlist *finalargs)
 {
 struct Rval rval;
 SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
-rval.item = strdup(IsDefinedClass(finalargs->item) ? "!any" : "any");
+rval.item = xstrdup(IsDefinedClass(finalargs->item) ? "!any" : "any");
 rval.rtype = CF_SCALAR;
 return rval;
 }
@@ -3956,10 +3799,7 @@ Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",(long)cftime);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallAgo");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -4190,7 +4030,7 @@ SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
 /* Return the number of lines in array */
 
 snprintf(fnname,CF_MAXVARSIZE-1,"%d",entries);
-rval.item = strdup(fnname);
+rval.item = xstrdup(fnname);
 
 free(file_buffer);
 rval.rtype = CF_SCALAR;
@@ -4244,7 +4084,7 @@ else
  /* 6 args: array_lval,instring,comment_regex,split_regex,max number of entries,maxfilesize  */
 
 array_lval = (char *)(finalargs->item);
-instring = strdup((char *)(finalargs->next->item));
+instring = xstrdup((char *)(finalargs->next->item));
 comment = (char *)(finalargs->next->next->item);
 split = (char *)(finalargs->next->next->next->item);
 maxent = Str2Int(finalargs->next->next->next->next->item);
@@ -4288,7 +4128,7 @@ SetFnCallReturnStatus(fnname,FNCALL_SUCCESS,NULL,NULL);
 /* Return the number of lines in array */
 
 snprintf(fnname,CF_MAXVARSIZE-1,"%d",entries);
-rval.item = strdup(fnname);
+rval.item = xstrdup(fnname);
 
 free(instring);
 rval.rtype = CF_SCALAR;
@@ -4368,7 +4208,7 @@ else
    {
    CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;            
    }
@@ -4377,7 +4217,7 @@ if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    {
    CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;            
    }
@@ -4386,7 +4226,7 @@ if (rettype != CF_LIST)
    {
    CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
-   rval.item = strdup("!any");
+   rval.item = xstrdup("!any");
    rval.rtype = CF_SCALAR;
    return rval;            
    }
@@ -4404,7 +4244,7 @@ for (rp = files; rp != NULL; rp=rp->next)
       }
    }
 
-rval.item = strdup(buffer);
+rval.item = xstrdup(buffer);
 
 SetFnCallReturnStatus("filesexist",FNCALL_SUCCESS,NULL,NULL);
 
@@ -4445,7 +4285,7 @@ else
    {
    if (RetrieveUnreliableValue("ldapvalue",handle,buffer))
       {
-      newval = strdup(buffer);
+      newval = xstrdup(buffer);
       }
    }
 
@@ -4455,7 +4295,7 @@ if (newval)
    }
 else
    {
-   newval = strdup("no result");
+   newval = xstrdup("no result");
    SetFnCallReturnStatus("ldapvalue",FNCALL_FAILURE,NULL,NULL);
    }
 
@@ -4581,10 +4421,7 @@ if (df == CF_INFINITY)
 
 snprintf(buffer,CF_BUFSIZE-1,"%lld", df);
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallGetGid");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -4636,10 +4473,7 @@ else if ((pw = getpwnam(arg)) == NULL)
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallUserExists");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -4687,10 +4521,7 @@ else if ((gr = getgrnam(arg)) == NULL)
    strcpy(buffer,"!any");
    }
 
-if ((rval.item = strdup(buffer)) == NULL)
-   {
-   FatalError("Memory allocation in FnCallGroupExists");
-   }
+rval.item = xstrdup(buffer);
 
 /* end fn specific content */
 
@@ -4748,13 +4579,7 @@ if (size == 0)
    return NULL;
    }
 
-result = malloc(size+1);
-   
-if (result == NULL)
-   {
-   CfOut(cf_error,"malloc","Could not allocate file %s in readfile",filename);
-   return NULL;
-   }
+result = xmalloc(size+1);
 
 if ((fp = fopen(filename,"r")) == NULL)
    {

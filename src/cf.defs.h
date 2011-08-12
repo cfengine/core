@@ -374,8 +374,8 @@ int uname  (struct utsname *name);
 #ifndef HAVE_STRSTR
 char *strstr (char *s1,char *s2);
 #endif
-#ifndef HAVE_STRDUP
-char *strdup (char *str);
+#if !HAVE_DECL_STRDUP
+char *strdup (const char *str);
 #endif
 #ifndef HAVE_STRRCHR
 char *strrchr (char *str,char ch);

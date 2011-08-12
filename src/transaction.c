@@ -150,7 +150,7 @@ if (THIS_AGENT_TYPE == cf_agent)
 
 if (IGNORELOCK)
    {
-   this.lock = strdup("dummy");
+   this.lock = xstrdup("dummy");
    return this;
    }
 
@@ -265,9 +265,9 @@ if (!ignoreProcesses)
 
 ReleaseCriticalSection();
 
-this.lock = strdup(cflock);
-this.last = strdup(cflast);
-this.log  = strdup(cflog);
+this.lock = xstrdup(cflock);
+this.last = xstrdup(cflast);
+this.log  = xstrdup(cflog);
 
 /* Keep this as a global for signal handling */
 strcpy(CFLOCK,cflock);

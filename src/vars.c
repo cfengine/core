@@ -151,7 +151,7 @@ if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    DeleteVariable(scope,lval);
    }
  
-sp1 = strdup(lval);
+sp1 = xstrdup(lval);
 AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
 }
 
@@ -1038,7 +1038,7 @@ while ((assoc = HashIteratorNext(&i)))
             DeleteRvalItem(assoc->rval,assoc->rtype);
 
             // avoids double free - borrowing value from lol (freed in DeleteScope())
-            assoc->rval = strdup(rp->state_ptr->item);
+            assoc->rval = xstrdup(rp->state_ptr->item);
             }
 
          switch(assoc->dtype)

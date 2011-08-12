@@ -40,20 +40,13 @@ struct cfagent_connection *NewAgentConn()
 
 { struct cfagent_connection *ap;
 
-if ((ap = (struct cfagent_connection *)malloc(sizeof(struct cfagent_connection))) == NULL)
-   {
-   return NULL;
-   }
+ap = xcalloc(1, sizeof(struct cfagent_connection));
 
 Debug("New server connection...\n");
 ap->sd = (int)CF_NOT_CONNECTED;
 ap->family = AF_INET; 
 ap->trust = false;
-ap->localip[0] = '\0';
-ap->remoteip[0] = '\0';
-ap->session_key = NULL;
 ap->encryption_type = 'c';
-ap->error = false; 
 return ap;
 };
 

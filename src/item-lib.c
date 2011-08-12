@@ -272,39 +272,17 @@ if (!IsItemIn(*liststart,itemstring))
 struct Item *PrependItem(struct Item **liststart,const char *itemstring,const char *classes)
 
 { struct Item *ip;
-  char *sp,*spe = NULL;
 
-if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
-   {
-   FatalError("memory allocation in prepend item");
-   }
+ip = xcalloc(1, sizeof(struct Item));
 
-if ((sp = malloc(strlen(itemstring)+2)) == NULL)
-   {
-   FatalError("memory allocation in prepend item");
-   }
-
-if ((classes != NULL) && (spe = malloc(strlen(classes)+2)) == NULL)
-   {
-   FatalError("Memory allocation in prepend item");
-   }
-
-strcpy(sp,itemstring);
-ip->name = sp;
+ip->name = xstrdup(itemstring);
 ip->next = *liststart;
-ip->counter = 0;
-ip->time = 0;
-*liststart = ip;
-
 if (classes != NULL)
    {
-   strcpy(spe,classes);
-   ip->classes = spe;
+   ip->classes = xstrdup(classes);
    }
-else
-   {
-   ip->classes = NULL;
-   }
+
+*liststart = ip;
 
 return *liststart;
 }
@@ -314,25 +292,10 @@ return *liststart;
 void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int counter,time_t t)
 
 { struct Item *ip;
-  char *sp,*spe = NULL;
 
-if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
-   {
-   FatalError("memory allocation in prepend item");
-   }
+ip = xcalloc(1, sizeof(struct Item));
 
-if ((sp = malloc(strlen(itemstring)+2)) == NULL)
-   {
-   FatalError("memory allocation in prepend item");
-   }
-
-if ((classes != NULL) && (spe = malloc(strlen(classes)+2)) == NULL)
-   {
-   FatalError("Memory allocation in prepend item");
-   }
-
-strcpy(sp,itemstring);
-ip->name = sp;
+ip->name = xstrdup(itemstring);
 ip->next = *liststart;
 ip->counter = counter;
 ip->time = t;
@@ -340,12 +303,7 @@ ip->time = t;
 
 if (classes != NULL)
    {
-   strcpy(spe,classes);
-   ip->classes = spe;
-   }
-else
-   {
-   ip->classes = NULL;
+   ip->classes = xstrdup(classes);
    }
 }
 
@@ -356,8 +314,8 @@ void AppendItem(struct Item **liststart, const char *itemstring,char *classes)
 
 {
 struct Item *lp;
-struct Item *ip = malloc(sizeof (struct Item));
-ip->name = strdup(itemstring);
+struct Item *ip = xcalloc(1, sizeof (struct Item));
+ip->name = xstrdup(itemstring);
 
 if (*liststart == NULL)
    {
@@ -372,16 +330,9 @@ else
    lp->next = ip;
    }
 
-ip->next = NULL;
-ip->counter = 0;
-
 if (classes)
    {
-   ip->classes = strdup(classes); /* unused now */
-   }
-else
-   {
-   ip->classes = NULL;
+   ip->classes = xstrdup(classes); /* unused now */
    }
 }
 
@@ -389,24 +340,11 @@ else
 
 void PrependItemList(struct Item **liststart,char *itemstring)
 
-{ struct Item *ip;
-
-if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
-   {
-   CfOut(cf_error,"malloc","Memory failure in Prepend");
-   FatalError("");
-   }
-
-if ((ip->name = strdup(itemstring)) == NULL)
-   {
-   CfOut(cf_error,"malloc","Memory failure in Prepend");
-   FatalError("");
-   }
-
+{
+struct Item *ip = xcalloc(1, sizeof(struct Item));
+ip->name = xstrdup(itemstring);
 ip->next = *liststart;
-ip->counter = 0;
 *liststart = ip;
-ip->classes = NULL; /* unused */
 }
 
 /*********************************************************************/
@@ -701,15 +639,11 @@ if (ptr == NULL)
    return;
    }
 
-if ((ip = (struct Item *)malloc(sizeof(struct Item))) == NULL)
-   {
-   CfOut(cf_error,"","Can't allocate memory in InsertAfter()");
-   FatalError("");
-   }
+ip = xcalloc(1, sizeof(struct Item));
 
 ip->next = ptr->next;
 ptr->next = ip;
-ip->name = strdup(string);
+ip->name = xstrdup(string);
 ip->classes = NULL;
 }
 
@@ -856,7 +790,7 @@ for (ip = list; ip !=  NULL; ip=ip->next)
    len += strlen(ip->name) + 1;
    }
 
-s = malloc(len+1);
+s = xmalloc(len+1);
 *s = '\0';
 
 for (ip = list; ip !=  NULL; ip=ip->next)

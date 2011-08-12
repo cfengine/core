@@ -311,7 +311,7 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
    {
    if (!expandnaked && (rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
       {
-      returnval.item = strdup(rp->item);
+      returnval.item = xstrdup(rp->item);
       returnval.rtype = CF_SCALAR;       
       }
    else if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
@@ -359,7 +359,7 @@ switch (type)
    case CF_SCALAR:
 
        ExpandPrivateScalar(scopeid,(char *)rval,buffer);
-       returnval.item = strdup(buffer);
+       returnval.item = xstrdup(buffer);
        returnval.rtype = CF_SCALAR;
        break;
        
@@ -402,7 +402,7 @@ switch (type)
    case CF_SCALAR:
 
        ExpandPrivateScalar(scopeid,(char *)rval,buffer);
-       returnval.item = strdup(buffer);
+       returnval.item = xstrdup(buffer);
        returnval.rtype = CF_SCALAR;       
        break;
        
@@ -1146,7 +1146,7 @@ if (rval != NULL)
          if (IsNakedVar(rp->item,'@'))
             {
             free(rp->item);
-            rp->item = strdup(CF_NULL_VALUE);
+            rp->item = xstrdup(CF_NULL_VALUE);
             }
          }
       }
@@ -1191,7 +1191,7 @@ switch (pp->petype)
           if (strcmp(pp->promisee,expandbuf) != 0)
              {
              free(pp->promisee);
-             pp->promisee = strdup(expandbuf);
+             pp->promisee = xstrdup(expandbuf);
              }
           }
        break;
@@ -1206,7 +1206,7 @@ switch (pp->petype)
              if (strcmp(rp->item,expandbuf) != 0)
                 {
                 free(rp->item);
-                rp->item = strdup(expandbuf);
+                rp->item = xstrdup(expandbuf);
                 }
              }          
           }
@@ -1225,7 +1225,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              if (strcmp(cp->rval,expandbuf) != 0)
                 {
                 free(cp->rval);
-                cp->rval = strdup(expandbuf);
+                cp->rval = xstrdup(expandbuf);
                 }
              }
           break;
@@ -1240,7 +1240,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
                 if (strcmp(rp->item,expandbuf) != 0)
                    {
                    free(rp->item);
-                   rp->item = strdup(expandbuf);
+                   rp->item = xstrdup(expandbuf);
                    }
                 }          
              }
@@ -1255,7 +1255,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              {
              ExpandPrivateScalar(CONTEXTID,(char *)rp->item,expandbuf);
              free(rp->item);
-             rp->item = strdup(expandbuf);
+             rp->item = xstrdup(expandbuf);
              }
           }
 

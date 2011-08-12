@@ -875,15 +875,7 @@ for(i = 0; path[i] != '\0'; i++)
   }
 #endif  /* MINGW */
 
-if ((ptr = (struct Auth *)malloc(sizeof(struct Auth))) == NULL)
-   {
-   FatalError("Memory Allocation failed for InstallAuthPath() #1");
-   }
-
-if ((ptr->path = strdup(path)) == NULL)
-   {
-   FatalError("Memory Allocation failed for InstallAuthPath() #3");
-   }
+ptr = xcalloc(1, sizeof(struct Auth));
 
 if (*listtop == NULL)                 /* First element in the list */
    {
@@ -894,11 +886,7 @@ else
    (*listtop)->next = ptr;
    }
 
-ptr->accesslist = NULL;
-ptr->maproot = NULL;
-ptr->literal = false;
-ptr->encrypt = false; 
-ptr->next = NULL;
+ptr->path = xstrdup(path);
 *listtop = ptr;
 }
 

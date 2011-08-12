@@ -235,14 +235,6 @@ return strncpy(s1,s2,n);
 
 /*********************************************************************/
 
-char *cf_strdup(char *s)
-
-{
-return strdup(s);
-}
-
-/*********************************************************************/
-
 int cf_strlen(char *s)
     
 {
@@ -408,32 +400,6 @@ return NULL;
 
 #endif
 
-/***********************************************************/
-/* strdup() missing on old BSD systems                     */
-/***********************************************************/
-
-#ifndef HAVE_STRDUP
-
-char *strdup(char *str)
-
-{ char *sp;
- 
-if (str == NULL)
-   {
-   return NULL;
-   }
-
-if ((sp = malloc(strlen(str)+1)) == NULL)
-   {
-   perror("malloc");
-   return NULL;
-   }
-
-strcpy(sp,str);
-return sp; 
-}
-
-#endif
 
 #ifndef HAVE_STRSEP
 

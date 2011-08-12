@@ -16,6 +16,7 @@ libpromises_la_CFLAGS = $(AM_CFLAGS)
 libpromises_la_SOURCES =                                                \
         cf3parse.y                                                      \
         cf3lex.l                                                        \
+        alloc.c                                                         \
         patches.c                                                       \
         attributes.c                                                    \
         install.c                                                       \

@@ -171,7 +171,7 @@ if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    }
 
 buf_size = ST_BLKSIZE(dstat);
-buf = (char *) malloc(buf_size + sizeof(int));
+buf = xmalloc(buf_size + sizeof(int));
 
 while (true)
    {

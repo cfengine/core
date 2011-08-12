@@ -508,11 +508,14 @@ AC_REPLACE_FUNCS(strlcpy)
 AC_CHECK_DECLS(realpath)
 AC_CHECK_FUNCS(realpath)
 
+AC_CHECK_DECLS(strdup)
+AC_REPLACE_FUNCS(strdup)
+
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(strstr strsep putenv drand48 srand48 getaddrinfo)
 AC_CHECK_FUNCS(bcopy mkfifo statfs statvfs door)
-AC_CHECK_FUNCS(sysinfo setsid strdup strrchr strerror snprintf sysconf)
+AC_CHECK_FUNCS(sysinfo setsid strrchr strerror snprintf sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
 

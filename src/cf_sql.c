@@ -97,12 +97,7 @@ struct CfDbMysqlConn *c;
 
 CfOut(cf_verbose,""," -> This is a MySQL database\n");
 
-c = calloc(1, sizeof(struct CfDbMysqlConn));
-if (!c)
-   {
-   CfOut(cf_error, "", "Failed to allocate memory to store MySQL database information");
-   return NULL;
-   }
+c = xcalloc(1, sizeof(struct CfDbMysqlConn));
 
 mysql_init(&c->conn);
 
@@ -162,7 +157,7 @@ if (c->maxrows > 0)
 
    if (thisrow)
       {
-      c->rowdata = malloc(sizeof(char *) * c->maxcolumns);
+      c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
 
       for (i = 0; i < c->maxcolumns; i++)
          {
@@ -251,12 +246,7 @@ char format[CF_BUFSIZE];
 
 CfOut(cf_verbose,""," -> This is a PotsgreSQL database\n");
 
-c = calloc(1, sizeof(struct CfDbPostgresqlConn));
-if (!c)
-   {
-   CfOut(cf_error, "", "Failed to allocate memory to store PostgreSQL database information");
-   return NULL;
-   }
+c = xcalloc(1, sizeof(struct CfDbPostgresqlConn));
 
 if (strcmp(host,"localhost") == 0)
    {
@@ -337,7 +327,7 @@ if (c->row >= c->maxrows)
 
 if (c->maxrows > 0)
    {
-   c->rowdata = malloc(sizeof(char *) * c->maxcolumns);
+   c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
    }
 
 for (i = 0; i < c->maxcolumns; i++)
@@ -431,7 +421,7 @@ switch (dbtype)
 if (cfdb->data)
     cfdb->connected = true;
 
-cfdb->blank = strdup("");
+cfdb->blank = xstrdup("");
 return true;
 }
 

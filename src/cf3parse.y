@@ -14,6 +14,8 @@ extern char *yytext;
 
 static void fatal_yyerror(const char *s);
 
+#define YYMALLOC xmalloc
+
 %}
 
 %token ID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
@@ -358,7 +360,7 @@ id:                    ID
 
 rval:                  ID
                          {
-                         P.rval = strdup(P.currentid);
+                         P.rval = xstrdup(P.currentid);
                          P.rtype = CF_SCALAR;
                          P.isbody = true;
                          Debug("Recorded IDRVAL %s\n",P.rval);
@@ -479,7 +481,7 @@ givearglist:            '('
                               {
                               fatal_yyerror("Nesting of functions is deeper than recommended");
                               }
-                           P.currentfnid[P.arg_nesting] = strdup(P.currentid);
+                           P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
                            Debug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                            }
 

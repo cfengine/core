@@ -451,7 +451,7 @@ for (sp = proc; *sp != '\0'; sp++)
       start[col] = offset;
       sscanf(sp,"%15s",title);
       Debug("Start of %s is %d\n",title,offset);
-      names[col] = strdup(title);
+      names[col] = xstrdup(title);
       Debug("Col[%d]=%s\n",col,names[col]);
       }
    }

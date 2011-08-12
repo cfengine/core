@@ -62,16 +62,16 @@ if (!rhs.result)
    return rhs;
    }
 
-dot = calloc(1, sizeof(StringExpression));
+dot = xcalloc(1, sizeof(StringExpression));
 dot->op = LITERAL;
-dot->val.literal.literal = strdup(".");
+dot->val.literal.literal = xstrdup(".");
 
-subret = calloc(1, sizeof(StringExpression));
+subret = xcalloc(1, sizeof(StringExpression));
 subret->op = CONCAT;
 subret->val.concat.lhs = dot;
 subret->val.concat.rhs = rhs.result;
 
-ret = calloc(1, sizeof(StringExpression));
+ret = xcalloc(1, sizeof(StringExpression));
 ret->op = CONCAT;
 ret->val.concat.lhs = lhs.result;
 ret->val.concat.rhs = subret;
@@ -93,7 +93,7 @@ if (start + 1 < end && expr[start] == '$')
          {
          if (res.position < end && expr[res.position] == closing_bracket)
             {
-            StringExpression *ret = calloc(1, sizeof(StringExpression));
+            StringExpression *ret = xcalloc(1, sizeof(StringExpression));
             ret->op = VARREF;
             ret->val.varref.name = res.result;
 
@@ -158,9 +158,9 @@ while (endlit < end && ValidTokenCharacter(expr[endlit]))
 
 if (endlit > start)
    {
-   StringExpression *ret = calloc(1, sizeof(StringExpression));
+   StringExpression *ret = xcalloc(1, sizeof(StringExpression));
    ret->op = LITERAL;
-   ret->val.literal.literal = strndup(expr + start, endlit - start);
+   ret->val.literal.literal = xstrndup(expr + start, endlit - start);
 
    return (StringParseResult) { ret, endlit };
    }
@@ -195,7 +195,7 @@ if (lhs.result)
    StringParseResult rhs = ParseStringExpression(expr, lhs.position, end);
    if (rhs.result)
       {
-      StringExpression *ret = calloc(1, sizeof(StringExpression));
+      StringExpression *ret = xcalloc(1, sizeof(StringExpression));
       ret->op = CONCAT;
       ret->val.concat.lhs = lhs.result;
       ret->val.concat.rhs = rhs.result;
@@ -233,7 +233,7 @@ if (!rhs)
    return NULL;
    }
 
-char *res = malloc(strlen(lhs) + strlen(rhs) + 1);
+char *res = xmalloc(strlen(lhs) + strlen(rhs) + 1);
 sprintf(res, "%s%s", lhs, rhs);
 free(lhs);
 free(rhs);
@@ -264,7 +264,7 @@ switch (expr->op)
    case CONCAT:
       return EvalConcat(expr, evalfn, param);
    case LITERAL:
-      return strdup(expr->val.literal.literal);
+      return xstrdup(expr->val.literal.literal);
    case VARREF:
       return EvalVarRef(expr, evalfn, param);
    default:

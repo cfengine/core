@@ -409,7 +409,7 @@ for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
       CfOut(cf_inform,""," !! Unacceptable model uncertainty examining processes");
       }
 
-   line[i] = strdup(cols1[i]);
+   line[i] = xstrdup(cols1[i]);
    }
 
 return true;

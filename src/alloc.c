@@ -25,6 +25,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*****************************************************************************/
+
 static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {
 if (ptr == NULL && check_result)
@@ -34,25 +36,35 @@ if (ptr == NULL && check_result)
 return ptr;
 }
 
+/*****************************************************************************/
+
 void *xmalloc(size_t size)
 {
 return CheckResult(malloc(size), "xmalloc", size != 0);
 }
+
+/*****************************************************************************/
 
 void *xcalloc(size_t nmemb, size_t size)
 {
 return CheckResult(calloc(nmemb, size), "xcalloc", nmemb != 0 && size != 0);
 }
 
+/*****************************************************************************/
+
 void *xrealloc(void *ptr, size_t size)
 {
 return CheckResult(realloc(ptr, size), "xrealloc", size != 0);
 }
 
+/*****************************************************************************/
+
 char *xstrdup(const char *str)
 {
 return CheckResult(strdup(str), "xstrdup", true);
 }
+
+/*****************************************************************************/
 
 char *xstrndup(const char *str, size_t n)
 {

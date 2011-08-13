@@ -108,7 +108,7 @@ else
       
       char gen[CF_BUFSIZE];
       struct Rlist *rlist = 0;
-      snprintf(gen,CF_BUFSIZE-1,"%s::%s",tp->topic_context,tp->topic_name);
+      snprintf(gen,CF_BUFSIZE-1,"any::%s",tp->topic_name);
       PrependRScalar(&rlist,gen,CF_SCALAR);
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,rlist,true,tp->topic_context,tp->topic_name);
       DeleteRlist(rlist);
@@ -130,7 +130,9 @@ void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,ch
   char fwd_context[CF_MAXVARSIZE];
   struct Rlist *rp,*rpc;
   struct Topic *new_tp;
+  char contexttopic[CF_MAXVARSIZE];
 
+snprintf(contexttopic,CF_MAXVARSIZE,"%s::%s",from_context,from_topic);
 strncpy(fwd_context,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
 
 if (passociates == NULL || passociates->item == NULL)
@@ -167,9 +169,6 @@ else
 for (rp = passociates; rp != NULL; rp=rp->next)
    {
    char normalform[CF_BUFSIZE] = {0};
-   char contexttopic[CF_MAXVARSIZE];
-
-   snprintf(contexttopic,CF_MAXVARSIZE,"%s::%s",from_context,from_topic);
 
    if (strcmp(contexttopic,rp->item) == 0)
       {
@@ -182,7 +181,7 @@ for (rp = passociates; rp != NULL; rp=rp->next)
 
    if (ok_to_add_inverse)
       {
-      CfOut(cf_verbose,""," --> Adding '%s' with id %d as an associate of '%s'",normalform,new_tp->id,this_tp->topic_name);
+      CfOut(cf_verbose,""," --> Adding '%s' with id %d as an associate of '%s::%s'",normalform,new_tp->id,this_tp->topic_context,this_tp->topic_name);
       }
    else
       {

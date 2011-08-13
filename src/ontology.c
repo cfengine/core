@@ -101,6 +101,19 @@ else
 
    tp->id = GLOBAL_ID++;
    tp->associations = NULL;
+
+   if (strcmp(tp->topic_context,"any") != 0)
+      {
+      // Every topic in a special context is generalized by itself in context "any"
+      
+      char gen[CF_BUFSIZE];
+      struct Rlist *rlist = 0;
+      snprintf(gen,CF_BUFSIZE-1,"%s::%s",tp->topic_context,tp->topic_name);
+      PrependRScalar(&rlist,gen,CF_SCALAR);
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,rlist,true,tp->topic_context,tp->topic_name);
+      DeleteRlist(rlist);
+      }
+   
    tp->next = *list;
    *list = tp;
    CF_TOPICS++;
@@ -173,7 +186,7 @@ for (rp = passociates; rp != NULL; rp=rp->next)
       }
    else
       {
-      CfOut(cf_verbose,""," ---> Reverse '%s' with id %d as an associate of '%s' (inverse)",normalform,new_tp->id,this_tp->topic_name);
+      CfOut(cf_verbose,""," ---> Reverse '%s' with id %d as an associate of '%s::%s' (inverse)",normalform,new_tp->id,this_tp->topic_context,this_tp->topic_name);
       }
 
    if (!IsItemIn(ta->associates,normalform))

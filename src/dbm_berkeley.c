@@ -363,7 +363,7 @@ static DBT *BDB_NewDBKey(char *name)
 {
 DBT *key = xcalloc(1, sizeof(DBT));
 
-key->data = xstrcpy(name);
+key->data = xstrdup(name);
 key->size = strlen(name)+1;
 
 return key;

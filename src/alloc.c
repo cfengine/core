@@ -58,3 +58,4 @@ char *xstrndup(const char *str, size_t n)
 {
 return CheckResult(strndup(str, n), "xstrndup", true);
 }
+

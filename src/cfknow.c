@@ -147,10 +147,7 @@ const char *HINTS[16] =
 int main(int argc,char *argv[])
 
 {
- printf("RES: %s",Nova_StripString("alpha.beta.gamma\n","gamma"));
- return;
-
- CheckOpts(argc,argv); 
+CheckOpts(argc,argv); 
 GenericInitialize(argc,argv,"knowledge");
 ThisAgentInit();
 KeepKnowControlPromises();

@@ -1042,6 +1042,7 @@ int SkipDirLinks(char *path,const char *lastnode,struct Recursion r);
 
 /* reporting.c */
 
+void ShowAllReservedWords(void);
 void ShowContext(void);
 void ShowPromises(struct Bundle *bundles,struct Body *bodies);
 void ShowPromise(struct Promise *pp, int indent);

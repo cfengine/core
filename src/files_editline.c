@@ -935,7 +935,7 @@ if (a.replace.occurrences && (strcmp(a.replace.occurrences,"first") == 0))
    once_only = true;
    }
 
-for (ip = file_start; ip != file_end; ip=ip->next)
+for (ip = file_start; ip != NULL && ip != file_end; ip=ip->next)
    {
    if (ip->name == NULL)
       {

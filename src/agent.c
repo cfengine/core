@@ -81,6 +81,7 @@ int NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
+static int VerifyBootstrap();
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -136,6 +137,8 @@ const char *HINTS[15] =
 int main(int argc,char *argv[])
 
 {
+int ret = 0;
+ 
 CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent");
 ThisAgentInit();
@@ -145,8 +148,15 @@ NoteClassUsage(VHEAP);
 Nova_NoteVarUsageDB();
 #endif
 PurgeLocks();
+
+if(BOOTSTRAP && !VerifyBootstrap())
+   {
+   ret = 1;
+   }
+
 GenericDeInitialize();
-return 0;
+
+return ret;
 }
 
 /*******************************************************************/
@@ -215,6 +225,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != 
       case 'B':
           BOOTSTRAP = true;
           MINUSF = true;
+          IGNORELOCK = true;
           NewClass("bootstrap_mode");
           break;
 
@@ -1347,3 +1358,37 @@ if (child == 0 || !background)
 #endif  /* NOT MINGW */
 }
 
+/**************************************************************/
+
+static int VerifyBootstrap()
+{
+ struct stat sb;
+ char filePath[CF_MAXVARSIZE];
+
+ if(EMPTY(POLICY_SERVER))
+    {
+    CfOut(cf_error, "", "!! Bootstrapping failed, no policy server is specified");
+    return false;
+    }
+ 
+ 
+ // we should at least have gotten promises.cf from the policy hub
+ 
+ snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
+ MapName(filePath);
+ 
+ if(cfstat(filePath, &sb) == -1)
+    {
+    CfOut(cf_error, "", "!! Bootstrapping failed, no input file at %s after bootstrap", filePath);
+    return false;
+    }
+
+ // cf-execd should be running
+ 
+
+ // FIXME: the license should be OK
+ 
+ CfOut(cf_cmdout, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
+ 
+ return true;
+}

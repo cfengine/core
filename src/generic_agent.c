@@ -269,7 +269,15 @@ if (CBUNDLESEQUENCE)
    strlcat(cmd, "\"", CF_BUFSIZE);
    }
 
+if(BOOTSTRAP)
+   {
+   // avoids license complains from commercial cf-promises during bootstrap - see Nova_CheckLicensePromise
+   strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
+   }
+
 /* Check if reloading policy will succeed */
+
+CfOut(cf_verbose, "", "Checking policy with command \"%s\"", cmd);
 
 if (ShellCommandReturnsZero(cmd,true))
    {
@@ -591,12 +599,10 @@ if (BOOTSTRAP)
 
    if (!IsEnterprise() && cfstat(vbuff,&statbuf) == -1)
       {
-      CfOut(cf_inform,"","Didn't find established file %s, so looking for one in current directory\n",vbuff);
       snprintf(VINPUTFILE,CF_BUFSIZE-1,".%cfailsafe.cf",FILE_SEPARATOR);
       }
    else
       {
-      CfOut(cf_inform,"","Found an established failsafe file %s, so using it.\n",vbuff);
       strncpy(VINPUTFILE,vbuff,CF_BUFSIZE-1);
       }
    }

@@ -1646,8 +1646,8 @@ if (attr.copy.servers != NULL && strcmp(attr.copy.servers->item,"localhost") != 
 #ifdef DARWIN
 if (strstr(dest, _PATH_RSRCFORKSPEC))
    {
+   char *tempstr = xstrndup(dest, CF_BUFSIZE);
    rsrcfork = 1;
-   tempstr = xstrndup(dest, CF_BUFSIZE);
    /* Drop _PATH_RSRCFORKSPEC */
    forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
    *forkpointer = '\0';

@@ -825,7 +825,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
          CfOut(cf_verbose,""," ---> %s is a generalization for %s",rps->item,tp->topic_name);
          }
       
-      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true,rp->item,pp->promiser);
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,a.general,true,rp->item,pp->promiser);
       }
 
    // Treat comments as occurrences of information.
@@ -911,7 +911,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
          CfOut(cf_verbose,""," ---> %s is a generalization for %s",rps->item,tp->topic_name);
          }
       
-      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_F,KM_GENERALIZES_B,a.general,true,rp->item,pp->promiser);
+      AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,a.general,true,rp->item,pp->promiser);
       }
    
    if (handle)

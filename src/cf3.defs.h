@@ -613,7 +613,7 @@ enum storytype
 #define KM_REPAIR_UNCERT_B "might be repaired by"
 
 #define KM_GENERALIZES_F "is a generalization of"
-#define KM_GENERALIZES_B "is a case of"
+#define KM_GENERALIZES_B "is a special case of"
 #define KM_SYNONYM "is a synonym for"
 
 enum knowledgecertainty

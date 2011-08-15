@@ -519,8 +519,31 @@ AC_CHECK_FUNCS(sysinfo setsid strdup strrchr strerror snprintf sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
 
-AC_CHECK_DECLS(dirfd)
-AC_REPLACE_FUNCS(dirfd)
+dnl dirfd might be a function or a macro
+
+AC_CHECK_DECLS(dirfd, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_DIRENT_H
+# include <dirent.h>
+#endif
+])
+
+AC_CHECK_FUNCS(dirfd, [], [
+  AC_MSG_CHECKING([for dirfd macro])
+  AC_EGREP_CPP([dirfd_found],
+    AC_INCLUDES_DEFAULT
+    [#ifdef HAVE_DIRENT_H
+    # include <dirent.h>
+    #endif
+    #ifdef dirfd
+      dirfd_found
+    #endif
+    ],
+  [AC_MSG_RESULT(yes)
+  DIRFD_MACRO_FOUND=1],
+  [AC_MSG_RESULT(no)])
+  if test x$DIRFD_MACRO_FOUND != x; then
+    AC_LIBOBJ([dirfd])
+  fi])
 
 AC_CHECK_FUNCS(jail_get)
 

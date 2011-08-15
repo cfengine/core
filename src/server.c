@@ -3446,7 +3446,7 @@ if (!IsAbsoluteFileName(dirname))
    {
    sprintf(sendbuffer,"BAD: request to access a non-absolute filename\n");
    cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
-   SendTransaction(conn->sd_reply,out,0,CF_DONE);
+   SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
    return -1;
    }
 
@@ -3455,7 +3455,7 @@ if ((dirh = OpenDirLocal(dirname)) == NULL)
    CfOut(cf_verbose,"","Couldn't open dir %s\n",dirname);
    snprintf(sendbuffer,CF_BUFSIZE,"BAD: cfengine, couldn't open dir %s\n",dirname);
    cipherlen = EncryptString(conn->encryption_type,sendbuffer,out,conn->session_key,strlen(sendbuffer)+1);
-   SendTransaction(conn->sd_reply,out,0,CF_DONE);
+   SendTransaction(conn->sd_reply,out,cipherlen,CF_DONE);
    return -1;
    }
 

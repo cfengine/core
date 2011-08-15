@@ -380,13 +380,9 @@ while (true)
       {
       if (ACTIVE_THREADS == 0)
          {
-         ThreadUnlock(cft_count);
          CheckFileChanges(argc,argv,sd);
          }
-      else
-         {
-         ThreadUnlock(cft_count);
-         }
+      ThreadUnlock(cft_count);
       }
    
    FD_ZERO(&rset);

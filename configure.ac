@@ -493,6 +493,9 @@ AC_REPLACE_FUNCS(clock_gettime)
 AC_CHECK_DECLS(unsetenv)
 AC_REPLACE_FUNCS(unsetenv)
 
+AC_CHECK_DECLS(strnlen)
+AC_REPLACE_FUNCS(strnlen)
+
 AC_CHECK_DECLS(strndup)
 AC_REPLACE_FUNCS(strndup)
 

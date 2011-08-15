@@ -104,8 +104,13 @@ else
       }
 
    tp->id = GLOBAL_ID++;
-   tp->associations = NULL;
+   tp->associations = NULL;   
+   tp->next = *list;
+   *list = tp;
+   CF_TOPICS++;
 
+   // This section must come last, as there is possible recursion and memory ref needs to be complete first
+   
    if (strcmp(tp->topic_context,"any") != 0)
       {
       // Every topic in a special context is generalized by itself in context "any"
@@ -117,10 +122,7 @@ else
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,rlist,true,tp->topic_context,tp->topic_name);
       DeleteRlist(rlist);
       }
-   
-   tp->next = *list;
-   *list = tp;
-   CF_TOPICS++;
+
    }
 
 return tp;
@@ -134,9 +136,11 @@ void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,ch
   char fwd_context[CF_MAXVARSIZE];
   struct Rlist *rp,*rpc;
   struct Topic *new_tp;
-  char contexttopic[CF_MAXVARSIZE];
+  char contexttopic[CF_BUFSIZE],ntopic[CF_BUFSIZE],ncontext[CF_BUFSIZE];
 
-snprintf(contexttopic,CF_MAXVARSIZE,"%s::%s",from_context,from_topic);
+strncpy(ntopic,NormalizeTopic(from_topic),CF_BUFSIZE-1);
+strncpy(ncontext,NormalizeTopic(from_context),CF_BUFSIZE-1);  
+snprintf(contexttopic,CF_MAXVARSIZE,"%s::%s",ncontext,ntopic);
 strncpy(fwd_context,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
 
 if (passociates == NULL || passociates->item == NULL)
@@ -185,20 +189,29 @@ else
 
 /* Association now exists, so add new members */
 
+if (ok_to_add_inverse)
+   {
+   CfOut(cf_verbose,""," -> BEGIN add fwd associates for %s::%s",ncontext,ntopic);
+   }
+else
+   {
+   CfOut(cf_verbose,"","  ---> BEGIN reverse associations %s::%s",ncontext,ntopic);
+   }
+
 // First make sure topics pointed to exist so that they can point to us also
 
 for (rp = passociates; rp != NULL; rp=rp->next)
    {
    char normalform[CF_BUFSIZE] = {0};
 
-   if (strcmp(contexttopic,rp->item) == 0)
+   strncpy(normalform,NormalizeTopic(rp->item),CF_BUFSIZE-1);
+   new_tp = IdempInsertTopic(normalform);
+
+   if (strcmp(contexttopic,normalform) == 0)
       {
       CfOut(cf_verbose,""," ! Excluding self-reference to %s",rp->item);
       continue;
       }
-   
-   strncpy(normalform,NormalizeTopic(rp->item),CF_BUFSIZE-1);
-   new_tp = IdempInsertTopic(rp->item);
 
    if (ok_to_add_inverse)
       {
@@ -212,20 +225,36 @@ for (rp = passociates; rp != NULL; rp=rp->next)
    if (!IsItemIn(ta->associates,normalform))
       {
       PrependFullItem(&(ta->associates),normalform,NULL,new_tp->id,0);
+
+      if (ok_to_add_inverse)
+         {
+         // inverse is from normalform to ncontext::ntopic
+         char rev[CF_BUFSIZE],ndt[CF_BUFSIZE],ndc[CF_BUFSIZE];
+         struct Rlist *rlist = 0;
+         snprintf(rev,CF_BUFSIZE-1,"%s::%s",ncontext,ntopic);
+         PrependRScalar(&rlist,rev,CF_SCALAR);
+
+         // Stupid to have to declassify + reclassify, but ..
+         DeClassifyTopic(normalform,ndt,ndc);
+         AddTopicAssociation(new_tp,&(new_tp->associations),bwd_name,fwd_name,rlist,false,ndc,ndt);
+         DeleteRlist(rlist);
+         }
       }
-   
-   if (ok_to_add_inverse)
+   else
       {
-      char rev[CF_BUFSIZE];
-      struct Rlist *rlist = 0;
-      snprintf(rev,CF_BUFSIZE-1,"%s::%s",this_tp->topic_context,this_tp->topic_name);
-      PrependRScalar(&rlist,rev,CF_SCALAR);
-      AddTopicAssociation(new_tp,&(new_tp->associations),bwd_name,fwd_name,rlist,false,from_context,from_topic
-                          );
-      DeleteRlist(rlist);
+      CfOut(cf_verbose,""," -> Already in %s::%s's associate list",ncontext,ntopic);
       }
        
    CF_EDGES++;
+   }
+
+if (ok_to_add_inverse)
+   {
+   CfOut(cf_verbose,""," -> END add fwd associates for %s::%s",ncontext,ntopic);
+   }
+else
+   {
+   CfOut(cf_verbose,"","  ---> END reverse associations %s::%s",ncontext,ntopic);
    }
 }
 

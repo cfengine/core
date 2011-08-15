@@ -60,10 +60,9 @@ void CheckAutoBootstrap()
   char name[CF_BUFSIZE];
   int repaired = false, have_policy = false, am_appliance = false;
 
-printf("\n ** Initiated the cfengine enterprise diagnostic bootstrap probe\n");
-printf(" ** This is a Nova automation extension (self-healing installer)\n\n");
+CfOut(cf_cmdout, "", "** CFEngine BOOTSTRAP probe initiated");
 
-PrintVersionBanner("cfengine");
+PrintVersionBanner("CFEngine");
 printf("\n");
 
 printf(" -> This host is: %s\n",VSYSNAME.nodename);
@@ -94,6 +93,7 @@ if (IsDefinedClass("debian"))
    }
 
 snprintf(name,CF_BUFSIZE-1,"%s/inputs/failsafe.cf",CFWORKDIR);
+MapName(name);
 
 if (cfstat(name,&sb) == -1)
    {
@@ -102,6 +102,7 @@ if (cfstat(name,&sb) == -1)
    }
 
 snprintf(name,CF_BUFSIZE-1,"%s/inputs/promises.cf",CFWORKDIR);
+MapName(name);
 
 if (cfstat(name,&sb) == -1)
    {
@@ -115,7 +116,7 @@ else
 
 if (strlen(POLICY_SERVER) > 0)
    {
-   CfOut(cf_cmdout,""," -> Assuming the policy distribution point at: %s:WORKDIR/masterfiles\n",POLICY_SERVER);
+   CfOut(cf_cmdout,""," -> Assuming the policy distribution point at: %s:/var/cfengine/masterfiles\n",POLICY_SERVER);
    }
 else
    {
@@ -129,8 +130,7 @@ else
       }
    }
 
-printf(" -> Policy trajectory accepted\n");
-printf(" -> Attempting to initiate promised autonomous services\n\n");
+printf(" -> Attempting to initiate promised autonomous services...\n\n");
 
 am_appliance = IsDefinedClass(CanonifyName(POLICY_SERVER));
 snprintf(name,CF_MAXVARSIZE,"ipv4_%s",CanonifyName(POLICY_SERVER));
@@ -147,14 +147,13 @@ MapName(name);
 if (am_appliance)
    {
    NewClass("am_policy_hub");
-   printf(" ** This host recognizes itself as a Cfengine Policy Hub, with policy distribution and knowledge base.\n");
+   printf(" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
    printf(" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
    creat(name,0600);
    }
 else
    {
    unlink(name);
-   printf(" -> Satellite system converging on trajectory\n");
    }
 }
 
@@ -217,7 +216,10 @@ void CreateFailSafe(char *name)
 if ((fout = fopen(name,"w")) == NULL)
    {
    CfOut(cf_error,"fopen","Unable to write failsafe file! (%s)",name);
+   return;
    }
+
+CfOut(cf_cmdout,""," -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
 fprintf(fout,
 "body common control\n"
@@ -227,70 +229,55 @@ fprintf(fout,
 "body agent control\n"
 "{\n"
 "skipidentify => \"true\";\n"
-"}\n"
+"}\n\n"
 "bundle agent update\n"
 "{\n"
-"vars:\n"
-" \"master_location\" string => \"$(sys.workdir)/masterfiles\";\n"
-" \"policy_server\"   string => readfile(\"$(sys.workdir)/policy_server.dat\",40),\n"
-"                      comment => \"IP address to locate your policy host.\";\n"
+
 "classes:\n"
-"  \"policy_host\" or => { \n"
-"                        classmatch(canonify(\"ipv4_$(policy_server)\")),\n"
-"                        classmatch(canonify(\"$(policy_server)\"))\n"
-"                        },\n"
-"                   comment => \"Define the ip identity of the policy source host\";\n"
 "  \"have_ppkeys\" expression => fileexists(\"$(sys.workdir)/ppkeys/localhost.pub\");\n"
-"  \"gotfile\" expression => fileexists(\"$(sys.workdir)/policy_server.dat\");\n"
-"commands:\n"
+"\ncommands:\n"
 " !have_ppkeys::\n"
 "   \"$(sys.cf_key)\";\n"
-"files:\n"
+
+"\nfiles:\n"
 " !windows::\n"
 "  \"$(sys.workdir)/inputs\" \n"
 "    handle => \"update_policy\",\n"
-"    perms => u_p(\"600\"),\n"
-"    copy_from => u_scp(\"$(master_location)\"),\n"
+"    copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
 "    depth_search => u_recurse(\"inf\"),\n"
-"    action => u_immediate,\n"
 "    classes => success(\"got_policy\");\n"
 "\n"
 "  \"$(sys.workdir)/bin/cf-twin\"\n"
 "         comment => \"Make sure we maintain a clone of the agent for updating\",\n"
 "       copy_from => u_cp(\"$(sys.workdir)/bin/cf-agent\"),\n"
-"           perms => u_p(\"755\"),\n"
-"          action => u_immediate;\n"
+"           perms => u_p(\"755\");\n"
 "\n"
 "  \"$(sys.workdir)/lib-twin/.\"\n"
 "         comment => \"Make sure we maintain a clone of the cf-twin libraries for updating\",\n"
 "       copy_from => u_cp(\"$(sys.workdir)/lib/.\"),\n"
-"    depth_search => u_recurse(\"1\"),\n"
-"          action => u_immediate;\n"
+"    depth_search => u_recurse(\"1\");\n"
 "\n"
 "  windows::\n"
 "  \"$(sys.workdir)\\inputs\" \n"
 "    handle => \"windows_update_policy\",\n"
 "    copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
 "    depth_search => u_recurse(\"inf\"),\n"
-"    action => u_immediate,\n"
 "    classes => success(\"got_policy\");\n\n"
 "\n"
 "     \"$(sys.workdir)\\bin-twin\\.\"\n"
 "         comment => \"Make sure we maintain a clone of the binaries and libraries for updating\",\n"
 "       copy_from => u_cp(\"$(sys.workdir)\\bin\\.\"),\n"
-"    depth_search => u_recurse(\"1\"),\n"
-"          action => u_immediate;\n"
+"    depth_search => u_recurse(\"1\");\n"
 "\n"
 "\n"
-"processes:\n"
-"!windows::\n"
+
+"\nprocesses:\n"
+"!windows.got_policy::\n"
 "\"cf-execd\" restart_class => \"start_exec\";\n"
-"policy_host::\n"
+"am_policy_hub.got_policy::\n"
 "\"cf-serverd\" restart_class => \"start_server\";\n\n"
 
-"commands:\n"
-"config.am_policy_hub::\n"
-"\"$(sys.cf_promises) -r\";"
+"\ncommands:\n"
 "start_exec.!windows::\n"
 "\"$(sys.cf_execd)\","
 "classes => outcome(\"executor\");\n"
@@ -299,21 +286,24 @@ fprintf(fout,
 "action => ifwin_bg,\n"
 "classes => outcome(\"server\");\n\n"
 
-"services:\n"
-"windows::\n"
+"\nservices:\n"
+"windows.got_policy::\n"
 "\"CfengineNovaExec\"\n"
 "   service_policy => \"start\",\n"
 "   service_method => bootstart,\n"
 "   classes => outcome(\"executor\");\n\n"
 
 "reports:\n"
-"  bootstrap_mode.policy_host::\n"
+"  bootstrap_mode.am_policy_hub::\n"
 "      \"This host assumes the role of policy distribution host\";\n"
-"  bootstrap_mode.!policy_host::\n"
+"  bootstrap_mode.!am_policy_hub::\n"
 "      \"This autonomous node assumes the role of voluntary client\";\n"
 "  got_policy::      \" -> Updated local policy from policy server\";\n"
-"  server_ok::      \" -> Started the server - system ready to serve\";\n"
-"  executor_ok::      \" -> Started the scheduler - system functional\";\n"
+" !got_policy::      \" !! Failed to pull policy from policy server\";\n"
+"  server_ok::      \" -> Started the server\";\n"
+" am_policy_hub.!server_ok::      \" !! Failed to start the server\";\n"
+"  executor_ok::      \" -> Started the scheduler\";\n"
+" !executor_ok::      \" !! Did not start the scheduler\";\n"
 "}\n"
 "############################################\n"
 "body classes outcome(x)\n"
@@ -336,13 +326,8 @@ fprintf(fout,
 "source      => \"$(from)\";\n"
 "compare     => \"digest\";\n"
 "trustkey    => \"true\";\n"
-"!policy_host.gotfile::\n"
-"servers => { \"$(policy_server)\" };\n"
-"}\n"
-"############################################\n"
-"body action u_immediate\n"
-"{\n"
-"ifelapsed => \"1\";\n"
+"!am_policy_hub::\n"
+"servers => { \"$(sys.policy_hub)\" };\n"
 "}\n"
 "############################################\n"
 "body action u_background\n"
@@ -375,11 +360,14 @@ fprintf(fout,
 "}\n"
 
 "\n"
-        );
-
-CfOut(cf_cmdout,""," -> No policy failsafe discovered, assume temporary bootstrap vector\n");
+);
 
 fclose(fout);
+
+if(cf_chmod(name, S_IRUSR|S_IWUSR) == -1)
+   {
+   CfOut(cf_error, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+   }
 }
 
 /********************************************************************/
@@ -391,21 +379,11 @@ void SetDocRoot(char *name)
 { char file[CF_BUFSIZE];
   FILE *fout,*fin;
   struct stat sb;
-  enum cfreport level;
 
 if (LOOKUP)
    {
    CfOut(cf_verbose, "","Ignoring document root in lookup mode");
    return;
-   }
-
-if (BOOTSTRAP)
-   {
-   level = cf_cmdout;
-   }
-else
-   {
-   level = cf_verbose;
    }
 
 snprintf(file,CF_BUFSIZE-1,"%s/document_root.dat",CFWORKDIR);
@@ -421,7 +399,7 @@ if (cfstat(file,&sb) == -1 && strlen(name) > 0)
 
    fprintf(fout,"%s",name);
    fclose(fout);
-   CfOut(level,""," -> Setting document root for a knowledge base to %s",name);
+   CfOut(cf_verbose,""," -> Setting document root for a knowledge base to %s",name);
    strcpy(DOCROOT,name);
    NewScalar("sys","doc_root",DOCROOT,cf_str);
    }
@@ -435,7 +413,7 @@ else
       file[0] = 0;
       fscanf(fin,"%255s",file);
       fclose(fin);
-      CfOut(level,""," -> Assuming document root for a knowledge base in %s",file);
+      CfOut(cf_verbose,""," -> Assuming document root for a knowledge base in %s",file);
       strcpy(DOCROOT,name);
       NewScalar("sys","doc_root",DOCROOT,cf_str);
       }

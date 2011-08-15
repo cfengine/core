@@ -176,7 +176,7 @@ The below procedure is valid for the latest CFE Community v3.2 beta source code 
 @item The first run of cf-key will complain but it will create the local work directory tree, @code{/var/cfengine}, as well as a public and private key.
 @item We use "cp" to populate the the binaries cache in @code{/var/cfengine/bin/}.
 @item We also use "cp" to populate the @code{masterfiles} directory with the default configuration.
-@item The bootstrapping will copy default policy files into @file{masterfiles} and make CFEngine run in the background.
+@item The bootstrapping will configure the hub and make CFEngine run in the background.
 @end itemize
 
 @noindent On the clients (all other machines):
@@ -226,19 +226,20 @@ or @file{C:\Program Files\Cfengine\inputs} (Windows).
 We recommend the following reading:
 
 @itemize 
-@item CFEngine Concepts:@* @url{http://cfengine.com/manuals/cf3-conceptguide.html}
-@item First promises:@*
-@url{http://cfengine.com/manuals/cf3-tutorial.html#First-promises} @c cf3-GetStarted
+@item CFEngine Concepts: @url{http://cfengine.com/manuals/cf3-conceptguide.html}
+@item Get started, first promises: @url{http://cfengine.com/manuals/cf3-getstarted.html}
 @end itemize
 
 @noindent For a complete overview:
 @itemize
-@item @url{http://cfengine.com/manuals/cf3-tutorial.html}
-@item @url{http://cfengine.com/manuals/cf3-reference.html}
+@item Tutorial: @url{http://cfengine.com/manuals/cf3-tutorial.html}
+@item Reference manual: @url{http://cfengine.com/manuals/cf3-reference.html}
 @end itemize
 
 @noindent Links to external resources:
 @itemize
+@item Getting Started with CFEngine 3 by Vertical Sysadmin:@*
+@url{http://www.verticalsysadmin.com/cfengine/Getting_Started_with_CFEngine_3.pdf}
 @item CFEngine 3 Beginning Examples:@*
 @url{http://www.verticalsysadmin.com/cfengine/beginning_examples/}@*
 This is, basically, a selection from /usr/local/share/doc/cfengine/ which has over 200 examples.

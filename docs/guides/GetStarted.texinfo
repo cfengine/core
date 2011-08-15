@@ -2,7 +2,7 @@
 \input texinfo-logo
 \input texinfo
 @selectaltfont{cmbright}
-@setlogo{NewLogo}
+@setlogo{CFEngineFrontPage}
 
 @c *********************************************************************
 @c
@@ -270,7 +270,7 @@ Following the above procedure, you should have a fully functional
 CFEngine on all clients. However, in the default configuration,
 CFEngine does nothing other than looking after itself, and looking for
 possible policy updates from @file{/var/cfengine/masterfiles}
-on the policy server. The policy server is configured to collect data
+on the policy server. On CFE Nova, the policy server is configured to collect data
 from non-policy server machines and generate reports that are
 integrated into the knowledge base.
 

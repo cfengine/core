@@ -321,7 +321,7 @@ The below procedure is valid for the latest CFE Community v3.2 beta source code 
 <li>The first run of cf-key will complain but it will create the local work directory tree, <code>/var/cfengine</code>, as well as a public and private key. 
 <li>We use "cp" to populate the the binaries cache in <code>/var/cfengine/bin/</code>. 
 <li>We also use "cp" to populate the <code>masterfiles</code> directory with the default configuration. 
-<li>The bootstrapping will copy default policy files into <samp><span class="file">masterfiles</span></samp> and make CFEngine run in the background. 
+<li>The bootstrapping will configure the hub and make CFEngine run in the background. 
 </ul>
 
 <p class="noindent">On the clients (all other machines):
@@ -386,19 +386,20 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#CFEngine-Installation-Guide">CFEngine 
 <p>We recommend the following reading:
 
      <ul>
-<li>CFEngine Concepts:<br> <a href="http://cfengine.com/manuals/cf3-conceptguide.html">http://cfengine.com/manuals/cf3-conceptguide.html</a>
-<li>First promises:<br>
-<a href="http://cfengine.com/manuals/cf3-tutorial.html#First-promises">http://cfengine.com/manuals/cf3-tutorial.html#First-promises</a> <!-- cf3-GetStarted -->
+<li>CFEngine Concepts: <a href="http://cfengine.com/manuals/cf3-conceptguide.html">http://cfengine.com/manuals/cf3-conceptguide.html</a>
+<li>Get started, first promises: <a href="http://cfengine.com/manuals/cf3-getstarted.html">http://cfengine.com/manuals/cf3-getstarted.html</a>
 </ul>
 
 <p class="noindent">For a complete overview:
      <ul>
-<li><a href="http://cfengine.com/manuals/cf3-tutorial.html">http://cfengine.com/manuals/cf3-tutorial.html</a>
-<li><a href="http://cfengine.com/manuals/cf3-reference.html">http://cfengine.com/manuals/cf3-reference.html</a>
+<li>Tutorial: <a href="http://cfengine.com/manuals/cf3-tutorial.html">http://cfengine.com/manuals/cf3-tutorial.html</a>
+<li>Reference manual: <a href="http://cfengine.com/manuals/cf3-reference.html">http://cfengine.com/manuals/cf3-reference.html</a>
 </ul>
 
 <p class="noindent">Links to external resources:
      <ul>
+<li>Getting Started with CFEngine 3 by Vertical Sysadmin:<br>
+<a href="http://www.verticalsysadmin.com/cfengine/Getting_Started_with_CFEngine_3.pdf">http://www.verticalsysadmin.com/cfengine/Getting_Started_with_CFEngine_3.pdf</a>
 <li>CFEngine 3 Beginning Examples:<br>
 <a href="http://www.verticalsysadmin.com/cfengine/beginning_examples/">http://www.verticalsysadmin.com/cfengine/beginning_examples/</a><br>
 This is, basically, a selection from /usr/local/share/doc/cfengine/ which has over 200 examples. 

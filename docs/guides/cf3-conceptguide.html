@@ -173,7 +173,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
 
 </div>
 
-<h2 class="unnumbered">CFEngine-GetStarted</h2>
+<h2 class="unnumbered">CFEngine Concepts</h2>
 
    <p><a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
 <h2>Summary of contents</h2>
@@ -903,7 +903,46 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Bodies-and-bundles">Bodies and bundles
 
 <h3 class="section">3.3 A simple syntax pattern</h3>
 
-<p>The syntax of CFEngine follows a simple pattern in all cases. Once you have learned this pattern,
+<p>The syntax of CFEngine follows a simple pattern in all cases and has a few simple rules:
+
+     <ul>
+<li>CFEngine built-in words, and identifiers of your choosing (the names
+of variables, bundles, body templates and classes) may only contain
+the usual alphanumeric and underscore characters (&lsquo;<samp><span class="samp">a-zA-Z0-9_</span></samp>&rsquo;).
+
+     <li>All other `literal' data must be quoted.
+
+     <li>Declarations of promise bundles
+in the form:
+     <pre class="example">          bundle <var>agent-type</var> identifier
+          {
+          ...
+          }
+</pre>
+     <li>Declarations of promise body-parts in the form:
+     <pre class="example">          body constraint_type template_identifier
+          {
+          ...
+          }
+</pre>
+     <p>matching and expanding on a reference inside a promise
+of the form
+&lsquo;<samp><span class="samp">constraint_type =&gt; template_identifier</span></samp>&rsquo;.
+
+     <li>CFEngine uses many `constraint expressions'
+as part of the body of a promise. These take the form: left-hand-side (cfengine word)
+&lsquo;<samp><span class="samp">=&gt;</span></samp>&rsquo; right-hand-side (user defined data). This can take several forms:
+
+     <pre class="verbatim">     cfengine_word => user_defined_template(parameters)
+                      user_defined_template
+                      builtin_function()
+                      "quoted literal scalar"
+                      { list }
+</pre>
+In each of these cases, the right hand side is a user choice. 
+</ul>
+
+   <p>Once you have learned this pattern,
 it will make sense anywhere in the program. The figure below illustrates
 this pattern. Some words are reserved by CFEngine, and are used as types or categories
 for talking about promises. Other words (in blue) are to be defined by you. 
@@ -2351,7 +2390,7 @@ details.
    <div class="contents">
 <h2>Table of Contents</h2>
 <ul>
-<li><a name="toc_Top" href="#Top">CFEngine-GetStarted</a>
+<li><a name="toc_Top" href="#Top">CFEngine Concepts</a>
 <li><a name="toc_Introduction-_002d-System-automation" href="#Introduction-_002d-System-automation">1 Introduction - System automation</a>
 <ul>
 <li><a href="#Managing-diverse-and-challenging-environments-seamlessly-and-invisibly">1.1 Managing diverse and challenging environments seamlessly and invisibly</a>

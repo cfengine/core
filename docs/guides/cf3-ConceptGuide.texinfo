@@ -53,7 +53,7 @@ Copyright @copyright{} 2011 CFEngine AS
 
 @ifnottex
 @node Top, Introduction - System automation, (dir), (dir)
-@top CFEngine-GetStarted
+@top CFEngine Concepts
 @end ifnottex
 @iftex
 @contents
@@ -709,7 +709,51 @@ Classes defined in common bundles have global scope.
 @node A simple syntax pattern,  , Bundles, Bodies and bundles
 @section A simple syntax pattern
 
-The syntax of CFEngine follows a simple pattern in all cases. Once you have learned this pattern,
+The syntax of CFEngine follows a simple pattern in all cases and has a few simple rules: 
+
+@itemize
+@item CFEngine built-in words, and identifiers of your choosing (the names
+of variables, bundles, body templates and classes) may only contain
+the usual alphanumeric and underscore characters (@samp{a-zA-Z0-9_}).
+
+@item All other `literal' data must be quoted.
+
+@item Declarations of promise bundles
+in the form:
+@example
+bundle @var{agent-type} identifier 
+@{
+...
+@}
+@end example
+
+@item Declarations of promise body-parts in the form:
+@example
+body constraint_type template_identifier 
+@{
+...
+@} 
+@end example
+matching and expanding on a reference inside a promise
+of the form
+@samp{constraint_type => template_identifier}.
+
+
+@item CFEngine uses many `constraint expressions'
+as part of the body of a promise. These take the form: left-hand-side (cfengine word)
+@samp{=>} right-hand-side (user defined data). This can take several forms:
+
+@verbatim
+cfengine_word => user_defined_template(parameters)
+                 user_defined_template
+                 builtin_function()
+                 "quoted literal scalar"
+                 { list }
+@end verbatim
+In each of these cases, the right hand side is a user choice.
+@end itemize
+
+Once you have learned this pattern,
 it will make sense anywhere in the program. The figure below illustrates
 this pattern. Some words are reserved by CFEngine, and are used as types or categories
 for talking about promises. Other words (in blue) are to be defined by you.

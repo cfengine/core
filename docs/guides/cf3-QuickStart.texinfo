@@ -20,6 +20,7 @@
 @setfilename cf3-quickstart.info
 @settitle CFEngine Quick Start
 @setchapternewpage odd
+\usepackage[bookmarks=true]{hyperref}
 @c %** end of header
 
 @titlepage
@@ -85,7 +86,8 @@ Copyright @copyright{} 2011- CFEngine AS
 @menu
 * Install from packages::  
 * Build from source (CFE Community)::  
-* Bootstrap from source::       
+* Bootstrap from source::
+* Recommended reading::       
 @end menu
 
 @node  Install from packages, Build from source (CFE Community), CFEngine Quick Start, CFEngine Quick Start

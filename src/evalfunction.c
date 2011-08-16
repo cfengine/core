@@ -2076,6 +2076,70 @@ return rval;
 
 /*********************************************************************/
 
+static struct Rval FnCallLsDir(struct FnCall *fp,struct Rlist *finalargs)
+
+{ struct Rval rval;
+  char *dirname,*regex;
+  char line[CF_BUFSIZE],retval[CF_SMALLBUF];
+  int lcount = 0,includepath;
+  CFDIR *dirh = NULL;
+  const struct dirent *dirp;
+  struct Rlist *newlist = NULL;
+  
+/* begin fn specific content */
+
+dirname = finalargs->item;
+regex = finalargs->next->item;
+includepath = GetBoolean(finalargs->next->next->item);
+
+if (chdir(dirname) == -1)
+   {
+   dirh == NULL;
+   }
+else
+   {
+   dirh = OpenDirLocal(".");
+   }
+
+if (dirh == NULL)
+   {
+   CfOut(cf_verbose,"opendir"," !! Directory \"%s\" could not be accessed in lsdir()",dirname);
+   snprintf(retval,CF_SMALLBUF-1,"0");
+   SetFnCallReturnStatus("lsdir",FNCALL_SUCCESS,NULL,NULL);
+   rval.item = xstrdup(retval);
+   rval.rtype = CF_SCALAR;
+   return rval;               
+   }
+
+for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+   {
+   if (strlen(regex) == 0 || FullTextMatch(regex,dirp->d_name))
+      {
+      if (includepath)
+         {
+         snprintf(line,CF_BUFSIZE,"%s/%s",dirname,dirp->d_name);
+         PrependRScalar(&newlist,line,CF_SCALAR);
+         }
+      else
+         {
+         PrependRScalar(&newlist,(char *)dirp->d_name,CF_SCALAR);
+         }
+      }
+   }
+
+CloseDir(dirh);
+
+SetFnCallReturnStatus("lsdir",FNCALL_SUCCESS,NULL,NULL);
+rval.item = newlist;
+
+/* end fn specific content */
+
+rval.rtype = CF_LIST;
+return rval;
+}
+
+/*********************************************************************/
+
 static struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */
@@ -5239,6 +5303,14 @@ struct FnCallArg LDAPVALUE_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg LSDIRLIST_ARGS[] =
+    {
+    {CF_PATHRANGE,cf_str,"Path to base directory"},
+    {CF_ANYSTRING,cf_str,"Regular expression to match files or blank"},
+    {CF_BOOL,cf_opts,"Include the base path in the list"},
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg NOT_ARGS[] =
    {
    {CF_ANYSTRING,cf_str,"Class value"},
@@ -5583,6 +5655,7 @@ struct FnCallType CF_FNCALL_TYPES[] =
    {"ldaparray",cf_class,6,LDAPARRAY_ARGS,&FnCallLDAPArray,"Extract all values from an ldap record"},
    {"ldaplist",cf_slist,6,LDAPLIST_ARGS,&FnCallLDAPList,"Extract all named values from multiple ldap records"},
    {"ldapvalue",cf_str,6,LDAPVALUE_ARGS,&FnCallLDAPValue,"Extract the first matching named value from ldap"},
+   {"lsdir",cf_slist,3,LSDIRLIST_ARGS,&FnCallLsDir,"Return a list of files in a directory matching a regular expression"},
    {"not",cf_str,1,NOT_ARGS,&FnCallNot,"Calculate whether argument is false"},
    {"now",cf_int,0,NOW_ARGS,&FnCallNow,"Convert the current time into system representation"},
    {"on",cf_int,6,DATE_ARGS,&FnCallOn,"Convert an exact date/time to an integer system representation"},

@@ -1,5 +1,6 @@
 3.3.0 (in development)
 	New function dirname() to complement lastnode()
+	New function lsdir() to list files in a directory
 
 3.2.0 (see branches/3.2.x)
 	New bootstrap method with single-command bootstrapping:

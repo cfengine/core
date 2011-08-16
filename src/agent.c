@@ -1354,9 +1354,7 @@ static bool VerifyBootstrap(void)
     return false;
     }
  
- 
  // we should at least have gotten promises.cf from the policy hub
- 
  snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
  MapName(filePath);
  
@@ -1366,7 +1364,16 @@ static bool VerifyBootstrap(void)
     return false;
     }
 
- if(!IsProcessNameRunning("cf-execd"))
+ // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
+ DeleteItemList(PROCESSTABLE);
+ PROCESSTABLE = NULL;
+ LoadProcessTable(&PROCESSTABLE);
+
+ char execdPath[CF_MAXVARSIZE];
+ snprintf(execdPath, sizeof(execdPath), "%s/bin/cf-execd", CFWORKDIR);
+ MapName(execdPath);
+
+ if(!IsProcessNameRunning(execdPath))
     {
     CfOut(cf_error, "", "!! Bootstrapping failed, cf-execd is not running");
     return false;

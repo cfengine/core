@@ -445,10 +445,9 @@ bool IsProcessNameRunning(char *procNameRegex)
  int end[CF_PROCCOLS] = {0};
  bool matched = false;
  
- LoadProcessTable(&PROCESSTABLE);
- 
  if (PROCESSTABLE == NULL)
    {
+   CfOut(cf_error, "", "!! IsProcessNameRunning: PROCESSTABLE is empty");
    return false;
    }
  

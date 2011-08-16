@@ -2092,14 +2092,7 @@ dirname = finalargs->item;
 regex = finalargs->next->item;
 includepath = GetBoolean(finalargs->next->next->item);
 
-if (chdir(dirname) == -1)
-   {
-   dirh == NULL;
-   }
-else
-   {
-   dirh = OpenDirLocal(".");
-   }
+dirh = OpenDirLocal(dirname);
 
 if (dirh == NULL)
    {

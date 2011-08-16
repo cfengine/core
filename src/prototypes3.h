@@ -1020,6 +1020,8 @@ int cf_pwait(pid_t pid);
 /* processes_select.c */
 
 int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp);
+bool IsProcessNameRunning(char *procNameRegex);
+
 
 /* promises.c */
 
@@ -1285,6 +1287,8 @@ void VerifyProcesses(struct Attributes a, struct Promise *pp);
 int LoadProcessTable(struct Item **procdata);
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
 int GracefulTerminate(pid_t pid);
+void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
+
 
 /* verify_services.c */
 

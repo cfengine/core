@@ -81,7 +81,7 @@ int NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
-static int VerifyBootstrap();
+static bool VerifyBootstrap(void);
 
 extern struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
@@ -1343,7 +1343,7 @@ if (child == 0 || !background)
 
 /**************************************************************/
 
-static int VerifyBootstrap()
+static bool VerifyBootstrap(void)
 {
  struct stat sb;
  char filePath[CF_MAXVARSIZE];
@@ -1366,11 +1366,12 @@ static int VerifyBootstrap()
     return false;
     }
 
- // cf-execd should be running
- 
+ if(!IsProcessNameRunning("cf-execd"))
+    {
+    CfOut(cf_error, "", "!! Bootstrapping failed, cf-execd is not running");
+    return false;
+    }
 
- // FIXME: the license should be OK
- 
  CfOut(cf_cmdout, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
  
  return true;

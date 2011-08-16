@@ -37,7 +37,6 @@ static int ProcessSanityChecks(struct Attributes a,struct Promise *pp);
 static void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
 static int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
 static int ExtractPid(char *psentry,char **names,int *start,int *end);
-static void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 
 /*****************************************************************************/
 
@@ -280,12 +279,12 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
 
    if (BlockTextMatch(pp->promiser,ip->name,&s,&e))
       {
-      if (!SelectProcess(ip->name,names,start,end,a,pp))
+      if (EMPTY(ip->name))
          {
          continue;
          }
-
-      if (EMPTY(ip->name))
+      
+      if (!SelectProcess(ip->name,names,start,end,a,pp))
          {
          continue;
          }
@@ -416,7 +415,7 @@ return pid;
 
 /**********************************************************************************/
 
-static void GetProcessColumnNames(char *proc,char **names,int *start,int *end)
+void GetProcessColumnNames(char *proc,char **names,int *start,int *end)
 
 { char *sp,title[16];
   int col,offset = 0;

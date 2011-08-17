@@ -306,29 +306,33 @@ pthread_attr_t PTHREADDEFAULTS;
 # ifndef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
 # endif
-pthread_mutex_t MUTEX_SYSCALL = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_LOCK = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_COUNT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_OUTPUT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_DBHANDLE = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_POLICY = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_GETADDR = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_DB_LASTSEEN = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_DB_REPORT = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_VSCOPE = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-pthread_mutex_t MUTEX_SERVER_KEYSEEN = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
-pthread_mutex_t *cft_system = &MUTEX_SYSCALL;
-pthread_mutex_t *cft_lock = &MUTEX_LOCK;
-pthread_mutex_t *cft_count = &MUTEX_COUNT;
-pthread_mutex_t *cft_output = &MUTEX_OUTPUT;
-pthread_mutex_t *cft_dbhandle = &MUTEX_DBHANDLE;
-pthread_mutex_t *cft_policy = &MUTEX_POLICY;
-pthread_mutex_t *cft_getaddr = &MUTEX_GETADDR;
-pthread_mutex_t *cft_db_lastseen = &MUTEX_DB_LASTSEEN;
-pthread_mutex_t *cft_report = &MUTEX_DB_REPORT;
-pthread_mutex_t *cft_vscope = &MUTEX_VSCOPE;
-pthread_mutex_t *cft_server_keyseen = &MUTEX_SERVER_KEYSEEN;
+pthread_mutex_t MUTEXES[] =
+   {
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   };
+
+pthread_mutex_t *cft_system = &MUTEXES[0];
+pthread_mutex_t *cft_lock = &MUTEXES[1];
+pthread_mutex_t *cft_count = &MUTEXES[2];
+pthread_mutex_t *cft_output = &MUTEXES[3];
+pthread_mutex_t *cft_dbhandle = &MUTEXES[4];
+pthread_mutex_t *cft_policy = &MUTEXES[5];
+pthread_mutex_t *cft_getaddr = &MUTEXES[6];
+pthread_mutex_t *cft_db_lastseen = &MUTEXES[7];
+pthread_mutex_t *cft_report = &MUTEXES[8];
+pthread_mutex_t *cft_vscope = &MUTEXES[9];
+pthread_mutex_t *cft_server_keyseen = &MUTEXES[10];
 #endif
 
 char VIPADDRESS[18] = {0};

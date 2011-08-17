@@ -33,6 +33,7 @@ ylwrap
 *.toc
 *.tp
 *.vr
+docs/reference/missfont.log
 
 # binaries
 

@@ -40,6 +40,7 @@ extern pthread_mutex_t MUTEX_DB_LASTSEEN;
 extern pthread_mutex_t MUTEX_DB_REPORT;
 extern pthread_mutex_t MUTEX_VSCOPE;
 extern pthread_mutex_t MUTEX_SERVER_KEYSEEN;
+extern pthread_mutex_t MUTEX_SERVER_CHILDREN;
 # endif
 
 extern pid_t ALARM_PID;

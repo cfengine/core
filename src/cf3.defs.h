@@ -1034,7 +1034,8 @@ enum cf_thread_mutex
   cft_no_tpolicy,
   cft_report,
   cft_vscope,           // protects VSCOPE
-  cft_server_keyseen  // protects   SERVER_KEYSEEN
+  cft_server_keyseen,  // protects   SERVER_KEYSEEN
+  cft_server_children,
   };
 
 enum cf_status

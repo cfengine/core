@@ -404,6 +404,10 @@ switch(name)
        return &MUTEX_SERVER_KEYSEEN;
        break;
 
+   case cft_server_children:
+       return &MUTEX_SERVER_CHILDREN;
+       break;
+
        
    default:
        CfOut(cf_error, "", "!! NameToThreadMutex supplied with unknown mutex name: %d", name);

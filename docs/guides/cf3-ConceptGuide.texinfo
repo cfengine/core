@@ -1466,7 +1466,7 @@ A promise to point or refer to a knowledge resource, in @code{cf-know}.
 @node Test a promise?, , The main promise types, A simple crash course in concepts
 @section Test a promise?
 
-If you are impatient to get hands-on experience, now might be a good time to take a break from Concepts and have a look at "First promises" (@url{http://cfengine.com/manuals/cf3-tutorial.html#First-promises}. Still, since knowledge management is an integral part of CFEngine, we strongly recommend to read the following section on this very issue sooner rather than later.
+If you are impatient to get hands-on experience, now might be a good time to take a break from Concepts and have a look at the getting started guide (@url{http://cfengine.com/manuals/cf3-getstarted.html}. Still, since knowledge management is an integral part of CFEngine, we strongly recommend to read the following section on this very issue sooner rather than later.
 
 @c *****************************************************
 @c * CHAPTER
@@ -2115,13 +2115,22 @@ concepts and can be extended indefinitely by human domain experts.
 @cartouche
 
 You will find extensive help, examples and documentation as part of  
-the commercial
-CFEngine support. Visit the website @url{http://www.cfengine.com} for more
+the commercial CFEngine support. Visit the website @url{http://www.cfengine.com} for more
 details.
 
 @end cartouche
 
+@noindent Need help getting started?
+@itemize 
+@item CFEngine Concepts: @url{http://cfengine.com/manuals/cf3-installation.html}
+@item Get started, first promises: @url{http://cfengine.com/manuals/cf3-getstarted.html}
+@end itemize
 
+@noindent For a complete overview:
+@itemize
+@item Tutorial: @url{http://cfengine.com/manuals/cf3-tutorial.html}
+@item Reference manual: @url{http://cfengine.com/manuals/cf3-reference.html}
+@end itemize
 
 
 

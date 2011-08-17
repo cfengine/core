@@ -133,7 +133,17 @@ The below procedure is valid for CFE Nova and CFE Community v3.2 and up (package
 
 This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
 @verbatim
+
    host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+
+@end verbatim
+
+CFEngine will output diagnostic information upon bootstrap (written to command line and syslog; cf-agent will also return a value: ERROR: 1, SUCCESS: 0). Error messages will be displayed if bootstrapping failed, pursue these to get and indication of what went wrong and correct accordingly. If all is well you should see the following in the output:
+
+@verbatim
+
+-> Bootstrap to 123.456.789.123 completed successfully
+
 @end verbatim
 
 @sp 1

@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-MAKEFLAGS += $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
+MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles
 

@@ -1,5 +1,7 @@
 AUTOMAKE_OPTIONS = foreign
 
+MAKEFLAGS = --no-print-directory --quiet
+
 SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles
 
 DIST_SUBDIRS = pub src docs examples masterfiles

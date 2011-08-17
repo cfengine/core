@@ -3,8 +3,15 @@ PREREQUISITES
 
 In order to build CFEngine you need the following tools and libraries installed:
 
-* gcc >= 3.0
-  [CFEngine uses several C99 constructs, so gcc 2.95 is not up to the task anymore]
+* C compiler supporting C90 + selected C99 constructs:
+    - _Bool type
+    - anonymous aggregates "(MyType) { .foo = 1, .bar = 2 }"
+    - declarations in "for" loop
+    - named initializers
+    - uintmax_t and corresponding printf/scanf formats
+  The following compilers are known to work:
+    - gcc >= 3.0
+    - clang >= 2.6
 * GNU make
 
 * OpenSSL library

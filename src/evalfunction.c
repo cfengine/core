@@ -2122,6 +2122,11 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
 
 CloseDir(dirh);
 
+if (newlist == NULL)
+   {
+   PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+   }
+
 SetFnCallReturnStatus("lsdir",FNCALL_SUCCESS,NULL,NULL);
 rval.item = newlist;
 

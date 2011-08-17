@@ -1,0 +1,4 @@
+@verbatim
+vars:
+  "apache_dir" string => dirname("/etc/apache2/httpd.conf");
+@end verbatim

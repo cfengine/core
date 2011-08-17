@@ -1042,6 +1042,7 @@ extern pthread_mutex_t *cft_db_lastseen;
 extern pthread_mutex_t *cft_report;
 extern pthread_mutex_t *cft_vscope;
 extern pthread_mutex_t *cft_server_keyseen;
+extern pthread_mutex_t *cft_server_children;
 #endif
 
 enum cf_status

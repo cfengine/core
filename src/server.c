@@ -376,13 +376,13 @@ fcntl(sd, F_SETFD, FD_CLOEXEC);
  
 while (true)
    {
-   if (ThreadLock(cft_count))
+   if (ThreadLock(cft_server_children))
       {
       if (ACTIVE_THREADS == 0)
          {
          CheckFileChanges(argc,argv,sd);
          }
-      ThreadUnlock(cft_count);
+      ThreadUnlock(cft_server_children);
       }
    
    FD_ZERO(&rset);
@@ -889,7 +889,7 @@ if (conn == NULL)
    return NULL;
    }
 
-if (!ThreadLock(cft_count))
+if (!ThreadLock(cft_server_children))
    {
    DeleteConn(conn);
    return NULL;
@@ -907,7 +907,7 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
       HandleSignals(SIGTERM);
       }
 
-   if (!ThreadUnlock(cft_count))
+   if (!ThreadUnlock(cft_server_children))
       {
       }
 
@@ -919,7 +919,7 @@ if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    }
 else
    {
-   ThreadUnlock(cft_count);
+   ThreadUnlock(cft_server_children);
    }
 
 TRIES = 0;   /* As long as there is activity, we're not stuck */
@@ -930,7 +930,7 @@ while (BusyWithConnection(conn))
 
 Debug("Terminating thread...\n");
 
-if (!ThreadLock(cft_count))
+if (!ThreadLock(cft_server_children))
    {
    DeleteConn(conn);
    return NULL;
@@ -938,7 +938,7 @@ if (!ThreadLock(cft_count))
 
 ACTIVE_THREADS--;
 
-if (!ThreadUnlock(cft_count))
+if (!ThreadUnlock(cft_server_children))
    {
    }
 

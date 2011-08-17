@@ -320,6 +320,7 @@ pthread_mutex_t MUTEXES[] =
    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
    };
 
 pthread_mutex_t *cft_system = &MUTEXES[0];
@@ -333,6 +334,7 @@ pthread_mutex_t *cft_db_lastseen = &MUTEXES[7];
 pthread_mutex_t *cft_report = &MUTEXES[8];
 pthread_mutex_t *cft_vscope = &MUTEXES[9];
 pthread_mutex_t *cft_server_keyseen = &MUTEXES[10];
+pthread_mutex_t *cft_server_children = &MUTEXES[11];
 #endif
 
 char VIPADDRESS[18] = {0};

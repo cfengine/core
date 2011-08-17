@@ -772,10 +772,15 @@ Currently supported reports include:
 @table @code
 @item compliance
 The percentage total compliance log for all hosts.
+@item dead-clients
+Shows a list of client hosts that have not made incoming requests within the standard
+time horizon (default 15 minutes).
 @item file_changes
 The change log
 @item file_diffs
 The change details for text files.
+@item last-seen
+Show the last time hosts connnected to the hub
 @item promises
 Compliance by promise, labelled by promise-handle.
 @item setuid

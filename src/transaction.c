@@ -355,12 +355,30 @@ for (rp = params; rp != NULL; rp=rp->next)
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 
+/************************************************************************/
+
+static void GetMutexName(const pthread_mutex_t *mutex, char *mutexname)
+{
+if (mutex >= cft_system && mutex <= cft_server_keyseen)
+   {
+   sprintf(mutexname, "Mutex %ld", mutex - cft_system);
+   }
+else
+   {
+   sprintf(mutexname, "Unknown mutex 0x%p", mutex);
+   }
+}
+
+/************************************************************************/
+
 int ThreadLock(pthread_mutex_t *mutex)
 {
 if (pthread_mutex_lock(mutex) != 0)
    {
-   // Don't use CfOut here as it also requires locking
-   printf("!! Could not lock: %ld", mutex - cft_system);
+   char mutexname[CF_BUFSIZE];
+   GetMutexName(mutex, mutexname);
+
+   printf("!! Could not lock: %s\n", mutexname);
    return false;
    }
 return true;
@@ -372,8 +390,10 @@ int ThreadUnlock(pthread_mutex_t *mutex)
 {
 if (pthread_mutex_unlock(mutex) != 0)
    {
-   // Don't use CfOut here as it also requires locking
-   printf("pthread_mutex_unlock: pthread_mutex_unlock failed");
+   char mutexname[CF_BUFSIZE];
+   GetMutexName(mutex, mutexname);
+
+   printf("!! Could not unlock: %s\n", mutexname);
    return false;
    }
 
@@ -388,10 +408,18 @@ void AssertThreadLocked(pthread_mutex_t *mutex, char *fname)
 {
 int status = pthread_mutex_trylock(mutex);
 
+if (status == 0)
+   {
+   char mutexname[CF_BUFSIZE];
+   GetMutexName(mutex, mutexname);
+
+   FatalError("Assertion failed: unlocked mutex in %s: %s\n", fname, mutexname);
+   }
+
 if (status != EBUSY && status != EDEADLK)
    {
-   CfOut(cf_error, "", "!! The mutex %ld was not locked in %s() -- status=%d", mutex - cft_system, fname, status);
-   FatalError("Software assertion failure\n");
+   CfOut(cf_error, "pthread_mutex_trylock", "!! Unable to test mutex state in %s", fname);
+   FatalError(NULL);
    }
 }
 

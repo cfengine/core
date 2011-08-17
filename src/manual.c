@@ -614,7 +614,7 @@ fprintf(fout,"\n@noindent @b{Synopsis}: %s(",fn.name);
 
 for (i = 0; args[i].pattern != NULL; i++)
    {
-   fprintf(fout,"arg%d",i);
+   fprintf(fout,"arg%d",i + 1);
 
    if (args[i+1].pattern != NULL)
       {
@@ -634,7 +634,7 @@ fprintf(fout,") returns type @b{%s}\n\n@*\n",CF_DATATYPES[fn.dtype]);
 
 for (i = 0; args[i].pattern != NULL; i++)
    {
-   fprintf(fout,"@noindent @code{  } @i{arg%d} : %s, @i{in the range} ",i,args[i].description);
+   fprintf(fout,"@noindent @code{  } @i{arg%d} : %s, @i{in the range} ",i + 1,args[i].description);
    PrintPattern(fout,args[i].pattern);
    fprintf(fout,"\n@*\n");
    }

@@ -969,6 +969,14 @@ if (!(isv6 || isv4))
 
 if (!(isrange||isCIDR)) 
    {
+   if (strlen(s2) > strlen(s1))
+      {
+      if (*(s2+strlen(s1)) != '.')
+         {
+         return -1; // Because xxx.1 should not match xxx.12 in the same octet
+         }
+      }
+   
    return strncmp(s1,s2,strlen(s1)); /* do partial string match */
    }
  

@@ -2007,10 +2007,11 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 
 /******************************************************************/
 
+#ifndef MINGW
 char *GetHome(uid_t uid)
 
 {
 struct passwd *mpw = getpwuid(uid);
 return mpw->pw_dir;
 }
-
+#endif

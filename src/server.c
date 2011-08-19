@@ -2005,7 +2005,7 @@ if (realpath(req_dir,res_path) == NULL)
    }
 #else
 memset(res_path,0,CF_BUFSIZE);
-CompressPath(res_path,translated_req_dir);
+CompressPath(res_path,req_dir);
 #endif
 
 AddSlash(res_path);

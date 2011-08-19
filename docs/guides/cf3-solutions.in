@@ -639,6 +639,13 @@ files:
 
 @verbatim
 
+body common control
+{
+bundlesequence => { "garbage_collection" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+
 bundle agent garbage_collection
 {
 files:

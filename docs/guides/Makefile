@@ -1,5 +1,5 @@
 
-all: build_solutions_guide SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
+all: build_solutions_guide cf3-solutions.texinfo SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
      SpecialTopic_Packages.pdf SpecialTopic_DevOps.pdf SpecialTopic_MissionCritical.pdf\
      SpecialTopic_Reporting.pdf SpecialTopic_BDMA.pdf\
      SpecialTopic_Knowledge.pdf SpecialTopic_Rollback.pdf\
@@ -13,10 +13,13 @@ all: build_solutions_guide SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
      SpecialTopic_MenuDrivenConfig.pdf SpecialTopic_FIPS.pdf cf3-tutorial.pdf\
      SpecialTopic_Vision.pdf SpecialTopic_Security.pdf SpecialTopic_Comparison.pdf\
      SpecialTopic_ContentDrivenPolicies.pdf SpecialTopic_Cloud.pdf SpecialTopic_OpenNebula.pdf SpecialTopic_RBAC.pdf\
-     NovaGetStarted.pdf cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf
+     cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf
 
 cf3-tutorial.html: cf3-tutorial.texinfo
 	makeinfo  --html --no-split --css-include=cfcomdoc.css cf3-tutorial.texinfo
+
+cf3-solutions.texinfo: cf3-solutions.in
+	./build_solutions_guide
 
 cfengine-Anomaly.html: /home/mark/LapTop/GNU-cfengine/trunk/doc/cfengine-Anomaly.texinfo
 	makeinfo  --html --no-split --css-include=cfcomdoc.css /home/mark/LapTop/GNU-cfengine/trunk/doc/cfengine-Anomaly.texinfo

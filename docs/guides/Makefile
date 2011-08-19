@@ -21,12 +21,6 @@ cf3-tutorial.html: cf3-tutorial.texinfo
 cf3-solutions.texinfo: cf3-solutions.in
 	./build_solutions_guide
 
-cfengine-Anomaly.html: /home/mark/LapTop/GNU-cfengine/trunk/doc/cfengine-Anomaly.texinfo
-	makeinfo  --html --no-split --css-include=cfcomdoc.css /home/mark/LapTop/GNU-cfengine/trunk/doc/cfengine-Anomaly.texinfo
-
-cf_Modularize.html: /home/mark/LapTop/CfengineProjects/Training/cf-Modularize.texinfo
-	makeinfo  --html --no-split --css-include=cfcomdoc.css /home/mark/LapTop/CfengineProjects/Training/cf-Modularize.texinfo
-
 %.pdf : %.texinfo
 	texi2pdf $<
 

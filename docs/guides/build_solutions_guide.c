@@ -84,6 +84,7 @@ while (!feof(fin))
 
       while(!feof(tmp))
          {
+         line[0] = '\0';
          fgets(line,2048,tmp);
          fprintf(fout,"%s",line);
          }

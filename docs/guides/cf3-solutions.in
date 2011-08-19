@@ -220,18 +220,7 @@ what_type:
 @subsection Hashing for change detection (tripwire)
 
 @verbatim
-
-files:
-
-  "/home/mark/tmp" -> "me"
-       changes      => detect_all_change,
-       depth_search => recurse("inf"),
-       action       => background;
-
-  "/home/mark/LapTop/words" -> "you"
-       changes      => detect_all_change,
-       depth_search => recurse("inf");
-
+#CFEexample:unit_change_detect.cf
 @end verbatim
 
 @c ......................................
@@ -239,19 +228,7 @@ files:
 @subsection Command or script execution
 
 @verbatim
-
-commands:
-
- Sunday.Hr04.Min05_10.myhost::
-
-  "/usr/bin/update_db";
-
- any::
-
-  "/etc/mysql/start"
-
-      contain => setuid("mysql");
-
+#CFEexample:unit_commands.cf
 @end verbatim
 
 @c ......................................
@@ -259,33 +236,20 @@ commands:
 @subsection Kill process
 
 @verbatim
-
-processes:
-
-  "snmpd"
-
-     signals => { "term", "kill" };
-
+#CFEexample:unit_process_kill.cf
 @end verbatim
 
 @c ......................................
 @node Restart process, Check filesystem space, Kill process, Begin - Get started
 @subsection Restart process
 
+A basic pattern for restarting processes:
 @verbatim
-
-processes:
-
-  "httpd"
-
-     restart_class => "lift_off";
-
-commands:
-
- lift_off::
-
-    "/etc/init.d/apache2 restart";
-
+#CFEexample:unit_process_restart_basic.cf
+@end verbatim
+This can be made more sophisticated to handle generic lists:
+@verbatim
+#CFEexample:unit_process_restart.cf
 @end verbatim
 
 Why? Separating this into two parts gives a high level of control
@@ -298,11 +262,7 @@ reproduced in @code{processes}.
 @subsection Check filesystem space
 
 @verbatim
-
-storage:
-
-  "/usr" volume  => mycheck("10%");
-
+#CFEexample:unit_diskfree.cf
 @end verbatim
 
 @c ......................................
@@ -310,29 +270,39 @@ storage:
 @subsection Mount a filesystem
 
 @verbatim
-
-storage:
-
- "/home/mark/server_home" 
-
-  mount => nfs("myserver","/home/mark");
-
+#CFEexample:unit_mount_fs.cf
 @end verbatim
 
 @c ......................................
 @node Software and patch installation,  , Mount a filesystem, Begin - Get started
 @subsection Software and patch installation
 
+Example for Debian:
 @verbatim
-
-packages:
-
-  "apache2"
-
-     package_policy => "add",
-     package_method => generic;
-
+#CFEexample:unit_package_apt.cf
 @end verbatim
+Examples MSI for Windows, by name:
+@verbatim
+#CFEexample:unit_package_msi_file.cf
+@end verbatim
+Windows MSI by version:
+@verbatim
+#CFEexample:unit_package_msi_version.cf
+@end verbatim
+Examples for solaris are more complex:
+@verbatim
+#CFEexample:unit_package_solaris.cf
+@end verbatim
+Examples for yum based systems:
+@verbatim
+#CFEexample:unit_package_yum.cf
+@end verbatim
+SuSE Linux's package manager zypper is the most powerful alternative:
+@verbatim
+#CFEexample:unit_package_zypper.cf
+@end verbatim
+
+
 
 
 
@@ -563,7 +533,6 @@ access:
 }
 
 @end verbatim
-
 
 @c -----------------------------------------------------------------------
 @node Updating from a central hub,  , Variation in hosts, Centralized Management

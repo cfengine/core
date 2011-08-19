@@ -1,5 +1,5 @@
 
-all: SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
+all: build_solutions_guide SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
      SpecialTopic_Packages.pdf SpecialTopic_DevOps.pdf SpecialTopic_MissionCritical.pdf\
      SpecialTopic_Reporting.pdf SpecialTopic_BDMA.pdf\
      SpecialTopic_Knowledge.pdf SpecialTopic_Rollback.pdf\
@@ -29,3 +29,6 @@ cf_Modularize.html: /home/mark/LapTop/CfengineProjects/Training/cf-Modularize.te
 
 %.pdf : %.texinfo
 	texi2pdf $<
+
+build_solutions_guide: build_solutions_guide.c
+	gcc -o build_solutions_guide build_solutions_guide.c

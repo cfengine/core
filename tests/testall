@@ -28,6 +28,7 @@ SUMMARY=summary.log
 QUIET=
 NOVA=
 STAGING=
+NETWORK=1
 DEFAGENT=/var/cfengine/bin/cf-agent
 AGENT=${DEFAGENT}
 
@@ -37,7 +38,7 @@ FAILED_TO_CRASH_TESTS=0
 SKIPPED_TESTS=0
 
 usage() {
-  echo "testall [-q] [--no-nova] [--staging] [--agent=<agent>] [<test> <test>...]"
+  echo "testall [-q] [--no-nova] [--staging] [--no-network] [--agent=<agent>] [<test> <test>...]"
   echo
   echo "If no test is given, all tests are run:"
   echo "  Tests with names of form NNN.cf are expected to run succesfully"
@@ -46,11 +47,13 @@ usage() {
   echo "    (and may be disabled by --no-nova option)"
   echo "  Tests inside directories called 'staging' are not run"
   echo "    (unless --staging option is passed)"
+  echo "  Tests inside directories called 'network' are not run"
+  echo "    if --no-network option is passed"
   echo
   echo "If arguments are given, those are executed as tests"
   echo
   echo " -q makes script much quieter"
-
+  echo
   echo " --agent provides a way to specify non-default cf-agent location,"
   echo "         and defaults to $DEFAGENT."
 }
@@ -75,13 +78,16 @@ runtest() {
   elif [ -z "$STAGING" ] && echo "$TEST" | grep -q -e 'staging'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
+  elif [ -z "$NETWORK" ] && echo "$TEST" | grep -q -e 'network'; then
+    SKIP=1
+    SKIPREASON="Network-dependent tests are disabled"
   else
     SKIP=
     SKIPREASON=
   fi
 
   ( echo ----------------------------------------------------------------------
-    echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \(skipped due to $SKIPREASON\)}
+    echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \($SKIPREASON\)}
     echo ----------------------------------------------------------------------
   ) >> $LOG
 
@@ -171,6 +177,8 @@ while true; do
       NOVA=;;
     --staging)
       STAGING=1;;
+    --no-network)
+      NETWORK=;;
     --agent=*)
       AGENT=${1#--agent=};;
     -*)

@@ -21,40 +21,27 @@
 # included file COSL.txt.
 
 
-#
-# Package managment
-#
-
 body common control
 {
-bundlesequence => { "packages" };
-inputs => { "cfengine_stdlb.cf" };
+bundlesequence  => { "my_commands" };
+inputs => { "cfengine_stdlib.cf" };
 }
 
-#############################################
 
-bundle agent packages
+bundle agent my_commands
 {
-vars:
+commands:
 
-  "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
-  "admin_file"                string => "cfengine_admin_file";
+ Sunday.Hr04.Min05_10.myhost::
 
-  "package_names"              slist => getindices("solaris_packages");
+  "/usr/bin/update_db";
 
-files:
+ any::
 
-  "/tmp/$(admin_file)"
-	create => "true",
-	edit_defaults => empty_file,
-	edit_line => create_solaris_admin_file;
+  "/etc/mysql/start"
 
-packages:
-
-  "$(package_names)"
-
-     package_policy => "add",
-     package_method => solaris("$(package_names)", "$(solaris_packages[$(package_names)])", "$(admin_file)");
+      contain => setuid("mysql");
 
 }
+
 

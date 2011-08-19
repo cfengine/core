@@ -20,41 +20,26 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
-#
-# Package managment
-#
-
 body common control
 {
-bundlesequence => { "packages" };
-inputs => { "cfengine_stdlb.cf" };
+bundlesequence  => { "my_recursive_copy" };
+inputs => { "cfengine_stdlib.cf" };
 }
 
-#############################################
-
-bundle agent packages
+bundle agent my_recursive_copy
 {
-vars:
-
-  "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
-  "admin_file"                string => "cfengine_admin_file";
-
-  "package_names"              slist => getindices("solaris_packages");
-
 files:
 
-  "/tmp/$(admin_file)"
-	create => "true",
-	edit_defaults => empty_file,
-	edit_line => create_solaris_admin_file;
+  "/home/mark/tmp/test_dir"
 
-packages:
+      copy_from => local_cp("$(sys.workdir)/bin/."),
+   depth_search => recurse("inf");
 
-  "$(package_names)"
+  "/home/mark/tmp/test_dir"
 
-     package_policy => "add",
-     package_method => solaris("$(package_names)", "$(solaris_packages[$(package_names)])", "$(admin_file)");
+      copy_from => secure_cp("$(sys.workdir)/bin","serverhost"),
+   depth_search => recurse("inf");
 
 }
+
 

@@ -211,15 +211,7 @@ what_type:
 @subsection Disabling and rotating files
 
 @verbatim
-
-files:
-
-  "/home/mark/tmp/test_create"
-      rename => disable;
- 
- "/home/mark/tmp/rotateme"
-      rename => rotate("4");
-
+#CFEexample:unit_disable.cf
 @end verbatim
 
 

@@ -76,6 +76,15 @@ while (!feof(fin))
       while(!feof(tmp))
          {
          fgets(line,2048,tmp);
+         if (strstr(line,"COSL.txt"))
+            {
+            break;
+            }
+         }
+
+      while(!feof(tmp))
+         {
+         fgets(line,2048,tmp);
          fprintf(fout,"%s",line);
          }
       

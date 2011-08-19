@@ -15,9 +15,6 @@ all: build_solutions_guide SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
      SpecialTopic_ContentDrivenPolicies.pdf SpecialTopic_Cloud.pdf SpecialTopic_OpenNebula.pdf SpecialTopic_RBAC.pdf\
      NovaGetStarted.pdf cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf
 
-cfengine-Reference.html: /home/mark/LapTop/GNU-cfengine/trunk/doc/cfengine-Reference.texinfo
-	makeinfo  --html --no-split --css-include=cfcomdoc.css /home/mark/LapTop/GNU-cfengine/trunk/doc/cfengine-Reference.texinfo
-
 cf3-tutorial.html: cf3-tutorial.texinfo
 	makeinfo  --html --no-split --css-include=cfcomdoc.css cf3-tutorial.texinfo
 

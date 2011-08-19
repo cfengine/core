@@ -16,8 +16,6 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
-	#
 	# This extracts the octal mode, and decimal nlink, uid, gid, size
 	"command" string => 'printf "%#o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
@@ -47,10 +45,10 @@ classes:
     "usr_bin_gzip" expression => fileexists("/usr/bin/gzip");
 
 files:
-	"$(g.testdir)/."
+	"$(G.testdir)/."
 	    create => "true";
 
-	"$(g.testdir)/$(files)"
+	"$(G.testdir)/$(files)"
 	    copy_from => init_copy("/etc/group");
 }
 
@@ -70,7 +68,7 @@ promise_repaired => { "$(class)" };
 bundle agent test
 {
 files:
-	"$(g.testdir)"
+	"$(G.testdir)"
 	    transformer => "$(init.gzip) $(this.promiser)",
 	    file_select => test_plain,
 	    depth_search => test_recurse;
@@ -95,14 +93,14 @@ vars:
 	"files" slist => { @{init.files} };
 
 classes:
-	"ok$(files)" expression => fileexists("$(g.testdir)/$(files).gz");
+	"ok$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
 	"ok" and => { "ok1", "ok2", "ok3" };
 
 reports:
     DEBUG::
-	"$(g.testdir)/$(files).gz exists as expected"
+	"$(G.testdir)/$(files).gz exists as expected"
 	    ifvarclass => "ok$(files)";
-	"$(g.testdir)/$(files).gz was not created!"
+	"$(G.testdir)/$(files).gz was not created!"
 	    ifvarclass => "!ok$(files)";
     ok::
 	"$(this.promise_filename) Pass";
@@ -115,5 +113,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

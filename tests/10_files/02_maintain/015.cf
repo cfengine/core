@@ -16,7 +16,7 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine.dir";
+	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -27,18 +27,12 @@ vars:
         "dummy" string => "dummy";
 }
 
-body link_from ln_s(x) {
-  link_type => "relative";
-  source => "$(x)";
-  when_no_source => "nop";
-}
-
 #######################################################
 
 bundle agent test
 {
 files:
-  "$(g.testdir)/destdir"
+  "$(G.testdir)/destdir"
     link_from => sync_cp("./srcdirrr");
 }
 
@@ -66,5 +60,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

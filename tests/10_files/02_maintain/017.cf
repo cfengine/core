@@ -16,7 +16,7 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
+	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -32,7 +32,7 @@ vars:
 bundle agent test
 {
 files:
-    "/tmp/$(g.testdir)/."
+    "/tmp/$(G.testdir)/."
       create => "true",
       move_obstructions => "true",
       copy_from => update_nobackup;
@@ -57,5 +57,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

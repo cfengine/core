@@ -16,7 +16,7 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
+	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -38,10 +38,10 @@ classes:
     "usr_bin_gzip" expression => fileexists("/usr/bin/gzip");
 
 files:
-	"$(g.testdir)/."
+	"$(G.testdir)/."
 	    create => "true";
 
-	"$(g.testdir)/$(files)"
+	"$(G.testdir)/$(files)"
 	    copy_from => init_copy("/etc/group");
 }
 
@@ -73,7 +73,7 @@ body contain start_from_cwd
 bundle agent test_dry_run
 {
 files:
-	"$(g.testdir)"
+	"$(G.testdir)"
 	    transformer => "$(init.gzip) $(this.promiser)",
 	    file_select => test_plain,
 	    depth_search => test_recurse;
@@ -102,8 +102,8 @@ vars:
 	"files" slist => { @{init.files} };
 
 classes:
-	"ok$(files)" expression => fileexists("$(g.testdir)/$(files)");
-	"no$(files)" expression => fileexists("$(g.testdir)/$(files).gz");
+	"ok$(files)" expression => fileexists("$(G.testdir)/$(files)");
+	"no$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
 	"ok" and => {
 		    "ok1", "ok2", "ok3",
 		    "!no1", "!no2", "!no3",
@@ -111,9 +111,9 @@ classes:
 
 reports:
     DEBUG::
-	"$(g.testdir)/$(files) exists with no $(g.testdir)/$(files).gz"
-	    ifvarclass => "ok$(files).!no$(files)";
-	"$(g.testdir)/$(files).gz was created during --dry-run!"
+	"$(G.testdir)/$(files) exists with no $(G.testdir)/$(files).gz"
+	    Ifvarclass => "ok$(files).!no$(files)";
+	"$(G.testdir)/$(files).gz was created during --dry-run!"
 	    ifvarclass => "no$(files)";
     ok::
 	"$(this.promise_filename) Pass";
@@ -126,5 +126,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

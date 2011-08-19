@@ -16,10 +16,8 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
-
 	# This extracts the octal mode, and decimal nlink, uid, gid, size
-	"command" string => 'printf "%o" . " %d" x 4, (stat("$(g.testdir)/copy_file"))[2]&07777, (stat(_))[3..5,7]';
+	"command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testdir)/copy_file"))[2]&07777, (stat(_))[3..5,7]';
 }
 
 #######################################################
@@ -27,16 +25,16 @@ vars:
 bundle agent init
 {
 files:
-    "$(g.testdir)/linkdir/" 
+    "$(G.testdir)/linkdir/"
       comment => "Create a directory.";
-    "$(g.testdir)/linkdir/another/" 
+    "$(G.testdir)/linkdir/another/"
       comment => "Create another directory.";
-    "$(g.testdir)/linkdir/another/target" 
+    "$(G.testdir)/linkdir/another/target"
       comment => "A target file.",
       create => "true";
-    "$(g.testdir)/linkdir/link"
+    "$(G.testdir)/linkdir/link"
       comment => "Create a relative link to the target.",
-      link_from => ln_s("$(g.testdir)/linkdir/another/target");
+      link_from => ln_s("$(G.testdir)/linkdir/another/target");
 }
 
 #######################################################
@@ -44,9 +42,9 @@ files:
 bundle agent test
 {
 files:
-    "$(g.testdir)/copy_file"
+    "$(G.testdir)/copy_file"
       comment => "Copy the file behind the link.",
-      copy_from => cp_2_file("$(g.testdir)/linkdir/link");
+      copy_from => cp_2_file("$(G.testdir)/linkdir/link");
 }
 
 body link_from ln_s(x) {
@@ -89,5 +87,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

@@ -16,10 +16,8 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine.dir";
-
 	# This extracts the octal mode, and decimal nlink, uid, gid, size
-	"type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(g.testdir)/destdir"))[2]);';
+	"type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(G.testdir)/destdir"))[2]);';
 }
 
 #######################################################
@@ -27,20 +25,20 @@ vars:
 bundle agent init
 {
 files:
-    "$(g.testdir)/srcdir/"
+    "$(G.testdir)/srcdir/"
       create => "true";
-    "$(g.testdir)/srcdir/intermediate/"
+    "$(G.testdir)/srcdir/intermediate/"
       create => "true";
-    "$(g.testdir)/srcdir/intermediate/intermediate2/"
+    "$(G.testdir)/srcdir/intermediate/intermediate2/"
       create => "true";
-    "$(g.testdir)/srcdir/intermediate/intermediate2/foo" 
+    "$(G.testdir)/srcdir/intermediate/intermediate2/foo"
       create => "true";
 
-    "$(g.testdir)/realdestdir/" 
+    "$(G.testdir)/realdestdir/"
       create => "true";
-    "$(g.testdir)/destdir"
+    "$(G.testdir)/destdir"
       comment => "Create a relative link to the target.",
-      link_from => ln_s("$(g.testdir)/realdestdir");
+      link_from => ln_s("$(G.testdir)/realdestdir");
 }
 
 
@@ -55,8 +53,8 @@ body link_from ln_s(x) {
 bundle agent test
 {
 files:
-  "$(g.testdir)/destdir/intermediate/intermediate2/foo"
-    copy_from => sync_cp("$(g.testdir)/srcdir/intermediate/intermediate2/foo");
+  "$(G.testdir)/destdir/intermediate/intermediate2/foo"
+    copy_from => sync_cp("$(G.testdir)/srcdir/intermediate/intermediate2/foo");
 }
 
 body copy_from sync_cp(from)
@@ -91,5 +89,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

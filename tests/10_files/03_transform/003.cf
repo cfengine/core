@@ -16,8 +16,6 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
-	#
 	# This extracts the octal mode, and decimal nlink, uid, gid, size
 	"command" string => 'printf "%#o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
@@ -36,10 +34,10 @@ vars:
     "files" slist => { "1", "2", "3" };
 
 files:
-	"$(g.testdir)/."
+	"$(G.testdir)/."
 	    create => "true";
 
-	"$(g.testdir)/$(files)"
+	"$(G.testdir)/$(files)"
 	    copy_from => init_copy("/etc/group");
 }
 
@@ -59,10 +57,10 @@ promise_repaired => { "$(class)" };
 bundle agent test
 {
 vars:
-    	"counter" string => "$(g.testdir)/counter";
+	"counter" string => "$(G.testdir)/counter";
 
 files:
-	"$(g.testdir)"
+	"$(G.testdir)"
 	    transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
 	    file_select => test_plain,
 	    depth_search => test_recurse;
@@ -103,5 +101,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

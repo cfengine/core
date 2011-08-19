@@ -16,7 +16,7 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
+	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,13 +24,13 @@ vars:
 bundle agent init
 {
 files:
-  "$(g.testdir)/afile"
+  "$(G.testdir)/afile"
     create => "true";
 
 # We can't use files promise here as it will remember we have created the file
 # and will not generate backup file which we are trying to get.
 commands:
-  "/bin/echo LimpBizkit > $(g.testdir)/destfile"
+  "/bin/echo LimpBizkit > $(G.testdir)/destfile"
     contain => shell;
 }
 
@@ -44,8 +44,8 @@ body contain shell
 bundle agent test
 {
 files:
-    "$(g.testdir)/destfile"
-      copy_from => cp_2_file("$(g.testdir)/afile");
+    "$(G.testdir)/destfile"
+      copy_from => cp_2_file("$(G.testdir)/afile");
 }
 
 body copy_from cp_2_file(x) {
@@ -59,7 +59,7 @@ body copy_from cp_2_file(x) {
 bundle agent check
 {
 files:
-  "$(g.testdir)/destfile.*\.cfsaved"
+  "$(G.testdir)/destfile.*\.cfsaved"
     touch => "true",
     classes => ifrepaired("ok");
 
@@ -80,5 +80,5 @@ promise_repaired => { "$(classname)" };
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

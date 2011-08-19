@@ -16,7 +16,7 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testdir" string => "/tmp/TEST.cfengine";
+	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -32,7 +32,7 @@ vars:
 bundle agent test
 {
 files:
-  "$(g.testdir)/shouldnotexist"
+  "$(G.testdir)/shouldnotexist"
      create => "true",
      nonexistant_attribute => "abc";
 }
@@ -42,7 +42,7 @@ files:
 bundle agent check
 {
 classes:
-	"ok" not => fileexists("$(g.testdir)/shouldnotexist");
+	"ok" not => fileexists("$(G.testdir)/shouldnotexist");
 reports:
     DEBUG::
 	"Expected to crash - illegal body contstraint name";
@@ -57,5 +57,5 @@ reports:
 bundle agent fini
 {
 methods:
-	"any" usebundle => default_fini("$(g.testdir)");
+	"any" usebundle => default_fini("$(G.testdir)");
 }

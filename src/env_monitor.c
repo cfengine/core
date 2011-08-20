@@ -306,8 +306,8 @@ MonEntropyClassesReset();
 ZeroArrivals();
 
 MonProcessesGatherData(CF_THIS);
-MonCPUGatherData(CF_THIS);
 #ifndef MINGW
+MonCPUGatherData(CF_THIS);
 MonLoadGatherData(CF_THIS);
 MonDiskGatherData(CF_THIS);
 MonNetworkGatherData(CF_THIS);

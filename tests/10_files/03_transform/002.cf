@@ -112,7 +112,7 @@ classes:
 reports:
     DEBUG::
 	"$(G.testdir)/$(files) exists with no $(G.testdir)/$(files).gz"
-	    Ifvarclass => "ok$(files).!no$(files)";
+	    ifvarclass => "ok$(files).!no$(files)";
 	"$(G.testdir)/$(files).gz was created during --dry-run!"
 	    ifvarclass => "no$(files)";
     ok::

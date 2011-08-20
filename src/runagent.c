@@ -150,8 +150,7 @@ if (HOSTLIST)
 	 CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
          BACKGROUND = false;
 	 }
-#endif  /* MINGW */
-
+#else
       if (BACKGROUND) /* parallel */
          {
 	 if (count <= MAXCHILD)
@@ -175,6 +174,7 @@ if (HOSTLIST)
             }
          }
       else /* serial */
+#endif  /* MINGW */
          {
       	 HailServer(rp->item,RUNATTR,pp);
          rp = rp->next;
@@ -182,6 +182,7 @@ if (HOSTLIST)
       } /* end while */
    } /* end if HOSTLIST */
 
+#ifndef MINGW
 if (BACKGROUND)
    {
    printf("Waiting for child processes to finish\n");
@@ -192,6 +193,7 @@ if (BACKGROUND)
       count--;
       }
    }
+#endif
 
 return 0;
 }

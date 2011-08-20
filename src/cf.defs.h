@@ -980,7 +980,7 @@ struct cfstat
 struct cfdir
    {
    /* Local directories */
-   DIR *dirh;
+   void *dirh; /* DIR* or HANDLE */
    struct dirent *entrybuf;
 
    /* Remote directories */

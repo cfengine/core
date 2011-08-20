@@ -3,6 +3,10 @@
 
 static size_t GetNameMax(DIR *dirp);
 static size_t GetDirentBufferSize(size_t path_len);
+static void CloseDirRemote(CFDIR *dir);
+
+void CloseDirLocal(CFDIR *dir);
+const struct dirent *ReadDirLocal(CFDIR *dir);
 
 /*********************************************************************/
 
@@ -21,6 +25,7 @@ else
 
 /*********************************************************************/
 
+#ifndef MINGW
 CFDIR *OpenDirLocal(const char *dirname)
 {
 CFDIR *ret;
@@ -28,15 +33,16 @@ if ((ret = calloc(1, sizeof(CFDIR))) == NULL)
    {
    FatalError("Unable to allocate memory for CFDIR");
    }
+DIR *dirh;
 
-ret->dirh  = opendir(dirname);
-if (ret->dirh == NULL)
+ret->dirh = dirh  = opendir(dirname);
+if (dirh == NULL)
    {
    free(ret);
    return NULL;
    }
 
-size_t dirent_buf_size = GetDirentBufferSize(GetNameMax(ret->dirh));
+size_t dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
 if (dirent_buf_size == (size_t)-1)
    {
    FatalError("Unable to determine directory entry buffer size for directory %s", dirname);
@@ -49,6 +55,7 @@ if ((ret->entrybuf = calloc(1, dirent_buf_size)) == NULL)
 
 return ret;
 }
+#endif
 
 /*********************************************************************/
 
@@ -67,18 +74,19 @@ return (struct dirent*)ret;
 
 /*********************************************************************/
 
+#ifndef MINGW
 /*
  * Returns NULL on EOF or error.
  *
  * Sets errno to 0 for EOF and non-0 for error.
  */
-static const struct dirent *ReadDirLocal(CFDIR *dir)
+const struct dirent *ReadDirLocal(CFDIR *dir)
 {
 int err;
 struct dirent *ret;
 
 errno = 0;
-err = readdir_r(dir->dirh, dir->entrybuf, &ret);
+err = readdir_r((DIR *)dir->dirh, dir->entrybuf, &ret);
 
 if (err != 0)
    {
@@ -93,6 +101,7 @@ if (ret == NULL)
 
 return ret;
 }
+#endif
 
 /*********************************************************************/
 
@@ -118,24 +127,39 @@ void CloseDir(CFDIR *dir)
 {
 if (dir->dirh)
    {
-   closedir(dir->dirh);
+   CloseDirLocal(dir);
    }
-
-if (dir->entrybuf)
+else
    {
-   free(dir->entrybuf);
+   CloseDirRemote(dir);
    }
+}
 
+/*********************************************************************/
+
+static void CloseDirRemote(CFDIR *dir)
+{
 if (dir->list)
    {
    DeleteItemList(dir->list);
    }
-
 free(dir);
 }
 
 /*********************************************************************/
 
+#ifndef MINGW
+void CloseDirLocal(CFDIR *dir)
+{
+closedir((DIR *)dir->dirh);
+free(dir->entrybuf);
+free(dir);
+}
+#endif
+
+/*********************************************************************/
+
+#ifndef MINGW
 /*
  * Taken from http://womble.decadent.org.uk/readdir_r-advisory.html
  *
@@ -220,3 +244,4 @@ struct dirent *entry = calloc(1, GetDirentBufferSize(strlen(filename)));
 strcpy(entry->d_name, filename);
 return entry;
 }
+#endif

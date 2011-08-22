@@ -544,7 +544,7 @@ AC_CHECK_FUNCS(dirfd, [], [
   [AC_MSG_RESULT(yes)
   DIRFD_MACRO_FOUND=1],
   [AC_MSG_RESULT(no)])
-  if test x$DIRFD_MACRO_FOUND != x; then
+  if test x$DIRFD_MACRO_FOUND = x; then
     AC_LIBOBJ([dirfd])
   fi])
 

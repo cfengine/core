@@ -27,8 +27,6 @@
 
 	New Emacs mode for CFEngine policy files (thanks to Ted Zlatanov!)
 
-        After beta 1:
-
 	Warnings are on edit_line changes can now give greater degree of information
 	without spamming promise logs
 
@@ -36,8 +34,6 @@
 
 	Invalidation of package list cache on installation/removal of
 	packages.
-
-	After beta 2:
 
 	New option cf-key -r to remove host key by IP or hostname.
 

@@ -18,12 +18,12 @@
 @c ***********************************************************************
 @c %** start of header
 @setfilename cf3-tutorial.info
-@settitle CFEngine 3 Concept Guide
+@settitle CFEngine 3 Tutorial
 @setchapternewpage odd
 @c %** end of header
 
 @titlepage
-@title CFEngine 3 Concept Guide
+@title CFEngine 3 Tutorial
 @subtitle A CFEngine AS workbook
 @author Mark Burgess @@ CFEngine AS
 

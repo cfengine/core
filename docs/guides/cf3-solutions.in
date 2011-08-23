@@ -166,7 +166,7 @@ what_type:
 
 @c ......................................
 @menu
-* Creating files and directories::  
+* Create files and directories::  
 * Copy single files::           
 * Copy directory trees::        
 * Editing password or group files::  
@@ -183,8 +183,8 @@ what_type:
 * Software and patch installation::  
 @end menu
 
-@node Creating files and directories, Copy single files, Begin - Get started, Introduction
-@section Creating files and directories
+@node Create files and directories, Copy single files, Begin - Get started, Introduction
+@section Create files and directories
 
 @verbatim
 #CFEexample:unit_create_filedir.cf

@@ -72,6 +72,13 @@ Copyright @copyright{} 2011- CFEngine AS
 @end html
 @end ifhtml
 
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
 @menu
 * CFEngine Installation Guide::        
 @end menu
@@ -169,12 +176,6 @@ See reference manual or INSTALL file in source code for dependencies. To build f
 Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
 
 @noindent On the hub (policy server):
-@cartouche
-The below procedure is valid for the latest CFE Community v3.2 beta source code (available in repository). If you are using the 3.2.0b3 tar-ball, you will need to change the from-path when copying to masterfiles below:
-@verbatim
-   host# cp /usr/local/share/doc/cfengine/inputs/*.cf /var/cfengine/masterfiles/
-@end verbatim
-@end cartouche
 @verbatim
    host# /usr/local/sbin/cf-key
    host# cp /usr/local/sbin/cf-* /var/cfengine/bin/
@@ -258,12 +259,6 @@ This is, basically, a selection from /usr/local/share/doc/cfengine/ which has ov
 @end itemize
 
 @c ------------------------------------------------------------------
-@ifhtml
-@html
-<a name="Contents">
-@contents
-@end html
-@end ifhtml
 
 @ifhtml
 @html

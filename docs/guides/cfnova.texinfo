@@ -2,13 +2,7 @@
 \input texinfo-logo
 \input texinfo
 @selectaltfont{cmbright}
-@setlogo{NewLogo}
-@c *********************************************************************
-@c
-@c  This is an AUTO_GENERATED TEXINFO file. Do not submit patches against it.
-@c  Refer to the the component .texinfo files instead when patching docs.
-@c
-@c ***********************************************************************
+@setlogo{CFEngineFrontPage}
 @c %** start of header
 @setfilename cfnova.info
 @settitle CFEngine Nova Technical Supplement

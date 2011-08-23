@@ -70,15 +70,15 @@ Copyright @copyright{} 2008- CFEngine AS
 
 @menu
 * Introduction ::               
-* Common high level issues::    
-* Common low level issues::     
+* High level::                  
+* Low level::                   
 @end menu
 
 
 @c **********************************************************************
 @c CHAPTER
 @c **********************************************************************
-@node  Introduction , Common high level issues, Top, Top
+@node  Introduction , High level, Top, Top
 @chapter Introduction
 
 CFEngine 3 has been redesigned to allow modular solution building in
@@ -103,9 +103,24 @@ system environment, contact CFEngine's Professional Services at
 
 @menu
 * Begin - Get started::         
+* Creating files and directories::  
+* Copy single files::           
+* Copy directory trees::        
+* Editing password or group files::  
+* Editing password or group files custom::  
+* Disabling and rotating files::  
+* unit_disable_and_rotate_files.cf::  
+* unit_disable.cf::             
+* Hashing for change detection - tripwire::  
+* Command or script execution::  
+* Kill process::                
+* Restart process::             
+* Check filesystem space::      
+* Mount a filesystem::          
+* Software and patch installation::  
 @end menu
 
-@node Begin - Get started,  , Introduction , Introduction
+@node Begin - Get started, Creating files and directories, Introduction , Introduction
 @section  Begin - Get Started
 
 To get started with CFEngine, you can imagine the following template for entering examples.
@@ -157,6 +172,8 @@ what_type:
 * Editing password or group files::  
 * Editing password or group files custom::  
 * Disabling and rotating files::  
+* unit_disable_and_rotate_files.cf::  
+* unit_disable.cf::             
 * Hashing for change detection - tripwire::  
 * Command or script execution::  
 * Kill process::                
@@ -166,40 +183,40 @@ what_type:
 * Software and patch installation::  
 @end menu
 
-@node Creating files and directories, Copy single files, Begin - Get started, Begin - Get started
-@subsection Creating files and directories
+@node Creating files and directories, Copy single files, Begin - Get started, Introduction
+@section Creating files and directories
 
 @verbatim
 #CFEexample:unit_create_filedir.cf
 @end verbatim
 
 @c ......................................
-@node Copy single files, Copy directory trees, Creating files and directories, Begin - Get started
-@subsection Copy single files
+@node Copy single files, Copy directory trees, Creating files and directories, Introduction
+@section Copy single files
 
 @verbatim
 #CFEexample:unit_copy_copbl.cf
 @end verbatim
 
 @c ......................................
-@node Copy directory trees, Editing password or group files, Copy single files, Begin - Get started
-@subsection Copy directory trees
+@node Copy directory trees, Editing password or group files, Copy single files, Introduction
+@section Copy directory trees
 
 @verbatim
 #CFEexample:unit_copydir_copbl.cf
 @end verbatim
 
 @c ......................................
-@node Editing password or group files, Editing password or group files custom, Copy directory trees, Begin - Get started
-@subsection Editing password or group files
+@node Editing password or group files, Editing password or group files custom, Copy directory trees, Introduction
+@section Editing password or group files
 
 @verbatim
 #CFEexample:unit_edit_passwd_file_basic.cf
 @end verbatim
 
 @c ......................................
-@node Editing password or group files custom, Disabling and rotating files, Editing password or group files, Begin - Get started
-@subsection Editing password or group files custom
+@node Editing password or group files custom, Disabling and rotating files, Editing password or group files, Introduction
+@section Editing password or group files custom
 
 @verbatim
 #CFEexample:unit_edit_passwd_file.cf
@@ -207,41 +224,50 @@ what_type:
 
 
 @c ......................................
-@node Disabling and rotating files, Hashing for change detection - tripwire, Editing password or group files custom, Begin - Get started
-@subsection Disabling and rotating files
+@node Disabling and rotating files, unit_disable_and_rotate_files.cf, Editing password or group files custom, Introduction
+@section Disabling and rotating files
 
+
+
+@node unit_disable_and_rotate_files.cf, unit_disable.cf, Disabling and rotating files, Introduction
+@section unit_disable_and_rotate_files.cf
+@verbatim
+#CFEexample:unit_disable_and_rotate_files.cf
+@end verbatim
+
+@node unit_disable.cf, Hashing for change detection - tripwire, unit_disable_and_rotate_files.cf, Introduction
+@section unit_disable.cf
 @verbatim
 #CFEexample:unit_disable.cf
 @end verbatim
 
-
 @c ......................................
-@node Hashing for change detection - tripwire, Command or script execution, Disabling and rotating files, Begin - Get started
-@subsection Hashing for change detection (tripwire)
+@node Hashing for change detection - tripwire, Command or script execution, unit_disable.cf, Introduction
+@section Hashing for change detection (tripwire)
 
 @verbatim
 #CFEexample:unit_change_detect.cf
 @end verbatim
 
 @c ......................................
-@node Command or script execution, Kill process, Hashing for change detection - tripwire, Begin - Get started
-@subsection Command or script execution
+@node Command or script execution, Kill process, Hashing for change detection - tripwire, Introduction
+@section Command or script execution
 
 @verbatim
 #CFEexample:unit_commands.cf
 @end verbatim
 
 @c ......................................
-@node Kill process, Restart process, Command or script execution, Begin - Get started
-@subsection Kill process
+@node Kill process, Restart process, Command or script execution, Introduction
+@section Kill process
 
 @verbatim
 #CFEexample:unit_process_kill.cf
 @end verbatim
 
 @c ......................................
-@node Restart process, Check filesystem space, Kill process, Begin - Get started
-@subsection Restart process
+@node Restart process, Check filesystem space, Kill process, Introduction
+@section Restart process
 
 A basic pattern for restarting processes:
 @verbatim
@@ -258,24 +284,24 @@ the ability to run commands in a sandbox or as `setuid'. These should not be
 reproduced in @code{processes}.
 
 @c ......................................
-@node Check filesystem space, Mount a filesystem, Restart process, Begin - Get started
-@subsection Check filesystem space
+@node Check filesystem space, Mount a filesystem, Restart process, Introduction
+@section Check filesystem space
 
 @verbatim
 #CFEexample:unit_diskfree.cf
 @end verbatim
 
 @c ......................................
-@node Mount a filesystem, Software and patch installation, Check filesystem space, Begin - Get started
-@subsection Mount a filesystem
+@node Mount a filesystem, Software and patch installation, Check filesystem space, Introduction
+@section Mount a filesystem
 
 @verbatim
 #CFEexample:unit_mount_fs.cf
 @end verbatim
 
 @c ......................................
-@node Software and patch installation,  , Mount a filesystem, Begin - Get started
-@subsection Software and patch installation
+@node Software and patch installation,  , Mount a filesystem, Introduction
+@section Software and patch installation
 
 Example for Debian:
 @verbatim
@@ -309,13 +335,16 @@ SuSE Linux's package manager zypper is the most powerful alternative:
 @c **********************************************************************
 @c CHAPTER
 @c **********************************************************************
-@node Common high level issues, Common low level issues, Introduction , Top
-@chapter Common high level issues
+@node High level, Low level, Introduction , Top
+@chapter High level
 
 @page
 @c -----------------------------------------------------------------------
 @menu
 * Centralized Management::      
+* All hosts the same::          
+* Variation in hosts::          
+* Updating from a central hub::  
 * Change detection::            
 * Garbage collection::          
 * Distribute root passwords::   
@@ -324,8 +353,17 @@ SuSE Linux's package manager zypper is the most powerful alternative:
 * Find MAC address::            
 * Log rotation::                
 * Manage a system file::        
+* Simple template::             
+* Simple versioned template::   
+* Macro template::              
+* Custom editing::              
 * Manage a system process::     
+* Ensure running::              
+* Ensure not running::          
+* Prune processes::             
 * Manage users::                
+* Add users::                   
+* Remove users::                
 * Postfix mail configuration::  
 * Set up HPC clusters::         
 * Set up name resolution::      
@@ -335,7 +373,7 @@ SuSE Linux's package manager zypper is the most powerful alternative:
 @end menu
 
 
-@node Centralized Management, Change detection, Common high level issues, Common high level issues
+@node Centralized Management, All hosts the same, High level, High level
 @section  Centralized Management
 
 These examples show a simple setup for starting with a central approach to management of
@@ -349,8 +387,8 @@ with few requirements. It is useful for clusters where systems are all alike.
 * Updating from a central hub::  
 @end menu
 
-@node All hosts the same, Variation in hosts, Centralized Management, Centralized Management
-@subsection All hosts the same
+@node All hosts the same, Variation in hosts, Centralized Management, High level
+@section All hosts the same
 
 This shows the simplest approach in which all hosts are the same. It is too simple
 for most environments, but it serves as a starting point. Compare it to the next
@@ -436,8 +474,8 @@ access:
 
 
 @c -----------------------------------------------------------------------
-@node Variation in hosts, Updating from a central hub, All hosts the same, Centralized Management
-@subsection Variation in hosts
+@node Variation in hosts, Updating from a central hub, All hosts the same, High level
+@section Variation in hosts
 
 
 @verbatim
@@ -535,8 +573,8 @@ access:
 @end verbatim
 
 @c -----------------------------------------------------------------------
-@node Updating from a central hub,  , Variation in hosts, Centralized Management
-@subsection Updating from a central hub
+@node Updating from a central hub, Change detection, Variation in hosts, High level
+@section Updating from a central hub
 
 
 The configuration bundled with the CFEngine source code contains an
@@ -600,7 +638,7 @@ access:
 
 @page
 @c -----------------------------------------------------------------------
-@node Change detection, Garbage collection, Centralized Management, Common high level issues
+@node Change detection, Garbage collection, Updating from a central hub, High level
 @section  Change detection
 
 
@@ -633,7 +671,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node  Garbage collection, Distribute root passwords, Change detection, Common high level issues
+@node  Garbage collection, Distribute root passwords, Change detection, High level
 @section Garbage collection
 
 
@@ -722,7 +760,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node  Distribute root passwords, Distribute ssh keys, Garbage collection, Common high level issues
+@node  Distribute root passwords, Distribute ssh keys, Garbage collection, High level
 @section Distribute root passwords
 
 
@@ -824,7 +862,7 @@ access:
 
 @page
 @c -----------------------------------------------------------------------
-@node Distribute ssh keys, Laptop support configuration, Distribute root passwords, Common high level issues
+@node Distribute ssh keys, Laptop support configuration, Distribute root passwords, High level
 @section Distribute ssh keys
 
 
@@ -913,7 +951,7 @@ insert_lines:
 
 @page
 @c -----------------------------------------------------------------------
-@node  Laptop support configuration, Find MAC address, Distribute ssh keys, Common high level issues
+@node  Laptop support configuration, Find MAC address, Distribute ssh keys, High level
 @section Laptop support configuration
 
 Laptops do not need a lot of confguration support. IP addresses are
@@ -1050,7 +1088,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node Find MAC address, Log rotation, Laptop support configuration, Common high level issues
+@node Find MAC address, Log rotation, Laptop support configuration, High level
 @section Find the MAC address
 
 Finding the ethernet address can be hard, but on Linux it is straightforward.
@@ -1118,7 +1156,7 @@ ok::
 
 @page
 @c -----------------------------------------------------------------------
-@node  Log rotation, Manage a system file, Find MAC address, Common high level issues
+@node  Log rotation, Manage a system file, Find MAC address, High level
 @section Log rotation
 
 
@@ -1155,7 +1193,7 @@ rotate => "$(level)";
 
 @page
 @c -----------------------------------------------------------------------
-@node Manage a system file, Manage a system process, Log rotation, Common high level issues
+@node Manage a system file, Simple template, Log rotation, High level
 @section Manage a system file
 
 
@@ -1166,8 +1204,8 @@ rotate => "$(level)";
 * Custom editing::              
 @end menu
 
-@node Simple template, Simple versioned template, Manage a system file, Manage a system file
-@subsection Simple template
+@node Simple template, Simple versioned template, Manage a system file, High level
+@section Simple template
 
 @verbatim
 bundle agent hand_edited_config_file
@@ -1212,8 +1250,8 @@ files:
 @end verbatim
 
 
-@node Simple versioned template, Macro template, Simple template, Manage a system file
-@subsection Simple versioned template
+@node Simple versioned template, Macro template, Simple template, High level
+@section Simple versioned template
 
 The simplest approach to managing a file is to maintain a master copy by hand, keeping it
 in a version controlled repository (e.g. svn), and installing this version on the end machine.
@@ -1250,8 +1288,8 @@ commands:
 
 @end verbatim
 
-@node Macro template, Custom editing, Simple versioned template, Manage a system file
-@subsection Macro template
+@node Macro template, Custom editing, Simple versioned template, High level
+@section Macro template
 
 The next simplest approach to file management is to add variables to
 the template that will be expanded into local values at the end
@@ -1317,8 +1355,8 @@ $(definitions.more_hosts)
 @end smallexample
 
 
-@node Custom editing,  , Macro template, Manage a system file
-@subsection Custom editing
+@node Custom editing, Manage a system process, Macro template, High level
+@section Custom editing
 
 If you do not control the starting state of the file, because it is distributed by
 an operating system vendor for instance, then editing the final state is the best approach.
@@ -1384,7 +1422,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node Manage a system process, Manage users, Manage a system file, Common high level issues
+@node Manage a system process, Ensure running, Custom editing, High level
 @section Manage a system process
 
 @menu
@@ -1393,8 +1431,8 @@ files:
 * Prune processes::             
 @end menu
 
-@node Ensure running, Ensure not running, Manage a system process, Manage a system process
-@subsection Ensure running
+@node Ensure running, Ensure not running, Manage a system process, High level
+@section Ensure running
 
 The simplest example might look like this:
 
@@ -1447,8 +1485,8 @@ commands:
 
 @end verbatim
 
-@node Ensure not running, Prune processes, Ensure running, Manage a system process
-@subsection Ensure not running
+@node Ensure not running, Prune processes, Ensure running, High level
+@section Ensure not running
 
 
 @verbatim
@@ -1470,8 +1508,8 @@ processes:
 
 @end verbatim
 
-@node Prune processes,  , Ensure not running, Manage a system process
-@subsection Prune processes
+@node Prune processes, Manage users, Ensure not running, High level
+@section Prune processes
 
 This example kills processes owned by a particular user that have exceeded 100000 bytes of
 resident memory.
@@ -1515,7 +1553,7 @@ process_result => "rsize.process_owner";
 
 @page
 @c -----------------------------------------------------------------------
-@node Manage users, Postfix mail configuration, Manage a system process, Common high level issues
+@node Manage users, Add users, Prune processes, High level
 @section Manage users
 
 There are many approaches to managing users. You can edit system files like @file{/etc/passwd}
@@ -1527,8 +1565,8 @@ In all cases it is desirable to make this a data-driven process.
 * Remove users::                
 @end menu
 
-@node Add users, Remove users, Manage users, Manage users
-@subsection Add users
+@node Add users, Remove users, Manage users, High level
+@section Add users
 
 A simple approach which adds new users to the password file, and to a
 group called @samp{users} in the group file. Is shown below. This example
@@ -1632,13 +1670,13 @@ files:
 @end verbatim
 
 
-@node Remove users,  , Add users, Manage users
-@subsection Remove users
+@node Remove users, Postfix mail configuration, Add users, High level
+@section Remove users
 
 
 @page
 @c -----------------------------------------------------------------------
-@node Postfix mail configuration, Set up HPC clusters, Manage users, Common high level issues
+@node Postfix mail configuration, Set up HPC clusters, Remove users, High level
 @section Postfix mail configuration
 
 @verbatim
@@ -1727,7 +1765,7 @@ bundle edit_line AppendIfNSL(parameter)
 
 
 
-@node Set up HPC clusters, Set up name resolution, Postfix mail configuration, Common high level issues
+@node Set up HPC clusters, Set up name resolution, Postfix mail configuration, High level
 @section Set up HPC clusters
 
 HPC cluster machines are usually all identical, so the CFEngine
@@ -1816,7 +1854,7 @@ bundle agent disable_xinetd(name)
 
 @page
 @c -----------------------------------------------------------------------
-@node  Set up name resolution, Set up sudo, Set up HPC clusters, Common high level issues
+@node  Set up name resolution, Set up sudo, Set up HPC clusters, High level
 @section Set up name resolution
 
 There are many ways to do name resolution setup@footnote{In CFEngine 2
@@ -1972,7 +2010,7 @@ insert_lines:
 
 @page
 @c -----------------------------------------------------------------------
-@node Set up sudo, Set up a web server, Set up name resolution, Common high level issues
+@node Set up sudo, Set up a web server, Set up name resolution, High level
 @section Set up sudo
 
 Setting up @code{sudo} is straightforward, and is best managed by copying trusted
@@ -2004,7 +2042,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node  Set up a web server, Templating, Set up sudo, Common high level issues
+@node  Set up a web server, Templating, Set up sudo, High level
 @section Set up a web server
 
 Adapt this template to your operating system by adding multiple
@@ -2158,7 +2196,7 @@ field_edits:
 
 @page
 @c -----------------------------------------------------------------------
-@node Templating,  , Set up a web server, Common high level issues
+@node Templating,  , Set up a web server, High level
 @section Templating
 
 With CFEngine you have a choice between editing `deltas' into files
@@ -2242,8 +2280,8 @@ files:
 @c **********************************************************************
 @c CHAPTER
 @c **********************************************************************
-@node Common low level issues,  , Common high level issues, Top
-@chapter Common low level issues
+@node Low level,  , High level, Top
+@chapter Low level
 
 
 
@@ -2253,24 +2291,132 @@ files:
 
 @c -----------------------------------------------------------------------
 @menu
+* Aborting execution::          
+* ACL file example::            
+* ACL generic example::         
+* ACL secret example::          
+* Active directory example::    
+* Active list users directory example::  
+* Active directory show users example::  
 * Add lines to a file::         
 * Add users to passwd and group::  
 * Add software packages to the system::  
 * Add variable definitions to a file::  
+* Application baseline::        
+* Array example::               
+* Back references in filenames::  
+* BSD flags::                   
+* Change directory for command::  
 * Check file or directory permissions::  
+* Class match example::         
+* Client-server example::       
+* Commands example::            
+* Commenting lines in a file::  
 * Copy files::                  
+* Copy and flatten directory::  
 * Copy then edit::              
+* Creating files and directories::  
+* Database creation::           
+* Deleting lines from a file::  
+* Deleting lines exception::    
 * Editing files::               
 * Editing tabular files::       
+* Environment (virtual)::       
+* Environment variables::       
+* Execresult example::          
+* Inserting lines in a file::   
+* Get a list of users::         
+* Global classes::              
+* Hello world::                 
+* LDAP interactions::           
+* Linking files::               
+* Listing files-pattern in a directory::  
+* Locate and transform files::  
+* Logging::                     
+* Measurements::                
+* Methods::                     
+* Method validation::           
 * Mount NFS filesystem::        
 * Ordering promises::           
+* Process management::          
+* Read from a TCP socket::      
+* Resolver management::         
+* Search and replace text::     
+* Selecting a region in a file::  
+* Service management (windows)::  
 * Set up a PXE boot server::    
 * Tidying garbage files::       
+* Software distribution::       
+* Trigger classes::             
 * Unmount NFS filesystem::      
 * Web server modules::          
+* Warn if matching line in file::  
+* Windows registry::            
+* unit_registry_cache.cf::      
+* unit_registry.cf::            
 @end menu
 
-@node Add lines to a file, Add users to passwd and group, Common low level issues, Common low level issues
+
+
+
+
+
+
+
+
+
+@node Aborting execution, ACL file example, Low level, Low level
+@section Aborting execution
+@verbatim
+#CFEexample:unit_abort.cf
+@end verbatim
+
+
+@node ACL file example, ACL generic example, Aborting execution, Low level
+@section ACL file example
+@verbatim
+#CFEexample:unit_acl.cf
+@end verbatim
+
+@node ACL generic example, ACL secret example, ACL file example, Low level
+@section ACL generic example
+@verbatim
+#CFEexample:unit_acl_generic.cf
+@end verbatim
+
+@node ACL secret example, Active directory example, ACL generic example, Low level
+@section ACL secret example
+@verbatim
+#CFEexample:unit_acl_secret.cf
+@end verbatim
+
+
+
+@node Active directory example, Active list users directory example, ACL secret example, Low level
+@section Active directory example
+@verbatim
+#CFEexample:active_directory.cf
+@end verbatim
+
+
+
+@node Active list users directory example, Active directory show users example, Active directory example, Low level
+@section Active list users directory example
+@verbatim
+#CFEexample:unit_activedirectory_listusers.cf
+@end verbatim
+
+@node Active directory show users example, Add lines to a file, Active list users directory example, Low level
+@section Active directory show users example
+@verbatim
+#CFEexample:unit_activedirectory_showuser.cf
+@end verbatim
+
+
+
+
+
+@node Add lines to a file, Add users to passwd and group, Active directory show users example, Low level
 @section Add lines to a file
 
 There are  numerous approaches to adding lines to a file.
@@ -2345,7 +2491,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node Add users to passwd and group, Add software packages to the system, Add lines to a file, Common low level issues
+@node Add users to passwd and group, Add software packages to the system, Add lines to a file, Low level
 @section Add users to passwd and group
 
 Add lines to the password file, and users to group if they are not already there.
@@ -2386,7 +2532,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node Add software packages to the system, Add variable definitions to a file, Add users to passwd and group, Common low level issues
+@node Add software packages to the system, Add variable definitions to a file, Add users to passwd and group, Low level
 @section Add software packages to the system
 
 @verbatim
@@ -2436,7 +2582,7 @@ be 100 percent correct.
 
 @page
 @c -----------------------------------------------------------------------
-@node Add variable definitions to a file, Check file or directory permissions, Add software packages to the system, Common low level issues
+@node Add variable definitions to a file, Application baseline, Add software packages to the system, Low level
 @section Add variable definitions to a file e.g. @file{/etc/system}
 
 @verbatim
@@ -2513,11 +2659,86 @@ files:
 }
 
 @end verbatim
+
+
+
+
+@menu
+* Application baseline::        
+* Array example::               
+* Back references in filenames::  
+* BSD flags::                   
+* Change directory for command::  
+@end menu
+
+@node Application baseline, Array example, Add variable definitions to a file, Low level
+@section Application baseline
+@verbatim
+#CFEexample:app_baseline.cf
+@end verbatim
+
+
+
+
+@node Array example, Back references in filenames, Application baseline, Low level
+@section Array example
+@verbatim
+#CFEexample:unit_arrays.cf
+@end verbatim
+
+
+@page
+@c -----------------------------------------------------------------------
+
+
+@node Back references in filenames, BSD flags, Array example, Low level
+@section Backreferences in filenames
+@verbatim
+#CFEexample:unit_backreferences_files.cf
+@end verbatim
+
+
+
+
+
+
+@node BSD flags, Change directory for command, Back references in filenames, Low level
+@section BSD flags
+@verbatim
+#CFEexample:unit_bsdflags.cf
+@end verbatim
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  
 
 @page
 @c -----------------------------------------------------------------------
-@node Check file or directory permissions, Copy files, Add variable definitions to a file, Common low level issues
+
+@node Change directory for command, Check file or directory permissions, BSD flags, Low level
+@section Change directory for command
+@verbatim
+#CFEexample:unit_chdir.cf
+@end verbatim
+
+
+
+
+
+@node Check file or directory permissions, Class match example, Change directory for command, Low level
 @section Check file or directory permissions
 
 
@@ -2569,9 +2790,59 @@ files:
 @end verbatim
 
 
-@page
-@c -----------------------------------------------------------------------
-@node Copy files, Copy then edit, Check file or directory permissions, Common low level issues
+
+
+
+@menu
+* Class match example::         
+* Client-server example::       
+* Commands example::            
+* Commenting lines in a file::  
+@end menu
+
+@node Class match example, Client-server example, Check file or directory permissions, Low level
+@section Class match example
+@verbatim
+#CFEexample:unit_classmatch.cf
+@end verbatim
+
+
+
+@node Client-server example, Commands example, Class match example, Low level
+@section Client-server example
+@verbatim
+#CFEexample:unit_server_copy_localhost.cf
+
+@end verbatim
+
+
+
+@node Commands example, Commenting lines in a file, Client-server example, Low level
+@section Commands example
+@verbatim
+#CFEexample:unit_commands.cf
+@end verbatim
+
+
+
+@node Commenting lines in a file, Copy files, Commands example, Low level
+@section Commenting lines in a file
+
+@verbatim
+#CFEexample:unit_edit_comment_lines.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_hashcomment.cf
+@end verbatim
+
+
+@verbatim
+#CFEexample:unit_hashuncomment.cf
+@end verbatim
+
+
+@node Copy files, Copy and flatten directory, Commenting lines in a file, Low level
 @section Copy files
 
 @verbatim
@@ -2597,9 +2868,27 @@ files:
 
 @end verbatim
 
-@page
-@c -----------------------------------------------------------------------
-@node Copy then edit, Editing files, Copy files, Common low level issues
+
+
+
+
+
+
+@menu
+* Copy and flatten directory::  
+@end menu
+
+@node Copy and flatten directory, Copy then edit, Copy files, Low level
+@section Copy and flatten directory
+@verbatim
+#CFEexample:unit_server_flatcopy_localhost.cf
+
+@end verbatim
+
+
+
+
+@node Copy then edit, Creating files and directories, Copy and flatten directory, Low level
 @section Copy then edit a file convergently
 
 To convergently chain a copy followed by edit, you need a staging file.
@@ -2643,9 +2932,59 @@ replace_patterns:
 
 @end verbatim
 
+
+
+
+
+
+@menu
+* Creating files and directories::  
+* Database creation::           
+* Deleting lines from a file::  
+* Deleting lines exception::    
+@end menu
+
+@node Creating files and directories, Database creation, Copy then edit, Low level
+@section Creating files and directories
+@verbatim
+#CFEexample:unit_create_filedir.cf
+@end verbatim
+
+
+
 @page
 @c -----------------------------------------------------------------------
-@node  Editing files, Editing tabular files, Copy then edit, Common low level issues
+
+@node Database creation, Deleting lines from a file, Creating files and directories, Low level
+@section Database creation
+@verbatim
+#CFEexample:unit_createdb.cf
+
+@end verbatim
+
+@verbatim
+#CFEexample:unit_sql.cf
+
+@end verbatim
+
+
+@node Deleting lines from a file, Deleting lines exception, Database creation, Low level
+@section Deleting lines from a file
+@verbatim
+#CFEexample:unit_deletelines.cf
+@end verbatim
+
+
+@node Deleting lines exception, Editing files, Deleting lines from a file, Low level
+@section Deleting lines exception
+@verbatim
+#CFEexample:unit_edit_deletenotmatch.cf
+@end verbatim
+
+
+@page
+@c -----------------------------------------------------------------------
+@node  Editing files, Editing tabular files, Deleting lines exception, Low level
 @section Editing files
 
 This is a huge topic. See also @xref{Add lines to a file}, @xref{Editing tabular files}, etc.
@@ -2689,7 +3028,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node  Editing tabular files, Mount NFS filesystem, Editing files, Common low level issues
+@node  Editing tabular files, Environment (virtual), Editing files, Low level
 @section Editing tabular files
 
 @verbatim
@@ -2793,51 +3132,210 @@ extend_fields => "true";
 
 
 
-@page
-@c -----------------------------------------------------------------------
-@node Mount NFS filesystem, Ordering promises, Editing tabular files, Common low level issues
-@section Mount NFS filesystem
+@menu
+* Environment (virtual)::       
+* Environment variables::       
+* Execresult example::          
+* Inserting lines in a file::   
+* Get a list of users::         
+* Global classes::              
+* Hello world::                 
+* LDAP interactions::           
+* Linking files::               
+* unit_remove_deadlinks.cf::    
+* Listing files-pattern in a directory::  
+* Locate and transform files::  
+* Logging::                     
+* Measurements::                
+* Methods::                     
+* Method validation::           
+* Mount NFS filesystem::        
+@end menu
 
+@node Environment (virtual), Environment variables, Editing tabular files, Low level
+@section Environments (virtual)
 
 @verbatim
-#####################################################################
-# Mount NFS
-#####################################################################
+#CFEexample:unit_environment.cf
 
-body common control
-
-{
-bundlesequence => { "mounts" };
-}
-
-#####################################################################
-
-bundle agent mounts
-
-{
-storage:
-
-  # Assumes the filesystem has been exported
-
-  "/mnt" mount  => nfs("server.example.org","/home");
-}
-
-######################################################################
-
-body mount nfs(server,source)
-
-{
-mount_type => "nfs";
-mount_source => "$(source)";
-mount_server => "$(server)";
-edit_fstab => "true";
-}
 @end verbatim
 
 
 
+@node Environment variables, Execresult example, Environment (virtual), Low level
+@section Environment variables
+@verbatim
+#CFEexample:unit_env.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_environment_simple.cf
+@end verbatim
+
+
+
+@node Execresult example, Inserting lines in a file, Environment variables, Low level
+@section Execresult example
+@verbatim
+#CFEexample:unit_execresult.cf
+@end verbatim
+
+
 @page
-@node Ordering promises, Set up a PXE boot server, Mount NFS filesystem, Common low level issues
+@c -----------------------------------------------------------------------
+
+
+@node Inserting lines in a file, Get a list of users, Execresult example, Low level
+@section Inserting lines in a file
+@verbatim
+#CFEexample:unit_edit_insert_fuzzylines.cf
+
+@end verbatim
+
+
+@verbatim
+#CFEexample:unit_edit_insert_lines.cf
+
+@end verbatim
+
+@verbatim
+#CFEexample:unit_edit_insert_lines_silly.cf
+
+@end verbatim
+
+@page
+@c -----------------------------------------------------------------------
+
+
+
+
+
+@node Get a list of users, Global classes, Inserting lines in a file, Low level
+@section Get a list of users
+@verbatim
+#CFEexample:unit_getusers.cf
+@end verbatim
+
+
+
+@node Global classes, Hello world, Get a list of users, Low level
+@section Global classes
+@verbatim
+#CFEexample:unit_classes_global.cf
+
+@end verbatim
+
+@page
+@c -----------------------------------------------------------------------
+
+@node Hello world, LDAP interactions, Global classes, Low level
+@section Hello world
+@verbatim
+#CFEexample:unit_helloworld.cf
+
+@end verbatim
+
+@page
+@c -----------------------------------------------------------------------
+
+@node LDAP interactions, Linking files, Hello world, Low level
+@section LDAP interactions
+@verbatim
+#CFEexample:unit_ldap.cf
+
+@end verbatim
+
+
+@node Linking files, Listing files-pattern in a directory, LDAP interactions, Low level
+@section Linking files
+@verbatim
+#CFEexample:unit_linking.cf
+
+@end verbatim
+
+Removing deadlinks from a directory:
+@verbatim
+#CFEexample:unit_remove_deadlinks.cf
+
+@end verbatim
+
+
+
+
+
+@node Listing files-pattern in a directory, Locate and transform files, Linking files, Low level
+@section Listing files-pattern in a directory
+@verbatim
+#CFEexample:unit_lsdir.cf
+
+@end verbatim
+
+
+@node Locate and transform files, Logging, Listing files-pattern in a directory, Low level
+@section Locate and transform files
+@verbatim
+#CFEexample:unit_locate_files_and_compress.cf
+@end verbatim
+
+@node Logging, Measurements, Locate and transform files, Low level
+@section Logging
+@verbatim
+#CFEexample:unit_log_private.cf
+
+@end verbatim
+
+
+@verbatim
+#CFEexample:unit_syslog2.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_syslog.cf
+@end verbatim
+
+
+@page
+@c -----------------------------------------------------------------------
+
+
+
+
+
+@node Measurements, Methods, Logging, Low level
+@section Measurements
+
+@verbatim
+#CFEexample:unit_measure_log.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_measurements.cf
+@end verbatim
+
+
+@node Methods, Method validation, Measurements, Low level
+@section Methods
+@verbatim
+#CFEexample:unit_method.cf
+@end verbatim
+
+@node Method validation, Mount NFS filesystem, Methods, Low level
+@section Method validation
+@verbatim
+#CFEexample:unit_method_validate.cf
+@end verbatim
+
+@node Mount NFS filesystem, Ordering promises, Method validation, Low level
+@section Mount NFS filesystem
+@verbatim
+#CFEexample:unit_mount_fs.cf
+@end verbatim
+
+
+
+
+@page
+@node Ordering promises, Process management, Mount NFS filesystem, Low level
 @section Ordering promises
 
 
@@ -2853,65 +3351,120 @@ promise type, and the types are ordered according to @i{normal
 ordering}.
 
 @verbatim
-####################################################
-#
-# Counting by the numbers...
-#
-####################################################
-
-body common control
-
-{
-bundlesequence => { "order" };
-}
-
-####################################################
-
-bundle agent order
-
-{
-vars:
-
- "list" slist => { "three", "four" };
-
-commands:
-
- ok_later::
-
-   "/bin/echo five";
-
- otherthing::
-
-   "/bin/echo six";
-
- any::
-
-  "/bin/echo one"    classes => d("ok_later","otherthing");
-  "/bin/echo two";
-  "/bin/echo $(list)";
-
- preserved_class::
-
-  "/bin/echo seven";
-
-}
-
-############################################
-
-body classes d(if,else)
-
-{
-promise_repaired => { "$(if)" };
-repair_failed => { "$(else)" };
-persist_time => "0";
-}
-
-
+#CFEexample:unit_ordering.cf
 @end verbatim
+
+
+
+
+
+
+
 
 @page
 @c -----------------------------------------------------------------------
-@node  Set up a PXE boot server, Tidying garbage files, Ordering promises, Common low level issues
+
+
+
+@menu
+* Process management::          
+* Read from a TCP socket::      
+* Resolver management::         
+* Search and replace text::     
+* Selecting a region in a file::  
+* Service management (windows)::  
+@end menu
+
+@node Process management, Read from a TCP socket, Ordering promises, Low level
+@section Process management
+@verbatim
+#CFEexample:unit_process_kill.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_process_matching2.cf
+@end verbatim
+
+
+@verbatim
+#CFEexample:unit_process_matching3.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_process_matching.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_process_restart_basic.cf
+@end verbatim
+
+
+@verbatim
+#CFEexample:unit_process_restart.cf
+@end verbatim
+
+@verbatim
+#CFEexample:unit_process_signalling.cf
+@end verbatim
+
+
+@page
+@c -----------------------------------------------------------------------
+
+
+@node Read from a TCP socket, Resolver management, Process management, Low level
+@section Read from a TCP socket
+@verbatim
+#CFEexample:unit_readtcp.cf
+
+@end verbatim
+
+
+
+
+@node Resolver management, Search and replace text, Read from a TCP socket, Low level
+@section Resolver management
+@verbatim
+#CFEexample:unit_resolveconf.cf
+@end verbatim
+
+
+
+
+@page
+@c -----------------------------------------------------------------------
+
+@node Search and replace text, Selecting a region in a file, Resolver management, Low level
+@section Search and replace text
+@verbatim
+#CFEexample:unit_edit_replace_string.cf
+@end verbatim
+
+
+
+@node Selecting a region in a file, Service management (windows), Search and replace text, Low level
+@section Selecting a region in a file
+@verbatim
+#CFEexample:unit_select_region.cf
+@end verbatim
+
+
+
+
+@node Service management (windows), Set up a PXE boot server, Selecting a region in a file, Low level
+@section Service management (windows)
+@verbatim
+#CFEexample:unit_service_disable.cf
+@end verbatim
+
+
+@verbatim
+#CFEexample:unit_service_start.cf
+@end verbatim
+
+
+
+@node  Set up a PXE boot server, Tidying garbage files, Service management (windows), Low level
 @section Set up a PXE boot server
 
 Use CFEngine to set up a PXE boot server.
@@ -3408,7 +3961,7 @@ bundle edit_line comment_lines_matching_apache2(comment)
 
 @page
 @c -----------------------------------------------------------------------
-@node Tidying garbage files, Unmount NFS filesystem, Set up a PXE boot server, Common low level issues
+@node Tidying garbage files, Software distribution, Set up a PXE boot server, Low level
 @section Tidying garbage files
 
 Emulating the `tidy' feature of CFEngine 2.
@@ -3480,7 +4033,35 @@ file_result => "mtime";
 
 @page
 @c -----------------------------------------------------------------------
-@node Unmount NFS filesystem, Web server modules, Tidying garbage files, Common low level issues
+
+
+@menu
+* Software distribution::       
+* Trigger classes::             
+@end menu
+
+@node Software distribution, Trigger classes, Tidying garbage files, Low level
+@section Software distribution
+@verbatim
+#CFEexample:unit_software_dist.cf
+@end verbatim
+
+
+@page
+@c -----------------------------------------------------------------------
+
+
+@node Trigger classes, Unmount NFS filesystem, Software distribution, Low level
+@section Trigger classes
+@verbatim
+#CFEexample:unit_edit_triggerclass.cf
+@end verbatim
+
+
+
+@page
+@c -----------------------------------------------------------------------
+@node Unmount NFS filesystem, Web server modules, Trigger classes, Low level
 @section Unmount NFS filesystem
 
 
@@ -3522,7 +4103,7 @@ unmount => "true";
 
 @page
 @c -----------------------------------------------------------------------
-@node Web server modules,  , Unmount NFS filesystem, Common low level issues
+@node Web server modules, Warn if matching line in file, Unmount NFS filesystem, Low level
 @section Web server modules
 
 The problem of editing the correct modules into the list of standard
@@ -3626,8 +4207,41 @@ field_edits:
 
 
 
+@page
+@c -------------------------------------------------------------------------
+
+@menu
+* Warn if matching line in file::  
+* Windows registry::            
+* unit_registry_cache.cf::      
+* unit_registry.cf::            
+@end menu
+
+@node Warn if matching line in file, Windows registry, Web server modules, Low level
+@section Warn if matching line in file
+@verbatim
+#CFEexample:unit_warnifline.cf
+
+@end verbatim
 
 
+@node Windows registry, unit_registry_cache.cf, Warn if matching line in file, Low level
+@section Windows registry
+@verbatim
+#CFEexample:unit_getregistry.cf
+@end verbatim
+
+@node unit_registry_cache.cf, unit_registry.cf, Windows registry, Low level
+@section unit_registry_cache.cf
+@verbatim
+#CFEexample:unit_registry_cache.cf
+@end verbatim
+
+@node unit_registry.cf,  , unit_registry_cache.cf, Low level
+@section unit_registry.cf
+@verbatim
+#CFEexample:unit_registry.cf
+@end verbatim
 
 
 

@@ -103,7 +103,7 @@ system environment, contact CFEngine's Professional Services at
 
 @menu
 * Begin - Get started::         
-* Creating files and directories::  
+* Create files and directories::  
 * Copy single files::           
 * Copy directory trees::        
 * Editing password or group files::  
@@ -120,7 +120,7 @@ system environment, contact CFEngine's Professional Services at
 * Software and patch installation::  
 @end menu
 
-@node Begin - Get started, Creating files and directories, Introduction , Introduction
+@node Begin - Get started, Create files and directories, Introduction , Introduction
 @section  Begin - Get Started
 
 To get started with CFEngine, you can imagine the following template for entering examples.
@@ -191,7 +191,7 @@ what_type:
 @end verbatim
 
 @c ......................................
-@node Copy single files, Copy directory trees, Creating files and directories, Introduction
+@node Copy single files, Copy directory trees, Create files and directories, Introduction
 @section Copy single files
 
 @verbatim
@@ -3142,7 +3142,6 @@ extend_fields => "true";
 * Hello world::                 
 * LDAP interactions::           
 * Linking files::               
-* unit_remove_deadlinks.cf::    
 * Listing files-pattern in a directory::  
 * Locate and transform files::  
 * Logging::                     

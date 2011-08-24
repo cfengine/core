@@ -47,3 +47,10 @@ return dirp->d_fd != -1 ? dirp->d_fd : ENOTSUP;
 }
 
 #endif
+
+#if defined(__hpux) || defined(_AIX)
+int dirfd(DIR *dirp)
+{
+return dirp->dd_fd != -1 ? dirp->dd_fd : ENOTSUP;
+}
+#endif

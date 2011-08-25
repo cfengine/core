@@ -243,7 +243,7 @@ while (true)
    
    if (intp == 0)
       {
-      if (cf_full_write (dd, buf, n_read) < 0)
+      if (FullWrite(dd, buf, n_read) < 0)
          {
          CfOut(cf_error,"","Copy failed (no space?) while doing %s to %s\n",source,new);
          close(sd);
@@ -264,7 +264,7 @@ while (true)
     {
     /* Write a null character and truncate it again.  */
     
-    if (cf_full_write (dd, "", 1) < 0 || ftruncate (dd, n_read_total) < 0)
+    if (FullWrite(dd, "", 1) < 0 || ftruncate (dd, n_read_total) < 0)
        {
        CfOut(cf_error,"write","cfengine: full_write or ftruncate error in CopyReg\n");
        free(buf);
@@ -334,7 +334,7 @@ if (pp && pp->makeholes)
 
 if (intp == 0)
    {
-   if (cf_full_write(dd,buf,towrite) < 0)
+   if (FullWrite(dd,buf,towrite) < 0)
       {
       CfOut(cf_error,"write","Local disk write(%.256s) failed\n",new);
       pp->conn->error = true;

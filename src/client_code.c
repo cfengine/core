@@ -784,9 +784,9 @@ while (!done)
 
 if (last_write_made_hole)   
    {
-   if (cf_full_write(dd,"",1) < 0 || ftruncate(dd,n_read_total) < 0)
+   if (FullWrite(dd,"",1) < 0 || ftruncate(dd,n_read_total) < 0)
       {
-      cfPS(cf_error,CF_FAIL,"",pp,attr,"cf_full_write or ftruncate error in CopyReg, source %s\n",source);
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"FullWrite or ftruncate error in CopyReg, source %s\n",source);
       free(buf);
       unlink(new);
       close(dd);
@@ -927,9 +927,9 @@ while (more)
 
 if (last_write_made_hole)   
    {
-   if (cf_full_write(dd,"",1) < 0 || ftruncate(dd,n_read_total) < 0)
+   if (FullWrite(dd,"",1) < 0 || ftruncate(dd,n_read_total) < 0)
       {
-      cfPS(cf_error,CF_FAIL,"",pp,attr,"cf_full_write or ftruncate error in CopyReg, source %s\n",source);
+      cfPS(cf_error,CF_FAIL,"",pp,attr,"FullWrite or ftruncate error in CopyReg, source %s\n",source);
       free(buf);
       unlink(new);
       close(dd);

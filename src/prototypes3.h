@@ -40,10 +40,6 @@
 const char *Version(void);
 const char *NameVersion(void);
 
-/* full-write.c */
-
-int cf_full_write (int desc, char *ptr, size_t len);
-
 /* cflex.l */
 
 int yylex (void);
@@ -721,6 +717,10 @@ struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
 FnCallType *FindFunction(const char *name);
 void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
+
+/* full-write.c */
+
+int FullWrite(int desc, const char *ptr, size_t len);
 
 /* generic_agent.c */
 

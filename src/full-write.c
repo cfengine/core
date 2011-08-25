@@ -22,51 +22,30 @@
   included file COSL.txt.
 */
 
-#ifdef HAVE_CONFIG_H
-# include <conf.h>
-#endif
-
-#include "cf.defs.h"
-#include <sys/types.h>
-
-/* Forward declaration copied from prototypes.h to avoid compile-time warning */
-int cf_full_write (int desc, char *ptr, size_t len);
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <errno.h>
-#ifndef STDC_HEADERS
-extern int errno;
-#endif
+#include "cf3.defs.h"
+#include "cf3.extern.h"
 
 /* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
    Return LEN upon success, write's (negative) error code otherwise.  */
 
-int cf_full_write (desc,ptr,len)
-
-int desc;
-char *ptr;
-size_t len;
-
-{ int total_written;
-
-total_written = 0;
+int FullWrite(int desc, const char *ptr, size_t len)
+{
+int total_written = 0;
 
 while (len > 0)
    {
    int written = write(desc,ptr,len);
-   
+
    if (written < 0)
       {
       if (errno == EINTR)
          {
          continue;
          }
-      
+
       return written;
       }
-   
+
    total_written += written;
    ptr += written;
    len -= written;

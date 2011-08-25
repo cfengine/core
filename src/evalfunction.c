@@ -3836,7 +3836,7 @@ return rval;
 static struct Rval FnCallNot(struct FnCall *fp, struct Rlist *finalargs)
 {
 struct Rval rval;
-SetFnCallReturnStatus("and", FNCALL_SUCCESS, NULL, NULL);
+SetFnCallReturnStatus("not", FNCALL_SUCCESS, NULL, NULL);
 rval.item = xstrdup(IsDefinedClass(finalargs->item) ? "!any" : "any");
 rval.rtype = CF_SCALAR;
 return rval;

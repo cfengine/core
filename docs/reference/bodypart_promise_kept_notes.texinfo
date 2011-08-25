@@ -1,6 +1,6 @@
 
 This class is set if no action was necessary by @code{cf-agent}
-because the promise concerned was aready kept without further action
+because the promise concerned was already kept without further action
 required.
 
 Note that any strings passed to this list are automatically

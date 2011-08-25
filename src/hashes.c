@@ -196,11 +196,6 @@ static bool HugeHashDeleteElement(AssocHashTable *hashtable, const char *element
 int bucket = GetHash(element);
 int i = bucket;
 
-if (!hashtable->buckets)
-   {
-   return false;
-   }
-
 do
    {
    /* End of allocated chunk */
@@ -274,11 +269,6 @@ static CfAssoc *HugeHashLookupElement(AssocHashTable *hashtable, const char *ele
 {
 int bucket = GetHash(element);
 int i = bucket;
-
-if (!hashtable->buckets)
-   {
-   return NULL;
-   }
 
 do
    {

@@ -759,15 +759,27 @@ StartJoin(buffer,"{",bufsize);
  
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   Join(buffer,"\'",bufsize);
+   if(!Join(buffer,"\'",bufsize))
+      {
+      return false;
+      }
    
-   PrintRval(buffer,bufsize,rp->item,rp->type);
+   if(!PrintRval(buffer,bufsize,rp->item,rp->type))
+      {
+      return false;
+      }
 
-   Join(buffer,"\'",bufsize);
+   if(!Join(buffer,"\'",bufsize))
+      {
+      return false;
+      }
    
    if (rp->next != NULL)
       {
-      Join(buffer,",",bufsize);
+      if(!Join(buffer,",",bufsize))
+         {
+         return false;
+         }
       }
    }
 
@@ -875,15 +887,16 @@ if (rval == NULL)
 switch (type)
    {
    case CF_SCALAR:
-       Join(buffer,(char *)rval,bufsize);
+       return Join(buffer,(char *)rval,bufsize);
        break;
        
    case CF_LIST:
-       PrintRlist(buffer,bufsize,(struct Rlist *)rval);
+       return PrintRlist(buffer,bufsize,(struct Rlist *)rval);
        break;
        
    case CF_FNCALL:
        PrintFnCall(buffer,bufsize,(struct FnCall *)rval);
+       return true;
        break;
 
    case CF_NOPROMISEE:
@@ -891,7 +904,7 @@ switch (type)
        break;
    }
 
-return true;
+return false;
 }
 
 /*******************************************************************/

@@ -1001,9 +1001,37 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,"ifvarclass") == 0)
       {
-      if (IsExcluded(cp->rval))
+      struct Rval res;
+      
+      switch(cp->type)
          {
-         return;
+         case CF_SCALAR:
+             
+             if (IsExcluded(cp->rval))
+                {
+                return;
+                }
+             
+             break;
+
+         case CF_FNCALL:
+             /* eval it: e.g. ifvarclass => not("a_class") */
+
+             res = EvaluateFunctionCall(cp->rval,NULL);
+             bool excluded = IsExcluded(res.item);
+
+             DeleteRvalItem(res.item,res.rtype);
+
+             if(excluded)
+                {
+                return;
+                }
+             
+             break;
+             
+         default:
+             CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->type);
+             continue;
          }
       
       continue;

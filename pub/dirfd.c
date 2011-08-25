@@ -37,7 +37,7 @@
 int dirfd(DIR *dirp);
 #endif
 
-/* Under Solaris dirfd(3) is just looking inside structure */
+/* Under Solaris, HP-UX and AIX dirfd(3) is just looking inside DIR structure */
 
 #if defined(__sun)
 
@@ -46,11 +46,11 @@ int dirfd(DIR *dirp)
 return dirp->d_fd != -1 ? dirp->d_fd : ENOTSUP;
 }
 
-#endif
+#elif defined(__hpux) || defined(_AIX)
 
-#if defined(__hpux) || defined(_AIX)
 int dirfd(DIR *dirp)
 {
 return dirp->dd_fd != -1 ? dirp->dd_fd : ENOTSUP;
 }
+
 #endif

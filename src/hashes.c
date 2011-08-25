@@ -275,18 +275,11 @@ do
    /* End of allocated chunk */
    if (hashtable->buckets[i] == NULL)
       {
-      break;
+      return NULL;
       }
 
-   /* Keep looking */
-   if (hashtable->buckets[i] == HASH_ENTRY_DELETED)
-      {
-      i = (i + 1) % CF_HASHTABLESIZE;
-      continue;
-      }
-
-   /* Element is found */
-   if (strcmp(element, hashtable->buckets[i]->lval) == 0)
+   if (hashtable->buckets[i] != HASH_ENTRY_DELETED
+       && strcmp(element, hashtable->buckets[i]->lval) == 0)
       {
       return hashtable->buckets[i];
       }
@@ -295,7 +288,7 @@ do
    }
 while (i != bucket);
 
-/* Either looped through hashtable or found a NULL */
+/* Looped through whole hashtable */
 return NULL;
 }
 

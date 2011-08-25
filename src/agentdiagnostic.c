@@ -38,9 +38,6 @@
 
 #ifdef BUILD_TESTSUITE
 
-#include "testoutput.h"
-#include "testinput.h"
-
 // types: 1-100
 
 #define CF_FILE 1

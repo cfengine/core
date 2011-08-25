@@ -109,7 +109,7 @@ for (i = 0; i < hashtable->array.size; ++i)
          {
          buckets[bucket] = assoc;
          break;
-      }
+         }
       bucket = (bucket + 1) % CF_HASHTABLESIZE;
       }
    }

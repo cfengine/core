@@ -186,6 +186,8 @@ what_type:
 @node Create files and directories, Copy single files, Begin - Get started, Introduction
 @section Create files and directories
 
+Create files and directories and set permissions.
+
 @verbatim
 #CFEexample:unit_create_filedir.cf
 @end verbatim

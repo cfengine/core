@@ -685,10 +685,24 @@ and keep two independent quality assurance processes apart.}
 @node Getting started with the Community Edition,  , The policy decision flow, The components of CFEngine
 @section Getting started with the Community Edition
 
-Bootstrapping the commercial versions of CFEngine is a one-line trivial
-operation, which is covered in their separate documentation.  The
-quickest way to get started with the Community Edition is to copy the
-distributed policy files that were installed in
+The quickest way to get started with CFEngine is to download and install binary packages, available from @url{http://cfengine.com/inside/myspace}. Installing and bootstrapping these is a trivial operation, putting you two steps away from testing your first CFEngine policies. 
+
+This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
+@verbatim
+
+   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+
+@end verbatim
+
+CFEngine will output diagnostic information upon bootstrap (written to command line and syslog; cf-agent will also return a value: ERROR: 1, SUCCESS: 0). Error messages will be displayed if bootstrapping failed, pursue these to get and indication of what went wrong and correct accordingly. If all is well you should see the following in the output:
+
+@verbatim
+
+-> Bootstrap to 123.456.789.123 completed successfully
+
+@end verbatim
+
+As an alternative to installing binary packages, the following steps outline the procedure when you have built from source (available from @url{http://cfengine.com/source_code}). You will then need to copy the distributed policy files that were installed in
 @file{/usr/local/share/doc/CFEngine/} to a policy distribution point, like  
 this:
 
@@ -699,34 +713,23 @@ this:
 
 @item Create the policy source directory and populate the cache:
 @smallexample
-host# /usr/local/sbin/cf-key
-host# cp /usr/local/share/doc/CFEngine/inputs/*cf /var/cfengine/inputs/
-host# /usr/local/sbin/cf-agent --bootstrap
-@end smallexample
-@noindent It does no harm to run CFEngine several times to resolve dependencies
-in the process.
-@item Now start the system.
-@smallexample
-host# /usr/local/sbin/cf-agent
+   host# /usr/local/sbin/cf-key
+   host# cp /usr/local/sbin/cf-* /var/cfengine/bin/
+   host# cp /usr/local/share/cfengine/masterfiles/*.cf /var/cfengine/masterfiles/
+   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
 @end smallexample
 @end enumerate
 
-CFEngine is now running on your policy server.
-@c What will it do?  Just a quick sentence or two, so folks know what to look
-@c for (or know that it is safe).
+@sp 1
+CFEngine should be up and running on your system after the bootstrap. It will copy its default policy files into @file{masterfiles} and @file{inputs} on the hub (policy server) provided that the directory is empty (fresh install). When the clients are bootstrapped, they will contact the hub and copy these files to their @file{inputs} directory. You should browse the files in @file{/var/cfengine/masterfiles} to see what they contain, and perhaps make some alterations to adapt to your environment. 
+
+To see which CFEngine processes are running:
 
 @smallexample
 
 host# ps waux | grep cf-
 
 @end smallexample
-
-You should browse the files in @file{/var/cfengine/masterfiles} to see
-what they contain, and even make some alterations before doing
-this. Amongst other things, you will want to customize things like the
-@file{resolv.conf} parameters to your site.  If you have used an
-earlier version of CFEngine before, the contents of these files will
-not look too mysterious.  For the rest, stay tuned for an overview.
 
 Note: If you have manually configured a different location for the  
 CFEngine work directory,

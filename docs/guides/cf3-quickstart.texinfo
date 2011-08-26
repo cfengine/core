@@ -133,9 +133,6 @@ The below examples are given for a Red Hat or SUSE, adapt them according to your
 @c ---------------------------------------------------
 @node Bootstrap CFEngine,  , Unpack the software, Install from packages
 @section Bootstrap CFEngine
-@cartouche
-The below procedure is valid for CFE Nova and CFE Community v3.2 and up (packages for v3.2 will be released soon). For earlier versions of CFE Community binaries, you may proceed directly to the Next steps chapter.
-@end cartouche
 
 This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
 @verbatim
@@ -223,10 +220,6 @@ CFEngine should now be up and running on your system.
 @c *****************************************************
 @node Check installation, Getting started, Build from source, Top
 @chapter Check installation
-
-@cartouche
-The below procedure is valid for CFE Nova and CFE Community v3.2 and up (packages for v3.2 will be released soon).
-@end cartouche
 
 The default configuration of CFEngine does nothing other than look after itself, running in the background. It will only look for possible policy updates from @file{/var/cfengine/masterfiles}
 on the hub (policy server).

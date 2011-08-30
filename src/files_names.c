@@ -406,7 +406,24 @@ return JoinMargin(path,leaf,nextFree,bufsize,CF_BUFFERMARGIN);
 int Join(char *path, const char *leaf, int bufsize)
 
 {
-  return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
+ return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
+}
+
+/*********************************************************************/
+
+int JoinSilent(char *path, const char *leaf, int bufsize)
+/* Don't warn on buffer limits - just return the value */
+{
+ int len = strlen(leaf);
+
+ if ((strlen(path)+len) > (bufsize - CF_BUFFERMARGIN))
+    {
+    return false;
+    }
+ 
+ strcat(path,leaf);
+ 
+ return true;
 }
 
 /*********************************************************************/

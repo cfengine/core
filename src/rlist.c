@@ -774,18 +774,34 @@ int PrintRlist(char *buffer,int bufsize,struct Rlist *list)
 { struct Rlist *rp;
 
 StartJoin(buffer,"{",bufsize);
- 
+
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   Join(buffer,"\'",bufsize);
+   if(!Join(buffer,"'",bufsize))
+      {
+      EndJoin(buffer,"...TRUNCATED'}",bufsize);
+      return false;
+      }
    
-   PrintRval(buffer,bufsize,rp->item,rp->type);
+   if(!PrintRval(buffer,bufsize,rp->item,rp->type))
+      {
+      EndJoin(buffer,"...TRUNCATED'}",bufsize);
+      return false;
+      }
 
-   Join(buffer,"\'",bufsize);
+   if(!Join(buffer,"'",bufsize))
+      {
+      EndJoin(buffer,"...TRUNCATED'}",bufsize);
+      return false;
+      }
    
    if (rp->next != NULL)
       {
-      Join(buffer,",",bufsize);
+      if(!Join(buffer,",",bufsize))
+         {
+         EndJoin(buffer,"...TRUNCATED}",bufsize);
+         return false;
+         }
       }
    }
 

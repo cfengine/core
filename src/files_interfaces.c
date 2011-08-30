@@ -369,7 +369,7 @@ else
       {
       if (a.havedepthsearch)
          {
-         CfOut(cf_error,"","Warning: depth_search (recursion) is promised for a base object %s that is not a directory",path);
+         CfOut(cf_inform,"","Warning: depth_search (recursion) is promised for a base object %s that is not a directory",path);
          SaveSetuid(a,pp);
          YieldCurrentLock(thislock);
          return;

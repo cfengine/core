@@ -100,6 +100,10 @@ if (thislock.lock == NULL)
    return;
    }
 
+// Start by reseting the root directory in case yum tries to glob regexs(!)
+
+chdir("/");
+
 if (!VerifyInstalledPackages(&INSTALLED_PACKAGE_LISTS,a,pp))
    {
    cfPS(cf_error,CF_FAIL,"",pp,a," !! Unable to obtain a list of installed packages - aborting");
@@ -1888,15 +1892,16 @@ return false;
 /*****************************************************************************/
 
 static int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
+
 {
-  if(strncmp(command,"/cf_internal_rpath",sizeof("/cf_internal_rpath") - 1) == 0)
-    {
-      return ExecPackageCommandRpath(command,verify,setCmdClasses,a,pp);
-    }
-  else
-    {
-      return ExecPackageCommandGeneric(command,verify,setCmdClasses,a,pp);
-    }
+if(strncmp(command,"/cf_internal_rpath",sizeof("/cf_internal_rpath") - 1) == 0)
+   {
+   return ExecPackageCommandRpath(command,verify,setCmdClasses,a,pp);
+   }
+else
+   {
+   return ExecPackageCommandGeneric(command,verify,setCmdClasses,a,pp);
+   }
 }
 
 /*****************************************************************************/

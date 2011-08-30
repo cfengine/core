@@ -759,7 +759,7 @@ StartJoin(buffer,"{",bufsize);
 
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   if(!Join(buffer,"'",bufsize))
+   if(!JoinSilent(buffer,"'",bufsize))
       {
       EndJoin(buffer,"...TRUNCATED'}",bufsize);
       return false;
@@ -771,7 +771,7 @@ for (rp = list; rp != NULL; rp=rp->next)
       return false;
       }
 
-   if(!Join(buffer,"'",bufsize))
+   if(!JoinSilent(buffer,"'",bufsize))
       {
       EndJoin(buffer,"...TRUNCATED'}",bufsize);
       return false;
@@ -779,7 +779,7 @@ for (rp = list; rp != NULL; rp=rp->next)
    
    if (rp->next != NULL)
       {
-      if(!Join(buffer,",",bufsize))
+      if(!JoinSilent(buffer,",",bufsize))
          {
          EndJoin(buffer,"...TRUNCATED}",bufsize);
          return false;
@@ -891,7 +891,7 @@ if (rval == NULL)
 switch (type)
    {
    case CF_SCALAR:
-       return Join(buffer,(char *)rval,bufsize);
+       return JoinSilent(buffer,(char *)rval,bufsize);
        break;
        
    case CF_LIST:

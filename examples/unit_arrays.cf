@@ -48,3 +48,4 @@ reports:
 
    "Global $(g.array[1]) and $(localarray[2])";
 }
+

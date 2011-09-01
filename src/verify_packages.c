@@ -1705,7 +1705,7 @@ switch(policy)
           }
        else
           {
-          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be verified -- no match\n",pp->promiser);
+          cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be verified -- no match\n",pp->promiser);
           }
        
        break;
@@ -1977,7 +1977,7 @@ int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct 
     ReplaceStr(line,lineSafe,sizeof(lineSafe),"%","%%");
     CfOut(cf_inform,"","Q:%20.20s ...:%s",cmd,lineSafe);
 
-    if (line[0] != '\0' && verify)
+    if (verify && line[0] != '\0')
        {
        if (a.packages.package_noverify_regex)
           {
@@ -1993,19 +1993,23 @@ int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,struct 
 
  packmanRetval = cf_pclose(pfp);
 
- if(verify)  // return code check for verify policy
+ if(verify && a.packages.package_noverify_returncode != CF_NOINT)
     {
-    if(a.packages.package_noverify_returncode != CF_NOINT)
+    if(a.packages.package_noverify_returncode == packmanRetval)
        {
-       if(a.packages.package_noverify_returncode == packmanRetval)
-	  {
-          cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
-          retval = false;
-	  }
-       else
-	  {
-          CfOut(cf_verbose, "", " Package successfully verified from return code");
-	  }
+       cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package verification error (returned %d)",packmanRetval);
+       retval = false;
+       }
+    else
+       {
+       cfPS(cf_inform,CF_NOP,"",pp,a,"-> Package verification succeeded (returned %d)",packmanRetval);
+       }
+    }
+ else if(verify && a.packages.package_noverify_regex)
+    {
+    if(retval)  // set status if we succeeded above
+       {
+       cfPS(cf_inform,CF_NOP,"",pp,a,"-> Package verification succeeded (no match with package_noverify_regex)");
        }
     }
  else if(setCmdClasses)  // generic return code check

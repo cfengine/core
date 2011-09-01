@@ -13,7 +13,7 @@ all: build_solutions_guide cf3-solutions.texinfo SpecialTopic_Adoption.pdf  Spec
      SpecialTopic_MenuDrivenConfig.pdf SpecialTopic_FIPS.pdf cf3-tutorial.pdf\
      SpecialTopic_Vision.pdf SpecialTopic_Security.pdf SpecialTopic_Comparison.pdf\
      SpecialTopic_ContentDrivenPolicies.pdf SpecialTopic_Cloud.pdf SpecialTopic_OpenNebula.pdf SpecialTopic_RBAC.pdf\
-     cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf cf3-conceptguide.pdf cf3-quickstart.pdf
+     cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf cf3-conceptguide.pdf cf3-quickstart.pdf cf3-nova-2-1-supplement.pdf
 
 
 cf3-solutions.texinfo: cf3-solutions.in

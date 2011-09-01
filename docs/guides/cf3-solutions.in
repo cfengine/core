@@ -196,6 +196,8 @@ Create files and directories and set permissions.
 @node Copy single files, Copy directory trees, Create files and directories, Introduction
 @section Copy single files
 
+Copy single files, locally (@code{local_cp}) or from a remote site (@code{secure_cp}). The Community Open Promise-Body Library (COPBL; @file{cfengine_stdlib.cf}) should be included in the @file{/var/cfengine/inputs/} directory and input as below.
+
 @verbatim
 #CFEexample:unit_copy_copbl.cf
 @end verbatim
@@ -203,6 +205,8 @@ Create files and directories and set permissions.
 @c ......................................
 @node Copy directory trees, Editing password or group files, Copy single files, Introduction
 @section Copy directory trees
+
+Copy directory trees, locally (@code{local_cp}) or from a remote site (@code{secure_cp}). (@code{depth_search => recurse("")}) defines the number of sublevels to include, (@code{"inf"}) gets entire tree.
 
 @verbatim
 #CFEexample:unit_copydir_copbl.cf
@@ -212,6 +216,11 @@ Create files and directories and set permissions.
 @node Editing password or group files, Editing password or group files custom, Copy directory trees, Introduction
 @section Editing password or group files
 
+To change the password of a system, we need to edit a file. A file is
+a complex object -- once open there is a new world of possible
+promises to make about its contents.  CFEngine has bundles of promises
+that are specially for editing.
+
 @verbatim
 #CFEexample:unit_edit_passwd_file_basic.cf
 @end verbatim
@@ -220,25 +229,19 @@ Create files and directories and set permissions.
 @node Editing password or group files custom, Disabling and rotating files, Editing password or group files, Introduction
 @section Editing password or group files custom
 
+In this example the bundles from the Community Open Promise-Body Library are included directly in the policy instead of being input as a separate file.
+
 @verbatim
 #CFEexample:unit_edit_passwd_file.cf
 @end verbatim
 
 
 @c ......................................
-@node Disabling and rotating files, unit_disable_and_rotate_files.cf, Editing password or group files custom, Introduction
+@node Disabling and rotating files, Hashing for change detection - tripwire, Editing password or group files custom, Introduction
 @section Disabling and rotating files
 
+Use the following simple steps to disable and rotate files. See the Community Open Promise-Body Library if you wish more details on what @code{disable} and @code{rotate} does.
 
-
-@node unit_disable_and_rotate_files.cf, unit_disable.cf, Disabling and rotating files, Introduction
-@section unit_disable_and_rotate_files.cf
-@verbatim
-#CFEexample:unit_disable_and_rotate_files.cf
-@end verbatim
-
-@node unit_disable.cf, Hashing for change detection - tripwire, unit_disable_and_rotate_files.cf, Introduction
-@section unit_disable.cf
 @verbatim
 #CFEexample:unit_disable.cf
 @end verbatim
@@ -247,6 +250,8 @@ Create files and directories and set permissions.
 @node Hashing for change detection - tripwire, Command or script execution, unit_disable.cf, Introduction
 @section Hashing for change detection (tripwire)
 
+Change detection is a powerful and easy way to monitor your environment, increase awareness and harden your system against security breaches.
+
 @verbatim
 #CFEexample:unit_change_detect.cf
 @end verbatim
@@ -254,6 +259,8 @@ Create files and directories and set permissions.
 @c ......................................
 @node Command or script execution, Kill process, Hashing for change detection - tripwire, Introduction
 @section Command or script execution
+
+Execute a command, for instance to start a MySQL service. Note that executing commands takes control away from CFEngine and may disrupt the convergent nature of well written policies.
 
 @verbatim
 #CFEexample:unit_commands.cf

@@ -112,7 +112,7 @@ const  struct option OPTIONS[15] =
       { "file",required_argument,0,'f' },
       { "manual",no_argument,0,'m'},
       { "manpage",no_argument,0,'M'},
-      { "stories",required_argument,0,'s'},
+      { "stories",required_argument,0,'z'},
       { "syntax",required_argument,0,'S'},
       { "topics",no_argument,0,'T'},
       { "test",required_argument,0,'t'},
@@ -183,7 +183,7 @@ void CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruT",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"hbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -218,25 +218,11 @@ while ((c=getopt_long(argc,argv,"hbd:vVf:mMs:St:ruT",OPTIONS,&optindex)) != EOF)
              }
           break;
 
-      case 's':
+      case 'z':
 
-      { char buffer[1000000];
-
-      /* LICENSES = 1; */
-      /* CfLDAP_JSON_GetSingleAttributeList("ldap://10.0.0.152", */
-      /*                                    "uid=sudhir,ou=people,dc=cfengine,dc=com", */
-      /*                                    "ou=groups,dc=cfengine,dc=com", */
-      /*                                    "(memberUid=sudhir)", */
-      /*                                    "cn", */
-      /*                                    "subtree", */
-      /*                                    "sasl", */
-      /*                                    "password",1,100,buffer,1000000); */
-
-      printf("JSON:%s \n",buffer);
-      }   
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
-          //CfGenerateStories(TOPIC_CMD,cfi_cause);
+          CfGenerateStories(TOPIC_CMD,cfi_cause);
 #endif
           exit(0);
           break;

@@ -43,3 +43,4 @@ commands:
    "/bin/pwd"
        contain => cd("/tmp");
 }
+

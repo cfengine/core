@@ -321,9 +321,6 @@ strcpy(SQL_DATABASE,"cf_kmdb");
 strcpy(GRAPHDIR,"");
 SHOWREPORTS = false;
 
-PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
-PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
-
 if (InsertTopic("any","any"))
    {
    struct Rlist *list = NULL;

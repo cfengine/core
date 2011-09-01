@@ -461,7 +461,7 @@ if (a.haveedit)
 
 if (cfstat(path,&osb) != -1 && S_ISREG(osb.st_mode))
    {
-   VerifyFileLeaf(path,&oslb,a,pp);
+   VerifyFileLeaf(path,&osb,a,pp);
    }
 
 SaveSetuid(a,pp);

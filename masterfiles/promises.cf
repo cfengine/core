@@ -164,8 +164,8 @@ body executor control
  any::
 
   splaytime  => "1";
-  mailto     => "cfengine@example.org";
-  mailfrom   => "cfengine@$(sys.host).example.org";
+  mailto     => "cfengine@$(def.domain)";
+  mailfrom   => "cfengine@$(sys.host).$(def.domain)";
   smtpserver => "localhost";
 
 # Default:

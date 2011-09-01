@@ -32,7 +32,19 @@
 
 @cartouche
 @quotation
+As IT services dominate the operations of an increasing number of industries,
+many companies now view all online services as mission critical. Today, mission critical
+no longer just means the protection of human lives, but the protection of crucial
+operational assets.
 
+By making a fully redundant architecture for information
+updates, it is possible to make reliable promises about availability
+of status information.  Users get reliable and predictable insight,
+with fault recovery times of only a few minutes in case of failure --
+something that cannot easily be matched by push-based centralization.
+
+This guide explains how to set up redundant hub availability for a single Nova
+star network.
 @end quotation
 @end cartouche
 
@@ -354,7 +366,8 @@ and some additional CFEngine configuration.
 
 To do this, configure the Mongo database to set up a minimal replica set. This underlying
 mechanism for automatic failover. For example, a configuration like the following should
-be typed into the mongo client on one of the hub machines.
+be typed into the mongo client on one of the hub machines. Text like the following
+example can be pasted directly into the mongo shell.
 
 @verbatim
 host$ mongo
@@ -408,9 +421,45 @@ carried out before boostrapping hosts, as the Mongo services need to
 be initialized before anything can be written to the database, and the
 bootstrapping of the license initialization writes information to be
 stored in Mongo. During a single hub installation, these steps
-can be automated, but boostrapping the replication prevents
+can be automated, but bootstrapping the replication prevents
 a fully automated installation.
 
+@cartouche
+@b{Using more than one hub at a time}:
+If you want to be able to perform queries on any one of the redundant
+hosts, not only the master, then it's necessary to set a flag on each
+of the running mongo servers (master and slave):
+@verbatim
+host$ mongo
+
+rs.slaveOk();
+@end verbatim 
+This ensures that updates are synchonrized for querying.
+e.g. In this example we see the first query fail, and the second
+succeed after setting the flag:
+@verbatim
+CFEngineNova:SECONDARY> use cfreport
+switched to db cfreport
+
+CFEngineNova:SECONDARY> db.notebook.find();
+error: { "$err" : "not master and slaveok=false", "code" : 13435 }
+
+CFEngineNova:SECONDARY> db.notebook.find();
+CFEngineNova:SECONDARY> rs.slaveOk();     
+not master and slaveok=false
+CFEngineNova:SECONDARY> db.notebook.find();
+{ "_id" : ObjectId("4e5cd788d5d6b92c00000000"), 
+"_kh" : "SHA=9e9ad21d192fa...1635", 
+"_rD" : "0 : 10.10.160.115", "_t" : 1, "n" : [
+    {
+        "u" : "admin",
+        "m" : "This machine is a web server",
+        "d" : 319944880
+    }
+] }
+
+@end verbatim
+@end cartouche
 
 @item Copy the public and private key from the licensed hub, along with the
 @file{license.dat} file to the secondary hubs.
@@ -525,6 +574,10 @@ This is the host that is elected by the MongoDB replica-set vote.
 
 With the approach taken above we can be sure that data are being collected redundantly
 without duplication of network overhead.
+
+Note that the standard Nova configuration files contains example
+configurations for the replica set configuration. Integrating all the
+settings can require extensive modifications, as mentioned above.
 
 
 @menu

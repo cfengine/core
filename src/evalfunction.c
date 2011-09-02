@@ -106,11 +106,11 @@ static struct Rlist *GetHostsFromLastseenDB(struct Item *addresses,
    
     if (return_address)
        {
-       snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
+       snprintf(address, sizeof(address), "%s", ip->name);
        }
     else
        {
-       snprintf(address, sizeof(address), "%s", ip->name);
+       snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
        }
 
     if (entrytime < now - horizon)

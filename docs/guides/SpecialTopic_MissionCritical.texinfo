@@ -51,7 +51,7 @@ star network.
 @vskip 2cm
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2010 CFEngine AS
+Copyright @copyright{} 2011 CFEngine AS
 
 @end titlepage
 
@@ -72,6 +72,19 @@ Copyright @copyright{} 2010 CFEngine AS
 
 @ifnottex
 
+
+@menu
+* What are Mission Critical Operations?::  
+* Factors affecting Risk::      
+* Model-based planning for stability::  
+* Key terminology for Mission Critical Systems::  
+* Strategy for Mission Critical Operations::  
+* How CFEngine contributes to reducing mission risks::  
+* High availability access to the Mission Portal::  
+* Redundant hub architecture::  
+* How do I make a change in mission-critical infrastructure?::  
+* Separating Policy Changes from ad-hoc Changes::  
+@end menu
 
 @node Top, What are Mission Critical Operations?, (dir), (dir)
 @top CFEngine for Mission Critical Operations
@@ -341,19 +354,31 @@ actual distributed system is down or that there is any fault.
 @node Setting up redundant monitoring hubs,  , High availability access to the Mission Portal, High availability access to the Mission Portal
 @unnumberedsubsec Setting up redundant monitoring hubs
 
-If information and insight into your IT system are indeed Mission Critical for you,
-it is possible to create a high availability access to the mission information in the
-portal. 
+If information and insight into your IT system are indeed Mission
+Critical for you, it is possible to create a high availability access
+to the mission information in the portal.
+In general, we recommend a small amount of professional services to 
+help set up such a system, as there are several details that need to
+be taken into account.
 
-The CFEngine star-network `hub', used in CFE Nova and CFE Constellation is the
-report aggregator for the CFEngine software.
-CFEngine commercial editions support multiple hubs for redundancy during reporting.
-By making a cluster of three (or more) hubs, you can ensure that reports will always be 
-available and up to date, at the time-resolution promised by CFEngine.
+The CFEngine star-network `hub', used in CFE Nova and CFE
+Constellation is the report aggregator for the CFEngine software.
+CFEngine commercial editions support multiple hubs for redundancy
+during reporting.  By making a cluster of three (or more) hubs, you
+can ensure that reports will always be available and up to date, at
+the time-resolution promised by CFEngine.
 
 To set up redundant hubs, you will need three physical computers, or
 at least three virtual machines on different physical computers.
+The idea is to use the underlying technology of the MongoDB database
+to provide a replicated data store. If a single database server goes down
+a secondary replica can take over the role. The commercial editions
+of CFEngine interface with this database through @code{cf-hub},
+and this process can be made aware of the underlying replica technology
+in the database. The architecture is intended to be as simple as possible
+for the CFEngine user to employ.
 
+@sp 1
 @itemize
 
 @item Install each of the three systems with the Nova/Constellation extension package for
@@ -424,42 +449,6 @@ stored in Mongo. During a single hub installation, these steps
 can be automated, but bootstrapping the replication prevents
 a fully automated installation.
 
-@cartouche
-@b{Using more than one hub at a time}:
-If you want to be able to perform queries on any one of the redundant
-hosts, not only the master, then it's necessary to set a flag on each
-of the running mongo servers (master and slave):
-@verbatim
-host$ mongo
-
-rs.slaveOk();
-@end verbatim 
-This ensures that updates are synchonrized for querying.
-e.g. In this example we see the first query fail, and the second
-succeed after setting the flag:
-@verbatim
-CFEngineNova:SECONDARY> use cfreport
-switched to db cfreport
-
-CFEngineNova:SECONDARY> db.notebook.find();
-error: { "$err" : "not master and slaveok=false", "code" : 13435 }
-
-CFEngineNova:SECONDARY> db.notebook.find();
-CFEngineNova:SECONDARY> rs.slaveOk();     
-not master and slaveok=false
-CFEngineNova:SECONDARY> db.notebook.find();
-{ "_id" : ObjectId("4e5cd788d5d6b92c00000000"), 
-"_kh" : "SHA=9e9ad21d192fa...1635", 
-"_rD" : "0 : 10.10.160.115", "_t" : 1, "n" : [
-    {
-        "u" : "admin",
-        "m" : "This machine is a web server",
-        "d" : 319944880
-    }
-] }
-
-@end verbatim
-@end cartouche
 
 @item Copy the public and private key from the licensed hub, along with the
 @file{license.dat} file to the secondary hubs.
@@ -469,6 +458,7 @@ All hubs will share the same public-private key pair and license file.
 
 @end itemize
 
+@sp 1
 Next, we'll run through the operation and failure modes of the symmetric hubs.
 The arrangement of the hubs is shown schematically in the figure below.
 @sp 1
@@ -706,6 +696,49 @@ form for your convenience.
 @end cartouche
 
 
+
+@node Appendix,  , Top, Top
+@appendix MongoDB access from the command line.
+
+
+
+
+@cartouche
+@b{Using more than one hub at a time}:
+If you want to be able to perform queries on any one of the redundant
+hosts, not only the master, then it's necessary to set a flag on each
+of the running mongo servers (master and slave):
+@verbatim
+host$ mongo
+
+rs.slaveOk();
+@end verbatim 
+This ensures that updates are synchonrized for querying.
+e.g. In this example we see the first query fail, and the second
+succeed after setting the flag:
+@verbatim
+CFEngineNova:SECONDARY> use cfreport
+switched to db cfreport
+
+CFEngineNova:SECONDARY> db.notebook.find();
+error: { "$err" : "not master and slaveok=false", "code" : 13435 }
+
+CFEngineNova:SECONDARY> db.notebook.find();
+CFEngineNova:SECONDARY> rs.slaveOk();     
+not master and slaveok=false
+CFEngineNova:SECONDARY> db.notebook.find();
+{ "_id" : ObjectId("4e5cd788d5d6b92c00000000"), 
+"_kh" : "SHA=9e9ad21d192fa...1635", 
+"_rD" : "0 : 10.10.160.115", "_t" : 1, "n" : [
+    {
+        "u" : "admin",
+        "m" : "This machine is a web server",
+        "d" : 319944880
+    }
+] }
+
+@end verbatim
+@end cartouche
 
 
 

@@ -481,7 +481,7 @@ int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct At
 int ForeignZone(char *s);
 void NewPromiser(struct Promise *pp);
 void AnalyzePromiseConflicts(void);
-
+void AddGoalsToDB(char *goal_patterns, char *goal_categories);
 /* env_context.c */
 
 /* - Parsing/evaluating expressions - */

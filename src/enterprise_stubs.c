@@ -1149,3 +1149,14 @@ return false;
 
 #endif
 }
+/*****************************************************************************/
+
+void AddGoalsToDB(char *goal_patterns, char *goal_categories)
+
+{
+#ifdef HAVE_NOVA
+  Nova_AddGoalsToDB(goal_patterns,goal_categories); 
+#endif
+}
+
+/*****************************************************************************/

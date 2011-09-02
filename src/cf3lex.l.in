@@ -48,8 +48,8 @@ void *yyrealloc(void *ptr, size_t bytes)
 
 %}
 
-%option noyyalloc
-%option noyyrealloc
+@YYALLOC@
+@YYREALLOC@
 @NOWRAP@
 
 space      [ \t]+

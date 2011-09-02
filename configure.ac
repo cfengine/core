@@ -857,6 +857,22 @@ fi
 
 AC_SUBST(NOWRAP)
 
+AC_MSG_CHECKING(for yyalloc/yyrealloc redifinition in Flex)
+
+if echo '%option yyalloc
+%%' | "$LEX" 2>/dev/null; then
+    YYALLOC="%option yyalloc"
+    YYREALLOC="%option yyrealloc"
+    AC_MSG_RESULT(available)
+else
+    YYALLOC=""
+    YYREALLOC=""
+    AC_MSG_RESULT(not available)
+fi
+
+AC_SUBST(YYALLOC)
+AC_SUBST(YYREALLOC)
+
 dnl ####################################################################
 dnl Set GCC CFLAGS only if using GCC.
 dnl ####################################################################

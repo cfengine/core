@@ -71,24 +71,8 @@ Copyright @copyright{} 2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
-
-
-@menu
-* What are Mission Critical Operations?::  
-* Factors affecting Risk::      
-* Model-based planning for stability::  
-* Key terminology for Mission Critical Systems::  
-* Strategy for Mission Critical Operations::  
-* How CFEngine contributes to reducing mission risks::  
-* High availability access to the Mission Portal::  
-* Redundant hub architecture::  
-* How do I make a change in mission-critical infrastructure?::  
-* Separating Policy Changes from ad-hoc Changes::  
-@end menu
-
 @node Top, What are Mission Critical Operations?, (dir), (dir)
 @top CFEngine for Mission Critical Operations
-
 @menu
 * What are Mission Critical Operations?::  
 * Factors affecting Risk::      
@@ -100,8 +84,8 @@ Copyright @copyright{} 2011 CFEngine AS
 * Redundant hub architecture::  
 * How do I make a change in mission-critical infrastructure?::  
 * Separating Policy Changes from ad-hoc Changes::  
+* Appendix::                    
 @end menu
-
 
 @end ifnottex
 @iftex
@@ -654,7 +638,7 @@ handle on change, using technology designed for stability with agility.
 CFEngine has the ability to change entire systems of thousands of
 hosts within a timeframe of 5 to 10 minutes.
 
-@node Separating Policy Changes from ad-hoc Changes,  , How do I make a change in mission-critical infrastructure?, Top
+@node Separating Policy Changes from ad-hoc Changes, Appendix, How do I make a change in mission-critical infrastructure?, Top
 @unnumberedsec Separating Policy Changes from @i{ad-hoc} Changes
 @sp 1
 
@@ -696,9 +680,9 @@ form for your convenience.
 @end cartouche
 
 
-
-@node Appendix,  , Top, Top
-@appendix MongoDB access from the command line.
+@page
+@node Appendix,  , Separating Policy Changes from ad-hoc Changes, Top
+@section Appendix MongoDB access from the command line.
 
 
 

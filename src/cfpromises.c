@@ -226,6 +226,9 @@ void ThisAgentInit()
 {
 PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
 PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
+
+AddGoalsToDB(Rlist2String(GOALS,","),Rlist2String(GOALCATEGORIES,","));
+
 SHOWREPORTS = false;
 }
 

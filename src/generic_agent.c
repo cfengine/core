@@ -1859,6 +1859,7 @@ printf("\n");
 AgentBanner(text);
 printf("\n");
 printf("Copyright (C) CFEngine AS 2008-%d\n", BUILD_YEAR);
+printf("See Licensing at http://cfengine.com/3rdpartylicenses\n");
 }
 
 /*******************************************************************/

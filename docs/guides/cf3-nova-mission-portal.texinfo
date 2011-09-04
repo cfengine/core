@@ -11,7 +11,7 @@
 @titlepage
 @title CFEngine Nova Mission Portal
 @subtitle CFEngine Enterprise Documentation
-@subtitle for version 2.1 beta1, 18. Aug 2011
+@subtitle for version 2.1 beta2, 2. September 2011
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -495,16 +495,16 @@ Reports are updated at different intervals, the default values are every 5 minut
 
 @menu
 * Policy editor::
+* Integration with subversion::
 @end menu
-
-The policy editor works with a subversion repository, the Mission Portal will prompt you for the path and login credentials. Setup of a subversion repository has to be done separately.
 
 @node
 @subsection Policy editor
 
 The CFEngine Nova Mission Portal provides an editor for working on
 CFEngine language. The editor provides syntax high-lighting and look-up to make working
-with CFEngine's extensive language easier.
+with CFEngine's extensive language easier. There is a tie-in for Subversion version
+control repositories; the Mission Portal will prompt you for the path and login credentials. Setup of a subversion repository has to be done separately.
 
 The main key commands in the editor Window are:
 
@@ -538,6 +538,63 @@ policy editing. Clicking the arrow in the panel divider collapses the
 menu and gives full-screen editing.
 
 The right hand panel shows basic file and Subversion commands. The @code{Save} button will store a local/version of the opened files without committing to the repository. 
+
+
+@node
+@subsection Integration with subversion
+
+The default architecture proposes to work in close dialogue with a version
+repository. CFEngine recommends the use of such a repository and currently
+supports subversion.
+
+Since the CFEngine Nova policy editor is a single user console,
+authentication is required for each interaction with the
+repository. Access control and authorization for policy are handled by
+subversion's authentication system so that edits made in the Mission
+Portal can be interleaved with edits from other sources.  The
+subversion repository thus becomes the centerpiece of the distributed
+coordination, as is the intended function of version control systems.
+
+When working with a subversion repository, you first do a
+``checkout''. This allows you to select the repository you want to
+download and creates a working environment based on it. Note that the
+editor currently only views files in the checked out repository, so if
+you have a directory hierarchy, you need to check out multiple
+times. After doing a checkout, you can view the path to the current
+repository by clicking the link at the top.
+
+@sp 1
+@center @image{editor-svnpath,6cm,,Path to the current repository}
+@center Figure: Path to the current repository.
+@sp 1
+
+The ''update'' command downloads the newest files from the already checked
+out subversion repository, while ''commit'' updates the repository
+with your working copy. You also have the ability to see the
+repository log of the 20 last changes. This includes changed files,
+users and log messages. For more detailed information on working with
+subversion, see @url{http://svnbook.red-bean.com}.
+
+After editing you may or may not commit changes. When closing an
+edited file, you are also given the option to commit at once.
+
+@sp 1
+@center @image{savefiledlg,6cm,,The front page}
+@center Figure: Save file with repository commit
+@sp 1
+@noindent The menu choice to commit a current version commits all files in the
+configuration repository. Commits require a mandatory comment. CFEngine recommends
+you use this to explain why a change was made, or relate it to an incident number, etc.
+The details of @i{what} was changed are already documented by the version control
+logs.
+@sp 1
+@center @image{commitdlg,6cm,,The front page}
+@center Figure: Commit dialogue
+@sp 1
+@sp 1
+@center @image{updatedialog,6cm,,The front page}
+@center Figure: Updating the repository contents.
+@sp 1
 
 
 @node 

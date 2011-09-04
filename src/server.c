@@ -849,6 +849,9 @@ if (NewPromiseProposals())
       Get3Environment();
       BuiltinClasses();
       OSClasses();
+
+      NewClass(THIS_AGENT);
+
       SetReferenceTime(true);
       ReadPromises(cf_server,CF_SERVERC);
       KeepPromises();

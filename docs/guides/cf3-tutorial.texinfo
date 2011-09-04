@@ -721,7 +721,7 @@ this:
 @end enumerate
 
 @sp 1
-CFEngine should be up and running on your system after the bootstrap. It will copy its default policy files into @file{masterfiles} and @file{inputs} on the hub (policy server) provided that the directory is empty (fresh install). When the clients are bootstrapped, they will contact the hub and copy these files to their @file{inputs} directory. You should browse the files in @file{/var/cfengine/masterfiles} to see what they contain, and perhaps make some alterations to adapt to your environment. 
+CFEngine should be up and running on your system after the bootstrap. It will copy its default policy files into @file{/var/cfengine/masterfiles} on the hub (policy server) provided that the directory is empty (fresh install). This directory is the definition point for your policy, meaning that clients will contact the hub and copy these files to their @file{/var/cfengine/inputs} directory. Note that the policy hub also works as a client against itself, so it too will copy from @file{/var/cfengine/masterfiles} to @file{/var/cfengine/inputs}. You should browse the files in @file{/var/cfengine/masterfiles} to see what they contain, and perhaps make some alterations to adapt to your environment. 
 
 To see which CFEngine processes are running:
 

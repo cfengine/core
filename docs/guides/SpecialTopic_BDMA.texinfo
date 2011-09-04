@@ -168,7 +168,7 @@ The better you understand your intentions, the simpler the system will be.
 
 We cannot emphasize enough the value of the promise discipline. If you can
 formulate your requirements as promises to be kept, you have identified not only
-what, where, when and how, but also who is reponsible and affected by every promise.
+what, where, when and how, but also who is responsible and affected by every promise.
 
 Building systems is resource intensive. CFEngine works well with @b{rPath}, allowing optimized
 build that can shave off many minutes from the build time for machines. CFEngine can then take over where
@@ -250,7 +250,7 @@ The reports CFEngine provides are meant to offer simple summaries of
 the kind of information administrators need about their environment,
 avoiding unnecessary detail@footnote{Reporting intelligence is a major
 area of development in CFEngine, and the next commercial edition CFEngine Constellation
-will include a generic queryable semantic web of the integrated system, with
+will include a generic query-able semantic web of the integrated system, with
 correlation analyses and more. The capabilities for reporting grow exponentially
 as one progresses from Community Edition to Nova to Constellation.}.
 

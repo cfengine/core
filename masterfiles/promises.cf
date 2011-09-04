@@ -20,7 +20,15 @@ body common control
 bundle agent main
 {
  reports:
-  cfengine_3::
+  am_policy_hub::
+   "--> I'm a policy hub."
+      comment => "Display message on screen/email",
+       handle => "main_reports_i_am_hub";
+
+  !am_policy_hub::
+   "--> $(sys.policy_hub) is my policy hub."
+      comment => "Display message on screen/email",
+       handle => "main_reports_is_my_hub";
    "--> CFE is running on $(sys.fqhost)"
       comment => "Display message on screen/email",
        handle => "main_reports_cfe_running";
@@ -131,16 +139,24 @@ bundle server access_rules()
   any::
 
    "$(def.dir_masterfiles)"
-       handle => "server_access_grant_access_policy",
+       handle => "server_access_rule_grant_access_policy",
       comment => "Grant access to the policy updates",
-      admit   => { ".*$(def.domain)", @(def.acl) };
+        admit => { ".*$(def.domain)", @(def.acl) };
+
+# Uncomment the promise below to allow cf-runagent to
+# access cf-agent on *NIX system
+#
+#   "$(sys.workdir)/bin/cf-agent"
+#       handle => "server_access_rule_grant_access_cfagent_linux",
+#      comment => "Grant access to cf-agent (for cf-runagent)",
+#        admit => { ".*$(def.domain)", @(def.acl) };
 
 # Uncomment the promise below to allow cf-runagent to
 # access cf-agent on Windows machines
 #	
 #  "c:\program files\cfengine\bin\cf-agent.exe"
 #
-#    handle => "grant_access_policy_agent",
+#    handle => "server_access_rule_grant_access_cfagent_windows",
 #    comment => "Grant access to the agent (for cf-runagent)",
 #    admit   => { ".*$(def.domain)", @(def.acl) };	
 	

@@ -14,7 +14,7 @@ body common control
 
 body agent control
 {
- ifelapsed => "0";
+ ifelapsed => "1";
  skipidentify => "true";
 }
 

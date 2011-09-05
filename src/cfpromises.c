@@ -91,7 +91,7 @@ const char *HINTS[14] =
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv); 
+CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"common");
 ThisAgentInit();
 AnalyzePromiseConflicts();
@@ -194,6 +194,8 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:",OPTIONS,&optindex)) != EOF
           exit(0);
 
        case 'r':
+	  PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
+  	  PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
           SHOWREPORTS = true;
           break;
 
@@ -224,11 +226,7 @@ Debug("Set debugging\n");
 void ThisAgentInit()
 
 {
-PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
-PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
-
 AddGoalsToDB(Rlist2String(GOALS,","),Rlist2String(GOALCATEGORIES,","));
-
 SHOWREPORTS = false;
 }
 

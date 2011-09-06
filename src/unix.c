@@ -424,7 +424,10 @@ void Unix_CreateEmptyFile(char *name)
 
 if (unlink(name) == -1)
    {
-   Debug("Pre-existing object %s could not be removed or was not there\n",name);
+   if (errno != ENOENT)
+      {
+      Debug("Unable to remove existing file %s: %s\n", name, strerror(errno));
+      }
    }
 
 if ((tempfd = open(name, O_CREAT|O_EXCL|O_WRONLY,0600)) < 0)

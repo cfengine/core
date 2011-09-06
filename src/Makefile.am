@@ -48,6 +48,9 @@ libpromises_la_SOURCES =                                                \
         exec_tools.c                                                    \
         nfs.c                                                           \
         item-lib.c                                                      \
+	string-lib.c                                                    \
+	files-lib.c                                                     \
+	addr-lib.c                                                      \
         alphalist.c                                                     \
         cf_sql.c                                                        \
         client_protocol.c                                               \
@@ -234,3 +237,24 @@ SUFFIXES= .h
 cf3.defs.h:
 	cd ./../core/src; svn update
 	ln -fs ../../core/src/cf3.defs.h cf3.defs.h
+
+check_PROGRAMS = alphalist_test item_lib_test
+
+alphalist_test_SOURCES = alphalist.c
+# Test code
+alphalist_test_SOURCES += alphalist_test.c cmockery.c mock_cfstream.c
+# Deps
+alphalist_test_SOURCES += item-lib.c alloc.c matching.c string-lib.c
+
+alphalist_test_LDADD = ../pub/libcfpub.la
+
+item_lib_test_SOURCES = item-lib.c
+# Test code
+item_lib_test_SOURCES += item-lib_test.c cmockery.c mock_cfstream.c
+# Deps
+item_lib_test_SOURCES += alloc.c matching.c
+
+item_lib_test_LDADD = ../pub/libcfpub.la
+
+TESTS = $(check_PROGRAMS)
+

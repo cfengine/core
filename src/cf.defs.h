@@ -401,10 +401,6 @@ int setegid (gid_t egid);
 #if !HAVE_DECL_SETLINEBUF
 void setlinebuf(FILE *stream);
 #endif
-#ifdef MINGW
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
-int inet_pton(int af, const char *src, void *dst);
-#endif
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */

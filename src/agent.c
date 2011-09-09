@@ -1369,11 +1369,7 @@ static bool VerifyBootstrap(void)
  PROCESSTABLE = NULL;
  LoadProcessTable(&PROCESSTABLE);
 
- char execdPath[CF_MAXVARSIZE];
- snprintf(execdPath, sizeof(execdPath), "%s/bin/cf-execd", CFWORKDIR);
- MapName(execdPath);
-
- if(!IsProcessNameRunning(execdPath))
+ if(!IsProcessNameRunning(".*cf-execd.*"))
     {
     CfOut(cf_error, "", "!! Bootstrapping failed, cf-execd is not running");
     return false;

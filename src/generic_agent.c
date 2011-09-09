@@ -222,7 +222,7 @@ CloseAllDB();
 
 int CheckPromises(enum cfagenttype ag)
 
-{ char cmd[CF_BUFSIZE];
+{ char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
   char filename[CF_MAXVARSIZE];
   struct stat sb;
   int fd;
@@ -234,9 +234,9 @@ if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
 
 CfOut(cf_verbose,""," -> Verifying the syntax of the inputs...\n");
 
-snprintf(cmd,CF_BUFSIZE-1,"%s%cbin%ccf-promises%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX);
+snprintf(cfpromises,sizeof(cfpromises),"%s%cbin%ccf-promises%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,EXEC_SUFFIX);
 
-if (cfstat(cmd,&sb) == -1)
+if (cfstat(cfpromises,&sb) == -1)
    {
    CfOut(cf_error,"","cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",EXEC_SUFFIX,CFWORKDIR,FILE_SEPARATOR);
    return false;
@@ -244,7 +244,8 @@ if (cfstat(cmd,&sb) == -1)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
-strlcat(cmd, " -f \"", CF_BUFSIZE);
+snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
+
 
 if (IsFileOutsideDefaultRepository(VINPUTFILE))
    {

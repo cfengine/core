@@ -182,9 +182,9 @@ the job that they are good at.
 
 The main problem in managing systems is a loss of self-discipline.  
 Discipline
-does not imply that order have to be barked from a central command. It
+does not imply that orders have to be barked from a central command. It
 only requires that every part of the system knows its job and carries
-is out seamlessly and flawlessly.
+it out seamlessly and flawlessly.
 
 Skilled workers tend to think that it is enough to be smart. In fact
 this is wrong: smart people tend to be problem solvers and will
@@ -291,8 +291,9 @@ its
 own copy of the music and knows what to play. It might or might not have
 a conductor to help coordinate the individual parts -- that's up to you.
 
-CFEngine's software agents run on each individual computer but can
-communicate if they need to, as depicted the figure below. This means
+An agent is piece of software that runs independently and automatically to carry out a
+task. CFEngine's software agents run on each individual computer but can
+communicate if they need to, as depicted in the figure below. This means
 you don't have to arrange risky login credentials to run your network
 -- and if something goes wrong with the communications network,
 CFEngine is where it needs to be to repair or protect the system
@@ -415,7 +416,7 @@ automatically.
 @item Audit
 In traditional configuration systems, the outcome is far from clear
 after a one-shot transaction, so one audits the system
-to determine to discover what actually happened. In CFEngine, changes
+to determine what actually happened. In CFEngine, changes
 are not just initiated once, but locally audited and maintained.
 Decision outcomes are assured by design in CFEngine and maintained
 automatically, so the main worry is managing conflicting
@@ -430,7 +431,7 @@ for new `roll out' transactions.
 roll-out system, i.e. one that attempts to force out absolute changes
 and perhaps reverse them in case of error. Roll-out and roll-back are
 theoretically flawed concepts that only sometimes work in practice.
-With CFEngine, you publish a sequences of policy revisions, always
+With CFEngine, you publish a sequence of policy revisions, always
 moving forward (because like it or not, time only goes in one
 direction).  All of the desired-state changes are managed locally by
 each individual computer, and continuously repaired to ensure on-going
@@ -771,15 +772,18 @@ Look at the examples and try to identify these patterns yourself.
 
 @menu
 * Rules are promises::          
-* Control promises::            
-* Variables::                   
+* Best practice for writing promises::  
+* Containers::                  
 * Decisions::                   
+* Types in CFEngine 3::         
+* Datatypes in CFEngine 3::     
+* Variables::                   
 * Loops::                       
 * The main promise types::      
-* Test a promise?::
+* Test a promise?::             
 @end menu
 
-@node Rules are promises, Control promises, A simple crash course in concepts, A simple crash course in concepts
+@node Rules are promises, Best practice for writing promises, A simple crash course in concepts, A simple crash course in concepts
 @section Rules are promises
 
 Everything in CFEngine 3 can be interpreted as a promise. Promises can
@@ -877,267 +881,179 @@ special functions or parameterized templates which contain the `meat'
 of the right hand
 side.
 
+The words @code{commands}, and @code{files} are built-in promise
+types. Promise types generally belong each to a particular component
+of CFEngine, as the components are designed to keep different kinds of
+promises.  A few types, such as @code{vars}, @code{classes} and
+@code{reports} are common to all the different component bundles. You
+will find a full list of the promise types that can be made by the
+different components in the reference manual.
 
-@menu
-* Scalar variable expansion::   
-* List variables::              
-* List variable substitution and expansion::  
-@end menu
 
+@c -----------------------------------------------------------------------
+@node Best practice for writing promises, Containers, Rules are promises, A simple crash course in concepts
+@section Best practice for writing promises
 
-@c ---------------------------------------------------------------------
-@node Control promises, Variables, Rules are promises, A simple crash course in concepts
-@section Control promises
+When writing promises, get into the habit of giving every promise a comment
+that explains its intention.
 
-Certain promises that CFEngine components make are hard-wired into their
-code. For example, the promise to email output to an appropriate
-address, or the promise to wait until a certain time has elapsed before
-checking a promise again (@code{ifelapsed}). Although these promises are
-hard-wired, their behaviour can be changed. In CFEngine, behaviour is  
-always
-constrained by the promise body. Thus hard-wired behaviour is altered by
-changing the control body for each. You can find these alterable  
-parameters
-in the reference manual.
-
-The most important bundle is the @code{common} bundle, that is read by
-all components of CFEngine. It contains the list of promise bundles
-that should be read in and examined for promise suggestions.  From the
-@file{promises.cf} file:
+Also, give related promises @i{handles}, or labels that can be used to
+refer to them by.
 
 @verbatim
 
-body common control
-{
-bundlesequence  => {
-                 "update",
-                 "garbage_collection",
-                 "main",
-                 "cfengine"
-                 };
+files:
 
-inputs          => {
-                 "update.cf",
-                 "site.cf",
-                 "library.cf"
-                 };
-}
+  "/var/cfengine/inputs"
 
-#######################################################
+    handle => "update_policy",
+    comment => "Update the configuration from a master server",
 
-body agent control
-{
-# if default runtime is 5 mins we need this for long jobs
-ifelapsed => "15";
-}
-
-#######################################################
-
-body monitor control
-{
-forgetrate => "0.7";
-histograms => "true";
-}
-
-#######################################################
-
-body executor control
-
-{
-splaytime => "1";
-mailto => "cfengine_mail@example.org";
-smtpserver => "localhost";
-mailmaxlines => "30";
-}
-
-#######################################################
-
-body reporter control
-
-{
-reports => { "performance", "last_seen", "monitor_history" };
-build_directory => "/tmp/nerves";
-report_output => "html";
-}
-
-#######################################################
-
-body runagent control
-{
-hosts => {
-        "127.0.0.1"
-        # , "myhost.example.com:5308", ...
-       };
-
-}
-
-#######################################################
-
-body server control
-
-{
-allowconnects         => { "127.0.0.1" , "::1" };
-allowallconnects      => { "127.0.0.1" , "::1" };
-trustkeysfrom         => { "127.0.0.1" , "::1" };
-
-# Make updates and runs happen in one
-
-cfruncommand          => "$(sys.workdir)/bin/cf-agent -f failsafe.cf &&
-$(sys.workdir)/bin/cf-agent";
-allowusers            => { "root" };
-}
+    perms => system("600"),
+    copy_from => mycopy("$(master_location)","$(policy_server)"),
+    depth_search => recurse("inf"),
+    file_select => input_files,
+    action => immediate;
 
 @end verbatim
-
-
-@c --------------------------------------------------------------------
-@node Variables, Decisions, Control promises, A simple crash course in concepts
-@section Variables
-
-Variables (or "variable definitions") are also promises -- the promise to
-represent their values.  We can write these in
-any promise bundle. CFEngine recognizes two object types: scalars and  
-lists (lists contain 0 or more objects), as well as
-three data-types (string, integer and real). Typing in CFEngine is  
-dynamic, as in
-Perl and other scripting languages. Thus variables of any data-type  
-may be used as strings.
-
-
-@menu
-* Scalar variable expansion::   
-* List variables::              
-* List variable substitution and expansion::  
-@end menu
-
-@node Scalar variable expansion, List variables, Variables, Variables
-@subsection Scalar variables
-
-Scalar variables hold a single value. The are declared as follows:
-
-@smallexample
-bundle @i{<type>} name
-@{
-vars:
-
-"my_scalar" string => "String contents...";
-    "my_int" int    => "1234";
-   "my_real" real   => "567.89";
-
-@}
-
-@end smallexample
-
-The @samp{@i{<type>}} indicates that any kind of bundle applies here.
-Scalar variables are referenced by @samp{$(name)} (or  
-@samp{$@{name@}}) and they represent
-a single value at a time.
-
-@itemize
-@item Scalars that are written without a context, e.g. @samp{$(myvar)}
-are local to the current bundle.
-
-@item Scalars are globally available everywhere provided one
-uses the context to verify them e.g. @samp{$(context.myvar)}
-may be written to access the variable `myvar' in bundle `context'.
-@end itemize
-
-@c -----------------------------------------------------------------------
-@node List variables, List variable substitution and expansion, Scalar variable expansion, Variables
-@subsection List variables
-
-List variables hold several values. The are declared as follows:
-
-@smallexample
-bundle @i{<type>} name
-@{
-vars:
-
-   "my_slist" slist => @{ "list", "of", "strings" @};
-   "my_ilist" ilist => @{ "1234", "5678" @};
-   "my_rlist" rlist => @{ "567.89" @};
-
-@}
-
-@end smallexample
-An entire list is referred to with the at symbol @samp{@@}, but it does
-not usually make sense to use this reference in a string. For instance
-@smallexample
-
-reports:
-
-  cfengine_3::
-
-     "My list is @@(my_slist)";
-
-@end smallexample
-@noindent means nothing and cannot be expanded (it does not generate an
-error, but instead inserts the text @@(my_slist) into the string); but if
-we use the scalar reference to a list variable, CFEngine will iterate over
-the  values in
-the list essentially making this into a list of promises.
-
-@noindent To summarize:
-@itemize
-
-@item Scalar references to @i{local} list variables imply iteration,  
-e.g.
-suppose we have local list variable @samp{@@(list)}, then the
-scalar @samp{$(list)} implies an iteration over every value of the
-list.
-
-
-@item Lists can be passed in their entirety in any context
-where a list is expected as @samp{@@(list)}., e.g.
+If a promise affects another promise in some way, you can make the affected
+promise one of the promisees, like this:
 
 @verbatim
 
-vars:
+access:
 
-"longlist" slist => { @(shortlist), "plus", "plus" };
+  "/master/cfengine/inputs" -> { "update_policy", "other_promisee" },
 
-"shortlist" slist => { "you", "me" };
+    comment => "Grant access to policy to our clients",
+    handle  => "serve_updates",
+
+    admit   => { "217.77.34.*" };
 
 @end verbatim
 
-The declaration order does not matter -- CFEngine will execute the promise
-to assign the variable @samp{@@(shortlist)} before the promise to assign the
-variable @samp{@@(longlist)}.
+Conversely, if a promise might depend on another in some (even indirect) way, document this too.
 
-@item Only local lists can be expanded directly. Thus @samp{$(list)}
-can be expanded but not @samp{$(context.list)}.  Global
-list references have to be mapped into a local context if you want to
-use them for iteration. See the reference manual for more information.
+@verbatim
 
-@end itemize
+files:
+
+  "/var/cfengine/inputs"
+
+    comment => "Update the configuration from a master server",
+    handle     => "update_policy",
+
+    depends_on => "serve_updates",
+
+    perms => system("600"),
+    copy_from => mycopy("$(master_location)","$(policy_server)"),
+    depth_search => recurse("inf"),
+    file_select => input_files,
+    action => immediate;
+
+
+@end verbatim
+
+Get into the habit of adding the cause-effect lines of influence.
+Enterprise editions of CFEngine will track the dependencies between these
+promises and map out impact analyses.
 
 @c -----------------------------------------------------------------------
-@node List variable substitution and expansion,  , List variables, Variables
-@subsection Associative arrays
+@node Containers, Decisions, Best practice for writing promises, A simple crash course in concepts
+@section Containers
 
-Associative array variables also hold several values. The are declared
-as follows:
-
+CFEngine allows you to group multiple promise statements
+    into containers called bundles.
 @smallexample
-bundle @i{<type>} name
-@{
-vars:
 
-   "switches[mellow]" int => "1";
-   "switches[relaxed]" int => "1";
-   "off_keys" slist => @{ "red", "grouchy", "coarse", "febrile" @};
-   "switches[$(off_keys)]" int => "0";
+bundle agent identifier
+
+@{
+commands:
+
+  "/bin/echo These commands are a silly way to use CFEngine";
+  "/bin/ls -l";
+  "/bin/echo But they illustrate a point";
 
 @}
 
 @end smallexample
 
-See the reference manual for information on the @samp{getindices} function
-and other details of associative arrays.
+Bundles serve two purposes: they allow us to collect related promises under a
+single heading, like a subroutine, and they allow us to mix configuration for different
+parts of CFEngine in the same file. The type of a bundle is the name of the component
+of CFEngine for which it is intended.
+
+For instance, we can make a self-contained example agent-server
+configuration by labelling the bundles:
+
+@smallexample
+
+#
+# Not a complete example
+#
+
+bundle agent testbundle
+
+@{
+files:
+
+  "/home/mark/tmp/testcopy"
+
+    comment      => "Throwaway example...",
+    copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+    perms        => system,
+    depth_search => recurse("inf");
+
+@}
+
+#
+
+bundle server access_rules
+
+@{
+access:
+
+  "/home/mark/LapTop"
+
+    admit   => @{ "127.0.0.1" @};
+@}
+
+@end smallexample
+
+Another type of container in CFEngine 3 is a `body' part. Body parts
+exist to hide complex parameter information in reusable containers.
+The right hand side of some attribute assignments use body containers
+to reduce the amount of in-line information and preserve readability.
+You cannot choose where to use bodies: either they are used or they
+are not used for a particular kind of attribute. What you can choose, however, is
+the name and number of parameters for the body; and you can make as many of them as you like:
+For example:
+
+@smallexample
+
+body copy_from mycopy(from,server)
+
+@{
+source      => "$(from)";
+servers     => @{ "$(server)" @};
+copy_backup => "true";
+
+special_class::
+
+  purge       => "true";
+@}
+
+@end smallexample
+
+Notice also that classes can be used in bodies as well as parameters so that
+you can hide environmental adaptations in these bodies also. The classes used
+here are effectively ANDed with the classes under which the calling promise
+is defined.
 
 
 @c ------------------------------------------------------------------
-@node Decisions, Loops, Variables, A simple crash course in concepts
+@node Decisions, Types in CFEngine 3, Containers, A simple crash course in concepts
 @section Decisions
 
 CFEngine decisions are made behind the scenes and the results of
@@ -1342,9 +1258,432 @@ and @samp{two} are in scope in the @samp{ls_2} bundle (and the class
 expression for bundle @samp{ls_2} requires that both @samp{zero} and
 @samp{two} be true and that @samp{one} not be true).
 
+CFEngine is controlled by a series of locks which prevent it from
+checking promises too often, and which prevent it from spending too
+long trying to verify promises it already verified recently. The locks
+work in such a way that you can start several CFEngine processes
+simultaneously without them interfering with each other. You can
+control two things about each kind of action in the action sequence:
+
+@table @samp
+
+@item ifelapsed
+The minimum time (in minutes) which should have passed since the last time
+that promise was verified. It will not be executed again until
+this amount of time has elapsed.
+(Default time is 1 minute.)
+
+@item expireafter
+The maximum amount (in minutes) of time cf-agent should wait for an old
+instantiation to finish before killing it
+and starting again. (Default time is 120 minutes.)
+
+@end table
+
+@noindent
+You can set these values either globally (for all
+actions) or for each action separately. If you
+set global and local values, the local values override
+the global ones. All times are written in units
+of @emph{minutes}. Global setting is in the control body:
+
+@verbatim
+
+body agent control
+{
+ifelapsed => "60";	# one hour
+}
+
+@end verbatim
+
+@noindent
+or locally in the transaction bodies:
+
+
+@verbatim
+
+body action example
+{
+ifelapsed => "90";	# 1.5 hours
+}
+
+@end verbatim
+
+These locks do not prevent the whole of cf-agent from running, only
+atomic promise checks. Several different atoms can be run concurrently
+by different cf-agents.  The locks ensure that atoms will never be
+started by two cf-agents at the same time, or too soon after a
+verification, causing contention and wasting CPU cycles.
+
+
+@c -----------------------------------------------------------------------
+@node Types in CFEngine 3, Datatypes in CFEngine 3, Decisions, A simple crash course in concepts
+@section Types in CFEngine 3
+
+A key difference in CFEngine 3 compared to earlier versions is the
+presence of types. Types are a mechanism for associating
+values and checking consistency in a language. Once again, there is a
+simple pattern to types in CFEngine.
+
+The principle is very simple: types exist in order to match like a
+plug-socket relationship. In the examples above, you can see two places
+where types are used to match templates:
+
+@itemize
+@item Matching bundles to components:
+@smallexample
+
+bundle TYPE name  # matches TYPE to running agent
+@{
+@}
+
+@end smallexample
+
+@item Match bodies templates to lvalues in @code{lvalues => rvalue} constraints:
+
+@smallexample
+
+body TYPE name    # matches TYPE => name in promise
+@{
+@}
+
+@end smallexample
+@end itemize
+
+
+@c -----------------------------------------------------------------------
+@node Datatypes in CFEngine 3, Variables, Types in CFEngine 3, A simple crash course in concepts
+@section Datatypes in CFEngine 3
+
+CFEngine variables have two meta-types: scalars and lists. A scalar is a single value,
+a list is a collection of scalars. Each scalar may have one of three types:
+@code{string}, @code{int} or @code{real}. Typing is dynamic, so these are
+interchangable in many instances. However arguments to special functions check legal
+type for consistency.
+
+Integer constants may use suffixes to represent large numbers.
+
+@itemize
+  @item 'k'
+          = value times 1000.
+
+  @item 'K'
+          = value times 1024.
+
+  @item 'm'
+          = value times 1000^2
+  @item 'M'
+          = value times 1024^2
+  @item 'g'
+          = value times 1000^3
+  @item 'G'
+          = value times 1024^3
+
+  @item '%'
+	  meaning percent, in limited contexts
+
+  @item 'inf'
+	  = a constant representing an unlimited value.
+@end itemize
+
+
+@c --------------------------------------------------------------------
+@node Variables, Loops, Datatypes in CFEngine 3, A simple crash course in concepts
+@section Variables
+
+Variables (or "variable definitions") are also promises -- the promise to
+represent their values.  We can write these in
+any promise bundle. CFEngine recognizes two variable object types: scalars and  
+lists (lists contain 0 or more objects)@footnote{Arrays can be scalars or lists of the RHS (rvalues). An array is really just a pattern in the names of the LHS (lvalues), not a separate type.}, as well as
+three data-types (string, integer and real). Typing in CFEngine is  
+dynamic, as in
+Perl and other scripting languages. Thus variables of any data-type  
+may be used as strings.
+
+
+@menu
+* Scalar variable expansion::   
+* List variable substitution and expansion::           
+* Special list value cf_null::   
+* Arrays in CFEngine 3::
+@end menu
+
+@node Scalar variable expansion, List variable substitution and expansion, Variables, Variables
+@subsection Scalar variable expansion
+
+Scalar variables hold a single value. The are declared as follows:
+
+@smallexample
+bundle @i{<type>} name
+@{
+vars:
+
+"my_scalar" string => "String contents...";
+    "my_int" int    => "1234";
+   "my_real" real   => "567.89";
+
+@}
+
+@end smallexample
+
+The @samp{@i{<type>}} indicates that any kind of bundle applies here.
+Scalar variables are referenced by @samp{$(name)} (or  
+@samp{$@{name@}}) and they represent
+a single value at a time.
+
+@itemize
+@item Scalars that are written without a context, e.g. @samp{$(myvar)}
+are local to the current bundle.
+
+@item Scalars are globally available everywhere provided one
+uses the context to verify them e.g. @samp{$(context.myvar)}
+may be written to access the variable `myvar' in bundle `context'.
+@end itemize
+
+
+@c -----------------------------------------------------------------------
+@node List variable substitution and expansion, Special list value cf_null, Scalar variable expansion, Variables
+@subsection List variable substitution and expansion
+
+List variables hold several values. The are declared as follows:
+
+@smallexample
+bundle @i{<type>} name
+@{
+vars:
+
+   "my_slist" slist => @{ "list", "of", "strings" @};
+   "my_ilist" ilist => @{ "1234", "5678" @};
+   "my_rlist" rlist => @{ "567.89" @};
+
+@}
+
+@end smallexample
+An entire list is referred to with the at symbol @samp{@@}, but it does
+not usually make sense to use this reference in a string. For instance
+@smallexample
+
+reports:
+
+  cfengine_3::
+
+     "My list is @@(my_slist)";
+
+@end smallexample
+@noindent means nothing and cannot be expanded (it does not generate an
+error, but instead inserts the text @@(my_slist) into the string); but if
+we use the scalar reference to a list variable, CFEngine will iterate over
+the  values in
+the list essentially making this into a list of promises.
+
+@noindent To summarize:
+@itemize
+
+@item Scalar references to @i{local} list variables imply iteration,  
+e.g.
+suppose we have local list variable @samp{@@(list)}, then the
+scalar @samp{$(list)} implies an iteration over every value of the
+list.
+
+
+@item Lists can be passed in their entirety in any context
+where a list is expected as @samp{@@(list)}., e.g.
+
+@verbatim
+
+vars:
+
+"longlist" slist => { @(shortlist), "plus", "plus" };
+
+"shortlist" slist => { "you", "me" };
+
+@end verbatim
+
+The declaration order does not matter -- CFEngine will execute the promise
+to assign the variable @samp{@@(shortlist)} before the promise to assign the
+variable @samp{@@(longlist)}.
+
+@item Only local lists can be expanded directly. Thus @samp{$(list)}
+can be expanded but not @samp{$(context.list)}.  Global
+list references have to be mapped into a local context if you want to
+use them for iteration. 
+@end itemize
+
+Instead of doing this in some
+arbitrary way, with possibility of name collisions, CFEngine
+asks you to make this explicit. There are two possible approaches.
+
+The first uses parameterization to map a global list into a local
+context.
+@verbatim
+
+#
+# Show access of external lists.
+#
+# - to pass lists globally, use a parameter to dereference them
+#
+
+body common control
+{
+bundlesequence => { hardening(@(va.tmpdirs)) };
+}
+
+#########################################################
+
+bundle common va
+{
+vars:
+
+ "tmpdirs"  slist => { "/tmp", "/var/tmp", "/usr/tmp"  };
+
+}
+
+##########################################################
+
+bundle agent hardening(x)
+{
+classes:
+
+  "ok" expression => "any";
+
+vars:
+
+ "other"    slist => { "/tmp", "/var/tmp" };
+
+reports:
+
+  ok::
+
+    "Do $(x)";
+    "Other: $(other)";
+}
+
+@end verbatim
+
+This alternative uses a direct `short-circuit' approach to map the global
+list into the local context.
+
+@verbatim
+#
+# Show access of external lists.
+#
+
+body common control
+{
+bundlesequence => { hardening };
+}
+
+#########################################################
+
+bundle common va
+{
+vars:
+
+ "tmpdirs"  slist => { "/tmp", "/var/tmp", "/usr/tmp"  };
+
+}
+
+##########################################################
+
+bundle agent hardening
+{
+classes:
+
+  "ok" expression => "any";
+
+vars:
+
+ "other"    slist => { "/tmp", "/var/tmp" };
+ "x"        slist => { @(va.tmpdirs) };
+
+reports:
+
+  ok::
+
+    "Do $(x)";
+    "Other: $(other)";
+}
+@end verbatim
+
+
+@c -----------------------------------------------------------------------
+@node Special list value cf_null, Arrays in CFEngine 3, List variable substitution and expansion, Variables
+@subsection Special list value @code{cf_null}
+
+As of CFEngine core version 3.1.0, the value @samp{cf_null} may be used as a NULL
+value within lists. This value is ignored in list variable expansion.
+
+@verbatim
+
+vars:
+
+  "empty_list" slist => { "cf_null" };
+
+@end verbatim
+
+
+@c -----------------------------------------------------------------------
+@node Arrays in CFEngine 3,  , Special list value cf_null, Variables
+@subsection Arrays in CFEngine 3
+
+Array variables are written with @samp{[} and @samp{]} brackets, e.g.
+
+@verbatim
+
+bundle agent example
+
+{
+vars:
+
+  "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
+
+  "array[cf-monitord]" string => "The monitor";
+  "array[cf-serverd]" string => "The server";
+  "array[cf-execd]" string => "The executor, not executioner";
+
+commands:
+
+   "/bin/echo $(component) is"
+
+            args => "$(array[$(component)])";
+
+}
+
+@end verbatim
+
+Arrays are associative and may be of type scalar or list. Enumerated
+arrays are simply treated as a special case of associative arrays, since
+there are no numerical loops in CFEngine. Special functions exist to
+extract lists of keys from array variables for iteration purposes.
+
+Thus one could have written the example above in the form of the
+following example:
+
+@verbatim
+
+bundle agent array
+
+{
+vars:
+
+  "v[index_1]" string => "value_1";
+  "v[index_2]" string => "value_2";
+
+  "parameter_name" slist => getindices("v");
+
+reports:
+
+  Yr2008::
+
+   "Found index: $(parameter_name)";
+
+}
+
+@end verbatim
+
 
 @c ------------------------------------------------------------------
-@node Loops, The main promise types, Decisions, A simple crash course in concepts
+@node Loops, The main promise types, Variables, A simple crash course in concepts
 @section Loops
 If you are looking for loops in CFEngine then we need to reprogram you
 a little, as you are thinking like a programmer!  CFEngine is not a
@@ -1466,7 +1805,7 @@ A promise to point or refer to a knowledge resource, in @code{cf-know}.
 @node Test a promise?, , The main promise types, A simple crash course in concepts
 @section Test a promise?
 
-If you are impatient to get hands-on experience, now might be a good time to take a break from Concepts and have a look at the getting started guide (@url{http://cfengine.com/manuals/cf3-getstarted.html}. Still, since knowledge management is an integral part of CFEngine, we strongly recommend to read the following section on this very issue sooner rather than later.
+If you are impatient to get hands-on experience, now might be a good time to take a break from Concepts and try out your first promises (@url{http://cfengine.com/manuals/cf3-tutorial#First-promises.html}. Still, since knowledge management is an integral part of CFEngine, we strongly recommend to read the following section on this very issue sooner rather than later.
 
 @c *****************************************************
 @c * CHAPTER
@@ -1578,7 +1917,7 @@ Remember that the point of a promise is to convey an @i{intention}.
 When writing promises, get into the habit of giving every promise a
 comment that explains its intention.  Also, expect to give special  
 promises
-@i{handles}, or helpful labels that can be used to refer to them by in  
+@i{handles}, or helpful labels that can be used to refer to them in  
 other
 promise statements. A handle could be something dumb like `xyz', but  
 you should
@@ -1640,7 +1979,7 @@ in CFEngine.
 The annotations are used internally by CFEngine to provide meaningful
 error messages with context and to compute dependencies that reveal
 the existence of process chains. These can be turned into a topic map
-for browsing the policy relationships is a web browser, using
+for browsing the policy relationships in a web browser, using
 @code{cf-know}.
 
 
@@ -2122,8 +2461,8 @@ details.
 
 @noindent Need help getting started?
 @itemize 
-@item CFEngine Concepts: @url{http://cfengine.com/manuals/cf3-installation.html}
-@item Get started, first promises: @url{http://cfengine.com/manuals/cf3-getstarted.html}
+@item CFEngine Installation: @url{http://cfengine.com/manuals/cf3-installation.html}
+@item Get started, first promises: @url{http://cfengine.com/manuals/cf3-tutorial.html#First-promises}
 @end itemize
 
 @noindent For a complete overview:

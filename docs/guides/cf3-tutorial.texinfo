@@ -1506,12 +1506,6 @@ of the right hand
 side.
 
 
-@menu
-* Scalar variable expansion::   
-* List variables::              
-* List variable substitution and expansion::  
-@end menu
-
 @node Control promises, Variables, Rules are promises, A simple crash course in concepts
 @section Control promises
 
@@ -2518,11 +2512,11 @@ files:
 
 # Library template
 
-body copy_from rcp(file,server)
-
+body copy_from remote_cp(from,server)
 {
-servers     => { "$(server)", "failover.example.org"};
-source      => "$(file)";
+servers     => { "$(server)" };
+source      => "$(from)";
+compare     => "mtime";
 }
 
 @end verbatim

@@ -160,11 +160,19 @@ CFEngine should now be up and running on your system. It will copy its default p
 @chapter Build from source
 
 @menu
+* Get the source code::
 * Unpack and make::
 * Bootstrap from source::
 @end menu
 
-@node Unpack and make, Bootstrap from source, Build from source, Build from source
+@node Get the source code, Unpack and make, Build from source, Build from source
+@section Get the source code
+
+The CFEngine Community source code is available at @url{http://cfengine.com/source_code}
+
+
+@c --------------------------------------------------------------
+@node Unpack and make, Bootstrap from source, Get the source code, Build from source
 @section Unpack and make
 
 See reference manual or INSTALL file in source code for dependencies. To build from source:

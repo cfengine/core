@@ -31,7 +31,7 @@
 
 
 @page
-@vskip 0pt plus 1filll
+@vskip 0pt plus 1fill
 Copyright @copyright{} 2011 CFEngine AS
 
 @end titlepage
@@ -115,7 +115,7 @@ indistinguishable from it."}
 Today many are talking about Cloud Computing as another manifestation
 of this dream, in which computing service is not only everywhere, but
 nowhere -- or more correctly, spread out across the planet in
-datacentres, instead of our offices and homes. This is one aspect of
+data centers, instead of our offices and homes. This is one aspect of
 making computing into something we take for granted. At the
 foundations of any such technology are the tools required to implement
 mass configuration with surgical precision. CFEngine is such a tool.
@@ -771,7 +771,7 @@ components. The structure of a promise is this:
 @table @i
 @item Promiser
 This is the object that formally makes the promise. It is always the @i{affected object},
-since objects can only make promises about their own state or behaviour in CFEngine.
+since objects can only make promises about their own state or behavior in CFEngine.
 
 @item Promisee (optional)
 This is a possible stakeholder, someone who is interested in the outcome of the
@@ -879,7 +879,7 @@ attachments in-line. This is a lesson that was learned from CFEngine
 Some promises in CFEngine are implicit. They are hard-coded into the program.
 For example, the fact that CFEngine looks for a number of files to read and
 will execute them in a sequence is hard coded. You cannot change this.
-However, you can change the behaviour of such promises by setting control
+However, you can change the behavior of such promises by setting control
 parameters. These are formally parts of the `promise body' for these hard-coded
 promises, so we use the body structure to set them. Each agent has a special
 body whose name is @code{control}; e.g.
@@ -1378,7 +1378,7 @@ mailmaxlines => "30";
 }
 
 @end verbatim
-These other lines change different aspects of the hard-wired behaviour  
+These other lines change different aspects of the hard-wired behavior  
 of the
 executor, e.g. a load-balancing time delay before execution of the  
 agent, a mail address,
@@ -1447,7 +1447,7 @@ affected by the promise.
 @end cartouche
 
 Not all of these elements are necessary every time. Some promises
-contain a lot of implicit behaviour. In other cases we might want to
+contain a lot of implicit behavior. In other cases we might want to
 be much more explicit.  For example, the simplest reports promise
 looks like this:
 
@@ -1480,7 +1480,7 @@ A more complex promise contains many attributes:
 # Promise type
 files:
 
-# promisor                  -> promisee (no curly braces needed if only one)
+# promiser                  -> promisee (no curly braces needed if only one)
 "/home/mark/tmp/test_plain" -> "system blue team",
 
  # attribute => value
@@ -1500,7 +1500,7 @@ You see several kinds of object in this example. All literal strings
 (e.g. @code{"true"}) in CFEngine 3 must be quoted. This provides
 absolute consistency and makes type-checking easy and error-correction
 powerful. All function-like objects (e.g. @code{users("..")}) are  
-either builtin
+either built-in
 special functions or parameterized templates which contain the `meat'  
 of the right hand
 side.
@@ -1513,9 +1513,9 @@ Certain promises that CFEngine components make are hard-wired into their
 code. For example, the promise to email output to an appropriate
 address, or the promise to wait until a certain time has elapsed before
 checking a promise again (@code{ifelapsed}). Although these promises are
-hard-wired, their behaviour can be changed. In CFEngine, behaviour is  
+hard-wired, their behavior can be changed. In CFEngine, behavior is  
 always
-constrained by the promise body. Thus hard-wired behaviour is altered by
+constrained by the promise body. Thus hard-wired behavior is altered by
 changing the control body for each. You can find these alterable  
 parameters
 in the reference manual.
@@ -2538,7 +2538,7 @@ filesystem as the destination-file. This file has the suffix
 Only when the file has been successfully collected will @code{cf- 
 agent} make a
 copy of the old file, (see @code{repository} in the Reference manual),
-and rename the new file into place. This behaviour is designed to avoid
+and rename the new file into place. This behavior is designed to avoid
 race-conditions which can occur during network connections and indeed
 any operations which take some time. If files were simply copied
 directly to their new destinations it is conceivable that a network
@@ -2937,7 +2937,7 @@ sophisticated index-databases of documents.
 * What topic maps offer::       
 * The nuts and bolts of topic maps::  
 * Example of topics promises::  
-* Modelling configuration promises as topic maps::  
+* Modeling configuration promises as topic maps::  
 @end menu
 
 @node Promises and Knowledge, The basics of knowledge, Knowledge Management, Knowledge Management
@@ -2954,7 +2954,7 @@ CFEngine introduced the @emph{promise model} for configuration in
 order to flatten out this learning curve. It can lead to
 simplifications in use, because a lot of the thinking has been done
 already and is encapsulated into the model. One of its special
-properties is that it is both a model for system behaviour and a model
+properties is that it is both a model for system behavior and a model
 for knowledge representation (this is what declarative languages seek
 to be, of course). More specifically, it incorporated a subset of the
 ISO standard for `Topic Maps', an open technology for semantic
@@ -3246,7 +3246,7 @@ The box into which we classify a topic to disambiguate different
 topics with the same name (`in the context of')@footnote{Here, CFEngine differs from the topic map standard in allowing contexts
 to be overlapping sets, rather than mutually exclusive `types'.
 CFEngine is guided by Promise Theory in this respect in order to enable
-distribtued cooperation and the development of a free and emergent ontology.}.
+distributed cooperation and the development of a free and emergent ontology.}.
 
 @item Topics/Things
 The representation of a subject (an index term).
@@ -3272,7 +3272,7 @@ represent a set of topics that might be relevant, which in turn encompass a set 
 occurrences of resources that contain actual information about the topics in that context. The primacy of topics in this
 stems from their ability to form networks by @emph{association}.
 
-The classic approach to information modelling is to build a
+The classic approach to information modeling is to build a
 hierarchical decomposition of non-overlapping objects. Data are
 manipulated into non-overlapping containers which often prove
 to be overly restrictive. Topic maps allow us to avoid the kinds of
@@ -3285,7 +3285,7 @@ occurrences of information that highlight the concepts pertinent to
 the topic somehow.
 
 
-@node Example of topics promises, Modelling configuration promises as topic maps, The nuts and bolts of topic maps, Knowledge Management
+@node Example of topics promises, Modeling configuration promises as topic maps, The nuts and bolts of topic maps, Knowledge Management
 @section Example of topics promises
 
 You can use @code{cf-know} to render a topic map either as text (for  
@@ -3325,7 +3325,7 @@ services::
                        "programs::httpd",
                        "implements");
 
- # if we don't specificy a context, it is "any"
+ # if we don't specify a context, it is "any"
 
 "WWW" association => a("looks up addresses with",
                        "named",
@@ -3382,12 +3382,12 @@ things:
 @end verbatim
 
 @menu
-* Analysing and indexing the policy::  
+* Analyzing and indexing the policy::  
 * cf-know::                     
 @end menu
 
-@node Analysing and indexing the policy, cf-know, Example of topics promises, Example of topics promises
-@subsection Analysing and indexing the policy
+@node Analyzing and indexing the policy, cf-know, Example of topics promises, Example of topics promises
+@subsection Analyzing and indexing the policy
 
 CFEngine can analyze the promises you have made, index and cross
 reference them using the command:
@@ -3398,7 +3398,7 @@ reference them using the command:
 Normally, the default policy in Nova or Constellation will perform this
 command each time the policy is changed.
 
-@node cf-know,  , Analysing and indexing the policy, Example of topics promises
+@node cf-know,  , Analyzing and indexing the policy, Example of topics promises
 @subsection @code{cf-know}
 
 CFEngine's knowledge agent @code{cf-know} allows you to make promises
@@ -3469,8 +3469,8 @@ lead to poor knowledge maps.
 @end cartouche
 
 
-@node Modelling configuration promises as topic maps,  , Example of topics promises, Knowledge Management
-@section Modelling configuration promises as topic maps
+@node Modeling configuration promises as topic maps,  , Example of topics promises, Knowledge Management
+@section Modeling configuration promises as topic maps
 
 We can model topic maps as promises within CFEngine; the
 question then remains as to how to use topic maps to model
@@ -3539,7 +3539,7 @@ _var_CFEngine_inputs::
 Note that in this mapping, the actual promise (viewed as a real world
 entity) is an occurrence of the topic `promise'; at the same time each
 promise could be discussed as a different topic allowing
-meta-modelling of the entity-relation model in the real-world
+meta-modeling of the entity-relation model in the real-world
 data. Conversely the topics themselves become configuration items or
 `promisers' in the promise model. The effect is to create a navigable
 semantic web for traversing the policy; this documents the structure

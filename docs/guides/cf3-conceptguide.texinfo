@@ -70,7 +70,7 @@ Copyright @copyright{} 2011 CFEngine AS
 @c CHAPTER
 @c **********************************************************************
 
-@i{This document is an abreviated version of the CFEngine tutorial (http://cfengine.com/manuals/cf3-tutorial.html).}
+@i{This document is an abbreviated version of the CFEngine tutorial (http://cfengine.com/manuals/cf3-tutorial.html).}
 
 @c **********************************************************************
 @menu
@@ -444,7 +444,7 @@ compliance with policy. }
 @section The policy decision flow
 
 CFEngine does not make absolute choices for you, like other
-tools. Almost everything about its behaviour is matter of policy and
+tools. Almost everything about its behavior is matter of policy and
 can be changed.  However, a structure for use, like the following, is
 recommended (see the following figure).
 
@@ -538,7 +538,7 @@ components. The structure of a promise is this:
 @table @i
 @item Promiser
 This is the object that formally makes the promise. It is always the @i{affected object},
-since objects can only make promises about their own state or behaviour in CFEngine.
+since objects can only make promises about their own state or behavior in CFEngine.
 
 @item Promisee (optional)
 This is a possible stakeholder, someone who is interested in the outcome of the
@@ -646,7 +646,7 @@ attachments in-line. This is a lesson that was learned from CFEngine
 Some promises in CFEngine are implicit. They are hard-coded into the program.
 For example, the fact that CFEngine looks for a number of files to read and
 will execute them in a sequence is hard coded. You cannot change this.
-However, you can change the behaviour of such promises by setting control
+However, you can change the behavior of such promises by setting control
 parameters. These are formally parts of the `promise body' for these hard-coded
 promises, so we use the body structure to set them. Each agent has a special
 body whose name is @code{control}; e.g.
@@ -773,7 +773,7 @@ Look at the examples and try to identify these patterns yourself.
 @menu
 * Rules are promises::          
 * Best practice for writing promises::  
-* Containers::                  
+@c * Containers::                  
 * Decisions::                   
 * Types in CFEngine 3::         
 * Datatypes in CFEngine 3::     
@@ -823,7 +823,7 @@ affected by the promise.
 @end cartouche
 
 Not all of these elements are necessary every time. Some promises
-contain a lot of implicit behaviour. In other cases we might want to
+contain a lot of implicit behavior. In other cases we might want to
 be much more explicit.  For example, the simplest reports promise
 looks like this:
 
@@ -856,7 +856,7 @@ A more complex promise contains many attributes:
 # Promise type
 files:
 
-# promisor                  -> promisee (no curly braces needed if only one)
+# promiser                  -> promisee (no curly braces needed if only one)
 "/home/mark/tmp/test_plain" -> "system blue team",
 
  # attribute => value
@@ -876,7 +876,7 @@ You see several kinds of object in this example. All literal strings
 (e.g. @code{"true"}) in CFEngine 3 must be quoted. This provides
 absolute consistency and makes type-checking easy and error-correction
 powerful. All function-like objects (e.g. @code{users("..")}) are  
-either builtin
+either built-in
 special functions or parameterized templates which contain the `meat'  
 of the right hand
 side.
@@ -891,7 +891,8 @@ different components in the reference manual.
 
 
 @c -----------------------------------------------------------------------
-@node Best practice for writing promises, Containers, Rules are promises, A simple crash course in concepts
+@c @node Best practice for writing promises, Containers, Rules are promises, A simple crash course in concepts
+@node Best practice for writing promises, Decisions, Rules are promises, A simple crash course in concepts
 @section Best practice for writing promises
 
 When writing promises, get into the habit of giving every promise a comment
@@ -959,101 +960,102 @@ Enterprise editions of CFEngine will track the dependencies between these
 promises and map out impact analyses.
 
 @c -----------------------------------------------------------------------
-@node Containers, Decisions, Best practice for writing promises, A simple crash course in concepts
-@section Containers
+@c @node Containers, Decisions, Best practice for writing promises, A simple crash course in concepts
+@c @section Containers
 
-CFEngine allows you to group multiple promise statements
-    into containers called bundles.
-@smallexample
 
-bundle agent identifier
+@c CFEngine allows you to group multiple promise statements into containers called bundles.
+@c @smallexample
 
-@{
-commands:
+@c bundle agent identifier
 
-  "/bin/echo These commands are a silly way to use CFEngine";
-  "/bin/ls -l";
-  "/bin/echo But they illustrate a point";
+@c @{
+@c commands:
+@c 
+@c   "/bin/echo These commands are a silly way to use CFEngine";
+@c   "/bin/ls -l";
+@c   "/bin/echo But they illustrate a point";
 
-@}
+@c @}
 
-@end smallexample
+@c @end smallexample
 
-Bundles serve two purposes: they allow us to collect related promises under a
-single heading, like a subroutine, and they allow us to mix configuration for different
-parts of CFEngine in the same file. The type of a bundle is the name of the component
-of CFEngine for which it is intended.
+@c Bundles serve two purposes: they allow us to collect related promises under a
+@c single heading, like a subroutine, and they allow us to mix configuration for different
+@c parts of CFEngine in the same file. The type of a bundle is the name of the component
+@c of CFEngine for which it is intended.
 
-For instance, we can make a self-contained example agent-server
-configuration by labelling the bundles:
+@c For instance, we can make a self-contained example agent-server
+@c configuration by labeling the bundles:
 
-@smallexample
+@c @smallexample
 
-#
-# Not a complete example
-#
+@c #
+@c # Not a complete example
+@c #
 
-bundle agent testbundle
+@c bundle agent testbundle
 
-@{
-files:
+@c @{
+@c files:
 
-  "/home/mark/tmp/testcopy"
+@c   "/home/mark/tmp/testcopy"
 
-    comment      => "Throwaway example...",
-    copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
-    perms        => system,
-    depth_search => recurse("inf");
+@c     comment      => "Throwaway example...",
+@c     copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+@c     perms        => system,
+@c     depth_search => recurse("inf");
+ 
+@c @}
 
-@}
+@c #
 
-#
+@c bundle server access_rules
 
-bundle server access_rules
+@c @{
+@c access:
 
-@{
-access:
+@c   "/home/mark/LapTop"
 
-  "/home/mark/LapTop"
+@c     admit   => @{ "127.0.0.1" @};
+@c @}
 
-    admit   => @{ "127.0.0.1" @};
-@}
+@c @end smallexample
 
-@end smallexample
+@c Another type of container in CFEngine 3 is a `body' part. Body parts
+@c exist to hide complex parameter information in reusable containers.
+@c The right hand side of some attribute assignments use body containers
+@c to reduce the amount of in-line information and preserve readability.
+@c You cannot choose where to use bodies: either they are used or they
+@c are not used for a particular kind of attribute. What you can choose, however, is
+@c the name and number of parameters for the body; and you can make as many of them as you like:
+@c For example:
 
-Another type of container in CFEngine 3 is a `body' part. Body parts
-exist to hide complex parameter information in reusable containers.
-The right hand side of some attribute assignments use body containers
-to reduce the amount of in-line information and preserve readability.
-You cannot choose where to use bodies: either they are used or they
-are not used for a particular kind of attribute. What you can choose, however, is
-the name and number of parameters for the body; and you can make as many of them as you like:
-For example:
+@c @smallexample
 
-@smallexample
+@c body copy_from mycopy(from,server)
 
-body copy_from mycopy(from,server)
+@c @{
+@c source      => "$(from)";
+@c servers     => @{ "$(server)" @};
+@c copy_backup => "true";
 
-@{
-source      => "$(from)";
-servers     => @{ "$(server)" @};
-copy_backup => "true";
+@c special_class::
 
-special_class::
+@c   purge       => "true";
+@c @}
 
-  purge       => "true";
-@}
+@c @end smallexample
 
-@end smallexample
-
-Notice also that classes can be used in bodies as well as parameters so that
-you can hide environmental adaptations in these bodies also. The classes used
-here are effectively ANDed with the classes under which the calling promise
-is defined.
+@c Notice also that classes can be used in bodies as well as parameters so that
+@c you can hide environmental adaptations in these bodies also. The classes used
+@c here are effectively ANDed with the classes under which the calling promise
+@c is defined.
 
 
 @c ------------------------------------------------------------------
-@node Decisions, Types in CFEngine 3, Containers, A simple crash course in concepts
+@c @node Decisions, Types in CFEngine 3, Containers, A simple crash course in concepts
+@node Decisions, Types in CFEngine 3, Best practice for writing promises, A simple crash course in concepts
 @section Decisions
 
 CFEngine decisions are made behind the scenes and the results of
@@ -1358,7 +1360,7 @@ body TYPE name    # matches TYPE => name in promise
 CFEngine variables have two meta-types: scalars and lists. A scalar is a single value,
 a list is a collection of scalars. Each scalar may have one of three types:
 @code{string}, @code{int} or @code{real}. Typing is dynamic, so these are
-interchangable in many instances. However arguments to special functions check legal
+interchangeable in many instances. However arguments to special functions check legal
 type for consistency.
 
 Integer constants may use suffixes to represent large numbers.
@@ -1836,7 +1838,7 @@ sophisticated index-databases of documents.
 * What topic maps offer::       
 * The nuts and bolts of topic maps::  
 * Example of topics promises::  
-* Modelling configuration promises as topic maps::  
+* Modeling configuration promises as topic maps::  
 @end menu
 
 @node Promises and Knowledge, The basics of knowledge, Knowledge Management, Knowledge Management
@@ -2145,7 +2147,7 @@ The box into which we classify a topic to disambiguate different
 topics with the same name (`in the context of')@footnote{Here, CFEngine differs from the topic map standard in allowing contexts
 to be overlapping sets, rather than mutually exclusive `types'.
 CFEngine is guided by Promise Theory in this respect in order to enable
-distribtued cooperation and the development of a free and emergent ontology.}.
+distributed cooperation and the development of a free and emergent ontology.}.
 
 @item Topics/Things
 The representation of a subject (an index term).
@@ -2171,7 +2173,7 @@ represent a set of topics that might be relevant, which in turn encompass a set 
 occurrences of resources that contain actual information about the topics in that context. The primacy of topics in this
 stems from their ability to form networks by @emph{association}.
 
-The classic approach to information modelling is to build a
+The classic approach to information modeling is to build a
 hierarchical decomposition of non-overlapping objects. Data are
 manipulated into non-overlapping containers which often prove
 to be overly restrictive. Topic maps allow us to avoid the kinds of
@@ -2184,7 +2186,7 @@ occurrences of information that highlight the concepts pertinent to
 the topic somehow.
 
 
-@node Example of topics promises, Modelling configuration promises as topic maps, The nuts and bolts of topic maps, Knowledge Management
+@node Example of topics promises, Modeling configuration promises as topic maps, The nuts and bolts of topic maps, Knowledge Management
 @section Example of topics promises
 
 You can use @code{cf-know} to render a topic map either as text (for  
@@ -2224,7 +2226,7 @@ services::
                        "programs::httpd",
                        "implements");
 
- # if we don't specificy a context, it is "any"
+ # if we don't specify a context, it is "any"
 
 "WWW" association => a("looks up addresses with",
                        "named",
@@ -2281,12 +2283,12 @@ things:
 @end verbatim
 
 @menu
-* Analysing and indexing the policy::  
+* Analyzing and indexing the policy::  
 * cf-know::                     
 @end menu
 
-@node Analysing and indexing the policy, cf-know, Example of topics promises, Example of topics promises
-@subsection Analysing and indexing the policy
+@node Analyzing and indexing the policy, cf-know, Example of topics promises, Example of topics promises
+@subsection Analyzing and indexing the policy
 
 CFEngine can analyze the promises you have made, index and cross
 reference them using the command:
@@ -2297,7 +2299,7 @@ reference them using the command:
 Normally, the default policy in Nova or Constellation will perform this
 command each time the policy is changed.
 
-@node cf-know,  , Analysing and indexing the policy, Example of topics promises
+@node cf-know,  , Analyzing and indexing the policy, Example of topics promises
 @subsection @code{cf-know}
 
 CFEngine's knowledge agent @code{cf-know} allows you to make promises
@@ -2368,8 +2370,8 @@ lead to poor knowledge maps.
 @end cartouche
 
 
-@node Modelling configuration promises as topic maps,  , Example of topics promises, Knowledge Management
-@section Modelling configuration promises as topic maps
+@node Modeling configuration promises as topic maps,  , Example of topics promises, Knowledge Management
+@section Modeling configuration promises as topic maps
 
 We can model topic maps as promises within CFEngine; the
 question then remains as to how to use topic maps to model
@@ -2438,7 +2440,7 @@ _var_CFEngine_inputs::
 Note that in this mapping, the actual promise (viewed as a real world
 entity) is an occurrence of the topic `promise'; at the same time each
 promise could be discussed as a different topic allowing
-meta-modelling of the entity-relation model in the real-world
+meta-modeling of the entity-relation model in the real-world
 data. Conversely the topics themselves become configuration items or
 `promisers' in the promise model. The effect is to create a navigable
 semantic web for traversing the policy; this documents the structure

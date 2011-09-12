@@ -551,7 +551,7 @@ To complete the conversion, you will need to:
 
 @enumerate 
 @item Check that the intention of the converted promise matches the orginal.
-@item Check that variable references are ok - you will need to rename them g.name
+@item Check that variable references are ok - global ones can be referenced with def.varname (if they are defined in the bundle common def)
 @item Insert comments
 @item Simplifying repeated patterns using lists.
 @item Run through cf-promises

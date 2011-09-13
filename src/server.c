@@ -117,7 +117,6 @@ const char *HINTS[15] =
       "Print the help message",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
-      "All talk and no action mode - make no changes, only inform of promises not kept",
       "Output the version of the software",
       "Specify an alternative input file than the default",
       "Define a list of comma separated classes to be defined at the start of execution",

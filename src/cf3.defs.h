@@ -1124,13 +1124,6 @@ enum promiselog_rep
    plog_notkept
    };
 
-enum time_window
-   {
-   time_hour,
-   time_day,
-   time_week
-   };
-
 /*************************************************************************/
 
 enum cfd_menu

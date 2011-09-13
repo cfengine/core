@@ -666,6 +666,7 @@ case "$target_os" in
 	AC_DEFINE(ULTRIX, [], [Ultrix build])
         ;;
    hpux*|hp-ux*) 
+
 	AC_DEFINE(HPuUX, [], [HP/UX build])
         if test "$GCC" != "yes"; then
 	  AC_DEFINE(REGEX_MALLOC, [], [Whether to use the local regex functions])
@@ -858,8 +859,18 @@ dnl ####################################################################
 dnl Set GCC CFLAGS only if using GCC.
 dnl ####################################################################
 
+AC_MSG_CHECKING(for HP-UX aC)
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+#if defined __HP_cc
+#This is HP-UX ANSI C
+#endif
+]])], [AC_MSG_RESULT(no)],[AC_MSG_RESULT(yes)
+CFLAGS="$CFLAGS -Agcc"
+CPPFLAGS="$CPPFLAGS -Agcc"
+HP_UX_AC=yes])
+
 AC_MSG_CHECKING(for GCC specific compile flags)
-if test x"$GCC" = "xyes"; then
+if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
 	
 dnl # -Wformat - to be considered
 

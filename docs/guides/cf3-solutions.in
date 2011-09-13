@@ -97,6 +97,14 @@ the need for low level coding. For most tasks, you will find the
 standardized templates sufficient for your needs, but the possibilties
 do not stop there.
 
+The following resources are available as a supplement to this guide:
+
+@itemize
+@item Community Open Promise-Body Library, the nuts'n'bolts definitions for the solutions presented here: @url{http://cfengine.com/manuals/CfengineStdLibrary.html}
+@item Tutorial: @url{http://cfengine.com/manuals/cf-manuals/cf3-tutorial.html }
+@item Reference manual: @url{http://cfengine.com/manuals/cf-manuals/cf3-reference.html }
+@end itemize
+
 If you need assistance in formulating specific solutions for your
 system environment, contact CFEngine's Professional Services at
 @code{contact@@CFEngine.com};

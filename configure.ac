@@ -860,7 +860,7 @@ AC_SUBST(NOWRAP)
 AC_MSG_CHECKING(for yyalloc/yyrealloc redifinition in Flex)
 
 if echo '%option yyalloc
-%%' | "$LEX" 2>/dev/null; then
+%%' | "$LEX" -o /dev/null 2>/dev/null; then
     YYALLOC="%option noyyalloc"
     YYREALLOC="%option noyyrealloc"
     AC_MSG_RESULT(available)

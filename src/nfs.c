@@ -164,7 +164,6 @@ do
           
           break;
       case solaris:
-      case solarisx86:
 
       case hp:      
           if (IsAbsoluteFileName(buf3))
@@ -368,7 +367,6 @@ switch (VSYSTEMHARDCLASS)
                  break;
 
    case unix_sv:
-   case solarisx86:
    case solaris: snprintf(fstab,CF_BUFSIZE,"%s:%s - %s %s - yes %s",host,rmountpt,mountpt,fstype,opts);
                  break;
 

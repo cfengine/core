@@ -191,6 +191,18 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
       }
    }
 
+/*
+ * solarisx86 is a historically defined class for Solaris on x86. We have to
+ * define it manually now.
+ */
+#ifdef SOLARIS
+if (strcmp(VSYSNAME.machine == 'i86pc') == 0)
+   {
+   NewClass("solarisx86");
+   }
+#endif
+
+
 FindDomainName(VSYSNAME.nodename);
 
 if (!StrStr(VSYSNAME.nodename,VDOMAIN))

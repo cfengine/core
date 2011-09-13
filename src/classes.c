@@ -55,7 +55,6 @@ char *CLASSTEXT[] =   /* If you change here change enum classes too! */
    "irix",
    "irix64",
    "freebsd",
-   "solarisx86",
    "bsd4_3",
    "newsos",
    "netbsd",
@@ -101,7 +100,6 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
    {"irix", "ip.*",".*"},          /* irix */
    {"irix64","ip.*",".*"},         /* irix64 */
    {"freebsd",".*",".*"},          /* freebsd */
-   {"sunos","i86pc","5.*"},        /* solarisx86 */
    {"bsd",".*",".*"},              /* bsd 4.3 */
    {"newsos",".*",".*"},           /* newsos4 */
    {"netbsd",".*",".*"},           /* NetBSD */
@@ -145,7 +143,6 @@ char *VPSCOMM[CF_CLASSATTR] =
    "/bin/ps",       /* irix */
    "/bin/ps",       /* irix64 */
    "/bin/ps",       /* freebsd */
-   "/bin/ps",       /* solarisx86 */
    "/bin/ps",       /* bsd 4.3 */
    "/bin/ps",       /* newos4 */
    "/bin/ps",       /* netbsd */
@@ -192,7 +189,6 @@ char *VPSOPTS[CF_CLASSATTR] =
    "-ef",    /* irix */
    "-ef",    /* irix64 */
    "auxw",   /* freebsd */
-   "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",   /* solarisx86 */
    "-ax",    /* bsd 4.3 */
    "auxw",   /* newsos4 */
    "auxw",   /* netbsd */
@@ -237,7 +233,6 @@ char *VMOUNTCOMM[CF_CLASSATTR] =
    "/sbin/mount -va",     /* irix */
    "/sbin/mount -va",     /* irix64 */
    "/sbin/mount -va",     /* freebsd */
-   "/usr/sbin/mount -a",  /* solarisx86 */
    "/etc/mount -a",       /* bsd 4.3 */
    "/etc/mount -a",       /* newsos4 */
    "/sbin/mount -a",      /* netbsd */
@@ -281,7 +276,6 @@ char *VUNMOUNTCOMM[CF_CLASSATTR] =
    "/sbin/umount",     /* irix */
    "/sbin/umount",     /* irix64 */
    "/sbin/umount",     /* freebsd */
-   "/etc/umount",      /* solarisx86 */
    "/etc/umount",      /* bsd4.3 */
    "/etc/umount",      /* newsos4 */
    "/sbin/umount",     /* netbsd */
@@ -327,7 +321,6 @@ char *VMOUNTOPTS[CF_CLASSATTR] =
    "bg,hard,intr",    /* irix */
    "bg,hard,intr",    /* irix64 */
    "bg,intr",         /* freebsd */
-   "bg,hard,intr",    /* solarisx86 */
    "bg,hard,intr",    /* bsd4.3 */
    "bg,hard,intr",    /* newsos4 */
    "-i,-b",           /* netbsd */
@@ -371,7 +364,6 @@ char *VRESOLVCONF[CF_CLASSATTR] =
    "/etc/resolv.conf",     /* irix */
    "/etc/resolv.conf",     /* irix64 */
    "/etc/resolv.conf",     /* freebsd */
-   "/etc/resolv.conf",     /* solarisx86 */
    "/etc/resolv.conf",     /* bsd4.3 */
    "/etc/resolv.conf",     /* newsos4 */
    "/etc/resolv.conf",     /* netbsd */
@@ -417,7 +409,6 @@ char *VFSTAB[CF_CLASSATTR] =
    "/etc/fstab",       /* irix */
    "/etc/fstab",       /* irix64 */
    "/etc/fstab",       /* freebsd */
-   "/etc/vfstab",      /* solarisx86 */
    "/etc/fstab",       /* bsd4.3 */
    "/etc/fstab",       /* newsos4 */
    "/etc/fstab",       /* netbsd */
@@ -461,7 +452,6 @@ char *VMAILDIR[CF_CLASSATTR] =
    "/usr/mail",          /* irix */
    "/usr/var/mail",      /* irix64 */
    "/var/mail",          /* freebsd */
-   "/var/mail",          /* solarisx86 */
    "/usr/spool/mail",    /* bsd4.3 */
    "/usr/spool/mail",    /* newsos4 */
    "/var/mail",          /* netbsd */
@@ -505,7 +495,6 @@ char *VNETSTAT[CF_CLASSATTR] =
    "/usr/etc/netstat -rn",   /* irix */
    "/usr/etc/netstat -rn",   /* irix64 */
    "/usr/bin/netstat -rn",   /* freebsd */
-   "/bin/netstat -rn",       /* solarisx86 */
    "/usr/ucb/netstat -rn",   /* bsd4.3 */
    "/usr/ucb/netstat -rn",   /* newsos4 */
    "/usr/bin/netstat -rn",   /* netbsd */
@@ -550,7 +539,6 @@ char *VEXPORTS[CF_CLASSATTR] =
    "/etc/exports",    /* irix */
    "/etc/exports",    /* irix64 */
    "/etc/exports",    /* freebsd */
-   "/etc/dfs/dfstab", /* solarisx86 */
    "/etc/exports",    /* bsd4.3 */
    "/etc/exports",    /* newsos4 */
    "/etc/exports",    /* netbsd */
@@ -595,7 +583,6 @@ char *VROUTE[CF_CLASSATTR] =
    "-",              /* irix */
    "-",              /* irix64 */
    "/sbin/route",    /* freebsd */
-   "/usr/sbin/route",/* solarisx86 */
    "-",              /* bsd4.3 */
    "-",              /* newsos4 */
    "-",              /* netbsd */
@@ -639,7 +626,6 @@ char *VROUTEADDFMT[CF_CLASSATTR] =
    "-",              /* irix */
    "-",              /* irix64 */
    "add %s %s",      /* freebsd */
-   "add %s %s",      /* solarisx86 */
    "-",              /* bsd4.3 */
    "-",              /* newsos4 */
    "-",              /* netbsd */
@@ -683,7 +669,6 @@ char *VROUTEDELFMT[CF_CLASSATTR] =
    "-",              /* irix */
    "-",              /* irix64 */
    "delete %s",      /* freebsd */
-   "delete %s",      /* solarisx86 */
    "-",              /* bsd4.3 */
    "-",              /* newsos4 */
    "-",              /* netbsd */

@@ -1021,7 +1021,6 @@ enum classes
    irix,
    irix64,
    freebsd,
-   solarisx86,
    bsd4_3,
    newsos,
    netbsd,

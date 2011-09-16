@@ -451,6 +451,7 @@ if (strlen(MENU) > 0)
      {
      case cfd_menu_delta:
          Nova_QueryForKnowledgeMap(conn,MENU,time(0) - SECONDS_PER_MINUTE * 10);
+	 break;
      case cfd_menu_full:
          Nova_QueryForKnowledgeMap(conn,MENU,time(0) - SECONDS_PER_WEEK);
        break;

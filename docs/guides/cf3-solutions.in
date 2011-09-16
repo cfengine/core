@@ -180,8 +180,8 @@ what_type:
 * Editing password or group files::  
 * Editing password or group files custom::  
 * Disabling and rotating files::  
-* unit_disable_and_rotate_files.cf::  
-* unit_disable.cf::             
+@c * unit_disable_and_rotate_files.cf::  
+@c * unit_disable.cf::             
 * Hashing for change detection - tripwire::  
 * Command or script execution::  
 * Kill process::                
@@ -255,7 +255,7 @@ Use the following simple steps to disable and rotate files. See the Community Op
 @end verbatim
 
 @c ......................................
-@node Hashing for change detection - tripwire, Command or script execution, unit_disable.cf, Introduction
+@node Hashing for change detection - tripwire, Command or script execution, Disabling and rotating files, Introduction
 @section Hashing for change detection (tripwire)
 
 Change detection is a powerful and easy way to monitor your environment, increase awareness and harden your system against security breaches.

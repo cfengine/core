@@ -117,8 +117,8 @@ system environment, contact CFEngine's Professional Services at
 * Editing password or group files::  
 * Editing password or group files custom::  
 * Disabling and rotating files::  
-* unit_disable_and_rotate_files.cf::  
-* unit_disable.cf::             
+@c * unit_disable_and_rotate_files.cf::  
+@c * unit_disable.cf::             
 * Hashing for change detection - tripwire::  
 * Command or script execution::  
 * Kill process::                
@@ -268,7 +268,7 @@ Change detection is a powerful and easy way to monitor your environment, increas
 @node Command or script execution, Kill process, Hashing for change detection - tripwire, Introduction
 @section Command or script execution
 
-Execute a command, for instance to start a MySQL service. Note that executing commands takes control away from CFEngine and may disrupt the convergent nature of well written policies.
+Execute a command, for instance to start a MySQL service. Note that simple shell commands like @code{rm} or @code{mkdir} cannot be managed by CFEngine, so none of the protections that CFEngine offers can be applied to the process. Moreover, this starts a new process, adding to the burden on the system. See CFEngine 3 Best Practices @url{http://cfengine.com/manuals/cf3-bestpractice.html} for more information on how to best write policies.
 
 @verbatim
 #CFEexample:unit_commands.cf

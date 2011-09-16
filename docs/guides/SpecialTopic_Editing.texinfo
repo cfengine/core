@@ -124,7 +124,7 @@ a fully deterministic approach, or live with a partial approximation.
 
 Some approaches to file editing try to `know' the intended format of a
 file, by hardcoding it. If the file then fails to follow this format,
-the algorithms might break. CfEngine gives you generic tools to be
+the algorithms might break. CFEngine gives you generic tools to be
 able to handle files in any line-based format, without the need to
 hard-code specialist knowledge about file formats.
 
@@ -194,7 +194,7 @@ files:
 @end verbatim
 
 Editing bundles are defined like other bundles for the agent, except that they have a type
-give by the left hand side of the constraint (just like body templates):
+given by the left hand side of the constraint (just like body templates):
 
 @verbatim
 bundle edit_line mybundle(arg1,arg2,arg3)

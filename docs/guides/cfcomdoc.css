@@ -158,9 +158,13 @@ table.cartouche {
 }
 
  .cartouche td  {
-    background-color: #ddd;
+    background: none !important;
+    border: none !important;
+    padding: 5px; 
+
+/*    background-color: #ddd;
     border: 1px solid #ccc;
-    padding: 5px;
+    padding: 5px;*/
 }
 
 A:link { color: #2c2e70 }

@@ -113,7 +113,7 @@ manage in advance. Once a mission is underway, you should expect to
 work by making small corrections to the mission plan, rather than
 large risky changes.
 
-@center @image{MissionPlan,10cm,,Mission Plan,.pdf}
+@center @image{MissionPlan,10cm,,Mission Plan,png}
 
 Planning does not mean sitting around a table, or in front of a whiteboard.
 Successful planning is a dialogue between theory and practice. It should include
@@ -144,7 +144,7 @@ integration. See the CFEngine Nova Supplement for more information.
 
 You are free to download Community Editions of CFEngine at any time to
 test the software. There is a considerable amount of documentation and
-example policy available on the CFEngine.org and CFEngine.com web-sites
+example policy available on the cfengine.com web-site
 to try some simple examples of system management.
 
 If you intend to purchase a significant number of commercial licenses

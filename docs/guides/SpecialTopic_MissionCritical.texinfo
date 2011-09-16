@@ -446,7 +446,7 @@ All hubs will share the same public-private key pair and license file.
 Next, we'll run through the operation and failure modes of the symmetric hubs.
 The arrangement of the hubs is shown schematically in the figure below.
 @sp 1
-@image{redundhubs,9cm,,,pdf}
+@center @image{redundhubs,9cm,,,png}
 @sp 1
 @center Fig 1. Only one master hub at a time collects data in a symmetric cluster.
 @sp 1

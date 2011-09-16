@@ -375,7 +375,7 @@ reports:
 }
 @end verbatim
 The policy @code{ifdefined} means that CFEngine will ignore
-the foreign list if is does not exist. This means you can
+the foreign list if it does not exist. This means you can
 include a number of lists from other bundles to extend
 the behviour of your own, if they are provided.
 

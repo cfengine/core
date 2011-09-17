@@ -49,9 +49,7 @@ ACX_PTHREAD
 
 CC="$PTHREAD_CC"
 CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
-CPPFLAGS="$PTHREAD_CFLAGS $CPPFLAGS"
-LDFLAGS="$PTHREAD_LDFLAGS $LDFLAGS"
-
+LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################
 dnl Checks for programs.

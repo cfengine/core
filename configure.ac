@@ -572,6 +572,16 @@ if test "$ac_cv_lib_pthread_main" = "yes"; then
 	AC_CHECK_HEADERS(sched.h)
 fi
 
+#
+# Temporarily force C macros to enable threading in CFEngine if pthreads were
+# found by ACX_PTHREAD, and errorneously disabled by another pthread-related
+# checks.
+#
+if test "x$acx_pthread_ok" = "xyes"; then
+   AC_DEFINE(HAVE_PTHREAD_H)
+   AC_DEFINE(HAVE_LIBPTHREAD)
+fi
+
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
 dnl ######################################################################

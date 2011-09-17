@@ -34,30 +34,12 @@ dnl Libtool madness
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
-
 dnl
 dnl hide [s]include macros, so old aclocal (automake < 1.10) won't find them and
 dnl won't complain about something/something.m4 not found
 dnl
 m4_define(incstart,sinc)
 m4_define(incend,lude)
-
-#
-# Add to the default list of places in CPPFLAGS to match LDFLAGS above
-# Don't add if cross-compiling (setting host), to avoid using native libs.
-# 
-if test "x$cross_compiling" = "xno"; then
-  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include	
-  do 
-    if test -d "$x"; then
-      y=`expr " $CPPFLAGS " : ".* -I$x "`
-      if test $y -eq 0; then
-        CPPFLAGS="$CPPFLAGS -I$x"
-      fi
-    fi
-  done
-fi
 
 dnl ######################################################################
 dnl Use pthreads if available
@@ -90,6 +72,24 @@ AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
+
+AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
+
+#
+# Add to the default list of places in CPPFLAGS to match LDFLAGS above
+# Don't add if cross-compiling (setting host), to avoid using native libs.
+#
+if test "x$cross_compiling" = "xno"; then
+  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include	
+  do
+    if test -d "$x"; then
+      y=`expr " $CPPFLAGS " : ".* -I$x "`
+      if test $y -eq 0; then
+        CPPFLAGS="$CPPFLAGS -I$x"
+      fi
+    fi
+  done
+fi
 
 dnl ######################################################################
 dnl Checks for libraries.

@@ -123,6 +123,7 @@ body server control
  skipverify            => { ".*$(def.domain)", "127.0.0.1" , "::1", @(def.acl) };
 
  allowusers            => { "root" };
+ maxconnections        => "100";
 
 # Uncomment the line below to allow remote users to run 
 # cf-agent through cf-runagent

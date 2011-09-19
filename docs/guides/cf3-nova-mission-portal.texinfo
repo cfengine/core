@@ -11,7 +11,7 @@
 @titlepage
 @title CFEngine Nova Mission Portal
 @subtitle CFEngine Enterprise Documentation
-@subtitle for version 2.1 Beta 2, 5. September 2011
+@subtitle for version 2.1.0, 19. September 2011
 @author CFEngine
 @c @smallbook
 @fonttextsize 10

@@ -75,7 +75,7 @@ Copyright @copyright{} 2009 CFEngine AS
 
 @ifnottex
 @node top, What is rollback?, (dir), (dir)
-@top CFEngine-Tutorial
+@top Rollback
 @menu
 * What is rollback?::           
 * Like revision control?::      
@@ -134,7 +134,7 @@ systems (CVS, Subversion, etc) use the same idea to keep a record of
 what @i{intended changes} have been made in source code or other
 documents. In theory, if you intentionally commit a change that you
 don't like, you can `back out' by reversing a `commit' operation and
-going back to a previous version before the it becomes irreversible.
+going back to a previous version before it becomes irreversible.
 
 This idea works well if you only ever want to undo the last atomic
 transaction in a sequence of deliberate changes, however there are
@@ -148,7 +148,7 @@ from that point to the current point. At that point, it is more
 efficient to make a `new' revision that takes away the offending text,
 rather than undoing everything that happened since.
 
-Revsion control can also fail.Your last change might have already been
+Revsion control can also fail. Your last change might have already been
 changed with or without your knowledge and simply reversing what you
 changed will not be possible.
 For example, consider the file:

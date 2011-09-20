@@ -132,8 +132,8 @@ system environment, contact CFEngine's Professional Services at
 @section  Begin - Get Started
 
 To get started with CFEngine, you can imagine the following template for entering examples.
-This part of the code is common to all the examples. We include below for completeness,
-but you might also like to hide is in yours.
+This part of the code is common to all the examples. @c We include it below for completeness,
+@c but you might also like to hide is in yours.
 
 @verbatim
 

@@ -74,7 +74,7 @@ Copyright @copyright{} 2009 CFEngine AS
 * What is knowledge management?::  
 * Risk and uncertainty::        
 * How should you begin?::       
-* The Copernicus Knowledge map::  
+* The CFEngine Knowledge map::  
 * Pitfalls to avoid::           
 * Types of information::        
 * Example company_knowledge.cf::  
@@ -142,7 +142,7 @@ the situations we find ourselves in.
 To do that, we have to make the connections between the appropriate
 parts to that we can always obtain the answers.
 
-@node How should you begin?, The Copernicus Knowledge map, Risk and uncertainty, Top
+@node How should you begin?, The CFEngine Knowledge map, Risk and uncertainty, Top
 @unnumberedsec How should you begin?
 
 @sp 1
@@ -168,13 +168,13 @@ need to have intentions to make promises, and so on.  Ask yourself:
 does everyone in your team know your business goals, and how to
 translate their efforts into progess?
 
-@node The Copernicus Knowledge map, Pitfalls to avoid, How should you begin?, Top
-@unnumberedsec The Copernicus Knowledge Map in CFEngine
+@node The CFEngine Knowledge map, Pitfalls to avoid, How should you begin?, Top
+@unnumberedsec The CFEngine Knowledge map
 
 Maps guide us to where we need to get to from where we are (even when we don't
 fully understand where we are). A map places us in the context or a larger
 picture and helps us to find our way.
-The Copernicus Knowledge Map is a part of the CFEngine Mission Portal,
+The Knowledge map is a part of the CFEngine Mission Portal,
 which in turn is provided with CFEngine Nova and Constellation Editions.
 Significant instrumentation of the software, user process and policy analysis
 are provided in these editions in order to make Knowledge mining as transparent
@@ -197,7 +197,7 @@ Ask yourself: what are the places in this map, and what are the paths between th
 This is a question every organization needs to ask itself.
 
 @sp 1
-@node Pitfalls to avoid, Types of information, The Copernicus Knowledge map, Top
+@node Pitfalls to avoid, Types of information, The CFEngine Knowledge map, Top
 @unnumberedsec Pitfalls to avoid
 
 @sp 1
@@ -325,7 +325,7 @@ current policy.
 @item You may create enterprise process documents and written policies for your 
 organization, which you will link into the knowledge map.
 
-@item CFEngine Nova creates the Copernicus Knowledge Map which includes
+@item CFEngine Nova creates the Knowledge Map which includes
 a conceptual framework for IT management, and which integrates with
 the CFEngine software documentation. Copernicus has two parts: i) a self-organizing
 map that belongs to you, and ii) a static map of more encylop@ae{}dic information

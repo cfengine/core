@@ -1,0 +1,243 @@
+nmake\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+@c %** start of header
+@setfilename cf-nova-gui.info
+@settitle CFEngine Constellastion Mission Observatory
+@setchapternewpage odd
+@c %** end of header
+@titlepage
+@title CFEngine Constellastion Mission Observatory
+@subtitle CFEngine Enterprise Documentation
+@subtitle for version 1.0
+@author CFEngine
+@c @smallbook
+@fonttextsize 10
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2011 CFEngine AS.
+The features described herein are in provided for user convenience and imply no warranty whatsoever
+to the extent of applicable law.
+@end titlepage
+@c *************************** File begins here ************************
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Reference:
+                        CFEngine is a language based framework
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+@ifnottex
+@node Top
+@top CFEngine Constellastion Mission Observatory
+@end ifnottex
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+@iftex
+@contents
+@end iftex
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@menu
+* Introduction::
+* Mission Portal::
+@end menu
+
+@node 
+@chapter Introduction
+
+CFEngine Constellation is a commercially licensed version of the core
+CFEngine software@footnote{Major version 3} with enterprise library
+extensions. All of the documentation for CFEngine 3 and CFE Nova
+applies to CFEngine Constellation. This document is a supplement
+describing the graphical user interphase used in CFEngine
+Constellation: the Mission Observatory.
+
+CFE Constellation has two levels of user interface. The 
+CFE Constellation architecture integrates a collection of 
+free standing hub configurations. You can think  of
+Constellation as being a number of instances of CFEngine
+Nova that have been  joined together by an umbrella of
+summary reporting. 
+
+@cartouche
+It is a basic principe of CFEngine that all hub installations
+are autonomously run. There is no concept of authoratative 
+hierarchy in CFEngine. The purpose of CFE Constellation
+is to provide an integrated view of what is going on in each of these
+autonmous installations for a suitably authorized user.
+@end cartouche
+
+There are thus two level of user interface:
+@itemize
+@item Mission Portal (MP) - this is indentical to the user interface used by CFE Nova.
+It shows the status of hosts connected to a free-standing hub. CFEngine users in a
+local evnironment will have a separate login on this interface in order to customize
+the browsing to their wishes.
+
+@item Mission Observatory (MO) - this is a separate graphical login environment with its
+own set of users, independent of the logins on the Mission Portal. The
+Mission Observatory has no authority to demand reports from the
+various hubs it subscribes to.  Each hub must grant the Mission
+Observatory permission to access its data. The users who log on to the
+Mission Observatory will then be able to see a high level overview of
+the hubs connected to the Mission Observatory, in much the same way as
+the users of the MP can see hosts connected to a hub.
+@end itemize
+
+
+
+@sp 1
+@center @image{img-login,5cm,,Mission Portal login}
+@center Figure: Mission Observatory login screen
+@sp 1
+
+@noindent Default user and password is 'admin' and 'admin' (make sure to change this at first login to prevent unauthorized access).
+
+@node 
+@chapter The Constellation Mission Portal
+
+
+CFE Constellation adds a number of features to the Mission Portal
+
+Each Mission Portal shows a number of hosts running in a `star network' with a
+single reporting hub at its centre. 
+
+New features in the Mission Portal for Constellation include:
+@itemize
+@item Automated story discovery in system knowledge for diagnostic purposes.
+@item A gallery function for defining and showing multiple vital signs graphs on the same page
+for the purpose of comparison.
+@end itemize
+
+
+
+@node 
+@chapter The Constellation Mission Obsveratory
+
+CFE Constellation adds a completely new user interface for showing
+summaries of data collected from local hub installations.  Each
+Mission Observatory collects reports from the hubs it knows about, and
+therefore creates a super-set of star networks, i.e. a constellation.
+
+@cartouche
+NB - a Mission Observtory is not a policy server. It does not define policy for the
+hubs it communicates with. It should not be considered as a level `above' the hubs
+in an authoritative hierarchy.
+@end cartouche
+
+The Mission Observatory provides some interface virtualization
+that attempts to show an integated view of different aspects
+of system management:
+
+@itemize
+@item Virtualized collections of promises
+@item Collections of hosts within a hub
+@item Collections of hubs
+@item Collections of people (teams)
+@end itemize
+
+
+There are two kinds of report:
+
+@itemize
+@item Standard summary reports
+@item Specil reports collected on a `need to know' basis. These
+reports are collected by the Mission Observatory from each of the hubs
+it knows about.
+@end itemize
+
+
+
+@node
+@section The MO status page
+
+The status page should look very like the MP status page. Instead of showing hosts
+on a particular hub, it will show 
+
+@itemize
+@item Status of aggregate hosts on all hubs
+@item Status of all hubs
+@item Business value of aggregate hubs
+@end itemize
+Since each hub might run a different policy, we will need to figure out eventually
+how to deal with different promises and environments.
+
+@sp 1
+@center @image{obs-status,10cm,,Mission Portal login}
+@center Figure: Mission Observatory login screen
+@sp 1
+
+
+@node
+@section The MO engineering page
+
+The MO engineering page should look very like the MP engineering page. INstead 
+of showing the status of hosts, it shows the status of each hub being monitored,
+as red, green yellow, blue, etc
+
+@sp 1
+@center @image{obs-engineering,10cm,,Mission Portal login}
+@center Figure: Mission Observatory login screen
+@sp 1
+
+
+@node
+@section The MO gallery viewer
+
+The gallery viewer may be configured to show multiple vital signs
+graphs on the same screen. It only makes sense to compare graphs with
+the same time-scale on a single screen, e.g. weekly, yearly,
+histogram, etc.
+
+@sp 1
+@center @image{obs-gallery,10cm,,Mission Portal login}
+@center Figure: Mission Observatory login screen
+@sp 1
+
+
+
+@c =========================================================================
+@c @node Index,  , CFEngine Methods, Top
+@c @unnumbered Concept Index
+@c @printindex cp
+@c =========================================================================
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+@bye

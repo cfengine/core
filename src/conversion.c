@@ -1193,28 +1193,42 @@ return cfsrv_nostatus;
 
 /*********************************************************************/
 
+char *CFCON_VIEWS[] = { "Comp",  // NOTE: must match cfl_view enum
+                        "VirtBundleComp",
+                        "Repaired",
+                        "NotKept",
+                        "RepairedReason",                           
+                        "NotKeptReason",
+                        "FileChange",
+                        "Software",
+                        "RepairLog",
+                        "NotKeptLog",
+                        NULL };
+
+
 enum cfl_view Str2View(char *s)
 
-{ static char *views[] = { "Comp",  // NOTE: must match cfl_view enum
-                           "VirtBundleComp",
-			   "Repaired",
-			   "NotKept",
-			   "RepairedReason",                           
-			   "NotKeptReason",
-                           "FileChange",
-                           "Software",
-			   NULL };
-  int i;
+{ static   int i;
 
-for (i = 0; views[i] != NULL; i++)
+for (i = 0; CFCON_VIEWS[i] != NULL; i++)
    {
-   if (strcmp(s,views[i]) == 0)
+   if (strcmp(s,CFCON_VIEWS[i]) == 0)
       {
       return i;
       }
    }
 
 return cfl_view_error;
+}
+
+char *View2Str(enum cfl_view view)
+{
+ if(view >= cfl_view_error)
+    {
+    return "VIEWERROR";
+    }
+
+ return CFCON_VIEWS[view];
 }
 
 /*********************************************************************/

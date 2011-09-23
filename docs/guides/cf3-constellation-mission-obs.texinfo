@@ -290,6 +290,7 @@ It should be analogous to the cfpr_compliance_summary_graph()
 
 
 
+
 @c =========================================================================
 @c @node Index,  , CFEngine Methods, Top
 @c @unnumbered Concept Index

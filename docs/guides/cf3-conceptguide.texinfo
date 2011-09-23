@@ -291,7 +291,7 @@ its
 own copy of the music and knows what to play. It might or might not have
 a conductor to help coordinate the individual parts -- that's up to you.
 
-CFEngine's software agents run on each individual computer but can
+CFEngine's software agents are independent components that run on each individual computer. They can
 communicate if they need to, as depicted in the figure below. This means
 you don't have to arrange risky login credentials to run your network
 -- and if something goes wrong with the communications network,
@@ -642,18 +642,23 @@ attachments in-line. This is a lesson that was learned from CFEngine
 @node Control bodies,  , Body parts, Bodies
 @subsection Control bodies
 
-Some promises in CFEngine are implicit. They are hard-coded into the program.
+Some promises in CFEngine are implicit and hard-coded into the program.
 For example, the fact that CFEngine looks for a number of files to read and
-will execute them in a sequence is hard coded. You cannot change this.
+execute them in a sequence cannot be changed.
 However, you can change the behavior of such promises by setting control
-parameters. These are formally parts of the `promise body' for these hard-coded
-promises, so we use the body structure to set them. Each agent has a special
-body whose name is @code{control}; e.g.
+parameters. These are formally parts of the `promise body', so we use the body structure to set them. Each agent, (CFEngine software component) has a special body whose name is @code{control}, used for setting these parameters. For cf-agent and cf-serverd we can have:
 
 @verbatim
 body agent control
 {
 bundlesequence => { "test" };
+}
+@end verbatim
+
+@verbatim
+body server control
+{
+allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
 }
 @end verbatim
 

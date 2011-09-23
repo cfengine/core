@@ -398,7 +398,7 @@ CFEngine offers. Custom scripts should be for your specific business
 operations, not for system maintenance.
 
 If you are tempted to use scripts to achieve your needs, consider
-jusing @code{methods}, and if necessary consult with support personnel
+using @code{methods}, and if necessary consult with support personnel
 for advice.
 
 
@@ -624,7 +624,7 @@ policy will be simpler.
 CFEngine provides indirection (pointers) to particular resources,
 through its @samp{sys} variable context. These variables adapt
 to the operating system and user id under which CFEngine is run.
-You policy will be more readily portable and you will need to
+Your policy will be more readily portable and you will need to
 code fewer exceptions if you use CFEngine's automatically adapting
 primitives, e.g. instead of writing @file{/etc/resolv.conf} for the
 name-service configuration file, use @code{$(sys.resolv)}.
@@ -683,7 +683,7 @@ files:
 This chapter concerns `workflow processes' that should typically be
 dealt with on systems. A workflow process is represented by a
 @i{promise bundle} in CFEngine.  None of the proposals here should be
-considered mandatory in any sense, but the do represent the norm.
+considered mandatory in any sense, but they do represent the norm.
 
 We refer users to the CFEngine solutions guide for implementation details of
 specific solutions.
@@ -838,7 +838,7 @@ commands:
 
 @noindent @b{Purpose:}
 
-Garbage collection is require on systems to prevent temporary or
+Garbage collection is required on systems to prevent temporary or
 antiquated files from consuming all available storage resources. It is
 impossible for a system to survive in the long term without throwing
 some data away.
@@ -895,7 +895,7 @@ file.
 
 @noindent @b{Remarks:}
 
-Always use the @code{$(sys.resolve)} variable to refer to the file.
+Always use the @code{$(sys.resolv)} variable to refer to the file.
 
 @noindent @b{Example:}
 
@@ -1079,7 +1079,7 @@ files:
 
    "$(system_files)"
  
-      comment      => "Check permissions are secret on the above",
+      comment      => "Check permissions are correct on the above",
       perms        => mo("644","root");
 
 
@@ -1412,7 +1412,7 @@ policy is the vetting agent. This creates a shallow hierarchy, but
 there is no reason why this formal body could not be comprised of
 representatives from the multiple teams.
 
-@image{delegate,10cm,,Delegation of responsibility requires vetting access,png}
+@center @image{delegate,13cm,,Delegation of responsibility requires vetting access,png}
 
 @cartouche
 

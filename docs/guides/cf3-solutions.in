@@ -151,7 +151,7 @@ bundle agent main
 
 @end verbatim
 @noindent Then you enter the cases as below. The general pattern
-of the syntax is like this (red: CFEngine word, blue: user-defined word):
+of the syntax is like this (colors in html version: red, CFEngine word; blue, user-defined word):
 
 @verbatim
 # The general pattern

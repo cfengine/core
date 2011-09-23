@@ -327,9 +327,7 @@ organization, which you will link into the knowledge map.
 
 @item CFEngine Nova creates the Knowledge Map which includes
 a conceptual framework for IT management, and which integrates with
-the CFEngine software documentation. Copernicus has two parts: i) a self-organizing
-map that belongs to you, and ii) a static map of more encylop@ae{}dic information
-that is located at CFEngine.com.
+the CFEngine software documentation.
 
 @item You may now extend the basic knowledge map with more of your
 own special documentation by placing references and

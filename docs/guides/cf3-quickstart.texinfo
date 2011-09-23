@@ -18,12 +18,12 @@
 @c ***********************************************************************
 @c %** start of header
 @setfilename cf3-quickstart.info
-@settitle CFEngine Quickstart
+@settitle CFEngine Quick Start Guide
 @setchapternewpage odd
 @c %** end of header
 
 @titlepage
-@title CFEngine Quickstart
+@title CFEngine Quick Start Guide
 @subtitle A CFEngine Handbook
 @author CFEngine AS
 
@@ -58,7 +58,7 @@ Copyright @copyright{} 2011- CFEngine AS
 
 @ifnottex
 @node Top, Install from packages, (dir), (dir)
-@top CFEngine Quickstart
+@top CFEngine Quick Start Guide
 @end ifnottex
 
 @iftex

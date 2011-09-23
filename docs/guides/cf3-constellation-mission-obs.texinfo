@@ -219,6 +219,25 @@ histogram, etc.
 @node
 @chapter PHP Functions for Mission Portal
 
+@node
+@section cfcon_generate_story(topic1,topic2)
+
+Generates stories about topics. Used for diagnostic purposes. 
+
+TODO: decide on the return format (it should include both the explanation and the final conclusion)
+
+@node
+@section cfcon_get_gallery_graph(hostkey,graphid)
+
+This function should return data in JSON format for the graphs that need comparision. 
+Each graph should be given a unique ID. Querying for all the data at once might lead
+to retrieving too much data at once. Hence, the web application must query for one
+graph for a single host at a time and keep track of host count and graph IDs.
+
+The user should be able to save the comparisions and edit them later.
+
+TODO: decide on return values: the graph data from the vitals are of different format than the summary graph data
+
 
 @c *******************************************************************
 
@@ -285,9 +304,6 @@ hosts that are red/green/yellow/blue.
 This function generates the data for the rendering of the bar graph on the status
 page. It should return the aggregate of the compliances for all the monitored hubs.
 It should be analogous to the cfpr_compliance_summary_graph()
-
-
-
 
 
 

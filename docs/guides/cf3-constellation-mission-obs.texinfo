@@ -162,6 +162,8 @@ it knows about.
 
 
 
+
+
 @node
 @section The MO status page
 
@@ -207,6 +209,84 @@ histogram, etc.
 @center @image{obs-gallery,10cm,,Mission Portal login}
 @center Figure: Mission Observatory login screen
 @sp 1
+
+
+
+
+
+@c *******************************************************************
+
+@node
+@chapter PHP Functions for Mission Portal
+
+
+@c *******************************************************************
+
+@node
+@chapter PHP Functions for Mission Observatory
+
+
+We try to make functions that look as similar as possible to the 
+existing Nova functrions, and define the semantics accordingly. 
+
+@node
+@section cfcon_show_[red|green|yellow|blue]_hubs
+
+Analogous to the getting the list of green/yellow/red hosts for
+a hub, is getting the status of an aggregate hub. The API should look
+quite similar so that we can re-use the code.
+
+@verbatim
+cfcon_show_green_hubs(results_per_page,page_num)
+@end verbatim
+
+The semantics of this function is simply to show the aggregate
+average of the green/yellow/red/blue values from the @i{currently
+available monitored hubs}.
+
+Note that there is a subtlety about blue hubs versus black hubs, see below.
+
+A hub can be black or coloured. If host is black, no information is available
+about the state of its internal colour. If the host is not black, then it
+has a mixture of colours that reflect the proportions of the hosts it is composed
+of. Thus the blue hub result is
+
+@verbatim
+  sum of blue hosts
+  -------------------
+ Number of alive hubs
+@end verbatim
+
+
+@node
+@section cfcon_show_black_hubs
+
+A hub can be black or coloured.
+
+Now that we have aggregation, there needs to be a new category of colouration
+for the hubs. We define a BLACK hub to be a hub that is not available. (This
+is analogous to a blue host, except that we need to distinguish between hosts
+that were last seen to be blue, and whether or not we have information about
+a hub at all).
+
+@verbatim
+cfcon_show_black_hubs(results_per_page,page_num)
+@end verbatim
+
+i.e. Show the list of hubs that is currently not available. The data in the
+database for these hubs will be the last known values, which might include
+hosts that are red/green/yellow/blue.
+
+
+@node
+@section cfcon_compliance_summary_graph("compliance")
+
+
+This function generates the data for the rendering of the bar graph on the status
+page. It should return the aggregate of the compliances for all the monitored hubs.
+It should be analogous to the cfpr_compliance_summary_graph()
+
+
 
 
 

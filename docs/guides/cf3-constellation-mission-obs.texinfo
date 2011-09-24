@@ -259,52 +259,43 @@ quite similar so that we can re-use the code.
 cfcon_show_green_hubs(results_per_page,page_num)
 @end verbatim
 
-The semantics of this function is simply to show the aggregate
-average of the green/yellow/red/blue values from the @i{currently
-available monitored hubs}.
+The semantics of this function is if more than 80% of hosts on a hub
+are green, then the hub is green. If more than 20% of hosts on hub are yellow, the hub is yellow.
+If more than 20% of hosts on hub are red, the hub is red.
 
-Note that there is a subtlety about blue hubs versus black hubs, see below.
-
-A hub can be black or coloured. If host is black, no information is available
-about the state of its internal colour. If the host is not black, then it
-has a mixture of colours that reflect the proportions of the hosts it is composed
-of. Thus the blue hub result is
-
-@verbatim
-  sum of blue hosts
-  -------------------
- Number of alive hubs
-@end verbatim
+If a hub is not available it is blue.
+i.e. Show the list of hubs that is currently not available. The data in the
+database for these hubs will be the last known values, which might include
+hosts that are red/green/yellow.
 
 
 @node
-@section cfcon_show_black_hubs
+@section cfpr_count_all_hosts()
 
-A hub can be black or coloured.
+Return the aggregate number of hosts from all hubs
+If a hub is `black' we do not include the hosts.
 
-Now that we have aggregation, there needs to be a new category of colouration
-for the hubs. We define a BLACK hub to be a hub that is not available. (This
-is analogous to a blue host, except that we need to distinguish between hosts
-that were last seen to be blue, and whether or not we have information about
-a hub at all).
+@node
+@section cfpr_count_red/yellow/green/blue_hosts()
 
-@verbatim
-cfcon_show_black_hubs(results_per_page,page_num)
-@end verbatim
+Return the aggregate number of hosts from all hubs in each of the categories,
+based on the last known data. If a hub is `blue' we do not include the hosts.
 
-i.e. Show the list of hubs that is currently not available. The data in the
-database for these hubs will be the last known values, which might include
-hosts that are red/green/yellow/blue.
+@node
+@section cfpr_count_red/yellow/green/blue/black_hubs()
+
+Return the number of hubs from all hubs in each of the categories,
+based on the last known data. If a hub is `black' we do not include the hosts.
 
 
 @node
 @section cfcon_compliance_summary_graph("compliance")
 
-
 This function generates the data for the rendering of the bar graph on the status
 page. It should return the aggregate of the compliances for all the monitored hubs.
 It should be analogous to the cfpr_compliance_summary_graph()
 
+The argument may not be necessary as we only use compliance today.
 
 
 @c =========================================================================

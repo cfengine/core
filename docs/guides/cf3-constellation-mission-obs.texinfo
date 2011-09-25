@@ -246,10 +246,25 @@ TODO: decide on return values: the graph data from the vitals are of different f
 
 
 We try to make functions that look as similar as possible to the 
-existing Nova functrions, and define the semantics accordingly. 
+existing Nova functions, and define the semantics accordingly. 
+
+@cartouche
+NB - we assume that knowledge-based functions are global in nature
+unless they refer to promises. So business goal functions, for example,
+will be assumed constant over the organization. Different federated hubs
+might refer to different business goals, but the list of goals is an invariant
+across all hubs.
+@end cartouche
+
+The functions listed below are grouped according to where they (first)
+appear, but they might be reused. If we implement these basic functions, we
+can reproduce the basic skeleton of the Mission Observatory.
 
 @node
-@section cfcon_show_[red|green|yellow|blue]_hubs
+@section Status page
+
+@node
+@subsection cfcon_show_[red|green|yellow|blue]_hubs
 
 Analogous to the getting the list of green/yellow/red hosts for
 a hub, is getting the status of an aggregate hub. The API should look
@@ -270,26 +285,37 @@ hosts that are red/green/yellow.
 
 
 @node
-@section cfpr_count_all_hosts()
+@section Engineering page
+
+
+Any functions not here refer to policy, and the Mission Obs. needs a new approach
+to dealing with the policy, as it might not have access to the specific policy data.
+Security might be such that the policy is not available -- this needs to be discussed
+in our design team.
+
+@node
+@subsection cfpr_count_all_hosts()
 
 Return the aggregate number of hosts from all hubs
 If a hub is `black' we do not include the hosts.
 
+This is for the engineering page.
+
 @node
-@section cfpr_count_red/yellow/green/blue_hosts()
+@subsection cfpr_count_red/yellow/green/blue_hosts()
 
 Return the aggregate number of hosts from all hubs in each of the categories,
 based on the last known data. If a hub is `blue' we do not include the hosts.
 
 @node
-@section cfpr_count_red/yellow/green/blue/black_hubs()
+@subsection cfpr_count_red/yellow/green/blue/black_hubs()
 
 Return the number of hubs from all hubs in each of the categories,
 based on the last known data. If a hub is `black' we do not include the hosts.
 
 
 @node
-@section cfcon_compliance_summary_graph("compliance")
+@subsection cfcon_compliance_summary_graph("compliance")
 
 This function generates the data for the rendering of the bar graph on the status
 page. It should return the aggregate of the compliances for all the monitored hubs.
@@ -297,6 +323,73 @@ It should be analogous to the cfpr_compliance_summary_graph()
 
 The argument may not be necessary as we only use compliance today.
 
+
+@node
+@subsection cfcon_compliance_summary_meter()
+
+This function should not have arguments in Nova or
+Constellation. (Currently does no range checking - bug.)  It should return
+the average of the cfpr_compliance_summary_meter values from all the
+non-black hubs.
+
+@node
+@subsection cfcon_show_[red|green|yellow|blue]_hosts
+
+Returns an aggregate for all hubs.
+
+@verbatim
+cfconf_show_green_hosts($rows, $page_number)
+@end verbatim
+
+
+@node
+@subsection cfcon_delete_hub
+
+Delete a hub and all its data from the mongo db
+
+@node
+@subsection cfcon_select_reports(".*", 100)
+
+Get a list of reports available on the mission observatory. Note there are no arguments in
+Nova or Constellation (range checking currently ignored - bug).
+
+@node
+@subsection cfcon_hub_meter(hub)
+
+Show the aggregate meter for the hub as computed by cfpr_compliance_summary_meter
+on the named hub. Question: do we use the name of the hub, or its hostkey?
+
+@node
+@subsection cfcon_top_n_hubs(n)
+
+Show the compliance ranking of the hubs, based on the last hour.
+
+
+@node
+@subsection NEW: cfcon_get_hub_details(hub)
+
+Return the analogue of the discovered host details.
+
+@cartouche
+@verbatim
+Name of hub: hub1.cfengine.com
+Location: London
+Contact e-mail:
+Contact phone: 
+Number of hosts:
+Operating system flavours represented: solaris, redhat_5
+@end verbatim
+@end cartouche
+
+@node
+@section Planning page
+
+This is, as yet, undefined.
+
+@node
+@section Knowledge page
+
+This is identical to the Mission Portal.
 
 @c =========================================================================
 @c @node Index,  , CFEngine Methods, Top

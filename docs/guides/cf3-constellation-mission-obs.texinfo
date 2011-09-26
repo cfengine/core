@@ -391,6 +391,53 @@ This is, as yet, undefined.
 
 This is identical to the Mission Portal.
 
+@node
+@chapter Error codes and data format
+
+In this chapter we define rules for transporting data from the c library to the PHP module and finally to the web application.
+
+@node
+@subsection C library to PHP module error codes
+
+Accepted return data type: int @*
+Only integer values with error/success codes must be returned by the C library functions to the PHP module. @*
+
+@verbatim
+Error codes: 
+Range: 0-300 
+1-99 => CFER_            // errors  
+101-199 => CFWN_       // warnings  
+201-299 => CF_EX_       // exceptions 
+
+#define CF_SUCCESS 0                          // success 
+#define CF_WARNING 100    // can be used for general purposes and comparisons in the code 
+#define CF_EXCEPTION 200 
+
+#define CFEX_DB_OPEN_FAIL 201 
+#define CFWN_DB_CLOSE_FAIL 101 
+#define CFER_DATA_TRUNCATED 1
+#define CFER_DATA_NOT_FOUND 2
+@end verbatim
+
+@node
+@subsection Returning data to the Web application 
+
+If the return type from the C library is an exception, a PHP exception must be thrown by the PHP module. 
+Otherwise, it should return the return value along with the buffer passed to the C module.
+
+@node
+@subsection Web data format
+
+The data returned to the web must be JSON formatted for all data types. @*
+
+@verbatim
+{ meta: {<header, count and other optional information>},    //  JSON object 
+ data: [ actual data ],                                     // JSON Array  
+ error: { error_code: "", msg: ""}                          // JSON Object 
+}
+@end verbatim 
+
+
 @c =========================================================================
 @c @node Index,  , CFEngine Methods, Top
 @c @unnumbered Concept Index

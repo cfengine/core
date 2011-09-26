@@ -80,6 +80,8 @@ time_t PROMISETIME = 0;
 time_t CF_LOCKHORIZON = CF_MONTH;
 
 int LICENSES = 0;
+int AM_NOVA = false;
+int AM_CONSTELLATION = false;
 char EXPIRY[CF_SMALLBUF] = {0};
 char LICENSE_COMPANY[CF_SMALLBUF] = {0};
 int INSTALL_SKIP = false;

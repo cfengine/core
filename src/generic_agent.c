@@ -104,6 +104,16 @@ if (EnterpriseExpiry())
    exit(1);
    }
 
+if (AM_NOVA)
+   {
+   CfOut(cf_verbose,""," -> This is CFE Nova\n");
+   }
+
+if (AM_CONSTELLATION)
+   {
+   CfOut(cf_verbose,""," -> This is CFE Constellation\n");
+   }
+
 NewScope("const");
 NewScope("match");
 NewScope("mon");

@@ -43,6 +43,8 @@ extern char POLICY_SERVER[CF_BUFSIZE];
 extern int ALWAYS_VALIDATE;
 extern bool ALLCLASSESREPORT;
 extern int LICENSES;
+extern int AM_NOVA;
+extern int AM_CONSTELLATION;
 extern char EXPIRY[32];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
 extern int IGNORE_MISSING_INPUTS;

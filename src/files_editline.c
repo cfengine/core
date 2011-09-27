@@ -836,11 +836,11 @@ for (ip = initiator; ip != terminator && ip != NULL; ip = np)
 
    if (matches)
       {
-      CfOut(cf_verbose,""," -> Multi-line region (size %d) matched text in the file",matches);
+      CfOut(cf_verbose,""," -> Multi-line region (%d lines) matched text in the file",matches);
       }
    else
       {
-      CfOut(cf_verbose,""," -> Multi-line region didn't match text in the file");
+      Debug(" -> Multi-line region didn't match text in the file");
       }
       
    if (!SelectLine(ip->name,a,pp)) // Start search from location

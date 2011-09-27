@@ -568,9 +568,6 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
       continue;
       }
 
-   /*
-    * HvB: add variabele output directory
-   */
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_output_directory].lval) == 0)
       {
       if ( IsAbsPath(retval) )

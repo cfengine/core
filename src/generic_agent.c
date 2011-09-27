@@ -644,7 +644,14 @@ if (VINPUTLIST != NULL)
          }
       else
          {
-         struct Rval returnval = EvaluateFinalRval("sys",rp->item,rp->type,true,NULL);
+         struct Rval returnval;
+
+         if (strcmp(rp->item,CF_NULL_VALUE) == 0)
+            {
+            continue;
+            }
+
+         returnval = EvaluateFinalRval("sys",rp->item,rp->type,true,NULL);
 
          switch (returnval.rtype)
             {

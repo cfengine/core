@@ -1148,6 +1148,8 @@ enum cfl_view
    cfl_view_software,
    cfl_view_log_repair,
    cfl_view_log_notkept,
+   cfl_view_hub_status,
+   cfl_view_hub_meter,
    cfl_view_error
    };
 

@@ -1203,7 +1203,10 @@ char *CFCON_VIEWS[] = { "Comp",  // NOTE: must match cfl_view enum
                         "Software",
                         "RepairLog",
                         "NotKeptLog",
+                        "HubStatus",
+                        "HubMeter",
                         NULL };
+
 
 
 enum cfl_view Str2View(char *s)
@@ -1220,6 +1223,8 @@ for (i = 0; CFCON_VIEWS[i] != NULL; i++)
 
 return cfl_view_error;
 }
+
+/*********************************************************************/
 
 char *View2Str(enum cfl_view view)
 {

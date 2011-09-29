@@ -203,7 +203,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:",OPTIONS,&optindex)) != EOF
           exit(0);
 
       case 'a':
-          printf("Self-analysis is not yet implemented.");
+          printf("Self-analysis is not yet implemented.\n");
           exit(0);
           break;
 

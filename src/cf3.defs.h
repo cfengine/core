@@ -1546,7 +1546,7 @@ struct ProcessSelect
 struct Context
    {
    struct Constraint *expression;
-   int broken;
+   int nconstraints;
    };
 
 /*************************************************************************/

@@ -285,7 +285,13 @@ if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
    snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
    }
 
-if (a.context.broken)
+if (a.context.nconstraints == 0)
+   {
+   cfPS(cf_error,CF_FAIL,"",pp,a,"No constraints for class promise %s (broken promise)",pp->promiser);
+   return;
+   }
+
+if (a.context.nconstraints > 1)
    {
    cfPS(cf_error,CF_FAIL,"",pp,a,"Irreconcilable constraints in classes for %s (broken promise)",pp->promiser);
    return;

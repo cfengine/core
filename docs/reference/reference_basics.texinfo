@@ -612,6 +612,11 @@ The report result `Success' is therefore true because only @samp{one} and
 @samp{three} are in scope (and @samp{two} is @i{not} in scope) inside of the
 third bundle.
 
+Note that any class promise must have one - and only one - value
+constraint. That is, you might not leave @samp{expression} in the
+example above or add both @samp{and} and @samp{xor} constraints to the
+single promise.
+
 Another type of class definition happens when you define classes based on the
 outcome of a promise, e.g. to set a class if a promise is repaired, one might write:
 

@@ -1250,7 +1250,7 @@ struct Context GetContextConstraints(struct Promise *pp)
   struct Constraint *cp;
   int i;
 
-a.broken = -1;
+a.nconstraints = 0;
 a.expression = NULL; 
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -1260,7 +1260,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       if (strcmp(cp->lval,CF_CLASSBODY[i].lval) == 0)
          {
          a.expression = cp;
-         a.broken++;
+         a.nconstraints++;
          }
       }
    }

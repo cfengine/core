@@ -385,9 +385,10 @@ return rval;
 
 /*********************************************************************/
 
+#if defined(HAVE_GETPWENT)
+
 static struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs)
-    
-#ifndef MINGW
+
 { struct Rlist *newlist = NULL,*except_names,*except_uids;
   struct Rval rval;
   struct passwd *pw;
@@ -422,14 +423,18 @@ rval.item = newlist;
 rval.rtype = CF_LIST;
 return rval;
 }
+
 #else
+
+static struct Rval FnCallGetUsers(struct FnCall *fp, struct Rlist *finalargs)
 {
 struct Rval rval;
-CfOut(cf_error,""," -> getusers is not yet implemented on Windows"); 
+CfOut(cf_error,""," -> getusers is not implemented");
 rval.item = NULL;
 rval.rtype = CF_LIST;
 return rval;
 }
+
 #endif
 
 /*********************************************************************/

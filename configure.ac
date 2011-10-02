@@ -531,6 +531,8 @@ AC_REPLACE_FUNCS(round)
 AC_CHECK_DECLS(inet_network, [], [], [[#include <arpa/inet.h>]])
 AC_REPLACE_FUNCS(inet_network)
 
+AC_CHECK_FUNCS(getpwent setpwent endpwent)
+
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(strstr strsep putenv drand48 srand48 getaddrinfo)

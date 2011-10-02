@@ -2026,6 +2026,14 @@ const char *GetWorkdir(void)
     return WORKDIR;
 }
 
+#elif defined(__ANDROID__)
+
+const char *GetWorkdir(void)
+{
+    /* getpwuid() on Android returns /data, so use compile-time default instead */
+    return WORKDIR;
+}
+
 #elif !defined(__MINGW32__)
 
 const chair *GetWorkdir(void)

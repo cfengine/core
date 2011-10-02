@@ -2019,11 +2019,38 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 
 /******************************************************************/
 
-#ifndef MINGW
-char *GetHome(uid_t uid)
+#if defined(__CYGWIN__)
 
+const char *GetWorkdir(void)
 {
-struct passwd *mpw = getpwuid(uid);
-return mpw->pw_dir;
+    return WORKDIR;
 }
+
+#elif !defined(__MINGW32__)
+
+const chair *GetWorkdir(void)
+{
+if (getuid() > 0)
+   {
+   static char workdir[CF_BUFSIZE];
+   if (!*workdir)
+      {
+      struct passwd *mpw = getpwuid(getuid());
+
+      strncpy(workdir, mpw->pw_dir, CF_BUFSIZE-10);
+      strcat(workdir, "/.cfagent");
+
+      if (strlen(workdir) > CF_BUFSIZE/2)
+         {
+         FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
+         }
+      }
+   return workdir;
+   }
+else
+   {
+   return WORKDIR;
+   }
+}
+
 #endif

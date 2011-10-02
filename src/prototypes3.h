@@ -1179,8 +1179,8 @@ int GetCurrentUserName(char *userName, int userNameLen);
 #ifndef MINGW
 void Unix_GetInterfaceInfo(enum cfagenttype ag);
 void Unix_FindV6InterfaceInfo(void);
-char *GetHome(uid_t uid);
 #endif  /* NOT MINGW */
+const char *GetWorkdir(void);
 
 /* transaction.c */
 

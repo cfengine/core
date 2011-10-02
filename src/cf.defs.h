@@ -164,10 +164,7 @@ struct utsname
 #define LOG_DAEMON      (3<<3)
 
 #else  /* NOT MINGW */
-
 #include <syslog.h>
-
-extern int errno;
 #endif
 
 

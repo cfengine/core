@@ -1079,8 +1079,7 @@ free(ap);
 
 void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy policy)
 
-{ int errno;
-  CF_DB *dbp;
+{ CF_DB *dbp;
   struct CfState state;
   time_t now = time(NULL);
   char filename[CF_BUFSIZE];
@@ -1122,8 +1121,7 @@ CloseDB(dbp);
 
 void DeletePersistentContext(char *name)
 
-{ int errno;
-  CF_DB *dbp;
+{ CF_DB *dbp;
   char filename[CF_BUFSIZE];
 
 snprintf(filename,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_STATEDB_FILE);

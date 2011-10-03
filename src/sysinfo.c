@@ -2036,7 +2036,7 @@ const char *GetWorkdir(void)
 
 #elif !defined(__MINGW32__)
 
-const chair *GetWorkdir(void)
+const char *GetWorkdir(void)
 {
 if (getuid() > 0)
    {

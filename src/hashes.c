@@ -358,6 +358,7 @@ void HashClear(AssocHashTable *hashtable)
 if (hashtable->huge)
    {
    HugeHashClear(hashtable);
+   free(hashtable->buckets);
    }
 else
    {

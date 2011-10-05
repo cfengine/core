@@ -89,6 +89,7 @@ int KEYTTL = 0;
 
 // These are used to measure graph complexity in know/agent
 
+int CSV=false;
 int CF_TOPICS = 0; // objects
 int CF_OCCUR = 0; // objects
 int CF_EDGES = 0; // links or promises between them
